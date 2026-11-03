@@ -28,3 +28,4 @@ The time now: digital (the time as the language of the page writes it) or analog
 ## Tests
 
 - [Clock shows the time of its zone, digital or analog, and a zone the browser does not know is the one of the device](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L131) — `tests/regression/library-new.test.js`
+- [Slider writes its value by Format, on the thumb and to a screen reader, and its Unit after it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L37) — `tests/regression/library-controls.test.js`

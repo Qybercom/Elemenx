@@ -85,4 +85,4 @@ The controls of a video or a piece of sound over the player of the browser (<vid
 
 ## Tests
 
-- [MediaPlayer loads the sound, shows its time, mutes, changes the speed and follows the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L540) — `tests/regression/library-new.test.js`
+- [MediaPlayer loads the sound, shows its time, mutes, changes the speed and follows the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L624) — `tests/regression/library-new.test.js`

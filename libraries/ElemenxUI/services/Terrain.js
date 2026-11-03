@@ -9,7 +9,23 @@
  *   heights and slopes and a skirt under its edges so chunks of other sizes leave no gap) and Path(from, to, options)
  *   (a way of points {X, Y, Z} round what cannot be walked, made straight where it can be; null when there is none;
  *   options Step, the finest it looks, MaxSlope, Swim). Palette gives it the colors of a biome; Roads ([[x, z]...]) set
- *   on a field are painted on it, and OnRoad(field, x, z, width) tells whether a point is on one.
+ *   on a field are painted on it, and OnRoad(field, x, z, width) tells whether a point is on one. Sketch: a sketch over it
+ *   (below); the field then has Sketch, its Height after it, and its colors (Paint) after what it lays.
+ * - A sketch is {Layers: [{ID, Name, Visible, Strength, Items}]}, each item {ID, Type, Strength} changing the height left by the
+ *   items before it. Strokes (Points, Radius): raise and lower (Amount), flatten (Height), smooth. Lines (Points, Width): ridge
+ *   (Height, Sharp), valley and canyon (Depth), river (Depth, Bank, Flow: how fast it runs; its bed under the levels of its way, never rising as it
+ *   flows; a point [x, z, y] gives its level), road (Shoulder: level across), cliff (Height, Reach: up on the left of its way).
+ *   Areas (Points, Edge): plateau (Height), basin (Depth), lake (Level, Depth), terraces (Step), swamp (Level), beach,
+ *   floodplain (Level), dunes (Height, Length, Way), erosion (Amount), biome (Palette: only its colors) and mask (what comes
+ *   after it is held back in it; with Heights {Bounds, Side, Data} it holds those heights). Circles (At, Radius): mountain
+ *   (Height, Ridged), crater (Depth, Rim), stamp (Data {Side, Heights from 0 to 1}, Height, Turn). What changes no height and
+ *   only places things (SketchPlaced, sown by the Scatter of a GameScene): areas of growth forest, meadow, bushes, thicket, jungle,
+ *   sequoia (Density, Passability, Shapes), clearing (nothing grows), fields and orchard (in rows: Spacing, Gap, Way); lines of
+ *   things a step apart row, fence, hedge, wall, powerline (Shapes, Spacing); the circle marker (Role, Team, Name); the triggers
+ *   of a game, trigger an area, triggerpoint a circle, triggerline a line (Height, Team, Kinds, Every, Once, Blueprint), and the
+ *   area zone (Tags, Team), objects of the scene of a GameScene (the trait Triggers). Sketched(sketch, base,
+ *   seed) makes one ({Height(x, z, h), Look(x, z), Waters(), Items}: Waters the rivers, a strip at their levels, and the
+ *   lakes); SketchChanged(before, after) gives the bounds [x0, z0, x1, z1] where two differ, for a ground made again only there.
  * - Sphere(options) returns the ground of a planet, the very one its baked surface shows (the noise of Graphics3D, as
  *   the shader of a GameScene bakes it): options Radius (units), Height (its relief), Seed (the number of its pattern),
  *   Ocean (0 to 1), Type (rocky, desert, terran, ocean, ice, lava, dwarf, moon). Its methods: Land(direction) (the
@@ -36,7 +52,7 @@
 Elemenx.Service('Terrain', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['Flat(options)', 'Sphere(options)', 'Cells(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Source(names)']
+		Methods: ['Flat(options)', 'Sphere(options)', 'Cells(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'SketchChanged(before, after)', 'Source(names)']
 	},
 
 	Smoothstep: function (from, to, value) {
@@ -107,6 +123,17 @@ Elemenx.Service('Terrain', {
 				return self.Way(field, from, to, rules || {});
 			}
 		};
+
+		/* A sketch over it (Sketch): its heights after it, and its colors. */
+		if (settings.Sketch) {
+			var plain = field.Height;
+			var sketched = this.Sketched(settings.Sketch, plain, settings.Seed);
+
+			field.Sketch = sketched;
+			field.Height = function (x, z) {
+				return sketched.Height(x, z, plain(x, z));
+			};
+		}
 
 		return field;
 	},
@@ -591,7 +618,8 @@ Elemenx.Service('Terrain', {
 
 	/* The colors of the ground of a flat map: sand by the sea, grass, rock on the slopes, snow on the heights. */
 	Paint: function (field, x, z, y, slope) {
-		var palette = field.Palette || {};
+		var look = field.Sketch ? field.Sketch.Look(x, z) : null;
+		var palette = look && look.Palette || field.Palette || {};
 		var high = y / Math.max(1, field.Top);
 		var low = palette.Low || [0.3, 0.5, 0.22];
 		var upper = palette.High || [0.39, 0.43, 0.25];
@@ -608,6 +636,10 @@ Elemenx.Service('Terrain', {
 
 		if (field.Roads && this.OnRoad(field, x, z, 1.8))
 			color = palette.Road || [0.5, 0.42, 0.32];
+
+		/* What a sketch lays there: a road, a beach, the bed of a river. */
+		if (look && look.Color)
+			color = [color[0] + (look.Color[0] - color[0]) * look.Tint, color[1] + (look.Color[1] - color[1]) * look.Tint, color[2] + (look.Color[2] - color[2]) * look.Tint];
 
 		return color;
 	},
@@ -905,7 +937,860 @@ Elemenx.Service('Terrain', {
 	},
 
 	Work: function () {
-		return this.$Service('Workers').Pool('Terrain', {Graphics3D: ['Noise', 'SeedOffset', 'Vectors'], Terrain: ['Smoothstep', 'Flat', 'Sphere', 'Paint', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid']});
+		return this.$Service('Workers').Pool('Terrain', {Graphics3D: ['Noise', 'SeedOffset', 'Vectors'], Terrain: ['Smoothstep', 'Flat', 'Sphere', 'Paint', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan']});
+	},
+
+	/*
+	 * A sketch over a ground: what it changes of its heights and of its colors, made once. sketch {Layers: [{ID, Visible, Strength,
+	 * Items}]}; each item {ID, Type, Strength} changes the height a point has after the items before it. base(x, z): the height of
+	 * the ground under it. Gives {Height(x, z, h), Look(x, z) ({Palette, Weight, Color, Tint}: the colors of what it paints),
+	 * Items: [{Item, Bounds: [x0, z0, x1, z1]}]}.
+	 */
+	Sketched: function (sketch, base, seed) {
+		var self = this;
+		var noise = this.$Service('Graphics3D').Noise('sketch-' + (seed || ''));
+		var items = [];
+		var looks = {road: [0.5, 0.42, 0.32], street: [0.46, 0.44, 0.42], square: [0.58, 0.55, 0.5], river: [0.36, 0.32, 0.26], beach: [0.8, 0.74, 0.56], swamp: [0.24, 0.27, 0.18], floodplain: [0.42, 0.45, 0.28], canyon: [0.6, 0.43, 0.3], cliff: [0.45, 0.42, 0.36], crater: [0.4, 0.37, 0.33], dunes: [0.82, 0.72, 0.5]};
+
+		function number (value, fallback) {
+			return value === undefined || value === null || value === '' || isNaN(Number(value)) ? fallback : Number(value);
+		}
+
+		/* 1 at the middle, 0 at the edge and past it, smoothly. */
+		function fall (distance, radius) {
+			var t = Math.max(0, Math.min(1, distance / Math.max(1e-6, radius)));
+
+			return 0.5 + 0.5 * Math.cos(t * Math.PI);
+		}
+
+		/* The nearest point of a line: {Distance, T (along the whole of it, 0 to 1), Side (+1 left of its way, -1 right), Segment}. */
+		function along (points, lengths, x, z) {
+			var best = {Distance: Infinity, T: 0, Side: 1, Segment: 0};
+			var total = lengths[lengths.length - 1] || 1;
+			var i;
+
+			for (i = 0; i + 1 < points.length; i++) {
+				var ax = points[i][0];
+				var az = points[i][1];
+				var dx = points[i + 1][0] - ax;
+				var dz = points[i + 1][1] - az;
+				var span = dx * dx + dz * dz || 1;
+				var t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / span));
+				var px = ax + dx * t - x;
+				var pz = az + dz * t - z;
+				var d = Math.sqrt(px * px + pz * pz);
+
+				if (d < best.Distance) {
+					best.Distance = d;
+					best.T = (lengths[i] + Math.sqrt(span) * t) / total;
+					best.Side = dx * (z - az) - dz * (x - ax) > 0 ? -1 : 1;
+					best.Segment = i;
+				}
+			}
+
+			return best;
+		}
+
+		/* How far into an area: 1 inside, fading over edge outside it. */
+		function inside (points, x, z) {
+			var within = false;
+			var nearest = Infinity;
+			var i;
+			var j;
+
+			for (i = 0, j = points.length - 1; i < points.length; j = i++) {
+				var xi = points[i][0];
+				var zi = points[i][1];
+				var xj = points[j][0];
+				var zj = points[j][1];
+				var dx = xj - xi;
+				var dz = zj - zi;
+				var t = Math.max(0, Math.min(1, ((x - xi) * dx + (z - zi) * dz) / (dx * dx + dz * dz || 1)));
+
+				if (zi > z !== zj > z && x < (xj - xi) * (z - zi) / (zj - zi) + xi)
+					within = !within;
+
+				nearest = Math.min(nearest, Math.hypot(xi + dx * t - x, zi + dz * t - z));
+			}
+
+			return {Inside: within, Distance: nearest};
+		}
+
+		function areaWeight (shape, x, z) {
+			var seen = inside(shape.Points, x, z);
+			if (seen.Inside) return 1;
+
+			return seen.Distance < shape.Edge ? fall(seen.Distance, shape.Edge) : 0;
+		}
+
+		/* The heights of a line at its points, along the way it flows: never higher than the one before (a river), or evened out (a road). */
+		function levels (points, lengths, downhill) {
+			var heights = points.map(function (point) {
+				return point[2] !== undefined ? Number(point[2]) : base(point[0], point[1]);
+			});
+			var even;
+			var i;
+
+			if (downhill) {
+				for (i = 1; i < heights.length; i++)
+					heights[i] = Math.min(heights[i], heights[i - 1]);
+
+				return heights;
+			}
+
+			even = heights.slice();
+
+			for (i = 1; i + 1 < heights.length; i++)
+				even[i] = (heights[i - 1] + heights[i] * 2 + heights[i + 1]) / 4;
+
+			return even;
+		}
+
+		function levelAt (made, seen) {
+			var i = seen.Segment;
+			var span = made.Lengths[i + 1] - made.Lengths[i] || 1;
+			var t = Math.max(0, Math.min(1, (seen.T * made.Lengths[made.Lengths.length - 1] - made.Lengths[i]) / span));
+
+			return made.Levels[i] + (made.Levels[i + 1] - made.Levels[i]) * t;
+		}
+
+		/* A grid of heights over bounds (a stamp, a frozen mask): bilinear inside, none outside. */
+		function sample (grid, x, z) {
+			var bounds = grid.Bounds;
+			var side = grid.Side;
+			var u = (x - bounds[0]) / (bounds[2] - bounds[0]) * (side - 1);
+			var v = (z - bounds[1]) / (bounds[3] - bounds[1]) * (side - 1);
+			var c;
+			var r;
+			var a;
+			var b;
+
+			if (!(u >= 0 && v >= 0 && u <= side - 1 && v <= side - 1)) return null;
+
+			c = Math.min(side - 2, Math.floor(u));
+			r = Math.min(side - 2, Math.floor(v));
+			a = grid.Data[r * side + c] + (grid.Data[r * side + c + 1] - grid.Data[r * side + c]) * (u - c);
+			b = grid.Data[(r + 1) * side + c] + (grid.Data[(r + 1) * side + c + 1] - grid.Data[(r + 1) * side + c]) * (u - c);
+
+			return a + (b - a) * (v - r);
+		}
+
+		var all = [];
+
+		/* An item made ready: its points, its kind, its sizes, its bounds; null when it has too few points or no type. */
+		function build (item, layer) {
+			var made = {Item: item, Layer: layer, Strength: number(item.Strength, 1) * number(layer.Strength, 1), Points: (item.Points || []).map(function (point) {
+				return [Number(point[0]) || 0, Number(point[1]) || 0, point[2]];
+			})};
+			var reach = 0;
+			var lengths = [0];
+			var i;
+
+			if (item.Visible === false || !self.SketchTypes[item.Type]) return null;
+
+			made.Kind = self.SketchTypes[item.Type];
+
+			for (i = 1; i < made.Points.length; i++)
+				lengths.push(lengths[i - 1] + Math.hypot(made.Points[i][0] - made.Points[i - 1][0], made.Points[i][1] - made.Points[i - 1][1]));
+
+			made.Lengths = lengths;
+
+			/* A circle is a point and its radius. */
+			if (made.Kind === 'circle')
+				made.Points = [[Number(item.At && item.At[0]) || 0, Number(item.At && item.At[1]) || 0]];
+
+			made.Radius = number(item.Radius, item.Type === 'mountain' ? 60 : item.Type === 'crater' ? 25 : item.Type === 'stamp' ? number(item.Size, 50) / 2 : 8);
+			made.Width = number(item.Width, {ridge: 20, valley: 20, canyon: 30, river: 6, road: 6, cliff: 3}[item.Type] || 10);
+			made.Edge = number(item.Edge, 10);
+
+			if (made.Kind === 'line' && made.Points.length < 2) return null;
+			if (made.Kind === 'area' && made.Points.length < 3) return null;
+
+			if (made.Kind === 'stroke') reach = made.Radius;
+			else if (made.Kind === 'line') reach = made.Width / 2 + number(item.Bank, number(item.Shoulder, number(item.Reach, item.Type === 'cliff' ? 30 : 6)));
+			else if (made.Kind === 'area') reach = made.Edge;
+			else reach = made.Radius * (item.Type === 'crater' ? 1.4 : 1);
+
+			if (item.Type === 'river' || item.Type === 'road' || item.Type === 'street')
+				made.Levels = levels(made.Points, lengths, item.Type === 'river');
+
+			made.Bounds = [Infinity, Infinity, -Infinity, -Infinity];
+
+			made.Points.forEach(function (point) {
+				made.Bounds = [Math.min(made.Bounds[0], point[0] - reach), Math.min(made.Bounds[1], point[1] - reach), Math.max(made.Bounds[2], point[0] + reach), Math.max(made.Bounds[3], point[1] + reach)];
+			});
+
+			return made;
+		}
+
+		(sketch && sketch.Layers || []).forEach(function (layer) {
+			if (layer.Visible === false || layer.Visible === 'false') return;
+
+			(layer.Items || []).forEach(function (item) {
+				var made = build(item, layer);
+				if (!made) return;
+
+				all.push(item);
+				items.push(made);
+			});
+		});
+
+		/* A settlement: its plan, and its streets roads right after it, level across, as one drawn. */
+		items.slice().forEach(function (made) {
+			var at;
+
+			if (made.Item.Type !== 'settlement') return;
+
+			made.Plan = self.SettlementPlan(made.Item, all, function (name) {
+				return self.SettlementSizes[name] || null;
+			});
+			at = items.indexOf(made);
+
+			made.Plan.Streets.forEach(function (street, index) {
+				var road = build({ID: made.Item.ID + '/street-' + index, Type: 'street', Points: street.Points, Width: street.Width, Shoulder: 3}, made.Layer);
+				if (road)
+					items.splice(at + 1 + index, 0, road);
+			});
+		});
+
+		/* What one item makes of the height h a point has: the height again; guard (0 to 1) holds it back under a mask. */
+		function apply (made, x, z, h, guard) {
+			var item = made.Item;
+			var s = made.Strength * (1 - guard);
+			var seen;
+			var w;
+			var target;
+
+			if (made.Kind === 'stroke') {
+				seen = along(made.Points.length > 1 ? made.Points : [made.Points[0], made.Points[0]], made.Points.length > 1 ? made.Lengths : [0, 0], x, z);
+				w = fall(seen.Distance, made.Radius) * s;
+
+				if (item.Type === 'raise')
+					return h + number(item.Amount, 3) * w;
+
+				if (item.Type === 'lower')
+					return h - number(item.Amount, 3) * w;
+
+				if (item.Type === 'flatten')
+					return h + (number(item.Height, base(made.Points[0][0], made.Points[0][1])) - h) * w;
+
+				target = (base(x + made.Radius * 0.5, z) + base(x - made.Radius * 0.5, z) + base(x, z + made.Radius * 0.5) + base(x, z - made.Radius * 0.5) + base(x, z)) / 5;
+
+				return h + (target - h) * w;
+			}
+
+			if (made.Kind === 'line') {
+				seen = along(made.Points, made.Lengths, x, z);
+
+				if (item.Type === 'ridge') {
+					w = fall(seen.Distance, made.Width / 2);
+					w = Math.pow(w, 1 - number(item.Sharp, 0.3) * 0.7);
+
+					return h + number(item.Height, 15) * w * s * (0.85 + 0.3 * noise.Fbm(x * 0.02, 0.5, z * 0.02, 3));
+				}
+
+				if (item.Type === 'valley')
+					return h - number(item.Depth, 8) * fall(seen.Distance, made.Width / 2) * s;
+
+				if (item.Type === 'canyon')
+					return h - number(item.Depth, 25) * Math.pow(fall(seen.Distance, made.Width / 2), 0.25) * s;
+
+				if (item.Type === 'cliff') {
+					w = self.Smoothstep(-made.Width / 2, made.Width / 2, seen.Side * seen.Distance);
+
+					return h + number(item.Height, 8) * w * fall(Math.max(0, seen.Distance - made.Width / 2) * (seen.Side > 0 ? 1 : 0), number(item.Reach, 30)) * s;
+				}
+
+				/* A river: its bed under the level of its way, flat across its width, its banks coming down to it. A road: level across. */
+				target = levelAt(made, seen) - (item.Type === 'river' ? number(item.Depth, 2) : 0);
+				w = seen.Distance <= made.Width / 2 ? 1 : fall(seen.Distance - made.Width / 2, number(item.Bank, number(item.Shoulder, 6)));
+
+				return item.Type === 'river' ? h + (Math.min(h, target) - h) * w * s : h + (target - h) * w * s;
+			}
+
+			if (made.Kind === 'area') {
+				w = areaWeight(made, x, z) * s;
+
+				if (!w)
+					return h;
+
+				if (item.Type === 'plateau')
+					return h + (number(item.Height, 20) - h) * w;
+
+				/* A settlement on gentler ground, a square level. */
+				if (item.Type === 'settlement' || item.Type === 'square') {
+					target = (base(x + 20, z) + base(x - 20, z) + base(x, z + 20) + base(x, z - 20) + base(x, z)) / 5;
+
+					return h + (target - h) * w * (item.Type === 'square' ? 1 : 0.7);
+				}
+
+				if (item.Type === 'basin')
+					return h - number(item.Depth, 6) * w;
+
+				if (item.Type === 'lake')
+					return h + (Math.min(h, number(item.Level, -1.5) - number(item.Depth, 3) * w) - h) * w;
+
+				if (item.Type === 'swamp')
+					return h + (number(item.Level, 0.15) + noise.Fbm(x * 0.08, 1.7, z * 0.08, 3) * 0.8 - 0.4 - h) * w;
+
+				if (item.Type === 'beach')
+					return h + (Math.max(-2, Math.min(1.4, h)) * 0.5 - h) * w;
+
+				if (item.Type === 'floodplain')
+					return h + (number(item.Level, Math.min(h, 1.5)) + noise.Fbm(x * 0.03, 2.3, z * 0.03, 2) * 0.5 - 0.25 - h) * w;
+
+				if (item.Type === 'erosion')
+					return h - number(item.Amount, 4) * w * (1 - noise.Ridge(x * 0.04, 3.1, z * 0.04, 4));
+
+				if (item.Type === 'dunes') {
+					var way = number(item.Way, 70) * Math.PI / 180;
+					var u = (x * Math.sin(way) + z * Math.cos(way)) / number(item.Length, 25);
+
+					return h + number(item.Height, 3) * w * (0.5 + 0.5 * Math.sin(u * Math.PI * 2 + noise.Fbm(x * 0.01, 4.2, z * 0.01, 3) * 6)) * (0.6 + 0.4 * noise.Fbm(x * 0.03, 0.9, z * 0.03, 2));
+				}
+
+				if (item.Type === 'terraces') {
+					var step = Math.max(0.2, number(item.Step, 3));
+					var level = Math.floor(h / step);
+					var part = h / step - level;
+
+					return h + ((level + self.Smoothstep(0.75, 1, part)) * step - h) * w;
+				}
+
+				return h;
+			}
+
+			/* A circle: a mountain, a crater or a stamp. */
+			seen = Math.hypot(x - made.Points[0][0], z - made.Points[0][1]);
+
+			if (item.Type === 'mountain') {
+				w = fall(seen, made.Radius);
+
+				return h + number(item.Height, 60) * Math.pow(w, 1.2) * s * (1 - number(item.Ridged, 0.5) * 0.5 + number(item.Ridged, 0.5) * 0.5 * noise.Ridge(x * 0.012, 5.3, z * 0.012, 5));
+			}
+
+			if (item.Type === 'crater') {
+				var r = seen / made.Radius;
+				if (r > 1.4) return h;
+
+				return h + s * (r < 1 ? -number(item.Depth, 8) * (1 - r * r) + number(item.Rim, 3) * self.Smoothstep(0.7, 1, r) : number(item.Rim, 3) * fall(r - 1, 0.4));
+			}
+
+			if (item.Type === 'stamp' && item.Data) {
+				var turn = -number(item.Turn, 0) * Math.PI / 180;
+				var lx = (x - made.Points[0][0]) * Math.cos(turn) - (z - made.Points[0][1]) * Math.sin(turn);
+				var lz = (x - made.Points[0][0]) * Math.sin(turn) + (z - made.Points[0][1]) * Math.cos(turn);
+				var got = sample({Bounds: [-made.Radius, -made.Radius, made.Radius, made.Radius], Side: item.Data.Side, Data: item.Data.Heights}, lx, lz);
+				if (got === null) return h;
+
+				w = fall(Math.max(Math.abs(lx), Math.abs(lz)) - made.Radius * 0.8, made.Radius * 0.2) * s;
+
+				return h + (got * number(item.Height, 20) - h) * w;
+			}
+
+			return h;
+		}
+
+		return {
+			Items: items,
+
+			/* The plans of its settlements (SettlementPlan), in the order of the sketch. */
+			Settlements: function () {
+				return items.filter(function (made) {
+					return made.Plan;
+				}).map(function (made) {
+					return made.Plan;
+				});
+			},
+
+			/*
+			 * The water it lays: of each river a strip a little wider than its bed, a quarter of its depth under the level of its way,
+			 * and of each lake its area at its Level. {Kind, Points, Width, Levels} or {Kind, Points, Level}.
+			 */
+			Waters: function () {
+				return items.filter(function (made) {
+					return made.Item.Type === 'river' || made.Item.Type === 'lake';
+				}).map(function (made) {
+					if (made.Item.Type === 'lake')
+						return {Kind: 'lake', Points: made.Points, Level: number(made.Item.Level, -1.5)};
+
+					/* Flow: how fast it runs, in metres a second (0: by how steeply its bed falls). */
+					return {Kind: 'river', Points: made.Points, Width: made.Width * 1.25, Flow: number(made.Item.Flow, 0), Levels: made.Levels.map(function (level) {
+						return level - number(made.Item.Depth, 2) * 0.25;
+					})};
+				});
+			},
+
+			Height: function (x, z, h) {
+				var guard = 0;
+				var i;
+
+				for (i = 0; i < items.length; i++) {
+					var made = items[i];
+					var b = made.Bounds;
+					var w;
+					var frozen;
+
+					if (x < b[0] || z < b[1] || x > b[2] || z > b[3]) continue;
+
+					/* A mask: what is frozen in it, and what comes after it held back. */
+					if (made.Item.Type === 'mask') {
+						w = areaWeight(made, x, z) * made.Strength;
+						frozen = made.Item.Heights ? sample(made.Item.Heights, x, z) : null;
+
+						if (frozen !== null)
+							h += (frozen - h) * w;
+
+						guard = Math.max(guard, w);
+
+						continue;
+					}
+
+					if (made.Item.Type === 'biome' || self.SketchPlaced[made.Item.Type]) continue;
+
+					h = apply(made, x, z, h, guard);
+				}
+
+				return h;
+			},
+
+			/* The colors of a point: the palette of the last biome over it, and the color of what lies there (a road, a beach). */
+			Look: function (x, z) {
+				var look = null;
+				var i;
+
+				for (i = 0; i < items.length; i++) {
+					var made = items[i];
+					var b = made.Bounds;
+					var item = made.Item;
+					var w = 0;
+					var seen;
+
+					if (x < b[0] || z < b[1] || x > b[2] || z > b[3]) continue;
+
+					if (item.Type === 'biome' && item.Palette) {
+						w = areaWeight(made, x, z);
+
+						if (w > 0.5) {
+							look = look || {};
+							look.Palette = item.Palette;
+						}
+
+						continue;
+					}
+
+					if (!looks[item.Type]) continue;
+
+					if (made.Kind === 'line') {
+						seen = along(made.Points, made.Lengths, x, z);
+						w = item.Type === 'cliff' ? fall(seen.Distance, made.Width) : seen.Distance <= made.Width / 2 ? 1 : fall(seen.Distance - made.Width / 2, 1.5);
+					}
+					else if (made.Kind === 'area') {
+						w = areaWeight(made, x, z);
+					}
+					else {
+						w = fall(Math.hypot(x - made.Points[0][0], z - made.Points[0][1]), made.Radius);
+					}
+
+					if (w > 0.05) {
+						look = look || {};
+						look.Color = item.Color || looks[item.Type];
+						look.Tint = Math.min(1, w * (item.Type === 'road' || item.Type === 'river' ? 1 : 0.85));
+					}
+				}
+
+				return look;
+			}
+		};
+	},
+
+	/* The kind of each type of item of a sketch. */
+	SketchTypes: {
+		raise: 'stroke', lower: 'stroke', flatten: 'stroke', smooth: 'stroke',
+		ridge: 'line', valley: 'line', canyon: 'line', river: 'line', road: 'line', cliff: 'line',
+		plateau: 'area', basin: 'area', lake: 'area', swamp: 'area', beach: 'area', floodplain: 'area', erosion: 'area', dunes: 'area', terraces: 'area', biome: 'area', mask: 'area',
+		mountain: 'circle', crater: 'circle', stamp: 'circle',
+		forest: 'area', meadow: 'area', clearing: 'area', bushes: 'area', thicket: 'area', jungle: 'area', sequoia: 'area', fields: 'area', orchard: 'area',
+		row: 'line', fence: 'line', hedge: 'line', wall: 'line', powerline: 'line',
+		marker: 'circle',
+		settlement: 'area', street: 'line', square: 'area', district: 'area', citywall: 'line', landmark: 'circle',
+		trigger: 'area', triggerpoint: 'circle', triggerline: 'line', zone: 'area'
+	},
+
+	/* The size of a building of each class, its Width and Depth in metres: what a settlement lays out, and Buildings makes. */
+	SettlementSizes: {shack: [3.5, 3], cabin: [5, 4], cottage: [7, 6], house: [9, 8], villa: [16, 12], townhouse: [6, 10], shop: [10, 10], warehouse: [30, 20], factory: [40, 28], apartments: [24, 14], office: [30, 24], tower: [26, 26], skyscraper: [34, 34], business: [40, 32]},
+
+	/* What each kind of settlement is: the step of its streets, their width, a grid of them or a main one, its buildings. */
+	SettlementKinds: {
+		hamlet: {Block: 50, Street: 5, Grid: false, Classes: {shack: 2, cabin: 3, cottage: 2}},
+		village: {Block: 45, Street: 6, Grid: false, Classes: {cottage: 4, house: 3, cabin: 1, shop: 1}},
+		town: {Block: 60, Street: 8, Grid: true, Classes: {townhouse: 4, house: 2, shop: 2, apartments: 1}},
+		city: {Block: 80, Street: 12, Grid: true, Classes: {apartments: 4, office: 3, shop: 1, townhouse: 1}, Core: {tower: 2, skyscraper: 1, business: 1}},
+		fort: {Block: 55, Street: 7, Grid: true, Walls: true, Classes: {house: 3, townhouse: 2, shop: 1}}
+	},
+
+	/* The buildings of each kind of district. */
+	SettlementDistricts: {
+		residential: {house: 3, townhouse: 2, cottage: 1},
+		market: {shop: 4, townhouse: 1},
+		craft: {house: 2, warehouse: 1, shop: 1},
+		noble: {villa: 4},
+		business: {office: 3, tower: 2, business: 1, skyscraper: 1},
+		industry: {warehouse: 3, factory: 2},
+		fields: {}
+	},
+
+	/*
+	 * The plan of a settlement of a sketch: its streets (those drawn in it, else its own: a grid along its longest side, or a main
+	 * street and lanes off it), its lots along them (each a building of a class of its district or its kind, turned to its street,
+	 * none on a square, a street, another lot or out of it), its walls (a fort: round it) with their gates where streets cross
+	 * them and towers at their corners. item {Points, Kind, Density, Seed}; others: the other items of the sketch.
+	 * Gives {Streets: [{Points, Width}], Lots: [{X, Z, Turn, Width, Depth, Class, District}], Walls: [[[x, z]...]], Gates: [{X, Z,
+	 * Turn}], Towers: [{X, Z}]}.
+	 */
+	SettlementPlan: function (item, others, sizes) {
+		var self = this;
+		var kind = this.SettlementKinds[item.Kind] || this.SettlementKinds.village;
+		var points = item.Points;
+		var density = item.Density === undefined ? 0.85 : Number(item.Density);
+		var seed = 0;
+		var text = String(item.Seed === undefined ? item.ID : item.Seed);
+		var plan = {ID: item.ID, Kind: item.Kind || 'village', Streets: [], Lots: [], Walls: [], Gates: [], Towers: []};
+		var center = [0, 0];
+		var longest = 0;
+		var angle = 0;
+		var i;
+
+		for (i = 0; i < text.length; i++)
+			seed = (seed * 31 + text.charCodeAt(i)) >>> 0;
+
+		function random () {
+			seed = (seed * 1664525 + 1013904223) >>> 0;
+
+			return seed / 4294967296;
+		}
+
+		function inside (polygon, x, z) {
+			var within = false;
+			var a;
+			var b;
+
+			for (a = 0, b = polygon.length - 1; a < polygon.length; b = a++) {
+				if (polygon[a][1] > z !== polygon[b][1] > z && x < (polygon[b][0] - polygon[a][0]) * (z - polygon[a][1]) / (polygon[b][1] - polygon[a][1]) + polygon[a][0])
+					within = !within;
+			}
+
+			return within;
+		}
+
+		/* The point of a line nearest to x, z: [x, z, distance]. */
+		function nearest (line, x, z) {
+			var best = [x, z, Infinity];
+			var a;
+
+			for (a = 0; a + 1 < line.length; a++) {
+				var dx = line[a + 1][0] - line[a][0];
+				var dz = line[a + 1][1] - line[a][1];
+				var t = Math.max(0, Math.min(1, ((x - line[a][0]) * dx + (z - line[a][1]) * dz) / (dx * dx + dz * dz || 1)));
+				var p = [line[a][0] + dx * t, line[a][1] + dz * t];
+				var d = Math.hypot(p[0] - x, p[1] - z);
+				if (d < best[2])
+					best = [p[0], p[1], d];
+			}
+
+			return best;
+		}
+
+		function distance (line, x, z) {
+			return nearest(line, x, z)[2];
+		}
+
+		/* How far a point is from the edge of the settlement. */
+		function edge (x, z) {
+			return distance(points.concat([points[0]]), x, z);
+		}
+
+		/* A line clipped to the settlement: the runs of it inside, by steps of four metres. */
+		function clip (from, to) {
+			var length = Math.hypot(to[0] - from[0], to[1] - from[1]);
+			var steps = Math.max(1, Math.ceil(length / 4));
+			var runs = [];
+			var run = null;
+			var s;
+
+			for (s = 0; s <= steps; s++) {
+				var p = [from[0] + (to[0] - from[0]) * s / steps, from[1] + (to[1] - from[1]) * s / steps];
+
+				if (inside(points, p[0], p[1])) {
+					run = run || [p, p];
+					run[1] = p;
+				}
+				else if (run) {
+					runs.push(run);
+					run = null;
+				}
+			}
+
+			if (run)
+				runs.push(run);
+
+			/* None along its very edge: the lots of it would be out of it. */
+			return runs.filter(function (one) {
+				var middle = [(one[0][0] + one[1][0]) / 2, (one[0][1] + one[1][1]) / 2];
+
+				return Math.hypot(one[1][0] - one[0][0], one[1][1] - one[0][1]) > 8 && edge(middle[0], middle[1]) > width;
+			});
+		}
+
+		if (!points || points.length < 3) return plan;
+
+		points.forEach(function (point, index) {
+			var next = points[(index + 1) % points.length];
+			var length = Math.hypot(next[0] - point[0], next[1] - point[1]);
+
+			center = [center[0] + point[0] / points.length, center[1] + point[1] / points.length];
+
+			if (length > longest) {
+				longest = length;
+				angle = Math.atan2(next[1] - point[1], next[0] - point[0]);
+			}
+		});
+
+		var block;
+		var width = Math.max(3, Number(item.Street) || kind.Street);
+		var along = [Math.cos(angle), Math.sin(angle)];
+		var across = [-along[1], along[0]];
+		var reach = 0;
+
+		points.forEach(function (point) {
+			reach = Math.max(reach, Math.hypot(point[0] - center[0], point[1] - center[1]));
+		});
+
+		/* The step of its streets: of its kind, but a small one has a few blocks all the same. */
+		block = Math.max(15, Number(item.Block) || Math.min(kind.Block, reach * 0.45));
+
+		/* The streets drawn in it, else its own. */
+		var drawn = others.filter(function (other) {
+			return other.Type === 'street' && other.Points && other.Points.some(function (point) {
+				return inside(points, point[0], point[1]);
+			});
+		});
+
+		if (drawn.length) {
+			plan.Streets = drawn.map(function (other) {
+				return {Points: other.Points, Width: Number(other.Width) || width};
+			});
+		}
+		else if (kind.Grid) {
+			var k;
+
+			for (k = -Math.ceil(reach / block); k <= Math.ceil(reach / block); k++) {
+				[[along, across], [across, along]].forEach(function (axes) {
+					var o = [center[0] + axes[1][0] * k * block, center[1] + axes[1][1] * k * block];
+
+					clip([o[0] - axes[0][0] * reach, o[1] - axes[0][1] * reach], [o[0] + axes[0][0] * reach, o[1] + axes[0][1] * reach]).forEach(function (run) {
+						plan.Streets.push({Points: run, Width: k === 0 ? width * 1.3 : width});
+					});
+				});
+			}
+		}
+		else {
+			clip([center[0] - along[0] * reach, center[1] - along[1] * reach], [center[0] + along[0] * reach, center[1] + along[1] * reach]).forEach(function (run) {
+				plan.Streets.push({Points: run, Width: width});
+			});
+
+			/* Lanes off the main street, to one side and the other by turns. */
+			var lane;
+
+			for (lane = -Math.floor(reach / block * 2); lane <= Math.floor(reach / block * 2); lane++) {
+				var side = lane % 2 ? 1 : -1;
+				var root = [center[0] + along[0] * lane * block * 0.5, center[1] + along[1] * lane * block * 0.5];
+
+				if (!lane) continue;
+
+				clip(root, [root[0] + across[0] * side * block * 0.9, root[1] + across[1] * side * block * 0.9]).forEach(function (run) {
+					plan.Streets.push({Points: run, Width: width * 0.75});
+				});
+			}
+		}
+
+		var squares = others.filter(function (other) {
+			return other.Type === 'square' && other.Points && other.Points.length > 2;
+		});
+		var districts = others.filter(function (other) {
+			return other.Type === 'district' && other.Points && other.Points.length > 2;
+		});
+
+		function classes (x, z) {
+			var district = districts.filter(function (other) {
+				return inside(other.Points, x, z);
+			})[0];
+			var near = Math.hypot(x - center[0], z - center[1]) / Math.max(1, reach);
+
+			if (district)
+				return {District: district.Kind || 'residential', Weights: self.SettlementDistricts[district.Kind] || self.SettlementDistricts.residential};
+
+			return {District: '', Weights: kind.Core && near < 0.35 ? kind.Core : kind.Classes};
+		}
+
+		function pick (weights) {
+			var names = Object.keys(weights);
+			var total = names.reduce(function (sum, name) {
+				return sum + weights[name];
+			}, 0);
+			var roll = random() * total;
+			var n;
+
+			for (n = 0; n < names.length; n++) {
+				roll -= weights[names[n]];
+
+				if (roll <= 0)
+					return names[n];
+			}
+
+			return names[names.length - 1];
+		}
+
+		/* Lots along both sides of each street: a building of its place, its front to the street, a little set back. */
+		plan.Streets.forEach(function (street) {
+			var line = street.Points;
+			var a;
+
+			for (a = 0; a + 1 < line.length; a++) {
+				var dx = line[a + 1][0] - line[a][0];
+				var dz = line[a + 1][1] - line[a][1];
+				var length = Math.hypot(dx, dz);
+				var unit = [dx / length, dz / length];
+
+				[1, -1].forEach(function (side) {
+					var walked = 4;
+
+					while (walked < length - 4) {
+						var at = [line[a][0] + unit[0] * walked, line[a][1] + unit[1] * walked];
+						var probe = classes(at[0], at[1]);
+						var name = pick(probe.Weights);
+						var size = name ? sizes(name) : null;
+						var normal = [-unit[1] * side, unit[0] * side];
+						var x;
+						var z;
+						var free;
+
+						if (!size) {
+							walked += 12;
+
+							continue;
+						}
+
+						/* A lot left empty, as the density tells. */
+						if (random() >= density) {
+							walked += size[0] + 3;
+
+							continue;
+						}
+
+						x = at[0] + unit[0] * size[0] / 2 + normal[0] * (street.Width / 2 + 2 + size[1] / 2);
+						z = at[1] + unit[1] * size[0] / 2 + normal[1] * (street.Width / 2 + 2 + size[1] / 2);
+
+						/* All of it inside the settlement, off its squares, its streets and the other lots. */
+						free = [[-1, -1], [1, -1], [1, 1], [-1, 1]].every(function (corner) {
+							return inside(points, x + unit[0] * corner[0] * size[0] / 2 + normal[0] * corner[1] * size[1] / 2, z + unit[1] * corner[0] * size[0] / 2 + normal[1] * corner[1] * size[1] / 2);
+						}) && !squares.some(function (other) {
+							return inside(other.Points, x, z);
+						}) && plan.Streets.every(function (other) {
+							return distance(other.Points, x, z) > other.Width / 2 + Math.min(size[0], size[1]) / 2;
+						}) && plan.Lots.every(function (lot) {
+							return Math.hypot(lot.X - x, lot.Z - z) > (Math.max(lot.Width, lot.Depth) + Math.max(size[0], size[1])) * 0.42;
+						});
+
+						/* No room for it: a few metres on, maybe a smaller one fits there. */
+						if (!free) {
+							walked += 4;
+
+							continue;
+						}
+
+						plan.Lots.push({X: x, Z: z, Turn: Math.atan2(-normal[0], -normal[1]), Width: size[0], Depth: size[1], Class: name, District: probe.District});
+
+						walked += size[0] + 3;
+					}
+				});
+			}
+		});
+
+		/*
+		 * A fort: walls round it, its gates on them where its streets go out, the way through them along the street, a tower at each
+		 * corner.
+		 */
+		if (kind.Walls || item.Walls) {
+			var ring = points.concat([points[0]]);
+
+			plan.Walls.push(ring);
+
+			points.forEach(function (point) {
+				plan.Towers.push({X: point[0], Z: point[1]});
+			});
+
+			plan.Streets.forEach(function (street) {
+				var line = street.Points;
+				var last = line.length - 1;
+
+				[[line[0], line[1]], [line[last], line[last - 1]]].forEach(function (end) {
+					var on = nearest(ring, end[0][0], end[0][1]);
+					if (on[2] < 6)
+						plan.Gates.push({X: on[0], Z: on[1], Turn: Math.atan2(end[0][0] - end[1][0], end[0][1] - end[1][1])});
+				});
+			});
+		}
+
+		return plan;
+	},
+
+	/*
+	 * The items of a sketch that place things (the Scatter of a GameScene sows them) and change no height: a trigger and a zone
+	 * of the game are objects of the scene.
+	 */
+	SketchPlaced: {forest: true, meadow: true, clearing: true, bushes: true, thicket: true, jungle: true, sequoia: true, fields: true, orchard: true, row: true, fence: true, hedge: true, wall: true, powerline: true, marker: true, district: true, citywall: true, landmark: true, trigger: true, triggerpoint: true, triggerline: true, zone: true},
+
+	/*
+	 * Where two sketches differ, for a ground to make again only there: the bounds [x0, z0, x1, z1] of each item one has and
+	 * the other has not, or has otherwise (those of both, when it moved), merged where they overlap. A trigger or a zone changes
+	 * no ground.
+	 */
+	SketchChanged: function (before, after) {
+		var flat = function (sketch) {
+			var made = {};
+
+			(sketch && sketch.Layers || []).forEach(function (layer) {
+				(layer.Items || []).forEach(function (item, index) {
+					made[(layer.ID || '') + '/' + (item.ID || index)] = JSON.stringify([item, layer.Visible, layer.Strength]);
+				});
+			});
+
+			return made;
+		};
+		var old = flat(before);
+		var now = flat(after);
+		var bounds = [];
+		var keys = Object.keys(old).concat(Object.keys(now));
+		var none = function () {
+			return 0;
+		};
+		var oldItems = this.Sketched(before, none).Items;
+		var newItems = this.Sketched(after, none).Items;
+		var game = {trigger: true, triggerpoint: true, triggerline: true, zone: true};
+
+		keys.forEach(function (key, index) {
+			if (keys.indexOf(key) !== index || old[key] === now[key]) return;
+
+			[oldItems, newItems].forEach(function (list) {
+				list.forEach(function (made) {
+					if (key.slice(key.indexOf('/') + 1) === String(made.Item.ID) && !game[made.Item.Type])
+						bounds.push(made.Bounds.slice());
+				});
+			});
+		});
+
+		return bounds;
 	},
 
 	/*

@@ -7,11 +7,11 @@ Kinds of space: star (Star: Mass, Radius, Temperature, Luminosity, Color, Veil: 
 
 The objects: System ({Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}), Seed (a whole system of it: Astronomy.Generate) and GameObject declared inside (a GameObject in another goes round it when it moves, an Orbit or a Mover, and is a part of it otherwise; Part="dock" changes a part of the kind of its parent). Every attribute of a GameObject is a field of it or of a Trait, in any case. Time is the day (0), Speed the days of it a second (1), Paused holds it; Scale compressed (the default: large bodies, short distances) or real.
 
-The view: a drag turns it round the object in focus, the wheel or two fingers zoom, a click selects an object (or its label; a part of an object near enough), a double click flies to it (from its day side), Escape goes back, the arrows turn, + and - zoom, Enter flies to the selected one, Space holds the time. Orbits, Labels, Details (a card of the selected object), Background (the far stars), Team, the slot hud. Without WebGL2 it says so (and emits error).
+The view: a drag turns it round the object in focus, the wheel or two fingers zoom, a click selects an object (or its label; a part of an object near enough), a double click flies to it (from its day side), Escape goes back, the arrows turn, + and - zoom, Enter flies to the selected one, Space holds the time. Orbits, Labels, Details (a card of the selected object), Background (the far stars), Team, the slot hud, the slot screens (elements a car's screens show, out of sight). Without WebGL2 it says so (and emits error).
 
 The view is free in every 3D scene: a drag turns and tilts it, the wheel zooms, the middle button or a drag with Shift carries it (two fingers on a screen), WASD or the arrows move it, Q and E turn it, R and F tilt it.
 
-The sky of a ground: a GameObject of kind sun takes Time (18:30, or hours as a number) and goes on at the pace of DaySeconds, Noon is the azimuth it passes at noon (180) and Shade the color of the light of the sky. DayHours is how long a day is (24); with a Latitude the sun goes as the planet turns: Tilt of its axis (23.44), DayOfYear (172) of a year of YearDays (365) give the length of the light of the day, the polar days and nights too. At night the moon lights the land: Moon (false: a sky without one), MoonLight, MoonSize, MoonPhase (0 new, 0.5 full, it goes late by that part of a day), MoonElevation with MoonAzimuth to hold it in a place, MoonTilt with MoonNode (the day of a year its way crosses the sun's: an eclipse, of the sun at a new moon, of the moon at a full one), and NightLight, the light of the air in the dark. SkyGlow (0 to 1) is the light towns throw on the air, of SkyGlowColor, from SkyGlowAzimuth or all round: it lights the clouds from under and hides the faint stars. The stars turn with the planet, round its pole at the height of Latitude, and with them the band of the galaxy (Galaxy, 0 for none). Weather (clear, cloudy, overcast, rain, storm, snow, fog) changes in a few seconds, and rain wets what stands in it; Flare (0 to 2) is how strongly a lens shows the sun. At high and ultra what is glossy or wet mirrors what is on the screen, and past it the sky. Kind light (Color, Power, Radius, Height, Spot, Aim, Flicker, Follow, Z) is a lamp: any number, the nearest 24 at once, the nearest 2 with shadows; what shines in a model of a file is a lamp too (Lamps of the Models Service; Lights: false on an object leaves them out). Kind location (Model, Size, Without, Plane) makes a ground of a model of a file, its floors and walls read from its triangles; Control(id) gives the keys to a walker: a press takes the mouse (Capture), it faces the view, A and D step aside, Shift runs, Shift and Alt sprint, Space jumps, a drag with the right button turns the view and leaves the walk as it was. A skeleton with no clips gets walk and idle made from the names of its bones, Motions of a recipe bring clips of FBX files.
+The sky of a ground: a GameObject of kind sun takes Time (18:30, or hours as a number) and goes on at the pace of DaySeconds, Noon is the azimuth it passes at noon (180) and Shade the color of the light of the sky. DayHours is how long a day is (24); with a Latitude the sun goes as the planet turns: Tilt of its axis (23.44), DayOfYear (172) of a year of YearDays (365) give the length of the light of the day, the polar days and nights too. At night the moon lights the land: Moon (false: a sky without one), MoonLight, MoonSize, MoonPhase (0 new, 0.5 full, it goes late by that part of a day), MoonElevation with MoonAzimuth to hold it in a place, MoonTilt with MoonNode (the day of a year its way crosses the sun's: an eclipse, of the sun at a new moon, of the moon at a full one), and NightLight, the light of the air in the dark. SkyGlow (0 to 1) is the light towns throw on the air, of SkyGlowColor, from SkyGlowAzimuth or all round: it lights the clouds from under and hides the faint stars. The stars turn with the planet, round its pole at the height of Latitude, and with them the band of the galaxy (Galaxy, 0 for none). Weather (clear, cloudy, overcast, rain, storm, snow, fog) changes in a few seconds, and rain wets what stands in it (pools on what is level, drops on what is smooth; Wet and Drops of an object, 0 to 1, its own); Flare (0 to 2) is how strongly a lens shows the sun; Bokeh (0 to 1) blurs what is out of focus (BokehFocus, a distance; else the hero, or the middle of the view). At high and ultra what is glossy or wet mirrors what is on the screen, and past it the sky. Kind light (Color, Power, Radius, Height, Spot, Aim, Flicker, Follow, Z) is a lamp: any number, the nearest 24 at once, the nearest 2 with shadows; what shines in a model of a file is a lamp too (Lamps of the Models Service; Lights: false on an object leaves them out). Kind mirror (Width, Height, Yaw and Pitch in degrees, Lift over the ground or Z, Tint, Blur, Strength, Every: the frames between two of its pictures) shows the world reflected by its plane, drawn again at half the size (the nearest one at low and medium, two at high, three at ultra); kind glass (the same place and size, Tint, Clarity, Frost, Reflect) is a pane blended over what is behind it, the sky, the sun and, while Reflect is above 0, the world on it by its angle. Kind location (Model, Size, Without, Plane) makes a ground of a model of a file, its floors and walls read from its triangles; Control(id) gives the keys to a walker: a press takes the mouse (Capture), it faces the view, A and D step aside, Shift runs, Shift and Alt sprint, Space jumps, a drag with the right button turns the view and leaves the walk as it was. A skeleton with no clips gets walk and idle made from the names of its bones, Motions of a recipe bring clips of FBX files.
 
 The surface: Land(id, {Latitude, Longitude, Altitude}) goes down to the ground of a body (not of a giant of gas), the very ground its baked surface shows (Terrain.Sphere), in patches finer near the eye, under its sky (its atmosphere and its star); a drag looks round, the wheel rises and comes down, WASD and the arrows walk, Escape or TakeOff() goes back up. The time runs SurfaceSpeed days a second there (1/120).
 
@@ -21,7 +21,9 @@ The models stand in the light of their sun and cast shadows on each other and on
 
 A map of cells: Map, GameTerrain and GameLayer make the ground of a strategy game (see the trait Strategy): its objects stand on cells, its units are selected in a frame and ordered, Fog, Grid and Minimap come with it.
 
-Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty when none is), focus ({ID}), arrive ({ID, At}), land ({ID}), takeoff ({ID}), error ({Reason: webgl2}). Cosmos (nebula, pillars, galaxy, galaxies, cluster, void, or {Kind, Seed, Colors, Gas, Dust, Stars, Pillars, Band, Galaxies, Clusters, Beacon}) is what lies far behind a system (trait Cosmos). Kind effect (Type: spark, torch, campfire, smoke, steam, dust, exhaust; Size, Power, Aim, Height, Light, Follow, Offset) burns and smokes where it stands, or goes with an object; Burst(type, place, options) happens once, as an explosion (trait Effects). Methods: Add(kind, props), Change(id, changes), Remove(id), Attach(parent, object), Detach(id), Get(id), Objects(filter), Describe(id), Position(id), Select(id), FocusOn(id), Move(id, target), Now(), SetTime(days), Play(id, clip, callback), ToScreen(id), Pick(clientX, clientY), Save(), Load(saved), Land(id, options), TakeOff(), Surface(), Supported().
+Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty when none is), focus ({ID}), arrive ({ID, At}), land ({ID}), takeoff ({ID}), error ({Reason: webgl2}); enter, active and leave of a trigger ({Trigger, ID, Object}) and action ({Trigger, Name, Data}): kind trigger and kind zone (trait Triggers: Trigger(id), TriggerActions(actions), ZonesAt(x, z)); touch ({ID, With, At, Normal, Impulse}) of solid things that fall and are knocked over (trait Rigid: Push(id, impulse, at), CastRay(from, direction, max), RigidWorld()). Cosmos (nebula, pillars, galaxy, galaxies, cluster, void, or {Kind, Seed, Colors, Gas, Dust, Stars, Pillars, Band, Galaxies, Clusters, Beacon}) is what lies far behind a system (trait Cosmos). Kind effect (Type: spark, torch, campfire, smoke, steam, dust, exhaust; Size, Power, Aim, Height, Light, Follow, Offset) burns and smokes where it stands, or goes with an object; Burst(type, place, options) happens once, as an explosion (trait Effects). Methods: Add(kind, props), Change(id, changes), Remove(id), Attach(parent, object), Detach(id), Get(id), Objects(filter), Describe(id), Position(id), Select(id), FocusOn(id), Move(id, target), Now(), SetTime(days), Play(id, clip, callback), ToScreen(id), Pick(clientX, clientY), Save(options), Load(saved), Land(id, options), TakeOff(), Surface(), Supported(). Save gives the recipe of a game (Seed, Cosmos, Weather, Time and what the methods changed: Added, Removed, Overrides), made again by Load; Save({Baked: true}) every object as it is.
+
+What a scene waits for, its programs and models, comes behind the page and holds no frame up: Loader shows how far it came, a slot named loading takes the place of the bar, and the event loading tells {Part}, up to 100.
 
 ## Properties
 
@@ -38,6 +40,8 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 | `Shadows` | `true` |
 | `View` | `''` |
 | `Paused` | `false` |
+| `Bokeh` | `0` |
+| `BokehFocus` | `''` |
 | `Orbits` | `true` |
 | `Labels` | `true` |
 | `Details` | `true` |
@@ -45,6 +49,7 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 | `Scale` | `'compressed'` |
 | `Team` | `''` |
 | `Label` | `''` |
+| `Loader` | `true` |
 
 ## Events
 
@@ -54,13 +59,14 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 - `land`: The view went down to the surface of a body: {ID}.
 - `takeoff`: The view went back up to space: {ID}.
 - `select`: The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).
+- `loading`: What the scene waits for came a step nearer: {Part}, up to 100.
 - `ready`: The scene is ready: the component itself, to call its methods.
 - `person`: V took the view of a walker to another place: third, first or shoulder.
 - `shoulder`: B took the view over another shoulder: right or left.
 
 ## Slots
 
-`hud`, default
+`loading`, `hud`, default, `screens`
 
 ## Methods
 
@@ -81,8 +87,8 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 - `Now()`
 - `SetTime(days)`
 - `ToScreen(id, y)`
-- `Pick(clientX, clientY)`
-- `Save()`
+- `Pick(clientX, clientY, all)`
+- `Save(options)`
 - `Load(saved, callback)`
 - `Supported()`
 - `Land(id, options)`
@@ -153,13 +159,13 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 - [GameScene: sets no timer of no function while it is made (a page that forbids eval refuses one)](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L81) — `tests/regression/game-world.test.js`
 - [GameScene: the map and the objects it declares, the ways round its buildings, its methods, the order walked to the end](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L102) — `tests/regression/game-world.test.js`
 - [GameScene: a declaration changed moves its object, one taken away takes it away; a map by its URL loads](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L191) — `tests/regression/game-world.test.js`
+- [gives the passes of the library as a render graph, in the order they run, and draws the same picture of it given](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L113) — `tests/regression/library-render-pipeline.test.js`
+- [leaves out a pass switched off, takes the properties of its blocks, and adds a pass of a graph of its own after the picture](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L140) — `tests/regression/library-render-pipeline.test.js`
+- [draws the picture of the library when the Pipeline cannot be made, and tells it once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L202) — `tests/regression/library-render-pipeline.test.js`
+- [lets a crate fall onto the ground, tells the touch, and knocks it over by a push](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-rigid.test.js#L58) — `tests/regression/library-rigid.test.js`
+- [lets a walker push a ball it walks into](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-rigid.test.js#L115) — `tests/regression/library-rigid.test.js`
+- [sets the view at once and tells it, and finds the point of the ground under a point of the page](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editing.test.js#L44) — `tests/regression/library-scene-editing.test.js`
+- [turns what stands by its Facing, lifts it by its Lift, and picks with all what cannot be selected](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editing.test.js#L87) — `tests/regression/library-scene-editing.test.js`
 - [reads the GameObject inside it: each attribute a field of its kind, nested ones going round their holder or a part of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L327) — `tests/regression/library-scene.test.js`
-- [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L374) — `tests/regression/library-scene.test.js`
-- [selects an object by its label and a part by a press when near, flies to it, sends a fleet that arrives](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L415) — `tests/regression/library-scene.test.js`
-- [adds, changes, attaches, detaches and removes objects and parts, saves the game and loads it the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L477) — `tests/regression/library-scene.test.js`
-- [runs the systems of the application for traits of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L539) — `tests/regression/library-scene.test.js`
-- [lands on the surface of a body and takes off again; a giant of gas has none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L556) — `tests/regression/library-scene.test.js`
-- [plays the clips of a model: walking on a way by itself, a clip that ends going back, a kind for each model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L596) — `tests/regression/library-scene.test.js`
-- [sees a ground in parallel rays: from above a point is where the plan says, at an angle where the rhombus says](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L666) — `tests/regression/library-scene.test.js`
 
-+115 more in the same files
++148 more in the same files

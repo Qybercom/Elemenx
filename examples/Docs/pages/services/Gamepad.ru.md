@@ -12,9 +12,13 @@ On(name, callback) / Off(callback). Pads() перечисляет [{Index, ID, K
 
 ## Методы
 
+- `Virtual(name, options)`
+- `Axes()`
+- `Held(button)`
 - `Pads()`
 - `Kind()`
 - `Label(button, kind)`
+- `Press(name, pad)`
 - `Move(direction, scope)`
 - `On(name, callback)`
 - `Off(callback)`
@@ -67,3 +71,5 @@ On(name, callback) / Off(callback). Pads() перечисляет [{Index, ID, K
 ## Тесты
 
 - [Gamepad: names the buttons of each kind of pad, and lists no pad while none is pressed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L260) — `tests/regression/library-services.test.js`
+- [Gamepad: a pad of the page is a pad as any other: its events, its sticks and triggers, its buttons held; quiet by choice](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/virtual-gamepad.test.js#L67) — `tests/regression/virtual-gamepad.test.js`
+- [walks, drives and looks by a pad as far as it leans: half a trigger is half the gas, the stick steers, A jumps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1637) — `tests/regression/library-scene.test.js`

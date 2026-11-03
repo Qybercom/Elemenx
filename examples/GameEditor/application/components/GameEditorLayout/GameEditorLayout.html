@@ -1,0 +1,34 @@
+<div class="game-editor">
+	<header class="game-editor-bar">
+		<input class="game-editor-name" type="text" [value]="Game.Name" [attribute.aria-label]="$T('gameEditor.name')" (change)="Renamed" />
+		<div class="game-editor-views" role="tablist">
+			<button type="button" class="game-editor-view" role="tab" *for="view of Views" *key="view.ID" [class.active]="View === view.ID" [attribute.aria-selected]="View === view.ID ? 'true' : 'false'" [attribute.data-view]="view.ID" (click)="Show(view.ID)">{{$T(view.Key)}}</button>
+		</div>
+		<div class="game-editor-actions">
+			<Button Size="small" Variant="ghost" [label]="$T('gameEditor.newGround')" (click)="NewGround" />
+			<Button Size="small" Variant="ghost" [label]="$T('gameEditor.newSpace')" (click)="NewSpace" />
+			<Button Size="small" Variant="ghost" Icon="download" [label]="$T('gameEditor.export')" (click)="Exported" />
+			<label class="game-editor-import"><Icon name="upload" Size="16" />{{$T('gameEditor.import')}}<input type="file" accept="application/json,.json" (change)="Imported" /></label>
+			<Button Size="small" Icon="file-code" [label]="$T('gameEditor.page')" (click)="DownloadPage" />
+			<Button Size="small" Icon="archive" [label]="$T('gameEditor.project')" (click)="DownloadProject" />
+		</div>
+		<span class="game-editor-status" role="status">{{Status}}</span>
+	</header>
+	<main class="game-editor-main">
+		<section class="game-editor-pane" [class.hidden]="View !== 'scene'" [attribute.aria-hidden]="View !== 'scene' ? 'true' : 'false'">
+			<SceneEditor #Scene [value]="Game.Scene" [models]="Names(Version)" Storage="elemenx-game-editor-scene" (change)="SceneChanged" />
+		</section>
+		<section class="game-editor-pane game-editor-models" [class.hidden]="View !== 'models'" [attribute.aria-hidden]="View !== 'models' ? 'true' : 'false'">
+			<aside class="game-editor-list">
+				<div class="game-editor-title">{{$T('gameEditor.models')}}<Button Size="small" Variant="ghost" Icon="add" [title]="$T('gameEditor.addModel')" (click)="AddModel" /></div>
+				<div class="game-editor-item" *for="model of Game.Models" *key="model.ID" [class.current]="model.ID === Current">
+					<button type="button" class="game-editor-item-name" [attribute.data-model]="model.ID" (click)="PickModel(model.ID)">{{Label(model)}}</button>
+					<button type="button" class="game-editor-item-remove" [attribute.title]="$T('gameEditor.removeModel')" (click)="RemoveModel(model.ID)"><Icon name="delete" Size="14" /></button>
+				</div>
+			</aside>
+			<div class="game-editor-object">
+				<ObjectEditor #Object *if="Current" [value]="Document(Version)" Storage="elemenx-game-editor-object" (change)="ModelChanged" />
+			</div>
+		</section>
+	</main>
+</div>

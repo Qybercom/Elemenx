@@ -2752,11 +2752,17 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		expect(gl.getError()).toBe(gl.NO_ERROR);
 
-		var air = lightingSource.indexOf('pass(state.Aired, run.Air, {');
-		var frames = lightingSource.indexOf('pass(state.Now, run.Frames, {');
+		var air = lightingSource.indexOf('pass(state.Aired, frame.Run.Air, {');
+		var frames = lightingSource.indexOf('pass(state.Now, frame.Run.Frames, {');
+		var order = Elemenx.Service('Blueprints').Compile(mounted.Space.PipelineGraph()).Passes.map(function (pass) {
+			return pass.Type;
+		});
 
 		expect(air).toBeGreaterThan(0);
 		expect(air).toBeLessThan(frames);
+
+		/* The passes run in the order of the pipeline: the air before the frames add up. */
+		expect(order.indexOf('Air')).toBeLessThan(order.indexOf('Frames'));
 
 		/* The picture has no depth of its own to read any more. */
 		var picture = lightingSource.slice(lightingSource.indexOf('Picture: head + ['));
@@ -10145,7 +10151,9 @@ describe('Contract: Models, the models of a game made of code', function () {
 		}});
 
 		expect(models.Has('test-crate')).toBe(true);
-		expect(models.Names({Type: 'prop'})).toEqual(['test-crate']);
+		/* Props of the library stand by it now (a fence, a well): the filters together. */
+		expect(models.Names({Group: 'fantasy', Type: 'prop'})).toEqual(['test-crate']);
+		expect(models.Names({Type: 'prop'})).toEqual(expect.arrayContaining(['test-crate', 'fence', 'well']));
 		expect(models.Info('test-crate').Size).toBe(2);
 		expect(models.Make('test-crate').Pieces[0].Geometry.Positions.length).toBe(36 * 3);
 

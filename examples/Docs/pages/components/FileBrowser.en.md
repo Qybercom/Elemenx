@@ -1,7 +1,7 @@
 <!-- generated -->
 # FileBrowser
 
-Folders and files to go through, as the explorer of a system: Items is the tree, [{ID, Name, Items (a folder: its content, null while not loaded), Size, Modified, Icon}], Path the IDs of the folders open from the root. A folder opens by a double press or Enter (navigate, and load with the folder whose Items are null: the owner gives them), a file by the same emits open; Up (Backspace) and the path over it go back. View: list (with Size and Modified, a press on a header sorts by it) or grid. A press selects (Ctrl or Cmd adds, Shift a range, with Multiple), Ctrl+A selects all; select emits the items selected. Arrows move between them. Folders come first, then the files, each by Sort.
+Folders and files to go through, as the explorer of a system: Items is the tree, [{ID, Name, Items (a folder: its content, null while not loaded), Size, Modified, Icon}], Path the IDs of the folders open from the root. A folder opens by a double press or Enter (navigate, and load with the folder whose Items are null: the owner gives them), a file by the same emits open; Up (Backspace) and the path over it go back. View: list (with Size and Modified, a press on a header sorts by it) or grid. A press selects (Ctrl or Cmd adds, Shift a range, with Multiple), Ctrl+A selects all; select emits the items selected. Arrows move between them. Folders come first, then the files, each by Sort. View tree shows the whole tree, a folder open under itself (Expanded: the IDs of the folders open, null all of them; a press on its arrow, Enter, the arrows right and left open and close it, expand tells {Item, Open, Expanded}). Toolbar (true) shows the bar of the path and the views, Details (true) the sizes and the dates.
 
 ## Properties
 
@@ -13,11 +13,15 @@ Folders and files to go through, as the explorer of a system: Items is the tree,
 | `Sort` | `'Name'` |
 | `Multiple` | `true` |
 | `Label` | `''` |
+| `Expanded` | `null` |
+| `Toolbar` | `true` |
+| `Details` | `true` |
 
 ## Events
 
-- `navigate`: A folder was opened, or left: {Path, Folder}.
+- `expand`: A folder of the tree was opened or closed: {Item, Open, Expanded}.
 - `load`: A folder whose Items are null was opened: {Folder, Path}.
+- `navigate`: A folder was opened, or left: {Path, Folder}.
 - `open`: A file was opened: the item.
 - `select`: The selection changed: the items selected.
 
@@ -55,3 +59,5 @@ Folders and files to go through, as the explorer of a system: Items is the tree,
 ## Tests
 
 - [FileBrowser opens folders and files, loads a folder not loaded, sorts, selects with Ctrl and Shift, and follows the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L467) — `tests/regression/library-new.test.js`
+- [FileBrowser as a tree: every folder open under itself, its arrow, Enter and the arrows across open and close it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L540) — `tests/regression/library-new.test.js`
+- [reads a tree of files by its indents, of spaces or of the lines of tree, and Markdown draws it by FileBrowser as a tree](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-plugins.test.js#L203) — `tests/regression/rich-plugins.test.js`

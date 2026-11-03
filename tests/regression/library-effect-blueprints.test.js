@@ -1,0 +1,162 @@
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadElemenx, resetDOM, unique, waitFor } from '../setup.js';
+import { Use } from '../library.js';
+
+var owned = [];
+
+async function mount () {
+	var ready = null;
+	var component = Elemenx.Component(unique('EffectHost'), {$Template: '<div style="width: 240px; height: 160px"><GameScene Paused="true" Quality="medium" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="200" Height="1" Water="0" Seed="test" /></GameScene></div>', Ready: function (space) {
+		ready = space;
+	}})();
+
+	owned.push(component);
+
+	document.getElementById('mount').appendChild(component.$Element());
+
+	await waitFor(function () {
+		return ready;
+	}, 4000);
+
+	ready.Scene().Loop.Stop();
+
+	return ready;
+}
+
+/* A graph goes through a file as it would. */
+function stored (blueprints, graph) {
+	return JSON.parse(blueprints.Write(graph));
+}
+
+/* The colors the layers of the effects of a frame are drawn with. */
+function colors (scene) {
+	var engine = scene.Engine();
+	var renderer = engine.Renderer;
+	var draw = renderer.Draw;
+	var seen = [];
+
+	renderer.Draw = function (mesh, program, uniforms) {
+		if (uniforms && uniforms.uColor && uniforms.uHot)
+			seen.push(Array.from(uniforms.uColor));
+
+		return draw.apply(this, arguments);
+	};
+
+	try {
+		scene.Scene().Rest = 0;
+
+		engine.Frame(performance.now());
+	}
+	finally {
+		renderer.Draw = draw;
+	}
+
+	return seen;
+}
+
+describe('Contract: effects as effect graphs of Blueprints, their numbers and colors set by parameters', function () {
+	var blueprints;
+
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['GameScene', 'GameObject', 'service:Blueprints']);
+
+		blueprints = Elemenx.Service('Blueprints');
+	});
+
+	beforeEach(function () {
+		resetDOM();
+	});
+
+	afterEach(function () {
+		while (owned.length) owned.pop().$Destroy();
+	});
+
+	it('gives every type of the library as an effect graph that makes the very same type again', async function () {
+		var scene = await mount();
+		var types = scene.Scene().EffectTypes;
+		var names = Object.keys(types);
+
+		expect(names.length).toBeGreaterThan(20);
+
+		names.forEach(function (name) {
+			var graph = stored(blueprints, scene.EffectGraph(name));
+
+			expect(graph.type).toBe('effect');
+			expect(blueprints.Check(graph)).toEqual([]);
+			expect(blueprints.Compile(graph).Make({})).toEqual(types[name]);
+		});
+
+		expect(function () {
+			scene.EffectGraph('nothing');
+		}).toThrow('Elemenx GameScene: no type of effect nothing');
+	});
+
+	it('burns an effect of a Blueprint, its parameters the values of its layers, one graph for many effects', async function () {
+		var scene = await mount();
+		var engine = scene.Engine();
+		var graph = scene.EffectGraph('torch');
+		var flame = blueprints.Add(graph, 'Parameter', {properties: {Key: 'Flame', Type: 'vec3'}});
+		var twice = blueprints.Add(graph, 'Multiply');
+		var count = blueprints.Add(graph, 'Parameter', {properties: {Key: 'Sparks'}});
+		var made;
+
+		graph.parameters = [{key: 'Flame', type: 'vec3', value: [0, 0, 1]}, {key: 'Sparks', type: 'float', value: 7}];
+
+		blueprints.Link(graph, [flame.id, 'Value'], ['layer1', 'Color']);
+		blueprints.Link(graph, [count.id, 'Value'], [twice.id, 'A']);
+		blueprints.Link(graph, [blueprints.Add(graph, 'Number', {properties: {Value: 2}}).id, 'Value'], [twice.id, 'B']);
+		blueprints.Link(graph, [twice.id, 'Out'], ['layer3', 'Count']);
+
+		graph = stored(blueprints, graph);
+
+		/* The math of a generator stands in an effect graph too. */
+		made = engine.EffectBlueprint(graph, {Sparks: 10});
+
+		expect(made.Layers[0].Color).toEqual([0, 0, 1]);
+		expect(made.Layers[2].Count).toBe(20);
+		expect(made.Layers[1]).toEqual(scene.Scene().EffectTypes.torch.Layers[1]);
+		expect(engine.EffectBlueprint(graph, {Sparks: 10})).toBe(made);
+
+		scene.Add('effect', {ID: 'green', Blueprint: graph, Parameters: {Flame: [0, 1, 0]}, X: 0, Y: 0});
+		scene.Add('effect', {ID: 'red', Blueprint: graph, Parameters: {Flame: [1, 0, 0]}, X: 4, Y: 0});
+
+		expect(engine.EffectsCount()).toBe(2);
+		expect(colors(scene)).toEqual(expect.arrayContaining([[0, 1, 0], [1, 0, 0]]));
+
+		/* A type made of the graph, and Parameters of its own for an effect of that type. */
+		scene.Effects({lantern: graph});
+		scene.Add('effect', {ID: 'plain', Type: 'lantern', X: 8, Y: 0});
+		scene.Add('effect', {ID: 'violet', Type: 'lantern', Parameters: {Flame: [0.5, 0, 1]}, X: 12, Y: 0});
+
+		expect(scene.Scene().EffectTypes.lantern.Layers[0].Color).toEqual([0, 0, 1]);
+		expect(colors(scene)).toEqual(expect.arrayContaining([[0, 0, 1], [0.5, 0, 1]]));
+		expect(scene.Burst(graph, [0, 1, 0], {Parameters: {Flame: [1, 1, 0]}})).toBe(true);
+		expect(engine.EffectsCount()).toBe(5);
+	});
+
+	it('burns nothing of a Blueprint that cannot be made, and tells it once', async function () {
+		var warn = vi.spyOn(console, 'warn').mockImplementation(function () {});
+		var scene = await mount();
+		var engine = scene.Engine();
+		var graph = scene.EffectGraph('spark');
+
+		try {
+			blueprints.Remove(graph, 'effect');
+
+			scene.Add('effect', {ID: 'broken', Blueprint: graph, X: 0, Y: 0});
+
+			colors(scene);
+			colors(scene);
+
+			expect(engine.EffectsCount()).toBe(0);
+			expect(warn.mock.calls.filter(function (call) {
+				return String(call[0]).indexOf('Elemenx GameScene: the Blueprint of an effect cannot be made') === 0;
+			}).length).toBe(1);
+		}
+		finally {
+			warn.mockRestore();
+		}
+	});
+});

@@ -1,0 +1,185 @@
+.elemenx-topology {
+	display: flex;
+	min-height: 320px;
+	height: 100%;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	overflow: hidden;
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+	font: var(--elemenx-font-size-small) / var(--elemenx-line-height-small) var(--elemenx-font);
+}
+
+.elemenx-topology-board {
+	flex: 1 1 auto;
+	min-width: 0;
+	min-height: 0;
+}
+
+.elemenx-topology-board .elemenx-board-host {
+	height: 100%;
+}
+
+.elemenx-topology-canvas {
+	position: relative;
+	width: 1px;
+	height: 1px;
+}
+
+/* The links under the nodes; only their lines take the pointer, so a press on an empty place moves the board. */
+.elemenx-topology-links {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1px;
+	height: 1px;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.elemenx-topology-link {
+	fill: none;
+	stroke: var(--elemenx-blueprint-any);
+	stroke-width: 2;
+	pointer-events: stroke;
+	cursor: pointer;
+	transition: opacity 0.15s;
+}
+
+.elemenx-topology-link.status-ok {
+	stroke: var(--elemenx-success);
+}
+
+.elemenx-topology-link.status-warning {
+	stroke: var(--elemenx-warning);
+}
+
+.elemenx-topology-link.status-error {
+	stroke: var(--elemenx-danger);
+}
+
+.elemenx-topology-link.status-off {
+	stroke-dasharray: 4 4;
+	opacity: 0.5;
+}
+
+.elemenx-topology-link.selected {
+	stroke: var(--elemenx-accent);
+	stroke-width: 3;
+}
+
+.elemenx-topology-link.far {
+	opacity: 0.2;
+}
+
+.elemenx-topology-arrow path {
+	fill: var(--elemenx-blueprint-any);
+}
+
+.elemenx-topology-label {
+	fill: var(--elemenx-text-muted);
+	font-size: 11px;
+	text-anchor: middle;
+	pointer-events: none;
+}
+
+.elemenx-topology-node {
+	position: absolute;
+	min-width: 120px;
+	max-width: 240px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	background: var(--elemenx-surface-raised);
+	box-shadow: 0 4px 14px var(--elemenx-shadow);
+	outline: none;
+	user-select: none;
+	-webkit-user-select: none;
+	transition: opacity 0.15s;
+}
+
+.elemenx-topology-node:focus-visible {
+	box-shadow: 0 0 0 2px var(--elemenx-accent), 0 4px 14px var(--elemenx-shadow);
+}
+
+.elemenx-topology-node.selected {
+	border-color: var(--elemenx-accent);
+	box-shadow: 0 0 0 2px var(--elemenx-accent), 0 4px 14px var(--elemenx-shadow);
+}
+
+.elemenx-topology-node.far {
+	opacity: 0.35;
+}
+
+.elemenx-topology-node.status-off {
+	opacity: 0.55;
+}
+
+.elemenx-topology-head {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 8px;
+	border-radius: var(--elemenx-radius-large) var(--elemenx-radius-large) 0 0;
+	background: var(--elemenx-surface-hover);
+	cursor: move;
+}
+
+.elemenx-topology-details {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 2px 8px;
+	margin: 0;
+	padding: 4px 8px 6px;
+	border-top: 1px solid var(--elemenx-border);
+}
+
+.elemenx-topology-details dt {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-topology-details dd {
+	margin: 0;
+	text-align: right;
+	overflow-wrap: anywhere;
+}
+
+.elemenx-topology-head:only-child {
+	border-radius: var(--elemenx-radius-large);
+}
+
+.elemenx-topology-icon {
+	display: inline-flex;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-topology-title {
+	flex: 1 1 auto;
+	font-weight: var(--elemenx-font-weight-strong);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.elemenx-topology-status {
+	flex: 0 0 auto;
+	width: 8px;
+	height: 8px;
+	border-radius: var(--elemenx-radius-pill);
+	background: var(--elemenx-text-muted);
+}
+
+.elemenx-topology-node.status-ok .elemenx-topology-status {
+	background: var(--elemenx-success);
+}
+
+.elemenx-topology-node.status-warning .elemenx-topology-status {
+	background: var(--elemenx-warning);
+}
+
+.elemenx-topology-node.status-error .elemenx-topology-status {
+	background: var(--elemenx-danger);
+}
+
+.elemenx-topology-node.status-error {
+	border-color: var(--elemenx-danger);
+}

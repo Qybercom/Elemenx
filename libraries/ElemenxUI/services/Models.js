@@ -11,6 +11,9 @@
  *   Blob(radius, at, color, rough, scale), Lathe(points, at, color, segments) and Wedge(width, height, depth, at, color,
  *   turn); at is [x, y, z] in the space of the model, turn degrees round x, y and z, a piece with Team takes the color
  *   of its team; tools.Graphics and tools.Rigs (Biped, Quadruped, Tracked: clips to reuse) are at hand.
+ *   A recipe of data has Parts in place of Build (Assemble: shapes with their Piece, Tags, Mirror, Chance and Vary, its
+ *   Pieces, Rig for its clips, Seed: its variants of it, not of its name), JSON to keep and to edit (ObjectEditor);
+ *   Tagged(name, tag) gives the pieces of a tag.
  *   A recipe may name a file instead of Build (glb, gltf, fbx or obj: ModelFormats): Define('hero', {URL: 'assets/hero.glb', Type, Size, Speed, Clips: {walk:
  *   'Run'}}) (Clips: the clips of the game and the animations of the file that play them; idle, walk, run, attack, die
  *   and work are found by their names). Load(name, callback) fetches it, (error, model), and Ready(name) tells whether
@@ -34,7 +37,7 @@
 Elemenx.Service('Models', {
 	$Meta: {
 		Description: 'The models of a game made of code: units, animals, plants, buildings and ships of pieces that move, fantasy and sci-fi, and their clips.',
-		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Make(name, options)', 'Surfaces(model)', 'Whole(model)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)']
+		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Assemble(recipe, tools, random, variant)', 'Tagged(name, tag)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Make(name, options)', 'Surfaces(model)', 'Whole(model)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)']
 	},
 
 	$OnCreate: function () {
@@ -45,10 +48,31 @@ Elemenx.Service('Models', {
 	},
 
 	Define: function (name, recipe) {
+		var self = this;
 		var made = this.Made;
+		var given = recipe;
 
-		if (!name || !recipe || typeof recipe.Build !== 'function' && !recipe.URL)
+		if (!name || !recipe || typeof recipe.Build !== 'function' && !recipe.URL && !Array.isArray(recipe.Parts))
 			throw new Error('Elemenx Models: Define expects (name, {Build}) or (name, {URL})');
+
+		/*
+		 * A recipe of data (an editor's): its Build made of its Parts, its clips of its Rig; with a Seed its variants are of
+		 * it, whatever name it is defined under (the editor shows the very variants a game gets).
+		 */
+		if (typeof recipe.Build !== 'function' && !recipe.URL) {
+			recipe = Object.assign({}, given, {Build: function (tools, random, variant) {
+				return self.Assemble(given, tools, given.Seed !== undefined && given.Seed !== '' ? self.Random(String(given.Seed) + ':' + variant) : random, variant);
+			}});
+
+			if (!recipe.Clips && recipe.Rig && this.Rigs()[recipe.Rig])
+				recipe.Clips = this.Rigs()[recipe.Rig];
+		}
+
+		/* A model made again under its name has a Key of its own: what drew the one before (a scene keeps it) does not draw this one. */
+		this.Revisions = this.Revisions || {};
+
+		if (this.Recipes[name])
+			this.Revisions[name] = (this.Revisions[name] || 0) + 1;
 
 		this.Recipes[name] = recipe;
 
@@ -161,6 +185,8 @@ Elemenx.Service('Models', {
 		var variants = recipe ? recipe.Variants || 1 : 1;
 		var variant = Math.abs(Math.floor(Number(settings.Variant) || 0)) % variants;
 		var key = name + '~' + variant;
+		var revision = this.Revisions && this.Revisions[name];
+		var shown = revision ? key + '~' + revision : key;
 		var graphics = this.$Service('Graphics3D');
 		var pieces;
 
@@ -173,18 +199,18 @@ Elemenx.Service('Models', {
 		if (recipe.URL) {
 			if (!recipe.Asset) return null;
 
-			this.Made[key] = this.FromFile(name, key, recipe);
+			this.Made[key] = this.FromFile(name, shown, recipe);
 
 			return this.Made[key];
 		}
 
-		pieces = recipe.Build(this.Tools(), this.Random(name + ':' + variant)).map(function (piece) {
+		pieces = recipe.Build(this.Tools(), this.Random(name + ':' + variant), variant).map(function (piece) {
 			var geometry = graphics.Merge(piece.Parts);
 
 			return {ID: piece.ID, Parent: piece.Parent || '', Pivot: piece.Pivot || [0, 0, 0], Team: !!piece.Team, Geometry: recipe.Smooth ? geometry : graphics.Facets(geometry)};
 		});
 
-		this.Made[key] = {Name: name, Key: key, Group: recipe.Group || '', Type: recipe.Type || '', Size: recipe.Size || 1, Speed: recipe.Speed || 0, Sway: recipe.Sway || 0, Matte: recipe.Matte !== false, Clips: recipe.Clips || {}, Pieces: pieces};
+		this.Made[key] = {Name: name, Key: shown, Group: recipe.Group || '', Type: recipe.Type || '', Size: recipe.Size || 1, Speed: recipe.Speed || 0, Sway: recipe.Sway || 0, Matte: recipe.Matte !== false, Clips: recipe.Clips || {}, Pieces: pieces};
 
 		return this.Made[key];
 	},
@@ -1925,6 +1951,133 @@ Elemenx.Service('Models', {
 		};
 	},
 
+	/*
+	 * The pieces of a recipe of data: its Parts [{ID, Shape (box, wedge, cylinder, ball, blob, lathe), Piece (the piece it
+	 * belongs to: body by default; a rig moves its pieces by their names), Tags, At, Size [x, y, z], Turn (degrees), Color
+	 * (#rrggbb or [r, g, b]), Top (of a cylinder, a part of its radius: 0 a cone), Segments, Rough (of a blob), Points (of a
+	 * lathe: [[radius, height]...]), Mirror (a copy on the other side of X too, its piece -l and -r swapped), Chance (0 to 1:
+	 * how often a variant has it), Vary {At, Size, Turn (as much either way), Color (lighter or darker by as much)}}] and its
+	 * Pieces [{ID, Parent, Pivot, Team}]. Variant 0 is the parts as they are; the others are varied by their seed.
+	 */
+	Assemble: function (recipe, tools, random, variant) {
+		var graphics = tools.Graphics;
+		var degrees = Math.PI / 180;
+		var pieces = {};
+		var order = [];
+		var varied = variant > 0;
+
+		function color (value) {
+			var text = String(value || '#c8c8c8');
+
+			if (Array.isArray(value))
+				return value.slice(0, 3);
+
+			return [parseInt(text.slice(1, 3), 16) / 255, parseInt(text.slice(3, 5), 16) / 255, parseInt(text.slice(5, 7), 16) / 255];
+		}
+
+		/* A list of three, each as much either way as its vary says: always the same draws, so a part keeps its seed. */
+		function vary (list, amount, fallback) {
+			return [0, 1, 2].map(function (i) {
+				var base = list && list[i] !== undefined ? Number(list[i]) : fallback[i];
+				var spread = Array.isArray(amount) ? Number(amount[i]) || 0 : Number(amount) || 0;
+				var drawn = random(-1, 1);
+
+				return varied ? base + spread * drawn : base;
+			});
+		}
+
+		function matrix (at, turn, scale) {
+			var result = graphics.Translation(at[0], at[1], at[2]);
+
+			result = graphics.Multiply(result, graphics.Rotation([0, 1, 0], turn[1] * degrees));
+			result = graphics.Multiply(result, graphics.Rotation([1, 0, 0], turn[0] * degrees));
+			result = graphics.Multiply(result, graphics.Rotation([0, 0, 1], turn[2] * degrees));
+
+			return scale ? graphics.Multiply(result, graphics.Scaling(scale[0], scale[1], scale[2])) : result;
+		}
+
+		function shape (part, at, size, turn, tint) {
+			var made;
+
+			if (part.Shape === 'wedge')
+				return tools.Wedge(size[0], size[1], size[2], at, tint, turn);
+
+			if (part.Shape === 'cylinder')
+				return tools.Cylinder(size[0] / 2, size[0] / 2 * (part.Top === undefined ? 1 : Number(part.Top)), size[1], at, tint, turn, Number(part.Segments) || 12);
+
+			if (part.Shape === 'ball') made = tools.Ball(0.5, [0, 0, 0], tint);
+			else if (part.Shape === 'blob') made = tools.Blob(0.5, at, tint, part.Rough === undefined ? 0.6 : Number(part.Rough));
+			else if (part.Shape === 'lathe') made = tools.Lathe(part.Points && part.Points.length > 1 ? part.Points : [[0, 0], [0.5, 0], [0.5, 1], [0, 1]], [0, 0, 0], tint, Number(part.Segments) || 12);
+			else return tools.Box(size[0], size[1], size[2], at, tint, turn);
+
+			made.Matrix = matrix(at, turn, size);
+
+			return made;
+		}
+
+		function put (id, made) {
+			if (!pieces[id]) {
+				pieces[id] = [];
+
+				order.push(id);
+			}
+
+			pieces[id].push(made);
+		}
+
+		(recipe.Parts || []).forEach(function (part) {
+			/* What a variant makes of it: always the same draws, so the parts after it keep theirs whatever it is. */
+			var change = part.Vary || {};
+			var drawn = random(0, 1);
+			var at = vary(part.At, change.At, [0, 0.5, 0]);
+			var size = vary(part.Size, change.Size, [1, 1, 1]).map(function (one) {
+				return Math.max(0.001, one);
+			});
+			var turn = vary(part.Turn, change.Turn, [0, 0, 0]);
+			var shade = 1 + (varied ? Number(change.Color) || 0 : 0) * random(-1, 1);
+			var tint = color(part.Color).map(function (one) {
+				return Math.max(0, Math.min(1, one * shade));
+			});
+			var id = part.Piece || 'body';
+
+			/* A part a variant may leave out, by its chance. */
+			if (varied && part.Chance !== undefined && part.Chance !== '' && drawn >= Number(part.Chance)) return;
+
+			put(id, shape(part, at, size, turn, tint));
+
+			/* Its mirror: the same, on the other side of X, in the piece of that side. */
+			if (part.Mirror)
+				put(/-l$/.test(id) ? id.slice(0, -2) + '-r' : /-r$/.test(id) ? id.slice(0, -2) + '-l' : id, shape(part, [-at[0], at[1], at[2]], size, [turn[0], -turn[1], -turn[2]], tint));
+		});
+
+		return order.map(function (id) {
+			var given = (recipe.Pieces || []).filter(function (piece) {
+				return piece.ID === id;
+			})[0] || {};
+
+			return tools.Piece(id, pieces[id], {Parent: given.Parent || '', Pivot: given.Pivot || [0, 0, 0], Team: !!given.Team});
+		});
+	},
+
+	/* The pieces of a model of data whose parts carry a tag, or its part names with it: what a game finds of a model. */
+	Tagged: function (name, tag) {
+		var recipe = this.Recipes[name];
+		var found = [];
+
+		(recipe && recipe.Parts || []).forEach(function (part) {
+			var id = part.Piece || 'body';
+
+			if ((part.Tags || []).indexOf(tag) === -1) return;
+
+			[id].concat(part.Mirror ? [/-l$/.test(id) ? id.slice(0, -2) + '-r' : /-r$/.test(id) ? id.slice(0, -2) + '-l' : id] : []).forEach(function (one) {
+				if (found.indexOf(one) === -1)
+					found.push(one);
+			});
+		});
+
+		return found;
+	},
+
 	/* What a recipe builds with. */
 	Tools: function () {
 		var graphics = this.$Service('Graphics3D');
@@ -2328,6 +2481,173 @@ Elemenx.Service('Models', {
 			var cap = [0.7 + random(0, 0.2), 0.2 + random(0, 0.14), 0.16];
 
 			return [tools.Piece('body', [tools.Cylinder(0.1, 0.07, 0.5, [0, 0.25, 0], [0.92, 0.88, 0.8]), tools.Lathe([[0.36, 0], [0.33, 0.1], [0.18, 0.24], [0, 0.28]], [0, 0.46, 0], cap, 10), tools.Ball(0.04, [0.12, 0.66, 0.06], [0.95, 0.95, 0.9]), tools.Ball(0.03, [-0.1, 0.62, 0.14], [0.95, 0.95, 0.9])])];
+		});
+
+		/* A giant: a thick red trunk, bare up to its high crown of narrow tiers. */
+		plant('sequoia', 60, 0.12, 3, function (tools, random) {
+			var red = [0.46 + random(0, 0.06), 0.22, 0.14];
+			var green = [0.16, 0.32 + random(0, 0.06), 0.18];
+			var parts = [tools.Cylinder(0.045, 0.012, 0.98, [0, 0.49, 0], red, null, 10), tools.Cylinder(0.075, 0.045, 0.05, [0, 0.025, 0], red, null, 10)];
+			var level;
+
+			for (level = 0; level < 6; level++)
+				parts.push(tools.Cylinder(0.09 - level * 0.011, 0.02, 0.1, [random(-0.01, 0.01), 0.5 + level * 0.08, random(-0.01, 0.01)], [green[0], green[1] + level * 0.015, green[2]]));
+
+			return [tools.Piece('body', parts)];
+		});
+
+		/* A tree of a jungle: a tall trunk on buttress roots, a broad flat crown, vines hanging from it. */
+		plant('jungle', 24, 0.25, 4, function (tools, random) {
+			var green = [0.12 + random(0, 0.06), 0.38 + random(0, 0.1), 0.16];
+			var parts = [tools.Cylinder(0.03, 0.022, 0.72, [0, 0.36, 0], bark)];
+			var i;
+
+			for (i = 0; i < 4; i++)
+				parts.push(tools.Wedge(0.012, 0.14, 0.12, [Math.cos(i * 1.57) * 0.05, 0.06, Math.sin(i * 1.57) * 0.05], bark, [0, i * 90, 0]));
+
+			for (i = 0; i < 6; i++)
+				parts.push(tools.Blob(0.13 + random(0, 0.04), [Math.cos(i * 1.05) * 0.14, 0.76 + random(0, 0.06), Math.sin(i * 1.05) * 0.14], [green[0], green[1] + random(-0.04, 0.04), green[2]], 1, [1, 0.45, 1]));
+
+			for (i = 0; i < 5; i++)
+				parts.push(tools.Box(0.006, 0.22 + random(0, 0.16), 0.006, [random(-0.22, 0.22), 0.58, random(-0.22, 0.22)], [0.2, 0.36, 0.14]));
+
+			return [tools.Piece('body', parts)];
+		});
+
+		/* Fronds out of the ground, bending outwards. */
+		plant('fern', 1.4, 0.6, 3, function (tools, random) {
+			var green = [0.2 + random(0, 0.08), 0.48 + random(0, 0.1), 0.18];
+			var parts = [];
+			var i;
+
+			for (i = 0; i < 7; i++)
+				parts.push(tools.Box(0.5, 0.02, 0.12, [Math.cos(i * 0.9) * 0.22, 0.32, Math.sin(i * 0.9) * 0.22], green, [0, -i * 0.9 * 57.3, 28]));
+
+			return [tools.Piece('body', parts)];
+		});
+
+		/* Reeds of the shallows and the swamps: thin stalks, a dark head each. */
+		plant('reed', 2.2, 0.9, 3, function (tools, random) {
+			var parts = [];
+			var i;
+
+			for (i = 0; i < 9; i++) {
+				var x = random(-0.18, 0.18);
+				var z = random(-0.18, 0.18);
+				var tall = random(0.7, 1);
+
+				parts.push(tools.Cylinder(0.008, 0.005, tall, [x, tall / 2, z], [0.46, 0.52, 0.26]));
+				parts.push(tools.Cylinder(0.02, 0.018, 0.12, [x, tall - 0.04, z], [0.34, 0.24, 0.14]));
+			}
+
+			return [tools.Piece('body', parts)];
+		});
+
+		/* A tuft of ripe grain, for fields sown in rows. */
+		plant('wheat', 1.1, 0.8, 2, function (tools, random) {
+			var parts = [];
+			var i;
+
+			for (i = 0; i < 12; i++) {
+				var x = random(-0.25, 0.25);
+				var z = random(-0.25, 0.25);
+				var tall = random(0.8, 1);
+
+				parts.push(tools.Cylinder(0.012, 0.008, tall, [x, tall / 2, z], [0.8, 0.7, 0.36]));
+				parts.push(tools.Cylinder(0.03, 0.02, 0.16, [x, tall - 0.04, z], [0.88, 0.76, 0.4]));
+			}
+
+			return [tools.Piece('body', parts)];
+		});
+
+		/* A vine on its post, for vineyards in rows. */
+		plant('vine', 1.8, 0.3, 2, function (tools, random) {
+			var green = [0.22 + random(0, 0.08), 0.42 + random(0, 0.08), 0.18];
+
+			return [tools.Piece('body', [tools.Cylinder(0.02, 0.02, 1, [0, 0.5, 0], wood), tools.Blob(0.22, [0, 0.7, 0], green, 1, [1.4, 0.9, 0.7]), tools.Blob(0.16, [0.1, 0.45, 0.04], green, 1, [1.2, 0.8, 0.7])])];
+		});
+
+		/* What stands along a line, a piece at each step: its length along X is its Size. */
+		function piece (name, size, build) {
+			self.Define(name, {Group: 'props', Type: 'prop', Size: size, Build: build});
+		}
+
+		piece('fence', 2, function (tools) {
+			return [tools.Piece('body', [tools.Box(0.05, 0.55, 0.05, [-0.47, 0.27, 0], wood), tools.Box(0.05, 0.55, 0.05, [0.47, 0.27, 0], wood), tools.Box(1, 0.05, 0.025, [0, 0.42, 0], wood), tools.Box(1, 0.05, 0.025, [0, 0.22, 0], wood)])];
+		});
+
+		piece('hedge', 2, function (tools, random) {
+			var green = [0.18 + random(0, 0.06), 0.36 + random(0, 0.08), 0.16];
+
+			return [tools.Piece('body', [tools.Blob(0.32, [-0.25, 0.32, 0], green, 1, [1.6, 1.1, 0.8]), tools.Blob(0.32, [0.25, 0.34, 0], green, 1, [1.6, 1.1, 0.8])])];
+		});
+
+		piece('stone-wall', 2, function (tools, random) {
+			var parts = [];
+			var i;
+
+			for (i = 0; i < 6; i++)
+				parts.push(tools.Box(0.34, 0.16, 0.24, [-0.4 + (i % 3) * 0.4 + (i > 2 ? 0.2 : 0), 0.08 + (i > 2 ? 0.16 : 0), 0], [stone[0] - random(0, 0.08), stone[1] - random(0, 0.08), stone[2] - random(0, 0.08)]));
+
+			return [tools.Piece('body', parts)];
+		});
+
+		piece('pole', 9, function (tools) {
+			return [tools.Piece('body', [tools.Cylinder(0.012, 0.01, 1, [0, 0.5, 0], wood), tools.Box(0.012, 0.012, 0.16, [0, 0.95, 0], wood), tools.Box(0.006, 0.02, 0.006, [0, 0.97, 0.07], [0.8, 0.8, 0.74]), tools.Box(0.006, 0.02, 0.006, [0, 0.97, -0.07], [0.8, 0.8, 0.74])])];
+		});
+
+		piece('tent', 3, function (tools) {
+			return [tools.Piece('body', [tools.Wedge(1, 0.6, 0.9, [0, 0.3, 0], [0.62, 0.52, 0.36], [0, 90, 0]), tools.Box(0.02, 0.66, 0.02, [0.46, 0.33, 0], wood), tools.Box(0.02, 0.66, 0.02, [-0.46, 0.33, 0], wood)])];
+		});
+
+		piece('ruin', 6, function (tools, random) {
+			var parts = [];
+			var i;
+
+			for (i = 0; i < 5; i++)
+				parts.push(tools.Box(0.3 + random(0, 0.2), random(0.15, 0.6), 0.1, [Math.cos(i * 1.25) * 0.35, 0.15, Math.sin(i * 1.25) * 0.35], [stone[0] - random(0, 0.1), stone[1] - random(0, 0.1), stone[2] - random(0, 0.1)], [0, i * 72, random(-8, 8)]));
+
+			return [tools.Piece('body', parts)];
+		});
+
+		/* A piece of the wall of a town, 6 metres long and high, with its battlements. */
+		piece('city-wall', 6, function (tools) {
+			var parts = [tools.Box(1, 0.82, 0.4, [0, 0.41, 0], stone), tools.Box(1, 0.04, 0.5, [0, 0.84, 0], [stone[0] - 0.05, stone[1] - 0.05, stone[2] - 0.05])];
+			var i;
+
+			for (i = 0; i < 4; i++)
+				parts.push(tools.Box(0.14, 0.14, 0.1, [-0.375 + i * 0.25, 0.93, 0.17], stone));
+
+			return [tools.Piece('body', parts)];
+		});
+
+		piece('wall-tower', 12, function (tools) {
+			return [tools.Piece('body', [tools.Cylinder(0.22, 0.2, 0.86, [0, 0.43, 0], stone, null, 12), tools.Cylinder(0.25, 0.25, 0.06, [0, 0.88, 0], stone, null, 12), tools.Cylinder(0.26, 0, 0.3, [0, 1.05, 0], tile, null, 12)])];
+		});
+
+		/* A gate: two piers and the arch over the way, 8 metres wide. */
+		piece('gate', 8, function (tools) {
+			return [tools.Piece('body', [tools.Box(0.2, 0.9, 0.5, [-0.4, 0.45, 0], stone), tools.Box(0.2, 0.9, 0.5, [0.4, 0.45, 0], stone), tools.Box(1, 0.2, 0.5, [0, 0.9, 0], stone), tools.Wedge(1.05, 0.2, 0.55, [0, 1.1, 0], tile, [0, 90, 0])])];
+		});
+
+		piece('well', 2.5, function (tools) {
+			return [tools.Piece('body', [tools.Cylinder(0.32, 0.32, 0.3, [0, 0.15, 0], stone, null, 12), tools.Box(0.04, 0.6, 0.04, [-0.3, 0.6, 0], wood), tools.Box(0.04, 0.6, 0.04, [0.3, 0.6, 0], wood), tools.Wedge(0.8, 0.25, 0.5, [0, 1, 0], tile, [0, 90, 0])])];
+		});
+
+		piece('lighthouse', 24, function (tools) {
+			return [tools.Piece('body', [tools.Cylinder(0.12, 0.08, 0.82, [0, 0.41, 0], [0.92, 0.9, 0.86], null, 14), tools.Cylinder(0.1, 0.1, 0.1, [0, 0.87, 0], [2.4, 2.1, 1.4], null, 14), tools.Cylinder(0.12, 0, 0.12, [0, 0.98, 0], [0.62, 0.18, 0.16], null, 14)])];
+		});
+
+		piece('temple', 18, function (tools) {
+			var parts = [tools.Box(1, 0.08, 0.7, [0, 0.04, 0], stone), tools.Box(0.84, 0.05, 0.56, [0, 0.62, 0], stone), tools.Wedge(0.9, 0.18, 0.62, [0, 0.73, 0], stone, [0, 90, 0])];
+			var i;
+
+			for (i = 0; i < 6; i++) {
+				parts.push(tools.Cylinder(0.035, 0.03, 0.52, [-0.38 + i * 0.152, 0.34, 0.24], [0.9, 0.88, 0.84], null, 8));
+				parts.push(tools.Cylinder(0.035, 0.03, 0.52, [-0.38 + i * 0.152, 0.34, -0.24], [0.9, 0.88, 0.84], null, 8));
+			}
+
+			return [tools.Piece('body', parts)];
 		});
 
 		function rock (name, size, color, scale) {

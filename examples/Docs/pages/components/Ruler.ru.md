@@ -53,4 +53,4 @@
 
 ## Тесты
 
-- [Ruler labels its Major ticks from Start at its Scale, and a press pulls a guide out with the value under the pointer](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L276) — `tests/regression/library-controls.test.js`
+- [Ruler labels its Major ticks from Start at its Scale, and a press pulls a guide out with the value under the pointer](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L328) — `tests/regression/library-controls.test.js`

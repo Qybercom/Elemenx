@@ -119,4 +119,4 @@
 - [accepts only messages from the attached Window and configured origin](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L475) — `tests/regression/messaging.test.js`
 - [owner-aware $Messaging.Window is destroyed with its Component](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L510) — `tests/regression/messaging.test.js`
 
-+2 ещё в тех же файлах
++4 ещё в тех же файлах

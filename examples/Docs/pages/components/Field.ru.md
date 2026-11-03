@@ -46,5 +46,7 @@
 ## Тесты
 
 - [Field names the control inside by its Label, unless the control has a name of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L327) — `tests/regression/library-forms.test.js`
+- [runs a flow: events, branches, variables, loops, delays, actions of the context and what it tells](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L289) — `tests/regression/blueprints.test.js`
 - [tree-shakes unused Library Components and keeps transitive Component dependencies](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/builder-multi-application.test.js#L226) — `tests/regression/builder-multi-application.test.js`
+- [takes an action through the trigger a handler is given, and runs its flow: its events, the actions of the scene](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-triggers.test.js#L171) — `tests/regression/library-triggers.test.js`
 - [Form nests the values of Fields named by parts (user\[name\], items\[ID\]\[title\], tags\[\]) and follows the rows of a *for that come and go](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L270) — `tests/regression/library-forms.test.js`

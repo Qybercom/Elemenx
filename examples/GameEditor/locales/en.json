@@ -1,0 +1,19 @@
+{
+	"gameEditor": {
+		"name": "Name of the game",
+		"scene": "Scene",
+		"models": "Models",
+		"newGround": "New ground",
+		"newSpace": "New star system",
+		"export": "Export",
+		"import": "Import",
+		"page": "Game in one file",
+		"project": "Project",
+		"addModel": "Add a model",
+		"removeModel": "Remove the model",
+		"replace": "Start a new game in the place of this one?",
+		"packing": "Packing the game…",
+		"notKept": "The browser did not keep the game",
+		"notGame": "That is not a game of the Game editor"
+	}
+}

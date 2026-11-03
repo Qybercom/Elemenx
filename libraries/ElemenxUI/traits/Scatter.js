@@ -19,7 +19,8 @@
  * far a picture baked from all sides that is lit as the model is (Graphics3D.Target). The streams are made again only
  * when the view moved, so a still view costs no work, and a few draws show them all.
  *
- * Methods: Sown() ({Things, Squares, Waiting, Draws, Blades}).
+ * Methods: Sown() ({Things, Squares, Waiting, Draws, Blades}), SownNear(x, z, radius) (what is sown round a point: [{Model, X, Y, Z,
+ * Size, Turn}]).
  */
 Elemenx.Trait('Scatter', {
 	ScatterStart: function () {
@@ -89,9 +90,321 @@ Elemenx.Trait('Scatter', {
 			});
 			var land = biome();
 
-			return land ? given.concat(land.Scatter.map(function (rule, index) {
+			return (land ? given.concat(land.Scatter.map(function (rule, index) {
 				return Object.assign({ID: 'biome-' + index}, rule);
-			})) : given;
+			})) : given).concat(sketched().Rules);
+		}
+
+		/*
+		 * What the sketch of the ground places: a rule of each area of growth (the shapes of its kind in its area, as thick as its
+		 * Density, as easy to go through as its Passability, from 0 none to 1 all), of each field or orchard (in rows), of each line
+		 * of things (a piece every Spacing, along its way), the places nothing grows (clearings, masks, roads, rivers, lakes) and
+		 * its markers. Made again only when the sketch changes.
+		 */
+		var presets = {
+			forest: {Shapes: ['pine', 'pine', 'oak', 'birch', 'bush', 'stump'], Density: 2.5, Clumps: 0.3, Passability: 0.6},
+			meadow: {Shapes: ['fern', 'bush', 'mushroom'], Density: 0.25, Size: [0.6, 1.2], Passability: 1},
+			bushes: {Shapes: ['bush', 'bush', 'fern'], Density: 4, Size: [0.7, 1.3], Passability: 0.7},
+			thicket: {Shapes: ['bush', 'fern', 'bush', 'oak'], Density: 10, Size: [0.8, 1.4], Passability: 0.1},
+			jungle: {Shapes: ['jungle', 'jungle', 'palm', 'fern', 'bush'], Density: 5, Passability: 0.3},
+			sequoia: {Shapes: ['sequoia', 'sequoia', 'fern', 'pine'], Density: 0.35, Passability: 0.8},
+			fields: {Shapes: ['wheat'], Spacing: 1, Gap: 1.4, Size: [0.9, 1.1], Passability: 1},
+			orchard: {Shapes: ['oak'], Spacing: 6, Gap: 6, Size: [0.45, 0.6], Passability: 0.9},
+			row: {Shapes: ['fence'], Spacing: 4, Passability: 0},
+			fence: {Shapes: ['fence'], Spacing: 2, Passability: 0, Fit: true},
+			hedge: {Shapes: ['hedge'], Spacing: 1.8, Passability: 0, Fit: true},
+			wall: {Shapes: ['stone-wall'], Spacing: 1.9, Passability: 0, Fit: true},
+			powerline: {Shapes: ['pole'], Spacing: 40, Passability: 1}
+		};
+
+		function sketched () {
+			var ground = scene.Roots.filter(function (object) {
+				return object.Traits.Terrain;
+			})[0];
+			var sketch = ground && ground.Traits.Terrain.Sketch || null;
+			var text = sketch ? JSON.stringify(sketch) : '';
+			var terrain = self.$Service('Terrain');
+			var made;
+
+			if (state.SketchText === text && state.Sketched) return state.Sketched;
+
+			made = {Rules: [], Areas: [], Lines: [], Markers: []};
+
+			(sketch && sketch.Layers || []).forEach(function (layer) {
+				if (layer.Visible === false || layer.Visible === 'false') return;
+
+				(layer.Items || []).forEach(function (item) {
+					var kind = terrain.SketchTypes[item.Type];
+					var preset = presets[item.Type];
+					var rule;
+
+					if (item.Visible === false) return;
+
+					/* Where nothing grows: clearings and masks, and the beds of roads, rivers and lakes. */
+					if ((item.Type === 'clearing' || item.Type === 'mask' || item.Type === 'lake') && item.Points && item.Points.length > 2)
+						made.Areas.push(item.Points);
+
+					if ((item.Type === 'road' || item.Type === 'river') && item.Points && item.Points.length > 1)
+						made.Lines.push({Points: item.Points, Reach: (Number(item.Width) || 6) / 2 + (item.Type === 'river' ? Number(item.Bank === undefined ? 6 : item.Bank) * 0.5 : 1)});
+
+					if (item.Type === 'marker' && item.At || games[item.Type] && (item.At || item.Points))
+						made.Markers.push(item);
+
+					if (!preset) return;
+
+					rule = Object.assign({ID: 'sketch-' + item.ID, Seed: item.ID, Cover: 1, MinHeight: 0.2, MaxSlope: kind === 'line' ? 2 : 0.6}, preset);
+
+					['Shapes', 'Density', 'Size', 'Passability', 'Clumps', 'Spacing', 'Gap', 'Way', 'MaxSlope', 'Seed'].forEach(function (key) {
+						if (item[key] !== undefined && item[key] !== '')
+							rule[key] = item[key];
+					});
+
+					if (kind === 'area') rule.Area = item.Points;
+					else rule.Line = item.Points;
+
+					if (item.Type === 'fields' || item.Type === 'orchard')
+						rule.Rows = true;
+
+					made.Rules.push(rule);
+				});
+			});
+
+			settlements(made);
+
+			state.SketchText = text;
+			state.Sketched = made;
+
+			return made;
+		}
+
+		function within (points, x, z) {
+			var inside = false;
+			var i;
+			var j;
+
+			for (i = 0, j = points.length - 1; i < points.length; j = i++) {
+				if (points[i][1] > z !== points[j][1] > z && x < (points[j][0] - points[i][0]) * (z - points[i][1]) / (points[j][1] - points[i][1]) + points[i][0])
+					inside = !inside;
+			}
+
+			return inside;
+		}
+
+		function near (points, x, z, reach) {
+			var i;
+
+			for (i = 0; i + 1 < points.length; i++) {
+				var ax = points[i][0];
+				var az = points[i][1];
+				var dx = points[i + 1][0] - ax;
+				var dz = points[i + 1][1] - az;
+				var t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1)));
+				if (Math.hypot(ax + dx * t - x, az + dz * t - z) < reach) return true;
+			}
+
+			return false;
+		}
+
+		/* Nothing of any rule grows where the sketch keeps the ground free; the things of a line stand on its way all the same. */
+		function free (rule, x, z) {
+			var made = sketched();
+
+			if (rule.Line) return true;
+
+			return !made.Areas.some(function (points) {
+				return within(points, x, z);
+			}) && !made.Lines.some(function (line) {
+				return near(line.Points, x, z, line.Reach);
+			});
+		}
+
+		/* Where a building stands: the lowest of its corners, so no corner of it hangs over the ground. */
+		function footing (field, one) {
+			var half = [(one.Width || 0) / 2, (one.Depth || 0) / 2];
+			var c = Math.cos(one.Turn || 0);
+			var s = Math.sin(one.Turn || 0);
+			var low = field.Height(one.X, one.Z);
+
+			[[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(function (corner) {
+				var x = corner[0] * half[0];
+				var z = corner[1] * half[1];
+
+				low = Math.min(low, field.Height(one.X + c * x + s * z, one.Z + c * z - s * x));
+			});
+
+			return low;
+		}
+
+		/* The cells of 2 by 2 a building of that width and depth covers, turned as it stands. */
+		function footprint (x, z, turn, width, depth) {
+			var cells = [];
+			var c = Math.cos(turn || 0);
+			var s = Math.sin(turn || 0);
+			var u;
+			var v;
+
+			for (u = -width / 2; u <= width / 2; u += 1.5) {
+				for (v = -depth / 2; v <= depth / 2; v += 1.5)
+					cells.push(Math.floor((x + c * u + s * v) / 2) + ':' + Math.floor((z + c * v - s * u) / 2));
+			}
+
+			return cells;
+		}
+
+		/*
+		 * The settlements of the sketch (their plans, laid out by Terrain): their buildings, models of Buildings of the class and the
+		 * size of each lot, four of each size; their walls, a piece every 6 metres but where a gate is; their gates and towers; the
+		 * wheat of their fields; and the walls of towns drawn on their own.
+		 */
+		function settlements (made) {
+			var field = scene.Ground && scene.Ground.Field;
+			var plans = field && field.Sketch && field.Sketch.Settlements ? field.Sketch.Settlements() : [];
+			var buildings = self.$Service('Buildings');
+			var sketch = field && field.Options && field.Options.Sketch;
+			var lit = {};
+
+			(sketch && sketch.Layers || []).forEach(function (layer) {
+				(layer.Items || []).forEach(function (item) {
+					if (item.Type === 'settlement')
+						lit[item.ID] = Number(item.Lit) || 0;
+
+					/* A wall drawn alone: its pieces and a tower at each of its corners. */
+					if (item.Type === 'citywall' && item.Points && item.Points.length > 1) {
+						made.Rules.push({ID: 'sketch-' + item.ID, Shapes: ['city-wall'], Line: item.Points, Spacing: 6, Fit: true, Passability: 0, Cover: 1, MinHeight: -100});
+						made.Rules.push({ID: 'sketch-' + item.ID + '/towers', Fixed: item.Points.map(function (point) {
+							return {X: point[0], Z: point[1], Model: 'wall-tower'};
+						}), Passability: 0});
+					}
+
+					/* A landmark: an object of the scene, as a marker is. */
+					if (item.Type === 'landmark' && item.At)
+						made.Markers.push(Object.assign({}, item, {Role: 'landmark'}));
+
+					/* The fields of a district grow wheat in rows. */
+					if (item.Type === 'district' && item.Kind === 'fields' && item.Points && item.Points.length > 2)
+						made.Rules.push({ID: 'sketch-' + item.ID, Shapes: ['wheat'], Area: item.Points, Rows: true, Spacing: 1, Gap: 1.4, Size: [0.9, 1.1], Passability: 1, Cover: 1, MinHeight: 0.2, MaxSlope: 0.6});
+				});
+			});
+
+			plans.forEach(function (plan, index) {
+				var id = 'settlement-' + index;
+				var gates = plan.Gates;
+
+				made.Rules.push({ID: id, Passability: 0, Fixed: plan.Lots.map(function (lot, number) {
+					var variant = number % 4;
+					var name = 'settle-' + lot.Class + '-' + Math.round(lot.Width) + 'x' + Math.round(lot.Depth) + '-' + Math.round((lit[plan.ID] || 0) * 10) + '-' + variant;
+					if (!library.Has(name))
+						buildings.Define(name, Object.assign(buildings.Random({Class: lot.Class}, name), {Width: lot.Width, Depth: lot.Depth, Lit: lit[plan.ID] || 0}));
+
+					return {X: lot.X, Z: lot.Z, Turn: lot.Turn, Model: name, Size: library.Info(name).Size, Width: lot.Width, Depth: lot.Depth};
+				})});
+
+				plan.Walls.forEach(function (ring, number) {
+					made.Rules.push({ID: id + '/wall-' + number, Shapes: ['city-wall'], Line: ring, Spacing: 6, Fit: true, Passability: 0, Cover: 1, MinHeight: -100, Gates: gates});
+				});
+
+				made.Rules.push({ID: id + '/towers', Passability: 0, Fixed: plan.Towers.map(function (tower) {
+					return {X: tower.X, Z: tower.Z, Model: 'wall-tower'};
+				})});
+
+				/* A gate turned along its wall, and a way through it. */
+				made.Rules.push({ID: id + '/gates', Passability: 1, Fixed: gates.map(function (gate) {
+					var best = {Far: Infinity, Turn: 0};
+
+					plan.Walls.forEach(function (ring) {
+						var n;
+
+						for (n = 0; n + 1 < ring.length; n++) {
+							var dx = ring[n + 1][0] - ring[n][0];
+							var dz = ring[n + 1][1] - ring[n][1];
+							var t = Math.max(0, Math.min(1, ((gate.X - ring[n][0]) * dx + (gate.Z - ring[n][1]) * dz) / (dx * dx + dz * dz || 1)));
+							var far = Math.hypot(ring[n][0] + dx * t - gate.X, ring[n][1] + dz * t - gate.Z);
+							if (far < best.Far)
+								best = {Far: far, Turn: Math.atan2(-dz, dx)};
+						}
+					});
+
+					return {X: gate.X, Z: gate.Z, Turn: best.Turn, Model: 'gate'};
+				})});
+			});
+		}
+
+		/* The places of a rule of a sketch in a square: in rows over its area, a piece at each step of its line, or none. */
+		function placesOf (rule, square, random) {
+			var places = [];
+			var spacing = Math.max(0.3, Number(rule.Spacing) || 2);
+			var points = rule.Line;
+			var way;
+			var i;
+
+			/* Things at their places: the buildings of lots, the towers and the gates of walls. */
+			if (rule.Fixed) {
+				return rule.Fixed.filter(function (one) {
+					return one.X >= square.X && one.X < square.X + size && one.Z >= square.Z && one.Z < square.Z + size;
+				}).map(function (one) {
+					return [one.X, one.Z, one.Turn || 0, one.Model, one];
+				});
+			}
+
+			if (rule.Rows) {
+				var gap = Math.max(0.3, Number(rule.Gap) || spacing);
+				var angle = (Number(rule.Way) || 0) * Math.PI / 180;
+				var c = Math.cos(angle);
+				var s = Math.sin(angle);
+				var reach = size * 0.75;
+				var cx = square.X + size / 2;
+				var cz = square.Z + size / 2;
+				var u;
+				var v;
+
+				/* The rows of the whole ground, fixed to its origin: the squares next to each other meet in them. */
+				var u0 = Math.floor((cx * c + cz * s - reach) / spacing);
+				var v0 = Math.floor((-cx * s + cz * c - reach) / gap);
+
+				for (v = v0; v * gap < -cx * s + cz * c + reach; v++) {
+					for (u = u0; u * spacing < cx * c + cz * s + reach; u++) {
+						var x = u * spacing * c - v * gap * s;
+						var z = u * spacing * s + v * gap * c;
+						if (x >= square.X && x < square.X + size && z >= square.Z && z < square.Z + size)
+							places.push([x + random(-0.08, 0.08) * spacing, z + random(-0.08, 0.08) * spacing, -angle]);
+					}
+				}
+
+				return places;
+			}
+
+			if (!points)
+				return places;
+
+			/* Along the line: the same steps from its start whatever square, each piece turned along its way. */
+			var walked = 0;
+
+			for (i = 0; i + 1 < points.length; i++) {
+				var dx = points[i + 1][0] - points[i][0];
+				var dz = points[i + 1][1] - points[i][1];
+				var length = Math.hypot(dx, dz);
+				var at = Math.ceil(walked / spacing) * spacing - walked;
+
+				way = Math.atan2(-dz, dx);
+
+				for (; at < length; at += spacing) {
+					var px = points[i][0] + dx * (at + spacing / 2) / length;
+					var pz = points[i][1] + dz * (at + spacing / 2) / length;
+
+					if (at + spacing / 2 > length) break;
+
+					/* A wall leaves the way of its gates open. */
+					var gated = (rule.Gates || []).some(function (gate) {
+						return Math.hypot(gate.X - px, gate.Z - pz) < 5;
+					});
+					if (!gated && px >= square.X && px < square.X + size && pz >= square.Z && pz < square.Z + size)
+						places.push([px, pz, way]);
+				}
+
+				walked += length;
+			}
+
+			return places;
 		}
 
 		/* The villages of the ground, once: their houses are objects of the scene, their roads are on the ground. */
@@ -151,6 +464,92 @@ Elemenx.Trait('Scatter', {
 			}
 		}
 
+		/* The triggers and zones of a sketch, objects of the scene of their kind (the trait Triggers), by the shape of each type. */
+		var games = {trigger: 'area', triggerpoint: 'circle', triggerline: 'line', zone: 'area'};
+
+		function game (item, id) {
+			var points = item.Points || [];
+			var at = item.At || points.reduce(function (sum, point) {
+				return [sum[0] + point[0] / points.length, sum[1] + point[1] / points.length];
+			}, [0, 0]);
+			var spec = {ID: id, Kind: item.Type === 'zone' ? 'zone' : 'trigger', Name: item.Name || item.Type, X: Number(at[0]) || 0, Y: Number(at[1]) || 0};
+			var keys = item.Type === 'zone' ? ['Points', 'Tags', 'Team'] : ['Points', 'Radius', 'Width', 'Height', 'Team', 'Kinds', 'Every', 'Once', 'Enabled', 'Blueprint', 'Parameters'];
+
+			if (item.Type !== 'zone')
+				spec.Shape = games[item.Type];
+
+			keys.forEach(function (key) {
+				if (item[key] !== undefined && item[key] !== '' && !(key === 'Points' && games[item.Type] === 'circle'))
+					spec[key] = item[key];
+			});
+
+			return spec;
+		}
+
+		/*
+		 * The markers of the sketch, objects of the scene of kind marker (its Role, Team, Name: what a game looks for, as where a
+		 * hero or enemies come), with what shows of their role: a camp its tent and its fire, ruins their stones, a cave the
+		 * boulders of its mouth, a spring its mist; its triggers and zones.
+		 */
+		function mark () {
+			var markers = sketched().Markers;
+			var key = JSON.stringify(markers);
+			var made = [];
+
+			if (state.MarkKey === key) return;
+
+			state.MarkKey = key;
+
+			(state.Marked || []).forEach(function (id) {
+				self.Remove(id);
+			});
+
+			state.Marked = [];
+
+			markers.forEach(function (item) {
+				var id = 'sketch-' + item.ID;
+
+				if (games[item.Type]) {
+					made.push(game(item, id));
+
+					return;
+				}
+
+				var x = Number(item.At[0]) || 0;
+				var z = Number(item.At[1]) || 0;
+				var role = item.Role || 'spawn';
+
+				/* A landmark is a building of the scene, its own model; a marker an object a game finds. */
+				if (role === 'landmark') made.push({ID: id, Kind: 'house', Name: item.Name || item.Model || 'temple', X: x, Y: z, Model: item.Model || 'temple', Size: Number(item.Size) || (library.Info(item.Model || 'temple') || {Size: 10}).Size, Facing: Number(item.Facing) || 0});
+				else made.push({ID: id, Kind: 'marker', Name: item.Name || role, X: x, Y: z, Role: role, Team: item.Team || ''});
+
+				if (role === 'camp')
+					made.push({ID: id + '/tent', Kind: 'thing', X: x + 3, Y: z + 1, Model: 'tent', Size: 3, Facing: 200}, {ID: id + '/fire', Kind: 'effect', Type: 'campfire', X: x, Y: z});
+
+				if (role === 'ruins')
+					made.push({ID: id + '/ruin', Kind: 'thing', X: x, Y: z, Model: 'ruin', Size: 6});
+
+				if (role === 'spring')
+					made.push({ID: id + '/mist', Kind: 'effect', Type: 'steam', Size: 0.4, X: x, Y: z});
+
+				if (role === 'cave') {
+					[[-3, 0], [3, 0], [0, -2.5]].forEach(function (at, index) {
+						made.push({ID: id + '/rock-' + index, Kind: 'thing', X: x + at[0], Y: z + at[1], Model: 'boulder', Size: 5});
+					});
+				}
+			});
+
+			state.Marked = made.map(function (spec) {
+				return spec.ID;
+			});
+
+			if (made.length) {
+				window.setTimeout(function () {
+					self.Add(made);
+				}, 0);
+			}
+		}
+
 		/* The cells of 4 by 4 that nothing is sown on. */
 		function keep (x, z, reach) {
 			var cx;
@@ -171,10 +570,14 @@ Elemenx.Trait('Scatter', {
 			var x;
 			var z;
 
-			if (ground && !ground.Field.Whole)
+			if (ground && !ground.Field.Whole) {
 				settle(ground.Field);
 
-			key = ground ? ground.Key + JSON.stringify(given) : '';
+				mark();
+			}
+
+			/* What a sketch sows is told by its text: its lots are many, and the key is made every frame. */
+			key = ground ? ground.Key + JSON.stringify(given.slice(0, given.length - sketched().Rules.length)) + (state.SketchText || '') : '';
 
 			if (key === state.Key) return;
 
@@ -200,6 +603,8 @@ Elemenx.Trait('Scatter', {
 			var height = field.Height(place[0], place[1]);
 
 			if (state.Kept[Math.floor(place[0] / 4) + ':' + Math.floor(place[1] / 4)]) return null;
+			if (rule.Area && !within(rule.Area, place[0], place[1])) return null;
+			if (!free(rule, place[0], place[1])) return null;
 			if (field.Roads && self.$Service('Terrain').OnRoad(field, place[0], place[1], 3)) return null;
 			if (height < (rule.MinHeight === undefined ? 1 : Number(rule.MinHeight))) return null;
 			if (rule.MaxHeight !== undefined && height > Number(rule.MaxHeight)) return null;
@@ -230,11 +635,16 @@ Elemenx.Trait('Scatter', {
 				if (grid)
 					count = Math.ceil(size / grid) * Math.ceil(size / grid);
 
+				/* Rows and lines of a sketch: their own places, each with its turn. */
+				var fixed = rule.Rows || rule.Line || rule.Fixed ? placesOf(rule, square, random) : null;
+				if (fixed)
+					count = fixed.length;
+
 				for (i = 0; i < count; i++) {
-					var place = grid ? [Math.ceil(square.X / grid) * grid + (i % Math.ceil(size / grid)) * grid, Math.ceil(square.Z / grid) * grid + Math.floor(i / Math.ceil(size / grid)) * grid] : [square.X + random(0, size), square.Z + random(0, size)];
-					var name = shapes[Math.floor(random(0, shapes.length))];
-					var variant = Math.floor(random(0, 16));
-					var height = chance(rule, place, field, noise);
+					var place = fixed ? fixed[i] : grid ? [Math.ceil(square.X / grid) * grid + (i % Math.ceil(size / grid)) * grid, Math.ceil(square.Z / grid) * grid + Math.floor(i / Math.ceil(size / grid)) * grid] : [square.X + random(0, size), square.Z + random(0, size)];
+					var name = rule.Fixed ? place[3] : shapes[Math.floor(random(0, shapes.length))];
+					var variant = rule.Fixed ? place[4].Variant || 0 : Math.floor(random(0, 16));
+					var height = rule.Fixed ? footing(field, place[4]) : chance(rule, place, field, noise);
 					var info = library.Info(name);
 					var key;
 					var made;
@@ -246,13 +656,28 @@ Elemenx.Trait('Scatter', {
 					made = lists[key] = lists[key] || {Places: [], Extra: []};
 					tone = random(0.86, 1.1);
 
-					made.Places.push(place[0], height - 0.05, place[1], info.Size * random(Number(scale[0]), Number(scale[1])));
-					made.Extra.push(grid ? Math.floor(random(0, 4)) * Math.PI / 2 : random(0, Math.PI * 2), tone, tone * random(0.94, 1.04), tone * random(0.92, 1));
+					/* A piece that joins the next (a fence, a hedge, a wall) is as long as the step; the others as their Size says. */
+					made.Places.push(place[0], height - 0.05, place[1], fixed && rule.Fit ? Number(rule.Spacing) : rule.Fixed ? place[4].Size || info.Size : fixed && rule.Line ? info.Size : info.Size * random(Number(scale[0]), Number(scale[1])));
+					made.Extra.push(fixed ? place[2] : grid ? Math.floor(random(0, 4)) * Math.PI / 2 : random(0, Math.PI * 2), tone, tone * random(0.94, 1.04), tone * random(0.92, 1));
 
 					made.Reach = rule.Reach ? Number(rule.Reach) : 0;
 
-					if (rule.Blocks !== false && rule.Blocks !== 'false' && info.Size > 2)
-						state.Blocked[Math.floor(place[0] / 2) + ':' + Math.floor(place[1] / 2)] = true;
+					/*
+					 * A building stops the way over all of its ground; the others as their Passability tells, how many of them leave a way
+					 * through (1 all, 0 none); a piece of a line stops all along it.
+					 */
+					if (rule.Fixed && place[4].Width) {
+						footprint(place[0], place[1], place[2], place[4].Width, place[4].Depth).forEach(function (cell) {
+							state.Blocked[cell] = true;
+						});
+					}
+					else if (rule.Passability !== undefined ? random(0, 1) >= Number(rule.Passability) : rule.Blocks !== false && rule.Blocks !== 'false' && info.Size > 2) {
+						[-0.5, -0.25, 0, 0.25, 0.5].forEach(function (along) {
+							var reach = fixed && rule.Line ? info.Size * along : 0;
+
+							state.Blocked[Math.floor((place[0] + Math.cos(place[2] || 0) * reach) / 2) + ':' + Math.floor((place[1] - Math.sin(place[2] || 0) * reach) / 2)] = true;
+						});
+					}
 
 					state.Things++;
 				}
@@ -785,6 +1210,36 @@ Elemenx.Trait('Scatter', {
 			var cellZ = Math.floor(z / 2);
 
 			return !!state.Blocked[cellX + ':' + cellZ];
+		};
+
+		/* What is sown round a point, of the squares made so far: [{Model, X, Y, Z, Size, Turn}], the nearest first. */
+		this.SownNear = function (x, z, radius) {
+			var found = [];
+
+			state.Squares.forEach(function (square) {
+				if (square.X > x + radius || square.Z > z + radius || square.X + size < x - radius || square.Z + size < z - radius) return;
+
+				Object.keys(square.Lists).forEach(function (key) {
+					var list = square.Lists[key];
+					var i;
+
+					for (i = 0; i < list.Count; i++) {
+						var px = list.Places[i * 4];
+						var pz = list.Places[i * 4 + 2];
+						var far = Math.hypot(px - x, pz - z);
+						if (far <= radius)
+							found.push({Model: key.split('~')[0], X: px, Y: list.Places[i * 4 + 1], Z: pz, Size: list.Places[i * 4 + 3], Turn: list.Extra[i * 4], Far: far});
+					}
+				});
+			});
+
+			return found.sort(function (a, b) {
+				return a.Far - b.Far;
+			}).map(function (one) {
+				delete one.Far;
+
+				return one;
+			});
 		};
 	},
 

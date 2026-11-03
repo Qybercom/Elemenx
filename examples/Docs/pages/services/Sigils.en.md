@@ -13,4 +13,5 @@ Sigils: magic circles of a seed, as data, for whatever draws them: a circle is a
 
 ## Tests
 
-- [Sigils makes circles of a seed, the same each time, whose rings turn apart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2859) — `tests/regression/library-scene.test.js`
+- [Sigils makes circles of a seed, the same each time, whose rings turn apart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3441) — `tests/regression/library-scene.test.js`
+- [saves a recipe of the kinds of the library and makes the very same thing of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/generated.test.js#L23) — `tests/regression/generated.test.js`

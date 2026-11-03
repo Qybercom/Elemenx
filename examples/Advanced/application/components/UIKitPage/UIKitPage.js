@@ -656,7 +656,93 @@ Elemenx.Component('UIKitPage', {
 	MorePurposes: [{ID: 'necessary', Label: 'Necessary', Required: true}, {ID: 'analytics', Label: 'Analytics'}],
 	MoreBefore: 'function Area (radius) {\n\treturn 3.14 * radius * radius;\n}\n',
 	MoreAfter: 'function Area (radius) {\n\treturn Math.PI * radius * radius;\n}\n',
-	CodesNote: 'CommitGraph · Barcode · QRCode · Diagram · Markdown with plugins',
+	CodesNote: 'CommitGraph · Barcode · QRCode · Diagram · Markdown with plugins · Blueprint',
+
+	/* A pass of a picture: the clouds of noise of the shaders over the UV, coloured between a dark and the parameter Tint. */
+	BlueprintGraph: {
+		version: 1,
+		type: 'pass',
+		name: 'Clouds',
+		parameters: [{key: 'Scale', type: 'float', value: 4}, {key: 'Tint', type: 'vec3', value: '#7fc4ff'}],
+		blocks: [
+			{id: 'uv', type: 'UV', x: 20, y: 40, properties: []},
+			{id: 'scale', type: 'Parameter', x: 20, y: 150, properties: [{key: 'Key', value: 'Scale'}, {key: 'Type', value: 'float'}]},
+			{id: 'fbm', type: 'Fbm', x: 240, y: 60, properties: [{key: 'Octaves', value: 5}]},
+			{id: 'dark', type: 'Color', x: 240, y: 230, properties: [{key: 'Color', value: '#0b0e12'}, {key: 'Alpha', value: 1}]},
+			{id: 'tint', type: 'Parameter', x: 240, y: 380, properties: [{key: 'Key', value: 'Tint'}, {key: 'Type', value: 'vec3'}]},
+			{id: 'mix', type: 'Mix', x: 480, y: 180, properties: []},
+			{id: 'out', type: 'Output', x: 700, y: 200, properties: []}
+		],
+		links: [
+			{id: 'l1', p1: 'uv-out-UV', p2: 'fbm-in-Position'},
+			{id: 'l2', p1: 'scale-out-Value', p2: 'fbm-in-Scale'},
+			{id: 'l3', p1: 'dark-out-RGB', p2: 'mix-in-A'},
+			{id: 'l4', p1: 'tint-out-Value', p2: 'mix-in-B'},
+			{id: 'l5', p1: 'fbm-out-Value', p2: 'mix-in-T'},
+			{id: 'l6', p1: 'mix-out-Out', p2: 'out-in-Color'}
+		]
+	},
+	BlueprintState: '',
+	TopologyGraph: 'network',
+	TopologyLayout: 'auto',
+	TopologyNote: '',
+	TopologyGraphs: [{Value: 'network', Label: 'A network: a router and its hosts'}, {Value: 'modules', Label: 'Modules: what depends on what'}, {Value: 'company', Label: 'A company: who reports to whom'}],
+	TopologyLayouts: ['auto', 'layers', 'tree', 'star', 'circle', 'grid', 'force'].map(function (layout) {
+		return {Value: layout, Label: layout};
+	}),
+	TopologyData: {
+		network: {
+			Nodes: [
+				{ID: 'internet', Label: 'Internet', Icon: 'globe', Status: 'ok'},
+				{ID: 'router', Label: 'Router', Icon: 'server', Status: 'ok', Details: {Address: '10.0.0.1', Ports: 24}},
+				{ID: 'wifi', Label: 'Access point', Icon: 'monitor', Status: 'warning', Details: {Clients: 31}},
+				{ID: 'nas', Label: 'Storage', Icon: 'database', Status: 'ok', Details: {Free: '1.2 TB'}},
+				{ID: 'printer', Label: 'Printer', Icon: 'print', Status: 'off'},
+				{ID: 'cam', Label: 'Camera', Icon: 'camera', Status: 'error', Details: {Error: 'no signal'}},
+				{ID: 'laptop', Label: 'Laptop', Icon: 'monitor'},
+				{ID: 'phone', Label: 'Phone', Icon: 'smartphone'},
+				{ID: 'tablet', Label: 'Tablet', Icon: 'tablet'}
+			],
+			Links: [
+				{From: 'internet', To: 'router', Label: '1 Gb/s', Status: 'ok'},
+				{From: 'router', To: 'wifi'},
+				{From: 'router', To: 'nas', Label: '10 Gb/s'},
+				{From: 'router', To: 'printer', Status: 'off'},
+				{From: 'router', To: 'cam', Status: 'error'},
+				{From: 'wifi', To: 'laptop'},
+				{From: 'wifi', To: 'phone'},
+				{From: 'wifi', To: 'tablet'}
+			]
+		},
+		modules: {
+			Nodes: [
+				{ID: 'app', Label: 'app.js', Icon: 'file-code'},
+				{ID: 'router', Label: 'Router', Icon: 'branch'},
+				{ID: 'ui', Label: 'ElemenxUI', Icon: 'layout', Details: {Components: 221}},
+				{ID: 'scene', Label: 'GameScene', Icon: 'star'},
+				{ID: 'graphics', Label: 'Graphics3D', Icon: 'shapes'},
+				{ID: 'models', Label: 'Models', Icon: 'layers'},
+				{ID: 'core', Label: 'elemenx.js', Icon: 'code', Status: 'ok'},
+				{ID: 'workers', Label: 'Workers', Icon: 'server'}
+			],
+			Links: [
+				{From: 'app', To: 'router'}, {From: 'app', To: 'ui'}, {From: 'ui', To: 'scene'}, {From: 'scene', To: 'graphics'}, {From: 'scene', To: 'models'},
+				{From: 'models', To: 'graphics'}, {From: 'router', To: 'core'}, {From: 'ui', To: 'core'}, {From: 'graphics', To: 'workers'}, {From: 'workers', To: 'core'}
+			]
+		},
+		company: {
+			Nodes: [
+				{ID: 'ceo', Label: 'Director', Icon: 'user'},
+				{ID: 'cto', Label: 'Engineering', Icon: 'code'},
+				{ID: 'cfo', Label: 'Finance', Icon: 'credit-card'},
+				{ID: 'web', Label: 'Web team', Icon: 'globe', Details: {People: 6}},
+				{ID: 'games', Label: 'Games team', Icon: 'star', Details: {People: 9}},
+				{ID: 'ops', Label: 'Operations', Icon: 'server', Details: {People: 3}},
+				{ID: 'books', Label: 'Accounting', Icon: 'table', Details: {People: 2}}
+			],
+			Links: [{From: 'ceo', To: 'cto'}, {From: 'ceo', To: 'cfo'}, {From: 'cto', To: 'web'}, {From: 'cto', To: 'games'}, {From: 'cto', To: 'ops'}, {From: 'cfo', To: 'books'}]
+		}
+	},
 	CodesCommits: [
 		{ID: 'f6a1c20', Parents: ['e5b2d31', 'd4c3e42'], Message: 'Merge branch feature/charts', Author: 'Ada', Date: '2026-10-20', Refs: [{Name: 'main', Kind: 'head'}, {Name: 'v0.10', Kind: 'tag'}]},
 		{ID: 'e5b2d31', Parents: ['c3d4f53'], Message: 'Fix the router on a hash', Author: 'Linus', Date: '2026-10-19'},
@@ -1293,6 +1379,71 @@ Elemenx.Component('UIKitPage', {
 
 	Clicked: function () {
 		this.Clicks++;
+	},
+
+	TopologyOf: function (name) {
+		return this.TopologyData[name] || this.TopologyData.network;
+	},
+
+	TopologyPicked: function (value) {
+		this.TopologyGraph = value;
+		this.TopologyNote = '';
+	},
+
+	TopologyArranged: function (value) {
+		this.TopologyLayout = value;
+	},
+
+	TopologyChosen: function (selected) {
+		var node = selected.Node ? this.TopologyOf(this.TopologyGraph).Nodes.filter(function (one) {
+			return one.ID === selected.Node;
+		})[0] : null;
+
+		this.TopologyNote = node ? node.Label + (node.Status ? ' · ' + node.Status : '') : selected.Link !== null ? 'A link' : '';
+	},
+
+	TopologyOpened: function (event) {
+		this.TopologyNote = 'Opened ' + event.Node;
+	},
+
+	/*
+	 * A generator of models for the object editor, of rules and no network: a word of the description chooses what it builds
+	 * (a tower, a table, a robot, else a tree), a number in it how many of its parts there are.
+	 */
+	ObjectGenerator: function (description, callback) {
+		var text = String(description || '').toLowerCase();
+		var count = Math.max(2, Math.min(12, Number((text.match(/\d+/) || [4])[0])));
+		var parts = [];
+		var i;
+
+		if (/tower|башн/.test(text)) {
+			for (i = 0; i < count; i++)
+				parts.push({ID: 'floor-' + i, Shape: 'cylinder', Piece: 'body', At: [0, (i + 0.5) / count * 0.9, 0], Size: [0.5 - i * 0.02, 0.9 / count, 0.5], Color: i % 2 ? '#b8a88c' : '#9e9078', Tags: ['floor']});
+
+			parts.push({ID: 'roof', Shape: 'cylinder', Top: 0, Piece: 'body', At: [0, 0.97, 0], Size: [0.6, 0.2, 0.6], Color: '#7a3b2e'});
+		}
+		else if (/table|стол/.test(text)) {
+			parts.push({ID: 'top', Shape: 'box', At: [0, 0.75, 0], Size: [1, 0.06, 0.6], Color: '#8a6a4a'});
+			parts.push({ID: 'leg-front', Shape: 'box', At: [0.44, 0.36, 0.24], Size: [0.06, 0.72, 0.06], Color: '#6e5238', Mirror: true, Tags: ['leg']});
+			parts.push({ID: 'leg-back', Shape: 'box', At: [0.44, 0.36, -0.24], Size: [0.06, 0.72, 0.06], Color: '#6e5238', Mirror: true, Tags: ['leg']});
+		}
+		else if (/robot|робот/.test(text)) {
+			parts.push({ID: 'chest', Shape: 'box', Piece: 'body', At: [0, 0.62, 0], Size: [0.42, 0.34, 0.24], Color: '#8f9aa8'});
+			parts.push({ID: 'head', Shape: 'box', Piece: 'head', At: [0, 0.88, 0], Size: [0.22, 0.18, 0.2], Color: '#c8d0da', Vary: {Size: [0.03, 0.03, 0]}});
+			parts.push({ID: 'arm', Shape: 'cylinder', Piece: 'arm-l', At: [0.28, 0.58, 0], Size: [0.09, 0.34, 0.09], Color: '#6c7684', Mirror: true});
+			parts.push({ID: 'leg', Shape: 'cylinder', Piece: 'leg-l', At: [0.1, 0.22, 0], Size: [0.12, 0.44, 0.12], Color: '#5a6270', Mirror: true});
+			parts.push({ID: 'antenna', Shape: 'cylinder', Piece: 'head', At: [0.06, 1.02, 0], Size: [0.02, 0.12, 0.02], Color: '#e0b050', Chance: 0.5});
+		}
+		else {
+			parts.push({ID: 'trunk', Shape: 'cylinder', Top: 0.7, At: [0, 0.3, 0], Size: [0.12, 0.6, 0.12], Color: '#6b4a32'});
+
+			for (i = 0; i < count; i++)
+				parts.push({ID: 'crown-' + i, Shape: 'blob', At: [Math.cos(i * 2.4) * 0.16, 0.66 + i * 0.05, Math.sin(i * 2.4) * 0.16], Size: [0.34, 0.3, 0.34], Color: '#4f8a3c', Vary: {At: [0.05, 0.04, 0.05], Color: 0.15}, Chance: 0.8});
+		}
+
+		window.setTimeout(function () {
+			callback(null, {Type: /robot|робот/.test(text) ? 'unit' : '', Rig: /robot|робот/.test(text) ? 'Biped' : '', Variants: 4, Parts: parts});
+		}, 0);
 	},
 
 	TextChanged: function (value) {
@@ -5165,6 +5316,46 @@ Elemenx.Component('UIKitPage', {
 
 	DiagramFailed: function (error) {
 		this.CodesNote = error.message;
+	},
+
+	/* The pass of the Blueprint drawn on its canvas each time it changes; what is wrong with it is told instead. */
+	BlueprintChanged: function (graph) {
+		this.BlueprintDraw(graph);
+	},
+
+	BlueprintTold: function (problems) {
+		var editor = this.$Ref('Blueprint', true);
+
+		if (problems.length) this.BlueprintState = problems[0].Message;
+		else if (editor) this.BlueprintDraw(editor.Graph());
+	},
+
+	BlueprintDraw: function (graph) {
+		var canvas = this.$Ref('BlueprintPreview');
+		var graphics = this.$Service('Graphics3D');
+		var view = canvas ? canvas.BlueprintView : null;
+		var made;
+
+		if (!canvas) return;
+
+		try {
+			made = this.$Service('Blueprints').Compile(graph);
+		}
+		catch (error) {
+			this.BlueprintState = error.message;
+
+			return;
+		}
+
+		if (!view) {
+			view = canvas.BlueprintView = {Renderer: graphics.Create(canvas, {Antialias: false})};
+			view.Quad = view.Renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
+		}
+
+		view.Renderer.Resize(256, 256, 1);
+		view.Renderer.Draw(view.Quad, view.Renderer.Program(graphics.Shaders.Quad, made.Fragment), made.Values({}, {Time: performance.now() / 1000}), {Depth: false, Cull: 'none'});
+
+		this.BlueprintState = made.Fragment.split('\n').length + ' lines of GLSL, ' + made.Uniforms.length + ' uniforms, hash ' + made.Hash;
 	},
 
 	SoundSought: function (time) {

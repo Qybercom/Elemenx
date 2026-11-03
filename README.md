@@ -79,7 +79,7 @@ The examples, each a project of its own:
 - `examples/Widgets`: the Components of an application mounted as widgets on a page of another site (`Elemenx.Widgets`, `elemenx build --widget`);
 - `examples/Native`: the desktop program (Electron) and the Android and iOS programs (Capacitor) of one application (`elemenx build --native`);
 - `examples/Tutorials`: the projects of the tutorials of the Docs (a landing page, a blog, an admin panel, a shop, a chat, a game, an editor, a page of a server);
-- `examples/Docs` and `examples/Designer`, below.
+- `examples/Docs`, `examples/Designer` and `examples/GameEditor`, below.
 
 From the Elemenx repository they can be started with:
 
@@ -88,11 +88,12 @@ npm run example:simple
 npm run example:advanced
 ```
 
-Two applications are built with ElemenxUI as well: `examples/Docs`, the Docs of Elemenx and of the Library in English and Russian (its pages are Markdown files, `pages/<section>/<page>.<language>.md`; `npm run docs:pages` makes the pages of the Library again from the comments of its sources), and `examples/Designer`, a visual builder of pages that exports and imports their templates (its palette holds every component of the Library and the classes of its layouts; it takes them from the `data/meta.json` of the Library, which `npm run meta` makes again from the `$Meta` of the sources):
+Three applications are built with ElemenxUI as well: `examples/Docs`, the Docs of Elemenx and of the Library in English and Russian (its pages are Markdown files, `pages/<section>/<page>.<language>.md`; `npm run docs:pages` makes the pages of the Library again from the comments of its sources), and `examples/Designer`, a visual builder of pages that exports and imports their templates (its palette holds every component of the Library and the classes of its layouts; it takes them from the `data/meta.json` of the Library, which `npm run meta` makes again from the `$Meta` of the sources), and `examples/GameEditor`, a game of a scene (`SceneEditor`: a ground or a star system, its sketch, objects and triggers) and of models of shapes (`ObjectEditor`) placed in it, played in place and downloaded as one HTML file that runs alone or as a project of Elemenx with its models as glb files (the file of one needs `npm run dist`):
 
 ```bash
 npm run example:docs
 npm run example:designer
+npm run example:game-editor
 ```
 
 `Advanced` is also a standalone package consumer: after copying it outside the repository, run `npm install` and `npm run dev`. Its `@qybercom/elemenx` dependency provides the framework and CLI; the example does not carry a private copy of `elemenx.js` or the server.

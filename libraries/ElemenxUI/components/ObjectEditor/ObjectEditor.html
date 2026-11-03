@@ -1,0 +1,45 @@
+<div class="elemenx-object-editor">
+	<div class="elemenx-object-editor-toolbar" role="toolbar" [attribute.aria-label]="$T('ui.objectEditor.tools')">
+		<div class="elemenx-object-editor-group">
+			<button type="button" class="elemenx-object-editor-tool" *for="tool of Tools" *key="tool.ID" [class.active]="Tool === tool.ID" [attribute.data-tool]="tool.ID" [attribute.title]="$T(tool.Key) + ' (' + tool.Hotkey + ')'" [attribute.aria-pressed]="Tool === tool.ID ? 'true' : 'false'" (click)="Pick(tool.ID)"><Icon [name]="tool.Icon" Size="16" /></button>
+			<label class="elemenx-object-editor-snap" [attribute.title]="$T('ui.objectEditor.snap')"><input type="checkbox" [checked]="Snap" (change)="Snapped" />{{$T('ui.objectEditor.snap')}}</label>
+			<label class="elemenx-object-editor-variant" [attribute.title]="$T('ui.objectEditor.variant')">{{$T('ui.objectEditor.variant')}}<input type="number" min="0" step="1" [value]="Variant" (change)="VariantPicked" /></label>
+		</div>
+		<div class="elemenx-object-editor-group">
+			<Button Size="small" Variant="ghost" Icon="undo" [title]="$T('ui.objectEditor.undo')" [disabled]="!Past" (click)="Undo" />
+			<Button Size="small" Variant="ghost" Icon="redo" [title]="$T('ui.objectEditor.redo')" [disabled]="!Future" (click)="Redo" />
+		</div>
+		<div class="elemenx-object-editor-group end">
+			<select class="elemenx-object-editor-format" [attribute.aria-label]="$T('ui.objectEditor.format')" (change)="FormatPicked">
+				<option *for="format of Formats" *key="format" [value]="format" [selected]="format === Format">{{format}}</option>
+			</select>
+			<Button Size="small" Variant="ghost" Icon="download" [title]="$T('ui.objectEditor.model')" [label]="$T('ui.objectEditor.model')" (click)="DownloadPressed" />
+			<Button Size="small" Variant="ghost" Icon="save" [title]="$T('ui.objectEditor.save')" (click)="Store" />
+			<Button Size="small" Variant="ghost" Icon="file-code" [title]="$T('ui.objectEditor.export')" (click)="Exported" />
+			<label class="elemenx-object-editor-import" [attribute.title]="$T('ui.objectEditor.import')"><Icon name="upload" Size="16" /><input type="file" accept="application/json,.json" (change)="Imported" /></label>
+		</div>
+	</div>
+	<aside class="elemenx-object-editor-side">
+		<div class="elemenx-object-editor-title">{{$T('ui.objectEditor.parts')}}</div>
+		<Tree [items]="Items(Version)" [expanded]="Opened(Version)" [value]="Selected" [label]="$T('ui.objectEditor.parts')" (select)="Chosen" />
+		<div class="elemenx-object-editor-title">{{$T('ui.objectEditor.add')}}</div>
+		<div class="elemenx-object-editor-palette">
+			<button type="button" class="elemenx-object-editor-shape" *for="shape of Shapes" *key="shape" [attribute.data-shape]="shape" (click)="Placed(shape)">{{shape}}</button>
+		</div>
+		<div class="elemenx-object-editor-generator" *if="Generator">
+			<div class="elemenx-object-editor-title">{{$T('ui.objectEditor.generate')}}</div>
+			<textarea rows="3" [value]="Description" [attribute.aria-label]="$T('ui.objectEditor.describe')" [attribute.placeholder]="$T('ui.objectEditor.describe')" (input)="Described"></textarea>
+			<Button Size="small" Icon="lightbulb" [label]="$T('ui.objectEditor.generate')" [disabled]="Busy" (click)="GeneratePressed" />
+		</div>
+	</aside>
+	<div class="elemenx-object-editor-view" #View>
+		<GameScene #Scene Paused="true" Labels="false" Details="false" Quality="medium" [loader]="true" (ready)="SceneReady" />
+		<div class="elemenx-object-editor-overlay" #Overlay tabindex="0" [attribute.aria-label]="Label || $T('ui.objectEditor.label')" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Up" (wheel)="Wheeled" (contextmenu)="Menu" (keydown)="Key">
+			<svg class="elemenx-object-editor-gizmo" #Gizmo></svg>
+		</div>
+	</div>
+	<aside class="elemenx-object-editor-inspector">
+		<div class="elemenx-object-editor-title">{{Selected || $T('ui.objectEditor.whole')}}</div>
+		<div class="elemenx-object-editor-fields" #Fields></div>
+	</aside>
+</div>

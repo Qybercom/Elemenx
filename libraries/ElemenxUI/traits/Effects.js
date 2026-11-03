@@ -19,6 +19,11 @@
  * {Rings: [...]}, smoke: false}: what is told replaces what the type has, false leaves the layer out, a list adds layers. Effects({Name:
  * {...}}) makes a whole type of its own, from any layers.
  *
+ * A type is also an effect graph of the Blueprints Service: EffectGraph(name) gives the one of a type (its Layer blocks one
+ * after the other, its Effect at the end), Effects({Name: graph}) makes a type of one, and an effect with Blueprint (a graph)
+ * burns as it says. Parameters are the values of its parameters: a Parameter block linked to a number or a color of a layer
+ * is that value, so one graph makes many effects; a type made of a graph takes Parameters of its own too.
+ *
  * What lies flat is a plate across its Aim: Kind sigil is a magic circle of the Sigils service, of the Seed of the effect, or of its
  * Rings, a list of rings each with a Speed of its own, and Spin turns them all faster or slower; Kind swirl is the mouth of a portal, pool the light that falls on what it stands on, wave a ring that
  * runs out and fades.
@@ -61,6 +66,7 @@ Elemenx.Trait('Effects', {
 		var plate = null;
 		var ribbon = null;
 		var fire = [1, 0.62, 0.3];
+		var compiled = {Graphs: new WeakMap(), Texts: {}};
 
 		var types = scene.EffectTypes = {
 			spark: {Lamp: null, Layers: [
@@ -238,10 +244,67 @@ Elemenx.Trait('Effects', {
 			return meshes[count];
 		}
 
+		/*
+		 * The type of an effect: of its Blueprint (an effect graph of the Blueprints Service) with its Parameters, of its
+		 * Type made of a blueprint with Parameters of its own, or the Type as it is. A type is made once for each set of
+		 * parameters; a graph that cannot be made is told once, and burns as nothing.
+		 */
+		function typeOf (settings, fallback) {
+			var type = types[settings.Type || fallback];
+
+			if (settings.Blueprint)
+				return blueprinted(settings.Blueprint, settings.Parameters);
+
+			if (type && type.Blueprint && settings.Parameters)
+				return blueprinted(type.Blueprint, settings.Parameters);
+
+			return type;
+		}
+
+		function blueprinted (graph, parameters) {
+			var key = JSON.stringify(parameters || {});
+			var made = typeof graph === 'string' ? compiled.Texts[graph] : compiled.Graphs.get(graph);
+			var type;
+
+			if (made === undefined) {
+				try {
+					made = self.$Service('Blueprints').Compile(typeof graph === 'string' ? JSON.parse(graph) : graph);
+					made.Types = {};
+				}
+				catch (error) {
+					made = null;
+
+					if (window.console && window.console.warn)
+						window.console.warn('Elemenx GameScene: the Blueprint of an effect cannot be made: ' + error.message);
+				}
+
+				if (typeof graph === 'string') compiled.Texts[graph] = made;
+				else compiled.Graphs.set(graph, made);
+			}
+
+			if (!made)
+				return null;
+
+			if (!made.Types[key]) {
+				if (Object.keys(made.Types).length > 64)
+					made.Types = {};
+
+				type = made.Types[key] = made.Make(parameters || {});
+				type.Blueprint = graph;
+			}
+
+			return made.Types[key];
+		}
+
+		engine.EffectBlueprint = blueprinted;
+
+		self.EffectNodes();
+
 		function placeOf (object, settings) {
 			var follows = object.Values.Follow ? scene.Objects[object.Values.Follow] : null;
 			var offset = object.Values.Offset || [0, 0, 0];
-			var height = given(settings.Height, 0) || (types[settings.Type] && types[settings.Type].Stand ? types[settings.Type].Stand * given(settings.Size, 1) : 0);
+			var type = typeOf(settings);
+			var height = given(settings.Height, 0) || (type && type.Stand ? type.Stand * given(settings.Size, 1) : 0);
 			var x = given(object.Values.X, 0);
 			var z = given(object.Values.Y, 0);
 
@@ -386,7 +449,7 @@ Elemenx.Trait('Effects', {
 				born[object.ID] = born[object.ID] === undefined ? scene.Seconds : born[object.ID];
 
 				var settings = pulsed(told, scene.Seconds - born[object.ID]);
-				var type = types[settings.Type];
+				var type = typeOf(settings);
 
 				var carrier = object.Values.Follow ? scene.Objects[object.Values.Follow] : null;
 				var coming = given(settings.Appear, 0.45);
@@ -411,7 +474,7 @@ Elemenx.Trait('Effects', {
 					born[key] = born[key] === undefined ? scene.Seconds : born[key];
 
 					var settings = pulsed(told, scene.Seconds - born[key]);
-					var type = types[settings.Type || 'exhaust'];
+					var type = typeOf(settings, 'exhaust');
 					var seen = looks(settings);
 
 					if (!type) return;
@@ -449,7 +512,7 @@ Elemenx.Trait('Effects', {
 
 		engine.EffectBurst = function (type, at, options) {
 			var settings = options || {};
-			var made = types[type];
+			var made = type && typeof type === 'object' ? blueprinted(type, settings.Parameters) : typeOf({Type: type, Parameters: settings.Parameters});
 			if (!made)
 				return false;
 
@@ -817,9 +880,162 @@ Elemenx.Trait('Effects', {
 		};
 	},
 
-	/* Adds types of effects, or a type of the same name in the place of one. */
+	/* Adds types of effects, or a type of the same name in the place of one: its data, or an effect graph of Blueprints. */
 	Effects: function (types) {
-		Object.assign(this.Scene().EffectTypes, types);
+		var engine = this.Engine();
+		var made = {};
+
+		Object.keys(types).forEach(function (name) {
+			var type = types[name];
+
+			made[name] = type && (type.blocks || typeof type === 'string') ? engine.EffectBlueprint(type) : type;
+		});
+
+		Object.assign(this.Scene().EffectTypes, made);
+	},
+
+	/*
+	 * The blocks of effect graphs: Layer (each of a Kind, its numbers as inputs a Parameter can take, else its properties;
+	 * each one after the layers under it) and Effect, the end (its lamp, heat, aim and flight, the layers given).
+	 */
+	EffectNodes: function () {
+		var blueprints = this.$Service('Blueprints');
+		var numbers = ['Count', 'Life', 'Spread', 'Gravity', 'Rise', 'Drag', 'Bounce', 'Stretch', 'Wander', 'Wind', 'Opacity', 'Start', 'Base', 'Hollow', 'Soft', 'Reach', 'Seed'];
+		var layer = [{Key: 'Speed', Type: 'vec2'}, {Key: 'Size', Type: 'vec2'}, {Key: 'Color', Type: 'vec3'}, {Key: 'Hot', Type: 'vec3'}].concat(numbers.map(function (key) {
+			return {Key: key, Type: 'float'};
+		}));
+		var effect = [{Key: 'Heat', Type: 'float'}, {Key: 'Stand', Type: 'float'}, {Key: 'Lasts', Type: 'float'}, {Key: 'Fly', Type: 'float'}, {Key: 'Aim', Type: 'vec3'}, {Key: 'Glow', Type: 'vec3'}, {Key: 'LampColor', Type: 'any'}, {Key: 'LampPower', Type: 'float'}, {Key: 'LampRadius', Type: 'float'}, {Key: 'LampFlicker', Type: 'float'}];
+		var known = blueprints.NodeOf('Layer');
+
+		/* A value of a field: what comes to its input, else its property; none is left out. Lists may be written "1, 2". */
+		function value (inputs, properties, field) {
+			var told = inputs[field.Key] !== undefined ? inputs[field.Key] : properties[field.Key];
+			if (told === undefined || told === null || told === '') return undefined;
+			if (field.Type === 'float') return Number(told);
+			if (typeof told === 'string' && told.indexOf(',') !== -1) return told.split(',').map(Number);
+
+			return told;
+		}
+
+		if (known && known.Effects) return;
+
+		blueprints.Graph('effect', {
+			End: 'Effect',
+			Uses: ['generator'],
+			Compile: function (plan) {
+				return {
+					Make: function (parameters) {
+						var run = {Outputs: {}, Parameters: parameters || {}, Inputs: {}, Memo: true, Graph: {parameters: this && this.Parameters || plan.Graph.parameters}};
+						var end = plan.Order.filter(function (id) {
+							return plan.Blocks[id].type === 'Effect' && plan.Blocks[id].enabled !== false;
+						})[0];
+
+						return blueprints.Pull(plan, end, 'Type', run, 0);
+					}
+				};
+			}
+		});
+
+		blueprints.Node('Layer', {
+			Graphs: ['effect'],
+			Group: 'effect',
+			Effects: true,
+			Properties: [{Key: 'Kind', Type: 'select', Options: ['flame', 'smoke', 'spark', 'mote', 'bubble', 'fire', 'stream', 'ball', 'beam', 'shell', 'bolt', 'sigil', 'swirl', 'pool', 'wave', 'nozzle', 'flare'], Value: 'mote'}, {Key: 'Blend', Type: 'select', Options: ['add', 'alpha'], Value: 'add'}, {Key: 'Hold', Type: 'bool', Value: false}, {Key: 'Rings', Type: 'object', Value: null}].concat(layer.map(function (field) {
+				return {Key: field.Key, Type: field.Type === 'float' ? 'number' : 'vector'};
+			})),
+			Inputs: [{Key: 'Under', Type: 'object'}].concat(layer),
+			Outputs: [{Key: 'Layers', Type: 'object'}],
+			Compute: function (inputs, properties) {
+				var made = {Kind: properties.Kind || 'mote', Blend: properties.Blend || 'add'};
+
+				layer.forEach(function (field) {
+					var told = value(inputs, properties, field);
+					if (told !== undefined)
+						made[field.Key] = told;
+				});
+
+				if (properties.Hold === true || properties.Hold === 'true')
+					made.Hold = true;
+
+				if (properties.Rings)
+					made.Rings = typeof properties.Rings === 'string' ? JSON.parse(properties.Rings) : properties.Rings;
+
+				return {Layers: (Array.isArray(inputs.Under) ? inputs.Under : []).concat([made])};
+			}
+		});
+
+		blueprints.Node('Effect', {
+			Graphs: ['effect'],
+			Group: 'effect',
+			Effects: true,
+			Properties: [{Key: 'Once', Type: 'bool', Value: false}, {Key: 'Then', Type: 'text', Value: ''}].concat(effect.map(function (field) {
+				return {Key: field.Key, Type: field.Type === 'float' ? 'number' : 'vector'};
+			})),
+			Inputs: [{Key: 'Layers', Type: 'object'}].concat(effect),
+			Outputs: [],
+			Compute: function (inputs, properties) {
+				var told = {};
+				var type = {Lamp: null};
+
+				effect.forEach(function (field) {
+					told[field.Key] = value(inputs, properties, field);
+				});
+
+				if (told.LampColor !== undefined)
+					type.Lamp = {Color: told.LampColor, Power: told.LampPower, Radius: told.LampRadius, Flicker: told.LampFlicker};
+
+				['Heat', 'Stand', 'Lasts', 'Fly', 'Aim', 'Glow'].forEach(function (key) {
+					if (told[key] !== undefined)
+						type[key] = told[key];
+				});
+
+				if (properties.Once === true || properties.Once === 'true')
+					type.Once = true;
+
+				if (properties.Then)
+					type.Then = properties.Then;
+
+				type.Layers = Array.isArray(inputs.Layers) ? inputs.Layers : [];
+
+				return {Type: type};
+			}
+		});
+	},
+
+	/* The effect graph of a type of effect: its layers one after the other, its lamp and the rest on its Effect; to change in a Blueprint. */
+	EffectGraph: function (name) {
+		var blueprints = this.$Service('Blueprints');
+		var type = this.Scene().EffectTypes[name];
+		var graph;
+		var under = null;
+		var end;
+		var lamp;
+
+		if (!type)
+			throw new Error('Elemenx GameScene: no type of effect ' + name);
+
+		if (type.Blueprint && typeof type.Blueprint === 'object') return JSON.parse(JSON.stringify(type.Blueprint));
+
+		this.EffectNodes();
+
+		graph = blueprints.Create('effect', {name: name});
+
+		type.Layers.forEach(function (layer, index) {
+			var block = blueprints.Add(graph, 'Layer', {id: 'layer' + (index + 1), x: 40 + index * 260, y: 40 + index % 2 * 60, properties: JSON.parse(JSON.stringify(layer))});
+
+			if (under)
+				blueprints.Link(graph, [under.id, 'Layers'], [block.id, 'Under']);
+
+			under = block;
+		});
+
+		lamp = type.Lamp || {};
+		end = blueprints.Add(graph, 'Effect', {id: 'effect', x: 40 + type.Layers.length * 260, y: 40, properties: JSON.parse(JSON.stringify({Once: !!type.Once, Then: type.Then || '', Heat: type.Heat, Stand: type.Stand, Lasts: type.Lasts, Fly: type.Fly, Aim: type.Aim, Glow: type.Glow, LampColor: lamp.Color, LampPower: lamp.Power, LampRadius: lamp.Radius, LampFlicker: lamp.Flicker}))});
+
+		if (under)
+			blueprints.Link(graph, [under.id, 'Layers'], [end.id, 'Layers']);
+
+		return graph;
 	},
 
 	/* An effect that happens once at a place [x, y, z] of the world: Burst('explosion', [0, 1, 0], {Size, Power, Aim}). */

@@ -36,6 +36,7 @@
  *   Widgets                  Elemenx.Widgets: Components of an Application mounted on a page of another site
  *   Splash                   Elemenx.Splash: the splash of the page, gone when the first Application is ready
  *   Motion                   the endless animations of Elemenx rest while their element is out of the viewport
+ *   SSR                      pages rendered on a server: the state of their Components ($OnSSR), their markup replaced
  *   Application              Elemenx.Application: ownership, mounting, startup lifecycle
  *   Export                   Elemenx.Version, Elemenx.NoConflict; the window gets this copy, an isolated build keeps it
  *   ServiceWorker bootstrap  runs inside a service worker started by Elemenx.ServiceWorker
@@ -1073,6 +1074,9 @@
 			script = global.document.createElement('script');
 			script.src = url;
 			script.async = true;
+
+			/* What the framework loaded itself: a page rendered for a server leaves it out (Elemenx.Render). */
+			script.setAttribute('data-elemenx-loaded', '');
 
 			script.onload = function () {
 				done(deferred(type, name) ? new Error('Elemenx Bundle part did not bring ' + type + ': ' + name + ' (' + url + ')') : null);
@@ -2140,6 +2144,9 @@
 			script = global.document.createElement('script');
 			script.src = target;
 			script.async = true;
+
+			/* What the framework loaded itself: a page rendered for a server leaves it out (Elemenx.Render). */
+			script.setAttribute('data-elemenx-loaded', '');
 
 			script.onload = function () {
 				callbacks = pending[key] || [];
@@ -6982,6 +6989,9 @@
 			return !!(definition.$StyleURL && definition.$Style === undefined);
 		}
 
+		/* The definitions a Component of a template URL is made of, by the name of that Component. */
+		var remoteNames = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
+
 		function createRemoteFactory (name, definition, generation) {
 			var templateID;
 			var remoteFactory = function (data, slotProjection, options) {
@@ -7011,6 +7021,10 @@
 						}
 
 						localFactory = CreateComponentFactory(null, localDefinition, generation);
+
+						/* Its instances are of the name of the Component that loaded it: the key of its state is of that name (SSR). */
+						if (remoteNames)
+							remoteNames.set(localDefinition, name);
 
 						ready(null, localFactory);
 					}
@@ -7656,6 +7670,10 @@
 				 */
 				if (options && options.RoutePacket)
 					updateRouteContext(options.RoutePacket);
+
+				/* Its data before its first render: of the state a server rendered it with, or of its $OnSSR (SSR). */
+				if (!directState)
+					Runtime.SSR.Component(api, name || (remoteNames && remoteNames.get(definition)) || '', definition, values, Update, parentComponent);
 
 				/*
 				 * Bootstrap is intentionally delayed until after $OnCreate().
@@ -20278,6 +20296,212 @@
 		}, true);
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* SSR */
+	(function (global) {
+		'use strict';
+
+		/*
+		 * A page rendered on a server: its markup in the mount of its Application (the mount has data-elemenx-ssr, the version
+		 * of the framework that rendered it) and its state in <script type="application/json" data-elemenx-state>, {Version,
+		 * Application, URL, Components: {key: fields}}. A Component loads its data in $OnSSR(done, context): on the server the
+		 * page waits for every done(error), and the fields of each such Component go into the state; on the client a Component
+		 * whose key is in the state starts with its fields (and $OnSSR is not called), one that is not calls $OnSSR there.
+		 * The key of a Component is its place in the tree of Components: the key of its owner, its name and how many of that
+		 * name its owner made before it (Page#0/Card#2), the same on both sides whatever comes late.
+		 */
+		var keys = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
+		var counts = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
+		var roots = {};
+		var made = [];
+		var state = null;
+		var waiting = [];
+
+		Runtime.SSR = {
+			/* True while this copy renders a page for a server (its page sets ElemenxSSR first): $OnSSR is awaited and its fields are kept. */
+			Server: typeof ElemenxSSR === 'object' && !!ElemenxSSR,
+			/* The $OnSSR not done yet. */
+			Pending: 0
+		};
+
+		/* The state of the page: the Components of every state script of the document, each script read once. */
+		function pageState () {
+			var scripts;
+			var i = 0;
+
+			state = state || {};
+
+			if (!Runtime.HasDOM || !global.document.querySelectorAll) return state;
+
+			scripts = global.document.querySelectorAll('script[type="application/json"][data-elemenx-state]');
+
+			while (i < scripts.length) {
+				if (!scripts[i].ElemenxRead) {
+					scripts[i].ElemenxRead = true;
+
+					try {
+						Runtime.Assign(state, JSON.parse(scripts[i].textContent || '{}').Components || {});
+					}
+					catch (error) {
+						Runtime.Report(error);
+					}
+				}
+
+				i++;
+			}
+
+			return state;
+		}
+
+		/* The fields of a Component that go into the state: its own values that JSON keeps, not its methods nor its $ names. */
+		function fieldsOf (values) {
+			var result = {};
+
+			Object.keys(values).forEach(function (key) {
+				var value = values[key];
+				var text;
+
+				if (typeof value === 'function' || key.charAt(0) === '$' || key.charAt(0) === '_') return;
+
+				try {
+					text = JSON.stringify(value);
+				}
+				catch (error) {
+					return;
+				}
+
+				if (text !== undefined)
+					result[key] = JSON.parse(text);
+			});
+
+			return result;
+		}
+
+		function keyOf (api, name, parent) {
+			var owner = parent && keys ? keys.get(parent) : '';
+			var count = parent && counts ? counts.get(parent) : roots;
+			var key;
+
+			if (!count) {
+				count = {};
+
+				counts.set(parent, count);
+			}
+
+			count[name] = (count[name] || 0) + 1;
+			key = (owner ? owner + '/' : '') + name + '#' + (count[name] - 1);
+
+			if (keys)
+				keys.set(api, key);
+
+			return key;
+		}
+
+		/*
+		 * A Component made: its key, and its data. From the state of the page when it has its key there (the entry let go
+		 * then: a key comes once, a Component made again is the next of its name), else by its $OnSSR; on the server its
+		 * fields are kept when it is done.
+		 */
+		Runtime.SSR.Component = function (api, name, definition, values, update, parent) {
+			var key = keyOf(api, name || 'Component', parent);
+			var page;
+			var entry;
+			var finished = false;
+
+			if (typeof definition.$OnSSR !== 'function') return;
+
+			page = Runtime.SSR.Server ? {} : pageState();
+
+			if (Runtime.Own(page, key)) {
+				update(page[key]);
+
+				delete page[key];
+
+				return;
+			}
+
+			entry = {Key: key, Values: values};
+
+			if (Runtime.SSR.Server) {
+				made.push(entry);
+
+				Runtime.SSR.Pending++;
+			}
+
+			Runtime.Untracked(function () {
+				definition.$OnSSR.call(api, function (error) {
+					if (finished) return;
+
+					finished = true;
+
+					if (error)
+						Runtime.Report(error);
+
+					if (Runtime.SSR.Server) {
+						Runtime.SSR.Pending--;
+
+						settle();
+					}
+				}, {Server: Runtime.SSR.Server, Key: key, URL: Runtime.HasDOM && global.location ? global.location.href : ''});
+			});
+		};
+
+		/* The fields of every Component a server render loaded, by their keys. */
+		Runtime.SSR.State = function () {
+			var result = {};
+
+			made.forEach(function (entry) {
+				result[entry.Key] = fieldsOf(entry.Values);
+			});
+
+			return result;
+		};
+
+		/* Calls back once no $OnSSR is pending, after the renders their data brought (a few ticks with none). */
+		function settle () {
+			var calm = 0;
+
+			if (!waiting.length) return;
+
+			(function check () {
+				if (Runtime.SSR.Pending) return;
+
+				calm++;
+
+				if (calm < 3) {
+					setTimeout(check, 0);
+
+					return;
+				}
+
+				waiting.splice(0).forEach(function (callback) {
+					callback();
+				});
+			})();
+		}
+
+		Runtime.SSR.Settled = function (callback) {
+			waiting.push(callback);
+
+			settle();
+		};
+
+		/* The markup a server sent into a mount: what replaces it (or what it becomes) once the Application is ready. */
+		Runtime.SSR.Markup = function (mount) {
+			var nodes = [];
+			var i = 0;
+
+			if (!mount || !mount.getAttribute || mount.getAttribute('data-elemenx-ssr') === null) return null;
+
+			while (i < mount.childNodes.length) {
+				nodes.push(mount.childNodes[i]);
+
+				i++;
+			}
+
+			return nodes;
+		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
 	/* Application */
 	(function (global) {
 		'use strict';
@@ -20287,6 +20511,8 @@
 		var mountOwners = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
 		var mountedApplications = [];
 		var started = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
+		/* What a server render waits for, by Application: its page there ({Done, Error}). */
+		var rendered = {};
 
 		function applicationMountOwner (element) {
 			if (!mountOwners || !element) return null;
@@ -20644,6 +20870,7 @@
 			var serviceWorkers = {};
 			var ownedMount = null;
 			var shadow = null;
+			var served = null;
 			var api = {};
 
 			definition = definition || {};
@@ -20828,8 +21055,10 @@
 					}
 				}
 
-				if (applications[name] === api)
+				if (applications[name] === api) {
 					delete applications[name];
+					delete rendered[name];
+				}
 			};
 
 			Runtime.InitializeOwnerSubscriptions(api, definition);
@@ -20883,6 +21112,21 @@
 				if (destroyed || router || !definition.$Router || !root) return;
 
 				router = Elemenx.Router(applicationRouterDefinition(definition.$Router, root));
+
+				/*
+				 * Over the markup of a server: it goes once the page of the first navigation is there (or it failed), not
+				 * before; a page rendered for a server is done then too.
+				 */
+				if (served || Runtime.SSR.Server) {
+					['NavigationEnd', 'NavigationError', 'NavigationCancel'].forEach(function (event) {
+						router.On(event, function (context) {
+							reveal();
+
+							if (rendered[name] && !rendered[name].Done)
+								rendered[name] = {Done: true, Error: event === 'NavigationError' && context ? context.$Error || null : null};
+						});
+					});
+				}
 
 				router.Start();
 			}
@@ -20974,10 +21218,17 @@
 					}
 				};
 				var preservedMounts = nestedMounts(api, mount);
+				var markup = Runtime.SSR.Markup(mount);
 
 				detachMounts(preservedMounts);
 
 				root = factory(definition.$State || {}, null, options);
+
+				/* Over the markup of a server: the root is made out of sight beside it, and takes its place once ready. */
+				if (markup && root.$Element().style) {
+					served = {Nodes: markup, Mount: mount, Element: root.$Element(), Display: root.$Element().style.display};
+					root.$Element().style.display = 'none';
+				}
 
 				mount.appendChild(root.$Element());
 
@@ -21067,9 +21318,136 @@
 				});
 			}
 
+			/* The fields, the open details and the focus of a markup, in the order of the document, and its scrolled elements by their place. */
+			function readerState (nodes) {
+				var state = {Fields: [], Details: [], Scrolled: [], Focused: -1};
+				var focusable = [];
+
+				function walk (node, place) {
+					var children = node.childNodes || [];
+					var i = 0;
+
+					if (node.nodeType !== 1) return;
+
+					if (/^(INPUT|TEXTAREA|SELECT)$/.test(node.tagName))
+						state.Fields.push(node);
+
+					if (node.tagName === 'DETAILS')
+						state.Details.push(node);
+
+					if (place && (node.scrollTop || node.scrollLeft))
+						state.Scrolled.push({Place: place, Tag: node.tagName, Top: node.scrollTop, Left: node.scrollLeft});
+
+					if (node.tabIndex >= 0 || /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(node.tagName))
+						focusable.push(node);
+
+					while (i < children.length) {
+						walk(children[i], place ? place.concat([i]) : null);
+
+						i++;
+					}
+				}
+
+				/* The places of the parts that scroll are taken from the first element: the root of the markup, as the root made of it. */
+				nodes.forEach(function (node) {
+					walk(node, node === Array.prototype.filter.call(nodes, function (each) {
+						return each.nodeType === 1;
+					})[0] ? [] : null);
+				});
+
+				state.Focused = focusable.indexOf(global.document.activeElement);
+				state.Focusable = focusable;
+
+				return state;
+			}
+
+			/*
+			 * $Hydrate: what the reader did in the markup of the server before the scripts ran goes on in the root that takes
+			 * its place: what was typed and chosen, the details opened, the scroll of each part, the focus.
+			 */
+			function adopt () {
+				var before = readerState(served.Nodes);
+				var after = readerState([served.Element]);
+
+				before.Fields.forEach(function (field, index) {
+					var other = after.Fields[index];
+					if (!other || other.tagName !== field.tagName || other.type !== field.type || (other.name || '') !== (field.name || '')) return;
+
+					if (field.type === 'checkbox' || field.type === 'radio') other.checked = field.checked;
+					else if (field.tagName === 'SELECT') other.selectedIndex = field.selectedIndex;
+					else if (field.type !== 'file' && field.value !== other.value) other.value = field.value;
+
+					if (field.value !== field.defaultValue || field.checked !== field.defaultChecked)
+						other.dispatchEvent(new global.Event(field.tagName === 'SELECT' || field.type === 'checkbox' || field.type === 'radio' ? 'change' : 'input', {bubbles: true}));
+				});
+
+				before.Details.forEach(function (details, index) {
+					if (after.Details[index])
+						after.Details[index].open = details.open;
+				});
+
+				return {Before: before, After: after};
+			}
+
+			/* After the swap: the scroll of each part and the focus, in the root now in the page. */
+			function adopted (taken) {
+				taken.Before.Scrolled.forEach(function (scrolled) {
+					var node = served.Element;
+					var i = 0;
+
+					while (node && i < scrolled.Place.length) {
+						node = node.childNodes[scrolled.Place[i]];
+
+						i++;
+					}
+
+					if (node && node.tagName === scrolled.Tag) {
+						node.scrollTop = scrolled.Top;
+						node.scrollLeft = scrolled.Left;
+					}
+				});
+
+				if (taken.Before.Focused !== -1 && taken.After.Focusable[taken.Before.Focused] && taken.After.Focusable[taken.Before.Focused].focus)
+					taken.After.Focusable[taken.Before.Focused].focus({preventScroll: true});
+			}
+
+			/* The markup of the server goes and the root shows, at once: the page is never empty between them. */
+			function reveal () {
+				var taken;
+
+				if (!served) return;
+
+				if (definition.$Hydrate)
+					taken = adopt();
+
+				served.Nodes.forEach(function (node) {
+					if (node.parentNode === served.Mount)
+						served.Mount.removeChild(node);
+				});
+
+				/* Only what hid it goes: the styles its bindings gave it meanwhile stay. */
+				served.Element.style.display = served.Display;
+
+				if (served.Element.getAttribute('style') === '')
+					served.Element.removeAttribute('style');
+
+				if (taken)
+					adopted(taken);
+
+				served.Mount.removeAttribute('data-elemenx-ssr');
+
+				served = null;
+			}
+
 			api.$OnPending = definition.$OnPending || null;
 			api.$OnReady = function (args) {
 				startRouter();
+
+				if (!router) {
+					reveal();
+
+					rendered[name] = {Done: true, Error: null};
+				}
 
 				if (typeof definition.$OnReady === 'function')
 					definition.$OnReady.call(api, args);
@@ -21079,7 +21457,15 @@
 					Runtime.Splash.Ready();
 			};
 
-			api.$OnError = definition.$OnError || null;
+			/* Failed: a page rendered for a server is done with the error; the hook of the definition, else the console, gets it. */
+			api.$OnError = function (args) {
+				var error = args && args.Error ? args.Error : null;
+
+				rendered[name] = {Done: true, Error: error || new Error('Elemenx Application failed: ' + name)};
+
+				if (typeof definition.$OnError === 'function') definition.$OnError.call(api, args);
+				else if (error && global.console && typeof global.console.error === 'function') global.console.error(error);
+			};
 
 			/* The root renders once the dictionaries of the language are in: no key shows in place of its phrase. */
 			function startLocalized () {
@@ -21133,9 +21519,87 @@
 			if (definition && !definition.$DefinitionURL && Runtime.CurrentScriptURL())
 				definition.$DefinitionURL = Runtime.CurrentScriptURL();
 
+			rendered[name] = {Done: false, Error: null};
 			applications[name] = createApplication(name, definition);
 
 			return applications[name];
+		};
+
+		/*
+		 * The page as a server sends it, in a page rendered for a server (ElemenxSSR set before the framework): once every
+		 * Application has its page (the first navigation of its Router) and no $OnSSR is pending, each mount gets
+		 * data-elemenx-ssr and the body a state script, and callback(error, html, state) has the HTML of the document and
+		 * {Version, URL, Components}. The first Application that failed gives its error.
+		 */
+		Elemenx.Render = function (callback) {
+			var tries = 0;
+
+			if (typeof callback !== 'function')
+				throw new Error('Elemenx.Render expects (callback)');
+
+			if (!Runtime.SSR.Server || !Runtime.HasDOM) {
+				callback(new Error('Elemenx.Render renders a page for a server: ElemenxSSR is not set'));
+
+				return;
+			}
+
+			(function wait () {
+				var names = Object.keys(rendered);
+				var failed = null;
+				var done = names.every(function (each) {
+					failed = failed || rendered[each].Error;
+
+					return rendered[each].Done;
+				});
+
+				/* Ten seconds or so for an Application to be ready: one that never is fails the render, not hangs it. */
+				if (!done && tries > 1050) {
+					callback(new Error('Elemenx.Render: an Application is not ready: ' + names.filter(function (each) {
+						return !rendered[each].Done;
+					}).join(', ')));
+
+					return;
+				}
+
+				if (!done) {
+					tries++;
+
+					setTimeout(wait, tries < 50 ? 0 : 10);
+
+					return;
+				}
+
+				if (failed) {
+					callback(failed);
+
+					return;
+				}
+
+				Runtime.SSR.Settled(function () {
+					var state = {Version: 1, URL: global.location ? global.location.href : '', Components: Runtime.SSR.State()};
+					var script = global.document.createElement('script');
+
+					/* The scripts the framework loaded itself go: the page loads them again, by its own scripts. */
+					Array.prototype.forEach.call(global.document.querySelectorAll('script[data-elemenx-loaded]'), function (each) {
+						each.parentNode.removeChild(each);
+					});
+
+					names.forEach(function (each) {
+						var mount = applications[each] ? applications[each].$Mount() : null;
+						if (mount)
+							mount.setAttribute('data-elemenx-ssr', Version);
+					});
+
+					script.setAttribute('type', 'application/json');
+					script.setAttribute('data-elemenx-state', '');
+
+					script.textContent = JSON.stringify(state).replace(/</g, '\\u003c');
+
+					global.document.body.appendChild(script);
+
+					callback(null, '<!DOCTYPE html>\n' + global.document.documentElement.outerHTML, state);
+				});
+			})();
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 

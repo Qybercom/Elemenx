@@ -10,9 +10,12 @@
 | `SidebarOpen` | `true` |
 | `SidebarWidth` | `280` |
 | `Selection` | `[]` |
+| `HistoryBusy` | `false` |
+| `HistoryDone` | `false` |
 
 ## События
 
+- `history`
 - `clear`: Выделение сообщений снято (кнопкой или Escape).
 - `resize`: Изменён размер боковой панели: SidebarWidth.
 
@@ -78,11 +81,15 @@
 
 ## Тесты
 
-- [chat composer puts emoji at the caret and sends stickers; messages take reactions](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L999) — `tests/examples/ui-kit.spec.js`
-- [chat composer suggests emoji for a word and for :word, the stickers of a message of one emoji, and keeps to its setting](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1070) — `tests/examples/ui-kit.spec.js`
-- [chat messages: a tap opens the menu, a long press starts a choice of several, the bar counts and deletes them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1549) — `tests/examples/ui-kit.spec.js`
-- [a call stage pages its tiles, changes its layout with the bar of the call, pins a tile in front, opens its side panel and takes its own video to another corner](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L2775) — `tests/examples/ui-kit.spec.js`
-- [a mobile menu is a sheet from the bottom: large rows, levels inside it with a way back, Cancel and the shade close it](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4136) — `tests/examples/ui-kit.spec.js`
-- [chat keeps to its last message when what it holds grows later: a picture that loads, more messages](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5634) — `tests/examples/ui-kit.spec.js`
-- [chat shows the avatar on the newest message of a run from one author](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5685) — `tests/examples/ui-kit.spec.js`
-- [chat messages show their state, open their menu by a right click or the dots, and sum up reactions and views](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5702) — `tests/examples/ui-kit.spec.js`
+- [*infinite asks once near the end, again when the list grew, never while Busy or Done, and at once when too short](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L387) — `tests/regression/library-directives.test.js`
+- [*infinite up asks at the start, and keeps what the reader sees when rows come above](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L495) — `tests/regression/library-directives.test.js`
+- [InfiniteList shows a spinner while busy and a word at its end, and tells more; up its spinner takes no room](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L536) — `tests/regression/library-directives.test.js`
+- [VirtualList asks for more when its last rows are drawn, once for each length; Chat asks for its history at its start](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L580) — `tests/regression/library-directives.test.js`
+- [chat composer puts emoji at the caret and sends stickers; messages take reactions](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1000) — `tests/examples/ui-kit.spec.js`
+- [chat composer suggests emoji for a word and for :word, the stickers of a message of one emoji, and keeps to its setting](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1071) — `tests/examples/ui-kit.spec.js`
+- [chat messages: a tap opens the menu, a long press starts a choice of several, the bar counts and deletes them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1550) — `tests/examples/ui-kit.spec.js`
+- [a call stage pages its tiles, changes its layout with the bar of the call, pins a tile in front, opens its side panel and takes its own video to another corner](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L2776) — `tests/examples/ui-kit.spec.js`
+- [a mobile menu is a sheet from the bottom: large rows, levels inside it with a way back, Cancel and the shade close it](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4181) — `tests/examples/ui-kit.spec.js`
+- [chat keeps to its last message when what it holds grows later: a picture that loads, more messages](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5680) — `tests/examples/ui-kit.spec.js`
+- [chat shows the avatar on the newest message of a run from one author](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5731) — `tests/examples/ui-kit.spec.js`
+- [chat messages show their state, open their menu by a right click or the dots, and sum up reactions and views](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5748) — `tests/examples/ui-kit.spec.js`

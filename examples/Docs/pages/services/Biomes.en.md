@@ -39,6 +39,6 @@ The same functions run in Node: they read no page.
 
 ## Tests
 
-- [lays out the same village of the same seed, on what is level and dry, moved there if it must](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1472) — `tests/regression/library-scene.test.js`
-- [takes the lands of an application](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1505) — `tests/regression/library-scene.test.js`
-- [makes a whole land of one attribute, and a village with its roads that nothing grows on](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1044) — `tests/regression/library-scene.test.js`
+- [lays out the same village of the same seed, on what is level and dry, moved there if it must](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9991) — `tests/regression/library-scene.test.js`
+- [takes the lands of an application](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L10024) — `tests/regression/library-scene.test.js`
+- [makes a whole land of one attribute, and a village with its roads that nothing grows on](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9009) — `tests/regression/library-scene.test.js`

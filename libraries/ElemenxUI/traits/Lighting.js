@@ -33,6 +33,8 @@ Elemenx.Trait('Lighting', {
 	Wind: null,
 	WindWay: 70,
 	Front: null,
+	Pipeline: null,
+	PipelineParameters: null,
 
 	LightingStart: function () {
 		var self = this;
@@ -41,7 +43,8 @@ Elemenx.Trait('Lighting', {
 		var renderer = engine.Renderer;
 		var graphics = this.$Service('Graphics3D');
 		var shaders = this.LightingShaders(graphics);
-		var state = {Width: 0, Height: 0, Level: '', Scene: null, Bloom: [], Dark: null, Soft: null, Programs: null, Late: 0, Frames: 0, Step: 0};
+		var blueprints = this.$Service('Blueprints');
+		var state = {Width: 0, Height: 0, Level: '', Scene: null, Bloom: [], Dark: null, Soft: null, Programs: null, Late: 0, Frames: 0, Step: 0, Screen: {}, Shaders: {}};
 		var levels = ['low', 'medium', 'high', 'ultra'];
 		var sets = {
 			low: {Post: false, Cascades: 1, Bounce: false, Occlusion: 0, Rays: false, Samples: 0, Reach: 0.6, Grass: false},
@@ -112,7 +115,8 @@ Elemenx.Trait('Lighting', {
 					Focus: renderer.Program(graphics.Shaders.Quad, shaders.Focus),
 					Circle: renderer.Program(graphics.Shaders.Quad, shaders.Circle),
 					Disc: renderer.Program(graphics.Shaders.Quad, shaders.Disc),
-					Focused: renderer.Program(graphics.Shaders.Quad, shaders.Focused)
+					Focused: renderer.Program(graphics.Shaders.Quad, shaders.Focused),
+					Copy: renderer.Program(graphics.Shaders.Quad, shaders.Copy)
 				};
 			}
 
@@ -776,103 +780,135 @@ Elemenx.Trait('Lighting', {
 		}
 
 		/*
-		 * After all was drawn: the picture of it. view {Matrix (of the view, the eye at the origin), Plain (the same with no shake), Sun, SunColor, Air, Fog
-		 * (how thick the air is), Sky (true: there is a sky to see the sun in)}.
+		 * Lighting: the passes of the picture. What a frame drew is made into its picture by a render graph of the Blueprints
+		 * Service: each pass below is a block of it, its textures flowing from one to the next. The graph of the library
+		 * (PipelineGraph) runs them in the order they always ran; the Pipeline of the scene, a graph of its own, takes its
+		 * place: passes left out, others added (Shader: a pass of a graph of its own), their properties changed.
 		 */
-		engine.PostEnd = function (view) {
-			var set = sets[level()];
-			var run = programs();
-			var inverse = graphics.Invert(view.Matrix);
-			var plain = view.Plain || view.Matrix;
-			var color = state.Scene.Textures[0];
-			var depth = state.Scene.Depth;
-			var sun = view.Sun || [0, 1, 0];
-			var spot = graphics.Apply(view.Plain || view.Matrix, sun);
-			var now = state.Now2 || calm;
-			var rays = (view.Sky && sun[1] > -0.02 || view.Star) && set.Rays && spot[2] < 1 && !scene.Camera.Ortho ? 1 : 0;
-			var airLight = view.AirLight === undefined ? Math.max(0.05, Math.min(1, sun[1] * 2.5 + 0.2)) : view.AirLight;
-			var i;
-
-			state.Scene.End();
-
-			if (!scene.PostQuad)
-				scene.PostQuad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
+		var steps = {
+			Scene: function () {
+				return {Color: state.Scene.Textures[0], Depth: state.Scene.Depth};
+			},
 
 			/* Clouds: at half the size, over all that is nearer than them or behind them; none before their noise came. */
-			var air = view.Clouds && state.Cloud && now.Clouds > 0.02 && cloudNoise() === state.Noise ? view.Clouds : null;
+			Clouds: function (frame, inputs) {
+				var view = frame.View;
+				var now = frame.Now;
+				var air = view.Clouds && state.Cloud && now.Clouds > 0.02 && cloudNoise() === state.Noise ? view.Clouds : null;
 
-			if (air) {
-				if (!air.Over)
-					cloudMap(air, run, now);
+				frame.Air = air;
 
-				cloudFrames(air, run, depth, inverse, plain, now, set);
-			}
+				if (air) {
+					if (!air.Over)
+						cloudMap(air, frame.Run, now);
 
-			if (state.Dark && view.Sky) {
-				pass(state.Dark, run.Dark, {uDepth: depth, uInverse: inverse, uMatrix: view.Matrix, uReach: view.Reach || 2, uSunWay: sun, uSunOn: view.Sky ? Math.min(1, ((view.SunColor || [0, 0, 0])[0] + (view.SunColor || [0, 0, 0])[1]) * 1.2) : 0, uSeed: scene.Frames = (scene.Frames || 0) + 1});
-				pass(state.Soft, run.Soft, {uColor: state.Dark.Textures[0], uDepth: depth, uPixel: [1 / state.Dark.Width, 1 / state.Dark.Height]});
-			}
+					cloudFrames(air, frame.Run, inputs.Depth, frame.Inverse, frame.Plain, now, frame.Set);
+				}
 
-			pass(state.Aired, run.Air, {
-				uColor: color,
-				uDepth: depth,
-				uDark: state.Dark && view.Sky ? state.Soft.Textures[0] : scene.White || color,
-				uDarkOn: state.Dark && view.Sky ? 1 : 0,
-				uCloud: state.Cloud && view.Clouds ? state.CloudPast.Textures[0] : scene.White || color,
-				uCover: state.Cloud && view.Clouds && now.Clouds > 0.02 ? 1 : 0,
-				uBehind: view.Clouds && view.Clouds.Over ? 0 : 1,
-				uFogSky: view.Clouds ? Math.min(0.92, now.Fog * 0.92) : 0,
-				uAirLight: airLight,
-				uAirGlow: view.AirGlow || [0, 0, 0],
-				uVeil: view.Veil || 0,
-				uVeilMove: [(now.DriftX || 0) * 9, (now.DriftY || 0) * 9, scene.Seconds * 0.07],
-				uNoise: state.Noise || emptyNoise(),
-				uInverse: inverse,
-				uSun: sun,
-				uSunColor: view.SunColor || [1, 1, 1],
-				uAir: view.Air || [0, 0, 0, 0],
-				uFog: view.Fog || 0,
-				uFogLow: view.FogLow || [0, 0, 0],
-				uParallel: scene.Camera.Ortho ? 1 : 0
-			});
+				return {Cloud: state.Cloud && view.Clouds ? state.CloudPast.Textures[0] : null};
+			},
 
-			color = state.Aired.Textures[0];
+			/* The darkening of corners, where there is a sky. */
+			Occlusion: function (frame, inputs) {
+				var view = frame.View;
+				if (!state.Dark || !view.Sky) return {Dark: null};
+
+				pass(state.Dark, frame.Run.Dark, {uDepth: inputs.Depth, uInverse: frame.Inverse, uMatrix: view.Matrix, uReach: view.Reach || 2, uSunWay: frame.Sun, uSunOn: view.Sky ? Math.min(1, ((view.SunColor || [0, 0, 0])[0] + (view.SunColor || [0, 0, 0])[1]) * 1.2) : 0, uSeed: scene.Frames = (scene.Frames || 0) + 1});
+				pass(state.Soft, frame.Run.Soft, {uColor: state.Dark.Textures[0], uDepth: inputs.Depth, uPixel: [1 / state.Dark.Width, 1 / state.Dark.Height]});
+
+				return {Dark: state.Soft.Textures[0]};
+			},
+
+			/* The air between the eye and what it sees, with the clouds and the darkened corners laid in. */
+			Air: function (frame, inputs) {
+				var view = frame.View;
+				var now = frame.Now;
+
+				pass(state.Aired, frame.Run.Air, {
+					uColor: inputs.Color,
+					uDepth: inputs.Depth,
+					uDark: inputs.Dark || scene.White || inputs.Color,
+					uDarkOn: inputs.Dark ? 1 : 0,
+					uCloud: inputs.Cloud || scene.White || inputs.Color,
+					uCover: inputs.Cloud && now.Clouds > 0.02 ? 1 : 0,
+					uBehind: view.Clouds && view.Clouds.Over ? 0 : 1,
+					uFogSky: view.Clouds ? Math.min(0.92, now.Fog * 0.92) : 0,
+					uAirLight: frame.AirLight,
+					uAirGlow: view.AirGlow || [0, 0, 0],
+					uVeil: view.Veil || 0,
+					uVeilMove: [(now.DriftX || 0) * 9, (now.DriftY || 0) * 9, scene.Seconds * 0.07],
+					uNoise: state.Noise || emptyNoise(),
+					uInverse: frame.Inverse,
+					uSun: frame.Sun,
+					uSunColor: view.SunColor || [1, 1, 1],
+					uAir: view.Air || [0, 0, 0, 0],
+					uFog: view.Fog || 0,
+					uFogLow: view.FogLow || [0, 0, 0],
+					uParallel: scene.Camera.Ortho ? 1 : 0
+				});
+
+				return {Color: state.Aired.Textures[0]};
+			},
 
 			/* This frame with the ones before it, where they are now. */
-			if (set.Frames && view.Eye) {
-				pass(state.Now, run.Frames, {uColor: color, uDepth: depth, uPast: state.Past ? state.Past.Textures[0] : color, uInverse: graphics.Invert(plain), uMatrix: state.PastMatrix || plain, uMoved: state.PastEye ? graphics.Vectors.Subtract(view.Eye, state.PastEye) : [0, 0, 0], uMix: state.Past ? 0.92 : 0, uPixel: [1 / renderer.Width, 1 / renderer.Height]});
+			Frames: function (frame, inputs) {
+				var view = frame.View;
+				var color;
+
+				if (!frame.Set.Frames || !view.Eye) return {Color: inputs.Color};
+
+				pass(state.Now, frame.Run.Frames, {uColor: inputs.Color, uDepth: inputs.Depth, uPast: state.Past ? state.Past.Textures[0] : inputs.Color, uInverse: graphics.Invert(frame.Plain), uMatrix: state.PastMatrix || frame.Plain, uMoved: state.PastEye ? graphics.Vectors.Subtract(view.Eye, state.PastEye) : [0, 0, 0], uMix: state.Past ? 0.92 : 0, uPixel: [1 / renderer.Width, 1 / renderer.Height]});
 
 				color = state.Now.Textures[0];
 
 				state.Past = state.Now;
 				state.Now = state.Before;
 				state.Before = state.Past;
-				state.PastMatrix = plain;
+				state.PastMatrix = frame.Plain;
 				state.PastEye = view.Eye.slice();
-			}
+
+				return {Color: color};
+			},
 
 			/* What glossy surfaces mirror of what is on the screen. */
-			if (state.Mirror && view.Eye)
-				pass(state.Mirror, run.Mirror, {uColor: color, uDepth: depth, uMask: state.Scene.Textures[0], uInverse: graphics.Invert(plain), uMatrix: plain, uAir: view.Air || [0, 0, 0, 0], uAirLight: airLight, uAirGlow: view.AirGlow || [0, 0, 0]});
+			Mirror: function (frame, inputs) {
+				var view = frame.View;
+				if (!state.Mirror || !view.Eye) return {Mirror: null};
 
-			/* The light of the sun past what stands before it, drawn out from it. */
-			if (rays) {
-				pass(state.Shaft, run.Shafts, {uDepth: depth, uSpot: [spot[0] * 0.5 + 0.5, spot[1] * 0.5 + 0.5], uSize: [renderer.Width / Math.max(1, renderer.Height), 1], uClear: view.Clear || 0.9999});
-				pass(state.ShaftSoft, run.Down, {uColor: state.Shaft.Textures[0], uPixel: [1 / state.Shaft.Width, 1 / state.Shaft.Height], uThreshold: 0});
+				pass(state.Mirror, frame.Run.Mirror, {uColor: inputs.Color, uDepth: inputs.Depth, uMask: state.Scene.Textures[0], uInverse: graphics.Invert(frame.Plain), uMatrix: frame.Plain, uAir: view.Air || [0, 0, 0, 0], uAirLight: frame.AirLight, uAirGlow: view.AirGlow || [0, 0, 0]});
 
-				/* Rays and how much of the sun shows go over frames, as the clouds do: what they are made of trembles with the depth. */
-				pass(state.ShaftNext, run.CloudFrames, {uNew: state.ShaftSoft.Textures[0], uOld: state.ShaftPast.Textures[0], uInverse: graphics.Invert(plain), uMatrix: state.ShaftMatrix || plain, uMix: state.ShaftMatrix ? 0.85 : 0, uPixel: [1 / state.ShaftSoft.Width, 1 / state.ShaftSoft.Height]});
+				return {Mirror: state.Mirror.Textures[0]};
+			},
 
-				var kept = state.ShaftPast;
+			/* The light of the sun past what stands before it, drawn out from it; rays and how much of the sun shows go over frames. */
+			Rays: function (frame, inputs) {
+				var spot = frame.Spot;
+				var plain = frame.Plain;
+				var view = frame.View;
+				var kept;
+				var step;
+				var ring;
 
+				if (!frame.Rays) {
+					state.SunlitOn = false;
+					state.ShaftMatrix = null;
+
+					return {Shaft: null, Sunlit: null};
+				}
+
+				pass(state.Shaft, frame.Run.Shafts, {uDepth: inputs.Depth, uSpot: [spot[0] * 0.5 + 0.5, spot[1] * 0.5 + 0.5], uSize: [renderer.Width / Math.max(1, renderer.Height), 1], uClear: view.Clear || 0.9999});
+				pass(state.ShaftSoft, frame.Run.Down, {uColor: state.Shaft.Textures[0], uPixel: [1 / state.Shaft.Width, 1 / state.Shaft.Height], uThreshold: 0});
+				pass(state.ShaftNext, frame.Run.CloudFrames, {uNew: state.ShaftSoft.Textures[0], uOld: state.ShaftPast.Textures[0], uInverse: graphics.Invert(plain), uMatrix: state.ShaftMatrix || plain, uMix: state.ShaftMatrix ? 0.85 : 0, uPixel: [1 / state.ShaftSoft.Width, 1 / state.ShaftSoft.Height]});
+
+				kept = state.ShaftPast;
 				state.ShaftPast = state.ShaftNext;
 				state.ShaftNext = kept;
 				state.ShaftMatrix = plain;
 
-				var step = Math.min(state.Step || 1 / 60, 0.1);
-				var ring = Math.max(0.02, (view.Ring || 0) * 0.7);
+				step = Math.min(state.Step || 1 / 60, 0.1);
+				ring = Math.max(0.02, (view.Ring || 0) * 0.7);
 
-				pass(state.SunlitNext, run.Sunlit, {uDepth: depth, uCloud: state.Cloud && air ? state.CloudPast.Textures[0] : emptyPicture(), uOld: state.Sunlit.Textures[0], uSpot: [spot[0] * 0.5 + 0.5, spot[1] * 0.5 + 0.5], uRing: [ring / Math.max(1e-6, renderer.Width / Math.max(1, renderer.Height)), ring], uClear: view.Clear || 0.9999, uMix: state.SunlitOn ? 0.14 : 1, uEyeMix: state.SunlitOn ? [1 - Math.exp(-step / 0.07), 1 - Math.exp(-step / 0.4)] : [1, 1]});
+				pass(state.SunlitNext, frame.Run.Sunlit, {uDepth: inputs.Depth, uCloud: inputs.Cloud && frame.Air ? inputs.Cloud : emptyPicture(), uOld: state.Sunlit.Textures[0], uSpot: [spot[0] * 0.5 + 0.5, spot[1] * 0.5 + 0.5], uRing: [ring / Math.max(1e-6, renderer.Width / Math.max(1, renderer.Height)), ring], uClear: view.Clear || 0.9999, uMix: state.SunlitOn ? 0.14 : 1, uEyeMix: state.SunlitOn ? [1 - Math.exp(-step / 0.07), 1 - Math.exp(-step / 0.4)] : [1, 1]});
 
 				kept = state.Sunlit;
 				state.Sunlit = state.SunlitNext;
@@ -880,52 +916,187 @@ Elemenx.Trait('Lighting', {
 				state.SunlitOn = true;
 
 				readEye();
+
+				return {Shaft: state.ShaftPast.Textures[0], Sunlit: state.Sunlit.Textures[0]};
+			},
+
+			/* How bright the picture is, followed by the eye in a second or two; none with an Exposure given. */
+			Exposure: function (frame, inputs) {
+				var view = frame.View;
+
+				eyeSteps(view, frame.Run, inputs.Color);
+
+				return {Eye: state.Eye && given(view.Exposure, null) === null && view.Sky ? state.Eye.Textures[0] : null};
+			},
+
+			Bokeh: function (frame, inputs) {
+				return {Color: frame.View.Bokeh > 0 ? bokeh(frame.View, frame.Run, inputs.Color, inputs.Depth, frame.Plain) : inputs.Color};
+			},
+
+			/* The glow of what is too bright (above Threshold), down six steps and up again. */
+			Bloom: function (frame, inputs, properties) {
+				var run = frame.Run;
+				var i;
+
+				pass(state.Bloom[0], run.Down, {uColor: inputs.Color, uPixel: [1 / renderer.Width, 1 / renderer.Height], uThreshold: given(properties.Threshold, 0.85)});
+
+				for (i = 1; i < state.Bloom.length; i++)
+					pass(state.Bloom[i], run.Down, {uColor: state.Bloom[i - 1].Textures[0], uPixel: [1 / state.Bloom[i - 1].Width, 1 / state.Bloom[i - 1].Height], uThreshold: 0});
+
+				for (i = state.Bloom.length - 1; i > 0; i--)
+					pass(state.Bloom[i - 1], run.Up, {uColor: state.Bloom[i].Textures[0], uPixel: [1 / state.Bloom[i].Width, 1 / state.Bloom[i].Height]});
+
+				return {Bloom: state.Bloom[0].Textures[0]};
+			},
+
+			/* The picture: the filmic curve, the glow, the mirror, the rays and the flare; on the screen when Present shows it. */
+			Picture: function (frame, inputs, properties, block) {
+				var view = frame.View;
+				var now = frame.Now;
+				var rays = frame.Rays;
+				var spot = frame.Spot;
+				var white = scene.White || inputs.Color;
+				var direct = frame.Direct === block.id;
+				if (!direct)
+					state.Final = target(state.Final, renderer.Width, renderer.Height, {});
+
+				pass(direct ? null : state.Final, frame.Run.Picture, {
+					uColor: inputs.Color,
+					uDepth: inputs.Depth,
+					uBloom: inputs.Bloom || emptyPicture(),
+					uPixel: [1 / renderer.Width, 1 / renderer.Height],
+					uSharp: frame.Set.Frames ? 0.16 : 0.12,
+					uHeat: view.Heat || 0,
+					uMirror: inputs.Mirror || white,
+					uMirrorOn: inputs.Mirror ? 1 : 0,
+					uFlash: now.Flash,
+					uShimmer: view.Shimmer || new Array(16).fill(0),
+					uTick: scene.Seconds % 1000,
+					uEye: inputs.Eye || white,
+					uEyeOn: state.Eye && view.Sky ? 1 : 0,
+					uExposure: given(view.Exposure, 1),
+					uNight: view.Night || 0,
+					uNoise: state.Noise || emptyNoise(),
+					uGrade: [1 - (view.Veil || 0) * 0.14, 1 - (view.Veil || 0) * 0.05, 1 + (view.Veil || 0) * 0.02, Math.min(0.5, (view.Veil || 0) * 0.5 + (now.Clouds * now.Clouds) * 0.16)],
+					uSunColor: view.SunColor || [1, 1, 1],
+					uRays: rays * (view.Star ? view.Glare : Math.pow(1 - Math.min(1, now.Fog), 2)),
+					uShaft: inputs.Shaft || white,
+					uSunlit: inputs.Sunlit || white,
+					uFlare: rays ? flareOf() * (view.Glare === undefined ? 1 : view.Glare) : 0,
+					uAspect: renderer.Width / Math.max(1, renderer.Height),
+					uSpot: [spot[0] * 0.5 + 0.5, spot[1] * 0.5 + 0.5, spot[2]],
+					uParallel: scene.Camera.Ortho ? 1 : 0
+				});
+
+				return {Color: direct ? frame.Screen : state.Final.Textures[0]};
+			},
+
+			/*
+			 * A pass of a graph of its own (a pass of the Blueprints Service, its property Graph) over Color and Depth, at Scale
+			 * of the view; its parameters are those of Parameters, then of the pipeline, then its own.
+			 */
+			Shader: function (frame, inputs, properties, block, parameters) {
+				var own = state.Shaders[block.id] = state.Shaders[block.id] || {};
+				var scale = Math.max(0.05, Math.min(1, given(properties.Scale, 1)));
+				var width = Math.max(1, Math.round(renderer.Width * scale));
+				var height = Math.max(1, Math.round(renderer.Height * scale));
+
+				if (own.Source !== properties.Graph) {
+					own.Source = properties.Graph;
+					own.Made = blueprints.Compile(typeof properties.Graph === 'string' ? JSON.parse(properties.Graph) : properties.Graph);
+					own.Program = renderer.Program(graphics.Shaders.Quad, own.Made.Fragment);
+				}
+
+				own.Target = target(own.Target, width, height, {Float: true});
+
+				pass(own.Target, own.Program, own.Made.Values(Object.assign({}, parameters, properties.Parameters || {}), {Time: scene.Seconds, Pixel: [1 / width, 1 / height], Textures: {Color: inputs.Color, Depth: inputs.Depth}}));
+
+				return {Color: own.Target.Textures[0]};
 			}
-			else {
-				state.SunlitOn = false;
-				state.ShaftMatrix = null;
+		};
+
+		/* A target of this size, the one there when it has it. */
+		function target (kept, width, height, options) {
+			if (kept && kept.Width === width && kept.Height === height) return kept;
+
+			if (kept)
+				kept.Destroy();
+
+			return renderer.Target(width, height, options);
+		}
+
+		/* The pipeline of the scene made once for each graph given; one that cannot be made is told once, and the library's runs. */
+		function pipeline () {
+			var given = self.Pipeline || null;
+			var made;
+			var present;
+
+			if (state.Pipeline && state.PipelineGiven === given) return state.Pipeline;
+
+			self.PipelineNodes();
+
+			state.PipelineGiven = given;
+
+			try {
+				made = blueprints.Compile(given || state.Library || (state.Library = self.PipelineGraph()));
+			}
+			catch (error) {
+				if (window.console && window.console.warn)
+					window.console.warn('Elemenx GameScene: the Pipeline cannot be made, the picture of the library is drawn: ' + error.message);
+
+				made = blueprints.Compile(state.Library || (state.Library = self.PipelineGraph()));
 			}
 
-			eyeSteps(view, run, color);
+			present = made.Passes.filter(function (pass) {
+				return pass.Type === 'Present';
+			})[0];
 
-			if (view.Bokeh > 0)
-				color = bokeh(view, run, color, depth, plain);
+			state.Direct = present && present.Inputs.Color && made.Passes.some(function (pass) {
+				return pass.ID === present.Inputs.Color.Block && pass.Type === 'Picture' && pass.Enabled;
+			}) ? present.Inputs.Color.Block : null;
+			state.Pipeline = made;
 
-			pass(state.Bloom[0], run.Down, {uColor: color, uPixel: [1 / renderer.Width, 1 / renderer.Height], uThreshold: 0.85});
+			return made;
+		}
 
-			for (i = 1; i < state.Bloom.length; i++)
-				pass(state.Bloom[i], run.Down, {uColor: state.Bloom[i - 1].Textures[0], uPixel: [1 / state.Bloom[i - 1].Width, 1 / state.Bloom[i - 1].Height], uThreshold: 0});
+		/*
+		 * After all was drawn: the picture of it. view {Matrix (of the view, the eye at the origin), Plain (the same with no shake), Sun, SunColor, Air, Fog
+		 * (how thick the air is), Sky (true: there is a sky to see the sun in)}.
+		 */
+		engine.PostEnd = function (view) {
+			var set = sets[level()];
+			var run = programs();
+			var plain = view.Plain || view.Matrix;
+			var sun = view.Sun || [0, 1, 0];
+			var spot = graphics.Apply(view.Plain || view.Matrix, sun);
+			var made = pipeline();
+			var frame = {
+				Steps: steps,
+				View: view,
+				Set: set,
+				Run: run,
+				Inverse: graphics.Invert(view.Matrix),
+				Plain: plain,
+				Sun: sun,
+				Spot: spot,
+				Now: state.Now2 || calm,
+				Rays: (view.Sky && sun[1] > -0.02 || view.Star) && set.Rays && spot[2] < 1 && !scene.Camera.Ortho ? 1 : 0,
+				AirLight: view.AirLight === undefined ? Math.max(0.05, Math.min(1, sun[1] * 2.5 + 0.2)) : view.AirLight,
+				Direct: state.Direct,
+				Screen: state.Screen
+			};
+			var picture;
 
-			for (i = state.Bloom.length - 1; i > 0; i--)
-				pass(state.Bloom[i - 1], run.Up, {uColor: state.Bloom[i].Textures[0], uPixel: [1 / state.Bloom[i].Width, 1 / state.Bloom[i].Height]});
+			state.Scene.End();
 
-			pass(null, run.Picture, {
-				uColor: color,
-				uDepth: depth,
-				uBloom: state.Bloom[0].Textures[0],
-				uPixel: [1 / renderer.Width, 1 / renderer.Height],
-				uSharp: set.Frames ? 0.16 : 0.12,
-				uHeat: view.Heat || 0,
-				uMirror: state.Mirror && view.Eye ? state.Mirror.Textures[0] : scene.White || color,
-				uMirrorOn: state.Mirror && view.Eye ? 1 : 0,
-				uFlash: now.Flash,
-				uShimmer: view.Shimmer || new Array(16).fill(0),
-				uTick: scene.Seconds % 1000,
-				uEye: state.Eye && given(view.Exposure, null) === null && view.Sky ? state.Eye.Textures[0] : scene.White || color,
-				uEyeOn: state.Eye && view.Sky ? 1 : 0,
-				uExposure: given(view.Exposure, 1),
-				uNight: view.Night || 0,
-				uNoise: state.Noise || emptyNoise(),
-				uGrade: [1 - (view.Veil || 0) * 0.14, 1 - (view.Veil || 0) * 0.05, 1 + (view.Veil || 0) * 0.02, Math.min(0.5, (view.Veil || 0) * 0.5 + (now.Clouds * now.Clouds) * 0.16)],
-				uSunColor: view.SunColor || [1, 1, 1],
-				uRays: rays * (view.Star ? view.Glare : Math.pow(1 - Math.min(1, now.Fog), 2)),
-				uShaft: rays ? state.ShaftPast.Textures[0] : scene.White || color,
-				uSunlit: rays ? state.Sunlit.Textures[0] : scene.White || color,
-				uFlare: rays ? flareOf() * (view.Glare === undefined ? 1 : view.Glare) : 0,
-				uAspect: renderer.Width / Math.max(1, renderer.Height),
-				uSpot: [spot[0] * 0.5 + 0.5, spot[1] * 0.5 + 0.5, spot[2]],
-				uParallel: scene.Camera.Ortho ? 1 : 0
-			});
+			if (!scene.PostQuad)
+				scene.PostQuad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
+
+			picture = made.Run(frame, self.PipelineParameters || {});
+
+			/* A picture that is not on the screen yet (passes after Picture, or none): put there as it is. */
+			if (picture !== state.Screen)
+				pass(null, run.Copy, {uColor: picture || scene.White || state.Scene.Textures[0]});
 		};
 
 		/* Frames late for long: a level down, while nobody asked for one. */
@@ -945,6 +1116,82 @@ Elemenx.Trait('Lighting', {
 		};
 
 		engine.PostDestroy = destroy;
+	},
+
+	/* The types of the blocks of the passes: the same for every scene, each one runs the steps of the scene that runs it. */
+	PipelineNodes: function () {
+		var blueprints = this.$Service('Blueprints');
+		var types = {
+			Scene: [[], ['Color', 'Depth']],
+			Clouds: [['Depth'], ['Cloud']],
+			Occlusion: [['Depth'], ['Dark']],
+			Air: [['Color', 'Depth', 'Cloud', 'Dark'], ['Color']],
+			Frames: [['Color', 'Depth'], ['Color']],
+			Mirror: [['Color', 'Depth'], ['Mirror']],
+			Rays: [['Depth', 'Cloud'], ['Shaft', 'Sunlit']],
+			Exposure: [['Color'], ['Eye']],
+			Bokeh: [['Color', 'Depth'], ['Color']],
+			Bloom: [['Color'], ['Bloom']],
+			Picture: [['Color', 'Depth', 'Bloom', 'Mirror', 'Eye', 'Shaft', 'Sunlit'], ['Color']],
+			Shader: [['Color', 'Depth'], ['Color']]
+		};
+		var properties = {
+			Bloom: [{Key: 'Threshold', Type: 'number', Value: 0.85, Min: 0, Max: 4}],
+			Shader: [{Key: 'Graph', Type: 'object', Value: null}, {Key: 'Scale', Type: 'number', Value: 1, Min: 0.05, Max: 1}, {Key: 'Parameters', Type: 'object', Value: null}]
+		};
+
+		Object.keys(types).forEach(function (type) {
+			var known = blueprints.NodeOf(type);
+			if (known && known.Lighting) return;
+
+			blueprints.Node(type, {
+				Graphs: ['render'],
+				Group: 'picture',
+				Lighting: true,
+				Properties: properties[type] || [],
+				Inputs: types[type][0].map(function (key) {
+					return {Key: key, Type: 'texture'};
+				}),
+				Outputs: types[type][1].map(function (key) {
+					return {Key: key, Type: 'texture'};
+				}),
+				Pass: function (frame, inputs, values, block, parameters) {
+					return frame.Steps[type](frame, inputs, values, block, parameters);
+				}
+			});
+		});
+	},
+
+	/* The render graph of the library: the passes of the picture as they always ran, in their order; a Pipeline starts from it. */
+	PipelineGraph: function () {
+		var blueprints = this.$Service('Blueprints');
+		var graph;
+		var ids = {};
+
+		this.PipelineNodes();
+
+		graph = blueprints.Create('render', {name: 'Picture'});
+
+		['Scene', 'Clouds', 'Occlusion', 'Air', 'Frames', 'Mirror', 'Rays', 'Exposure', 'Bokeh', 'Bloom', 'Picture', 'Present'].forEach(function (type, index) {
+			ids[type] = blueprints.Add(graph, type, {id: type.toLowerCase(), x: 40 + index * 220, y: index % 2 ? 220 : 40}).id;
+		});
+
+		[
+			['Scene', 'Depth', 'Clouds', 'Depth'], ['Scene', 'Depth', 'Occlusion', 'Depth'],
+			['Scene', 'Color', 'Air', 'Color'], ['Scene', 'Depth', 'Air', 'Depth'], ['Clouds', 'Cloud', 'Air', 'Cloud'], ['Occlusion', 'Dark', 'Air', 'Dark'],
+			['Air', 'Color', 'Frames', 'Color'], ['Scene', 'Depth', 'Frames', 'Depth'],
+			['Frames', 'Color', 'Mirror', 'Color'], ['Scene', 'Depth', 'Mirror', 'Depth'],
+			['Scene', 'Depth', 'Rays', 'Depth'], ['Clouds', 'Cloud', 'Rays', 'Cloud'],
+			['Frames', 'Color', 'Exposure', 'Color'],
+			['Frames', 'Color', 'Bokeh', 'Color'], ['Scene', 'Depth', 'Bokeh', 'Depth'],
+			['Bokeh', 'Color', 'Bloom', 'Color'],
+			['Bokeh', 'Color', 'Picture', 'Color'], ['Scene', 'Depth', 'Picture', 'Depth'], ['Bloom', 'Bloom', 'Picture', 'Bloom'], ['Mirror', 'Mirror', 'Picture', 'Mirror'], ['Exposure', 'Eye', 'Picture', 'Eye'], ['Rays', 'Shaft', 'Picture', 'Shaft'], ['Rays', 'Sunlit', 'Picture', 'Sunlit'],
+			['Picture', 'Color', 'Present', 'Color']
+		].forEach(function (link) {
+			blueprints.Link(graph, [ids[link[0]], link[1]], [ids[link[2]], link[3]]);
+		});
+
+		return graph;
 	},
 
 	LightingShaders: function (graphics) {
@@ -987,6 +1234,16 @@ Elemenx.Trait('Lighting', {
 		].join('\n');
 
 		return {
+			/* A picture put on the screen as it is: what a pipeline made after its Picture. */
+			Copy: head + [
+				'in vec2 vQuad;',
+				'uniform sampler2D uColor;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	outColor = vec4(texture(uColor, vQuad * 0.5 + 0.5).rgb, 1.0);',
+				'}'
+			].join('\n'),
+
 			/* A step down: the mean of four, of what is too bright the first time. */
 			Down: head + [
 				'in vec2 vQuad;',

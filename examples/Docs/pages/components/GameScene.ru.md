@@ -18,6 +18,8 @@
 | `Shadows` | `true` |
 | `View` | `''` |
 | `Paused` | `false` |
+| `Bokeh` | `0` |
+| `BokehFocus` | `''` |
 | `Orbits` | `true` |
 | `Labels` | `true` |
 | `Details` | `true` |
@@ -25,6 +27,7 @@
 | `Scale` | `'compressed'` |
 | `Team` | `''` |
 | `Label` | `''` |
+| `Loader` | `true` |
 
 ## События
 
@@ -34,13 +37,14 @@
 - `land`: Вид спустился на поверхность тела: {ID}.
 - `takeoff`: Вид поднялся обратно в космос: {ID}.
 - `select`: Выделение изменилось: {ID, Object, Info, IDs, Objects} (ID пустой, когда не выбрано ничего).
+- `loading`
 - `ready`: Сцена готова: сам компонент, чтобы вызывать его методы.
 - `person`
 - `shoulder`
 
 ## Слоты
 
-`hud`, по умолчанию
+`loading`, `hud`, по умолчанию, `screens`
 
 ## Методы
 
@@ -61,8 +65,8 @@
 - `Now()`
 - `SetTime(days)`
 - `ToScreen(id, y)`
-- `Pick(clientX, clientY)`
-- `Save()`
+- `Pick(clientX, clientY, all)`
+- `Save(options)`
 - `Load(saved, callback)`
 - `Supported()`
 - `Land(id, options)`
@@ -133,13 +137,13 @@
 - [GameScene: sets no timer of no function while it is made (a page that forbids eval refuses one)](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L81) — `tests/regression/game-world.test.js`
 - [GameScene: the map and the objects it declares, the ways round its buildings, its methods, the order walked to the end](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L102) — `tests/regression/game-world.test.js`
 - [GameScene: a declaration changed moves its object, one taken away takes it away; a map by its URL loads](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L191) — `tests/regression/game-world.test.js`
+- [gives the passes of the library as a render graph, in the order they run, and draws the same picture of it given](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L113) — `tests/regression/library-render-pipeline.test.js`
+- [leaves out a pass switched off, takes the properties of its blocks, and adds a pass of a graph of its own after the picture](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L140) — `tests/regression/library-render-pipeline.test.js`
+- [draws the picture of the library when the Pipeline cannot be made, and tells it once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L202) — `tests/regression/library-render-pipeline.test.js`
+- [lets a crate fall onto the ground, tells the touch, and knocks it over by a push](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-rigid.test.js#L58) — `tests/regression/library-rigid.test.js`
+- [lets a walker push a ball it walks into](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-rigid.test.js#L115) — `tests/regression/library-rigid.test.js`
+- [sets the view at once and tells it, and finds the point of the ground under a point of the page](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editing.test.js#L44) — `tests/regression/library-scene-editing.test.js`
+- [turns what stands by its Facing, lifts it by its Lift, and picks with all what cannot be selected](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editing.test.js#L87) — `tests/regression/library-scene-editing.test.js`
 - [reads the GameObject inside it: each attribute a field of its kind, nested ones going round their holder or a part of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L327) — `tests/regression/library-scene.test.js`
-- [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L374) — `tests/regression/library-scene.test.js`
-- [selects an object by its label and a part by a press when near, flies to it, sends a fleet that arrives](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L415) — `tests/regression/library-scene.test.js`
-- [adds, changes, attaches, detaches and removes objects and parts, saves the game and loads it the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L477) — `tests/regression/library-scene.test.js`
-- [runs the systems of the application for traits of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L539) — `tests/regression/library-scene.test.js`
-- [lands on the surface of a body and takes off again; a giant of gas has none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L556) — `tests/regression/library-scene.test.js`
-- [plays the clips of a model: walking on a way by itself, a clip that ends going back, a kind for each model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L596) — `tests/regression/library-scene.test.js`
-- [sees a ground in parallel rays: from above a point is where the plan says, at an angle where the rhombus says](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L666) — `tests/regression/library-scene.test.js`
 
-+115 ещё в тех же файлах
++148 ещё в тех же файлах

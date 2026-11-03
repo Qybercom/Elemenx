@@ -3671,6 +3671,24 @@
 					"Description": "What the light costs: empty chooses by the graphics card and steps down while frames are late."
 				},
 				{
+					"Name": "Pipeline",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The render graph of the Blueprints Service that makes the picture of a frame (high, ultra and medium): its passes (Scene, Clouds, Occlusion, Air, Frames, Mirror, Rays, Exposure, Bokeh, Bloom, Picture, Shader: a pass graph of its own) up to Present; empty: PipelineGraph(), the passes of the library."
+				},
+				{
+					"Name": "PipelineParameters",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The values of the parameters of the Pipeline, by key."
+				},
+				{
 					"Name": "Flare",
 					"Type": "bool",
 					"Default": true,
@@ -3903,6 +3921,11 @@
 				"land",
 				"takeoff",
 				"travel",
+				"enter",
+				"active",
+				"leave",
+				"action",
+				"touch",
 				"error"
 			],
 			"EventDescriptions": {
@@ -3920,10 +3943,23 @@
 				"land": "The view went down to the surface of a body: {ID}.",
 				"takeoff": "The view went back up to space: {ID}.",
 				"travel": "A ship on its way far at once (Travel, H or J) came to a phase: {ID, Kind (warp or jump), Phase (enter, inside, exit, done)}.",
+				"enter": "A walker, a vehicle or the hero came into a trigger: {Trigger (the trigger itself: ID, Inside(), Action(name, data), Enable(on)), ID, Object}.",
+				"active": "One stays in a trigger, every Every seconds of it: {Trigger, ID, Object}.",
+				"leave": "One went out of a trigger, or was removed: {Trigger, ID, Object}.",
+				"action": "A trigger was sent an action (Action of the trigger): {Trigger, Name, Data}.",
+				"touch": "Two solid things began to touch (trait Rigid): {ID, With (null: the ground), At, Normal, Impulse}.",
 				"error": "There is no WebGL2 ({Reason: webgl2}), or a map could not be loaded (the error)."
 			},
 			"Methods": [
+				"Trigger(id)",
+				"TriggerActions(actions)",
+				"ZonesAt(x, z)",
+				"Push(id, impulse, at)",
+				"CastRay(from, direction, max)",
+				"RigidWorld()",
 				"Burst(type, place, options)",
+				"PipelineGraph()",
+				"EffectGraph(name)",
 				"Effects(types)",
 				"MountsOf(id, kind)",
 				"Travel(id, kind, options, callback)",
@@ -3947,7 +3983,13 @@
 				"Now()",
 				"SetTime(days)",
 				"ToScreen(id)",
-				"Pick(clientX, clientY)",
+				"Pick(clientX, clientY, all)",
+				"Viewpoint()",
+				"SetViewpoint(view)",
+				"Project(point)",
+				"Ray(clientX, clientY)",
+				"GroundAt(clientX, clientY)",
+				"OrbitAt(id, clientX, clientY)",
 				"Save(options)",
 				"Load(saved)",
 				"Land(id, options)",
@@ -16251,6 +16293,582 @@
 			}
 		},
 		{
+			"Name": "Blueprint",
+			"Kind": "Component",
+			"Group": "codes",
+			"Icon": "share-2",
+			"Description": "The editor of a blueprint in the JSON of Flowprint: blocks, pins and links on a canvas, the types to add and the parameters of the graph.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The graph: an object or the text of its file."
+				},
+				{
+					"Name": "Type",
+					"Type": "select",
+					"Default": "flow",
+					"Options": [
+						"flow",
+						"pass",
+						"material",
+						"render",
+						"generator"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The type of the graph made when there is no Value."
+				},
+				{
+					"Name": "Palette",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the types of blocks to add and the parameters (true by default)."
+				},
+				{
+					"Name": "ReadOnly",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the graph alone: blocks still move, nothing else changes."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"select",
+				"problems"
+			],
+			"EventDescriptions": {
+				"change": "The graph changed: the graph.",
+				"select": "The selection changed: {Block, Link}, their ids or null.",
+				"problems": "What is wrong with the graph: [{Block, Pin, Link, Message}]."
+			},
+			"Methods": [
+				"Graph()",
+				"Write()",
+				"Add(type, x, y)",
+				"Remove(id)",
+				"Select(id)",
+				"Selected()",
+				"Check()",
+				"Compile(options)",
+				"Arrange()",
+				"Fit()"
+			],
+			"Sample": {
+				"Type": "generator",
+				"Value": {
+					"version": 1,
+					"type": "generator",
+					"parameters": [
+						{
+							"key": "Scale",
+							"type": "float",
+							"value": 2
+						}
+					],
+					"blocks": [
+						{
+							"id": "n",
+							"type": "Number",
+							"x": 40,
+							"y": 40,
+							"properties": [
+								{
+									"key": "Value",
+									"value": 3
+								}
+							]
+						},
+						{
+							"id": "s",
+							"type": "Parameter",
+							"x": 40,
+							"y": 160,
+							"properties": [
+								{
+									"key": "Key",
+									"value": "Scale"
+								},
+								{
+									"key": "Type",
+									"value": "float"
+								}
+							]
+						},
+						{
+							"id": "m",
+							"type": "Multiply",
+							"x": 280,
+							"y": 90,
+							"properties": []
+						},
+						{
+							"id": "r",
+							"type": "Result",
+							"x": 500,
+							"y": 100,
+							"properties": [
+								{
+									"key": "Key",
+									"value": "Value"
+								}
+							]
+						}
+					],
+					"links": [
+						{
+							"id": "a",
+							"p1": "n-out-Value",
+							"p2": "m-in-A"
+						},
+						{
+							"id": "b",
+							"p1": "s-out-Value",
+							"p2": "m-in-B"
+						},
+						{
+							"id": "c",
+							"p1": "m-out-Out",
+							"p2": "r-in-Value"
+						}
+					]
+				}
+			}
+		},
+		{
+			"Name": "SceneEditor",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "layers",
+			"Description": "An editor of a game scene as Unreal edits a level: objects, kinds to add, the view with a gizmo, fields, blueprint parameters, Play.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The document: {Version, Name, Setting, Scene (the recipe of GameScene.Save)}."
+				},
+				{
+					"Name": "Setting",
+					"Type": "select",
+					"Default": "ground",
+					"Options": [
+						"ground",
+						"space"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "What a new document is: a ground under a sun, or a star system."
+				},
+				{
+					"Name": "Kinds",
+					"Type": "json",
+					"Default": [
+						"unit",
+						"effect",
+						"glass",
+						"mirror",
+						"tree",
+						"rock",
+						"house"
+					],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The kinds of objects to add on a ground."
+				},
+				{
+					"Name": "SpaceKinds",
+					"Type": "json",
+					"Default": [
+						"star",
+						"planet",
+						"moon",
+						"belt",
+						"ring",
+						"station",
+						"outpost",
+						"craft",
+						"fleet"
+					],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The kinds of objects to add in a star system."
+				},
+				{
+					"Name": "Models",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Models of the Models Service to place on a ground (an ObjectEditor's), each as the kind its Type fits: a unit, a house, a tree, a rock or a thing."
+				},
+				{
+					"Name": "Storage",
+					"Type": "text",
+					"Default": "elemenx-scene-editor",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The key of localStorage Save keeps the document under."
+				},
+				{
+					"Name": "SnapMove",
+					"Type": "number",
+					"Default": 0.5,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of a move with Snap, in metres."
+				},
+				{
+					"Name": "SnapTurn",
+					"Type": "number",
+					"Default": 15,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of a turn with Snap, in degrees."
+				},
+				{
+					"Name": "SnapScale",
+					"Type": "number",
+					"Default": 0.1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of a scale with Snap."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"select",
+				"play"
+			],
+			"EventDescriptions": {
+				"change": "The document changed: {Version, Name, Scene}.",
+				"select": "The selection changed: {ID}.",
+				"play": "Play or Stop: {Playing}."
+			},
+			"Methods": [
+				"Document()",
+				"Load(document)",
+				"Save()",
+				"Restore()",
+				"Export()",
+				"Import(text)",
+				"Select(id)",
+				"Add(kind, props)",
+				"Remove(id)",
+				"Undo()",
+				"Redo()",
+				"Play()",
+				"Stop()",
+				"Scene()"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "ObjectEditor",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "shapes",
+			"Description": "An editor of a model made of shapes: parts in pieces with tags, mirrors and variants of a seed, a gizmo, the recipe of Models and its files glb, fbx and obj.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The document: {Version, Name, Recipe (a recipe of data of Models: Parts, Pieces, Group, Type, Size...)}."
+				},
+				{
+					"Name": "Variant",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The variant shown: 0, the parts as they are; the others varied by their seed."
+				},
+				{
+					"Name": "Generator",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A generator of models: function (description, callback (error, recipe))."
+				},
+				{
+					"Name": "Storage",
+					"Type": "text",
+					"Default": "elemenx-object-editor",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The key of localStorage Save keeps the document under."
+				},
+				{
+					"Name": "SnapMove",
+					"Type": "number",
+					"Default": 0.05,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of a move with Snap, in sizes of the model."
+				},
+				{
+					"Name": "SnapTurn",
+					"Type": "number",
+					"Default": 15,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of a turn with Snap, in degrees."
+				},
+				{
+					"Name": "SnapScale",
+					"Type": "number",
+					"Default": 0.05,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of a scale with Snap."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"select"
+			],
+			"EventDescriptions": {
+				"change": "The document changed: {Version, Name, Recipe}.",
+				"select": "The selected part changed: {ID}."
+			},
+			"Methods": [
+				"Document()",
+				"Load(document)",
+				"Recipe()",
+				"Save()",
+				"Restore()",
+				"Export()",
+				"Import(text)",
+				"Model(format, variant)",
+				"Download(format)",
+				"Define(name)",
+				"Select(id)",
+				"Add(shape, props)",
+				"Remove(id)",
+				"Undo()",
+				"Redo()",
+				"Generate(description, callback)",
+				"Scene()"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Topology",
+			"Kind": "Component",
+			"Group": "codes",
+			"Icon": "share",
+			"Description": "A graph shown as the blocks of a blueprint, laid out by itself: a network or what depends on what, in layers, a tree, a star, a circle or by force.",
+			"Props": [
+				{
+					"Name": "Nodes",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The nodes: [{ID, Label, Icon, Kind, Status (ok, warning, error, off), Details}]."
+				},
+				{
+					"Name": "Links",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The links: [{From, To, Label, Status, Kind}]."
+				},
+				{
+					"Name": "Layout",
+					"Type": "select",
+					"Default": "auto",
+					"Options": [
+						"auto",
+						"layers",
+						"tree",
+						"star",
+						"circle",
+						"grid",
+						"force"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "How the nodes are laid out: auto by the shape of the graph."
+				},
+				{
+					"Name": "Direction",
+					"Type": "select",
+					"Default": "right",
+					"Options": [
+						"right",
+						"down"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Where layers and a tree go."
+				},
+				{
+					"Name": "Center",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The node in the middle of a star, at the root of a tree."
+				},
+				{
+					"Name": "Directed",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Arrows to where the links go (true)."
+				},
+				{
+					"Name": "Gap",
+					"Type": "number",
+					"Default": 48,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The room between nodes, in pixels (48)."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"select",
+				"open"
+			],
+			"EventDescriptions": {
+				"select": "The selection changed: {Node, Link}, their IDs or null.",
+				"open": "A node was opened (a double press or Enter): {Node}."
+			},
+			"Methods": [
+				"Arrange(layout)",
+				"Fit()",
+				"Select(id)",
+				"Selected()",
+				"Places()"
+			],
+			"Sample": {
+				"Nodes": [
+					{
+						"ID": "web",
+						"Label": "Web",
+						"Icon": "globe",
+						"Status": "ok"
+					},
+					{
+						"ID": "api",
+						"Label": "API",
+						"Icon": "server",
+						"Status": "warning",
+						"Details": {
+							"Latency": "120 ms"
+						}
+					},
+					{
+						"ID": "db",
+						"Label": "Database",
+						"Icon": "database"
+					}
+				],
+				"Links": [
+					{
+						"From": "web",
+						"To": "api"
+					},
+					{
+						"From": "api",
+						"To": "db",
+						"Label": "SQL"
+					}
+				]
+			}
+		},
+		{
 			"Name": "EmojiPicker",
 			"Kind": "Component",
 			"Group": "inputs",
@@ -25791,7 +26409,7 @@
 			"Kind": "Service",
 			"Group": "",
 			"Icon": "",
-			"Description": "The places of tiles, cards and pictures in a box: a packed grid (bento), masonry, justified rows and a treemap.",
+			"Description": "The places of tiles, cards and pictures in a box: a packed grid (bento), masonry, justified rows, a treemap and the nodes of a graph.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -25803,7 +26421,8 @@
 				"Pack(items, options)",
 				"Masonry(items, options)",
 				"Justified(items, options)",
-				"Treemap(items, options)"
+				"Treemap(items, options)",
+				"Graph(nodes, links, options)"
 			],
 			"Sample": {}
 		},
@@ -26081,6 +26700,8 @@
 				"Grid(options, side, top, steep)",
 				"Heights(field, side)",
 				"FromGrid(options, heights, side)",
+				"Sketched(sketch, base, seed)",
+				"SketchChanged(before, after)",
 				"Source(names)"
 			],
 			"Sample": {}
@@ -26124,6 +26745,60 @@
 				"Load(record)",
 				"Pack(value)",
 				"Unpack(value)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Blueprints",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Graphs of blocks in the JSON of Flowprint, made into shaders, passes of a picture, code and flows of actions.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Node(type, definition)",
+				"Nodes(graph)",
+				"NodeOf(type)",
+				"Graph(type, definition)",
+				"Graphs()",
+				"Create(type, options)",
+				"Block(type, options)",
+				"Add(graph, type, options)",
+				"Link(graph, from, to)",
+				"Remove(graph, id)",
+				"Pin(block, key, out)",
+				"Read(json)",
+				"Write(graph)",
+				"Check(graph)",
+				"Order(graph)",
+				"Compile(graph, options)",
+				"Bake(graph)",
+				"Start(graph, context)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Archive",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Archives made in the page: a zip of texts and bytes by their paths, to download a project or a game in one file.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Zip(files)",
+				"Crc(bytes)"
 			],
 			"Sample": {}
 		},
@@ -26272,7 +26947,7 @@
 			"Kind": "Service",
 			"Group": "",
 			"Icon": "",
-			"Description": "How things move, apart from what shows them: steps of one length, springs, a car on its tyres and springs, a ship in space.",
+			"Description": "How things move, apart from what shows them: steps of one length, springs, a car on its tyres and springs, a ship in space, a world of solid bodies with ragdolls and water to float in, cloth and ropes, waves and a fluid of particles.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -26288,7 +26963,12 @@
 				"Gearbox(state, input, settings, gas, braking, speed, elapsed)",
 				"Hit(state, normal, depth, at, settings)",
 				"Bounce(way, normal, depth, bounce)",
-				"Ship(state, input, settings, elapsed)"
+				"Ship(state, input, settings, elapsed)",
+				"World(settings)",
+				"Cloth(settings)",
+				"Rope(settings)",
+				"Waves(settings)",
+				"Fluid(settings)"
 			],
 			"Sample": {}
 		},
@@ -26310,6 +26990,8 @@
 				"Has(name)",
 				"Info(name)",
 				"Define(name, recipe)",
+				"Assemble(recipe, tools, random, variant)",
+				"Tagged(name, tag)",
 				"Load(name, callback)",
 				"Ready(name)",
 				"Bake(model)",
@@ -26320,6 +27002,28 @@
 				"Levels(name, options)",
 				"Pose(model, clip, time, options)",
 				"Length(model, clip)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Buildings",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Buildings of any size made of their numbers, from a shack to a business centre: models of the Models Service.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Classes()",
+				"Options(options)",
+				"Pieces(tools, options, random)",
+				"Define(name, options)",
+				"Random(options, seed)"
 			],
 			"Sample": {}
 		},
@@ -28478,6 +29182,158 @@
 		"elemenx-board-content": [],
 		"elemenx-board-controls": [],
 		"elemenx-board-zoom": [],
+		"elemenx-blueprint": [
+			"read-only"
+		],
+		"elemenx-blueprint-side": [],
+		"elemenx-blueprint-filter": [],
+		"elemenx-blueprint-palette": [],
+		"elemenx-blueprint-group-name": [],
+		"elemenx-blueprint-type": [],
+		"elemenx-blueprint-parameters": [],
+		"elemenx-blueprint-parameters-head": [],
+		"elemenx-blueprint-parameter": [],
+		"elemenx-blueprint-board": [],
+		"elemenx-blueprint-canvas": [],
+		"elemenx-blueprint-links": [],
+		"elemenx-blueprint-link": [
+			"draft",
+			"off",
+			"selected"
+		],
+		"elemenx-blueprint-block": [
+			"off",
+			"selected",
+			"wrong"
+		],
+		"elemenx-blueprint-head": [],
+		"elemenx-blueprint-title": [],
+		"elemenx-blueprint-flows": [
+			"out"
+		],
+		"elemenx-blueprint-body": [],
+		"elemenx-blueprint-inputs": [],
+		"elemenx-blueprint-outputs": [],
+		"elemenx-blueprint-port": [],
+		"elemenx-blueprint-pin": [],
+		"elemenx-blueprint-pin-name": [],
+		"elemenx-blueprint-properties": [],
+		"elemenx-blueprint-property": [],
+		"elemenx-scene-editor": [
+			"playing"
+		],
+		"elemenx-scene-editor-toolbar": [],
+		"elemenx-scene-editor-group": [
+			"end"
+		],
+		"elemenx-scene-editor-tool": [
+			"active"
+		],
+		"elemenx-scene-editor-snap": [],
+		"elemenx-scene-editor-import": [],
+		"elemenx-scene-editor-time": [],
+		"elemenx-scene-editor-side": [],
+		"elemenx-scene-editor-inspector": [],
+		"elemenx-scene-editor-title": [],
+		"elemenx-scene-editor-palette": [],
+		"elemenx-scene-editor-kind": [
+			"model"
+		],
+		"elemenx-scene-editor-view": [],
+		"elemenx-scene-editor-overlay": [],
+		"elemenx-scene-editor-gizmo": [],
+		"elemenx-scene-editor-axis": [
+			"axis-x",
+			"axis-y",
+			"axis-z"
+		],
+		"elemenx-scene-editor-tip": [
+			"axis-x",
+			"axis-y",
+			"axis-z"
+		],
+		"elemenx-scene-editor-plane": [],
+		"elemenx-scene-editor-orbit": [],
+		"elemenx-scene-editor-ring": [],
+		"elemenx-scene-editor-fields": [],
+		"elemenx-scene-editor-field": [],
+		"elemenx-scene-editor-parameter": [],
+		"elemenx-scene-editor-blueprint": [],
+		"elemenx-scene-editor-sketch-type": [],
+		"elemenx-scene-editor-layers": [],
+		"elemenx-scene-editor-layer": [
+			"current"
+		],
+		"elemenx-scene-editor-layer-name": [],
+		"elemenx-scene-editor-layer-eye": [],
+		"elemenx-scene-editor-item": [],
+		"elemenx-scene-editor-item-head": [],
+		"elemenx-scene-editor-sketch-shape": [
+			"area",
+			"current",
+			"draft"
+		],
+		"elemenx-object-editor": [],
+		"elemenx-object-editor-toolbar": [],
+		"elemenx-object-editor-group": [
+			"end"
+		],
+		"elemenx-object-editor-tool": [
+			"active"
+		],
+		"elemenx-object-editor-snap": [],
+		"elemenx-object-editor-variant": [],
+		"elemenx-object-editor-import": [],
+		"elemenx-object-editor-format": [],
+		"elemenx-object-editor-side": [],
+		"elemenx-object-editor-inspector": [],
+		"elemenx-object-editor-title": [],
+		"elemenx-object-editor-palette": [],
+		"elemenx-object-editor-shape": [],
+		"elemenx-object-editor-generator": [],
+		"elemenx-object-editor-view": [],
+		"elemenx-object-editor-overlay": [],
+		"elemenx-object-editor-gizmo": [],
+		"elemenx-object-editor-axis": [
+			"axis-x",
+			"axis-y",
+			"axis-z"
+		],
+		"elemenx-object-editor-tip": [
+			"axis-x",
+			"axis-y",
+			"axis-z"
+		],
+		"elemenx-object-editor-ring": [],
+		"elemenx-object-editor-fields": [],
+		"elemenx-object-editor-field": [],
+		"elemenx-topology": [],
+		"elemenx-topology-board": [],
+		"elemenx-topology-canvas": [],
+		"elemenx-topology-links": [],
+		"elemenx-topology-link": [
+			"far",
+			"selected",
+			"status-error",
+			"status-off",
+			"status-ok",
+			"status-warning"
+		],
+		"elemenx-topology-arrow": [],
+		"elemenx-topology-label": [],
+		"elemenx-topology-node": [
+			"far",
+			"selected",
+			"status-error",
+			"status-off",
+			"status-ok",
+			"status-warning"
+		],
+		"elemenx-topology-head": [],
+		"elemenx-topology-details": [],
+		"elemenx-topology-icon": [],
+		"elemenx-topology-title": [],
+		"elemenx-topology-status": [],
 		"elemenx-emoji": [],
 		"elemenx-emoji-item": [
 			"selected"

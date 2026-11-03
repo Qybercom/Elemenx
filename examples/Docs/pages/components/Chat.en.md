@@ -1,7 +1,7 @@
 <!-- generated -->
 # Chat
 
-A chat layout built on elemenx-screen, elemenx-container and elemenx-column. Slots: sidebar (conversations), header, default (the messages), composer. SidebarOpen shows the sidebar (a chat 600 pixels wide or less, as on a phone, hides it); SidebarWidth is resizable. The message list follows new messages while the reader is at its end, and stays in place while the reader scrolls back through the history. Selection is the IDs of the messages chosen (the select events of the ChatMessage): while it has some, a bar takes the place of the header with their count, a button that lets them go (the clear event; Escape too) and the slot selection for the actions on them. Each ChatMessage takes [selecting] and [selected] from it.
+A chat layout built on elemenx-screen, elemenx-container and elemenx-column. Slots: sidebar (conversations), header, default (the messages), composer. SidebarOpen shows the sidebar (a chat 600 pixels wide or less, as on a phone, hides it); SidebarWidth is resizable. The message list follows new messages while the reader is at its end, and stays in place while the reader scrolls back through the history. Selection is the IDs of the messages chosen (the select events of the ChatMessage): while it has some, a bar takes the place of the header with their count, a button that lets them go (the clear event; Escape too) and the slot selection for the actions on them. Each ChatMessage takes [selecting] and [selected] from it. Near the first message the event history asks for older ones (the directive *infinite, up): HistoryBusy while they come, HistoryDone when there are none; the reader stays where they were when they come above.
 
 ## Properties
 
@@ -10,9 +10,12 @@ A chat layout built on elemenx-screen, elemenx-container and elemenx-column. Slo
 | `SidebarOpen` | `true` |
 | `SidebarWidth` | `280` |
 | `Selection` | `[]` |
+| `HistoryBusy` | `false` |
+| `HistoryDone` | `false` |
 
 ## Events
 
+- `history`: The reader came near the first message: older ones are asked for.
 - `clear`: The selection of messages was let go (its button, or Escape).
 - `resize`: The sidebar was resized: SidebarWidth.
 
@@ -78,11 +81,15 @@ A chat layout built on elemenx-screen, elemenx-container and elemenx-column. Slo
 
 ## Tests
 
-- [chat composer puts emoji at the caret and sends stickers; messages take reactions](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L999) — `tests/examples/ui-kit.spec.js`
-- [chat composer suggests emoji for a word and for :word, the stickers of a message of one emoji, and keeps to its setting](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1070) — `tests/examples/ui-kit.spec.js`
-- [chat messages: a tap opens the menu, a long press starts a choice of several, the bar counts and deletes them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1549) — `tests/examples/ui-kit.spec.js`
-- [a call stage pages its tiles, changes its layout with the bar of the call, pins a tile in front, opens its side panel and takes its own video to another corner](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L2775) — `tests/examples/ui-kit.spec.js`
-- [a mobile menu is a sheet from the bottom: large rows, levels inside it with a way back, Cancel and the shade close it](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4136) — `tests/examples/ui-kit.spec.js`
-- [chat keeps to its last message when what it holds grows later: a picture that loads, more messages](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5634) — `tests/examples/ui-kit.spec.js`
-- [chat shows the avatar on the newest message of a run from one author](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5685) — `tests/examples/ui-kit.spec.js`
-- [chat messages show their state, open their menu by a right click or the dots, and sum up reactions and views](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5702) — `tests/examples/ui-kit.spec.js`
+- [*infinite asks once near the end, again when the list grew, never while Busy or Done, and at once when too short](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L387) — `tests/regression/library-directives.test.js`
+- [*infinite up asks at the start, and keeps what the reader sees when rows come above](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L495) — `tests/regression/library-directives.test.js`
+- [InfiniteList shows a spinner while busy and a word at its end, and tells more; up its spinner takes no room](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L536) — `tests/regression/library-directives.test.js`
+- [VirtualList asks for more when its last rows are drawn, once for each length; Chat asks for its history at its start](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L580) — `tests/regression/library-directives.test.js`
+- [chat composer puts emoji at the caret and sends stickers; messages take reactions](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1000) — `tests/examples/ui-kit.spec.js`
+- [chat composer suggests emoji for a word and for :word, the stickers of a message of one emoji, and keeps to its setting](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1071) — `tests/examples/ui-kit.spec.js`
+- [chat messages: a tap opens the menu, a long press starts a choice of several, the bar counts and deletes them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1550) — `tests/examples/ui-kit.spec.js`
+- [a call stage pages its tiles, changes its layout with the bar of the call, pins a tile in front, opens its side panel and takes its own video to another corner](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L2776) — `tests/examples/ui-kit.spec.js`
+- [a mobile menu is a sheet from the bottom: large rows, levels inside it with a way back, Cancel and the shade close it](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4181) — `tests/examples/ui-kit.spec.js`
+- [chat keeps to its last message when what it holds grows later: a picture that loads, more messages](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5680) — `tests/examples/ui-kit.spec.js`
+- [chat shows the avatar on the newest message of a run from one author](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5731) — `tests/examples/ui-kit.spec.js`
+- [chat messages show their state, open their menu by a right click or the dots, and sum up reactions and views](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5748) — `tests/examples/ui-kit.spec.js`

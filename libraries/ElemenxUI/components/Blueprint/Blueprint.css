@@ -1,0 +1,366 @@
+.elemenx-blueprint {
+	display: flex;
+	min-height: 320px;
+	height: 100%;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	overflow: hidden;
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+	font: var(--elemenx-font-size-small) / var(--elemenx-line-height-small) var(--elemenx-font);
+	outline: none;
+}
+
+.elemenx-blueprint-side {
+	box-sizing: border-box;
+	display: flex;
+	flex: 0 0 200px;
+	flex-direction: column;
+	gap: 8px;
+	min-height: 0;
+	padding: 8px;
+	border-right: 1px solid var(--elemenx-border);
+	background: var(--elemenx-surface-raised);
+}
+
+.elemenx-blueprint-filter {
+	box-sizing: border-box;
+	width: 100%;
+	padding: 4px 8px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface);
+	color: inherit;
+	font: inherit;
+}
+
+.elemenx-blueprint-palette {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: auto;
+}
+
+.elemenx-blueprint-group-name {
+	margin: 6px 0 2px;
+	color: var(--elemenx-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.elemenx-blueprint-type {
+	display: block;
+	width: 100%;
+	padding: 2px 6px;
+	border: 0;
+	border-radius: var(--elemenx-radius-small);
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.elemenx-blueprint-type:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-blueprint-parameters {
+	flex: 0 0 auto;
+	max-height: 40%;
+	overflow: auto;
+	border-top: 1px solid var(--elemenx-border);
+	padding-top: 6px;
+}
+
+.elemenx-blueprint-parameters-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-weight: var(--elemenx-font-weight-strong);
+}
+
+.elemenx-blueprint-parameter {
+	display: grid;
+	grid-template-columns: 1fr 56px;
+	gap: 2px 4px;
+	align-items: center;
+	margin-top: 4px;
+}
+
+.elemenx-blueprint-parameter input,
+.elemenx-blueprint-parameter select {
+	box-sizing: border-box;
+	min-width: 0;
+	padding: 2px 4px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-surface);
+	color: inherit;
+	font: inherit;
+}
+
+.elemenx-blueprint-board {
+	flex: 1 1 auto;
+	min-width: 0;
+	min-height: 0;
+}
+
+.elemenx-blueprint-board .elemenx-board-host {
+	height: 100%;
+}
+
+.elemenx-blueprint-canvas {
+	position: relative;
+	width: 1px;
+	height: 1px;
+}
+
+/* The links under the blocks; only their lines take the pointer, so a press on an empty place moves the board. */
+.elemenx-blueprint-links {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1px;
+	height: 1px;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.elemenx-blueprint-link {
+	fill: none;
+	stroke: var(--elemenx-blueprint-any);
+	stroke-width: 2;
+	pointer-events: stroke;
+	cursor: pointer;
+}
+
+.elemenx-blueprint-link[data-kind='flow'] {
+	stroke: var(--elemenx-text);
+	stroke-width: 3;
+}
+
+.elemenx-blueprint-link.selected {
+	stroke-width: 4;
+	filter: drop-shadow(0 0 3px var(--elemenx-accent));
+}
+
+.elemenx-blueprint-link.off {
+	stroke-dasharray: 4 4;
+	opacity: 0.5;
+}
+
+.elemenx-blueprint-link.draft {
+	stroke: var(--elemenx-accent);
+	stroke-dasharray: 6 4;
+	pointer-events: none;
+}
+
+.elemenx-blueprint-block {
+	position: absolute;
+	min-width: 150px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	background: var(--elemenx-surface-raised);
+	box-shadow: 0 4px 14px var(--elemenx-shadow);
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.elemenx-blueprint-block.selected {
+	border-color: var(--elemenx-accent);
+	box-shadow: 0 0 0 2px var(--elemenx-accent), 0 4px 14px var(--elemenx-shadow);
+}
+
+.elemenx-blueprint-block.wrong {
+	border-color: var(--elemenx-danger);
+	box-shadow: 0 0 0 2px var(--elemenx-danger);
+}
+
+.elemenx-blueprint-block.off {
+	opacity: 0.55;
+}
+
+.elemenx-blueprint-head {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 6px;
+	border-bottom: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large) var(--elemenx-radius-large) 0 0;
+	background: var(--elemenx-surface-hover);
+	cursor: grab;
+}
+
+.elemenx-blueprint.read-only .elemenx-blueprint-head {
+	cursor: move;
+}
+
+.elemenx-blueprint-title {
+	flex: 1 1 auto;
+	font-weight: var(--elemenx-font-weight-strong);
+	white-space: nowrap;
+}
+
+.elemenx-blueprint-flows {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.elemenx-blueprint-flows.out {
+	align-items: flex-end;
+}
+
+.elemenx-blueprint-body {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 4px 0;
+}
+
+.elemenx-blueprint-inputs,
+.elemenx-blueprint-outputs {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.elemenx-blueprint-outputs {
+	align-items: flex-end;
+}
+
+.elemenx-blueprint-port {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	white-space: nowrap;
+}
+
+.elemenx-blueprint-inputs .elemenx-blueprint-port {
+	margin-left: -6px;
+}
+
+.elemenx-blueprint-outputs .elemenx-blueprint-port {
+	margin-right: -6px;
+}
+
+.elemenx-blueprint-pin {
+	box-sizing: border-box;
+	width: 11px;
+	height: 11px;
+	border: 2px solid var(--elemenx-blueprint-any);
+	border-radius: var(--elemenx-radius-pill);
+	background: var(--elemenx-surface);
+	cursor: crosshair;
+}
+
+.elemenx-blueprint-pin[data-kind='flow'] {
+	border-color: var(--elemenx-text);
+	border-radius: var(--elemenx-radius-small);
+	transform: rotate(45deg) scale(0.85);
+}
+
+.elemenx-blueprint-pin[data-type='float'],
+.elemenx-blueprint-pin[data-type='int'] {
+	border-color: var(--elemenx-blueprint-number);
+}
+
+.elemenx-blueprint-pin[data-type='vec2'],
+.elemenx-blueprint-pin[data-type='vec3'] {
+	border-color: var(--elemenx-blueprint-vector);
+}
+
+.elemenx-blueprint-pin[data-type='vec4'] {
+	border-color: var(--elemenx-blueprint-color);
+}
+
+.elemenx-blueprint-pin[data-type='bool'] {
+	border-color: var(--elemenx-blueprint-bool);
+}
+
+.elemenx-blueprint-pin[data-type='texture'] {
+	border-color: var(--elemenx-blueprint-texture);
+}
+
+.elemenx-blueprint-pin[data-type='text'] {
+	border-color: var(--elemenx-blueprint-text);
+}
+
+.elemenx-blueprint-link[data-type='float'],
+.elemenx-blueprint-link[data-type='int'] {
+	stroke: var(--elemenx-blueprint-number);
+}
+
+.elemenx-blueprint-link[data-type='vec2'],
+.elemenx-blueprint-link[data-type='vec3'] {
+	stroke: var(--elemenx-blueprint-vector);
+}
+
+.elemenx-blueprint-link[data-type='vec4'] {
+	stroke: var(--elemenx-blueprint-color);
+}
+
+.elemenx-blueprint-link[data-type='bool'] {
+	stroke: var(--elemenx-blueprint-bool);
+}
+
+.elemenx-blueprint-link[data-type='texture'] {
+	stroke: var(--elemenx-blueprint-texture);
+}
+
+.elemenx-blueprint-link[data-type='text'] {
+	stroke: var(--elemenx-blueprint-text);
+}
+
+.elemenx-blueprint-pin-name {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-blueprint-properties {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	padding: 4px 8px 6px;
+	border-top: 1px solid var(--elemenx-border);
+}
+
+.elemenx-blueprint-property {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 6px;
+}
+
+.elemenx-blueprint-property input,
+.elemenx-blueprint-property select {
+	box-sizing: border-box;
+	width: 84px;
+	padding: 1px 4px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-surface);
+	color: inherit;
+	font: inherit;
+}
+
+.elemenx-blueprint-property input[type='checkbox'] {
+	width: auto;
+}
+
+.elemenx-blueprint-property input[type='color'] {
+	height: 20px;
+	padding: 0 2px;
+}
+
+@media (max-width: 640px) {
+	.elemenx-blueprint {
+		flex-direction: column;
+	}
+
+	.elemenx-blueprint-side {
+		flex: 0 0 auto;
+		max-height: 40%;
+		border-right: 0;
+		border-bottom: 1px solid var(--elemenx-border);
+	}
+}

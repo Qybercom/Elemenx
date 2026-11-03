@@ -53,6 +53,7 @@ Kinds that are not defined throw: 'Elemenx Kinds: unknown kind <name>'; a kind t
 
 ## Tests
 
-- [makes a kind whole of its base, its Traits by their fields and its Parts by their ID, and tells its fields in any case](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L258) — `tests/regression/library-scene.test.js`
-- [makes an object of a kind with parts of its own, and keeps of it only what differs: restored the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L279) — `tests/regression/library-scene.test.js`
+- [makes a kind whole of its base, its Traits by their fields and its Parts by their ID, and tells its fields in any case](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L270) — `tests/regression/library-scene.test.js`
+- [makes an object of a kind with parts of its own, and keeps of it only what differs: restored the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L291) — `tests/regression/library-scene.test.js`
 - [puts planets on their orbits and makes shapes of three dimensions with the Services of ElemenxUI](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`
+- [sows in clumps: thick groves and thin ground between them; grass in tufts and glades, its blades unlike by its spread](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L8812) — `tests/regression/library-scene.test.js`

@@ -66,5 +66,5 @@
 
 ## Тесты
 
-- [Knob turns by its keys in Steps within Min and Max, tells input and change, and goes back to Default on a double click](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L37) — `tests/regression/library-controls.test.js`
+- [Knob turns by its keys in Steps within Min and Max, tells input and change, and goes back to Default on a double click](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L89) — `tests/regression/library-controls.test.js`
 - [Tour goes step by step with Next and Back, tells each step, finishes at the last, and closes with the reason](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-overlays.test.js#L97) — `tests/regression/library-overlays.test.js`

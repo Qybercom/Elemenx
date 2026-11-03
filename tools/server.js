@@ -483,6 +483,13 @@ function create (options) {
 				return;
 			}
 
+			/* A page rendered by a build (elemenx build --prerender): /items is items.html beside the others. */
+			if (path.extname(file) === '' && fs.existsSync(file + '.html')) {
+				send(request, response, file + '.html');
+
+				return;
+			}
+
 			if (options.SPA === false) {
 				response.writeHead(404, {'Content-Type': 'text/plain; charset=utf-8'});
 				response.end('Not Found');

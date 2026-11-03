@@ -38,3 +38,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [keeps to the letter of the formats: turns in their order, layers by polygon, four bones, names, degrees, bounds](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/model-formats.test.js#L518) — `tests/regression/model-formats.test.js`

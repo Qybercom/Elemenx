@@ -11,7 +11,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `ScriptURL` | URL of the loaded `elemenx.js` (a `blob:` URL of its text when it is inline in its page); workers load the same file from it, and ElemenxUI is taken from `libraries/ElemenxUI` next to it | Library, WebWorker, ServiceWorker |
-| `HasDOM` | `true` in a document, `false` inside workers | Application, Bundle, Discovery, Identity, Install, Locale, Messaging, Motion, ServiceWorker, ServiceWorker bootstrap, Splash, Style, Template and Component, Utilities, WebWorker, Widgets |
+| `HasDOM` | `true` in a document, `false` inside workers | Application, Bundle, Discovery, Identity, Install, Locale, Messaging, Motion, SSR, ServiceWorker, ServiceWorker bootstrap, Splash, Style, Template and Component, Utilities, WebWorker, Widgets |
 | `StartedAt` | time this runtime started | Identity |
 | `Isolated` | true in an isolated build (`ElemenxIsolated`): the html element of the page is left alone | Application, Locale, Style, Widgets |
 | `ShadowHosts` | the hosts of the Applications that render in a shadow root | Application, Locale, Widgets |
@@ -20,7 +20,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Application, Bundle, Cache, Directive registry, Discovery, Locale, Messaging, Meta, Network, Reactive, Router, Service and Guard, Storage, Structural, Template and Component, Widgets |
+| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Application, Bundle, Cache, Directive registry, Discovery, Locale, Messaging, Meta, Network, Reactive, Router, SSR, Service and Guard, Storage, Structural, Template and Component, Widgets |
 | `BaseURL` | the base of the relative URLs of the document: its address, or for one that is no base (a page of a `blob:` or `about:` URL) its base URI, the root of its origin or `file:///` | Application, Bundle, Discovery |
 | `AbsoluteURL` | resolves a URL against the document; in a worker the value is kept as it is | Locale, Resource, ServiceWorker, WebWorker |
 | `CurrentScriptURL` | the URL of the executing script without query and hash, or `null`: the base of the relative paths of its definitions | Application, Bundle, Library, Template and Component |
@@ -30,8 +30,8 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `Countdown` | waits for N asynchronous steps: the callback gets the first error, or `null` once all succeeded | Discovery, Install, Library, Locale |
 | `MessageListeners` | listeners of the global `message` event added through a wrapper, removable by their own callback | Messaging, WebWorker |
 | `CaseName` | the own key of an object that is a key in another case (a lower-case attribute of a template for a prop), or `null` when none or several are (of a value and a method of the same letters, the value); its names are kept by their lower case for each object (read again when its count of keys changes) | Template and Component, Structural |
-| `Assign` | copies the own enumerable properties of a source into a target and returns the target | Template and Component, Router, Structural, Storage, WebWorker, ServiceWorker |
-| `Report` | reports an exception as an uncaught error at once, like the DOM does for event listeners (`reportError`; without it, rethrown from a timer) | Application, Install, Locale, Router, Widgets |
+| `Assign` | copies the own enumerable properties of a source into a target and returns the target | Template and Component, Router, SSR, Structural, Storage, WebWorker, ServiceWorker |
+| `Report` | reports an exception as an uncaught error at once, like the DOM does for event listeners (`reportError`; without it, rethrown from a timer) | Application, Install, Locale, Router, SSR, Widgets |
 | `Notify` | calls one event listener in isolation: its exception is reported and the dispatch continues | Template and Component, Router, Network, Events, Messaging, Identity |
 | `Invoke` | calls a callback `(error, value)` from a promise handler; an exception thrown by the callback is reported instead of being swallowed | Network, ServiceWorker |
 
@@ -48,7 +48,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `Reactive` | wraps a value into a tracked reactive proxy | Locale, Template and Component |
 | `Effect` | runs a callback and re-runs it when its tracked dependencies change | Template and Component, Structural |
 | `BatchReactive` | groups changes and flushes effects once | Locale, Template and Component |
-| `Untracked` | runs a callback without recording dependencies | Structural, Template and Component |
+| `Untracked` | runs a callback without recording dependencies | SSR, Structural, Template and Component |
 | `TrackIteration` | records a dependency on the iteration of a collection | Structural |
 
 ## Bundle
@@ -232,6 +232,12 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `Splash` | `Ready()`: an Application is ready or failed, so the splash of the page goes unless it is held | Application |
+
+## SSR
+
+| Field | Purpose | Used by |
+|---|---|---|
+| `SSR` | pages rendered on a server: `Server` (this copy renders one: `$OnSSR` awaited, its fields kept), `Pending`, `Component(api, name, definition, values, update, parent)` (the key of a Component made, its data of the state of the page or of its `$OnSSR`), `State()` (the fields of the Components a server render loaded), `Settled(callback)` (once no `$OnSSR` is pending), `Markup(mount)` (the nodes a server sent into a mount, null for none) | Template and Component, Application |
 
 ## Application
 

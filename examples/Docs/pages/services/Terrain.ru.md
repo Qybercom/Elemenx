@@ -9,6 +9,15 @@
 - `Cells(options)`
 - `OnRoad(field, x, z, width)`
 - `Sphere(options)`
+- `Work()`
+- `Sketched(sketch, base, seed)`
+- `SketchChanged(before, after)`
+- `FromGrid(options, heights, side)`
+- `Heights(field, side)`
+- `Field(shape, options)`
+- `Piece(shape, options, roads, args)`
+- `Grid(options, side, top, steep)`
+- `Source(names)`
 
 ## Пример
 
@@ -34,17 +43,17 @@
 
 ## Тесты
 
-- [has continuous heights, chunks with a skirt, and ways that keep out of the sea](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7774) — `tests/regression/library-scene.test.js`
-- [has the ground of a planet whose coasts are the ones its baked surface shows, its squares turned outwards](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7808) — `tests/regression/library-scene.test.js`
-- [takes a ground from a model: floors one over the other, walls that stop a walker, and a plane at its foot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1385) — `tests/regression/library-scene.test.js`
-- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1601) — `tests/regression/library-scene.test.js`
-- [looks from what it follows to where it looks by degrees, so a raised eye makes no leap under the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5050) — `tests/regression/library-scene.test.js`
-- [leaves a hero where it stands when the scene changes round it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5185) — `tests/regression/library-scene.test.js`
-- [takes a short drop for no jump, though the body leaves the ground](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5237) — `tests/regression/library-scene.test.js`
-- [takes no seam of a map for a jump, and still falls and jumps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5354) — `tests/regression/library-scene.test.js`
-- [lets a hero stand while the view goes round it with a free look, and brings it round when it sets off](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5779) — `tests/regression/library-scene.test.js`
-- [brings the eye of a hero down to the ground at its distance, the hero in the frame](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6026) — `tests/regression/library-scene.test.js`
-- [keeps the eye of a hero on its side of a wall: in at once, out slowly](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6139) — `tests/regression/library-scene.test.js`
-- [mirrors what is glossy at high quality, not cut-outs, and wets what stands in the rain](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6201) — `tests/regression/library-scene.test.js`
+- [has continuous heights, chunks with a skirt, and ways that keep out of the sea](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L10177) — `tests/regression/library-scene.test.js`
+- [has the ground of a planet whose coasts are the ones its baked surface shows, its squares turned outwards](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L10211) — `tests/regression/library-scene.test.js`
+- [raises and lowers along a stroke, flattens to a height and smooths, up to its radius and no farther](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/terrain-sketch.test.js#L37) — `tests/regression/terrain-sketch.test.js`
+- [draws ridges, valleys and canyons along lines, a river whose bed goes down the way it flows, a level road and a cliff on one side](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/terrain-sketch.test.js#L50) — `tests/regression/terrain-sketch.test.js`
+- [makes plateaus, basins, lakes, terraces, swamps, beaches, floodplains, dunes, erosion, mountains, craters and stamps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/terrain-sketch.test.js#L77) — `tests/regression/terrain-sketch.test.js`
+- [keeps to its layers: one hidden draws nothing, its Strength weakens it; a mask freezes what it holds and holds back what comes after](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/terrain-sketch.test.js#L124) — `tests/regression/terrain-sketch.test.js`
+- [tells the water it lays: a river a little wider than its bed under the levels of its way, a lake at its level](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/terrain-sketch.test.js#L139) — `tests/regression/terrain-sketch.test.js`
+- [paints what it lays: the palette of a biome over an area, a road and the sand of a beach](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/terrain-sketch.test.js#L150) — `tests/regression/terrain-sketch.test.js`
+- [tells where two sketches differ, and its workers make the very squares the page makes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/terrain-sketch.test.js#L159) — `tests/regression/terrain-sketch.test.js`
+- [makes a ground again only where its sketch changed: the same ground, its squares there made again, what stands there set on it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/terrain-sketch.test.js#L180) — `tests/regression/terrain-sketch.test.js`
+- [draws a material of a recipe by its Blueprint, its parameters uniforms that change it without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L72) — `tests/regression/library-material-blueprints.test.js`
+- [draws a ground by its Blueprint, the color of its parameter, and keeps the very same ground as its look changes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L198) — `tests/regression/library-material-blueprints.test.js`
 
-+4 ещё в тех же файлах
++21 ещё в тех же файлах

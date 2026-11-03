@@ -1,0 +1,3 @@
+[
+	'GameEditorLayout/GameEditorLayout.js'
+];

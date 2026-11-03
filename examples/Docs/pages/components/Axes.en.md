@@ -19,4 +19,4 @@ The three axes of a view: how a world stands to the eye. Yaw and Pitch are the t
 
 ## Tests
 
-- [Axes draws each end where the view has it, the nearest over the others](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2555) — `tests/regression/library-scene.test.js`
+- [Axes draws each end where the view has it, the nearest over the others](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3137) — `tests/regression/library-scene.test.js`

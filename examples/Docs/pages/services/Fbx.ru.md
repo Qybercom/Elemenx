@@ -5,9 +5,22 @@
 
 ## Методы
 
-- `Parse(text)`
+- `Parse(data)`
 - `Sample(curve, time, fallback)`
 - `Load(url, callback)`
+- `IsBinary(bytes)`
+- `Tree(data)`
+- `Inflate(bytes)`
+- `Child(node, name)`
+- `Children(node, name)`
+- `Skeleton(tree)`
+- `Read(data)`
+- `Typed(type, value)`
+- `Binary(tree)`
+- `Text(tree)`
+- `FromAsset(asset)`
+- `Write(asset, options)`
+- `Properties(node)`
 
 ## Пример
 
@@ -30,4 +43,11 @@
 
 ## Тесты
 
-- [reads the clip of an FBX as text and lays it on another skeleton, by what its bones are](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7161) — `tests/regression/library-scene.test.js`
+- [unpacks zlib as the browser packs it: blocks stored, fixed and of their own codes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/model-formats.test.js#L359) — `tests/regression/model-formats.test.js`
+- [reads an FBX as a model: polygons in triangles by material, its picture inside, its skin and its clip](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/model-formats.test.js#L378) — `tests/regression/model-formats.test.js`
+- [reads a binary FBX the same as its text, of either width, its lists packed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/model-formats.test.js#L437) — `tests/regression/model-formats.test.js`
+- [writes a model in every format, and reads back the very same model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/model-formats.test.js#L466) — `tests/regression/model-formats.test.js`
+- [keeps to the letter of the formats: turns in their order, layers by polygon, four bones, names, degrees, bounds](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/model-formats.test.js#L518) — `tests/regression/model-formats.test.js`
+- [exports a model of code with its clips, and its skeleton for a clip of another binary file](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/model-formats.test.js#L588) — `tests/regression/model-formats.test.js`
+- [makes a model of a file of FBX through Models, as one of glTF](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/model-formats.test.js#L630) — `tests/regression/model-formats.test.js`
+- [reads the clip of an FBX as text and lays it on another skeleton, by what its bones are](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9562) — `tests/regression/library-scene.test.js`

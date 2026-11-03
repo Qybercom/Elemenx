@@ -59,6 +59,6 @@
 
 ## Тесты
 
-- [a mouse drags a gallery and the pictures of a product card across, and the click that ends the drag presses nothing](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L2196) — `tests/examples/ui-kit.spec.js`
-- [a finger swipes a gallery and the pictures of a product card across, and drags a menu sheet down to close it](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L2258) — `tests/examples/ui-kit.spec.js`
-- [gallery shows one picture with its caption, goes by arrows, dots, thumbnails, keys and swipes, and plays by itself](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5783) — `tests/examples/ui-kit.spec.js`
+- [a mouse drags a gallery and the pictures of a product card across, and the click that ends the drag presses nothing](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L2197) — `tests/examples/ui-kit.spec.js`
+- [a finger swipes a gallery and the pictures of a product card across, and drags a menu sheet down to close it](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L2259) — `tests/examples/ui-kit.spec.js`
+- [gallery shows one picture with its caption, goes by arrows, dots, thumbnails, keys and swipes, and plays by itself](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5829) — `tests/examples/ui-kit.spec.js`

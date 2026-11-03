@@ -85,8 +85,8 @@
 
 ## Тесты
 
-- [Toggle takes Values of its own: two for a switch, three for three positions, given back by change and to a form](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L75) — `tests/regression/library-controls.test.js`
-- [Toggle stands vertical with on at the top, and with States 3 goes from false to null to true by its keys, a press on its text and on its track](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L143) — `tests/regression/library-controls.test.js`
+- [Toggle takes Values of its own: two for a switch, three for three positions, given back by change and to a form](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L127) — `tests/regression/library-controls.test.js`
+- [Toggle stands vertical with on at the top, and with States 3 goes from false to null to true by its keys, a press on its text and on its track](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L195) — `tests/regression/library-controls.test.js`
 - [knows the Components, Services and Directives of the Libraries and of the project](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/language-server.test.js#L48) — `tests/regression/language-server.test.js`
 - [knows the references of a template (#Name): completes, tells and finds them from $Ref, and marks a $Ref of none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/language-server.test.js#L121) — `tests/regression/language-server.test.js`
 - [finds the Component of a <template id> of a page by its $TemplateID, and marks a name in $Template](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/language-server.test.js#L165) — `tests/regression/language-server.test.js`

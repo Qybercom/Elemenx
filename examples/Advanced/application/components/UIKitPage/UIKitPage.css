@@ -997,3 +997,50 @@
 .ui-kit-dash-lights.on {
 	color: #4aa8ff;
 }
+
+.ui-kit-blueprint {
+	align-self: stretch;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 256px;
+	gap: 12px;
+	height: 480px;
+}
+
+.ui-kit-topology {
+	align-self: stretch;
+	height: 460px;
+}
+
+.ui-kit-blueprint-preview {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.ui-kit-blueprint-preview canvas {
+	width: 256px;
+	height: 256px;
+	border-radius: var(--elemenx-radius-large);
+	background: var(--elemenx-surface-raised);
+}
+
+.ui-kit-blueprint-state {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+@media (max-width: 760px) {
+	.ui-kit-blueprint {
+		grid-template-columns: minmax(0, 1fr);
+		height: auto;
+	}
+
+	.ui-kit-blueprint .elemenx-blueprint {
+		height: 480px;
+	}
+}
+
+.ui-kit-scene-editor {
+	align-self: stretch;
+	height: 640px;
+}

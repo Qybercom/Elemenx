@@ -14,6 +14,18 @@
 			"zoomOut": "Zoom out",
 			"fit": "Fit the content"
 		},
+		"blueprint": {
+			"label": "Blueprint",
+			"find": "Find a block",
+			"palette": "Blocks",
+			"add": "Add",
+			"parameters": "Parameters",
+			"addParameter": "Add a parameter",
+			"removeParameter": "Remove the parameter",
+			"key": "Key",
+			"type": "Type",
+			"value": "Value"
+		},
 		"breadcrumbs": {
 			"label": "Breadcrumbs",
 			"more": "Hidden levels"
@@ -1172,6 +1184,63 @@
 			"thanks": "Thank you for your answers",
 			"score": "{score} of {max} points",
 			"restart": "Start again"
+		},
+		"sceneEditor": {
+			"label": "Scene editor",
+			"tools": "Tools of the scene",
+			"select": "Select",
+			"move": "Move",
+			"turn": "Turn",
+			"scale": "Scale",
+			"snap": "Snap",
+			"day": "Day",
+			"undo": "Undo",
+			"redo": "Redo",
+			"play": "Play",
+			"stop": "Stop",
+			"save": "Save in the browser",
+			"export": "Export JSON",
+			"import": "Import JSON",
+			"objects": "Objects",
+			"add": "Add",
+			"nothing": "Nothing selected",
+			"parameters": "Parameters of the blueprint",
+			"sketch": "Sketch",
+			"sketchType": "Type of the sketch",
+			"layers": "Layers",
+			"addLayer": "Add a layer",
+			"visible": "Shown",
+			"kinds": {
+				"stroke": "Brushes",
+				"line": "Lines",
+				"area": "Areas",
+				"circle": "Circles"
+			}
+		},
+		"topology": {
+			"label": "A graph of nodes and their links"
+		},
+		"objectEditor": {
+			"label": "Object editor",
+			"tools": "Tools of the model",
+			"select": "Select",
+			"move": "Move",
+			"turn": "Turn",
+			"scale": "Scale",
+			"snap": "Snap",
+			"variant": "Variant",
+			"undo": "Undo",
+			"redo": "Redo",
+			"format": "Format of the file",
+			"model": "Model",
+			"save": "Save in the browser",
+			"export": "Export JSON",
+			"import": "Import JSON",
+			"parts": "Parts",
+			"add": "Add",
+			"whole": "The model",
+			"generate": "Generate",
+			"describe": "Describe the model"
 		}
 	}
 }

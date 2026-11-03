@@ -790,6 +790,26 @@
 		</div>
 	</Section>
 
+	<Section *if="Shows('Scene editor')" Title="Scene editor" Note="SceneEditor · as Unreal: right button looks and W A S D Q E fly, Alt and the left button turn round, the wheel comes nearer, a click selects, W E R move, turn and scale, F looks at it, End sets it down, Ctrl+Z undoes">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-scene-editor">
+				<SceneEditor Storage="ui-kit-scene-editor" />
+			</div>
+			<p class="elemenx-text small muted">A star system: the square carries a body on its orbit, the green axis tilts the orbit, the ring turns its axis.</p>
+			<div class="ui-kit-scene-editor">
+				<SceneEditor Setting="space" Storage="ui-kit-space-editor" />
+			</div>
+		</div>
+	</Section>
+
+	<Section *if="Shows('Object editor')" Title="Object editor" Note="ObjectEditor · a model of shapes: parts in pieces a rig moves, tags, a mirror on the other side, variants of a seed; the right button turns round, W E R move, turn and scale; Generate asks a generator of rules (a tower, a table, a robot, a tree); Model saves it as glb, gltf, fbx or obj">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-scene-editor">
+				<ObjectEditor Storage="ui-kit-object-editor" [generator]="ObjectGenerator" />
+			</div>
+		</div>
+	</Section>
+
 	<Section *if="Shows('Terrain')" Title="Terrain" [note]="TerrainNote || 'GameScene · a ground of the Terrain Service: a drag turns, the wheel zooms, WASD moves, a click selects a unit, a right click sends it'">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
@@ -1878,6 +1898,27 @@
 					<Diagram [value]="CodesSequence" FontSize="12" />
 					<h5>Markdown with plugins</h5>
 					<Markdown [value]="CodesMarkdown" />
+				</div>
+			</div>
+			<div class="ui-kit-stack">
+				<h5>Blueprint: a pass of a picture, made into a shader as it changes</h5>
+				<div class="ui-kit-blueprint">
+					<Blueprint #Blueprint [value]="BlueprintGraph" (change)="BlueprintChanged" (problems)="BlueprintTold" />
+					<div class="ui-kit-blueprint-preview">
+						<canvas #BlueprintPreview width="256" height="256"></canvas>
+						<span class="ui-kit-blueprint-state">{{BlueprintState}}</span>
+					</div>
+				</div>
+			</div>
+			<div class="ui-kit-stack">
+				<h5>Topology: a network or what depends on what, laid out by itself</h5>
+				<div class="ui-kit-row">
+					<Select [options]="TopologyGraphs" [value]="TopologyGraph" (change)="TopologyPicked" />
+					<Select [options]="TopologyLayouts" [value]="TopologyLayout" (change)="TopologyArranged" />
+					<span>{{TopologyNote}}</span>
+				</div>
+				<div class="ui-kit-topology">
+					<Topology [nodes]="TopologyOf(TopologyGraph).Nodes" [links]="TopologyOf(TopologyGraph).Links" [layout]="TopologyLayout" [direction]="TopologyGraph === 'modules' ? 'right' : 'down'" [directed]="TopologyGraph !== 'network'" (select)="TopologyChosen" (open)="TopologyOpened" />
 				</div>
 			</div>
 		</div>

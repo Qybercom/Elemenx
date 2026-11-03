@@ -41,4 +41,4 @@
 
 ## Тесты
 
-- [Mixer keeps what its strips change in their channels, tells it, and dims the others while one is on Solo](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L364) — `tests/regression/library-controls.test.js`
+- [Mixer keeps what its strips change in their channels, tells it, and dims the others while one is on Solo](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L419) — `tests/regression/library-controls.test.js`

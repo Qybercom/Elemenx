@@ -1466,6 +1466,82 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-sampler-pad`: `active`, `empty`, `over`
 
 
+## SceneEditor
+
+- `elemenx-scene-editor`: `playing`
+- `elemenx-scene-editor-axis`: `axis-x`, `axis-y`, `axis-z`
+- `elemenx-scene-editor-blueprint`
+- `elemenx-scene-editor-field`
+- `elemenx-scene-editor-fields`
+- `elemenx-scene-editor-gizmo`
+- `elemenx-scene-editor-group`: `end`
+- `elemenx-scene-editor-import`
+- `elemenx-scene-editor-inspector`
+- `elemenx-scene-editor-item`
+- `elemenx-scene-editor-item-head`
+- `elemenx-scene-editor-kind`: `model`
+- `elemenx-scene-editor-layer`: `current`
+- `elemenx-scene-editor-layer-eye`
+- `elemenx-scene-editor-layer-name`
+- `elemenx-scene-editor-layers`
+- `elemenx-scene-editor-orbit`
+- `elemenx-scene-editor-overlay`
+- `elemenx-scene-editor-palette`
+- `elemenx-scene-editor-parameter`
+- `elemenx-scene-editor-plane`
+- `elemenx-scene-editor-ring`
+- `elemenx-scene-editor-side`
+- `elemenx-scene-editor-sketch-shape`: `area`, `current`, `draft`
+- `elemenx-scene-editor-sketch-type`
+- `elemenx-scene-editor-snap`
+- `elemenx-scene-editor-time`
+- `elemenx-scene-editor-tip`: `axis-x`, `axis-y`, `axis-z`
+- `elemenx-scene-editor-title`
+- `elemenx-scene-editor-tool`: `active`
+- `elemenx-scene-editor-toolbar`
+- `elemenx-scene-editor-view`
+
+## Topology
+
+- `elemenx-topology`
+- `elemenx-topology-arrow`
+- `elemenx-topology-board`
+- `elemenx-topology-canvas`
+- `elemenx-topology-details`
+- `elemenx-topology-head`
+- `elemenx-topology-icon`
+- `elemenx-topology-label`
+- `elemenx-topology-link`: `far`, `selected`, `status-error`, `status-off`, `status-ok`, `status-warning`
+- `elemenx-topology-links`
+- `elemenx-topology-node`: `far`, `selected`, `status-error`, `status-off`, `status-ok`, `status-warning`
+- `elemenx-topology-status`
+- `elemenx-topology-title`
+
+## ObjectEditor
+
+- `elemenx-object-editor`
+- `elemenx-object-editor-axis`: `axis-x`, `axis-y`, `axis-z`
+- `elemenx-object-editor-field`
+- `elemenx-object-editor-fields`
+- `elemenx-object-editor-format`
+- `elemenx-object-editor-generator`
+- `elemenx-object-editor-gizmo`
+- `elemenx-object-editor-group`: `end`
+- `elemenx-object-editor-import`
+- `elemenx-object-editor-inspector`
+- `elemenx-object-editor-overlay`
+- `elemenx-object-editor-palette`
+- `elemenx-object-editor-ring`
+- `elemenx-object-editor-shape`
+- `elemenx-object-editor-side`
+- `elemenx-object-editor-snap`
+- `elemenx-object-editor-tip`: `axis-x`, `axis-y`, `axis-z`
+- `elemenx-object-editor-title`
+- `elemenx-object-editor-tool`: `active`
+- `elemenx-object-editor-toolbar`
+- `elemenx-object-editor-variant`
+- `elemenx-object-editor-view`
+
 ## Section
 
 - `elemenx-section-actions`
@@ -1797,6 +1873,34 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-workspace-stripe`: `left`, `right`
 - `elemenx-workspace-tool-button`
 - `elemenx-workspace-tools`
+
+## Blueprint
+
+- `elemenx-blueprint`: `read-only`
+- `elemenx-blueprint-block`: `off`, `selected`, `wrong`
+- `elemenx-blueprint-board`
+- `elemenx-blueprint-body`
+- `elemenx-blueprint-canvas`
+- `elemenx-blueprint-filter`
+- `elemenx-blueprint-flows`: `out`
+- `elemenx-blueprint-group-name`
+- `elemenx-blueprint-head`
+- `elemenx-blueprint-inputs`
+- `elemenx-blueprint-link`: `draft`, `off`, `selected`
+- `elemenx-blueprint-links`
+- `elemenx-blueprint-outputs`
+- `elemenx-blueprint-palette`
+- `elemenx-blueprint-parameter`
+- `elemenx-blueprint-parameters`
+- `elemenx-blueprint-parameters-head`
+- `elemenx-blueprint-pin`
+- `elemenx-blueprint-pin-name`
+- `elemenx-blueprint-port`
+- `elemenx-blueprint-properties`
+- `elemenx-blueprint-property`
+- `elemenx-blueprint-side`
+- `elemenx-blueprint-title`
+- `elemenx-blueprint-type`
 
 ## Board
 

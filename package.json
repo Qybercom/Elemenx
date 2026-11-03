@@ -63,6 +63,7 @@
 		"example:advanced": "node elemenx-cli.js dev examples/Advanced",
 		"example:docs": "node elemenx-cli.js dev examples/Docs",
 		"example:designer": "node elemenx-cli.js dev examples/Designer",
+		"example:game-editor": "node elemenx-cli.js dev examples/GameEditor",
 		"tutorial": "node scripts/tutorial.js",
 		"docs:pages": "node examples/Docs/tools/pages.js",
 		"docs:site": "node tools/docs-site.js",

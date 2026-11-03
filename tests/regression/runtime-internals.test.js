@@ -19,7 +19,9 @@ var KnownGlobals = [
 	'clearTimeout', 'console', 'decodeURIComponent', 'document', 'encodeURIComponent', 'globalThis', 'parseInt', 'self',
 	'setTimeout', 'undefined',
 	/* The box of an isolated build (elemenx build --widget) gets the copy of the framework. */
-	'ElemenxIsolated'
+	'ElemenxIsolated',
+	/* A page rendered for a server (tools/ssr.js) sets it before the framework runs. */
+	'ElemenxSSR'
 ];
 
 var root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');

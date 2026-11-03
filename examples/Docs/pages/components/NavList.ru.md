@@ -55,4 +55,4 @@
 
 ## Тесты
 
-- [NavList opens a group, selects an item with the keys, and its search opens the branches that match](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L304) — `tests/regression/library-controls.test.js`
+- [NavList opens a group, selects an item with the keys, and its search opens the branches that match](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L359) — `tests/regression/library-controls.test.js`

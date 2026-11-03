@@ -40,6 +40,12 @@ function parse (argv) {
 
 				i += result.Options[name] === true ? 1 : 2;
 			}
+			/* --prerender alone starts at the root of the site; its pages, when given, are paths (/,/about). */
+			else if (name === 'prerender') {
+				result.Options[name] = argv[i + 1] && argv[i + 1].charAt(0) === '/' ? argv[i + 1] : true;
+
+				i += result.Options[name] === true ? 1 : 2;
+			}
 			else if (i + 1 < argv.length && argv[i + 1].indexOf('--') !== 0) {
 				result.Options[name] = argv[i + 1];
 
@@ -150,8 +156,25 @@ function buildOptions (parsed, settings) {
 		splash: settings.Splash,
 		pwa: settings.PWA,
 		icon: settings.Icon,
-		icons: settings.Icons
+		icons: settings.Icons,
+		prerender: prerenderOptions(parsed.Options.prerender, settings.Prerender)
 	};
+}
+
+/*
+ * The pages a build renders (--prerender, or Prerender of elemenx.config.js: true, a list of paths, or {Routes, Crawl,
+ * Limit}): null for none, else {Routes, Crawl, Limit}.
+ */
+function prerenderOptions (given, configured) {
+	var setting = given !== undefined ? given : configured;
+	if (!setting) return null;
+
+	if (setting === true)
+		return {Routes: [], Crawl: true};
+
+	if (typeof setting === 'string' || Array.isArray(setting)) return {Routes: listValue(setting), Crawl: true};
+
+	return {Routes: listValue(setting.Routes || []), Crawl: setting.Crawl !== false, Limit: setting.Limit};
 }
 
 /* A list option: an Array of the config, or the names of the command line separated by commas. */
@@ -161,6 +184,29 @@ function listValue (input) {
 	return String(input === true ? '' : input).split(',').map(function (item) {
 		return item.trim();
 	}).filter(Boolean);
+}
+
+/* The pages of a build rendered, told one by one; a page that fails fails the build, after the others. */
+function prerender (output, options) {
+	var base = options.base ? '/' + String(options.base).replace(/^\/+|\/+$/g, '') + '/' : '/';
+
+	require('./tools/prerender.js').Run({Output: output, Routes: options.prerender.Routes, Crawl: options.prerender.Crawl, Limit: options.prerender.Limit, Base: base.replace(/^\/\/$/, '/')}, function (error, pages) {
+		var failed;
+
+		if (error)
+			fail(error.message);
+
+		failed = pages.filter(function (page) {
+			return page.Error;
+		});
+
+		pages.forEach(function (page) {
+			process.stdout.write('Elemenx prerender: ' + page.URL + (page.Error ? ' failed: ' + page.Error.message : ' ' + path.relative(output, page.File)) + '\n');
+		});
+
+		if (failed.length)
+			fail(failed.length + ' of ' + pages.length + ' pages did not render');
+	});
 }
 
 function booleanValue (input, fallback) {
@@ -292,6 +338,9 @@ command('build', 'Build an Application into dist: a site, one file, a widget, a 
 	var mode = options.single || options.widget || options.extension || options.native || options.docker;
 	var targets = parsed.Options.target !== undefined ? listValue(parsed.Options.target) : ((settings.Build || {}).Targets || null);
 
+	if (options.prerender && mode)
+		fail('--prerender renders the pages of a site: not with --single, --widget, --extension, --native or --docker');
+
 	/* The targets of elemenx.config.js (Build.Targets) or of --target, each into its folder; an option of a mode builds that one alone. */
 	if (targets && targets.length && (!mode || parsed.Options.target !== undefined)) {
 		Builder.BuildTargets(project, options, targets);
@@ -299,7 +348,11 @@ command('build', 'Build an Application into dist: a site, one file, a widget, a 
 		return;
 	}
 
-	Builder.Build(project, options);
+	var output = Builder.Build(project, options);
+
+	/* The pages of the site rendered as a server sends them: each a file of its own (see prerender.js). */
+	if (options.prerender)
+		prerender(output, options);
 }, {
 	Usage: ['elemenx build [project] [options]'],
 	Text: ['Without an option the build is a site: the framework, the Application and its Libraries for any static server. The settings of elemenx.config.js are the defaults of the options (docs/BUILDER.md).', 'Build.Targets of elemenx.config.js (or --target) builds several at once: web, single, widget, extension, desktop, mobile, android-library, docker; one goes where its build goes, several each into a folder of its own (dist/web, dist/single, dist/widget, dist/docker, dist/extension, dist/native/<platform>). An option of a mode (--single...) builds that one alone.'],
@@ -319,6 +372,7 @@ command('build', 'Build an Application into dist: a site, one file, a widget, a 
 		['--extension', 'a browser extension for Chrome, Edge and Firefox'],
 		['--surface <popup|tab|side>', 'where the extension shows (popup)'],
 		['--docker', 'the site and a Docker image of it, served by nginx (the image when docker is installed)'],
+		['--prerender [/a,/b]', 'renders each page of the site as a server sends it (SSR), a file of its own: from these paths (the root of the site by default) and the links of the pages (Prerender of elemenx.config.js)'],
 		['--target <a,b>', 'the targets to build (Build.Targets): web, single, widget, extension, desktop, mobile, android-library, docker'],
 		['--strict', 'fails a target whose tool is missing (docker) instead of leaving it out'],
 		['--native [desktop|mobile|android-library]', 'native programs: desktop (Electron) or mobile (Capacitor: Android and iOS), without a platform both (elemenx native add installs what they need); android-library: the interface for an Android program of its own, a module of Gradle with ElemenxView']

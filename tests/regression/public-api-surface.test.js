@@ -112,6 +112,7 @@ describe('Regression: public API surface', function () {
 			'Elemenx.Network.XHR:function',
 			'Elemenx.NoConflict:function',
 			'Elemenx.Pipe:function',
+			'Elemenx.Render:function',
 			'Elemenx.Resource:function',
 			'Elemenx.Resource.Load:function',
 			'Elemenx.Router:function',

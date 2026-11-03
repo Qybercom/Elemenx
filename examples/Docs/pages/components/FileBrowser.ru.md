@@ -13,11 +13,15 @@
 | `Sort` | `'Name'` |
 | `Multiple` | `true` |
 | `Label` | `''` |
+| `Expanded` | `null` |
+| `Toolbar` | `true` |
+| `Details` | `true` |
 
 ## События
 
-- `navigate`: Папка открыта или покинута: {Path, Folder}.
+- `expand`
 - `load`: Открыта папка, у которой Items равен null: {Folder, Path}.
+- `navigate`: Папка открыта или покинута: {Path, Folder}.
 - `open`: Открыт файл: элемент.
 - `select`: Выделение изменилось: выделенные элементы.
 
@@ -55,3 +59,5 @@
 ## Тесты
 
 - [FileBrowser opens folders and files, loads a folder not loaded, sorts, selects with Ctrl and Shift, and follows the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L467) — `tests/regression/library-new.test.js`
+- [FileBrowser as a tree: every folder open under itself, its arrow, Enter and the arrows across open and close it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L540) — `tests/regression/library-new.test.js`
+- [reads a tree of files by its indents, of spaces or of the lines of tree, and Markdown draws it by FileBrowser as a tree](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-plugins.test.js#L203) — `tests/regression/rich-plugins.test.js`

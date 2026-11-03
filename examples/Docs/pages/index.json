@@ -755,6 +755,13 @@
 					"Group": "layout"
 				},
 				{
+					"ID": "Blueprint",
+					"Title": {
+						"en": "Blueprint"
+					},
+					"Group": "codes"
+				},
+				{
 					"ID": "Board",
 					"Title": {
 						"en": "Board"
@@ -1399,6 +1406,13 @@
 					"Group": "media"
 				},
 				{
+					"ID": "InfiniteList",
+					"Title": {
+						"en": "InfiniteList"
+					},
+					"Group": "layout"
+				},
+				{
 					"ID": "Input",
 					"Title": {
 						"en": "Input"
@@ -1628,6 +1642,13 @@
 						"en": "OTPInput"
 					},
 					"Group": "inputs"
+				},
+				{
+					"ID": "ObjectEditor",
+					"Title": {
+						"en": "ObjectEditor"
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "Pagination",
@@ -1873,6 +1894,13 @@
 						"en": "Sampler"
 					},
 					"Group": "music"
+				},
+				{
+					"ID": "SceneEditor",
+					"Title": {
+						"en": "SceneEditor"
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "Section",
@@ -2148,6 +2176,13 @@
 					"Group": "inputs"
 				},
 				{
+					"ID": "Topology",
+					"Title": {
+						"en": "Topology"
+					},
+					"Group": "codes"
+				},
+				{
 					"ID": "Tour",
 					"Title": {
 						"en": "Tour"
@@ -2181,6 +2216,13 @@
 						"en": "VideoTimeline"
 					},
 					"Group": "media"
+				},
+				{
+					"ID": "VirtualGamepad",
+					"Title": {
+						"en": "VirtualGamepad"
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "VirtualList",
@@ -2240,6 +2282,12 @@
 					}
 				},
 				{
+					"ID": "Archive",
+					"Title": {
+						"en": "Archive"
+					}
+				},
+				{
 					"ID": "Astronomy",
 					"Title": {
 						"en": "Astronomy"
@@ -2279,6 +2327,18 @@
 					"ID": "Biometric",
 					"Title": {
 						"en": "Biometric"
+					}
+				},
+				{
+					"ID": "Blueprints",
+					"Title": {
+						"en": "Blueprints"
+					}
+				},
+				{
+					"ID": "Buildings",
+					"Title": {
+						"en": "Buildings"
 					}
 				},
 				{
@@ -2420,6 +2480,12 @@
 					}
 				},
 				{
+					"ID": "Generated",
+					"Title": {
+						"en": "Generated"
+					}
+				},
+				{
 					"ID": "Gltf",
 					"Title": {
 						"en": "Gltf"
@@ -2468,9 +2534,21 @@
 					}
 				},
 				{
+					"ID": "ModelFormats",
+					"Title": {
+						"en": "ModelFormats"
+					}
+				},
+				{
 					"ID": "Models",
 					"Title": {
 						"en": "Models"
+					}
+				},
+				{
+					"ID": "Motion",
+					"Title": {
+						"en": "Motion"
 					}
 				},
 				{
@@ -2634,6 +2712,12 @@
 					"Title": {
 						"en": "Windows"
 					}
+				},
+				{
+					"ID": "Workers",
+					"Title": {
+						"en": "Workers"
+					}
 				}
 			]
 		},
@@ -2684,6 +2768,12 @@
 					"ID": "hotkey",
 					"Title": {
 						"en": "*hotkey"
+					}
+				},
+				{
+					"ID": "infinite",
+					"Title": {
+						"en": "*infinite"
 					}
 				},
 				{

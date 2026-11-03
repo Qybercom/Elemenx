@@ -21,6 +21,7 @@
 - `Levels(name, options)`
 - `Length(model, clip)`
 - `Pose(model, clip, time, options)`
+- `Tagged(name, tag)`
 
 ## Пример
 
@@ -52,17 +53,17 @@
 
 ## Тесты
 
-- [has units, animals, vehicles, plants, rocks, buildings and ships, each of whole triangles, its parents before their pieces](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7649) — `tests/regression/library-scene.test.js`
-- [makes the same shape of the same variant, another of another, and throws on an unknown model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7682) — `tests/regression/library-scene.test.js`
-- [poses the pieces of a clip on their pivots, children with their parents, and fades from a clip to another](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7694) — `tests/regression/library-scene.test.js`
-- [spins what turns with no end, and leaves a model of one piece still](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7720) — `tests/regression/library-scene.test.js`
-- [makes simpler levels of a model, with fewer faces and the same size](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7727) — `tests/regression/library-scene.test.js`
-- [takes the models of an application](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7747) — `tests/regression/library-scene.test.js`
-- [gives each scene of a page its own textures of a model they share](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1454) — `tests/regression/library-scene.test.js`
-- [lights the world with the lamps a model carries, unless it is told not to](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1841) — `tests/regression/library-scene.test.js`
-- [A mirrored node keeps its mirror, and what a file keeps as one piece stands apart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3290) — `tests/regression/library-scene.test.js`
-- [holds a car inside the barrier by its corners, at any speed and at any angle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3681) — `tests/regression/library-scene.test.js`
-- [drives a car on its track: it stands on the road, nothing shakes, and the barrier holds it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3739) — `tests/regression/library-scene.test.js`
-- [makes a part of a vehicle of what lies in a box of its model, moves it by degrees, and keeps what stops a wheel with the wheel](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4139) — `tests/regression/library-scene.test.js`
+- [knows its classes, from a shack to a business centre, and the height of each of its floors and its roof](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/buildings.test.js#L54) — `tests/regression/buildings.test.js`
+- [varies a building of a class by its seed within what the class allows, the same seed the same building](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/buildings.test.js#L65) — `tests/regression/buildings.test.js`
+- [is a model of Models as tall as its Size: a tower steps in at its setbacks, a business centre stands on a wider podium, its windows lit as told](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/buildings.test.js#L81) — `tests/regression/buildings.test.js`
+- [starts as a block, adds a part over the selected one in its piece, selects a part by a press on it, and emits the document](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-object-editor.test.js#L89) — `tests/regression/library-object-editor.test.js`
+- [moves and scales a part by the gizmo along its axes, changes it by its fields, and undoes it all](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-object-editor.test.js#L135) — `tests/regression/library-object-editor.test.js`
+- [gives its model to Models under a name, and as files of every format that read back with its pieces](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-object-editor.test.js#L216) — `tests/regression/library-object-editor.test.js`
+- [keeps its document when it is given the same again without a Seed: nothing loaded anew, the selection kept](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-object-editor.test.js#L242) — `tests/regression/library-object-editor.test.js`
+- [takes a recipe of the generator plugged in for a description, which Undo takes back; and shows the variant it is told](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-object-editor.test.js#L260) — `tests/regression/library-object-editor.test.js`
+- [offers the models it is given that Models has, and places each as the kind its Type fits, as large as it is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L108) — `tests/regression/library-scene-editor.test.js`
+- [has units, animals, vehicles, plants, rocks, buildings and ships, each of whole triangles, its parents before their pieces](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L10050) — `tests/regression/library-scene.test.js`
+- [makes the same shape of the same variant, another of another, and throws on an unknown model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L10083) — `tests/regression/library-scene.test.js`
+- [poses the pieces of a clip on their pivots, children with their parents, and fades from a clip to another](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L10095) — `tests/regression/library-scene.test.js`
 
-+6 ещё в тех же файлах
++25 ещё в тех же файлах

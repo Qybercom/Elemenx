@@ -35,6 +35,9 @@
 - `Simplify(geometry, cell)`
 - `Normals(geometry)`
 - `Noise(seed)`
+- `Source(names)`
+- `Work()`
+- `CloudBlock(size)`
 - `Create(canvas, options)`
 
 ## Пример
@@ -128,12 +131,12 @@
 - [multiplies, inverts and projects matrices, and makes shapes of triangles](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L149) — `tests/regression/library-scene.test.js`
 - [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L180) — `tests/regression/library-scene.test.js`
 - [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L219) — `tests/regression/library-scene.test.js`
+- [Graphics3D makes programs behind the page for who is patient, and sets in a program only what changed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3957) — `tests/regression/library-scene.test.js`
+- [Graphics3D sets the state of the context only where it changes, and only the uniforms a program has](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4066) — `tests/regression/library-scene.test.js`
 - [puts planets on their orbits and makes shapes of three dimensions with the Services of ElemenxUI](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`
 - [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L374) — `tests/regression/library-scene.test.js`
-- [keeps the noise of a ground and of water where they are, not where the eye is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L955) — `tests/regression/library-scene.test.js`
-- [keeps from the shaders what would blur, flicker or show as noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1248) — `tests/regression/library-scene.test.js`
-- [puts rain and snow in the world, clouds in frames that add up, and takes a lens by how strong it is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1492) — `tests/regression/library-scene.test.js`
-- [burns where it is told: effects with their lamps, those of a body, bursts that end, types of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1956) — `tests/regression/library-scene.test.js`
-- [A mirrored node keeps its mirror, and what a file keeps as one piece stands apart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3290) — `tests/regression/library-scene.test.js`
+- [keeps the noise of a ground and of water where they are, not where the eye is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1010) — `tests/regression/library-scene.test.js`
+- [keeps from the shaders what would blur, flicker or show as noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1303) — `tests/regression/library-scene.test.js`
+- [puts rain and snow in the world, clouds in frames that add up, and takes a lens by how strong it is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1552) — `tests/regression/library-scene.test.js`
 
-+13 ещё в тех же файлах
++21 ещё в тех же файлах

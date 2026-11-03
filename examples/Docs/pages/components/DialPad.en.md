@@ -46,4 +46,4 @@ A dial pad: the number in a field over a grid of keys, a key that erases and a k
 
 ## Tests
 
-- [DialPad puts the keys pressed into the number, erases the last one, and calls with it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L235) — `tests/regression/library-controls.test.js`
+- [DialPad puts the keys pressed into the number, erases the last one, and calls with it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L287) — `tests/regression/library-controls.test.js`

@@ -1,0 +1,156 @@
+html,
+body {
+	height: 100%;
+	margin: 0;
+}
+
+.game-editor {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+	font: var(--elemenx-font-size) / var(--elemenx-line-height) var(--elemenx-font);
+}
+
+.game-editor-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	padding: 6px 12px;
+	border-bottom: 1px solid var(--elemenx-border);
+	background: var(--elemenx-surface-raised);
+}
+
+.game-editor-name {
+	width: 180px;
+	padding: 2px 6px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface);
+	color: inherit;
+	font: inherit;
+	font-weight: var(--elemenx-font-weight-strong);
+}
+
+.game-editor-views {
+	display: flex;
+	gap: 2px;
+}
+
+.game-editor-view {
+	padding: 4px 12px;
+	border: 1px solid transparent;
+	border-radius: var(--elemenx-radius);
+	background: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.game-editor-view.active {
+	border-color: var(--elemenx-accent);
+	background: var(--elemenx-surface-hover);
+}
+
+.game-editor-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+	margin-left: auto;
+}
+
+.game-editor-import {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 0 8px;
+	cursor: pointer;
+}
+
+.game-editor-import input {
+	display: none;
+}
+
+.game-editor-status {
+	color: var(--elemenx-text-muted);
+}
+
+/* Both editors stay as they are while the other is shown: their scenes keep their size. */
+.game-editor-main {
+	position: relative;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.game-editor-pane {
+	position: absolute;
+	inset: 8px;
+}
+
+.game-editor-pane.hidden {
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.game-editor-pane > .elemenx-scene-editor {
+	height: 100%;
+}
+
+.game-editor-models {
+	display: grid;
+	grid-template-columns: 180px minmax(0, 1fr);
+	gap: 8px;
+}
+
+.game-editor-list {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	overflow: auto;
+}
+
+.game-editor-title {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	color: var(--elemenx-text-muted);
+	font-weight: var(--elemenx-font-weight-strong);
+	text-transform: uppercase;
+}
+
+.game-editor-item {
+	display: flex;
+	align-items: center;
+	border-radius: var(--elemenx-radius-small);
+}
+
+.game-editor-item.current {
+	background: var(--elemenx-surface-hover);
+}
+
+.game-editor-item-name,
+.game-editor-item-remove {
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.game-editor-item-name {
+	flex: 1 1 auto;
+	padding: 4px;
+	text-align: left;
+}
+
+.game-editor-object {
+	min-width: 0;
+	min-height: 0;
+}
+
+.game-editor-object > .elemenx-object-editor {
+	height: 100%;
+}
