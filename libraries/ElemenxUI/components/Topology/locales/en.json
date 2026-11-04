@@ -1,0 +1,7 @@
+{
+	"ui": {
+		"topology": {
+			"label": "A graph of nodes and their links"
+		}
+	}
+}

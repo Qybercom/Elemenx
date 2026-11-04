@@ -5,14 +5,16 @@ import { Use } from '../library.js';
 describe('Contract: Blueprints, graphs in the JSON of Flowprint made into shaders, passes, code and flows', function () {
 	var blueprints;
 	var graphics;
+	var math;
 
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:Blueprints', 'service:Graphics3D']);
+		Use(['service:Blueprints', 'service:Renderer', 'service:Meshes', 'service:Math']);
 
 		blueprints = Elemenx.Service('Blueprints');
-		graphics = Elemenx.Service('Graphics3D');
+		graphics = Elemenx.Service('Renderer');
+		math = Elemenx.Service('Math');
 	});
 
 	/* A graph goes through a file as it would. */
@@ -104,6 +106,31 @@ describe('Contract: Blueprints, graphs in the JSON of Flowprint made into shader
 		pixels = draw(made.Fragment, made.Values({Gain: 0}), 4);
 
 		expect(pixels[3 * 4]).toBe(0);
+	});
+
+	/*
+	 * Blueprints is of ElemenxCommon: the kinds of shaders are of BlueprintShaders, a Service of a Library over it, made
+	 * as a graph of such a kind is first met, so an Application calls nothing first.
+	 */
+	it('makes its Service of shaders as a graph of shaders is met: the kinds of shaders and their blocks come with it', function () {
+		var fresh = Elemenx.Application('BlueprintsShadersFresh', {}).$Service('Blueprints');
+		var code = fresh.Create('generator');
+		var made;
+
+		expect(fresh.NodeOf('Number').Graphs).toEqual(['generator', 'flow']);
+
+		fresh.Link(code, [fresh.Add(code, 'Number', {properties: {Value: 2}}).id, 'Value'], [fresh.Add(code, 'Result').id, 'Value']);
+
+		expect(fresh.Compile(code).Run()).toEqual({Value: 2});
+		expect(fresh.NodeOf('Number').Graphs).toEqual(['generator', 'flow']);
+
+		/* A file of a pass, as it comes. */
+		made = fresh.Compile({version: 1, type: 'pass', blocks: [{id: 'o', type: 'Output'}], links: []});
+
+		expect(made.Fragment).toContain('outColor = vec4(0.0, 0.0, 0.0, 1.0);');
+		expect(fresh.Graphs()).toEqual(expect.arrayContaining(['generator', 'flow', 'pass', 'material', 'render', 'vertex']));
+		expect(fresh.NodeOf('Number').Graphs).toEqual(['generator', 'flow', 'pass', 'material', 'vertex', 'water', 'sky', 'land', 'render']);
+		expect(typeof fresh.NodeOf('Add').GLSL).toBe('string');
 	});
 
 	it('makes a graph once, whatever where its blocks stand; what it is made of makes it again', function () {
@@ -221,6 +248,152 @@ describe('Contract: Blueprints, graphs in the JSON of Flowprint made into shader
 		expect(blueprints.Compile(graph).Run()).toEqual({Value: 3});
 	});
 
+	/* A GLSL block: code of its own in a graph, its pins named by its properties, its errors told on it. */
+	it('runs the code of a GLSL block on its pins, makes the pins its properties name, and tells its errors on it', function () {
+		var graph = blueprints.Create('pass');
+		var color = blueprints.Add(graph, 'Color', {properties: {Color: '#ff0000'}});
+		var gain = blueprints.Add(graph, 'Number', {properties: {Value: 0.5}});
+		var code = blueprints.Add(graph, 'GLSL', {id: 'mix', properties: {Inputs: 'Tint: vec3, Gain: float', Outputs: 'Out: vec4', Code: 'uniform float uTime;\nOut = vec4(Tint * Gain + uTime * 0.0, 1.0);'}});
+		var output = blueprints.Add(graph, 'Output');
+		var made;
+		var pixels;
+		var renderer = graphics.Create(document.createElement('canvas'), {Antialias: false});
+		var log = '';
+
+		expect(code.pins.filter(function (pin) {
+			return pin.kind === 'value';
+		}).map(function (pin) {
+			return pin.key + ':' + pin.type;
+		})).toEqual(['Tint:vec3', 'Gain:float', 'Out:vec4']);
+
+		blueprints.Link(graph, [color.id, 'RGB'], [code.id, 'Tint']);
+		blueprints.Link(graph, [gain.id, 'Value'], [code.id, 'Gain']);
+		blueprints.Link(graph, [code.id, 'Out'], [output.id, 'Color']);
+
+		made = blueprints.Compile(stored(graph));
+
+		expect(made.Fragment).toContain('#line 1 1003');
+		expect(made.Uniforms.map(function (uniform) {
+			return uniform.Name;
+		})).toContain('uTime');
+
+		pixels = draw(made.Fragment, made.Values({}, {Time: 1}), 2);
+
+		expect(Math.abs(pixels[0] - 127.5)).toBeLessThan(1.5);
+		expect([pixels[1], pixels[2]]).toEqual([0, 0]);
+
+		/* Other pins named: the gone one goes with its link, the one kept keeps its link and takes its new type. */
+		code.properties.filter(function (property) {
+			return property.key === 'Inputs';
+		})[0].value = 'Tint: vec4';
+
+		blueprints.Pins(code);
+
+		expect(blueprints.Prune(graph).length).toBe(1);
+		expect(blueprints.Pin(code, 'Tint', false).type).toBe('vec4');
+		expect(blueprints.Pin(code, 'Gain', false)).toBe(null);
+		expect(graph.links.length).toBe(2);
+
+		/* An error of its code is on the block, at its line there. */
+		code.properties.filter(function (property) {
+			return property.key === 'Code';
+		})[0].value = 'Out = vec4(Tint);\nOut = nothing;';
+
+		made = blueprints.Compile(stored(graph));
+
+		try {
+			renderer.Program(graphics.Shaders.Quad, made.Fragment);
+		}
+		catch (error) {
+			log = error.message;
+		}
+
+		renderer.Destroy();
+
+		expect(Elemenx.Service('BlueprintShaders').Errors(made, log).filter(function (one) {
+			return one.Block === 'mix';
+		})[0]).toMatchObject({Block: 'mix', Line: 2});
+	});
+
+	/* A vertex graph moves the corners of a shape: blueprintVertex, of blocks or written by hand. */
+	it('makes a vertex graph a function that moves a corner and its normal, of blocks or of GLSL written by hand', function () {
+		var graph = blueprints.Create('vertex', {parameters: [{key: 'Lift', type: 'float', value: 2}]});
+		var world = blueprints.Add(graph, 'World');
+		var lift = blueprints.Add(graph, 'Parameter', {properties: {Key: 'Lift'}});
+		var up = blueprints.Add(graph, 'Combine');
+		var add = blueprints.Add(graph, 'Add');
+		var end = blueprints.Add(graph, 'Vertex');
+		var made;
+		var written;
+
+		blueprints.Link(graph, [lift.id, 'Value'], [up.id, 'Y']);
+		blueprints.Link(graph, [world.id, 'World'], [add.id, 'A']);
+		blueprints.Link(graph, [up.id, 'XYZ'], [add.id, 'B']);
+		blueprints.Link(graph, [add.id, 'Out'], [end.id, 'World']);
+
+		made = blueprints.Compile(stored(graph));
+
+		expect(made.Type).toBe('vertex');
+		expect(made.Function.indexOf('void blueprintVertex(vec3 position, vec3 normal, vec2 uv, float sway, float phase, float size, inout vec3 world, inout vec3 bent) {')).toBe(0);
+		expect(made.Function).toContain('world = ');
+		expect(made.Function).toContain('bent = bent;');
+		expect(made.Values({Lift: 3})).toEqual({uParameter_Lift: 3});
+		expect(blueprints.Nodes('vertex')).toEqual(expect.arrayContaining(['World', 'Position', 'Normal', 'UV', 'Sway', 'Phase', 'Size', 'Wind', 'Time', 'Noise', 'GLSL', 'Vertex']));
+		expect(blueprints.Nodes('vertex')).not.toContain('Texture');
+
+		written = blueprints.Compile({type: 'vertex', glsl: 'uniform float uParameter_Sway; // = 0.2\nuniform float uTime;\n\nvoid blueprintVertex(vec3 position, vec3 normal, vec2 uv, float sway, float phase, float size, inout vec3 world, inout vec3 bent) {\n\tworld.x += sin(uTime) * uParameter_Sway * position.y;\n}'});
+
+		expect(written.Parameters).toEqual([{key: 'Sway', type: 'float', value: 0.2}]);
+		expect(written.Values({}, {Time: 1})).toEqual({uParameter_Sway: 0.2, uTime: 1});
+		expect(function () {
+			blueprints.Compile({type: 'vertex', glsl: 'void main() {}'});
+		}).toThrow('Elemenx Blueprints: a vertex written by hand has no blueprintVertex');
+	});
+
+	/* A shader written by hand is a graph made: its uniforms, parameters, textures and parts of shaders read from its text. */
+	it('makes a material and a pass written by hand of their GLSL, and draws the pass', function () {
+		var material = blueprints.Compile({type: 'material', glsl: '// needs: Noise\nuniform vec3 uParameter_Tint; // = #ff8000\nuniform float uParameter_Gain; // = 0.5\nuniform float uTime;\nuniform sampler2D uTexture_Rust;\n\nvec3 rusted (vec2 uv) {\n\treturn texture(uTexture_Rust, uv).rgb;\n}\n\nvoid blueprintSurface(vec3 position, vec3 normal, vec2 uv, inout vec3 color, inout float alpha, inout float rough, inout float metal, inout vec3 emission, inout vec3 bent) {\n\tcolor = rusted(uv) * uParameter_Tint * uParameter_Gain + noise3(position) * 0.0 + uTime * 0.0;\n}'});
+		var pass = blueprints.Compile({type: 'pass', glsl: 'uniform float uParameter_Red; // = 1\n\nvoid main() {\n\toutColor = vec4(uParameter_Red, 0.0, 0.0, 1.0);\n}'});
+		var whole = '#version 300 es\nprecision highp float;\nin vec2 vQuad;\nout vec4 outColor;\nuniform float uParameter_Blue;\nvoid main() {\n\toutColor = vec4(0.0, 0.0, uParameter_Blue, 1.0);\n}';
+		var pixels;
+
+		expect(material.Type).toBe('material');
+		expect(material.Needs).toEqual(['Noise']);
+		expect(material.Textures).toEqual([{Name: 'Rust', Uniform: 'uTexture_Rust'}]);
+		expect(material.Parameters).toEqual([{key: 'Tint', type: 'vec3', value: '#ff8000'}, {key: 'Gain', type: 'float', value: 0.5}]);
+		expect(material.Values({Gain: 2}, {Time: 3})).toEqual({uParameter_Tint: [1, 128 / 255, 0], uParameter_Gain: 2, uTime: 3});
+		expect(material.Function.indexOf('vec3 rusted (vec2 uv)')).toBe(0);
+		expect(material.Function).not.toContain('uniform');
+		expect(material.Source).toContain('uniform sampler2D uTexture_Rust;');
+		expect(material.Source).toContain('float noise3(');
+
+		pixels = draw(pass.Fragment, pass.Values(), 2);
+
+		expect([pixels[0], pixels[1], pixels[2]]).toEqual([255, 0, 0]);
+
+		/* Another text is another graph; the same text is made once, the parameters a record gives over those of its text. */
+		expect(blueprints.Compile({type: 'material', glsl: material.Function.replace(/^vec3 rusted[\s\S]*?\n}\n\n/, '')}).Hash).not.toBe(material.Hash);
+		expect(blueprints.Compile({type: 'pass', glsl: 'uniform float uParameter_Red; // = 1\n\nvoid main() {\n\toutColor = vec4(uParameter_Red, 0.0, 0.0, 1.0);\n}', parameters: [{key: 'Red', type: 'float', value: 0.25}]})).toBe(pass);
+		expect(pass.Values()).toEqual({uParameter_Red: 0.25});
+
+		/* A whole fragment shader is kept as it is; its uniforms still read. */
+		expect(blueprints.Compile({type: 'pass', glsl: whole}).Fragment).toBe(whole);
+		expect(draw(whole, blueprints.Compile({type: 'pass', glsl: whole}).Values({Blue: 1}), 2)[2]).toBe(255);
+
+		/* A pass written by hand is baked like one of blocks. */
+		expect(blueprints.Compile(stored(blueprints.Bake({type: 'pass', glsl: whole}))).Fragment).toBe(whole);
+
+		expect(function () {
+			blueprints.Compile({type: 'pass', glsl: 'float nothing;'});
+		}).toThrow('Elemenx Blueprints: a pass written by hand has no main');
+		expect(function () {
+			blueprints.Compile({type: 'material', glsl: 'void main() {}'});
+		}).toThrow('Elemenx Blueprints: a material written by hand has no blueprintSurface');
+		expect(function () {
+			blueprints.Compile({type: 'generator', glsl: 'void main() {}'});
+		}).toThrow('Elemenx Blueprints: a generator graph is not written by hand');
+	});
+
 	it('bakes a pass and a material into JSON made again with no block at all; a graph of code is not baked', function () {
 		var graph = blueprints.Create('material', {parameters: [{key: 'Wet', type: 'float', value: 0.3}]});
 		var wet = blueprints.Add(graph, 'Parameter', {properties: {Key: 'Wet'}});
@@ -271,7 +444,7 @@ describe('Contract: Blueprints, graphs in the JSON of Flowprint made into shader
 		var twice = blueprints.Add(graph, 'Multiply');
 		var double = blueprints.Add(graph, 'Result', {properties: {Key: 'Double'}});
 		var made;
-		var noise = graphics.Noise();
+		var noise = math.Noise();
 
 		blueprints.Link(graph, [input.id, 'Value'], [fbm.id, 'Position']);
 		blueprints.Link(graph, [scale.id, 'Value'], [fbm.id, 'Scale']);

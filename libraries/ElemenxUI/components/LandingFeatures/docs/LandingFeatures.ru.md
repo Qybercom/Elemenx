@@ -1,0 +1,1 @@
+Возможности продукта: Overline, Title и Text над сеткой карточек Items [{ID, Icon, Image, Title, Text, Href}] (с Href карточка — ссылка), не больше Columns в ряд (3; меньше на узком месте). Variant: cards (в рамках) или plain. Align: start или center. Слот по умолчанию добавляет свои карточки в сетку.

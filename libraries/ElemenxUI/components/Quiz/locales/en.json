@@ -1,0 +1,21 @@
+{
+	"ui": {
+		"quiz": {
+			"label": "Quiz",
+			"start": "Start",
+			"progress": "Question {index} of {count}",
+			"check": "Check",
+			"next": "Next",
+			"back": "Back",
+			"right": "Right",
+			"wrong": "Wrong",
+			"up": "Move {name} up",
+			"down": "Move {name} down",
+			"passed": "Passed",
+			"failed": "Not passed",
+			"thanks": "Thank you for your answers",
+			"score": "{score} of {max} points",
+			"restart": "Start again"
+		}
+	}
+}

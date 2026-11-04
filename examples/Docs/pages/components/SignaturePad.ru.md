@@ -50,5 +50,5 @@
 ## Тесты
 
 - [SignaturePad draws a stroke of the pointer, emits change with the strokes, undoes, clears and gives a picture and an SVG](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L237) — `tests/regression/library-new.test.js`
-- [scores a signature against another and against the samples of a person, its parts told](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-signatures.test.js#L61) — `tests/regression/library-signatures.test.js`
-- [compares what is drawn with its Reference after each stroke, tells compare and says whether it looks like it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-signatures.test.js#L87) — `tests/regression/library-signatures.test.js`
+- [scores a signature against another and against the samples of a person, its parts told](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/SignaturePad/SignaturePad.test.js#L61) — `libraries/ElemenxUI/components/SignaturePad/SignaturePad.test.js`
+- [compares what is drawn with its Reference after each stroke, tells compare and says whether it looks like it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/SignaturePad/SignaturePad.test.js#L87) — `libraries/ElemenxUI/components/SignaturePad/SignaturePad.test.js`

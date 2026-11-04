@@ -56,4 +56,4 @@
 
 ## Тесты
 
-- [embeds in ElemenxUI its styles, sprites, data and every entity with its template and style](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/dist.test.js#L47) — `tests/regression/dist.test.js`
+- [embeds in ElemenxUI its styles, sprites, data and every entity with its template and style](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/dist.test.js#L54) — `tests/regression/dist.test.js`

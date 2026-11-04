@@ -801,42 +801,16 @@ var Checks = {
 	},
 
 	Game: async function (page) {
-		var canvas = page.locator('.elemenx-game-scene-marks');
 		var help = page.locator('.gems-help');
-		var box;
-		var at;
 
-		/* The cell a press on the canvas reaches, as the HUD tells it. */
-		async function press (x, y) {
-			await page.mouse.click(box.x + x, box.y + y);
+		/* Where the gem g1 is on the page: the point of the land under it, as the scene projects it. */
+		async function gem () {
+			return page.evaluate(function () {
+				var scene = Elemenx.Instance(document.querySelector('.elemenx-scene'));
+				var object = scene.Scene().Objects.g1;
 
-			await expect(help).toContainText('Going to');
-
-			/* The HUD of this press, not of the one before (a cell off the map is negative). */
-			await page.waitForTimeout(150);
-
-			return (await help.textContent()).match(/Going to (-?\d+), (-?\d+)/).slice(1, 3).map(Number);
-		}
-
-		/* A press on the cell, found by trying: the HUD tells the cell each press reaches. */
-		async function go (cell) {
-			var point = {X: at.X + (cell[0] - at.Cell[0]) * at.Size, Y: at.Y + (cell[1] - at.Cell[1]) * at.Size};
-			var tries = [];
-			var reached;
-			var i;
-
-			for (i = 0; i < 4; i++) {
-				reached = await press(point.X, point.Y);
-
-				tries.push(Math.round(point.X) + ',' + Math.round(point.Y) + ' -> ' + reached.join(','));
-
-				if (reached[0] === cell[0] && reached[1] === cell[1]) return;
-
-				point.X += (cell[0] - reached[0]) * at.Size;
-				point.Y += (cell[1] - reached[1]) * at.Size;
-			}
-
-			throw new Error('No press reached the cell ' + cell.join(', ') + ': ' + JSON.stringify(at) + ' ' + tries.join('; '));
+				return object && object.World ? scene.Project(object.World) : null;
+			});
 		}
 
 		await page.setViewportSize({width: 1280, height: 800});
@@ -847,18 +821,15 @@ var Checks = {
 
 		await expect(page.locator('.gems-menu')).toHaveCount(0);
 
-		/* Two presses tell the size of a cell on the screen. */
-		box = await canvas.boundingBox();
+		/* A right press on the gem sends the hero there; it finds it. */
+		await expect.poll(gem, {timeout: 20000}).not.toBeNull();
 
-		var first = await press(box.width / 2 - 120, box.height / 2);
-		var second = await press(box.width / 2 + 120, box.height / 2);
+		var at = await gem();
 
-		at = {X: box.width / 2 - 120, Y: box.height / 2, Cell: first, Size: 240 / Math.max(1, second[0] - first[0])};
+		await page.mouse.click(at.X, at.Y, {button: 'right'});
 
-		/* The hero walks to the gem at 3, 6 and finds it. */
-		await go([3, 6]);
-
-		await expect(page.locator('.gems-score')).toContainText('1', {timeout: 20000});
+		await expect(help).toContainText('Going to');
+		await expect(page.locator('.gems-score')).toContainText('1', {timeout: 40000});
 
 		/* Escape pauses, Resume goes on. */
 		await page.keyboard.press('Escape');

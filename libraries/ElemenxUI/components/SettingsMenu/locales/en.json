@@ -1,0 +1,9 @@
+{
+	"ui": {
+		"settingsMenu": {
+			"back": "Back",
+			"nothing": "No settings found",
+			"search": "Search settings"
+		}
+	}
+}

@@ -57,11 +57,11 @@ var Read = [
 	['pdf417', 'Привет, мир ✓', '1tbyns5']
 ];
 
-describe('Contract: the barcodes and the QR codes of ElemenxUI', function () {
+describe('Contract: the barcodes and the QR codes of ElemenxCommon, and their components of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['Barcode', 'QRCode', 'service:Barcodes', 'service:QR', 'service:Platform']);
+		Use(['Barcode', 'QRCode', 'service:Barcodes', 'service:QR', 'service:Pictures', 'service:Platform']);
 	});
 
 	beforeEach(function () {
@@ -70,6 +70,31 @@ describe('Contract: the barcodes and the QR codes of ElemenxUI', function () {
 
 	afterEach(function () {
 		while (owned.length) owned.pop().$Destroy();
+	});
+
+	/* The codes are of ElemenxCommon and read no page: their pictures are drawn into a PNG by Pictures, of ElemenxUI. */
+	it('Pictures draws an SVG into a PNG of a size, and tells when the SVG is no picture', async function () {
+		var pictures = Elemenx.Service('Pictures');
+		var made = null;
+		var failed = null;
+
+		expect(Elemenx.Service('QR').Raster).toBeUndefined();
+
+		pictures.Raster('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 2"><rect width="2" height="2" fill="#f00"/></svg>', 8, 4, function (error, url) {
+			made = error ? error.message : url;
+		});
+
+		pictures.Raster('not a picture', 8, 4, function (error) {
+			failed = error ? error.message : 'drawn';
+		});
+
+		expect(await waitFor(function () {
+			return made;
+		}, 4000)).toMatch(/^data:image\/png;base64,/);
+
+		expect(await waitFor(function () {
+			return failed;
+		}, 4000)).toBe('Elemenx Pictures could not draw the picture');
 	});
 
 	it('Barcodes writes each format as the reference decoder read it, checks the digits, and tells what a format cannot write', function () {

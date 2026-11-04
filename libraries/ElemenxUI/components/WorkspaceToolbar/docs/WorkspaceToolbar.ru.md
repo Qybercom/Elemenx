@@ -1,0 +1,1 @@
+Ряд действий для шапки Workspace или любой панели: кнопки, меню, поля, разделители (<span class="elemenx-divider vertical"></span>) и распорки (<span class="elemenx-spacer"></span>), сдвигающие следующее к концу. Vertical ставит его вертикально. Label называет его для экранных читалок (role toolbar).

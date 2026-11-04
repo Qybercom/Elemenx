@@ -1,0 +1,14 @@
+{
+	"ui": {
+		"productCard": {
+			"add": "Add to cart",
+			"color": "Color",
+			"favorite": "Favorite",
+			"image": "Image",
+			"images": "Images",
+			"inCart": "In the cart",
+			"rating": "Rating",
+			"size": "Size"
+		}
+	}
+}

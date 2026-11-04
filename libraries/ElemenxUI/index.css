@@ -56,13 +56,11 @@
 	--elemenx-call-control-hover: rgba(255, 255, 255, 0.2);
 	--elemenx-call-chip: rgba(0, 0, 0, 0.5);
 	--elemenx-call-dim: rgba(255, 255, 255, 0.35);
-	--elemenx-game-scene-map-background: #0b0e12;
-	--elemenx-game-scene-map-frame: #3a3226;
-	--elemenx-game-scene-background: #03050a;
-	--elemenx-game-scene-orbit: rgba(140, 165, 215, 0.32);
-	--elemenx-game-scene-selection: #7fc4ff;
-	--elemenx-game-scene-label: #d9e2f0;
-	--elemenx-game-scene-shadow: rgba(0, 0, 0, 0.9);
+	--elemenx-scene-background: #03050a;
+	--elemenx-scene-orbit: rgba(140, 165, 215, 0.32);
+	--elemenx-scene-selection: #7fc4ff;
+	--elemenx-scene-label: #d9e2f0;
+	--elemenx-scene-shadow: rgba(0, 0, 0, 0.9);
 	--elemenx-virtual-pad-fill: rgba(0, 0, 0, 0.25);
 	--elemenx-virtual-pad-edge: rgba(255, 255, 255, 0.38);
 	--elemenx-virtual-pad-knob: rgba(255, 255, 255, 0.72);

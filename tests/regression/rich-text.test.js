@@ -6,7 +6,7 @@ var richText;
 describe('Regression: RichText keeps no executable URL', function () {
 	beforeAll(async function () {
 		await loadElemenx();
-		await import('../../libraries/ElemenxUI/services/RichText.js');
+		await import('../../libraries/ElemenxUI/services/RichText/RichText.js');
 
 		richText = Elemenx.Service('RichText');
 	});

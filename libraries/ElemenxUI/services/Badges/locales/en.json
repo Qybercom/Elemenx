@@ -1,0 +1,8 @@
+{
+	"ui": {
+		"badge": {
+			"new": "New",
+			"busy": "In progress"
+		}
+	}
+}

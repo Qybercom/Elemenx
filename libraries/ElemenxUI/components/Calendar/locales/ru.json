@@ -1,0 +1,22 @@
+{
+	"ui": {
+		"calendar": {
+			"month": "Месяц",
+			"more": {
+				"one": "ещё {count}",
+				"few": "ещё {count}",
+				"many": "ещё {count}",
+				"other": "ещё {count}"
+			},
+			"today": "Сегодня",
+			"view": "Вид",
+			"week": "Неделя",
+			"day": "День",
+			"months": "Месяцы",
+			"quarter": "Квартал",
+			"year": "Год",
+			"years": "Годы",
+			"quarterTitle": "{quarter} квартал {year}"
+		}
+	}
+}

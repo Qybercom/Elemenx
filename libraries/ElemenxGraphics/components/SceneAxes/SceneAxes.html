@@ -1,0 +1,7 @@
+<svg class="elemenx-scene-axes" viewBox="-50 -50 100 100" role="group" [attribute.width]="Size" [attribute.height]="Size" [attribute.aria-label]="Label">
+	<g *for="end of Ends(Yaw, Pitch)" *key="end.Key" class="elemenx-scene-axes-end" [class]="['elemenx-scene-axes-' + end.Axis.toLowerCase(), end.Sign > 0 ? 'near' : 'other']" role="button" tabindex="0" [attribute.aria-label]="(end.Sign > 0 ? '' : '-') + end.Axis" (click)="Press(end)" (keydown.enter)="Press(end)">
+		<line *if="end.Sign > 0" x1="0" y1="0" [attribute.x2]="end.X" [attribute.y2]="end.Y"></line>
+		<circle [attribute.cx]="end.X" [attribute.cy]="end.Y" [attribute.r]="end.Sign > 0 ? 11 : 7"></circle>
+		<text *if="end.Sign > 0 && Labels && Labels !== 'false'" [attribute.x]="end.X" [attribute.y]="end.Y" dy="0.36em">{{end.Axis}}</text>
+	</g>
+</svg>

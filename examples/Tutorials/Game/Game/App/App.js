@@ -1,6 +1,7 @@
 /*
- * The game: the world, the gems on it, the HUD over it and the menu. A press on a cell sends the hero there (GameScene
- * finds the way); a gem under the hero when it arrives is found. Escape pauses.
+ * The game: the land, the gems on it, the HUD over it and the menu. A right press on the land sends the hero there
+ * (GameStrategy orders it, the Scene finds its way round the water and the slopes); a trigger round each gem tells when
+ * the hero comes to it. The last gem unlocks an achievement. Escape pauses.
  */
 Elemenx.Component('App', {
 	$TemplateURL: 'App.html',
@@ -10,39 +11,29 @@ Elemenx.Component('App', {
 	Found: 0,
 	Target: '',
 	Gems: [],
-	Rows: [
-		'..........~~........',
-		'..TT......~~....^^..',
-		'..TT......=~........',
-		'..........~~...##...',
-		'....##....~~...##...',
-		'....##..............',
-		'..........~~....TT..',
-		'..........~~....TT..'
-	],
 	Start: [
-		{ID: 'g1', X: 3, Y: 6},
-		{ID: 'g2', X: 8, Y: 1},
-		{ID: 'g3', X: 13, Y: 2},
-		{ID: 'g4', X: 18, Y: 4},
-		{ID: 'g5', X: 15, Y: 7}
+		{ID: 'g1', X: -60, Y: 30},
+		{ID: 'g2', X: 40, Y: -50},
+		{ID: 'g3', X: 70, Y: 60},
+		{ID: 'g4', X: -30, Y: -70},
+		{ID: 'g5', X: 10, Y: 80}
 	],
 
 	$OnCreate: function () {
 		var self = this;
-		/* The world, once it is ready: its methods (Order, Change, CenterOn...). It stays out of the state. */
-		var world = null;
+		/* The scene, once it is ready: its methods (Change, SetViewpoint...). It stays out of the state. */
+		var scene = null;
 
 		this.Items = function (started) {
 			return started ? [{ID: 'resume', Label: 'Resume'}, {ID: 'restart', Label: 'Start again'}] : [{ID: 'start', Label: 'Start', Hint: 'Find the five gems'}];
 		};
 
-		/* The world for the methods: a function, so the world is not state. */
-		this.World = function (instance) {
+		/* The scene for the methods: a function, so the scene is not state. */
+		this.Land = function (instance) {
 			if (instance)
-				world = instance;
+				scene = instance;
 
-			return world;
+			return scene;
 		};
 
 		/* Escape pauses the game, and goes on with it. */
@@ -52,6 +43,10 @@ Elemenx.Component('App', {
 		};
 
 		document.addEventListener('keydown', this.Key);
+
+		/* The achievement of the game: data of the Achievements Service; the AchievementHost shows it as it is unlocked. */
+		if (!this.$Service('Achievements').State('gem-hunter'))
+			this.$Service('Achievements').Define({ID: 'gem-hunter', Title: 'Gem hunter', Text: 'All five gems found.', Rarity: 'epic', Points: 50});
 	},
 
 	$OnDestroy: function () {
@@ -59,37 +54,41 @@ Elemenx.Component('App', {
 	},
 
 	/* The handlers of the events are methods of the definition: the template binds them as it renders. */
-	Ready: function (world) {
-		this.World(world);
+	Ready: function (scene) {
+		this.Land(scene);
+
+		scene.SetViewpoint({Target: [-20, 4, 10], Yaw: 0.6, Pitch: 0.75, Distance: 70});
 	},
 
 	Chosen: function (detail) {
 		if (detail.ID === 'start' || detail.ID === 'restart') {
 			this.Gems = this.Start.slice();
 			this.Found = 0;
+			this.Target = '';
 			this.Started = true;
 
-			if (this.World())
-				this.World().Change('hero', {X: 1, Y: 1});
+			this.$Service('Achievements').Reset('gem-hunter');
+
+			if (this.Land())
+				this.Land().Change('hero', {X: 0, Y: 0});
 		}
 
 		this.Menu = false;
 	},
 
-	/* A cell pressed: the hero goes there, round what blocks the way. */
-	Pressed: function (detail) {
-		if (this.Menu || !this.World()) return;
-
-		this.Target = detail.X + ', ' + detail.Y;
-
-		this.World().Order(['hero'], {X: detail.X, Y: detail.Y});
+	/* Where the hero was sent. */
+	Ordered: function (detail) {
+		if (detail.Kind === 'move')
+			this.Target = Math.round(detail.X) + ', ' + Math.round(detail.Z);
 	},
 
-	Arrived: function (detail) {
+	/* The hero came into the trigger round a gem: the gem is found. */
+	Entered: function (detail) {
+		var id = detail.Trigger.ID.replace(/^at-/, '');
 		var found = this.Gems.filter(function (gem) {
-			return gem.X === detail.X && gem.Y === detail.Y;
+			return gem.ID === id;
 		})[0];
-		if (!found) return;
+		if (!found || detail.ID !== 'hero') return;
 
 		this.Gems = this.Gems.filter(function (gem) {
 			return gem !== found;
@@ -97,7 +96,7 @@ Elemenx.Component('App', {
 		this.Found++;
 
 		if (!this.Gems.length) {
-			this.$Service('Achievements').Show({Title: 'Gem hunter', Text: 'All five gems found.', Rarity: 'epic', Points: 50, Icon: 'trophy'});
+			this.$Service('Achievements').Unlock('gem-hunter');
 
 			this.Started = false;
 			this.Menu = true;

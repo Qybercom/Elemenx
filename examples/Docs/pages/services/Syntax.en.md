@@ -55,12 +55,14 @@ The highlighting of source code: the grammars of the languages and the tokens of
 
 ## Tests
 
-- [covers the whole text with its tokens in every language](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/syntax.test.js#L40) — `tests/regression/syntax.test.js`
-- [reads YAML, TOML, INI and CSV: their keys, sections, strings, numbers, anchors and comments](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/syntax.test.js#L61) — `tests/regression/syntax.test.js`
-- [reads JavaScript: comments, strings, regular expressions, numbers, keywords and calls](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/syntax.test.js#L97) — `tests/regression/syntax.test.js`
-- [reads a block comment and a string left open up to the end, as they are typed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/syntax.test.js#L113) — `tests/regression/syntax.test.js`
-- [reads the script and the style of HTML in their languages, and the tags and attributes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/syntax.test.js#L118) — `tests/regression/syntax.test.js`
-- [reads the code of a fenced block of Markdown in the language it names](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/syntax.test.js#L129) — `tests/regression/syntax.test.js`
-- [splits the tokens into lines, one array for each line](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/syntax.test.js#L137) — `tests/regression/syntax.test.js`
-- [escapes the HTML it returns](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/syntax.test.js#L146) — `tests/regression/syntax.test.js`
-- [finds languages by their aliases and takes new ones](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/syntax.test.js#L151) — `tests/regression/syntax.test.js`
+- [covers the whole text with its tokens in every language](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L40) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
+- [reads YAML, TOML, INI and CSV: their keys, sections, strings, numbers, anchors and comments](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L61) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
+- [reads JavaScript: comments, strings, regular expressions, numbers, keywords and calls](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L97) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
+- [reads a block comment and a string left open up to the end, as they are typed](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L113) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
+- [reads the script and the style of HTML in their languages, and the tags and attributes](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L118) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
+- [reads the code of a fenced block of Markdown in the language it names](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L129) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
+- [splits the tokens into lines, one array for each line](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L137) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
+- [escapes the HTML it returns](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L146) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
+- [finds languages by their aliases and takes new ones](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L151) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
+- [makes the provider only as a name of it is wanted, in the Application that wants it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-provides.test.js#L47) — `tests/regression/library-provides.test.js`
+- [makes the providers for a list, and none for a name no one declares](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-provides.test.js#L62) — `tests/regression/library-provides.test.js`

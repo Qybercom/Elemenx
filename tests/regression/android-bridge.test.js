@@ -26,7 +26,7 @@ function door (features, handled) {
 describe('Contract: the bridge of an Android program of its own (elemenx build --native android-library)', function () {
 	beforeAll(async function () {
 		await loadElemenx();
-		await import('../../libraries/ElemenxUI/services/Platform.js');
+		await import('../../libraries/ElemenxUI/services/Platform/Platform.js');
 	});
 
 	afterEach(function () {

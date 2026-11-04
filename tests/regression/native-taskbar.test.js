@@ -25,7 +25,7 @@ function bridge () {
 describe('Contract: the Platform Service of ElemenxUI with the taskbar and the tray of a program', function () {
 	beforeAll(async function () {
 		await loadElemenx();
-		await import('../../libraries/ElemenxUI/services/Platform.js');
+		await import('../../libraries/ElemenxUI/services/Platform/Platform.js');
 
 		native = Elemenx.Service('Platform');
 	});

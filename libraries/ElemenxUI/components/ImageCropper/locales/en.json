@@ -1,0 +1,8 @@
+{
+	"ui": {
+		"imageCropper": {
+			"label": "Crop",
+			"frame": "crop frame, arrows move it, Shift with arrows resizes it"
+		}
+	}
+}

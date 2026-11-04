@@ -1,75 +1,22 @@
 <!-- generated -->
 # Gamepad
 
-Геймпады (Gamepad API, стандартная раскладка): они управляют страницей так же, как клавиатура. Каждый компонент, отвечающий на клавиши, отвечает и на геймпад.
+Геймпады управляют страницей так же, как клавиатура: каждый компонент, отвечающий на клавиши, отвечает и на геймпад. Сами геймпады (их кнопки, стики, виды и названия, геймпады страницы) — в сервисе InputDevices из ElemenxCommon; этот сервис двигает по ним страницу.
 
 - Крестовина и левый стик отправляют сфокусированному элементу клавиши-стрелки; когда ни один компонент не принимает стрелку (не отменяет действие по умолчанию), фокус переходит к ближайшему элементу управления с той стороны (Move). Удерживаемое направление повторяется.
-- A отправляет Enter, X — пробел, и любая из них нажимает сфокусированный элемент, если клавишу не принял компонент (кнопку, флажок, вариант...; A также переходит по ссылке); B отправляет Escape и отменяет верхний диалог, если его не принял компонент (сначала закрывается открытое всплывающее окно); Y отправляет Delete; остальные кнопки — только события.
-- Каждое нажатие — событие button ({Button, Pad}): a, b, x, y, lb, rb, lt, rt, select, start, ls, rs, up, down, left, right, home; на геймпаде без стандартной раскладки, кнопки которого ничего известного не значат, — b0, b1... (стик всё равно двигает). connect и disconnect сообщают о геймпадах ({Pad}); change — о новом Kind.
-- Геймпад, о котором сообщают дважды (XInput и HID, Steam), нажимает один раз; стик идёт туда, куда наклонён больше всего; геймпад управляет страницей, только пока она видна и в фокусе, и управляет им одна копия Elemenx, когда геймпады используют несколько приложений или виджетов (запущенная первой: window.ElemenxGamepad); события получают все.
+- A отправляет Enter, X — пробел, и любая из них нажимает сфокусированный элемент, если клавишу не принял компонент (кнопку, флажок, вариант...; A также переходит по ссылке); B отправляет Escape и отменяет верхний диалог, если его не принял компонент (сначала закрывается открытое всплывающее окно); Y отправляет Delete; остальные кнопки — только события InputDevices.
+- Геймпад управляет страницей, только пока она видна и в фокусе, и управляет им одна копия Elemenx, когда геймпады используют несколько приложений или виджетов (запущенная первой: window.ElemenxGamepad); геймпад страницы с Navigate false (InputDevices.Virtual) ничем не управляет.
 
-On(name, callback) / Off(callback). Pads() перечисляет [{Index, ID, Kind}]; Kind() — вид последнего использованного геймпада (xbox, playstation, nintendo, generic или '', если его нет); Label(button, kind) — название кнопки на геймпаде этого вида (A, ✕, B...). Navigate (true), если false, отключает клавиши и фокус (события остаются). Move(direction, scope) переводит фокус к ближайшему элементу управления слева, справа, сверху или снизу (внутри открытого диалога или scope); её может вызывать и клавиатура. Браузеры сообщают о геймпаде, как только на странице нажата его кнопка.
+Navigate (true), если false, отключает клавиши и фокус. Move(direction, scope) переводит фокус к ближайшему элементу управления слева, справа, сверху или снизу (внутри открытого диалога или scope); её может вызывать и клавиатура.
 
 ## Методы
 
-- `Virtual(name, options)`
-- `Axes()`
-- `Held(button)`
-- `Pads()`
-- `Kind()`
-- `Label(button, kind)`
-- `Press(name, pad)`
 - `Move(direction, scope)`
-- `On(name, callback)`
-- `Off(callback)`
-
-## Пример
-
-```example
-<div class="elemenx-container wrappable" style="gap: 8px;">
-	<GameKey Button="a" [pad]="Kind || 'xbox'" />
-	<GameKey Button="b" [pad]="Kind || 'xbox'" />
-	<GameKey Button="x" [pad]="Kind || 'xbox'" />
-	<GameKey Button="y" [pad]="Kind || 'xbox'" />
-</div>
-<p class="elemenx-text">{{Kind ? 'A ' + Kind + ' pad is connected.' : 'Connect a gamepad and press a button.'}} Last button: <strong>{{Last}}</strong></p>
-<p class="elemenx-text small muted">The pad works the page as the keys do: the d-pad moves the focus, A presses.</p>
-<script>
-({
-	Kind: '',
-	Last: '—',
-
-	$OnCreate: function () {
-		var self = this;
-		var gamepad = this.$Service('Gamepad');
-
-		this.Kind = gamepad.Kind();
-
-		this.Pressed = function (event) {
-			self.Last = gamepad.Label(event.Button, gamepad.Kind()) + ' (' + event.Button + ')';
-		};
-
-		this.Changed = function () {
-			self.Kind = gamepad.Kind();
-		};
-
-		gamepad.On('button', this.Pressed);
-		gamepad.On('change', this.Changed);
-		gamepad.On('connect', this.Changed);
-	},
-
-	$OnDestroy: function () {
-		var gamepad = this.$Service('Gamepad');
-
-		gamepad.Off(this.Pressed);
-		gamepad.Off(this.Changed);
-	}
-})
-</script>
-```
 
 ## Тесты
 
-- [Gamepad: names the buttons of each kind of pad, and lists no pad while none is pressed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L260) — `tests/regression/library-services.test.js`
-- [Gamepad: a pad of the page is a pad as any other: its events, its sticks and triggers, its buttons held; quiet by choice](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/virtual-gamepad.test.js#L67) — `tests/regression/virtual-gamepad.test.js`
-- [walks, drives and looks by a pad as far as it leans: half a trigger is half the gas, the stick steers, A jumps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1637) — `tests/regression/library-scene.test.js`
+- [InputDevices: a pad of the page is a pad as any other: its events, its sticks and triggers, its buttons held; quiet by choice](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/virtual-gamepad.test.js#L70) — `tests/regression/virtual-gamepad.test.js`
+- [InputDevices: the keys held, the pointer and how far it went, the fingers; a window left lets every key go](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/virtual-gamepad.test.js#L139) — `tests/regression/virtual-gamepad.test.js`
+- [InputDevices: actions bound to keys, buttons, halves of the sticks and the mouse; their contexts](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/virtual-gamepad.test.js#L175) — `tests/regression/virtual-gamepad.test.js`
+- [InputDevices: the lean of a device as a wheel, its top away, and flat; the way the screen is turned; its middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/virtual-gamepad.test.js#L242) — `tests/regression/virtual-gamepad.test.js`
+- [VirtualGamepad: its stick leans the pad as far as the finger, its buttons hold, and it goes with its pad](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/virtual-gamepad.test.js#L316) — `tests/regression/virtual-gamepad.test.js`

@@ -18,7 +18,7 @@ function pointer (element, type) {
 describe('Contract: the *tip directive of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
-		await import('../../libraries/ElemenxUI/directives/Tip.js');
+		await import('../../libraries/ElemenxUI/directives/Tip/Tip.js');
 		await import('../../libraries/ElemenxUI/index.css');
 	});
 

@@ -12,6 +12,7 @@ var Native = require('./tools/native.js');
 var Meta = require('./tools/meta.js');
 var Package = require('./package.json');
 var fail = require('./tools/common.js').fail;
+var SystemLibraries = require('./tools/common.js').SystemLibraries;
 
 var BooleanOptions = {force: true, 'current-color': true, single: true, widget: true, full: true, readable: true, precompile: true, extension: true, help: true, docker: true, strict: true, open: true, 'no-split': true};
 
@@ -486,7 +487,7 @@ command('designer', 'Open the Designer on a project: its pages, components and r
 
 			if (describe(request, response, pathname)) return true;
 
-			match = /^\/bundles\/(elemenx\.min\.js|elemenx-ui\.min\.js)$/.exec(pathname);
+			match = /^\/bundles\/(elemenx(?:-common|-ui)?\.min\.js)$/.exec(pathname);
 			file = match ? path.join(__dirname, 'dist', match[1]) : '';
 
 			if (!match || !fs.existsSync(file)) return false;
@@ -541,14 +542,19 @@ command('icons', 'Build an icon set (a sprite) from a directory of SVG files.', 
 });
 
 command('meta', 'Collect the $Meta of the Components, Services and Directives of a library into one JSON file.', function (parsed) {
-	var library = path.resolve(parsed.Arguments[0] || path.join(__dirname, 'libraries', 'ElemenxUI'));
-	var output = path.resolve(parsed.Arguments[1] || path.join(library, 'data', 'meta.json'));
-	var result = Meta.Build(library, output);
+	var given = parsed.Arguments[0] ? [path.resolve(parsed.Arguments[0])] : SystemLibraries.map(function (library) {
+		return path.join(__dirname, 'libraries', library.Name);
+	});
 
-	process.stdout.write('Elemenx meta: ' + result.Components.length + ' components, ' + result.Services.length + ' services, ' + result.Directives.length + ' directives, ' + Object.keys(result.Classes).length + ' classes in ' + output + '\n');
+	given.forEach(function (library) {
+		var output = path.resolve(parsed.Arguments[1] || path.join(library, 'data', 'meta.json'));
+		var result = Meta.Build(library, output);
+
+		process.stdout.write('Elemenx meta: ' + result.Components.length + ' components, ' + result.Services.length + ' services, ' + result.Directives.length + ' directives, ' + Object.keys(result.Classes).length + ' classes in ' + output + '\n');
+	});
 }, {
 	Usage: ['elemenx meta [library] [output.json]'],
-	Text: ['Reads the files of the index.js of the library (ElemenxUI by default) and writes what their definitions declare in $Meta, as Elemenx.Meta(name) gives it, with the classes of the stylesheets and their modifiers: the data of the tools (a builder, a reference). The output is data/meta.json in the library by default, where the Designer Service reads it.']
+	Text: ['Reads the files of the index.js of the library (each system Library by default: ElemenxCommon, ElemenxUI, ElemenxGraphics and ElemenxGaming) and writes what their definitions declare in $Meta, as Elemenx.Meta(name) gives it, with the classes of the stylesheets and their modifiers: the data of the tools (a builder, a reference). The output is data/meta.json in the library by default, where the Designer Service reads it.']
 });
 
 command('native', 'Add what native programs need to a project: Electron (desktop), Capacitor (mobile).', function (parsed) {

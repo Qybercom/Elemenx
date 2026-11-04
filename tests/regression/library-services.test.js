@@ -11,7 +11,7 @@ describe('Contract: the Services of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:Format', 'service:Countries', 'service:Currencies', 'service:Badges', 'service:Formulas', 'service:GameItems', 'service:Dialogs', 'service:Idle', 'service:Permissions', 'service:Panels', 'service:Gamepad', 'service:ElemenxHelpers']);
+		Use(['service:Format', 'service:Countries', 'service:Currencies', 'service:Badges', 'service:Formulas', 'service:GameItems', 'service:Dialogs', 'service:Idle', 'service:Permissions', 'service:Panels', 'service:InputDevices', 'service:ElemenxHelpers']);
 	});
 
 	afterEach(function () {
@@ -257,8 +257,8 @@ describe('Contract: the Services of ElemenxUI', function () {
 		root.remove();
 	});
 
-	it('Gamepad: names the buttons of each kind of pad, and lists no pad while none is pressed', function () {
-		var gamepad = service('Gamepad');
+	it('InputDevices: names the buttons of each kind of pad, and lists no pad while none is pressed', function () {
+		var gamepad = service('InputDevices');
 
 		expect(gamepad.Label('a', 'xbox')).toBe('A');
 		expect(gamepad.Label('a', 'playstation')).toBe('✕');

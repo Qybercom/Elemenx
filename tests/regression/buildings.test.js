@@ -9,10 +9,10 @@ describe('Contract: Buildings, a building of any size made of its numbers, a mod
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:Buildings', 'service:Models']);
+		Use(['service:SceneBuildingGenerator', 'service:SceneModels']);
 
-		buildings = Elemenx.Service('Buildings');
-		models = Elemenx.Service('Models');
+		buildings = Elemenx.Service('SceneBuildingGenerator');
+		models = Elemenx.Service('SceneModels');
 	});
 
 	/* The bounds of the positions of a model made, in its own units: [x0, y0, z0, x1, y1, z1]; of what lies in a band of height. */

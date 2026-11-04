@@ -1,0 +1,8 @@
+{
+	"ui": {
+		"virtualList": {
+			"empty": "No items",
+			"label": "List"
+		}
+	}
+}

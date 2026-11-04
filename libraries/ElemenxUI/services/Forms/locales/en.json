@@ -1,0 +1,16 @@
+{
+	"ui": {
+		"forms": {
+			"required": "Fill in this field",
+			"email": "Enter an email address",
+			"min": "At least {min}",
+			"max": "At most {max}",
+			"minLength": "At least {length} characters",
+			"maxLength": "At most {length} characters",
+			"pattern": "The value does not match the format",
+			"equal": "The values do not match",
+			"match": "The values do not match",
+			"invalid": "The value is not valid"
+		}
+	}
+}

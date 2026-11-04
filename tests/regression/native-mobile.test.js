@@ -32,7 +32,7 @@ var filesystem = {
 describe('Contract: the Platform Service of ElemenxUI in a mobile program (Capacitor)', function () {
 	beforeAll(async function () {
 		await loadElemenx();
-		await import('../../libraries/ElemenxUI/services/Platform.js');
+		await import('../../libraries/ElemenxUI/services/Platform/Platform.js');
 
 		native = Elemenx.Service('Platform');
 	});

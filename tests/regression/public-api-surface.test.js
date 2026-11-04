@@ -203,6 +203,8 @@ describe('Regression: public API surface', function () {
 			'$Generation:function',
 			'$Messaging:function',
 			'$Network:function',
+			'$Provide:function',
+			'$Providers:function',
 			'$Service:function',
 			'$ServiceWorker:function',
 			'$StartedAt:function',

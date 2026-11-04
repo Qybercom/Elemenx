@@ -6,7 +6,7 @@ var owned = [];
 
 async function mount () {
 	var ready = null;
-	var component = Elemenx.Component(unique('EffectHost'), {$Template: '<div style="width: 240px; height: 160px"><GameScene Paused="true" Quality="medium" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="200" Height="1" Water="0" Seed="test" /></GameScene></div>', Ready: function (space) {
+	var component = Elemenx.Component(unique('EffectHost'), {$Template: '<div style="width: 240px; height: 160px"><Scene Paused="true" Quality="medium" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="200" Height="1" Water="0" Seed="test" /></Scene></div>', Ready: function (space) {
 		ready = space;
 	}})();
 
@@ -60,7 +60,7 @@ describe('Contract: effects as effect graphs of Blueprints, their numbers and co
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['GameScene', 'GameObject', 'service:Blueprints']);
+		Use(['Scene', 'SceneObject', 'service:Blueprints']);
 
 		blueprints = Elemenx.Service('Blueprints');
 	});
@@ -71,6 +71,22 @@ describe('Contract: effects as effect graphs of Blueprints, their numbers and co
 
 	afterEach(function () {
 		while (owned.length) owned.pop().$Destroy();
+	});
+
+	/* SceneBlueprints declares its kind and blocks in $Provides: a graph of them is read with no Scene made, nothing called first. */
+	it('reads a graph of an effect and the blocks of the passes with no Scene: Blueprints makes what declares them', function () {
+		var blueprints = Elemenx.Application(unique('EffectsAlone'), {}).$Service('Blueprints');
+		var graph = {version: 1, type: 'effect', blocks: [{id: 'l', type: 'Layer', properties: [{key: 'Kind', value: 'spark'}, {key: 'Count', value: 12}]}, {id: 'e', type: 'Effect', properties: [{key: 'Heat', value: 2}]}], links: []};
+		var made;
+
+		graph.links.push({id: 'k', p1: 'l-out-Layers', p2: 'e-in-Layers'});
+
+		made = blueprints.Compile(graph).Make();
+
+		expect(made.Heat).toBe(2);
+		expect(made.Layers).toEqual([{Kind: 'spark', Blend: 'add', Count: 12}]);
+		expect(blueprints.Nodes('render')).toEqual(expect.arrayContaining(['Scene', 'Bloom', 'Picture', 'Shader', 'Present']));
+		expect(blueprints.NodeOf('Layer').Effects).toBeUndefined();
 	});
 
 	it('gives every type of the library as an effect graph that makes the very same type again', async function () {
@@ -90,7 +106,7 @@ describe('Contract: effects as effect graphs of Blueprints, their numbers and co
 
 		expect(function () {
 			scene.EffectGraph('nothing');
-		}).toThrow('Elemenx GameScene: no type of effect nothing');
+		}).toThrow('Elemenx Scene: no type of effect nothing');
 	});
 
 	it('burns an effect of a Blueprint, its parameters the values of its layers, one graph for many effects', async function () {
@@ -152,7 +168,7 @@ describe('Contract: effects as effect graphs of Blueprints, their numbers and co
 
 			expect(engine.EffectsCount()).toBe(0);
 			expect(warn.mock.calls.filter(function (call) {
-				return String(call[0]).indexOf('Elemenx GameScene: the Blueprint of an effect cannot be made') === 0;
+				return String(call[0]).indexOf('Elemenx Scene: the Blueprint of an effect cannot be made') === 0;
 			}).length).toBe(1);
 		}
 		finally {

@@ -207,14 +207,14 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 		var page = path.join(site, 'index.html');
 
 		try {
-			fs.mkdirSync(path.join(core, 'library', 'data'), {recursive: true});
-			fs.mkdirSync(path.join(core, 'library', 'directives'), {recursive: true});
-			fs.mkdirSync(path.join(core, 'library', 'components', 'Card'), {recursive: true});
+			fs.mkdirSync(path.join(core, 'libraries', 'ElemenxUI', 'data'), {recursive: true});
+			fs.mkdirSync(path.join(core, 'libraries', 'ElemenxUI', 'directives', 'Tip'), {recursive: true});
+			fs.mkdirSync(path.join(core, 'libraries', 'ElemenxUI', 'components', 'Card'), {recursive: true});
 			fs.mkdirSync(path.join(site, 'vendor'), {recursive: true});
 			fs.copyFileSync(path.join(root, 'editors', 'core', 'elemenx-language.js'), path.join(core, 'elemenx-language.js'));
-			fs.writeFileSync(path.join(core, 'library', 'data', 'meta.json'), JSON.stringify({Components: [{Name: 'Card', Props: [{Name: 'Title', Type: 'text'}]}], Directives: [{Name: 'tip', Description: 'A tip.'}]}));
-			fs.writeFileSync(path.join(core, 'library', 'directives', 'Tip.js'), "/* A tip. */\nElemenx.Directive('tip', {});\n");
-			fs.writeFileSync(path.join(core, 'library', 'components', 'Card', 'Card.js'), "Elemenx.Component('Card', {\n\tTitle: ''\n});\n");
+			fs.writeFileSync(path.join(core, 'libraries', 'ElemenxUI', 'data', 'meta.json'), JSON.stringify({Components: [{Name: 'Card', Props: [{Name: 'Title', Type: 'text'}]}], Directives: [{Name: 'tip', Description: 'A tip.'}]}));
+			fs.writeFileSync(path.join(core, 'libraries', 'ElemenxUI', 'directives', 'Tip', 'Tip.js'), "/* A tip. */\nElemenx.Directive('tip', {});\n");
+			fs.writeFileSync(path.join(core, 'libraries', 'ElemenxUI', 'components', 'Card', 'Card.js'), "Elemenx.Component('Card', {\n\tTitle: ''\n});\n");
 			fs.writeFileSync(path.join(core, 'elemenx.js'), "(function () {\n\tRuntime.Directive.Register('if', {});\n})();\n");
 			fs.writeFileSync(path.join(site, 'vendor', 'elemenx.all.js'), "/*! Elemenx 0.10.1 | LGPL-3.0 */\nElemenx.Directive('tip', {});\nElemenx.Component('Card', {\n\tTitle: ''\n});\n");
 			fs.writeFileSync(path.join(site, 'vendor', 'elemenx-ui.min.js'), "Elemenx.Directive('tip',{});Elemenx.Component('Card',{Title:''});");
@@ -222,9 +222,9 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 			copy = require(path.join(core, 'elemenx-language.js'));
 			carried = copy.Create({Roots: [site]});
 
-			expect(copy.Definition(carried, '<div *tip="x">', 6, 'html', page)).toEqual({File: path.join(core, 'library', 'directives', 'Tip.js'), Line: 1, Character: 0});
+			expect(copy.Definition(carried, '<div *tip="x">', 6, 'html', page)).toEqual({File: path.join(core, 'libraries', 'ElemenxUI', 'directives', 'Tip', 'Tip.js'), Line: 1, Character: 0});
 			expect(copy.Definition(carried, '<div *if="x">', 6, 'html', page)).toEqual({File: path.join(core, 'elemenx.js'), Line: 1, Character: 9});
-			expect(copy.Definition(carried, '<Card Title="x" />', 8, 'html', page)).toEqual({File: path.join(core, 'library', 'components', 'Card', 'Card.js'), Line: 1, Character: 1});
+			expect(copy.Definition(carried, '<Card Title="x" />', 8, 'html', page)).toEqual({File: path.join(core, 'libraries', 'ElemenxUI', 'components', 'Card', 'Card.js'), Line: 1, Character: 1});
 			expect(copy.Hover(carried, '<div *tip="x">', 7, 'html', page).Markdown).toContain('A tip.');
 		}
 		finally {

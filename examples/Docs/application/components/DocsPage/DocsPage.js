@@ -1,7 +1,8 @@
 /*
  * A page of the Docs: the navigation of all the pages (pages/index.json) beside the page of the route, read from
- * pages/<section>/<page>.<language>.md (the English page when the language has none); the components in the navigation
- * by their groups, the group of the page open. The text is shown by Markdown; a block ```example holds a template that
+ * pages/<section>/<page>.<language>.md (the English page when the language has none); the pages of the components,
+ * Services and directives in the tree of Libraries, a branch for each Library (the components by their groups), the
+ * branches of the page open. The text is shown by Markdown; a block ```example holds a template that
  * runs beside its code (DocsExample), a block ```diagram an SVG drawn in the colors of the theme. The page of a
  * component, a service or a directive ends with its source, read from the Library: a listing for each of its files (its
  * template, its script, its stylesheet), a tab each. Beside the page, on a wide screen, its contents: its headings, the
@@ -13,6 +14,7 @@ Elemenx.Component('DocsPage', {
 	$TemplateURL: 'DocsPage.html',
 	$StyleURL: 'DocsPage.css',
 	Index: [],
+	Libraries: [],
 	Segments: [],
 	Fallback: false,
 	Missing: false,
@@ -77,30 +79,76 @@ Elemenx.Component('DocsPage', {
 			})[0] || {Language: 'text', Text: '', Label: ''};
 		};
 
-		/* The sections and their pages; a section of groups (the components) has a branch for each group. */
-		this.NavItems = function (index, language) {
-			return (index || []).map(function (section) {
-				function item (page) {
-					return {ID: section.ID + '/' + page.ID, Label: page.Title ? page.Title[language] || page.Title.en : page.ID};
-				}
+		/*
+		 * The sections and their pages; the pages of the Libraries (a section of a kind whose pages name their Library) in the
+		 * tree of Libraries: a branch for each Library, in it one for each kind, the components in a branch for each group.
+		 */
+		this.NavItems = function (index, language, libraries) {
+			var sections = index || [];
+			var kinds = sections.filter(function (section) {
+				return section.Pages.some(function (page) {
+					return page.Library;
+				});
+			});
+
+			function item (section, page) {
+				return {ID: section.ID + '/' + page.ID, Label: page.Title ? page.Title[language] || page.Title.en : page.ID};
+			}
+
+			function branch (section, pages, prefix) {
+				return {
+					ID: prefix + section.ID,
+					Label: section.Title[language] || section.Title.en,
+					Items: section.Groups ? section.Groups.filter(function (group) {
+						return pages.some(function (page) {
+							return page.Group === group.ID;
+						});
+					}).map(function (group) {
+						return {
+							ID: prefix + section.ID + ':' + group.ID,
+							Label: group.Title[language] || group.Title.en,
+							Items: pages.filter(function (page) {
+								return page.Group === group.ID;
+							}).map(function (page) {
+								return item(section, page);
+							})
+						};
+					}) : pages.map(function (page) {
+						return item(section, page);
+					})
+				};
+			}
+
+			var items = sections.filter(function (section) {
+				return kinds.indexOf(section) === -1;
+			}).map(function (section) {
+				return branch(section, section.Pages, '');
+			});
+
+			var trees = (libraries || []).map(function (library) {
+				var prefix = 'library:' + library.ID + ':';
 
 				return {
-					ID: section.ID,
-					Label: section.Title[language] || section.Title.en,
-					Items: section.Groups ? section.Groups.map(function (group) {
-						return {
-							ID: section.ID + ':' + group.ID,
-							Label: group.Title[language] || group.Title.en,
-							Items: section.Pages.filter(function (page) {
-								return page.Group === group.ID;
-							}).map(item)
-						};
-					}) : section.Pages.map(item)
+					ID: 'library:' + library.ID,
+					Label: library.Title[language] || library.Title.en,
+					Items: kinds.map(function (section) {
+						return branch(section, section.Pages.filter(function (page) {
+							return page.Library === library.ID;
+						}), prefix);
+					}).filter(function (kind) {
+						return kind.Items.length > 0;
+					})
 				};
+			}).filter(function (library) {
+				return library.Items.length > 0;
 			});
+			if (trees.length)
+				items.push({ID: 'libraries', Label: Elemenx.Locale.Text('docs.libraries'), Items: trees});
+
+			return items;
 		};
 
-		/* The branches open: the section of the page, and its group in a section of groups. */
+		/* The branches open: the section of the page; for a page of a Library its Library, its kind and its group. */
 		this.Expanded = function (index, current) {
 			var parts = current.split('/');
 			var section = (index || []).filter(function (entry) {
@@ -109,6 +157,13 @@ Elemenx.Component('DocsPage', {
 			var page = section ? section.Pages.filter(function (entry) {
 				return entry.ID === parts[1];
 			})[0] : null;
+			var prefix;
+
+			if (page && page.Library) {
+				prefix = 'library:' + page.Library;
+
+				return ['libraries', prefix, prefix + ':' + parts[0]].concat(page.Group ? [prefix + ':' + parts[0] + ':' + page.Group] : []);
+			}
 
 			return page && page.Group ? [parts[0], parts[0] + ':' + page.Group] : [parts[0]];
 		};
@@ -172,8 +227,14 @@ Elemenx.Component('DocsPage', {
 		this.Watcher.observe(this.$Element().querySelector('.docs-article'), {childList: true, subtree: true});
 
 		Elemenx.Resource.Load('/pages/index.json', function (error, text) {
-			if (!error)
+			if (!error) {
 				self.Index = JSON.parse(text).Sections;
+				self.Libraries = JSON.parse(text).Libraries || [];
+
+				/* The sources of the page shown, from its own Library now the contents tell which it is. */
+				if (self.Reading)
+					self.Read(self.Reading.Current, self.Reading.Key);
+			}
 		});
 
 		Elemenx.Resource.Load('/data/tutorials.json', function (error, text) {
@@ -188,6 +249,8 @@ Elemenx.Component('DocsPage', {
 		if (this.Loaded === key) return;
 
 		this.Loaded = key;
+
+		this.Reading = {Current: current, Key: key};
 
 		this.Read(current, key);
 		this.Shut();
@@ -278,12 +341,19 @@ Elemenx.Component('DocsPage', {
 
 	/*
 	 * The files of the page of a component (its .html, .js and .css), a service or a directive (its .js), read from the
-	 * root of ElemenxUI; a file that is not there (a bundle carries no sources) is left out.
+	 * root of its Library (the contents name it; ElemenxUI until they are in); a file that is not there (a bundle carries
+	 * no sources) is left out.
 	 */
 	Read: function (current, key) {
 		var self = this;
 		var parts = current.split('/');
-		var library = Elemenx.Library('ElemenxUI');
+		var section = this.Index.filter(function (entry) {
+			return entry.ID === parts[0];
+		})[0];
+		var entry = section ? section.Pages.filter(function (each) {
+			return each.ID === parts[1];
+		})[0] : null;
+		var library = Elemenx.Library(entry && entry.Library || 'ElemenxUI');
 		var root = String(library && library.$Root || '').replace(/\/$/, '');
 		var name = parts[1] ? parts[1].charAt(0).toUpperCase() + parts[1].substring(1) : '';
 		var languages = {html: 'html', js: 'js', css: 'css'};

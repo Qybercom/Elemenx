@@ -19,6 +19,6 @@ A signature is its strokes, [[{X, Y, P, T}]] as SignaturePad gives them (P the p
 
 ## Tests
 
-- [scores a signature against another and against the samples of a person, its parts told](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-signatures.test.js#L61) — `tests/regression/library-signatures.test.js`
-- [compares what is drawn with its Reference after each stroke, tells compare and says whether it looks like it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-signatures.test.js#L87) — `tests/regression/library-signatures.test.js`
-- [compares signatures and lays out items with the Services of ElemenxUI](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L25) — `tests/regression/headless.test.js`
+- [scores a signature against another and against the samples of a person, its parts told](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/SignaturePad/SignaturePad.test.js#L61) — `libraries/ElemenxUI/components/SignaturePad/SignaturePad.test.js`
+- [compares what is drawn with its Reference after each stroke, tells compare and says whether it looks like it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/SignaturePad/SignaturePad.test.js#L87) — `libraries/ElemenxUI/components/SignaturePad/SignaturePad.test.js`
+- [compares signatures and lays out items with the Services of the system Libraries](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L25) — `tests/regression/headless.test.js`

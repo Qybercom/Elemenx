@@ -347,6 +347,27 @@
 	width: auto;
 }
 
+.elemenx-blueprint-property.code {
+	flex-direction: column;
+	align-items: stretch;
+}
+
+.elemenx-blueprint-property textarea {
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 200px;
+	padding: 3px 4px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-surface);
+	color: inherit;
+	font-size: 11px;
+	font-family: var(--elemenx-font-mono), monospace;
+	line-height: 1.35;
+	tab-size: 4;
+	resize: vertical;
+}
+
 .elemenx-blueprint-property input[type='color'] {
 	height: 20px;
 	padding: 0 2px;

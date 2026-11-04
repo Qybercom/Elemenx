@@ -39,7 +39,7 @@ describe('Contract: the Game editor packs a game to run alone: its models, its s
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['GameScene', 'GameObject', 'service:Archive', 'service:ModelFormats']);
+		Use(['Scene', 'SceneObject', 'service:Archive', 'service:ModelFormats']);
 	});
 
 	beforeEach(function () {
@@ -49,7 +49,7 @@ describe('Contract: the Game editor packs a game to run alone: its models, its s
 	afterEach(function () {
 		while (owned.length) owned.pop().$Destroy();
 
-		delete Elemenx.Service('Models').Recipes['game-hut'];
+		delete Elemenx.Service('SceneModels').Recipes['game-hut'];
 	});
 
 	it('makes a Component of the game that defines its models, loads its scene and gives the keys to its hero', async function () {
@@ -71,14 +71,14 @@ describe('Contract: the Game editor packs a game to run alone: its models, its s
 		document.getElementById('mount').appendChild(host.$Element());
 
 		await waitFor(function () {
-			var node = host.$Element().querySelector('.elemenx-game-scene');
+			var node = host.$Element().querySelector('.elemenx-scene');
 
 			scene = node ? Elemenx.Instance(node) : null;
 
 			return scene && scene.Get('hut') && scene.Scene().Hero;
 		}, 6000);
 
-		expect(Elemenx.Service('Models').Make('game-hut').Pieces.map(function (piece) {
+		expect(Elemenx.Service('SceneModels').Make('game-hut').Pieces.map(function (piece) {
 			return piece.ID;
 		})).toEqual(['body', 'roof']);
 		expect(scene.Get('hut').Values.Model).toBe('game-hut');
@@ -100,6 +100,14 @@ describe('Contract: the Game editor packs a game to run alone: its models, its s
 		expect(text).toContain('<title>A &lt;b>game&lt;/b></title>');
 		expect(text).toContain('/* bundles/elemenx.min.js */ var end = "<\\/script>";');
 		expect(text.indexOf('bundles/elemenx-ui.min.js')).toBeGreaterThan(text.indexOf('bundles/elemenx.min.js'));
+
+		/* A game stands on every system Library: each bundle after the ones it stands on. */
+		expect(['elemenx.min.js', 'elemenx-common.min.js', 'elemenx-ui.min.js', 'elemenx-graphics.min.js', 'elemenx-gaming.min.js'].map(function (name) {
+			return text.indexOf('/* bundles/' + name + ' */');
+		}).every(function (at, index, list) {
+			return at !== -1 && (!index || at > list[index - 1]);
+		})).toBe(true);
+		expect(text).toContain('$Use: [\'ElemenxGaming\']');
 		expect(text).toContain('Elemenx.Component(\'Game\'');
 		expect(text).toContain('$Mount: \'body\'');
 		expect(text).not.toContain('$Root');
@@ -136,6 +144,6 @@ describe('Contract: the Game editor packs a game to run alone: its models, its s
 		expect(new TextDecoder().decode(files['app.js'])).toContain('$Root: \'application\'');
 		expect(new TextDecoder().decode(files['application/components/Game/Game.js'])).toBe(made.Code(game()) + '\n');
 		expect(Elemenx.Service('ModelFormats').Read(files['models/game-hut.glb'], {Format: 'glb'}).Meshes.length).toBe(2);
-		expect(Elemenx.Service('Models').Has('game-packager-game-hut')).toBe(false);
+		expect(Elemenx.Service('SceneModels').Has('game-packager-game-hut')).toBe(false);
 	});
 });

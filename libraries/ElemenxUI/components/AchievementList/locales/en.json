@@ -1,0 +1,9 @@
+{
+	"ui": {
+		"achievementList": {
+			"summary": "{unlocked} of {total} unlocked",
+			"points": "{points} points",
+			"secret": "Secret achievement"
+		}
+	}
+}

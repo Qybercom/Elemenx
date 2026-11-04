@@ -1,0 +1,15 @@
+{
+	"ui": {
+		"postCard": {
+			"comment": "Комментарии",
+			"like": "Нравится",
+			"readTime": {
+				"one": "{count} мин чтения",
+				"few": "{count} мин чтения",
+				"many": "{count} мин чтения",
+				"other": "{count} мин чтения"
+			},
+			"share": "Поделиться"
+		}
+	}
+}

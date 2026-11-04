@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadElemenx, resetDOM, tick, unique } from '../setup.js';
-import popupSource from '../../libraries/ElemenxUI/directives/Popup.js?raw';
+import popupSource from '../../libraries/ElemenxUI/directives/Popup/Popup.js?raw';
 
 var owned = [];
 

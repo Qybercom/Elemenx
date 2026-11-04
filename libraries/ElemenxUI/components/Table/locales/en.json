@@ -1,0 +1,10 @@
+{
+	"ui": {
+		"table": {
+			"empty": "No data",
+			"filter": "Filter {name}",
+			"selectAll": "Select all rows",
+			"selectRow": "Select row"
+		}
+	}
+}

@@ -1,0 +1,10 @@
+{
+	"ui": {
+		"codeEditor": {
+			"label": "Code editor",
+			"suggestions": "Suggestions",
+			"diff": "Changes",
+			"unchanged": "{count} unchanged lines"
+		}
+	}
+}

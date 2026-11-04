@@ -1,0 +1,19 @@
+{
+	"ui": {
+		"richEditor": {
+			"label": "Text editor",
+			"placeholder": "Write something…",
+			"formatting": "Formatting",
+			"bold": "Bold",
+			"italic": "Italic",
+			"underline": "Underline",
+			"strike": "Strikethrough",
+			"code": "Code",
+			"link": "Link",
+			"linkPlaceholder": "Paste a link and press Enter",
+			"heading": "Heading",
+			"quote": "Quote",
+			"clear": "Clear formatting"
+		}
+	}
+}

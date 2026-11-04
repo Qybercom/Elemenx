@@ -1,0 +1,12 @@
+{
+	"ui": {
+		"timeInput": {
+			"choose": "Choose a time",
+			"done": "OK",
+			"hours": "Hours",
+			"minutes": "Minutes",
+			"seconds": "Seconds",
+			"title": "Time"
+		}
+	}
+}

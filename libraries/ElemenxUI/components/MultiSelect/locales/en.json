@@ -1,0 +1,8 @@
+{
+	"ui": {
+		"multiSelect": {
+			"empty": "Nothing found",
+			"placeholder": "Select…"
+		}
+	}
+}

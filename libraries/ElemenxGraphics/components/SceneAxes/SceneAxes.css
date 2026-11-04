@@ -1,0 +1,50 @@
+.elemenx-scene-axes {
+	display: block;
+	overflow: visible;
+	user-select: none;
+}
+
+.elemenx-scene-axes-x {
+	--elemenx-scene-axes-color: var(--elemenx-danger);
+}
+
+.elemenx-scene-axes-y {
+	--elemenx-scene-axes-color: var(--elemenx-success);
+}
+
+.elemenx-scene-axes-z {
+	--elemenx-scene-axes-color: var(--elemenx-info);
+}
+
+.elemenx-scene-axes-end {
+	cursor: pointer;
+	outline: none;
+}
+
+.elemenx-scene-axes-end line {
+	stroke: var(--elemenx-scene-axes-color);
+	stroke-width: 3;
+}
+
+.elemenx-scene-axes-end circle {
+	fill: var(--elemenx-scene-axes-color);
+	stroke: var(--elemenx-scene-axes-color);
+	stroke-width: 2;
+}
+
+.elemenx-scene-axes-end.other circle {
+	fill: var(--elemenx-surface);
+}
+
+.elemenx-scene-axes-end:hover circle,
+.elemenx-scene-axes-end:focus-visible circle {
+	stroke: var(--elemenx-text);
+}
+
+.elemenx-scene-axes-end text {
+	fill: var(--elemenx-accent-text);
+	font-size: 13px;
+	font-weight: 600;
+	text-anchor: middle;
+	pointer-events: none;
+}

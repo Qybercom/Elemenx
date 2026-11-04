@@ -1,8 +1,9 @@
 /*
  * The page of the Designer as an Application of its own, to download:
  * - Html(template, options, callback): one HTML file that runs alone, opened from the disk or put on any server: the
- *   framework and ElemenxUI (their bundles, from Bundles: bundles/elemenx.min.js and bundles/elemenx-ui.min.js, made by
- *   npm run dist) and the page as the root Component of the Application, all inline. callback(error, text).
+ *   framework, ElemenxCommon and ElemenxUI (their bundles, from Bundles: bundles/elemenx.min.js, elemenx-common.min.js
+ *   and elemenx-ui.min.js, made by npm run dist) and the page as the root Component of the Application, all inline.
+ *   callback(error, text).
  * - Project(template, options): a project of Elemenx in a zip: index.html, app.js, elemenx.config.js and the page as
  *   the Component Page (Page.html, Page.js) under application/, ready for elemenx dev and elemenx build. It returns the
  *   bytes of the zip (a Uint8Array).
@@ -23,7 +24,7 @@
  * route has (the first page without one). Without pages the first component is the page.
  */
 Elemenx.Service('Packager', {
-	Bundles: ['bundles/elemenx.min.js', 'bundles/elemenx-ui.min.js'],
+	Bundles: ['bundles/elemenx.min.js', 'bundles/elemenx-common.min.js', 'bundles/elemenx-ui.min.js'],
 
 	/* The text of a file of the server of the Designer. */
 	Fetch: function (url, callback) {

@@ -1,0 +1,113 @@
+<!-- generated -->
+# Renderer
+
+Трёхмерная графика на WebGL2 без библиотек: камера и рендерер, который рисует фигуры (сервис Meshes) заданными шейдерами; матрицы, векторы и шум — в сервисе Math. Camera(options) — камера (Ortho — высота вида в параллельных лучах) с View, Projection, Matrix, Orbit(target, yaw, pitch, distance), Ray(x, y, width, height), Project(point, width, height). Chunks.Noise — шум Math в шейдерах, Chunks.Lights — свет до 4 точек с тенями до 4 шаров, Chunks.Shadow — чтение карты теней (Shadow(size) рендерера: Begin() и End()), Target(width, height, {Colors, Depth, DepthTexture, Float, Samples, Mipmaps}) — текстуры, в которые рисуют, Viewport(x, y, width, height), Texture с Float для массива чисел. Create(canvas, options) возвращает рендерер (или null без WebGL2): Program(vertex, fragment), Mesh(geometry) с Update, Instance и Destroy, Lines, Points, Texture, Draw(mesh, program, uniforms, settings) (Mode, Blend, Depth, DepthWrite, Cull, Instances), Resize, Clear, Lost, Destroy. Камера работает и в Node.
+
+## Методы
+
+- `Camera(options)`
+- `Work()`
+- `CloudBlock(size)`
+- `Create(canvas, options)`
+
+## Пример
+
+```example
+<canvas #Canvas style="display: block; width: 100%; height: 260px; border-radius: 8px; background: #05070c;"></canvas>
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: 'A torus, a ball and a bar merged into one mesh, lit and turning.',
+
+	$OnReady: function () {
+		var self = this;
+		var graphics = this.$Service('Renderer');
+		var meshes = this.$Service('Meshes');
+		var canvas = this.$Ref('Canvas');
+		var renderer = graphics.Create(canvas);
+		var head = '#version 300 es\nprecision highp float;\n';
+		var program;
+		var mesh;
+		var camera = graphics.Camera({Fov: 40});
+		var angle = 0;
+
+		if (!renderer) {
+			this.Note = 'This browser has no WebGL2.';
+
+			return;
+		}
+
+		program = renderer.Program(head + [
+			'in vec3 aPosition;',
+			'in vec3 aNormal;',
+			'in vec3 aColor;',
+			'uniform mat4 uModel;',
+			'uniform mat4 uViewProjection;',
+			'uniform mat3 uNormalMatrix;',
+			'out vec3 vNormal;',
+			'out vec3 vColor;',
+			'void main() {',
+			'	vNormal = uNormalMatrix * aNormal;',
+			'	vColor = aColor;',
+			'	gl_Position = uViewProjection * uModel * vec4(aPosition, 1.0);',
+			'}'
+		].join('\n'), head + [
+			'in vec3 vNormal;',
+			'in vec3 vColor;',
+			'out vec4 outColor;',
+			'void main() {',
+			'	float light = max(dot(normalize(vNormal), normalize(vec3(0.6, 0.8, 0.5))), 0.0);',
+			'	outColor = vec4(vColor * (0.15 + 0.85 * light), 1.0);',
+			'}'
+		].join('\n'));
+
+		/* Three shapes merged into one mesh, each of its color. */
+		mesh = renderer.Mesh(meshes.Merge([
+			{Geometry: meshes.Torus({Radius: 1, Tube: 0.3}), Color: [0.25, 0.55, 1]},
+			{Geometry: meshes.Icosphere({Radius: 0.5, Detail: 2}), Color: [1, 0.6, 0.2]},
+			{Geometry: meshes.Box({Width: 0.3, Height: 2.6, Depth: 0.3}), Color: [0.9, 0.9, 0.95]}
+		]));
+
+		function frame () {
+			var model = graphics.Compose([0, 0, 0], graphics.Multiply(graphics.Rotation([0, 1, 0], angle), graphics.Rotation([1, 0, 0], 0.5)), 1);
+
+			if (!canvas.isConnected) return;
+
+			angle += 0.01;
+
+			renderer.Resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
+			renderer.Clear([0.02, 0.03, 0.05, 1]);
+
+			camera.Orbit([0, 0, 0], 0, 0.3, 5);
+
+			renderer.Draw(mesh, program, {uModel: model, uNormalMatrix: graphics.NormalMatrix(model), uViewProjection: camera.Matrix(renderer.Width / renderer.Height)});
+
+			self.Frame = window.requestAnimationFrame(frame);
+		}
+
+		frame();
+	},
+
+	$OnDestroy: function () {
+		window.cancelAnimationFrame(this.Frame);
+	}
+})
+</script>
+```
+
+## Тесты
+
+- [puts a body on its orbit of Kepler at a time, and describes stars and planets](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L72) — `tests/regression/library-scene.test.js`
+- [makes the same system of the same seed: a star, planets by their distance, moons, rings and belts](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L118) — `tests/regression/library-scene.test.js`
+- [multiplies, inverts and projects matrices, and makes shapes of triangles](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L153) — `tests/regression/library-scene.test.js`
+- [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L184) — `tests/regression/library-scene.test.js`
+- [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L225) — `tests/regression/library-scene.test.js`
+- [Renderer makes programs behind the page for who is patient, and sets in a program only what changed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3793) — `tests/regression/library-scene.test.js`
+- [Renderer sets the state of the context only where it changes, and only the uniforms a program has](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3904) — `tests/regression/library-scene.test.js`
+- [puts planets on their orbits and makes shapes of three dimensions with the Services of the system Libraries](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`
+- [draws its water by the water graph of the library made of blocks, or by a WaterGraph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L301) — `tests/regression/library-material-blueprints.test.js`
+- [draws its sky and its land by the graphs of the library made of blocks, or by a SkyGraph and a LandGraph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L354) — `tests/regression/library-material-blueprints.test.js`
+- [sways by the wind of the library made of blocks, or by a WindGraph of its own in every shader that sways](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L423) — `tests/regression/library-material-blueprints.test.js`
+- [leans the grass by the wind of the library made of blocks, or by a GrassGraph of its own, and draws it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L477) — `tests/regression/library-material-blueprints.test.js`
+
++24 ещё в тех же файлах

@@ -1,0 +1,21 @@
+{
+	"ui": {
+		"tabGroup": {
+			"closeOthers": "Close others",
+			"closeRight": "Close to the right",
+			"closeLeft": "Close to the left",
+			"closeAll": "Close all",
+			"pin": "Pin",
+			"unpin": "Unpin",
+			"pinned": "Pinned",
+			"splitRight": "Split right",
+			"splitLeft": "Split left",
+			"splitDown": "Split down",
+			"splitUp": "Split up",
+			"moveRight": "Split and move right",
+			"moveLeft": "Split and move left",
+			"moveDown": "Split and move down",
+			"moveUp": "Split and move up"
+		}
+	}
+}

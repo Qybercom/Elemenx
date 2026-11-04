@@ -43,17 +43,20 @@ function lean (wheel, back) {
 	window.dispatchEvent(new DeviceOrientationEvent('deviceorientation', {alpha: 0, beta: beta * 180 / Math.PI, gamma: gamma * 180 / Math.PI}));
 }
 
-describe('Contract: pads of the page, the motion of a device, VirtualGamepad', function () {
+describe('Contract: pads of the page, the motion of a device (InputDevices), the page moved by pads (Gamepad), VirtualGamepad', function () {
+	var input;
 	var gamepad;
-	var motion;
 
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:Gamepad', 'service:Motion', 'VirtualGamepad']);
+		Use(['service:InputDevices', 'service:Gamepad', 'VirtualGamepad']);
 
+		input = Elemenx.Service('InputDevices');
 		gamepad = Elemenx.Service('Gamepad');
-		motion = Elemenx.Service('Motion');
+
+		/* The page moves by the pads from its start. */
+		gamepad.$Generation();
 	});
 
 	beforeEach(function () {
@@ -64,13 +67,13 @@ describe('Contract: pads of the page, the motion of a device, VirtualGamepad', f
 		while (owned.length) owned.pop().$Destroy();
 	});
 
-	it('Gamepad: a pad of the page is a pad as any other: its events, its sticks and triggers, its buttons held; quiet by choice', async function () {
+	it('InputDevices: a pad of the page is a pad as any other: its events, its sticks and triggers, its buttons held; quiet by choice', async function () {
 		var events = [];
-		var listen = gamepad.On('button', function (detail) {
+		var listen = input.On('button', function (detail) {
 			events.push(detail.Button + ':' + detail.Pad.Kind);
 		});
 		var connected = [];
-		var connect = gamepad.On('connect', function (detail) {
+		var connect = input.On('connect', function (detail) {
 			connected.push(detail.Pad.Kind);
 		});
 		var field = document.createElement('button');
@@ -86,10 +89,10 @@ describe('Contract: pads of the page, the motion of a device, VirtualGamepad', f
 
 		field.focus();
 
-		quiet = gamepad.Virtual('quiet', {Navigate: false});
+		quiet = input.Virtual('quiet', {Navigate: false});
 
 		expect(connected).toEqual(['virtual']);
-		expect(gamepad.Pads().some(function (pad) {
+		expect(input.Pads().some(function (pad) {
 			return pad.Kind === 'virtual';
 		})).toBe(true);
 
@@ -98,9 +101,9 @@ describe('Contract: pads of the page, the motion of a device, VirtualGamepad', f
 		quiet.Press('a');
 
 		/* A small lean is none; the triggers as far as they are pressed. */
-		expect(gamepad.Axes()).toEqual({LeftX: 0.6, LeftY: 0, RightX: 0, RightY: 0, LeftTrigger: 0, RightTrigger: 0.4});
-		expect(gamepad.Held('a')).toBe(true);
-		expect(gamepad.Held('right')).toBe(true);
+		expect(input.Axes()).toEqual({LeftX: 0.6, LeftY: 0, RightX: 0, RightY: 0, LeftTrigger: 0, RightTrigger: 0.4});
+		expect(input.Held('a')).toBe(true);
+		expect(input.Held('right')).toBe(true);
 
 		await frame();
 
@@ -109,17 +112,17 @@ describe('Contract: pads of the page, the motion of a device, VirtualGamepad', f
 
 		quiet.Release('a');
 
-		expect(gamepad.Held('a')).toBe(false);
+		expect(input.Held('a')).toBe(false);
 
 		quiet.Destroy();
 
-		expect(gamepad.Axes().LeftX).toBe(0);
+		expect(input.Axes().LeftX).toBe(0);
 
 		/* A frame with A up: the next press is a press (a pad reported twice presses once). */
 		await frame();
 
 		/* One that leads the page as a real one: A is Enter on the focused control. */
-		loud = gamepad.Virtual('loud');
+		loud = input.Virtual('loud');
 
 		loud.Press('a');
 
@@ -129,82 +132,185 @@ describe('Contract: pads of the page, the motion of a device, VirtualGamepad', f
 
 		loud.Destroy();
 
-		gamepad.Off(listen);
-		gamepad.Off(connect);
+		input.Off(listen);
+		input.Off(connect);
 	});
 
-	it('Motion: the lean of a device as a wheel, its top away, and flat; the way the screen is turned; its middle', function () {
-		var turned = motion.Turned;
+	it('InputDevices: the keys held, the pointer and how far it went, the fingers; a window left lets every key go', function () {
+		window.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyW', key: 'w'}));
+		window.dispatchEvent(new KeyboardEvent('keydown', {code: 'ShiftLeft', key: 'Shift'}));
+
+		expect(input.Down('KeyW')).toBe(true);
+		expect(input.Keys()).toEqual(['KeyW', 'ShiftLeft']);
+
+		window.dispatchEvent(new KeyboardEvent('keyup', {code: 'KeyW', key: 'w'}));
+
+		expect(input.Down('KeyW')).toBe(false);
+
+		window.dispatchEvent(new Event('blur'));
+
+		expect(input.Keys()).toEqual([]);
+
+		input.Moved();
+
+		window.dispatchEvent(new PointerEvent('pointermove', {clientX: 30, clientY: 40, movementX: 5, movementY: -2}));
+		window.dispatchEvent(new PointerEvent('pointermove', {clientX: 33, clientY: 41, movementX: 3, movementY: 1}));
+		window.dispatchEvent(new PointerEvent('pointerdown', {clientX: 33, clientY: 41, buttons: 1}));
+
+		expect(input.Pointer()).toEqual({X: 33, Y: 41, Buttons: 1, Locked: false});
+		expect(input.Moved()).toEqual({X: 8, Y: -1});
+		expect(input.Moved()).toEqual({X: 0, Y: 0});
+
+		window.dispatchEvent(new PointerEvent('pointerup', {clientX: 33, clientY: 41, buttons: 0}));
+
+		window.dispatchEvent(new TouchEvent('touchstart', {touches: [new Touch({identifier: 4, target: document.body, clientX: 10, clientY: 20})]}));
+
+		expect(input.Touches()).toEqual([{ID: 4, X: 10, Y: 20}]);
+
+		window.dispatchEvent(new TouchEvent('touchend', {touches: []}));
+
+		expect(input.Touches()).toEqual([]);
+	});
+
+	it('InputDevices: actions bound to keys, buttons, halves of the sticks and the mouse; their contexts', function () {
+		var pad = input.Virtual(unique('actions'), {Navigate: false});
+
+		input.Bind('Ahead', ['KeyW', 'ArrowUp', 'LeftY-']);
+		input.Bind('Back', ['KeyS', 'LeftY+']);
+		input.Bind('Fire', ['Mouse0', 'rt']);
+		input.Bind('Brake', ['Space'], {Context: 'driving'});
+		input.Bind('Jump', ['Space'], {Context: 'walking'});
+
+		expect(input.Value('Ahead')).toBe(0);
+
+		window.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyW'}));
+
+		expect(input.Value('Ahead')).toBe(1);
+		expect(input.Held('Ahead')).toBe(true);
+
+		window.dispatchEvent(new KeyboardEvent('keyup', {code: 'KeyW'}));
+
+		/* A stick as far as it leans, its other half none; one axis of two actions. */
+		pad.Stick('left', 0, 0.4);
+
+		expect(input.Value('Back')).toBeCloseTo(0.4, 6);
+		expect(input.Value('Ahead')).toBe(0);
+		expect(input.Held('Back')).toBe(false);
+		expect(input.Axis('Back', 'Ahead')).toBeCloseTo(-0.4, 6);
+		expect(input.Value('LeftY+')).toBeCloseTo(0.4, 6);
+
+		pad.Trigger('right', 1);
+
+		expect(input.Held('Fire')).toBe(true);
+		expect(input.Held('rt')).toBe(true);
+
+		/* A binding of a context works only in it; one with none always. */
+		window.dispatchEvent(new KeyboardEvent('keydown', {code: 'Space'}));
+
+		expect(input.Context()).toBe('');
+		expect(input.Held('Brake')).toBe(false);
+		expect(input.Context('driving')).toBe('driving');
+		expect(input.Held('Brake')).toBe(true);
+		expect(input.Held('Jump')).toBe(false);
+		expect(input.Held('Fire')).toBe(true);
+
+		input.Context('walking');
+
+		expect(input.Held('Jump')).toBe(true);
+
+		window.dispatchEvent(new KeyboardEvent('keyup', {code: 'Space'}));
+
+		expect(input.Actions().filter(function (one) {
+			return one.Action === 'Jump';
+		})).toEqual([{Action: 'Jump', Sources: ['Space'], Context: 'walking'}]);
+
+		['Ahead', 'Back', 'Fire', 'Brake', 'Jump'].forEach(function (action) {
+			input.Unbind(action);
+		});
+
+		input.Context('');
+
+		expect(input.Actions()).toEqual([]);
+
+		expect(function () {
+			input.Bind('Nothing');
+		}).toThrow('Elemenx InputDevices: Bind expects (action, sources)');
+
+		pad.Destroy();
+	});
+
+	it('InputDevices: the lean of a device as a wheel, its top away, and flat; the way the screen is turned; its middle', function () {
+		var turned = input.Turned;
 		var tilt;
 
-		expect(motion.Supported()).toBe(true);
+		expect(input.MotionSupported()).toBe(true);
 
-		motion.Request(function (error, state) {
+		input.RequestMotion(function (error, state) {
 			expect(state).toBe('granted');
 		});
 
-		motion.Start();
+		input.StartMotion();
 
 		/* Upright, facing the eye: nothing leans. */
 		lean(0, 0);
 
-		tilt = motion.Tilt();
+		tilt = input.Tilt();
 
 		expect(tilt.Steer).toBeCloseTo(0, 6);
 		expect(tilt.Pitch).toBeCloseTo(0, 6);
-		expect(motion.State().Orientation.Beta).toBeCloseTo(90, 6);
+		expect(input.Motion().Orientation.Beta).toBeCloseTo(90, 6);
 
 		/* Turned 20 degrees to the right as a wheel: past the dead zone, as far as the range. */
 		lean(20, 0);
 
-		expect(motion.Tilt().Steer).toBeCloseTo((20 - 2) / (35 - 2), 4);
+		expect(input.Tilt().Steer).toBeCloseTo((20 - 2) / (35 - 2), 4);
 
 		lean(-60, 0);
 
-		expect(motion.Tilt().Steer).toBe(-1);
+		expect(input.Tilt().Steer).toBe(-1);
 
 		/* Leaned back 30 degrees, then that made the middle. */
 		lean(0, 30);
 
-		expect(motion.Tilt().Pitch).toBeCloseTo((30 - 2) / 33, 4);
+		expect(input.Tilt().Pitch).toBeCloseTo((30 - 2) / 33, 4);
 
-		motion.Center();
+		input.Center();
 
-		expect(motion.Tilt().Pitch).toBeCloseTo(0, 6);
+		expect(input.Tilt().Pitch).toBeCloseTo(0, 6);
 
 		lean(10, 30);
 
-		expect(motion.Tilt().Steer).toBeCloseTo(8 / 33, 4);
+		expect(input.Tilt().Steer).toBeCloseTo(8 / 33, 4);
 
-		motion.Center();
+		input.Center();
 
-		expect(motion.Tilt().Steer).toBeCloseTo(0, 6);
+		expect(input.Tilt().Steer).toBeCloseTo(0, 6);
 
 		/* Landscape: the device turned a quarter, a wheel is the same turn of the screen. */
-		motion.Turned = function () {
+		input.Turned = function () {
 			return 90;
 		};
 
 		window.dispatchEvent(new DeviceOrientationEvent('deviceorientation', {alpha: 0, beta: 0, gamma: -90}));
 
-		expect(motion.Tilt().Up.map(function (value) {
+		expect(input.Tilt().Up.map(function (value) {
 			return Math.round(value * 1e4) / 1e4 || 0;
 		})).toEqual([0, 1, 0]);
 
-		motion.Turned = turned;
-		motion.Middle = {Steer: 0, Pitch: 0};
+		input.Turned = turned;
+		input.Middle = {Steer: 0, Pitch: 0};
 
 		/* Flat on a hand, its right edge down. */
 		window.dispatchEvent(new DeviceOrientationEvent('deviceorientation', {alpha: 0, beta: 0, gamma: 20}));
 
-		expect(motion.Tilt().X).toBeCloseTo((20 - 2) / 33, 4);
-		expect(motion.Tilt().Y).toBeCloseTo(0, 6);
+		expect(input.Tilt().X).toBeCloseTo((20 - 2) / 33, 4);
+		expect(input.Tilt().Y).toBeCloseTo(0, 6);
 
-		motion.Stop();
+		input.StopMotion();
 
 		window.dispatchEvent(new DeviceOrientationEvent('deviceorientation', {alpha: 0, beta: 0, gamma: 0}));
 
-		expect(motion.State().Orientation.Gamma).toBe(20);
+		expect(input.Motion().Orientation.Gamma).toBe(20);
 	});
 
 	it('VirtualGamepad: its stick leans the pad as far as the finger, its buttons hold, and it goes with its pad', async function () {
@@ -233,21 +339,21 @@ describe('Contract: pads of the page, the motion of a device, VirtualGamepad', f
 		/* Half way to the right and all the way up (past the ring: as far as it goes). */
 		pointer(stick, 'pointerdown', box.left + 75, box.top + 50, 3);
 
-		expect(gamepad.Axes().LeftX).toBeCloseTo(0.5, 2);
+		expect(input.Axes().LeftX).toBeCloseTo(0.5, 2);
 
 		pointer(stick, 'pointermove', box.left + 50, box.top - 200, 3);
 
-		expect(gamepad.Axes().LeftY).toBeCloseTo(-1, 4);
+		expect(input.Axes().LeftY).toBeCloseTo(-1, 4);
 
 		/* Out of the ring on a slant: on its rim, not past it. */
 		pointer(stick, 'pointermove', box.left + 250, box.top - 150, 3);
 
-		expect(gamepad.Axes().LeftX).toBeCloseTo(Math.SQRT1_2, 2);
-		expect(gamepad.Axes().LeftY).toBeCloseTo(-Math.SQRT1_2, 2);
+		expect(input.Axes().LeftX).toBeCloseTo(Math.SQRT1_2, 2);
+		expect(input.Axes().LeftY).toBeCloseTo(-Math.SQRT1_2, 2);
 
 		pointer(stick, 'pointerup', box.left + 50, box.top - 200, 3);
 
-		expect(gamepad.Axes().LeftY).toBe(0);
+		expect(input.Axes().LeftY).toBe(0);
 
 		/* A button held while the finger is on it; the trigger is pressed all the way. */
 		var a = root.querySelector('[data-button="a"]');
@@ -256,20 +362,20 @@ describe('Contract: pads of the page, the motion of a device, VirtualGamepad', f
 		pointer(a, 'pointerdown', 0, 0, 4);
 		pointer(trigger, 'pointerdown', 0, 0, 5);
 
-		expect(gamepad.Held('a')).toBe(true);
-		expect(gamepad.Axes().LeftTrigger).toBe(1);
+		expect(input.Held('a')).toBe(true);
+		expect(input.Axes().LeftTrigger).toBe(1);
 
 		pointer(a, 'pointerup', 0, 0, 4);
 		pointer(trigger, 'pointerup', 0, 0, 5);
 
-		expect(gamepad.Held('a')).toBe(false);
+		expect(input.Held('a')).toBe(false);
 		expect(told).toEqual(['a+', 'lt+', 'a-', 'lt-']);
 
-		var count = gamepad.Pads().length;
+		var count = input.Pads().length;
 
 		owned.pop().$Destroy();
 
-		expect(gamepad.Pads().length).toBe(count - 1);
+		expect(input.Pads().length).toBe(count - 1);
 
 		var never = mount('<div><VirtualGamepad Show="never" /></div>');
 

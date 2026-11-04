@@ -133,7 +133,7 @@ Elemenx.Component('QRCode', {
 	Png: function (size, callback) {
 		var pixels = Number(size) || Number(this.Size) * 2;
 
-		this.$Service('QR').Raster(this.SVG(), pixels, pixels, callback);
+		this.$Service('Pictures').Raster(this.SVG(), pixels, pixels, callback);
 	},
 
 	/* Saves the code as name.png (format png) or name.svg (svg): callback(error) after. */

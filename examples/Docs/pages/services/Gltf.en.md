@@ -42,7 +42,7 @@ The same functions run in Node: they read no page, but for the pictures of Load.
 		gltf.Parse(json, function (error, asset) {
 			self.Text = error ? String(error) : 'Nodes: ' + asset.Nodes.map(function (node) {
 				return node.Name;
-			}).join(', ') + '\nTriangles: ' + asset.Meshes[0][0].Geometry.Indices.length / 3 + '\n\nIn a scene: <GameObject Kind="unit" Model="assets/hero.glb" Clip="Idle" />';
+			}).join(', ') + '\nTriangles: ' + asset.Meshes[0][0].Geometry.Indices.length / 3 + '\n\nIn a scene: <SceneObject Kind="unit" Model="assets/hero.glb" Clip="Idle" />';
 		});
 	}
 })
@@ -51,17 +51,17 @@ The same functions run in Node: they read no page, but for the pictures of Load.
 
 ## Tests
 
-- [reads a GLB: its nodes, meshes, materials, skins, animations and pictures](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9238) — `tests/regression/library-scene.test.js`
-- [refuses what it cannot read, and says why](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9269) — `tests/regression/library-scene.test.js`
-- [decodes meshopt: the example of the specification, each mode and each filter](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9285) — `tests/regression/library-scene.test.js`
-- [makes a model of a file: 1 tall on the ground, its clips found by their names, its skeleton in frames of a texture](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9358) — `tests/regression/library-scene.test.js`
-- [measures a skinned model by where its skeleton holds it, not by the numbers of its vertices](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9422) — `tests/regression/library-scene.test.js`
-- [plays the only clip of a file by itself, and bakes one animation once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9462) — `tests/regression/library-scene.test.js`
-- [makes clips from a skeleton by the names of its bones: legs that swing in turn, arms let down](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9494) — `tests/regression/library-scene.test.js`
-- [bakes a long clip in steps, and joins the pieces of a location by material](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9536) — `tests/regression/library-scene.test.js`
-- [reads the clip of an FBX as text and lays it on another skeleton, by what its bones are](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9562) — `tests/regression/library-scene.test.js`
-- [reads a material of specular and glossiness as one of metal and roughness](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9640) — `tests/regression/library-scene.test.js`
-- [closes the dish of the radar: seen from above it has a side that faces up](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9648) — `tests/regression/library-scene.test.js`
-- [lets a piece no skin holds go with the nearest bone, and takes the turn of the whole body out of a clip](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9664) — `tests/regression/library-scene.test.js`
+- [reads a GLB: its nodes, meshes, materials, skins, animations and pictures](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L8993) — `tests/regression/library-scene.test.js`
+- [refuses what it cannot read, and says why](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9024) — `tests/regression/library-scene.test.js`
+- [decodes meshopt: the example of the specification, each mode and each filter](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9040) — `tests/regression/library-scene.test.js`
+- [makes a model of a file: 1 tall on the ground, its clips found by their names, its skeleton in frames of a texture](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9113) — `tests/regression/library-scene.test.js`
+- [measures a skinned model by where its skeleton holds it, not by the numbers of its vertices](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9177) — `tests/regression/library-scene.test.js`
+- [plays the only clip of a file by itself, and bakes one animation once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9217) — `tests/regression/library-scene.test.js`
+- [makes clips from a skeleton by the names of its bones: legs that swing in turn, arms let down](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9249) — `tests/regression/library-scene.test.js`
+- [bakes a long clip in steps, and joins the pieces of a location by material](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9291) — `tests/regression/library-scene.test.js`
+- [reads the clip of an FBX as text and lays it on another skeleton, by what its bones are](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9317) — `tests/regression/library-scene.test.js`
+- [reads a material of specular and glossiness as one of metal and roughness](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9395) — `tests/regression/library-scene.test.js`
+- [closes the dish of the radar: seen from above it has a side that faces up](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9403) — `tests/regression/library-scene.test.js`
+- [lets a piece no skin holds go with the nearest bone, and takes the turn of the whole body out of a clip](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9419) — `tests/regression/library-scene.test.js`
 
 +10 more in the same files

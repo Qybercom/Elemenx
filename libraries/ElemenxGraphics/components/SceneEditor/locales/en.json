@@ -1,0 +1,46 @@
+{
+	"graphics": {
+		"sceneEditor": {
+			"label": "Scene editor",
+			"tools": "Tools of the scene",
+			"select": "Select",
+			"move": "Move",
+			"turn": "Turn",
+			"scale": "Scale",
+			"snap": "Snap",
+			"day": "Day",
+			"undo": "Undo",
+			"redo": "Redo",
+			"play": "Play",
+			"stop": "Stop",
+			"save": "Save in the browser",
+			"export": "Export JSON",
+			"import": "Import JSON",
+			"objects": "Objects",
+			"add": "Add",
+			"nothing": "Nothing selected",
+			"parameters": "Parameters of the blueprint",
+			"sketch": "Sketch",
+			"sketchType": "Type of the sketch",
+			"layers": "Layers",
+			"addLayer": "Add a layer",
+			"visible": "Shown",
+			"kinds": {
+				"stroke": "Brushes",
+				"line": "Lines",
+				"area": "Areas",
+				"circle": "Circles"
+			},
+			"road": "Roads",
+			"roadType": "Type of road",
+			"roadPart": "Parts of the road",
+			"roadRadius": "Corner radius",
+			"pointRadius": "Corner radius at point {point}",
+			"parts": {
+				"line": "Straight",
+				"arc": "Arcs",
+				"curve": "Smooth"
+			}
+		}
+	}
+}

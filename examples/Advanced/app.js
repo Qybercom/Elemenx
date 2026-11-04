@@ -3,7 +3,7 @@ Elemenx.Application('ApplicationExample', {
 	$Component: 'Layout',
 	$Root: 'application',
 	$Mount: 'body',
-	$Use: ['ElemenxUI'],
+	$Use: ['ElemenxGaming'],
 	$Bootstrap: function () {
 		/* Keep-alive where the templates ask for it (*keep, $KeepAlive): the panel of the Keep-alive section of the UI Kit. */
 		Elemenx.Cache({Instances: {Scope: 'marked'}});

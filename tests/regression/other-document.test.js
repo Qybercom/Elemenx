@@ -31,12 +31,12 @@ function pointer (element, type) {
 describe('Regression: ElemenxUI in another document (a window the Application opened)', function () {
 	beforeAll(async function () {
 		await loadElemenx();
-		await import('../../libraries/ElemenxUI/directives/Tip.js');
+		await import('../../libraries/ElemenxUI/directives/Tip/Tip.js');
 		/* The helpers the Services of ElemenxUI share (their lists of listeners). */
-		await import('../../libraries/ElemenxUI/services/ElemenxHelpers.js');
-		await import('../../libraries/ElemenxUI/services/Find.js');
-		await import('../../libraries/ElemenxUI/services/Hotkeys.js');
-		await import('../../libraries/ElemenxUI/services/Platform.js');
+		await import('../../libraries/ElemenxUI/services/ElemenxHelpers/ElemenxHelpers.js');
+		await import('../../libraries/ElemenxUI/services/Find/Find.js');
+		await import('../../libraries/ElemenxUI/services/Hotkeys/Hotkeys.js');
+		await import('../../libraries/ElemenxUI/services/Platform/Platform.js');
 
 		/* The Keyboard with its template inline: the page of the tests serves no Library. */
 		new Function(keyboardSource.replace("$StyleURL: 'Keyboard.css',", '').replace("$TemplateURL: 'Keyboard.html'", function () {

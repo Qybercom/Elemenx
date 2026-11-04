@@ -1,0 +1,9 @@
+{
+	"ui": {
+		"chat": {
+			"latest": "Latest messages",
+			"selected": "{count} selected",
+			"clearSelection": "Cancel selection"
+		}
+	}
+}

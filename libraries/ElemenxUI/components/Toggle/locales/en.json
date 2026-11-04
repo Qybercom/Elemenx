@@ -1,0 +1,9 @@
+{
+	"ui": {
+		"toggle": {
+			"off": "Off",
+			"auto": "Auto",
+			"on": "On"
+		}
+	}
+}

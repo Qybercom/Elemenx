@@ -397,12 +397,45 @@ describe('Elemenx multi-Application Builder', function () {
 		expect(fs.readFileSync(path.join(root, 'dist', 'elemenx.js'), 'utf8')).toBe(fs.readFileSync(path.resolve('elemenx.js'), 'utf8'));
 	});
 
-	it('resolves the built-in ElemenxUI Library from $Use without an explicit declaration', function () {
+	it('resolves the built-in ElemenxUI Library from $Use without an explicit declaration, with ElemenxCommon it uses before it', function () {
 		var declarations = Builder.LibraryDeclarations(project(), "Elemenx.Application('FooApp', {$Use:['ElemenxUI']});");
 
-		expect(declarations.length).toBe(1);
-		expect(declarations[0].Name).toBe('ElemenxUI');
-		expect(declarations[0].Root).toBe('libraries/ElemenxUI');
-		expect(fs.existsSync(path.join(declarations[0].Directory, 'index.js'))).toBe(true);
+		expect(declarations.map(function (declaration) {
+			return declaration.Name;
+		})).toEqual(['ElemenxCommon', 'ElemenxUI']);
+		expect(declarations[1].Root).toBe('libraries/ElemenxUI');
+
+		declarations.forEach(function (declaration) {
+			expect(fs.existsSync(path.join(declaration.Directory, 'index.js'))).toBe(true);
+		});
+	});
+
+	it('brings each system Library a project uses with all those it stands on, each once and in their order', function () {
+		var declarations = Builder.LibraryDeclarations(project(), "Elemenx.Application('FooApp', {$Use:['ElemenxGaming', 'ElemenxUI']});");
+
+		expect(declarations.map(function (declaration) {
+			return declaration.Name;
+		})).toEqual(['ElemenxCommon', 'ElemenxUI', 'ElemenxGraphics', 'ElemenxGaming']);
+	});
+
+	/*
+	 * A Service that declares in $Provides what it adds to a registry goes into a build that uses the registry, as the
+	 * registry makes it when it is wanted; one provider (which names the registry to add to it) does not bring the others.
+	 */
+	it('takes the providers of a registry the code uses, and not the other providers of one a provider names', function () {
+		var catalog = {Service: {
+			Registry: "Elemenx.Service('Registry', {\n\tGet: function (name) {\n\t\tthis.$Provide('Things', name);\n\t}\n});\n",
+			Rust: "Elemenx.Service('Rust', {\n\t$Provides: {Registry: {Things: ['rust']}},\n\n\t$OnCreate: function () {\n\t\tthis.$Service('Registry');\n\t}\n});\n",
+			Patina: "Elemenx.Service('Patina', {\n\t$Provides: {\n\t\tRegistry: {Things: ['patina'], Other: {Deep: ['x']}}\n\t},\n\n\t$OnCreate: function () {\n\t\tthis.$Service('Registry');\n\t}\n});\n",
+			Deep: "Elemenx.Service('Deep', {});\n"
+		}};
+		var some = {};
+		var all = {};
+
+		Builder.SelectLibraryEntities(some, catalog, "this.$Service('Rust');");
+		Builder.SelectLibraryEntities(all, catalog, "this.$Service('Registry').Get('patina');");
+
+		expect(Object.keys(some.Service).sort()).toEqual(['Registry', 'Rust']);
+		expect(Object.keys(all.Service).sort()).toEqual(['Patina', 'Registry', 'Rust']);
 	});
 });

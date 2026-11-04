@@ -46,6 +46,95 @@ describe('Contract: Elemenx.Library and $Use', function () {
 		expect(application.$Libraries()).toEqual([library]);
 	});
 
+	it('a Library that uses another one ($Use) brings it in first: its Components and Services are there for the Components of the first', async function () {
+		var base = unique('BaseKit');
+		var top = unique('TopKit');
+		var root = unique('ChainRoot');
+		var ready = false;
+		var application;
+
+		Elemenx.Library(base, {$Root: '/library-contracts', $Locales: {URL: 'locales/{language}.json', Languages: ['en']}});
+		Elemenx.Library(top, {$Root: '/library-chain', $Use: [base]});
+		Elemenx.Component(root, {$Template: '<main class="chain-root"><ChainCard /></main>'});
+
+		application = Elemenx.Application(unique('ChainApplication'), {
+			$Component: root,
+			$Mount: '#mount',
+			$Use: top,
+			$OnReady: function () {
+				ready = true;
+			}
+		});
+
+		applications.push(application);
+
+		expect(await waitFor(function () {
+			return ready && document.querySelector('.chain-card .library-greeting');
+		}, 4000)).toBeTruthy();
+
+		expect(document.querySelector('.chain-greeting').textContent).toBe('Hello, Chain');
+		expect(document.querySelector('.chain-card .library-greeting').textContent).toBe('Hello, Bo');
+
+		/* What it names, as it named it. */
+		expect(application.$Libraries()).toEqual([top]);
+	});
+
+	it('the system Libraries stand each on the ones before it: Common, UI, Graphics, Gaming', function () {
+		expect(Elemenx.Library('ElemenxCommon').$Use).toEqual([]);
+		expect(Elemenx.Library('ElemenxUI').$Use).toEqual(['ElemenxCommon']);
+		expect(Elemenx.Library('ElemenxGraphics').$Use).toEqual(['ElemenxUI']);
+		expect(Elemenx.Library('ElemenxGaming').$Use).toEqual(['ElemenxGraphics']);
+	});
+
+	it('refuses a Library that uses itself, by others or not', function () {
+		var one = unique('One');
+		var two = unique('Two');
+		var root = unique('CycleRoot');
+
+		Elemenx.Library(one, {$Root: '/library-contracts', $Use: [two]});
+		Elemenx.Library(two, {$Root: '/library-chain', $Use: [one]});
+		Elemenx.Component(root, {$Template: '<main class="cycle-root">ready</main>'});
+
+		expect(function () {
+			applications.push(Elemenx.Application(unique('CycleApplication'), {
+				$Component: root,
+				$Mount: '#mount',
+				$Use: one
+			}));
+		}).toThrow('Elemenx Library uses itself: ' + one + ' > ' + two + ' > ' + one);
+		expect(document.querySelector('.cycle-root')).toBe(null);
+	});
+
+	it('refuses two Libraries that define the same name: which one is found would depend on their order', async function () {
+		var one = unique('Same');
+		var two = unique('Again');
+		var root = unique('SameRoot');
+		var errors = [];
+		var application;
+
+		Elemenx.Library(one, {$Root: '/library-contracts'});
+		Elemenx.Library(two, {$Root: '/library-contracts', $Use: [one]});
+		Elemenx.Component(root, {$Template: '<main class="same-root">ready</main>'});
+
+		application = Elemenx.Application(unique('SameApplication'), {
+			$Component: root,
+			$Mount: '#mount',
+			$Use: two,
+			$OnError: function (args) {
+				errors.push(args.Error);
+			}
+		});
+
+		applications.push(application);
+
+		expect(await waitFor(function () {
+			return errors.length;
+		}, 4000)).toBeTruthy();
+
+		expect(errors[0].message).toContain('Elemenx Library ' + two + ' defines ');
+		expect(errors[0].message).toContain(', which ' + one + ' defines too');
+	});
+
 	it('Elemenx.Library gives a definition back by its name, null for none, and refuses the wrong arguments', function () {
 		var name = unique('Defined');
 		var definition = {$Root: '/somewhere'};

@@ -65,6 +65,13 @@ function read (file) {
 	}
 }
 
+/* The file of a Service or a Directive of a Library: in its own folder (services/Math/Math.js), or one of its kind. */
+function ownFile (folder, name) {
+	var own = path.join(folder, name, name + '.js');
+
+	return exists(own) ? own : path.join(folder, name + '.js');
+}
+
 function exists (file) {
 	try {
 		return fs.statSync(file).isFile();
@@ -378,7 +385,18 @@ function metaFiles (roots, given) {
 		});
 	});
 
-	/* The copy the extension carries, the Library of its version with its sources (a project with the builds of dist alone has none). */
+	/* The copies the extension carries, the Libraries of its version with their sources (a project with the builds of dist alone has none). */
+	if (!found.length) {
+		try {
+			fs.readdirSync(path.join(__dirname, 'libraries')).forEach(function (name) {
+				add(path.join(__dirname, 'libraries', name, 'data', 'meta.json'));
+			});
+		}
+		catch (error) {
+			/* An extension of a version before the Libraries were split carries one, in library. */
+		}
+	}
+
 	if (!found.length)
 		add(path.join(__dirname, 'library', 'data', 'meta.json'));
 
@@ -438,7 +456,7 @@ function Create (options) {
 			});
 
 			(data.Services || []).forEach(function (service) {
-				var source = path.join(base, 'services', service.Name + '.js');
+				var source = ownFile(path.join(base, 'services'), service.Name);
 
 				library.Services[lower(service.Name)] = {Name: service.Name, Description: service.Description || '', Methods: (service.Methods || []).map(function (method) {
 					return {Name: String(method).replace(/\(.*$/, ''), Signature: method};
@@ -446,7 +464,9 @@ function Create (options) {
 			});
 
 			(data.Directives || []).forEach(function (directive) {
-				library.Directives[lower(directive.Name)] = {Name: directive.Name, Description: directive.Description || '', File: fileOf(path.join(base, 'directives'), directive.Name + '.js')};
+				var folder = fileOf(path.join(base, 'directives'), directive.Name);
+
+				library.Directives[lower(directive.Name)] = {Name: directive.Name, Description: directive.Description || '', File: (folder && fileOf(folder, directive.Name + '.js')) || fileOf(path.join(base, 'directives'), directive.Name + '.js')};
 			});
 		});
 	}

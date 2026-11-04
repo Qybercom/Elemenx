@@ -15,4 +15,4 @@ In a worker, this.$Service(name) of a member is what the pool carries of that Se
 
 ## Tests
 
-- [Workers runs the methods of Services in workers made of their source, and in the page when it cannot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4123) — `tests/regression/library-scene.test.js`
+- [Workers runs the methods of Services in workers made of their source, and in the page when it cannot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3961) — `tests/regression/library-scene.test.js`

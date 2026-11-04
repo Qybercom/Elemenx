@@ -1,0 +1,1 @@
+Выбор валюты с поиском: каждая валюта ISO 4217 сервиса Currencies или только перечисленные в Codes (['EUR', 'USD']), каждая с кодом, символом и названием на языке страницы (Locale меняет его). Value — код (по умолчанию 'USD'). Placeholder, Size, Shape, Name, Disabled и Invalid — как в Select. События: change (код).

@@ -11,7 +11,7 @@ Elemenx.Application('ElemenxDocs', {
 	$Component: 'DocsLayout',
 	$Root: 'application',
 	$Mount: 'body',
-	$Use: ['ElemenxUI'],
+	$Use: ['ElemenxGaming'],
 	$Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']},
 	$Router: {
 		NotFound: 'DocsPage',

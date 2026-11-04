@@ -1,0 +1,12 @@
+{
+	"ui": {
+		"chatComposer": {
+			"attach": "Прикрепить",
+			"expressions": "Эмодзи и стикеры",
+			"message": "Сообщение",
+			"placeholder": "Напишите сообщение…",
+			"send": "Отправить",
+			"suggestions": "Подсказки"
+		}
+	}
+}

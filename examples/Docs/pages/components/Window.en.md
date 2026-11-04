@@ -119,4 +119,4 @@ A window over the page or over its container: a header with its Title (and an Ov
 - [accepts only messages from the attached Window and configured origin](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L475) — `tests/regression/messaging.test.js`
 - [owner-aware $Messaging.Window is destroyed with its Component](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L510) — `tests/regression/messaging.test.js`
 
-+4 more in the same files
++5 more in the same files

@@ -17,9 +17,9 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:Terrain', 'GameScene', 'GameObject']);
+		Use(['service:SceneTerrainGenerator', 'Scene', 'SceneObject']);
 
-		terrain = Elemenx.Service('Terrain');
+		terrain = Elemenx.Service('SceneTerrainGenerator');
 	});
 
 	beforeEach(function () {
@@ -166,7 +166,7 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 		expect(terrain.SketchChanged(before, after)).toEqual([[90, 90, 110, 110], [190, 90, 210, 110], [-178, -28, -122, 28]]);
 		expect(terrain.SketchChanged(after, after)).toEqual([]);
 
-		terrain.Work().Run('Terrain', 'Piece', ['Flat', options, null, [190, 100, 40, 8]], function (error, piece) {
+		terrain.Work().Run('SceneTerrainGenerator', 'Piece', ['Flat', options, null, [190, 100, 40, 8]], function (error, piece) {
 			worked = error || piece;
 		});
 
@@ -179,7 +179,7 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 
 	it('makes a ground again only where its sketch changed: the same ground, its squares there made again, what stands there set on it again', async function () {
 		var ready = null;
-		var component = Elemenx.Component(unique('SketchHost'), {$Template: '<div style="width: 320px; height: 200px"><GameScene Paused="true" Quality="low" Labels="false" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="600" Height="4" Water="0" Scale="300" Ridges="0" Seed="sketch" /></GameScene></div>', Ready: function (space) {
+		var component = Elemenx.Component(unique('SketchHost'), {$Template: '<div style="width: 320px; height: 200px"><Scene Paused="true" Quality="low" Labels="false" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="600" Height="4" Water="0" Scale="300" Ridges="0" Seed="sketch" /></Scene></div>', Ready: function (space) {
 			ready = space;
 		}})();
 		var scene;
@@ -213,7 +213,7 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 
 			engine.Frame(now += 33);
 
-			return Elemenx.Service('Terrain').Work().Waiting() === 0 && Object.keys(inner.Ground.Nodes).length > 8;
+			return Elemenx.Service('SceneTerrainGenerator').Work().Waiting() === 0 && Object.keys(inner.Ground.Nodes).length > 8;
 		}, 20000);
 
 
@@ -269,7 +269,7 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 
 			return near.every(function (key) {
 				return !ground.Nodes[key] || !ground.Nodes[key].Stale;
-			}) && Elemenx.Service('Terrain').Work().Waiting() === 0;
+			}) && Elemenx.Service('SceneTerrainGenerator').Work().Waiting() === 0;
 		}, 20000);
 
 		/* What is drawn now is of the new sketch, the square under the hill among it. */
@@ -327,7 +327,7 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 
 			engine.Frame(now += 33);
 
-			return Elemenx.Service('Terrain').Work().Waiting() === 0 && inner.Objects.post.World[1] > 4;
+			return Elemenx.Service('SceneTerrainGenerator').Work().Waiting() === 0 && inner.Objects.post.World[1] > 4;
 		}, 30000);
 
 		/* What stands on the hill stands on it now. */

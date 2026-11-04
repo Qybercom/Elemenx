@@ -6,10 +6,10 @@ var owned = [];
 
 async function mount (touched) {
 	var ready = null;
-	var component = Elemenx.Component(unique('RigidHost'), {$Template: '<div style="width: 320px; height: 200px"><GameScene Quality="low" Labels="false" (ready)="Ready" (touch)="Touch">' +
-		'<GameObject ID="land" Kind="ground" Size="200" Height="6" Water="0" Seed="test" />' +
-		'<GameObject ID="day" Kind="sun" Time="12" Latitude="45" />' +
-	'</GameScene></div>', Ready: function (space) {
+	var component = Elemenx.Component(unique('RigidHost'), {$Template: '<div style="width: 320px; height: 200px"><Scene Quality="low" Labels="false" (ready)="Ready" (touch)="Touch">' +
+		'<SceneObject ID="land" Kind="ground" Size="200" Height="6" Water="0" Seed="test" />' +
+		'<SceneObject ID="day" Kind="sun" Time="12" Latitude="45" />' +
+	'</Scene></div>', Ready: function (space) {
 		ready = space;
 	}, Touch: function (event) {
 		touched.push(event);
@@ -40,11 +40,11 @@ function frames (scene, seconds, now) {
 	}
 }
 
-describe('Contract: GameScene trait Rigid, solid things of a ground that fall and are knocked over', function () {
+describe('Contract: Scene trait Rigid, solid things of a ground that fall and are knocked over', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['GameScene', 'GameObject']);
+		Use(['Scene', 'SceneObject']);
 	});
 
 	beforeEach(function () {
@@ -110,6 +110,37 @@ describe('Contract: GameScene trait Rigid, solid things of a ground that fall an
 		expect(scene.RigidWorld().Bodies().some(function (body) {
 			return body.ID === 'crate';
 		})).toBe(false);
+	});
+
+	/* Shown where the world had it at the last step, a screen faster than the steps saw it go by in jerks. */
+	it('shows a falling crate between its last two steps, by how far the time came into the next one', async function () {
+		var scene = await mount([]);
+		var now = {At: 1000};
+		var inner;
+		var body;
+		var shown;
+
+		frames(scene, 0.1, now);
+
+		scene.Add({ID: 'crate', Kind: 'rock', Values: {X: 5, Y: 5, Lift: 6}, Traits: {Rigid: {Shape: 'box', Size: [1, 1, 1]}}});
+
+		frames(scene, 0.2, now);
+
+		inner = scene.Scene();
+		body = scene.RigidWorld().Bodies().filter(function (one) {
+			return one.ID === 'crate';
+		})[0];
+
+		/* A frame of 1/240 s: half a step of 1/120, the crate half way between where it was and where it is. */
+		inner.Last = now.At;
+
+		scene.Engine().Frame(now.At += 1000 / 240);
+
+		shown = inner.Objects.crate.Flight.At[1] + 0.5;
+
+		expect(body.Was[1]).toBeGreaterThan(body.At[1]);
+		expect(shown).toBeLessThan(body.Was[1]);
+		expect(shown).toBeGreaterThan(body.At[1]);
 	});
 
 	it('lets a walker push a ball it walks into', async function () {

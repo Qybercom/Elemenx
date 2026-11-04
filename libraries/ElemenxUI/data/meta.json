@@ -2100,75 +2100,6 @@
 			}
 		},
 		{
-			"Name": "Axes",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "move",
-			"Description": "The three axes of a view: how a world stands to the eye; a press on one tells which.",
-			"Props": [
-				{
-					"Name": "Yaw",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The turn of the view round the height, in radians."
-				},
-				{
-					"Name": "Pitch",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "How far above its middle the eye stands, in radians."
-				},
-				{
-					"Name": "Size",
-					"Type": "number",
-					"Default": 72,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its side in pixels."
-				},
-				{
-					"Name": "Labels",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Writes the letters of the axes."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "Axes",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of it for screen readers."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [
-				"axis"
-			],
-			"EventDescriptions": {
-				"axis": "An end of an axis was pressed: {Axis, Sign}."
-			},
-			"Methods": [],
-			"Sample": {
-				"Yaw": 0.6,
-				"Pitch": 0.4
-			}
-		},
-		{
 			"Name": "GameBar",
 			"Kind": "Component",
 			"Group": "game",
@@ -3132,883 +3063,6 @@
 				"Limit": 5,
 				"ScoreLabel": "Glory",
 				"Selectable": true
-			}
-		},
-		{
-			"Name": "GameTerrain",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "layout",
-			"Description": "A kind of ground of the map of a GameScene: the character of its rows, its color, its cost and whether it hides.",
-			"Props": [
-				{
-					"Name": "Key",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The character of the kind in the rows of a GameLayer."
-				},
-				{
-					"Name": "Name",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the kind: water, forest."
-				},
-				{
-					"Name": "Color",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its color."
-				},
-				{
-					"Name": "Cost",
-					"Type": "number",
-					"Default": 1,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The cost to enter a cell of it: 1 by default, Infinity blocks."
-				},
-				{
-					"Name": "Opaque",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "It hides what is behind it."
-				},
-				{
-					"Name": "Image",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A picture of a tile of it."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {
-				"Key": "~",
-				"Name": "water",
-				"Color": "#3a6fb8",
-				"Cost": "Infinity"
-			}
-		},
-		{
-			"Name": "GameLayer",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "layout",
-			"Description": "A layer of the ground of the map of a GameScene: its rows of text, a character a kind of the ground.",
-			"Props": [
-				{
-					"Name": "Name",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the layer."
-				},
-				{
-					"Name": "Rows",
-					"Type": "json",
-					"Default": [],
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The rows, when they are not inside it."
-				}
-			],
-			"Slots": [],
-			"Container": true,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {
-				"Name": "ground"
-			}
-		},
-		{
-			"Name": "GameObject",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "shapes",
-			"Description": "An object of a game of any kind: its Kind gives its traits and parts, every other attribute is a field of it.",
-			"Props": [
-				{
-					"Name": "ID",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The ID of the object."
-				},
-				{
-					"Name": "Kind",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its kind (the Kinds Service): planet, station, fleet, tree, or one of your own."
-				},
-				{
-					"Name": "Name",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its name."
-				},
-				{
-					"Name": "Part",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The part of its parent it changes (the part of that ID of the kind of the parent)."
-				},
-				{
-					"Name": "Parent",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "What it goes round or belongs to, when not the object it is declared in."
-				},
-				{
-					"Name": "Team",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its team."
-				},
-				{
-					"Name": "X",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its place across (a cell of a map)."
-				},
-				{
-					"Name": "Y",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its place down (a cell of a map)."
-				},
-				{
-					"Name": "Width",
-					"Type": "number",
-					"Default": 1,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The cells it takes across."
-				},
-				{
-					"Name": "Height",
-					"Type": "number",
-					"Default": 1,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The cells it takes down."
-				},
-				{
-					"Name": "Color",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its color."
-				},
-				{
-					"Name": "Image",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A picture of it, standing on its cell."
-				},
-				{
-					"Name": "Blocks",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "No way through it."
-				},
-				{
-					"Name": "Opaque",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "It hides what is behind it."
-				}
-			],
-			"Slots": [],
-			"Container": true,
-			"Children": [
-				"GameObject"
-			],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {
-				"Kind": "planet",
-				"Name": "Earth"
-			}
-		},
-		{
-			"Name": "GameScene",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "star",
-			"Description": "The scene of a game in 3D: objects of any kind with their traits and parts; the setting space brings a star system on Kepler orbits, stations and fleets, with a landing on the surfaces of its bodies; the setting terrain a ground of noise and its walkers.",
-			"Props": [
-				{
-					"Name": "Map",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A map of cells: its JSON ({Width, Height, Projection, Terrain, Layers, Objects}), or the URL of a JSON of its own or of Tiled."
-				},
-				{
-					"Name": "Projection",
-					"Type": "select",
-					"Default": "",
-					"Options": [
-						"",
-						"isometric",
-						"orthogonal"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "A map from above (orthogonal) or at an angle (isometric); the one of the map by default."
-				},
-				{
-					"Name": "Fog",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The fog of war of a map: what the team does not see is hidden, what it explored is dimmed."
-				},
-				{
-					"Name": "Grid",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Draws the lines of the cells of a map."
-				},
-				{
-					"Name": "Minimap",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Shows the whole map in a corner."
-				},
-				{
-					"Name": "X",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The point of a map at the left of the view (null: the map in the middle)."
-				},
-				{
-					"Name": "Y",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The point of a map at the top of the view."
-				},
-				{
-					"Name": "Zoom",
-					"Type": "number",
-					"Default": 1,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The scale of the view of a map."
-				},
-				{
-					"Name": "MinZoom",
-					"Type": "number",
-					"Default": 0.25,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The smallest zoom of a map."
-				},
-				{
-					"Name": "MaxZoom",
-					"Type": "number",
-					"Default": 4,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The largest zoom of a map."
-				},
-				{
-					"Name": "Biome",
-					"Type": "json",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "On a ground: what it looks like and what grows on it, by itself (the Biomes Service: temperate, taiga, tundra, desert, savanna, swamp, alien)."
-				},
-				{
-					"Name": "Setting",
-					"Type": "select",
-					"Default": "space",
-					"Options": [
-						"space",
-						"terrain"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers)."
-				},
-				{
-					"Name": "System",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}."
-				},
-				{
-					"Name": "Seed",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A whole star system made of a seed (always the same for the same seed)."
-				},
-				{
-					"Name": "Systems",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Systems of the application for traits of its own: {Trait: {Update(object, scene), Draw(object, scene)}}."
-				},
-				{
-					"Name": "Time",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The day of the scene."
-				},
-				{
-					"Name": "Speed",
-					"Type": "number",
-					"Default": 1,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The days of the scene a second."
-				},
-				{
-					"Name": "Capture",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "With a walker under the keys (Control), a press takes the pointer: the mouse turns the view, Escape gives it back."
-				},
-				{
-					"Name": "Person",
-					"Type": "select",
-					"Default": "third",
-					"Options": [
-						"third",
-						"first",
-						"shoulder"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "Where the view of a walker stands: behind it (third), in its eyes (first, its head hidden but its body and what it holds seen) or over its shoulder. V changes it while the pointer is taken."
-				},
-				{
-					"Name": "Shoulder",
-					"Type": "select",
-					"Default": "right",
-					"Options": [
-						"right",
-						"left"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "Over which shoulder the view stands. B changes it while the pointer is taken."
-				},
-				{
-					"Name": "Axes",
-					"Type": "select",
-					"Default": "",
-					"Options": [
-						"",
-						"top-left",
-						"top-right",
-						"bottom-left",
-						"bottom-right"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "The corner where the Axes of the view stand, none when empty; a press on one looks along it."
-				},
-				{
-					"Name": "Origin",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Draws the three axes of the world at its middle."
-				},
-				{
-					"Name": "FreeLook",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A walker that stands does not turn with the view, so it can be looked at from all sides: it comes round when it sets off."
-				},
-				{
-					"Name": "DaySeconds",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The seconds a day of 24 hours takes, on a body and from space alike, however fast the orbits go (0: as Speed says)."
-				},
-				{
-					"Name": "SurfaceSpeed",
-					"Type": "number",
-					"Default": 0.008333333333333333,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The days a second on the surface of a body (1/120: a day of two minutes)."
-				},
-				{
-					"Name": "Shadows",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The shadows of a sun on a ground, a surface and a model near the view (true)."
-				},
-				{
-					"Name": "Quality",
-					"Type": "select",
-					"Default": "",
-					"Options": [
-						"",
-						"low",
-						"medium",
-						"high",
-						"ultra"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "What the light costs: empty chooses by the graphics card and steps down while frames are late."
-				},
-				{
-					"Name": "Pipeline",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The render graph of the Blueprints Service that makes the picture of a frame (high, ultra and medium): its passes (Scene, Clouds, Occlusion, Air, Frames, Mirror, Rays, Exposure, Bokeh, Bloom, Picture, Shader: a pass graph of its own) up to Present; empty: PipelineGraph(), the passes of the library."
-				},
-				{
-					"Name": "PipelineParameters",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The values of the parameters of the Pipeline, by key."
-				},
-				{
-					"Name": "Flare",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "How strongly the rings and the glow a lens makes of the sun show, at high and ultra: 0 to 2 (true is 1)."
-				},
-				{
-					"Name": "Weather",
-					"Type": "select",
-					"Default": "clear",
-					"Options": [
-						"clear",
-						"cloudy",
-						"overcast",
-						"rain",
-						"storm",
-						"snow",
-						"fog",
-						"changing"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "What the air of a ground does; it changes in a few seconds, as a front comes; changing goes from one to the next by itself."
-				},
-				{
-					"Name": "Wind",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "How strong the wind is, 0 to 4, for clouds, rain, grass and trees (empty: as the weather has it)."
-				},
-				{
-					"Name": "WindWay",
-					"Type": "number",
-					"Default": 70,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Where the wind blows to: an azimuth in degrees."
-				},
-				{
-					"Name": "Front",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The seconds a change of the weather takes."
-				},
-				{
-					"Name": "View",
-					"Type": "select",
-					"Default": "",
-					"Options": [
-						"",
-						"top",
-						"isometric"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "A ground seen in parallel rays, as a game of two dimensions: from above or at an angle (empty: in perspective)."
-				},
-				{
-					"Name": "Paused",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Holds the time."
-				},
-				{
-					"Name": "Loader",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Shows how much of the scene has come; a slot named loading takes its place."
-				},
-				{
-					"Name": "Focus",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The ID of the object in the middle of the view."
-				},
-				{
-					"Name": "Selected",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The ID of the selected object."
-				},
-				{
-					"Name": "Orbits",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Draws the orbits."
-				},
-				{
-					"Name": "Labels",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Shows the names of the objects."
-				},
-				{
-					"Name": "Exposure",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "What a view lets in: a number holds it, empty adapts to the light as an eye does."
-				},
-				{
-					"Name": "Bokeh",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The depth of field, 0 to 1: how wide the lens is open; what is far from the focus is blurred, a bright point of it a disc."
-				},
-				{
-					"Name": "BokehFocus",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The distance in focus; empty: the hero, or what the middle of the view shows, followed slowly."
-				},
-				{
-					"Name": "Details",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Shows a card of the selected object."
-				},
-				{
-					"Name": "Background",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Draws the stars far away."
-				},
-				{
-					"Name": "Cosmos",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "What lies far behind a system, made of a seed: nebula, pillars, galaxy, galaxies, cluster, void, or {Kind, Seed, Colors, Gas, Dust, Stars, Pillars, Band, Galaxies, Clusters, Beacon}: a kind is a set of these amounts, and what is told comes on top of it."
-				},
-				{
-					"Name": "Scale",
-					"Type": "select",
-					"Default": "compressed",
-					"Options": [
-						"compressed",
-						"real"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "Large bodies and short distances (compressed), or their real sizes."
-				},
-				{
-					"Name": "Team",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The team of the player."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the scene for screen readers."
-				}
-			],
-			"Slots": [
-				"hud",
-				"loading",
-				"screens"
-			],
-			"Container": true,
-			"Children": [
-				"GameObject",
-				"GameTerrain",
-				"GameLayer"
-			],
-			"Current": "",
-			"Events": [
-				"ready",
-				"select",
-				"focus",
-				"person",
-				"loading",
-				"shoulder",
-				"arrive",
-				"load",
-				"order",
-				"cell",
-				"view",
-				"land",
-				"takeoff",
-				"travel",
-				"enter",
-				"active",
-				"leave",
-				"action",
-				"touch",
-				"error"
-			],
-			"EventDescriptions": {
-				"ready": "The scene is ready: the component itself, to call its methods.",
-				"select": "The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).",
-				"focus": "The view moved to an object: {ID}.",
-				"person": "V took the view of a walker to another place: third, first or shoulder.",
-				"loading": "What the scene waits for came a step nearer: {Part}, up to 100.",
-				"shoulder": "B took the view over another shoulder: right or left.",
-				"arrive": "An object reached where it was sent: {ID, At} (with a map, X and Y too).",
-				"load": "A map was loaded: {Width, Height} in cells.",
-				"order": "The selected units of a map were ordered: {Kind (move, attack or stop), IDs, X, Y, Target}.",
-				"cell": "A cell of a map was pressed: {X, Y, Button, Object}, the object on it or null.",
-				"view": "The view of a map moved or zoomed: {X, Y, Zoom}.",
-				"land": "The view went down to the surface of a body: {ID}.",
-				"takeoff": "The view went back up to space: {ID}.",
-				"travel": "A ship on its way far at once (Travel, H or J) came to a phase: {ID, Kind (warp or jump), Phase (enter, inside, exit, done)}.",
-				"enter": "A walker, a vehicle or the hero came into a trigger: {Trigger (the trigger itself: ID, Inside(), Action(name, data), Enable(on)), ID, Object}.",
-				"active": "One stays in a trigger, every Every seconds of it: {Trigger, ID, Object}.",
-				"leave": "One went out of a trigger, or was removed: {Trigger, ID, Object}.",
-				"action": "A trigger was sent an action (Action of the trigger): {Trigger, Name, Data}.",
-				"touch": "Two solid things began to touch (trait Rigid): {ID, With (null: the ground), At, Normal, Impulse}.",
-				"error": "There is no WebGL2 ({Reason: webgl2}), or a map could not be loaded (the error)."
-			},
-			"Methods": [
-				"Trigger(id)",
-				"TriggerActions(actions)",
-				"ZonesAt(x, z)",
-				"Push(id, impulse, at)",
-				"CastRay(from, direction, max)",
-				"RigidWorld()",
-				"Burst(type, place, options)",
-				"PipelineGraph()",
-				"EffectGraph(name)",
-				"Effects(types)",
-				"MountsOf(id, kind)",
-				"Travel(id, kind, options, callback)",
-				"OpenPart(id, name, amount)",
-				"CosmosKinds()",
-				"Add(kind, props)",
-				"Change(id, changes)",
-				"Remove(id)",
-				"Attach(parent, object)",
-				"Detach(id)",
-				"Get(id)",
-				"Objects(filter)",
-				"Describe(id)",
-				"Position(id)",
-				"Select(id)",
-				"Selection()",
-				"FocusOn(id)",
-				"Control(id)",
-				"Move(id, target)",
-				"Play(id, clip, callback)",
-				"Now()",
-				"SetTime(days)",
-				"ToScreen(id)",
-				"Pick(clientX, clientY, all)",
-				"Viewpoint()",
-				"SetViewpoint(view)",
-				"Project(point)",
-				"Ray(clientX, clientY)",
-				"GroundAt(clientX, clientY)",
-				"OrbitAt(id, clientX, clientY)",
-				"Save(options)",
-				"Load(saved)",
-				"Land(id, options)",
-				"TakeOff()",
-				"Surface()",
-				"Supported()",
-				"Order(ids, target, kind)",
-				"Stop(ids)",
-				"Cell(x, y)",
-				"Paint(x, y, key, layer)",
-				"Near(x, y, radius, filter)",
-				"Route(from, to)",
-				"PathGrid()",
-				"FogOfWar()",
-				"CenterOn(x, y)",
-				"ToCell(clientX, clientY)"
-			],
-			"Sample": {
-				"Seed": "kepler"
 			}
 		},
 		{
@@ -7583,265 +6637,6 @@
 			},
 			"Methods": [],
 			"Sample": {}
-		},
-		{
-			"Name": "Drawing",
-			"Kind": "Component",
-			"Group": "media",
-			"Icon": "brush",
-			"Description": "A vector drawing: shapes, lines, arrows, freehand brushes and texts on layers, with groups and an export to SVG and PNG.",
-			"Props": [
-				{
-					"Name": "Value",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The model: {Width, Height, Background, Layers: [{ID, Name, Visible, Locked, Items}]}."
-				},
-				{
-					"Name": "Tool",
-					"Type": "select",
-					"Default": "select",
-					"Options": [
-						"select",
-						"rect",
-						"ellipse",
-						"line",
-						"arrow",
-						"path",
-						"text",
-						"eraser"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "The tool in hand."
-				},
-				{
-					"Name": "Brush",
-					"Type": "select",
-					"Default": "pen",
-					"Options": [
-						"pen",
-						"marker",
-						"highlighter",
-						"calligraphy"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "The brush of the freehand tool."
-				},
-				{
-					"Name": "Stroke",
-					"Type": "text",
-					"Default": "#1f2328",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The color of the lines of new items."
-				},
-				{
-					"Name": "Fill",
-					"Type": "text",
-					"Default": "none",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The color inside new shapes (none: no fill)."
-				},
-				{
-					"Name": "StrokeWidth",
-					"Type": "number",
-					"Default": 3,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The width of the lines in the units of the drawing."
-				},
-				{
-					"Name": "Layer",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The ID of the layer new items go into."
-				},
-				{
-					"Name": "Toolbar",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Shows the tools, the colors and the actions over it."
-				},
-				{
-					"Name": "ReadOnly",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Shows the drawing alone."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "What it shows, for screen readers."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [
-				"change",
-				"select"
-			],
-			"EventDescriptions": {
-				"change": "The drawing changed: its model.",
-				"select": "The selection changed: the IDs of the items selected."
-			},
-			"Methods": [
-				"Undo()",
-				"Redo()",
-				"Delete()",
-				"Group()",
-				"Ungroup()",
-				"Forward()",
-				"Backward()",
-				"Select(ids)",
-				"Selected()",
-				"Add(item, layer)",
-				"Clear()",
-				"SVG()",
-				"PNG(callback, scale)"
-			],
-			"Sample": {
-				"Value": {
-					"Width": 320,
-					"Height": 200,
-					"Layers": [
-						{
-							"ID": "layer-1",
-							"Name": "Layer 1",
-							"Visible": true,
-							"Locked": false,
-							"Items": [
-								{
-									"ID": "a",
-									"Type": "rect",
-									"X": 30,
-									"Y": 30,
-									"W": 120,
-									"H": 80,
-									"Stroke": "#3f6c9e",
-									"Fill": "#dbe7f5",
-									"Width": 2
-								},
-								{
-									"ID": "b",
-									"Type": "ellipse",
-									"X": 170,
-									"Y": 60,
-									"W": 110,
-									"H": 90,
-									"Stroke": "#c0392b",
-									"Fill": "none",
-									"Width": 3
-								}
-							]
-						}
-					]
-				}
-			}
-		},
-		{
-			"Name": "DrawingLayers",
-			"Kind": "Component",
-			"Group": "media",
-			"Icon": "layers",
-			"Description": "The layers of a Drawing: shown or hidden, locked, named, ordered.",
-			"Props": [
-				{
-					"Name": "Value",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The model of the Drawing."
-				},
-				{
-					"Name": "Layer",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The ID of the current layer."
-				},
-				{
-					"Name": "ReadOnly",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Shows the layers without letting them change."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [
-				"change",
-				"select"
-			],
-			"EventDescriptions": {
-				"change": "The layers changed: the model of the drawing.",
-				"select": "A layer was chosen: its ID."
-			},
-			"Methods": [],
-			"Sample": {
-				"Value": {
-					"Width": 320,
-					"Height": 200,
-					"Layers": [
-						{
-							"ID": "back",
-							"Name": "Background",
-							"Visible": true,
-							"Locked": true,
-							"Items": [
-								{
-									"ID": "a",
-									"Type": "rect",
-									"X": 0,
-									"Y": 0,
-									"W": 320,
-									"H": 200
-								}
-							]
-						},
-						{
-							"ID": "sketch",
-							"Name": "Sketch",
-							"Visible": true,
-							"Locked": false,
-							"Items": []
-						}
-					]
-				},
-				"Layer": "sketch"
-			}
 		},
 		{
 			"Name": "MediaCard",
@@ -13889,7 +12684,7 @@
 			"Kind": "Component",
 			"Group": "overlays",
 			"Icon": "trophy",
-			"Description": "Shows the achievements of the Achievements Service, one at a time, over the whole page, as a game console does: a round badge pops up, opens into a band with the title (a light runs over it), and folds back into the badge before it goes.",
+			"Description": "Shows the achievements of the AchievementQueue Service, one at a time, over the whole page, as a game console does: a round badge pops up, opens into a band with the title (a light runs over it), and folds back into the badge before it goes.",
 			"Props": [
 				{
 					"Name": "Placement",
@@ -13899,6 +12694,63 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "Where the achievements show: at the bottom or the top of the middle of the viewport."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "AchievementList",
+			"Kind": "Component",
+			"Group": "data",
+			"Icon": "trophy",
+			"Description": "The showcase of the achievements of the Achievements Service: badges, titles, points and progress, locked and secret ones too.",
+			"Props": [
+				{
+					"Name": "Group",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the achievements of one group only; empty: all of them."
+				},
+				{
+					"Name": "Filter",
+					"Type": "select",
+					"Default": "all",
+					"Options": [
+						"all",
+						"unlocked",
+						"locked"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "all, unlocked or locked ones."
+				},
+				{
+					"Name": "Summary",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Heads it with how many are unlocked and their points."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of it for screen readers."
 				}
 			],
 			"Slots": [],
@@ -14348,6 +13200,67 @@
 				"Label": "CPU",
 				"Unit": "%",
 				"ShowRange": true
+			}
+		},
+		{
+			"Name": "FPSMeter",
+			"Kind": "Component",
+			"Group": "display",
+			"Icon": "chart",
+			"Description": "How smoothly the page draws: frames a second, the times of frames, a graph and the numbers of what draws.",
+			"Props": [
+				{
+					"Name": "Corner",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"top-left",
+						"top-right",
+						"bottom-left",
+						"bottom-right"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Over a corner of the nearest positioned element; empty: in the page."
+				},
+				{
+					"Name": "Graph",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Draws the times of the last frames."
+				},
+				{
+					"Name": "Sources",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the numbers what draws tells (a Scene: its CPU and GPU milliseconds)."
+				},
+				{
+					"Name": "Every",
+					"Type": "number",
+					"Default": 500,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How often it changes, ms."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"Graph": true
 			}
 		},
 		{
@@ -16342,6 +15255,15 @@
 					"Description": "Shows the graph alone: blocks still move, nothing else changes."
 				},
 				{
+					"Name": "Errors",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What its owner found wrong as it used the graph: [{Block, Line, Message}] (a Scene tells them in its event shader), marked on the blocks."
+				},
+				{
 					"Name": "Label",
 					"Type": "text",
 					"Default": "",
@@ -16457,270 +15379,6 @@
 					]
 				}
 			}
-		},
-		{
-			"Name": "SceneEditor",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "layers",
-			"Description": "An editor of a game scene as Unreal edits a level: objects, kinds to add, the view with a gizmo, fields, blueprint parameters, Play.",
-			"Props": [
-				{
-					"Name": "Value",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The document: {Version, Name, Setting, Scene (the recipe of GameScene.Save)}."
-				},
-				{
-					"Name": "Setting",
-					"Type": "select",
-					"Default": "ground",
-					"Options": [
-						"ground",
-						"space"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "What a new document is: a ground under a sun, or a star system."
-				},
-				{
-					"Name": "Kinds",
-					"Type": "json",
-					"Default": [
-						"unit",
-						"effect",
-						"glass",
-						"mirror",
-						"tree",
-						"rock",
-						"house"
-					],
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The kinds of objects to add on a ground."
-				},
-				{
-					"Name": "SpaceKinds",
-					"Type": "json",
-					"Default": [
-						"star",
-						"planet",
-						"moon",
-						"belt",
-						"ring",
-						"station",
-						"outpost",
-						"craft",
-						"fleet"
-					],
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The kinds of objects to add in a star system."
-				},
-				{
-					"Name": "Models",
-					"Type": "json",
-					"Default": [],
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Models of the Models Service to place on a ground (an ObjectEditor's), each as the kind its Type fits: a unit, a house, a tree, a rock or a thing."
-				},
-				{
-					"Name": "Storage",
-					"Type": "text",
-					"Default": "elemenx-scene-editor",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The key of localStorage Save keeps the document under."
-				},
-				{
-					"Name": "SnapMove",
-					"Type": "number",
-					"Default": 0.5,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The step of a move with Snap, in metres."
-				},
-				{
-					"Name": "SnapTurn",
-					"Type": "number",
-					"Default": 15,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The step of a turn with Snap, in degrees."
-				},
-				{
-					"Name": "SnapScale",
-					"Type": "number",
-					"Default": 0.1,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The step of a scale with Snap."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "What it shows, for screen readers."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [
-				"change",
-				"select",
-				"play"
-			],
-			"EventDescriptions": {
-				"change": "The document changed: {Version, Name, Scene}.",
-				"select": "The selection changed: {ID}.",
-				"play": "Play or Stop: {Playing}."
-			},
-			"Methods": [
-				"Document()",
-				"Load(document)",
-				"Save()",
-				"Restore()",
-				"Export()",
-				"Import(text)",
-				"Select(id)",
-				"Add(kind, props)",
-				"Remove(id)",
-				"Undo()",
-				"Redo()",
-				"Play()",
-				"Stop()",
-				"Scene()"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "ObjectEditor",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "shapes",
-			"Description": "An editor of a model made of shapes: parts in pieces with tags, mirrors and variants of a seed, a gizmo, the recipe of Models and its files glb, fbx and obj.",
-			"Props": [
-				{
-					"Name": "Value",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The document: {Version, Name, Recipe (a recipe of data of Models: Parts, Pieces, Group, Type, Size...)}."
-				},
-				{
-					"Name": "Variant",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The variant shown: 0, the parts as they are; the others varied by their seed."
-				},
-				{
-					"Name": "Generator",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A generator of models: function (description, callback (error, recipe))."
-				},
-				{
-					"Name": "Storage",
-					"Type": "text",
-					"Default": "elemenx-object-editor",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The key of localStorage Save keeps the document under."
-				},
-				{
-					"Name": "SnapMove",
-					"Type": "number",
-					"Default": 0.05,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The step of a move with Snap, in sizes of the model."
-				},
-				{
-					"Name": "SnapTurn",
-					"Type": "number",
-					"Default": 15,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The step of a turn with Snap, in degrees."
-				},
-				{
-					"Name": "SnapScale",
-					"Type": "number",
-					"Default": 0.05,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The step of a scale with Snap."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "What it shows, for screen readers."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [
-				"change",
-				"select"
-			],
-			"EventDescriptions": {
-				"change": "The document changed: {Version, Name, Recipe}.",
-				"select": "The selected part changed: {ID}."
-			},
-			"Methods": [
-				"Document()",
-				"Load(document)",
-				"Recipe()",
-				"Save()",
-				"Restore()",
-				"Export()",
-				"Import(text)",
-				"Model(format, variant)",
-				"Download(format)",
-				"Define(name)",
-				"Select(id)",
-				"Add(shape, props)",
-				"Remove(id)",
-				"Undo()",
-				"Redo()",
-				"Generate(description, callback)",
-				"Scene()"
-			],
-			"Sample": {}
 		},
 		{
 			"Name": "Topology",
@@ -24491,102 +23149,6 @@
 			}
 		},
 		{
-			"Name": "VirtualGamepad",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "gamepad",
-			"Description": "A gamepad on the screen for the fingers: a stick, buttons and triggers; a pad of the Gamepad Service as a real one.",
-			"Props": [
-				{
-					"Name": "Buttons",
-					"Type": "json",
-					"Default": [
-						"a",
-						"b",
-						"x",
-						"y"
-					],
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The buttons it shows: a, b, x, y, lb, rb, lt, rt, start, select (a list, or a text with commas)."
-				},
-				{
-					"Name": "Right",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A second stick, at the right, to look round."
-				},
-				{
-					"Name": "Show",
-					"Type": "select",
-					"Default": "auto",
-					"Options": [
-						"auto",
-						"always",
-						"never"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "auto: where the screen is touched; always; never."
-				},
-				{
-					"Name": "Tilt",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The left stick across follows the lean of the device as a wheel."
-				},
-				{
-					"Name": "Navigate",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its buttons also move the focus and press the controls of the page, as a real pad does."
-				},
-				{
-					"Name": "Size",
-					"Type": "number",
-					"Default": 120,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The size of a stick, in pixels."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the pad for screen readers."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [
-				"button"
-			],
-			"EventDescriptions": {
-				"button": "A button went down or up: {Button, Down}."
-			},
-			"Methods": [],
-			"Sample": {
-				"Show": "always",
-				"Buttons": "a,b,x,y"
-			}
-		},
-		{
 			"Name": "EmptyState",
 			"Kind": "Component",
 			"Group": "feedback",
@@ -25400,29 +23962,6 @@
 			"Sample": {}
 		},
 		{
-			"Name": "Syntax",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The highlighting of source code: the grammars of the languages and the tokens of a text in one of them.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Register(name, grammar)",
-				"Find(name)",
-				"Languages()",
-				"Tokens(text, language)",
-				"Lines(text, language)",
-				"HTML(text, language)"
-			],
-			"Sample": {}
-		},
-		{
 			"Name": "Print",
 			"Kind": "Service",
 			"Group": "",
@@ -25471,7 +24010,7 @@
 			"Kind": "Service",
 			"Group": "",
 			"Icon": "",
-			"Description": "Gamepads (the Gamepad API, standard mapping): they work the page the way the keyboard does.",
+			"Description": "Gamepads work the page the way the keyboard does: the arrows, Enter, Escape and the focus, by the pads of InputDevices.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -25480,15 +24019,7 @@
 			"Events": [],
 			"EventDescriptions": {},
 			"Methods": [
-				"Pads()",
-				"Kind()",
-				"Label(button, kind)",
-				"Move(direction, scope)",
-				"On(name, callback)",
-				"Off(callback)",
-				"Axes()",
-				"Held(button)",
-				"Virtual(name, options)"
+				"Move(direction, scope)"
 			],
 			"Sample": {}
 		},
@@ -25540,11 +24071,11 @@
 			"Sample": {}
 		},
 		{
-			"Name": "QR",
+			"Name": "Pictures",
 			"Kind": "Service",
 			"Group": "",
 			"Icon": "",
-			"Description": "QR codes: Encode(text, level) returns the modules of the code of a text, SVG(text, options) a drawing of it, styled.",
+			"Description": "Pictures drawn by the page: an SVG drawn into a PNG.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -25553,32 +24084,7 @@
 			"Events": [],
 			"EventDescriptions": {},
 			"Methods": [
-				"Encode(text, level)",
-				"SVG(text, options)",
-				"LevelFor(options)",
-				"Raster(svg, width, height, callback)",
-				"ModulePath(x, y, shape)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Barcodes",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "Barcodes: Code 128, EAN-13, EAN-8, UPC-A, Code 39, ITF-14, DataMatrix, PDF417 and formats of its own, drawn in SVG.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Formats()",
-				"Register(name, format)",
-				"Encode(format, text, options)",
-				"SVG(format, text, options)"
+				"Raster(svg, width, height, callback)"
 			],
 			"Sample": {}
 		},
@@ -25599,29 +24105,6 @@
 				"Types()",
 				"Parse(text)",
 				"SVG(text, options)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "DataFormats",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The formats of data and of files: JSON, YAML, CSV, INI, TOML, XML, query strings and Base64 read and written, and formats of your own.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Parse(name, text, options)",
-				"Stringify(name, value, options)",
-				"Register(name, format)",
-				"Find(name)",
-				"Names()",
-				"For(file)"
 			],
 			"Sample": {}
 		},
@@ -25680,11 +24163,11 @@
 			"Sample": {}
 		},
 		{
-			"Name": "Achievements",
+			"Name": "AchievementQueue",
 			"Kind": "Service",
 			"Group": "",
 			"Icon": "",
-			"Description": "The achievements of an Application (a game, a course, a profile...), shown one after another by an AchievementHost (place one in the layout of the Application, as a ToastHost).",
+			"Description": "The achievements shown one after another by an AchievementHost: each one the Achievements Service unlocks, and any other.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -25700,27 +24183,6 @@
 				"Queue()",
 				"OnChange(callback)",
 				"OffChange(callback)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Diff",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The differences between two texts (the algorithm of Myers: the shortest list of changes).",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Lines(before, after)",
-				"Words(before, after)",
-				"Hunks(lines, context)",
-				"Stats(lines)"
 			],
 			"Sample": {}
 		},
@@ -26244,24 +24706,6 @@
 			"Sample": {}
 		},
 		{
-			"Name": "Formulas",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "Formulas written as in LaTeX, drawn by the browser as MathML.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"MathML(text, display)"
-			],
-			"Sample": {}
-		},
-		{
 			"Name": "Designer",
 			"Kind": "Service",
 			"Group": "",
@@ -26343,68 +24787,6 @@
 			"Sample": {}
 		},
 		{
-			"Name": "Random",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "Random numbers of a seed: always the same numbers for the same seed.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Create(seed)",
-				"Hash(text)",
-				"Noise(seed, size)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Spatial",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "Where things are on a plane, found fast: a grid of buckets for the queries of a rectangle, a radius and the nearest.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Create(options)",
-				"Distance(x, y, thing)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Pathfinding",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The ways across a map: A*, Dijkstra and flow fields on a grid, A* on a graph of your own.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Grid(width, height, cost)",
-				"Path(grid, from, to, options)",
-				"Distances(grid, targets, options)",
-				"Flow(grid, targets, options)",
-				"Search(options)",
-				"Smooth(grid, path)"
-			],
-			"Sample": {}
-		},
-		{
 			"Name": "Layouts",
 			"Kind": "Service",
 			"Group": "",
@@ -26423,47 +24805,6 @@
 				"Justified(items, options)",
 				"Treemap(items, options)",
 				"Graph(nodes, links, options)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Signatures",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "How much a signature looks like another or like the samples of a person: a help for an interface, not a check of security.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Compare(a, b)",
-				"Enroll(samples)",
-				"Match(signature, reference, threshold)",
-				"Normalize(signature)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Calculations",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "Formulas of numbers read without eval: variables, functions, conditions.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Evaluate(text, variables, options)",
-				"Compile(text, options)",
-				"Names(text)"
 			],
 			"Sample": {}
 		},
@@ -26495,65 +24836,6 @@
 			"Sample": {}
 		},
 		{
-			"Name": "Visibility",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "What can be seen on a grid: lines, the line of sight, the field of view and the fog of war.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Line(x0, y0, x1, y1)",
-				"Sight(opaque, x0, y0, x1, y1)",
-				"Field(opaque, x, y, radius)",
-				"Fog(width, height)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "GameLoop",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The loop of a game: updates in steps of the same time, drawn once a frame.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Create(options)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "GameMaps",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The maps of GameScene: its own JSON, or a map of Tiled (.tmj), made into one form.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Normalize(map)",
-				"FromTiled(data, base)",
-				"Load(url, callback)"
-			],
-			"Sample": {}
-		},
-		{
 			"Name": "Suprematist",
 			"Kind": "Service",
 			"Group": "",
@@ -26570,482 +24852,6 @@
 				"Generate(options)",
 				"DataURL(options)",
 				"Figures(options)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Graphics3D",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The graphics of three dimensions on WebGL2: matrices, a camera, shapes of triangles and a renderer of them.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Create(canvas, options)",
-				"Camera(options)",
-				"Identity()",
-				"Multiply(a, b)",
-				"Invert(m)",
-				"Translation(x, y, z)",
-				"Rotation(axis, angle)",
-				"Scaling(x, y, z)",
-				"Compose(position, rotation, scale)",
-				"Perspective(fov, aspect, near, far)",
-				"Orthographic(left, right, bottom, top, near, far)",
-				"LookAt(eye, target, up)",
-				"NormalMatrix(m)",
-				"Apply(m, point)",
-				"Hit(ray, center, radius)",
-				"Sphere(options)",
-				"Icosphere(options)",
-				"Ring(options)",
-				"Box(options)",
-				"Cylinder(options)",
-				"Torus(options)",
-				"Plane(options)",
-				"Lathe(options)",
-				"Wedge(options)",
-				"Transform(geometry, matrix)",
-				"Merge(parts)",
-				"Displace(geometry, amount)",
-				"Normals(geometry)",
-				"Facets(geometry)",
-				"Simplify(geometry, cell)",
-				"Noise(seed)",
-				"Source(names)",
-				"CloudBlock(size)",
-				"Work()"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Astronomy",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The numbers of a star system: Kepler orbits, stars and planets, their warmth, and whole systems of a seed.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Length(value)",
-				"Period(distance, mass)",
-				"Position(orbit, time, mass)",
-				"Path(orbit, count)",
-				"Star(star)",
-				"Describe(body, context)",
-				"Color(temperature)",
-				"Generate(seed, options)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Kinds",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The kinds of the objects of a game: what they extend, what they can do (Traits) and what they are made of (Parts).",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Define(name, kind)",
-				"Get(name)",
-				"Has(name)",
-				"Names()",
-				"Resolve(name)",
-				"Make(kind, props)",
-				"Field(object, name)",
-				"Fields(kind)",
-				"Diff(object)",
-				"Restore(saved)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Terrain",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Flat(options)",
-				"Sphere(options)",
-				"Cells(options)",
-				"OnRoad(field, x, z, width)",
-				"Work()",
-				"Piece(shape, options, roads, args)",
-				"Field(shape, options)",
-				"Grid(options, side, top, steep)",
-				"Heights(field, side)",
-				"FromGrid(options, heights, side)",
-				"Sketched(sketch, base, seed)",
-				"SketchChanged(before, after)",
-				"Source(names)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Workers",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "Work of the Services of the library off the main thread: workers made of the source of their methods.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Pool(name, services, size)",
-				"Source(owner, names)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Generated",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "What is made of a seed, saved and made again: its recipe by default, the data made too when baked.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Define(kind, definition)",
-				"Kinds()",
-				"Save(kind, params, options)",
-				"Load(record)",
-				"Pack(value)",
-				"Unpack(value)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Blueprints",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "Graphs of blocks in the JSON of Flowprint, made into shaders, passes of a picture, code and flows of actions.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Node(type, definition)",
-				"Nodes(graph)",
-				"NodeOf(type)",
-				"Graph(type, definition)",
-				"Graphs()",
-				"Create(type, options)",
-				"Block(type, options)",
-				"Add(graph, type, options)",
-				"Link(graph, from, to)",
-				"Remove(graph, id)",
-				"Pin(block, key, out)",
-				"Read(json)",
-				"Write(graph)",
-				"Check(graph)",
-				"Order(graph)",
-				"Compile(graph, options)",
-				"Bake(graph)",
-				"Start(graph, context)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Archive",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "Archives made in the page: a zip of texts and bytes by their paths, to download a project or a game in one file.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Zip(files)",
-				"Crc(bytes)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Motion",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The motion of the device: its accelerometer, gyroscope and turn in space, and its lean as a controller.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Supported()",
-				"Request(callback)",
-				"Start()",
-				"Stop()",
-				"On(name, callback)",
-				"Off(callback)",
-				"State()",
-				"Tilt()",
-				"Center()"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Gltf",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "glTF 2.0 and GLB: meshes, materials, skins and animations of the models other programs make.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Parse(data, callback, options)",
-				"Load(url, callback)",
-				"Write(asset, options)",
-				"Meshopt(mode, source, count, stride, filter)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Fbx",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The files of FBX, binary and text: models with meshes, materials, pictures, skins and clips, read and written.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Read(data)",
-				"Write(asset, options)",
-				"Tree(data)",
-				"Parse(data)",
-				"Skeleton(tree)",
-				"Sample(curve, time, fallback)",
-				"Load(url, callback)",
-				"FromAsset(asset)",
-				"Binary(tree)",
-				"Text(tree)",
-				"Inflate(bytes)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "ModelFormats",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The files of models read and written in one form: glb, gltf, fbx (binary and text) and obj.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Formats()",
-				"Detect(data, name)",
-				"Read(data, options)",
-				"Parse(data, callback, options)",
-				"Load(url, callback)",
-				"Write(asset, format, options)",
-				"FromModel(model)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Sigils",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "Magic circles of a seed, as data: rings of lines, ticks, dots, arcs, runes and stars, each with a turn of its own.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Make(seed, options)",
-				"Uniforms(circle, seconds, spin)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Tracks",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "Closed race tracks of a seed: a middle line, its land, road, kerbs, barriers and stands, as data and as a model.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Make(seed, options)",
-				"Near(track, x, z, hint)",
-				"Height(track, x, z)",
-				"Under(track, x, z, hint)",
-				"Asset(track)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Physics",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "How things move, apart from what shows them: steps of one length, springs, a car on its tyres and springs, a ship in space, a world of solid bodies with ragdolls and water to float in, cloth and ropes, waves and a fluid of particles.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Steps(clock, elapsed, length, each)",
-				"Blend(from, to, part)",
-				"Spring(value, speed, target, stiffness, damping, elapsed)",
-				"Car(state, input, surface, settings, elapsed)",
-				"Gearbox(state, input, settings, gas, braking, speed, elapsed)",
-				"Hit(state, normal, depth, at, settings)",
-				"Bounce(way, normal, depth, bounce)",
-				"Ship(state, input, settings, elapsed)",
-				"World(settings)",
-				"Cloth(settings)",
-				"Rope(settings)",
-				"Waves(settings)",
-				"Fluid(settings)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Models",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The models of a game made of code: units, animals, plants, buildings and ships of pieces that move, fantasy and sci-fi, and their clips.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Names(filter)",
-				"Has(name)",
-				"Info(name)",
-				"Define(name, recipe)",
-				"Assemble(recipe, tools, random, variant)",
-				"Tagged(name, tag)",
-				"Load(name, callback)",
-				"Ready(name)",
-				"Bake(model)",
-				"Make(name, options)",
-				"Surfaces(model)",
-				"Whole(model)",
-				"Bounds(geometry)",
-				"Levels(name, options)",
-				"Pose(model, clip, time, options)",
-				"Length(model, clip)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Buildings",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "Buildings of any size made of their numbers, from a shack to a business centre: models of the Models Service.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Classes()",
-				"Options(options)",
-				"Pieces(tools, options, random)",
-				"Define(name, options)",
-				"Random(options, seed)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "Biomes",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The lands of a game: the colors of a ground, what grows on it, and villages laid out on it.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Names()",
-				"Has(name)",
-				"Get(name)",
-				"Define(name, biome)",
-				"Village(field, options)"
 			],
 			"Sample": {}
 		}
@@ -27084,75 +24890,11 @@
 			"Sample": {}
 		},
 		{
-			"Name": "resizable",
-			"Kind": "Directive",
-			"Group": "",
-			"Icon": "",
-			"Description": "*resizable=\"'right bottom'\" adds resize handles to the element: right, left, bottom, top and corner (bottom right).",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {}
-		},
-		{
 			"Name": "modal",
 			"Kind": "Directive",
 			"Group": "",
 			"Icon": "",
 			"Description": "*modal=\"Open\" opens a <dialog> element as a modal while the expression is truthy and closes it otherwise.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {}
-		},
-		{
-			"Name": "draggable",
-			"Kind": "Directive",
-			"Group": "",
-			"Icon": "",
-			"Description": "*draggable=\"{Data: item, Type: 'task', Handle: '.grip'}\" (or just *draggable=\"item\") lets the element be dragged with the pointer onto *droppable elements that accept Type.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {}
-		},
-		{
-			"Name": "droppable",
-			"Kind": "Directive",
-			"Group": "",
-			"Icon": "",
-			"Description": "*droppable=\"{Accept: ['task'], Files: true, Text: true}\" makes the element a drop target.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {}
-		},
-		{
-			"Name": "mount",
-			"Kind": "Directive",
-			"Group": "",
-			"Icon": "",
-			"Description": "*mount=\"source\" places custom content in the element: source is a DOM node (moved in), a function (called once with the element) or an object with Element or Render(container, item).",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -27260,22 +25002,6 @@
 			"Sample": {}
 		},
 		{
-			"Name": "swipe",
-			"Kind": "Directive",
-			"Group": "",
-			"Icon": "",
-			"Description": "*swipe makes an element follow a finger (a pen, or a mouse with Mouse) along an axis and tells the end of the move: *swipe, *swipe=\"'y'\" or *swipe=\"{Axis: 'x' or 'y', Threshold: 40, Mouse: false}\".",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {}
-		},
-		{
 			"Name": "tip",
 			"Kind": "Directive",
 			"Group": "",
@@ -27297,22 +25023,6 @@
 			"Group": "",
 			"Icon": "",
 			"Description": "*blur makes an element a surface of frosted glass: what is behind it blurred and seen through the tint of the surface.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {}
-		},
-		{
-			"Name": "infinite",
-			"Kind": "Directive",
-			"Group": "",
-			"Icon": "",
-			"Description": "*infinite asks for more (the event more) when the end of a list comes near: *infinite=\"{Margin: 300, Direction: 'down' or 'up', Busy: false, Done: false}\".",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -27904,13 +25614,6 @@
 			"top",
 			"top-end"
 		],
-		"elemenx-axes": [],
-		"elemenx-axes-x": [],
-		"elemenx-axes-y": [],
-		"elemenx-axes-z": [],
-		"elemenx-axes-end": [
-			"other"
-		],
 		"elemenx-game-bar": [
 			"large",
 			"low",
@@ -28090,31 +25793,6 @@
 			"up"
 		],
 		"elemenx-game-leaderboard-score": [],
-		"elemenx-game-scene": [
-			"dragging",
-			"flat",
-			"panning"
-		],
-		"elemenx-game-scene-canvas": [],
-		"elemenx-game-scene-labels": [
-			"hidden"
-		],
-		"elemenx-game-scene-label": [],
-		"elemenx-game-scene-card": [],
-		"elemenx-game-scene-card-header": [],
-		"elemenx-game-scene-card-title": [],
-		"elemenx-game-scene-card-kind": [],
-		"elemenx-game-scene-card-rows": [],
-		"elemenx-game-scene-card-row": [],
-		"elemenx-game-scene-card-actions": [],
-		"elemenx-game-scene-axes": [],
-		"elemenx-game-scene-takeoff": [],
-		"elemenx-game-scene-fallback": [],
-		"elemenx-game-scene-loading": [],
-		"elemenx-game-scene-hud": [],
-		"elemenx-game-scene-marks": [],
-		"elemenx-game-scene-minimap": [],
-		"elemenx-game-scene-screens": [],
 		"elemenx-number-controls": [],
 		"elemenx-date": [],
 		"elemenx-time": [],
@@ -28333,34 +26011,6 @@
 			"w"
 		],
 		"elemenx-cropper-size": [],
-		"elemenx-drawing": [
-			"readonly"
-		],
-		"elemenx-drawing-toolbar": [],
-		"elemenx-drawing-group": [],
-		"elemenx-drawing-tool": [
-			"active"
-		],
-		"elemenx-drawing-brush": [],
-		"elemenx-drawing-color": [],
-		"elemenx-drawing-width": [],
-		"elemenx-drawing-stage": [],
-		"elemenx-drawing-svg": [],
-		"elemenx-drawing-selection": [],
-		"elemenx-drawing-marquee": [],
-		"elemenx-drawing-handle": [],
-		"elemenx-drawing-editor": [],
-		"elemenx-drawing-layers": [],
-		"elemenx-drawing-layers-list": [],
-		"elemenx-drawing-layer": [
-			"current",
-			"hidden"
-		],
-		"elemenx-drawing-layer-name": [],
-		"elemenx-drawing-layer-toggle": [],
-		"elemenx-drawing-layer-field": [],
-		"elemenx-drawing-layer-count": [],
-		"elemenx-drawing-layers-actions": [],
 		"elemenx-media-card": [
 			"large",
 			"small"
@@ -28960,6 +26610,24 @@
 		"elemenx-achievement-points": [],
 		"elemenx-achievement-title": [],
 		"elemenx-achievement-text": [],
+		"elemenx-achievement-list": [],
+		"elemenx-achievement-list-summary": [],
+		"elemenx-achievement-list-items": [],
+		"elemenx-achievement-card": [
+			"epic",
+			"legendary",
+			"locked",
+			"rare",
+			"secret",
+			"uncommon"
+		],
+		"elemenx-achievement-card-badge": [],
+		"elemenx-achievement-card-body": [],
+		"elemenx-achievement-card-title": [],
+		"elemenx-achievement-card-text": [],
+		"elemenx-achievement-card-value": [],
+		"elemenx-achievement-card-progress": [],
+		"elemenx-achievement-card-points": [],
 		"elemenx-slider": [
 			"disabled",
 			"large",
@@ -29007,6 +26675,21 @@
 		"elemenx-meter-tick": [],
 		"elemenx-meter-center": [],
 		"elemenx-meter-content": [],
+		"elemenx-fps-meter": [
+			"bad",
+			"bottom-left",
+			"bottom-right",
+			"corner",
+			"slow",
+			"top-left",
+			"top-right"
+		],
+		"elemenx-fps-meter-head": [],
+		"elemenx-fps-meter-rate": [],
+		"elemenx-fps-meter-unit": [],
+		"elemenx-fps-meter-counts": [],
+		"elemenx-fps-meter-source": [],
+		"elemenx-fps-meter-graph": [],
 		"elemenx-knob": [
 			"active",
 			"disabled",
@@ -29218,95 +26901,9 @@
 		"elemenx-blueprint-pin": [],
 		"elemenx-blueprint-pin-name": [],
 		"elemenx-blueprint-properties": [],
-		"elemenx-blueprint-property": [],
-		"elemenx-scene-editor": [
-			"playing"
+		"elemenx-blueprint-property": [
+			"code"
 		],
-		"elemenx-scene-editor-toolbar": [],
-		"elemenx-scene-editor-group": [
-			"end"
-		],
-		"elemenx-scene-editor-tool": [
-			"active"
-		],
-		"elemenx-scene-editor-snap": [],
-		"elemenx-scene-editor-import": [],
-		"elemenx-scene-editor-time": [],
-		"elemenx-scene-editor-side": [],
-		"elemenx-scene-editor-inspector": [],
-		"elemenx-scene-editor-title": [],
-		"elemenx-scene-editor-palette": [],
-		"elemenx-scene-editor-kind": [
-			"model"
-		],
-		"elemenx-scene-editor-view": [],
-		"elemenx-scene-editor-overlay": [],
-		"elemenx-scene-editor-gizmo": [],
-		"elemenx-scene-editor-axis": [
-			"axis-x",
-			"axis-y",
-			"axis-z"
-		],
-		"elemenx-scene-editor-tip": [
-			"axis-x",
-			"axis-y",
-			"axis-z"
-		],
-		"elemenx-scene-editor-plane": [],
-		"elemenx-scene-editor-orbit": [],
-		"elemenx-scene-editor-ring": [],
-		"elemenx-scene-editor-fields": [],
-		"elemenx-scene-editor-field": [],
-		"elemenx-scene-editor-parameter": [],
-		"elemenx-scene-editor-blueprint": [],
-		"elemenx-scene-editor-sketch-type": [],
-		"elemenx-scene-editor-layers": [],
-		"elemenx-scene-editor-layer": [
-			"current"
-		],
-		"elemenx-scene-editor-layer-name": [],
-		"elemenx-scene-editor-layer-eye": [],
-		"elemenx-scene-editor-item": [],
-		"elemenx-scene-editor-item-head": [],
-		"elemenx-scene-editor-sketch-shape": [
-			"area",
-			"current",
-			"draft"
-		],
-		"elemenx-object-editor": [],
-		"elemenx-object-editor-toolbar": [],
-		"elemenx-object-editor-group": [
-			"end"
-		],
-		"elemenx-object-editor-tool": [
-			"active"
-		],
-		"elemenx-object-editor-snap": [],
-		"elemenx-object-editor-variant": [],
-		"elemenx-object-editor-import": [],
-		"elemenx-object-editor-format": [],
-		"elemenx-object-editor-side": [],
-		"elemenx-object-editor-inspector": [],
-		"elemenx-object-editor-title": [],
-		"elemenx-object-editor-palette": [],
-		"elemenx-object-editor-shape": [],
-		"elemenx-object-editor-generator": [],
-		"elemenx-object-editor-view": [],
-		"elemenx-object-editor-overlay": [],
-		"elemenx-object-editor-gizmo": [],
-		"elemenx-object-editor-axis": [
-			"axis-x",
-			"axis-y",
-			"axis-z"
-		],
-		"elemenx-object-editor-tip": [
-			"axis-x",
-			"axis-y",
-			"axis-z"
-		],
-		"elemenx-object-editor-ring": [],
-		"elemenx-object-editor-fields": [],
-		"elemenx-object-editor-field": [],
 		"elemenx-topology": [],
 		"elemenx-topology-board": [],
 		"elemenx-topology-canvas": [],
@@ -30140,29 +27737,6 @@
 		"elemenx-infinite-above": [],
 		"elemenx-infinite-status": [],
 		"elemenx-infinite-end": [],
-		"elemenx-virtual-pad": [
-			"with-right"
-		],
-		"elemenx-virtual-pad-stick": [
-			"left",
-			"right"
-		],
-		"elemenx-virtual-pad-button": [
-			"down",
-			"face-a",
-			"face-b",
-			"face-x",
-			"face-y",
-			"shoulder",
-			"small"
-		],
-		"elemenx-virtual-pad-knob": [],
-		"elemenx-virtual-pad-face": [],
-		"elemenx-virtual-pad-shoulders": [
-			"left",
-			"right"
-		],
-		"elemenx-virtual-pad-middle": [],
 		"elemenx-empty": [
 			"error",
 			"search",

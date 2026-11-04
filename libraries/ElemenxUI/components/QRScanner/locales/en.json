@@ -1,0 +1,13 @@
+{
+	"ui": {
+		"qrScanner": {
+			"label": "Code scanner",
+			"aim": "Point the camera at a code",
+			"starting": "Starting the camera…",
+			"done": "Code read",
+			"unsupported": "This browser cannot read codes from the camera.",
+			"denied": "The camera is not allowed for this page.",
+			"camera": "The camera cannot be used."
+		}
+	}
+}

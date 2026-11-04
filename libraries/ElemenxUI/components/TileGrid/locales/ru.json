@@ -1,0 +1,10 @@
+{
+	"ui": {
+		"tileGrid": {
+			"dropNewGroup": "Отпустите здесь, чтобы начать группу",
+			"groupWidth": "Ширина группы",
+			"newGroupTitle": "Новая группа",
+			"groupHeight": "Высота группы"
+		}
+	}
+}

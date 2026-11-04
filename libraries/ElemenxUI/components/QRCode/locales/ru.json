@@ -1,0 +1,7 @@
+{
+	"ui": {
+		"qrCode": {
+			"label": "QR-код: {value}"
+		}
+	}
+}

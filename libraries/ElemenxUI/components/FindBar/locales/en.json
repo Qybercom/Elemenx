@@ -1,0 +1,20 @@
+{
+	"ui": {
+		"find": {
+			"label": "Find",
+			"placeholder": "Find",
+			"replacement": "Replace with",
+			"case": "Match case",
+			"word": "Whole word",
+			"regexp": "Regular expression",
+			"count": "{index} of {count}",
+			"none": "No results",
+			"previous": "Previous match",
+			"next": "Next match",
+			"close": "Close",
+			"toggleReplace": "Show replace",
+			"replace": "Replace",
+			"replaceAll": "Replace all"
+		}
+	}
+}

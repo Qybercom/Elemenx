@@ -1,0 +1,43 @@
+{
+	"graphics": {
+		"drawing": {
+			"label": "Drawing",
+			"tools": "Drawing tools",
+			"select": "Select",
+			"rect": "Rectangle",
+			"ellipse": "Ellipse",
+			"line": "Line",
+			"arrow": "Arrow",
+			"path": "Freehand",
+			"text": "Text",
+			"eraser": "Eraser",
+			"brush": "Brush",
+			"brushes": {
+				"pen": "Pen",
+				"marker": "Marker",
+				"highlighter": "Highlighter",
+				"calligraphy": "Calligraphy"
+			},
+			"stroke": "Line color",
+			"fill": "Fill color",
+			"filled": "Fill",
+			"width": "Line width",
+			"undo": "Undo",
+			"redo": "Redo",
+			"group": "Group",
+			"ungroup": "Ungroup",
+			"forward": "Bring forward",
+			"backward": "Send backward",
+			"delete": "Delete",
+			"layer": "Layer",
+			"layers": "Layers",
+			"visible": "Visible",
+			"locked": "Locked",
+			"rename": "Layer name",
+			"addLayer": "Add a layer",
+			"raise": "Move the layer up",
+			"lower": "Move the layer down",
+			"removeLayer": "Remove the layer"
+		}
+	}
+}

@@ -115,7 +115,7 @@ Elemenx.Component('Barcode', {
 			return;
 		}
 
-		this.$Service('QR').Raster(svg, Math.round(Number(size[1]) * times), Math.round(Number(size[2]) * times), callback);
+		this.$Service('Pictures').Raster(svg, Math.round(Number(size[1]) * times), Math.round(Number(size[2]) * times), callback);
 	},
 
 	/* Saves the code as name.png (format png) or name.svg (svg): callback(error) after. */

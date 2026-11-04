@@ -309,12 +309,12 @@ describe('Contract: ModelFormats and Fbx, the files of models read and written',
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:ModelFormats', 'service:Fbx', 'service:Gltf', 'service:Graphics3D', 'service:Models']);
+		Use(['service:ModelFormats', 'service:Fbx', 'service:Gltf', 'service:Renderer', 'service:Meshes', 'service:Math', 'service:SceneModels']);
 
 		formats = Elemenx.Service('ModelFormats');
 		fbx = Elemenx.Service('Fbx');
 		gltf = Elemenx.Service('Gltf');
-		models = Elemenx.Service('Models');
+		models = Elemenx.Service('SceneModels');
 	});
 
 	/* What a file holds, to tell two of them apart: counts, and every number rounded. */
@@ -516,10 +516,11 @@ describe('Contract: ModelFormats and Fbx, the files of models read and written',
 	});
 
 	it('keeps to the letter of the formats: turns in their order, layers by polygon, four bones, names, degrees, bounds', function () {
-		var graphics = Elemenx.Service('Graphics3D');
-		var x = graphics.Rotation([1, 0, 0], Math.PI / 2);
-		var y = graphics.Rotation([0, 1, 0], Math.PI / 4);
-		var z = graphics.Rotation([0, 0, 1], Math.PI / 2);
+		var graphics = Elemenx.Service('Renderer');
+		var math = Elemenx.Service('Math');
+		var x = math.Rotation([1, 0, 0], Math.PI / 2);
+		var y = math.Rotation([0, 1, 0], Math.PI / 4);
+		var z = math.Rotation([0, 0, 1], Math.PI / 2);
 
 		function close (a, b) {
 			a.forEach(function (value, index) {
@@ -528,8 +529,8 @@ describe('Contract: ModelFormats and Fbx, the files of models read and written',
 		}
 
 		/* XYZ: x turns first, then y, then z; ZXY: z first. */
-		close(fbx.Euler([90, 45, 90], 0), graphics.Multiply(z, graphics.Multiply(y, x)));
-		close(fbx.Euler([90, 45, 90], 4), graphics.Multiply(y, graphics.Multiply(x, z)));
+		close(fbx.Euler([90, 45, 90], 0), math.Multiply(z, math.Multiply(y, x)));
+		close(fbx.Euler([90, 45, 90], 4), math.Multiply(y, math.Multiply(x, z)));
 
 		/* Colors by polygon, five bones on a point: its four strongest, weighed again. */
 		var lines = ['Objects:  {', '	Geometry: 1, "Geometry::Tri", "Mesh" {', '		Vertices: *12 {', '			a: 0,0,0,1,0,0,0,1,0,1,1,0', '		}', '		PolygonVertexIndex: *6 {', '			a: 0,1,-3,1,3,-3', '		}',
@@ -590,7 +591,8 @@ describe('Contract: ModelFormats and Fbx, the files of models read and written',
 		var asset = formats.FromModel(knight);
 		var back = formats.Read(formats.Write(asset, 'glb'));
 		var clip = Object.keys(knight.Clips)[0];
-		var graphics = Elemenx.Service('Graphics3D');
+		var graphics = Elemenx.Service('Renderer');
+		var math = Elemenx.Service('Math');
 		var arm = knight.Pieces.map(function (piece) {
 			return piece.ID;
 		}).indexOf('arm-l');
@@ -610,7 +612,7 @@ describe('Contract: ModelFormats and Fbx, the files of models read and written',
 			return Math.abs(each - time) < 1e-4;
 		});
 		var turn = Array.from(channel.Values.slice(step * 4, step * 4 + 4));
-		var wanted = gltf.Node({matrix: graphics.Multiply(graphics.Invert(graphics.Multiply(pose.body, graphics.Translation.apply(graphics, knight.Pieces[0].Pivot))), graphics.Multiply(pose['arm-l'], graphics.Translation.apply(graphics, knight.Pieces[arm].Pivot)))}).Rotation;
+		var wanted = gltf.Node({matrix: math.Multiply(math.Invert(math.Multiply(pose.body, math.Translation.apply(graphics, knight.Pieces[0].Pivot))), math.Multiply(pose['arm-l'], math.Translation.apply(graphics, knight.Pieces[arm].Pivot)))}).Rotation;
 		var sign = Math.sign(turn[3] * wanted[3]) || 1;
 
 		turn.forEach(function (value, axis) {

@@ -2281,17 +2281,25 @@
 	(function (global) {
 		'use strict';
 		/*
-		 * The root of ElemenxUI: libraries/ElemenxUI next to the elemenx.js that runs, on its origin (a framework from a CDN
-		 * takes its Library from there, not from the site of the page); /libraries/ElemenxUI of the page for a framework
-		 * inline in its page.
+		 * The root of a system Library: libraries/<name> next to the elemenx.js that runs, on its origin (a framework from a CDN
+		 * takes its Libraries from there, not from the site of the page); /libraries/<name> of the page for a framework inline
+		 * in its page.
 		 */
-		function systemRoot () {
+		function systemRoot (name) {
 			var script = Runtime.ScriptURL && /^(?:https?|file):/i.test(Runtime.ScriptURL) ? Runtime.ScriptURL.split('?')[0].split('#')[0] : '';
 
-			return script ? script.substring(0, script.lastIndexOf('/') + 1) + 'libraries/ElemenxUI' : '/libraries/ElemenxUI';
+			return script ? script.substring(0, script.lastIndexOf('/') + 1) + 'libraries/' + name : '/libraries/' + name;
 		}
 
-		var definitions = {ElemenxUI: {$Root: systemRoot(), $Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']}}};
+		/*
+		 * The system Libraries, each on the ones before it: ElemenxCommon (algorithms that need no page), ElemenxUI (the
+		 * Components of a page), ElemenxGraphics (scenes in 3D), ElemenxGaming (what makes a scene a game).
+		 */
+		function system (name, uses) {
+			return {$Root: systemRoot(name), $Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']}, $Use: uses};
+		}
+
+		var definitions = {ElemenxCommon: system('ElemenxCommon', []), ElemenxUI: system('ElemenxUI', ['ElemenxCommon']), ElemenxGraphics: system('ElemenxGraphics', ['ElemenxUI']), ElemenxGaming: system('ElemenxGaming', ['ElemenxGraphics'])};
 		var applications = new WeakMap();
 
 		function list (value) {
@@ -2326,9 +2334,41 @@
 				Elemenx.Locale.Source(base + '{language}.json', languages);
 		}
 
+		/*
+		 * The names an Application uses with the Libraries each of them uses ($Use of a Library), each once, every one after
+		 * those it uses: ElemenxGaming is ElemenxCommon, ElemenxUI, ElemenxGraphics and ElemenxGaming. A Library that uses
+		 * itself, by others or not, is an error.
+		 */
+		function ordered (values) {
+			var result = [];
+			var path = [];
+
+			function visit (name) {
+				var definition = definitions[name];
+
+				if (path.indexOf(name) !== -1)
+					throw new Error('Elemenx Library uses itself: ' + path.slice(path.indexOf(name)).concat([name]).join(' > '));
+
+				if (result.indexOf(name) !== -1) return;
+
+				path.push(name);
+
+				if (definition)
+					list(definition.$Use).forEach(visit);
+
+				path.pop();
+
+				result.push(name);
+			}
+
+			values.forEach(visit);
+
+			return result;
+		}
+
 		/* discovered: the Libraries of $Discovery of the Application, [{Name, Root, Graph}], besides the ones it names. */
 		function use (application, value, callback, discovered) {
-			var values = list(value);
+			var values = ordered(list(value));
 			var entries = [];
 			var i = 0;
 
@@ -2376,46 +2416,86 @@
 				return;
 			}
 
-			var remaining = entries.length;
+			/* One after another, in their order: what a Library uses is there before it. */
+			function next (index) {
+				var entry = entries[index];
+				var base;
 
-			var complete = Runtime.Countdown(remaining, callback);
+				if (!entry) {
+					callback(null);
 
-			i = 0;
+					return;
+				}
 
-			while (i < entries.length) {
-				(function (entry) {
-					var base = root(entry.Definition);
+				base = root(entry.Definition);
 
-					if (!base) {
-						complete(new Error('Elemenx Library Root is not configured: ' + entry.Name));
+				if (!base) {
+					callback(new Error('Elemenx Library Root is not configured: ' + entry.Name));
+
+					return;
+				}
+
+				Runtime.Discovery.Build(entry.Owner, base, function (error) {
+					var twice;
+
+					if (error) {
+						callback(error);
 
 						return;
 					}
 
-					Runtime.Discovery.Build(entry.Owner, base, function (error) {
-						if (error) {
-							complete(error);
+					twice = repeated(entries, index);
+
+					if (twice) {
+						callback(twice);
+
+						return;
+					}
+
+					if (entry.Discovered)
+						discoveredLocales(entry);
+
+					Runtime.Discovery.LoadDirectives(entry.Owner, function (directiveError) {
+						if (directiveError) {
+							callback(directiveError);
 
 							return;
 						}
 
-						if (entry.Discovered)
-							discoveredLocales(entry);
-
-						Runtime.Discovery.LoadDirectives(entry.Owner, function (directiveError) {
-							if (directiveError) {
-								complete(directiveError);
+						Runtime.Discovery.LoadServices(entry.Owner, function (serviceError) {
+							if (serviceError) {
+								callback(serviceError);
 
 								return;
 							}
 
-							Runtime.Discovery.LoadServices(entry.Owner, complete);
+							next(index + 1);
 						});
-					}, entry.Definition.$Graph || null);
-				})(entries[i]);
+					});
+				}, entry.Definition.$Graph || null);
+			}
+
+			next(0);
+		}
+
+		/* A name a Library defines that one before it defines too: which of them would be found depended on the order. */
+		function repeated (entries, index) {
+			var names = Runtime.Discovery.Names(entries[index].Owner);
+			var i = 0;
+			var found;
+
+			while (i < index) {
+				found = names.filter(function (name) {
+					return Runtime.Discovery.Names(entries[i].Owner).indexOf(name) !== -1;
+				})[0];
+
+				if (found)
+					return new Error('Elemenx Library ' + entries[index].Name + ' defines ' + found + ', which ' + entries[i].Name + ' defines too');
 
 				i++;
 			}
+
+			return null;
 		}
 
 		Elemenx.Library = function (name, definition) {
@@ -2518,6 +2598,14 @@
 				return serviceHandle(serviceName, application);
 			};
 
+			instance.$Provide = function (kind, value) {
+				return provide(name, kind, value, application, true);
+			};
+
+			instance.$Providers = function (kind, value) {
+				return provide(name, kind, value, application, false);
+			};
+
 			Runtime.AttachOwnerFacades(instance, name, 0);
 
 			Runtime.InitializeOwnerSubscriptions(instance, definition);
@@ -2535,6 +2623,44 @@
 			}
 
 			return instance;
+		}
+
+		/*
+		 * The Services that declare in $Provides what they add to a registry ({Registry: {Kind: [names]}}, '*' for any
+		 * name), made in the Application that asks: their $OnCreate adds it. registry is the name of the Service that
+		 * asks, kind a part of it ('Nodes'), value one name of that kind (none: all of the kind). A Service being made
+		 * already is not made again. Returns the names of the Services that provide it; with make false ($Providers) it
+		 * only names them and makes none.
+		 */
+		var providing = [];
+
+		function provide (registry, kind, value, application, make) {
+			var names = [];
+
+			Object.keys(serviceRegistry).forEach(function (provider) {
+				var provides = serviceRegistry[provider].Definition.$Provides;
+				var list = provides && provides[registry] ? provides[registry][kind] : null;
+				if (provider === registry || list == null) return;
+
+				list = [].concat(list);
+
+				if (value !== undefined && list.indexOf(value) === -1 && list.indexOf('*') === -1) return;
+
+				names.push(provider);
+
+				if (!make || providing.indexOf(provider) !== -1) return;
+
+				providing.push(provider);
+
+				try {
+					serviceHandle(provider, application).$Generation();
+				}
+				finally {
+					providing.splice(providing.indexOf(provider), 1);
+				}
+			});
+
+			return names;
 		}
 
 		function existingServiceTarget (name, application) {

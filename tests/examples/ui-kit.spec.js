@@ -2966,39 +2966,25 @@ for (const origin of origins) {
 			expect(errors).toEqual([]);
 		});
 
-		test('a game world draws its declared map, selects the units of its team, orders them along their ways, recruits by code and hides the unexplored in the fog', async function ({ page }) {
+		test('a game world draws its land, selects the units of its team, orders them along their ways, recruits by code and hides the unseen in the fog', async function ({ page }) {
 			var errors = captureErrors(page);
 			var game;
 			var world;
-			var canvas;
 			var header;
 			var box;
-			var pixel;
 			var ground;
-			var recruited;
 
 			await page.setViewportSize({width: 1280, height: 900});
 
 			await open(page, origin, ['Game world']);
 
 			game = section(page, 'Game world');
-			world = game.locator('.elemenx-game-scene');
-			canvas = world.locator('.elemenx-game-scene-marks');
+			world = game.locator('.elemenx-scene');
 			header = game.locator('.elemenx-section-header');
 
 			await world.scrollIntoViewIfNeeded();
 
-			/* The declarations: a layer, two buildings, eight units, five trees and a rock. */
-			await expect(world.locator('.elemenx-game-source')).toHaveCount(17);
-			await expect(world).toHaveAttribute('role', 'application');
-
-			pixel = async function (selector, x, y) {
-				return world.locator(selector).evaluate(function (node, point) {
-					return Array.prototype.slice.call(node.getContext('2d').getImageData(point.X, point.Y, 1, 1).data);
-				}, {X: x, Y: y});
-			};
-
-			/* The map is drawn in the middle of the view, by the scene under the canvas of the marks. */
+			/* The land is drawn in the middle of the view. */
 			ground = async function () {
 				return world.evaluate(function (node) {
 					var instance = Elemenx.Instance(node);
@@ -3016,25 +3002,19 @@ for (const origin of origins) {
 
 			await expect.poll(ground).toBeGreaterThan(90);
 
-			await expect.poll(async function () {
-				return world.evaluate(function (node) {
-					return Elemenx.Instance(node).Objects().length;
-				});
-			}).toBe(16);
-
 			/* Ctrl+A: the units of the team; Escape: none. */
 			await world.focus();
 
 			await page.keyboard.press('Control+a');
 
-			await expect(header).toContainText('5 selected: archer-1, archer-2, archer-3, sword-1, sword-2');
+			await expect(header).toContainText('5 selected: archer-1, archer-2, archer-3, knight-1, knight-2');
 
 			await page.keyboard.press('Escape');
 
 			await expect(header).toContainText('Nothing selected');
 
 			/* A frame drawn over the view: the units in it. */
-			box = await canvas.boundingBox();
+			box = await world.locator('.elemenx-scene-canvas').boundingBox();
 
 			await page.mouse.move(box.x + 4, box.y + 4);
 			await page.mouse.down();
@@ -3043,32 +3023,24 @@ for (const origin of origins) {
 
 			await expect(header).toContainText('5 selected');
 
-			/* A right click in the middle: the order, then each walks its way there. */
-			await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2, {button: 'right'});
+			/* A right click on the land: the order, each to its own spot. */
+			await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.7, {button: 'right'});
 
-			await expect(header).toContainText(/move to \d+, \d+: 5 units/);
-			await expect(header).toContainText('Arrived:', {timeout: 20000});
+			await expect(header).toContainText(/Move to -?\d+, -?\d+: 5 units/);
 
-			/* A unit of the code: added by the barracks, sent on its way (it arrives soon: its note lasts a moment). */
-			recruited = await became(page, header.locator('.elemenx-caption'), null, 'Recruited recruit-1 · 6 blue units');
-
+			/* A unit of the code: added at the barracks, sent on its way. */
 			await game.getByRole('button', {name: 'Recruit'}).click();
 
-			await recruited();
+			await expect(header).toContainText('Recruited recruit-1');
 
-			/* The fog: the far side of the river, unexplored, black on the minimap. */
-			expect((await pixel('.elemenx-game-scene-minimap', 170, 42)).slice(0, 3)).not.toEqual([6, 8, 12]);
-
+			/* The fog: the raiders far away, out of sight, are hidden. */
 			await game.locator('.elemenx-toggle').filter({hasText: 'Fog of war'}).click();
 
 			await expect.poll(async function () {
-				return (await pixel('.elemenx-game-scene-minimap', 170, 42)).slice(0, 3);
-			}).toEqual([6, 8, 12]);
-
-			/* From above: the same world, drawn again. */
-			await game.locator('.elemenx-check-label', {hasText: 'From above'}).click();
-
-			await expect.poll(ground).toBeGreaterThan(90);
+				return world.evaluate(function (node) {
+					return Elemenx.Instance(node).Scene().Objects['raider-1'].Hidden;
+				});
+			}).toBe(true);
 
 			expect(errors).toEqual([]);
 		});
@@ -3084,13 +3056,13 @@ for (const origin of origins) {
 			await open(page, origin, ['Space']);
 
 			bodies = section(page, 'Space');
-			space = bodies.locator('.elemenx-game-scene');
+			space = bodies.locator('.elemenx-scene');
 
 			await space.scrollIntoViewIfNeeded();
 
 			/* A name of every body but the belts: the Sun, 8 planets, 9 moons, 2 stations and 2 fleets. */
-			await expect(space.locator('.elemenx-game-scene-label')).toHaveCount(22);
-			await expect(space.locator('.elemenx-game-scene-fallback')).toHaveCount(0);
+			await expect(space.locator('.elemenx-scene-label')).toHaveCount(22);
+			await expect(space.locator('.elemenx-scene-fallback')).toHaveCount(0);
 
 			/* The Sun is drawn bright in the middle of a dark sky. */
 			sun = async function (id) {
@@ -3127,10 +3099,10 @@ for (const origin of origins) {
 			}).toBeLessThan(60);
 
 			/* Its name selects the Earth: the card of its numbers; then the view flies to it. */
-			await space.locator('.elemenx-game-scene-label[data-id="earth"]').click();
+			await space.locator('.elemenx-scene-label[data-id="earth"]').click();
 
-			await expect(space.locator('.elemenx-game-scene-card')).toContainText('Earth-like planet');
-			await expect(space.locator('.elemenx-game-scene-card')).toContainText('Habitable zone');
+			await expect(space.locator('.elemenx-scene-card')).toContainText('Earth-like planet');
+			await expect(space.locator('.elemenx-scene-card')).toContainText('Habitable zone');
 			await expect(bodies.locator('.elemenx-section-header')).toContainText('Selected: Earth');
 
 			await space.getByRole('button', {name: 'Fly to it'}).click();
@@ -3163,8 +3135,8 @@ for (const origin of origins) {
 			/* A system of a seed: a star of its own, its planets and their moons. */
 			await bodies.locator('.elemenx-check-label', {hasText: 'Of a seed'}).click();
 
-			await expect(space.locator('.elemenx-game-scene-label[data-kind="star"]')).toHaveCount(1);
-			await expect(space.locator('.elemenx-game-scene-label[data-id="planet-b"]')).toHaveCount(1);
+			await expect(space.locator('.elemenx-scene-label[data-kind="star"]')).toHaveCount(1);
+			await expect(space.locator('.elemenx-scene-label[data-id="planet-b"]')).toHaveCount(1);
 			await expect(bodies.locator('.ui-kit-space-hud')).toContainText('Seed kepler-186');
 
 			/* At its real size, the star is still drawn: a few pixels at least. */
@@ -3188,14 +3160,14 @@ for (const origin of origins) {
 			await open(page, origin, ['Models']);
 
 			models = section(page, 'Models');
-			scene = models.locator('.elemenx-game-scene');
+			scene = models.locator('.elemenx-scene');
 			note = models.locator('.elemenx-section-header');
 
 			await scene.scrollIntoViewIfNeeded();
 
 			/* The units and the buildings that can be selected are named; the plants are not. */
 			await expect.poll(async function () {
-				return scene.locator('.elemenx-game-scene-label').count();
+				return scene.locator('.elemenx-scene-label').count();
 			}).toBeGreaterThan(20);
 
 			await expect.poll(async function () {
@@ -3257,7 +3229,7 @@ for (const origin of origins) {
 
 			await expect(menus.nth(2)).toContainText('Medium');
 			await expect.poll(function () {
-				return section(page, 'Terrain').locator('.elemenx-game-scene').evaluate(function (node) {
+				return section(page, 'Terrain').locator('.elemenx-scene').evaluate(function (node) {
 					return Elemenx.Instance(node).Graphics().Level;
 				});
 			}).toBe('medium');
@@ -3284,13 +3256,13 @@ for (const origin of origins) {
 			await open(page, origin, ['Terrain']);
 
 			terrain = section(page, 'Terrain');
-			scene = terrain.locator('.elemenx-game-scene');
+			scene = terrain.locator('.elemenx-scene');
 
 			await scene.scrollIntoViewIfNeeded();
 
 			/* The names of what can be selected: three units and three houses. */
 			await expect.poll(async function () {
-				return scene.locator('.elemenx-game-scene-label').count();
+				return scene.locator('.elemenx-scene-label').count();
 			}).toBeGreaterThanOrEqual(6);
 
 			/* The ground is drawn: the middle of the view is no sky of the color of the page. */
@@ -3330,7 +3302,7 @@ for (const origin of origins) {
 			await expect(terrain.locator('.elemenx-section-header')).toContainText('Loaded');
 
 			await expect.poll(async function () {
-				return scene.locator('.elemenx-game-scene-label').count();
+				return scene.locator('.elemenx-scene-label').count();
 			}).toBeGreaterThanOrEqual(6);
 
 			expect(errors).toEqual([]);

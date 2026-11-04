@@ -27,7 +27,7 @@
 				</div>
 			</aside>
 			<div class="game-editor-object">
-				<ObjectEditor #Object *if="Current" [value]="Document(Version)" Storage="elemenx-game-editor-object" (change)="ModelChanged" />
+				<ModelEditor #Object *if="Current" [value]="Document(Version)" Storage="elemenx-game-editor-object" (change)="ModelChanged" />
 			</div>
 		</section>
 	</main>

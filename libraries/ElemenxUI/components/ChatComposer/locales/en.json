@@ -1,0 +1,12 @@
+{
+	"ui": {
+		"chatComposer": {
+			"attach": "Attach",
+			"expressions": "Emoji and stickers",
+			"message": "Message",
+			"placeholder": "Write a message…",
+			"send": "Send",
+			"suggestions": "Suggestions"
+		}
+	}
+}

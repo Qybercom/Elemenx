@@ -1,0 +1,14 @@
+{
+	"ui": {
+		"pagination": {
+			"first": "First page",
+			"label": "Pages",
+			"last": "Last page",
+			"next": "Next page",
+			"previous": "Previous page",
+			"range": "{from}–{to} of {count}",
+			"rowsPerPage": "Rows per page",
+			"size": "{size} / page"
+		}
+	}
+}

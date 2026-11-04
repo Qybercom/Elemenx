@@ -1,0 +1,9 @@
+{
+	"ui": {
+		"terminal": {
+			"command": "Command",
+			"running": "Running",
+			"title": "Terminal"
+		}
+	}
+}

@@ -1,0 +1,1 @@
+*resizable="'right bottom'" добавляет элементу маркеры изменения размера: right, left, bottom, top и corner (правый нижний угол). Значение может быть и {Edges, MinWidth, MaxWidth, MinHeight, MaxHeight}. Маркер тянут указателем или двигают стрелками (с Shift — крупными шагами). Элемент отправляет "resize" во время изменения и "resizeend" после, оба с detail {Width, Height, Edge}.

@@ -1,0 +1,9 @@
+{
+	"ui": {
+		"achievementList": {
+			"summary": "Получено {unlocked} из {total}",
+			"points": "Очков: {points}",
+			"secret": "Секретное достижение"
+		}
+	}
+}

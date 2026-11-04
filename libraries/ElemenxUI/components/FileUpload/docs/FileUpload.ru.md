@@ -1,0 +1,1 @@
+Выбирает файлы через диалог или перетаскиванием; сам их не загружает. Variant: dropzone, inline, gallery или avatar. Files: [{ID, Name, Size, Type, URL, File}], URL — превью изображения (object URL). События: change (массив File), reject ([{Name, Reason}]) для файлов, отклонённых по Accept, MaxSize или MaxFiles.

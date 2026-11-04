@@ -1,0 +1,1 @@
+Объявление стадии в шаблоне Pipeline: <PipelineStage ID="test" Name="Тесты"> с PipelineJob внутри. Принимает свойства стадии Pipeline (ID, Name, Status — по умолчанию статус её задач). Сам ничего не показывает: его читает Pipeline.

@@ -5,11 +5,11 @@ import { Use } from '../library.js';
 var owned = [];
 
 /* A ground under the sun at noon, its exposure given, so a frame is the same as the one before it. */
-var GROUND = '<GameObject ID="land" Kind="ground" Size="200" Height="10" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="45" />';
+var GROUND = '<SceneObject ID="land" Kind="ground" Size="200" Height="10" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" Latitude="45" />';
 
 async function mount (attributes, state) {
 	var ready = null;
-	var component = Elemenx.Component(unique('PipelineHost'), Object.assign({$Template: '<div style="width: 240px; height: 160px"><GameScene Paused="true" Exposure="1" ' + attributes + ' (ready)="Ready">' + GROUND + '</GameScene></div>', Ready: function (space) {
+	var component = Elemenx.Component(unique('PipelineHost'), Object.assign({$Template: '<div style="width: 240px; height: 160px"><Scene Paused="true" Exposure="1" ' + attributes + ' (ready)="Ready">' + GROUND + '</Scene></div>', Ready: function (space) {
 		ready = space;
 	}}, state || {}))();
 	var scene;
@@ -36,7 +36,7 @@ async function mount (attributes, state) {
 
 		engine.Frame(now += 33);
 
-		return engine.Renderer.Progress().Needed === 0 && Elemenx.Service('Terrain').Work().Waiting() === 0;
+		return engine.Renderer.Progress().Needed === 0 && Elemenx.Service('SceneTerrainGenerator').Work().Waiting() === 0;
 	}, 30000);
 
 	/* A frame drawn, and what the canvas shows read at once: [r, g, b] of its middle. */
@@ -91,13 +91,13 @@ function inverted (blueprints) {
 	return graph;
 }
 
-describe('Contract: the Pipeline of a GameScene, the passes of its picture as a render graph of Blueprints', function () {
+describe('Contract: the Pipeline of a Scene, the passes of its picture as a render graph of Blueprints', function () {
 	var blueprints;
 
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['GameScene', 'GameObject', 'service:Blueprints']);
+		Use(['Scene', 'SceneObject', 'service:Blueprints']);
 
 		blueprints = Elemenx.Service('Blueprints');
 	});
@@ -215,7 +215,7 @@ describe('Contract: the Pipeline of a GameScene, the passes of its picture as a 
 			expect(scene.Shot()).toEqual(plain);
 			expect(scene.Shot()).toEqual(plain);
 			expect(warn.mock.calls.filter(function (call) {
-				return String(call[0]).indexOf('Elemenx GameScene: the Pipeline cannot be made') === 0;
+				return String(call[0]).indexOf('Elemenx Scene: the Pipeline cannot be made') === 0;
 			}).length).toBe(1);
 		}
 		finally {

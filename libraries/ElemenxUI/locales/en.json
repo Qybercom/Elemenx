@@ -4,52 +4,6 @@
 			"title": "Achievements",
 			"unlocked": "Achievement unlocked"
 		},
-		"badge": {
-			"new": "New",
-			"busy": "In progress"
-		},
-		"board": {
-			"label": "Canvas",
-			"zoomIn": "Zoom in",
-			"zoomOut": "Zoom out",
-			"fit": "Fit the content"
-		},
-		"blueprint": {
-			"label": "Blueprint",
-			"find": "Find a block",
-			"palette": "Blocks",
-			"add": "Add",
-			"parameters": "Parameters",
-			"addParameter": "Add a parameter",
-			"removeParameter": "Remove the parameter",
-			"key": "Key",
-			"type": "Type",
-			"value": "Value"
-		},
-		"breadcrumbs": {
-			"label": "Breadcrumbs",
-			"more": "Hidden levels"
-		},
-		"calendar": {
-			"month": "Month",
-			"more": {
-				"one": "+{count} more",
-				"other": "+{count} more"
-			},
-			"today": "Today",
-			"view": "View",
-			"week": "Week",
-			"day": "Day",
-			"months": "Months",
-			"quarter": "Quarter",
-			"year": "Year",
-			"years": "Years",
-			"quarterTitle": "Q{quarter} {year}"
-		},
-		"cardNumberInput": {
-			"hideNumber": "Hide number",
-			"showNumber": "Show number"
-		},
 		"call": {
 			"incoming": "Incoming call",
 			"accept": "Accept",
@@ -79,76 +33,6 @@
 			"leave": "Leave",
 			"stage": "Call"
 		},
-		"chart": {
-			"label": "Chart"
-		},
-		"chat": {
-			"latest": "Latest messages",
-			"selected": "{count} selected",
-			"clearSelection": "Cancel selection"
-		},
-		"chatComposer": {
-			"attach": "Attach",
-			"expressions": "Emoji and stickers",
-			"message": "Message",
-			"placeholder": "Write a message…",
-			"send": "Send",
-			"suggestions": "Suggestions"
-		},
-		"chatMessage": {
-			"react": "Add a reaction",
-			"sticker": "Sticker",
-			"edited": "edited",
-			"views": "Seen by {count}",
-			"sending": "Sending",
-			"sent": "Sent",
-			"delivered": "Delivered",
-			"read": "Read",
-			"error": "Not sent",
-			"actions": "Message actions",
-			"summary": "Reactions and views",
-			"all": "All",
-			"viewsUnknown": "Seen by {count}",
-			"select": "Select message",
-			"nobody": "No one yet"
-		},
-		"codeEditor": {
-			"label": "Code editor",
-			"suggestions": "Suggestions",
-			"diff": "Changes",
-			"unchanged": "{count} unchanged lines"
-		},
-		"codeView": {
-			"copy": "Copy the code",
-			"fold": "Fold the block",
-			"unfold": "Unfold the block"
-		},
-		"colorInput": {
-			"area": "Saturation and brightness",
-			"dropper": "Pick from the screen",
-			"hue": "Hue",
-			"opacity": "Opacity",
-			"pick": "Pick a color",
-			"title": "Color"
-		},
-		"combobox": {
-			"create": "Create",
-			"empty": "Nothing found"
-		},
-		"commandPalette": {
-			"command": "Command",
-			"empty": "No matching commands",
-			"placeholder": "Type a command or search",
-			"recentTitle": "Recent",
-			"title": "Command palette"
-		},
-		"commentCard": {
-			"like": "Like",
-			"reply": "Reply",
-			"repost": "Repost",
-			"share": "Share",
-			"verified": "Verified"
-		},
 		"common": {
 			"all": "All",
 			"back": "Back",
@@ -167,32 +51,6 @@
 			"selectAll": "Select all",
 			"showCode": "Show code",
 			"showOptions": "Show the options"
-		},
-		"cityInput": {
-			"empty": "No city found",
-			"hint": "Type the name of a city",
-			"placeholder": "City"
-		},
-		"currencySelect": {
-			"placeholder": "Currency"
-		},
-		"dateInput": {
-			"calendar": "Calendar",
-			"choose": "Choose a date",
-			"clear": "Clear"
-		},
-		"dateRangeInput": {
-			"choose": "Choose a range",
-			"clear": "Clear",
-			"last30": "Last 30 days",
-			"last7": "Last 7 days",
-			"lastMonth": "Last month",
-			"nextMonth": "Next month",
-			"pickEnd": "Pick the end",
-			"placeholder": "Start – End",
-			"previousMonth": "Previous month",
-			"thisMonth": "This month",
-			"thisYear": "This year"
 		},
 		"designer": {
 			"search": "Find a component",
@@ -449,104 +307,9 @@
 			},
 			"outlet": "The page of the route goes here"
 		},
-		"dialPad": {
-			"call": "Call",
-			"erase": "Erase",
-			"hold": "hold for {value}",
-			"label": "Dial pad",
-			"number": "Number"
-		},
 		"dialogs": {
 			"cancel": "Cancel",
 			"ok": "OK"
-		},
-		"emojiPicker": {
-			"group": {
-				"activities": "Activities",
-				"component": "Components",
-				"flags": "Flags",
-				"food": "Food & drink",
-				"nature": "Animals & nature",
-				"objects": "Objects",
-				"people": "People & body",
-				"recent": "Recently used",
-				"search": "Search results",
-				"smileys": "Smileys & emotion",
-				"symbols": "Symbols",
-				"travel": "Travel & places"
-			},
-			"groups": "Groups",
-			"label": "Emoji",
-			"nothing": "No emoji found",
-			"placeholder": "Search emoji",
-			"searchLabel": "Search emoji",
-			"skinTone": "Skin tone",
-			"tone0": "No skin tone",
-			"tone1": "Light skin tone",
-			"tone2": "Medium-light skin tone",
-			"tone3": "Medium skin tone",
-			"tone4": "Medium-dark skin tone",
-			"tone5": "Dark skin tone"
-		},
-		"expressionPicker": {
-			"emoji": "Emoji",
-			"kind": "Kind",
-			"stickers": "Stickers"
-		},
-		"fileUpload": {
-			"label": "Drop files here or click to browse"
-		},
-		"find": {
-			"label": "Find",
-			"placeholder": "Find",
-			"replacement": "Replace with",
-			"case": "Match case",
-			"word": "Whole word",
-			"regexp": "Regular expression",
-			"count": "{index} of {count}",
-			"none": "No results",
-			"previous": "Previous match",
-			"next": "Next match",
-			"close": "Close",
-			"toggleReplace": "Show replace",
-			"replace": "Replace",
-			"replaceAll": "Replace all"
-		},
-		"formats": {
-			"decimal": "Enter a number, like 12.5",
-			"email": "Enter an email address, like name@example.com",
-			"iban": "Enter an IBAN, like DE89 3704 0044 0532 0130 00",
-			"ibanCheck": "This IBAN has a mistake: check its characters",
-			"integer": "Enter a whole number",
-			"ipv4": "Enter an IPv4 address, like 192.168.0.1",
-			"ipv6": "Enter an IPv6 address, like 2001:db8::1",
-			"max": "Enter {max} or less",
-			"min": "Enter {min} or more",
-			"postalCode": "Enter a postal code",
-			"postalCodeOf": "Enter a postal code of {country}",
-			"semver": "Enter a version, like 1.4.2",
-			"url": "Enter a web address, like https://example.com",
-			"uuid": "Enter a UUID, like 123e4567-e89b-12d3-a456-426614174000"
-		},
-		"forms": {
-			"required": "Fill in this field",
-			"email": "Enter an email address",
-			"min": "At least {min}",
-			"max": "At most {max}",
-			"minLength": "At least {length} characters",
-			"maxLength": "At most {length} characters",
-			"pattern": "The value does not match the format",
-			"equal": "The values do not match",
-			"match": "The values do not match",
-			"invalid": "The value is not valid"
-		},
-		"gallery": {
-			"label": "Gallery",
-			"previous": "Previous picture",
-			"next": "Next picture",
-			"pause": "Pause",
-			"play": "Play",
-			"pictures": "Pictures"
 		},
 		"game": {
 			"health": "Health",
@@ -586,8 +349,348 @@
 			"rose": "up {count}",
 			"fell": "down {count}"
 		},
+		"mixer": {
+			"label": "Mixer",
+			"master": "Master",
+			"mute": "Mute",
+			"pan": "Pan",
+			"solo": "Solo",
+			"volume": "Volume"
+		},
+		"tabs": {
+			"close": "Close tab"
+		},
+		"window": {
+			"handle": "window",
+			"keys": "the arrows move the window, Shift with the arrows resizes it",
+			"minimize": "Minimize",
+			"unfold": "Unfold",
+			"maximize": "Maximize",
+			"restore": "Restore",
+			"close": "Close",
+			"popOut": "Picture in picture",
+			"popIn": "Back into the page"
+		},
+		"media": {
+			"score": "Score",
+			"play": "Play",
+			"resume": "Resume",
+			"favorite": "Favorite",
+			"progress": "Watched",
+			"back": "Scroll back",
+			"forward": "Scroll forward",
+			"filters": "Filters",
+			"clear": "Clear all",
+			"remove": "Remove",
+			"find": "Find",
+			"showAll": "Show all",
+			"any": "Any",
+			"from": "from",
+			"to": "to",
+			"tracks": "Tracks",
+			"trackCount": {
+				"one": "{count} track",
+				"other": "{count} tracks"
+			},
+			"explicit": "Explicit",
+			"cast": "Cast"
+		},
+		"achievementList": {
+			"summary": "{unlocked} of {total} unlocked",
+			"points": "{points} points",
+			"secret": "Secret achievement"
+		},
+		"barcode": {
+			"label": "Barcode: {value}"
+		},
+		"blueprint": {
+			"label": "Blueprint",
+			"find": "Find a block",
+			"palette": "Blocks",
+			"add": "Add",
+			"parameters": "Parameters",
+			"addParameter": "Add a parameter",
+			"removeParameter": "Remove the parameter",
+			"key": "Key",
+			"type": "Type",
+			"value": "Value"
+		},
+		"board": {
+			"label": "Canvas",
+			"zoomIn": "Zoom in",
+			"zoomOut": "Zoom out",
+			"fit": "Fit the content"
+		},
+		"breadcrumbs": {
+			"label": "Breadcrumbs",
+			"more": "Hidden levels"
+		},
+		"calculator": {
+			"label": "Calculator",
+			"history": "History",
+			"keys": {
+				"clear": "Clear",
+				"back": "Delete the last",
+				"negate": "Change the sign",
+				"equals": "Equals",
+				"shift": "Second functions",
+				"angle": "Degrees or radians",
+				"inverse": "One over"
+			}
+		},
+		"calendar": {
+			"month": "Month",
+			"more": {
+				"one": "+{count} more",
+				"other": "+{count} more"
+			},
+			"today": "Today",
+			"view": "View",
+			"week": "Week",
+			"day": "Day",
+			"months": "Months",
+			"quarter": "Quarter",
+			"year": "Year",
+			"years": "Years",
+			"quarterTitle": "Q{quarter} {year}"
+		},
+		"cardNumberInput": {
+			"hideNumber": "Hide number",
+			"showNumber": "Show number"
+		},
+		"chart": {
+			"label": "Chart"
+		},
+		"chat": {
+			"latest": "Latest messages",
+			"selected": "{count} selected",
+			"clearSelection": "Cancel selection"
+		},
+		"chatComposer": {
+			"attach": "Attach",
+			"expressions": "Emoji and stickers",
+			"message": "Message",
+			"placeholder": "Write a message…",
+			"send": "Send",
+			"suggestions": "Suggestions"
+		},
+		"chatMessage": {
+			"react": "Add a reaction",
+			"sticker": "Sticker",
+			"edited": "edited",
+			"views": "Seen by {count}",
+			"sending": "Sending",
+			"sent": "Sent",
+			"delivered": "Delivered",
+			"read": "Read",
+			"error": "Not sent",
+			"actions": "Message actions",
+			"summary": "Reactions and views",
+			"all": "All",
+			"viewsUnknown": "Seen by {count}",
+			"select": "Select message",
+			"nobody": "No one yet"
+		},
+		"cityInput": {
+			"empty": "No city found",
+			"hint": "Type the name of a city",
+			"placeholder": "City"
+		},
+		"codeEditor": {
+			"label": "Code editor",
+			"suggestions": "Suggestions",
+			"diff": "Changes",
+			"unchanged": "{count} unchanged lines"
+		},
+		"codeView": {
+			"copy": "Copy the code",
+			"fold": "Fold the block",
+			"unfold": "Unfold the block"
+		},
+		"colorInput": {
+			"area": "Saturation and brightness",
+			"dropper": "Pick from the screen",
+			"hue": "Hue",
+			"opacity": "Opacity",
+			"pick": "Pick a color",
+			"title": "Color"
+		},
+		"combobox": {
+			"create": "Create",
+			"empty": "Nothing found"
+		},
+		"commandPalette": {
+			"command": "Command",
+			"empty": "No matching commands",
+			"placeholder": "Type a command or search",
+			"recentTitle": "Recent",
+			"title": "Command palette"
+		},
+		"commentCard": {
+			"like": "Like",
+			"reply": "Reply",
+			"repost": "Repost",
+			"share": "Share",
+			"verified": "Verified"
+		},
+		"commitGraph": {
+			"label": "Commits",
+			"commit": "{message}, {author}, {date}, {id}"
+		},
+		"consent": {
+			"title": "Your privacy",
+			"accept": "Accept all",
+			"reject": "Reject",
+			"customize": "Customize",
+			"save": "Save choices",
+			"required": "always on",
+			"policy": "Read the policy"
+		},
+		"countdown": {
+			"days": {
+				"one": "day",
+				"other": "days"
+			},
+			"hours": {
+				"one": "hour",
+				"other": "hours"
+			},
+			"minutes": {
+				"one": "minute",
+				"other": "minutes"
+			},
+			"seconds": {
+				"one": "second",
+				"other": "seconds"
+			}
+		},
+		"currencySelect": {
+			"placeholder": "Currency"
+		},
+		"dateInput": {
+			"calendar": "Calendar",
+			"choose": "Choose a date",
+			"clear": "Clear"
+		},
+		"dateRangeInput": {
+			"choose": "Choose a range",
+			"clear": "Clear",
+			"last30": "Last 30 days",
+			"last7": "Last 7 days",
+			"lastMonth": "Last month",
+			"nextMonth": "Next month",
+			"pickEnd": "Pick the end",
+			"placeholder": "Start – End",
+			"previousMonth": "Previous month",
+			"thisMonth": "This month",
+			"thisYear": "This year"
+		},
+		"diagram": {
+			"label": "Diagram"
+		},
+		"dialPad": {
+			"call": "Call",
+			"erase": "Erase",
+			"hold": "hold for {value}",
+			"label": "Dial pad",
+			"number": "Number"
+		},
+		"diffView": {
+			"label": "Differences",
+			"fold": {
+				"one": "Show {count} unchanged line",
+				"other": "Show {count} unchanged lines"
+			}
+		},
+		"emojiPicker": {
+			"group": {
+				"activities": "Activities",
+				"component": "Components",
+				"flags": "Flags",
+				"food": "Food & drink",
+				"nature": "Animals & nature",
+				"objects": "Objects",
+				"people": "People & body",
+				"recent": "Recently used",
+				"search": "Search results",
+				"smileys": "Smileys & emotion",
+				"symbols": "Symbols",
+				"travel": "Travel & places"
+			},
+			"groups": "Groups",
+			"label": "Emoji",
+			"nothing": "No emoji found",
+			"placeholder": "Search emoji",
+			"searchLabel": "Search emoji",
+			"skinTone": "Skin tone",
+			"tone0": "No skin tone",
+			"tone1": "Light skin tone",
+			"tone2": "Medium-light skin tone",
+			"tone3": "Medium skin tone",
+			"tone4": "Medium-dark skin tone",
+			"tone5": "Dark skin tone"
+		},
+		"expressionPicker": {
+			"emoji": "Emoji",
+			"kind": "Kind",
+			"stickers": "Stickers"
+		},
+		"fpsMeter": {
+			"slow": "slow",
+			"long": "long",
+			"heap": "memory"
+		},
+		"fileBrowser": {
+			"label": "Files",
+			"root": "Files",
+			"up": "Up a folder",
+			"view": "View",
+			"list": "List",
+			"grid": "Icons",
+			"tree": "Tree",
+			"toggle": "Open or close the folder",
+			"name": "Name",
+			"size": "Size",
+			"modified": "Modified",
+			"empty": "This folder is empty",
+			"items": {
+				"one": "{count} item",
+				"other": "{count} items"
+			}
+		},
+		"fileUpload": {
+			"label": "Drop files here or click to browse"
+		},
+		"find": {
+			"label": "Find",
+			"placeholder": "Find",
+			"replacement": "Replace with",
+			"case": "Match case",
+			"word": "Whole word",
+			"regexp": "Regular expression",
+			"count": "{index} of {count}",
+			"none": "No results",
+			"previous": "Previous match",
+			"next": "Next match",
+			"close": "Close",
+			"toggleReplace": "Show replace",
+			"replace": "Replace",
+			"replaceAll": "Replace all"
+		},
+		"gallery": {
+			"label": "Gallery",
+			"previous": "Previous picture",
+			"next": "Next picture",
+			"pause": "Pause",
+			"play": "Play",
+			"pictures": "Pictures"
+		},
 		"image": {
 			"broken": "The picture did not load"
+		},
+		"imageCropper": {
+			"label": "Crop",
+			"frame": "crop frame, arrows move it, Shift with arrows resizes it"
 		},
 		"infiniteList": {
 			"end": "That is all",
@@ -597,8 +700,28 @@
 			"hidePassword": "Hide password",
 			"showPassword": "Show password"
 		},
+		"jog": {
+			"label": "Jog wheel"
+		},
+		"keyboard": {
+			"label": "Keyboard"
+		},
 		"masterDetail": {
 			"empty": "Select an item"
+		},
+		"mediaPlayer": {
+			"label": "Player",
+			"play": "Play",
+			"pause": "Pause",
+			"seek": "Time",
+			"mute": "Mute",
+			"unmute": "Unmute",
+			"volume": "Volume",
+			"speed": "Speed",
+			"subtitles": "Subtitles",
+			"pip": "Picture in picture",
+			"full": "Full screen",
+			"exitFull": "Exit full screen"
 		},
 		"multiSelect": {
 			"empty": "Nothing found",
@@ -607,30 +730,15 @@
 		"navList": {
 			"label": "Navigation"
 		},
+		"notifications": {
+			"more": "+{count} more"
+		},
 		"numberInput": {
 			"decrease": "Decrease",
 			"increase": "Increase"
 		},
 		"otpInput": {
 			"label": "One-time code"
-		},
-		"mixer": {
-			"label": "Mixer",
-			"master": "Master",
-			"mute": "Mute",
-			"pan": "Pan",
-			"solo": "Solo",
-			"volume": "Volume"
-		},
-		"keyboard": {
-			"label": "Keyboard"
-		},
-		"piano": {
-			"label": "Piano"
-		},
-		"pip": {
-			"away": "Shown in a picture-in-picture window",
-			"back": "Bring it back"
 		},
 		"pagination": {
 			"first": "First page",
@@ -642,11 +750,32 @@
 			"rowsPerPage": "Rows per page",
 			"size": "{size} / page"
 		},
-		"notifications": {
-			"more": "+{count} more"
-		},
 		"phoneInput": {
 			"search": "Search country or code"
+		},
+		"piano": {
+			"label": "Piano"
+		},
+		"pianoRoll": {
+			"label": "Piano roll"
+		},
+		"pipeline": {
+			"label": "Pipeline",
+			"retry": "Retry {name}",
+			"cancel": "Cancel {name}",
+			"play": "Run {name}",
+			"status": {
+				"created": "Created",
+				"pending": "Pending",
+				"scheduled": "Scheduled",
+				"running": "Running",
+				"success": "Passed",
+				"failed": "Failed",
+				"warning": "Passed with warnings",
+				"canceled": "Canceled",
+				"skipped": "Skipped",
+				"manual": "Waiting for a run"
+			}
 		},
 		"planCard": {
 			"action": "Choose plan",
@@ -697,6 +826,35 @@
 			"message": "Message",
 			"verified": "Verified"
 		},
+		"qrCode": {
+			"label": "QR code: {value}"
+		},
+		"qrScanner": {
+			"label": "Code scanner",
+			"aim": "Point the camera at a code",
+			"starting": "Starting the camera…",
+			"done": "Code read",
+			"unsupported": "This browser cannot read codes from the camera.",
+			"denied": "The camera is not allowed for this page.",
+			"camera": "The camera cannot be used."
+		},
+		"quiz": {
+			"label": "Quiz",
+			"start": "Start",
+			"progress": "Question {index} of {count}",
+			"check": "Check",
+			"next": "Next",
+			"back": "Back",
+			"right": "Right",
+			"wrong": "Wrong",
+			"up": "Move {name} up",
+			"down": "Move {name} down",
+			"passed": "Passed",
+			"failed": "Not passed",
+			"thanks": "Thank you for your answers",
+			"score": "{score} of {max} points",
+			"restart": "Start again"
+		},
 		"rating": {
 			"label": "Rating"
 		},
@@ -733,6 +891,9 @@
 			"quote": "Quote",
 			"clear": "Clear formatting"
 		},
+		"sampler": {
+			"label": "Sampler"
+		},
 		"select": {
 			"empty": "Nothing found",
 			"placeholder": "Select…"
@@ -745,11 +906,32 @@
 			"nothing": "No settings found",
 			"search": "Search settings"
 		},
+		"signal": {
+			"good": "Good connection",
+			"fair": "Fair connection",
+			"poor": "Poor connection",
+			"level": "Signal {percent}%"
+		},
+		"signaturePad": {
+			"label": "Signature",
+			"empty": "empty",
+			"placeholder": "Sign here",
+			"undo": "Undo",
+			"clear": "Clear",
+			"match": "Looks like the signature on file ({score}%)",
+			"mismatch": "Does not look like the signature on file ({score}%)"
+		},
 		"sparkline": {
 			"label": "Trend"
 		},
+		"spectrum": {
+			"label": "Spectrum"
+		},
 		"spinner": {
 			"label": "Loading"
+		},
+		"splitButton": {
+			"more": "More actions"
 		},
 		"stickerPicker": {
 			"favorites": "Favorites",
@@ -764,15 +946,6 @@
 			"searchLabel": "Search stickers",
 			"star": "Add to favorites",
 			"unstar": "Remove from favorites"
-		},
-		"table": {
-			"empty": "No data",
-			"filter": "Filter {name}",
-			"selectAll": "Select all rows",
-			"selectRow": "Select row"
-		},
-		"tabs": {
-			"close": "Close tab"
 		},
 		"tabGroup": {
 			"closeOthers": "Close others",
@@ -794,6 +967,12 @@
 		"tabSplit": {
 			"divider": "Divider between groups of tabs"
 		},
+		"table": {
+			"empty": "No data",
+			"filter": "Filter {name}",
+			"selectAll": "Select all rows",
+			"selectRow": "Select row"
+		},
 		"tagInput": {
 			"placeholder": "Add a tag"
 		},
@@ -801,15 +980,6 @@
 			"command": "Command",
 			"running": "Running",
 			"title": "Terminal"
-		},
-		"theme": {
-			"contrast": "High contrast",
-			"darcula": "Darcula",
-			"default": "Default",
-			"soft": "Soft",
-			"fantasy": "Fantasy",
-			"scifi": "Sci-fi",
-			"glassy": "Glassy"
 		},
 		"themeSwitch": {
 			"dark": "Dark theme",
@@ -831,8 +1001,24 @@
 			"seconds": "Seconds",
 			"title": "Time"
 		},
+		"timeline": {
+			"label": "Timeline",
+			"now": "Now",
+			"playhead": "Playhead",
+			"zoomIn": "Zoom in",
+			"zoomOut": "Zoom out",
+			"fit": "Show all"
+		},
 		"toastHost": {
 			"title": "Notifications"
+		},
+		"toggle": {
+			"off": "Off",
+			"auto": "Auto",
+			"on": "On"
+		},
+		"topology": {
+			"label": "A graph of nodes and their links"
 		},
 		"tour": {
 			"back": "Back",
@@ -843,210 +1029,6 @@
 		"tree": {
 			"empty": "Nothing found",
 			"label": "Tree"
-		},
-		"virtualGamepad": {
-			"label": "Gamepad on the screen",
-			"look": "Look round",
-			"stick": "Stick"
-		},
-		"virtualList": {
-			"empty": "No items",
-			"label": "List"
-		},
-		"window": {
-			"handle": "window",
-			"keys": "the arrows move the window, Shift with the arrows resizes it",
-			"minimize": "Minimize",
-			"unfold": "Unfold",
-			"maximize": "Maximize",
-			"restore": "Restore",
-			"close": "Close",
-			"popOut": "Picture in picture",
-			"popIn": "Back into the page"
-		},
-		"gameScene": {
-			"minimap": "Minimap",
-			"selected": "{count} selected",
-			"label": "Game scene",
-			"unsupported": "This browser cannot draw in 3D: WebGL2 is off or missing.",
-			"close": "Close",
-			"focus": "Fly to it",
-			"class": "Class",
-			"temperature": "Temperature",
-			"mass": "Mass",
-			"radius": "Radius",
-			"luminosity": "Luminosity",
-			"gravity": "Gravity",
-			"distance": "Orbit",
-			"period": "Year",
-			"day": "Day",
-			"habitable": "Habitable zone",
-			"at": "At",
-			"team": "Team",
-			"ships": "Ships",
-			"heading": "Heading to",
-			"yes": "yes",
-			"locked": "tidally locked",
-			"km": "km",
-			"au": "AU",
-			"ms2": "m/s²",
-			"days": "days",
-			"hours": "h",
-			"health": "Health",
-			"parts": "Parts",
-			"surfaces": {
-				"rocky": "Rocky planet",
-				"desert": "Desert planet",
-				"terran": "Earth-like planet",
-				"ocean": "Ocean planet",
-				"ice": "Ice world",
-				"lava": "Lava world",
-				"gas": "Gas giant",
-				"ice-giant": "Ice giant",
-				"dwarf": "Dwarf planet",
-				"moon": "Moon"
-			},
-			"kinds": {
-				"star": "Star",
-				"planet": "Planet",
-				"moon": "Moon",
-				"belt": "Belt",
-				"ring": "Rings",
-				"module": "Module",
-				"station": "Station",
-				"outpost": "Outpost",
-				"ship": "Ship",
-				"fighter": "Fighter",
-				"cruiser": "Cruiser",
-				"freighter": "Freighter",
-				"fleet": "Fleet"
-			},
-			"land": "Land",
-			"takeOff": "Take off",
-			"loading": "Loading the scene"
-		},
-		"signal": {
-			"good": "Good connection",
-			"fair": "Fair connection",
-			"poor": "Poor connection",
-			"level": "Signal {percent}%"
-		},
-		"timeline": {
-			"label": "Timeline",
-			"now": "Now",
-			"playhead": "Playhead",
-			"zoomIn": "Zoom in",
-			"zoomOut": "Zoom out",
-			"fit": "Show all"
-		},
-		"splitButton": {
-			"more": "More actions"
-		},
-		"countdown": {
-			"days": {
-				"one": "day",
-				"other": "days"
-			},
-			"hours": {
-				"one": "hour",
-				"other": "hours"
-			},
-			"minutes": {
-				"one": "minute",
-				"other": "minutes"
-			},
-			"seconds": {
-				"one": "second",
-				"other": "seconds"
-			}
-		},
-		"consent": {
-			"title": "Your privacy",
-			"accept": "Accept all",
-			"reject": "Reject",
-			"customize": "Customize",
-			"save": "Save choices",
-			"required": "always on",
-			"policy": "Read the policy"
-		},
-		"diffView": {
-			"label": "Differences",
-			"fold": {
-				"one": "Show {count} unchanged line",
-				"other": "Show {count} unchanged lines"
-			}
-		},
-		"signaturePad": {
-			"label": "Signature",
-			"empty": "empty",
-			"placeholder": "Sign here",
-			"undo": "Undo",
-			"clear": "Clear",
-			"match": "Looks like the signature on file ({score}%)",
-			"mismatch": "Does not look like the signature on file ({score}%)"
-		},
-		"drawing": {
-			"label": "Drawing",
-			"tools": "Drawing tools",
-			"select": "Select",
-			"rect": "Rectangle",
-			"ellipse": "Ellipse",
-			"line": "Line",
-			"arrow": "Arrow",
-			"path": "Freehand",
-			"text": "Text",
-			"eraser": "Eraser",
-			"brush": "Brush",
-			"brushes": {
-				"pen": "Pen",
-				"marker": "Marker",
-				"highlighter": "Highlighter",
-				"calligraphy": "Calligraphy"
-			},
-			"stroke": "Line color",
-			"fill": "Fill color",
-			"filled": "Fill",
-			"width": "Line width",
-			"undo": "Undo",
-			"redo": "Redo",
-			"group": "Group",
-			"ungroup": "Ungroup",
-			"forward": "Bring forward",
-			"backward": "Send backward",
-			"delete": "Delete",
-			"layer": "Layer",
-			"layers": "Layers",
-			"visible": "Visible",
-			"locked": "Locked",
-			"rename": "Layer name",
-			"addLayer": "Add a layer",
-			"raise": "Move the layer up",
-			"lower": "Move the layer down",
-			"removeLayer": "Remove the layer"
-		},
-		"media": {
-			"score": "Score",
-			"play": "Play",
-			"resume": "Resume",
-			"favorite": "Favorite",
-			"progress": "Watched",
-			"back": "Scroll back",
-			"forward": "Scroll forward",
-			"filters": "Filters",
-			"clear": "Clear all",
-			"remove": "Remove",
-			"find": "Find",
-			"showAll": "Show all",
-			"any": "Any",
-			"from": "from",
-			"to": "to",
-			"tracks": "Tracks",
-			"trackCount": {
-				"one": "{count} track",
-				"other": "{count} tracks"
-			},
-			"explicit": "Explicit",
-			"cast": "Cast"
 		},
 		"videoTimeline": {
 			"label": "Timeline",
@@ -1059,188 +1041,57 @@
 			"hide": "Hide",
 			"lock": "Lock"
 		},
-		"imageCropper": {
-			"label": "Crop",
-			"frame": "crop frame, arrows move it, Shift with arrows resizes it"
-		},
-		"qrCode": {
-			"label": "QR code: {value}"
-		},
-		"qrScanner": {
-			"label": "Code scanner",
-			"aim": "Point the camera at a code",
-			"starting": "Starting the camera…",
-			"done": "Code read",
-			"unsupported": "This browser cannot read codes from the camera.",
-			"denied": "The camera is not allowed for this page.",
-			"camera": "The camera cannot be used."
-		},
-		"fileBrowser": {
-			"label": "Files",
-			"root": "Files",
-			"up": "Up a folder",
-			"view": "View",
-			"list": "List",
-			"grid": "Icons",
-			"tree": "Tree",
-			"toggle": "Open or close the folder",
-			"name": "Name",
-			"size": "Size",
-			"modified": "Modified",
-			"empty": "This folder is empty",
-			"items": {
-				"one": "{count} item",
-				"other": "{count} items"
-			}
-		},
-		"mediaPlayer": {
-			"label": "Player",
-			"play": "Play",
-			"pause": "Pause",
-			"seek": "Time",
-			"mute": "Mute",
-			"unmute": "Unmute",
-			"volume": "Volume",
-			"speed": "Speed",
-			"subtitles": "Subtitles",
-			"pip": "Picture in picture",
-			"full": "Full screen",
-			"exitFull": "Exit full screen"
-		},
-		"toggle": {
-			"off": "Off",
-			"auto": "Auto",
-			"on": "On"
-		},
-		"commitGraph": {
-			"label": "Commits",
-			"commit": "{message}, {author}, {date}, {id}"
-		},
-		"barcode": {
-			"label": "Barcode: {value}"
-		},
-		"diagram": {
-			"label": "Diagram"
-		},
-		"spectrum": {
-			"label": "Spectrum"
+		"virtualList": {
+			"empty": "No items",
+			"label": "List"
 		},
 		"waveform": {
 			"label": "Waveform"
 		},
-		"jog": {
-			"label": "Jog wheel"
+		"badge": {
+			"new": "New",
+			"busy": "In progress"
 		},
-		"pianoRoll": {
-			"label": "Piano roll"
+		"formats": {
+			"decimal": "Enter a number, like 12.5",
+			"email": "Enter an email address, like name@example.com",
+			"iban": "Enter an IBAN, like DE89 3704 0044 0532 0130 00",
+			"ibanCheck": "This IBAN has a mistake: check its characters",
+			"integer": "Enter a whole number",
+			"ipv4": "Enter an IPv4 address, like 192.168.0.1",
+			"ipv6": "Enter an IPv6 address, like 2001:db8::1",
+			"max": "Enter {max} or less",
+			"min": "Enter {min} or more",
+			"postalCode": "Enter a postal code",
+			"postalCodeOf": "Enter a postal code of {country}",
+			"semver": "Enter a version, like 1.4.2",
+			"url": "Enter a web address, like https://example.com",
+			"uuid": "Enter a UUID, like 123e4567-e89b-12d3-a456-426614174000"
 		},
-		"sampler": {
-			"label": "Sampler"
+		"forms": {
+			"required": "Fill in this field",
+			"email": "Enter an email address",
+			"min": "At least {min}",
+			"max": "At most {max}",
+			"minLength": "At least {length} characters",
+			"maxLength": "At most {length} characters",
+			"pattern": "The value does not match the format",
+			"equal": "The values do not match",
+			"match": "The values do not match",
+			"invalid": "The value is not valid"
 		},
-		"pipeline": {
-			"label": "Pipeline",
-			"retry": "Retry {name}",
-			"cancel": "Cancel {name}",
-			"play": "Run {name}",
-			"status": {
-				"created": "Created",
-				"pending": "Pending",
-				"scheduled": "Scheduled",
-				"running": "Running",
-				"success": "Passed",
-				"failed": "Failed",
-				"warning": "Passed with warnings",
-				"canceled": "Canceled",
-				"skipped": "Skipped",
-				"manual": "Waiting for a run"
-			}
+		"pip": {
+			"away": "Shown in a picture-in-picture window",
+			"back": "Bring it back"
 		},
-		"calculator": {
-			"label": "Calculator",
-			"history": "History",
-			"keys": {
-				"clear": "Clear",
-				"back": "Delete the last",
-				"negate": "Change the sign",
-				"equals": "Equals",
-				"shift": "Second functions",
-				"angle": "Degrees or radians",
-				"inverse": "One over"
-			}
-		},
-		"quiz": {
-			"label": "Quiz",
-			"start": "Start",
-			"progress": "Question {index} of {count}",
-			"check": "Check",
-			"next": "Next",
-			"back": "Back",
-			"right": "Right",
-			"wrong": "Wrong",
-			"up": "Move {name} up",
-			"down": "Move {name} down",
-			"passed": "Passed",
-			"failed": "Not passed",
-			"thanks": "Thank you for your answers",
-			"score": "{score} of {max} points",
-			"restart": "Start again"
-		},
-		"sceneEditor": {
-			"label": "Scene editor",
-			"tools": "Tools of the scene",
-			"select": "Select",
-			"move": "Move",
-			"turn": "Turn",
-			"scale": "Scale",
-			"snap": "Snap",
-			"day": "Day",
-			"undo": "Undo",
-			"redo": "Redo",
-			"play": "Play",
-			"stop": "Stop",
-			"save": "Save in the browser",
-			"export": "Export JSON",
-			"import": "Import JSON",
-			"objects": "Objects",
-			"add": "Add",
-			"nothing": "Nothing selected",
-			"parameters": "Parameters of the blueprint",
-			"sketch": "Sketch",
-			"sketchType": "Type of the sketch",
-			"layers": "Layers",
-			"addLayer": "Add a layer",
-			"visible": "Shown",
-			"kinds": {
-				"stroke": "Brushes",
-				"line": "Lines",
-				"area": "Areas",
-				"circle": "Circles"
-			}
-		},
-		"topology": {
-			"label": "A graph of nodes and their links"
-		},
-		"objectEditor": {
-			"label": "Object editor",
-			"tools": "Tools of the model",
-			"select": "Select",
-			"move": "Move",
-			"turn": "Turn",
-			"scale": "Scale",
-			"snap": "Snap",
-			"variant": "Variant",
-			"undo": "Undo",
-			"redo": "Redo",
-			"format": "Format of the file",
-			"model": "Model",
-			"save": "Save in the browser",
-			"export": "Export JSON",
-			"import": "Import JSON",
-			"parts": "Parts",
-			"add": "Add",
-			"whole": "The model",
-			"generate": "Generate",
-			"describe": "Describe the model"
+		"theme": {
+			"contrast": "High contrast",
+			"darcula": "Darcula",
+			"default": "Default",
+			"soft": "Soft",
+			"fantasy": "Fantasy",
+			"scifi": "Sci-fi",
+			"glassy": "Glassy"
 		}
 	}
 }

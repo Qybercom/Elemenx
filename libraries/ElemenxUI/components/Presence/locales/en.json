@@ -1,0 +1,12 @@
+{
+	"ui": {
+		"presence": {
+			"online": "Online",
+			"away": "Away",
+			"busy": "Busy",
+			"dnd": "Do not disturb",
+			"offline": "Offline",
+			"connecting": "Connecting…"
+		}
+	}
+}

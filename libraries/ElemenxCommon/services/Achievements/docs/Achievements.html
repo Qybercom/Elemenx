@@ -1,0 +1,30 @@
+<Button Label="Take a step" Icon="add" Variant="primary" (click)="Step" />
+<Button Label="Unlock the secret" Icon="trophy" Variant="ghost" (click)="Secret" />
+<Button Label="Start again" Variant="ghost" (click)="Reset" />
+<AchievementList />
+<AchievementHost />
+<script>
+({
+	$OnCreate: function () {
+		var achievements = this.$Service('Achievements');
+		if (achievements.State('docs-walker')) return;
+
+		achievements.Define([
+			{ID: 'docs-walker', Title: 'Walker', Text: 'Take five steps.', Goal: 5, Points: 10, Rarity: 'rare'},
+			{ID: 'docs-secret', Title: 'The secret', Text: 'Found what was hidden.', Secret: true, Points: 50, Rarity: 'legendary'}
+		]);
+	},
+
+	Step: function () {
+		this.$Service('Achievements').Progress('docs-walker');
+	},
+
+	Secret: function () {
+		this.$Service('Achievements').Unlock('docs-secret');
+	},
+
+	Reset: function () {
+		this.$Service('Achievements').Reset();
+	}
+})
+</script>

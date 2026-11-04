@@ -1,0 +1,12 @@
+{
+	"ui": {
+		"colorInput": {
+			"area": "Saturation and brightness",
+			"dropper": "Pick from the screen",
+			"hue": "Hue",
+			"opacity": "Opacity",
+			"pick": "Pick a color",
+			"title": "Color"
+		}
+	}
+}

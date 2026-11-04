@@ -1,0 +1,45 @@
+<div class="elemenx-model-editor">
+	<div class="elemenx-model-editor-toolbar" role="toolbar" [attribute.aria-label]="$T('graphics.modelEditor.tools')">
+		<div class="elemenx-model-editor-group">
+			<button type="button" class="elemenx-model-editor-tool" *for="tool of Tools" *key="tool.ID" [class.active]="Tool === tool.ID" [attribute.data-tool]="tool.ID" [attribute.title]="$T(tool.Key) + ' (' + tool.Hotkey + ')'" [attribute.aria-pressed]="Tool === tool.ID ? 'true' : 'false'" (click)="Pick(tool.ID)"><Icon [name]="tool.Icon" Size="16" /></button>
+			<label class="elemenx-model-editor-snap" [attribute.title]="$T('graphics.modelEditor.snap')"><input type="checkbox" [checked]="Snap" (change)="Snapped" />{{$T('graphics.modelEditor.snap')}}</label>
+			<label class="elemenx-model-editor-variant" [attribute.title]="$T('graphics.modelEditor.variant')">{{$T('graphics.modelEditor.variant')}}<input type="number" min="0" step="1" [value]="Variant" (change)="VariantPicked" /></label>
+		</div>
+		<div class="elemenx-model-editor-group">
+			<Button Size="small" Variant="ghost" Icon="undo" [title]="$T('graphics.modelEditor.undo')" [disabled]="!Past" (click)="Undo" />
+			<Button Size="small" Variant="ghost" Icon="redo" [title]="$T('graphics.modelEditor.redo')" [disabled]="!Future" (click)="Redo" />
+		</div>
+		<div class="elemenx-model-editor-group end">
+			<select class="elemenx-model-editor-format" [attribute.aria-label]="$T('graphics.modelEditor.format')" (change)="FormatPicked">
+				<option *for="format of Formats" *key="format" [value]="format" [selected]="format === Format">{{format}}</option>
+			</select>
+			<Button Size="small" Variant="ghost" Icon="download" [title]="$T('graphics.modelEditor.model')" [label]="$T('graphics.modelEditor.model')" (click)="DownloadPressed" />
+			<Button Size="small" Variant="ghost" Icon="save" [title]="$T('graphics.modelEditor.save')" (click)="Store" />
+			<Button Size="small" Variant="ghost" Icon="file-code" [title]="$T('graphics.modelEditor.export')" (click)="Exported" />
+			<label class="elemenx-model-editor-import" [attribute.title]="$T('graphics.modelEditor.import')"><Icon name="upload" Size="16" /><input type="file" accept="application/json,.json" (change)="Imported" /></label>
+		</div>
+	</div>
+	<aside class="elemenx-model-editor-side">
+		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.parts')}}</div>
+		<Tree [items]="Items(Version)" [expanded]="Opened(Version)" [value]="Selected" [label]="$T('graphics.modelEditor.parts')" (select)="Chosen" />
+		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.add')}}</div>
+		<div class="elemenx-model-editor-palette">
+			<button type="button" class="elemenx-model-editor-shape" *for="shape of Shapes" *key="shape" [attribute.data-shape]="shape" (click)="Placed(shape)">{{shape}}</button>
+		</div>
+		<div class="elemenx-model-editor-generator" *if="Generator">
+			<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.generate')}}</div>
+			<textarea rows="3" [value]="Description" [attribute.aria-label]="$T('graphics.modelEditor.describe')" [attribute.placeholder]="$T('graphics.modelEditor.describe')" (input)="Described"></textarea>
+			<Button Size="small" Icon="lightbulb" [label]="$T('graphics.modelEditor.generate')" [disabled]="Busy" (click)="GeneratePressed" />
+		</div>
+	</aside>
+	<div class="elemenx-model-editor-view" #View>
+		<Scene #Scene Paused="true" Labels="false" Details="false" Quality="medium" [loader]="true" (ready)="SceneReady" />
+		<div class="elemenx-model-editor-overlay" #Overlay tabindex="0" [attribute.aria-label]="Label || $T('graphics.modelEditor.label')" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Up" (wheel)="Wheeled" (contextmenu)="Menu" (keydown)="Key">
+			<svg class="elemenx-model-editor-gizmo" #Gizmo></svg>
+		</div>
+	</div>
+	<aside class="elemenx-model-editor-inspector">
+		<div class="elemenx-model-editor-title">{{Selected || $T('graphics.modelEditor.whole')}}</div>
+		<div class="elemenx-model-editor-fields" #Fields></div>
+	</aside>
+</div>

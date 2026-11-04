@@ -2,13 +2,13 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { loadElemenx, resetDOM, tick, unique, waitFor } from '../setup.js';
 import { Use } from '../library.js';
 import { Binary, Picture } from '../glb.mjs';
-import gameSceneSource from '../../libraries/ElemenxUI/components/GameScene/GameScene.js?raw';
-import modelsSource from '../../libraries/ElemenxUI/services/Models.js?raw';
-import lightingSource from '../../libraries/ElemenxUI/traits/Lighting.js?raw';
-import graphicsSource from '../../libraries/ElemenxUI/services/Graphics3D.js?raw';
-import cosmosSource from '../../libraries/ElemenxUI/traits/Cosmos.js?raw';
+import gameSceneSource from '../../libraries/ElemenxGraphics/components/Scene/Scene.js?raw';
+import modelsSource from '../../libraries/ElemenxGraphics/services/SceneModels/SceneModels.js?raw';
+import lightingSource from '../../libraries/ElemenxGraphics/traits/SceneLighting.js?raw';
+import graphicsSource from '../../libraries/ElemenxGraphics/services/Renderer/Renderer.js?raw';
+import cosmosSource from '../../libraries/ElemenxGraphics/traits/SceneCosmos.js?raw';
 import pageSource from '../../examples/Advanced/application/components/UIKitPage/UIKitPage.js?raw';
-import effectsSource from '../../libraries/ElemenxUI/traits/Effects.js?raw';
+import effectsSource from '../../libraries/ElemenxGraphics/traits/SceneEffects.js?raw';
 
 var owned = [];
 
@@ -52,17 +52,21 @@ function bright (color) {
 	return color[0] + color[1] + color[2];
 }
 
-describe('Contract: Astronomy and Graphics3D, the numbers of a star system and of three dimensions', function () {
+describe('Contract: Astronomy and Renderer, the numbers of a star system and of three dimensions', function () {
 	var astronomy;
 	var graphics;
+	var meshes;
+	var math;
 
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:Astronomy', 'service:Graphics3D']);
+		Use(['service:Astronomy', 'service:Renderer', 'service:Meshes', 'service:Math']);
 
 		astronomy = Elemenx.Service('Astronomy');
-		graphics = Elemenx.Service('Graphics3D');
+		graphics = Elemenx.Service('Renderer');
+		meshes = Elemenx.Service('Meshes');
+		math = Elemenx.Service('Math');
 	});
 
 	it('puts a body on its orbit of Kepler at a time, and describes stars and planets', function () {
@@ -147,26 +151,26 @@ describe('Contract: Astronomy and Graphics3D, the numbers of a star system and o
 	});
 
 	it('multiplies, inverts and projects matrices, and makes shapes of triangles', function () {
-		var m = graphics.Compose([1, 2, 3], graphics.Rotation([0, 1, 0], 0.7), 2);
-		var back = graphics.Multiply(graphics.Invert(m), m);
+		var m = math.Compose([1, 2, 3], math.Rotation([0, 1, 0], 0.7), 2);
+		var back = math.Multiply(math.Invert(m), m);
 		var camera = graphics.Camera({Position: [0, 0, 10], Target: [0, 0, 0]});
-		var sphere = graphics.Sphere({Segments: 8, Rings: 4});
-		var merged = graphics.Merge([graphics.Box({}), {Geometry: graphics.Box({}), Matrix: graphics.Translation(2, 0, 0), Color: [1, 0, 0]}]);
-		var noise = graphics.Noise('a');
+		var sphere = meshes.Sphere({Segments: 8, Rings: 4});
+		var merged = meshes.Merge([meshes.Box({}), {Geometry: meshes.Box({}), Matrix: math.Translation(2, 0, 0), Color: [1, 0, 0]}]);
+		var noise = math.Noise('a');
 		var value = noise.Fbm(0.3, 0.7, 1.1, 4);
 
-		graphics.Identity().forEach(function (expected, index) {
+		math.Identity().forEach(function (expected, index) {
 			expect(back[index]).toBeCloseTo(expected, 9);
 		});
 
-		expect(graphics.Apply(m, [0, 0, 0])).toEqual([1, 2, 3]);
+		expect(math.Apply(m, [0, 0, 0])).toEqual([1, 2, 3]);
 		expect(camera.Project([0, 0, 0], 200, 100)).toMatchObject({X: 100, Y: 50, Visible: true});
 		expect(camera.Project([0, 0, 20], 200, 100).Visible).toBe(false);
-		expect(graphics.Hit(camera.Ray(100, 50, 200, 100), [0, 0, 0], 1)).toBeCloseTo(8.9, 6);
-		expect(graphics.Hit(camera.Ray(0, 0, 200, 100), [0, 0, 0], 1)).toBe(-1);
+		expect(math.Hit(camera.Ray(100, 50, 200, 100), [0, 0, 0], 1)).toBeCloseTo(8.9, 6);
+		expect(math.Hit(camera.Ray(0, 0, 200, 100), [0, 0, 0], 1)).toBe(-1);
 
 		expect(sphere.Positions.length / 3).toBe(9 * 5);
-		expect(graphics.Icosphere({Detail: 1}).Indices.length / 3).toBe(80);
+		expect(meshes.Icosphere({Detail: 1}).Indices.length / 3).toBe(80);
 		expect(merged.Positions.length / 3).toBe(48);
 		expect(Math.max.apply(Math, merged.Indices)).toBe(47);
 		expect(merged.Colors.slice(-3)).toEqual([1, 0, 0]);
@@ -174,15 +178,17 @@ describe('Contract: Astronomy and Graphics3D, the numbers of a star system and o
 
 		expect(value).toBeGreaterThan(0);
 		expect(value).toBeLessThan(1);
-		expect(graphics.Noise('a').Fbm(0.3, 0.7, 1.1, 4)).toBe(value);
+		expect(math.Noise('a').Fbm(0.3, 0.7, 1.1, 4)).toBe(value);
 	});
 
 	it('turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light', function () {
-		var graphics = Elemenx.Service('Graphics3D');
-		var lathe = graphics.Lathe({Points: [[1, 0], [1, 2]], Segments: 8});
-		var wedge = graphics.Wedge({Width: 2, Height: 1, Depth: 2});
-		var facets = graphics.Facets(graphics.Box({}));
-		var box = graphics.Orthographic(-2, 2, -1, 1, 0, 10);
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
+		var lathe = meshes.Lathe({Points: [[1, 0], [1, 2]], Segments: 8});
+		var wedge = meshes.Wedge({Width: 2, Height: 1, Depth: 2});
+		var facets = meshes.Facets(meshes.Box({}));
+		var box = math.Orthographic(-2, 2, -1, 1, 0, 10);
 		var i;
 
 		expect(lathe.Indices.length).toBe(8 * 6);
@@ -210,10 +216,10 @@ describe('Contract: Astronomy and Graphics3D, the numbers of a star system and o
 		expect(facets.Positions.length).toBe(36 * 3);
 		expect(facets.Normals.slice(0, 3)).toEqual(facets.Normals.slice(3, 6));
 
-		expect(graphics.Apply(box, [2, 1, -10]).map(function (value) {
+		expect(math.Apply(box, [2, 1, -10]).map(function (value) {
 			return Math.round(value * 1000) / 1000;
 		})).toEqual([1, 1, 1]);
-		expect(graphics.Apply(box, [-2, -1, 0])[2]).toBeCloseTo(-1, 6);
+		expect(math.Apply(box, [-2, -1, 0])[2]).toBeCloseTo(-1, 6);
 	});
 
 	it('has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface', function () {
@@ -224,7 +230,7 @@ describe('Contract: Astronomy and Graphics3D, the numbers of a star system and o
 		var quad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
 		var gl = renderer.GL;
 		var data = new Uint8Array(64 * 64 * 4);
-		var noise = graphics.Noise();
+		var noise = math.Noise();
 		var worst = 0;
 		var x;
 		var y;
@@ -257,9 +263,9 @@ describe('Contract: Kinds, the kinds of the objects of a game', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:Kinds']);
+		Use(['service:SceneKinds']);
 
-		kinds = Elemenx.Service('Kinds');
+		kinds = Elemenx.Service('SceneKinds');
 
 		kinds.Define('test-body', {Traits: {Orbit: {Distance: 1, Eccentricity: 0}, Selectable: {}}, Values: {Radius: 1000}});
 		kinds.Define('test-planet', {Extends: 'test-body', Traits: {Surface: {Kind: 'rocky'}}, Values: {Radius: 6371}});
@@ -309,11 +315,11 @@ describe('Contract: Kinds, the kinds of the objects of a game', function () {
 	});
 });
 
-describe('Contract: GameScene and GameObject, the objects of a game in 3D', function () {
+describe('Contract: Scene and SceneObject, the objects of a game in 3D', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['GameScene', 'GameObject', 'GameLayer', 'GameTerrain', 'service:Terrain']);
+		Use(['Scene', 'SceneObject', 'service:SceneTerrainGenerator', 'service:SceneRoadGenerator']);
 	});
 
 	beforeEach(function () {
@@ -324,19 +330,19 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		while (owned.length) owned.pop().$Destroy();
 	});
 
-	it('reads the GameObject inside it: each attribute a field of its kind, nested ones going round their holder or a part of it', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
-			'<GameObject ID="sun" Kind="star" Name="Sun" Mass="1">' +
-				'<GameObject ID="earth" Kind="planet" Name="Earth" Radius="6371" Mass="1" Distance="1" Tilt="23.4">' +
-					'<GameObject ID="moon" Kind="moon" Name="Moon" Radius="1737" distance="384400 km" />' +
-					'<GameObject ID="gateway" Kind="station" Name="Gateway" Team="blue">' +
-						'<GameObject Part="dock" Max="300" />' +
-						'<GameObject ID="lab" Kind="module" Shape="sphere" />' +
-					'</GameObject>' +
-				'</GameObject>' +
-			'</GameObject>' +
-			'<GameObject ID="first" Kind="fleet" Name="First fleet" Parent="earth" Team="blue" Count="3" />' +
-		'</GameScene>');
+	it('reads the SceneObject inside it: each attribute a field of its kind, nested ones going round their holder or a part of it', async function () {
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Name="Sun" Mass="1">' +
+				'<SceneObject ID="earth" Kind="planet" Name="Earth" Radius="6371" Mass="1" Distance="1" Tilt="23.4">' +
+					'<SceneObject ID="moon" Kind="moon" Name="Moon" Radius="1737" distance="384400 km" />' +
+					'<SceneObject ID="gateway" Kind="station" Name="Gateway" Team="blue">' +
+						'<SceneObject Part="dock" Max="300" />' +
+						'<SceneObject ID="lab" Kind="module" Shape="sphere" />' +
+					'</SceneObject>' +
+				'</SceneObject>' +
+			'</SceneObject>' +
+			'<SceneObject ID="first" Kind="fleet" Name="First fleet" Parent="earth" Team="blue" Count="3" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var parents = {};
 		var later;
@@ -366,18 +372,20 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		later = scene.Position('earth');
 
 		expect(later[1]).toBeCloseTo(1, 5);
-		expect(Array.prototype.map.call(scene.$Element().querySelectorAll('.elemenx-game-scene-label'), function (label) {
+		expect(Array.prototype.map.call(scene.$Element().querySelectorAll('.elemenx-scene-label'), function (label) {
 			return label.textContent;
 		}).sort()).toEqual(['Earth', 'First fleet', 'Gateway', 'Moon', 'Sun']);
 	});
 
 	it('draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle', async function () {
-		var mounted = await mount('<GameScene Paused="true" Background="false" Labels="false" (ready)="Ready">' +
-			'<GameObject ID="sun" Kind="star"><GameObject ID="rock" Kind="moon" Radius="6000" Distance="1" Atmosphere="none" Day="24" /></GameObject>' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Paused="true" Background="false" Labels="false" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star"><SceneObject ID="rock" Kind="moon" Radius="6000" Distance="1" Atmosphere="none" Day="24" /></SceneObject>' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
-		var graphics = Elemenx.Service('Graphics3D');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
 		var center;
 		var rock;
 		var toStar;
@@ -403,9 +411,9 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		scene.Engine().Frame(performance.now());
 
-		toStar = graphics.Vectors.Normalize([-rock.World[0], -rock.World[1], -rock.World[2]]);
+		toStar = math.Vectors.Normalize([-rock.World[0], -rock.World[1], -rock.World[2]]);
 		spot = function (sign) {
-			return inner.Camera.Project(graphics.Vectors.Add(rock.World, graphics.Vectors.Scale(toStar, sign * rock.Size * 0.6)), inner.Width, inner.Height);
+			return inner.Camera.Project(math.Vectors.Add(rock.World, math.Vectors.Scale(toStar, sign * rock.Size * 0.6)), inner.Width, inner.Height);
 		};
 
 		expect(bright(pixel(scene, spot(1).X, spot(1).Y))).toBeGreaterThan(90);
@@ -415,10 +423,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	it('selects an object by its label and a part by a press when near, flies to it, sends a fleet that arrives', async function () {
 		var selected = [];
 		var arrived = [];
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready" (select)="Selected" (arrive)="Arrived">' +
-			'<GameObject ID="sun" Kind="star" Name="Sun"><GameObject ID="earth" Kind="planet" Name="Earth" Surface-Type="terran" Distance="1" /><GameObject ID="mars" Kind="planet" Name="Mars" Distance="1.5" /></GameObject>' +
-			'<GameObject ID="first" Kind="fleet" Name="First fleet" Parent="earth" Team="red" Speed="0.5" />' +
-		'</GameScene>', {
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready" (select)="Selected" (arrive)="Arrived">' +
+			'<SceneObject ID="sun" Kind="star" Name="Sun"><SceneObject ID="earth" Kind="planet" Name="Earth" Surface-Type="terran" Distance="1" /><SceneObject ID="mars" Kind="planet" Name="Mars" Distance="1.5" /></SceneObject>' +
+			'<SceneObject ID="first" Kind="fleet" Name="First fleet" Parent="earth" Team="red" Speed="0.5" />' +
+		'</Scene>', {
 			Selected: function (event) {
 				selected.push(event);
 			},
@@ -430,14 +438,14 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		var element = scene.$Element();
 		var card;
 
-		element.querySelector('.elemenx-game-scene-label[data-id="earth"]').click();
+		element.querySelector('.elemenx-scene-label[data-id="earth"]').click();
 
 		await tick(20);
 
 		expect(selected[0].ID).toBe('earth');
 		expect(selected[0].Info.Gravity).toBeCloseTo(9.81, 1);
 
-		card = element.querySelector('.elemenx-game-scene-card');
+		card = element.querySelector('.elemenx-scene-card');
 
 		expect(card.textContent).toContain('Earth');
 		expect(card.textContent).toContain('Habitable zone');
@@ -471,11 +479,11 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		scene.Select('first/ship-2');
 
 		expect(selected[selected.length - 1].ID).toBe('first/ship-2');
-		expect(element.querySelector('.elemenx-game-scene-card').textContent).toContain('Fighter');
+		expect(element.querySelector('.elemenx-scene-card').textContent).toContain('Fighter');
 	});
 
 	it('adds, changes, attaches, detaches and removes objects and parts, saves the game and loads it the same', async function () {
-		var mounted = await mount('<GameScene Seed="kepler" Paused="true" (ready)="Ready" />');
+		var mounted = await mount('<Scene Seed="kepler" Paused="true" (ready)="Ready" />');
 		var scene = mounted.Space;
 		var count = scene.Objects().length;
 		var saved;
@@ -582,7 +590,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 	it('runs the systems of the application for traits of their own', async function () {
 		var seen = [];
-		var mounted = await mount('<GameScene Paused="true" [systems]="Systems" (ready)="Ready"><GameObject ID="sun" Kind="star" /></GameScene>', {
+		var mounted = await mount('<Scene Paused="true" [systems]="Systems" (ready)="Ready"><SceneObject ID="sun" Kind="star" /></Scene>', {
 			Systems: {
 				Star: {
 					Update: function (object, context) {
@@ -599,10 +607,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 	it('lands on the surface of a body and takes off again; a giant of gas has none', async function () {
 		var events = [];
-		var mounted = await mount('<GameScene Paused="true" Background="false" (ready)="Ready" (land)="Landed" (takeoff)="Left">' +
-			'<GameObject ID="sun" Kind="star"><GameObject ID="rock" Kind="planet" Surface-Type="desert" Radius="3390" Distance="1" />' +
-			'<GameObject ID="giant" Kind="planet" Surface-Type="gas" Radius="69911" Distance="5" /></GameObject>' +
-		'</GameScene>', {
+		var mounted = await mount('<Scene Paused="true" Background="false" (ready)="Ready" (land)="Landed" (takeoff)="Left">' +
+			'<SceneObject ID="sun" Kind="star"><SceneObject ID="rock" Kind="planet" Surface-Type="desert" Radius="3390" Distance="1" />' +
+			'<SceneObject ID="giant" Kind="planet" Surface-Type="gas" Radius="69911" Distance="5" /></SceneObject>' +
+		'</Scene>', {
 			Landed: function (event) {
 				events.push('land ' + event.ID);
 			},
@@ -650,12 +658,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 	it('plays the clips of a model: walking on a way by itself, a clip that ends going back, a kind for each model', async function () {
 		var ended = [];
-		var mounted = await mount('<GameScene (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="400" Height="20" Water="0.1" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" />' +
-			'<GameObject ID="hero" Kind="knight" X="0" Y="0" Team="red" />' +
-			'<GameObject ID="keep" Kind="tower" X="40" Y="40" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="400" Height="20" Water="0.1" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" />' +
+			'<SceneObject ID="hero" Kind="knight" X="0" Y="0" Team="red" />' +
+			'<SceneObject ID="keep" Kind="tower" X="40" Y="40" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var hero = scene.Get('hero');
@@ -719,10 +727,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('sees a ground in parallel rays: from above a point is where the plan says, at an angle where the rhombus says', async function () {
-		var mounted = await mount('<GameScene View="top" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
-			'<GameObject ID="tower" Kind="tower" X="10" Y="20" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene View="top" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
+			'<SceneObject ID="tower" Kind="tower" X="10" Y="20" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var at;
@@ -760,154 +768,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(inner.Camera.Ortho).toBe(0);
 	});
 
-	it('draws a map of cells: its objects with their models, in the places of their cells, by the API of every scene', async function () {
-		var mounted = await mount('<GameScene Team="blue" Projection="isometric" (ready)="Ready">' +
-			'<GameLayer Name="ground">\n........\n........\n........\n........\n</GameLayer>' +
-			'<GameObject ID="hall" Kind="barracks" X="4" Y="0" Width="3" Height="2" Team="blue" />' +
-			'<GameObject ID="hero" Kind="knight" X="1" Y="1" Team="blue" />' +
-			'<GameObject ID="foe" Kind="unit" X="2" Y="2" Team="red" Type="worker" />' +
-			'<GameObject ID="oak" Kind="tree" X="0" Y="3" />' +
-		'</GameScene>');
-		var world = mounted.Space;
-		var inner = world.Scene();
-		var engine = world.Engine();
-		var selected = [];
-		var at;
-
-		await waitFor(function () {
-			engine.Frame(performance.now() + 100);
-
-			return inner.Camera.Ortho > 0;
-		}, 3000);
-
-		expect(world.Cells).toBe(true);
-		expect(world.Flat).toBe(false);
-		expect(inner.Objects.hero.Shape).toBe('knight');
-		expect(inner.Objects.foe.Shape).toBe('villager');
-		expect(inner.Objects.hall.Shape).toBe('barracks');
-		expect(world.Cell(5, 1).Cost).toBe(Infinity);
-		expect(world.Cell(0, 3).Cost).toBe(Infinity);
-		expect(inner.Ground.Field.Whole).toBe(true);
-
-		/* A unit stands in the middle of its cell, and the scene shows it where the map says it is. */
-		engine.Frame(performance.now() + 200);
-
-		at = engine.ToScreen('hero');
-
-		expect(at.X).toBeCloseTo(world.Strategy().ToScreen(1.5, 1.5).X, 0);
-		expect(at.Y).toBeCloseTo(world.Strategy().ToScreen(1.5, 1.5).Y, 0);
-
-		/* The same methods as in any scene: Select one or many, Selection, Move, Get, Change, Remove. */
-		world.$On && world.$On('select', function (event) {
-			selected.push(event);
-		});
-
-		world.Select('hero');
-
-		expect(world.Selection()).toEqual(['hero']);
-
-		world.Select(['hero', 'foe']);
-
-		expect(world.Selection()).toEqual(['hero', 'foe']);
-
-		expect(world.Move('hero', [6, 3])).toBe(true);
-
-		await waitFor(function () {
-			return world.Get('hero').Moving && inner.Objects.hero.Walking > 0;
-		}, 2000);
-
-		expect(world.Change('foe', {Team: 'blue'})).toBeTruthy();
-		expect(world.Get('foe').Team).toBe('blue');
-		expect(world.Get('hero').Moving).toBe(true);
-
-		world.Remove('foe');
-
-		expect(world.Get('foe')).toBe(null);
-		expect(inner.Objects.foe).toBe(undefined);
-		expect(world.Selection()).toEqual(['hero']);
-
-		/* A saved game keeps where a unit walked to. */
-		await waitFor(function () {
-			return !world.Get('hero').Moving;
-		}, 6000);
-
-		var saved = world.Save();
-
-		world.Change('hero', {X: 0, Y: 0});
-
-		expect(world.Get('hero').X).toBe(0);
-
-		world.Load(saved);
-
-		expect(world.Get('hero')).toMatchObject({X: 6, Y: 3});
-
-		/* A map of pictures is drawn on the canvas of the marks. */
-		world.Add({ID: 'statue', Kind: 'statue', X: 1, Y: 3, Image: 'data:image/gif;base64,R0lGODlhAQABAAAAACw='});
-
-		await waitFor(function () {
-			return world.Flat === true;
-		}, 2000);
-
-		expect(world.Get('statue').Kind).toBe('thing');
-		expect(world.Get('statue').Type).toBe('statue');
-	});
-
-	/* Regression: a frame counted 0.1 s at most, so at a few frames a second units walked in slow motion. */
-	it('keeps the time of the game to the clock when frames are slow', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
-		'</GameScene>');
-		var scene = mounted.Space;
-		var inner = scene.Scene();
-		var engine = scene.Engine();
-		var start = performance.now() + 100000;
-		var seconds;
-
-		scene.Paused = false;
-
-		engine.Frame(start);
-
-		seconds = inner.Seconds;
-
-		engine.Frame(start + 400);
-		engine.Frame(start + 800);
-
-		expect(inner.Seconds - seconds).toBeCloseTo(0.8, 5);
-
-		/* A page that slept does not jump. */
-		seconds = inner.Seconds;
-
-		engine.Frame(start + 60000);
-
-		expect(inner.Seconds - seconds).toBeCloseTo(1, 5);
-	});
-
-	/* Regression: each object summed the stars of all the objects, so 20 000 of them froze the page until it crashed. */
-	it('shakes a view in parallel rays by moving it: a slant would throw it by its whole depth', async function () {
-		var mounted = await mount('<GameScene View="top" Quality="high" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
-		'</GameScene>');
-		var engine = mounted.Space.Engine();
-		var parallel = [0.1, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, -0.01, 0, 0, 0, -1, 1];
-		var slanted = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, -1, 0, 0, -0.2, 0];
-		var moved = engine.PostJitter(parallel);
-		var turned = engine.PostJitter(slanted);
-
-		expect(mounted.Space.Graphics().Frames).toBe(true);
-
-		expect(moved[8]).toBe(0);
-		expect(moved[9]).toBe(0);
-		expect(Math.abs(moved[12]) + Math.abs(moved[13])).toBeGreaterThan(0);
-		expect(Math.abs(moved[12])).toBeLessThan(2 / engine.Renderer.Width);
-
-		expect(turned[12]).toBe(0);
-		expect(Math.abs(turned[8]) + Math.abs(turned[9])).toBeGreaterThan(0);
-	});
-
 	it('brings the resolution back at the 60 frames of a screen, and holds it where a quality was chosen', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -953,9 +817,9 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('steps down from frames that are late, but not to where the grass goes', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var first = scene.Graphics().Level;
 		var i;
@@ -975,9 +839,9 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('never leaves a hole in the ground: a square gives way only when its parts are made', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
+		'</Scene>');
 		var inner = mounted.Space.Scene();
 		var engine = mounted.Space.Engine();
 		var nodes = inner.Ground.Nodes;
@@ -1008,21 +872,26 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('keeps the noise of a ground and of water where they are, not where the eye is', async function () {
-		var mounted = await mount('<GameScene (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="2" Seed="test" /></GameScene>');
-		var shaders = mounted.Space.Shaders(Elemenx.Service('Graphics3D'));
+		var mounted = await mount('<Scene (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="2" Seed="test" /></Scene>');
+		/* The water as it is drawn: the shader with the water graph of the library in it. */
+		var shaders = mounted.Space.Watered(mounted.Space.Shaders(Elemenx.Service('Renderer')));
+
+		expect(shaders.Sea).toContain('= vWorld + uEye;');
+		expect(shaders.Sea).toContain('void blueprintWater(inout vec3 color, inout float alpha) {\n');
 
 		[shaders.Land, shaders.Sea, shaders.Ground].forEach(function (source) {
 			expect(source).not.toMatch(/noise3\(vWorld/);
+			expect(source).not.toMatch(/wavesAt\(vWorld\./);
 		});
 	});
 
 	it('turns bodies at the pace of DaySeconds, however fast their orbits go', async function () {
-		var mounted = await mount('<GameScene Paused="true" Speed="4" DaySeconds="30" (ready)="Ready">' +
-			'<GameObject ID="sun" Kind="star">' +
-				'<GameObject ID="earth" Kind="planet" Radius="6371" Distance="1" Day="24" />' +
-				'<GameObject ID="mars" Kind="planet" Radius="3390" Distance="1.5" Day="12" />' +
-			'</GameObject>' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Paused="true" Speed="4" DaySeconds="30" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star">' +
+				'<SceneObject ID="earth" Kind="planet" Radius="6371" Distance="1" Day="24" />' +
+				'<SceneObject ID="mars" Kind="planet" Radius="3390" Distance="1.5" Day="12" />' +
+			'</SceneObject>' +
+		'</Scene>');
 		var inner = mounted.Space.Scene();
 		var engine = mounted.Space.Engine();
 
@@ -1037,11 +906,11 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('flies to what it focuses on: the eye goes through space, with no turn of the system', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
-			'<GameObject ID="sun" Kind="star">' +
-				'<GameObject ID="mars" Kind="planet" Radius="3390" Distance="1.5" />' +
-			'</GameObject>' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star">' +
+				'<SceneObject ID="mars" Kind="planet" Radius="3390" Distance="1.5" />' +
+			'</SceneObject>' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -1087,11 +956,11 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('puts what a square holds in every level one of its things can be seen at', async function () {
-		var mounted = await mount('<GameScene Quality="medium" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="192" Height="2" Water="0" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" />' +
-			'<GameObject ID="woods" Kind="forest" Shapes="oak" Density="1" Seed="a" Cover="1" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Quality="medium" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="192" Height="2" Water="0" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" />' +
+			'<SceneObject ID="woods" Kind="forest" Shapes="oak" Density="1" Seed="a" Cover="1" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -1115,9 +984,9 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('gives what Add is told to its traits, as a declaration does: the Size of a unit is the size of its model', async function () {
-		var mounted = await mount('<GameScene (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 
 		scene.Add('unit', {ID: 'giant', Size: 7, X: 5, Y: 5, Name: 'Giant'});
@@ -1129,10 +998,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('lets the view go anywhere: over a ground it is carried and lets its object go, in space it leaves its body aside', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
-			'<GameObject ID="hero" Kind="knight" X="0" Y="0" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
+			'<SceneObject ID="hero" Kind="knight" X="0" Y="0" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -1165,7 +1034,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(inner.Yaw).toBeLessThan(yaw);
 		expect(inner.Pitch).toBeLessThan(pitch);
 
-		var space = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="sun" Kind="star"><GameObject ID="mars" Kind="planet" Radius="3390" Distance="1.5" /></GameObject></GameScene>');
+		var space = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="sun" Kind="star"><SceneObject ID="mars" Kind="planet" Radius="3390" Distance="1.5" /></SceneObject></Scene>');
 		var far = space.Space.Scene();
 
 		space.Space.Engine().Frame(performance.now() + 100);
@@ -1179,10 +1048,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('works out the light of a field: what a hill hides of the sky, and the color that comes from the land round a place', async function () {
-		var mounted = await mount('<GameScene Quality="high" Paused="true" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="300" Height="40" Water="0" Scale="60" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" Elevation="40" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Quality="high" Paused="true" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="300" Height="40" Water="0" Scale="60" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" Elevation="40" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var engine = scene.Engine();
 		var field = scene.Scene().Ground.Field;
@@ -1229,11 +1098,11 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('comes down to a body from where the eye stands and goes back up to the same view, in one piece', async function () {
-		var mounted = await mount('<GameScene (ready)="Ready">' +
-			'<GameObject ID="sun" Kind="star">' +
-				'<GameObject ID="earth" Kind="planet" Surface-Type="terran" Radius="6371" Distance="1" />' +
-			'</GameObject>' +
-		'</GameScene>');
+		var mounted = await mount('<Scene (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star">' +
+				'<SceneObject ID="earth" Kind="planet" Surface-Type="terran" Radius="6371" Distance="1" />' +
+			'</SceneObject>' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -1289,7 +1158,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('goes down at once when it is told so', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="sun" Kind="star"><GameObject ID="moon" Kind="planet" Surface-Type="moon" Radius="1737" Distance="1" /></GameObject></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="sun" Kind="star"><SceneObject ID="moon" Kind="planet" Surface-Type="moon" Radius="1737" Distance="1" /></SceneObject></Scene>');
 		var inner = mounted.Space.Scene();
 
 		mounted.Space.Engine().Frame(performance.now() + 100);
@@ -1301,9 +1170,11 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('keeps from the shaders what would blur, flicker or show as noise', async function () {
-		var mounted = await mount('<GameScene (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="2" Seed="test" /></GameScene>');
+		var mounted = await mount('<Scene (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="2" Seed="test" /></Scene>');
 		var space = mounted.Space;
-		var graphics = Elemenx.Service('Graphics3D');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
 		var lights = space.LightingShaders(graphics);
 		var sown = space.ScatterShaders(graphics);
 
@@ -1320,9 +1191,13 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		/* Air seen from inside its shell has no line where the nearest point of a ray goes behind the eye. */
 		expect(space.Shaders(graphics).Air).toMatch(/max\(dot\(uBody\.xyz - uCamera, look\), 0\.0\)/);
 
-		/* Grass: the wind is one wave for a place, a blade stirs only near, and one with no height is not drawn. */
-		expect(sown.GrassVertex).toMatch(/wave \* 0\.16 \* near/);
-		expect(sown.GrassVertex).not.toMatch(/uWind \* 1\.4 \+ place\.x \* 0\.21 \+ seed/);
+		/* Grass: the wind (a graph of the library now, LibraryGrass) is one wave for a place, a blade stirs only near, and one with no height is not drawn. */
+		var grassWind = Elemenx.Service('Blueprints').Compile(space.LibraryGrass()).Function;
+
+		expect(grassWind).toContain('0.16');
+		expect(grassWind).toMatch(/\buv\b/);
+		expect(grassWind).not.toMatch(/1\.4\b/);
+		expect(sown.GrassVertex).toContain('blueprintGrass(');
 		expect(sown.GrassVertex).toMatch(/tall > 0\.01 \?/);
 
 		/* Clumps thin the blades between the tufts and make them lower there; the height of a blade is not its chance to grow. */
@@ -1340,7 +1215,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('lets the eye go down to the ground and look up at the sky', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="200" Height="2" Seed="test" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="200" Height="2" Seed="test" /></Scene>');
 		var inner = mounted.Space.Scene();
 		var engine = mounted.Space.Engine();
 
@@ -1354,10 +1229,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('reads an hour of the day: the sun at noon is high and white, at sunset low and gold, at night the moon lights the land', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="200" Height="2" Seed="test" />' +
-			'<GameObject ID="day" Kind="sun" Time="12:00" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="200" Height="2" Seed="test" />' +
+			'<SceneObject ID="day" Kind="sun" Time="12:00" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 
@@ -1386,10 +1261,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('changes its weather slowly: clouds take the sun, rain falls, and what is not a weather is clear', async function () {
-		var mounted = await mount('<GameScene Paused="true" Weather="clear" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="200" Height="2" Seed="test" />' +
-			'<GameObject ID="day" Kind="sun" Elevation="50" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Paused="true" Weather="clear" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="200" Height="2" Seed="test" />' +
+			'<SceneObject ID="day" Kind="sun" Elevation="50" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var engine = scene.Engine();
 		var clear = engine.WeatherStep(0).Clouds;
@@ -1417,9 +1292,9 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('shines many lights: the nearest two dozen at once, lit where they stand, each with its color', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="200" Height="2" Seed="test" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="200" Height="2" Seed="test" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var i;
 
@@ -1443,7 +1318,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('takes a ground from a model: floors one over the other, walls that stop a walker, and a plane at its foot', function () {
-		var terrain = Elemenx.Service('Terrain');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
 
 		function box (x0, x1, y, z0, z1) {
 			return {Positions: [x0, y, z0, x1, y, z0, x1, y, z1, x0, y, z1], Indices: [0, 2, 1, 0, 3, 2]};
@@ -1512,9 +1387,9 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('gives each scene of a page its own textures of a model they share', async function () {
-		var models = Elemenx.Service('Models');
-		var first = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></GameScene>');
-		var second = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></GameScene>');
+		var models = Elemenx.Service('SceneModels');
+		var first = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></Scene>');
+		var second = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></Scene>');
 
 		models.Define('test-shared', {URL: 'shared.glb'});
 
@@ -1550,9 +1425,9 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('puts rain and snow in the world, clouds in frames that add up, and takes a lens by how strong it is', async function () {
-		var mounted = await mount('<GameScene Flare="1.5" Weather="rain" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></GameScene>');
+		var mounted = await mount('<Scene Flare="1.5" Weather="rain" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></Scene>');
 		var space = mounted.Space;
-		var lights = space.LightingShaders(Elemenx.Service('Graphics3D'));
+		var lights = space.LightingShaders(Elemenx.Service('Renderer'));
 		var engine = space.Engine();
 
 		/* A box of air that wraps round the eye: not the coordinates of the screen. */
@@ -1573,7 +1448,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('has a view however early the keys are given: a walker of a size not known yet does not put the eye on its target', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></Scene>');
 		var scene = mounted.Space;
 
 		scene.Add('unit', {ID: 'hero', Size: 0, X: 1, Y: 1});
@@ -1592,7 +1467,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('walks with the keys where the view looks, and goes on its way while the right button turns the view', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="200" Height="1" Water="0" Seed="test" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="200" Height="1" Water="0" Seed="test" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -1635,12 +1510,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('walks, drives and looks by a pad as far as it leans: half a trigger is half the gas, the stick steers, A jumps', async function () {
-		var gamepad = Elemenx.Service('Gamepad');
+		var gamepad = Elemenx.Service('InputDevices');
 		var pad = gamepad.Virtual(unique('drive'), {Navigate: false});
 		var now = performance.now() + 1000;
 
 		async function scene (vehicle) {
-			var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="600" Height="0" Water="0" Seed="flat" /></GameScene>');
+			var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="600" Height="0" Water="0" Seed="flat" /></Scene>');
 			var space = mounted.Space;
 
 			space.Add('unit', Object.assign({ID: 'hero', Size: 1.2, X: 0, Y: 0}, vehicle ? {Vehicle: {Kind: 'car'}} : {}));
@@ -1730,7 +1605,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		};
 
 		try {
-			mounted = await mount('<GameScene (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></GameScene>');
+			mounted = await mount('<Scene (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></Scene>');
 		}
 		finally {
 			HTMLCanvasElement.prototype.getContext = get;
@@ -1746,8 +1621,8 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view', async function () {
-		var terrain = Elemenx.Service('Terrain');
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"></GameScene>');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -1834,7 +1709,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('keeps a block of noise for a sampler3D', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
 		var renderer = mounted.Space.Engine().Renderer;
 		var gl = renderer.GL;
 		var head = '#version 300 es\nprecision highp float;\nprecision highp sampler3D;\n';
@@ -1855,7 +1730,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('puts another picture into a texture, and draws an element of the page as it is styled', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
 		var engine = mounted.Space.Engine();
 		var renderer = engine.Renderer;
 		var gl = renderer.GL;
@@ -1925,7 +1800,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('moves the weather: fronts, a wind for all, what stays on the ground and the bolts of a storm', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var engine = scene.Engine();
 		var inner = scene.Scene();
@@ -2031,7 +1906,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('casts the shadows of the clouds that are there, from a map of what they hold', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="medium" Weather="cloudy" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="200" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="45" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="medium" Weather="cloudy" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="200" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" Latitude="45" /></Scene>');
 		var scene = mounted.Space;
 		var engine = scene.Engine();
 		var gl = engine.Renderer.GL;
@@ -2056,9 +1931,11 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come', async function () {
-		var graphics = Elemenx.Service('Graphics3D');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
 		var pictures = graphics.Work();
-		var lands = Elemenx.Service('Terrain').Work();
+		var lands = Elemenx.Service('SceneTerrainGenerator').Work();
 		var runs = {Pictures: pictures.Run, Lands: lands.Run};
 		var held = [];
 		var asked = 0;
@@ -2080,7 +1957,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		};
 
 		try {
-			mounted = await mount('<GameScene Paused="true" Quality="high" Weather="cloudy" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="200" Height="10" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="45" /></GameScene>');
+			mounted = await mount('<Scene Paused="true" Quality="high" Weather="cloudy" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="200" Height="10" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" Latitude="45" /></Scene>');
 
 			var scene = mounted.Space;
 			var engine = scene.Engine();
@@ -2129,7 +2006,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 			/* The block of a worker is the very one of the page. */
 			var block = null;
 
-			pictures.Run('Graphics3D', 'CloudBlock', [6], function (error, data) {
+			pictures.Run('Renderer', 'CloudBlock', [6], function (error, data) {
 				block = data;
 			});
 
@@ -2146,11 +2023,11 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('makes a body or what it holds glow by an effect that follows it, declared; mana rises in bubbles that the wind barely moves', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="g" />' +
-			'<GameObject ID="fx" Kind="effect" Type="glow" Follow="hero" Color="#7fd0ff" Appear="0" Offset="[0, 0.5, 0]" />' +
-			'<GameObject ID="bubbles" Kind="effect" Type="mana" Follow="hero" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="g" />' +
+			'<SceneObject ID="fx" Kind="effect" Type="glow" Follow="hero" Color="#7fd0ff" Appear="0" Offset="[0, 0.5, 0]" />' +
+			'<SceneObject ID="bubbles" Kind="effect" Type="mana" Follow="hero" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -2240,9 +2117,9 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('draws a mirror as the world reflected by its plane, cut at it, and glass blended over what is behind it', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="high" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="m" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="high" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="m" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -2415,12 +2292,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('lights the world with the lamps a model carries, unless it is told not to', async function () {
-		var library = Elemenx.Service('Models');
+		var library = Elemenx.Service('SceneModels');
 		var mounted;
 
 		library.Define('test-beacon', {Build: library.Recipes.crystal.Build});
 
-		mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="23" /></GameScene>');
+		mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="23" /></Scene>');
 
 		var scene = mounted.Space;
 		var inner = scene.Scene();
@@ -2458,7 +2335,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('takes the color out of a wet day and melts what is far into its sky', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="medium" Weather="clear" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="200" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="45" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="medium" Weather="clear" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="200" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" Latitude="45" /></Scene>');
 		var scene = mounted.Space;
 		var engine = scene.Engine();
 		var inner = scene.Scene();
@@ -2501,7 +2378,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('softens a shadow with the distance of what casts it, and opens the view as an eye does', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="high" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="200" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="45" /><GameObject ID="hero" Kind="unit" X="0" Y="0" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="high" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="200" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" Latitude="45" /><SceneObject ID="hero" Kind="unit" X="0" Y="0" /></Scene>');
 		var scene = mounted.Space;
 		var engine = scene.Engine();
 		var renderer = engine.Renderer;
@@ -2530,8 +2407,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('burns where it is told: effects with their lamps, those of a body, bursts that end, types of its own', async function () {
-		var graphics = Elemenx.Service('Graphics3D');
-		var mounted = await mount('<GameScene Paused="true" Quality="medium" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="23" /></GameScene>');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
+		var mounted = await mount('<Scene Paused="true" Quality="medium" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="23" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -2625,12 +2504,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(jet.At[1]).toBeCloseTo(inner.Objects.hero.World[1] + 1 + 0.5, 3);
 
 		/* The air over what burns trembles, and particles leave the gloss of what is behind them alone. */
-		expect(engine.EffectHeat(graphics.Identity(), 1).length).toBe(16);
+		expect(engine.EffectHeat(math.Identity(), 1).length).toBe(16);
 		expect(effectsSource).toContain('renderer.GL.colorMask(true, true, true, false);');
 	});
 
 	it('makes a sky of a seed, a face a frame, the same for the same seed, and gives it to the shade of bodies', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -2694,7 +2573,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('hides the sun behind the clouds of a wet day, its glare and its rays too', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="medium" Weather="clear" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="200" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="45" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="medium" Weather="clear" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="200" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" Latitude="45" /></Scene>');
 		var scene = mounted.Space;
 		var engine = scene.Engine();
 		var inner = scene.Scene();
@@ -2736,12 +2615,13 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		/* How much of the sun is seen is read with the clouds before it, over frames: a leaf does not flash it. */
 		expect(lightingSource).toContain('float now = seen / 8.0 * (1.0 - shut / 8.0) *');
 		expect(lightingSource).toContain('uMix: state.SunlitOn ? 0.14 : 1');
-		expect(lightingSource).toContain('var spot = graphics.Apply(view.Plain || view.Matrix, sun);');
-		expect(gameSceneSource).toContain('smoothstep(-0.12, 0.02, s) * (1.0 - uCover);');
+		expect(lightingSource).toContain('var spot = math.Apply(view.Plain || view.Matrix, sun);');
+		/* The light round the sun goes with the clouds: in the sky of the library, a graph now (LibrarySky, its SkyHalo). */
+		expect(Elemenx.Service('Blueprints').Compile(scene.LibrarySky()).Function).toMatch(/smoothstep\(-0\.12, 0\.02, [^)]+\) \* \(1\.0 - uCover\)\)/);
 	});
 
 	it('does what hangs on the depth before the frames add up, so no edge trembles with the shake of the view', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="high" Weather="fog" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="200" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="45" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="high" Weather="fog" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="200" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" Latitude="45" /></Scene>');
 		var engine = mounted.Space.Engine();
 		var gl = engine.Renderer.GL;
 		var now = performance.now() + 100;
@@ -2775,7 +2655,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('lets go of neither a hero nor the view on Escape, and takes no leap of the pointer', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -2841,7 +2721,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('never lets a hero out of the view, and ends a press when the pointer is taken or given back', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -2952,7 +2832,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('stands the view of a walker behind it, in its eyes or over its shoulder, and V goes through them with the pointer taken', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var heard = '';
 		var inner = scene.Scene();
@@ -3070,7 +2950,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('shows the axes of a view in a corner, and a press on one looks along it', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" Axes="bottom-left" Origin="true" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" Axes="bottom-left" Origin="true" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -3111,31 +2991,31 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		await tick();
 
-		var corner = scene.$Element().querySelector('.elemenx-game-scene-axes');
+		var corner = scene.$Element().querySelector('.elemenx-scene-axes-place');
 
 		expect(corner.getAttribute('data-corner')).toBe('bottom-left');
 		expect(scene.ViewYaw).toBe(0.7);
 
-		var ends = corner.querySelectorAll('.elemenx-axes-end');
+		var ends = corner.querySelectorAll('.elemenx-scene-axes-end');
 
 		expect(ends.length).toBe(6);
 
-		corner.querySelector('.elemenx-axes-x.near').dispatchEvent(new MouseEvent('click', {bubbles: true}));
+		corner.querySelector('.elemenx-scene-axes-x.near').dispatchEvent(new MouseEvent('click', {bubbles: true}));
 
 		expect(inner.Yaw).toBeCloseTo(Math.PI / 2, 5);
 		expect(inner.Pitch).toBe(0);
 
-		corner.querySelector('.elemenx-axes-z.other').dispatchEvent(new MouseEvent('click', {bubbles: true}));
+		corner.querySelector('.elemenx-scene-axes-z.other').dispatchEvent(new MouseEvent('click', {bubbles: true}));
 
 		expect(inner.Yaw).toBeCloseTo(Math.PI, 5);
 
-		corner.querySelector('.elemenx-axes-y.near').dispatchEvent(new MouseEvent('click', {bubbles: true}));
+		corner.querySelector('.elemenx-scene-axes-y.near').dispatchEvent(new MouseEvent('click', {bubbles: true}));
 
 		expect(inner.Pitch).toBe(1.5);
 	});
 
 	it('Axes draws each end where the view has it, the nearest over the others', async function () {
-		var axes = Elemenx.Component('Axes')({Yaw: 0, Pitch: 0});
+		var axes = Elemenx.Component('SceneAxes')({Yaw: 0, Pitch: 0});
 
 		document.getElementById('mount').appendChild(axes.$Element());
 
@@ -3165,7 +3045,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 			heard.push(event);
 		});
 
-		axes.$Element().querySelector('.elemenx-axes-x.other').dispatchEvent(new MouseEvent('click', {bubbles: true}));
+		axes.$Element().querySelector('.elemenx-scene-axes-x.other').dispatchEvent(new MouseEvent('click', {bubbles: true}));
 
 		expect(heard[0]).toEqual({Axis: 'X', Sign: -1});
 		expect(axes.$Element().querySelectorAll('text').length).toBe(3);
@@ -3209,7 +3089,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('ends every press when the pointer goes, and takes back the leap that came just before', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var captured = scene.Captured;
@@ -3274,7 +3154,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('chooses the lamps with shadows by what the view follows, so coming close changes nothing', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="high" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="high" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -3310,7 +3190,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('quiets the moon: it lights less than it did, and a night holds its colors back', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="0" Latitude="20" DayOfYear="100" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="0" Latitude="20" DayOfYear="100" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 
@@ -3323,7 +3203,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('goes over the other shoulder, and B says so with the pointer taken', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" Person="shoulder" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" Person="shoulder" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -3375,7 +3255,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('draws every effect of magic, and what is told of a circle turns it', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="medium" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="20" Latitude="20" DayOfYear="100" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="medium" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="20" Latitude="20" DayOfYear="100" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -3464,50 +3344,6 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(moved.uRingsMore[0]).toBeCloseTo(Math.PI / 2, 6);
 		expect(sigils.Uniforms(told, 1, 2).uRingsMore[0]).toBeCloseTo(Math.PI, 6);
 		expect(sigils.Make('d', {Rings: 4}).Rings.length).toBe(4);
-	});
-
-	it('Tracks makes a closed road of a seed, knows how far a place is from it, and a model of it', function () {
-		var tracks = Elemenx.Service('Tracks');
-		var track = tracks.Make('t', {Length: 1500, Corners: 10});
-		var points = track.Points;
-		var i;
-
-		expect(tracks.Make('t', {Length: 1500, Corners: 10}).Points).toEqual(points);
-		expect(tracks.Make('u', {Length: 1500, Corners: 10}).Points[9].X).not.toBe(points[9].X);
-
-		var round = 0;
-
-		for (i = 0; i < points.length; i++)
-			round += Math.hypot(points[(i + 1) % points.length].X - points[i].X, points[(i + 1) % points.length].Z - points[i].Z);
-
-		expect(Math.abs(round - 1500)).toBeLessThan(150);
-
-		/* It closes on itself and keeps its steps. */
-		expect(Math.hypot(points[0].X - points[points.length - 1].X, points[0].Z - points[points.length - 1].Z)).toBeLessThan(20);
-
-		var point = points[40];
-		var aside = tracks.Near(track, point.X + point.Way[1] * 5, point.Z - point.Way[0] * 5);
-
-		expect(Math.abs(aside.Offset)).toBeCloseTo(5, 0);
-		expect(Math.abs(aside.Along - 40)).toBeLessThan(3);
-		expect(tracks.Near(track, point.X - point.Way[1] * 5, point.Z + point.Way[0] * 5).Offset * aside.Offset).toBeLessThan(0);
-
-		/* The land comes to the road, and goes off on its own far from it. */
-		expect(tracks.Height(track, point.X, point.Z)).toBeCloseTo(point.Y - 0.25, 3);
-
-		var start = track.Start;
-
-		expect(Math.hypot(start.X - points[track.Line].X, start.Z - points[track.Line].Z)).toBe(0);
-
-		var asset = tracks.Asset(track);
-
-		expect(asset.Meshes[0].length).toBeGreaterThan(5);
-		expect(asset.Images.length).toBe(asset.Materials.length);
-
-		asset.Meshes[0].forEach(function (part) {
-			expect(Math.max.apply(null, part.Geometry.Indices)).toBeLessThan(part.Geometry.Positions.length / 3);
-			expect(part.Geometry.Colors).toBe(null);
-		});
 	});
 
 	it('Physics runs steps of one length, whatever the frames are, and blends what shows', function () {
@@ -3954,8 +3790,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(coming(30, 0.1)).toBeLessThan(held(30, quick, flat, {Steer: 1}, 0.1).Steer * 0.6);
 	});
 
-	it('Graphics3D makes programs behind the page for who is patient, and sets in a program only what changed', async function () {
-		var graphics = Elemenx.Service('Graphics3D');
+	it('Renderer makes programs behind the page for who is patient, and sets in a program only what changed', async function () {
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
 		var quad = graphics.Shaders.Quad;
 		var fragment = '#version 300 es\nprecision highp float;\nuniform float uA;\nuniform vec2 uB;\nout vec4 outColor;\nvoid main() { outColor = vec4(uA, uB, 1.0); }';
 		var patient = graphics.Create(document.createElement('canvas'), {Patient: true, Antialias: false});
@@ -4063,11 +3901,11 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(wanted.Settled).toBe(true);
 	});
 
-	it('Graphics3D sets the state of the context only where it changes, and only the uniforms a program has', async function () {
-		var renderer = Elemenx.Service('Graphics3D').Create(document.createElement('canvas'), {Antialias: false});
+	it('Renderer sets the state of the context only where it changes, and only the uniforms a program has', async function () {
+		var renderer = Elemenx.Service('Renderer').Create(document.createElement('canvas'), {Antialias: false});
 		var gl = renderer.GL;
 		var fragment = '#version 300 es\nprecision highp float;\nuniform float uA;\nout vec4 outColor;\nvoid main() { outColor = vec4(uA); }';
-		var program = renderer.Program(Elemenx.Service('Graphics3D').Shaders.Quad, fragment);
+		var program = renderer.Program(Elemenx.Service('Renderer').Shaders.Quad, fragment);
 		var mesh = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0], Indices: [0, 1, 2]});
 		var calls = [];
 		var watched = ['useProgram', 'enable', 'disable', 'depthMask', 'blendFunc', 'blendFuncSeparate', 'cullFace'];
@@ -4121,7 +3959,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('Workers runs the methods of Services in workers made of their source, and in the page when it cannot', async function () {
-		var terrain = Elemenx.Service('Terrain');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
 		var workers = Elemenx.Service('Workers');
 		var options = {Size: 200, Height: 30, Seed: 'work'};
 		var roads = [[[-50, 0], [50, 0]]];
@@ -4144,13 +3982,13 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(pool.Inline()).toBe(false);
 		expect(field.Options).toBe(options);
 
-		pool.Run('Terrain', 'Piece', ['Flat', options, roads, [10, -20, 50, 8]], function (error, result) {
+		pool.Run('SceneTerrainGenerator', 'Piece', ['Flat', options, roads, [10, -20, 50, 8]], function (error, result) {
 			piece = result;
 		});
-		pool.Run('Terrain', 'Grid', [options, 5, 20, 0.3], function (error, result) {
+		pool.Run('SceneTerrainGenerator', 'Grid', [options, 5, 20, 0.3], function (error, result) {
 			grid = result;
 		});
-		pool.Run('Terrain', 'Missing', [], function (error) {
+		pool.Run('SceneTerrainGenerator', 'Missing', [], function (error) {
 			failed = error;
 		});
 
@@ -4208,7 +4046,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		var plain = workers.Pool(unique('Plain'), {Terrain: ['Smoothstep']});
 		var now = null;
 
-		plain.Run('Terrain', 'Smoothstep', [0, 1, 0.5], function (error, value) {
+		plain.Run('SceneTerrainGenerator', 'Smoothstep', [0, 1, 0.5], function (error, value) {
 			now = value;
 		});
 
@@ -4222,7 +4060,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('makes the squares of a ground of noise in workers, lets go of what came for roads that changed, and grows grass with no noise in a frame', async function () {
-		var pool = Elemenx.Service('Terrain').Work();
+		var pool = Elemenx.Service('SceneTerrainGenerator').Work();
 		var run = pool.Run;
 		var held = [];
 		var grids = [];
@@ -4237,11 +4075,11 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		};
 
 		try {
-			mounted = await mount('<GameScene (ready)="Ready">' +
-				'<GameObject ID="land" Kind="ground" Size="192" Height="20" Water="0.2" Seed="test" />' +
-				'<GameObject ID="sun" Kind="sun" />' +
-				'<GameObject ID="blades" Kind="grass" />' +
-			'</GameScene>');
+			mounted = await mount('<Scene (ready)="Ready">' +
+				'<SceneObject ID="land" Kind="ground" Size="192" Height="20" Water="0.2" Seed="test" />' +
+				'<SceneObject ID="sun" Kind="sun" />' +
+				'<SceneObject ID="blades" Kind="grass" />' +
+			'</Scene>');
 
 			var scene = mounted.Space;
 			var inner = scene.Scene();
@@ -4275,7 +4113,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 			/* Roads came while it was made: what came is let go, and asked for again. */
 			field.Roads = [[[-90, 0], [90, 0]]];
 
-			one.Callback(null, Elemenx.Service('Terrain').Piece.apply(null, one.Args));
+			one.Callback(null, Elemenx.Service('SceneTerrainGenerator').Piece.apply(null, one.Args));
 
 			expect(Object.keys(ground.Nodes).length).toBe(1);
 
@@ -4287,7 +4125,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 			expect(again.Args[2]).toBe(field.Roads);
 
-			again.Callback(null, Elemenx.Service('Terrain').Piece.apply(null, again.Args));
+			again.Callback(null, Elemenx.Service('SceneTerrainGenerator').Piece.apply(null, again.Args));
 
 			expect(Object.keys(ground.Nodes).length).toBe(2);
 
@@ -4341,8 +4179,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 	it('A mirrored node keeps its mirror, and what a file keeps as one piece stands apart', function () {
 		var gltf = Elemenx.Service('Gltf');
-		var models = Elemenx.Service('Models');
-		var graphics = Elemenx.Service('Graphics3D');
+		var models = Elemenx.Service('SceneModels');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
 
 		/* As the wheels of the other side come: x and z change places. */
 		var matrix = [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 2, 3, 4, 1];
@@ -4379,7 +4219,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		var asset = {Nodes: [{Name: 'Tyres'}, {Name: 'Body'}]};
 		var geometry = {Positions: positions, Normals: normals, Indices: indices};
-		var pieces = [{ID: 'a', Node: 0, Skin: -1, Rest: graphics.Identity(), Geometry: geometry, Material: {Name: 'paint'}}, {ID: 'b', Node: 1, Skin: -1, Rest: graphics.Identity(), Geometry: geometry, Material: {Name: 'paint'}}, {ID: 'c', Node: 1, Skin: -1, Rest: graphics.Identity(), Geometry: geometry, Material: {Name: 'Tyre'}}];
+		var pieces = [{ID: 'a', Node: 0, Skin: -1, Rest: math.Identity(), Geometry: geometry, Material: {Name: 'paint'}}, {ID: 'b', Node: 1, Skin: -1, Rest: math.Identity(), Geometry: geometry, Material: {Name: 'paint'}}, {ID: 'c', Node: 1, Skin: -1, Rest: math.Identity(), Geometry: geometry, Material: {Name: 'Tyre'}}];
 		var apart = models.Apart(asset, pieces, /Tyre/);
 
 		expect(apart.length).toBe(9);
@@ -4396,7 +4236,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(part.Geometry.Indices).toEqual([0, 1, 2]);
 
 		/* One axle does not fall in two along its length. */
-		var axle = models.Apart(asset, [{ID: 'a', Node: 0, Skin: -1, Rest: graphics.Identity(), Material: {Name: ''}, Geometry: {Positions: [0, 1, 2, 3, 4, 5, 6, 7].reduce(function (list, row) {
+		var axle = models.Apart(asset, [{ID: 'a', Node: 0, Skin: -1, Rest: math.Identity(), Material: {Name: ''}, Geometry: {Positions: [0, 1, 2, 3, 4, 5, 6, 7].reduce(function (list, row) {
 			return list.concat([-1, 0, 2 + row * 0.1, -0.8, 0, 2 + row * 0.1, -1, 0, 2 + row * 0.1, 1, 0, 2 + row * 0.1, 1.2, 0, 2 + row * 0.1, 1, 0, 2 + row * 0.1]);
 		}, []), Indices: Array.from({length: 48}, function (each, index) {
 			return index;
@@ -4645,7 +4485,9 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 	it('Physics flies a ship: its speed comes after its throttle, its axes stay square', function () {
 		var physics = Elemenx.Service('Physics');
-		var graphics = Elemenx.Service('Graphics3D');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
 		var ship = {At: [0, 0, 0], Right: [1, 0, 0], Up: [0, 1, 0], Ahead: [0, 0, 1], Way: [0, 0, 0], Spin: [0, 0, 0], Throttle: 0.5};
 		var i;
 
@@ -4653,9 +4495,9 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 			physics.Ship(ship, {Throttle: 1, Yaw: 1, Pitch: 0.5, Roll: 1}, {Top: 2}, 1 / 120);
 
 		expect(ship.Throttle).toBe(1);
-		expect(graphics.Vectors.Length(ship.Way)).toBeGreaterThan(1);
-		expect(graphics.Vectors.Dot(ship.Ahead, ship.Up)).toBeCloseTo(0, 6);
-		expect(graphics.Vectors.Length(ship.Right)).toBeCloseTo(1, 6);
+		expect(math.Vectors.Length(ship.Way)).toBeGreaterThan(1);
+		expect(math.Vectors.Dot(ship.Ahead, ship.Up)).toBeCloseTo(0, 6);
+		expect(math.Vectors.Length(ship.Right)).toBeCloseTo(1, 6);
 
 		var still = {At: [0, 0, 0], Right: [1, 0, 0], Up: [0, 1, 0], Ahead: [0, 0, 1], Way: [0, 0, 0], Spin: [0, 0, 0], Throttle: 0};
 
@@ -4664,150 +4506,20 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(still.Ahead[0]).toBeGreaterThan(0);
 	});
 
-	it('Tracks says what a wheel stands on: smooth along the road, the land beside it', function () {
-		var tracks = Elemenx.Service('Tracks');
-		var track = tracks.Make('under', {Length: 1200, Corners: 9, Hills: 9});
-		var a = track.Points[30];
-		var b = track.Points[31];
-		var last = null;
-		var i;
-
-		for (i = 0; i <= 12; i++) {
-			var under = tracks.Under(track, a.X + (b.X - a.X) * i / 12, a.Z + (b.Z - a.Z) * i / 12);
-
-			expect(under.Grip).toBe(1);
-
-			if (last !== null)
-				expect(Math.abs(under.Height - last)).toBeLessThan(0.05);
-
-			last = under.Height;
-		}
-
-		var off = tracks.Under(track, a.X + a.Way[1] * 15, a.Z - a.Way[0] * 15);
-
-		expect(off.Grip).toBeLessThan(1);
-		expect(off.Drag).toBeGreaterThan(0);
-
-		/* All the way round, and where its points lie far apart as well, the road has no step: a step is what threw a car up on a flat road. */
-		var longest = 0;
-		var worst = 0;
-
-		track.Points.forEach(function (point, index) {
-			var after = track.Points[(index + 1) % track.Points.length];
-			var before = tracks.Under(track, point.X, point.Z).Height;
-			var j;
-
-			longest = Math.max(longest, Math.hypot(after.X - point.X, after.Z - point.Z));
-
-			for (j = 1; j <= 24; j++) {
-				var height = tracks.Under(track, point.X + (after.X - point.X) * j / 24, point.Z + (after.Z - point.Z) * j / 24).Height;
-
-				worst = Math.max(worst, Math.abs(height - before));
-				before = height;
-			}
-		});
-
-		expect(longest).toBeGreaterThan(7);
-		expect(worst).toBeLessThan(0.05);
-
-		/* Nearness is to the line and not to its nearest point, and with a hint it stays with the section it was told. */
-		var sharpest = 0;
-
-		track.Points.forEach(function (point, index) {
-			if (point.Bend > track.Points[sharpest].Bend)
-				sharpest = index;
-		});
-
-		var bendFrom = track.Points[sharpest];
-		var bendTo = track.Points[(sharpest + 1) % track.Points.length];
-
-		expect(Math.abs(tracks.Near(track, (bendFrom.X + bendTo.X) / 2, (bendFrom.Z + bendTo.Z) / 2).Offset)).toBeLessThan(0.01);
-
-		var count = track.Points.length;
-		var far = Math.floor(count / 2);
-
-		expect(tracks.Near(track, a.X, a.Z, far).Along).not.toBe(30);
-		expect(tracks.Near(track, a.X, a.Z, 28).Along).toBe(30);
-	});
-
-	it('holds a car inside the barrier by its corners, at any speed and at any angle', async function () {
-		var models = Elemenx.Service('Models');
-		var tracks = Elemenx.Service('Tracks');
-		var track = tracks.Make('walls', {Length: 1200, Corners: 9});
-		var name = unique('track');
-
-		models.Define(name, {URL: name, Asset: tracks.Asset(track), Fit: false});
-
-		await new Promise(function (done) {
-			models.Load(name, done);
-		});
-
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"></GameScene>');
-		var scene = mounted.Space;
-		var inner = scene.Scene();
-		var engine = scene.Engine();
-		var now = performance.now() + 100;
-		var start = track.Start;
-
-		scene.Add('location', {ID: 'place', Model: name, Size: 1});
-
-		for (var f = 0; f < 3; f++) {
-			inner.Rest = 0;
-
-			engine.Frame(now += 33);
-		}
-
-		scene.Add('unit', {ID: 'car', Name: '', Size: 1, X: start.X, Y: start.Z, Z: start.Y, Vehicle: {Kind: 'car', Track: track, Heading: start.Heading + 0.9, Long: 2.3, Wide: 1, Power: 1400000, Top: 120}});
-		scene.Control('car');
-
-		var car = inner.Objects.car;
-		var wall = track.Width / 2 + track.Margin;
-		var worst = 0;
-		var met = 0;
-
-		for (var i = 0; i < 700; i++) {
-			inner.Ground.Keys = i % 140 < 70 ? {KeyW: true, KeyA: true} : {KeyW: true, KeyD: true};
-			inner.Rest = 0;
-
-			engine.Frame(now += 33);
-
-			var state = car.Car;
-			var ahead = [Math.sin(state.Heading), Math.cos(state.Heading)];
-
-			[[2.3, 1], [2.3, -1], [-2.3, 1], [-2.3, -1]].forEach(function (corner) {
-				var x = state.X + ahead[0] * corner[0] + ahead[1] * corner[1];
-				var z = state.Z + ahead[1] * corner[0] - ahead[0] * corner[1];
-				var near = Math.abs(tracks.Near(track, x, z, state.Along).Offset);
-
-				worst = Math.max(worst, near);
-				met = near > wall - 0.3 ? met + 1 : met;
-			});
-		}
-
-		expect(met).toBeGreaterThan(0);
-		expect(worst).toBeLessThan(wall);
-	});
-
 	it('drives a car on its track: it stands on the road, nothing shakes, and the barrier holds it', async function () {
-		var models = Elemenx.Service('Models');
-		var tracks = Elemenx.Service('Tracks');
-		var track = tracks.Make('drive', {Length: 1200, Corners: 9});
-		var name = unique('track');
+		var models = Elemenx.Service('SceneModels');
+		var roads = Elemenx.Service('SceneRoads');
+		var track = Elemenx.Service('SceneRoadGenerator').Track('drive', {Length: 1200, Corners: 9});
 
-		models.Define(name, {URL: name, Asset: tracks.Asset(track), Fit: false});
-
-		await new Promise(function (done) {
-			models.Load(name, done);
-		});
-
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
 		var now = performance.now() + 100;
 		var start = track.Start;
 
-		scene.Add('location', {ID: 'place', Model: name, Size: 1});
+		scene.Add('ground', {ID: 'land', Size: 1400, Height: 8, Water: 0, Scale: 300, Ridges: 0, Seed: 'drive'});
+		scene.Add('road', track.Spec);
 
 		function frames (count, length) {
 			for (var i = 0; i < count; i++) {
@@ -4819,16 +4531,16 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		frames(3);
 
-		scene.Add('unit', {ID: 'car', Name: '', Size: 1.2, X: start.X, Y: start.Z, Z: start.Y, Vehicle: {Kind: 'car', Track: track, Heading: start.Heading}});
+		scene.Add('unit', {ID: 'car', Name: '', Size: 1.2, X: start.X, Y: start.Z, Vehicle: {Kind: 'car', Heading: start.Heading}});
 		scene.Control('car');
 
 		frames(40);
 
 		var car = inner.Objects.car;
-		var lift = inner.Ground.Field.Lift || 0;
 
 		/* On the road as the model has it. */
-		expect(car.World[1]).toBeCloseTo(tracks.Under(track, car.Car.X, car.Car.Z).Height + lift, 1);
+		expect(scene.SurfaceAt(car.Car.X, car.Car.Z).Road).toBe('track');
+		expect(car.World[1]).toBeCloseTo(scene.SurfaceAt(car.Car.X, car.Car.Z).Height, 1);
 
 		inner.Ground.Keys = {KeyW: true};
 
@@ -4852,13 +4564,29 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		expect(Math.max.apply(null, gaps)).toBeLessThan(0.001);
 
-		/* Past the barrier it does not go. */
-		car.Car.X = start.X + Math.cos(start.Heading) * 60;
-		car.Car.Z = start.Z - Math.sin(start.Heading) * 60;
+		/* Past the barrier it does not go: driven straight at it, from near it. */
+		var road = scene.Roads()[0];
+		var across = [Math.cos(start.Heading), -Math.sin(start.Heading)];
 
-		frames(3);
+		car.Car.X = start.X + across[0] * (road.Barriers[1].Offset - 6);
+		car.Car.Z = start.Z + across[1] * (road.Barriers[1].Offset - 6);
+		car.Car.Heading = Math.atan2(across[0], across[1]);
+		car.Car.Forward = 25;
+		inner.Ground.Keys = {KeyW: true};
 
-		expect(Math.abs(tracks.Near(track, car.Car.X, car.Car.Z).Offset)).toBeLessThanOrEqual(track.Width / 2 + track.Margin);
+		var reached = 0;
+
+		for (i = 0; i < 40; i++) {
+			frames(1);
+
+			reached = Math.max(reached, Math.abs(roads.Near(road, car.Car.X, car.Car.Z).Offset));
+		}
+
+		/* It came to the barrier, and no farther than its nose allows. */
+		expect(reached).toBeGreaterThan(road.Barriers[1].Offset - 4);
+		expect(reached).toBeLessThanOrEqual(road.Barriers[1].Offset - 1);
+
+		inner.Ground.Keys = {};
 
 		/* A kind of its own. */
 		var stepped = 0;
@@ -4876,7 +4604,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('sends a ship far at once: a warp to a body and a jump ahead, each going in, inside and out, and never into a body', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="star" Kind="star" Mass="1"><GameObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1"><GameObject ID="moon" Kind="moon" Radius="1737" Distance="384400 km" /></GameObject></GameObject></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1"><SceneObject ID="moon" Kind="moon" Radius="1737" Distance="384400 km" /></SceneObject></SceneObject></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -4990,7 +4718,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 			/* Not two at once. */
 			scene.Travel('me', 'warp', {}, function (error) {
-				expect(error.message).toBe('Elemenx GameScene: me cannot warp now');
+				expect(error.message).toBe('Elemenx Scene: me cannot warp now');
 			});
 
 			frames(9);
@@ -5038,7 +4766,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 				ended = error;
 			});
 
-			expect(ended.message).toBe('Elemenx GameScene: star cannot jump now');
+			expect(ended.message).toBe('Elemenx Scene: star cannot jump now');
 
 			/* J jumps. */
 			press('KeyJ');
@@ -5052,7 +4780,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('opens the hatch of a ship by degrees, as a car opens a door: regression, only a car moved what opens', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="star" Kind="star" Mass="1"><GameObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></GameObject></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></SceneObject></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -5093,7 +4821,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('flies a ship by a body: the keys fly it, the mouse only looks, and the model goes with the view', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="star" Kind="star" Mass="1"><GameObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></GameObject></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></SceneObject></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -5189,7 +4917,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(state.Ahead[1]).toBeLessThan(0);
 
 		/* Space brings it to rest, and the key does not stop the time of the scene. */
-		mounted.Host.$Element().querySelector('.elemenx-game-scene').focus();
+		mounted.Host.$Element().querySelector('.elemenx-scene').focus();
 
 		var element = scene.$Element();
 
@@ -5250,7 +4978,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('builds a vehicle of its mounts: engines burn with the thrust where they stand, a game asks where they are', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="star" Kind="star" Mass="1"><GameObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></GameObject></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></SceneObject></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -5406,11 +5134,13 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('makes a part of a vehicle of what lies in a box of its model, moves it by degrees, and keeps what stops a wheel with the wheel', async function () {
-		var models = Elemenx.Service('Models');
-		var graphics = Elemenx.Service('Graphics3D');
+		var models = Elemenx.Service('SceneModels');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
 		var name = unique('windows');
 		var box = function (x, y, z) {
-			var made = graphics.Box({Width: 0.2, Height: 0.2, Depth: 0.2});
+			var made = meshes.Box({Width: 0.2, Height: 0.2, Depth: 0.2});
 
 			return {Positions: new Float32Array(Array.from(made.Positions).map(function (value, index) {
 				return value + [x, y, z][index % 3];
@@ -5437,7 +5167,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 			models.Load(name, done);
 		});
 
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -5512,12 +5242,14 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('turns what the driver moves round its hinge: the steering wheel with the steering, pedals, paddles on the wheel, a pair of doors each its own way', async function () {
-		var models = Elemenx.Service('Models');
-		var graphics = Elemenx.Service('Graphics3D');
-		var vectors = graphics.Vectors;
+		var models = Elemenx.Service('SceneModels');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
+		var vectors = math.Vectors;
 		var name = unique('cockpit');
 		var box = function (x, y, z, size) {
-			var made = graphics.Box({Width: size || 0.1, Height: size || 0.1, Depth: 0.02});
+			var made = meshes.Box({Width: size || 0.1, Height: size || 0.1, Depth: 0.02});
 
 			return {Positions: new Float32Array(Array.from(made.Positions).map(function (value, index) {
 				return value + [x, y, z][index % 3];
@@ -5548,7 +5280,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 			models.Load(name, done);
 		});
 
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -5587,7 +5319,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		}
 
 		function moved (piece, point) {
-			return graphics.Apply(engine.OpeningMove(car, piece), point);
+			return math.Apply(engine.OpeningMove(car, piece), point);
 		}
 
 		/* Of the one mesh of the cabin the disc takes the wheel and leaves the dash behind it; the pedal and the paddle come by the names of their nodes. */
@@ -5741,10 +5473,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('shows the mirrors and the screens of the car that is driven: the world reflected small, what an element of the page shows', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="high" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="100" Height="0.3" Water="0" Seed="flat" />' +
+		var mounted = await mount('<Scene Paused="true" Quality="high" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="100" Height="0.3" Water="0" Seed="flat" />' +
 			'<div slot="screens" data-screen="dash" style="width: 64px; height: 32px; background: rgb(255, 0, 0)"></div>' +
-		'</GameScene>');
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -5850,11 +5582,13 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('lights a car: its lamps on at night or by L, the rear brighter as it brakes, reverse, indicators that blink and go off, hazards; a wet road holds less', async function () {
-		var models = Elemenx.Service('Models');
-		var graphics = Elemenx.Service('Graphics3D');
+		var models = Elemenx.Service('SceneModels');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
 		var name = unique('lamps');
 		var box = function (x, y, z) {
-			var made = graphics.Box({Width: 0.2, Height: 0.1, Depth: 0.05});
+			var made = meshes.Box({Width: 0.2, Height: 0.1, Depth: 0.05});
 
 			return {Positions: new Float32Array(Array.from(made.Positions).map(function (value, index) {
 				return value + [x, y, z][index % 3];
@@ -5883,7 +5617,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 			models.Load(name, done);
 		});
 
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="200" Height="0.2" Water="0" Seed="flat" /><GameObject ID="sun" Kind="sun" Time="12" Latitude="45" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="200" Height="0.2" Water="0" Seed="flat" /><SceneObject ID="sun" Kind="sun" Time="12" Latitude="45" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -6080,7 +5814,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('looks ahead from the seat of a car while it moves, but while the right button is held', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" Person="first" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="400" Height="0" Seed="test" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" Person="first" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="400" Height="0" Seed="test" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -6144,7 +5878,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		/* On a road that falls the eyes go down with the car: they do not stay level and look over its nose at the sky. */
 		var falling = inner.Objects.car;
 
-		falling.Body = Elemenx.Service('Graphics3D').Rotation([1, 0, 0], 0.2);
+		falling.Body = Elemenx.Service('Math').Rotation([1, 0, 0], 0.2);
 		falling.Car.Heading = 0;
 		falling.Head = [0, 1, 0];
 
@@ -6161,7 +5895,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('bursts at the pipes of a car when it lets go of the gas at speed', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="900" Height="0" Seed="test" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="900" Height="0" Seed="test" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -6205,17 +5939,17 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('stops a ship at what flies there: a craft by the box of its model, as a body by its round', async function () {
-		var models = Elemenx.Service('Models');
-		var tracks = Elemenx.Service('Tracks');
+		var models = Elemenx.Service('SceneModels');
+		var roads = Elemenx.Service('SceneRoads');
 		var name = unique('hull');
 
-		models.Define(name, {URL: name, Asset: tracks.Asset(tracks.Make('hull', {Length: 200, Corners: 6})), Fit: false});
+		models.Define(name, {URL: name, Asset: roads.Asset([roads.Road(Elemenx.Service('SceneRoadGenerator').Track('hull', {Length: 200, Corners: 6}).Spec)]), Fit: false});
 
 		await new Promise(function (done) {
 			models.Load(name, done);
 		});
 
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="star" Kind="star" Mass="1"><GameObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></GameObject></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></SceneObject></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -6258,9 +5992,9 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('does not take a sheet a file lies on for what stands on it', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"></Scene>');
 		var engine = mounted.Space.Engine();
-		var identity = Elemenx.Service('Graphics3D').Identity();
+		var identity = Elemenx.Service('Math').Identity();
 		var box = engine.BoxOf({Pieces: [{Rest: identity, Geometry: {Positions: [-50, 0, -50, 50, 0, -50, 50, 0, 50, -50, 0, 50]}}, {Rest: identity, Geometry: {Positions: [-1, 0, -2, 1, 1, 2]}}]});
 
 		expect(box.Low).toEqual([-1, 0, -2]);
@@ -6268,7 +6002,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('hangs a wheel on its spring: it goes down as far as the spring has opened, in the size of the car', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"></Scene>');
 		var engine = mounted.Space.Engine();
 		var car = {Values: {Vehicle: {}}, Size: 2, Car: {Spin: 0, Steer: 0}, Strokes: [0.1, 0, 0, -0.04]};
 		var left = engine.WheelTurn(car, {Middle: [1, 0.3, 1], Front: true, Corner: 0});
@@ -6279,10 +6013,9 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('draws glass last, through it what is behind, and throws no shadow of it', async function () {
-		var models = Elemenx.Service('Models');
-		var tracks = Elemenx.Service('Tracks');
-		var track = tracks.Make('glass', {Length: 400, Corners: 6});
-		var asset = tracks.Asset(track);
+		var models = Elemenx.Service('SceneModels');
+		var roads = Elemenx.Service('SceneRoads');
+		var asset = roads.Asset([roads.Road(Elemenx.Service('SceneRoadGenerator').Track('glass', {Length: 400, Corners: 6}).Spec)]);
 		var name = unique('glassy');
 
 		asset.Materials.push(Object.assign({}, asset.Materials[1], {Name: 'Window', Alpha: 'BLEND', Transmission: 1, BaseColor: [0, 0, 0, 0.25], DoubleSided: true}));
@@ -6297,7 +6030,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 			models.Load(name, done);
 		});
 
-		var mounted = await mount('<GameScene Paused="true" Quality="medium" (ready)="Ready"><GameObject ID="star" Kind="star" Mass="1"><GameObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></GameObject></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="medium" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></SceneObject></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -6318,11 +6051,13 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		for (var i = 0; i < 6; i++) {
 			inner.Rest = 0;
+			drawn = [];
 
 			engine.Frame(now += 33);
 		}
 
-		var last = drawn.slice(-7);
+		/* The draws of the last frame (what stands still of the body is one with its kind, each of a material). */
+		var last = drawn;
 		var glass = last.filter(function (one) {
 			return one.Glass > 0;
 		});
@@ -6343,7 +6078,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(leaves[0].Options.DepthWrite).not.toBe(false);
 
 		/* Light goes through it: on a ground the map of the shadows has the rest and not the glass. */
-		var sunny = await mount('<GameScene Paused="true" Quality="medium" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="20" DayOfYear="100" /></GameScene>');
+		var sunny = await mount('<Scene Paused="true" Quality="medium" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" Latitude="20" DayOfYear="100" /></Scene>');
 		var lit = sunny.Space.Scene();
 		var litEngine = sunny.Space.Engine();
 		var litDraw = litEngine.Renderer.Draw;
@@ -6372,15 +6107,17 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('leaves no trail: the frames do not bring back where a body was, nor the clouds and rays its shape', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="high" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="high" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></Scene>');
 		var scene = mounted.Space;
 		var engine = scene.Engine();
 		var renderer = engine.Renderer;
 		var gl = renderer.GL;
-		var graphics = Elemenx.Service('Graphics3D');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
 		var shaders = scene.LightingShaders(graphics);
 		var quad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
-		var identity = graphics.Identity();
+		var identity = math.Identity();
 
 		function picture (each) {
 			var data = new Float32Array(9 * 9 * 4);
@@ -6490,12 +6227,14 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('keeps the size of a limb through a fade: the two poses are turned between, not mixed', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var engine = scene.Engine();
 		var renderer = engine.Renderer;
 		var gl = renderer.GL;
-		var graphics = Elemenx.Service('Graphics3D');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
 		var skinned = scene.Shaders(graphics).Skinned;
 		var from = skinned.indexOf('mat4 joint(');
 		var to = skinned.indexOf('void main()');
@@ -6504,12 +6243,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		/* A joint at rest at pivot, in a model of half size: first as it was bound, then turned a right angle round itself. */
 		function line (turn) {
-			var m = graphics.Multiply(graphics.Translation(pivot[0] * size, pivot[1] * size, pivot[2] * size), graphics.Multiply(graphics.Scaling(size, size, size), graphics.Multiply(turn, graphics.Translation(-pivot[0], -pivot[1], -pivot[2]))));
+			var m = math.Multiply(math.Translation(pivot[0] * size, pivot[1] * size, pivot[2] * size), math.Multiply(math.Scaling(size, size, size), math.Multiply(turn, math.Translation(-pivot[0], -pivot[1], -pivot[2]))));
 
 			return [m[0], m[4], m[8], m[12], m[1], m[5], m[9], m[13], m[2], m[6], m[10], m[14]];
 		}
 
-		var palette = renderer.Texture({Width: 3, Height: 3, Data: new Float32Array(line(graphics.Identity()).concat(line(graphics.Rotation([0, 0, 1], Math.PI / 2)), [pivot[0], pivot[1], pivot[2], 0, 0, 0, 0, 0, 0, 0, 0, 0]))}, {Float: true, Nearest: true});
+		var palette = renderer.Texture({Width: 3, Height: 3, Data: new Float32Array(line(math.Identity()).concat(line(math.Rotation([0, 0, 1], Math.PI / 2)), [pivot[0], pivot[1], pivot[2], 0, 0, 0, 0, 0, 0, 0, 0, 0]))}, {Float: true, Nearest: true});
 		var fragment = '#version 300 es\nprecision highp float;\nuniform sampler2D uPalette;\nuniform float uJointOffset;\nuniform vec4 aFrames;\nout vec4 outColor;\n' + skinned.slice(from, to) + 'void main() {\n	mat4 m = posed(0.0);\n	outColor = vec4(length(m[0].xyz), length(m[1].xyz), distance((m * vec4(2.0, 0.0, 0.0, 1.0)).xyz, vec3(1.0, 0.0, 0.0)), 1.0);\n}';
 		var target = renderer.Target(1, 1, {Float: true});
 		var quad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
@@ -6532,13 +6271,15 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('blinds with a sun in space as with a sun over a ground, the more the nearer, and what hides it takes it away', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="high" (ready)="Ready"><GameObject ID="star" Kind="star" Mass="1"><GameObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></GameObject></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="high" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></SceneObject></Scene>');
 		var inner = mounted.Space.Scene();
 		var engine = mounted.Space.Engine();
 		var now = performance.now() + 100;
 		var told = null;
 		var end = engine.PostEnd;
-		var graphics = Elemenx.Service('Graphics3D');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
 
 		engine.PostEnd = function (view) {
 			told = view;
@@ -6555,7 +6296,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		frame();
 
 		expect(told.Star).toBe(true);
-		expect(graphics.Vectors.Length(told.Sun)).toBeCloseTo(1, 5);
+		expect(math.Vectors.Length(told.Sun)).toBeCloseTo(1, 5);
 		expect(told.Clear).toBeLessThan(1);
 		expect(engine.Renderer.GL.getError()).toBe(engine.Renderer.GL.NO_ERROR);
 
@@ -6641,15 +6382,15 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(nearest().Veil).toBe(3);
 
 		function burning (reach, shut, turned) {
-			var length = graphics.Vectors.Length(mouth.uFrom);
-			var way = graphics.Vectors.Scale(mouth.uFrom, 1 / length);
-			var side = graphics.Vectors.Normalize(graphics.Vectors.Cross(way, [0, 1, 0]));
+			var length = math.Vectors.Length(mouth.uFrom);
+			var way = math.Vectors.Scale(mouth.uFrom, 1 / length);
+			var side = math.Vectors.Normalize(math.Vectors.Cross(way, [0, 1, 0]));
 
 			engine.SunEye = function () {
 				return shut;
 			};
 			engine.NearestStar = function () {
-				return {At: graphics.Vectors.Add(inner.Eye, graphics.Vectors.Add(graphics.Vectors.Scale(way, 100 * Math.cos(turned)), graphics.Vectors.Scale(side, 100 * Math.sin(turned)))), Size: 1, Veil: reach};
+				return {At: math.Vectors.Add(inner.Eye, math.Vectors.Add(math.Vectors.Scale(way, 100 * Math.cos(turned)), math.Vectors.Scale(side, 100 * Math.sin(turned)))), Size: 1, Veil: reach};
 			};
 
 			frame();
@@ -6704,22 +6445,22 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		/* A mouth goes with the hull when it banks, and leans by its Twist. */
 		var hero = inner.Objects.me;
-		var level = graphics.Vectors.Normalize(mouth.uSide);
+		var level = math.Vectors.Normalize(mouth.uSide);
 
-		hero.Ship.Up = graphics.Vectors.Normalize([hero.Ship.Right[0] + hero.Ship.Up[0], hero.Ship.Right[1] + hero.Ship.Up[1], hero.Ship.Right[2] + hero.Ship.Up[2]]);
-		hero.Ship.Right = graphics.Vectors.Normalize(graphics.Vectors.Cross(hero.Ship.Up, hero.Ship.Ahead));
+		hero.Ship.Up = math.Vectors.Normalize([hero.Ship.Right[0] + hero.Ship.Up[0], hero.Ship.Right[1] + hero.Ship.Up[1], hero.Ship.Right[2] + hero.Ship.Up[2]]);
+		hero.Ship.Right = math.Vectors.Normalize(math.Vectors.Cross(hero.Ship.Up, hero.Ship.Ahead));
 
 		frame();
 
-		expect(Math.abs(graphics.Vectors.Dot(graphics.Vectors.Normalize(mouth.uSide), level))).toBeLessThan(0.9);
+		expect(Math.abs(math.Vectors.Dot(math.Vectors.Normalize(mouth.uSide), level))).toBeLessThan(0.9);
 
-		var side = graphics.Vectors.Normalize(mouth.uSide);
+		var side = math.Vectors.Normalize(mouth.uSide);
 
 		hero.Values.Vehicle.Mounts[0].Twist = 90;
 
 		frame();
 
-		expect(Math.abs(graphics.Vectors.Dot(graphics.Vectors.Normalize(mouth.uSide), side))).toBeLessThan(0.05);
+		expect(Math.abs(math.Vectors.Dot(math.Vectors.Normalize(mouth.uSide), side))).toBeLessThan(0.05);
 
 		hero.Values.Vehicle.Mounts[0].Twist = 0;
 
@@ -6809,7 +6550,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(engine.Renderer.GL.getError()).toBe(engine.Renderer.GL.NO_ERROR);
 
 		/* A word of its own may know a wheel by its material; the word of all cars looks at the names of the nodes only. */
-		var wheel = {ID: 'tyre', Node: 0, Rest: graphics.Identity(), Material: {Name: 'Tyre'}, Geometry: {Positions: [0.8, 0.3, 1.5, 0.8, 0.6, 1.5, 0.8, 0.3, 1.8]}};
+		var wheel = {ID: 'tyre', Node: 0, Rest: math.Identity(), Material: {Name: 'Tyre'}, Geometry: {Positions: [0.8, 0.3, 1.5, 0.8, 0.6, 1.5, 0.8, 0.3, 1.8]}};
 		var worn = {Asset: {Nodes: [{Name: 'Object_1', Parent: -1}]}, Pieces: [wheel]};
 
 		expect(engine.WheelsOf(worn, {}).tyre).toBe(undefined);
@@ -6822,7 +6563,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('takes the sun out of a fog: no glare, no rays', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" Weather="clear" Front="0.01" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="20" DayOfYear="100" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" Weather="clear" Front="0.01" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" Latitude="20" DayOfYear="100" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -6848,7 +6589,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('changes what an effect is told as time goes: its Pulse', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="20" DayOfYear="100" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" Latitude="20" DayOfYear="100" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -6903,7 +6644,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('draws a craft of a model at its place of an orbit', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="star" Kind="star" Mass="1"><GameObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></GameObject></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></SceneObject></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -6923,8 +6664,8 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('looks from what it follows to where it looks by degrees, so a raised eye makes no leap under the view', async function () {
-		var terrain = Elemenx.Service('Terrain');
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"></GameScene>');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -6982,7 +6723,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('tells one effect what it wants of its type, part by part, and brings it in by degrees', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="20" DayOfYear="100" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" Latitude="20" DayOfYear="100" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -7058,8 +6799,8 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('leaves a hero where it stands when the scene changes round it', async function () {
-		var terrain = Elemenx.Service('Terrain');
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"></GameScene>');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -7110,8 +6851,8 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('takes a short drop for no jump, though the body leaves the ground', async function () {
-		var terrain = Elemenx.Service('Terrain');
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"></GameScene>');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -7154,7 +6895,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('tells an effect what it looks like: colors, volume, intensity, length and smoke', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="medium" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="23" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="medium" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="23" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -7227,8 +6968,8 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('takes no seam of a map for a jump, and still falls and jumps', async function () {
-		var terrain = Elemenx.Service('Terrain');
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"></GameScene>');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -7286,7 +7027,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('lights the air of a planet from the side of its star, and draws pillars and galaxies of a seed', async function () {
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -7326,12 +7067,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		/* What lights a nebula is stars, not one more sun: the texels round its light are no disc of white. */
 		var made = sky('nebula', 'sun');
-		var glow = Elemenx.Service('Graphics3D');
+		var glow = Elemenx.Service('Renderer');
 
 		expect(made.uBeacon).toBeGreaterThan(0);
 		expect(cosmosSource).not.toContain('pow(near, 180.0)');
 		expect(cosmosSource).not.toContain('pow(near, 900.0) * 3.0');
-		expect(glow.Vectors.Length(made.uShine)).toBeCloseTo(1, 5);
+		expect(Elemenx.Service('Math').Vectors.Length(made.uShine)).toBeCloseTo(1, 5);
 
 		/* Pillars are of their seed: how many, how thick, how high, how bent, and where the light stands. */
 		var widths = {};
@@ -7501,7 +7242,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('turns the stars with the planet round a pole as high as its latitude', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="22" Latitude="60" DayOfYear="100" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="22" Latitude="60" DayOfYear="100" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -7553,7 +7294,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('lights the air of a night by what is there: a high moon is no sun, and towns hide the faint stars', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="0" Latitude="45" DayOfYear="1" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="0" Latitude="45" DayOfYear="1" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -7601,7 +7342,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('darkens a day when the moon comes before the sun, and reddens a moon in the shadow of its planet', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="45" DayOfYear="80" MoonPhase="0.25" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" Latitude="45" DayOfYear="80" MoonPhase="0.25" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -7628,7 +7369,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(dark.Glare).toBe(0);
 
 		/* Even under thin clouds no bit of the disc shows through the moon. */
-		expect(gameSceneSource).toContain('tint * disk * (1.0 - smoothstep(0.0, 0.25, moonShape))');
+		expect(Elemenx.Service('Blueprints').Compile(scene.LibrarySky()).Function).toMatch(/\* s\d+_disk \* \(1\.0 - smoothstep\(0\.0, 0\.25, [^)]+\)\)/);
 
 		/* On other days a new moon passes over or under the sun: its way is tilted. */
 		expect(sky({DayOfYear: 140}).Eclipse).toBe(0);
@@ -7652,8 +7393,8 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('lets a hero stand while the view goes round it with a free look, and brings it round when it sets off', async function () {
-		var terrain = Elemenx.Service('Terrain');
-		var mounted = await mount('<GameScene Paused="true" FreeLook="true" (ready)="Ready"></GameScene>');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var mounted = await mount('<Scene Paused="true" FreeLook="true" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -7711,7 +7452,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('keeps the time of a clip when its rate changes, and fades from where the last one was', async function () {
-		var mounted = await mount('<GameScene (ready)="Ready"></GameScene>');
+		var mounted = await mount('<Scene (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -7769,7 +7510,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('walks the sun by the azimuth of its noon, and tints the light of the sky', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 
@@ -7796,7 +7537,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('turns a sun with its planet: the light of a day follows latitude, tilt, season and the length of the day', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="50" DayOfYear="172" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" Latitude="50" DayOfYear="172" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 
@@ -7828,7 +7569,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('darkens what a low sun does not reach, and keeps the twilight after it sets', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="60" DayOfYear="121" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" Latitude="60" DayOfYear="121" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 
@@ -7852,7 +7593,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('lights a night by its moon, faintly: its phase, its place, or none at all', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><GameObject ID="day" Kind="sun" Time="0" Latitude="45" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="0" Latitude="45" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 
@@ -7899,8 +7640,8 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('brings the eye of a hero down to the ground at its distance, the hero in the frame', async function () {
-		var terrain = Elemenx.Service('Terrain');
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"></GameScene>');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -7957,7 +7698,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('moves by the time of the frame on the screen, and draws each frame of a hero: uneven turns shake the view', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var loop = inner.Loop;
@@ -7978,7 +7719,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 			engine.Frame(now += 33);
 
-			settled = engine.Renderer.Progress().Needed === 0 && Elemenx.Service('Terrain').Work().Waiting() === 0 ? settled + 1 : 0;
+			settled = engine.Renderer.Progress().Needed === 0 && Elemenx.Service('SceneTerrainGenerator').Work().Waiting() === 0 ? settled + 1 : 0;
 
 			return settled >= 5;
 		}, 30000);
@@ -8007,7 +7748,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('compiles no pillars for a sky without them, and bakes only what is done', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="star" Kind="star" Mass="1" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1" /></Scene>');
 		var inner = mounted.Space.Scene();
 		var engine = mounted.Space.Engine();
 		var made = [];
@@ -8072,7 +7813,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('tells how far a scene has come, and draws nothing until its programs are done', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="0" /><div slot="loading" class="mine">wait</div></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="0" /><div slot="loading" class="mine">wait</div></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -8117,7 +7858,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		await tick(20);
 
-		var holder = scene.$Element().querySelector('.elemenx-game-scene-loading');
+		var holder = scene.$Element().querySelector('.elemenx-scene-loading');
 
 		/* The slot was filled: that takes the place of the bar. */
 		expect(holder.hidden).toBe(false);
@@ -8161,7 +7902,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('shows a bar of its own while it loads, that moves when only what is behind the page is left', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="0" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="0" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -8179,7 +7920,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		await tick(20);
 
-		var holder = scene.$Element().querySelector('.elemenx-game-scene-loading');
+		var holder = scene.$Element().querySelector('.elemenx-scene-loading');
 		var bar = holder.querySelector('[role="progressbar"]');
 
 		expect(holder.hidden).toBe(false);
@@ -8202,7 +7943,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('leaves the pointer alone while the mouse is captured: the browser refuses to hold both', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></Scene>');
 		var scene = mounted.Space;
 		var canvas = scene.$Element().querySelector('canvas');
 		var calls = 0;
@@ -8226,8 +7967,8 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('keeps the eye of a hero on its side of a wall: in at once, out slowly', async function () {
-		var terrain = Elemenx.Service('Terrain');
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"></GameScene>');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -8288,12 +8029,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('mirrors what is glossy at high quality, not cut-outs, and wets what stands in the rain', async function () {
-		var terrain = Elemenx.Service('Terrain');
-		var mounted = await mount('<GameScene Quality="high" Paused="true" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="100" Height="1" Water="0" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" />' +
-			'<GameObject ID="hero" Kind="unit" X="0" Y="0" />' +
-		'</GameScene>');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var mounted = await mount('<Scene Quality="high" Paused="true" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="100" Height="1" Water="0" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" />' +
+			'<SceneObject ID="hero" Kind="unit" X="0" Y="0" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -8356,7 +8097,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('starts what is added anew from what it is told, not from where its namesake walked', async function () {
-		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></GameScene>');
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 
@@ -8374,10 +8115,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('takes thousands of objects at once in a time that grows with their number', async function () {
-		var mounted = await mount('<GameScene (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var list = [];
 		var started;
@@ -8399,12 +8140,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('keeps what did not change when the scene is made again, and stands what stays still once', async function () {
-		var mounted = await mount('<GameScene (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="300" Height="10" Water="0.1" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" />' +
-			'<GameObject ID="oak" Kind="oak" X="10" Y="10" />' +
-			'<GameObject ID="hero" Kind="knight" X="0" Y="0" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="300" Height="10" Water="0.1" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" />' +
+			'<SceneObject ID="oak" Kind="oak" X="10" Y="10" />' +
+			'<SceneObject ID="hero" Kind="knight" X="0" Y="0" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -8450,12 +8191,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('builds a land of ready models: tiles a cell each, and grass of a model only round the eye', async function () {
-		var mounted = await mount('<GameScene Quality="medium" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="96" Height="2" Water="0" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" />' +
-			'<GameObject ID="tiles" Kind="rocks" Shapes="rock" Grid="12" MinHeight="-10" MaxSlope="1" />' +
-			'<GameObject ID="blades" Kind="grass" Shapes="bush" Reach="20" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Quality="medium" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="96" Height="2" Water="0" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" />' +
+			'<SceneObject ID="tiles" Kind="rocks" Shapes="rock" Grid="12" MinHeight="-10" MaxSlope="1" />' +
+			'<SceneObject ID="blades" Kind="grass" Shapes="bush" Reach="20" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -8486,12 +8227,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('sows a ground in masses by its rules, the same for the same seed, with no object for each thing, and grows grass', async function () {
-		var mounted = await mount('<GameScene (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="192" Height="20" Water="0.2" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" />' +
-			'<GameObject ID="woods" Kind="forest" Density="3" Seed="a" Cover="1" MaxHeight="7" />' +
-			'<GameObject ID="blades" Kind="grass" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="192" Height="20" Water="0.2" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" />' +
+			'<SceneObject ID="woods" Kind="forest" Density="3" Seed="a" Cover="1" MaxHeight="7" />' +
+			'<SceneObject ID="blades" Kind="grass" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -8553,9 +8294,11 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('beads water on what is smooth and wet, its own Wet over the weather, as many drops as it says; none on what is rough', async function () {
-		var models = Elemenx.Service('Models');
-		var graphics = Elemenx.Service('Graphics3D');
-		var made = graphics.Box({Width: 3, Height: 0.05, Depth: 3});
+		var models = Elemenx.Service('SceneModels');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
+		var made = meshes.Box({Width: 3, Height: 0.05, Depth: 3});
 		var plate = {Positions: new Float32Array(made.Positions), Normals: new Float32Array(made.Normals), UVs: new Float32Array(made.UVs), Colors: null, Joints: null, Weights: null, Indices: Array.from(made.Indices)};
 		var names = {smooth: unique('lacquer'), rough: unique('felt')};
 
@@ -8573,11 +8316,11 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 			});
 		});
 
-		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="100" Height="0.5" Water="0" Seed="flat" />' +
-			'<GameObject ID="sun" Kind="sun" Elevation="35" />' +
-			'<GameObject ID="plate" Kind="thing" Model="' + names.smooth + '" Size="1" X="0" Y="0" Z="1.2" Wet="1" Drops="0" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="100" Height="0.5" Water="0" Seed="flat" />' +
+			'<SceneObject ID="sun" Kind="sun" Elevation="35" />' +
+			'<SceneObject ID="plate" Kind="thing" Model="' + names.smooth + '" Size="1" X="0" Y="0" Z="1.2" Wet="1" Drops="0" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -8649,7 +8392,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 				engine.Frame(now += 33);
 
-				return Elemenx.Service('Terrain').Work().Waiting() === 0 && Math.hypot(inner.Target[0] - target[0], inner.Target[1] - target[1], inner.Target[2] - target[2]) < 1e-6 && Math.abs(inner.Distance - inner.Wanted) < 1e-4;
+				return Elemenx.Service('SceneTerrainGenerator').Work().Waiting() === 0 && Math.hypot(inner.Target[0] - target[0], inner.Target[1] - target[1], inner.Target[2] - target[2]) < 1e-6 && Math.abs(inner.Distance - inner.Wanted) < 1e-4;
 			}, 30000);
 
 			/* Declared, as a template writes them: regression, read as wet and drops they were left out. */
@@ -8694,10 +8437,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('blurs what is out of focus by its Bokeh: the hero in focus, or the distance given; nothing of it with none', async function () {
-		var mounted = await mount('<GameScene Quality="high" Paused="true" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="300" Height="30" Water="0" Scale="20" Seed="sharp" />' +
-			'<GameObject ID="sun" Kind="sun" Elevation="40" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Quality="high" Paused="true" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="300" Height="30" Water="0" Scale="20" Seed="sharp" />' +
+			'<SceneObject ID="sun" Kind="sun" Elevation="40" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -8761,7 +8504,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 			engine.Frame(now += 33);
 
-			return renderer.Progress().Needed === 0 && Elemenx.Service('Terrain').Work().Waiting() === 0 && Object.keys(inner.Ground.Nodes).length > 4;
+			return renderer.Progress().Needed === 0 && Elemenx.Service('SceneTerrainGenerator').Work().Waiting() === 0 && Object.keys(inner.Ground.Nodes).length > 4;
 		}, 30000);
 
 		await tick(50);
@@ -8810,12 +8553,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('sows in clumps: thick groves and thin ground between them; grass in tufts and glades, its blades unlike by its spread', async function () {
-		var mounted = await mount('<GameScene (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="192" Height="2" Water="0" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" />' +
-			'<GameObject ID="woods" Kind="forest" Density="4" Seed="a" Cover="1" Patch="40" />' +
-			'<GameObject ID="blades" Kind="grass" Clumps="0.7" Patch="30" Spread="0.05" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="192" Height="2" Water="0" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" />' +
+			'<SceneObject ID="woods" Kind="forest" Density="4" Seed="a" Cover="1" Patch="40" />' +
+			'<SceneObject ID="blades" Kind="grass" Clumps="0.7" Patch="30" Spread="0.05" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -8861,12 +8604,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		engine.Renderer.Draw = draw;
 
 		expect(draws[0]).toEqual([0.7, 30, 0.05]);
-		expect(Elemenx.Service('Kinds').Make('grass', {}).Traits.Grass).toMatchObject({Clumps: 0, Patch: 24, Spread: 0.45});
+		expect(Elemenx.Service('SceneKinds').Make('grass', {}).Traits.Grass).toMatchObject({Clumps: 0, Patch: 24, Spread: 0.45});
 	});
 
 	it('draws the model of a file by the same API: fetched, lit, moved and played', async function () {
 		var address = URL.createObjectURL(new Blob([Binary()], {type: 'model/gltf-binary'})) + '#.glb';
-		var library = Elemenx.Service('Models');
+		var library = Elemenx.Service('SceneModels');
 		var mounted;
 		var scene;
 		var inner;
@@ -8875,12 +8618,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		library.Define('test-column', {URL: address, Type: 'unit', Clips: {walk: 'Bend', attack: 'Spin'}});
 
-		mounted = await mount('<GameScene (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="300" Height="4" Water="0" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" />' +
-			'<GameObject ID="hero" Kind="unit" Model="test-column" X="0" Y="0" />' +
-			'<GameObject ID="other" Kind="unit" Model="test-column" X="4" Y="0" />' +
-		'</GameScene>');
+		mounted = await mount('<Scene (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="300" Height="4" Water="0" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" />' +
+			'<SceneObject ID="hero" Kind="unit" Model="test-column" X="0" Y="0" />' +
+			'<SceneObject ID="other" Kind="unit" Model="test-column" X="4" Y="0" />' +
+		'</Scene>');
 
 		scene = mounted.Space;
 		inner = scene.Scene();
@@ -8933,12 +8676,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 	it('sows the model of a file as it sows the ones of code', async function () {
 		var address = URL.createObjectURL(new Blob([Binary()], {type: 'model/gltf-binary'})) + '#.glb';
-		var library = Elemenx.Service('Models');
-		var mounted = await mount('<GameScene (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="96" Height="4" Water="0" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" />' +
-			'<GameObject ID="posts" Kind="forest" [shapes]="Shapes" Density="2" Cover="1" MinHeight="-100" MaxSlope="1" />' +
-		'</GameScene>', {Shapes: [address]});
+		var library = Elemenx.Service('SceneModels');
+		var mounted = await mount('<Scene (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="96" Height="4" Water="0" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" />' +
+			'<SceneObject ID="posts" Kind="forest" [shapes]="Shapes" Density="2" Cover="1" MinHeight="-100" MaxSlope="1" />' +
+		'</Scene>', {Shapes: [address]});
 		var scene = mounted.Space;
 		var engine = scene.Engine();
 
@@ -8958,11 +8701,11 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('makes a picture of its light by the quality asked for, and steps down while frames are late when none is', async function () {
-		var mounted = await mount('<GameScene Quality="ultra" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="200" Height="6" Water="0.1" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" Elevation="30" />' +
-			'<GameObject ID="keep" Kind="house" X="0" Y="0" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Quality="ultra" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="200" Height="6" Water="0.1" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" Elevation="30" />' +
+			'<SceneObject ID="keep" Kind="house" X="0" Y="0" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var engine = scene.Engine();
 		var gl = engine.Renderer.GL;
@@ -9007,15 +8750,15 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	it('makes a whole land of one attribute, and a village with its roads that nothing grows on', async function () {
-		var mounted = await mount('<GameScene (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="288" Height="24" Water="0.15" Seed="test" Biome="desert" />' +
-			'<GameObject ID="sun" Kind="sun" />' +
-			'<GameObject ID="oasis" Kind="village" X="10" Y="10" Houses="6" Seed="a" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="288" Height="24" Water="0.15" Seed="test" Biome="desert" />' +
+			'<SceneObject ID="sun" Kind="sun" />' +
+			'<SceneObject ID="oasis" Kind="village" X="10" Y="10" Houses="6" Seed="a" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
-		var terrain = Elemenx.Service('Terrain');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
 		var field;
 
 		await waitFor(function () {
@@ -9026,7 +8769,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		field = inner.Ground.Field;
 
-		expect(field.Palette).toEqual(Elemenx.Service('Biomes').Get('desert').Ground);
+		expect(field.Palette).toEqual(Elemenx.Service('SceneBiomes').Get('desert').Ground);
 		expect(scene.Sown().Things).toBeGreaterThan(20);
 
 		await waitFor(function () {
@@ -9039,7 +8782,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(terrain.Paint(field, 200, 200, 3, 0)).not.toEqual([0.3, 0.5, 0.22]);
 		expect(field.Roads.length).toBeGreaterThan(2);
 		expect(terrain.OnRoad(field, field.Roads[0][0][0], field.Roads[0][0][1], 1)).toBe(true);
-		expect(terrain.Paint(field, field.Roads[0][0][0], field.Roads[0][0][1], 3, 0)).toEqual(Elemenx.Service('Biomes').Get('desert').Ground.Road);
+		expect(terrain.Paint(field, field.Roads[0][0][0], field.Roads[0][0][1], 3, 0)).toEqual(Elemenx.Service('SceneBiomes').Get('desert').Ground.Road);
 
 		/* A land of another name is another land. */
 		scene.Change('land', {Biome: 'alien'});
@@ -9047,18 +8790,18 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		await waitFor(function () {
 			engine.Frame(performance.now() + 200);
 
-			return inner.Ground && inner.Ground.Field.Palette === Elemenx.Service('Biomes').Get('alien').Ground;
+			return inner.Ground && inner.Ground.Field.Palette === Elemenx.Service('SceneBiomes').Get('alien').Ground;
 		}, 3000);
 
 		expect(engine.Renderer.GL.getError()).toBe(engine.Renderer.GL.NO_ERROR);
 	});
 
 	it('casts the shadows of what stands on a ground, or none when told', async function () {
-		var mounted = await mount('<GameScene (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" Elevation="30" Azimuth="90" />' +
-			'<GameObject ID="keep" Kind="castle" X="0" Y="0" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" Elevation="30" Azimuth="90" />' +
+			'<SceneObject ID="keep" Kind="castle" X="0" Y="0" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var renderer = scene.Engine().Renderer;
@@ -9094,9 +8837,17 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 			return Object.keys(inner.Ground.Nodes).length > 6;
 		}, 3000);
 
-		/* The view comes to rest and the finest squares of the ground are made: until no more come. */
+		/*
+		 * The view comes to rest and the finest squares of the ground are made: until no more come. Regression: the frames
+		 * were given with no turn between them, so the squares the workers made came only later, under load between the
+		 * two pictures compared, and the ground of one was not the ground of the other.
+		 */
 		for (i = 0; i < 200 && steady < 4; i++) {
 			scene.Engine().Frame(performance.now() + (at += 1000));
+
+			await new Promise(function (done) {
+				setTimeout(done, 30);
+			});
 
 			steady = Object.keys(inner.Ground.Nodes).length === squares ? steady + 1 : 0;
 			squares = Object.keys(inner.Ground.Nodes).length;
@@ -9114,10 +8865,10 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 	/* Regression: the ground had no light of the sky, so its shadows were black. */
 	it('keeps the light of the sky in the shadows on a ground', async function () {
-		var mounted = await mount('<GameScene Quality="low" (ready)="Ready">' +
-			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" Elevation="1" Azimuth="90" />' +
-		'</GameScene>');
+		var mounted = await mount('<Scene Quality="low" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" Elevation="1" Azimuth="90" />' +
+		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -9141,12 +8892,12 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 	it('walks a unit over a ground round the water and what blocks it, sends it by a right press, and saves its place', async function () {
 		var arrived = [];
-		var mounted = await mount('<GameScene (ready)="Ready" (arrive)="Arrived">' +
-			'<GameObject ID="land" Kind="ground" Size="400" Height="30" Water="0.3" Seed="test" />' +
-			'<GameObject ID="sun" Kind="sun" />' +
-			'<GameObject ID="walker" Kind="unit" X="0" Y="0" Speed="10" />' +
-			'<GameObject ID="oak" Kind="tree" X="20" Y="0" />' +
-		'</GameScene>', {
+		var mounted = await mount('<Scene (ready)="Ready" (arrive)="Arrived">' +
+			'<SceneObject ID="land" Kind="ground" Size="400" Height="30" Water="0.3" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" />' +
+			'<SceneObject ID="walker" Kind="unit" X="0" Y="0" Speed="10" />' +
+			'<SceneObject ID="oak" Kind="tree" X="20" Y="0" />' +
+		'</Scene>', {
 			Arrived: function (event) {
 				arrived.push(event);
 			}
@@ -9204,17 +8955,21 @@ describe('Contract: Gltf, the models other programs make', function () {
 	var gltf;
 	var models;
 	var graphics;
+	var meshes;
+	var math;
 
 	beforeAll(async function () {
 		await loadElemenx();
 	});
 
 	beforeEach(function () {
-		Use(['service:Gltf', 'service:Fbx', 'service:Models', 'service:Graphics3D', 'service:Sigils', 'service:Tracks', 'service:Physics']);
+		Use(['service:Gltf', 'service:Fbx', 'service:SceneModels', 'service:Renderer', 'service:Meshes', 'service:Math', 'service:Sigils', 'service:SceneRoads', 'service:SceneRoadGenerator', 'service:Physics']);
 
 		gltf = Elemenx.Service('Gltf');
-		models = Elemenx.Service('Models');
-		graphics = Elemenx.Service('Graphics3D');
+		models = Elemenx.Service('SceneModels');
+		graphics = Elemenx.Service('Renderer');
+		meshes = Elemenx.Service('Meshes');
+		math = Elemenx.Service('Math');
 	});
 
 	afterEach(function () {
@@ -9409,10 +9164,10 @@ describe('Contract: Gltf, the models other programs make', function () {
 		/* A node that is no bone turns as a piece. */
 		var pose = models.Pose(model, 'Spin', 0.5);
 		var crate = model.Pieces[1];
-		var turned = graphics.Apply(pose[crate.ID], [0.2, 0, 0]);
-		var still = graphics.Apply(models.Pose(model, 'Spin', 0)[crate.ID], [0.2, 0, 0]);
+		var turned = math.Apply(pose[crate.ID], [0.2, 0, 0]);
+		var still = math.Apply(models.Pose(model, 'Spin', 0)[crate.ID], [0.2, 0, 0]);
 
-		expect(graphics.Vectors.Distance(turned, still)).toBeGreaterThan(0.1);
+		expect(math.Vectors.Distance(turned, still)).toBeGreaterThan(0.1);
 
 		/* Copies at the same frame share one pose: a crowd is no slower for it. */
 		expect(models.Pose(model, 'Spin', 0.5)).toBe(pose);
@@ -9662,11 +9417,13 @@ describe('Contract: Gltf, the models other programs make', function () {
 	});
 
 	it('lets a piece no skin holds go with the nearest bone, and takes the turn of the whole body out of a clip', function () {
-		var graphics = Elemenx.Service('Graphics3D');
-		var binds = [[graphics.Identity(), graphics.Translation(0, -2, 0)]];
-		var rest = {5: graphics.Identity(), 6: graphics.Translation(0, 2, 0)};
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
+		var binds = [[math.Identity(), math.Translation(0, -2, 0)]];
+		var rest = {5: math.Identity(), 6: math.Translation(0, 2, 0)};
 		var geometry = {Positions: new Float32Array([0, 2.1, 0, 0.1, 2.1, 0, 0, 2.2, 0]), Normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]), Indices: new Uint16Array([0, 1, 2])};
-		var held = models.Held(geometry, graphics.Identity(), binds, {Skins: [{Joints: [5, 6]}]}, rest);
+		var held = models.Held(geometry, math.Identity(), binds, {Skins: [{Joints: [5, 6]}]}, rest);
 
 		expect(held.Skin).toBe(0);
 		expect(held.Geometry.Joints[0]).toBe(1);
@@ -9712,19 +9469,21 @@ describe('Contract: Gltf, the models other programs make', function () {
 	});
 
 	it('reads the lamps of a file and finds what glows in a model, as lamps of its own', function () {
-		var graphics = Elemenx.Service('Graphics3D');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
 
 		/* A node of a file says which of its lamps stands there. */
 		expect(gltf.Node({name: 'Lamp', extensions: {KHR_lights_punctual: {light: 1}}}).Light).toBe(1);
 		expect(gltf.Node({name: 'Plain'}).Light).toBe(-1);
 
 		function plate (x, emissive, skin) {
-			return {Rest: graphics.Translation(x, 2, 0), Skin: skin === undefined ? -1 : skin, Material: {Emissive: emissive}, Geometry: {Positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 0, 1]), Indices: new Uint16Array([0, 1, 2])}};
+			return {Rest: math.Translation(x, 2, 0), Skin: skin === undefined ? -1 : skin, Material: {Emissive: emissive}, Geometry: {Positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 0, 1]), Indices: new Uint16Array([0, 1, 2])}};
 		}
 
 		var asset = {Lights: [{Type: 'point', Color: [1, 0, 0], Intensity: 100, Range: 12, Outer: 0.7}, {Type: 'spot', Color: [0, 1, 0], Intensity: 10, Range: 0, Outer: 0.5}, {Type: 'directional', Color: [1, 1, 1], Intensity: 3}], Nodes: [{Light: 0}, {Light: 1}, {Light: 2}, {Light: -1}], Images: []};
-		var rest = [graphics.Translation(1, 2, 3), graphics.Translation(4, 5, 6), graphics.Identity(), graphics.Identity()];
-		var lamps = models.BuiltLamps(asset, [plate(50, [0, 0, 2]), plate(-50, [0.01, 0, 0]), plate(0, [0, 2, 0], 0)], rest, graphics.Identity(), 240);
+		var rest = [math.Translation(1, 2, 3), math.Translation(4, 5, 6), math.Identity(), math.Identity()];
+		var lamps = models.BuiltLamps(asset, [plate(50, [0, 0, 2]), plate(-50, [0.01, 0, 0]), plate(0, [0, 2, 0], 0)], rest, math.Identity(), 240);
 		var found = function (test) {
 			return lamps.filter(test);
 		};
@@ -9747,11 +9506,13 @@ describe('Contract: Gltf, the models other programs make', function () {
 		expect(glow.Radius).toBeGreaterThan(0);
 
 		/* Many surfaces of one place are one lamp. */
-		expect(models.BuiltLamps({Lights: [], Nodes: [], Images: []}, [plate(1, [2, 2, 2]), plate(1.2, [2, 2, 2]), plate(120, [2, 2, 2])], [], graphics.Identity(), 240).length).toBe(2);
+		expect(models.BuiltLamps({Lights: [], Nodes: [], Images: []}, [plate(1, [2, 2, 2]), plate(1.2, [2, 2, 2]), plate(120, [2, 2, 2])], [], math.Identity(), 240).length).toBe(2);
 	});
 
 	it('moves the flesh that hangs on twist bones beside a limb, and brings the bone to where the limb bends', function () {
-		var graphics = Elemenx.Service('Graphics3D');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
 
 		function node (name, parent, at) {
 			return {Name: name, Parent: parent, Translation: at, Rotation: [0, 0, 0, 1], Scale: [1, 1, 1], Mesh: -1, Skin: -1, Children: []};
@@ -9773,7 +9534,7 @@ describe('Contract: Gltf, the models other programs make', function () {
 
 		var source = {Length: 1, Bones: [bone('Hips', -1, [0, 100, 0]), bone('LeftUpLeg', 0, [10, 0, 0]), bone('LeftLeg', 1, [0, -50, 0]), bone('LeftFoot', 2, [0, -50, 0]), bone('RightUpLeg', 0, [-10, 0, 0]), bone('LeftArm', 0, [15, 50, 0]), bone('LeftForeArm', 5, [30, 0, 0]), bone('LeftHand', 6, [30, 0, 0])], Curves: [null, null, null, null, null, {R: [null, null, {Times: [0, 1], Values: [0, -90]}]}, null, null]};
 		var asset = {Nodes: nodes, Scene: [0], Skins: [{Joints: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}], Animations: []};
-		var hand = models.NodeWorld(asset, models.Sample(asset, null, 0), graphics.Identity())[8];
+		var hand = models.NodeWorld(asset, models.Sample(asset, null, 0), math.Identity())[8];
 		var made = models.Retarget(asset, source, 'wave');
 
 		/* A clip can be told to ask less of a bone: the turn it keeps is less, and the rest of it as it was. */
@@ -9795,7 +9556,7 @@ describe('Contract: Gltf, the models other programs make', function () {
 		expect(turnOf(calmed, arm)).toBeLessThan(turnOf(made, arm) * 0.65);
 
 		function placeOf (time, index) {
-			var world = models.NodeWorld(asset, models.Sample(asset, time === null ? null : made, time), graphics.Identity())[index];
+			var world = models.NodeWorld(asset, models.Sample(asset, time === null ? null : made, time), math.Identity())[index];
 
 			return [world[12], world[13], world[14]];
 		}
@@ -9891,7 +9652,9 @@ describe('Contract: Gltf, the models other programs make', function () {
 	});
 
 	it('knows a bone of a model at a second of a clip, and where a thing in its hand stands', function () {
-		var graphics = Elemenx.Service('Graphics3D');
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
 
 		models.Define('test-bone', {URL: 'test.glb', Clips: {walk: 'Bend'}});
 
@@ -9903,24 +9666,24 @@ describe('Contract: Gltf, the models other programs make', function () {
 		expect(models.BoneMatrix(model, name, 'walk', 0).length).toBe(16);
 		expect(models.BoneMatrix(model, name, 'walk', 0.5)).not.toEqual(models.BoneMatrix(model, name, 'walk', 0));
 		expect(models.BoneMatrix(model, 'HandR', 'walk', 0)).toBe(null);
-		expect(models.GripTurn(model, 'HandR', name)).toEqual(graphics.Identity());
+		expect(models.GripTurn(model, 'HandR', name)).toEqual(math.Identity());
 
 		/* It lies in the palm: most of the way from the wrist to the middle finger; a hand with no fingers keeps its place. */
 		function joint (name, parent, x, children) {
 			return {Name: name, Parent: parent, Translation: [x, 0, 0], Rotation: [0, 0, 0, 1], Scale: [1, 1, 1], Children: children};
 		}
 
-		var fingers = {Clips: {}, Fit: graphics.Identity(), Bones: {HandQ: 0}, Asset: {Nodes: [joint('hand', -1, 1, [1]), joint('middle.01', 0, 1, [])], Scene: [0], Skins: [], Animations: []}};
+		var fingers = {Clips: {}, Fit: math.Identity(), Bones: {HandQ: 0}, Asset: {Nodes: [joint('hand', -1, 1, [1]), joint('middle.01', 0, 1, [])], Scene: [0], Skins: [], Animations: []}};
 
-		expect(models.Palm(fingers, 'HandQ', '', graphics.Translation(1, 0, 0))[12]).toBeCloseTo(1.8, 5);
-		expect(models.Palm({Bones: {}}, 'HandQ', '', graphics.Translation(1, 0, 0))[12]).toBe(1);
+		expect(models.Palm(fingers, 'HandQ', '', math.Translation(1, 0, 0))[12]).toBeCloseTo(1.8, 5);
+		expect(models.Palm({Bones: {}}, 'HandQ', '', math.Translation(1, 0, 0))[12]).toBe(1);
 
 		/* A thing in a hand lies as the two bones stand at rest, X from the one to the other, and then turns with the first alone. */
 		var first = model.Asset.Nodes[model.Asset.Skins[0].Joints[0]].Name;
 		var hand = models.BoneMatrix(model, first, '', 0);
 		var other = models.BoneMatrix(model, name, '', 0);
 		var turn = models.GripTurn(model, first, name);
-		var lying = graphics.Multiply(models.Grip(hand, null), turn);
+		var lying = math.Multiply(models.Grip(hand, null), turn);
 		var aimed = models.Grip(hand, other);
 
 		expect(lying[0]).toBeCloseTo(aimed[0], 5);
@@ -9929,14 +9692,14 @@ describe('Contract: Gltf, the models other programs make', function () {
 		expect(models.GripTurn(model, first, name)).toBe(turn);
 
 		/* A bone of a skeleton of a hundredth: the thing does not shrink with it. */
-		var small = graphics.Multiply(graphics.Translation(1, 2, 3), graphics.Scaling(0.01, 0.01, 0.01));
+		var small = math.Multiply(math.Translation(1, 2, 3), math.Scaling(0.01, 0.01, 0.01));
 		var kept = models.Grip(small, null);
 
 		expect(kept[0]).toBeCloseTo(1, 5);
 		expect(kept[12]).toBe(1);
 
 		/* Between two hands: X from the one to the other, Y up, whatever way the hand is turned. */
-		var aimed = models.Grip(graphics.Multiply(graphics.Translation(0, 1, 0), graphics.Rotation([1, 0, 0], 1.2)), graphics.Translation(0, 1, 2));
+		var aimed = models.Grip(math.Multiply(math.Translation(0, 1, 0), math.Rotation([1, 0, 0], 1.2)), math.Translation(0, 1, 2));
 
 		expect(aimed.slice(0, 3).map(Math.abs)).toEqual([0, 0, 1]);
 		expect(aimed[5]).toBeCloseTo(1, 5);
@@ -9985,13 +9748,13 @@ describe('Contract: Biomes, the lands of a game', function () {
 	});
 
 	beforeEach(function () {
-		Use(['service:Biomes', 'service:Terrain', 'service:Models', 'service:Graphics3D']);
+		Use(['service:SceneBiomes', 'service:SceneTerrainGenerator', 'service:SceneModels', 'service:Renderer', 'service:Meshes', 'service:Math']);
 	});
 
 	it('lays out the same village of the same seed, on what is level and dry, moved there if it must', function () {
-		var biomes = Elemenx.Service('Biomes');
-		var models = Elemenx.Service('Models');
-		var field = Elemenx.Service('Terrain').Flat({Size: 400, Height: 30, Water: 0.3, Seed: 'test'});
+		var biomes = Elemenx.Service('SceneBiomes');
+		var models = Elemenx.Service('SceneModels');
+		var field = Elemenx.Service('SceneTerrainGenerator').Flat({Size: 400, Height: 30, Water: 0.3, Seed: 'test'});
 		var first = biomes.Village(field, {X: 30, Y: -20, Houses: 7, Seed: 'a'});
 		var again = biomes.Village(field, {X: 30, Y: -20, Houses: 7, Seed: 'a'});
 
@@ -10022,7 +9785,7 @@ describe('Contract: Biomes, the lands of a game', function () {
 	});
 
 	it('takes the lands of an application', function () {
-		var biomes = Elemenx.Service('Biomes');
+		var biomes = Elemenx.Service('SceneBiomes');
 
 		biomes.Define('test-land', {Ground: {Low: [1, 0, 0]}, Scatter: [], Grass: null});
 
@@ -10035,16 +9798,20 @@ describe('Contract: Biomes, the lands of a game', function () {
 describe('Contract: Models, the models of a game made of code', function () {
 	var models;
 	var graphics;
+	var meshes;
+	var math;
 
 	beforeAll(async function () {
 		await loadElemenx();
 	});
 
 	beforeEach(function () {
-		Use(['service:Models', 'service:Graphics3D']);
+		Use(['service:SceneModels', 'service:Renderer', 'service:Meshes', 'service:Math']);
 
-		models = Elemenx.Service('Models');
-		graphics = Elemenx.Service('Graphics3D');
+		models = Elemenx.Service('SceneModels');
+		graphics = Elemenx.Service('Renderer');
+		meshes = Elemenx.Service('Meshes');
+		math = Elemenx.Service('Math');
 	});
 
 	it('has units, animals, vehicles, plants, rocks, buildings and ships, each of whole triangles, its parents before their pieces', function () {
@@ -10096,8 +9863,8 @@ describe('Contract: Models, the models of a game made of code', function () {
 		var knight = models.Make('knight');
 		var foot = [-0.075, 0.03, 0.03];
 		var hip = [-0.075, 0.47, 0];
-		var forward = graphics.Apply(models.Pose(knight, 'walk', 0)['leg-l'], foot);
-		var backward = graphics.Apply(models.Pose(knight, 'walk', 0.4)['leg-l'], foot);
+		var forward = math.Apply(models.Pose(knight, 'walk', 0)['leg-l'], foot);
+		var backward = math.Apply(models.Pose(knight, 'walk', 0.4)['leg-l'], foot);
 		var pose = models.Pose(knight, 'walk', 0);
 		var fading = models.Pose(knight, 'idle', 0, {From: 'walk', FromTime: 0, Fade: 0});
 		var fallen = models.Pose(knight, 'die', 1);
@@ -10107,13 +9874,13 @@ describe('Contract: Models, the models of a game made of code', function () {
 		expect(backward[2]).toBeLessThan(-0.1);
 
 		/* The hip itself stays with the body. */
-		expect(graphics.Vectors.Distance(graphics.Apply(pose['leg-l'], hip), graphics.Apply(pose.body, hip))).toBeLessThan(0.001);
+		expect(math.Vectors.Distance(math.Apply(pose['leg-l'], hip), math.Apply(pose.body, hip))).toBeLessThan(0.001);
 
 		/* At the start of a fade it is the last clip. */
 		expect(Array.from(fading['leg-l'])).toEqual(Array.from(pose['leg-l']));
 
 		/* The head of a fallen one is near the ground, and stays there. */
-		expect(graphics.Apply(fallen.head, [0, 0.9, 0])[1]).toBeLessThan(0.25);
+		expect(math.Apply(fallen.head, [0, 0.9, 0])[1]).toBeLessThan(0.25);
 		expect(models.Pose(knight, 'die', 5).head).toEqual(fallen.head);
 		expect(models.Length(knight, 'die')).toBe(1);
 	});
@@ -10122,7 +9889,7 @@ describe('Contract: Models, the models of a game made of code', function () {
 		var mill = models.Make('windmill');
 
 		expect(models.Pose(mill, 'idle', 1).sails).not.toEqual(models.Pose(mill, 'idle', 2).sails);
-		expect(models.Pose(models.Make('pine'), 'idle', 1).body).toEqual(graphics.Identity());
+		expect(models.Pose(models.Make('pine'), 'idle', 1).body).toEqual(math.Identity());
 	});
 
 	it('makes simpler levels of a model, with fewer faces and the same size', function () {
@@ -10169,9 +9936,9 @@ describe('Contract: Terrain, the ground of a game', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:Terrain', 'service:Graphics3D']);
+		Use(['service:SceneTerrainGenerator', 'service:Renderer', 'service:Meshes', 'service:Math']);
 
-		terrain = Elemenx.Service('Terrain');
+		terrain = Elemenx.Service('SceneTerrainGenerator');
 	});
 
 	it('has continuous heights, chunks with a skirt, and ways that keep out of the sea', function () {
@@ -10210,9 +9977,11 @@ describe('Contract: Terrain, the ground of a game', function () {
 
 	it('has the ground of a planet whose coasts are the ones its baked surface shows, its squares turned outwards', function () {
 		var field = terrain.Sphere({Radius: 6371, Height: 8, Seed: 5.3, Ocean: 0.55, Type: 'terran'});
-		var graphics = Elemenx.Service('Graphics3D');
-		var noise = graphics.Noise();
-		var direction = graphics.Vectors.Normalize([0.3, 0.8, -0.5]);
+		var graphics = Elemenx.Service('Renderer');
+		var meshes = Elemenx.Service('Meshes');
+		var math = Elemenx.Service('Math');
+		var noise = math.Noise();
+		var direction = math.Vectors.Normalize([0.3, 0.8, -0.5]);
 		var q = [direction[0] * 2.2 + 5.3, direction[1] * 2.2 + 5.3 * 0.7, direction[2] * 2.2 + 5.3 * 1.3];
 		var face;
 		var patch;
@@ -10234,9 +10003,9 @@ describe('Contract: Terrain, the ground of a game', function () {
 			a = [positions[indices[0] * 3], positions[indices[0] * 3 + 1], positions[indices[0] * 3 + 2]];
 			b = [positions[indices[1] * 3], positions[indices[1] * 3 + 1], positions[indices[1] * 3 + 2]];
 			c = [positions[indices[2] * 3], positions[indices[2] * 3 + 1], positions[indices[2] * 3 + 2]];
-			n = graphics.Vectors.Cross(graphics.Vectors.Subtract(b, a), graphics.Vectors.Subtract(c, a));
+			n = math.Vectors.Cross(math.Vectors.Subtract(b, a), math.Vectors.Subtract(c, a));
 
-			expect(graphics.Vectors.Dot(n, graphics.Vectors.Add(a, patch.Center)), 'face ' + face).toBeGreaterThan(0);
+			expect(math.Vectors.Dot(n, math.Vectors.Add(a, patch.Center)), 'face ' + face).toBeGreaterThan(0);
 		}
 	});
 });

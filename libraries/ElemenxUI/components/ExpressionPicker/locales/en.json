@@ -1,0 +1,9 @@
+{
+	"ui": {
+		"expressionPicker": {
+			"emoji": "Emoji",
+			"kind": "Kind",
+			"stickers": "Stickers"
+		}
+	}
+}

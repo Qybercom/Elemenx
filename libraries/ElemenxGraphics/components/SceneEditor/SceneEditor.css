@@ -1,0 +1,402 @@
+.elemenx-scene-editor {
+	display: grid;
+	grid-template-areas:
+		'toolbar toolbar toolbar'
+		'side view inspector'
+		'side blueprint inspector';
+	grid-template-columns: 220px minmax(0, 1fr) 260px;
+	grid-template-rows: auto minmax(0, 1fr) auto;
+	min-height: 480px;
+	height: 100%;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	overflow: hidden;
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+	font: var(--elemenx-font-size-small) / var(--elemenx-line-height-small) var(--elemenx-font);
+}
+
+.elemenx-scene-editor.playing {
+	grid-template-areas:
+		'toolbar'
+		'view';
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-rows: auto minmax(0, 1fr);
+}
+
+.elemenx-scene-editor-toolbar {
+	grid-area: toolbar;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	padding: 4px 8px;
+	border-bottom: 1px solid var(--elemenx-border);
+	background: var(--elemenx-surface-raised);
+}
+
+.elemenx-scene-editor-group {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.elemenx-scene-editor-group.end {
+	margin-left: auto;
+}
+
+.elemenx-scene-editor-tool {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: 1px solid transparent;
+	border-radius: var(--elemenx-radius);
+	background: none;
+	color: inherit;
+	cursor: pointer;
+}
+
+.elemenx-scene-editor-tool.active {
+	border-color: var(--elemenx-accent);
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-scene-editor-snap,
+.elemenx-scene-editor-import {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	cursor: pointer;
+}
+
+.elemenx-scene-editor-import input {
+	display: none;
+}
+
+.elemenx-scene-editor-time {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.elemenx-scene-editor-time input {
+	width: 72px;
+}
+
+.elemenx-scene-editor-side,
+.elemenx-scene-editor-inspector {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-height: 0;
+	padding: 8px;
+	overflow: auto;
+	background: var(--elemenx-surface-raised);
+}
+
+.elemenx-scene-editor-side {
+	grid-area: side;
+	border-right: 1px solid var(--elemenx-border);
+}
+
+.elemenx-scene-editor-inspector {
+	grid-area: inspector;
+	border-left: 1px solid var(--elemenx-border);
+}
+
+.elemenx-scene-editor-title {
+	color: var(--elemenx-text-muted);
+	font-weight: var(--elemenx-font-weight-strong);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.elemenx-scene-editor-palette {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+.elemenx-scene-editor-kind {
+	padding: 2px 8px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-pill);
+	background: var(--elemenx-surface);
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.elemenx-scene-editor-kind:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-scene-editor-kind.model {
+	border-style: dashed;
+}
+
+.elemenx-scene-editor-view {
+	grid-area: view;
+	position: relative;
+	min-width: 0;
+	min-height: 0;
+}
+
+.elemenx-scene-editor-view .elemenx-scene {
+	position: absolute;
+	inset: 0;
+}
+
+/* Over the scene while it is edited: the pointer and the keys are the editor's. */
+.elemenx-scene-editor-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	outline: none;
+	touch-action: none;
+}
+
+.elemenx-scene-editor-overlay:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--elemenx-accent);
+}
+
+.elemenx-scene-editor-gizmo {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.elemenx-scene-editor-axis {
+	stroke-width: 4;
+	stroke-linecap: round;
+	pointer-events: stroke;
+	cursor: grab;
+}
+
+.elemenx-scene-editor-tip,
+.elemenx-scene-editor-plane {
+	pointer-events: all;
+	cursor: grab;
+}
+
+.elemenx-scene-editor-axis.axis-x {
+	stroke: var(--elemenx-scene-editor-x);
+}
+
+.elemenx-scene-editor-axis.axis-y {
+	stroke: var(--elemenx-scene-editor-y);
+}
+
+.elemenx-scene-editor-axis.axis-z {
+	stroke: var(--elemenx-scene-editor-z);
+}
+
+.elemenx-scene-editor-tip.axis-x {
+	fill: var(--elemenx-scene-editor-x);
+}
+
+.elemenx-scene-editor-tip.axis-y {
+	fill: var(--elemenx-scene-editor-y);
+}
+
+.elemenx-scene-editor-tip.axis-z {
+	fill: var(--elemenx-scene-editor-z);
+}
+
+.elemenx-scene-editor-plane {
+	fill: var(--elemenx-scene-editor-plane);
+	stroke: var(--elemenx-scene-editor-y);
+}
+
+.elemenx-scene-editor-orbit {
+	stroke: var(--elemenx-scene-editor-plane);
+	stroke-width: 1.5;
+	stroke-dasharray: 4 4;
+}
+
+.elemenx-scene-editor-ring {
+	fill: none;
+	stroke: var(--elemenx-scene-editor-y);
+	stroke-width: 4;
+	pointer-events: stroke;
+	cursor: grab;
+}
+
+.elemenx-scene-editor-fields {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.elemenx-scene-editor-field,
+.elemenx-scene-editor-parameter label {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 6px;
+}
+
+.elemenx-scene-editor-field input,
+.elemenx-scene-editor-parameter input {
+	box-sizing: border-box;
+	width: 110px;
+	padding: 1px 4px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-surface);
+	color: inherit;
+	font: inherit;
+}
+
+.elemenx-scene-editor-field input[type='checkbox'] {
+	width: auto;
+}
+
+.elemenx-scene-editor-blueprint {
+	grid-area: blueprint;
+	height: 300px;
+	border-top: 1px solid var(--elemenx-border);
+}
+
+@media (max-width: 760px) {
+	.elemenx-scene-editor {
+		grid-template-areas:
+			'toolbar'
+			'view'
+			'blueprint'
+			'inspector'
+			'side';
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: auto 360px auto auto auto;
+	}
+
+	.elemenx-scene-editor-side,
+	.elemenx-scene-editor-inspector {
+		border: 0;
+		border-top: 1px solid var(--elemenx-border);
+	}
+}
+
+.elemenx-scene-editor-sketch-type {
+	padding: 2px 4px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface);
+	color: inherit;
+	font: inherit;
+}
+
+.elemenx-scene-editor-layers {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.elemenx-scene-editor-layers .elemenx-scene-editor-title {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.elemenx-scene-editor-layer {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-scene-editor-layer.current {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-scene-editor-layer-name,
+.elemenx-scene-editor-layer-eye {
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.elemenx-scene-editor-layer-name {
+	flex: 1 1 auto;
+	text-align: left;
+}
+
+.elemenx-scene-editor-item {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 4px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+}
+
+.elemenx-scene-editor-item-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-weight: var(--elemenx-font-weight-strong);
+}
+
+.elemenx-scene-editor-item-head button {
+	border: 0;
+	background: none;
+	color: inherit;
+	cursor: pointer;
+}
+
+.elemenx-scene-editor-sketch-shape {
+	fill: none;
+	stroke: var(--elemenx-scene-editor-sketch);
+	stroke-width: 2;
+	stroke-linejoin: round;
+}
+
+.elemenx-scene-editor-sketch-shape.area {
+	fill: var(--elemenx-scene-editor-sketch-fill);
+}
+
+.elemenx-scene-editor-sketch-shape.current {
+	stroke-width: 3;
+}
+
+/* The points of a road to drag, the middles of its parts (a press changes the kind of a part, a drag bends an arc or adds a point). */
+.elemenx-scene-editor-road-point {
+	fill: var(--elemenx-scene-editor-y);
+	stroke: var(--elemenx-scene-editor-plane);
+	stroke-width: 2;
+	pointer-events: all;
+	cursor: grab;
+}
+
+.elemenx-scene-editor-road-point.chosen {
+	fill: var(--elemenx-scene-editor-x);
+}
+
+.elemenx-scene-editor-road-point.draft {
+	fill: var(--elemenx-scene-editor-plane);
+	pointer-events: none;
+}
+
+.elemenx-scene-editor-road-mid {
+	fill: var(--elemenx-scene-editor-plane);
+	stroke: var(--elemenx-scene-editor-sketch);
+	stroke-width: 2;
+	pointer-events: all;
+	cursor: pointer;
+}
+
+.elemenx-scene-editor-road-mid.arc {
+	fill: var(--elemenx-scene-editor-z);
+}
+
+.elemenx-scene-editor-sketch-shape.draft {
+	stroke: var(--elemenx-scene-editor-plane);
+	stroke-dasharray: 6 4;
+}

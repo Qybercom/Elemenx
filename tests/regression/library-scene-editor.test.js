@@ -106,7 +106,7 @@ describe('Contract: SceneEditor, a game scene edited as Unreal edits a level', f
 	});
 
 	it('offers the models it is given that Models has, and places each as the kind its Type fits, as large as it is', async function () {
-		var models = Elemenx.Service('Models');
+		var models = Elemenx.Service('SceneModels');
 		var mounted;
 		var editor;
 		var scene;
@@ -414,6 +414,146 @@ describe('Contract: SceneEditor, a game scene edited as Unreal edits a level', f
 		frame(editor);
 
 		expect(editor.$Element().querySelectorAll('.elemenx-scene-editor-sketch-shape').length).toBe(6);
+	});
+
+	it('draws a road point by point, bends a part into an arc, adds and takes away points, rounds a corner, undone as one', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var scene = editor.Scene();
+		var road;
+
+		function spot (x, z) {
+			return scene.Project([x, Math.max(0, scene.Scene().Ground.Field.Height(x, z)), z]);
+		}
+
+		function press (x, z, kind, target) {
+			var p = spot(x, z);
+
+			pointer(target || overlay(editor), kind || 'pointerdown', p.X, p.Y);
+		}
+
+		function click (x, z) {
+			press(x, z);
+			press(x, z, 'pointerup');
+		}
+
+		function handle (name) {
+			return editor.$Element().querySelector('[data-handle="' + name + '"]');
+		}
+
+		function given () {
+			return scene.Get(editor.Selected).Traits.Road;
+		}
+
+		/* From above, the snap off: each press where it is. */
+		scene.SetViewpoint({Target: [0, 2, 0], Yaw: 0, Pitch: 1.35, Distance: 70});
+
+		editor.Snap = false;
+
+		frame(editor);
+
+		key(editor, 'KeyT');
+
+		expect(editor.Tool).toBe('road');
+		expect(editor.RoadTypesOf()).toEqual(expect.arrayContaining(['street', 'rail', 'track']));
+
+		editor.RoadType = 'street';
+		editor.RoadPart = 'line';
+		editor.RoadRadius = 4;
+
+		/* Three presses, a press again on the last one: a street of straight parts, its corner rounded. */
+		click(-15, 0);
+		click(0, 0);
+		click(0, 15);
+		click(0, 15);
+
+		road = given();
+
+		expect(editor.Selected).toBe('road-1');
+		expect(scene.Get('road-1').Values.Type || road.Type).toBe('street');
+		expect(road.Points.length).toBe(3);
+		expect(road.Segments.map(function (part) {
+			return part.Kind;
+		})).toEqual(['line', 'line']);
+		expect(road.Radii).toEqual([0, 4, 0]);
+
+		frame(editor);
+
+		/* A press on the middle of the first part: an arc; a drag of it bends it. */
+		var mid = handle('road-mid-0');
+		var box = mid.getBoundingClientRect();
+
+		pointer(mid, 'pointerdown', box.left + 5, box.top + 5);
+		pointer(mid, 'pointerup', box.left + 5, box.top + 5);
+
+		expect(given().Segments[0].Kind).toBe('arc');
+
+		frame(editor);
+
+		mid = handle('road-mid-0');
+		box = mid.getBoundingClientRect();
+
+		pointer(mid, 'pointerdown', box.left + 5, box.top + 5);
+
+		press(-7.5, 5, 'pointermove');
+		press(-7.5, 5, 'pointerup');
+
+		expect(given().Segments[0].Bulge).toBeCloseTo(5, 0);
+
+		/* A drag from the middle of the straight part: a point there. */
+		frame(editor);
+
+		mid = handle('road-mid-1');
+		box = mid.getBoundingClientRect();
+
+		pointer(mid, 'pointerdown', box.left + 5, box.top + 5);
+
+		press(3, 8, 'pointermove');
+		press(3, 8, 'pointerup');
+
+		expect(given().Points.length).toBe(4);
+		expect(given().Points[2][0]).toBeCloseTo(3, 0);
+		expect(given().Radii.length).toBe(4);
+
+		/* Its corner radius among the fields of the point chosen; Delete takes the point away. */
+		frame(editor);
+
+		var point = handle('road-point-2');
+
+		box = point.getBoundingClientRect();
+
+		pointer(point, 'pointerdown', box.left + 7, box.top + 7);
+		pointer(point, 'pointerup', box.left + 7, box.top + 7);
+
+		var radius = editor.$Element().querySelector('[data-field="PointRadius"]');
+
+		radius.value = '6';
+
+		radius.dispatchEvent(new Event('change'));
+
+		expect(given().Radii[2]).toBe(6);
+
+		key(editor, 'Delete');
+
+		expect(given().Points.length).toBe(3);
+
+		/* The road of the scene made of it; Undo takes the deletion back as one. */
+		expect(scene.Roads()[0].ID).toBe('road-1');
+
+		editor.Undo();
+
+		expect(given().Points.length).toBe(4);
+
+		/* Escape lets a road being drawn go. */
+		click(20, 20);
+
+		key(editor, 'Escape');
+
+		click(25, 25);
+		click(30, 25);
+		click(30, 25);
+
+		expect(scene.Get('road-2').Traits.Road.Points.length).toBe(2);
 	});
 
 	it('keeps the document in the browser and in a JSON file, and Play runs it then Stop brings it back', async function () {

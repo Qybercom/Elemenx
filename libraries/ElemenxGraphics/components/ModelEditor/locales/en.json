@@ -1,0 +1,26 @@
+{
+	"graphics": {
+		"modelEditor": {
+			"label": "Object editor",
+			"tools": "Tools of the model",
+			"select": "Select",
+			"move": "Move",
+			"turn": "Turn",
+			"scale": "Scale",
+			"snap": "Snap",
+			"variant": "Variant",
+			"undo": "Undo",
+			"redo": "Redo",
+			"format": "Format of the file",
+			"model": "Model",
+			"save": "Save in the browser",
+			"export": "Export JSON",
+			"import": "Import JSON",
+			"parts": "Parts",
+			"add": "Add",
+			"whole": "The model",
+			"generate": "Generate",
+			"describe": "Describe the model"
+		}
+	}
+}

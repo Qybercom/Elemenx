@@ -9,10 +9,15 @@ function read (file) {
 	return fs.readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 }
 
+/* The stylesheets of the components of every system Library: the themes of ElemenxUI style them all. */
 function componentStyles () {
-	return fs.readdirSync(path.join(library, 'components')).sort().flatMap(function (name) {
-		var directory = path.join(library, 'components', name);
+	return ['ElemenxCommon', 'ElemenxUI', 'ElemenxGraphics', 'ElemenxGaming'].flatMap(function (name) {
+		var root = path.resolve(process.cwd(), 'libraries', name, 'components');
 
+		return fs.existsSync(root) ? fs.readdirSync(root).sort().map(function (one) {
+			return path.join(root, one);
+		}) : [];
+	}).flatMap(function (directory) {
 		return fs.readdirSync(directory).filter(function (file) {
 			return /\.css$/.test(file);
 		}).map(function (file) {

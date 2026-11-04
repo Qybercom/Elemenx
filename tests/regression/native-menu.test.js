@@ -60,16 +60,16 @@ describe('Contract: NativeMenu, the menu of the system declared with MenuItem', 
 	beforeAll(async function () {
 		await loadElemenx();
 		/* The helpers the Services of ElemenxUI share (their lists of listeners). */
-		await import('../../libraries/ElemenxUI/services/ElemenxHelpers.js');
-		await import('../../libraries/ElemenxUI/services/Menus.js');
-		await import('../../libraries/ElemenxUI/services/Platform.js');
-		await import('../../libraries/ElemenxUI/directives/Mount.js');
+		await import('../../libraries/ElemenxUI/services/ElemenxHelpers/ElemenxHelpers.js');
+		await import('../../libraries/ElemenxUI/services/Menus/Menus.js');
+		await import('../../libraries/ElemenxUI/services/Platform/Platform.js');
+		await import('../../libraries/ElemenxCommon/directives/Mount/Mount.js');
 
 		define(menuItemSource, 'MenuItem', menuItemTemplate);
 		define(nativeMenuSource, 'NativeMenu', nativeMenuTemplate);
 		define(panelSource, 'NativeMenuPanel', panelTemplate);
 
-		await import('../../libraries/ElemenxUI/services/Hotkeys.js');
+		await import('../../libraries/ElemenxUI/services/Hotkeys/Hotkeys.js');
 
 		/* The MenuBar, as a stand-in that shows each menu with its items, and chooses the first item of a menu at a press. */
 		Elemenx.Component('MenuBar', {$Template: '<div><button class="stub-menu" *for="top of Items" [attribute.data-index]="$index" (click)="Press">{{top.Label}}: {{top.Items.map(function (item) { return item.Separator ? \'-\' : item.Label + (item.Shortcut ? \' \' + item.Shortcut : \'\'); }).join(\', \')}}</button></div>', Items: [], Caret: false, Variant: '', Size: '', Press: function (event, node) {
@@ -251,7 +251,7 @@ describe('Contract: NativeMenu, the menu of the system declared with MenuItem', 
 		var host;
 		var hotkeys;
 
-		await import('../../libraries/ElemenxUI/services/Hotkeys.js');
+		await import('../../libraries/ElemenxUI/services/Hotkeys/Hotkeys.js');
 
 		hotkeys = Elemenx.Service('Hotkeys');
 

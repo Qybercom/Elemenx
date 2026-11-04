@@ -1,0 +1,20 @@
+{
+	"ui": {
+		"calendar": {
+			"month": "Month",
+			"more": {
+				"one": "+{count} more",
+				"other": "+{count} more"
+			},
+			"today": "Today",
+			"view": "View",
+			"week": "Week",
+			"day": "Day",
+			"months": "Months",
+			"quarter": "Quarter",
+			"year": "Year",
+			"years": "Years",
+			"quarterTitle": "Q{quarter} {year}"
+		}
+	}
+}

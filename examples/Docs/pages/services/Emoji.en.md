@@ -56,4 +56,4 @@ The emoji of Unicode, drawn by the fonts of the system: their groups, names and 
 
 ## Tests
 
-- [embeds in ElemenxUI its styles, sprites, data and every entity with its template and style](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/dist.test.js#L47) — `tests/regression/dist.test.js`
+- [embeds in ElemenxUI its styles, sprites, data and every entity with its template and style](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/dist.test.js#L54) — `tests/regression/dist.test.js`

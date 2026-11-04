@@ -55,8 +55,9 @@ The differences between two texts (the algorithm of Myers: the shortest list of 
 
 ## Tests
 
-- [lists the lines of two texts as kept, removed and added, with their numbers in each text](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/diff.test.js#L24) — `tests/regression/diff.test.js`
-- [finds the shortest list of changes in long texts quickly](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/diff.test.js#L39) — `tests/regression/diff.test.js`
-- [marks the words that differ in two versions of a line](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/diff.test.js#L60) — `tests/regression/diff.test.js`
-- [groups the lines into changes with their context and the folds between them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/diff.test.js#L67) — `tests/regression/diff.test.js`
-- [code editor shows a diff with the original text, in one column or side by side, with the words changed and folds that open](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6326) — `tests/examples/ui-kit.spec.js`
+- [lists the lines of two texts as kept, removed and added, with their numbers in each text](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Diff/Diff.node.test.js#L24) — `libraries/ElemenxCommon/services/Diff/Diff.node.test.js`
+- [finds the shortest list of changes in long texts quickly](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Diff/Diff.node.test.js#L39) — `libraries/ElemenxCommon/services/Diff/Diff.node.test.js`
+- [marks the words that differ in two versions of a line](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Diff/Diff.node.test.js#L60) — `libraries/ElemenxCommon/services/Diff/Diff.node.test.js`
+- [groups the lines into changes with their context and the folds between them](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Diff/Diff.node.test.js#L67) — `libraries/ElemenxCommon/services/Diff/Diff.node.test.js`
+- [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L129) — `tests/regression/headless.test.js`
+- [code editor shows a diff with the original text, in one column or side by side, with the words changed and folds that open](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6298) — `tests/examples/ui-kit.spec.js`

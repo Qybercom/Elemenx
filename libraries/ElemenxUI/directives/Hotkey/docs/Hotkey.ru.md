@@ -1,0 +1,1 @@
+*hotkey="'Mod+S'" (или *hotkey="{Keys: 'Mod+S', Scope: 'local', Description: 'Save', Group: 'File'}") нажимает элемент при нажатии клавиш, если он не отключён и не скрыт, и задаёт его aria-keyshortcuts. Scope 'local' ограничивает сочетание фокусом внутри ближайших к элементу раздела, диалога или формы. Использует сервис Hotkeys.

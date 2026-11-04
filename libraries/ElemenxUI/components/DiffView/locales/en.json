@@ -1,0 +1,11 @@
+{
+	"ui": {
+		"diffView": {
+			"label": "Differences",
+			"fold": {
+				"one": "Show {count} unchanged line",
+				"other": "Show {count} unchanged lines"
+			}
+		}
+	}
+}

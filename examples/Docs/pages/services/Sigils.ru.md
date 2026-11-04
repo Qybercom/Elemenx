@@ -10,5 +10,6 @@
 
 ## Тесты
 
-- [Sigils makes circles of a seed, the same each time, whose rings turn apart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3441) — `tests/regression/library-scene.test.js`
-- [saves a recipe of the kinds of the library and makes the very same thing of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/generated.test.js#L23) — `tests/regression/generated.test.js`
+- [Sigils makes circles of a seed, the same each time, whose rings turn apart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3321) — `tests/regression/library-scene.test.js`
+- [saves a recipe of the kinds of the library and makes the very same thing of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/seeded.test.js#L23) — `tests/regression/seeded.test.js`
+- [makes the Service that declares a kind as a record of it is loaded, and every one of them for the list](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/seeded.test.js#L45) — `tests/regression/seeded.test.js`

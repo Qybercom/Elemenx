@@ -120,7 +120,61 @@ function writeFile (file, text, wait) {
 	}
 }
 
+/*
+ * The system Libraries in their order, each on the ones before it (as the runtime declares them): Slug names their files
+ * of dist (elemenx-<slug>.js, elemenx-<slug>/), All whether elemenx.all.js carries it.
+ */
+var SystemLibraries = [
+	{Name: 'ElemenxCommon', Slug: 'common', Uses: [], All: true},
+	{Name: 'ElemenxUI', Slug: 'ui', Uses: ['ElemenxCommon'], All: true},
+	{Name: 'ElemenxGraphics', Slug: 'graphics', Uses: ['ElemenxUI'], All: false},
+	{Name: 'ElemenxGaming', Slug: 'gaming', Uses: ['ElemenxGraphics'], All: false}
+];
+
+/* The system Libraries names need, those they use first: [{Name, Slug, Uses, All}] in their order. */
+function systemLibraries (names) {
+	var wanted = {};
+
+	function want (name) {
+		var library = SystemLibraries.filter(function (each) {
+			return each.Name === name;
+		})[0];
+		if (!library || wanted[name]) return;
+
+		wanted[name] = true;
+
+		library.Uses.forEach(want);
+	}
+
+	(names || SystemLibraries.map(function (library) {
+		return library.Name;
+	})).forEach(want);
+
+	return SystemLibraries.filter(function (library) {
+		return wanted[library.Name];
+	});
+}
+
+/*
+ * What a Library keeps beside its entities for their authors, never shipped (bundles, its files in dist, the copies of
+ * the editors, npm): a docs folder (of the Library or of an entity: its page, its example, its description in other
+ * languages), a test beside what it tests (Math.test.js), and the pieces of its dictionaries (services/Math/locales,
+ * locales/shared), which tools/locales.js merges into locales/<language>.json. relative is from the folder of the
+ * Library, with /.
+ */
+function LibraryPrivate (relative, folder) {
+	var parts = relative.split('/');
+	if (parts.indexOf('docs') !== -1) return true;
+	if (!folder && /\.test\.js$/.test(relative)) return true;
+	if (parts[0] === 'locales' && parts[1] === 'shared') return true;
+
+	return parts.indexOf('locales') > 0;
+}
+
 module.exports = {
+	LibraryPrivate: LibraryPrivate,
+	SystemLibraries: SystemLibraries,
+	systemLibraries: systemLibraries,
 	fail: fail,
 	writeFile: writeFile,
 	installed: installed,

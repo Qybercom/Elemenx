@@ -38,7 +38,7 @@ function element (place) {
 
 describe('ElemenxUI Form', function () {
 	it('keeps the controls of its Fields in their order on the page, whatever order they register in', function () {
-		var forms = definition('services/Forms.js');
+		var forms = definition('services/Forms/Forms.js');
 		var form = Object.assign({}, definition('components/Form/Form.js'));
 		var fields = [['name', 1], ['email', 2], ['terms', 5], ['password', 3]];
 
@@ -71,7 +71,7 @@ describe('ElemenxUI Form', function () {
 
 	/* The names of the forms of a server: their parts nest the controls in groups and arrays, and Value with them. */
 	it('nests the controls of names of parts (user[address][city], items[2][name], tags[]) and takes the groups made for them out with the last', function () {
-		var forms = definition('services/Forms.js');
+		var forms = definition('services/Forms/Forms.js');
 		var form = Object.assign({}, definition('components/Form/Form.js'));
 		var controls = {};
 		var place = 0;

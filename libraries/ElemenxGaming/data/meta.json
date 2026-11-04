@@ -1,0 +1,166 @@
+{
+	"Components": [
+		{
+			"Name": "GameRace",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "flag",
+			"Description": "A race on a closed road of a Scene, declared inside it: laps, checkpoints, times, positions, the wrong way.",
+			"Props": [
+				{
+					"Name": "Road",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the road of the race; empty: the first closed road of the scene."
+				},
+				{
+					"Name": "Laps",
+					"Type": "number",
+					"Default": 3,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How many laps."
+				},
+				{
+					"Name": "Racers",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The IDs of the vehicles that race (a list, or text with commas); empty: the one under the keys."
+				},
+				{
+					"Name": "Checkpoints",
+					"Type": "number",
+					"Default": 3,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How many checkpoints a lap has, evenly round the road."
+				},
+				{
+					"Name": "Countdown",
+					"Type": "number",
+					"Default": 3,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Seconds of the countdown before the start."
+				},
+				{
+					"Name": "Auto",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Starts as the scene starts."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"countdown",
+				"start",
+				"checkpoint",
+				"lap",
+				"position",
+				"wrong",
+				"finish",
+				"end"
+			],
+			"EventDescriptions": {
+				"countdown": "A second of the countdown before the start: {Seconds}.",
+				"start": "The race started.",
+				"checkpoint": "A racer passed a checkpoint: {ID, Lap, Index}.",
+				"lap": "A racer finished a lap: {ID, Lap, Time, Best}.",
+				"position": "A racer came to another position: {ID, Position}.",
+				"wrong": "A racer goes the wrong way, or the right way again: {ID, Wrong}.",
+				"finish": "A racer finished: {ID, Position, Time, Best}.",
+				"end": "All the racers finished."
+			},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "GameStrategy",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "flag",
+			"Description": "A strategy game on the ground of a Scene, declared inside it: selection, orders, paths round the land, attacks, the fog of war.",
+			"Props": [
+				{
+					"Name": "Team",
+					"Type": "text",
+					"Default": "blue",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The team of the player: its walkers are its units."
+				},
+				{
+					"Name": "Fog",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The fog of war: what the units do not see is hidden and darkened."
+				},
+				{
+					"Name": "Spread",
+					"Type": "number",
+					"Default": 2.5,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Metres between the units sent to one place."
+				},
+				{
+					"Name": "Selected",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The units selected from the start (IDs: a list, or text with commas), as they come."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of it for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"select",
+				"order",
+				"death"
+			],
+			"EventDescriptions": {
+				"select": "The units selected changed: {IDs}.",
+				"order": "Units were told to move or attack: {Kind, IDs, X, Z, Target}.",
+				"death": "A unit has no health left and is gone: {ID, By}."
+			},
+			"Methods": [],
+			"Sample": {}
+		}
+	],
+	"Services": [],
+	"Directives": [],
+	"Classes": {}
+}

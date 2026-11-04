@@ -59,7 +59,7 @@ describe('elemenx build: Components of a base and of Traits', function () {
 		expect(bundle).toMatch(/\n\t"Trait": \{\n/);
 		expect(bundle).toMatch(/\n\t\t"Glow": function \(\) \{\n\t\t\tElemenx\.Trait\('Glow'/);
 
-		/* A Trait of a Library goes in only with a Component that names it: no GameScene here, no Strategy. */
-		expect(bundle).not.toContain("Elemenx.Trait('Strategy'");
+		/* A Trait of a Library goes in only with a Component that names it: no Scene here, none of its traits. */
+		expect(bundle).not.toContain("Elemenx.Trait('SceneTriggers'");
 	});
 });

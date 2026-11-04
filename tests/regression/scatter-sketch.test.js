@@ -9,9 +9,9 @@ function square (x0, z0, x1, z1) {
 }
 
 /* A ground of a sketch, all of it sown: the scene itself. */
-async function mount (items, bare) {
+async function mount (items, bare, more) {
 	var ready = null;
-	var component = Elemenx.Component(unique('ScatterHost'), {$Template: '<div style="width: 320px; height: 200px"><GameScene Paused="true" Quality="low" Labels="false" (ready)="Ready"></GameScene></div>', Ready: function (space) {
+	var component = Elemenx.Component(unique('ScatterHost'), {$Template: '<div style="width: 320px; height: 200px"><Scene Paused="true" Quality="low" Labels="false" (ready)="Ready"></Scene></div>', Ready: function (space) {
 		ready = space;
 	}})();
 	var now = 1000;
@@ -26,6 +26,10 @@ async function mount (items, bare) {
 
 	ready.Scene().Loop.Stop();
 	ready.Add('ground', {ID: 'land', Size: 200, Height: 4, Water: 0, Scale: 300, Ridges: 0, Seed: 'sow', Sketch: {Layers: [{ID: 'base', Items: items}]}});
+
+	if (more)
+		more(ready);
+
 	ready.SetViewpoint({Target: [0, 2, 0], Yaw: 0, Pitch: 1.2, Distance: 120});
 
 	await waitFor(function () {
@@ -43,7 +47,7 @@ describe('Contract: what a sketch sows over a ground: growth in its areas, rows,
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['GameScene', 'GameObject']);
+		Use(['Scene', 'SceneObject']);
 	});
 
 	beforeEach(function () {
@@ -52,6 +56,19 @@ describe('Contract: what a sketch sows over a ground: growth in its areas, rows,
 
 	afterEach(function () {
 		while (owned.length) owned.pop().$Destroy();
+	});
+
+	/* Regression: the scatter read the sketch of the ground alone, so the trees grew on the roads of the scene. */
+	it('grows nothing on a road of the scene', async function () {
+		var scene = await mount([{ID: 'f', Type: 'forest', Points: square(-90, -90, 90, 90), Density: 6}], false, function (ready) {
+			ready.Add('road', {ID: 'way', Type: 'road', Points: [[-90, 0], [90, 0]]});
+		});
+		var trees = scene.SownNear(0, 0, 90);
+
+		expect(trees.length).toBeGreaterThan(100);
+		expect(trees.filter(function (one) {
+			return Math.abs(one.Z) < 4;
+		})).toEqual([]);
 	});
 
 	it('grows a forest in its area only, none in its clearing nor on its road, and sows a field in rows of its spacing', async function () {
@@ -151,7 +168,7 @@ describe('Contract: what a sketch sows over a ground: growth in its areas, rows,
 
 			expect(one.Model).toMatch(new RegExp('^settle-' + lot.Class + '-' + Math.round(lot.Width) + 'x' + Math.round(lot.Depth) + '-5-'));
 			expect(one.Turn).toBeCloseTo(lot.Turn, 6);
-			expect(Elemenx.Service('Models').Info(one.Model).Size).toBeCloseTo(one.Size, 4);
+			expect(Elemenx.Service('SceneModels').Info(one.Model).Size).toBeCloseTo(one.Size, 4);
 			/* All of its ground, its corners too, a metre in. */
 			[[-1, -1], [1, -1], [1, 1], [-1, 1], [0, 0]].forEach(function (corner) {
 				var x = corner[0] * (lot.Width / 2 - 1);

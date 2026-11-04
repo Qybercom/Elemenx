@@ -1,0 +1,9 @@
+{
+	"ui": {
+		"codeView": {
+			"copy": "Copy the code",
+			"fold": "Fold the block",
+			"unfold": "Unfold the block"
+		}
+	}
+}

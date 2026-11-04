@@ -1,0 +1,10 @@
+{
+	"ui": {
+		"codeEditor": {
+			"label": "Редактор кода",
+			"suggestions": "Подсказки",
+			"diff": "Изменения",
+			"unchanged": "Без изменений: {count}"
+		}
+	}
+}

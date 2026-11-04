@@ -1,0 +1,25 @@
+<div class="elemenx-scene" tabindex="0" role="application" [class.dragging]="Dragging" [attribute.data-setting]="Setting || 'space'" [attribute.aria-label]="Label || $T('graphics.scene.label')" [attribute.data-changed]="Changed(System, Seed, Time, Speed, Paused, Focus, Selected, Orbits, Labels, Scale, Background, Team, Setting, Map, Fog, Grid, Projection, X, Y, Zoom)" (keydown)="Key" (keyup)="KeyUp" (blur)="Blurred">
+	<canvas class="elemenx-scene-canvas" (pointerdown)="PointerDown" (pointermove)="PointerMove" (pointerup)="PointerUp" (pointercancel)="PointerCancel" (wheel)="Wheel" (dblclick)="Double" (contextmenu)="Menu"></canvas>
+	<div class="elemenx-scene-labels" [class.hidden]="!Labels || Labels === 'false'" (click)="LabelPressed" (dblclick)="LabelDouble"></div>
+	<div class="elemenx-scene-axes-place" *if="Axes" [attribute.data-corner]="Axes === true || Axes === 'true' ? 'top-right' : Axes"><SceneAxes [yaw]="ViewYaw" [pitch]="ViewPitch" (axis)="AxisChosen" /></div>
+	<div class="elemenx-scene-fallback" *if="Unsupported">{{$T('graphics.scene.unsupported')}}</div>
+	<aside class="elemenx-scene-card" *if="Card && Details && Details !== 'false'" [attribute.aria-label]="Card.Name">
+		<header class="elemenx-scene-card-header">
+			<span class="elemenx-scene-card-title"><strong class="elemenx-ellipsis">{{Card.Name}}</strong><span class="elemenx-scene-card-kind">{{Card.Kind}}</span></span>
+			<Button Variant="ghost" Size="small" Icon="close" [title]="$T('graphics.scene.close')" (click)="Unselect" />
+		</header>
+		<dl class="elemenx-scene-card-rows">
+			<div class="elemenx-scene-card-row" *for="row of Card.Rows" *key="row.Key"><dt>{{row.Label}}</dt><dd>{{row.Value}}</dd></div>
+		</dl>
+		<span class="elemenx-scene-card-actions">
+			<Button Size="small" Icon="zoom-in" [label]="$T('graphics.scene.focus')" (click)="FocusSelected" />
+			<Button Size="small" Icon="arrow-down" *if="Card.Land" [label]="$T('graphics.scene.land')" (click)="LandSelected" />
+		</span>
+	</aside>
+	<Button class="elemenx-scene-takeoff" Size="small" Icon="arrow-up" *if="Landed" [label]="$T('graphics.scene.takeOff')" (click)="TakeOff" />
+	<div class="elemenx-scene-loading" [hidden]="Loading === null || !Loader || Loader === 'false'"><slot name="loading"></slot><Progress *if="!LoadingOwn" Size="small" [value]="LoadingEndless ? null : Loading" [label]="$T('graphics.scene.loading')" /></div>
+	<div class="elemenx-scene-hud"><slot name="hud"></slot></div>
+	<div class="elemenx-scene-sources" hidden><slot></slot></div>
+	<div class="elemenx-scene-screens" aria-hidden="true"><slot name="screens"></slot></div>
+	<div class="elemenx-visually-hidden" aria-live="polite">{{Status}}</div>
+</div>

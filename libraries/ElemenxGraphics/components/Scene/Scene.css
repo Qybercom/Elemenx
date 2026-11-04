@@ -1,0 +1,241 @@
+/*
+ * The scene of a game: a canvas of WebGL2 as large as its place, the names of the bodies over it, the card of the
+ * selected body in a corner, the HUD of the game over all.
+ */
+.elemenx-scene {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	min-height: 320px;
+	overflow: hidden;
+	background: var(--elemenx-scene-background);
+	outline: none;
+	touch-action: none;
+	user-select: none;
+}
+
+.elemenx-scene:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--elemenx-focus);
+}
+
+.elemenx-scene-canvas {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+	cursor: grab;
+}
+
+.elemenx-scene.dragging .elemenx-scene-canvas {
+	cursor: grabbing;
+}
+
+/* The names: buttons over the places of their bodies, moved every frame. */
+.elemenx-scene-labels {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	pointer-events: none;
+}
+
+.elemenx-scene-labels.hidden {
+	display: none;
+}
+
+.elemenx-scene-label {
+	position: absolute;
+	top: 0;
+	left: 0;
+	padding: 1px 6px;
+	font: inherit;
+	font-size: 11px;
+	line-height: 16px;
+	color: var(--elemenx-scene-label);
+	white-space: nowrap;
+	background: transparent;
+	border: 0;
+	border-radius: var(--elemenx-radius-small);
+	cursor: pointer;
+	pointer-events: auto;
+	text-shadow: 0 1px 2px var(--elemenx-scene-shadow);
+}
+
+.elemenx-scene-label[data-kind="star"] {
+	font-weight: 600;
+}
+
+.elemenx-scene-label[data-kind="station"],
+.elemenx-scene-label[data-kind="outpost"],
+.elemenx-scene-label[data-kind="fleet"] {
+	color: var(--elemenx-scene-selection);
+}
+
+.elemenx-scene-label:hover,
+.elemenx-scene-label[aria-pressed="true"] {
+	color: var(--elemenx-scene-background);
+	background: var(--elemenx-scene-selection);
+	text-shadow: none;
+}
+
+.elemenx-scene-label:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 1px;
+}
+
+/* The card of the selected body: its numbers. */
+.elemenx-scene-card {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	box-sizing: border-box;
+	inline-size: min(260px, calc(100% - 24px));
+	padding: 10px 12px 12px;
+	color: var(--elemenx-text);
+	background: var(--elemenx-surface-raised);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	box-shadow: var(--elemenx-shadow);
+	opacity: 0.96;
+}
+
+.elemenx-scene-card-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.elemenx-scene-card-title {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.elemenx-scene-card-kind {
+	font-size: var(--elemenx-font-size-small);
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-scene-card-rows {
+	display: grid;
+	gap: 3px;
+	margin: 0;
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-scene-card-row {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.elemenx-scene-card-row dt {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-scene-card-row dd {
+	margin: 0;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+.elemenx-scene-card-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+/* The axes of the view, in a corner of their own. */
+.elemenx-scene-axes-place {
+	position: absolute;
+	z-index: 2;
+}
+
+.elemenx-scene-axes-place[data-corner='top-left'] {
+	top: 12px;
+	left: 12px;
+}
+
+.elemenx-scene-axes-place[data-corner='top-right'] {
+	top: 12px;
+	right: 12px;
+}
+
+.elemenx-scene-axes-place[data-corner='bottom-left'] {
+	bottom: 12px;
+	left: 12px;
+}
+
+.elemenx-scene-axes-place[data-corner='bottom-right'] {
+	right: 12px;
+	bottom: 12px;
+}
+
+/* On the surface of a body: the way back to space, in a corner. */
+.elemenx-scene-takeoff {
+	position: absolute;
+	top: 12px;
+	left: 12px;
+	z-index: 2;
+}
+
+/* Without WebGL2: what is missing, in the middle. */
+.elemenx-scene-fallback {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+	color: var(--elemenx-scene-label);
+	text-align: center;
+}
+
+/* The HUD over the scene: it lets the presses through, its own parts take them. */
+.elemenx-scene-loading {
+	position: absolute;
+	right: 16px;
+	bottom: 16px;
+	left: 16px;
+	z-index: 4;
+	max-width: 420px;
+	margin: 0 auto;
+	color: var(--elemenx-scene-label);
+	pointer-events: none;
+}
+
+.elemenx-scene-hud {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	pointer-events: none;
+}
+
+.elemenx-scene-hud > * > * {
+	pointer-events: auto;
+}
+
+/* The HUD over the world: it lets the presses through, its own parts take them. */
+.elemenx-scene-hud {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	pointer-events: none;
+}
+
+.elemenx-scene-hud > * > * {
+	pointer-events: auto;
+}
+
+/* What the screens of a car show: laid out as it is styled, out of sight, for its pictures. */
+.elemenx-scene-screens {
+	position: absolute;
+	top: 0;
+	left: -10000px;
+	pointer-events: none;
+}

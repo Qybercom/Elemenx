@@ -73,7 +73,8 @@ describe('Elemenx npm release surface', function () {
 
 	it('leaves out the examples, the tests and the development files', function () {
 		var outside = files.filter(function (file) {
-			return /^(examples|tests|scripts|packages|coverage|test-results|playwright-report|node_modules|eslint|stylelint|\.github)\//.test(file) || /^(AGENTS|CLAUDE)\.md$|\.config\.m?js$|^elemenx\.zip$/.test(file === 'docs-site/elemenx.config.js' ? 'the server of the Docs' : file);
+			/* What a Library keeps beside its entities for their authors: docs, tests, the phrases it merges. */
+			return /^(examples|tests|scripts|packages|coverage|test-results|playwright-report|node_modules|eslint|stylelint|\.github)\//.test(file) || /^(dist\/elemenx-[\w-]+|libraries\/\w+)\/(.*\/)?docs\/|^(dist\/elemenx-[\w-]+|libraries\/\w+)\/.+\.test\.js$|^(dist\/elemenx-[\w-]+|libraries\/\w+)\/.+\/locales\//.test(file) || /^(AGENTS|CLAUDE)\.md$|\.config\.m?js$|^elemenx\.zip$/.test(file === 'docs-site/elemenx.config.js' ? 'the server of the Docs' : file);
 		});
 
 		expect(outside).toEqual([]);

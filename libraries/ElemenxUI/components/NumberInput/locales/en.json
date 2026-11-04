@@ -1,0 +1,8 @@
+{
+	"ui": {
+		"numberInput": {
+			"decrease": "Decrease",
+			"increase": "Increase"
+		}
+	}
+}

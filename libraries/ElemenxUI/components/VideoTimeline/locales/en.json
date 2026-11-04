@@ -1,0 +1,15 @@
+{
+	"ui": {
+		"videoTimeline": {
+			"label": "Timeline",
+			"split": "Split at the playhead",
+			"delete": "Delete the clips",
+			"zoomOut": "Zoom out",
+			"zoomIn": "Zoom in",
+			"fit": "Fit the timeline",
+			"mute": "Mute",
+			"hide": "Hide",
+			"lock": "Lock"
+		}
+	}
+}

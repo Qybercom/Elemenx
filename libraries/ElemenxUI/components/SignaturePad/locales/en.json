@@ -1,0 +1,13 @@
+{
+	"ui": {
+		"signaturePad": {
+			"label": "Signature",
+			"empty": "empty",
+			"placeholder": "Sign here",
+			"undo": "Undo",
+			"clear": "Clear",
+			"match": "Looks like the signature on file ({score}%)",
+			"mismatch": "Does not look like the signature on file ({score}%)"
+		}
+	}
+}

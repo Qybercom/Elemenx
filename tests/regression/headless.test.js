@@ -22,7 +22,7 @@ describe('Elemenx without a DOM', function () {
 	});
 
 	/* A server checks a signature against the samples it keeps with the code of the page; it lays out with it too. */
-	it('compares signatures and lays out items with the Services of ElemenxUI', function () {
+	it('compares signatures and lays out items with the Services of the system Libraries', function () {
 		var signatures;
 		var line = function (shift, wave) {
 			var points = [];
@@ -34,8 +34,8 @@ describe('Elemenx without a DOM', function () {
 		};
 		var reference;
 
-		require('../../libraries/ElemenxUI/services/Signatures.js');
-		require('../../libraries/ElemenxUI/services/Layouts.js');
+		require('../../libraries/ElemenxCommon/services/Signatures/Signatures.js');
+		require('../../libraries/ElemenxUI/services/Layouts/Layouts.js');
 
 		signatures = Elemenx.Service('Signatures');
 		reference = signatures.Enroll([line(0, 20), line(3, 21), line(-2, 19)]);
@@ -45,30 +45,34 @@ describe('Elemenx without a DOM', function () {
 		expect(Elemenx.Service('Layouts').Pack([{ID: 'a', Width: 2}, {ID: 'b'}], {Columns: 2}).Rows).toBe(2);
 	});
 
-	it('puts planets on their orbits and makes shapes of three dimensions with the Services of ElemenxUI', function () {
+	it('puts planets on their orbits and makes shapes of three dimensions with the Services of the system Libraries', function () {
 		var astronomy;
 		var graphics;
+		var meshes;
 		var quarter;
 
-		require('../../libraries/ElemenxUI/services/Astronomy.js');
-		require('../../libraries/ElemenxUI/services/Graphics3D.js');
+		require('../../libraries/ElemenxCommon/services/Astronomy/Astronomy.js');
+		require('../../libraries/ElemenxCommon/services/Math/Math.js');
+		require('../../libraries/ElemenxGraphics/services/Renderer/Renderer.js');
+		require('../../libraries/ElemenxGraphics/services/Meshes/Meshes.js');
 
 		astronomy = Elemenx.Service('Astronomy');
-		graphics = Elemenx.Service('Graphics3D');
+		graphics = Elemenx.Service('Renderer');
+		meshes = Elemenx.Service('Meshes');
 		quarter = astronomy.Position({Distance: 1}, 365.25 / 4, 1);
 
 		expect(quarter[1]).toBeCloseTo(1, 6);
 		expect(astronomy.Generate('node').Bodies[0].Type).toBe('star');
-		expect(graphics.Sphere({Segments: 8, Rings: 4}).Positions.length).toBe(9 * 5 * 3);
+		expect(meshes.Sphere({Segments: 8, Rings: 4}).Positions.length).toBe(9 * 5 * 3);
 		expect(graphics.Camera({Position: [0, 0, 10]}).Project([0, 0, 0], 100, 100)).toMatchObject({X: 50, Y: 50});
 		expect(graphics.Create({getContext: function () {
 			return null;
 		}})).toBe(null);
 
 		/* The kinds of a game and a saved one, on a server too. */
-		require('../../libraries/ElemenxUI/services/Kinds.js');
+		require('../../libraries/ElemenxGraphics/services/SceneKinds/SceneKinds.js');
 
-		var kinds = Elemenx.Service('Kinds');
+		var kinds = Elemenx.Service('SceneKinds');
 		var made;
 
 		kinds.Define('node-module', {Traits: {Health: {Max: 10}}});
@@ -119,6 +123,64 @@ describe('Elemenx without a DOM', function () {
 		expect(Elemenx.Template('headless-row')).toBe('<li>{{Name}}</li>');
 		expect(Elemenx.Application('HeadlessServices', {}).$Service('HeadlessCounter').Count(1)).toBe(2);
 		expect(Elemenx.Install.State()).toEqual({Available: false, Installed: false, Manual: false, Waiting: false, Version: null});
+	});
+
+	/* ElemenxCommon has an entry of its own for Node: the framework and every Service of the Library, nothing of a page. */
+	it('loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence', function () {
+		var loaded = require('../../libraries/ElemenxCommon/node.js');
+		var calls = 0;
+		var watch;
+
+		expect(loaded).toBe(Elemenx);
+		expect(Elemenx.Service('Random').Create(7).Next()).toBe(Elemenx.Service('Random').Create(7).Next());
+		expect(Elemenx.Service('Diff').Lines('a\nb', 'a\nc').length).toBe(3);
+		expect(Elemenx.Service('DataFormats').Parse('yaml', 'a: 1')).toEqual({a: 1});
+		expect(Elemenx.Service('Calculations').Evaluate('2 + x * 3', {x: 2})).toBe(8);
+		expect(Elemenx.Service('Archive').Crc(new Uint8Array([97]))).toBe(0xe8b7be43);
+
+		expect(Elemenx.Service('SpatialIndex').Create({Cell: 10}).Count()).toBe(0);
+		expect(Elemenx.Service('Math').Apply(Elemenx.Service('Math').Translation(1, 2, 3), [0, 0, 0])).toEqual([1, 2, 3]);
+		expect(Elemenx.Service('Physics').Bounce([0, -1, 0], [0, 1, 0], 0, 1)).toEqual([0, 1, 0]);
+
+		/* InputDevices with no page: nothing held, nothing moves, the actions still bound. */
+		Elemenx.Service('InputDevices').Bind('Ahead', ['KeyW', 'LeftY-']);
+
+		expect(Elemenx.Service('InputDevices').Down('KeyW')).toBe(false);
+		expect(Elemenx.Service('InputDevices').Pads()).toEqual([]);
+		expect(Elemenx.Service('InputDevices').Value('Ahead')).toBe(0);
+		expect(Elemenx.Service('InputDevices').Tilt().Steer).toBe(0);
+		expect(Elemenx.Service('InputDevices').MotionSupported()).toBe(false);
+
+		/* The codes as SVG on a server (a ticket in a mail). */
+		expect(Elemenx.Service('QR').Encode('Elemenx').Size).toBe(21);
+		expect(Elemenx.Service('Barcodes').SVG('ean13', '4006381333931')).toMatch(/^<svg /);
+
+		/* Blueprints alone: the graphs of code; one of shaders needs BlueprintShaders, of ElemenxUI. */
+		expect(Elemenx.Service('Blueprints').Graphs()).toEqual(['generator', 'flow']);
+		expect(function () {
+			Elemenx.Service('Blueprints').Compile({version: 1, type: 'pass', blocks: [], links: []});
+		}).toThrow(/unknown type of graph pass/);
+		expect(Elemenx.Service('Seeded').Load(JSON.parse(JSON.stringify(Elemenx.Service('Seeded').Save('system', {Seed: 'node'})))).Bodies[0].Type).toBe('star');
+
+		/* A loop with no window runs on timers. */
+		var loop = Elemenx.Service('Loop').Create({});
+
+		loop.Start();
+
+		expect(loop.Running).toBe(true);
+
+		loop.Stop();
+
+		watch = Elemenx.Service('FPS').Watch(function () {
+			calls++;
+		});
+
+		expect(Elemenx.Service('FPS').Watching()).toBe(true);
+		expect(Elemenx.Service('FPS').Stats().Heap === null || typeof Elemenx.Service('FPS').Stats().Heap === 'number').toBe(true);
+
+		watch.Stop();
+
+		expect(calls).toBe(0);
 	});
 
 	it('keeps cookies in memory, and a transport without its class of the browser says so', function () {

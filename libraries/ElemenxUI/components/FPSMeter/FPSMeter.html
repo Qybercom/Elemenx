@@ -1,0 +1,10 @@
+<div class="elemenx-fps-meter" role="status" aria-live="off" [class]="[Corner ? 'corner ' + Corner : '', Level(Stats)]">
+	<div class="elemenx-fps-meter-head">
+		<span class="elemenx-fps-meter-rate">{{Stats ? Stats.FPS : '–'}}</span>
+		<span class="elemenx-fps-meter-unit">FPS</span>
+		<span class="elemenx-fps-meter-times" *if="Stats">{{Round(Stats.Frame)}} · p95 {{Round(Stats.P95)}} · max {{Round(Stats.Max)}} ms</span>
+	</div>
+	<canvas class="elemenx-fps-meter-graph" width="240" height="40" *if="Graph && Graph !== 'false'"></canvas>
+	<div class="elemenx-fps-meter-counts" *if="Stats">{{$T('ui.fpsMeter.slow')}} {{Stats.Slow}} · {{$T('ui.fpsMeter.long')}} {{Stats.Long}}{{Stats.Heap === null ? '' : ' · ' + $T('ui.fpsMeter.heap') + ' ' + Stats.Heap + ' MB'}}</div>
+	<div class="elemenx-fps-meter-source" *for="line of (Sources && Sources !== 'false' ? Lines(Stats) : [])"><b>{{line.Source}}</b> {{line.Values}}</div>
+</div>

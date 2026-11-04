@@ -240,8 +240,9 @@ The page runs from any static server and from a file (`file://`), with these lim
 | `elemenx.js`, `elemenx.min.js` | the framework |
 | `elemenx-ui.js`, `elemenx-ui.min.js` | ElemenxUI standalone: every component with its template and style, the stylesheets, the sprites and the data, embedded, but its packs |
 | `elemenx-ui.<pack>.js`, `elemenx-ui.<pack>.min.js` | a pack of ElemenxUI: `emoji` (the emoji with their English names and keywords), `emoji.ru` (the Russian ones), `cities` (the cities of GeoNames, about 7 MB, 3.3 MB with gzip), `cities.ru` (their Russian names), `brands` and `files` (the icon sets), `fantasy` and `scifi` (the game themes: the script puts the stylesheet into the page) |
-| `elemenx.all.js`, `elemenx.all.min.js` | the framework and ElemenxUI in one file |
-| `elemenx-ui/` | ElemenxUI as files, for the Discovery of a project (`Elemenx.Library('ElemenxUI', {$Root: ...})`) |
+| `elemenx-common.js`, `elemenx-graphics.js`, `elemenx-gaming.js` (and `.min.js`) | the other system Libraries standalone, as `elemenx-ui.js` is: a page adds each after the ones it stands on (ElemenxGraphics after ElemenxUI, ElemenxGaming after ElemenxGraphics) |
+| `elemenx.all.js`, `elemenx.all.min.js` | the framework, ElemenxCommon and ElemenxUI in one file |
+| `elemenx-common/`, `elemenx-ui/`, `elemenx-graphics/`, `elemenx-gaming/` | each system Library as files, for the Discovery of a project (`Elemenx.Library('ElemenxUI', {$Root: ...})`) |
 | `manifest.json` | the version, and the size, the gzip size and the integrity (SRI) of every file |
 
 The minifier (`tools/minify.js`) has no dependencies: it drops comments (but `/*!` licenses) and the blanks that carry no meaning, and keeps a line break where a statement could end; the `.min.js` files also take short local names (`tools/mangle.js`, as a build: properties, keys and globals keep theirs, so no public name can break, and `npm test` runs every browser contract against `elemenx.min.js`). Templates and stylesheets are minified without renaming.

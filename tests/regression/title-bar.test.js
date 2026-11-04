@@ -49,9 +49,9 @@ describe('Contract: the frames of the windows of a program (Platform.Frame) and 
 	beforeAll(async function () {
 		await loadElemenx();
 		/* The helpers the Services of ElemenxUI share (their lists of listeners). */
-		await import('../../libraries/ElemenxUI/services/ElemenxHelpers.js');
-		await import('../../libraries/ElemenxUI/services/Theme.js');
-		await import('../../libraries/ElemenxUI/services/Platform.js');
+		await import('../../libraries/ElemenxUI/services/ElemenxHelpers/ElemenxHelpers.js');
+		await import('../../libraries/ElemenxUI/services/Theme/Theme.js');
+		await import('../../libraries/ElemenxUI/services/Platform/Platform.js');
 
 		/* The TitleBar with its template inline: the page of the tests serves no Library. */
 		new Function(titleBarSource.replace("$StyleURL: 'TitleBar.css',\n", '').replace("$TemplateURL: 'TitleBar.html'", function () {

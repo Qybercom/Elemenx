@@ -6,7 +6,7 @@ var owned = [];
 
 /* An object editor, its scene ready and its model shown; a generator of one recipe when told. */
 async function mount (state) {
-	var component = Elemenx.Component(unique('ObjectEditorHost'), Object.assign({$Template: '<div style="width: 900px; height: 560px"><ObjectEditor #Editor [generator]="Generator" (change)="Changed" /></div>', Changes: [], Generator: null, Changed: function (document) {
+	var component = Elemenx.Component(unique('ModelEditorHost'), Object.assign({$Template: '<div style="width: 900px; height: 560px"><ModelEditor #Editor [generator]="Generator" (change)="Changed" /></div>', Changes: [], Generator: null, Changed: function (document) {
 		this.Changes.push(document);
 	}}, state || {}))();
 	var editor;
@@ -42,7 +42,7 @@ function frame (editor) {
 }
 
 function overlay (editor) {
-	return editor.$Element().querySelector('.elemenx-object-editor-overlay');
+	return editor.$Element().querySelector('.elemenx-model-editor-overlay');
 }
 
 function pointer (target, type, x, y) {
@@ -54,7 +54,7 @@ function height (name) {
 	var top = -Infinity;
 	var bottom = Infinity;
 
-	Elemenx.Service('Models').Make(name).Pieces.forEach(function (piece) {
+	Elemenx.Service('SceneModels').Make(name).Pieces.forEach(function (piece) {
 		var p = piece.Geometry.Positions;
 		var i;
 
@@ -68,14 +68,14 @@ function height (name) {
 }
 
 function field (editor, name) {
-	return editor.$Element().querySelector('.elemenx-object-editor-fields [data-field="' + name + '"]');
+	return editor.$Element().querySelector('.elemenx-model-editor-fields [data-field="' + name + '"]');
 }
 
-describe('Contract: ObjectEditor, a model of shapes edited part by part, its recipe of Models and its files', function () {
+describe('Contract: ModelEditor, a model of shapes edited part by part, its recipe of Models and its files', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['ObjectEditor', 'service:ModelFormats']);
+		Use(['ModelEditor', 'service:ModelFormats']);
 	});
 
 	beforeEach(function () {
@@ -114,7 +114,7 @@ describe('Contract: ObjectEditor, a model of shapes edited part by part, its rec
 		expect(editor.Recipe().Parts[1]).toMatchObject({ID: id, Shape: 'ball', Piece: 'body'});
 		expect(editor.Recipe().Parts[1].At[1]).toBeGreaterThan(0.5);
 		expect(mounted.Host.Changes[mounted.Host.Changes.length - 1].Recipe.Parts.length).toBe(2);
-		expect(editor.$Element().querySelector('.elemenx-object-editor-side').textContent).toContain(id);
+		expect(editor.$Element().querySelector('.elemenx-model-editor-side').textContent).toContain(id);
 
 		/* A press on the block selects it; on the sky, nothing. */
 		spot = editor.Scene().Project(editor.World([0, 0.25, 0]));
@@ -197,7 +197,7 @@ describe('Contract: ObjectEditor, a model of shapes edited part by part, its rec
 		/* The model shown has both arms. */
 		frame(editor);
 
-		expect(Elemenx.Service('Models').Make(editor.Scene().Get('model').Values.Model).Pieces.map(function (piece) {
+		expect(Elemenx.Service('SceneModels').Make(editor.Scene().Get('model').Values.Model).Pieces.map(function (piece) {
 			return piece.ID;
 		})).toEqual(['arm-l', 'arm-r']);
 
@@ -217,7 +217,7 @@ describe('Contract: ObjectEditor, a model of shapes edited part by part, its rec
 		var mounted = await mount();
 		var editor = mounted.Editor;
 		var formats = Elemenx.Service('ModelFormats');
-		var models = Elemenx.Service('Models');
+		var models = Elemenx.Service('SceneModels');
 
 		editor.Select('block');
 		editor.Add('cylinder', {Piece: 'leg-l', Mirror: true, At: [0.3, 0.2, 0]});
@@ -241,7 +241,7 @@ describe('Contract: ObjectEditor, a model of shapes edited part by part, its rec
 
 	it('keeps its document when it is given the same again without a Seed: nothing loaded anew, the selection kept', async function () {
 		var given = {Version: 1, Name: 'Crate', Recipe: {Parts: [{ID: 'box', Shape: 'box', At: [0, 0.5, 0], Size: [1, 1, 1]}]}};
-		var mounted = await mount({Document: given, $Template: '<div style="width: 900px; height: 560px"><ObjectEditor #Editor [value]="Document" (change)="Changed" /></div>'});
+		var mounted = await mount({Document: given, $Template: '<div style="width: 900px; height: 560px"><ModelEditor #Editor [value]="Document" (change)="Changed" /></div>'});
 		var editor = mounted.Editor;
 		var seed = editor.Recipe().Seed;
 
@@ -268,7 +268,7 @@ describe('Contract: ObjectEditor, a model of shapes edited part by part, its rec
 		var done = null;
 		var shown;
 
-		expect(editor.$Element().querySelector('.elemenx-object-editor-generator')).not.toBe(null);
+		expect(editor.$Element().querySelector('.elemenx-model-editor-generator')).not.toBe(null);
 
 		editor.Generate('a pole', function (error, recipe) {
 			done = error || recipe;
@@ -292,15 +292,15 @@ describe('Contract: ObjectEditor, a model of shapes edited part by part, its rec
 
 		expect(editor.Scene().Get('model').Values.Model).not.toBe(shown);
 		expect(Math.abs(height(editor.Scene().Get('model').Values.Model) - 1)).toBeGreaterThan(0.01);
-		expect(Elemenx.Service('Models').Has(shown)).toBe(false);
+		expect(Elemenx.Service('SceneModels').Has(shown)).toBe(false);
 
 		/* The variant it shows is the one a game gets of it, under any name (regression: it showed one of its own seed). */
 		editor.Define('editor-pole-game');
 
 		expect(height('editor-pole-game')).toBeCloseTo(1, 6);
-		expect(Elemenx.Service('Models').Make('editor-pole-game', {Variant: 3}).Pieces[0].Geometry.Positions).toEqual(Elemenx.Service('Models').Make(editor.Scene().Get('model').Values.Model).Pieces[0].Geometry.Positions);
+		expect(Elemenx.Service('SceneModels').Make('editor-pole-game', {Variant: 3}).Pieces[0].Geometry.Positions).toEqual(Elemenx.Service('SceneModels').Make(editor.Scene().Get('model').Values.Model).Pieces[0].Geometry.Positions);
 
-		delete Elemenx.Service('Models').Recipes['editor-pole-game'];
+		delete Elemenx.Service('SceneModels').Recipes['editor-pole-game'];
 
 		editor.Undo();
 
@@ -313,6 +313,6 @@ describe('Contract: ObjectEditor, a model of shapes edited part by part, its rec
 			done = error;
 		});
 
-		expect(done.message).toBe('Elemenx ObjectEditor: no Generator');
+		expect(done.message).toBe('Elemenx ModelEditor: no Generator');
 	});
 });

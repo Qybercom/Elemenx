@@ -1,0 +1,1817 @@
+{
+	"Components": [
+		{
+			"Name": "SceneAxes",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "move",
+			"Description": "The three axes of a view: how a world stands to the eye; a press on one tells which.",
+			"Props": [
+				{
+					"Name": "Yaw",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The turn of the view round the height, in radians."
+				},
+				{
+					"Name": "Pitch",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How far above its middle the eye stands, in radians."
+				},
+				{
+					"Name": "Size",
+					"Type": "number",
+					"Default": 72,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its side in pixels."
+				},
+				{
+					"Name": "Labels",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Writes the letters of the axes."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "Axes",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of it for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"axis"
+			],
+			"EventDescriptions": {
+				"axis": "An end of an axis was pressed: {Axis, Sign}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Yaw": 0.6,
+				"Pitch": 0.4
+			}
+		},
+		{
+			"Name": "SceneObject",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "shapes",
+			"Description": "An object of a game of any kind: its Kind gives its traits and parts, every other attribute is a field of it.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the object."
+				},
+				{
+					"Name": "Kind",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its kind (the Kinds Service): planet, station, fleet, tree, or one of your own."
+				},
+				{
+					"Name": "Name",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name."
+				},
+				{
+					"Name": "Part",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The part of its parent it changes (the part of that ID of the kind of the parent)."
+				},
+				{
+					"Name": "Parent",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it goes round or belongs to, when not the object it is declared in."
+				},
+				{
+					"Name": "Team",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its team."
+				},
+				{
+					"Name": "X",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its place across (a cell of a map)."
+				},
+				{
+					"Name": "Y",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its place down (a cell of a map)."
+				},
+				{
+					"Name": "Width",
+					"Type": "number",
+					"Default": 1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The cells it takes across."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The cells it takes down."
+				},
+				{
+					"Name": "Color",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its color."
+				},
+				{
+					"Name": "Image",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A picture of it, standing on its cell."
+				},
+				{
+					"Name": "Blocks",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "No way through it."
+				},
+				{
+					"Name": "Opaque",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "It hides what is behind it."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"SceneObject"
+			],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"Kind": "planet",
+				"Name": "Earth"
+			}
+		},
+		{
+			"Name": "Scene",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "star",
+			"Description": "The scene of a game in 3D: objects of any kind with their traits and parts; the setting space brings a star system on Kepler orbits, stations and fleets, with a landing on the surfaces of its bodies; the setting terrain a ground of noise and its walkers.",
+			"Props": [
+				{
+					"Name": "Biome",
+					"Type": "json",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "On a ground: what it looks like and what grows on it, by itself (the Biomes Service: temperate, taiga, tundra, desert, savanna, swamp, alien)."
+				},
+				{
+					"Name": "Setting",
+					"Type": "select",
+					"Default": "space",
+					"Options": [
+						"space",
+						"terrain"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers)."
+				},
+				{
+					"Name": "System",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}."
+				},
+				{
+					"Name": "Seed",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A whole star system made of a seed (always the same for the same seed)."
+				},
+				{
+					"Name": "Systems",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Systems of the application for traits of its own: {Trait: {Update(object, scene), Draw(object, scene)}}."
+				},
+				{
+					"Name": "Time",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The day of the scene."
+				},
+				{
+					"Name": "Speed",
+					"Type": "number",
+					"Default": 1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The days of the scene a second."
+				},
+				{
+					"Name": "Capture",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "With a walker under the keys (Control), a press takes the pointer: the mouse turns the view, Escape gives it back."
+				},
+				{
+					"Name": "Person",
+					"Type": "select",
+					"Default": "third",
+					"Options": [
+						"third",
+						"first",
+						"shoulder"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Where the view of a walker stands: behind it (third), in its eyes (first, its head hidden but its body and what it holds seen) or over its shoulder. V changes it while the pointer is taken."
+				},
+				{
+					"Name": "Shoulder",
+					"Type": "select",
+					"Default": "right",
+					"Options": [
+						"right",
+						"left"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Over which shoulder the view stands. B changes it while the pointer is taken."
+				},
+				{
+					"Name": "Axes",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"top-left",
+						"top-right",
+						"bottom-left",
+						"bottom-right"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The corner where the Axes of the view stand, none when empty; a press on one looks along it."
+				},
+				{
+					"Name": "Origin",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Draws the three axes of the world at its middle."
+				},
+				{
+					"Name": "FreeLook",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A walker that stands does not turn with the view, so it can be looked at from all sides: it comes round when it sets off."
+				},
+				{
+					"Name": "DaySeconds",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The seconds a day of 24 hours takes, on a body and from space alike, however fast the orbits go (0: as Speed says)."
+				},
+				{
+					"Name": "SurfaceSpeed",
+					"Type": "number",
+					"Default": 0.008333333333333333,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The days a second on the surface of a body (1/120: a day of two minutes)."
+				},
+				{
+					"Name": "Shadows",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The shadows of a sun on a ground, a surface and a model near the view (true)."
+				},
+				{
+					"Name": "Quality",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"low",
+						"medium",
+						"high",
+						"ultra"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "What the light costs: empty chooses by the graphics card and steps down while frames are late."
+				},
+				{
+					"Name": "Pipeline",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The render graph of the Blueprints Service that makes the picture of a frame (high, ultra and medium): its passes (Scene, Clouds, Occlusion, Air, Frames, Mirror, Rays, Exposure, Bokeh, Bloom, Picture, Shader: a pass graph of its own) up to Present; empty: PipelineGraph(), the passes of the library."
+				},
+				{
+					"Name": "PipelineParameters",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The values of the parameters of the Pipeline, by key."
+				},
+				{
+					"Name": "Flare",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How strongly the rings and the glow a lens makes of the sun show, at high and ultra: 0 to 2 (true is 1)."
+				},
+				{
+					"Name": "Weather",
+					"Type": "select",
+					"Default": "clear",
+					"Options": [
+						"clear",
+						"cloudy",
+						"overcast",
+						"rain",
+						"storm",
+						"snow",
+						"fog",
+						"changing"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "What the air of a ground does; it changes in a few seconds, as a front comes; changing goes from one to the next by itself."
+				},
+				{
+					"Name": "Wind",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How strong the wind is, 0 to 4, for clouds, rain, grass and trees (empty: as the weather has it)."
+				},
+				{
+					"Name": "WindWay",
+					"Type": "number",
+					"Default": 70,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Where the wind blows to: an azimuth in degrees."
+				},
+				{
+					"Name": "WaterGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What water looks like: a water graph of the Blueprints Service (or its JSON, or its GLSL) of its waves, the sky and the sun it mirrors, its depth, its foam and the fog over it; the one of the library (LibraryWater) when empty."
+				},
+				{
+					"Name": "LandGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What the land is, its light and its wet and snow too: a land graph of the Blueprints Service (or its JSON, or GLSL with blueprintLand); empty, the one of the library (LibraryLand()). Its Blueprint (a material graph) still paints it, in LandPaint."
+				},
+				{
+					"Name": "SkyGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What the sky is: a sky graph of the Blueprints Service (or its JSON, or GLSL with blueprintSky); empty, the one of the library (LibrarySky())."
+				},
+				{
+					"Name": "GrassGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How the wind leans the grass: a vertex graph as WindGraph (or its JSON, or GLSL); empty, the one of the library (LibraryGrass())."
+				},
+				{
+					"Name": "WindGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How the wind bends what grows and sways: a vertex graph of the Blueprints Service (or its JSON, or its GLSL), the one of the library (LibraryWind) when empty; the Vertex of a material runs after it."
+				},
+				{
+					"Name": "Front",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The seconds a change of the weather takes."
+				},
+				{
+					"Name": "View",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"top",
+						"isometric"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "A ground seen in parallel rays, as a game of two dimensions: from above or at an angle (empty: in perspective)."
+				},
+				{
+					"Name": "Paused",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Holds the time."
+				},
+				{
+					"Name": "Loader",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows how much of the scene has come; a slot named loading takes its place."
+				},
+				{
+					"Name": "Focus",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the object in the middle of the view."
+				},
+				{
+					"Name": "Selected",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the selected object."
+				},
+				{
+					"Name": "Orbits",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Draws the orbits."
+				},
+				{
+					"Name": "Labels",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the names of the objects."
+				},
+				{
+					"Name": "Exposure",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What a view lets in: a number holds it, empty adapts to the light as an eye does."
+				},
+				{
+					"Name": "Bokeh",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The depth of field, 0 to 1: how wide the lens is open; what is far from the focus is blurred, a bright point of it a disc."
+				},
+				{
+					"Name": "BokehFocus",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The distance in focus; empty: the hero, or what the middle of the view shows, followed slowly."
+				},
+				{
+					"Name": "Details",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows a card of the selected object."
+				},
+				{
+					"Name": "Background",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Draws the stars far away."
+				},
+				{
+					"Name": "Cosmos",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What lies far behind a system, made of a seed: nebula, pillars, galaxy, galaxies, cluster, void, or {Kind, Seed, Colors, Gas, Dust, Stars, Pillars, Band, Galaxies, Clusters, Beacon}: a kind is a set of these amounts, and what is told comes on top of it."
+				},
+				{
+					"Name": "Scale",
+					"Type": "select",
+					"Default": "compressed",
+					"Options": [
+						"compressed",
+						"real"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Large bodies and short distances (compressed), or their real sizes."
+				},
+				{
+					"Name": "Team",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The team of the player."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the scene for screen readers."
+				}
+			],
+			"Slots": [
+				"hud",
+				"loading",
+				"screens"
+			],
+			"Container": true,
+			"Children": [
+				"SceneObject"
+			],
+			"Current": "",
+			"Events": [
+				"ready",
+				"select",
+				"focus",
+				"person",
+				"loading",
+				"shoulder",
+				"arrive",
+				"land",
+				"takeoff",
+				"travel",
+				"enter",
+				"leave",
+				"action",
+				"touch",
+				"shader",
+				"error"
+			],
+			"EventDescriptions": {
+				"ready": "The scene is ready: the component itself, to call its methods.",
+				"select": "The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).",
+				"focus": "The view moved to an object: {ID}.",
+				"person": "V took the view of a walker to another place: third, first or shoulder.",
+				"loading": "What the scene waits for came a step nearer: {Part}, up to 100.",
+				"shoulder": "B took the view over another shoulder: right or left.",
+				"arrive": "An object reached where it was sent: {ID, At}.",
+				"land": "The view went down to the surface of a body: {ID}.",
+				"takeoff": "The view went back up to space: {ID}.",
+				"travel": "A ship on its way far at once (Travel, H or J) came to a phase: {ID, Kind (warp or jump), Phase (enter, inside, exit, done)}.",
+				"enter": "A walker, a vehicle or the hero came into a trigger: {Trigger (the trigger itself: ID, Inside(), Action(name, data), Enable(on)), ID, Object}.",
+				"leave": "One went out of a trigger, or was removed: {Trigger, ID, Object}.",
+				"action": "A trigger was sent an action (Action of the trigger): {Trigger, Name, Data}.",
+				"touch": "Two solid things began to touch (trait Rigid): {ID, With (null: the ground), At, Normal, Impulse}.",
+				"shader": "A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.",
+				"error": "There is no WebGL2 ({Reason: webgl2})."
+			},
+			"Methods": [
+				"Trigger(id)",
+				"TriggerActions(actions)",
+				"ZonesAt(x, z)",
+				"SurfaceAt(x, z)",
+				"Roads()",
+				"Junctions()",
+				"Push(id, impulse, at)",
+				"CastRay(from, direction, max)",
+				"RigidWorld()",
+				"Burst(type, place, options)",
+				"AddBehaviour(behaviour)",
+				"PipelineGraph()",
+				"LibraryWind()",
+				"LibraryGrass()",
+				"LibrarySky()",
+				"LibraryLand()",
+				"LibraryWater()",
+				"EffectGraph(name)",
+				"Effects(types)",
+				"MountsOf(id, kind)",
+				"Travel(id, kind, options, callback)",
+				"OpenPart(id, name, amount)",
+				"CosmosKinds()",
+				"Add(kind, props)",
+				"Change(id, changes)",
+				"Remove(id)",
+				"Attach(parent, object)",
+				"Detach(id)",
+				"Get(id)",
+				"Objects(filter)",
+				"Describe(id)",
+				"Position(id)",
+				"Select(id)",
+				"Selection()",
+				"FocusOn(id)",
+				"Control(id)",
+				"Move(id, target)",
+				"Play(id, clip, callback)",
+				"Now()",
+				"SetTime(days)",
+				"ToScreen(id)",
+				"Pick(clientX, clientY, all)",
+				"Viewpoint()",
+				"SetViewpoint(view)",
+				"Project(point)",
+				"Ray(clientX, clientY)",
+				"GroundAt(clientX, clientY)",
+				"OrbitAt(id, clientX, clientY)",
+				"Save(options)",
+				"Load(saved)",
+				"Land(id, options)",
+				"TakeOff()",
+				"Surface()",
+				"Supported()"
+			],
+			"Sample": {
+				"Seed": "kepler"
+			}
+		},
+		{
+			"Name": "Drawing",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "brush",
+			"Description": "A vector drawing: shapes, lines, arrows, freehand brushes and texts on layers, with groups and an export to SVG and PNG.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The model: {Width, Height, Background, Layers: [{ID, Name, Visible, Locked, Items}]}."
+				},
+				{
+					"Name": "Tool",
+					"Type": "select",
+					"Default": "select",
+					"Options": [
+						"select",
+						"rect",
+						"ellipse",
+						"line",
+						"arrow",
+						"path",
+						"text",
+						"eraser"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The tool in hand."
+				},
+				{
+					"Name": "Brush",
+					"Type": "select",
+					"Default": "pen",
+					"Options": [
+						"pen",
+						"marker",
+						"highlighter",
+						"calligraphy"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The brush of the freehand tool."
+				},
+				{
+					"Name": "Stroke",
+					"Type": "text",
+					"Default": "#1f2328",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The color of the lines of new items."
+				},
+				{
+					"Name": "Fill",
+					"Type": "text",
+					"Default": "none",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The color inside new shapes (none: no fill)."
+				},
+				{
+					"Name": "StrokeWidth",
+					"Type": "number",
+					"Default": 3,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The width of the lines in the units of the drawing."
+				},
+				{
+					"Name": "Layer",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the layer new items go into."
+				},
+				{
+					"Name": "Toolbar",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the tools, the colors and the actions over it."
+				},
+				{
+					"Name": "ReadOnly",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the drawing alone."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"select"
+			],
+			"EventDescriptions": {
+				"change": "The drawing changed: its model.",
+				"select": "The selection changed: the IDs of the items selected."
+			},
+			"Methods": [
+				"Undo()",
+				"Redo()",
+				"Delete()",
+				"Group()",
+				"Ungroup()",
+				"Forward()",
+				"Backward()",
+				"Select(ids)",
+				"Selected()",
+				"Add(item, layer)",
+				"Clear()",
+				"SVG()",
+				"PNG(callback, scale)"
+			],
+			"Sample": {
+				"Value": {
+					"Width": 320,
+					"Height": 200,
+					"Layers": [
+						{
+							"ID": "layer-1",
+							"Name": "Layer 1",
+							"Visible": true,
+							"Locked": false,
+							"Items": [
+								{
+									"ID": "a",
+									"Type": "rect",
+									"X": 30,
+									"Y": 30,
+									"W": 120,
+									"H": 80,
+									"Stroke": "#3f6c9e",
+									"Fill": "#dbe7f5",
+									"Width": 2
+								},
+								{
+									"ID": "b",
+									"Type": "ellipse",
+									"X": 170,
+									"Y": 60,
+									"W": 110,
+									"H": 90,
+									"Stroke": "#c0392b",
+									"Fill": "none",
+									"Width": 3
+								}
+							]
+						}
+					]
+				}
+			}
+		},
+		{
+			"Name": "DrawingLayers",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "layers",
+			"Description": "The layers of a Drawing: shown or hidden, locked, named, ordered.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The model of the Drawing."
+				},
+				{
+					"Name": "Layer",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the current layer."
+				},
+				{
+					"Name": "ReadOnly",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the layers without letting them change."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"select"
+			],
+			"EventDescriptions": {
+				"change": "The layers changed: the model of the drawing.",
+				"select": "A layer was chosen: its ID."
+			},
+			"Methods": [],
+			"Sample": {
+				"Value": {
+					"Width": 320,
+					"Height": 200,
+					"Layers": [
+						{
+							"ID": "back",
+							"Name": "Background",
+							"Visible": true,
+							"Locked": true,
+							"Items": [
+								{
+									"ID": "a",
+									"Type": "rect",
+									"X": 0,
+									"Y": 0,
+									"W": 320,
+									"H": 200
+								}
+							]
+						},
+						{
+							"ID": "sketch",
+							"Name": "Sketch",
+							"Visible": true,
+							"Locked": false,
+							"Items": []
+						}
+					]
+				},
+				"Layer": "sketch"
+			}
+		},
+		{
+			"Name": "SceneEditor",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "layers",
+			"Description": "An editor of a game scene as Unreal edits a level: objects, kinds to add, the view with a gizmo, fields, blueprint parameters, Play.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The document: {Version, Name, Setting, Scene (the recipe of Scene.Save)}."
+				},
+				{
+					"Name": "Setting",
+					"Type": "select",
+					"Default": "ground",
+					"Options": [
+						"ground",
+						"space"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "What a new document is: a ground under a sun, or a star system."
+				},
+				{
+					"Name": "Kinds",
+					"Type": "json",
+					"Default": [
+						"unit",
+						"effect",
+						"glass",
+						"mirror",
+						"tree",
+						"rock",
+						"house"
+					],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The kinds of objects to add on a ground."
+				},
+				{
+					"Name": "SpaceKinds",
+					"Type": "json",
+					"Default": [
+						"star",
+						"planet",
+						"moon",
+						"belt",
+						"ring",
+						"station",
+						"outpost",
+						"craft",
+						"fleet"
+					],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The kinds of objects to add in a star system."
+				},
+				{
+					"Name": "Models",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Models of the Models Service to place on a ground (an ModelEditor's), each as the kind its Type fits: a unit, a house, a tree, a rock or a thing."
+				},
+				{
+					"Name": "Storage",
+					"Type": "text",
+					"Default": "elemenx-scene-editor",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The key of localStorage Save keeps the document under."
+				},
+				{
+					"Name": "SnapMove",
+					"Type": "number",
+					"Default": 0.5,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of a move with Snap, in metres."
+				},
+				{
+					"Name": "SnapTurn",
+					"Type": "number",
+					"Default": 15,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of a turn with Snap, in degrees."
+				},
+				{
+					"Name": "SnapScale",
+					"Type": "number",
+					"Default": 0.1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of a scale with Snap."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"select",
+				"play"
+			],
+			"EventDescriptions": {
+				"change": "The document changed: {Version, Name, Scene}.",
+				"select": "The selection changed: {ID}.",
+				"play": "Play or Stop: {Playing}."
+			},
+			"Methods": [
+				"Document()",
+				"Load(document)",
+				"Save()",
+				"Restore()",
+				"Export()",
+				"Import(text)",
+				"Select(id)",
+				"Add(kind, props)",
+				"Remove(id)",
+				"Undo()",
+				"Redo()",
+				"Play()",
+				"Stop()",
+				"Scene()"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "ModelEditor",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "shapes",
+			"Description": "An editor of a model made of shapes: parts in pieces with tags, mirrors and variants of a seed, a gizmo, the recipe of Models and its files glb, fbx and obj.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The document: {Version, Name, Recipe (a recipe of data of Models: Parts, Pieces, Group, Type, Size...)}."
+				},
+				{
+					"Name": "Variant",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The variant shown: 0, the parts as they are; the others varied by their seed."
+				},
+				{
+					"Name": "Generator",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A generator of models: function (description, callback (error, recipe))."
+				},
+				{
+					"Name": "Storage",
+					"Type": "text",
+					"Default": "elemenx-model-editor",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The key of localStorage Save keeps the document under."
+				},
+				{
+					"Name": "SnapMove",
+					"Type": "number",
+					"Default": 0.05,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of a move with Snap, in sizes of the model."
+				},
+				{
+					"Name": "SnapTurn",
+					"Type": "number",
+					"Default": 15,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of a turn with Snap, in degrees."
+				},
+				{
+					"Name": "SnapScale",
+					"Type": "number",
+					"Default": 0.05,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of a scale with Snap."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"select"
+			],
+			"EventDescriptions": {
+				"change": "The document changed: {Version, Name, Recipe}.",
+				"select": "The selected part changed: {ID}."
+			},
+			"Methods": [
+				"Document()",
+				"Load(document)",
+				"Recipe()",
+				"Save()",
+				"Restore()",
+				"Export()",
+				"Import(text)",
+				"Model(format, variant)",
+				"Download(format)",
+				"Define(name)",
+				"Select(id)",
+				"Add(shape, props)",
+				"Remove(id)",
+				"Undo()",
+				"Redo()",
+				"Generate(description, callback)",
+				"Scene()"
+			],
+			"Sample": {}
+		}
+	],
+	"Services": [
+		{
+			"Name": "Renderer",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The graphics of three dimensions on WebGL2: a camera and a renderer of shapes with shaders.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Create(canvas, options)",
+				"Camera(options)",
+				"Source(names)",
+				"CloudBlock(size)",
+				"Work()"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Meshes",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The shapes of three dimensions made of triangles: spheres, boxes, cylinders, lathes and the rest, moved, merged and simplified.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Geometry()",
+				"Sphere(options)",
+				"Icosphere(options)",
+				"Ring(options)",
+				"Box(options)",
+				"Cylinder(options)",
+				"Torus(options)",
+				"Plane(options)",
+				"Lathe(options)",
+				"Wedge(options)",
+				"Transform(geometry, matrix)",
+				"Merge(parts)",
+				"Displace(geometry, amount)",
+				"Normals(geometry)",
+				"Facets(geometry)",
+				"Simplify(geometry, cell)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneKinds",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The kinds of the objects of a game: what they extend, what they can do (Traits) and what they are made of (Parts).",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Define(name, kind)",
+				"Get(name)",
+				"Has(name)",
+				"Names()",
+				"Resolve(name)",
+				"Make(kind, props)",
+				"Field(object, name)",
+				"Fields(kind)",
+				"Diff(object)",
+				"Restore(saved)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneTerrainGenerator",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Flat(options)",
+				"Sphere(options)",
+				"OnRoad(field, x, z, width)",
+				"Work()",
+				"Piece(shape, options, roads, args)",
+				"Field(shape, options)",
+				"Grid(options, side, top, steep)",
+				"Heights(field, side)",
+				"FromGrid(options, heights, side)",
+				"Sketched(sketch, base, seed)",
+				"SketchChanged(before, after)",
+				"Source(names)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "BlueprintShaders",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The graphs of Blueprints made into shaders and passes of a picture: the kinds pass, material and render.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneBlueprints",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "What a Scene adds to Blueprints: the graphs of effects and the blocks of the passes of its picture.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "Gltf",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "glTF 2.0 and GLB: meshes, materials, skins and animations of the models other programs make.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Parse(data, callback, options)",
+				"Load(url, callback)",
+				"Write(asset, options)",
+				"Meshopt(mode, source, count, stride, filter)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Fbx",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The files of FBX, binary and text: models with meshes, materials, pictures, skins and clips, read and written.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Read(data)",
+				"Write(asset, options)",
+				"Tree(data)",
+				"Parse(data)",
+				"Skeleton(tree)",
+				"Sample(curve, time, fallback)",
+				"Load(url, callback)",
+				"FromAsset(asset)",
+				"Binary(tree)",
+				"Text(tree)",
+				"Inflate(bytes)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "ModelFormats",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The files of models read and written in one form: glb, gltf, fbx (binary and text) and obj.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Formats()",
+				"Detect(data, name)",
+				"Read(data, options)",
+				"Parse(data, callback, options)",
+				"Load(url, callback)",
+				"Write(asset, format, options)",
+				"FromModel(model)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Sigils",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Magic circles of a seed, as data: rings of lines, ticks, dots, arcs, runes and stars, each with a turn of its own.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Make(seed, options)",
+				"Uniforms(circle, seconds, spin)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneRoads",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The roads of a scene, of any kind: motorways, streets, country roads, race tracks, paths, runways and railways, their cross-sections, lines and models.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Surface(name, surface)",
+				"Define(name, type)",
+				"Type(name)",
+				"Types()",
+				"Line(points, options)",
+				"Road(spec)",
+				"Network(specs, junctions, options)",
+				"JunctionAt(junctions, x, z)",
+				"Near(road, x, z, hint)",
+				"Under(roads, x, z, hints)",
+				"BarrierHit(roads, x, z, fromX, fromZ, hints, size)",
+				"FreeBarrier(spec, options)",
+				"Sketch(roads, junctions)",
+				"Asset(roads, options)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneRoadGenerator",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Roads made of a seed, the same each time: closed race tracks as roads of a Scene, with where they start.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Track(seed, options)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneModels",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The models of a game made of code: units, animals, plants, buildings and ships of pieces that move, fantasy and sci-fi, and their clips.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Names(filter)",
+				"Has(name)",
+				"Info(name)",
+				"Define(name, recipe)",
+				"Assemble(recipe, tools, random, variant)",
+				"Tagged(name, tag)",
+				"Load(name, callback)",
+				"Ready(name)",
+				"Bake(model)",
+				"Make(name, options)",
+				"Surfaces(model)",
+				"Whole(model)",
+				"Bounds(geometry)",
+				"Levels(name, options)",
+				"Pose(model, clip, time, options)",
+				"Length(model, clip)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneBuildingGenerator",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Buildings of any size made of their numbers, from a shack to a business centre: models of the Models Service.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Classes()",
+				"Options(options)",
+				"Pieces(tools, options, random)",
+				"Define(name, options)",
+				"Random(options, seed)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneBiomes",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The lands of a game: the colors of a ground, what grows on it, and villages laid out on it.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Names()",
+				"Has(name)",
+				"Get(name)",
+				"Define(name, biome)",
+				"Village(field, options)"
+			],
+			"Sample": {}
+		}
+	],
+	"Directives": [],
+	"Classes": {
+		"elemenx-scene-axes": [],
+		"elemenx-scene-axes-x": [],
+		"elemenx-scene-axes-y": [],
+		"elemenx-scene-axes-z": [],
+		"elemenx-scene-axes-end": [
+			"other"
+		],
+		"elemenx-scene": [
+			"dragging"
+		],
+		"elemenx-scene-canvas": [],
+		"elemenx-scene-labels": [
+			"hidden"
+		],
+		"elemenx-scene-label": [],
+		"elemenx-scene-card": [],
+		"elemenx-scene-card-header": [],
+		"elemenx-scene-card-title": [],
+		"elemenx-scene-card-kind": [],
+		"elemenx-scene-card-rows": [],
+		"elemenx-scene-card-row": [],
+		"elemenx-scene-card-actions": [],
+		"elemenx-scene-axes-place": [],
+		"elemenx-scene-takeoff": [],
+		"elemenx-scene-fallback": [],
+		"elemenx-scene-loading": [],
+		"elemenx-scene-hud": [],
+		"elemenx-scene-screens": [],
+		"elemenx-drawing": [
+			"readonly"
+		],
+		"elemenx-drawing-toolbar": [],
+		"elemenx-drawing-group": [],
+		"elemenx-drawing-tool": [
+			"active"
+		],
+		"elemenx-drawing-brush": [],
+		"elemenx-drawing-color": [],
+		"elemenx-drawing-width": [],
+		"elemenx-drawing-stage": [],
+		"elemenx-drawing-svg": [],
+		"elemenx-drawing-selection": [],
+		"elemenx-drawing-marquee": [],
+		"elemenx-drawing-handle": [],
+		"elemenx-drawing-editor": [],
+		"elemenx-drawing-layers": [],
+		"elemenx-drawing-layers-list": [],
+		"elemenx-drawing-layer": [
+			"current",
+			"hidden"
+		],
+		"elemenx-drawing-layer-name": [],
+		"elemenx-drawing-layer-toggle": [],
+		"elemenx-drawing-layer-field": [],
+		"elemenx-drawing-layer-count": [],
+		"elemenx-drawing-layers-actions": [],
+		"elemenx-scene-editor": [
+			"playing"
+		],
+		"elemenx-scene-editor-toolbar": [],
+		"elemenx-scene-editor-group": [
+			"end"
+		],
+		"elemenx-scene-editor-tool": [
+			"active"
+		],
+		"elemenx-scene-editor-snap": [],
+		"elemenx-scene-editor-import": [],
+		"elemenx-scene-editor-time": [],
+		"elemenx-scene-editor-side": [],
+		"elemenx-scene-editor-inspector": [],
+		"elemenx-scene-editor-title": [],
+		"elemenx-scene-editor-palette": [],
+		"elemenx-scene-editor-kind": [
+			"model"
+		],
+		"elemenx-scene-editor-view": [],
+		"elemenx-scene-editor-overlay": [],
+		"elemenx-scene-editor-gizmo": [],
+		"elemenx-scene-editor-axis": [
+			"axis-x",
+			"axis-y",
+			"axis-z"
+		],
+		"elemenx-scene-editor-tip": [
+			"axis-x",
+			"axis-y",
+			"axis-z"
+		],
+		"elemenx-scene-editor-plane": [],
+		"elemenx-scene-editor-orbit": [],
+		"elemenx-scene-editor-ring": [],
+		"elemenx-scene-editor-fields": [],
+		"elemenx-scene-editor-field": [],
+		"elemenx-scene-editor-parameter": [],
+		"elemenx-scene-editor-blueprint": [],
+		"elemenx-scene-editor-sketch-type": [],
+		"elemenx-scene-editor-layers": [],
+		"elemenx-scene-editor-layer": [
+			"current"
+		],
+		"elemenx-scene-editor-layer-name": [],
+		"elemenx-scene-editor-layer-eye": [],
+		"elemenx-scene-editor-item": [],
+		"elemenx-scene-editor-item-head": [],
+		"elemenx-scene-editor-sketch-shape": [
+			"area",
+			"current",
+			"draft"
+		],
+		"elemenx-scene-editor-road-point": [
+			"chosen",
+			"draft"
+		],
+		"elemenx-scene-editor-road-mid": [
+			"arc"
+		],
+		"elemenx-model-editor": [],
+		"elemenx-model-editor-toolbar": [],
+		"elemenx-model-editor-group": [
+			"end"
+		],
+		"elemenx-model-editor-tool": [
+			"active"
+		],
+		"elemenx-model-editor-snap": [],
+		"elemenx-model-editor-variant": [],
+		"elemenx-model-editor-import": [],
+		"elemenx-model-editor-format": [],
+		"elemenx-model-editor-side": [],
+		"elemenx-model-editor-inspector": [],
+		"elemenx-model-editor-title": [],
+		"elemenx-model-editor-palette": [],
+		"elemenx-model-editor-shape": [],
+		"elemenx-model-editor-generator": [],
+		"elemenx-model-editor-view": [],
+		"elemenx-model-editor-overlay": [],
+		"elemenx-model-editor-gizmo": [],
+		"elemenx-model-editor-axis": [
+			"axis-x",
+			"axis-y",
+			"axis-z"
+		],
+		"elemenx-model-editor-tip": [
+			"axis-x",
+			"axis-y",
+			"axis-z"
+		],
+		"elemenx-model-editor-ring": [],
+		"elemenx-model-editor-fields": [],
+		"elemenx-model-editor-field": []
+	}
+}

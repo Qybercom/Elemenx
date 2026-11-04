@@ -1,0 +1,3 @@
+[
+	'components/ChainCard/ChainCard.js'
+];

@@ -42,7 +42,7 @@ var plugins = {
 
 export default [
 	{
-		ignores: ['node_modules/**', 'test-results/**', 'playwright-report/**', 'coverage/**', '**/dist/**', 'docs-site/**', 'designer-site/**', '.vitest/**', '.idea/**', 'examples/Docs/tools/examples/**', 'examples/Native/android/**', 'examples/Native/ios/**', 'editors/vscode/core/**', 'editors/intellij/build/**', 'editors/intellij/.gradle/**', 'editors/intellij/.intellijPlatform/**']
+		ignores: ['node_modules/**', 'test-results/**', 'playwright-report/**', 'coverage/**', '**/dist/**', 'docs-site/**', 'designer-site/**', '.vitest/**', '.idea/**', 'libraries/*/*/*/docs/**', 'examples/Native/android/**', 'examples/Native/ios/**', 'editors/vscode/core/**', 'editors/intellij/build/**', 'editors/intellij/.gradle/**', 'editors/intellij/.intellijPlatform/**']
 	},
 	{
 		linterOptions: {
@@ -51,6 +51,8 @@ export default [
 	},
 	{
 		files: ['elemenx.js', 'elemenx-cli.js', 'tools/**/*.js', 'libraries/**/*.js', 'examples/**/*.js', 'eslint/**/*.js', 'editors/**/*.js'],
+		/* The tests of a Library beside what they test are tests: modern syntax (below). */
+		ignores: ['libraries/**/*.test.js'],
 		languageOptions: {
 			ecmaVersion: 5,
 			sourceType: 'script'
@@ -62,7 +64,7 @@ export default [
 		})
 	},
 	{
-		files: ['tests/**/*.js'],
+		files: ['tests/**/*.js', 'libraries/**/*.test.js'],
 		languageOptions: {
 			ecmaVersion: 'latest',
 			sourceType: 'script'
@@ -71,7 +73,7 @@ export default [
 		rules: formatting
 	},
 	{
-		files: ['tests/**/*.test.js', 'tests/**/*.spec.js', 'tests/setup.js', 'tests/library.js', 'tests/coverage/**/*.js', 'tests/**/*.mjs', '*.config.js', '*.config.mjs', 'stylelint/**/*.mjs', 'examples/Tutorials/*/tests/**/*.js', 'examples/Tutorials/*/*.config.mjs'],
+		files: ['tests/**/*.test.js', 'libraries/**/*.test.js', 'tests/**/*.spec.js', 'tests/setup.js', 'tests/library.js', 'tests/coverage/**/*.js', 'tests/**/*.mjs', '*.config.js', '*.config.mjs', 'stylelint/**/*.mjs', 'examples/Tutorials/*/tests/**/*.js', 'examples/Tutorials/*/*.config.mjs'],
 		languageOptions: {
 			ecmaVersion: 'latest',
 			sourceType: 'module'

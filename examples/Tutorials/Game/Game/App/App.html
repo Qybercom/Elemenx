@@ -1,16 +1,21 @@
 <div class="gems">
-	<GameScene Team="blue" Projection="orthogonal" [paused]="Menu" Label="The map" (ready)="Ready" (cell)="Pressed" (arrive)="Arrived">
-		<GameLayer Name="ground" [rows]="Rows" />
-		<GameObject Kind="unit" ID="hero" X="1" Y="1" Team="blue" Type="hero" Name="Hero" Speed="4" />
-		<GameObject *for="gem of Gems" *key="gem.ID" [id]="gem.ID" Kind="gem" [x]="gem.X" [y]="gem.Y" Color="#c47dff" Name="A gem" />
+	<Scene Setting="terrain" Team="blue" [paused]="Menu" Label="The land" (ready)="Ready" (enter)="Entered">
+		<SceneObject ID="day" Kind="sun" Time="15:30" />
+		<SceneObject ID="land" Kind="ground" Size="300" Height="22" Water="0.15" Scale="260" Ridges="0.1" Seed="gems" />
+		<SceneObject ID="woods" Kind="forest" Density="0.6" Cover="0.4" />
+		<SceneObject ID="meadow" Kind="grass" Density="0.6" Height="0.5" />
+		<SceneObject ID="hero" Kind="unit" X="0" Y="0" Team="blue" Name="Hero" Speed="9" />
+		<SceneObject *for="gem of Gems" *key="gem.ID" [id]="gem.ID" Kind="thing" [x]="gem.X" [y]="gem.Y" Model="crystal" Size="2.5" Name="A gem" />
+		<SceneObject *for="gem of Gems" *key="'at-' + gem.ID" [id]="'at-' + gem.ID" Kind="trigger" [x]="gem.X" [y]="gem.Y" Radius="2.5" />
+		<GameStrategy Team="blue" Selected="hero" (order)="Ordered" />
 		<div slot="hud" class="gems-hud">
 			<div class="elemenx-game-panel gems-score">
 				<strong>Gems</strong>
 				<GameBar [value]="Found" Max="5" Kind="mana" Segments="5" ShowValue="true" Label="Gems found" />
 			</div>
-			<span class="elemenx-game-panel gems-help" *if="!Menu">{{Target ? 'Going to ' + Target : 'Press a cell: the hero goes there'}} · Escape pauses</span>
+			<span class="elemenx-game-panel gems-help" *if="!Menu">{{Target ? 'Going to ' + Target : 'A right press on the land sends the hero there'}} · Escape pauses</span>
 		</div>
-	</GameScene>
+	</Scene>
 	<div class="gems-menu" *if="Menu">
 		<GameMenu [title]="Started ? 'Paused' : 'Gem hunt'" [subtitle]="Found === 5 ? 'You found them all!' : ''" [items]="Items(Started)" (select)="Chosen" />
 	</div>

@@ -462,20 +462,29 @@ function libraryDeclarations (project, appSource) {
 	});
 
 	var usePattern = /(?:\$Use|Use)\s*:\s*(?:\[([\s\S]*?)\]|(['"])([^'"]+)\2)/g;
+	var used = [];
 
 	while ((match = usePattern.exec(appSource))) {
 		var body = match[1] || (match[3] ? JSON.stringify(match[3]) : '');
 		var itemPattern = /(['"])([^'"]+)\1/g;
 		var item;
 
-		while ((item = itemPattern.exec(body))) {
-			if (item[2] === 'ElemenxUI' && !names.ElemenxUI) {
-				result.push({Name: 'ElemenxUI', Root: 'libraries/ElemenxUI', Directory: path.resolve(packageRoot, 'libraries/ElemenxUI')});
-
-				names.ElemenxUI = true;
-			}
-		}
+		while ((item = itemPattern.exec(body)))
+			used.push(item[2]);
 	}
+
+	/* A system Library comes with the ones it uses, before it: ElemenxUI is ElemenxCommon and ElemenxUI. */
+	common.systemLibraries(used.filter(function (name) {
+		return common.SystemLibraries.some(function (library) {
+			return library.Name === name;
+		});
+	})).forEach(function (library) {
+		if (names[library.Name]) return;
+
+		result.push({Name: library.Name, Root: 'libraries/' + library.Name, Directory: path.resolve(packageRoot, 'libraries/' + library.Name)});
+
+		names[library.Name] = true;
+	});
 
 	return result;
 }
@@ -665,9 +674,53 @@ function sourceUsesEntity (source, type, name) {
 	return true;
 }
 
+/* The names of the Services a source of a Service declares in $Provides that it adds to. */
+function providedTo (source) {
+	var block = /\$Provides\s*:\s*\{([\s\S]*?)\n\t\},?\n/.exec(source || '') || /\$Provides\s*:\s*\{([^\n]*)\},?\n/.exec(source || '');
+	var names = [];
+	var depth = 0;
+	var text = block ? block[1] : '';
+	var match;
+	var pattern = /([A-Za-z_$][\w$]*)\s*:\s*\{|[{}]/g;
+
+	/* The keys of the first level only: the registries, not their kinds. */
+	while ((match = pattern.exec(text))) {
+		if (match[1] && !depth)
+			names.push(match[1]);
+
+		if (match[1] || match[0] === '{') depth++;
+		else depth--;
+	}
+
+	return names;
+}
+
+/*
+ * Whether a Service declares in $Provides what it adds to a Service the build uses: it goes in with it, as the registry
+ * makes it when it is wanted. A registry counts as used by what is not one of its own providers (each of them names it
+ * to add to it), so one provider does not bring in all the others.
+ */
+function providesTo (source, entities, text) {
+	return providedTo(source).some(function (registry) {
+		var services = entities.Service || {};
+		if (!services[registry]) return false;
+
+		return [text || ''].concat(Object.keys(entities).reduce(function (list, type) {
+			return list.concat(Object.keys(entities[type]).filter(function (name) {
+				return !(type === 'Service' && (name === registry || providedTo(entities[type][name]).indexOf(registry) !== -1));
+			}).map(function (name) {
+				return entities[type][name];
+			}));
+		}, [])).some(function (one) {
+			return sourceUsesEntity(one, 'Service', registry);
+		});
+	});
+}
+
 /*
  * Adds to entities the ones of a Library catalog that the Application uses, and the ones they use, until nothing
- * changes. text is the code the build has besides the entities (the entry, the page and its templates).
+ * changes. text is the code the build has besides the entities (the entry, the page and its templates). A Service that
+ * provides to one of them ($Provides) goes in too.
  */
 function selectLibraryEntities (entities, catalog, text) {
 	var changed = true;
@@ -689,7 +742,7 @@ function selectLibraryEntities (entities, catalog, text) {
 
 				if (sources.some(function (source) {
 					return sourceUsesEntity(source, type, name);
-				})) {
+				}) || type === 'Service' && providesTo(catalog[type][name], entities, text)) {
 					if (!entities[type])
 						entities[type] = {};
 
@@ -1464,12 +1517,15 @@ function libraryAssets (job, page) {
 		var list = [];
 		var root = '/' + String(declaration.Root).replace(/^\/+|\/+$/g, '');
 		var packs = common.readPacks(declaration.Directory);
+		var system = common.SystemLibraries.some(function (library) {
+			return library.Name === declaration.Name;
+		});
 
 		libraryResources(declaration.Directory, declaration.Directory, list, {}, declaration.Graph);
 
-		/* ElemenxUI takes its files from next to elemenx.js; in one file they are embedded under this root, so it keeps it. */
-		if (declaration.Name === 'ElemenxUI')
-			resources.push('if (Elemenx.Library && Elemenx.Library("ElemenxUI")) Elemenx.Library("ElemenxUI").$Root = ' + JSON.stringify(root) + ';');
+		/* A system Library takes its files from next to elemenx.js; in one file they are embedded under this root, so it keeps it. */
+		if (system)
+			resources.push('if (Elemenx.Library && Elemenx.Library(' + JSON.stringify(declaration.Name) + ')) Elemenx.Library(' + JSON.stringify(declaration.Name) + ').$Root = ' + JSON.stringify(root) + ';');
 
 		list.forEach(function (item) {
 			var relative = item.Relative.replace(/\\/g, '/');

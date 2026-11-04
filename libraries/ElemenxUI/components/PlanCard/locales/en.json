@@ -1,0 +1,14 @@
+{
+	"ui": {
+		"planCard": {
+			"action": "Choose plan",
+			"current": "Current plan",
+			"excluded": "Not included",
+			"free": "Free",
+			"included": "Included",
+			"perMonth": "/ month",
+			"perYear": "/ year",
+			"selected": "Selected"
+		}
+	}
+}

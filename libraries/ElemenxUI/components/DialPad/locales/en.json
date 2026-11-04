@@ -1,0 +1,11 @@
+{
+	"ui": {
+		"dialPad": {
+			"call": "Call",
+			"erase": "Erase",
+			"hold": "hold for {value}",
+			"label": "Dial pad",
+			"number": "Number"
+		}
+	}
+}

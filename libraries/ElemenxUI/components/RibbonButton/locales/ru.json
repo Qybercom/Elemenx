@@ -1,0 +1,7 @@
+{
+	"ui": {
+		"ribbonButton": {
+			"more": "Ещё: {name}"
+		}
+	}
+}

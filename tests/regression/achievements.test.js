@@ -3,13 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
 
-var source = fs.readFileSync(path.join(import.meta.dirname, '../../libraries/ElemenxUI/services/Achievements.js'), 'utf8');
+var source = fs.readFileSync(path.join(import.meta.dirname, '../../libraries/ElemenxUI/services/AchievementQueue/AchievementQueue.js'), 'utf8');
 
 /* The ElemenxHelpers Service of ElemenxUI, out of a page. */
 function helpers () {
 	var definition;
 
-	vm.runInNewContext(fs.readFileSync(path.join(import.meta.dirname, '../../libraries/ElemenxUI/services/ElemenxHelpers.js'), 'utf8'), {
+	vm.runInNewContext(fs.readFileSync(path.join(import.meta.dirname, '../../libraries/ElemenxUI/services/ElemenxHelpers/ElemenxHelpers.js'), 'utf8'), {
 		Elemenx: {
 			Service: function (name, value) {
 				definition = value;
@@ -20,7 +20,7 @@ function helpers () {
 	return definition;
 }
 
-/* The GameAchievements Service on the timers of the test. */
+/* The AchievementQueue Service on the timers of the test, with no Achievements Service to follow. */
 function create () {
 	var definition;
 	var instance;
@@ -39,8 +39,8 @@ function create () {
 
 	instance = Object.assign({}, definition);
 	/* The helpers it asks for (its list of listeners), as ElemenxUI has them. */
-	instance.$Service = function () {
-		return helpers();
+	instance.$Service = function (name) {
+		return name === 'ElemenxHelpers' ? helpers() : null;
 	};
 
 	instance.$OnCreate();
@@ -56,7 +56,7 @@ afterEach(function () {
 	vi.useRealTimers();
 });
 
-describe('ElemenxUI Achievements Service', function () {
+describe('ElemenxUI AchievementQueue Service', function () {
 	it('shows the achievements one after another, each for its Duration, and reports every change', function () {
 		var achievements = create();
 		var states = [];
@@ -72,7 +72,7 @@ describe('ElemenxUI Achievements Service', function () {
 
 		expect(first).toBe('achievement-1');
 		expect(second).toBe('achievement-2');
-		expect(achievements.Current()).toEqual({ID: first, Title: 'First blood', Text: '', Icon: 'trophy', Image: '', Rarity: 'common', Points: 10, Overline: '', Duration: 6000});
+		expect(achievements.Current()).toEqual({ID: first, Title: 'First blood', Text: '', Icon: 'trophy', Image: '', Rarity: 'common', Points: 10, Overline: '', Duration: 6000, Achievement: ''});
 		expect(achievements.Queue().map(function (item) {
 			return item.Title;
 		})).toEqual(['Pack hunter']);

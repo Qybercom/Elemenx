@@ -29,11 +29,13 @@ describe('Elemenx dist', function () {
 		fs.rmSync(output, {recursive: true, force: true});
 	});
 
-	it('writes the framework, ElemenxUI and both in one, plain and minified, with a license banner', function () {
-		['elemenx.js', 'elemenx.min.js', 'elemenx-ui.js', 'elemenx-ui.min.js', 'elemenx.all.js', 'elemenx.all.min.js'].forEach(function (name) {
+	it('writes the framework, each system Library and the framework with ElemenxCommon and ElemenxUI in one, plain and minified, with a license banner', function () {
+		var banners = {'elemenx-common': 'ElemenxCommon', 'elemenx-ui': 'ElemenxUI', 'elemenx-graphics': 'ElemenxGraphics', 'elemenx-gaming': 'ElemenxGaming'};
+
+		['elemenx.js', 'elemenx.min.js', 'elemenx-common.js', 'elemenx-common.min.js', 'elemenx-ui.js', 'elemenx-ui.min.js', 'elemenx-graphics.js', 'elemenx-graphics.min.js', 'elemenx-gaming.js', 'elemenx-gaming.min.js', 'elemenx.all.js', 'elemenx.all.min.js'].forEach(function (name) {
 			var source = read(name);
 
-			expect(source.indexOf('/*! ' + (name.indexOf('elemenx-ui') === 0 ? 'ElemenxUI' : 'Elemenx') + ' ' + Package.version + ' | LGPL-3.0 */'), name).toBe(0);
+			expect(source.indexOf('/*! ' + (banners[name.replace(/(\.min)?\.js$/, '')] || 'Elemenx') + ' ' + Package.version + ' | LGPL-3.0 */'), name).toBe(0);
 			expect(function () {
 				new vm.Script(source);
 			}, name).not.toThrow();
@@ -41,7 +43,12 @@ describe('Elemenx dist', function () {
 
 		expect(read('elemenx.min.js').length).toBeLessThan(read('elemenx.js').length * 0.8);
 		expect(read('elemenx-ui.min.js').length).toBeLessThan(read('elemenx-ui.js').length);
-		expect(read('elemenx.all.min.js')).toBe(read('elemenx.min.js') + read('elemenx-ui.min.js'));
+		expect(read('elemenx.all.min.js')).toBe(read('elemenx.min.js') + read('elemenx-common.min.js') + read('elemenx-ui.min.js'));
+
+		/* Each Library says which ones it stands on: a page adds their scripts before it. */
+		expect(read('elemenx-common.js')).toContain(', $Use: []});');
+		expect(read('elemenx-graphics.js')).toContain(', $Use: ["ElemenxUI"]});');
+		expect(read('elemenx-gaming.js')).toContain(', $Use: ["ElemenxGraphics"]});');
 	});
 
 	it('embeds in ElemenxUI its styles, sprites, data and every entity with its template and style', function () {
@@ -50,7 +57,7 @@ describe('Elemenx dist', function () {
 		var root = (/Elemenx\.Library\('ElemenxUI',\{\$Root:([\w$]+),/.exec(ui) || [])[1];
 
 		expect(root).toBeTruthy();
-		expect(ui).toContain('Elemenx.Library(\'ElemenxUI\',{$Root:' + root + ',$Locales:{"URL":"locales/{language}.json","Languages":["en","ru"]}});');
+		expect(ui).toContain('Elemenx.Library(\'ElemenxUI\',{$Root:' + root + ',$Locales:{"URL":"locales/{language}.json","Languages":["en","ru"]},$Use:["ElemenxCommon"]});');
 		expect(ui).toContain('Elemenx.Resource(' + root + '+"/locales/ru.json",');
 		expect(ui).toContain('Elemenx.Resource(' + root + '+"/index.svg",');
 		expect(ui).toContain('Elemenx.Resource(' + root + '+"/icons/weather.svg",');
@@ -330,13 +337,16 @@ describe('Elemenx dist', function () {
 		expect(new Function('return ' + Builder.ScriptText('"</SCRIPT><!--"'))()).toBe('</SCRIPT><!--');
 	});
 
-	it('copies ElemenxUI as files and describes every file in manifest.json', function () {
+	it('copies each system Library as files and describes every file in manifest.json', function () {
 		var manifest = JSON.parse(read('manifest.json'));
 
-		expect(fs.existsSync(path.join(output, 'elemenx-ui', 'index.js'))).toBe(true);
+		['elemenx-common', 'elemenx-ui', 'elemenx-graphics', 'elemenx-gaming'].forEach(function (folder) {
+			expect(fs.existsSync(path.join(output, folder, 'index.js')), folder).toBe(true);
+		});
 		expect(fs.existsSync(path.join(output, 'elemenx-ui', 'icons', 'brands.svg'))).toBe(true);
 		expect(manifest.Version).toBe(Package.version);
 		expect(Object.keys(manifest.Files).sort()).toEqual([
+			'elemenx-common.js', 'elemenx-common.min.js', 'elemenx-gaming.js', 'elemenx-gaming.min.js', 'elemenx-graphics.js', 'elemenx-graphics.min.js',
 			'elemenx-ui.art.js', 'elemenx-ui.art.min.js', 'elemenx-ui.brands.js', 'elemenx-ui.brands.min.js', 'elemenx-ui.cinema.js', 'elemenx-ui.cinema.min.js', 'elemenx-ui.cities.js', 'elemenx-ui.cities.min.js', 'elemenx-ui.cities.ru.js', 'elemenx-ui.cities.ru.min.js', 'elemenx-ui.emoji.js', 'elemenx-ui.emoji.min.js', 'elemenx-ui.emoji.ru.js', 'elemenx-ui.emoji.ru.min.js',
 			'elemenx-ui.fantasy.js', 'elemenx-ui.fantasy.min.js', 'elemenx-ui.files.js', 'elemenx-ui.files.min.js', 'elemenx-ui.games.js', 'elemenx-ui.games.min.js', 'elemenx-ui.glassy.js', 'elemenx-ui.glassy.min.js', 'elemenx-ui.js', 'elemenx-ui.meta.js', 'elemenx-ui.meta.min.js', 'elemenx-ui.min.js',
 			'elemenx-ui.racing.js', 'elemenx-ui.racing.min.js', 'elemenx-ui.science.js', 'elemenx-ui.science.min.js', 'elemenx-ui.scifi.js', 'elemenx-ui.scifi.min.js', 'elemenx-ui.sport.js', 'elemenx-ui.sport.min.js', 'elemenx.all.js', 'elemenx.all.min.js', 'elemenx.js', 'elemenx.min.js'

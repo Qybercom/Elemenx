@@ -1,0 +1,10 @@
+{
+	"ui": {
+		"planPicker": {
+			"action": "Choose plan",
+			"label": "Plans",
+			"monthly": "Monthly",
+			"yearly": "Yearly"
+		}
+	}
+}

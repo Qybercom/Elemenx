@@ -1,0 +1,21 @@
+{
+	"ui": {
+		"chatMessage": {
+			"react": "Add a reaction",
+			"sticker": "Sticker",
+			"edited": "edited",
+			"views": "Seen by {count}",
+			"sending": "Sending",
+			"sent": "Sent",
+			"delivered": "Delivered",
+			"read": "Read",
+			"error": "Not sent",
+			"actions": "Message actions",
+			"summary": "Reactions and views",
+			"all": "All",
+			"viewsUnknown": "Seen by {count}",
+			"select": "Select message",
+			"nobody": "No one yet"
+		}
+	}
+}

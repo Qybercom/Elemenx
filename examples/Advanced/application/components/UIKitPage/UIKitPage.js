@@ -244,8 +244,6 @@ Elemenx.Component('UIKitPage', {
 	PianoMarks: {C4: true, E4: true, G4: true},
 	DialNote: '',
 	WorldNote: '',
-	WorldProjection: 'isometric',
-	WorldProjections: [{Value: 'isometric', Label: 'Isometric'}, {Value: 'orthogonal', Label: 'From above'}],
 	WorldFog: false,
 	WorldAdded: 0,
 	SpaceNote: '',
@@ -336,6 +334,8 @@ Elemenx.Component('UIKitPage', {
 	RaceCar: 'mclaren',
 	RacePerson: 'third',
 	RaceSeed: 1,
+	RaceLapText: '',
+	RaceWrong: false,
 	RaceNote: '',
 	RaceSpeed: 0,
 	RaceGear: '',
@@ -441,6 +441,8 @@ Elemenx.Component('UIKitPage', {
 	PlaceCharacter: 'elf',
 	PlaceList: [{Value: 'tree', Label: 'Tree house'}, {Value: 'forest', Label: 'Forest road'}, {Value: 'gulch', Label: 'Blood Gulch'}, {Value: 'infinity', Label: 'Infinity'}],
 	SceneQuality: 'auto',
+	ShowFPS: false,
+	Far: {},
 	SceneQualities: [{Value: 'auto', Label: 'Auto'}, {Value: 'low', Label: 'Low'}, {Value: 'medium', Label: 'Medium'}, {Value: 'high', Label: 'High'}, {Value: 'ultra', Label: 'Ultra'}],
 	TerrainNote: '',
 	TerrainBiome: 'temperate',
@@ -465,39 +467,17 @@ Elemenx.Component('UIKitPage', {
 		{ID: 'mill', Name: 'Mill', X: 58, Y: 32},
 		{ID: 'forge', Name: 'Forge', X: 48, Y: 60}
 	],
-	WorldRows: [
-		'TTTT,,,.......:~~:..........',
-		'TTT,,,,.......:~~:.....,,,..',
-		'TT,,..........:~~:....,,,,,.',
-		'T,,...........:~~:..........',
-		',,.............:~~:.........',
-		'...............:~~:.....^^^.',
-		'____...........:==:....^^^^.',
-		'...____________:==:___^^^^..',
-		'...............:~~:....^^^..',
-		'..^^............:~~:........',
-		'.^^^^...........:~~:........',
-		'.^^^^............:~~:.......',
-		'..^^.............:~~:....TTT',
-		'.................:~~:...TTTT',
-		'..##..............:~~:..TTTT',
-		'.###..............:~~:.TTTTT',
-		'..#...............:~~:TTTTTT',
-		'..................:~~:.TTTTT',
-		'...................:~~:TTTTT',
-		'...................:~~:TTTTT'
-	],
+	/* The units of the Game world, in metres from the middle of its land: the player is blue. */
 	WorldUnits: [
-		{ID: 'archer-1', X: 6, Y: 9, Team: 'blue', Type: 'archer', Health: 40, MaxHealth: 40},
-		{ID: 'archer-2', X: 7, Y: 9, Team: 'blue', Type: 'archer', Health: 32, MaxHealth: 40},
-		{ID: 'archer-3', X: 6, Y: 10, Team: 'blue', Type: 'archer', Health: 40, MaxHealth: 40},
-		{ID: 'sword-1', X: 8, Y: 10, Team: 'blue', Type: 'swordsman', Health: 60, MaxHealth: 60},
-		{ID: 'sword-2', X: 7, Y: 11, Team: 'blue', Type: 'swordsman', Health: 25, MaxHealth: 60},
-		{ID: 'raider-1', X: 24, Y: 5, Team: 'red', Type: 'swordsman', Health: 60, MaxHealth: 60},
-		{ID: 'raider-2', X: 25, Y: 6, Team: 'red', Type: 'swordsman', Health: 60, MaxHealth: 60},
-		{ID: 'raider-3', X: 23, Y: 6, Team: 'red', Type: 'archer', Health: 40, MaxHealth: 40}
+		{ID: 'archer-1', Name: 'Archer', X: -62, Y: -22, Team: 'blue', Model: 'archer', Health: 40, Damage: 8, Range: 12},
+		{ID: 'archer-2', Name: 'Archer', X: -58, Y: -22, Team: 'blue', Model: 'archer', Health: 32, Damage: 8, Range: 12},
+		{ID: 'archer-3', Name: 'Archer', X: -62, Y: -18, Team: 'blue', Model: 'archer', Health: 40, Damage: 8, Range: 12},
+		{ID: 'knight-1', Name: 'Knight', X: -55, Y: -16, Team: 'blue', Model: 'knight', Health: 100, Damage: 14, Range: 2.5},
+		{ID: 'knight-2', Name: 'Knight', X: -58, Y: -13, Team: 'blue', Model: 'knight', Health: 60, Damage: 14, Range: 2.5},
+		{ID: 'raider-1', Name: 'Orc', X: 60, Y: 30, Team: 'red', Model: 'orc', Health: 100, Damage: 12, Range: 2.5},
+		{ID: 'raider-2', Name: 'Orc', X: 64, Y: 34, Team: 'red', Model: 'orc', Health: 100, Damage: 12, Range: 2.5},
+		{ID: 'raider-3', Name: 'Orc', X: 58, Y: 36, Team: 'red', Model: 'orc', Health: 100, Damage: 12, Range: 2.5}
 	],
-	WorldTrees: [{ID: 'tree-1', X: 10, Y: 15}, {ID: 'tree-2', X: 12, Y: 16}, {ID: 'tree-3', X: 9, Y: 17}, {ID: 'tree-4', X: 11, Y: 18}, {ID: 'tree-5', X: 21, Y: 1}],
 	CallLayout: 'grid',
 	CallSide: false,
 	CallCorner: 'bottom-right',
@@ -640,6 +620,7 @@ Elemenx.Component('UIKitPage', {
 	],
 	GameZoom: 2,
 	GameAchievementIndex: 0,
+	GameAchievementsOpen: false,
 	NativePlatform: 'web',
 	WorldCity: '',
 	ScopeTheme: 'darcula',
@@ -719,8 +700,8 @@ Elemenx.Component('UIKitPage', {
 				{ID: 'app', Label: 'app.js', Icon: 'file-code'},
 				{ID: 'router', Label: 'Router', Icon: 'branch'},
 				{ID: 'ui', Label: 'ElemenxUI', Icon: 'layout', Details: {Components: 221}},
-				{ID: 'scene', Label: 'GameScene', Icon: 'star'},
-				{ID: 'graphics', Label: 'Graphics3D', Icon: 'shapes'},
+				{ID: 'scene', Label: 'Scene', Icon: 'star'},
+				{ID: 'graphics', Label: 'Renderer', Icon: 'shapes'},
 				{ID: 'models', Label: 'Models', Icon: 'layers'},
 				{ID: 'core', Label: 'elemenx.js', Icon: 'code', Status: 'ok'},
 				{ID: 'workers', Label: 'Workers', Icon: 'server'}
@@ -1480,8 +1461,126 @@ Elemenx.Component('UIKitPage', {
 		});
 	},
 
+	/*
+	 * The demos far from the view (two screens away for three seconds) let their scenes go, with their contexts and their
+	 * memory: a page of many scenes made every frame heavy. What a scene was is kept (Save, the hero and how it moves, the
+	 * view) and made again when it comes near.
+	 */
+	FarWatch: function () {
+		var self = this;
+		var watched = [];
+		var timers = {};
+		var sight;
+
+		if (typeof window.IntersectionObserver !== 'function') return;
+
+		sight = new window.IntersectionObserver(function (entries) {
+			entries.forEach(function (entry) {
+				var key = entry.target.getAttribute('data-demo');
+				var change = {};
+
+				window.clearTimeout(timers[key]);
+
+				if (entry.isIntersecting) {
+					if (!self.Far[key]) return;
+
+					change[key] = false;
+					self.Far = Object.assign({}, self.Far, change);
+
+					return;
+				}
+
+				timers[key] = window.setTimeout(function () {
+					change[key] = true;
+
+					self.SceneGone(key);
+
+					self.Far = Object.assign({}, self.Far, change);
+				}, 3000);
+			});
+		}, {rootMargin: '200% 0px'});
+
+		/* The demos come with their sections, one after another: each is watched once it is there. */
+		this.FarClock = window.setInterval(function () {
+			Array.prototype.forEach.call(self.$Element().querySelectorAll('[data-demo]'), function (element) {
+				if (watched.indexOf(element) >= 0) return;
+
+				watched.push(element);
+
+				sight.observe(element);
+			});
+		}, 1000);
+
+		this.FarSight = function () {
+			return sight;
+		};
+	},
+
+	/* The scene of a demo, as its handler of ready keeps it; the editors keep their documents themselves. */
+	SceneOf: function (key) {
+		var getter = {world: this.World, space: this.Spaced, terrain: this.Terrained, place: this.PlaceScene, race: this.RaceScene, orbit: this.OrbitScene, models: this.ModelsScene}[key];
+		var scene = typeof getter === 'function' ? getter() : null;
+
+		return scene && scene.$Element().isConnected ? scene : null;
+	},
+
+	/* What a scene is, before it goes: its recipe, its hero and how it moves, the view, the system of the space shown. */
+	SceneGone: function (key) {
+		var scene = this.SceneOf(key);
+		var hero;
+
+		if (!scene) return;
+
+		hero = scene.Scene().Hero ? scene.Scene().Objects[scene.Scene().Hero] : null;
+		this.Kept()[key] = {Saved: scene.Save(), Hero: hero ? hero.ID : '', Car: hero ? hero.Car : null, Ship: hero ? hero.Ship : null, View: scene.Viewpoint(), System: this.SpaceSystem};
+
+		if (key === 'race')
+			window.clearInterval(this.RaceClock);
+
+		if (key === 'orbit')
+			window.clearInterval(this.OrbitClock);
+	},
+
+	/* A scene come back: what it was when it went, true; false the first time, made as the demo makes it. */
+	SceneBack: function (key, scene) {
+		var kept = this.Kept()[key];
+		var hero;
+
+		if (!kept || key === 'space' && kept.System !== this.SpaceSystem) return false;
+
+		delete this.Kept()[key];
+
+		scene.Load(kept.Saved);
+
+		if (kept.Hero) {
+			scene.Control(kept.Hero);
+
+			hero = scene.Scene().Objects[kept.Hero];
+
+			if (hero && kept.Car) {
+				hero.Car = kept.Car;
+				hero.Clock = {};
+			}
+
+			if (hero && kept.Ship) {
+				hero.Ship = kept.Ship;
+				hero.Clock = {};
+			}
+		}
+
+		if (kept.View)
+			scene.SetViewpoint(kept.View);
+
+		return true;
+	},
+
 	$OnDestroy: function () {
 		var hotkeys = this.$Service('Hotkeys');
+
+		window.clearInterval(this.FarClock);
+
+		if (this.FarSight)
+			this.FarSight().disconnect();
 
 		hotkeys.Unbind(this.ThemeKey);
 		hotkeys.Unbind(this.TilesKey);
@@ -2264,7 +2363,7 @@ Elemenx.Component('UIKitPage', {
 
 	/* The ground of the game: its scene kept for the buttons; trees where the ground is dry and gentle. */
 	ModelsReady: function (scene) {
-		var library = this.$Service('Models');
+		var library = this.$Service('SceneModels');
 		var rows = [['unit', -34], ['animal', -22], ['vehicle', -22], ['plant', -2], ['rock', -2], ['building', 26]];
 		var list = [];
 		var teams = ['red', 'blue', 'green'];
@@ -2297,7 +2396,9 @@ Elemenx.Component('UIKitPage', {
 		scene.Scene().Wanted = 90;
 		scene.Scene().Pitch = 0.55;
 
-		this.ModelsFromFiles(scene);
+		/* Come back: the models of the files are in what was kept. */
+		if (!this.SceneBack('models', scene))
+			this.ModelsFromFiles(scene);
 	},
 
 	/* The models kept out of git: shown when they are in data/models of this copy (a file nobody has only answers 404). */
@@ -2340,6 +2441,8 @@ Elemenx.Component('UIKitPage', {
 			return scene;
 		};
 
+		if (this.SceneBack('place', scene)) return;
+
 		/* A location is tens of megabytes: on the whole catalogue it waits to be asked for. */
 		if (new URLSearchParams(window.location.search).get('sections'))
 			this.PlaceLoad();
@@ -2350,35 +2453,19 @@ Elemenx.Component('UIKitPage', {
 			return scene;
 		};
 
+		if (this.SceneBack('race', scene)) {
+			this.RaceWatch(scene);
+
+			return;
+		}
+
 		if (new URLSearchParams(window.location.search).get('sections'))
 			this.RaceBuild();
 	},
 
-	/* A track of a seed, as a location of its own, and a car on its line. */
-	RaceBuild: function () {
+	/* What the ribbon and the dash show of the car: its speed, gear, revolutions and lights, five times a second. */
+	RaceWatch: function (scene) {
 		var self = this;
-		var scene = this.RaceScene ? this.RaceScene() : null;
-		var models = this.$Service('Models');
-		var tracks = this.$Service('Tracks');
-		var seed = 'track-' + this.RaceSeed;
-
-		if (!scene) return;
-
-		var track = tracks.Make(seed);
-
-		this.RaceTrack = track;
-
-		scene.Objects().forEach(function (object) {
-			scene.Remove(object.ID);
-		});
-
-		if (!models.Has(seed))
-			models.Define(seed, {URL: seed, Asset: tracks.Asset(track), Fit: false});
-
-		scene.Add('sun', {ID: 'day', Time: this.RaceHour, Latitude: 45, DayOfYear: 172, Color: '#fff4e0'});
-		scene.Add('location', {ID: 'place', Model: seed, Size: 1});
-
-		this.RaceWait(0);
 
 		window.clearInterval(this.RaceClock);
 
@@ -2399,12 +2486,38 @@ Elemenx.Component('UIKitPage', {
 		}, 200);
 	},
 
+	/* A track of a seed, a road of kind track over rolling land with woods round it, and a car on its line. */
+	RaceBuild: function () {
+		var scene = this.RaceScene ? this.RaceScene() : null;
+		var seed = 'track-' + this.RaceSeed;
+
+		if (!scene) return;
+
+		var track = this.$Service('SceneRoadGenerator').Track(seed, {Length: 2400});
+
+		this.RaceTrack = track;
+
+		scene.Objects().forEach(function (object) {
+			scene.Remove(object.ID);
+		});
+
+		scene.Add('sun', {ID: 'day', Time: this.RaceHour, Latitude: 45, DayOfYear: 172, Color: '#fff4e0'});
+		scene.Add('ground', {ID: 'land', Size: 2400, Height: 22, Water: 0, Scale: 420, Ridges: 0.15, Seed: seed});
+		scene.Add('forest', {ID: 'woods', Density: 1.2, Cover: 0.4, Patch: 120});
+		scene.Add('grass', {ID: 'meadow', Density: 0.6, Height: 0.5});
+		scene.Add('road', track.Spec);
+
+		this.RaceWait(0);
+
+		this.RaceWatch(scene);
+	},
+
 	RaceWait: function (tries) {
 		var self = this;
 		var scene = this.RaceScene();
 		var ground = scene.Scene().Ground;
 
-		if (!ground || !ground.Field || !ground.Field.Start) {
+		if (!ground || !ground.Field || !scene.Roads().length) {
 			if (tries < 400)
 				window.setTimeout(function () {
 					self.RaceWait(tries + 1);
@@ -2418,7 +2531,7 @@ Elemenx.Component('UIKitPage', {
 
 	RaceCarPut: function () {
 		var scene = this.RaceScene();
-		var models = this.$Service('Models');
+		var models = this.$Service('SceneModels');
 		var track = this.RaceTrack;
 		var start = track.Start;
 		var chosen = this.RaceCar;
@@ -2439,7 +2552,7 @@ Elemenx.Component('UIKitPage', {
 		if (scene.Get('car'))
 			scene.Remove('car');
 
-		scene.Add('unit', {ID: 'car', Name: '', Model: name, Size: car.Size || 1.25, X: start.X, Y: start.Z, Z: start.Y, Vehicle: Object.assign({Kind: 'car', Track: track, Heading: start.Heading, Wheels: car.Wheels, Held: car.Held, Yaw: car.Yaw, Seat: car.Seat || [0.3, 0.95, 0], Mass: 1400, Base: 2.85, Width: 1.75, Mounts: mounts, Openings: (car.Windows ? [{Name: 'windows', Match: 'Window', Both: true, Low: car.Windows, High: [0.7, 0.95, 0.65], Way: [0, -1, 0], Reach: 0.26, Open: this.RaceWindows, Follow: (car.Controls || []).some(function (each) {
+		scene.Add('unit', {ID: 'car', Name: '', Model: name, Size: car.Size || 1.25, X: start.X, Y: start.Z, Vehicle: Object.assign({Kind: 'car', Heading: start.Heading, Wheels: car.Wheels, Held: car.Held, Yaw: car.Yaw, Seat: car.Seat || [0.3, 0.95, 0], Mass: 1400, Base: 2.85, Width: 1.75, Mounts: mounts, Openings: (car.Windows ? [{Name: 'windows', Match: 'Window', Both: true, Low: car.Windows, High: [0.7, 0.95, 0.65], Way: [0, -1, 0], Reach: 0.26, Open: this.RaceWindows, Follow: (car.Controls || []).some(function (each) {
 			return each.Name === 'doors';
 		}) ? 'doors' : ''}] : []).concat((car.Controls || []).map(function (each) {
 			return each.Name === 'doors' ? Object.assign({}, each, {Open: doors}) : each;
@@ -2449,6 +2562,29 @@ Elemenx.Component('UIKitPage', {
 		scene.Scene().Wanted = scene.Scene().Distance = 8;
 		scene.Scene().Yaw = start.Heading + Math.PI;
 		scene.Scene().Pitch = 0.16;
+
+		this.RaceRestart();
+	},
+
+	/* A lap of the GameRace of the scene: its number, its time and the best one. */
+	RaceLapped: function (event) {
+		function clock (seconds) {
+			return Math.floor(seconds / 60) + ':' + ('0' + (seconds % 60).toFixed(1)).slice(-4);
+		}
+
+		this.RaceLapText = 'lap ' + event.Lap + ' ' + clock(event.Time) + ' · best ' + clock(event.Best);
+	},
+
+	/* The race again from the line: a new track, a car put on it. */
+	RaceRestart: function () {
+		var scene = this.RaceScene ? this.RaceScene() : null;
+		var element = scene ? scene.$Element().querySelector('.elemenx-game-race') : null;
+
+		this.RaceLapText = '';
+		this.RaceWrong = false;
+
+		if (element && Elemenx.Instance(element))
+			Elemenx.Instance(element).Start();
 	},
 
 	RaceCarChosen: function (value) {
@@ -2558,9 +2694,7 @@ Elemenx.Component('UIKitPage', {
 	},
 
 	OrbitReady: function (scene) {
-		var self = this;
-		var models = this.$Service('Models');
-		var clock;
+		var models = this.$Service('SceneModels');
 
 		this.OrbitScene = function () {
 			return scene;
@@ -2573,13 +2707,23 @@ Elemenx.Component('UIKitPage', {
 			models.Load(one[0]);
 		});
 
-		this.OrbitShipChosen(this.OrbitShip);
+		if (!this.SceneBack('orbit', scene))
+			this.OrbitShipChosen(this.OrbitShip);
 
-		clock = window.setInterval(function () {
+		this.OrbitWatch(scene);
+	},
+
+	/* The speed of the ship, four times a second. */
+	OrbitWatch: function (scene) {
+		var self = this;
+
+		window.clearInterval(this.OrbitClock);
+
+		this.OrbitClock = window.setInterval(function () {
 			var hero = scene.Scene().Objects.me;
 
 			if (!self.$Element().isConnected) {
-				window.clearInterval(clock);
+				window.clearInterval(self.OrbitClock);
 
 				return;
 			}
@@ -2625,7 +2769,7 @@ Elemenx.Component('UIKitPage', {
 	/* Another ship for the same pilot. */
 	OrbitShipChosen: function (value) {
 		var scene = this.OrbitScene ? this.OrbitScene() : null;
-		var models = this.$Service('Models');
+		var models = this.$Service('SceneModels');
 		var name = 'ship-' + value;
 		var ship = this.OrbitShips.filter(function (each) {
 			return each.Value === value;
@@ -3054,7 +3198,7 @@ Elemenx.Component('UIKitPage', {
 	},
 
 	PlaceHero: function () {
-		var models = this.$Service('Models');
+		var models = this.$Service('SceneModels');
 		var chosen = this.PlaceCharacter;
 		var name = 'walker-' + chosen;
 		var character = this.PlaceCharacters.filter(function (each) {
@@ -3173,12 +3317,13 @@ Elemenx.Component('UIKitPage', {
 			return scene;
 		};
 
-		scene.FocusOn('scout');
+		if (!this.SceneBack('terrain', scene))
+			scene.FocusOn('scout');
 	},
 
 	/* The grass of a biome, for the meadow whose clumps and spread the sliders set. */
 	TerrainGrass: function (name) {
-		var biome = this.$Service('Biomes').Get(name);
+		var biome = this.$Service('SceneBiomes').Get(name);
 
 		return biome ? biome.Grass : null;
 	},
@@ -3193,7 +3338,7 @@ Elemenx.Component('UIKitPage', {
 
 	TerrainLake: function () {
 		var scene = this.Terrained ? this.Terrained() : null;
-		var terrain = this.$Service('Terrain').Flat({Size: 900, Height: 55, Water: 0.32, Seed: 'valley'});
+		var terrain = this.$Service('SceneTerrainGenerator').Flat({Size: 900, Height: 55, Water: 0.32, Seed: 'valley'});
 		var best = null;
 		var x;
 		var y;
@@ -3244,6 +3389,8 @@ Elemenx.Component('UIKitPage', {
 		this.Spaced = function () {
 			return space;
 		};
+
+		this.SceneBack('space', space);
 
 		this.SpaceKinds = space.CosmosKinds();
 
@@ -3303,15 +3450,21 @@ Elemenx.Component('UIKitPage', {
 		this.SpaceNote = 'Arrived: ' + this.Spaced().Get(detail.ID).Name + ' at ' + this.Spaced().Get(detail.At).Name;
 	},
 
-	/* The world of the game: its methods, kept for the buttons of the section. */
-	WorldReady: function (world) {
+	/* The scene of the game and its GameStrategy, kept for the buttons of the section. */
+	WorldReady: function (scene) {
 		this.World = function () {
-			return world;
+			return scene;
 		};
-	},
 
-	WorldProjected: function (value) {
-		this.WorldProjection = value;
+		this.Strategy = function () {
+			var element = scene.$Element().querySelector('.elemenx-game-strategy');
+
+			return element ? Elemenx.Instance(element) : null;
+		};
+
+		if (this.SceneBack('world', scene)) return;
+
+		scene.SetViewpoint({Target: [-60, 4, -20], Yaw: 2.4, Pitch: 0.8, Distance: 70});
 	},
 
 	WorldFogged: function (value) {
@@ -3323,38 +3476,33 @@ Elemenx.Component('UIKitPage', {
 	},
 
 	WorldOrdered: function (detail) {
-		this.WorldNote = detail.Kind === 'stop' ? 'Stop: ' + detail.IDs.join(', ') : detail.Kind + ' to ' + detail.X + ', ' + detail.Y + ': ' + detail.IDs.length + ' units';
+		this.WorldNote = detail.Kind === 'stop' ? 'Stop: ' + detail.IDs.join(', ') : detail.Kind === 'attack' ? 'Attack ' + detail.Target + ': ' + detail.IDs.length + ' units' : 'Move to ' + Math.round(detail.X) + ', ' + Math.round(detail.Z) + ': ' + detail.IDs.length + ' units';
 	},
 
-	WorldArrived: function (detail) {
-		this.WorldNote = 'Arrived: ' + detail.ID;
-	},
-
-	WorldCell: function (detail) {
-		this.WorldNote = 'Cell ' + detail.X + ', ' + detail.Y + (detail.Object ? ' · ' + detail.Object.ID : '');
+	WorldDied: function (detail) {
+		this.WorldNote = detail.ID + ' fell to ' + detail.By;
 	},
 
 	WorldCentered: function () {
 		if (this.World)
-			this.World().CenterOn(6.5, 3.5);
+			this.World().SetViewpoint({Target: [-80, 4, -40], Yaw: 2.4, Pitch: 0.8, Distance: 60});
 	},
 
-	/* A unit added by the code, by the barracks: the methods of the world, beside what its template declares. */
+	/* A unit added by the code at the barracks, and sent out by the GameStrategy: beside what its template declares. */
 	WorldRecruited: function () {
-		var world = this.World ? this.World() : null;
-		var unit;
+		var scene = this.World ? this.World() : null;
+		var id = 'recruit-' + (this.WorldAdded + 1);
 
-		if (!world) return;
+		if (!scene) return;
 
 		this.WorldAdded++;
 
-		unit = world.Add({ID: 'recruit-' + this.WorldAdded, Kind: 'unit', X: 8, Y: 5, Team: 'blue', Type: 'worker', Health: 30, MaxHealth: 30, Speed: 3});
+		scene.Add('unit', {ID: id, Name: 'Recruit', X: -74, Y: -32, Team: 'blue', Model: 'villager', Health: 30, Damage: 4, Range: 2});
 
-		world.Order([unit], {X: 9 + this.WorldAdded % 4, Y: 7});
+		if (this.Strategy())
+			this.Strategy().Order([id], [-66 + this.WorldAdded % 4 * 3, -26]);
 
-		this.WorldNote = 'Recruited ' + unit + ' · ' + world.Objects(function (item) {
-			return item.Kind === 'unit' && item.Team === 'blue';
-		}).length + ' blue units';
+		this.WorldNote = 'Recruited ' + id;
 	},
 
 	CallAccepted: function (detail) {
@@ -4019,16 +4167,43 @@ Elemenx.Component('UIKitPage', {
 		this.GameNote = 'Marker: ' + marker.Label;
 	},
 
-	GameUnlock: function () {
-		var list = [
-			{Title: 'First blood', Text: 'Defeat your first enemy.', Points: 10},
-			{Title: 'Pack hunter', Text: 'Slay five grey wolves.', Rarity: 'rare', Points: 25, Icon: 'flag'},
-			{Title: 'Legend of the north', Text: 'Finish the main story.', Rarity: 'legendary', Points: 100, Icon: 'star-filled'}
-		];
+	/* The achievements of the game, as data of the Achievements Service: each one unlocked shows by itself (AchievementQueue). */
+	GameAchievements: function () {
+		var achievements = this.$Service('Achievements');
+		if (achievements.State('game-first-blood')) return achievements;
 
-		this.$Service('Achievements').Show(list[this.GameAchievementIndex % list.length]);
+		achievements.Define([
+			{ID: 'game-first-blood', Title: 'First blood', Text: 'Defeat your first enemy.', Points: 10, Group: 'Combat'},
+			{ID: 'game-pack-hunter', Title: 'Pack hunter', Text: 'Slay five grey wolves.', Rarity: 'rare', Points: 25, Icon: 'flag', Group: 'Combat', Goal: 5},
+			{ID: 'game-legend', Title: 'Legend of the north', Text: 'Finish the main story.', Rarity: 'legendary', Points: 100, Icon: 'star-filled', Group: 'Story'},
+			{ID: 'game-cave', Title: 'The hidden cave', Text: 'Find the cave behind the falls.', Rarity: 'epic', Points: 50, Secret: true, Group: 'Story'}
+		]);
+
+		return achievements;
+	},
+
+	GameUnlock: function () {
+		var achievements = this.GameAchievements();
+		var order = ['game-first-blood', 'game-pack-hunter', 'game-legend'];
+		/* Round again: from nothing, so it shows again. */
+		var id = order[this.GameAchievementIndex % order.length];
+		if (achievements.State(id).Unlocked)
+			achievements.Reset(id);
+
+		achievements.Unlock(id);
 
 		this.GameAchievementIndex++;
+	},
+
+	GameToggleAchievements: function () {
+		this.GameAchievements();
+
+		this.GameAchievementsOpen = !this.GameAchievementsOpen;
+	},
+
+	/* A wolf slain: a step to Pack hunter. */
+	GameWolf: function () {
+		this.GameAchievements().Progress('game-pack-hunter');
 	},
 
 	GameRecordClosed: function () {
@@ -4420,6 +4595,18 @@ Elemenx.Component('UIKitPage', {
 		catch (error) {
 			this.SceneQuality = 'auto';
 		}
+
+		/* ?fps=1 shows how smoothly the page draws, over every demo. */
+		this.ShowFPS = new URLSearchParams(window.location.search).get('fps') === '1';
+
+		/* What the scenes far from the view were, by demo, until they come back: not state of the page. */
+		var kept = {};
+
+		this.Kept = function () {
+			return kept;
+		};
+
+		this.FarWatch();
 
 		/* Titles split by | or by commas; a part between | counts whole too, as a title may have a comma (Payment, phone and money). */
 		var only = (new URLSearchParams(window.location.search).get('sections') || '').split('|').reduce(function (all, part) {
@@ -5332,7 +5519,7 @@ Elemenx.Component('UIKitPage', {
 
 	BlueprintDraw: function (graph) {
 		var canvas = this.$Ref('BlueprintPreview');
-		var graphics = this.$Service('Graphics3D');
+		var graphics = this.$Service('Renderer');
 		var view = canvas ? canvas.BlueprintView : null;
 		var made;
 

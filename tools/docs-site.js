@@ -11,6 +11,7 @@
  */
 var fs = require('fs');
 var path = require('path');
+var SystemLibraries = require('./common.js').SystemLibraries;
 
 var Root = path.resolve(__dirname, '..');
 var Docs = path.join(Root, 'examples', 'Docs');
@@ -35,10 +36,12 @@ function Build (options) {
 	});
 
 	/*
-	 * ElemenxUI is in the package already (libraries/), and the server of the CLI answers /libraries/ from there: a copy
-	 * of it here would double the package (its data alone, the emoji and the cities, is 11 MB).
+	 * The system Libraries are in the package already (libraries/), and the server of the CLI answers /libraries/ from
+	 * there: a copy of them here would double the package (its data alone, the emoji and the cities, is 11 MB).
 	 */
-	fs.rmSync(path.join(output, 'libraries', 'ElemenxUI'), {recursive: true, force: true});
+	SystemLibraries.forEach(function (library) {
+		fs.rmSync(path.join(output, 'libraries', library.Name), {recursive: true, force: true});
+	});
 
 	if (fs.existsSync(path.join(output, 'libraries')) && !fs.readdirSync(path.join(output, 'libraries')).length)
 		fs.rmdirSync(path.join(output, 'libraries'));

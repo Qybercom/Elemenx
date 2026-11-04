@@ -1,0 +1,17 @@
+{
+	"ui": {
+		"dateRangeInput": {
+			"choose": "Choose a range",
+			"clear": "Clear",
+			"last30": "Last 30 days",
+			"last7": "Last 7 days",
+			"lastMonth": "Last month",
+			"nextMonth": "Next month",
+			"pickEnd": "Pick the end",
+			"placeholder": "Start – End",
+			"previousMonth": "Previous month",
+			"thisMonth": "This month",
+			"thisYear": "This year"
+		}
+	}
+}

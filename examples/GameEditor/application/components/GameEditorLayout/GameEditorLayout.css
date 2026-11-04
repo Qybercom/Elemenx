@@ -151,6 +151,6 @@ body {
 	min-height: 0;
 }
 
-.game-editor-object > .elemenx-object-editor {
+.game-editor-object > .elemenx-model-editor {
 	height: 100%;
 }

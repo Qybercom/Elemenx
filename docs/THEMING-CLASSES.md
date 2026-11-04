@@ -341,6 +341,20 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-achievement-title`
 - `elemenx-achievements`: `bottom`, `top`
 
+## AchievementList
+
+- `elemenx-achievement-card`: `epic`, `legendary`, `locked`, `rare`, `secret`, `uncommon`
+- `elemenx-achievement-card-badge`
+- `elemenx-achievement-card-body`
+- `elemenx-achievement-card-points`
+- `elemenx-achievement-card-progress`
+- `elemenx-achievement-card-text`
+- `elemenx-achievement-card-title`
+- `elemenx-achievement-card-value`
+- `elemenx-achievement-list`
+- `elemenx-achievement-list-items`
+- `elemenx-achievement-list-summary`
+
 ## Block
 
 - `elemenx-block-actions`
@@ -913,11 +927,11 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## Axes
 
-- `elemenx-axes`
-- `elemenx-axes-end`: `other`
-- `elemenx-axes-x`
-- `elemenx-axes-y`
-- `elemenx-axes-z`
+- `elemenx-scene-axes`
+- `elemenx-scene-axes-end`: `other`
+- `elemenx-scene-axes-x`
+- `elemenx-scene-axes-y`
+- `elemenx-scene-axes-z`
 
 ## GameBar
 
@@ -1035,27 +1049,25 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-game-tracker-quest`
 - `elemenx-game-tracker-title`
 
-## GameScene
+## Scene
 
-- `elemenx-game-scene`: `dragging`, `flat`, `panning`
-- `elemenx-game-scene-axes`
-- `elemenx-game-scene-canvas`
-- `elemenx-game-scene-card`
-- `elemenx-game-scene-card-actions`
-- `elemenx-game-scene-card-header`
-- `elemenx-game-scene-card-kind`
-- `elemenx-game-scene-card-row`
-- `elemenx-game-scene-card-rows`
-- `elemenx-game-scene-card-title`
-- `elemenx-game-scene-fallback`
-- `elemenx-game-scene-loading`
-- `elemenx-game-scene-hud`
-- `elemenx-game-scene-label`
-- `elemenx-game-scene-labels`: `hidden`
-- `elemenx-game-scene-marks`
-- `elemenx-game-scene-minimap`
-- `elemenx-game-scene-screens`
-- `elemenx-game-scene-takeoff`
+- `elemenx-scene`: `dragging`
+- `elemenx-scene-axes-place`
+- `elemenx-scene-canvas`
+- `elemenx-scene-card`
+- `elemenx-scene-card-actions`
+- `elemenx-scene-card-header`
+- `elemenx-scene-card-kind`
+- `elemenx-scene-card-row`
+- `elemenx-scene-card-rows`
+- `elemenx-scene-card-title`
+- `elemenx-scene-fallback`
+- `elemenx-scene-loading`
+- `elemenx-scene-hud`
+- `elemenx-scene-label`
+- `elemenx-scene-labels`: `hidden`
+- `elemenx-scene-screens`
+- `elemenx-scene-takeoff`
 
 ## GameSlot
 
@@ -1135,6 +1147,16 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-menu-bar`
 - `elemenx-menu-bar-entry`
 - `elemenx-menu-bar-host`
+
+## FPSMeter
+
+- `elemenx-fps-meter`: `bad`, `bottom-left`, `bottom-right`, `corner`, `slow`, `top-left`, `top-right`
+- `elemenx-fps-meter-counts`
+- `elemenx-fps-meter-graph`
+- `elemenx-fps-meter-head`
+- `elemenx-fps-meter-rate`
+- `elemenx-fps-meter-source`
+- `elemenx-fps-meter-unit`
 
 ## Meter
 
@@ -1489,6 +1511,8 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-scene-editor-palette`
 - `elemenx-scene-editor-parameter`
 - `elemenx-scene-editor-plane`
+- `elemenx-scene-editor-road-mid`: `arc`
+- `elemenx-scene-editor-road-point`: `chosen`, `draft`
 - `elemenx-scene-editor-ring`
 - `elemenx-scene-editor-side`
 - `elemenx-scene-editor-sketch-shape`: `area`, `current`, `draft`
@@ -1517,30 +1541,30 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-topology-status`
 - `elemenx-topology-title`
 
-## ObjectEditor
+## ModelEditor
 
-- `elemenx-object-editor`
-- `elemenx-object-editor-axis`: `axis-x`, `axis-y`, `axis-z`
-- `elemenx-object-editor-field`
-- `elemenx-object-editor-fields`
-- `elemenx-object-editor-format`
-- `elemenx-object-editor-generator`
-- `elemenx-object-editor-gizmo`
-- `elemenx-object-editor-group`: `end`
-- `elemenx-object-editor-import`
-- `elemenx-object-editor-inspector`
-- `elemenx-object-editor-overlay`
-- `elemenx-object-editor-palette`
-- `elemenx-object-editor-ring`
-- `elemenx-object-editor-shape`
-- `elemenx-object-editor-side`
-- `elemenx-object-editor-snap`
-- `elemenx-object-editor-tip`: `axis-x`, `axis-y`, `axis-z`
-- `elemenx-object-editor-title`
-- `elemenx-object-editor-tool`: `active`
-- `elemenx-object-editor-toolbar`
-- `elemenx-object-editor-variant`
-- `elemenx-object-editor-view`
+- `elemenx-model-editor`
+- `elemenx-model-editor-axis`: `axis-x`, `axis-y`, `axis-z`
+- `elemenx-model-editor-field`
+- `elemenx-model-editor-fields`
+- `elemenx-model-editor-format`
+- `elemenx-model-editor-generator`
+- `elemenx-model-editor-gizmo`
+- `elemenx-model-editor-group`: `end`
+- `elemenx-model-editor-import`
+- `elemenx-model-editor-inspector`
+- `elemenx-model-editor-overlay`
+- `elemenx-model-editor-palette`
+- `elemenx-model-editor-ring`
+- `elemenx-model-editor-shape`
+- `elemenx-model-editor-side`
+- `elemenx-model-editor-snap`
+- `elemenx-model-editor-tip`: `axis-x`, `axis-y`, `axis-z`
+- `elemenx-model-editor-title`
+- `elemenx-model-editor-tool`: `active`
+- `elemenx-model-editor-toolbar`
+- `elemenx-model-editor-variant`
+- `elemenx-model-editor-view`
 
 ## Section
 
@@ -1897,7 +1921,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-blueprint-pin-name`
 - `elemenx-blueprint-port`
 - `elemenx-blueprint-properties`
-- `elemenx-blueprint-property`
+- `elemenx-blueprint-property`: `code`
 - `elemenx-blueprint-side`
 - `elemenx-blueprint-title`
 - `elemenx-blueprint-type`

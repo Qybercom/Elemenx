@@ -1,0 +1,9 @@
+{
+	"ui": {
+		"expressionPicker": {
+			"emoji": "Эмодзи",
+			"kind": "Вид",
+			"stickers": "Стикеры"
+		}
+	}
+}

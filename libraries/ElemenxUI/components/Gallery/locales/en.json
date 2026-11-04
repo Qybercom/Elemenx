@@ -1,0 +1,12 @@
+{
+	"ui": {
+		"gallery": {
+			"label": "Gallery",
+			"previous": "Previous picture",
+			"next": "Next picture",
+			"pause": "Pause",
+			"play": "Play",
+			"pictures": "Pictures"
+		}
+	}
+}

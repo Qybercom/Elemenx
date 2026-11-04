@@ -1,54 +1,61 @@
 <!-- generated -->
 # Achievements
 
-Достижения приложения (игры, курса, профиля...), которые по очереди показывает AchievementHost (поставьте его в раскладку приложения, как ToastHost). Show(options) ставит достижение в очередь и возвращает его ID. Параметры: Title, Text, Icon или Image (по умолчанию кубок), Rarity (от common до legendary: цвет значка), Points, Overline (строка над заголовком: по умолчанию «Достижение получено»), Duration (6000 миллисекунд — время показа вместе с появлением и уходом; 0 оставляет его до закрытия). Dismiss(id) закрывает достижение (или убирает его из очереди), Clear() закрывает все; Current() — показанное, Queue() — ожидающие. OnChange(callback)/OffChange(callback) сообщают {Current, Queue}.
+Достижения приложения любого рода (игры, курса, профиля, экскурсии) как данные: какие они есть, насколько продвинулось каждое, какие получены. Сервис ничего не показывает (их показывают AchievementQueue и AchievementHost из ElemenxUI, а перечисляет AchievementList) и ничего не хранит: приложение сохраняет Export() где хочет и возвращает его в Import(data). Работает на странице, в воркере и в Node.
+
+- Define(achievement или список): {ID, Title, Text, Icon, Image, Rarity (common, uncommon, rare, epic, legendary), Points, Group, Goal (сколько нужно для получения, 1), Hidden (не показывается в списке, пока не получено), Secret (показывается, но Title и Text скрыты, пока не получено)}. Повторное определение с тем же ID заменяет его, сохраняя состояние.
+- Progress(id, amount) прибавляет к продвижению (по умолчанию 1), Set(id, value) задаёт его; при достижении Goal достижение получено. Unlock(id) выдаёт его сразу, Reset(id) (без ID — все) сбрасывает с нуля. Каждый возвращает состояние.
+- State(id): {ID, Value, Goal, Part (от 0 до 1), Unlocked, At (время получения, мс)}; null для неизвестного ID. List({Group, Unlocked: true или false}): определения с состояниями в порядке определения; Hidden — только после получения, у Secret до получения пустые Title и Text (Secret: true). Groups() — группы, Points() — очки полученных, Count() — {Unlocked, Total}.
+- On(event, callback) и Off(event, callback): progress ({ID, Value, Goal, Achievement}), unlock ({ID, Achievement, State}), reset ({ID}: пусто — все), change ({ID}) после любого из них.
+- Export(): {Version, States: {id: {Value, At}}}; Import(data) возвращает такую запись (состояние неизвестного ID ждёт его определения) и сообщает change, без unlock.
 
 ## Методы
 
-- `Show(options)`
-- `Dismiss(id)`
-- `Clear()`
-- `Current()`
-- `Queue()`
-- `OnChange(callback)`
-- `OffChange(callback)`
+- `Define(given)`
+- `Progress(id, amount)`
+- `Set(id, value)`
+- `Unlock(id)`
+- `Reset(id)`
+- `State(id)`
+- `List(filter)`
+- `Groups()`
+- `Points()`
+- `Count()`
+- `On(event, callback)`
+- `Off(event, callback)`
+- `Export()`
+- `Import(data)`
 
 ## Пример
 
 ```example
-<Button Label="Unlock" Icon="trophy" Variant="primary" (click)="Unlock" />
-<Button Label="Dismiss all" Variant="ghost" (click)="Clear" />
-<span class="elemenx-text small muted">Shown: {{Current}} · waiting: {{Waiting}}</span>
+<Button Label="Take a step" Icon="add" Variant="primary" (click)="Step" />
+<Button Label="Unlock the secret" Icon="trophy" Variant="ghost" (click)="Secret" />
+<Button Label="Start again" Variant="ghost" (click)="Reset" />
+<AchievementList />
 <AchievementHost />
 <script>
 ({
-	Current: '—',
-	Waiting: 0,
-	Count: 0,
-
 	$OnCreate: function () {
-		var self = this;
+		var achievements = this.$Service('Achievements');
+		if (achievements.State('docs-walker')) return;
 
-		this.Changed = function (state) {
-			self.Current = state.Current ? state.Current.Title : '—';
-			self.Waiting = state.Queue.length;
-		};
-
-		this.$Service('Achievements').OnChange(this.Changed);
+		achievements.Define([
+			{ID: 'docs-walker', Title: 'Walker', Text: 'Take five steps.', Goal: 5, Points: 10, Rarity: 'rare'},
+			{ID: 'docs-secret', Title: 'The secret', Text: 'Found what was hidden.', Secret: true, Points: 50, Rarity: 'legendary'}
+		]);
 	},
 
-	$OnDestroy: function () {
-		this.$Service('Achievements').OffChange(this.Changed);
+	Step: function () {
+		this.$Service('Achievements').Progress('docs-walker');
 	},
 
-	Unlock: function () {
-		this.Count++;
-
-		this.$Service('Achievements').Show({Title: 'Explorer ' + this.Count, Text: 'Three in a row queue up.', Rarity: this.Count % 2 ? 'epic' : 'rare', Points: 25, Duration: 3000});
+	Secret: function () {
+		this.$Service('Achievements').Unlock('docs-secret');
 	},
 
-	Clear: function () {
-		this.$Service('Achievements').Clear();
+	Reset: function () {
+		this.$Service('Achievements').Reset();
 	}
 })
 </script>
@@ -56,5 +63,8 @@
 
 ## Тесты
 
-- [shows the achievements one after another, each for its Duration, and reports every change](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/achievements.test.js#L60) — `tests/regression/achievements.test.js`
-- [keeps an achievement of Duration 0 until it is dismissed, takes one out of the queue, and clears all](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/achievements.test.js#L94) — `tests/regression/achievements.test.js`
+- [counts progress to the goal, unlocks once at it, and tells each step](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/achievements-common.test.js#L51) — `tests/regression/achievements-common.test.js`
+- [lists them with their states: a hidden one only once unlocked, a secret one kept back until then; groups, points and counts](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/achievements-common.test.js#L81) — `tests/regression/achievements-common.test.js`
+- [exports its states for the Application to keep, imports them back without unlock events, and resets](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/achievements-common.test.js#L103) — `tests/regression/achievements-common.test.js`
+- [shows in the AchievementQueue each achievement unlocked, unless told not to follow](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/achievements-common.test.js#L135) — `tests/regression/achievements-common.test.js`
+- [unlocks an achievement of the Achievements Service as one comes in, and has the action achievement by itself](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-triggers.test.js#L273) — `tests/regression/library-triggers.test.js`

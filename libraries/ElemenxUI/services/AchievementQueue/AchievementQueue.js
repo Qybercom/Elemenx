@@ -1,0 +1,131 @@
+/*
+ * AchievementQueue: the achievements shown one after another by an AchievementHost (place one in the layout of the
+ * Application, as a ToastHost). Each achievement the Achievements Service of ElemenxCommon unlocks comes in by itself
+ * (Follow: false of the Service keeps them out); any other may be shown too.
+ * Show(options) queues one and returns its ID. Options: Title, Text, Icon or Image (a trophy by default), Rarity
+ * (common... legendary: the color of the badge), Points, Overline (the line above the title: "Achievement unlocked" by
+ * default), Duration (6000 milliseconds, the time it shows, its coming and going included; 0 keeps it until it is
+ * dismissed). Dismiss(id) closes it (or takes it out of the queue), Clear()
+ * closes all; Current() is the one shown, Queue() the ones waiting. OnChange(callback)/OffChange(callback) report
+ * {Current, Queue}.
+ */
+Elemenx.Service('AchievementQueue', {
+	$Meta: {
+		Description: 'The achievements shown one after another by an AchievementHost: each one the Achievements Service unlocks, and any other.',
+		Methods: ['Show(options)', 'Dismiss(id)', 'Clear()', 'Current()', 'Queue()', 'OnChange(callback)', 'OffChange(callback)']
+	},
+	Duration: 6000,
+	Follow: true,
+
+	$OnCreate: function () {
+		this.Shown = null;
+		this.Waiting = [];
+		this.Listeners = this.$Service('ElemenxHelpers').Listeners();
+		this.Timer = null;
+		this.Sequence = 0;
+
+		/* What the Achievements of the Application unlock shows here. */
+		var self = this;
+		var achievements = this.$Service('Achievements');
+		if (achievements)
+			this.Unlocked = achievements.On('unlock', function (event) {
+				if (self.Follow)
+					self.Show({Title: event.Achievement.Title, Text: event.Achievement.Text, Icon: event.Achievement.Icon, Image: event.Achievement.Image, Rarity: event.Achievement.Rarity, Points: event.Achievement.Points || null, Achievement: event.ID});
+			});
+	},
+
+	$OnDestroy: function () {
+		window.clearTimeout(this.Timer);
+
+		if (this.Unlocked)
+			this.$Service('Achievements').Off('unlock', this.Unlocked);
+
+		this.Listeners.Clear();
+	},
+
+	Show: function (options) {
+		var item;
+
+		options = typeof options === 'string' ? {Title: options} : options || {};
+
+		this.Sequence++;
+
+		item = {
+			ID: 'achievement-' + this.Sequence,
+			Title: options.Title || '',
+			Text: options.Text || '',
+			Icon: options.Icon || (options.Image ? '' : 'trophy'),
+			Image: options.Image || '',
+			Rarity: options.Rarity || 'common',
+			Points: options.Points == null ? null : options.Points,
+			Overline: options.Overline || '',
+			Duration: options.Duration == null ? this.Duration : Number(options.Duration),
+			Achievement: options.Achievement || ''
+		};
+
+		this.Waiting.push(item);
+
+		if (!this.Shown) this.Next();
+		else this.Changed();
+
+		return item.ID;
+	},
+
+	/* Shows the next one of the queue, for its Duration. */
+	Next: function () {
+		var self = this;
+
+		window.clearTimeout(this.Timer);
+
+		this.Shown = this.Waiting.shift() || null;
+		this.Timer = null;
+
+		if (this.Shown && this.Shown.Duration > 0) {
+			this.Timer = window.setTimeout(function () {
+				self.Next();
+			}, this.Shown.Duration);
+		}
+
+		this.Changed();
+	},
+
+	Dismiss: function (id) {
+		if (this.Shown && this.Shown.ID === id) {
+			this.Next();
+
+			return;
+		}
+
+		this.Waiting = this.Waiting.filter(function (item) {
+			return item.ID !== id;
+		});
+
+		this.Changed();
+	},
+
+	Clear: function () {
+		this.Waiting = [];
+
+		this.Next();
+	},
+
+	Current: function () {
+		return this.Shown;
+	},
+
+	Queue: function () {
+		return this.Waiting.slice();
+	},
+
+	OnChange: function (callback) {
+		return this.Listeners.On(callback);
+	},
+
+	OffChange: function (callback) {
+		this.Listeners.Off(callback);
+	},
+
+	Changed: function () {
+		this.Listeners.Tell({Current: this.Shown, Queue: this.Waiting.slice()});
+	}
+});

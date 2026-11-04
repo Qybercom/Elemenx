@@ -1,0 +1,17 @@
+{
+	"ui": {
+		"calculator": {
+			"label": "Calculator",
+			"history": "History",
+			"keys": {
+				"clear": "Clear",
+				"back": "Delete the last",
+				"negate": "Change the sign",
+				"equals": "Equals",
+				"shift": "Second functions",
+				"angle": "Degrees or radians",
+				"inverse": "One over"
+			}
+		}
+	}
+}

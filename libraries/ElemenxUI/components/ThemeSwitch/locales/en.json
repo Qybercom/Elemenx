@@ -1,0 +1,10 @@
+{
+	"ui": {
+		"themeSwitch": {
+			"dark": "Dark theme",
+			"light": "Light theme",
+			"system": "System theme",
+			"title": "Theme"
+		}
+	}
+}

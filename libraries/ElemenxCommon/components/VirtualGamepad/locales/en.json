@@ -1,0 +1,9 @@
+{
+	"common": {
+		"virtualGamepad": {
+			"label": "Gamepad on the screen",
+			"look": "Look round",
+			"stick": "Stick"
+		}
+	}
+}

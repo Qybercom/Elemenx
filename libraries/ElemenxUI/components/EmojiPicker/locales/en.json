@@ -1,0 +1,32 @@
+{
+	"ui": {
+		"emojiPicker": {
+			"group": {
+				"activities": "Activities",
+				"component": "Components",
+				"flags": "Flags",
+				"food": "Food & drink",
+				"nature": "Animals & nature",
+				"objects": "Objects",
+				"people": "People & body",
+				"recent": "Recently used",
+				"search": "Search results",
+				"smileys": "Smileys & emotion",
+				"symbols": "Symbols",
+				"travel": "Travel & places"
+			},
+			"groups": "Groups",
+			"label": "Emoji",
+			"nothing": "No emoji found",
+			"placeholder": "Search emoji",
+			"searchLabel": "Search emoji",
+			"skinTone": "Skin tone",
+			"tone0": "No skin tone",
+			"tone1": "Light skin tone",
+			"tone2": "Medium-light skin tone",
+			"tone3": "Medium skin tone",
+			"tone4": "Medium-dark skin tone",
+			"tone5": "Dark skin tone"
+		}
+	}
+}

@@ -1,0 +1,12 @@
+{
+	"ui": {
+		"timeline": {
+			"label": "Timeline",
+			"now": "Now",
+			"playhead": "Playhead",
+			"zoomIn": "Zoom in",
+			"zoomOut": "Zoom out",
+			"fit": "Show all"
+		}
+	}
+}

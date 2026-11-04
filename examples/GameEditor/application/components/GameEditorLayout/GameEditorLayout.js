@@ -1,6 +1,6 @@
 /*
  * The Game editor: a game of a scene and its models. The tab Scene edits the scene (SceneEditor), the models of the game
- * in its palette to place; the tab Models edits them one by one (ObjectEditor), each a model of the Models Service under
+ * in its palette to place; the tab Models edits them one by one (ModelEditor), each a model of the Models Service under
  * its ID. The game is kept in the browser after each change (Storage), exported and imported as JSON, and downloaded to
  * run: one HTML file, or a project of Elemenx in a zip (GamePackager).
  */
@@ -52,7 +52,7 @@ Elemenx.Component('GameEditorLayout', {
 
 	/* Each model of the game in the Models Service under its ID, for the scene to place and to draw. */
 	Define: function () {
-		var models = this.$Service('Models');
+		var models = this.$Service('SceneModels');
 
 		this.Game.Models.forEach(function (model) {
 			models.Define(model.ID, model.Document.Recipe);
@@ -113,7 +113,7 @@ Elemenx.Component('GameEditorLayout', {
 
 		entry.Document = document;
 
-		this.$Service('Models').Define(entry.ID, document.Recipe);
+		this.$Service('SceneModels').Define(entry.ID, document.Recipe);
 
 		if (scene && scene.Scene())
 			this.Redraw(scene.Scene(), entry.ID);

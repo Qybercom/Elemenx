@@ -9,15 +9,17 @@
  *   else it is left out, and told so.
  * - the one of Visual Studio 2022, elemenx-visualstudio.vsix, with the MSBuild of the Visual Studio of the machine (found
  *   by vswhere, with the workload Visual Studio extension development); on Windows only, else it is left out, and told so.
- * The core of the language, the meta.json of ElemenxUI and the sources of Elemenx and ElemenxUI go into each of them;
- * their names, descriptions and icons come from editors/extension.json. Build({Output, Idea, VSCode, IntelliJ,
- * VisualStudio, Only, Log}) returns [{Name, Size}] of the files made; VSCode false leaves it out; IntelliJ or
+ * The core of the language, the meta.json of ElemenxUI and the sources of Elemenx and of every system Library (in
+ * core/libraries/<name>) go into each of them; their names, descriptions and icons come from editors/extension.json.
+ * Build({Output, Idea, VSCode, IntelliJ, VisualStudio, Only, Log}) returns [{Name, Size}] of the files made; VSCode false leaves it out; IntelliJ or
  * VisualStudio: false leaves it out, true needs it; Only (vscode, intellij or visualstudio; --only) builds that one alone
  * and needs it: CI builds each in a job of its own, in parallel.
  */
 var fs = require('fs');
 var path = require('path');
 var child = require('child_process');
+var common = require('../tools/common.js');
+var SystemLibraries = common.SystemLibraries;
 
 var root = path.resolve(__dirname, '..');
 var vscode = path.join(__dirname, 'vscode');
@@ -64,14 +66,27 @@ function sources (library, to) {
 	copy(path.join(library, 'data', 'meta.json'), path.join(to, 'data', 'meta.json'));
 
 	['components', 'directives', 'services', 'locales'].forEach(function (folder) {
+		if (!fs.existsSync(path.join(library, folder))) return;
+
 		(function walk (directory) {
 			fs.readdirSync(directory, {withFileTypes: true}).forEach(function (entry) {
+				/* What is beside an entity for its authors stays: its docs, its tests, the phrases the Library has merged. */
 				var file = path.join(directory, entry.name);
+				if (common.LibraryPrivate(path.relative(library, file).replace(/\\/g, '/'), entry.isDirectory())) return;
 
 				if (entry.isDirectory()) walk(file);
 				else if (/\.(js|html|json)$/.test(entry.name)) copy(file, path.join(to, path.relative(library, file)));
 			});
 		})(path.join(library, folder));
+	});
+}
+
+/* The sources of every system Library, each in libraries/<name> of the core of an extension: the definitions go there. */
+function carried (core) {
+	fs.rmSync(path.join(core, 'library'), {recursive: true, force: true});
+
+	SystemLibraries.forEach(function (library) {
+		sources(path.join(root, 'libraries', library.Name), path.join(core, 'libraries', library.Name));
 	});
 }
 
@@ -180,7 +195,7 @@ function stageVisualStudio (extension, version) {
 	copy(path.join(root, 'libraries', 'ElemenxUI', 'data', 'meta.json'), path.join(visualstudio, 'core', 'meta.json'));
 	copy(path.join(root, 'elemenx.js'), path.join(visualstudio, 'core', 'elemenx.js'));
 
-	sources(path.join(root, 'libraries', 'ElemenxUI'), path.join(visualstudio, 'core', 'library'));
+	carried(path.join(visualstudio, 'core'));
 
 	copy(path.join(branding, 'logo-90.png'), path.join(visualstudio, 'icon.png'));
 	copy(path.join(branding, 'logo-200.png'), path.join(visualstudio, 'preview.png'));
@@ -266,7 +281,7 @@ function Build (options) {
 		/* The sources of Elemenx and ElemenxUI of this version: a project with a build of dist alone goes to their definitions here. */
 		copy(path.join(root, 'elemenx.js'), path.join(vscode, 'core', 'elemenx.js'));
 
-		sources(path.join(root, 'libraries', 'ElemenxUI'), path.join(vscode, 'core', 'library'));
+		carried(path.join(vscode, 'core'));
 
 		copy(path.join(root, 'LICENSE'), path.join(vscode, 'LICENSE'));
 

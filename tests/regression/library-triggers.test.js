@@ -13,7 +13,7 @@ async function mount (items) {
 	var ready = null;
 	var told = [];
 	var component = Elemenx.Component(unique('TriggerHost'), {
-		$Template: '<div style="width: 320px; height: 200px"><GameScene Quality="low" Labels="false" (ready)="Ready" (enter)="Enter" (active)="Active" (leave)="Leave" (action)="Acted"></GameScene></div>',
+		$Template: '<div style="width: 320px; height: 200px"><Scene Quality="low" Labels="false" (ready)="Ready" (enter)="Enter" (active)="Active" (leave)="Leave" (action)="Acted"></Scene></div>',
 		Ready: function (space) {
 			ready = space;
 		},
@@ -64,11 +64,11 @@ async function mount (items) {
 	};
 }
 
-describe('Contract: the triggers and zones of a GameScene: enter, active and leave, actions sent to a trigger, flows of Blueprints', function () {
+describe('Contract: the triggers and zones of a Scene: enter and leave, who stays inside, actions sent to a trigger, flows of Blueprints', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['GameScene', 'GameObject', 'service:Blueprints']);
+		Use(['Scene', 'SceneObject', 'service:Blueprints']);
 	});
 
 	beforeEach(function () {
@@ -79,11 +79,11 @@ describe('Contract: the triggers and zones of a GameScene: enter, active and lea
 		while (owned.length) owned.pop().$Destroy();
 	});
 
-	it('tells when a walker comes into a round trigger, while it stays, every Every seconds, and when it goes out or is removed', async function () {
+	it('tells when a walker comes into a round trigger and when it goes out or is removed, nothing while it stays, and who stays inside', async function () {
 		var made = await mount();
 		var scene = made.Scene;
 
-		scene.Add('trigger', {ID: 'door', X: 10, Y: 10, Radius: 5, Every: 0.25});
+		scene.Add('trigger', {ID: 'door', X: 10, Y: 10, Radius: 5});
 		scene.Add('unit', {ID: 'hero', X: -40, Y: 0});
 		scene.Add('tree', {ID: 'oak', X: 10, Y: 11});
 
@@ -92,7 +92,8 @@ describe('Contract: the triggers and zones of a GameScene: enter, active and lea
 		scene.Change('hero', {X: 12, Y: 9});
 
 		expect(made.Frames(1)).toEqual([['enter', 'door', 'hero']]);
-		expect(made.Frames(6)).toEqual([['active', 'door', 'hero'], ['active', 'door', 'hero']]);
+		/* Regression of a decision: no event while one stays (active is gone); Inside() tells it. */
+		expect(made.Frames(6)).toEqual([]);
 		expect(scene.Trigger('door').Inside()).toEqual(['hero']);
 		expect(made.Told[0][3].Trigger).toBe(scene.Trigger('door'));
 		expect(made.Told[0][3].Object).toEqual(scene.Get('hero'));
@@ -117,7 +118,7 @@ describe('Contract: the triggers and zones of a GameScene: enter, active and lea
 		var scene = made.Scene;
 
 		scene.Add('trigger', {ID: 'yard', X: 0, Y: 0, Points: square(-10, -10, 10, 10), Team: 'red'});
-		scene.Add('trigger', {ID: 'road', X: 0, Y: 40, Points: [[-20, 40], [20, 40]], Width: 6, Kinds: ['house'], Every: 1000});
+		scene.Add('trigger', {ID: 'road', X: 0, Y: 40, Points: [[-20, 40], [20, 40]], Width: 6, Kinds: ['house']});
 		scene.Add('trigger', {ID: 'mine', X: 50, Y: 0, Radius: 4, Once: true});
 		scene.Add('trigger', {ID: 'sky', X: -50, Y: 0, Radius: 4, Height: 3});
 		scene.Add('unit', {ID: 'red', X: -60, Y: -60, Team: 'red'});
@@ -235,7 +236,7 @@ describe('Contract: the triggers and zones of a GameScene: enter, active and lea
 
 	it('knows its zones at a point, and makes the triggers and zones of a sketch objects of the scene', async function () {
 		var made = await mount([
-			{ID: 't1', Type: 'trigger', Points: square(20, 20, 40, 40), Name: 'Camp', Every: 1},
+			{ID: 't1', Type: 'trigger', Points: square(20, 20, 40, 40), Name: 'Camp'},
 			{ID: 't2', Type: 'triggerpoint', At: [-30, 30], Radius: 5},
 			{ID: 't3', Type: 'triggerline', Points: [[-40, -30], [40, -30]], Width: 4},
 			{ID: 'z1', Type: 'zone', Points: square(-50, -50, 0, 0), Tags: 'safe, no-build', Name: 'Village'}
@@ -267,6 +268,40 @@ describe('Contract: the triggers and zones of a GameScene: enter, active and lea
 		});
 
 		/* A trigger changes no ground. */
-		expect(Elemenx.Service('Terrain').SketchChanged({Layers: [{ID: 'base', Items: []}]}, {Layers: [{ID: 'base', Items: [{ID: 't1', Type: 'trigger', Points: square(20, 20, 40, 40)}]}]})).toEqual([]);
+		expect(Elemenx.Service('SceneTerrainGenerator').SketchChanged({Layers: [{ID: 'base', Items: []}]}, {Layers: [{ID: 'base', Items: [{ID: 't1', Type: 'trigger', Points: square(20, 20, 40, 40)}]}]})).toEqual([]);
+	});
+	it('unlocks an achievement of the Achievements Service as one comes in, and has the action achievement by itself', async function () {
+		var made = await mount();
+		var scene = made.Scene;
+		var achievements = Elemenx.Service('Achievements');
+		var told = null;
+
+		achievements.Define([{ID: 'trigger-gate', Title: 'Through the gate'}, {ID: 'trigger-steps', Goal: 5}]);
+		achievements.Reset();
+
+		scene.Add('trigger', {ID: 'gate', X: 10, Y: 10, Radius: 5, Achievement: 'trigger-gate'});
+		scene.Add('unit', {ID: 'hero', X: -40, Y: 0});
+
+		made.Frames(2);
+
+		expect(achievements.State('trigger-gate').Unlocked).toBe(false);
+
+		scene.Change('hero', {X: 10, Y: 10});
+
+		made.Frames(1);
+
+		expect(achievements.State('trigger-gate').Unlocked).toBe(true);
+
+		scene.Scene().TriggerActions.achievement({ID: 'trigger-steps', Amount: 2}, function (error, state) {
+			told = [error, state.Value];
+		});
+
+		expect(told).toEqual([null, 2]);
+
+		scene.Scene().TriggerActions.achievement('nothing', function (error) {
+			told = [error.message];
+		});
+
+		expect(told).toEqual(['Elemenx Achievements: no achievement nothing']);
 	});
 });

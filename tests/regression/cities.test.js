@@ -7,7 +7,7 @@ import { createRequire } from 'module';
 
 var require = createRequire(import.meta.url);
 var Cities = require('../../tools/cities.js');
-var service = fs.readFileSync(path.join(import.meta.dirname, '../../libraries/ElemenxUI/services/Cities.js'), 'utf8');
+var service = fs.readFileSync(path.join(import.meta.dirname, '../../libraries/ElemenxUI/services/Cities/Cities.js'), 'utf8');
 var temporary = [];
 
 /* A line of cities1000.txt: the columns of GeoNames that the build reads. */

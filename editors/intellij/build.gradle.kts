@@ -133,16 +133,21 @@ tasks.processResources {
 	}
 
 	/*
-	 * The sources of Elemenx and of ElemenxUI of this version: a project that has only a build of dist goes to their
+	 * The sources of Elemenx and of the system Libraries of this version: a project that has only a build of dist goes to their
 	 * definitions in this copy (*if to elemenx.js, a Component to its file). files.txt lists what the plugin copies out.
 	 */
 	from("../../elemenx.js") {
 		into("elemenx/core")
 	}
 
-	from("../../libraries/ElemenxUI") {
-		include("data/meta.json", "components/**/*.js", "components/**/*.html", "directives/*.js", "services/*.js", "locales/*.json")
-		into("elemenx/core/library")
+	/* Each system Library in a folder of its own, as the core of the language looks for them. */
+	listOf("ElemenxCommon", "ElemenxUI", "ElemenxGraphics", "ElemenxGaming").forEach { name ->
+		from("../../libraries/" + name) {
+			include("data/meta.json", "components/**/*.js", "components/**/*.html", "directives/**/*.js", "services/**/*.js", "locales/*.json")
+			/* What is beside an entity for its authors: its docs and its tests. */
+			exclude("**/docs/**", "**/*.test.js")
+			into("elemenx/core/libraries/" + name)
+		}
 	}
 
 	doLast {

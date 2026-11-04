@@ -1,0 +1,10 @@
+{
+	"ui": {
+		"signal": {
+			"good": "Good connection",
+			"fair": "Fair connection",
+			"poor": "Poor connection",
+			"level": "Signal {percent}%"
+		}
+	}
+}

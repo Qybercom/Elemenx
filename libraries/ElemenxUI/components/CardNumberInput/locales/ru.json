@@ -1,0 +1,8 @@
+{
+	"ui": {
+		"cardNumberInput": {
+			"hideNumber": "Скрыть номер",
+			"showNumber": "Показать номер"
+		}
+	}
+}

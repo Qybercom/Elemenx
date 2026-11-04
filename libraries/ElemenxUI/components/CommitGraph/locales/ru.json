@@ -1,0 +1,8 @@
+{
+	"ui": {
+		"commitGraph": {
+			"label": "Коммиты",
+			"commit": "{message}, {author}, {date}, {id}"
+		}
+	}
+}

@@ -1,0 +1,1 @@
+Объявление плитки в шаблоне TileGrid, внутри TileGroup: <Tile ID="mail" Title="Mail" Icon="mail" Size="wide" />. Принимает свойства плитки TileGrid (ID, Title, Icon, Size, Width, Height, Row, Column, Color, Badge, Text, Class, Locked); разметка внутри становится собственным содержимым плитки и сохраняет свои привязки. Сама по себе ничего не показывает: её читает TileGrid.

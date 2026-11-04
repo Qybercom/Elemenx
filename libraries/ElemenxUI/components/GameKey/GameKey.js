@@ -33,28 +33,28 @@ Elemenx.Component('GameKey', {
 		/* The text of the glyph: the button on a pad of kind, or the key on this keyboard. */
 		this.Glyph = function (button, keyboard, kind) {
 			if (kind)
-				return self.$Service('Gamepad').Label(button, kind);
+				return self.$Service('InputDevices').Label(button, kind);
 
-			return keyboard ? self.$Service('Hotkeys').Format(keyboard) : self.$Service('Gamepad').Label(button, 'xbox');
+			return keyboard ? self.$Service('Hotkeys').Format(keyboard) : self.$Service('InputDevices').Label(button, 'xbox');
 		};
 	},
 
 	$OnReady: function () {
 		var self = this;
-		var gamepad = this.$Service('Gamepad');
+		var input = this.$Service('InputDevices');
 
-		this.Kind = this.Pad || gamepad.Kind();
+		this.Kind = this.Pad || input.Kind();
 
 		this.Listener = function () {
-			self.Kind = self.Pad || gamepad.Kind();
+			self.Kind = self.Pad || input.Kind();
 		};
 
-		gamepad.On('change', this.Listener);
-		gamepad.On('connect', this.Listener);
-		gamepad.On('disconnect', this.Listener);
+		input.On('change', this.Listener);
+		input.On('connect', this.Listener);
+		input.On('disconnect', this.Listener);
 	},
 
 	$OnDestroy: function () {
-		this.$Service('Gamepad').Off(this.Listener);
+		this.$Service('InputDevices').Off(this.Listener);
 	}
 });

@@ -1,0 +1,11 @@
+{
+	"ui": {
+		"commandPalette": {
+			"command": "Command",
+			"empty": "No matching commands",
+			"placeholder": "Type a command or search",
+			"recentTitle": "Recent",
+			"title": "Command palette"
+		}
+	}
+}

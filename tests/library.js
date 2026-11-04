@@ -1,16 +1,17 @@
 /*
- * The parts of ElemenxUI for the browser contracts: the page of the tests serves no Library, so a test defines the
- * Components, Services and Directives it needs from their sources, the templates and the styles inline. Use(names)
- * defines them and what they use in turn: the Components of their templates, the Services they ask for ($Service) and
- * the Directives of their templates, their Traits ($Traits) and their bases ($Extends). The phrases of ElemenxUI in
- * English come with them (Elemenx.Locale).
+ * The parts of the system Libraries (ElemenxCommon, ElemenxUI, ElemenxGraphics, ElemenxGaming) for the browser contracts:
+ * the page of the tests serves no Library, so a test defines the Components, Services and Directives it needs from their
+ * sources, the templates and the styles inline. Use(names) defines them and what they use in turn: the Components of
+ * their templates, the Services they ask for ($Service) and the Directives of their templates, their Traits ($Traits) and
+ * their bases ($Extends), from whichever Library has them. The phrases of the Libraries in English come with them
+ * (Elemenx.Locale). A Service or a Directive is a file of its folder, or the file of its own folder (services/Math/Math.js),
+ * its tests beside it left out.
  */
-import english from '../libraries/ElemenxUI/locales/en.json';
-
-var components = import.meta.glob('../libraries/ElemenxUI/components/*/*.{js,html,css}', {query: '?raw', import: 'default', eager: true});
-var services = import.meta.glob('../libraries/ElemenxUI/services/*.js', {query: '?raw', import: 'default', eager: true});
-var directives = import.meta.glob('../libraries/ElemenxUI/directives/*.js', {query: '?raw', import: 'default', eager: true});
-var traits = import.meta.glob('../libraries/ElemenxUI/traits/*.js', {query: '?raw', import: 'default', eager: true});
+var english = import.meta.glob('../libraries/*/locales/en.json', {import: 'default', eager: true});
+var components = import.meta.glob('../libraries/*/components/*/*.{js,html,css}', {query: '?raw', import: 'default', eager: true});
+var services = import.meta.glob(['../libraries/*/services/*.js', '../libraries/*/services/*/*.js', '!../libraries/**/*.test.js'], {query: '?raw', import: 'default', eager: true});
+var directives = import.meta.glob(['../libraries/*/directives/*.js', '../libraries/*/directives/*/*.js', '!../libraries/**/*.test.js'], {query: '?raw', import: 'default', eager: true});
+var traits = import.meta.glob('../libraries/*/traits/*.js', {query: '?raw', import: 'default', eager: true});
 var defined = {};
 
 function file (list, name) {
@@ -61,6 +62,21 @@ function service (name) {
 	need(wants(source));
 
 	new Function(source)();
+
+	providers(name).forEach(service);
+}
+
+/* The Services that declare in $Provides what they add to a Service: a registry comes with what is declared to it. */
+function providers (name) {
+	var declared = new RegExp('\\$Provides\\s*:\\s*\\{[^]*?\\b' + name + '\\s*:');
+
+	return Object.keys(services).filter(function (path) {
+		var block = /\$Provides\s*:\s*\{[^]*?\n\t\},?\n/.exec(services[path]) || /\$Provides\s*:\s*\{[^\n]*\},?\n/.exec(services[path]);
+
+		return block && declared.test(block[0]);
+	}).map(function (path) {
+		return /\/(\w+)\.js$/.exec(path)[1];
+	});
 }
 
 function directive (name) {
@@ -113,16 +129,19 @@ function need (found) {
 	found.Components.forEach(component);
 }
 
-/* Defines the Components (by their names), the Services ('service:Name') and the Directives ('*name') given, and what they use. */
+/* Defines the Components (by their names), the Services ('service:Name'), the Traits ('trait:Name') and the Directives ('*name') given, and what they use. */
 export function Use (names) {
 	if (!defined.locale) {
 		defined.locale = true;
 
-		Elemenx.Locale.Add('en', english);
+		Object.keys(english).forEach(function (path) {
+			Elemenx.Locale.Add('en', english[path]);
+		});
 	}
 
 	names.forEach(function (name) {
 		if (name.indexOf('service:') === 0) service(name.substring(8));
+		else if (name.indexOf('trait:') === 0) trait(name.substring(6));
 		else if (name.charAt(0) === '*') directive(name.substring(1));
 		else component(name);
 	});

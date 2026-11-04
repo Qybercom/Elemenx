@@ -18,17 +18,17 @@
 
 ## Тесты
 
-- [lays what depends on what in layers, each after all it comes from, going right or down, the links from edge to edge](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/layouts-graph.test.js#L60) — `tests/regression/layouts-graph.test.js`
-- [puts a crossing right: a node in a layer by the middle of its neighbours](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/layouts-graph.test.js#L98) — `tests/regression/layouts-graph.test.js`
-- [lays a star round its center in rings by how many links away, each near the one it hangs on, and the unreached outside](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/layouts-graph.test.js#L106) — `tests/regression/layouts-graph.test.js`
-- [lays a tree from its root, each parent over the middle of its children, a wide parent pushing its subtree on](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/layouts-graph.test.js#L142) — `tests/regression/layouts-graph.test.js`
-- [lays a circle, a grid and by force with no node on another, force the same for the same Seed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/layouts-graph.test.js#L157) — `tests/regression/layouts-graph.test.js`
 - [packs a grid of cells without holes, keeping the items in their places](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-layouts.test.js#L42) — `tests/regression/library-layouts.test.js`
 - [lays masonry into the shortest column, a picture by its ratio, an item over several columns](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-layouts.test.js#L59) — `tests/regression/library-layouts.test.js`
 - [fills justified rows of one height, each picture keeping its shape, the last one at the wanted height](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-layouts.test.js#L77) — `tests/regression/library-layouts.test.js`
 - [makes a treemap of areas by value, children inside their parent, the parents first](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-layouts.test.js#L98) — `tests/regression/library-layouts.test.js`
 - [draws a Mosaic of items given and declared, follows its width, and selects an item by a press or Enter](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-layouts.test.js#L124) — `tests/regression/library-layouts.test.js`
-- [compares signatures and lays out items with the Services of ElemenxUI](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L25) — `tests/regression/headless.test.js`
+- [lays what depends on what in layers, each after all it comes from, going right or down, the links from edge to edge](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/services/Layouts/Layouts.test.js#L60) — `libraries/ElemenxUI/services/Layouts/Layouts.test.js`
+- [puts a crossing right: a node in a layer by the middle of its neighbours](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/services/Layouts/Layouts.test.js#L98) — `libraries/ElemenxUI/services/Layouts/Layouts.test.js`
+- [lays a star round its center in rings by how many links away, each near the one it hangs on, and the unreached outside](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/services/Layouts/Layouts.test.js#L106) — `libraries/ElemenxUI/services/Layouts/Layouts.test.js`
+- [lays a tree from its root, each parent over the middle of its children, a wide parent pushing its subtree on](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/services/Layouts/Layouts.test.js#L142) — `libraries/ElemenxUI/services/Layouts/Layouts.test.js`
+- [lays a circle, a grid and by force with no node on another, force the same for the same Seed](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/services/Layouts/Layouts.test.js#L157) — `libraries/ElemenxUI/services/Layouts/Layouts.test.js`
+- [compares signatures and lays out items with the Services of the system Libraries](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L25) — `tests/regression/headless.test.js`
 - [themes switch the tokens and the rules of the Components, keep to their schemes and are remembered](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L470) — `tests/examples/ui-kit.spec.js`
 
 +1 ещё в тех же файлах

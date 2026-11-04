@@ -1,0 +1,11 @@
+{
+	"ui": {
+		"ribbon": {
+			"collapse": "Collapse the ribbon",
+			"file": "File",
+			"label": "Ribbon",
+			"pin": "Pin the ribbon",
+			"quickAccess": "Quick access"
+		}
+	}
+}

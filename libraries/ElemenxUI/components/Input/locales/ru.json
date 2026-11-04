@@ -1,0 +1,8 @@
+{
+	"ui": {
+		"input": {
+			"hidePassword": "Скрыть пароль",
+			"showPassword": "Показать пароль"
+		}
+	}
+}

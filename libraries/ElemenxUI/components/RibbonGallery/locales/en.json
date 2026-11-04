@@ -1,0 +1,9 @@
+{
+	"ui": {
+		"ribbonGallery": {
+			"label": "Gallery",
+			"nextRow": "Next row",
+			"previousRow": "Previous row"
+		}
+	}
+}

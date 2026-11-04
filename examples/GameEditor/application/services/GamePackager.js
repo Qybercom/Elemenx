@@ -1,18 +1,19 @@
 /*
  * The game of the editor as an Application of its own, to download. A game is {Name, Scene (a document of SceneEditor:
- * its Scene the recipe of GameScene.Save), Models ([{ID, Document}]: documents of ObjectEditor, each model under its ID)}.
+ * its Scene the recipe of Scene.Save), Models ([{ID, Document}]: documents of ModelEditor, each model under its ID)}.
  * - Data(game): what the game carries: {Name, Models: [{ID, Recipe}], Scene}.
- * - Code(game): the Component Game (its models defined in the Models Service before its scene is made, the scene loaded,
- *   the keys given to the object marked Hero) and the Application that mounts it on the body.
+ * - Code(game): the Component Game (its models defined in the SceneModels Service before its scene is made, the scene
+ *   loaded, the keys given to the object marked Hero) and the Application that mounts it on the body.
  * - Html(game, callback): one HTML file that runs alone, from the disk or any server: the bundles of the framework and of
- *   ElemenxUI (Bundles: bundles/elemenx.min.js and bundles/elemenx-ui.min.js, made by npm run dist) and the game, all
- *   inline. callback(error, text).
+ *   the system Libraries a game stands on (Bundles: bundles/elemenx.min.js, elemenx-common.min.js, elemenx-ui.min.js,
+ *   elemenx-graphics.min.js and elemenx-gaming.min.js, made by npm run dist) and the game, all inline. callback(error,
+ *   text).
  * - Project(game): a project of Elemenx in a zip (the Archive Service): index.html, app.js, elemenx.config.js, the
  *   Component Game under application/, and each model as models/<ID>.glb for other tools. The bytes of the zip.
  * - Save(name, data, type): gives a file to the browser to save.
  */
 Elemenx.Service('GamePackager', {
-	Bundles: ['bundles/elemenx.min.js', 'bundles/elemenx-ui.min.js'],
+	Bundles: ['bundles/elemenx.min.js', 'bundles/elemenx-common.min.js', 'bundles/elemenx-ui.min.js', 'bundles/elemenx-graphics.min.js', 'bundles/elemenx-gaming.min.js'],
 
 	Fetch: function (url, callback) {
 		var request = new XMLHttpRequest();
@@ -52,11 +53,11 @@ Elemenx.Service('GamePackager', {
 		return [
 			'/* The game made in the Game editor of Elemenx: its models, its scene, its hero under the keys. */',
 			'Elemenx.Component(\'Game\', {',
-			'\t$Template: \'<div class="game"><GameScene Labels="false" Details="false" (ready)="Ready" /></div>\',',
+			'\t$Template: \'<div class="game"><Scene Labels="false" Details="false" (ready)="Ready" /></div>\',',
 			'\tData: ' + JSON.stringify(data) + ',',
 			'',
 			'\t$OnCreate: function () {',
-			'\t\tvar models = this.$Service(\'Models\');',
+			'\t\tvar models = this.$Service(\'SceneModels\');',
 			'',
 			'\t\tthis.Data.Models.forEach(function (model) {',
 			'\t\t\tmodels.Define(model.ID, model.Recipe);',
@@ -81,7 +82,7 @@ Elemenx.Service('GamePackager', {
 	},
 
 	App: function (game, files) {
-		return 'Elemenx.Application(' + JSON.stringify(this.Name(game)) + ', {\n\t$Title: ' + JSON.stringify(game.Name || 'Game') + ',\n\t$Component: \'Game\',\n' + (files ? '\t$Root: \'application\',\n' : '') + '\t$Mount: \'body\',\n\t$Use: [\'ElemenxUI\']\n});';
+		return 'Elemenx.Application(' + JSON.stringify(this.Name(game)) + ', {\n\t$Title: ' + JSON.stringify(game.Name || 'Game') + ',\n\t$Component: \'Game\',\n' + (files ? '\t$Root: \'application\',\n' : '') + '\t$Mount: \'body\',\n\t$Use: [\'ElemenxGaming\']\n});';
 	},
 
 	/* The name of the Application: its words joined, as a name of code. */
@@ -95,7 +96,7 @@ Elemenx.Service('GamePackager', {
 
 	/* The page: the game fills the window. */
 	Head: function (game) {
-		return '\t<meta charset="utf-8" />\n\t<meta name="viewport" content="width=device-width, initial-scale=1" />\n\t<title>' + String(game.Name || 'Game').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</title>\n\n\t<style>\n\t\thtml,\n\t\tbody {\n\t\t\theight: 100%;\n\t\t\tmargin: 0;\n\t\t\tbackground: #000000;\n\t\t}\n\n\t\t.game {\n\t\t\tposition: fixed;\n\t\t\tinset: 0;\n\t\t}\n\n\t\t.game .elemenx-game-scene {\n\t\t\twidth: 100%;\n\t\t\theight: 100%;\n\t\t}\n\t</style>\n';
+		return '\t<meta charset="utf-8" />\n\t<meta name="viewport" content="width=device-width, initial-scale=1" />\n\t<title>' + String(game.Name || 'Game').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</title>\n\n\t<style>\n\t\thtml,\n\t\tbody {\n\t\t\theight: 100%;\n\t\t\tmargin: 0;\n\t\t\tbackground: #000000;\n\t\t}\n\n\t\t.game {\n\t\t\tposition: fixed;\n\t\t\tinset: 0;\n\t\t}\n\n\t\t.game .elemenx-scene {\n\t\t\twidth: 100%;\n\t\t\theight: 100%;\n\t\t}\n\t</style>\n';
 	},
 
 	Html: function (game, callback) {
@@ -126,7 +127,7 @@ Elemenx.Service('GamePackager', {
 	},
 
 	Project: function (game) {
-		var models = this.$Service('Models');
+		var models = this.$Service('SceneModels');
 		var formats = this.$Service('ModelFormats');
 		var files = {
 			'index.html': '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + this.Head(game) + '\n\t<script src="/elemenx.js"></script>\n\t<script src="/app.js"></script>\n</head>\n<body>\n</body>\n</html>\n',

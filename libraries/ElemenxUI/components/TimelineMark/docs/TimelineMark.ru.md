@@ -1,0 +1,1 @@
+Отметка Timeline, объявленная внутри него: момент At с Label, Text, Icon, Tone (accent, info, success, warning, danger или muted) и Side (before — над осью или слева от вертикальной; after — под ней или справа). Содержимое внутри неё заменяет Label как подпись (любая разметка). Сама ничего не показывает: её рисует Timeline.

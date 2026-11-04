@@ -1,0 +1,9 @@
+{
+	"ui": {
+		"dateInput": {
+			"calendar": "Calendar",
+			"choose": "Choose a date",
+			"clear": "Clear"
+		}
+	}
+}

@@ -1,0 +1,7 @@
+{
+	"ui": {
+		"notifications": {
+			"more": "ещё {count}"
+		}
+	}
+}

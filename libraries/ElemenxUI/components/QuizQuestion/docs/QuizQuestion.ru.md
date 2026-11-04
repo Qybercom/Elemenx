@@ -1,0 +1,1 @@
+Объявление вопроса в шаблоне Quiz: <QuizQuestion ID="capital" Text="Столица Франции?"> с QuizOption внутри. Принимает свойства вопроса Quiz (ID, Text, Type, Points, Answer — у текста варианты через |, Tolerance, Explanation, Image, Next). Сам ничего не показывает: его читает Quiz.

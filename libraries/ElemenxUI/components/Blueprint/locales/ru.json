@@ -1,0 +1,16 @@
+{
+	"ui": {
+		"blueprint": {
+			"label": "Чертёж",
+			"find": "Найти блок",
+			"palette": "Блоки",
+			"add": "Добавить",
+			"parameters": "Параметры",
+			"addParameter": "Добавить параметр",
+			"removeParameter": "Удалить параметр",
+			"key": "Ключ",
+			"type": "Тип",
+			"value": "Значение"
+		}
+	}
+}

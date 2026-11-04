@@ -3,7 +3,8 @@
  * links drawn between them, the types of blocks of its graph to add (Palette) and its parameters, set from outside it.
  * Value is the graph (an object or the text of its file); without one it is an empty graph of Type. change emits the graph
  * after each action, select {Block, Link} (their ids, or null), problems what Check finds (each block it names is marked
- * wrong, with its message as its title).
+ * wrong, with its message as its title). Errors are the ones its owner found as it used the graph ([{Block, Line,
+ * Message}]: the errors of a shader made of it, as a Scene tells them in its event shader): marked wrong the same way.
  * A drag of the head of a block moves it; a drag from a pin to another draws a link (an input takes one link of values,
  * an output of flow goes one way: a new link takes the place of the old one); a drag from an input with a link, let go
  * on no pin, takes the link away. A press on a link selects it; Delete removes the block or the link selected. The
@@ -30,6 +31,7 @@ Elemenx.Component('Blueprint', {
 			Type: {Options: ['flow', 'pass', 'material', 'render', 'generator'], Description: 'The type of the graph made when there is no Value.'},
 			Palette: 'Shows the types of blocks to add and the parameters (true by default).',
 			ReadOnly: 'Shows the graph alone: blocks still move, nothing else changes.',
+			Errors: 'What its owner found wrong as it used the graph: [{Block, Line, Message}] (a Scene tells them in its event shader), marked on the blocks.',
 			Label: 'What it shows, for screen readers.'
 		},
 		Sample: {Type: 'generator', Value: {version: 1, type: 'generator', parameters: [{key: 'Scale', type: 'float', value: 2}], blocks: [{id: 'n', type: 'Number', x: 40, y: 40, properties: [{key: 'Value', value: 3}]}, {id: 's', type: 'Parameter', x: 40, y: 160, properties: [{key: 'Key', value: 'Scale'}, {key: 'Type', value: 'float'}]}, {id: 'm', type: 'Multiply', x: 280, y: 90, properties: []}, {id: 'r', type: 'Result', x: 500, y: 100, properties: [{key: 'Key', value: 'Value'}]}], links: [{id: 'a', p1: 'n-out-Value', p2: 'm-in-A'}, {id: 'b', p1: 's-out-Value', p2: 'm-in-B'}, {id: 'c', p1: 'm-out-Out', p2: 'r-in-Value'}]}}
@@ -38,6 +40,7 @@ Elemenx.Component('Blueprint', {
 	Type: 'flow',
 	Palette: true,
 	ReadOnly: false,
+	Errors: null,
 	Label: '',
 
 	/* What the template renders: the filter of the palette, the kind of the graph and its parameters. */
@@ -131,6 +134,9 @@ Elemenx.Component('Blueprint', {
 			this.Load(this.Value);
 			this.Render();
 		}
+
+		if ('Errors' in changed)
+			this.Marks();
 
 		if ('Type' in changed && !this.Value) {
 			this.Load(null);
@@ -512,7 +518,7 @@ Elemenx.Component('Blueprint', {
 		((node && node.Properties) || []).forEach(function (property) {
 			var label = document.createElement('label');
 			var name = document.createElement('span');
-			var field = property.Type === 'select' ? document.createElement('select') : document.createElement('input');
+			var field = document.createElement(property.Type === 'select' ? 'select' : property.Type === 'code' ? 'textarea' : 'input');
 			var value = values[property.Key];
 
 			label.className = 'elemenx-blueprint-property';
@@ -536,6 +542,16 @@ Elemenx.Component('Blueprint', {
 			else if (property.Type === 'bool') {
 				field.type = 'checkbox';
 				field.checked = value === true || value === 'true';
+			}
+			else if (property.Type === 'code') {
+				/* Code (GLSL of a block): lines of their own, kept as they are typed. */
+				label.classList.add('code');
+
+				field.value = value == null ? '' : String(value);
+				field.rows = 5;
+				field.spellcheck = false;
+
+				field.setAttribute('wrap', 'off');
 			}
 			else {
 				field.type = property.Type === 'number' ? 'number' : property.Type === 'color' ? 'color' : 'text';
@@ -595,7 +611,10 @@ Elemenx.Component('Blueprint', {
 
 		if (!own.Canvas) return;
 
-		own.Problems.forEach(function (problem) {
+		/* What Check finds, and what the owner found as it used the graph (a line of the code of a GLSL block). */
+		own.Problems.concat((this.Errors || []).map(function (error) {
+			return {Block: error.Block, Message: (error.Line ? 'GLSL ' + error.Line + ': ' : '') + error.Message};
+		})).forEach(function (problem) {
 			if (problem.Block)
 				wrong[problem.Block] = (wrong[problem.Block] ? wrong[problem.Block] + '\n' : '') + problem.Message;
 		});
@@ -871,14 +890,10 @@ Elemenx.Component('Blueprint', {
 		if (kept) kept.value = value;
 		else block.properties.push({key: key, value: value});
 
-		if (typeof node.Outputs === 'function') {
-			node.Outputs(blueprints.Properties(block)).forEach(function (output) {
-				var pin = blueprints.Pin(block, output.Key, true);
-				if (pin)
-					pin.type = output.Type;
-			});
-
+		/* Pins that follow the properties (a Vector of another size, a block of GLSL): made again, the links to the gone ones dropped. */
+		if (typeof node.Outputs === 'function' || typeof node.Inputs === 'function') {
 			blueprints.Pins(block);
+			blueprints.Prune(this.Graph());
 
 			fresh = this.BlockElement(block);
 

@@ -1,0 +1,18 @@
+{
+	"ui": {
+		"stickerPicker": {
+			"favorites": "Favorites",
+			"label": "Stickers",
+			"noFavorites": "Star a sticker to keep it here",
+			"noPacks": "No sticker packs yet",
+			"noRecent": "The stickers you send show here",
+			"nothing": "No stickers found",
+			"packs": "Packs",
+			"placeholder": "Search stickers",
+			"recent": "Recently sent",
+			"searchLabel": "Search stickers",
+			"star": "Add to favorites",
+			"unstar": "Remove from favorites"
+		}
+	}
+}

@@ -31,7 +31,7 @@ function load () {
 		}
 	};
 
-	vm.runInNewContext(fs.readFileSync(path.resolve(process.cwd(), 'libraries', 'ElemenxUI', 'services', 'FieldFormats.js'), 'utf8'), context);
+	vm.runInNewContext(fs.readFileSync(path.resolve(process.cwd(), 'libraries', 'ElemenxUI', 'services', 'FieldFormats', 'FieldFormats.js'), 'utf8'), context);
 
 	definition.$OnCreate.call(definition);
 

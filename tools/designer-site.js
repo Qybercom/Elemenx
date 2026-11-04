@@ -9,6 +9,7 @@
  */
 var fs = require('fs');
 var path = require('path');
+var SystemLibraries = require('./common.js').SystemLibraries;
 
 var Root = path.resolve(__dirname, '..');
 var Designer = path.join(Root, 'examples', 'Designer');
@@ -31,7 +32,9 @@ function Build (options) {
 		allLibraries: true
 	});
 
-	fs.rmSync(path.join(output, 'libraries', 'ElemenxUI'), {recursive: true, force: true});
+	SystemLibraries.forEach(function (library) {
+		fs.rmSync(path.join(output, 'libraries', library.Name), {recursive: true, force: true});
+	});
 
 	if (fs.existsSync(path.join(output, 'libraries')) && !fs.readdirSync(path.join(output, 'libraries')).length)
 		fs.rmdirSync(path.join(output, 'libraries'));

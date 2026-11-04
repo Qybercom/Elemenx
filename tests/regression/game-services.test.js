@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadElemenx } from '../setup.js';
 
-describe('Contract: the Services of games (Random, Spatial, Pathfinding, Visibility, GameLoop)', function () {
+describe('Contract: the Services of games (Random, SpatialIndex, Pathfinding, Visibility, Loop)', function () {
 	var random;
 	var spatial;
 	var paths;
@@ -10,18 +10,19 @@ describe('Contract: the Services of games (Random, Spatial, Pathfinding, Visibil
 
 	beforeAll(async function () {
 		await loadElemenx();
-		await import('../../libraries/ElemenxUI/services/Random.js');
-		await import('../../libraries/ElemenxUI/services/Suprematist.js');
-		await import('../../libraries/ElemenxUI/services/Spatial.js');
-		await import('../../libraries/ElemenxUI/services/Pathfinding.js');
-		await import('../../libraries/ElemenxUI/services/Visibility.js');
-		await import('../../libraries/ElemenxUI/services/GameLoop.js');
+		await import('../../libraries/ElemenxCommon/services/Random/Random.js');
+		await import('../../libraries/ElemenxCommon/services/Seeded/Seeded.js');
+		await import('../../libraries/ElemenxUI/services/Suprematist/Suprematist.js');
+		await import('../../libraries/ElemenxCommon/services/SpatialIndex/SpatialIndex.js');
+		await import('../../libraries/ElemenxCommon/services/Pathfinding/Pathfinding.js');
+		await import('../../libraries/ElemenxCommon/services/Visibility/Visibility.js');
+		await import('../../libraries/ElemenxCommon/services/Loop/Loop.js');
 
 		random = Elemenx.Service('Random');
-		spatial = Elemenx.Service('Spatial');
+		spatial = Elemenx.Service('SpatialIndex');
 		paths = Elemenx.Service('Pathfinding');
 		sight = Elemenx.Service('Visibility');
-		loops = Elemenx.Service('GameLoop');
+		loops = Elemenx.Service('Loop');
 	});
 
 	it('Random: the same numbers for the same seed, its helpers in their bounds, a fork of its own, a smooth noise', function () {
@@ -64,7 +65,7 @@ describe('Contract: the Services of games (Random, Spatial, Pathfinding, Visibil
 		}
 	});
 
-	it('Spatial: the things in a rectangle, within a radius the nearest first, the nearest one, as they move and go', function () {
+	it('SpatialIndex: the things in a rectangle, within a radius the nearest first, the nearest one, as they move and go', function () {
 		var index = spatial.Create({Cell: 32});
 
 		index.Set('worker', 10, 10);
@@ -225,7 +226,7 @@ describe('Contract: the Services of games (Random, Spatial, Pathfinding, Visibil
 		expect(fog.Get(6, 4)).toBe(0);
 	});
 
-	it('GameLoop: steps of the same time whatever the frames, a part of a step to draw between, its speed, pause and catch-up limit', function () {
+	it('Loop: steps of the same time whatever the frames, a part of a step to draw between, its speed, pause and catch-up limit', function () {
 		var updates = 0;
 		var alphas = [];
 		var queued = [];

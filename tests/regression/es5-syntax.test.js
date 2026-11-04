@@ -6,7 +6,8 @@ import * as espree from 'espree';
 
 /*
  * Elemenx is ES5 by design. Runtime APIs (WeakMap, URL, TextEncoder...) are allowed, ES2015+ syntax is not.
- * Checked: every .js file outside tests/ and every inline <script> of HTML pages outside tests/.
+ * Checked: every .js file outside tests/ and every inline <script> of HTML pages outside tests/; the tests of a Library
+ * beside what they test (libraries/.../Math.test.js) are tests too.
  * Tests and root tool configs (*.config.js, *.config.mjs) may use modern syntax; their formatting is checked by `npm run lint`.
  */
 
@@ -30,7 +31,7 @@ function files (directory, result) {
 			if (!Skipped[entry.name] && SkippedPaths.indexOf(path.relative(root, file).replace(/\\/g, '/')) === -1)
 				files(file, result);
 		}
-		else if (/\.(js|html)$/.test(entry.name) && !(directory === root && /\.config\.js$/.test(entry.name))) {
+		else if (/\.(js|html)$/.test(entry.name) && !/\.test\.js$/.test(entry.name) && !(directory === root && /\.config\.js$/.test(entry.name))) {
 			result.push(path.relative(root, file).replace(/\\/g, '/'));
 		}
 

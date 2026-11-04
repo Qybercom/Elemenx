@@ -1,0 +1,22 @@
+{
+	"ui": {
+		"fileBrowser": {
+			"label": "Files",
+			"root": "Files",
+			"up": "Up a folder",
+			"view": "View",
+			"list": "List",
+			"grid": "Icons",
+			"tree": "Tree",
+			"toggle": "Open or close the folder",
+			"name": "Name",
+			"size": "Size",
+			"modified": "Modified",
+			"empty": "This folder is empty",
+			"items": {
+				"one": "{count} item",
+				"other": "{count} items"
+			}
+		}
+	}
+}

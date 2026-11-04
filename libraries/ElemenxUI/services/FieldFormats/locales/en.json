@@ -1,0 +1,20 @@
+{
+	"ui": {
+		"formats": {
+			"decimal": "Enter a number, like 12.5",
+			"email": "Enter an email address, like name@example.com",
+			"iban": "Enter an IBAN, like DE89 3704 0044 0532 0130 00",
+			"ibanCheck": "This IBAN has a mistake: check its characters",
+			"integer": "Enter a whole number",
+			"ipv4": "Enter an IPv4 address, like 192.168.0.1",
+			"ipv6": "Enter an IPv6 address, like 2001:db8::1",
+			"max": "Enter {max} or less",
+			"min": "Enter {min} or more",
+			"postalCode": "Enter a postal code",
+			"postalCodeOf": "Enter a postal code of {country}",
+			"semver": "Enter a version, like 1.4.2",
+			"url": "Enter a web address, like https://example.com",
+			"uuid": "Enter a UUID, like 123e4567-e89b-12d3-a456-426614174000"
+		}
+	}
+}

@@ -1,0 +1,1 @@
+Полоса игры: здоровье, мана, опыт, выносливость или любая другая величина. Value из Max; Kind (health, mana, experience, stamina или любое имя: его цвет — --elemenx-game-<Kind> или Color); Label и ShowValue; Segments делит полосу на столько частей; Size (small, medium, large). Потеря оставляет след, который догоняет через мгновение (урон), прибавка заполняется сразу.

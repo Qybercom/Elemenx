@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { loadElemenx } from '../setup.js';
+import { loadElemenx, unique } from '../setup.js';
+import designerSource from '../../libraries/ElemenxUI/services/Designer/Designer.js?raw';
 
 var designer;
 
@@ -12,11 +13,41 @@ describe('Contract: the Designer Service edits projects of pages, components, ro
 		localStorage.setItem('elemenx-designer:project', JSON.stringify({Mode: 'application', Name: 'Old', Settings: {Title: 'Old', Language: 'en', Theme: '', Router: 'history'}, Documents: [{ID: 'd1', Type: 'page', Name: 'Home', Route: '/', Title: 'Home', Description: '', Props: [], Root: null}, {ID: 'd2', Type: 'page', Name: 'About', Route: '/about', Title: 'About', Description: '', Props: [], Root: null}], Current: 'd1'}));
 
 		await loadElemenx();
-		await import('../../libraries/ElemenxUI/services/Designer.js');
+		await import('../../libraries/ElemenxUI/services/Designer/Designer.js');
 
 		designer = Elemenx.Service('Designer');
 
 		designer.Use({Components: [], Classes: {}});
+	});
+
+	/* The palette had the Components of ElemenxUI alone: those of the other Libraries were not in it. */
+	it('takes into its palette the Components of every Library it is told of, from the meta of each of them', async function () {
+		var name = unique('Designer');
+		var one = unique('MetaOne');
+		var two = unique('MetaTwo');
+		var other;
+
+		Elemenx.Library(one, {$Root: '/library-meta-one'});
+		Elemenx.Library(two, {$Root: '/library-meta-two'});
+
+		new Function(designerSource.replace("Elemenx.Service('Designer'", "Elemenx.Service('" + name + "'").replace("Library: ['ElemenxCommon', 'ElemenxUI', 'ElemenxGraphics', 'ElemenxGaming'],", "Library: ['" + one + "', '" + two + "'], StorageKey: 'elemenx-designer:" + name + "',"))();
+
+		other = Elemenx.Service(name);
+
+		await new Promise(function (done, failed) {
+			other.Load(function (error) {
+				if (error) failed(error);
+				else done();
+			});
+		});
+
+		expect(other.Kinds().reduce(function (all, group) {
+			return all.concat(group.Kinds);
+		}, []).filter(function (kind) {
+			return kind.Component;
+		}).map(function (kind) {
+			return kind.ID;
+		})).toEqual(['MetaOne', 'MetaTwo']);
 	});
 
 	it('takes a project kept before as the first of the projects, its routes from its pages', function () {

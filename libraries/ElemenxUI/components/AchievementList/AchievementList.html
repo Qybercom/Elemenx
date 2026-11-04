@@ -1,0 +1,21 @@
+<section class="elemenx-achievement-list" [attribute.aria-label]="Label || $T('ui.achievements.title')">
+	<header class="elemenx-achievement-list-summary" *if="Summary === true || Summary === 'true'">
+		<strong>{{$T('ui.achievementList.summary', {unlocked: Tally(Version).Unlocked, total: Tally(Version).Total})}}</strong>
+		<span>{{$T('ui.achievementList.points', {points: Tally(Version).Points})}}</span>
+	</header>
+	<ul class="elemenx-achievement-list-items">
+		<li class="elemenx-achievement-card" *for="item of Shown(Group, Filter, Version)" *key="item.ID" [class]="[item.Rarity || 'common', item.State.Unlocked ? 'unlocked' : 'locked', item.Secret ? 'secret' : '']" [attribute.data-id]="item.ID">
+			<span class="elemenx-achievement-card-badge">
+				<img *if="item.Image" [src]="item.Image" alt="" />
+				<Icon *if="!item.Image && item.Icon" [name]="item.Secret ? 'lock' : item.Icon" />
+			</span>
+			<span class="elemenx-achievement-card-body">
+				<strong class="elemenx-achievement-card-title">{{item.Title || $T('ui.achievementList.secret')}}</strong>
+				<span class="elemenx-achievement-card-text" *if="item.Text">{{item.Text}}</span>
+				<span class="elemenx-achievement-card-progress" *if="!item.State.Unlocked && item.Goal > 1" role="progressbar" [attribute.aria-valuenow]="item.State.Value" aria-valuemin="0" [attribute.aria-valuemax]="item.Goal"><span [style.width]="item.Percent + '%'"></span></span>
+				<span class="elemenx-achievement-card-value" *if="!item.State.Unlocked && item.Goal > 1">{{item.State.Value}} / {{item.Goal}}</span>
+			</span>
+			<span class="elemenx-achievement-card-points" *if="item.Points">{{item.Points}}</span>
+		</li>
+	</ul>
+</section>

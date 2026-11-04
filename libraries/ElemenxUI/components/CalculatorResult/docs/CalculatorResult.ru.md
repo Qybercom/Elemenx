@@ -1,0 +1,1 @@
+Объявление результата в шаблоне BusinessCalculator: <CalculatorResult ID="Total" Label="Итого" Formula="Area * Price" Format="money" Primary="true" />. Принимает свойства результата BusinessCalculator (ID, Label, Formula, Format, Precision, Unit, Primary, Hidden, Hint). Сам ничего не показывает: его читает BusinessCalculator.

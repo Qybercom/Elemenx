@@ -1,0 +1,1 @@
+Объявление поля в шаблоне BusinessCalculator: <CalculatorField ID="Area" Label="Площадь" Value="50" Unit="м²" />. Принимает свойства поля BusinessCalculator (ID, Label, Type, Value, Min, Max, Step, Unit, Options, Hint). Сам ничего не показывает: его читает BusinessCalculator.

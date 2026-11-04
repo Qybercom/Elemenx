@@ -1,0 +1,9 @@
+{
+	"ui": {
+		"fpsMeter": {
+			"slow": "slow",
+			"long": "long",
+			"heap": "memory"
+		}
+	}
+}

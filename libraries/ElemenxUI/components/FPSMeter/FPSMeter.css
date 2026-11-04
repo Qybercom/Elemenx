@@ -1,0 +1,76 @@
+.elemenx-fps-meter {
+	--elemenx-fps-meter-good: var(--elemenx-success);
+	--elemenx-fps-meter-slow: var(--elemenx-warning);
+	--elemenx-fps-meter-bad: var(--elemenx-danger);
+	--elemenx-fps-meter-line: var(--elemenx-border);
+	--elemenx-fps-meter-color: var(--elemenx-fps-meter-good);
+	display: inline-flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 6px 8px;
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+	font-variant-numeric: tabular-nums;
+	pointer-events: none;
+}
+
+.elemenx-fps-meter.slow {
+	--elemenx-fps-meter-color: var(--elemenx-fps-meter-slow);
+}
+
+.elemenx-fps-meter.bad {
+	--elemenx-fps-meter-color: var(--elemenx-fps-meter-bad);
+}
+
+/* Over a corner of the nearest positioned element. */
+.elemenx-fps-meter.corner {
+	position: absolute;
+	z-index: 5;
+	opacity: 0.9;
+}
+
+.elemenx-fps-meter.top-left {
+	top: 8px;
+	left: 8px;
+}
+
+.elemenx-fps-meter.top-right {
+	top: 8px;
+	right: 8px;
+}
+
+.elemenx-fps-meter.bottom-left {
+	bottom: 8px;
+	left: 8px;
+}
+
+.elemenx-fps-meter.bottom-right {
+	right: 8px;
+	bottom: 8px;
+}
+
+.elemenx-fps-meter-head {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+}
+
+.elemenx-fps-meter-rate {
+	color: var(--elemenx-fps-meter-color);
+	font-size: var(--elemenx-font-size);
+	font-weight: var(--elemenx-font-weight-strong);
+}
+
+.elemenx-fps-meter-unit,
+.elemenx-fps-meter-counts,
+.elemenx-fps-meter-source {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-fps-meter-graph {
+	width: 240px;
+	height: 40px;
+}

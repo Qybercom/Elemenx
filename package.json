@@ -38,6 +38,9 @@
 		"docs",
 		"tools",
 		"libraries",
+		"!libraries/**/docs",
+		"!libraries/**/*.test.js",
+		"!libraries/*/*/*/locales",
 		"dist",
 		"docs-site",
 		"designer-site"
@@ -66,6 +69,7 @@
 		"example:game-editor": "node elemenx-cli.js dev examples/GameEditor",
 		"tutorial": "node scripts/tutorial.js",
 		"docs:pages": "node examples/Docs/tools/pages.js",
+		"locales": "node tools/locales.js",
 		"docs:site": "node tools/docs-site.js",
 		"designer:site": "node tools/designer-site.js",
 		"editors": "node editors/build.js",

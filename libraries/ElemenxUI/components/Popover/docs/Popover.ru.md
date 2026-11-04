@@ -1,0 +1,1 @@
+Всплывающее содержимое рядом с элементом. Слоты: trigger (якорь: Button, ссылка...) и по умолчанию (содержимое). Trigger: click (по умолчанию) или hover. Open может задавать владелец; событие toggle сообщает о каждом изменении. Placement: bottom-start, bottom-end, top-start, right-start.

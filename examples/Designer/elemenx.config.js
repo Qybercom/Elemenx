@@ -12,7 +12,7 @@ module.exports = {
 
 		/* The bundles the export of an Application puts into its file: bundles/<name>, from dist/ of the repository (npm run dist). */
 		Request: function (request, response, pathname) {
-			var match = /^\/bundles\/(elemenx\.min\.js|elemenx-ui\.min\.js)$/.exec(pathname);
+			var match = /^\/bundles\/(elemenx(?:-common|-ui)?\.min\.js)$/.exec(pathname);
 			var file = match ? path.resolve(__dirname, '..', '..', 'dist', match[1]) : '';
 
 			if (!match)

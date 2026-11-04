@@ -910,7 +910,7 @@
 	bottom: 10px;
 	font-size: 12px;
 	font-variant-numeric: tabular-nums;
-	color: var(--elemenx-game-scene-label);
+	color: var(--elemenx-scene-label);
 }
 
 /* The bar of the HUD takes the presses over it only: the world round it takes the others. */
@@ -1043,4 +1043,12 @@
 .ui-kit-scene-editor {
 	align-self: stretch;
 	height: 640px;
+}
+
+/* ?fps=1: how smoothly the page draws, over every demo. */
+.ui-kit-fps {
+	position: fixed;
+	top: 96px;
+	right: 16px;
+	z-index: 50;
 }

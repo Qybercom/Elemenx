@@ -1,0 +1,10 @@
+{
+	"ui": {
+		"board": {
+			"label": "Canvas",
+			"zoomIn": "Zoom in",
+			"zoomOut": "Zoom out",
+			"fit": "Fit the content"
+		}
+	}
+}

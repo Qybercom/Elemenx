@@ -27,9 +27,10 @@ function mount (template) {
 describe('Contract: Suprematism, pictures made of a seed', function () {
 	beforeAll(async function () {
 		await loadElemenx();
-		await import('../../libraries/ElemenxUI/directives/Mount.js');
-		await import('../../libraries/ElemenxUI/services/Random.js');
-		await import('../../libraries/ElemenxUI/services/Suprematist.js');
+		await import('../../libraries/ElemenxCommon/directives/Mount/Mount.js');
+		await import('../../libraries/ElemenxCommon/services/Random/Random.js');
+		await import('../../libraries/ElemenxCommon/services/Seeded/Seeded.js');
+		await import('../../libraries/ElemenxUI/services/Suprematist/Suprematist.js');
 
 		define(componentSource, 'Suprematism', componentTemplate);
 		define(avatarSource, 'Avatar', avatarTemplate);

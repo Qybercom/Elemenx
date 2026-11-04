@@ -1,0 +1,8 @@
+{
+	"ui": {
+		"infiniteList": {
+			"end": "That is all",
+			"loading": "Loading more"
+		}
+	}
+}

@@ -1,0 +1,18 @@
+{
+	"ui": {
+		"mediaPlayer": {
+			"label": "Player",
+			"play": "Play",
+			"pause": "Pause",
+			"seek": "Time",
+			"mute": "Mute",
+			"unmute": "Unmute",
+			"volume": "Volume",
+			"speed": "Speed",
+			"subtitles": "Subtitles",
+			"pip": "Picture in picture",
+			"full": "Full screen",
+			"exitFull": "Exit full screen"
+		}
+	}
+}

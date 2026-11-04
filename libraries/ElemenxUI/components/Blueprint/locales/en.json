@@ -1,0 +1,16 @@
+{
+	"ui": {
+		"blueprint": {
+			"label": "Blueprint",
+			"find": "Find a block",
+			"palette": "Blocks",
+			"add": "Add",
+			"parameters": "Parameters",
+			"addParameter": "Add a parameter",
+			"removeParameter": "Remove the parameter",
+			"key": "Key",
+			"type": "Type",
+			"value": "Value"
+		}
+	}
+}

@@ -45,3 +45,4 @@
 - [checks whole and decimal numbers in their bounds; a comma is a decimal point](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/formats.test.js#L100) — `tests/regression/formats.test.js`
 - [keeps while typing only the characters a format holds; an empty value is valid](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/formats.test.js#L109) — `tests/regression/formats.test.js`
 - [takes the formats of the Application](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/formats.test.js#L117) — `tests/regression/formats.test.js`
+- [makes the provider only as a name of it is wanted, in the Application that wants it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-provides.test.js#L47) — `tests/regression/library-provides.test.js`

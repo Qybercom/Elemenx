@@ -36,8 +36,8 @@ describe('Contract: Platform.Notify, the notifications of the system or of Eleme
 
 	beforeAll(async function () {
 		await loadElemenx();
-		await import('../../libraries/ElemenxUI/directives/Mount.js');
-		await import('../../libraries/ElemenxUI/services/Platform.js');
+		await import('../../libraries/ElemenxCommon/directives/Mount/Mount.js');
+		await import('../../libraries/ElemenxUI/services/Platform/Platform.js');
 
 		new Function(hostSource.replace("$StyleURL: 'NotificationHost.css',\n", '').replace("$TemplateURL: 'NotificationHost.html'", function () {
 			return '$Template: ' + JSON.stringify(hostTemplate);

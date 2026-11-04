@@ -1,0 +1,13 @@
+{
+	"ui": {
+		"consent": {
+			"title": "Your privacy",
+			"accept": "Accept all",
+			"reject": "Reject",
+			"customize": "Customize",
+			"save": "Save choices",
+			"required": "always on",
+			"policy": "Read the policy"
+		}
+	}
+}

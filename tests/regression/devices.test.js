@@ -28,7 +28,7 @@ function load (name, browser) {
 	}, browser.globals || {});
 	var service;
 
-	vm.runInNewContext(fs.readFileSync(path.join(import.meta.dirname, '../../libraries/ElemenxUI/services/' + name + '.js'), 'utf8'), context);
+	vm.runInNewContext(fs.readFileSync(path.join(import.meta.dirname, '../../libraries/ElemenxUI/services/' + name + '/' + name + '.js'), 'utf8'), context);
 
 	service = Object.assign({}, definition);
 

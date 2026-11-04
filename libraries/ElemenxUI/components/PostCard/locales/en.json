@@ -1,0 +1,13 @@
+{
+	"ui": {
+		"postCard": {
+			"comment": "Comments",
+			"like": "Like",
+			"readTime": {
+				"one": "{count} min read",
+				"other": "{count} min read"
+			},
+			"share": "Share"
+		}
+	}
+}

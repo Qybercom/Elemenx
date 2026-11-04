@@ -1,5 +1,5 @@
 /*
- * Shows the achievements of the Achievements Service, one at a time, over the whole page, as a game console does: a
+ * Shows the achievements of the AchievementQueue Service (each one the Achievements Service unlocks), one at a time, over the whole page, as a game console does: a
  * round badge pops up, opens into a band with the title (a light runs over it), and folds back into the badge before
  * it goes. Place one in the layout of the Application. Placement: bottom (the default) or top, at the middle of the
  * viewport. A press on the band dismisses it.
@@ -10,7 +10,7 @@ Elemenx.Component('AchievementHost', {
 	$Meta: {
 		Group: 'overlays',
 		Icon: 'trophy',
-		Description: 'Shows the achievements of the Achievements Service, one at a time, over the whole page, as a game console does: a round badge pops up, opens into a band with the title (a light runs over it), and folds back into the badge before it goes.',
+		Description: 'Shows the achievements of the AchievementQueue Service, one at a time, over the whole page, as a game console does: a round badge pops up, opens into a band with the title (a light runs over it), and folds back into the badge before it goes.',
 		Props: {
 			Placement: 'Where the achievements show: at the bottom or the top of the middle of the viewport.'
 		}
@@ -20,7 +20,7 @@ Elemenx.Component('AchievementHost', {
 
 	$OnCreate: function () {
 		var self = this;
-		var achievements = this.$Service('Achievements');
+		var achievements = this.$Service('AchievementQueue');
 
 		this.Item = achievements.Current();
 
@@ -30,11 +30,11 @@ Elemenx.Component('AchievementHost', {
 	},
 
 	$OnDestroy: function () {
-		this.$Service('Achievements').OffChange(this.Listener);
+		this.$Service('AchievementQueue').OffChange(this.Listener);
 	},
 
 	Dismiss: function () {
 		if (this.Item)
-			this.$Service('Achievements').Dismiss(this.Item.ID);
+			this.$Service('AchievementQueue').Dismiss(this.Item.ID);
 	}
 });

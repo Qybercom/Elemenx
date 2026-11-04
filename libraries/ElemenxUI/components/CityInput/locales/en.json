@@ -1,0 +1,9 @@
+{
+	"ui": {
+		"cityInput": {
+			"empty": "No city found",
+			"hint": "Type the name of a city",
+			"placeholder": "City"
+		}
+	}
+}

@@ -1,0 +1,10 @@
+# ElemenxGaming
+
+Back to [the Libraries](../../../docs/LIBRARIES.md).
+
+## Components
+
+What makes a scene a game, on `ElemenxGraphics`. Its phrases are under `gaming.*`.
+
+- `GameRace`: a race on a closed road of a `Scene`, declared inside it (`<Scene> ... <GameRace Road="track" Laps="3" /> </Scene>`, the trait `SceneBehaviour`): `Road` (its ID; empty: the first closed road), `Laps`, `Racers` (the IDs of the vehicles; empty: the one under the keys), `Checkpoints` (how many a lap has, evenly round the road: a lap counts only through all of them, so a way back over the line counts nothing), `Countdown` (seconds), `Auto` (starts with the scene). `Start()`, `Stop()`, `Standings()` (`[{ID, Position, Lap, Progress, Time, Last, Best, Finished, Wrong}]`). Events: `countdown` (`{Seconds}`), `start`, `checkpoint` (`{ID, Lap, Index}`), `lap` (`{ID, Lap, Time, Best}`), `position` (`{ID, Position}`), `wrong` (`{ID, Wrong}`: the wrong way, or the right one again), `finish` (`{ID, Position, Time, Best}`), `end`.
+- `GameStrategy`: a strategy game on the ground of a `Scene`, declared inside it (`<Scene> ... <GameStrategy Team="blue" Fog="true" /> </Scene>`, the trait `SceneBehaviour`): the walkers of its `Team` are the units of the player; a press selects one (Shift adds or takes it away), a frame drawn with the left button selects all in it, a double press all of its kind on the screen, Ctrl+A all of them, Escape none; a right press on the land sends them there, each to its own spot (`Spread` metres apart), their ways round the water and the slopes; on a unit of another team they attack it, S stops them. A unit with `Damage` (per second) attacks what is within its `Range`, going to it first, and by itself what comes within half its `Sight`; one with no `Health` left is gone. `Fog` hides what the units do not see and darkens what they have not seen yet or see no more, the units of other teams hidden there. `Selected`: the units selected from the start. `Selection()`, `Select(ids)`, `Order(ids, target, kind)`, `Stop(ids)`, `Seen(x, z)`, `Explored(x, z)`. Events: `select` (`{IDs}`), `order` (`{Kind, IDs, X, Z, Target}`), `death` (`{ID, By}`).

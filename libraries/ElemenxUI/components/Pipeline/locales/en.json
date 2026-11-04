@@ -1,0 +1,22 @@
+{
+	"ui": {
+		"pipeline": {
+			"label": "Pipeline",
+			"retry": "Retry {name}",
+			"cancel": "Cancel {name}",
+			"play": "Run {name}",
+			"status": {
+				"created": "Created",
+				"pending": "Pending",
+				"scheduled": "Scheduled",
+				"running": "Running",
+				"success": "Passed",
+				"failed": "Failed",
+				"warning": "Passed with warnings",
+				"canceled": "Canceled",
+				"skipped": "Skipped",
+				"manual": "Waiting for a run"
+			}
+		}
+	}
+}

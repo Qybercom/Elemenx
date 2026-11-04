@@ -1,0 +1,8 @@
+{
+	"ui": {
+		"combobox": {
+			"create": "Create",
+			"empty": "Nothing found"
+		}
+	}
+}

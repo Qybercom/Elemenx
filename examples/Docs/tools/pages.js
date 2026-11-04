@@ -1,12 +1,13 @@
 /*
- * Makes the pages of the Library for the Docs: one for every component, service and directive of ElemenxUI, from
- * the comment at the head of its source (in English), with its example (tools/examples/<Name>.html) and its Russian
- * description (the files of tools/ru) when they are there; and pages/index.json, the contents (the components in the
- * groups their $Meta names, as data/meta.json has them), and pages/search.<language>.json, the text of every page in a
- * language for the search of the Docs. A page it made starts with the line <!-- generated -->: it is made again
+ * Makes the pages of the Libraries for the Docs: one for every component, service and directive of each system
+ * Library, from the comment at the head of its source (in English), with its example and its Russian description when
+ * they are there, in the docs folder beside it (<Name>/docs/<Name>.html, <Name>/docs/<Name>.ru.md); and pages/index.json, the contents (the
+ * components in the groups their $Meta names, as data/meta.json has them; each page with the name of its Library, the
+ * Libraries in their order), and pages/search.<language>.json, the text of every page in a language for the search of
+ * the Docs. A page it made starts with the line <!-- generated -->: it is made again
  * each time; a page without that line was written by hand and is kept. A page of the Library lists the tests of its
- * component, service or directive too (tests/regression, tests/examples), their names linked to their lines in the
- * repository. node examples/Docs/tools/pages.js
+ * component, service or directive too (tests/regression, tests/examples, and the tests of the Libraries beside what
+ * they test), their names linked to their lines in the repository. node examples/Docs/tools/pages.js
  */
 var fs = require('fs');
 var path = require('path');
@@ -16,29 +17,6 @@ var Docs = path.resolve(__dirname, '..');
 var Library = path.resolve(Docs, '..', '..', 'libraries', 'ElemenxUI');
 var Pages = path.join(Docs, 'pages');
 var Marker = '<!-- generated -->';
-var examples = {};
-
-/* The examples: tools/examples/<Name>.html, the example of the page of that name. */
-fs.readdirSync(path.join(__dirname, 'examples')).forEach(function (file) {
-	if (/\.html$/.test(file))
-		examples[file.replace(/\.html$/, '')] = fs.readFileSync(path.join(__dirname, 'examples', file), 'utf8').replace(/\s+$/, '');
-});
-
-var russian = {};
-
-/* The Russian descriptions: the files of tools/ru, {Name: Markdown}. */
-fs.readdirSync(path.join(__dirname, 'ru')).filter(function (file) {
-	return /\.json$/.test(file);
-}).forEach(function (file) {
-	var part = JSON.parse(fs.readFileSync(path.join(__dirname, 'ru', file), 'utf8'));
-	var name;
-
-	for (name in part) {
-		if (Object.prototype.hasOwnProperty.call(part, name))
-			russian[name] = part[name];
-	}
-});
-
 var guide = JSON.parse(fs.readFileSync(path.join(__dirname, 'guide.json'), 'utf8'));
 
 var kinds = [
@@ -134,11 +112,30 @@ var Repository = String((JSON.parse(fs.readFileSync(path.join(Root, 'package.jso
  */
 var Tests = (function () {
 	var result = [];
+	var files = [];
 
+	/* The files of the tests: those of tests/regression and tests/examples, then those of the Libraries beside what they test. */
 	['tests/regression', 'tests/examples'].forEach(function (folder) {
 		fs.readdirSync(path.join(Root, folder)).filter(function (file) {
 			return /\.(test|spec)\.[cm]?js$/.test(file);
 		}).sort().forEach(function (file) {
+			files.push({Folder: folder, File: file});
+		});
+	});
+
+	(function walk (folder) {
+		fs.readdirSync(path.join(Root, folder), {withFileTypes: true}).map(function (entry) {
+			return {Name: entry.name, Folder: entry.isDirectory()};
+		}).sort(function (a, b) {
+			return a.Name < b.Name ? -1 : 1;
+		}).forEach(function (entry) {
+			if (entry.Folder) walk(folder + '/' + entry.Name);
+			else if (/\.test\.js$/.test(entry.Name)) files.push({Folder: folder, File: entry.Name});
+		});
+	})('libraries');
+
+	files.forEach(function (one) {
+		(function (folder, file) {
 			var source = fs.readFileSync(path.join(Root, folder, file), 'utf8');
 			var pattern = /(^|[^\w.$])(describe|it|test)(?:\.(?:only|skip|each\([^)]*\)))?\(\s*(['"])((?:\\.|(?!\3)[^\\\n])*)\3/g;
 			var marks = [];
@@ -166,7 +163,7 @@ var Tests = (function () {
 					Body: source.substring(mark.At, index + 1 < marks.length ? marks[index + 1].At : source.length)
 				});
 			});
-		});
+		})(one.Folder, one.File);
 	});
 
 	return result;
@@ -335,8 +332,7 @@ function api (kind, name, source, template, comment, language) {
 	return text;
 }
 
-function page (kind, name, description, language, reference) {
-	var example = examples[name.replace(/^\*/, '')] || examples[name];
+function page (kind, name, description, language, reference, example) {
 	var text = Marker + '\n# ' + name + '\n\n' + description + (reference || '');
 
 	if (example)
@@ -347,37 +343,71 @@ function page (kind, name, description, language, reference) {
 
 var sections = guide.Sections.slice();
 
-/* The groups of the components: the one each names in its $Meta, in the order of the palette, by the names of the Library. */
-var meta = JSON.parse(fs.readFileSync(path.join(Library, 'data', 'meta.json'), 'utf8'));
+/* The system Libraries, in their order: the pages of each are in the tree of Libraries, under their name. */
+var libraries = require('../../../tools/common.js').SystemLibraries.map(function (system) {
+	return {ID: system.Name, Title: {en: system.Name}, Directory: path.resolve(Docs, '..', '..', 'libraries', system.Name)};
+});
+
+/* The groups of the components: the one each names in its $Meta, in the order of the palette, by the names of ElemenxUI. */
 var labels = {en: JSON.parse(fs.readFileSync(path.join(Library, 'locales', 'en.json'), 'utf8')).ui.designer.groups, ru: JSON.parse(fs.readFileSync(path.join(Library, 'locales', 'ru.json'), 'utf8')).ui.designer.groups};
 var order = ['layout', 'text', 'inputs', 'buttons', 'menus', 'navigation', 'display', 'feedback', 'data', 'codes', 'media', 'overlays', 'social', 'commerce', 'music', 'game', 'tools', 'other'];
 var groupOf = {};
+/* The meta of the Libraries as one: the Components of all of them. */
+var meta = {Components: []};
+
+libraries.forEach(function (library) {
+	var file = path.join(library.Directory, 'data', 'meta.json');
+
+	meta.Components = meta.Components.concat(fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).Components : []);
+});
 
 meta.Components.forEach(function (component) {
 	groupOf[component.Name] = order.indexOf(component.Group) === -1 ? 'other' : component.Group;
 });
 
+/*
+ * A section of each kind (components, services, directives) holds the pages of every Library, each page with the name
+ * of its Library: its address is the same wherever it lives (/components/Button), and the tree shows it in its Library.
+ */
 kinds.forEach(function (kind) {
-	var directory = path.join(Library, kind.ID);
-	var names = fs.readdirSync(directory).filter(function (entry) {
-		return kind.ID === 'components' ? fs.existsSync(path.join(directory, entry, entry + '.js')) : /\.js$/.test(entry);
-	}).map(function (entry) {
-		return entry.replace(/\.js$/, '');
-	}).sort();
+	var names = [];
+	var libraryOf = {};
+
+	libraries.forEach(function (library) {
+		var directory = path.join(library.Directory, kind.ID);
+		if (!fs.existsSync(directory)) return;
+
+		/* A component in its folder; a service or a directive in its own folder too (services/Math/Math.js), or a file. */
+		fs.readdirSync(directory).filter(function (entry) {
+			return fs.existsSync(path.join(directory, entry, entry + '.js')) || kind.ID !== 'components' && /\.js$/.test(entry);
+		}).forEach(function (entry) {
+			var name = entry.replace(/\.js$/, '');
+
+			names.push(name);
+
+			libraryOf[name] = library;
+		});
+	});
+
+	names.sort();
 
 	names.forEach(function (name) {
-		var file = kind.ID === 'components' ? path.join(directory, name, name + '.js') : path.join(directory, name + '.js');
+		var directory = path.join(libraryOf[name].Directory, kind.ID);
+		var file = fs.existsSync(path.join(directory, name, name + '.js')) ? path.join(directory, name, name + '.js') : path.join(directory, name + '.js');
 		var source = fs.readFileSync(file, 'utf8');
+		var docs = path.join(directory, name, 'docs', name);
+		var example = fs.existsSync(docs + '.html') ? fs.readFileSync(docs + '.html', 'utf8').replace(/\s+$/, '') : null;
+		var described = fs.existsSync(docs + '.ru.md') ? fs.readFileSync(docs + '.ru.md', 'utf8') : '';
 		var html = path.join(directory, name, name + '.html');
 		var template = kind.ID === 'components' && fs.existsSync(html) ? fs.readFileSync(html, 'utf8') : '';
 		var comment = (/^\/\*([\s\S]*?)\*\//.exec(source) || ['', ''])[1];
 		var id = kind.ID === 'directives' ? name.charAt(0).toLowerCase() + name.substring(1) : name;
 		var title = kind.ID === 'directives' ? '*' + id : name;
 
-		write(path.join(Pages, kind.ID, id + '.en.md'), page(kind, title, markdown(source), 'en', api(kind, name, source, template, comment, 'en')));
+		write(path.join(Pages, kind.ID, id + '.en.md'), page(kind, title, markdown(source), 'en', api(kind, name, source, template, comment, 'en'), example));
 
-		if (russian[name])
-			write(path.join(Pages, kind.ID, id + '.ru.md'), page(kind, title, russian[name].trim() + '\n', 'ru', api(kind, name, source, template, comment, 'ru')));
+		if (described)
+			write(path.join(Pages, kind.ID, id + '.ru.md'), page(kind, title, described.trim() + '\n', 'ru', api(kind, name, source, template, comment, 'ru'), example));
 	});
 
 	sections.push(kind.ID === 'components' ? {
@@ -391,7 +421,7 @@ kinds.forEach(function (kind) {
 			return {ID: group, Title: {en: labels.en[group], ru: labels.ru[group]}};
 		}),
 		Pages: names.map(function (name) {
-			return {ID: name, Title: {en: name}, Group: groupOf[name] || 'other'};
+			return {ID: name, Title: {en: name}, Group: groupOf[name] || 'other', Library: libraryOf[name].ID};
 		})
 	} : {
 		ID: kind.ID,
@@ -399,12 +429,14 @@ kinds.forEach(function (kind) {
 		Pages: names.map(function (name) {
 			var id = kind.ID === 'directives' ? name.charAt(0).toLowerCase() + name.substring(1) : name;
 
-			return {ID: id, Title: {en: kind.ID === 'directives' ? '*' + id : name}};
+			return {ID: id, Title: {en: kind.ID === 'directives' ? '*' + id : name}, Library: libraryOf[name].ID};
 		})
 	});
 });
 
-save(path.join(Pages, 'index.json'), JSON.stringify({Sections: sections}, null, '\t') + '\n');
+save(path.join(Pages, 'index.json'), JSON.stringify({Sections: sections, Libraries: libraries.map(function (library) {
+	return {ID: library.ID, Title: library.Title};
+})}, null, '\t') + '\n');
 
 /*
  * The Russian pages written by hand: tools/ru-pages/<section>/<page>.md, the text in Russian, and a line "@block N"

@@ -1,0 +1,13 @@
+{
+	"ui": {
+		"theme": {
+			"contrast": "High contrast",
+			"darcula": "Darcula",
+			"default": "Default",
+			"soft": "Soft",
+			"fantasy": "Fantasy",
+			"scifi": "Sci-fi",
+			"glassy": "Glassy"
+		}
+	}
+}

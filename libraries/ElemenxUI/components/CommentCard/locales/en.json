@@ -1,0 +1,11 @@
+{
+	"ui": {
+		"commentCard": {
+			"like": "Like",
+			"reply": "Reply",
+			"repost": "Repost",
+			"share": "Share",
+			"verified": "Verified"
+		}
+	}
+}

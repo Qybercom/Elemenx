@@ -1,0 +1,1 @@
+Эмодзи и стикеры в одном окне, каждое на своей вкладке: EmojiPicker и, пока у сервиса Stickers есть наборы и включено Stickers, — StickerPicker. Kind — показанная вкладка: emoji или stickers. События: pick ({Type: 'emoji', Emoji, Name} или {Type: 'sticker', Sticker}), dismiss.

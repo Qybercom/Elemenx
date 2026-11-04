@@ -1,0 +1,10 @@
+{
+	"ui": {
+		"profileCard": {
+			"follow": "Follow",
+			"following": "Following",
+			"message": "Message",
+			"verified": "Verified"
+		}
+	}
+}

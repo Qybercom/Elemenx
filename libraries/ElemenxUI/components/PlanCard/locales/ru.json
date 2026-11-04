@@ -1,0 +1,14 @@
+{
+	"ui": {
+		"planCard": {
+			"action": "Выбрать тариф",
+			"current": "Текущий тариф",
+			"excluded": "Не входит",
+			"free": "Бесплатно",
+			"included": "Входит",
+			"perMonth": "/ месяц",
+			"perYear": "/ год",
+			"selected": "Выбран"
+		}
+	}
+}

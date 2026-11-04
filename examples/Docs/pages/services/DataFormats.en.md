@@ -99,13 +99,17 @@ Built in, with their options:
 
 ## Tests
 
-- [names its formats, finds the one of a file or a type, takes formats of its own and refuses an unknown one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/data-formats.test.js#L28) — `tests/regression/data-formats.test.js`
-- [reads YAML: mappings, sequences, flow collections, scalars of the core schema, block scalars, anchors and merges](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/data-formats.test.js#L53) — `tests/regression/data-formats.test.js`
-- [names the line and the column of what YAML cannot read](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/data-formats.test.js#L127) — `tests/regression/data-formats.test.js`
-- [writes YAML that reads back as the same values](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/data-formats.test.js#L139) — `tests/regression/data-formats.test.js`
-- [reads JSON and JSON with comments, naming the place of an error](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/data-formats.test.js#L157) — `tests/regression/data-formats.test.js`
-- [reads and writes CSV and TSV: quotes, the header, the types](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/data-formats.test.js#L170) — `tests/regression/data-formats.test.js`
-- [reads and writes INI: sections, nested by dots, comments and types](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/data-formats.test.js#L182) — `tests/regression/data-formats.test.js`
-- [reads and writes TOML: tables, arrays of tables, dotted keys, strings, numbers, dates and inline tables](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/data-formats.test.js#L190) — `tests/regression/data-formats.test.js`
-- [reads and writes XML as elements of {Name, Attributes, Children}](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/data-formats.test.js#L230) — `tests/regression/data-formats.test.js`
-- [reads and writes query strings with lists and nested names, and Base64 of texts and bytes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/data-formats.test.js#L245) — `tests/regression/data-formats.test.js`
+- [names its formats, finds the one of a file or a type, takes formats of its own and refuses an unknown one](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L28) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
+- [reads YAML: mappings, sequences, flow collections, scalars of the core schema, block scalars, anchors and merges](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L53) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
+- [names the line and the column of what YAML cannot read](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L127) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
+- [writes YAML that reads back as the same values](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L139) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
+- [reads JSON and JSON with comments, naming the place of an error](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L157) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
+- [reads and writes CSV and TSV: quotes, the header, the types](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L170) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
+- [reads and writes INI: sections, nested by dots, comments and types](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L182) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
+- [reads and writes TOML: tables, arrays of tables, dotted keys, strings, numbers, dates and inline tables](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L190) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
+- [reads and writes XML as elements of {Name, Attributes, Children}](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L230) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
+- [reads and writes query strings with lists and nested names, and Base64 of texts and bytes](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L245) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
+- [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L129) — `tests/regression/headless.test.js`
+- [makes the provider only as a name of it is wanted, in the Application that wants it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-provides.test.js#L47) — `tests/regression/library-provides.test.js`
+
++1 more in the same files

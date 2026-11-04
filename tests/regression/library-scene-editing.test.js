@@ -6,10 +6,10 @@ var owned = [];
 
 async function mount () {
 	var ready = null;
-	var component = Elemenx.Component(unique('EditingHost'), {$Template: '<div style="width: 320px; height: 200px"><GameScene Paused="true" Quality="low" Labels="false" (ready)="Ready">' +
-		'<GameObject ID="land" Kind="ground" Size="200" Height="6" Water="0" Seed="test" />' +
-		'<GameObject ID="day" Kind="sun" Time="12" Latitude="45" />' +
-	'</GameScene></div>', Ready: function (space) {
+	var component = Elemenx.Component(unique('EditingHost'), {$Template: '<div style="width: 320px; height: 200px"><Scene Paused="true" Quality="low" Labels="false" (ready)="Ready">' +
+		'<SceneObject ID="land" Kind="ground" Size="200" Height="6" Water="0" Seed="test" />' +
+		'<SceneObject ID="day" Kind="sun" Time="12" Latitude="45" />' +
+	'</Scene></div>', Ready: function (space) {
 		ready = space;
 	}})();
 
@@ -26,11 +26,11 @@ async function mount () {
 	return ready;
 }
 
-describe('Contract: what a GameScene gives an editor: the view set at once, points of the page and of the ground, Facing and Lift', function () {
+describe('Contract: what a Scene gives an editor: the view set at once, points of the page and of the ground, Facing and Lift', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['GameScene', 'GameObject']);
+		Use(['Scene', 'SceneObject']);
 	});
 
 	beforeEach(function () {
