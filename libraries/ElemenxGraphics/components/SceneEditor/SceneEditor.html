@@ -57,12 +57,19 @@
 		<div class="elemenx-scene-editor-fields" #Fields></div>
 		<div class="elemenx-scene-editor-title" *if="Tool === 'sketch'">{{$T('graphics.sceneEditor.sketch')}}</div>
 		<div class="elemenx-scene-editor-fields" #Items></div>
+		<div class="elemenx-scene-editor-title" *if="Lands(Version).length">{{$T('graphics.sceneEditor.lands')}}</div>
+		<div class="elemenx-scene-editor-land" *for="problem of Lands(Version)" *key="problem.Key" [attribute.data-type]="problem.Type">{{$T(problem.Phrase, problem.Words)}}</div>
 		<div class="elemenx-scene-editor-title" *if="Exposed(Version).length">{{$T('graphics.sceneEditor.parameters')}}</div>
 		<div class="elemenx-scene-editor-parameter" *for="parameter of Exposed(Version)" *key="parameter.key">
 			<label>{{parameter.key}}<input type="text" [value]="parameter.Shown" [attribute.data-parameter]="parameter.key" (change)="Tuned" /></label>
 		</div>
 	</aside>
-	<div class="elemenx-scene-editor-blueprint" *if="!Playing && Graph(Version)">
-		<Blueprint [value]="Graph(Version)" [errors]="GraphErrors(Version, Told)" (change)="Drawn" />
+	<div class="elemenx-scene-editor-blueprint" *if="!Playing && GraphKinds(Version, GraphStep).length">
+		<div class="elemenx-scene-editor-graphs" role="tablist">
+			<button type="button" role="tab" class="elemenx-scene-editor-graph-kind" *for="kind of GraphKinds(Version, GraphStep)" *key="kind.ID" [class.active]="kind.ID === GraphKindOf(Version, GraphKind, GraphStep)" [attribute.aria-selected]="kind.ID === GraphKindOf(Version, GraphKind, GraphStep) ? 'true' : 'false'" [attribute.data-graph]="kind.ID" (click)="GraphPicked(kind.ID)">{{$T(kind.Key)}}</button>
+			<Button Size="small" Variant="ghost" Icon="plus" *if="!Graph(Version, GraphKind, GraphStep) && GraphKindOf(Version, GraphKind, GraphStep) !== 'Blueprint'" [label]="$T('graphics.sceneEditor.graphs.library')" (click)="GraphMade" />
+			<Button Size="small" Variant="ghost" Icon="delete" *if="Graph(Version, GraphKind, GraphStep) && GraphKindOf(Version, GraphKind, GraphStep) !== 'Blueprint' && GraphKindOf(Version, GraphKind, GraphStep) !== 'World'" [title]="$T('graphics.sceneEditor.graphs.remove')" (click)="GraphCleared" />
+		</div>
+		<Blueprint *if="Graph(Version, GraphKind, GraphStep)" [value]="Graph(Version, GraphKind, GraphStep)" [errors]="GraphErrors(Version, Told)" (change)="Drawn" (select)="StepPicked" />
 	</div>
 </div>

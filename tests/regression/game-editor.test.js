@@ -21,13 +21,20 @@ function packager () {
 	return definition;
 }
 
+/* The World of its ground: one graph, so two games of the same are equal. */
+function littleWorld () {
+	littleWorld.Made = littleWorld.Made || Elemenx.Service('SceneWorld').Library({Size: 200, Height: 2, Water: 0, Seed: 'little'});
+
+	return JSON.parse(JSON.stringify(littleWorld.Made));
+}
+
 /* A game: a model of shapes placed on a ground, and a walker marked Hero. */
 function game () {
 	return {
 		Version: 1,
 		Name: 'Little world',
 		Scene: {Version: 1, Name: '', Setting: 'ground', Scene: {Version: 1, Seed: '', Cosmos: '', Weather: 'clear', Time: 0, Travels: [], Removed: [], Overrides: {}, Added: [
-			{ID: 'ground', Kind: 'ground', Values: {}, Traits: {Terrain: {Size: 200, Height: 2, Water: 0, Seed: 'little'}}, Parts: []},
+			{ID: 'ground', Kind: 'ground', Values: {}, Traits: {Terrain: {World: littleWorld()}}, Parts: []},
 			{ID: 'sun', Kind: 'sun', Values: {}, Traits: {Sun: {Time: 11}}, Parts: []},
 			{ID: 'hut', Kind: 'house', Values: {Model: 'game-hut', X: 0, Y: 0}, Traits: {Model: {Size: 4}}, Parts: []},
 			{ID: 'hero', Kind: 'unit', Values: {Name: 'Hero', Hero: true, X: 5, Y: 2}, Traits: {}, Parts: []}

@@ -364,4 +364,34 @@ describe('Contract: Blueprint, the editor of a graph of the Blueprints Service',
 
 		expect(blueprint.Graph().blocks.length).toBe(4);
 	});
+	/* Regression: a graph given anew with all its blocks at 0, 0 (a graph of a library) stayed in a heap, or was laid out 40 pixels apart. */
+	it('lays out a graph given anew whose blocks all stand at 0, 0, none over another', async function () {
+		var host = mount('<Blueprint #Editor [value]="Graph" />', {Graph: graph()});
+		var heap = graph();
+		var blocks;
+
+		await tick(30);
+
+		heap.blocks.forEach(function (block) {
+			block.x = 0;
+			block.y = 0;
+		});
+
+		host.Graph = heap;
+
+		await tick(60);
+
+		blocks = host.$Ref('Editor', true).Graph().blocks;
+
+		expect(blocks.some(function (block) {
+			return block.x || block.y;
+		})).toBe(true);
+
+		blocks.forEach(function (one) {
+			blocks.forEach(function (other) {
+				if (one !== other && one.x === other.x)
+					expect(Math.abs(one.y - other.y)).toBeGreaterThanOrEqual(100);
+			});
+		});
+	});
 });

@@ -7,12 +7,12 @@
 
 ## 1. Земля
 
-`Scene` рисует трёхмерную землю и водит юнитов в обход того, что им не пройти: воды, крутых склонов, деревьев. Всё, что в ней есть, объявляется внутри: солнце, земля (рельеф из шума по `Seed`, размер `Size` в метрах, высота `Height`, доля под водой `Water`), лес и трава поверх неё, герой, кристаллы.
+`Scene` рисует трёхмерную землю и водит юнитов в обход того, что им не пройти: воды, крутых склонов, деревьев. Всё, что в ней есть, объявляется внутри: солнце, земля (её `World` — граф шагов земли, здесь обычный из `SceneWorld.Library`: рельеф из шума по `Seed`, размер `Size` в метрах, высота `Height`, доля под водой `Water`), лес и трава поверх неё, герой, кристаллы.
 
 ```html
 <Scene Setting="terrain" Team="blue" [paused]="Menu" Label="The land" (ready)="Ready" (enter)="Entered">
 	<SceneObject ID="day" Kind="sun" Time="15:30" />
-	<SceneObject ID="land" Kind="ground" Size="300" Height="22" Water="0.15" Scale="260" Ridges="0.1" Seed="gems" />
+	<SceneObject ID="land" Kind="ground" [world]="World" />
 	<SceneObject ID="woods" Kind="forest" Density="0.6" Cover="0.4" />
 	<SceneObject ID="meadow" Kind="grass" Density="0.6" Height="0.5" />
 	<SceneObject ID="hero" Kind="unit" X="0" Y="0" Team="blue" Name="Hero" Speed="9" />
@@ -30,6 +30,10 @@
 ```
 
 ```js
+/* In $OnCreate: the World of the land. */
+this.World = this.$Service('SceneWorld').Library({Size: 300, Height: 22, Water: 0.15, Scale: 260, Ridges: 0.1, Seed: 'gems'});
+
+/* Where the gems lie. */
 Start: [
 	{ID: 'g1', X: -60, Y: 30},
 	{ID: 'g2', X: 40, Y: -50},

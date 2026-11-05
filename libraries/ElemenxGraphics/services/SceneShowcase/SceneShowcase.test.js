@@ -40,13 +40,14 @@ describe('Contract: SceneShowcase, one world of every primitive of the generatio
 		})).toEqual(world.Districts.map(function (district) {
 			return district.ID;
 		}));
-		expect(world.Objects[0]).toMatchObject({ID: 'land', Kind: 'ground', Size: 3000});
+		expect(world.Objects[0]).toMatchObject({ID: 'land', Kind: 'ground'});
+		expect(Elemenx.Service('SceneWorld').Make(world.Objects[0].World).Ground.Size).toBe(3000);
 	});
 
 	/* Every primitive: a type of a sketch, a type of a road, a model, a class of building, an effect added later shows too. */
 	it('uses every type of the sketch of a ground, every type of road, every model, every class of building and every effect', function () {
 		var world = showcase.World();
-		var sketch = world.Objects[0].Sketch;
+		var sketch = Elemenx.Service('SceneWorld').Make(world.Objects[0].World).Ground.Sketch;
 		var used = {};
 		var ids = {};
 
@@ -117,7 +118,7 @@ describe('Contract: SceneShowcase, one world of every primitive of the generatio
 		ready.Add(world.Objects);
 		ready.Engine().Frame(performance.now() + 50);
 
-		expect(scene.Objects.land.Traits.Terrain.Sketch.Layers.length).toBe(2);
+		expect(Elemenx.Service('SceneWorld').Make(scene.Objects.land.Traits.Terrain.World).Ground.Sketch.Layers.length).toBe(2);
 		expect(scene.Objects.track.Traits.Road.Type).toBe('track');
 		expect(scene.Objects.gate.Traits.Trigger.Radius).toBe(6);
 		expect(scene.Ground && scene.Ground.Field.Sketch).toBeTruthy();

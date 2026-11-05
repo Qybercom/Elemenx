@@ -75,7 +75,7 @@ describe('Contract: a boat on the sea of a Scene', function () {
 
 		try {
 			/* A sea: the ground of the mount is low, its water over it. */
-			scene.Change('land', {Height: 1, Water: 0.9});
+			scene.Change('land', {World: Elemenx.Service('SceneWorld').Library({Size: 100, Height: 1, Water: 0.9, Seed: 'flat'})});
 
 			for (i = 0; i < 4; i++) {
 				inner.Rest = 0;

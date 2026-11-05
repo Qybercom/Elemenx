@@ -2,6 +2,9 @@
  * An editor of the scene of a game (a Scene) as Unreal edits a level: the objects of the scene in a tree, the kinds to
  * add, the view with a gizmo, the fields of the selected object, the parameters of its Blueprint (an effect graph or a
  * material graph of the Blueprints Service: the values a level gives one graph) and the graph itself under the view.
+ * Under the view too, as tabs: the relief of a ground (Relief, a generator graph; From the library starts it as the
+ * ground is) and the rule of a Scatter (Graph); the inspector tells what the lands by climate of a ground (Biomes) leave
+ * bare (SceneBiomes.Check).
  * Value is its document {Version, Scene (the recipe of Scene.Save), Name}; change emits it after each action, select
  * {ID}, play {Playing}. A document with no Scene starts as a ground under a sun. Kinds lists the kinds to add (by default those of objects that stand on a ground).
  * The view (as Unreal): the right button held looks round, with W A S D going and Q E going down and up (Shift faster);
@@ -63,6 +66,14 @@ Elemenx.Component('SceneEditor', {
 	/* What the template renders. */
 	Tool: 'move',
 	Told: 0,
+	/* The graph open under the view: Blueprint (its look), Relief (of a ground), Graph (the rule of a Scatter); '' the first it has. */
+	GraphKind: '',
+	/* The block of the World whose graph is open in the tab of its step. */
+	GraphStep: '',
+	/* The phrase of the tab of each step of a World that has a graph of its own. */
+	StepKeys: {Relief: {Key: 'graphics.sceneEditor.graphs.relief'}, Scatter: {Key: 'graphics.sceneEditor.graphs.rule'}},
+	/* The phrase of each type of what SceneBiomes.Check finds amiss with lands by climate. */
+	LandPhrases: [{Type: 'range', Key: 'graphics.sceneEditor.land.range'}, {Type: 'gap', Key: 'graphics.sceneEditor.land.gap'}, {Type: 'unreachable', Key: 'graphics.sceneEditor.land.unreachable'}, {Type: 'unused', Key: 'graphics.sceneEditor.land.unused'}, {Type: 'uncovered', Key: 'graphics.sceneEditor.land.uncovered'}],
 	Snap: true,
 	Selected: '',
 	Playing: false,
@@ -141,20 +152,8 @@ Elemenx.Component('SceneEditor', {
 
 		own.Scene = scene;
 
-		/* A new document: a ground under a sun at the end of the morning, looked at from above its middle; or a star and a planet. */
-		if (own.Document.Scene) {
-			scene.Load(own.Document.Scene);
-		}
-		else if (own.Document.Setting === 'space') {
-			scene.Add('star', {ID: 'star', Name: 'Star'});
-			scene.Add('planet', {ID: 'planet', Name: 'Planet', Parent: 'star', Distance: 1, Anomaly: 30});
-			scene.SetViewpoint({Target: [0, 0, 0], Yaw: 0.4, Pitch: 0.9, Distance: 60});
-		}
-		else {
-			scene.Add('ground', {ID: 'ground', Size: 400, Height: 12, Water: 0.15, Seed: 'editor'});
-			scene.Add('sun', {ID: 'sun', Time: 11, Latitude: 45});
-			scene.SetViewpoint({Target: [0, 2, 0], Yaw: 0.6, Pitch: 0.55, Distance: 40});
-		}
+		if (own.Document.Scene) scene.Load(own.Document.Scene);
+		else this.Fresh(scene);
 
 		function follow () {
 			own.Frame = window.requestAnimationFrame(follow);
@@ -215,13 +214,35 @@ Elemenx.Component('SceneEditor', {
 		this.Changed(before);
 	},
 
+	/*
+	 * A new document in a scene: emptied, then a ground under a sun at the end of the morning, looked at from above its
+	 * middle; or a star and a planet.
+	 */
+	Fresh: function (scene) {
+		var own = this.Own();
+
+		scene.Load({Version: 1, Seed: '', Time: 0, Travels: [], Added: [], Removed: [], Overrides: {}});
+
+		if (own.Document.Setting === 'space') {
+			scene.Add('star', {ID: 'star', Name: 'Star'});
+			scene.Add('planet', {ID: 'planet', Name: 'Planet', Parent: 'star', Distance: 1, Anomaly: 30});
+			scene.SetViewpoint({Target: [0, 0, 0], Yaw: 0.4, Pitch: 0.9, Distance: 60});
+		}
+		else {
+			scene.Add('ground', {ID: 'ground', World: this.$Service('SceneWorld').Library({Size: 400, Height: 12, Water: 0.15, Seed: 'editor'})});
+			scene.Add('sun', {ID: 'sun', Time: 11, Latitude: 45});
+			scene.SetViewpoint({Target: [0, 2, 0], Yaw: 0.6, Pitch: 0.55, Distance: 40});
+		}
+	},
+
 	Load: function (document) {
 		var own = this.Own();
 
 		own.Document = this.Normalize(document);
 
-		if (own.Scene && own.Document.Scene)
-			own.Scene.Load(own.Document.Scene);
+		/* Regression: a new document (no Scene) left the scene of the one before. */
+		if (own.Scene && own.Document.Scene) own.Scene.Load(own.Document.Scene);
+		else if (own.Scene) this.Fresh(own.Scene);
 
 		this.Select('');
 
@@ -354,7 +375,7 @@ Elemenx.Component('SceneEditor', {
 		return scene.Objects().filter(function (object) {
 			return !object.Owner;
 		}).map(function (object) {
-			return {ID: object.ID, Label: (object.Values.Name || object.ID) + (object.Kind ? ' · ' + object.Kind : ''), Icon: object.Kind === 'effect' ? 'star' : 'square'};
+			return {ID: object.ID, Label: (object.Values.Name || object.ID) + (object.Kind ? ' · ' + object.Kind : '') + (object.Values.Generated ? ' · ' + Elemenx.Locale.Text('graphics.sceneEditor.generated') : ''), Icon: object.Kind === 'effect' ? 'star' : object.Values.Generated ? 'layers' : 'square'};
 		});
 	},
 
@@ -364,6 +385,7 @@ Elemenx.Component('SceneEditor', {
 
 	Select: function (id) {
 		this.Selected = id || '';
+		this.GraphStep = '';
 		this.Own().RoadPoint = null;
 
 		this.Fields();
@@ -518,8 +540,13 @@ Elemenx.Component('SceneEditor', {
 
 		Object.keys(object.Traits || {}).forEach(function (name) {
 			Object.keys(object.Traits[name] || {}).forEach(function (key) {
+				/* What is no text (a graph, a list of records) is edited elsewhere. */
 				var value = object.Traits[name][key];
 				if (key === 'Blueprint' || key === 'Parameters' || value && typeof value === 'object' && !Array.isArray(value)) return;
+
+				if (Array.isArray(value) && value.some(function (part) {
+					return part && typeof part === 'object';
+				})) return;
 
 				fields.push([key, value, name]);
 			});
@@ -925,16 +952,209 @@ Elemenx.Component('SceneEditor', {
 		return found;
 	},
 
-	Graph: function () {
-		var owner = this.Owner();
+	/*
+	 * The graphs the selected object has to edit under the view: the look of its Blueprint, the World of a ground and the graph
+	 * of its step picked in it (the relief of Relief, the rule of Scatter), the rule of a Scatter of its own.
+	 */
+	GraphKinds: function () {
+		var object = this.Found(this.Selected);
+		var step = this.WorldStep();
+		var kinds = [];
 
-		return owner ? typeof owner.Blueprint === 'string' ? JSON.parse(owner.Blueprint) : owner.Blueprint : null;
+		if (!object)
+			return kinds;
+
+		if (this.Owner())
+			kinds.push({ID: 'Blueprint', Key: 'graphics.sceneEditor.graphs.look'});
+
+		if (object.Traits.Terrain)
+			kinds.push({ID: 'World', Key: 'graphics.sceneEditor.graphs.world'});
+
+		if (step)
+			kinds.push({ID: 'Step', Key: this.StepKeys[step.type].Key});
+
+		if (object.Traits.Scatter && !object.Values.Generated)
+			kinds.push({ID: 'Graph', Key: 'graphics.sceneEditor.graphs.rule'});
+
+		return kinds;
+	},
+
+	/* The World of the selected ground, a copy of it; null for any other object. */
+	World: function () {
+		var object = this.Found(this.Selected);
+		var graph = object && object.Traits.Terrain ? object.Traits.Terrain.World : null;
+
+		return graph ? JSON.parse(typeof graph === 'string' ? graph : JSON.stringify(graph)) : null;
+	},
+
+	/* The step of the World picked in it whose graph is open (StepPicked): a block of Relief or of Scatter of the copy given. */
+	WorldStep: function (world) {
+		var self = this;
+		var graph = world || this.World();
+
+		return graph && this.GraphStep ? graph.blocks.filter(function (block) {
+			return block.id === self.GraphStep && (block.type === 'Relief' || block.type === 'Scatter');
+		})[0] || null : null;
+	},
+
+	/* A block of the World picked: a step that has a graph of its own opens it in a tab. */
+	StepPicked: function (event) {
+		var world = this.GraphKindOf() === 'World' ? this.World() : null;
+		var block = world && event && event.Block ? world.blocks.filter(function (one) {
+			return one.id === event.Block;
+		})[0] : null;
+		if (block && (block.type === 'Relief' || block.type === 'Scatter'))
+			this.GraphStep = block.id;
+	},
+
+	/* A property of a block of a graph, and one set. */
+	Property: function (block, key, value) {
+		var found = (block.properties || []).filter(function (property) {
+			return property.key === key;
+		})[0];
+
+		if (arguments.length < 3)
+			return found ? found.value : undefined;
+
+		if (found) found.value = value;
+		else block.properties.push({key: key, value: value});
+	},
+
+	/* The World of the selected ground with the graph of its open step set (null: none), given to it. */
+	StepGraph: function (graph, before) {
+		var world = this.World();
+		var step = this.WorldStep(world);
+		if (!step) return;
+
+		this.Property(step, 'Graph', graph);
+		this.Change(this.Selected, {World: world}, before);
+	},
+
+	/* The kind of the graph open: the one picked when the object has it, else its first. */
+	GraphKindOf: function () {
+		var self = this;
+		var kinds = this.GraphKinds();
+		var found = kinds.filter(function (kind) {
+			return kind.ID === self.GraphKind;
+		})[0] || kinds[0];
+
+		return found ? found.ID : '';
+	},
+
+	GraphPicked: function (kind) {
+		this.GraphKind = kind;
+	},
+
+	/* The graph open: of its Blueprint, the World of a ground or the graph of its step, or the rule of a Scatter; null when it has none. */
+	Graph: function () {
+		var kind = this.GraphKindOf();
+		var owner = kind === 'Blueprint' ? this.Owner() : null;
+		var object = this.Found(this.Selected);
+		var step = kind === 'Step' ? this.WorldStep() : null;
+		var value;
+
+		if (owner)
+			return typeof owner.Blueprint === 'string' ? JSON.parse(owner.Blueprint) : owner.Blueprint;
+
+		if (kind === 'World') value = object.Traits.Terrain.World;
+		else if (step) value = this.Property(step, 'Graph');
+		else if (kind === 'Graph') value = object.Traits.Scatter.Graph;
+
+		return value ? typeof value === 'string' ? JSON.parse(value) : value : null;
+	},
+
+	/*
+	 * A graph of the library for what is open: a usual World; the relief of a step of Relief as its land makes it; the rule of
+	 * a Scatter as it sows with none (a step of the World its Seed set, when it has none, to its own id).
+	 */
+	GraphMade: function () {
+		var kind = this.GraphKindOf();
+		var object = this.Found(this.Selected);
+		var world;
+		var step;
+		var rule;
+
+		if (!object || kind === 'Blueprint') return;
+
+		if (kind === 'World') {
+			this.Change(this.Selected, {World: this.$Service('SceneWorld').Library({})});
+
+			return;
+		}
+
+		if (kind === 'Graph') {
+			this.Change(this.Selected, {Graph: this.$Service('SceneSower').LibraryScatter(Object.assign({ID: object.ID}, object.Traits.Scatter, object.Values))});
+
+			return;
+		}
+
+		world = this.World();
+		step = this.WorldStep(world);
+
+		if (!step) return;
+
+		if (step.type === 'Relief') {
+			this.Property(step, 'Graph', this.$Service('SceneTerrainGenerator').LibraryRelief(this.$Service('SceneWorld').Make(object.Traits.Terrain.World).Ground || {}));
+		}
+		else {
+			if (!this.Property(step, 'Seed'))
+				this.Property(step, 'Seed', step.id);
+
+			rule = {};
+
+			(step.properties || []).forEach(function (property) {
+				if (property.value !== '' && property.value !== null && property.value !== undefined)
+					rule[property.key] = property.value;
+			});
+
+			this.Property(step, 'Graph', this.$Service('SceneSower').LibraryScatter(rule));
+		}
+
+		this.Change(this.Selected, {World: world});
+	},
+
+	GraphCleared: function () {
+		var kind = this.GraphKindOf();
+
+		if (kind === 'Step') this.StepGraph(null);
+		else if (kind === 'Graph') this.Change(this.Selected, {Graph: null});
+	},
+
+	/* What is amiss with the lands by their climate of the selected ground (SceneBiomes.Check), made again with the scene. */
+	Lands: function () {
+		var own = this.Own();
+		var object = this.Found(this.Selected);
+		var ground = own.Scene && own.Scene.Scene().Ground;
+		var key = this.Selected + ':' + this.Version;
+		var biomes = object && object.Traits.Terrain && ground && ground.Field && ground.Field.Options ? ground.Field.Options.Biomes : null;
+		var phrases = this.LandPhrases;
+
+		/* What a message of a problem says, its numbers as text. */
+		function words (problem) {
+			function range (pair) {
+				return pair ? pair[0].toFixed(2) + '–' + pair[1].toFixed(2) : '';
+			}
+
+			return {biome: problem.Biome || '', key: problem.Of || '', from: problem.Heights ? problem.Heights[0].toFixed(2) : '', to: problem.Heights ? problem.Heights[1].toFixed(2) : '', wet: range(problem.Moisture), warm: range(problem.Temperature), part: problem.Part === undefined ? '' : String(problem.Part)};
+		}
+
+		if (!Array.isArray(biomes) || !biomes.length || !ground || !ground.Field || ground.Field.Whole) return [];
+
+		if (own.Lands && own.Lands.Key === key) return own.Lands.List;
+
+		own.Lands = {Key: key, List: this.$Service('SceneBiomes').Check(biomes, ground.Field).Problems.map(function (problem, index) {
+			return Object.assign({Key: problem.Type + ':' + index, Phrase: phrases.filter(function (phrase) {
+				return phrase.Type === problem.Type;
+			})[0].Key, Words: words(problem)}, problem);
+		})};
+
+		return own.Lands.List;
 	},
 
 	/* The parameters of its Blueprint with the values the object gives them: what a level sets of one graph. */
 	Exposed: function () {
-		var owner = this.Owner();
-		var graph = this.Graph();
+		var owner = this.GraphKindOf() === 'Blueprint' ? this.Owner() : null;
+		var graph = owner ? this.Graph() : null;
 		var values = owner && owner.Parameters || {};
 
 		return (graph && graph.parameters || []).map(function (parameter) {
@@ -976,7 +1196,31 @@ Elemenx.Component('SceneEditor', {
 	},
 
 	Drawn: function (graph) {
-		this.Change(this.Selected, {Blueprint: JSON.parse(JSON.stringify(graph))});
+		var before = this.Graph();
+		var changes = {};
+		var laid;
+
+		/* A graph as it is, its places left out. */
+		function shape (one) {
+			return JSON.stringify(one, function (key, value) {
+				return ['x', 'y', 'x1', 'y1', 'x2', 'y2'].indexOf(key) === -1 ? value : undefined;
+			});
+		}
+
+		/* Laid out by the editor of the graph as it opened (its blocks all at 0, 0): no change of the user, nothing to undo. */
+		laid = !!before && before.blocks.length > 1 && before.blocks.every(function (block) {
+			return !block.x && !block.y;
+		}) && shape(before) === shape(graph);
+
+		if (this.GraphKindOf() === 'Step') {
+			this.StepGraph(JSON.parse(JSON.stringify(graph)), laid ? false : undefined);
+
+			return;
+		}
+
+		changes[this.GraphKindOf() || 'Blueprint'] = JSON.parse(JSON.stringify(graph));
+
+		this.Change(this.Selected, changes, laid ? false : undefined);
 	},
 
 	Pick: function (tool) {
@@ -1368,10 +1612,51 @@ Elemenx.Component('SceneEditor', {
 		})[0] || null : null;
 	},
 
-	/* A copy of the sketch of the ground, with a layer at least. */
+	/* The step Sketch of a World (a copy of a graph): the first that runs; with none and make, one put before its end. */
+	SketchStep: function (world, make) {
+		var blueprints = this.$Service('Blueprints');
+		var found = world.blocks.filter(function (block) {
+			return block.type === 'Sketch' && block.enabled !== false;
+		})[0];
+		var end;
+		var into;
+
+		if (found || !make)
+			return found || null;
+
+		end = world.blocks.filter(function (block) {
+			return block.type === 'Terrain';
+		})[0];
+
+		if (!end)
+			return null;
+
+		found = blueprints.Add(world, 'Sketch', {x: end.x, y: end.y + 180});
+		into = world.links.filter(function (link) {
+			var pin = blueprints.PinById(world, link.p2);
+
+			return pin && pin.Block.id === end.id && pin.Pin.key === 'Land';
+		})[0];
+
+		/* What came to the end comes to the sketch, and the sketch to the end. */
+		if (into) {
+			world.links.splice(world.links.indexOf(into), 1);
+
+			blueprints.Link(world, into.p1, [found.id, 'Land']);
+		}
+
+		blueprints.Link(world, [found.id, 'Land'], [end.id, 'Land']);
+
+		return found;
+	},
+
+	/* A copy of the sketch of the ground (of the step Sketch of its World), with a layer at least. */
 	SketchOf: function () {
 		var ground = this.Ground();
-		var sketch = ground && ground.Traits.Terrain.Sketch ? JSON.parse(JSON.stringify(ground.Traits.Terrain.Sketch)) : {Layers: []};
+		var graph = ground && ground.Traits.Terrain.World;
+		var world = graph ? JSON.parse(typeof graph === 'string' ? graph : JSON.stringify(graph)) : null;
+		var step = world ? this.SketchStep(world, false) : null;
+		var sketch = step && this.Property(step, 'Sketch') ? JSON.parse(JSON.stringify(this.Property(step, 'Sketch'))) : {Layers: []};
 		if (!sketch.Layers.length)
 			sketch.Layers.push({ID: 'base', Name: 'Base', Visible: true, Strength: 1, Items: []});
 
@@ -1380,9 +1665,13 @@ Elemenx.Component('SceneEditor', {
 
 	SaveSketch: function (sketch) {
 		var ground = this.Ground();
-		if (!ground) return;
+		var graph = ground && ground.Traits.Terrain.World;
+		var world = graph ? JSON.parse(typeof graph === 'string' ? graph : JSON.stringify(graph)) : null;
+		var step = world ? this.SketchStep(world, true) : null;
+		if (!step) return;
 
-		this.Change(ground.ID, {Sketch: sketch});
+		this.Property(step, 'Sketch', sketch);
+		this.Change(ground.ID, {World: world});
 		this.SketchItems();
 	},
 

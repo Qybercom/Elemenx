@@ -10,7 +10,7 @@ describe('Contract: Blueprints, graphs in the JSON of Flowprint made into shader
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:Blueprints', 'service:Renderer', 'service:Meshes', 'service:Math']);
+		Use(['service:Blueprints', 'service:Renderer', 'service:Meshes', 'service:Math', 'service:Noise', 'service:BlueprintShaders']);
 
 		blueprints = Elemenx.Service('Blueprints');
 		graphics = Elemenx.Service('Renderer');
@@ -660,5 +660,162 @@ describe('Contract: Blueprints, graphs in the JSON of Flowprint made into shader
 		})[0].Last).toBe(made.Passes.map(function (pass) {
 			return pass.ID;
 		}).indexOf(blend.id));
+	});
+	/* A noise of any algorithm by its spec: the same in a graph that runs as code and in a shader of the card. */
+	it('reads a noise of the Noise Service by the spec of its block, in a generator and in a pass, the same numbers', function () {
+		var properties = {Type: 'worley', Seed: 'cells', Fractal: 'fbm', Octaves: 3, Cell: 'edge', Warp: 0.5};
+		var spec = blueprints.NoiseOf(properties);
+		var sampler = Elemenx.Service('Noise').Make(spec);
+		var graph = blueprints.Create('generator');
+		var input = blueprints.Add(graph, 'Input', {properties: {Name: 'At'}});
+		var noise = blueprints.Add(graph, 'NoiseSpec', {properties: properties});
+		var result = blueprints.Add(graph, 'Result', {properties: {Key: 'Value'}});
+		var pass = blueprints.Create('pass');
+		var point = blueprints.Add(pass, 'Vector', {properties: {Size: 3, X: 1.3, Y: 2.7, Z: 0.4}});
+		var shaded = blueprints.Add(pass, 'NoiseSpec', {properties: properties});
+		var output = blueprints.Add(pass, 'Output');
+		var made;
+		var pixels;
+
+		blueprints.Link(graph, [input.id, 'Value'], [noise.id, 'Position']);
+		blueprints.Link(graph, [noise.id, 'Value'], [result.id, 'Value']);
+		blueprints.Link(pass, [point.id, 'Value'], [shaded.id, 'Position']);
+		blueprints.Link(pass, [shaded.id, 'Value'], [output.id, 'Color']);
+
+		expect(spec).toMatchObject({Type: 'worley', Seed: 'cells', Cell: {Return: 'edge'}, Warp: {Amount: 0.5}});
+		expect(blueprints.Compile(stored(graph)).Run({}, {At: [1, 2, 3]}).Value).toBe(sampler.At(1, 2, 3));
+
+		made = blueprints.Compile(stored(pass));
+
+		expect(made.Fragment).toContain('float enx_worley3(');
+
+		pixels = draw(made.Fragment, made.Values({}), 2);
+
+		expect(Math.abs(pixels[0] / 255 - sampler.At(1.3, 2.7, 0.4))).toBeLessThan(1.5 / 255);
+	});
+	/* A generator as JavaScript: what a ground reads at every point of its heights, with no walk of the blocks each time. */
+	it('makes a generator JavaScript that gives the very values of its Run, many times faster; a graph with a block of no code gives null', function () {
+		var graph = blueprints.Create('generator', {parameters: [{key: 'Gain', type: 'float', value: 2}]});
+		var at = blueprints.Add(graph, 'Input', {properties: {Name: 'At'}});
+		var split = blueprints.Add(graph, 'Split');
+		var fbm = blueprints.Add(graph, 'Fbm', {properties: {Octaves: 5}});
+		var cells = blueprints.Add(graph, 'NoiseSpec', {properties: {Type: 'worley', Seed: 'c', Fractal: 'fbm', Octaves: 2, Cell: 'edge'}});
+		var gain = blueprints.Add(graph, 'Parameter', {properties: {Key: 'Gain'}});
+		var times = blueprints.Add(graph, 'Multiply');
+		var mix = blueprints.Add(graph, 'Mix');
+		var smooth = blueprints.Add(graph, 'Smoothstep');
+		var remap = blueprints.Add(graph, 'Remap');
+		var combine = blueprints.Add(graph, 'Combine');
+		var length = blueprints.Add(graph, 'Length');
+		var sine = blueprints.Add(graph, 'Sin');
+		var compare = blueprints.Add(graph, 'Compare', {properties: {Operator: '>'}});
+		var color = blueprints.Add(graph, 'Color', {properties: {Color: '#336699'}});
+		var height = blueprints.Add(graph, 'Result', {properties: {Key: 'Height'}});
+		var tint = blueprints.Add(graph, 'Result', {properties: {Key: 'Tint'}});
+		var high = blueprints.Add(graph, 'Result', {properties: {Key: 'High'}});
+		var size = blueprints.Add(graph, 'Result', {properties: {Key: 'Size'}});
+		var made;
+		var code;
+		var started;
+		var slow;
+		var fast;
+		var i;
+
+		blueprints.Link(graph, [at.id, 'Value'], [fbm.id, 'Position']);
+		blueprints.Link(graph, [at.id, 'Value'], [cells.id, 'Position']);
+		blueprints.Link(graph, [at.id, 'Value'], [split.id, 'Vector']);
+		blueprints.Link(graph, [fbm.id, 'Value'], [times.id, 'A']);
+		blueprints.Link(graph, [gain.id, 'Value'], [times.id, 'B']);
+		blueprints.Link(graph, [times.id, 'Out'], [mix.id, 'A']);
+		blueprints.Link(graph, [cells.id, 'Value'], [mix.id, 'B']);
+		blueprints.Link(graph, [split.id, 'X'], [mix.id, 'T']);
+		blueprints.Link(graph, [mix.id, 'Out'], [smooth.id, 'X']);
+		blueprints.Link(graph, [smooth.id, 'Out'], [remap.id, 'X']);
+		blueprints.Link(graph, [remap.id, 'Out'], [height.id, 'Value']);
+		blueprints.Link(graph, [split.id, 'Y'], [combine.id, 'X']);
+		blueprints.Link(graph, [sine.id, 'Out'], [combine.id, 'Y']);
+		blueprints.Link(graph, [split.id, 'Z'], [sine.id, 'X']);
+		blueprints.Link(graph, [combine.id, 'XYZ'], [length.id, 'X']);
+		blueprints.Link(graph, [length.id, 'Out'], [size.id, 'Value']);
+		blueprints.Link(graph, [fbm.id, 'Value'], [compare.id, 'A']);
+		blueprints.Link(graph, [cells.id, 'Value'], [compare.id, 'B']);
+		blueprints.Link(graph, [compare.id, 'Out'], [high.id, 'Value']);
+		blueprints.Link(graph, [color.id, 'RGB'], [tint.id, 'Value']);
+
+		made = blueprints.Compile(stored(graph));
+		code = blueprints.Code(stored(graph));
+
+		expect(code.Keys.sort()).toEqual(['Height', 'High', 'Size', 'Tint']);
+
+		for (i = 0; i < 200; i++) {
+			var point = {At: [Math.sin(i) * 40, Math.cos(i * 1.7) * 9, i * 0.37 - 20]};
+
+			expect(code.Run({Gain: 1 + i % 3}, point)).toEqual(made.Run({Gain: 1 + i % 3}, point));
+		}
+
+		expect(code.Run({}, {At: [1, 2, 3]})).toEqual(made.Run({}, {At: [1, 2, 3]}));
+
+		/* The same, faster: no walk of the blocks, no objects of their values (a graph of numbers alone, where the walk is the cost). */
+		var sums = blueprints.Create('generator');
+		var input = blueprints.Add(sums, 'Input', {properties: {Name: 'At'}});
+		var parts = blueprints.Add(sums, 'Split');
+		var last = [parts.id, 'X'];
+		var j;
+
+		blueprints.Link(sums, [input.id, 'Value'], [parts.id, 'Vector']);
+
+		for (j = 0; j < 12; j++) {
+			var step = blueprints.Add(sums, j % 2 ? 'Multiply' : 'Add');
+
+			blueprints.Link(sums, last, [step.id, 'A']);
+			blueprints.Link(sums, [parts.id, j % 3 ? 'Y' : 'Z'], [step.id, 'B']);
+
+			last = [step.id, 'Out'];
+		}
+
+		var end = blueprints.Add(sums, 'Result');
+
+		blueprints.Link(sums, last, [end.id, 'Value']);
+
+		made = blueprints.Compile(stored(sums));
+		code = blueprints.Code(stored(sums));
+
+		expect(code.Run({}, {At: [1.5, 0.5, 2]})).toEqual(made.Run({}, {At: [1.5, 0.5, 2]}));
+
+		/* Regression: timed cold, under load the first loop paid for the warming of the engine: warmed, the best of three. */
+		function time (run) {
+			var best = Infinity;
+			var round;
+			var k;
+
+			for (round = 0; round < 4; round++) {
+				started = performance.now();
+
+				for (k = 0; k < 20000; k++)
+					run({}, {At: [k * 0.1, 0.5, k * 0.2]});
+
+				/* The first round warms. */
+				if (round)
+					best = Math.min(best, performance.now() - started);
+			}
+
+			return best;
+		}
+
+		slow = time(made.Run);
+		fast = time(code.Run);
+
+		expect(fast * 5).toBeLessThan(slow);
+
+		/* A block of no code: no code of the graph. */
+		var other = blueprints.Create('generator');
+		var object = blueprints.Add(other, 'Input', {properties: {Name: 'Thing'}});
+		var field = blueprints.Add(other, 'Field', {properties: {Path: 'a.b'}});
+		var out = blueprints.Add(other, 'Result');
+
+		blueprints.Link(other, [object.id, 'Value'], [field.id, 'Object']);
+		blueprints.Link(other, [field.id, 'Value'], [out.id, 'Value']);
+
+		expect(blueprints.Code(stored(other))).toBe(null);
 	});
 });

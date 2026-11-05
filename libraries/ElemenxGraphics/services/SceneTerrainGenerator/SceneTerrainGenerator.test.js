@@ -53,7 +53,7 @@ describe('Contract: the plan of a settlement of a sketch: its streets, its lots 
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:SceneTerrainGenerator']);
+		Use(['service:SceneTerrainGenerator', 'service:Noise', 'service:Workers']);
 
 		terrain = Elemenx.Service('SceneTerrainGenerator');
 	});
@@ -213,7 +213,7 @@ describe('Contract: the zones of a ground and where things may grow on it', func
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:SceneTerrainGenerator']);
+		Use(['service:SceneTerrainGenerator', 'service:SceneBiomes']);
 
 		terrain = Elemenx.Service('SceneTerrainGenerator');
 	});
@@ -259,5 +259,304 @@ describe('Contract: the zones of a ground and where things may grow on it', func
 		expect(terrain.Free(10, 11, [], []).every(function (value) {
 			return value === 255;
 		})).toBe(true);
+	});
+	/* A ground of a noise of its own: any of the Noise Service, the same in a worker, and the hills of Scale and Ridges without one. */
+	it('raises its hills of the noise its options give, the same in a worker, and the same as ever without one', async function () {
+		var spec = {Type: 'worley', Seed: 'dunes', Scale: 120, Cell: {Return: 'f1'}, Fractal: 'fbm', Octaves: 3};
+		var plain = terrain.Flat({Size: 600, Height: 40, Water: 0, Seed: 'g'});
+		var noisy = terrain.Flat({Size: 600, Height: 40, Water: 0, Seed: 'g', Noise: spec});
+		var sampler = Elemenx.Service('Noise').Make(spec);
+		var pool = terrain.Work();
+		var piece;
+		var here;
+
+		expect(noisy.Height(30, -40)).not.toBe(plain.Height(30, -40));
+		expect(Math.sign(noisy.Height(30, -40) - noisy.Height(-120, 90))).toBe(Math.sign(sampler.At(30, 0, -40) - sampler.At(-120, 0, 90)));
+
+		piece = await new Promise(function (done, failed) {
+			pool.Run('SceneTerrainGenerator', 'Piece', ['Flat', {Size: 600, Height: 40, Water: 0, Seed: 'g', Noise: spec}, null, [10, -20, 50, 8]], function (error, result) {
+				if (error) failed(error);
+				else done(result);
+			});
+		});
+
+		here = noisy.Chunk(10, -20, 50, 8);
+
+		expect(Array.from(piece.Positions)).toEqual(Array.from(new Float32Array(here.Positions)));
+	});
+
+	it('raises the very same hills of the library graph of its relief, in a worker too, and tells the climate of a point', async function () {
+		var options = {Size: 800, Height: 50, Water: 0.3, Scale: 150, Ridges: 0.6, Seed: 'relief'};
+		var plain = terrain.Flat(options);
+		var graph = terrain.LibraryRelief(options);
+		var drawn = terrain.Flat(Object.assign({Relief: graph}, options));
+		var steep = terrain.Flat({Size: 800, Height: 50, Water: 0.3, Scale: 150, Seed: 'relief', Relief: terrain.LibraryRelief(Object.assign({}, options, {Ridges: 1}))});
+		var pool = terrain.Work();
+		var i;
+		var x;
+		var z;
+		var climate;
+		var piece;
+
+		expect(typeof drawn.Options.ReliefSource).toBe('string');
+
+		for (i = 0; i < 300; i++) {
+			x = Math.sin(i * 12.9898) * 400;
+			z = Math.cos(i * 78.233) * 400;
+			climate = drawn.Climate(x, z);
+
+			expect(drawn.Height(x, z)).toBe(plain.Height(x, z));
+			expect(climate).toEqual(plain.Climate(x, z));
+			expect(climate.Moisture).toBeGreaterThanOrEqual(0);
+			expect(climate.Temperature).toBeLessThanOrEqual(1);
+		}
+
+		/* Its parameters are the graph's where the options tell none: more folds of mountains, other heights. */
+		expect([0, 1, 2, 3, 4, 5, 6, 7].some(function (k) {
+			return steep.Height(k * 90 - 360, k * 40) !== plain.Height(k * 90 - 360, k * 40);
+		})).toBe(true);
+
+		/* The higher, the colder. */
+		var spots = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map(function (k) {
+			return [Math.sin(k * 3.7) * 380, Math.cos(k * 5.1) * 380];
+		}).sort(function (a, b) {
+			return plain.Height(a[0], a[1]) - plain.Height(b[0], b[1]);
+		});
+
+		expect(plain.Climate(spots[19][0], spots[19][1]).Temperature).toBeLessThan(plain.Climate(spots[0][0], spots[0][1]).Temperature);
+
+		piece = await new Promise(function (done, failed) {
+			pool.Run('SceneTerrainGenerator', 'Piece', ['Flat', drawn.Options, null, [40, -60, 80, 8]], function (error, result) {
+				if (error) failed(error);
+				else done(result);
+			});
+		});
+
+		expect(Array.from(piece.Positions)).toEqual(Array.from(new Float32Array(plain.Chunk(40, -60, 80, 8).Positions)));
+	});
+
+	it('lays its lands by their climate and height, softly where they meet, the same in a worker', async function () {
+		var options = {Size: 1600, Height: 80, Water: 0.3, Seed: 'lands', Biomes: ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp']};
+		var field = terrain.Flat(options);
+		var names = {};
+		var mixed = false;
+		var red = [1, 0, 0];
+		var piece;
+		var here;
+		var i;
+
+		for (i = 0; i < 400; i++) {
+			var x = Math.sin(i * 12.9898) * 780;
+			var z = Math.cos(i * 78.233) * 780;
+			var lands = field.Biome(x, z);
+			var weather = field.Climate(x, z);
+			var part = field.Height(x, z) / field.Top;
+			var sum = lands.List.reduce(function (total, land) {
+				return total + land.Weight;
+			}, 0);
+
+			expect(lands.Gap).toBe(false);
+			expect(sum).toBeCloseTo(1, 9);
+
+			names[lands.List[0].Name] = true;
+			mixed = mixed || lands.List.length > 1;
+
+			/* What holds a point most is of its climate. */
+			if (lands.List[0].Weight === 1) {
+				if (lands.List[0].Name === 'tundra')
+					expect(weather.Temperature).toBeLessThanOrEqual(0.24);
+
+				if (lands.List[0].Name === 'desert')
+					expect(weather.Moisture).toBeLessThanOrEqual(0.35);
+
+				if (lands.List[0].Name === 'swamp')
+					expect(part).toBeLessThanOrEqual(0.14);
+			}
+		}
+
+		expect(Object.keys(names).length).toBeGreaterThan(1);
+		expect(mixed).toBe(true);
+
+		/* Its colors are those of its lands (the 5 by 5 points of its top; the skirt under its edges is darker). */
+		expect(terrain.Flat(Object.assign({}, options, {BiomeList: null, Biomes: [{Biome: 'red', Ground: {Low: red, High: red, Sand: red, Deep: red, Rock: red, Snow: red, Road: red}, Climate: {}}]})).Chunk(0, 0, 40, 4).Colors.every(function (value, index) {
+			return index % 3 !== 0 || index >= 25 * 3 || value > 0.99;
+		})).toBe(true);
+
+		piece = await new Promise(function (done, failed) {
+			terrain.Work().Run('SceneTerrainGenerator', 'Piece', ['Flat', field.Options, null, [100, 200, 120, 8]], function (error, result) {
+				if (error) failed(error);
+				else done(result);
+			});
+		});
+
+		here = field.Chunk(100, 200, 120, 8);
+
+		expect(Array.from(piece.Colors)).toEqual(Array.from(new Float32Array(here.Colors)));
+	});
+
+	it('tells where lands by their climate leave heights and climates of a ground bare, and lands it never has', function () {
+		var biomes = Elemenx.Service('SceneBiomes');
+		var field = terrain.Flat({Size: 1600, Height: 80, Water: 0.3, Seed: 'lands'});
+		var whole = biomes.Check(['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp'], field);
+		var holed = biomes.Check([{Biome: 'warm', Climate: {Temperature: [0.5, null]}}, {Biome: 'peaks', Climate: {Height: [3, null]}}, {Biome: 'none', Climate: {Moisture: [0.6, 0.4]}}], field);
+		var types = holed.Problems.map(function (problem) {
+			return problem.Type;
+		});
+		var gap = holed.Problems.find(function (problem) {
+			return problem.Type === 'gap';
+		});
+
+		expect(whole.Problems).toEqual([]);
+		expect(whole.Gap).toBe(0);
+		expect(Object.keys(whole.Share).reduce(function (sum, name) {
+			return sum + whole.Share[name];
+		}, 0)).toBeCloseTo(1, 6);
+		expect(whole.Heights.swamp[0]).toBeLessThan(0.15);
+
+		expect(types).toContain('range');
+		expect(types).toContain('gap');
+		expect(types).toContain('unreachable');
+		expect(types).toContain('uncovered');
+		expect(gap.Temperature[0]).toBeLessThan(0.5);
+		expect(holed.Gap).toBeGreaterThan(0);
+
+		/* With no ground: the climates alone, each band of heights of a ground. */
+		expect(biomes.Check(['tundra', 'desert']).Problems.some(function (problem) {
+			return problem.Type === 'gap';
+		})).toBe(true);
+	});
+});
+
+describe('Contract: the volume of a ground: tunnels, caves and overhangs cut out of it and grown on it', function () {
+	var terrain;
+
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:SceneTerrainGenerator', 'service:Noise']);
+
+		terrain = Elemenx.Service('SceneTerrainGenerator');
+	});
+
+	/* The edges of a geometry no triangle goes back along, away from its rim: holes in it. */
+	function holes (geometry, half) {
+		var edges = {};
+		var count = 0;
+		var i;
+
+		for (i = 0; i < geometry.Indices.length; i += 3) {
+			[[0, 1], [1, 2], [2, 0]].forEach(function (pair) {
+				edges[geometry.Indices[i + pair[0]] + ':' + geometry.Indices[i + pair[1]]] = true;
+			});
+		}
+
+		Object.keys(edges).forEach(function (key) {
+			var ends = key.split(':');
+			var x = geometry.Positions[ends[0] * 3];
+			var z = geometry.Positions[ends[0] * 3 + 2];
+			if (!edges[ends[1] + ':' + ends[0]] && Math.abs(x) < half - 1 && Math.abs(z) < half - 1)
+				count++;
+		});
+
+		return count;
+	}
+
+	it('cuts a tunnel through a hill, its floor level, the rest of the ground its heights as ever', function () {
+		var options = {Size: 400, Height: 40, Water: 0, Seed: 'hill', Scale: 90};
+		var plain = terrain.Flat(options);
+		var field = terrain.Flat(Object.assign({}, options, {Carves: [{Type: 'tunnel', Points: [[-60, 0, 6], [60, 0, 6]], Radius: 4, Flat: 0.5}]}));
+		var piece = field.Chunk(0, 0, 32, 16);
+
+		expect(plain.Height(0, 0)).toBeGreaterThan(11);
+		expect(field.Density(0, 6, 0)).toBeLessThan(0);
+		expect(field.Density(0, plain.Height(0, 0) - 1, 0)).toBeGreaterThan(0);
+		/* Its floor: 0.7 of its radius under its axis, level. */
+		expect(field.Density(0, 2.5, 0)).toBeGreaterThan(0);
+		expect(field.Density(0, 3.6, 0)).toBeLessThan(0);
+		expect(field.Density(30, 3.6, 0)).toBeLessThan(0);
+		expect(field.Height(150, 150)).toBe(plain.Height(150, 150));
+		expect(field.Chunk(150, 150, 32, 16).Volume).toBeUndefined();
+
+		/* The square over it is made of its volume: more than a surface, and no hole in it. */
+		expect(piece.Volume).toBe(true);
+		expect(piece.Positions.length).toBeGreaterThan(plain.Chunk(0, 0, 32, 16).Positions.length);
+		expect(holes(piece, 16)).toBe(0);
+		expect(piece.Positions.some(function (value, index) {
+			return index % 3 === 1 && value < 4 && value > 2.5;
+		})).toBe(true);
+	});
+
+	it('makes natural caves of ways and halls under the ground in their band, and rock jutting out of steep slopes', function () {
+		var options = {Size: 400, Height: 40, Water: 0, Seed: 'deep', Scale: 90};
+		var plain = terrain.Flat(options);
+		var field = terrain.Flat(Object.assign({}, options, {Carves: [{Type: 'caves', Center: [0, 0], Radius: 80, Top: 4, Bottom: 30, Scale: 20}, {Type: 'overhangs', Amount: 8, Slope: 0.2}]}));
+		var hollow = 0;
+		var under = 0;
+		var x;
+		var z;
+		var y;
+
+		for (x = -60; x <= 60; x += 6) {
+			for (z = -60; z <= 60; z += 6) {
+				for (y = -20; y <= 40; y += 3) {
+					var depth = plain.Height(x, z) - y;
+
+					if (depth > 6 && depth < 28) {
+						under++;
+
+						if (field.Density(x, y, z) < 0)
+							hollow++;
+					}
+
+					/* Nothing cut out of the band above the caves. */
+					if (depth > 0.5 && depth < 3 && field.Slope(x, z) < 0.05)
+						expect(field.Density(x, y, z)).toBeGreaterThan(0);
+				}
+			}
+		}
+
+		expect(hollow / under).toBeGreaterThan(0.02);
+		expect(hollow / under).toBeLessThan(0.6);
+		expect(holes(field.Chunk(0, 0, 32, 16), 16)).toBe(0);
+		expect(terrain.Flat(Object.assign({}, options, {Carves: [{Type: 'caves', Center: [0, 0], Radius: 80}]})).Volume.Touches(150, 150, 170, 170)).toBe(false);
+	});
+
+	it('tells each point of a square of a volume how much of the sky it sees: a tunnel under rock little, the ground over it all', function () {
+		var options = {Size: 400, Height: 40, Water: 0, Seed: 'hill', Scale: 90};
+		var field = terrain.Flat(Object.assign({}, options, {Carves: [{Type: 'tunnel', Points: [[-60, 0, 2], [60, 0, 2]], Radius: 3}]}));
+		var piece = field.Chunk(0, 0, 32, 16);
+		var inside = [];
+		var over = [];
+		var i;
+
+		for (i = 0; i < piece.Positions.length / 3; i++) {
+			var x = piece.Positions[i * 3];
+			var y = piece.Positions[i * 3 + 1];
+			var z = piece.Positions[i * 3 + 2];
+
+			if (Math.abs(z) < 2.5 && Math.abs(x) < 12 && y < 4) inside.push(piece.UVs[i * 2 + 1]);
+			else if (Math.abs(y - field.Height(x, z)) < 0.5 && Math.abs(z) > 8) over.push(piece.UVs[i * 2 + 1]);
+		}
+
+		expect(inside.length).toBeGreaterThan(10);
+		expect(Math.max.apply(Math, inside)).toBeLessThan(0.25);
+		expect(Math.min.apply(Math, over)).toBeGreaterThan(0.75);
+		expect(terrain.Flat(options).Chunk(150, 150, 32, 16).UVs.filter(function (value, index) {
+			return index % 2 === 1 && value !== 1;
+		})).toEqual([]);
+	});
+
+	it('makes a square of a volume in a worker as in the page', async function () {
+		var options = {Size: 300, Height: 30, Water: 0, Seed: 'work', Carves: [{Type: 'sphere', At: [5, 10, 5], Radius: 6}]};
+		var here = terrain.Flat(options).Chunk(0, 0, 32, 16);
+		var piece = await new Promise(function (done, failed) {
+			terrain.Work().Run('SceneTerrainGenerator', 'Piece', ['Flat', options, null, [0, 0, 32, 16]], function (error, result) {
+				if (error) failed(error);
+				else done(result);
+			});
+		});
+
+		expect(Array.from(piece.Positions)).toEqual(Array.from(new Float32Array(here.Positions)));
+		expect(Array.from(piece.Indices)).toEqual(here.Indices);
 	});
 });

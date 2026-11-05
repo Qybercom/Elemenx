@@ -3,7 +3,9 @@
  * - Flat(options) returns a field of a flat map: options Size (of the map, 1000), Height (of its highest hills, 60),
  *   Water (the level of the sea, 0 to 1, 0.35), Scale (the size of its hills, 180), Ridges (0 to 1: how much of it is
  *   folded into mountains, 0.4), Rock and Snow (the parts of its Height where rock and snow begin, 0.45 and 0.75; false:
- *   none, a land of low hills all of grass), Seed; it has Size, Top (its Height), Rock, Snow (those heights) and Water. Its methods: Height(x, z) (the height of the ground; below 0 under the sea),
+ *   none, a land of low hills all of grass), Seed, Noise (a spec of the Noise Service: its hills of that noise, in
+ *   metres, in place of those of Scale and Ridges), Relief (a graph of blocks, a generator of Blueprints: its hills of
+ *   it, below); it has Size, Top (its Height), Rock, Snow (those heights) and Water. Its methods: Height(x, z) (the height of the ground; below 0 under the sea),
  *   Normal(x, z), Slope(x, z) (0 flat, 1 a wall), Walkable(x, z, options) (MaxSlope 0.45; Swim: the sea too; Blocked(x,
  *   z): true where a thing stands in the way), Chunk(x,
  *   z, size, resolution) (a geometry of a square of it, its positions relative to its middle, with Colors of its
@@ -33,6 +35,16 @@
  *   ground of the noise: below 0 the sea), Elevation(direction) (above the radius), Point(direction) (on the ground),
  *   Altitude(point) (above the ground under it), Patch(face, u, v, size, resolution) (a geometry of a square of a face
  *   of its cube, from u and v of -1 to 1, its positions relative to its Center, the land in UV.x, the sea in UV.y).
+ * - A Relief graph has inputs X and Z and results Height (0 to 1, as the hills of noise are), Moisture and Temperature (0
+ *   to 1); its parameters Scale, Ridges, Water and Height are those of the options. LibraryRelief(options) makes the one of
+ *   the hills of noise of those options, the very same heights and climate: what an editor starts from. Relief(settings)
+ *   gives its function (x, z) of results, made JavaScript once (Blueprints.Code) and its source kept in the options
+ *   (ReliefSource), so a worker makes it again with no graph; null with none. A field has Climate(x, z) ({Moisture,
+ *   Temperature}): of its graph, else Climate(settings) of its height and a noise of moisture.
+ * - Carves of the options cut its volume and grow it (Volume: tunnels, holes dug, natural caves of ways and halls,
+ *   overhangs of rock on steep slopes): the field has Density(x, y, z) (solid over 0) and Volume; the squares they touch are
+ *   made of the density (Volumetric, surface nets), and it is walked as a place of floors (Underground: Height(x, z, y),
+ *   Blocked, CanStep, Stands), as a location is.
  * - Work(): the workers of the ground (Workers.Pool), that run Piece and Grid off the main thread.
  * - Piece(shape, options, roads, args): a square of a ground of a shape (Flat or Sphere) of its options, as a worker
  *   makes it: of Flat, args [x, z, size, resolution] and the geometry of Chunk; of Sphere, args [face, u, v, size,
@@ -54,7 +66,7 @@
 Elemenx.Service('SceneTerrainGenerator', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['Flat(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'SketchChanged(before, after)', 'Source(names)']
+		Methods: ['Flat(options)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'SketchChanged(before, after)', 'Source(names)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['terrain']}},
@@ -85,6 +97,389 @@ Elemenx.Service('SceneTerrainGenerator', {
 		return t * t * (3 - 2 * t);
 	},
 
+	/*
+	 * The function of the relief of a ground of a graph (Relief: a generator of Blueprints with inputs X and Z and results
+	 * Height, 0 to 1 as its hills of noise are, and Moisture and Temperature; its parameters Scale, Ridges, Water and Height
+	 * of the options that tell them, its own values else): the graph made JavaScript (Blueprints.Code) once, its source kept in the options
+	 * (ReliefSource), so a worker makes the same function of it with no graph. Null without one.
+	 */
+	Relief: function (settings) {
+		var blueprints = this.$Service('Blueprints');
+		var source = settings.ReliefSource;
+		var parameters = {};
+		var made;
+		var run;
+
+		if (!source && settings.Relief && blueprints && blueprints.Code) {
+			made = blueprints.Code(typeof settings.Relief === 'string' ? JSON.parse(settings.Relief) : settings.Relief);
+
+			if (made)
+				source = settings.ReliefSource = made.Source;
+		}
+
+		if (!source)
+			return null;
+
+		/* What the options tell of its parameters; the graph's own values for the rest. */
+		['Scale', 'Ridges', 'Water', 'Height'].forEach(function (key) {
+			if (settings[key] !== undefined && settings[key] !== null && settings[key] !== '')
+				parameters[key] = Number(settings[key]);
+		});
+
+		this.Reliefs = this.Reliefs || {};
+		run = this.Reliefs[source] = this.Reliefs[source] || new Function('B', 'M', 'N', source)(blueprints, this.$Service('Math'), this.$Service('Noise'));
+
+		return function (x, z) {
+			return run(parameters, {X: x, Z: z}) || {};
+		};
+	},
+
+	/*
+	 * The numbers of the climate of a ground (Climate of its options): Warmth (by the sea, 0.72), Lapse (how much it falls to
+	 * the top, 0.7), Spread (of the noise round it, 0.7), Stretch (of the noise of the moisture round 0.5, 2.2).
+	 */
+	ClimateOf: function (settings) {
+		var given = settings && settings.Climate || {};
+
+		function number (value, fallback) {
+			return value === undefined || value === null || value === '' || isNaN(Number(value)) ? fallback : Number(value);
+		}
+
+		return {Warmth: number(given.Warmth, 0.72), Lapse: number(given.Lapse, 0.7), Spread: number(given.Spread, 0.7), Stretch: number(given.Stretch, 2.2)};
+	},
+
+	/*
+	 * The climate of a ground with no graph to tell it: the warmth, Warmth by the sea, falls with the height over it (Water
+	 * to the top: by Lapse), a noise round it (by Spread); the moisture a noise of its own, five times wider than its hills. raw is its
+	 * height, 0 to 1. LibraryRelief makes the very same of blocks.
+	 */
+	Climate: function (settings) {
+		var noise = this.$Service('Noise');
+		var seed = settings.Seed === undefined ? 'ground' : String(settings.Seed);
+		var scale = Number(settings.Scale) || 180;
+		var water = settings.Water === undefined ? 0.35 : Number(settings.Water);
+		var numbers = this.ClimateOf(settings);
+		var wet = null;
+		var warm = null;
+
+		/* Its noises made when a climate is first asked: most grounds never ask it. */
+		return function (x, z, raw) {
+			var t = Math.max(0, Math.min(1, (raw - water) / ((1 - water) || 1)));
+			var cold = t * t * (3 - 2 * t);
+
+			wet = wet || noise.Make({Type: 'value', Seed: seed + '-moisture', Fractal: 'fbm', Octaves: 4});
+			warm = warm || noise.Make({Type: 'value', Seed: seed + '-warmth', Fractal: 'fbm', Octaves: 3});
+
+			return {
+				Moisture: Math.max(0, Math.min(1, 0.5 + (wet.At(x / (scale * 5), 5.5, z / (scale * 5)) - 0.5) * numbers.Stretch)),
+				Temperature: Math.max(0, Math.min(1, numbers.Warmth - cold * numbers.Lapse + (warm.At(x / (scale * 4), 7.5, z / (scale * 4)) - 0.5) * numbers.Spread))
+			};
+		};
+	},
+
+	/*
+	 * The relief of a ground of noise as a graph of blocks (a generator of Blueprints), the very heights and climate of
+	 * one with no graph: soft hills, the folds of mountains where a wide noise says, in parts; the moisture and the warmth as
+	 * Climate makes them. options: Seed, and the values of its parameters (Scale, Ridges, Water, Height). What an editor
+	 * starts from to make a ground of its own.
+	 */
+	LibraryRelief: function (options) {
+		var given = options || {};
+		var climate = this.ClimateOf(given);
+		var seed = given.Seed === undefined ? 'ground' : given.Seed;
+		var blueprints = this.$Service('Blueprints');
+		var graph = blueprints.Create('generator', {name: 'Relief', parameters: [
+			{key: 'Scale', type: 'float', value: Number(given.Scale) || 180},
+			{key: 'Ridges', type: 'float', value: given.Ridges === undefined ? 0.4 : Number(given.Ridges)},
+			{key: 'Water', type: 'float', value: given.Water === undefined ? 0.35 : Number(given.Water)},
+			{key: 'Height', type: 'float', value: given.Height === undefined ? 60 : Number(given.Height)}
+		]});
+
+		function add (type, properties) {
+			return blueprints.Add(graph, type, {x: 0, y: 0, properties: properties || {}});
+		}
+
+		function link (from, key, to, input) {
+			blueprints.Link(graph, [from.id, key], [to.id, input]);
+		}
+
+		/* A point of a noise: [X / divide * times + plusX, y, Z / divide * times + plusZ]. */
+		function point (x, z, divide, times, plus, y) {
+			var size = add('Multiply');
+			var u = add('Divide');
+			var w = add('Divide');
+			var su = add('Multiply', {});
+			var sw = add('Multiply', {});
+			var pu = add('Add');
+			var pw = add('Add');
+			var k = add('Number', {Value: times});
+			var d = add('Number', {Value: divide});
+			var ax = add('Number', {Value: plus[0]});
+			var az = add('Number', {Value: plus[1]});
+			var yy = add('Number', {Value: y});
+			var at = add('Combine');
+
+			link(scale, 'Value', size, 'A');
+			link(d, 'Value', size, 'B');
+			link(x, 'Value', u, 'A');
+			link(size, 'Out', u, 'B');
+			link(z, 'Value', w, 'A');
+			link(size, 'Out', w, 'B');
+			link(u, 'Out', su, 'A');
+			link(k, 'Value', su, 'B');
+			link(w, 'Out', sw, 'A');
+			link(k, 'Value', sw, 'B');
+			link(su, 'Out', pu, 'A');
+			link(ax, 'Value', pu, 'B');
+			link(sw, 'Out', pw, 'A');
+			link(az, 'Value', pw, 'B');
+			link(pu, 'Out', at, 'X');
+			link(yy, 'Value', at, 'Y');
+			link(pw, 'Out', at, 'Z');
+
+			return at;
+		}
+
+		function noise (spec, at) {
+			var made = add('NoiseSpec', spec);
+
+			link(at, 'XYZ', made, 'Position');
+
+			return made;
+		}
+
+		var x = add('Input', {Name: 'X'});
+		var z = add('Input', {Name: 'Z'});
+		var scale = add('Parameter', {Key: 'Scale'});
+		var ridges = add('Parameter', {Key: 'Ridges'});
+		var water = add('Parameter', {Key: 'Water'});
+		var soft = noise({Type: 'value', Seed: seed, Fractal: 'fbm', Octaves: 6, Gain: 0.5}, point(x, z, 1, 1, [0, 0], 0.37));
+		var folded = noise({Type: 'value', Seed: seed, Fractal: 'ridged', Octaves: 5, Gain: 0.5}, point(x, z, 1, 0.7, [11, -5], 1.3));
+		var wide = noise({Type: 'value', Seed: seed, Fractal: 'fbm', Octaves: 3, Gain: 0.5}, point(x, z, 1, 0.25, [3, 0], 2.1));
+		var steep = add('Smoothstep');
+		var low = add('Number', {Value: 0.45});
+		var high = add('Number', {Value: 0.75});
+		var mountains = add('Multiply');
+		var rest = add('OneMinus');
+		var softPart = add('Multiply');
+		var foldedPart = add('Multiply');
+		var mixed = add('Add');
+		var height = add('Result', {Key: 'Height'});
+		var wet = noise({Type: 'value', Seed: String(seed) + '-moisture', Fractal: 'fbm', Octaves: 4, Gain: 0.5}, point(x, z, 5, 1, [0, 0], 5.5));
+		var warm = noise({Type: 'value', Seed: String(seed) + '-warmth', Fractal: 'fbm', Octaves: 3, Gain: 0.5}, point(x, z, 4, 1, [0, 0], 7.5));
+		var one = add('Number', {Value: 1});
+		var coldness = add('Smoothstep');
+		var lapse = add('Multiply');
+		var lapsed = add('Subtract');
+		var half = add('Number', {Value: 0.5});
+		var shift = add('Subtract');
+		var spread = add('Multiply');
+		var warmth = add('Add');
+		var warmSaturate = add('Saturate');
+		var wetSaturate = add('Saturate');
+		var moisture = add('Result', {Key: 'Moisture'});
+		var temperature = add('Result', {Key: 'Temperature'});
+		var factor = add('Number', {Value: climate.Lapse});
+		var width = add('Number', {Value: climate.Spread});
+		var base = add('Number', {Value: climate.Warmth});
+		var stretch = add('Number', {Value: climate.Stretch});
+		var wetShift = add('Subtract');
+		var wetSpread = add('Multiply');
+		var wetSum = add('Add');
+
+		link(low, 'Value', steep, 'Low');
+		link(high, 'Value', steep, 'High');
+		link(wide, 'Value', steep, 'X');
+		link(steep, 'Out', mountains, 'A');
+		link(ridges, 'Value', mountains, 'B');
+		link(mountains, 'Out', rest, 'X');
+		link(soft, 'Value', softPart, 'A');
+		link(rest, 'Out', softPart, 'B');
+		link(folded, 'Value', foldedPart, 'A');
+		link(mountains, 'Out', foldedPart, 'B');
+		link(softPart, 'Out', mixed, 'A');
+		link(foldedPart, 'Out', mixed, 'B');
+		link(mixed, 'Out', height, 'Value');
+
+		link(wet, 'Value', wetShift, 'A');
+		link(half, 'Value', wetShift, 'B');
+		link(wetShift, 'Out', wetSpread, 'A');
+		link(stretch, 'Value', wetSpread, 'B');
+		link(half, 'Value', wetSum, 'A');
+		link(wetSpread, 'Out', wetSum, 'B');
+		link(wetSum, 'Out', wetSaturate, 'X');
+		link(wetSaturate, 'Out', moisture, 'Value');
+		link(water, 'Value', coldness, 'Low');
+		link(one, 'Value', coldness, 'High');
+		link(mixed, 'Out', coldness, 'X');
+		link(coldness, 'Out', lapse, 'A');
+		link(factor, 'Value', lapse, 'B');
+		link(base, 'Value', lapsed, 'A');
+		link(lapse, 'Out', lapsed, 'B');
+		link(warm, 'Value', shift, 'A');
+		link(half, 'Value', shift, 'B');
+		link(shift, 'Out', spread, 'A');
+		link(width, 'Value', spread, 'B');
+		link(lapsed, 'Out', warmth, 'A');
+		link(spread, 'Out', warmth, 'B');
+		link(warmth, 'Out', warmSaturate, 'X');
+		link(warmSaturate, 'Out', temperature, 'Value');
+
+		return graph;
+	},
+
+	/*
+	 * The lands of a ground by its climate (Biomes of the options: names of biomes of the Biomes Service, each where its
+	 * Climate says, or {Biome, Ground, Climate}): [{Name, Ground (its colors), Grass (whether grass grows in it), Climate: [{Height, Moisture, Temperature}]}],
+	 * each a range [from, to] (null: no end), Height in parts of the Top of the ground (under 0 below the sea), the others
+	 * 0 to 1. Made once and kept in the options (BiomeList), so a worker has it with no Biomes Service. Null with none.
+	 */
+	Biomes: function (settings) {
+		var registry = this.$Service('SceneBiomes');
+		var list;
+
+		if (settings.BiomeList)
+			return settings.BiomeList;
+
+		if (!Array.isArray(settings.Biomes) || !settings.Biomes.length) return null;
+
+		list = settings.Biomes.map(function (entry) {
+			var name = typeof entry === 'string' ? entry : entry.Biome || entry.Name;
+			var known = registry && name ? registry.Get(name) : null;
+			var climate = typeof entry === 'object' && entry.Climate || known && known.Climate || {};
+
+			return {
+				Name: name || '',
+				Ground: typeof entry === 'object' && entry.Ground || known && known.Ground || {},
+				Grass: typeof entry === 'object' && entry.Grass !== undefined ? !!entry.Grass : known ? !!known.Grass : true,
+				Climate: Array.isArray(climate) ? climate : [climate]
+			};
+		});
+
+		settings.BiomeList = list;
+
+		return list;
+	},
+
+	/*
+	 * The biomes of a point of a height (a part of the Top), a moisture and a warmth, of a list of Biomes: {List: [{Name,
+	 * Ground, Weight}] (the weights 1 in all, softly where ranges meet), Gap (true: none of them holds it, the nearest
+	 * given)}.
+	 */
+	BiomeOf: function (list, height, moisture, temperature) {
+		var soft = {Height: 0.03, Moisture: 0.04, Temperature: 0.04};
+		var values = {Height: height, Moisture: moisture, Temperature: temperature};
+		var found = [];
+		var nearest = null;
+		var reach = -Infinity;
+		var sum = 0;
+
+		/* How deep a value is in a range: under 0 out of it. */
+		function depth (range, key) {
+			var low = range && range[0] !== null && range[0] !== undefined ? Number(range[0]) : -Infinity;
+			var high = range && range[1] !== null && range[1] !== undefined ? Number(range[1]) : Infinity;
+
+			return Math.min(values[key] - low, high - values[key]) / soft[key];
+		}
+
+		list.forEach(function (biome) {
+			var weight = 0;
+			var near = -Infinity;
+
+			biome.Climate.forEach(function (envelope) {
+				var deepest = Infinity;
+				var part = 1;
+
+				['Height', 'Moisture', 'Temperature'].forEach(function (key) {
+					var d = depth(envelope[key], key);
+
+					deepest = Math.min(deepest, d);
+					part *= Math.max(0, Math.min(1, d + 0.5));
+				});
+
+				weight = Math.max(weight, part);
+				near = Math.max(near, deepest);
+			});
+
+			if (weight > 0) {
+				found.push({Name: biome.Name, Ground: biome.Ground, Weight: weight});
+
+				sum += weight;
+			}
+
+			if (near > reach) {
+				reach = near;
+				nearest = biome;
+			}
+		});
+
+		if (!found.length)
+			return {List: nearest ? [{Name: nearest.Name, Ground: nearest.Ground, Weight: 1}] : [], Gap: true};
+
+		found.forEach(function (biome) {
+			biome.Weight /= sum;
+		});
+
+		return {List: found.sort(function (a, b) {
+			return b.Weight - a.Weight;
+		}), Gap: false};
+	},
+
+	/*
+	 * A place of a planet of ScenePlanet as a flat ground (Planet of the options of Flat: {Options (of ScenePlanet.Make),
+	 * Latitude, Longitude, Turn (degrees the north of the ground is turned from -Z)}): its points are those of the plane
+	 * touching the planet at the place, metres east (X) and south (Z) of it; Elevation(x, z) is the elevation of the planet
+	 * there (metres, its sea level 0), Sample(x, z) all the planet tells of it, Direction(x, z) the direction. Its lands
+	 * resolved there and then (BiomeList of the options), so a worker makes the same of them.
+	 */
+	Site: function (given) {
+		var planets = this.$Service('ScenePlanet');
+		var options = given.Options || {};
+		var planet;
+		var middle;
+		var east;
+		var north;
+		var radius;
+		var turn = (Number(given.Turn) || 0) * Math.PI / 180;
+
+		if (!options.BiomeList)
+			options.BiomeList = this.Biomes({Biomes: options.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp']});
+
+		planet = planets.Planet(options);
+		radius = planet.Radius * 1000;
+		middle = planets.Direction(Number(given.Latitude) || 0, Number(given.Longitude) || 0);
+		/* East: the axis Y crossed with the middle (at a pole, -Z); north: the middle crossed with east. */
+		east = Math.abs(middle[1]) > 0.9999 ? [0, 0, -1] : (function () {
+			var c = [middle[2], 0, -middle[0]];
+			var length = Math.sqrt(c[0] * c[0] + c[2] * c[2]);
+
+			return [c[0] / length, 0, c[2] / length];
+		})();
+		north = [middle[1] * east[2] - middle[2] * east[1], middle[2] * east[0] - middle[0] * east[2], middle[0] * east[1] - middle[1] * east[0]];
+
+		function direction (x, z) {
+			var u = x * Math.cos(turn) + z * Math.sin(turn);
+			var v = -z * Math.cos(turn) + x * Math.sin(turn);
+			var p = [middle[0] * radius + east[0] * u + north[0] * v, middle[1] * radius + east[1] * u + north[1] * v, middle[2] * radius + east[2] * u + north[2] * v];
+			var length = Math.sqrt(p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
+
+			return [p[0] / length, p[1] / length, p[2] / length];
+		}
+
+		return {
+			Planet: planet,
+			Direction: direction,
+
+			Elevation: function (x, z) {
+				return planet.Elevation(direction(x, z));
+			},
+
+			Sample: function (x, z) {
+				return planet.Sample(direction(x, z));
+			}
+		};
+	},
+
 	Flat: function (options) {
 		var self = this;
 		var settings = options || {};
@@ -95,6 +490,15 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var water = settings.Water === undefined ? 0.35 : Number(settings.Water);
 		var scale = Number(settings.Scale) || 180;
 		var ridges = settings.Ridges === undefined ? 0.4 : Number(settings.Ridges);
+		/* Its hills of a noise of its own (a spec of the Noise Service), in metres; else those of Scale and Ridges. */
+		var own = settings.Noise ? this.$Service('Noise').Make(settings.Noise) : null;
+		/* Of a graph (Relief): its heights, its moisture and its warmth at each point; else the climate of the hills of noise. */
+		var relief = this.Relief(settings);
+		/* A place of a planet (Planet): its heights, its climate and its lands, the very ones of its globe. */
+		var site = settings.Planet ? this.Site(settings.Planet) : null;
+		var climate = this.Climate(settings);
+		/* Its lands by its climate (Biomes): each where its height, its moisture and its warmth are those of a biome; of a planet, its own. */
+		var biomes = this.Biomes(site && !settings.Biomes && !settings.BiomeList ? Object.assign(settings, {BiomeList: site.Planet.Lands}) : settings);
 		var field;
 
 		/* A height of a zone: a part of the highest hills, Infinity for none (false), the part by default. */
@@ -105,6 +509,16 @@ Elemenx.Service('SceneTerrainGenerator', {
 		}
 
 		function raw (x, z) {
+			if (relief)
+				return Number(relief(x, z).Height) || 0;
+
+			/* The elevation of the planet there, metres, as a part of Height: its sea level is 0, its sea under it (Water, any share). */
+			if (site)
+				return site.Elevation(x, z) / (height || 1) * (1 - water) + water;
+
+			if (own)
+				return own.At(x, 0, z);
+
 			var soft = noise.Fbm(x / scale, 0.37, z / scale, 6);
 			var folded = noise.Ridge(x / scale * 0.7 + 11, 1.3, z / scale * 0.7 - 5, 5);
 			var mountains = self.Smoothstep(0.45, 0.75, noise.Fbm(x / scale * 0.25 + 3, 2.1, z / scale * 0.25, 3)) * ridges;
@@ -121,6 +535,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 			Snow: zone(settings.Snow, 0.75, height),
 			Water: water,
 			Palette: settings.Palette || null,
+			Biomes: biomes,
 			Roads: null,
 
 			Height: function (x, z) {
@@ -139,6 +554,37 @@ Elemenx.Service('SceneTerrainGenerator', {
 				return 1 - field.Normal(x, z)[1];
 			},
 
+			/* How wet and how warm it is at a point, 0 to 1: of its Relief graph, else of the height and a noise of moisture. */
+			Climate: function (x, z) {
+				var made = relief ? relief(x, z) : site ? site.Sample(x, z) : null;
+				var given = made && made.Moisture !== undefined && made.Temperature !== undefined;
+
+				return given ? {Moisture: Math.max(0, Math.min(1, Number(made.Moisture) || 0)), Temperature: Math.max(0, Math.min(1, Number(made.Temperature) || 0))} : climate(x, z, raw(x, z));
+			},
+
+			/* Its biomes at a point (BiomeOf): of its height, a part of its Top, and of its climate; null with none. */
+			Biome: function (x, z) {
+				var weather;
+				var told;
+
+				if (!biomes)
+					return null;
+
+				/* Of a planet: the land its globe has there (none under its sea: the nearest of its climate). */
+				told = site && !settings.Biomes ? site.Sample(x, z).Biome : '';
+
+				if (told)
+					return {List: biomes.filter(function (one) {
+						return one.Name === told;
+					}).map(function (one) {
+						return {Name: one.Name, Ground: one.Ground, Weight: 1};
+					}), Gap: false};
+
+				weather = field.Climate(x, z);
+
+				return self.BiomeOf(biomes, field.Height(x, z) / Math.max(1, height), weather.Moisture, weather.Temperature);
+			},
+
 			Walkable: function (x, z, rules) {
 				var given = rules || {};
 
@@ -150,6 +596,8 @@ Elemenx.Service('SceneTerrainGenerator', {
 			},
 
 			Chunk: function (x, z, extent, resolution) {
+				if (field.Volume && field.Volume.Touches(x - extent / 2, z - extent / 2, x + extent / 2, z + extent / 2)) return self.Volumetric(field, x, z, extent, resolution || 32);
+
 				return self.Mesh(field, x, z, extent, resolution || 32);
 			},
 
@@ -168,6 +616,17 @@ Elemenx.Service('SceneTerrainGenerator', {
 				return sketched.Height(x, z, plain(x, z));
 			};
 		}
+
+		/* What is cut out of it and juts out of it (Carves): its volume over its heights. */
+		field.Volume = this.Volume(settings, field);
+
+		field.Density = function (x, y, z) {
+			return field.Volume ? field.Volume.Density(x, y, z) : field.Height(x, z) - y;
+		};
+
+		/* Walked as a place of floors where it is cut. */
+		if (field.Volume)
+			this.Underground(field, settings);
 
 		return field;
 	},
@@ -600,8 +1059,28 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * where its Rock and Snow begin (none on a field that has none).
 	 */
 	Paint: function (field, x, z, y, slope) {
+		var self = this;
 		var look = field.Sketch ? field.Sketch.Look(x, z) : null;
-		var palette = look && look.Palette || field.Palette || {};
+		var lands = !(look && look.Palette) && field.Biomes ? field.Biome(x, z) : null;
+		var color = [0, 0, 0];
+
+		if (!lands || lands.List.length === 1)
+			return this.Painted(field, x, z, y, slope, look, look && look.Palette || (lands ? lands.List[0].Ground : field.Palette) || {});
+
+		/* Where lands meet, their colors in their parts. */
+		lands.List.forEach(function (land) {
+			var made = self.Painted(field, x, z, y, slope, look, land.Ground || {});
+
+			color[0] += made[0] * land.Weight;
+			color[1] += made[1] * land.Weight;
+			color[2] += made[2] * land.Weight;
+		});
+
+		return color;
+	},
+
+	/* The colors of a point of a flat map of a palette (Paint). */
+	Painted: function (field, x, z, y, slope, look, palette) {
 		var top = Math.max(1, field.Top);
 		var rock = field.Rock === undefined ? top * 0.45 : field.Rock;
 		var snow = field.Snow === undefined ? top * 0.75 : field.Snow;
@@ -655,6 +1134,590 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	/* A square of a flat map as a geometry: its positions relative to its middle, a skirt down its four edges. */
+	/* SceneTerrainGenerator: the volume of a ground (caves, tunnels, overhangs) */
+
+	/*
+	 * The volume of a flat ground of its options (Carves: a list of what is cut out of it and what juts out of it), over its
+	 * heights: solid where Density(x, y, z) is over 0, the heights of the ground under the sky where nothing is told. null
+	 * with no Carves. Each carve:
+	 * - tunnel: Points [[x, z, y]...] (y: the height of its axis; none: Depth under the ground there), Radius (2.5), Flat
+	 *   (0 to 1: how much of its bottom is cut level to walk on, 0.5);
+	 * - sphere: At [x, y, z], Radius: a hole dug;
+	 * - caves: natural caves of noise, ways and halls, under the ground round Center [x, z] within Radius: Top and Bottom
+	 *   (metres under the ground where they are, 3 and 40; Top 0 lets them open to the sky), Scale (the size of their
+	 *   features, 24), Width (of their ways, 0 to 1, 0.35), Halls (0 to 1, how much of them are halls, 0.5), Seed;
+	 * - overhangs: rock that juts out of the steep slopes, round Center within Radius (none: all the ground): Amount (how
+	 *   far, metres, 6), Scale (24), Slope (where it begins, 0.45), Seed.
+	 * Gives {Density(x, y, z), Touches(x0, z0, x1, z1) (whether a square of the ground is more than its heights),
+	 * Range(x0, z0, x1, z1) ([lowest, highest] of what it adds there), Carves}.
+	 */
+	Volume: function (settings, field) {
+		var self = this;
+		var noise = this.$Service('Noise');
+		/* Its heights as the noise and the sketch make them, never of what the volume makes of them (Underground). */
+		var ground = field.Height;
+		var carves = (settings.Carves || []).filter(function (carve) {
+			return carve && carve.Type;
+		});
+		var made;
+
+		if (!carves.length) return null;
+
+		function number (value, fallback) {
+			return value === undefined || value === null || value === '' || isNaN(Number(value)) ? fallback : Number(value);
+		}
+
+		made = carves.map(function (carve, index) {
+			var seed = String(carve.Seed === undefined ? (settings.Seed === undefined ? 'ground' : settings.Seed) + '-carve-' + index : carve.Seed);
+			var one = {Type: carve.Type, Carve: carve};
+			var points;
+
+			if (carve.Type === 'tunnel') {
+				points = (carve.Points || []).map(function (point) {
+					return [Number(point[0]), point[2] === undefined || point[2] === null ? ground(point[0], point[1]) - number(carve.Depth, 0) : Number(point[2]), Number(point[1])];
+				});
+				one.Points = points;
+				one.Radius = number(carve.Radius, 2.5);
+				one.Flat = Math.max(0, Math.min(1, number(carve.Flat, 0.5)));
+				one.Bounds = points.reduce(function (box, point) {
+					return [Math.min(box[0], point[0]), Math.min(box[1], point[1]), Math.min(box[2], point[2]), Math.max(box[3], point[0]), Math.max(box[4], point[1]), Math.max(box[5], point[2])];
+				}, [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]);
+				one.Bounds = [one.Bounds[0] - one.Radius, one.Bounds[1] - one.Radius, one.Bounds[2] - one.Radius, one.Bounds[3] + one.Radius, one.Bounds[4] + one.Radius, one.Bounds[5] + one.Radius];
+			}
+			else if (carve.Type === 'sphere') {
+				one.At = (carve.At || [0, 0, 0]).map(Number);
+				one.Radius = number(carve.Radius, 2);
+				one.Bounds = [one.At[0] - one.Radius, one.At[1] - one.Radius, one.At[2] - one.Radius, one.At[0] + one.Radius, one.At[1] + one.Radius, one.At[2] + one.Radius];
+			}
+			else if (carve.Type === 'caves') {
+				one.Center = (carve.Center || [0, 0]).map(Number);
+				one.Radius = number(carve.Radius, 100);
+				one.Top = number(carve.Top, 3);
+				one.Bottom = number(carve.Bottom, 40);
+				one.Scale = number(carve.Scale, 24);
+				one.Width = number(carve.Width, 0.35);
+				one.Halls = number(carve.Halls, 0.5);
+				one.Ways = [noise.Make({Type: 'simplex', Seed: seed + '-a'}), noise.Make({Type: 'simplex', Seed: seed + '-b'})];
+				one.Hall = noise.Make({Type: 'simplex', Seed: seed + '-h', Fractal: 'fbm', Octaves: 3});
+				one.Bounds = [one.Center[0] - one.Radius, -Infinity, one.Center[1] - one.Radius, one.Center[0] + one.Radius, Infinity, one.Center[1] + one.Radius];
+			}
+			else if (carve.Type === 'overhangs') {
+				one.Center = carve.Center ? carve.Center.map(Number) : null;
+				one.Radius = number(carve.Radius, Infinity);
+				one.Amount = number(carve.Amount, 6);
+				one.Scale = number(carve.Scale, 24);
+				one.Slope = number(carve.Slope, 0.45);
+				one.Warp = [noise.Make({Type: 'simplex', Seed: seed + '-x', Fractal: 'fbm', Octaves: 2}), noise.Make({Type: 'simplex', Seed: seed + '-z', Fractal: 'fbm', Octaves: 2})];
+				one.Bounds = one.Center && isFinite(one.Radius) ? [one.Center[0] - one.Radius - one.Amount, -Infinity, one.Center[1] - one.Radius - one.Amount, one.Center[0] + one.Radius + one.Amount, Infinity, one.Center[1] + one.Radius + one.Amount] : [-Infinity, -Infinity, -Infinity, Infinity, Infinity, Infinity];
+			}
+			else {
+				return null;
+			}
+
+			return one;
+		}).filter(Boolean);
+
+		/* The distance of a point to a tunnel, and the height of its axis at the nearest point of it. */
+		function tunnel (one, x, y, z) {
+			var best = Infinity;
+			var axis = y;
+			var i;
+
+			for (i = 0; i + 1 < one.Points.length; i++) {
+				var a = one.Points[i];
+				var b = one.Points[i + 1];
+				var dx = b[0] - a[0];
+				var dy = b[1] - a[1];
+				var dz = b[2] - a[2];
+				var t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy + (z - a[2]) * dz) / (dx * dx + dy * dy + dz * dz || 1)));
+				var px = a[0] + dx * t - x;
+				var py = a[1] + dy * t - y;
+				var pz = a[2] + dz * t - z;
+				var d = Math.sqrt(px * px + py * py + pz * pz);
+
+				if (d < best) {
+					best = d;
+					axis = a[1] + dy * t;
+				}
+			}
+
+			if (one.Points.length === 1) {
+				best = Math.sqrt((x - one.Points[0][0]) * (x - one.Points[0][0]) + (y - one.Points[0][1]) * (y - one.Points[0][1]) + (z - one.Points[0][2]) * (z - one.Points[0][2]));
+				axis = one.Points[0][1];
+			}
+
+			/* Its floor cut level: nothing of it under the axis by more than (1 - Flat) of its radius. */
+			return Math.max(best - one.Radius, axis - one.Radius * (1 - one.Flat * 0.6) - y);
+		}
+
+		/* Natural caves: ways where two noises are both near their middle, halls where a third is high; only in their band. */
+		function caves (one, x, y, z, top) {
+			var depth = top - y;
+			var across = Math.sqrt((x - one.Center[0]) * (x - one.Center[0]) + (z - one.Center[1]) * (z - one.Center[1]));
+			var s = one.Scale;
+			var a = one.Ways[0].At(x / s, y / (s * 0.6), z / s) - 0.5;
+			var b = one.Ways[1].At(x / s + 17.3, y / (s * 0.6), z / s - 9.1) - 0.5;
+			var way = (Math.max(Math.abs(a), Math.abs(b)) - one.Width * 0.18) * s;
+			var hall = (0.72 - one.Halls * 0.16 - one.Hall.At(x / (s * 1.8), y / (s * 0.9), z / (s * 1.8))) * s * 1.5;
+
+			return Math.max(Math.min(way, hall), one.Top - depth, depth - one.Bottom, across - one.Radius);
+		}
+
+		/* How steep the ground is at a point, 0 flat to 1 a wall, for overhangs: of its own heights, never of the volume. */
+		function steep (x, z) {
+			var dx = ground(x + 0.5, z) - ground(x - 0.5, z);
+			var dz = ground(x, z + 0.5) - ground(x, z - 0.5);
+
+			return 1 - 1 / Math.sqrt(dx * dx + 1 + dz * dz);
+		}
+
+		function inside (one, x, y, z) {
+			var b = one.Bounds;
+
+			return x >= b[0] && y >= b[1] && z >= b[2] && x <= b[3] && y <= b[4] && z <= b[5];
+		}
+
+		/*
+		 * The density of a point: the ground (its height over the point), pushed aside on steep slopes by overhangs, then each
+		 * carve cut out of it. column: [height, slope] of the point's x and z, when they are known already.
+		 */
+		function density (x, y, z, column) {
+			var top = column ? column[0] : ground(x, z);
+			var value = top - y;
+			var i;
+
+			for (i = 0; i < made.length; i++) {
+				var one = made[i];
+
+				if (one.Type === 'overhangs' && inside(one, x, y, z)) {
+					var slope = column ? column[1] : steep(x, z);
+					var share = self.Smoothstep(one.Slope - 0.1, one.Slope + 0.2, slope);
+					var far = one.Center ? Math.sqrt((x - one.Center[0]) * (x - one.Center[0]) + (z - one.Center[1]) * (z - one.Center[1])) : 0;
+
+					share *= one.Center ? 1 - self.Smoothstep(one.Radius * 0.8, one.Radius, far) : 1;
+
+					if (share > 0) {
+						var wx = (one.Warp[0].At(x / one.Scale, y / one.Scale, z / one.Scale) - 0.5) * 2 * one.Amount * share;
+						var wz = (one.Warp[1].At(x / one.Scale, y / one.Scale, z / one.Scale) - 0.5) * 2 * one.Amount * share;
+
+						value = ground(x + wx, z + wz) - y;
+					}
+				}
+			}
+
+			for (i = 0; i < made.length; i++) {
+				var carve = made[i];
+				if (carve.Type === 'overhangs' || !inside(carve, x, y, z)) continue;
+
+				if (carve.Type === 'tunnel') value = Math.min(value, tunnel(carve, x, y, z));
+				else if (carve.Type === 'sphere') value = Math.min(value, Math.sqrt((x - carve.At[0]) * (x - carve.At[0]) + (y - carve.At[1]) * (y - carve.At[1]) + (z - carve.At[2]) * (z - carve.At[2])) - carve.Radius);
+				else if (carve.Type === 'caves') value = Math.min(value, caves(carve, x, y, z, top));
+			}
+
+			return value;
+		}
+
+		return {
+			Carves: made,
+			Density: density,
+			Steep: steep,
+
+			Touches: function (x0, z0, x1, z1) {
+				return made.some(function (one) {
+					var b = one.Bounds;
+					if (b[3] < x0 || b[0] > x1 || b[5] < z0 || b[2] > z1) return false;
+
+					/* Overhangs only where it is steep somewhere in the square. */
+					if (one.Type === 'overhangs') {
+						return [0, 0.25, 0.5, 0.75, 1].some(function (u) {
+							return [0, 0.25, 0.5, 0.75, 1].some(function (v) {
+								return steep(x0 + (x1 - x0) * u, z0 + (z1 - z0) * v) > one.Slope - 0.1;
+							});
+						});
+					}
+
+					return true;
+				});
+			},
+
+			Range: function (x0, z0, x1, z1, low, high) {
+				made.forEach(function (one) {
+					var b = one.Bounds;
+					if (b[3] < x0 || b[0] > x1 || b[5] < z0 || b[2] > z1) return;
+
+					if (one.Type === 'caves') low = Math.min(low, low - one.Bottom);
+					else if (one.Type === 'overhangs') high = high + one.Amount * 0.5;
+					else low = Math.min(low, b[1]);
+				});
+
+				return [low, high];
+			}
+		};
+	},
+
+	/*
+	 * A field with a volume walked as a place of floors, as the ground of a location is: Height(x, z) the ground under the sky, what was cut out of it too, and Height(x, z, y) the floor a walker
+	 * at y stands on, steps up to (Climb, 0.6 m) or falls to, where the carves are (else its heights as ever: y says nothing
+	 * there); Blocked(x, z, y) rock where its body is; CanStep(x, z, y) a floor for it with no rock in its way; Stands(x, z,
+	 * y) a floor for it, Up(x, y, z) how much a floor faces up (1 level), Path(from, to, rules) a way over and under it
+	 * (WayUnder), not steeper than Steep (the least it faces up, 0.5) when it goes up. Climb and Steep of the options.
+	 */
+	Underground: function (field, settings) {
+		var self = this;
+		var volume = field.Volume;
+		var top = field.Height;
+		var climb = settings.Climb === undefined ? 0.6 : Number(settings.Climb);
+		var steep = settings.Steep === undefined ? 0.5 : Number(settings.Steep);
+		var step = 0.25;
+
+		/* Whether a column is more than its heights, and how far over them rock may jut there. */
+		function column (x, z) {
+			var over = 0;
+			var cut = false;
+
+			volume.Carves.forEach(function (one) {
+				var b = one.Bounds;
+				if (x < b[0] || z < b[2] || x > b[3] || z > b[5]) return;
+
+				if (one.Type === 'overhangs') {
+					if (volume.Steep(x, z) > one.Slope - 0.1)
+						over = Math.max(over, one.Amount);
+				}
+				else {
+					cut = true;
+				}
+			});
+
+			return over || cut ? {Over: over} : null;
+		}
+
+		/* The floor under y + Climb: going down, the first air over rock; null with none within 60 m. */
+		function floor (x, z, y) {
+			var made = column(x, z);
+			var height = top(x, z);
+			var at;
+			var air;
+			var low;
+			var high;
+			var i;
+
+			if (!made)
+				return height;
+
+			/* With no y: the ground under the sky, what was cut out of it too. */
+			at = y === undefined ? height + made.Over + climb : Math.min(y + climb, height + made.Over + climb);
+			air = volume.Density(x, at, z) <= 0;
+
+			for (i = 0; i < 240; i++) {
+				var below = at - step;
+				var solid = volume.Density(x, below, z) > 0;
+
+				if (air && solid) {
+					low = below;
+					high = at;
+
+					/* Where the rock begins, more nearly. */
+					[0, 1, 2, 3, 4].forEach(function () {
+						var middle = (low + high) / 2;
+
+						if (volume.Density(x, middle, z) > 0) low = middle;
+						else high = middle;
+					});
+
+					return (low + high) / 2;
+				}
+
+				air = !solid;
+				at = below;
+			}
+
+			return null;
+		}
+
+		field.Height = function (x, z, y) {
+			var found = floor(x, z, y);
+
+			return found === null ? y : found;
+		};
+
+		field.Blocked = function (x, z, y) {
+			return volume.Density(x, y + 0.3, z) > 0 || volume.Density(x, y + 1.2, z) > 0;
+		};
+
+		field.Stands = function (x, z, y) {
+			var found = floor(x, z, y);
+
+			return found !== null && found <= y + climb;
+		};
+
+		/* How much a floor faces up, of the density round it: 1 level, 0 a wall. */
+		function up (x, y, z) {
+			var e = 0.2;
+			var gx = volume.Density(x + e, y, z) - volume.Density(x - e, y, z);
+			var gy = volume.Density(x, y + e, z) - volume.Density(x, y - e, z);
+			var gz = volume.Density(x, y, z + e) - volume.Density(x, y, z - e);
+
+			return -gy / (Math.sqrt(gx * gx + gy * gy + gz * gz) || 1);
+		}
+
+		field.Up = up;
+
+		/* Its ways over and under it, as a walker goes (WayUnder). */
+		field.Path = function (from, to, rules) {
+			return self.WayUnder(field, from, to, rules || {});
+		};
+
+		/* Up only what is not too steep (Steep: the least a floor faces up, 0.5); down anything. */
+		field.CanStep = function (x, z, y) {
+			var found = floor(x, z, y);
+
+			return found !== null && found <= y + climb && !field.Blocked(x, z, found) && (found <= y + 0.05 || up(x, found, z) >= steep);
+		};
+
+		return field;
+	},
+
+	/*
+	 * The geometry of a square of a ground with a volume (Volume), as Chunk gives it: its surface where its density goes
+	 * through 0 (surface nets: a point in each cell it crosses, the mean of where it crosses its edges, joined across each
+	 * edge it crosses), its positions relative to its middle, its normals of the density, the colors of the ground on top
+	 * and of rock below. One more cell round it is reckoned, its points held to the edges, so its surface goes right to them;
+	 * a skirt under its edges where the ground there is only its height hides what a square beside of other cells leaves.
+	 */
+	Volumetric: function (field, cx, cz, extent, resolution) {
+		var self = this;
+		var volume = field.Volume;
+		var n = resolution;
+		var step = extent / n;
+		var x0 = cx - extent / 2;
+		var z0 = cz - extent / 2;
+		var low = Infinity;
+		var high = -Infinity;
+		var side = n + 3;
+		var columns = [];
+		var geometry = {Positions: [], Normals: [], UVs: [], Colors: [], Indices: []};
+		var range;
+		var y0;
+		var layers;
+		var values;
+		var cells;
+		var i;
+		var j;
+		var k;
+
+		/* The heights and slopes of the columns, one more round the square. */
+		for (k = -1; k <= n + 1; k++) {
+			for (i = -1; i <= n + 1; i++) {
+				var h = field.Height(x0 + i * step, z0 + k * step);
+
+				columns.push([h, field.Slope(x0 + i * step, z0 + k * step)]);
+
+				low = Math.min(low, h);
+				high = Math.max(high, h);
+			}
+		}
+
+		range = volume.Range(x0 - step, z0 - step, x0 + extent + step, z0 + extent + step, low, high);
+		y0 = Math.floor((range[0] - step * 2) / step) * step;
+		layers = Math.min(400, Math.ceil((range[1] + step * 2 - y0) / step));
+		values = new Float32Array(side * side * (layers + 1));
+
+		function at (ii, jj, kk) {
+			return (jj * side + (kk + 1)) * side + (ii + 1);
+		}
+
+		for (j = 0; j <= layers; j++) {
+			for (k = -1; k <= n + 1; k++) {
+				for (i = -1; i <= n + 1; i++)
+					values[at(i, j, k)] = volume.Density(x0 + i * step, y0 + j * step, z0 + k * step, columns[(k + 1) * side + (i + 1)]);
+			}
+		}
+
+		cells = new Int32Array(side * side * layers).fill(-1);
+
+		/*
+		 * How much of the sky a cell sees, 0 to 1: of five rays up through the density, one straight up and four leaning a
+		 * cell aside each cell up, those that meet no rock (out of the square: seen); a little always (0.03), so a cave is dark
+		 * and its lamps light it.
+		 */
+		function open (ii, jj, kk) {
+			var seen = 0;
+
+			[[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (lean) {
+				var up;
+
+				for (up = 2; jj + up <= layers; up++) {
+					var ci = ii + lean[0] * up;
+					var ck = kk + lean[1] * up;
+					if (ci < -1 || ci > n + 1 || ck < -1 || ck > n + 1) break;
+
+					if (values[at(ci, jj + up, ck)] > 0) return;
+				}
+
+				seen++;
+			});
+
+			return Math.max(0.03, seen / 5);
+		}
+
+		/* A point in each cell the surface crosses: the mean of where it crosses the edges of the cell. */
+		for (j = 0; j < layers; j++) {
+			for (k = -1; k <= n; k++) {
+				for (i = -1; i <= n; i++) {
+					var corners = [];
+					var solid = 0;
+					var sum = [0, 0, 0];
+					var count = 0;
+					var c;
+
+					for (c = 0; c < 8; c++) {
+						corners.push(values[at(i + (c & 1), j + (c >> 2 & 1), k + (c >> 1 & 1))]);
+
+						if (corners[c] > 0)
+							solid++;
+					}
+
+					if (!solid || solid === 8) continue;
+
+					/*
+					 * A cell out of the square, across its edge: its point of the crossings on the face it shares with the square
+					 * alone, the very samples the square beside has there, so both put the same points on their edge.
+					 */
+					var face = function (corner) {
+						return (i === -1 ? (corner & 1) === 1 : i === n ? (corner & 1) === 0 : true) && (k === -1 ? (corner >> 1 & 1) === 1 : k === n ? (corner >> 1 & 1) === 0 : true);
+					};
+
+					[[0, 1], [2, 3], [4, 5], [6, 7], [0, 2], [1, 3], [4, 6], [5, 7], [0, 4], [1, 5], [2, 6], [3, 7]].forEach(function (edge) {
+						var a = corners[edge[0]];
+						var b = corners[edge[1]];
+						var t;
+
+						if (a > 0 === b > 0 || !face(edge[0]) || !face(edge[1])) return;
+
+						t = a / (a - b);
+						sum[0] += (edge[0] & 1) + ((edge[1] & 1) - (edge[0] & 1)) * t;
+						sum[1] += (edge[0] >> 2 & 1) + ((edge[1] >> 2 & 1) - (edge[0] >> 2 & 1)) * t;
+						sum[2] += (edge[0] >> 1 & 1) + ((edge[1] >> 1 & 1) - (edge[0] >> 1 & 1)) * t;
+						count++;
+					});
+
+					if (!count) continue;
+
+					/* The cells round it are held to its edges: its surface goes right to them, and so does the one of the square beside. */
+					var px = Math.max(x0, Math.min(x0 + extent, x0 + (i + sum[0] / count) * step));
+					var py = y0 + (j + sum[1] / count) * step;
+					var pz = Math.max(z0, Math.min(z0 + extent, z0 + (k + sum[2] / count) * step));
+					/* The way the density grows, of the corners of the cell: no more of it reckoned. */
+					var gx = corners[1] - corners[0] + corners[3] - corners[2] + corners[5] - corners[4] + corners[7] - corners[6];
+					var gy = corners[4] - corners[0] + corners[5] - corners[1] + corners[6] - corners[2] + corners[7] - corners[3];
+					var gz = corners[2] - corners[0] + corners[3] - corners[1] + corners[6] - corners[4] + corners[7] - corners[5];
+					var length = Math.sqrt(gx * gx + gy * gy + gz * gz) || 1;
+					var normal = [-gx / length, -gy / length, -gz / length];
+					var top = field.Height(px, pz);
+					var color;
+
+					/* The ground under the sky has its colors; what is under it or juts out, rock, darker the deeper. */
+					if (normal[1] > 0.3 && Math.abs(py - top) < step * 1.5) {
+						color = self.Paint(field, px, pz, py, 1 - normal[1]);
+					}
+					else {
+						color = self.Paint(field, px, pz, Math.max(py, 2), 1);
+						color = color.map(function (part) {
+							return part * Math.max(0.55, 1 - Math.max(0, top - py) / 60);
+						});
+					}
+
+					cells[(j * side + (k + 1)) * side + (i + 1)] = geometry.Positions.length / 3;
+
+					geometry.Positions.push(px - cx, py, pz - cz);
+					geometry.Normals.push(normal[0], normal[1], normal[2]);
+					geometry.UVs.push(py, open(i, j, k));
+					geometry.Colors.push(color[0], color[1], color[2]);
+				}
+			}
+		}
+
+		function cell (ii, jj, kk) {
+			return jj < 0 || jj >= layers ? -1 : cells[(jj * side + (kk + 1)) * side + (ii + 1)];
+		}
+
+		/*
+		 * A quad across each edge the surface crosses, of the four cells round it, its face to the air: the four go round the
+		 * edge so that their face is to +X, -Y and +Z (of its axis), turned the other way when the air is at its start.
+		 */
+		function quad (a, b, c, d, forward) {
+			if (a < 0 || b < 0 || c < 0 || d < 0) return;
+
+			if (forward) geometry.Indices.push(a, b, c, a, c, d);
+			else geometry.Indices.push(a, c, b, a, d, c);
+		}
+
+		for (j = 0; j <= layers; j++) {
+			for (k = 0; k <= n; k++) {
+				for (i = 0; i <= n; i++) {
+					/* Across its edges only within it: one out of it would stand as a sheet in the plane of its edge. */
+					var here = values[at(i, j, k)] > 0;
+					if (j > 0 && j < layers && i < n && here !== values[at(i + 1, j, k)] > 0)
+						quad(cell(i, j - 1, k - 1), cell(i, j, k - 1), cell(i, j, k), cell(i, j - 1, k), here);
+
+					if (j < layers && here !== values[at(i, j + 1, k)] > 0)
+						quad(cell(i - 1, j, k - 1), cell(i, j, k - 1), cell(i, j, k), cell(i - 1, j, k), !here);
+
+					if (j > 0 && j < layers && k < n && here !== values[at(i, j, k + 1)] > 0)
+						quad(cell(i - 1, j - 1, k), cell(i, j - 1, k), cell(i, j, k), cell(i - 1, j, k), here);
+				}
+			}
+		}
+
+		/*
+		 * A skirt along its edges, where the ground there is only its height: a square beside, of other cells or of no volume,
+		 * shows no gap. None where a carve or a rock cuts the edge, so no way in is walled up.
+		 */
+		var edges = [];
+
+		for (i = 0; i <= n; i++)
+			edges.push([i, 0]);
+
+		for (k = 1; k <= n; k++)
+			edges.push([n, k]);
+
+		for (i = n - 1; i >= 0; i--)
+			edges.push([i, n]);
+
+		for (k = n - 1; k >= 0; k--)
+			edges.push([0, k]);
+
+		edges = edges.map(function (point) {
+			var x = x0 + point[0] * step;
+			var z = z0 + point[1] * step;
+			var top = columns[(point[1] + 1) * side + (point[0] + 1)][0];
+			var plain = volume.Density(x, top - step * 0.5, z) > 0 && volume.Density(x, top + step * 0.5, z) <= 0;
+			var color = self.Paint(field, x, z, top, 0);
+			var index = geometry.Positions.length / 3;
+
+			geometry.Positions.push(x - cx, top, z - cz, x - cx, top - step * 2, z - cz);
+			geometry.Normals.push(0, 1, 0, 0, 1, 0);
+			geometry.UVs.push(top, 1, top, 1);
+			geometry.Colors.push(color[0], color[1], color[2], color[0] * 0.8, color[1] * 0.8, color[2] * 0.8);
+
+			return {Index: index, Plain: plain, Top: top};
+		});
+
+		edges.forEach(function (edge, index) {
+			var next = edges[(index + 1) % edges.length];
+			/* Only where the ground goes gently along the edge: none from the top of a wall down to its foot. */
+			if (!edge.Plain || !next.Plain || Math.abs(edge.Top - next.Top) > step * 1.5) return;
+
+			/* Both its faces: it is seen from either side. */
+			geometry.Indices.push(edge.Index, next.Index, edge.Index + 1, next.Index, next.Index + 1, edge.Index + 1);
+			geometry.Indices.push(edge.Index, edge.Index + 1, next.Index, next.Index, edge.Index + 1, next.Index + 1);
+		});
+
+		geometry.Volume = true;
+
+		return geometry;
+	},
+
 	Mesh: function (field, cx, cz, extent, resolution) {
 		var geometry = {Positions: [], Normals: [], UVs: [], Colors: [], Indices: []};
 		var side = resolution + 1;
@@ -680,7 +1743,8 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 				geometry.Positions.push(x - cx, y, z - cz);
 				geometry.Normals.push(normal[0], normal[1], normal[2]);
-				geometry.UVs.push(y, y < 0 ? 1 : 0);
+				/* Its height, and how much of the sky it sees: all of it, over a ground of heights. */
+				geometry.UVs.push(y, 1);
 				geometry.Colors.push(color[0], color[1], color[2]);
 			}
 		}
@@ -849,9 +1913,166 @@ Elemenx.Service('SceneTerrainGenerator', {
 		});
 	},
 
+	/*
+	 * A way over a field with a volume, over and under its ground: A* over points Step apart, each on a floor (Height(x, z,
+	 * y) from the floor before it), a step taken only as a walker takes it (CanStep: up Climb at most and not too steep,
+	 * down any drop, no rock where its body goes), no steeper than MaxSlope of the rules, not into the sea without Swim, nor
+	 * where Blocked of the rules says; then made straight wherever a walker can go straight. from and to {X, Z, Y}: Y the
+	 * height it is at, or none for the top of the ground. Gives [{X, Y, Z}] or null.
+	 */
+	WayUnder: function (field, from, to, rules) {
+		var step = Number(rules.Step) || field.Size / 96;
+		var limit = Number(rules.Limit) || 40000;
+		var steepest = rules.MaxSlope === undefined || rules.MaxSlope === null ? null : Number(rules.MaxSlope);
+		var half = field.Size / 2;
+		var open = [];
+		var came = {};
+		var cost = {};
+		var closed = {};
+		var neighbours = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+		var visited = 0;
+		var found = null;
+		var path = [];
+		var straight;
+		var start;
+		var goal;
+		var current;
+		var far;
+		var i;
+
+		/* The floor a walker at y comes to at x, z, or null where it cannot. */
+		function can (x, z, y) {
+			var floor;
+			var top;
+
+			if (Math.abs(x) > half || Math.abs(z) > half || !field.CanStep(x, z, y)) return null;
+
+			floor = field.Height(x, z, y);
+			top = field.Height(x, z);
+
+			if (!rules.Swim && top < 0 && floor > top - 0.5) return null;
+			if (rules.Blocked && rules.Blocked(x, z)) return null;
+			if (steepest !== null && field.Up(x, floor, z) < 1 - steepest) return null;
+
+			return floor;
+		}
+
+		function key (point) {
+			return point.X + ':' + point.Z + ':' + Math.round(point.Y / 2);
+		}
+
+		function guess (point) {
+			return Math.sqrt((point.X - goal.X) * (point.X - goal.X) + (point.Z - goal.Z) * (point.Z - goal.Z) + (point.Y - goal.Y) * (point.Y - goal.Y) / (step * step));
+		}
+
+		start = {X: Math.round(from.X / step), Z: Math.round(from.Z / step), Y: field.Height(from.X, from.Z, from.Y)};
+		goal = {X: Math.round(to.X / step), Z: Math.round(to.Z / step), Y: field.Height(to.X, to.Z, to.Y)};
+
+		if (start.Y === null || goal.Y === null || can(to.X, to.Z, goal.Y) === null) return null;
+
+		cost[key(start)] = 0;
+
+		open.push({X: start.X, Z: start.Z, Y: start.Y, F: guess(start)});
+
+		while (open.length && visited < limit) {
+			open.sort(function (a, b) {
+				return a.F - b.F;
+			});
+
+			current = open.shift();
+
+			if (closed[key(current)]) continue;
+
+			closed[key(current)] = true;
+			visited++;
+
+			if (current.X === goal.X && current.Z === goal.Z && Math.abs(current.Y - goal.Y) < 2.5) {
+				found = current;
+
+				break;
+			}
+
+			neighbours.forEach(function (offset) {
+				var y = can((current.X + offset[0]) * step, (current.Z + offset[1]) * step, current.Y);
+				var next;
+				var id;
+				var price;
+
+				if (y === null) return;
+
+				next = {X: current.X + offset[0], Z: current.Z + offset[1], Y: y};
+				id = key(next);
+
+				if (closed[id]) return;
+
+				/* A diagonal does not cut the corner of what cannot be walked. */
+				if (offset[0] && offset[1] && (can((current.X + offset[0]) * step, current.Z * step, current.Y) === null || can(current.X * step, (current.Z + offset[1]) * step, current.Y) === null)) return;
+
+				price = cost[key(current)] + Math.sqrt(offset[0] * offset[0] + offset[1] * offset[1] + (y - current.Y) * (y - current.Y) / (step * step)) * (1 + Math.max(0, y - current.Y) / step);
+
+				if (cost[id] !== undefined && cost[id] <= price) return;
+
+				cost[id] = price;
+				came[id] = current;
+
+				open.push({X: next.X, Z: next.Z, Y: y, F: price + guess(next)});
+			});
+		}
+
+		if (!found)
+			return null;
+
+		current = found;
+
+		while (current) {
+			path.unshift({X: current.X * step, Y: current.Y, Z: current.Z * step});
+
+			current = came[key(current)];
+		}
+
+		path[0] = {X: from.X, Y: start.Y, Z: from.Z};
+		path[path.length - 1] = {X: to.X, Y: goal.Y, Z: to.Z};
+
+		/* Straight wherever a walker goes straight: from a point to another, its floor followed, it comes to the other's floor. */
+		function clear (a, b) {
+			var length = Math.sqrt((b.X - a.X) * (b.X - a.X) + (b.Z - a.Z) * (b.Z - a.Z));
+			var count = Math.max(1, Math.ceil(length / (step / 2)));
+			var y = a.Y;
+			var at;
+
+			for (at = 1; at <= count; at++) {
+				y = can(a.X + (b.X - a.X) * at / count, a.Z + (b.Z - a.Z) * at / count, y);
+
+				if (y === null) return false;
+			}
+
+			return Math.abs(y - b.Y) < 1;
+		}
+
+		straight = [path[0]];
+		i = 0;
+
+		while (i < path.length - 1) {
+			far = path.length - 1;
+
+			while (far > i + 1 && !clear(path[i], path[far]))
+				far--;
+
+			straight.push(path[far]);
+
+			i = far;
+		}
+
+		return straight;
+	},
+
 	Sphere: function (options) {
 		var self = this;
+		/* A planet of ScenePlanet (Planet: its options): its ground, the very one its globe shows. */
 		var settings = options || {};
+		if (settings.Planet)
+			return this.$Service('ScenePlanet').Sphere(settings.Planet);
+
 		var math = this.$Service('Math');
 		var noise = math.Noise();
 		var radius = Number(settings.Radius) || 6371;
@@ -927,7 +2148,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: ['Noise', 'SeedOffset', 'Vectors'], SceneTerrainGenerator: ['Smoothstep', 'Flat', 'Sphere', 'Paint', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan']});
+		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Make', 'Planet', 'Color', 'Sphere'], SceneTerrainGenerator: ['Smoothstep', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan']});
 	},
 
 	/*
@@ -1977,11 +3198,26 @@ Elemenx.Service('SceneTerrainGenerator', {
 				var at = (row * side + column) * 4;
 
 				data[at] = height;
-				data[at + 1] = height > 1 && height < top && field.Slope(x, z) < steep ? 1 : 0;
+				data[at + 1] = height > 1 && height < top && field.Slope(x, z) < steep && this.Grassy(field, x, z) ? 1 : 0;
 			}
 		}
 
 		return data;
+	},
+
+	/* Whether grass grows at a point of a field: everywhere, but on a ground of lands by their climate where the most of them have it. */
+	Grassy: function (field, x, z) {
+		var lands;
+
+		if (!field.Biomes) return true;
+
+		lands = field.Biome(x, z).List;
+
+		return lands.reduce(function (sum, land) {
+			return sum + (field.Biomes.some(function (biome) {
+				return biome.Name === land.Name && biome.Grass;
+			}) ? land.Weight : 0);
+		}, 0) >= 0.5;
 	},
 
 	/* What a worker of the ground carries: see Workers. */
@@ -2011,7 +3247,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 	SpherePatch: function (field, face, cu, cv, extent, resolution) {
 		var math = this.$Service('Math');
-		var geometry = {Positions: [], Normals: [], UVs: [], Indices: []};
+		var geometry = {Positions: [], Normals: [], UVs: [], Colors: [], Indices: []};
 		var side = resolution + 1;
 		var step = extent / resolution;
 		var center = field.Point(this.Face(face, cu, cv));
@@ -2035,6 +3271,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 				points.push(point);
 				geometry.Positions.push(point[0] - center[0], point[1] - center[1], point[2] - center[2]);
 				geometry.UVs.push(value, field.Ocean > 0 && value < 0 ? 1 : 0);
+
+				/* A ground that tells its colors (ScenePlanet) has them on each point. */
+				if (field.Color)
+					geometry.Colors.push.apply(geometry.Colors, field.Color(direction));
 			}
 		}
 

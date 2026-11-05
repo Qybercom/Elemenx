@@ -6,23 +6,30 @@
  *   the ground and the rules: a worker makes the field once for it), Options (of the field of the ground,
  *   SceneTerrainGenerator.Flat), Roads (painted on it), Kept (the cells of 4 by 4 where a house of a village stands:
  *   ['x:z']), Rules (of Scatter, of a biome, of a sketch: Shapes, Density, Size, MinHeight, MaxHeight, MaxSlope, Cover,
- *   Patch, Clumps, Seed, Passability, Blocks, Reach, Grid, Area, Line, Rows, Spacing, Gap, Way, Fit, Gates, Fixed), Free
+ *   Patch, Clumps, Seed, Passability, Blocks, Reach, Grid, Area, Line, Rows, Spacing, Gap, Way, Fit, Gates, Fixed, Biome (the
+ *   land of a ground of lands by their climate it grows in), Source (of a graph, below), Parameters (of its graph)), Free
  *   ({Areas, Lines}: where the sketch keeps the ground free), Models ({name: {Size, Keys (the Key of SceneModels.Make of
  *   each of 16 variants)}}), Size (of a square, 48), and in the page Field (the field itself, not made again)}. It gives
  *   {Squares: [{X, Z, Lists ({key: {Places, Extra (Float32Array, four numbers a thing), Count, Reach}}), Center}], Blocked
  *   (the cells of 2 by 2 what was sown stops the way through), Things}.
+ * - A rule of a graph: Graph, a generator of Blueprints that tells where a thing grows and how, in place of MinHeight,
+ *   MaxHeight, MaxSlope, Cover and Clumps. Inputs X, Z, Height, Slope, Moisture, Temperature (of the climate of the
+ *   ground), Random and Other (numbers of 0 to 1 of the place); results Grow (true, or a number over 0.5), Size (in sizes of
+ *   its model), Turn (radians), Shape (the index of one of its Shapes), each left to the rule when it is not there.
+ *   Compile(rules), in the page, makes each graph JavaScript (Source) for a worker; LibraryScatter(rule) the graph of a
+ *   rule as it is sown with none, the very same things: what an editor starts from.
  * - Work(): the pool of its workers, made once.
  * The same functions run in Node: they read no page.
  */
 Elemenx.Service('SceneSower', {
 	$Meta: {
 		Description: 'What the Scatter of a Scene sows in squares of a ground, worked out in workers: the same things for the same seed.',
-		Methods: ['Sow(job)', 'Work()']
+		Methods: ['Sow(job)', 'Compile(rules)', 'LibraryScatter(rule)', 'Work()']
 	},
 
 	/* The workers of the sowing: the field of the ground made as the page makes it, the noise and the chances of Models. */
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneSower', {Math: ['Noise', 'SeedOffset', 'Vectors'], SceneTerrainGenerator: ['Smoothstep', 'Flat', 'Sphere', 'Paint', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan'], SceneSower: ['Sow', 'Random', 'Ground', 'Within', 'Near', 'Box', 'Touches', 'Keeping', 'Free', 'Footing', 'Footprint', 'Places', 'Chance']});
+		return this.$Service('Workers').Pool('SceneSower', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Make', 'Planet', 'Color', 'Sphere'], SceneTerrainGenerator: ['Smoothstep', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan'], SceneSower: ['Land', 'Grown', 'Sow', 'Random', 'Ground', 'Within', 'Near', 'Box', 'Touches', 'Keeping', 'Free', 'Footing', 'Footprint', 'Places', 'Chance']});
 	},
 
 	/* The numbers of a seed, as SceneModels.Random gives them: the same things for the same seed in a worker and in the page. */
@@ -263,6 +270,226 @@ Elemenx.Service('SceneSower', {
 		return places;
 	},
 
+	/*
+	 * The land of a place of a ground of lands by their climate (Biomes): where they meet, one of them by their parts, the
+	 * same for the same place, so their things mingle at the edge. Kept for the place.
+	 */
+	Land: function (ground, place) {
+		var key = place[0] + ':' + place[1];
+		var lands;
+		var pick;
+		var i;
+
+		ground.Lands = ground.Lands || {};
+
+		if (ground.Lands[key] !== undefined) return ground.Lands[key];
+
+		lands = ground.Field.Biome(place[0], place[1]).List;
+		pick = Math.abs(Math.sin(place[0] * 39.3468 + place[1] * 11.135) * 24634.6345) % 1;
+
+		for (i = 0; i < lands.length - 1 && pick >= lands[i].Weight; i++)
+			pick -= lands[i].Weight;
+
+		ground.Lands[key] = lands[i] ? lands[i].Name : '';
+
+		return ground.Lands[key];
+	},
+
+	/*
+	 * Rules with a graph (Graph: a generator of Blueprints) made ready to sow, in the page: each with the source of its graph made
+	 * JavaScript (Source), its graph left out, so a worker runs it with no Blueprints of its own. Rules without one as they are.
+	 */
+	Compile: function (rules) {
+		var blueprints = this.$Service('Blueprints');
+
+		return (rules || []).map(function (rule) {
+			var made;
+			var copy;
+
+			if (!rule.Graph || rule.Source) return rule;
+
+			made = blueprints.Code(typeof rule.Graph === 'string' ? JSON.parse(rule.Graph) : rule.Graph);
+			copy = Object.assign({}, rule, {Source: made ? made.Source : null});
+
+			delete copy.Graph;
+
+			return copy;
+		});
+	},
+
+	/*
+	 * What the graph of a rule says of a place: its inputs X, Z, Height, Slope, Moisture and Temperature (of the climate of the
+	 * ground), Random and Other (two numbers of 0 to 1 of the place, the same for the same place); its results Grow (whether a
+	 * thing grows there: true, or a number over 0.5), Size (in sizes of its model), Turn (radians) and Shape (the index of one
+	 * of its Shapes), each left to the rule when it does not tell it. Parameters of the rule are those of the graph.
+	 */
+	Grown: function (rule, place, height, field) {
+		var x = place[0];
+		var z = place[1];
+		var growers = this.Growers = this.Growers || {};
+		var run = growers[rule.Source] = growers[rule.Source] || new Function('B', 'M', 'N', rule.Source)(this.$Service('Blueprints'), this.$Service('Math'), this.$Service('Noise'));
+		var inputs = {X: x, Z: z, Height: height, Random: Math.abs(Math.sin(x * 12.9898 + z * 78.233) * 43758.5453) % 1, Other: Math.abs(Math.sin(x * 39.3468 + z * 11.135) * 24634.6345) % 1};
+		var weather = null;
+		var made;
+
+		/* What costs is read only when the graph reads it. */
+		function climate () {
+			weather = weather || (field.Climate ? field.Climate(x, z) : {Moisture: 0.5, Temperature: 0.5});
+
+			return weather;
+		}
+
+		Object.defineProperty(inputs, 'Slope', {enumerable: true, get: function () {
+			return field.Slope(x, z);
+		}});
+		Object.defineProperty(inputs, 'Moisture', {enumerable: true, get: function () {
+			return climate().Moisture;
+		}});
+		Object.defineProperty(inputs, 'Temperature', {enumerable: true, get: function () {
+			return climate().Temperature;
+		}});
+
+		made = run(rule.Parameters || {}, inputs) || {};
+
+		return {Grow: made.Grow === undefined ? true : Number(made.Grow) > 0.5, Size: made.Size, Turn: made.Turn, Shape: made.Shape};
+	},
+
+	/*
+	 * The graph of a rule as the sowing tells it with none (a generator of Blueprints for Graph of a rule): its heights
+	 * (MinHeight, MaxHeight), its slope (MaxSlope), its patches (Cover, Patch) and its clumps (Clumps) as blocks, Grow of them
+	 * all; the very same things grow of it. What an editor starts from to make a rule of its own.
+	 */
+	LibraryScatter: function (rule) {
+		var given = rule || {};
+		var blueprints = this.$Service('Blueprints');
+		var graph = blueprints.Create('generator', {name: 'Scatter'});
+		var seed = String(given.Seed === undefined ? given.ID : given.Seed);
+		var patch = Number(given.Patch) || 60;
+		var cover = given.Cover === undefined ? 1 : Number(given.Cover);
+		var clumps = Number(given.Clumps) || 0;
+		var all = null;
+		var x;
+		var z;
+		var height;
+		var slope;
+		var random;
+		var grow;
+
+		function add (type, properties) {
+			return blueprints.Add(graph, type, {x: 0, y: 0, properties: properties || {}});
+		}
+
+		function link (from, key, to, input) {
+			blueprints.Link(graph, [from.id, key], [to.id, input]);
+		}
+
+		function number (value) {
+			return add('Number', {Value: value});
+		}
+
+		/* A test of a value against a number: a and b, linked; true where it holds. */
+		function compare (from, key, operator, value) {
+			var test = add('Compare', {Operator: operator});
+
+			link(from, key, test, 'A');
+			link(number(value), 'Value', test, 'B');
+
+			return both(test);
+		}
+
+		/* All the tests so far, and this one. */
+		function both (test) {
+			var and;
+
+			if (!all) {
+				all = test;
+
+				return test;
+			}
+
+			and = add('And');
+
+			link(all, 'Out', and, 'A');
+			link(test, 'Out', and, 'B');
+
+			all = and;
+
+			return and;
+		}
+
+		/* The noise of its patches at [X / Patch, y, Z / Patch]. */
+		function patches (y) {
+			var u = add('Divide');
+			var w = add('Divide');
+			var size = number(patch);
+			var at = add('Combine');
+			var noise = add('NoiseSpec', {Type: 'value', Seed: seed, Fractal: 'fbm', Octaves: 3, Gain: 0.5});
+
+			link(x, 'Value', u, 'A');
+			link(size, 'Value', u, 'B');
+			link(z, 'Value', w, 'A');
+			link(size, 'Value', w, 'B');
+			link(u, 'Out', at, 'X');
+			link(number(y), 'Value', at, 'Y');
+			link(w, 'Out', at, 'Z');
+			link(at, 'XYZ', noise, 'Position');
+
+			return noise;
+		}
+
+		x = add('Input', {Name: 'X'});
+		z = add('Input', {Name: 'Z'});
+		height = add('Input', {Name: 'Height'});
+		slope = add('Input', {Name: 'Slope'});
+		random = add('Input', {Name: 'Random'});
+		grow = add('Result', {Key: 'Grow'});
+
+		compare(height, 'Value', '>=', given.MinHeight === undefined ? 1 : Number(given.MinHeight));
+
+		if (given.MaxHeight !== undefined)
+			compare(height, 'Value', '<=', Number(given.MaxHeight));
+
+		compare(slope, 'Value', '<=', given.MaxSlope === undefined ? 0.3 : Number(given.MaxSlope));
+
+		/* Its patches: where the noise of them is over its Cover, none. */
+		if (cover < 1) {
+			var scaled = add('Multiply');
+			var lowered = add('Subtract');
+
+			link(patches(0.5), 'Value', scaled, 'A');
+			link(number(1.6), 'Value', scaled, 'B');
+			link(scaled, 'Out', lowered, 'A');
+			link(number(0.3), 'Value', lowered, 'B');
+
+			compare(lowered, 'Out', '<=', cover);
+		}
+
+		/* Its clumps: thick in groves and thin between them, the number of the place against how thick they are there. */
+		if (clumps > 0) {
+			var steep = add('Smoothstep');
+			var open = add('OneMinus');
+			var thin = add('Multiply');
+			var thick = add('OneMinus');
+			var test = add('Compare', {Operator: '<='});
+
+			link(number(0.35), 'Value', steep, 'Low');
+			link(number(0.65), 'Value', steep, 'High');
+			link(patches(1.7), 'Value', steep, 'X');
+			link(steep, 'Out', open, 'X');
+			link(number(Math.min(1, clumps)), 'Value', thin, 'A');
+			link(open, 'Out', thin, 'B');
+			link(thin, 'Out', thick, 'X');
+			link(random, 'Value', test, 'A');
+			link(thick, 'Out', test, 'B');
+
+			both(test);
+		}
+
+		link(all, 'Out', grow, 'Value');
+
+		return graph;
+	},
+
 	/* The height a thing of a rule stands at, at a place; null where it does not grow. */
 	Chance: function (rule, place, ground, noise, keep) {
 		var terrain = this.$Service('SceneTerrainGenerator');
@@ -274,6 +501,11 @@ Elemenx.Service('SceneSower', {
 		if (rule.Area && !this.Within(rule.Area, place[0], place[1])) return null;
 		if (!this.Free(rule, place[0], place[1], keep)) return null;
 		if (field.Roads && terrain.OnRoad(field, place[0], place[1], 3)) return null;
+		if (rule.Biome && field.Biomes && this.Land(ground, place) !== rule.Biome) return null;
+
+		/* A rule of a graph tells all the rest itself (Grown). */
+		if (rule.Source) return height;
+
 		if (height < (rule.MinHeight === undefined ? 1 : Number(rule.MinHeight))) return null;
 		if (rule.MaxHeight !== undefined && height > Number(rule.MaxHeight)) return null;
 		if (field.Slope(place[0], place[1]) > (rule.MaxSlope === undefined ? 0.3 : Number(rule.MaxSlope))) return null;
@@ -331,10 +563,20 @@ Elemenx.Service('SceneSower', {
 					var name = rule.Fixed ? place[3] : shapes[Math.floor(random(0, shapes.length))];
 					var variant = rule.Fixed ? place[4].Variant || 0 : Math.floor(random(0, 16));
 					var height = rule.Fixed ? self.Footing(field, place[4]) : self.Chance(rule, place, ground, noise, keep);
-					var info = context.Models[name];
+					var grown = height !== null && rule.Source && !rule.Fixed ? self.Grown(rule, place, height, field) : null;
+					var info;
 					var key;
 					var list;
 					var tone;
+					var large;
+					var turn;
+
+					if (grown && !grown.Grow) continue;
+
+					if (grown && grown.Shape !== undefined && isFinite(grown.Shape))
+						name = shapes[((Math.floor(Number(grown.Shape)) % shapes.length) + shapes.length) % shapes.length];
+
+					info = context.Models[name];
 
 					if (height === null || !info) continue;
 
@@ -343,8 +585,18 @@ Elemenx.Service('SceneSower', {
 					tone = random(0.86, 1.1);
 
 					/* A piece that joins the next (a fence, a hedge, a wall) is as long as the step; the others as their Size says. */
-					list.Places.push(place[0], height - 0.05, place[1], fixed && rule.Fit ? Number(rule.Spacing) : rule.Fixed ? place[4].Size || info.Size : fixed && rule.Line ? info.Size : info.Size * random(Number(scale[0]), Number(scale[1])));
-					list.Extra.push(fixed ? place[2] : grid ? Math.floor(random(0, 4)) * Math.PI / 2 : random(0, Math.PI * 2), tone, tone * random(0.94, 1.04), tone * random(0.92, 1));
+					large = fixed && rule.Fit ? Number(rule.Spacing) : rule.Fixed ? place[4].Size || info.Size : fixed && rule.Line ? info.Size : info.Size * random(Number(scale[0]), Number(scale[1]));
+					turn = fixed ? place[2] : grid ? Math.floor(random(0, 4)) * Math.PI / 2 : random(0, Math.PI * 2);
+
+					/* What a graph tells of its size and its turn, over the chance. */
+					if (grown && grown.Size !== undefined && isFinite(grown.Size))
+						large = info.Size * Number(grown.Size);
+
+					if (grown && grown.Turn !== undefined && isFinite(grown.Turn))
+						turn = Number(grown.Turn);
+
+					list.Places.push(place[0], height - 0.05, place[1], large);
+					list.Extra.push(turn, tone, tone * random(0.94, 1.04), tone * random(0.92, 1));
 
 					list.Reach = rule.Reach ? Number(rule.Reach) : 0;
 

@@ -1849,6 +1849,14 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "PlanetEditor",
+					"Title": {
+						"en": "PlanetEditor"
+					},
+					"Group": "game",
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "Popover",
 					"Title": {
 						"en": "Popover"
@@ -2836,6 +2844,13 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "Noise",
+					"Title": {
+						"en": "Noise"
+					},
+					"Library": "ElemenxCommon"
+				},
+				{
 					"ID": "Panels",
 					"Title": {
 						"en": "Panels"
@@ -2962,9 +2977,23 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "SceneLocations",
+					"Title": {
+						"en": "SceneLocations"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneModels",
 					"Title": {
 						"en": "SceneModels"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "ScenePlanet",
+					"Title": {
+						"en": "ScenePlanet"
 					},
 					"Library": "ElemenxGraphics"
 				},
@@ -3007,6 +3036,13 @@
 					"ID": "SceneWaves",
 					"Title": {
 						"en": "SceneWaves"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneWorld",
+					"Title": {
+						"en": "SceneWorld"
 					},
 					"Library": "ElemenxGraphics"
 				},
@@ -3270,6 +3306,20 @@
 					"ID": "SceneEffects",
 					"Title": {
 						"en": "SceneEffects"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneFootings",
+					"Title": {
+						"en": "SceneFootings"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneLanding",
+					"Title": {
+						"en": "SceneLanding"
 					},
 					"Library": "ElemenxGraphics"
 				},

@@ -156,7 +156,7 @@ Elemenx.Component('GameStrategy', {
 
 			var ground = scene.GroundAt(event.clientX, event.clientY);
 			if (ground)
-				this.Order(this.Chosen, [ground[0], ground[2]], 'move');
+				this.Order(this.Chosen, [ground[0], ground[2], ground[1]], 'move');
 
 			return true;
 		}
@@ -268,7 +268,8 @@ Elemenx.Component('GameStrategy', {
 
 			var row = Math.floor(index / side);
 			var column = index % side;
-			var spot = [point[0] + (column - (side - 1) / 2) * spread, point[1] + (row - (side - 1) / 2) * spread];
+			/* The height of the floor told goes too: a cave under a hill is another place than the hill. */
+			var spot = [point[0] + (column - (side - 1) / 2) * spread, point[1] + (row - (side - 1) / 2) * spread].concat(point.length > 2 ? [point[2]] : []);
 
 			self.Orders[id] = {Kind: 'move'};
 

@@ -259,8 +259,43 @@
 
 .elemenx-scene-editor-blueprint {
 	grid-area: blueprint;
+	display: flex;
+	flex-direction: column;
 	height: 300px;
 	border-top: 1px solid var(--elemenx-border);
+}
+
+.elemenx-scene-editor-blueprint > :last-child {
+	flex: 1;
+	min-height: 0;
+}
+
+.elemenx-scene-editor-graphs {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 4px 8px;
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.elemenx-scene-editor-graph-kind {
+	padding: 4px 10px;
+	border: 0;
+	border-radius: var(--elemenx-radius-small);
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.elemenx-scene-editor-graph-kind.active {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-scene-editor-land {
+	padding: 2px 8px;
+	font-size: var(--elemenx-font-size-small);
+	color: var(--elemenx-warning);
 }
 
 @media (max-width: 760px) {

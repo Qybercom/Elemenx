@@ -3,6 +3,7 @@
 		"name": "Name of the game",
 		"scene": "Scene",
 		"models": "Models",
+		"planet": "Planet",
 		"newGround": "New ground",
 		"newSpace": "New star system",
 		"showcase": "Showcase world",

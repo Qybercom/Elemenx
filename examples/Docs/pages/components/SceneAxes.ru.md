@@ -19,4 +19,4 @@
 
 ## Тесты
 
-- [Axes draws each end where the view has it, the nearest over the others](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3029) — `tests/regression/library-scene.test.js`
+- [Axes draws each end where the view has it, the nearest over the others](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3036) — `tests/regression/library-scene.test.js`

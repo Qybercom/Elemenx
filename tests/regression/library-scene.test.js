@@ -625,8 +625,15 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		/* The frames are given here: the loop of the page would come back in time between them. */
 		inner.Loop.Stop();
 
+		/* Regression: the field Landed was the method of the shaders of the land too: the button showed in every scene, and a landing broke the method. */
+		expect(scene.$Element().querySelector('.elemenx-scene-takeoff')).toBe(null);
 		expect(scene.Land('giant')).toBe(false);
 		expect(scene.Land('rock', {Latitude: 10, Longitude: 20, Altitude: 2})).toBe(true);
+
+		await tick(20);
+
+		expect(scene.$Element().querySelector('.elemenx-scene-takeoff')).not.toBe(null);
+		expect(typeof scene.Landed).toBe('function');
 		expect(scene.Surface()).toMatchObject({ID: 'rock'});
 		expect(scene.Surface().Latitude).toBeCloseTo(10, 6);
 
@@ -1629,7 +1636,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var now = performance.now() + 1000;
 		var i;
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 		scene.Add('unit', {ID: 'hero', X: 0, Y: 0});
 
 		function frames (count) {
@@ -2674,7 +2681,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var now = performance.now() + 100;
 		var i;
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 		scene.Add('unit', {ID: 'hero', X: 0, Y: 0});
 
 		function frames (count) {
@@ -2740,7 +2747,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var now = performance.now() + 100;
 		var i;
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 		scene.Add('unit', {ID: 'hero', X: 0, Y: 0});
 		scene.Add('unit', {ID: 'other', X: 8, Y: 8});
 
@@ -2852,7 +2859,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var now = performance.now() + 100;
 		var i;
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 		scene.Add('unit', {ID: 'hero', X: 0, Y: 0});
 
 		function frames (count) {
@@ -2969,7 +2976,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var gl = engine.Renderer.GL;
 		var now = performance.now() + 100;
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 
 		function frames (count) {
 			for (var i = 0; i < count; i++) {
@@ -3107,7 +3114,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var captured = scene.Captured;
 		var locked = Object.getOwnPropertyDescriptor(Document.prototype, 'pointerLockElement');
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 
 		/* A button let go outside stays among the pointers, and the next press would count as a second finger. */
 		inner.Pointers = {7: {X: 1, Y: 1}};
@@ -3172,7 +3179,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var engine = scene.Engine();
 		var now = performance.now() + 100;
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 		scene.Add('unit', {ID: 'hero', X: 0, Y: 0});
 		scene.Add('light', {ID: 'near-hero', X: 3, Y: 0, Height: 2, Radius: 8, Power: 0.3});
 		scene.Add('light', {ID: 'near-eye', X: 0, Y: 18, Height: 2, Radius: 8, Power: 0.3});
@@ -3222,7 +3229,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var now = performance.now() + 100;
 		var heard = '';
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 		scene.Add('unit', {ID: 'hero', X: 0, Y: 0});
 		scene.$On('shoulder', function (side) {
 			heard = side;
@@ -4533,7 +4540,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var now = performance.now() + 100;
 		var start = track.Start;
 
-		scene.Add('ground', {ID: 'land', Size: 1400, Height: 8, Water: 0, Scale: 300, Ridges: 0, Seed: 'drive'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 1400, Height: 8, Water: 0, Scale: 300, Ridges: 0, Seed: 'drive'})});
 		scene.Add('road', track.Spec);
 
 		function frames (count, length) {
@@ -6688,7 +6695,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var engine = scene.Engine();
 		var now = performance.now() + 100;
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 		scene.Add('unit', {ID: 'hero', X: 0, Y: 0});
 
 		function frames (count) {
@@ -6824,7 +6831,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var now = performance.now() + 100;
 		var i;
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 		scene.Add('unit', {ID: 'hero', X: 0, Y: 0});
 
 		function frames (count) {
@@ -6875,7 +6882,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var engine = scene.Engine();
 		var now = performance.now() + 100;
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 		scene.Add('unit', {ID: 'hero', X: 0, Y: 0});
 
 		function frames (count) {
@@ -6993,7 +7000,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var now = performance.now() + 100;
 		var i;
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 		scene.Add('unit', {ID: 'hero', X: 0, Y: 0});
 
 		function frames (count) {
@@ -7418,7 +7425,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var now = performance.now() + 1000;
 		var i;
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 		scene.Add('unit', {ID: 'hero', X: 0, Y: 0});
 
 		function frames (count) {
@@ -7476,7 +7483,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var now = performance.now() + 1000;
 		var i;
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 		scene.Add('unit', {ID: 'hero', X: 0, Y: 0});
 
 		function frames (count) {
@@ -7665,7 +7672,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var now = performance.now() + 1000;
 		var i;
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 		scene.Add('unit', {ID: 'hero', X: 0, Y: 0});
 
 		function frames (count) {
@@ -7992,7 +7999,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		var now = performance.now() + 1000;
 		var i;
 
-		scene.Add('ground', {ID: 'land', Size: 200, Height: 1, Water: 0, Seed: 'test'});
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
 		scene.Add('unit', {ID: 'hero', X: 2, Y: 0});
 
 		function frames (count) {
@@ -8766,7 +8773,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(gl.getError()).toBe(gl.NO_ERROR);
 	});
 
-	it('makes a whole land of one attribute, and a village with its roads that nothing grows on', async function () {
+	it('makes a whole land of one biome of its World, and a village with its roads that nothing grows on', async function () {
 		var mounted = await mount('<Scene (ready)="Ready">' +
 			'<SceneObject ID="land" Kind="ground" Size="288" Height="24" Water="0.15" Seed="test" Biome="desert" />' +
 			'<SceneObject ID="sun" Kind="sun" />' +
@@ -8786,7 +8793,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		field = inner.Ground.Field;
 
-		expect(field.Palette).toEqual(Elemenx.Service('SceneBiomes').Get('desert').Ground);
+		expect(field.Biome(30, -40).List[0].Ground).toEqual(Elemenx.Service('SceneBiomes').Get('desert').Ground);
 		expect(scene.Sown().Things).toBeGreaterThan(20);
 
 		await waitFor(function () {
@@ -8802,13 +8809,15 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(terrain.Paint(field, field.Roads[0][0][0], field.Roads[0][0][1], 3, 0)).toEqual(Elemenx.Service('SceneBiomes').Get('desert').Ground.Road);
 
 		/* A land of another name is another land. */
-		scene.Change('land', {Biome: 'alien'});
+		scene.Change('land', {World: Elemenx.Service('SceneWorld').Library({Size: 288, Height: 24, Water: 0.15, Seed: 'test', Biomes: ['alien']})});
 
 		await waitFor(function () {
 			engine.Frame(performance.now() + 200);
 
-			return inner.Ground && inner.Ground.Field.Palette === Elemenx.Service('SceneBiomes').Get('alien').Ground;
+			return inner.Ground && inner.Ground.Field.Biomes && inner.Ground.Field.Biome(30, -40).List[0].Ground === Elemenx.Service('SceneBiomes').Get('alien').Ground;
 		}, 3000);
+
+		expect(inner.Ground.Field.Biome(30, -40).List[0].Name).toBe('alien');
 
 		expect(engine.Renderer.GL.getError()).toBe(engine.Renderer.GL.NO_ERROR);
 	});

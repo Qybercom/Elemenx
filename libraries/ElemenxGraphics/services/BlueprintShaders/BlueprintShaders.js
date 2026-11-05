@@ -27,7 +27,8 @@
  * compile each on its block: [{Block, Line, Message}].
  * The blocks it adds: UV, Pixel, Position, Normal, Texture, Output, Surface, Present; the numbers of Blueprints
  * (Number, Vector, Color, Bool, Parameter, Time, the operators, Mix, Clamp, Smoothstep, Remap, Dot, Length, Normalize,
- * Split, Combine, Noise, Fbm) stand in its graphs with their GLSL. It declares them in $Provides: Blueprints makes it
+ * Split, Combine, Noise, Fbm, NoiseSpec: its lines, the part Noises of Renderer for the functions of the Noise Service)
+ * stand in its graphs with their GLSL. It declares them in $Provides: Blueprints makes it
  * when it meets a graph of these kinds or one of these blocks, so there is nothing to call first. The same functions run in Node: they read no page.
  */
 Elemenx.Service('BlueprintShaders', {
@@ -864,5 +865,17 @@ Elemenx.Service('BlueprintShaders', {
 		shaded('Fbm', function (context) {
 			return {Value: 'fbm3(' + context.Inputs.Position + ' * ' + context.Inputs.Scale + ', ' + Math.max(1, Math.round(Number(context.Properties.Octaves) || 4)) + ')'};
 		}, {Needs: ['Noise']});
+
+		/* A noise of the Noise Service by its spec: its lines in the body of the shader, its functions a part of the shaders (Noises). */
+		if (!self.$Service('Renderer').Chunks.Noises)
+			self.$Service('Renderer').Chunks.Noises = self.$Service('Noise').GLSLChunk();
+
+		shaded('NoiseSpec', function (context) {
+			var made = self.$Service('Noise').GLSLLines(core.NoiseOf(context.Properties), 'n' + context.Index, context.Inputs.Position + ' * ' + context.Inputs.Scale);
+
+			context.Lines.push.apply(context.Lines, made.Lines);
+
+			return {Value: made.Value};
+		}, {Needs: ['Noises']});
 	}
 });

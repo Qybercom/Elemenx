@@ -16,7 +16,15 @@
 			<Button Size="small" Icon="arrow-down" *if="Card.Land" [label]="$T('graphics.scene.land')" (click)="LandSelected" />
 		</span>
 	</aside>
-	<Button class="elemenx-scene-takeoff" Size="small" Icon="arrow-up" *if="Landed" [label]="$T('graphics.scene.takeOff')" (click)="TakeOff" />
+	<Button class="elemenx-scene-takeoff" Size="small" Icon="arrow-up" *if="LandedOn" [label]="$T('graphics.scene.takeOff')" (click)="TakeOff" />
+	<div class="elemenx-scene-landing" *if="ShipCan">
+		<Button Size="small" Icon="arrow-down" *if="ShipCan === 'land'" [label]="$T('graphics.scene.landing')" [attribute.aria-expanded]="LandingOpen ? 'true' : 'false'" (click)="LandingOpened" />
+		<Button Size="small" Icon="arrow-up" *if="ShipCan === 'takeoff'" [label]="$T('graphics.scene.takeOff')" (click)="ShipTakeOff" />
+		<div class="elemenx-scene-landing-list" *if="LandingOpen" role="menu">
+			<button type="button" role="menuitem" class="elemenx-scene-landing-item" *for="marker of LandingMarkers" *key="marker.ID" [attribute.data-marker]="marker.ID" (click)="MarkerPicked(marker.ID)">{{marker.Name}}<span class="elemenx-scene-landing-time" *if="marker.Day">{{$T('graphics.scene.day')}}</span><span class="elemenx-scene-landing-time" *if="!marker.Day">{{$T('graphics.scene.night')}}</span></button>
+			<button type="button" role="menuitem" class="elemenx-scene-landing-item pick" (click)="PointPicking">{{$T('graphics.scene.pickPoint')}}</button>
+		</div>
+	</div>
 	<div class="elemenx-scene-loading" [hidden]="Loading === null || !Loader || Loader === 'false'"><slot name="loading"></slot><Progress *if="!LoadingOwn" Size="small" [value]="LoadingEndless ? null : Loading" [label]="$T('graphics.scene.loading')" /></div>
 	<div class="elemenx-scene-hud"><slot name="hud"></slot></div>
 	<div class="elemenx-scene-sources" hidden><slot></slot></div>

@@ -6,12 +6,12 @@ What you learn: `Scene` and the things declared in it, `GameStrategy` that selec
 
 ## 1. The land
 
-`Scene` draws a land of three dimensions and walks its units round what they cannot cross: the water, the steep slopes, the trees. What is in it is declared inside it: the sun, the ground (a land of noise of its `Seed`, its `Size` in metres, its `Height`, how much of it is under `Water`), a forest and the grass sown over it, the hero, the gems.
+`Scene` draws a land of three dimensions and walks its units round what they cannot cross: the water, the steep slopes, the trees. What is in it is declared inside it: the sun, the ground (its `World`: a graph of the steps of the land, here the usual one of `SceneWorld.Library`: a land of noise of its `Seed`, its `Size` in metres, its `Height`, how much of it is under `Water`), a forest and the grass sown over it, the hero, the gems.
 
 ```html
 <Scene Setting="terrain" Team="blue" [paused]="Menu" Label="The land" (ready)="Ready" (enter)="Entered">
 	<SceneObject ID="day" Kind="sun" Time="15:30" />
-	<SceneObject ID="land" Kind="ground" Size="300" Height="22" Water="0.15" Scale="260" Ridges="0.1" Seed="gems" />
+	<SceneObject ID="land" Kind="ground" [world]="World" />
 	<SceneObject ID="woods" Kind="forest" Density="0.6" Cover="0.4" />
 	<SceneObject ID="meadow" Kind="grass" Density="0.6" Height="0.5" />
 	<SceneObject ID="hero" Kind="unit" X="0" Y="0" Team="blue" Name="Hero" Speed="9" />
@@ -29,6 +29,10 @@ What you learn: `Scene` and the things declared in it, `GameStrategy` that selec
 ```
 
 ```js
+/* In $OnCreate: the World of the land. */
+this.World = this.$Service('SceneWorld').Library({Size: 300, Height: 22, Water: 0.15, Scale: 260, Ridges: 0.1, Seed: 'gems'});
+
+/* Where the gems lie. */
 Start: [
 	{ID: 'g1', X: -60, Y: 30},
 	{ID: 'g2', X: 40, Y: -50},

@@ -238,13 +238,13 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 		 * Regression: two changes before the squares of the first came (a mountain, then a river in the editor) left the squares
 		 * asked for the first let go and never asked again: drawn as they were for good.
 		 */
-		scene.Change('land', {Sketch: sketch([{ID: 'hill', Type: 'raise', Points: [[10, 0]], Radius: 12, Amount: 3}])});
+		scene.Change('land', {World: Elemenx.Service('SceneWorld').Library(Object.assign({}, GROUND, {Sketch: sketch([{ID: 'hill', Type: 'raise', Points: [[10, 0]], Radius: 12, Amount: 3}])}))});
 
 		inner.Rest = 0;
 
 		engine.Frame(now += 33);
 
-		scene.Change('land', {Sketch: sketch([{ID: 'hill', Type: 'raise', Points: [[10, 0]], Radius: 12, Amount: 6}])});
+		scene.Change('land', {World: Elemenx.Service('SceneWorld').Library(Object.assign({}, GROUND, {Sketch: sketch([{ID: 'hill', Type: 'raise', Points: [[10, 0]], Radius: 12, Amount: 6}])}))});
 
 		inner.Rest = 0;
 
@@ -302,7 +302,7 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 		})).toBe(true);
 
 		/* A change under all the view at once: more squares than the workers take in a frame, every one made again. */
-		scene.Change('land', {Sketch: sketch([{ID: 'hill', Type: 'raise', Points: [[10, 0]], Radius: 12, Amount: 6}, {ID: 'wide', Type: 'plateau', Points: [[-200, -200], [200, -200], [200, 200], [-200, 200]], Height: 1, Edge: 20}])});
+		scene.Change('land', {World: Elemenx.Service('SceneWorld').Library(Object.assign({}, GROUND, {Sketch: sketch([{ID: 'hill', Type: 'raise', Points: [[10, 0]], Radius: 12, Amount: 6}, {ID: 'wide', Type: 'plateau', Points: [[-200, -200], [200, -200], [200, 200], [-200, 200]], Height: 1, Edge: 20}])}))});
 
 		await waitFor(function () {
 			var drawn = Object.keys(ground.Nodes).map(function (key) {
@@ -320,7 +320,7 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 			});
 		}, 30000);
 
-		scene.Change('land', {Sketch: sketch([{ID: 'hill', Type: 'raise', Points: [[10, 0]], Radius: 12, Amount: 6}])});
+		scene.Change('land', {World: Elemenx.Service('SceneWorld').Library(Object.assign({}, GROUND, {Sketch: sketch([{ID: 'hill', Type: 'raise', Points: [[10, 0]], Radius: 12, Amount: 6}])}))});
 
 		await waitFor(function () {
 			inner.Rest = 0;
@@ -342,7 +342,7 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 
 		expect(inner.Ground.WaterMesh).toBe(null);
 
-		scene.Change('land', {Sketch: sketch([{ID: 'w', Type: 'river', Points: [[-40, 20], [0, 20], [40, 20]], Width: 6, Depth: 2, Flow: 0}, {ID: 'f', Type: 'river', Points: [[-40, -60], [-40, -20]], Width: 6, Depth: 2, Flow: 3}])});
+		scene.Change('land', {World: Elemenx.Service('SceneWorld').Library(Object.assign({}, GROUND, {Sketch: sketch([{ID: 'w', Type: 'river', Points: [[-40, 20], [0, 20], [40, 20]], Width: 6, Depth: 2, Flow: 0}, {ID: 'f', Type: 'river', Points: [[-40, -60], [-40, -20]], Width: 6, Depth: 2, Flow: 3}])}))});
 
 		engine.Renderer.Draw = function (made, program, uniforms) {
 			if (made === inner.Ground.WaterMesh) {
@@ -404,7 +404,7 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 			return way.indexOf('1,0,') === 0;
 		})).toBe(true);
 
-		scene.Change('land', {Sketch: null});
+		scene.Change('land', {World: Elemenx.Service('SceneWorld').Library(Object.assign({}, GROUND, {Sketch: null}))});
 
 		inner.Rest = 0;
 

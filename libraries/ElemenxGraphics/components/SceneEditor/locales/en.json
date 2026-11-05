@@ -20,6 +20,23 @@
 			"add": "Add",
 			"nothing": "Nothing selected",
 			"parameters": "Parameters of the blueprint",
+			"lands": "Lands by their climate",
+			"generated": "of the World",
+			"land": {
+				"range": "{biome}: its {key} holds nothing",
+				"gap": "Heights {from} to {to} of the top have no land where moisture is {wet} and temperature {warm}",
+				"unreachable": "{biome}: the ground has none of its heights",
+				"unused": "{biome}: nowhere on the ground, its climate is not there",
+				"uncovered": "{part}% of the ground is of no land"
+			},
+			"graphs": {
+				"look": "Look",
+				"world": "World",
+				"relief": "Relief",
+				"rule": "Rule",
+				"library": "From the library",
+				"remove": "Remove the graph"
+			},
 			"sketch": "Sketch",
 			"sketchType": "Type of the sketch",
 			"layers": "Layers",

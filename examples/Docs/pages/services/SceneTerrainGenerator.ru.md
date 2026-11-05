@@ -3,8 +3,20 @@
 
 Земля игры, непрерывная: высоты из шума в любой точке (без клеток), её сетки кусками и пути по ней. Flat(options) — земля плоской карты: Size (1000), Height (высота самых высоких холмов, 60), Water (уровень моря от 0 до 1, 0.35), Scale (размер холмов, 180), Ridges (доля гор, 0.4), Seed; её методы Height(x, z) (ниже 0 — под морем), Normal(x, z), Slope(x, z) (0 — ровно, 1 — стена), Walkable(x, z, options) (MaxSlope, Swim, Blocked(x, z)), Chunk(x, z, size, resolution) — геометрия квадрата с цветами высот и склонов и юбкой под краями, Path({X, Z}, {X, Z}, options) — путь из точек {X, Y, Z} в обход непроходимого, спрямлённый где можно, или null. Sphere(options) — земля планеты, та самая, что на её запечённой поверхности (шум Renderer, как его запекает шейдер Scene): Radius, Height, Seed, Ocean, Type; её методы Land(direction), Elevation(direction), Point(direction), Altitude(point), Patch(face, u, v, size, resolution). Cells({Width, Height, Depth, Color(x, y)}) — плоская земля карты клеток, одним куском. Работает и в Node.
 
+Рельеф как граф. Параметр Relief земли — граф-генератор Blueprints: входы X и Z, результаты Height (от 0 до 1, как холмы из шума), Moisture и Temperature (от 0 до 1). Его параметры Scale, Ridges, Water и Height берутся из параметров земли, если они заданы, иначе — свои значения графа. LibraryRelief(options) строит граф обычного рельефа этих параметров: те же высоты до бита и тот же климат, с него начинает редактор. Relief(settings) один раз компилирует граф в JavaScript (Blueprints.Code) и кладёт исходник в параметры (ReliefSource), поэтому воркер собирает ту же функцию без графа.
+
+Климат. У поля есть Climate(x, z) → {Moisture, Temperature}: из графа рельефа, а без него — температура 0.72 у моря, падает с высотой (на 0.7 к вершинам) и колеблется по шуму; влажность — свой шум, в пять раз шире холмов.
+
+Биомы по климату. Параметр Biomes земли — список имён биомов SceneBiomes или записей {Biome, Ground, Grass, Climate, Scatter}. Climate — конверт {Height, Moisture, Temperature} или список конвертов, каждый диапазон [от, до] (null — без края; Height в долях Top, ниже 0 — под морем). Поле получает Biome(x, z) → {List: [{Name, Ground, Weight}], Gap}: веса мягкие на стыках (BiomeOf), Gap — точка вне всех конвертов. Paint смешивает палитры биомов, Grassy убирает траву там, где у биома её нет. Список с палитрами кладётся в параметры (BiomeList) для воркеров.
+
+Объём земли. Carves в параметрах вырезают из земли и наращивают её: tunnel (Points [[x, z, y]...], Radius, Flat — ровный пол, Depth), sphere (At, Radius — выкопанная яма), caves (естественные пещеры из шума — ходы и залы — вокруг Center в пределах Radius: Top и Bottom — глубины слоя, Scale, Width, Halls, Seed; Top 0 выводит их на поверхность), overhangs (нависающие скалы на крутых склонах: Amount, Scale, Slope, Center и Radius). У поля появляются Density(x, y, z) (твёрдое там, где больше 0) и Volume; куски земли, которых касается вырез, строятся по плотности (Volumetric, surface nets: без щелей между соседями, с юбкой по краю), остальные — как обычно. По такой земле ходят как по локации с этажами (Underground): Height(x, z, y) — пол под тем, кто на высоте y (шаг вверх до Climb, 0.6 м), Blocked — порода там, где тело, CanStep — можно ли шагнуть (вверх не круче Steep), Stands. Всё работает и в воркерах. В графе мира это шаги Tunnel, Caves и Overhangs.
+Path на такой земле — WayUnder: A* по клеткам, каждая на своём полу, шаги по CanStep (вверх до Climb и не круче Steep, вниз любой спуск), не круче MaxSlope правил, не в море без Swim; путь выпрямляется там, где можно пройти прямо. Height(x, z) без y — поверхность под небом с учётом выкопанного. Второй канал UV кусков земли — доля видимого неба (1 у обычной земли; у объёмной — по пяти лучам вверх сквозь плотность).
+
 ## Методы
 
+- `Relief(settings)`
+- `Climate(settings)`
+- `LibraryRelief(options)`
 - `Flat(options)`
 - `OnRoad(field, x, z, width)`
 - `Sphere(options)`
@@ -44,17 +56,17 @@
 
 ## Тесты
 
+- [gives its ground to land on as the Sphere of SceneTerrainGenerator does: its heights, squares with its colors, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L149) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 - [draws a material of a recipe by its Blueprint, its parameters uniforms that change it without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L72) — `tests/regression/library-material-blueprints.test.js`
 - [draws a ground by its Blueprint, the color of its parameter, and keeps the very same ground as its look changes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L198) — `tests/regression/library-material-blueprints.test.js`
-- [takes a ground from a model: floors one over the other, walls that stop a walker, and a plane at its foot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1320) — `tests/regression/library-scene.test.js`
-- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1623) — `tests/regression/library-scene.test.js`
-- [makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1933) — `tests/regression/library-scene.test.js`
-- [Workers runs the methods of Services in workers made of their source, and in the page when it cannot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3973) — `tests/regression/library-scene.test.js`
-- [makes the squares of a ground of noise in workers, lets go of what came for roads that changed, and grows grass with no noise in a frame](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4077) — `tests/regression/library-scene.test.js`
-- [looks from what it follows to where it looks by degrees, so a raised eye makes no leap under the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6683) — `tests/regression/library-scene.test.js`
-- [leaves a hero where it stands when the scene changes round it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6818) — `tests/regression/library-scene.test.js`
-- [takes a short drop for no jump, though the body leaves the ground](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6870) — `tests/regression/library-scene.test.js`
-- [takes no seam of a map for a jump, and still falls and jumps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6987) — `tests/regression/library-scene.test.js`
-- [lets a hero stand while the view goes round it with a free look, and brings it round when it sets off](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7412) — `tests/regression/library-scene.test.js`
+- [takes a ground from a model: floors one over the other, walls that stop a walker, and a plane at its foot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1327) — `tests/regression/library-scene.test.js`
+- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1630) — `tests/regression/library-scene.test.js`
+- [makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1940) — `tests/regression/library-scene.test.js`
+- [Workers runs the methods of Services in workers made of their source, and in the page when it cannot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3980) — `tests/regression/library-scene.test.js`
+- [makes the squares of a ground of noise in workers, lets go of what came for roads that changed, and grows grass with no noise in a frame](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4084) — `tests/regression/library-scene.test.js`
+- [looks from what it follows to where it looks by degrees, so a raised eye makes no leap under the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6690) — `tests/regression/library-scene.test.js`
+- [leaves a hero where it stands when the scene changes round it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6825) — `tests/regression/library-scene.test.js`
+- [takes a short drop for no jump, though the body leaves the ground](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6877) — `tests/regression/library-scene.test.js`
+- [takes no seam of a map for a jump, and still falls and jumps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6994) — `tests/regression/library-scene.test.js`
 
-+14 ещё в тех же файлах
++27 ещё в тех же файлах

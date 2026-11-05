@@ -75,6 +75,37 @@
 			"rolesExport": "Export the roles of the files",
 			"rolesImport": "Import roles"
 		},
+		"planetEditor": {
+			"label": "Globe of the planet",
+			"overlay": "Show",
+			"planet": "Planet",
+			"stroke": "Stroke",
+			"remove": "Remove the stroke",
+			"tools": {
+				"label": "Tools of the globe",
+				"look": "Look",
+				"land": "Land",
+				"sea": "Sea",
+				"mountains": "Mountains",
+				"rift": "Rift",
+				"river": "River",
+				"climate": "Climate",
+				"biome": "Biome",
+				"location": "Location"
+			},
+			"overlays": {
+				"relief": "Relief",
+				"plates": "Plates",
+				"wind": "Winds",
+				"temperature": "Temperature",
+				"moisture": "Moisture",
+				"biomes": "Biomes"
+			},
+			"location": "Location",
+			"open": "Open",
+			"side": "Side",
+			"passage": "Passage"
+		},
 		"scene": {
 			"label": "Game scene",
 			"unsupported": "This browser cannot draw in 3D: WebGL2 is off or missing.",
@@ -88,7 +119,7 @@
 			"gravity": "Gravity",
 			"distance": "Orbit",
 			"period": "Year",
-			"day": "Day",
+			"day": "day",
 			"habitable": "Habitable zone",
 			"at": "At",
 			"team": "Team",
@@ -132,6 +163,9 @@
 			},
 			"land": "Land",
 			"takeOff": "Take off",
+			"landing": "Landing",
+			"pickPoint": "Pick a point on the surface",
+			"night": "night",
 			"loading": "Loading the scene"
 		},
 		"sceneEditor": {
@@ -154,6 +188,23 @@
 			"add": "Add",
 			"nothing": "Nothing selected",
 			"parameters": "Parameters of the blueprint",
+			"lands": "Lands by their climate",
+			"generated": "of the World",
+			"land": {
+				"range": "{biome}: its {key} holds nothing",
+				"gap": "Heights {from} to {to} of the top have no land where moisture is {wet} and temperature {warm}",
+				"unreachable": "{biome}: the ground has none of its heights",
+				"unused": "{biome}: nowhere on the ground, its climate is not there",
+				"uncovered": "{part}% of the ground is of no land"
+			},
+			"graphs": {
+				"look": "Look",
+				"world": "World",
+				"relief": "Relief",
+				"rule": "Rule",
+				"library": "From the library",
+				"remove": "Remove the graph"
+			},
 			"sketch": "Sketch",
 			"sketchType": "Type of the sketch",
 			"layers": "Layers",

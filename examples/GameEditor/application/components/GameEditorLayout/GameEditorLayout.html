@@ -19,6 +19,9 @@
 		<section class="game-editor-pane" [class.hidden]="View !== 'scene'" [attribute.aria-hidden]="View !== 'scene' ? 'true' : 'false'">
 			<SceneEditor #Scene [value]="Game.Scene" [models]="Names(Version)" Storage="elemenx-game-editor-scene" (change)="SceneChanged" />
 		</section>
+		<section class="game-editor-pane" [class.hidden]="View !== 'planet'" [attribute.aria-hidden]="View !== 'planet' ? 'true' : 'false'">
+			<PlanetEditor *if="View === 'planet'" [value]="Game.Planet || {Seed: 'planet'}" (change)="PlanetChanged" (location)="LocationOpened" />
+		</section>
 		<section class="game-editor-pane game-editor-models" [class.hidden]="View !== 'models'" [attribute.aria-hidden]="View !== 'models' ? 'true' : 'false'">
 			<aside class="game-editor-list">
 				<div class="game-editor-title">{{$T('gameEditor.models')}}<Button Size="small" Variant="ghost" Icon="add" [title]="$T('gameEditor.addModel')" (click)="AddModel" /></div>

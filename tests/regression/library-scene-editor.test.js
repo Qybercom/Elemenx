@@ -301,7 +301,13 @@ describe('Contract: SceneEditor, a game scene edited as Unreal edits a level', f
 		}
 
 		function sketched () {
-			return scene.Get('ground').Traits.Terrain.Sketch;
+			var step = scene.Get('ground').Traits.Terrain.World.blocks.filter(function (block) {
+				return block.type === 'Sketch';
+			})[0];
+
+			return step ? step.properties.filter(function (property) {
+				return property.key === 'Sketch';
+			})[0].value : null;
 		}
 
 		/* From above: what is drawn raises no hill in the way of the next press. */
@@ -610,5 +616,176 @@ describe('Contract: SceneEditor, a game scene edited as Unreal edits a level', f
 		expect(editor.Playing).toBe(false);
 		expect(scene.Paused).toBe(true);
 		expect(scene.Get(id).Values.X).toBe(0);
+	});
+
+	it('edits the World of a ground under the view: its steps, the relief of its step Relief from the library, and what its lands by climate leave bare', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var scene = editor.Scene();
+		var element = editor.$Element();
+		var blueprints = Elemenx.Service('Blueprints');
+		var before;
+		var relief;
+		var world;
+
+		function tabs () {
+			return Array.from(element.querySelectorAll('.elemenx-scene-editor-graph-kind')).map(function (tab) {
+				return tab.getAttribute('data-graph');
+			});
+		}
+
+		function button (text) {
+			return Array.from(element.querySelectorAll('.elemenx-scene-editor-graphs button')).filter(function (one) {
+				return one.textContent.indexOf(text) !== -1;
+			})[0];
+		}
+
+		function step (type) {
+			return scene.Get('ground').Traits.Terrain.World.blocks.filter(function (block) {
+				return block.type === type;
+			})[0];
+		}
+
+		editor.Select('ground');
+
+		await tick(30);
+
+		before = scene.Scene().Ground.Field.Height(12, -7);
+
+		/* The World of the ground, its steps under the view. */
+		expect(tabs()).toEqual(['World']);
+		expect(element.querySelector('.elemenx-scene-editor-blueprint .elemenx-blueprint-block[data-id="' + step('Relief').id + '"]')).not.toBe(null);
+
+		/* Its step Relief picked: its graph in a tab of its own, none yet, started from the library. */
+		editor.StepPicked({Block: step('Relief').id});
+
+		await tick(30);
+
+		expect(tabs()).toEqual(['World', 'Step']);
+
+		editor.GraphPicked('Step');
+
+		await tick(30);
+
+		expect(element.querySelector('.elemenx-scene-editor-blueprint .elemenx-blueprint-block')).toBe(null);
+
+		button('From the library').click();
+
+		await waitFor(function () {
+			frame(editor);
+
+			return scene.Scene().Ground && scene.Scene().Ground.Field.Options.ReliefSource;
+		}, 6000);
+
+		/* The graph of the library is the relief it had: the same heights, its blocks under the view, kept for undo. */
+		relief = step('Relief').properties.filter(function (property) {
+			return property.key === 'Graph';
+		})[0].value;
+
+		expect(relief.type).toBe('generator');
+		expect(scene.Scene().Ground.Field.Height(12, -7)).toBe(before);
+
+		await tick(30);
+
+		expect(element.querySelector('.elemenx-scene-editor-blueprint .elemenx-blueprint-block[data-type="NoiseSpec"]') || element.querySelector('.elemenx-scene-editor-blueprint .elemenx-blueprint-block')).not.toBe(null);
+
+		editor.Undo();
+
+		await tick(30);
+
+		expect(step('Relief').properties.filter(function (property) {
+			return property.key === 'Graph';
+		})[0].value).toBe(null);
+
+		/* Lands of a climate that holds only the warm, a step of the World: the cold heights of no land. */
+		world = JSON.parse(JSON.stringify(scene.Get('ground').Traits.Terrain.World));
+
+		var biomes = blueprints.Add(world, 'Biomes', {properties: {List: [{Biome: 'warm', Climate: {Temperature: [0.5, null]}}]}});
+		var end = world.blocks.filter(function (block) {
+			return block.type === 'Terrain';
+		})[0];
+		var into = world.links.filter(function (link) {
+			return blueprints.PinById(world, link.p2).Block.id === end.id;
+		})[0];
+
+		world.links.splice(world.links.indexOf(into), 1);
+
+		blueprints.Link(world, into.p1, [biomes.id, 'Land']);
+		blueprints.Link(world, [biomes.id, 'Land'], [end.id, 'Land']);
+
+		editor.Change('ground', {World: world});
+
+		await waitFor(function () {
+			frame(editor);
+
+			return scene.Scene().Ground && scene.Scene().Ground.Field.Biomes;
+		}, 6000);
+
+		/* The ground is made again in a frame after the change: the inspector reads it at the next render. */
+		editor.Version++;
+
+		await tick(30);
+
+		expect(Array.from(element.querySelectorAll('.elemenx-scene-editor-land')).map(function (line) {
+			return line.getAttribute('data-type');
+		})).toContain('gap');
+	});
+
+	it('makes the objects of the World of a ground in the scene, marked in the tree, not saved: they come again of it', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var scene = editor.Scene();
+		var labels;
+		var saved;
+
+		editor.Change('ground', {World: Elemenx.Service('SceneWorld').Library({Size: 400, Height: 12, Water: 0.15, Seed: 'editor', Settlements: [{X: 20, Y: 10, Houses: 4}], Scatters: [{Kind: 'grove', Density: 0.5}]})});
+
+		await tick(30);
+
+		expect(scene.Get('ground-world-0').Kind).toBe('village');
+		expect(scene.Get('ground-world-1').Values.Generated).toBe('ground');
+
+		labels = Array.from(editor.$Element().querySelectorAll('.elemenx-scene-editor-side [role="treeitem"], .elemenx-scene-editor-side li')).map(function (item) {
+			return item.textContent;
+		}).join('|');
+
+		expect(labels).toContain('of the World');
+
+		saved = scene.Save({Baked: true});
+
+		expect(saved.Objects.map(function (object) {
+			return object.ID;
+		})).not.toContain('ground-world-0');
+
+		/* The houses of its village are made of the village: marked so, not saved either. */
+		await waitFor(function () {
+			frame(editor);
+
+			return scene.Objects(function (object) {
+				return object.ID.indexOf('ground-world-0/house-') === 0;
+			}).length > 0;
+		}, 8000);
+
+		expect(scene.Objects(function (object) {
+			return object.ID.indexOf('ground-world-0/house-') === 0;
+		})[0].Values.Generated).toBe('ground-world-0');
+		expect(JSON.stringify(scene.Save().Added)).not.toContain('/house-');
+	});
+	/* Regression: a new document (no Scene) loaded into an editor left the scene of the one before (New of the Game editor did nothing). */
+	it('makes a new document anew in the scene: a star system in place of the ground, a ground in place of the system', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var scene = editor.Scene();
+
+		editor.Load({Version: 1, Name: 'space', Setting: 'space', Scene: null});
+
+		expect(scene.Get('ground')).toBe(null);
+		expect(scene.Get('planet').Kind).toBe('planet');
+		expect(scene.Get('star').Kind).toBe('star');
+
+		editor.Load({Version: 1, Name: 'land', Setting: 'ground', Scene: null});
+
+		expect(scene.Get('planet')).toBe(null);
+		expect(scene.Get('ground').Kind).toBe('ground');
 	});
 });

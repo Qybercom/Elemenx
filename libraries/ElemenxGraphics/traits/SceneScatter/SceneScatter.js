@@ -10,8 +10,8 @@
  * too) it sows that model, thick, up to Reach from the eye. Reach holds for any rule; Grid (a size) lays Shapes as tiles,
  * one a cell, turned by quarters, the way to build a land out of ready pieces.
  *
- * Biome on a ground (the Biomes Service) brings its colors, its rules and its grass by itself, so a whole land is one
- * attribute; a SceneObject of kind village lays out houses and their roads at its X and Y (Houses, Radius, Seed), and what
+ * The Biomes of the World of a ground (lands by their climate, SceneWorld) bring the colors, the rules and the grass of
+ * each, each rule growing only in its own land (Biome of a rule), mingled where they meet; a SceneObject of kind village lays out houses and their roads at its X and Y (Houses, Radius, Seed), and what
  * is sown keeps away from them.
  *
  * The things live in squares of the ground, typed arrays made in workers (SceneSower), the nearest first. Each square in view
@@ -81,14 +81,6 @@ Elemenx.Trait('SceneScatter', {
 			return state.Programs;
 		}
 
-		function biome () {
-			var ground = scene.Roots.filter(function (object) {
-				return object.Traits.Terrain;
-			})[0];
-
-			return ground ? self.$Service('SceneBiomes').Get(ground.Values.Biome) : null;
-		}
-
 		function rules () {
 			var given = scene.Roots.filter(function (object) {
 				return object.Traits.Scatter || object.Traits.Grass && (object.Values.Shapes || object.Traits.Grass.Shapes);
@@ -96,11 +88,42 @@ Elemenx.Trait('SceneScatter', {
 				/* Grass of models: thick, and only round the eye. */
 				return object.Traits.Scatter ? Object.assign({ID: object.ID}, object.Traits.Scatter, object.Values) : Object.assign({ID: object.ID, Reach: 40, Blocks: false}, object.Traits.Grass, {Density: Number(object.Traits.Grass.Density) * 60}, object.Values);
 			});
-			var land = biome();
 
-			return (land ? given.concat(land.Scatter.map(function (rule, index) {
-				return Object.assign({ID: 'biome-' + index}, rule);
-			})) : given).concat(sketched().Rules);
+			return given.concat(lands()).concat(sketched().Rules);
+		}
+
+		/* The grass of a ground of lands by their climate: of the first of them that has one; it grows only in those that have it. */
+		function landsGrass () {
+			var field = scene.Ground && scene.Ground.Field;
+			var registry = self.$Service('SceneBiomes');
+			var found = null;
+
+			(field && field.Biomes && field.Options && field.Options.Biomes || []).some(function (entry) {
+				var known = registry.Get(typeof entry === 'string' ? entry : entry.Biome || entry.Name);
+
+				found = typeof entry === 'object' && entry.Grass || known && known.Grass || null;
+
+				return !!found;
+			});
+
+			return found;
+		}
+
+		/* The rules of the lands of a ground by their climate (Biomes): each grows only in its own land (Biome). */
+		function lands () {
+			var field = scene.Ground && scene.Ground.Field;
+			var list = field && field.Biomes && field.Options && field.Options.Biomes || [];
+			var registry = self.$Service('SceneBiomes');
+
+			return [].concat.apply([], list.map(function (entry) {
+				var name = typeof entry === 'string' ? entry : entry.Biome || entry.Name;
+				var known = registry.Get(name);
+				var scatter = typeof entry === 'object' && entry.Scatter || known && known.Scatter || [];
+
+				return scatter.map(function (rule, index) {
+					return Object.assign({ID: 'land-' + name + '-' + index}, rule, {Biome: name});
+				});
+			}));
 		}
 
 		/*
@@ -127,11 +150,8 @@ Elemenx.Trait('SceneScatter', {
 
 		function sketched () {
 			var field = scene.Ground && scene.Ground.Field;
-			var ground = field && field.Options && field.Options.Sketch ? null : scene.Roots.filter(function (object) {
-				return object.Traits.Terrain;
-			})[0];
-			/* The sketch the ground is made of: the one of the ground and the roads of the scene over it. */
-			var sketch = field && field.Options && field.Options.Sketch || ground && ground.Traits.Terrain.Sketch || null;
+			/* The sketch the ground is made of: the one of its World and the roads of the scene over it. */
+			var sketch = field && field.Options && field.Options.Sketch || null;
 			var terrain = self.$Service('SceneTerrainGenerator');
 			var text;
 			var made;
@@ -304,7 +324,8 @@ Elemenx.Trait('SceneScatter', {
 					/* No house on a road of the scene. */
 					if (self.RoadsState && self.$Service('SceneRoads').Under(self.RoadsState.Made, house.X, house.Y)) return;
 
-					made.push({ID: id, Kind: house.Kind, Name: house.Kind.charAt(0).toUpperCase() + house.Kind.slice(1), X: house.X, Y: house.Y, Size: size, Traits: {Model: {Size: size}}});
+					/* Made of its village: marked so, never saved, made again of it. */
+					made.push({ID: id, Kind: house.Kind, Name: house.Kind.charAt(0).toUpperCase() + house.Kind.slice(1), X: house.X, Y: house.Y, Size: size, Generated: object.ID, Traits: {Model: {Size: size}}});
 					state.Houses.push(id);
 
 					keep(house.X, house.Y, size * 0.8);
@@ -482,7 +503,7 @@ Elemenx.Trait('SceneScatter', {
 			if (state.Context && state.Context.Generation === state.Generation && state.Context.Inline === inline) return state.Context.Data;
 
 			made = sketched();
-			list = rules();
+			list = self.$Service('SceneSower').Compile(rules());
 
 			list.forEach(function (rule) {
 				[].concat(rule.Shapes || (rule.Fixed ? [] : 'pine'), (rule.Fixed || []).map(function (one) {
@@ -896,7 +917,7 @@ Elemenx.Trait('SceneScatter', {
 					var at = (row * side + x) * 4;
 
 					grass.Data[at] = height;
-					grass.Data[at + 1] = height > 1 && height < top && field.Slope(px, pz) < steep ? 1 : 0;
+					grass.Data[at + 1] = height > 1 && height < top && field.Slope(px, pz) < steep && self.$Service('SceneTerrainGenerator').Grassy(field, px, pz) ? 1 : 0;
 				}
 			}
 
@@ -932,7 +953,7 @@ Elemenx.Trait('SceneScatter', {
 				return object.Traits.Grass;
 			}).map(function (object) {
 				return Object.assign({}, object.Traits.Grass, object.Values);
-			})[0] || biome() && biome().Grass;
+			})[0] || landsGrass();
 			var grass;
 			var view;
 			var eye = scene.Eye;

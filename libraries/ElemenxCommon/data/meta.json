@@ -132,6 +132,30 @@
 			"Sample": {}
 		},
 		{
+			"Name": "Noise",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The noise of space by any algorithm (value, perlin, simplex, worley, white), with fractals, warp, tiling, terraces and blends, the same in a shader.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Make(spec)",
+				"Types()",
+				"Fractals()",
+				"GLSLChunk()",
+				"GLSL(spec, name)",
+				"GLSLLines(spec, prefix, point)",
+				"Source(names)"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "Random",
 			"Kind": "Service",
 			"Group": "",
@@ -529,6 +553,8 @@
 				"Check(graph)",
 				"Order(graph)",
 				"Compile(graph, options)",
+				"Code(graph)",
+				"Source(names)",
 				"Bake(graph)",
 				"Start(graph, context)"
 			],

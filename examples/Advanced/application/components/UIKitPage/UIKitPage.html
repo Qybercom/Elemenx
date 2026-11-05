@@ -696,7 +696,7 @@
 			<div class="ui-kit-world" data-demo="world">
 				<Scene *if="!Far.world" Setting="terrain" Team="blue" Labels="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="WorldReady">
 					<SceneObject ID="day" Kind="sun" Time="14:00" />
-					<SceneObject ID="land" Kind="ground" Size="320" Height="18" Water="0.12" Scale="260" Ridges="0.15" Seed="world" />
+					<SceneObject ID="land" Kind="ground" [world]="WorldOf('world')" />
 					<SceneObject ID="woods" Kind="forest" Density="0.5" Cover="0.35" />
 					<SceneObject ID="meadow" Kind="grass" Density="0.5" Height="0.5" />
 					<SceneObject Kind="house" ID="barracks" Name="Barracks" X="-80" Y="-40" Team="blue" Model="barracks" />
@@ -828,6 +828,7 @@
 				<Field Label="Mirror blur"><Slider Label="Mirror blur" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="TerrainMirrorBlur" (input)="TerrainMirrorBlur = $event" /></Field>
 				<Toggle Label="Glass" [checked]="TerrainGlass" (change)="TerrainGlass = $event" />
 				<Field Label="Glass frost"><Slider Label="Glass frost" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="TerrainFrost" (input)="TerrainFrost = $event" /></Field>
+				<Select Label="Relief" [options]="TerrainReliefs" [value]="TerrainRelief" (change)="TerrainRelief = $event" />
 				<Field Label="Swell"><Slider Label="Swell" Min="0" Max="1.5" Step="0.05" ShowValue="always" [value]="TerrainSwell" (input)="TerrainSwell = $event" /></Field>
 				<Button Label="To the lake" Icon="map-pin" Variant="ghost" (click)="TerrainLake" />
 				<Button Label="Boat" Icon="sailing" Variant="ghost" (click)="TerrainBoat" />
@@ -837,7 +838,7 @@
 			</div>
 			<div class="ui-kit-space" data-demo="terrain">
 				<Scene *if="!Far.terrain" Setting="terrain" Team="blue" Labels="true" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" [bokeh]="SceneBokeh" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
-					<SceneObject ID="valley" Kind="ground" Size="900" Height="55" Water="0.32" Seed="valley" [biome]="TerrainBiome" [swell]="TerrainSwell" />
+					<SceneObject ID="valley" Kind="ground" [world]="TerrainWorld(TerrainBiome, TerrainRelief)" [swell]="TerrainSwell" />
 					<SceneObject ID="sun" Kind="sun" Latitude="45" DayOfYear="172" Noon="150" [time]="TerrainHour" />
 					<SceneObject ID="hamlet" Kind="village" X="-70" Y="20" Houses="10" />
 					<SceneObject *for="unit of TerrainUnits" *key="unit.ID" Kind="unit" [id]="unit.ID" [name]="unit.Name" [x]="unit.X" [y]="unit.Y" Team="blue" />
@@ -1069,9 +1070,9 @@
 				<span>{{OrbitSpeed}} m/s{{OrbitPhase ? ' · ' + OrbitPhase : ''}}</span>
 			</div>
 			<div class="ui-kit-space" data-demo="orbit">
-				<Scene *if="!Far.orbit" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="OrbitCosmos" (ready)="OrbitReady" (travel)="OrbitTravelled">
+				<Scene *if="!Far.orbit" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="OrbitCosmos" (ready)="OrbitReady" (travel)="OrbitTravelled" (landing)="OrbitLanding">
 					<SceneObject ID="sol" Kind="star" Name="Star" Mass="1">
-						<SceneObject ID="terra" Kind="planet" Name="Terra" Surface-Type="terran" Radius="6371" Mass="1" Distance="1" Day="23.93" Tilt="23.4">
+						<SceneObject ID="terra" Kind="planet" Name="Terra" Surface-Type="terran" Surface-Planet='{"Seed": "terra", "Ocean": 0.62, "Markers": [{"ID": "base", "Name": "Base Alpha", "Latitude": 18, "Longitude": 32}, {"ID": "ridge", "Name": "North Ridge", "Latitude": 46, "Longitude": -70}]}' Radius="6371" Mass="1" Distance="1" Day="23.93" Tilt="23.4">
 							<SceneObject ID="luna" Kind="moon" Name="Luna" Surface-Type="moon" Radius="1737" Distance="384400 km" Day="0" />
 							<SceneObject ID="rocks" Kind="belt" Name="Rocks" Inner="1.3" Outer="1.75" Count="700" Inclination="6" Rocks="0.14" />
 							<SceneObject ID="station-1" Kind="craft" Name="Halcyon" Model="station-a" Size="0.32" Distance="1.75" Period="90" Inclination="4" Anomaly="196" />
@@ -1102,7 +1103,7 @@
 			</div>
 			<div class="ui-kit-space" data-demo="models">
 				<Scene *if="!Far.models" Setting="terrain" Team="red" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [shadows]="ModelsShadows" (ready)="ModelsReady">
-					<SceneObject ID="meadow" Kind="ground" Size="400" Height="22" Water="0.2" Scale="420" Seed="meadow" />
+					<SceneObject ID="meadow" Kind="ground" [world]="WorldOf('meadow')" />
 					<SceneObject ID="noon" Kind="sun" Elevation="36" Azimuth="130" />
 					<SceneObject *for="model of ModelsList" *key="model.ID" [kind]="model.Kind" [id]="model.ID" [name]="model.Kind" [x]="model.X" [y]="model.Y" [team]="model.Team" />
 					<SceneObject ID="from-file" Kind="unit" Name="column.glb" Model="/data/models/column.glb" Size="4" X="-92" Y="-40" Clip="Bend" />

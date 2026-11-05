@@ -133,6 +133,12 @@ Elemenx.Component('Blueprint', {
 		if ('Value' in changed && this.Value && (typeof this.Value === 'string' ? this.Value : JSON.stringify(this.Value)) !== own.Emitted) {
 			this.Load(this.Value);
 			this.Render();
+
+			/* A graph given anew with its blocks all at 0, 0 is laid out, as one given first is. */
+			if (own.Graph.blocks.length > 1 && own.Graph.blocks.every(function (block) {
+				return !block.x && !block.y;
+			}))
+				this.Arrange();
 		}
 
 		if ('Errors' in changed)
@@ -350,7 +356,8 @@ Elemenx.Component('Blueprint', {
 
 				block.x = 40 + index * 260;
 				block.y = y;
-				y += (element ? element.offsetHeight : 120) + 40;
+				/* A block not laid out yet (its height 0) is taken as a usual one. */
+				y += (element && element.offsetHeight || 120) + 40;
 			});
 		});
 

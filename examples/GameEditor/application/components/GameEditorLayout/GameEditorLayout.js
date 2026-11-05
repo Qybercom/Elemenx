@@ -14,7 +14,7 @@ Elemenx.Component('GameEditorLayout', {
 	Current: '',
 	Version: 0,
 	Status: '',
-	Views: [{ID: 'scene', Key: 'gameEditor.scene'}, {ID: 'models', Key: 'gameEditor.models'}],
+	Views: [{ID: 'scene', Key: 'gameEditor.scene'}, {ID: 'models', Key: 'gameEditor.models'}, {ID: 'planet', Key: 'gameEditor.planet'}],
 
 	$OnCreate: function () {
 		var text = null;
@@ -94,6 +94,30 @@ Elemenx.Component('GameEditorLayout', {
 
 	Renamed: function (event) {
 		this.Game.Name = event.target.value || 'Game';
+
+		this.Keep();
+	},
+
+	/* The planet of the game (ScenePlanet options), drawn on its globe. */
+	PlanetChanged: function (planet) {
+		this.Game.Planet = planet;
+
+		this.Keep();
+	},
+
+	/*
+	 * A location of the planet opened (PlanetEditor): its scene in the editor, its ground the World of the planet there
+	 * (SceneLocations), its sun at its latitude; the game keeps which location it is.
+	 */
+	LocationOpened: function (opened) {
+		var place = opened.Location.Place;
+
+		this.Game.Location = opened.ID;
+		this.Game.Scene = {Version: 1, Name: opened.ID, Setting: 'ground', Scene: {Version: 1, Seed: '', Cosmos: '', Weather: 'clear', Time: 0, Travels: [], Removed: [], Overrides: {}, Added: [
+			{ID: 'ground', Kind: 'ground', Values: {}, Traits: {Terrain: {World: opened.Location.World}}, Parts: []},
+			{ID: 'sun', Kind: 'sun', Values: {}, Traits: {Sun: {Time: 11, Latitude: Math.round(place.Latitude * 100) / 100}}, Parts: []}
+		]}};
+		this.View = 'scene';
 
 		this.Keep();
 	},

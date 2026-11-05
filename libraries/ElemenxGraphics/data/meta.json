@@ -225,14 +225,6 @@
 			"Description": "The scene of a game in 3D: objects of any kind with their traits and parts; the setting space brings a star system on Kepler orbits, stations and fleets, with a landing on the surfaces of its bodies; the setting terrain a ground of noise and its walkers.",
 			"Props": [
 				{
-					"Name": "Biome",
-					"Type": "json",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "On a ground: what it looks like and what grows on it, by itself (the Biomes Service: temperate, taiga, tundra, desert, savanna, swamp, alien)."
-				},
-				{
 					"Name": "Setting",
 					"Type": "select",
 					"Default": "space",
@@ -691,6 +683,7 @@
 				"enter",
 				"leave",
 				"action",
+				"dig",
 				"part",
 				"touch",
 				"shader",
@@ -710,6 +703,7 @@
 				"enter": "A walker, a vehicle or the hero came into a trigger: {Trigger (the trigger itself: ID, Inside(), Action(name, data), Enable(on)), ID, Object}.",
 				"leave": "One went out of a trigger, or was removed: {Trigger, ID, Object}.",
 				"action": "A trigger was sent an action (Action of the trigger): {Trigger, Name, Data}.",
+				"dig": "A hole was dug in the ground (Dig): {At, Radius}.",
 				"part": "A part of an object was set by its role (Part(id, role).Set): {ID, Role, Value}.",
 				"touch": "Two solid things began to touch (trait Rigid): {ID, With (null: the ground), At, Normal, Impulse}.",
 				"shader": "A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.",
@@ -768,6 +762,8 @@
 				"OrbitAt(id, clientX, clientY)",
 				"Save(options)",
 				"Load(saved)",
+				"Dig(at, radius)",
+				"FootingsOf()",
 				"Land(id, options)",
 				"TakeOff()",
 				"Surface()",
@@ -1188,6 +1184,95 @@
 			"Sample": {}
 		},
 		{
+			"Name": "PlanetEditor",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "globe",
+			"Description": "An editor of a planet as a globe: continents, oceans, ranges, rivers, climates and lands drawn on it, its plates, winds and climate shown sharp at any distance.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The planet: the options of ScenePlanet.Make."
+				},
+				{
+					"Name": "Tool",
+					"Type": "select",
+					"Default": "look",
+					"Options": [
+						"look",
+						"land",
+						"sea",
+						"mountains",
+						"rift",
+						"river",
+						"climate",
+						"biome",
+						"location"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The tool in hand."
+				},
+				{
+					"Name": "Overlay",
+					"Type": "select",
+					"Default": "relief",
+					"Options": [
+						"relief",
+						"plates",
+						"wind",
+						"temperature",
+						"moisture",
+						"biomes"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "What is shown of the planet."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"select",
+				"location",
+				"drawn"
+			],
+			"EventDescriptions": {
+				"change": "The planet changed: the options of ScenePlanet.Make.",
+				"select": "The stroke selected: {Index} (-1: none).",
+				"location": "A location of the planet opened: {ID, Location} (SceneLocations.Location: its World, its place, its kind).",
+				"drawn": "The picture of the view is whole: {Overlay}."
+			},
+			"Methods": [
+				"Planet()",
+				"View()",
+				"SetView(view)",
+				"At(clientX, clientY)",
+				"Finish()",
+				"Cancel()",
+				"Remove(index)",
+				"Render()"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "ModelEditor",
 			"Kind": "Component",
 			"Group": "game",
@@ -1423,6 +1508,10 @@
 			"EventDescriptions": {},
 			"Methods": [
 				"Flat(options)",
+				"Relief(settings)",
+				"Climate(settings)",
+				"ClimateOf(settings)",
+				"LibraryRelief(options)",
 				"Sphere(options)",
 				"OnRoad(field, x, z, width)",
 				"Work()",
@@ -1720,6 +1809,7 @@
 				"Has(name)",
 				"Get(name)",
 				"Define(name, biome)",
+				"Check(list, field)",
 				"Village(field, options)"
 			],
 			"Sample": {}
@@ -1778,7 +1868,89 @@
 			"EventDescriptions": {},
 			"Methods": [
 				"Sow(job)",
+				"Compile(rules)",
+				"LibraryScatter(rule)",
 				"Work()"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneWorld",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The world of a ground as a graph of its steps: the land, its relief, climate, biomes and sketch, and what is made on it.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Make(graph, parameters)",
+				"Library(options)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "ScenePlanet",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "A planet as one continuous function of a direction: painted continents, tectonic plates, winds, climate and biomes, as fine as it is asked.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Make(options)",
+				"Direction(latitude, longitude)",
+				"LatLon(direction)",
+				"Kinds()",
+				"Project(view, direction)",
+				"Unproject(view, x, y)",
+				"Planet(options)",
+				"Color(planet, sample, overlay, light)",
+				"Picture(options, view, rect, step, overlay)",
+				"Sphere(options)",
+				"Cells(radius, size)",
+				"CellAt(radius, size, direction)",
+				"CellPoint(cell, a, b)",
+				"CellCenter(cell)",
+				"CellCorners(cell)",
+				"CellNeighbours(radius, size, cell)",
+				"CellPlace(radius, cell)",
+				"Work()",
+				"Source(names)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneLocations",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The locations of a planet: cells of its surface, each a scene in detail, their neighbours, passages between them and what is past their sides.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Location(planet, id)",
+				"At(planet, latitude, longitude)",
+				"Open(planet, id)",
+				"Tell(planet, id, changes)",
+				"Forget(planet, id)",
+				"Passage(planet, id, passage)",
+				"Kinds()",
+				"Beyonds()"
 			],
 			"Sample": {}
 		}
@@ -1881,6 +2053,11 @@
 		"elemenx-scene-editor-field": [],
 		"elemenx-scene-editor-parameter": [],
 		"elemenx-scene-editor-blueprint": [],
+		"elemenx-scene-editor-graphs": [],
+		"elemenx-scene-editor-graph-kind": [
+			"active"
+		],
+		"elemenx-scene-editor-land": [],
 		"elemenx-scene-editor-sketch-type": [],
 		"elemenx-scene-editor-layers": [],
 		"elemenx-scene-editor-layer": [
@@ -1902,6 +2079,29 @@
 		"elemenx-scene-editor-road-mid": [
 			"arc"
 		],
+		"elemenx-planet-editor": [],
+		"elemenx-planet-editor-toolbar": [],
+		"elemenx-planet-editor-tool": [
+			"active"
+		],
+		"elemenx-planet-editor-overlay": [],
+		"elemenx-planet-editor-view": [],
+		"elemenx-planet-editor-canvas": [],
+		"elemenx-planet-editor-marks": [],
+		"elemenx-planet-editor-stroke": [
+			"location",
+			"mountains",
+			"rift",
+			"river"
+		],
+		"elemenx-planet-editor-place": [],
+		"elemenx-planet-editor-passage": [],
+		"elemenx-planet-editor-field": [],
+		"elemenx-planet-editor-arrow": [],
+		"elemenx-planet-editor-arrow-tip": [],
+		"elemenx-planet-editor-info": [],
+		"elemenx-planet-editor-panel": [],
+		"elemenx-planet-editor-title": [],
 		"elemenx-model-editor": [],
 		"elemenx-model-editor-toolbar": [],
 		"elemenx-model-editor-group": [

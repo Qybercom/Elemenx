@@ -11,6 +11,8 @@ Elemenx.Component('App', {
 	Found: 0,
 	Target: '',
 	Gems: [],
+	/* The World of the land: a graph of its steps (SceneWorld), made in $OnCreate. */
+	World: null,
 	Start: [
 		{ID: 'g1', X: -60, Y: 30},
 		{ID: 'g2', X: 40, Y: -50},
@@ -23,6 +25,9 @@ Elemenx.Component('App', {
 		var self = this;
 		/* The scene, once it is ready: its methods (Change, SetViewpoint...). It stays out of the state. */
 		var scene = null;
+
+		/* Low hills round a lake: the usual World of these numbers, its steps edited as a graph like any other. */
+		this.World = this.$Service('SceneWorld').Library({Size: 300, Height: 22, Water: 0.15, Scale: 260, Ridges: 0.1, Seed: 'gems'});
 
 		this.Items = function (started) {
 			return started ? [{ID: 'resume', Label: 'Resume'}, {ID: 'restart', Label: 'Start again'}] : [{ID: 'start', Label: 'Start', Hint: 'Find the five gems'}];

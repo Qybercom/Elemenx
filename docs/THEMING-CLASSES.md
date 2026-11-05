@@ -1068,6 +1068,10 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-scene-labels`: `hidden`
 - `elemenx-scene-screens`
 - `elemenx-scene-takeoff`
+- `elemenx-scene-landing`
+- `elemenx-scene-landing-item`: `pick`
+- `elemenx-scene-landing-list`
+- `elemenx-scene-landing-time`
 
 ## GameSlot
 
@@ -1496,12 +1500,15 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-scene-editor-field`
 - `elemenx-scene-editor-fields`
 - `elemenx-scene-editor-gizmo`
+- `elemenx-scene-editor-graph-kind`: `active`
+- `elemenx-scene-editor-graphs`
 - `elemenx-scene-editor-group`: `end`
 - `elemenx-scene-editor-import`
 - `elemenx-scene-editor-inspector`
 - `elemenx-scene-editor-item`
 - `elemenx-scene-editor-item-head`
 - `elemenx-scene-editor-kind`: `model`
+- `elemenx-scene-editor-land`
 - `elemenx-scene-editor-layer`: `current`
 - `elemenx-scene-editor-layer-eye`
 - `elemenx-scene-editor-layer-name`
@@ -1540,6 +1547,25 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-topology-node`: `far`, `selected`, `status-error`, `status-off`, `status-ok`, `status-warning`
 - `elemenx-topology-status`
 - `elemenx-topology-title`
+
+## PlanetEditor
+
+- `elemenx-planet-editor`
+- `elemenx-planet-editor-arrow`
+- `elemenx-planet-editor-arrow-tip`
+- `elemenx-planet-editor-canvas`
+- `elemenx-planet-editor-field`
+- `elemenx-planet-editor-info`
+- `elemenx-planet-editor-marks`
+- `elemenx-planet-editor-overlay`
+- `elemenx-planet-editor-panel`
+- `elemenx-planet-editor-passage`
+- `elemenx-planet-editor-place`
+- `elemenx-planet-editor-stroke`: `location`, `mountains`, `rift`, `river`
+- `elemenx-planet-editor-title`
+- `elemenx-planet-editor-tool`: `active`
+- `elemenx-planet-editor-toolbar`
+- `elemenx-planet-editor-view`
 
 ## ModelEditor
 

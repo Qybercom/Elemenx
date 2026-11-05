@@ -57,6 +57,10 @@
 			},
 			"land": "Land",
 			"takeOff": "Take off",
+			"landing": "Landing",
+			"pickPoint": "Pick a point on the surface",
+			"day": "day",
+			"night": "night",
 			"loading": "Loading the scene"
 		}
 	}

@@ -770,7 +770,7 @@ Elemenx.Trait('SceneVehicles', {
 			return scene.Order.filter(function (object) {
 				var traits = object.Traits || {};
 
-				return object !== hero && object.World && (ground ? object.Values.Vehicle : traits.Body || traits.Star || object.Values.Model);
+				return object !== hero && object.World && !object.Hidden && (ground ? object.Values.Vehicle : traits.Body || traits.Star || object.Values.Model);
 			});
 		}
 
@@ -1503,6 +1503,9 @@ Elemenx.Trait('SceneVehicles', {
 		};
 
 		scene.Vehicles = {car: car, ship: ship, boat: boat};
+
+		/* Where a ship stands and how it lies, of its axes: for what flies it otherwise (SceneLanding). */
+		engine.PlaceShip = placeShip;
 
 		/* Which roles of parts there are now: a scene settles again when they change. */
 		engine.RigsVersion = function () {

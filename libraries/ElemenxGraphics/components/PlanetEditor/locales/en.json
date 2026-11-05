@@ -1,0 +1,35 @@
+{
+	"graphics": {
+		"planetEditor": {
+			"label": "Globe of the planet",
+			"overlay": "Show",
+			"planet": "Planet",
+			"stroke": "Stroke",
+			"remove": "Remove the stroke",
+			"tools": {
+				"label": "Tools of the globe",
+				"look": "Look",
+				"land": "Land",
+				"sea": "Sea",
+				"mountains": "Mountains",
+				"rift": "Rift",
+				"river": "River",
+				"climate": "Climate",
+				"biome": "Biome",
+				"location": "Location"
+			},
+			"overlays": {
+				"relief": "Relief",
+				"plates": "Plates",
+				"wind": "Winds",
+				"temperature": "Temperature",
+				"moisture": "Moisture",
+				"biomes": "Biomes"
+			},
+			"location": "Location",
+			"open": "Open",
+			"side": "Side",
+			"passage": "Passage"
+		}
+	}
+}

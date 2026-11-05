@@ -119,12 +119,12 @@ Create(canvas, options) returns a renderer, or null where there is no WebGL2 (op
 - [multiplies, inverts and projects matrices, and makes shapes of triangles](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L153) — `tests/regression/library-scene.test.js`
 - [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L184) — `tests/regression/library-scene.test.js`
 - [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L225) — `tests/regression/library-scene.test.js`
-- [Renderer makes programs behind the page for who is patient, and sets in a program only what changed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3805) — `tests/regression/library-scene.test.js`
-- [Renderer sets the state of the context only where it changes, and only the uniforms a program has](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3916) — `tests/regression/library-scene.test.js`
+- [Renderer makes programs behind the page for who is patient, and sets in a program only what changed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3812) — `tests/regression/library-scene.test.js`
+- [Renderer sets the state of the context only where it changes, and only the uniforms a program has](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3923) — `tests/regression/library-scene.test.js`
 - [makes a texture of one byte a texel with Single, its rows as long as they are](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L17) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 - [counts its draws and the triangles of them, each copy of an instanced mesh, and no triangle of a line](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L51) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 - [puts planets on their orbits and makes shapes of three dimensions with the Services of the system Libraries](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`
 - [draws its water by the water graph of the library made of blocks, or by a WaterGraph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L301) — `tests/regression/library-material-blueprints.test.js`
 - [draws its sky and its land by the graphs of the library made of blocks, or by a SkyGraph and a LandGraph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L354) — `tests/regression/library-material-blueprints.test.js`
 
-+26 more in the same files
++27 more in the same files

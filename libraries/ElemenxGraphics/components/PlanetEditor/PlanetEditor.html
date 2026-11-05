@@ -1,0 +1,25 @@
+<div class="elemenx-planet-editor">
+	<div class="elemenx-planet-editor-toolbar" role="toolbar" [attribute.aria-label]="$T('graphics.planetEditor.tools.label')">
+		<button type="button" class="elemenx-planet-editor-tool" *for="tool of Tools" *key="tool.ID" [class.active]="Tool === tool.ID" [attribute.data-tool]="tool.ID" [attribute.aria-pressed]="Tool === tool.ID ? 'true' : 'false'" (click)="Picked(tool.ID)">{{$T(tool.Key)}}</button>
+		<label class="elemenx-planet-editor-overlay">{{$T('graphics.planetEditor.overlay')}}
+			<select (change)="Overlaid">
+				<option *for="overlay of Overlays" *key="overlay.ID" [value]="overlay.ID" [selected]="overlay.ID === Overlay">{{$T(overlay.Key)}}</option>
+			</select>
+		</label>
+	</div>
+	<div class="elemenx-planet-editor-view" #View tabindex="0" [attribute.aria-label]="Label || $T('graphics.planetEditor.label')" [attribute.data-tool]="Tool" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (wheel)="Wheeled" (dblclick)="Finish" (keydown)="Key">
+		<canvas class="elemenx-planet-editor-canvas" #Canvas></canvas>
+		<svg class="elemenx-planet-editor-marks" #Marks></svg>
+		<div class="elemenx-planet-editor-info" *if="Info">{{Info}}</div>
+	</div>
+	<aside class="elemenx-planet-editor-panel">
+		<div class="elemenx-planet-editor-title">{{$T('graphics.planetEditor.planet')}}</div>
+		<label class="elemenx-planet-editor-field" *for="field of Fields(Version)" *key="field.Key"><span>{{field.Key}}</span><input type="text" [value]="field.Value" [attribute.data-key]="field.Key" (change)="SettingChanged" /></label>
+		<div class="elemenx-planet-editor-title" *if="Selected >= 0">{{$T('graphics.planetEditor.stroke')}}<Button Size="small" Variant="ghost" Icon="delete" [title]="$T('graphics.planetEditor.remove')" (click)="Remove(Selected)" /></div>
+		<label class="elemenx-planet-editor-field" *for="field of StrokeOf(Version, Selected)" *key="field.Key"><span>{{field.Key}}</span><input type="text" [value]="field.Value" [attribute.data-key]="field.Key" (change)="StrokeChanged" /></label>
+		<div class="elemenx-planet-editor-title" *if="Place">{{$T('graphics.planetEditor.location')}}<Button Size="small" Variant="primary" [label]="$T('graphics.planetEditor.open')" (click)="Opened" /></div>
+		<div class="elemenx-planet-editor-place" *if="Place">{{Place}}</div>
+		<label class="elemenx-planet-editor-field" *for="field of LocationFields(Version, Place)" *key="field.Key"><span>{{field.Key}}</span><select *if="field.Options" [attribute.data-key]="field.Key" (change)="LocationChanged"><option *for="option of field.Options" *key="option" [value]="option" [selected]="option === field.Value">{{option}}</option></select><input *if="!field.Options" type="text" [value]="field.Value" [attribute.data-key]="field.Key" (change)="LocationChanged" /></label>
+		<div class="elemenx-planet-editor-passage" *if="Place"><select data-key="Side" [attribute.aria-label]="$T('graphics.planetEditor.side')"><option value="0">+X</option><option value="1">+Z</option><option value="2">-X</option><option value="3">-Z</option></select><select data-key="Kind" [attribute.aria-label]="$T('graphics.planetEditor.passage')"><option *for="kind of PassageKinds" *key="kind" [value]="kind">{{kind}}</option></select><Button Size="small" Variant="ghost" Icon="add" [label]="$T('graphics.planetEditor.passage')" (click)="PassageAdded" /></div>
+	</aside>
+</div>

@@ -64,8 +64,8 @@ A clip is {Length, Loop, Hold, Stride, Tracks: {piece: [[time 0 to 1, rx, ry, rz
 
 ## Tests
 
-- [makes a Component of the game that defines its models, loads its scene and gives the keys to its hero](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-editor.test.js#L56) — `tests/regression/game-editor.test.js`
-- [zips a project of Elemenx: the page, the Application of its root, the Component Game, and each model as a glb](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-editor.test.js#L128) — `tests/regression/game-editor.test.js`
+- [makes a Component of the game that defines its models, loads its scene and gives the keys to its hero](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-editor.test.js#L63) — `tests/regression/game-editor.test.js`
+- [zips a project of Elemenx: the page, the Application of its root, the Component Game, and each model as a glb](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-editor.test.js#L135) — `tests/regression/game-editor.test.js`
 - [moves and scales a part by the gizmo along its axes, changes it by its fields, and undoes it all](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-object-editor.test.js#L135) — `tests/regression/library-object-editor.test.js`
 - [gives its model to Models under a name, and as files of every format that read back with its pieces](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-object-editor.test.js#L216) — `tests/regression/library-object-editor.test.js`
 - [takes a recipe of the generator plugged in for a description, which Undo takes back; and shows the variant it is told](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-object-editor.test.js#L260) — `tests/regression/library-object-editor.test.js`
@@ -73,8 +73,8 @@ A clip is {Length, Loop, Hold, Stride, Tracks: {piece: [[time 0 to 1, rx, ry, rz
 - [draws what moves together of a model of a file as one for each material: all that stands still, each wheel, each opening](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-frames.test.js#L175) — `tests/regression/library-scene-frames.test.js`
 - [makes the ground level across a road, tells its strips and the ground off it, and its model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L58) — `tests/regression/library-scene-roads.test.js`
 - [stands barriers of kind barrier along a road its Road names, or on points of their own, and they stop a car](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L231) — `tests/regression/library-scene-roads.test.js`
-- [gives each scene of a page its own textures of a model they share](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1389) — `tests/regression/library-scene.test.js`
-- [lights the world with the lamps a model carries, unless it is told not to](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2306) — `tests/regression/library-scene.test.js`
-- [A mirrored node keeps its mirror, and what a file keeps as one piece stands apart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4195) — `tests/regression/library-scene.test.js`
+- [gives each scene of a page its own textures of a model they share](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1396) — `tests/regression/library-scene.test.js`
+- [lights the world with the lamps a model carries, unless it is told not to](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2313) — `tests/regression/library-scene.test.js`
+- [A mirrored node keeps its mirror, and what a file keeps as one piece stands apart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4202) — `tests/regression/library-scene.test.js`
 
 +15 more in the same files

@@ -463,10 +463,20 @@ Elemenx.Component('UIKitPage', {
 	TerrainMirror: true,
 	/* How wild the sea of the Terrain demo is (Swell of its ground). */
 	TerrainSwell: 0.35,
+	TerrainRelief: 'classic',
+	TerrainNoises: {
+		dunes: {Type: 'worley', Seed: 'valley', Scale: 140, Fractal: 'fbm', Octaves: 3, Cell: {Return: 'f1'}, Invert: true, Power: 1.6},
+		ridges: {Type: 'perlin', Seed: 'valley', Scale: 260, Fractal: 'ridged', Octaves: 6, Power: 1.8},
+		billows: {Type: 'simplex', Seed: 'valley', Scale: 220, Fractal: 'billow', Octaves: 5},
+		terraces: {Type: 'perlin', Seed: 'valley', Scale: 240, Fractal: 'fbm', Octaves: 5, Warp: {Amount: 0.6, Scale: 0.5}, Terrace: {Steps: 7, Sharp: 0.6}}
+	},
+	TerrainReliefs: [{Value: 'classic', Label: 'Classic hills'}, {Value: 'dunes', Label: 'Worley dunes'}, {Value: 'ridges', Label: 'Perlin ridges'}, {Value: 'billows', Label: 'Simplex billows'}, {Value: 'terraces', Label: 'Warped terraces'}],
 	TerrainMirrorBlur: 0,
 	TerrainGlass: true,
 	TerrainFrost: 0,
-	TerrainBiomes: [{Value: 'temperate', Label: 'Temperate'}, {Value: 'taiga', Label: 'Taiga'}, {Value: 'tundra', Label: 'Tundra'}, {Value: 'desert', Label: 'Desert'}, {Value: 'savanna', Label: 'Savanna'}, {Value: 'swamp', Label: 'Swamp'}, {Value: 'alien', Label: 'Alien'}],
+	TerrainBiomes: [{Value: 'temperate', Label: 'Temperate'}, {Value: 'taiga', Label: 'Taiga'}, {Value: 'tundra', Label: 'Tundra'}, {Value: 'desert', Label: 'Desert'}, {Value: 'savanna', Label: 'Savanna'}, {Value: 'swamp', Label: 'Swamp'}, {Value: 'alien', Label: 'Alien'}, {Value: 'climate', Label: 'All, by climate'}],
+	/* The lands of the valley by its climate: each where its height, moisture and warmth are those of it. */
+	TerrainClimateLands: ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp'],
 	TerrainSaved: null,
 	TerrainUnits: [
 		{ID: 'scout', Name: 'Scout', X: 0, Y: 10},
@@ -2513,7 +2523,7 @@ Elemenx.Component('UIKitPage', {
 		});
 
 		scene.Add('sun', {ID: 'day', Time: this.RaceHour, Latitude: 45, DayOfYear: 172, Color: '#fff4e0'});
-		scene.Add('ground', {ID: 'land', Size: 2400, Height: 22, Water: 0, Scale: 420, Ridges: 0.15, Rock: false, Snow: false, Seed: seed});
+		scene.Add('ground', {ID: 'land', World: this.$Service('SceneWorld').Library({Size: 2400, Height: 22, Water: 0, Scale: 420, Ridges: 0.15, Rock: false, Snow: false, Seed: seed})});
 		scene.Add('forest', {ID: 'woods', Density: 1.2, Cover: 0.4, Patch: 120});
 		scene.Add('grass', {ID: 'meadow', Density: 0.6, Height: 0.5});
 		scene.Add('road', track.Spec);
@@ -2912,7 +2922,10 @@ Elemenx.Component('UIKitPage', {
 				return;
 			}
 
-			self.OrbitSpeed = hero && hero.Ship ? Math.round(Math.sqrt(hero.Ship.Way[0] * hero.Ship.Way[0] + hero.Ship.Way[1] * hero.Ship.Way[1] + hero.Ship.Way[2] * hero.Ship.Way[2]) * 1000) : 0;
+			/* In the air of a location, metres a second; on its way down or up, its real speed; in space, of its way. */
+			if (hero && hero.Flying) self.OrbitSpeed = Math.round(Math.sqrt(hero.Flying.Way[0] * hero.Flying.Way[0] + hero.Flying.Way[1] * hero.Flying.Way[1] + hero.Flying.Way[2] * hero.Flying.Way[2]));
+			else if (hero && hero.Landing && hero.Landing.Real) self.OrbitSpeed = Math.round(hero.Landing.Real * 1000);
+			else self.OrbitSpeed = hero && hero.Ship ? Math.round(Math.sqrt(hero.Ship.Way[0] * hero.Ship.Way[0] + hero.Ship.Way[1] * hero.Ship.Way[1] + hero.Ship.Way[2] * hero.Ship.Way[2]) * 1000) : 0;
 		}, 250);
 	},
 
@@ -2944,6 +2957,11 @@ Elemenx.Component('UIKitPage', {
 
 		if (hero)
 			hero.Values.Vehicle.Warp = {To: value};
+	},
+
+	/* The phases of a landing and of a take-off, where those of a warp are. */
+	OrbitLanding: function (event) {
+		this.OrbitPhase = event.Phase === 'orbit' || event.Phase === 'landed' ? '' : event.Phase;
 	},
 
 	OrbitTravelled: function (event) {
@@ -3541,6 +3559,16 @@ Elemenx.Component('UIKitPage', {
 	},
 
 	/* A boat on the sea, the nearest deep water to the middle: W, A, S and D drive it; again, the view is free. */
+	/* The relief of the valley of a noise of the Noise Service (null: its hills of Scale and Ridges, as ever). */
+	TerrainNoise: function (relief) {
+		return this.TerrainNoises[relief] || null;
+	},
+
+	/* The World of the valley: its relief of a noise (or its hills of Scale and Ridges), one biome or all by their climate. */
+	TerrainWorld: function (biome, relief) {
+		return this.WorldOf('valley', {Size: 900, Height: 55, Water: 0.32, Seed: 'valley', Noise: this.TerrainNoise(relief) || undefined, Biomes: biome === 'climate' ? this.TerrainClimateLands : [biome]});
+	},
+
 	TerrainBoat: function () {
 		var scene = this.Terrained ? this.Terrained() : null;
 		var field;
@@ -4814,6 +4842,22 @@ Elemenx.Component('UIKitPage', {
 		var now = new Date();
 		var self = this;
 		var hotkeys = this.$Service('Hotkeys');
+		/* The Worlds of the grounds of the page, each made once for its numbers: a graph is not state. */
+		var worlds = {};
+		var grounds = {
+			world: {Size: 320, Height: 18, Water: 0.12, Scale: 260, Ridges: 0.15, Seed: 'world'},
+			meadow: {Size: 400, Height: 22, Water: 0.2, Scale: 420, Seed: 'meadow'}
+		};
+
+		/* The World of a ground of the page (SceneWorld.Library): of its name, or of the numbers given. */
+		this.WorldOf = function (name, options) {
+			var given = options || grounds[name] || {};
+			var key = name + JSON.stringify(given);
+
+			worlds[key] = worlds[key] || self.$Service('SceneWorld').Library(given);
+
+			return worlds[key];
+		};
 
 		try {
 			this.SceneQuality = window.localStorage.getItem('ui-kit-quality') || 'auto';

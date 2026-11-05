@@ -24,7 +24,7 @@ async function mount () {
 	}, 4000);
 
 	ready.Scene().Loop.Stop();
-	ready.Add('ground', {ID: 'land', Size: 400, Height: 30, Water: 0, Scale: 90, Ridges: 0.3, Seed: 'roads'});
+	ready.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 400, Height: 30, Water: 0, Scale: 90, Ridges: 0.3, Seed: 'roads'})});
 
 	return {
 		Scene: ready,

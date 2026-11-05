@@ -707,13 +707,14 @@ Elemenx.Service('SceneBlueprints', {
 		});
 
 		/* The light on a point: the sun as its shadows let it, the sky over it, what the land bounces back, the lamps. */
-		node('LandLight', [vec3('World', 'vWorld'), vec3('Normal', 'normalize(vNormal)')], [{Key: 'Light', Type: 'vec3'}, {Key: 'Sunlit', Type: 'float'}], function (context) {
+		/* Open: how much of the sky it sees (a cave under rock: little); the sun, the sky and what they bounce, by it; the lamps not. */
+		node('LandLight', [vec3('World', 'vWorld'), vec3('Normal', 'normalize(vNormal)'), float('Open', 'vOpen')], [{Key: 'Light', Type: 'vec3'}, {Key: 'Sunlit', Type: 'float'}], function (context) {
 			var name = 'l' + context.Index;
 			var inputs = context.Inputs;
 
-			context.Lines.push('float ' + name + '_sunlit = sunLit(' + inputs.World + ', ' + inputs.Normal + ');');
+			context.Lines.push('float ' + name + '_sunlit = sunLit(' + inputs.World + ', ' + inputs.Normal + ') * smoothstep(0.0, 0.6, ' + inputs.Open + ');');
 
-			return {Light: '(uSunColor * 1.35 * max(dot(' + inputs.Normal + ', uSun), 0.0) * ' + name + '_sunlit + mix(uFloorLight, uSkyLight, ' + inputs.Normal + '.y * 0.5 + 0.5) * skySeen(' + inputs.World + ') + sunBounce(' + inputs.World + ') + localLight(' + inputs.World + ', ' + inputs.Normal + '))', Sunlit: name + '_sunlit'};
+			return {Light: '((uSunColor * 1.35 * max(dot(' + inputs.Normal + ', uSun), 0.0) * ' + name + '_sunlit + (mix(uFloorLight, uSkyLight, ' + inputs.Normal + '.y * 0.5 + 0.5) * skySeen(' + inputs.World + ') + sunBounce(' + inputs.World + ')) * ' + inputs.Open + ') + localLight(' + inputs.World + ', ' + inputs.Normal + '))', Sunlit: name + '_sunlit'};
 		});
 
 		/*

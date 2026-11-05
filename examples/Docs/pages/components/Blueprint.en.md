@@ -48,4 +48,4 @@ The editor of a blueprint (the Blueprints Service: a graph in the JSON of Flowpr
 - [fits all of its blocks into the view, not the corner of its canvas (regression: it fitted a canvas 1 pixel large)](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/Blueprint/Blueprint.test.js#L158) — `libraries/ElemenxUI/components/Blueprint/Blueprint.test.js`
 - [moves a block by its head, and the links follow it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/Blueprint/Blueprint.test.js#L188) — `libraries/ElemenxUI/components/Blueprint/Blueprint.test.js`
 
-+4 more in the same files
++5 more in the same files

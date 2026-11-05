@@ -56,10 +56,16 @@
  * The surface: Land(id, {Latitude, Longitude, Altitude}) goes down to the ground of a body (not of a giant of gas),
  * the very ground its baked surface shows (SceneTerrainGenerator.Sphere), in patches finer near the eye, under its sky (its
  * atmosphere and its star); a drag looks round, the wheel rises and comes down, WASD and the arrows walk, Escape or
- * TakeOff() goes back up. The time runs SurfaceSpeed days a second there (1/120).
+ * TakeOff() goes back up. The time runs SurfaceSpeed days a second there (1/120). A ship lands and takes off by itself
+ * (its traits Entry and Flight, SceneLanding): Land(ship, {Marker} or {Latitude, Longitude}) takes it from its orbit
+ * through the air to the location of the point, TakeOff(ship) back up to a low orbit; the command Landing of the scene
+ * lists the markers of the body and lets a point be picked.
  *
- * Kinds of the ground (the setting terrain): ground (Terrain: Size, Height, Water, Scale, Ridges, Rock, Snow, Swell (how wild its sea, 0 to 1.5: SceneWaves; wilder in the rain), SwellWay (degrees the wind drives it), Seed: a ground of
- * noise, SceneTerrainGenerator.Flat, in chunks finer near the eye, with its sea), sun (Sun: its light from far), unit (Walker: Speed,
+ * Kinds of the ground (the setting terrain): ground (Terrain: World, the graph of its world (SceneWorld: its land, relief,
+ * climate, biomes, sketch and what is made on it, the only place they are told; with none there is no ground), Swell (how
+ * wild its sea, 0 to 1.5: SceneWaves; wilder in the rain), SwellWay (degrees the wind drives it): a ground of noise,
+ * SceneTerrainGenerator.Flat, in chunks finer near the eye, with its sea; the objects its World makes are in the scene
+ * as Generated, made again with it and never saved), sun (Sun: its light from far), unit (Walker: Speed,
  * MaxSlope, Swim; a Model), tree, rock and house (Model, Blocks: what stands in the way). An object of it stands at
  * X and Y of the ground; Move(id, [x, y]) walks a walker round what cannot be walked, a right click sends the selected
  * one; the view turns round a point of the ground and the keys move it. Every model of the Models Service is a kind of
@@ -93,7 +99,7 @@
 Elemenx.Component('Scene', {
 	$TemplateURL: 'Scene.html',
 	$StyleURL: 'Scene.css',
-	$Traits: ['SceneScatter', 'SceneLighting', 'SceneEffects', 'SceneCosmos', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork'],
+	$Traits: ['SceneScatter', 'SceneLighting', 'SceneEffects', 'SceneCosmos', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'star',
@@ -115,14 +121,14 @@ Elemenx.Component('Scene', {
 			enter: 'A walker, a vehicle or the hero came into a trigger: {Trigger (the trigger itself: ID, Inside(), Action(name, data), Enable(on)), ID, Object}.',
 			leave: 'One went out of a trigger, or was removed: {Trigger, ID, Object}.',
 			action: 'A trigger was sent an action (Action of the trigger): {Trigger, Name, Data}.',
+			dig: 'A hole was dug in the ground (Dig): {At, Radius}.',
 			part: 'A part of an object was set by its role (Part(id, role).Set): {ID, Role, Value}.',
 			touch: 'Two solid things began to touch (trait Rigid): {ID, With (null: the ground), At, Normal, Impulse}.',
 			shader: 'A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}).'
 		},
-		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Save(options)', 'Load(saved)', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()'],
+		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()'],
 		Props: {
-			Biome: 'On a ground: what it looks like and what grows on it, by itself (the Biomes Service: temperate, taiga, tundra, desert, savanna, swamp, alien).',
 			Setting: {Options: ['space', 'terrain'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers).'},
 			System: 'The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}.',
 			Seed: 'A whole star system made of a seed (always the same for the same seed).',
@@ -213,7 +219,12 @@ Elemenx.Component('Scene', {
 	Unsupported: false,
 	Dragging: false,
 	Card: null,
-	Landed: '',
+	/* The body the view landed on (Land), '' in space: what the button to take off waits for. */
+	LandedOn: '',
+	/* What the driven ship can do now (SceneLanding): land (near a body), takeoff (down in a location) or ''; the list of its command. */
+	ShipCan: '',
+	LandingOpen: false,
+	LandingMarkers: null,
 
 	$OnCreate: function () {
 		var self = this;
@@ -266,13 +277,13 @@ Elemenx.Component('Scene', {
 	},
 
 	/*
-	 * The kinds of the setting terrain: a ground of noise (Terrain: Size, Height, Water, Scale, Ridges, Rock, Snow, Swell, SwellWay, Seed), its sun
+	 * The kinds of the setting terrain: a ground of noise (Terrain: World, the graph of its world, Swell, SwellWay; its look Blueprint and Parameters), its sun
 	 * (Sun: Elevation, Azimuth in degrees, Color; with Time, Noon: the azimuth at noon of its way, 180; Shade: the color of the light of the sky), units that walk (Walker: Speed, a second; X and Y their place on the
 	 * map), trees, rocks and houses (a Model; Blocks: no way through them).
 	 */
 	Ground: function () {
 		return {
-			'ground': {Traits: {Terrain: {Size: 1000, Height: 60, Water: 0.35, Scale: 180, Ridges: 0.4, Rock: '', Snow: '', Swell: 0.35, SwellWay: 30, Seed: 'ground', Blueprint: null, Parameters: null, Sketch: null}}},
+			'ground': {Traits: {Terrain: {World: null, Swell: 0.35, SwellWay: 30, Blueprint: null, Parameters: null}}},
 			'effect': {Traits: {Effect: {Type: 'campfire', Size: 1, Power: 1, Aim: null, Height: 0, Light: true, On: true, Color: '', Hot: '', Volume: 1, Intensity: 1, Length: 1, Width: 1, Spin: 1, Rings: null, Seed: '', Smoke: 1, Appear: 0.45, Tune: null, Pulse: null, Where: 'body', Blueprint: null, Parameters: null}}},
 			'mirror': {Traits: {Mirror: {Width: 2, Height: 2, Yaw: 0, Pitch: 0, Lift: 1, Tint: '#ffffff', Blur: 0, Strength: 0.92, Every: 1}}},
 			'glass': {Traits: {Glass: {Width: 2, Height: 2, Yaw: 0, Pitch: 0, Lift: 1, Tint: '#cfe6f0', Clarity: 0.88, Frost: 0, Reflect: 0.35}}},
@@ -306,7 +317,7 @@ Elemenx.Component('Scene', {
 
 		return {
 			'star': {Traits: {Star: {Mass: 1, Radius: null, Temperature: null, Luminosity: null, Color: '', Veil: 3}, Selectable: {}}},
-			'planet': {Traits: {Orbit: orbit, Body: {Radius: 6371, Mass: null, Day: 24, Tilt: 0, Albedo: null}, Surface: {Type: 'rocky', Colors: '', Water: '', Ocean: null, Ice: null, Clouds: null, Atmosphere: '', Seed: ''}, Selectable: {}}},
+			'planet': {Traits: {Orbit: orbit, Body: {Radius: 6371, Mass: null, Day: 24, Tilt: 0, Albedo: null}, Surface: {Type: 'rocky', Colors: '', Water: '', Ocean: null, Ice: null, Clouds: null, Planet: null, Atmosphere: '', Seed: ''}, Selectable: {}}},
 			'moon': {Extends: 'planet', Traits: {Body: {Radius: 1737, Day: 0}, Surface: {Type: 'moon'}}},
 			'belt': {Traits: {Belt: {Inner: 2.2, Outer: 3.2, Count: 260, Inclination: 0, Colors: '', Rocks: 1}}},
 			'ring': {Traits: {Ring: {Inner: 1.3, Outer: 2.3, Inclination: 0, Colors: ''}}},
@@ -332,7 +343,7 @@ Elemenx.Component('Scene', {
 				]
 			},
 			'craft': {Traits: {Orbit: {Distance: 1.8, Unit: 'radii', Period: 0.6, Inclination: 12, Anomaly: null}, Model: {Shape: '', Size: 0.11, Relative: true}, Health: {Max: 1000}, Selectable: {}}},
-			'ship': {Traits: {Model: {Shape: 'fighter', Size: 0.07, Relative: false}, Health: {Max: 100}, Selectable: {}}},
+			'ship': {Traits: {Model: {Shape: 'fighter', Size: 0.07, Relative: false}, Health: {Max: 100}, Selectable: {}, Entry: {Mode: 'landing', Pace: 30, Cruise: 40, Parking: 400, Exit: 0.6}, Flight: {Airspeed: 160, Climb: 30, Hover: 40, Agility: 1}}},
 			'fighter': {Extends: 'ship'},
 			'cruiser': {Extends: 'ship', Traits: {Model: {Shape: 'cruiser'}, Health: {Max: 600}}},
 			'freighter': {Extends: 'ship', Traits: {Model: {Shape: 'freighter'}, Health: {Max: 300}, Container: {Size: 80}}},
@@ -412,6 +423,8 @@ Elemenx.Component('Scene', {
 			Overrides: {},
 			Loaded: null,
 			Travels: {},
+			/* What was dug out of the ground (Dig): spheres cut out of its volume. */
+			Digs: [],
 			Ways: {},
 			Seconds: 0,
 			Ground: null,
@@ -553,7 +566,7 @@ Elemenx.Component('Scene', {
 		function canonical (raw, of, given) {
 			var kind = raw.Kind && kinds.Has(raw.Kind) ? raw.Kind : '';
 			var fields = kind || of ? kinds.Fields(kind || of) : {};
-			var common = {clip: 'Clip', soft: 'Soft', biome: 'Biome', houses: 'Houses', radius: 'Radius', type: 'Type', health: 'Health', maxhealth: 'MaxHealth', sight: 'Sight', tall: 'Tall', model: 'Model', roof: 'Roof', speed: 'Speed', shapes: 'Shapes', density: 'Density', size: 'Size', minheight: 'MinHeight', maxheight: 'MaxHeight', maxslope: 'MaxSlope', cover: 'Cover', patch: 'Patch', clumps: 'Clumps', spread: 'Spread', follow: 'Follow', offset: 'Offset', facing: 'Facing', lift: 'Lift', wet: 'Wet', drops: 'Drops', seed: 'Seed', blocks: 'Blocks', root: 'Root'};
+			var common = {clip: 'Clip', soft: 'Soft', footing: 'Footing', houses: 'Houses', radius: 'Radius', type: 'Type', health: 'Health', maxhealth: 'MaxHealth', sight: 'Sight', tall: 'Tall', model: 'Model', roof: 'Roof', speed: 'Speed', shapes: 'Shapes', density: 'Density', size: 'Size', minheight: 'MinHeight', maxheight: 'MaxHeight', maxslope: 'MaxSlope', cover: 'Cover', patch: 'Patch', clumps: 'Clumps', spread: 'Spread', follow: 'Follow', offset: 'Offset', facing: 'Facing', lift: 'Lift', wet: 'Wet', drops: 'Drops', seed: 'Seed', blocks: 'Blocks', root: 'Root'};
 			var spec = {ID: raw.ID, Kind: kind, Parent: raw.Parent, Part: raw.Part, Values: {}, Traits: {}, Parts: []};
 
 			Object.keys(raw).forEach(function (key) {
@@ -770,7 +783,7 @@ Elemenx.Component('Scene', {
 				return !scene.Removed[spec.ID];
 			});
 
-			roots = specs.map(function (spec) {
+			function build (spec) {
 				var key = spec.Restored ? '' : JSON.stringify([spec.Kind, spec.Parent, spec.Values, spec.Traits, spec.Parts, scene.Overrides[spec.ID] || null]);
 				var kept = key && made[spec.ID] && made[spec.ID].Key === key ? made[spec.ID].Object : null;
 				var object = kept || (spec.Restored ? JSON.parse(JSON.stringify(spec.Restored)) : make(spec));
@@ -802,6 +815,24 @@ Elemenx.Component('Scene', {
 				objects[object.ID] = object;
 
 				return object;
+			}
+
+			roots = specs.map(build);
+
+			/* What the World of a ground makes: objects of the scene as any other (Generated: the ground), made again with it, never saved. */
+			roots.slice().forEach(function (object) {
+				if (!trait(object, 'Terrain')) return;
+
+				worldOf(object).Things.forEach(function (thing) {
+					var id = object.ID + '-' + thing.ID;
+					var made;
+
+					if (scene.Removed[id] || objects[id]) return;
+
+					made = engine.Canonical(Object.assign({}, thing.Values, {Kind: thing.Kind}), null, true);
+
+					roots.push(build({ID: id, Kind: thing.Kind, Parent: '', Values: Object.assign({}, made.Values, {Generated: object.ID}), Traits: made.Traits, Parts: []}));
+				});
 			});
 
 			first = roots.filter(function (object) {
@@ -915,6 +946,10 @@ Elemenx.Component('Scene', {
 
 			if (trait(object, 'Formation'))
 				object.Size = 0.07 * (real ? 0.02 : 1);
+
+			/* A ship down in a location is as long as it is, in metres (SceneLanding). */
+			if (object.Located)
+				object.Size = object.Located;
 		}
 
 		/* A formation has its ships as parts: as many as Count, of its Ship kind, the ones its object has not. */
@@ -1054,7 +1089,7 @@ Elemenx.Component('Scene', {
 
 				object.Turn = math.Identity();
 
-				if (scene.Ground && !object.Owner && !orbit && !trait(object, 'Terrain') && !trait(object, 'Sun')) {
+				if (scene.Ground && !object.Hidden && !object.Owner && !orbit && !trait(object, 'Terrain') && !trait(object, 'Sun')) {
 					stand(object);
 				}
 				else if (object.Owner && !object.Generated) {
@@ -1505,7 +1540,7 @@ Elemenx.Component('Scene', {
 			var positions = [];
 			var colors = [];
 			var list = scene.Order.filter(function (object) {
-				return trait(object, 'Star') && object.World;
+				return trait(object, 'Star') && object.World && !object.Hidden;
 			}).slice(0, 4);
 
 			list.forEach(function (star) {
@@ -2014,7 +2049,7 @@ Elemenx.Component('Scene', {
 				var surface;
 				var ring;
 
-				if (!object.World) return;
+				if (!object.World || object.Hidden) return;
 
 				if (trait(object, 'Star')) {
 					model = placed(object, size);
@@ -3254,7 +3289,7 @@ Elemenx.Component('Scene', {
 				if (ground.Sun[1] < 0.04) return off;
 
 				/* A location needs room: past the map of the shadows nothing is in shadow, and its edge shows as a square. */
-				extent = Math.max(ground.Field.Blocked ? Math.max(90, ground.Field.Size * 0.55) : ground.Field.Whole ? 8 : 30, Math.min(ground.Field.Size, scene.Distance * 1.5));
+				extent = Math.max(ground.Field.Whole ? ground.Field.Blocked ? Math.max(90, ground.Field.Size * 0.55) : 8 : 30, Math.min(ground.Field.Size, scene.Distance * 1.5));
 				set = self.Graphics();
 				made = castShadow(ground.Sun, ground.Target, scene.Eye, extent, Math.max(extent * 2, ground.Field.Top * 4), casters);
 
@@ -3392,11 +3427,23 @@ Elemenx.Component('Scene', {
 		}
 
 		/*
-		 * The ground of the setting terrain: the object of a Terrain trait is a flat map of noise (the Terrain Service)
+		 * The ground of the setting terrain: the object of a Terrain trait is a flat map of noise (the Terrain Service) of its World
 		 * drawn in squares, the finer the nearer; its water a plane, its sky of its sun (an object of a Sun trait). The
 		 * other objects stand on it at X and Y (across and down the map); a Walker walks a way round
 		 * the slopes, the sea and the things that block it. The view goes round a point of the ground.
 		 */
+		/* What the World of a ground makes (SceneWorld.Make), made again only when its graph is another. */
+		function worldOf (object) {
+			var graph = trait(object, 'Terrain').World || null;
+
+			if (object.WorldGraph !== graph || !object.WorldMade) {
+				object.WorldGraph = graph;
+				object.WorldMade = self.$Service('SceneWorld').Make(graph);
+			}
+
+			return object.WorldMade;
+		}
+
 		function groundOf () {
 			var object = scene.Roots.filter(function (each) {
 				return trait(each, 'Terrain');
@@ -3406,7 +3453,7 @@ Elemenx.Component('Scene', {
 			})[0];
 			var settings;
 			var key;
-			var biome;
+			var world;
 			var sketch;
 			var sketched;
 			var swell = null;
@@ -3428,6 +3475,12 @@ Elemenx.Component('Scene', {
 			if (site && !locationReady(site))
 				site = null;
 
+			/* A ground is what its World makes: with no World, or none that runs, there is none. */
+			world = object ? worldOf(object) : null;
+
+			if (object && !world.Ground)
+				object = null;
+
 			if (!object && !site) {
 				if (scene.Ground)
 					dropGround();
@@ -3435,34 +3488,39 @@ Elemenx.Component('Scene', {
 				return null;
 			}
 
-			settings = object ? trait(object, 'Terrain') : null;
-			biome = object && self.$Service('SceneBiomes').Get(object.Values.Biome);
+			/*
+			 * Its shape is the land of its World; the look of a ground (its Blueprint and its Parameters) and the waves of its sea
+			 * are not its shape: they make no other ground. The sketch over it is not its shape either: a change of it makes the
+			 * ground again only where it changed. The shape and its text are made once for a World.
+			 */
+			if (object) {
+				swell = {Swell: trait(object, 'Terrain').Swell, Way: trait(object, 'Terrain').SwellWay, Seed: world.Ground.Seed};
 
-			/* The look of a ground (its Blueprint and its Parameters) and the waves of its sea are not its shape: they make no other ground. */
-			if (settings) {
-				swell = {Swell: settings.Swell, Way: settings.SwellWay, Seed: settings.Seed};
-				settings = Object.assign({}, settings);
+				if (!world.Shape) {
+					var shape = Object.assign({}, world.Ground);
 
-				delete settings.Blueprint;
-				delete settings.Parameters;
-				delete settings.Swell;
-				delete settings.SwellWay;
+					delete shape.Sketch;
+
+					world.Shape = {Settings: shape, Key: JSON.stringify(shape)};
+				}
+
+				settings = Object.assign({}, world.Shape.Settings);
+				sketch = world.Ground.Sketch || null;
+
+				/* What was dug out of it (Dig): carves of its volume, not of its shape; a new one makes it again only round it. */
+				if (scene.Digs.length)
+					settings.Carves = (settings.Carves || []).concat(scene.Digs);
 			}
-
-			if (biome)
-				settings = Object.assign({}, settings, {Palette: biome.Ground});
-
-			/* The sketch over it is not its shape either: a change of it makes the ground again only where it changed. */
-			sketch = settings && settings.Sketch || null;
-
-			if (settings)
-				delete settings.Sketch;
 
 			/* The roads over a ground of noise: the ground is made level under them. */
 			if (settings && !site && engine.RoadsSketch)
 				sketch = engine.RoadsSketch(settings, sketch);
 
-			key = site ? 'location:' + site.ID + ':' + site.Values.Model : JSON.stringify(settings);
+			/* What stands on it for good, on level places of their own (a World with the step Footings). */
+			if (settings && !site && settings.Footings && engine.FootingsSketch)
+				sketch = engine.FootingsSketch(settings, sketch);
+
+			key = site ? 'location:' + site.ID + ':' + site.Values.Model : world.Shape.Key;
 
 			/* Its text, made again only when the sketch or the scene changed: with the roads over it it is long, and this runs every frame. */
 			if (!sketch) sketched = '';
@@ -3473,9 +3531,9 @@ Elemenx.Component('Scene', {
 				if (scene.Ground)
 					dropGround();
 
-				scene.Ground = {Shape: key, Key: key + sketched, Sketched: sketched, ID: object ? object.ID : '', Field: site ? locationField(site) : terrain.Flat(sketch ? Object.assign({}, settings, {Sketch: sketch}) : settings), Nodes: {}, Frame: 0, Keys: {}};
+				scene.Ground = {Shape: key, Key: key + sketched + (scene.Digs.length ? '#dug' + scene.Digs.length : ''), Sketched: sketched, Dug: scene.Digs.length, ID: object ? object.ID : '', Field: site ? locationField(site) : terrain.Flat(sketch ? Object.assign({}, settings, {Sketch: sketch}) : settings), Nodes: {}, Frame: 0, Keys: {}};
 			}
-			else if (scene.Ground.Sketched !== sketched && !site) {
+			else if ((scene.Ground.Sketched !== sketched || scene.Ground.Dug !== scene.Digs.length) && !site) {
 				resketch(settings, sketch, sketched);
 			}
 
@@ -3615,9 +3673,17 @@ Elemenx.Component('Scene', {
 			var before = ground.Field.Options ? ground.Field.Options.Sketch : null;
 			var changed = terrain.SketchChanged(before || null, sketch);
 
+			/* Round what was dug since: the squares there, made again. */
+			scene.Digs.slice(ground.Dug || 0).forEach(function (dug) {
+				changed.push([dug.At[0] - dug.Radius - 1, dug.At[2] - dug.Radius - 1, dug.At[0] + dug.Radius + 1, dug.At[2] + dug.Radius + 1]);
+			});
+
+			ground.Dug = scene.Digs.length;
+
 			ground.Field = terrain.Flat(sketch ? Object.assign({}, settings, {Sketch: sketch}) : settings);
 			ground.Sketched = sketched;
-			ground.Key = ground.Shape + sketched;
+			/* What was dug is of its key too: what stands and grows there is set again. */
+			ground.Key = ground.Shape + sketched + (scene.Digs.length ? '#dug' + scene.Digs.length : '');
 			ground.Changed = changed;
 
 			Object.keys(ground.Nodes).forEach(function (key) {
@@ -3829,7 +3895,7 @@ Elemenx.Component('Scene', {
 		/* Which objects move, after the scene changed: the others stand once. */
 		function settle () {
 			/* The roles of the parts of the models change what moves too. */
-			var key = scene.Version + ':' + (scene.Ground ? scene.Ground.Key : '') + ':' + (engine.RigsVersion ? engine.RigsVersion() : '');
+			var key = scene.Version + ':' + (scene.Ground ? scene.Ground.Key : '') + ':' + (engine.RigsVersion ? engine.RigsVersion() : '') + ':' + (scene.Location ? scene.Location.ID : '');
 			if (scene.Settled === key) return;
 
 			scene.Settled = key;
@@ -3837,7 +3903,19 @@ Elemenx.Component('Scene', {
 			scene.Still = [];
 			scene.StillLists = null;
 
+			/* A ship down in a location (SceneLanding): what is of space is away, neither drawn nor met. */
 			scene.Order.forEach(function (object) {
+				object.Hidden = !!scene.Location && ofSpace(object);
+			});
+
+			/* What is away still goes round its star and turns (the sun of a location is where its star is), but is not drawn. */
+			scene.Order.forEach(function (object) {
+				if (object.Hidden) {
+					scene.Active.push(object);
+
+					return;
+				}
+
 				if (scene.Ground && stillOf(object)) scene.Still.push(object);
 				else scene.Active.push(object);
 			});
@@ -3847,6 +3925,20 @@ Elemenx.Component('Scene', {
 
 				stand(object);
 			});
+		}
+
+		/* What is of space: a star, a body, what goes round one or flies there (but the hero), and what is of them. */
+		function ofSpace (object) {
+			var traits = object.Traits || {};
+			var parent = object.Owner || (object.Parent ? scene.Objects[object.Parent] : null);
+
+			if (object.ID === scene.Hero) return false;
+
+			if (traits.Star || traits.Body || traits.Ring || traits.Belt || traits.Orbit || traits.Formation || traits.Mover) return true;
+
+			if (object.Values.Vehicle && object.Values.Vehicle.Kind === 'ship' && object.Values.Vehicle.Around) return true;
+
+			return !!parent && parent !== object && ofSpace(parent);
 		}
 
 		/* A thing on the ground: at its X and Y, or along its way at the time of the scene. */
@@ -3952,14 +4044,15 @@ Elemenx.Component('Scene', {
 			var object = scene.Objects[id];
 			var walker = object ? trait(object, 'Walker') : null;
 			var field = scene.Ground ? scene.Ground.Field : null;
-			var target = Array.isArray(point) ? {X: point[0], Z: point[1]} : {X: number(point.X, 0), Z: number(point.Z !== undefined ? point.Z : point.Y, 0)};
+			/* [x, z] or [x, z, y]: y the height of the floor it goes to, where one is over another (a cave under a hill). */
+			var target = Array.isArray(point) ? {X: point[0], Z: point[1], Y: point[2]} : {X: number(point.X, 0), Z: number(point.Z !== undefined ? point.Z : point.Y, 0), Y: point.Height};
 			var points;
 			var lengths = [0];
 			var i;
 
 			if (!object || !walker || !field || !object.World) return false;
 
-			points = field.Path({X: object.World[0], Z: object.World[2]}, target, {MaxSlope: number(walker.MaxSlope, 0.45), Step: field.Size / 160, Blocked: function (x, z) {
+			points = field.Path({X: object.World[0], Z: object.World[2], Y: object.World[1] - (object.Lifted || 0)}, target, {MaxSlope: number(walker.MaxSlope, 0.45), Step: field.Size / 160, Blocked: function (x, z) {
 				return blocked(x, z, object);
 			}});
 
@@ -3986,8 +4079,12 @@ Elemenx.Component('Scene', {
 			var point;
 			var i;
 
+			/* Over the ground, or, of a ground with a volume, in its air (a cave seen through its mouth). */
 			function above (at) {
 				var p = vectors.Add(ray.Origin, vectors.Scale(ray.Direction, at));
+
+				if (field.Volume)
+					return p[1] < 0 && field.Height(p[0], p[2]) < 0 ? p[1] : -field.Density(p[0], p[1], p[2]);
 
 				return p[1] - Math.max(0, field.Height(p[0], p[2]));
 			}
@@ -4007,7 +4104,8 @@ Elemenx.Component('Scene', {
 
 			point = vectors.Add(ray.Origin, vectors.Scale(ray.Direction, high));
 
-			return [point[0], point[2]];
+			/* The height too: the floor it is, where one is over another. */
+			return [point[0], point[2], point[1]];
 		}
 
 		/*
@@ -5533,6 +5631,15 @@ Elemenx.Component('Scene', {
 		 */
 		var terrain = self.$Service('SceneTerrainGenerator');
 
+		/* The ground of a body: of its planet (Surface: Planet, ScenePlanet: the very ground of its globe), else of its baked look. */
+		function surfaceField (object) {
+			var surface = trait(object, 'Surface') || {};
+			var type = surface.Type || 'rocky';
+			var relief = {terran: 8, ocean: 6, desert: 7, rocky: 9, moon: 10, dwarf: 6, ice: 5, lava: 6};
+
+			return surface.Planet ? terrain.Sphere({Planet: Object.assign({}, typeof surface.Planet === 'string' ? JSON.parse(surface.Planet) : surface.Planet, {Radius: object.Radius})}) : terrain.Sphere({Radius: object.Radius, Height: relief[type] || 6, Seed: object.Seed, Ocean: object.Look.Ocean, Type: type});
+		}
+
 		function land (id, options) {
 			var object = scene.Objects[id];
 			var settings = options || {};
@@ -5542,11 +5649,22 @@ Elemenx.Component('Scene', {
 			var high;
 			var arrive;
 			var sweep = 0.5;
-			var relief = {terran: 8, ocean: 6, desert: 7, rocky: 9, moon: 10, dwarf: 6, ice: 5, lava: 6};
 
 			if (!object || !trait(object, 'Body') || type === 'gas' || type === 'ice-giant') return false;
 
 			place(scene.Time);
+
+			/*
+			 * A ship that comes down or goes up (SceneLanding): the surface is the frame it flies in, at Up (in the frame of the
+			 * body) and Altitude (km); the ship says where the eye stands, and it is no visit of the scene.
+			 */
+			if (settings.Ship) {
+				scene.Surface = {ID: object.ID, Field: surfaceField(object), Nodes: {}, Up: vectors.Normalize(settings.Up), Yaw: 0, Pitch: 0.22, Altitude: Number(settings.Altitude) || 1, Wanted: Number(settings.Altitude) || 1, Way: null, Heat: 0, Rising: false, Keys: {}, Frame: 0, Ship: settings.Ship};
+				labels.hidden = true;
+				self.Card = null;
+
+				return true;
+			}
 
 			up = vectors.Normalize(settings.Latitude !== undefined ? toDirection(Number(settings.Latitude) || 0, Number(settings.Longitude) || 0) : vectors.Subtract(scene.Camera.Position, object.World));
 
@@ -5563,7 +5681,8 @@ Elemenx.Component('Scene', {
 
 			scene.Surface = {
 				ID: object.ID,
-				Field: terrain.Sphere({Radius: object.Radius, Height: relief[type] || 6, Seed: object.Seed, Ocean: object.Look.Ocean, Type: type}),
+				/* A planet of ScenePlanet (Surface: Planet, its options): the very ground of its globe, at the radius of the body. */
+				Field: surfaceField(object),
 				Nodes: {},
 				Up: vectors.Normalize(up),
 				Yaw: 0,
@@ -5578,7 +5697,7 @@ Elemenx.Component('Scene', {
 			};
 
 			labels.hidden = true;
-			self.Landed = object.ID;
+			self.LandedOn = object.ID;
 			self.Card = null;
 
 			self.$Emit('land', {ID: object.ID});
@@ -5588,8 +5707,7 @@ Elemenx.Component('Scene', {
 
 		function takeOff () {
 			var surface = scene.Surface;
-			if (!surface)
-				return false;
+			if (!surface || surface.Ship) return false;
 
 			surface.Rising = true;
 			surface.Wanted = surface.Field.Radius * 1.6;
@@ -5669,6 +5787,13 @@ Elemenx.Component('Scene', {
 			var eye;
 			var look;
 
+			/* A ship flies over it: it says where the eye stands (SceneLanding). */
+			if (surface.Ship) {
+				engine.LandingSurfaceStep(surface, keys, elapsed);
+
+				return;
+			}
+
 			if (surface.Way) flyWay(surface, elapsed);
 			else surface.Altitude = Math.exp(Math.log(Math.max(0.0005, surface.Altitude)) + (Math.log(Math.max(0.0005, surface.Wanted)) - Math.log(Math.max(0.0005, surface.Altitude))) * (1 - Math.exp(-elapsed * 1.2)));
 
@@ -5731,14 +5856,9 @@ Elemenx.Component('Scene', {
 			var object = surface ? scene.Objects[surface.ID] : null;
 			var away;
 
-			Object.keys(surface.Nodes).forEach(function (key) {
-				if (surface.Nodes[key].Mesh)
-					surface.Nodes[key].Mesh.Destroy();
-			});
+			closeSurface();
 
-			scene.Surface = null;
-			labels.hidden = false;
-			self.Landed = '';
+			self.LandedOn = '';
 
 			if (object) {
 				focusOn(object.ID, true);
@@ -5754,6 +5874,20 @@ Elemenx.Component('Scene', {
 			}
 
 			self.$Emit('takeoff', {ID: surface.ID});
+		}
+
+		/* The surface let go, its squares with it: space again (or a location a ship came down to). */
+		function closeSurface () {
+			var surface = scene.Surface;
+			if (!surface) return;
+
+			Object.keys(surface.Nodes).forEach(function (key) {
+				if (surface.Nodes[key].Mesh)
+					surface.Nodes[key].Mesh.Destroy();
+			});
+
+			scene.Surface = null;
+			labels.hidden = !!scene.Location;
 		}
 
 		/* The squares of the faces of the cube in view, the finer the nearer; each made once, a few a frame. */
@@ -5886,6 +6020,57 @@ Elemenx.Component('Scene', {
 			return {Turn: [axes.East[0], axes.Up[0], axes.North[0], axes.East[1], axes.Up[1], axes.North[1], axes.East[2], axes.Up[2], axes.North[2]], From: [surface.Eye[0] * 0, surface.Altitude, 0], Sun: [vectors.Dot(sun, axes.East), vectors.Dot(sun, axes.Up), vectors.Dot(sun, axes.North)], SunLight: [sunColor[0] * 2 * day, sunColor[1] * 2 * day, sunColor[2] * 2 * day], SkyTone: [0.34 * day + 0.01, 0.4 * day + 0.012, 0.5 * day + 0.02], Under: [0, 0, 0], Layer: [3, 9, 0.25], Over: true};
 		}
 
+		/*
+		 * The ship that flies over a surface (Ship of it, SceneLanding): its model in the frame of the surface, in kilometres,
+		 * where the ship stands (ShipAt), as large as it is (ShipSize) and turned as it flies (ShipTurn), lit by the star.
+		 */
+		function drawSurfaceShip (matrix, sun, sunColor) {
+			var flying = scene.Surface;
+			var hero = scene.Objects[flying.Ship];
+			var settings = hero ? trait(hero, 'Model') : null;
+			var lists = scene.SurfaceLists = scene.SurfaceLists || {};
+			var kept;
+			var day;
+			var common;
+
+			if (!hero || !settings || !flying.ShipAt || !flying.Eye) return;
+
+			kept = {World: hero.World, Size: hero.Size, Turn: hero.Turn, Eye: scene.Eye};
+			hero.World = flying.ShipAt;
+			hero.Size = flying.ShipSize;
+			hero.Turn = flying.ShipTurn;
+			scene.Eye = flying.Eye;
+
+			Object.keys(lists).forEach(function (name) {
+				lists[name].Count = 0;
+			});
+
+			gatherModel(lists, hero, settings);
+
+			/* What glows of it is not drawn over the surface: its lists start again each frame. */
+			Object.keys(scene.GlowLists || {}).forEach(function (name) {
+				scene.GlowLists[name].Count = 0;
+			});
+
+			day = Math.max(0, Math.min(1, vectors.Dot(sun, flying.Axes.Up) * 3 + 0.2));
+			common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: [sun[0] * 1e6, sun[1] * 1e6, sun[2] * 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightColors: [sunColor[0] * 1.15, sunColor[1] * 1.15, sunColor[2] * 1.15, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightCount: 1, uSkyLight: [0.3 * day + 0.01, 0.38 * day + 0.012, 0.5 * day + 0.02], uFloorLight: [0.12 * day, 0.11 * day, 0.1 * day], uAmbient: [0.05 + 0.12 * day, 0.055 + 0.13 * day, 0.07 + 0.16 * day], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: 0, uWet: 0, uSnowed: 0, uRainDrops: 0, uEyeAt: [0, 0, 0], uTime2: scene.Seconds % 1000, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0]}, idle(), localLights(), self.WindValues(scene.Seconds));
+
+			Object.keys(lists).forEach(function (name) {
+				var list = lists[name];
+				if (!list.Count) return;
+
+				upload(name, list);
+
+				if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign({}, common, {uOrigin: [0, 0, 0], uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft}, surface(list), blueprintValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back'});
+				else renderer.Draw(shape(name), gpu.Many, Object.assign({}, common, {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: [0, 0, 0]}));
+			});
+
+			hero.World = kept.World;
+			hero.Size = kept.Size;
+			hero.Turn = kept.Turn;
+			scene.Eye = kept.Eye;
+		}
+
 		function drawSurface () {
 			var surface = scene.Surface;
 			var object = scene.Objects[surface.ID];
@@ -5893,9 +6078,9 @@ Elemenx.Component('Scene', {
 			var width = renderer.Width;
 			var height = renderer.Height;
 			var aspect = width / Math.max(1, height);
-			var near = Math.max(0.0005, surface.Altitude * 0.25);
+			var near = surface.Near || Math.max(0.0005, surface.Altitude * 0.25);
 			var far = Math.max(50, Math.sqrt(surface.Altitude * (2 * field.Radius + surface.Altitude)) * 3 + field.Radius * 0.1);
-			var view = math.LookAt([0, 0, 0], surface.Look, surface.Axes.Up);
+			var view = math.LookAt([0, 0, 0], surface.Look, surface.ViewUp || surface.Axes.Up);
 			var projection = math.Perspective(scene.Camera.Fov, aspect, near, far);
 			var matrix = math.Multiply(projection, view);
 			var star = scene.Order.filter(function (each) {
@@ -5944,6 +6129,7 @@ Elemenx.Component('Scene', {
 					uSun: sun,
 					uSunColor: sunColor,
 					uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]),
+					uPainted: field.Painted ? 1 : 0,
 					uWater: object.Look.Water,
 					uIce: object.Look.Ice,
 					uAir: air,
@@ -5953,6 +6139,9 @@ Elemenx.Component('Scene', {
 					uHigh: Math.min(1, surface.Altitude / thickness)
 				}, shade), {Cull: 'back'});
 			});
+
+			if (surface.Ship)
+				drawSurfaceShip(matrix, sun, sunColor);
 
 			if (posted)
 				engine.PostEnd(Object.assign({Matrix: matrix, Sun: sun, SunColor: sunColor, Sky: false, Heat: surface.Heat, Clouds: surfaceClouds(surface, object, sun, sunColor)}, lens()));
@@ -5980,7 +6169,7 @@ Elemenx.Component('Scene', {
 
 			/* On a surface the days go at their own speed (a day of two minutes by default), not at the one of the orbits. */
 			if (!self.Paused)
-				scene.Time += spent * (scene.Surface ? number(self.SurfaceSpeed, 1 / 120) : number(self.Speed, 1));
+				scene.Time += spent * (scene.Surface || scene.Location ? number(self.SurfaceSpeed, 1 / 120) : number(self.Speed, 1));
 
 			if (!self.Paused)
 				scene.Seconds += spent;
@@ -6043,7 +6232,7 @@ Elemenx.Component('Scene', {
 			function test (object, least) {
 				var t;
 
-				if (!object.World || !(object.Size || least)) return;
+				if (!object.World || object.Hidden || !(object.Size || least)) return;
 
 				t = math.Hit(ray, object.World, Math.max(object.Size, pixels(object.World, least)));
 
@@ -6322,8 +6511,12 @@ Elemenx.Component('Scene', {
 			var high;
 			var i;
 
+			/* Over the ground, or, of a ground with a volume, in its air (a cave seen through its mouth). */
 			function above (at) {
 				var p = space.Add(ray.Origin, space.Scale(ray.Direction, at));
+
+				if (field.Volume)
+					return p[1] < 0 && field.Height(p[0], p[2]) < 0 ? p[1] : -field.Density(p[0], p[1], p[2]);
 
 				return p[1] - Math.max(0, field.Height(p[0], p[2]));
 			}
@@ -6450,7 +6643,7 @@ Elemenx.Component('Scene', {
 			/* A walker of a ground: to a point ([x, y] or {X, Y}), or to an object. */
 			if (object && trait(object, 'Walker') && scene.Ground) {
 				if (goal && goal.World)
-					return walk(id, [goal.World[0], goal.World[2]], callback);
+					return walk(id, [goal.World[0], goal.World[2], goal.World[1] - (goal.Lifted || 0)], callback);
 
 				return target && typeof target === 'object' ? walk(id, target, callback) : false;
 			}
@@ -6500,6 +6693,12 @@ Elemenx.Component('Scene', {
 			return scene.Ground ? groundAt(x, y) : null;
 		};
 		engine.TakeOff = takeOff;
+		engine.SurfaceClose = closeSurface;
+
+		/* The names over the objects shown or not (a ship down in a location hides those of space). */
+		engine.LabelsHidden = function (hidden) {
+			labels.hidden = !!hidden;
+		};
 
 		engine.ToScreen = function (id) {
 			var object = scene.Objects[id];
@@ -6695,6 +6894,7 @@ Elemenx.Component('Scene', {
 			this.Unsupported = true;
 
 		this.RoadsStart();
+		this.FootingsStart();
 		this.TriggersStart();
 		this.RigidStart();
 
@@ -6704,6 +6904,7 @@ Elemenx.Component('Scene', {
 			this.EffectsStart();
 			this.CosmosStart();
 			this.VehiclesStart();
+			this.LandingStart();
 		}
 
 		this.Behaving = true;
@@ -6953,6 +7154,13 @@ Elemenx.Component('Scene', {
 
 		scene.Drag = null;
 		this.Dragging = false;
+
+		/* A point of a body picked to come down to (the command Landing). */
+		if (scene.Picking && drag && !drag.Moved) {
+			this.Engine().LandingPick(point.X, point.Y);
+
+			return;
+		}
 
 		if (scene.Hero) return;
 
@@ -7462,15 +7670,24 @@ Elemenx.Component('Scene', {
 			})
 		};
 
+		/* What was dug out of the ground, as it was dug. */
+		saved.Digs = JSON.parse(JSON.stringify(scene.Digs));
+
 		if (options && options.Baked || scene.Loaded) {
-			saved.Objects = scene.Roots.map(function (object) {
+			/* What a World makes is made again of it. */
+			saved.Objects = scene.Roots.filter(function (object) {
+				return !object.Values.Generated;
+			}).map(function (object) {
 				return Object.assign(kinds.Diff(object), {Parent: object.Parent || ''});
 			});
 
 			return saved;
 		}
 
-		saved.Added = JSON.parse(JSON.stringify(scene.Added));
+		/* What is made of another object (the houses of a village) is made again of it. */
+		saved.Added = JSON.parse(JSON.stringify(scene.Added.filter(function (added) {
+			return !(added.Values && added.Values.Generated);
+		})));
 		saved.Removed = Object.keys(scene.Removed);
 		saved.Overrides = JSON.parse(JSON.stringify(scene.Overrides));
 
@@ -7492,6 +7709,25 @@ Elemenx.Component('Scene', {
 		});
 
 		return saved;
+	},
+
+	/*
+	 * Digs a hole in the ground: a sphere of radius metres cut out of its volume round at ([x, y, z]), the squares round it
+	 * made again, what stood there set down again; kept in Save. false where there is no ground of noise. Emits dig.
+	 */
+	Dig: function (at, radius) {
+		var scene = this.Scene();
+		var made;
+
+		if (!scene.Ground || !scene.Ground.Field || scene.Ground.Field.Whole || !Array.isArray(at)) return false;
+
+		made = {Type: 'sphere', At: [Number(at[0]) || 0, Number(at[1]) || 0, Number(at[2]) || 0], Radius: Math.max(0.2, Number(radius) || 2)};
+
+		scene.Digs.push(made);
+
+		this.$Emit('dig', {At: made.At.slice(), Radius: made.Radius});
+
+		return true;
 	},
 
 	/* A saved game shown again: its objects alone, at its time; or a map (its JSON or its URL), called back when it came. */
@@ -7521,6 +7757,14 @@ Elemenx.Component('Scene', {
 			});
 		}
 
+		/* What was dug: another list makes the ground again. */
+		if (JSON.stringify(saved.Digs || []) !== JSON.stringify(scene.Digs)) {
+			scene.Digs = JSON.parse(JSON.stringify(saved.Digs || []));
+
+			if (scene.Ground)
+				scene.Ground.Shape = '';
+		}
+
 		if (saved.Seed !== undefined && String(saved.Seed) !== String(this.Seed))
 			this.Seed = saved.Seed;
 
@@ -7547,10 +7791,19 @@ Elemenx.Component('Scene', {
 
 	/* Down to the surface of a body (not of a giant of gas): at a latitude and a longitude, or under the eye. */
 	Land: function (id, options) {
+		/* A ship comes down itself (SceneLanding): Body, Latitude and Longitude, or Marker; in a location, X and Y of it. */
+		var object = this.Scene().Objects[id];
+		if (object && object.Values.Vehicle && object.Values.Vehicle.Kind === 'ship')
+			return this.Engine().LandShip ? this.Engine().LandShip(object, options || {}) : false;
+
 		return this.Engine().Land(id, options);
 	},
 
-	TakeOff: function () {
+	TakeOff: function (id) {
+		var scene = this.Scene();
+		var ship = scene.Objects[id || scene.Hero];
+		if (ship && ship.Values.Vehicle && ship.Values.Vehicle.Kind === 'ship' && !(scene.Surface && !scene.Surface.Ship)) return this.Engine().ShipTakeOff ? this.Engine().ShipTakeOff(ship) : false;
+
 		return this.Engine().TakeOff();
 	},
 
@@ -9016,6 +9269,9 @@ Elemenx.Component('Scene', {
 				'in vec3 aPosition;',
 				'in vec3 aNormal;',
 				'in vec2 aUV;',
+				/* The colors of a ground that tells them (ScenePlanet): its biomes, its snow, its seas by their depth. */
+				'in vec3 aColor;',
+				'out vec3 vPainted;',
 				'uniform mat4 uViewProjection;',
 				'uniform vec3 uOffset;',
 				'uniform vec3 uCenter;',
@@ -9028,6 +9284,7 @@ Elemenx.Component('Scene', {
 				'	vNormal = aNormal;',
 				'	vDirection = normalize(aPosition + uCenter);',
 				'	vLand = aUV;',
+				'	vPainted = aColor;',
 				'	gl_Position = uViewProjection * vec4(vWorld, 1.0);',
 				'}'
 			].join('\n'),
@@ -9037,6 +9294,8 @@ Elemenx.Component('Scene', {
 				'in vec3 vNormal;',
 				'in vec3 vDirection;',
 				'in vec2 vLand;',
+				'in vec3 vPainted;',
+				'uniform float uPainted;',
 				'uniform vec3 uSun;',
 				'uniform vec3 uSunColor;',
 				'uniform vec3 uColors[4];',
@@ -9065,7 +9324,8 @@ Elemenx.Component('Scene', {
 				'	if (sea > 0.5) n = up;',
 				'	float rock = 1.0 - smoothstep(0.55, 0.75, dot(n, up));',
 				'	if (sea < 0.5) albedo = mix(albedo, uColors[1] * 0.8, rock * 0.6);',
-				'	if (uIce > 0.0) {',
+				'	if (uPainted > 0.5) albedo = vPainted;',
+				'	if (uIce > 0.0 && uPainted < 0.5) {',
 				'		float pole = abs(up.y) + (fbm3(up * 6.6, 3) - 0.5) * 0.3;',
 				'		float cap = uIce >= 1.0 ? 1.0 : smoothstep(1.0 - uIce, 1.0 - uIce + 0.04, pole);',
 				'		albedo = mix(albedo, vec3(0.93, 0.95, 0.98), cap);',
@@ -9134,6 +9394,8 @@ Elemenx.Component('Scene', {
 				'in vec3 aPosition;',
 				'in vec3 aNormal;',
 				'in vec3 aColor;',
+				/* Its height, and how much of the sky it sees (under rock of a volume: less). */
+				'in vec2 aUV;',
 				'uniform mat4 uViewProjection;',
 				'uniform vec3 uOffset;',
 				'uniform vec3 uCenter;',
@@ -9141,7 +9403,9 @@ Elemenx.Component('Scene', {
 				'out vec3 vNormal;',
 				'out vec3 vColor;',
 				'out vec3 vPlace;',
+				'out float vOpen;',
 				'void main() {',
+				'	vOpen = aUV.y;',
 				'	vWorld = aPosition + uOffset;',
 				'	vNormal = aNormal;',
 				'	vColor = aColor;',
@@ -9155,6 +9419,7 @@ Elemenx.Component('Scene', {
 				'in vec3 vNormal;',
 				'in vec3 vColor;',
 				'in vec3 vPlace;',
+				'in float vOpen;',
 				'uniform vec3 uSun;',
 				'uniform vec3 uSunColor;',
 				'uniform vec4 uAir;',

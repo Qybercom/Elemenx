@@ -276,7 +276,7 @@ Elemenx.Service('SceneShowcase', {
 		add({ID: 'thickets', Kind: 'thicket', Density: 2, Cover: 0.2});
 		add({ID: 'stones', Kind: 'rocks', Density: 0.3});
 
-		objects.unshift({ID: 'land', Kind: 'ground', Name: '', Size: size, Height: 60, Water: 0.12, Scale: 380, Ridges: 0.2, Rock: 0.8, Snow: 0.95, Swell: 0.5, Seed: seed, Sketch: {Layers: layers}});
+		objects.unshift({ID: 'land', Kind: 'ground', Name: '', Swell: 0.5, World: this.$Service('SceneWorld').Library({Size: size, Height: 60, Water: 0.12, Scale: 380, Ridges: 0.2, Rock: 0.8, Snow: 0.95, Seed: seed, Sketch: {Layers: layers}})});
 
 		route = districts.map(function (district) {
 			return {ID: district.ID, Name: district.Name, Target: [district.X * scale, 0, district.Y * scale], Yaw: 0.6, Pitch: 0.5, Distance: district.Radius * scale * (district.Near || 1.6)};

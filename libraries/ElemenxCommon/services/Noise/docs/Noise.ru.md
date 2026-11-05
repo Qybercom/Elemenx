@@ -1,0 +1,8 @@
+Noise: шум пространства любым алгоритмом и всё, что с ним делают, — одно описание для всего, что строится из шума (земля, текстура, поле роста, поток). Одинаково на странице, в воркере, в Node и в шейдере.
+
+- Шум описывается спецификацией: {Type (value, perlin, simplex, worley, white), Seed, Scale (размер деталей в единицах, в которых его читают), Offset, Fractal (none, fbm, ridged, billow), Octaves, Lacunarity, Gain, Shift, Cell ({Distance: euclid, manhattan, chebyshev; Return: f1, f2, edge, cell; Jitter}: у worley), Warp ({Amount, Scale, Octaves}: искажение пространства своим шумом), Tile ([x, y, z]: через сколько деталей повторяется; value, perlin, worley, white), Terrace ({Steps, Sharp}), Power, Invert, Range ([низ, верх])}. Спецификация может быть и смесью: {Combine (add, multiply, min, max, mask), Of, Weights, Mask} с той же обработкой. Value с fbm (6 октав) совпадает с Fbm из Math.Noise до бита.
+- Make(spec) — сэмплер: At(x, y, z), Gradient(x, y, z), Curl(x, y, z) (поток без источников и стоков: дым, пыль, вода), Grid({Width, Height, X, Y, Step, Plane, Z}) — Float32Array.
+- Types(), Fractals() — допустимые имена.
+- GLSLChunk() — функции, нужные шейдеру один раз; GLSL(spec, name) — функция float name(vec3 p); GLSLLines(spec, prefix, point) — то же строками тела шейдера ({Lines, Value}). Числа совпадают с At до точности float.
+
+Где применяется: земля SceneTerrainGenerator.Flat принимает Noise (спецификацию: её холмы из этого шума, в метрах; без неё — прежние холмы Scale и Ridges), блок NoiseSpec есть и в генераторных, и в шейдерных графах Blueprints. Раздел Terrain в UI kit переключает рельеф: классические холмы, дюны Ворли, хребты Перлина, холмы симплекса, террасы с искажением.

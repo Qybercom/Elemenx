@@ -1,0 +1,35 @@
+{
+	"graphics": {
+		"planetEditor": {
+			"label": "Глобус планеты",
+			"overlay": "Показ",
+			"planet": "Планета",
+			"stroke": "Мазок",
+			"remove": "Убрать мазок",
+			"tools": {
+				"label": "Инструменты глобуса",
+				"look": "Осмотр",
+				"land": "Суша",
+				"sea": "Море",
+				"mountains": "Горы",
+				"rift": "Рифт",
+				"river": "Река",
+				"climate": "Климат",
+				"biome": "Биом",
+				"location": "Локация"
+			},
+			"overlays": {
+				"relief": "Рельеф",
+				"plates": "Плиты",
+				"wind": "Ветра",
+				"temperature": "Температура",
+				"moisture": "Влажность",
+				"biomes": "Биомы"
+			},
+			"location": "Локация",
+			"open": "Открыть",
+			"side": "Сторона",
+			"passage": "Проход"
+		}
+	}
+}

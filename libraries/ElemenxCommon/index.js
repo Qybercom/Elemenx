@@ -2,6 +2,7 @@
 	'locales/en.json',
 	'locales/ru.json',
 	'services/Math/Math.js',
+	'services/Noise/Noise.js',
 	'services/Random/Random.js',
 	'services/Pathfinding/Pathfinding.js',
 	'services/Visibility/Visibility.js',

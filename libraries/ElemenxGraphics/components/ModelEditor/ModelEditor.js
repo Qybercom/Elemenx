@@ -179,7 +179,7 @@ Elemenx.Component('ModelEditor', {
 
 		own.Scene = scene;
 
-		scene.Add('ground', {ID: 'floor', Size: 60, Height: 0.01, Water: 0, Ridges: 0, Scale: 300, Seed: 'object'});
+		scene.Add('ground', {ID: 'floor', World: this.$Service('SceneWorld').Library({Size: 60, Height: 0.01, Water: 0, Ridges: 0, Scale: 300, Seed: 'object'})});
 		scene.Add('sun', {ID: 'sun', Time: 10, Latitude: 40});
 		scene.SetViewpoint({Target: [0, this.Shown / 2, 0], Yaw: 0.6, Pitch: 0.35, Distance: this.Shown * 2.6});
 

@@ -1,0 +1,199 @@
+.elemenx-planet-editor {
+	display: grid;
+	grid-template-areas:
+		'toolbar toolbar'
+		'view panel';
+	grid-template-columns: minmax(0, 1fr) 240px;
+	grid-template-rows: auto minmax(0, 1fr);
+	height: 100%;
+	min-height: 360px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+	font: var(--elemenx-font-size-small) / var(--elemenx-line-height-small) var(--elemenx-font);
+}
+
+.elemenx-planet-editor-toolbar {
+	display: flex;
+	grid-area: toolbar;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+	padding: 6px 8px;
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.elemenx-planet-editor-tool {
+	padding: 4px 10px;
+	border: 1px solid transparent;
+	border-radius: var(--elemenx-radius-small);
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.elemenx-planet-editor-tool.active {
+	border-color: var(--elemenx-accent);
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-planet-editor-overlay {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-left: auto;
+}
+
+.elemenx-planet-editor-view {
+	position: relative;
+	grid-area: view;
+	overflow: hidden;
+	background: var(--elemenx-planet-editor-space);
+	cursor: grab;
+	touch-action: none;
+}
+
+.elemenx-planet-editor-view[data-tool]:not([data-tool='look']) {
+	cursor: crosshair;
+}
+
+.elemenx-planet-editor-canvas,
+.elemenx-planet-editor-marks {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.elemenx-planet-editor-marks {
+	pointer-events: none;
+}
+
+.elemenx-planet-editor-stroke {
+	fill: none;
+	stroke: var(--elemenx-planet-editor-stroke);
+	stroke-width: 1.5;
+	stroke-dasharray: 4 3;
+}
+
+.elemenx-planet-editor-stroke.mountains,
+.elemenx-planet-editor-stroke.rift {
+	stroke: var(--elemenx-planet-editor-range);
+	stroke-dasharray: none;
+	stroke-width: 2.5;
+}
+
+.elemenx-planet-editor-stroke.location {
+	stroke: var(--elemenx-planet-editor-draft);
+	stroke-dasharray: none;
+}
+
+.elemenx-planet-editor-place {
+	margin-bottom: 4px;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-planet-editor-passage {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+	margin-top: 6px;
+}
+
+.elemenx-planet-editor-field select {
+	min-width: 0;
+	padding: 2px 6px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-surface);
+	color: inherit;
+	font: inherit;
+}
+
+.elemenx-planet-editor-stroke.river {
+	stroke: var(--elemenx-planet-editor-river);
+	stroke-dasharray: none;
+}
+
+.selected .elemenx-planet-editor-stroke {
+	stroke: var(--elemenx-accent);
+	stroke-width: 3;
+}
+
+.draft .elemenx-planet-editor-stroke {
+	stroke: var(--elemenx-planet-editor-draft);
+	stroke-dasharray: none;
+}
+
+.elemenx-planet-editor-arrow {
+	stroke: var(--elemenx-planet-editor-arrow);
+	stroke-width: 1.5;
+}
+
+.elemenx-planet-editor-arrow-tip {
+	fill: var(--elemenx-planet-editor-arrow);
+}
+
+.elemenx-planet-editor-info {
+	position: absolute;
+	bottom: 8px;
+	left: 8px;
+	padding: 2px 8px;
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-overlay);
+	color: var(--elemenx-overlay-text);
+	pointer-events: none;
+}
+
+.elemenx-planet-editor-panel {
+	grid-area: panel;
+	overflow: auto;
+	padding: 8px;
+	border-left: 1px solid var(--elemenx-border);
+}
+
+.elemenx-planet-editor-title {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin: 8px 0 4px;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.elemenx-planet-editor-field {
+	display: grid;
+	grid-template-columns: 90px minmax(0, 1fr);
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 4px;
+}
+
+.elemenx-planet-editor-field input {
+	min-width: 0;
+	padding: 2px 6px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-surface);
+	color: inherit;
+	font: inherit;
+}
+
+@media (max-width: 760px) {
+	.elemenx-planet-editor {
+		grid-template-areas:
+			'toolbar'
+			'view'
+			'panel';
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: auto 360px auto;
+	}
+
+	.elemenx-planet-editor-panel {
+		border-top: 1px solid var(--elemenx-border);
+		border-left: 0;
+	}
+}

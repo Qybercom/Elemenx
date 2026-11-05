@@ -49,7 +49,10 @@
  *   [{Name, Type}], Textures [{Name, Uniform}], Parameters, Values(parameters, extra)}: Values gives the uniforms of
  *   the parameters (by key, else their value) and of extra (Time, Pixel, Textures by name). Of a material the same
  *   with Source (the function blueprintSurface) in place of Fragment. Of a render {Passes, Run(context, parameters)};
- *   of a generator {Run(parameters, inputs)}; of a flow {Start(context)}. A graph written by hand, {type, glsl (its
+ *   of a generator {Run(parameters, inputs)}; of a flow {Start(context)}. Code(graph) makes a generator JavaScript: {Source
+ *   (the body of a function of (B, M, N): Blueprints, Math, Noise), Run (the same values as the Run of Compile, with no
+ *   walk of its blocks: a ground reads it at every point), Keys}, null when a block of it has no code; a worker makes
+ *   Run of Source with its own Services. A graph written by hand, {type, glsl (its
  *   text), parameters (none: those of the text)}, is made by Text of its kind, once for the same text (a shader of
  *   BlueprintShaders: pass, material).
  * - Parameters of a graph are what is set from outside it: a block Parameter (its key) gives the value; in a shader
@@ -65,7 +68,7 @@
  *   way runs: the Index of a For). More than Steps (100000) at once is an error: a flow that never ends.
  * The types of this library: Number, Vector, Color, Text, Bool, Parameter, Time, Input, Add, Subtract, Multiply,
  * Divide, Min, Max, Pow, Step, Sin, Cos, Abs, Floor, Fract, Sqrt, Exp, OneMinus, Saturate, Mix, Clamp, Smoothstep,
- * Remap, Dot, Length, Normalize, Split, Combine, Noise, Fbm, Result, Compare, And, Or, Not, Field, Get, Set, Event,
+ * Remap, Dot, Length, Normalize, Split, Combine, Noise, Fbm, NoiseSpec (a noise of the Noise Service by its spec), Result, Compare, And, Or, Not, Field, Get, Set, Event,
  * Branch, Sequence, For, Delay, Action, Emit; BlueprintShaders adds UV, Pixel, Position, Normal, Texture, Output,
  * Surface and Present, and the GLSL of the numbers.
  * Errors start with 'Elemenx Blueprints:'. The same functions run in Node: they read no page.
@@ -73,7 +76,7 @@
 Elemenx.Service('Blueprints', {
 	$Meta: {
 		Description: 'Graphs of blocks in the JSON of Flowprint, made into code and flows of actions (and into shaders by BlueprintShaders).',
-		Methods: ['Node(type, definition)', 'Nodes(graph)', 'NodeOf(type)', 'Graph(type, definition)', 'Graphs()', 'Create(type, options)', 'Block(type, options)', 'Add(graph, type, options)', 'Link(graph, from, to)', 'Remove(graph, id)', 'Pin(block, key, out)', 'Read(json)', 'Write(graph)', 'Check(graph)', 'Order(graph)', 'Compile(graph, options)', 'Bake(graph)', 'Start(graph, context)']
+		Methods: ['Node(type, definition)', 'Nodes(graph)', 'NodeOf(type)', 'Graph(type, definition)', 'Graphs()', 'Create(type, options)', 'Block(type, options)', 'Add(graph, type, options)', 'Link(graph, from, to)', 'Remove(graph, id)', 'Pin(block, key, out)', 'Read(json)', 'Write(graph)', 'Check(graph)', 'Order(graph)', 'Compile(graph, options)', 'Code(graph)', 'Source(names)', 'Bake(graph)', 'Start(graph, context)']
 	},
 
 	Version: 1,
@@ -81,6 +84,11 @@ Elemenx.Service('Blueprints', {
 
 	/* How many numbers each type of GLSL holds. */
 	Sizes: {float: 1, vec2: 2, vec3: 3, vec4: 4, int: 1, bool: 1},
+
+	/* What a worker carries of it (Workers.Source): its numbers and its casts, to run a generator made JavaScript (Code). */
+	Source: function (names) {
+		return this.$Service('Workers').Source(this, names);
+	},
 
 	$OnCreate: function () {
 		this.Types = {};
@@ -874,6 +882,252 @@ Elemenx.Service('Blueprints', {
 		return inputs;
 	},
 
+	/* Blueprints: generators as JavaScript */
+
+	/*
+	 * A generator graph as JavaScript: the same values as its Run, with no walk of its blocks at each call, so a ground
+	 * reads it at every point of its heights. {Source (the body of a function of (B, M, N): Blueprints, Math and Noise,
+	 * giving a function (parameters, inputs) of its results), Run (that function, made here), Keys (of its results)}; null
+	 * when a block of it has no code (an action, a field of an object): such a graph runs by Run of Compile alone.
+	 */
+	Code: function (graph) {
+		var self = this;
+		var plan;
+		var needed = {};
+		var names = {};
+		var prelude = [];
+		var lines = [];
+		var results = [];
+		var keys = [];
+		var made;
+		var failed = false;
+		var defaults = {};
+		var problems;
+		var error;
+		var source;
+		var run;
+		var hash;
+
+		graph = this.Read(graph);
+
+		if (graph.type !== 'generator')
+			throw new Error('Elemenx Blueprints: Code makes a generator, not a ' + graph.type + ' graph');
+
+		problems = this.Check(graph);
+
+		if (problems.length) {
+			error = new Error('Elemenx Blueprints: ' + problems[0].Message);
+			error.Problems = problems;
+
+			throw error;
+		}
+
+		(graph.parameters || []).forEach(function (parameter) {
+			defaults[parameter.key] = parameter.value;
+		});
+
+		/* Made once for the same blocks and the same values of its parameters. */
+		hash = this.Hash(graph) + JSON.stringify(defaults);
+		this.CodeMade = this.CodeMade || {};
+
+		if (this.CodeMade[hash] !== undefined) return this.CodeMade[hash];
+
+		plan = this.Plan(graph);
+
+		/* What the results read, through their links back. */
+		function need (id) {
+			if (needed[id]) return;
+
+			needed[id] = true;
+
+			Object.keys(plan.From[id]).forEach(function (key) {
+				need(plan.From[id][key].Block);
+			});
+		}
+
+		plan.Order.forEach(function (id) {
+			if (plan.Blocks[id].type === 'Result' && plan.Blocks[id].enabled !== false)
+				need(id);
+		});
+
+		plan.Order.forEach(function (id, index) {
+			var block = plan.Blocks[id];
+			var node = plan.Nodes[id];
+			var properties = self.Properties(block);
+			var inputs = {};
+			var outputs;
+			var code;
+			var first;
+
+			if (!needed[id] || failed) return;
+
+			names[id] = {};
+
+			(self.Inputs(node, block) || []).forEach(function (input) {
+				var from = plan.From[id][input.Key];
+
+				if (from) inputs[input.Key] = 'C(' + names[from.Block][from.Key] + ', ' + JSON.stringify(from.Type || null) + ', ' + JSON.stringify(input.Type || null) + ')';
+				else inputs[input.Key] = input.Value === undefined ? 'undefined' : JSON.stringify(self.Cast(input.Value, null, input.Type));
+			});
+
+			outputs = self.Outputs(node, block) || [];
+
+			if (block.type === 'Result') {
+				if (block.enabled !== false) {
+					results.push(JSON.stringify(properties.Key || 'Value') + ': ' + inputs.Value);
+					keys.push(properties.Key || 'Value');
+				}
+
+				return;
+			}
+
+			/* A block turned off gives what comes to its first input. */
+			if (block.enabled === false) {
+				first = Object.keys(plan.From[id])[0];
+				code = {};
+
+				outputs.forEach(function (output) {
+					code[output.Key] = first ? inputs[first] : 'undefined';
+				});
+			}
+			/* A block of no input and no outside (a number, a vector, a color) is its value. */
+			else if (!(self.Inputs(node, block) || []).length && ['Parameter', 'Time', 'Input'].indexOf(block.type) === -1 && typeof node.Compute === 'function') {
+				made = node.Compute.call(self, {}, properties, {Graph: graph, Parameters: {}, Inputs: {}}) || {};
+				code = {};
+
+				outputs.forEach(function (output) {
+					code[output.Key] = JSON.stringify(made[output.Key] === undefined ? null : made[output.Key]);
+				});
+			}
+			else {
+				code = self.CodeOf(block.type, {Inputs: inputs, Properties: properties, Index: index, Defaults: defaults, Prelude: function (line) {
+					prelude.push(line);
+				}});
+			}
+
+			if (!code) {
+				failed = true;
+
+				return;
+			}
+
+			outputs.forEach(function (output) {
+				var name = 'v' + index + '_' + String(output.Key).replace(/[^A-Za-z0-9_]/g, '_');
+
+				names[id][output.Key] = name;
+
+				lines.push('\t\tvar ' + name + ' = ' + (code[output.Key] === undefined ? 'undefined' : code[output.Key]) + ';');
+			});
+		});
+
+		if (failed) {
+			this.CodeMade[hash] = null;
+
+			return null;
+		}
+
+		source = [
+			'var C = function (value, from, to) { return B.Cast(value, from, to); };',
+			'var E = function (a, b, f) { return B.Each(a, b, f); };',
+			'var D = ' + JSON.stringify(defaults) + ';',
+			'var own = Object.prototype.hasOwnProperty;'
+		].concat(prelude).concat([
+			'return function (P, I) {',
+			'\t\tP = P || {};',
+			'\t\tI = I || {};'
+		]).concat(lines).concat([
+			'\t\treturn {' + results.join(', ') + '};',
+			'};'
+		]).join('\n');
+
+		/* The source is made of the blocks of the graph alone, its texts written as JSON. */
+		run = new Function('B', 'M', 'N', source)(this, this.$Service ? this.$Service('Math') : null, this.$Service ? this.$Service('Noise') : null);
+
+		this.CodeMade[hash] = {Source: source, Run: run, Keys: keys};
+
+		return this.CodeMade[hash];
+	},
+
+	/* The code of a block of numbers: {Output: an expression of its inputs (expressions too)}; null for one with none. */
+	CodeOf: function (type, context) {
+		var inputs = context.Inputs;
+		var properties = context.Properties;
+		var index = context.Index;
+		var binary = {Add: 'function (a, b) { return a + b; }', Subtract: 'function (a, b) { return a - b; }', Multiply: 'function (a, b) { return a * b; }', Divide: 'function (a, b) { return b ? a / b : 0; }', Min: 'Math.min', Max: 'Math.max', Pow: 'Math.pow', Step: 'function (edge, x) { return x < edge ? 0 : 1; }'};
+		var unary = {Sin: 'Math.sin', Cos: 'Math.cos', Abs: 'Math.abs', Floor: 'Math.floor', Exp: 'Math.exp', Fract: 'function (x) { return x - Math.floor(x); }', Sqrt: 'function (x) { return Math.sqrt(Math.max(0, x)); }', OneMinus: 'function (x) { return 1 - x; }', Saturate: 'function (x) { return Math.max(0, Math.min(1, x)); }'};
+		var key;
+		var spec;
+
+		if (binary[type]) {
+			context.Prelude('var f' + index + ' = ' + binary[type] + ';');
+
+			return {Out: 'E(' + inputs.A + ', ' + inputs.B + ', f' + index + ')'};
+		}
+
+		if (unary[type]) {
+			context.Prelude('var f' + index + ' = ' + unary[type] + ';');
+
+			return {Out: 'E(' + inputs.X + ', 0, f' + index + ')'};
+		}
+
+		switch (type) {
+			case 'Parameter':
+				key = JSON.stringify(properties.Key);
+
+				return {Value: '(own.call(P, ' + key + ') ? P[' + key + '] : D[' + key + '])'};
+			case 'Time':
+				return {Seconds: '(Number(I.Time) || 0)'};
+			case 'Input':
+				return {Value: 'I[' + JSON.stringify(properties.Name) + ']'};
+			case 'Mix':
+				return {Out: '(function (t) { return E(' + inputs.A + ', ' + inputs.B + ', function (a, b) { return a + (b - a) * t; }); })(' + inputs.T + ')'};
+			case 'Clamp':
+				return {Out: '(function (low, high) { return E(' + inputs.X + ', 0, function (x) { return Math.max(low, Math.min(high, x)); }); })(' + inputs.Low + ', ' + inputs.High + ')'};
+			case 'Smoothstep':
+				return {Out: '(function (low, high) { return E(' + inputs.X + ', 0, function (x) { var t = Math.max(0, Math.min(1, (x - low) / ((high - low) || 1))); return t * t * (3 - 2 * t); }); })(' + inputs.Low + ', ' + inputs.High + ')'};
+			case 'Remap':
+				return {Out: '(function (a, b, c, d) { return E(' + inputs.X + ', 0, function (x) { return c + (x - a) / ((b - a) || 1) * (d - c); }); })(' + inputs.FromLow + ', ' + inputs.FromHigh + ', ' + inputs.ToLow + ', ' + inputs.ToHigh + ')'};
+			case 'Dot':
+				return {Out: '(function (parts) { return Array.isArray(parts) ? parts.reduce(function (sum, part) { return sum + part; }, 0) : parts; })(E(' + inputs.A + ', ' + inputs.B + ', function (a, b) { return a * b; }))'};
+			case 'Length':
+				return {Out: '(function (x) { var list = Array.isArray(x) ? x : [x]; return Math.sqrt(list.reduce(function (sum, part) { return sum + part * part; }, 0)); })(' + inputs.X + ')'};
+			case 'Normalize':
+				return {Out: '(function (x) { var list = Array.isArray(x) ? x : [x]; var length = Math.sqrt(list.reduce(function (sum, part) { return sum + part * part; }, 0)) || 1; return Array.isArray(x) ? list.map(function (part) { return part / length; }) : x / length; })(' + inputs.X + ')'};
+			case 'Split':
+				context.Prelude('var s' + index + ' = null;');
+
+				return {X: '(s' + index + ' = ' + inputs.Vector + ' || [0, 0, 0, 0])[0]', Y: 's' + index + '[1]', Z: 's' + index + '[2]', W: 's' + index + '[3]'};
+			case 'Combine':
+				return {XYZW: '[' + inputs.X + ', ' + inputs.Y + ', ' + inputs.Z + ', ' + inputs.W + ']', XYZ: '[' + inputs.X + ', ' + inputs.Y + ', ' + inputs.Z + ']', XY: '[' + inputs.X + ', ' + inputs.Y + ']'};
+			case 'Noise':
+				context.Prelude('var noise = noise || M.Noise();');
+
+				return {Value: '(function (p, s) { return noise.Value(p[0] * s, p[1] * s, p[2] * s); })(' + inputs.Position + ', ' + inputs.Scale + ')'};
+			case 'Fbm':
+				context.Prelude('var noise = noise || M.Noise();');
+
+				return {Value: '(function (p, s) { return noise.Fbm(p[0] * s, p[1] * s, p[2] * s, ' + Math.max(1, Math.round(Number(properties.Octaves) || 4)) + '); })(' + inputs.Position + ', ' + inputs.Scale + ')'};
+			case 'NoiseSpec':
+				spec = this.NoiseOf(properties);
+
+				context.Prelude('var n' + index + ' = N.Make(' + JSON.stringify(spec) + ');');
+
+				return {Value: '(function (p, s) { return n' + index + '.At(p[0] * s, p[1] * s, p[2] * s); })(' + inputs.Position + ', ' + inputs.Scale + ')'};
+			case 'Compare':
+				key = {'!=': '!==', '<': '<', '<=': '<=', '>': '>', '>=': '>='}[properties.Operator] || '===';
+
+				return {Out: '(' + inputs.A + ' ' + key + ' ' + inputs.B + ')'};
+			case 'And':
+				return {Out: '!!(' + inputs.A + ' && ' + inputs.B + ')'};
+			case 'Or':
+				return {Out: '!!(' + inputs.A + ' || ' + inputs.B + ')'};
+			case 'Not':
+				return {Out: '!' + inputs.X};
+			default:
+				return null;
+		}
+	},
+
 	/* Blueprints: flows */
 
 	Start: function (graph, context) {
@@ -1069,6 +1323,28 @@ Elemenx.Service('Blueprints', {
 		};
 
 		return instance;
+	},
+
+	/* The properties of a block of a spec of noise (NoiseSpec), and the spec of their values. */
+	NoiseProperties: function () {
+		return [
+			{Key: 'Type', Type: 'select', Options: ['value', 'perlin', 'simplex', 'worley', 'white'], Value: 'perlin'},
+			{Key: 'Seed', Type: 'text', Value: ''},
+			{Key: 'Fractal', Type: 'select', Options: ['none', 'fbm', 'ridged', 'billow'], Value: 'fbm'},
+			{Key: 'Octaves', Type: 'number', Value: 4, Min: 1, Max: 8},
+			{Key: 'Gain', Type: 'number', Value: 0.5, Min: 0, Max: 1},
+			{Key: 'Cell', Type: 'select', Options: ['f1', 'f2', 'edge', 'cell'], Value: 'f1'},
+			{Key: 'Distance', Type: 'select', Options: ['euclid', 'manhattan', 'chebyshev'], Value: 'euclid'},
+			{Key: 'Warp', Type: 'number', Value: 0, Min: 0, Max: 4},
+			{Key: 'Tile', Type: 'number', Value: 0, Min: 0, Max: 64}
+		];
+	},
+
+	NoiseOf: function (properties) {
+		var given = properties || {};
+		var tile = Number(given.Tile) || 0;
+
+		return {Type: given.Type || 'perlin', Seed: given.Seed || '', Fractal: given.Fractal || 'fbm', Octaves: Number(given.Octaves) || 4, Gain: given.Gain === undefined ? 0.5 : Number(given.Gain), Cell: {Return: given.Cell || 'f1', Distance: given.Distance || 'euclid'}, Warp: Number(given.Warp) ? {Amount: Number(given.Warp)} : null, Tile: tile ? [tile, tile, tile] : null};
 	},
 
 	/* Blueprints: the library */
@@ -1325,6 +1601,20 @@ Elemenx.Service('Blueprints', {
 				var p = inputs.Position;
 
 				return {Value: noiseOf().Fbm(p[0] * inputs.Scale, p[1] * inputs.Scale, p[2] * inputs.Scale, Math.max(1, Math.round(Number(properties.Octaves) || 4)))};
+			}
+		});
+
+		/* A noise of any algorithm of the Noise Service, by its spec: the same as a ground, a texture or a shader made of it. */
+		this.Node('NoiseSpec', {Graphs: numeric, Group: 'noise', Properties: self.NoiseProperties(), Inputs: [{Key: 'Position', Type: 'vec3', Value: 0}, {Key: 'Scale', Type: 'float', Value: 1}], Outputs: [{Key: 'Value', Type: 'float'}],
+			Compute: function (inputs, properties) {
+				var p = inputs.Position;
+				var spec = self.NoiseOf(properties);
+				var key = JSON.stringify(spec);
+				var samplers = self.Samplers = self.Samplers || {};
+
+				samplers[key] = samplers[key] || self.$Service('Noise').Make(spec);
+
+				return {Value: samplers[key].At(p[0] * inputs.Scale, p[1] * inputs.Scale, p[2] * inputs.Scale)};
 			}
 		});
 
