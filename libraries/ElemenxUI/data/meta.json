@@ -22710,6 +22710,15 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "The text of an empty container; the phrase of the language of the page without one."
+				},
+				{
+					"Name": "Document",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The document of the project it shows (the one being edited without one): another one sleeps until it is pressed."
 				}
 			],
 			"Slots": [],
@@ -22718,11 +22727,13 @@
 			"Current": "",
 			"Events": [
 				"select",
-				"drop"
+				"drop",
+				"wake"
 			],
 			"EventDescriptions": {
 				"select": "An element was pressed: its ID, or null for the page.",
-				"drop": "A kind or an element was dropped on the canvas: {Kind, Node, Parent, Index, ID}, ID the element made or moved."
+				"drop": "A kind or an element was dropped on the canvas: {Kind, Node, Parent, Index, ID}, ID the element made or moved.",
+				"wake": "A canvas of another document was pressed: its Document, for the owner to edit."
 			},
 			"Methods": [],
 			"Sample": {}
@@ -24753,7 +24764,7 @@
 				"CanRedo()",
 				"Undo()",
 				"Redo()",
-				"Template(canvas, empty)",
+				"Template(canvas, empty, id)",
 				"Import(text)",
 				"Project()",
 				"Opened()",
@@ -26251,7 +26262,9 @@
 			"right",
 			"top"
 		],
-		"elemenx-tab-split": [],
+		"elemenx-tab-split": [
+			"many"
+		],
 		"elemenx-tab-split-group": [],
 		"elemenx-tab-split-divider": [
 			"column",

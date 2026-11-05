@@ -64,7 +64,7 @@ Elemenx.Component('GameEditorLayout', {
 			window.localStorage.setItem(this.Storage, JSON.stringify(this.Game));
 		}
 		catch (error) {
-			this.Status = this.$T('gameEditor.notKept');
+			this.Status = Elemenx.Locale.Text('gameEditor.notKept');
 		}
 
 		this.Version++;
@@ -166,7 +166,7 @@ Elemenx.Component('GameEditorLayout', {
 
 	/* A new game in the place of this one, when the page is told so. */
 	New: function (setting) {
-		if (!window.confirm(this.$T('gameEditor.replace'))) return;
+		if (!window.confirm(Elemenx.Locale.Text('gameEditor.replace'))) return;
 
 		this.Game = this.Fresh(setting);
 		this.Current = this.Game.Models[0].ID;
@@ -182,6 +182,33 @@ Elemenx.Component('GameEditorLayout', {
 
 	NewSpace: function () {
 		this.New('space');
+	},
+
+	/*
+	 * A new game of the showcase world (SceneShowcase): every primitive of the generation, district by district. Its objects
+	 * go into the scene of the editor as one change, and the game keeps the recipe the editor makes of them.
+	 */
+	NewShowcase: function () {
+		var editor = this.$Ref('Scene', true);
+		var world = this.$Service('SceneShowcase').World();
+		var scene = editor ? editor.Scene() : null;
+		if (!scene || !window.confirm(Elemenx.Locale.Text('gameEditor.replace'))) return;
+
+		/* No seed of a scene: it would make a star system round the world (its ground has a seed of its own). */
+		scene.Load({Version: 1, Seed: '', Time: 0, Travels: [], Added: [], Removed: [], Overrides: {}});
+		scene.Add(world.Objects);
+
+		if (world.Route.length)
+			scene.SetViewpoint(world.Route[0]);
+
+		this.Game = this.Fresh('ground');
+		this.Game.Name = world.Name;
+		this.Game.Scene = Object.assign(editor.Document(), {Name: world.Name});
+		this.Current = this.Game.Models[0].ID;
+		this.View = 'scene';
+
+		this.Define();
+		this.Keep();
 	},
 
 	/* The name of its files: its words joined by dashes. */
@@ -224,7 +251,7 @@ Elemenx.Component('GameEditorLayout', {
 		var self = this;
 		var packager = this.$Service('GamePackager');
 
-		this.Status = this.$T('gameEditor.packing');
+		this.Status = Elemenx.Locale.Text('gameEditor.packing');
 
 		packager.Html(this.Game, function (error, text) {
 			self.Status = error ? error.message : '';

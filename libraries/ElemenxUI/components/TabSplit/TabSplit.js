@@ -16,7 +16,9 @@
  * CopyID(id, n), <ID>:2 by default), or with the tab itself (Split and move: a group of one tab stays as it is). A copy
  * closes at once (the owner has no Tab of it); the layout keeps the copies of each group in its Copies ({ID, Of}) and a
  * Layout given makes them again. A group left with no tab goes, and its room goes to the others.
- * Its parts keep their content as they move: their panels go from group to group, never made again.
+ * Its parts keep their content as they move: their panels go from group to group, never made again. The group of the
+ * focus (the last one pressed, or the one of a tab opened) is the one a new tab opens in; while there are more groups
+ * the line under its current tab is the accent, the other ones quieter.
  * Events: change (the layout), select (the ID of the tab opened), close (the ID of a tab that asks to close: the
  * owner takes its Tab away; until it does the tab stays out of the groups), copy ({ID, Of, Group}: a copy of a tab made
  * in a new group). Methods: Open(id), Close(id), Split(id, side, move), Model().
@@ -162,6 +164,7 @@ Elemenx.Component('TabSplit', {
 
 	$OnDestroy: function () {
 		window.cancelAnimationFrame(this.Own().Settling);
+		window.cancelAnimationFrame(this.Own().Bodies);
 
 		if (this.StopWatch)
 			this.StopWatch();
@@ -191,7 +194,24 @@ Elemenx.Component('TabSplit', {
 
 	/* The panels of its tabs: in its source, in its groups; not the ones of a Tabs, a TabGroup or a TabSplit inside a tab. */
 	Panels: function () {
-		return this.$Service('Panels').Read(this.$Element(), '.elemenx-tab-panel', '.elemenx-tab-split, .elemenx-tabs, .elemenx-tab-group:not(.elemenx-tab-split-group > .elemenx-tab-group):not(.declared):not(.elemenx-tab-split-source .elemenx-tab-group)');
+		var root = this.$Element();
+		var owners = '.elemenx-tab-split, .elemenx-tabs, .elemenx-tab-group:not(.declared):not(.elemenx-tab-split-source .elemenx-tab-group)';
+
+		/* The TabGroup of one of its groups holds the panels for it: the group or panel nearest around it is its group. */
+		function own (group) {
+			var around = group.parentElement ? group.parentElement.closest('.elemenx-tab-split-group, .elemenx-tab-panel') : null;
+
+			return !!around && around.classList.contains('elemenx-tab-split-group') && around.parentElement === root;
+		}
+
+		return Array.prototype.filter.call(root ? root.querySelectorAll('.elemenx-tab-panel') : [], function (panel) {
+			/* The TabGroup of a group is in an element of its own while it loads: not a child of the group. */
+			var owner = panel.parentElement ? panel.parentElement.closest(owners) : null;
+			if (owner && owner !== root && owner.classList.contains('elemenx-tab-group') && own(owner))
+				owner = owner.parentElement.closest(owners);
+
+			return !owner || owner === root;
+		});
 	},
 
 	/* Reads the tabs, and the layout the first time: the one of Layout, or the one declared in the template. */
@@ -265,7 +285,11 @@ Elemenx.Component('TabSplit', {
 				if (!metas[id].Pinned || self.Own().Pinned[id] && !declared) return;
 
 				self.Own().Pinned[id] = true;
-				node.Pinned = (node.Pinned || []).concat([id]);
+
+				/* A layout given may pin it already: once in it. */
+				if ((node.Pinned || []).indexOf(id) === -1)
+					node.Pinned = (node.Pinned || []).concat([id]);
+
 				node.Tabs = node.Pinned.concat(node.Tabs.filter(function (each) {
 					return node.Pinned.indexOf(each) === -1;
 				}));
@@ -274,6 +298,9 @@ Elemenx.Component('TabSplit', {
 
 		if (JSON.stringify(metas) !== JSON.stringify(this.Metas))
 			this.Metas = metas;
+
+		if (!this.Find(tree, this.Own().Focused) && this.First(tree))
+			this.Front(this.First(tree).Group);
 
 		this.Use(this.Normal(tree, true), !!missing.length && !!this.Tree);
 	},
@@ -515,10 +542,13 @@ Elemenx.Component('TabSplit', {
 
 	/* Every panel in the body of its group, the one of the current tab shown; a panel of no group back in the source. */
 	Arrange: function (tree, metas) {
+		var self = this;
+		var own = this.Own();
 		var root = this.$Element();
 		var source = root.querySelector('.elemenx-tab-split-source');
 		var panels = {};
 		var placed = {};
+		var waiting = false;
 
 		/* Before its layout is read a panel stays in its declaration, which tells the group it is of. */
 		if (!tree || !this.Own().Settled) return;
@@ -534,7 +564,11 @@ Elemenx.Component('TabSplit', {
 
 			body = root.querySelector('.elemenx-tab-split-group[data-group="' + node.Group + '"] .elemenx-tab-group-body');
 
-			if (!body) return;
+			if (!body) {
+				waiting = true;
+
+				return;
+			}
 
 			node.Tabs.forEach(function (id) {
 				var panel = panels[id];
@@ -562,6 +596,21 @@ Elemenx.Component('TabSplit', {
 				source.appendChild(panels[id]);
 			}
 		});
+
+		this.Mark();
+
+		/*
+		 * A TabGroup that loads later (its template, the first time) has no body yet while the layout is read: its
+		 * panels go into it on a frame when it has one (five seconds at most).
+		 */
+		window.cancelAnimationFrame(own.Bodies);
+
+		own.Tries = waiting ? (own.Tries || 0) + 1 : 0;
+
+		if (waiting && own.Tries < 300)
+			own.Bodies = window.requestAnimationFrame(function () {
+				self.Arrange(self.Tree, self.Metas);
+			});
 	},
 
 	/* Opens a tab (its group goes to the focus). */
@@ -569,7 +618,7 @@ Elemenx.Component('TabSplit', {
 		var group = this.Holder(this.Tree, id);
 		if (!group) return;
 
-		this.Own().Focused = group.Group;
+		this.Front(group.Group);
 
 		if (group.Active !== id) {
 			this.Change(function (tree) {
@@ -653,7 +702,7 @@ Elemenx.Component('TabSplit', {
 			this.Beside(tree, target, group, side);
 		});
 
-		this.Own().Focused = name;
+		this.Front(name);
 
 		if (copied) {
 			this.Read();
@@ -797,7 +846,7 @@ Elemenx.Component('TabSplit', {
 				target.Pinned = (target.Pinned || []).concat([id]);
 		});
 
-		this.Own().Focused = group;
+		this.Front(group);
 
 		this.$Emit('select', id);
 	},
@@ -851,11 +900,36 @@ Elemenx.Component('TabSplit', {
 		this.Part(detail.ID, detail.Side, detail.Group, !!detail.Move);
 	},
 
-	/* The group of the focus: the one a new tab opens in. */
+	/* The group of the focus: the one a new tab opens in, marked while there are more of them. */
+	Front: function (group) {
+		this.Own().Focused = group;
+
+		this.Mark();
+	},
+
+	/* The marks of the groups, on their elements (not state: they render nothing): the group of the focus, and many. */
+	Mark: function () {
+		var root = this.$Element();
+		var focused = this.Own().Focused;
+		var groups;
+
+		if (!root) return;
+
+		groups = Array.prototype.filter.call(root.querySelectorAll('.elemenx-tab-split-group'), function (group) {
+			return group.parentElement === root;
+		});
+
+		root.classList.toggle('many', groups.length > 1);
+
+		groups.forEach(function (group) {
+			group.classList.toggle('focused', group.getAttribute('data-group') === focused);
+		});
+	},
+
 	Focused: function (event) {
 		var group = event.target.closest && event.target.closest('.elemenx-tab-split-group');
 		if (group)
-			this.Own().Focused = group.getAttribute('data-group');
+			this.Front(group.getAttribute('data-group'));
 	},
 
 	/* A divider dragged: the two parts beside it share their room, none smaller than a tenth of the split. */

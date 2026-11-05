@@ -58,7 +58,7 @@
  * atmosphere and its star); a drag looks round, the wheel rises and comes down, WASD and the arrows walk, Escape or
  * TakeOff() goes back up. The time runs SurfaceSpeed days a second there (1/120).
  *
- * Kinds of the ground (the setting terrain): ground (Terrain: Size, Height, Water, Scale, Ridges, Seed: a ground of
+ * Kinds of the ground (the setting terrain): ground (Terrain: Size, Height, Water, Scale, Ridges, Rock, Snow, Swell (how wild its sea, 0 to 1.5: SceneWaves; wilder in the rain), SwellWay (degrees the wind drives it), Seed: a ground of
  * noise, SceneTerrainGenerator.Flat, in chunks finer near the eye, with its sea), sun (Sun: its light from far), unit (Walker: Speed,
  * MaxSlope, Swim; a Model), tree, rock and house (Model, Blocks: what stands in the way). An object of it stands at
  * X and Y of the ground; Move(id, [x, y]) walks a walker round what cannot be walked, a right click sends the selected
@@ -115,11 +115,12 @@ Elemenx.Component('Scene', {
 			enter: 'A walker, a vehicle or the hero came into a trigger: {Trigger (the trigger itself: ID, Inside(), Action(name, data), Enable(on)), ID, Object}.',
 			leave: 'One went out of a trigger, or was removed: {Trigger, ID, Object}.',
 			action: 'A trigger was sent an action (Action of the trigger): {Trigger, Name, Data}.',
+			part: 'A part of an object was set by its role (Part(id, role).Set): {ID, Role, Value}.',
 			touch: 'Two solid things began to touch (trait Rigid): {ID, With (null: the ground), At, Normal, Impulse}.',
 			shader: 'A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}).'
 		},
-		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Save(options)', 'Load(saved)', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()'],
+		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Save(options)', 'Load(saved)', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()'],
 		Props: {
 			Biome: 'On a ground: what it looks like and what grows on it, by itself (the Biomes Service: temperate, taiga, tundra, desert, savanna, swamp, alien).',
 			Setting: {Options: ['space', 'terrain'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers).'},
@@ -265,13 +266,13 @@ Elemenx.Component('Scene', {
 	},
 
 	/*
-	 * The kinds of the setting terrain: a ground of noise (Terrain: Size, Height, Water, Scale, Ridges, Seed), its sun
+	 * The kinds of the setting terrain: a ground of noise (Terrain: Size, Height, Water, Scale, Ridges, Rock, Snow, Swell, SwellWay, Seed), its sun
 	 * (Sun: Elevation, Azimuth in degrees, Color; with Time, Noon: the azimuth at noon of its way, 180; Shade: the color of the light of the sky), units that walk (Walker: Speed, a second; X and Y their place on the
 	 * map), trees, rocks and houses (a Model; Blocks: no way through them).
 	 */
 	Ground: function () {
 		return {
-			'ground': {Traits: {Terrain: {Size: 1000, Height: 60, Water: 0.35, Scale: 180, Ridges: 0.4, Seed: 'ground', Blueprint: null, Parameters: null, Sketch: null}}},
+			'ground': {Traits: {Terrain: {Size: 1000, Height: 60, Water: 0.35, Scale: 180, Ridges: 0.4, Rock: '', Snow: '', Swell: 0.35, SwellWay: 30, Seed: 'ground', Blueprint: null, Parameters: null, Sketch: null}}},
 			'effect': {Traits: {Effect: {Type: 'campfire', Size: 1, Power: 1, Aim: null, Height: 0, Light: true, On: true, Color: '', Hot: '', Volume: 1, Intensity: 1, Length: 1, Width: 1, Spin: 1, Rings: null, Seed: '', Smoke: 1, Appear: 0.45, Tune: null, Pulse: null, Where: 'body', Blueprint: null, Parameters: null}}},
 			'mirror': {Traits: {Mirror: {Width: 2, Height: 2, Yaw: 0, Pitch: 0, Lift: 1, Tint: '#ffffff', Blur: 0, Strength: 0.92, Every: 1}}},
 			'glass': {Traits: {Glass: {Width: 2, Height: 2, Yaw: 0, Pitch: 0, Lift: 1, Tint: '#cfe6f0', Clarity: 0.88, Frost: 0, Reflect: 0.35}}},
@@ -1253,7 +1254,7 @@ Elemenx.Component('Scene', {
 			if (self.WindGraph && self.WindMade && !shaderChecked('wind', 'WindGraph', self.WindMade, shaders.Instanced, shaders.Pbr))
 				self.WindMade = self.Made(null, 'vertex', 'WindGraph', self.LibraryWind.bind(self));
 
-			if (self.WaterGraph && self.WaterMade && !shaderChecked('water', 'WaterGraph', self.WaterMade, shaders.Lit, shaders.Sea))
+			if (self.WaterGraph && self.WaterMade && !shaderChecked('water', 'WaterGraph', self.WaterMade, shaders.SeaVertex, shaders.Sea))
 				self.WaterMade = self.Made(null, 'water', 'WaterGraph', self.LibraryWater.bind(self));
 
 			if (self.SkyGraph && self.SkyMade && !shaderChecked('sky', 'SkyGraph', self.SkyMade, graphics.Shaders.Quad, shaders.Sky))
@@ -1298,7 +1299,7 @@ Elemenx.Component('Scene', {
 			gpu.LandDepth = renderer.Program(shaders.LandVertex, shaders.Depth);
 			gpu.GroundDepth = renderer.Program(shaders.GroundVertex, shaders.Depth);
 			gpu.ShadowMap = null;
-			gpu.Sea = renderer.Program(shaders.Lit, shaders.Sea);
+			gpu.Sea = renderer.Program(shaders.SeaVertex, shaders.Sea);
 			gpu.Sky = renderer.Program(graphics.Shaders.Quad, shaders.Sky);
 			gpu.Sphere = renderer.Mesh(meshes.Sphere({Segments: 64, Rings: 40}));
 			gpu.Quad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
@@ -1968,6 +1969,10 @@ Elemenx.Component('Scene', {
 			 * The mirrors first, each the world drawn again as its plane reflects it, from the eye at the origin: the world through
 			 * the reflection, a near plane laid along the mirror (what is behind it is not in it), the triangles turning the other way.
 			 */
+			/* Whether the eye is under the sea: lower than the waves over it. */
+			if (scene.Ground)
+				scene.Ground.Under = !!scene.Ground.Field.Water && !scene.Camera.Ortho && scene.Eye[1] < self.$Service('SceneWaves').At(scene.Ground.Waves, scene.Eye[0], scene.Eye[2], scene.Seconds).Height;
+
 			var mirrored = scene.Ground && !scene.Camera.Ortho ? mirrorsOf(projection, viewMatrix, function (vp, eye, small) {
 				var mine = Object.assign({}, common, {uViewProjection: vp, uCamera: eye, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0]});
 
@@ -1975,14 +1980,15 @@ Elemenx.Component('Scene', {
 
 				Object.keys(models).forEach(function (name) {
 					var list = models[name];
-					if (list.Material && seeThrough(list.Material)) return;
+					/* The glass of a mirror is not in its own picture, nor in another's. */
+					if (list.Material && seeThrough(list.Material) || list.MirrorKey) return;
 
 					if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign({}, mine, {uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft}, surface(list), blueprintValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back'});
 					else renderer.Draw(shape(name), gpu.Many, Object.assign({}, mine, {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list)}));
 				});
 
-				/* A small mirror of a car shows no grass: a quarter of the size, it would be a blur at the cost of all of it. */
-				if (self.Graphics().Level !== 'low' && !small)
+				/* A mirror of a car shows the trees and the grass too at high and ultra: its picture is as fine as the screen now, and no bigger than the mirror. */
+				if (self.Graphics().Level !== 'low' && (!small || self.Graphics().Level === 'high' || self.Graphics().Level === 'ultra'))
 					engine.ScatterDraw(mine, vp);
 			}) : {};
 
@@ -2063,6 +2069,13 @@ Elemenx.Component('Scene', {
 			Object.keys(models).forEach(function (name) {
 				var list = models[name];
 
+				/* The glass of a mirror of a car: the picture of its mirror in its own shape. */
+				if (list.MirrorKey && mirrored[list.MirrorKey]) {
+					renderer.Draw(shape(name), mirrorGlass(list), Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft}), mirrorValues(list.MirrorKey, mirrored[list.MirrorKey])), {Cull: 'none'});
+
+					return;
+				}
+
 				if (list.Material) {
 					var blended = seeThrough(list.Material);
 
@@ -2141,7 +2154,7 @@ Elemenx.Component('Scene', {
 			}
 
 			if (posted)
-				engine.PostEnd(scene.Ground ? {Matrix: matrix, Plain: plain, Eye: scene.Eye, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Night: scene.Ground.Night, Shimmer: engine.EffectHeat(matrix, width / Math.max(1, height)), Exposure: self.Exposure, Air: scene.Ground.AirTint, Veil: scene.Ground.Air.Fog * (scene.Ground.Air.Rain > 0.05 ? 1 : 0.6), Clouds: scene.Camera.Ortho ? null : groundClouds(), Glare: scene.Ground.Glare, AirLight: scene.Ground.AirLight, AirGlow: scene.Ground.Glow, AirGlowWay: scene.Ground.GlowWay, Fog: scene.Camera.Ortho ? 0 : (scene.Ground.Field.Whole ? 0.12 : 0.4) / Math.max(scene.Ground.Field.Size, 300) + scene.Ground.Air.Fog * 0.011, FogLow: scene.Camera.Ortho ? [0, 0, 0] : [Math.max(0, scene.Eye[1] - Math.max(0, scene.Ground.Field.Height(scene.Eye[0], scene.Eye[2]))), 1 / Math.max(6, scene.Ground.Field.Top * 0.2), scene.Ground.Air.Fog * 0.03], Sky: true, Reach: Math.max(1, scene.Distance * 0.05), Bokeh: lens().Bokeh, Focus: lens().Focus} : Object.assign({Matrix: matrix, Plain: plain}, spaceSun(plain, camera), lens()));
+				engine.PostEnd(scene.Ground ? {Matrix: matrix, Plain: plain, Eye: scene.Eye, Under: scene.Ground.Under ? 1 : 0, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Night: scene.Ground.Night, Shimmer: engine.EffectHeat(matrix, width / Math.max(1, height)), Exposure: self.Exposure, Air: scene.Ground.AirTint, Veil: scene.Ground.Air.Fog * (scene.Ground.Air.Rain > 0.05 ? 1 : 0.6), Clouds: scene.Camera.Ortho ? null : groundClouds(), Glare: scene.Ground.Glare, AirLight: scene.Ground.AirLight, AirGlow: scene.Ground.Glow, AirGlowWay: scene.Ground.GlowWay, Fog: scene.Camera.Ortho ? 0 : (scene.Ground.Field.Whole ? 0.12 : 0.4) / Math.max(scene.Ground.Field.Size, 300) + scene.Ground.Air.Fog * 0.011, FogLow: scene.Camera.Ortho ? [0, 0, 0] : [Math.max(0, scene.Eye[1] - Math.max(0, scene.Ground.Field.Height(scene.Eye[0], scene.Eye[2]))), 1 / Math.max(6, scene.Ground.Field.Top * 0.2), scene.Ground.Air.Fog * 0.03], Sky: true, Reach: Math.max(1, scene.Distance * 0.05), Bokeh: lens().Bokeh, Focus: lens().Focus} : Object.assign({Matrix: matrix, Plain: plain}, spaceSun(plain, camera), lens()));
 		}
 
 		function nearestStar () {
@@ -2648,6 +2661,7 @@ Elemenx.Component('Scene', {
 			var team = paint(teamColor(object.Team)).slice(0, 3);
 			var pose;
 			var plain;
+			var rig;
 
 			if (!made && library.Has(nameOf(object, settings))) return;
 
@@ -2662,10 +2676,18 @@ Elemenx.Component('Scene', {
 			if (made.Type === 'ship' && object.Team)
 				color = [color[0] * 0.65 + team[0] * 0.35, color[1] * 0.65 + team[1] * 0.35, color[2] * 0.65 + team[2] * 0.35];
 
-			if (object.Values.Vehicle && !object.Wheels) {
-				engine.OpeningsOf(made, object.Values.Vehicle);
+			/* What moves on it (a vehicle, the roles of the parts of its model): its pieces cut once, again when its rig is another. */
+			rig = engine.RigOf(object);
 
-				object.Wheels = engine.WheelsOf(made, object.Values.Vehicle);
+			if (rig && (!object.Wheels || object.RigCut !== rig || object.RigModel !== made)) {
+				engine.OpeningsOf(made, rig);
+
+				if (object.Values.Vehicle)
+					engine.MirrorsOf(made, object.Values.Vehicle);
+
+				object.Wheels = engine.WheelsOf(made, rig);
+				object.RigCut = rig;
+				object.RigModel = made;
 			}
 
 			pose = (made.Pieces.length > 1 || made.Moves) && !still ? poseOf(object, made, settings) : null;
@@ -2691,12 +2713,19 @@ Elemenx.Component('Scene', {
 					var whole = shifted ? math.Multiply(base, shifted) : base;
 					var lit = piece.Opening ? engine.LampGlow(object, piece) : null;
 
-					batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, piece.Skin !== -1 ? whole : math.Multiply(whole, wheel ? math.Multiply(engine.WheelTurn(object, wheel), rest) : rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Soft: softOf(object, made, piece), Glow: object.Glow && object.Glow.Body ? object.Glow.Color : lit, Lit: !!lit && !(object.Glow && object.Glow.Body), Wet: object.Values.Wet, Drops: object.Values.Drops});
+					/* The glass of a mirror of the car that is driven shows its picture (MirrorKey): its own list, of that car alone. */
+					var reflecting = piece.Mirror !== undefined && object.ID === scene.Hero ? 'car:' + object.ID + ':' + piece.Mirror : '';
+
+					batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID + (reflecting ? '@' + object.ID : ''), object.World, piece.Skin !== -1 ? whole : math.Multiply(whole, wheel ? math.Multiply(engine.WheelTurn(object, wheel), rest) : rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Soft: softOf(object, made, piece), Glow: object.Glow && object.Glow.Body ? object.Glow.Color : lit, Lit: !!lit && !(object.Glow && object.Glow.Body), Wet: object.Values.Wet, Drops: object.Values.Drops, MirrorKey: reflecting});
 
 					return;
 				}
 
-				batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, pose ? math.Multiply(base, pose[piece.ID]) : base, piece.Team ? team : color, {Matte: made.Matte, Rough: made.Matte ? 0.5 : 0.15, Sway: made.Sway, Geometry: piece.Geometry, Still: still, Glow: object.Glow && object.Glow.Body ? object.Glow.Color : null, Wet: object.Values.Wet, Drops: object.Values.Drops});
+				/* A part of a model of shapes moves as its role says, as one of a file does. */
+				var moved = piece.Opening ? engine.OpeningMove(object, piece) : null;
+				var placed = moved ? math.Multiply(base, moved) : base;
+
+				batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, pose ? math.Multiply(placed, pose[piece.ID]) : placed, piece.Team ? team : color, {Matte: made.Matte, Rough: made.Matte ? 0.5 : 0.15, Sway: made.Sway, Geometry: piece.Geometry, Still: still, Glow: object.Glow && object.Glow.Body ? object.Glow.Color : null, Wet: object.Values.Wet, Drops: object.Values.Drops});
 			});
 		}
 
@@ -2733,7 +2762,7 @@ Elemenx.Component('Scene', {
 					materials.push(piece.Material);
 				}
 
-				name = piece.Skin !== -1 ? 'own:' + piece.ID : (wheel ? 'wheel:' + wheel.Corner + ':' + (wheel.Held ? 1 : 0) : piece.Opening ? 'open:' + piece.Opening + ':' + (piece.Side || 1) : 'still') + ':' + material;
+				name = piece.Skin !== -1 ? 'own:' + piece.ID : (wheel ? 'wheel:' + wheel.Corner + ':' + (wheel.Held ? 1 : 0) : piece.Opening ? 'open:' + piece.Opening + ':' + (piece.Side || 1) : 'still') + (piece.Mirror !== undefined ? ':mirror-' + piece.Mirror : '') + ':' + material;
 				group = groups[name];
 
 				if (!group) {
@@ -2997,7 +3026,7 @@ Elemenx.Component('Scene', {
 				batch(scene.GlowLists, (settings.Lit ? 'lit:' : 'glow:') + name, world, matrix, settings.Glow, Object.assign({}, settings, {Glow: null}));
 
 			if (!list) {
-				list = models[name] = {Count: 0, Capacity: 0, Matte: !!settings.Matte, Rough: settings.Rough || 0, Geometry: settings.Geometry || null, Still: !!settings.Still, Material: settings.Material || null, Asset: settings.Asset || null, Skinned: settings.Skinned || null, Offset: settings.Offset || 0, Soft: settings.Soft || 0, Flat: !!settings.Lit};
+				list = models[name] = {Count: 0, Capacity: 0, Matte: !!settings.Matte, Rough: settings.Rough || 0, Geometry: settings.Geometry || null, Still: !!settings.Still, Material: settings.Material || null, Asset: settings.Asset || null, Skinned: settings.Skinned || null, Offset: settings.Offset || 0, Soft: settings.Soft || 0, Flat: !!settings.Lit, MirrorKey: settings.MirrorKey || ''};
 			}
 
 			if (list.Count === list.Capacity)
@@ -3380,6 +3409,7 @@ Elemenx.Component('Scene', {
 			var biome;
 			var sketch;
 			var sketched;
+			var swell = null;
 			var sun;
 			var azimuth;
 			var elevation;
@@ -3408,12 +3438,15 @@ Elemenx.Component('Scene', {
 			settings = object ? trait(object, 'Terrain') : null;
 			biome = object && self.$Service('SceneBiomes').Get(object.Values.Biome);
 
-			/* The look of a ground (its Blueprint and its Parameters) is not its shape: it makes no other ground. */
+			/* The look of a ground (its Blueprint and its Parameters) and the waves of its sea are not its shape: they make no other ground. */
 			if (settings) {
+				swell = {Swell: settings.Swell, Way: settings.SwellWay, Seed: settings.Seed};
 				settings = Object.assign({}, settings);
 
 				delete settings.Blueprint;
 				delete settings.Parameters;
+				delete settings.Swell;
+				delete settings.SwellWay;
 			}
 
 			if (biome)
@@ -3430,7 +3463,11 @@ Elemenx.Component('Scene', {
 				sketch = engine.RoadsSketch(settings, sketch);
 
 			key = site ? 'location:' + site.ID + ':' + site.Values.Model : JSON.stringify(settings);
-			sketched = sketch ? JSON.stringify(sketch) : '';
+
+			/* Its text, made again only when the sketch or the scene changed: with the roads over it it is long, and this runs every frame. */
+			if (!sketch) sketched = '';
+			else if (scene.Ground && scene.Ground.SketchOf === sketch && scene.Ground.SketchVersion === scene.Version) sketched = scene.Ground.Sketched;
+			else sketched = JSON.stringify(sketch);
 
 			if (!scene.Ground || scene.Ground.Shape !== key) {
 				if (scene.Ground)
@@ -3440,6 +3477,18 @@ Elemenx.Component('Scene', {
 			}
 			else if (scene.Ground.Sketched !== sketched && !site) {
 				resketch(settings, sketch, sketched);
+			}
+
+			scene.Ground.SketchOf = sketch;
+			scene.Ground.SketchVersion = scene.Version;
+
+			/* The waves of the sea, wilder in the rain (in steps of a tenth), made again only when its state changes. */
+			if (swell)
+				swell.Swell = Math.round((number(swell.Swell, 0.35) + (scene.Ground.Air ? scene.Ground.Air.Rain : 0) * 0.5) * 10) / 10;
+
+			if (JSON.stringify(swell) !== scene.Ground.SwellKey) {
+				scene.Ground.SwellKey = JSON.stringify(swell);
+				scene.Ground.Waves = self.$Service('SceneWaves').Make(swell || {Swell: 0});
 			}
 
 			sun = scene.Roots.filter(function (each) {
@@ -3769,6 +3818,9 @@ Elemenx.Component('Scene', {
 			if (!settings || !settings.Shape || object.Owner || object.Hidden) return false;
 			if (trait(object, 'Orbit') || trait(object, 'Walker') || trait(object, 'Mover') || trait(object, 'Formation') || trait(object, 'Rigid')) return false;
 
+			/* What has parts that move by their roles (a door, a lamp) is drawn as it stands each frame. */
+			if (engine.RigOf && engine.RigOf(object)) return false;
+
 			made = modelOf(object, settings);
 
 			return !made || !Object.keys(made.Clips).length;
@@ -3776,7 +3828,8 @@ Elemenx.Component('Scene', {
 
 		/* Which objects move, after the scene changed: the others stand once. */
 		function settle () {
-			var key = scene.Version + ':' + (scene.Ground ? scene.Ground.Key : '');
+			/* The roles of the parts of the models change what moves too. */
+			var key = scene.Version + ':' + (scene.Ground ? scene.Ground.Key : '') + ':' + (engine.RigsVersion ? engine.RigsVersion() : '');
 			if (scene.Settled === key) return;
 
 			scene.Settled = key;
@@ -4212,8 +4265,11 @@ Elemenx.Component('Scene', {
 
 			camera.Orbit(round, scene.Yaw, lowest === null ? scene.Pitch : Math.max(scene.Pitch, -lowest), away);
 
-			/* The floor under the eye comes by steps in a location: the eye goes up and down smoothly. */
-			floor = Math.max(0, field.Height(camera.Position[0], camera.Position[2], ground.Target[1])) + (scene.Hero ? 0.15 : 1.5);
+			/*
+			 * The floor under the eye comes by steps in a location: the eye goes up and down smoothly. It keeps over the sea,
+			 * unless what it looks at is under it (a diver, a wreck): then it goes down to the bed too.
+			 */
+			floor = field.Water && ground.Target[1] < -0.5 ? field.Height(camera.Position[0], camera.Position[2], ground.Target[1]) + 0.5 : Math.max(0, field.Height(camera.Position[0], camera.Position[2], ground.Target[1])) + (scene.Hero ? 0.15 : 1.5);
 			scene.Floor = scene.Floor === undefined ? floor : scene.Floor + (floor - scene.Floor) * (1 - Math.exp(-elapsed * 5));
 			floor = Math.min(floor, scene.Floor);
 
@@ -4471,18 +4527,98 @@ Elemenx.Component('Scene', {
 			var seen = posted ? engine.PostMiddle() : null;
 
 			var waters = sketchWaters(ground);
-			var values = Object.assign({uViewProjection: matrix, uSun: ground.Sun, uSunColor: ground.SunColor, uAir: [0.55, 0.72, 1, 0.95], uFog: fog, uSeen: seen ? seen.Color : gpu.NoBounce, uSeenDepth: seen ? seen.Depth : gpu.NoBounce, uMirror: seen ? 1 : 0, uEye: scene.Eye, uTime: scene.Seconds, uDay: ground.Day * (1 - ground.Cover * ground.Cover * 0.5), uWild: 1 + ground.Air.Rain * 0.9, uFlow: 0}, self.WaterValues(scene.Seconds));
+			var values = Object.assign({uViewProjection: matrix, uSun: ground.Sun, uSunColor: ground.SunColor, uAir: [0.55, 0.72, 1, 0.95], uFog: fog, uSeen: seen ? seen.Color : gpu.NoBounce, uSeenDepth: seen ? seen.Depth : gpu.NoBounce, uSeenInverse: math.Invert(matrix), uMirror: seen ? 1 : 0, uPlanar: gpu.NoBounce, uPlanarOn: 0, uEyeUnder: ground.Under ? 1 : 0, uEye: scene.Eye, uTime: scene.Seconds, uDay: ground.Day * (1 - ground.Cover * ground.Cover * 0.5), uWild: 1 + ground.Air.Rain * 0.9, uFlow: 0}, self.WaterValues(scene.Seconds));
 
 			/* The rivers and the lakes of a sketch: the same water, calmer, where they lie. */
 			if (waters)
-				renderer.Draw(waters, gpu.Sea, Object.assign({}, values, {uModel: math.Translation(-scene.Eye[0], -scene.Eye[1], -scene.Eye[2]), uWild: 0.45 + ground.Air.Rain * 0.5, uFlow: 1}), {Blend: 'alpha', Cull: 'none'});
+				renderer.Draw(waters, gpu.Sea, Object.assign({}, values, {uModel: math.Translation(-scene.Eye[0], -scene.Eye[1], -scene.Eye[2]), uWaves: 0, uWild: 0.45 + ground.Air.Rain * 0.5, uFlow: 1}), {Blend: 'veil', Cull: 'none'});
 
 			if (!field.Water) return;
 
-			if (!gpu.Water)
-				gpu.Water = renderer.Mesh(meshes.Plane({Width: 1, Depth: 1, Segments: 1}));
+			/* The sea: the grid round the eye, as far as the plane of water reached (field.Size * 1.6 across), its waves on it. */
+			if (!gpu.SeaGrid || gpu.SeaGrid.Reach !== field.Size * 1.15) {
+				if (gpu.SeaGrid)
+					gpu.SeaGrid.Destroy();
 
-			renderer.Draw(gpu.Water, gpu.Sea, Object.assign({}, values, {uModel: math.Compose(vectors.Subtract([0, 0, 0], scene.Eye), null, field.Size * 1.6)}), {Blend: 'alpha', Cull: 'none'});
+				gpu.SeaGrid = seaGrid(field.Size * 1.15);
+			}
+
+			var floor = seaFloor(ground);
+			/* The world mirrored by the level of the sea, at high and ultra (mirrorsOf). */
+			var planar = gpu.Mirrors && gpu.Mirrors.sea && gpu.Mirrors.sea.Drawn ? gpu.Mirrors.sea : null;
+
+			renderer.Draw(gpu.SeaGrid, gpu.Sea, Object.assign({}, values, self.$Service('SceneWaves').Values(ground.Waves, scene.Seconds), {uModel: math.Identity(), uWaves: 1, uFloor: floor || gpu.NoBounce, uFloorSize: [field.Size, floor ? 256 : 0], uPlanar: planar ? planar.Textures[0] : gpu.NoBounce, uPlanarOn: planar ? 1 : 0}), {Blend: 'veil', Cull: 'none'});
+		}
+
+		/*
+		 * The grid of a sea round the eye: rings each a little wider than the one inside it (a corner every half unit near
+		 * the eye, wide far off), out to reach, and a fan in the middle.
+		 */
+		function seaGrid (reach) {
+			var made = {Positions: [0, 0, 0], Normals: [0, 1, 0], UVs: [0, 0], Colors: [0, 0, 0], Indices: []};
+			var sectors = 192;
+			var radii = [];
+			var radius = 0.5;
+			var mesh;
+			var i;
+			var s;
+
+			while (radius < reach) {
+				radii.push(radius);
+
+				radius *= 1.045;
+			}
+
+			radii.push(reach);
+
+			radii.forEach(function (r) {
+				for (s = 0; s < sectors; s++) {
+					made.Positions.push(Math.cos(s / sectors * Math.PI * 2) * r, 0, Math.sin(s / sectors * Math.PI * 2) * r);
+					made.Normals.push(0, 1, 0);
+					made.UVs.push(0, 0);
+					made.Colors.push(0, 0, 0);
+				}
+			});
+
+			for (s = 0; s < sectors; s++)
+				made.Indices.push(0, 1 + (s + 1) % sectors, 1 + s);
+
+			for (i = 0; i + 1 < radii.length; i++) {
+				for (s = 0; s < sectors; s++) {
+					var a = 1 + i * sectors + s;
+					var b = 1 + i * sectors + (s + 1) % sectors;
+
+					made.Indices.push(a, b, a + sectors, b, b + sectors, a + sectors);
+				}
+			}
+
+			mesh = renderer.Mesh(made);
+			mesh.Reach = reach;
+
+			return mesh;
+		}
+
+		/*
+		 * The heights of the ground under the sea (256 by 256 over its size), made by a worker once for a ground: the waves
+		 * calm down where it is shallow. null until then, and for a ground of no noise.
+		 */
+		function seaFloor (ground) {
+			var field = ground.Field;
+
+			if (ground.FloorKey === ground.Key) return ground.Floor;
+
+			ground.FloorKey = ground.Key;
+			ground.Floor = null;
+
+			if (!field.Options) return null;
+
+			terrain.Work().Run('SceneTerrainGenerator', 'Floor', [field.Options, 256], function (error, data) {
+				if (error || scene.Ground !== ground || ground.FloorKey !== ground.Key) return;
+
+				ground.Floor = renderer.Texture({Width: 256, Height: 256, Data: data}, {Float: true, Nearest: true});
+			});
+
+			return null;
 		}
 
 		/*
@@ -4774,7 +4910,7 @@ Elemenx.Component('Scene', {
 
 			up = vectors.Cross(normal, right);
 
-			return {Center: center, Normal: normal, Width: width, Height: height, Model: math.Multiply(math.Translation(at[0], at[1], at[2]), math.Multiply([right[0], right[1], right[2], 0, up[0], up[1], up[2], 0, normal[0], normal[1], normal[2], 0, 0, 0, 0, 1], math.Multiply(math.Rotation([1, 0, 0], Math.PI / 2), math.Scaling(width, 1, height))))};
+			return {Center: center, Normal: normal, Right: right, Up: up, Width: width, Height: height, Model: math.Multiply(math.Translation(at[0], at[1], at[2]), math.Multiply([right[0], right[1], right[2], 0, up[0], up[1], up[2], 0, normal[0], normal[1], normal[2], 0, 0, 0, 0, 1], math.Multiply(math.Rotation([1, 0, 0], Math.PI / 2), math.Scaling(width, 1, height))))};
 		}
 
 		/* The vehicle the keys drive, if it carries mirrors or screens: only its own are drawn, the others' are too small to see. */
@@ -4793,7 +4929,14 @@ Elemenx.Component('Scene', {
 
 				return {Key: object.ID, Pane: paneOf(object, settings), Settings: settings};
 			}).concat(car ? (car.Values.Vehicle.Mirrors || []).map(function (mirror, index) {
-				return {Key: 'car:' + car.ID + ':' + index, Pane: carPane(car, mirror), Settings: Object.assign({Every: 2}, mirror), Small: true};
+				var shape = (car.Values.Vehicle.MirrorShapes || {})[index];
+				var size = car.Scaled ? Math.max(car.Scaled[0], car.Scaled[1], car.Scaled[2]) : car.Size || 1;
+
+				var turn = car.Turn || math.Identity();
+				var back = vectors.Normalize([-turn[8], -turn[9], -turn[10]]);
+
+				/* A mirror that sees as a camera: its plane behind the car, so the car is not in its picture, and it looks straight back. */
+				return {Key: 'car:' + car.ID + ':' + index, Pane: carPane(car, mirror), Settings: Object.assign({Every: 2}, mirror), Small: true, Shift: shape && shape.Camera ? (shape.Rear + 0.05) * size : 0, Glass: !!shape && shape.Glass, Back: shape && shape.Camera ? back : null};
 			}) : []);
 		}
 
@@ -4847,10 +4990,14 @@ Elemenx.Component('Scene', {
 			}).slice(0, most).forEach(function (one, index) {
 				var settings = one.Settings;
 				var target = kept[one.Key];
-				var width = Math.max(1, renderer.Width >> (one.Small ? 2 : 1));
-				var height = Math.max(1, renderer.Height >> (one.Small ? 2 : 1));
-				var n = one.Pane.Normal;
-				var d = vectors.Dot(n, one.At);
+				var rect = screenRect(one, math.Multiply(projection, view));
+				/* The part of the screen it covers, as finely as the screen (half as finely for a big one), in steps of 32 not to make it again at each move. */
+				var scale = one.Small ? 1 : 0.5;
+				var width = Math.min(2048, Math.max(32, Math.ceil((rect[2] - rect[0]) / 2 * renderer.Width * scale / 32) * 32));
+				var height = Math.min(2048, Math.max(32, Math.ceil((rect[3] - rect[1]) / 2 * renderer.Height * scale / 32) * 32));
+				var n = aimed(one);
+				var d = vectors.Dot(n, one.At) + (one.Shift || 0);
+				var crop = [2 / (rect[2] - rect[0]), 0, 0, 0, 0, 2 / (rect[3] - rect[1]), 0, 0, 0, 0, 1, 0, -(rect[2] + rect[0]) / (rect[2] - rect[0]), -(rect[3] + rect[1]) / (rect[3] - rect[1]), 0, 1];
 				var reflection = [1 - 2 * n[0] * n[0], -2 * n[1] * n[0], -2 * n[2] * n[0], 0, -2 * n[0] * n[1], 1 - 2 * n[1] * n[1], -2 * n[2] * n[1], 0, -2 * n[0] * n[2], -2 * n[1] * n[2], 1 - 2 * n[2] * n[2], 0, 2 * d * n[0], 2 * d * n[1], 2 * d * n[2], 1];
 				var inverse = math.Invert(view);
 				var plane = [-n[0], -n[1], -n[2], d];
@@ -4858,7 +5005,14 @@ Elemenx.Component('Scene', {
 					return inverse[row * 4] * plane[0] + inverse[row * 4 + 1] * plane[1] + inverse[row * 4 + 2] * plane[2] + inverse[row * 4 + 3] * plane[3];
 				});
 
-				if (!target || target.Width !== width || target.Height !== height) {
+				/* Each in a frame of its own: all of them on the same frames made every other frame a heavy one, and the view went by in jerks. */
+				var waits = (tick + index) % Math.max(1, Math.round(number(settings.Every, 1))) !== 0;
+
+				/*
+				 * Made again only when it is too small, or twice too big, and on its own frame: a mirror that moves on the screen
+				 * shows the picture it has until then.
+				 */
+				if (!target || !(target.Drawn && waits) && (width > target.Width || height > target.Height || width * 2 < target.Width || height * 2 < target.Height)) {
 					if (target)
 						target.Destroy();
 
@@ -4868,15 +5022,36 @@ Elemenx.Component('Scene', {
 
 				made[one.Key] = target;
 
-				/* Each in a frame of its own: all of them on the same frames made every other frame a heavy one, and the view went by in jerks. */
-				if (target.Drawn && (tick + index) % Math.max(1, Math.round(number(settings.Every, 1)))) return;
+				if (target.Drawn && waits) return;
 
 				target.Begin();
 
 				renderer.Clear([0, 0, 0, 1]);
+
+				/*
+				 * A mirror that sees as a camera: a camera behind the car (where its plane would be), level, looking straight
+				 * back; its picture lies on the mirror by the place on its pane, the sides turned as a mirror turns them.
+				 */
+				if (one.Back) {
+					var camera = vectors.Add(one.At, vectors.Scale(one.Back, one.Shift));
+
+					target.Rect = null;
+
+					world(math.Multiply(math.Perspective(number(settings.Fov, 28), one.Pane.Width / one.Pane.Height, 0.1, number(scene.Camera.Far, 5000)), math.LookAt(camera, vectors.Add(camera, [one.Back[0], 0, one.Back[2]]), [0, 1, 0])), camera, !!one.Small);
+
+					target.End();
+
+					target.Drawn = true;
+
+					return;
+				}
+
 				renderer.Winding(true);
 
-				world(math.Multiply(oblique(projection, near), math.Multiply(view, reflection)), [2 * d * n[0], 2 * d * n[1], 2 * d * n[2]], !!one.Small);
+				/* The picture holds the part of the view in its rect alone, as finely as its size. */
+				target.Rect = rect;
+
+				world(math.Multiply(crop, math.Multiply(oblique(projection, near), math.Multiply(view, reflection))), [2 * d * n[0], 2 * d * n[1], 2 * d * n[2]], !!one.Small);
 
 				renderer.Winding(false);
 
@@ -4884,6 +5059,12 @@ Elemenx.Component('Scene', {
 
 				target.Drawn = true;
 			});
+
+			/* The sea at high and ultra, the eye over it: the world mirrored by its level, as fine as half the screen, at every frame. */
+			if (scene.Ground && scene.Ground.Field.Water && !scene.Camera.Ortho && (level === 'high' || level === 'ultra') && scene.Eye[1] > 0.3 && !scene.Ground.Under) {
+				keys.sea = true;
+				made.sea = seaMirror(kept, projection, view, world);
+			}
 
 			/* What no longer reflects lets its picture go. */
 			Object.keys(kept).forEach(function (id) {
@@ -4895,6 +5076,134 @@ Elemenx.Component('Scene', {
 			});
 
 			return made;
+		}
+
+		/*
+		 * The picture of the sea: the world drawn again as the level of the sea mirrors it, cut at it (what is under the water
+		 * is not in it), at half the size of the screen. The waves bend it as it is read (Reflection of the water).
+		 */
+		function seaMirror (kept, projection, view, world) {
+			var target = kept.sea;
+			var width = Math.max(1, renderer.Width >> 1);
+			var height = Math.max(1, renderer.Height >> 1);
+			var d = -scene.Eye[1];
+			var reflection = [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 2 * d, 0, 1];
+			var inverse = math.Invert(view);
+			var plane = [0, -1, 0, d];
+			var near = [0, 1, 2, 3].map(function (row) {
+				return inverse[row * 4] * plane[0] + inverse[row * 4 + 1] * plane[1] + inverse[row * 4 + 2] * plane[2] + inverse[row * 4 + 3] * plane[3];
+			});
+
+			if (!target || target.Width !== width || target.Height !== height) {
+				if (target)
+					target.Destroy();
+
+				target = kept.sea = renderer.Target(width, height, {Depth: true, Float: true, Mipmaps: true});
+			}
+
+			target.Begin();
+
+			renderer.Clear([0, 0, 0, 1]);
+			renderer.Winding(true);
+
+			target.Rect = [-1, -1, 1, 1];
+
+			world(math.Multiply(oblique(projection, near), math.Multiply(view, reflection)), [0, 2 * d, 0], false);
+
+			renderer.Winding(false);
+
+			target.End();
+
+			target.Drawn = true;
+
+			return target;
+		}
+
+		/*
+		 * The part of the screen a mirror covers, [x0, y0, x1, y1] from -1 to 1, a few pixels round it: the corners of its pane
+		 * (half as wide again for the glass of a model, which may reach past it) through vp; the whole screen when a corner is
+		 * behind the eye.
+		 */
+		function screenRect (one, vp) {
+			var reach = one.Glass ? 0.8 : 0.5;
+			var m = one.Pane.Model;
+			var low = [Infinity, Infinity];
+			var high = [-Infinity, -Infinity];
+			var margin = [8 / Math.max(1, renderer.Width), 8 / Math.max(1, renderer.Height)];
+			var behind = false;
+
+			[[-reach, -reach], [reach, -reach], [reach, reach], [-reach, reach]].forEach(function (corner) {
+				var p = [m[0] * corner[0] + m[8] * corner[1] + m[12], m[1] * corner[0] + m[9] * corner[1] + m[13], m[2] * corner[0] + m[10] * corner[1] + m[14]];
+				var w = vp[3] * p[0] + vp[7] * p[1] + vp[11] * p[2] + vp[15];
+				var x = (vp[0] * p[0] + vp[4] * p[1] + vp[8] * p[2] + vp[12]) / w;
+				var y = (vp[1] * p[0] + vp[5] * p[1] + vp[9] * p[2] + vp[13]) / w;
+
+				if (w < 0.02)
+					behind = true;
+
+				low = [Math.min(low[0], x), Math.min(low[1], y)];
+				high = [Math.max(high[0], x), Math.max(high[1], y)];
+			});
+
+			if (behind)
+				return [-1, -1, 1, 1];
+
+			low = [Math.max(-1, low[0] - margin[0]), Math.max(-1, low[1] - margin[1])];
+			high = [Math.min(1, high[0] + margin[0]), Math.min(1, high[1] + margin[1])];
+
+			if (high[0] - low[0] < 0.01 || high[1] - low[1] < 0.01) return [-1, -1, 1, 1];
+
+			return [low[0], low[1], high[0], high[1]];
+		}
+
+		/*
+		 * The plane a mirror reflects by: its own; that of a mirror of a car turned, while the eye is in the car, as a driver
+		 * sets it: what the eye sees in it is level (the way it would look, its height left out), and straight back for one
+		 * that sees as a camera (Back): the eye is not before the middle of the car, the camera is.
+		 */
+		function aimed (one) {
+			var look;
+			var seen;
+			var level;
+
+			if (!one.Small || (scene.Inside || 0) < 0.5) return one.Pane.Normal;
+
+			look = vectors.Normalize(one.At);
+			seen = one.Back || vectors.Subtract(look, vectors.Scale(one.Pane.Normal, 2 * vectors.Dot(look, one.Pane.Normal)));
+			level = [seen[0], 0, seen[2]];
+
+			if (vectors.Length(level) < 0.1) return one.Pane.Normal;
+
+			return vectors.Normalize(vectors.Subtract(vectors.Normalize(level), look));
+		}
+
+		/* Where the picture of a mirror lies on the screen ([x0, y0, x1, y1] in -1 to 1): it holds that part of the view alone. */
+		function rectOf (target) {
+			return target && target.Rect || [-1, -1, 1, 1];
+		}
+
+		/* The program of the glass of a mirror of a model: the shader of copies (of skeletons for a skinned one), its picture in its shape. */
+		function mirrorGlass (list) {
+			if (list.Skinned) {
+				gpu.MirrorGlassSkinned = gpu.MirrorGlassSkinned || renderer.Program(shaders.Skinned, shaders.MirrorGlass);
+
+				return gpu.MirrorGlassSkinned;
+			}
+
+			gpu.MirrorGlass = gpu.MirrorGlass || renderer.Program(shaders.Instanced, shaders.MirrorGlass);
+
+			return gpu.MirrorGlass;
+		}
+
+		/* The uniforms of the glass of a mirror of the car driven (key car:<id>:<index>): its picture and its settings. */
+		function mirrorValues (key, target) {
+			var parts = key.split(':');
+			var car = scene.Objects[parts[1]];
+			var mirror = car && car.Values.Vehicle && (car.Values.Vehicle.Mirrors || [])[Number(parts[2])] || {};
+
+			var pane = car ? carPane(car, mirror) : null;
+
+			return {uMirror: target.Textures[0], uRect: rectOf(target), uScreen: [renderer.Width, renderer.Height], uTint: paint(mirror.Tint || '#ffffff').slice(0, 3), uBlur: Math.max(0, Math.min(1, number(mirror.Blur, 0))), uStrength: Math.max(0, Math.min(1, number(mirror.Strength, 0.92))), uAsCamera: target.Rect ? 0 : 1, uCenter: pane ? vectors.Subtract(pane.Center, scene.Eye) : [0, 0, 0], uRight: pane ? pane.Right : [1, 0, 0], uUp: pane ? pane.Up : [0, 1, 0], uSize: pane ? [pane.Width, pane.Height] : [1, 1]};
 		}
 
 		/*
@@ -4917,14 +5226,14 @@ Elemenx.Component('Scene', {
 				if (mirror) {
 					pane = paneOf(object, mirror);
 
-					renderer.Draw(gpu.Pane, gpu.Mirror, uniforms({uModel: pane.Model, uMirror: mirrored[object.ID] ? mirrored[object.ID].Textures[0] : white, uOn: mirrored[object.ID] ? 1 : 0, uScreen: [renderer.Width, renderer.Height], uSize: [pane.Width, pane.Height], uSkyLight: ground.SkyLight, uTint: paint(mirror.Tint || '#ffffff').slice(0, 3), uBlur: Math.max(0, Math.min(1, number(mirror.Blur, 0))), uStrength: Math.max(0, Math.min(1, number(mirror.Strength, 0.92)))}), {Cull: 'none'});
+					renderer.Draw(gpu.Pane, gpu.Mirror, uniforms({uModel: pane.Model, uMirror: mirrored[object.ID] ? mirrored[object.ID].Textures[0] : white, uOn: mirrored[object.ID] ? 1 : 0, uScreen: [renderer.Width, renderer.Height], uRect: rectOf(mirrored[object.ID]), uAsCamera: 0, uSize: [pane.Width, pane.Height], uSkyLight: ground.SkyLight, uTint: paint(mirror.Tint || '#ffffff').slice(0, 3), uBlur: Math.max(0, Math.min(1, number(mirror.Blur, 0))), uStrength: Math.max(0, Math.min(1, number(mirror.Strength, 0.92)))}), {Cull: 'none'});
 				}
 
 				if (glass) {
 					later.push(function () {
 						pane = paneOf(object, glass);
 
-						renderer.Draw(gpu.Pane, gpu.Glass, uniforms({uModel: pane.Model, uSize: [pane.Width, pane.Height], uMirror: mirrored[object.ID] ? mirrored[object.ID].Textures[0] : white, uOn: mirrored[object.ID] ? 1 : 0, uScreen: [renderer.Width, renderer.Height], uTint: paint(glass.Tint || '#cfe6f0').slice(0, 3), uClarity: Math.max(0, Math.min(1, number(glass.Clarity, 0.88))), uFrost: Math.max(0, Math.min(1, number(glass.Frost, 0))), uReflect: Math.max(0, Math.min(1, number(glass.Reflect, 0.35))), uSun: ground.Sun, uSunColor: ground.SunColor, uSkyLight: ground.SkyLight}), {Blend: 'over', DepthWrite: false, Cull: 'none'});
+						renderer.Draw(gpu.Pane, gpu.Glass, uniforms({uModel: pane.Model, uSize: [pane.Width, pane.Height], uMirror: mirrored[object.ID] ? mirrored[object.ID].Textures[0] : white, uOn: mirrored[object.ID] ? 1 : 0, uScreen: [renderer.Width, renderer.Height], uRect: rectOf(mirrored[object.ID]), uTint: paint(glass.Tint || '#cfe6f0').slice(0, 3), uClarity: Math.max(0, Math.min(1, number(glass.Clarity, 0.88))), uFrost: Math.max(0, Math.min(1, number(glass.Frost, 0))), uReflect: Math.max(0, Math.min(1, number(glass.Reflect, 0.35))), uSun: ground.Sun, uSunColor: ground.SunColor, uSkyLight: ground.SkyLight}), {Blend: 'over', DepthWrite: false, Cull: 'none'});
 					});
 				}
 			});
@@ -4936,8 +5245,11 @@ Elemenx.Component('Scene', {
 			(car.Values.Vehicle.Mirrors || []).forEach(function (mirror, index) {
 				var key = 'car:' + car.ID + ':' + index;
 				var pane = carPane(car, mirror);
+				/* A mirror whose glass the model has shows its picture in that glass: no pane. */
+				var shapes = car.Values.Vehicle.MirrorShapes;
+				if (shapes && shapes[index] && shapes[index].Glass) return;
 
-				renderer.Draw(gpu.Pane, gpu.Mirror, uniforms({uModel: pane.Model, uMirror: mirrored[key] ? mirrored[key].Textures[0] : white, uOn: mirrored[key] ? 1 : 0, uScreen: [renderer.Width, renderer.Height], uSize: [pane.Width, pane.Height], uSkyLight: ground.SkyLight, uTint: paint(mirror.Tint || '#ffffff').slice(0, 3), uBlur: Math.max(0, Math.min(1, number(mirror.Blur, 0))), uStrength: Math.max(0, Math.min(1, number(mirror.Strength, 0.85)))}), {Cull: 'none'});
+				renderer.Draw(gpu.Pane, gpu.Mirror, uniforms({uModel: pane.Model, uMirror: mirrored[key] ? mirrored[key].Textures[0] : white, uOn: mirrored[key] ? 1 : 0, uScreen: [renderer.Width, renderer.Height], uRect: rectOf(mirrored[key]), uAsCamera: mirrored[key] && !mirrored[key].Rect ? 1 : 0, uSize: [pane.Width, pane.Height], uSkyLight: ground.SkyLight, uTint: paint(mirror.Tint || '#ffffff').slice(0, 3), uBlur: Math.max(0, Math.min(1, number(mirror.Blur, 0))), uStrength: Math.max(0, Math.min(1, number(mirror.Strength, 0.85)))}), {Cull: 'none'});
 			});
 
 			gpu.ScreenProgram = gpu.ScreenProgram || renderer.Program(shaders.PaneVertex, shaders.Screen);
@@ -5196,7 +5508,7 @@ Elemenx.Component('Scene', {
 			var settings = trait(scene.Objects[ground.ID], 'Terrain');
 			var own = settings && settings.Blueprint ? blueprinted(settings, 'Land', ground.ID) : null;
 			var program = own ? gpu.LandOf(own) : gpu.Land;
-			var land = Object.assign({uViewProjection: matrix, uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog, uSkyLight: ground.SkyLight, uFloorLight: ground.FloorLight, uWet: ground.Air.Wet, uSnowed: ground.Air.Cover || 0, uRainDrops: ground.Air.Rain, uTime2: scene.Seconds % 1000}, shade, own ? own.Made.Values(settings.Parameters || {}, {Time: scene.Seconds % 3000}) : null, self.LandValues(scene.Seconds));
+			var land = Object.assign({uViewProjection: matrix, uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog, uSea: field.Water ? 1 : 0, uSkyLight: ground.SkyLight, uFloorLight: ground.FloorLight, uWet: ground.Air.Wet, uSnowed: ground.Air.Cover || 0, uRainDrops: ground.Air.Rain, uTime2: scene.Seconds % 1000}, shade, own ? own.Made.Values(settings.Parameters || {}, {Time: scene.Seconds % 3000}) : null, self.LandValues(scene.Seconds));
 
 			nodes.forEach(function (node) {
 				land.uOffset = vectors.Subtract(node.Center, scene.Eye);
@@ -5649,8 +5961,12 @@ Elemenx.Component('Scene', {
 		}
 
 		function frame (now, quiet) {
-			/* The time of the game keeps to the clock on a slow machine too (up to a second, a page may have slept); what eases takes small steps. */
-			var spent = scene.Last ? Math.min(1, (now - scene.Last) / 1000) : 0;
+			/*
+			 * The time of the game keeps to the clock on a slow machine too (up to a second, a page may have slept); what eases
+			 * takes small steps. A clock that goes back (a frame given an earlier time) is no time: what eases backwards ran
+			 * away to no number at all, and the view with it.
+			 */
+			var spent = scene.Last ? Math.max(0, Math.min(1, (now - scene.Last) / 1000)) : 0;
 			var elapsed = Math.min(0.1, spent);
 
 			scene.Last = now;
@@ -5695,6 +6011,9 @@ Elemenx.Component('Scene', {
 			else aim(elapsed);
 
 			engine.TriggersStep();
+
+			if (engine.RigsStep)
+				engine.RigsStep(elapsed);
 
 			if (!quiet && renderer && !renderer.Lost && scene.Width && scene.Height) {
 				draw();
@@ -7280,6 +7599,10 @@ Elemenx.Component('Scene', {
 		add('mirrored', 'Mix');
 		add('lit', 'Add');
 		add('foam', 'Foam');
+		add('under', 'Under');
+		add('absorb', 'Absorb');
+		add('cover', 'Max');
+		add('below', 'Below');
 		add('reflection', 'Reflection');
 		add('fog', 'WaterFog');
 		add('base', 'Number', {Value: 0.86});
@@ -7302,8 +7625,16 @@ Elemenx.Component('Scene', {
 		link('view', 'View', 'sky', 'View');
 		link('flow', 'Speed', 'body', 'Speed');
 
-		/* mix(body, sky, fresnel) + the sun, white where it rushes, what is round it, the fog. */
-		link('body', 'Color', 'mirrored', 'A');
+		/* What is under it, through it, its light taken as it is deep (the body of the water where it is deep, or where nothing is seen through it). */
+		link('normal', 'Normal', 'under', 'Normal');
+		link('under', 'Color', 'absorb', 'Color');
+		link('under', 'Depth', 'absorb', 'Depth');
+		link('under', 'Cover', 'absorb', 'Cover');
+		link('body', 'Color', 'absorb', 'Body');
+		link('under', 'Depth', 'foam', 'Shore');
+
+		/* mix(that, sky, fresnel) + the sun, white where it rushes, what is round it, the fog. */
+		link('absorb', 'Color', 'mirrored', 'A');
 		link('sky', 'Color', 'mirrored', 'B');
 		link('fresnel', 'Fresnel', 'mirrored', 'T');
 		link('mirrored', 'Out', 'lit', 'A');
@@ -7315,14 +7646,21 @@ Elemenx.Component('Scene', {
 		link('view', 'View', 'reflection', 'View');
 		link('fresnel', 'Fresnel', 'reflection', 'Fresnel');
 		link('reflection', 'Color', 'fog', 'Color');
-		link('fog', 'Color', 'end', 'Color');
+		link('fog', 'Color', 'below', 'Color');
+		link('normal', 'Normal', 'below', 'Normal');
+		link('below', 'Color', 'end', 'Color');
 
 		/* 0.86 + fresnel * 0.14 */
 		link('fresnel', 'Fresnel', 'facing', 'A');
 		link('more', 'Value', 'facing', 'B');
 		link('base', 'Value', 'alpha', 'A');
 		link('facing', 'Out', 'alpha', 'B');
-		link('alpha', 'Out', 'end', 'Alpha');
+
+		/* Whole where it draws what is under it itself. */
+		link('alpha', 'Out', 'cover', 'A');
+		link('under', 'Cover', 'cover', 'B');
+		link('cover', 'Out', 'below', 'Alpha');
+		link('below', 'Alpha', 'end', 'Alpha');
 
 		graph.blocks.forEach(function (block, index) {
 			block.x = 40 + index % 6 * 220;
@@ -7576,7 +7914,7 @@ Elemenx.Component('Scene', {
 		var graph = blueprints.Create('land', {name: 'Land'});
 		var ids = {};
 
-		[['point', 'LandPoint'], ['grain', 'LandGrain'], ['pools', 'LandPools'], ['albedo', 'LandAlbedo'], ['paint', 'LandPaint'], ['light', 'LandLight'], ['sheen', 'LandSheen'], ['compose', 'LandCompose'], ['end', 'LandEnd']].forEach(function (pair) {
+		[['point', 'LandPoint'], ['grain', 'LandGrain'], ['pools', 'LandPools'], ['albedo', 'LandAlbedo'], ['paint', 'LandPaint'], ['light', 'LandLight'], ['caustics', 'LandCaustics'], ['sheen', 'LandSheen'], ['compose', 'LandCompose'], ['end', 'LandEnd']].forEach(function (pair) {
 			ids[pair[0]] = blueprints.Add(graph, pair[1], {id: pair[0]}).id;
 		});
 
@@ -7588,7 +7926,8 @@ Elemenx.Component('Scene', {
 			['albedo', 'Albedo', 'paint', 'Albedo'], ['point', 'Place', 'paint', 'Place'], ['point', 'Normal', 'paint', 'Normal'],
 			['point', 'World', 'light', 'World'], ['paint', 'Normal', 'light', 'Normal'],
 			['point', 'World', 'sheen', 'World'], ['paint', 'Normal', 'sheen', 'Normal'], ['pools', 'Water', 'sheen', 'Water'], ['pools', 'Pool', 'sheen', 'Pool'],
-			['point', 'World', 'compose', 'World'], ['paint', 'Albedo', 'compose', 'Albedo'], ['light', 'Light', 'compose', 'Light'], ['sheen', 'Sheen', 'compose', 'Sheen'], ['light', 'Sunlit', 'compose', 'Sunlit'], ['paint', 'Glow', 'compose', 'Glow'], ['pools', 'Pool', 'compose', 'Pool'],
+			['point', 'Place', 'caustics', 'Place'], ['light', 'Light', 'caustics', 'Light'], ['light', 'Sunlit', 'caustics', 'Sunlit'],
+			['point', 'World', 'compose', 'World'], ['paint', 'Albedo', 'compose', 'Albedo'], ['caustics', 'Light', 'compose', 'Light'], ['sheen', 'Sheen', 'compose', 'Sheen'], ['light', 'Sunlit', 'compose', 'Sunlit'], ['paint', 'Glow', 'compose', 'Glow'], ['pools', 'Pool', 'compose', 'Pool'],
 			['compose', 'Color', 'end', 'Color'], ['compose', 'Alpha', 'end', 'Alpha']
 		].forEach(function (one) {
 			blueprints.Link(graph, [ids[one[0]], one[1]], [ids[one[2]], one[3]]);
@@ -7799,6 +8138,58 @@ Elemenx.Component('Scene', {
 				'}'
 			].join('\n'),
 
+			/*
+			 * The water: a sea of Gerstner waves (SceneWaves) over a grid round the eye, finer near it, its corners where
+			 * the waves take them, calmer where it is shallow (uFloor, the heights of the ground over its size: uFloorSize
+			 * [size, on]); a lake or a river (uWaves 0) flat where its mesh lays it. vSurface: the normal of the waves, vCrest
+			 * where they break.
+			 */
+			SeaVertex: head + [
+				'in vec3 aPosition;',
+				'in vec3 aColor;',
+				'uniform mat4 uModel;',
+				'uniform mat4 uViewProjection;',
+				'uniform vec3 uEye;',
+				'uniform float uWaves;',
+				'uniform sampler2D uFloor;',
+				'uniform vec2 uFloorSize;',
+				this.$Service('SceneWaves').GLSL,
+				'out vec3 vWorld;',
+				'out vec3 vColor;',
+				'out vec3 vSurface;',
+				'out float vCrest;',
+				'void main() {',
+				'	vColor = aColor;',
+				'	vSurface = vec3(0.0, 1.0, 0.0);',
+				'	vCrest = 0.0;',
+				'	if (uWaves < 0.5) {',
+				'		vec4 level = uModel * vec4(aPosition, 1.0);',
+				'		vWorld = level.xyz;',
+				'		gl_Position = uViewProjection * level;',
+				'		return;',
+				'	}',
+				'	vec2 place = aPosition.xz + uEye.xz;',
+				'	float far = length(aPosition.xz);',
+				/* How deep the water is there: the waves die away where it is shallow. */
+				'	float fade = 1.0;',
+				'	if (uFloorSize.y > 1.5) {',
+				'		vec2 at = clamp((place / uFloorSize.x + 0.5) * (uFloorSize.y - 1.0), vec2(0.0), vec2(uFloorSize.y - 1.001));',
+				'		ivec2 cell = ivec2(floor(at));',
+				'		vec2 t = at - vec2(cell);',
+				'		float a = mix(texelFetch(uFloor, cell, 0).r, texelFetch(uFloor, cell + ivec2(1, 0), 0).r, t.x);',
+				'		float b = mix(texelFetch(uFloor, cell + ivec2(0, 1), 0).r, texelFetch(uFloor, cell + ivec2(1, 1), 0).r, t.x);',
+				'		fade = smoothstep(0.0, 6.0, -mix(a, b, t.y));',
+				'	}',
+				'	vec3 normal;',
+				'	float crest;',
+				'	vec3 moved = gerstner(place, far, fade, normal, crest);',
+				'	vSurface = normal;',
+				'	vCrest = crest;',
+				'	vWorld = vec3(aPosition.x + moved.x, moved.y - uEye.y, aPosition.z + moved.z);',
+				'	gl_Position = uViewProjection * vec4(vWorld, 1.0);',
+				'}'
+			].join('\n'),
+
 			Instanced: head + [
 				'in vec3 aPosition;',
 				'in vec3 aNormal;',
@@ -7958,21 +8349,54 @@ Elemenx.Component('Scene', {
 				'in vec2 vUV;',
 				'uniform sampler2D uMirror;',
 				'uniform vec2 uScreen;',
+				'uniform vec4 uRect;',
 				'uniform vec2 uSize;',
 				'uniform vec3 uTint;',
 				'uniform vec3 uSkyLight;',
 				'uniform float uBlur;',
 				'uniform float uStrength;',
 				'uniform float uOn;',
+				/* A mirror that sees as a camera: its picture by the place on the pane, the sides turned. */
+				'uniform float uAsCamera;',
 				'out vec4 outColor;',
 				'void main() {',
-				'	vec3 seen = textureLod(uMirror, gl_FragCoord.xy / uScreen, uBlur * 6.0).rgb;',
+				'	vec2 at = uAsCamera > 0.5 ? vec2(1.0 - vUV.x, vUV.y) : (gl_FragCoord.xy / uScreen * 2.0 - 1.0 - uRect.xy) / (uRect.zw - uRect.xy);',
+				'	vec3 seen = textureLod(uMirror, at, uBlur * 6.0).rgb;',
 				'	float front = step(0.0, dot(vNormal, -vWorld));',
 				'	vec2 edge = min(vUV, 1.0 - vUV) * uSize;',
 				'	float bevel = 1.0 - smoothstep(0.012, 0.03, min(edge.x, edge.y));',
 				'	vec3 back = vec3(0.04, 0.04, 0.045);',
 				'	vec3 face = seen * uTint * uStrength + back * (1.0 - uStrength);',
 				'	outColor = vec4(mix(back, mix(face, uSkyLight * 1.4 + 0.08, bevel * 0.7), front * uOn), 1.0);',
+				'}'
+			].join('\n'),
+
+			/*
+			 * The glass of a mirror of a model (drawn by the shader of copies): its picture where it is on the screen, in the
+			 * shape of the glass, softened by Blur and tinted; it moves with the car, as what moves is told to the frames.
+			 */
+			MirrorGlass: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'uniform sampler2D uMirror;',
+				'uniform vec2 uScreen;',
+				'uniform vec4 uRect;',
+				'uniform vec3 uTint;',
+				'uniform float uBlur;',
+				'uniform float uStrength;',
+				/* A mirror that sees as a camera: its picture by the place on its pane (its middle, its axes and its size), the sides turned. */
+				'uniform float uAsCamera;',
+				'uniform vec3 uCenter;',
+				'uniform vec3 uRight;',
+				'uniform vec3 uUp;',
+				'uniform vec2 uSize;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	vec3 off = vWorld - uCenter;',
+				'	vec2 at = uAsCamera > 0.5 ? vec2(0.5 - dot(off, uRight) / uSize.x, 0.5 + dot(off, uUp) / uSize.y) : (gl_FragCoord.xy / uScreen * 2.0 - 1.0 - uRect.xy) / (uRect.zw - uRect.xy);',
+				'	vec3 seen = textureLod(uMirror, at, uBlur * 6.0).rgb;',
+				'	vec3 back = vec3(0.04, 0.04, 0.045);',
+				'	outColor = vec4(seen * uTint * uStrength + back * (1.0 - uStrength), 0.0);',
 				'}'
 			].join('\n'),
 
@@ -7987,6 +8411,7 @@ Elemenx.Component('Scene', {
 				'in vec2 vUV;',
 				'uniform sampler2D uMirror;',
 				'uniform vec2 uScreen;',
+				'uniform vec4 uRect;',
 				'uniform float uOn;',
 				'uniform vec2 uSize;',
 				'uniform vec3 uTint;',
@@ -8006,7 +8431,7 @@ Elemenx.Component('Scene', {
 				'	vec3 r = reflect(-v, n);',
 				'	float glint = pow(max(dot(r, uSun), 0.0), mix(600.0, 24.0, uFrost)) * mix(6.0, 0.6, uFrost);',
 				'	vec3 sky = uSkyLight * (0.7 + 0.6 * max(r.y, 0.0)) + vec3(0.18, 0.22, 0.28) * max(r.y, 0.0);',
-				'	sky = mix(sky, textureLod(uMirror, gl_FragCoord.xy / uScreen, uFrost * 6.0).rgb, uOn * front);',
+				'	sky = mix(sky, textureLod(uMirror, (gl_FragCoord.xy / uScreen * 2.0 - 1.0 - uRect.xy) / (uRect.zw - uRect.xy), uFrost * 6.0).rgb, uOn * front);',
 				'	vec2 side = min(vUV, 1.0 - vUV) * uSize;',
 				'	float rim = 1.0 - smoothstep(0.01, 0.035, min(side.x, side.y));',
 				'	vec3 color = uTint * (0.08 + uFrost * 0.55) * (uSkyLight + 0.3) + sky * uReflect * fresnel * 3.0 + uSunColor * glint + uTint * rim * 0.35;',
@@ -8740,6 +9165,8 @@ Elemenx.Component('Scene', {
 				'uniform float uSnowed;',
 				'uniform float uRainDrops;',
 				'uniform float uTime2;',
+				/* 1 where the ground has a sea: under its level the light of the waves plays on it. */
+				'uniform float uSea;',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				graphics.Chunks.Shadow,
@@ -8757,6 +9184,8 @@ Elemenx.Component('Scene', {
 
 			Sea: head + [
 				'in vec3 vWorld;',
+				'in vec3 vSurface;',
+				'in float vCrest;',
 				'uniform vec3 uSun;',
 				'uniform vec3 uSunColor;',
 				'uniform vec4 uAir;',
@@ -8764,7 +9193,11 @@ Elemenx.Component('Scene', {
 				'uniform mat4 uViewProjection;',
 				'uniform sampler2D uSeen;',
 				'uniform sampler2D uSeenDepth;',
+				'uniform mat4 uSeenInverse;',
 				'uniform float uMirror;',
+				'uniform sampler2D uPlanar;',
+				'uniform float uPlanarOn;',
+				'uniform float uEyeUnder;',
 				'uniform vec3 uEye;',
 				'uniform float uTime;',
 				'uniform float uDay;',
@@ -8796,6 +9229,13 @@ Elemenx.Component('Scene', {
 				'		}',
 				'	}',
 				'	return vec4(0.0);',
+				'}',
+				/* How thick the water is along the ray to a point of the screen, from where it is (far from the eye): what the scene had there, behind it. */
+				'float underDepth(vec2 screen, float far) {',
+				'	float depth = texture(uSeenDepth, screen).r;',
+				'	if (depth >= 1.0) return 1000.0;',
+				'	vec4 at = uSeenInverse * vec4(screen * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);',
+				'	return length(at.xyz / at.w) - far;',
 				'}',
 				/* The water: the graph of water of the scene (WaterGraph, else the one of the library) in this place. */
 				'void blueprintWater(inout vec3 color, inout float alpha) {}',

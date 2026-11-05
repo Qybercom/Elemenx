@@ -321,4 +321,23 @@ describe('Contract: TabGroup and TabSplit', function () {
 		expect(groups(root).sort()).toEqual(['one.js=Changed', 'one.js=Changed', 'two.js=Two'].sort());
 		expect(copies.length).toBe(1);
 	});
+	/* A layout kept by its owner pins the tabs declared Pinned already: they were pinned once more, twice in the strip. */
+	it('a layout given that pins a tab declared Pinned keeps it once', async function () {
+		var host = mount('<div style="height: 200px"><TabSplit [layout]="Saved"><Tab ID="home" Label="Home" Pinned="true">Home</Tab><Tab ID="one" Label="one.js">One</Tab></TabSplit></div>', {
+			Saved: {Group: 'main', Tabs: ['home', 'one'], Active: 'one', Pinned: ['home']}
+		});
+		var split;
+
+		await waitFor(function () {
+			return labels(host.$Element()).length >= 2;
+		});
+
+		await tick(50);
+
+		split = Elemenx.Instance(host.$Element().querySelector('.elemenx-tab-split'));
+
+		expect(labels(host.$Element())).toEqual(['Home', 'one.js']);
+		expect(split.Model().Pinned).toEqual(['home']);
+		expect(split.Model().Tabs).toEqual(['home', 'one']);
+	});
 });

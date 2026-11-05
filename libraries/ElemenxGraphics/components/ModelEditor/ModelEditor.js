@@ -17,6 +17,11 @@
  * network or an algorithm: its field asks it for a recipe, which takes the place of the one edited (Undo brings it back).
  * Load(document), Document(), Recipe(), Select(id), Add(shape, props), Remove(id), Undo(), Redo(), Generate(description,
  * callback) and Scene() (the Scene) are its methods.
+ * Its tab Roles (Mode roles) sets what the parts of a model are (ModelRoles): of the model of the document (its recipe keeps
+ * them, Roles) or of a model of a file (RoleModel; ModelRoles keeps them). A role is added of a kind and picked in its list;
+ * in the view Pick takes a piece whole or lets it go, Brush paints the triangles of a piece round the pointer (Shift wipes
+ * them), Pivot sets the point it turns round; its parts show over the model, its fields are in the inspector, and Test moves
+ * it as a scene does. Roles() and SetRoles(roles) are those of the model edited; Undo takes back a change of them too.
  */
 Elemenx.Component('ModelEditor', {
 	$TemplateURL: 'ModelEditor.html',
@@ -29,7 +34,7 @@ Elemenx.Component('ModelEditor', {
 			change: 'The document changed: {Version, Name, Recipe}.',
 			select: 'The selected part changed: {ID}.'
 		},
-		Methods: ['Document()', 'Load(document)', 'Recipe()', 'Save()', 'Restore()', 'Export()', 'Import(text)', 'Model(format, variant)', 'Download(format)', 'Define(name)', 'Select(id)', 'Add(shape, props)', 'Remove(id)', 'Undo()', 'Redo()', 'Generate(description, callback)', 'Scene()'],
+		Methods: ['Document()', 'Load(document)', 'Recipe()', 'Roles()', 'SetRoles(roles)', 'Moded(mode)', 'Save()', 'Restore()', 'Export()', 'Import(text)', 'Model(format, variant)', 'Download(format)', 'Define(name)', 'Select(id)', 'Add(shape, props)', 'Remove(id)', 'Undo()', 'Redo()', 'Generate(description, callback)', 'Scene()'],
 		Props: {
 			Value: 'The document: {Version, Name, Recipe (a recipe of data of Models: Parts, Pieces, Group, Type, Size...)}.',
 			Variant: 'The variant shown: 0, the parts as they are; the others varied by their seed.',
@@ -38,7 +43,9 @@ Elemenx.Component('ModelEditor', {
 			SnapMove: 'The step of a move with Snap, in sizes of the model.',
 			SnapTurn: 'The step of a turn with Snap, in degrees.',
 			SnapScale: 'The step of a scale with Snap.',
-			Label: 'What it shows, for screen readers.'
+			Label: 'What it shows, for screen readers.',
+			Mode: {Options: ['shape', 'roles'], Description: 'The tab shown: the parts of the recipe (shape) or the roles of the parts of a model (roles).'},
+			RoleModel: 'In the tab Roles, a model of a file of SceneModels whose roles are edited (ModelRoles keeps them); empty: the one of the document (its recipe keeps them, Roles).'
 		}
 	},
 	Value: null,
@@ -66,6 +73,19 @@ Elemenx.Component('ModelEditor', {
 		{ID: 'turn', Icon: 'refresh', Key: 'graphics.modelEditor.turn', Hotkey: 'E'},
 		{ID: 'scale', Icon: 'maximize', Key: 'graphics.modelEditor.scale', Hotkey: 'R'}
 	],
+	Modes: [{ID: 'shape', Key: 'graphics.modelEditor.shape'}, {ID: 'roles', Key: 'graphics.modelEditor.roles'}],
+	RoleTools: [
+		{ID: 'pick', Icon: 'pointer', Key: 'graphics.modelEditor.pick'},
+		{ID: 'brush', Icon: 'edit', Key: 'graphics.modelEditor.brush'},
+		{ID: 'pivot', Icon: 'map-pin', Key: 'graphics.modelEditor.pivot'}
+	],
+	Mode: 'shape',
+	RoleModel: '',
+	RoleSelected: '',
+	RoleTool: 'pick',
+	RoleKind: 'door',
+	RoleTest: 0,
+	Brush: 0.03,
 	Shapes: ['box', 'wedge', 'cylinder', 'ball', 'blob', 'lathe'],
 	Formats: ['glb', 'gltf', 'fbx', 'obj'],
 	Rigs: ['', 'Biped', 'Quadruped', 'Tracked'],
@@ -168,6 +188,7 @@ Elemenx.Component('ModelEditor', {
 
 			self.Show();
 			self.Gizmo();
+			self.Marks();
 		}
 
 		if (!own.Frame)
@@ -187,10 +208,18 @@ Elemenx.Component('ModelEditor', {
 		if (!own.Dirty || !own.Scene) return;
 
 		own.Dirty = false;
+
+		if (this.RoleModel) {
+			if (own.Scene.Get('model')) own.Scene.Change('model', {Model: this.RoleModel});
+			else own.Scene.Add('thing', {ID: 'model', X: 0, Y: 0, Model: this.RoleModel, Size: this.Shown});
+
+			return;
+		}
+
 		own.Built++;
 		name = own.Key + '-' + own.Built;
 
-		models.Define(name, {Group: recipe.Group || '', Type: recipe.Type || '', Size: 1, Smooth: !!recipe.Smooth, Matte: recipe.Matte !== false, Build: function (tools) {
+		models.Define(name, {Group: recipe.Group || '', Type: recipe.Type || '', Size: 1, Smooth: !!recipe.Smooth, Matte: recipe.Matte !== false, Roles: recipe.Roles || [], Build: function (tools) {
 			return models.Assemble(recipe, tools, models.Random(String(recipe.Seed) + ':' + variant), variant);
 		}});
 
@@ -201,6 +230,21 @@ Elemenx.Component('ModelEditor', {
 			this.Forget(own.Name);
 
 		own.Name = name;
+	},
+
+	/* What was before a change made already (a stroke of the brush) kept for Undo. */
+	Push: function (before) {
+		var own = this.Own();
+
+		own.Past.push(before);
+
+		own.Future = [];
+
+		if (own.Past.length > 100)
+			own.Past.shift();
+
+		this.Past = own.Past.length;
+		this.Future = own.Future.length;
 	},
 
 	/* A model it made let go of: its recipe and what Models made of it. */
@@ -238,8 +282,18 @@ Elemenx.Component('ModelEditor', {
 		this.$Emit('change', this.Document());
 	},
 
+	/* What Undo brings back: the recipe, and the roles of the model of a file edited (if one is). */
 	Kept: function () {
-		return JSON.stringify(this.Own().Document.Recipe);
+		return JSON.stringify({Recipe: this.Own().Document.Recipe, Model: this.RoleModel, Roles: this.RoleModel ? this.$Service('ModelRoles').Get(this.RoleModel) : null});
+	},
+
+	Back: function (text) {
+		var kept = JSON.parse(text);
+
+		this.Own().Document.Recipe = kept.Recipe;
+
+		if (kept.Model)
+			this.$Service('ModelRoles').Set(kept.Model, kept.Roles || []);
 	},
 
 	Undo: function () {
@@ -248,7 +302,7 @@ Elemenx.Component('ModelEditor', {
 
 		own.Future.push(this.Kept());
 
-		own.Document.Recipe = JSON.parse(own.Past.pop());
+		this.Back(own.Past.pop());
 
 		this.Changed(null);
 	},
@@ -259,7 +313,7 @@ Elemenx.Component('ModelEditor', {
 
 		own.Past.push(this.Kept());
 
-		own.Document.Recipe = JSON.parse(own.Future.pop());
+		this.Back(own.Future.pop());
 
 		this.Changed(null);
 	},
@@ -587,12 +641,17 @@ Elemenx.Component('ModelEditor', {
 		var vary;
 		var piece;
 		var fields;
+		var roled = null;
 
 		if (!holder) return;
 
 		holder.textContent = '';
 
-		if (part) {
+		if (this.Mode === 'roles') {
+			roled = this.RoleFields(holder);
+			fields = roled.Fields || [];
+		}
+		else if (part) {
 			vary = part.Vary || {};
 			piece = recipe.Pieces.filter(function (one) {
 				return one.ID === (part.Piece || 'body');
@@ -646,6 +705,10 @@ Elemenx.Component('ModelEditor', {
 				input.type = 'color';
 				input.value = field[1];
 			}
+			else if (field[2] === 'readonly') {
+				input.readOnly = true;
+				input.value = field[1];
+			}
 			else {
 				input.value = field[2] === 'vector' ? (field[1] || []).join(', ') : field[1] === undefined || field[1] === null ? '' : String(field[1]);
 			}
@@ -660,6 +723,9 @@ Elemenx.Component('ModelEditor', {
 			label.appendChild(input);
 			holder.appendChild(label);
 		});
+
+		if (roled && roled.After)
+			holder.appendChild(roled.After);
 	},
 
 	/* A field changed: a number, a list of three, a list of words, JSON or a text; of the part, its piece or the model. */
@@ -681,6 +747,12 @@ Elemenx.Component('ModelEditor', {
 		}).filter(Boolean);
 		else if (field[2] === 'json') value = JSON.parse(text);
 		else value = text;
+
+		if (this.Mode === 'roles') {
+			this.RoleEdited(field, value);
+
+			return;
+		}
 
 		if (!part && key === 'Name') {
 			this.Own().Document.Name = value;
@@ -736,6 +808,681 @@ Elemenx.Component('ModelEditor', {
 		this.Change(this.Selected, changes);
 	},
 
+	/*
+	 * The tab Roles: what the parts of a model are (ModelRoles). The model is the one of the document (its roles in its
+	 * recipe, Roles: they go where it goes) or a model of a file of SceneModels (RoleModel: its roles kept by ModelRoles). A
+	 * role is picked in the list or added of a kind; its parts are set in the view: Pick takes a piece whole or lets it go,
+	 * Brush paints the triangles of a piece round the pointer (Shift wipes them off: the glass of a lamp in the body), Pivot
+	 * sets the point it turns round. The parts of the selected role show over the model, and Test moves it as a scene does.
+	 */
+
+	/* The tab shown: shape (the parts of the recipe) or roles. */
+	Moded: function (mode) {
+		var own = this.Own();
+
+		this.Mode = mode === 'roles' ? 'roles' : 'shape';
+
+		if (this.Mode === 'shape' && this.RoleModel) {
+			this.RoleModel = '';
+			own.Dirty = true;
+		}
+
+		this.Fields();
+
+		this.Version++;
+	},
+
+	/* The models of files of SceneModels: their roles are kept apart from any document. */
+	FileModels: function () {
+		var models = this.$Service('SceneModels');
+
+		return models.Names().filter(function (name) {
+			return !!models.Recipes[name].URL;
+		});
+	},
+
+	/* The model whose roles are edited: a model of a file, or the one shown of the document. */
+	RoleTarget: function () {
+		return this.RoleModel || this.Own().Name;
+	},
+
+	/* The roles of the model edited. */
+	Roles: function () {
+		var recipe = this.Own().Document.Recipe;
+
+		return this.RoleModel ? this.$Service('ModelRoles').Get(this.RoleModel) : JSON.parse(JSON.stringify(recipe.Roles || []));
+	},
+
+	/* The roles of the model edited set: in the recipe of the document (Undo brings them back), or kept for the model of a file. */
+	SetRoles: function (roles, before) {
+		var own = this.Own();
+		var given = JSON.parse(JSON.stringify(roles || []));
+
+		if (this.RoleModel) {
+			if (before) {
+				own.Past.push(before);
+
+				own.Future = [];
+			}
+
+			this.$Service('ModelRoles').Set(this.RoleModel, given);
+
+			this.Past = own.Past.length;
+			this.Future = own.Future.length;
+			this.Version++;
+
+			this.Fields();
+
+			return;
+		}
+
+		own.Document.Recipe.Roles = given;
+
+		this.Changed(before || null);
+	},
+
+	Role: function (id) {
+		return this.Roles().filter(function (role) {
+			return role.ID === id;
+		})[0] || null;
+	},
+
+	/* The list of the roles: their name or kind, how many parts each has. */
+	RoleList: function () {
+		return this.Roles().map(function (role) {
+			return {ID: role.ID, Label: (role.Name || role.ID) + ' · ' + role.Kind + ' · ' + (role.Parts || []).length};
+		});
+	},
+
+	/* The kinds a role is added of, by group. */
+	RoleKinds: function () {
+		var list = [];
+
+		this.$Service('ModelRoles').Kinds().forEach(function (group) {
+			group.Kinds.forEach(function (kind) {
+				list.push({ID: kind.ID, Label: group.ID + ' · ' + kind.ID});
+			});
+		});
+
+		return list;
+	},
+
+	RoleModelPicked: function (event) {
+		var own = this.Own();
+		var name = event.target.value;
+
+		this.RoleModel = name;
+		this.RoleSelected = '';
+		own.Dirty = true;
+
+		this.Fields();
+
+		this.Version++;
+	},
+
+	RoleKindPicked: function (event) {
+		this.RoleKind = event.target.value;
+	},
+
+	RolePicked: function (id) {
+		this.RoleSelected = this.Role(id) ? id : '';
+		this.RoleTest = 0;
+
+		this.Fields();
+
+		this.Version++;
+	},
+
+	/* A role of the kind chosen, selected at once: its parts are set next. */
+	RoleAdded: function () {
+		var roles = this.Roles();
+		var role = this.$Service('ModelRoles').Make(this.RoleKind || 'part');
+
+		roles.push(role);
+
+		this.SetRoles(roles, this.Kept());
+		this.RolePicked(role.ID);
+	},
+
+	RoleRemoved: function () {
+		var id = this.RoleSelected;
+		if (!id) return;
+
+		this.SetRoles(this.Roles().filter(function (role) {
+			return role.ID !== id;
+		}).map(function (role) {
+			if (role.Follow === id)
+				delete role.Follow;
+
+			return role;
+		}), this.Kept());
+
+		this.RolePicked('');
+	},
+
+	/* A role changed by a function given it, the rest as they are. */
+	RoleChange: function (id, change, before) {
+		this.SetRoles(this.Roles().map(function (role) {
+			if (role.ID === id)
+				change(role);
+
+			return role;
+		}), before);
+	},
+
+	PickRoleTool: function (tool) {
+		this.RoleTool = tool;
+	},
+
+	BrushSized: function (event) {
+		this.Brush = Math.max(0.002, Number(event.target.value) || 0.03);
+	},
+
+	/* The model in the view, its object, and the matrix from its own space to the world. */
+	RoleView: function () {
+		var scene = this.Own().Scene;
+		var math = this.$Service('Math');
+		var object = scene ? scene.Scene().Objects.model : null;
+		var models = this.$Service('SceneModels');
+		var name = this.RoleTarget();
+		var made;
+		var scale;
+		var base;
+
+		if (!object || !object.World || !name || !models.Has(name)) return null;
+
+		try {
+			made = models.Make(name);
+		}
+		catch (error) {
+			made = null;
+		}
+
+		if (!made)
+			return null;
+
+		scale = object.Scaled || [object.Size || 1, object.Size || 1, object.Size || 1];
+		base = math.Multiply(math.Translation(object.World[0], object.World[1], object.World[2]), math.Multiply(object.Turn || math.Identity(), math.Scaling(scale[0], scale[1], scale[2])));
+
+		return {Model: made, Object: object, Base: base, Inverse: math.Invert(base)};
+	},
+
+	/* A corner of a piece in the space of its model. */
+	Corner: function (piece, index) {
+		var seen = piece.Placed || piece.Geometry;
+		var p = seen.Positions;
+		var at = [p[index * 3], p[index * 3 + 1], p[index * 3 + 2]];
+
+		return piece.Rest ? this.$Service('Math').Apply(piece.Rest, at) : at;
+	},
+
+	/*
+	 * What of the model is under a point of the page: the piece (its own ID, as a role names it), the point met in the space
+	 * of the model, and the triangle; null where the ray meets nothing.
+	 */
+	RoleHit: function (clientX, clientY) {
+		var self = this;
+		var view = this.RoleView();
+		var math = this.$Service('Math');
+		var ray;
+		var origin;
+		var way;
+		var best = null;
+
+		if (!view)
+			return null;
+
+		ray = this.Own().Scene.Ray(clientX, clientY);
+		origin = math.Apply(view.Inverse, ray.Origin);
+		way = math.Apply(view.Inverse, [ray.Origin[0] + ray.Direction[0], ray.Origin[1] + ray.Direction[1], ray.Origin[2] + ray.Direction[2]]);
+		way = [way[0] - origin[0], way[1] - origin[1], way[2] - origin[2]];
+
+		view.Model.Pieces.forEach(function (piece) {
+			var indices = piece.Geometry.Indices;
+			var i;
+
+			for (i = 0; i + 2 < indices.length; i += 3) {
+				var a = self.Corner(piece, indices[i]);
+				var b = self.Corner(piece, indices[i + 1]);
+				var c = self.Corner(piece, indices[i + 2]);
+				var t = self.Meet(origin, way, a, b, c);
+				if (t !== null && (!best || t < best.T))
+					best = {T: t, Piece: piece.Origin || piece.ID, Triangle: [indices[i], indices[i + 1], indices[i + 2]], Point: [origin[0] + way[0] * t, origin[1] + way[1] * t, origin[2] + way[2] * t]};
+			}
+		});
+
+		return best;
+	},
+
+	/* Where a ray meets a triangle (Möller–Trumbore): how far along it, or null. */
+	Meet: function (origin, way, a, b, c) {
+		var e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+		var e2 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+		var p = [way[1] * e2[2] - way[2] * e2[1], way[2] * e2[0] - way[0] * e2[2], way[0] * e2[1] - way[1] * e2[0]];
+		var det = e1[0] * p[0] + e1[1] * p[1] + e1[2] * p[2];
+		var s;
+		var u;
+		var q;
+		var v;
+		var t;
+
+		if (Math.abs(det) < 1e-12) return null;
+
+		s = [origin[0] - a[0], origin[1] - a[1], origin[2] - a[2]];
+		u = (s[0] * p[0] + s[1] * p[1] + s[2] * p[2]) / det;
+
+		if (u < 0 || u > 1) return null;
+
+		q = [s[1] * e1[2] - s[2] * e1[1], s[2] * e1[0] - s[0] * e1[2], s[0] * e1[1] - s[1] * e1[0]];
+		v = (way[0] * q[0] + way[1] * q[1] + way[2] * q[2]) / det;
+
+		if (v < 0 || u + v > 1) return null;
+
+		t = (e2[0] * q[0] + e2[1] * q[1] + e2[2] * q[2]) / det;
+
+		return t > 0 ? t : null;
+	},
+
+	/* How tall the model is in its own space: the brush is a part of it. */
+	RoleHeight: function (view) {
+		var self = this;
+		var low = Infinity;
+		var high = -Infinity;
+
+		view.Model.Pieces.forEach(function (piece) {
+			var count = (piece.Placed || piece.Geometry).Positions.length / 3;
+			var step = Math.max(1, Math.floor(count / 200));
+			var i;
+
+			for (i = 0; i < count; i += step) {
+				var at = self.Corner(piece, i);
+
+				low = Math.min(low, at[1]);
+				high = Math.max(high, at[1]);
+			}
+		});
+
+		return high > low ? high - low : 1;
+	},
+
+	/*
+	 * What a press of a tool does to the selected role where the pointer is: Pick takes the piece whole or lets it go, Brush
+	 * paints (erase: wipes) the triangles of the piece round the point met, Pivot sets the point its hinge turns round.
+	 */
+	RoleTouch: function (hit, erase, before) {
+		var self = this;
+		var roles = this.$Service('ModelRoles');
+		var tool = this.RoleTool;
+		var view = this.RoleView();
+		var reach;
+		var touched = [];
+
+		if (!hit || !this.RoleSelected || !view) return;
+
+		if (tool === 'pivot') {
+			this.RoleChange(this.RoleSelected, function (role) {
+				role.Motion = Object.assign({}, role.Motion, {Pivot: hit.Point.map(function (value) {
+					return Math.round(value * 10000) / 10000;
+				})});
+			}, before);
+
+			return;
+		}
+
+		if (tool === 'pick') {
+			this.RoleChange(this.RoleSelected, function (role) {
+				var had = (role.Parts || []).some(function (part) {
+					return part.Piece === hit.Piece;
+				});
+
+				role.Parts = had ? role.Parts.filter(function (part) {
+					return part.Piece !== hit.Piece;
+				}) : (role.Parts || []).concat([{Piece: hit.Piece}]);
+			}, before);
+
+			return;
+		}
+
+		/* The brush: the triangle under it, and those of the piece with their middle or a corner within its reach. */
+		reach = this.Brush * this.RoleHeight(view);
+
+		view.Model.Pieces.forEach(function (piece) {
+			var indices = piece.Geometry.Indices;
+			var i;
+
+			if ((piece.Origin || piece.ID) !== hit.Piece) return;
+
+			for (i = 0; i + 2 < indices.length; i += 3) {
+				var a = self.Corner(piece, indices[i]);
+				var b = self.Corner(piece, indices[i + 1]);
+				var c = self.Corner(piece, indices[i + 2]);
+				var middle = [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3, (a[2] + b[2] + c[2]) / 3];
+				var under = indices[i] === hit.Triangle[0] && indices[i + 1] === hit.Triangle[1] && indices[i + 2] === hit.Triangle[2];
+				if (under || [a, b, c, middle].some(function (point) {
+					return Math.pow(point[0] - hit.Point[0], 2) + Math.pow(point[1] - hit.Point[1], 2) + Math.pow(point[2] - hit.Point[2], 2) <= reach * reach;
+				}))
+					touched.push(indices[i], indices[i + 1], indices[i + 2]);
+			}
+		});
+
+		if (!touched.length) return;
+
+		this.RoleChange(this.RoleSelected, function (role) {
+			var parts = role.Parts || [];
+			var part = parts.filter(function (each) {
+				return each.Piece === hit.Piece;
+			})[0];
+			var count = 0;
+			var have = {};
+			var list = [];
+
+			view.Model.Pieces.forEach(function (piece) {
+				if ((piece.Origin || piece.ID) === hit.Piece)
+					count = (piece.Placed || piece.Geometry).Positions.length / 3;
+			});
+
+			/* What it has now: the vertices of its ranges, or all of the piece. */
+			if (part && !part.Vertices) {
+				list = Array.apply(null, {length: count}).map(function (value, index) {
+					return index;
+				});
+			}
+			else if (part) {
+				part.Vertices.forEach(function (range) {
+					var i;
+
+					for (i = range[0]; i <= range[1]; i++)
+						list.push(i);
+				});
+			}
+
+			list.forEach(function (index) {
+				have[index] = true;
+			});
+
+			touched.forEach(function (index) {
+				if (erase) delete have[index];
+				else have[index] = true;
+			});
+
+			list = Object.keys(have).map(Number);
+
+			parts = parts.filter(function (each) {
+				return each.Piece !== hit.Piece;
+			});
+
+			if (list.length)
+				parts.push({Piece: hit.Piece, Vertices: list.length === count ? undefined : roles.Ranges(list)});
+
+			role.Parts = parts.map(function (each) {
+				return each.Vertices === undefined ? {Piece: each.Piece} : each;
+			});
+		}, before);
+	},
+
+	/* The selected role tried: the model in the view moved as a scene moves it, 0 to 1. */
+	RoleTried: function (value) {
+		var scene = this.Own().Scene;
+		var part = scene && this.RoleSelected ? scene.Part('model', this.RoleSelected) : null;
+
+		this.RoleTest = Number(value) || 0;
+
+		if (part)
+			part.Set(this.RoleTest);
+	},
+
+	/* The roles of every model of a file, as the text of a file; read back over those kept. */
+	RolesExported: function () {
+		this.Saved(this.$Service('ModelRoles').Export(), 'roles.json', 'application/json');
+	},
+
+	RolesImported: function (event) {
+		var self = this;
+		var file = event.target.files && event.target.files[0];
+		var reader;
+
+		if (!file) return;
+
+		reader = new FileReader();
+
+		reader.onload = function () {
+			self.$Service('ModelRoles').Import(String(reader.result));
+			self.Fields();
+
+			self.Version++;
+		};
+
+		reader.readAsText(file);
+	},
+
+	/*
+	 * The parts of the selected role over the model, its pivot and its axis, made again as the view or the roles change: the
+	 * triangles it takes, as many as show the shape of them (a few thousand).
+	 */
+	Marks: function () {
+		var self = this;
+		var svg = this.$Ref('Marks');
+		var holder = this.$Ref('View');
+		var scene = this.Own().Scene;
+		var math = this.$Service('Math');
+		var roles = this.$Service('ModelRoles');
+		var role = this.Mode === 'roles' && this.RoleSelected ? this.Role(this.RoleSelected) : null;
+		var view = role ? this.RoleView() : null;
+		var box;
+		var key;
+		var path = [];
+		var marks = [];
+		var budget = 4000;
+		var motion;
+		var pivot;
+		var end;
+
+		if (!svg) return;
+
+		if (!role || !view) {
+			if (svg.childNodes.length)
+				svg.textContent = '';
+
+			this.Own().Marked = '';
+
+			return;
+		}
+
+		key = JSON.stringify([role, scene.Viewpoint(), view.Model.Key, view.Object.Opens || {}, holder.clientWidth, holder.clientHeight]);
+
+		if (this.Own().Marked === key) return;
+
+		this.Own().Marked = key;
+		box = holder.getBoundingClientRect();
+
+		/* A point of a piece where the view shows it now: moved as its role moves it (Test). */
+		function at (point, moved) {
+			var spot = scene.Project(math.Apply(view.Base, moved ? math.Apply(moved, point) : point));
+
+			return spot.Visible ? (spot.X - box.left).toFixed(1) + ' ' + (spot.Y - box.top).toFixed(1) : null;
+		}
+
+		(role.Parts || []).forEach(function (part) {
+			view.Model.Pieces.forEach(function (piece) {
+				var indices = piece.Geometry.Indices;
+				var moved;
+				var step;
+				var i;
+
+				if ((piece.Origin || piece.ID) !== part.Piece) return;
+
+				moved = piece.Opening ? scene.Engine().OpeningMove(view.Object, piece) : null;
+				step = Math.max(3, Math.ceil(indices.length / 3 / budget) * 3);
+
+				for (i = 0; i + 2 < indices.length; i += step) {
+					if (part.Vertices && !(roles.Within(part.Vertices, indices[i]) && roles.Within(part.Vertices, indices[i + 1]) && roles.Within(part.Vertices, indices[i + 2]))) continue;
+
+					var a = at(self.Corner(piece, indices[i]), moved);
+					var b = at(self.Corner(piece, indices[i + 1]), moved);
+					var c = at(self.Corner(piece, indices[i + 2]), moved);
+					if (a && b && c)
+						path.push('M' + a + 'L' + b + 'L' + c + 'Z');
+				}
+			});
+		});
+
+		marks.push('<path class="elemenx-model-editor-role-part" d="' + path.join('') + '"></path>');
+
+		motion = role.Motion || {};
+
+		if (motion.Type === 'hinge' || motion.Type === 'spin') {
+			pivot = motion.Pivot || [0, 0, 0];
+			end = [pivot[0] + (motion.Axis || [0, 1, 0])[0] * 0.3, pivot[1] + (motion.Axis || [0, 1, 0])[1] * 0.3, pivot[2] + (motion.Axis || [0, 1, 0])[2] * 0.3];
+
+			if (at(pivot) && at(end))
+				marks.push('<path class="elemenx-model-editor-role-axis" d="M' + at(pivot) + 'L' + at(end) + '"></path><circle class="elemenx-model-editor-role-pivot" cx="' + at(pivot).split(' ')[0] + '" cy="' + at(pivot).split(' ')[1] + '" r="5"></circle>');
+		}
+
+		svg.innerHTML = marks.join('');
+	},
+
+	/* The fields of the selected role, or what to do with none. */
+	RoleFields: function (holder) {
+		var self = this;
+		var role = this.Role(this.RoleSelected);
+		var motion;
+		var light;
+		var fields;
+		var test;
+		var name;
+		var label;
+		var parts;
+		var vertices = 0;
+
+		if (!role) {
+			label = document.createElement('p');
+			label.className = 'elemenx-model-editor-hint';
+			label.textContent = Elemenx.Locale.Text('graphics.modelEditor.roleHint');
+
+			holder.appendChild(label);
+
+			return [];
+		}
+
+		motion = role.Motion || {};
+		light = role.Light || {};
+
+		(role.Parts || []).forEach(function (part) {
+			(part.Vertices || []).forEach(function (range) {
+				vertices += range[1] - range[0] + 1;
+			});
+		});
+
+		parts = (role.Parts || []).length + ' · ' + (vertices ? vertices : '—');
+
+		fields = [
+			['Role.ID', role.ID, 'text'], ['Role.Name', role.Name || '', 'text'], ['Role.Kind', role.Kind, this.RoleKinds().map(function (kind) {
+				return kind.ID;
+			})], ['Role.Parts', parts, 'readonly'],
+			['Motion.Type', motion.Type || 'none', ['hinge', 'slide', 'spin', 'glow', 'none']]
+		];
+
+		if (motion.Type === 'hinge' || motion.Type === 'spin')
+			fields.push(['Motion.Pivot', motion.Pivot || [0, 0, 0], 'vector'], ['Motion.Axis', motion.Axis || [0, 1, 0], 'vector']);
+
+		if (motion.Type === 'hinge')
+			fields.push(['Motion.Angle', motion.Angle === undefined ? 90 : motion.Angle, 'number'], ['Motion.Aside', motion.Aside, 'vector'], ['Motion.AsideAngle', motion.AsideAngle === undefined ? '' : motion.AsideAngle, 'number']);
+
+		if (motion.Type === 'slide')
+			fields.push(['Motion.Way', motion.Way || [0, -1, 0], 'vector'], ['Motion.Reach', motion.Reach === undefined ? 1 : motion.Reach, 'number']);
+
+		if (motion.Type === 'spin')
+			fields.push(['Motion.Speed', motion.Speed === undefined ? 1 : motion.Speed, 'number']);
+
+		if (motion.Type === 'glow')
+			fields.push(['Light.Kind', light.Kind || 'glow', ['head', 'rear', 'brake', 'reverse', 'indicator', 'glow']], ['Light.Color', light.Color || '#ffd9a0', 'color'], ['Light.Glow', light.Glow === undefined ? '' : light.Glow, 'number'], ['Light.Power', light.Power === undefined ? '' : light.Power, 'number'], ['Light.Radius', light.Radius === undefined ? '' : light.Radius, 'number'], ['Light.Spot', light.Spot === undefined ? '' : light.Spot, 'number']);
+
+		if (role.Kind === 'wheel' || role.Kind === 'caliper')
+			fields.push(['Role.Corner', role.Corner || 'FL', ['FL', 'FR', 'RL', 'RR']], ['Role.Held', !!role.Held, 'check']);
+
+		fields.push(['Role.Drive', role.Drive || '', ['', 'steer', 'gas', 'brake', 'hand', 'gear', 'sequential', 'paddle', 'indicator', 'wipers']], ['Role.Follow', role.Follow || '', [''].concat(this.Roles().map(function (each) {
+			return each.ID;
+		}).filter(function (id) {
+			return id !== role.ID;
+		}))], ['Role.Both', !!role.Both, 'check'], ['Role.Pace', role.Pace === undefined ? '' : role.Pace, 'number'], ['Role.Open', role.Open || 0, 'number']);
+
+		/* Test: the role moved in the view as a scene moves it. */
+		label = document.createElement('label');
+		name = document.createElement('span');
+		test = document.createElement('input');
+
+		label.className = 'elemenx-model-editor-field';
+		name.textContent = Elemenx.Locale.Text('graphics.modelEditor.test');
+		test.type = 'range';
+		test.min = '0';
+		test.max = '1';
+		test.step = '0.01';
+		test.value = String(this.RoleTest || 0);
+
+		test.setAttribute('data-field', 'Test');
+
+		test.addEventListener('input', function () {
+			self.RoleTried(test.value);
+		});
+
+		label.appendChild(name);
+		label.appendChild(test);
+
+		return {Fields: fields, After: label};
+	},
+
+	/* A field of the selected role changed. */
+	RoleEdited: function (field, value) {
+		var key = field[0];
+		var id = this.RoleSelected;
+		var others = this.Roles();
+
+		if (key === 'Role.ID') {
+			if (!value || others.some(function (role) {
+				return role.ID === value;
+			})) {
+				this.Fields();
+
+				return;
+			}
+
+			this.SetRoles(others.map(function (role) {
+				if (role.ID === id)
+					role.ID = value;
+
+				if (role.Follow === id)
+					role.Follow = value;
+
+				return role;
+			}), this.Kept());
+
+			this.RolePicked(value);
+
+			return;
+		}
+
+		this.RoleChange(id, function (role) {
+			var group = key.split('.')[0];
+			var name = key.split('.')[1];
+			var target;
+
+			if (group === 'Role') {
+				target = role;
+			}
+			else {
+				role[group] = Object.assign({}, role[group] || {});
+				target = role[group];
+			}
+
+			if (value === undefined || value === '') delete target[name];
+			else target[name] = value;
+
+			/* Another kind starts as that kind does, its parts kept. */
+			if (key === 'Role.Kind')
+				Object.assign(role, this.$Service('ModelRoles').Make(value, {ID: role.ID, Name: role.Name, Parts: role.Parts}));
+		}.bind(this), this.Kept());
+	},
+
 	/* The view */
 
 	Down: function (event) {
@@ -764,6 +1511,18 @@ Elemenx.Component('ModelEditor', {
 
 		if (event.button === 1) {
 			own.Drag = {Kind: 'pan', X: event.clientX, Y: event.clientY, View: scene.Viewpoint()};
+
+			return;
+		}
+
+		if (this.Mode === 'roles') {
+			own.Drag = {Kind: this.RoleTool === 'brush' ? 'brush' : 'press', X: event.clientX, Y: event.clientY, Before: this.Kept(), Painted: false};
+
+			if (this.RoleTool === 'brush') {
+				this.RoleTouch(this.RoleHit(event.clientX, event.clientY), event.shiftKey, null);
+
+				own.Drag.Painted = true;
+			}
 
 			return;
 		}
@@ -806,6 +1565,12 @@ Elemenx.Component('ModelEditor', {
 			return;
 		}
 
+		if (drag.Kind === 'brush') {
+			this.RoleTouch(this.RoleHit(event.clientX, event.clientY), event.shiftKey, null);
+
+			return;
+		}
+
 		if (drag.Kind === 'press') return;
 
 		drag.Moved = true;
@@ -820,6 +1585,21 @@ Elemenx.Component('ModelEditor', {
 		own.Drag = null;
 
 		if (!drag || !own.Scene) return;
+
+		/* A stroke of the brush is one change to undo; a press of Pick or Pivot changes the role where it is. */
+		if (drag.Kind === 'brush') {
+			if (drag.Painted && drag.Before !== this.Kept())
+				this.Push(drag.Before);
+
+			return;
+		}
+
+		if (this.Mode === 'roles') {
+			if (drag.Kind === 'press' && Math.abs(event.clientX - drag.X) + Math.abs(event.clientY - drag.Y) < 4)
+				this.RoleTouch(this.RoleHit(event.clientX, event.clientY), event.shiftKey, drag.Before);
+
+			return;
+		}
 
 		/* A press that did not move selects the part under it, or nothing. */
 		if (drag.Kind === 'press' && Math.abs(event.clientX - drag.X) + Math.abs(event.clientY - drag.Y) < 4) {
@@ -957,7 +1737,7 @@ Elemenx.Component('ModelEditor', {
 
 		if (!svg || !scene) return;
 
-		if (!part || this.Tool === 'select') {
+		if (!part || this.Tool === 'select' || this.Mode === 'roles') {
 			if (svg.childNodes.length)
 				svg.textContent = '';
 

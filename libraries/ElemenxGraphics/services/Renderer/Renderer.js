@@ -32,14 +32,17 @@
  *   cubeDirection(uFace, vQuad) (Chunks.Cube): a surface of noise computed once, sampled at every frame.
  * - Target(width, height, {Colors, Depth, DepthTexture, Float, Samples, Mipmaps}) returns textures to draw into: Textures,
  *   Depth (with DepthTexture), Begin(), End() (it resolves the samples and makes the mipmaps), Destroy();
- *   Viewport(x, y, width, height) draws in a part of it. Texture takes options Float for an array of floats, Srgb for
- *   the colors of a picture, Mipmaps, and Wrap and Filter of a sampler of glTF.
+ *   Viewport(x, y, width, height) draws in a part of it. Texture takes options Float for an array of floats, Single for
+ *   one byte a texel (a mask, read as .r), Srgb for the colors of a picture, Mipmaps, and Wrap and Filter of a sampler of glTF.
  * - Shadow(size) returns a shadow map, a depth texture for a uniform sampler2DShadow (Raw: the same for a sampler2D, to read
  *   its depths): between its Begin() and End() the
  *   draws write only its depth, as seen from the light; Destroy().
  * - Draw(mesh, program, uniforms, settings): settings Mode (triangles, lines, line-strip, line-loop, points), Blend
- *   (alpha, add or none), Depth (test, true; lequal: what is drawn again over the same surface passes), DepthWrite (true), Cull (back, front or none), Instances (the copies).
+ *   (alpha; add; over: its color over what is behind, the alpha of that kept; veil: the same, that alpha gone as far as it
+ *   covers it; or none), Depth (test, true; lequal: what is drawn again over the same surface passes), DepthWrite (true), Cull (back, front or none), Instances (the copies).
  *   The value of a uniform is a number, an array (of a vector, a matrix or a list of them), true or false, or a texture.
+ * - Counts(): what it drew since it was made, {Draws, Triangles} (the copies of an instanced mesh counted): the
+ *   difference of two of them is what a frame, or a second, costs.
  * - Resize(width, height, ratio), Clear(color) ([r, g, b, a], 0 to 1), Winding(clockwise) (the front of a triangle goes round
  *   clockwise: a world drawn as a mirror shows it), Lost (the context was taken by the browser),
  *   Destroy().
@@ -473,6 +476,7 @@ Elemenx.Service('Renderer', {
 		var patient = !!settings.Patient;
 		var parallel = null;
 		var current = {};
+		var counts = {Draws: 0, Triangles: 0};
 		var bound;
 		var renderer;
 
@@ -899,6 +903,11 @@ Elemenx.Service('Renderer', {
 				return true;
 			},
 
+			/* What it drew since it was made: the draws and the triangles of them (each copy of an instanced mesh counted). */
+			Counts: function () {
+				return {Draws: counts.Draws, Triangles: counts.Triangles};
+			},
+
 			Progress: function () {
 				var made = {Done: 0, Total: 0, Needed: 0};
 
@@ -949,7 +958,15 @@ Elemenx.Service('Renderer', {
 
 				gl.bindTexture(gl.TEXTURE_2D, handle);
 
-				if (source && source.Data && settings.Float) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, source.Width, source.Height, 0, gl.RGBA, gl.FLOAT, source.Data);
+				/* Single: one byte a texel (a mask), read as .r; its rows are not padded to four bytes. */
+				function single () {
+					gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+					gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, source.Width, source.Height, 0, gl.RED, gl.UNSIGNED_BYTE, source.Data instanceof Uint8Array ? source.Data : new Uint8Array(source.Data));
+					gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+				}
+
+				if (source && source.Data && settings.Single) single();
+				else if (source && source.Data && settings.Float) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, source.Width, source.Height, 0, gl.RGBA, gl.FLOAT, source.Data);
 				else if (source && source.Data) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, source.Width, source.Height, 0, gl.RGBA, gl.UNSIGNED_BYTE, source.Data instanceof Uint8Array ? source.Data : new Uint8Array(source.Data));
 				else gl.texImage2D(gl.TEXTURE_2D, 0, settings.Srgb ? gl.SRGB8_ALPHA8 : gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
 
@@ -1305,7 +1322,7 @@ Elemenx.Service('Renderer', {
 				var instances = draw.Instances === undefined ? made.Instances : draw.Instances;
 				var list;
 				var value;
-				var blend = draw.Blend === 'add' || draw.Blend === 'over' || draw.Blend === 'alpha' ? draw.Blend : '';
+				var blend = draw.Blend === 'add' || draw.Blend === 'over' || draw.Blend === 'alpha' || draw.Blend === 'veil' ? draw.Blend : '';
 				var cull = draw.Cull === 'none' || draw.Cull === false ? '' : draw.Cull === 'front' ? 'front' : 'back';
 				var i;
 
@@ -1360,6 +1377,8 @@ Elemenx.Service('Renderer', {
 					if (blend === 'add') gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ZERO, gl.ONE);
 					else if (blend === 'over') gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
 					else if (blend === 'alpha') gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+					/* veil: its color over what is behind, and the alpha of what is behind (how glossy it is) gone as far as it covers it. */
+					else if (blend === 'veil') gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
 				}
 
 				if (current.Cull !== cull) {
@@ -1373,6 +1392,11 @@ Elemenx.Service('Renderer', {
 				}
 
 				gl.bindVertexArray(made.VAO);
+
+				counts.Draws++;
+
+				if (mode === gl.TRIANGLES)
+					counts.Triangles += Math.floor(made.Count / 3) * (instances || 1);
 
 				if (made.Indexed && instances) gl.drawElementsInstanced(mode, made.Count, made.IndexType, 0, instances);
 				else if (made.Indexed) gl.drawElements(mode, made.Count, made.IndexType, 0);

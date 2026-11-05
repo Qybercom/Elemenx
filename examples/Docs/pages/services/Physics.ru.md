@@ -11,6 +11,7 @@
 - `Car(state, input, surface, settings, elapsed)`
 - `Gearbox(state, input, settings, gas, braking, speed, elapsed)`
 - `Hit(state, normal, depth, at, settings)`
+- `Boat(state, input, sea, bed, settings, elapsed)`
 - `Bounce(way, normal, depth, bounce)`
 - `Ship(state, input, settings, elapsed)`
 - `World(settings)`
@@ -21,17 +22,17 @@
 
 ## Тесты
 
-- [Physics runs steps of one length, whatever the frames are, and blends what shows](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3349) — `tests/regression/library-scene.test.js`
-- [Physics shifts the gears of a car: up near the red line, without drive while it changes, into reverse when stopped and asked back, by hand with a manual](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3388) — `tests/regression/library-scene.test.js`
-- [Physics drives a car: slowed by grass, on its springs, leaning as it goes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3473) — `tests/regression/library-scene.test.js`
-- [Physics keeps the wheels on the road: each on a spring of its own, the body riding over them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3558) — `tests/regression/library-scene.test.js`
-- [Physics stops and turns a car as it is told: brakes, grip, downforce, steering](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3652) — `tests/regression/library-scene.test.js`
-- [Physics turns a car by a table of its own, whatever the speed, and a touch of the key is a little turn](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3699) — `tests/regression/library-scene.test.js`
-- [Physics holds a car level in a turn by its bars, and keeps all its wheels down](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4250) — `tests/regression/library-scene.test.js`
-- [Physics turns a car as sharply as it is told, with no more lean for that](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4285) — `tests/regression/library-scene.test.js`
-- [Physics is a simulator or an arcade by its numbers, and lets the tail go when it is asked](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4315) — `tests/regression/library-scene.test.js`
-- [Physics takes a car off a wall: out of it, its way into it gone, turned round the corner that struck](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4431) — `tests/regression/library-scene.test.js`
-- [Physics brings a ship to rest, all of it, and then it stays](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4462) — `tests/regression/library-scene.test.js`
-- [Physics flies a ship: its speed comes after its throttle, its axes stay square](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4486) — `tests/regression/library-scene.test.js`
+- [Physics runs steps of one length, whatever the frames are, and blends what shows](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3361) — `tests/regression/library-scene.test.js`
+- [Physics shifts the gears of a car: up near the red line, without drive while it changes, into reverse when stopped and asked back, by hand with a manual](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3400) — `tests/regression/library-scene.test.js`
+- [Physics drives a car: slowed by grass, on its springs, leaning as it goes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3485) — `tests/regression/library-scene.test.js`
+- [Physics keeps the wheels on the road: each on a spring of its own, the body riding over them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3570) — `tests/regression/library-scene.test.js`
+- [Physics stops and turns a car as it is told: brakes, grip, downforce, steering](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3664) — `tests/regression/library-scene.test.js`
+- [Physics turns a car by a table of its own, whatever the speed, and a touch of the key is a little turn](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3711) — `tests/regression/library-scene.test.js`
+- [Physics holds a car level in a turn by its bars, and keeps all its wheels down](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4265) — `tests/regression/library-scene.test.js`
+- [Physics turns a car as sharply as it is told, with no more lean for that](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4300) — `tests/regression/library-scene.test.js`
+- [Physics is a simulator or an arcade by its numbers, and lets the tail go when it is asked](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4330) — `tests/regression/library-scene.test.js`
+- [Physics takes a car off a wall: out of it, its way into it gone, turned round the corner that struck](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4446) — `tests/regression/library-scene.test.js`
+- [Physics brings a ship to rest, all of it, and then it stays](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4477) — `tests/regression/library-scene.test.js`
+- [Physics flies a ship: its speed comes after its throttle, its axes stay square](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4501) — `tests/regression/library-scene.test.js`
 
-+22 ещё в тех же файлах
++24 ещё в тех же файлах

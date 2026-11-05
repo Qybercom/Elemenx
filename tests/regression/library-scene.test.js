@@ -4,11 +4,11 @@ import { Use } from '../library.js';
 import { Binary, Picture } from '../glb.mjs';
 import gameSceneSource from '../../libraries/ElemenxGraphics/components/Scene/Scene.js?raw';
 import modelsSource from '../../libraries/ElemenxGraphics/services/SceneModels/SceneModels.js?raw';
-import lightingSource from '../../libraries/ElemenxGraphics/traits/SceneLighting.js?raw';
+import lightingSource from '../../libraries/ElemenxGraphics/traits/SceneLighting/SceneLighting.js?raw';
 import graphicsSource from '../../libraries/ElemenxGraphics/services/Renderer/Renderer.js?raw';
-import cosmosSource from '../../libraries/ElemenxGraphics/traits/SceneCosmos.js?raw';
+import cosmosSource from '../../libraries/ElemenxGraphics/traits/SceneCosmos/SceneCosmos.js?raw';
 import pageSource from '../../examples/Advanced/application/components/UIKitPage/UIKitPage.js?raw';
-import effectsSource from '../../libraries/ElemenxGraphics/traits/SceneEffects.js?raw';
+import effectsSource from '../../libraries/ElemenxGraphics/traits/SceneEffects/SceneEffects.js?raw';
 
 var owned = [];
 
@@ -2118,7 +2118,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 	it('draws a mirror as the world reflected by its plane, cut at it, and glass blended over what is behind it', async function () {
 		var mounted = await mount('<Scene Paused="true" Quality="high" (ready)="Ready">' +
-			'<SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="m" />' +
+			'<SceneObject ID="land" Kind="ground" Size="100" Height="1" Water="0" Seed="m" />' +
 		'</Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
@@ -2207,7 +2207,16 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 				return !call.Turned && call.Uniforms.uViewProjection && call.Uniforms.uStrength === undefined;
 			}).pop().Uniforms.uViewProjection;
 
-			/* The world was drawn once more, its triangles turned, into a picture of half the size: the mirror shows it. */
+			/*
+			 * The world was drawn once more, its triangles turned, into a picture of the part of the screen the mirror covers
+			 * alone (Rect), half as fine as the screen, in steps of 32: the mirror shows it.
+			 */
+			var rect = made[0].Rect;
+
+			function uncrop (p) {
+				return [rect[0] + (p[0] / p[3] + 1) / 2 * (rect[2] - rect[0]), rect[1] + (p[1] / p[3] + 1) / 2 * (rect[3] - rect[1])];
+			}
+
 			expect(calls.filter(function (call) {
 				return call.Winding !== undefined;
 			}).map(function (call) {
@@ -2215,9 +2224,12 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			})).toEqual([true, false]);
 			expect(reflected.length).toBeGreaterThan(0);
 			expect(made.length).toBe(1);
-			expect(made[0].Width).toBe(Math.max(1, renderer.Width >> 1));
+			expect(rect[2] - rect[0]).toBeLessThan(2);
+			expect(made[0].Width).toBe(Math.min(2048, Math.max(32, Math.ceil((rect[2] - rect[0]) / 2 * renderer.Width * 0.5 / 32) * 32)));
+			expect(made[0].Width % 32).toBe(0);
 			expect(pane.Uniforms.uOn).toBe(1);
 			expect(pane.Uniforms.uMirror).toBe(made[0].Textures[0]);
+			expect(pane.Uniforms.uRect).toBe(rect);
 			expect(pane.Uniforms.uSize).toEqual([4, 3]);
 
 			/* What is on its plane is where the eye sees it; what stands before it shows where its reflection would be; what is behind it is cut away. */
@@ -2235,10 +2247,10 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 			/* (The view of the eye shakes by less than a pixel from frame to frame; the picture of a mirror keeps still.) */
 			expect(mirror.World).toBeTruthy();
-			expect(a[0] / a[3]).toBeCloseTo(b[0] / b[3], 2);
-			expect(a[1] / a[3]).toBeCloseTo(b[1] / b[3], 2);
-			expect(c[0] / c[3]).toBeCloseTo(d[0] / d[3], 2);
-			expect(c[1] / c[3]).toBeCloseTo(d[1] / d[3], 2);
+			expect(uncrop(a)[0]).toBeCloseTo(b[0] / b[3], 2);
+			expect(uncrop(a)[1]).toBeCloseTo(b[1] / b[3], 2);
+			expect(uncrop(c)[0]).toBeCloseTo(d[0] / d[3], 2);
+			expect(uncrop(c)[1]).toBeCloseTo(d[1] / d[3], 2);
 			expect(Math.abs(c[2] / c[3])).toBeLessThan(1);
 			expect(e[2] / e[3]).toBeLessThan(-1);
 
@@ -3982,6 +3994,9 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(pool.Inline()).toBe(false);
 		expect(field.Options).toBe(options);
 
+		/* The pool is the one of all the scenes: what they still wait for is counted too. */
+		var waiting = pool.Waiting();
+
 		pool.Run('SceneTerrainGenerator', 'Piece', ['Flat', options, roads, [10, -20, 50, 8]], function (error, result) {
 			piece = result;
 		});
@@ -3992,7 +4007,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			failed = error;
 		});
 
-		expect(pool.Waiting()).toBe(3);
+		expect(pool.Waiting()).toBe(waiting + 3);
 
 		await waitFor(function () {
 			return piece && grid && failed;
@@ -5535,12 +5550,14 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 			frames(4);
 
-			/* The mirror: the world drawn again, its triangles turned, into a picture a quarter of the size; it shows it. */
+			/*
+			 * The mirror: the world drawn again, its triangles turned, into a picture as fine as the screen of the part of it the
+			 * mirror covers (regression: a quarter of the whole screen, of which a small mirror showed a blur), in steps of 32.
+			 */
 			expect(turned).toBeGreaterThan(0);
-			/* Made again as the canvas takes its size: each time a quarter of it. */
 			expect(sizes.length).toBeGreaterThan(0);
 			expect(sizes.every(function (size) {
-				return size[0] === size[2] && size[1] === size[3];
+				return size[0] % 32 === 0 && size[1] % 32 === 0 && size[0] <= renderer.Width + 32 && size[1] <= renderer.Height + 32;
 			})).toBe(true);
 			expect(mirrors).toContain(1);
 

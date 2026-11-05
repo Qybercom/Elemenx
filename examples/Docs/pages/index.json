@@ -2822,6 +2822,13 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "ModelRoles",
+					"Title": {
+						"en": "ModelRoles"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "NFC",
 					"Title": {
 						"en": "NFC"
@@ -2976,9 +2983,30 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "SceneShowcase",
+					"Title": {
+						"en": "SceneShowcase"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneSower",
+					"Title": {
+						"en": "SceneSower"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneTerrainGenerator",
 					"Title": {
 						"en": "SceneTerrainGenerator"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneWaves",
+					"Title": {
+						"en": "SceneWaves"
 					},
 					"Library": "ElemenxGraphics"
 				},
@@ -3207,6 +3235,85 @@
 						"en": "*tip"
 					},
 					"Library": "ElemenxUI"
+				}
+			]
+		},
+		{
+			"ID": "traits",
+			"Title": {
+				"en": "Traits",
+				"ru": "Трейты"
+			},
+			"Pages": [
+				{
+					"ID": "Declared",
+					"Title": {
+						"en": "Declared"
+					},
+					"Library": "ElemenxUI"
+				},
+				{
+					"ID": "SceneBehaviour",
+					"Title": {
+						"en": "SceneBehaviour"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneCosmos",
+					"Title": {
+						"en": "SceneCosmos"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneEffects",
+					"Title": {
+						"en": "SceneEffects"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneLighting",
+					"Title": {
+						"en": "SceneLighting"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "ScenePhysics",
+					"Title": {
+						"en": "ScenePhysics"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneRoadNetwork",
+					"Title": {
+						"en": "SceneRoadNetwork"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneScatter",
+					"Title": {
+						"en": "SceneScatter"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneTriggers",
+					"Title": {
+						"en": "SceneTriggers"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneVehicles",
+					"Title": {
+						"en": "SceneVehicles"
+					},
+					"Library": "ElemenxGraphics"
 				}
 			]
 		}

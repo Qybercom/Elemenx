@@ -4,6 +4,13 @@ import path from 'path';
 
 var origin = 'http://127.0.0.1:4278';
 
+/* The canvas in view: the one of the current tab of the panes of an application (the others are hidden), the only one otherwise. */
+var CANVAS = '.designer-main > .elemenx-designer-canvas, .designer-main .elemenx-tab-panel.active .elemenx-designer-canvas';
+
+/* The tabs of the panes of an application, all of them or the current one. */
+var TABS = '.designer-main .elemenx-tab-group-tab';
+var ACTIVE = '.designer-main .elemenx-tab-group-tab.active';
+
 function captureErrors (page) {
 	var errors = [];
 
@@ -990,7 +997,7 @@ test.describe('Elemenx Designer', function () {
 
 		await create(page, 'application', 'Splashy');
 
-		await page.locator('.designer-document').filter({hasText: 'Application'}).click();
+		await page.locator(TABS).filter({hasText: 'Application'}).click();
 
 		await expect(settings).toBeVisible();
 
@@ -1187,13 +1194,13 @@ test.describe('Elemenx Designer', function () {
 			designer.Set(designer.Insert('Card', 'root'), 'Href', '/contacts');
 		});
 
-		await page.locator('.designer-documents [data-map]').click();
+		await page.locator(TABS).filter({hasText: 'Map'}).click();
 
 		await expect(map.locator('.elemenx-designer-map-frame')).toHaveCount(3);
 		await expect(map.locator('.elemenx-designer-map-label')).toHaveText([/^\s*Home\s+\/\s*$/, /^\s*Contacts\s+\/contacts\s*$/, /^\s*About\s+\/about\s*$/]);
 		await expect(map.locator('.elemenx-designer-map-frame[aria-label="About"]')).toContainText('Heading');
 		await expect(map.locator('.elemenx-designer-map-link')).toHaveCount(3);
-		await expect(page.locator('.elemenx-designer-canvas')).toHaveCount(0);
+		await expect(page.locator(CANVAS)).toHaveCount(0);
 
 		/* All of the map in view at the start: every frame on the board. */
 		board = await map.boundingBox();
@@ -1208,16 +1215,75 @@ test.describe('Elemenx Designer', function () {
 		/* A press on the name of a page opens it on the canvas. */
 		await map.locator('.elemenx-designer-map-label').filter({hasText: 'Contacts'}).click();
 
-		await expect(map).toHaveCount(0);
-		await expect(page.locator('.designer-document.active')).toHaveText('Contacts');
-		await expect(page.locator('.elemenx-designer-canvas')).toHaveCount(1);
+		await expect(map).toBeHidden();
+		await expect(page.locator(ACTIVE)).toHaveText('Contacts');
+		await expect(page.locator(CANVAS)).toHaveCount(1);
+
+		expect(errors).toEqual([]);
+	});
+
+	test('splits the documents of an application into panes: one document in two, each pane with its own selection, the layout kept', async function ({ page }) {
+		var errors = captureErrors(page);
+		var groups = page.locator('.designer-main > .elemenx-tab-split > .elemenx-tab-split-group');
+		var heading;
+
+		async function selected () {
+			return page.evaluate(function () {
+				return Elemenx.Application('ElemenxDesigner').$Service('Designer').Selected();
+			});
+		}
+
+		await page.setViewportSize({width: 1600, height: 900});
+
+		await open(page);
+
+		await create(page, 'application', 'Panes');
+
+		await add(page, 'heading');
+
+		heading = await selected();
+
+		expect(heading).toBeTruthy();
+
+		/* The menu of the tab splits its group to the right with a copy: the same page in two panes, the new one in focus. */
+		await page.locator(TABS).filter({hasText: 'Home'}).click({button: 'right'});
+		await page.getByRole('menuitem', {name: 'Split right'}).click();
+
+		await expect(groups).toHaveCount(2);
+		await expect(page.locator(ACTIVE)).toHaveText(['Home', 'Home']);
+		await expect(groups.nth(1)).toHaveClass(/focused/);
+		await expect(groups.nth(1).locator('.elemenx-designer-page-host [data-designer-id]')).toHaveCount(1);
+
+		/* The copy starts with the selection of its pane; a selection of its own stays its own. */
+		expect(await selected()).toBe(heading);
+
+		await deselect(page);
+
+		expect(await selected()).toBe(null);
+
+		/* The tab of the first pane gives it the focus and its selection back; the second one keeps its own. */
+		await groups.nth(0).locator(TABS).filter({hasText: 'Home'}).click();
+
+		await expect(groups.nth(0)).toHaveClass(/focused/);
+		await expect.poll(selected).toBe(heading);
+
+		await groups.nth(1).locator(TABS).filter({hasText: 'Home'}).click();
+
+		await expect.poll(selected).toBe(null);
+
+		/* The layout is kept for the project: the two panes again after a reload. */
+		await page.reload();
+
+		await expect(groups).toHaveCount(2);
+		await expect(page.locator(ACTIVE)).toHaveText(['Home', 'Home']);
+		await expect(groups.nth(1).locator('.elemenx-designer-page-host [data-designer-id]')).toHaveCount(1);
 
 		expect(errors).toEqual([]);
 	});
 
 	test('makes an application of pages and components: a component with its props and slot, used on a page, routes, guards, settings and a download', async function ({ page }) {
 		var errors = captureErrors(page);
-		var canvas = page.locator('.elemenx-designer-canvas');
+		var canvas = page.locator(CANVAS);
 		var inspector = page.locator('.elemenx-designer-inspector');
 		var settings = page.locator('.elemenx-designer-settings');
 		var route;
@@ -1233,13 +1299,13 @@ test.describe('Elemenx Designer', function () {
 		/* An application: its kind chosen when it is made; a tab for each document open over the canvas, and its settings. */
 		await create(page, 'application', 'Shop');
 
-		await expect(page.locator('.designer-document')).toHaveText(['Application', 'Map', 'Home']);
+		await expect(page.locator(TABS)).toHaveText(['Application', 'Map', 'Home']);
 
 		/* A component: a paragraph and the slot of what it is given. */
 		await page.locator('.elemenx-ribbon-tab[data-id="project"]').click();
 		await page.locator('.elemenx-ribbon [data-command="new-component"]').click();
 
-		await expect(page.locator('.designer-document.active')).toHaveText('Component2');
+		await expect(page.locator(ACTIVE)).toHaveText('Component2');
 
 		await page.locator('.elemenx-ribbon-tab[data-id="insert"]').click();
 
@@ -1257,7 +1323,7 @@ test.describe('Elemenx Designer', function () {
 		await inspector.locator('.elemenx-designer-document input').first().fill('HeroBanner');
 		await inspector.locator('.elemenx-designer-document input').first().press('Enter');
 
-		await expect(page.locator('.designer-document.active')).toHaveText('HeroBanner');
+		await expect(page.locator(ACTIVE)).toHaveText('HeroBanner');
 
 		await inspector.locator('.elemenx-designer-document-add').click();
 		await inspector.locator('.elemenx-designer-document-prop input[data-key="Name"]').fill('Title');
@@ -1268,7 +1334,7 @@ test.describe('Elemenx Designer', function () {
 		await expect(inspector.locator('.elemenx-designer-document-slots .elemenx-chip')).toHaveText(['Default slot']);
 
 		/* The page takes the component from the palette: it shows on the canvas, its prop in the inspector. */
-		await page.locator('.designer-document-open').filter({hasText: 'Home'}).click();
+		await page.locator(TABS).filter({hasText: 'Home'}).click();
 
 		await add(page, 'HeroBanner');
 
@@ -1277,7 +1343,7 @@ test.describe('Elemenx Designer', function () {
 		await expect(inspector.locator('input[name="Title"]')).toHaveValue('Hello');
 
 		/* The component the page holds cannot go. */
-		await page.locator('.designer-document-open').filter({hasText: 'HeroBanner'}).click();
+		await page.locator(TABS).filter({hasText: 'HeroBanner'}).click();
 
 		await deselect(page);
 
@@ -1285,12 +1351,12 @@ test.describe('Elemenx Designer', function () {
 		await expect(inspector.locator('.elemenx-designer-document')).toContainText('Used in: Home');
 
 		/* A tab closes by its cross; the document stays in the project, the explorer opens it again. */
-		await page.locator('.designer-document').filter({hasText: 'HeroBanner'}).locator('.designer-document-close').click();
+		await page.locator(TABS).filter({hasText: 'HeroBanner'}).locator('.elemenx-tab-group-close').click();
 
-		await expect(page.locator('.designer-document')).toHaveText(['Application', 'Map', 'Home']);
+		await expect(page.locator(TABS)).toHaveText(['Application', 'Map', 'Home']);
 
 		/* The settings of the Application in the main area: a guard, and a route it guards. */
-		await page.locator('.designer-document').filter({hasText: 'Application'}).click();
+		await page.locator(TABS).filter({hasText: 'Application'}).click();
 
 		await expect(settings).toBeVisible();
 		await expect(canvas).toHaveCount(0);
@@ -1366,12 +1432,12 @@ test.describe('Elemenx Designer', function () {
 		await reopen(page, 'Shop');
 
 		await expect(page.locator('.elemenx-workspace-tool-button[data-tool="project"]')).toHaveCount(1);
-		await expect(page.locator('.designer-document')).toHaveText(['Application', 'Map', 'Home']);
+		await expect(page.locator(TABS)).toHaveText(['Application', 'Map', 'Home']);
 
 		/* The kinds stay their own: the component has its slot, no tab of documents, no tab of the project. */
 		await reopen(page, 'Badge');
 
-		await expect(page.locator('.designer-documents')).toHaveCount(0);
+		await expect(page.locator('.designer-main .elemenx-tab-split')).toHaveCount(0);
 		await expect(page.locator('.elemenx-ribbon-tab[data-id="project"]')).toHaveCount(0);
 
 		/* Saved into a file and opened from it: a project of its own beside the others. */
@@ -1637,7 +1703,7 @@ test.describe('Elemenx Designer', function () {
 		await page.locator('.designer-disk .elemenx-tree-row[data-id="components"] .elemenx-tree-twisty').click();
 		await page.locator('.designer-disk .elemenx-tree-row[data-id="component:Greeting"]').click();
 
-		await expect(page.locator('.designer-document-open[aria-selected="true"]')).toHaveText('Greeting');
+		await expect(page.locator(ACTIVE)).toHaveText('Greeting');
 
 		expect(await page.evaluate(function () {
 			var designer = Elemenx.Application('ElemenxDesigner').$Service('Designer');
@@ -1646,7 +1712,7 @@ test.describe('Elemenx Designer', function () {
 		})).toBe('<p class="demo-greeting" (click)="Wave">Hello, {{Name}}: {{Waved}}</p>');
 
 		/* On the page the copy runs with the definition it came with: its state and its methods. */
-		await page.locator('.designer-document-open').filter({hasText: 'Home'}).click();
+		await page.locator(TABS).filter({hasText: 'Home'}).click();
 
 		await canvas.locator('.demo-greeting').evaluate(function (element) {
 			element.click();

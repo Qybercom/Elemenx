@@ -18,7 +18,7 @@ Elemenx.Service('SceneBlueprints', {
 	},
 
 	$Provides: {
-		Blueprints: {Graphs: ['effect', 'water', 'sky', 'land'], Nodes: ['LandPoint', 'LandGrain', 'LandPools', 'LandAlbedo', 'LandPaint', 'LandLight', 'LandSheen', 'LandCompose', 'LandEnd', 'SkyRay', 'SkyDay', 'SkyAir', 'SkyDusk', 'SkyHalo', 'SkyPink', 'SkyWisps', 'SkyCover', 'SkyEclipse', 'SkyTowns', 'SkyRainbow', 'SkyMoonHaze', 'SkyMoon', 'SkyCompose', 'SkyEnd', 'Place', 'View', 'Far', 'Flow', 'Sun', 'Waves', 'WaterNormal', 'Fresnel', 'Glints', 'Sky', 'Body', 'Foam', 'Reflection', 'WaterFog', 'Water', 'Layer', 'Effect', 'Scene', 'Clouds', 'Occlusion', 'Air', 'Frames', 'Mirror', 'Rays', 'Exposure', 'Bokeh', 'Bloom', 'Picture', 'Shader']}
+		Blueprints: {Graphs: ['effect', 'water', 'sky', 'land'], Nodes: ['LandPoint', 'LandGrain', 'LandPools', 'LandAlbedo', 'LandPaint', 'LandLight', 'LandCaustics', 'LandSheen', 'LandCompose', 'LandEnd', 'SkyRay', 'SkyDay', 'SkyAir', 'SkyDusk', 'SkyHalo', 'SkyPink', 'SkyWisps', 'SkyCover', 'SkyEclipse', 'SkyTowns', 'SkyRainbow', 'SkyMoonHaze', 'SkyMoon', 'SkyCompose', 'SkyEnd', 'Place', 'View', 'Far', 'Flow', 'Sun', 'Waves', 'WaterNormal', 'Fresnel', 'Glints', 'Sky', 'Body', 'Foam', 'Under', 'Absorb', 'Below', 'Reflection', 'WaterFog', 'Water', 'Layer', 'Effect', 'Scene', 'Clouds', 'Occlusion', 'Air', 'Frames', 'Mirror', 'Rays', 'Exposure', 'Bokeh', 'Bloom', 'Picture', 'Shader']}
 	},
 
 	$OnCreate: function () {
@@ -177,7 +177,8 @@ Elemenx.Service('SceneBlueprints', {
 	 * (Flow), the sun (Sun) and the time. Its blocks are the parts of the water of the library, each its very GLSL:
 	 * Waves (the slope of the surface: the waves of a lake, or drawn out along a river and carried down it; Rush where it
 	 * runs white), WaterNormal, Fresnel, Glints (the path of the sun), Sky (the sky it mirrors), Body (the color of the
-	 * depth: a lake, or a river with its silt), Foam, Reflection (what is round it, mirrored on the screen) and WaterFog;
+	 * depth: a lake, or a river with its silt), Foam, Under (what is under it, through it, and how deep), Absorb (its light
+	 * taken as it is deep), Reflection (what is round it, mirrored) and WaterFog;
 	 * Water is its end. Scene.LibraryWater() is the water of the library made of them.
 	 */
 	Waters: function () {
@@ -267,7 +268,8 @@ Elemenx.Service('SceneBlueprints', {
 			return {Slope: name + '_slope', Rush: name + '_rush'};
 		});
 
-		node('WaterNormal', [{Key: 'Slope', Type: 'vec2', Value: 0}], [{Key: 'Normal', Type: 'vec3'}], 'normalize(vec3(-{Slope}.x * 0.22 * uWild, 1.0, -{Slope}.y * 0.22 * uWild))');
+		/* The normal of the water: the slope of its ripples over Base, the normal of its waves (those of a sea; level elsewhere). */
+		node('WaterNormal', [{Key: 'Slope', Type: 'vec2', Value: 0}, {Key: 'Base', Type: 'vec3', Default: 'vSurface'}], [{Key: 'Normal', Type: 'vec3'}], 'normalize(vec3({Base}.x - {Slope}.x * 0.22 * uWild * {Base}.y, {Base}.y, {Base}.z - {Slope}.y * 0.22 * uWild * {Base}.y))');
 		node('Fresnel', [{Key: 'Normal', Type: 'vec3', Default: 'vec3(0.0, 1.0, 0.0)'}, {Key: 'View', Type: 'vec3', Default: 'normalize(-vWorld)'}], [{Key: 'Fresnel', Type: 'float'}], '0.02 + 0.98 * pow(1.0 - max(dot({Normal}, {View}), 0.0), 5.0)');
 
 		/* What a wave turns to the eye is the sky it faces, and the sun: so the path of light is made of the waves. */
@@ -292,7 +294,62 @@ Elemenx.Service('SceneBlueprints', {
 
 		/* A river carries its silt: greener and duller than a lake or the sea; darker as the sun goes down. */
 		node('Body', [{Key: 'Speed', Type: 'float', Default: 'vColor.z * uFlow'}], [{Key: 'Color', Type: 'vec3'}], '({Speed} > 0.01 ? vec3(0.05, 0.13, 0.11) : vec3(0.02, 0.11, 0.17)) * (0.25 + 0.75 * clamp(uSun.y * 2.0, 0.0, 1.0))');
-		node('Foam', [{Key: 'Color', Type: 'vec3', Value: 0}, {Key: 'Rush', Type: 'float', Value: 0}], [{Key: 'Color', Type: 'vec3'}], 'mix({Color}, vec3(0.82, 0.86, 0.85) * (0.3 + 0.7 * clamp(uSun.y * 2.0, 0.0, 1.0)), {Rush} * 0.45)');
+		/*
+		 * White where a river rushes (Rush), where a wave of a sea breaks (Crest) and where the water is shallow at its edge
+		 * (Shore: how deep it is there), broken up as foam is.
+		 */
+		node('Foam', [{Key: 'Color', Type: 'vec3', Value: 0}, {Key: 'Rush', Type: 'float', Value: 0}, {Key: 'Crest', Type: 'float', Default: 'vCrest'}, {Key: 'Shore', Type: 'float', Default: '1000.0'}], [{Key: 'Color', Type: 'vec3'}], 'mix({Color}, vec3(0.82, 0.86, 0.85) * (0.3 + 0.7 * clamp(uSun.y * 2.0, 0.0, 1.0)), max(max({Rush} * 0.45, {Crest} * smoothstep(0.35, 0.75, noise3(vec3((vWorld.xz + uEye.xz) * 0.9, uTime * 0.3)))), (1.0 - smoothstep(0.0, 0.45, {Shore})) * smoothstep(0.3, 0.6, noise3(vec3((vWorld.xz + uEye.xz) * 2.3, uTime * 0.6))) * 0.85))');
+
+		/*
+		 * What is under the water, seen through it: the picture of the scene before the water (uSeen, its depth uSeenDepth),
+		 * bent by the waves as far as the water is thick there, and how thick it is along the ray (Depth). Cover is 1 where
+		 * the water draws what is under it itself; with no picture of the scene (low quality) Color is black, Depth deep,
+		 * Cover 0, and the water covers what is under it as it did.
+		 */
+		node('Under', [{Key: 'Normal', Type: 'vec3', Default: 'vec3(0.0, 1.0, 0.0)'}], [{Key: 'Color', Type: 'vec3'}, {Key: 'Depth', Type: 'float'}, {Key: 'Cover', Type: 'float'}], function (context) {
+			var name = 'w' + context.Index;
+
+			context.Lines.push('vec3 ' + name + '_color = vec3(0.0);');
+			context.Lines.push('float ' + name + '_depth = 1000.0;');
+			context.Lines.push('float ' + name + '_cover = 0.0;');
+			context.Lines.push('if (uMirror > 0.5) {');
+			context.Lines.push('\tvec4 ' + name + '_clip = uViewProjection * vec4(vWorld, 1.0);');
+			context.Lines.push('\tvec2 ' + name + '_screen = ' + name + '_clip.xy / ' + name + '_clip.w * 0.5 + 0.5;');
+			context.Lines.push('\tfloat ' + name + '_far = length(vWorld);');
+			context.Lines.push('\tvec2 ' + name + '_bent = clamp(' + name + '_screen + ' + context.Inputs.Normal + '.xz * 0.05 * clamp(underDepth(' + name + '_screen, ' + name + '_far), 0.0, 2.0) / (1.0 + ' + name + '_far * 0.05), 0.001, 0.999);');
+			/* What the waves bend the ray to is under the water too, or the ray goes straight. */
+			context.Lines.push('\tif (underDepth(' + name + '_bent, ' + name + '_far) > 0.0) ' + name + '_screen = ' + name + '_bent;');
+			context.Lines.push('\t' + name + '_color = texture(uSeen, ' + name + '_screen).rgb;');
+			context.Lines.push('\t' + name + '_depth = max(underDepth(' + name + '_screen, ' + name + '_far), 0.0);');
+			context.Lines.push('\t' + name + '_cover = 1.0;');
+			context.Lines.push('}');
+
+			return {Color: name + '_color', Depth: name + '_depth', Cover: name + '_cover'};
+		});
+
+		/*
+		 * The water seen from under it (uEyeUnder): within the window of the sky (what the surface lets out, bent as it goes
+		 * into the air) the sky and the sun; beyond it, the water itself mirrored back, deep blue-green. Over the water
+		 * Color and Alpha go through as they are.
+		 */
+		node('Below', [{Key: 'Color', Type: 'vec3', Value: 0}, {Key: 'Alpha', Type: 'float', Default: '1.0'}, {Key: 'Normal', Type: 'vec3', Default: 'vec3(0.0, 1.0, 0.0)'}], [{Key: 'Color', Type: 'vec3'}, {Key: 'Alpha', Type: 'float'}], function (context) {
+			var name = 'w' + context.Index;
+			var inputs = context.Inputs;
+
+			context.Lines.push('vec3 ' + name + '_color = ' + inputs.Color + ';');
+			context.Lines.push('float ' + name + '_alpha = ' + inputs.Alpha + ';');
+			context.Lines.push('if (uEyeUnder > 0.5) {');
+			context.Lines.push('\tvec3 ' + name + '_out = refract(normalize(vWorld), -' + inputs.Normal + ', 1.333);');
+			context.Lines.push('\tvec3 ' + name + '_deep = vec3(0.02, 0.12, 0.14) * (0.3 + 0.7 * clamp(uSun.y * 3.0, 0.0, 1.0));');
+			context.Lines.push('\t' + name + '_color = dot(' + name + '_out, ' + name + '_out) < 0.001 ? ' + name + '_deep : reflectedSky(' + name + '_out) * uDay * 0.85 + uSunColor * pow(max(dot(' + name + '_out, uSun), 0.0), 600.0) * 4.0;');
+			context.Lines.push('\t' + name + '_alpha = 1.0;');
+			context.Lines.push('}');
+
+			return {Color: name + '_color', Alpha: name + '_alpha'};
+		});
+
+		/* The water takes the light of what is under it as it is deep: red first, then green; deep, it is its own color (Body). */
+		node('Absorb', [{Key: 'Color', Type: 'vec3', Value: 0}, {Key: 'Depth', Type: 'float', Default: '1000.0'}, {Key: 'Body', Type: 'vec3', Value: 0}, {Key: 'Cover', Type: 'float', Value: 0}], [{Key: 'Color', Type: 'vec3'}], 'mix({Body}, {Color} * exp(-{Depth} * vec3(0.42, 0.1, 0.07)), {Cover} * exp(-{Depth} * 0.22))');
 
 		/* What is round the water, found on the screen along the ray it mirrors, at high quality (a mirror). */
 		node('Reflection', [{Key: 'Color', Type: 'vec3', Value: 0}, {Key: 'Normal', Type: 'vec3', Default: 'vec3(0.0, 1.0, 0.0)'}, {Key: 'View', Type: 'vec3', Default: 'normalize(-vWorld)'}, {Key: 'Fresnel', Type: 'float', Value: 0}], [{Key: 'Color', Type: 'vec3'}], function (context) {
@@ -300,7 +357,13 @@ Elemenx.Service('SceneBlueprints', {
 			var inputs = context.Inputs;
 
 			context.Lines.push('vec3 ' + name + '_color = ' + inputs.Color + ';');
-			context.Lines.push('if (uMirror > 0.5) {');
+			/* The sea at high and ultra: the world mirrored by its level, bent by the waves where it is read. */
+			context.Lines.push('if (uPlanarOn > 0.5) {');
+			context.Lines.push('\tvec4 ' + name + '_at = uViewProjection * vec4(vWorld, 1.0);');
+			context.Lines.push('\tvec2 ' + name + '_seen = ' + name + '_at.xy / ' + name + '_at.w * 0.5 + 0.5 + ' + inputs.Normal + '.xz * 0.06 / (1.0 + length(vWorld) * 0.01);');
+			context.Lines.push('\t' + name + '_color = mix(' + name + '_color, texture(uPlanar, clamp(' + name + '_seen, 0.001, 0.999)).rgb, clamp(' + inputs.Fresnel + ', 0.0, 1.0));');
+			context.Lines.push('}');
+			context.Lines.push('else if (uMirror > 0.5) {');
 			context.Lines.push('\tvec4 image = mirrored(vWorld, reflect(-' + inputs.View + ', ' + inputs.Normal + '));');
 			context.Lines.push('\t' + name + '_color = mix(' + name + '_color, image.rgb, image.a * clamp(0.3 + ' + inputs.Fresnel + ', 0.0, 1.0));');
 			context.Lines.push('}');
@@ -651,6 +714,24 @@ Elemenx.Service('SceneBlueprints', {
 			context.Lines.push('float ' + name + '_sunlit = sunLit(' + inputs.World + ', ' + inputs.Normal + ');');
 
 			return {Light: '(uSunColor * 1.35 * max(dot(' + inputs.Normal + ', uSun), 0.0) * ' + name + '_sunlit + mix(uFloorLight, uSkyLight, ' + inputs.Normal + '.y * 0.5 + 0.5) * skySeen(' + inputs.World + ') + sunBounce(' + inputs.World + ') + localLight(' + inputs.World + ', ' + inputs.Normal + '))', Sunlit: name + '_sunlit'};
+		});
+
+		/*
+		 * Under the sea (uSea: the ground has one; its level is 0) the waves gather the sun into a web of light on the
+		 * ground: two ridges of noise that run on, met where both are bright; less of it as the water deepens, none in the
+		 * shadow, none over the water.
+		 */
+		node('LandCaustics', [vec3('Place', 'vPlace'), vec3('Light', 'vec3(1.0)'), float('Sunlit', '1.0')], [{Key: 'Light', Type: 'vec3'}], function (context) {
+			var name = 'l' + context.Index;
+			var inputs = context.Inputs;
+
+			context.Lines.push('float ' + name + '_deep = -' + inputs.Place + '.y;');
+			context.Lines.push('vec3 ' + name + '_at = vec3(' + inputs.Place + '.xz * 0.45, uTime2 * 0.35);');
+			context.Lines.push('float ' + name + '_a = 1.0 - abs(noise3(' + name + '_at) * 2.0 - 1.0);');
+			context.Lines.push('float ' + name + '_b = 1.0 - abs(noise3(' + name + '_at * vec3(1.7, 1.7, 1.25) + vec3(5.2, 1.3, 0.0)) * 2.0 - 1.0);');
+			context.Lines.push('float ' + name + '_web = pow(' + name + '_a, 6.0) * pow(' + name + '_b, 6.0) * 6.0 + pow(' + name + '_a * ' + name + '_b, 12.0) * 4.0;');
+
+			return {Light: '(' + inputs.Light + ' + uSunColor * max(uSun.y, 0.0) * ' + inputs.Sunlit + ' * ' + name + '_web * uSea * smoothstep(0.05, 0.6, ' + name + '_deep) * exp(-max(' + name + '_deep, 0.0) * 0.18))'};
 		});
 
 		/* Wet ground takes a sheen: the sun on it, wide where it is only wet, a sharp glint where water stands and its rings break it. */

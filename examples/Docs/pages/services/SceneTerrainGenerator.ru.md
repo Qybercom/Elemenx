@@ -15,6 +15,8 @@
 - `Heights(field, side)`
 - `Field(shape, options)`
 - `Piece(shape, options, roads, args)`
+- `Free(size, side, lines, areas, edge)`
+- `Floor(options, side)`
 - `Grid(options, side, top, steep)`
 - `Source(names)`
 
@@ -47,12 +49,12 @@
 - [takes a ground from a model: floors one over the other, walls that stop a walker, and a plane at its foot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1320) — `tests/regression/library-scene.test.js`
 - [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1623) — `tests/regression/library-scene.test.js`
 - [makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1933) — `tests/regression/library-scene.test.js`
-- [Workers runs the methods of Services in workers made of their source, and in the page when it cannot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3961) — `tests/regression/library-scene.test.js`
-- [makes the squares of a ground of noise in workers, lets go of what came for roads that changed, and grows grass with no noise in a frame](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4062) — `tests/regression/library-scene.test.js`
-- [looks from what it follows to where it looks by degrees, so a raised eye makes no leap under the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6666) — `tests/regression/library-scene.test.js`
-- [leaves a hero where it stands when the scene changes round it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6801) — `tests/regression/library-scene.test.js`
-- [takes a short drop for no jump, though the body leaves the ground](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6853) — `tests/regression/library-scene.test.js`
-- [takes no seam of a map for a jump, and still falls and jumps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6970) — `tests/regression/library-scene.test.js`
-- [lets a hero stand while the view goes round it with a free look, and brings it round when it sets off](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7395) — `tests/regression/library-scene.test.js`
+- [Workers runs the methods of Services in workers made of their source, and in the page when it cannot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3973) — `tests/regression/library-scene.test.js`
+- [makes the squares of a ground of noise in workers, lets go of what came for roads that changed, and grows grass with no noise in a frame](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4077) — `tests/regression/library-scene.test.js`
+- [looks from what it follows to where it looks by degrees, so a raised eye makes no leap under the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6683) — `tests/regression/library-scene.test.js`
+- [leaves a hero where it stands when the scene changes round it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6818) — `tests/regression/library-scene.test.js`
+- [takes a short drop for no jump, though the body leaves the ground](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6870) — `tests/regression/library-scene.test.js`
+- [takes no seam of a map for a jump, and still falls and jumps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6987) — `tests/regression/library-scene.test.js`
+- [lets a hero stand while the view goes round it with a free look, and brings it round when it sets off](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7412) — `tests/regression/library-scene.test.js`
 
-+11 ещё в тех же файлах
++14 ещё в тех же файлах

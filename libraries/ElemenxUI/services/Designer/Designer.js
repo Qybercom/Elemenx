@@ -30,7 +30,8 @@
  * - Template() is the document as a template of Elemenx, its rules first in a <style> (@media for the widths);
  *   Template(true, empty) the same for a canvas, every node in an element that names it (data-designer-id), a container
  *   marked (data-designer-container, data-designer-gap), an empty one holding the text empty (none when it is ''), and
- *   the rules inside the page of the canvas (@container for the widths).
+ *   the rules inside the page of the canvas (@container for the widths). A third argument names another document of
+ *   the project to write (Template(true, '', id): its page in a pane of its own, while another one is edited).
  * - Import(text) reads a template back: the kinds of the palette where an element is one, any other element as it is,
  *   and the rules of its <style> (those it does not understand kept as they are).
  * - Projects, the one being edited among them, each kept in the storage of the browser (ProjectsKey): Projects() lists
@@ -67,7 +68,7 @@
 Elemenx.Service('Designer', {
 	$Meta: {
 		Description: 'The document of a designer of pages: its nodes, their props and layout, the selection, the history and the template.',
-		Methods: ['Load(callback)', 'Use(meta)', 'Ready()', 'Literal(value)', 'Parse(expression)', 'Rules()', 'Rule(context)', 'SetRule(context, property, value)', 'RootClass(id)', 'Kinds()', 'Kind(id)', 'Label(kind)', 'Hint(kind)', 'GroupLabel(group)', 'Root()', 'Find(id)', 'Parent(id)', 'Container(id)', 'Within(id, within)', 'Slots(id)', 'Insert(kind, parent, index)', 'Move(id, parent, index)', 'Remove(id)', 'Duplicate(id)', 'Set(id, name, value)', 'SetStyle(id, property, value)', 'Clear()', 'Select(id)', 'Selected()', 'Count()', 'CanUndo()', 'CanRedo()', 'Undo()', 'Redo()', 'Template(canvas, empty)', 'Import(text)', 'Project()', 'Opened()', 'Projects()', 'Create(mode, name)', 'Switch(id)', 'RemoveProject(id)', 'ExportProject()', 'ImportProject(text)', 'AddDocument(type, name)', 'RemoveDocument(id)', 'Used(id)', 'Open(id)', 'Close(id)', 'SetDocument(id, name, value)', 'AddRoute(path, page)', 'SetRoute(id, name, value)', 'RemoveRoute(id)', 'AddGuard(name)', 'SetGuard(name, field, value)', 'RemoveGuard(name)', 'SetSetting(name, value)', 'Source(id)', 'Map()', 'Scope(name)', 'Extend(components)', 'Copy(name)', 'OnChange(listener)', 'OffChange(listener)']
+		Methods: ['Load(callback)', 'Use(meta)', 'Ready()', 'Literal(value)', 'Parse(expression)', 'Rules()', 'Rule(context)', 'SetRule(context, property, value)', 'RootClass(id)', 'Kinds()', 'Kind(id)', 'Label(kind)', 'Hint(kind)', 'GroupLabel(group)', 'Root()', 'Find(id)', 'Parent(id)', 'Container(id)', 'Within(id, within)', 'Slots(id)', 'Insert(kind, parent, index)', 'Move(id, parent, index)', 'Remove(id)', 'Duplicate(id)', 'Set(id, name, value)', 'SetStyle(id, property, value)', 'Clear()', 'Select(id)', 'Selected()', 'Count()', 'CanUndo()', 'CanRedo()', 'Undo()', 'Redo()', 'Template(canvas, empty, id)', 'Import(text)', 'Project()', 'Opened()', 'Projects()', 'Create(mode, name)', 'Switch(id)', 'RemoveProject(id)', 'ExportProject()', 'ImportProject(text)', 'AddDocument(type, name)', 'RemoveDocument(id)', 'Used(id)', 'Open(id)', 'Close(id)', 'SetDocument(id, name, value)', 'AddRoute(path, page)', 'SetRoute(id, name, value)', 'RemoveRoute(id)', 'AddGuard(name)', 'SetGuard(name, field, value)', 'RemoveGuard(name)', 'SetSetting(name, value)', 'Source(id)', 'Map()', 'Scope(name)', 'Extend(components)', 'Copy(name)', 'OnChange(listener)', 'OffChange(listener)']
 	},
 	Library: ['ElemenxCommon', 'ElemenxUI', 'ElemenxGraphics', 'ElemenxGaming'],
 	StorageKey: 'elemenx-designer:document',
@@ -2082,12 +2083,18 @@ Elemenx.Service('Designer', {
 		 * On the canvas the components of the project are the Components made of their documents (part); out of it the
 		 * texts of a copy of a Component keep their expressions.
 		 */
-		this.Template = function (canvas, empty) {
+		this.Template = function (canvas, empty, id) {
+			var item = id ? documentOf(id) : opened();
+			if (!item)
+				return '';
+
 			aliasing = !!canvas;
 
 			try {
-				return expressed(!canvas && !!opened().Origin, function () {
-					return template(canvas, empty);
+				return expressed(!canvas && !!item.Origin, function () {
+					return within(treeOf(item), function () {
+						return template(canvas, empty);
+					});
 				});
 			}
 			finally {

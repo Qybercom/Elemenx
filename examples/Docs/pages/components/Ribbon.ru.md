@@ -127,10 +127,10 @@
 ## Тесты
 
 - [Ribbon: the first control of the panel a person can see, after ArrowDown on its tab](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/focus-on-open.test.js#L84) — `tests/regression/focus-on-open.test.js`
-- [adds components from the Insert tab of its Ribbon, edits their props and text, and undoes and redoes the changes](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L142) — `tests/examples/designer.spec.js`
-- [drops components from the Ribbon where the line shows, with words saying where, and moves elements by the grip of the selection](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L213) — `tests/examples/designer.spec.js`
-- [moves elements in the structure by dragging them, and takes a kind dragged from the Ribbon into it](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L561) — `tests/examples/designer.spec.js`
-- [opens a group of the Ribbon over the canvas, its rulers and the handles of the panels](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L1556) — `tests/examples/designer.spec.js`
+- [adds components from the Insert tab of its Ribbon, edits their props and text, and undoes and redoes the changes](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L149) — `tests/examples/designer.spec.js`
+- [drops components from the Ribbon where the line shows, with words saying where, and moves elements by the grip of the selection](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L220) — `tests/examples/designer.spec.js`
+- [moves elements in the structure by dragging them, and takes a kind dragged from the Ribbon into it](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L568) — `tests/examples/designer.spec.js`
+- [opens a group of the Ribbon over the canvas, its rulers and the handles of the panels](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L1622) — `tests/examples/designer.spec.js`
 - [embeds in ElemenxUI its styles, sprites, data and every entity with its template and style](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/dist.test.js#L54) — `tests/regression/dist.test.js`
 - [ribbon switches tabs, runs commands, menus and galleries, and shows a contextual tab](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L580) — `tests/examples/ui-kit.spec.js`
 - [ribbon shrinks its groups to fit, folds them into buttons and collapses to its tabs](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L650) — `tests/examples/ui-kit.spec.js`

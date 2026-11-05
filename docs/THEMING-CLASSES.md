@@ -1551,11 +1551,23 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-model-editor-generator`
 - `elemenx-model-editor-gizmo`
 - `elemenx-model-editor-group`: `end`
+- `elemenx-model-editor-hint`
 - `elemenx-model-editor-import`
 - `elemenx-model-editor-inspector`
+- `elemenx-model-editor-marks`
+- `elemenx-model-editor-mode`: `active`
+- `elemenx-model-editor-modes`
 - `elemenx-model-editor-overlay`
 - `elemenx-model-editor-palette`
 - `elemenx-model-editor-ring`
+- `elemenx-model-editor-role`: `active`
+- `elemenx-model-editor-role-actions`
+- `elemenx-model-editor-role-axis`
+- `elemenx-model-editor-role-kind`
+- `elemenx-model-editor-role-model`
+- `elemenx-model-editor-role-part`
+- `elemenx-model-editor-role-pivot`
+- `elemenx-model-editor-roles`
 - `elemenx-model-editor-shape`
 - `elemenx-model-editor-side`
 - `elemenx-model-editor-snap`
@@ -1713,7 +1725,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## TabSplit
 
-- `elemenx-tab-split`
+- `elemenx-tab-split`: `many`
 - `elemenx-tab-split-divider`: `column`, `row`
 - `elemenx-tab-split-group`
 

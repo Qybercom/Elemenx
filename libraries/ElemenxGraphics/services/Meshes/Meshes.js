@@ -427,7 +427,9 @@ Elemenx.Service('Meshes', {
 
 			count = geometry.Positions.length / 3;
 
-			Array.prototype.push.apply(result.Positions, geometry.Positions);
+			/* One by one: a list of a large model passed at once to push is more than the stack takes. */
+			for (i = 0; i < geometry.Positions.length; i++)
+				result.Positions.push(geometry.Positions[i]);
 
 			for (i = 0; i < geometry.Normals.length; i++)
 				result.Normals.push(geometry.Normals[i]);

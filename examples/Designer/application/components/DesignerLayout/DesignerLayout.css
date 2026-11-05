@@ -83,7 +83,7 @@ body {
 	width: 140px;
 }
 
-/* The main area: the tabs of the documents of an application over the canvas, or its settings. */
+/* The main area: the panes of an application (its documents, its settings, its map), or the canvas of one document. */
 .designer-main {
 	display: flex;
 	flex: 1 1 auto;
@@ -93,73 +93,16 @@ body {
 }
 
 .designer-main > .elemenx-designer-canvas,
-.designer-main > .elemenx-designer-settings {
+.designer-main > .elemenx-tab-split {
 	flex: 1 1 auto;
 	min-height: 0;
 }
 
-.designer-documents {
-	display: flex;
-	flex: 0 0 auto;
-	gap: 2px;
-	padding: 4px 8px 0;
-	overflow-x: auto;
-	border-bottom: 1px solid var(--elemenx-border);
-}
-
-/* A tab of a document: its name, which opens it, and its cross, which closes it. */
-.designer-document {
-	display: inline-flex;
-	align-items: center;
-	color: var(--elemenx-text-muted);
-	font-size: var(--elemenx-font-size-small);
-	white-space: nowrap;
-	background: transparent;
-	border: 1px solid transparent;
-	border-bottom: 0;
-	border-radius: var(--elemenx-radius-small) var(--elemenx-radius-small) 0 0;
-}
-
-button.designer-document,
-.designer-document-open {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	padding: 6px 12px;
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
-	background: transparent;
-	border: 0;
-}
-
-.designer-document-close {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 20px;
-	height: 20px;
-	margin-inline-end: 6px;
-	padding: 0;
-	color: inherit;
-	cursor: pointer;
-	background: transparent;
-	border: 0;
-	border-radius: var(--elemenx-radius-small);
-}
-
-.designer-document-close:hover {
-	background: var(--elemenx-surface-hover);
-}
-
-.designer-document:hover {
-	color: var(--elemenx-text);
-}
-
-.designer-document.active {
-	color: var(--elemenx-text);
-	background: var(--elemenx-surface);
-	border-color: var(--elemenx-border);
+/* A pane: its canvas, its settings or its map as high as it is (the content of a tab is in an element of its own). */
+.designer-main .elemenx-tab-split-group .elemenx-tab-panel .elemenx-designer-canvas,
+.designer-main .elemenx-tab-split-group .elemenx-tab-panel .elemenx-designer-settings,
+.designer-main .elemenx-tab-split-group .elemenx-tab-panel .elemenx-designer-map {
+	height: 100%;
 }
 
 /* Create: a card for each kind of project. */

@@ -14,12 +14,12 @@
  * attribute; a SceneObject of kind village lays out houses and their roads at its X and Y (Houses, Radius, Seed), and what
  * is sown keeps away from them.
  *
- * The things live in squares of the ground, typed arrays made a few at a time, the nearest first. Each square in view
+ * The things live in squares of the ground, typed arrays made in workers (SceneSower), the nearest first. Each square in view
  * gives its things to the stream of their model and level: near the whole model, farther two simpler ones (SceneModels.Levels),
  * far a picture baked from all sides that is lit as the model is (Renderer.Target). The streams are made again only
  * when the view moved, so a still view costs no work, and a few draws show them all.
  *
- * Methods: Sown() ({Things, Squares, Waiting, Draws, Blades}), SownNear(x, z, radius) (what is sown round a point: [{Model, X, Y, Z,
+ * Methods: Sown() ({Things, Squares, Waiting (the squares not sown yet, those in a worker among them), Draws, Blades}), SownNear(x, z, radius) (what is sown round a point: [{Model, X, Y, Z,
  * Size, Turn}]).
  */
 Elemenx.Trait('SceneScatter', {
@@ -36,10 +36,10 @@ Elemenx.Trait('SceneScatter', {
 		var shaders = this.Grassed(this.Winded(this.ScatterShaders(graphics)));
 		var size = 48;
 		var steps = [[62, 74], [140, 165], [270, 310]];
-		var state = {Kept: {}, Houses: [], Settled: '', Surfaces: {}, Key: '', Squares: [], Waiting: [], Streams: {}, Meshes: {}, Baked: {}, Blocked: {}, Things: 0, Moved: true, Eye: null, Look: null, Grass: null, Field: null, Programs: null};
+		var state = {Sown: Math.random().toString(36).slice(2, 8), Generation: 0, Running: 0, Flying: 0, Kept: {}, Houses: [], Settled: '', Surfaces: {}, Key: '', Squares: [], Waiting: [], Streams: {}, Meshes: {}, Baked: {}, Blocked: {}, Things: 0, Moved: true, Eye: null, Look: null, Grass: null, Field: null, Programs: null};
 
 		this.Sown = function () {
-			return {Things: state.Things, Squares: state.Squares.length, Waiting: state.Waiting.length, Draws: Object.keys(state.Streams).filter(function (key) {
+			return {Things: state.Things, Squares: state.Squares.length, Waiting: state.Waiting.length + state.Flying, Draws: Object.keys(state.Streams).filter(function (key) {
 				return state.Streams[key].Count;
 			}).length, Copies: Object.keys(state.Streams).reduce(function (sum, key) {
 				return sum + state.Streams[key].Count;
@@ -126,15 +126,22 @@ Elemenx.Trait('SceneScatter', {
 		};
 
 		function sketched () {
-			var ground = scene.Roots.filter(function (object) {
+			var field = scene.Ground && scene.Ground.Field;
+			var ground = field && field.Options && field.Options.Sketch ? null : scene.Roots.filter(function (object) {
 				return object.Traits.Terrain;
 			})[0];
-			var field = scene.Ground && scene.Ground.Field;
 			/* The sketch the ground is made of: the one of the ground and the roads of the scene over it. */
 			var sketch = field && field.Options && field.Options.Sketch || ground && ground.Traits.Terrain.Sketch || null;
-			var text = sketch ? JSON.stringify(sketch) : '';
 			var terrain = self.$Service('SceneTerrainGenerator');
+			var text;
 			var made;
+
+			/* Asked for each place a thing may grow: the same sketch in the same scene is what it was. */
+			if (state.Sketched && state.SketchOf === sketch && state.SketchVersion === scene.Version) return state.Sketched;
+
+			text = sketch ? JSON.stringify(sketch) : '';
+			state.SketchOf = sketch;
+			state.SketchVersion = scene.Version;
 
 			if (state.SketchText === text && state.Sketched) return state.Sketched;
 
@@ -185,80 +192,6 @@ Elemenx.Trait('SceneScatter', {
 			state.Sketched = made;
 
 			return made;
-		}
-
-		function within (points, x, z) {
-			var inside = false;
-			var i;
-			var j;
-
-			for (i = 0, j = points.length - 1; i < points.length; j = i++) {
-				if (points[i][1] > z !== points[j][1] > z && x < (points[j][0] - points[i][0]) * (z - points[i][1]) / (points[j][1] - points[i][1]) + points[i][0])
-					inside = !inside;
-			}
-
-			return inside;
-		}
-
-		function near (points, x, z, reach) {
-			var i;
-
-			for (i = 0; i + 1 < points.length; i++) {
-				var ax = points[i][0];
-				var az = points[i][1];
-				var dx = points[i + 1][0] - ax;
-				var dz = points[i + 1][1] - az;
-				var t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1)));
-				if (Math.hypot(ax + dx * t - x, az + dz * t - z) < reach) return true;
-			}
-
-			return false;
-		}
-
-		/* Nothing of any rule grows where the sketch keeps the ground free; the things of a line stand on its way all the same. */
-		function free (rule, x, z) {
-			var made = sketched();
-
-			if (rule.Line) return true;
-
-			return !made.Areas.some(function (points) {
-				return within(points, x, z);
-			}) && !made.Lines.some(function (line) {
-				return near(line.Points, x, z, line.Reach);
-			});
-		}
-
-		/* Where a building stands: the lowest of its corners, so no corner of it hangs over the ground. */
-		function footing (field, one) {
-			var half = [(one.Width || 0) / 2, (one.Depth || 0) / 2];
-			var c = Math.cos(one.Turn || 0);
-			var s = Math.sin(one.Turn || 0);
-			var low = field.Height(one.X, one.Z);
-
-			[[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(function (corner) {
-				var x = corner[0] * half[0];
-				var z = corner[1] * half[1];
-
-				low = Math.min(low, field.Height(one.X + c * x + s * z, one.Z + c * z - s * x));
-			});
-
-			return low;
-		}
-
-		/* The cells of 2 by 2 a building of that width and depth covers, turned as it stands. */
-		function footprint (x, z, turn, width, depth) {
-			var cells = [];
-			var c = Math.cos(turn || 0);
-			var s = Math.sin(turn || 0);
-			var u;
-			var v;
-
-			for (u = -width / 2; u <= width / 2; u += 1.5) {
-				for (v = -depth / 2; v <= depth / 2; v += 1.5)
-					cells.push(Math.floor((x + c * u + s * v) / 2) + ':' + Math.floor((z + c * v - s * u) / 2));
-			}
-
-			return cells;
 		}
 
 		/*
@@ -337,84 +270,6 @@ Elemenx.Trait('SceneScatter', {
 					return {X: gate.X, Z: gate.Z, Turn: best.Turn, Model: 'gate'};
 				})});
 			});
-		}
-
-		/* The places of a rule of a sketch in a square: in rows over its area, a piece at each step of its line, or none. */
-		function placesOf (rule, square, random) {
-			var places = [];
-			var spacing = Math.max(0.3, Number(rule.Spacing) || 2);
-			var points = rule.Line;
-			var way;
-			var i;
-
-			/* Things at their places: the buildings of lots, the towers and the gates of walls. */
-			if (rule.Fixed) {
-				return rule.Fixed.filter(function (one) {
-					return one.X >= square.X && one.X < square.X + size && one.Z >= square.Z && one.Z < square.Z + size;
-				}).map(function (one) {
-					return [one.X, one.Z, one.Turn || 0, one.Model, one];
-				});
-			}
-
-			if (rule.Rows) {
-				var gap = Math.max(0.3, Number(rule.Gap) || spacing);
-				var angle = (Number(rule.Way) || 0) * Math.PI / 180;
-				var c = Math.cos(angle);
-				var s = Math.sin(angle);
-				var reach = size * 0.75;
-				var cx = square.X + size / 2;
-				var cz = square.Z + size / 2;
-				var u;
-				var v;
-
-				/* The rows of the whole ground, fixed to its origin: the squares next to each other meet in them. */
-				var u0 = Math.floor((cx * c + cz * s - reach) / spacing);
-				var v0 = Math.floor((-cx * s + cz * c - reach) / gap);
-
-				for (v = v0; v * gap < -cx * s + cz * c + reach; v++) {
-					for (u = u0; u * spacing < cx * c + cz * s + reach; u++) {
-						var x = u * spacing * c - v * gap * s;
-						var z = u * spacing * s + v * gap * c;
-						if (x >= square.X && x < square.X + size && z >= square.Z && z < square.Z + size)
-							places.push([x + random(-0.08, 0.08) * spacing, z + random(-0.08, 0.08) * spacing, -angle]);
-					}
-				}
-
-				return places;
-			}
-
-			if (!points)
-				return places;
-
-			/* Along the line: the same steps from its start whatever square, each piece turned along its way. */
-			var walked = 0;
-
-			for (i = 0; i + 1 < points.length; i++) {
-				var dx = points[i + 1][0] - points[i][0];
-				var dz = points[i + 1][1] - points[i][1];
-				var length = Math.hypot(dx, dz);
-				var at = Math.ceil(walked / spacing) * spacing - walked;
-
-				way = Math.atan2(-dz, dx);
-
-				for (; at < length; at += spacing) {
-					var px = points[i][0] + dx * (at + spacing / 2) / length;
-					var pz = points[i][1] + dz * (at + spacing / 2) / length;
-
-					if (at + spacing / 2 > length) break;
-
-					/* A wall leaves the way of its gates open. */
-					var gated = (rule.Gates || []).some(function (gate) {
-						return Math.hypot(gate.X - px, gate.Z - pz) < 5;
-					});
-					if (!gated && px >= square.X && px < square.X + size && pz >= square.Z && pz < square.Z + size)
-						places.push([px, pz, way]);
-				}
-
-				walked += length;
-			}
-
-			return places;
 		}
 
 		/* The villages of the ground, once: their houses are objects of the scene, their roads are on the ground. */
@@ -595,6 +450,9 @@ Elemenx.Trait('SceneScatter', {
 			if (key === state.Key) return;
 
 			state.Key = key;
+			state.Generation = (state.Generation || 0) + 1;
+			state.Running = 0;
+			state.Flying = 0;
 			state.Squares = [];
 			state.Waiting = [];
 			state.Blocked = {};
@@ -611,105 +469,104 @@ Elemenx.Trait('SceneScatter', {
 			}
 		}
 
-		function chance (rule, place, field, noise) {
-			var cover = rule.Cover === undefined ? 1 : Number(rule.Cover);
-			var height = field.Height(place[0], place[1]);
+		/*
+		 * What the jobs of the sowing of a generation share (a context of SceneSower.Sow), made once: the ground (its options, its
+		 * field made once by each worker; in the page, the field itself), the rules, what keeps the ground free, the models of the
+		 * shapes (their sizes and the Keys of their variants).
+		 */
+		function context (ground, inline) {
+			var table = {};
+			var made;
+			var list;
 
-			if (state.Kept[Math.floor(place[0] / 4) + ':' + Math.floor(place[1] / 4)]) return null;
-			if (rule.Area && !within(rule.Area, place[0], place[1])) return null;
-			if (!free(rule, place[0], place[1])) return null;
-			if (field.Roads && self.$Service('SceneTerrainGenerator').OnRoad(field, place[0], place[1], 3)) return null;
-			if (height < (rule.MinHeight === undefined ? 1 : Number(rule.MinHeight))) return null;
-			if (rule.MaxHeight !== undefined && height > Number(rule.MaxHeight)) return null;
-			if (field.Slope(place[0], place[1]) > (rule.MaxSlope === undefined ? 0.3 : Number(rule.MaxSlope))) return null;
+			if (state.Context && state.Context.Generation === state.Generation && state.Context.Inline === inline) return state.Context.Data;
 
-			if (cover < 1 && noise.Fbm(place[0] / (Number(rule.Patch) || 60), 0.5, place[1] / (Number(rule.Patch) || 60), 3) * 1.6 - 0.3 > cover) return null;
+			made = sketched();
+			list = rules();
 
-			/* Clumps: thick in groves and thin between them, where Cover would leave none; the same place, the same choice. */
-			if (Number(rule.Clumps) > 0 && Math.abs(Math.sin(place[0] * 12.9898 + place[1] * 78.233) * 43758.5453) % 1 > 1 - Math.min(1, Number(rule.Clumps)) * (1 - self.$Service('SceneTerrainGenerator').Smoothstep(0.35, 0.65, noise.Fbm(place[0] / (Number(rule.Patch) || 60), 1.7, place[1] / (Number(rule.Patch) || 60), 3)))) return null;
+			list.forEach(function (rule) {
+				[].concat(rule.Shapes || (rule.Fixed ? [] : 'pine'), (rule.Fixed || []).map(function (one) {
+					return one.Model;
+				})).forEach(function (name) {
+					var info = table[name] === undefined ? library.Info(name) : null;
+					var keys = [];
+					var v;
 
-			return height;
-		}
+					if (table[name] !== undefined) return;
 
-		/* The things of a square: the same ones for the same seed, in arrays of their model. */
-		function sow (square, field) {
-			var lists = {};
+					if (!info) {
+						table[name] = null;
 
-			rules().forEach(function (rule) {
-				var random = library.Random(String(rule.Seed === undefined ? rule.ID : rule.Seed) + ':' + square.X + ':' + square.Z);
-				var noise = math.Noise(String(rule.Seed === undefined ? rule.ID : rule.Seed));
-				var shapes = [].concat(rule.Shapes || 'pine');
-				var count = Number(rule.Density === undefined ? 4 : rule.Density) * size * size / 100;
-				var scale = rule.Size || [0.8, 1.3];
-				var grid = Number(rule.Grid) || 0;
-				var i;
-
-				/* Tiles of ready models: a cell each, turned by quarters, all of a square. */
-				if (grid)
-					count = Math.ceil(size / grid) * Math.ceil(size / grid);
-
-				/* Rows and lines of a sketch: their own places, each with its turn. */
-				var fixed = rule.Rows || rule.Line || rule.Fixed ? placesOf(rule, square, random) : null;
-				if (fixed)
-					count = fixed.length;
-
-				for (i = 0; i < count; i++) {
-					var place = fixed ? fixed[i] : grid ? [Math.ceil(square.X / grid) * grid + (i % Math.ceil(size / grid)) * grid, Math.ceil(square.Z / grid) * grid + Math.floor(i / Math.ceil(size / grid)) * grid] : [square.X + random(0, size), square.Z + random(0, size)];
-					var name = rule.Fixed ? place[3] : shapes[Math.floor(random(0, shapes.length))];
-					var variant = rule.Fixed ? place[4].Variant || 0 : Math.floor(random(0, 16));
-					var height = rule.Fixed ? footing(field, place[4]) : chance(rule, place, field, noise);
-					var info = library.Info(name);
-					var key;
-					var made;
-					var tone;
-
-					if (height === null || !info) continue;
-
-					key = library.Make(name, {Variant: variant}).Key;
-					made = lists[key] = lists[key] || {Places: [], Extra: []};
-					tone = random(0.86, 1.1);
-
-					/* A piece that joins the next (a fence, a hedge, a wall) is as long as the step; the others as their Size says. */
-					made.Places.push(place[0], height - 0.05, place[1], fixed && rule.Fit ? Number(rule.Spacing) : rule.Fixed ? place[4].Size || info.Size : fixed && rule.Line ? info.Size : info.Size * random(Number(scale[0]), Number(scale[1])));
-					made.Extra.push(fixed ? place[2] : grid ? Math.floor(random(0, 4)) * Math.PI / 2 : random(0, Math.PI * 2), tone, tone * random(0.94, 1.04), tone * random(0.92, 1));
-
-					made.Reach = rule.Reach ? Number(rule.Reach) : 0;
-
-					/*
-					 * A building stops the way over all of its ground; the others as their Passability tells, how many of them leave a way
-					 * through (1 all, 0 none); a piece of a line stops all along it.
-					 */
-					if (rule.Fixed && place[4].Width) {
-						footprint(place[0], place[1], place[2], place[4].Width, place[4].Depth).forEach(function (cell) {
-							state.Blocked[cell] = true;
-						});
-					}
-					else if (rule.Passability !== undefined ? random(0, 1) >= Number(rule.Passability) : rule.Blocks !== false && rule.Blocks !== 'false' && info.Size > 2) {
-						[-0.5, -0.25, 0, 0.25, 0.5].forEach(function (along) {
-							var reach = fixed && rule.Line ? info.Size * along : 0;
-
-							state.Blocked[Math.floor((place[0] + Math.cos(place[2] || 0) * reach) / 2) + ':' + Math.floor((place[1] - Math.sin(place[2] || 0) * reach) / 2)] = true;
-						});
+						return;
 					}
 
-					state.Things++;
-				}
+					for (v = 0; v < 16; v++)
+						keys.push(library.Make(name, {Variant: v}).Key);
+
+					table[name] = {Size: info.Size, Keys: keys};
+				});
 			});
 
-			Object.keys(lists).forEach(function (key) {
-				square.Lists[key] = {Places: new Float32Array(lists[key].Places), Extra: new Float32Array(lists[key].Extra), Count: lists[key].Places.length / 4, Reach: lists[key].Reach};
-			});
+			state.Context = {Generation: state.Generation, Inline: inline, Shared: false, Data: {Key: state.Sown + ':' + state.Generation, Options: inline ? null : ground.Field.Options, Field: inline ? ground.Field : null, Roads: ground.Field.Roads || null, Kept: Object.keys(state.Kept), Rules: list, Free: {Areas: made.Areas, Lines: made.Lines}, Models: table, Size: size}};
 
-			square.Center = [square.X + size / 2, field.Height(square.X + size / 2, square.Z + size / 2), square.Z + size / 2];
+			return state.Context.Data;
 		}
 
-		/* A few squares a frame, the nearest first: the view is never held up, and what is near comes first. */
+		/* The squares of a job, as SceneSower takes them. */
+		function placed (squares) {
+			return squares.map(function (square) {
+				return {X: square.X, Z: square.Z};
+			});
+		}
+
+		/* What a job sowed: its squares among the others, the way through them stopped where it stops it. */
+		function sown (result) {
+			result.Squares.forEach(function (square) {
+				state.Squares.push(square);
+			});
+
+			result.Blocked.forEach(function (cell) {
+				state.Blocked[cell] = true;
+			});
+
+			state.Things += result.Things;
+			state.Moved = true;
+		}
+
+		/*
+		 * A job of a few squares to a worker; what it sows of a ground made before (another generation) is let go, and the squares of
+		 * a worker that failed are sown in the page.
+		 */
+		function send (pool, sower, batch) {
+			var generation = state.Generation;
+
+			state.Running++;
+			state.Flying += batch.length;
+
+			pool.Run('SceneSower', 'Sow', [{Context: 'sow:' + state.Sown, Squares: placed(batch)}], function (error, result) {
+				/* A job of another generation: what counts the jobs of this one started again. */
+				if (generation !== state.Generation) return;
+
+				state.Running--;
+				state.Flying -= batch.length;
+
+				sown(error ? sower.Sow({Context: context(scene.Ground, true), Squares: placed(batch)}) : result);
+			});
+		}
+
+		/*
+		 * What is sown, the nearest squares first: in the workers of SceneSower, a few squares a job and two jobs a worker, the
+		 * context of the generation sent to each worker once (Share), so a job carries its squares alone and the view is never
+		 * held up; with no worker, a few squares a frame in the page.
+		 */
 		function grow () {
 			var ground = scene.Ground;
 			var started = performance.now();
 			var eye = scene.Eye;
-
-			if (!state.Waiting.length) return;
+			var sower = self.$Service('SceneSower');
+			var pool = sower.Work();
+			var inline = pool.Inline();
+			if (!state.Waiting.length || !inline && state.Running >= 8) return;
 
 			/* What is sown from files, once they came. */
 			if (rules().some(function (rule) {
@@ -722,15 +579,23 @@ Elemenx.Trait('SceneScatter', {
 				return Math.abs(b.X - eye[0]) + Math.abs(b.Z - eye[2]) - Math.abs(a.X - eye[0]) - Math.abs(a.Z - eye[2]);
 			});
 
-			while (state.Waiting.length && performance.now() - started < 4) {
-				var square = state.Waiting.pop();
+			if (inline) {
+				while (state.Waiting.length && performance.now() - started < 4)
+					sown(sower.Sow({Context: context(ground, true), Squares: placed([state.Waiting.pop()])}));
 
-				sow(square, ground.Field);
-
-				state.Squares.push(square);
-
-				state.Moved = true;
+				return;
 			}
+
+			context(ground, false);
+
+			if (!state.Context.Shared) {
+				pool.Share('sow:' + state.Sown, state.Context.Data);
+
+				state.Context.Shared = true;
+			}
+
+			while (state.Waiting.length && state.Running < 8)
+				send(pool, sower, state.Waiting.splice(Math.max(0, state.Waiting.length - 6), 6));
 		}
 
 		/* The six planes of a view, each [a, b, c, d] of the side a point is in when a x + b y + c z + d > 0. */
@@ -960,18 +825,25 @@ Elemenx.Trait('SceneScatter', {
 			return renderer.Mesh(geometry);
 		}
 
-		/* What the shader of the blades reads of the ground: its height, and where it may grow; made a row at a time. */
+		/*
+		 * What the shader of the blades reads of the ground: its height, and where it may grow (made a row at a time); grass
+		 * grows up to where the rock or the snow of the ground begins (MaxHeight of the rule otherwise). Free: where it may
+		 * not, finer (a metre a texel, up to 2048): the roads and their shoulders, the rivers and their banks, the clearings,
+		 * the lakes and the masks of the sketch, made by a worker.
+		 */
 		function fieldOf (rule) {
 			var ground = scene.Ground;
 			var field = ground.Field;
 			var side = 256;
-			var key = ground.Key + JSON.stringify(rule);
+			var made = sketched();
+			var key = ground.Key + JSON.stringify(rule) + (state.SketchText || '');
 			var grass = state.Grass;
 			var started = performance.now();
 			var half = field.Size / 2;
 			var step = field.Size / (side - 1);
-			var top = rule.MaxHeight === undefined ? field.Top * 0.45 : Number(rule.MaxHeight);
+			var top = rule.MaxHeight === undefined || rule.MaxHeight === '' ? Math.min(field.Rock === undefined ? field.Top * 0.45 : field.Rock, field.Snow === undefined ? Infinity : field.Snow) : Number(rule.MaxHeight);
 			var steep = rule.MaxSlope === undefined ? 0.28 : Number(rule.MaxSlope);
+			var fine = Math.max(2, Math.min(2048, Math.ceil(field.Size) + 1));
 			var row;
 			var x;
 
@@ -979,7 +851,24 @@ Elemenx.Trait('SceneScatter', {
 				if (grass && grass.Texture)
 					grass.Texture.Destroy();
 
-				grass = state.Grass = {Key: key, Data: new Float32Array(side * side * 4), Row: 0, Side: side, Texture: null, Blades: 0, Near: bladesMesh(1300, 7), Far: bladesMesh(330, 7), Patches: null};
+				if (grass && grass.Free)
+					grass.Free.Destroy();
+
+				grass = state.Grass = {Key: key, Data: new Float32Array(side * side * 4), Row: 0, Side: side, Texture: null, Free: null, Blades: 0, Near: bladesMesh(1300, 7), Far: bladesMesh(330, 7), Patches: null};
+
+				/* What is kept bare: nothing to make when nothing is. */
+				if (made.Lines.length || made.Areas.length) {
+					grass.Freeing = true;
+
+					self.$Service('SceneTerrainGenerator').Work().Run('SceneTerrainGenerator', 'Free', [field.Size, fine, made.Lines, made.Areas], function (error, data) {
+						if (state.Grass !== grass) return;
+
+						grass.Freeing = false;
+
+						if (!error)
+							grass.Free = renderer.Texture({Width: fine, Height: fine, Data: data}, {Single: true});
+					});
+				}
 
 				/* Of a ground of noise a worker makes it all; the rows below are of another ground, or of one it failed. */
 				if (field.Options) {
@@ -1013,6 +902,10 @@ Elemenx.Trait('SceneScatter', {
 
 			if (grass.Row === side && !grass.Waiting && !grass.Texture)
 				grass.Texture = renderer.Texture({Width: side, Height: side, Data: grass.Data}, {Float: true, Nearest: true});
+
+			/* A white texel: where nothing is kept bare. */
+			if (!grass.Free && !grass.Freeing)
+				grass.Free = renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([255])}, {Single: true});
 
 			return grass;
 		}
@@ -1062,7 +955,7 @@ Elemenx.Trait('SceneScatter', {
 
 			grass = fieldOf(rule);
 
-			if (!grass.Texture) return;
+			if (!grass.Texture || !grass.Free) return;
 
 			view = planes(matrix);
 			middleX = Math.round(target[0] / extent) * extent;
@@ -1094,7 +987,7 @@ Elemenx.Trait('SceneScatter', {
 
 			[[grass.Near, near], [grass.Far, far]].forEach(function (each) {
 				if (each[1].length) {
-					renderer.Draw(each[0], programs().Grass, Object.assign({}, uniforms, {uOrigin: vectors.Subtract([0, 0, 0], eye), uField: grass.Texture, uFieldSize: [ground.Field.Size, grass.Side], uBlade: [Number(rule.Height) || 0.7, Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: engine.Paint(rule.Root || '#2f5a22').slice(0, 3), uTip: engine.Paint(rule.Color || '#7fae4a').slice(0, 3), uSun: ground.Sun, uSunColor: ground.SunColor, uEye: target}), {Cull: 'none'});
+					renderer.Draw(each[0], programs().Grass, Object.assign({}, uniforms, {uOrigin: vectors.Subtract([0, 0, 0], eye), uField: grass.Texture, uFree: grass.Free, uFieldSize: [ground.Field.Size, grass.Side], uBlade: [Number(rule.Height) || 0.7, Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: engine.Paint(rule.Root || '#2f5a22').slice(0, 3), uTip: engine.Paint(rule.Color || '#7fae4a').slice(0, 3), uSun: ground.Sun, uSunColor: ground.SunColor, uEye: target}), {Cull: 'none'});
 				}
 			});
 		}
@@ -1156,10 +1049,15 @@ Elemenx.Trait('SceneScatter', {
 		engine.ScatterShadow = function (matrix) {
 			var origin = vectors.Subtract([0, 0, 0], scene.Eye);
 
+			/*
+			 * Each stream by the shape that holds its copies (gather put them there): the near ones drawn by the simpler shape of
+			 * the next level had the copies of that level, and the trees near the eye cast no shadow where the levels do not
+			 * overlap (at ultra: farther apart).
+			 */
 			each(function (one) {
 				if (one.Level === 3 || one.Level === 0 && surfaces(one.Key)) return;
 
-				renderer.Draw(levels(one.Key)[Math.max(1, one.Level)], programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: 0, uFade: fadeOf(one.Level)}, self.WindValues(scene.Seconds)), {Cull: 'none'});
+				renderer.Draw(levels(one.Key)[one.Level], programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: 0, uFade: fadeOf(one.Level)}, self.WindValues(scene.Seconds)), {Cull: 'none'});
 			});
 		};
 
@@ -1407,6 +1305,7 @@ Elemenx.Trait('SceneScatter', {
 				'uniform vec3 uEye;',
 				'uniform float uWind;',
 				'uniform sampler2D uField;',
+				'uniform sampler2D uFree;',
 				'uniform vec2 uFieldSize;',
 				'uniform vec4 uBlade;',
 				'uniform vec3 uClump;',
@@ -1437,7 +1336,10 @@ Elemenx.Trait('SceneScatter', {
 				'	float n = mix(mix(fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5), fract(sin(dot(i + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5), f.x), mix(fract(sin(dot(i + vec2(0.0, 1.0), vec2(127.1, 311.7))) * 43758.5), fract(sin(dot(i + vec2(1.0, 1.0), vec2(127.1, 311.7))) * 43758.5), f.x), f.y);',
 				'	float thick = mix(1.0, smoothstep(0.3, 0.7, n), uClump.x);',
 				'	float own = fract(seed * 7.31 + 0.13);',
-				'	float tall = uBlade.x * (1.0 + (own - 0.5) * 2.0 * uClump.z) * mix(1.0, 0.6 + 0.6 * thick, uClump.x) * smoothstep(0.35, 0.8, land.y) * fade * step(seed, uBlade.y * thick);',
+				/* Where the ground is kept bare (a road, a river, a clearing), a metre a texel: its texels are at its edges. */
+				'	vec2 freeSide = vec2(textureSize(uFree, 0));',
+				'	float free = texture(uFree, ((place / uFieldSize.x + 0.5) * (freeSide - 1.0) + 0.5) / freeSide).r;',
+				'	float tall = uBlade.x * (1.0 + (own - 0.5) * 2.0 * uClump.z) * mix(1.0, 0.6 + 0.6 * thick, uClump.x) * smoothstep(0.35, 0.8, land.y) * smoothstep(0.1, 0.9, free) * fade * step(seed, uBlade.y * thick);',
 				'	vec2 side = vec2(cos(aNormal.y), sin(aNormal.y));',
 				'	vec3 world = vec3(place.x, land.x, place.y) + uOrigin;',
 				/* The wind is waves over the field, one for all the blades of a place; a blade of its own stirs only near the eye. */

@@ -119,6 +119,28 @@ describe('Contract: the Designer Service edits projects of pages, components, ro
 		expect(designer.Close(home)).toBe(false);
 	});
 
+	/* Panes side by side: each canvas shows its document while another one is edited. */
+	it('writes the template of another document of the project, the one being edited as it is', function () {
+		var home = designer.Opened();
+		var other = designer.AddDocument('page', 'Other');
+		var count;
+
+		designer.Open(other);
+		designer.Insert('paragraph', 'root');
+		designer.Open(home);
+
+		count = designer.Count();
+
+		expect(designer.Template(false, '', other)).toBe('<p>A paragraph of text.</p>');
+		expect(designer.Template(true, '', other)).toContain('data-designer-id');
+		expect(designer.Template(false, '', 'nothing')).toBe('');
+		expect(designer.Template(false)).toBe(designer.Template(false, '', home));
+		expect(designer.Opened()).toBe(home);
+		expect(designer.Count()).toBe(count);
+
+		designer.RemoveDocument(other);
+	});
+
 	it('adds a component with a slot: the slot is a kind of a component only, its name what the component makes', function () {
 		var home = designer.Opened();
 		var card = designer.Project().Documents[1].ID;

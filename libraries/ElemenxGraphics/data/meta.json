@@ -691,6 +691,7 @@
 				"enter",
 				"leave",
 				"action",
+				"part",
 				"touch",
 				"shader",
 				"error"
@@ -709,6 +710,7 @@
 				"enter": "A walker, a vehicle or the hero came into a trigger: {Trigger (the trigger itself: ID, Inside(), Action(name, data), Enable(on)), ID, Object}.",
 				"leave": "One went out of a trigger, or was removed: {Trigger, ID, Object}.",
 				"action": "A trigger was sent an action (Action of the trigger): {Trigger, Name, Data}.",
+				"part": "A part of an object was set by its role (Part(id, role).Set): {ID, Role, Value}.",
 				"touch": "Two solid things began to touch (trait Rigid): {ID, With (null: the ground), At, Normal, Impulse}.",
 				"shader": "A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.",
 				"error": "There is no WebGL2 ({Reason: webgl2})."
@@ -736,6 +738,8 @@
 				"MountsOf(id, kind)",
 				"Travel(id, kind, options, callback)",
 				"OpenPart(id, name, amount)",
+				"Parts(id)",
+				"Part(id, role)",
 				"CosmosKinds()",
 				"Add(kind, props)",
 				"Change(id, changes)",
@@ -1261,6 +1265,27 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "What it shows, for screen readers."
+				},
+				{
+					"Name": "Mode",
+					"Type": "select",
+					"Default": "shape",
+					"Options": [
+						"shape",
+						"roles"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The tab shown: the parts of the recipe (shape) or the roles of the parts of a model (roles)."
+				},
+				{
+					"Name": "RoleModel",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In the tab Roles, a model of a file of SceneModels whose roles are edited (ModelRoles keeps them); empty: the one of the document (its recipe keeps them, Roles)."
 				}
 			],
 			"Slots": [],
@@ -1279,6 +1304,9 @@
 				"Document()",
 				"Load(document)",
 				"Recipe()",
+				"Roles()",
+				"SetRoles(roles)",
+				"Moded(mode)",
 				"Save()",
 				"Restore()",
 				"Export()",
@@ -1401,6 +1429,8 @@
 				"Piece(shape, options, roads, args)",
 				"Field(shape, options)",
 				"Grid(options, side, top, steep)",
+				"Free(size, side, lines, areas, edge)",
+				"Floor(options, side)",
 				"Heights(field, side)",
 				"FromGrid(options, heights, side)",
 				"Sketched(sketch, base, seed)",
@@ -1560,7 +1590,9 @@
 				"BarrierHit(roads, x, z, fromX, fromZ, hints, size)",
 				"FreeBarrier(spec, options)",
 				"Sketch(roads, junctions)",
-				"Asset(roads, options)"
+				"Asset(roads, options)",
+				"AssetOf(roads, options)",
+				"Work()"
 			],
 			"Sample": {}
 		},
@@ -1600,6 +1632,7 @@
 				"Has(name)",
 				"Info(name)",
 				"Define(name, recipe)",
+				"Remake(name)",
 				"Assemble(recipe, tools, random, variant)",
 				"Tagged(name, tag)",
 				"Load(name, callback)",
@@ -1612,6 +1645,38 @@
 				"Levels(name, options)",
 				"Pose(model, clip, time, options)",
 				"Length(model, clip)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "ModelRoles",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "What the parts of a model are: wheels, steering, pedals, doors, lamps, levers, hatches; kept for each model, moved by a Scene.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Kinds()",
+				"Kind(id)",
+				"Make(kind, props)",
+				"Get(model)",
+				"Set(model, roles)",
+				"Remove(model)",
+				"Models()",
+				"Export()",
+				"Import(text)",
+				"Rig(roles)",
+				"Ranges(indices)",
+				"Within(ranges, index)",
+				"Version()",
+				"OnChange(listener)",
+				"OffChange(listener)"
 			],
 			"Sample": {}
 		},
@@ -1656,6 +1721,64 @@
 				"Get(name)",
 				"Define(name, biome)",
 				"Village(field, options)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneWaves",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The waves of a sea as Gerstner waves: for the shader that draws them and for what floats on them.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Make(settings)",
+				"At(made, x, z, time)",
+				"Values(made, time)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneShowcase",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "One big world made of every primitive of the generation of a Scene: a demo and a benchmark.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"World(options)",
+				"Districts()"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneSower",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "What the Scatter of a Scene sows in squares of a ground, worked out in workers: the same things for the same seed.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Sow(job)",
+				"Work()"
 			],
 			"Sample": {}
 		}
@@ -1799,6 +1922,7 @@
 		"elemenx-model-editor-generator": [],
 		"elemenx-model-editor-view": [],
 		"elemenx-model-editor-overlay": [],
+		"elemenx-model-editor-marks": [],
 		"elemenx-model-editor-gizmo": [],
 		"elemenx-model-editor-axis": [
 			"axis-x",
@@ -1812,6 +1936,21 @@
 		],
 		"elemenx-model-editor-ring": [],
 		"elemenx-model-editor-fields": [],
-		"elemenx-model-editor-field": []
+		"elemenx-model-editor-field": [],
+		"elemenx-model-editor-modes": [],
+		"elemenx-model-editor-mode": [
+			"active"
+		],
+		"elemenx-model-editor-roles": [],
+		"elemenx-model-editor-role": [
+			"active"
+		],
+		"elemenx-model-editor-role-model": [],
+		"elemenx-model-editor-role-kind": [],
+		"elemenx-model-editor-role-actions": [],
+		"elemenx-model-editor-hint": [],
+		"elemenx-model-editor-role-part": [],
+		"elemenx-model-editor-role-axis": [],
+		"elemenx-model-editor-role-pivot": []
 	}
 }

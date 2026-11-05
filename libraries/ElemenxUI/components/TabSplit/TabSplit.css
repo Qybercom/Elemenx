@@ -19,6 +19,11 @@
 	flex: 1;
 }
 
+/* Groups side by side: the current tab of a group out of the focus has a quieter line than the one of the focus. */
+.elemenx-tab-split.many > .elemenx-tab-split-group:not(.focused) .elemenx-tab-group-tab.active::after {
+	background: var(--elemenx-border-strong);
+}
+
 /* A divider: a band a little wider than the line it is over, so a pointer finds it. */
 .elemenx-tab-split-divider {
 	position: absolute;

@@ -203,7 +203,7 @@ describe('elemenx meta', function () {
 
 			/* What its Traits emit is what it emits. */
 			(source.match(/\$Traits:\s*\[([^\]]*)\]/) || ['', ''])[1].replace(/'(\w+)'/g, function (all, name) {
-				source += fs.readFileSync(path.join(library, 'traits', name + '.js'), 'utf8');
+				source += fs.readFileSync(path.join(library, 'traits', name, name + '.js'), 'utf8');
 			});
 
 			/* The names in the first argument of an $Emit: $Emit('close'), $Emit(open ? 'popout' : 'popin'). */

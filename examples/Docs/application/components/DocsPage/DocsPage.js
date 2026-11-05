@@ -1,10 +1,10 @@
 /*
  * A page of the Docs: the navigation of all the pages (pages/index.json) beside the page of the route, read from
  * pages/<section>/<page>.<language>.md (the English page when the language has none); the pages of the components,
- * Services and directives in the tree of Libraries, a branch for each Library (the components by their groups), the
+ * Services, directives and traits in the tree of Libraries, a branch for each Library (the components by their groups), the
  * branches of the page open. The text is shown by Markdown; a block ```example holds a template that
  * runs beside its code (DocsExample), a block ```diagram an SVG drawn in the colors of the theme. The page of a
- * component, a service or a directive ends with its source, read from the Library: a listing for each of its files (its
+ * component, a service, a directive or a trait ends with its source, read from the Library: a listing for each of its files (its
  * template, its script, its stylesheet), a tab each. Beside the page, on a wide screen, its contents: its headings, the
  * one read now marked as the page scrolls; a press goes to one. An article of a tutorial (data/tutorials.json) offers
  * its finished project under its title: to download (tutorials/<Project>.zip), and, when it runs without a server of
@@ -366,8 +366,9 @@ Elemenx.Component('DocsPage', {
 				return {Name: name + '.' + extension, URL: root + '/components/' + name + '/' + name + '.' + extension, Language: languages[extension]};
 			});
 		}
-		else if (parts[0] === 'services' || parts[0] === 'directives') {
-			files = [{Name: name + '.js', URL: root + '/' + parts[0] + '/' + name + '.js', Language: 'js'}];
+		else if (parts[0] === 'services' || parts[0] === 'directives' || parts[0] === 'traits') {
+			/* Each in a folder of its own, as a component (services/Math/Math.js). */
+			files = [{Name: name + '.js', URL: root + '/' + parts[0] + '/' + name + '/' + name + '.js', Language: 'js'}];
 		}
 
 		this.Sources = [];

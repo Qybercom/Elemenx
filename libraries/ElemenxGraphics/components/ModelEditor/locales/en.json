@@ -20,7 +20,21 @@
 			"add": "Add",
 			"whole": "The model",
 			"generate": "Generate",
-			"describe": "Describe the model"
+			"describe": "Describe the model",
+			"shape": "Shape",
+			"roles": "Roles",
+			"pick": "Pick a piece",
+			"brush": "Brush (Shift wipes)",
+			"pivot": "Pivot",
+			"brushSize": "Brush",
+			"roleModel": "Model",
+			"thisModel": "This model",
+			"addRole": "Add a role",
+			"removeRole": "Remove the role",
+			"roleHint": "Pick a role in the list or add one, then set its parts in the view: Pick takes a piece whole, Brush paints the triangles of a piece, Pivot sets the point it turns round.",
+			"test": "Test",
+			"rolesExport": "Export the roles of the files",
+			"rolesImport": "Import roles"
 		}
 	}
 }

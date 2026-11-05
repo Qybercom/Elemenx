@@ -1,5 +1,5 @@
 /*
- * Makes the pages of the Libraries for the Docs: one for every component, service and directive of each system
+ * Makes the pages of the Libraries for the Docs: one for every component, service, directive and trait of each system
  * Library, from the comment at the head of its source (in English), with its example and its Russian description when
  * they are there, in the docs folder beside it (<Name>/docs/<Name>.html, <Name>/docs/<Name>.ru.md); and pages/index.json, the contents (the
  * components in the groups their $Meta names, as data/meta.json has them; each page with the name of its Library, the
@@ -22,7 +22,8 @@ var guide = JSON.parse(fs.readFileSync(path.join(__dirname, 'guide.json'), 'utf8
 var kinds = [
 	{ID: 'components', Title: {en: 'Components', ru: 'Компоненты'}, Example: {en: 'Example', ru: 'Пример'}},
 	{ID: 'services', Title: {en: 'Services', ru: 'Сервисы'}, Example: {en: 'Example', ru: 'Пример'}},
-	{ID: 'directives', Title: {en: 'Directives', ru: 'Директивы'}, Example: {en: 'Example', ru: 'Пример'}}
+	{ID: 'directives', Title: {en: 'Directives', ru: 'Директивы'}, Example: {en: 'Example', ru: 'Пример'}},
+	{ID: 'traits', Title: {en: 'Traits', ru: 'Трейты'}, Example: {en: 'Example', ru: 'Пример'}}
 ];
 
 /* The comment at the head of a source as Markdown: its paragraphs, and its lines that start with "- " as a list. */
@@ -177,7 +178,7 @@ var Tests = (function () {
 function testsOf (kind, name, limit) {
 	var escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	var word = kind.ID === 'directives' ? new RegExp('\\*' + escaped + '\\b') : new RegExp('(^|[^\\w$])' + escaped + '(?![\\w$])');
-	var asked = kind.ID === 'directives' ? new RegExp('\\*' + escaped + '\\b|[\'"]directive:' + escaped + '[\'"]') : new RegExp('[\'"](?:service:)?' + escaped + '[\'"]');
+	var asked = kind.ID === 'directives' ? new RegExp('\\*' + escaped + '\\b|[\'"]directive:' + escaped + '[\'"]') : new RegExp('[\'"](?:service:|trait:)?' + escaped + '[\'"]');
 	var tag = kind.ID === 'components' ? new RegExp('<' + escaped + '[\\s/>]') : null;
 	var ranked = [[], [], []];
 	var list;

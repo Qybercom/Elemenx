@@ -845,7 +845,9 @@ Elemenx.Trait('SceneLighting', {
 					uAir: view.Air || [0, 0, 0, 0],
 					uFog: view.Fog || 0,
 					uFogLow: view.FogLow || [0, 0, 0],
-					uParallel: scene.Camera.Ortho ? 1 : 0
+					uParallel: scene.Camera.Ortho ? 1 : 0,
+					uUnder: view.Under || 0,
+					uSeconds: scene.Seconds % 1000
 				});
 
 				return {Color: state.Aired.Textures[0]};
@@ -1721,14 +1723,28 @@ Elemenx.Trait('SceneLighting', {
 				'uniform vec3 uVeilMove;',
 				'uniform highp sampler3D uNoise;',
 				'uniform float uBehind;',
+				/* The eye under the sea: what it sees wavers, and the water between takes the light (red first), deep blue-green far off. */
+				'uniform float uUnder;',
+				'uniform float uSeconds;',
 				'out vec4 outColor;',
 				'void main() {',
 				'	vec2 uv = vQuad * 0.5 + 0.5;',
+				'	if (uUnder > 0.5) uv = clamp(uv + vec2(sin(uv.y * 31.0 + uSeconds * 1.7), cos(uv.x * 27.0 + uSeconds * 1.3)) * 0.0025, 0.0, 1.0);',
 				'	vec4 given = texture(uColor, uv);',
 				'	vec3 color = pow(max(given.rgb, vec3(0.0)), vec3(2.2));',
 				'	float depth = texture(uDepth, uv).r;',
-				'	vec4 p = uInverse * vec4(vQuad, depth * 2.0 - 1.0, 1.0);',
+				'	vec4 p = uInverse * vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);',
 				'	vec3 place = p.xyz / p.w;',
+				'	if (uUnder > 0.5) {',
+				'		float through = depth < 1.0 ? length(place) : 80.0;',
+				'		vec3 deep = pow(vec3(0.06, 0.32, 0.36), vec3(2.2)) * uAirLight * (0.25 + 0.75 * clamp(uSun.y * 3.0, 0.0, 1.0));',
+				'		vec3 ray = normalize(place);',
+				/* Lighter where the eye looks up toward the light of the surface. */
+				'		deep *= 1.0 + 2.5 * smoothstep(0.2, 1.0, ray.y);',
+				'		color = mix(color * exp(-through * vec3(0.16, 0.045, 0.035)), deep, 1.0 - exp(-through * 0.045));',
+				'		outColor = vec4(pow(max(color, vec3(0.0)), vec3(1.0 / 2.2)), given.a);',
+				'		return;',
+				'	}',
 				'	if (uDarkOn > 0.5 && depth < 1.0) color *= mix(1.0, texture(uDark, uv).r, 0.85);',
 				/* Thick air hides the sky too. */
 				'	if (uFogSky > 0.0 && depth >= 1.0) color = mix(color, pow(mix(uAir.rgb, vec3(1.0), 0.55), vec3(2.2)) * uAirLight + pow(uAirGlow, vec3(2.2)) * 0.3, uFogSky);',

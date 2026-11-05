@@ -114,4 +114,54 @@ describe('Regression: the plan of a template', function () {
 		expect(host.$Element().querySelector('.label').textContent).toBe('Box');
 		expect(host.$Element().querySelector('.fallback')).toBe(null);
 	});
+
+	/* A template with slots reads its own places by its plan and walks only what fills its slots: both in the order of the document. */
+	it('binds its own places and what fills named slots between them, refs and events in the order of the document', async function () {
+		var frame = unique('PlanFrame');
+		var host;
+
+		Elemenx.Component(frame, {
+			$Template: '<div class="frame"><b #mark class="first">{{Title}}</b><slot name="top"></slot><i #mark class="middle" (click)="Pressed">{{Presses}}</i><slot></slot><u #mark class="last">{{Title}}</u></div>',
+			Title: 'Frame',
+			Presses: 0,
+			Pressed: function () {
+				this.Presses++;
+			}
+		});
+
+		host = mount('<div><' + frame + '><s #given slot="top" class="top" [title]="Word">{{Word}}</s><em class="rest" (click)="Hit">{{Count}}</em>{{Word}}</' + frame + '></div>', {
+			Word: 'top',
+			Count: 0,
+			Hit: function () {
+				this.Count++;
+			}
+		});
+
+		await tick(20);
+
+		var element = host.$Element().querySelector('.frame');
+		var instance = Elemenx.Instance(element);
+
+		/* What fills a slot is wrapped (display: contents): the elements in the order of the document. */
+		expect(Array.prototype.map.call(element.querySelectorAll('b, s, i, em, u'), function (node) {
+			return node.className;
+		})).toEqual(['first', 'top', 'middle', 'rest', 'last']);
+		expect(element.querySelector('.top').textContent).toBe('top');
+		expect(element.querySelector('.top').getAttribute('title')).toBe('top');
+		expect(element.textContent).toBe('Frametop00topFrame');
+		expect(instance.$Refs('mark').map(function (node) {
+			return node.className;
+		})).toEqual(['first', 'middle', 'last']);
+
+		element.querySelector('.middle').click();
+		element.querySelector('.rest').click();
+
+		host.Word = 'again';
+
+		await tick(20);
+
+		expect(element.querySelector('.middle').textContent).toBe('1');
+		expect(element.querySelector('.rest').textContent).toBe('1');
+		expect(element.textContent).toBe('Frameagain11againFrame');
+	});
 });

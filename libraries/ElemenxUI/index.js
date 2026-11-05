@@ -74,7 +74,7 @@
 	'services/Layouts/Layouts.js',
 	'services/Audience/Audience.js',
 	'services/Suprematist/Suprematist.js',
-	'traits/Declared.js',
+	'traits/Declared/Declared.js',
 	'components/Icon/Icon.js',
 	'components/FileIcon/FileIcon.js',
 	'components/Button/Button.js',

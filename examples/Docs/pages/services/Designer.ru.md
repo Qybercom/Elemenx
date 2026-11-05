@@ -9,7 +9,7 @@
 - Literal(value) записывает значение как исходный код выражения ({ID: 'a'}); Parse(expression) читает его обратно.
 - Kinds() перечисляет виды по группам; Kind(id) — один вид: {ID, Group, Icon, Tag, Component, Container, Flex, Text, Description, Props (первые значения), Fields ([{Name, Type, Options, Default, Description}]), Slots}. Label(kind) и GroupLabel(group) называют их на языке страницы; Slots(id) — именованные слоты родителя узла.
 - Insert(kind, parent, index), Move(id, parent, index), Remove(id), Duplicate(id), Set(id, name, value), SetStyle(id, property, value), Clear(); Select(id) и Selected() — для выбранного узла.
-- Template() — документ как шаблон Elemenx; Template(true, empty) — то же для холста: каждый узел в элементе, который его называет (data-designer-id), а пустой контейнер содержит текст empty.
+- Template() — документ как шаблон Elemenx; Template(true, empty) — то же для холста: каждый узел в элементе, который его называет (data-designer-id), а пустой контейнер содержит текст empty. Третий аргумент называет другой документ проекта (Template(true, '', id)): его страница в своей панели, пока редактируется другой.
 - Правила CSS страницы по контексту: Rules(); Rule(context) — правило контекста {Who: node, kind или within, Node, Class, Parent, State, Width, Theme}; SetRule(context, property, value) задаёт его свойство (правило появляется с первым свойством и исчезает с последним); RootClass(id) — класс элемента узла (elemenx-button), который называет правило его вида. Узел со своими правилами получает класс page-<его ID> (у компонента — на div вокруг него). Template() пишет правила первыми в <style> (ширины — через @media), а для холста — внутрь его страницы (ширины — через @container).
 - Import(text) читает шаблон обратно вместе с правилами его <style> (непонятные правила сохраняются как есть): виды палитры там, где элемент им соответствует, а любой другой элемент — как есть.
 - Свойство, которое компонент объявляет как Body (Value у Markdown, CodeView), — многострочный текст: пишется в тело элемента (с отступом шаблона, тег в нём — как &lt;) и читается из него обратно.
@@ -40,7 +40,7 @@
 - `Set(id, name, value)`
 - `SetStyle(id, property, value)`
 - `Clear()`
-- `Template(canvas, empty)`
+- `Template(canvas, empty, id)`
 - `Import(source)`
 - `Rules()`
 - `Rule(context)`
@@ -146,9 +146,9 @@
 - [takes a project kept before as the first of the projects, its routes from its pages](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L53) — `tests/regression/designer-project.test.js`
 - [makes a project of a mode that stays its own: an application of a page on /, a component, a template](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L68) — `tests/regression/designer-project.test.js`
 - [opens documents in tabs, each with its tree, and closes them, never the last one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L96) — `tests/regression/designer-project.test.js`
-- [adds a component with a slot: the slot is a kind of a component only, its name what the component makes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L122) — `tests/regression/designer-project.test.js`
-- [declares the props of a component, which become the fields of its kind on the pages](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L146) — `tests/regression/designer-project.test.js`
-- [shows a component of the project on the canvas as a Component made of its document](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L175) — `tests/regression/designer-project.test.js`
-- [never puts a component into itself, nor into one it holds; renames it where it is held, and keeps one that is held](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L193) — `tests/regression/designer-project.test.js`
+- [writes the template of another document of the project, the one being edited as it is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L123) — `tests/regression/designer-project.test.js`
+- [adds a component with a slot: the slot is a kind of a component only, its name what the component makes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L144) — `tests/regression/designer-project.test.js`
+- [declares the props of a component, which become the fields of its kind on the pages](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L168) — `tests/regression/designer-project.test.js`
+- [shows a component of the project on the canvas as a Component made of its document](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L197) — `tests/regression/designer-project.test.js`
 
-+9 ещё в тех же файлах
++11 ещё в тех же файлах

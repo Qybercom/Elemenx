@@ -89,7 +89,7 @@
 ## Тесты
 
 - [stands the strip left or right of the panels, its text turned or level, and moves by Up and Down](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tabs.test.js#L37) — `tests/regression/library-tabs.test.js`
-- [declares the tabs of a Tabs as its children: adds them, shows the one selected on the canvas and exports them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L470) — `tests/examples/designer.spec.js`
+- [declares the tabs of a Tabs as its children: adds them, shows the one selected on the canvas and exports them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L477) — `tests/examples/designer.spec.js`
 - [a right-to-left language mirrors the components: arrows, sliders, popups and the icons of a direction](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L323) — `tests/examples/ui-kit.spec.js`
 - [tabs declared with their content show the panel of the current one, and make the component of a tab when it first opens](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4285) — `tests/examples/ui-kit.spec.js`
 - [editor tabs switch and close](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4338) — `tests/examples/ui-kit.spec.js`

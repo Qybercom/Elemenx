@@ -20,8 +20,10 @@
  * padding, its size; a press keeps one, and Shift held measures the distance from it to the one under the pointer (to
  * the edges of the canvas without one). Lines draws the outlines in a preview too. Rulers (Ruler) run along the top and
  * the side of the canvas, the pointer and the selected element marked on them. Empty is the text of an empty container
- * (the phrase of the language of the page by default).
- * Events: select (the ID of an element, or null), drop ({Kind or Node, Parent, Index, ID}).
+ * (the phrase of the language of the page by default). Document names the document of the project it shows (the one being
+ * edited without one): a canvas of another one sleeps (its page, no marks, no selection) until it is pressed or a drag
+ * goes over it, which asks its owner to edit it (wake) and edits it when the owner did not: panes side by side.
+ * Events: select (the ID of an element, or null), drop ({Kind or Node, Parent, Index, ID}), wake (the Document asked for).
  */
 Elemenx.Component('DesignerCanvas', {
 	$TemplateURL: 'DesignerCanvas.html',
@@ -32,7 +34,8 @@ Elemenx.Component('DesignerCanvas', {
 		Description: 'The canvas of a designer of pages: the page as it is built, with the selection and the drops.',
 		Events: {
 			select: 'An element was pressed: its ID, or null for the page.',
-			drop: 'A kind or an element was dropped on the canvas: {Kind, Node, Parent, Index, ID}, ID the element made or moved.'
+			drop: 'A kind or an element was dropped on the canvas: {Kind, Node, Parent, Index, ID}, ID the element made or moved.',
+			wake: 'A canvas of another document was pressed: its Document, for the owner to edit.'
 		},
 		Props: {
 			Width: {Options: ['desktop', 'tablet', 'phone'], Description: 'The width of the page: desktop (all of it), tablet (768 pixels) or phone (390).'},
@@ -43,7 +46,8 @@ Elemenx.Component('DesignerCanvas', {
 			Lines: 'Draws the frame of every container in a preview too.',
 			Rulers: 'Shows the rulers along the top and the side, with the pointer and the selected element marked on them.',
 			Controls: 'Shows the buttons of the zoom of the canvas and its percent.',
-			Empty: 'The text of an empty container; the phrase of the language of the page without one.'
+			Empty: 'The text of an empty container; the phrase of the language of the page without one.',
+			Document: 'The document of the project it shows (the one being edited without one): another one sleeps until it is pressed.'
 		}
 	},
 	Width: 'desktop',
@@ -55,6 +59,7 @@ Elemenx.Component('DesignerCanvas', {
 	Rulers: true,
 	Controls: true,
 	Empty: '',
+	Document: '',
 	Version: 0,
 	Hovered: null,
 	Tick: 0,
@@ -92,10 +97,10 @@ Elemenx.Component('DesignerCanvas', {
 		 * The page is made again when the document changes, the language does (the text of an empty container is in it)
 		 * or the preview does (it has none).
 		 */
-		this.Draw = function (version, preview) {
+		this.Draw = function (version, preview, shown) {
 			return {
 				Render: function () {
-					if (version >= 0 && preview !== undefined)
+					if (version >= 0 && preview !== undefined && shown !== undefined)
 						self.Paint();
 				}
 			};
@@ -141,7 +146,7 @@ Elemenx.Component('DesignerCanvas', {
 		};
 
 		this.Selected = function (version) {
-			return version >= 0 ? designer.Selected() : null;
+			return version >= 0 && self.Awake(false) ? designer.Selected() : null;
 		};
 
 		this.Label = function (id, version) {
@@ -243,8 +248,11 @@ Elemenx.Component('DesignerCanvas', {
 		var own = this.Own();
 		var designer = this.$Service('Designer');
 		var host = this.$Element().querySelector('.elemenx-designer-page-host');
-		var source = designer.Ready() ? designer.Template(true, this.Preview ? '' : this.Empty || Elemenx.Locale.Text('ui.designer.drop')) : '';
+		var source = designer.Ready() ? designer.Template(true, this.Preview ? '' : this.Empty || Elemenx.Locale.Text('ui.designer.drop'), this.Document || '') : '';
 		var page = Elemenx.Component('DesignerCanvasPage');
+
+		if (this.Hovered && !this.Awake(false))
+			this.Hovered = null;
 
 		if (!host || (own.Instance && own.Source === source)) return;
 
@@ -508,8 +516,31 @@ Elemenx.Component('DesignerCanvas', {
 		return {Left: box.Left, Top: (after ? box.Bottom : box.Top) - 2, Width: box.Width, Height: 4};
 	},
 
+	/*
+	 * Whether it shows the document being edited. One of another document sleeps: no marks, no selection; asked (a press,
+	 * a drag over it), it tells its owner (wake), and edits its document itself when the owner did not open it.
+	 */
+	Awake: function (ask) {
+		var designer = this.$Service('Designer');
+		if (!this.Document || this.Document === designer.Opened()) return true;
+
+		if (!ask)
+			return false;
+
+		this.$Emit('wake', this.Document);
+
+		if (this.Document !== designer.Opened())
+			designer.Open(this.Document);
+
+		return this.Document === designer.Opened();
+	},
+
 	Moved: function (event) {
-		var id = this.At(event.clientX, event.clientY);
+		var id;
+
+		if (!this.Awake(false)) return;
+
+		id = this.At(event.clientX, event.clientY);
 
 		this.Own().Point = {X: event.clientX, Y: event.clientY};
 		this.Hovered = id === 'root' ? null : id;
@@ -559,7 +590,11 @@ Elemenx.Component('DesignerCanvas', {
 	},
 
 	Pressed: function (event) {
-		var id = this.At(event.clientX, event.clientY);
+		var id;
+
+		if (!this.Awake(true)) return;
+
+		id = this.At(event.clientX, event.clientY);
 
 		this.$Service('Designer').Select(id);
 
@@ -573,7 +608,7 @@ Elemenx.Component('DesignerCanvas', {
 		var place;
 		var links;
 
-		if (detail.Kind !== 'item') return;
+		if (detail.Kind !== 'item' || !this.Awake(true)) return;
 
 		place = this.Place(detail.ClientX, detail.ClientY, detail.Type === 'elemenx-designer-node' ? detail.Data : null, this.Own().Shift);
 		links = this.Links(place.Parent);
@@ -597,7 +632,7 @@ Elemenx.Component('DesignerCanvas', {
 
 		this.Left();
 
-		if (detail.Kind !== 'item') return;
+		if (detail.Kind !== 'item' || !this.Awake(true)) return;
 
 		place = this.Place(detail.ClientX, detail.ClientY, detail.Type === 'elemenx-designer-node' ? detail.Data : null, this.Own().Shift);
 

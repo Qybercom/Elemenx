@@ -147,4 +147,4 @@
 - [lets a crate fall onto the ground, tells the touch, and knocks it over by a push](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-rigid.test.js#L58) — `tests/regression/library-rigid.test.js`
 - [shows a falling crate between its last two steps, by how far the time came into the next one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-rigid.test.js#L116) — `tests/regression/library-rigid.test.js`
 
-+162 ещё в тех же файлах
++170 ещё в тех же файлах

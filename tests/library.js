@@ -11,7 +11,7 @@ var english = import.meta.glob('../libraries/*/locales/en.json', {import: 'defau
 var components = import.meta.glob('../libraries/*/components/*/*.{js,html,css}', {query: '?raw', import: 'default', eager: true});
 var services = import.meta.glob(['../libraries/*/services/*.js', '../libraries/*/services/*/*.js', '!../libraries/**/*.test.js'], {query: '?raw', import: 'default', eager: true});
 var directives = import.meta.glob(['../libraries/*/directives/*.js', '../libraries/*/directives/*/*.js', '!../libraries/**/*.test.js'], {query: '?raw', import: 'default', eager: true});
-var traits = import.meta.glob('../libraries/*/traits/*.js', {query: '?raw', import: 'default', eager: true});
+var traits = import.meta.glob(['../libraries/*/traits/*.js', '../libraries/*/traits/*/*.js', '!../libraries/**/*.test.js'], {query: '?raw', import: 'default', eager: true});
 var defined = {};
 
 function file (list, name) {

@@ -18,3 +18,7 @@ The same functions run in Node: they read no page.
 - `Random(options, seed)`
 - `Pieces(tools, options, random)`
 - `Define(name, options)`
+
+## Tests
+
+- [uses every type of the sketch of a ground, every type of road, every model, every class of building and every effect](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneShowcase/SceneShowcase.test.js#L47) — `libraries/ElemenxGraphics/services/SceneShowcase/SceneShowcase.test.js`

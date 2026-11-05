@@ -2,6 +2,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadElemenx, resetDOM, unique, waitFor } from '../setup.js';
 import { Use } from '../library.js';
 import packagerSource from '../../examples/GameEditor/application/services/GamePackager.js?raw';
+import layoutSource from '../../examples/GameEditor/application/components/GameEditorLayout/GameEditorLayout.js?raw';
 
 var owned = [];
 
@@ -145,5 +146,46 @@ describe('Contract: the Game editor packs a game to run alone: its models, its s
 		expect(new TextDecoder().decode(files['application/components/Game/Game.js'])).toBe(made.Code(game()) + '\n');
 		expect(Elemenx.Service('ModelFormats').Read(files['models/game-hut.glb'], {Format: 'glb'}).Meshes.length).toBe(2);
 		expect(Elemenx.Service('SceneModels').Has('game-packager-game-hut')).toBe(false);
+	});
+	/* The layout asked this.$T for its texts, a name of the templates alone: New game, a game not kept and the packing threw. */
+	it('starts a new game in the place of the one there and tells what it could not keep, its texts of the language of the page', function () {
+		var definition = null;
+		var confirm = window.confirm;
+		var storage = Object.getOwnPropertyDescriptor(window, 'localStorage');
+		var layout;
+
+		new Function('Elemenx', layoutSource)({Locale: Elemenx.Locale, Component: function (name, value) {
+			definition = value;
+		}});
+
+		layout = Object.assign({}, definition, {Game: {Version: 1, Name: 'Old', Scene: null, Models: []}, Version: 0, Status: '', View: 'models', Current: ''});
+		layout.$Service = function (name) {
+			return Elemenx.Service(name);
+		};
+
+		window.confirm = function () {
+			return true;
+		};
+
+		try {
+			layout.New('ground');
+
+			expect(layout.Game.Name).toBe('Game');
+			expect(layout.Game.Scene.Setting).toBe('ground');
+			expect(layout.View).toBe('scene');
+
+			Object.defineProperty(window, 'localStorage', {configurable: true, get: function () {
+				throw new Error('No storage');
+			}});
+
+			layout.Keep();
+
+			expect(layout.Status).toBe(Elemenx.Locale.Text('gameEditor.notKept'));
+		}
+		finally {
+			window.confirm = confirm;
+
+			Object.defineProperty(window, 'localStorage', storage);
+		}
 	});
 });

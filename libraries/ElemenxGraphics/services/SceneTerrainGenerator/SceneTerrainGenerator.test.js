@@ -206,3 +206,58 @@ describe('Contract: the plan of a settlement of a sketch: its streets, its lots 
 		expect(plan({Kind: 'city', Points: [[0, 0], [10, 0]]}).Streets).toEqual([]);
 	});
 });
+
+describe('Contract: the zones of a ground and where things may grow on it', function () {
+	var terrain;
+
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:SceneTerrainGenerator']);
+
+		terrain = Elemenx.Service('SceneTerrainGenerator');
+	});
+
+	/* Regression: a land of low hills (Height 22) was rock above 10 units, and no grass grew there: its zones were parts of its Height only. */
+	it('begins rock and snow where Rock and Snow say, none of them with false, and paints a land of low hills all of grass', function () {
+		var hills = terrain.Flat({Size: 400, Height: 22, Water: 0, Rock: false, Snow: false, Seed: 'hills'});
+		var usual = terrain.Flat({Size: 400, Height: 22, Water: 0, Seed: 'hills'});
+		var told = terrain.Flat({Size: 400, Height: 100, Rock: 0.6, Snow: 0.9, Seed: 'hills'});
+		var grass = terrain.Paint(hills, 0, 0, 20, 0);
+
+		expect(hills.Rock).toBe(Infinity);
+		expect(hills.Snow).toBe(Infinity);
+		expect(usual.Rock).toBeCloseTo(9.9, 5);
+		expect(usual.Snow).toBeCloseTo(16.5, 5);
+		expect(told.Rock).toBe(60);
+		expect(told.Snow).toBe(90);
+		expect(grass[1]).toBeGreaterThan(grass[0]);
+		expect(terrain.Paint(usual, 0, 0, 12, 0)).toEqual([0.45, 0.42, 0.36]);
+		expect(terrain.Paint(usual, 0, 0, 20, 0)).toEqual([0.93, 0.94, 0.96]);
+		expect(terrain.Paint(told, 0, 0, 50, 0)).not.toEqual([0.45, 0.42, 0.36]);
+		expect(terrain.Paint(told, 0, 0, 70, 0)).toEqual([0.45, 0.42, 0.36]);
+		/* A steep slope is rock wherever it is. */
+		expect(terrain.Paint(hills, 0, 0, 5, 0.5)).toEqual([0.42, 0.39, 0.35]);
+	});
+
+	/* Regression: grass grew on the roads, which the ground under them made level: nothing kept them bare. */
+	it('keeps bare what is within the reach of a line and inside an area, softly at their edge, free farther', function () {
+		var side = 101;
+		var free = terrain.Free(100, side, [{Points: [[-50, 0], [50, 0]], Reach: 4}], [[[20, 20], [40, 20], [40, 40], [20, 40]]], 2);
+
+		function at (x, z) {
+			return free[Math.round(z + 50) * side + Math.round(x + 50)];
+		}
+
+		expect(free.length).toBe(side * side);
+		expect(at(0, 0)).toBe(0);
+		expect(at(-30, 3)).toBe(0);
+		expect(at(10, 5)).toBe(128);
+		expect(at(10, 10)).toBe(255);
+		expect(at(30, 30)).toBe(0);
+		expect(at(10, 30)).toBe(255);
+		expect(terrain.Free(10, 11, [], []).every(function (value) {
+			return value === 255;
+		})).toBe(true);
+	});
+});

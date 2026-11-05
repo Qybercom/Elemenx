@@ -6,11 +6,13 @@
  * its own) and Open (the projects kept, a project read from a file or saved into one). The tabs: Home (undo and redo; a
  * copy, the removal, the moves and the parent of the selected element), Project (in an application: a new page or
  * component, the settings of the Application in the main area; each document open has a tab over the canvas, closed by
- * its cross, and the explorer of the project lists them all), Insert (every component of ElemenxUI and the classes of
- * its layouts, a gallery for each group of the palette, with a search: a sample pressed goes into the selected element,
- * or after it; a sample dragged goes where the canvas or the structure takes it) and View (the width of the canvas, its
- * outlines, gaps and rulers). The header runs the page and stops it (Run, Stop), inspects it while it runs, and
- * switches the language and the theme. The structure of the page is on the left, always in view, the layout and the
+ * its cross, and the explorer of the project lists them all; the menu of a tab splits it into panes: one document in
+ * as many as it is wanted, each with its own selection, the structure and the properties following the pane of the
+ * focus, the layout kept for the project in the storage of the browser), Insert (every component of ElemenxUI and
+ * the classes of its layouts, a gallery for each group of the palette, with a search: a sample pressed goes into the
+ * selected element, or after it; a sample dragged goes where the canvas or the structure takes it) and View (the
+ * width of the canvas, its outlines, gaps and rulers). The header runs the page and stops it (Run, Stop), inspects it
+ * while it runs, and switches the language and the theme. The structure of the page is on the left, always in view, the layout and the
  * props of the selected element on the right (with none, the document: a page, a component), its template at the
  * bottom. The documents are the ones of the Designer Service. Keys: Mod+Z, Mod+Shift+Z (or Mod+Y), Mod+D (a copy),
  * Delete, Escape (no selection), and the key tips of the Ribbon (Alt).
@@ -40,6 +42,7 @@ Elemenx.Component('DesignerLayout', {
 	PackageFailed: '',
 	ImportFailed: false,
 	DiskFailed: '',
+	Panes: null,
 
 	$OnCreate: function () {
 		var self = this;
@@ -47,9 +50,14 @@ Elemenx.Component('DesignerLayout', {
 		var disk = this.$Service('Disk');
 		var keys = [];
 		var saved = null;
+		var panes = {Pane: '', Selections: {}, Project: ''};
 		var icons = {layout: 'layout', text: 'text-color', inputs: 'edit', buttons: 'launcher', navigation: 'menu', display: 'star', data: 'chart', overlays: 'panel-right', social: 'users', commerce: 'cart', music: 'headphones', game: 'trophy', tools: 'settings'};
 
+		/* A change of the Designer; another project brings the panes it was left with. */
 		function changed () {
+			if (designer.Project().ID !== panes.Project)
+				self.Unfold(designer.Project().ID);
+
 			self.Version++;
 		}
 
@@ -114,7 +122,7 @@ Elemenx.Component('DesignerLayout', {
 
 		/* What the Designer keeps for itself: not state, so it renders nothing. */
 		this.Own = function () {
-			return {Keys: keys, Changed: changed};
+			return {Keys: keys, Changed: changed, Panes: panes};
 		};
 
 		/* The groups of the palette for the Insert tab, the first ones last to shrink. */
@@ -224,6 +232,8 @@ Elemenx.Component('DesignerLayout', {
 			return version >= 0 && designer.CanRedo();
 		};
 
+		this.Unfold(designer.Project().ID);
+
 		try {
 			saved = window.localStorage.getItem('elemenx-designer:language');
 		}
@@ -306,39 +316,32 @@ Elemenx.Component('DesignerLayout', {
 		}
 	},
 
-
-	/* A new page or component of the application, edited at once. */
+	/* A new page or component of the application, edited at once in the pane of the focus. */
 	Created: function (type) {
 		var designer = this.$Service('Designer');
 		var id = designer.AddDocument(type);
-		if (id)
-			designer.Open(id);
+		if (!id) return;
 
-		this.Settings = false;
-		this.Mapped = false;
+		designer.Open(id);
+
+		this.Reveal(id);
 	},
 
+	/* The settings of the Application: their tab, pinned first in the strip. */
 	Configured: function () {
-		this.Settings = true;
+		this.Reveal('@settings');
 	},
 
-	/* A document opened by the explorer or the settings: the canvas shows it. */
+	/* A document opened by the explorer: its pane. */
 	Opened: function () {
-		this.Settings = false;
-		this.Mapped = false;
+		this.Reveal(this.$Service('Designer').Opened());
 	},
 
-	/* The tab of the map: the pages of the application side by side, the links between them. */
-	Mapping: function () {
-		this.Settings = false;
-		this.Mapped = true;
-	},
-
-	/* A page pressed on the map: its tab, on the canvas. */
+	/* A page pressed on the map: its pane. */
 	MapOpened: function (id) {
 		this.$Service('Designer').Open(id);
 
-		this.Mapped = false;
+		this.Reveal(id);
 	},
 
 	/*
@@ -362,21 +365,260 @@ Elemenx.Component('DesignerLayout', {
 
 		designer.Open(id);
 
-		this.Settings = false;
-		this.Mapped = false;
+		this.Reveal(id);
 	},
 
-	/* The tab of a document pressed. */
-	Switched: function (event, node) {
-		this.$Service('Designer').Open(node.getAttribute('data-document'));
+	/*
+	 * The panes of an application: a TabSplit of the documents open, the settings and the map, a document in as many
+	 * panes as the menu of its tab makes (copies: <ID>:2...). The pane of the focus is the document the Designer edits,
+	 * the one the structure and the properties show, and each pane keeps its own selection. The layout of the panes is
+	 * kept for each project in the storage of the browser.
+	 */
 
-		this.Settings = false;
-		this.Mapped = false;
+	/* The document of a pane: the ID of its tab less the number of a copy (d2:2); none for the settings and the map. */
+	DocumentOf: function (pane) {
+		return pane && pane.charAt(0) !== '@' ? String(pane).split(':')[0] : '';
 	},
 
-	/* The cross of a tab: the document stays in the project, its tab goes. */
-	Closed: function (event, node) {
-		this.$Service('Designer').Close(node.getAttribute('data-document'));
+	/* The TabSplit of the panes (an application has one). */
+	Split: function () {
+		var element = this.$Element().querySelector('.designer-main > .elemenx-tab-split');
+
+		return element ? Elemenx.Instance(element) : null;
+	},
+
+	/* The key of the storage of the panes of a project; a project of elemenx designer apart. */
+	PanesKey: function (id) {
+		var disk = this.$Service('Disk').Project();
+
+		return 'elemenx-designer:panes:' + (disk ? disk.Name + ':' : '') + id;
+	},
+
+	/*
+	 * Another project: the panes it was left with (one group of all its tabs the first time), the focus on the pane of the
+	 * document it edits once the panes are there.
+	 */
+	Unfold: function (id) {
+		var panes = this.Own().Panes;
+		var saved = null;
+
+		panes.Project = id;
+		panes.Pane = '';
+		panes.Selections = {};
+
+		try {
+			saved = JSON.parse(window.localStorage.getItem(this.PanesKey(id)) || 'null');
+		}
+		catch (error) {
+			saved = null;
+		}
+
+		this.Panes = saved && typeof saved === 'object' ? saved : {Group: 'main', Tabs: [], Active: null};
+
+		this.Reveal(this.$Service('Designer').Opened());
+	},
+
+	/* The groups of a layout, its tabs in each: [{Group, Tabs, Active}]. */
+	Leaves: function (tree) {
+		var list = [];
+
+		function walk (node) {
+			if (!node) return;
+
+			if (node.Split) node.Children.forEach(walk);
+			else list.push(node);
+		}
+
+		walk(tree);
+
+		return list;
+	},
+
+	/*
+	 * The pane that shows a document (or the tab of the settings, of the map): the pane of the focus when it does, else a
+	 * pane where it is the current tab, else any tab of it; '' when none does.
+	 */
+	PaneOf: function (tree, id) {
+		var self = this;
+		var groups = this.Leaves(tree);
+		var pane = this.Own().Panes.Pane;
+		var any = [];
+		var active;
+		var focused;
+
+		function matches (tab) {
+			return !!tab && (tab === id || self.DocumentOf(tab) === id);
+		}
+
+		active = groups.filter(function (group) {
+			return matches(group.Active);
+		})[0];
+
+		focused = matches(pane) && groups.some(function (group) {
+			return group.Active === pane;
+		});
+
+		if (focused)
+			return pane;
+
+		if (active)
+			return active.Active;
+
+		groups.forEach(function (group) {
+			any = any.concat(group.Tabs.filter(matches));
+		});
+
+		return any[0] || '';
+	},
+
+	/* Shows the pane of a document, or of the settings, of the map, and gives it the focus; its tab, once it is there. */
+	Reveal: function (id, tries) {
+		var self = this;
+		var split = this.Split();
+		var pane = split ? this.PaneOf(split.Model(), id) : '';
+
+		if (!pane) {
+			if ((tries || 0) < 60 && this.Mode(0) === 'application')
+				window.requestAnimationFrame(function () {
+					self.Reveal(id, (tries || 0) + 1);
+				});
+
+			return;
+		}
+
+		split.Open(pane);
+
+		this.Focus(pane);
+	},
+
+	/*
+	 * The pane of the focus: its document is the one the Designer edits, with the selection that pane had (the first pane
+	 * of the focus keeps the selection there is). The settings and the map edit nothing: the document stays.
+	 */
+	Focus: function (pane) {
+		var designer = this.$Service('Designer');
+		var panes = this.Own().Panes;
+		var id = this.DocumentOf(pane);
+		var before = panes.Pane;
+		var split = this.Split();
+
+		if (!pane || pane === before) return;
+
+		if (this.DocumentOf(before) && this.DocumentOf(before) === designer.Opened())
+			panes.Selections[before] = designer.Selected();
+
+		panes.Pane = pane;
+
+		/* The TabSplit marks it, and opens a new tab in it. */
+		if (split)
+			split.Open(pane);
+
+		if (this.Settings !== (pane === '@settings'))
+			this.Settings = pane === '@settings';
+
+		if (this.Mapped !== (pane === '@map'))
+			this.Mapped = pane === '@map';
+
+		if (!id || (!before && id === designer.Opened())) return;
+
+		if (designer.Opened() !== id)
+			designer.Open(id);
+
+		designer.Select(panes.Selections[pane] || null);
+	},
+
+	/* A press or the focus in a pane: the current tab of its group has the focus. */
+	Touched: function (event) {
+		var group = event.target && event.target.closest ? event.target.closest('.elemenx-tab-split-group') : null;
+		var split = this.Split();
+		var panel;
+
+		if (!group || !split || group.closest('.elemenx-tab-split') !== split.$Element()) return;
+
+		panel = group.querySelector('.elemenx-tab-group-body > .elemenx-tab-panel.active');
+
+		if (panel)
+			this.Focus(panel.getAttribute('data-id'));
+	},
+
+	/* A tab opened in its strip. */
+	Chose: function (id) {
+		this.Focus(id);
+	},
+
+	/* A canvas of another document pressed, or a drag over it: its pane has the focus. */
+	Woken: function (id, canvas) {
+		var panel = canvas && canvas.$Element ? canvas.$Element().closest('.elemenx-tab-panel') : null;
+		var split = this.Split();
+
+		this.Focus(panel ? panel.getAttribute('data-id') : this.PaneOf(split ? split.Model() : null, id));
+	},
+
+	/* A pane made by the menu of a tab, a copy of it: the focus, with the selection of the pane it came of. */
+	Copied: function (detail) {
+		var designer = this.$Service('Designer');
+		var panes = this.Own().Panes;
+
+		panes.Selections[detail.ID] = this.DocumentOf(detail.Of) === designer.Opened() ? designer.Selected() : panes.Selections[detail.Of] || null;
+
+		this.Focus(detail.ID);
+	},
+
+	/*
+	 * The layout changed: kept for the project. When the pane of the focus went (its tab closed, a copy) or there was none
+	 * yet, the focus goes to the pane of the document edited, else to the current tab of the first group.
+	 */
+	Laid: function (model) {
+		var designer = this.$Service('Designer');
+		var panes = this.Own().Panes;
+		var groups = this.Leaves(model);
+		var next;
+
+		try {
+			window.localStorage.setItem(this.PanesKey(panes.Project), JSON.stringify(model));
+		}
+		catch (error) {
+			next = '';
+		}
+
+		if (groups.some(function (group) {
+			return group.Tabs.indexOf(panes.Pane) !== -1;
+		})) return;
+
+		next = this.PaneOf(model, designer.Opened()) || (groups[0] && groups[0].Active) || '';
+
+		/* The pane that went edited the document the next one shows: the selection stays. */
+		if (this.DocumentOf(next) === designer.Opened())
+			panes.Pane = '';
+
+		this.Focus(next);
+	},
+
+	/*
+	 * The cross of the tab of a document: the document stays in the project, its tab goes (a copy goes by itself); a
+	 * document still in another pane stays open. The Designer edits then the tab beside the one that went: the pane of
+	 * the focus tells which document it edits.
+	 */
+	Closed: function (id) {
+		var self = this;
+		var designer = this.$Service('Designer');
+		var panes = this.Own().Panes;
+		var split = this.Split();
+		var shut = this.DocumentOf(id);
+		var edited;
+		var shown = this.Leaves(split ? split.Model() : null).some(function (group) {
+			return group.Tabs.some(function (tab) {
+				return self.DocumentOf(tab) === shut;
+			});
+		});
+		if (shown || !designer.Close(shut)) return;
+
+		edited = this.DocumentOf(panes.Pane);
+
+		if (edited && edited !== designer.Opened()) {
+			designer.Open(edited);
+			designer.Select(panes.Selections[panes.Pane] || null);
+		}
 	},
 
 	NewNamed: function (value) {
@@ -512,7 +754,7 @@ Elemenx.Component('DesignerLayout', {
 		else if (command === 'rulers') this.Remember('Rulers', !this.Rulers);
 		else if (command === 'stop') this.Ran();
 		else if (command === 'new-page' || command === 'new-component') this.Created(command.substring(4));
-		else if (command === 'settings') this.Settings = !this.Settings;
+		else if (command === 'settings') this.Reveal(this.Settings ? designer.Opened() : '@settings');
 		else if (['desktop', 'tablet', 'phone'].indexOf(command) !== -1) this.Width = command;
 		else if (!selected) return;
 		else if (command === 'duplicate') designer.Select(designer.Duplicate(selected));

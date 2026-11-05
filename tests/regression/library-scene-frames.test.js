@@ -85,6 +85,33 @@ describe('Regression: what made the frames of a scene uneven or heavy', function
 		}
 	});
 
+	/* Regression: a frame given an earlier time than the last eased the view backwards, without end: the eye was no number, the screen grey. */
+	it('takes a frame of an earlier time as no time: the view keeps where it was going', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var i;
+
+		for (i = 0; i < 40; i++) {
+			inner.Rest = 0;
+
+			engine.Frame(200000 + i * 33);
+		}
+
+		scene.SetViewpoint({Target: [5, 1, 5], Yaw: 0.6, Pitch: 0.3, Distance: 12});
+		scene.SetViewpoint({Target: [5, 1, 5], Yaw: 0.6, Pitch: 0.3, Distance: 30});
+
+		for (i = 0; i < 40; i++) {
+			inner.Rest = 0;
+
+			engine.Frame(100000 + i * 33);
+		}
+
+		expect(inner.Eye.every(isFinite)).toBe(true);
+		expect(inner.Distance).toBeGreaterThan(11);
+		expect(inner.Distance).toBeLessThan(31);
+	});
+
 	it('sleeps out of sight: nothing moves, nothing is drawn, and seen again it goes on from where it was', async function () {
 		var scene = await mount();
 		var inner = scene.Scene();

@@ -18,19 +18,23 @@
  *   Height(x, z), when given, is the height of a point with none of its own.
  * - Road(spec): a road made of {ID, Type, Points, Closed, Width (in place of the width of the type: its strips scaled),
  *   Height} with its Line, its Width and its strips at their offsets ({Left, Right} from the middle).
- * - Near(road, x, z, hint): {Offset (from the middle, left below 0), Along (the index of the point nearest), At (the
- *   metres from its start), Way, Y (of the road there)}; hint, the Along of a moment ago, looks only round it.
+ * - Near(road, x, z, hint): {Offset (from the middle, left below 0, across the way), Far (how far the point is from
+ *   the line: past an end, more than its Offset), Along (the index of the point nearest), At (the metres from its start),
+ *   Way, Y (of the road there)}; hint, the Along of a moment ago, looks only round it.
  * - Under(roads, x, z, hints): what is under a point, the road on top: {Road (its ID), Strip (its kind), Surface,
  *   Height, Grip, Drag, Offset, Along} or null off every road.
  * - Sketch(roads): the lines a ground is made level under ({Type: road, Points, Width, Shoulder}).
  * - Asset(roads): the roads as a model of SceneModels (Define(name, {URL: name, Asset, Fit: false})): their strips,
  *   the sides of what is raised, the markings, the rails and sleepers.
+ * - AssetOf(roads, options) is the same in a worker (Work(): the pool of its workers, made once, with the surfaces there are
+ *   then): options {Ground (the options of the flat ground the piers of its bridges stand on, SceneTerrainGenerator.Flat, or
+ *   the name a worker keeps them under by Share of Workers), Junctions}.
  * The same functions run in Node: they read no page.
  */
 Elemenx.Service('SceneRoads', {
 	$Meta: {
 		Description: 'The roads of a scene, of any kind: motorways, streets, country roads, race tracks, paths, runways and railways, their cross-sections, lines and models.',
-		Methods: ['Surface(name, surface)', 'Define(name, type)', 'Type(name)', 'Types()', 'Line(points, options)', 'Road(spec)', 'Network(specs, junctions, options)', 'JunctionAt(junctions, x, z)', 'Near(road, x, z, hint)', 'Under(roads, x, z, hints)', 'BarrierHit(roads, x, z, fromX, fromZ, hints, size)', 'FreeBarrier(spec, options)', 'Sketch(roads, junctions)', 'Asset(roads, options)']
+		Methods: ['Surface(name, surface)', 'Define(name, type)', 'Type(name)', 'Types()', 'Line(points, options)', 'Road(spec)', 'Network(specs, junctions, options)', 'JunctionAt(junctions, x, z)', 'Near(road, x, z, hint)', 'Under(roads, x, z, hints)', 'BarrierHit(roads, x, z, fromX, fromZ, hints, size)', 'FreeBarrier(spec, options)', 'Sketch(roads, junctions)', 'Asset(roads, options)', 'AssetOf(roads, options)', 'Work()']
 	},
 
 	$OnCreate: function () {
@@ -426,7 +430,7 @@ Elemenx.Service('SceneRoads', {
 
 			made.forEach(function (road) {
 				var near = self.Near(road, junction.X, junction.Z);
-				if (Math.abs(near.Offset) > road.Width / 2 + 1 || self.SpanAt(road, near.At)) return;
+				if (near.Far > road.Width / 2 + 1 || self.SpanAt(road, near.At)) return;
 
 				junction.Roads.push(road.ID);
 				levels.push(near.Y - road.Height);
@@ -482,12 +486,26 @@ Elemenx.Service('SceneRoads', {
 				junctions.push({ID: 'junction-' + junctions.length, X: x, Z: z, Y: null, Radius: 0, Surface: 'asphalt', Roads: []});
 		}
 
+		/* The bounds of the line of each road, once: two that do not meet need no look at their points. */
+		var bounds = roads.map(function (road) {
+			var box = {X0: Infinity, Z0: Infinity, X1: -Infinity, Z1: -Infinity};
+
+			road.Points.forEach(function (point) {
+				box.X0 = Math.min(box.X0, point.X);
+				box.Z0 = Math.min(box.Z0, point.Z);
+				box.X1 = Math.max(box.X1, point.X);
+				box.Z1 = Math.max(box.Z1, point.Z);
+			});
+
+			return box;
+		});
+
 		roads.forEach(function (a, first) {
 			roads.forEach(function (b, second) {
 				var i;
 				var j;
 
-				if (second <= first) return;
+				if (second <= first || bounds[first].X1 < bounds[second].X0 || bounds[second].X1 < bounds[first].X0 || bounds[first].Z1 < bounds[second].Z0 || bounds[second].Z1 < bounds[first].Z0) return;
 
 				for (i = 0; i + 1 < a.Points.length; i++) {
 					for (j = 0; j + 1 < b.Points.length; j++) {
@@ -523,7 +541,7 @@ Elemenx.Service('SceneRoads', {
 					if (b === a) return;
 
 					var near = self.Near(b, end.X, end.Z);
-					if (Math.abs(near.Offset) <= b.Width / 2 + 1 && !self.SpanAt(b, near.At))
+					if (near.Far <= b.Width / 2 + 1 && !self.SpanAt(b, near.At))
 						put(end.X - near.Way[1] * near.Offset, end.Z + near.Way[0] * near.Offset);
 				});
 			});
@@ -622,7 +640,7 @@ Elemenx.Service('SceneRoads', {
 			}
 		});
 
-		return {Offset: offset, Along: best, At: at, Way: way, Y: y + road.Height};
+		return {Offset: offset, Far: Math.sqrt(least), Along: best, At: at, Way: way, Y: y + road.Height};
 	},
 
 	Under: function (roads, x, z, hints) {
@@ -981,17 +999,36 @@ Elemenx.Service('SceneRoads', {
 
 	/* Many pieces made one. */
 	Merged: function (list) {
-		var made = {Positions: [], Normals: [], UVs: [], Indices: []};
+		var sizes = {Positions: 0, Normals: 0, UVs: 0, Indices: 0};
+		var made = {};
+		var at = {Positions: 0, Normals: 0, UVs: 0, Indices: 0};
+
+		/* As long as all of them, made at once: one by one into lists of their own length (push of a whole list overflows the stack). */
+		list.forEach(function (part) {
+			Object.keys(sizes).forEach(function (key) {
+				sizes[key] += part[key].length;
+			});
+		});
+
+		Object.keys(sizes).forEach(function (key) {
+			made[key] = new Array(sizes[key]);
+		});
 
 		list.forEach(function (part) {
-			var base = made.Positions.length / 3;
+			var base = at.Positions / 3;
 
-			Array.prototype.push.apply(made.Positions, part.Positions);
-			Array.prototype.push.apply(made.Normals, part.Normals);
-			Array.prototype.push.apply(made.UVs, part.UVs);
-			Array.prototype.push.apply(made.Indices, part.Indices.map(function (index) {
-				return index + base;
-			}));
+			Object.keys(sizes).forEach(function (key) {
+				var source = part[key];
+				var target = made[key];
+				var offset = key === 'Indices' ? base : 0;
+				var start = at[key];
+				var i;
+
+				for (i = 0; i < source.length; i++)
+					target[start + i] = source[i] + offset;
+
+				at[key] += source.length;
+			});
 		});
 
 		return made;
@@ -1342,6 +1379,30 @@ Elemenx.Service('SceneRoads', {
 			Animations: [],
 			Scene: [0]
 		};
+	},
+
+	/* The model of roads made in a worker: the height of its ground of options given, or kept by the worker under a name. */
+	AssetOf: function (roads, options) {
+		var given = options || {};
+		var ground = typeof given.Ground === 'string' ? this.$Shared(given.Ground) : given.Ground;
+		var field = ground ? this.$Service('SceneTerrainGenerator').Field('Flat', ground) : null;
+
+		return this.Asset(roads, {Junctions: given.Junctions || [], Height: field ? function (x, z) {
+			return Math.max(0, field.Height(x, z));
+		} : null});
+	},
+
+	/* The workers of the models of roads: all of this Service, the ground of noise for the height of their piers. */
+	Work: function () {
+		var self = this;
+
+		return this.$Service('Workers').Pool('SceneRoads', {Math: ['Noise', 'SeedOffset', 'Vectors'], SceneTerrainGenerator: ['Smoothstep', 'Flat', 'Sphere', 'Paint', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan'], SceneRoads: Object.keys(this).filter(function (name) {
+			return name.charAt(0) !== '$' && name !== 'Work' && name !== 'Source' && name !== 'Library' && (typeof self[name] === 'function' || name === 'Surfaces' || name === 'Defined');
+		})});
+	},
+
+	Source: function (names) {
+		return this.$Service('Workers').Source(this, names);
 	},
 
 	/* SceneRoads: the library */

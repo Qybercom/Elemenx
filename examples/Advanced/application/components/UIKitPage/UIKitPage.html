@@ -828,14 +828,16 @@
 				<Field Label="Mirror blur"><Slider Label="Mirror blur" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="TerrainMirrorBlur" (input)="TerrainMirrorBlur = $event" /></Field>
 				<Toggle Label="Glass" [checked]="TerrainGlass" (change)="TerrainGlass = $event" />
 				<Field Label="Glass frost"><Slider Label="Glass frost" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="TerrainFrost" (input)="TerrainFrost = $event" /></Field>
+				<Field Label="Swell"><Slider Label="Swell" Min="0" Max="1.5" Step="0.05" ShowValue="always" [value]="TerrainSwell" (input)="TerrainSwell = $event" /></Field>
 				<Button Label="To the lake" Icon="map-pin" Variant="ghost" (click)="TerrainLake" />
+				<Button Label="Boat" Icon="sailing" Variant="ghost" (click)="TerrainBoat" />
 				<Button Label="All to the village" Icon="home" Variant="ghost" (click)="TerrainVillage" />
 				<Button Label="Save" Icon="save" Variant="ghost" (click)="TerrainSave" />
 				<Button Label="Load" Icon="refresh" Variant="ghost" [disabled]="!TerrainSaved" (click)="TerrainLoad" />
 			</div>
 			<div class="ui-kit-space" data-demo="terrain">
 				<Scene *if="!Far.terrain" Setting="terrain" Team="blue" Labels="true" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" [bokeh]="SceneBokeh" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
-					<SceneObject ID="valley" Kind="ground" Size="900" Height="55" Water="0.32" Seed="valley" [biome]="TerrainBiome" />
+					<SceneObject ID="valley" Kind="ground" Size="900" Height="55" Water="0.32" Seed="valley" [biome]="TerrainBiome" [swell]="TerrainSwell" />
 					<SceneObject ID="sun" Kind="sun" Latitude="45" DayOfYear="172" Noon="150" [time]="TerrainHour" />
 					<SceneObject ID="hamlet" Kind="village" X="-70" Y="20" Houses="10" />
 					<SceneObject *for="unit of TerrainUnits" *key="unit.ID" Kind="unit" [id]="unit.ID" [name]="unit.Name" [x]="unit.X" [y]="unit.Y" Team="blue" />
@@ -1036,6 +1038,24 @@
 			<div class="ui-kit-space" data-demo="race">
 				<Scene *if="!Far.race" Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [person]="RacePerson" [weather]="SceneWeather" Labels="false" (person)="RacePerson = $event" (ready)="RaceReady"><div slot="screens" data-screen="dash" class="ui-kit-dash"><span class="ui-kit-dash-turn" [class.on]="RaceSignals.Left">&#9664;</span><span class="ui-kit-dash-speed">{{RaceSpeed}}</span><span class="ui-kit-dash-unit">km/h</span><span class="ui-kit-dash-gear">{{RaceGearOnly}}</span><span class="ui-kit-dash-rpm"><span [style.width]="RaceRpmPart + '%'"></span></span><span class="ui-kit-dash-lights" [class.on]="RaceSignals.Lights">&#9679;</span><span class="ui-kit-dash-turn" [class.on]="RaceSignals.Right">&#9654;</span></div><VirtualGamepad slot="hud" Tilt="true" Buttons="a,b,lt,rt,rb" Label="Drive" /><GameRace Road="track" Laps="3" Countdown="0" (lap)="RaceLapped" (wrong)="RaceWrong = $event.Wrong" /></Scene>
 			</div>
+		</div>
+	</Section>
+
+	<Section *if="Shows('Showcase world')" Title="Showcase world" [note]="ShowNote || 'Scene · SceneShowcase: every primitive of the generation in one world of three kilometres, district by district; Benchmark tours them all and measures each'">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<Select Label="District" [options]="ShowDistricts" [value]="ShowDistrict" (change)="ShowFly" />
+				<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
+				<Button Label="Benchmark" Icon="play" Variant="ghost" [disabled]="ShowRunning || !ShowMade" (click)="ShowBench" />
+				<span *if="ShowMade">{{ShowMade}}</span>
+			</div>
+			<div class="elemenx-chips" *if="ShowShows.length">
+				<span class="elemenx-chip" *for="item of ShowShows" *key="item">{{item}}</span>
+			</div>
+			<div class="ui-kit-space" data-demo="show">
+				<Scene *if="!Far.show" Team="blue" Labels="true" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="ShowReady"></Scene>
+			</div>
+			<Table *if="ShowResults.length" Compact="true" Label="Benchmark" RowKey="ID" [columns]="ShowColumns" [rows]="ShowResults" />
 		</div>
 	</Section>
 

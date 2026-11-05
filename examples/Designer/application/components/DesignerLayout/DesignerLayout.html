@@ -153,18 +153,19 @@
 			</RibbonTab>
 		</Ribbon>
 
-		<div slot="main" class="designer-main">
-			<div class="designer-documents" role="tablist" *if="Mode(Version) === 'application'" [attribute.aria-label]="$T('designer.documents')">
-				<button type="button" role="tab" class="designer-document" data-settings [class.active]="Settings" [attribute.aria-selected]="Settings ? 'true' : 'false'" (click)="Configured"><Icon Name="settings" Size="14" /><span>{{$T('designer.settings')}}</span></button>
-				<button type="button" role="tab" class="designer-document" data-map [class.active]="Mapped && !Settings" [attribute.aria-selected]="Mapped && !Settings ? 'true' : 'false'" (click)="Mapping"><Icon Name="map" Size="14" /><span>{{$T('designer.map')}}</span></button>
-				<div class="designer-document" *for="item of Tabs(Version)" *key="item.ID" [class.active]="item.Active && !Settings && !Mapped" [attribute.data-document]="item.ID">
-					<button type="button" role="tab" class="designer-document-open" [attribute.aria-selected]="item.Active && !Settings && !Mapped ? 'true' : 'false'" [attribute.data-document]="item.ID" (click)="Switched"><Icon Size="14" [name]="item.Icon" /><span>{{item.Name}}</span></button>
-					<button type="button" class="designer-document-close" *if="Tabs(Version).length > 1" [attribute.title]="$T('designer.closeTab')" [attribute.aria-label]="$T('designer.closeTab')" [attribute.data-document]="item.ID" (click)="Closed"><Icon Name="close" Size="12" /></button>
-				</div>
-			</div>
-			<DesignerSettings *if="Settings && Mode(Version) === 'application'" (open)="Opened" />
-			<DesignerMap *if="Mapped && !Settings && Mode(Version) === 'application'" [width]="Width" (open)="MapOpened" />
-			<DesignerCanvas *if="(!Settings && !Mapped) || Mode(Version) !== 'application'" [width]="Width" [preview]="Preview" [outlines]="Outlines" [gaps]="Gaps" [inspect]="Inspect" [lines]="Lines" [rulers]="Rulers" />
+		<div slot="main" class="designer-main" (pointerdown)="Touched" (focusin)="Touched">
+			<TabSplit *if="Mode(Version) === 'application'" [layout]="Panes" [label]="$T('designer.documents')" (change)="Laid" (select)="Chose" (close)="Closed" (copy)="Copied">
+				<Tab ID="@settings" Icon="settings" Pinned="true" [label]="$T('designer.settings')">
+					<DesignerSettings (open)="Opened" />
+				</Tab>
+				<Tab ID="@map" Icon="map" Pinned="true" [label]="$T('designer.map')">
+					<DesignerMap [width]="Width" (open)="MapOpened" />
+				</Tab>
+				<Tab *for="item of Tabs(Version)" *key="item.ID" [id]="item.ID" [label]="item.Name" [icon]="item.Icon" [closable]="Tabs(Version).length > 1">
+					<DesignerCanvas [document]="item.ID" [width]="Width" [preview]="Preview" [outlines]="Outlines" [gaps]="Gaps" [inspect]="Inspect" [lines]="Lines" [rulers]="Rulers" (wake)="Woken" />
+				</Tab>
+			</TabSplit>
+			<DesignerCanvas *if="Mode(Version) !== 'application'" [width]="Width" [preview]="Preview" [outlines]="Outlines" [gaps]="Gaps" [inspect]="Inspect" [lines]="Lines" [rulers]="Rulers" />
 		</div>
 
 		<WorkspaceToolWindow slot="tools" ID="project" Icon="folder" Area="left" *if="Mode(Version) === 'application'" [title]="$T('designer.project')">

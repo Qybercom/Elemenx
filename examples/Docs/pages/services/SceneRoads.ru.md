@@ -25,6 +25,8 @@
 - `Under(roads, x, z, hints)`
 - `Sketch(roads, junctions)`
 - `Asset(roads, options)`
+- `AssetOf(roads, options)`
+- `Work()`
 
 ## Тесты
 
@@ -41,4 +43,4 @@
 - [has barriers only where asked, of their kinds, sides and stretches, and they stop what drives into them from either side](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scene-roads.test.js#L233) — `tests/regression/scene-roads.test.js`
 - [finds the junctions of a network where roads cross or end on one another, brings the roads to one level there and stops their paint](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scene-roads.test.js#L261) — `tests/regression/scene-roads.test.js`
 
-+8 ещё в тех же файлах
++11 ещё в тех же файлах

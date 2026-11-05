@@ -337,6 +337,15 @@ Elemenx.Component('UIKitPage', {
 	RaceLapText: '',
 	RaceWrong: false,
 	RaceNote: '',
+	ShowNote: '',
+	ShowWorld: null,
+	ShowDistricts: [],
+	ShowDistrict: '',
+	ShowShows: [],
+	ShowMade: '',
+	ShowRunning: false,
+	ShowResults: [],
+	ShowColumns: [{Key: 'District', Title: 'District'}, {Key: 'Fps', Title: 'Frames a second', Align: 'end'}, {Key: 'Slowest', Title: 'Slowest frame, ms', Align: 'end'}, {Key: 'Draws', Title: 'Draws a frame', Align: 'end'}, {Key: 'Triangles', Title: 'Triangles a frame', Align: 'end'}],
 	RaceSpeed: 0,
 	RaceGear: '',
 	RaceGearOnly: 'N',
@@ -452,6 +461,8 @@ Elemenx.Component('UIKitPage', {
 	PlaceMana: false,
 	TerrainSpread: 0.45,
 	TerrainMirror: true,
+	/* How wild the sea of the Terrain demo is (Swell of its ground). */
+	TerrainSwell: 0.35,
 	TerrainMirrorBlur: 0,
 	TerrainGlass: true,
 	TerrainFrost: 0,
@@ -1518,7 +1529,7 @@ Elemenx.Component('UIKitPage', {
 
 	/* The scene of a demo, as its handler of ready keeps it; the editors keep their documents themselves. */
 	SceneOf: function (key) {
-		var getter = {world: this.World, space: this.Spaced, terrain: this.Terrained, place: this.PlaceScene, race: this.RaceScene, orbit: this.OrbitScene, models: this.ModelsScene}[key];
+		var getter = {world: this.World, space: this.Spaced, terrain: this.Terrained, place: this.PlaceScene, race: this.RaceScene, show: this.ShowScene, orbit: this.OrbitScene, models: this.ModelsScene}[key];
 		var scene = typeof getter === 'function' ? getter() : null;
 
 		return scene && scene.$Element().isConnected ? scene : null;
@@ -2502,7 +2513,7 @@ Elemenx.Component('UIKitPage', {
 		});
 
 		scene.Add('sun', {ID: 'day', Time: this.RaceHour, Latitude: 45, DayOfYear: 172, Color: '#fff4e0'});
-		scene.Add('ground', {ID: 'land', Size: 2400, Height: 22, Water: 0, Scale: 420, Ridges: 0.15, Seed: seed});
+		scene.Add('ground', {ID: 'land', Size: 2400, Height: 22, Water: 0, Scale: 420, Ridges: 0.15, Rock: false, Snow: false, Seed: seed});
 		scene.Add('forest', {ID: 'woods', Density: 1.2, Cover: 0.4, Patch: 120});
 		scene.Add('grass', {ID: 'meadow', Density: 0.6, Height: 0.5});
 		scene.Add('road', track.Spec);
@@ -2691,6 +2702,179 @@ Elemenx.Component('UIKitPage', {
 		this.RaceSeed++;
 
 		this.RaceBuild();
+	},
+
+	/*
+	 * The showcase world (SceneShowcase): every primitive of the generation, district by district. It is made once the scene
+	 * is ready, and timed until the ground is sown; a district picked flies there; the benchmark goes to each one in turn,
+	 * lets it settle and measures its frames (their rate, the slowest of them) and what a frame draws.
+	 */
+	ShowReady: function (scene) {
+		var self = this;
+		var world = this.$Service('SceneShowcase').World();
+		var start = performance.now();
+		var steady = 0;
+		var told = 0;
+		var ground = '';
+
+		this.ShowScene = function () {
+			return scene;
+		};
+
+		this.ShowWorld = world;
+		this.ShowDistricts = world.Districts.map(function (district) {
+			return {Value: district.ID, Label: district.Name};
+		});
+		this.ShowDistrict = world.Districts[0] ? world.Districts[0].ID : '';
+		this.ShowShows = world.Districts[0] ? world.Districts[0].Shows : [];
+
+		if (this.SceneBack('show', scene)) {
+			this.ShowMade = this.ShowMade || 'Made again from its recipe';
+
+			return;
+		}
+
+		scene.Add(world.Objects);
+
+		this.ShowFly(this.ShowDistrict);
+
+		/*
+		 * Made: the ground at once, then all it grows, a few squares a frame (the nearest first): how far it is told twice a
+		 * second, and the time of all of it once nothing waits, ten frames in a row.
+		 */
+		(function wait () {
+			var sown = scene.$Element().isConnected && scene.Sown ? scene.Sown() : null;
+			var seconds = ((performance.now() - start) / 1000).toFixed(1);
+
+			if (!sown) return;
+
+			steady = sown.Waiting || !sown.Things ? 0 : steady + 1;
+			ground = ground || (scene.Scene().Ground ? seconds : '');
+
+			if (steady < 10) {
+				if (performance.now() - told > 500) {
+					told = performance.now();
+					self.ShowMade = 'Ground in ' + (ground || seconds) + ' s; sowing: ' + sown.Squares + ' of ' + (sown.Squares + sown.Waiting) + ' squares, ' + sown.Things + ' things';
+				}
+
+				window.requestAnimationFrame(wait);
+
+				return;
+			}
+
+			self.ShowMade = 'Ground in ' + ground + ' s, all of it in ' + seconds + ' s: ' + scene.Scene().Order.length + ' objects, ' + sown.Things + ' things sown';
+		})();
+	},
+
+	/* A district picked: the view flies over it, its primitives named. */
+	ShowFly: function (id) {
+		var scene = this.ShowScene ? this.ShowScene() : null;
+		var stop = this.ShowWorld ? this.ShowWorld.Route.filter(function (each) {
+			return each.ID === id;
+		})[0] : null;
+		var district = stop ? this.ShowWorld.Districts.filter(function (each) {
+			return each.ID === id;
+		})[0] : null;
+		var field;
+
+		if (!scene || !stop) return;
+
+		field = scene.Scene().Ground && scene.Scene().Ground.Field;
+
+		this.ShowDistrict = id;
+		this.ShowShows = district.Shows;
+
+		scene.SetViewpoint({Target: [stop.Target[0], field ? Math.max(0, field.Height(stop.Target[0], stop.Target[2])) : 0, stop.Target[2]], Yaw: stop.Yaw, Pitch: stop.Pitch, Distance: stop.Distance});
+	},
+
+	/*
+	 * The benchmark: each district in turn, two seconds to settle and three measured: frames a second, the slowest frame
+	 * (of a hundred, the one past 99), the draws and the triangles of a frame. The last row is all of them.
+	 */
+	ShowBench: function () {
+		var self = this;
+		var scene = this.ShowScene ? this.ShowScene() : null;
+		var renderer = scene ? scene.Engine().Renderer : null;
+		var stops = this.ShowWorld ? this.ShowWorld.Route.slice() : [];
+		var rows = [];
+		var all = [];
+		var drawn = {Draws: 0, Triangles: 0, Frames: 0};
+
+		if (!scene || !renderer || this.ShowRunning) return;
+
+		this.ShowRunning = true;
+		this.ShowResults = [];
+
+		function row (id, name, times, draws, triangles) {
+			var sorted = times.slice().sort(function (a, b) {
+				return a - b;
+			});
+			var mean = times.reduce(function (sum, each) {
+				return sum + each;
+			}, 0) / Math.max(1, times.length);
+
+			return {ID: id, District: name, Fps: Math.round(1000 / Math.max(1, mean)), Slowest: Math.round(sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.99))] || 0), Draws: Math.round(draws), Triangles: Math.round(triangles / 1000) + ' k'};
+		}
+
+		function next () {
+			var stop = stops.shift();
+			var times = [];
+			var begin;
+			var last;
+			var counts;
+
+			if (!stop || !scene.$Element().isConnected) {
+				rows.push(row('all', 'All', all, drawn.Draws / Math.max(1, drawn.Frames), drawn.Triangles / Math.max(1, drawn.Frames)));
+
+				self.ShowResults = rows;
+				self.ShowRunning = false;
+				self.ShowNote = 'Benchmark done at ' + (self.SceneQuality === 'auto' ? 'the quality chosen by itself' : 'the quality ' + self.SceneQuality);
+
+				return;
+			}
+
+			self.ShowFly(stop.ID);
+
+			self.ShowNote = 'Benchmark: ' + stop.Name;
+
+			window.setTimeout(function () {
+				counts = renderer.Counts();
+				begin = performance.now();
+				last = begin;
+
+				(function frame (now) {
+					var after;
+					var frames;
+
+					if (now - begin < 3000 && scene.$Element().isConnected) {
+						if (now > last)
+							times.push(now - last);
+
+						last = now;
+
+						window.requestAnimationFrame(frame);
+
+						return;
+					}
+
+					after = renderer.Counts();
+					frames = Math.max(1, times.length);
+
+					drawn.Draws += after.Draws - counts.Draws;
+					drawn.Triangles += after.Triangles - counts.Triangles;
+					drawn.Frames += frames;
+					all = all.concat(times);
+
+					rows.push(row(stop.ID, stop.Name, times, (after.Draws - counts.Draws) / frames, (after.Triangles - counts.Triangles) / frames));
+
+					self.ShowResults = rows.slice();
+
+					next();
+				})(performance.now());
+			}, 2000);
+		}
+
+		next();
 	},
 
 	OrbitReady: function (scene) {
@@ -3354,6 +3538,48 @@ Elemenx.Component('UIKitPage', {
 		}
 
 		this.TerrainNote = best && scene.Move('scout', best) ? 'Scout: to the lake at ' + best.join(', ') : 'No way to the lake';
+	},
+
+	/* A boat on the sea, the nearest deep water to the middle: W, A, S and D drive it; again, the view is free. */
+	TerrainBoat: function () {
+		var scene = this.Terrained ? this.Terrained() : null;
+		var field;
+		var best = null;
+		var x;
+		var y;
+
+		if (!scene) return;
+
+		if (scene.Scene().Hero === 'boat') {
+			scene.Control('');
+
+			this.TerrainNote = 'Off the boat';
+
+			return;
+		}
+
+		field = scene.Scene().Ground.Field;
+
+		if (!scene.Scene().Objects.boat) {
+			for (x = -400; x <= 400; x += 8) {
+				for (y = -400; y <= 400; y += 8) {
+					if (field.Height(x, y) < -6 && (!best || x * x + y * y < best[0] * best[0] + best[1] * best[1]))
+						best = [x, y];
+				}
+			}
+
+			if (!best) {
+				this.TerrainNote = 'No sea deep enough for a boat';
+
+				return;
+			}
+
+			scene.Add('unit', {ID: 'boat', Name: 'Boat', Model: 'boat', Size: 5.5, X: best[0], Y: best[1], Vehicle: {Kind: 'boat', Heading: Math.atan2(-best[0], -best[1]) + Math.PI}});
+		}
+
+		scene.Control('boat');
+
+		this.TerrainNote = 'Boat: W the motor, S astern, A and D the rudder, Space stops it';
 	},
 
 	TerrainVillage: function () {

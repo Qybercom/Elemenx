@@ -26,7 +26,8 @@
  * - The Lamps of a model of a file are what shines in it (BuiltLamps): a Scene lights its world with them.
  * - BoneMatrix(model, bone, clip, time): the matrix of a bone at a second of a clip; Grip(bone, aim): where a thing in a hand stands.
  * - Make(name, {Variant}) returns a model, made once: {Name, Key, Group, Type, Size, Speed, Sway, Matte, Clips, Pieces:
- *   [{ID, Parent, Pivot, Team, Geometry}]}.
+ *   [{ID, Parent, Pivot, Team, Geometry}]}. Remake(name) has it made again on the next Make, under a Key of its own (what
+ *   cut its pieces, the roles of its parts, changed).
  * - Whole(model) is a model as one geometry, Bounds(geometry) its {Radius, Middle} and Levels(name, {Variant}) its
  *   geometries from the finest down: for what is sown in masses and seen from afar.
  * - Pose(model, clip, time, {From, FromTime, Fade}) returns the matrix of each piece at a second of a clip, in the space
@@ -39,7 +40,7 @@
 Elemenx.Service('SceneModels', {
 	$Meta: {
 		Description: 'The models of a game made of code: units, animals, plants, buildings and ships of pieces that move, fantasy and sci-fi, and their clips.',
-		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Assemble(recipe, tools, random, variant)', 'Tagged(name, tag)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Make(name, options)', 'Surfaces(model)', 'Whole(model)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)']
+		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Remake(name)', 'Assemble(recipe, tools, random, variant)', 'Tagged(name, tag)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Make(name, options)', 'Surfaces(model)', 'Whole(model)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['model']}},
@@ -105,6 +106,21 @@ Elemenx.Service('SceneModels', {
 		});
 
 		return this;
+	},
+
+	/* Made again on the next Make, under a Key of its own: what cut its pieces changed (the roles of its parts). */
+	Remake: function (name) {
+		var made = this.Made;
+
+		if (!this.Recipes[name]) return;
+
+		this.Revisions = this.Revisions || {};
+		this.Revisions[name] = (this.Revisions[name] || 0) + 1;
+
+		Object.keys(made).forEach(function (key) {
+			if (key.split('~')[0] === name)
+				delete made[key];
+		});
 	},
 
 	Has: function (name) {
@@ -2398,6 +2414,33 @@ Elemenx.Service('SceneModels', {
 				}), {Parent: 'body', Pivot: [0, 0.11, -0.3]}),
 				tools.Piece('dish', [tools.Cylinder(0.012, 0.012, 0.2, [0, 0.42, -0.26], dark), tools.Cylinder(0.12, 0.02, 0.05, [0, 0.54, -0.26], hull, [20, 0, 0], 10)], {Parent: 'body', Pivot: [0, 0.4, -0.26]}),
 				tools.Piece('stripe', [tools.Box(0.5, 0.01, 0.12, [0, 0.325, -0.26], [1, 1, 1])], {Parent: 'body', Team: true})
+			];
+		}});
+
+		/* A motor boat: a white hull with its bow cut to a point, a deck of wood, a console with its glass, two seats and an outboard motor at its stern; its front is +z. */
+		this.Define('boat', {Group: 'transport', Type: 'vehicle', Size: 5.5, Speed: 14, Matte: false, Build: function (tools) {
+			var white = [0.9, 0.91, 0.92];
+			var wood = [0.5, 0.33, 0.2];
+			var glass = [0.55, 0.7, 0.8];
+
+			return [
+				tools.Piece('hull', [
+					tools.Box(0.38, 0.13, 0.7, [0, 0.065, -0.1], white),
+					tools.Wedge(0.38, 0.13, 0.3, [0, 0.065, 0.4], white, [0, -90, 0]),
+					tools.Box(0.36, 0.02, 0.66, [0, 0.135, -0.12], wood),
+					tools.Box(0.39, 0.035, 0.72, [0, 0.03, -0.1], dark)
+				]),
+				tools.Piece('console', [
+					tools.Box(0.16, 0.12, 0.1, [0.05, 0.2, 0.08], white),
+					tools.Box(0.17, 0.08, 0.012, [0.05, 0.29, 0.13], glass, [-25, 0, 0]),
+					tools.Box(0.1, 0.06, 0.08, [-0.08, 0.17, -0.08], dark),
+					tools.Box(0.1, 0.06, 0.08, [0.08, 0.17, -0.08], dark)
+				], {Parent: 'hull'}),
+				tools.Piece('motor', [
+					tools.Box(0.08, 0.1, 0.07, [0, 0.17, -0.47], dark),
+					tools.Box(0.03, 0.14, 0.03, [0, 0.07, -0.49], iron)
+				], {Parent: 'hull', Pivot: [0, 0.14, -0.46]}),
+				tools.Piece('stripe', [tools.Box(0.392, 0.025, 0.5, [0, 0.1, -0.05], [1, 1, 1])], {Parent: 'hull', Team: true})
 			];
 		}});
 

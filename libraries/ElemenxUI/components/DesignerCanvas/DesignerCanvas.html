@@ -1,5 +1,5 @@
 <div class="elemenx-designer-canvas" [class.preview]="Preview" [class.outlines]="Preview ? Lines : Outlines" [class.gaps]="!Preview && Gaps" [class.rulers]="Rulers">
-	<i class="elemenx-designer-sync" hidden *mount="Draw(Version, Preview)"></i>
+	<i class="elemenx-designer-sync" hidden *mount="Draw(Version, Preview, Document)"></i>
 	<div class="elemenx-designer-rulers" *if="Rulers">
 		<span class="elemenx-designer-rulers-corner"></span>
 		<div class="elemenx-designer-ruler horizontal">

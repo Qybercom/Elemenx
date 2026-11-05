@@ -28,6 +28,11 @@
  * - Bounce(way, normal, depth, bounce): the same for a list [x, y, z]: returns the way after it.
  * - Ship(state, input, settings, elapsed): input {Yaw, Pitch, Roll, Throttle, Lift, Boost, Stop (all of it comes to rest)}. Settings: Top,
  *   Boost, Turn, Roll, Assist (how soon it gives up a way it no longer points). State: {At, Right, Up, Ahead, Way, Spin: [pitch, yaw, roll], Throttle}.
+ * - Boat(state, input, sea, bed, settings, elapsed): input {Gas, Brake (and astern; true, or 0 to 1), Steer (-1 to 1, left over 0),
+ *   Stop}; sea(x, z) is {Height} of the water there (SceneWaves.At), bed(x, z) the height of the ground under it. Settings: Power
+ *   (m/s² the motor gives, 6), Top (m/s, 16), Turn (radians a second at speed, 0.9), Length (4.5), Width (1.8), Draft (how deep it
+ *   lies, 0.35), Plane (how far its bow rises at speed, radians, 0.09), Lean (how far it leans into a turn, 0.12). State: {X, Z,
+ *   Heading, Forward, Aside, Rate, Y, Rise, Pitch, PitchSpeed, Roll, RollSpeed, Aground}.
  * - World(settings): a world of solid bodies. Settings: Gravity (m/s² down, or a list [x, y, z]), Ground (a height, a function (x, z)
  *   of the height, or null for none; 0 by default), Friction, Bounce and Rolling of the ground, Step (1/120 s), Iterations (10), Sleep (false:
  *   none sleep), Touch(a, b, {At, Normal, Impulse}) (when two begin to touch; b is null for the ground). It has:
@@ -58,8 +63,8 @@
  */
 Elemenx.Service('Physics', {
 	$Meta: {
-		Description: 'How things move, apart from what shows them: steps of one length, springs, a car on its tyres and springs, a ship in space, a world of solid bodies with ragdolls and water to float in, cloth and ropes, waves and a fluid of particles.',
-		Methods: ['Steps(clock, elapsed, length, each)', 'Blend(from, to, part)', 'Spring(value, speed, target, stiffness, damping, elapsed)', 'Car(state, input, surface, settings, elapsed)', 'Gearbox(state, input, settings, gas, braking, speed, elapsed)', 'Hit(state, normal, depth, at, settings)', 'Bounce(way, normal, depth, bounce)', 'Ship(state, input, settings, elapsed)', 'World(settings)', 'Cloth(settings)', 'Rope(settings)', 'Waves(settings)', 'Fluid(settings)']
+		Description: 'How things move, apart from what shows them: steps of one length, springs, a car on its tyres and springs, a ship in space, a boat on the waves, a world of solid bodies with ragdolls and water to float in, cloth and ropes, waves and a fluid of particles.',
+		Methods: ['Steps(clock, elapsed, length, each)', 'Blend(from, to, part)', 'Spring(value, speed, target, stiffness, damping, elapsed)', 'Car(state, input, surface, settings, elapsed)', 'Gearbox(state, input, settings, gas, braking, speed, elapsed)', 'Hit(state, normal, depth, at, settings)', 'Bounce(way, normal, depth, bounce)', 'Ship(state, input, settings, elapsed)', 'Boat(state, input, sea, bed, settings, elapsed)', 'World(settings)', 'Cloth(settings)', 'Rope(settings)', 'Waves(settings)', 'Fluid(settings)']
 	},
 
 	Gravity: 9.81,
@@ -441,6 +446,84 @@ Elemenx.Service('Physics', {
 
 		/* Struck at a corner it turns: as far as the blow does not go through its middle. */
 		state.Rate += push * (at[1] * normal[0] - at[0] * normal[1]) / (at[0] * at[0] + at[1] * at[1] + 1.5);
+
+		return state;
+	},
+
+	/*
+	 * A boat on water. sea(x, z) is {Height} of the water there, bed(x, z) the height of the ground under it. The motor pushes
+	 * it, the water holds it back (it comes to Top at full gas) and holds it sideways; the rudder turns it as far as water goes
+	 * past it; it rides on the waves at its four ends, as on springs damped by the water, its bow up as it goes fast, leaning
+	 * into a turn; where the bed comes up under its bow (its stern, going back) it runs aground and stops.
+	 */
+	Boat: function (state, input, sea, bed, settings, elapsed) {
+		var number = this.Number;
+		var power = number(settings.Power, 6);
+		var top = Math.max(1, number(settings.Top, 16));
+		var turn = number(settings.Turn, 0.9);
+		var half = number(settings.Length, 4.5) / 2;
+		var side = number(settings.Width, 1.8) / 2;
+		var draft = number(settings.Draft, 0.35);
+		var gas = Math.max(0, Math.min(1, Number(input.Gas) || 0));
+		var brake = Math.max(0, Math.min(1, Number(input.Brake) || 0));
+		var steer = Math.max(-1, Math.min(1, Number(input.Steer) || 0));
+		var ahead = [Math.sin(state.Heading), Math.cos(state.Heading)];
+		var last = {X: state.X, Z: state.Z};
+		var push = gas * power - brake * power * 0.6;
+		var flow;
+		var ends;
+		var level;
+		var pitch;
+		var roll;
+		var moved;
+
+		if (input.Stop)
+			push = Math.abs(state.Forward) > 0.2 ? -Math.sign(state.Forward) * power * 0.8 : -state.Forward / Math.max(elapsed, 1e-3);
+
+		/* The water: what grows with the square of the speed (Top where the motor gives no more), and a little more. */
+		state.Forward += (push - Math.max(0, power - 0.15 * top) / (top * top) * state.Forward * Math.abs(state.Forward) - 0.15 * state.Forward) * elapsed;
+		state.Forward = Math.max(-top * 0.35, state.Forward);
+
+		/* The rudder turns it as far as water goes past it; going back, the other way. */
+		flow = Math.min(1, Math.abs(state.Forward) / 4);
+		state.Rate += (steer * turn * flow * (state.Forward >= 0 ? 1 : -1) - state.Rate) * Math.min(1, elapsed * 3);
+		state.Heading += state.Rate * elapsed;
+
+		/* Thrown out of a turn, held by the water. */
+		state.Aside = (state.Aside - state.Rate * state.Forward * 0.25 * elapsed) * Math.exp(-elapsed * 2.5);
+
+		ahead = [Math.sin(state.Heading), Math.cos(state.Heading)];
+		state.X += (ahead[0] * state.Forward + ahead[1] * state.Aside) * elapsed;
+		state.Z += (ahead[1] * state.Forward - ahead[0] * state.Aside) * elapsed;
+
+		/* Aground: the bed under its bow going on, under its stern going back, nearer than it lies deep. */
+		state.Aground = state.Forward >= 0 ? bed(state.X + ahead[0] * half, state.Z + ahead[1] * half) > -draft * 0.6 : bed(state.X - ahead[0] * half, state.Z - ahead[1] * half) > -draft * 0.6;
+
+		if (state.Aground) {
+			state.X = last.X;
+			state.Z = last.Z;
+			state.Forward *= -0.15;
+			state.Aside = 0;
+		}
+
+		function water (forward, aside) {
+			return sea(state.X + ahead[0] * forward + ahead[1] * aside, state.Z + ahead[1] * forward - ahead[0] * aside).Height;
+		}
+
+		ends = [water(half * 0.8, 0), water(-half * 0.8, 0), water(0, side), water(0, -side)];
+		level = (ends[0] + ends[1] + ends[2] + ends[3]) / 4 - draft + Math.min(1, Math.abs(state.Forward) / top) * 0.12;
+		pitch = Math.atan2(ends[0] - ends[1], half * 1.6) + number(settings.Plane, 0.09) * Math.min(1, Math.max(0, state.Forward) / (top * 0.6));
+		roll = Math.atan2(ends[2] - ends[3], side * 2) - state.Rate * Math.min(1, Math.abs(state.Forward) / top) * number(settings.Lean, 0.12) / Math.max(0.1, turn);
+
+		moved = this.Spring(state.Y, state.Rise, level, 30, 7, elapsed);
+		state.Y = moved[0];
+		state.Rise = moved[1];
+		moved = this.Spring(state.Pitch, state.PitchSpeed, pitch, 26, 6, elapsed);
+		state.Pitch = moved[0];
+		state.PitchSpeed = moved[1];
+		moved = this.Spring(state.Roll, state.RollSpeed, roll, 26, 5, elapsed);
+		state.Roll = moved[0];
+		state.RollSpeed = moved[1];
 
 		return state;
 	},

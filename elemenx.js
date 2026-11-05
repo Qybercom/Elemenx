@@ -4964,6 +4964,68 @@
 			return {Listed: templateListed(nodes(plan.Elements), plan.Flags), Texts: nodes(plan.Texts), Inert: nodes(plan.Inert)};
 		}
 
+		/* Two lists of nodes, each in the order of the document, as one in that order. */
+		function documentMerge (a, b) {
+			var result = [];
+			var i = 0;
+			var j = 0;
+
+			while (i < a.length && j < b.length) {
+				if (a[i].compareDocumentPosition(b[j]) & 4) result.push(a[i++]);
+				else result.push(b[j++]);
+			}
+
+			return result.concat(a.slice(i), b.slice(j));
+		}
+
+		/*
+		 * What the collectors read in a root whose slots are filled: the nodes of its plan still in it (a slot itself goes),
+		 * and those of what filled its slots, a walk of each piece only, in the order of the document. {Listed, Texts}.
+		 */
+		function slottedNodes (root, planned, projected) {
+			var listed = {Refs: [], Bindings: [], Directives: [], Events: []};
+			var texts = [];
+			var walker;
+			var node;
+			var text;
+			var piece;
+			var i = 0;
+
+			function kept (each) {
+				return each === root || root.contains(each);
+			}
+
+			while (i < projected.length) {
+				node = projected[i];
+
+				if (node.nodeType === 3 && node.nodeValue.indexOf('{{') !== -1) {
+					texts.push(node);
+				}
+				else if (node.nodeType === 1) {
+					piece = templateElements(node);
+
+					Object.keys(listed).forEach(function (kind) {
+						Array.prototype.push.apply(listed[kind], piece[kind]);
+					});
+
+					walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null);
+
+					while ((text = walker.nextNode())) {
+						if (text.nodeValue.indexOf('{{') !== -1)
+							texts.push(text);
+					}
+				}
+
+				i++;
+			}
+
+			Object.keys(listed).forEach(function (kind) {
+				listed[kind] = documentMerge(planned.Listed[kind].filter(kept), listed[kind]);
+			});
+
+			return {Listed: listed, Texts: documentMerge(planned.Texts.filter(kept), texts), Inert: planned.Inert};
+		}
+
 		function createFragment (html) {
 			var key = String(html);
 			var parsed = own(fragmentCache, key) ? fragmentCache[key] : null;
@@ -5879,12 +5941,14 @@
 			}
 		}
 
+		/* Fills the slots of a root with what projection holds for each; returns the nodes it put in, in the order of the document. */
 		function projectSlots (root, projection) {
 			var slots = [];
 			var found;
 			var groups = projection && projection.Groups ? projection.Groups() : {};
 			var used = {};
 			var roots = [];
+			var projected = [];
 			var i;
 			var j;
 			var slot;
@@ -5893,7 +5957,8 @@
 			var parent;
 			var k;
 
-			if (!root) return;
+			if (!root)
+				return projected;
 
 			if (root.nodeType) {
 				roots.push(root);
@@ -5943,6 +6008,8 @@
 					while (k < nodes.length) {
 						parent.insertBefore(nodes[k], slot);
 
+						projected.push(nodes[k]);
+
 						k++;
 					}
 
@@ -5955,6 +6022,9 @@
 
 				i++;
 			}
+
+			/* The slots are found in the order of the document, and each is filled in its place: so are its nodes. */
+			return projected;
 		}
 
 		/* Component: instance helpers */
@@ -7328,23 +7398,23 @@
 
 				/* Instance: template compilation (a template without a slot has nothing to fill) */
 				if (plan.Slots)
-					projectSlots(root, slotProjection);
+					planned = slottedNodes(root, planned, projectSlots(root, slotProjection));
 
 				seenOuter = structuralSeen;
 				structuralSeen = new Map();
 
 				try {
 					/*
-					 * The elements the collectors read: those of the plan, or, in a template with a slot (what fills it is part of
-					 * the root now), those of one walk of it. Most elements of a template have nothing for them.
+					 * The elements the collectors read: those of the plan, and in a template with a slot those of what fills it
+					 * too (slottedNodes). Most elements of a template have nothing for them.
 					 */
-					listed = plan.Slots ? templateElements(root) : planned.Listed;
+					listed = planned.Listed;
 
 					collectRefs(root, refs, refOwner, listed);
 
 					collectOutlets(root, outlets, listed);
 
-					collectTextBindings(root, bindings, plan.Slots ? null : planned.Texts);
+					collectTextBindings(root, bindings, planned.Texts);
 
 					collectElementBindings(root, bindings, models, listed);
 

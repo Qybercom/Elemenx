@@ -2,7 +2,8 @@
  * The ground of a game, continuous: heights of noise anywhere (no cells), its meshes in chunks, and ways over it.
  * - Flat(options) returns a field of a flat map: options Size (of the map, 1000), Height (of its highest hills, 60),
  *   Water (the level of the sea, 0 to 1, 0.35), Scale (the size of its hills, 180), Ridges (0 to 1: how much of it is
- *   folded into mountains, 0.4), Seed; it has Size, Top (its Height) and Water. Its methods: Height(x, z) (the height of the ground; below 0 under the sea),
+ *   folded into mountains, 0.4), Rock and Snow (the parts of its Height where rock and snow begin, 0.45 and 0.75; false:
+ *   none, a land of low hills all of grass), Seed; it has Size, Top (its Height), Rock, Snow (those heights) and Water. Its methods: Height(x, z) (the height of the ground; below 0 under the sea),
  *   Normal(x, z), Slope(x, z) (0 flat, 1 a wall), Walkable(x, z, options) (MaxSlope 0.45; Swim: the sea too; Blocked(x,
  *   z): true where a thing stands in the way), Chunk(x,
  *   z, size, resolution) (a geometry of a square of it, its positions relative to its middle, with Colors of its
@@ -40,6 +41,10 @@
  * - Grid(options, side, top, steep): the heights of a flat ground of its options over all its size, side by side
  *   points, four numbers each (a Float32Array): the height, and 1 where it is over 1 and under top and its slope under
  *   steep (where grass grows), 0 elsewhere.
+ * - Floor(options, side): the heights of a flat ground of its options, as Grid lays them, nothing else (the floor of a sea).
+ * - Free(size, side, lines, areas, edge): where things may grow on a field of size, side by side bytes (a Uint8Array, row
+ *   by row along Z): 0 within Reach of each line ({Points, Reach}: a road and its shoulders, a river and its banks) and
+ *   inside each area (Points: a clearing, a lake), 255 farther than edge (1.5) from them, between them in between.
  * - Heights(field, side): the heights of a flat field in a grid of side by side points over all its size (a
  *   Float32Array, row by row along Z); FromGrid(options, heights, side) a field of Flat whose heights are such a grid (a
  *   field baked or painted; out of the grid, of its noise): it has Grid and Side, and no Options.
@@ -49,7 +54,7 @@
 Elemenx.Service('SceneTerrainGenerator', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['Flat(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'SketchChanged(before, after)', 'Source(names)']
+		Methods: ['Flat(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'SketchChanged(before, after)', 'Source(names)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['terrain']}},
@@ -92,6 +97,13 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var ridges = settings.Ridges === undefined ? 0.4 : Number(settings.Ridges);
 		var field;
 
+		/* A height of a zone: a part of the highest hills, Infinity for none (false), the part by default. */
+		function zone (value, fallback, top) {
+			if (value === false || value === 'false') return Infinity;
+
+			return top * (value === undefined || value === '' || value === null ? fallback : Number(value));
+		}
+
 		function raw (x, z) {
 			var soft = noise.Fbm(x / scale, 0.37, z / scale, 6);
 			var folded = noise.Ridge(x / scale * 0.7 + 11, 1.3, z / scale * 0.7 - 5, 5);
@@ -104,6 +116,9 @@ Elemenx.Service('SceneTerrainGenerator', {
 			Options: settings,
 			Size: size,
 			Top: height,
+			/* Where the rock and the snow begin, in its units (Rock and Snow of the options, parts of its Height; false: none). */
+			Rock: zone(settings.Rock, 0.45, height),
+			Snow: zone(settings.Snow, 0.75, height),
 			Water: water,
 			Palette: settings.Palette || null,
 			Roads: null,
@@ -580,19 +595,30 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 
-	/* The colors of the ground of a flat map: sand by the sea, grass, rock on the slopes, snow on the heights. */
+	/*
+	 * The colors of the ground of a flat map: sand by the sea, grass, rock on the slopes, rock and snow on the heights
+	 * where its Rock and Snow begin (none on a field that has none).
+	 */
 	Paint: function (field, x, z, y, slope) {
 		var look = field.Sketch ? field.Sketch.Look(x, z) : null;
 		var palette = look && look.Palette || field.Palette || {};
-		var high = y / Math.max(1, field.Top);
+		var top = Math.max(1, field.Top);
+		var rock = field.Rock === undefined ? top * 0.45 : field.Rock;
+		var snow = field.Snow === undefined ? top * 0.75 : field.Snow;
+		var part = Math.min(1, y / (isFinite(rock) ? rock : top));
 		var low = palette.Low || [0.3, 0.5, 0.22];
 		var upper = palette.High || [0.39, 0.43, 0.25];
 		var color;
 
-		if (y < -0.5) color = palette.Deep || [0.2, 0.26, 0.3];
+		/* Under the sea the sand goes on, darker and darker as it goes down (seen through the water now). */
+		if (y < -0.5) color = [0, 1, 2].map(function (k) {
+			var sand = (palette.Sand || [0.76, 0.7, 0.52])[k];
+
+			return sand + ((palette.Deep || [0.2, 0.26, 0.3])[k] - sand) * Math.min(1, (-0.5 - y) / 7.5);
+		});
 		else if (y < 1.2) color = palette.Sand || [0.76, 0.7, 0.52];
-		else if (high < 0.45) color = [low[0] + (upper[0] - low[0]) * high / 0.45, low[1] + (upper[1] - low[1]) * high / 0.45, low[2] + (upper[2] - low[2]) * high / 0.45];
-		else if (high < 0.75) color = palette.Rock || [0.45, 0.42, 0.36];
+		else if (y < rock && y < snow) color = [low[0] + (upper[0] - low[0]) * part, low[1] + (upper[1] - low[1]) * part, low[2] + (upper[2] - low[2]) * part];
+		else if (y < snow) color = palette.Rock || [0.45, 0.42, 0.36];
 		else color = palette.Snow || [0.93, 0.94, 0.96];
 
 		if (slope > 0.32 && y > 1.2)
@@ -901,7 +927,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: ['Noise', 'SeedOffset', 'Vectors'], SceneTerrainGenerator: ['Smoothstep', 'Flat', 'Sphere', 'Paint', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan']});
+		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: ['Noise', 'SeedOffset', 'Vectors'], SceneTerrainGenerator: ['Smoothstep', 'Flat', 'Sphere', 'Paint', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan']});
 	},
 
 	/*
@@ -1836,6 +1862,104 @@ Elemenx.Service('SceneTerrainGenerator', {
 		field.Roads = roads || null;
 
 		return typed(field.Chunk(args[0], args[1], args[2], args[3]));
+	},
+
+	/*
+	 * Where things may grow on a square field of size, side by side bytes (its rows from -size/2 to size/2): 255 free, 0
+	 * kept bare: within Reach of the way of each line ({Points [[x, z]...], Reach}: a road with its shoulders, a river with
+	 * its banks) and inside each area (Points: a clearing, a lake), with Edge (1.5) of soft border.
+	 */
+	Free: function (size, side, lines, areas, edge) {
+		var data = new Uint8Array(side * side);
+		var step = size / (side - 1);
+		var soft = edge === undefined ? 1.5 : Math.max(0.01, Number(edge));
+		var half = size / 2;
+
+		data.fill(255);
+
+		/* A cell kept as bare as its distance d from the border tells (0 inside, soft outside). */
+		function keep (column, row, d) {
+			var at = row * side + column;
+			var value = d <= 0 ? 0 : Math.round(255 * Math.min(1, d / soft));
+			if (value < data[at])
+				data[at] = value;
+		}
+
+		function cells (x0, z0, x1, z1, each) {
+			var c0 = Math.max(0, Math.floor((x0 + half) / step));
+			var c1 = Math.min(side - 1, Math.ceil((x1 + half) / step));
+			var r0 = Math.max(0, Math.floor((z0 + half) / step));
+			var r1 = Math.min(side - 1, Math.ceil((z1 + half) / step));
+			var row;
+			var column;
+
+			for (row = r0; row <= r1; row++) {
+				for (column = c0; column <= c1; column++)
+					each(column, row, column * step - half, row * step - half);
+			}
+		}
+
+		(lines || []).forEach(function (line) {
+			var points = line.Points || [];
+			var reach = Number(line.Reach) || 0;
+			var i;
+
+			for (i = 0; i + 1 < points.length; i++) {
+				(function (a, b) {
+					var dx = b[0] - a[0];
+					var dz = b[1] - a[1];
+					var length = dx * dx + dz * dz || 1;
+					var out = reach + soft;
+
+					cells(Math.min(a[0], b[0]) - out, Math.min(a[1], b[1]) - out, Math.max(a[0], b[0]) + out, Math.max(a[1], b[1]) + out, function (column, row, x, z) {
+						var t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / length));
+
+						keep(column, row, Math.hypot(a[0] + dx * t - x, a[1] + dz * t - z) - reach);
+					});
+				})(points[i], points[i + 1]);
+			}
+		});
+
+		(areas || []).forEach(function (points) {
+			var xs = points.map(function (point) {
+				return point[0];
+			});
+			var zs = points.map(function (point) {
+				return point[1];
+			});
+
+			cells(Math.min.apply(null, xs), Math.min.apply(null, zs), Math.max.apply(null, xs), Math.max.apply(null, zs), function (column, row, x, z) {
+				var inside = false;
+				var i;
+				var j;
+
+				for (i = 0, j = points.length - 1; i < points.length; j = i++) {
+					if ((points[i][1] > z) !== (points[j][1] > z) && x < (points[j][0] - points[i][0]) * (z - points[i][1]) / (points[j][1] - points[i][1]) + points[i][0])
+						inside = !inside;
+				}
+
+				if (inside)
+					keep(column, row, 0);
+			});
+		});
+
+		return data;
+	},
+
+	/* The heights of a flat ground of its options over all its size, side by side points, four numbers each, its height the first (the floor of a sea). */
+	Floor: function (options, side) {
+		var field = this.Field('Flat', options);
+		var data = new Float32Array(side * side * 4);
+		var step = field.Size / (side - 1);
+		var row;
+		var column;
+
+		for (row = 0; row < side; row++) {
+			for (column = 0; column < side; column++)
+				data[(row * side + column) * 4] = field.Height(column * step - field.Size / 2, row * step - field.Size / 2);
+		}
+
+		return data;
 	},
 
 	Grid: function (options, side, top, steep) {

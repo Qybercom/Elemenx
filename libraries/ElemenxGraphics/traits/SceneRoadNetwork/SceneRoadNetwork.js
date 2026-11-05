@@ -58,10 +58,12 @@ Elemenx.Trait('SceneRoadNetwork', {
 
 		/* The network again: the roads, their junctions, a model of each road, and the layer of the sketch under them. */
 		function make (found, settings, sketch, key) {
-			var field = terrain.Flat(sketch ? Object.assign({}, settings, {Sketch: sketch}) : settings);
+			var options = sketch ? Object.assign({}, settings, {Sketch: sketch}) : settings;
+			var field = terrain.Flat(options);
 			var ground = function (x, z) {
 				return Math.max(0, field.Height(x, z));
 			};
+			var pool = roads.Work();
 			var fences = barriers();
 			var network = roads.Network(found.map(function (object) {
 				var made = spec(object);
@@ -94,15 +96,36 @@ Elemenx.Trait('SceneRoadNetwork', {
 				return made;
 			});
 
-			/* A junction is drawn with the first road it holds. */
+			/*
+			 * A junction is drawn with the first road it holds. The model of each road is made in a worker (SceneRoads.AssetOf, the
+			 * ground shared once): an empty one stands for it until it comes, and what stands still is gathered again then.
+			 */
+			if (!pool.Inline())
+				pool.Share('roads-ground', options);
+
 			state.Made.forEach(function (road) {
 				var name = 'road:' + road.ID + ':' + hash;
-				if (!models.Has(name))
-					models.Define(name, {URL: name, Asset: roads.Asset([road], {Height: ground, Junctions: state.Junctions.filter(function (junction) {
-						return junction.Roads[0] === road.ID;
-					})}), Fit: false, Type: 'prop'});
+				var held = state.Junctions.filter(function (junction) {
+					return junction.Roads[0] === road.ID;
+				});
 
 				state.Names[road.ID] = name;
+
+				if (models.Has(name)) return;
+
+				if (pool.Inline()) {
+					models.Define(name, {URL: name, Asset: roads.Asset([road], {Height: ground, Junctions: held}), Fit: false, Type: 'prop'});
+
+					return;
+				}
+
+				models.Define(name, {URL: name, Asset: roads.Asset([]), Fit: false, Type: 'prop'});
+
+				pool.Run('SceneRoads', 'AssetOf', [[road], {Ground: 'roads-ground', Junctions: held}], function (error, asset) {
+					models.Define(name, {URL: name, Asset: error ? roads.Asset([road], {Height: ground, Junctions: held}) : asset, Fit: false, Type: 'prop'});
+
+					scene.StillLists = null;
+				});
 			});
 
 			state.Sketch = {Layers: (sketch && sketch.Layers || []).concat([{ID: 'roads', Name: 'roads', Visible: true, Strength: 1, Items: roads.Sketch(state.Made, state.Junctions).map(function (item, index) {

@@ -519,3 +519,73 @@ describe('Contract: Physics World, solid bodies that fall, strike and rest', fun
 		expect(world.Bodies()).toEqual([]);
 	});
 });
+
+describe('Contract: Physics Boat, a boat on the waves', function () {
+	var physics;
+
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:Physics']);
+
+		physics = Elemenx.Service('Physics');
+	});
+
+	function boat () {
+		return {X: 0, Z: 0, Heading: 0, Forward: 0, Aside: 0, Rate: 0, Y: 0, Rise: 0, Pitch: 0, PitchSpeed: 0, Roll: 0, RollSpeed: 0};
+	}
+
+	function sail (state, input, sea, bed, seconds, settings) {
+		var i;
+
+		for (i = 0; i < seconds * 120; i++)
+			physics.Boat(state, input, sea, bed, settings || {}, 1 / 120);
+
+		return state;
+	}
+
+	function calm () {
+		return {Height: 0};
+	}
+
+	function deep () {
+		return -20;
+	}
+
+	it('comes to its top speed at full gas, turns only as water goes past its rudder, and slows when let go', function () {
+		var still = sail(boat(), {Steer: 1}, calm, deep, 3);
+		var going = sail(boat(), {Gas: 1}, calm, deep, 30, {Top: 16});
+
+		expect(still.Heading).toBeCloseTo(0, 6);
+		expect(going.Forward).toBeGreaterThan(14);
+		expect(going.Forward).toBeLessThan(16.1);
+		expect(going.Z).toBeGreaterThan(200);
+		expect(Math.abs(going.X)).toBeLessThan(1e-6);
+		/* The bow rises as it goes fast. */
+		expect(going.Pitch).toBeGreaterThan(0.05);
+
+		sail(going, {Gas: 1, Steer: 1}, calm, deep, 2);
+
+		expect(going.Heading).toBeGreaterThan(1);
+		expect(going.Roll).not.toBe(0);
+
+		sail(going, {}, calm, deep, 20);
+
+		expect(going.Forward).toBeLessThan(2);
+	});
+
+	it('rides on the water, its bow up where a wave lifts it, and runs aground where the bed comes up', function () {
+		var riding = sail(boat(), {}, function (x, z) {
+			return {Height: 1 + z * 0.1};
+		}, deep, 6, {Draft: 0.35});
+		var beached = sail(boat(), {Gas: 1}, calm, function (x, z) {
+			return z > 30 ? 0 : -10;
+		}, 20);
+
+		expect(riding.Y).toBeCloseTo(1 - 0.35, 1);
+		expect(riding.Pitch).toBeCloseTo(Math.atan(0.1), 1);
+		expect(beached.Aground).toBe(true);
+		expect(beached.Z).toBeLessThan(30);
+		expect(beached.Forward).toBeLessThan(1);
+	});
+});

@@ -5,8 +5,10 @@
  *   each Service they carry (a Service gives the source of its members by its method Source(names)); size how many
  *   (by the cores of the device, 1 to 4). Its methods: Run(service, method, args, callback(error, result)) (the
  *   method of the Service in a worker, on the data of args; the lists of numbers of the result come back as they
- *   are, Float32Array or Uint32Array, moved, not copied), Waiting() (how many runs are not done), Inline() (true with
- *   no worker: the runs go at once in the page, as in Node) and Destroy().
+ *   are, Float32Array or Uint32Array, moved, not copied), Share(key, data) (data each worker keeps under a key, sent to
+ *   each once: a method in a worker reads it by this.$Shared(key); the runs that follow see it), Waiting() (how many runs
+ *   are not done), Inline() (true with no worker: the runs go at once in the page, as in Node; Share keeps nothing) and
+ *   Destroy().
  * - Source(owner, names): the members of an object as the text of an object, its functions as they are written; what a
  *   Service gives by its method Source. A function of it may use only its arguments, this and what a worker has.
  * In a worker, this.$Service(name) of a member is what the pool carries of that Service.
@@ -53,7 +55,8 @@ Elemenx.Service('Workers', {
 			return 'var services = {' + Object.keys(services).map(function (service) {
 				return JSON.stringify(service) + ': ' + self.$Service(service).Source(services[service]);
 			}).join(',\n') + '};\n'
-				+ 'Object.keys(services).forEach(function (name) { services[name].$Service = function (other) { return services[other]; }; });\n'
+				+ 'var shared = {};\n'
+				+ 'Object.keys(services).forEach(function (name) { services[name].$Service = function (other) { return services[other]; }; services[name].$Shared = function (key) { return shared[key]; }; });\n'
 				+ 'function moved (value, list) {\n'
 				+ '	if (value && value.buffer instanceof ArrayBuffer) { if (list.indexOf(value.buffer) === -1) list.push(value.buffer); return list; }\n'
 				+ '	if (value && typeof value === \'object\') Object.keys(value).forEach(function (key) { moved(value[key], list); });\n'
@@ -62,18 +65,20 @@ Elemenx.Service('Workers', {
 				+ 'onmessage = function (event) {\n'
 				+ '	var job = event.data;\n'
 				+ '	var result;\n'
+				+ '	if (job.Share !== undefined) { shared[job.Share] = job.Data; return; }\n'
 				+ '	try { result = services[job.Service][job.Method].apply(services[job.Service], job.Args); }\n'
 				+ '	catch (error) { postMessage({ID: job.ID, Error: String(error && error.message || error)}); return; }\n'
 				+ '	postMessage({ID: job.ID, Result: result}, moved(result, []));\n'
 				+ '};\n';
 		}
 
-		/* A run in the page: what a pool does with no worker, or when its workers failed. */
+		/* A run in the page: what a pool does with no worker, or when its workers failed; the Service is this of its method. */
 		function here (job) {
+			var service = self.$Service(job.Service);
 			var result;
 
 			try {
-				result = self.$Service(job.Service)[job.Method].apply(null, job.Args);
+				result = service[job.Method].apply(service, job.Args);
 			}
 			catch (error) {
 				job.Callback(error);
@@ -157,6 +162,15 @@ Elemenx.Service('Workers', {
 				worker.Waiting++;
 
 				worker.postMessage({ID: job.ID, Service: service, Method: method, Args: job.Args});
+			},
+
+			/* Data every worker keeps under a name, sent to each once: what the runs of a while share (the field of a ground). */
+			Share: function (key, data) {
+				if (inline) return;
+
+				workers.forEach(function (worker) {
+					worker.postMessage({Share: key, Data: data});
+				});
 			},
 
 			Waiting: function () {

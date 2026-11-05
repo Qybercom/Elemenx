@@ -14,6 +14,12 @@
  * boosts, Space brings all of it to rest. The mouse only looks round it. Its Thrust goes to what burns on it. H takes it into warp and
  * J jumps (Travel(id, kind, options, callback)), with Warp and Jump of its Vehicle: {To, Length, Enter, Inside, Exit, Tint}.
  *
+ * A boat, besides the settings of Physics.Boat (Power, Top, Turn, Length, Width, Draft, Plane, Lean): Yaw, Heading, Seat. It
+ * floats on the sea of the ground, on its waves (SceneWaves), at its four ends; W gives it the motor, S goes astern, A and D
+ * turn the rudder, Space stops it; it runs aground where the bed comes up under it. It leaves foam behind it (the effect
+ * wake), more as it goes faster, and throws up water at its bow when it goes fast (spray). The model boat of SceneModels
+ * is one.
+ *
  * A car stays off the barriers of the roads by all its corners (Long and Wide: half of its length and width), and a vehicle of any kind
  * meets what stands in its way: another vehicle, a craft, a body, a wall of a location.
  *
@@ -33,8 +39,19 @@
  * by default, on at dusk, at night and in rain or fog), Z and X the indicators, which go off as the wheel comes back, both the
  * hazard lights. A wet road holds WetGrip (0.75) of its grip.
  *
+ * The roles of the parts of a model (ModelRoles, set in the tab Roles of a ModelEditor) are openings, lamps and wheels of
+ * their own on any object of the model, a vehicle or not (the door of a house, a lever, a fan, a lamp over a porch): the
+ * parts each names (pieces of it, or the triangles of one a brush painted) cut out as those of an opening are, moving as its
+ * Motion says (hinge, slide, spin, glow), after the role it Follows. Parts(id) lists those of an object, Part(id, role) is
+ * one: Get(), Set(value) (the scene emits part); what it is set to comes by degrees, at its Pace.
+ *
  * Mirrors and Screens of a vehicle are panes in its model, {At, Normal (where it faces), Up, Width, Height}: a mirror shows the world
- * reflected by its plane (Every frames apart, at a quarter of the size; Tint, Blur, Strength), a screen what an element of the
+ * reflected by its plane (Every frames apart, 2, each on a frame of its own, as finely as the screen in the part of it it covers;
+ * Tint, Blur, Strength), in the shape of its glass where a model of a file has it there (the triangles on its plane, Depth
+ * off it, 0.03, facing as it faces), a pane otherwise. Seen from the seat it is set as a driver sets it, what it shows level;
+ * View 'camera' (by itself where the body of the car stands in the way of what it shows, a car with no rear window) shows
+ * what a camera behind the car sees, straight back; View 'mirror' never does. Seat ([x, y, z], of the vehicle by default)
+ * is where the eye looks into it from. A screen shows what an element of the
  * page shows (Source: the data-screen of an element in the screens slot of the scene, drawn every Every seconds into Pixels
  * [width, height]; Bright). Only those of the vehicle that is driven are drawn.
  *
@@ -55,9 +72,35 @@ Elemenx.Trait('SceneVehicles', {
 		var library = this.$Service('SceneModels');
 		var self = this;
 
+		var roles = this.$Service('ModelRoles');
+
 		function given (value, fallback) {
 			return value === null || value === undefined || value === '' || isNaN(Number(value)) ? fallback : Number(value);
 		}
+
+		/*
+		 * What moves on an object and what glows on it (its rig): the settings of its vehicle with the roles of the parts of its
+		 * model (ModelRoles) after them, or the roles alone on what is no vehicle (the door of a house, a lever); null for what
+		 * has neither. Made again when the roles change, or the settings of the vehicle.
+		 */
+		engine.RigOf = function (object) {
+			var vehicle = object.Values.Vehicle;
+			var name = object.Values.Model || object.Traits && object.Traits.Model && object.Traits.Model.Shape || '';
+			var version = roles.Version();
+			var made;
+
+			if (object.Rig && object.Rig.Version === version && object.Rig.Of === vehicle && object.Rig.Name === name) return object.Rig.Made;
+
+			made = roles.Rig(name ? roles.Get(name) : []);
+
+			if (vehicle) made = Object.assign({}, vehicle, {Openings: (vehicle.Openings || []).concat(made.Openings), Lamps: (vehicle.Lamps || []).concat(made.Lamps), RoleWheels: made.Wheels, Source: vehicle});
+			else if (made.Openings.length || made.Lamps.length || made.Wheels.length) made = {Rigged: true, Openings: made.Openings, Lamps: made.Lamps, RoleWheels: made.Wheels};
+			else made = null;
+
+			object.Rig = {Version: version, Of: vehicle, Name: name, Made: made};
+
+			return made;
+		};
 
 		/* What of a model is a wheel, and where the middle of each of the four lies. */
 		function wheelsOf (model, settings) {
@@ -71,6 +114,41 @@ Elemenx.Trait('SceneVehicles', {
 
 			if (!asset)
 				return found;
+
+			/* Wheels a role names: the pieces cut for each (wheel:<index>), at its corner. */
+			if (settings.RoleWheels && settings.RoleWheels.length) {
+				settings.RoleWheels.forEach(function (wheel, index) {
+					var key = String(wheel.Corner || 'FL').toUpperCase();
+					var low = [Infinity, Infinity, Infinity];
+					var high = [-Infinity, -Infinity, -Infinity];
+					var pieces = model.Pieces.filter(function (piece) {
+						return piece.Opening === 'wheel:' + index;
+					});
+
+					pieces.forEach(function (piece) {
+						var indices = piece.Geometry.Indices;
+						var i;
+
+						for (i = 0; i < indices.length; i += 3) {
+							var at = placeOf(piece, indices[i]);
+
+							[0, 1, 2].forEach(function (axis) {
+								low[axis] = Math.min(low[axis], at[axis]);
+								high[axis] = Math.max(high[axis], at[axis]);
+							});
+						}
+					});
+
+					pieces.forEach(function (piece) {
+						found[piece.ID] = {Middle: [(low[0] + high[0]) / 2, (low[1] + high[1]) / 2, (low[2] + high[2]) / 2], Front: key.charAt(0) === 'F', Corner: Math.max(0, ['FL', 'FR', 'RL', 'RR'].indexOf(key)), Held: !!wheel.Held};
+					});
+				});
+
+				return found;
+			}
+
+			/* What is no vehicle has only the wheels of its roles. */
+			if (settings.Rigged) return found;
 
 			function named (index) {
 				var node = asset.Nodes[index];
@@ -162,7 +240,8 @@ Elemenx.Trait('SceneVehicles', {
 			var seen = piece.Placed || piece.Geometry;
 			var p = seen.Positions;
 
-			return math.Apply(piece.Rest, [p[index * 3], p[index * 3 + 1], p[index * 3 + 2]]);
+			/* A piece of a model of shapes is in the space of its model already. */
+			return piece.Rest ? math.Apply(piece.Rest, [p[index * 3], p[index * 3 + 1], p[index * 3 + 2]]) : [p[index * 3], p[index * 3 + 1], p[index * 3 + 2]];
 		}
 
 		/* Whether a piece's node, or one of the three above it, is named by a word: files name the node of a part, not its mesh. */
@@ -190,6 +269,8 @@ Elemenx.Trait('SceneVehicles', {
 			/* The glass of a lamp is cut out as an opening is, each side apart, and stays where it is. */
 			(vehicle.Openings || []).concat((vehicle.Lamps || []).map(function (lamp, index) {
 				return Object.assign({}, lamp, {Name: 'lamp-' + index, Lamp: true, Hinge: null, Follow: null});
+			}), (vehicle.RoleWheels || []).map(function (wheel, index) {
+				return {Name: 'wheel:' + index, Parts: wheel.Parts, Wheel: true};
 			})).forEach(function (opening) {
 				var word = new RegExp(opening.Match || '.', 'i');
 				var low = opening.Low || [-Infinity, -Infinity, -Infinity];
@@ -201,6 +282,7 @@ Elemenx.Trait('SceneVehicles', {
 
 				var disc = opening.Disc;
 				var axis = disc ? vectors.Normalize(disc.Axis || [0, 0, 1]) : null;
+				var parts = opening.Parts || null;
 
 				model.Pieces.slice().forEach(function (piece) {
 					var indices = piece.Geometry.Indices;
@@ -208,11 +290,21 @@ Elemenx.Trait('SceneVehicles', {
 					var sides = {1: [], '-1': []};
 					var i;
 
+					/* The part of a role that names this piece: all of it, or the vertices a brush painted. */
+					var part = parts ? parts.filter(function (each) {
+						return each.Piece === (piece.Origin || piece.ID);
+					})[0] : null;
+
 					/* In the box (Both: on either side, x as its size), or in the disc round an axis (a steering wheel): Disc {At, Axis, Radius, Depth}. */
 					function inside (index) {
-						var at = placeOf(piece, index);
+						var at;
 						var off;
 						var along;
+
+						if (part)
+							return !part.Vertices || roles.Within(part.Vertices, index);
+
+						at = placeOf(piece, index);
 
 						if (disc) {
 							off = vectors.Subtract(at, disc.At || [0, 0, 0]);
@@ -229,7 +321,7 @@ Elemenx.Trait('SceneVehicles', {
 					}
 
 					/* A piece moves with one opening: what one took, the next leaves. */
-					if (piece.Opening || !word.test(piece.Material ? piece.Material.Name : '') && !(opening.Nodes && nodeNamed(model, piece, word))) return;
+					if (piece.Opening || (parts ? !part : !word.test(piece.Material ? piece.Material.Name : '') && !(opening.Nodes && nodeNamed(model, piece, word)))) return;
 
 					for (i = 0; i + 2 < indices.length; i += 3) {
 						var whole = inside(indices[i]) && inside(indices[i + 1]) && inside(indices[i + 2]);
@@ -249,7 +341,7 @@ Elemenx.Trait('SceneVehicles', {
 					/* What turns on hinges on both sides is two pieces, the other one turning the other way; so is what such a pair carries (the glass of a door). */
 					[1, -1].forEach(function (side) {
 						if (sides[side].length)
-							model.Pieces.push(Object.assign({}, piece, {ID: piece.ID + '-' + opening.Name + (side < 0 ? '-other' : ''), Opening: opening.Name, Side: side, Geometry: Object.assign({}, piece.Geometry, {Indices: sides[side]})}));
+							model.Pieces.push(Object.assign({}, piece, {ID: piece.ID + '-' + opening.Name + (side < 0 ? '-other' : ''), Origin: piece.Origin || piece.ID, Opening: opening.Name, Side: side, Geometry: Object.assign({}, piece.Geometry, {Indices: sides[side]})}));
 					});
 				});
 			});
@@ -284,11 +376,181 @@ Elemenx.Trait('SceneVehicles', {
 			});
 
 			vehicle.LampPlaces = model.LampPlaces;
+
+			/* The settings of the vehicle say where its lamps are too, as they did before its rig had roles. */
+			if (vehicle.Source)
+				vehicle.Source.LampPlaces = model.LampPlaces;
 		};
+
+		/*
+		 * The glass of each mirror of a vehicle cut out of its model, once: the triangles of any material on the plane of the
+		 * mirror (Depth, 0.03, off it), within its pane and half as much again round it, facing where it faces. They become
+		 * a piece of their own with the Mirror of their index, keeping the opening they were on (a mirror on a door goes with
+		 * it). {Glass (whether any was found: else the mirror is drawn as its pane), Camera, Rear} for each, in
+		 * vehicle.MirrorShapes: Camera whether it shows what is behind as a camera would, from behind the car (View 'camera';
+		 * by itself when the body of the car stands where the eye looks into it, as the engine of a car with no rear window),
+		 * and Rear how far the car reaches behind its plane, where such a camera stands.
+		 */
+		engine.MirrorsOf = function (model, vehicle) {
+			var mirrors = vehicle.Mirrors || [];
+			var made;
+
+			/* A model made of shapes, not of a file, has no glass to cut: its mirrors are panes. */
+			if (!model.Asset) return;
+
+			model.MirrorShapes = model.MirrorShapes || {};
+
+			/* Each mirror its plane, its axes and the way the eye looks into it, in the space of the model. */
+			made = mirrors.map(function (mirror, index) {
+				var n = vectors.Normalize(mirror.Normal || [0, 0, -1]);
+				var right = vectors.Normalize(vectors.Cross(mirror.Up || [0, 1, 0], n));
+				var at = mirror.At || [0, 0, 0];
+				var seat = mirror.Seat || vehicle.Seat || vectors.Subtract(at, vectors.Scale(n, 0.6));
+				var look = vectors.Normalize(vectors.Subtract(at, seat));
+
+				return model.MirrorShapes[index] ? null : {Index: index, Mirror: mirror, N: n, Right: right, Up: vectors.Cross(n, right), At: at, Depth: given(mirror.Depth, 0.03), Reach: [given(mirror.Width, 0.2) * 0.75, given(mirror.Height, 0.1) * 0.75], Seen: vectors.Subtract(look, vectors.Scale(n, 2 * vectors.Dot(look, n))), Found: 0, Rear: 0, Walls: []};
+			}).filter(Boolean);
+
+			if (!made.length) return;
+
+			/* Whether a corner lies on the glass of a mirror: on its plane, within its pane and half as much again. */
+			function onGlass (one, p) {
+				var x = p[0] - one.At[0];
+				var y = p[1] - one.At[1];
+				var z = p[2] - one.At[2];
+
+				return Math.abs(x * one.N[0] + y * one.N[1] + z * one.N[2]) <= one.Depth && Math.abs(x * one.Right[0] + y * one.Right[1] + z * one.Right[2]) <= one.Reach[0] && Math.abs(x * one.Up[0] + y * one.Up[1] + z * one.Up[2]) <= one.Reach[1];
+			}
+
+			/* Whether a triangle may stand where the eye looks into a mirror: its ball reaches the way within 4.5 units ahead, 0.4 aside. */
+			function along (one, a, b, c) {
+				var middle = [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3, (a[2] + b[2] + c[2]) / 3];
+				var size = Math.max(vectors.Length(vectors.Subtract(a, middle)), vectors.Length(vectors.Subtract(b, middle)), vectors.Length(vectors.Subtract(c, middle)));
+				var off = vectors.Subtract(middle, one.At);
+				var ahead = vectors.Dot(off, one.Seen);
+
+				return ahead > -size && ahead < 4.5 + size && vectors.Length(vectors.Subtract(off, vectors.Scale(one.Seen, ahead))) < 1 + size;
+			}
+
+			model.Pieces.slice().forEach(function (piece) {
+				var indices = piece.Geometry.Indices;
+				var kept = [];
+				var cuts = made.map(function () {
+					return [];
+				});
+				var glass = /glass|window/i.test(piece.Material ? piece.Material.Name || '' : '') || !!piece.Material && piece.Material.Alpha === 'BLEND';
+				var i;
+
+				if (piece.Mirror !== undefined) return;
+
+				for (i = 0; i + 2 < indices.length; i += 3) {
+					var a = placeOf(piece, indices[i]);
+					var b = placeOf(piece, indices[i + 1]);
+					var c = placeOf(piece, indices[i + 2]);
+					var face = vectors.Normalize(vectors.Cross(vectors.Subtract(b, a), vectors.Subtract(c, a)));
+					var taken = -1;
+					var m;
+
+					for (m = 0; m < made.length; m++) {
+						var one = made[m];
+
+						one.Rear = Math.max(one.Rear, (a[0] - one.At[0]) * one.N[0] + (a[1] - one.At[1]) * one.N[1] + (a[2] - one.At[2]) * one.N[2]);
+
+						if (taken < 0 && vectors.Dot(face, one.N) > 0.5 && onGlass(one, a) && onGlass(one, b) && onGlass(one, c)) {
+							taken = m;
+
+							continue;
+						}
+
+						/* What the eye may meet looking into the mirror: the body, not its glass. */
+						if (!glass && along(one, a, b, c))
+							one.Walls.push([a, b, c]);
+					}
+
+					if (taken < 0) kept.push(indices[i], indices[i + 1], indices[i + 2]);
+					else cuts[taken].push(indices[i], indices[i + 1], indices[i + 2]);
+				}
+
+				if (kept.length === indices.length) return;
+
+				piece.Geometry = Object.assign({}, piece.Geometry, {Indices: kept});
+
+				if (!kept.length)
+					model.Pieces.splice(model.Pieces.indexOf(piece), 1);
+
+				cuts.forEach(function (cut, m) {
+					if (!cut.length) return;
+
+					made[m].Found += cut.length / 3;
+
+					model.Pieces.push(Object.assign({}, piece, {ID: piece.ID + '-mirror-' + made[m].Index, Mirror: made[m].Index, Geometry: Object.assign({}, piece.Geometry, {Indices: cut})}));
+				});
+			});
+
+			made.forEach(function (one) {
+				model.MirrorShapes[one.Index] = {Glass: one.Found > 0, Rear: one.Rear, Camera: one.Mirror.View === 'camera' || one.Mirror.View !== 'mirror' && blocked(one.At, one.Seen, one.Walls)};
+			});
+
+			vehicle.MirrorShapes = model.MirrorShapes;
+		};
+
+		/*
+		 * Whether the body of a car stands in the way of what a mirror shows: of a fan of fifteen rays from the mirror round
+		 * seen, the way the eye sees into it (0.2 aside, 0.1 up and down), seven tenths meet a triangle of walls within 4
+		 * units. The flank of a car fills a part of what a side mirror shows, the engine behind the seats all of an inner one.
+		 */
+		function blocked (at, seen, walls) {
+			var hits = 0;
+			var side = vectors.Normalize(vectors.Cross(seen, [0, 1, 0]));
+			var lift = vectors.Cross(side, seen);
+			var fan = [];
+
+			[-0.2, -0.1, 0, 0.1, 0.2].forEach(function (x) {
+				[-0.1, 0, 0.1].forEach(function (y) {
+					fan.push([x, y]);
+				});
+			});
+
+			fan.forEach(function (aside) {
+				var way = vectors.Normalize(vectors.Add(seen, vectors.Add(vectors.Scale(side, aside[0]), vectors.Scale(lift, aside[1]))));
+				var from = vectors.Add(at, vectors.Scale(way, 0.03));
+				var met = walls.some(function (triangle) {
+					var e1 = vectors.Subtract(triangle[1], triangle[0]);
+					var e2 = vectors.Subtract(triangle[2], triangle[0]);
+					var p = vectors.Cross(way, e2);
+					var det = vectors.Dot(e1, p);
+					var t;
+					var u;
+					var v;
+					var q;
+					var s;
+
+					if (Math.abs(det) < 1e-9) return false;
+
+					s = vectors.Subtract(from, triangle[0]);
+					u = vectors.Dot(s, p) / det;
+
+					if (u < 0 || u > 1) return false;
+
+					q = vectors.Cross(s, e1);
+					v = vectors.Dot(way, q) / det;
+
+					if (v < 0 || u + v > 1) return false;
+
+					t = vectors.Dot(e2, q) / det;
+
+					return t > 0 && t < 4;
+				});
+				if (met)
+					hits++;
+			});
+
+			return hits >= fan.length * 0.7;
+		}
 
 		/* How far what moves has come, in the space of its model, or null. */
 		engine.OpeningMove = function (object, piece) {
-			var vehicle = object.Values.Vehicle;
+			var vehicle = engine.RigOf(object);
 			var opening = vehicle && piece.Opening ? (vehicle.Openings || []).filter(function (each) {
 				return each.Name === piece.Opening;
 			})[0] : null;
@@ -300,7 +562,7 @@ Elemenx.Trait('SceneVehicles', {
 		/* The move of one opening, after the one it Follows (a paddle goes round with the steering wheel it is on). */
 		function moved (object, vehicle, opening, side, depth) {
 			var state = object.Opens = object.Opens || {};
-			var wanted = given(opening.Open, 0);
+			var wanted = opening.Spin ? 0 : given(opening.Open, 0);
 			var own;
 			var way;
 			var far;
@@ -393,16 +655,26 @@ Elemenx.Trait('SceneVehicles', {
 
 		/* What moves comes to where it is told or driven: a door slowly, what a hand moves fast (Pace, a second). */
 		function openingsStep (object, elapsed) {
+			var rig = engine.RigOf(object);
+
 			/* The time the wipers go by: the scene's, while they are on. */
 			object.Swept = object.Signals && object.Signals.Wipers ? (object.Swept || 0) + elapsed : 0;
 
-			(object.Values.Vehicle.Openings || []).forEach(function (opening) {
+			((rig && rig.Openings) || []).forEach(function (opening) {
 				var state = object.Opens = object.Opens || {};
 				var driven = drivenOf(object, opening);
 				var wanted = driven ? (opening.Sign ? Math.max(0, driven[0] * opening.Sign) : driven[0]) : given(opening.Open, 0);
 				var now = state[opening.Name] === undefined ? wanted : state[opening.Name];
 				var pace = elapsed * given(opening.Pace, driven ? 10 : 0.6);
 				var aside = state[opening.Name + ':aside'] || 0;
+
+				/* A spin goes round as fast as it is on (Spin turns a second at 1), and never comes back. */
+				if (opening.Spin) {
+					state[opening.Name + ':on'] = state[opening.Name + ':on'] === undefined ? wanted : state[opening.Name + ':on'] + Math.max(-elapsed, Math.min(elapsed, wanted - state[opening.Name + ':on']));
+					state[opening.Name] = ((state[opening.Name] === undefined ? 0 : state[opening.Name]) + elapsed * opening.Spin * state[opening.Name + ':on']) % 1;
+
+					return;
+				}
 
 				state[opening.Name] = opening.Drive === 'steer' || opening.Drive === 'wipers' ? wanted : now + Math.max(-pace, Math.min(pace, wanted - now));
 
@@ -689,6 +961,96 @@ Elemenx.Trait('SceneVehicles', {
 
 				if (seated)
 					scene.Pitch += (0.02 - scene.Pitch) * Math.min(1, elapsed * 5);
+			}
+		}
+
+		/*
+		 * A boat on the sea of the ground (Physics.Boat on the waves of SceneWaves): W the motor, S astern, A and D the rudder,
+		 * Space stops it. It leaves foam behind it as it goes (wake) and throws up water at its bow when it goes fast (spray).
+		 */
+		function boat (hero, keys, elapsed) {
+			var settings = hero.Values.Vehicle;
+			var ground = scene.Ground;
+			var field = ground.Field;
+			var waves = self.$Service('SceneWaves');
+			var state = hero.Boat;
+			var pad = keys.Pad || {X: 0, Y: 0, Gas: 0, Brake: 0};
+			var input = {Gas: keys.KeyW || keys.ArrowUp ? 1 : Math.max(pad.Gas, pad.Y, 0), Brake: keys.KeyS || keys.ArrowDown ? 1 : Math.max(pad.Brake, -pad.Y, 0), Steer: Math.max(-1, Math.min(1, (keys.KeyA || keys.ArrowLeft ? 1 : 0) - (keys.KeyD || keys.ArrowRight ? 1 : 0) - pad.X)), Stop: keys.Space};
+			var last;
+
+			function sea (x, z) {
+				return waves.At(ground.Waves, x, z, scene.Seconds);
+			}
+
+			function bed (x, z) {
+				return field.Height(x, z);
+			}
+
+			if (!state) {
+				var x = given(hero.Values.X, 0);
+				var z = given(hero.Values.Y, 0);
+
+				state = hero.Boat = {X: x, Z: z, Heading: given(settings.Heading, 0), Forward: 0, Aside: 0, Rate: 0, Y: sea(x, z).Height - given(settings.Draft, 0.35), Rise: 0, Pitch: 0, PitchSpeed: 0, Roll: 0, RollSpeed: 0, Aground: false};
+				hero.Clock = {};
+			}
+
+			last = hero.Last || state;
+
+			hero.Controls = {Gas: input.Gas, Brake: input.Brake, Hand: 0};
+
+			var part = physics.Steps(hero.Clock, elapsed, 1 / 120, function (step) {
+				last = {X: state.X, Z: state.Z, Y: state.Y, Heading: state.Heading, Pitch: state.Pitch, Roll: state.Roll};
+
+				physics.Boat(state, input, sea, bed, settings, step);
+			});
+
+			hero.Last = last;
+
+			var seen = {X: physics.Blend(last.X, state.X, part), Z: physics.Blend(last.Z, state.Z, part), Y: physics.Blend(last.Y, state.Y, part), Heading: physics.Blend(last.Heading, state.Heading, part), Pitch: physics.Blend(last.Pitch, state.Pitch, part), Roll: physics.Blend(last.Roll, state.Roll, part)};
+			var ahead = [Math.sin(seen.Heading), Math.cos(seen.Heading)];
+			var turn = math.Multiply(math.Rotation([0, 1, 0], seen.Heading + given(settings.Yaw, 0) * Math.PI / 180), math.Multiply(math.Rotation([1, 0, 0], -seen.Pitch), math.Rotation([0, 0, 1], seen.Roll)));
+			var pace = Math.abs(state.Forward);
+			var half = given(settings.Length, 4.5) / 2;
+
+			hero.Air = seen.Y;
+			hero.Values.X = seen.X;
+			hero.Values.Y = seen.Z;
+			hero.Facing = seen.Heading;
+			hero.Heading = [ahead[0], 0, ahead[1]];
+			hero.Flight = {At: [seen.X, seen.Y, seen.Z], Turn: turn};
+			hero.World = hero.Flight.At;
+			hero.Turn = turn;
+			hero.Thrust = input.Gas ? 0.3 + 0.7 * Math.min(1, pace / given(settings.Top, 16)) : 0.05;
+			hero.Head = settings.Seat ? math.Apply(turn, settings.Seat) : null;
+			hero.Body = math.Multiply(math.Rotation([0, 1, 0], seen.Heading), math.Multiply(math.Rotation([1, 0, 0], -seen.Pitch), math.Rotation([0, 0, 1], seen.Roll)));
+
+			/* The foam behind it, more as it goes faster; the spray at its bow, fast. */
+			hero.Waked = (hero.Waked || 0) + elapsed;
+
+			if (pace > 1.5 && hero.Waked > Math.max(0.08, 0.5 - pace * 0.03)) {
+				hero.Waked = 0;
+
+				self.Burst('wake', [seen.X - ahead[0] * half, sea(seen.X - ahead[0] * half, seen.Z - ahead[1] * half).Height + 0.05, seen.Z - ahead[1] * half], {Size: Math.min(2, 0.5 + pace * 0.08)});
+
+				hero.Sprayed = !hero.Sprayed;
+
+				if (pace > 7 && hero.Sprayed)
+					self.Burst('spray', [seen.X + ahead[0] * half * 0.8, seen.Y + 0.3, seen.Z + ahead[1] * half * 0.8], {Aim: [ahead[0] * 0.3, 1, ahead[1] * 0.3], Size: Math.min(1.5, pace * 0.08)});
+			}
+
+			openingsStep(hero, elapsed);
+
+			scene.Overrides[hero.ID] = scene.Overrides[hero.ID] || {};
+			scene.Overrides[hero.ID].Values = Object.assign(scene.Overrides[hero.ID].Values || {}, {X: seen.X, Y: seen.Z});
+
+			/* The view comes round behind it as it goes, as behind a car. */
+			var seated = (scene.Inside || 0) > 0.5;
+
+			if (pace > 1 && !scene.LookHeld && (seated || !scene.Drag && performance.now() - (scene.Looked || 0) > 1500)) {
+				var behind = seen.Heading + Math.PI;
+				var apart = Math.atan2(Math.sin(behind - scene.Yaw), Math.cos(behind - scene.Yaw));
+
+				scene.Yaw += apart * Math.min(1, elapsed * (seated ? 5 : 3));
 			}
 		}
 
@@ -1046,7 +1408,8 @@ Elemenx.Trait('SceneVehicles', {
 			rear: {Color: '#ff1a10', Glow: 4, Power: 0.8, Radius: 6, Spot: 0, Aim: [0, 0, -1]},
 			brake: {Color: '#ff1a10', Glow: 4, Power: 0.8, Radius: 6, Spot: 0, Aim: [0, 0, -1]},
 			reverse: {Color: '#ffffff', Glow: 3, Power: 1, Radius: 10, Spot: 100, Aim: [0, -0.2, -1]},
-			indicator: {Color: '#ffa020', Glow: 5, Power: 0.7, Radius: 5, Spot: 0, Aim: [0, 0, 1]}
+			indicator: {Color: '#ffa020', Glow: 5, Power: 0.7, Radius: 5, Spot: 0, Aim: [0, 0, 1]},
+			glow: {Color: '#ffd9a0', Glow: 3, Power: 1, Radius: 8, Spot: 0, Aim: [0, -1, 0]}
 		};
 
 		/* How far a lamp of a car is lit now, 0 to 1, on its side (1 the left, as x goes, -1 the right). */
@@ -1068,20 +1431,23 @@ Elemenx.Trait('SceneVehicles', {
 					return car.Gear === -1 || car.Gear === undefined && (car.Forward || 0) < -0.3 ? 1 : 0;
 				case 'indicator':
 					return way === side && Math.floor((object.Blink || 0) / 0.36) % 2 === 0 ? 1 : 0;
+				case 'glow':
+					return lamp.Role ? given((object.Opens || {})['role:' + lamp.Role], given(lamp.Open, 0)) : given(lamp.Open, 1);
 				default:
 					return 0;
 			}
 		}
 
 		function lampOf (object, index) {
-			var lamp = (object.Values.Vehicle.Lamps || [])[index];
+			var rig = engine.RigOf(object);
+			var lamp = ((rig && rig.Lamps) || [])[index];
 
 			return lamp ? Object.assign({}, Lamps[lamp.Kind] || Lamps.head, lamp) : null;
 		}
 
 		/* The glow of the glass of a lamp, if it is lit: its colour as bright as it is. */
 		engine.LampGlow = function (object, piece) {
-			var vehicle = object.Values.Vehicle;
+			var vehicle = engine.RigOf(object);
 			var lamp = vehicle && piece.Opening && piece.Opening.indexOf('lamp-') === 0 ? lampOf(object, Number(piece.Opening.slice(5))) : null;
 			var amount = lamp ? lampOn(object, lamp, piece.Side || 1) : 0;
 
@@ -1095,7 +1461,7 @@ Elemenx.Trait('SceneVehicles', {
 			var lamps = [];
 
 			scene.Order.forEach(function (object) {
-				var vehicle = object.Values.Vehicle;
+				var vehicle = object.Rig ? engine.RigOf(object) : null;
 				if (!vehicle || !vehicle.Lamps || !vehicle.LampPlaces || !object.World || !object.Turn) return;
 
 				var size = object.Scaled || [object.Size || 1, object.Size || 1, object.Size || 1];
@@ -1136,7 +1502,20 @@ Elemenx.Trait('SceneVehicles', {
 			});
 		};
 
-		scene.Vehicles = {car: car, ship: ship};
+		scene.Vehicles = {car: car, ship: ship, boat: boat};
+
+		/* Which roles of parts there are now: a scene settles again when they change. */
+		engine.RigsVersion = function () {
+			return roles.Version();
+		};
+
+		/* What moves of the objects that are not driven (a door of a house, a door of a parked car) comes to where it is set. */
+		engine.RigsStep = function (elapsed) {
+			scene.Order.forEach(function (object) {
+				if (object.Rig && object.Rig.Made && object.Rig.Made.Openings.length && !(object.ID === scene.Hero && object.Values.Vehicle))
+					openingsStep(object, elapsed);
+			});
+		};
 
 		/* A step of what is driven; false if the hero is no vehicle. */
 		engine.VehicleStep = function (hero, keys, elapsed) {
@@ -1151,10 +1530,71 @@ Elemenx.Trait('SceneVehicles', {
 		};
 	},
 
+	/*
+	 * The roles of the parts of an object (ModelRoles of its model): [{ID, Kind, Name, Value}], Value where each stands, 0 to
+	 * 1 (a spin: how fast it goes, a lamp: how bright).
+	 */
+	Parts: function (id) {
+		var object = this.Scene().Objects[id];
+		var name = object ? object.Values.Model || object.Traits.Model && object.Traits.Model.Shape : '';
+		var part = this.Part.bind(this);
+
+		return name ? this.$Service('ModelRoles').Get(name).map(function (role) {
+			return {ID: role.ID, Kind: role.Kind, Name: role.Name || '', Value: part(id, role.ID).Get()};
+		}) : [];
+	},
+
+	/*
+	 * A part of an object by its role: {ID, Role, Get(), Set(value)}: Set moves it there (0 as its model has it, 1 as far as it
+	 * goes; a spin: how fast it goes; a lamp: how bright it is), by degrees as its Pace says, and the scene emits part ({ID,
+	 * Role, Value}). What the parts it carries (Follow) follow comes with it. Null for a role the model has not.
+	 */
+	Part: function (id, role) {
+		var self = this;
+		var engine = this.Engine();
+		var object = this.Scene().Objects[id];
+		var rig = object ? engine.RigOf(object) : null;
+		var name = 'role:' + role;
+		var opening = rig ? (rig.Openings || []).filter(function (each) {
+			return each.Name === name;
+		})[0] : null;
+		var lamp = rig && !opening ? (rig.Lamps || []).filter(function (each) {
+			return each.Role === role;
+		})[0] : null;
+		if (!opening && !lamp) return null;
+
+		return {
+			ID: id,
+			Role: role,
+			Get: function () {
+				var state = object.Opens || {};
+
+				if (opening && opening.Spin)
+					return Number(opening.Open) || 0;
+
+				return state[name] === undefined ? Number((opening || lamp).Open) || 0 : state[name];
+			},
+			Set: function (value) {
+				var amount = Number(value) || 0;
+
+				if (opening) {
+					opening.Open = amount;
+				}
+				else {
+					lamp.Open = amount;
+					object.Opens = object.Opens || {};
+					object.Opens[name] = amount;
+				}
+
+				self.$Emit('part', {ID: id, Role: role, Value: amount});
+			}
+		};
+	},
+
 	/* Moves what opens on a vehicle, 0 as its model has it, 1 as far as it goes; it goes there by degrees. */
 	OpenPart: function (id, name, amount) {
 		var object = this.Scene().Objects[id];
-		var vehicle = object ? object.Values.Vehicle : null;
+		var vehicle = object ? this.Engine().RigOf(object) : null;
 
 		((vehicle && vehicle.Openings) || []).forEach(function (opening) {
 			if (opening.Name === name)

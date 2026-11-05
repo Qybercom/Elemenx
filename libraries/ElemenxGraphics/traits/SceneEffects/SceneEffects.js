@@ -29,7 +29,7 @@
  * runs out and fades.
  *
  * What burns lights what is round it (the lamp of the type, flickering, the nearest ones with shadows) and the air over it
- * trembles. Types: spark, torch, campfire, smoke, steam, dust, exhaust, fumes, backfire, explosion; of magic aura, circle, portal, shield, lightning,
+ * trembles. Types: spark, torch, campfire, smoke, steam, dust, exhaust, fumes, backfire, explosion, wake (the foam a boat leaves), spray (water thrown up); of magic aura, circle, portal, shield, lightning,
  * healing, frost, poison, beam, fireball, teleport, and pillar, a shaft of light; mana, bubbles that rise slowly round what it follows;
  * glow, the light of the body of what it follows (Glow of a type: the color of it): Where body (by default), held (what it holds) or
  * both, brightest at its edges. Effects({Type: {...}}) adds types of its own.
@@ -87,6 +87,14 @@ Elemenx.Trait('SceneEffects', {
 			]},
 			steam: {Lamp: null, Layers: [
 				{Kind: 'smoke', Count: 30, Life: 1.8, Speed: [1, 2], Spread: 0.3, Rise: 0.8, Drag: 1, Size: [0.2, 1.4], Wander: 0.4, Color: [0.82, 0.84, 0.86], Opacity: 0.2, Blend: 'alpha'}
+			]},
+			/* What a boat leaves on the water behind it: foam that spreads and fades where it lies. */
+			wake: {Lamp: null, Lasts: 0.5, Layers: [
+				{Kind: 'smoke', Count: 10, Life: 3, Speed: [0.2, 0.8], Spread: 1.4, Rise: 0, Drag: 1.8, Size: [0.5, 2.2], Wander: 0.15, Wind: 0, Color: [1, 1, 1], Opacity: 0.42, Blend: 'alpha'}
+			]},
+			/* Water thrown up by a bow that strikes a wave, falling back. */
+			spray: {Lamp: null, Lasts: 0.3, Layers: [
+				{Kind: 'smoke', Count: 16, Life: 0.9, Speed: [2, 4.5], Spread: 0.6, Rise: 0.6, Gravity: 9, Drag: 0.8, Size: [0.1, 0.6], Wander: 0.1, Wind: 0.2, Color: [0.92, 0.95, 0.97], Opacity: 0.4, Blend: 'alpha'}
 			]},
 			dust: {Lamp: null, Layers: [
 				{Kind: 'smoke', Count: 20, Life: 1.6, Speed: [0.3, 1], Spread: 1.2, Rise: 0.1, Drag: 1.6, Size: [0.2, 1.2], Wander: 0.2, Color: [0.5, 0.42, 0.32], Opacity: 0.2, Blend: 'alpha'}

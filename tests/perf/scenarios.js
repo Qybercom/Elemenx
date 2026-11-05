@@ -70,6 +70,13 @@
 		Count: 0
 	});
 
+	/* A child with a slot in a larger template: what its parent puts into it (with bindings of the parent) fills the slot. */
+	Elemenx.Component('BenchPanel', {
+		$Template: '<section class="bench-panel"><header class="bench-panel-head"><h3 class="bench-panel-title">{{Title}}</h3><span class="bench-panel-badge">{{Count}}</span></header><div class="bench-panel-body"><p class="bench-panel-intro">A panel of the bench</p><slot></slot></div><footer class="bench-panel-foot"><span class="bench-panel-key">Owner</span><span class="bench-panel-value">Ada</span><span class="bench-panel-key">Team</span><span class="bench-panel-value">Core</span></footer></section>',
+		Title: '',
+		Count: 0
+	});
+
 	var Scenarios = {
 		/* 1000 rows of a list: an element each, its bindings and a handler. */
 		'mount-list': function () {
@@ -96,6 +103,23 @@
 			for (k = 0; k < 7; k++) {
 				var start = performance.now();
 				var component = make('<div><BenchItem *for="row of Rows" *key="row.ID" [title]="row.Title" [count]="row.Count" [done]="row.Done" Size="small" Tone="success" Label="Item" Hint="A row" /></div>', {Rows: rows(300)});
+
+				times.push(performance.now() - start);
+
+				clear(component);
+			}
+
+			return median(times);
+		},
+
+		/* 200 panels with a slot, each filled by its parent with a few elements, one of them bound. */
+		'mount-slots': function () {
+			var times = [];
+			var k;
+
+			for (k = 0; k < 7; k++) {
+				var start = performance.now();
+				var component = make('<div><BenchPanel *for="row of Rows" *key="row.ID" [title]="row.Title" [count]="row.Count"><ul class="bench-panel-list"><li>One</li><li>Two</li><li [class.done]="row.Done">{{row.Title}}</li></ul></BenchPanel></div>', {Rows: rows(200)});
 
 				times.push(performance.now() - start);
 

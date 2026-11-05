@@ -47,8 +47,8 @@
 
 ## Тесты
 
-- [declares the tabs of a Tabs as its children: adds them, shows the one selected on the canvas and exports them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L470) — `tests/examples/designer.spec.js`
-- [sets the layout of an element above its props: its box, its sizes and the alignment of a flex container by icons](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L506) — `tests/examples/designer.spec.js`
+- [declares the tabs of a Tabs as its children: adds them, shows the one selected on the canvas and exports them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L477) — `tests/examples/designer.spec.js`
+- [sets the layout of an element above its props: its box, its sizes and the alignment of a flex container by icons](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L513) — `tests/examples/designer.spec.js`
 - [text formats keep their characters, normalize the value and show what is wrong](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1417) — `tests/examples/ui-kit.spec.js`
 - [a dialog that needs an answer shakes on Escape and the backdrop; Dialogs asks from the code](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4713) — `tests/examples/ui-kit.spec.js`
 - [code editor highlights, keeps the indent, closes pairs, completes, comments and shows the messages of its markers](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6179) — `tests/examples/ui-kit.spec.js`
@@ -58,4 +58,6 @@
 - [a tab dropped in the middle of another group goes into it, and a group left without a tab goes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L156) — `tests/regression/library-tab-split.test.js`
 - [takes the layout of Layout, closes a tab for its owner, and moves a divider by its keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L188) — `tests/regression/library-tab-split.test.js`
 - [a Split of the menu copies the tab into a new group, its content made again, and Split and move takes the tab there](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L243) — `tests/regression/library-tab-split.test.js`
-- [stands the strip left or right of the panels, its text turned or level, and moves by Up and Down](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tabs.test.js#L37) — `tests/regression/library-tabs.test.js`
+- [a layout given that pins a tab declared Pinned keeps it once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L325) — `tests/regression/library-tab-split.test.js`
+
++2 ещё в тех же файлах

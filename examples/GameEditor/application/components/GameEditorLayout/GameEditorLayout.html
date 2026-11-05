@@ -7,6 +7,7 @@
 		<div class="game-editor-actions">
 			<Button Size="small" Variant="ghost" [label]="$T('gameEditor.newGround')" (click)="NewGround" />
 			<Button Size="small" Variant="ghost" [label]="$T('gameEditor.newSpace')" (click)="NewSpace" />
+			<Button Size="small" Variant="ghost" Icon="globe" [label]="$T('gameEditor.showcase')" [title]="$T('gameEditor.showcaseNote')" (click)="NewShowcase" />
 			<Button Size="small" Variant="ghost" Icon="download" [label]="$T('gameEditor.export')" (click)="Exported" />
 			<label class="game-editor-import"><Icon name="upload" Size="16" />{{$T('gameEditor.import')}}<input type="file" accept="application/json,.json" (change)="Imported" /></label>
 			<Button Size="small" Icon="file-code" [label]="$T('gameEditor.page')" (click)="DownloadPage" />
