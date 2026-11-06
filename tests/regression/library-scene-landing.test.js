@@ -123,8 +123,9 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 		inner.Loop.Start();
 
+		/* Prepared, and the frame after it telling the loading is over. */
 		await waitFor(function () {
-			return prepared.length > 0;
+			return prepared.length > 0 && stages[stages.length - 1] === '';
 		}, 30000);
 
 		inner.Loop.Stop();
@@ -132,7 +133,7 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		expect(prepared).toEqual([true]);
 
 		stages.forEach(function (stage) {
-			expect(['programs', 'models', 'globes', 'view', '']).toContain(stage);
+			expect(['programs', 'models', 'rivers', 'globes', 'view', '']).toContain(stage);
 		});
 
 		expect(stages[stages.length - 1]).toBe('');
@@ -877,4 +878,103 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 		expect(hero.Orbiting).toBe(null);
 	}, 120000);
+
+	/*
+	 * Regression: near, the globe was a picture of 39 km a texel, blurred, its rivers none, its relief of no light. Near it
+	 * is its very ground (as a surface is drawn: squares finer the nearer), its rivers on it.
+	 */
+	it('draws a planet near as its very ground, finer the nearer, its rivers on it', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var planets = Elemenx.Service('ScenePlanet');
+		var now = performance.now() + 1000;
+		var held;
+		var rivers;
+		var river;
+		var point;
+		var i;
+
+		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'terra', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'terra', From: [0, 0, 1.3], Facing: [-1, 0, 0], Length: 30}});
+		scene.Control('me');
+
+		await waitFor(function () {
+			inner.Rest = 0;
+			inner.Looping = true;
+
+			engine.Frame(now += 100);
+
+			inner.Looping = false;
+
+			return inner.Globes.terra && Object.keys(inner.Globes.terra.Nodes).length > 6;
+		}, 30000);
+
+		/* Its rivers on it: the color of a point of a big one is water. */
+		held = inner.Rivers.terra;
+		rivers = planets.RiversOf(held.Key);
+		river = rivers.filter(function (one) {
+			return Math.max.apply(null, one.Flow) > 80;
+		})[0];
+		point = river.Points[Math.floor(river.Points.length * 0.7)];
+
+		expect(inner.Globes.terra.Field.Color(point, 1)).toEqual([0.16, 0.34, 0.58]);
+
+		for (i = 0; i < 3; i++)
+			engine.Frame(now += 100, true);
+	}, 60000);
+
+	/*
+	 * Regression: at night the globe was all dark, its settlements unseen. Its settlements are made once after its rivers
+	 * (ScenePlanet.Settlements, kept as its rivers are), and their lights painted on a cube of their own, shown at night.
+	 */
+	it('settles a planet after its rivers and paints the lights of its settlements for its night side', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var gl = engine.Renderer.GL;
+		var planets = Elemenx.Service('ScenePlanet');
+		var now = performance.now() + 1000;
+		var options;
+		var lights;
+		var best = 0;
+		var at = 0;
+		var reader;
+		var pixel = new Uint8Array(4);
+		var k;
+
+		await waitFor(function () {
+			inner.Rest = 0;
+
+			engine.Frame(now += 100);
+
+			return inner.Baked.terra && inner.Baked.terra.Lit && inner.Baked.terra.Lights;
+		}, 40000);
+
+		expect(inner.Towns.terra.Ready).toBe(true);
+		expect(engine.PlanetOptions(inner.Objects.terra).Settlements).toBe(inner.Towns.terra.Key);
+		expect(planets.TownsOf(inner.Towns.terra.Key).length).toBeGreaterThan(10);
+
+		options = engine.PlanetOptions(inner.Objects.terra);
+		lights = planets.Lights(options, 4, 256, 0, 256);
+
+		for (k = 0; k < lights.Data.length; k++) {
+			if (lights.Data[k] > best) {
+				best = lights.Data[k];
+				at = k;
+			}
+		}
+
+		reader = gl.createFramebuffer();
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, reader);
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, inner.Baked.terra.Lights.Handle, 0);
+		gl.readPixels(at % 256, Math.floor(at / 256), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		gl.deleteFramebuffer(reader);
+
+		expect(best).toBeGreaterThan(0);
+		expect(pixel[0]).toBe(best);
+
+		engine.Frame(now += 100, true);
+	}, 60000);
 });

@@ -32,7 +32,7 @@
 Elemenx.Service('ScenePlanet', {
 	$Meta: {
 		Description: 'A planet as one continuous function of a direction: painted continents, tectonic plates, winds, climate and biomes, as fine as it is asked.',
-		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)']
+		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'Settlements(options, count)', 'UseSettlements(key, towns)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)']
 	},
 
 	/* The kinds of strokes of a paint. */
@@ -427,13 +427,13 @@ Elemenx.Service('ScenePlanet', {
 		 * The valley of a river near a point: the ground comes down toward its bed as it nears it (wider the more it drains: a
 		 * valley of 0.6 km times its flow to 0.4), the bed going down to the sea along it.
 		 */
-		function carved (p, height) {
+		/* The nearest river to a point: {Far (km), Flow, Level}; null with none near. */
+		function nearestRiver (p) {
 			var found = buckets[self.CellAt(1, Math.PI / 2 / 48, p).ID];
 			var best = null;
-			var made = height;
 
 			if (!found)
-				return height;
+				return null;
 
 			found.forEach(function (segment) {
 				var a = segment.A;
@@ -445,6 +445,13 @@ Elemenx.Service('ScenePlanet', {
 				if (!best || far < best.Far)
 					best = {Far: far, Flow: segment.FlowA + (segment.FlowB - segment.FlowA) * t, Level: segment.LevelA + (segment.LevelB - segment.LevelA) * t};
 			});
+
+			return best;
+		}
+
+		function carved (p, height) {
+			var best = nearestRiver(p);
+			var made = height;
 
 			if (!best)
 				return height;
@@ -641,6 +648,11 @@ Elemenx.Service('ScenePlanet', {
 
 			LatLon: function (direction) {
 				return self.LatLon(direction);
+			},
+
+			/* The nearest of its rivers to a direction: {Far (km), Flow, Level}, null with none near. */
+			River: function (direction) {
+				return nearestRiver(normalize(direction));
 			}
 		};
 
@@ -1090,6 +1102,150 @@ Elemenx.Service('ScenePlanet', {
 	 * Rivers kept under a key (UseRivers), for a planet to name in place of carrying them (Rivers: the key): in the page and
 	 * in the workers that make grounds of planets (shared to them once).
 	 */
+	/*
+	 * The settlements of a planet, where people would live: points of its land scored by their climate (warm enough, not
+	 * too dry nor too wet), their height (low), their rivers (the more they drain, the more) and their coasts; the best
+	 * taken first, each kept apart from the others by its size: a few cities, more towns, many villages. count: the points
+	 * tried (20000). Gives {Settlements: [{Point (direction), Size (0 to 1), Kind (city, town, village)}]}: the Settlements
+	 * of a planet (a key of UseSettlements, or the list).
+	 */
+	Settlements: function (options, count) {
+		var planet = this.Planet(options);
+		var tries = count || 20000;
+		var radius = planet.Radius;
+		var places = [];
+		var kept = [];
+		var seed = 0;
+		var text = String(options.Seed === undefined ? 'planet' : options.Seed) + ':towns';
+		var i;
+
+		for (i = 0; i < text.length; i++)
+			seed = (seed * 31 + text.charCodeAt(i)) >>> 0;
+
+		function random () {
+			seed = (seed * 1664525 + 1013904223) >>> 0;
+
+			return seed / 4294967296;
+		}
+
+		for (i = 0; i < tries; i++) {
+			var y = 1 - (i + 0.5) / tries * 2;
+			var around = Math.sqrt(Math.max(0, 1 - y * y));
+			/* Off the even spiral by up to its step, at random: towns never stand in rows. */
+			var step = Math.sqrt(4 * Math.PI / tries);
+			var p = this.Unit([Math.cos(i * 2.39996) * around + (random() - 0.5) * step * 1.4, y + (random() - 0.5) * step * 1.4, Math.sin(i * 2.39996) * around + (random() - 0.5) * step * 1.4]);
+			var sample = planet.Sample(p, 20);
+			var score;
+			var river;
+
+			if (!sample.Land || sample.Elevation > 2200) continue;
+
+			score = Math.max(0, 1 - Math.abs(sample.Celsius - 16) / 16) * Math.max(0, 1 - Math.abs(sample.Moisture - 0.55) / 0.45) * Math.max(0.15, 1 - sample.Elevation / 2200);
+			river = planet.River(p);
+
+			if (river && river.Far < 15)
+				score *= 1 + Math.min(2, river.Flow / 150);
+
+			if (sample.Elevation < 60)
+				score *= 1.5;
+
+			if (score > 0.05)
+				places.push({Point: p, Score: score * (0.5 + random())});
+		}
+
+		places.sort(function (a, b) {
+			return b.Score - a.Score;
+		});
+
+		/* The best first, each apart from those kept: a city by 400 km, a town by 120, a village by 40. */
+		places.forEach(function (place, index) {
+			var share = index / Math.max(1, places.length);
+			var kind = share < 0.015 ? 'city' : share < 0.12 ? 'town' : 'village';
+			var apart = (kind === 'city' ? 400 : kind === 'town' ? 120 : 40) / radius;
+			var near = kept.some(function (other) {
+				var d = place.Point[0] * other.Point[0] + place.Point[1] * other.Point[1] + place.Point[2] * other.Point[2];
+
+				return Math.acos(Math.max(-1, Math.min(1, d))) < Math.max(apart, other.Apart);
+			});
+			if (near) return;
+
+			kept.push({Point: place.Point.map(function (value) {
+				return Math.round(value * 1e7) / 1e7;
+			}), Size: Math.round(Math.min(1, place.Score) * 100) / 100, Kind: kind, Apart: apart});
+		});
+
+		return {Settlements: kept.map(function (town) {
+			return {Point: town.Point, Size: town.Size, Kind: town.Kind};
+		})};
+	},
+
+	/* The settlements kept under a key, as UseRivers keeps rivers. */
+	UseSettlements: function (key, towns) {
+		var self = this;
+
+		this.TownSets[key] = towns;
+
+		['ScenePlanet', 'SceneTerrainGenerator', 'SceneSower', 'SceneRoads'].forEach(function (name) {
+			var service = name === 'ScenePlanet' ? self : self.$Service(name);
+			if (service && service.Work)
+				service.Work().Share('towns:' + key, towns);
+		});
+	},
+
+	TownsOf: function (key) {
+		var kept = this.TownSets ? this.TownSets[key] : null;
+
+		return kept || (this.$Shared ? this.$Shared('towns:' + key) : null) || [];
+	},
+
+	TownSets: {},
+
+	/*
+	 * The lights of its settlements at night on a face of its globe (texels as Face lays them): how much light each texel
+	 * gives, 0 to 255, each settlement a soft spot as wide as it is large (a city 40 km, a village 6). {Data, Face, Row, Rows}.
+	 */
+	Lights: function (options, face, size, row, rows) {
+		var self = this;
+		var towns = Array.isArray(options.Settlements) ? options.Settlements : options.Settlements ? this.TownsOf(options.Settlements) : [];
+		var radius = Number(options.Radius) || 6371;
+		var first = row || 0;
+		var count = Math.min(size - first, rows || size);
+		var data = new Uint8Array(size * count);
+		var buckets = {};
+		var x;
+		var y;
+
+		towns.forEach(function (town) {
+			var cell = self.CellAt(1, Math.PI / 2 / 32, town.Point);
+
+			[cell].concat(self.CellNeighbours(1, Math.PI / 2 / 32, cell)).forEach(function (near) {
+				(buckets[near.ID] = buckets[near.ID] || []).push(town);
+			});
+		});
+
+		for (y = 0; y < count; y++) {
+			for (x = 0; x < size; x++) {
+				var a = -1 + (x + 0.5) * 2 / size;
+				var b = -1 + (first + y + 0.5) * 2 / size;
+				var way = this.Unit(face === 0 ? [1, -b, -a] : face === 1 ? [-1, -b, a] : face === 2 ? [a, 1, b] : face === 3 ? [a, -1, -b] : face === 4 ? [a, -b, 1] : [-a, -b, -1]);
+				var found = buckets[this.CellAt(1, Math.PI / 2 / 32, way).ID] || [];
+				var light = 0;
+
+				found.forEach(function (town) {
+					/* Never less than a texel: from far a village is a speck of light, not nothing. */
+					var reach = Math.max((town.Kind === 'city' ? 40 : town.Kind === 'town' ? 14 : 6) * (0.6 + town.Size * 0.6) / radius, Math.PI / 2 / size * 1.3);
+					var d = Math.acos(Math.max(-1, Math.min(1, way[0] * town.Point[0] + way[1] * town.Point[1] + way[2] * town.Point[2])));
+					if (d < reach)
+						light += Math.pow(1 - d / reach, 1.5) * (town.Kind === 'city' ? 1 : town.Kind === 'town' ? 0.7 : 0.45);
+				});
+
+				data[y * size + x] = Math.min(255, Math.round(light * 255));
+			}
+		}
+
+		return {Data: data, Face: face, Row: first, Rows: count};
+	},
+
 	/* The rivers kept, one store for every use of the service (an object of its own, never made again). */
 	RiverSets: {},
 
@@ -1128,6 +1284,10 @@ Elemenx.Service('ScenePlanet', {
 				var sample = planet.Sample([way[0] / length, way[1] / length, way[2] / length], Math.PI / 2 * planet.Radius / size);
 				var color = this.Color(planet, sample, 'relief', 1);
 				var at = (y * size + x) * 4;
+				/* A big river shows on the globe: a line of its water where it passes the texel. */
+				var river = sample.Land ? planet.River([way[0] / length, way[1] / length, way[2] / length]) : null;
+				if (river && river.Flow > 60 && river.Far < Math.PI / 2 * planet.Radius / size * 0.55)
+					color = [0.16, 0.36, 0.62];
 
 				data[at] = color[0] * 255;
 				data[at + 1] = color[1] * 255;
@@ -1684,8 +1844,30 @@ Elemenx.Service('ScenePlanet', {
 				return Math.sqrt(point[0] * point[0] + point[1] * point[1] + point[2] * point[2]) - planet.Radius - field.Elevation(point);
 			},
 
-			Color: function (direction) {
-				return self.Color(planet, planet.Sample(unit(direction)), 'relief', 1);
+			/*
+			 * Its colors at a point, as fine as a square shows (step: km between its points): a river there where it passes
+			 * within half a step (or its channel), its flood plain greener round it.
+			 */
+			Color: function (direction, step) {
+				var p = unit(direction);
+				var sample = planet.Sample(p);
+				var color = self.Color(planet, sample, 'relief', 1);
+				var river = sample.Land ? planet.River(p) : null;
+				var channel;
+				var plain;
+
+				if (!river)
+					return color;
+
+				channel = Math.max(0.04 * Math.sqrt(river.Flow), (step || 0) * 0.55);
+				plain = 0.6 * Math.pow(river.Flow, 0.4);
+
+				if (river.Far < channel && river.Flow > Math.min(60, (step || 0) * 1.5)) return [0.16, 0.34, 0.58];
+
+				if (river.Far < plain)
+					return [color[0] * 0.85 + 0.03, color[1] * 0.9 + 0.08, color[2] * 0.85];
+
+				return color;
 			},
 
 			Patch: function (face, u, v, extent, resolution) {
@@ -1698,7 +1880,7 @@ Elemenx.Service('ScenePlanet', {
 
 	/* The workers that paint globes. */
 	Work: function () {
-		return this.$Service('Workers').Pool('ScenePlanet', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], SceneTerrainGenerator: ['Smoothstep', 'Biomes', 'BiomeOf', 'Face'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Project', 'Unproject', 'Planet', 'Color', 'Picture', 'Face', 'Sphere', 'Heights', 'Drainage', 'Smoothed', 'RiversOf', 'Unit', 'Dot', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'HexAt', 'HexPoint', 'HexCell', 'Icosahedron', 'Wound', 'Slerp', 'Along', 'Cross']});
+		return this.$Service('Workers').Pool('ScenePlanet', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], SceneTerrainGenerator: ['Smoothstep', 'Biomes', 'BiomeOf', 'Face'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Project', 'Unproject', 'Planet', 'Color', 'Picture', 'Face', 'Sphere', 'Heights', 'Drainage', 'Smoothed', 'RiversOf', 'Settlements', 'TownsOf', 'Lights', 'Unit', 'Dot', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'HexAt', 'HexPoint', 'HexCell', 'Icosahedron', 'Wound', 'Slerp', 'Along', 'Cross']});
 	},
 
 	/* What a worker of the planet carries: see Workers. */

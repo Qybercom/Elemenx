@@ -37,4 +37,4 @@ The same functions run in workers and in Node: they read no page.
 - [lays its surface out in hexagons of an icosahedron too: 12 pentagons, each cell found of its points and of its ID, its neighbours round it, its sides shared with them the other way](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L246) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 - [makes land of plains, hills and ranges, its heights spread as on the Earth](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L306) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 
-+7 more in the same files
++10 more in the same files

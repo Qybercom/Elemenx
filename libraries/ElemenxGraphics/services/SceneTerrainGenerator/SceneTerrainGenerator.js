@@ -3404,7 +3404,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 				/* A ground that tells its colors (ScenePlanet) has them on each point. */
 				if (field.Color)
-					geometry.Colors.push.apply(geometry.Colors, field.Color(direction));
+					geometry.Colors.push.apply(geometry.Colors, field.Color(direction, step * Math.PI / 4 * field.Radius));
 			}
 		}
 

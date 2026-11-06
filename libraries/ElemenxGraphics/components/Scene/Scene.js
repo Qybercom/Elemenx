@@ -456,6 +456,8 @@ Elemenx.Component('Scene', {
 			Rings: {},
 			Baked: {},
 			Rivers: {},
+			Towns: {},
+			Globes: {},
 			Labels: {},
 			Time: Number(this.Time) || 0,
 			Given: {},
@@ -1551,7 +1553,7 @@ Elemenx.Component('Scene', {
 			var planet = planetOf(object);
 			/* A planet is painted with its rivers: none before they are made. */
 			var flowing = planet ? scene.Rivers[object.ID] : null;
-			if (flowing && !flowing.Ready) return null;
+			if (flowing && !flowing.Ready || planet && scene.Towns[object.ID] && !scene.Towns[object.ID].Ready) return null;
 
 			var key = JSON.stringify([object.Look, object.Seed, planet]);
 			var made = scene.Baked[object.ID];
@@ -1594,10 +1596,60 @@ Elemenx.Component('Scene', {
 			if (!base)
 				return null;
 
-			if (made && made.Key && made.Ready)
+			if (made && made.Key && made.Ready) {
 				base.Rivers = made.Key;
 
+				/* Its settlements, of its land with its rivers. */
+				var towns = townsOf(object, base);
+				if (towns && towns.Ready)
+					base.Settlements = towns.Key;
+			}
+
 			return base;
+		}
+
+		/*
+		 * The settlements of a planet (ScenePlanet.Settlements, in a worker), made once for its options and its rivers, kept in
+		 * the browser: {Key, Ready}; none for a planet that says Settlements: false, or brings its own.
+		 */
+		function townsOf (object, base) {
+			var held = scene.Towns[object.ID];
+			var key;
+
+			if (base.Settlements === false || Array.isArray(base.Settlements) || typeof base.Settlements === 'string') return null;
+
+			key = 'towns:' + JSON.stringify(base) + ':' + String(planets.Settlements).length;
+
+			if (held && held.Key === key) return held;
+
+			held = scene.Towns[object.ID] = {Key: key, Ready: false};
+
+			cachedGlobe(key, function (found) {
+				if (scene.Gone || scene.Towns[object.ID] !== held) return;
+
+				if (found) {
+					planets.UseSettlements(key, found);
+
+					held.Ready = true;
+
+					return;
+				}
+
+				planets.Work().Run('ScenePlanet', 'Settlements', [base, 20000], function (failed, made) {
+					if (scene.Gone || scene.Towns[object.ID] !== held) return;
+
+					var towns = failed || !made ? [] : made.Settlements;
+
+					planets.UseSettlements(key, towns);
+
+					if (!failed)
+						keepGlobe(key, towns);
+
+					held.Ready = true;
+				});
+			});
+
+			return held;
 		}
 
 		function planetBase (object) {
@@ -1627,20 +1679,38 @@ Elemenx.Component('Scene', {
 
 			held = scene.Rivers[object.ID] = {Key: key, Ready: false, Done: 0};
 
+			makeRivers(base, key, function () {
+				if (scene.Rivers[object.ID] === held)
+					held.Done++;
+			}, function () {
+				if (scene.Rivers[object.ID] !== held) return;
+
+				held.Ready = true;
+				held.Done = 25;
+			});
+
+			return held;
+		}
+
+		/*
+		 * The rivers of a planet made (or taken from the store of the browser) under their key, given to ScenePlanet
+		 * (UseRivers): step() each of the 24 strips of heights, done() once they are there. What failed is not kept.
+		 */
+		function makeRivers (base, key, step, done) {
 			cachedGlobe(key, function (found) {
 				var size = 256;
 				var heights;
 				var left = 24;
+				var failed = false;
 				var face;
 				var row;
 
-				if (scene.Gone || scene.Rivers[object.ID] !== held) return;
+				if (scene.Gone) return;
 
 				if (found) {
 					planets.UseRivers(key, found);
 
-					held.Ready = true;
-					held.Done = 25;
+					done();
 
 					return;
 				}
@@ -1649,26 +1719,26 @@ Elemenx.Component('Scene', {
 
 				function came (face, row) {
 					return function (error, piece) {
-						if (scene.Gone || scene.Rivers[object.ID] !== held) return;
+						if (scene.Gone) return;
 
-						if (!error && piece && piece.Data)
-							heights.set(piece.Data, face * size * size + row * size);
+						if (!error && piece && piece.Data) heights.set(piece.Data, face * size * size + row * size);
+						else failed = true;
 
-						held.Done++;
+						step();
 
 						if (--left) return;
 
-						planets.Work().Run('ScenePlanet', 'Drainage', [heights, size, 40], function (failed, made) {
-							if (scene.Gone || scene.Rivers[object.ID] !== held) return;
+						planets.Work().Run('ScenePlanet', 'Drainage', [heights, size, 40], function (wrong, made) {
+							var rivers = wrong || !made ? [] : made.Rivers;
 
-							var rivers = failed || !made ? [] : made.Rivers;
+							if (scene.Gone) return;
 
 							planets.UseRivers(key, rivers);
 
-							keepGlobe(key, rivers);
+							if (!failed && !wrong)
+								keepGlobe(key, rivers);
 
-							held.Ready = true;
-							held.Done = 25;
+							done();
 						});
 					};
 				}
@@ -1678,8 +1748,6 @@ Elemenx.Component('Scene', {
 						planets.Work().Run('ScenePlanet', 'Heights', [base, face, size, row, size / 4], came(face, row));
 				}
 			});
-
-			return held;
 		}
 
 		function riversKey (base) {
@@ -1727,7 +1795,66 @@ Elemenx.Component('Scene', {
 				made.Ground = cube;
 				made.Painted = size;
 				made.Strips = 24;
+
+				paintLights(object, made, planet);
 			});
+		}
+
+		/* The lights of the settlements of a planet at night, a cube of their own (ScenePlanet.Lights, in strips), when it has any. */
+		function paintLights (object, made, planet) {
+			var size = 256;
+			var strip = size / 4;
+			var left = 24;
+			var cube;
+			var face;
+			var row;
+
+			if (!planet.Settlements) {
+				made.Lit = true;
+
+				return;
+			}
+
+			cube = renderer.Cube(size);
+
+			function done (face, row) {
+				return function (error, piece) {
+					var data;
+					var k;
+
+					if (scene.Gone || scene.Baked[object.ID] !== made || renderer.Lost) {
+						if (!--left)
+							cube.Destroy();
+
+						return;
+					}
+
+					left--;
+					made.LitStrips = 24 - left;
+
+					if (!error && piece && piece.Data) {
+						data = new Uint8Array(piece.Data.length * 4);
+
+						for (k = 0; k < piece.Data.length; k++)
+							data[k * 4] = data[k * 4 + 1] = data[k * 4 + 2] = data[k * 4 + 3] = piece.Data[k];
+
+						cube.Write(face, data, row, !left);
+					}
+
+					if (left) return;
+
+					if (made.Lights)
+						made.Lights.Destroy();
+
+					made.Lights = cube;
+					made.Lit = true;
+				};
+			}
+
+			for (face = 0; face < 6; face++) {
+				for (row = 0; row < size; row += strip)
+					planets.Work().Run('ScenePlanet', 'Lights', [planet, face, size, row, strip], done(face, row));
+			}
 		}
 
 		function paintStrips (object, made, planet, size, strip, key) {
@@ -1764,6 +1891,8 @@ Elemenx.Component('Scene', {
 
 					made.Ground = cube;
 					made.Painted = size;
+
+					paintLights(object, made, planet);
 
 					keepGlobe(key, faces);
 				};
@@ -1843,7 +1972,22 @@ Elemenx.Component('Scene', {
 		}
 
 		/* A globe painted into the store of the browser before a scene shows it (Preload): callback(error) once it is there. */
-		engine.PreloadGlobe = function (planet, callback) {
+		engine.PreloadGlobe = function (given, callback) {
+			var flowing = given.Rivers === false || given.Rivers ? '' : riversKey(given);
+
+			/* Its rivers first, as a scene makes them; its globe with them named. */
+			if (flowing) {
+				makeRivers(given, flowing, function () {}, function () {
+					engine.PreloadGlobe(Object.assign({}, given, {Rivers: flowing}), callback);
+				});
+
+				return;
+			}
+
+			paintAhead(given, callback);
+		};
+
+		function paintAhead (planet, callback) {
 			var size = 256;
 			var key = globeKey(planet, size);
 
@@ -1879,7 +2023,7 @@ Elemenx.Component('Scene', {
 						planets.Work().Run('ScenePlanet', 'Face', [planet, face, size, row, size / 4], done(face, row));
 				}
 			});
-		};
+		}
 
 		function keepGlobe (key, faces, callback) {
 			var done = callback || function () {};
@@ -2433,17 +2577,17 @@ Elemenx.Component('Scene', {
 			if (split) {
 				after = math.Multiply(math.Perspective(camera.Fov, aspect, camera.Near, split * 1.0001), viewMatrix);
 
-				passed(math.Multiply(math.Perspective(camera.Fov, aspect, split, camera.Far), viewMatrix), [0.5, 1]);
-				passed(after, [0, 0.5]);
+				passed(math.Multiply(math.Perspective(camera.Fov, aspect, split, camera.Far), viewMatrix), [0.5, 1], [split, camera.Far]);
+				passed(after, [0, 0.5], [camera.Near, split * 1.0001]);
 
 				common.uViewProjection = after;
 			}
 			else {
-				passed(matrix, null);
+				passed(matrix, null, [camera.Near, camera.Far]);
 			}
 
 			/* All that stands, once, through a view (its matrix), its depth in a range of the buffer (null: all of it). */
-			function passed (matrix, range) {
+			function passed (matrix, range, planes) {
 				var later = [];
 
 				common.uViewProjection = matrix;
@@ -2485,12 +2629,25 @@ Elemenx.Component('Scene', {
 					else if (trait(object, 'Body')) {
 						surface = baked(object);
 
-						if (!surface || surface.Planet && !surface.Painted) return;
+						/* Near, a planet of ScenePlanet is its very ground, finer the nearer (drawGlobe), its clouds over it; far, its globe once all painted. */
+						var near = !!surface && surface.Planet && !scene.Camera.Ortho && object.Size / pixels(object.World, 1) > 60;
+						if (!surface || surface.Planet && !surface.Painted && !near) return;
 
 						model = placed(object, size);
 						shade = occluders(object);
 
-						renderer.Draw(gpu.Sphere, gpu.Planet, uniforms({uModel: model, uNormalMatrix: math.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object)}));
+						if (near && drawGlobe(object, planes)) {
+							if (object.Look.Clouds) {
+								var high = math.Compose(local(object.World), object.Turn, size * 1.004);
+
+								later.push(function () {
+									renderer.Draw(gpu.Sphere, gpu.Planet, uniforms({uModel: high, uNormalMatrix: math.NormalMatrix(high), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: [0, 0, 0, 0], uCloudsOnly: 1, uLights: noLights(), uLightsOn: 0}), {Blend: 'alpha', DepthWrite: false});
+								});
+							}
+						}
+						else {
+							renderer.Draw(gpu.Sphere, gpu.Planet, uniforms({uModel: model, uNormalMatrix: math.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object), uCloudsOnly: 0, uLights: surface.Lights || noLights(), uLightsOn: surface.Lights ? 1 : 0}));
+						}
 
 						if (object.Look.Atmosphere[3]) {
 							later.push(function () {
@@ -3696,6 +3853,20 @@ Elemenx.Component('Scene', {
 		}
 
 		/* No shadow: the samplers still need textures of their own kinds. */
+		/* The lights of the settlements of a body painted (paintLights), else none. */
+		function lightsOf (object) {
+			var made = scene.Baked[object.ID];
+
+			return made && made.Lights ? made.Lights : noLights();
+		}
+
+		/* No lights of settlements: a cube of black. */
+		function noLights () {
+			gpu.NoLights = gpu.NoLights || renderer.Cube(1);
+
+			return gpu.NoLights;
+		}
+
 		function idle () {
 			if (!gpu.NoShadow) {
 				gpu.NoShadow = renderer.Shadow(1);
@@ -4972,7 +5143,7 @@ Elemenx.Component('Scene', {
 
 				delete asked[key];
 
-				if (field.Roads !== roads || owner.Field !== field || owner !== scene.Ground && owner !== scene.Surface && owner !== scene.Horizon) return;
+				if (field.Roads !== roads || owner.Field !== field || owner !== scene.Ground && owner !== scene.Surface && owner !== scene.Horizon && !(owner.Globe && scene.Globes[owner.ID] === owner)) return;
 
 				made(error ? null : piece);
 			});
@@ -6461,6 +6632,75 @@ Elemenx.Component('Scene', {
 		}
 
 		/*
+		 * A planet of ScenePlanet seen near from space: its ground as the surface of a Scene draws it (patches, finer the
+		 * nearer, each of its colors), in the frame of the body, through the view of the pass it is drawn in (planes: its near
+		 * and far, in the units of the view), its relief made steeper for the light from far. False when it cannot be drawn.
+		 */
+		function drawGlobe (object, planes) {
+			var camera = scene.Camera;
+			var planet = planetOf(object);
+			var key = JSON.stringify(planet);
+			var globe = scene.Globes[object.ID];
+			var scale = object.Size / object.Radius;
+			var turn = math.Invert(object.Turn || math.Identity()) || math.Identity();
+			var field;
+			var eye;
+			var view;
+			var matrix;
+			var star;
+			var sun;
+			var sunColor;
+			var nodes;
+
+			if (!globe || globe.Key !== key) {
+				if (globe)
+					destroyNodes(globe.Nodes);
+
+				/* Finer squares and sooner than over a surface: from far all of its land is in view at once. */
+				globe = scene.Globes[object.ID] = {ID: object.ID, Key: key, Field: surfaceField(object), Nodes: {}, Frame: 0, Finest: 0.4, Globe: true, Resolution: 48, Eager: 2.5};
+			}
+
+			field = globe.Field;
+			eye = vectors.Scale(math.Apply(turn, vectors.Subtract(camera.Position, object.World)), 1 / scale);
+			globe.Eye = eye;
+			globe.Altitude = Math.max(0.002, vectors.Length(eye) - field.Radius - field.Elevation(vectors.Normalize(eye)));
+			view = math.LookAt([0, 0, 0], math.Apply(turn, vectors.Normalize(vectors.Subtract(camera.Target, camera.Position))), math.Apply(turn, camera.Up));
+			matrix = math.Multiply(math.Perspective(camera.Fov, renderer.Width / Math.max(1, renderer.Height), Math.max(1e-7, planes[0] / scale), planes[1] / scale), view);
+			star = scene.Order.filter(function (each) {
+				return trait(each, 'Star') && each.World;
+			})[0];
+			sun = vectors.Normalize(star ? math.Apply(turn, vectors.Normalize(vectors.Subtract(star.World, object.World))) : [0, 1, 0]);
+			sunColor = star ? paint(star.Color).slice(0, 3) : [1, 1, 1];
+			nodes = patches(globe);
+
+			nodes.forEach(function (node) {
+				renderer.Draw(node.Mesh, gpu.Ground, Object.assign({
+					uViewProjection: matrix,
+					uOffset: vectors.Subtract(node.Center, eye),
+					uCenter: node.Center,
+					uSun: sun,
+					uSunColor: sunColor,
+					uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]),
+					uPainted: field.Painted ? 1 : 0,
+					uWater: object.Look.Water,
+					uIce: object.Look.Ice,
+					uAir: object.Look.Atmosphere,
+					uRadius: field.Radius,
+					uTime: scene.Seconds,
+					uFog: Math.max(field.Radius * 0.02, globe.Altitude * 3),
+					uHigh: Math.min(1, globe.Altitude / 100),
+					uRelief: Math.max(1, Math.min(6, globe.Altitude / 150)),
+					uLights: lightsOf(object),
+					uLightsOn: lightsOf(object) === noLights() ? 0 : 1
+				}, idle()), {Cull: 'back'});
+			});
+
+			forget(globe);
+
+			return nodes.length > 0;
+		}
+
+		/*
 		 * The far ground round a location (scene.Horizon): the ground of its body, as it is drawn from over its surface, past
 		 * the ground of the location. Behind all: drawn over the sky at one depth, that of the farthest point of the ground of
 		 * the location (so all of that is over it), the farthest first; the air of the scene takes it as far as that, its own
@@ -6539,7 +6779,10 @@ Elemenx.Component('Scene', {
 					uRadius: field.Radius,
 					uTime: scene.Seconds,
 					uFog: Math.max(field.Radius * 0.02, far * 0.6),
-					uHigh: Math.min(1, horizon.Altitude / 100)
+					uHigh: Math.min(1, horizon.Altitude / 100),
+					uRelief: 1,
+					uLights: lightsOf(object),
+					uLightsOn: lightsOf(object) === noLights() ? 0 : 1
 				}, idle()), {Cull: 'back', Depth: 'lequal'});
 			});
 
@@ -6585,8 +6828,8 @@ Elemenx.Component('Scene', {
 				var made;
 
 				if (level) {
-					askPiece(surface, key, 'Sphere', [face, u, v, size, 24], function (piece) {
-						made = piece || field.Patch(face, u, v, size, 24);
+					askPiece(surface, key, 'Sphere', [face, u, v, size, surface.Resolution || 24], function (piece) {
+						made = piece || field.Patch(face, u, v, size, surface.Resolution || 24);
 
 						surface.Nodes[key] = {Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Used: surface.Frame};
 					});
@@ -6594,7 +6837,7 @@ Elemenx.Component('Scene', {
 					return;
 				}
 
-				made = field.Patch(face, u, v, size, 24);
+				made = field.Patch(face, u, v, size, surface.Resolution || 24);
 
 				surface.Nodes[key] = {Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Used: surface.Frame};
 			}
@@ -6625,7 +6868,7 @@ Elemenx.Component('Scene', {
 
 				node.Used = surface.Frame;
 
-				if (level < 17 && near < field.Radius * size * 0.75 * 2.2 && size * Math.PI / 4 * field.Radius > (surface.Finest || 0)) {
+				if (level < 17 && near < field.Radius * size * 0.75 * 2.2 * (surface.Eager || 1) && size * Math.PI / 4 * field.Radius > (surface.Finest || 0)) {
 					parts = [[u - half / 2, v - half / 2], [u + half / 2, v - half / 2], [u - half / 2, v + half / 2], [u + half / 2, v + half / 2]].filter(function (part) {
 						return !hidden(vectors.Normalize(terrain.Face(face, part[0], part[1])), half);
 					});
@@ -6659,6 +6902,8 @@ Elemenx.Component('Scene', {
 			missing.sort(function (a, b) {
 				return a.Near - b.Near;
 			});
+
+			surface.Missing = missing.length;
 
 			missing.some(function (one) {
 				build(one.Face, one.U, one.V, one.Size, one.Level);
@@ -6817,7 +7062,10 @@ Elemenx.Component('Scene', {
 					uRadius: field.Radius,
 					uTime: scene.Seconds,
 					uFog: Math.max(field.Radius * 0.02, far * 0.6),
-					uHigh: Math.min(1, surface.Altitude / thickness)
+					uHigh: Math.min(1, surface.Altitude / thickness),
+					uRelief: 1,
+					uLights: lightsOf(object),
+					uLightsOn: lightsOf(object) === noLights() ? 0 : 1
 				}, shade), {Cull: 'back'});
 			});
 
@@ -7511,8 +7759,9 @@ Elemenx.Component('Scene', {
 				}
 
 				made = scene.Baked[object.ID];
-				globes.Total += 24;
-				globes.Done += made ? made.Painted ? 24 : made.Strips || 0 : 0;
+				/* Its lands, then the lights of its settlements: 24 strips each. */
+				globes.Total += 48;
+				globes.Done += made ? (made.Painted ? 24 : made.Strips || 0) + (made.Lit ? 24 : made.LitStrips || 0) : 0;
 			});
 
 			if (!ground)
@@ -7590,8 +7839,13 @@ Elemenx.Component('Scene', {
 
 				made = scene.Baked[object.ID];
 
-				if (!made || !made.Painted)
+				if (!made || !made.Painted || !made.Lit)
 					left++;
+			});
+
+			/* A globe near: its squares as fine as the eye needs. */
+			Object.keys(scene.Globes).forEach(function (id) {
+				left += scene.Globes[id].Missing || 0;
 			});
 
 			if (scene.Ground) {
@@ -9972,6 +10226,9 @@ Elemenx.Component('Scene', {
 				'uniform float uTime;',
 				'uniform samplerCube uGround;',
 				'uniform samplerCube uSky;',
+				'uniform float uCloudsOnly;',
+				'uniform samplerCube uLights;',
+				'uniform float uLightsOn;',
 				'out vec4 outColor;',
 				graphics.Chunks.Lights,
 				'float daylight(vec3 position, vec3 normal) {',
@@ -9993,12 +10250,20 @@ Elemenx.Component('Scene', {
 				'	float turn = uTime * 0.01;',
 				'	vec3 drifted = vec3(p.x * cos(turn) - p.z * sin(turn), p.y, p.x * sin(turn) + p.z * cos(turn));',
 				'	vec4 sky = texture(uSky, drifted);',
+				/* Its clouds alone, over its ground drawn of its planet (a globe near): their light, as much of them as there is. */
+				'	if (uCloudsOnly > 0.5) {',
+				'		vec3 lit = mix(vec3(0.96), uAtmosphere.rgb, uClouds >= 1.0 ? 0.55 * uAtmosphere.a : 0.0) * lighting(vWorld, n, v, 1.0, 0.0);',
+				'		outColor = vec4(lit, uClouds > 0.0 ? sky.r : 0.0);',
+				'		return;',
+				'	}',
 				'	vec4 heat = texture(uSky, p);',
 				'	if (uKind == 3) color += mix(uColors[2], uColors[3], heat.b) * heat.g * 1.6;',
 				'	if (uClouds > 0.0) {',
 				'		vec3 haze = mix(vec3(0.96), uAtmosphere.rgb, uClouds >= 1.0 ? 0.55 * uAtmosphere.a : 0.0);',
 				'		color = mix(color, haze * lighting(vWorld, n, v, 1.0, 0.0), sky.r);',
 				'	}',
+				/* Its settlements at night: their light where its sun is down. */
+				'	if (uLightsOn > 0.5) color += vec3(1.0, 0.72, 0.38) * texture(uLights, p).r * 1.6 * (1.0 - daylight(vWorld, n)) * (1.0 - (uClouds > 0.0 ? sky.r * 0.7 : 0.0));',
 				'	float rim = pow(1.0 - max(dot(n, v), 0.0), 3.0);',
 				'	color += uAtmosphere.rgb * rim * uAtmosphere.a * daylight(vWorld, n);',
 				'	color += uHighlight.rgb * pow(1.0 - max(dot(n, v), 0.0), 6.0) * uHighlight.a;',
@@ -10195,6 +10460,9 @@ Elemenx.Component('Scene', {
 				'uniform float uHigh;',
 				'uniform float uRadius;',
 				'uniform float uTime;',
+				'uniform float uRelief;',
+				'uniform samplerCube uLights;',
+				'uniform float uLightsOn;',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				graphics.Chunks.Shadow,
@@ -10210,10 +10478,12 @@ Elemenx.Component('Scene', {
 				'	float sea = vLand.y;',
 				'	vec3 albedo = sea > 0.5 ? mix(uWater * 1.25, uWater * 0.55, clamp(-vLand.x * 4.0, 0.0, 1.0)) : ground(clamp(vLand.x, 0.0, 1.0));',
 				'	vec3 up = vDirection;',
+				/* From far its relief is told by its light: the slopes made steeper for the light (uRelief), as the eye reads mountains from orbit. */
+				'	if (uRelief > 1.0) n = normalize(up + (n - up * dot(n, up)) * uRelief);',
 				'	if (sea > 0.5) n = up;',
 				'	float rock = 1.0 - smoothstep(0.55, 0.75, dot(n, up));',
 				'	if (sea < 0.5) albedo = mix(albedo, uColors[1] * 0.8, rock * 0.6);',
-				'	if (uPainted > 0.5) albedo = vPainted;',
+				'	if (uPainted > 0.5) albedo = sea > 0.5 ? vPainted : mix(vPainted, vec3(0.42, 0.39, 0.35), rock * 0.55);',
 				'	if (uIce > 0.0 && uPainted < 0.5) {',
 				'		float pole = abs(up.y) + (fbm3(up * 6.6, 3) - 0.5) * 0.3;',
 				'		float cap = uIce >= 1.0 ? 1.0 : smoothstep(1.0 - uIce, 1.0 - uIce + 0.04, pole);',
@@ -10242,6 +10512,8 @@ Elemenx.Component('Scene', {
 				'		float shine = (pow(toward, 1400.0) * 7.0 + pow(toward, 180.0) * 0.16) * smoothstep(-0.02, 0.1, rise);',
 				'		color = mix(color, mirrored, fresnel) + uSunColor * mix(vec3(1.0, 0.55, 0.25), vec3(1.0), smoothstep(0.0, 0.3, rise)) * shine;',
 				'	}',
+				/* Its settlements at night (of a globe near). */
+				'	if (uLightsOn > 0.5) color += vec3(1.0, 0.72, 0.38) * texture(uLights, up).r * 1.6 * (1.0 - smoothstep(-0.05, 0.12, rise));',
 				'	float haze = (1.0 - exp(-length(vWorld) / uFog)) * uAir.a * (1.0 - uHigh * 0.7);',
 				'	color = mix(color, mix(uAir.rgb, vec3(0.9), 0.35) * light, clamp(haze, 0.0, 1.0));',
 				'	outColor = vec4(color, 1.0);',

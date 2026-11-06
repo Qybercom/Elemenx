@@ -120,6 +120,54 @@ Elemenx.Service('SceneLocations', {
 		return items.length ? {Layers: [{ID: 'rivers', Name: 'Rivers', Items: items}]} : undefined;
 	},
 
+	/*
+	 * The settlements of the planet (Settlements of ScenePlanet) in a location as a sketch of its ground: each an area of the
+	 * type settlement round its point (metres of the location), as large as its kind (a city 900 m across its middle, a town
+	 * 450, a village 180), within the location; undefined with none.
+	 */
+	Towns: function (planet, place) {
+		var planets = this.$Service('ScenePlanet');
+		var towns = Array.isArray(planet.Settlements) ? planet.Settlements : planet.Settlements ? planets.TownsOf(planet.Settlements) : [];
+		var half = this.Extent(place) / 2;
+		var middle = planets.Direction(place.Latitude, place.Longitude);
+		var reach = half * 2 / ((Number(planet.Radius) || 6371) * 1000);
+		var items = [];
+		var site;
+
+		towns.forEach(function (town, number) {
+			var radius = town.Kind === 'city' ? 900 : town.Kind === 'town' ? 450 : 180;
+			var at;
+			var points = [];
+			var i;
+
+			if (Math.acos(Math.max(-1, Math.min(1, planets.Dot(town.Point, middle)))) > reach) return;
+
+			site = site || this.$Service('SceneTerrainGenerator').Site({Options: planet, Latitude: place.Latitude, Longitude: place.Longitude, Turn: place.Turn});
+			at = site.Local(town.Point);
+
+			/* Within the location: a large one taken in, not cut by its edge. */
+			radius = Math.min(radius, half - 60 - Math.max(Math.abs(at[0]), Math.abs(at[1])));
+
+			if (radius < 60) return;
+
+			for (i = 0; i < 12; i++)
+				points.push([Math.round((at[0] + Math.cos(i / 12 * Math.PI * 2) * radius * (1 + 0.12 * Math.sin(i * 2.3 + number))) * 10) / 10, Math.round((at[1] + Math.sin(i / 12 * Math.PI * 2) * radius * (1 + 0.12 * Math.cos(i * 1.7 + number))) * 10) / 10]);
+
+			items.push({ID: 'settlement-' + number, Type: 'settlement', Points: points, Kind: town.Kind, Density: 0.6 + town.Size * 0.3, Seed: 'town-' + number});
+		}, this);
+
+		return items.length ? {Layers: [{ID: 'settlements', Name: 'Settlements', Items: items}]} : undefined;
+	},
+
+	/* The sketch of the ground of a location of a planet: its rivers (Streams) and its settlements (Towns); undefined with none. */
+	Sketch: function (planet, place) {
+		var layers = [this.Streams(planet, place), this.Towns(planet, place)].filter(Boolean).map(function (sketch) {
+			return sketch.Layers[0];
+		});
+
+		return layers.length ? {Layers: layers} : undefined;
+	},
+
 	/* The way of a river bent: a point every 400 m along it, aside by its width and more, the same for the same river. */
 	Meander: function (run, width, seed) {
 		var made = [];
@@ -207,7 +255,7 @@ Elemenx.Service('SceneLocations', {
 			Kind: told && told.Kind || 'generated',
 			Model: told && told.Model || '',
 			Told: !!told,
-			World: told && told.World || this.$Service('SceneWorld').Library({Size: this.Extent(place), Planet: {Options: options, Latitude: place.Latitude, Longitude: place.Longitude, Turn: place.Turn}, Sketch: this.Streams(options, place), Border: {Points: place.Points, Sides: place.Sides, Beyond: told && told.Beyond || 'far', Passages: passages, Open: open}}),
+			World: told && told.World || this.$Service('SceneWorld').Library({Size: this.Extent(place), Planet: {Options: options, Latitude: place.Latitude, Longitude: place.Longitude, Turn: place.Turn}, Sketch: this.Sketch(options, place), Border: {Points: place.Points, Sides: place.Sides, Beyond: told && told.Beyond || 'far', Passages: passages, Open: open}}),
 			Passages: passages,
 			Beyond: told && told.Beyond || 'far',
 			Sides: neighbours.map(function (other, side) {

@@ -428,4 +428,64 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 		expect(streams.Items.length).toBeGreaterThan(0);
 		expect(streams.Items[0].Type).toBe('river');
 	}, 60000);
+
+	/*
+	 * Its settlements: where people would live on its land, a few cities, more towns, many villages, each apart from the
+	 * others by its size; their lights at night a spot round each on the faces of its globe, none far from them.
+	 */
+	it('settles its land with cities, towns and villages apart from each other, and lights them at night', function () {
+		var options = {Seed: 'terra', Ocean: 0.62, Radius: 6371};
+		var made = planets.Settlements(options, 6000);
+		var kinds = {};
+		var city;
+		var lights;
+		var face;
+		var lit = 0;
+		var k;
+
+		made.Settlements.forEach(function (town) {
+			kinds[town.Kind] = (kinds[town.Kind] || 0) + 1;
+
+			expect(planets.Make(options).Land(town.Point)).toBe(true);
+		});
+
+		expect(kinds.city).toBeGreaterThan(0);
+		expect(kinds.town).toBeGreaterThan(kinds.city);
+		expect(kinds.village).toBeGreaterThan(kinds.town);
+
+		/* Two cities never nearer than 400 km. */
+		made.Settlements.filter(function (town) {
+			return town.Kind === 'city';
+		}).forEach(function (one, index, all) {
+			all.slice(index + 1).forEach(function (other) {
+				var d = one.Point[0] * other.Point[0] + one.Point[1] * other.Point[1] + one.Point[2] * other.Point[2];
+
+				expect(Math.acos(Math.min(1, d)) * 6371).toBeGreaterThan(399);
+			});
+		});
+
+		planets.UseSettlements('test-towns', made.Settlements);
+
+		expect(planets.TownsOf('test-towns')).toBe(made.Settlements);
+
+		/* Lit round a city: the face it is on has light, and the face's texel of the city the most of all near it. */
+		city = made.Settlements.filter(function (town) {
+			return town.Kind === 'city';
+		})[0];
+		face = [Math.abs(city.Point[0]), Math.abs(city.Point[1]), Math.abs(city.Point[2])];
+		face = face[0] >= face[1] && face[0] >= face[2] ? (city.Point[0] > 0 ? 0 : 1) : face[1] >= face[2] ? (city.Point[1] > 0 ? 2 : 3) : city.Point[2] > 0 ? 4 : 5;
+		lights = planets.Lights(Object.assign({}, options, {Settlements: 'test-towns'}), face, 128, 0, 128);
+
+		for (k = 0; k < lights.Data.length; k++) {
+			if (lights.Data[k] > 0)
+				lit++;
+		}
+
+		expect(lights.Rows).toBe(128);
+		expect(lit).toBeGreaterThan(0);
+		expect(lit).toBeLessThan(lights.Data.length / 4);
+		expect(planets.Lights(Object.assign({}, options, {Settlements: []}), face, 16, 0, 16).Data.every(function (value) {
+			return value === 0;
+		})).toBe(true);
+	}, 60000);
 });

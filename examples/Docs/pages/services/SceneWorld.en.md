@@ -34,11 +34,11 @@ The same functions run in Node: they read no page.
 - [cuts its land with steps of its volume: tunnels, caves, overhangs, each one more carve of it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js#L97) — `libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js`
 - [makes the land of a place of a planet exactly as its globe: its heights and coasts, its lands, its neighbour meeting it at their border, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js#L107) — `libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js`
 - [makes the objects of the World of a ground in the scene, marked in the tree, not saved: they come again of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L734) — `tests/regression/library-scene-editor.test.js`
-- [preloads the globe of a planet into the store of the browser, and a scene of it takes it from there at once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L146) — `tests/regression/library-scene-landing.test.js`
+- [preloads the globe of a planet into the store of the browser, and a scene of it takes it from there at once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L147) — `tests/regression/library-scene-landing.test.js`
 - [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1778) — `tests/regression/library-scene.test.js`
 - [lets go of neither a hero nor the view on Escape, and takes no leap of the pointer](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2824) — `tests/regression/library-scene.test.js`
 - [never lets a hero out of the view, and ends a press when the pointer is taken or given back](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2890) — `tests/regression/library-scene.test.js`
 - [stands the view of a walker behind it, in its eyes or over its shoulder, and V goes through them with the pointer taken](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3001) — `tests/regression/library-scene.test.js`
 - [shows the axes of a view in a corner, and a press on one looks along it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3119) — `tests/regression/library-scene.test.js`
 
-+25 more in the same files
++26 more in the same files

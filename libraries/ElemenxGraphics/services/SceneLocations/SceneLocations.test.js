@@ -172,4 +172,30 @@ describe('Contract: SceneLocations, the locations of a planet: cells of its surf
 		expect(terrain.Flat(worlds.Make(locations.Location(baked, id).World).Ground).Height(0, 0)).toBe(field.Height(0, 0));
 		expect(locations.Forget(baked, id).Baked[id]).toBeUndefined();
 	});
+
+	/* A settlement of the planet in a location: an area of the type settlement of its kind round its point, within the location. */
+	it('has the settlements of its planet as settlements of its sketch, round their points and within it', function () {
+		var planet = {Seed: 'towns', Radius: 6371, LocationSize: 4, Ocean: 0.3};
+		var id = locations.At(planet, 30, 40);
+		var place = locations.Location(planet, id).Place;
+		var middle = planets.Direction(place.Latitude, place.Longitude);
+		var town = {Point: middle, Size: 0.5, Kind: 'town'};
+		var far = {Point: planets.Direction(-30, -140), Size: 1, Kind: 'city'};
+		var location = locations.Location(Object.assign({}, planet, {Settlements: [town, far]}), id);
+		var layer = Elemenx.Service('SceneWorld').Make(location.World).Ground.Sketch.Layers.filter(function (one) {
+			return one.ID === 'settlements';
+		})[0];
+		var half = locations.Extent(place) / 2;
+
+		expect(layer.Items.length).toBe(1);
+		expect(layer.Items[0].Type).toBe('settlement');
+		expect(layer.Items[0].Kind).toBe('town');
+
+		layer.Items[0].Points.forEach(function (point) {
+			expect(Math.hypot(point[0], point[1])).toBeLessThan(600);
+			expect(Math.max(Math.abs(point[0]), Math.abs(point[1]))).toBeLessThan(half);
+		});
+
+		expect(locations.Towns(planet, place)).toBeUndefined();
+	});
 });

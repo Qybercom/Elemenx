@@ -16,6 +16,8 @@ ScenePlanet: планета как одна непрерывная функци�
 
 Реки. Heights(options, face, size, row, rows) — высоты клеток грани (кубическая сетка, size на сторону) для стока. Drainage(heights, size, least) — реки планеты по высотам всех шести граней. Суша заполняется от моря (priority flood: впадины заливаются до перелива, каждая клетка стекает туда, откуда до неё дошли), вода каждой клетки собирается вниз по течению, а пути, которые собирают least клеток и больше, ведутся до моря и сглаживаются. Результат: {Size, Rivers: [{Points (направления), Flow (клеток стока), Level (метры дна, вниз по течению никогда не растёт)}]}. UseRivers(key, rivers) хранит реки под ключом в странице и в воркерах, а планета называет их ключом (Rivers: key) вместо того, чтобы нести мегабайты. Планета с реками прорезает их долины: шириной 0,6 км × сток^0,4, дно спускается к морю, часть холмов на дне остаётся.
 
+Поселения. Settlements(options, count) расселяет сушу планеты: перебирает count точек (по умолчанию 20000, по спирали со случайным сдвигом), оценивает каждую по климату (тепло, не слишком сухо и не слишком влажно), высоте (ниже — лучше), рекам (чем больше сток рядом, тем лучше) и побережью, и берёт лучшие так, чтобы каждое стояло в стороне от уже взятых: города не ближе 400 км, посёлки 120 км, деревни 40 км. Результат: {Settlements: [{Point (направление), Size (0–1), Kind (city, town, village)}]}. UseSettlements(key, towns) хранит их под ключом, как реки, и планета называет их ключом (Settlements: key) или списком. Lights(options, face, size, row, rows) даёт огни поселений ночью на грани глобуса: яркость 0–255 на тексель, пятно вокруг каждого поселения размером по его виду (город около 40 км, деревня около 6). Результат: {Data, Face, Row, Rows}.
+
 ## Методы
 
 - `Direction(latitude, longitude)`
@@ -42,4 +44,4 @@ ScenePlanet: планета как одна непрерывная функци�
 - [lays its surface out in hexagons of an icosahedron too: 12 pentagons, each cell found of its points and of its ID, its neighbours round it, its sides shared with them the other way](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L246) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 - [makes land of plains, hills and ranges, its heights spread as on the Earth](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L306) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 
-+7 ещё в тех же файлах
++10 ещё в тех же файлах
