@@ -5,6 +5,8 @@
  * of them, Escape none. A right press orders them: on the ground they go there and spread round it (Spread metres apart),
  * on a unit of another team they attack it; S stops them. A unit with Damage (per second, 10) attacks what is within its
  * Range (3 metres), going to it first, and by itself what comes within half its Sight; a unit with no Health left is gone.
+ * A unit with a Weapon (of the weapons of the Scene: rifle, rocket, mortar...) shoots it from its Range (25 metres) with a
+ * Spread of its own (degrees, 2), its shots hitting what is in their way; the damage is of the health of the scene (Vitals).
  * Fog hides what the units of the Team do not see (Sight of a unit, 30 metres) and darkens what they have not seen yet or
  * see no more; the units of other teams are hidden there. The right button turns the view, the wheel brings it near.
  * Selected: the units selected from the start, as they come into the scene.
@@ -49,6 +51,10 @@ Elemenx.Component('GameStrategy', {
 		this.Clock = 0;
 		this.FogMade = null;
 		this.Hurt = {};
+		this.Watching = null;
+
+		/* A death by anything of the scene (a shot of a weapon too) leaves the orders and the selection. */
+		this.Ledger();
 
 		/* Over the canvas of the scene, as large as it; the presses go through it to the scene. */
 		scene.$Element().appendChild(canvas);
@@ -59,9 +65,17 @@ Elemenx.Component('GameStrategy', {
 	SceneStop: function () {
 		this.Chosen = [];
 		this.Orders = {};
+		this.Watching = null;
 	},
 
 	/* The scene and its inner state. */
+	/* A range of sight as the weather and the light of the scene leave it: shorter in fog, rain and the dark. */
+	Seeing: function (range) {
+		var scene = this.ParentScene();
+
+		return scene && scene.SightOf ? scene.SightOf(range) : range;
+	},
+
 	Space: function () {
 		var scene = this.ParentScene();
 
@@ -358,13 +372,16 @@ Elemenx.Component('GameStrategy', {
 
 		fighters.forEach(function (unit) {
 			var order = self.Orders[unit.ID];
-			var range = self.Value(unit.Values.Range, 3);
+			/* A unit with a Weapon shoots from afar (the shots of the scene, SceneWeapons), one without strikes near. */
+			var armed = unit.Values.Weapon && typeof scene.Fire === 'function';
+			var range = self.Value(unit.Values.Range, armed ? 25 : 3);
 			var target;
 			var far;
 
 			/* Idle, it takes on a foe that comes near. */
 			if (!order && !space.Ways[unit.ID]) {
-				var sight = self.Value(unit.Values.Sight, 30) / 2;
+				/* As far as the weather and the light let it see (Scene.SightOf). */
+				var sight = self.Seeing(self.Value(unit.Values.Sight, 30)) / 2;
 				var near = fighters.filter(function (other) {
 					return other.Team && unit.Team && String(other.Team) !== String(unit.Team) && Math.hypot(other.World[0] - unit.World[0], other.World[2] - unit.World[2]) <= sight;
 				})[0];
@@ -399,29 +416,48 @@ Elemenx.Component('GameStrategy', {
 			delete space.Ways[unit.ID];
 			unit.Heading = [target.World[0] - unit.World[0], 0, target.World[2] - unit.World[2]];
 
+			if (armed) {
+				scene.Fire(unit.ID, {At: target.ID, Spread: self.Value(unit.Values.Spread, 2)});
+
+				return;
+			}
+
 			self.Strike(unit, target, self.Value(unit.Values.Damage, 10) * elapsed);
 		});
 	},
 
-	/* Damage to a unit: its Health goes down, and at nothing it is gone. */
+	/* Damage to a unit, through the health of the scene (Vitals): its Health goes down, and at nothing it is gone. */
 	Strike: function (by, target, amount) {
-		var scene = this.ParentScene();
-		var max = this.Value(target.Traits.Health.Max, 100);
-		var health = this.Value(target.Values.Health, max) - amount;
+		this.Ledger().Damage(target.ID, {Amount: amount, Source: by.ID, Team: by.Team, Type: 'melee'});
+	},
 
-		target.Values.Health = Math.max(0, health);
+	/*
+	 * The health of the scene (Vitals.Of): one for all that hurts there, a death there leaves the orders and the selection.
+	 * The ledger is held in a function: a field would hold a reactive copy of it, never the same.
+	 */
+	Ledger: function () {
+		var self = this;
+		var ledger = this.$Service('Vitals').Of(this.ParentScene());
 
-		if (health > 0) return;
+		if (!this.Watching || this.Watching() !== ledger) {
+			this.Watching = function () {
+				return ledger;
+			};
 
-		delete this.Orders[target.ID];
+			ledger.On('death', function (event) {
+				if (!self.Watching || self.Watching() !== ledger) return;
 
-		this.Chosen = this.Chosen.filter(function (id) {
-			return id !== target.ID;
-		});
+				delete self.Orders[event.ID];
 
-		this.$Emit('death', {ID: target.ID, By: by.ID});
+				self.Chosen = self.Chosen.filter(function (id) {
+					return id !== event.ID;
+				});
 
-		scene.Remove(target.ID);
+				self.$Emit('death', {ID: event.ID, By: event.By});
+			});
+		}
+
+		return ledger;
 	},
 
 	/* The fog: a grid over the ground, what the units see now and what they have seen; the units of others hidden out of sight. */
@@ -451,7 +487,7 @@ Elemenx.Component('GameStrategy', {
 		fog.State.Hide();
 
 		this.Units().forEach(function (unit) {
-			var sight = self.Value(unit.Values.Sight, 30) / cell;
+			var sight = self.Seeing(self.Value(unit.Values.Sight, 30)) / cell;
 			var cx = (unit.World[0] + size / 2) / cell;
 			var cz = (unit.World[2] + size / 2) / cell;
 			var x;

@@ -36,8 +36,9 @@
  * - World(settings): a world of solid bodies. Settings: Gravity (m/s² down, or a list [x, y, z]), Ground (a height, a function (x, z)
  *   of the height, or null for none; 0 by default), Friction, Bounce and Rolling of the ground, Step (1/120 s), Iterations (10), Sleep (false:
  *   none sleep), Touch(a, b, {At, Normal, Impulse}) (when two begin to touch; b is null for the ground). It has:
- *   - Add(body): body {ID, Shape ('sphere', 'box', 'capsule' standing along its y), Radius, Size [x, y, z] (a box), Height (a capsule,
- *     between the middles of its ends), Mass (0: it never moves), Static, At, Turn [x, y, z, w], Way, Spin (radians a second round
+ *   - Add(body): body {ID, Shape ('sphere', 'box', 'capsule' standing along its y, 'prism': a convex outline Points [[x, z]...]
+ *     round its middle standing Height high, that never moves), Radius, Size [x, y, z] (a box), Height (a capsule, between the
+ *     middles of its ends; a prism, all of it), Mass (0: it never moves), Static, At, Turn [x, y, z, w], Way, Spin (radians a second round
  *     each axis), Bounce, Friction, Rolling (what holds back its rolling: 0 rolls on for ever, 0.03 by default), Damping, Angular
  *     (how it slows by itself), Gravity (how much of it the body feels), Sleeping};
  *     the world moves the body itself, so what shows it reads At and Turn, or blends from Was and WasTurn (where it was a
@@ -687,7 +688,8 @@ Elemenx.Service('Physics', {
 			if (!body.Sleeping && record.Still > 0.6)
 				record.Still = 0;
 
-			record.Static = body.Static === true || !(mass > 0);
+			/* A prism (a wall of a shape of its own) never moves. */
+			record.Static = body.Static === true || !(mass > 0) || body.Shape === 'prism';
 			record.Mass = record.Static ? 0 : 1 / mass;
 			record.Inertia = inertia.map(function (value) {
 				return record.Static || !(value > 0) ? 0 : 1 / value;
@@ -695,6 +697,9 @@ Elemenx.Service('Physics', {
 			record.Half = half;
 			record.Reach = body.Shape === 'box' ? size(half) : body.Shape === 'capsule' ? r + body.Height / 2 : r;
 			record.Matrix = matrix(body.Turn);
+
+			if (body.Shape === 'prism')
+				prismOf(record);
 		}
 
 		function free (record) {
@@ -851,6 +856,185 @@ Elemenx.Service('Physics', {
 			contact(a, b, add(b.Body.At, apply(b.Matrix, near)), apply(b.Matrix, n), r + least);
 		}
 
+		/*
+		 * A prism: its points [x, z] round its middle, made to turn left (a convex outline), its height along its y; the planes
+		 * of its sides, its top and its bottom ({N, D}: inside where N . p <= D), in its own frame; its reach.
+		 */
+		function prismOf (record) {
+			var body = record.Body;
+			var points = (body.Points || []).map(function (point) {
+				return [number(point[0], 0), number(point[1], 0)];
+			});
+			var half = number(body.Height, 1) / 2;
+			var turn = 0;
+			var far = 0;
+			var key = JSON.stringify([points, half]);
+
+			/* Its reach and its half sizes each time (refresh sets them as for a ball); its planes once. */
+			if (record.PrismKey === key) {
+				record.Half = record.PrismHalf;
+				record.Reach = record.PrismReach;
+
+				return;
+			}
+
+			points.forEach(function (point, i) {
+				var next = points[(i + 1) % points.length];
+
+				turn += point[0] * next[1] - next[0] * point[1];
+				far = Math.max(far, Math.hypot(point[0], point[1]));
+			});
+
+			/* Its corners round to the left: the inside of each side is on its left. */
+			if (turn < 0)
+				points.reverse();
+
+			record.PrismKey = key;
+			record.Points = points;
+			record.Planes = [{N: [0, 1, 0], D: half}, {N: [0, -1, 0], D: half}].concat(points.map(function (point, i) {
+				var next = points[(i + 1) % points.length];
+				var n = [next[1] - point[1], 0, -(next[0] - point[0])];
+				var l = Math.hypot(n[0], n[2]) || 1;
+
+				n = [n[0] / l, 0, n[2] / l];
+
+				return {N: n, D: n[0] * point[0] + n[2] * point[1]};
+			}));
+			record.PrismHalf = [far, half, far];
+			record.PrismReach = Math.hypot(far, half);
+			record.Half = record.PrismHalf;
+			record.Reach = record.PrismReach;
+		}
+
+		/*
+		 * Where a point is against a prism, in the frame of the world: {Inside, Near (the nearest point of its surface), Normal
+		 * (out of it, toward the point), Distance (from it; how deep within it, inside)}.
+		 */
+		function prismNear (record, c) {
+			var l = local(record.Matrix, sub(c, record.Body.At));
+			var half = record.Half[1];
+			var points = record.Points;
+			var worst = -Infinity;
+			var face = null;
+			var near;
+			var best;
+			var d;
+
+			record.Planes.forEach(function (plane) {
+				var out = dot(plane.N, l) - plane.D;
+
+				if (out > worst) {
+					worst = out;
+					face = plane;
+				}
+			});
+
+			if (worst <= 0) {
+				near = sub(l, scale(face.N, worst));
+
+				return {Inside: true, Near: add(record.Body.At, apply(record.Matrix, near)), Normal: apply(record.Matrix, face.N), Distance: -worst};
+			}
+
+			/* Outside: the nearest point of its outline (or within it), at the height of the point as far as it reaches. */
+			best = null;
+
+			if (record.Planes.slice(2).every(function (plane) {
+				return dot(plane.N, l) - plane.D <= 0;
+			})) {
+				best = [l[0], l[2]];
+			}
+			else {
+				points.forEach(function (point, i) {
+					var next = points[(i + 1) % points.length];
+					var e = [next[0] - point[0], next[1] - point[1]];
+					var t = Math.max(0, Math.min(1, ((l[0] - point[0]) * e[0] + (l[2] - point[1]) * e[1]) / Math.max(1e-12, e[0] * e[0] + e[1] * e[1])));
+					var q = [point[0] + e[0] * t, point[1] + e[1] * t];
+					if (!best || Math.hypot(q[0] - l[0], q[1] - l[2]) < Math.hypot(best[0] - l[0], best[1] - l[2]))
+						best = q;
+				});
+			}
+
+			near = [best[0], Math.max(-half, Math.min(half, l[1])), best[1]];
+			d = sub(l, near);
+
+			return {Inside: false, Near: add(record.Body.At, apply(record.Matrix, near)), Normal: apply(record.Matrix, unit(d)), Distance: size(d)};
+		}
+
+		/* A ball (its middle c, radius r) of a against a prism b. */
+		function ballPrism (a, c, r, b) {
+			var met = prismNear(b, c);
+
+			if (met.Inside) {
+				contact(a, b, met.Near, met.Normal, r + met.Distance);
+
+				return;
+			}
+
+			if (met.Distance < r)
+				contact(a, b, met.Near, met.Normal, r - met.Distance);
+		}
+
+		/* A box of a against a prism b: its corners in the prism, and the corners of the prism in it. */
+		function boxPrism (a, b) {
+			var half = b.Half[1];
+
+			corners(a).forEach(function (corner) {
+				ballPrism(a, corner, 0, b);
+			});
+
+			b.Points.forEach(function (point) {
+				[-half, half].forEach(function (y) {
+					ballBox(b, add(b.Body.At, apply(b.Matrix, [point[0], y, point[1]])), 0, a);
+				});
+			});
+		}
+
+		/* A ray into a prism: where it first comes in through its planes, or -1. */
+		function castPrism (record, from, direction) {
+			var o = local(record.Matrix, sub(from, record.Body.At));
+			var d = local(record.Matrix, direction);
+			var near = -Infinity;
+			var far = Infinity;
+			var normal = [0, 1, 0];
+			var i;
+
+			for (i = 0; i < record.Planes.length; i++) {
+				var plane = record.Planes[i];
+				var along = dot(plane.N, d);
+				var room = plane.D - dot(plane.N, o);
+
+				if (Math.abs(along) < 1e-12) {
+					if (room < 0)
+						return {Distance: -1};
+
+					continue;
+				}
+
+				var t = room / along;
+
+				if (along < 0) {
+					if (t > near) {
+						near = t;
+						normal = plane.N;
+					}
+				}
+				else {
+					far = Math.min(far, t);
+				}
+
+				if (near > far)
+					return {Distance: -1};
+			}
+
+			if (far < 0)
+				return {Distance: -1};
+
+			if (near < 0)
+				return {Distance: 0, Normal: scale(direction, -1)};
+
+			return {Distance: near, Normal: apply(record.Matrix, normal)};
+		}
+
 		function support (record, n) {
 			var m = record.Matrix;
 			var h = record.Half;
@@ -969,7 +1153,20 @@ Elemenx.Service('Physics', {
 			else if (kinds === 'box|box') {
 				boxes(a, b);
 			}
-			else {
+			else if (kinds === 'sphere|prism') {
+				ballPrism(a, a.Body.At, a.Body.Radius, b);
+			}
+			else if (kinds === 'capsule|prism') {
+				pair = ends(a);
+
+				[pair[0], pair[1], nearest(pair[0], pair[1], b.Body.At)].forEach(function (point) {
+					ballPrism(a, point, a.Body.Radius, b);
+				});
+			}
+			else if (kinds === 'box|prism') {
+				boxPrism(a, b);
+			}
+			else if (kinds !== 'prism|prism') {
 				collide(b, a);
 			}
 		}
@@ -1469,7 +1666,7 @@ Elemenx.Service('Physics', {
 				var record = {Body: body, Key: next, Still: 0};
 
 				body.ID = body.ID === undefined ? 'body' + next : body.ID;
-				body.Shape = body.Shape === 'box' || body.Shape === 'capsule' ? body.Shape : 'sphere';
+				body.Shape = body.Shape === 'box' || body.Shape === 'capsule' || body.Shape === 'prism' ? body.Shape : 'sphere';
 				body.Radius = number(body.Radius, 0.5);
 				body.Size = Array.isArray(body.Size) ? body.Size : [1, 1, 1];
 				body.Height = number(body.Height, 1);
@@ -1562,7 +1759,7 @@ Elemenx.Service('Physics', {
 
 					if (typeof filter === 'function' && !filter(record.Body)) return;
 
-					hit = shape === 'box' ? castBox(record, from, way) : shape === 'capsule' ? castCapsule(record, from, way) : castBall(record, from, way);
+					hit = shape === 'box' ? castBox(record, from, way) : shape === 'capsule' ? castCapsule(record, from, way) : shape === 'prism' ? castPrism(record, from, way) : castBall(record, from, way);
 
 					if (hit.Distance >= 0 && hit.Distance <= limit && (!best || hit.Distance < best.Distance))
 						best = {Body: record.Body, At: add(from, scale(way, hit.Distance)), Normal: hit.Normal, Distance: hit.Distance};

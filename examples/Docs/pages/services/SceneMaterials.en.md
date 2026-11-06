@@ -1,0 +1,29 @@
+<!-- generated -->
+# SceneMaterials
+
+The library of materials of a Scene: what a surface is made of, drawn by its own pattern of GLSL in metres of the world (no picture: it never repeats, it is sharp as near as the eye comes, and fades to its color where it is too small to see). A material changes the color of a surface (its tint: the color it is given stays its color), its roughness, its metal and its height (metres: the light bends on it). The ground of a Scene is drawn of them (each part of a palette: Sand, Low, High, Rock, Snow, Deep, Road, and what a sketch lays: a road, a beach), a road by the materials of its surfaces, a model by the Pattern of a material of it.
+
+- Names(group), Has(name), Get(name), Define(name, material): a material is {Title, Group (ground, road, build or other), Land (true: the ground may be made of it), Code (the body of a function of GLSL over q (vec2, metres along the surface), px (float, metres a pixel covers), c (inout vec3: its color), r (inout float: its roughness), m (inout float: its metal) and h (inout float: its height, metres); helpers enx_mh (a hash of a vec2), enx_mh2, enx_mn (value noise), enx_mf (its octaves), enx_mc (cells: f1, f2 and two hashes of the nearest) and enx_ms (px, size: 1 where features of size are seen, 0 where they are too small))}. Built in: lawn, soil (moss, leaves, pebbles), gravel (sandy, colored grains), clay (clods, pits), sand, rock, snow, dirt; asphalt (fresh, grainy), terrazzo (speckled grey), concrete, paving, cobbles, ballast; brick, stone, plaster, wood, metal, glass, fabric.
+- Chunk(names): the GLSL of those materials and enx_material(id, q, px, c, r, m, h) drawing the one of index id of names; enx_bump(position, normal, h) bends a normal by a height (of the derivatives of the screen: called where all pixels go).
+- Land(names): the GLSL of the materials of a ground (up to 8, its slots) in the shader of the land: landMaterials(place, px, color, height), each by the weight of it at the corners (vMaterials, vMaterials2), drawn once where it weighs.
+- LandNames(): the materials a ground may be made of.
+- Surface(name): a material written by hand for a Blueprint of a material of a model (Blueprints, type material): the pattern on its body, in metres of it, on the side its normal faces most.
+
+The same functions run in Node: they read no page.
+
+## Methods
+
+- `Names(group)`
+- `Has(name)`
+- `Get(name)`
+- `Define(name, material)`
+- `Chunk(names)`
+- `Land(names)`
+- `LandNames()`
+- `Surface(name)`
+
+## Tests
+
+- [has the materials of the references and the common ones, by group, and the ground may be made of those of land](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js#L70) — `libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js`
+- [draws each of its materials as a pattern: it compiles, it varies near, and fades to its color where it is too small to see](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js#L90) — `libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js`
+- [defines a material of its own, in the chunk of materials and as the surface of a model](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js#L103) — `libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js`

@@ -1073,6 +1073,14 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "CutsceneEditor",
+					"Title": {
+						"en": "CutsceneEditor"
+					},
+					"Group": "game",
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "Dashboard",
 					"Title": {
 						"en": "Dashboard"
@@ -1367,6 +1375,14 @@
 					},
 					"Group": "game",
 					"Library": "ElemenxUI"
+				},
+				{
+					"ID": "GameCombat",
+					"Title": {
+						"en": "GameCombat"
+					},
+					"Group": "game",
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "GameDialogue",
@@ -2984,6 +3000,20 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "SceneMannequin",
+					"Title": {
+						"en": "SceneMannequin"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneMaterials",
+					"Title": {
+						"en": "SceneMaterials"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneModels",
 					"Title": {
 						"en": "SceneModels"
@@ -3129,6 +3159,13 @@
 						"en": "Visibility"
 					},
 					"Library": "ElemenxCommon"
+				},
+				{
+					"ID": "Vitals",
+					"Title": {
+						"en": "Vitals"
+					},
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "Windows",
@@ -3296,9 +3333,37 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "SceneCamera",
+					"Title": {
+						"en": "SceneCamera"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneCinema",
+					"Title": {
+						"en": "SceneCinema"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneCosmos",
 					"Title": {
 						"en": "SceneCosmos"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneDebris",
+					"Title": {
+						"en": "SceneDebris"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneDeepSpace",
+					"Title": {
+						"en": "SceneDeepSpace"
 					},
 					"Library": "ElemenxGraphics"
 				},
@@ -3352,6 +3417,13 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "SceneScreens",
+					"Title": {
+						"en": "SceneScreens"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneTriggers",
 					"Title": {
 						"en": "SceneTriggers"
@@ -3362,6 +3434,13 @@
 					"ID": "SceneVehicles",
 					"Title": {
 						"en": "SceneVehicles"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneWeapons",
+					"Title": {
+						"en": "SceneWeapons"
 					},
 					"Library": "ElemenxGraphics"
 				}

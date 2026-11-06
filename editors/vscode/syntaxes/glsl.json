@@ -1,0 +1,18 @@
+{
+	"scopeName": "source.glsl",
+	"name": "GLSL",
+	"patterns": [
+		{"name": "comment.line.double-slash.glsl", "match": "//.*$"},
+		{"name": "comment.block.glsl", "begin": "/\\*", "end": "\\*/"},
+		{"name": "meta.preprocessor.glsl", "match": "^\\s*#\\s*(version|define|undef|if|ifdef|ifndef|else|elif|endif|extension|pragma|line|error)\\b.*$"},
+		{"name": "constant.numeric.glsl", "match": "\\b(0[xX][0-9a-fA-F]+[uU]?|\\d+\\.\\d*([eE][+-]?\\d+)?[fF]?|\\.\\d+([eE][+-]?\\d+)?[fF]?|\\d+([eE][+-]?\\d+)?[uUfF]?)\\b"},
+		{"name": "storage.modifier.glsl", "match": "\\b(attribute|centroid|const|flat|highp|in|inout|invariant|layout|lowp|mediump|noperspective|out|precision|smooth|uniform|varying)\\b"},
+		{"name": "keyword.control.glsl", "match": "\\b(break|case|continue|default|discard|do|else|for|if|return|switch|while|struct)\\b"},
+		{"name": "storage.type.glsl", "match": "\\b(void|bool|int|uint|float|double|[biudv]?vec[234]|d?mat[234](x[234])?|[iu]?sampler(2D|3D|Cube|2DArray)(Shadow)?|sampler2DArrayShadow|samplerCubeShadow|sampler2DShadow)\\b"},
+		{"name": "constant.language.glsl", "match": "\\b(true|false)\\b"},
+		{"name": "variable.language.glsl", "match": "\\bgl_\\w+\\b"},
+		{"name": "support.function.glsl", "match": "\\b(abs|acos|acosh|all|any|asin|asinh|atan|atanh|ceil|clamp|cos|cosh|cross|dFdx|dFdy|degrees|determinant|distance|dot|equal|exp|exp2|faceforward|floatBitsToInt|floatBitsToUint|floor|fract|fwidth|greaterThan|greaterThanEqual|intBitsToFloat|inverse|inversesqrt|isinf|isnan|length|lessThan|lessThanEqual|log|log2|matrixCompMult|max|min|mix|mod|modf|normalize|not|notEqual|outerProduct|packHalf2x16|packSnorm2x16|packUnorm2x16|pow|radians|reflect|refract|round|roundEven|sign|sin|sinh|smoothstep|sqrt|step|tan|tanh|texelFetch|texelFetchOffset|texture|textureGrad|textureLod|textureOffset|textureProj|textureSize|transpose|trunc|uintBitsToFloat|unpackHalf2x16)\\b(?=\\s*\\()"},
+		{"name": "variable.other.property.swizzle.glsl", "match": "(?<=\\.)([xyzw]{1,4}|[rgba]{1,4}|[stpq]{1,4})\\b"},
+		{"name": "keyword.operator.glsl", "match": "[-+*/%=<>!|&^~?:]+"}
+	]
+}

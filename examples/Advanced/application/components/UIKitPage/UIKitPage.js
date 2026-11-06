@@ -257,6 +257,74 @@ Elemenx.Component('UIKitPage', {
 	ModelsNote: '',
 	ModelsShadows: true,
 	ModelsList: [],
+	/* The cinema demo (SceneCamera, SceneScreens, SceneCinema): its lenses and rigs, what its live panel holds. */
+	CinemaLenses: [
+		{Value: 'view', Label: 'The view of the scene (no camera)'},
+		{Value: 'normal', Label: '50 mm f/2.8'},
+		{Value: 'portrait', Label: 'Portrait 85 mm f/1.4'},
+		{Value: 'wide', Label: 'Wide 14 mm, barrel and fringes'},
+		{Value: 'film', Label: 'Film 35 mm, 1/48 s, warm, bars'},
+		{Value: 'night', Label: 'Night, ISO 6400, 1/30 s, grain'},
+		{Value: 'cctv', Label: 'The CCTV camera on its pole'}
+	],
+	CinemaRigs: [
+		{Value: 'tripod', Label: 'Tripod'},
+		{Value: 'handheld', Label: 'Handheld'},
+		{Value: 'gimbal', Label: 'Gimbal'},
+		{Value: 'steadicam', Label: 'Steadicam'},
+		{Value: 'drone', Label: 'Drone'}
+	],
+	/* Deep space: where the view flies, what the pointer is over. */
+	DeepPlaces: [
+		{Value: 'gargantua', Label: 'Black hole Gargantua'},
+		{Value: 'gate', Label: 'Wormhole'},
+		{Value: 'halley', Label: 'Comet'},
+		{Value: 'pebble', Label: 'Planetoid'},
+		{Value: 'beacon', Label: 'Quasar'},
+		{Value: 'vega', Label: 'The star'}
+	],
+	DeepPlace: 'gargantua',
+	DeepNote: 'Point at a black hole, a wormhole, a comet, the quasar: the pointer finds them and the scene tells hover; press one for its card.',
+	/* Combat and magic: the weapons of the hero, what it aims at, the crosshair, what was hit. */
+	CombatWeapons: [
+		{Value: 'rifle', Label: 'Rifle'},
+		{Value: 'pistol', Label: 'Pistol'},
+		{Value: 'shotgun', Label: 'Shotgun'},
+		{Value: 'sniper', Label: 'Sniper rifle'},
+		{Value: 'laser', Label: 'Laser'},
+		{Value: 'railgun', Label: 'Railgun'},
+		{Value: 'plasma', Label: 'Plasma'},
+		{Value: 'rocket', Label: 'Rocket (locks)'},
+		{Value: 'mortar', Label: 'Mortar'},
+		{Value: 'bow', Label: 'Bow'}
+	],
+	CombatWeapon: 'rifle',
+	CombatCrosshairs: [
+		{Value: '', Label: 'As the weapon says'},
+		{Value: 'dot', Label: 'Dot'},
+		{Value: 'cross', Label: 'Cross'},
+		{Value: 'circle', Label: 'Circle'},
+		{Value: 'chevron', Label: 'Chevron'},
+		{Value: 'none', Label: 'None'}
+	],
+	CombatCrosshair: '',
+	CombatTargets: [
+		{Value: 'crate', Label: 'Wooden crate'},
+		{Value: 'plate', Label: 'Steel plate'},
+		{Value: 'pane', Label: 'Glass pane'},
+		{Value: 'wall', Label: 'Stone wall'},
+		{Value: 'robot-1', Label: 'Robot'},
+		{Value: 'ground', Label: 'The ground'}
+	],
+	CombatTarget: 'crate',
+	CombatNote: 'Press the scene to take the pointer: the hero shoots with the left button toward the middle of the view (WASD walks it, Escape gives the pointer back). Fire and Burst shoot at what Aim at names. Each hit shows by its material: sparks on steel, chips of wood, dust of stone, shards of glass; its mark stays. The rocket locks what stays under the crosshair.',
+	CinemaLens: 'portrait',
+	CinemaRig: 'handheld',
+	CinemaPresses: 0,
+	CinemaLamp: true,
+	CinemaRecording: false,
+	CinemaGoal: 8,
+	CinemaNote: 'The camera shot follows Aria as she walks; behind her stand three screens: what the CCTV camera sees, a live panel of this page (press its button and its toggle there, in the world) and a HUD of no background. Cutscene plays a short film: cuts, an orbit, a title typed out, a subtitle, a cue that turns the lamp.',
 	ModelsFiles: [],
 	SceneWeather: 'clear',
 	SceneWeathers: [{Value: 'clear', Label: 'Clear'}, {Value: 'cloudy', Label: 'Cloudy'}, {Value: 'overcast', Label: 'Overcast'}, {Value: 'rain', Label: 'Rain'}, {Value: 'storm', Label: 'Storm'}, {Value: 'snow', Label: 'Snow'}, {Value: 'fog', Label: 'Fog'}, {Value: 'changing', Label: 'Changing'}],
@@ -264,6 +332,26 @@ Elemenx.Component('UIKitPage', {
 	PlaceNote: '',
 	PlaceName: 'tree',
 	PlaceHour: 17.5,
+	TerrainAuroras: [
+		{Value: 'auto', Label: 'By themselves (latitude, night)'},
+		{Value: 'off', Label: 'None'},
+		{Value: 'on', Label: 'On, anywhere at night'},
+		{Value: 'fantasy', Label: 'Fantasy colors'}
+	],
+	TerrainAurora: 'auto',
+	/* The year of the valley: a season fixed, or that of the day of the year at the latitude. */
+	TerrainSeasons: [
+		{Value: '', Label: 'Of the date'},
+		{Value: 'spring', Label: 'Spring'},
+		{Value: 'summer', Label: 'Summer'},
+		{Value: 'autumn', Label: 'Autumn'},
+		{Value: 'winter', Label: 'Winter'}
+	],
+	TerrainSeason: '',
+	TerrainDay: 172,
+	TerrainLatitude: 45,
+	TerrainYear: '',
+	TerrainSeeing: '',
 	PlaceSky: {DayHours: 24, Latitude: 45, Tilt: 23.44, DayOfYear: 172, Moon: true, MoonLight: 1, MoonSize: 1, MoonPhase: 0.5, NightLight: 1, SkyGlow: 0},
 	PlaceMoonHeld: false,
 	PlaceFire: {Color: '#ff9a3c', Hot: '#fff0b0', Volume: 1, Intensity: 1, Length: 1, Width: 1, Smoke: 1, Spin: 1},
@@ -755,7 +843,11 @@ Elemenx.Component('UIKitPage', {
 	],
 	CodesFlow: 'flowchart LR\n  A([Order]) --> B{Paid?}\n  B -->|yes| C[[Pack]]\n  B -. no .-> D>Remind]\n  C ==> E[(Shipped)]\n  D --> B',
 	CodesSequence: 'sequenceDiagram\n  actor U as User\n  U->>+S: Places an order\n  S-->>-U: The number',
-	CodesMarkdown: '::: tip title="Plugins"\nA fence of a language a plugin takes draws its Component:\n:::\n\n```mermaid\nstateDiagram-v2\n  [*] --> Draft\n  Draft --> Published : approve\n  Published --> [*]\n```\n\nA tree of files by its indents:\n\n```files\nsrc/\n  components/\n    App.js\n    Header.js\n  index.js\npackage.json\nREADME.md\n```\n',
+	CodesMarkdown: '::: tip title="Plugins"\nA fence of a language a plugin takes draws its Component:\n:::\n\n```mermaid\nstateDiagram-v2\n  [*] --> Draft\n  Draft --> Published : approve\n  Published --> [*]\n```\n\nA tree of files by its indents:\n\n```files\nsrc/\n  components/\n    App.js\n    Header.js\n  index.js\npackage.json\nREADME.md\n```\n\nA network by its nodes and links:\n\n```topology layout=layers\ninternet: Internet [icon=globe]\nlb: Balancer [icon=shuffle]\nweb1: Web 1 [icon=server status=ok]\nweb2: Web 2 [icon=server status=warning]\ndb: Database [icon=database]\ninternet -> lb\nlb -> web1\nlb -> web2\nweb1 -> db : SQL\nweb2 -> db : SQL\n```\n\nTasks, ticked by the reader (only the first two may be):\n\n- [x] Draw the plan\n- [ ] Order the parts\n- [ ] Sign the contract (managers only)\n',
+	/* Who may tick which task of the Markdown above: the reader is no manager. */
+	CodesTaskCheck: function (item) {
+		return item.Index < 2;
+	},
 	SoundNote: 'Spectrum · Waveform · Jog · Sampler · PianoRoll: the Audio Service plays and hears',
 	DrawingNote: 'Drawing · DrawingLayers: shapes, brushes, texts, groups and layers',
 	DrawingLayer: 'sketch',
@@ -1539,7 +1631,7 @@ Elemenx.Component('UIKitPage', {
 
 	/* The scene of a demo, as its handler of ready keeps it; the editors keep their documents themselves. */
 	SceneOf: function (key) {
-		var getter = {world: this.World, space: this.Spaced, terrain: this.Terrained, place: this.PlaceScene, race: this.RaceScene, show: this.ShowScene, orbit: this.OrbitScene, models: this.ModelsScene}[key];
+		var getter = {world: this.World, space: this.Spaced, terrain: this.Terrained, place: this.PlaceScene, race: this.RaceScene, show: this.ShowScene, orbit: this.OrbitScene, models: this.ModelsScene, cinema: this.CinemaScene}[key];
 		var scene = typeof getter === 'function' ? getter() : null;
 
 		return scene && scene.$Element().isConnected ? scene : null;
@@ -2382,6 +2474,541 @@ Elemenx.Component('UIKitPage', {
 		this.CallNote = 'Left the call';
 	},
 
+	/* The cinema demo: Aria and Bram walk, the camera shot follows Aria, the screens stand behind them. */
+	DeepReady: function (scene) {
+		this.DeepScene = function () {
+			return scene;
+		};
+
+		this.DeepFly({detail: this.DeepPlace});
+	},
+
+	DeepFly: function (value) {
+		var scene = this.DeepScene ? this.DeepScene() : null;
+
+		this.DeepPlace = value && value.detail !== undefined ? value.detail : value;
+
+		if (!scene || this.DeepPlace === 'beacon') return;
+
+		scene.FocusOn(this.DeepPlace);
+
+		/* A comet is small: its tails are what is seen, from farther off. */
+		if (this.DeepPlace === 'halley')
+			scene.Scene().Wanted = 6;
+	},
+
+	DeepLand: function () {
+		var scene = this.DeepScene ? this.DeepScene() : null;
+		if (scene)
+			scene.Land('pebble', {Latitude: 10, Longitude: 210});
+	},
+
+	DeepTakeOff: function () {
+		var scene = this.DeepScene ? this.DeepScene() : null;
+		if (scene)
+			scene.TakeOff();
+	},
+
+	DeepHovered: function (event) {
+		this.DeepNote = event.ID ? 'Over ' + (event.Object && event.Object.Name || event.ID) + (event.Info && event.Info.Kind ? ' (' + event.Info.Kind + ')' : '') + ': press it for its card.' : 'Point at a black hole, a wormhole, a comet, the quasar.';
+	},
+
+	DeepSelected: function (event) {
+		if (event.ID)
+			this.DeepNote = 'Selected ' + (event.Object && event.Object.Name || event.ID) + '.';
+	},
+
+	/* The models of the range: a crate of planks, a steel plate on posts, a pane of glass in a frame, a wall of stone. */
+	CombatModels: function () {
+		var models = this.$Service('SceneModels');
+		if (models.Has('demo-crate')) return;
+
+		models.Define('demo-crate', {Group: 'props', Type: 'thing', Size: 1, Build: function (tools) {
+			var wood = [0.62, 0.45, 0.26];
+			var dark = [0.42, 0.29, 0.16];
+
+			return [tools.Piece('body', [tools.Box(1, 1, 1, [0, 0.5, 0], wood), tools.Box(1.02, 0.12, 1.02, [0, 0.08, 0], dark), tools.Box(1.02, 0.12, 1.02, [0, 0.92, 0], dark), tools.Box(0.12, 1.02, 1.02, [-0.45, 0.5, 0], dark), tools.Box(0.12, 1.02, 1.02, [0.45, 0.5, 0], dark)])];
+		}});
+
+		models.Define('demo-plate', {Group: 'props', Type: 'thing', Size: 1, Build: function (tools) {
+			var steel = [0.58, 0.6, 0.64];
+
+			return [tools.Piece('body', [tools.Box(1.2, 0.9, 0.06, [0, 0.95, 0], steel), tools.Box(0.08, 1.4, 0.08, [-0.5, 0.7, 0.06], [0.3, 0.3, 0.32]), tools.Box(0.08, 1.4, 0.08, [0.5, 0.7, 0.06], [0.3, 0.3, 0.32])])];
+		}});
+
+		models.Define('demo-pane', {Group: 'props', Type: 'thing', Size: 1, Build: function (tools) {
+			var frame = [0.25, 0.25, 0.28];
+
+			return [tools.Piece('body', [tools.Box(1, 1.3, 0.02, [0, 0.95, 0], [0.7, 0.85, 0.95]), tools.Box(1.1, 0.06, 0.06, [0, 0.3, 0], frame), tools.Box(1.1, 0.06, 0.06, [0, 1.6, 0], frame), tools.Box(0.06, 1.36, 0.06, [-0.55, 0.95, 0], frame), tools.Box(0.06, 1.36, 0.06, [0.55, 0.95, 0], frame), tools.Box(0.06, 0.3, 0.06, [0, 0.15, 0], frame)])];
+		}});
+
+		models.Define('demo-wall', {Group: 'buildings', Type: 'building', Size: 1, Build: function (tools) {
+			return [tools.Piece('body', [tools.Box(4, 2.5, 0.4, [0, 1.25, 0], [0.62, 0.6, 0.56]), tools.Box(4.1, 0.2, 0.5, [0, 2.5, 0], [0.5, 0.48, 0.45])])];
+		}});
+	},
+
+	CombatReady: function (scene) {
+		this.CombatScene = function () {
+			return scene;
+		};
+
+		this.CombatModels();
+		this.CombatReset();
+
+		scene.Add('unit', {ID: 'hero', Name: 'Hero', X: 0, Y: 0, Team: 'hero', Weapon: this.CombatWeapon, Facing: 0, Speed: 4});
+		scene.Control('hero');
+
+		this.CombatAimed({detail: this.CombatTarget});
+	},
+
+	/* The targets again: what broke or fell comes back, the marks stay where they were. */
+	CombatReset: function () {
+		var scene = this.CombatScene ? this.CombatScene() : null;
+		var targets = [
+			{ID: 'crate', Kind: 'thing', Model: 'demo-crate', Size: 1.2, X: -6, Y: 14, Traits: {Health: {Max: 60, Death: 'break'}}},
+			{ID: 'plate', Kind: 'thing', Model: 'demo-plate', Size: 1.6, X: -2, Y: 14, Material: 'metal', Traits: {Health: {Max: 400, Death: 'keep'}}},
+			{ID: 'pane', Kind: 'thing', Model: 'demo-pane', Size: 1.7, X: 2, Y: 14, Material: 'glass', Traits: {Health: {Max: 8, Death: 'break'}}},
+			{ID: 'wall', Kind: 'thing', Model: 'demo-wall', Size: 2.5, X: 7, Y: 16, Material: 'stone'},
+			{ID: 'robot-1', Kind: 'unit', Model: 'robot', X: -3, Y: 24, Team: 'red', Health: 120, Damage: 0, Sight: 1},
+			{ID: 'robot-2', Kind: 'unit', Model: 'robot', X: 3, Y: 26, Team: 'red', Health: 120, Damage: 0, Sight: 1}
+		];
+
+		if (!scene) return;
+
+		targets.forEach(function (one) {
+			if (scene.Get(one.ID))
+				scene.Remove(one.ID);
+		});
+
+		scene.Add(targets);
+	},
+
+	CombatWeaponChosen: function (value) {
+		var scene = this.CombatScene ? this.CombatScene() : null;
+
+		this.CombatWeapon = value && value.detail !== undefined ? value.detail : value;
+
+		if (scene && scene.Get('hero'))
+			scene.Scene().Objects.hero.Values.Weapon = this.CombatWeapon;
+	},
+
+	/* The hero turns to what it aims at, the view behind it. */
+	CombatAimed: function (value) {
+		var scene = this.CombatScene ? this.CombatScene() : null;
+		var inner = scene ? scene.Scene() : null;
+		var hero = inner ? inner.Objects.hero : null;
+		var at;
+
+		this.CombatTarget = value && value.detail !== undefined ? value.detail : value;
+
+		if (!hero || !hero.World) return;
+
+		if (inner.Hero !== 'hero')
+			scene.Control('hero');
+
+		at = this.CombatPoint();
+
+		if (!at) return;
+
+		inner.Yaw = Math.atan2(at[0] - hero.World[0], at[2] - hero.World[2]) + Math.PI;
+		inner.Pitch = 0.12;
+		hero.Heading = [at[0] - hero.World[0], 0, at[2] - hero.World[2]];
+	},
+
+	/* The height of the ground of the range at a point. */
+	CombatGround: function (x, z) {
+		var scene = this.CombatScene ? this.CombatScene() : null;
+		var ground = scene ? scene.Scene().Ground : null;
+
+		return ground && ground.Field ? Math.max(0, ground.Field.Height(x, z)) : 0;
+	},
+
+	/* Where the shots go: the middle of the target, or the ground before the hero. */
+	CombatPoint: function () {
+		var scene = this.CombatScene ? this.CombatScene() : null;
+		var inner = scene ? scene.Scene() : null;
+		var target = inner ? inner.Objects[this.CombatTarget] : null;
+		var body;
+
+		if (this.CombatTarget === 'ground')
+			return [0, this.CombatGround(0, 9), 9];
+
+		if (!target || !target.World) return null;
+
+		body = scene.Engine().BodyOf(target);
+
+		return body ? [(body.Min[0] + body.Max[0]) / 2, body.Min[1] + (body.Max[1] - body.Min[1]) * 0.55, (body.Min[2] + body.Max[2]) / 2] : [target.World[0], target.World[1] + 1, target.World[2]];
+	},
+
+	CombatFire: function () {
+		var self = this;
+		var scene = this.CombatScene ? this.CombatScene() : null;
+		var point = this.CombatPoint();
+		var held = 0;
+		var clock;
+
+		if (!scene || !point) return;
+
+		this.CombatAimed({detail: this.CombatTarget});
+
+		/* A laser is held for a moment and a half. */
+		if (this.CombatWeapon === 'laser') {
+			clock = window.setInterval(function () {
+				held += 50;
+
+				if (held > 1500 || !scene.$Element().isConnected) {
+					window.clearInterval(clock);
+
+					return;
+				}
+
+				scene.Fire('hero', {At: self.CombatPoint() || point});
+			}, 50);
+
+			return;
+		}
+
+		scene.Fire('hero', {At: point});
+	},
+
+	CombatBurst: function () {
+		var self = this;
+		var shots = 0;
+		var clock = window.setInterval(function () {
+			var scene = self.CombatScene ? self.CombatScene() : null;
+			var point = self.CombatPoint();
+
+			if (!scene || !point || !scene.$Element().isConnected || shots >= 5) {
+				window.clearInterval(clock);
+
+				return;
+			}
+
+			if (scene.Fire('hero', {At: point}))
+				shots++;
+		}, 60);
+
+		this.CombatAimed({detail: this.CombatTarget});
+	},
+
+	/* Two squads far apart, sent at each other: blue riflemen and a rocket man, red robots with plasma. */
+	CombatSquads: function () {
+		var scene = this.CombatScene ? this.CombatScene() : null;
+		var strategy = scene ? Elemenx.Instance(scene.$Element().querySelector('.elemenx-game-strategy')) : null;
+		var blue = [];
+		var red = [];
+		var i;
+
+		if (!scene || !strategy) return;
+
+		for (i = 0; i < 4; i++) {
+			blue.push({ID: 'blue-' + i, Kind: 'unit', Model: 'soldier', X: -30 + i * 3, Y: 34 + (i % 2) * 3, Team: 'blue', Weapon: i === 3 ? 'rocket' : 'rifle', Range: 28, Sight: 40, Health: 100});
+			red.push({ID: 'red-' + i, Kind: 'unit', Model: 'robot', X: 22 + i * 3, Y: 36 + (i % 2) * 3, Team: 'red', Weapon: 'plasma', Range: 24, Sight: 40, Health: 100});
+		}
+
+		blue.concat(red).forEach(function (one) {
+			if (scene.Get(one.ID))
+				scene.Remove(one.ID);
+		});
+
+		scene.Add(blue.concat(red));
+
+		strategy.Order(blue.map(function (one) {
+			return one.ID;
+		}), 'red-0', 'attack');
+		strategy.Order(red.map(function (one) {
+			return one.ID;
+		}), 'blue-0', 'attack');
+
+		/* The view leaves the hero to watch them: a weapon chosen or a target aimed at gives it back. */
+		scene.Control('');
+		scene.SetViewpoint({Target: [-2, this.CombatGround(-2, 36) + 1, 36], Yaw: Math.PI, Pitch: 0.42, Distance: 34});
+
+		scene.Scene().Wanted = 34;
+
+		this.CombatNote = 'Units with a Weapon shoot from their Range; what they hit is told and makes damage through the health of the scene (Vitals), the bars show who is hurt.';
+	},
+
+	CombatBarrage: function () {
+		var self = this;
+		var scene = this.CombatScene ? this.CombatScene() : null;
+		var count = 0;
+		var clock;
+
+		if (!scene) return;
+
+		/* The view turns toward where the shells fall. */
+		if (scene.Scene().Hero !== 'hero')
+			scene.Control('hero');
+
+		scene.Scene().Yaw = Math.atan2(1, 30) + Math.PI;
+		scene.Scene().Pitch = 0.05;
+
+		clock = window.setInterval(function () {
+			if (count >= 4 || !scene.$Element().isConnected) {
+				window.clearInterval(clock);
+
+				return;
+			}
+
+			var x = -8 + count * 6;
+			var z = 28 + (count % 2) * 4;
+			if (scene.Fire('hero', {Weapon: 'mortar', At: [x, self.CombatGround(x, z), z]}))
+				count++;
+		}, 700);
+
+		this.CombatNote = 'Mortar shells fly high and blast where they land: what has health near takes less the farther it stands, the ground is scorched.';
+	},
+
+	/* The hero beamed ahead, then back where it was. */
+	CombatBeam: function () {
+		var scene = this.CombatScene ? this.CombatScene() : null;
+		var hero = scene ? scene.Scene().Objects.hero : null;
+		var from;
+
+		if (!hero || !hero.World) return;
+
+		from = hero.World.slice();
+
+		scene.Teleport('hero', [from[0] + 6, null, from[2] + 8], {Seconds: 1.4}, function () {
+			window.setTimeout(function () {
+				if (scene.$Element().isConnected)
+					scene.Teleport('hero', [from[0], null, from[2]], {Seconds: 1.4, Color: '#ffd27a'});
+			}, 1500);
+		});
+
+		this.CombatNote = 'Teleport: the body breaks up into sparkling grains from the top in a column of light and gathers again at the place, the same way.';
+	},
+
+	/* A circle written on the wall, across it; one on the ground before the hero. */
+	CombatCircle: function () {
+		var scene = this.CombatScene ? this.CombatScene() : null;
+		var id;
+
+		if (!scene) return;
+
+		id = scene.CastOn('circle', {From: [7, this.CombatGround(7, 8) + 1.4, 8], Way: [0, 0, 1]}, {Size: 0.9, Draw: 2.2});
+
+		this.CombatCast = (this.CombatCast || []).concat(id ? [id] : []);
+		this.CombatNote = 'CastOn lays a circle across whatever a ray meets (here the wall), written ring by ring; Dispel unwrites it.';
+	},
+
+	CombatGroundCircle: function () {
+		var scene = this.CombatScene ? this.CombatScene() : null;
+		var id;
+
+		if (!scene) return;
+
+		id = scene.CastOn('circle', {From: [0, this.CombatGround(0, 6) + 4, 6], Way: [0, -1, 0]}, {Size: 1.4, Draw: 2.6, Seed: 'range-' + Math.round(Math.random() * 1000)});
+
+		this.CombatCast = (this.CombatCast || []).concat(id ? [id] : []);
+	},
+
+	CombatDispel: function () {
+		var scene = this.CombatScene ? this.CombatScene() : null;
+
+		(this.CombatCast || []).forEach(function (id) {
+			if (scene)
+				scene.Dispel(id, 1.4);
+		});
+
+		this.CombatCast = [];
+	},
+
+	CombatBreak: function () {
+		var scene = this.CombatScene ? this.CombatScene() : null;
+		if (scene && scene.Get('crate'))
+			scene.Break('crate', {Point: [-6, this.CombatGround(-6, 13.4) + 0.6, 13.4]});
+	},
+
+	CombatHit: function (event) {
+		var scene = this.CombatScene ? this.CombatScene() : null;
+		var combat = scene ? Elemenx.Instance(scene.$Element().querySelector('.elemenx-game-combat')) : null;
+		var health = combat && event.Target ? combat.HealthOf(event.Target) : null;
+
+		if (event.Source !== 'hero') return;
+
+		this.CombatNote = event.Weapon + ' hit ' + (event.Target || 'the ground') + ' (' + event.Material + (event.Part ? ', ' + event.Part : '') + ') for ' + Math.round(event.Amount) + (health ? ' · health ' + Math.round(health.Value) + ' of ' + health.Max : '');
+	},
+
+	CombatLocked: function (event) {
+		this.CombatNote = 'Locked ' + event.ID + ': a rocket fired now flies to it.';
+	},
+
+	CombatBroke: function (event) {
+		this.CombatNote = event.ID + ' broke into ' + event.Pieces + ' pieces.';
+	},
+
+	CombatDied: function (event) {
+		if (event.ID === 'plate')
+			this.CombatNote = 'The steel plate holds no more (Death: keep): it stays where it stands.';
+	},
+
+	CinemaReady: function (scene) {
+		var self = this;
+
+		this.CinemaScene = function () {
+			return scene;
+		};
+
+		this.$Service('SceneModels').Load('mannequin', function () {
+			if (!scene.$Element().isConnected) return;
+
+			scene.Add('unit', {ID: 'aria', Name: 'Aria', Model: 'mannequin', X: -8, Y: 0, Size: 1.7, Facing: 90, Speed: 1.4});
+			scene.Add('unit', {ID: 'bram', Name: 'Bram', Model: 'mannequin', X: 4, Y: 3, Size: 1.85, Clip: 'idle', Facing: 250});
+			scene.Add('camera', {ID: 'shot', Follow: 'aria', At: [1.6, 1.6, 5.5], Target: 'aria'});
+			scene.Add('camera', {ID: 'cctv', X: 10, Y: 12, Lift: 4.5, Target: 'aria', Focal: 24});
+			scene.Add('camera', {ID: 'orbiter', X: 0, Y: -10, Lift: 2, Target: 'aria', Focal: 40, Aperture: 2.8});
+			scene.Add('light', {ID: 'lamp', X: 1.5, Y: 8.5, Height: 3, Color: '#ffc27a', Power: 1.6, Radius: 12});
+			scene.Add('screen', {ID: 'tv', X: -2.2, Y: 10, Lift: 1.5, Width: 1.6, Height: 0.9, Yaw: 180, Camera: 'cctv', Pixels: [512, 288]});
+			scene.Add('screen', {ID: 'panel', X: 0, Y: 10, Lift: 1.5, Width: 1.6, Height: 0.9, Yaw: 180, Element: 'cinema-panel'});
+			scene.Add('screen', {ID: 'hud', X: 2.2, Y: 10, Lift: 2.1, Width: 1.6, Height: 0.48, Yaw: 180, Element: 'cinema-hud'});
+
+			self.CinemaGoal = 8;
+
+			self.CinemaWalk();
+			self.CinemaApply();
+		});
+
+		scene.Scene().Wanted = 6;
+		scene.Scene().Pitch = 0.06;
+
+		scene.SetViewpoint({Target: [0, 1.6, 10], Yaw: Math.PI, Pitch: 0.06, Distance: 6});
+	},
+
+	/* Aria sent to her next point; asked again a moment later while the ground cannot lead her yet. */
+	CinemaWalk: function () {
+		var self = this;
+		var scene = this.CinemaScene ? this.CinemaScene() : null;
+		if (!scene || !scene.$Element().isConnected) return;
+
+		if (!scene.Move('aria', [this.CinemaGoal, 0]))
+			window.setTimeout(function () {
+				self.CinemaWalk();
+			}, 1000);
+	},
+
+	/* Aria walks to and fro between two points. */
+	CinemaArrived: function (event) {
+		var detail = event && event.detail ? event.detail : event;
+		var scene = this.CinemaScene ? this.CinemaScene() : null;
+		if (!scene || !detail || detail.ID !== 'aria') return;
+
+		this.CinemaGoal = -this.CinemaGoal;
+
+		this.CinemaWalk();
+	},
+
+	/* The lens and the rig chosen, on the camera shot (or the view, or the CCTV camera); a night lens takes the sun down. */
+	CinemaApply: function () {
+		var scene = this.CinemaScene ? this.CinemaScene() : null;
+		var plain = {Focal: 50, Aperture: '', ISO: '', Shutter: '', ND: 0, Temperature: 6500, Saturation: 1, Contrast: 1, Distortion: 0, Aberration: 0, Grain: '', Vignette: '', Polarizer: 0};
+		var lenses = {
+			normal: {Focal: 50, Aperture: 2.8},
+			portrait: {Focal: 85, Aperture: 1.4},
+			wide: {Focal: 14, Aperture: 8, Distortion: -0.6, Aberration: 0.7},
+			film: {Focal: 35, Aperture: 2, ISO: 200, Shutter: 1 / 48, ND: 4, Temperature: 7600, Saturation: 1.1, Contrast: 1.12},
+			night: {Focal: 35, Aperture: 1.8, ISO: 6400, Shutter: 1 / 30}
+		};
+
+		if (!scene || !scene.Get('shot')) return;
+
+		scene.Change('evening', {Time: this.CinemaLens === 'night' ? 23 : 17.5});
+		scene.Change('shot', Object.assign({}, plain, lenses[this.CinemaLens] || {}, {Rig: this.CinemaRig}));
+		scene.Cinema(this.CinemaLens === 'film' ? {Letterbox: 1, Ratio: 2.39} : null);
+
+		/* The view of the scene looks at the screens, near enough to read them. */
+		if (this.CinemaLens === 'view') {
+			var ground = scene.Scene().Ground;
+			var height = ground && ground.Field ? ground.Field.Height(0, 10) : 0;
+
+			scene.Scene().Wanted = 5;
+
+			scene.SetViewpoint({Target: [0, height + 1.6, 10], Yaw: Math.PI, Pitch: 0.05, Distance: 5});
+		}
+
+		scene.UseCamera(this.CinemaLens === 'view' ? '' : this.CinemaLens === 'cctv' ? 'cctv' : 'shot', {Fly: 1.2});
+	},
+
+	CinemaLensChosen: function (value) {
+		this.CinemaLens = value && value.detail !== undefined ? value.detail : value;
+
+		this.CinemaApply();
+	},
+
+	CinemaRigChosen: function (value) {
+		this.CinemaRig = value && value.detail !== undefined ? value.detail : value;
+
+		this.CinemaApply();
+	},
+
+	CinemaPressed: function () {
+		this.CinemaPresses++;
+	},
+
+	CinemaLampToggled: function (value) {
+		var scene = this.CinemaScene ? this.CinemaScene() : null;
+
+		this.CinemaLamp = value && value.detail !== undefined ? !!value.detail : !!value;
+
+		if (scene && scene.Get('lamp'))
+			scene.Change('lamp', {Power: this.CinemaLamp ? 1.6 : 0});
+	},
+
+	/* The short film of the demo. */
+	CinemaFilm: function () {
+		return {Name: 'demo', Restore: true, Skip: true, Tracks: [
+			{Type: 'fade', Keys: [{At: 0, Value: 1}, {At: 1.2, Value: 0}, {At: 12, Value: 0}, {At: 13, Value: 1}]},
+			{Type: 'letterbox', Keys: [{At: 0, Value: 1, Ratio: 2.39}]},
+			{Type: 'camera', Keys: [{At: 0, Camera: 'cctv'}, {At: 4, Camera: 'orbiter'}, {At: 9, Camera: 'shot', Fly: 1.5}]},
+			{Type: 'orbit', ID: 'orbiter', At: 4, Length: 5, Around: 'aria', Radius: 6, Height: 1.6, From: 200, To: 330},
+			{Type: 'title', Items: [{At: 0.8, Length: 3, Text: 'Camera and cinema', Kind: 'chapter', Typing: 16}]},
+			{Type: 'subtitle', Items: [{At: 5, Length: 3.5, Text: 'A camera, a lens, a light, and a story.', Speaker: 'Aria'}]},
+			{Type: 'cue', Items: [{At: 7, Name: 'lamp'}]},
+			{Type: 'title', Items: [{At: 10, Length: 2.5, Text: 'Elemenx', Kind: 'title', Place: 'bottom', In: 0.6, Out: 0.8}]}
+		]};
+	},
+
+	CinemaPlay: function () {
+		var scene = this.CinemaScene ? this.CinemaScene() : null;
+		if (scene)
+			scene.PlayCutscene(this.CinemaFilm());
+	},
+
+	/* The film played as a video, saved as a file when it ends. */
+	CinemaRecord: function () {
+		var self = this;
+		var scene = this.CinemaScene ? this.CinemaScene() : null;
+		if (!scene) return;
+
+		this.CinemaRecording = true;
+
+		scene.PlayCutscene(Object.assign(this.CinemaFilm(), {Record: {Fps: 30}}), function (error, result) {
+			var link;
+
+			self.CinemaRecording = false;
+
+			if (error || !result || !result.Video) return;
+
+			link = document.createElement('a');
+			link.href = URL.createObjectURL(result.Video);
+			link.download = 'elemenx-cinema.webm';
+
+			link.click();
+
+			window.setTimeout(function () {
+				URL.revokeObjectURL(link.href);
+			}, 10000);
+		});
+	},
+
+	/* A cue of the film: the lamp turns. */
+	CinemaCued: function (event) {
+		var detail = event && event.detail ? event.detail : event;
+		if (detail && detail.Name === 'lamp')
+			this.CinemaLampToggled(!this.CinemaLamp);
+	},
+
 	/* The ground of the game: its scene kept for the buttons; trees where the ground is dry and gentle. */
 	ModelsReady: function (scene) {
 		var library = this.$Service('SceneModels');
@@ -3132,6 +3759,114 @@ Elemenx.Component('UIKitPage', {
 			scene.Change('day', changes);
 	},
 
+	/* The northern lights as the Scene takes them: by themselves (none), none, or as strong. */
+	TerrainAuroraOf: function (choice) {
+		return choice === 'off' ? 0 : choice === 'on' || choice === 'fantasy' ? 1 : null;
+	},
+
+	TerrainAuroraChosen: function (value) {
+		this.TerrainAurora = value && value.detail !== undefined ? value.detail : value;
+
+		if (this.TerrainAurora !== 'auto' && this.TerrainAurora !== 'off' && this.TerrainHour > 5 && this.TerrainHour < 19) {
+			this.TerrainTimed(23);
+			this.TerrainLook(0, 0.4);
+		}
+	},
+
+	/* The sun of the valley: its latitude and its day of the year. */
+	TerrainSky: function (latitude, day) {
+		this.TerrainLatitude = latitude;
+		this.TerrainDay = day;
+	},
+
+	/* A season chosen: the day turns to its middle too, so the sky and the light go with it; the view to the trees. */
+	TerrainSeasonChosen: function (value) {
+		var season = value && value.detail !== undefined ? value.detail : value;
+		var days = {spring: 100, summer: 190, autumn: 290, winter: 15};
+
+		this.TerrainSeason = season;
+
+		if (days[season]) {
+			this.TerrainDay = this.TerrainLatitude < 0 ? (days[season] + 182) % 365 : days[season];
+			this.TerrainAurora = 'auto';
+			this.SceneWeather = 'clear';
+
+			this.TerrainTimed(14);
+			this.TerrainLook(Math.PI / 2, 0.05);
+		}
+	},
+
+	/* Far north on a winter night: the northern lights come by themselves. */
+	TerrainPolarNight: function () {
+		this.TerrainAurora = 'auto';
+		this.SceneWeather = 'clear';
+		this.TerrainSeason = '';
+
+		this.TerrainSky(68, 355);
+		this.TerrainTimed(23);
+		this.TerrainLook(0, 0.4);
+	},
+
+	/* A storm over the valley, the view toward it: a flash inside the clouds, then a bolt to the land. */
+	TerrainLightning: function () {
+		var scene = this.Terrained ? this.Terrained() : null;
+		if (!scene) return;
+
+		this.SceneWeather = 'storm';
+
+		this.TerrainLook(Math.PI / 2, 0.25);
+
+		scene.Lightning('sheet');
+
+		window.setTimeout(function () {
+			scene.Lightning('strike');
+		}, 1600);
+	},
+
+	TerrainSummer: function () {
+		this.TerrainAurora = 'auto';
+		this.SceneWeather = 'clear';
+		this.TerrainSeason = '';
+
+		this.TerrainSky(45, 172);
+		this.TerrainTimed(16);
+	},
+
+	/*
+	 * A rainbow as it comes: a rain that ends with the clouds opening, the sun low; the view turned away from the sun and
+	 * up a little, where the bow stands.
+	 */
+	TerrainRainbow: function () {
+		var self = this;
+
+		this.TerrainSky(45, 172);
+		this.TerrainTimed(18.4);
+
+		this.SceneWeather = 'rain';
+
+		this.TerrainLook(Math.PI, 0.3);
+
+		window.setTimeout(function () {
+			self.SceneWeather = 'clear';
+
+			self.TerrainLook(Math.PI, 0.3);
+		}, 4000);
+	},
+
+	/* The view of the valley turned from the sun by an angle (0: toward it, PI: away), lifted up by pitch radians. */
+	TerrainLook: function (from, up) {
+		var scene = this.Terrained ? this.Terrained() : null;
+		var ground = scene ? scene.Scene().Ground : null;
+		var view;
+
+		if (!ground || !ground.Sky) return;
+
+		view = scene.Viewpoint();
+		scene.Scene().Wanted = Math.min(view.Distance, 30);
+
+		scene.SetViewpoint({Target: view.Target, Yaw: Math.atan2(ground.Sky[0], ground.Sky[2]) + Math.PI + from, Pitch: -up, Distance: Math.min(view.Distance, 30)});
+	},
+
 	PlaceDayLength: function (value) {
 		this.PlaceSkied('DayHours', Number(value));
 
@@ -3515,9 +4250,35 @@ Elemenx.Component('UIKitPage', {
 	},
 
 	TerrainReady: function (scene) {
+		var self = this;
+
 		this.Terrained = function () {
 			return scene;
 		};
+
+		/* How far one sees, read twice a second while the scene is there (Visibility: the weather and the light). */
+		window.clearInterval(this.TerrainSeeingClock);
+
+		this.TerrainSeeingClock = window.setInterval(function () {
+			var seen;
+
+			if (!scene.$Element().isConnected) {
+				window.clearInterval(self.TerrainSeeingClock);
+
+				return;
+			}
+
+			seen = scene.Visibility();
+			self.TerrainSeeing = 'Visibility ' + (seen.Distance >= 1000 ? (seen.Distance / 1000).toFixed(1) + ' km' : Math.round(seen.Distance) + ' m') + ' · light ' + Math.round(seen.Light * 100) + '% · a sight of 60 m reaches ' + Math.round(scene.SightOf(60)) + ' m';
+
+			/* What the season does now (SeasonState): the leaves, the flowers, the burnt grass, the snow. */
+			var year = scene.SeasonState();
+			var percent = function (part) {
+				return Math.round(part * 100) + '%';
+			};
+
+			self.TerrainYear = year ? 'Warmth ' + year.Warmth.toFixed(2) + ' · leaves fallen ' + percent(year.Bare) + ' · turned ' + percent(year.Turn) + ' · blossom ' + percent(year.Blossom) + ' · dry ' + percent(year.Dry) + ' · snow ' + percent(year.Snow) : '';
+		}, 500);
 
 		if (!this.SceneBack('terrain', scene))
 			scene.FocusOn('scout');

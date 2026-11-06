@@ -31,6 +31,302 @@
 	cursor: grabbing;
 }
 
+/* The crosshair of the weapon of the hero and the marks on what it locks (SceneWeapons). */
+.elemenx-scene-aim {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	pointer-events: none;
+	overflow: hidden;
+}
+
+.elemenx-scene-crosshair {
+	--elemenx-scene-aim-spread: 6px;
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 0;
+	height: 0;
+	color: var(--elemenx-scene-aim);
+	filter: drop-shadow(0 0 1px var(--elemenx-scene-aim-shadow));
+	transition: color 0.08s;
+}
+
+.elemenx-scene-crosshair i {
+	position: absolute;
+	background: currentColor;
+	transition: transform 0.06s;
+}
+
+.elemenx-scene-crosshair i:nth-child(1),
+.elemenx-scene-crosshair i:nth-child(2) {
+	top: -1px;
+	width: 8px;
+	height: 2px;
+}
+
+.elemenx-scene-crosshair i:nth-child(3),
+.elemenx-scene-crosshair i:nth-child(4) {
+	left: -1px;
+	width: 2px;
+	height: 8px;
+}
+
+.elemenx-scene-crosshair i:nth-child(1) {
+	right: var(--elemenx-scene-aim-spread);
+}
+
+.elemenx-scene-crosshair i:nth-child(2) {
+	left: var(--elemenx-scene-aim-spread);
+}
+
+.elemenx-scene-crosshair i:nth-child(3) {
+	bottom: var(--elemenx-scene-aim-spread);
+}
+
+.elemenx-scene-crosshair i:nth-child(4) {
+	top: var(--elemenx-scene-aim-spread);
+}
+
+.elemenx-scene-crosshair.is-dot i {
+	display: none;
+}
+
+.elemenx-scene-crosshair.is-dot::before,
+.elemenx-scene-crosshair.is-circle::before {
+	content: '';
+	position: absolute;
+	left: -2px;
+	top: -2px;
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+.elemenx-scene-crosshair.is-circle i {
+	display: none;
+}
+
+.elemenx-scene-crosshair.is-circle::after {
+	content: '';
+	position: absolute;
+	left: calc(-1 * var(--elemenx-scene-aim-spread) - 8px);
+	top: calc(-1 * var(--elemenx-scene-aim-spread) - 8px);
+	width: calc(2 * var(--elemenx-scene-aim-spread) + 16px);
+	height: calc(2 * var(--elemenx-scene-aim-spread) + 16px);
+	border: 2px solid currentColor;
+	border-radius: 50%;
+	box-sizing: border-box;
+}
+
+.elemenx-scene-crosshair.is-chevron i:nth-child(3) {
+	display: none;
+}
+
+.elemenx-scene-crosshair.is-chevron i:nth-child(1) {
+	transform: rotate(-35deg);
+}
+
+.elemenx-scene-crosshair.is-chevron i:nth-child(2) {
+	transform: rotate(35deg);
+}
+
+/* A hit: the lines turn into an X for a moment; a kill: red. */
+.elemenx-scene-crosshair.hit::after,
+.elemenx-scene-crosshair.kill::after {
+	content: '';
+	position: absolute;
+	left: -9px;
+	top: -9px;
+	width: 18px;
+	height: 18px;
+	background:
+		linear-gradient(45deg, transparent 45%, currentColor 45%, currentColor 55%, transparent 55%),
+		linear-gradient(-45deg, transparent 45%, currentColor 45%, currentColor 55%, transparent 55%);
+	border: 0;
+	border-radius: 0;
+}
+
+.elemenx-scene-crosshair.kill {
+	color: var(--elemenx-scene-aim-kill);
+}
+
+/* A lock: four corners closing in on the target as it locks; at the edge of the view an arrow toward it. */
+.elemenx-scene-lock {
+	--elemenx-scene-lock-close: 0;
+	--elemenx-scene-lock-turn: 0rad;
+	position: absolute;
+	width: calc(72px - 40px * var(--elemenx-scene-lock-close));
+	height: calc(72px - 40px * var(--elemenx-scene-lock-close));
+	transform: translate(-50%, -50%) rotate(calc(45deg * (1 - var(--elemenx-scene-lock-close))));
+	color: var(--elemenx-scene-lock);
+	background:
+		linear-gradient(currentColor, currentColor) top left / 10px 2px no-repeat,
+		linear-gradient(currentColor, currentColor) top left / 2px 10px no-repeat,
+		linear-gradient(currentColor, currentColor) top right / 10px 2px no-repeat,
+		linear-gradient(currentColor, currentColor) top right / 2px 10px no-repeat,
+		linear-gradient(currentColor, currentColor) bottom left / 10px 2px no-repeat,
+		linear-gradient(currentColor, currentColor) bottom left / 2px 10px no-repeat,
+		linear-gradient(currentColor, currentColor) bottom right / 10px 2px no-repeat,
+		linear-gradient(currentColor, currentColor) bottom right / 2px 10px no-repeat;
+	filter: drop-shadow(0 0 1px var(--elemenx-scene-aim-shadow));
+}
+
+.elemenx-scene-lock.locked {
+	color: var(--elemenx-scene-lock-locked);
+}
+
+.elemenx-scene-lock.locked::after {
+	content: '';
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 6px;
+	height: 6px;
+	transform: translate(-50%, -50%) rotate(45deg);
+	border: 2px solid currentColor;
+}
+
+.elemenx-scene-lock.off {
+	width: 0;
+	height: 0;
+	transform: translate(-50%, -50%) rotate(var(--elemenx-scene-lock-turn));
+	background: none;
+	border-top: 9px solid transparent;
+	border-bottom: 9px solid transparent;
+	border-left: 16px solid currentColor;
+}
+
+.elemenx-scene-lock.off::after {
+	display: none;
+}
+
+/* What a film lays over the picture (SceneCinema): a fade, the bars of a wide picture, titles, subtitles. */
+.elemenx-scene-cinema {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	container-type: size;
+	pointer-events: none;
+	overflow: hidden;
+	visibility: hidden;
+}
+
+.elemenx-scene-cinema.shown {
+	visibility: visible;
+}
+
+.elemenx-scene-cinema-fade {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+}
+
+.elemenx-scene-cinema-bar {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 0;
+	background: var(--elemenx-scene-veil);
+}
+
+.elemenx-scene-cinema-bar.top {
+	top: 0;
+}
+
+.elemenx-scene-cinema-bar.bottom {
+	bottom: 0;
+}
+
+.elemenx-scene-cinema-titles {
+	position: absolute;
+	inset: 0;
+}
+
+.elemenx-scene-cinema-title {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 6% 8%;
+	color: var(--elemenx-scene-title);
+	font-family: var(--elemenx-scene-title-font);
+	text-shadow: var(--elemenx-scene-title-shadow);
+	text-align: center;
+	white-space: pre-wrap;
+}
+
+.elemenx-scene-cinema-title[data-place="top"] {
+	align-items: flex-start;
+}
+
+.elemenx-scene-cinema-title[data-place="bottom"] {
+	align-items: flex-end;
+}
+
+.elemenx-scene-cinema-title[data-place="top-left"] {
+	align-items: flex-start;
+	justify-content: flex-start;
+	text-align: left;
+}
+
+.elemenx-scene-cinema-title[data-place="bottom-left"] {
+	align-items: flex-end;
+	justify-content: flex-start;
+	text-align: left;
+}
+
+.elemenx-scene-cinema-title[data-kind="title"] .elemenx-scene-cinema-title-text {
+	font-size: clamp(28px, 6cqh, 72px);
+	font-weight: 700;
+	letter-spacing: 0.06em;
+}
+
+.elemenx-scene-cinema-title[data-kind="chapter"] .elemenx-scene-cinema-title-text {
+	font-size: clamp(20px, 4cqh, 44px);
+	font-weight: 300;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+}
+
+.elemenx-scene-cinema-title[data-kind="caption"] .elemenx-scene-cinema-title-text {
+	font-size: clamp(14px, 2.4cqh, 24px);
+	letter-spacing: 0.04em;
+}
+
+.elemenx-scene-cinema-title[data-kind="credits"] .elemenx-scene-cinema-title-text {
+	font-size: clamp(16px, 3cqh, 30px);
+	line-height: 1.6;
+}
+
+.elemenx-scene-cinema-subtitles {
+	position: absolute;
+	left: 8%;
+	right: 8%;
+	bottom: 7%;
+	display: flex;
+	justify-content: center;
+}
+
+.elemenx-scene-cinema-subtitle {
+	max-width: 100%;
+	padding: 4px 12px;
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-scene-subtitle-background);
+	color: var(--elemenx-scene-title);
+	font-family: var(--elemenx-scene-title-font);
+	font-size: clamp(14px, 3cqh, 26px);
+	text-align: center;
+}
+
+.elemenx-scene-cinema-speaker {
+	margin-right: 0.5em;
+	color: var(--elemenx-scene-subtitle-speaker);
+	font-weight: 600;
+}
+
 /* The names: buttons over the places of their bodies, moved every frame. */
 .elemenx-scene-labels {
 	position: absolute;

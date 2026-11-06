@@ -3,6 +3,8 @@
 
 Как движутся вещи отдельно от того, что их показывает: шаги одной длины (Steps), смешивание двух шагов для показа (Blend), пружины (Spring), машина на шинах и подвеске (Car) и корабль в космосе (Ship). Сцену не знает: получает состояние и ввод, возвращает новое состояние.
 
+Призма (Shape: 'prism') — неподвижное тело. Points [[x, z]...] задают выпуклый контур вокруг середины (порядок обхода любой), Height — высоту. Шар, капсула и ящик сталкиваются с ней: шар по ближайшей точке поверхности, ящик углами (а углы призмы — с ящиком). Ray в неё попадает. Друг с другом призмы не сталкиваются.
+
 ## Методы
 
 - `Steps(clock, elapsed, length, each)`
@@ -35,4 +37,4 @@
 - [Physics brings a ship to rest, all of it, and then it stays](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4632) — `tests/regression/library-scene.test.js`
 - [Physics flies a ship: its speed comes after its throttle, its axes stay square](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4656) — `tests/regression/library-scene.test.js`
 
-+24 ещё в тех же файлах
++25 ещё в тех же файлах

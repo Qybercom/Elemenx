@@ -257,6 +257,14 @@
 	width: auto;
 }
 
+/* The cutscenes of the scene on a line of time, under the view, where the graphs are (CutsceneEditor). */
+.elemenx-scene-editor-cutscenes {
+	grid-area: blueprint;
+	height: 260px;
+	min-height: 0;
+	border-top: 1px solid var(--elemenx-border);
+}
+
 .elemenx-scene-editor-blueprint {
 	grid-area: blueprint;
 	display: flex;

@@ -488,4 +488,61 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 			return value === 0;
 		})).toBe(true);
 	}, 60000);
+
+	/*
+	 * Its highways: its cities and towns joined along the ground (a highway between cities, a road to a town), each from one
+	 * settlement to another; a planet with them shows them on its globe and tells the one near a point.
+	 */
+	it('joins its cities and towns by highways along the ground, shown on its globe', function () {
+		var options = {Seed: 'terra', Ocean: 0.62, Radius: 6371};
+		var towns = planets.Settlements(options, 6000).Settlements;
+		var made;
+		var road;
+		var middle;
+		var planet;
+
+		planets.UseSettlements('test-hw-towns', towns);
+
+		made = planets.Highways(Object.assign({}, options, {Settlements: 'test-hw-towns'}), 20);
+
+		expect(made.Highways.length).toBeGreaterThan(10);
+
+		made.Highways.forEach(function (one) {
+			expect(['highway', 'road']).toContain(one.Class);
+			expect(one.Points[0]).toEqual(towns[one.From].Point.map(function (value) {
+				return Math.round(value * 1e7) / 1e7;
+			}));
+			expect(['city', 'town']).toContain(towns[one.To].Kind);
+		});
+
+		/* Mostly over land: a bridge or a ferry only where it must. */
+		var points = 0;
+		var dry = 0;
+		var plain = planets.Planet(options);
+
+		made.Highways.forEach(function (one) {
+			one.Points.forEach(function (point) {
+				points++;
+
+				if (plain.Elevation(point) > 0)
+					dry++;
+			});
+		});
+
+		expect(dry / points).toBeGreaterThan(0.9);
+
+		/* Kept by a key; a planet with them knows the one near a point, its globe draws it. */
+		planets.UseHighways('test-hw', made.Highways);
+
+		expect(planets.HighwaysOf('test-hw')).toBe(made.Highways);
+
+		road = made.Highways.filter(function (one) {
+			return one.Points.length > 2;
+		})[0];
+		middle = road.Points[1];
+		planet = planets.Planet(Object.assign({}, options, {Highways: 'test-hw'}));
+
+		expect(planet.Highway(middle).Far).toBeLessThan(0.01);
+		expect(plain.Highway(middle)).toBe(null);
+	}, 120000);
 });

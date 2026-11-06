@@ -73,4 +73,50 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 		expect(after.Draws - before.Draws).toBe(3);
 		expect(after.Triangles - before.Triangles).toBe(2 + 2 * 3);
 	});
+
+	/* A mesh of a mode of its own (lines): its pairs of points drawn as lines, no triangle of them; the weights of materials of a ground taken. */
+	it('makes a mesh of lines by its mode, and a mesh of the weights of the materials of a ground', function () {
+		var gl = renderer.GL;
+		var program = renderer.Program([
+			'#version 300 es',
+			'in vec3 aPosition;',
+			'in vec4 aMaterials;',
+			'in vec4 aMaterials2;',
+			'out vec4 vPaint;',
+			'void main() { vPaint = vec4(aMaterials.x, aMaterials2.w, 0.0, 1.0); gl_Position = vec4(aPosition.xy, 0.0, 1.0); }'
+		].join('\n'), [
+			'#version 300 es',
+			'precision highp float;',
+			'in vec4 vPaint;',
+			'out vec4 outColor;',
+			'void main() { outColor = vPaint; }'
+		].join('\n'));
+		var lines = renderer.Mesh({Positions: [-1, 0, 0, 1, 0, 0, 0, -1, 0, 0, 1, 0], Indices: []}, 'lines');
+		var quad = renderer.Mesh({Positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0], Indices: [0, 1, 2], Materials: [1, 0, 0, 0, 0, 0, 0, 0.5, 1, 0, 0, 0, 0, 0, 0, 0.5, 1, 0, 0, 0, 0, 0, 0, 0.5]});
+		var plain = renderer.Mesh({Positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0], Indices: [0, 1, 2]});
+		var target = renderer.Target(2, 2, {});
+		var pixel = new Uint8Array(4);
+		var before = renderer.Counts();
+
+		renderer.Draw(lines, program, {}, {Depth: false});
+
+		expect(renderer.Counts().Triangles).toBe(before.Triangles);
+
+		target.Begin();
+
+		renderer.Draw(quad, program, {}, {Depth: false, Cull: 'none'});
+
+		gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+		expect([pixel[0], Math.round(pixel[1] / 255 * 10) / 10]).toEqual([255, 0.5]);
+
+		/* None: 0, not the 1 of what is not given. */
+		renderer.Draw(plain, program, {}, {Depth: false, Cull: 'none'});
+
+		gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+		target.End();
+
+		expect([pixel[0], pixel[1]]).toEqual([0, 0]);
+	});
 });

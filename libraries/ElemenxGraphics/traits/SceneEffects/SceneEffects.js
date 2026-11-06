@@ -1,6 +1,7 @@
 /*
  * Effects: what burns, smokes and flies off in a Scene. Kind effect (Type, Size, Power, Aim, Height, Light, Follow, Offset,
- * X, Y, Z, Appear, the seconds it takes to come; Tune, what is changed of its type, below; Color and Hot, the body and the heart of its fire, Volume, how much of it there is and how wide, Intensity, how bright,
+ * X, Y, Z, At (a place of the world as it is: on a wall, CastOn), Appear, the seconds it takes to come; Draw, the seconds a
+ * circle takes to be written ring by ring (Dispel(id, seconds) unwrites it and it goes); Tune, what is changed of its type, below; Color and Hot, the body and the heart of its fire, Volume, how much of it there is and how wide, Intensity, how bright,
  * Length, how far it reaches, Width, how wide, Smoke, how much of it) stands on the ground or goes with an object; Burst(type, place) is one that happens once, as an explosion.
  *
  * Nothing is simulated: each particle is a quad whose place is worked out in its vertex shader from its seed and the time, so
@@ -29,7 +30,7 @@
  * runs out and fades.
  *
  * What burns lights what is round it (the lamp of the type, flickering, the nearest ones with shadows) and the air over it
- * trembles. Types: spark, torch, campfire, smoke, steam, dust, exhaust, fumes, backfire, explosion, wake (the foam a boat leaves), spray (water thrown up); of magic aura, circle, portal, shield, lightning,
+ * trembles. Types: spark, torch, campfire, smoke, steam, dust, exhaust, fumes, backfire, explosion, wake (the foam a boat leaves), spray (water thrown up), roadspray (the mist of wheels on a wet road); of magic aura, circle, portal, shield, lightning,
  * healing, frost, poison, beam, fireball, teleport, and pillar, a shaft of light; mana, bubbles that rise slowly round what it follows;
  * glow, the light of the body of what it follows (Glow of a type: the color of it): Where body (by default), held (what it holds) or
  * both, brightest at its edges. Effects({Type: {...}}) adds types of its own.
@@ -95,6 +96,11 @@ Elemenx.Trait('SceneEffects', {
 			/* Water thrown up by a bow that strikes a wave, falling back. */
 			spray: {Lamp: null, Lasts: 0.3, Layers: [
 				{Kind: 'smoke', Count: 16, Life: 0.9, Speed: [2, 4.5], Spread: 0.6, Rise: 0.6, Gravity: 9, Drag: 0.8, Size: [0.1, 0.6], Wander: 0.1, Wind: 0.2, Color: [0.92, 0.95, 0.97], Opacity: 0.4, Blend: 'alpha'}
+			]},
+			/* The mist the wheels throw up off a wet road: wide, light, hanging a while behind what drives; it scatters light (adds), never darkens. */
+			roadspray: {Lamp: null, Lasts: 0.5, Layers: [
+				{Kind: 'smoke', Count: 10, Life: 1.1, Speed: [1, 3.2], Spread: 0.9, Rise: 0.5, Gravity: 1.5, Drag: 1.4, Size: [0.5, 2.2], Wander: 0.2, Wind: 0.4, Color: [0.5, 0.54, 0.6], Opacity: 0.07, Blend: 'add'},
+				{Kind: 'smoke', Count: 8, Life: 0.5, Speed: [3, 6], Spread: 0.35, Rise: 0.4, Gravity: 9, Drag: 0.6, Size: [0.08, 0.3], Wander: 0.05, Wind: 0.1, Color: [0.7, 0.75, 0.8], Opacity: 0.25, Blend: 'add'}
 			]},
 			dust: {Lamp: null, Layers: [
 				{Kind: 'smoke', Count: 20, Life: 1.6, Speed: [0.3, 1], Spread: 1.2, Rise: 0.1, Drag: 1.6, Size: [0.2, 1.2], Wander: 0.2, Color: [0.5, 0.42, 0.32], Opacity: 0.2, Blend: 'alpha'}
@@ -320,6 +326,9 @@ Elemenx.Trait('SceneEffects', {
 				return vectors.Add(follows.World, vectors.Add(turned, [0, height, 0]));
 			}
 
+			/* A place of the world given as it is (on a wall, a ceiling: CastOn). */
+			if (Array.isArray(object.Values.At)) return object.Values.At.slice();
+
 			if (!scene.Ground)
 				return object.World || [x, given(object.Values.Z, 0), z];
 
@@ -447,6 +456,7 @@ Elemenx.Trait('SceneEffects', {
 
 		/* What burns now: those of the scene and the bursts still going, each {Type, At, Aim, Size, Power, Since}. */
 		function burning () {
+			var gone = [];
 			var list = scene.Order.filter(function (object) {
 				return !!trait(object);
 			}).map(function (object) {
@@ -459,6 +469,19 @@ Elemenx.Trait('SceneEffects', {
 
 				var carrier = object.Values.Follow ? scene.Objects[object.Values.Follow] : null;
 				var coming = given(settings.Appear, 0.45);
+				/* A circle written ring by ring as it comes (Draw, seconds), unwritten as it goes (Dispel). */
+				var writing = given(settings.Draw, 0);
+				var going = scene.Dispelled ? scene.Dispelled[object.ID] : null;
+				var drawn = writing > 0 ? Math.min(1, (scene.Seconds - born[object.ID]) / writing) : 1;
+				var fading = 1;
+
+				if (going) {
+					fading = Math.max(0, 1 - (scene.Seconds - going.Start) / going.Seconds);
+					drawn = Math.min(drawn, fading);
+
+					if (fading <= 0)
+						gone.push(object.ID);
+				}
 
 				var seen = looks(settings);
 
@@ -466,8 +489,14 @@ Elemenx.Trait('SceneEffects', {
 				if (carrier && carrier.Thrust !== undefined)
 					seen.Length *= 0.25 + carrier.Thrust;
 
-				return type && settings.On !== false && settings.On !== 'false' ? Object.assign(seen, {Type: type, At: placeOf(object, settings), Aim: aimOf(object, settings, type), Size: given(settings.Size, 1), Power: given(settings.Power, 1), Since: scene.Seconds + (object.Seed || 0) * 40, Light: settings.Light, Key: object.ID, Seed: settings.Seed || object.ID, Rings: settings.Rings, Spin: given(settings.Spin, 1), Grown: coming > 0 ? Math.min(1, (scene.Seconds - born[object.ID]) / coming) : 1, Layers: layersOf(type, settings.Tune)}) : null;
+				return type && settings.On !== false && settings.On !== 'false' ? Object.assign(seen, {Type: type, At: placeOf(object, settings), Aim: aimOf(object, settings, type), Size: given(settings.Size, 1), Power: given(settings.Power, 1), Since: scene.Seconds + (object.Seed || 0) * 40, Light: settings.Light, Key: object.ID, Seed: settings.Seed || object.ID, Rings: settings.Rings, Spin: given(settings.Spin, 1), Grown: (coming > 0 ? Math.min(1, (scene.Seconds - born[object.ID]) / coming) : 1) * Math.min(1, fading * 1.5), Drawn: drawn, Layers: layersOf(type, settings.Tune)}) : null;
 			}).filter(Boolean);
+
+			gone.forEach(function (id) {
+				delete scene.Dispelled[id];
+
+				self.Remove(id);
+			});
 
 			/* What burns on what a vehicle is built of. */
 			scene.Order.forEach(function (object) {
@@ -707,7 +736,8 @@ Elemenx.Trait('SceneEffects', {
 				uScene: depth || blank(),
 				uSoft: depth && layer.Kind !== 'swirl' && !mouth ? wide * 0.35 : 0,
 				uScreen: [renderer.Width, renderer.Height, view.Near, view.Far],
-				uSplit: view.Split ? 1 : 0
+				uSplit: view.Split ? 1 : 0,
+				uDrawn: one.Drawn === undefined ? 1 : one.Drawn
 			}, circle ? sigils.Uniforms(circle, scene.Seconds, one.Spin) : {uRingCount: 0}), {Depth: !(depth && layer.Kind !== 'swirl') || !!mouth, DepthWrite: false, Blend: layer.Blend, Cull: 'none'});
 		}
 
@@ -941,6 +971,56 @@ Elemenx.Trait('SceneEffects', {
 		return graph;
 	},
 
+	/*
+	 * An effect laid on whatever surface a ray meets (a wall, a ceiling, a slope; a magic circle most of all), across it:
+	 * CastOn(type, {From, Way} or [x, y, z], options) with options Normal (when a point is given), Size, Draw (seconds to
+	 * write it, ring by ring: 1.6), Color, Hot, Seed, ID. The ID of the new effect, or '' when the ray meets nothing.
+	 */
+	CastOn: function (type, at, options) {
+		var settings = options || {};
+		var vectors = this.$Service('Math').Vectors;
+		var found = null;
+		var point;
+		var normal;
+		var spec;
+
+		if (Array.isArray(at)) {
+			point = at;
+			normal = settings.Normal || [0, 1, 0];
+		}
+		else if (at && at.From && at.Way && this.Trace) {
+			found = this.Trace(at.From, at.Way, at.Range || 300);
+
+			if (!found) return '';
+
+			point = found.Point;
+			normal = found.Normal;
+		}
+
+		if (!point) return '';
+
+		normal = vectors.Normalize(normal);
+		spec = {ID: settings.ID || 'cast-' + Math.random().toString(36).slice(2, 8), Type: type || 'circle', At: vectors.Add(point, vectors.Scale(normal, 0.015)), Aim: normal, Size: settings.Size || 1, Draw: settings.Draw === undefined ? 1.6 : settings.Draw, Light: settings.Light !== false};
+
+		['Color', 'Hot', 'Seed', 'Rings', 'Spin', 'Power', 'Intensity'].forEach(function (name) {
+			if (settings[name] !== undefined)
+				spec[name] = settings[name];
+		});
+
+		return this.Add('effect', spec);
+	},
+
+	/* An effect goes: a circle unwritten ring by ring, all of it fading, then removed (seconds, 1.2). False when there is none. */
+	Dispel: function (id, seconds) {
+		var scene = this.Scene();
+		if (!scene.Objects[id]) return false;
+
+		scene.Dispelled = scene.Dispelled || {};
+		scene.Dispelled[id] = {Start: scene.Seconds, Seconds: Math.max(0.05, Number(seconds) || 1.2)};
+
+		return true;
+	},
+
 	/* An effect that happens once at a place [x, y, z] of the world: Burst('explosion', [0, 1, 0], {Size, Power, Aim}). */
 	Burst: function (type, place, options) {
 		return this.Engine().EffectBurst(type, place, options);
@@ -1144,6 +1224,8 @@ Elemenx.Trait('SceneEffects', {
 				'uniform int uRingCount;',
 				'uniform vec4 uRings[12];',
 				'uniform vec4 uRingsMore[12];',
+				/* How much of the circle is written (1: all of it): ring by ring from the rim, each round from its top. */
+				'uniform float uDrawn;',
 				'out vec4 outColor;',
 				'float hash1(float x) {',
 				'	return fract(sin(x * 91.17) * 43758.5453);',
@@ -1255,12 +1337,21 @@ Elemenx.Trait('SceneEffects', {
 				'	float ink = 0.0;',
 				'	float glow = exp(-r * 2.4) * 0.05;',
 				'	float px = fwidth(r);',
+				'	float written = uDrawn * float(uRingCount);',
+				'	float round = fract(atan(vAt.x, vAt.y) / 6.2831853 + 1.0);',
+				'	float pen = 0.0;',
 				'	for (int i = 0; i < 12 && i < uRingCount; i++) {',
+				'		float part = clamp(written - float(i), 0.0, 1.0);',
+				'		if (part <= 0.0) continue;',
 				'		float d = mark(vAt, r, uRings[i], uRingsMore[i]);',
-				'		float line = 1.0 - smoothstep(-px, px, d);',
+				'		float line = (1.0 - smoothstep(-px, px, d)) * (part >= 1.0 ? 1.0 : step(round, part));',
 				'		ink = max(ink, line * uRingsMore[i].z);',
-				'		glow += exp(-max(d, 0.0) * 42.0) * 0.26 * uRingsMore[i].z;',
+				'		glow += exp(-max(d, 0.0) * 42.0) * 0.26 * uRingsMore[i].z * (part >= 1.0 ? 1.0 : step(round, part));',
+				/* The tip of the pen that writes it: a spark where the ring has come to. */
+				'		if (part < 1.0) pen = max(pen, exp(-max(d, 0.0) * 30.0) * exp(-abs(round - part) * 90.0));',
 				'	}',
+				'	ink = max(ink, pen);',
+				'	glow += pen * 1.5;',
 				'	vec3 color = uColor * glow * 1.3 + uHot * ink;',
 				'	float seen = clamp(ink + glow * 1.4, 0.0, 1.0) * min(uIntensity, 1.0);',
 				'	if (seen < 0.003) discard;',

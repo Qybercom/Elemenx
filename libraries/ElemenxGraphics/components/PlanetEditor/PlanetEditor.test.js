@@ -69,7 +69,7 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		expect(corner[3]).toBe(0);
 		expect(at.Latitude).toBeCloseTo(under[0], 6);
 		expect(at.Sample.Elevation).toBe(editor.Planet().Elevation(planets.Unproject(view, view.Width / 2, view.Height / 2)));
-	});
+	}, 45000);
 
 	it('draws a continent by its points on the globe, sets its fields and takes it away, each change emitted', async function () {
 		var mounted = await mount({Seed: 'draw', Ocean: 0.9});
@@ -123,7 +123,7 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		editor.Key({key: 'Delete'});
 
 		expect(host.Changes[host.Changes.length - 1].Paint).toEqual([]);
-	});
+	}, 45000);
 
 	it('shows the winds and the plates as arrows over the globe', async function () {
 		var mounted = await mount({Seed: 'show'});

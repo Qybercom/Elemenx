@@ -474,4 +474,112 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 			server.kill();
 		}
 	});
+
+	it('tells when the project has a newer Elemenx than the extension, and its server offers the update, opening its page on Update', async function () {
+		var updated = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-updated-'));
+		var server;
+		var received = [];
+		var buffer = Buffer.alloc(0);
+
+		fs.mkdirSync(path.join(updated, 'node_modules', '@qybercom', 'elemenx'), {recursive: true});
+		fs.writeFileSync(path.join(updated, 'node_modules', '@qybercom', 'elemenx', 'package.json'), JSON.stringify({name: '@qybercom/elemenx', version: '9.1.0'}));
+
+		expect(language.Updates([updated], '9.0.4')).toMatchObject({Plugin: '9.0.4', Project: '9.1.0', Newer: true});
+		expect(language.Updates([updated], '9.1.0').Newer).toBe(false);
+		expect(language.Updates([updated], '9.1.0-beta.2').Newer).toBe(true);
+		expect(language.Updates([updated], '10.0.0').Newer).toBe(false);
+		expect(language.Updates([os.tmpdir() + '/nothing-here'], '1.0.0')).toBe(null);
+
+		/* GLSL: in a file of it, and in a string of a shader in the code; nowhere else. */
+		var shader = "var made = [\n\t'uniform vec3 uColor;',\n\t'\tvec3 c = smoo";
+
+		expect(language.GlslComplete(shader, shader.length, 'a.js').map(function (item) {
+			return item.Label;
+		})).toEqual(['smooth', 'smoothstep']);
+		expect(language.GlslComplete('float a = norm', 14, 'light.frag').map(function (item) {
+			return item.Label;
+		})).toEqual(['normalize']);
+		expect(language.GlslComplete('var a = smoo', 12, 'a.js')).toEqual([]);
+
+		server = child.spawn(process.execPath, [path.join(root, 'editors', 'server', 'elemenx-language-server.js'), '--stdio'], {stdio: ['pipe', 'pipe', 'inherit']});
+
+		server.stdout.on('data', function (chunk) {
+			var end;
+			var length;
+
+			buffer = Buffer.concat([buffer, chunk]);
+
+			while ((end = buffer.indexOf('\r\n\r\n')) !== -1) {
+				length = Number(/Content-Length: (\d+)/.exec(buffer.slice(0, end).toString())[1]);
+
+				if (buffer.length < end + 4 + length) break;
+
+				received.push(JSON.parse(buffer.slice(end + 4, end + 4 + length).toString()));
+
+				buffer = buffer.slice(end + 4 + length);
+			}
+		});
+
+		function send (message) {
+			var text = JSON.stringify(Object.assign({jsonrpc: '2.0'}, message));
+
+			server.stdin.write('Content-Length: ' + Buffer.byteLength(text) + '\r\n\r\n' + text);
+		}
+
+		async function answer (test) {
+			var started = Date.now();
+
+			while (Date.now() - started < 30000) {
+				var found = received.filter(test)[0];
+				if (found)
+					return found;
+
+				await new Promise(function (resolve) {
+					setTimeout(resolve, 20);
+				});
+			}
+
+			throw new Error('No answer: ' + JSON.stringify(received));
+		}
+
+		try {
+			send({id: 1, method: 'initialize', params: {rootUri: 'file:///' + updated.replace(/\\/g, '/').replace(/^\//, ''), capabilities: {}, initializationOptions: {PluginVersion: '9.0.4', Marketplace: 'https://example.com/elemenx'}}});
+
+			await answer(function (message) {
+				return message.id === 1;
+			});
+
+			send({method: 'initialized', params: {}});
+
+			var asked = await answer(function (message) {
+				return message.method === 'window/showMessageRequest';
+			});
+
+			expect(asked.params.message).toContain('9.1.0');
+			expect(asked.params.actions.map(function (action) {
+				return action.title;
+			})).toEqual(['Update', 'Later']);
+
+			/* The answer of the editor is no request of its own: the server opens the page, and answers nothing back. */
+			send({id: asked.id, result: {title: 'Update'}});
+
+			expect((await answer(function (message) {
+				return message.method === 'window/showDocument';
+			})).params).toEqual({uri: 'https://example.com/elemenx', external: true});
+			expect(received.some(function (message) {
+				return message.id === asked.id && message.error;
+			})).toBe(false);
+
+			send({id: 2, method: 'shutdown'});
+
+			await answer(function (message) {
+				return message.id === 2;
+			});
+
+			send({method: 'exit'});
+		}
+		finally {
+			server.kill();
+		}
+	});
 });

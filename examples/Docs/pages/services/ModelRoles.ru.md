@@ -12,6 +12,15 @@ ModelRoles: что такое части модели — её колёса, р�
 
 На сцене: Parts(id) — роли объекта, Part(id, role) — одна: Get(), Set(value), событие part ({ID, Role, Value}).
 
+Новые группы ролей:
+- chassis (шасси машины): arm — рычаг подвески, качается с ходом своего колеса (Drive stroke, Corner, Length — длина в единицах модели); knuckle — поворотный кулак, поворачивается с колесом (wheel-steer); shock — амортизатор, растягивается от точки крепления вдоль Way с ходом колеса (Motion stretch); halfshaft — полуось, крутится с колесом (roll); gauge-speed и gauge-rpm — стрелки скорости и оборотов; exhaust — выхлоп, дымит при газе;
+- flight (летательный аппарат): aileron, elevator, rudder — от крена, тангажа и рыскания; flap — закрылки на малом газу; propeller — винт от газа; gear-leg — стойка шасси, убирается в полёте;
+- weapons (оружие): turret и barrel — по Aim объекта ({Yaw, Pitch} в градусах); recoil — откат при выстреле (Fired: секунды сцены);
+- mechanisms (механизмы): drawer, lid, button, valve; turbine — от ветра; clock-hour и clock-minute — стрелки по времени суток; radar; boom; platform;
+- points (точки): socket — точка крепления (Scene.Socket(id, name) → {At, Axis}); emitter — излучатель эффекта (Effect, Rate — выбросов в секунду, Drive); collider — части роли становятся коллайдером по своему контуру.
+
+Rig отдаёт ещё Sockets, Emitters и Colliders, а у Openings появились Stretch, Corner и Length. Приводы, которые ставят часть сразу, без Pace: steer, wipers, stroke, wheel-steer, roll, pitch, yaw, roll-air, aim-yaw, aim-pitch, fire, clock-hour, clock-minute.
+
 ## Методы
 
 - `Version()`
@@ -34,9 +43,10 @@ ModelRoles: что такое части модели — её колёса, р�
 
 - [edits the roles of another model, kept by ModelRoles, and undoes them](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/ModelEditor/ModelEditor.test.js#L185) — `libraries/ElemenxGraphics/components/ModelEditor/ModelEditor.test.js`
 - [lists its kinds by group and makes a role of a kind, what the kind starts as under what is given](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L70) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
-- [keeps the roles of a model in the storage of the browser, writes them into a file and reads them back](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L83) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
-- [gives a Scene its rig: what moves, what glows and the wheels, each of its parts](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L114) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
-- [packs the vertices a brush painted into ranges and finds one in them](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L132) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
-- [cuts what a role names out of a model of a file: a whole piece, or only the painted triangles of one](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L142) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
-- [moves the door of a house as its role says: Part(id, role) sets it, it comes by degrees, the scene tells it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L159) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
-- [lights a lamp of a role as far as it is set, turns a fan while it is on, and remakes the model when the roles change](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L215) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
+- [keeps the roles of a model in the storage of the browser, writes them into a file and reads them back](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L85) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
+- [gives a Scene its rig: what moves, what glows and the wheels, each of its parts](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L116) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
+- [packs the vertices a brush painted into ranges and finds one in them](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L134) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
+- [cuts what a role names out of a model of a file: a whole piece, or only the painted triangles of one](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L144) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
+- [moves the door of a house as its role says: Part(id, role) sets it, it comes by degrees, the scene tells it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L161) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
+- [drives a shock by its wheel, a clock by the time, a turret by its aim; holds at a socket, emits, and collides](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L222) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
+- [lights a lamp of a role as far as it is set, turns a fan while it is on, and remakes the model when the roles change](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L292) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`

@@ -21,4 +21,5 @@ Pulse эффекта меняет заданное со временем: {Size:
 
 - `Effects(types)`
 - `EffectGraph(name)`
+- `Dispel(id, seconds)`
 - `Burst(type, place, options)`

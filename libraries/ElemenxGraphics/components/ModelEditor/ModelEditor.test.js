@@ -211,4 +211,68 @@ describe('Contract: ModelEditor, its tab Roles: what the parts of a model are', 
 
 		Elemenx.Service('ModelRoles').Remove(name);
 	});
+
+	/*
+	 * Its tab Parts: the pieces of the model listed, picked in the view or in the list; split, hidden, taken out into a model
+	 * of its own; each change in the recipe of the document, Undo takes it back.
+	 */
+	it('edits the pieces of the model in its tab Parts: picked in the view, split, hidden, taken out, undone', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var models = editor.$Service('SceneModels');
+		var list;
+
+		editor.Moded('parts');
+
+		await tick(20);
+
+		frame(editor);
+
+		list = editor.PartsList();
+
+		expect(list.length).toBeGreaterThan(0);
+
+		/* Picked in the view: the piece under the pointer. */
+		press(editor, [0, 0.3, 0]);
+
+		expect(editor.PartsSelected.length).toBe(1);
+
+		var picked = editor.PartsSelected[0];
+
+		/* Hidden: listed as hidden; then shown again by Undo. */
+		editor.PartsHide();
+
+		expect(editor.Recipe().Edits).toEqual([{Op: 'hide', Pieces: [picked], Hidden: true}]);
+		expect(editor.PartsList().filter(function (piece) {
+			return piece.ID === picked;
+		})[0].Hidden).toBe(true);
+
+		editor.Undo();
+
+		frame(editor);
+
+		expect(editor.Recipe().Edits || []).toEqual([]);
+
+		/* Taken out: a model of its own of that piece. */
+		editor.PartsSelected = [picked];
+
+		editor.PartsNamed({target: {value: 'test-parts-out'}});
+		editor.PartsExtract();
+
+		expect(models.Make('test-parts-out').Pieces.map(function (piece) {
+			return piece.ID;
+		})).toEqual([picked]);
+
+		await tick(30);
+
+		expect(mounted.Host.$Element().querySelector('[data-mode="parts"]').getAttribute('aria-selected')).toBe('true');
+		/* Gone from the model it was of: the list shows what is left. */
+		expect(editor.PartsList().some(function (piece) {
+			return piece.ID === picked;
+		})).toBe(false);
+		expect(mounted.Host.$Element().querySelectorAll('[data-piece]').length).toBe(editor.PartsList().length);
+
+		models.SetEdits(editor.RoleTarget(), []);
+		delete models.Recipes['test-parts-out'];
+	});
 });

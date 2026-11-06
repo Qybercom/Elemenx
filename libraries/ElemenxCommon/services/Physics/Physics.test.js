@@ -320,6 +320,34 @@ describe('Contract: Physics World, solid bodies that fall, strike and rest', fun
 		}).Body).toBe(null);
 	});
 
+	/*
+	 * A prism (a convex outline standing its height high) never moves: a ball comes to rest on its top, a box and a capsule
+	 * driven into its side are held out of it, a ray meets its side; its outline taken whichever way it turns.
+	 */
+	it('holds what strikes a prism: a ball rests on its top, a box and a capsule stop at its side, a ray meets it', function () {
+		var world = physics.World({Sleep: false});
+		var wall = world.Add({Shape: 'prism', Points: [[-1, -2], [-1, 2], [1, 2], [1.4, 0], [1, -2]], Height: 2, At: [0, 1, 0]});
+		var ball = world.Add({Shape: 'sphere', Radius: 0.3, At: [0, 4, 0]});
+		var box = world.Add({Shape: 'box', Size: [0.6, 0.6, 0.6], At: [-3, 0.3, 0], Way: [6, 0, 0], Friction: 0});
+		var capsule = world.Add({Shape: 'capsule', Radius: 0.3, Height: 0.6, At: [4, 0.6, 1], Way: [-6, 0, 0], Friction: 0});
+		var hit;
+
+		run(world, 3);
+
+		expect(wall.At).toEqual([0, 1, 0]);
+		expect(ball.At[1]).toBeCloseTo(2.3, 1);
+		expect(box.At[0]).toBeLessThan(-1.25);
+		expect(capsule.At[0]).toBeGreaterThan(1.4);
+
+		hit = world.Ray([0.2, 1, 5], [0, 0, -1], 20);
+
+		expect(hit.Body).toBe(wall);
+		expect(hit.Distance).toBeCloseTo(3, 3);
+		expect(hit.Normal[2]).toBeCloseTo(1, 3);
+		expect(world.Ray([5, 1, 0], [-1, 0, 0], 20).Distance).toBeCloseTo(3.6, 3);
+		expect(world.Ray([5, 3, 0], [-1, 0, 0], 20)).toBe(null);
+	});
+
 	it('floats a light board on water, face up, and lets a heavy box sink', function () {
 		var world = physics.World({Ground: -10, Water: {Level: 0}});
 		var light = world.Add({Shape: 'box', Size: [2, 0.4, 2], Mass: 640, At: [0, 1, 0], Turn: [Math.sin(0.3), 0, 0, Math.cos(0.3)]});

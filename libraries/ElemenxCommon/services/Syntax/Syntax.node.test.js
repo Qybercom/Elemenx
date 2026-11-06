@@ -159,4 +159,16 @@ describe('ElemenxCommon Syntax', function () {
 		expect(typed('[main]\nkey = 1 ; note', 'conf')).toEqual([['meta', '[main]'], ['property', 'key'], ['comment', '; note']]);
 		expect(syntax.Languages()).toContain('ini');
 	});
+
+	it('reads GLSL: the preprocessor, qualifiers, types, built-in functions and variables, swizzles; offers its words to complete', function () {
+		expect(typed('#version 300 es\nuniform vec3 uColor;\nvoid main() { gl_FragColor = vec4(mix(uColor, vec3(1.0), 0.5).rgb, 1.0); }', 'frag')).toEqual([
+			['meta', '#version 300 es'],
+			['keyword', 'uniform'], ['type', 'vec3'], ['punctuation', ';'],
+			['type', 'void'], ['punctuation', '()'], ['punctuation', '{'],
+			['variable', 'gl_FragColor'], ['operator', '='], ['type', 'vec4'], ['punctuation', '('], ['function', 'mix'], ['punctuation', '('], ['punctuation', ','], ['type', 'vec3'], ['punctuation', '('], ['number', '1.0'], ['punctuation', '),'], ['number', '0.5'], ['punctuation', ')'], ['property', '.rgb'], ['punctuation', ','], ['number', '1.0'], ['punctuation', ');'], ['punctuation', '}']
+		]);
+		expect(syntax.Find('vert').Name).toBe('glsl');
+		expect(syntax.Words('glsl')).toEqual(expect.arrayContaining([{Label: 'smoothstep', Kind: 'function', Detail: 'built-in function'}, {Label: 'sampler2D', Kind: 'type', Detail: 'type'}]));
+		expect(syntax.Words('javascript')).toEqual([]);
+	});
 });

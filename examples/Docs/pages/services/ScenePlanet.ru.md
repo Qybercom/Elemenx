@@ -18,6 +18,8 @@ ScenePlanet: планета как одна непрерывная функци�
 
 Поселения. Settlements(options, count) расселяет сушу планеты: перебирает count точек (по умолчанию 20000, по спирали со случайным сдвигом), оценивает каждую по климату (тепло, не слишком сухо и не слишком влажно), высоте (ниже — лучше), рекам (чем больше сток рядом, тем лучше) и побережью, и берёт лучшие так, чтобы каждое стояло в стороне от уже взятых: города не ближе 400 км, посёлки 120 км, деревни 40 км. Результат: {Settlements: [{Point (направление), Size (0–1), Kind (city, town, village)}]}. UseSettlements(key, towns) хранит их под ключом, как реки, и планета называет их ключом (Settlements: key) или списком. Lights(options, face, size, row, rows) даёт огни поселений ночью на грани глобуса: яркость 0–255 на тексель, пятно вокруг каждого поселения размером по его виду (город около 40 км, деревня около 6). Результат: {Data, Face, Row, Rows}.
 
+Магистрали. Highways(options, step) соединяет города и посёлки планеты (Settlements) по земле: сначала города, затем посёлки, каждый к ближайшему уже соединённому не дальше 1500 км. Путь ищется по клеткам шагом step км (20): крутое обходится, вода пересекается только там, где без этого нельзя (мост или паром в 15 раз дороже). Результат: {Highways: [{Points (направления), Class (highway между городами, road к посёлку), From, To (номера поселений)}]}. UseHighways(key, roads) хранит их под ключом, как реки; планета называет их Highways: key (или списком). Планета с магистралями рисует их на глобусе серыми линиями, а Highway(direction) даёт ближайшую: {Far (км), Class}.
+
 ## Методы
 
 - `Direction(latitude, longitude)`
@@ -44,4 +46,4 @@ ScenePlanet: планета как одна непрерывная функци�
 - [lays its surface out in hexagons of an icosahedron too: 12 pentagons, each cell found of its points and of its ID, its neighbours round it, its sides shared with them the other way](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L246) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 - [makes land of plains, hills and ranges, its heights spread as on the Earth](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L306) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 
-+10 ещё в тех же файлах
++11 ещё в тех же файлах

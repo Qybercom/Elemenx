@@ -61,9 +61,10 @@ What a scene waits for, its programs and models, comes behind the page and holds
 - `land`: The view went down to the surface of a body: {ID}.
 - `takeoff`: The view went back up to space: {ID}.
 - `select`: The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).
-- `loading`: What the scene waits for came a step nearer: {Part}, up to 100.
-- `prepared`
+- `loading`: What the scene waits for came a step nearer: {Part (up to 100, never back), Stage (programs, models, globes, ground, plants, view; empty when done)}.
+- `prepared`: All the view needs is made and the veil goes: {First (the start of the scene, not a location that came)}.
 - `ready`: The scene is ready: the component itself, to call its methods.
+- `hover`: The pointer came over a selectable object, or left it: {ID (empty: none), Object, Info}.
 - `person`: V took the view of a walker to another place: third, first or shoulder.
 - `shoulder`: B took the view over another shoulder: right or left.
 - `dig`: A hole was dug in the ground (Dig): {At, Radius}.
@@ -166,11 +167,11 @@ What a scene waits for, its programs and models, comes behind the page and holds
 - [selects the units of its team only, by code, by Ctrl+A and by a frame drawn over them, and none by Escape](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L74) — `tests/regression/library-game-strategy.test.js`
 - [sends units to a place, each to its own spot, stops them, and has them attack a foe until it is gone](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L108) — `tests/regression/library-game-strategy.test.js`
 - [hides in its fog the units of other teams that its units do not see, and tells what was seen and explored](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L149) — `tests/regression/library-game-strategy.test.js`
-- [sets no timer of no function while the scene and its game are made](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L176) — `tests/regression/library-game-strategy.test.js`
+- [sees no farther than the weather and the light let it: a fog takes the range of sight of its units](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L177) — `tests/regression/library-game-strategy.test.js`
+- [sets no timer of no function while the scene and its game are made](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L198) — `tests/regression/library-game-strategy.test.js`
 - [gives the passes of the library as a render graph, in the order they run, and draws the same picture of it given](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L113) — `tests/regression/library-render-pipeline.test.js`
 - [leaves out a pass switched off, takes the properties of its blocks, and adds a pass of a graph of its own after the picture](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L140) — `tests/regression/library-render-pipeline.test.js`
 - [draws the picture of the library when the Pipeline cannot be made, and tells it once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L202) — `tests/regression/library-render-pipeline.test.js`
 - [lets a crate fall onto the ground, tells the touch, and knocks it over by a push](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-rigid.test.js#L58) — `tests/regression/library-rigid.test.js`
-- [shows a falling crate between its last two steps, by how far the time came into the next one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-rigid.test.js#L116) — `tests/regression/library-rigid.test.js`
 
-+177 more in the same files
++227 more in the same files

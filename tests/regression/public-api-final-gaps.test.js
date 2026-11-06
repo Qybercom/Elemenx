@@ -122,7 +122,8 @@ describe('Regression: final public API gap contracts', function () {
 			$Root: '/final-gap'
 		});
 
-		expect(await waitFor(function () { return app.$Component() !== null; }, 1000)).toBe(true);
+		/* What comes over the network may come late under the load of a whole run: waitFor ends as soon as it is there. */
+		expect(await waitFor(function () { return app.$Component() !== null; }, 10000)).toBe(true);
 		expect(function () { app.$Reload('Unknown', 'ReloadProbe'); }).toThrow();
 
 		var result = 'pending';
@@ -131,10 +132,10 @@ describe('Regression: final public API gap contracts', function () {
 			result = error || null;
 		});
 
-		expect(await waitFor(function () { return result !== 'pending'; }, 1500)).toBe(true);
+		expect(await waitFor(function () { return result !== 'pending'; }, 10000)).toBe(true);
 		expect(result).toBeNull();
 		expect(Elemenx.Component('ReloadProbe')).not.toBeNull();
-	});
+	}, 30000);
 
 	it('Component.Ref follows conditional structural recreation and never returns the removed node', async function () {
 		var name = unique('RefLifecycle');

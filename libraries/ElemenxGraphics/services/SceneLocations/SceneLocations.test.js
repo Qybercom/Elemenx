@@ -97,9 +97,12 @@ describe('Contract: SceneLocations, the locations of a planet: cells of its surf
 		var other = location.Place.Sides[2];
 		var far = [(other[0] + other[2]) / 2 * 1.04, (other[1] + other[3]) / 2 * 1.04];
 		var base = terrain.Flat(worlds.Make(plain.World).Ground);
-		var made = worlds.Make(location.World).Ground;
+		var built = worlds.Make(location.World);
+		var made = built.Ground;
 		var field = terrain.Flat(made);
-		var roads = made.Sketch.Layers[0].Items;
+		var roads = built.Things.filter(function (thing) {
+			return thing.Kind === 'road';
+		});
 		var walled;
 		var wall;
 
@@ -108,9 +111,11 @@ describe('Contract: SceneLocations, the locations of a planet: cells of its surf
 		expect(field.Height(0, 0)).toBeCloseTo(base.Height(0, 0), 3);
 		expect(field.Border.Distance(far[0], far[1])).toBeGreaterThan(0);
 		expect(field.Border.Gap(middle[0] * 1.03, middle[1] * 1.03)).toBe(1);
+		/* Its road (Roads): from past its side along the ground to the middle, a road of the location. */
 		expect(roads.length).toBe(1);
-		expect(roads[0]).toMatchObject({Type: 'road', Width: 8});
-		expect(roads[0].Points[3]).toEqual([0, 0]);
+		expect(roads[0].Values.Type).toBe('gravel');
+		expect(Math.hypot(roads[0].Values.Points[0][0] - middle[0], roads[0].Values.Points[0][1] - middle[1])).toBeGreaterThan(100);
+		expect(roads[0].Values.Points[roads[0].Values.Points.length - 1]).toEqual([0, 0]);
 
 		/* Regression: the workers of the ground and of what grows on it had no Border, and made no ground of such a location. */
 		for (var pool of [terrain.Work(), Elemenx.Service('SceneSower').Work(), Elemenx.Service('SceneRoads').Work()]) {
@@ -197,5 +202,47 @@ describe('Contract: SceneLocations, the locations of a planet: cells of its surf
 		});
 
 		expect(locations.Towns(planet, place)).toBeUndefined();
+	});
+
+	/*
+	 * A highway of the planet through a location: a road of its sketch from where it comes in to where it leaves, at the very
+	 * point of the planet where the location beside takes it on; its road (Roads) along the ground between them.
+	 */
+	it('has the highways of its planet as roads of its sketch, meeting those of the location beside at their border', function () {
+		var planet = {Seed: 'trunks', Radius: 6371, LocationSize: 4, Ocean: 0.3};
+		var id = locations.At(planet, 30, 40);
+		var place = locations.Location(planet, id).Place;
+		var east = locations.Location(planet, id).Sides[0].To;
+		var there = locations.Location(planet, east).Place;
+		var a = planets.Direction(place.Latitude, place.Longitude);
+		var b = planets.Direction(there.Latitude, there.Longitude);
+		var far = [b[0] * 2 - a[0], b[1] * 2 - a[1], b[2] * 2 - a[2]];
+		var back = [a[0] * 2 - b[0], a[1] * 2 - b[1], a[2] * 2 - b[2]];
+		var told = Object.assign({}, planet, {Highways: [{Points: [planets.Unit(back), planets.Unit(far)], Class: 'highway'}]});
+		var mine = locations.Trunks(told, place).Layers[0].Items;
+		var theirs = locations.Trunks(told, there).Layers[0].Items;
+		var site = Elemenx.Service('SceneTerrainGenerator').Site({Options: planet, Latitude: place.Latitude, Longitude: place.Longitude, Turn: place.Turn});
+		var other = Elemenx.Service('SceneTerrainGenerator').Site({Options: planet, Latitude: there.Latitude, Longitude: there.Longitude, Turn: there.Turn});
+		/* On the outline: the point before the last of one, the second of the other (each runs a little past it). */
+		var leaves = mine[0].Points[mine[0].Points.length - 2];
+		var comes = theirs[0].Points[1];
+		var made;
+
+		expect(mine.length).toBe(1);
+		expect(mine[0]).toMatchObject({Type: 'road', Trunk: true, Class: 'highway', Width: 14});
+
+		/* The same point of the planet, where one leaves and the other comes in. */
+		var p = site.Direction(leaves[0], leaves[1]);
+		var q = other.Direction(comes[0], comes[1]);
+
+		expect(Math.acos(Math.min(1, planets.Dot(p, q))) * 6371000).toBeLessThan(5);
+
+		/* Its road a highway of the location. */
+		made = Elemenx.Service('SceneWorld').Make(locations.Location(told, id).World);
+
+		expect(made.Things.filter(function (thing) {
+			return thing.Kind === 'road' && thing.Values.Type === 'highway';
+		}).length).toBe(1);
+		expect(locations.Trunks(planet, place)).toBeUndefined();
 	});
 });

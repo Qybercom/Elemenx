@@ -337,7 +337,34 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "Draws the three axes of the world at its middle."
+					"Description": "Draws the three axes of the world at its middle (and the colliders as their outlines)."
+				},
+				{
+					"Name": "Wireframe",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Draws the wire of the scene over it: each edge of the ground and of the models (--elemenx-scene-wire)."
+				},
+				{
+					"Name": "Edges",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Draws the edges of the models: where their faces meet at an angle and their rims (--elemenx-scene-edges)."
+				},
+				{
+					"Name": "Hovered",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the object under the pointer, outlined (--elemenx-scene-hover) as the selected one is (--elemenx-scene-outline)."
 				},
 				{
 					"Name": "FreeLook",
@@ -584,6 +611,94 @@
 					"Description": "What a view lets in: a number holds it, empty adapts to the light as an eye does."
 				},
 				{
+					"Name": "Aurora",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The northern lights, 0 to 1 (more is brighter): anywhere, at night; empty: by themselves at 55 to 68 degrees of Latitude of the sun, at night under a clear sky."
+				},
+				{
+					"Name": "AuroraColors",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The colors of the northern lights, under and over: ['#3dff9a', '#c03cff']."
+				},
+				{
+					"Name": "Crosshair",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"none",
+						"dot",
+						"cross",
+						"circle",
+						"chevron"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The crosshair over the view while the hero holds a Weapon: empty as its weapon says, none for no crosshair."
+				},
+				{
+					"Name": "MarkCount",
+					"Type": "number",
+					"Default": 200,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How many marks of shots stay at once (the oldest go first)."
+				},
+				{
+					"Name": "MarkSeconds",
+					"Type": "number",
+					"Default": 60,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How long a mark of a shot stays, in seconds."
+				},
+				{
+					"Name": "Season",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The season the land and its plants show: spring, summer, autumn or winter; empty: of the sun (its DayOfYear of YearDays at its Latitude), passing with the days."
+				},
+				{
+					"Name": "Rainbow",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A rainbow, 0 to 1, where the sun stands low behind the view; empty: the weather's, in a light rain or as it ends."
+				},
+				{
+					"Name": "Cutscenes",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The cutscenes of the scene by name ({Name: {Tracks, Restore, Skip, Loop}}, SceneCinema): PlayCutscene(name) plays one; Save and Load keep them."
+				},
+				{
+					"Name": "Camera",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The camera of the scene (an object of kind camera) that shows the world; empty: the view of the scene."
+				},
+				{
 					"Name": "Bokeh",
 					"Type": "number",
 					"Default": 0,
@@ -675,6 +790,7 @@
 				"focus",
 				"person",
 				"loading",
+				"prepared",
 				"shoulder",
 				"arrive",
 				"land",
@@ -684,6 +800,16 @@
 				"leave",
 				"action",
 				"dig",
+				"fire",
+				"hit",
+				"lock",
+				"unlock",
+				"break",
+				"teleport",
+				"through",
+				"hover",
+				"cutscene",
+				"cue",
 				"part",
 				"touch",
 				"shader",
@@ -694,7 +820,8 @@
 				"select": "The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).",
 				"focus": "The view moved to an object: {ID}.",
 				"person": "V took the view of a walker to another place: third, first or shoulder.",
-				"loading": "What the scene waits for came a step nearer: {Part}, up to 100.",
+				"loading": "What the scene waits for came a step nearer: {Part (up to 100, never back), Stage (programs, models, globes, ground, plants, view; empty when done)}.",
+				"prepared": "All the view needs is made and the veil goes: {First (the start of the scene, not a location that came)}.",
 				"shoulder": "B took the view over another shoulder: right or left.",
 				"arrive": "An object reached where it was sent: {ID, At}.",
 				"land": "The view went down to the surface of a body: {ID}.",
@@ -704,6 +831,16 @@
 				"leave": "One went out of a trigger, or was removed: {Trigger, ID, Object}.",
 				"action": "A trigger was sent an action (Action of the trigger): {Trigger, Name, Data}.",
 				"dig": "A hole was dug in the ground (Dig): {At, Radius}.",
+				"fire": "An object shot its weapon (SceneWeapons): {ID, Weapon, From, Way}.",
+				"hit": "A shot hit something or the ground (SceneWeapons): {ID, Weapon, Type, Source, Team, Target, Part, Point, Normal, Material, Amount, Distance}.",
+				"lock": "The hero locked a target under its aim (Lock of its weapon): {ID, Weapon}.",
+				"unlock": "A lock was lost: {ID}.",
+				"break": "A thing broke into pieces (Break, SceneDebris): {ID, Pieces, Point}.",
+				"teleport": "A thing is beamed away or comes (Teleport): {ID, Phase (out or in), From, To}.",
+				"through": "A ship flew into the mouth of a wormhole (SceneDeepSpace): {ID, Wormhole, Leads, To (the mouth it comes out of, empty: none)}.",
+				"hover": "The pointer came over a selectable object, or left it: {ID (empty: none), Object, Info}.",
+				"cutscene": "A cutscene started, ended or was stopped (SceneCinema): {Name, State: start, end or stop}.",
+				"cue": "A cue of a cutscene came: {Cutscene, Name, Data, At}.",
 				"part": "A part of an object was set by its role (Part(id, role).Set): {ID, Role, Value}.",
 				"touch": "Two solid things began to touch (trait Rigid): {ID, With (null: the ground), At, Normal, Impulse}.",
 				"shader": "A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.",
@@ -718,6 +855,7 @@
 				"Junctions()",
 				"Push(id, impulse, at)",
 				"CastRay(from, direction, max)",
+				"Colliders()",
 				"RigidWorld()",
 				"Burst(type, place, options)",
 				"AddBehaviour(behaviour)",
@@ -737,6 +875,33 @@
 				"CosmosKinds()",
 				"Add(kind, props)",
 				"Change(id, changes)",
+				"UseCamera(id, options)",
+				"Cameras()",
+				"Fire(id, options)",
+				"Weapons(types)",
+				"HitRules(rules)",
+				"Locked()",
+				"Trace(from, way, range)",
+				"Marks()",
+				"Killed(id)",
+				"Break(id, options)",
+				"Debris()",
+				"Teleport(id, place, options, callback)",
+				"CastOn(type, at, options)",
+				"Dispel(id, seconds)",
+				"Lightning(kind)",
+				"Visibility()",
+				"SightOf(range)",
+				"SeasonState()",
+				"Visible(from, to, range)",
+				"PlayCutscene(cutscene, callback)",
+				"StopCutscene()",
+				"PauseCutscene(on)",
+				"SeekCutscene(seconds)",
+				"Cutscene()",
+				"Cinema(layer)",
+				"Record(options, callback)",
+				"ScreenAt(clientX, clientY)",
 				"Remove(id)",
 				"Attach(parent, object)",
 				"Detach(id)",
@@ -760,6 +925,10 @@
 				"Ray(clientX, clientY)",
 				"GroundAt(clientX, clientY)",
 				"OrbitAt(id, clientX, clientY)",
+				"Unlink(id)",
+				"Socket(id, name)",
+				"ChangeSown(key, changes)",
+				"UnlinkSown(key)",
 				"Save(options)",
 				"Load(saved)",
 				"Dig(at, radius)",
@@ -767,7 +936,9 @@
 				"Land(id, options)",
 				"TakeOff()",
 				"Surface()",
-				"Supported()"
+				"Supported()",
+				"Preload(list, callback)",
+				"ToOrbit(id)"
 			],
 			"Sample": {
 				"Seed": "kepler"
@@ -1033,6 +1204,75 @@
 			}
 		},
 		{
+			"Name": "CutsceneEditor",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "video",
+			"Description": "An editor of the cutscenes of a Scene on a line of time: tracks, keys, titles, preview and recording.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The cutscenes by name: {Name: {Tracks, Restore, Skip, Loop}}."
+				},
+				{
+					"Name": "Scene",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The Scene (the component) they play in."
+				},
+				{
+					"Name": "Target",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The object a move or a cut goes to by default."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"camera",
+				"record"
+			],
+			"EventDescriptions": {
+				"change": "The cutscenes changed: {Name: {Tracks...}}.",
+				"camera": "Camera from view was pressed: {Props} of a camera where the view is.",
+				"record": "A recording ended: {Name, Video (a Blob)}."
+			},
+			"Methods": [
+				"Cutscene()",
+				"Add(type)",
+				"Remove()",
+				"Preview(seconds)",
+				"Play()",
+				"Stop()",
+				"Record()"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "SceneEditor",
 			"Kind": "Component",
 			"Group": "game",
@@ -1068,6 +1308,8 @@
 						"effect",
 						"glass",
 						"mirror",
+						"camera",
+						"screen",
 						"tree",
 						"rock",
 						"house"
@@ -1352,16 +1594,35 @@
 					"Description": "What it shows, for screen readers."
 				},
 				{
+					"Name": "Wire",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the wire of the model: each edge of its triangles."
+				},
+				{
+					"Name": "Edges",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the edges of the model: where its faces meet at an angle and its rims (true)."
+				},
+				{
 					"Name": "Mode",
 					"Type": "select",
 					"Default": "shape",
 					"Options": [
 						"shape",
-						"roles"
+						"roles",
+						"parts"
 					],
 					"Schema": null,
 					"Body": false,
-					"Description": "The tab shown: the parts of the recipe (shape) or the roles of the parts of a model (roles)."
+					"Description": "The tab shown: the parts of the recipe (shape), the roles of the parts of a model (roles) or what is done to its pieces (parts)."
 				},
 				{
 					"Name": "RoleModel",
@@ -1494,6 +1755,31 @@
 			"Sample": {}
 		},
 		{
+			"Name": "SceneMaterials",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The library of materials of a Scene: patterns of GLSL in metres of the world, for the ground, roads and models.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Names(group)",
+				"Has(name)",
+				"Get(name)",
+				"Define(name, material)",
+				"Chunk(names)",
+				"Land(names)",
+				"LandNames()",
+				"Surface(name)"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "SceneTerrainGenerator",
 			"Kind": "Service",
 			"Group": "",
@@ -1508,6 +1794,7 @@
 			"EventDescriptions": {},
 			"Methods": [
 				"Flat(options)",
+				"Border(options)",
 				"Relief(settings)",
 				"Climate(settings)",
 				"ClimateOf(settings)",
@@ -1523,6 +1810,7 @@
 				"Heights(field, side)",
 				"FromGrid(options, heights, side)",
 				"Sketched(sketch, base, seed)",
+				"RoadWay(field, from, to, options)",
 				"SketchChanged(before, after)",
 				"Source(names)"
 			],
@@ -1722,6 +2010,12 @@
 				"Info(name)",
 				"Define(name, recipe)",
 				"Remake(name)",
+				"Edits(name)",
+				"SetEdits(name, edits)",
+				"Edit(name, edit)",
+				"PieceList(name)",
+				"Extract(name, ids, newName)",
+				"Combine(newName, parts, options)",
 				"Assemble(recipe, tools, random, variant)",
 				"Tagged(name, tag)",
 				"Load(name, callback)",
@@ -1734,6 +2028,32 @@
 				"Levels(name, options)",
 				"Pose(model, clip, time, options)",
 				"Length(model, clip)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneMannequin",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "A person made wholly of code, as detailed as a model of a file: its skin, its skeleton of Mixamo and its clips.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Options(options)",
+				"Skeleton(options)",
+				"Shapes(options, bones)",
+				"Distance(shapes, point)",
+				"Near(shapes, point)",
+				"Asset(options)",
+				"Clips(bones, options)",
+				"Pose(bones, pose)",
+				"Define(name, options)"
 			],
 			"Sample": {}
 		},
@@ -1916,9 +2236,19 @@
 				"Planet(options)",
 				"Color(planet, sample, overlay, light)",
 				"Picture(options, view, rect, step, overlay)",
+				"Face(options, face, size, row, rows)",
+				"Heights(options, face, size, row, rows)",
+				"Drainage(heights, size, least)",
+				"UseRivers(key, rivers)",
+				"Settlements(options, count)",
+				"UseSettlements(key, towns)",
+				"Highways(options, step)",
+				"UseHighways(key, roads)",
+				"Lights(options, face, size, row, rows)",
 				"Sphere(options)",
-				"Cells(radius, size)",
-				"CellAt(radius, size, direction)",
+				"Cells(radius, size, kind)",
+				"CellAt(radius, size, direction, kind)",
+				"CellOf(id)",
 				"CellPoint(cell, a, b)",
 				"CellCenter(cell)",
 				"CellCorners(cell)",
@@ -1949,6 +2279,8 @@
 				"Tell(planet, id, changes)",
 				"Forget(planet, id)",
 				"Passage(planet, id, passage)",
+				"Bake(planet, id, side, given)",
+				"Extent(place)",
 				"Kinds()",
 				"Beyonds()"
 			],
@@ -1968,6 +2300,32 @@
 			"dragging"
 		],
 		"elemenx-scene-canvas": [],
+		"elemenx-scene-aim": [],
+		"elemenx-scene-crosshair": [
+			"hit",
+			"is-chevron",
+			"is-circle",
+			"is-dot",
+			"kill"
+		],
+		"elemenx-scene-lock": [
+			"locked",
+			"off"
+		],
+		"elemenx-scene-cinema": [
+			"shown"
+		],
+		"elemenx-scene-cinema-fade": [],
+		"elemenx-scene-cinema-bar": [
+			"bottom",
+			"top"
+		],
+		"elemenx-scene-cinema-titles": [],
+		"elemenx-scene-cinema-title": [],
+		"elemenx-scene-cinema-title-text": [],
+		"elemenx-scene-cinema-subtitles": [],
+		"elemenx-scene-cinema-subtitle": [],
+		"elemenx-scene-cinema-speaker": [],
 		"elemenx-scene-labels": [
 			"hidden"
 		],
@@ -1981,6 +2339,14 @@
 		"elemenx-scene-card-actions": [],
 		"elemenx-scene-axes-place": [],
 		"elemenx-scene-takeoff": [],
+		"elemenx-scene-veil": [],
+		"elemenx-scene-landing": [],
+		"elemenx-scene-landing-hint": [],
+		"elemenx-scene-landing-list": [],
+		"elemenx-scene-landing-item": [
+			"pick"
+		],
+		"elemenx-scene-landing-time": [],
 		"elemenx-scene-fallback": [],
 		"elemenx-scene-loading": [],
 		"elemenx-scene-hud": [],
@@ -2013,6 +2379,18 @@
 		"elemenx-drawing-layer-field": [],
 		"elemenx-drawing-layer-count": [],
 		"elemenx-drawing-layers-actions": [],
+		"elemenx-cutscene-editor": [],
+		"elemenx-cutscene-editor-bar": [],
+		"elemenx-cutscene-editor-gap": [],
+		"elemenx-cutscene-editor-names": [],
+		"elemenx-cutscene-editor-add": [],
+		"elemenx-cutscene-editor-time": [],
+		"elemenx-cutscene-editor-body": [],
+		"elemenx-cutscene-editor-line": [],
+		"elemenx-cutscene-editor-empty": [],
+		"elemenx-cutscene-editor-fields": [],
+		"elemenx-cutscene-editor-title": [],
+		"elemenx-cutscene-editor-field": [],
 		"elemenx-scene-editor": [
 			"playing"
 		],
@@ -2052,6 +2430,7 @@
 		"elemenx-scene-editor-fields": [],
 		"elemenx-scene-editor-field": [],
 		"elemenx-scene-editor-parameter": [],
+		"elemenx-scene-editor-cutscenes": [],
 		"elemenx-scene-editor-blueprint": [],
 		"elemenx-scene-editor-graphs": [],
 		"elemenx-scene-editor-graph-kind": [

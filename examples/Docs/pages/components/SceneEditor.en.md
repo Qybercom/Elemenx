@@ -11,7 +11,7 @@ Space: a document of Setting space (the prop, for a new one) starts as a star wi
 | --- | --- |
 | `Value` | `null` |
 | `Setting` | `'ground'` |
-| `Kinds` | `['unit', 'effect', 'glass', 'mirror', 'tree', 'rock', 'house']` |
+| `Kinds` | `['unit', 'effect', 'glass', 'mirror', 'camera', 'screen', 'tree', 'rock', 'house']` |
 | `SpaceKinds` | `['star', 'planet', 'moon', 'belt', 'ring', 'station', 'outpost', 'craft', 'fleet']` |
 | `Storage` | `'elemenx-scene-editor'` |
 | `SnapMove` | `0.5` |
@@ -61,4 +61,4 @@ Space: a document of Setting space (the prop, for a new one) starts as a star wi
 - [makes a new document anew in the scene: a star system in place of the ground, a ground in place of the system](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L775) — `tests/regression/library-scene-editor.test.js`
 - [starts as a star and a planet, offers the kinds of space and no sketch, and keeps its setting in the document](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js#L76) — `libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js`
 
-+3 more in the same files
++4 more in the same files

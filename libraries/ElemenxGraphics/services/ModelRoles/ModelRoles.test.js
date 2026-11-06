@@ -73,7 +73,9 @@ describe('Contract: ModelRoles, the roles of the parts of a model', function () 
 		});
 		var door = roles.Make('door', {ID: 'front', Parts: [{Piece: 'door'}]});
 
-		expect(groups).toEqual(['opens', 'turns', 'drives', 'lights']);
+		expect(groups).toEqual(['opens', 'turns', 'drives', 'lights', 'chassis', 'flight', 'weapons', 'mechanisms', 'points']);
+		expect(roles.Make('arm')).toMatchObject({Drive: 'stroke', Corner: 'FL', Length: 0.3});
+		expect(roles.Make('exhaust')).toMatchObject({Effect: 'smoke', Rate: 6, Drive: 'gas'});
 		expect(door).toMatchObject({ID: 'front', Kind: 'door', Parts: [{Piece: 'door'}], Motion: {Type: 'hinge', Axis: [0, 1, 0], Angle: 70}, Pace: 0.6});
 		expect(roles.Make('steering').Drive).toBe('steer');
 		expect(roles.Make('lamp-rear').Light).toEqual({Kind: 'rear'});
@@ -208,6 +210,81 @@ describe('Contract: ModelRoles, the roles of the parts of a model', function () 
 		expect(moved[0]).toBeCloseTo(0, 5);
 		expect(moved[8]).toBeCloseTo(1, 5);
 		expect(scene.Part('hut', 'front').Get()).toBe(1);
+
+		roles.Remove(name);
+	});
+
+	/*
+	 * Roles beyond doors and wheels: a shock grows with the travel of its wheel, the hand of a clock goes with the time of
+	 * day, a turret with the Aim of the object; a socket is a point of the model in the world, an emitter gives off its
+	 * effect, a collider stops what comes to the outline of its parts.
+	 */
+	it('drives a shock by its wheel, a clock by the time, a turret by its aim; holds at a socket, emits, and collides', async function () {
+		var name = unique('hut');
+		var scene;
+		var engine;
+		var object;
+		var made;
+		var shock;
+		var socket;
+		var bursts = [];
+
+		hut(name);
+
+		roles.Set(name, [
+			roles.Make('shock', {ID: 'spring', Parts: [{Piece: 'door'}], Motion: {Type: 'stretch', Pivot: [0.1, 0.5, 0.41], Way: [0, -1, 0]}, Corner: 'FL', Length: 0.25}),
+			roles.Make('clock-hour', {ID: 'hand', Parts: [{Piece: 'door'}], Motion: {Type: 'hinge', Pivot: [0.1, 0.25, 0.41], Axis: [0, 0, 1], Angle: -360}}),
+			roles.Make('turret', {ID: 'top', Parts: [{Piece: 'door'}]}),
+			roles.Make('socket', {ID: 'grip', Name: 'Grip', Parts: [{Piece: 'body'}]}),
+			roles.Make('emitter', {ID: 'chimney', Parts: [{Piece: 'body'}], Effect: 'smoke', Rate: 4}),
+			roles.Make('collider', {ID: 'wall', Parts: [{Piece: 'body'}]})
+		]);
+
+		scene = await mount(name);
+		engine = scene.Engine();
+		object = scene.Scene().Objects.hut;
+		scene.Burst = function (type, at) {
+			bursts.push([type, at]);
+		};
+
+		scene.Add('sun', {ID: 'sky', Latitude: 45, Time: 15});
+
+		engine.Frame(performance.now());
+		engine.Frame(performance.now() + 30);
+
+		object.Strokes = [0.4, 0, 0, 0];
+		object.Values.Aim = {Yaw: 30, Pitch: 0};
+
+		engine.RigsStep(1);
+
+		/* The shock: its wheel 0.1 of the model lower, a quarter of a Length of 0.25 more: 1.4 as long along y. */
+		made = Elemenx.Service('SceneModels').Make(name);
+		shock = made.Pieces.filter(function (each) {
+			return each.Opening === 'role:spring';
+		})[0];
+
+		expect(object.Opens['role:spring']).toBeCloseTo(0.4, 5);
+		expect(engine.OpeningMove(object, shock)[5]).toBeCloseTo(1.4, 3);
+
+		/* The hand at three: a quarter round; the turret at its aim. */
+		expect(object.Opens['role:hand']).toBeCloseTo(0.25, 2);
+		expect(object.Opens['role:top']).toBe(30);
+
+		/* The socket: the middle of the body where the hut stands, as large as it is. */
+		socket = scene.Socket('hut', 'Grip');
+
+		expect(socket.At[1]).toBeCloseTo(object.World[1] + 0.4 * 4, 0);
+		expect(scene.Socket('hut', 'nothing')).toBe(null);
+
+		/* The emitter: four bursts a second of its effect. */
+		expect(bursts.length).toBe(4);
+		expect(bursts[0][0]).toBe('smoke');
+
+		/* The collider: the outline of the body. */
+		expect(scene.Colliders().map(function (one) {
+			return one.ID;
+		})).toContain('hut:wall');
+		expect(scene.Engine().ColliderHit(object.World[0], object.World[2], null, 0).ID).toBe('hut:wall');
 
 		roles.Remove(name);
 	});

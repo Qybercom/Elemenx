@@ -5,6 +5,13 @@
  * it and it lies as it fell. The walkers and the hero are capsules the world cannot move (Radius 0.4, 1.8 high) that push
  * what they walk into. The ground is the ground of the scene.
  *
+ * A collider is a wall of a shape of its own that stops what comes to it and never moves: an object of kind collider (the
+ * trait Collider: Points [[x, z]...] of a convex outline round its X and Y, turned by its Facing, Height, Lift over the
+ * ground; or Model, the outline and the height of that model as large as its Size), or an area of type collider of the
+ * sketch of the ground (Height, Lift). The rigid bodies strike it, a ray meets it, a car is held off it and a walker walks
+ * round it (ColliderHit); the editor (Origin) shows them as outlines. Colliders() gives them: [{ID, Points (the outline
+ * in the world, turning left), Bottom, Top}].
+ *
  * The scene emits touch ({ID, With (null: the ground), At, Normal, Impulse}) when two begin to touch. Push(id, impulse, at)
  * knocks one (an impulse [x, y, z], N s, at a point, its middle when none), CastRay(from, direction, max) gives the first
  * {ID (null: the ground), At, Normal, Distance} along a ray, or null; RigidWorld() the World itself.
@@ -16,7 +23,7 @@ Elemenx.Trait('ScenePhysics', {
 		var engine = this.Engine();
 		var physics = this.$Service('Physics');
 		var number = physics.Number;
-		var state = {World: null, Bodies: {}, Movers: {}};
+		var state = {World: null, Bodies: {}, Movers: {}, Colliders: [], ColliderKey: '', Prisms: {}, Hulls: {}};
 
 		function world () {
 			if (!state.World) {
@@ -96,6 +103,230 @@ Elemenx.Trait('ScenePhysics', {
 			scene.Overrides[object.ID].Values = Object.assign(scene.Overrides[object.ID].Values || {}, {X: body.At[0], Y: body.At[2]});
 		}
 
+		/* The outline round a list of points [x, z]: its convex hull, turning left (the chain of Andrew). */
+		function hull (points) {
+			var sorted = points.slice().sort(function (a, b) {
+				return a[0] - b[0] || a[1] - b[1];
+			});
+			var lower = [];
+			var upper = [];
+
+			function cross (o, a, b) {
+				return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+			}
+
+			sorted.forEach(function (point) {
+				while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], point) <= 0)
+					lower.pop();
+
+				lower.push(point);
+			});
+
+			sorted.slice().reverse().forEach(function (point) {
+				while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], point) <= 0)
+					upper.pop();
+
+				upper.push(point);
+			});
+
+			return lower.slice(0, -1).concat(upper.slice(0, -1));
+		}
+
+		/* The outline and the height of a model as large as size (its height), made once: {Points, Height} or null. */
+		function modelHull (name, size) {
+			var library = self.$Service('SceneModels');
+			var key = name + '@' + size;
+			var made;
+			var whole;
+			var low = Infinity;
+			var high = -Infinity;
+			var points = [];
+			var p;
+			var k;
+			var i;
+
+			if (state.Hulls[key] !== undefined) return state.Hulls[key];
+
+			if (!library.Has(name) || !library.Ready(name)) return null;
+
+			made = library.Make(name);
+			whole = library.Whole(made);
+			p = whole.Positions;
+
+			for (i = 0; i < p.length; i += 3) {
+				low = Math.min(low, p[i + 1]);
+				high = Math.max(high, p[i + 1]);
+			}
+
+			k = size / Math.max(1e-6, high - low);
+
+			for (i = 0; i < p.length; i += 3)
+				points.push([Math.round(p[i] * k * 100) / 100, Math.round(p[i + 2] * k * 100) / 100]);
+
+			state.Hulls[key] = {Points: hull(points), Height: (high - low) * k};
+
+			return state.Hulls[key];
+		}
+
+		/* The colliders of the scene and of the sketch of its ground: [{ID, Points (in the world), Bottom, Top}], made again when they change. */
+		function colliders () {
+			var field = scene.Ground && scene.Ground.Field;
+			var sketch = field && field.Options && field.Options.Sketch;
+			var given = [];
+			var key;
+
+			/* The parts of models with the role collider: their outlines where they stand. */
+			scene.Roots.forEach(function (object) {
+				if (!engine.RoleColliders || object.Away || !object.Rig || !object.Rig.Made || !(object.Rig.Made.Colliders || []).length) return;
+
+				engine.RoleColliders(object).forEach(function (one) {
+					given.push({ID: one.ID, X: 0, Z: 0, Facing: 0, Points: one.Points, Height: one.Top - one.Bottom, Lift: 0, Bottom: one.Bottom});
+				});
+			});
+
+			scene.Roots.forEach(function (object) {
+				var settings = object.Traits.Collider;
+				var shape;
+
+				if (!settings || object.Away) return;
+
+				shape = settings.Model ? modelHull(settings.Model, number(object.Values.Size, number(settings.Size, 1))) : null;
+
+				given.push({ID: object.ID, X: number(object.Values.X, 0), Z: number(object.Values.Y, 0), Facing: number(object.Values.Facing, 0), Points: shape ? shape.Points : settings.Points || [[-1, -1], [1, -1], [1, 1], [-1, 1]], Height: shape && (settings.Height === null || settings.Height === undefined || settings.Height === '') ? shape.Height : number(settings.Height, 3), Lift: number(object.Values.Lift, number(settings.Lift, 0))});
+			});
+
+			(sketch && sketch.Layers || []).forEach(function (layer) {
+				if (layer.Visible === false || layer.Visible === 'false') return;
+
+				(layer.Items || []).forEach(function (item) {
+					if (item.Type === 'collider' && item.Points && item.Points.length > 2)
+						given.push({ID: 'sketch-' + (item.ID || given.length), X: 0, Z: 0, Facing: 0, Points: item.Points, Height: number(item.Height, 3), Lift: number(item.Lift, 0)});
+				});
+			});
+
+			key = JSON.stringify(given) + ':' + (field ? field.Size : 0);
+
+			if (key === state.ColliderKey) return state.Colliders;
+
+			state.ColliderKey = key;
+			state.Colliders = given.map(function (one) {
+				var turn = one.Facing * Math.PI / 180;
+				var c = Math.cos(turn);
+				var s = Math.sin(turn);
+				/* Turned as a model is by its Facing: its x to (cos, -sin), its z to (sin, cos). */
+				var points = hull(one.Points.map(function (point) {
+					return [one.X + point[0] * c + point[1] * s, one.Z - point[0] * s + point[1] * c];
+				}));
+				var middle = [0, 0];
+				var base;
+
+				points.forEach(function (point) {
+					middle[0] += point[0] / points.length;
+					middle[1] += point[1] / points.length;
+				});
+
+				base = one.Bottom !== undefined ? one.Bottom : field ? Math.min.apply(null, points.map(function (point) {
+					return field.Height(point[0], point[1]);
+				}).concat([field.Height(middle[0], middle[1])])) : 0;
+
+				return {ID: one.ID, Points: points, Middle: middle, Bottom: base + one.Lift, Top: base + one.Lift + one.Height};
+			}).filter(function (one) {
+				return one.Points.length > 2;
+			});
+
+			return state.Colliders;
+		}
+
+		/* The colliders as prisms of the world: made again when they change. */
+		function prisms () {
+			var list = colliders();
+			var wanted = {};
+
+			list.forEach(function (one) {
+				var id = 'collider:' + one.ID;
+				var body = state.Prisms[id];
+				var points = one.Points.map(function (point) {
+					return [point[0] - one.Middle[0], point[1] - one.Middle[1]];
+				});
+				var at = [one.Middle[0], (one.Bottom + one.Top) / 2, one.Middle[1]];
+
+				wanted[id] = true;
+
+				if (body && JSON.stringify([body.Points, body.At, body.Height]) === JSON.stringify([points, at, one.Top - one.Bottom])) return;
+
+				if (body)
+					world().Remove(body);
+
+				state.Prisms[id] = world().Add({ID: one.ID, Shape: 'prism', Points: points, Height: one.Top - one.Bottom, At: at, Mass: 0, Friction: 0.6, Bounce: 0.1});
+			});
+
+			Object.keys(state.Prisms).forEach(function (id) {
+				if (wanted[id]) return;
+
+				world().Remove(state.Prisms[id]);
+
+				delete state.Prisms[id];
+			});
+		}
+
+		engine.Colliders = function () {
+			return colliders();
+		};
+
+		/*
+		 * A point against the colliders (at the height y, any height when null), margin metres round them: {ID, Normal [x, z] out
+		 * of the nearest side, Depth (how far in it is)} of the deepest, or null.
+		 */
+		engine.ColliderHit = function (x, z, y, margin) {
+			var far = number(margin, 0);
+			var best = null;
+
+			colliders().forEach(function (one) {
+				var points = one.Points;
+				var least = Infinity;
+				var normal = null;
+				var i;
+
+				if (y !== null && y !== undefined && (y < one.Bottom - far || y > one.Top + far)) return;
+
+				for (i = 0; i < points.length; i++) {
+					var a = points[i];
+					var b = points[(i + 1) % points.length];
+					var e = [b[0] - a[0], b[1] - a[1]];
+					var l = Math.hypot(e[0], e[1]) || 1;
+					/* Out of the side: on its right, the outline turning left. */
+					var n = [e[1] / l, -e[0] / l];
+					var inside = -((x - a[0]) * n[0] + (z - a[1]) * n[1]) + far;
+					if (inside < 0) return;
+
+					if (inside < least) {
+						least = inside;
+						normal = n;
+					}
+				}
+
+				if (!best || least > best.Depth)
+					best = {ID: one.ID, Normal: normal, Depth: least};
+			});
+
+			return best;
+		};
+
+		/* The outlines of the colliders, bottom and top and the edges between: for the editor. */
+		engine.ColliderLines = function () {
+			var lines = [];
+
+			colliders().forEach(function (one) {
+				one.Points.forEach(function (point, i) {
+					var next = one.Points[(i + 1) % one.Points.length];
+
+					lines.push([point[0], one.Bottom, point[1]], [next[0], one.Bottom, next[1]], [point[0], one.Top, point[1]], [next[0], one.Top, next[1]], [point[0], one.Bottom, point[1]], [point[0], one.Top, point[1]]);
+				});
+			});
+
+			return lines;
+		};
+
 		/* A step of the world, on a ground only: its bodies made for the objects that came, gone with those that went. */
 		engine.RigidStep = function (elapsed) {
 			var alive = {};
@@ -108,6 +339,8 @@ Elemenx.Trait('ScenePhysics', {
 			if (!state.World && !scene.Roots.some(function (object) {
 				return object.Traits.Rigid;
 			})) return;
+
+			prisms();
 
 			scene.Roots.forEach(function (object) {
 				var settings = object.Traits.Rigid;
@@ -168,7 +401,12 @@ Elemenx.Trait('ScenePhysics', {
 		};
 
 		engine.RigidRay = function (from, direction, max) {
-			var hit = world().Ray(from, direction, max);
+			var hit;
+
+			if (scene.Ground && scene.Ground.Field)
+				prisms();
+
+			hit = world().Ray(from, direction, max);
 
 			return hit ? {ID: hit.Body ? hit.Body.ID : null, At: hit.At, Normal: hit.Normal, Distance: hit.Distance} : null;
 		};
@@ -184,6 +422,11 @@ Elemenx.Trait('ScenePhysics', {
 	/* The first thing a ray meets, of the rigid objects, the walkers and the ground: {ID (null: the ground), At, Normal, Distance}. */
 	CastRay: function (from, direction, max) {
 		return this.Engine().RigidRay(from, direction, max);
+	},
+
+	/* The colliders of the scene and of its sketch: [{ID, Points (their outline in the world), Bottom, Top}]. */
+	Colliders: function () {
+		return this.Engine().Colliders();
 	},
 
 	/* The World of the Physics Service the rigid objects are in, for joints and the rest. */

@@ -33,3 +33,18 @@
 .elemenx-markdown.interface img {
 	max-width: 100%;
 }
+
+/* A task of a list: its box in the place of its mark, no bullet. */
+.elemenx-markdown .elemenx-markdown-task-item {
+	list-style: none;
+}
+
+.elemenx-markdown .elemenx-markdown-task {
+	margin: 0 0.5em 0 -1.4em;
+	vertical-align: middle;
+	accent-color: var(--elemenx-accent);
+}
+
+.elemenx-markdown .elemenx-markdown-task:not(:disabled) {
+	cursor: pointer;
+}

@@ -236,4 +236,36 @@ describe('Contract: SceneSower, what a Scatter sows, in workers', function () {
 
 		expect(plain(there)).toEqual(plain(sown));
 	});
+
+	/* Regression: a line of short pieces (the way of a road, a point every 2 m) had nothing on it when its step was longer than a piece. */
+	it('places the things of a line every step of it, whatever its pieces, the same from its start in every square', function () {
+		var line = [];
+		var rule;
+		var all = [];
+		var x;
+
+		for (x = 0; x <= 200; x += 2)
+			line.push([x, 10 + Math.sin(x / 30) * 5]);
+
+		rule = {Line: line, Spacing: 28};
+
+		[0, 48, 96, 144, 192].forEach(function (from) {
+			[-48, 0].forEach(function (z) {
+				all = all.concat(sower.Places(rule, {X: from, Z: z}, function (a) {
+					return a;
+				}, 48));
+			});
+		});
+
+		expect(all.length).toBe(7);
+
+		all.sort(function (a, b) {
+			return a[0] - b[0];
+		}).forEach(function (place, index) {
+			if (index)
+				expect(Math.abs(place[0] - all[index - 1][0])).toBeGreaterThan(25);
+		});
+
+		expect(all[0][0]).toBeCloseTo(13.9, 0);
+	});
 });

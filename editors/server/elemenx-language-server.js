@@ -2,7 +2,8 @@
  * The language server of Elemenx (LSP over stdio): completion, hover, the definition, the references (Find usages)
  * and diagnostics of the templates and the code of an Elemenx project, for any editor that speaks LSP (IntelliJ through
  * LSP4IJ, Neovim, Zed, Sublime...). Its knowledge is the one of ../core/elemenx-language.js. Options: --meta <file> (a meta.json of a
- * Library, beside the ones the project has), --stdio (the default and only transport).
+ * Library, beside the ones the project has), --stdio (the default and only transport). After the start it tells the
+ * editor when the project has a newer Elemenx than the one it carries (after an npm update) and offers to update it.
  */
 var path = require('path');
 var language = require(path.join(__dirname, '..', 'core', 'elemenx-language.js'));
@@ -12,6 +13,10 @@ var knowledge = null;
 var buffer = Buffer.alloc(0);
 var timers = {};
 var meta = null;
+/* The requests the server sent the editor, by their IDs: what to do with the answer. */
+var asked = {};
+var sent = 0;
+var started = {Roots: [], Plugin: ''};
 var index = process.argv.indexOf('--meta');
 if (index !== -1)
 	meta = process.argv[index + 1] || null;
@@ -90,15 +95,52 @@ function roots (params) {
 	return list;
 }
 
+/* A request to the editor (window/showMessageRequest...): its answer goes to then. */
+function ask (method, params, then) {
+	var id = 'elemenx-' + (++sent);
+
+	asked[id] = then;
+
+	send({jsonrpc: '2.0', id: id, method: method, params: params});
+}
+
+/*
+ * After an npm update the project may have a newer Elemenx than the extension: the editor is asked whether to update it,
+ * and Update opens the page of the extension (of the marketplace of the IDE: initializationOptions.Marketplace).
+ */
+function updates () {
+	var found = language.Updates(started.Roots, started.Plugin);
+	if (!found || !found.Newer) return;
+
+	ask('window/showMessageRequest', {type: 3, message: found.Message, actions: [{title: 'Update'}, {title: 'Later'}]}, function (answer) {
+		if (!answer || answer.title !== 'Update') return;
+
+		ask('window/showDocument', {uri: started.Marketplace || 'https://plugins.jetbrains.com/search?search=elemenx', external: true}, function () {});
+	});
+}
+
 function handle (message) {
 	var params = message.params || {};
 	var document;
 	var offset;
 	var file;
+	var then;
+
+	/* An answer of the editor to a request of the server. */
+	if (!message.method && message.id !== undefined && message.id !== null) {
+		then = asked[message.id];
+		delete asked[message.id];
+
+		if (then)
+			then(message.result, message.error);
+
+		return;
+	}
 
 	switch (message.method) {
 		case 'initialize':
 			knowledge = language.Create({Roots: roots(params), Meta: meta});
+			started = {Roots: roots(params), Plugin: params.initializationOptions && params.initializationOptions.PluginVersion || '', Marketplace: params.initializationOptions && params.initializationOptions.Marketplace || ''};
 
 			respond(message.id, {
 				capabilities: {
@@ -110,6 +152,11 @@ function handle (message) {
 				},
 				serverInfo: {name: 'elemenx-language-server', version: '1.0.0'}
 			});
+
+			return;
+
+		case 'initialized':
+			updates();
 
 			return;
 
@@ -170,6 +217,15 @@ function handle (message) {
 		case 'textDocument/definition':
 		case 'textDocument/references':
 			document = documents[params.textDocument.uri];
+
+			/* GLSL: its words, in a file of it or a string of a shader in the code. */
+			if (document && message.method === 'textDocument/completion' && language.GlslComplete(document.Text, language.Offset(document.Text, params.position), toPath(params.textDocument.uri)).length) {
+				respond(message.id, {isIncomplete: false, items: language.GlslComplete(document.Text, language.Offset(document.Text, params.position), toPath(params.textDocument.uri)).map(function (item) {
+					return {label: item.Label, kind: Kinds[item.Kind] || 1, detail: item.Detail, textEdit: {range: range(document.Text, item.Start, item.End), newText: item.Insert}, sortText: item.Sort};
+				})});
+
+				return;
+			}
 
 			if (!document || !knowledge || !kindOf(params.textDocument.uri)) {
 				respond(message.id, null);

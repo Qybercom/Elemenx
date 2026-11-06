@@ -180,6 +180,32 @@ describe('Contract: the plan of a settlement of a sketch: its streets, its lots 
 		expect(plan({Kind: 'village', Points: outline, Density: 0}).Lots).toEqual([]);
 	});
 
+	/* Regression: houses of a settlement stood on a road of the sketch through it (and on a river): lots keep off all its ways. */
+	it('builds no lot of a settlement on a road, a street not its own or a river of the sketch through it', function () {
+		var outline = square(-150, -150, 150, 150);
+		var road = {Type: 'road', Points: [[-200, -40], [0, 10], [200, 60]], Width: 8};
+		var river = {Type: 'river', Points: [[-60, -200], [-40, 0], [-70, 200]], Width: 14};
+		var town = plan({Kind: 'town', Points: outline}, [road, river]);
+		var free = plan({Kind: 'town', Points: outline});
+
+		expect(town.Lots.length).toBeGreaterThan(20);
+		expect(town.Lots.length).toBeLessThan(free.Lots.length);
+
+		town.Lots.forEach(function (lot) {
+			corners(lot).concat([[lot.X, lot.Z]]).forEach(function (point) {
+				expect(distance(road.Points, point[0], point[1])).toBeGreaterThan(road.Width / 2 + 1);
+				expect(distance(river.Points, point[0], point[1])).toBeGreaterThan(river.Width / 2 + 1);
+			});
+		});
+
+		/* Without them, some stood there. */
+		expect(free.Lots.some(function (lot) {
+			return distance(road.Points, lot.X, lot.Z) < road.Width / 2 + 1;
+		}) || free.Lots.some(function (lot) {
+			return distance(river.Points, lot.X, lot.Z) < river.Width / 2 + 1;
+		})).toBe(true);
+	});
+
 	it('walls a fort round, a tower at each corner, a gate on the wall where each street goes out, the way through it along the street', function () {
 		var outline = square(-100, 60, -20, 140);
 		var fort = plan({Kind: 'fort', Points: outline});
@@ -238,6 +264,52 @@ describe('Contract: the zones of a ground and where things may grow on it', func
 		expect(terrain.Paint(told, 0, 0, 70, 0)).toEqual([0.45, 0.42, 0.36]);
 		/* A steep slope is rock wherever it is. */
 		expect(terrain.Paint(hills, 0, 0, 5, 0.5)).toEqual([0.42, 0.39, 0.35]);
+	});
+
+	/*
+	 * What a ground is made of (SceneMaterials): the materials of its palettes and its sketch in slots, the weights of them at
+	 * a point as its colors go (Paint into), and those of each corner of its squares (Materials: 8 a vertex).
+	 */
+	it('makes its ground of materials: slots of its palettes and sketch, their weights at a point and at each corner', function () {
+		var field = terrain.Flat({Size: 400, Height: 100, Rock: 0.6, Snow: 0.9, Water: 0, Seed: 'stuff', Palette: {Materials: {Low: 'clay'}}, Sketch: {Layers: [{ID: 'a', Items: [{Type: 'beach', Points: [[-50, -50], [50, -50], [50, 50], [-50, 50]]}, {Type: 'road', Points: [[100, -150], [100, 150]], Width: 8, Material: 'cobbles'}]}]}});
+		var stuff = [0, 0, 0, 0, 0, 0, 0, 0];
+		var geometry;
+		var count;
+
+		expect(field.Materials.slice(0, 7)).toEqual(['clay', 'soil', 'rock', 'sand', 'dirt', 'cobbles', 'snow']);
+
+		/* Low and high, as their colors are: clay, soil; rock on a slope; cobbles on the road of the sketch; snow high. */
+		terrain.Paint(field, -150, -150, 20, 0, stuff);
+
+		expect(stuff[0] + stuff[1]).toBeCloseTo(1, 5);
+		expect(stuff[0]).toBeGreaterThan(stuff[1]);
+
+		stuff = [0, 0, 0, 0, 0, 0, 0, 0];
+
+		terrain.Paint(field, -150, -150, 30, 0.5, stuff);
+
+		expect(stuff[2]).toBe(1);
+
+		stuff = [0, 0, 0, 0, 0, 0, 0, 0];
+
+		terrain.Paint(field, -150, -150, 95, 0, stuff);
+
+		expect(stuff[6]).toBe(1);
+
+		stuff = [0, 0, 0, 0, 0, 0, 0, 0];
+
+		terrain.Paint(field, 100, 0, 30, 0, stuff);
+
+		expect(stuff[5]).toBeGreaterThan(0.9);
+
+		/* Its squares: 8 weights of each corner, the skirt too. */
+		geometry = field.Chunk(0, 0, 100, 8);
+		count = geometry.Positions.length / 3;
+
+		expect(geometry.Materials.length).toBe(count * 8);
+		expect(geometry.Materials.slice(0, 8).reduce(function (sum, value) {
+			return sum + value;
+		}, 0)).toBeCloseTo(1, 5);
 	});
 
 	/* Regression: grass grew on the roads, which the ground under them made level: nothing kept them bare. */

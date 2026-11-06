@@ -239,4 +239,32 @@ describe('Contract: SceneEditor of a star system: bodies added round the one tha
 		expect(scene.Get('planet').Traits.Body.Radius).not.toBe(radius);
 		expect(scene.Get('planet').Size).toBeGreaterThan(0);
 	});
+
+	/* Regression: Load leaves the cutscenes a scene has, so an undo of the first cutscene kept it. */
+	it('edits the cutscenes of the scene under the view, each change one step to undo, cameras and screens to add', async function () {
+		var made = await mount();
+		var editor = made.Editor;
+
+		expect(editor.Kinds).toContain('camera');
+		expect(editor.Kinds).toContain('screen');
+
+		editor.CutscenesToggled();
+
+		await tick();
+
+		expect(editor.$Element().querySelector('.elemenx-cutscene-editor')).not.toBe(null);
+
+		editor.CutscenesChanged({intro: {Tracks: [{Type: 'fade', Keys: [{At: 0, Value: 1}]}]}});
+
+		expect(Object.keys(editor.Scene().Cutscenes)).toEqual(['intro']);
+		expect(made.Host.Changes[made.Host.Changes.length - 1].Scene.Cutscenes.intro.Tracks.length).toBe(1);
+
+		editor.Undo();
+
+		expect(editor.Scene().Cutscenes).toBe(null);
+
+		editor.Redo();
+
+		expect(Object.keys(editor.Scene().Cutscenes)).toEqual(['intro']);
+	});
 });

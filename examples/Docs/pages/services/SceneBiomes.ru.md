@@ -7,6 +7,8 @@
 
 Check(list, field) проверяет, как биомы покрывают землю и её высоты: range — пустой диапазон; gap — полоса высот, где для какого-то климата нет биома (Heights, Moisture, Temperature этого пробела); unreachable — биом, чьих высот на земле нет; unused — биом, которого на земле нет совсем; uncovered — доля земли без биома. Возвращает {Problems, Share (доля земли каждого биома), Gap, Heights (диапазон высот, где биом есть)}. Без field проверяется только климат по полосам высот.
 
+У палитры биома может быть Materials — из какого материала SceneMaterials сделана каждая её часть (Sand, Low, High, Rock, Snow, Deep, Road). Встроенные: taiga — почва с мхом и гравий, tundra — снег и гравий, desert — песок, savanna — глина на возвышенностях, swamp — почва и глина; temperate — материалы земли по умолчанию (газон, почва, скала, песок).
+
 ## Методы
 
 - `Names()`
@@ -44,4 +46,4 @@ Check(list, field) проверяет, как биомы покрывают зе
 - [makes a whole land of one biome of its World, and a village with its roads that nothing grows on](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L8929) — `tests/regression/library-scene.test.js`
 - [lays out the same village of the same seed, on what is level and dry, moved there if it must](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9933) — `tests/regression/library-scene.test.js`
 - [takes the lands of an application](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L9966) — `tests/regression/library-scene.test.js`
-- [tells where lands by their climate leave heights and climates of a ground bare, and lands it never has](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTerrainGenerator/SceneTerrainGenerator.test.js#L397) — `libraries/ElemenxGraphics/services/SceneTerrainGenerator/SceneTerrainGenerator.test.js`
+- [tells where lands by their climate leave heights and climates of a ground bare, and lands it never has](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTerrainGenerator/SceneTerrainGenerator.test.js#L469) — `libraries/ElemenxGraphics/services/SceneTerrainGenerator/SceneTerrainGenerator.test.js`

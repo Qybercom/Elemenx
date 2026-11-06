@@ -103,6 +103,229 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 		expect(Elemenx.Service('SceneModels').Ready(object.Shape)).toBe(true);
 	});
 
+	/*
+	 * Regression: roads and the ground were of flat colors, the same near as far. A strip is drawn by the material of its
+	 * surface (SceneMaterials, the Pattern of its material made the Blueprint of it), the ground by the materials of its
+	 * palettes; all of them compile.
+	 */
+	it('draws a road by the materials of its surfaces and the ground by its own, all of them compiled', async function () {
+		var mounted = await mount();
+		var scene = mounted.Scene;
+		var told = [];
+		var made;
+		var patterns;
+
+		scene.$On('shader', function (event) {
+			told.push(event.Message);
+		});
+		scene.Add('road', {ID: 'paved', Type: 'street', Points: [[-110, -30], [0, 12], [110, 25]]});
+		scene.SetViewpoint({Target: [0, 10, 10], Yaw: 0.5, Pitch: 0.5, Distance: 20});
+
+		/* Its model comes of a worker; drawn, its materials are of their patterns. */
+		await waitFor(function () {
+			mounted.Frames(1);
+
+			made = scene.$Service('SceneModels').Make(scene.Scene().Objects.paved.Shape);
+
+			return made && made.Pieces.some(function (piece) {
+				return piece.Material && piece.Material.Pattern === 'asphalt' && piece.Material.Blueprint;
+			});
+		}, 10000);
+
+		patterns = made.Pieces.map(function (piece) {
+			return piece.Material && piece.Material.Pattern;
+		});
+
+		expect(patterns).toContain('asphalt');
+		expect(patterns).toContain('paving');
+		expect(made.Pieces.some(function (piece) {
+			return piece.Material.Pattern === 'asphalt' && /void blueprintSurface\(/.test(piece.Material.Blueprint || '');
+		})).toBe(true);
+		expect(scene.Scene().Ground.Field.Materials).toContain('lawn');
+		expect(told).toEqual([]);
+	});
+
+	/*
+	 * The furniture of a street (the Along of its type): lamps on its sidewalks, benches and bins, a bus stop, sown by the
+	 * scatter wherever it goes, low as it may be; a lamp glows by itself at night, far less by day, and lights nothing.
+	 */
+	it('sows the furniture of a street along it, and its lamps light it at night', async function () {
+		var mounted = await mount();
+		var scene = mounted.Scene;
+		var kinds = {};
+		var road;
+		var sketch;
+
+		scene.Add('road', {ID: 'high', Type: 'street', Points: [[-120, 40], [0, 60], [120, 50]]});
+
+		await waitFor(function () {
+			mounted.Frames(2);
+
+			return scene.SownNear(0, 60, 80).some(function (one) {
+				return one.Model === 'streetlamp';
+			}) && scene.Sown().Waiting === 0;
+		}, 40000);
+
+		road = scene.Roads()[0];
+		sketch = scene.Scene().Ground.Field.Options.Sketch;
+
+		expect(road.Beside.map(function (line) {
+			return line.Shapes;
+		})).toContain('streetlamp');
+		expect(sketch.Layers[0].Items.filter(function (item) {
+			return item.Type === 'row' && item.Shapes === 'streetlamp';
+		})[0].MinHeight).toBe(-1000);
+
+		scene.SownNear(0, 60, 80).forEach(function (one) {
+			kinds[one.Model] = (kinds[one.Model] || 0) + 1;
+		});
+
+		expect(kinds.streetlamp).toBeGreaterThan(4);
+		expect((kinds.bench || 0) + (kinds.bin || 0) + (kinds.hydrant || 0)).toBeGreaterThan(2);
+
+		/* By night the ground tells it: what glows by itself shows all of it. */
+		scene.Add('sun', {ID: 'sky', Latitude: 45, DayOfYear: 172, Time: 23.5});
+
+		mounted.Frames(2);
+
+		expect(scene.Scene().Ground.Night).toBe(1);
+
+		/* Its lamps light the street at night: lights of the scene where they stand, at the height of their lanterns. */
+		var lit = scene.Scene().Lamps.filter(function (lamp) {
+			return lamp.Built && lamp.Settings.Night;
+		});
+
+		expect(lit.length).toBeGreaterThan(3);
+		expect(lit[0].At[1] - scene.Scene().Ground.Field.Height(lit[0].At[0], lit[0].At[2])).toBeGreaterThan(3.5);
+		expect(lit[0].Settings.Radius).toBeGreaterThan(15);
+
+		scene.Change('sky', {Time: 13});
+
+		mounted.Frames(2);
+
+		expect(scene.Scene().Ground.Night).toBe(0);
+
+		/* By day they are dark. */
+		expect(scene.Scene().Lamps.some(function (lamp) {
+			return lamp.Settings.Night;
+		})).toBe(false);
+	}, 60000);
+
+	/*
+	 * What is generated is edited by hand: a thing of a World changed (its override kept, made again with the World over it)
+	 * or unlinked (an object of its own, saved as any other); a thing sown changed (taken away, moved, another model, the rest
+	 * sown as they were) or unlinked (an object where it stood); all of it kept by Save and made again by Load.
+	 */
+	it('edits what is generated: its changes kept over it as it is made again, or it unlinked as an object of its own', async function () {
+		var mounted = await mount();
+		var scene = mounted.Scene;
+		var inner = scene.Scene();
+		var world = Elemenx.Service('SceneWorld').Library({Size: 400, Height: 30, Water: 0, Scale: 90, Ridges: 0.3, Seed: 'roads', Settlements: [{X: 20, Y: 10, Houses: 4}], Scatters: [{Kind: 'grove', Shapes: ['oak', 'birch'], Density: 1.2}]});
+		var near;
+		var other;
+		var before;
+		var moved;
+		var id;
+		var saved;
+
+		scene.Change('land', {World: world});
+
+		await waitFor(function () {
+			mounted.Frames(2);
+
+			return scene.Get('land-world-0') && scene.SownNear(0, 0, 200).length > 20 && scene.Sown().Waiting === 0;
+		}, 30000);
+
+		/* A thing of the World: changed, its change kept when the World is made again. */
+		expect(scene.Change('land-world-0', {Houses: 2})).toBe(true);
+
+		mounted.Frames(1);
+
+		expect(JSON.stringify(scene.Get('land-world-0'))).toContain('"Houses":2');
+		expect(JSON.stringify(scene.Save().Overrides['land-world-0'])).toContain('"Houses":2');
+
+		/* Unlinked: an object of its own, no more of the World, saved with what was changed of it. */
+		expect(scene.Unlink('land-world-0')).toBe(true);
+		expect(scene.Unlink('land-world-0')).toBe(false);
+
+		mounted.Frames(1);
+
+		expect(scene.Get('land-world-0').Values.Generated).toBeUndefined();
+		expect(JSON.stringify(scene.Save().Added.filter(function (added) {
+			return added.ID === 'land-world-0';
+		})[0])).toContain('"Houses":2');
+
+		/* A thing sown: taken away, the others where they were. */
+		await waitFor(function () {
+			mounted.Frames(2);
+
+			return scene.Sown().Waiting === 0 && scene.SownNear(0, 0, 200).length > 20;
+		}, 30000);
+
+		near = scene.SownNear(0, 0, 200);
+		before = near.slice(1, 6).map(function (one) {
+			return [one.Key, one.X, one.Z];
+		});
+
+		expect(near[0].Key).toMatch(/:/);
+		expect(scene.ChangeSown(near[0].Key, {Remove: true})).toBe(true);
+
+		await waitFor(function () {
+			mounted.Frames(2);
+
+			return scene.Sown().Waiting === 0 && scene.SownNear(0, 0, 200).length > 20;
+		}, 30000);
+
+		other = scene.SownNear(0, 0, 200);
+
+		expect(other.some(function (one) {
+			return one.Key === near[0].Key;
+		})).toBe(false);
+
+		before.forEach(function (one) {
+			var same = other.filter(function (each) {
+				return each.Key === one[0];
+			})[0];
+
+			expect(same.X).toBeCloseTo(one[1], 3);
+			expect(same.Z).toBeCloseTo(one[2], 3);
+		});
+
+		/* Moved and made another model. */
+		scene.ChangeSown(before[0][0], {X: before[0][1] + 3, Model: 'pine'});
+
+		await waitFor(function () {
+			mounted.Frames(2);
+
+			moved = scene.SownNear(before[0][1] + 3, before[0][2], 0.5).filter(function (one) {
+				return one.Key === before[0][0];
+			})[0];
+
+			return moved && scene.Sown().Waiting === 0;
+		}, 30000);
+
+		expect(moved.Model).toBe('pine');
+
+		/* Unlinked: an object of kind thing where it stood, sown no more. */
+		id = scene.UnlinkSown(before[1][0]);
+
+		expect(scene.Get(id).Kind).toBe('thing');
+		expect(scene.Get(id).Values.X).toBeCloseTo(before[1][1], 1);
+		expect(scene.UnlinkSown('nothing:0:0')).toBe(null);
+
+		/* Saved, and made again so by Load. */
+		saved = scene.Save();
+
+		expect(saved.Sown[near[0].Key]).toEqual({Remove: true});
+		expect(saved.Sown[before[1][0]]).toEqual({Remove: true});
+
+		scene.ChangeSown(near[0].Key, null);
+		scene.Load(saved);
+
+		expect(Elemenx.Instance(scene.$Element()).Engine().SownEdits()[near[0].Key]).toEqual({Remove: true});
+		expect(inner.Objects[id]).toBeTruthy();
+	}, 120000);
+
 	it('leaves the ground as it is under a bridge and over a tunnel, and gives the road its piers and portals', async function () {
 		var mounted = await mount();
 		var scene = mounted.Scene;

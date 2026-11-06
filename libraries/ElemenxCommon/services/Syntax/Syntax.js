@@ -1,23 +1,25 @@
 /*
  * The highlighting of source code: the grammars of the languages and the tokens of a text in one of them. Built in:
  * javascript (js, mjs, cjs, jsx), typescript (ts, tsx), json, html (xml, svg), css, markdown (md), sql, python (py),
- * shell (sh, bash, zsh), yaml (yml), toml, ini (cfg, conf, properties, env) and csv (tsv); text has no rules. Used by
- * CodeEditor; any component may show highlighted code with it.
+ * shell (sh, bash, zsh), yaml (yml), toml, ini (cfg, conf, properties, env), csv (tsv) and glsl (the shaders of WebGL
+ * and OpenGL: frag, vert, vs, fs, shader); text has no rules. Used by CodeEditor; any component may show highlighted
+ * code with it.
  * - Register(name, grammar) adds a language (or replaces one): {Aliases, Rules, Comment, Indent}. Rules are
  *   [Type, RegExp, Options]: the first rule that matches nearest wins (a rule must not match empty text). Type is the
  *   class of the token (elemenx-syntax-<Type>; null for plain text). Options: Inside (a language name, or a
  *   function (match) returning one: the match is read in that language) or Groups (the types of the capture groups,
  *   which follow each other and cover the match; a group may be {Inside}). Comment: {Line: '//'} or {Block: ['<!--',
  *   '-->']} for the comment command of an editor. Indent: a RegExp of the text before a line break that indents the
- *   next line one more step.
- * - Find(name) returns the grammar of a language or of an alias (null when there is none); Languages() the names.
+ *   next line one more step. Words: what an editor offers to complete in the language, [{Label, Kind, Detail}].
+ * - Find(name) returns the grammar of a language or of an alias (null when there is none); Languages() the names;
+ *   Words(name) what it offers to complete ([] for none).
  * - Tokens(text, language) returns [{Type, Text}] covering the text; Lines(text, language) the same split into
  *   lines (a token never holds a line break); HTML(text, language) escaped markup with a span for each token.
  */
 Elemenx.Service('Syntax', {
 	$Meta: {
 		Description: 'The highlighting of source code: the grammars of the languages and the tokens of a text in one of them.',
-		Methods: ['Register(name, grammar)', 'Find(name)', 'Languages()', 'Tokens(text, language)', 'Lines(text, language)', 'HTML(text, language)']
+		Methods: ['Register(name, grammar)', 'Find(name)', 'Languages()', 'Words(name)', 'Tokens(text, language)', 'Lines(text, language)', 'HTML(text, language)']
 	},
 	$OnCreate: function () {
 		var self = this;
@@ -154,6 +156,41 @@ Elemenx.Service('Syntax', {
 				['variable', /[@:$][A-Za-z_]\w*|\?/],
 				['operator', /[-+*/%=<>!|&^~]+/],
 				['punctuation', /[(),;.]/]
+			]
+		});
+
+		/* GLSL: its types, qualifiers, the functions and the variables it has built in, the lines of the preprocessor. */
+		var glsl = {
+			keyword: 'attribute break case centroid const continue default discard do else flat for highp if in inout invariant layout lowp mediump noperspective out precision return smooth struct switch uniform varying while',
+			type: 'bool bvec2 bvec3 bvec4 dmat2 dmat3 dmat4 double dvec2 dvec3 dvec4 float int isampler2D isampler3D isamplerCube ivec2 ivec3 ivec4 mat2 mat2x2 mat2x3 mat2x4 mat3 mat3x2 mat3x3 mat3x4 mat4 mat4x2 mat4x3 mat4x4 sampler2D sampler2DArray sampler2DArrayShadow sampler2DShadow sampler3D samplerCube samplerCubeShadow uint usampler2D usampler3D usamplerCube uvec2 uvec3 uvec4 vec2 vec3 vec4 void',
+			function: 'abs acos acosh all any asin asinh atan atanh ceil clamp cos cosh cross dFdx dFdy degrees determinant distance dot equal exp exp2 faceforward floatBitsToInt floatBitsToUint floor fract fwidth greaterThan greaterThanEqual intBitsToFloat inverse inversesqrt isinf isnan length lessThan lessThanEqual log log2 matrixCompMult max min mix mod modf normalize not notEqual outerProduct packHalf2x16 packSnorm2x16 packUnorm2x16 pow radians reflect refract round roundEven sign sin sinh smoothstep sqrt step tan tanh texelFetch texelFetchOffset texture textureGrad textureLod textureOffset textureProj textureSize transpose trunc uintBitsToFloat unpackHalf2x16',
+			variable: 'gl_FragCoord gl_FragDepth gl_FrontFacing gl_InstanceID gl_PointCoord gl_PointSize gl_Position gl_VertexID'
+		};
+		var glslWords = [];
+
+		Object.keys(glsl).forEach(function (kind) {
+			glsl[kind].split(' ').forEach(function (word) {
+				glslWords.push({Label: word, Kind: kind, Detail: kind === 'function' ? 'built-in function' : kind === 'variable' ? 'built-in variable' : kind});
+			});
+		});
+
+		this.Register('glsl', {
+			Aliases: ['frag', 'vert', 'vs', 'fs', 'shader', 'glslang'],
+			Comment: {Line: '//'},
+			Indent: /\{\s*$/,
+			Words: glslWords,
+			Rules: [
+				['comment', /\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$)/],
+				['meta', /^[ \t]*#[ \t]*(?:version|define|undef|if|ifdef|ifndef|else|elif|endif|extension|pragma|line|error)\b[^\n]*/m],
+				['number', /\b(?:0[xX][\da-fA-F]+[uU]?|\d+\.\d*(?:[eE][+-]?\d+)?[fF]?|\.\d+(?:[eE][+-]?\d+)?[fF]?|\d+(?:[eE][+-]?\d+)?[uUfF]?)\b/],
+				['keyword', words(glsl.keyword)],
+				['type', words(glsl.type)],
+				['literal', /\b(?:true|false)\b/],
+				['variable', /\bgl_\w+\b/],
+				['function', words(glsl.function)],
+				['property', /\.(?:[xyzw]{1,4}|[rgba]{1,4}|[stpq]{1,4})\b/],
+				['operator', /[-+*/%=<>!|&^~?:]+/],
+				['punctuation', /[(){}[\];,.]/]
 			]
 		});
 
@@ -349,7 +386,7 @@ Elemenx.Service('Syntax', {
 			return {Type: rule[0] || null, Pattern: new RegExp(pattern.source, flags), Options: rule[2] || null};
 		});
 
-		this.Grammars[key] = {Name: key, Rules: rules, Comment: grammar.Comment || null, Indent: grammar.Indent || null};
+		this.Grammars[key] = {Name: key, Rules: rules, Comment: grammar.Comment || null, Indent: grammar.Indent || null, Words: grammar.Words || null};
 
 		(grammar.Aliases || []).forEach(function (alias) {
 			self.Aliases[String(alias).toLowerCase()] = key;
@@ -365,6 +402,13 @@ Elemenx.Service('Syntax', {
 			this.$Provide('Languages', key);
 
 		return this.Grammars[key] || this.Grammars[this.Aliases[key]] || null;
+	},
+
+	/* What an editor offers to complete in a language: its Words, [] for none. */
+	Words: function (name) {
+		var grammar = this.Find(name);
+
+		return grammar && grammar.Words ? grammar.Words.slice() : [];
 	},
 
 	Languages: function () {

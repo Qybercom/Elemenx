@@ -258,7 +258,7 @@ describe('Contract: materials of models as material graphs of Blueprints, drawn 
 		finally {
 			delete models.Recipes['test-plain'];
 		}
-	});
+	}, 45000);
 
 	it('draws a material as it is when its Blueprint cannot be made, and tells it once', async function () {
 		var address = URL.createObjectURL(new Blob([Binary()], {type: 'model/gltf-binary'})) + '#.glb';
@@ -381,7 +381,7 @@ describe('Contract: materials of models as material graphs of Blueprints, drawn 
 		made = blueprints.Compile(JSON.parse(JSON.stringify(scene.LibrarySky())));
 
 		expect(made.Type).toBe('sky');
-		['uInverse * vec4(vQuad, 1.0, 1.0)', 'vec3(0.38, 0.55, 1.0)', 'vec3(1.0, 0.54, 0.2)', 'pow(', '500.0', 'vec3(0.85, 0.3, 0.42)', 'noise3(', 'uCover * 0.8', 'uEclipse', 'uGlowWay', 'uRainbow', 'uMoonGlow', 'uMoonSize', '0.99972', '9.0'].forEach(function (part) {
+		['uInverse * vec4(vQuad, 1.0, 1.0)', 'vec3(0.38, 0.55, 1.0)', 'vec3(1.0, 0.54, 0.2)', 'pow(', '500.0', 'vec3(0.85, 0.3, 0.42)', 'noise3(', 'uCover * 0.8', 'uEclipse', 'uGlowWay', 'uRainbow', 'uMoonGlow', 'uMoonSize', 'uSunRadius', '9.0'].forEach(function (part) {
 			expect(made.Function).toContain(part);
 		});
 

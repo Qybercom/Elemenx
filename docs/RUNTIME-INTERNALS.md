@@ -112,7 +112,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Directive` | directive registry and composition policy, including the built-in `if`, `for`, `key`, `outlet`, `pending`, `error` | Template and Component, Structural, Meta |
+| `Directive` | directive registry and composition policy, including the built-in `if`, `for`, `key`, `outlet`, `pending`, `error` | Defined, Meta, Structural, Template and Component |
 
 ## Template and Component
 
@@ -123,7 +123,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `ResolveComponent` | resolves a component factory by name, through Bundle, Discovery and Libraries | Structural |
 | `CallSuper` | `$Super` of an instance: the method of the layer under the one that runs (`$Extends`, `$Traits`), from the stack of the layered methods | Template and Component only |
 | `ResolveComponentRegistered` | returns a factory only if it is already registered and loaded | Router, Structural, Application |
-| `ComponentDefinition` | the definition of a component registered and loaded under a name, or `null` | Meta |
+| `ComponentDefinition` | the definition of a component registered and loaded under a name, or `null` | Defined, Meta |
 | `ComponentNames` | the names of the components registered and loaded | Meta |
 | `ComponentTag` | the name of the Component an element of a template declares: `data-elemenx-component`, otherwise its tag, in any case for an element HTML does not know | Structural |
 | `ReloadComponentTemplate` | reloads the external template of a component | Application |
@@ -153,6 +153,12 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `EvictComponent` | unloads an idle definition: the text of its template and style, its stylesheet, the compiled expressions | Cache |
 | `SleepTree` | puts to sleep the components and directives with `$OnSleep` inside an element and empties its password and card fields | Cache |
 | `WakeTree` | wakes what `SleepTree` put to sleep, the ones still alive (`$OnWake`) | Cache |
+
+## Defined
+
+| Field | Purpose | Used by |
+|---|---|---|
+| `DefinedTell` | a Component, a Service or a Directive was defined: what `Elemenx.Defined` waits for is looked at again, after the definition | Service and Guard, Template and Component |
 
 ## Structural
 

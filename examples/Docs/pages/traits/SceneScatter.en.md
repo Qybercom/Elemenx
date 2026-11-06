@@ -7,9 +7,11 @@ The Biomes of the World of a ground (lands by their climate, SceneWorld) bring t
 
 The things live in squares of the ground, typed arrays made in workers (SceneSower), the nearest first. Each square in view gives its things to the stream of their model and level: near the whole model, farther two simpler ones (SceneModels.Levels), far a picture baked from all sides that is lit as the model is (Renderer.Target). The streams are made again only when the view moved, so a still view costs no work, and a few draws show them all.
 
-Methods: Sown() ({Things, Squares, Waiting (the squares not sown yet, those in a worker among them), Draws, Blades}), SownNear(x, z, radius) (what is sown round a point: [{Model, X, Y, Z, Size, Turn}]).
+Methods: Sown() ({Things, Squares, Waiting (the squares not sown yet, those in a worker among them), Draws, Blades}), SownNear(x, z, radius) (what is sown round a point: [{Model, X, Y, Z, Size, Turn, Key}]), ChangeSown(key, changes) (a thing sown changed by hand, made so again each time it is sown: {Remove, Model, X, Z, Turn, Size}; null forgets the change; kept in Save), UnlinkSown(key) (a thing sown made an object of the scene of its own, kind thing, where it stood: its ID; it is sown no more).
 
 ## Methods
 
 - `Sown()`
+- `ChangeSown(key, changes)`
+- `UnlinkSown(key)`
 - `SownNear(x, z, radius)`

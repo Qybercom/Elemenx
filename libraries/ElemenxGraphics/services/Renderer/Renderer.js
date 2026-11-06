@@ -22,8 +22,9 @@
  *   whether it is done, Progress() is {Done, Total, Needed} of the programs (behind: one nothing waits for), and a Draw with
  *   one not done yet waits, as it must. A slow shader so holds no frame up. Check(vertex, fragment) asks the card at once
  *   whether two shaders compile: their logs, or null. The attributes have fixed places: aPosition, aNormal, aUV, aColor, aInstance (and aInstance2 to
- *   aInstance5, one of each copy of an instanced mesh).
- * - Mesh(geometry) returns a mesh: Update(geometry), Instance(data, count) (data {aInstance: {Size, Data}, ...}: the
+ *   aInstance5, one of each copy of an instanced mesh), aMaterials and aMaterials2 (the weights of 8 materials of a
+ *   ground, Materials of a geometry: 8 numbers a vertex; 0 where it has none).
+ * - Mesh(geometry, mode) returns a mesh (mode: triangles, lines, line-strip, line-loop or points; triangles by default): Update(geometry), Instance(data, count) (data {aInstance: {Size, Data}, ...}: the
  *   copies of the mesh drawn at once), Destroy(); Lines(points, loop) and Points(positions, extra) (extra {aColor:
  *   {Size, Data}}) make meshes of lines and of points.
  * - Texture(source, options) (a canvas, a picture, or {Width, Height, Data}; options Repeat, Nearest) returns a texture (Update(picture) puts another canvas or picture in it)
@@ -54,7 +55,7 @@ Elemenx.Service('Renderer', {
 	},
 
 	/* The places of the attributes, the same in every program: a mesh binds its buffers to them. */
-	Locations: {aPosition: 0, aNormal: 1, aUV: 2, aColor: 3, aInstance: 4, aInstance2: 5, aInstance3: 6, aInstance4: 7, aInstance5: 8, aJoints: 9, aWeights: 10, aFrames: 11},
+	Locations: {aPosition: 0, aNormal: 1, aUV: 2, aColor: 3, aInstance: 4, aInstance2: 5, aInstance3: 6, aInstance4: 7, aInstance5: 8, aJoints: 9, aWeights: 10, aFrames: 11, aMaterials: 12, aMaterials2: 13},
 
 	Camera: function (options) {
 		var math = this.$Service('Math');
@@ -556,6 +557,11 @@ Elemenx.Service('Renderer', {
 			return null;
 
 		bound = bindings(gl);
+
+		/* A mesh with no weights of materials has none: 0, not the 1 of the last part of what is not given. */
+		gl.vertexAttrib4f(12, 0, 0, 0, 0);
+		gl.vertexAttrib4f(13, 0, 0, 0, 0);
+
 		parallel = gl.getExtension('KHR_parallel_shader_compile');
 		modes = {'triangles': gl.TRIANGLES, 'lines': gl.LINES, 'line-strip': gl.LINE_STRIP, 'line-loop': gl.LINE_LOOP, 'points': gl.POINTS};
 
@@ -648,6 +654,21 @@ Elemenx.Service('Renderer', {
 			gl.vertexAttribDivisor(location, divisor || 0);
 		}
 
+		/* Four numbers of each eight, from the first of them. */
+		function split (values, count, from) {
+			var part = new Float32Array(count * 4);
+			var i;
+
+			for (i = 0; i < count; i++) {
+				part[i * 4] = values[i * 8 + from];
+				part[i * 4 + 1] = values[i * 8 + from + 1];
+				part[i * 4 + 2] = values[i * 8 + from + 2];
+				part[i * 4 + 3] = values[i * 8 + from + 3];
+			}
+
+			return part;
+		}
+
 		function mesh (geometry, mode) {
 			var made = {VAO: gl.createVertexArray(), Buffers: {}, Sizes: {}, Count: 0, Indexed: false, Mode: mode || 'triangles', Instances: 0};
 
@@ -672,6 +693,16 @@ Elemenx.Service('Renderer', {
 				if (shape.Joints && shape.Joints.length) {
 					attribute(made, 'aJoints', 4, shape.Joints);
 					attribute(made, 'aWeights', 4, shape.Weights);
+				}
+
+				/* The weights of the materials of a ground: 8 a vertex, as two attributes of 4. */
+				if (shape.Materials && shape.Materials.length === count * 8) {
+					attribute(made, 'aMaterials', 4, split(shape.Materials, count, 0));
+					attribute(made, 'aMaterials2', 4, split(shape.Materials, count, 4));
+				}
+				else {
+					gl.disableVertexAttribArray(self.Locations.aMaterials);
+					gl.disableVertexAttribArray(self.Locations.aMaterials2);
 				}
 
 				if (shape.Indices && shape.Indices.length) {
@@ -922,8 +953,8 @@ Elemenx.Service('Renderer', {
 				return made;
 			},
 
-			Mesh: function (geometry) {
-				return mesh(geometry);
+			Mesh: function (geometry, mode) {
+				return mesh(geometry, mode);
 			},
 
 			Lines: function (points, loop) {

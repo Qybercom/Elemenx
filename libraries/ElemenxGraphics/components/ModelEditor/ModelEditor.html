@@ -16,6 +16,10 @@
 			<Button Size="small" Variant="ghost" Icon="undo" [title]="$T('graphics.modelEditor.undo')" [disabled]="!Past" (click)="Undo" />
 			<Button Size="small" Variant="ghost" Icon="redo" [title]="$T('graphics.modelEditor.redo')" [disabled]="!Future" (click)="Redo" />
 		</div>
+		<div class="elemenx-model-editor-group">
+			<Button Size="small" Variant="ghost" Icon="grid" [title]="$T('graphics.modelEditor.wire')" [pressed]="Wire" (click)="WireToggled" />
+			<Button Size="small" Variant="ghost" Icon="shapes" [title]="$T('graphics.modelEditor.edges')" [pressed]="Edges" (click)="EdgesToggled" />
+		</div>
 		<div class="elemenx-model-editor-group end" *if="Mode === 'roles'">
 			<Button Size="small" Variant="ghost" Icon="file-code" [title]="$T('graphics.modelEditor.rolesExport')" (click)="RolesExported" />
 			<label class="elemenx-model-editor-import" [attribute.title]="$T('graphics.modelEditor.rolesImport')"><Icon name="upload" Size="16" /><input type="file" accept="application/json,.json" (change)="RolesImported" /></label>
@@ -47,6 +51,41 @@
 		<div class="elemenx-model-editor-role-actions">
 			<Button Size="small" Icon="add" [label]="$T('graphics.modelEditor.addRole')" (click)="RoleAdded" />
 			<Button Size="small" Variant="ghost" Icon="delete" [title]="$T('graphics.modelEditor.removeRole')" [disabled]="!RoleSelected" (click)="RoleRemoved" />
+		</div>
+	</aside>
+	<aside class="elemenx-model-editor-side" *if="Mode === 'parts'">
+		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.roleModel')}}</div>
+		<select class="elemenx-model-editor-role-model" [attribute.aria-label]="$T('graphics.modelEditor.roleModel')" (change)="RoleModelPicked">
+			<option value="" [selected]="!RoleModel">{{$T('graphics.modelEditor.thisModel')}}</option>
+			<option *for="name of FileModels(Version)" *key="name" [value]="name" [selected]="name === RoleModel">{{name}}</option>
+		</select>
+		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.pieces')}}</div>
+		<div class="elemenx-model-editor-roles" role="listbox" aria-multiselectable="true" [attribute.aria-label]="$T('graphics.modelEditor.pieces')">
+			<button type="button" role="option" class="elemenx-model-editor-role" *for="piece of PartsList(Version)" *key="piece.ID" [class.active]="piece.Selected" [attribute.aria-selected]="piece.Selected ? 'true' : 'false'" [attribute.data-piece]="piece.ID" (click)="PartPicked(piece.ID, $event)">{{piece.Label}}</button>
+		</div>
+		<input type="text" class="elemenx-model-editor-parts-name" [value]="PartsName" [attribute.aria-label]="$T('graphics.modelEditor.partsName')" [attribute.placeholder]="$T('graphics.modelEditor.partsName')" (input)="PartsNamed" />
+		<div class="elemenx-model-editor-role-actions">
+			<Button Size="small" Variant="ghost" Icon="cut" [title]="$T('graphics.modelEditor.partsSplit')" (click)="PartsSplit" />
+			<Button Size="small" Variant="ghost" Icon="layers" [title]="$T('graphics.modelEditor.partsGroup')" (click)="PartsGroup" />
+			<Button Size="small" Variant="ghost" Icon="minimize" [title]="$T('graphics.modelEditor.partsUngroup')" (click)="PartsUngroup" />
+			<Button Size="small" Variant="ghost" Icon="link" [title]="$T('graphics.modelEditor.partsMerge')" (click)="PartsMerge" />
+			<Button Size="small" Variant="ghost" Icon="edit" [title]="$T('graphics.modelEditor.partsRename')" (click)="PartsRename" />
+			<Button Size="small" Variant="ghost" Icon="eye-off" [title]="$T('graphics.modelEditor.partsHide')" (click)="PartsHide" />
+			<Button Size="small" Variant="ghost" Icon="copy" [title]="$T('graphics.modelEditor.partsDuplicate')" (click)="PartsDuplicate" />
+			<Button Size="small" Variant="ghost" Icon="refresh" [title]="$T('graphics.modelEditor.partsMirror')" (click)="PartsMirror" />
+			<Button Size="small" Variant="ghost" Icon="chevron-down" [title]="$T('graphics.modelEditor.partsOrigin')" (click)="PartsOrigin" />
+			<Button Size="small" Variant="ghost" Icon="delete" [title]="$T('graphics.modelEditor.partsRemove')" (click)="PartsRemove" />
+		</div>
+		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.partsModels')}}</div>
+		<div class="elemenx-model-editor-role-actions">
+			<Button Size="small" Icon="external" [label]="$T('graphics.modelEditor.partsExtract')" (click)="PartsExtract" />
+		</div>
+		<select class="elemenx-model-editor-role-model" [attribute.aria-label]="$T('graphics.modelEditor.partsWith')" (change)="PartsWithPicked">
+			<option value="" [selected]="!PartsWith">{{$T('graphics.modelEditor.partsWith')}}</option>
+			<option *for="name of PartsModels(Version)" *key="name" [value]="name" [selected]="name === PartsWith">{{name}}</option>
+		</select>
+		<div class="elemenx-model-editor-role-actions">
+			<Button Size="small" Icon="add" [label]="$T('graphics.modelEditor.partsCombine')" [disabled]="!PartsWith" (click)="PartsCombine" />
 		</div>
 	</aside>
 	<aside class="elemenx-model-editor-side" *if="Mode === 'shape'">

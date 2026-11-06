@@ -744,6 +744,27 @@
 					"Description": "document (as a RichEditor) or interface (the classes of the Library)."
 				},
 				{
+					"Name": "Tasks",
+					"Type": "select",
+					"Default": "readonly",
+					"Options": [
+						"readonly",
+						"editable"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The boxes of the tasks of the text (- [ ] and - [x]): only shown, or ticked by the reader."
+				},
+				{
+					"Name": "TaskCheck",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A function of a task {Index, Checked, Text}: false keeps it as it was (who may tick which)."
+				},
+				{
 					"Name": "Label",
 					"Type": "text",
 					"Default": "",
@@ -757,8 +778,16 @@
 			"Container": false,
 			"Children": [],
 			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
+			"Events": [
+				"task",
+				"taskdenied",
+				"change"
+			],
+			"EventDescriptions": {
+				"task": "A task was ticked or unticked: {Index, Checked, Text, Value (the text with it)}.",
+				"taskdenied": "A tick that TaskCheck refused: {Index, Checked, Text}.",
+				"change": "The text changed by a tick: {Value}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Value": "## A title\n\nSome **bold** and *italic* text, and a [link](https://example.com).\n\n- One\n- Two"
@@ -24012,7 +24041,8 @@
 				"Extend(plugin)",
 				"Plugins()",
 				"Mount(container, options)",
-				"FileTree(text)"
+				"FileTree(text)",
+				"TopologyOf(text)"
 			],
 			"Sample": {}
 		},
@@ -25496,6 +25526,8 @@
 		"elemenx-markdown": [
 			"interface"
 		],
+		"elemenx-markdown-task-item": [],
+		"elemenx-markdown-task": [],
 		"elemenx-code-view": [
 			"folding",
 			"limited",

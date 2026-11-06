@@ -54,7 +54,8 @@ Elemenx.Component('SceneEditor', {
 	},
 	Value: null,
 	Setting: 'ground',
-	Kinds: ['unit', 'effect', 'glass', 'mirror', 'tree', 'rock', 'house'],
+	Kinds: ['unit', 'effect', 'glass', 'mirror', 'camera', 'screen', 'tree', 'rock', 'house'],
+	CutscenesOpen: false,
 	SpaceKinds: ['star', 'planet', 'moon', 'belt', 'ring', 'station', 'outpost', 'craft', 'fleet'],
 	Models: [],
 	Storage: 'elemenx-scene-editor',
@@ -97,7 +98,7 @@ Elemenx.Component('SceneEditor', {
 	SketchGroups: [
 		{Kind: 'stroke', Key: 'graphics.sceneEditor.kinds.stroke', Types: ['raise', 'lower', 'flatten', 'smooth']},
 		{Kind: 'line', Key: 'graphics.sceneEditor.kinds.line', Types: ['ridge', 'valley', 'canyon', 'river', 'road', 'cliff', 'row', 'fence', 'hedge', 'wall', 'powerline', 'street', 'citywall', 'triggerline']},
-		{Kind: 'area', Key: 'graphics.sceneEditor.kinds.area', Types: ['plateau', 'basin', 'lake', 'terraces', 'swamp', 'beach', 'floodplain', 'dunes', 'erosion', 'biome', 'mask', 'forest', 'meadow', 'clearing', 'bushes', 'thicket', 'jungle', 'sequoia', 'fields', 'orchard', 'settlement', 'square', 'district', 'trigger', 'zone']},
+		{Kind: 'area', Key: 'graphics.sceneEditor.kinds.area', Types: ['plateau', 'basin', 'lake', 'terraces', 'swamp', 'beach', 'floodplain', 'dunes', 'erosion', 'biome', 'mask', 'forest', 'meadow', 'clearing', 'bushes', 'thicket', 'jungle', 'sequoia', 'fields', 'orchard', 'settlement', 'square', 'district', 'trigger', 'zone', 'collider']},
 		{Kind: 'circle', Key: 'graphics.sceneEditor.kinds.circle', Types: ['mountain', 'crater', 'stamp', 'marker', 'landmark', 'triggerpoint']}
 	],
 
@@ -112,7 +113,8 @@ Elemenx.Component('SceneEditor', {
 		marker: {Radius: 2, Role: 'spawn', Team: '', Name: ''},
 		settlement: {Kind: 'village', Density: 0.85, Lit: 0, Edge: 15}, street: {Width: 8}, square: {Edge: 4}, district: {Kind: 'residential'}, citywall: {}, landmark: {Radius: 2, Model: 'temple', Name: ''},
 		trigger: {Height: 0, Team: '', Kinds: '', Once: 'false', Achievement: '', Name: ''}, triggerpoint: {Radius: 4, Height: 0, Team: '', Kinds: '', Once: 'false', Achievement: '', Name: ''}, triggerline: {Width: 4, Height: 0, Team: '', Kinds: '', Once: 'false', Achievement: '', Name: ''},
-		zone: {Tags: 'safe', Team: '', Name: ''}
+		zone: {Tags: 'safe', Team: '', Name: ''},
+		collider: {Height: 3, Lift: 0}
 	},
 
 	$OnCreate: function () {
@@ -221,6 +223,8 @@ Elemenx.Component('SceneEditor', {
 	Fresh: function (scene) {
 		var own = this.Own();
 
+		scene.Cutscenes = null;
+
 		scene.Load({Version: 1, Seed: '', Time: 0, Travels: [], Added: [], Removed: [], Overrides: {}});
 
 		if (own.Document.Setting === 'space') {
@@ -241,7 +245,7 @@ Elemenx.Component('SceneEditor', {
 		own.Document = this.Normalize(document);
 
 		/* Regression: a new document (no Scene) left the scene of the one before. */
-		if (own.Scene && own.Document.Scene) own.Scene.Load(own.Document.Scene);
+		if (own.Scene && own.Document.Scene) this.Recall(own.Document.Scene);
 		else if (own.Scene) this.Fresh(own.Scene);
 
 		this.Select('');
@@ -277,7 +281,8 @@ Elemenx.Component('SceneEditor', {
 		if (!own.Past.length || this.Playing) return;
 
 		own.Future.push(own.Scene.Save());
-		own.Scene.Load(own.Past.pop());
+
+		this.Recall(own.Past.pop());
 
 		this.Changed(null);
 	},
@@ -287,9 +292,51 @@ Elemenx.Component('SceneEditor', {
 		if (!own.Future.length || this.Playing) return;
 
 		own.Past.push(own.Scene.Save());
-		own.Scene.Load(own.Future.pop());
+
+		this.Recall(own.Future.pop());
 
 		this.Changed(null);
+	},
+
+	/* A state of the scene back as it was: its cutscenes too, none when it had none (Load leaves the ones a scene has). */
+	Recall: function (saved) {
+		var own = this.Own();
+
+		own.Scene.Cutscenes = null;
+
+		own.Scene.Load(saved);
+	},
+
+	/* The cutscenes of the scene, edited under the view (CutsceneEditor). */
+	CutscenesToggled: function () {
+		this.CutscenesOpen = !this.CutscenesOpen;
+	},
+
+	CutscenesOf: function () {
+		var own = this.Own();
+
+		return own.Scene && own.Scene.Cutscenes ? own.Scene.Cutscenes : {};
+	},
+
+	SceneOf: function () {
+		return this.Own().Scene || null;
+	},
+
+	CutscenesChanged: function (event) {
+		var own = this.Own();
+		var value = event && event.detail !== undefined ? event.detail : event;
+		var before = own.Scene.Save();
+
+		own.Scene.Cutscenes = value && Object.keys(value).length ? JSON.parse(JSON.stringify(value)) : null;
+
+		this.Changed(before);
+	},
+
+	/* A camera where the view is, asked by the cutscenes. */
+	CameraAsked: function (event) {
+		var detail = event && event.detail ? event.detail : event;
+
+		this.Add('camera', detail && detail.Props ? detail.Props : {});
 	},
 
 	Save: function () {
@@ -1355,6 +1402,14 @@ Elemenx.Component('SceneEditor', {
 		var scene = own.Scene;
 		var dx;
 		var dy;
+		var under;
+
+		/* With no drag, what is under the pointer is outlined (Hovered of the scene), a few times a second at most. */
+		if (!drag && scene && this.Tool === 'select' && Date.now() - (own.Hovering || 0) > 80) {
+			own.Hovering = Date.now();
+			under = scene.Pick(event.clientX, event.clientY, true);
+			scene.Hovered = under && scene.Selection().indexOf(under) === -1 ? under : '';
+		}
 
 		if (!drag || !scene) return;
 

@@ -7,10 +7,13 @@
 - Find(name) возвращает грамматику языка или псевдонима (null, если её нет); Languages() — имена.
 - Tokens(text, language) возвращает [{Type, Text}], покрывающие текст; Lines(text, language) — то же, разбитое на строки (токен никогда не содержит перенос строки); HTML(text, language) — экранированная разметка со span на каждый токен.
 
+GLSL (glsl; псевдонимы frag, vert, vs, fs, shader, glslang): строки препроцессора, квалификаторы, типы, встроенные функции и переменные gl_*, свиззлы (.xyz, .rgb). У грамматики может быть Words — то, что редактор предлагает дописать ([{Label, Kind, Detail}]); Words(name) возвращает их ([] — нет).
+
 ## Методы
 
 - `Register(name, grammar)`
 - `Find(name)`
+- `Words(name)`
 - `Languages()`
 - `Tokens(text, language)`
 - `Lines(text, language)`
@@ -64,5 +67,6 @@
 - [splits the tokens into lines, one array for each line](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L137) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
 - [escapes the HTML it returns](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L146) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
 - [finds languages by their aliases and takes new ones](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L151) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
+- [reads GLSL: the preprocessor, qualifiers, types, built-in functions and variables, swizzles; offers its words to complete](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L163) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
 - [makes the provider only as a name of it is wanted, in the Application that wants it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-provides.test.js#L47) — `tests/regression/library-provides.test.js`
 - [makes the providers for a list, and none for a name no one declares](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-provides.test.js#L62) — `tests/regression/library-provides.test.js`

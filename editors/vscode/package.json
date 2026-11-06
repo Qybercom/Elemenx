@@ -28,9 +28,26 @@
 	"activationEvents": [
 		"onLanguage:html",
 		"onLanguage:javascript",
+		"onLanguage:glsl",
 		"workspaceContains:**/elemenx.config.js"
 	],
 	"contributes": {
+		"languages": [
+			{
+				"id": "glsl",
+				"aliases": [
+					"GLSL",
+					"glsl"
+				],
+				"extensions": [
+					".glsl",
+					".vert",
+					".frag",
+					".vs",
+					".fs"
+				]
+			}
+		],
 		"commands": [
 			{
 				"command": "elemenx.refresh",
@@ -53,6 +70,23 @@
 			}
 		},
 		"grammars": [
+			{
+				"language": "glsl",
+				"scopeName": "source.glsl",
+				"path": "./syntaxes/glsl.json"
+			},
+			{
+				"scopeName": "elemenx.glsl.javascript",
+				"path": "./syntaxes/elemenx-js-glsl.json",
+				"injectTo": [
+					"source.js",
+					"source.js.jsx",
+					"source.ts"
+				],
+				"embeddedLanguages": {
+					"meta.embedded.inline.glsl.elemenx": "glsl"
+				}
+			},
 			{
 				"scopeName": "elemenx.template.components",
 				"path": "./syntaxes/elemenx-components.json",

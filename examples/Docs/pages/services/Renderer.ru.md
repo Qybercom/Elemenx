@@ -3,6 +3,8 @@
 
 Трёхмерная графика на WebGL2 без библиотек: камера и рендерер, который рисует фигуры (сервис Meshes) заданными шейдерами; матрицы, векторы и шум — в сервисе Math. Camera(options) — камера (Ortho — высота вида в параллельных лучах) с View, Projection, Matrix, Orbit(target, yaw, pitch, distance), Ray(x, y, width, height), Project(point, width, height). Chunks.Noise — шум Math в шейдерах, Chunks.Lights — свет до 4 точек с тенями до 4 шаров, Chunks.Shadow — чтение карты теней (Shadow(size) рендерера: Begin() и End()), Target(width, height, {Colors, Depth, DepthTexture, Float, Samples, Mipmaps}) — текстуры, в которые рисуют, Viewport(x, y, width, height), Texture с Float для массива чисел. Create(canvas, options) возвращает рендерер (или null без WebGL2): Program(vertex, fragment), Mesh(geometry) с Update, Instance и Destroy, Lines, Points, Texture, Draw(mesh, program, uniforms, settings) (Mode, Blend, Depth, DepthWrite, Cull, Instances), Cube(size) — куб из шести граней для samplerCube: Bake рисует его шейдером, cube.Write(face, data, row, mipmaps) заливает в грань байты RGBA с процессора, полосами строк; Counts() (сколько нарисовано с создания: {Draws, Triangles}, копии инстансной сетки считаются; разница двух замеров — цена кадра или секунды), Resize, Clear, Lost, Destroy. Камера работает и в Node.
 
+Атрибуты aMaterials и aMaterials2 — веса 8 материалов земли (Materials геометрии: 8 чисел на вершину). Где их нет, они равны 0.
+
 ## Методы
 
 - `Camera(options)`
@@ -106,8 +108,8 @@
 - [Renderer sets the state of the context only where it changes, and only the uniforms a program has](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4071) — `tests/regression/library-scene.test.js`
 - [makes a texture of one byte a texel with Single, its rows as long as they are](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L17) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 - [counts its draws and the triangles of them, each copy of an instanced mesh, and no triangle of a line](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L51) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
+- [makes a mesh of lines by its mode, and a mesh of the weights of the materials of a ground](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L78) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 - [puts planets on their orbits and makes shapes of three dimensions with the Services of the system Libraries](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`
 - [draws its water by the water graph of the library made of blocks, or by a WaterGraph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L301) — `tests/regression/library-material-blueprints.test.js`
-- [draws its sky and its land by the graphs of the library made of blocks, or by a SkyGraph and a LandGraph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L354) — `tests/regression/library-material-blueprints.test.js`
 
-+27 ещё в тех же файлах
++28 ещё в тех же файлах

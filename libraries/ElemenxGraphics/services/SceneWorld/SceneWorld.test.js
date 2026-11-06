@@ -162,4 +162,87 @@ describe('Contract: SceneWorld, the world of a ground as a graph of its steps', 
 
 		expect(Array.from(piece.Positions)).toEqual(Array.from(new Float32Array(field.Chunk(0, 0, 256, 8).Positions)));
 	});
+
+	/*
+	 * Its roads (Roads): settlements joined along the ground, the bigger by the main type; a passage out of the location
+	 * a road to the nearest one, its straight line of the border gone; a road climbs gently where it can.
+	 */
+	it('joins its settlements and passages by roads along the ground, the class of each by what it joins', function () {
+		var ring = function (x, z, r) {
+			var points = [];
+			var i;
+
+			for (i = 0; i < 10; i++)
+				points.push([x + Math.cos(i / 10 * Math.PI * 2) * r, z + Math.sin(i / 10 * Math.PI * 2) * r]);
+
+			return points;
+		};
+		var sides = [[-900, -900, 900, -900], [900, -900, 900, 900], [900, 900, -900, 900], [-900, 900, -900, -900]];
+		var graph = world.Library({Size: 2000, Height: 120, Water: 0, Seed: 'roads', Sketch: {Layers: [{ID: 'towns', Items: [{Type: 'settlement', Kind: 'town', Points: ring(-500, -400, 120)}, {Type: 'settlement', Kind: 'town', Points: ring(450, 300, 120)}, {Type: 'settlement', Kind: 'village', Points: ring(-400, 500, 60)}]}]}, Border: {Points: [[-900, -900], [900, -900], [900, 900], [-900, 900]], Sides: sides, Passages: [{Side: 1, At: 0.2, Width: 6}]}, Roads: true});
+		var made = world.Make(graph);
+		var roads = made.Things.filter(function (thing) {
+			return thing.Kind === 'road';
+		});
+		var field = terrain.Flat(made.Ground);
+		var types = roads.map(function (road) {
+			return road.Values.Type;
+		});
+
+		/* Two towns by a road; the village and the passage each by a country road to the town nearest them. */
+		expect(types.sort()).toEqual(['country', 'country', 'road']);
+
+		roads.forEach(function (road) {
+			expect(road.Values.Structures).toBe(true);
+			expect(road.Values.Points.length).toBeGreaterThan(1);
+		});
+
+		/* The passage starts past its side (x 900 + 120) and ends in the town at 450, 300. */
+		var passage = roads.filter(function (road) {
+			return road.Values.Points[0][0] > 900;
+		})[0];
+
+		expect(passage.Values.Points[passage.Values.Points.length - 1]).toEqual([450, 300]);
+
+		/* Its straight line of the border gone from the sketch. */
+		expect(made.Ground.Sketch.Layers.some(function (layer) {
+			return layer.Items.some(function (item) {
+				return /^border-passage-/.test(item.ID || '');
+			});
+		})).toBe(false);
+
+		/* Over the ground as gently as it can: the steepest 50 m of a road gentler than those of the straight line. */
+		function steepest (points) {
+			var most = 0;
+			var k;
+
+			for (k = 0; k + 1 < points.length; k++) {
+				var a = points[k];
+				var b = points[k + 1];
+				var n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 50));
+				var m;
+
+				for (m = 0; m < n; m++) {
+					var x0 = a[0] + (b[0] - a[0]) * m / n;
+					var z0 = a[1] + (b[1] - a[1]) * m / n;
+					var x1 = a[0] + (b[0] - a[0]) * (m + 1) / n;
+					var z1 = a[1] + (b[1] - a[1]) * (m + 1) / n;
+
+					most = Math.max(most, Math.abs(field.Height(x1, z1) - field.Height(x0, z0)) / Math.max(1, Math.hypot(x1 - x0, z1 - z0)));
+				}
+			}
+
+			return most;
+		}
+
+		roads.forEach(function (road) {
+			var points = road.Values.Points;
+
+			expect(steepest(points)).toBeLessThan(steepest([points[0], points[points.length - 1]]));
+		});
+
+		/* With Rail, a railway beside the main road. */
+		expect(world.Make(world.Library({Size: 2000, Height: 120, Water: 0, Seed: 'roads', Sketch: {Layers: [{ID: 'towns', Items: [{Type: 'settlement', Kind: 'town', Points: ring(-500, -400, 120)}, {Type: 'settlement', Kind: 'city', Points: ring(450, 300, 120)}]}]}, Roads: {Rail: true}})).Things.map(function (thing) {
+			return thing.Values.Type;
+		})).toEqual(['road', 'rail']);
+	});
 });

@@ -20,6 +20,8 @@
  *   SceneTerrainGenerator.Volume); the squares of the ground they touch are made of its density.
  * - Footings: the ground gives way under what stands on it: a level place under each building, Margin metres round it,
  *   at the height there (Mode mean, low, high), the ground coming to it within Edge (the trait SceneFootings of a Scene).
+ * - Roads: its settlements and the passages of its Border joined by roads along the ground (Main, Minor, Paths: the types
+ *   of SceneRoads of each class; Rail: a railway beside the main ones), roads among its things.
  * - Settlement: a village laid on it (X, Y, Houses, Radius, Seed, Shapes), and Scatter: things sown over it by a rule
  *   (Kind, Shapes, Density, Size, MinHeight, MaxHeight, MaxSlope, Cover, Patch, Clumps, Seed, Blocks, Biome, and Graph, a
  *   rule of its own: LibraryScatter of SceneSower starts one). Each takes the things before it (Under) and gives them
@@ -31,7 +33,7 @@
  *   of the objects it makes: {ID, Kind, Values}, their IDs of their order), Problems (what keeps the graph from running)},
  *   made once for the same graph and parameters.
  * - Library(options): the graph of a usual world of options (Size, Height, Water, Seed, Rock, Snow, Scale, Ridges, Noise,
- *   Relief, Planet ({Options, Latitude, Longitude, Turn}), Climate, Biomes, Sketch, Border (its properties), Tunnels and Caves (lists of the properties of such steps), Overhangs and Footings (true or their properties); and Settlements, Scatters: lists of the properties of such blocks): what an editor or
+ *   Relief, Planet ({Options, Latitude, Longitude, Turn}), Climate, Biomes, Sketch, Border (its properties), Tunnels and Caves (lists of the properties of such steps), Overhangs, Footings and Roads (true or their properties); and Settlements, Scatters: lists of the properties of such blocks): what an editor or
  *   a page starts from.
  * The same functions run in Node: they read no page.
  */
@@ -42,7 +44,7 @@ Elemenx.Service('SceneWorld', {
 	},
 
 	$Provides: {
-		Blueprints: {Graphs: ['world'], Nodes: ['Ground', 'Planet', 'Relief', 'Climate', 'Biomes', 'Sketch', 'Border', 'Footings', 'Tunnel', 'Caves', 'Overhangs', 'Settlement', 'Scatter', 'Terrain']}
+		Blueprints: {Graphs: ['world'], Nodes: ['Ground', 'Planet', 'Relief', 'Climate', 'Biomes', 'Sketch', 'Border', 'Footings', 'Tunnel', 'Caves', 'Overhangs', 'Roads', 'Settlement', 'Scatter', 'Terrain']}
 	},
 
 	$OnCreate: function () {
@@ -51,6 +53,7 @@ Elemenx.Service('SceneWorld', {
 
 	/* The kind world and its blocks. */
 	Steps: function () {
+		var self = this;
 		var blueprints = this.$Service('Blueprints');
 
 		/* What comes to an input, else the property; none is left out. */
@@ -356,12 +359,198 @@ Elemenx.Service('SceneWorld', {
 			}
 		});
 
+		/*
+		 * The roads of the land: its settlements (items settlement of its sketch) joined by the shortest net of them, each
+		 * passage out of it (Border) to the settlement nearest it, along the ground (SceneTerrainGenerator.RoadWay: round what
+		 * is steep, over water by bridges). Main between towns and cities, Minor to a town, Paths to a village and out of it;
+		 * with Rail a railway too between towns and cities. Roads of the kind road among the things; the straight passages of
+		 * the Border go.
+		 */
+		blueprints.Node('Roads', {
+			Graphs: ['world'],
+			Group: 'world',
+			Properties: [{Key: 'Main', Type: 'text', Value: 'road'}, {Key: 'Minor', Type: 'text', Value: 'country'}, {Key: 'Paths', Type: 'text', Value: 'gravel'}, {Key: 'Rail', Type: 'boolean', Value: false}],
+			Inputs: [{Key: 'Land', Type: 'land'}, {Key: 'Under', Type: 'things'}],
+			Outputs: [{Key: 'Land', Type: 'land'}, {Key: 'Things', Type: 'things'}],
+			Compute: function (inputs, properties) {
+				return self.Roads(inputs.Land, inputs.Under || [], properties);
+			}
+		});
+
 		blueprints.Node('Terrain', {
 			Graphs: ['world'],
 			Group: 'world',
 			Inputs: [{Key: 'Land', Type: 'land'}, {Key: 'Things', Type: 'things'}],
 			Outputs: []
 		});
+	},
+
+	/* The step Roads: {Land (the passages of its Border made roads of it), Things (and its roads)}. */
+	Roads: function (land, under, properties) {
+		var terrain = this.$Service('SceneTerrainGenerator');
+		var rank = {city: 3, town: 2, village: 1, hamlet: 1, fort: 2};
+		var hubs = [];
+		var ways = [];
+		var trunks = [];
+		var things = under.slice();
+		var layers;
+		var field;
+		var joined;
+
+		/* A place by its tens of metres: the name of a road of the places it joins. */
+		function place (point) {
+			return Math.round(point[0] / 10) + '_' + Math.round(point[1] / 10);
+		}
+
+		if (!land)
+			return {Land: land, Things: things};
+
+		layers = (land.Sketch && land.Sketch.Layers || []).map(function (layer) {
+			return Object.assign({}, layer, {Items: (layer.Items || []).slice()});
+		});
+
+		layers.forEach(function (layer) {
+			layer.Items = layer.Items.filter(function (item) {
+				var points = item.Points || [];
+				var x = 0;
+				var z = 0;
+
+				if (item.Type === 'settlement' && points.length > 2) {
+					points.forEach(function (point) {
+						x += point[0] / points.length;
+						z += point[1] / points.length;
+					});
+
+					hubs.push({X: x, Z: z, Rank: rank[item.Kind] || 1});
+				}
+
+				/* A highway of the planet through it: its way along the ground from where it comes in to where it leaves. */
+				if (item.Type === 'road' && item.Trunk && points.length > 1) {
+					trunks.push(item);
+
+					return false;
+				}
+
+				/* A road of a passage: from past its side; the net takes it where it goes. */
+				if (item.Type === 'road' && /^border-passage-/.test(item.ID || '') && points.length > 1) {
+					ways.push({From: points[0], Rank: 0});
+
+					return false;
+				}
+
+				return true;
+			});
+		});
+
+		if (!hubs.length && !ways.length && !trunks.length) return {Land: land, Things: things};
+
+		field = terrain.Flat(Object.assign({}, land, {Sketch: undefined}));
+
+		/* The highways first: the settlements may come to them. */
+		trunks = trunks.map(function (trunk) {
+			var points = terrain.RoadWay(field, trunk.Points[0], trunk.Points[trunk.Points.length - 1]) || trunk.Points;
+
+			things.push({ID: 'road-' + place(trunk.Points[0]) + '-' + place(trunk.Points[trunk.Points.length - 1]), Kind: 'road', Values: {Type: trunk.Class === 'highway' ? 'highway' : properties.Main || 'road', Points: points, Structures: true}});
+
+			return points;
+		});
+
+		/* Settlements joined by the shortest net (Prim), the biggest first; the passages each to the nearest; with none, to the middle. */
+		hubs.sort(function (a, b) {
+			return b.Rank - a.Rank;
+		});
+
+		/* The nearest point of a highway to a place, as a place of rank 2 the net may join; null with none. */
+		function trunkNear (x, z) {
+			var best = null;
+
+			trunks.forEach(function (points) {
+				points.forEach(function (point) {
+					var d = Math.hypot(point[0] - x, point[1] - z);
+					if (!best || d < best.D)
+						best = {D: d, X: point[0], Z: point[1], Rank: 2};
+				});
+			});
+
+			return best;
+		}
+
+		if (!hubs.length && !ways.length)
+			return {Land: land, Things: things};
+
+		if (!hubs.length)
+			hubs.push(trunkNear(0, 0) || {X: 0, Z: 0, Rank: 1});
+
+		/* The first settlement to the highway near it. */
+		var reached = trunkNear(hubs[0].X, hubs[0].Z);
+		if (reached && reached.D > 30)
+			ways.push({From: [hubs[0].X, hubs[0].Z], To: reached, Rank: Math.min(2, hubs[0].Rank), Big: 2});
+
+		/* The towns and cities joined by the shortest net of them (Prim); each smaller one to the nearest joined before it. */
+		joined = [hubs[0]];
+
+		hubs.slice(1).forEach(function (hub) {
+			var big = hub.Rank >= 2;
+			var best = null;
+
+			hubs.forEach(function (one) {
+				var trunk;
+
+				if (joined.indexOf(one) !== -1 || big && one.Rank < 2 || !big && one !== hub) return;
+
+				/* A highway nearer than all joined: to it. */
+				trunk = trunkNear(one.X, one.Z);
+
+				if (trunk && (!best || trunk.D < best.D) && trunk.D > 30)
+					best = {D: trunk.D, A: trunk, B: one};
+
+				joined.forEach(function (other) {
+					var d = Math.hypot(one.X - other.X, one.Z - other.Z);
+					if (!best || d < best.D)
+						best = {D: d, A: other, B: one};
+				});
+			});
+
+			if (!best) return;
+
+			joined.push(best.B);
+			ways.push({From: [best.B.X, best.B.Z], To: best.A, Rank: Math.min(best.A.Rank, best.B.Rank), Big: Math.max(best.A.Rank, best.B.Rank)});
+		});
+
+		/* A passage to the settlement nearest it. */
+		ways.forEach(function (way) {
+			if (!way.To) {
+				way.To = hubs.slice().sort(function (a, b) {
+					return Math.hypot(a.X - way.From[0], a.Z - way.From[1]) - Math.hypot(b.X - way.From[0], b.Z - way.From[1]);
+				})[0];
+
+				way.Rank = 1;
+				way.Big = way.To.Rank;
+			}
+		});
+
+		ways.forEach(function (way) {
+			var points = terrain.RoadWay(field, way.From, [way.To.X, way.To.Z]);
+			var type = way.Rank >= 2 ? properties.Main || 'road' : way.Big >= 2 ? properties.Minor || 'country' : properties.Paths || 'gravel';
+
+			if (!points || points.length < 2) return;
+
+			things.push({ID: 'road-' + place(way.From) + '-' + place([way.To.X, way.To.Z]), Kind: 'road', Values: {Type: type, Points: points, Structures: true}});
+
+			if (properties.Rail && way.Rank >= 2)
+				things.push({ID: 'rail-' + place(way.From) + '-' + place([way.To.X, way.To.Z]), Kind: 'road', Values: {Type: 'rail', Points: points.map(function (point, index) {
+					var next = points[Math.min(points.length - 1, index + 1)];
+					var back = points[Math.max(0, index - 1)];
+					var dx = next[0] - back[0];
+					var dz = next[1] - back[1];
+					var length = Math.hypot(dx, dz) || 1;
+
+					/* Beside the road, 14 m off it. */
+					return [Math.round((point[0] - dz / length * 14) * 10) / 10, Math.round((point[1] + dx / length * 14) * 10) / 10];
+				}), Structures: true}});
+		});
+
+		return {Land: Object.assign({}, land, {Sketch: land.Sketch ? Object.assign({}, land.Sketch, {Layers: layers}) : land.Sketch}), Things: things};
 	},
 
 	Make: function (graph, parameters) {
@@ -382,8 +571,9 @@ Elemenx.Service('SceneWorld', {
 
 		try {
 			made = blueprints.Compile(read).Make(parameters || {});
+			/* Their IDs by their order, or their own (a road: of the places it joins), so a change of one is kept when the rest change. */
 			made = {Ground: made.Ground, Things: made.Things.map(function (thing, index) {
-				return {ID: 'world-' + index, Kind: thing.Kind, Values: thing.Values};
+				return {ID: 'world-' + (thing.ID || index), Kind: thing.Kind, Values: thing.Values};
 			}), Problems: []};
 		}
 		catch (error) {
@@ -461,6 +651,14 @@ Elemenx.Service('SceneWorld', {
 
 		if (given.Footings)
 			land = step('Footings', given.Footings === true ? {} : given.Footings, 'Land', 'Land', land);
+
+		/* Its roads: a land in and out, and the first of its things. */
+		if (given.Roads) {
+			var roads = step('Roads', given.Roads === true ? {} : given.Roads, 'Land', 'Land', land);
+
+			land = roads;
+			things = roads;
+		}
 
 		(given.Settlements || []).forEach(function (settlement) {
 			things = step('Settlement', settlement, 'Under', 'Things', things);

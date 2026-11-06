@@ -836,10 +836,26 @@
 				<Button Label="Save" Icon="save" Variant="ghost" (click)="TerrainSave" />
 				<Button Label="Load" Icon="refresh" Variant="ghost" [disabled]="!TerrainSaved" (click)="TerrainLoad" />
 			</div>
+			<div class="ui-kit-row">
+				<span class="elemenx-caption">Lights of the sky:</span>
+				<Button Label="Rainbow" Icon="sun" Variant="ghost" [title]="'A rain that ends, the sun low behind the view: the bow of 42 degrees and the second of 51'" (click)="TerrainRainbow" />
+				<Select Label="Northern lights" [options]="TerrainAuroras" [value]="TerrainAurora" (change)="TerrainAuroraChosen" />
+				<Button Label="Lightning" Icon="zap" Variant="ghost" [title]="'A storm: a flash inside the clouds, its veins crawling, then a bolt to the land'" (click)="TerrainLightning" />
+				<Button Label="Polar night" Icon="moon" Variant="ghost" [title]="'Latitude 68, a winter night: the northern lights come by themselves'" (click)="TerrainPolarNight" />
+				<Button Label="Back to summer" Icon="refresh" Variant="ghost" (click)="TerrainSummer" />
+				<span class="elemenx-caption" aria-live="polite">{{TerrainSeeing}}</span>
+			</div>
+			<div class="ui-kit-row">
+				<span class="elemenx-caption">The year:</span>
+				<Select Label="Season" [options]="TerrainSeasons" [value]="TerrainSeason" (change)="TerrainSeasonChosen" />
+				<Field Label="Day of the year"><Slider Label="Day of the year" Min="1" Max="365" Step="1" ShowValue="always" [value]="TerrainDay" (input)="TerrainDay = $event" /></Field>
+				<Field Label="Latitude"><Slider Label="Latitude" Min="-70" Max="70" Step="1" ShowValue="always" [value]="TerrainLatitude" (input)="TerrainLatitude = $event" /></Field>
+				<span class="elemenx-caption" aria-live="polite">{{TerrainYear}}</span>
+			</div>
 			<div class="ui-kit-space" data-demo="terrain">
-				<Scene *if="!Far.terrain" Setting="terrain" Team="blue" Labels="true" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" [bokeh]="SceneBokeh" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
+				<Scene *if="!Far.terrain" Setting="terrain" Team="blue" Labels="true" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [season]="TerrainSeason" [aurora]="TerrainAuroraOf(TerrainAurora)" [auroracolors]="TerrainAurora === 'fantasy' ? ['#ff4fd8', '#3fb4ff'] : null" [flare]="SceneFlare" [bokeh]="SceneBokeh" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
 					<SceneObject ID="valley" Kind="ground" [world]="TerrainWorld(TerrainBiome, TerrainRelief)" [swell]="TerrainSwell" />
-					<SceneObject ID="sun" Kind="sun" Latitude="45" DayOfYear="172" Noon="150" [time]="TerrainHour" />
+					<SceneObject ID="sun" Kind="sun" [latitude]="TerrainLatitude" [dayofyear]="TerrainDay" Noon="150" [time]="TerrainHour" />
 					<SceneObject ID="hamlet" Kind="village" X="-70" Y="20" Houses="10" />
 					<SceneObject *for="unit of TerrainUnits" *key="unit.ID" Kind="unit" [id]="unit.ID" [name]="unit.Name" [x]="unit.X" [y]="unit.Y" Team="blue" />
 					<SceneObject *for="house of TerrainHouses" *key="house.ID" Kind="house" [id]="house.ID" [name]="house.Name" [x]="house.X" [y]="house.Y" />
@@ -1107,6 +1123,95 @@
 					<SceneObject ID="noon" Kind="sun" Elevation="36" Azimuth="130" />
 					<SceneObject *for="model of ModelsList" *key="model.ID" [kind]="model.Kind" [id]="model.ID" [name]="model.Kind" [x]="model.X" [y]="model.Y" [team]="model.Team" />
 					<SceneObject ID="from-file" Kind="unit" Name="column.glb" Model="/data/models/column.glb" Size="4" X="-92" Y="-40" Clip="Bend" />
+				</Scene>
+			</div>
+		</div>
+	</Section>
+
+	<Section *if="Shows('Camera and cinema')" Title="Camera and cinema" [note]="'Scene · SceneCamera, SceneScreens, SceneCinema: lenses of real cameras, rigs, screens of a camera, a canvas and live HTML, cutscenes and their video'">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<Select Label="Lens" [options]="CinemaLenses" [value]="CinemaLens" (change)="CinemaLensChosen" />
+				<Select Label="Rig" [options]="CinemaRigs" [value]="CinemaRig" (change)="CinemaRigChosen" />
+				<Button Label="Cutscene" Icon="play" (click)="CinemaPlay" />
+				<Button Label="Record the cutscene" Icon="video" Variant="ghost" [disabled]="CinemaRecording" (click)="CinemaRecord" />
+				<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
+			</div>
+			<p class="elemenx-caption">{{CinemaNote}}</p>
+			<div class="ui-kit-space" data-demo="cinema">
+				<Scene *if="!Far.cinema" Setting="terrain" Labels="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="CinemaReady" (arrive)="CinemaArrived" (cue)="CinemaCued">
+					<SceneObject ID="meadow" Kind="ground" [world]="WorldOf('meadow')" />
+					<SceneObject ID="evening" Kind="sun" Time="17.5" Latitude="45" />
+					<div slot="screens" data-screen="cinema-panel" class="ui-kit-cinema-panel">
+						<h3>Control panel</h3>
+						<p>A live part of the page on a screen in the world: press it there.</p>
+						<div class="ui-kit-row">
+							<Button Label="Press me" Icon="star" (click)="CinemaPressed" />
+							<span>Pressed: {{CinemaPresses}}</span>
+						</div>
+						<div class="ui-kit-row">
+							<Toggle Label="Lamp" [checked]="CinemaLamp" (change)="CinemaLampToggled" />
+							<Input Size="small" Placeholder="Type here" />
+						</div>
+					</div>
+					<div slot="screens" data-screen="cinema-hud" class="ui-kit-cinema-hud">
+						<div class="ui-kit-cinema-hud-title">&#9679; REC</div>
+						<div class="ui-kit-cinema-hud-bar"><span [style.width]="CinemaPresses * 10 % 100 + 10 + '%'"></span></div>
+					</div>
+				</Scene>
+			</div>
+		</div>
+	</Section>
+
+	<Section *if="Shows('Combat and magic')" Title="Combat and magic" [note]="'Scene · SceneWeapons, SceneDebris, SceneEffects; GameCombat and GameStrategy of ElemenxGaming: weapons, hits by material, marks, locks, health, what breaks, a transporter beam, circles on any surface'">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<Select Label="Weapon" [options]="CombatWeapons" [value]="CombatWeapon" (change)="CombatWeaponChosen" />
+				<Select Label="Crosshair" [options]="CombatCrosshairs" [value]="CombatCrosshair" (change)="CombatCrosshair = $event && $event.detail !== undefined ? $event.detail : $event" />
+				<Select Label="Aim at" [options]="CombatTargets" [value]="CombatTarget" (change)="CombatAimed" />
+				<Button Label="Fire" Icon="target" (click)="CombatFire" />
+				<Button Label="Burst of five" Icon="zap" Variant="ghost" (click)="CombatBurst" />
+				<Button Label="Squads fight" Icon="users" Variant="ghost" (click)="CombatSquads" />
+				<Button Label="Mortar barrage" Icon="crosshair" Variant="ghost" (click)="CombatBarrage" />
+				<Button Label="New targets" Icon="refresh" Variant="ghost" (click)="CombatReset" />
+			</div>
+			<div class="ui-kit-row">
+				<span class="elemenx-caption">Magic:</span>
+				<Button Label="Beam the hero" Icon="sparkles" (click)="CombatBeam" />
+				<Button Label="Circle on the wall" Icon="circle" Variant="ghost" (click)="CombatCircle" />
+				<Button Label="Circle on the ground" Icon="circle-dot" Variant="ghost" (click)="CombatGroundCircle" />
+				<Button Label="Dispel" Icon="x" Variant="ghost" (click)="CombatDispel" />
+				<Button Label="Break the crate" Icon="box" Variant="ghost" (click)="CombatBreak" />
+			</div>
+			<p class="elemenx-caption" aria-live="polite">{{CombatNote}}</p>
+			<div class="ui-kit-space" data-demo="combat">
+				<Scene *if="!Far.combat" Setting="terrain" Labels="false" Person="shoulder" [crosshair]="CombatCrosshair" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="CombatReady" (hit)="CombatHit" (lock)="CombatLocked" (break)="CombatBroke">
+					<SceneObject ID="range" Kind="ground" [world]="WorldOf('meadow')" />
+					<SceneObject ID="noon" Kind="sun" Time="14" Latitude="45" />
+					<GameCombat Bars="hurt" (death)="CombatDied" />
+					<GameStrategy Team="blue" />
+				</Scene>
+			</div>
+		</div>
+	</Section>
+
+	<Section *if="Shows('Deep space')" Title="Deep space" [note]="'Scene · SceneDeepSpace: a black hole with its disc, light bent round it; a wormhole to another sky; a comet; a quasar; a planetoid to land on. Point at them, press them'">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<Select Label="Fly to" [options]="DeepPlaces" [value]="DeepPlace" (change)="DeepFly" />
+				<Button Label="Land on the planetoid" Icon="arrow-down" Variant="ghost" (click)="DeepLand" />
+				<Button Label="Take off" Icon="arrow-up" Variant="ghost" (click)="DeepTakeOff" />
+			</div>
+			<p class="elemenx-caption" aria-live="polite">{{DeepNote}}</p>
+			<div class="ui-kit-space" data-demo="deep">
+				<Scene *if="!Far.deep" Team="blue" Speed="0.02" DaySeconds="30" Cosmos="nebula" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="DeepReady" (hover)="DeepHovered" (select)="DeepSelected">
+					<SceneObject ID="vega" Kind="star" Name="Vega" Temperature="9600" Mass="2.1" />
+					<SceneObject ID="terra" Kind="planet" Name="Terra" Distance="1.4" Type="terran" />
+					<SceneObject ID="pebble" Kind="planetoid" Name="Pebble" Distance="2.6" Radius="140" />
+					<SceneObject ID="gargantua" Kind="blackhole" Name="Gargantua" Distance="14" Mass="40" />
+					<SceneObject ID="gate" Kind="wormhole" Name="Gate" Distance="7" Leads="Kepler-442" Cosmos="pillars" Star="#ffcf80" />
+					<SceneObject ID="halley" Kind="comet" Name="Halley" Distance="5" Eccentricity="0.88" Anomaly="3" />
+					<SceneObject ID="beacon" Kind="quasar" Name="3C 273" Azimuth="70" Elevation="18" />
 				</Scene>
 			</div>
 		</div>
@@ -1920,7 +2025,7 @@
 					<Diagram [value]="CodesFlow" (error)="DiagramFailed" />
 					<Diagram [value]="CodesSequence" FontSize="12" />
 					<h5>Markdown with plugins</h5>
-					<Markdown [value]="CodesMarkdown" />
+					<Markdown [value]="CodesMarkdown" Tasks="editable" [taskcheck]="CodesTaskCheck" (change)="CodesMarkdown = $event.Value" />
 				</div>
 			</div>
 			<div class="ui-kit-stack">

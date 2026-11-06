@@ -10,7 +10,8 @@
  *   marker shows its message.
  * - Complete(context, callback) offers completions as the user types a word (and on Ctrl+Space): context is
  *   {Text, Offset, Line, Column, Word, Before, Language, Explicit}; callback(error, items), items [{Label, Insert,
- *   Detail, Kind}] or texts. The items that start with the word show; Enter or Tab inserts one.
+ *   Detail, Kind}] or texts. The items that start with the word show; Enter or Tab inserts one. Without Complete the
+ *   words of the language complete, where it has them (Syntax Words: the types and built-ins of GLSL).
  * - Hint(context, callback) shows a hint for the text under the pointer: callback(error, text).
  * - Keys: Tab and Shift+Tab indent and outdent (Escape, then Tab, leaves the editor), Enter keeps the indent,
  *   Mod+/ comments the lines, Mod+] and Mod+[ indent and outdent, Ctrl+Space completes, Mod+F finds and Mod+R (or
@@ -478,7 +479,7 @@ Elemenx.Component('CodeEditor', {
 
 		this.Reveal();
 
-		if (this.Complete && event && event.inputType === 'insertText' && /^[\w$.]$/.test(event.data || '')) this.Suggest(false);
+		if (this.Completer() && event && event.inputType === 'insertText' && /^[\w$.]$/.test(event.data || '')) this.Suggest(false);
 		else if (this.Suggestions.length) this.Suggest(false);
 	},
 
@@ -894,6 +895,22 @@ Elemenx.Component('CodeEditor', {
 		return {Left: rect.left, Top: rect.top, Bottom: rect.bottom};
 	},
 
+	/*
+	 * What completes the words: Complete, or without it the words of the language (Syntax Words: its types, keywords and
+	 * built-in functions, as of GLSL); null for neither.
+	 */
+	Completer: function () {
+		var words;
+
+		if (typeof this.Complete === 'function') return this.Complete;
+
+		words = this.$Service('Syntax').Words(this.Language);
+
+		return words.length ? function (context, callback) {
+			callback(null, words);
+		} : null;
+	},
+
 	/* Asks Complete for the completions of the word before the caret. */
 	Suggest: function (explicit) {
 		var self = this;
@@ -904,8 +921,9 @@ Elemenx.Component('CodeEditor', {
 		var before = value.substring(lineStart, offset);
 		var word = (/[\w$]*$/.exec(before) || [''])[0];
 		var asked = ++this.Own().Asked;
+		var complete = this.Completer();
 
-		if (typeof this.Complete !== 'function' || node.selectionStart !== offset) {
+		if (!complete || node.selectionStart !== offset) {
 			this.Suggestions = [];
 
 			return;
@@ -917,7 +935,7 @@ Elemenx.Component('CodeEditor', {
 			return;
 		}
 
-		this.Complete({Text: value, Offset: offset, Line: this.LineOf(offset) + 1, Column: offset - lineStart + 1, Word: word, Before: before, Language: this.Language, Explicit: !!explicit}, function (error, items) {
+		complete({Text: value, Offset: offset, Line: this.LineOf(offset) + 1, Column: offset - lineStart + 1, Word: word, Before: before, Language: this.Language, Explicit: !!explicit}, function (error, items) {
 			var root = self.$Element();
 			var point;
 			var box;

@@ -20,7 +20,9 @@
  * when the view moved, so a still view costs no work, and a few draws show them all.
  *
  * Methods: Sown() ({Things, Squares, Waiting (the squares not sown yet, those in a worker among them), Draws, Blades}), SownNear(x, z, radius) (what is sown round a point: [{Model, X, Y, Z,
- * Size, Turn}]).
+ * Size, Turn, Key}]), ChangeSown(key, changes) (a thing sown changed by hand, made so again each time it is sown: {Remove,
+ * Model, X, Z, Turn, Size}; null forgets the change; kept in Save), UnlinkSown(key) (a thing sown made an object of the
+ * scene of its own, kind thing, where it stood: its ID; it is sown no more).
  */
 Elemenx.Trait('SceneScatter', {
 	ScatterStart: function () {
@@ -36,7 +38,7 @@ Elemenx.Trait('SceneScatter', {
 		var shaders = this.Grassed(this.Winded(this.ScatterShaders(graphics)));
 		var size = 48;
 		var steps = [[62, 74], [140, 165], [270, 310]];
-		var state = {Sown: Math.random().toString(36).slice(2, 8), Generation: 0, Running: 0, Flying: 0, Kept: {}, Houses: [], Settled: '', Surfaces: {}, Key: '', Squares: [], Waiting: [], Streams: {}, Meshes: {}, Baked: {}, Blocked: {}, Things: 0, Moved: true, Eye: null, Look: null, Grass: null, Field: null, Programs: null};
+		var state = {Sown: Math.random().toString(36).slice(2, 8), Generation: 0, Running: 0, Flying: 0, Kept: {}, Houses: [], Settled: '', Surfaces: {}, Key: '', Squares: [], Waiting: [], Streams: {}, Meshes: {}, Baked: {}, Blocked: {}, Things: 0, Moved: true, Eye: null, Look: null, Grass: null, Field: null, Programs: null, Edits: {}};
 
 		this.Sown = function () {
 			return {Things: state.Things, Squares: state.Squares.length, Waiting: state.Waiting.length + state.Flying, Draws: Object.keys(state.Streams).filter(function (key) {
@@ -191,10 +193,16 @@ Elemenx.Trait('SceneScatter', {
 
 					rule = Object.assign({ID: 'sketch-' + item.ID, Seed: item.ID, Cover: 1, MinHeight: 0.2, MaxSlope: kind === 'line' ? 2 : 0.6}, preset);
 
-					['Shapes', 'Density', 'Size', 'Passability', 'Clumps', 'Spacing', 'Gap', 'Way', 'MaxSlope', 'Seed'].forEach(function (key) {
+					['Shapes', 'Density', 'Size', 'Passability', 'Clumps', 'Spacing', 'Gap', 'Way', 'MinHeight', 'MaxSlope', 'Seed'].forEach(function (key) {
 						if (item[key] !== undefined && item[key] !== '')
 							rule[key] = item[key];
 					});
+
+					/* Shapes told as words: 'bench, bin'. */
+					if (typeof rule.Shapes === 'string')
+						rule.Shapes = rule.Shapes.split(',').map(function (name) {
+							return name.trim();
+						}).filter(Boolean);
 
 					if (kind === 'area') rule.Area = item.Points;
 					else rule.Line = item.Points;
@@ -471,7 +479,7 @@ Elemenx.Trait('SceneScatter', {
 			}
 
 			/* What a sketch sows is told by its text: its lots are many, and the key is made every frame. */
-			key = ground ? ground.Key + JSON.stringify(given.slice(0, given.length - sketched().Rules.length)) + (state.SketchText || '') : '';
+			key = ground ? ground.Key + JSON.stringify(given.slice(0, given.length - sketched().Rules.length)) + (state.SketchText || '') + JSON.stringify(state.Edits) : '';
 
 			if (key === state.Key) return;
 
@@ -510,7 +518,10 @@ Elemenx.Trait('SceneScatter', {
 			made = sketched();
 			list = self.$Service('SceneSower').Compile(rules());
 
-			list.forEach(function (rule) {
+			/* The models of the rules, and those things sown were changed to by hand. */
+			list.concat([{Shapes: Object.keys(state.Edits).map(function (key) {
+				return state.Edits[key].Model;
+			}).filter(Boolean)}]).forEach(function (rule) {
 				[].concat(rule.Shapes || (rule.Fixed ? [] : 'pine'), (rule.Fixed || []).map(function (one) {
 					return one.Model;
 				})).forEach(function (name) {
@@ -533,7 +544,7 @@ Elemenx.Trait('SceneScatter', {
 				});
 			});
 
-			state.Context = {Generation: state.Generation, Inline: inline, Shared: false, Data: {Key: state.Sown + ':' + state.Generation, Options: inline ? null : ground.Field.Options, Field: inline ? ground.Field : null, Roads: ground.Field.Roads || null, Kept: Object.keys(state.Kept), Rules: list, Free: {Areas: made.Areas, Lines: made.Lines}, Models: table, Size: size}};
+			state.Context = {Generation: state.Generation, Inline: inline, Shared: false, Data: {Key: state.Sown + ':' + state.Generation, Options: inline ? null : ground.Field.Options, Field: inline ? ground.Field : null, Roads: ground.Field.Roads || null, Kept: Object.keys(state.Kept), Rules: list, Free: {Areas: made.Areas, Lines: made.Lines}, Models: table, Size: size, Edits: state.Edits}};
 
 			return state.Context.Data;
 		}
@@ -1013,7 +1024,17 @@ Elemenx.Trait('SceneScatter', {
 
 			[[grass.Near, near], [grass.Far, far]].forEach(function (each) {
 				if (each[1].length) {
-					renderer.Draw(each[0], programs().Grass, Object.assign({}, uniforms, {uOrigin: vectors.Subtract([0, 0, 0], eye), uField: grass.Texture, uFree: grass.Free, uFieldSize: [ground.Field.Size, grass.Side], uBlade: [Number(rule.Height) || 0.7, Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: engine.Paint(rule.Root || '#2f5a22').slice(0, 3), uTip: engine.Paint(rule.Color || '#7fae4a').slice(0, 3), uSun: ground.Sun, uSunColor: ground.SunColor, uEye: target}), {Cull: 'none'});
+					/* The season on the grass: burnt in summer, brown in autumn, low and white under the snow of winter. */
+					var season = ground.Season || {Dry: 0, Turn: 0, Snow: 0};
+					var snow = engine.Snowed ? engine.Snowed() : 0;
+					var seasoned = function (color, tip) {
+						var dry = Math.min(1, season.Dry * tip + season.Turn * 0.6);
+						var made = [color[0] + (0.72 * tip + 0.3 - color[0]) * dry * 0.6, color[1] + (0.6 * tip + 0.25 - color[1]) * dry * 0.45, color[2] + (0.25 - color[2]) * dry * 0.5];
+
+						return [made[0] + (0.86 - made[0]) * snow * 0.8, made[1] + (0.9 - made[1]) * snow * 0.8, made[2] + (0.95 - made[2]) * snow * 0.8];
+					};
+
+					renderer.Draw(each[0], programs().Grass, Object.assign({}, uniforms, {uOrigin: vectors.Subtract([0, 0, 0], eye), uField: grass.Texture, uFree: grass.Free, uFieldSize: [ground.Field.Size, grass.Side], uBlade: [(Number(rule.Height) || 0.7) * (1 - snow * 0.85), Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: seasoned(engine.Paint(rule.Root || '#2f5a22'), 0.5), uTip: seasoned(engine.Paint(rule.Color || '#7fae4a'), 1), uSun: ground.Sun, uSunColor: ground.SunColor, uEye: target}), {Cull: 'none'});
 				}
 			});
 		}
@@ -1132,7 +1153,7 @@ Elemenx.Trait('SceneScatter', {
 						files.uSway = made.Sway;
 						files.uSoftness = each.Soft;
 
-						renderer.Draw(each.Mesh, programs().Files, Object.assign(files, engine.Surface(each)), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
+						renderer.Draw(each.Mesh, programs().Files, Object.assign(files, engine.Surface(each), engine.SeasonValues ? engine.SeasonValues(parts[0]) : null), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
 					});
 
 					return;
@@ -1142,6 +1163,9 @@ Elemenx.Trait('SceneScatter', {
 					many.uSway = made.Sway;
 					many.uSoft = made.Sway ? 0.9 : 0;
 					many.uFade = fadeOf(one.Level);
+
+					if (engine.SeasonValues)
+						Object.assign(many, engine.SeasonValues(parts[0]));
 
 					renderer.Draw(levels(one.Key)[one.Level], programs().Many, many, {Cull: 'back'});
 
@@ -1169,7 +1193,107 @@ Elemenx.Trait('SceneScatter', {
 			return !!state.Blocked[cellX + ':' + cellZ];
 		};
 
-		/* What is sown round a point, of the squares made so far: [{Model, X, Y, Z, Size, Turn}], the nearest first. */
+		/* A thing sown changed by hand (changes: {Remove, Model, X, Z, Turn, Size}, merged; null forgets it): sown again so. */
+		this.ChangeSown = function (key, changes) {
+			if (!key)
+				return false;
+
+			if (changes === null) delete state.Edits[key];
+			else state.Edits[key] = Object.assign({}, state.Edits[key] || {}, changes);
+
+			return true;
+		};
+
+		/* A thing sown made an object of the scene (kind thing) where it stands, as large and turned as it is: its ID; it is sown no more. */
+		this.UnlinkSown = function (key) {
+			var found = null;
+			var id;
+
+			state.Squares.some(function (square) {
+				return Object.keys(square.Lists).some(function (name) {
+					var list = square.Lists[name];
+					var at = list.Keys ? list.Keys.indexOf(key) : -1;
+					if (at < 0)
+						return false;
+
+					found = {Model: name.split('~')[0], X: list.Places[at * 4], Z: list.Places[at * 4 + 2], Size: list.Places[at * 4 + 3], Turn: list.Extra[at * 4]};
+
+					return true;
+				});
+			});
+
+			if (!found)
+				return null;
+
+			id = 'sown-' + key.replace(/[^A-Za-z0-9-]/g, '-');
+
+			self.Add('thing', {ID: id, Model: found.Model, X: Math.round(found.X * 100) / 100, Y: Math.round(found.Z * 100) / 100, Size: Math.round(found.Size * 1000) / 1000, Facing: Math.round(found.Turn * 180 / Math.PI * 100) / 100});
+
+			this.ChangeSown(key, {Remove: true});
+
+			return id;
+		};
+
+		/*
+		 * The lamps of the things sown round a point within reach (a street lamp, the window of a kiosk: the Lamps of their
+		 * models), where each thing stands, as large and turned as it is; made once a frame.
+		 */
+		engine.ScatterLamps = function (from, reach) {
+			var lamps = [];
+			var key = scene.Seconds + ':' + from.join(',') + ':' + reach + ':' + state.Squares.length;
+			if (state.LampKey === key) return state.Lamps;
+
+			state.Squares.forEach(function (square) {
+				if (square.X > from[0] + reach || square.Z > from[2] + reach || square.X + size < from[0] - reach || square.Z + size < from[2] - reach) return;
+
+				Object.keys(square.Lists).forEach(function (name) {
+					var parts = name.split('~');
+					var list = square.Lists[name];
+					var made;
+					var i;
+
+					if (!library.Has(parts[0])) return;
+
+					made = library.Make(parts[0], {Variant: Number(parts[1]) || 0});
+
+					if (!made || !made.Lamps || !made.Lamps.length) return;
+
+					for (i = 0; i < list.Count; i++) {
+						var x = list.Places[i * 4];
+						var y = list.Places[i * 4 + 1];
+						var z = list.Places[i * 4 + 2];
+						var large = list.Places[i * 4 + 3];
+						var turn = list.Extra[i * 4];
+						var c = Math.cos(turn);
+						var s = Math.sin(turn);
+
+						if (Math.abs(x - from[0]) > reach || Math.abs(z - from[2]) > reach) continue;
+
+						made.Lamps.forEach(function (lamp) {
+							var p = lamp.Place;
+							var aim = lamp.Aim;
+
+							lamps.push({Object: {Seed: i}, Built: true, At: [x + (p[0] * c + p[2] * s) * large, y + p[1] * large, z + (-p[0] * s + p[2] * c) * large], Settings: {Color: lamp.Color, Power: lamp.Power, Radius: lamp.Radius * large, Spot: lamp.Spot, Aim: aim ? [aim[0] * c + aim[2] * s, aim[1], -aim[0] * s + aim[2] * c] : null, Night: lamp.Night}});
+						});
+					}
+				});
+			});
+
+			state.LampKey = key;
+			state.Lamps = lamps;
+
+			return lamps;
+		};
+
+		/* The changes of things sown by hand, to save; given, they replace them (a game loaded). */
+		engine.SownEdits = function (edits) {
+			if (edits !== undefined)
+				state.Edits = JSON.parse(JSON.stringify(edits || {}));
+
+			return JSON.parse(JSON.stringify(state.Edits));
+		};
+
+		/* What is sown round a point, of the squares made so far: [{Model, X, Y, Z, Size, Turn, Key}], the nearest first. */
 		this.SownNear = function (x, z, radius) {
 			var found = [];
 
@@ -1185,7 +1309,7 @@ Elemenx.Trait('SceneScatter', {
 						var pz = list.Places[i * 4 + 2];
 						var far = Math.hypot(px - x, pz - z);
 						if (far <= radius)
-							found.push({Model: key.split('~')[0], X: px, Y: list.Places[i * 4 + 1], Z: pz, Size: list.Places[i * 4 + 3], Turn: list.Extra[i * 4], Far: far});
+							found.push({Model: key.split('~')[0], X: px, Y: list.Places[i * 4 + 1], Z: pz, Size: list.Places[i * 4 + 3], Turn: list.Extra[i * 4], Key: list.Keys ? list.Keys[i] : '', Far: far});
 					}
 				});
 			});

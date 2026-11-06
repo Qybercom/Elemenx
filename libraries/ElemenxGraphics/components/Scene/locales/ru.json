@@ -53,7 +53,12 @@
 				"fighter": "Истребитель",
 				"cruiser": "Крейсер",
 				"freighter": "Грузовик",
-				"fleet": "Флот"
+				"fleet": "Флот",
+				"blackhole": "Чёрная дыра",
+				"wormhole": "Кротовая нора",
+				"comet": "Комета",
+				"quasar": "Квазар",
+				"planetoid": "Планетоид"
 			},
 			"land": "Сесть",
 			"takeOff": "Взлететь",
@@ -70,7 +75,11 @@
 			"stageGlobes": "Планеты",
 			"stageGround": "Земля",
 			"stagePlants": "Растительность",
-			"stageView": "Картинка"
+			"stageView": "Картинка",
+			"horizon": "Горизонт событий",
+			"innermost": "Внутренняя орбита",
+			"leads": "Ведёт в",
+			"nucleus": "Ядро"
 		}
 	}
 }

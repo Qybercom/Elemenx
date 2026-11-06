@@ -53,7 +53,12 @@
 				"fighter": "Fighter",
 				"cruiser": "Cruiser",
 				"freighter": "Freighter",
-				"fleet": "Fleet"
+				"fleet": "Fleet",
+				"blackhole": "Black hole",
+				"wormhole": "Wormhole",
+				"comet": "Comet",
+				"quasar": "Quasar",
+				"planetoid": "Planetoid"
 			},
 			"land": "Land",
 			"takeOff": "Take off",
@@ -70,7 +75,11 @@
 			"stageGlobes": "Planets",
 			"stageGround": "Ground",
 			"stagePlants": "Plants",
-			"stageView": "The view"
+			"stageView": "The view",
+			"horizon": "Event horizon",
+			"innermost": "Innermost orbit",
+			"leads": "Leads to",
+			"nucleus": "Nucleus"
 		}
 	}
 }

@@ -107,7 +107,7 @@
 Elemenx.Component('Scene', {
 	$TemplateURL: 'Scene.html',
 	$StyleURL: 'Scene.css',
-	$Traits: ['SceneScatter', 'SceneLighting', 'SceneEffects', 'SceneCosmos', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding'],
+	$Traits: ['SceneScatter', 'SceneLighting', 'SceneEffects', 'SceneCosmos', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneDebris', 'SceneDeepSpace'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'star',
@@ -131,12 +131,22 @@ Elemenx.Component('Scene', {
 			leave: 'One went out of a trigger, or was removed: {Trigger, ID, Object}.',
 			action: 'A trigger was sent an action (Action of the trigger): {Trigger, Name, Data}.',
 			dig: 'A hole was dug in the ground (Dig): {At, Radius}.',
+			fire: 'An object shot its weapon (SceneWeapons): {ID, Weapon, From, Way}.',
+			hit: 'A shot hit something or the ground (SceneWeapons): {ID, Weapon, Type, Source, Team, Target, Part, Point, Normal, Material, Amount, Distance}.',
+			lock: 'The hero locked a target under its aim (Lock of its weapon): {ID, Weapon}.',
+			unlock: 'A lock was lost: {ID}.',
+			break: 'A thing broke into pieces (Break, SceneDebris): {ID, Pieces, Point}.',
+			teleport: 'A thing is beamed away or comes (Teleport): {ID, Phase (out or in), From, To}.',
+			through: 'A ship flew into the mouth of a wormhole (SceneDeepSpace): {ID, Wormhole, Leads, To (the mouth it comes out of, empty: none)}.',
+			hover: 'The pointer came over a selectable object, or left it: {ID (empty: none), Object, Info}.',
+			cutscene: 'A cutscene started, ended or was stopped (SceneCinema): {Name, State: start, end or stop}.',
+			cue: 'A cue of a cutscene came: {Cutscene, Name, Data, At}.',
 			part: 'A part of an object was set by its role (Part(id, role).Set): {ID, Role, Value}.',
 			touch: 'Two solid things began to touch (trait Rigid): {ID, With (null: the ground), At, Normal, Impulse}.',
 			shader: 'A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}).'
 		},
-		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
+		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
 		Props: {
 			Setting: {Options: ['space', 'terrain'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers).'},
 			System: 'The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}.',
@@ -148,7 +158,10 @@ Elemenx.Component('Scene', {
 			Person: {Options: ['third', 'first', 'shoulder'], Description: 'Where the view of a walker stands: behind it (third), in its eyes (first, its head hidden but its body and what it holds seen) or over its shoulder. V changes it while the pointer is taken.'},
 			Shoulder: {Options: ['right', 'left'], Description: 'Over which shoulder the view stands. B changes it while the pointer is taken.'},
 			Axes: {Options: ['', 'top-left', 'top-right', 'bottom-left', 'bottom-right'], Description: 'The corner where the Axes of the view stand, none when empty; a press on one looks along it.'},
-			Origin: 'Draws the three axes of the world at its middle.',
+			Origin: 'Draws the three axes of the world at its middle (and the colliders as their outlines).',
+			Wireframe: 'Draws the wire of the scene over it: each edge of the ground and of the models (--elemenx-scene-wire).',
+			Edges: 'Draws the edges of the models: where their faces meet at an angle and their rims (--elemenx-scene-edges).',
+			Hovered: 'The ID of the object under the pointer, outlined (--elemenx-scene-hover) as the selected one is (--elemenx-scene-outline).',
 			FreeLook: 'A walker that stands does not turn with the view, so it can be looked at from all sides: it comes round when it sets off.',
 			DaySeconds: 'The seconds a day of 24 hours takes, on a body and from space alike, however fast the orbits go (0: as Speed says).',
 			SurfaceSpeed: 'The days a second on the surface of a body (1/120: a day of two minutes).',
@@ -174,6 +187,15 @@ Elemenx.Component('Scene', {
 			Orbits: 'Draws the orbits.',
 			Labels: 'Shows the names of the objects.',
 			Exposure: 'What a view lets in: a number holds it, empty adapts to the light as an eye does.',
+			Aurora: 'The northern lights, 0 to 1 (more is brighter): anywhere, at night; empty: by themselves at 55 to 68 degrees of Latitude of the sun, at night under a clear sky.',
+			AuroraColors: 'The colors of the northern lights, under and over: [\'#3dff9a\', \'#c03cff\'].',
+			Crosshair: {Options: ['', 'none', 'dot', 'cross', 'circle', 'chevron'], Description: 'The crosshair over the view while the hero holds a Weapon: empty as its weapon says, none for no crosshair.'},
+			MarkCount: 'How many marks of shots stay at once (the oldest go first).',
+			MarkSeconds: 'How long a mark of a shot stays, in seconds.',
+			Season: 'The season the land and its plants show: spring, summer, autumn or winter; empty: of the sun (its DayOfYear of YearDays at its Latitude), passing with the days.',
+			Rainbow: 'A rainbow, 0 to 1, where the sun stands low behind the view; empty: the weather\'s, in a light rain or as it ends.',
+			Cutscenes: 'The cutscenes of the scene by name ({Name: {Tracks, Restore, Skip, Loop}}, SceneCinema): PlayCutscene(name) plays one; Save and Load keep them.',
+			Camera: 'The camera of the scene (an object of kind camera) that shows the world; empty: the view of the scene.',
 			Bokeh: 'The depth of field, 0 to 1: how wide the lens is open; what is far from the focus is blurred, a bright point of it a disc.',
 			BokehFocus: 'The distance in focus; empty: the hero, or what the middle of the view shows, followed slowly.',
 			Details: 'Shows a card of the selected object.',
@@ -201,6 +223,15 @@ Elemenx.Component('Scene', {
 	Focus: '',
 	Bokeh: 0,
 	BokehFocus: '',
+	Camera: '',
+	Cutscenes: null,
+	Aurora: null,
+	AuroraColors: null,
+	Rainbow: null,
+	Season: '',
+	Crosshair: '',
+	MarkCount: 200,
+	MarkSeconds: 60,
 	Selected: '',
 	Orbits: true,
 	Labels: true,
@@ -213,6 +244,9 @@ Elemenx.Component('Scene', {
 	LandGraph: null,
 	WaterGraph: null,
 	Origin: false,
+	Wireframe: false,
+	Edges: false,
+	Hovered: '',
 	ViewYaw: 0,
 	ViewPitch: 0,
 	Details: true,
@@ -301,7 +335,7 @@ Elemenx.Component('Scene', {
 	Ground: function () {
 		return {
 			'ground': {Traits: {Terrain: {World: null, Swell: 0.35, SwellWay: 30, Blueprint: null, Parameters: null}}},
-			'effect': {Traits: {Effect: {Type: 'campfire', Size: 1, Power: 1, Aim: null, Height: 0, Light: true, On: true, Color: '', Hot: '', Volume: 1, Intensity: 1, Length: 1, Width: 1, Spin: 1, Rings: null, Seed: '', Smoke: 1, Appear: 0.45, Tune: null, Pulse: null, Where: 'body', Blueprint: null, Parameters: null}}},
+			'effect': {Traits: {Effect: {Type: 'campfire', Size: 1, Power: 1, Aim: null, Height: 0, Light: true, On: true, Color: '', Hot: '', Volume: 1, Intensity: 1, Length: 1, Width: 1, Spin: 1, Rings: null, Seed: '', Smoke: 1, Appear: 0.45, Draw: 0, Tune: null, Pulse: null, Where: 'body', Blueprint: null, Parameters: null}}},
 			'mirror': {Traits: {Mirror: {Width: 2, Height: 2, Yaw: 0, Pitch: 0, Lift: 1, Tint: '#ffffff', Blur: 0, Strength: 0.92, Every: 1}}},
 			'glass': {Traits: {Glass: {Width: 2, Height: 2, Yaw: 0, Pitch: 0, Lift: 1, Tint: '#cfe6f0', Clarity: 0.88, Frost: 0, Reflect: 0.35}}},
 			'light': {Traits: {Light: {Color: '#ffd39a', Power: 1, Radius: 14, Height: 2.5, Spot: 0, Aim: null, Flicker: 0}}},
@@ -313,7 +347,10 @@ Elemenx.Component('Scene', {
 			'house': {Traits: {Model: {Shape: 'house', Size: 8, Color: '#ffffff'}, Health: {Max: 800}, Selectable: {}}, Values: {Blocks: true}},
 			'building': {Extends: 'house'},
 			'thing': {Traits: {Model: {Shape: 'crystal', Size: 1, Color: '#ffffff'}}},
+			'collider': {Traits: {Collider: {Points: null, Height: null, Lift: 0, Model: ''}}},
+			'screen': {Traits: {Screen: {Width: 1.6, Height: 0.9, Yaw: 0, Pitch: 0, Lift: 1.5, Camera: '', Image: '', Video: '', Canvas: '', Element: '', Pixels: null, Every: null, Bright: 1, Interactive: true}}},
 			'marker': {Traits: {Marker: {Role: 'spawn', Team: ''}}},
+			'camera': {Traits: {Camera: {Lift: 1.6, Yaw: 0, Pitch: 0, Roll: 0, Target: '', Follow: '', At: null, Rig: 'tripod', Shake: null, Smooth: null, Lag: null, Tilt: 0.3, PitchMin: -90, PitchMax: 30, Focal: 35, Sensor: 36, Aperture: null, Focus: null, ISO: null, Shutter: null, ND: 0, Compensation: 0, Polarizer: 0, Filter: '', Temperature: 6500, Tint: 0, Saturation: 1, Contrast: 1, LUT: '', Aberration: 0, Distortion: 0, Vignette: null, Grain: null}}},
 			'trigger': {Traits: {Trigger: {Shape: '', Points: null, Radius: 4, Width: 4, Height: 0, Team: '', Kinds: null, Once: false, Enabled: true, Achievement: null, Blueprint: null, Parameters: null}}},
 			'zone': {Traits: {Zone: {Points: null, Radius: 0, Tags: null, Team: ''}}},
 			'road': {Traits: {Road: {Type: 'road', Points: null, Closed: false, Width: 0, Height: 0, Bridges: null, Tunnels: null, Structures: false, Clear: 5, Cover: 8, Barriers: null, Along: null, Marks: null, Straight: false, Segments: null, Radii: null}, Model: {Shape: 'road', Size: 1, Color: '#ffffff'}}},
@@ -333,9 +370,14 @@ Elemenx.Component('Scene', {
 		var orbit = {Distance: 1, Eccentricity: 0, Inclination: 0, Node: 0, Periapsis: 0, Anomaly: 0, Period: null, Unit: 'AU'};
 
 		return {
-			'star': {Traits: {Star: {Mass: 1, Radius: null, Temperature: null, Luminosity: null, Color: '', Veil: 3}, Selectable: {}}},
+			'star': {Traits: {Star: {Mass: 1, Radius: null, Temperature: null, Luminosity: null, Color: '', Veil: 3, Corona: 1, Prominences: 1, Flares: 1}, Selectable: {}}},
 			'planet': {Traits: {Orbit: orbit, Body: {Radius: 6371, Mass: null, Day: 24, Tilt: 0, Albedo: null}, Surface: {Type: 'rocky', Colors: '', Water: '', Ocean: null, Ice: null, Clouds: null, Planet: null, Atmosphere: '', Seed: ''}, Selectable: {}}},
 			'moon': {Extends: 'planet', Traits: {Body: {Radius: 1737, Day: 0}, Surface: {Type: 'moon'}}},
+			'blackhole': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 40}), BlackHole: {Mass: 10, Disk: true, Inner: 3, Outer: 14, Tilt: 12, Color: '', Brightness: 1}, Selectable: {}}},
+			'wormhole': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 12}), Wormhole: {Radius: 1, Cosmos: 'nebula', Star: '#ffd9a0', Leads: '', To: '', Tilt: 0}, Selectable: {}}},
+			'comet': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 6, Eccentricity: 0.85, Inclination: 18}), Comet: {Radius: 5, Tail: 1, Color: '', Ion: ''}, Selectable: {}}},
+			'quasar': {Traits: {Quasar: {Azimuth: 40, Elevation: 20, Color: '#bcd4ff', Brightness: 1, Jets: true}, Selectable: {}}},
+			'planetoid': {Extends: 'moon', Traits: {Body: {Radius: 120, Day: 9}, Surface: {Type: 'dwarf', Atmosphere: 'none', Clouds: 0}}},
 			'belt': {Traits: {Belt: {Inner: 2.2, Outer: 3.2, Count: 260, Inclination: 0, Colors: '', Rocks: 1}}},
 			'ring': {Traits: {Ring: {Inner: 1.3, Outer: 2.3, Inclination: 0, Colors: ''}}},
 			'module': {Traits: {Model: {Shape: 'box', Size: 1, Scale: [1, 1, 1], Color: '#d6d9e0'}, Health: {Max: 200}}},
@@ -457,6 +499,7 @@ Elemenx.Component('Scene', {
 			Baked: {},
 			Rivers: {},
 			Towns: {},
+			Highways: {},
 			Globes: {},
 			Labels: {},
 			Time: Number(this.Time) || 0,
@@ -488,7 +531,7 @@ Elemenx.Component('Scene', {
 			Slow: 0,
 			Fast: 0,
 			Last: 0,
-			Colors: {Background: [0.01, 0.02, 0.04, 1], Orbit: [0.55, 0.65, 0.85, 0.3], Selection: [0.5, 0.77, 1, 1]},
+			Colors: {Background: [0.01, 0.02, 0.04, 1], Orbit: [0.55, 0.65, 0.85, 0.3], Selection: [0.5, 0.77, 1, 1], Wire: [0.35, 0.85, 0.45, 0.7], Outline: [1, 0.72, 0.15, 1], Hover: [0.5, 0.82, 1, 1], Edges: [0.88, 0.25, 0.98, 1], Collider: [1, 0.55, 0.15, 0.9]},
 			Painted: 0
 		};
 
@@ -552,6 +595,13 @@ Elemenx.Component('Scene', {
 			scene.Colors.Background = paint(style.getPropertyValue('--elemenx-scene-background').trim(), [0.01, 0.02, 0.04, 1]);
 			scene.Colors.Orbit = paint(style.getPropertyValue('--elemenx-scene-orbit').trim(), [0.55, 0.65, 0.85, 0.3]);
 			scene.Colors.Selection = paint(style.getPropertyValue('--elemenx-scene-selection').trim(), [0.5, 0.77, 1, 1]);
+
+			/* What the debug shows, each its own colour: the wire of all, the outline of the chosen one and of the one under the pointer, the edges of models, the colliders. */
+			scene.Colors.Wire = paint(style.getPropertyValue('--elemenx-scene-wire').trim(), [0.35, 0.85, 0.45, 0.7]);
+			scene.Colors.Outline = paint(style.getPropertyValue('--elemenx-scene-outline').trim(), [1, 0.72, 0.15, 1]);
+			scene.Colors.Hover = paint(style.getPropertyValue('--elemenx-scene-hover').trim(), [0.5, 0.82, 1, 1]);
+			scene.Colors.Edges = paint(style.getPropertyValue('--elemenx-scene-edges').trim(), [0.88, 0.25, 0.98, 1]);
+			scene.Colors.Collider = paint(style.getPropertyValue('--elemenx-scene-collider').trim(), [1, 0.55, 0.15, 0.9]);
 		}
 
 		function number (value, fallback) {
@@ -592,7 +642,7 @@ Elemenx.Component('Scene', {
 		function canonical (raw, of, given) {
 			var kind = raw.Kind && kinds.Has(raw.Kind) ? raw.Kind : '';
 			var fields = kind || of ? kinds.Fields(kind || of) : {};
-			var common = {clip: 'Clip', soft: 'Soft', footing: 'Footing', houses: 'Houses', radius: 'Radius', type: 'Type', health: 'Health', maxhealth: 'MaxHealth', sight: 'Sight', tall: 'Tall', model: 'Model', roof: 'Roof', speed: 'Speed', shapes: 'Shapes', density: 'Density', size: 'Size', minheight: 'MinHeight', maxheight: 'MaxHeight', maxslope: 'MaxSlope', cover: 'Cover', patch: 'Patch', clumps: 'Clumps', spread: 'Spread', follow: 'Follow', offset: 'Offset', facing: 'Facing', lift: 'Lift', wet: 'Wet', drops: 'Drops', seed: 'Seed', blocks: 'Blocks', root: 'Root', length: 'Length'};
+			var common = {clip: 'Clip', soft: 'Soft', footing: 'Footing', houses: 'Houses', radius: 'Radius', type: 'Type', health: 'Health', maxhealth: 'MaxHealth', sight: 'Sight', tall: 'Tall', model: 'Model', roof: 'Roof', speed: 'Speed', shapes: 'Shapes', density: 'Density', size: 'Size', minheight: 'MinHeight', maxheight: 'MaxHeight', maxslope: 'MaxSlope', cover: 'Cover', patch: 'Patch', clumps: 'Clumps', spread: 'Spread', follow: 'Follow', offset: 'Offset', facing: 'Facing', lift: 'Lift', wet: 'Wet', drops: 'Drops', seed: 'Seed', blocks: 'Blocks', root: 'Root', length: 'Length', weapon: 'Weapon', material: 'Material', shootable: 'Shootable', interactive: 'Interactive', death: 'Death', invulnerable: 'Invulnerable', debrisseconds: 'DebrisSeconds', at: 'At'};
 			var spec = {ID: raw.ID, Kind: kind, Parent: raw.Parent, Part: raw.Part, Values: {}, Traits: {}, Parts: []};
 
 			Object.keys(raw).forEach(function (key) {
@@ -970,7 +1020,7 @@ Elemenx.Component('Scene', {
 				if (real && !object.Owner && lengthOf(object))
 					object.Size = lengthOf(object) * METRE;
 			}
-			else {
+			else if (!self.DeepSize || !self.DeepSize(object, real, KM * UNIT)) {
 				object.Size = 0;
 			}
 
@@ -1360,16 +1410,25 @@ Elemenx.Component('Scene', {
 			gpu.Far = renderer.Program(shaders.Far, shaders.Dot);
 			gpu.StarsTurned = renderer.Program(shaders.FarTurned, shaders.Dot);
 			gpu.Ground = renderer.Program(shaders.GroundVertex, shaders.Ground);
-			gpu.Land = renderer.Program(shaders.LandVertex, shaders.Land);
-			gpu.LandOf = function (own) {
-				own.Programs.Land = own.Programs.Land || renderer.Program(shaders.LandVertex, own.Fragments.Land);
+			/* The land of the materials of a ground (names), with the Blueprint of the ground (own) or none: each made once. */
+			gpu.LandPrograms = {};
+			gpu.LandOf = function (own, names) {
+				var key = (names || []).join(',');
+				var kept = own ? own.Programs : gpu.LandPrograms;
+				var hook = 'void landMaterials(vec3 place, float px, inout vec3 color, inout float height) {}';
 
-				return own.Programs.Land;
+				kept['Land:' + key] = kept['Land:' + key] || renderer.Program(shaders.LandVertex, (own ? own.Fragments.Land : shaders.Land).replace(hook, function () {
+					return self.$Service('SceneMaterials').Land(names || []);
+				}));
+
+				return kept['Land:' + key];
 			};
 			gpu.ManyDepth = renderer.Program(shaders.Instanced, shaders.Depth);
 			gpu.Pbr = renderer.Program(shaders.Instanced, shaders.Pbr);
 			gpu.PbrSkinned = renderer.Program(shaders.Skinned, shaders.Pbr);
 			gpu.GlowMany = renderer.Program(shaders.Instanced, shaders.BodyGlow);
+			gpu.Outline = renderer.Program(shaders.Instanced, shaders.Flat);
+			gpu.OutlineSkinned = renderer.Program(shaders.Skinned, shaders.Flat);
 			gpu.GlowSkinned = renderer.Program(shaders.Skinned, shaders.BodyGlow);
 			gpu.SkinDepth = renderer.Program(shaders.Skinned, shaders.Depth);
 			gpu.White = null;
@@ -1553,7 +1612,7 @@ Elemenx.Component('Scene', {
 			var planet = planetOf(object);
 			/* A planet is painted with its rivers: none before they are made. */
 			var flowing = planet ? scene.Rivers[object.ID] : null;
-			if (flowing && !flowing.Ready || planet && scene.Towns[object.ID] && !scene.Towns[object.ID].Ready) return null;
+			if (flowing && !flowing.Ready || planet && (scene.Towns[object.ID] && !scene.Towns[object.ID].Ready || scene.Highways[object.ID] && !scene.Highways[object.ID].Ready)) return null;
 
 			var key = JSON.stringify([object.Look, object.Seed, planet]);
 			var made = scene.Baked[object.ID];
@@ -1588,68 +1647,94 @@ Elemenx.Component('Scene', {
 
 		var planets = self.$Service('ScenePlanet');
 
-		/* The options of the planet of a body (Surface: Planet, ScenePlanet) at its radius, its rivers named once made; null for none. */
+		/*
+		 * The options of the planet of a body (Surface: Planet, ScenePlanet) at its radius, its rivers, then its settlements,
+		 * then its highways named once made; null for none.
+		 */
 		function planetOf (object) {
 			var base = planetBase(object);
 			var made = base ? riversOf(object, base) : null;
+			var towns;
+			var roads;
 
 			if (!base)
 				return null;
 
-			if (made && made.Key && made.Ready) {
-				base.Rivers = made.Key;
+			if (!made || !made.Key || !made.Ready) return base;
 
-				/* Its settlements, of its land with its rivers. */
-				var towns = townsOf(object, base);
-				if (towns && towns.Ready)
-					base.Settlements = towns.Key;
-			}
+			base.Rivers = made.Key;
+
+			/* Its settlements, of its land with its rivers; its highways between them. */
+			towns = laid(object, 'Towns', base, 'Settlements');
+
+			if (!towns || !towns.Ready) return base;
+
+			base.Settlements = towns.Key;
+			roads = laid(object, 'Highways', base, 'Highways');
+
+			if (roads && roads.Ready)
+				base.Highways = roads.Key;
 
 			return base;
 		}
 
 		/*
-		 * The settlements of a planet (ScenePlanet.Settlements, in a worker), made once for its options and its rivers, kept in
-		 * the browser: {Key, Ready}; none for a planet that says Settlements: false, or brings its own.
+		 * What is laid on a planet once its land is made: its settlements (kind Settlements: ScenePlanet.Settlements) or its
+		 * highways (kind Highways: ScenePlanet.Highways), made in a worker once for its options and kept in the browser:
+		 * scene.Towns or scene.Highways {Key, Ready}; none for a planet that says false for them, or brings its own.
 		 */
-		function townsOf (object, base) {
-			var held = scene.Towns[object.ID];
+		function laid (object, store, base, kind) {
+			var held = scene[store][object.ID];
 			var key;
 
-			if (base.Settlements === false || Array.isArray(base.Settlements) || typeof base.Settlements === 'string') return null;
+			if (base[kind] === false || Array.isArray(base[kind]) || typeof base[kind] === 'string') return null;
 
-			key = 'towns:' + JSON.stringify(base) + ':' + String(planets.Settlements).length;
+			key = layKey(base, kind);
 
 			if (held && held.Key === key) return held;
 
-			held = scene.Towns[object.ID] = {Key: key, Ready: false};
+			held = scene[store][object.ID] = {Key: key, Ready: false};
+
+			lay(base, kind, key, function () {
+				if (!scene.Gone && scene[store][object.ID] === held)
+					held.Ready = true;
+			});
+
+			return held;
+		}
+
+		function layKey (base, kind) {
+			return (kind === 'Settlements' ? 'towns:' : 'highways:') + JSON.stringify(base) + ':' + String(kind === 'Settlements' ? planets.Settlements : planets.Highways).length;
+		}
+
+		/* Made (or taken from the store of the browser) and named by its key; done when it is. */
+		function lay (base, kind, key, done) {
+			var use = kind === 'Settlements' ? 'UseSettlements' : 'UseHighways';
 
 			cachedGlobe(key, function (found) {
-				if (scene.Gone || scene.Towns[object.ID] !== held) return;
+				if (scene.Gone) return;
 
 				if (found) {
-					planets.UseSettlements(key, found);
+					planets[use](key, found);
 
-					held.Ready = true;
+					done();
 
 					return;
 				}
 
-				planets.Work().Run('ScenePlanet', 'Settlements', [base, 20000], function (failed, made) {
-					if (scene.Gone || scene.Towns[object.ID] !== held) return;
+				planets.Work().Run('ScenePlanet', kind, kind === 'Settlements' ? [base, 20000] : [base, 20], function (failed, made) {
+					var list = failed || !made ? [] : made[kind];
 
-					var towns = failed || !made ? [] : made.Settlements;
+					if (scene.Gone) return;
 
-					planets.UseSettlements(key, towns);
+					planets[use](key, list);
 
 					if (!failed)
-						keepGlobe(key, towns);
+						keepGlobe(key, list);
 
-					held.Ready = true;
+					done();
 				});
 			});
-
-			return held;
 		}
 
 		function planetBase (object) {
@@ -1916,7 +2001,8 @@ Elemenx.Component('Scene', {
 			for (i = 0; i < source.length; i++)
 				sum = (sum * 31 + source.charCodeAt(i)) >>> 0;
 
-			return sum + ':' + size + ':' + JSON.stringify(planet);
+			/* Its settlements are lights of their own (paintLights): the ground is the same with them or not. */
+			return sum + ':' + size + ':' + JSON.stringify(Object.assign({}, planet, {Settlements: undefined}));
 		}
 
 		function globeStore (mode, done) {
@@ -1975,10 +2061,26 @@ Elemenx.Component('Scene', {
 		engine.PreloadGlobe = function (given, callback) {
 			var flowing = given.Rivers === false || given.Rivers ? '' : riversKey(given);
 
-			/* Its rivers first, as a scene makes them; its globe with them named. */
+			/* Its rivers first, as a scene makes them, then its settlements and its highways; its globe with them named. */
 			if (flowing) {
 				makeRivers(given, flowing, function () {}, function () {
 					engine.PreloadGlobe(Object.assign({}, given, {Rivers: flowing}), callback);
+				});
+
+				return;
+			}
+
+			if (given.Rivers && given.Settlements === undefined) {
+				lay(given, 'Settlements', layKey(given, 'Settlements'), function () {
+					engine.PreloadGlobe(Object.assign({}, given, {Settlements: layKey(given, 'Settlements')}), callback);
+				});
+
+				return;
+			}
+
+			if (typeof given.Settlements === 'string' && given.Highways === undefined) {
+				lay(given, 'Highways', layKey(given, 'Highways'), function () {
+					engine.PreloadGlobe(Object.assign({}, given, {Highways: layKey(given, 'Highways')}), callback);
 				});
 
 				return;
@@ -2227,7 +2329,12 @@ Elemenx.Component('Scene', {
 			var hero = scene.Hero ? scene.Objects[scene.Hero] : null;
 			var given = number(self.BokehFocus, 0);
 
-			return {Bokeh: Math.max(0, Math.min(1, number(self.Bokeh, 0))), Focus: given > 0 ? given : hero && hero.World && scene.Eye ? vectors.Distance(vectors.Add(hero.World, [0, (hero.Size || 1) * 0.6, 0]), scene.Eye) : 0};
+			/* A camera of the scene that shows the world brings a lens of its own (SceneCamera). */
+			var camera = engine.Lens ? engine.Lens() : null;
+			if (camera)
+				return {Bokeh: camera.Coc ? 1 : 0, Focus: camera.Focus, Lens: camera};
+
+			return {Bokeh: Math.max(0, Math.min(1, number(self.Bokeh, 0))), Focus: given > 0 ? given : hero && hero.World && scene.Eye ? vectors.Distance(vectors.Add(hero.World, [0, (hero.Size || 1) * 0.6, 0]), scene.Eye) : 0, Lens: null};
 		}
 
 		/* The keys of a free view in space: WASD go, Q and E turn, R and F tilt. */
@@ -2479,6 +2586,9 @@ Elemenx.Component('Scene', {
 
 			engine.CosmosBake();
 
+			if (engine.DeepPlace)
+				engine.DeepPlace();
+
 			/* First: a village it lays out makes the ground again. */
 			engine.ScatterFrame(matrix);
 
@@ -2492,7 +2602,7 @@ Elemenx.Component('Scene', {
 			if (!scene.Ground)
 				Object.assign(shade, localLights());
 
-			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uSkyLight: scene.Ground ? scene.Ground.SkyLight : [0.004, 0.004, 0.006], uFloorLight: scene.Ground ? scene.Ground.FloorLight : [0.004, 0.004, 0.006], uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : scene.CosmosShade ? [0.025 + scene.CosmosShade[0], 0.027 + scene.CosmosShade[1], 0.035 + scene.CosmosShade[2]] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Gust || 0, uWet: scene.Ground ? scene.Ground.Air.Wet : 0, uSnowed: scene.Ground ? scene.Ground.Air.Cover || 0 : 0, uRainDrops: scene.Ground ? scene.Ground.Air.Rain : 0, uEyeAt: scene.Eye || [0, 0, 0], uTime2: scene.Seconds % 1000}, shade, self.WindValues(scene.Seconds));
+			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uSkyLight: scene.Ground ? scene.Ground.SkyLight : [0.004, 0.004, 0.006], uFloorLight: scene.Ground ? scene.Ground.FloorLight : [0.004, 0.004, 0.006], uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : scene.CosmosShade ? [0.025 + scene.CosmosShade[0], 0.027 + scene.CosmosShade[1], 0.035 + scene.CosmosShade[2]] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Gust || 0, uWet: scene.Ground ? scene.Ground.Air.Wet : 0, uSnowed: snowed(), uRainDrops: scene.Ground ? scene.Ground.Air.Rain : 0, uEyeAt: scene.Eye || [0, 0, 0], uTime2: scene.Seconds % 1000, uNightGlow: scene.Ground ? scene.Ground.Night || 0 : 1}, shade, self.WindValues(scene.Seconds));
 			var selected = scene.Selected ? scene.Objects[scene.Selected] : null;
 
 			scene.BakedThisFrame = 0;
@@ -2528,7 +2638,7 @@ Elemenx.Component('Scene', {
 			if (scene.Ground)
 				scene.Ground.Under = !!scene.Ground.Field.Water && !scene.Camera.Ortho && scene.Eye[1] < self.$Service('SceneWaves').At(scene.Ground.Waves, scene.Eye[0], scene.Eye[2], scene.Seconds).Height;
 
-			var mirrored = scene.Ground && !scene.Camera.Ortho ? mirrorsOf(projection, viewMatrix, function (vp, eye, small) {
+			var worldOf = function (vp, eye, small) {
 				var mine = Object.assign({}, common, {uViewProjection: vp, uCamera: eye, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0]});
 
 				drawGround(vp, nodes, shade, true);
@@ -2538,14 +2648,19 @@ Elemenx.Component('Scene', {
 					/* The glass of a mirror is not in its own picture, nor in another's. */
 					if (list.Material && seeThrough(list.Material) || list.MirrorKey) return;
 
-					if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign({}, mine, {uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft}, surface(list), blueprintValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back'});
-					else renderer.Draw(shape(name), gpu.Many, Object.assign({}, mine, {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list)}));
+					if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign({}, mine, {uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft}, surface(list), blueprintValues(list), engine.SeasonValues(name), engine.DissolveValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back'});
+					else renderer.Draw(shape(name), gpu.Many, Object.assign({}, mine, {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list)}, engine.SeasonValues(name), engine.DissolveValues(list)));
 				});
 
 				/* A mirror of a car shows the trees and the grass too at high and ultra: its picture is as fine as the screen now, and no bigger than the mirror. */
 				if (self.Graphics().Level !== 'low' && (!small || self.Graphics().Level === 'high' || self.Graphics().Level === 'ultra'))
 					engine.ScatterDraw(mine, vp);
-			}) : {};
+			};
+			var mirrored = scene.Ground && !scene.Camera.Ortho ? mirrorsOf(projection, viewMatrix, worldOf) : {};
+
+			/* What the cameras of the screens see (SceneScreens), drawn as the mirrors are. */
+			if (scene.Ground && !scene.Camera.Ortho && engine.ScreensWorld)
+				engine.ScreensWorld(projection, viewMatrix, worldOf);
 
 			posted = engine.PostBegin();
 
@@ -2608,7 +2723,7 @@ Elemenx.Component('Scene', {
 					if (trait(object, 'Star')) {
 						model = placed(object, size);
 
-						renderer.Draw(gpu.Sphere, gpu.Star, uniforms({uModel: model, uNormalMatrix: math.NormalMatrix(model), uColor: paint(object.Color).slice(0, 3), uSeed: object.Seed}));
+						renderer.Draw(gpu.Sphere, gpu.Star, uniforms({uModel: model, uNormalMatrix: math.NormalMatrix(model), uColor: paint(object.Color).slice(0, 3), uSeed: object.Seed, uCells: object.Star.Radius > 8 ? 3 : object.Star.Radius > 2 ? 6 : 9}));
 
 						later.push(function () {
 							/* In real sizes its disc is small, its light is not: a halo of a size on the screen, as bright as it blinds. */
@@ -2675,6 +2790,10 @@ Elemenx.Component('Scene', {
 						later.unshift(line(object, parent, uniforms));
 				});
 
+				/* Black holes, wormholes, comets and quasars (SceneDeepSpace): light bent and gas that glows, with what is seen through. */
+				if (engine.DeepDraw)
+					engine.DeepDraw(matrix, later, right, up, planes);
+
 				Object.keys(models).forEach(function (name) {
 					var list = models[name];
 
@@ -2689,7 +2808,7 @@ Elemenx.Component('Scene', {
 						var blended = seeThrough(list.Material);
 
 						var drawn = function () {
-							renderer.Draw(shape(name), pbrOf(list), Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft, uMoving: list.Still || blended ? 0 : 1, uSteady: list.Still ? 0 : 1, uCut: heroCut(list)}), surface(list), blueprintValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: blended ? 'over' : 'none', DepthWrite: !blended});
+							renderer.Draw(shape(name), pbrOf(list), Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft, uMoving: list.Still || blended ? 0 : 1, uSteady: list.Still ? 0 : 1, uCut: heroCut(list)}), surface(list), blueprintValues(list), engine.SeasonValues(name), engine.DissolveValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: blended ? 'over' : 'none', DepthWrite: !blended});
 						};
 
 						/* What is seen through comes after all it shows, and hides nothing of what is drawn after it. */
@@ -2699,7 +2818,7 @@ Elemenx.Component('Scene', {
 						return;
 					}
 
-					renderer.Draw(shape(name), gpu.Many, uniforms({uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list), uMoving: list.Still ? 0 : 1}));
+					renderer.Draw(shape(name), gpu.Many, uniforms(Object.assign({uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list), uMoving: list.Still ? 0 : 1}, engine.SeasonValues(name), engine.DissolveValues(list))));
 				});
 
 				/* The mirrors as panes of what they show, the glass after all it shows through. */
@@ -2711,6 +2830,24 @@ Elemenx.Component('Scene', {
 					var list = scene.GlowLists[name];
 					if (list.Count)
 						renderer.Draw(shape(name), moved(list, list.Skinned ? gpu.GlowSkinned : gpu.GlowMany, 'BodyGlow'), Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uTime: scene.Seconds, uFlat: list.Flat ? 1 : 0}), movedValues(list)), {Blend: 'add', DepthWrite: false, Depth: 'lequal', Cull: list.Material && list.Material.DoubleSided ? 'none' : 'back'});
+				});
+
+				/* The outlines: back faces grown by a few pixels, behind what they outline. */
+				Object.keys(scene.OutlineLists || {}).forEach(function (name) {
+					var list = scene.OutlineLists[name];
+					if (list.Count)
+						renderer.Draw(shape(name, list.Geometry), list.Skinned ? gpu.OutlineSkinned : gpu.Outline, Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uOutline: Math.tan(scene.Camera.Fov * Math.PI / 360) * 2 * 3 / Math.max(1, scene.Height), uColor: [list.Tints[0], list.Tints[1], list.Tints[2], 1], uBody: [0, 0, 0, 0]})), {Cull: 'front'});
+				});
+
+				/* The wire of all and the edges of the models, over them. */
+				[['wire', wired(), scene.Colors.Wire], ['edges', edged(), scene.Colors.Edges]].forEach(function (one) {
+					if (!one[1]) return;
+
+					Object.keys(models).forEach(function (name) {
+						var list = models[name];
+						if (list.Count && list.Geometry !== undefined && !list.Skinned)
+							renderer.Draw(linesMesh(one[0], name, list.Geometry), gpu.Outline, Object.assign(uniforms({uOrigin: originOf(list), uOutline: 0, uColor: one[2], uBody: [0, 0, 0, 0]})), {Blend: 'alpha', DepthWrite: false, Depth: 'lequal'});
+					});
 				});
 
 				engine.ScatterDraw(common, matrix);
@@ -2734,6 +2871,13 @@ Elemenx.Component('Scene', {
 
 				engine.BoltDraw(matrix, scene.Eye, scene.Ground);
 
+				/* The shots, their streaks and the marks they leave (SceneWeapons), before what is seen through. */
+				if (engine.DebrisDraw)
+					engine.DebrisDraw(matrix);
+
+				if (engine.WeaponsDraw)
+					engine.WeaponsDraw(matrix);
+
 				later.forEach(function (each) {
 					each();
 				});
@@ -2753,10 +2897,18 @@ Elemenx.Component('Scene', {
 				engine.CosmosWarp(plain, Object.assign({Depth: Math.min(0.99999, math.Apply(plain, vectors.Scale(forward, reach))[2])}, scene.Warp));
 			}
 
-			if (self.Origin && self.Origin !== 'false')
+			if (self.Origin && self.Origin !== 'false') {
 				drawOrigin(matrix);
 
+				drawColliders(matrix);
+			}
+
 			engine.EffectsDraw(after, {Right: right, Up: up, Forward: [-viewMatrix[2], -viewMatrix[6], -viewMatrix[10]], Near: camera.Near, Far: split ? split * 1.0001 : camera.Far, Split: !!split});
+
+			/* The ring of what the pointer is over (hover), whatever its size: it is drawn by a shader or by a model. */
+			var hovering = scene.Hovering ? scene.Objects[scene.Hovering] : null;
+			if (hovering && hovering.World && hovering !== selected)
+				renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: local(hovering.World), uSize: Math.max(hovering.Size * 1.35, pixels(hovering.World, 16)), uRight: right, uUp: up, uColor: scene.Colors.Hover.slice(0, 3), uInner: 0, uStyle: 1}), {Blend: 'add', DepthWrite: false, Depth: false, Cull: 'none'});
 
 			/* The mark of the selected object while it is small on the screen: near, its own glow shows it. */
 			if (selected && selected.World && Math.max(selected.Size, 0.001) < pixels(selected.World, 40)) {
@@ -2770,7 +2922,7 @@ Elemenx.Component('Scene', {
 			}
 
 			if (posted)
-				engine.PostEnd(scene.Ground ? {Matrix: matrix, Plain: plain, Eye: scene.Eye, Under: scene.Ground.Under ? 1 : 0, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Night: scene.Ground.Night, Shimmer: engine.EffectHeat(matrix, width / Math.max(1, height)), Exposure: self.Exposure, Air: scene.Ground.AirTint, Veil: scene.Ground.Air.Fog * (scene.Ground.Air.Rain > 0.05 ? 1 : 0.6), Clouds: scene.Camera.Ortho ? null : groundClouds(), Glare: scene.Ground.Glare, AirLight: scene.Ground.AirLight, AirGlow: scene.Ground.Glow, AirGlowWay: scene.Ground.GlowWay, Fog: scene.Camera.Ortho ? 0 : (scene.Horizon ? 0.4 / 40000 : (scene.Ground.Field.Whole ? 0.12 : 0.4) / Math.max(scene.Ground.Field.Size, 300)) + scene.Ground.Air.Fog * 0.011, FogLow: scene.Camera.Ortho ? [0, 0, 0] : [Math.max(0, scene.Eye[1] - Math.max(0, scene.Ground.Field.Height(scene.Eye[0], scene.Eye[2]))), 1 / Math.max(6, scene.Ground.Field.Top * 0.2), scene.Ground.Air.Fog * 0.03], Sky: true, Reach: Math.max(1, scene.Distance * 0.05), Bokeh: lens().Bokeh, Focus: lens().Focus} : Object.assign({Matrix: matrix, Plain: sky}, spaceSun(plain, camera), lens()));
+				engine.PostEnd(scene.Ground ? {Matrix: matrix, Plain: plain, Eye: scene.Eye, Under: scene.Ground.Under ? 1 : 0, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Night: scene.Ground.Night, Shimmer: engine.EffectHeat(matrix, width / Math.max(1, height)), Exposure: self.Exposure, Air: scene.Ground.AirTint, Veil: scene.Ground.Air.Fog * (scene.Ground.Air.Rain > 0.05 ? 1 : 0.6), Clouds: scene.Camera.Ortho ? null : groundClouds(), Glare: scene.Ground.Glare, AirLight: scene.Ground.AirLight, AirGlow: scene.Ground.Glow, AirGlowWay: scene.Ground.GlowWay, Fog: scene.Camera.Ortho ? 0 : (scene.Horizon ? 0.4 / 40000 : (scene.Ground.Field.Whole ? 0.12 : 0.4) / Math.max(scene.Ground.Field.Size, 300)) + scene.Ground.Air.Fog * 0.011, FogLow: scene.Camera.Ortho ? [0, 0, 0] : [Math.max(0, scene.Eye[1] - Math.max(0, scene.Ground.Field.Height(scene.Eye[0], scene.Eye[2]))), 1 / Math.max(6, scene.Ground.Field.Top * 0.2), scene.Ground.Air.Fog * 0.03], Sky: true, Reach: Math.max(1, scene.Distance * 0.05), Bokeh: lens().Bokeh, Focus: lens().Focus, Lens: lens().Lens} : Object.assign({Matrix: matrix, Plain: sky}, spaceSun(plain, camera), lens()));
 		}
 
 		/* Where space is split for its depth (Scene: draw): half the way to the surface of the nearest body or star, 0 when one view of depth is enough. */
@@ -2839,6 +2991,21 @@ Elemenx.Component('Scene', {
 		/* The copies of the shapes of a frame: the rocks of the belts, the models of the objects, their pieces as they stand now. */
 		function gather () {
 			var models = scene.Lists = scene.Lists || {};
+			var lined = wired() + ':' + edged();
+
+			/* The wire or the edges turned on or off: what stands still and the squares of the ground are made again with their lines. */
+			if (scene.Lined !== undefined && scene.Lined !== lined) {
+				scene.StillLists = null;
+
+				if (scene.Ground) {
+					destroyNodes(scene.Ground.Nodes);
+
+					scene.Ground.Nodes = {};
+				}
+			}
+
+			scene.Lined = lined;
+
 			var glows = scene.GlowLists = scene.GlowLists || {};
 			var drawn = {};
 
@@ -2886,6 +3053,8 @@ Elemenx.Component('Scene', {
 				else forgotten(glows, name);
 			});
 
+			outlines();
+
 			if (!scene.StillLists) {
 				scene.StillLists = {};
 
@@ -2901,6 +3070,106 @@ Elemenx.Component('Scene', {
 			}
 
 			return Object.assign(drawn, scene.StillLists);
+		}
+
+		/*
+		 * The outlines of the object chosen (Selected) and of the one under the pointer (Hovered): their models gathered once more,
+		 * each in a list of its own, drawn grown along their normals, their back faces only, in the colour of each.
+		 */
+		function outlines () {
+			var lists = scene.OutlineLists = scene.OutlineLists || {};
+
+			Object.keys(lists).forEach(function (name) {
+				lists[name].Count = 0;
+			});
+
+			[[scene.Selected, 'Outline'], [self.Hovered, 'Hover']].forEach(function (pair) {
+				var object = pair[0] ? scene.Objects[pair[0]] : null;
+				var settings = object ? trait(object, 'Model') : null;
+				if (!object || !object.World || object.Hidden || !settings || !(settings.Shape || object.Values.Model) || pair[1] === 'Hover' && pair[0] === scene.Selected) return;
+
+				scene.Outlining = {Color: pair[1]};
+
+				gatherModel(lists, object, settings);
+
+				scene.Outlining = null;
+			});
+
+			Object.keys(lists).forEach(function (name) {
+				if (lists[name].Count) upload(name, lists[name]);
+				else forgotten(lists, name);
+			});
+		}
+
+		/* The lines of a geometry: each edge of its triangles once (all: its wire), or those where its faces meet at an angle and its rims (its edges). */
+		function linesOf (geometry, edges) {
+			var p = geometry.Positions;
+			var count = p.length / 3;
+			var index = geometry.Indices && geometry.Indices.length ? geometry.Indices : null;
+			var triangles = index ? index.length / 3 : count / 3;
+			var corners = {};
+			var seen = {};
+			var made = [];
+			var t;
+
+			function at (i) {
+				return index ? index[i] : i;
+			}
+
+			/* Corners of the same place are one: a model of flat faces has a corner of each face. */
+			function place (v) {
+				var key = Math.round(p[v * 3] * 1e4) + ',' + Math.round(p[v * 3 + 1] * 1e4) + ',' + Math.round(p[v * 3 + 2] * 1e4);
+
+				corners[key] = corners[key] === undefined ? v : corners[key];
+
+				return corners[key];
+			}
+
+			function normal (a, b, c) {
+				var u = [p[b * 3] - p[a * 3], p[b * 3 + 1] - p[a * 3 + 1], p[b * 3 + 2] - p[a * 3 + 2]];
+				var w = [p[c * 3] - p[a * 3], p[c * 3 + 1] - p[a * 3 + 1], p[c * 3 + 2] - p[a * 3 + 2]];
+
+				return vectors.Normalize(vectors.Cross(u, w));
+			}
+
+			for (t = 0; t < triangles; t++) {
+				var v = [place(at(t * 3)), place(at(t * 3 + 1)), place(at(t * 3 + 2))];
+				var n = normal(v[0], v[1], v[2]);
+
+				[[0, 1], [1, 2], [2, 0]].forEach(function (pair) {
+					var a = Math.min(v[pair[0]], v[pair[1]]);
+					var b = Math.max(v[pair[0]], v[pair[1]]);
+					var key = a + ':' + b;
+
+					if (a === b) return;
+
+					seen[key] = seen[key] || {A: a, B: b, Normals: []};
+
+					seen[key].Normals.push(n);
+				});
+			}
+
+			/* An edge of the shape: a rim (of one face) or where two faces meet at more than 30 degrees. */
+			Object.keys(seen).forEach(function (key) {
+				var edge = seen[key];
+				if (edges && edge.Normals.length === 2 && vectors.Dot(edge.Normals[0], edge.Normals[1]) > 0.866) return;
+
+				made.push(p[edge.A * 3], p[edge.A * 3 + 1], p[edge.A * 3 + 2], p[edge.B * 3], p[edge.B * 3 + 1], p[edge.B * 3 + 2]);
+			});
+
+			return made;
+		}
+
+		/* The lines mesh of a shape (kind wire or edges), made once, its copies those of the shape. */
+		function linesMesh (kind, name, geometry) {
+			var key = kind + ':' + name;
+
+			gpu.LineShapes = gpu.LineShapes || {};
+
+			if (!gpu.LineShapes[key])
+				gpu.LineShapes[key] = renderer.Mesh({Positions: linesOf(geometry || shapeGeometry(name), kind === 'edges'), Indices: []}, 'lines');
+
+			return gpu.LineShapes[key];
 		}
 
 		/*
@@ -2934,6 +3203,21 @@ Elemenx.Component('Scene', {
 				data.aFrames = {Size: 4, Data: list.Frames.subarray(0, size)};
 
 			shape(name, list.Geometry).Instance(data, list.Count);
+
+			/* The wire of the scene, the edges of its models: their lines copied as the shape is. */
+			if (wired() && name.indexOf('outline:') !== 0)
+				linesMesh('wire', name, list.Geometry).Instance(data, list.Count);
+
+			if (edged() && name.indexOf('outline:') !== 0)
+				linesMesh('edges', name, list.Geometry).Instance(data, list.Count);
+		}
+
+		function wired () {
+			return !!self.Wireframe && self.Wireframe !== 'false';
+		}
+
+		function edged () {
+			return !!self.Edges && self.Edges !== 'false';
 		}
 
 		/* What is kept in buffers stands in the world: the eye is taken away from it in the shader. */
@@ -3109,14 +3393,26 @@ Elemenx.Component('Scene', {
 			if (graph === null) return null;
 
 			gpu.Blueprinted = gpu.Blueprinted || new WeakMap();
+			gpu.BlueprintTexts = gpu.BlueprintTexts || {};
 			own = gpu.Blueprinted.get(material);
+
+			/* The same GLSL written by hand (a Pattern of many materials) made once for all of them. */
+			if (!own && typeof material.Blueprint === 'string' && gpu.BlueprintTexts[material.Blueprint]) {
+				own = gpu.BlueprintTexts[material.Blueprint];
+
+				gpu.Blueprinted.set(material, own);
+			}
 
 			host = host || 'Pbr';
 
 			if (own && own.Source === material.Blueprint && (!own.Made || own.Fragments[host])) return own.Made ? own : null;
 
-			if (!own || own.Source !== material.Blueprint)
+			if (!own || own.Source !== material.Blueprint) {
 				own = {Source: material.Blueprint, Made: null, Programs: {}, Fragments: {}};
+
+				if (typeof material.Blueprint === 'string')
+					gpu.BlueprintTexts[material.Blueprint] = own;
+			}
 
 			gpu.Blueprinted.set(material, own);
 
@@ -3163,9 +3459,27 @@ Elemenx.Component('Scene', {
 			return own;
 		}
 
+		/*
+		 * A material with a Pattern (a material of SceneMaterials) and no Blueprint of its own: drawn by the pattern, its
+		 * Blueprint the GLSL of it (SceneMaterials.Surface), once.
+		 */
+		function patterned (material) {
+			var text;
+
+			if (material.Pattern && !material.Blueprint && material.Patterned !== material.Pattern) {
+				text = self.$Service('SceneMaterials').Surface(material.Pattern);
+				material.Patterned = material.Pattern;
+
+				if (text)
+					material.Blueprint = text;
+			}
+
+			return material;
+		}
+
 		/* The program of a material: PBR, or PBR with the surface of its Blueprint; its corners moved by its Vertex. */
 		function pbrOf (list) {
-			var own = list.Material.Blueprint ? blueprinted(list.Material) : null;
+			var own = patterned(list.Material).Blueprint ? blueprinted(list.Material) : null;
 			var key = list.Skinned ? 'Skinned' : 'Plain';
 
 			if (!own)
@@ -3174,7 +3488,10 @@ Elemenx.Component('Scene', {
 			if (vertexed(list.Material))
 				return moved(list, null, 'Pbr', own.Fragments.Pbr);
 
-			own.Programs[key] = own.Programs[key] || renderer.Program(list.Skinned ? shaders.Skinned : shaders.Instanced, own.Fragments.Pbr);
+			own.Programs[key] = own.Programs[key] || renderer.Program(list.Skinned ? shaders.Skinned : shaders.Instanced, own.Fragments.Pbr, !!list.Material.Pattern);
+
+			/* A pattern is made behind the page: till it is, its surface is drawn plain, nothing waits for it. */
+			if (list.Material.Pattern && !renderer.Ready(own.Programs[key])) return list.Skinned ? gpu.PbrSkinned : gpu.Pbr;
 
 			return own.Programs[key];
 		}
@@ -3305,6 +3622,9 @@ Elemenx.Component('Scene', {
 			var base = math.Multiply(object.Turn || math.Identity(), math.Scaling(scale[0], scale[1], scale[2]));
 			var color = paint(settings.Color || (made ? '#ffffff' : '#c8ccd4')).slice(0, 3);
 			var team = paint(teamColor(object.Team)).slice(0, 3);
+			/* Dissolving (Teleport): a list of its own, with how far it has gone. */
+			var dissolve = object.Dissolve && object.Dissolve.Amount > 0 ? object.Dissolve : null;
+			var dissolving = dissolve ? 'dissolve:' + object.ID + ':' : '';
 			var pose;
 			var plain;
 			var rig;
@@ -3362,7 +3682,7 @@ Elemenx.Component('Scene', {
 					/* The glass of a mirror of the car that is driven shows its picture (MirrorKey): its own list, of that car alone. */
 					var reflecting = piece.Mirror !== undefined && object.ID === scene.Hero ? 'car:' + object.ID + ':' + piece.Mirror : '';
 
-					batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID + (reflecting ? '@' + object.ID : ''), object.World, piece.Skin !== -1 ? whole : math.Multiply(whole, wheel ? math.Multiply(engine.WheelTurn(object, wheel), rest) : rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Soft: softOf(object, made, piece), Glow: object.Glow && object.Glow.Body ? object.Glow.Color : lit, Lit: !!lit && !(object.Glow && object.Glow.Body), Wet: object.Values.Wet, Drops: object.Values.Drops, MirrorKey: reflecting});
+					batch(models, (still ? 'still:' : '') + dissolving + made.Key + '/' + piece.ID + (reflecting ? '@' + object.ID : ''), object.World, piece.Skin !== -1 ? whole : math.Multiply(whole, wheel ? math.Multiply(engine.WheelTurn(object, wheel), rest) : rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Soft: softOf(object, made, piece), Glow: object.Glow && object.Glow.Body ? object.Glow.Color : lit, Lit: !!lit && !(object.Glow && object.Glow.Body), Wet: object.Values.Wet, Drops: object.Values.Drops, MirrorKey: reflecting, Dissolve: dissolve});
 
 					return;
 				}
@@ -3371,7 +3691,7 @@ Elemenx.Component('Scene', {
 				var moved = piece.Opening ? engine.OpeningMove(object, piece) : null;
 				var placed = moved ? math.Multiply(base, moved) : base;
 
-				batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, pose ? math.Multiply(placed, pose[piece.ID]) : placed, piece.Team ? team : color, {Matte: made.Matte, Rough: made.Matte ? 0.5 : 0.15, Sway: made.Sway, Geometry: piece.Geometry, Still: still, Glow: object.Glow && object.Glow.Body ? object.Glow.Color : null, Wet: object.Values.Wet, Drops: object.Values.Drops});
+				batch(models, (still ? 'still:' : '') + dissolving + made.Key + '/' + piece.ID, object.World, pose ? math.Multiply(placed, pose[piece.ID]) : placed, piece.Team ? team : color, {Matte: made.Matte, Rough: made.Matte ? 0.5 : 0.15, Sway: made.Sway, Geometry: piece.Geometry, Still: still, Glow: object.Glow && object.Glow.Body ? object.Glow.Color : null, Wet: object.Values.Wet, Drops: object.Values.Drops, Dissolve: dissolve});
 			});
 		}
 
@@ -3667,6 +3987,13 @@ Elemenx.Component('Scene', {
 			var at = settings.Still ? world : local(world);
 			var i;
 
+			/* An outline: a list of its own, of the same shape, in the colour of the outline. */
+			if (scene.Outlining && models === scene.OutlineLists && name.indexOf('outline:') !== 0) {
+				batch(models, 'outline:' + name, world, matrix, scene.Colors[scene.Outlining.Color], Object.assign({}, settings, {Glow: null, Still: false, Geometry: settings.Geometry || shapeGeometry(name)}));
+
+				return;
+			}
+
 			/* What glows is drawn once more, apart: its light added over it (Glow, the color of its light). */
 			if (settings.Glow && !settings.Still)
 				batch(scene.GlowLists, (settings.Lit ? 'lit:' : 'glow:') + name, world, matrix, settings.Glow, Object.assign({}, settings, {Glow: null}));
@@ -3677,6 +4004,9 @@ Elemenx.Component('Scene', {
 
 			if (list.Count === list.Capacity)
 				grow(list);
+
+			/* A body that is beamed away or comes (Teleport): drawn apart, dissolving. */
+			list.Dissolve = settings.Dissolve || null;
 
 			i = list.Count * 4;
 
@@ -3956,6 +4286,24 @@ Elemenx.Component('Scene', {
 			});
 		}
 
+		/* The colliders as their outlines, for the editor: made again when they change. */
+		function drawColliders (matrix) {
+			var lines = engine.ColliderLines ? engine.ColliderLines() : [];
+			var key = JSON.stringify(lines);
+
+			if (!lines.length) return;
+
+			if (!gpu.ColliderLines || gpu.ColliderKey !== key) {
+				if (gpu.ColliderLines)
+					gpu.ColliderLines.Destroy();
+
+				gpu.ColliderLines = renderer.Mesh({Positions: [].concat.apply([], lines), Indices: []}, 'lines');
+				gpu.ColliderKey = key;
+			}
+
+			renderer.Draw(gpu.ColliderLines, gpu.Line, {uViewProjection: matrix, uOffset: local([0, 0, 0]), uBody: [0, 0, 0, 0], uColor: scene.Colors.Collider}, {Blend: 'alpha', DepthWrite: false});
+		}
+
 		/* The size in the view of some pixels of the screen at a point. */
 		function pixels (point, count) {
 			return vectors.Distance(scene.Camera.Position, point) * Math.tan(scene.Camera.Fov * Math.PI / 360) * 2 * count / Math.max(1, scene.Height);
@@ -4185,6 +4533,7 @@ Elemenx.Component('Scene', {
 			azimuth = number(sun ? trait(sun, 'Sun').Azimuth : 140, 140) * Math.PI / 180;
 			elevation = number(sun ? trait(sun, 'Sun').Elevation : 35, 35) * Math.PI / 180;
 			hour = sun ? hourOf(trait(sun, 'Sun').Time, dayHours(trait(sun, 'Sun'))) : null;
+			scene.Ground.Hour = hour;
 
 			if (hour !== null) {
 				var place = skyPlace(trait(sun, 'Sun'), hour);
@@ -4243,6 +4592,7 @@ Elemenx.Component('Scene', {
 			});
 			scene.Ground.FloorLight = [0.1 * fill + 0.016 * dark, 0.1 * fill + 0.019 * dark, 0.09 * fill + 0.03 * dark];
 			scene.Ground.Day = day;
+			scene.Ground.Night = night;
 			scene.Ground.Glare = (1 - night) * (1 - solar);
 
 			/* What lights the air itself, and the towns: at night there is nothing to see in it but what they give. */
@@ -4280,6 +4630,23 @@ Elemenx.Component('Scene', {
 			scene.Ground.Cover = air.Clouds;
 			scene.Ground.AirLight *= Math.max(0.32, 1 - shut * 0.75);
 			scene.Ground.Glare *= (1 - shut) * Math.pow(1 - Math.min(1, air.Fog), 3);
+
+			/*
+			 * The northern lights: by themselves far from the equator (55 to 68 degrees of Latitude), at night, under a clear
+			 * sky; Aurora of the scene (0 to 1) sets them anywhere, as strong; the day hides them either way.
+			 */
+			var polar = sun ? number(trait(sun, 'Sun').Latitude, null) : null;
+			var asked = number(self.Aurora, null);
+			var colors = Array.isArray(self.AuroraColors) ? self.AuroraColors : [];
+
+			scene.Ground.Aurora = (asked === null ? polar === null ? 0 : Math.min(1, Math.max(0, (Math.abs(polar) - 55) / 13)) : Math.max(0, Math.min(2, asked))) * night * (1 - shut) * (1 - Math.min(1, air.Fog));
+			scene.Ground.AuroraLow = paint(colors[0] || '#3dff9a').slice(0, 3);
+			scene.Ground.AuroraHigh = paint(colors[1] || '#c03cff').slice(0, 3);
+
+			scene.Ground.Season = engine.SeasonNow(sun ? trait(sun, 'Sun') : null);
+
+			/* A rainbow: the weather's (in a light rain, or as it ends), or Rainbow of the scene (0 to 1). */
+			scene.Ground.Rainbow = number(self.Rainbow, null) === null ? air.Rainbow || 0 : Math.max(0, Math.min(1, number(self.Rainbow, 0)));
 			scene.Ground.SkyLight = scene.Ground.SkyLight.map(function (value) {
 				return value * (1 - shut * 0.35);
 			});
@@ -4497,6 +4864,9 @@ Elemenx.Component('Scene', {
 		/* What blocks the way at a point: a thing that Blocks, within its size. */
 		function blocked (x, z, mover) {
 			if (engine.ScatterBlocked(x, z)) return true;
+
+			/* A collider, as far as a walker is wide. */
+			if (engine.ColliderHit && engine.ColliderHit(x, z, null, 0.4)) return true;
 
 			return scene.Roots.some(function (object) {
 				var size;
@@ -4912,6 +5282,95 @@ Elemenx.Component('Scene', {
 			hero.Heading = [Math.sin(facing), 0, Math.cos(facing)];
 		}
 
+		/*
+		 * The season of the sun (its DayOfYear of YearDays at its Latitude; Season of the scene fixes one): Warmth (-1 the middle
+		 * of winter to 1 of summer, little of either near the equator), Rising (the days grow longer), and what it does to plants
+		 * and the land: Bare (the part of their leaves the trees that lose them have lost), Turn (how far the leaves turned to the
+		 * colors of autumn), Blossom (the flowers of spring), Dry (the grass burnt by the summer), Snow (the snow that lies,
+		 * whatever the weather does, where winters are cold).
+		 */
+		engine.SeasonNow = function (sun) {
+			var given = String(self.Season || '').toLowerCase();
+			var fixed = {spring: [-0.3, true], summer: [1, true], autumn: [-0.35, false], winter: [-1, false]}[given];
+			var latitude = sun ? number(sun.Latitude, null) : null;
+			var days = sun ? Math.max(1, number(sun.YearDays, 365)) : 365;
+			var day = sun ? number(sun.DayOfYear, 172) : 172;
+			var far = latitude === null ? 0.75 : Math.max(0, Math.min(1, (Math.abs(latitude) - 15) / 20));
+			var south = latitude !== null && latitude < 0 ? -1 : 1;
+			var phase = (day - days * 172 / 365) / days * Math.PI * 2;
+			var warmth = fixed ? fixed[0] : Math.cos(phase) * south * far + (1 - far) * 0.6;
+			var rising = fixed ? fixed[1] : Math.sin(phase) * south < 0;
+			var cold = latitude === null ? 0.7 : Math.max(0, Math.min(1, (Math.abs(latitude) - 30) / 20));
+			var smooth = function (a, b, x) {
+				var t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+
+				return t * t * (3 - 2 * t);
+			};
+
+			return {
+				Warmth: warmth,
+				Rising: rising,
+				Bare: smooth(-0.2, -0.75, warmth),
+				Turn: rising ? 0 : smooth(0.45, -0.25, warmth),
+				Blossom: rising ? smooth(-0.6, -0.2, warmth) * smooth(0.45, 0.1, warmth) : 0,
+				Dry: smooth(0.7, 1, warmth) * 0.3 + (rising ? 0 : smooth(0.3, -0.4, warmth) * 0.4),
+				Snow: smooth(-0.55, -0.92, warmth) * cold
+			};
+		};
+
+		/* The snow that covers things: of the weather, or of the winter. */
+		function snowed () {
+			var ground = scene.Ground;
+
+			return ground ? Math.max(ground.Air.Cover || 0, ground.Season ? ground.Season.Snow : 0) : 0;
+		}
+
+		engine.Snowed = snowed;
+
+		/* What the season does to a model of plants: none (0), its leaves (1: a tree that loses them), only its snow (2: green the year round). */
+		engine.SeasonOf = function (name) {
+			var models = self.$Service('SceneModels');
+			var cache = scene.SeasonKinds = scene.SeasonKinds || {};
+			/* The name of a list of draws: [still:]name~variant[/piece]. */
+			var base = String(name || '').replace(/^still:/, '').replace(/^dissolve:[^:]*:/, '').split('~')[0];
+			var info;
+
+			if (cache[base] !== undefined) return cache[base];
+
+			info = models && models.Has(base) ? models.Info(base) : null;
+			cache[base] = !info || info.Type !== 'plant' ? 0 : /pine|fir|spruce|cedar|cypress|palm|cact|juniper|yew|sequoia|redwood|giant/i.test(base) ? 2 : 1;
+
+			return cache[base];
+		};
+
+		/* The uniforms of a list dissolving (Teleport): how far, the foot and the height of the body, its color. */
+		engine.DissolveValues = function (list) {
+			var given = list && list.Dissolve;
+
+			return given ? {uDissolve: [given.Amount, given.Base - (scene.Eye ? scene.Eye[1] : 0), given.Height, given.Seed || 0], uDissolveColor: given.Color || [0.6, 0.85, 1]} : {uDissolve: [0, 0, 1, 0], uDissolveColor: [0, 0, 0]};
+		};
+
+		/* The uniforms of the season for a model. */
+		engine.SeasonValues = function (name) {
+			var season = scene.Ground && scene.Ground.Season;
+
+			return {uSeason: season ? [season.Bare, season.Turn, season.Blossom, season.Dry] : [0, 0, 0, 0], uSeasonOn: season ? engine.SeasonOf(name) : 0};
+		};
+
+		/* The steps of a walker on wet ground splash, at the pace of its steps, more running. */
+		function puddled (hero, elapsed) {
+			var wet = scene.Ground && scene.Ground.Air ? scene.Ground.Air.Wet || 0 : 0;
+			var pace = hero.Walking || 0;
+
+			hero.Stepped = (hero.Stepped || 0) + elapsed;
+
+			if (wet < 0.35 || pace < 0.8 || !hero.World || hero.Stepped < Math.max(0.22, 0.6 - pace * 0.06)) return;
+
+			hero.Stepped = 0;
+
+			self.Burst('spray', [hero.World[0], hero.World[1] + 0.05, hero.World[2]], {Aim: [0, 1, 0], Size: Math.min(0.5, 0.12 + pace * 0.04) * Math.min(1, wet * 1.4)});
+		}
+
 		/* Where the view of a hero stands now: each way of it comes and goes in a quarter of a second. */
 		function easePerson (elapsed) {
 			var step = 1 - Math.exp(-elapsed * 10);
@@ -4958,8 +5417,11 @@ Elemenx.Component('Scene', {
 
 			/* With a hero the keys walk it, and the view goes after it. */
 			if (scene.Hero && scene.Objects[scene.Hero]) {
-				if (!engine.VehicleStep(scene.Objects[scene.Hero], keys, elapsed))
+				if (!engine.VehicleStep(scene.Objects[scene.Hero], keys, elapsed)) {
 					walkHero(scene.Objects[scene.Hero], keys, elapsed);
+
+					puddled(scene.Objects[scene.Hero], elapsed);
+				}
 			}
 			else {
 				moveView();
@@ -5198,7 +5660,9 @@ Elemenx.Component('Scene', {
 					askPiece(ground, key, 'Flat', [x, z, size, 32], function (piece) {
 						replace();
 
-						ground.Nodes[key] = {Mesh: renderer.Mesh(piece || field.Chunk(x, z, size, 32)), Center: [x, 0, z], Size: size, Top: Math.max(0, field.Height(x, z)), Used: ground.Frame};
+						var made = piece || field.Chunk(x, z, size, 32);
+
+						ground.Nodes[key] = {Mesh: renderer.Mesh(made), Wire: wired() ? renderer.Mesh({Positions: linesOf(made, false), Indices: []}, 'lines') : null, Center: [x, 0, z], Size: size, Top: Math.max(0, field.Height(x, z)), Used: ground.Frame};
 					});
 
 					return;
@@ -5628,13 +6092,19 @@ Elemenx.Component('Scene', {
 				var at = lightPlace(object, settings);
 
 				return {Object: object, Settings: settings, At: at, Far: vectors.Distance(at, scene.Eye)};
-			}).concat(builtLamps()).concat(engine.EffectLamps()).concat(engine.VehicleLamps()).map(function (lamp) {
+			}).concat(builtLamps()).concat(engine.EffectLamps()).concat(engine.VehicleLamps()).concat(engine.ScatterLamps ? engine.ScatterLamps(from, 160) : []).map(function (lamp) {
 				lamp.Far = vectors.Distance(lamp.At, from);
 
 				return lamp;
+			}).filter(function (lamp) {
+				/* A lamp of the night is dark by day. */
+				return !lamp.Settings.Night || !scene.Ground || (scene.Ground.Night || 0) > 0.01;
 			}).sort(function (a, b) {
 				return a.Far - b.Far;
 			}).slice(0, 24);
+
+			/* The last of them fade as they near the farthest taken: one more or one less is never a jump. */
+			var reach = scene.Lamps.length >= 24 ? scene.Lamps[scene.Lamps.length - 1].Far : Infinity;
 
 			if (scene.Ground)
 				lampShadows();
@@ -5643,7 +6113,7 @@ Elemenx.Component('Scene', {
 				var settings = lamp.Settings;
 				var color = Array.isArray(settings.Color) ? settings.Color : paint(settings.Color);
 				var flicker = 1 + number(settings.Flicker, 0) * (Math.sin(scene.Seconds * 11 + (lamp.Object.Seed || 0) * 40) * 0.5 + Math.sin(scene.Seconds * 23 + (lamp.Object.Seed || 0) * 13) * 0.3);
-				var power = number(settings.Power, 1) * flicker * 6;
+				var power = number(settings.Power, 1) * flicker * 6 * (settings.Night && scene.Ground ? scene.Ground.Night || 0 : 1) * (isFinite(reach) ? 1 - Math.max(0, Math.min(1, (lamp.Far - reach * 0.75) / (reach * 0.25))) : 1);
 				var at = vectors.Subtract(lamp.At, scene.Eye);
 				var spot = number(settings.Spot, 0);
 				var aim = vectors.Normalize(settings.Aim || [0, -1, 0]);
@@ -5681,7 +6151,7 @@ Elemenx.Component('Scene', {
 				made.Lamps.forEach(function (lamp) {
 					var at = vectors.Add(world, math.Apply(base, lamp.Place));
 
-					lamps.push({Object: object, Built: true, At: at, Far: vectors.Distance(at, scene.Eye), Settings: {Color: lamp.Color, Power: lamp.Power, Radius: lamp.Radius * grown, Spot: lamp.Spot, Aim: lamp.Aim}});
+					lamps.push({Object: object, Built: true, At: at, Far: vectors.Distance(at, scene.Eye), Settings: {Color: lamp.Color, Power: lamp.Power, Radius: lamp.Radius * grown, Spot: lamp.Spot, Aim: lamp.Aim ? math.Apply(object.Turn || math.Identity(), lamp.Aim) : null, Night: lamp.Night}});
 				});
 			});
 
@@ -5704,6 +6174,17 @@ Elemenx.Component('Scene', {
 
 			return {Center: center, Normal: math.Apply(turn, [0, 0, 1]), Width: width, Height: height, Model: math.Multiply(math.Translation(at[0], at[1], at[2]), math.Multiply(turn, math.Multiply(math.Rotation([1, 0, 0], Math.PI / 2), math.Scaling(width, 1, height))))};
 		}
+
+		/* A pane of an object (a mirror, a glass, a screen) for the traits: its middle, the ways of it, its size. */
+		engine.PaneOf = function (object, settings) {
+			var pane = paneOf(object, settings);
+			var turn = math.Multiply(math.Rotation([0, 1, 0], number(settings.Yaw, 0) * Math.PI / 180), math.Rotation([1, 0, 0], number(settings.Pitch, 0) * Math.PI / 180));
+
+			pane.Right = math.Apply(turn, [1, 0, 0]);
+			pane.Up = math.Apply(turn, [0, 1, 0]);
+
+			return pane;
+		};
 
 		/*
 		 * A pane a vehicle carries (its Mirrors and Screens: {At, Normal, Up, Width, Height} in its model), where it stands now: in the
@@ -6030,11 +6511,38 @@ Elemenx.Component('Scene', {
 			gpu.Pane = gpu.Pane || renderer.Mesh(meshes.Plane({Width: 1, Depth: 1, Segments: 1}));
 			gpu.Mirror = gpu.Mirror || renderer.Program(shaders.PaneVertex, shaders.Mirror);
 			gpu.Glass = gpu.Glass || renderer.Program(shaders.PaneVertex, shaders.Glass);
+			gpu.ScreenProgram = gpu.ScreenProgram || renderer.Program(shaders.PaneVertex, shaders.Screen);
 
 			scene.Active.forEach(function (object) {
 				var mirror = trait(object, 'Mirror');
 				var glass = trait(object, 'Glass');
+				var screen = trait(object, 'Screen');
 				var pane;
+
+				/*
+				 * A screen: what its source shows (SceneScreens). A camera's picture is opaque, dark until it came; a picture of a page,
+				 * an image, a video or a canvas has the clear places of its own (an element of no background): it is laid over what
+				 * is behind it after all (what it covers no longer glossy: no reflection of the screen shows through it); its depth is written where it is not clear, or the air would lay the far over it. It is not there until it came.
+				 */
+				if (screen) {
+					var picture = engine.ScreenPicture ? engine.ScreenPicture(object) : null;
+					var camera = !!screen.Camera;
+
+					if (camera || !picture) {
+						if (!camera && !picture) return;
+
+						pane = paneOf(object, screen);
+
+						renderer.Draw(gpu.Pane, gpu.ScreenProgram, uniforms({uModel: pane.Model, uPicture: picture ? picture.Texture : white, uBright: picture ? number(screen.Bright, 1) : 0.02, uFlip: picture && picture.Flip ? 1 : 0, uClear: 0}), {Cull: 'none'});
+					}
+					else {
+						later.push(function () {
+							var shown = paneOf(object, screen);
+
+							renderer.Draw(gpu.Pane, gpu.ScreenProgram, uniforms({uModel: shown.Model, uPicture: picture.Texture, uBright: number(screen.Bright, 1), uFlip: picture.Flip ? 1 : 0, uClear: 1}), {Blend: 'veil', Cull: 'none'});
+						});
+					}
+				}
 
 				if (mirror) {
 					pane = paneOf(object, mirror);
@@ -6065,14 +6573,12 @@ Elemenx.Component('Scene', {
 				renderer.Draw(gpu.Pane, gpu.Mirror, uniforms({uModel: pane.Model, uMirror: mirrored[key] ? mirrored[key].Textures[0] : white, uOn: mirrored[key] ? 1 : 0, uScreen: [renderer.Width, renderer.Height], uRect: rectOf(mirrored[key]), uAsCamera: mirrored[key] && !mirrored[key].Rect ? 1 : 0, uSize: [pane.Width, pane.Height], uSkyLight: ground.SkyLight, uTint: paint(mirror.Tint || '#ffffff').slice(0, 3), uBlur: Math.max(0, Math.min(1, number(mirror.Blur, 0))), uStrength: Math.max(0, Math.min(1, number(mirror.Strength, 0.85)))}), {Cull: 'none'});
 			});
 
-			gpu.ScreenProgram = gpu.ScreenProgram || renderer.Program(shaders.PaneVertex, shaders.Screen);
-
 			(car.Values.Vehicle.Screens || []).forEach(function (screen, index) {
 				var picture = screenOf(car, screen, index);
 				var pane = carPane(car, screen);
 
 				if (picture)
-					renderer.Draw(gpu.Pane, gpu.ScreenProgram, uniforms({uModel: pane.Model, uPicture: picture, uBright: number(screen.Bright, 1)}), {Cull: 'none'});
+					renderer.Draw(gpu.Pane, gpu.ScreenProgram, uniforms({uModel: pane.Model, uPicture: picture, uBright: number(screen.Bright, 1), uFlip: 0, uClear: 0}), {Cull: 'none'});
 			});
 		}
 
@@ -6099,11 +6605,18 @@ Elemenx.Component('Scene', {
 		};
 
 		function screenOf (car, screen, index) {
-			var key = 'screen:' + car.ID + ':' + index;
+			return engine.ElementPicture('screen:' + car.ID + ':' + index, screen.Source, screen.Pixels || [512, 256], number(screen.Every, 0.15));
+		}
+
+		/*
+		 * The picture of an element of the page (source: the name of a data-screen in the slot screens, a selector of the page, or
+		 * the element itself) as a texture of pixels [width, height], drawn again when it changed, every seconds at most; null
+		 * until its first picture came. Changed(key) has it drawn again (a hover or a focus that is no change of the DOM).
+		 */
+		engine.ElementPicture = function (key, source, pixels, every) {
 			var state = (gpu.Screens = gpu.Screens || {})[key] = gpu.Screens[key] || {At: 0, Changed: true, Styles: null};
 			var moment = view.performance ? view.performance.now() : Date.now();
-			var element = state.Element && state.Element.isConnected ? state.Element : self.$Element().querySelector('[data-screen="' + String(screen.Source || '') + '"]');
-			var pixels = screen.Pixels || [512, 256];
+			var element = state.Element && state.Element.isConnected ? state.Element : engine.ScreenElement(source);
 
 			if (element && element !== state.Element) {
 				if (state.Watch)
@@ -6152,7 +6665,7 @@ Elemenx.Component('Scene', {
 				state.Changed = true;
 			}
 
-			if (element && !state.Busy && !state.Failed && (state.Changed || !state.Texture || !view.MutationObserver) && moment - state.At > number(screen.Every, 0.15) * 1000) {
+			if (element && !state.Busy && !state.Failed && (state.Changed || !state.Texture || !view.MutationObserver) && moment - state.At > every * 1000) {
 				state.Busy = true;
 				state.Changed = false;
 				state.Styles = state.Styles || {At: moment, List: null, Own: null, Dirty: [], Defaults: {}};
@@ -6176,50 +6689,160 @@ Elemenx.Component('Scene', {
 			}
 
 			return state.Texture || null;
-		}
+		};
+
+		/* The element a screen shows: itself, a data-screen of the slot screens, or one the selector finds in the page. */
+		engine.ScreenElement = function (source) {
+			if (!source)
+				return null;
+
+			if (typeof source === 'object')
+				return source.nodeType === 1 ? source : null;
+
+			return self.$Element().querySelector('[data-screen="' + String(source).replace(/"/g, '') + '"]') || (/^[#.\[]/.test(String(source)) ? self.$Element().ownerDocument.querySelector(String(source)) : null);
+		};
+
+		/* A picture of an element drawn again at its next turn. */
+		engine.ElementChanged = function (key) {
+			var state = gpu.Screens && gpu.Screens[key];
+			if (state)
+				state.Changed = true;
+		};
 
 		/*
-		 * An element of the page as a picture: a copy of it with every style it is shown with written on it, in an SVG foreignObject,
-		 * drawn into a canvas of width by height. callback(error, canvas). styles ({List, Own, Dirty, Defaults}) keeps what was read
-		 * for the next time: a List of the same nodes is written again without reading the styles of the page, but for the
-		 * elements of Dirty and what is inside them.
+		 * An element of the page as a picture: a copy of it written as XHTML with every style it is shown with on it, in an SVG
+		 * foreignObject, drawn into a canvas of width by height. callback(error, canvas). styles ({List, Own, Pseudo, Dirty,
+		 * Defaults}) keeps what was read for the next time: a List of the same nodes is written again without reading the styles
+		 * of the page, but for the elements of Dirty and what is inside them. What ::before, ::after and the ::placeholder of a
+		 * field show goes with it as rules of its own. The copy is written as text straight from the element and what was read:
+		 * a copy of its nodes, its styles set and serialized, cost tens of milliseconds a picture of a big one.
 		 */
 		engine.Rasterize = function (element, width, height, callback, styles) {
 			var document = element.ownerDocument;
-			var copy = element.cloneNode(true);
 			var canvas = document.createElement('canvas');
 			var picture = new view.Image();
 			var whole = !styles || !styles.List;
 			var dirty = styles && !whole ? styles.Dirty : [];
 			var list = whole ? [] : styles.List;
 			var owns = whole || !styles.Own ? [] : styles.Own;
+			var pseudos = whole || !styles.Pseudo ? [] : styles.Pseudo;
 			var defaults = styles ? styles.Defaults = styles.Defaults || {} : {};
+			var wanted = [];
 			var at = 0;
 
-			/* What an element of a tag is styled with by itself, here, to leave out of a copy what it would have anyway. */
-			function plain (tag) {
+			/*
+			 * What an element of a tag is styled with by itself where no stylesheet of the page is (as in the picture), to leave out
+			 * of a copy what it would have anyway: read in a page of its own, a blank frame. Read on the page itself, a rule of it
+			 * for all (* {box-sizing: border-box}) made what it sets look like nothing, and the picture had none of it.
+			 */
+			function plain (tag, type) {
+				var blank = clean();
+				var key = type ? tag + ':' + type : tag;
 				var probe;
 				var style;
 				var made = {};
 				var i;
 
-				if (defaults[tag])
-					return defaults[tag];
+				if (defaults[key])
+					return defaults[key];
 
-				probe = document.createElement(tag);
+				probe = blank.createElement(tag);
 
-				document.body.appendChild(probe);
+				if (type)
+					probe.setAttribute('type', type);
 
-				style = view.getComputedStyle(probe);
+				blank.body.appendChild(probe);
+
+				style = blank.defaultView.getComputedStyle(probe);
 
 				for (i = 0; i < style.length; i++)
 					made[style[i]] = style.getPropertyValue(style[i]);
 
-				document.body.removeChild(probe);
+				blank.body.removeChild(probe);
 
-				defaults[tag] = made;
+				defaults[key] = made;
 
 				return made;
+			}
+
+			/* What an element takes from its parent by itself: written only where it is not what the parent has. */
+			var inherited = /^(color|cursor|direction|visibility|white-space|white-space-collapse|word-spacing|letter-spacing|line-height|quotes|orphans|widows|tab-size|hyphens|hyphenate-character|word-break|overflow-wrap|word-wrap|line-break|writing-mode|text-orientation|text-align|text-align-last|text-indent|text-transform|text-shadow|text-rendering|text-justify|text-underline-position|text-underline-offset|text-emphasis.*|text-wrap.*|text-size-adjust|text-spacing-trim|text-autospace|font.*|list-style.*|border-collapse|border-spacing|caption-side|empty-cells|caret-color|accent-color|color-scheme|pointer-events|image-rendering|image-orientation|paint-order|fill.*|stroke.*|marker.*|clip-rule|shape-rendering|color-interpolation.*|color-rendering|dominant-baseline|text-anchor|speak|ruby-.*|math-.*|forced-color-adjust|print-color-adjust|user-select|dynamic-range-limit|interpolate-size|-webkit-text-.*|-webkit-border-horizontal-spacing|-webkit-border-vertical-spacing|-webkit-locale|-webkit-rtl-ordering|-webkit-user-modify|-webkit-user-select|-webkit-tap-highlight-color|-webkit-hyphenate-character|-webkit-line-break|-webkit-font-smoothing|-webkit-print-color-adjust|-webkit-writing-mode|-webkit-highlight)$/;
+
+			/* The properties of CSS, each once, and whether an element takes it from its parent: read of a blank page, once. */
+			function properties () {
+				var made = [];
+				var flat = plain('span');
+
+				if (engine.CssNames)
+					return engine.CssNames;
+
+				Object.keys(flat).forEach(function (name) {
+					if (name.charAt(0) !== '-' || name.charAt(1) !== '-')
+						made.push({Name: name, Inherited: inherited.test(name)});
+				});
+
+				engine.CssNames = made;
+
+				return made;
+			}
+
+			/* A page of no stylesheet but the browser's: a frame out of sight, made once. */
+			function clean () {
+				var frame = engine.BlankFrame;
+
+				if (!frame || !frame.isConnected || !frame.contentDocument || !frame.contentDocument.body) {
+					frame = engine.BlankFrame = document.createElement('iframe');
+
+					frame.setAttribute('aria-hidden', 'true');
+					frame.setAttribute('tabindex', '-1');
+
+					frame.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 10px; height: 10px; border: 0; visibility: hidden';
+
+					document.body.appendChild(frame);
+
+					/* In the standards mode a picture is drawn in: a page of no doctype keeps the quirks of old (a table of a size of its own). */
+					frame.contentDocument.open();
+					frame.contentDocument.write('<!DOCTYPE html><html><head></head><body></body></html>');
+					frame.contentDocument.close();
+				}
+
+				return frame.contentDocument;
+			}
+
+			/* The rules of what the pseudo elements of an element show ([data-enx-p="index"]::before {...}), '' for none. */
+			function pseudo (original, index, own) {
+				var rules = '';
+				var base = plain('span');
+				var kinds = ['::before', '::after'];
+				/* A pseudo element takes from its element what is inherited; the rest is its own. */
+
+				if (/^(INPUT|TEXTAREA)$/.test(original.tagName) && original.getAttribute('placeholder'))
+					kinds.push('::placeholder');
+
+				kinds.forEach(function (kind) {
+					var style = view.getComputedStyle(original, kind);
+					var content = style.getPropertyValue('content');
+					var text = '';
+					var name;
+					var value;
+					var i;
+
+					if (kind !== '::placeholder' && (!content || content === 'none' || content === 'normal')) return;
+
+					for (i = 0; i < style.length; i++) {
+						name = style[i];
+						value = style.getPropertyValue(name);
+
+						if (name.charAt(0) === '-' && name.charAt(1) === '-') continue;
+
+						if (inherited.test(name) ? value !== own[name] : value !== base[name])
+							text += name + ':' + value + ';';
+					}
+
+					rules += '[data-enx-p="' + index + '"]' + kind + '{' + text + '}';
+				});
+
+				return rules;
 			}
 
 			/*
@@ -6227,59 +6850,271 @@ Elemenx.Component('Scene', {
 			 * of them; one inside it only what is not what its tag has by itself, nor what it takes from its parent: a copy of
 			 * hundreds of properties on each node made a picture of tens of milliseconds.
 			 */
-			function styled (original, made, above, again) {
+			function styled (original, above, again) {
 				var index = at;
 				var fresh = whole || again || dirty.indexOf(original) >= 0;
 				var style;
 				var text;
 				var own;
 				var base;
+				var table;
+				var flat;
 				var name;
 				var value;
 				var i;
 
-				if (original.nodeType !== 1) return;
+				if (original.nodeType !== 1 || skipped(original)) return;
 
 				at++;
 
 				if (fresh) {
 					style = view.getComputedStyle(original);
-					base = above ? plain(original.tagName.toLowerCase()) : null;
+					table = /table$/.test(style.getPropertyValue('display'));
+					flat = plain('span');
+					base = above ? plain(original.tagName.toLowerCase(), original.tagName === 'INPUT' ? original.type : '') : null;
 					text = '';
 					own = {};
+					changed = true;
 
-					for (i = 0; i < style.length; i++) {
-						name = style[i];
+					/*
+					 * The first takes all; one inside it what it does not take from its parent, and what its tag has not by itself.
+					 * Only the properties of CSS are read (no custom one: read only by var(), and every value here is computed
+					 * already), and only what is inherited is kept for those inside.
+					 */
+					for (i = 0; i < names.length; i++) {
+						name = names[i].Name;
 						value = style.getPropertyValue(name);
-						own[name] = value;
 
-						if (!base || value !== base[name] || value !== above[name])
+						if (names[i].Inherited)
+							own[name] = value;
+
+						/* The height of a table is that of its caption too, which its height leaves out: its rows give it. */
+						if (table && (name === 'height' || name === 'block-size')) continue;
+
+						/* What is inherited goes unless the parent has it, or the browser gives the tag its own (a th centered, bold). */
+						if (!base || (names[i].Inherited ? value !== above[name] || base[name] !== flat[name] : value !== base[name]))
 							text += name + ':' + value + ';';
 					}
 
 					list[index] = text;
 					owns[index] = own;
+					pseudos[index] = pseudo(original, index, own);
 				}
 
-				made.style.cssText = list[index] || '';
+				/* A canvas or a video is written as a picture of it: what it holds is not. */
+				if (/^(CANVAS|VIDEO)$/.test(original.tagName)) return;
 
 				for (i = 0; i < original.childNodes.length; i++)
-					styled(original.childNodes[i], made.childNodes[i], owns[index] || {}, fresh && !whole);
+					styled(original.childNodes[i], owns[index] || {}, fresh && !whole);
 			}
 
-			styled(element, copy);
+			/* What a picture cannot show nor needs: none of it is written. */
+			function skipped (node) {
+				return /^(SCRIPT|STYLE|TEMPLATE|NOSCRIPT|IFRAME|OBJECT|EMBED|LINK|META)$/.test(node.tagName);
+			}
+
+			function text (value) {
+				var made = String(value);
+
+				return /[&<>]/.test(made) ? made.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : made;
+			}
+
+			function quoted (value) {
+				var made = text(value);
+
+				return made.indexOf('"') >= 0 ? made.replace(/"/g, '&quot;') : made;
+			}
+
+			/*
+			 * The copy as text: each element with the styles read for it, and what a copy of nodes would not take of its original:
+			 * what is typed into a field, what is ticked or chosen, how far it scrolled, the pictures it shows (a picture of an SVG
+			 * fetches nothing: each goes in it as data), what a canvas or a video shows.
+			 */
+			function written (original, extra) {
+				var index = at;
+				var tag = original.tagName;
+				var name = original.localName;
+				var svg = original.namespaceURI === 'http://www.w3.org/2000/svg';
+				var attributes = '';
+				var inner = '';
+				var source;
+				var i;
+
+				at++;
+
+				if (tag === 'CANVAS' || tag === 'VIDEO') {
+					try {
+						source = tag === 'CANVAS' ? original.toDataURL() : frameOf(original);
+					}
+					catch (error) {
+						source = '';
+					}
+
+					return '<img style="' + quoted((list[index] || '') + (extra || '')) + '"' + (source ? ' src="' + quoted(source) + '"' : '') + '></img>';
+				}
+
+				for (i = 0; i < original.attributes.length; i++) {
+					var attribute = original.attributes[i];
+					if (attribute.name === 'style' || !/^[a-zA-Z_:][-a-zA-Z0-9_:.]*$/.test(attribute.name) || /^on/i.test(attribute.name)) continue;
+					if (tag === 'IMG' && /^(src|srcset|loading)$/.test(attribute.name)) continue;
+					if (tag === 'INPUT' && /^(value|checked)$/.test(attribute.name)) continue;
+					if (tag === 'OPTION' && attribute.name === 'selected') continue;
+
+					attributes += ' ' + attribute.name + '="' + quoted(attribute.value) + '"';
+				}
+
+				if (svg && name === 'svg' && !original.getAttribute('xmlns'))
+					attributes += ' xmlns="http://www.w3.org/2000/svg"';
+
+				if (tag === 'IMG') {
+					source = original.currentSrc || original.src;
+
+					if (source) {
+						attributes += ' src="' + quoted(source) + '"';
+
+						wanted.push(source);
+					}
+				}
+				else if (tag === 'INPUT') {
+					if (original.type === 'checkbox' || original.type === 'radio') {
+						if (original.checked)
+							attributes += ' checked="checked"';
+					}
+					else {
+						attributes += ' value="' + quoted(original.value) + '"';
+					}
+				}
+				else if (tag === 'OPTION' && original.selected) {
+					attributes += ' selected="selected"';
+				}
+
+				if (pseudos[index])
+					attributes += ' data-enx-p="' + index + '"';
+
+				if (list[index] || extra)
+					attributes += ' style="' + quoted((list[index] || '') + (extra || '')) + '"';
+
+				if (tag === 'TEXTAREA') {
+					inner = text(original.value);
+				}
+				else {
+					for (i = 0; i < original.childNodes.length; i++) {
+						var child = original.childNodes[i];
+
+						if (child.nodeType === 3) inner += text(child.data);
+						else if (child.nodeType === 1 && !skipped(child)) inner += written(child);
+					}
+
+					/* A copy does not scroll: what it holds is moved up and aside by as much. */
+					if (original.scrollTop || original.scrollLeft)
+						inner = '<div style="position: relative; top: ' + -original.scrollTop + 'px; left: ' + -original.scrollLeft + 'px">' + inner + '</div>';
+				}
+
+				return '<' + name + (index === 0 && !svg ? ' xmlns="http://www.w3.org/1999/xhtml"' : '') + attributes + '>' + inner + '</' + name + '>';
+			}
+
+			/* What a video shows now, as data. */
+			function frameOf (video) {
+				var still = document.createElement('canvas');
+
+				still.width = video.videoWidth || video.width || 1;
+				still.height = video.videoHeight || video.height || 1;
+
+				still.getContext('2d').drawImage(video, 0, 0, still.width, still.height);
+
+				return still.toDataURL();
+			}
+
+			/* The addresses of what the styles show (backgrounds, masks, borders of pictures), each once. */
+			function addresses (texts) {
+				var found = /url\("?([^")]+)"?\)/g;
+				var made = [];
+				var match;
+
+				texts.forEach(function (text) {
+					found.lastIndex = 0;
+
+					while ((match = found.exec(text || '')))
+						made.push(match[1]);
+				});
+
+				return made;
+			}
+
+			/* Each address fetched once as data (engine.Inlined): what cannot be is left out of the picture. */
+			function inline (urls, done) {
+				var kept = engine.Inlined = engine.Inlined || {};
+				var left = 1;
+
+				function one () {
+					if (--left === 0)
+						done();
+				}
+
+				urls.forEach(function (url) {
+					var request;
+
+					if (!url || /^data:/.test(url) || kept[url] !== undefined) return;
+
+					kept[url] = null;
+					left++;
+
+					request = new view.XMLHttpRequest();
+
+					request.open('GET', url);
+
+					request.responseType = 'blob';
+
+					request.onload = function () {
+						var reader;
+
+						if (request.status >= 400 || !request.response) {
+							one();
+
+							return;
+						}
+
+						reader = new view.FileReader();
+
+						reader.onload = function () {
+							kept[url] = reader.result;
+
+							one();
+						};
+
+						reader.onerror = one;
+
+						reader.readAsDataURL(request.response);
+					};
+
+					request.onerror = one;
+
+					request.send();
+				});
+
+				one();
+			}
+
+			var names = properties();
+			var changed = false;
+			var addressed = styles && styles.Addresses;
+
+			styled(element);
 
 			if (styles) {
 				styles.List = list;
 				styles.Own = owns;
+				styles.Pseudo = pseudos;
 				styles.Dirty = [];
 			}
 
-			copy.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+			/* The rules of the pseudo elements, before the copy in the picture. */
+			var rules = pseudos.join('');
 
-			copy.style.margin = '0';
-			copy.style.width = width + 'px';
-			copy.style.height = height + 'px';
+			/* The copy stands at the corner of its picture, wherever the element is put out of sight on the page. */
+			at = 0;
+
+			var copy = written(element, 'margin: 0; position: relative; left: 0; top: 0; right: auto; bottom: auto; transform: none; width: ' + width + 'px; height: ' + height + 'px;');
 
 			canvas.width = width;
 			canvas.height = height;
@@ -6294,7 +7129,29 @@ Elemenx.Component('Scene', {
 				callback(new Error('Elemenx Scene: a screen could not be drawn'));
 			};
 
-			picture.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '"><foreignObject width="100%" height="100%">' + new view.XMLSerializer().serializeToString(copy) + '</foreignObject></svg>');
+			/* The addresses the styles show, found again only when a style was read again. */
+			if (changed || !styles || !styles.Addresses)
+				addressed = addresses(list.concat(pseudos));
+
+			if (styles)
+				styles.Addresses = addressed;
+
+			var urls = wanted.concat(addressed);
+
+			inline(urls, function () {
+				var made = (rules ? '<style xmlns="http://www.w3.org/1999/xhtml">' + text(rules) + '</style>' : '') + copy;
+				var kept = engine.Inlined || {};
+
+				/* Each address as the data it came as (written as it is, or with its & escaped by the serializer). */
+				urls.forEach(function (url) {
+					if (!url || !kept[url]) return;
+
+					made = made.split(url).join(kept[url]);
+					made = made.split(url.replace(/&/g, '&amp;')).join(kept[url]);
+				});
+
+				picture.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '"><foreignObject width="100%" height="100%">' + made + '</foreignObject></svg>');
+			});
 		};
 
 		function drawGround (matrix, nodes, shade, mirror) {
@@ -6315,7 +7172,7 @@ Elemenx.Component('Scene', {
 			}
 
 			if (!scene.Camera.Ortho)
-				renderer.Draw(gpu.Quad, gpu.Sky, Object.assign({uInverse: math.Invert(matrix), uSun: ground.Sky, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0, uCover: ground.Shut, uEclipse: ground.Eclipse, uSunRadius: ground.SunRadius || 0.00465, uRainbow: ground.Air.Rainbow || 0, uMoonShade: ground.Moon ? ground.Moon.Shade : 0, uGlow: ground.Glow, uGlowWay: ground.GlowWay, uMoon: ground.Moon ? ground.Moon.Way : [0, 1, 0], uMoonLit: ground.Moon ? ground.Moon.Lit : [0, 1, 0], uMoonSize: ground.Moon ? ground.Moon.Size : 0, uMoonGlow: ground.Moon ? Math.min(1, ground.Moon.Glow) * Math.max(0, Math.min(1, ground.Moon.Way[1] / 0.15)) : 0}, self.SkyValues(scene.Seconds)), {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
+				renderer.Draw(gpu.Quad, gpu.Sky, Object.assign({uInverse: math.Invert(matrix), uSun: ground.Sky, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0, uCover: ground.Shut, uEclipse: ground.Eclipse, uSunRadius: ground.SunRadius || 0.00465, uRainbow: ground.Rainbow || 0, uAurora: [ground.Aurora || 0, scene.Seconds % 3000, 0, 0], uAuroraLow: ground.AuroraLow || [0.2, 1, 0.55], uAuroraHigh: ground.AuroraHigh || [0.75, 0.25, 1], uMoonShade: ground.Moon ? ground.Moon.Shade : 0, uGlow: ground.Glow, uGlowWay: ground.GlowWay, uMoon: ground.Moon ? ground.Moon.Way : [0, 1, 0], uMoonLit: ground.Moon ? ground.Moon.Lit : [0, 1, 0], uMoonSize: ground.Moon ? ground.Moon.Size : 0, uMoonGlow: ground.Moon ? Math.min(1, ground.Moon.Glow) * Math.max(0, Math.min(1, ground.Moon.Way[1] / 0.15)) : 0}, self.SkyValues(scene.Seconds)), {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
 
 			/* Past the ground of a location: the far ground of its body. */
 			if (!scene.Camera.Ortho && !mirror && scene.Horizon)
@@ -6324,8 +7181,8 @@ Elemenx.Component('Scene', {
 			/* One set of uniforms for all the squares, their places set for each; a ground with a Blueprint drawn by its graph. */
 			var settings = trait(scene.Objects[ground.ID], 'Terrain');
 			var own = settings && settings.Blueprint ? blueprinted(settings, 'Land', ground.ID) : null;
-			var program = own ? gpu.LandOf(own) : gpu.Land;
-			var land = Object.assign({uViewProjection: matrix, uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog, uSea: field.Water ? 1 : 0, uSkyLight: ground.SkyLight, uFloorLight: ground.FloorLight, uWet: ground.Air.Wet, uSnowed: ground.Air.Cover || 0, uRainDrops: ground.Air.Rain, uTime2: scene.Seconds % 1000}, shade, own ? own.Made.Values(settings.Parameters || {}, {Time: scene.Seconds % 3000}) : null, self.LandValues(scene.Seconds));
+			var program = gpu.LandOf(own, field.Materials);
+			var land = Object.assign({uViewProjection: matrix, uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog, uSea: field.Water ? 1 : 0, uSkyLight: ground.SkyLight, uFloorLight: ground.FloorLight, uWet: ground.Air.Wet, uSnowed: snowed(), uRainDrops: ground.Air.Rain, uTime2: scene.Seconds % 1000}, shade, own ? own.Made.Values(settings.Parameters || {}, {Time: scene.Seconds % 3000}) : null, self.LandValues(scene.Seconds));
 
 			nodes.forEach(function (node) {
 				land.uOffset = vectors.Subtract(node.Center, scene.Eye);
@@ -6334,9 +7191,22 @@ Elemenx.Component('Scene', {
 				renderer.Draw(node.Mesh, program, land, {Cull: 'back'});
 			});
 
+			/* The wire of the ground: the edges of its squares over them. */
+			if (wired() && !mirror) {
+				gpu.LandWire = gpu.LandWire || renderer.Program(shaders.LandVertex, shaders.Flat);
+
+				nodes.forEach(function (node) {
+					if (node.Wire)
+						renderer.Draw(node.Wire, gpu.LandWire, {uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye), uCenter: node.Center, uColor: scene.Colors.Wire, uBody: [0, 0, 0, 0]}, {Blend: 'alpha', DepthWrite: false, Depth: 'lequal'});
+				});
+			}
+
 			Object.keys(ground.Nodes).forEach(function (key) {
 				if (ground.Frame - (ground.Nodes[key].Used || 0) > 240) {
 					ground.Nodes[key].Mesh.Destroy();
+
+					if (ground.Nodes[key].Wire)
+						ground.Nodes[key].Wire.Destroy();
 
 					delete ground.Nodes[key];
 				}
@@ -6628,6 +7498,9 @@ Elemenx.Component('Scene', {
 			Object.keys(nodes).forEach(function (key) {
 				if (nodes[key].Mesh)
 					nodes[key].Mesh.Destroy();
+
+				if (nodes[key].Wire)
+					nodes[key].Wire.Destroy();
 			});
 		}
 
@@ -6981,8 +7854,8 @@ Elemenx.Component('Scene', {
 
 				upload(name, list);
 
-				if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign({}, common, {uOrigin: [0, 0, 0], uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft}, surface(list), blueprintValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back'});
-				else renderer.Draw(shape(name), gpu.Many, Object.assign({}, common, {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: [0, 0, 0]}));
+				if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign({}, common, {uOrigin: [0, 0, 0], uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft, uSeasonOn: 0, uDissolve: [0, 0, 1, 0]}, surface(list), blueprintValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back'});
+				else renderer.Draw(shape(name), gpu.Many, Object.assign({}, common, {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: [0, 0, 0], uSeasonOn: 0, uDissolve: [0, 0, 1, 0]}));
 			});
 
 			/* Its engines burn as they did in space: its own effects, where it is over the surface. */
@@ -7134,7 +8007,20 @@ Elemenx.Component('Scene', {
 			if (scene.Ground) aimGround(elapsed);
 			else aim(elapsed);
 
+			/* A cutscene sets what it moves first; then the camera that shows the world is placed. */
+			if (engine.CinemaStep)
+				engine.CinemaStep(elapsed);
+
+			if (engine.CameraStep)
+				engine.CameraStep(elapsed);
+
 			engine.TriggersStep();
+
+			if (engine.WeaponsStep)
+				engine.WeaponsStep(elapsed);
+
+			if (engine.DebrisStep)
+				engine.DebrisStep(elapsed);
 
 			if (engine.RigsStep)
 				engine.RigsStep(elapsed);
@@ -7147,6 +8033,10 @@ Elemenx.Component('Scene', {
 				engine.PostTime(elapsed);
 
 				scene.Painted++;
+
+				/* A recording takes the picture now, while the canvas still holds it (SceneCinema). */
+				if (engine.RecordFrame)
+					engine.RecordFrame();
 			}
 
 			moveLabels();
@@ -7167,7 +8057,7 @@ Elemenx.Component('Scene', {
 			function test (object, least) {
 				var t;
 
-				if (!object.World || object.Hidden || !(object.Size || least)) return;
+				if (!object.World || object.Hidden || object.Values.Interactive === false || !(object.Size || least)) return;
 
 				t = math.Hit(ray, object.World, Math.max(object.Size, pixels(object.World, least)));
 
@@ -7248,6 +8138,14 @@ Elemenx.Component('Scene', {
 
 				if (info.Habitable && (!parent || trait(parent, 'Star')))
 					add('habitable', t('yes'));
+			}
+			else if (object.Info && object.Info.Rows) {
+				/* What a kind of its own tells (SceneDeepSpace): [key, value, unit]. */
+				object.Info.Rows.forEach(function (row) {
+					add(row[0], row[1], row[2] === 'km' ? t('km') : row[2]);
+				});
+
+				kind = t('kinds.' + object.Info.Kind);
 			}
 			else {
 				add('at', parent ? parent.Name : '—');
@@ -7596,6 +8494,191 @@ Elemenx.Component('Scene', {
 		engine.Land = land;
 		engine.Known = known;
 		engine.Surface = surface;
+
+		/*
+		 * The pieces of a model at rest as triangles of its own space, once a model: what a ray is tested against and what a
+		 * thing breaks into; the color of each (of its vertices, or of its material) and whether it is glass.
+		 */
+		function hitMesh (made) {
+			var points = [];
+			var pieces = [];
+			var colors = [];
+			var glass = [];
+			var min = [Infinity, Infinity, Infinity];
+			var max = [-Infinity, -Infinity, -Infinity];
+
+			if (made.HitMesh)
+				return made.HitMesh;
+
+			made.Pieces.forEach(function (piece) {
+				var g = piece.Geometry;
+				var rest = piece.Rest || null;
+				var i;
+				var k;
+
+				if (!g || !g.Positions) return;
+
+				var material = piece.Material || null;
+				var base = material && material.BaseColor ? material.BaseColor : null;
+				var clear = !!material && (/glass|window|windscreen|windshield/i.test(material.Name || '') || material.Alpha === 'BLEND' && !material.DoubleSided);
+
+				for (i = 0; i + 2 < (g.Indices ? g.Indices.length : g.Positions.length / 3); i += 3) {
+					var tint = [0, 0, 0];
+
+					for (k = 0; k < 3; k++) {
+						var c = (g.Indices ? g.Indices[i + k] : i + k) * 3;
+
+						tint[0] += (base ? base[0] : 1) * (g.Colors ? g.Colors[c] : base ? 1 : 0.7) / 3;
+						tint[1] += (base ? base[1] : 1) * (g.Colors ? g.Colors[c + 1] : base ? 1 : 0.7) / 3;
+						tint[2] += (base ? base[2] : 1) * (g.Colors ? g.Colors[c + 2] : base ? 1 : 0.7) / 3;
+					}
+
+					colors.push(tint[0], tint[1], tint[2]);
+					glass.push(clear ? 1 : 0);
+
+					for (k = 0; k < 3; k++) {
+						var at = (g.Indices ? g.Indices[i + k] : i + k) * 3;
+						var p = rest ? math.Apply(rest, [g.Positions[at], g.Positions[at + 1], g.Positions[at + 2]]) : [g.Positions[at], g.Positions[at + 1], g.Positions[at + 2]];
+
+						points.push(p[0], p[1], p[2]);
+
+						min = [Math.min(min[0], p[0]), Math.min(min[1], p[1]), Math.min(min[2], p[2])];
+						max = [Math.max(max[0], p[0]), Math.max(max[1], p[1]), Math.max(max[2], p[2])];
+					}
+
+					pieces.push(piece);
+				}
+			});
+
+			made.HitMesh = {Points: new Float32Array(points), Pieces: pieces, Colors: new Float32Array(colors), Glass: new Uint8Array(glass), Min: min, Max: max};
+
+			return made.HitMesh;
+		}
+
+		/* The model of an object, how it is placed (turned and sized), and the box of it in the world: {Made, Base, Min, Max}. */
+		engine.BodyOf = function (object) {
+			var settings = trait(object, 'Model');
+			var made = settings && object.World && (settings.Shape || object.Values.Model) ? modelOf(object, settings) : null;
+			var mesh;
+			var scale;
+			var base;
+			var min = [Infinity, Infinity, Infinity];
+			var max = [-Infinity, -Infinity, -Infinity];
+
+			if (!made)
+				return null;
+
+			mesh = hitMesh(made);
+
+			if (!isFinite(mesh.Min[0])) return null;
+
+			scale = object.Scaled || vectors.Scale(settings.Scale || [1, 1, 1], object.Size);
+			base = math.Multiply(object.Turn || math.Identity(), math.Scaling(scale[0], scale[1], scale[2]));
+
+			[0, 1].forEach(function (a) {
+				[0, 1].forEach(function (b) {
+					[0, 1].forEach(function (c) {
+						var p = vectors.Add(object.World, math.Apply(base, [a ? mesh.Max[0] : mesh.Min[0], b ? mesh.Max[1] : mesh.Min[1], c ? mesh.Max[2] : mesh.Min[2]]));
+
+						min = [Math.min(min[0], p[0]), Math.min(min[1], p[1]), Math.min(min[2], p[2])];
+						max = [Math.max(max[0], p[0]), Math.max(max[1], p[1]), Math.max(max[2], p[2])];
+					});
+				});
+			});
+
+			return {Made: made, Base: base, Min: min, Max: max, Mesh: mesh};
+		};
+
+		/*
+		 * Where a ray ({Origin, Direction}) meets the model of an object, nearer than far: its box first, then each triangle
+		 * of its pieces at rest, in the space of the model. {Distance, Point, Normal, Piece, Height (0 its foot, 1 its top)}.
+		 */
+		engine.ModelHit = function (object, ray, far) {
+			var body = engine.BodyOf(object);
+			var inverse;
+			var origin;
+			var way;
+			var mesh;
+			var near = far;
+			var best = null;
+			var enter = 0;
+			var leave = far;
+			var axis;
+			var i;
+
+			if (!body)
+				return null;
+
+			mesh = body.Mesh;
+			inverse = math.Invert(body.Base);
+
+			if (!inverse) return null;
+
+			origin = math.Apply(inverse, vectors.Subtract(ray.Origin, object.World));
+			way = vectors.Subtract(math.Apply(inverse, ray.Direction), math.Apply(inverse, [0, 0, 0]));
+
+			/* The box, in the space of the model: the same distance along the ray as in the world. */
+			for (axis = 0; axis < 3; axis++) {
+				if (Math.abs(way[axis]) < 1e-12) {
+					if (origin[axis] < mesh.Min[axis] || origin[axis] > mesh.Max[axis]) return null;
+
+					continue;
+				}
+
+				var t1 = (mesh.Min[axis] - origin[axis]) / way[axis];
+				var t2 = (mesh.Max[axis] - origin[axis]) / way[axis];
+
+				enter = Math.max(enter, Math.min(t1, t2));
+				leave = Math.min(leave, Math.max(t1, t2));
+			}
+
+			if (enter > leave) return null;
+
+			for (i = 0; i < mesh.Pieces.length; i++) {
+				var p = mesh.Points;
+				var o = i * 9;
+				var e1 = [p[o + 3] - p[o], p[o + 4] - p[o + 1], p[o + 5] - p[o + 2]];
+				var e2 = [p[o + 6] - p[o], p[o + 7] - p[o + 1], p[o + 8] - p[o + 2]];
+				var h = vectors.Cross(way, e2);
+				var a = vectors.Dot(e1, h);
+				var f;
+				var s;
+				var u;
+				var q;
+				var v;
+				var t;
+
+				if (Math.abs(a) < 1e-12) continue;
+
+				f = 1 / a;
+				s = [origin[0] - p[o], origin[1] - p[o + 1], origin[2] - p[o + 2]];
+				u = f * vectors.Dot(s, h);
+
+				if (u < 0 || u > 1) continue;
+
+				q = vectors.Cross(s, e1);
+				v = f * vectors.Dot(way, q);
+
+				if (v < 0 || u + v > 1) continue;
+
+				t = f * vectors.Dot(e2, q);
+
+				if (t > 1e-4 && t < near) {
+					near = t;
+					best = {Distance: t, Piece: mesh.Pieces[i], Local: vectors.Cross(e1, e2), Height: (origin[1] + way[1] * t - mesh.Min[1]) / Math.max(1e-6, mesh.Max[1] - mesh.Min[1])};
+				}
+			}
+
+			if (!best)
+				return null;
+
+			/* The normal back in the world (by the inverse turned over), facing the ray. */
+			var n = vectors.Normalize([inverse[0] * best.Local[0] + inverse[1] * best.Local[1] + inverse[2] * best.Local[2], inverse[4] * best.Local[0] + inverse[5] * best.Local[1] + inverse[6] * best.Local[2], inverse[8] * best.Local[0] + inverse[9] * best.Local[1] + inverse[10] * best.Local[2]]);
+			if (vectors.Dot(n, ray.Direction) > 0)
+				n = vectors.Scale(n, -1);
+
+			return {Distance: best.Distance, Point: vectors.Add(ray.Origin, vectors.Scale(ray.Direction, best.Distance)), Normal: n, Piece: best.Piece, Height: best.Height};
+		};
 
 		/* A clip of an object: one that ends calls back and goes back to what the object was doing, a loop stays. */
 		engine.Play = function (id, name, callback) {
@@ -7979,14 +9062,20 @@ Elemenx.Component('Scene', {
 		this.FootingsStart();
 		this.TriggersStart();
 		this.RigidStart();
+		this.CameraStart();
+		this.CinemaStart();
 
 		if (renderer) {
 			this.ScatterStart();
 			this.LightingStart();
 			this.EffectsStart();
+			this.WeaponsStart();
+			this.DebrisStart();
+			this.DeepSpaceStart();
 			this.CosmosStart();
 			this.VehiclesStart();
 			this.LandingStart();
+			this.ScreensStart();
 		}
 
 		this.Behaving = true;
@@ -8098,6 +9187,8 @@ Elemenx.Component('Scene', {
 
 	PointerDown: function (event) {
 		if (this.RunBehaviours('Pointer', ['down', event])) return;
+		if (this.ScreenPointer && this.ScreenPointer('down', event)) return;
+		if (this.WeaponsPointer && this.WeaponsPointer('down', event)) return;
 
 		var self = this;
 		var scene = this.Scene();
@@ -8138,6 +9229,7 @@ Elemenx.Component('Scene', {
 
 	PointerMove: function (event) {
 		if (this.RunBehaviours('Pointer', ['move', event])) return;
+		if (this.ScreenPointer && this.ScreenPointer('move', event)) return;
 
 		var scene = this.Scene();
 		var point = this.Engine().Local(event);
@@ -8187,7 +9279,11 @@ Elemenx.Component('Scene', {
 			return;
 		}
 
-		if (!drag) return;
+		if (!drag) {
+			this.HoverAt(point);
+
+			return;
+		}
 
 		if (Math.abs(point.X - drag.X) + Math.abs(point.Y - drag.Y) > 4)
 			drag.Moved = true;
@@ -8219,8 +9315,36 @@ Elemenx.Component('Scene', {
 		scene.Pitch = Math.max(-1.5, Math.min(1.5, drag.Pitch + (point.Y - drag.Y) * 0.006));
 	},
 
+	/*
+	 * What is under the pointer as it moves (no button down), looked for now and then: hover tells it ({ID, Object, Info};
+	 * ID empty when it left), the pointer turns to a hand over it and a ring of light marks it. Interactive: false on an
+	 * object keeps it out.
+	 */
+	HoverAt: function (point) {
+		var scene = this.Scene();
+		var engine = this.Engine();
+		var now = performance.now();
+		var id;
+
+		if (now - (scene.HoverAt || 0) < 50 || scene.Hero && this.Captured()) return;
+
+		scene.HoverAt = now;
+		id = engine.Pick(point.X, point.Y, false) || '';
+
+		if (id === (scene.Hovering || '')) return;
+
+		scene.Hovering = id;
+		this.$Element().querySelector('.elemenx-scene-canvas').style.cursor = id ? 'pointer' : '';
+
+		this.$Emit('hover', {ID: id, Object: id ? this.Get(id) : null, Info: id ? engine.Describe(id) : null});
+	},
+
 	PointerUp: function (event) {
 		if (this.RunBehaviours('Pointer', ['up', event])) return;
+		if (this.ScreenPointer && this.ScreenPointer('up', event)) return;
+
+		if (this.WeaponsPointer)
+			this.WeaponsPointer('up', event);
 
 		var scene = this.Scene();
 		var drag = scene.Drag;
@@ -8302,6 +9426,7 @@ Elemenx.Component('Scene', {
 
 	Wheel: function (event) {
 		if (this.RunBehaviours('Pointer', ['wheel', event])) return;
+		if (this.ScreenPointer && this.ScreenPointer('wheel', event)) return;
 
 		var amount = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
 		var surface = this.Scene().Surface;
@@ -8343,6 +9468,9 @@ Elemenx.Component('Scene', {
 
 	Key: function (event) {
 		if (this.RunBehaviours('Key', [event])) return;
+		/* What is typed into a screen goes to it, not to the scene. */
+		if (this.ScreenTyped && this.ScreenTyped(event)) return;
+		if (this.CinemaKey && this.CinemaKey(event)) return;
 
 		var scene = this.Scene();
 
@@ -8418,6 +9546,7 @@ Elemenx.Component('Scene', {
 
 	KeyUp: function (event) {
 		if (this.RunBehaviours('KeyUp', [event])) return;
+		if (this.ScreenTyped && this.ScreenTyped(event)) return;
 
 		var scene = this.Scene();
 
@@ -8501,6 +9630,36 @@ Elemenx.Component('Scene', {
 		made = this.Engine().Canonical(Object.assign({}, values, {Kind: spec.Kind}), null, true);
 
 		scene.Added.push({ID: spec.ID, Kind: spec.Kind || '', Parent: spec.Parent, Values: Object.assign({}, spec.Values || {}, made.Values), Traits: this.$Service('SceneKinds').MergeTraits(made.Traits, spec.Traits || {}), Parts: spec.Parts || []});
+	},
+
+	/* Where a socket of the model of an object is (a part of the role socket, by its Name or ID): {At [x, y, z], Axis}, or null. */
+	Socket: function (id, name) {
+		var object = this.Scene().Objects[id];
+
+		return object && this.Engine().SocketOf ? this.Engine().SocketOf(object, name) : null;
+	},
+
+	/*
+	 * An object a World made (Generated: the houses of a village, a road of its Roads) made an object of the scene of its own,
+	 * as it is now: its changes in it, made no more of the World, saved as any other. false for what was not made so.
+	 */
+	Unlink: function (id) {
+		var scene = this.Scene();
+		var object = scene.Objects[id];
+		var values;
+
+		if (!object || !object.Values.Generated) return false;
+
+		values = JSON.parse(JSON.stringify(object.Values));
+
+		delete values.Generated;
+		delete scene.Overrides[id];
+
+		scene.Added.push({ID: id, Kind: object.Kind || '', Parent: '', Values: values, Traits: JSON.parse(JSON.stringify(object.Traits || {})), Parts: []});
+
+		this.Engine().Compose();
+
+		return true;
 	},
 
 	/* Changes the fields of an object (or of a part): each to its trait by its name in any case, {Traits} as they are. */
@@ -8682,6 +9841,13 @@ Elemenx.Component('Scene', {
 		this.Engine().Place(this.Scene().Time);
 	},
 
+	/* The season now: {Warmth, Rising, Bare, Turn, Blossom, Dry, Snow} (Season, or of the sun), null with no ground. */
+	SeasonState: function () {
+		var ground = this.Scene().Ground;
+
+		return ground && ground.Season ? Object.assign({}, ground.Season) : null;
+	},
+
 	/* Where an object is on the canvas. */
 	ToScreen: function (id) {
 		this.Engine().Place(this.Scene().Time);
@@ -8755,8 +9921,15 @@ Elemenx.Component('Scene', {
 			})
 		};
 
-		/* What was dug out of the ground, as it was dug. */
+		/* What was dug out of the ground, as it was dug; what was changed by hand of what is sown. */
 		saved.Digs = JSON.parse(JSON.stringify(scene.Digs));
+
+		/* Its cutscenes, as data. */
+		if (this.Cutscenes && Object.keys(this.Cutscenes).length)
+			saved.Cutscenes = JSON.parse(JSON.stringify(this.Cutscenes));
+
+		if (this.Engine().SownEdits)
+			saved.Sown = this.Engine().SownEdits();
 
 		if (options && options.Baked || scene.Loaded) {
 			/* What a World makes is made again of it. */
@@ -8764,6 +9937,14 @@ Elemenx.Component('Scene', {
 				return !object.Values.Generated;
 			}).map(function (object) {
 				return Object.assign(kinds.Diff(object), {Parent: object.Parent || ''});
+			});
+
+			/* What was changed of what a World makes: made again of it, the changes over it. */
+			saved.Generated = {Removed: Object.keys(scene.Removed), Overrides: {}};
+
+			Object.keys(scene.Overrides).forEach(function (id) {
+				if (scene.Objects[id] && scene.Objects[id].Values.Generated)
+					saved.Generated.Overrides[id] = JSON.parse(JSON.stringify(scene.Overrides[id]));
 			});
 
 			return saved;
@@ -8829,7 +10010,11 @@ Elemenx.Component('Scene', {
 			});
 			scene.Added = [];
 			scene.Removed = {};
-			scene.Overrides = {};
+			scene.Overrides = JSON.parse(JSON.stringify(saved.Generated && saved.Generated.Overrides || {}));
+
+			(saved.Generated && saved.Generated.Removed || []).forEach(function (id) {
+				scene.Removed[id] = true;
+			});
 		}
 		else {
 			scene.Loaded = null;
@@ -8841,6 +10026,12 @@ Elemenx.Component('Scene', {
 				scene.Removed[id] = true;
 			});
 		}
+
+		if (saved.Cutscenes)
+			this.Cutscenes = JSON.parse(JSON.stringify(saved.Cutscenes));
+
+		if (saved.Sown && this.Engine().SownEdits)
+			this.Engine().SownEdits(saved.Sown);
 
 		/* What was dug: another list makes the ground again. */
 		if (JSON.stringify(saved.Digs || []) !== JSON.stringify(scene.Digs)) {
@@ -9310,16 +10501,17 @@ Elemenx.Component('Scene', {
 		var graph = blueprints.Create('land', {name: 'Land'});
 		var ids = {};
 
-		[['point', 'LandPoint'], ['grain', 'LandGrain'], ['pools', 'LandPools'], ['albedo', 'LandAlbedo'], ['paint', 'LandPaint'], ['light', 'LandLight'], ['caustics', 'LandCaustics'], ['sheen', 'LandSheen'], ['compose', 'LandCompose'], ['end', 'LandEnd']].forEach(function (pair) {
+		[['point', 'LandPoint'], ['material', 'LandMaterial'], ['grain', 'LandGrain'], ['pools', 'LandPools'], ['albedo', 'LandAlbedo'], ['paint', 'LandPaint'], ['light', 'LandLight'], ['caustics', 'LandCaustics'], ['sheen', 'LandSheen'], ['compose', 'LandCompose'], ['end', 'LandEnd']].forEach(function (pair) {
 			ids[pair[0]] = blueprints.Add(graph, pair[1], {id: pair[0]}).id;
 		});
 
 		/* The light and the sheen take the normal the Blueprint of the ground leaves. */
 		[
 			['point', 'Place', 'grain', 'Place'],
-			['point', 'Place', 'pools', 'Place'], ['point', 'Normal', 'pools', 'Normal'],
-			['point', 'Color', 'albedo', 'Color'], ['grain', 'Grain', 'albedo', 'Grain'], ['pools', 'Pool', 'albedo', 'Pool'], ['point', 'Normal', 'albedo', 'Normal'],
-			['albedo', 'Albedo', 'paint', 'Albedo'], ['point', 'Place', 'paint', 'Place'], ['point', 'Normal', 'paint', 'Normal'],
+			['point', 'Place', 'material', 'Place'], ['point', 'Color', 'material', 'Color'], ['point', 'Normal', 'material', 'Normal'],
+			['point', 'Place', 'pools', 'Place'], ['material', 'Normal', 'pools', 'Normal'],
+			['material', 'Color', 'albedo', 'Color'], ['grain', 'Grain', 'albedo', 'Grain'], ['pools', 'Pool', 'albedo', 'Pool'], ['material', 'Normal', 'albedo', 'Normal'],
+			['albedo', 'Albedo', 'paint', 'Albedo'], ['point', 'Place', 'paint', 'Place'], ['material', 'Normal', 'paint', 'Normal'],
 			['point', 'World', 'light', 'World'], ['paint', 'Normal', 'light', 'Normal'],
 			['point', 'World', 'sheen', 'World'], ['paint', 'Normal', 'sheen', 'Normal'], ['pools', 'Water', 'sheen', 'Water'], ['pools', 'Pool', 'sheen', 'Pool'],
 			['point', 'Place', 'caustics', 'Place'], ['light', 'Light', 'caustics', 'Light'], ['light', 'Sunlit', 'caustics', 'Sunlit'],
@@ -9360,7 +10552,7 @@ Elemenx.Component('Scene', {
 			blueprints.Link(graph, [ids[from], out], [ids[to], key]);
 		}
 
-		[['ray', 'SkyRay'], ['day', 'SkyDay'], ['air', 'SkyAir'], ['dusk', 'SkyDusk'], ['halo', 'SkyHalo'], ['pink', 'SkyPink'], ['wisps', 'SkyWisps'], ['cover', 'SkyCover'], ['eclipse', 'SkyEclipse'], ['towns', 'SkyTowns'], ['rainbow', 'SkyRainbow'], ['haze', 'SkyMoonHaze'], ['moon', 'SkyMoon'], ['compose', 'SkyCompose'], ['end', 'SkyEnd']].forEach(function (pair) {
+		[['ray', 'SkyRay'], ['day', 'SkyDay'], ['air', 'SkyAir'], ['dusk', 'SkyDusk'], ['halo', 'SkyHalo'], ['pink', 'SkyPink'], ['wisps', 'SkyWisps'], ['cover', 'SkyCover'], ['eclipse', 'SkyEclipse'], ['towns', 'SkyTowns'], ['aurora', 'SkyAurora'], ['rainbow', 'SkyRainbow'], ['haze', 'SkyMoonHaze'], ['moon', 'SkyMoon'], ['compose', 'SkyCompose'], ['end', 'SkyEnd']].forEach(function (pair) {
 			add(pair[0], pair[1]);
 		});
 
@@ -9374,11 +10566,12 @@ Elemenx.Component('Scene', {
 			['wisps', 'Color', 'cover', 'Color'], ['day', 'Day', 'cover', 'Day'],
 			['cover', 'Color', 'eclipse', 'Color'], ['ray', 'Toward', 'eclipse', 'Toward'],
 			['eclipse', 'Color', 'towns', 'Color'], ['ray', 'Ray', 'towns', 'Ray'], ['ray', 'Height', 'towns', 'Height'],
-			['towns', 'Color', 'rainbow', 'Color'], ['ray', 'Ray', 'rainbow', 'Ray'], ['ray', 'Sun', 'rainbow', 'Sun'], ['ray', 'Height', 'rainbow', 'Height'],
+			['towns', 'Color', 'aurora', 'Color'], ['ray', 'Ray', 'aurora', 'Ray'], ['ray', 'Height', 'aurora', 'Height'],
+			['aurora', 'Color', 'rainbow', 'Color'], ['ray', 'Ray', 'rainbow', 'Ray'], ['ray', 'Sun', 'rainbow', 'Sun'], ['ray', 'Height', 'rainbow', 'Height'],
 			['rainbow', 'Color', 'haze', 'Color'], ['ray', 'Ray', 'haze', 'Ray'], ['day', 'Day', 'haze', 'Day'],
 			['ray', 'Ray', 'moon', 'Ray'], ['day', 'Day', 'moon', 'Day'],
 			['haze', 'Color', 'compose', 'Color'], ['eclipse', 'Crown', 'compose', 'Crown'], ['halo', 'Tint', 'compose', 'Tint'], ['ray', 'Toward', 'compose', 'Toward'], ['ray', 'Sun', 'compose', 'Sun'],
-			['day', 'Day', 'compose', 'Day'], ['dusk', 'Dusk', 'compose', 'Dusk'], ['haze', 'Haze', 'compose', 'Haze'], ['towns', 'Towns', 'compose', 'Towns'], ['moon', 'Color', 'compose', 'Moon'], ['moon', 'Shape', 'compose', 'Shape'],
+			['day', 'Day', 'compose', 'Day'], ['dusk', 'Dusk', 'compose', 'Dusk'], ['haze', 'Haze', 'compose', 'Haze'], ['towns', 'Towns', 'compose', 'Towns'], ['aurora', 'Aurora', 'compose', 'Aurora'], ['moon', 'Color', 'compose', 'Moon'], ['moon', 'Shape', 'compose', 'Shape'],
 			['compose', 'Color', 'end', 'Color'], ['compose', 'Alpha', 'end', 'Alpha']
 		].forEach(function (one) {
 			link(one[0], one[1], one[2], one[3]);
@@ -9466,6 +10659,7 @@ Elemenx.Component('Scene', {
 	/* The shaders: lit things, copies, faces to the view, lines, far stars; the surfaces of bodies baked and lit. */
 	Shaders: function (graphics) {
 		var head = '#version 300 es\nprecision highp float;\n';
+		var materials = this.$Service('SceneMaterials');
 
 		/* The rings of the drops on standing water: each cell of the surface has its drop, at a moment of its own. */
 		var ripples = [
@@ -9599,6 +10793,8 @@ Elemenx.Component('Scene', {
 				'uniform mat4 uViewProjection;',
 				'uniform float uWind;',
 				'uniform vec3 uOrigin;',
+				/* An outline: each corner pushed out along its normal, as far as a few pixels are where it is (0: none). */
+				'uniform float uOutline;',
 				'out vec3 vWorld;',
 				'out vec3 vNormal;',
 				'out vec3 vLocal;',
@@ -9625,6 +10821,7 @@ Elemenx.Component('Scene', {
 				'	vec3 bent = normalize(mat3(normalize(aInstance2.xyz), normalize(aInstance3.xyz), normalize(aInstance4.xyz)) * aNormal);',
 				'	blueprintWind(aPosition, aNormal, aUV, aInstance.w, aInstance5.a, length(aInstance3.xyz), world, bent);',
 				'	blueprintVertex(aPosition, aNormal, aUV, aInstance.w, aInstance5.a, length(aInstance3.xyz), world, bent);',
+				'	if (uOutline > 0.0) world += normalize(bent) * uOutline * length(world);',
 				'	vWorld = world;',
 				'	vNormal = normalize(bent);',
 				'	vLocal = aPosition;',
@@ -9650,6 +10847,8 @@ Elemenx.Component('Scene', {
 				'in vec4 aFrames;',
 				'uniform mat4 uViewProjection;',
 				'uniform vec3 uOrigin;',
+				/* An outline: each corner pushed out along its normal, as far as a few pixels are where it is (0: none). */
+				'uniform float uOutline;',
 				'uniform sampler2D uPalette;',
 				'uniform float uJointOffset;',
 				'out vec3 vWorld;',
@@ -9706,6 +10905,7 @@ Elemenx.Component('Scene', {
 				'	vec3 bent = normalize(mat3(normalize(aInstance2.xyz), normalize(aInstance3.xyz), normalize(aInstance4.xyz)) * mat3(moved) * aNormal);',
 				'	blueprintWind(aPosition, aNormal, aUV, 0.0, aInstance5.a, length(aInstance3.xyz), world, bent);',
 				'	blueprintVertex(aPosition, aNormal, aUV, 0.0, aInstance5.a, length(aInstance3.xyz), world, bent);',
+				'	if (uOutline > 0.0) world += normalize(bent) * uOutline * length(world);',
 				'	vWorld = world;',
 				'	vNormal = normalize(bent);',
 				'	vLocal = aPosition;',
@@ -9843,10 +11043,19 @@ Elemenx.Component('Scene', {
 				'in vec2 vUV;',
 				'uniform sampler2D uPicture;',
 				'uniform float uBright;',
+				'uniform float uFlip;',
+				'uniform float uClear;',
 				'out vec4 outColor;',
 				'void main() {',
 				'	float front = step(0.0, dot(vNormal, -vWorld));',
-				'	outColor = vec4(texture(uPicture, vec2(vUV.x, 1.0 - vUV.y)).rgb * uBright * front, 1.0);',
+				/* A picture of a canvas has its rows from the top, one the scene drew from the bottom (uFlip); one with clear places (uClear) is as clear there, and seen from behind is not there. */
+				'	vec4 seen = texture(uPicture, vec2(vUV.x, uFlip > 0.5 ? vUV.y : 1.0 - vUV.y));',
+				'	if (uClear > 0.5) {',
+				'		if (front < 0.5 || seen.a < 0.004) discard;',
+				'		outColor = vec4(seen.rgb * uBright, seen.a);',
+				'		return;',
+				'	}',
+				'	outColor = vec4(seen.rgb * uBright * front, 1.0);',
 				'}'
 			].join('\n'),
 
@@ -9883,6 +11092,11 @@ Elemenx.Component('Scene', {
 				'uniform float uWind;',
 				'uniform vec3 uEyeAt;',
 				'uniform float uTime2;',
+				/* The season of a plant of a file, as of the Solid one: Bare, Turn, Blossom, Dry; uSeasonOn 1 its leaves turn and fall, 2 green the year round. */
+				'uniform vec4 uSeason;',
+				'uniform float uSeasonOn;',
+				'uniform vec4 uDissolve;',
+				'uniform vec3 uDissolveColor;',
 				ripples,
 				'in vec3 vBody;',
 				'in vec3 vBodyNormal;',
@@ -9972,6 +11186,20 @@ Elemenx.Component('Scene', {
 				'}',
 				/* What a material graph of Blueprints does to the surface: nothing here; a material with a Blueprint puts its own in this place. */
 				'void blueprintSurface(vec3 position, vec3 normal, vec2 uv, inout vec3 color, inout float alpha, inout float rough, inout float metal, inout vec3 emission, inout vec3 bent) {}',
+				/*
+				 * A body beamed away or coming (Teleport): it breaks up into sparkling grains in streaks up and down, from the
+				 * top, glowing in the color of the beam where it goes; uDissolve [how far, foot, height, phase].
+				 */
+				'float dissolved(vec3 world, inout vec3 color) {',
+				'	if (uDissolve.x <= 0.0) return 0.0;',
+				'	float h = clamp((world.y - uDissolve.y) / max(uDissolve.z, 0.01), 0.0, 1.0);',
+				'	float grain = noise3((world + uEyeAt) * vec3(30.0, 6.0, 30.0) + vec3(0.0, uDissolve.w, 0.0)) * 0.5 + 0.5;',
+				'	float d = grain * 0.8 + (1.0 - h) * 0.2;',
+				'	float gone = uDissolve.x * 1.3 - 0.15;',
+				'	if (d < gone) discard;',
+				'	color = mix(color, uDissolveColor, min(1.0, uDissolve.x * 1.6));',
+				'	return max(1.0 - smoothstep(0.0, 0.1, d - gone), uDissolve.x * 0.6) * (0.6 + 0.4 * sin(uDissolve.w * 9.0 + grain * 20.0));',
+				'}',
 				'void main() {',
 				'	if (uCut.w > 0.0 && distance(vWorld, uCut.xyz) < uCut.w) discard;',
 				'	vec4 base = uBaseColor * texture(uColorMap, vUV);',
@@ -9990,7 +11218,20 @@ Elemenx.Component('Scene', {
 				'	float ownRough = uRoughness * surface.g;',
 				'	float ownMetal = uMetallic * surface.b;',
 				'	vec3 ownGlow = uEmissive * texture(uEmissiveMap, vUV).rgb;',
+				'	ownGlow += uDissolveColor * dissolved(vWorld, albedo) * 3.0;',
 				'	blueprintSurface(vWorld, n, vUV, albedo, base.a, ownRough, ownMetal, ownGlow, n);',
+				/* The leaves of a tree of a file are what is green of its textures: they turn, thin out to bare branches, blossom. */
+				'	if (uSeasonOn > 0.5 && uSeasonOn < 1.5) {',
+				'		float leaf = smoothstep(0.01, 0.05, albedo.g - max(albedo.r, albedo.b) * 0.9);',
+				'		float tree = fract(sin(dot(floor((vWorld.xz + uEyeAt.xz - vBody.xz) * 0.22), vec2(12.9898, 78.233))) * 43758.5453);',
+				'		if (leaf > 0.0) {',
+				'			vec3 fall = tree < 0.3 ? vec3(0.62, 0.42, 0.04) : tree < 0.55 ? vec3(0.55, 0.16, 0.02) : tree < 0.8 ? vec3(0.42, 0.05, 0.02) : vec3(0.25, 0.14, 0.05);',
+				'			albedo = mix(albedo, fall * (0.7 + 0.6 * dot(albedo, vec3(0.33))), uSeason.y * leaf);',
+				'			if (uSeason.x > 0.0 && noise3(vBody * 9.0 + tree * 7.0) * 0.5 + 0.5 < uSeason.x * leaf * 1.08) discard;',
+				'			if (uSeason.z > 0.0 && tree < 0.45 && noise3(vBody * 26.0) > 0.35) albedo = mix(albedo, tree < 0.2 ? vec3(0.95, 0.62, 0.72) : vec3(0.95, 0.94, 0.9), uSeason.z * leaf);',
+				'		}',
+				'		albedo = mix(albedo, albedo * vec3(1.15, 1.0, 0.55), uSeason.w * leaf * 0.5);',
+				'	}',
 				/* Its own wet (1 + it, 0 for the weather's) and how much water beads on it (1 + it, 0 for all). */
 				'	float wet = vWet.x > 0.5 ? clamp(vWet.x - 1.0, 0.0, 1.0) : uWet;',
 				'	float beads = vWet.y > 0.5 ? clamp(vWet.y - 1.0, 0.0, 1.0) : 1.0;',
@@ -10279,16 +11520,22 @@ Elemenx.Component('Scene', {
 				'uniform vec3 uColor;',
 				'uniform float uSeed;',
 				'uniform float uTime;',
+				/* How fine its cells of rising gas are: a dwarf boils in small ones, a giant in a few huge. */
+				'uniform float uCells;',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				'void main() {',
 				'	vec3 n = normalize(vNormal);',
 				'	vec3 v = normalize(uCamera - vWorld);',
 				'	vec3 p = normalize(vLocal);',
-				'	float cells = fbm3(p * 9.0 + vec3(0.0, uTime * 0.08, uSeed), 4);',
-				'	float spots = smoothstep(0.7, 0.78, fbm3(p * 2.6 + vec3(uSeed, uTime * 0.01, 0.0), 3));',
+				'	float cells = fbm3(p * uCells + vec3(0.0, uTime * 0.08, uSeed), 4);',
+				/* Spots keep to the belts of middle latitudes, each with a bright ring of faculae round it. */
+				'	float belt = smoothstep(0.08, 0.2, abs(p.y)) * (1.0 - smoothstep(0.45, 0.62, abs(p.y)));',
+				'	float field = fbm3(p * 2.6 + vec3(uSeed, uTime * 0.01, 0.0), 3);',
+				'	float spots = smoothstep(0.66, 0.74, field) * belt;',
+				'	float faculae = (smoothstep(0.58, 0.66, field) - spots) * belt;',
 				'	float limb = pow(max(dot(n, v), 0.0), 0.45);',
-				'	vec3 color = uColor * (0.7 + 0.6 * cells) * (0.5 + 0.6 * limb) * (1.0 - spots * 0.45);',
+				'	vec3 color = uColor * (0.7 + 0.6 * cells) * (0.5 + 0.6 * limb) * (1.0 - spots * 0.55) * (1.0 + faculae * 0.35 * (1.0 - limb));',
 				/* A sun is far brighter than white: what shows of it to the eye is only that it burns. */
 				'	outColor = vec4(mix(color, vec3(1.0), 0.28 * limb) * 2.4, 1.0);',
 				'}'
@@ -10365,17 +11612,62 @@ Elemenx.Component('Scene', {
 				'uniform float uSnowed;',
 				'uniform float uSpecular;',
 				'uniform float uRough;',
+				/* How much of what glows by itself shows: all of it at night, little by day. */
+				'uniform float uNightGlow;',
+				/* The season of a plant: Bare, Turn, Blossom, Dry (uSeasonOn 1: its leaves fall and turn; 2: green the year round). */
+				'uniform vec4 uSeason;',
+				'uniform float uSeasonOn;',
+				'uniform vec3 uEyeAt;',
+				'uniform vec4 uDissolve;',
+				'uniform vec3 uDissolveColor;',
 				'out vec4 outColor;',
 				'uniform float uSoft;',
 				graphics.Chunks.Noise,
 				graphics.Chunks.Lights,
 				graphics.Chunks.Shadow,
+				/*
+				 * A body beamed away or coming (Teleport): it breaks up into sparkling grains in streaks up and down, from the
+				 * top, glowing in the color of the beam where it goes; uDissolve [how far, foot, height, phase].
+				 */
+				'float dissolved(vec3 world, inout vec3 color) {',
+				'	if (uDissolve.x <= 0.0) return 0.0;',
+				'	float h = clamp((world.y - uDissolve.y) / max(uDissolve.z, 0.01), 0.0, 1.0);',
+				'	float grain = noise3((world + uEyeAt) * vec3(30.0, 6.0, 30.0) + vec3(0.0, uDissolve.w, 0.0)) * 0.5 + 0.5;',
+				'	float d = grain * 0.8 + (1.0 - h) * 0.2;',
+				'	float gone = uDissolve.x * 1.3 - 0.15;',
+				'	if (d < gone) discard;',
+				'	color = mix(color, uDissolveColor, min(1.0, uDissolve.x * 1.6));',
+				'	return max(1.0 - smoothstep(0.0, 0.1, d - gone), uDissolve.x * 0.6) * (0.6 + 0.4 * sin(uDissolve.w * 9.0 + grain * 20.0));',
+				'}',
 				'void main() {',
 				'	vec3 n = normalize(vNormal);',
 				'	vec3 v = normalize(uCamera - vWorld);',
 				'	vec3 color = pow(min(vColor, vec3(1.0)), vec3(2.2));',
+				/*
+				 * The leaves of a plant are what is green of it: in autumn they turn, each tree to a color of its own; they thin
+				 * out to bare branches as the year goes cold, and come back in spring with the flowers of some trees.
+				 */
+				'	if (uSeasonOn > 0.5) {',
+				'		float leaf = smoothstep(0.01, 0.05, color.g - max(color.r, color.b) * 0.9);',
+				'		vec3 cell = floor((vWorld + uEyeAt) * 0.22);',
+				'		float tree = fract(sin(dot(cell.xz, vec2(12.9898, 78.233))) * 43758.5453);',
+				'		if (uSeasonOn < 1.5 && leaf > 0.0) {',
+				'			vec3 fall = tree < 0.3 ? vec3(0.62, 0.42, 0.04) : tree < 0.55 ? vec3(0.55, 0.16, 0.02) : tree < 0.8 ? vec3(0.42, 0.05, 0.02) : vec3(0.25, 0.14, 0.05);',
+				'			color = mix(color, fall * (0.7 + 0.6 * dot(color, vec3(0.33))), uSeason.y * leaf);',
+				'			if (uSeason.x > 0.0 && noise3(vLocal * 9.0 + tree * 7.0) * 0.5 + 0.5 < uSeason.x * leaf * 1.08) discard;',
+				'			if (uSeason.z > 0.0 && tree < 0.45 && noise3(vLocal * 26.0) > 0.35) color = mix(color, tree < 0.2 ? vec3(0.95, 0.62, 0.72) : vec3(0.95, 0.94, 0.9), uSeason.z * leaf);',
+				'		}',
+				'		color = mix(color, color * vec3(1.15, 1.0, 0.55), uSeason.w * leaf * 0.5);',
+				'	}',
 				'	color *= 1.0 - uRough * 0.45 + uRough * 0.45 * fbm3(vLocal * 3.0, 3);',
-				'	vec3 hot = max(vColor - vec3(1.0), 0.0);',
+				/* Snow lies on what looks up, thicker where the noise piles it. */
+				'	if (uSnowed > 0.0) {',
+				/* A plant holds snow on its slopes too: on the cones of a fir, the tops of its blobs. */
+				'		float laid = uSnowed * smoothstep(uSeasonOn > 0.5 ? 0.15 : 0.35, uSeasonOn > 0.5 ? 0.5 : 0.8, normalize(vNormal).y + (noise3((vWorld + uEyeAt) * 0.6) * 0.5 - 0.25) * 0.4);',
+				'		color = mix(color, vec3(0.86, 0.9, 0.95), laid);',
+				'	}',
+				'	float beamed = dissolved(vWorld, color);',
+				'	vec3 hot = max(vColor - vec3(1.0), 0.0) + uDissolveColor * beamed * 3.0;',
 				'	lightShade = sunLit(vWorld, n);',
 				'	vec3 light = lighting(vWorld, n, v, uShine, uSpecular) - mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) * (1.0 - skySeen(vWorld));',
 				'	light = (max(light, vec3(0.0)) + sunBounce(vWorld) + localLight(vWorld, n)) * (1.0 - (vWet.x > 0.5 ? clamp(vWet.x - 1.0, 0.0, 1.0) : uWet) * 0.25);',
@@ -10384,7 +11676,7 @@ Elemenx.Component('Scene', {
 				'		float through = pow(max(dot(v, -l), 0.0), 3.0) * 0.8 + max(-dot(n, l), 0.0) * 0.35;',
 				'		light += uLightColors[0] * through * lightShade * uSoft * vec3(1.0, 1.05, 0.55);',
 				'	}',
-				'	outColor = vec4(pow(color * light + hot * hot * 4.0, vec3(1.0 / 2.2)), uMoving > 0.5 ? 0.0 : 1.0);',
+				'	outColor = vec4(pow(color * light + hot * hot * 4.0 * (0.12 + 0.88 * uNightGlow), vec3(1.0 / 2.2)), uMoving > 0.5 ? 0.0 : 1.0);',
 				'}'
 			].join('\n'),
 
@@ -10536,6 +11828,9 @@ Elemenx.Component('Scene', {
 				'uniform float uMoonGlow;',
 				'uniform float uMoonShade;',
 				'uniform float uRainbow;',
+				'uniform vec4 uAurora;',
+				'uniform vec3 uAuroraLow;',
+				'uniform vec3 uAuroraHigh;',
 				'uniform float uEclipse;',
 				'uniform float uSunRadius;',
 				'uniform vec3 uGlow;',
@@ -10558,6 +11853,9 @@ Elemenx.Component('Scene', {
 				'in vec3 aColor;',
 				/* Its height, and how much of the sky it sees (under rock of a volume: less). */
 				'in vec2 aUV;',
+				/* What it is made of: the weights of the 8 materials of its ground (SceneMaterials). */
+				'in vec4 aMaterials;',
+				'in vec4 aMaterials2;',
 				'uniform mat4 uViewProjection;',
 				'uniform vec3 uOffset;',
 				'uniform vec3 uCenter;',
@@ -10566,8 +11864,12 @@ Elemenx.Component('Scene', {
 				'out vec3 vColor;',
 				'out vec3 vPlace;',
 				'out float vOpen;',
+				'out vec4 vMaterials;',
+				'out vec4 vMaterials2;',
 				'void main() {',
 				'	vOpen = aUV.y;',
+				'	vMaterials = aMaterials;',
+				'	vMaterials2 = aMaterials2;',
 				'	vWorld = aPosition + uOffset;',
 				'	vNormal = aNormal;',
 				'	vColor = aColor;',
@@ -10582,6 +11884,8 @@ Elemenx.Component('Scene', {
 				'in vec3 vColor;',
 				'in vec3 vPlace;',
 				'in float vOpen;',
+				'in vec4 vMaterials;',
+				'in vec4 vMaterials2;',
 				'uniform vec3 uSun;',
 				'uniform vec3 uSunColor;',
 				'uniform vec4 uAir;',
@@ -10598,6 +11902,9 @@ Elemenx.Component('Scene', {
 				graphics.Chunks.Noise,
 				graphics.Chunks.Shadow,
 				ripples,
+				materials.Helpers,
+				/* What its ground is made of: nothing here; a ground puts the materials of its slots in this place (SceneMaterials.Land). */
+				'void landMaterials(vec3 place, float px, inout vec3 color, inout float height) {}',
 				/* What a material graph of Blueprints does to the ground: nothing here; a ground with a Blueprint puts its own in this place. */
 				'void blueprintSurface(vec3 position, vec3 normal, vec2 uv, inout vec3 color, inout float alpha, inout float rough, inout float metal, inout vec3 emission, inout vec3 bent) {}',
 				'void blueprintLand(inout vec3 color, inout float alpha) {}',

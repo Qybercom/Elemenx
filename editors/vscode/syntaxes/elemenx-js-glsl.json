@@ -1,0 +1,21 @@
+{
+	"scopeName": "elemenx.glsl.javascript",
+	"injectionSelector": "L:source.js -comment",
+	"patterns": [
+		{
+			"comment": "A string of the source of a shader, as the Libraries write them, a line an item of an array: one that starts with GLSL (a declaration, #version, a statement of main) is read as GLSL.",
+			"begin": "(')(?=\\t*(#version|precision |uniform |in |out |layout|flat |void |vec[234] |float |int |mat[34] |sampler|bool |gl_|if \\(|for \\(|return |discard))",
+			"beginCaptures": {
+				"1": {"name": "string.quoted.single.js punctuation.definition.string.begin.js"}
+			},
+			"end": "(?<!\\\\)(')",
+			"endCaptures": {
+				"1": {"name": "string.quoted.single.js punctuation.definition.string.end.js"}
+			},
+			"contentName": "meta.embedded.inline.glsl.elemenx",
+			"patterns": [
+				{"include": "source.glsl"}
+			]
+		}
+	]
+}

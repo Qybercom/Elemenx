@@ -8,3 +8,12 @@ ModelRoles: что такое части модели — её колёса, р�
 - Version() меняется с каждой правкой; OnChange(listener) и OffChange(listener). После правки модель пересобирается (SceneModels.Remake).
 
 На сцене: Parts(id) — роли объекта, Part(id, role) — одна: Get(), Set(value), событие part ({ID, Role, Value}).
+
+Новые группы ролей:
+- chassis (шасси машины): arm — рычаг подвески, качается с ходом своего колеса (Drive stroke, Corner, Length — длина в единицах модели); knuckle — поворотный кулак, поворачивается с колесом (wheel-steer); shock — амортизатор, растягивается от точки крепления вдоль Way с ходом колеса (Motion stretch); halfshaft — полуось, крутится с колесом (roll); gauge-speed и gauge-rpm — стрелки скорости и оборотов; exhaust — выхлоп, дымит при газе;
+- flight (летательный аппарат): aileron, elevator, rudder — от крена, тангажа и рыскания; flap — закрылки на малом газу; propeller — винт от газа; gear-leg — стойка шасси, убирается в полёте;
+- weapons (оружие): turret и barrel — по Aim объекта ({Yaw, Pitch} в градусах); recoil — откат при выстреле (Fired: секунды сцены);
+- mechanisms (механизмы): drawer, lid, button, valve; turbine — от ветра; clock-hour и clock-minute — стрелки по времени суток; radar; boom; platform;
+- points (точки): socket — точка крепления (Scene.Socket(id, name) → {At, Axis}); emitter — излучатель эффекта (Effect, Rate — выбросов в секунду, Drive); collider — части роли становятся коллайдером по своему контуру.
+
+Rig отдаёт ещё Sockets, Emitters и Colliders, а у Openings появились Stretch, Corner и Length. Приводы, которые ставят часть сразу, без Pace: steer, wipers, stroke, wheel-steer, roll, pitch, yaw, roll-air, aim-yaw, aim-pitch, fire, clock-hour, clock-minute.

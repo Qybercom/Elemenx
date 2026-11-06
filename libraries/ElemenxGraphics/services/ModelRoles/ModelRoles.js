@@ -18,7 +18,14 @@
  *   roles), Remove(model), Models() (the names of those kept); they are kept in the storage of the browser (StorageKey).
  *   Export() is all of them as the text of a file, Import(text) reads one in (over what is kept, model by model).
  * - Rig(roles) is what a Scene takes of them, as the settings of a vehicle name them: {Openings (what moves: hinge, slide,
- *   spin), Lamps (what glows), Wheels ([{Parts, Corner, Held}])}; each opening named role:<ID>.
+ *   spin, stretch), Lamps (what glows), Wheels ([{Parts, Corner, Held}]), Sockets ([{Name, Parts, At, Axis}]: where a thing is
+ *   held), Emitters ([{Parts, At, Way, Effect, Rate, Drive}]: what gives off an effect), Colliders ([{Parts}]: the outline of
+ *   its parts stops what comes to it)}; each opening named role:<ID>.
+ * - Besides doors, wheels and lamps: the chassis of a car (arm and shock with the travel of their wheel, Corner and Length;
+ *   knuckle with its steering; halfshaft with its roll; the gauges of speed and rpm; exhaust), what flies (aileron, elevator,
+ *   rudder, flap, propeller, gear-leg up while it flies), arms (turret and barrel by the Aim of the object {Yaw, Pitch}
+ *   degrees, recoil when it Fired), mechanisms (drawer, lid, button, valve, turbine by the wind, the hands of a clock by the
+ *   time of day, radar, boom, platform), points (socket, emitter, collider).
  * - Ranges(indices) packs a list of vertices into ranges, Within(ranges, index) tells whether one is in them.
  * - Version() changes with every change; OnChange(listener) and OffChange(listener).
  * The same functions run in Node: they read no page (with no storage nothing is kept).
@@ -56,7 +63,41 @@ Elemenx.Service('ModelRoles', {
 		{ID: 'lamp-brake', Group: 'lights', Icon: 'sun', Motion: {Type: 'glow'}, Light: {Kind: 'brake'}},
 		{ID: 'lamp-reverse', Group: 'lights', Icon: 'sun', Motion: {Type: 'glow'}, Light: {Kind: 'reverse'}},
 		{ID: 'lamp-indicator', Group: 'lights', Icon: 'sun', Motion: {Type: 'glow'}, Light: {Kind: 'indicator'}},
-		{ID: 'light', Group: 'lights', Icon: 'sun', Motion: {Type: 'glow'}, Light: {Kind: 'glow', Color: '#ffd9a0', Power: 1, Radius: 8}}
+		{ID: 'light', Group: 'lights', Icon: 'sun', Motion: {Type: 'glow'}, Light: {Kind: 'glow', Color: '#ffd9a0', Power: 1, Radius: 8}},
+		/* What hangs a wheel on a car: it goes with the travel of its wheel (stroke), turns with it (wheel-steer, roll). */
+		{ID: 'arm', Group: 'chassis', Icon: 'move', Motion: {Type: 'hinge', Axis: [0, 0, 1], Angle: 57.2958}, Drive: 'stroke', Corner: 'FL', Length: 0.3, Pace: 0},
+		{ID: 'knuckle', Group: 'chassis', Icon: 'circle', Motion: {Type: 'hinge', Axis: [0, 1, 0], Angle: 57.2958}, Drive: 'wheel-steer', Corner: 'FL', Pace: 0},
+		{ID: 'shock', Group: 'chassis', Icon: 'sliders', Motion: {Type: 'stretch', Way: [0, -1, 0]}, Drive: 'stroke', Corner: 'FL', Length: 0.3, Pace: 0},
+		{ID: 'halfshaft', Group: 'chassis', Icon: 'refresh', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 360}, Drive: 'roll', Corner: 'RL', Pace: 0},
+		{ID: 'gauge-speed', Group: 'chassis', Icon: 'gauge', Motion: {Type: 'hinge', Axis: [0, 0, 1], Angle: -240}, Drive: 'speed', Pace: 4},
+		{ID: 'gauge-rpm', Group: 'chassis', Icon: 'gauge', Motion: {Type: 'hinge', Axis: [0, 0, 1], Angle: -240}, Drive: 'rpm', Pace: 8},
+		{ID: 'exhaust', Group: 'chassis', Icon: 'cloud', Motion: {Type: 'emit'}, Effect: 'smoke', Rate: 6, Drive: 'gas'},
+		/* What flies: its control surfaces as its controls go, its propeller as its throttle, its gear up while it flies. */
+		{ID: 'aileron', Group: 'flight', Icon: 'move', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 20}, Drive: 'roll-air', Pace: 0},
+		{ID: 'elevator', Group: 'flight', Icon: 'move', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 20}, Drive: 'pitch', Pace: 0},
+		{ID: 'rudder', Group: 'flight', Icon: 'move', Motion: {Type: 'hinge', Axis: [0, 1, 0], Angle: 25}, Drive: 'yaw', Pace: 0},
+		{ID: 'flap', Group: 'flight', Icon: 'move', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 30}, Drive: 'flaps', Pace: 0.5},
+		{ID: 'propeller', Group: 'flight', Icon: 'refresh', Motion: {Type: 'spin', Axis: [0, 0, 1], Speed: 20}, Drive: 'throttle'},
+		{ID: 'gear-leg', Group: 'flight', Icon: 'chevron-up', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 95}, Drive: 'airborne', Pace: 0.3},
+		/* Arms: a turret and its barrel as they aim (Aim of the object: {Yaw, Pitch} degrees), what recoils when it fires (Fired). */
+		{ID: 'turret', Group: 'weapons', Icon: 'refresh', Motion: {Type: 'hinge', Axis: [0, 1, 0], Angle: 1}, Drive: 'aim-yaw', Pace: 0},
+		{ID: 'barrel', Group: 'weapons', Icon: 'chevron-up', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: -1}, Drive: 'aim-pitch', Pace: 0, Follow: ''},
+		{ID: 'recoil', Group: 'weapons', Icon: 'chevron-down', Motion: {Type: 'slide', Way: [0, 0, -1], Reach: 0.15}, Drive: 'fire', Pace: 0},
+		/* Mechanisms: opened as they are told, or by the wind, the time of day, the throttle. */
+		{ID: 'drawer', Group: 'mechanisms', Icon: 'box', Motion: {Type: 'slide', Way: [0, 0, 1], Reach: 0.4}, Pace: 0.5},
+		{ID: 'lid', Group: 'mechanisms', Icon: 'box', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: -100}, Pace: 0.6},
+		{ID: 'button', Group: 'mechanisms', Icon: 'circle', Motion: {Type: 'slide', Way: [0, 0, -1], Reach: 0.01}, Pace: 0.08},
+		{ID: 'valve', Group: 'mechanisms', Icon: 'refresh', Motion: {Type: 'hinge', Axis: [0, 1, 0], Angle: 720}, Pace: 1.5},
+		{ID: 'turbine', Group: 'mechanisms', Icon: 'refresh', Motion: {Type: 'spin', Axis: [0, 0, 1], Speed: 0.6}, Drive: 'wind'},
+		{ID: 'clock-hour', Group: 'mechanisms', Icon: 'clock', Motion: {Type: 'hinge', Axis: [0, 0, 1], Angle: -360}, Drive: 'clock-hour', Pace: 0},
+		{ID: 'clock-minute', Group: 'mechanisms', Icon: 'clock', Motion: {Type: 'hinge', Axis: [0, 0, 1], Angle: -360}, Drive: 'clock-minute', Pace: 0},
+		{ID: 'radar', Group: 'mechanisms', Icon: 'refresh', Motion: {Type: 'spin', Axis: [0, 1, 0], Speed: 0.25}, Open: 1},
+		{ID: 'boom', Group: 'mechanisms', Icon: 'chevron-up', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: -60}, Pace: 0.15},
+		{ID: 'platform', Group: 'mechanisms', Icon: 'chevron-up', Motion: {Type: 'slide', Way: [0, 1, 0], Reach: 3}, Pace: 0.1},
+		/* Points: where a thing is held (socket), what a part gives off (emitter), a part that stops what comes to it (collider). */
+		{ID: 'socket', Group: 'points', Icon: 'target', Motion: {Type: 'point'}},
+		{ID: 'emitter', Group: 'points', Icon: 'cloud', Motion: {Type: 'emit'}, Effect: 'smoke', Rate: 2},
+		{ID: 'collider', Group: 'points', Icon: 'square', Motion: {Type: 'collider'}}
 	],
 
 	$OnCreate: function () {
@@ -146,7 +187,7 @@ Elemenx.Service('ModelRoles', {
 		var given = props || {};
 		var role = {ID: given.ID || base.ID + '-' + Math.random().toString(36).slice(2, 7), Kind: base.ID, Name: given.Name || '', Parts: [], Both: false, Motion: base.Motion, Open: base.Open || 0};
 
-		['Drive', 'Light', 'Corner', 'Held', 'Pace'].forEach(function (key) {
+		['Drive', 'Light', 'Corner', 'Held', 'Pace', 'Length', 'Effect', 'Rate'].forEach(function (key) {
 			if (base[key] !== undefined)
 				role[key] = base[key];
 		});
@@ -212,7 +253,7 @@ Elemenx.Service('ModelRoles', {
 
 	/* What a Scene takes of the roles: the openings, the lamps and the wheels a vehicle names, each of its parts. */
 	Rig: function (roles) {
-		var rig = {Openings: [], Lamps: [], Wheels: []};
+		var rig = {Openings: [], Lamps: [], Wheels: [], Sockets: [], Emitters: [], Colliders: []};
 
 		(roles || []).forEach(function (role) {
 			var motion = role.Motion || {};
@@ -233,13 +274,36 @@ Elemenx.Service('ModelRoles', {
 				return;
 			}
 
-			if (motion.Type !== 'hinge' && motion.Type !== 'slide' && motion.Type !== 'spin') return;
+			/* Points: a socket where a thing is held, an emitter of an effect, a collider of the outline of its parts. */
+			if (motion.Type === 'point') {
+				rig.Sockets.push({Role: role.ID, Name: role.Name || role.ID, Parts: role.Parts, At: motion.Pivot || null, Axis: motion.Axis || [0, 1, 0]});
+
+				return;
+			}
+
+			if (motion.Type === 'emit') {
+				rig.Emitters.push({Role: role.ID, Parts: role.Parts, At: motion.Pivot || null, Way: motion.Way || [0, 1, 0], Effect: role.Effect || 'smoke', Rate: Number(role.Rate) || 2, Drive: role.Drive || ''});
+
+				return;
+			}
+
+			if (motion.Type === 'collider') {
+				rig.Colliders.push({Role: role.ID, Parts: role.Parts});
+
+				return;
+			}
+
+			if (motion.Type !== 'hinge' && motion.Type !== 'slide' && motion.Type !== 'spin' && motion.Type !== 'stretch') return;
 
 			opening = {Name: name, Role: role.ID, Parts: role.Parts, Both: !!role.Both, Open: Number(role.Open) || 0};
 
 			if (motion.Type === 'slide') {
 				opening.Way = motion.Way || [0, -1, 0];
 				opening.Reach = motion.Reach === undefined ? 1 : Number(motion.Reach);
+			}
+			else if (motion.Type === 'stretch') {
+				/* A shock: it grows along Way from its Pivot (its mount) as its wheel hangs lower. */
+				opening.Stretch = {Pivot: motion.Pivot || [0, 0, 0], Way: motion.Way || [0, -1, 0]};
 			}
 			else {
 				opening.Hinge = motion.Pivot || [0, 0, 0];
@@ -255,7 +319,7 @@ Elemenx.Service('ModelRoles', {
 					opening.Spin = motion.Speed === undefined ? 1 : Number(motion.Speed);
 			}
 
-			['Drive', 'Sign', 'Pace'].forEach(function (key) {
+			['Drive', 'Sign', 'Pace', 'Corner', 'Length'].forEach(function (key) {
 				if (role[key] !== undefined && role[key] !== '')
 					opening[key] = role[key];
 			});

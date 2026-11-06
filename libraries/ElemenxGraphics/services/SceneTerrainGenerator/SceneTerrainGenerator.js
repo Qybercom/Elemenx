@@ -67,7 +67,7 @@
 Elemenx.Service('SceneTerrainGenerator', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['Flat(options)', 'Border(options)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'SketchChanged(before, after)', 'Source(names)']
+		Methods: ['Flat(options)', 'Border(options)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['terrain']}},
@@ -641,6 +641,14 @@ Elemenx.Service('SceneTerrainGenerator', {
 			};
 		}
 
+		/* What its ground is made of (SceneMaterials): up to 8 materials of its palettes and its sketch, by their slots. */
+		field.Materials = this.MaterialsOf(field);
+		field.MaterialSlot = {};
+
+		field.Materials.forEach(function (name, index) {
+			field.MaterialSlot[name] = index;
+		});
+
 		/* What is cut out of it and juts out of it (Carves): its volume over its heights. */
 		field.Volume = this.Volume(settings, field);
 
@@ -1188,18 +1196,18 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * The colors of the ground of a flat map: sand by the sea, grass, rock on the slopes, rock and snow on the heights
 	 * where its Rock and Snow begin (none on a field that has none).
 	 */
-	Paint: function (field, x, z, y, slope) {
+	Paint: function (field, x, z, y, slope, into) {
 		var self = this;
 		var look = field.Sketch ? field.Sketch.Look(x, z) : null;
 		var lands = !(look && look.Palette) && field.Biomes ? field.Biome(x, z) : null;
 		var color = [0, 0, 0];
 
 		if (!lands || lands.List.length === 1)
-			return this.Painted(field, x, z, y, slope, look, look && look.Palette || (lands ? lands.List[0].Ground : field.Palette) || {});
+			return this.Painted(field, x, z, y, slope, look, look && look.Palette || (lands ? lands.List[0].Ground : field.Palette) || {}, into, 1);
 
 		/* Where lands meet, their colors in their parts. */
 		lands.List.forEach(function (land) {
-			var made = self.Painted(field, x, z, y, slope, look, land.Ground || {});
+			var made = self.Painted(field, x, z, y, slope, look, land.Ground || {}, into, land.Weight);
 
 			color[0] += made[0] * land.Weight;
 			color[1] += made[1] * land.Weight;
@@ -1209,9 +1217,14 @@ Elemenx.Service('SceneTerrainGenerator', {
 		return color;
 	},
 
-	/* The colors of a point of a flat map of a palette (Paint). */
-	Painted: function (field, x, z, y, slope, look, palette) {
+	/*
+	 * The colors of a point of a flat map of a palette (Paint); into (8 numbers): the weight of each material of the field
+	 * there (its slots, field.Materials), weight: how much of the point this palette is.
+	 */
+	Painted: function (field, x, z, y, slope, look, palette, into, weight) {
 		var top = Math.max(1, field.Top);
+		var own = palette.Materials || {};
+		var made = [];
 		var rock = field.Rock === undefined ? top * 0.45 : field.Rock;
 		var snow = field.Snow === undefined ? top * 0.75 : field.Snow;
 		var part = Math.min(1, y / (isFinite(rock) ? rock : top));
@@ -1230,18 +1243,98 @@ Elemenx.Service('SceneTerrainGenerator', {
 		else if (y < snow) color = palette.Rock || [0.45, 0.42, 0.36];
 		else color = palette.Snow || [0.93, 0.94, 0.96];
 
-		if (slope > 0.32 && y > 1.2)
-			color = palette.Rock || [0.42, 0.39, 0.35];
+		/* What it is made of, as its color goes. */
+		if (into) {
+			if (y < -0.5) made = [[own.Deep || this.GroundMaterials.Deep, 1]];
+			else if (y < 1.2) made = [[own.Sand || this.GroundMaterials.Sand, 1]];
+			else if (y < rock && y < snow) made = [[own.Low || this.GroundMaterials.Low, 1 - part], [own.High || this.GroundMaterials.High, part]];
+			else if (y < snow) made = [[own.Rock || this.GroundMaterials.Rock, 1]];
+			else made = [[own.Snow || this.GroundMaterials.Snow, 1]];
+		}
 
-		if (field.Roads && this.OnRoad(field, x, z, 1.8))
+		if (slope > 0.32 && y > 1.2) {
+			color = palette.Rock || [0.42, 0.39, 0.35];
+			made = [[own.Rock || this.GroundMaterials.Rock, 1]];
+		}
+
+		if (field.Roads && this.OnRoad(field, x, z, 1.8)) {
 			color = palette.Road || [0.5, 0.42, 0.32];
+			made = [[own.Road || this.GroundMaterials.Road, 1]];
+		}
 
 		/* What a sketch lays there: a road, a beach, the bed of a river. */
-		if (look && look.Color)
+		if (look && look.Color) {
 			color = [color[0] + (look.Color[0] - color[0]) * look.Tint, color[1] + (look.Color[1] - color[1]) * look.Tint, color[2] + (look.Color[2] - color[2]) * look.Tint];
+
+			if (look.Material)
+				made = made.map(function (one) {
+					return [one[0], one[1] * (1 - look.Tint)];
+				}).concat([[look.Material, look.Tint]]);
+		}
+
+		if (into && field.MaterialSlot) {
+			made.forEach(function (one) {
+				var slot = field.MaterialSlot[one[0]];
+				if (slot !== undefined)
+					into[slot] += one[1] * weight;
+			});
+		}
 
 		return color;
 	},
+
+	/* What each part of a palette is made of, unless its Materials say otherwise (SceneMaterials). */
+	GroundMaterials: {Sand: 'sand', Deep: 'sand', Low: 'lawn', High: 'soil', Rock: 'rock', Snow: 'snow', Road: 'dirt'},
+
+	/* What each item of a sketch lays on the ground, unless its Material says otherwise. */
+	LookMaterials: {road: 'dirt', street: 'paving', square: 'paving', river: 'gravel', beach: 'sand', swamp: 'clay', floodplain: 'soil', canyon: 'rock', cliff: 'rock', crater: 'rock', dunes: 'sand'},
+
+	/*
+	 * The materials a field is made of: those of its palettes (its own, of its lands, of the biomes of its sketch) and of
+	 * the items of its sketch, the first 8 (the slots of the shader of its ground).
+	 */
+	MaterialsOf: function (field) {
+		var self = this;
+		var names = [];
+		var palettes = field.Biomes && field.Biomes.length ? field.Biomes.map(function (land) {
+			return land.Ground;
+		}) : [field.Palette];
+
+		function add (name) {
+			if (name && names.indexOf(name) === -1 && names.length < 8)
+				names.push(name);
+		}
+
+		function parts (list) {
+			palettes.forEach(function (one) {
+				var own = one && one.Materials || {};
+
+				list.forEach(function (part) {
+					add(own[part] || self.GroundMaterials[part]);
+				});
+			});
+		}
+
+		/* What most of it is first, then what its sketch lays, then snow and the bed of the sea. */
+		parts(['Low', 'High', 'Rock', 'Sand', 'Road']);
+
+		((field.Options.Sketch || {}).Layers || []).forEach(function (layer) {
+			(layer.Items || []).forEach(function (item) {
+				if (item.Type === 'biome' && item.Palette) {
+					palettes.push(item.Palette);
+
+					return;
+				}
+
+				add(item.Material || self.LookMaterials[item.Type]);
+			});
+		});
+
+		parts(['Low', 'High', 'Rock', 'Sand', 'Road', 'Snow', 'Deep']);
+
+		return names;
+	},
+
 
 	/* Whether a point is within a distance of a road of a field. */
 	OnRoad: function (field, x, z, width) {
@@ -1625,7 +1718,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var high = -Infinity;
 		var side = n + 3;
 		var columns = [];
-		var geometry = {Positions: [], Normals: [], UVs: [], Colors: [], Indices: []};
+		var geometry = {Positions: [], Normals: [], UVs: [], Colors: [], Materials: [], Indices: []};
 		var range;
 		var y0;
 		var layers;
@@ -1744,14 +1837,15 @@ Elemenx.Service('SceneTerrainGenerator', {
 					var length = Math.sqrt(gx * gx + gy * gy + gz * gz) || 1;
 					var normal = [-gx / length, -gy / length, -gz / length];
 					var top = field.Height(px, pz);
+					var stuff = [0, 0, 0, 0, 0, 0, 0, 0];
 					var color;
 
 					/* The ground under the sky has its colors; what is under it or juts out, rock, darker the deeper. */
 					if (normal[1] > 0.3 && Math.abs(py - top) < step * 1.5) {
-						color = self.Paint(field, px, pz, py, 1 - normal[1]);
+						color = self.Paint(field, px, pz, py, 1 - normal[1], stuff);
 					}
 					else {
-						color = self.Paint(field, px, pz, Math.max(py, 2), 1);
+						color = self.Paint(field, px, pz, Math.max(py, 2), 1, stuff);
 						color = color.map(function (part) {
 							return part * Math.max(0.55, 1 - Math.max(0, top - py) / 60);
 						});
@@ -1763,6 +1857,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 					geometry.Normals.push(normal[0], normal[1], normal[2]);
 					geometry.UVs.push(py, open(i, j, k));
 					geometry.Colors.push(color[0], color[1], color[2]);
+					geometry.Materials.push.apply(geometry.Materials, stuff);
 				}
 			}
 		}
@@ -1822,13 +1917,15 @@ Elemenx.Service('SceneTerrainGenerator', {
 			var z = z0 + point[1] * step;
 			var top = columns[(point[1] + 1) * side + (point[0] + 1)][0];
 			var plain = volume.Density(x, top - step * 0.5, z) > 0 && volume.Density(x, top + step * 0.5, z) <= 0;
-			var color = self.Paint(field, x, z, top, 0);
+			var stuff = [0, 0, 0, 0, 0, 0, 0, 0];
+			var color = self.Paint(field, x, z, top, 0, stuff);
 			var index = geometry.Positions.length / 3;
 
 			geometry.Positions.push(x - cx, top, z - cz, x - cx, top - step * 2, z - cz);
 			geometry.Normals.push(0, 1, 0, 0, 1, 0);
 			geometry.UVs.push(top, 1, top, 1);
 			geometry.Colors.push(color[0], color[1], color[2], color[0] * 0.8, color[1] * 0.8, color[2] * 0.8);
+			geometry.Materials.push.apply(geometry.Materials, stuff.concat(stuff));
 
 			return {Index: index, Plain: plain, Top: top};
 		});
@@ -1849,7 +1946,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	Mesh: function (field, cx, cz, extent, resolution) {
-		var geometry = {Positions: [], Normals: [], UVs: [], Colors: [], Indices: []};
+		var geometry = {Positions: [], Normals: [], UVs: [], Colors: [], Materials: [], Indices: []};
 		var side = resolution + 1;
 		var step = extent / resolution;
 		var row;
@@ -1859,6 +1956,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var y;
 		var normal;
 		var color;
+		var stuff;
 		var a;
 		var base;
 		var edges;
@@ -1869,13 +1967,15 @@ Elemenx.Service('SceneTerrainGenerator', {
 				z = cz - extent / 2 + row * step;
 				y = field.Height(x, z);
 				normal = field.Normal(x, z);
-				color = this.Paint(field, x, z, y, 1 - normal[1]);
+				stuff = [0, 0, 0, 0, 0, 0, 0, 0];
+				color = this.Paint(field, x, z, y, 1 - normal[1], stuff);
 
 				geometry.Positions.push(x - cx, y, z - cz);
 				geometry.Normals.push(normal[0], normal[1], normal[2]);
 				/* Its height, and how much of the sky it sees: all of it, over a ground of heights. */
 				geometry.UVs.push(y, 1);
 				geometry.Colors.push(color[0], color[1], color[2]);
+				geometry.Materials.push(stuff[0], stuff[1], stuff[2], stuff[3], stuff[4], stuff[5], stuff[6], stuff[7]);
 			}
 		}
 
@@ -1908,6 +2008,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 			geometry.Normals.push(geometry.Normals[index * 3], geometry.Normals[index * 3 + 1], geometry.Normals[index * 3 + 2]);
 			geometry.UVs.push(geometry.UVs[index * 2], geometry.UVs[index * 2 + 1]);
 			geometry.Colors.push(geometry.Colors[index * 3] * 0.8, geometry.Colors[index * 3 + 1] * 0.8, geometry.Colors[index * 3 + 2] * 0.8);
+			geometry.Materials.push.apply(geometry.Materials, geometry.Materials.slice(index * 8, index * 8 + 8));
 		});
 
 		edges.forEach(function (index, at) {
@@ -1919,6 +2020,182 @@ Elemenx.Service('SceneTerrainGenerator', {
 		});
 
 		return geometry;
+	},
+
+	/*
+	 * The way of a road over a field from [x, z] to [x, z]: A* over points Step apart (a 64th of the field), what climbs
+	 * costing more the steeper (a grade over MaxGrade, 0.12, far more), over water Bridge times as much (6), within the
+	 * field; then fewer points, each kept where the way bends from the straight line by more than half a step. [[x, z]...],
+	 * or null where it cannot go.
+	 */
+	RoadWay: function (field, from, to, options) {
+		var settings = options || {};
+		var step = Number(settings.Step) || Math.max(8, field.Size / 64);
+		var steep = Number(settings.MaxGrade) || 0.12;
+		var bridge = Number(settings.Bridge) || 6;
+		var half = field.Size / 2;
+		var reach = Math.floor(half / step);
+		var start = [Math.round(from[0] / step), Math.round(from[1] / step)];
+		var goal = [Math.round(to[0] / step), Math.round(to[1] / step)];
+		var heap = [];
+		var cost = {};
+		var came = {};
+		var closed = {};
+		var heights = {};
+		var visited = 0;
+		var neighbours = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+		var current = null;
+		var path = [];
+		var kept;
+		var i;
+
+		function key (x, z) {
+			return x + ':' + z;
+		}
+
+		function height (x, z) {
+			var id = key(x, z);
+			if (heights[id] === undefined)
+				heights[id] = field.Height(x * step, z * step);
+
+			return heights[id];
+		}
+
+		function push (node) {
+			var at = heap.push(node) - 1;
+
+			while (at > 0) {
+				var up = (at - 1) >> 1;
+				if (heap[up].F <= heap[at].F) break;
+
+				var swap = heap[up];
+
+				heap[up] = heap[at];
+				heap[at] = swap;
+				at = up;
+			}
+		}
+
+		function pop () {
+			var top = heap[0];
+			var last = heap.pop();
+			var at = 0;
+
+			if (heap.length) {
+				heap[0] = last;
+
+				for (;;) {
+					var left = at * 2 + 1;
+					var right = left + 1;
+					var least = at;
+					if (left < heap.length && heap[left].F < heap[least].F)
+						least = left;
+
+					if (right < heap.length && heap[right].F < heap[least].F)
+						least = right;
+
+					if (least === at) break;
+
+					var swap = heap[least];
+
+					heap[least] = heap[at];
+					heap[at] = swap;
+					at = least;
+				}
+			}
+
+			return top;
+		}
+
+		function guess (x, z) {
+			return Math.hypot(x - goal[0], z - goal[1]) * step;
+		}
+
+		start = [Math.max(-reach, Math.min(reach, start[0])), Math.max(-reach, Math.min(reach, start[1]))];
+		goal = [Math.max(-reach, Math.min(reach, goal[0])), Math.max(-reach, Math.min(reach, goal[1]))];
+		cost[key(start[0], start[1])] = 0;
+
+		push({X: start[0], Z: start[1], F: guess(start[0], start[1])});
+
+		while (heap.length && visited < 60000) {
+			current = pop();
+
+			if (closed[key(current.X, current.Z)]) continue;
+
+			closed[key(current.X, current.Z)] = true;
+			visited++;
+
+			if (current.X === goal[0] && current.Z === goal[1]) break;
+
+			neighbours.forEach(function (offset) {
+				var x = current.X + offset[0];
+				var z = current.Z + offset[1];
+				var id = key(x, z);
+				var length = (offset[0] && offset[1] ? Math.SQRT2 : 1) * step;
+				var a;
+				var b;
+				var grade;
+				var price;
+
+				if (closed[id] || Math.abs(x) > reach || Math.abs(z) > reach) return;
+
+				a = height(current.X, current.Z);
+				b = height(x, z);
+				grade = Math.abs(b - a) / length;
+				price = length * (1 + 25 * grade * grade + (grade > steep ? Math.pow(grade / steep, 4) * 4 : 0)) * (b < 0 || a < 0 ? bridge : 1);
+				price += cost[key(current.X, current.Z)];
+
+				if (cost[id] !== undefined && cost[id] <= price) return;
+
+				cost[id] = price;
+				came[id] = current;
+
+				push({X: x, Z: z, F: price + guess(x, z)});
+			});
+		}
+
+		if (!current || current.X !== goal[0] || current.Z !== goal[1]) return null;
+
+		while (current) {
+			path.unshift([current.X * step, current.Z * step]);
+
+			current = came[key(current.X, current.Z)];
+		}
+
+		path[0] = [from[0], from[1]];
+		path[path.length - 1] = [to[0], to[1]];
+
+		/* Fewer points: from each, the farthest the way goes to near the straight line to it. */
+		function near (a, b) {
+			var dx = path[b][0] - path[a][0];
+			var dz = path[b][1] - path[a][1];
+			var length = Math.hypot(dx, dz) || 1;
+			var k;
+
+			for (k = a + 1; k < b; k++) {
+				if (Math.abs((path[k][0] - path[a][0]) * dz - (path[k][1] - path[a][1]) * dx) / length > step * 0.5) return false;
+			}
+
+			return true;
+		}
+
+		kept = [path[0]];
+		i = 0;
+
+		while (i < path.length - 1) {
+			var far = path.length - 1;
+
+			while (far > i + 1 && !near(i, far))
+				far--;
+
+			kept.push(path[far]);
+
+			i = far;
+		}
+
+		return kept.map(function (point) {
+			return [Math.round(point[0] * 10) / 10, Math.round(point[1] * 10) / 10];
+		});
 	},
 
 	/*
@@ -2278,7 +2555,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan']});
+		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf', 'HighwaysOf', 'TownsOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'GroundMaterials', 'LookMaterials', 'MaterialsOf', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan']});
 	},
 
 	/*
@@ -2737,6 +3014,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 						look = look || {};
 						look.Color = item.Color || looks[item.Type];
 						look.Tint = Math.min(1, w * (item.Type === 'road' || item.Type === 'river' ? 1 : 0.85));
+						look.Material = item.Material || self.LookMaterials[item.Type] || '';
 					}
 				}
 
@@ -2755,18 +3033,18 @@ Elemenx.Service('SceneTerrainGenerator', {
 		row: 'line', fence: 'line', hedge: 'line', wall: 'line', powerline: 'line',
 		marker: 'circle',
 		settlement: 'area', street: 'line', square: 'area', district: 'area', citywall: 'line', landmark: 'circle',
-		trigger: 'area', triggerpoint: 'circle', triggerline: 'line', zone: 'area'
+		trigger: 'area', triggerpoint: 'circle', triggerline: 'line', zone: 'area', collider: 'area'
 	},
 
 	/* The size of a building of each class, its Width and Depth in metres: what a settlement lays out, and Buildings makes. */
-	SettlementSizes: {shack: [3.5, 3], cabin: [5, 4], cottage: [7, 6], house: [9, 8], villa: [16, 12], townhouse: [6, 10], shop: [10, 10], warehouse: [30, 20], factory: [40, 28], apartments: [24, 14], office: [30, 24], tower: [26, 26], skyscraper: [34, 34], business: [40, 32]},
+	SettlementSizes: {shack: [3.5, 3], cabin: [5, 4], cottage: [7, 6], house: [9, 8], villa: [16, 12], townhouse: [6, 10], shop: [10, 10], warehouse: [30, 20], factory: [40, 28], apartments: [24, 14], office: [30, 24], tower: [26, 26], skyscraper: [34, 34], business: [40, 32], school: [40, 30], church: [12, 32], station: [46, 28], fuel: [22, 20], hangar: [30, 40], garage: [6, 7], barn: [14, 22], watertower: [9, 9], parking: [40, 32]},
 
 	/* What each kind of settlement is: the step of its streets, their width, a grid of them or a main one, its buildings. */
 	SettlementKinds: {
 		hamlet: {Block: 50, Street: 5, Grid: false, Classes: {shack: 2, cabin: 3, cottage: 2}},
-		village: {Block: 45, Street: 6, Grid: false, Classes: {cottage: 4, house: 3, cabin: 1, shop: 1}},
-		town: {Block: 60, Street: 8, Grid: true, Classes: {townhouse: 4, house: 2, shop: 2, apartments: 1}},
-		city: {Block: 80, Street: 12, Grid: true, Classes: {apartments: 4, office: 3, shop: 1, townhouse: 1}, Core: {tower: 2, skyscraper: 1, business: 1}},
+		village: {Block: 45, Street: 6, Grid: false, Classes: {cottage: 4, house: 3, cabin: 1, shop: 1, barn: 0.6, garage: 0.4, church: 0.1}},
+		town: {Block: 60, Street: 8, Grid: true, Classes: {townhouse: 4, house: 2, shop: 2, apartments: 1, school: 0.2, church: 0.15, fuel: 0.2, garage: 0.3}},
+		city: {Block: 80, Street: 12, Grid: true, Classes: {apartments: 4, office: 3, shop: 1, townhouse: 1, school: 0.2, parking: 0.3, fuel: 0.15, church: 0.1}, Core: {tower: 2, skyscraper: 1, business: 1}},
 		fort: {Block: 55, Street: 7, Grid: true, Walls: true, Classes: {house: 3, townhouse: 2, shop: 1}}
 	},
 
@@ -2777,7 +3055,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 		craft: {house: 2, warehouse: 1, shop: 1},
 		noble: {villa: 4},
 		business: {office: 3, tower: 2, business: 1, skyscraper: 1},
-		industry: {warehouse: 3, factory: 2},
+		industry: {warehouse: 3, factory: 2, hangar: 1, watertower: 0.3},
+		civic: {school: 2, church: 1, station: 1},
+		service: {fuel: 2, garage: 2, parking: 1},
+		farm: {barn: 3, watertower: 0.5, cottage: 1},
 		fields: {}
 	},
 
@@ -2958,6 +3239,11 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var squares = others.filter(function (other) {
 			return other.Type === 'square' && other.Points && other.Points.length > 2;
 		});
+
+		/* The other ways of the sketch through it (roads, streets not its own, rivers, railways): no lot stands on them. */
+		var ways = others.filter(function (other) {
+			return other !== item && (other.Type === 'road' || other.Type === 'street' || other.Type === 'river' || other.Type === 'railway' || other.Type === 'canyon') && other.Points && other.Points.length > 1;
+		});
 		var districts = others.filter(function (other) {
 			return other.Type === 'district' && other.Points && other.Points.length > 2;
 		});
@@ -3041,6 +3327,13 @@ Elemenx.Service('SceneTerrainGenerator', {
 							return distance(other.Points, x, z) > other.Width / 2 + Math.min(size[0], size[1]) / 2;
 						}) && plan.Lots.every(function (lot) {
 							return Math.hypot(lot.X - x, lot.Z - z) > (Math.max(lot.Width, lot.Depth) + Math.max(size[0], size[1])) * 0.42;
+						}) && ways.every(function (other) {
+							var room = (Number(other.Width) || 6) / 2 + (Number(other.Shoulder) || 1.5);
+
+							/* Its middle, its corners and the middles of its sides all off the way. */
+							return [[0, 0], [-1, -1], [1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [-1, 0], [1, 0]].every(function (corner) {
+								return distance(other.Points, x + unit[0] * corner[0] * size[0] / 2 + normal[0] * corner[1] * size[1] / 2, z + unit[1] * corner[0] * size[0] / 2 + normal[1] * corner[1] * size[1] / 2) > room;
+							});
 						});
 
 						/* No room for it: a few metres on, maybe a smaller one fits there. */
@@ -3090,7 +3383,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * The items of a sketch that place things (the Scatter of a Scene sows them) and change no height: a trigger and a zone
 	 * of the game are objects of the scene.
 	 */
-	SketchPlaced: {forest: true, meadow: true, clearing: true, bushes: true, thicket: true, jungle: true, sequoia: true, fields: true, orchard: true, row: true, fence: true, hedge: true, wall: true, powerline: true, marker: true, district: true, citywall: true, landmark: true, trigger: true, triggerpoint: true, triggerline: true, zone: true},
+	SketchPlaced: {forest: true, meadow: true, clearing: true, bushes: true, thicket: true, jungle: true, sequoia: true, fields: true, orchard: true, row: true, fence: true, hedge: true, wall: true, powerline: true, marker: true, district: true, citywall: true, landmark: true, trigger: true, triggerpoint: true, triggerline: true, zone: true, collider: true},
 
 	/*
 	 * Where two sketches differ, for a ground to make again only there: the bounds [x0, z0, x1, z1] of each item one has and
@@ -3201,7 +3494,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var made;
 
 		function typed (geometry) {
-			return {Positions: new Float32Array(geometry.Positions), Normals: new Float32Array(geometry.Normals), UVs: new Float32Array(geometry.UVs), Colors: new Float32Array(geometry.Colors || []), Indices: new Uint32Array(geometry.Indices)};
+			return {Positions: new Float32Array(geometry.Positions), Normals: new Float32Array(geometry.Normals), UVs: new Float32Array(geometry.UVs), Colors: new Float32Array(geometry.Colors || []), Materials: new Float32Array(geometry.Materials || []), Indices: new Uint32Array(geometry.Indices)};
 		}
 
 		if (shape === 'Sphere') {

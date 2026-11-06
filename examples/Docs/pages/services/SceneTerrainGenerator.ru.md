@@ -16,6 +16,12 @@ Border(options) — контур локации на её земле и то, ч
 
 Site({Options, Latitude, Longitude, Turn}) — место планеты ScenePlanet как плоская земля: плоскость, касающаяся планеты в этом месте (X на восток, Z на юг, повёрнутые на Turn). Elevation(x, z) — высота планеты там (метры, уровень моря 0), Sample(x, z) — всё, что планета говорит о точке, Direction(x, z) — направление, Local(direction) — обратно, точка места, в которую приходит направление: этим сшиваются два соседних места, одна и та же точка планеты в обоих.
 
+Материалы земли (SceneMaterials). Поле получает Materials — до 8 материалов своих палитр и эскиза (слоты шейдера земли) — и MaterialSlot (имя → слот). Каждая часть палитры (Sand, Low, High, Rock, Snow, Deep, Road) берёт материал из Materials палитры, иначе из GroundMaterials; элемент эскиза берёт свой Material, иначе материал по типу (LookMaterials). Paint(field, x, z, y, slope, into) при into (8 чисел) прибавляет вес каждого материала в точке так же, как смешиваются цвета. Куски земли (Chunk, Piece) несут Materials — 8 весов на вершину, юбка тоже.
+
+RoadWay(field, from, to, options) — путь дороги по полю от [x, z] до [x, z]: A* по точкам шагом Step (1/64 поля). Подъём тем дороже, чем круче, а уклон больше MaxGrade (0.12) — намного дороже; над водой в Bridge раз (6). Затем лишние точки убираются: остаются только те, где путь отходит от прямой больше чем на полшага. Результат — [[x, z]...] или null. План поселения (SettlementPlan) не ставит участки на чужие дороги, улицы, реки, железные дороги и каньоны эскиза: середина, углы и середины сторон участка должны быть дальше половины ширины пути плюс обочины.
+
+Здания поселений. В деревне иногда встречаются амбар, гараж и церковь; в посёлке — школа, церковь, заправка и гаражи; в городе — школа, многоэтажная парковка, заправка и церковь. Новые кварталы: civic (школа, церковь, вокзал), service (заправка, гаражи, парковка), farm (амбары, водонапорная башня, коттедж). В industry добавлены ангары и водонапорные башни. SettlementSizes знает размеры всех классов SceneBuildingGenerator.
+
 ## Методы
 
 - `Relief(settings)`
@@ -62,6 +68,7 @@ Site({Options, Latitude, Longitude, Turn}) — место планеты ScenePl
 ## Тесты
 
 - [gives its ground to land on as the Sphere of SceneTerrainGenerator does: its heights, squares with its colors, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L176) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [makes the buildings of a town of their own shapes, each as tall as its Size, its wings within its width and depth](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/buildings.test.js#L118) — `tests/regression/buildings.test.js`
 - [draws a material of a recipe by its Blueprint, its parameters uniforms that change it without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L72) — `tests/regression/library-material-blueprints.test.js`
 - [draws a ground by its Blueprint, the color of its parameter, and keeps the very same ground as its look changes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L198) — `tests/regression/library-material-blueprints.test.js`
 - [takes a ground from a model: floors one over the other, walls that stop a walker, and a plane at its foot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1475) — `tests/regression/library-scene.test.js`
@@ -72,6 +79,5 @@ Site({Options, Latitude, Longitude, Turn}) — место планеты ScenePl
 - [looks from what it follows to where it looks by degrees, so a raised eye makes no leap under the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6838) — `tests/regression/library-scene.test.js`
 - [leaves a hero where it stands when the scene changes round it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6973) — `tests/regression/library-scene.test.js`
 - [takes a short drop for no jump, though the body leaves the ground](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7025) — `tests/regression/library-scene.test.js`
-- [takes no seam of a map for a jump, and still falls and jumps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7142) — `tests/regression/library-scene.test.js`
 
-+31 ещё в тех же файлах
++33 ещё в тех же файлах

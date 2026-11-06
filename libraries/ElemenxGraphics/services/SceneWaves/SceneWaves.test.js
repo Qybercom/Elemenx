@@ -149,6 +149,15 @@ describe('Contract: SceneWaves, the waves of a sea, and the sea of a Scene', fun
 		var now = performance.now() + 100;
 		var i;
 
+		/* The ground is made in a worker: under load it comes later than the scene. */
+		await waitFor(function () {
+			inner.Rest = 0;
+
+			engine.Frame(now += 33);
+
+			return inner.Ground && inner.Ground.Field;
+		}, 20000);
+
 		renderer.Draw = function (mesh, program, uniforms) {
 			if (uniforms && uniforms.uUnder !== undefined)
 				under.push(uniforms.uUnder);
@@ -205,7 +214,7 @@ describe('Contract: SceneWaves, the waves of a sea, and the sea of a Scene', fun
 		finally {
 			renderer.Draw = draw;
 		}
-	});
+	}, 40000);
 
 	it('mirrors the sea by its level at high quality only', async function () {
 		var scene = await mount('medium');

@@ -1,6 +1,79 @@
 {
 	"Components": [
 		{
+			"Name": "GameCombat",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "heart",
+			"Description": "The health of what a game of a Scene can hurt, declared inside it: damage of the hits of its weapons, deaths, bars, a host and its clients.",
+			"Props": [
+				{
+					"Name": "Bars",
+					"Type": "select",
+					"Default": "hurt",
+					"Options": [
+						"hurt",
+						"always",
+						"never"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The bars of health over what has it: only the hurt, always or never."
+				},
+				{
+					"Name": "FriendlyFire",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A hit of a Team on its own counts."
+				},
+				{
+					"Name": "Authority",
+					"Type": "select",
+					"Default": "local",
+					"Options": [
+						"local",
+						"host",
+						"client"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Who applies the changes: here (local), here and sent out (host), or the host, asked (client)."
+				},
+				{
+					"Name": "Send",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The transport of the application: a function given each message for the host or the clients."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"damage",
+				"heal",
+				"death",
+				"revive",
+				"health"
+			],
+			"EventDescriptions": {
+				"damage": "Something took damage: {ID, Change, Amount, Value, Max, Hit, Source}.",
+				"heal": "Something was healed: {ID, Change, Amount, Value, Max, Source}.",
+				"death": "Something has no health left: {ID, By, Hit}.",
+				"revive": "Something came back: {ID, Value}.",
+				"health": "A health changed: {ID, Value, Max}."
+			},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
 			"Name": "GameRace",
 			"Kind": "Component",
 			"Group": "game",
@@ -160,7 +233,27 @@
 			"Sample": {}
 		}
 	],
-	"Services": [],
+	"Services": [
+		{
+			"Name": "Vitals",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The health of what a game can hurt, as data with one way in: damage and heal through rules, events, a host and its clients.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Make(options)",
+				"Of(scene)"
+			],
+			"Sample": {}
+		}
+	],
 	"Directives": [],
 	"Classes": {}
 }

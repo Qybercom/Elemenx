@@ -35,5 +35,7 @@
 
 		<fileNamePatternMapping patterns="*.html;*.htm" serverId="elemenx" languageId="html" />
 		<fileNamePatternMapping patterns="*.js;*.mjs" serverId="elemenx" languageId="javascript" />
+		<!-- GLSL: the words of the language completed in its files (the server knows them). -->
+		<fileNamePatternMapping patterns="*.glsl;*.vert;*.frag" serverId="elemenx" languageId="glsl" />
 	</extensions>
 </idea-plugin>

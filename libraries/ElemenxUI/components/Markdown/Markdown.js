@@ -8,6 +8,11 @@
  * an elemenx-divider. Without Value the text is the body of the element (<Markdown>## A title</Markdown>), without the
  * indentation its lines share: the body follows its changes. The plugins of the RichText Service draw what Markdown
  * has no element for: ```mermaid a Diagram, ```chart a Chart, ::: warning a callout... (RichText.Extend adds more).
+ *
+ * The items of a list that start with [ ] or [x] (- [ ] buy milk) are tasks, a box of each: Tasks 'readonly' (the default)
+ * shows them, 'editable' lets them be ticked. TaskCheck (a function of the item {Index, Checked, Text}, true or false)
+ * says whether this one may be (only the owner of a list, only an admin...): false keeps it as it was and tells
+ * taskdenied. A tick writes [x] or [ ] into the text, and tells task ({Index, Checked, Text, Value}) and change ({Value}).
  */
 Elemenx.Component('Markdown', {
 	$TemplateURL: 'Markdown.html',
@@ -20,13 +25,22 @@ Elemenx.Component('Markdown', {
 			Value: {Body: true, Description: 'The text in Markdown; without it, the body of the element.'},
 			Highlight: 'Highlights the code of the fences that name their language.',
 			Look: {Options: ['document', 'interface'], Description: 'document (as a RichEditor) or interface (the classes of the Library).'},
+			Tasks: {Options: ['readonly', 'editable'], Description: 'The boxes of the tasks of the text (- [ ] and - [x]): only shown, or ticked by the reader.'},
+			TaskCheck: 'A function of a task {Index, Checked, Text}: false keeps it as it was (who may tick which).',
 			Label: 'The name of the document for screen readers.'
+		},
+		Events: {
+			task: 'A task was ticked or unticked: {Index, Checked, Text, Value (the text with it)}.',
+			taskdenied: 'A tick that TaskCheck refused: {Index, Checked, Text}.',
+			change: 'The text changed by a tick: {Value}.'
 		},
 		Sample: {Value: '## A title\n\nSome **bold** and *italic* text, and a [link](https://example.com).\n\n- One\n- Two'}
 	},
 	Value: '',
 	Highlight: true,
 	Look: 'document',
+	Tasks: 'readonly',
+	TaskCheck: null,
 	Label: '',
 	Body: '',
 
@@ -88,7 +102,90 @@ Elemenx.Component('Markdown', {
 		/* The classes of the interface of the Library on the elements of a document (Look 'interface'). */
 		var looks = {table: 'elemenx-table', ul: 'elemenx-ul', ol: 'elemenx-ol', blockquote: 'elemenx-callout neutral', a: 'elemenx-link', pre: 'elemenx-code', 'code:not(pre code)': 'elemenx-code', hr: 'elemenx-divider'};
 
-		this.Rendered = function (value, highlight, look) {
+		/* The marks of the tasks of a text, in their order: [ ] or [x] at the start of an item of a list. */
+		var marks = /^(\s*(?:[-*+]|\d+[.)])\s+\[)( |x|X)(\])/gm;
+
+		/* A task ticked: its mark in the text, the new text kept and told. */
+		function tick (index, checked) {
+			var text = String(self.Value || self.Body || '');
+			var seen = -1;
+			var made = text.replace(marks, function (all, before, mark, after) {
+				seen++;
+
+				return seen === index ? before + (checked ? 'x' : ' ') + after : all;
+			});
+
+			if (self.Value) self.Value = made;
+			else self.Body = made;
+
+			return made;
+		}
+
+		/* The items that are tasks: a box in place of the mark, ticked or not, enabled when they may be ticked. */
+		function tasks (container, editable) {
+			var index = 0;
+
+			Array.prototype.forEach.call(container.querySelectorAll('li'), function (item) {
+				var first = item.firstChild;
+				var match;
+				var box;
+
+				while (first && first.nodeType === 1 && first.tagName === 'P')
+					first = first.firstChild;
+
+				match = first && first.nodeType === 3 ? /^\s*\[( |x|X)\]\s?/.exec(first.nodeValue) : null;
+
+				if (!match) return;
+
+				first.nodeValue = first.nodeValue.slice(match[0].length);
+				box = document.createElement('input');
+				box.type = 'checkbox';
+				box.className = 'elemenx-markdown-task';
+				box.checked = match[1] !== ' ';
+				box.disabled = !editable;
+
+				box.setAttribute('data-task', String(index));
+				box.setAttribute('aria-label', item.textContent.trim());
+
+				first.parentNode.insertBefore(box, first);
+
+				item.classList.add('elemenx-markdown-task-item');
+
+				index++;
+			});
+		}
+
+		/* A box ticked by the reader: asked of TaskCheck, then written into the text. */
+		this.TaskTicked = function (event) {
+			var box = event.target;
+			var index;
+			var item;
+			var told;
+
+			if (!box || !box.classList || !box.classList.contains('elemenx-markdown-task')) return;
+
+			/* The change of the box is the component's own: the one it tells, not the one of the page. */
+			if (event.stopPropagation)
+				event.stopPropagation();
+
+			index = Number(box.getAttribute('data-task'));
+			item = {Index: index, Checked: box.checked, Text: box.getAttribute('aria-label') || ''};
+
+			if (typeof self.TaskCheck === 'function' && self.TaskCheck(item) === false) {
+				box.checked = !box.checked;
+
+				self.$Emit('taskdenied', item);
+
+				return;
+			}
+
+			told = Object.assign({}, item, {Value: tick(index, box.checked)});
+
+			self.$Emit('task', told);
+			self.$Emit('change', {Value: told.Value});
+		};
+
+		this.Rendered = function (value, highlight, look, editable) {
 			var html = self.$Service('RichText').FromMarkdown(String(value == null ? '' : value));
 			var names = languages(value);
 			var syntax = self.$Service('Syntax');
@@ -105,6 +202,8 @@ Elemenx.Component('Markdown', {
 
 					if (source)
 						container.appendChild(source);
+
+					tasks(container, editable === 'editable');
 
 					if (look === 'interface')
 						Object.keys(looks).forEach(function (tag) {

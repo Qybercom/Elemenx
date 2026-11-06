@@ -319,6 +319,20 @@ Elemenx.Trait('SceneCosmos', {
 
 			if (ground && ground.StarLimit < 0.45 && ground.GalaxyLight > 0)
 				bake(night, settings({Kind: 'galaxy', Seed: 'night', Stars: 0.7, Pole: [0.72, 0.62, 0.3]}), 1024);
+
+			/* The other skies asked for of late, smaller: they are seen through a mouth. */
+			Object.keys(others).forEach(function (key) {
+				var holder = others[key];
+
+				var made = settings(holder.Wanted);
+
+				if (scene.Seconds - holder.Asked > 5 && holder.Asked !== undefined) return;
+
+				/* Never waited for: its program is made behind the scene, the mouth shows its plain stars till then. */
+				if (!renderer.Ready(program(made.Uniforms.uPillars > 0))) return;
+
+				bake(holder, made, Math.min(512, size()));
+			});
 		};
 
 		/* The band of the galaxy over a night: Galaxy of a sun, 0 for none. */
@@ -350,6 +364,26 @@ Elemenx.Trait('SceneCosmos', {
 			uniforms.uPart = 1;
 
 			renderer.Draw(quad, programs.Warp, uniforms, {DepthWrite: false, Blend: 'add', Cull: 'none'});
+		};
+
+		/* The cube of the sky of the system, once baked (what bent light reads, SceneDeepSpace); null before it is. */
+		engine.CosmosCube = function () {
+			return self.Cosmos && space.Cube ? space.Cube : null;
+		};
+
+		/*
+		 * The cube of another sky (the far side of a wormhole: a Kind or {Kind, Seed}), baked a face a frame while it is asked
+		 * for, under a key of its own; null till it is whole.
+		 */
+		var others = {};
+
+		engine.CosmosCubeOf = function (given, key) {
+			var holder = others[key] = others[key] || {Key: '', Cube: null, Next: null};
+
+			holder.Wanted = typeof given === 'string' ? {Kind: given, Seed: key} : given;
+			holder.Asked = scene.Seconds;
+
+			return holder.Cube;
 		};
 
 		engine.CosmosReady = function () {

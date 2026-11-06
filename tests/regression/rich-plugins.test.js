@@ -19,7 +19,7 @@ describe('Contract: the plugins of RichText, in Markdown and in a RichEditor', f
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['Markdown', 'RichEditor', 'QRCode', 'Barcode', 'Chart', 'FileBrowser', 'service:RichText']);
+		Use(['Markdown', 'RichEditor', 'QRCode', 'Barcode', 'Chart', 'FileBrowser', 'Topology', 'service:RichText']);
 	});
 
 	beforeEach(function () {
@@ -233,5 +233,34 @@ describe('Contract: the plugins of RichText, in Markdown and in a RichEditor', f
 		expect(browser.querySelector('[data-id="src/index.js"]').getAttribute('aria-level')).toBe('2');
 		expect(browser.classList.contains('plain')).toBe(true);
 		expect(browser.querySelector('.elemenx-file-browser-bar')).toBe(null);
+	});
+
+	it('reads a topology of nodes and links, their icons, statuses and details, and Markdown draws it by Topology', async function () {
+		var rich = Elemenx.Service('RichText');
+
+		expect(rich.TopologyOf('internet: Internet [icon=globe]\nweb: Web [icon=server status=ok cpu=8]  # the front\ninternet -> web : HTTPS [status=warning]\nweb -- db\ndb <- backup : nightly')).toEqual({
+			Nodes: [
+				{ID: 'internet', Label: 'Internet', Icon: 'globe'},
+				{ID: 'web', Label: 'Web', Icon: 'server', Status: 'ok', Details: {cpu: '8'}},
+				{ID: 'db', Label: 'db'},
+				{ID: 'backup', Label: 'backup'}
+			],
+			Links: [
+				{From: 'internet', To: 'web', Label: 'HTTPS', Status: 'warning'},
+				{From: 'web', To: 'db'},
+				{From: 'backup', To: 'db', Label: 'nightly'}
+			]
+		});
+		expect(rich.PluginFor('fence', 'network').Name).toBe('topology');
+
+		var host = mount('<div><Markdown [value]="Text" /></div>', {
+			Text: 'The network:\n\n```topology layout=layers\nlb: Balancer\nweb: Web\nlb -> web\n```\n'
+		});
+		var drawn = await waitFor(function () {
+			return host.$Element().querySelector('.elemenx-topology [data-node="web"]');
+		}, 4000);
+
+		expect(drawn.textContent).toContain('Web');
+		expect(host.$Element().querySelector('.elemenx-topology [data-node="lb"]').textContent).toContain('Balancer');
 	});
 });

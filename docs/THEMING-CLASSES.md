@@ -1052,6 +1052,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 ## Scene
 
 - `elemenx-scene`: `dragging`
+- `elemenx-scene-aim`
 - `elemenx-scene-axes-place`
 - `elemenx-scene-canvas`
 - `elemenx-scene-card`
@@ -1061,19 +1062,30 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-scene-card-row`
 - `elemenx-scene-card-rows`
 - `elemenx-scene-card-title`
+- `elemenx-scene-cinema`: `shown`
+- `elemenx-scene-cinema-bar`: `bottom`, `top`
+- `elemenx-scene-cinema-fade`
+- `elemenx-scene-cinema-speaker`
+- `elemenx-scene-cinema-subtitle`
+- `elemenx-scene-cinema-subtitles`
+- `elemenx-scene-cinema-title`
+- `elemenx-scene-cinema-title-text`
+- `elemenx-scene-cinema-titles`
+- `elemenx-scene-crosshair`: `hit`, `is-chevron`, `is-circle`, `is-dot`, `kill`
 - `elemenx-scene-fallback`
-- `elemenx-scene-loading`
 - `elemenx-scene-hud`
 - `elemenx-scene-label`
 - `elemenx-scene-labels`: `hidden`
-- `elemenx-scene-screens`
-- `elemenx-scene-takeoff`
-- `elemenx-scene-veil`
 - `elemenx-scene-landing`
 - `elemenx-scene-landing-hint`
 - `elemenx-scene-landing-item`: `pick`
 - `elemenx-scene-landing-list`
 - `elemenx-scene-landing-time`
+- `elemenx-scene-loading`
+- `elemenx-scene-lock`: `locked`, `off`
+- `elemenx-scene-screens`
+- `elemenx-scene-takeoff`
+- `elemenx-scene-veil`
 
 ## GameSlot
 
@@ -1499,6 +1511,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-scene-editor`: `playing`
 - `elemenx-scene-editor-axis`: `axis-x`, `axis-y`, `axis-z`
 - `elemenx-scene-editor-blueprint`
+- `elemenx-scene-editor-cutscenes`
 - `elemenx-scene-editor-field`
 - `elemenx-scene-editor-fields`
 - `elemenx-scene-editor-gizmo`
@@ -1520,9 +1533,9 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-scene-editor-palette`
 - `elemenx-scene-editor-parameter`
 - `elemenx-scene-editor-plane`
+- `elemenx-scene-editor-ring`
 - `elemenx-scene-editor-road-mid`: `arc`
 - `elemenx-scene-editor-road-point`: `chosen`, `draft`
-- `elemenx-scene-editor-ring`
 - `elemenx-scene-editor-side`
 - `elemenx-scene-editor-sketch-shape`: `area`, `current`, `draft`
 - `elemenx-scene-editor-sketch-type`
@@ -2032,6 +2045,8 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 ## Markdown
 
 - `elemenx-markdown`: `interface`
+- `elemenx-markdown-task`
+- `elemenx-markdown-task-item`
 
 ## CodeView
 
@@ -2334,3 +2349,18 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-media-time`
 - `elemenx-media-title`
 - `elemenx-media-volume`
+
+## CutsceneEditor
+
+- `elemenx-cutscene-editor`
+- `elemenx-cutscene-editor-add`
+- `elemenx-cutscene-editor-bar`
+- `elemenx-cutscene-editor-body`
+- `elemenx-cutscene-editor-empty`
+- `elemenx-cutscene-editor-field`
+- `elemenx-cutscene-editor-fields`
+- `elemenx-cutscene-editor-gap`
+- `elemenx-cutscene-editor-line`
+- `elemenx-cutscene-editor-names`
+- `elemenx-cutscene-editor-time`
+- `elemenx-cutscene-editor-title`

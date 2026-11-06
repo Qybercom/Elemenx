@@ -17,7 +17,7 @@
  *   diagram (```mermaid or ```diagram, the Diagram Component), chart (```chart, a JSON of the props of Chart), qrcode
  *   (```qr), barcode (```barcode format=ean13), callout (::: info, note, tip, success, warning, danger; title=...) and
  *   files (```files, ```tree or ```filetree: a tree of folders and files by its indents, drawn by FileBrowser as a tree;
- *   view=list, height=..., details=true). Plugins() lists their names.
+ *   view=list, height=..., details=true) and topology (```topology or ```network: a graph of nodes and links drawn by Topology, TopologyOf below; layout=..., direction=...). Plugins() lists their names.
  * - FileTree(text): the Items of FileBrowser of such a text: a line a file, its depth by its indent (spaces, tabs, and the
  *   lines of the tree command: │ ├── └──); a folder ends with / or has lines under it; what follows two spaces and # is
  *   a comment, left out. The ID of an item is its path.
@@ -26,7 +26,7 @@
 Elemenx.Service('RichText', {
 	$Meta: {
 		Description: 'The document of rich text: the HTML RichEditor keeps and the Markdown it reads and writes.',
-		Methods: ['Sanitize(html)', 'Text(html)', 'ToMarkdown(html)', 'FromMarkdown(text)', 'Extend(plugin)', 'Plugins()', 'Mount(container, options)', 'FileTree(text)']
+		Methods: ['Sanitize(html)', 'Text(html)', 'ToMarkdown(html)', 'FromMarkdown(text)', 'Extend(plugin)', 'Plugins()', 'Mount(container, options)', 'FileTree(text)', 'TopologyOf(text)']
 	},
 	Blocks: {P: 1, H1: 1, H2: 1, H3: 1, H4: 1, BLOCKQUOTE: 1, PRE: 1, UL: 1, OL: 1, LI: 1, HR: 1, TABLE: 1, THEAD: 1, TBODY: 1, TR: 1, TH: 1, TD: 1},
 	Inline: {STRONG: 1, EM: 1, U: 1, S: 1, CODE: 1, A: 1, BR: 1, IMG: 1},
@@ -72,6 +72,108 @@ Elemenx.Service('RichText', {
 
 			return self.PluginProps(data, {Items: items, View: 'tree', Toolbar: false, Details: false, Multiple: false, Height: Math.min(480, rows * 30 + 8)});
 		}, Insert: {Text: 'src/\n  components/\n    App.js\n  index.js\nREADME.md', Language: 'files'}});
+		this.Extend({Name: 'topology', Label: 'Topology', Fences: ['topology', 'network'], Component: 'Topology', Props: function (data) {
+			var made = self.TopologyOf(data.Text);
+
+			return self.PluginProps(data, {Nodes: made.Nodes, Links: made.Links});
+		}, Insert: {Text: 'internet: Internet [icon=globe]\nlb: Load balancer [icon=shuffle]\nweb1: Web 1 [icon=server status=ok]\nweb2: Web 2 [icon=server status=warning]\ndb: Database [icon=database]\ninternet -> lb\nlb -> web1\nlb -> web2\nweb1 -> db : SQL\nweb2 -> db : SQL', Language: 'topology', Attributes: {layout: 'layers'}}});
+	},
+
+	/*
+	 * The graph of a text of a topology (the fence ```topology of Markdown): a line a node or a link. A node: its ID, a
+	 * colon and its label, then [key=value ...] (icon, status, kind; any other key is a row of its Details): web: Web server
+	 * [icon=server status=ok]. A link: two IDs with -> (or --, the same for the layout) between them, then : its label and
+	 * [status=... kind=...]: web -> db : SQL [status=error]. A node named only by a link is made of its ID. What follows #
+	 * is a comment. {Nodes, Links} as the Topology Component takes them.
+	 */
+	TopologyOf: function (text) {
+		var nodes = [];
+		var links = [];
+		var known = {};
+
+		function attributes (part) {
+			var found = {};
+
+			String(part || '').replace(/([\w-]+)=("[^"]*"|'[^']*'|\S+)/g, function (all, key, value) {
+				found[key.toLowerCase()] = value.replace(/^["']|["']$/g, '');
+
+				return all;
+			});
+
+			return found;
+		}
+
+		function node (id, label, given) {
+			var settings = given || {};
+			var details = {};
+			var made = known[id];
+
+			Object.keys(settings).forEach(function (key) {
+				if (['icon', 'status', 'kind', 'label'].indexOf(key) === -1)
+					details[key] = settings[key];
+			});
+
+			if (!made) {
+				made = known[id] = {ID: id, Label: id};
+
+				nodes.push(made);
+			}
+
+			if (label)
+				made.Label = label;
+
+			if (settings.icon)
+				made.Icon = settings.icon;
+
+			if (settings.status)
+				made.Status = settings.status;
+
+			if (settings.kind)
+				made.Kind = settings.kind;
+
+			if (Object.keys(details).length)
+				made.Details = Object.assign(made.Details || {}, details);
+
+			return made;
+		}
+
+		String(text || '').split(/\r?\n/).forEach(function (raw) {
+			var line = raw.replace(/\s+#.*$/, '').replace(/^#.*$/, '').trim();
+			var bracket = /\[([^\]]*)\]\s*$/.exec(line);
+			var given = bracket ? attributes(bracket[1]) : {};
+			var body = bracket ? line.substring(0, bracket.index).trim() : line;
+			var link = /^([\w.-]+)\s*(->|--|<-)\s*([\w.-]+)\s*(?::\s*(.*))?$/.exec(body);
+			var named = /^([\w.-]+)\s*(?::\s*(.*))?$/.exec(body);
+
+			if (!line) return;
+
+			if (link) {
+				var from = link[2] === '<-' ? link[3] : link[1];
+				var to = link[2] === '<-' ? link[1] : link[3];
+				var made = {From: from, To: to};
+
+				node(from);
+				node(to);
+
+				if (link[4])
+					made.Label = link[4].trim();
+
+				if (given.status)
+					made.Status = given.status;
+
+				if (given.kind)
+					made.Kind = given.kind;
+
+				links.push(made);
+
+				return;
+			}
+
+			if (named)
+				node(named[1], named[2] ? named[2].trim() : '', given);
+		});
+
+		return {Nodes: nodes, Links: links};
 	},
 
 	FileTree: function (text) {

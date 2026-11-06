@@ -117,7 +117,8 @@ Elemenx.Trait('SceneLighting', {
 					Circle: renderer.Program(graphics.Shaders.Quad, shaders.Circle),
 					Disc: renderer.Program(graphics.Shaders.Quad, shaders.Disc),
 					Focused: renderer.Program(graphics.Shaders.Quad, shaders.Focused),
-					Copy: renderer.Program(graphics.Shaders.Quad, shaders.Copy)
+					Copy: renderer.Program(graphics.Shaders.Quad, shaders.Copy),
+					Shutter: renderer.Program(graphics.Shaders.Quad, shaders.Shutter)
 				};
 			}
 
@@ -381,7 +382,7 @@ Elemenx.Trait('SceneLighting', {
 		 * The weather of a scene: what each kind brings, and the way the sky goes from one to the next. Weather is one of the
 		 * names of the table; Renderer has no idea of it: all of it is a few numbers that the shaders read.
 		 */
-		var calm = {Clouds: 0.3, Kind: 0.5, High: 0.5, Wind: 0.6, Fog: 0, Rain: 0, Snow: 0, Wet: 0, Storm: 0, Flash: 0, Cover: 0, Rainbow: 0};
+		var calm = {Clouds: 0.3, Kind: 0.5, High: 0.5, Wind: 0.6, Fog: 0, Rain: 0, Snow: 0, Wet: 0, Storm: 0, Flash: 0, Cover: 0, Rainbow: 0, Rained: 0};
 		var kinds = {
 			clear: calm,
 			cloudy: {Clouds: 0.62, Kind: 0.6, High: 0.4, Wind: 1, Fog: 0, Rain: 0, Snow: 0, Wet: 0, Storm: 0},
@@ -439,17 +440,25 @@ Elemenx.Trait('SceneLighting', {
 			now.PathY = (now.PathY || 0) + now.Way[1] * wind * elapsed * 2.4;
 			scene.Gust = (scene.Gust || 0) + elapsed * (0.5 + wind * 0.75);
 
-			/* A storm strikes somewhere: a flash, and a bolt from the clouds to the land. */
-			if (now.Storm > 0.5 && Math.random() < elapsed * 0.14) {
-				now.Flash = 1.4;
-				now.Strike = {Way: Math.random() * Math.PI * 2, Far: 0.5 + Math.random() * 0.8, Seed: Math.random() * 1000};
+			/*
+			 * A storm flashes: now and then a bolt down to the land, more often a flash inside the clouds that lights them from
+			 * within, its veins crawling through them; each flickers a few times.
+			 */
+			if (now.Storm > 0.3 && Math.random() < elapsed * (0.08 + now.Storm * 0.3)) {
+				flash(Math.random() < 0.35 * now.Storm, Math.random() * Math.PI * 2);
+			}
+			else if (now.Strike && now.Strike.Pulses > 0 && now.Flash < 0.3 && Math.random() < elapsed * 10) {
+				now.Flash = now.Strike.Ground ? 1.1 : 0.7 + Math.random() * 0.4;
+				now.Strike.Pulses--;
 			}
 			else {
 				now.Flash = (now.Flash || 0) * Math.exp(-elapsed * 7);
 			}
 
-			/* Past the rain, with the clouds opening. */
-			now.Rainbow += ((now.Wet > 0.25 && wanted.Rain === 0 && now.Rain < 0.1 && wanted.Clouds < 0.8 ? 1 : 0) - now.Rainbow) * Math.min(1, elapsed / 8);
+			/* In a light rain, or as it ends with the clouds opening: where the sun gets through, a bow (the sky shows it where it stands). */
+			/* What rained lately, fading over a minute: the drops a rainbow needs are still in the air a while after a rain. */
+			now.Rained = Math.max(now.Rain, (now.Rained || 0) * Math.exp(-elapsed / 40));
+			now.Rainbow += ((now.Rained > 0.25 && now.Rain < 0.6 && now.Clouds < 0.85 && wanted.Clouds < 0.85 ? 1 : 0) - now.Rainbow) * Math.min(1, elapsed / 6);
 
 			return now;
 		};
@@ -605,12 +614,31 @@ Elemenx.Trait('SceneLighting', {
 		};
 
 		/* The bolt of a strike: a broken line from the clouds to the land, and its branch, for the moment of its flash. */
+		/* A flash of lightning ([ground]: a bolt down to the land; else inside the clouds), toward an angle round the eye. */
+		function flash (ground, way) {
+			var now = state.Now2;
+			if (!now)
+				return false;
+
+			now.Flash = ground ? 1.4 : 0.8 + Math.random() * 0.5;
+			now.Strike = {Way: way, Far: ground ? 0.5 + Math.random() * 0.8 : 0.35 + Math.random() * 1.2, Seed: Math.random() * 1000, Ground: !!ground, Pulses: 1 + Math.floor(Math.random() * 3)};
+
+			return true;
+		}
+
+		/* A flash asked for (Lightning of the scene): strike (a bolt to the land) or sheet (in the clouds), where the view looks. */
+		engine.Lightning = function (kind) {
+			var forward = [scene.Camera.Target[0] - scene.Camera.Position[0], scene.Camera.Target[2] - scene.Camera.Position[2]];
+
+			return flash(kind !== 'sheet', Math.atan2(forward[1], forward[0]) + (Math.random() - 0.5) * 0.5);
+		};
+
 		engine.BoltDraw = function (matrix, eye, ground) {
 			var now = state.Now2 || calm;
 			var strike = now.Strike;
 			var points = [];
 
-			if (!ground || !strike || now.Flash < 0.08 || scene.Camera.Ortho) return;
+			if (!ground || !strike || strike.Ground === false || now.Flash < 0.08 || scene.Camera.Ortho) return;
 
 			var low = Math.max(ground.Field.Top * 1.6, 90);
 
@@ -662,8 +690,10 @@ Elemenx.Trait('SceneLighting', {
 			var tone = ground.SkyLight;
 			var geometry;
 			var i;
-
-			if (amount < 0.02 || scene.Camera.Ortho) return;
+			/* Autumn: leaves come down while the trees lose them, if nothing else falls. */
+			var season = ground.Season;
+			var leaves = season && amount < 0.02 ? season.Turn * Math.min(1, season.Bare * 4) * (1 - season.Bare) * 1.6 : 0;
+			if (amount < 0.02 && leaves < 0.02 || scene.Camera.Ortho) return;
 
 			if (!state.Fall) {
 				geometry = {Positions: [], Normals: [], UVs: [], Indices: []};
@@ -684,11 +714,98 @@ Elemenx.Trait('SceneLighting', {
 				state.Fall = {Mesh: renderer.Mesh(geometry), Program: renderer.Program(shaders.FallVertex, shaders.Fall)};
 			}
 
-			renderer.Draw(state.Fall.Mesh, state.Fall.Program, {uViewProjection: matrix, uEye: eye, uBox: [36, 24, 36], uWind: [now.Way ? now.Way[0] * now.Blow * 2 : 1.6, now.Way ? now.Way[1] * now.Blow * 2 : 0.7], uPath: [now.PathX || 0, now.PathY || 0], uTime: scene.Seconds % 3000, uSnow: snow ? 1 : 0, uAmount: Math.min(1, amount), uTone: snow ? [Math.min(1, tone[2] * 2.2 + 0.1), Math.min(1, tone[2] * 2.3 + 0.1), Math.min(1, tone[2] * 2.5 + 0.12)] : [Math.min(1, tone[2] * 2.4 + 0.22), Math.min(1, tone[2] * 2.5 + 0.22), Math.min(1, tone[2] * 2.7 + 0.25)]}, {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
+			if (!snow && now.Rain > 0.05 && level() !== 'low')
+				splashes(matrix, eye, ground, now, tone);
+
+			if (amount < 0.02) {
+				renderer.Draw(state.Fall.Mesh, state.Fall.Program, {uViewProjection: matrix, uEye: eye, uBox: [30, 16, 30], uWind: [now.Way ? now.Way[0] * now.Blow : 0.6, now.Way ? now.Way[1] * now.Blow : 0.3], uPath: [now.PathX || 0, now.PathY || 0], uTime: scene.Seconds % 3000, uSnow: 1, uLeaves: 1, uAmount: Math.min(0.6, leaves * 0.08), uTone: [Math.min(1, tone[2] * 2.2 + 0.25), Math.min(1, tone[2] * 2.2 + 0.25), Math.min(1, tone[2] * 2.2 + 0.25)]}, {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
+
+				return;
+			}
+
+			renderer.Draw(state.Fall.Mesh, state.Fall.Program, {uViewProjection: matrix, uEye: eye, uBox: [36, 24, 36], uWind: [now.Way ? now.Way[0] * now.Blow * 2 : 1.6, now.Way ? now.Way[1] * now.Blow * 2 : 0.7], uPath: [now.PathX || 0, now.PathY || 0], uTime: scene.Seconds % 3000, uSnow: snow ? 1 : 0, uLeaves: 0, uAmount: Math.min(1, amount), uTone: snow ? [Math.min(1, tone[2] * 2.2 + 0.1), Math.min(1, tone[2] * 2.3 + 0.1), Math.min(1, tone[2] * 2.5 + 0.12)] : [Math.min(1, tone[2] * 2.4 + 0.22), Math.min(1, tone[2] * 2.5 + 0.22), Math.min(1, tone[2] * 2.7 + 0.25)]}, {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
 		};
+
+		/*
+		 * Where the rain hits the ground round the eye, a crown of drops: all of it in the shader of a mesh made once (each
+		 * crown a ring of spikes, its place and its moment of a hash of its seed and the time), the height of the ground of a
+		 * small map round the eye, made again only when the eye went a few metres. None on the sea, none at low.
+		 */
+		function splashes (matrix, eye, ground, now, tone) {
+			var field = ground.Field;
+			var side = 32;
+			var span = 24;
+			var center = [Math.round(eye[0] / 3) * 3, Math.round(eye[2] / 3) * 3];
+			var heights = state.Splash && state.Splash.Heights;
+			var geometry;
+			var data;
+			var i;
+			var j;
+
+			if (!state.Splash) {
+				geometry = {Positions: [], Normals: [], UVs: [], Indices: []};
+
+				for (i = 0; i < 2500; i++) {
+					var seed = [Math.random(), Math.random(), Math.random()];
+					var spikes = 7;
+
+					for (j = 0; j < spikes; j++) {
+						var angle = (j + seed[1] * 0.5) / spikes * Math.PI * 2;
+						var base = geometry.Positions.length / 3;
+
+						[[angle - 0.18, 0], [angle + 0.18, 0], [angle, 1]].forEach(function (corner) {
+							geometry.Positions.push(Math.cos(corner[0]), corner[1], Math.sin(corner[0]));
+							geometry.Normals.push(seed[0], seed[1], seed[2]);
+							geometry.UVs.push(0, 0);
+						});
+
+						geometry.Indices.push(base, base + 1, base + 2);
+					}
+				}
+
+				state.Splash = {Mesh: renderer.Mesh(geometry), Program: renderer.Program(shaders.SplashVertex, shaders.Splash), Heights: null};
+				heights = null;
+			}
+
+			if (!heights || heights.Center[0] !== center[0] || heights.Center[1] !== center[1] || heights.Field !== field) {
+				data = new Float32Array(side * side * 4);
+
+				for (j = 0; j < side; j++) {
+					for (i = 0; i < side; i++) {
+						var x = center[0] - span / 2 + (i + 0.5) * span / side;
+						var z = center[1] - span / 2 + (j + 0.5) * span / side;
+						var height = field.Height(x, z);
+
+						/* Under the water the rain makes rings of the water, no crown. */
+						data[(j * side + i) * 4] = field.Water && height < 0.05 ? -1e5 : height;
+					}
+				}
+
+				if (heights && heights.Texture)
+					heights.Texture.Destroy();
+
+				heights = state.Splash.Heights = {Center: center, Field: field, Texture: renderer.Texture({Width: side, Height: side, Data: data}, {Float: true, Nearest: true})};
+			}
+
+			renderer.Draw(state.Splash.Mesh, state.Splash.Program, {uViewProjection: matrix, uEye: eye, uTime: scene.Seconds % 3000, uAmount: Math.min(1, now.Rain), uHeights: heights.Texture, uCenter: heights.Center, uSpan: span, uReach: 9, uTone: [Math.min(1, tone[2] * 2.4 + 0.25), Math.min(1, tone[2] * 2.5 + 0.25), Math.min(1, tone[2] * 2.7 + 0.28)]}, {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
+		}
 
 		engine.WeatherNow = function () {
 			return state.Now2 || calm;
+		};
+
+		/*
+		 * How far one sees now: Distance, the visibility of the weather in metres (where what is seen through the air falls to
+		 * 2%: a clear day 40 km, rain a few, snow and fog less, a thick fog under 200 m); Light, how much light there is to see
+		 * by (1 by day, the moon at night, little under clouds); Sight, the part of a range of sight a walker keeps by both.
+		 */
+		engine.Visibility = function () {
+			var now = state.Now2 || calm;
+			var ground = scene.Ground;
+			var through = 3.912 / 40000 + (now.Fog || 0) * 3.912 / 180 + (now.Rain || 0) * 3.912 / 3000 + (now.Snow || 0) * 3.912 / 900 + (now.Storm || 0) * 3.912 / 6000;
+			var light = ground ? Math.max(0, Math.min(1, (ground.Day || 0) * (1 - (ground.Shut || 0) * 0.5) + (ground.MoonLit || 0) * 0.25 + 0.04)) : 1;
+
+			return {Distance: Math.min(50000, 3.912 / through), Light: light, Sight: 0.3 + 0.7 * light};
 		};
 
 		/* Before anything of a frame is drawn: into the texture of floats. */
@@ -709,10 +826,14 @@ Elemenx.Trait('SceneLighting', {
 
 			state.CloudStep = (state.CloudStep || 0) + 1;
 
-			var strike = now.Strike && now.Flash > 0.05 ? [Math.cos(now.Strike.Way), Math.sin(now.Strike.Way), now.Flash] : [0, 0, 0];
+			var strike = now.Strike && now.Flash > 0.05 ? [Math.cos(now.Strike.Way), Math.sin(now.Strike.Way), now.Flash * (now.Strike.Ground === false ? 0.25 : 1)] : [0, 0, 0];
+			/* The place of a flash in the clouds: over where its bolt comes down, or inside them; the seed of its veins. */
+			var reach = air.Layer[0] * 2.4 * (now.Strike ? now.Strike.Far : 0);
+			var glowing = now.Strike && now.Flash > 0.05 ? [air.From[0] + Math.cos(now.Strike.Way) * reach, air.Layer[0] + (air.Layer[1] - air.Layer[0]) * (now.Strike.Ground ? 0.25 : 0.5), air.From[2] + Math.sin(now.Strike.Way) * reach, now.Flash] : [0, 0, 0, 0];
+			var vein = now.Strike ? [now.Strike.Seed % 100, (air.Layer[1] - air.Layer[0]) * 2.2, 0, 0] : [0, 1, 0, 0];
 
-			pass(state.Cloud, run.Clouds, cloudValues(air, now, {uDepth: depth, uInverse: inverse, uTurn: air.Turn, uFrom: air.From, uSunWay: air.Sun, uSunLight: air.SunLight, uSkyTone: air.SkyTone, uUnder: air.Under, uBelow: air.Below || [0, 0, 0], uBelowWay: air.BelowWay || [0, 0, 0], uBolt: strike, uHaze: air.Haze || [0, 0, 0, 0], uSteps: set.Clouds, uStep: state.CloudStep % 64, uBehind: air.Over ? 0 : 1}));
-			pass(state.CloudNext, run.CloudFrames, {uNew: state.Cloud.Textures[0], uOld: state.CloudPast.Textures[0], uInverse: math.Invert(plain), uMatrix: state.CloudMatrix || plain, uMix: state.CloudMatrix ? 0.9 : 0, uPixel: [1 / state.Cloud.Width, 1 / state.Cloud.Height]});
+			pass(state.Cloud, run.Clouds, cloudValues(air, now, {uDepth: depth, uInverse: inverse, uTurn: air.Turn, uFrom: air.From, uSunWay: air.Sun, uSunLight: air.SunLight, uSkyTone: air.SkyTone, uUnder: air.Under, uBelow: air.Below || [0, 0, 0], uBelowWay: air.BelowWay || [0, 0, 0], uBolt: strike, uFlashAt: glowing, uVein: vein, uHaze: air.Haze || [0, 0, 0, 0], uSteps: set.Clouds, uStep: state.CloudStep % 64, uBehind: air.Over ? 0 : 1}));
+			pass(state.CloudNext, run.CloudFrames, {uNew: state.Cloud.Textures[0], uOld: state.CloudPast.Textures[0], uInverse: math.Invert(plain), uMatrix: state.CloudMatrix || plain, uMix: state.CloudMatrix ? now.Flash > 0.1 ? 0.25 : 0.9 : 0, uPixel: [1 / state.Cloud.Width, 1 / state.Cloud.Height]});
 
 			keep = state.CloudPast;
 			state.CloudPast = state.CloudNext;
@@ -773,9 +894,15 @@ Elemenx.Trait('SceneLighting', {
 			state.FocusNext = kept;
 			state.FocusOn = true;
 
-			pass(state.Circle, run.Circle, {uColor: color, uDepth: depth, uFocus: state.FocusPast.Textures[0], uInverse: inverse, uOpen: view.Bokeh, uPixel: [1 / renderer.Width, 1 / renderer.Height]});
-			pass(state.Disc, run.Disc, {uNear: state.Circle.Textures[0], uPixel: [1 / width, 1 / height], uRadius: 3 + view.Bokeh * 13});
-			pass(state.Focused, run.Focused, {uColor: color, uDepth: depth, uDisc: state.Disc.Textures[0], uFocus: state.FocusPast.Textures[0], uInverse: inverse, uOpen: view.Bokeh, uDiscPixel: [1 / width, 1 / height]});
+			/*
+			 * A lens of a camera (SceneCamera) blurs as a real one: the circle of a point, a part of the height of the picture, is
+			 * Scale * |d - f| / (d (f - Focal)); in pixels of the half picture over the widest disc (16 of them), 1 at its widest.
+			 */
+			var coc = view.Lens && view.Lens.Coc ? [view.Lens.Coc.Scale * height / 16, view.Lens.Coc.Focal] : [0, 0];
+
+			pass(state.Circle, run.Circle, {uColor: color, uDepth: depth, uFocus: state.FocusPast.Textures[0], uInverse: inverse, uOpen: view.Bokeh, uLens: coc, uPixel: [1 / renderer.Width, 1 / renderer.Height]});
+			pass(state.Disc, run.Disc, {uNear: state.Circle.Textures[0], uPixel: [1 / width, 1 / height], uRadius: coc[0] > 0 ? 16 : 3 + view.Bokeh * 13});
+			pass(state.Focused, run.Focused, {uColor: color, uDepth: depth, uDisc: state.Disc.Textures[0], uFocus: state.FocusPast.Textures[0], uInverse: inverse, uOpen: view.Bokeh, uLens: coc, uDiscPixel: [1 / width, 1 / height]});
 
 			return state.Focused.Textures[0];
 		}
@@ -786,6 +913,92 @@ Elemenx.Trait('SceneLighting', {
 		 * (PipelineGraph) runs them in the order they always ran; the Pipeline of the scene, a graph of its own, takes its
 		 * place: passes left out, others added (Shader: a pass of a graph of its own), their properties changed.
 		 */
+		var identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+
+		/*
+		 * The shutter of a camera (SceneCamera), before the frames add up (what reads the depth goes there, or its edges tremble
+		 * with the shake of the view): open for Shutter seconds, the picture blurs along how each point of it moved on the screen
+		 * since the last frame (the camera's move alone), by the part of the frame it was open, never over a cut; a polarizer
+		 * deepens the sky. The color as it was with neither.
+		 */
+		function shutter (view, frame, depth, color) {
+			var lens = view.Lens || null;
+			var blurred = 0;
+			var made;
+
+			if (lens && lens.Shutter > 0 && state.BlurMatrix && state.BlurCut === lens.Cut && view.Eye && state.BlurEye)
+				blurred = Math.min(1, lens.Shutter / Math.max(1 / 240, state.Step > 0 && state.Step < 1 ? state.Step : 1 / 60));
+
+			if (blurred || lens && lens.Polarizer > 0) {
+				state.Shuttered = target(state.Shuttered, state.Aired.Width, state.Aired.Height, {Float: true});
+
+				pass(state.Shuttered, programs().Shutter, {
+					uColor: color,
+					uDepth: depth,
+					uBlur: blurred,
+					uPolar: lens.Polarizer,
+					uInverse: blurred ? math.Invert(frame.Plain) : identity,
+					uPastMatrix: blurred ? state.BlurMatrix : identity,
+					uMoved: blurred ? math.Vectors.Subtract(view.Eye, state.BlurEye) : [0, 0, 0]
+				});
+
+				made = state.Shuttered.Textures[0];
+			}
+
+			state.BlurMatrix = frame.Plain;
+			state.BlurEye = view.Eye ? view.Eye.slice() : null;
+			state.BlurCut = lens ? lens.Cut : -1;
+
+			return made || color;
+		}
+
+		/* A table of colors of a camera (a strip of N slices, N*N by N): fetched once, a texture when it came. */
+		function lutOf (url) {
+			var kept;
+			var image;
+
+			state.Luts = state.Luts || {};
+			kept = state.Luts[url];
+
+			if (kept)
+				return kept.Texture ? kept : null;
+
+			kept = state.Luts[url] = {Texture: null, Size: 0};
+
+			if (typeof Image === 'undefined') return null;
+
+			image = new Image();
+			image.crossOrigin = 'anonymous';
+
+			image.onload = function () {
+				if (!image.height || image.width !== image.height * image.height) return;
+
+				kept.Size = image.height;
+				kept.Texture = renderer.Texture(image, {});
+			};
+
+			image.src = url;
+
+			return null;
+		}
+
+		/* What the lens of a camera does to the picture (SceneCamera): nothing for the view of the scene. */
+		function lensValues (lens, manual) {
+			var lut = lens && lens.LUT ? lutOf(lens.LUT) : null;
+			var none = scene.White || state.Scene.Textures[0];
+
+			if (!lens)
+				return {uBalance: [1, 1, 1, 1], uLook: [1, 1, 0, 0], uWarp: [0, 0, 0, 0], uLut: none, uLutSize: 0};
+
+			return {
+				uBalance: [lens.Balance[0], lens.Balance[1], lens.Balance[2], manual ? 1 : lens.Compensation],
+				uLook: [lens.Saturation, lens.Contrast, lens.Grain, lens.Vignette],
+				uWarp: [lens.Distortion * 0.22, lens.Aberration * 0.006, lens.Polarizer, manual ? 1 : 0],
+				uLut: lut ? lut.Texture : none,
+				uLutSize: lut ? lut.Size : 0
+			};
+		}
+
 		var steps = {
 			Scene: function () {
 				return {Color: state.Scene.Textures[0], Depth: state.Scene.Depth};
@@ -850,7 +1063,7 @@ Elemenx.Trait('SceneLighting', {
 					uSeconds: scene.Seconds % 1000
 				});
 
-				return {Color: state.Aired.Textures[0]};
+				return {Color: shutter(view, frame, inputs.Depth, state.Aired.Textures[0])};
 			},
 
 			/* This frame with the ones before it, where they are now. */
@@ -933,7 +1146,7 @@ Elemenx.Trait('SceneLighting', {
 			},
 
 			Bokeh: function (frame, inputs) {
-				return {Color: frame.View.Bokeh > 0 ? bokeh(frame.View, frame.Run, inputs.Color, inputs.Depth, frame.Plain) : inputs.Color};
+				return {Color: frame.View.Bokeh > 0 || frame.View.Lens && frame.View.Lens.Coc ? bokeh(frame.View, frame.Run, inputs.Color, inputs.Depth, frame.Plain) : inputs.Color};
 			},
 
 			/* The glow of what is too bright (above Threshold), down six steps and up again. */
@@ -941,7 +1154,10 @@ Elemenx.Trait('SceneLighting', {
 				var run = frame.Run;
 				var i;
 
-				pass(state.Bloom[0], run.Down, {uColor: inputs.Color, uPixel: [1 / renderer.Width, 1 / renderer.Height], uThreshold: given(properties.Threshold, 0.85)});
+				/* In fog, rain and snow the air scatters what is bright: the glow round each lamp is wider and starts lower. */
+				var thick = state.Now2 ? Math.min(1, (state.Now2.Fog || 0) + (state.Now2.Rain || 0) * 0.4 + (state.Now2.Snow || 0) * 0.5) : 0;
+
+				pass(state.Bloom[0], run.Down, {uColor: inputs.Color, uPixel: [1 / renderer.Width, 1 / renderer.Height], uThreshold: given(properties.Threshold, 0.85) * (1 - thick * 0.35)});
 
 				for (i = 1; i < state.Bloom.length; i++)
 					pass(state.Bloom[i], run.Down, {uColor: state.Bloom[i - 1].Textures[0], uPixel: [1 / state.Bloom[i - 1].Width, 1 / state.Bloom[i - 1].Height], uThreshold: 0});
@@ -960,24 +1176,28 @@ Elemenx.Trait('SceneLighting', {
 				var spot = frame.Spot;
 				var white = scene.White || inputs.Color;
 				var direct = frame.Direct === block.id;
+				var lens = view.Lens || null;
+				var manual = !!lens && lens.Exposure !== null;
+
 				if (!direct)
 					state.Final = target(state.Final, renderer.Width, renderer.Height, {});
 
-				pass(direct ? null : state.Final, frame.Run.Picture, {
+				pass(direct ? null : state.Final, frame.Run.Picture, Object.assign(lensValues(lens, manual), {
 					uColor: inputs.Color,
 					uDepth: inputs.Depth,
 					uBloom: inputs.Bloom || emptyPicture(),
+					uBloomGain: 0.62 * (1 + (state.Now2 ? Math.min(1, (state.Now2.Fog || 0) + (state.Now2.Rain || 0) * 0.4 + (state.Now2.Snow || 0) * 0.5) : 0) * 1.6),
 					uPixel: [1 / renderer.Width, 1 / renderer.Height],
 					uSharp: frame.Set.Frames ? 0.16 : 0.12,
 					uHeat: view.Heat || 0,
 					uMirror: inputs.Mirror || white,
 					uMirrorOn: inputs.Mirror ? 1 : 0,
-					uFlash: now.Flash,
+					uFlash: now.Flash * (now.Strike && now.Strike.Ground === false ? 0.06 : 0.18),
 					uShimmer: view.Shimmer || new Array(16).fill(0),
 					uTick: scene.Seconds % 1000,
 					uEye: inputs.Eye || white,
-					uEyeOn: state.Eye && view.Sky ? 1 : 0,
-					uExposure: given(view.Exposure, 1),
+					uEyeOn: state.Eye && view.Sky && !manual ? 1 : 0,
+					uExposure: manual ? lens.Exposure * lens.Compensation : given(view.Exposure, 1),
 					uNight: view.Night || 0,
 					uNoise: state.Noise || emptyNoise(),
 					uGrade: [1 - (view.Veil || 0) * 0.14, 1 - (view.Veil || 0) * 0.05, 1 + (view.Veil || 0) * 0.02, Math.min(0.5, (view.Veil || 0) * 0.5 + (now.Clouds * now.Clouds) * 0.16)],
@@ -989,7 +1209,7 @@ Elemenx.Trait('SceneLighting', {
 					uAspect: renderer.Width / Math.max(1, renderer.Height),
 					uSpot: [spot[0] * 0.5 + 0.5, spot[1] * 0.5 + 0.5, spot[2]],
 					uParallel: scene.Camera.Ortho ? 1 : 0
-				});
+				}));
 
 				return {Color: direct ? frame.Screen : state.Final.Textures[0]};
 			},
@@ -1172,6 +1392,80 @@ Elemenx.Trait('SceneLighting', {
 		return graph;
 	},
 
+	/*
+	 * A flash of lightning where the view looks, in any weather: strike (a bolt down to the land, by default) or sheet
+	 * (inside the clouds, lighting them from within, its veins crawling through them). False with no ground and sky.
+	 */
+	/* How far one sees now: {Distance (metres, the visibility of the weather), Light (0 to 1), Sight (the part of a range kept)}. */
+	Visibility: function () {
+		var engine = this.Engine();
+
+		return engine && engine.Visibility ? engine.Visibility() : {Distance: 50000, Light: 1, Sight: 1};
+	},
+
+	/* A range of sight (metres) as the weather and the light leave it: no farther than the visibility, shorter in the dark. */
+	SightOf: function (range) {
+		var seen = this.Visibility();
+
+		return Math.min(Number(range) || 0, seen.Distance) * seen.Sight;
+	},
+
+	/*
+	 * Whether a place is seen from another ([x, y] of the map, or the IDs of objects): within the range (SightOf of range,
+	 * no limit when none), and the land between them lets the line through (an eye 1.6 m over the ground, the other 1 m).
+	 */
+	Visible: function (from, to, range) {
+		var scene = this.Scene();
+		var field = scene.Ground ? scene.Ground.Field : null;
+		var a = this.SeenPlace(from);
+		var b = this.SeenPlace(to);
+		var far;
+		var reach;
+		var steps;
+		var i;
+
+		if (!a || !b)
+			return false;
+
+		far = Math.hypot(b[0] - a[0], b[1] - a[1]);
+		reach = this.SightOf(range === undefined || range === null || range === '' ? Infinity : range);
+
+		if (far > reach) return false;
+
+		if (!field)
+			return true;
+
+		var eye = field.Height(a[0], a[1]) + 1.6;
+		var end = field.Height(b[0], b[1]) + 1;
+
+		steps = Math.max(2, Math.ceil(far / 4));
+
+		for (i = 1; i < steps; i++) {
+			var t = i / steps;
+			if (field.Height(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t) > eye + (end - eye) * t) return false;
+		}
+
+		return true;
+	},
+
+	/* A place of the map: [x, y], or the place of an object by its ID. */
+	SeenPlace: function (given) {
+		var object;
+
+		if (Array.isArray(given))
+			return [Number(given[0]) || 0, Number(given[1]) || 0];
+
+		object = this.Scene().Objects[given];
+
+		return object && object.World ? [object.World[0], object.World[2]] : null;
+	},
+
+	Lightning: function (kind) {
+		var engine = this.Engine();
+
+		return !!(engine && engine.Lightning && engine.Lightning(kind || 'strike'));
+	},
+
 	LightingShaders: function (graphics) {
 		var head = '#version 300 es\nprecision highp float;\nprecision highp sampler3D;\n';
 
@@ -1213,6 +1507,38 @@ Elemenx.Trait('SceneLighting', {
 
 		return {
 			/* A picture put on the screen as it is: what a pipeline made after its Picture. */
+			/* The shutter of a camera: the picture along the way each point went on the screen while it was open; the sky a polarizer deepens. */
+			Shutter: head + [
+				'in vec2 vQuad;',
+				'uniform sampler2D uColor;',
+				'uniform sampler2D uDepth;',
+				'uniform float uBlur;',
+				'uniform float uPolar;',
+				'uniform mat4 uInverse;',
+				'uniform mat4 uPastMatrix;',
+				'uniform vec3 uMoved;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	vec2 uv = vQuad * 0.5 + 0.5;',
+				'	vec4 color = texture(uColor, uv);',
+				'	float depth = texture(uDepth, uv).r;',
+				'	if (uBlur > 0.0) {',
+				'		vec4 p = uInverse * vec4(vQuad, depth * 2.0 - 1.0, 1.0);',
+				'		vec4 q = uPastMatrix * vec4(p.xyz / p.w + uMoved, 1.0);',
+				'		vec2 way = (uv - (q.xy / q.w * 0.5 + 0.5)) * uBlur;',
+				'		float far = length(way);',
+				'		if (far > 0.08) way *= 0.08 / far;',
+				/* Each pixel starts its samples a little further along: no copies of what moved, a fine grain instead. */
+				'		float start = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));',
+				'		vec3 sum = vec3(0.0);',
+				'		for (int i = 0; i < 12; i++) sum += texture(uColor, uv - way * ((float(i) + start) / 12.0 - 0.5)).rgb;',
+				'		color.rgb = sum / 12.0;',
+				'	}',
+				'	if (uPolar > 0.0 && depth >= 0.99999) color.rgb *= mix(vec3(1.0), vec3(0.6, 0.72, 0.95), uPolar);',
+				'	outColor = color;',
+				'}'
+			].join('\n'),
+
 			Copy: head + [
 				'in vec2 vQuad;',
 				'uniform sampler2D uColor;',
@@ -1290,6 +1616,7 @@ Elemenx.Trait('SceneLighting', {
 				'uniform sampler2D uFocus;',
 				'uniform mat4 uInverse;',
 				'uniform float uOpen;',
+				'uniform vec2 uLens;',
 				'uniform vec2 uPixel;',
 				'out vec4 outColor;',
 				'void main() {',
@@ -1304,7 +1631,7 @@ Elemenx.Trait('SceneLighting', {
 				'	vec4 p = uInverse * vec4(vQuad, texture(uDepth, uv).r * 2.0 - 1.0, 1.0);',
 				'	float d = length(p.xyz / p.w);',
 				'	float f = max(0.05, texture(uFocus, vec2(0.5)).r);',
-				'	outColor = vec4(color, clamp((d - f) / max(d, 1e-3) * (0.6 + uOpen * 2.4), -1.0, 1.0));',
+				'	outColor = vec4(color, clamp(uLens.x > 0.0 ? (d - f) / max(d, 1e-3) * uLens.x / max(f - uLens.y, 1e-3) : (d - f) / max(d, 1e-3) * (0.6 + uOpen * 2.4), -1.0, 1.0));',
 				'}'
 			].join('\n'),
 
@@ -1345,6 +1672,7 @@ Elemenx.Trait('SceneLighting', {
 				'uniform sampler2D uFocus;',
 				'uniform mat4 uInverse;',
 				'uniform float uOpen;',
+				'uniform vec2 uLens;',
 				'uniform vec2 uDiscPixel;',
 				'out vec4 outColor;',
 				'void main() {',
@@ -1353,7 +1681,7 @@ Elemenx.Trait('SceneLighting', {
 				'	vec4 p = uInverse * vec4(vQuad, texture(uDepth, uv).r * 2.0 - 1.0, 1.0);',
 				'	float d = length(p.xyz / p.w);',
 				'	float f = max(0.05, texture(uFocus, vec2(0.5)).r);',
-				'	float blur = abs(clamp((d - f) / max(d, 1e-3) * (0.6 + uOpen * 2.4), -1.0, 1.0));',
+				'	float blur = abs(clamp(uLens.x > 0.0 ? (d - f) / max(d, 1e-3) * uLens.x / max(f - uLens.y, 1e-3) : (d - f) / max(d, 1e-3) * (0.6 + uOpen * 2.4), -1.0, 1.0));',
 				'	vec3 disc = (texture(uDisc, uv).rgb * 2.0 + texture(uDisc, uv + uDiscPixel * vec2(0.75, 0.25)).rgb + texture(uDisc, uv - uDiscPixel * vec2(0.75, 0.25)).rgb + texture(uDisc, uv + uDiscPixel * vec2(-0.25, 0.75)).rgb + texture(uDisc, uv - uDiscPixel * vec2(-0.25, 0.75)).rgb) / 6.0;',
 				'	outColor = vec4(mix(sharp.rgb, disc, smoothstep(0.04, 0.3, blur)), sharp.a);',
 				'}'
@@ -1532,6 +1860,8 @@ Elemenx.Trait('SceneLighting', {
 				'uniform vec3 uBelow;',
 				'uniform vec3 uBelowWay;',
 				'uniform vec3 uBolt;',
+				'uniform vec4 uFlashAt;',
+				'uniform vec4 uVein;',
 				'uniform vec4 uHaze;',
 				'uniform float uStep;',
 				'uniform float uBehind;',
@@ -1574,6 +1904,24 @@ Elemenx.Trait('SceneLighting', {
 				'			vec3 tone = uSunLight * through * phase + uSkyTone * (0.3 + 0.8 * h) * (0.28 + 0.72 * exp(-lit * 0.55)) + uUnder * pow(1.0 - h, 2.0) * (0.3 + 0.7 * pow(toward * 0.5 + 0.5, 3.0)) ;',
 				/* What lies under a place of a cloud shades it from the towns: that is what draws its folds. */
 				'			if (uBolt.z > 0.0) tone += vec3(0.75, 0.8, 1.0) * uBolt.z * 1.6 * pow(max(dot(normalize(ray.xz + vec2(1e-5)), uBolt.xy), 0.0), 6.0);',
+				/*
+				 * A flash inside lights the cloud round it, less the farther and the thicker the cloud between; its veins crawl out
+				 * from it, thin and broken, near the middle of the layer.
+				 */
+				'			if (uFlashAt.w > 0.0) {',
+				'				vec3 o = p - uFlashAt.xyz;',
+				'				float r = length(o) / uVein.y;',
+				'				tone += vec3(0.72, 0.78, 1.0) * uFlashAt.w * 3.2 * exp(-r * 2.2) * (0.35 + 0.65 * exp(-lit * 0.6));',
+				'				vec2 q = o.xz / uVein.y * 3.0;',
+				'				float veins = 0.0;',
+				'				for (int k = 0; k < 3; k++) {',
+				'					float turn = uVein.x * 1.7 + float(k) * 2.1;',
+				'					vec2 v = vec2(cos(turn) * q.x + sin(turn) * q.y, -sin(turn) * q.x + cos(turn) * q.y);',
+				'					float path = sin(v.x * 3.1 + uVein.x + float(k)) * 0.35 + sin(v.x * 7.3 + uVein.x * 2.0) * 0.14 + sin(v.x * 17.0 + float(k) * 5.0) * 0.05;',
+				'					veins += exp(-pow((v.y - path) * 22.0, 2.0)) * step(0.0, v.x) * exp(-v.x * 0.9);',
+				'				}',
+				'				tone += vec3(0.85, 0.88, 1.0) * uFlashAt.w * veins * 7.0 * exp(-pow(o.y / thickness * 3.0, 2.0));',
+				'			}',
 				'			if (below.r + below.g > 0.001) tone += below * 0.2 * pow(1.0 - h, 1.5) * exp(-thick(p - vec3(0.0, thickness * 0.14, 0.0), 0.0) * 5.0);',
 				'			tone = mix(tone, uHaze.rgb * (0.82 + 0.3 * h), uHaze.a * (0.75 + 0.25 * exp(-lit * 0.4)));',
 				'			float take = 1.0 - exp(-d * stride / thickness * 8.0);',
@@ -1808,6 +2156,51 @@ Elemenx.Trait('SceneLighting', {
 			 * What falls: each drop or flake a quad of its own, in a box of air that goes with the eye and wraps round it, so
 			 * they stand in the world and stay behind as the eye moves. A flake falls at a speed of its own, and drifts.
 			 */
+			/* A crown of a drop of rain: where and when of its seed and the time, on the ground of the map of heights round the eye. */
+			SplashVertex: head + [
+				'in vec3 aPosition;',
+				'in vec3 aNormal;',
+				'uniform mat4 uViewProjection;',
+				'uniform vec3 uEye;',
+				'uniform float uTime;',
+				'uniform float uAmount;',
+				'uniform sampler2D uHeights;',
+				'uniform vec2 uCenter;',
+				'uniform float uSpan;',
+				'uniform float uReach;',
+				'out float vAlpha;',
+				'out float vTip;',
+				'void main() {',
+				'	vec3 seed = aNormal;',
+				'	float t = uTime * 2.6 + seed.z * 11.0;',
+				'	float cycle = floor(t);',
+				'	float age = fract(t);',
+				'	vec2 h = fract(sin(vec2(cycle * 12.9898 + seed.x * 78.233, cycle * 39.346 + seed.y * 11.135)) * 43758.5453);',
+				'	vec2 place = uEye.xz + (h * 2.0 - 1.0) * uReach;',
+				'	float ground = texture(uHeights, (place - uCenter) / uSpan + 0.5).r;',
+				/* As many as the rain is heavy, none on the water, a crown of a few centimetres that rises and falls back. */
+				'	float alive = step(seed.x, uAmount) * step(-1e4, ground);',
+				'	float r = 0.02 + age * 0.09;',
+				'	float up = sin(age * 3.1416) * (0.05 + seed.y * 0.06);',
+				'	vec3 local = vec3(aPosition.x * r * (0.55 + 0.45 * aPosition.y), aPosition.y * up, aPosition.z * r * (0.55 + 0.45 * aPosition.y));',
+				'	vec3 world = vec3(place.x, ground + 0.004, place.y) + local - uEye;',
+				'	vAlpha = alive * (1.0 - age) * (1.0 - smoothstep(uReach * 0.6, uReach, length(place - uEye.xz)));',
+				'	vTip = aPosition.y;',
+				'	gl_Position = uViewProjection * vec4(world, 1.0);',
+				'}'
+			].join('\n'),
+
+			Splash: head + [
+				'in float vAlpha;',
+				'in float vTip;',
+				'uniform vec3 uTone;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	if (vAlpha < 0.01) discard;',
+				'	outColor = vec4(uTone * 1.2, vAlpha * (0.5 + 0.4 * vTip));',
+				'}'
+			].join('\n'),
+
 			FallVertex: head + [
 				'in vec3 aPosition;',
 				'in vec3 aNormal;',
@@ -1818,10 +2211,19 @@ Elemenx.Trait('SceneLighting', {
 				'uniform vec2 uPath;',
 				'uniform float uTime;',
 				'uniform float uSnow;',
+				'uniform float uLeaves;',
+				'uniform float uAmount;',
 				'out vec2 vAt;',
 				'out float vFar;',
+				'out float vSeed;',
 				'void main() {',
 				'	vec3 seed = aNormal;',
+				'	vSeed = seed.y;',
+				/* Leaves: only as many as come down, each tumbling as it falls. */
+				'	if (uLeaves > 0.5 && seed.y > uAmount) {',
+				'		gl_Position = vec4(0.0, 0.0, 2.0, 1.0);',
+				'		return;',
+				'	}',
 				'	float speed = uSnow > 0.5 ? 0.45 + seed.z * seed.z * 1.5 : 16.0 + seed.z * 7.0;',
 				'	vec3 p = seed * uBox;',
 				'	p.y -= speed * uTime;',
@@ -1837,7 +2239,10 @@ Elemenx.Trait('SceneLighting', {
 				'	if (uSnow > 0.5) {',
 				'		vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), at + vec3(0.001, 0.0, 0.0)));',
 				'		vec3 up = normalize(cross(at, right));',
-				'		world = at + (right * aPosition.x + up * (aPosition.y * 2.0 - 1.0)) * (0.024 + seed.x * seed.x * 0.05) * min(1.0, length(at) / 3.0);',
+				'		float turn = uLeaves > 0.5 ? uTime * (1.5 + seed.z * 3.0) + seed.x * 20.0 : 0.0;',
+				'		vec2 corner = vec2(aPosition.x, aPosition.y * 2.0 - 1.0);',
+				'		corner = vec2(corner.x * cos(turn) - corner.y * sin(turn), corner.x * sin(turn) + corner.y * cos(turn) * (uLeaves > 0.5 ? 0.6 + 0.4 * sin(turn * 1.7) : 1.0));',
+				'		world = at + (right * corner.x + up * corner.y) * (uLeaves > 0.5 ? 0.05 + seed.x * 0.03 : (0.024 + seed.x * seed.x * 0.05) * min(1.0, length(at) / 3.0));',
 				'	}',
 				'	else {',
 				'		world = at + side * aPosition.x * 0.011 + way * aPosition.y * (0.45 + seed.x * 0.55);',
@@ -1851,11 +2256,22 @@ Elemenx.Trait('SceneLighting', {
 			Fall: head + [
 				'in vec2 vAt;',
 				'in float vFar;',
+				'in float vSeed;',
 				'uniform vec3 uTone;',
 				'uniform float uSnow;',
+				'uniform float uLeaves;',
 				'uniform float uAmount;',
 				'out vec4 outColor;',
 				'void main() {',
+				/* A leaf: an oval of a color of autumn, of its seed. */
+				'	if (uLeaves > 0.5) {',
+				'		float leaf = 1.0 - smoothstep(0.75, 1.0, length(vAt * vec2(1.0, 1.6)));',
+				'		if (leaf < 0.5) discard;',
+				'		float hue = fract(vSeed * 13.7);',
+				'		vec3 color = hue < 0.35 ? vec3(0.78, 0.55, 0.1) : hue < 0.65 ? vec3(0.72, 0.28, 0.06) : hue < 0.85 ? vec3(0.55, 0.12, 0.05) : vec3(0.45, 0.32, 0.15);',
+				'		outColor = vec4(color * uTone, (1.0 - smoothstep(0.35, 0.5, vFar)) * smoothstep(0.01, 0.04, vFar));',
+				'		return;',
+				'	}',
 				'	float edge = uSnow > 0.5 ? 1.0 - smoothstep(0.3, 1.0, length(vAt)) : (1.0 - abs(vAt.x)) * (1.0 - vAt.y * vAt.y);',
 				'	outColor = vec4(uTone, edge * (uSnow > 0.5 ? 0.95 : 0.36) * uAmount * (1.0 - smoothstep(0.32, 0.5, vFar)) * smoothstep(0.015, 0.07, vFar));',
 				'}'
@@ -2008,6 +2424,7 @@ Elemenx.Trait('SceneLighting', {
 				'in vec2 vQuad;',
 				'uniform sampler2D uColor;',
 				'uniform sampler2D uBloom;',
+				'uniform float uBloomGain;',
 				'uniform vec3 uSun;',
 				'uniform vec3 uSunColor;',
 				'uniform float uRays;',
@@ -2030,7 +2447,23 @@ Elemenx.Trait('SceneLighting', {
 				'uniform float uNight;',
 				'uniform vec4 uGrade;',
 				'uniform highp sampler3D uNoise;',
+				'uniform vec4 uBalance;',
+				'uniform vec4 uLook;',
+				'uniform vec4 uWarp;',
+				'uniform sampler2D uLut;',
+				'uniform float uLutSize;',
 				'out vec4 outColor;',
+				/* A table of colors: N slices of blue side by side, red across each, green down. */
+				'vec3 table(vec3 c) {',
+				'	float n = uLutSize;',
+				'	float b = clamp(c.b, 0.0, 1.0) * (n - 1.0);',
+				'	float s0 = floor(b);',
+				'	float s1 = min(s0 + 1.0, n - 1.0);',
+				'	vec2 at = vec2(clamp(c.r, 0.0, 1.0) * (n - 1.0) + 0.5, clamp(c.g, 0.0, 1.0) * (n - 1.0) + 0.5) / vec2(n * n, n);',
+				'	vec3 a = texture(uLut, at + vec2(s0 / n, 0.0)).rgb;',
+				'	vec3 d = texture(uLut, at + vec2(s1 / n, 0.0)).rgb;',
+				'	return mix(a, d, b - s0);',
+				'}',
 				'vec3 aces(vec3 x) {',
 				'	return clamp(x * (2.51 * x + 0.03) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);',
 				'}',
@@ -2046,12 +2479,20 @@ Elemenx.Trait('SceneLighting', {
 				'			if (near > 0.0) uv += (texture(uNoise, vec3(uv * vec2(22.0, 9.0) - vec2(0.0, uTick * 0.9), uTick * 0.3)).gb - 0.5) * 0.0028 * near * uShimmer[i].a;',
 				'		}',
 				'	}',
+				/* The glass of a camera bends the picture: a barrel or a pincushion, more to the edges, the frame kept full. */
+				'	vec2 middle = uv - 0.5;',
+				'	if (uWarp.x != 0.0) uv = 0.5 + middle * (1.0 + uWarp.x * dot(middle * vec2(uAspect, 1.0), middle * vec2(uAspect, 1.0))) / (1.0 + max(uWarp.x, 0.0) * 0.25 * (uAspect * uAspect + 1.0));',
 				'	vec3 color = decoded(uv);',
 				'	vec3 round = decoded(uv + vec2(uPixel.x, 0.0)) + decoded(uv - vec2(uPixel.x, 0.0)) + decoded(uv + vec2(0.0, uPixel.y)) + decoded(uv - vec2(0.0, uPixel.y));',
 				'	color = max(color + (color - round * 0.25) * uSharp, vec3(0.0));',
+				/* The colors part at the edges: red a little out, blue a little in. */
+				'	if (uWarp.y > 0.0) {',
+				'		color.r = decoded(0.5 + (uv - 0.5) * (1.0 + uWarp.y * 4.0 * length(middle))).r;',
+				'		color.b = decoded(0.5 + (uv - 0.5) * (1.0 - uWarp.y * 4.0 * length(middle))).b;',
+				'	}',
 				'	if (uMirrorOn > 0.5) {',
 				'		vec4 mirrored = texture(uMirror, uv);',
-				'		color = mix(color, pow(max(mirrored.rgb, vec3(0.0)), vec3(2.2)), mirrored.a);',
+				'		color = mix(color, pow(max(mirrored.rgb, vec3(0.0)), vec3(2.2)), mirrored.a * (1.0 - uWarp.z * 0.8));',
 				'	}',
 				/* A grey day takes the color out of things. */
 				'	if (uGrade.a > 0.0) color = mix(color, vec3(dot(color, vec3(0.3, 0.59, 0.11))), uGrade.a) * uGrade.rgb;',
@@ -2087,7 +2528,7 @@ Elemenx.Trait('SceneLighting', {
 				'		color *= 1.0 - min(blind * 0.95, 0.93) * smoothstep(0.12, 0.85, away);',
 				'		color += lens * mix(uSunColor, vec3(1.0), 0.35) * min(seen * 2.5, 1.0) * uFlare;',
 				'	}',
-				'	color += texture(uBloom, uv).rgb * 0.62;',
+				'	color += texture(uBloom, uv).rgb * uBloomGain;',
 				/* The air burning round what comes down through it, at the edges of the view. */
 				'	color += vec3(1.0, 0.36, 0.1) * uHeat * smoothstep(0.5, 1.25, length(vQuad));',
 				'	float open = uEyeOn > 0.5 && uExposure == 1.0 ? clamp(0.3 / exp(texture(uEye, vec2(0.5)).r), 0.8, 1.35) : uExposure;',
@@ -2095,11 +2536,23 @@ Elemenx.Trait('SceneLighting', {
 				'	if (uNight > 0.0) {',
 				'		float seen = dot(color, vec3(0.3, 0.6, 0.1));',
 				'		color = mix(color, vec3(0.74, 0.83, 1.0) * seen, uNight * 0.8 * (1.0 - smoothstep(0.1, 0.5, seen)));',
-				'		open = mix(open, 1.0, uNight);',
+				'		if (uWarp.w < 0.5) open = mix(open, 1.0, uNight);',
 				'	}',
+				/* The white balance and the filter of a camera, what is added to the exposure, the corners its lens darkens. */
+				'	color *= uBalance.rgb * uBalance.a;',
+				'	if (uLook.w > 0.0) color *= 1.0 - uLook.w * smoothstep(0.15, 1.6, dot(vQuad, vQuad));',
 				'	color = aces(color * 0.9 * open);',
+				'	vec3 shown = pow(color, vec3(1.0 / 2.2));',
+				'	if (uLook.x != 1.0) shown = max(mix(vec3(dot(shown, vec3(0.2126, 0.7152, 0.0722))), shown, uLook.x), vec3(0.0));',
+				'	if (uLook.y != 1.0) shown = clamp((shown - 0.5) * uLook.y + 0.5, 0.0, 1.0);',
+				'	if (uLutSize > 1.0) shown = table(shown);',
+				/* The grain of a sensor pushed by its ISO: more in the dark, another each frame. */
+				'	if (uLook.z > 0.0) {',
+				'		float n = fract(sin(dot(gl_FragCoord.xy + fract(uTick * 7.31) * 113.0, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;',
+				'		shown += n * uLook.z * 0.09 * (1.2 - dot(shown, vec3(0.33)));',
+				'	}',
 				'	float grain = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) / 255.0;',
-				'	outColor = vec4(pow(color, vec3(1.0 / 2.2)) + grain, 1.0);',
+				'	outColor = vec4(shown + grain, 1.0);',
 				'}'
 			].join('\n')
 		};

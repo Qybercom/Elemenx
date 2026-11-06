@@ -29,7 +29,7 @@ Elemenx.Service('SceneSower', {
 
 	/* The workers of the sowing: the field of the ground made as the page makes it, the noise and the chances of Models. */
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneSower', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan'], SceneSower: ['Land', 'Grown', 'Sow', 'Random', 'Ground', 'Within', 'Near', 'Box', 'Touches', 'Keeping', 'Free', 'Footing', 'Footprint', 'Places', 'Chance']});
+		return this.$Service('Workers').Pool('SceneSower', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf', 'HighwaysOf', 'TownsOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'GroundMaterials', 'LookMaterials', 'MaterialsOf', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan'], SceneSower: ['Land', 'Grown', 'Sow', 'Random', 'Ground', 'Within', 'Near', 'Box', 'Touches', 'Keeping', 'Free', 'Footing', 'Footprint', 'Places', 'Chance']});
 	},
 
 	/* The numbers of a seed, as SceneModels.Random gives them: the same things for the same seed in a worker and in the page. */
@@ -239,22 +239,23 @@ Elemenx.Service('SceneSower', {
 		if (!points)
 			return places;
 
-		/* Along the line: the same steps from its start whatever square, each piece turned along its way. */
+		/*
+		 * Along the line: the same steps from its start whatever square (a piece at the middle of each step), each piece turned
+		 * along its way, over as many of its points as a step crosses (a line of short pieces: the way of a road).
+		 */
 		var walked = 0;
+		var next = spacing / 2;
 
 		for (i = 0; i + 1 < points.length; i++) {
 			var dx = points[i + 1][0] - points[i][0];
 			var dz = points[i + 1][1] - points[i][1];
 			var length = Math.hypot(dx, dz);
-			var at = Math.ceil(walked / spacing) * spacing - walked;
 
 			way = Math.atan2(-dz, dx);
 
-			for (; at < length; at += spacing) {
-				var px = points[i][0] + dx * (at + spacing / 2) / length;
-				var pz = points[i][1] + dz * (at + spacing / 2) / length;
-
-				if (at + spacing / 2 > length) break;
+			for (; next <= walked + length && length > 0; next += spacing) {
+				var px = points[i][0] + dx * (next - walked) / length;
+				var pz = points[i][1] + dz * (next - walked) / length;
 
 				/* A wall leaves the way of its gates open. */
 				var gated = (rule.Gates || []).some(function (gate) {
@@ -580,8 +581,10 @@ Elemenx.Service('SceneSower', {
 
 					if (height === null || !info) continue;
 
-					key = info.Keys[variant % info.Keys.length];
-					list = lists[key] = lists[key] || {Places: [], Extra: []};
+					/* What was changed of it by hand (context Edits by its own key: its rule and its place, a tenth of a metre). */
+					var own = (rule.ID || '') + ':' + Math.round(place[0] * 10) + ':' + Math.round(place[1] * 10);
+					var edit = context.Edits ? context.Edits[own] : null;
+
 					tone = random(0.86, 1.1);
 
 					/* A piece that joins the next (a fence, a hedge, a wall) is as long as the step; the others as their Size says. */
@@ -595,8 +598,47 @@ Elemenx.Service('SceneSower', {
 					if (grown && grown.Turn !== undefined && isFinite(grown.Turn))
 						turn = Number(grown.Turn);
 
-					list.Places.push(place[0], height - 0.05, place[1], large);
-					list.Extra.push(turn, tone, tone * random(0.94, 1.04), tone * random(0.92, 1));
+					/* The chances of it all taken, so what comes after it is the same whatever was done to it. */
+					var green = tone * random(0.94, 1.04);
+					var blue = tone * random(0.92, 1);
+					var at = [place[0], place[1]];
+
+					if (edit) {
+						/* Taken away: its chance of a way through it taken too, as it would have been. */
+						if (edit.Remove) {
+							if (!(rule.Fixed && place[4].Width) && rule.Passability !== undefined)
+								random(0, 1);
+
+							continue;
+						}
+
+						if (edit.Model && context.Models[edit.Model]) {
+							name = edit.Model;
+							info = context.Models[name];
+						}
+
+						if (edit.X !== undefined)
+							at[0] = Number(edit.X);
+
+						if (edit.Z !== undefined)
+							at[1] = Number(edit.Z);
+
+						if (edit.Turn !== undefined)
+							turn = Number(edit.Turn);
+
+						if (edit.Size !== undefined)
+							large = Number(edit.Size);
+
+						if (edit.X !== undefined || edit.Z !== undefined)
+							height = field.Height(at[0], at[1]) + 0.05;
+					}
+
+					key = info.Keys[variant % info.Keys.length];
+					list = lists[key] = lists[key] || {Places: [], Extra: [], Keys: []};
+
+					list.Places.push(at[0], height - 0.05, at[1], large);
+					list.Extra.push(turn, tone, green, blue);
+					list.Keys.push(own);
 
 					list.Reach = rule.Reach ? Number(rule.Reach) : 0;
 
@@ -622,7 +664,7 @@ Elemenx.Service('SceneSower', {
 			});
 
 			Object.keys(lists).forEach(function (key) {
-				made.Lists[key] = {Places: new Float32Array(lists[key].Places), Extra: new Float32Array(lists[key].Extra), Count: lists[key].Places.length / 4, Reach: lists[key].Reach};
+				made.Lists[key] = {Places: new Float32Array(lists[key].Places), Extra: new Float32Array(lists[key].Extra), Count: lists[key].Places.length / 4, Reach: lists[key].Reach, Keys: lists[key].Keys};
 			});
 
 			made.Center = [square.X + size / 2, field.Height(square.X + size / 2, square.Z + size / 2), square.Z + size / 2];

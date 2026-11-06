@@ -37,7 +37,7 @@ Elemenx.Service('SceneShowcase', {
 			{ID: 'workshop', Name: 'Editor strokes', X: 1000, Y: -1050, Radius: 300, Shows: ['raise', 'lower', 'flatten', 'smooth', 'stamp', 'erosion', 'mask', 'plateau']},
 			{ID: 'galleries', Name: 'Galleries', X: -700, Y: 1120, Radius: 330, Near: 0.9, Shows: ['models', 'buildings', 'road types', 'effects', 'lights', 'mirror', 'glass']},
 			{ID: 'race', Name: 'Race track', X: 1050, Y: 1000, Radius: 300, Shows: ['track', 'barriers', 'car']},
-			{ID: 'game', Name: 'Game', X: -150, Y: 700, Radius: 220, Shows: ['trigger', 'triggerpoint', 'triggerline', 'zone', 'marker', 'units', 'location']}
+			{ID: 'game', Name: 'Game', X: -150, Y: 700, Radius: 220, Shows: ['trigger', 'triggerpoint', 'triggerline', 'zone', 'collider', 'marker', 'units', 'location']}
 		];
 	},
 
@@ -220,6 +220,7 @@ Elemenx.Service('SceneShowcase', {
 				{Type: 'triggerpoint', At: at(-60, 640), Radius: 12},
 				{Type: 'triggerline', Points: points([[-260, 620], [-260, 780]]), Width: 6},
 				{Type: 'zone', Points: ring(-150, 700, 120, 8), Tags: ['safe'], Team: 'blue'},
+				{Type: 'collider', Points: rect(-230, 760, -210, 790), Height: 4},
 				{Type: 'marker', At: at(-200, 760), Radius: 4, Role: 'spawn', Team: 'blue', Name: 'Blue base'},
 				{Type: 'marker', At: at(-80, 760), Radius: 4, Role: 'spawn', Team: 'red', Name: 'Red base'}
 			]);

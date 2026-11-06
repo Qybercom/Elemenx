@@ -18,7 +18,7 @@ Elemenx.Service('SceneBlueprints', {
 	},
 
 	$Provides: {
-		Blueprints: {Graphs: ['effect', 'water', 'sky', 'land'], Nodes: ['LandPoint', 'LandGrain', 'LandPools', 'LandAlbedo', 'LandPaint', 'LandLight', 'LandCaustics', 'LandSheen', 'LandCompose', 'LandEnd', 'SkyRay', 'SkyDay', 'SkyAir', 'SkyDusk', 'SkyHalo', 'SkyPink', 'SkyWisps', 'SkyCover', 'SkyEclipse', 'SkyTowns', 'SkyRainbow', 'SkyMoonHaze', 'SkyMoon', 'SkyCompose', 'SkyEnd', 'Place', 'View', 'Far', 'Flow', 'Sun', 'Waves', 'WaterNormal', 'Fresnel', 'Glints', 'Sky', 'Body', 'Foam', 'Under', 'Absorb', 'Below', 'Reflection', 'WaterFog', 'Water', 'Layer', 'Effect', 'Scene', 'Clouds', 'Occlusion', 'Air', 'Frames', 'Mirror', 'Rays', 'Exposure', 'Bokeh', 'Bloom', 'Picture', 'Shader']}
+		Blueprints: {Graphs: ['effect', 'water', 'sky', 'land'], Nodes: ['LandPoint', 'LandMaterial', 'LandGrain', 'LandPools', 'LandAlbedo', 'LandPaint', 'LandLight', 'LandCaustics', 'LandSheen', 'LandCompose', 'LandEnd', 'SkyRay', 'SkyDay', 'SkyAir', 'SkyDusk', 'SkyHalo', 'SkyPink', 'SkyWisps', 'SkyCover', 'SkyEclipse', 'SkyTowns', 'SkyAurora', 'SkyRainbow', 'SkyMoonHaze', 'SkyMoon', 'SkyCompose', 'SkyEnd', 'Place', 'View', 'Far', 'Flow', 'Sun', 'Waves', 'WaterNormal', 'Fresnel', 'Glints', 'Sky', 'Body', 'Foam', 'Under', 'Absorb', 'Below', 'Reflection', 'WaterFog', 'Water', 'Layer', 'Effect', 'Scene', 'Clouds', 'Occlusion', 'Air', 'Frames', 'Mirror', 'Rays', 'Exposure', 'Bokeh', 'Bloom', 'Picture', 'Shader']}
 	},
 
 	$OnCreate: function () {
@@ -523,18 +523,75 @@ Elemenx.Service('SceneBlueprints', {
 			return {Color: '(' + inputs.Color + ' + uGlow * ' + name + '_towns)', Towns: name + '_towns'};
 		});
 
-		/* Past the rain, across the sky from the sun: red outside, violet inside. */
+		/*
+		 * In the rain, across the sky from the sun (the sun behind, under 42 degrees): the bow of 42 degrees round the point
+		 * opposite it, red outside and violet inside, the sky brighter inside it; the second of 51 degrees, fainter, its colors
+		 * the other way; Alexander's darker band between them. Where the sun shines through (uCover none).
+		 */
 		node('SkyRainbow', [vec3('Color', 'vec3(0.0)'), vec3('Ray', 'vec3(0.0, 1.0, 0.0)'), float('Sun', 'dot(uSun, uUp)'), float('Height', '0.0')], [{Key: 'Color', Type: 'vec3'}], function (context) {
 			var name = 's' + context.Index;
 			var inputs = context.Inputs;
 
 			context.Lines.push('vec3 ' + name + '_sky = ' + inputs.Color + ';');
-			context.Lines.push('if (uRainbow > 0.0 && ' + inputs.Sun + ' > 0.0 && ' + inputs.Height + ' > 0.0) {');
-			context.Lines.push('\tfloat bow = (acos(clamp(-dot(' + inputs.Ray + ', uSun), -1.0, 1.0)) - 0.70) / 0.05;');
-			context.Lines.push('\tif (bow > 0.0 && bow < 1.0) ' + name + '_sky += (0.5 + 0.5 * cos(6.28 * (bow * 0.8 + vec3(0.62, 0.33, 0.0)))) * sin(bow * 3.14) * 0.16 * uRainbow * smoothstep(0.0, 0.1, ' + inputs.Height + ');');
+			context.Lines.push('if (uRainbow > 0.0 && ' + inputs.Sun + ' > -0.02 && ' + inputs.Height + ' > 0.0) {');
+			context.Lines.push('\tfloat ' + name + '_at = acos(clamp(-dot(' + inputs.Ray + ', uSun), -1.0, 1.0));');
+			context.Lines.push('\tfloat ' + name + '_one = (' + name + '_at - 0.7155) / 0.0350;');
+			context.Lines.push('\tfloat ' + name + '_two = (' + name + '_at - 0.8810) / 0.0610;');
+			context.Lines.push('\tfloat ' + name + '_shown = uRainbow * (1.0 - uCover * 0.85) * smoothstep(0.0, 0.06, ' + inputs.Height + ');');
+			context.Lines.push('\tvec3 ' + name + '_bow = vec3(0.0);');
+			/* A hue of 0 red to 0.8 violet: red outside the first bow, inside the second. */
+			context.Lines.push('\tfloat ' + name + '_h1 = 0.8 * (1.0 - clamp(' + name + '_one, 0.0, 1.0)) * 6.0;');
+			context.Lines.push('\tfloat ' + name + '_h2 = 0.8 * clamp(' + name + '_two, 0.0, 1.0) * 6.0;');
+			context.Lines.push('\tif (' + name + '_one > 0.0 && ' + name + '_one < 1.0) ' + name + '_bow += clamp(vec3(abs(' + name + '_h1 - 3.0) - 1.0, 2.0 - abs(' + name + '_h1 - 2.0), 2.0 - abs(' + name + '_h1 - 4.0)), 0.0, 1.0) * sin(' + name + '_one * 3.1416) * 0.32;');
+			context.Lines.push('\tif (' + name + '_two > 0.0 && ' + name + '_two < 1.0) ' + name + '_bow += clamp(vec3(abs(' + name + '_h2 - 3.0) - 1.0, 2.0 - abs(' + name + '_h2 - 2.0), 2.0 - abs(' + name + '_h2 - 4.0)), 0.0, 1.0) * sin(' + name + '_two * 3.1416) * 0.12;');
+			context.Lines.push('\tfloat ' + name + '_inside = 1.0 - smoothstep(0.66, 0.7155, ' + name + '_at);');
+			context.Lines.push('\tfloat ' + name + '_band = smoothstep(0.75, 0.77, ' + name + '_at) * (1.0 - smoothstep(0.865, 0.885, ' + name + '_at));');
+			context.Lines.push('\t' + name + '_sky = ' + name + '_sky * (1.0 + (' + name + '_inside * 0.08 - ' + name + '_band * 0.1) * ' + name + '_shown) + ' + name + '_bow * ' + name + '_shown;');
 			context.Lines.push('}');
 
 			return {Color: name + '_sky'};
+		});
+
+		/*
+		 * The northern lights: curtains of light high over the land, their rays hanging down, green under and red to violet
+		 * over (uAuroraLow, uAuroraHigh), waving slowly; as strong as uAurora.x (its time in .y). Aurora is how much of the
+		 * sky they cover, for its alpha over the stars.
+		 */
+		node('SkyAurora', [vec3('Color', 'vec3(0.0)'), vec3('Ray', 'vec3(0.0, 1.0, 0.0)'), float('Height', '0.0')], [{Key: 'Color', Type: 'vec3'}, {Key: 'Aurora', Type: 'float'}], function (context) {
+			var name = 's' + context.Index;
+			var inputs = context.Inputs;
+			var ray = inputs.Ray;
+
+			/*
+			 * Through the layer of the lights, in ten steps of height: two thin walls along waving lines over the land, their rays
+			 * hanging down, brighter low (green) than high (to red and violet); seen through, a wall is a curtain.
+			 */
+			context.Lines.push('float ' + name + '_light = 0.0;');
+			context.Lines.push('vec3 ' + name + '_glow = vec3(0.0);');
+			context.Lines.push('if (uAurora.x > 0.0 && ' + inputs.Height + ' > 0.0) {');
+			context.Lines.push('\tfloat ' + name + '_t = uAurora.y * 0.05;');
+			/* Each pixel steps from a height of its own: no bands of the ten steps, a fine grain instead. */
+			context.Lines.push('\tfloat ' + name + '_jit = fract(sin(dot(' + ray + '.xz * 813.0 + ' + ray + '.y * 97.0 + fract(uAurora.y * 7.31), vec2(12.9898, 78.233))) * 43758.5453);');
+			context.Lines.push('\tfor (int j = 0; j < 16; j++) {');
+			context.Lines.push('\t\tfloat up = (float(j) + ' + name + '_jit) / 16.0;');
+			context.Lines.push('\t\tvec2 q = ' + ray + '.xz / max(' + ray + '.y, 0.03) * (1.0 + up * 1.4) * 0.3;');
+			context.Lines.push('\t\tfor (int k = 0; k < 2; k++) {');
+			context.Lines.push('\t\t\tfloat c = float(k);');
+			context.Lines.push('\t\t\tfloat line = sin(q.x * 0.8 + ' + name + '_t * (1.0 + c * 0.4) + c * 2.3) * 0.9 + sin(q.x * 2.1 - ' + name + '_t * 1.6 + c) * 0.22 + c * 1.6 - 0.5;');
+			context.Lines.push('\t\t\tfloat d = q.y - line;');
+			context.Lines.push('\t\t\tfloat wall = exp(-d * d * 55.0);');
+			context.Lines.push('\t\t\tfloat rays = 0.15 + 0.85 * pow(0.5 + 0.5 * sin(q.x * 38.0 + sin(q.x * 5.3 + ' + name + '_t * 2.5) * 4.0 + c * 1.9), 5.0);');
+			context.Lines.push('\t\t\tfloat part = wall * rays * exp(-up * 2.2) * (1.0 - c * 0.35);');
+			context.Lines.push('\t\t\t' + name + '_light += part;');
+			context.Lines.push('\t\t\t' + name + '_glow += mix(uAuroraLow, uAuroraHigh, smoothstep(0.25, 1.0, up)) * part;');
+			context.Lines.push('\t\t}');
+			context.Lines.push('\t}');
+			context.Lines.push('\tfloat ' + name + '_shown = uAurora.x * smoothstep(0.015, 0.12, ' + ray + '.y) * 0.26;');
+			context.Lines.push('\t' + name + '_light *= ' + name + '_shown;');
+			context.Lines.push('\t' + name + '_glow *= ' + name + '_shown * 3.4;');
+			context.Lines.push('}');
+
+			return {Color: '(' + inputs.Color + ' + ' + name + '_glow)', Aurora: 'min(' + name + '_light, 1.0)'};
 		});
 
 		/* A moon up lights the air round it a little, more the fuller it is. */
@@ -576,13 +633,13 @@ Elemenx.Service('SceneBlueprints', {
 		 * The air over the stars, as thick as it is by day, at dusk, round the moon and over towns; the disc of the sun with
 		 * its warm light (as large as it is seen: uSunRadius, the angle of its radius), hidden by a moon before it; the moon over all.
 		 */
-		node('SkyCompose', [vec3('Color', 'vec3(0.0)'), vec3('Crown', 'vec3(0.0)'), vec3('Tint', 'vec3(1.0)'), float('Toward', '0.0'), float('Sun', 'dot(uSun, uUp)'), float('Day', '1.0'), float('Dusk', '0.0'), float('Haze', '0.0'), float('Towns', '0.0'), vec3('Moon', 'vec3(0.0)'), float('Shape', '0.0')], [{Key: 'Color', Type: 'vec3'}, {Key: 'Alpha', Type: 'float'}], function (context) {
+		node('SkyCompose', [vec3('Color', 'vec3(0.0)'), vec3('Crown', 'vec3(0.0)'), vec3('Tint', 'vec3(1.0)'), float('Toward', '0.0'), float('Sun', 'dot(uSun, uUp)'), float('Day', '1.0'), float('Dusk', '0.0'), float('Haze', '0.0'), float('Towns', '0.0'), vec3('Moon', 'vec3(0.0)'), float('Shape', '0.0'), float('Aurora', '0.0')], [{Key: 'Color', Type: 'vec3'}, {Key: 'Alpha', Type: 'float'}], function (context) {
 			var name = 's' + context.Index;
 			var inputs = context.Inputs;
 
 			context.Lines.push('float ' + name + '_density = uAir.a * (1.0 - uHigh);');
 			context.Lines.push('float ' + name + '_disk = smoothstep(cos(uSunRadius * 1.35), cos(uSunRadius * 0.75), ' + inputs.Toward + ') * (1.0 - uCover);');
-			context.Lines.push('float ' + name + '_alpha = clamp(' + name + '_density * (' + inputs.Day + ' * 0.97 * (1.0 - uEclipse) + ' + inputs.Dusk + ' * 0.6 + ' + inputs.Haze + ' + ' + inputs.Towns + ' * max(uGlow.r, uGlow.g)), 0.0, 1.0);');
+			context.Lines.push('float ' + name + '_alpha = clamp(' + name + '_density * (' + inputs.Day + ' * 0.97 * (1.0 - uEclipse) + ' + inputs.Dusk + ' * 0.6 + ' + inputs.Haze + ' + ' + inputs.Towns + ' * max(uGlow.r, uGlow.g) + ' + inputs.Aurora + '), 0.0, 1.0);');
 			context.Lines.push('float ' + name + '_hidden = ' + inputs.Shape + ' * smoothstep(0.0, 0.05, uEclipse);');
 
 			return {Color: '((' + inputs.Color + ' + ' + inputs.Crown + ') * ' + name + '_density * (1.0 - ' + name + '_hidden) + ' + inputs.Tint + ' * ' + name + '_disk * (1.0 - smoothstep(0.0, 0.25, ' + inputs.Shape + ')) * 9.0 * smoothstep(-0.03, 0.01, ' + inputs.Sun + ') + ' + inputs.Moon + ')', Alpha: 'max(max(' + name + '_alpha, ' + name + '_disk), ' + inputs.Shape + ')'};
@@ -665,6 +722,22 @@ Elemenx.Service('SceneBlueprints', {
 		/* What the shader of the land has at a point: in the world (from the eye) and on the land, its normal and its color. */
 		node('LandPoint', [], [{Key: 'World', Type: 'vec3'}, {Key: 'Place', Type: 'vec3'}, {Key: 'Normal', Type: 'vec3'}, {Key: 'Color', Type: 'vec3'}], function () {
 			return {World: 'vWorld', Place: 'vPlace', Normal: 'normalize(vNormal)', Color: 'vColor'};
+		});
+
+		/*
+		 * What the ground is made of there (SceneMaterials, by the weights of its materials): its color and its normal bent by
+		 * their patterns, as near as the eye sees them.
+		 */
+		node('LandMaterial', [vec3('Place', 'vPlace'), vec3('Color', 'vColor'), vec3('Normal', 'normalize(vNormal)')], [{Key: 'Color', Type: 'vec3'}, {Key: 'Normal', Type: 'vec3'}], function (context) {
+			var name = 'l' + context.Index;
+			var inputs = context.Inputs;
+
+			context.Lines.push('vec3 ' + name + '_color = ' + inputs.Color + ';');
+			context.Lines.push('float ' + name + '_height = 0.0;');
+			context.Lines.push('landMaterials(' + inputs.Place + ', length(fwidth(' + inputs.Place + '.xz)), ' + name + '_color, ' + name + '_height);');
+			context.Lines.push('vec3 ' + name + '_normal = enx_bump(vWorld, ' + inputs.Normal + ', ' + name + '_height);');
+
+			return {Color: name + '_color', Normal: name + '_normal'};
 		});
 
 		/* The grain of the soil. */

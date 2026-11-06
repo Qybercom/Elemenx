@@ -30,6 +30,7 @@ A graph shown, not edited: a network (hosts, routers, services) or what depends 
 
 ## Tests
 
+- [reads a topology of nodes and links, their icons, statuses and details, and Markdown draws it by Topology](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-plugins.test.js#L238) — `tests/regression/rich-plugins.test.js`
 - [draws each node as a block of its name, status, kind and details where its layout puts it, its links between their edges, and fits it all in the view](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/Topology/Topology.test.js#L82) — `libraries/ElemenxUI/components/Topology/Topology.test.js`
 - [selects a node by a press and lights it with its neighbours, a link with its ends, lets go on nothing; opens a node by a double press and Enter](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/Topology/Topology.test.js#L129) — `libraries/ElemenxUI/components/Topology/Topology.test.js`
 - [goes from node to node by the arrows, keeps a node where it is dragged by its head, and lays out again when the graph or its layout changes](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/Topology/Topology.test.js#L170) — `libraries/ElemenxUI/components/Topology/Topology.test.js`

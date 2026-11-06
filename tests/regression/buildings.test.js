@@ -55,7 +55,7 @@ describe('Contract: Buildings, a building of any size made of its numbers, a mod
 		var house = buildings.Options({Class: 'house'});
 		var tower = buildings.Options({Class: 'tower', Floors: 30});
 
-		expect(buildings.Classes()).toEqual(['shack', 'cabin', 'cottage', 'house', 'villa', 'townhouse', 'shop', 'warehouse', 'factory', 'apartments', 'office', 'tower', 'skyscraper', 'business']);
+		expect(buildings.Classes()).toEqual(['shack', 'cabin', 'cottage', 'house', 'villa', 'townhouse', 'shop', 'warehouse', 'factory', 'apartments', 'office', 'tower', 'skyscraper', 'business', 'school', 'church', 'station', 'fuel', 'hangar', 'garage', 'barn', 'watertower', 'parking']);
 		expect(house).toMatchObject({Class: 'house', Floors: 2, FloorHeight: 3, Roof: 'hip', Walls: 'brick'});
 		expect(house.Height).toBeCloseTo(6 + 8 * 0.35, 6);
 		expect(tower.Height).toBeCloseTo(30 * 3.6 + 26 * 0.04 + 12, 6);
@@ -107,6 +107,74 @@ describe('Contract: Buildings, a building of any size made of its numbers, a mod
 
 		['test-tower', 'test-business', 'test-shack'].forEach(function (name) {
 			delete models.Recipes[name];
+		});
+	});
+
+	/*
+	 * The buildings of a town beside its houses: a school of wings round a yard open behind (U), a church and its bell
+	 * tower, a station, a fuel station, a hangar, a garage, a barn, a water tower, a car park; each a model as tall as its
+	 * Size, and of the size its lots are.
+	 */
+	it('makes the buildings of a town of their own shapes, each as tall as its Size, its wings within its width and depth', function () {
+		var terrain;
+		var school = buildings.Define('test-school', {Class: 'school', Floors: 2});
+		var made = models.Make('test-school');
+		var all = bounds(made);
+		/* The yard of a U: nothing in the middle of its back half, the wings at its sides and front. */
+		var back = bounds({Pieces: made.Pieces.map(function (piece) {
+			var p = piece.Geometry.Positions;
+			var kept = [];
+			var i;
+
+			for (i = 0; i < p.length; i += 3) {
+				if (Math.abs(p[i]) < school.Width * 0.15 / school.Height && p[i + 2] < -school.Depth * 0.2 / school.Height && p[i + 1] > 0.05)
+					kept.push(p[i], p[i + 1], p[i + 2]);
+			}
+
+			return {Geometry: {Positions: kept}};
+		})});
+
+		expect(school.Plan).toBe('U');
+		expect(all[4]).toBeLessThan(1.001);
+		expect((all[3] - all[0]) * school.Height).toBeLessThan(school.Width * 1.1);
+		expect(back[0]).toBe(Infinity);
+
+		/* A church: its bell tower over its roof, to the top of the model. */
+		var church = buildings.Options({Class: 'church'});
+
+		expect(church.Height).toBeCloseTo(9 * 2.6, 6);
+
+		['school', 'church', 'station', 'fuel', 'hangar', 'garage', 'barn', 'watertower', 'parking'].forEach(function (name) {
+			var options = buildings.Define('test-' + name, {Class: name});
+			var model = models.Make('test-' + name);
+			var box = bounds(model);
+
+			expect(models.Info('test-' + name).Size, name).toBeCloseTo(options.Height, 6);
+			expect(box[4], name).toBeGreaterThan(0.95);
+			expect(box[4], name).toBeLessThan(1.02);
+			expect(box[1], name).toBeGreaterThan(-0.02);
+
+			delete models.Recipes['test-' + name];
+		});
+
+		/* Masonry has a cornice, glass none; a house its porch or its wing by chance, as told when told. */
+		expect(buildings.Options({Class: 'house'}).Cornice).toBe(true);
+		expect(buildings.Options({Class: 'office'}).Cornice).toBe(false);
+		expect(buildings.Options({Class: 'tower', Plan: 'U'}).Plan).toBe('rect');
+
+		/* The lots of settlements know the sizes of all of them. */
+		Use(['service:SceneTerrainGenerator']);
+
+		terrain = Elemenx.Service('SceneTerrainGenerator');
+
+		[terrain.SettlementKinds, terrain.SettlementDistricts].forEach(function (table) {
+			Object.keys(table).forEach(function (kind) {
+				Object.keys(Object.assign({}, table[kind].Classes || table[kind], table[kind].Core || {})).forEach(function (name) {
+					if (['Block', 'Street', 'Grid', 'Walls'].indexOf(name) >= 0) return;
+
+					expect(terrain.SettlementSizes[name], name).toBeTruthy();
+				});
+			});
 		});
 	});
 });

@@ -32,7 +32,7 @@
 Elemenx.Service('ScenePlanet', {
 	$Meta: {
 		Description: 'A planet as one continuous function of a direction: painted continents, tectonic plates, winds, climate and biomes, as fine as it is asked.',
-		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'Settlements(options, count)', 'UseSettlements(key, towns)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)']
+		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'Settlements(options, count)', 'UseSettlements(key, towns)', 'Highways(options, step)', 'UseHighways(key, roads)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)']
 	},
 
 	/* The kinds of strokes of a paint. */
@@ -133,6 +133,30 @@ Elemenx.Service('ScenePlanet', {
 
 				Object.keys(keys).forEach(function (key) {
 					(buckets[key] = buckets[key] || []).push(segment);
+				});
+			}
+		});
+		/* Its highways (Highways: [{Points (directions), Class}]): kept in squares of the same grid, as its rivers. */
+		var trunks = {};
+
+		(Array.isArray(given.Highways) ? given.Highways : given.Highways ? self.HighwaysOf(given.Highways) : []).forEach(function (road) {
+			var points = road.Points || [];
+			var k;
+
+			for (k = 0; k + 1 < points.length; k++) {
+				var segment = {A: points[k], B: points[k + 1], Class: road.Class || 'road'};
+				var keys = {};
+
+				[points[k], points[k + 1]].forEach(function (end) {
+					var cell = self.CellAt(1, Math.PI / 2 / 48, end);
+
+					[cell].concat(self.CellNeighbours(1, Math.PI / 2 / 48, cell)).forEach(function (near) {
+						keys[near.ID] = true;
+					});
+				});
+
+				Object.keys(keys).forEach(function (key) {
+					(trunks[key] = trunks[key] || []).push(segment);
 				});
 			}
 		});
@@ -449,6 +473,25 @@ Elemenx.Service('ScenePlanet', {
 			return best;
 		}
 
+		/* The nearest of its highways to a point: {Far (km), Class}; null with none near. */
+		function nearestHighway (p) {
+			var found = trunks[self.CellAt(1, Math.PI / 2 / 48, p).ID];
+			var best = null;
+
+			(found || []).forEach(function (segment) {
+				var a = segment.A;
+				var b = segment.B;
+				var ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+				var t = Math.max(0, Math.min(1, ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / Math.max(1e-18, dot(ab, ab))));
+				var q = [a[0] + ab[0] * t - p[0], a[1] + ab[1] * t - p[1], a[2] + ab[2] * t - p[2]];
+				var far = Math.sqrt(dot(q, q)) * radius;
+				if (!best || far < best.Far)
+					best = {Far: far, Class: segment.Class};
+			});
+
+			return best;
+		}
+
 		function carved (p, height) {
 			var best = nearestRiver(p);
 			var made = height;
@@ -653,6 +696,11 @@ Elemenx.Service('ScenePlanet', {
 			/* The nearest of its rivers to a direction: {Far (km), Flow, Level}, null with none near. */
 			River: function (direction) {
 				return nearestRiver(normalize(direction));
+			},
+
+			/* The nearest of its highways to a direction: {Far (km), Class}, null with none near. */
+			Highway: function (direction) {
+				return nearestHighway(normalize(direction));
 			}
 		};
 
@@ -1246,6 +1294,238 @@ Elemenx.Service('ScenePlanet', {
 		return {Data: data, Face: face, Row: first, Rows: count};
 	},
 
+	/*
+	 * The highways of a planet: its cities and towns (Settlements) joined by the shortest net of them (a town to the nearest
+	 * of those joined before it, cities first), each over the ground through cells of step km (20): round what is steep, over
+	 * water only where it must (a bridge or a ferry costs 15 times as much), none longer than 1500 km. {Highways: [{Points
+	 * (directions), Class (highway between cities, road to a town), From, To (indexes of its settlements)}]}.
+	 */
+	Highways: function (options, step) {
+		var self = this;
+		var planet = this.Planet(options);
+		var radius = planet.Radius;
+		var size = Number(step) || 20;
+		var towns = (Array.isArray(options.Settlements) ? options.Settlements : options.Settlements ? this.TownsOf(options.Settlements) : []).map(function (town, index) {
+			return Object.assign({Index: index}, town);
+		}).filter(function (town) {
+			return town.Kind === 'city' || town.Kind === 'town';
+		});
+		var joined = [];
+		var ways = [];
+		var heights = {};
+
+		function arc (a, b) {
+			return Math.acos(Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]))) * radius;
+		}
+
+		function height (cell) {
+			if (heights[cell.ID] === undefined)
+				heights[cell.ID] = planet.Elevation(self.CellCenter(cell), size);
+
+			return heights[cell.ID];
+		}
+
+		/* A* over the cells, by a heap. */
+		function route (from, to) {
+			var start = self.CellAt(radius, size, from);
+			var goal = self.CellAt(radius, size, to);
+			var goalPoint = self.CellCenter(goal);
+			var heap = [];
+			var cost = {};
+			var came = {};
+			var closed = {};
+			var cells = {};
+			var visited = 0;
+			var current = null;
+			var path = [];
+
+			function push (node) {
+				var at = heap.push(node) - 1;
+
+				while (at > 0 && heap[(at - 1) >> 1].F > heap[at].F) {
+					var up = (at - 1) >> 1;
+					var swap = heap[up];
+
+					heap[up] = heap[at];
+					heap[at] = swap;
+					at = up;
+				}
+			}
+
+			function pop () {
+				var top = heap[0];
+				var last = heap.pop();
+				var at = 0;
+
+				if (heap.length) {
+					heap[0] = last;
+
+					for (;;) {
+						var left = at * 2 + 1;
+						var least = at;
+						if (left < heap.length && heap[left].F < heap[least].F)
+							least = left;
+
+						if (left + 1 < heap.length && heap[left + 1].F < heap[least].F)
+							least = left + 1;
+
+						if (least === at) break;
+
+						var swap = heap[least];
+
+						heap[least] = heap[at];
+						heap[at] = swap;
+						at = least;
+					}
+				}
+
+				return top;
+			}
+
+			cells[start.ID] = start;
+			cost[start.ID] = 0;
+
+			push({ID: start.ID, F: arc(self.CellCenter(start), goalPoint)});
+
+			while (heap.length && visited < 30000) {
+				current = pop();
+
+				if (closed[current.ID]) continue;
+
+				closed[current.ID] = true;
+				visited++;
+
+				if (current.ID === goal.ID) break;
+
+				var cell = cells[current.ID];
+				var here = self.CellCenter(cell);
+				var a = height(cell);
+
+				self.CellNeighbours(radius, size, cell).forEach(function (next) {
+					var there;
+					var b;
+					var length;
+					var grade;
+					var price;
+
+					if (closed[next.ID]) return;
+
+					there = self.CellCenter(next);
+					b = height(next);
+					length = arc(here, there);
+					grade = Math.abs(b - a) / Math.max(1, length * 1000);
+					price = cost[current.ID] + length * (1 + 400 * grade * grade) * (b <= 0 || a <= 0 ? 15 : 1);
+
+					if (cost[next.ID] !== undefined && cost[next.ID] <= price) return;
+
+					cells[next.ID] = next;
+					cost[next.ID] = price;
+					came[next.ID] = current.ID;
+
+					push({ID: next.ID, F: price + arc(there, goalPoint)});
+				});
+			}
+
+			if (!current || current.ID !== goal.ID) return null;
+
+			var id = current.ID;
+
+			while (id) {
+				path.unshift(self.CellCenter(cells[id]));
+
+				id = came[id];
+			}
+
+			path[0] = from;
+			path[path.length - 1] = to;
+
+			return path;
+		}
+
+		/* Fewer points: each kept where the way bends from the straight line by more than half a cell. */
+		function fewer (path) {
+			var kept = [path[0]];
+			var i = 0;
+
+			function near (a, b) {
+				var k;
+
+				for (k = a + 1; k < b; k++) {
+					var ab = [path[b][0] - path[a][0], path[b][1] - path[a][1], path[b][2] - path[a][2]];
+					var t = Math.max(0, Math.min(1, ((path[k][0] - path[a][0]) * ab[0] + (path[k][1] - path[a][1]) * ab[1] + (path[k][2] - path[a][2]) * ab[2]) / Math.max(1e-18, self.Dot(ab, ab))));
+					var q = [path[a][0] + ab[0] * t - path[k][0], path[a][1] + ab[1] * t - path[k][1], path[a][2] + ab[2] * t - path[k][2]];
+					if (Math.sqrt(self.Dot(q, q)) * radius > size * 0.5) return false;
+				}
+
+				return true;
+			}
+
+			while (i < path.length - 1) {
+				var far = path.length - 1;
+
+				while (far > i + 1 && !near(i, far))
+					far--;
+
+				kept.push(path[far]);
+
+				i = far;
+			}
+
+			return kept.map(function (point) {
+				return point.map(function (value) {
+					return Math.round(value * 1e7) / 1e7;
+				});
+			});
+		}
+
+		/* Cities first, then towns: each to the nearest joined before it within 1500 km. */
+		towns.sort(function (a, b) {
+			return (a.Kind === 'city' ? 0 : 1) - (b.Kind === 'city' ? 0 : 1) || b.Size - a.Size;
+		});
+
+		towns.forEach(function (town) {
+			var best = null;
+
+			joined.forEach(function (other) {
+				var d = arc(town.Point, other.Point);
+				if (d < 1500 && (!best || d < best.D))
+					best = {D: d, Other: other};
+			});
+
+			joined.push(town);
+
+			if (best)
+				ways.push({From: town, To: best.Other, Class: town.Kind === 'city' && best.Other.Kind === 'city' ? 'highway' : 'road'});
+		});
+
+		return {Highways: ways.map(function (way) {
+			var path = route(way.From.Point, way.To.Point);
+
+			return path ? {Points: fewer(path), Class: way.Class, From: way.From.Index, To: way.To.Index} : null;
+		}).filter(Boolean)};
+	},
+
+	/* The highways kept under a key, as UseRivers keeps rivers. */
+	UseHighways: function (key, roads) {
+		var self = this;
+
+		this.HighwaySets[key] = roads;
+
+		['ScenePlanet', 'SceneTerrainGenerator', 'SceneSower', 'SceneRoads'].forEach(function (name) {
+			var service = name === 'ScenePlanet' ? self : self.$Service(name);
+			if (service && service.Work)
+				service.Work().Share('highways:' + key, roads);
+		});
+	},
+
+	HighwaysOf: function (key) {
+		var kept = this.HighwaySets ? this.HighwaySets[key] : null;
+
+		return kept || (this.$Shared ? this.$Shared('highways:' + key) : null) || [];
+	},
+
+	HighwaySets: {},
+
 	/* The rivers kept, one store for every use of the service (an object of its own, never made again). */
 	RiverSets: {},
 
@@ -1288,6 +1568,11 @@ Elemenx.Service('ScenePlanet', {
 				var river = sample.Land ? planet.River([way[0] / length, way[1] / length, way[2] / length]) : null;
 				if (river && river.Flow > 60 && river.Far < Math.PI / 2 * planet.Radius / size * 0.55)
 					color = [0.16, 0.36, 0.62];
+
+				/* A highway too: a grey line. */
+				var road = sample.Land ? planet.Highway([way[0] / length, way[1] / length, way[2] / length]) : null;
+				if (road && road.Far < Math.PI / 2 * planet.Radius / size * 0.35)
+					color = [0.42, 0.4, 0.38];
 
 				data[at] = color[0] * 255;
 				data[at + 1] = color[1] * 255;
@@ -1853,8 +2138,12 @@ Elemenx.Service('ScenePlanet', {
 				var sample = planet.Sample(p);
 				var color = self.Color(planet, sample, 'relief', 1);
 				var river = sample.Land ? planet.River(p) : null;
+				var road = sample.Land ? planet.Highway(p) : null;
 				var channel;
 				var plain;
+
+				/* A highway: a grey line of its width or of the step, the finer the nearer. */
+				if (road && road.Far < Math.max(0.012, (step || 0) * 0.35)) return [0.42, 0.4, 0.38];
 
 				if (!river)
 					return color;
@@ -1880,7 +2169,7 @@ Elemenx.Service('ScenePlanet', {
 
 	/* The workers that paint globes. */
 	Work: function () {
-		return this.$Service('Workers').Pool('ScenePlanet', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], SceneTerrainGenerator: ['Smoothstep', 'Biomes', 'BiomeOf', 'Face'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Project', 'Unproject', 'Planet', 'Color', 'Picture', 'Face', 'Sphere', 'Heights', 'Drainage', 'Smoothed', 'RiversOf', 'Settlements', 'TownsOf', 'Lights', 'Unit', 'Dot', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'HexAt', 'HexPoint', 'HexCell', 'Icosahedron', 'Wound', 'Slerp', 'Along', 'Cross']});
+		return this.$Service('Workers').Pool('ScenePlanet', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], SceneTerrainGenerator: ['Smoothstep', 'Biomes', 'BiomeOf', 'Face'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Project', 'Unproject', 'Planet', 'Color', 'Picture', 'Face', 'Sphere', 'Heights', 'Drainage', 'Smoothed', 'RiversOf', 'Settlements', 'TownsOf', 'Lights', 'Highways', 'HighwaysOf', 'Unit', 'Dot', 'Cells', 'CellAt', 'CellPoint', 'CellCenter', 'CellNeighbours', 'HexAt', 'HexPoint', 'HexCell', 'Icosahedron', 'Wound', 'Slerp', 'Along', 'Cross']});
 	},
 
 	/* What a worker of the planet carries: see Workers. */

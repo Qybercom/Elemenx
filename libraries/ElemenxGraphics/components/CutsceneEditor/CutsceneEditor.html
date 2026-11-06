@@ -1,0 +1,30 @@
+<div class="elemenx-cutscene-editor" role="group" [attribute.aria-label]="Label || $T('graphics.cutsceneEditor.label')" [attribute.data-version]="Version">
+	<div class="elemenx-cutscene-editor-bar" role="toolbar" [attribute.aria-label]="$T('graphics.cutsceneEditor.tools')">
+		<select class="elemenx-cutscene-editor-names" [attribute.aria-label]="$T('graphics.cutsceneEditor.cutscene')" (change)="Picked">
+			<option *for="name of Names(Version, Value)" *key="name" [value]="name" [selected]="name === Name(Version, Value, Current)">{{name}}</option>
+		</select>
+		<Button Size="small" Variant="ghost" Icon="add" [title]="$T('graphics.cutsceneEditor.create')" (click)="Created" />
+		<Button Size="small" Variant="ghost" Icon="delete" [title]="$T('graphics.cutsceneEditor.delete')" [disabled]="!Cutscene(Version, Value, Current)" (click)="Deleted" />
+		<span class="elemenx-cutscene-editor-gap"></span>
+		<Button Size="small" [variant]="Playing ? 'danger' : 'primary'" [icon]="Playing ? 'stop' : 'play'" [label]="Playing ? $T('graphics.cutsceneEditor.stop') : $T('graphics.cutsceneEditor.play')" [disabled]="!Cutscene(Version, Value, Current)" (click)="Toggled" />
+		<Button Size="small" Variant="ghost" Icon="video" [label]="$T('graphics.cutsceneEditor.record')" [disabled]="!Cutscene(Version, Value, Current) || Recording" (click)="Record" />
+		<span class="elemenx-cutscene-editor-time">{{Time.toFixed(2)}} s</span>
+		<span class="elemenx-cutscene-editor-gap"></span>
+		<select class="elemenx-cutscene-editor-add" [attribute.aria-label]="$T('graphics.cutsceneEditor.add')" [disabled]="!Cutscene(Version, Value, Current)" (change)="Added">
+			<option value="">{{$T('graphics.cutsceneEditor.add')}}</option>
+			<option *for="type of Types" *key="type" [value]="type">{{$T('graphics.cutsceneEditor.types.' + type)}}</option>
+		</select>
+		<Button Size="small" Variant="ghost" Icon="camera" [label]="$T('graphics.cutsceneEditor.cameraFromView')" (click)="CameraFromView" />
+		<Button Size="small" Variant="ghost" Icon="pin" [label]="$T('graphics.cutsceneEditor.keyFromView')" [disabled]="!Cutscene(Version, Value, Current) || !Target" (click)="Keyed" />
+	</div>
+	<div class="elemenx-cutscene-editor-body">
+		<div class="elemenx-cutscene-editor-line">
+			<Timeline *if="Cutscene(Version, Value, Current)" Scale="number" Unit="s" [start]="0" [end]="End(Version, Value, Current)" [lanes]="Lanes(Version, Value, Current)" [ranges]="Ranges(Version, Value, Current, Selected)" [playhead]="Time" Seekable="true" Editable="true" Snap="0.05" [label]="$T('graphics.cutsceneEditor.line')" (select)="Chosen" (seek)="Sought" (move)="Moved" (resize)="Moved" />
+			<div class="elemenx-cutscene-editor-empty" *if="!Cutscene(Version, Value, Current)">{{$T('graphics.cutsceneEditor.none')}}</div>
+		</div>
+		<aside class="elemenx-cutscene-editor-fields" *if="Piece(Version, Value, Current, Selected)">
+			<div class="elemenx-cutscene-editor-title">{{Piece(Version, Value, Current, Selected).Track.Type}}<Button Size="small" Variant="ghost" Icon="delete" [title]="$T('graphics.cutsceneEditor.remove')" (click)="Remove" /></div>
+			<label class="elemenx-cutscene-editor-field" *for="field of Piece(Version, Value, Current, Selected).Fields" *key="field.Key">{{field.Key}}<input type="text" [value]="field.Value" [attribute.data-field]="field.Key" (change)="Fielded" /></label>
+		</aside>
+	</div>
+</div>

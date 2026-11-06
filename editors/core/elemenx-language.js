@@ -15,6 +15,8 @@
  * - Definition(knowledge, text, offset, language, file): {File, Line, Character} or null (from 0);
  * - Diagnose(knowledge, text, language, file): [{Start, End, Severity (error, warning, information), Message}].
  * Position(text, offset) and Offset(text, position) turn offsets into {line, character} and back.
+ * GlslComplete(text, offset, file): the words of GLSL in a file of it or a string of a shader in JS ([] elsewhere).
+ * Updates(roots, own) tells when the project has a newer Elemenx than the extension: {Plugin, Project, Newer, Message}.
  */
 var fs = require('fs');
 var path = require('path');
@@ -1982,6 +1984,106 @@ function Diagnose (knowledge, text, language, file) {
 	return problems;
 }
 
+/*
+ * A newer Elemenx in a project than the one the extension was made with (after an npm update): its version is the one
+ * of @qybercom/elemenx in node_modules of a root (or the root itself, the repository of the framework), the version of
+ * the extension the one of the elemenx.js it carries beside this file (or own). {Plugin, Project, Newer, Message}, or
+ * null when either is not known.
+ */
+function versionOf (text) {
+	var match = /(\d+)\.(\d+)\.(\d+)(?:-([\w.]+))?/.exec(String(text || ''));
+
+	return match ? {Text: match[0], Parts: [Number(match[1]), Number(match[2]), Number(match[3])], Pre: match[4] || ''} : null;
+}
+
+function newer (a, b) {
+	var i;
+
+	for (i = 0; i < 3; i++) {
+		if (a.Parts[i] !== b.Parts[i])
+			return a.Parts[i] > b.Parts[i];
+	}
+
+	/* 1.0.0 is newer than 1.0.0-beta: a release after its prereleases. */
+	if (a.Pre === b.Pre) return false;
+
+	return !a.Pre || !!b.Pre && a.Pre > b.Pre;
+}
+
+function Updates (roots, own) {
+	var plugin = versionOf(own || (/var Version = '([^']+)'/.exec(read(path.join(__dirname, 'elemenx.js')) || '') || [])[1]);
+	var project = null;
+
+	(roots || []).some(function (root) {
+		[path.join(root, 'node_modules', '@qybercom', 'elemenx', 'package.json'), path.join(root, 'package.json')].some(function (file) {
+			var pack;
+
+			try {
+				pack = JSON.parse(read(file) || 'null');
+			}
+			catch (error) {
+				pack = null;
+			}
+
+			if (pack && pack.name === '@qybercom/elemenx' && versionOf(pack.version))
+				project = versionOf(pack.version);
+
+			return !!project;
+		});
+
+		return !!project;
+	});
+
+	if (!plugin || !project) return null;
+
+	return {
+		Plugin: plugin.Text,
+		Project: project.Text,
+		Newer: newer(project, plugin),
+		Message: 'The project has Elemenx ' + project.Text + ', the Elemenx extension knows ' + plugin.Text + ': update the extension for what is new.'
+	};
+}
+
+/* The words of GLSL an editor completes: its qualifiers, its types, its built-in functions and variables. */
+var GlslWords = {
+	keyword: 'attribute break case centroid const continue default discard do else flat for highp if in inout invariant layout lowp mediump noperspective out precision return smooth struct switch uniform varying while',
+	type: 'bool bvec2 bvec3 bvec4 float int ivec2 ivec3 ivec4 mat2 mat3 mat4 mat2x3 mat3x4 sampler2D sampler2DArray sampler2DShadow sampler3D samplerCube uint uvec2 uvec3 uvec4 vec2 vec3 vec4 void',
+	function: 'abs acos all any asin atan ceil clamp cos cross dFdx dFdy degrees determinant distance dot exp exp2 faceforward floor fract fwidth inverse inversesqrt length log log2 max min mix mod normalize pow radians reflect refract round sign sin smoothstep sqrt step tan texelFetch texture textureLod textureSize transpose trunc',
+	variable: 'gl_FragCoord gl_FragDepth gl_FrontFacing gl_InstanceID gl_PointCoord gl_PointSize gl_Position gl_VertexID'
+};
+
+/*
+ * Whether an offset of a text is in GLSL: a file of it, or a string of JavaScript that starts with it (the source of a
+ * shader as the Libraries write it, a line an item of an array).
+ */
+function inGlsl (text, offset, file) {
+	var start = text.lastIndexOf('\n', offset - 1) + 1;
+	var line = text.substring(start, offset);
+	var quote = line.indexOf("'");
+
+	if (/\.(glsl|vert|frag|vs|fs)$/i.test(String(file || ''))) return true;
+
+	return quote !== -1 && /^'\t*(#version|precision |uniform |in |out |layout|flat |void |vec[234] |float |int |mat[34] |sampler|bool |gl_|if \(|for \(|return |discard)/.test(line.substring(quote));
+}
+
+/* The completions of GLSL at an offset: the words that start as the word before it. [] where it is no GLSL. */
+function GlslComplete (text, offset, file) {
+	var before = text.substring(0, offset);
+	var word = (/[A-Za-z_][\w]*$/.exec(before) || [''])[0];
+	var items = [];
+
+	if (!inGlsl(text, offset, file) || !word) return [];
+
+	Object.keys(GlslWords).forEach(function (kind) {
+		GlslWords[kind].split(' ').forEach(function (label) {
+			if (label.indexOf(word) === 0 && label !== word)
+				items.push({Label: label, Kind: kind === 'function' ? 'method' : kind === 'type' ? 'component' : kind === 'variable' ? 'field' : 'directive', Detail: 'GLSL ' + kind, Insert: label, Start: offset - word.length, End: offset, Sort: '5' + label});
+		});
+	});
+
+	return items;
+}
+
 module.exports = {
 	Create: Create,
 	Complete: Complete,
@@ -1992,5 +2094,7 @@ module.exports = {
 	Position: Position,
 	Offset: Offset,
 	Scan: scan,
-	Definitions: definitions
+	Definitions: definitions,
+	Updates: Updates,
+	GlslComplete: GlslComplete
 };

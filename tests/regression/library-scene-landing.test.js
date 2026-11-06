@@ -927,7 +927,7 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 	 * Regression: at night the globe was all dark, its settlements unseen. Its settlements are made once after its rivers
 	 * (ScenePlanet.Settlements, kept as its rivers are), and their lights painted on a cube of their own, shown at night.
 	 */
-	it('settles a planet after its rivers and paints the lights of its settlements for its night side', async function () {
+	it('settles a planet after its rivers, joins its towns by highways, and paints the lights of its settlements for its night side', async function () {
 		var scene = await mount();
 		var inner = scene.Scene();
 		var engine = scene.Engine();
@@ -953,6 +953,11 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		expect(inner.Towns.terra.Ready).toBe(true);
 		expect(engine.PlanetOptions(inner.Objects.terra).Settlements).toBe(inner.Towns.terra.Key);
 		expect(planets.TownsOf(inner.Towns.terra.Key).length).toBeGreaterThan(10);
+
+		/* Its highways between them, made after them; its globe painted with them. */
+		expect(inner.Highways.terra.Ready).toBe(true);
+		expect(engine.PlanetOptions(inner.Objects.terra).Highways).toBe(inner.Highways.terra.Key);
+		expect(planets.HighwaysOf(inner.Highways.terra.Key).length).toBeGreaterThan(3);
 
 		options = engine.PlanetOptions(inner.Objects.terra);
 		lights = planets.Lights(options, 4, 256, 0, 256);

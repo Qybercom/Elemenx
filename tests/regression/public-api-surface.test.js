@@ -62,6 +62,7 @@ describe('Regression: public API surface', function () {
 			'Elemenx.Cache.Clear:function',
 			'Elemenx.Cache.Stats:function',
 			'Elemenx.Component:function',
+			'Elemenx.Defined:function',
 			'Elemenx.Directive:function',
 			'Elemenx.Events:function',
 			'Elemenx.Expressions:function',

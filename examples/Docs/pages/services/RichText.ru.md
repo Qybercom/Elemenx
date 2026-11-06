@@ -10,6 +10,8 @@
 
 HTML читается в инертном шаблоне: при чтении ничего из него не выполняется и не загружается.
 
+Плагин topology (```topology или ```network) рисует граф компонентом Topology. Строка — узел или связь. Узел: ID, двоеточие, подпись и [ключ=значение ...] (icon, status, kind; остальные ключи — строки Details): web: Web server [icon=server status=ok]. Связь: два ID через -> (или --, <- в обратную сторону), затем : подпись и [status=... kind=...]. Узел, упомянутый только в связи, создаётся по ID. Всё после # — комментарий. Атрибуты ограды: layout, direction, center, directed. TopologyOf(text) возвращает {Nodes, Links}.
+
 ## Методы
 
 - `FileTree(text)`
@@ -64,5 +66,6 @@ HTML читается в инертном шаблоне: при чтении н
 - [Markdown in an Application draws a plugin whose Component its Library has not loaded yet](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-plugins.test.js#L102) — `tests/regression/rich-plugins.test.js`
 - [RichEditor draws its plugins as blocks the caret does not enter, puts one in by Command, edits its text in place, and writes it in Markdown](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-plugins.test.js#L132) — `tests/regression/rich-plugins.test.js`
 - [reads a tree of files by its indents, of spaces or of the lines of tree, and Markdown draws it by FileBrowser as a tree](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-plugins.test.js#L203) — `tests/regression/rich-plugins.test.js`
+- [reads a topology of nodes and links, their icons, statuses and details, and Markdown draws it by Topology](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-plugins.test.js#L238) — `tests/regression/rich-plugins.test.js`
 - [takes away a link and an image whose URL hides javascript: behind %s](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-text.test.js#L28) — `tests/regression/rich-text.test.js`
 - [keeps the URLs it allows, without the characters a browser drops](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-text.test.js#L34) — `tests/regression/rich-text.test.js`

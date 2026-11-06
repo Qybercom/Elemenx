@@ -159,9 +159,123 @@ Elemenx.Service('SceneLocations', {
 		return items.length ? {Layers: [{ID: 'settlements', Name: 'Settlements', Items: items}]} : undefined;
 	},
 
-	/* The sketch of the ground of a location of a planet: its rivers (Streams) and its settlements (Towns); undefined with none. */
+	/*
+	 * The highways of the planet (Highways of ScenePlanet: a key or the list) through a location as a sketch of its ground:
+	 * each a line of the type road (Trunk: true, Class) from where it comes into the location to where it leaves it (the
+	 * same points of the planet for the location beside), in metres of the location; undefined with none.
+	 */
+	Trunks: function (planet, place) {
+		var planets = this.$Service('ScenePlanet');
+		var roads = Array.isArray(planet.Highways) ? planet.Highways : planet.Highways ? planets.HighwaysOf(planet.Highways) : [];
+		var half = this.Extent(place) / 2 - 1;
+		var middle = planets.Direction(place.Latitude, place.Longitude);
+		var near = Math.cos(400 / (Number(planet.Radius) || 6371));
+		var items = [];
+		var site;
+
+		/* Where a segment of the plane goes in and out of the outline (convex, its corners Points): its part inside, or null. */
+		var outline = place.Points || [[-half, -half], [half, -half], [half, half], [-half, half]];
+		var turn = 0;
+
+		outline.forEach(function (point, index) {
+			var next = outline[(index + 1) % outline.length];
+
+			turn += point[0] * next[1] - next[0] * point[1];
+		});
+
+		function clip (a, b) {
+			var t0 = 0;
+			var t1 = 1;
+			var d = [b[0] - a[0], b[1] - a[1]];
+			var k;
+
+			for (k = 0; k < outline.length; k++) {
+				var p = outline[k];
+				var q = outline[(k + 1) % outline.length];
+				/* The inward normal of the side. */
+				var n = turn > 0 ? [-(q[1] - p[1]), q[0] - p[0]] : [q[1] - p[1], -(q[0] - p[0])];
+				var num = (a[0] - p[0]) * n[0] + (a[1] - p[1]) * n[1];
+				var den = d[0] * n[0] + d[1] * n[1];
+
+				if (den === 0) {
+					if (num < 0)
+						return null;
+
+					continue;
+				}
+
+				if (den > 0) t0 = Math.max(t0, -num / den);
+				else t1 = Math.min(t1, -num / den);
+
+				if (t0 > t1)
+					return null;
+			}
+
+			return [[a[0] + d[0] * t0, a[1] + d[1] * t0], [a[0] + d[0] * t1, a[1] + d[1] * t1], t0 > 0, t1 < 1];
+		}
+
+		/* A point a little past the outline along a way (its margin), so the ground round it has the road too. */
+		function past (from, to) {
+			var length = Math.hypot(to[0] - from[0], to[1] - from[1]) || 1;
+			var reach = Math.min(200, half);
+
+			return [to[0] + (to[0] - from[0]) / length * reach, to[1] + (to[1] - from[1]) / length * reach];
+		}
+
+		roads.forEach(function (road, number) {
+			var run = [];
+
+			function close () {
+				if (run.length > 1)
+					items.push({ID: 'trunk-' + number + '-' + items.length, Type: 'road', Trunk: true, Class: road.Class || 'road', Width: road.Class === 'highway' ? 14 : 9, Points: run.map(function (point) {
+						return [Math.round(point[0] * 10) / 10, Math.round(point[1] * 10) / 10];
+					})});
+
+				run = [];
+			}
+
+			(road.Points || []).forEach(function (point, index) {
+				var next = road.Points[index + 1];
+				var part;
+
+				if (!next || planets.Dot(point, middle) < near || planets.Dot(next, middle) < near) {
+					close();
+
+					return;
+				}
+
+				site = site || this.$Service('SceneTerrainGenerator').Site({Options: planet, Latitude: place.Latitude, Longitude: place.Longitude, Turn: place.Turn});
+				part = clip(site.Local(point), site.Local(next));
+
+				if (!part) {
+					close();
+
+					return;
+				}
+
+				/* Where it comes in: its point on the outline, and one past it. */
+				if (!run.length)
+					run.push.apply(run, part[2] ? [past(part[1], part[0]), part[0]] : [part[0]]);
+
+				run.push(part[1]);
+
+				/* It leaves: the run ends a little past the outline. */
+				if (part[3]) {
+					run.push(past(part[0], part[1]));
+
+					close();
+				}
+			}, this);
+
+			close();
+		}, this);
+
+		return items.length ? {Layers: [{ID: 'trunks', Name: 'Highways', Items: items}]} : undefined;
+	},
+
+	/* The sketch of the ground of a location of a planet: its rivers (Streams), its settlements (Towns) and its highways (Trunks); undefined with none. */
 	Sketch: function (planet, place) {
-		var layers = [this.Streams(planet, place), this.Towns(planet, place)].filter(Boolean).map(function (sketch) {
+		var layers = [this.Streams(planet, place), this.Towns(planet, place), this.Trunks(planet, place)].filter(Boolean).map(function (sketch) {
 			return sketch.Layers[0];
 		});
 
@@ -255,7 +369,7 @@ Elemenx.Service('SceneLocations', {
 			Kind: told && told.Kind || 'generated',
 			Model: told && told.Model || '',
 			Told: !!told,
-			World: told && told.World || this.$Service('SceneWorld').Library({Size: this.Extent(place), Planet: {Options: options, Latitude: place.Latitude, Longitude: place.Longitude, Turn: place.Turn}, Sketch: this.Sketch(options, place), Border: {Points: place.Points, Sides: place.Sides, Beyond: told && told.Beyond || 'far', Passages: passages, Open: open}}),
+			World: told && told.World || this.$Service('SceneWorld').Library({Size: this.Extent(place), Planet: {Options: options, Latitude: place.Latitude, Longitude: place.Longitude, Turn: place.Turn}, Sketch: this.Sketch(options, place), Border: {Points: place.Points, Sides: place.Sides, Beyond: told && told.Beyond || 'far', Passages: passages, Open: open}, Roads: options.LocationRoads === false ? undefined : true}),
 			Passages: passages,
 			Beyond: told && told.Beyond || 'far',
 			Sides: neighbours.map(function (other, side) {

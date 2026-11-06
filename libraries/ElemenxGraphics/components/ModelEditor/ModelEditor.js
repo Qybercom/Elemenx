@@ -22,6 +22,11 @@
  * in the view Pick takes a piece whole or lets it go, Brush paints the triangles of a piece round the pointer (Shift wipes
  * them), Pivot sets the point it turns round; its parts show over the model, its fields are in the inspector, and Test moves
  * it as a scene does. Roles() and SetRoles(roles) are those of the model edited; Undo takes back a change of them too.
+ * Its tab Parts (Mode parts) does to the pieces of the model what SceneModels edits do, over its source: a piece is picked
+ * in the list or in the view (one more with Shift or Ctrl); split as it hangs together, grouped under a name, ungrouped,
+ * merged, renamed, hidden or shown, duplicated, mirrored on X, removed, the origin moved to the bottom middle; taken out
+ * into a model of their own, or put together with another model. The edits of the model of the document are in its recipe
+ * (Edits), those of a model of a file kept for it; Undo takes them back.
  */
 Elemenx.Component('ModelEditor', {
 	$TemplateURL: 'ModelEditor.html',
@@ -44,7 +49,9 @@ Elemenx.Component('ModelEditor', {
 			SnapTurn: 'The step of a turn with Snap, in degrees.',
 			SnapScale: 'The step of a scale with Snap.',
 			Label: 'What it shows, for screen readers.',
-			Mode: {Options: ['shape', 'roles'], Description: 'The tab shown: the parts of the recipe (shape) or the roles of the parts of a model (roles).'},
+			Wire: 'Shows the wire of the model: each edge of its triangles.',
+			Edges: 'Shows the edges of the model: where its faces meet at an angle and its rims (true).',
+			Mode: {Options: ['shape', 'roles', 'parts'], Description: 'The tab shown: the parts of the recipe (shape), the roles of the parts of a model (roles) or what is done to its pieces (parts).'},
 			RoleModel: 'In the tab Roles, a model of a file of SceneModels whose roles are edited (ModelRoles keeps them); empty: the one of the document (its recipe keeps them, Roles).'
 		}
 	},
@@ -56,6 +63,23 @@ Elemenx.Component('ModelEditor', {
 	SnapTurn: 15,
 	SnapScale: 0.05,
 	Label: '',
+	Wire: false,
+	Edges: true,
+
+	/* The wire of the model and its edges (where its faces meet at an angle, its rims) shown or not, each in its colour. */
+	WireToggled: function () {
+		this.Wire = !this.Wire;
+
+		if (this.Own().Scene)
+			this.Own().Scene.Wireframe = this.Wire;
+	},
+
+	EdgesToggled: function () {
+		this.Edges = !this.Edges;
+
+		if (this.Own().Scene)
+			this.Own().Scene.Edges = this.Edges;
+	},
 
 	/* What the template renders. */
 	Tool: 'move',
@@ -73,7 +97,10 @@ Elemenx.Component('ModelEditor', {
 		{ID: 'turn', Icon: 'refresh', Key: 'graphics.modelEditor.turn', Hotkey: 'E'},
 		{ID: 'scale', Icon: 'maximize', Key: 'graphics.modelEditor.scale', Hotkey: 'R'}
 	],
-	Modes: [{ID: 'shape', Key: 'graphics.modelEditor.shape'}, {ID: 'roles', Key: 'graphics.modelEditor.roles'}],
+	Modes: [{ID: 'shape', Key: 'graphics.modelEditor.shape'}, {ID: 'roles', Key: 'graphics.modelEditor.roles'}, {ID: 'parts', Key: 'graphics.modelEditor.partsMode'}],
+	PartsSelected: null,
+	PartsName: '',
+	PartsWith: '',
 	RoleTools: [
 		{ID: 'pick', Icon: 'pointer', Key: 'graphics.modelEditor.pick'},
 		{ID: 'brush', Icon: 'edit', Key: 'graphics.modelEditor.brush'},
@@ -178,6 +205,8 @@ Elemenx.Component('ModelEditor', {
 		var self = this;
 
 		own.Scene = scene;
+		scene.Wireframe = this.Wire;
+		scene.Edges = this.Edges;
 
 		scene.Add('ground', {ID: 'floor', World: this.$Service('SceneWorld').Library({Size: 60, Height: 0.01, Water: 0, Ridges: 0, Scale: 300, Seed: 'object'})});
 		scene.Add('sun', {ID: 'sun', Time: 10, Latitude: 40});
@@ -219,7 +248,7 @@ Elemenx.Component('ModelEditor', {
 		own.Built++;
 		name = own.Key + '-' + own.Built;
 
-		models.Define(name, {Group: recipe.Group || '', Type: recipe.Type || '', Size: 1, Smooth: !!recipe.Smooth, Matte: recipe.Matte !== false, Roles: recipe.Roles || [], Build: function (tools) {
+		models.Define(name, {Group: recipe.Group || '', Type: recipe.Type || '', Size: 1, Smooth: !!recipe.Smooth, Matte: recipe.Matte !== false, Roles: recipe.Roles || [], Edits: recipe.Edits || [], Build: function (tools) {
 			return models.Assemble(recipe, tools, models.Random(String(recipe.Seed) + ':' + variant), variant);
 		}});
 
@@ -282,9 +311,9 @@ Elemenx.Component('ModelEditor', {
 		this.$Emit('change', this.Document());
 	},
 
-	/* What Undo brings back: the recipe, and the roles of the model of a file edited (if one is). */
+	/* What Undo brings back: the recipe, and the roles and the edits of the model of a file edited (if one is). */
 	Kept: function () {
-		return JSON.stringify({Recipe: this.Own().Document.Recipe, Model: this.RoleModel, Roles: this.RoleModel ? this.$Service('ModelRoles').Get(this.RoleModel) : null});
+		return JSON.stringify({Recipe: this.Own().Document.Recipe, Model: this.RoleModel, Roles: this.RoleModel ? this.$Service('ModelRoles').Get(this.RoleModel) : null, Edits: this.RoleModel ? this.$Service('SceneModels').Edits(this.RoleModel) : null});
 	},
 
 	Back: function (text) {
@@ -292,8 +321,172 @@ Elemenx.Component('ModelEditor', {
 
 		this.Own().Document.Recipe = kept.Recipe;
 
-		if (kept.Model)
+		if (kept.Model) {
 			this.$Service('ModelRoles').Set(kept.Model, kept.Roles || []);
+			this.$Service('SceneModels').SetEdits(kept.Model, kept.Edits || []);
+		}
+	},
+
+	/* The tab Parts: what is done to the pieces of the model (SceneModels edits, over its source; Undo takes them back). */
+
+	/* The pieces of the model edited, as listed: {ID, Label, Selected, Hidden, Group}. */
+	PartsList: function () {
+		var models = this.$Service('SceneModels');
+		var name = this.RoleTarget();
+		var chosen = this.PartsSelected || [];
+
+		if (!name || !models.Has(name) || !models.Ready(name)) return [];
+
+		return models.PieceList(name).map(function (piece) {
+			return {ID: piece.ID, Label: (piece.Group ? piece.Group + ' / ' : '') + piece.Name + ' · ' + piece.Triangles + (piece.Hidden ? ' ·  —' : ''), Selected: chosen.indexOf(piece.ID) >= 0, Hidden: piece.Hidden, Group: piece.Group};
+		});
+	},
+
+	/* A piece picked in the list or in the view: alone, or one more with Shift or Ctrl. */
+	PartPicked: function (id, event) {
+		var chosen = (this.PartsSelected || []).slice();
+		var at = chosen.indexOf(id);
+
+		if (event && (event.shiftKey || event.ctrlKey || event.metaKey)) {
+			if (at >= 0) chosen.splice(at, 1);
+			else chosen.push(id);
+		}
+		else {
+			chosen = at >= 0 && chosen.length === 1 ? [] : [id];
+		}
+
+		this.PartsSelected = chosen;
+		this.Version++;
+	},
+
+	PartsNamed: function (event) {
+		this.PartsName = event.target.value;
+	},
+
+	PartsWithPicked: function (event) {
+		this.PartsWith = event.target.value;
+	},
+
+	/* An edit of the model edited: in the recipe of the document, or kept for the model of a file. */
+	PartsEdit: function (edit) {
+		var before = this.Kept();
+		var recipe = this.Own().Document.Recipe;
+
+		if (this.RoleModel) this.$Service('SceneModels').Edit(this.RoleModel, edit);
+		else recipe.Edits = (recipe.Edits || []).concat([edit]);
+
+		this.Changed(before);
+
+		/* The model made again with it at once: the list shows it. */
+		this.Show();
+	},
+
+	PartsSplit: function () {
+		var self = this;
+
+		(this.PartsSelected || []).forEach(function (id) {
+			self.PartsEdit({Op: 'split', Piece: id, By: 'connected'});
+		});
+
+		this.PartsSelected = [];
+	},
+
+	PartsGroup: function () {
+		if ((this.PartsSelected || []).length)
+			this.PartsEdit({Op: 'group', Pieces: this.PartsSelected.slice(), Name: this.PartsName || 'group'});
+	},
+
+	PartsUngroup: function () {
+		var self = this;
+		var groups = {};
+
+		this.PartsList().forEach(function (piece) {
+			if (piece.Selected && piece.Group)
+				groups[piece.Group] = true;
+		});
+
+		Object.keys(groups).forEach(function (name) {
+			self.PartsEdit({Op: 'ungroup', Name: name});
+		});
+	},
+
+	PartsMerge: function () {
+		if ((this.PartsSelected || []).length > 1) {
+			this.PartsEdit({Op: 'merge', Pieces: this.PartsSelected.slice(), ID: this.PartsName || this.PartsSelected[0]});
+
+			this.PartsSelected = [];
+		}
+	},
+
+	PartsRename: function () {
+		if ((this.PartsSelected || []).length === 1 && this.PartsName)
+			this.PartsEdit({Op: 'rename', Piece: this.PartsSelected[0], Name: this.PartsName});
+	},
+
+	PartsRemove: function () {
+		if ((this.PartsSelected || []).length) {
+			this.PartsEdit({Op: 'remove', Pieces: this.PartsSelected.slice()});
+
+			this.PartsSelected = [];
+		}
+	},
+
+	PartsHide: function () {
+		var hidden = this.PartsList().some(function (piece) {
+			return piece.Selected && piece.Hidden;
+		});
+
+		if ((this.PartsSelected || []).length)
+			this.PartsEdit({Op: 'hide', Pieces: this.PartsSelected.slice(), Hidden: !hidden});
+	},
+
+	PartsDuplicate: function () {
+		var self = this;
+
+		(this.PartsSelected || []).forEach(function (id) {
+			self.PartsEdit({Op: 'duplicate', Piece: id, ID: id + '#copy', Move: [0.1, 0, 0]});
+		});
+	},
+
+	PartsMirror: function () {
+		if ((this.PartsSelected || []).length)
+			this.PartsEdit({Op: 'mirror', Pieces: this.PartsSelected.slice(), Axis: 'x'});
+	},
+
+	PartsOrigin: function () {
+		this.PartsEdit({Op: 'origin', To: 'bottom'});
+	},
+
+	/* The pieces picked taken out into a model of their own (its name the one written, else a new one). */
+	PartsExtract: function () {
+		var name = this.RoleTarget();
+		var fresh;
+
+		if (!(this.PartsSelected || []).length || !name) return;
+
+		fresh = this.PartsName || name + '-part';
+
+		this.$Service('SceneModels').Extract(name, this.PartsSelected.slice(), fresh);
+
+		this.PartsSelected = [];
+		this.Version++;
+
+		this.$Emit('change', this.Document());
+	},
+
+	/* Another model put together with this one, beside it: a model of both (its name the one written). */
+	PartsCombine: function () {
+		var name = this.RoleTarget();
+		if (!this.PartsWith || !name) return;
+
+		this.$Service('SceneModels').Combine(this.PartsName || name + '+' + this.PartsWith, [{Model: name}, {Model: this.PartsWith, At: [1.2, 0, 0]}], {Size: this.$Service('SceneModels').Info(name).Size});
+
+		this.Version++;
+	},
+
+	/* The models it may be put together with. */
+	PartsModels: function () {
+		return this.$Service('SceneModels').Names();
 	},
 
 	Undo: function () {
@@ -820,7 +1013,8 @@ Elemenx.Component('ModelEditor', {
 	Moded: function (mode) {
 		var own = this.Own();
 
-		this.Mode = mode === 'roles' ? 'roles' : 'shape';
+		this.Mode = mode === 'roles' || mode === 'parts' ? mode : 'shape';
+		this.PartsSelected = [];
 
 		if (this.Mode === 'shape' && this.RoleModel) {
 			this.RoleModel = '';
@@ -1379,11 +1573,18 @@ Elemenx.Component('ModelEditor', {
 			['Role.ID', role.ID, 'text'], ['Role.Name', role.Name || '', 'text'], ['Role.Kind', role.Kind, this.RoleKinds().map(function (kind) {
 				return kind.ID;
 			})], ['Role.Parts', parts, 'readonly'],
-			['Motion.Type', motion.Type || 'none', ['hinge', 'slide', 'spin', 'glow', 'none']]
+			['Motion.Type', motion.Type || 'none', ['hinge', 'slide', 'spin', 'stretch', 'glow', 'emit', 'point', 'collider', 'none']]
 		];
 
-		if (motion.Type === 'hinge' || motion.Type === 'spin')
+		if (motion.Type === 'hinge' || motion.Type === 'spin' || motion.Type === 'point')
 			fields.push(['Motion.Pivot', motion.Pivot || [0, 0, 0], 'vector'], ['Motion.Axis', motion.Axis || [0, 1, 0], 'vector']);
+
+		/* A shock grows along its way from its mount; an emitter gives off its effect at its point, along its way. */
+		if (motion.Type === 'stretch' || motion.Type === 'emit')
+			fields.push(['Motion.Pivot', motion.Pivot || [0, 0, 0], 'vector'], ['Motion.Way', motion.Way || [0, -1, 0], 'vector']);
+
+		if (motion.Type === 'emit')
+			fields.push(['Role.Effect', role.Effect || 'smoke', 'text'], ['Role.Rate', role.Rate === undefined ? 2 : role.Rate, 'number']);
 
 		if (motion.Type === 'hinge')
 			fields.push(['Motion.Angle', motion.Angle === undefined ? 90 : motion.Angle, 'number'], ['Motion.Aside', motion.Aside, 'vector'], ['Motion.AsideAngle', motion.AsideAngle === undefined ? '' : motion.AsideAngle, 'number']);
@@ -1400,7 +1601,11 @@ Elemenx.Component('ModelEditor', {
 		if (role.Kind === 'wheel' || role.Kind === 'caliper')
 			fields.push(['Role.Corner', role.Corner || 'FL', ['FL', 'FR', 'RL', 'RR']], ['Role.Held', !!role.Held, 'check']);
 
-		fields.push(['Role.Drive', role.Drive || '', ['', 'steer', 'gas', 'brake', 'hand', 'gear', 'sequential', 'paddle', 'indicator', 'wipers']], ['Role.Follow', role.Follow || '', [''].concat(this.Roles().map(function (each) {
+		/* What goes with a wheel: its corner, and how long it is (the travel of the wheel in Lengths of it). */
+		if (['arm', 'knuckle', 'shock', 'halfshaft'].indexOf(role.Kind) >= 0 || role.Drive === 'stroke' || role.Drive === 'wheel-steer' || role.Drive === 'roll')
+			fields.push(['Role.Corner', role.Corner || 'FL', ['FL', 'FR', 'RL', 'RR']], ['Role.Length', role.Length === undefined ? 0.3 : role.Length, 'number']);
+
+		fields.push(['Role.Drive', role.Drive || '', ['', 'steer', 'gas', 'brake', 'hand', 'gear', 'sequential', 'paddle', 'indicator', 'wipers', 'stroke', 'wheel-steer', 'roll', 'speed', 'rpm', 'pitch', 'yaw', 'roll-air', 'throttle', 'flaps', 'airborne', 'aim-yaw', 'aim-pitch', 'fire', 'wind', 'clock-hour', 'clock-minute']], ['Role.Follow', role.Follow || '', [''].concat(this.Roles().map(function (each) {
 			return each.ID;
 		}).filter(function (id) {
 			return id !== role.ID;
@@ -1511,6 +1716,17 @@ Elemenx.Component('ModelEditor', {
 
 		if (event.button === 1) {
 			own.Drag = {Kind: 'pan', X: event.clientX, Y: event.clientY, View: scene.Viewpoint()};
+
+			return;
+		}
+
+		/* Parts: the piece under the pointer picked (one more with Shift or Ctrl). */
+		if (this.Mode === 'parts') {
+			var hit = this.RoleHit(event.clientX, event.clientY);
+			if (hit)
+				this.PartPicked(hit.Piece, event);
+
+			own.Drag = {Kind: 'press', X: event.clientX, Y: event.clientY};
 
 			return;
 		}

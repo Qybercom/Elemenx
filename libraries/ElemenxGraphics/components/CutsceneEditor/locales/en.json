@@ -1,0 +1,31 @@
+{
+	"graphics": {
+		"cutsceneEditor": {
+			"label": "Cutscene editor",
+			"tools": "Tools of the cutscenes",
+			"cutscene": "Cutscene",
+			"create": "New cutscene",
+			"delete": "Delete the cutscene",
+			"play": "Play",
+			"stop": "Stop",
+			"record": "Record",
+			"add": "Add…",
+			"cameraFromView": "Camera from view",
+			"keyFromView": "Key from view",
+			"line": "The tracks of the cutscene",
+			"none": "No cutscene yet: create one.",
+			"remove": "Remove",
+			"types": {
+				"camera": "Camera cut",
+				"move": "Move key",
+				"orbit": "Orbit",
+				"fade": "Fade",
+				"letterbox": "Letterbox",
+				"title": "Title",
+				"subtitle": "Subtitle",
+				"cue": "Cue",
+				"clip": "Clip"
+			}
+		}
+	}
+}

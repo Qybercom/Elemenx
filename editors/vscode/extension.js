@@ -3,6 +3,7 @@
  * Elemenx project, from the knowledge of ./core/elemenx-language.js (taken in the host of the extension: no language
  * server to start), and the colors of the syntax of the templates ({{ }}, [prop], (event), *directive).
  * Settings: elemenx.meta (a meta.json of a Library beside the ones of the project), elemenx.diagnostics.
+ * A project with a newer Elemenx than the one the extension carries (after an npm update) is told so, with Update.
  */
 var vscode = require('vscode');
 var path = require('path');
@@ -101,6 +102,21 @@ function activate (context) {
 		}
 	}, '<', ' ', '[', '(', '*', '"', '\'', '.'));
 
+	/* GLSL: in its files, and in the strings of the shaders of the code (a line of GLSL an item of an array). */
+	context.subscriptions.push(vscode.languages.registerCompletionItemProvider([{language: 'glsl', scheme: 'file'}, {language: 'javascript', scheme: 'file'}], {
+		provideCompletionItems: function (document, position) {
+			return language.GlslComplete(document.getText(), document.offsetAt(position), document.uri.fsPath).map(function (item) {
+				var completion = new vscode.CompletionItem(item.Label, Kinds[item.Kind]);
+
+				completion.detail = item.Detail;
+				completion.range = range(document, item.Start, item.End);
+				completion.sortText = item.Sort;
+
+				return completion;
+			});
+		}
+	}));
+
 	context.subscriptions.push(vscode.languages.registerHoverProvider(selector, {
 		provideHover: function (document, position) {
 			var kind = kindOf(document);
@@ -173,6 +189,33 @@ function activate (context) {
 	context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(create));
 
 	context.subscriptions.push(vscode.commands.registerCommand('elemenx.refresh', create));
+
+	/*
+	 * After an npm update the project may have a newer Elemenx than this extension knows: it offers to update the
+	 * extension, once for each version (Later remembers it), at the start and when the package changes.
+	 */
+	function updates () {
+		var found = language.Updates((vscode.workspace.workspaceFolders || []).map(function (folder) {
+			return folder.uri.fsPath;
+		}), '');
+		if (!found || !found.Newer || context.globalState.get('elemenx.updateLater') === found.Project) return;
+
+		vscode.window.showInformationMessage(found.Message, 'Update', 'Later').then(function (choice) {
+			if (choice === 'Update') vscode.commands.executeCommand('workbench.extensions.search', '@id:qybercom.elemenx');
+			else if (choice === 'Later') context.globalState.update('elemenx.updateLater', found.Project);
+		});
+	}
+
+	context.subscriptions.push((function () {
+		var watcher = vscode.workspace.createFileSystemWatcher('**/node_modules/@qybercom/elemenx/package.json');
+
+		watcher.onDidChange(updates);
+		watcher.onDidCreate(updates);
+
+		return watcher;
+	})());
+
+	updates();
 }
 
 function deactivate () {}

@@ -95,8 +95,8 @@ Elemenx.Trait('SceneVehicles', {
 
 			made = roles.Rig(name ? roles.Get(name) : []);
 
-			if (vehicle) made = Object.assign({}, vehicle, {Openings: (vehicle.Openings || []).concat(made.Openings), Lamps: (vehicle.Lamps || []).concat(made.Lamps), RoleWheels: made.Wheels, Source: vehicle});
-			else if (made.Openings.length || made.Lamps.length || made.Wheels.length) made = {Rigged: true, Openings: made.Openings, Lamps: made.Lamps, RoleWheels: made.Wheels};
+			if (vehicle) made = Object.assign({}, vehicle, {Openings: (vehicle.Openings || []).concat(made.Openings), Lamps: (vehicle.Lamps || []).concat(made.Lamps), RoleWheels: made.Wheels, Sockets: made.Sockets, Emitters: made.Emitters, Colliders: made.Colliders, Source: vehicle});
+			else if (made.Openings.length || made.Lamps.length || made.Wheels.length || made.Sockets.length || made.Emitters.length || made.Colliders.length) made = {Rigged: true, Openings: made.Openings, Lamps: made.Lamps, RoleWheels: made.Wheels, Sockets: made.Sockets, Emitters: made.Emitters, Colliders: made.Colliders};
 			else made = null;
 
 			object.Rig = {Version: version, Of: vehicle, Name: name, Made: made};
@@ -577,6 +577,15 @@ Elemenx.Trait('SceneVehicles', {
 			if (opening.Hinge) {
 				own = hinged(opening, side, state[opening.Name], state[opening.Name + ':aside'] || 0);
 			}
+			else if (opening.Stretch) {
+				/* Longer along its way from its mount, as far as it is told (1: twice as long). */
+				var mount = opening.Stretch.Pivot;
+				var w = vectors.Normalize(opening.Stretch.Way);
+				var k = Math.max(0.2, 1 + state[opening.Name]) - 1;
+				var grow = [1 + k * w[0] * w[0], k * w[0] * w[1], k * w[0] * w[2], 0, k * w[1] * w[0], 1 + k * w[1] * w[1], k * w[1] * w[2], 0, k * w[2] * w[0], k * w[2] * w[1], 1 + k * w[2] * w[2], 0, 0, 0, 0, 1];
+
+				own = math.Multiply(math.Translation(mount[0], mount[1], mount[2]), math.Multiply(grow, math.Translation(-mount[0], -mount[1], -mount[2])));
+			}
 			else {
 				way = opening.Way || [0, -1, 0];
 				far = state[opening.Name] * given(opening.Reach, 1);
@@ -651,13 +660,76 @@ Elemenx.Trait('SceneVehicles', {
 				case 'wipers':
 					return [signals.Wipers ? 0.5 - 0.5 * Math.cos((object.Swept || 0) * Math.PI * 2 / given(opening.Period, 1.3)) : 0, 0];
 				default:
+					return drivenMore(object, opening, car);
+			}
+		}
+
+		var Corners = {FL: 0, FR: 1, RL: 2, RR: 3};
+
+		/*
+		 * What else drives a part, as far as it goes: the travel of the spring of its wheel (stroke, in Lengths of it), the
+		 * steering of its wheel (wheel-steer, radians) and its roll (roll, turns), the speed and the rpm (0 to 1), the controls of
+		 * what flies (pitch, yaw, roll-air: -1 to 1; throttle, flaps; airborne: 1 while it flies), the aim of the object (aim-yaw,
+		 * aim-pitch: degrees of Aim), a shot (fire: 1 as it fires, then less), the wind and the time of day (wind; clock-hour,
+		 * clock-minute: turns). Hinges of degrees (Angle 57.2958) take radians, of 360 turns.
+		 */
+		function drivenMore (object, opening, car) {
+			var corner = Corners[opening.Corner] === undefined ? 0 : Corners[opening.Corner];
+			var settings = object.Values.Vehicle || {};
+			var ship = object.Ship || null;
+			var spin = ship && ship.Spin || [0, 0, 0];
+			var turn = given(settings.Turn, 1.5) || 1.5;
+			var aim = object.Values.Aim || {};
+			var hour = scene.Ground && scene.Ground.Hour !== undefined && scene.Ground.Hour !== null ? scene.Ground.Hour : 12;
+
+			switch (opening.Drive) {
+				case 'stroke':
+					return [(object.Strokes || car.Strokes || [0, 0, 0, 0])[corner] / (object.Size || 1) / given(opening.Length, 0.3), 0];
+				case 'wheel-steer':
+					return [corner < 2 ? (car.Steer || 0) * 0.5 : 0, 0];
+				case 'roll':
+					return [(car.Spin || 0) / (Math.PI * 2), 0];
+				case 'speed':
+					return [Math.min(1, Math.abs(car.Forward || 0) / Math.max(1, given(settings.Top, 60))), 0];
+				case 'rpm':
+					return [Math.min(1, (car.Rpm || 0) / Math.max(1, given(settings.Redline, 7000))), 0];
+				case 'pitch':
+					return [Math.max(-1, Math.min(1, spin[0] / turn)), 0];
+				case 'yaw':
+					return [Math.max(-1, Math.min(1, spin[1] / turn)), 0];
+				case 'roll-air':
+					return [Math.max(-1, Math.min(1, spin[2] / turn)), 0];
+				case 'throttle':
+					return [ship ? Math.abs(ship.Throttle || 0) : (object.Controls || {}).Gas || 0, 0];
+				case 'flaps':
+					return [ship && Math.abs(ship.Throttle || 0) < 0.3 ? 1 : 0, 0];
+				case 'airborne':
+					return [ship && !object.Landed ? 1 : 0, 0];
+				case 'aim-yaw':
+					return [given(aim.Yaw, 0), 0];
+				case 'aim-pitch':
+					return [given(aim.Pitch, 0), 0];
+				case 'fire':
+					return [object.Values.Fired === undefined ? 0 : Math.exp(-Math.max(0, scene.Seconds - Number(object.Values.Fired)) * 12), 0];
+				case 'wind':
+					return [Math.max(0.1, scene.Gust || 0), 0];
+				case 'clock-hour':
+					return [(hour % 12) / 12, 0];
+				case 'clock-minute':
+					return [(hour * 60 % 60) / 60, 0];
+				default:
 					return null;
 			}
 		}
 
+		/* Drives that are where they say at once: no pace. */
+		var Instant = {steer: true, wipers: true, stroke: true, 'wheel-steer': true, roll: true, pitch: true, yaw: true, 'roll-air': true, 'aim-yaw': true, 'aim-pitch': true, fire: true, 'clock-hour': true, 'clock-minute': true};
+
 		/* What moves comes to where it is told or driven: a door slowly, what a hand moves fast (Pace, a second). */
 		function openingsStep (object, elapsed) {
 			var rig = engine.RigOf(object);
+
+			emitStep(object, rig, elapsed);
 
 			/* The time the wipers go by: the scene's, while they are on. */
 			object.Swept = object.Signals && object.Signals.Wipers ? (object.Swept || 0) + elapsed : 0;
@@ -678,12 +750,144 @@ Elemenx.Trait('SceneVehicles', {
 					return;
 				}
 
-				state[opening.Name] = opening.Drive === 'steer' || opening.Drive === 'wipers' ? wanted : now + Math.max(-pace, Math.min(pace, wanted - now));
+				state[opening.Name] = Instant[opening.Drive] || opening.Pace === 0 ? wanted : now + Math.max(-pace, Math.min(pace, wanted - now));
 
 				if (driven)
 					state[opening.Name + ':aside'] = aside + Math.max(-pace, Math.min(pace, driven[1] - aside));
 			});
 		}
+
+		/* The middle of the parts of a role in the space of its model, once: where a socket or an emitter is when it has no At. */
+		function middleOf (object, entry) {
+			var name = object.Values.Model || object.Traits.Model && object.Traits.Model.Shape;
+			var model;
+			var sum = [0, 0, 0];
+			var count = 0;
+
+			if (entry.At)
+				return entry.At;
+
+			if (entry.Middle)
+				return entry.Middle;
+
+			if (!name || !library.Has(name) || !library.Ready(name)) return [0, 0, 0];
+
+			model = library.Make(name);
+
+			(entry.Parts || []).forEach(function (part) {
+				var piece = model.Pieces.filter(function (each) {
+					return each.ID === part.Piece;
+				})[0];
+				var n;
+				var i;
+
+				if (!piece) return;
+
+				n = (piece.Placed || piece.Geometry).Positions.length / 3;
+
+				for (i = 0; i < n; i += Math.max(1, Math.floor(n / 200))) {
+					var p = placeOf(piece, i);
+
+					sum = vectors.Add(sum, p);
+					count++;
+				}
+			});
+
+			entry.Middle = count ? vectors.Scale(sum, 1 / count) : [0, 0, 0];
+
+			return entry.Middle;
+		}
+
+		/* A point of the model of an object in the world: as large and turned as the object. */
+		function worldOf (object, point) {
+			var settings = object.Traits.Model || {};
+			var scale = object.Scaled || vectors.Scale(settings.Scale || [1, 1, 1], object.Size || 1);
+
+			return vectors.Add(object.World || [0, 0, 0], math.Apply(object.Turn || math.Identity(), [point[0] * scale[0], point[1] * scale[1], point[2] * scale[2]]));
+		}
+
+		/* What a part gives off (Emitters: smoke of an exhaust, of a chimney): a burst every 1/Rate s while what drives it is on. */
+		function emitStep (object, rig, elapsed) {
+			if (!rig || !rig.Emitters || !rig.Emitters.length || !object.World || !self.Burst) return;
+
+			object.Emitted = object.Emitted || {};
+
+			rig.Emitters.forEach(function (emitter) {
+				var on = emitter.Drive ? drivenOf(object, {Drive: emitter.Drive}) : [1, 0];
+				var left = (object.Emitted[emitter.Role] || 0) + elapsed * emitter.Rate * Math.max(0.15, on ? Math.abs(on[0]) : 0);
+
+				if (left < 1) {
+					object.Emitted[emitter.Role] = left;
+
+					return;
+				}
+
+				object.Emitted[emitter.Role] = left % 1;
+
+				/* As many as the time asks, a few at most after a long step. */
+				for (left = Math.min(8, Math.floor(left)); left > 0; left--)
+					self.Burst(emitter.Effect, worldOf(object, middleOf(object, emitter)));
+			});
+		}
+
+		/* Where a socket of an object is in the world (a role socket of its model by Name or ID): {At, Axis}, or null. */
+		engine.SocketOf = function (object, name) {
+			var rig = engine.RigOf(object);
+			var socket = rig && rig.Sockets ? rig.Sockets.filter(function (each) {
+				return each.Name === name || each.Role === name;
+			})[0] : null;
+			var axis;
+
+			if (!socket || !object.World) return null;
+
+			axis = math.Apply(object.Turn || math.Identity(), socket.Axis || [0, 1, 0]);
+
+			return {At: worldOf(object, middleOf(object, socket)), Axis: vectors.Normalize(axis)};
+		};
+
+		/* The outlines in the world (x, z, turning either way) of the parts of an object with the role collider, and their bottom and top. */
+		engine.RoleColliders = function (object) {
+			var rig = engine.RigOf(object);
+			var name = object.Values.Model || object.Traits.Model && object.Traits.Model.Shape;
+			var model;
+			var made = [];
+
+			if (!rig || !rig.Colliders || !rig.Colliders.length || !object.World || !name || !library.Ready(name)) return made;
+
+			model = library.Make(name);
+
+			rig.Colliders.forEach(function (collider) {
+				var points = [];
+				var low = Infinity;
+				var high = -Infinity;
+
+				collider.Parts.forEach(function (part) {
+					var piece = model.Pieces.filter(function (each) {
+						return each.ID === part.Piece;
+					})[0];
+					var n;
+					var i;
+
+					if (!piece) return;
+
+					n = (piece.Placed || piece.Geometry).Positions.length / 3;
+
+					for (i = 0; i < n; i++) {
+						var p = worldOf(object, placeOf(piece, i));
+
+						points.push([p[0], p[2]]);
+
+						low = Math.min(low, p[1]);
+						high = Math.max(high, p[1]);
+					}
+				});
+
+				if (points.length > 2)
+					made.push({ID: object.ID + ':' + collider.Role, Points: points, Bottom: low, Top: high});
+			});
+
+			return made;
+		};
 
 		/* How large a model is in its own space, once. */
 		function boxOf (model) {
@@ -808,6 +1012,15 @@ Elemenx.Trait('SceneVehicles', {
 
 				corners.forEach(function (corner) {
 					var hit = engine.BarrierHit(state.X + corner[0], state.Z + corner[1], state.X, state.Z, state.RoadHints);
+					if (hit)
+						physics.Hit(state, hit.Normal, hit.Depth, corner, settings);
+				});
+			}
+
+			/* The colliders: each corner in one is pushed back out through its nearest side. */
+			if (engine.ColliderHit) {
+				corners.forEach(function (corner) {
+					var hit = engine.ColliderHit(state.X + corner[0], state.Z + corner[1], state.Y + 0.4, 0);
 					if (hit)
 						physics.Hit(state, hit.Normal, hit.Depth, corner, settings);
 				});
@@ -946,6 +1159,21 @@ Elemenx.Trait('SceneVehicles', {
 			hero.Body = math.Multiply(math.Rotation([0, 1, 0], seen.Heading), math.Multiply(math.Rotation([1, 0, 0], -seen.Pitch), math.Rotation([0, 0, 1], seen.Roll)));
 
 			pops(hero, input.Gas, pace);
+
+			/* On a wet road the wheels throw the water up behind them: more the faster and the wetter. */
+			var wet = scene.Ground && scene.Ground.Air ? scene.Ground.Air.Wet || 0 : 0;
+
+			hero.Splashed = (hero.Splashed || 0) + elapsed;
+
+			if (wet > 0.25 && pace > 4 && hero.Splashed > Math.max(0.05, 0.22 - pace * 0.004)) {
+				var aside = [ahead[1], -ahead[0]];
+
+				hero.Splashed = 0;
+
+				[-1, 1].forEach(function (side) {
+					self.Burst('roadspray', [seen.X - ahead[0] * long * 0.85 + aside[0] * wide * side, seen.Y + 0.15, seen.Z - ahead[1] * long * 0.85 + aside[1] * wide * side], {Aim: [-ahead[0] * 0.7 + aside[0] * side * 0.2, 0.55, -ahead[1] * 0.7 + aside[1] * side * 0.2], Size: Math.min(1.2, 0.2 + pace * 0.02) * Math.min(1, wet * 1.5)});
+				});
+			}
 
 			openingsStep(hero, elapsed);
 
@@ -1110,6 +1338,11 @@ Elemenx.Trait('SceneVehicles', {
 					state.Way = physics.Bounce(state.Way, met.Normal, met.Depth, 0.3);
 					state.Throttle *= 0.5;
 				});
+
+				/* Into the mouth of a wormhole: out of the other one of its pair, going on the same way (SceneDeepSpace). */
+				var passed = engine.DeepPass ? engine.DeepPass(hero, vectors.Add(origin, state.At)) : null;
+				if (passed)
+					state.At = vectors.Subtract(passed, origin);
 			});
 
 			hero.Last = last;
@@ -1535,7 +1768,7 @@ Elemenx.Trait('SceneVehicles', {
 		/* What moves of the objects that are not driven (a door of a house, a door of a parked car) comes to where it is set. */
 		engine.RigsStep = function (elapsed) {
 			scene.Order.forEach(function (object) {
-				if (object.Rig && object.Rig.Made && object.Rig.Made.Openings.length && !(object.ID === scene.Hero && object.Values.Vehicle))
+				if (object.Rig && object.Rig.Made && (object.Rig.Made.Openings.length || (object.Rig.Made.Emitters || []).length) && !(object.ID === scene.Hero && object.Values.Vehicle))
 					openingsStep(object, elapsed);
 			});
 		};

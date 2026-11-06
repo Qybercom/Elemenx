@@ -24,6 +24,9 @@
 		<div class="elemenx-scene-editor-group">
 			<Button Size="small" [variant]="Playing ? 'danger' : 'primary'" [icon]="Playing ? 'stop' : 'play'" [label]="Playing ? $T('graphics.sceneEditor.stop') : $T('graphics.sceneEditor.play')" (click)="Toggled" />
 		</div>
+		<div class="elemenx-scene-editor-group">
+			<Button Size="small" Variant="ghost" Icon="video" [label]="$T('graphics.sceneEditor.cutscenes')" [attribute.aria-pressed]="CutscenesOpen ? 'true' : 'false'" [disabled]="Playing" (click)="CutscenesToggled" />
+		</div>
 		<div class="elemenx-scene-editor-group end">
 			<Button Size="small" Variant="ghost" Icon="save" [title]="$T('graphics.sceneEditor.save')" [disabled]="Playing" (click)="Store" />
 			<Button Size="small" Variant="ghost" Icon="download" [title]="$T('graphics.sceneEditor.export')" [disabled]="Playing" (click)="Exported" />
@@ -64,7 +67,10 @@
 			<label>{{parameter.key}}<input type="text" [value]="parameter.Shown" [attribute.data-parameter]="parameter.key" (change)="Tuned" /></label>
 		</div>
 	</aside>
-	<div class="elemenx-scene-editor-blueprint" *if="!Playing && GraphKinds(Version, GraphStep).length">
+	<div class="elemenx-scene-editor-cutscenes" *if="!Playing && CutscenesOpen">
+		<CutsceneEditor [value]="CutscenesOf(Version)" [scene]="SceneOf(Version)" [target]="Selected" (change)="CutscenesChanged" (camera)="CameraAsked" />
+	</div>
+	<div class="elemenx-scene-editor-blueprint" *if="!Playing && !CutscenesOpen && GraphKinds(Version, GraphStep).length">
 		<div class="elemenx-scene-editor-graphs" role="tablist">
 			<button type="button" role="tab" class="elemenx-scene-editor-graph-kind" *for="kind of GraphKinds(Version, GraphStep)" *key="kind.ID" [class.active]="kind.ID === GraphKindOf(Version, GraphKind, GraphStep)" [attribute.aria-selected]="kind.ID === GraphKindOf(Version, GraphKind, GraphStep) ? 'true' : 'false'" [attribute.data-graph]="kind.ID" (click)="GraphPicked(kind.ID)">{{$T(kind.Key)}}</button>
 			<Button Size="small" Variant="ghost" Icon="plus" *if="!Graph(Version, GraphKind, GraphStep) && GraphKindOf(Version, GraphKind, GraphStep) !== 'Blueprint'" [label]="$T('graphics.sceneEditor.graphs.library')" (click)="GraphMade" />

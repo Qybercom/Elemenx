@@ -17,13 +17,16 @@
  *   A recipe may name a file instead of Build (glb, gltf, fbx or obj: ModelFormats): Define('hero', {URL: 'assets/hero.glb', Type, Size, Speed, Clips: {walk:
  *   'Run'}}) (Clips: the clips of the game and the animations of the file that play them; idle, walk, run, attack, die
  *   and work are found by their names). Load(name, callback) fetches it, (error, model), and Ready(name) tells whether
- *   it came; a model of a file stands on the ground and is 1 tall, as the others are. Make of one not come yet is null. Apart,
+ *   it came; a model of a file stands on the ground and is 1 tall, as the others are. With Generate(callback) instead of
+ *   a file it is made by that function, (error, asset) as Gltf gives one (SceneMannequin: the model mannequin). Make of one not come yet is null. Apart,
  *   a word of the name of a material or a node, cuts what a file keeps as one piece at its wide gaps: four wheels in one mesh.
  *   Merge: true makes its pieces one for each material when it is made; a Scene draws what moves together of a model
  *   that plays no clips as one for each material anyway (each wheel, each opening), but for Merge: false.
  *   Bake(model) makes the moves of its skeletons an array of frames, for a shader that reads them. Soft (0 to 1, or
  *   {material: value}) lets light under its surface, as in skin. Surfaces(model) is its geometry material by material.
- * - The Lamps of a model of a file are what shines in it (BuiltLamps): a Scene lights its world with them.
+ * - The Lamps of a model of a file are what shines in it (BuiltLamps): a Scene lights its world with them. A model built of
+ *   parts tells its own: recipe Lamps [{Place [x, y, z] (in its units: its height is 1), Color, Power, Radius (in its
+ *   units), Spot (degrees of its cone; none: all round), Aim, Night (true: lit only at night)}].
  * - BoneMatrix(model, bone, clip, time): the matrix of a bone at a second of a clip; Grip(bone, aim): where a thing in a hand stands.
  * - Make(name, {Variant}) returns a model, made once: {Name, Key, Group, Type, Size, Speed, Sway, Matte, Clips, Pieces:
  *   [{ID, Parent, Pivot, Team, Geometry}]}. Remake(name) has it made again on the next Make, under a Key of its own (what
@@ -40,7 +43,7 @@
 Elemenx.Service('SceneModels', {
 	$Meta: {
 		Description: 'The models of a game made of code: units, animals, plants, buildings and ships of pieces that move, fantasy and sci-fi, and their clips.',
-		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Remake(name)', 'Assemble(recipe, tools, random, variant)', 'Tagged(name, tag)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Make(name, options)', 'Surfaces(model)', 'Whole(model)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)']
+		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Remake(name)', 'Edits(name)', 'SetEdits(name, edits)', 'Edit(name, edit)', 'PieceList(name)', 'Extract(name, ids, newName)', 'Combine(newName, parts, options)', 'Assemble(recipe, tools, random, variant)', 'Tagged(name, tag)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Make(name, options)', 'Surfaces(model)', 'Whole(model)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['model']}},
@@ -76,14 +79,14 @@ Elemenx.Service('SceneModels', {
 		var made = this.Made;
 		var given = recipe;
 
-		if (!name || !recipe || typeof recipe.Build !== 'function' && !recipe.URL && !Array.isArray(recipe.Parts))
+		if (!name || !recipe || typeof recipe.Build !== 'function' && !recipe.URL && !Array.isArray(recipe.Parts) && !Array.isArray(recipe.Of))
 			throw new Error('Elemenx Models: Define expects (name, {Build}) or (name, {URL})');
 
 		/*
 		 * A recipe of data (an editor's): its Build made of its Parts, its clips of its Rig; with a Seed its variants are of
 		 * it, whatever name it is defined under (the editor shows the very variants a game gets).
 		 */
-		if (typeof recipe.Build !== 'function' && !recipe.URL) {
+		if (typeof recipe.Build !== 'function' && !recipe.URL && !Array.isArray(recipe.Of)) {
 			recipe = Object.assign({}, given, {Build: function (tools, random, variant) {
 				return self.Assemble(given, tools, given.Seed !== undefined && given.Seed !== '' ? self.Random(String(given.Seed) + ':' + variant) : random, variant);
 			}});
@@ -157,7 +160,12 @@ Elemenx.Service('SceneModels', {
 
 		if (recipe.Waiting.length > 1) return;
 
-		this.$Service('ModelFormats').Load(recipe.URL, function (error, asset) {
+		/* A model made of code as a file is (Generate(callback (error, asset))): made when first asked for, as one is fetched. */
+		(typeof recipe.Generate === 'function' ? function (url, then) {
+			recipe.Generate(then);
+		} : function (url, then) {
+			self.$Service('ModelFormats').Load(url, then);
+		})(recipe.URL, function (error, asset) {
 			/* Clips of other files (Motions: {clip: URL or {URL, Stride, Held}}) come before the model is said to be ready. */
 			var motions = Object.keys(recipe.Motions || {});
 			var left = motions.length;
@@ -236,9 +244,28 @@ Elemenx.Service('SceneModels', {
 			return this.Made[key];
 
 		if (recipe.URL) {
+			/* A model generated is made when it is asked for: a Generate that calls back at once gives it now. */
+			if (!recipe.Asset && typeof recipe.Generate === 'function' && !recipe.Waiting && !recipe.Failed)
+				this.Load(name);
+
 			if (!recipe.Asset) return null;
 
-			this.Made[key] = this.FromFile(name, shown, recipe);
+			if (this.Made[key])
+				return this.Made[key];
+
+			this.Made[key] = this.Finished(name, this.FromFile(name, shown, recipe), recipe);
+
+			return this.Made[key];
+		}
+
+		/* Of several models: their pieces where each is put. */
+		if (Array.isArray(recipe.Of)) {
+			pieces = this.Combined(recipe);
+
+			if (!pieces)
+				return null;
+
+			this.Made[key] = this.Finished(name, {Name: name, Key: shown, Group: recipe.Group || '', Type: recipe.Type || '', Size: recipe.Size || 1, Speed: 0, Sway: 0, Matte: false, Soft: 0, Clips: {}, Pieces: pieces, Lamps: [], Asset: {Nodes: [], Meshes: [], Materials: [], Images: [], Skins: [], Animations: []}, Fit: null, Joints: 0, Moves: false}, recipe);
 
 			return this.Made[key];
 		}
@@ -249,9 +276,520 @@ Elemenx.Service('SceneModels', {
 			return {ID: piece.ID, Parent: piece.Parent || '', Pivot: piece.Pivot || [0, 0, 0], Team: !!piece.Team, Geometry: recipe.Smooth ? geometry : meshes.Facets(geometry)};
 		});
 
-		this.Made[key] = {Name: name, Key: shown, Group: recipe.Group || '', Type: recipe.Type || '', Size: recipe.Size || 1, Speed: recipe.Speed || 0, Sway: recipe.Sway || 0, Matte: recipe.Matte !== false, Clips: recipe.Clips || {}, Pieces: pieces};
+		this.Made[key] = this.Finished(name, {Name: name, Key: shown, Group: recipe.Group || '', Type: recipe.Type || '', Size: recipe.Size || 1, Speed: recipe.Speed || 0, Sway: recipe.Sway || 0, Matte: recipe.Matte !== false, Clips: recipe.Clips || {}, Pieces: pieces, Lamps: (recipe.Lamps || []).slice()}, recipe);
 
 		return this.Made[key];
+	},
+
+	/* SceneModels: edits of models (what is done to a model and its pieces, over its source) */
+
+	/* A model made, its edits done over its pieces: those of its recipe (Edits), then those kept for it (SetEdits). */
+	Finished: function (name, model, recipe) {
+		var edits = (recipe.Edits || []).concat(this.Edits(name));
+		if (!edits.length) return model;
+
+		model.Unedited = model.Pieces;
+		model.Pieces = this.Edited(model.Pieces, edits).filter(function (piece) {
+			return !piece.Hidden;
+		});
+
+		return model;
+	},
+
+	EditSets: null,
+
+	/* The edits kept for a model (of a file or of a recipe), in the storage of the browser: a list of operations. */
+	Edits: function (name) {
+		var sets = this.EditSets || this.EditsLoaded();
+
+		return JSON.parse(JSON.stringify(sets[name] || []));
+	},
+
+	EditsLoaded: function () {
+		var text = null;
+
+		try {
+			text = typeof localStorage !== 'undefined' ? localStorage.getItem('elemenx-model-edits') : null;
+		}
+		catch (error) {
+			text = null;
+		}
+
+		try {
+			this.EditSets = text ? JSON.parse(text) || {} : {};
+		}
+		catch (error) {
+			this.EditSets = {};
+		}
+
+		return this.EditSets;
+	},
+
+	/* The edits of a model set (none: forgotten), kept, the model made again with them. */
+	SetEdits: function (name, edits) {
+		var sets = this.EditSets || this.EditsLoaded();
+
+		if (edits && edits.length) sets[name] = JSON.parse(JSON.stringify(edits));
+		else delete sets[name];
+
+		try {
+			if (typeof localStorage !== 'undefined')
+				localStorage.setItem('elemenx-model-edits', JSON.stringify(sets));
+		}
+		catch (error) {
+			/* No storage: they last as long as the page. */
+		}
+
+		this.Remake(name);
+
+		return this.Edits(name);
+	},
+
+	/* One edit more of a model: its list with it. */
+	Edit: function (name, edit) {
+		return this.SetEdits(name, this.Edits(name).concat([edit]));
+	},
+
+	/* The pieces of a model as an editor lists them: {ID, Name, Parent, Group, Hidden, Triangles, Material, Skinned}. */
+	PieceList: function (name) {
+		var model = this.Make(name);
+		var pieces;
+
+		if (!model) return [];
+
+		pieces = model.Unedited ? this.Edited(model.Unedited, (this.Recipes[name].Edits || []).concat(this.Edits(name))) : model.Pieces;
+
+		return pieces.map(function (piece) {
+			var g = piece.Geometry;
+
+			return {ID: piece.ID, Name: piece.Name || piece.ID, Parent: piece.Parent || '', Group: piece.Group || '', Hidden: !!piece.Hidden, Triangles: Math.floor((g.Indices && g.Indices.length ? g.Indices.length : g.Positions.length / 3) / 3), Material: piece.Material ? piece.Material.Name || '' : '', Skinned: piece.Skin !== undefined && piece.Skin !== -1};
+		});
+	},
+
+	/*
+	 * Pieces of a model taken out into a model of their own (newName: the same source, those pieces only), and gone from it.
+	 * Gives the new name.
+	 */
+	Extract: function (name, ids, newName) {
+		var recipe = this.Recipes[name];
+		var edits = (recipe.Edits || []).concat(this.Edits(name));
+		var own = Object.assign({}, recipe, {Edits: edits.concat([{Op: 'keep', Pieces: ids.slice()}])});
+
+		delete own.Asset;
+
+		if (recipe.URL)
+			own.Asset = recipe.Asset;
+
+		this.Define(newName, own);
+		this.Edit(name, {Op: 'remove', Pieces: ids.slice()});
+
+		return newName;
+	},
+
+	/*
+	 * Several models made one (parts: [{Model, At [x, y, z], Turn [degrees round x, y, z], Scale}], in the units of each, its
+	 * height 1): a model of their pieces under newName, of Size (options). Gives the new name.
+	 */
+	Combine: function (newName, parts, options) {
+		this.Define(newName, Object.assign({Group: 'combined', Type: 'prop', Size: 1}, options || {}, {Of: JSON.parse(JSON.stringify(parts || []))}));
+
+		return newName;
+	},
+
+	/* The pieces of a model of several: each of its models made, its pieces put where it is put; null till all are ready. */
+	Combined: function (recipe) {
+		var self = this;
+		var math = this.$Service('Math');
+		var pieces = [];
+		var ready = recipe.Of.every(function (part) {
+			return self.Has(part.Model) && self.Ready(part.Model);
+		});
+		if (!ready)
+			return null;
+
+		recipe.Of.forEach(function (part, index) {
+			var made = self.Make(part.Model);
+			var turn = part.Turn || [0, 0, 0];
+			var at = part.At || [0, 0, 0];
+			var scale = Number(part.Scale) || 1;
+			var degrees = Math.PI / 180;
+			var matrix = math.Multiply(math.Translation(at[0], at[1], at[2]), math.Multiply(math.Rotation([0, 1, 0], turn[1] * degrees), math.Multiply(math.Rotation([1, 0, 0], turn[0] * degrees), math.Multiply(math.Rotation([0, 0, 1], turn[2] * degrees), math.Scaling(scale, scale, scale)))));
+
+			(made ? made.Pieces : []).forEach(function (piece) {
+				if (piece.Skin !== undefined && piece.Skin !== -1) return;
+
+				pieces.push(Object.assign({}, piece, {ID: index + ':' + piece.ID, Name: (part.Name || part.Model) + ' · ' + (piece.Name || piece.ID), Rest: math.Multiply(matrix, piece.Rest || math.Identity()), Material: piece.Material || null, Skin: -1, Placed: null}));
+			});
+		});
+
+		return pieces;
+	},
+
+	/*
+	 * Edits done over pieces, in their order, each over what the ones before left: a new list (the geometries it changes are
+	 * new; the others shared). An edit is {Op, ...}:
+	 * - split: Piece, By (connected: each part of it that hangs together; vertices: the triangles all of whose corners are in
+	 *   Vertices, ranges of them, a piece of its own, ID); the new pieces <ID>#1..., or ID;
+	 * - group (Pieces, Name: they are of that group), ungroup (Name), merge (Pieces, ID: one piece of them, of the material
+	 *   of the first), rename (Piece, Name), parent (Piece, Parent), pivot (Piece, Pivot), remove (Pieces), hide (Pieces,
+	 *   Hidden: true, false shows them), keep (Pieces: those only), duplicate (Piece, ID, Move [x, y, z]), mirror (Pieces,
+	 *   Axis x, y or z), transform (Pieces, Move, Turn [degrees], Scale, round Pivot or the origin), origin (To: bottom,
+	 *   center: the model moved so its middle stands there).
+	 */
+	Edited: function (pieces, edits) {
+		var self = this;
+		var math = this.$Service('Math');
+		var list = pieces.slice();
+
+		function find (id) {
+			return list.filter(function (piece) {
+				return piece.ID === id;
+			})[0];
+		}
+
+		function among (ids) {
+			return list.filter(function (piece) {
+				return (ids || []).indexOf(piece.ID) >= 0;
+			});
+		}
+
+		function skinned (piece) {
+			return piece.Skin !== undefined && piece.Skin !== -1;
+		}
+
+		/* A geometry moved by a matrix of the space of the model: through the rest of its piece and back. */
+		function moved (piece, matrix, flip) {
+			var rest = piece.Rest || math.Identity();
+			var into = math.Multiply(math.Invert(rest) || math.Identity(), math.Multiply(matrix, rest));
+			var turn = math.NormalMatrix ? math.NormalMatrix(into) : null;
+			var g = piece.Geometry;
+			var made = Object.assign({}, g);
+			var n = g.Positions.length / 3;
+			var i;
+
+			made.Positions = new Float32Array(g.Positions.length);
+			made.Normals = g.Normals ? new Float32Array(g.Normals.length) : g.Normals;
+
+			for (i = 0; i < n; i++) {
+				var p = math.Apply(into, [g.Positions[i * 3], g.Positions[i * 3 + 1], g.Positions[i * 3 + 2]]);
+
+				made.Positions[i * 3] = p[0];
+				made.Positions[i * 3 + 1] = p[1];
+				made.Positions[i * 3 + 2] = p[2];
+
+				if (g.Normals && g.Normals.length) {
+					var q = turn ? [turn[0] * g.Normals[i * 3] + turn[3] * g.Normals[i * 3 + 1] + turn[6] * g.Normals[i * 3 + 2], turn[1] * g.Normals[i * 3] + turn[4] * g.Normals[i * 3 + 1] + turn[7] * g.Normals[i * 3 + 2], turn[2] * g.Normals[i * 3] + turn[5] * g.Normals[i * 3 + 1] + turn[8] * g.Normals[i * 3 + 2]] : [g.Normals[i * 3], g.Normals[i * 3 + 1], g.Normals[i * 3 + 2]];
+					var l = Math.hypot(q[0], q[1], q[2]) || 1;
+
+					made.Normals[i * 3] = q[0] / l;
+					made.Normals[i * 3 + 1] = q[1] / l;
+					made.Normals[i * 3 + 2] = q[2] / l;
+				}
+			}
+
+			/* Turned inside out by a mirror: its triangles wound the other way. */
+			if (flip) {
+				var index = g.Indices && g.Indices.length ? Array.prototype.slice.call(g.Indices) : null;
+
+				if (index) {
+					for (i = 0; i + 2 < index.length; i += 3) {
+						var t = index[i + 1];
+
+						index[i + 1] = index[i + 2];
+						index[i + 2] = t;
+					}
+
+					made.Indices = index;
+				}
+			}
+
+			return Object.assign({}, piece, {Geometry: made});
+		}
+
+		edits.forEach(function (edit) {
+			var piece;
+			var chosen;
+
+			switch (edit.Op) {
+				case 'split':
+					piece = find(edit.Piece);
+
+					if (!piece) return;
+
+					var parts = edit.By === 'vertices' ? self.SplitVertices(piece, edit.Vertices || []) : self.SplitConnected(piece);
+					var at = list.indexOf(piece);
+
+					if (parts.length < 2) return;
+
+					list.splice.apply(list, [at, 1].concat(parts.map(function (part, index) {
+						var id = edit.By === 'vertices' ? index === 0 ? edit.ID || piece.ID + '#sel' : piece.ID : piece.ID + '#' + (index + 1);
+
+						return Object.assign({}, piece, part, {ID: id, Name: id === piece.ID ? piece.Name : edit.Name && index === 0 ? edit.Name : id});
+					})));
+
+					break;
+				case 'group':
+					among(edit.Pieces).forEach(function (each) {
+						list[list.indexOf(each)] = Object.assign({}, each, {Group: edit.Name || 'group'});
+					});
+
+					break;
+				case 'ungroup':
+					list = list.map(function (each) {
+						return each.Group === edit.Name ? Object.assign({}, each, {Group: ''}) : each;
+					});
+
+					break;
+				case 'merge':
+					chosen = among(edit.Pieces).filter(function (each) {
+						return !skinned(each);
+					});
+
+					if (chosen.length < 2) return;
+
+					var merged = self.$Service('Meshes').Merge(chosen.map(function (each) {
+						return {Geometry: each.Geometry, Matrix: each.Rest || math.Identity()};
+					}));
+					var first = list.indexOf(chosen[0]);
+
+					list = list.filter(function (each) {
+						return chosen.indexOf(each) === -1 || each === chosen[0];
+					});
+					list[list.indexOf(chosen[0])] = Object.assign({}, chosen[0], {ID: edit.ID || chosen[0].ID, Name: edit.Name || edit.ID || chosen[0].Name, Geometry: merged, Rest: chosen[0].Rest ? math.Identity() : undefined, Placed: null});
+
+					if (first < 0) return;
+
+					break;
+				case 'rename':
+					piece = find(edit.Piece);
+
+					if (piece)
+						list[list.indexOf(piece)] = Object.assign({}, piece, {Name: edit.Name});
+
+					break;
+				case 'parent':
+					piece = find(edit.Piece);
+
+					if (piece)
+						list[list.indexOf(piece)] = Object.assign({}, piece, {Parent: edit.Parent || ''});
+
+					break;
+				case 'pivot':
+					piece = find(edit.Piece);
+
+					if (piece)
+						list[list.indexOf(piece)] = Object.assign({}, piece, {Pivot: (edit.Pivot || [0, 0, 0]).slice()});
+
+					break;
+				case 'remove':
+					list = list.filter(function (each) {
+						return (edit.Pieces || []).indexOf(each.ID) === -1;
+					});
+
+					break;
+				case 'keep':
+					list = list.filter(function (each) {
+						return (edit.Pieces || []).indexOf(each.ID) >= 0;
+					});
+
+					break;
+				case 'hide':
+					list = list.map(function (each) {
+						return (edit.Pieces || []).indexOf(each.ID) >= 0 ? Object.assign({}, each, {Hidden: edit.Hidden !== false}) : each;
+					});
+
+					break;
+				case 'duplicate':
+					piece = find(edit.Piece);
+
+					if (!piece || skinned(piece)) return;
+
+					var move = edit.Move || [0, 0, 0];
+					var copy = moved(piece, math.Translation(move[0], move[1], move[2]));
+
+					copy.ID = edit.ID || piece.ID + '#copy';
+					copy.Name = edit.Name || copy.ID;
+
+					list.splice(list.indexOf(piece) + 1, 0, copy);
+
+					break;
+				case 'mirror':
+					var axis = {x: 0, y: 1, z: 2}[edit.Axis || 'x'];
+					var flip = [1, 1, 1];
+
+					flip[axis] = -1;
+
+					among(edit.Pieces).forEach(function (each) {
+						if (!skinned(each))
+							list[list.indexOf(each)] = moved(each, math.Scaling(flip[0], flip[1], flip[2]), true);
+					});
+
+					break;
+				case 'transform':
+					var pivot = edit.Pivot || [0, 0, 0];
+					var t = edit.Move || [0, 0, 0];
+					var r = edit.Turn || [0, 0, 0];
+					var k = Number(edit.Scale) || 1;
+					var degrees = Math.PI / 180;
+					var matrix = math.Multiply(math.Translation(pivot[0] + t[0], pivot[1] + t[1], pivot[2] + t[2]), math.Multiply(math.Rotation([0, 1, 0], r[1] * degrees), math.Multiply(math.Rotation([1, 0, 0], r[0] * degrees), math.Multiply(math.Rotation([0, 0, 1], r[2] * degrees), math.Multiply(math.Scaling(k, k, k), math.Translation(-pivot[0], -pivot[1], -pivot[2]))))));
+
+					among(edit.Pieces).forEach(function (each) {
+						if (!skinned(each))
+							list[list.indexOf(each)] = moved(each, matrix);
+					});
+
+					break;
+				case 'origin':
+					var low = [Infinity, Infinity, Infinity];
+					var high = [-Infinity, -Infinity, -Infinity];
+
+					list.forEach(function (each) {
+						var g = each.Placed || each.Geometry;
+						var rest = each.Rest || math.Identity();
+						var i;
+
+						for (i = 0; i < g.Positions.length; i += 3) {
+							var p = math.Apply(rest, [g.Positions[i], g.Positions[i + 1], g.Positions[i + 2]]);
+
+							low = [Math.min(low[0], p[0]), Math.min(low[1], p[1]), Math.min(low[2], p[2])];
+							high = [Math.max(high[0], p[0]), Math.max(high[1], p[1]), Math.max(high[2], p[2])];
+						}
+					});
+
+					if (!isFinite(low[0])) return;
+
+					var shift = math.Translation(-(low[0] + high[0]) / 2, edit.To === 'center' ? -(low[1] + high[1]) / 2 : -low[1], -(low[2] + high[2]) / 2);
+
+					list = list.map(function (each) {
+						return skinned(each) ? each : moved(each, shift);
+					});
+
+					break;
+				default:
+					break;
+			}
+		});
+
+		return list;
+	},
+
+	/* The parts of a piece that hang together: its triangles grouped by the corners they share (by place). */
+	SplitConnected: function (piece) {
+		var g = piece.Geometry;
+		var p = g.Positions;
+		var index = g.Indices && g.Indices.length ? g.Indices : null;
+		var triangles = index ? index.length / 3 : p.length / 9;
+		var places = {};
+		var parent = [];
+		var groups = {};
+		var t;
+
+		function at (i) {
+			return index ? index[i] : i;
+		}
+
+		function root (a) {
+			while (parent[a] !== a) {
+				parent[a] = parent[parent[a]];
+				a = parent[a];
+			}
+
+			return a;
+		}
+
+		for (t = 0; t < triangles; t++)
+			parent[t] = t;
+
+		for (t = 0; t < triangles; t++) {
+			[0, 1, 2].forEach(function (corner) {
+				var v = at(t * 3 + corner);
+				var key = Math.round(p[v * 3] * 1e4) + ',' + Math.round(p[v * 3 + 1] * 1e4) + ',' + Math.round(p[v * 3 + 2] * 1e4);
+
+				if (places[key] === undefined) places[key] = t;
+				else parent[root(t)] = root(places[key]);
+			});
+		}
+
+		for (t = 0; t < triangles; t++)
+			(groups[root(t)] = groups[root(t)] || []).push(t);
+
+		return Object.keys(groups).map(function (key) {
+			return this.Subset(piece, groups[key]);
+		}, this);
+	},
+
+	/* A piece cut in two: the triangles all of whose corners are in ranges of vertices, and the rest (when both have any). */
+	SplitVertices: function (piece, ranges) {
+		var g = piece.Geometry;
+		var index = g.Indices && g.Indices.length ? g.Indices : null;
+		var triangles = index ? index.length / 3 : g.Positions.length / 9;
+		var inside = [];
+		var outside = [];
+		var t;
+
+		function within (v) {
+			return ranges.some(function (range) {
+				return v >= range[0] && v <= range[1];
+			});
+		}
+
+		for (t = 0; t < triangles; t++) {
+			var a = index ? index[t * 3] : t * 3;
+			var b = index ? index[t * 3 + 1] : t * 3 + 1;
+			var c = index ? index[t * 3 + 2] : t * 3 + 2;
+
+			(within(a) && within(b) && within(c) ? inside : outside).push(t);
+		}
+
+		return inside.length && outside.length ? [this.Subset(piece, inside), this.Subset(piece, outside)] : [];
+	},
+
+	/* The geometry of some triangles of a piece (and of its placed geometry, of a skin): each corner they use once. */
+	Subset: function (piece, triangles) {
+		function cut (g) {
+			var count = g.Positions.length / 3;
+			var index = g.Indices && g.Indices.length ? g.Indices : null;
+			var map = {};
+			var used = [];
+			var made = {};
+			var keys = Object.keys(g).filter(function (key) {
+				return key !== 'Indices' && g[key] && g[key].length && g[key].length % count === 0;
+			});
+
+			made.Indices = [];
+
+			triangles.forEach(function (t) {
+				[0, 1, 2].forEach(function (corner) {
+					var v = index ? index[t * 3 + corner] : t * 3 + corner;
+
+					if (map[v] === undefined) {
+						map[v] = used.length;
+
+						used.push(v);
+					}
+
+					made.Indices.push(map[v]);
+				});
+			});
+
+			keys.forEach(function (key) {
+				var stride = g[key].length / count;
+				var values = new (g[key] instanceof Float32Array ? Float32Array : g[key].constructor === Array ? Array : g[key].constructor)(used.length * stride);
+				var i;
+				var j;
+
+				for (i = 0; i < used.length; i++) {
+					for (j = 0; j < stride; j++)
+						values[i * stride + j] = g[key][used[i] * stride + j];
+				}
+
+				made[key] = values;
+			});
+
+			return Object.assign({}, g, made);
+		}
+
+		return {Geometry: cut(piece.Geometry), Placed: piece.Placed ? cut(piece.Placed) : piece.Placed};
 	},
 
 	Whole: function (model) {
@@ -2268,6 +2806,23 @@ Elemenx.Service('SceneModels', {
 		var bark = [0.36, 0.26, 0.18];
 		var stone = [0.62, 0.6, 0.57];
 		var plaster = [0.9, 0.86, 0.78];
+
+		/* The mannequin of SceneMannequin: a person of code, made the first time it is asked for. */
+		this.Define('mannequin', {URL: 'mannequin:mannequin', Group: 'characters', Type: 'unit', Size: 1.78, Clips: {run: 'jog'}, Generate: function (callback) {
+			var asset;
+
+			try {
+				asset = self.$Service('SceneMannequin').Asset({});
+			}
+			catch (error) {
+				callback(error, null);
+
+				return;
+			}
+
+			callback(null, asset);
+		}});
+
 		var tile = [0.62, 0.28, 0.22];
 		var hull = [0.78, 0.8, 0.84];
 		var dark = [0.27, 0.29, 0.34];
@@ -2637,9 +3192,77 @@ Elemenx.Service('SceneModels', {
 		});
 
 		/* What stands along a line, a piece at each step: its length along X is its Size. */
-		function piece (name, size, build) {
-			self.Define(name, {Group: 'props', Type: 'prop', Size: size, Build: build});
+		function piece (name, size, build, lamps) {
+			self.Define(name, {Group: 'props', Type: 'prop', Size: size, Build: build, Lamps: lamps});
 		}
+
+		/*
+		 * The furniture of streets, each its real height as its Size, its parts in parts of it. What glows (a color over 1: a
+		 * lamp, the light of a signal) glows by itself at night, lights nothing and casts no shadow; bloom spreads it.
+		 */
+		var steel = [0.3, 0.31, 0.33];
+		var dark = [0.12, 0.12, 0.13];
+
+		/* A street lamp: a post and a lantern on top, the same seen from any side. */
+		piece('streetlamp', 4.5, function (tools) {
+			return [tools.Piece('body', [tools.Cylinder(0.018, 0.012, 0.86, [0, 0.43, 0], steel, null, 10), tools.Cylinder(0.035, 0.03, 0.05, [0, 0.025, 0], steel, null, 10), tools.Cylinder(0.03, 0.045, 0.03, [0, 0.875, 0], dark, null, 8), tools.Cylinder(0.045, 0.032, 0.08, [0, 0.93, 0], [2.6, 2.2, 1.5], null, 8), tools.Cylinder(0.055, 0.005, 0.04, [0, 0.99, 0], dark, null, 8)])];
+		}, [{Place: [0, 0.92, 0], Color: [1, 0.78, 0.52], Power: 1.4, Radius: 4.2, Night: true}]);
+
+		/* A tall lamp of a road: a mast and a head over the way on both sides. */
+		piece('roadlamp', 9, function (tools) {
+			return [tools.Piece('body', [tools.Cylinder(0.014, 0.008, 0.98, [0, 0.49, 0], steel, null, 8), tools.Box(0.006, 0.006, 0.36, [0, 0.97, 0], steel), tools.Box(0.035, 0.012, 0.07, [0, 0.965, 0.18], steel), tools.Box(0.035, 0.012, 0.07, [0, 0.965, -0.18], steel), tools.Box(0.03, 0.004, 0.06, [0, 0.957, 0.18], [2.6, 2.3, 1.7]), tools.Box(0.03, 0.004, 0.06, [0, 0.957, -0.18], [2.6, 2.3, 1.7])])];
+		}, [{Place: [0, 0.95, 0.18], Color: [1, 0.86, 0.66], Power: 1.6, Radius: 3.2, Spot: 140, Aim: [0, -1, 0], Night: true}, {Place: [0, 0.95, -0.18], Color: [1, 0.86, 0.66], Power: 1.6, Radius: 3.2, Spot: 140, Aim: [0, -1, 0], Night: true}]);
+
+		/* A bench: a seat and a back of planks on iron legs. */
+		piece('bench', 0.85, function (tools) {
+			var wood = [0.48, 0.32, 0.2];
+
+			return [tools.Piece('body', [tools.Box(2.1, 0.05, 0.5, [0, 0.52, 0], wood), tools.Box(2.1, 0.3, 0.05, [0, 0.82, -0.24], wood, [-12, 0, 0]), tools.Box(0.06, 0.52, 0.5, [-0.9, 0.26, 0], dark), tools.Box(0.06, 0.52, 0.5, [0.9, 0.26, 0], dark), tools.Box(0.06, 0.4, 0.06, [-0.9, 0.75, -0.22], dark), tools.Box(0.06, 0.4, 0.06, [0.9, 0.75, -0.22], dark)])];
+		});
+
+		/* A bin. */
+		piece('bin', 0.9, function (tools) {
+			return [tools.Piece('body', [tools.Cylinder(0.28, 0.25, 0.92, [0, 0.46, 0], [0.22, 0.3, 0.24], null, 12), tools.Cylinder(0.3, 0.29, 0.06, [0, 0.95, 0], dark, null, 12)])];
+		});
+
+		/* A bus stop: a roof, a pane of glass behind, a bench, its sign. */
+		piece('bus-stop', 2.6, function (tools) {
+			return [tools.Piece('body', [tools.Box(1.4, 0.03, 0.6, [0, 0.95, 0], steel), tools.Box(1.36, 0.8, 0.012, [0, 0.52, -0.27], [0.62, 0.76, 0.82]), tools.Box(0.03, 0.95, 0.03, [-0.68, 0.475, -0.27], steel), tools.Box(0.03, 0.95, 0.03, [0.68, 0.475, -0.27], steel), tools.Box(0.03, 0.95, 0.03, [-0.68, 0.475, 0.27], steel), tools.Box(0.03, 0.95, 0.03, [0.68, 0.475, 0.27], steel), tools.Box(1, 0.03, 0.18, [0, 0.18, -0.16], [0.48, 0.32, 0.2]), tools.Cylinder(0.01, 0.01, 1, [0.82, 0.5, 0.25], steel, null, 6), tools.Box(0.16, 0.12, 0.01, [0.82, 0.92, 0.25], [0.15, 0.4, 0.75]), tools.Box(1.2, 0.012, 0.5, [0, 0.93, 0], [2.2, 2.1, 1.9])])];
+		});
+
+		/* A sign of a road: a post and a round plate, red rim. */
+		piece('roadsign', 2.6, function (tools) {
+			return [tools.Piece('body', [tools.Cylinder(0.012, 0.012, 0.86, [0, 0.43, 0], steel, null, 6), tools.Cylinder(0.12, 0.12, 0.01, [0, 0.86, 0.012], [0.82, 0.1, 0.08], [90, 0, 0], 16), tools.Cylinder(0.09, 0.09, 0.012, [0, 0.86, 0.014], [0.92, 0.92, 0.9], [90, 0, 0], 16)])];
+		});
+
+		/* A traffic light: a post, its box and three lamps, the red one lit. */
+		piece('traffic-light', 3.6, function (tools) {
+			return [tools.Piece('body', [tools.Cylinder(0.014, 0.012, 0.74, [0, 0.37, 0], steel, null, 8), tools.Box(0.08, 0.26, 0.07, [0, 0.86, 0], dark), tools.Cylinder(0.024, 0.024, 0.01, [0, 0.94, 0.036], [2.8, 0.35, 0.2], [90, 0, 0], 10), tools.Cylinder(0.024, 0.024, 0.01, [0, 0.86, 0.036], [0.35, 0.28, 0.08], [90, 0, 0], 10), tools.Cylinder(0.024, 0.024, 0.01, [0, 0.78, 0.036], [0.08, 0.3, 0.14], [90, 0, 0], 10)])];
+		});
+
+		/* A hydrant. */
+		piece('hydrant', 0.8, function (tools) {
+			var red = [0.72, 0.12, 0.08];
+
+			return [tools.Piece('body', [tools.Cylinder(0.14, 0.12, 0.8, [0, 0.4, 0], red, null, 10), tools.Ball(0.13, [0, 0.82, 0], red), tools.Cylinder(0.05, 0.05, 0.42, [0, 0.55, 0], red, [0, 0, 90], 8)])];
+		});
+
+		/* A bollard. */
+		piece('bollard', 0.9, function (tools) {
+			return [tools.Piece('body', [tools.Cylinder(0.08, 0.07, 0.95, [0, 0.475, 0], steel, null, 10), tools.Cylinder(0.075, 0.05, 0.05, [0, 0.97, 0], steel, null, 10), tools.Box(0.16, 0.04, 0.16, [0, 0.8, 0], [0.9, 0.9, 0.86])])];
+		});
+
+		/* A planter of flowers. */
+		piece('planter', 0.7, function (tools, random) {
+			var bloom = [[0.85, 0.2, 0.3], [0.95, 0.75, 0.2], [0.7, 0.4, 0.85]][Math.floor(random(0, 2.99))];
+
+			return [tools.Piece('body', [tools.Box(1.6, 0.6, 0.8, [0, 0.3, 0], [0.55, 0.53, 0.5]), tools.Blob(0.42, [-0.35, 0.75, 0], [0.22, 0.42, 0.18], 0.6, [1.4, 0.6, 1]), tools.Blob(0.38, [0.4, 0.74, 0], [0.24, 0.45, 0.2], 0.6, [1.3, 0.6, 1]), tools.Blob(0.12, [-0.2, 0.92, 0.1], bloom, 0.5), tools.Blob(0.12, [0.3, 0.9, -0.08], bloom, 0.5)])];
+		});
+
+		/* A kiosk: a booth, its window lit at night, its awning. */
+		piece('kiosk', 2.8, function (tools) {
+			return [tools.Piece('body', [tools.Box(0.9, 0.85, 0.7, [0, 0.425, 0], [0.42, 0.5, 0.36]), tools.Box(0.6, 0.3, 0.01, [0, 0.55, 0.351], [1.8, 1.6, 1.2]), tools.Wedge(1.0, 0.1, 0.36, [0, 0.83, 0.5], [0.75, 0.2, 0.18], [0, 90, 0]), tools.Box(0.96, 0.05, 0.76, [0, 0.875, 0], dark)])];
+		}, [{Place: [0, 0.55, 0.6], Color: [1, 0.9, 0.7], Power: 0.5, Radius: 2.5, Night: true}]);
 
 		piece('fence', 2, function (tools) {
 			return [tools.Piece('body', [tools.Box(0.05, 0.55, 0.05, [-0.47, 0.27, 0], wood), tools.Box(0.05, 0.55, 0.05, [0.47, 0.27, 0], wood), tools.Box(1, 0.05, 0.025, [0, 0.42, 0], wood), tools.Box(1, 0.05, 0.025, [0, 0.22, 0], wood)])];

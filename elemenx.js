@@ -22,6 +22,7 @@
  *   Directive registry       directive metadata and the built-in if, for, key, outlet, pending, error
  *   Template and Component   Elemenx.Template, Elemenx.Directive, Elemenx.Component, Elemenx.Instance: compiler, bindings, factory
  *   Meta                     Elemenx.Meta: what Components, Services and Directives declare of themselves ($Meta)
+ *   Defined                  Elemenx.Defined: what a name is defined as, and waiting for a definition to come
  *   Router                   Elemenx.Router: routes, guards, browser history
  *   Structural               structural hosts: conditional and collection mounting, deferred children
  *   Cache                    Elemenx.Cache: unloading idle component definitions, sleeping instances (keep-alive)
@@ -2840,6 +2841,9 @@
 			if (arguments.length === 2) {
 				Runtime.RegisterServiceDefinition(name, definition);
 
+				if (Runtime.DefinedTell)
+					Runtime.DefinedTell();
+
 				return serviceHandle(name);
 			}
 
@@ -3506,7 +3510,12 @@
 
 		/* Component: Directive API */
 		Elemenx.Directive = function (name, definition) {
-			return Runtime.Directive.Register(name, definition);
+			var made = Runtime.Directive.Register(name, definition);
+
+			if (Runtime.DefinedTell)
+				Runtime.DefinedTell();
+
+			return made;
 		};
 
 		/* Component: state */
@@ -8213,6 +8222,9 @@
 				/* The Components that extend this one, or wait for it, are made of it now. */
 				reinherit(name);
 
+				if (Runtime.DefinedTell)
+					Runtime.DefinedTell();
+
 				return factory;
 			}
 
@@ -8339,6 +8351,108 @@
 			}).filter(function (meta) {
 				return meta !== null;
 			});
+		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
+	/* Defined */
+	(function (global) {
+		'use strict';
+
+		/* What waits for a name to be defined: {Names, Kind, Done, Timer, Callback}. */
+		var waiting = [];
+
+		/* What a name is defined as now: Component (loaded, not only named), Service or Directive; null for none. */
+		function kindOf (name, kind) {
+			if ((!kind || kind === 'Component') && Runtime.ComponentDefinition(name)) return 'Component';
+
+			if ((!kind || kind === 'Service') && Elemenx.Service(name)) return 'Service';
+
+			if ((!kind || kind === 'Directive') && Runtime.Directive.Registry[String(name).toLowerCase()]) return 'Directive';
+
+			return null;
+		}
+
+		function settle (wait) {
+			var found = [];
+			var i;
+
+			if (wait.Done) return;
+
+			for (i = 0; i < wait.Names.length; i++) {
+				var kind = kindOf(wait.Names[i], wait.Kind);
+				if (!kind) return;
+
+				found.push({Name: wait.Names[i], Kind: kind});
+			}
+
+			finish(wait, null, wait.List ? found : found[0]);
+		}
+
+		function finish (wait, error, result) {
+			wait.Done = true;
+
+			if (wait.Timer)
+				clearTimeout(wait.Timer);
+
+			waiting = waiting.filter(function (one) {
+				return one !== wait;
+			});
+
+			wait.Callback(error, error ? null : result);
+		}
+
+		/* A definition came (a Component, a Service, a Directive): what waited for it is told, after what defined it. */
+		Runtime.DefinedTell = function () {
+			if (!waiting.length) return;
+
+			setTimeout(function () {
+				waiting.slice().forEach(settle);
+			}, 0);
+		};
+
+		/*
+		 * Elemenx.Defined(name) is what a name is defined as now: 'Component' (its definition loaded), 'Service',
+		 * 'Directive', or null. Elemenx.Defined(name or [names], callback, {Kind, Timeout}) calls back (error, {Name, Kind})
+		 * (a list of them for a list of names) once each is defined, of Kind when one is given: a Component of another
+		 * script, of a Library, of a part of a Bundle loaded later. Always after it returns, even for what is defined
+		 * already; Timeout (milliseconds, none by default) gives up with the error 'Elemenx.Defined waited <ms> ms for
+		 * <names>'. It returns a function that stops waiting (no callback then).
+		 */
+		Elemenx.Defined = function (name, callback, options) {
+			var settings = options || {};
+			var names = Array.isArray(name) ? name.map(String) : [String(name)];
+			var wait;
+
+			if (arguments.length === 1 && typeof name === 'string') return kindOf(name, null);
+
+			if (!names.length || typeof callback !== 'function' || settings.Kind && ['Component', 'Service', 'Directive'].indexOf(settings.Kind) === -1)
+				throw new Error('Elemenx.Defined expects (name) or (name, callback, {Kind, Timeout})');
+
+			wait = {Names: names, List: Array.isArray(name), Kind: settings.Kind || '', Done: false, Timer: null, Callback: callback};
+
+			waiting.push(wait);
+
+			if (Number(settings.Timeout) > 0) {
+				wait.Timer = setTimeout(function () {
+					if (!wait.Done)
+						finish(wait, new Error('Elemenx.Defined waited ' + Number(settings.Timeout) + ' ms for ' + names.join(', ')));
+				}, Number(settings.Timeout));
+			}
+
+			setTimeout(function () {
+				settle(wait);
+			}, 0);
+
+			return function () {
+				wait.Done = true;
+
+				if (wait.Timer)
+					clearTimeout(wait.Timer);
+
+				waiting = waiting.filter(function (one) {
+					return one !== wait;
+				});
+			};
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 

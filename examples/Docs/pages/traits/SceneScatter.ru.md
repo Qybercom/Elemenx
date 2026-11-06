@@ -12,4 +12,6 @@ Biome у земли (сервис Biomes) сам приносит свои цв�
 ## Методы
 
 - `Sown()`
+- `ChangeSown(key, changes)`
+- `UnlinkSown(key)`
 - `SownNear(x, z, radius)`

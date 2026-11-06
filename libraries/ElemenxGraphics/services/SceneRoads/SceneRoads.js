@@ -4,7 +4,8 @@
  * from its left edge to its right one.
  *
  * - Surfaces: what a strip is made of, by name (asphalt, concrete, cobbles, paving, gravel, dirt, sand, grass, ballast,
- *   runoff, rumble, cycle, steel, wood): {Color, Rough, Metal, Grip (1 holds as dry asphalt does), Drag (0: none)}.
+ *   runoff, rumble, cycle, steel, wood): {Color, Rough, Metal, Grip (1 holds as dry asphalt does), Drag (0: none),
+ *   Material (its pattern: a material of SceneMaterials, none: plain)}.
  *   Surface(name, surface) adds one or replaces it, Surface(name) gives it.
  * - Types: Define(name, type) adds one or replaces it, Type(name) gives it, Types() lists the names. A type is
  *   {Title, Group (road, street, path, race, air, rail), Strips: [{Kind (lane, shoulder, verge, kerb, sidewalk, median,
@@ -345,7 +346,7 @@ Elemenx.Service('SceneRoads', {
 
 		road.Spans = this.Spans(road, spec, settings.Height);
 		road.Barriers = this.Barriers(road, spec.Barriers);
-		road.Beside = (spec.Along || []).slice();
+		road.Beside = (spec.Along || type.Along || []).slice();
 		road.Marks = (spec.Marks || []).slice();
 
 		return road;
@@ -717,7 +718,8 @@ Elemenx.Service('SceneRoads', {
 
 				sides.forEach(function (sign) {
 					var offset = sign < 0 ? road.Strips[0].Left - gap : road.Strips[road.Strips.length - 1].Right + gap;
-					var item = Object.assign({}, line, {Type: line.Type || 'row', Road: road.ID, Points: points.filter(function (point) {
+					/* Beside the road wherever it goes, low as it may be. */
+					var item = Object.assign({MinHeight: -1000}, line, {Type: line.Type || 'row', Road: road.ID, Points: points.filter(function (point) {
 						return !self.SpanAt(road, point.Along);
 					}).map(function (point) {
 						return [point.X + point.Way[1] * offset, point.Z - point.Way[0] * offset];
@@ -1284,7 +1286,7 @@ Elemenx.Service('SceneRoads', {
 			if (named[name] === undefined) {
 				named[name] = materials.length;
 
-				materials.push({Name: name, BaseColor: surface.Color.concat([1]), Metallic: surface.Metal || 0, Roughness: surface.Rough, Emissive: [0, 0, 0], Clearcoat: 0, CoatRoughness: 0, Transmission: 0, ColorMap: null, MetalMap: null, NormalMap: null, OcclusionMap: null, EmissiveMap: null, Alpha: 'OPAQUE', Cutoff: 0.5, DoubleSided: true, Unlit: false, Specular: 1, SpecularColor: [1, 1, 1], SpecularMap: null});
+				materials.push({Name: name, Pattern: surface.Material || '', BaseColor: surface.Color.concat([1]), Metallic: surface.Metal || 0, Roughness: surface.Rough, Emissive: [0, 0, 0], Clearcoat: 0, CoatRoughness: 0, Transmission: 0, ColorMap: null, MetalMap: null, NormalMap: null, OcclusionMap: null, EmissiveMap: null, Alpha: 'OPAQUE', Cutoff: 0.5, DoubleSided: true, Unlit: false, Specular: 1, SpecularColor: [1, 1, 1], SpecularMap: null});
 			}
 
 			return named[name];
@@ -1396,7 +1398,7 @@ Elemenx.Service('SceneRoads', {
 	Work: function () {
 		var self = this;
 
-		return this.$Service('Workers').Pool('SceneRoads', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan'], SceneRoads: Object.keys(this).filter(function (name) {
+		return this.$Service('Workers').Pool('SceneRoads', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf', 'HighwaysOf', 'TownsOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'GroundMaterials', 'LookMaterials', 'MaterialsOf', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan'], SceneRoads: Object.keys(this).filter(function (name) {
 			return name.charAt(0) !== '$' && name !== 'Work' && name !== 'Source' && name !== 'Library' && (typeof self[name] === 'function' || name === 'Surfaces' || name === 'Defined');
 		})});
 	},
@@ -1419,37 +1421,37 @@ Elemenx.Service('SceneRoads', {
 		}
 
 		[
-			['asphalt', {Color: [0.2, 0.2, 0.21], Rough: 0.88, Grip: 1, Drag: 0}],
-			['concrete', {Color: [0.58, 0.57, 0.54], Rough: 0.9, Grip: 0.95, Drag: 0}],
-			['cobbles', {Color: [0.42, 0.4, 0.38], Rough: 0.95, Grip: 0.8, Drag: 0.06}],
-			['paving', {Color: [0.62, 0.6, 0.57], Rough: 0.92, Grip: 0.9, Drag: 0.02}],
-			['gravel', {Color: [0.56, 0.51, 0.43], Rough: 1, Grip: 0.62, Drag: 0.22}],
-			['dirt', {Color: [0.45, 0.36, 0.26], Rough: 1, Grip: 0.58, Drag: 0.3}],
-			['sand', {Color: [0.8, 0.72, 0.52], Rough: 1, Grip: 0.42, Drag: 0.55}],
-			['grass', {Color: [0.3, 0.46, 0.2], Rough: 1, Grip: 0.5, Drag: 0.45}],
-			['ballast', {Color: [0.43, 0.41, 0.39], Rough: 1, Grip: 0.5, Drag: 0.4}],
-			['runoff', {Color: [0.32, 0.32, 0.33], Rough: 0.85, Grip: 0.95, Drag: 0.02}],
-			['rumble', {Color: [0.78, 0.16, 0.12], Rough: 0.7, Grip: 0.85, Drag: 0.04}],
-			['cycle', {Color: [0.5, 0.2, 0.17], Rough: 0.9, Grip: 0.95, Drag: 0}],
-			['steel', {Color: [0.55, 0.55, 0.58], Rough: 0.35, Metal: 1, Grip: 0.4, Drag: 0}],
-			['wood', {Color: [0.35, 0.25, 0.17], Rough: 1, Grip: 0.6, Drag: 0.1}]
+			['asphalt', {Color: [0.2, 0.2, 0.21], Rough: 0.88, Grip: 1, Drag: 0, Material: 'asphalt'}],
+			['concrete', {Color: [0.58, 0.57, 0.54], Rough: 0.9, Grip: 0.95, Drag: 0, Material: 'concrete'}],
+			['cobbles', {Color: [0.42, 0.4, 0.38], Rough: 0.95, Grip: 0.8, Drag: 0.06, Material: 'cobbles'}],
+			['paving', {Color: [0.62, 0.6, 0.57], Rough: 0.92, Grip: 0.9, Drag: 0.02, Material: 'paving'}],
+			['gravel', {Color: [0.56, 0.51, 0.43], Rough: 1, Grip: 0.62, Drag: 0.22, Material: 'gravel'}],
+			['dirt', {Color: [0.45, 0.36, 0.26], Rough: 1, Grip: 0.58, Drag: 0.3, Material: 'dirt'}],
+			['sand', {Color: [0.8, 0.72, 0.52], Rough: 1, Grip: 0.42, Drag: 0.55, Material: 'sand'}],
+			['grass', {Color: [0.3, 0.46, 0.2], Rough: 1, Grip: 0.5, Drag: 0.45, Material: 'lawn'}],
+			['ballast', {Color: [0.43, 0.41, 0.39], Rough: 1, Grip: 0.5, Drag: 0.4, Material: 'ballast'}],
+			['runoff', {Color: [0.32, 0.32, 0.33], Rough: 0.85, Grip: 0.95, Drag: 0.02, Material: 'terrazzo'}],
+			['rumble', {Color: [0.78, 0.16, 0.12], Rough: 0.7, Grip: 0.85, Drag: 0.04, Material: 'concrete'}],
+			['cycle', {Color: [0.5, 0.2, 0.17], Rough: 0.9, Grip: 0.95, Drag: 0, Material: 'asphalt'}],
+			['steel', {Color: [0.55, 0.55, 0.58], Rough: 0.35, Metal: 1, Grip: 0.4, Drag: 0, Material: 'metal'}],
+			['wood', {Color: [0.35, 0.25, 0.17], Rough: 1, Grip: 0.6, Drag: 0.1, Material: 'wood'}]
 		].forEach(function (pair) {
 			self.Surface(pair[0], pair[1]);
 		});
 
 		/* Roads of cars. */
-		self.Define('motorway', {Title: 'Motorway', Group: 'road', Speed: 130, Strips: [strip('shoulder', 3, 'asphalt', 0, {Right: 'solid'}), lane(-1, 'asphalt', 3.75, 'none', 'dashed'), lane(-1, 'asphalt', 3.75, 'none', 'dashed'), lane(-1, 'asphalt', 3.75, 'none', 'solid'), strip('median', 3, 'concrete', 0.15), lane(1, 'asphalt', 3.75, 'solid', 'dashed'), lane(1, 'asphalt', 3.75, 'none', 'dashed'), lane(1, 'asphalt', 3.75, 'none', 'solid'), strip('shoulder', 3, 'asphalt')]});
-		self.Define('highway', {Title: 'Highway', Group: 'road', Speed: 110, Strips: [strip('verge', 1.5, 'grass'), strip('shoulder', 2, 'asphalt', 0, {Right: 'solid'}), lane(-1, 'asphalt', 3.6, 'none', 'dashed'), lane(-1, 'asphalt', 3.6, 'none', 'solid'), strip('median', 4, 'grass', 0.1), lane(1, 'asphalt', 3.6, 'solid', 'dashed'), lane(1, 'asphalt', 3.6, 'none', 'solid'), strip('shoulder', 2, 'asphalt'), strip('verge', 1.5, 'grass')]});
+		self.Define('motorway', {Title: 'Motorway', Group: 'road', Speed: 130, Strips: [strip('shoulder', 3, 'asphalt', 0, {Right: 'solid'}), lane(-1, 'asphalt', 3.75, 'none', 'dashed'), lane(-1, 'asphalt', 3.75, 'none', 'dashed'), lane(-1, 'asphalt', 3.75, 'none', 'solid'), strip('median', 3, 'concrete', 0.15), lane(1, 'asphalt', 3.75, 'solid', 'dashed'), lane(1, 'asphalt', 3.75, 'none', 'dashed'), lane(1, 'asphalt', 3.75, 'none', 'solid'), strip('shoulder', 3, 'asphalt')], Along: [{Type: 'row', Side: 'both', Gap: 0.8, Shapes: 'roadlamp', Spacing: 60}]});
+		self.Define('highway', {Title: 'Highway', Group: 'road', Speed: 110, Strips: [strip('verge', 1.5, 'grass'), strip('shoulder', 2, 'asphalt', 0, {Right: 'solid'}), lane(-1, 'asphalt', 3.6, 'none', 'dashed'), lane(-1, 'asphalt', 3.6, 'none', 'solid'), strip('median', 4, 'grass', 0.1), lane(1, 'asphalt', 3.6, 'solid', 'dashed'), lane(1, 'asphalt', 3.6, 'none', 'solid'), strip('shoulder', 2, 'asphalt'), strip('verge', 1.5, 'grass')], Along: [{Type: 'row', Side: 'both', Gap: 0.8, Shapes: 'roadlamp', Spacing: 60}]});
 		self.Define('road', {Title: 'Road', Group: 'road', Speed: 90, Strips: [strip('shoulder', 1, 'gravel'), lane(-1, 'asphalt', 3.5, 'solid', 'dashed'), lane(1, 'asphalt', 3.5, 'none', 'solid'), strip('shoulder', 1, 'gravel')]});
 		self.Define('country', {Title: 'Country road', Group: 'road', Speed: 70, Strips: [strip('verge', 0.8, 'grass'), lane(-1, 'asphalt', 2.9), lane(1, 'asphalt', 2.9), strip('verge', 0.8, 'grass')]});
 		self.Define('lane', {Title: 'One-way lane', Group: 'road', Speed: 50, Strips: [lane(1, 'asphalt', 4, 'solid', 'solid')]});
 
 		/* Streets of towns. */
-		self.Define('street', {Title: 'Street', Group: 'street', Speed: 50, Strips: [strip('sidewalk', 2.5, 'paving', 0.15), strip('kerb', 0.2, 'concrete', 0.15), strip('parking', 2.2, 'asphalt', 0, {Right: 'dotted'}), lane(-1, 'asphalt', 3.2, 'none', 'dashed'), lane(1, 'asphalt', 3.2), strip('parking', 2.2, 'asphalt', 0, {Left: 'dotted'}), strip('kerb', 0.2, 'concrete', 0.15), strip('sidewalk', 2.5, 'paving', 0.15)]});
-		self.Define('avenue', {Title: 'Avenue', Group: 'street', Speed: 60, Strips: [strip('sidewalk', 4, 'paving', 0.15), strip('kerb', 0.2, 'concrete', 0.15), lane(-1, 'asphalt', 3.3, 'none', 'dashed'), lane(-1, 'asphalt', 3.3), strip('median', 5, 'grass', 0.15), lane(1, 'asphalt', 3.3, 'none', 'dashed'), lane(1, 'asphalt', 3.3), strip('kerb', 0.2, 'concrete', 0.15), strip('sidewalk', 4, 'paving', 0.15)]});
-		self.Define('alley', {Title: 'Alley', Group: 'street', Speed: 20, Strips: [lane(0, 'cobbles', 4)]});
-		self.Define('boulevard', {Title: 'Boulevard', Group: 'street', Speed: 50, Strips: [strip('sidewalk', 3, 'paving', 0.15), lane(-1, 'asphalt', 3.3), strip('median', 8, 'paving', 0.15), lane(1, 'asphalt', 3.3), strip('sidewalk', 3, 'paving', 0.15)]});
-		self.Define('tram', {Title: 'Street with a tram', Group: 'street', Speed: 50, Catenary: true, Rails: [{Offset: 0, Gauge: 1.435}], Sleepers: {Step: 0.75, Length: 0, Surface: 'concrete'}, Strips: [strip('sidewalk', 2.5, 'paving', 0.15), lane(-1, 'asphalt', 3.2, 'none', 'solid'), strip('bed', 3, 'concrete'), lane(1, 'asphalt', 3.2, 'solid'), strip('sidewalk', 2.5, 'paving', 0.15)]});
+		self.Define('street', {Title: 'Street', Group: 'street', Speed: 50, Strips: [strip('sidewalk', 2.5, 'paving', 0.15), strip('kerb', 0.2, 'concrete', 0.15), strip('parking', 2.2, 'asphalt', 0, {Right: 'dotted'}), lane(-1, 'asphalt', 3.2, 'none', 'dashed'), lane(1, 'asphalt', 3.2), strip('parking', 2.2, 'asphalt', 0, {Left: 'dotted'}), strip('kerb', 0.2, 'concrete', 0.15), strip('sidewalk', 2.5, 'paving', 0.15)], Along: [{Type: 'row', Side: 'both', Gap: -0.6, Shapes: 'streetlamp', Spacing: 28}, {Type: 'row', Side: 'both', Gap: -1.2, Shapes: 'bench, bin, hydrant', Spacing: 45}, {Type: 'row', Side: 'right', Gap: -1.4, Shapes: 'bus-stop', Spacing: 320}]});
+		self.Define('avenue', {Title: 'Avenue', Group: 'street', Speed: 60, Strips: [strip('sidewalk', 4, 'paving', 0.15), strip('kerb', 0.2, 'concrete', 0.15), lane(-1, 'asphalt', 3.3, 'none', 'dashed'), lane(-1, 'asphalt', 3.3), strip('median', 5, 'grass', 0.15), lane(1, 'asphalt', 3.3, 'none', 'dashed'), lane(1, 'asphalt', 3.3), strip('kerb', 0.2, 'concrete', 0.15), strip('sidewalk', 4, 'paving', 0.15)], Along: [{Type: 'row', Side: 'both', Gap: -0.6, Shapes: 'streetlamp', Spacing: 28}, {Type: 'row', Side: 'both', Gap: -1.6, Shapes: 'bench, bin, planter', Spacing: 36}, {Type: 'row', Side: 'right', Gap: -2, Shapes: 'bus-stop, kiosk', Spacing: 260}]});
+		self.Define('alley', {Title: 'Alley', Group: 'street', Speed: 20, Strips: [lane(0, 'cobbles', 4)], Along: [{Type: 'row', Side: 'left', Gap: -0.4, Shapes: 'streetlamp', Spacing: 30}]});
+		self.Define('boulevard', {Title: 'Boulevard', Group: 'street', Speed: 50, Strips: [strip('sidewalk', 3, 'paving', 0.15), lane(-1, 'asphalt', 3.3), strip('median', 8, 'paving', 0.15), lane(1, 'asphalt', 3.3), strip('sidewalk', 3, 'paving', 0.15)], Along: [{Type: 'row', Side: 'both', Gap: -0.6, Shapes: 'streetlamp', Spacing: 28}, {Type: 'row', Side: 'both', Gap: -1.2, Shapes: 'bench, planter, bin', Spacing: 30}]});
+		self.Define('tram', {Title: 'Street with a tram', Group: 'street', Speed: 50, Catenary: true, Rails: [{Offset: 0, Gauge: 1.435}], Sleepers: {Step: 0.75, Length: 0, Surface: 'concrete'}, Strips: [strip('sidewalk', 2.5, 'paving', 0.15), lane(-1, 'asphalt', 3.2, 'none', 'solid'), strip('bed', 3, 'concrete'), lane(1, 'asphalt', 3.2, 'solid'), strip('sidewalk', 2.5, 'paving', 0.15)], Along: [{Type: 'row', Side: 'both', Gap: -0.6, Shapes: 'streetlamp', Spacing: 28}, {Type: 'row', Side: 'both', Gap: -1.2, Shapes: 'bench, bin', Spacing: 50}]});
 
 		/* Ways without a car. */
 		self.Define('dirt', {Title: 'Dirt road', Group: 'path', Speed: 40, Strips: [lane(0, 'dirt', 4.5)]});

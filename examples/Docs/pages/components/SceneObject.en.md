@@ -59,4 +59,4 @@ default
 - [sees a ground in parallel rays: from above a point is where the plan says, at an angle where the rhombus says](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L884) — `tests/regression/library-scene.test.js`
 - [brings the resolution back at the 60 frames of a screen, and holds it where a quality was chosen](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L926) — `tests/regression/library-scene.test.js`
 
-+138 more in the same files
++144 more in the same files

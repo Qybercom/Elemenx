@@ -1,16 +1,17 @@
 <!-- generated -->
 # Syntax
 
-The highlighting of source code: the grammars of the languages and the tokens of a text in one of them. Built in: javascript (js, mjs, cjs, jsx), typescript (ts, tsx), json, html (xml, svg), css, markdown (md), sql, python (py), shell (sh, bash, zsh), yaml (yml), toml, ini (cfg, conf, properties, env) and csv (tsv); text has no rules. Used by CodeEditor; any component may show highlighted code with it.
+The highlighting of source code: the grammars of the languages and the tokens of a text in one of them. Built in: javascript (js, mjs, cjs, jsx), typescript (ts, tsx), json, html (xml, svg), css, markdown (md), sql, python (py), shell (sh, bash, zsh), yaml (yml), toml, ini (cfg, conf, properties, env), csv (tsv) and glsl (the shaders of WebGL and OpenGL: frag, vert, vs, fs, shader); text has no rules. Used by CodeEditor; any component may show highlighted code with it.
 
-- Register(name, grammar) adds a language (or replaces one): {Aliases, Rules, Comment, Indent}. Rules are [Type, RegExp, Options]: the first rule that matches nearest wins (a rule must not match empty text). Type is the class of the token (elemenx-syntax-<Type>; null for plain text). Options: Inside (a language name, or a function (match) returning one: the match is read in that language) or Groups (the types of the capture groups, which follow each other and cover the match; a group may be {Inside}). Comment: {Line: '//'} or {Block: ['<!--', '-->']} for the comment command of an editor. Indent: a RegExp of the text before a line break that indents the next line one more step.
-- Find(name) returns the grammar of a language or of an alias (null when there is none); Languages() the names.
+- Register(name, grammar) adds a language (or replaces one): {Aliases, Rules, Comment, Indent}. Rules are [Type, RegExp, Options]: the first rule that matches nearest wins (a rule must not match empty text). Type is the class of the token (elemenx-syntax-<Type>; null for plain text). Options: Inside (a language name, or a function (match) returning one: the match is read in that language) or Groups (the types of the capture groups, which follow each other and cover the match; a group may be {Inside}). Comment: {Line: '//'} or {Block: ['<!--', '-->']} for the comment command of an editor. Indent: a RegExp of the text before a line break that indents the next line one more step. Words: what an editor offers to complete in the language, [{Label, Kind, Detail}].
+- Find(name) returns the grammar of a language or of an alias (null when there is none); Languages() the names; Words(name) what it offers to complete ([] for none).
 - Tokens(text, language) returns [{Type, Text}] covering the text; Lines(text, language) the same split into lines (a token never holds a line break); HTML(text, language) escaped markup with a span for each token.
 
 ## Methods
 
 - `Register(name, grammar)`
 - `Find(name)`
+- `Words(name)`
 - `Languages()`
 - `Tokens(text, language)`
 - `Lines(text, language)`
@@ -64,5 +65,6 @@ The highlighting of source code: the grammars of the languages and the tokens of
 - [splits the tokens into lines, one array for each line](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L137) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
 - [escapes the HTML it returns](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L146) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
 - [finds languages by their aliases and takes new ones](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L151) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
+- [reads GLSL: the preprocessor, qualifiers, types, built-in functions and variables, swizzles; offers its words to complete](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js#L163) — `libraries/ElemenxCommon/services/Syntax/Syntax.node.test.js`
 - [makes the provider only as a name of it is wanted, in the Application that wants it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-provides.test.js#L47) — `tests/regression/library-provides.test.js`
 - [makes the providers for a list, and none for a name no one declares](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-provides.test.js#L62) — `tests/regression/library-provides.test.js`
