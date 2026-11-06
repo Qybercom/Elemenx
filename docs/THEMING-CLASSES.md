@@ -1068,7 +1068,9 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-scene-labels`: `hidden`
 - `elemenx-scene-screens`
 - `elemenx-scene-takeoff`
+- `elemenx-scene-veil`
 - `elemenx-scene-landing`
+- `elemenx-scene-landing-hint`
 - `elemenx-scene-landing-item`: `pick`
 - `elemenx-scene-landing-list`
 - `elemenx-scene-landing-time`

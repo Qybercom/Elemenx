@@ -1029,7 +1029,7 @@ Elemenx.Service('Renderer', {
 				return texture;
 			},
 
-			/* A cube of six square faces, size pixels each, for a uniform samplerCube: empty until Bake draws it. */
+			/* A cube of six square faces, size pixels each, for a uniform samplerCube: empty until Bake draws it or Write fills it. */
 			Cube: function (size) {
 				var handle = gl.createTexture();
 				var side = Math.max(1, Math.round(size || 256));
@@ -1050,6 +1050,22 @@ Elemenx.Service('Renderer', {
 					gl.deleteTexture(handle);
 
 					textures.splice(textures.indexOf(cube), 1);
+				};
+
+				/*
+				 * Texels of the CPU into a face (0 to 5, as cubeDirection has them): RGBA bytes of rows from row on, their first row
+				 * the one of p.y = -1; with mipmaps, its smaller levels made again (once all is written).
+				 */
+				cube.Write = function (face, data, row, mipmaps) {
+					var rows = Math.round(data.length / 4 / side);
+
+					gl.bindTexture(gl.TEXTURE_CUBE_MAP, handle);
+					gl.texSubImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, 0, row || 0, side, rows, gl.RGBA, gl.UNSIGNED_BYTE, data instanceof Uint8Array ? data : new Uint8Array(data.buffer || data));
+
+					if (mipmaps)
+						gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+
+					return cube;
 				};
 
 				textures.push(cube);

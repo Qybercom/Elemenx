@@ -123,7 +123,41 @@ Elemenx.Component('GameEditorLayout', {
 	},
 
 	SceneChanged: function (document) {
+		var self = this;
+
 		this.Game.Scene = document;
+
+		this.Keep();
+
+		/* A location of the planet edited: kept in the planet and baked into its globe, once the edits rest a little. */
+		if (this.Game.Location && this.Game.Planet) {
+			window.clearTimeout(this.Baking);
+
+			this.Baking = window.setTimeout(function () {
+				self.Located();
+			}, 800);
+		}
+	},
+
+	/* The World of the ground of the location open, told in the planet and baked into it (SceneLocations.Bake) when it changed. */
+	Located: function () {
+		var editor = this.$Ref('Scene', true);
+		var scene = editor ? editor.Scene() : null;
+		var inner = scene && scene.Scene ? scene.Scene() : null;
+		var locations = this.$Service('SceneLocations');
+		var id = this.Game.Location;
+		var ground = inner ? inner.Roots.filter(function (object) {
+			return object.Traits.Terrain && object.Traits.Terrain.World;
+		})[0] : null;
+		var world;
+
+		if (!ground || !id || !this.Game.Planet) return;
+
+		world = ground.Traits.Terrain.World;
+
+		if (JSON.stringify(world) === JSON.stringify(locations.Location(this.Game.Planet, id).World)) return;
+
+		this.Game.Planet = locations.Bake(locations.Tell(this.Game.Planet, id, {World: world}), id, 64);
 
 		this.Keep();
 	},

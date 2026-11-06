@@ -184,6 +184,15 @@
 	z-index: 2;
 }
 
+/* The veil over the view while what it needs is made, or a ship goes through a passage: over all but the bar of the loading. */
+.elemenx-scene-veil {
+	position: absolute;
+	inset: 0;
+	z-index: 4;
+	background: var(--elemenx-scene-veil);
+	pointer-events: none;
+}
+
 /* The command Landing of a driven ship: its button, and the list of the markers of the body under it. */
 .elemenx-scene-landing {
 	position: absolute;
@@ -194,6 +203,14 @@
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 6px;
+}
+
+.elemenx-scene-landing-hint {
+	padding: 4px 8px;
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-scene-shadow);
+	color: var(--elemenx-scene-label);
+	font-size: var(--elemenx-font-size-small);
 }
 
 .elemenx-scene-landing-list {
@@ -254,7 +271,7 @@
 	right: 16px;
 	bottom: 16px;
 	left: 16px;
-	z-index: 4;
+	z-index: 5;
 	max-width: 420px;
 	margin: 0 auto;
 	color: var(--elemenx-scene-label);

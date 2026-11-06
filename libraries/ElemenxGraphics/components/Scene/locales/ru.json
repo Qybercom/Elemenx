@@ -58,10 +58,19 @@
 			"land": "Сесть",
 			"takeOff": "Взлететь",
 			"landing": "Посадка",
+			"toOrbit": "На орбиту",
+			"orbitHint": "Планета рядом: выйти на орбиту?",
 			"pickPoint": "Выбрать точку на поверхности",
 			"day": "день",
 			"night": "ночь",
-			"loading": "Загрузка сцены"
+			"loading": "Загрузка сцены",
+			"stagePrograms": "Шейдеры",
+			"stageModels": "Модели",
+			"stageRivers": "Реки",
+			"stageGlobes": "Планеты",
+			"stageGround": "Земля",
+			"stagePlants": "Растительность",
+			"stageView": "Картинка"
 		}
 	}
 }

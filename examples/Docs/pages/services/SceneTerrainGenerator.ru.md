@@ -12,12 +12,17 @@
 Объём земли. Carves в параметрах вырезают из земли и наращивают её: tunnel (Points [[x, z, y]...], Radius, Flat — ровный пол, Depth), sphere (At, Radius — выкопанная яма), caves (естественные пещеры из шума — ходы и залы — вокруг Center в пределах Radius: Top и Bottom — глубины слоя, Scale, Width, Halls, Seed; Top 0 выводит их на поверхность), overhangs (нависающие скалы на крутых склонах: Amount, Scale, Slope, Center и Radius). У поля появляются Density(x, y, z) (твёрдое там, где больше 0) и Volume; куски земли, которых касается вырез, строятся по плотности (Volumetric, surface nets: без щелей между соседями, с юбкой по краю), остальные — как обычно. По такой земле ходят как по локации с этажами (Underground): Height(x, z, y) — пол под тем, кто на высоте y (шаг вверх до Climb, 0.6 м), Blocked — порода там, где тело, CanStep — можно ли шагнуть (вверх не круче Steep), Stands. Всё работает и в воркерах. В графе мира это шаги Tunnel, Caves и Overhangs.
 Path на такой земле — WayUnder: A* по клеткам, каждая на своём полу, шаги по CanStep (вверх до Climb и не круче Steep, вниз любой спуск), не круче MaxSlope правил, не в море без Swim; путь выпрямляется там, где можно пройти прямо. Height(x, z) без y — поверхность под небом с учётом выкопанного. Второй канал UV кусков земли — доля видимого неба (1 у обычной земли; у объёмной — по пяти лучам вверх сквозь плотность).
 
+Border(options) — контур локации на её земле и то, что за ним: Points (углы), Sides (стороны), Beyond (far — земля как есть; cliff — обрыв на Depth, 250 м; void — пропасть, 3000 м; sea — уходит под море, 40 м; wall — земля как есть, стену ставит шаг Border графа мира), Passages ([{Side, At, Width}] — за ними земля идёт как есть), Open (стороны, открытые целиком), Edge (на скольких метрах меняется, 40). Даёт Height(x, z, h), Distance(x, z) (до контура, снаружи больше 0), Gap(x, z) (1 на пути прохода). Земля Flat с параметром Border получает его в поле Border.
+
+Site({Options, Latitude, Longitude, Turn}) — место планеты ScenePlanet как плоская земля: плоскость, касающаяся планеты в этом месте (X на восток, Z на юг, повёрнутые на Turn). Elevation(x, z) — высота планеты там (метры, уровень моря 0), Sample(x, z) — всё, что планета говорит о точке, Direction(x, z) — направление, Local(direction) — обратно, точка места, в которую приходит направление: этим сшиваются два соседних места, одна и та же точка планеты в обоих.
+
 ## Методы
 
 - `Relief(settings)`
 - `Climate(settings)`
 - `LibraryRelief(options)`
 - `Flat(options)`
+- `Border(options)`
 - `OnRoad(field, x, z, width)`
 - `Sphere(options)`
 - `Work()`
@@ -56,17 +61,17 @@ Path на такой земле — WayUnder: A* по клеткам, кажда
 
 ## Тесты
 
-- [gives its ground to land on as the Sphere of SceneTerrainGenerator does: its heights, squares with its colors, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L149) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [gives its ground to land on as the Sphere of SceneTerrainGenerator does: its heights, squares with its colors, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L176) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 - [draws a material of a recipe by its Blueprint, its parameters uniforms that change it without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L72) — `tests/regression/library-material-blueprints.test.js`
 - [draws a ground by its Blueprint, the color of its parameter, and keeps the very same ground as its look changes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L198) — `tests/regression/library-material-blueprints.test.js`
-- [takes a ground from a model: floors one over the other, walls that stop a walker, and a plane at its foot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1327) — `tests/regression/library-scene.test.js`
-- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1630) — `tests/regression/library-scene.test.js`
-- [makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1940) — `tests/regression/library-scene.test.js`
-- [Workers runs the methods of Services in workers made of their source, and in the page when it cannot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3980) — `tests/regression/library-scene.test.js`
-- [makes the squares of a ground of noise in workers, lets go of what came for roads that changed, and grows grass with no noise in a frame](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4084) — `tests/regression/library-scene.test.js`
-- [looks from what it follows to where it looks by degrees, so a raised eye makes no leap under the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6690) — `tests/regression/library-scene.test.js`
-- [leaves a hero where it stands when the scene changes round it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6825) — `tests/regression/library-scene.test.js`
-- [takes a short drop for no jump, though the body leaves the ground](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6877) — `tests/regression/library-scene.test.js`
-- [takes no seam of a map for a jump, and still falls and jumps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6994) — `tests/regression/library-scene.test.js`
+- [takes a ground from a model: floors one over the other, walls that stop a walker, and a plane at its foot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1475) — `tests/regression/library-scene.test.js`
+- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1778) — `tests/regression/library-scene.test.js`
+- [makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2088) — `tests/regression/library-scene.test.js`
+- [Workers runs the methods of Services in workers made of their source, and in the page when it cannot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4128) — `tests/regression/library-scene.test.js`
+- [makes the squares of a ground of noise in workers, lets go of what came for roads that changed, and grows grass with no noise in a frame](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4232) — `tests/regression/library-scene.test.js`
+- [looks from what it follows to where it looks by degrees, so a raised eye makes no leap under the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6838) — `tests/regression/library-scene.test.js`
+- [leaves a hero where it stands when the scene changes round it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6973) — `tests/regression/library-scene.test.js`
+- [takes a short drop for no jump, though the body leaves the ground](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7025) — `tests/regression/library-scene.test.js`
+- [takes no seam of a map for a jump, and still falls and jumps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7142) — `tests/regression/library-scene.test.js`
 
-+27 ещё в тех же файлах
++31 ещё в тех же файлах

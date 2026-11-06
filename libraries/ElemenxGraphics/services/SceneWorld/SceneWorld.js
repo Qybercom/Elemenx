@@ -12,6 +12,8 @@
  * - Climate: the numbers of its climate (Warmth, Lapse, Spread, Stretch: ClimateOf of SceneTerrainGenerator).
  * - Biomes: its lands by their climate (List: names of SceneBiomes, or {Biome, Ground, Grass, Climate, Scatter}).
  * - Sketch: a sketch over it (Sketch: {Layers}, as SceneEditor draws it).
+ * - Border: the outline of a location (Points, Sides), what is past it (Beyond: far, cliff, void, sea, wall; Edge, Depth)
+ *   and its passages (Passages of SceneLocations: roads, rivers and gates out of it).
  * - Tunnel (Points [[x, z, y]...], Radius, Flat, Depth), Caves (natural ways and halls of noise under the ground round X, Z
  *   within Radius: Top, Bottom, Scale, Width, Halls, Seed) and Overhangs (rock jutting out of steep slopes: Amount, Scale,
  *   Slope; X, Z and Radius for a place of them): the volume of the land, cut and grown (Carves of
@@ -29,7 +31,7 @@
  *   of the objects it makes: {ID, Kind, Values}, their IDs of their order), Problems (what keeps the graph from running)},
  *   made once for the same graph and parameters.
  * - Library(options): the graph of a usual world of options (Size, Height, Water, Seed, Rock, Snow, Scale, Ridges, Noise,
- *   Relief, Planet ({Options, Latitude, Longitude, Turn}), Climate, Biomes, Sketch, Tunnels and Caves (lists of the properties of such steps), Overhangs and Footings (true or their properties); and Settlements, Scatters: lists of the properties of such blocks): what an editor or
+ *   Relief, Planet ({Options, Latitude, Longitude, Turn}), Climate, Biomes, Sketch, Border (its properties), Tunnels and Caves (lists of the properties of such steps), Overhangs and Footings (true or their properties); and Settlements, Scatters: lists of the properties of such blocks): what an editor or
  *   a page starts from.
  * The same functions run in Node: they read no page.
  */
@@ -40,7 +42,7 @@ Elemenx.Service('SceneWorld', {
 	},
 
 	$Provides: {
-		Blueprints: {Graphs: ['world'], Nodes: ['Ground', 'Planet', 'Relief', 'Climate', 'Biomes', 'Sketch', 'Footings', 'Tunnel', 'Caves', 'Overhangs', 'Settlement', 'Scatter', 'Terrain']}
+		Blueprints: {Graphs: ['world'], Nodes: ['Ground', 'Planet', 'Relief', 'Climate', 'Biomes', 'Sketch', 'Border', 'Footings', 'Tunnel', 'Caves', 'Overhangs', 'Settlement', 'Scatter', 'Terrain']}
 	},
 
 	$OnCreate: function () {
@@ -199,6 +201,73 @@ Elemenx.Service('SceneWorld', {
 				var sketch = properties.Sketch;
 
 				return land(inputs, {Sketch: sketch && sketch.Layers && sketch.Layers.length ? sketch : undefined});
+			}
+		});
+
+		/*
+		 * The outline of a location (Points, Sides of ScenePlanet.CellPlace), what is past it (Beyond, Edge, Depth:
+		 * SceneTerrainGenerator.Border) and its passages (Passages of SceneLocations): open ways out, each a road (a river
+		 * of the kind river) from past its side to the middle; with Beyond wall a wall stands on the outline, open at each
+		 * passage, a gate in those of the kind gate. Open: the sides it is not on (a location told beside them).
+		 */
+		blueprints.Node('Border', {
+			Graphs: ['world'],
+			Group: 'world',
+			Properties: [{Key: 'Points', Type: 'object', Value: null}, {Key: 'Sides', Type: 'object', Value: null}, {Key: 'Beyond', Type: 'text', Value: 'far'}, {Key: 'Passages', Type: 'object', Value: null}, {Key: 'Open', Type: 'object', Value: null}, {Key: 'Edge', Type: 'number', Value: 40}, {Key: 'Depth', Type: 'text', Value: ''}],
+			Inputs: [{Key: 'Land', Type: 'land'}],
+			Outputs: [{Key: 'Land', Type: 'land'}],
+			Compute: function (inputs, properties) {
+				var points = list(properties.Points) || [];
+				var sides = list(properties.Sides) || [];
+				var passages = list(properties.Passages) || [];
+				var open = list(properties.Open) || [];
+				var beyond = properties.Beyond || 'far';
+				var edge = Number(properties.Edge) || 40;
+				var border = {Points: points, Sides: sides, Beyond: beyond, Passages: passages, Open: open, Edge: edge};
+				var before = (inputs.Land || {}).Sketch;
+				var items = [];
+				var gates = [];
+
+				if (properties.Depth !== undefined && properties.Depth !== null && properties.Depth !== '')
+					border.Depth = Number(properties.Depth);
+
+				passages.forEach(function (passage, index) {
+					var side = sides[passage.Side];
+					var at = passage.At === undefined ? 0.5 : Number(passage.At);
+					var width = Number(passage.Width) || 4;
+					var x;
+					var z;
+					var dx;
+					var dz;
+					var length;
+					var out;
+
+					if (!side) return;
+
+					x = side[0] + (side[2] - side[0]) * at;
+					z = side[1] + (side[3] - side[1]) * at;
+					length = Math.hypot(side[2] - side[0], side[3] - side[1]) || 1;
+					dx = (side[2] - side[0]) / length;
+					dz = (side[3] - side[1]) / length;
+
+					/* Out of the location: the normal of its side away from its middle. */
+					out = -dz * x + dx * z > 0 ? [-dz, dx] : [dz, -dx];
+
+					items.push({ID: 'border-passage-' + index, Type: passage.Kind === 'river' ? 'river' : 'road', Width: width, Points: [[x + out[0] * edge * 3, z + out[1] * edge * 3], [x, z], [x * 0.6, z * 0.6], [0, 0]]});
+					gates.push({Side: passage.Side, X: x, Z: z, Radius: width / 2 + 3, Turn: Math.atan2(-dz, dx), Model: passage.Kind === 'gate' ? 'gate' : ''});
+				});
+
+				/* A wall on each side but those open all along. */
+				if (beyond === 'wall') {
+					sides.forEach(function (side, index) {
+						if (open.indexOf(index) === -1)
+							items.push({ID: 'border-wall-' + index, Type: 'citywall', Points: [[side[0], side[1]], [side[2], side[3]]], Gates: gates.filter(function (gate) {
+								return gate.Side === index;
+							})});
+					});
+				}
+
+				return land(inputs, {Border: border, Sketch: items.length ? {Layers: (before && before.Layers || []).concat([{ID: 'border', Name: 'Border', Items: items}])} : before});
 			}
 		});
 
@@ -375,6 +444,9 @@ Elemenx.Service('SceneWorld', {
 
 		if (given.Sketch)
 			land = step('Sketch', {Sketch: given.Sketch}, 'Land', 'Land', land);
+
+		if (given.Border)
+			land = step('Border', given.Border, 'Land', 'Land', land);
 
 		(given.Tunnels || []).forEach(function (tunnel) {
 			land = step('Tunnel', tunnel, 'Land', 'Land', land);

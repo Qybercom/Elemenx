@@ -23,7 +23,7 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:ScenePlanet', 'service:SceneBiomes', 'service:SceneTerrainGenerator', 'service:Noise', 'service:Workers']);
+		Use(['service:ScenePlanet', 'service:SceneBiomes', 'service:SceneTerrainGenerator', 'service:Noise', 'service:Workers', 'service:SceneLocations', 'service:SceneWorld']);
 
 		planets = Elemenx.Service('ScenePlanet');
 	});
@@ -124,6 +124,33 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 		})).toBe(true);
 	});
 	/* Regression: a worker had no Math for the noises of the planet, and painted nothing. */
+	it('paints a face of the globe as texels of a cube, each of its direction, strips of it alike, the same in a worker', async function () {
+		var options = {Seed: 'faces', BiomeList: Elemenx.Service('SceneTerrainGenerator').Biomes({Biomes: ['temperate', 'desert', 'tundra']})};
+		var planet = planets.Planet(options);
+		var whole = planets.Face(options, 4, 16);
+		var strip = planets.Face(options, 4, 16, 8, 4);
+		var there = await new Promise(function (done, failed) {
+			planets.Work().Run('ScenePlanet', 'Face', [options, 4, 16, 8, 4], function (error, made) {
+				if (error) failed(error);
+				else done(made);
+			});
+		});
+		/* The texel of column 3 of row 9 of face +Z: its direction as cubeDirection gives it. */
+		var a = -1 + 3.5 * 2 / 16;
+		var b = -1 + 9.5 * 2 / 16;
+		var length = Math.hypot(a, b, 1);
+		var sample = planet.Sample([a / length, -b / length, 1 / length]);
+		var color = planets.Color(planet, sample, 'relief', 1);
+		var at = (9 * 16 + 3) * 4;
+
+		expect(whole.Data.length).toBe(16 * 16 * 4);
+		expect(strip).toMatchObject({Face: 4, Row: 8, Rows: 4});
+		expect(Array.from(strip.Data)).toEqual(Array.from(whole.Data.slice(8 * 16 * 4, 12 * 16 * 4)));
+		expect(Array.from(there.Data)).toEqual(Array.from(strip.Data));
+		expect(whole.Data[at]).toBe(Math.round(color[0] * 255));
+		expect(whole.Data[at + 3]).toBe(sample.Land || sample.Celsius < -12 ? 10 : 204);
+	});
+
 	it('paints a piece of a globe in a worker byte for byte as in the page, and turns a pixel into a direction and back', async function () {
 		var options = {Seed: 'picture', BiomeList: Elemenx.Service('SceneTerrainGenerator').Biomes({Biomes: ['temperate', 'desert', 'tundra']})};
 		var view = {Yaw: 0.4, Pitch: 0.3, Zoom: 1.2, Width: 64, Height: 48};
@@ -216,4 +243,189 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 		/* Its sides along the axes of the location: the first side runs along X. */
 		expect(Math.abs(place.Points[1][1] - place.Points[0][1])).toBeLessThan(Math.abs(place.Points[1][0] - place.Points[0][0]) * 0.05);
 	});
+	it('lays its surface out in hexagons of an icosahedron too: 12 pentagons, each cell found of its points and of its ID, its neighbours round it, its sides shared with them the other way', function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var radius = 6371;
+		var size = 4;
+		var n = planets.Cells(radius, size, 'hex');
+		var five = 0;
+
+		/* About Size from one middle to the next. */
+		expect(n).toBeGreaterThan(1800);
+
+		spread(200).concat(planets.Icosahedron().Corners).forEach(function (point) {
+			var cell = planets.CellAt(radius, size, point, 'hex');
+			var round = planets.CellNeighbours(radius, size, cell);
+			var place = planets.CellPlace(radius, cell);
+			var center = planets.CellCenter(cell);
+
+			expect(planets.CellAt(radius, size, center, 'hex').ID).toBe(cell.ID);
+			expect(planets.CellOf(cell.ID).ID).toBe(cell.ID);
+			expect(planets.CellCenter(planets.CellOf(cell.ID))).toEqual(center.map(function (value) {
+				return expect.closeTo(value, 9);
+			}));
+			expect([5, 6]).toContain(round.length);
+
+			if (round.length === 5)
+				five++;
+
+			expect(place.Points.length).toBe(round.length);
+			expect(place.Size).toBeGreaterThan(2900);
+			expect(place.Size).toBeLessThan(4800);
+
+			round.forEach(function (other, side) {
+				var back = planets.CellNeighbours(radius, size, other);
+				var facing = back.map(function (one) {
+					return one.ID;
+				}).indexOf(cell.ID);
+				var mine = place.Sides[side];
+				var theirs = planets.CellPlace(radius, other);
+				var site = terrain.Site({Options: {Seed: 'cells', Radius: radius}, Latitude: place.Latitude, Longitude: place.Longitude, Turn: place.Turn});
+				var there = terrain.Site({Options: {Seed: 'cells', Radius: radius}, Latitude: theirs.Latitude, Longitude: theirs.Longitude, Turn: theirs.Turn});
+				var a;
+				var b;
+
+				expect(facing).not.toBe(-1);
+
+				/* The side the neighbour shares runs the other way: its end is the start of mine. */
+				a = site.Direction(mine[0], mine[1]);
+				b = there.Direction(theirs.Sides[facing][2], theirs.Sides[facing][3]);
+
+				expect(Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) * radius * 1000).toBeLessThan(1);
+			});
+		});
+
+		expect(five).toBe(12);
+	});
+
+	/*
+	 * Regression: its land was a plain wherever one stood (a bump of 4 km, hills of tens of metres, mountains only where
+	 * plates met). It is made as the Earth is: heights spread as its land's (a half under 400-700 m, a tenth over 1.5-3 km),
+	 * plains flat and ranges rugged within a location of 4 km.
+	 */
+	it('makes land of plains, hills and ranges, its heights spread as on the Earth', function () {
+		var planet = planets.Make({Seed: 'terra', Ocean: 0.62, Radius: 6371});
+		var heights = [];
+		var ranges = [];
+
+		function at (list, part) {
+			return list[Math.floor(list.length * part)];
+		}
+
+		spread(3000).forEach(function (d) {
+			var h = planet.Elevation(d);
+			var lowest = Infinity;
+			var highest = -Infinity;
+			var east;
+			var north;
+			var u;
+			var v;
+
+			if (h <= 0) return;
+
+			heights.push(h);
+
+			if (ranges.length >= 150) return;
+
+			east = Math.abs(d[1]) > 0.99 ? [1, 0, 0] : planets.Tangent(d).East;
+			north = planets.Tangent(d).North;
+
+			for (u = -2; u <= 2; u++) {
+				for (v = -2; v <= 2; v++) {
+					var e = planet.Elevation([0, 1, 2].map(function (k) {
+						return d[k] + (east[k] * u + north[k] * v) / 6371;
+					}));
+
+					lowest = Math.min(lowest, e);
+					highest = Math.max(highest, e);
+				}
+			}
+
+			ranges.push(highest - lowest);
+		});
+
+		heights.sort(function (a, b) {
+			return a - b;
+		});
+		ranges.sort(function (a, b) {
+			return a - b;
+		});
+
+		expect(at(heights, 0.5)).toBeGreaterThan(250);
+		expect(at(heights, 0.5)).toBeLessThan(800);
+		expect(at(heights, 0.9)).toBeGreaterThan(1500);
+		expect(at(heights, 0.9)).toBeLessThan(3200);
+		expect(at(ranges, 0.1)).toBeLessThan(80);
+		expect(at(ranges, 0.9)).toBeGreaterThan(300);
+
+		/* A globe asks for no hills: its heights the same but for them. */
+		expect(Math.abs(planet.Elevation(spread(1)[0], 40) - planet.Elevation(spread(1)[0]))).toBeLessThan(1500);
+	});
+
+	/*
+	 * Its rivers: the water of its land gathered down to the sea over its cells (Heights, Drainage), each river's bed never
+	 * rising as it flows and at the sea at its mouth; a planet with them cut by their valleys; a location they go through has
+	 * them as rivers of its sketch.
+	 */
+	it('gathers the water of its land into rivers down to the sea, cuts their valleys, and gives them to the locations they cross', function () {
+		var options = {Seed: 'terra', Ocean: 0.62, Radius: 6371};
+		var size = 64;
+		var heights = new Float32Array(6 * size * size);
+		var face;
+		var made;
+		var plain;
+		var cut;
+		var river;
+		var middle;
+
+		for (face = 0; face < 6; face++)
+			heights.set(planets.Heights(options, face, size, 0, size).Data, face * size * size);
+
+		made = planets.Drainage(heights, size, 4);
+
+		expect(made.Rivers.length).toBeGreaterThan(10);
+
+		made.Rivers.forEach(function (one) {
+			for (var k = 1; k < one.Level.length; k++)
+				expect(one.Level[k]).toBeLessThanOrEqual(one.Level[k - 1]);
+		});
+
+		/* The biggest: to the sea at its mouth. */
+		river = made.Rivers.slice().sort(function (a, b) {
+			return b.Flow[b.Flow.length - 1] - a.Flow[a.Flow.length - 1];
+		})[0];
+
+		expect(river.Level[river.Level.length - 1]).toBe(0);
+
+		planets.UseRivers('test-rivers', made.Rivers);
+
+		plain = planets.Make(options);
+		cut = planets.Make(Object.assign({}, options, {Rivers: 'test-rivers'}));
+		middle = river.Points[Math.floor(river.Points.length / 2)];
+
+		/* Where the land stands over the bed of a river, its valley takes it down. */
+		var high = null;
+
+		made.Rivers.forEach(function (one) {
+			one.Points.forEach(function (point, k) {
+				if (!high && plain.Elevation(point) > one.Level[k] + 30)
+					high = point;
+			});
+		});
+
+		expect(high).not.toBe(null);
+		expect(cut.Elevation(high)).toBeLessThan(plain.Elevation(high) - 10);
+
+		/* A location on it: a river of its sketch, along it. */
+		var locations = Elemenx.Service('SceneLocations');
+		var place = planets.LatLon(middle);
+		var location = locations.Location(Object.assign({}, options, {LocationSize: 4, Rivers: 'test-rivers'}), locations.At(Object.assign({}, options, {LocationSize: 4}), place[0], place[1]));
+		var made2 = Elemenx.Service('SceneWorld').Make(location.World).Ground;
+		var streams = made2.Sketch.Layers.filter(function (layer) {
+			return layer.ID === 'rivers';
+		})[0];
+
+		expect(streams.Items.length).toBeGreaterThan(0);
+		expect(streams.Items[0].Type).toBe('river');
+	}, 60000);
 });

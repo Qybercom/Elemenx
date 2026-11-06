@@ -9,7 +9,9 @@
  * steer, and each goes up and down on its spring.
  *
  * A ship, besides those of Physics.Ship: Yaw, Facing ([x, y, z] it looks at first), Follow ([back, up] of the view, in its size), Around
- * (the ID of the body it goes by and must stay out of), From ([x, y, z] from that body, in its size). The keys fly it: A and D or the
+ * (the ID of the body it goes by and must stay out of), From ([x, y, z] from that body, in its size); in real sizes (Scale real of the
+ * Scene) Length (metres: how large it is), Speed (m/s, 3000, near the body) and Cruise (how many times faster far from it,
+ * 1000, from 60 000 km over it, as the root of how high it is) in place of Top. The keys fly it: A and D or the
  * arrows turn it, R and F or the arrows up and down pitch it, Q and E roll, W and S set its speed, C and X lift it up and down, Shift
  * boosts, Space brings all of it to rest. The mouse only looks round it. Its Thrust goes to what burns on it. H takes it into warp and
  * J jumps (Travel(id, kind, options, callback)), with Warp and Jump of its Vehicle: {To, Length, Enter, Inside, Exit, Tint}.
@@ -1095,7 +1097,7 @@ Elemenx.Trait('SceneVehicles', {
 			var part = physics.Steps(hero.Clock, elapsed, 1 / 120, function (step) {
 				last = {At: state.At, Right: state.Right, Up: state.Up, Ahead: state.Ahead};
 
-				physics.Ship(state, input, settings, step);
+				physics.Ship(state, input, real(settings, around, state), step);
 
 				/* A body is no place to fly through, nor is what flies by it. */
 				var origin = around && around.World ? around.World : [0, 0, 0];
@@ -1121,6 +1123,24 @@ Elemenx.Trait('SceneVehicles', {
 			hero.Thrust = Math.abs(state.Throttle) * (input.Boost ? 2 : 1);
 
 			placeShip(hero, settings, at, right, up, ahead);
+		}
+
+		/*
+		 * In real sizes a ship goes at Speed (m/s, 3000) near a body, and faster the farther from it, up to Cruise times as
+		 * fast (1000: 3000 km/s) from 60 000 km over it, as the root of how high it is: over the top of the air a hundred km/s
+		 * and more, as fast as a way down goes there; between bodies a way takes seconds to minutes, not days.
+		 */
+		function real (settings, around, state) {
+			var metre = engine.Metre();
+			var speed = given(settings.Speed, 3000);
+			var high;
+
+			if (!metre)
+				return settings;
+
+			high = around && around.Radius ? Math.max(0, (vectors.Length(state.At) / around.Size - 1) * around.Radius) : 60000;
+
+			return Object.assign({}, settings, {Top: (speed + speed * (given(settings.Cruise, 1000) - 1) * Math.sqrt(Math.min(1, high / 60000))) * metre});
 		}
 
 		function placeShip (hero, settings, at, right, up, ahead) {

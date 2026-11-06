@@ -1070,17 +1070,17 @@
 				<span>{{OrbitSpeed}} m/s{{OrbitPhase ? ' · ' + OrbitPhase : ''}}</span>
 			</div>
 			<div class="ui-kit-space" data-demo="orbit">
-				<Scene *if="!Far.orbit" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="OrbitCosmos" (ready)="OrbitReady" (travel)="OrbitTravelled" (landing)="OrbitLanding">
+				<Scene *if="!Far.orbit" Scale="real" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="OrbitCosmos" (ready)="OrbitReady" (travel)="OrbitTravelled" (landing)="OrbitLanding">
 					<SceneObject ID="sol" Kind="star" Name="Star" Mass="1">
 						<SceneObject ID="terra" Kind="planet" Name="Terra" Surface-Type="terran" Surface-Planet='{"Seed": "terra", "Ocean": 0.62, "Markers": [{"ID": "base", "Name": "Base Alpha", "Latitude": 18, "Longitude": 32}, {"ID": "ridge", "Name": "North Ridge", "Latitude": 46, "Longitude": -70}]}' Radius="6371" Mass="1" Distance="1" Day="23.93" Tilt="23.4">
 							<SceneObject ID="luna" Kind="moon" Name="Luna" Surface-Type="moon" Radius="1737" Distance="384400 km" Day="0" />
 							<SceneObject ID="rocks" Kind="belt" Name="Rocks" Inner="1.3" Outer="1.75" Count="700" Inclination="6" Rocks="0.14" />
-							<SceneObject ID="station-1" Kind="craft" Name="Halcyon" Model="station-a" Size="0.32" Distance="1.75" Period="90" Inclination="4" Anomaly="196" />
-							<SceneObject ID="station-2" Kind="craft" Name="Meridian" Model="station-b" Size="0.3" Distance="2.05" Period="120" Inclination="-3" Anomaly="214" />
-							<SceneObject ID="station-3" Kind="craft" Name="Ring One" Model="station-c" Size="0.4" Distance="1.6" Period="80" Inclination="9" Anomaly="228" />
-							<SceneObject ID="station-4" Kind="craft" Name="Anchor" Model="station-d" Size="0.3" Distance="2.3" Period="140" Inclination="2" Anomaly="178" />
-							<SceneObject ID="cruiser" Kind="craft" Name="Cruiser" Model="ship-cruiser" Size="0.1" Distance="1.9" Period="60" Inclination="1" Anomaly="205" />
-							<SceneObject ID="battleship" Kind="craft" Name="Battleship" Model="ship-battleship" Size="0.14" Distance="2.2" Period="70" Inclination="-2" Anomaly="190" />
+							<SceneObject ID="station-1" Kind="craft" Name="Halcyon" Model="station-a" Size="0.32" Length="450" Distance="1.75" Period="90" Inclination="4" Anomaly="196" />
+							<SceneObject ID="station-2" Kind="craft" Name="Meridian" Model="station-b" Size="0.3" Length="380" Distance="2.05" Period="120" Inclination="-3" Anomaly="214" />
+							<SceneObject ID="station-3" Kind="craft" Name="Ring One" Model="station-c" Size="0.4" Length="1500" Distance="1.6" Period="80" Inclination="9" Anomaly="228" />
+							<SceneObject ID="station-4" Kind="craft" Name="Anchor" Model="station-d" Size="0.3" Length="320" Distance="2.3" Period="140" Inclination="2" Anomaly="178" />
+							<SceneObject ID="cruiser" Kind="craft" Name="Cruiser" Model="ship-cruiser" Size="0.1" Length="280" Distance="1.9" Period="60" Inclination="1" Anomaly="205" />
+							<SceneObject ID="battleship" Kind="craft" Name="Battleship" Model="ship-battleship" Size="0.14" Length="640" Distance="2.2" Period="70" Inclination="-2" Anomaly="190" />
 						</SceneObject>
 					</SceneObject>
 				</Scene>

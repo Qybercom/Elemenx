@@ -8,7 +8,7 @@
  * climate and biome are areas, mountains, rift and river lines; each press on the globe puts a point of it, a double
  * press or Enter ends it, Escape leaves it. Overlay is what is shown: relief, plates (their motions as arrows), wind (as
  * arrows), temperature, moisture or biomes. The panel beside sets the planet and the stroke selected; Delete removes it.
- * Tool location picks the location of a point (SceneLocations: a cell of LocationSize km), its outline marked: its kind
+ * Tool location picks the location of a point (SceneLocations: a cell of LocationSize km of its Grid, cube or hex), its outline marked: its kind
  * (generated or a model of a file), what is past its sides, passages to the locations beside; Open emits location with it.
  * Methods: Planet() (ScenePlanet.Make of it), View() and SetView({Yaw, Pitch, Zoom}), At(clientX, clientY) ({Latitude,
  * Longitude, Sample} under a point, or null), Finish(), Cancel(), Remove(index), Render().
@@ -67,7 +67,8 @@ Elemenx.Component('PlanetEditor', {
 	/* The fields of the planet, and of each kind of stroke with their first values. */
 	Settings: [
 		{Key: 'Seed', Value: 'planet'}, {Key: 'Radius', Value: 6371}, {Key: 'Ocean', Value: 0.65}, {Key: 'Relief', Value: 8000},
-		{Key: 'Depth', Value: 6000}, {Key: 'Plates', Value: 14}, {Key: 'Detail', Value: 2}, {Key: 'LocationSize', Value: 4}
+		{Key: 'Depth', Value: 6000}, {Key: 'Plates', Value: 14}, {Key: 'Detail', Value: 2}, {Key: 'LocationSize', Value: 4},
+		{Key: 'Grid', Value: 'cube'}
 	],
 	StrokeFields: {
 		land: {Edge: 200}, sea: {Edge: 200}, mountains: {Width: 150, Height: 4000}, rift: {Width: 60, Depth: 1200},
@@ -651,6 +652,15 @@ Elemenx.Component('PlanetEditor', {
 		var location = this.LocationOf();
 
 		return location ? [{Key: 'Kind', Value: location.Kind, Options: ['generated', 'model']}, {Key: 'Model', Value: location.Model}, {Key: 'Beyond', Value: location.Beyond, Options: this.$Service('SceneLocations').Beyonds()}] : [];
+	},
+
+	/* The sides of the location picked, for a passage: +X, +Z, -X, -Z of a square, 1 to 6 round a hexagon. */
+	SidesOf: function () {
+		var location = this.LocationOf();
+
+		return location ? location.Sides.map(function (side) {
+			return {Value: side.Side, Label: location.Sides.length === 4 ? ['+X', '+Z', '-X', '-Z'][side.Side] : String(side.Side + 1)};
+		}) : [];
 	},
 
 	LocationChanged: function (event) {

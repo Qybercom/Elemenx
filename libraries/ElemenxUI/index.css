@@ -61,6 +61,7 @@
 	--elemenx-scene-selection: #7fc4ff;
 	--elemenx-scene-label: #d9e2f0;
 	--elemenx-scene-shadow: rgba(0, 0, 0, 0.9);
+	--elemenx-scene-veil: #000000;
 	--elemenx-virtual-pad-fill: rgba(0, 0, 0, 0.25);
 	--elemenx-virtual-pad-edge: rgba(255, 255, 255, 0.38);
 	--elemenx-virtual-pad-knob: rgba(255, 255, 255, 0.72);

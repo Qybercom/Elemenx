@@ -653,7 +653,8 @@ Elemenx.Trait('SceneEffects', {
 				uNoise: engine.NoiseBlock(),
 				uScene: depth || blank(),
 				uSoft: depth ? 1 : 0,
-				uScreen: [renderer.Width, renderer.Height, view.Near, view.Far]
+				uScreen: [renderer.Width, renderer.Height, view.Near, view.Far],
+				uSplit: view.Split ? 1 : 0
 			}, depth ? {Depth: false, DepthWrite: false, Blend: one.Mouth ? 'add' : layer.Blend, Cull: 'front'} : {DepthWrite: false, Blend: one.Mouth ? 'add' : layer.Blend, Cull: 'back'});
 		}
 
@@ -705,7 +706,8 @@ Elemenx.Trait('SceneEffects', {
 				uNoise: engine.NoiseBlock(),
 				uScene: depth || blank(),
 				uSoft: depth && layer.Kind !== 'swirl' && !mouth ? wide * 0.35 : 0,
-				uScreen: [renderer.Width, renderer.Height, view.Near, view.Far]
+				uScreen: [renderer.Width, renderer.Height, view.Near, view.Far],
+				uSplit: view.Split ? 1 : 0
 			}, circle ? sigils.Uniforms(circle, scene.Seconds, one.Spin) : {uRingCount: 0}), {Depth: !(depth && layer.Kind !== 'swirl') || !!mouth, DepthWrite: false, Blend: layer.Blend, Cull: 'none'});
 		}
 
@@ -747,6 +749,7 @@ Elemenx.Trait('SceneEffects', {
 				uScene: depth || blank(),
 				uSoft: 0,
 				uScreen: [renderer.Width, renderer.Height, view.Near, view.Far],
+				uSplit: view.Split ? 1 : 0,
 				uRingCount: 0
 			}, {Depth: false, DepthWrite: false, Blend: 'add', Cull: 'none'});
 		}
@@ -800,8 +803,11 @@ Elemenx.Trait('SceneEffects', {
 		}
 
 		/* Over all that stands in the scene: alpha first, what adds light on top of it. */
+		/* view {Right, Up, Forward, Near, Far, Only}: Only the ID of the one object whose effects are drawn (a ship over a surface). */
 		engine.EffectsDraw = function (matrix, view) {
-			var list = burning();
+			var list = burning().filter(function (one) {
+				return !view.Only || String(one.Key).indexOf(view.Only + ':') === 0;
+			});
 			var depth;
 
 			if (!list.length) return;
@@ -876,6 +882,7 @@ Elemenx.Trait('SceneEffects', {
 							uScene: depth || blank(),
 							uSoft: depth ? 1 : 0,
 							uScreen: [renderer.Width, renderer.Height, view.Near, view.Far],
+							uSplit: view.Split ? 1 : 0,
 							uSoftness: 0.12 * size
 						}, {DepthWrite: false, Blend: blend, Cull: 'none'});
 					});
@@ -1026,6 +1033,7 @@ Elemenx.Trait('SceneEffects', {
 				'in float vFar;',
 				'uniform sampler3D uNoise;',
 				'uniform sampler2D uScene;',
+				'uniform float uSplit;',
 				'uniform int uKind;',
 				'uniform vec3 uColor;',
 				'uniform vec3 uHot;',
@@ -1050,7 +1058,7 @@ Elemenx.Trait('SceneEffects', {
 				/* It fades where it meets what stands behind it, not in a hard line. */
 				'	float soft = 1.0;',
 				'	if (uSoft > 0.5) {',
-				'		float z = texture(uScene, gl_FragCoord.xy / uScreen.xy).r * 2.0 - 1.0;',
+				'		float z = (uSplit > 0.5 ? min(1.0, texture(uScene, gl_FragCoord.xy / uScreen.xy).r * 2.0) : texture(uScene, gl_FragCoord.xy / uScreen.xy).r) * 2.0 - 1.0;',
 				'		float far = 2.0 * uScreen.z * uScreen.w / (uScreen.w + uScreen.z - z * (uScreen.w - uScreen.z));',
 				'		soft = clamp((far - vFar) / uSoftness, 0.0, 1.0);',
 				'	}',
@@ -1121,6 +1129,7 @@ Elemenx.Trait('SceneEffects', {
 				'in float vFar;',
 				'uniform sampler3D uNoise;',
 				'uniform sampler2D uScene;',
+				'uniform float uSplit;',
 				'uniform float uSoft;',
 				'uniform vec4 uScreen;',
 				'uniform float uSquare;',
@@ -1188,7 +1197,7 @@ Elemenx.Trait('SceneEffects', {
 				'	if (r >= 1.0) discard;',
 				/* What stands well before it hides it; ground that only rises through it does not. */
 				'	if (uSoft > 0.0) {',
-				'		float z = texture(uScene, gl_FragCoord.xy / uScreen.xy).r * 2.0 - 1.0;',
+				'		float z = (uSplit > 0.5 ? min(1.0, texture(uScene, gl_FragCoord.xy / uScreen.xy).r * 2.0) : texture(uScene, gl_FragCoord.xy / uScreen.xy).r) * 2.0 - 1.0;',
 				'		float far = 2.0 * uScreen.z * uScreen.w / (uScreen.w + uScreen.z - z * (uScreen.w - uScreen.z));',
 				'		if (far < vFar - uSoft) discard;',
 				'	}',
@@ -1215,7 +1224,7 @@ Elemenx.Trait('SceneEffects', {
 				'			for (int i = 0; i < 9; i++) {',
 				'				float a = float(i) * 0.698;',
 				'				vec2 at = uTap.xy + (i == 8 ? vec2(0.0) : vec2(cos(a), sin(a))) * uTap.zw;',
-				'				float z = texture(uScene, at).r * 2.0 - 1.0;',
+				'				float z = (uSplit > 0.5 ? min(1.0, texture(uScene, at).r * 2.0) : texture(uScene, at).r) * 2.0 - 1.0;',
 				/* Far off a depth is not exact: what stands just before the mouth hides it by degrees, or a mouth would go out by itself. */
 				'				open += smoothstep(uTapFar.x, uTapFar.y, 2.0 * uScreen.z * uScreen.w / (uScreen.w + uScreen.z - z * (uScreen.w - uScreen.z)));',
 				'			}',
@@ -1331,6 +1340,7 @@ Elemenx.Trait('SceneEffects', {
 				'in vec3 vWorld;',
 				'uniform sampler3D uNoise;',
 				'uniform sampler2D uScene;',
+				'uniform float uSplit;',
 				'uniform vec3 uFrom;',
 				'uniform vec3 uSide;',
 				'uniform vec3 uOther;',
@@ -1433,7 +1443,7 @@ Elemenx.Trait('SceneEffects', {
 				'	float start = max(max(max(first.x, first.y), first.z), 0.0);',
 				'	float end = min(min(last.x, last.y), last.z);',
 				'	if (uSoft > 0.5) {',
-				'		float z = texture(uScene, gl_FragCoord.xy / uScreen.xy).r * 2.0 - 1.0;',
+				'		float z = (uSplit > 0.5 ? min(1.0, texture(uScene, gl_FragCoord.xy / uScreen.xy).r * 2.0) : texture(uScene, gl_FragCoord.xy / uScreen.xy).r) * 2.0 - 1.0;',
 				'		float far = 2.0 * uScreen.z * uScreen.w / (uScreen.w + uScreen.z - z * (uScreen.w - uScreen.z));',
 				'		end = min(end, far / max(dot(ray, uForward), 0.05));',
 				'	}',

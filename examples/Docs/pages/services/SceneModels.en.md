@@ -73,8 +73,8 @@ A clip is {Length, Loop, Hold, Stride, Tracks: {piece: [[time 0 to 1, rx, ry, rz
 - [draws what moves together of a model of a file as one for each material: all that stands still, each wheel, each opening](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-frames.test.js#L175) — `tests/regression/library-scene-frames.test.js`
 - [makes the ground level across a road, tells its strips and the ground off it, and its model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L58) — `tests/regression/library-scene-roads.test.js`
 - [stands barriers of kind barrier along a road its Road names, or on points of their own, and they stop a car](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L231) — `tests/regression/library-scene-roads.test.js`
-- [gives each scene of a page its own textures of a model they share](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1396) — `tests/regression/library-scene.test.js`
-- [lights the world with the lamps a model carries, unless it is told not to](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2313) — `tests/regression/library-scene.test.js`
-- [A mirrored node keeps its mirror, and what a file keeps as one piece stands apart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4202) — `tests/regression/library-scene.test.js`
+- [gives each scene of a page its own textures of a model they share](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1544) — `tests/regression/library-scene.test.js`
+- [lights the world with the lamps a model carries, unless it is told not to](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2461) — `tests/regression/library-scene.test.js`
+- [A mirrored node keeps its mirror, and what a file keeps as one piece stands apart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4350) — `tests/regression/library-scene.test.js`
 
 +15 more in the same files

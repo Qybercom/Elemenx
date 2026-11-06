@@ -231,12 +231,17 @@ Elemenx.Trait('SceneScatter', {
 					if (item.Type === 'settlement')
 						lit[item.ID] = Number(item.Lit) || 0;
 
-					/* A wall drawn alone: its pieces and a tower at each of its corners. */
+					/* A wall drawn alone: its pieces and a tower at each of its corners; open at its Gates ([{X, Z, Radius, Turn, Model}]), a gate in those that name one. */
 					if (item.Type === 'citywall' && item.Points && item.Points.length > 1) {
-						made.Rules.push({ID: 'sketch-' + item.ID, Shapes: ['city-wall'], Line: item.Points, Spacing: 6, Fit: true, Passability: 0, Cover: 1, MinHeight: -100});
+						made.Rules.push({ID: 'sketch-' + item.ID, Shapes: ['city-wall'], Line: item.Points, Spacing: 6, Fit: true, Passability: 0, Cover: 1, MinHeight: -100, Gates: item.Gates || []});
 						made.Rules.push({ID: 'sketch-' + item.ID + '/towers', Fixed: item.Points.map(function (point) {
 							return {X: point[0], Z: point[1], Model: 'wall-tower'};
 						}), Passability: 0});
+						made.Rules.push({ID: 'sketch-' + item.ID + '/gates', Passability: 1, Fixed: (item.Gates || []).filter(function (gate) {
+							return gate.Model;
+						}).map(function (gate) {
+							return {X: gate.X, Z: gate.Z, Turn: gate.Turn || 0, Model: gate.Model};
+						})});
 					}
 
 					/* A landmark: an object of the scene, as a marker is. */
@@ -1014,6 +1019,26 @@ Elemenx.Trait('SceneScatter', {
 		}
 
 		/* Before anything is drawn of a frame: what came, and the streams when the view moved. */
+		/* How many squares within reach (metres) of the eye are still to be sown, those sown now among them (Preparing of the scene). */
+		engine.ScatterPending = function (reach) {
+			var eye = scene.Eye || [0, 0, 0];
+
+			return state.Flying + state.Waiting.filter(function (square) {
+				return Math.hypot(square.X + size / 2 - eye[0], square.Z + size / 2 - eye[2]) < reach + size;
+			}).length;
+		};
+
+		/* How much of what grows within reach (metres) of the eye is sown: {Done, Total} squares (the loading of the scene). */
+		engine.ScatterProgress = function (reach) {
+			var eye = scene.Eye || [0, 0, 0];
+			var left = engine.ScatterPending(reach);
+			var sown = state.Squares.filter(function (square) {
+				return Math.hypot(square.X + size / 2 - eye[0], square.Z + size / 2 - eye[2]) < reach + size;
+			}).length;
+
+			return {Done: sown, Total: sown + left};
+		};
+
 		engine.ScatterFrame = function (matrix) {
 			var eye = scene.Eye;
 			var look = matrix[2] + matrix[6] * 3 + matrix[10] * 7;

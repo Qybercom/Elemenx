@@ -131,9 +131,27 @@ describe('Contract: SceneWorld, the world of a ground as a graph of its steps', 
 			}
 		}
 
-		/* Its border with the place east of it: the same ground on both sides, to a hand's breadth. */
-		for (z = -2000; z <= 2000; z += 500)
-			expect(Math.abs(field.Height(2000, z) - beside.Height(-2000, z))).toBeLessThan(0.1);
+		/*
+		 * Its border with the place east of it: the same point of the planet the same ground on both sides (Local: where a
+		 * direction comes to in a place), the border of one near the border of the other (the planes of the two touch the
+		 * planet at their middles: their edges part by less than a metre).
+		 */
+		var other = terrain.Site({Options: options, Latitude: planets.LatLon(east)[0], Longitude: planets.LatLon(east)[1]});
+
+		for (z = -2000; z <= 2000; z += 500) {
+			var across = other.Local(site.Direction(2000, z));
+
+			expect(Math.abs(field.Height(2000, z) - beside.Height(across[0], across[1]))).toBeLessThan(0.01);
+			expect(Math.hypot(across[0] + 2000, across[1] - z)).toBeLessThan(1);
+		}
+
+		expect(site.Local(site.Direction(1234, -567))[0]).toBeCloseTo(1234, 6);
+		expect(site.Local(site.Direction(1234, -567))[1]).toBeCloseTo(-567, 6);
+
+		var turned = terrain.Site(Object.assign({Turn: 30}, place));
+
+		expect(turned.Local(turned.Direction(-800, 1500))[0]).toBeCloseTo(-800, 6);
+		expect(turned.Local(turned.Direction(-800, 1500))[1]).toBeCloseTo(1500, 6);
 
 		piece = await new Promise(function (done, failed) {
 			terrain.Work().Run('SceneTerrainGenerator', 'Piece', ['Flat', field.Options, null, [0, 0, 256, 8]], function (error, result) {

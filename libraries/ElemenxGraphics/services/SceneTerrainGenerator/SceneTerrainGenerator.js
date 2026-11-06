@@ -13,7 +13,8 @@
  *   (a way of points {X, Y, Z} round what cannot be walked, made straight where it can be; null when there is none;
  *   options Step, the finest it looks, MaxSlope, Swim). Palette gives it the colors of a biome; Roads ([[x, z]...]) set
  *   on a field are painted on it, and OnRoad(field, x, z, width) tells whether a point is on one. Sketch: a sketch over it
- *   (below); the field then has Sketch, its Height after it, and its colors (Paint) after what it lays.
+ *   (below); the field then has Sketch, its Height after it, and its colors (Paint) after what it lays. Border: the
+ *   outline of a location and what is past it (Border(options)); the field then has Border.
  * - A sketch is {Layers: [{ID, Name, Visible, Strength, Items}]}, each item {ID, Type, Strength} changing the height left by the
  *   items before it. Strokes (Points, Radius): raise and lower (Amount), flatten (Height), smooth. Lines (Points, Width): ridge
  *   (Height, Sharp), valley and canyon (Depth), river (Depth, Bank, Flow: how fast it runs; its bed under the levels of its way, never rising as it
@@ -66,7 +67,7 @@
 Elemenx.Service('SceneTerrainGenerator', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['Flat(options)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'SketchChanged(before, after)', 'Source(names)']
+		Methods: ['Flat(options)', 'Border(options)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'SketchChanged(before, after)', 'Source(names)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['terrain']}},
@@ -429,7 +430,8 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * A place of a planet of ScenePlanet as a flat ground (Planet of the options of Flat: {Options (of ScenePlanet.Make),
 	 * Latitude, Longitude, Turn (degrees the north of the ground is turned from -Z)}): its points are those of the plane
 	 * touching the planet at the place, metres east (X) and south (Z) of it; Elevation(x, z) is the elevation of the planet
-	 * there (metres, its sea level 0), Sample(x, z) all the planet tells of it, Direction(x, z) the direction. Its lands
+	 * there (metres, its sea level 0), Sample(x, z) all the planet tells of it, Direction(x, z) the direction and Local(direction)
+	 * the point of it a direction comes to ([x, z]: what joins two places, the same point of the planet in both). Its lands
 	 * resolved there and then (BiomeList of the options), so a worker makes the same of them.
 	 */
 	Site: function (given) {
@@ -466,9 +468,20 @@ Elemenx.Service('SceneTerrainGenerator', {
 			return [p[0] / length, p[1] / length, p[2] / length];
 		}
 
+		/* The point of the place a direction of the planet comes to, [x, z] metres: the other way of direction. */
+		function local (way) {
+			var along = way[0] * middle[0] + way[1] * middle[1] + way[2] * middle[2];
+			var k = radius / (along || 1e-9);
+			var u = (way[0] * east[0] + way[1] * east[1] + way[2] * east[2]) * k;
+			var v = (way[0] * north[0] + way[1] * north[1] + way[2] * north[2]) * k;
+
+			return [u * Math.cos(turn) + v * Math.sin(turn), u * Math.sin(turn) - v * Math.cos(turn)];
+		}
+
 		return {
 			Planet: planet,
 			Direction: direction,
+			Local: local,
 
 			Elevation: function (x, z) {
 				return planet.Elevation(direction(x, z));
@@ -606,6 +619,17 @@ Elemenx.Service('SceneTerrainGenerator', {
 			}
 		};
 
+		/* The outline of a location (Border): what is past it, its passages open. */
+		if (settings.Border) {
+			var inner = field.Height;
+			var border = this.Border(settings.Border);
+
+			field.Border = border;
+			field.Height = function (x, z) {
+				return border.Height(x, z, inner(x, z));
+			};
+		}
+
 		/* A sketch over it (Sketch): its heights after it, and its colors. */
 		if (settings.Sketch) {
 			var plain = field.Height;
@@ -629,6 +653,112 @@ Elemenx.Service('SceneTerrainGenerator', {
 			this.Underground(field, settings);
 
 		return field;
+	},
+
+	/*
+	 * The outline of a location on its ground and what is past it. options {Points ([x, z] of its corners), Sides ([x0, z0,
+	 * x1, z1] of each side, ScenePlanet.CellPlace), Beyond (far: the ground goes on as it is; cliff: it falls Depth, 250 m;
+	 * void: it falls away, Depth 3000 m; sea: it goes down under the sea, Depth 40 m; wall: as it is, a wall stands on the
+	 * outline, SceneWorld's step Border), Passages ([{Side, At, Width}]: past them the ground goes on as it is), Open (the
+	 * sides past which it goes on as it is all along: a location told beside them), Edge
+	 * (metres over which it changes, 40)}. Gives {Height(x, z, h) (h past the outline), Distance(x, z) (to the outline,
+	 * over 0 out of it), Gap(x, z) (1 in the way of a passage), Beyond, Points}.
+	 */
+	Border: function (options) {
+		var self = this;
+		var given = options || {};
+		var points = given.Points || [];
+		var beyond = given.Beyond || 'far';
+		var edge = Number(given.Edge) || 40;
+		var depth = given.Depth !== undefined ? Number(given.Depth) : beyond === 'void' ? 3000 : beyond === 'sea' ? 40 : 250;
+		var openings = (given.Passages || []).map(function (passage) {
+			var side = (given.Sides || [])[passage.Side];
+			var at = passage.At === undefined ? 0.5 : Number(passage.At);
+			var length;
+
+			if (!side)
+				return null;
+
+			length = Math.hypot(side[2] - side[0], side[3] - side[1]) || 1;
+
+			return {X: side[0] + (side[2] - side[0]) * at, Z: side[1] + (side[3] - side[1]) * at, DX: (side[2] - side[0]) / length, DZ: (side[3] - side[1]) / length, Half: (Number(passage.Width) || 4) / 2 + 2};
+		}).concat((given.Open || []).map(function (index) {
+			var side = (given.Sides || [])[index];
+
+			return side ? {X: (side[0] + side[2]) / 2, Z: (side[1] + side[3]) / 2, DX: (side[2] - side[0]) / (Math.hypot(side[2] - side[0], side[3] - side[1]) || 1), DZ: (side[3] - side[1]) / (Math.hypot(side[2] - side[0], side[3] - side[1]) || 1), Half: Math.hypot(side[2] - side[0], side[3] - side[1]) / 2 + 2} : null;
+		})).filter(function (opening) {
+			return opening;
+		});
+
+		function inside (x, z) {
+			var within = false;
+			var i;
+			var j;
+
+			for (i = 0, j = points.length - 1; i < points.length; j = i++) {
+				if ((points[i][1] > z) !== (points[j][1] > z) && x < (points[j][0] - points[i][0]) * (z - points[i][1]) / (points[j][1] - points[i][1]) + points[i][0])
+					within = !within;
+			}
+
+			return within;
+		}
+
+		function distance (x, z) {
+			var least = Infinity;
+			var i;
+
+			for (i = 0; i < points.length; i++) {
+				var a = points[i];
+				var b = points[(i + 1) % points.length];
+				var dx = b[0] - a[0];
+				var dz = b[1] - a[1];
+				var t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / (dx * dx + dz * dz || 1)));
+
+				least = Math.min(least, Math.hypot(a[0] + dx * t - x, a[1] + dz * t - z));
+			}
+
+			return inside(x, z) ? -least : least;
+		}
+
+		/* In the way of a passage: across it within its width, and near its side. */
+		function gap (x, z) {
+			var open = 0;
+
+			openings.forEach(function (opening) {
+				var along = Math.abs((x - opening.X) * opening.DX + (z - opening.Z) * opening.DZ);
+				var across = Math.abs((x - opening.X) * -opening.DZ + (z - opening.Z) * opening.DX);
+
+				open = Math.max(open, (1 - self.Smoothstep(opening.Half, opening.Half + edge * 0.5, along)) * (1 - self.Smoothstep(edge * 4, edge * 8, across)));
+			});
+
+			return open;
+		}
+
+		return {
+			Beyond: beyond,
+			Points: points,
+			Distance: distance,
+			Gap: gap,
+
+			Height: function (x, z, h) {
+				var d;
+				var s;
+
+				if (points.length < 3 || beyond === 'far' || beyond === 'wall') return h;
+
+				d = distance(x, z);
+
+				if (d <= 0) return h;
+
+				if (beyond === 'sea') {
+					s = self.Smoothstep(0, edge * 4, d) * (1 - gap(x, z));
+
+					return h + (Math.min(h, -depth) - h) * s;
+				}
+
+				return h - depth * self.Smoothstep(0, edge, d) * (1 - gap(x, z));
+			}
+		};
 	},
 
 	/*
@@ -2148,7 +2278,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Make', 'Planet', 'Color', 'Sphere'], SceneTerrainGenerator: ['Smoothstep', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan']});
+		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan']});
 	},
 
 	/*

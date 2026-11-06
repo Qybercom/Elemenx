@@ -9,6 +9,7 @@ SceneWorld: the world of a ground as a graph of its steps, the one place a groun
 - Climate: the numbers of its climate (Warmth, Lapse, Spread, Stretch: ClimateOf of SceneTerrainGenerator).
 - Biomes: its lands by their climate (List: names of SceneBiomes, or {Biome, Ground, Grass, Climate, Scatter}).
 - Sketch: a sketch over it (Sketch: {Layers}, as SceneEditor draws it).
+- Border: the outline of a location (Points, Sides), what is past it (Beyond: far, cliff, void, sea, wall; Edge, Depth) and its passages (Passages of SceneLocations: roads, rivers and gates out of it).
 - Tunnel (Points [[x, z, y]...], Radius, Flat, Depth), Caves (natural ways and halls of noise under the ground round X, Z within Radius: Top, Bottom, Scale, Width, Halls, Seed) and Overhangs (rock jutting out of steep slopes: Amount, Scale, Slope; X, Z and Radius for a place of them): the volume of the land, cut and grown (Carves of SceneTerrainGenerator.Volume); the squares of the ground they touch are made of its density.
 - Footings: the ground gives way under what stands on it: a level place under each building, Margin metres round it, at the height there (Mode mean, low, high), the ground coming to it within Edge (the trait SceneFootings of a Scene).
 - Settlement: a village laid on it (X, Y, Houses, Radius, Seed, Shapes), and Scatter: things sown over it by a rule (Kind, Shapes, Density, Size, MinHeight, MaxHeight, MaxSlope, Cover, Patch, Clumps, Seed, Blocks, Biome, and Graph, a rule of its own: LibraryScatter of SceneSower starts one). Each takes the things before it (Under) and gives them with its own.
@@ -16,7 +17,7 @@ SceneWorld: the world of a ground as a graph of its steps, the one place a groun
 A block turned off lets what comes to it through. Any Service may add steps of its own: blocks of the kind world, declared to Blueprints in $Provides as these are, a land in and a land out, or things in and things out. The blocks of a generator (numbers, parameters) are there too, for the numbers of the steps.
 
 - Make(graph, parameters): {Ground (the options of its ground; null with no World or no land to it), Things (the specs of the objects it makes: {ID, Kind, Values}, their IDs of their order), Problems (what keeps the graph from running)}, made once for the same graph and parameters.
-- Library(options): the graph of a usual world of options (Size, Height, Water, Seed, Rock, Snow, Scale, Ridges, Noise, Relief, Planet ({Options, Latitude, Longitude, Turn}), Climate, Biomes, Sketch, Tunnels and Caves (lists of the properties of such steps), Overhangs and Footings (true or their properties); and Settlements, Scatters: lists of the properties of such blocks): what an editor or a page starts from.
+- Library(options): the graph of a usual world of options (Size, Height, Water, Seed, Rock, Snow, Scale, Ridges, Noise, Relief, Planet ({Options, Latitude, Longitude, Turn}), Climate, Biomes, Sketch, Border (its properties), Tunnels and Caves (lists of the properties of such steps), Overhangs and Footings (true or their properties); and Settlements, Scatters: lists of the properties of such blocks): what an editor or a page starts from.
 
 The same functions run in Node: they read no page.
 
@@ -33,11 +34,11 @@ The same functions run in Node: they read no page.
 - [cuts its land with steps of its volume: tunnels, caves, overhangs, each one more carve of it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js#L97) — `libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js`
 - [makes the land of a place of a planet exactly as its globe: its heights and coasts, its lands, its neighbour meeting it at their border, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js#L107) — `libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js`
 - [makes the objects of the World of a ground in the scene, marked in the tree, not saved: they come again of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L734) — `tests/regression/library-scene-editor.test.js`
-- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1630) — `tests/regression/library-scene.test.js`
-- [lets go of neither a hero nor the view on Escape, and takes no leap of the pointer](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2676) — `tests/regression/library-scene.test.js`
-- [never lets a hero out of the view, and ends a press when the pointer is taken or given back](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2742) — `tests/regression/library-scene.test.js`
-- [stands the view of a walker behind it, in its eyes or over its shoulder, and V goes through them with the pointer taken](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2853) — `tests/regression/library-scene.test.js`
-- [shows the axes of a view in a corner, and a press on one looks along it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2971) — `tests/regression/library-scene.test.js`
-- [ends every press when the pointer goes, and takes back the leap that came just before](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3110) — `tests/regression/library-scene.test.js`
+- [preloads the globe of a planet into the store of the browser, and a scene of it takes it from there at once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L146) — `tests/regression/library-scene-landing.test.js`
+- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1778) — `tests/regression/library-scene.test.js`
+- [lets go of neither a hero nor the view on Escape, and takes no leap of the pointer](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2824) — `tests/regression/library-scene.test.js`
+- [never lets a hero out of the view, and ends a press when the pointer is taken or given back](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2890) — `tests/regression/library-scene.test.js`
+- [stands the view of a walker behind it, in its eyes or over its shoulder, and V goes through them with the pointer taken](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3001) — `tests/regression/library-scene.test.js`
+- [shows the axes of a view in a corner, and a press on one looks along it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3119) — `tests/regression/library-scene.test.js`
 
-+21 more in the same files
++25 more in the same files

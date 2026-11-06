@@ -52,11 +52,11 @@
 - [adds, changes, attaches, detaches and removes objects and parts, saves the game and loads it the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L485) — `tests/regression/library-scene.test.js`
 - [runs the systems of the application for traits of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L591) — `tests/regression/library-scene.test.js`
 - [lands on the surface of a body and takes off again; a giant of gas has none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L608) — `tests/regression/library-scene.test.js`
-- [plays the clips of a model: walking on a way by itself, a clip that ends going back, a kind for each model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L666) — `tests/regression/library-scene.test.js`
-- [sees a ground in parallel rays: from above a point is where the plan says, at an angle where the rhombus says](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L736) — `tests/regression/library-scene.test.js`
-- [brings the resolution back at the 60 frames of a screen, and holds it where a quality was chosen](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L778) — `tests/regression/library-scene.test.js`
-- [steps down from frames that are late, but not to where the grass goes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L826) — `tests/regression/library-scene.test.js`
-- [never leaves a hole in the ground: a square gives way only when its parts are made](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L848) — `tests/regression/library-scene.test.js`
-- [keeps the noise of a ground and of water where they are, not where the eye is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L881) — `tests/regression/library-scene.test.js`
+- [makes crafts as long as they are and ships as fast as they go in real sizes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L667) — `tests/regression/library-scene.test.js`
+- [draws the Sun from a ship near a planet in real sizes, bright](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L716) — `tests/regression/library-scene.test.js`
+- [starts a ground behind a veil, its time still, until its squares and what grows round the eye are made](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L772) — `tests/regression/library-scene.test.js`
+- [plays the clips of a model: walking on a way by itself, a clip that ends going back, a kind for each model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L814) — `tests/regression/library-scene.test.js`
+- [sees a ground in parallel rays: from above a point is where the plan says, at an angle where the rhombus says](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L884) — `tests/regression/library-scene.test.js`
+- [brings the resolution back at the 60 frames of a screen, and holds it where a quality was chosen](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L926) — `tests/regression/library-scene.test.js`
 
-+133 ещё в тех же файлах
++138 ещё в тех же файлах

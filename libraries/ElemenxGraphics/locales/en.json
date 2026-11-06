@@ -164,9 +164,18 @@
 			"land": "Land",
 			"takeOff": "Take off",
 			"landing": "Landing",
+			"toOrbit": "To orbit",
+			"orbitHint": "Close to the planet: go into orbit?",
 			"pickPoint": "Pick a point on the surface",
 			"night": "night",
-			"loading": "Loading the scene"
+			"loading": "Loading the scene",
+			"stagePrograms": "Shaders",
+			"stageModels": "Models",
+			"stageRivers": "Rivers",
+			"stageGlobes": "Planets",
+			"stageGround": "Ground",
+			"stagePlants": "Plants",
+			"stageView": "The view"
 		},
 		"sceneEditor": {
 			"label": "Scene editor",

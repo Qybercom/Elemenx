@@ -663,6 +663,154 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(inner.Focus).toBe('rock');
 	});
 
+	/* In real sizes a craft is as long as it is (Length, metres) and a ship goes at its Speed (m/s) near a body. */
+	it('makes crafts as long as they are and ships as fast as they go in real sizes', async function () {
+		var mounted = await mount('<Scene Scale="real" Paused="true" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Mass="1">' +
+				'<SceneObject ID="earth" Kind="planet" Radius="6371" Mass="1" Distance="1">' +
+					'<SceneObject ID="dock" Kind="craft" Length="450" Distance="1.75" Period="90" />' +
+				'</SceneObject>' +
+			'</SceneObject>' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var metre = engine.Metre();
+		var now = performance.now() + 1000;
+		var from;
+		var i;
+
+		expect(metre).toBeGreaterThan(0);
+		expect(inner.Objects.earth.Size / metre / 1000).toBeCloseTo(6371, 3);
+		expect(inner.Objects.dock.Size / metre).toBeCloseTo(450, 6);
+
+		scene.Add('ship', {ID: 'me', Name: '', Parent: 'earth', Vehicle: {Kind: 'ship', Speed: 2000, Length: 22, Around: 'earth', From: [0, 0, 2], Facing: [0, 0, 1]}});
+		scene.Control('me');
+
+		engine.Frame(now += 100, true);
+
+		expect(inner.Objects.me.Size / metre).toBeCloseTo(22, 6);
+
+		inner.Objects.me.Ship.Throttle = 1;
+
+		for (i = 0; i < 60; i++)
+			engine.Frame(now += 100, true);
+
+		from = inner.Objects.me.Ship.At.slice();
+
+		engine.Frame(now += 100, true);
+
+		/* 2 km/s near the body, up to a thousand times that far from it, as the root of its height (12 700 km here: 0.46 of the way). */
+		var went = Math.hypot(inner.Objects.me.Ship.At[0] - from[0], inner.Objects.me.Ship.At[1] - from[1], inner.Objects.me.Ship.At[2] - from[2]) / metre / 0.1;
+
+		expect(went).toBeGreaterThan(2000 * 1000 * 0.4);
+		expect(went).toBeLessThan(2000 * 1000 * 0.5);
+	});
+
+	/*
+	 * Regression: in real sizes the view reached from a ship a metre from the eye to the stars: the depth could not tell a
+	 * body from its air (shards over the globe), the Sun stood at depth 1 and was not drawn, and the far sky turned through a
+	 * view whose inverse lost its way (half of it cut, flickering). Space is drawn in two parts of depth; the sky by a view
+	 * of its own; a star blinds by the light it sends.
+	 */
+	it('draws the Sun from a ship near a planet in real sizes, bright', async function () {
+		var mounted = await mount('<Scene Scale="real" Paused="true" Background="false" Quality="low" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Mass="1">' +
+				'<SceneObject ID="earth" Kind="planet" Radius="6371" Mass="1" Distance="1" />' +
+			'</SceneObject>' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var renderer = engine.Renderer;
+		var gl = renderer.GL;
+		var vectors = Elemenx.Service('Math').Vectors;
+		var now = performance.now() + 1000;
+		var data = new Uint8Array(4);
+		var spot;
+		var hero;
+
+		scene.Add('ship', {ID: 'me', Name: '', Parent: 'earth', Vehicle: {Kind: 'ship', Length: 22, Around: 'earth', From: [0, 0, 3], Facing: [0, 0, 1]}});
+		scene.Control('me');
+
+		engine.Frame(now += 100, true);
+
+		hero = inner.Objects.me;
+
+		/* The view behind the ship, the Sun ahead of the eye. */
+		var way = vectors.Normalize(vectors.Subtract(inner.Objects.sun.World, hero.World));
+		var axes = inner.ShipAxes || hero.Seen;
+		var round = [-vectors.Dot(way, axes.Right), -vectors.Dot(way, axes.Up), -vectors.Dot(way, axes.Ahead)];
+
+		inner.Pitch = Math.asin(round[1]) + 0.08;
+		inner.Yaw = Math.atan2(-round[0], -round[2]);
+
+		function frame () {
+			inner.Looping = true;
+
+			engine.Frame(now += 100);
+
+			inner.Looping = false;
+		}
+
+		frame();
+		frame();
+
+		spot = engine.Project(inner.Objects.sun.World);
+
+		expect(spot.Visible).toBe(true);
+		expect(inner.Camera.Near / engine.Metre()).toBeLessThan(10);
+
+		frame();
+
+		gl.readPixels(Math.round(spot.X * renderer.Ratio), Math.round(renderer.Height - spot.Y * renderer.Ratio), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+		expect(data[0] + data[1] + data[2]).toBeGreaterThan(600);
+	});
+
+	/* The game does not go on before all the view needs is there: the squares of its ground near the eye and what grows round it. */
+	it('starts a ground behind a veil, its time still, until its squares and what grows round the eye are made', async function () {
+		var mounted = await mount('<Scene (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="400" Height="20" Water="0.1" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" />' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var seconds;
+
+		await waitFor(function () {
+			return scene.Veiled === 1 || !inner.Preparing;
+		}, 4000);
+
+		seconds = inner.Seconds;
+
+		if (inner.Preparing)
+			expect(engine.Waiting()).toBeGreaterThan(0);
+
+		await waitFor(function () {
+			return !inner.Preparing;
+		}, 30000);
+
+		expect(inner.Seconds - seconds).toBeLessThan(0.2);
+		expect(inner.Ground.Missing).toBe(0);
+		expect(engine.ScatterPending(240)).toBe(0);
+
+		await waitFor(function () {
+			return scene.Veiled === 0 && inner.Seconds > seconds + 0.2;
+		}, 4000);
+
+		/* A location that comes (SceneLanding): behind the veil again until it is made. */
+		engine.Prepare();
+
+		await waitFor(function () {
+			return scene.Veiled === 1;
+		}, 4000);
+		await waitFor(function () {
+			return scene.Veiled === 0;
+		}, 30000);
+	}, 60000);
+
 	it('plays the clips of a model: walking on a way by itself, a clip that ends going back, a kind for each model', async function () {
 		var ended = [];
 		var mounted = await mount('<Scene (ready)="Ready">' +
@@ -7869,6 +8017,9 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		inner.Seen = true;
 		inner.Warmed = true;
+		/* Its programs alone: what the view is made ready of beside them is told by its own stages (library-scene-landing). */
+		inner.Preparing = false;
+		inner.LoadingLeast = 0;
 		engine.Renderer.Progress = function () {
 			return {Done: 3, Total: 4, Needed: 1};
 		};
@@ -7936,6 +8087,8 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		inner.Warmed = true;
 		inner.Seen = true;
+		inner.Preparing = false;
+		inner.LoadingLeast = 0;
 		engine.Renderer.Progress = function () {
 			return {Done: 1, Total: 2, Needed: 1};
 		};

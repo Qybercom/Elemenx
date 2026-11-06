@@ -574,14 +574,14 @@ Elemenx.Service('SceneBlueprints', {
 
 		/*
 		 * The air over the stars, as thick as it is by day, at dusk, round the moon and over towns; the disc of the sun with
-		 * its warm light, hidden by a moon before it; the moon over all.
+		 * its warm light (as large as it is seen: uSunRadius, the angle of its radius), hidden by a moon before it; the moon over all.
 		 */
 		node('SkyCompose', [vec3('Color', 'vec3(0.0)'), vec3('Crown', 'vec3(0.0)'), vec3('Tint', 'vec3(1.0)'), float('Toward', '0.0'), float('Sun', 'dot(uSun, uUp)'), float('Day', '1.0'), float('Dusk', '0.0'), float('Haze', '0.0'), float('Towns', '0.0'), vec3('Moon', 'vec3(0.0)'), float('Shape', '0.0')], [{Key: 'Color', Type: 'vec3'}, {Key: 'Alpha', Type: 'float'}], function (context) {
 			var name = 's' + context.Index;
 			var inputs = context.Inputs;
 
 			context.Lines.push('float ' + name + '_density = uAir.a * (1.0 - uHigh);');
-			context.Lines.push('float ' + name + '_disk = smoothstep(0.99972, 0.99990, ' + inputs.Toward + ') * (1.0 - uCover);');
+			context.Lines.push('float ' + name + '_disk = smoothstep(cos(uSunRadius * 1.35), cos(uSunRadius * 0.75), ' + inputs.Toward + ') * (1.0 - uCover);');
 			context.Lines.push('float ' + name + '_alpha = clamp(' + name + '_density * (' + inputs.Day + ' * 0.97 * (1.0 - uEclipse) + ' + inputs.Dusk + ' * 0.6 + ' + inputs.Haze + ' + ' + inputs.Towns + ' * max(uGlow.r, uGlow.g)), 0.0, 1.0);');
 			context.Lines.push('float ' + name + '_hidden = ' + inputs.Shape + ' * smoothstep(0.0, 0.05, uEclipse);');
 

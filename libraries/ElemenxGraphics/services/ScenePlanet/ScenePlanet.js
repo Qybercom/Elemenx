@@ -6,8 +6,10 @@
  * - Make(options): a planet of options {Radius (km, 6371), Seed, Ocean (the part of it under the sea, 0.65), Relief
  *   (metres of its highest mountains, 8000), Depth (metres of its deepest sea, 6000), Plates (how many tectonic plates,
  *   14), Detail (km: the finest the coasts are told by the globe; finer, the land and the sea are never turned one into
- *   the other, 2), Paint (what a developer drew, below), Biomes (names of SceneBiomes, the usual six)}. It gives
- *   {Options, Radius, Sample(direction), Elevation(direction), Land(direction), Plate(direction), Wind(direction),
+ *   the other, 2), Paint (what a developer drew, below), Biomes (names of SceneBiomes, the usual six), Baked (the
+ *   grounds of locations baked into it, SceneLocations.Bake: {ID: {Latitude, Longitude, Turn, Size, Side, Heights, Edge}};
+ *   there its heights are theirs, edits and all, its own again over Edge metres at their edge)}. It gives
+ *   {Options, Radius, Sample(direction, finest), Elevation(direction, finest) (finest: km, the finest asked; all by default), Land(direction), Plate(direction), Wind(direction),
  *   Climate(direction), Biome(direction), Point(direction), Direction(latitude, longitude), LatLon(direction)}.
  *   Sample gives all of a point at once: {Elevation (metres over the sea), Land (true over it), Plate {ID, Oceanic,
  *   Boundary (km to the next plate), Push (how the two meet: over 0 they close, mountains and trenches; under 0 they part,
@@ -22,14 +24,15 @@
  *   overlay relief, plates, wind, temperature, moisture or biomes (Color); Work() the workers that paint it.
  * - Sphere(options): its ground as SceneTerrainGenerator.Sphere gives one (Land, Elevation, Point, Altitude, Patch with the
  *   colors of the globe): what a Scene lands on and draws near, square by square, as fine as the eye needs.
- * - Cells, CellAt, CellCenter, CellCorners, CellNeighbours, CellPlace: the locations of a planet as cells of the faces of a
- *   cube, each a place for the step Planet of a World (its latitude, longitude, turn, size and outline).
+ * - Cells, CellAt, CellOf, CellCenter, CellCorners, CellNeighbours, CellPlace: the locations of a planet as cells, squares of
+ *   the faces of a cube or hexagons of an icosahedron (12 of them pentagons), each a place for the step Planet of a World
+ *   (its latitude, longitude, turn, size, outline and sides).
  * The same functions run in workers and in Node: they read no page.
  */
 Elemenx.Service('ScenePlanet', {
 	$Meta: {
 		Description: 'A planet as one continuous function of a direction: painted continents, tectonic plates, winds, climate and biomes, as fine as it is asked.',
-		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Sphere(options)', 'Cells(radius, size)', 'CellAt(radius, size, direction)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)']
+		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)']
 	},
 
 	/* The kinds of strokes of a paint. */
@@ -68,7 +71,16 @@ Elemenx.Service('ScenePlanet', {
 		var coarse = noise.Make({Type: 'simplex', Seed: seed + '-shape', Fractal: 'fbm', Octaves: 5, Gain: 0.52});
 		var warp = noise.Make({Type: 'simplex', Seed: seed + '-warp', Fractal: 'fbm', Octaves: 3});
 		var folds = noise.Make({Type: 'simplex', Seed: seed + '-folds', Fractal: 'ridged', Octaves: Math.min(12, octaves), Gain: 0.5});
-		var fine = noise.Make({Type: 'simplex', Seed: seed + '-fine', Fractal: 'fbm', Octaves: 6});
+		var crags = noise.Make({Type: 'simplex', Seed: seed + '-crags', Fractal: 'ridged', Octaves: 6, Gain: 0.5});
+		/*
+		 * The relief over the land, as it is made on the Earth: an uplift of whole regions (highlands, plateaus, shields), chains
+		 * of ranges of a ridged multifractal on bent ways where it rises, and hills and detail down to tens of metres, rougher
+		 * the higher and steeper the land (a heterogeneous terrain: valleys smooth, peaks rugged).
+		 */
+		var uplift = noise.Make({Type: 'simplex', Seed: seed + '-uplift', Fractal: 'fbm', Octaves: 3, Gain: 0.5});
+		var ranges = noise.Make({Type: 'simplex', Seed: seed + '-ranges', Fractal: 'ridged', Octaves: 7, Gain: 0.5, Warp: {Amount: 0.5, Scale: 0.4, Octaves: 2}});
+		var hills = noise.Make({Type: 'simplex', Seed: seed + '-hills', Fractal: 'fbm', Octaves: 6, Gain: 0.5});
+		var grain = noise.Make({Type: 'simplex', Seed: seed + '-grain', Fractal: 'fbm', Octaves: 6, Gain: 0.48});
 		var weather = noise.Make({Type: 'simplex', Seed: seed + '-weather', Fractal: 'fbm', Octaves: 3});
 		/* Its lands: BiomeList when given (a worker has no registry of them), else of their names. */
 		var biomes = this.$Service('SceneTerrainGenerator').Biomes(given.BiomeList ? {BiomeList: given.BiomeList} : {Biomes: given.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp']});
@@ -76,6 +88,53 @@ Elemenx.Service('ScenePlanet', {
 			return Object.assign({}, stroke, {Directions: (stroke.Points || []).map(function (point) {
 				return self.Direction(Number(point[0]), Number(point[1]));
 			})});
+		});
+		/*
+		 * The locations baked into it (Baked {ID: {Latitude, Longitude, Turn, Size, Side, Heights}}): the heights of their
+		 * grounds as they were made and edited, a square of Size metres on the plane touching the planet at their middle,
+		 * Side by Side, row by row along Z: there the planet is that ground, coming back to its own over the edge of it.
+		 */
+		var bakes = Object.keys(given.Baked || {}).map(function (id) {
+			var bake = given.Baked[id];
+			var middle = self.Direction(Number(bake.Latitude) || 0, Number(bake.Longitude) || 0);
+			var axes = self.Tangent(middle);
+			var turn = (Number(bake.Turn) || 0) * Math.PI / 180;
+			var half = (Number(bake.Size) || 0) / 2;
+
+			return {Middle: middle, East: axes.East, North: axes.North, Cos: Math.cos(turn), Sin: Math.sin(turn), Half: half, Edge: Math.min(half * 0.5, Number(bake.Edge) || 240), Side: Math.max(2, Number(bake.Side) || 2), Heights: bake.Heights || [], Reach: Math.cos(half * 1.5 / (radius * 1000))};
+		}).filter(function (bake) {
+			return bake.Half > 0 && bake.Heights.length >= bake.Side * bake.Side;
+		});
+		/*
+		 * Its rivers (Rivers of Drainage: [{Points (directions), Flow (cells of 39 km drained there), Level (metres of its
+		 * bed)}]): each segment kept in the squares of a coarse grid of the cube round its ends, for a point to find the near
+		 * ones at once.
+		 */
+		var streams = [];
+		var buckets = {};
+
+		(Array.isArray(given.Rivers) ? given.Rivers : given.Rivers ? self.RiversOf(given.Rivers) : []).forEach(function (river, index) {
+			var points = river.Points || [];
+			var k;
+
+			for (k = 0; k + 1 < points.length; k++) {
+				var segment = {A: points[k], B: points[k + 1], FlowA: river.Flow[k], FlowB: river.Flow[k + 1], LevelA: river.Level[k], LevelB: river.Level[k + 1], River: index};
+				var keys = {};
+
+				streams.push(segment);
+
+				[points[k], points[k + 1]].forEach(function (end) {
+					var cell = self.CellAt(1, Math.PI / 2 / 48, end);
+
+					[cell].concat(self.CellNeighbours(1, Math.PI / 2 / 48, cell)).forEach(function (near) {
+						keys[near.ID] = true;
+					});
+				});
+
+				Object.keys(keys).forEach(function (key) {
+					(buckets[key] = buckets[key] || []).push(segment);
+				});
+			}
 		});
 		var plates = [];
 		var level = 0;
@@ -109,6 +168,12 @@ Elemenx.Service('ScenePlanet', {
 			var length = Math.sqrt(dot(a, a)) || 1;
 
 			return [a[0] / length, a[1] / length, a[2] / length];
+		}
+
+		function smoothstep (from, to, value) {
+			var t = Math.max(0, Math.min(1, (value - from) / (to - from)));
+
+			return t * t * (3 - 2 * t);
 		}
 
 		function angle (a, b) {
@@ -276,7 +341,7 @@ Elemenx.Service('ScenePlanet', {
 		})();
 
 		/* The height of a point over the sea, metres, and what it is made of: its plate, its land. */
-		function raise (p) {
+		function raise (p, finest) {
 			var tectonic = plate(p);
 			var land = continent(p, tectonic);
 			var meet = Math.exp(-Math.abs(tectonic.Boundary) / 180);
@@ -285,8 +350,22 @@ Elemenx.Service('ScenePlanet', {
 
 			/* Over the sea: the land rises with its number, mountains where plates close, rifts where they part. */
 			if (land > 0) {
-				height = Math.pow(Math.min(1.5, land), 1.4) * 1400 + ridged * ridged * relief * 0.18 * Math.min(1, land * 3);
-				height += Math.max(0, tectonic.Push) * meet * relief * 0.75 * (0.4 + ridged * 0.6);
+				var coast = smoothstep(0, 0.12, land);
+				var lift = uplift.At(p[0] * 2.2, p[1] * 2.2, p[2] * 2.2);
+				var chains = smoothstep(0.5, 0.8, lift) + meet * Math.max(0, tectonic.Push) * 1.2;
+				var risen;
+				var rough;
+				var small = finest === undefined ? 0 : finest;
+
+				chains = Math.min(1, chains) * coast;
+
+				/* The plain rising inland, the highlands and the plateaus where the land is lifted. */
+				height = 15 + Math.pow(Math.min(1.5, land), 1.1) * 780 + smoothstep(0.42, 0.8, lift) * 900 * coast;
+
+				/* The ranges: sharp crests and their spurs, where the land is lifted and where plates close. */
+				risen = ranges.At(p[0] * 14, p[1] * 14, p[2] * 14);
+				height += Math.pow(risen, 2.6) * relief * 0.55 * chains;
+				height += Math.max(0, tectonic.Push) * meet * relief * 0.35 * (0.4 + ridged * 0.6);
 				height -= Math.max(0, -tectonic.Push) * meet * 900;
 				height += painted(p, 'mountains', function (stroke) {
 					var width = Math.max(1, Number(stroke.Width) || 150) / radius;
@@ -309,8 +388,30 @@ Elemenx.Service('ScenePlanet', {
 					return near < width * 4 ? (1 - Math.min(1, near / (width * 4))) * 0.85 : 0;
 				});
 
-				/* Finer than Detail: hills that never take the land under the sea. */
-				height = Math.max(1, height + (fine.At(p[0] * radius / detail * 0.5, p[1] * radius / detail * 0.5, p[2] * radius / detail * 0.5) - 0.5) * Math.min(height, 120));
+				/*
+				 * Finer than the ranges: hills of tens of kilometres down to one, and the grain of the ground down to tens of
+				 * metres, as rough as the land is high and in its chains; none finer than is asked (finest, km: a globe needs none).
+				 */
+				/* Some lowlands hilly (old worn ranges), some plains flat, by a field of their own of hundreds of kilometres. */
+				var hilly = smoothstep(0.38, 0.72, uplift.At(p[0] * 7 + 31, p[1] * 7, p[2] * 7));
+
+				rough = Math.max(0.06 + hilly * 0.5, Math.min(1, height / 3200 + chains * 0.5));
+
+				if (small < 20) {
+					var wide = radius / 40;
+
+					height += (hills.At(p[0] * wide, p[1] * wide, p[2] * wide) - 0.5) * 2 * (40 + 700 * rough) * coast;
+				}
+
+				if (small < 1) {
+					var close = radius / 1.2;
+					var rugged = Math.max(0, Math.min(1, (height - 600) / 2400));
+
+					height += (grain.At(p[0] * close, p[1] * close, p[2] * close) - 0.5) * 2 * (6 + 220 * rough) * coast;
+					height += (crags.At(p[0] * close * 0.6, p[1] * close * 0.6, p[2] * close * 0.6) - 0.45) * rugged * (180 + height * 0.12);
+				}
+
+				height = Math.max(1, carved(p, height));
 			}
 			else {
 				height = -(120 + Math.pow(Math.min(1.5, -land), 0.7) * depth * 0.8);
@@ -319,7 +420,92 @@ Elemenx.Service('ScenePlanet', {
 				height = Math.min(-1, height);
 			}
 
-			return {Height: height, Tectonic: tectonic, Land: land};
+			return {Height: baked(p, height), Tectonic: tectonic, Land: land};
+		}
+
+		/*
+		 * The valley of a river near a point: the ground comes down toward its bed as it nears it (wider the more it drains: a
+		 * valley of 0.6 km times its flow to 0.4), the bed going down to the sea along it.
+		 */
+		function carved (p, height) {
+			var found = buckets[self.CellAt(1, Math.PI / 2 / 48, p).ID];
+			var best = null;
+			var made = height;
+
+			if (!found)
+				return height;
+
+			found.forEach(function (segment) {
+				var a = segment.A;
+				var b = segment.B;
+				var ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+				var t = Math.max(0, Math.min(1, ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / Math.max(1e-18, dot(ab, ab))));
+				var q = [a[0] + ab[0] * t - p[0], a[1] + ab[1] * t - p[1], a[2] + ab[2] * t - p[2]];
+				var far = Math.sqrt(dot(q, q)) * radius;
+				if (!best || far < best.Far)
+					best = {Far: far, Flow: segment.FlowA + (segment.FlowB - segment.FlowA) * t, Level: segment.LevelA + (segment.LevelB - segment.LevelA) * t};
+			});
+
+			if (!best)
+				return height;
+
+			var valley = 0.6 * Math.pow(best.Flow, 0.4);
+			var bed = Math.max(2, Math.min(best.Level, height));
+
+			if (best.Far >= valley) return height;
+
+			/* The valley: the ground down toward the bed, gently at its sides, some of its hills kept on its floor (the river itself is of the sketch of a location). */
+			made = bed + (height - bed) * Math.max(0.12, smoothstep(0, valley, best.Far));
+
+			return made;
+		}
+
+		/* The height of a point of a baked location there, its own past the edge of it. */
+		function baked (p, height) {
+			var made = height;
+
+			bakes.forEach(function (bake) {
+				var near = dot(p, bake.Middle);
+				var scale;
+				var u;
+				var v;
+				var x;
+				var z;
+				var out;
+				var fx;
+				var fz;
+				var c;
+				var r;
+				var a;
+				var b;
+				var h;
+				var side = bake.Side;
+
+				if (near < bake.Reach) return;
+
+				scale = radius * 1000 / near;
+				u = dot(p, bake.East) * scale;
+				v = dot(p, bake.North) * scale;
+				x = u * bake.Cos + v * bake.Sin;
+				z = u * bake.Sin - v * bake.Cos;
+				out = Math.max(Math.abs(x), Math.abs(z));
+
+				if (out >= bake.Half) return;
+
+				fx = (x + bake.Half) / (bake.Half * 2) * (side - 1);
+				fz = (z + bake.Half) / (bake.Half * 2) * (side - 1);
+				c = Math.min(side - 2, Math.floor(fx));
+				r = Math.min(side - 2, Math.floor(fz));
+				fx -= c;
+				fz -= r;
+				a = bake.Heights[r * side + c] * (1 - fx) + bake.Heights[r * side + c + 1] * fx;
+				b = bake.Heights[(r + 1) * side + c] * (1 - fx) + bake.Heights[(r + 1) * side + c + 1] * fx;
+				h = a * (1 - fz) + b * fz;
+
+				made += (h - made) * Math.max(0, Math.min(1, (bake.Half - out) / bake.Edge));
+			});
+
+			return made;
 		}
 
 		/* The land of a point roughly, for what the winds bring: fewer octaves, its plate of its middle alone. */
@@ -338,9 +524,9 @@ Elemenx.Service('ScenePlanet', {
 			});
 		}
 
-		function sample (direction) {
+		function sample (direction, finest) {
 			var p = normalize(direction);
-			var raised = raise(p);
+			var raised = raise(p, finest);
 			var tectonic = raised.Tectonic;
 			var land = raised.Land;
 			var height = raised.Height;
@@ -412,11 +598,15 @@ Elemenx.Service('ScenePlanet', {
 			Lands: biomes || [],
 			Sample: sample,
 
-			Elevation: function (direction) {
-				return raise(normalize(direction)).Height;
+			/* finest: km, the finest that is asked (all by default): a globe of a few hundred texels a side asks for no hills. */
+			Elevation: function (direction, finest) {
+				return raise(normalize(direction), finest).Height;
 			},
 
 			Land: function (direction) {
+				if (bakes.length)
+					return raise(normalize(direction)).Height > 0;
+
 				return continent(normalize(direction), plate(normalize(direction))) > 0;
 			},
 
@@ -644,17 +834,329 @@ Elemenx.Service('ScenePlanet', {
 	},
 
 	/*
-	 * The cells of the locations of a planet: squares of the faces of a cube (SceneTerrainGenerator.Face), N to a side of
-	 * a face, laid out by equal angles so they are near alike; N of a radius (km) and a size of a cell (km). A cell {Face,
-	 * I, J, N, ID}. CellAt the cell of a direction; CellCenter and CellCorners its directions; CellNeighbours the four
-	 * across its sides, in the order +I, +J, -I, -J (over the edges of the faces too).
+	 * A face of the globe as a cube of texels (Renderer: a Cube, cube.Write): face 0 to 5 as cubeDirection has them, size texels
+	 * a side, rows from row on (rows of them, all by default), their first row the one of p.y = -1. RGBA bytes: the color of
+	 * the relief map (Color) and, in alpha, how it shines (the sea, 0.8). What the globe of a planet in space is drawn of,
+	 * the very lands its surface has.
 	 */
-	Cells: function (radius, size) {
-		return Math.max(1, Math.round(Math.PI / 2 * radius / Math.max(0.001, size)));
+	/*
+	 * The heights of the cells of a face (cube cells, N size to a side: CellPoint at their middles) for its drainage, rows
+	 * of them: {Data (Float32Array, metres, row by row of J), Face, Row, Rows}, of the planet with no river yet, no finer than
+	 * a cell.
+	 */
+	Heights: function (options, face, size, row, rows) {
+		var bare = Object.assign({}, options);
+		var planet;
+		var first = row || 0;
+		var count = Math.min(size - first, rows || size);
+		var data = new Float32Array(size * count);
+		var cell = {Face: face, I: 0, J: 0, N: size};
+		var i;
+		var j;
+
+		delete bare.Rivers;
+
+		planet = this.Planet(bare);
+
+		for (j = 0; j < count; j++) {
+			for (i = 0; i < size; i++) {
+				cell.I = i;
+				cell.J = first + j;
+				data[j * size + i] = planet.Elevation(this.CellPoint(cell, 0.5, 0.5), Math.PI / 2 * planet.Radius / size);
+			}
+		}
+
+		return {Data: data, Face: face, Row: first, Rows: count};
 	},
 
-	CellAt: function (radius, size, direction) {
-		var n = this.Cells(radius, size);
+	/*
+	 * The rivers of a planet of the heights of its cells (heights: 6 faces of size by size, as Heights makes them): the
+	 * land filled up from its sea (a priority flood: what is lower than all round it is filled to where it overflows, each
+	 * cell draining to the one it was reached from), the water of each cell gathered downstream, and the ways of what
+	 * drains Least cells (24) or more traced to the sea, smoothed: {Size, Rivers: [{Points (directions), Flow (cells), Level
+	 * (metres of the bed: never up downstream)}]}, the Rivers of Make.
+	 */
+	Drainage: function (heights, size, least) {
+		var self = this;
+		var n = size;
+		var total = 6 * n * n;
+		var fill = new Float32Array(total);
+		var into = new Int32Array(total);
+		var gathered = new Float32Array(total);
+		var order = new Int32Array(total);
+		var done = new Uint8Array(total);
+		var heap = [];
+		var count = 0;
+		var limit = least || 24;
+		var rivers = [];
+		var i;
+		var k;
+
+		function index (cell) {
+			return cell.Face * n * n + cell.J * n + cell.I;
+		}
+
+		function cellOf (at) {
+			var face = Math.floor(at / (n * n));
+			var rest = at - face * n * n;
+
+			return {Face: face, I: rest % n, J: Math.floor(rest / n), N: n};
+		}
+
+		/* The eight round a cell: the four of its sides (over the edges of the faces too) and the four of its corners. */
+		function around (at) {
+			var cell = cellOf(at);
+			var list = [];
+
+			[[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(function (step) {
+				var i2 = cell.I + step[0];
+				var j2 = cell.J + step[1];
+
+				if (i2 >= 0 && j2 >= 0 && i2 < n && j2 < n) list.push(cell.Face * n * n + j2 * n + i2);
+				else list.push(index(self.CellAt(1, Math.PI / 2 / n, self.CellPoint(cell, 0.5 + step[0], 0.5 + step[1]))));
+			});
+
+			return list;
+		}
+
+		function push (at, value) {
+			var place = heap.length;
+
+			heap.push([value, at]);
+
+			while (place > 0) {
+				var up = (place - 1) >> 1;
+				if (heap[up][0] <= heap[place][0]) break;
+
+				var kept = heap[up];
+
+				heap[up] = heap[place];
+				heap[place] = kept;
+				place = up;
+			}
+		}
+
+		function pop () {
+			var top = heap[0];
+			var last = heap.pop();
+			var place = 0;
+
+			if (heap.length) {
+				heap[0] = last;
+
+				for (;;) {
+					var left = place * 2 + 1;
+					var right = left + 1;
+					var least2 = place;
+					if (left < heap.length && heap[left][0] < heap[least2][0])
+						least2 = left;
+
+					if (right < heap.length && heap[right][0] < heap[least2][0])
+						least2 = right;
+
+					if (least2 === place) break;
+
+					var kept = heap[least2];
+
+					heap[least2] = heap[place];
+					heap[place] = kept;
+					place = least2;
+				}
+			}
+
+			return top;
+		}
+
+		/* The sea first: each cell of it a mouth. */
+		for (i = 0; i < total; i++) {
+			into[i] = -1;
+
+			if (heights[i] <= 0) {
+				fill[i] = heights[i];
+				done[i] = 1;
+
+				push(i, heights[i]);
+			}
+		}
+
+		while (heap.length) {
+			var top = pop();
+			var at = top[1];
+
+			order[count++] = at;
+
+			around(at).forEach(function (next) {
+				if (done[next]) return;
+
+				done[next] = 1;
+				fill[next] = Math.max(heights[next], fill[at] + 0.01);
+				into[next] = heights[at] <= 0 && fill[at] <= 0 ? -2 - at : at;
+
+				push(next, fill[next]);
+			});
+		}
+
+		/* The water: each cell its own, then all of it downstream, the highest first. */
+		for (k = count - 1; k >= 0; k--) {
+			var cell = order[k];
+			if (heights[cell] <= 0) continue;
+
+			gathered[cell] += 1;
+
+			if (into[cell] >= 0)
+				gathered[into[cell]] += gathered[cell];
+		}
+
+		/* The ways: from where each river begins (no river comes into it) down to the sea or to a river it joins. */
+		var fed = new Uint8Array(total);
+		var taken = new Uint8Array(total);
+
+		for (i = 0; i < total; i++) {
+			if (heights[i] > 0 && gathered[i] >= limit && into[i] >= 0)
+				fed[into[i]] = 1;
+		}
+
+		for (i = 0; i < total; i++) {
+			if (heights[i] <= 0 || gathered[i] < limit || fed[i]) continue;
+
+			var points = [];
+			var flows = [];
+			var levels = [];
+			var walk = i;
+
+			while (walk >= 0 && heights[walk] > 0) {
+				var point = self.CellPoint(cellOf(walk), 0.5, 0.5);
+
+				points.push(point);
+				flows.push(gathered[walk]);
+				levels.push(levels.length ? Math.min(levels[levels.length - 1], fill[walk]) : fill[walk]);
+
+				if (taken[walk]) break;
+
+				taken[walk] = 1;
+				walk = into[walk];
+			}
+
+			/* To the sea: its mouth on the coast, at level 0. */
+			if (walk < -1) {
+				points.push(self.CellPoint(cellOf(-2 - walk), 0.5, 0.5));
+				flows.push(flows[flows.length - 1]);
+				levels.push(0);
+			}
+
+			if (points.length > 1)
+				rivers.push(self.Smoothed(points, flows, levels));
+		}
+
+		return {Size: n, Rivers: rivers};
+	},
+
+	/* A way of a river smoothed off its grid (Chaikin, twice): its corners cut, its flow and level along it. */
+	Smoothed: function (points, flows, levels) {
+		var self = this;
+		var round;
+
+		for (round = 0; round < 2; round++) {
+			var p = [points[0]];
+			var f = [flows[0]];
+			var l = [levels[0]];
+			var k;
+
+			for (k = 0; k + 1 < points.length; k++) {
+				[0.25, 0.75].forEach(function (t) {
+					p.push(self.Unit([points[k][0] + (points[k + 1][0] - points[k][0]) * t, points[k][1] + (points[k + 1][1] - points[k][1]) * t, points[k][2] + (points[k + 1][2] - points[k][2]) * t]));
+					f.push(flows[k] + (flows[k + 1] - flows[k]) * t);
+					l.push(levels[k] + (levels[k + 1] - levels[k]) * t);
+				});
+			}
+
+			p.push(points[points.length - 1]);
+			f.push(flows[flows.length - 1]);
+			l.push(levels[levels.length - 1]);
+
+			points = p;
+			flows = f;
+			levels = l;
+		}
+
+		return {Points: points.map(function (point) {
+			return point.map(function (value) {
+				return Math.round(value * 1e7) / 1e7;
+			});
+		}), Flow: flows.map(Math.round), Level: levels.map(Math.round)};
+	},
+
+	/*
+	 * Rivers kept under a key (UseRivers), for a planet to name in place of carrying them (Rivers: the key): in the page and
+	 * in the workers that make grounds of planets (shared to them once).
+	 */
+	/* The rivers kept, one store for every use of the service (an object of its own, never made again). */
+	RiverSets: {},
+
+	UseRivers: function (key, rivers) {
+		var self = this;
+
+		this.RiverSets[key] = rivers;
+
+		['ScenePlanet', 'SceneTerrainGenerator', 'SceneSower', 'SceneRoads'].forEach(function (name) {
+			var service = name === 'ScenePlanet' ? self : self.$Service(name);
+			if (service && service.Work)
+				service.Work().Share('rivers:' + key, rivers);
+		});
+	},
+
+	RiversOf: function (key) {
+		var kept = this.RiverSets ? this.RiverSets[key] : null;
+
+		return kept || (this.$Shared ? this.$Shared('rivers:' + key) : null) || [];
+	},
+
+	Face: function (options, face, size, row, rows) {
+		var planet = this.Planet(options);
+		var first = row || 0;
+		var count = Math.min(size - first, rows || size);
+		var data = new Uint8ClampedArray(size * count * 4);
+		var x;
+		var y;
+
+		for (y = 0; y < count; y++) {
+			for (x = 0; x < size; x++) {
+				var a = -1 + (x + 0.5) * 2 / size;
+				var b = -1 + (first + y + 0.5) * 2 / size;
+				var way = face === 0 ? [1, -b, -a] : face === 1 ? [-1, -b, a] : face === 2 ? [a, 1, b] : face === 3 ? [a, -1, -b] : face === 4 ? [a, -b, 1] : [-a, -b, -1];
+				var length = Math.sqrt(way[0] * way[0] + way[1] * way[1] + way[2] * way[2]);
+				var sample = planet.Sample([way[0] / length, way[1] / length, way[2] / length], Math.PI / 2 * planet.Radius / size);
+				var color = this.Color(planet, sample, 'relief', 1);
+				var at = (y * size + x) * 4;
+
+				data[at] = color[0] * 255;
+				data[at + 1] = color[1] * 255;
+				data[at + 2] = color[2] * 255;
+				data[at + 3] = sample.Land || sample.Celsius < -12 ? 10 : 204;
+			}
+		}
+
+		return {Data: data, Face: face, Row: first, Rows: count};
+	},
+
+	/*
+	 * The cells of the locations of a planet, of two grids (kind): cube (the usual), squares of the faces of a cube
+	 * (SceneTerrainGenerator.Face), N to a side of a face, laid out by equal angles so they are near alike; hex, the cells
+	 * round the points of an icosahedron cut into triangles N to a side, hexagons but for 12 pentagons at its corners. N of
+	 * a radius (km) and a size of a cell (km, the step from one middle to the next). A cell {Face, I, J, N, ID, Kind}
+	 * (a hex cell: one of the triangles of the icosahedron it is on, I and J its point there). CellAt the cell of a
+	 * direction; CellOf the cell of its ID; CellCenter and CellCorners its directions; CellNeighbours those across its
+	 * sides: of a cube cell four in the order +I, +J, -I, -J (over the edges of the faces too), of a hex cell six (five)
+	 * round it, its side s between its corners s - 1 and s.
+	 */
+	Cells: function (radius, size, kind) {
+		var span = kind === 'hex' ? Math.atan(2) * 1.075 : Math.PI / 2;
+
+		return Math.max(1, Math.round(span * radius / Math.max(0.001, size)));
+	},
+
+	CellAt: function (radius, size, direction, kind) {
+		var n = this.Cells(radius, size, kind);
 		var x = direction[0];
 		var y = direction[1];
 		var z = direction[2];
@@ -666,6 +1168,9 @@ Elemenx.Service('ScenePlanet', {
 		var v;
 		var i;
 		var j;
+
+		if (kind === 'hex')
+			return this.HexAt(n, direction);
 
 		if (ax >= ay && ax >= az) {
 			face = x > 0 ? 0 : 1;
@@ -687,10 +1192,73 @@ Elemenx.Service('ScenePlanet', {
 		i = Math.max(0, Math.min(n - 1, Math.floor((Math.atan(u) * 4 / Math.PI + 1) / 2 * n)));
 		j = Math.max(0, Math.min(n - 1, Math.floor((Math.atan(v) * 4 / Math.PI + 1) / 2 * n)));
 
-		return {Face: face, I: i, J: j, N: n, ID: face + ':' + i + ':' + j + ':' + n};
+		return {Face: face, I: i, J: j, N: n, ID: face + ':' + i + ':' + j + ':' + n, Kind: 'cube'};
 	},
 
-	/* The direction of a point of a cell: a and b of 0 to 1 across it. */
+	CellOf: function (id) {
+		var text = String(id);
+		var parts;
+		var ico;
+		var faces;
+		var found;
+		var a;
+		var b;
+
+		if (text.charAt(0) !== 'h') {
+			parts = text.split(':').map(Number);
+
+			return {Face: parts[0], I: parts[1], J: parts[2], N: parts[3], ID: text, Kind: 'cube'};
+		}
+
+		/* h<N>:v:<corner>, h<N>:e:<a>:<b>:<along b>, h<N>:f:<face>:<i>:<j>. */
+		parts = text.slice(1).split(':');
+		ico = this.Icosahedron();
+		faces = ico.Faces;
+
+		function on (corner) {
+			return faces.filter(function (each) {
+				return each.indexOf(corner) !== -1;
+			})[0];
+		}
+
+		function cell (face, weights) {
+			var n = Number(parts[0]);
+			var at = {};
+
+			at[face[0]] = 0;
+			at[face[1]] = 0;
+			at[face[2]] = 0;
+
+			Object.keys(weights).forEach(function (corner) {
+				at[corner] = weights[corner];
+			});
+
+			return {Face: faces.indexOf(face), I: at[face[1]], J: at[face[2]], N: n, ID: text, Kind: 'hex'};
+		}
+
+		if (parts[1] === 'v') {
+			found = {};
+			found[parts[2]] = Number(parts[0]);
+
+			return cell(on(Number(parts[2])), found);
+		}
+
+		if (parts[1] === 'e') {
+			a = Number(parts[2]);
+			b = Number(parts[3]);
+			found = {};
+			found[a] = Number(parts[0]) - Number(parts[4]);
+			found[b] = Number(parts[4]);
+
+			return cell(faces.filter(function (each) {
+				return each.indexOf(a) !== -1 && each.indexOf(b) !== -1;
+			})[0], found);
+		}
+
+		return {Face: Number(parts[2]), I: Number(parts[3]), J: Number(parts[4]), N: Number(parts[0]), ID: text, Kind: 'hex'};
+	},
+
+	/* The direction of a point of a cube cell: a and b of 0 to 1 across it. */
 	CellPoint: function (cell, a, b) {
 		var face = this.$Service('SceneTerrainGenerator').Face(cell.Face, Math.tan((-1 + (cell.I + a) * 2 / cell.N) * Math.PI / 4), Math.tan((-1 + (cell.J + b) * 2 / cell.N) * Math.PI / 4));
 		var length = Math.sqrt(face[0] * face[0] + face[1] * face[1] + face[2] * face[2]);
@@ -699,40 +1267,116 @@ Elemenx.Service('ScenePlanet', {
 	},
 
 	CellCenter: function (cell) {
+		if (cell.Kind === 'hex')
+			return this.HexPoint(cell.N, cell.Face, cell.I, cell.J);
+
 		return this.CellPoint(cell, 0.5, 0.5);
 	},
 
 	CellCorners: function (cell) {
-		return [this.CellPoint(cell, 0, 0), this.CellPoint(cell, 1, 0), this.CellPoint(cell, 1, 1), this.CellPoint(cell, 0, 1)];
+		var self = this;
+		var center;
+		var round;
+
+		if (cell.Kind !== 'hex')
+			return [this.CellPoint(cell, 0, 0), this.CellPoint(cell, 1, 0), this.CellPoint(cell, 1, 1), this.CellPoint(cell, 0, 1)];
+
+		/* Each corner the middle of a triangle of it and two neighbours one after the other round it. */
+		center = this.CellCenter(cell);
+		round = this.CellNeighbours(0, 0, cell).map(function (other) {
+			return self.CellCenter(other);
+		});
+
+		return round.map(function (point, index) {
+			var next = round[(index + 1) % round.length];
+
+			return self.Unit([center[0] + point[0] + next[0], center[1] + point[1] + next[1], center[2] + point[2] + next[2]]);
+		});
 	},
 
 	CellNeighbours: function (radius, size, cell) {
 		var self = this;
+		var center;
+		var frame;
+		var found = {};
+		var list = [];
 
-		return [[1.02, 0.5], [0.5, 1.02], [-0.02, 0.5], [0.5, -0.02]].map(function (at) {
-			return self.CellAt(radius, size, self.CellPoint(cell, at[0], at[1]));
+		if (cell.Kind !== 'hex') {
+			return [[1.02, 0.5], [0.5, 1.02], [-0.02, 0.5], [0.5, -0.02]].map(function (at) {
+				return self.CellAt(radius, size, self.CellPoint(cell, at[0], at[1]));
+			});
+		}
+
+		/*
+		 * The cells round it a little nearer than the step of the lattice, all the way round (six; five at a corner of the
+		 * icosahedron): no cell further than its neighbours comes that near.
+		 */
+		center = this.CellCenter(cell);
+		frame = this.Tangent(center);
+
+		var step = Math.atan(2) / cell.N * 0.85;
+		var k;
+
+		for (k = 0; k < 36; k++) {
+			var way = k / 36 * Math.PI * 2;
+			var probe = [0, 1, 2].map(function (axis) {
+				return center[axis] * Math.cos(step) + (frame.East[axis] * Math.cos(way) + frame.North[axis] * Math.sin(way)) * Math.sin(step);
+			});
+			var other = self.HexAt(cell.N, probe);
+
+			if (other.ID !== cell.ID && !found[other.ID]) {
+				found[other.ID] = true;
+
+				list.push(other);
+			}
+		}
+
+		/* Round it the other way to the clock, seen from over it, from the first by the order of their IDs. */
+		list.forEach(function (other) {
+			var point = self.CellCenter(other);
+
+			other.Angle = Math.atan2(self.Dot(point, frame.North), self.Dot(point, frame.East));
+		});
+		list.sort(function (a, b) {
+			return a.Angle - b.Angle;
+		});
+
+		var first = 0;
+
+		list.forEach(function (other, index) {
+			if (other.ID < list[first].ID)
+				first = index;
+		});
+
+		return list.slice(first).concat(list.slice(0, first)).map(function (other) {
+			delete other.Angle;
+
+			return other;
 		});
 	},
 
 	/*
-	 * A cell as a location: its place on the planet {Latitude, Longitude, Turn (its axis X along the side +I of the cell),
-	 * Size (metres, the mean of its sides), Points ([x, z] of its corners on the ground of the location, metres: its
-	 * outline, a little off a square)}, for the step Planet of a World (SceneWorld) and the Shape of a location.
+	 * A cell as a location: its place on the planet {Latitude, Longitude, Turn (its axis X along the side +I of a cube
+	 * cell, to the first neighbour of a hex cell), Size (metres, the mean of its sides of a cube cell, from side to side
+	 * of a hex cell), Points ([x, z] of its corners on the ground of the location, metres: its outline, a little off a
+	 * square or a hexagon), Sides ([x0, z0, x1, z1] of each side in the order of CellNeighbours, all running one way round
+	 * it, so a side and the same side of the neighbour run the other way)}, for the step Planet of a World (SceneWorld)
+	 * and the Shape of a location.
 	 */
 	CellPlace: function (radius, cell) {
+		var self = this;
 		var center = this.CellCenter(cell);
 		var corners = this.CellCorners(cell);
 		var place = this.LatLon(center);
 		var metres = radius * 1000;
-		var east = Math.abs(center[1]) > 0.9999 ? [0, 0, -1] : (function () {
-			var length = Math.sqrt(center[2] * center[2] + center[0] * center[0]);
-
-			return [center[2] / length, 0, -center[0] / length];
-		})();
-		var north = [center[1] * east[2] - center[2] * east[1], center[2] * east[0] - center[0] * east[2], center[0] * east[1] - center[1] * east[0]];
-		var along = this.CellPoint(cell, 0.6, 0.5);
+		var frame = this.Tangent(center);
+		var east = frame.East;
+		var north = frame.North;
+		var along = cell.Kind === 'hex' ? this.CellCenter(this.CellNeighbours(0, 0, cell)[0]) : this.CellPoint(cell, 0.6, 0.5);
+		var hex = cell.Kind === 'hex';
 		var sides = 0;
 		var turn;
+		var ends;
 
 		function dot (a, b) {
 			return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -750,12 +1394,237 @@ Elemenx.Service('ScenePlanet', {
 		});
 
 		points.forEach(function (point, index) {
-			var next = points[(index + 1) % 4];
+			var next = points[(index + 1) % points.length];
 
 			sides += Math.sqrt((next[0] - point[0]) * (next[0] - point[0]) + (next[1] - point[1]) * (next[1] - point[1]));
 		});
 
-		return {Latitude: place[0], Longitude: place[1], Turn: turn * 180 / Math.PI, Size: sides / 4, Points: points};
+		/* The corners of each side: of a cube cell +I from corner 1 to 2, +J 2 to 3, -I 3 to 0, -J 0 to 1; of a hex cell s - 1 to s. */
+		ends = points.map(function (point, side) {
+			return hex ? [(side + points.length - 1) % points.length, side] : [(side + 1) % 4, (side + 2) % 4];
+		});
+
+		return {Latitude: place[0], Longitude: place[1], Turn: turn * 180 / Math.PI, Size: hex ? self.Across(points) : sides / 4, Points: points, Sides: ends.map(function (pair) {
+			var a = corners[pair[0]];
+			var b = corners[pair[1]];
+			var cross = self.Cross([a[0] - center[0], a[1] - center[1], a[2] - center[2]], [b[0] - center[0], b[1] - center[1], b[2] - center[2]]);
+			/* One way round the middle, seen from over it. */
+			var wound = dot(cross, center) < 0;
+			if (wound)
+				pair = [pair[1], pair[0]];
+
+			return [points[pair[0]][0], points[pair[0]][1], points[pair[1]][0], points[pair[1]][1]];
+		})};
+	},
+
+	/* The width of an outline from side to side: twice the mean distance of the middles of its sides from its middle. */
+	Across: function (points) {
+		var sum = 0;
+
+		points.forEach(function (point, index) {
+			var next = points[(index + 1) % points.length];
+
+			sum += Math.sqrt((point[0] + next[0]) * (point[0] + next[0]) + (point[1] + next[1]) * (point[1] + next[1])) / 2;
+		});
+
+		return sum / points.length * 2;
+	},
+
+	Unit: function (p) {
+		var length = Math.sqrt(p[0] * p[0] + p[1] * p[1] + p[2] * p[2]) || 1;
+
+		return [p[0] / length, p[1] / length, p[2] / length];
+	},
+
+	Dot: function (a, b) {
+		return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+	},
+
+	/* East and north at a direction (at a pole east is -Z). */
+	Tangent: function (center) {
+		var length = Math.sqrt(center[2] * center[2] + center[0] * center[0]);
+		var east = Math.abs(center[1]) > 0.9999 ? [0, 0, -1] : [center[2] / length, 0, -center[0] / length];
+
+		return {East: east, North: [center[1] * east[2] - center[2] * east[1], center[2] * east[0] - center[0] * east[2], center[0] * east[1] - center[1] * east[0]]};
+	},
+
+	/* The 12 corners and the 20 triangles of an icosahedron (each round the other way to the clock seen from out of it), made once. */
+	Icosahedron: function () {
+		var self = this;
+		var t = (1 + Math.sqrt(5)) / 2;
+		var corners;
+		var faces = [];
+		var a;
+		var b;
+		var c;
+
+		if (this.Ico)
+			return this.Ico;
+
+		corners = [[-1, t, 0], [1, t, 0], [-1, -t, 0], [1, -t, 0], [0, -1, t], [0, 1, t], [0, -1, -t], [0, 1, -t], [t, 0, -1], [t, 0, 1], [-t, 0, -1], [-t, 0, 1]].map(function (p) {
+			return self.Unit(p);
+		});
+
+		/* Three corners each two an edge apart: the edge is the least distance, 1.05 in units of the radius. */
+		function near (p, q) {
+			return Math.abs(Math.sqrt((p[0] - q[0]) * (p[0] - q[0]) + (p[1] - q[1]) * (p[1] - q[1]) + (p[2] - q[2]) * (p[2] - q[2])) - 1.0515) < 0.01;
+		}
+
+		for (a = 0; a < 12; a++) {
+			for (b = a + 1; b < 12; b++) {
+				for (c = b + 1; c < 12; c++) {
+					if (near(corners[a], corners[b]) && near(corners[b], corners[c]) && near(corners[a], corners[c]))
+						faces.push(this.Wound(corners, a, b, c));
+				}
+			}
+		}
+
+		this.Ico = {Corners: corners, Faces: faces, Middles: faces.map(function (face) {
+			return self.Unit([corners[face[0]][0] + corners[face[1]][0] + corners[face[2]][0], corners[face[0]][1] + corners[face[1]][1] + corners[face[2]][1], corners[face[0]][2] + corners[face[1]][2] + corners[face[2]][2]]);
+		})};
+
+		return this.Ico;
+	},
+
+	/* A triangle round the other way to the clock seen from out of it. */
+	Wound: function (corners, a, b, c) {
+		var p = corners[a];
+		var q = corners[b];
+		var r = corners[c];
+		var normal = [(q[1] - p[1]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[1] - p[1]), (q[2] - p[2]) * (r[0] - p[0]) - (q[0] - p[0]) * (r[2] - p[2]), (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])];
+
+		return this.Dot(normal, p) > 0 ? [a, b, c] : [a, c, b];
+	},
+
+	/*
+	 * The direction of a point I, J of the lattice of a triangle of the icosahedron (past its edges too). By equal angles,
+	 * so the cells are near alike: along its first edge to a point Q (I of N - J), then from Q to its third corner (J of N).
+	 */
+	HexPoint: function (n, face, i, j) {
+		var ico = this.Icosahedron();
+		var corners = ico.Faces[face].map(function (index) {
+			return ico.Corners[index];
+		});
+
+		if (n - j === 0)
+			return corners[2].slice();
+
+		return this.Slerp(this.Slerp(corners[0], corners[1], i / (n - j)), corners[2], j / n);
+	},
+
+	/* The way from one direction to another by the angle, t of 0 to 1 (and past them). */
+	Slerp: function (a, b, t) {
+		var cos = Math.max(-1, Math.min(1, this.Dot(a, b)));
+		var angle = Math.acos(cos);
+		var w = this.Unit([b[0] - a[0] * cos, b[1] - a[1] * cos, b[2] - a[2] * cos]);
+		var c = Math.cos(angle * t);
+		var s = Math.sin(angle * t);
+
+		if (angle < 1e-12) return a.slice();
+
+		return [a[0] * c + w[0] * s, a[1] * c + w[1] * s, a[2] * c + w[2] * s];
+	},
+
+	/* The angle from a to b, under 0 past a away from c (on the great circle of a and c). */
+	Along: function (a, b, c) {
+		var normal = this.Unit(this.Cross(a, c));
+
+		return Math.atan2(this.Dot(this.Cross(a, b), normal), this.Dot(a, b));
+	},
+
+	Cross: function (a, b) {
+		return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+	},
+
+	/* The hex cell of a direction: the point of the lattice nearest to it on the triangle it is on; its ID the same of any triangle. */
+	HexAt: function (n, direction) {
+		var self = this;
+		var ico = this.Icosahedron();
+		var p = this.Unit(direction);
+		var face = 0;
+		var best = -2;
+		var corners;
+		var q;
+		var fi;
+		var fj;
+		var pick = null;
+
+		ico.Middles.forEach(function (middle, index) {
+			var near = self.Dot(middle, p);
+
+			if (near > best) {
+				best = near;
+				face = index;
+			}
+		});
+
+		corners = ico.Faces[face].map(function (index) {
+			return ico.Corners[index];
+		});
+
+		/* The way back of HexPoint: Q where the great circle of the third corner and the point meets the first edge. */
+		if (this.Dot(p, corners[2]) > 1 - 1e-13) {
+			fi = 0;
+			fj = n;
+		}
+		else {
+			q = this.Unit(this.Cross(this.Cross(corners[2], p), this.Cross(corners[0], corners[1])));
+
+			if (this.Dot(q, [corners[0][0] + corners[1][0], corners[0][1] + corners[1][1], corners[0][2] + corners[1][2]]) < 0)
+				q = [-q[0], -q[1], -q[2]];
+
+			fj = this.Along(q, p, corners[2]) / Math.acos(Math.max(-1, Math.min(1, this.Dot(q, corners[2])))) * n;
+			fi = this.Along(corners[0], q, corners[1]) / Math.acos(this.Dot(corners[0], corners[1])) * (n - fj);
+		}
+
+		/* The nearest of the points of the lattice round it, by the angle. */
+		[-1, 0, 1, 2].forEach(function (di) {
+			[-1, 0, 1, 2].forEach(function (dj) {
+				var i = Math.floor(fi) + di;
+				var j = Math.floor(fj) + dj;
+				var near;
+
+				if (i < 0 || j < 0 || i + j > n) return;
+
+				near = self.Dot(self.HexPoint(n, face, i, j), p);
+
+				if (!pick || near > pick.Near)
+					pick = {I: i, J: j, Near: near};
+			});
+		});
+
+		return this.HexCell(n, face, pick.I, pick.J);
+	},
+
+	/* A hex cell of a point of the lattice of a triangle, its ID that of the corner or the edge it is on, if it is. */
+	HexCell: function (n, face, i, j) {
+		var ico = this.Icosahedron();
+		var corners = ico.Faces[face];
+		var weights = [n - i - j, i, j];
+		var on = [];
+		var id;
+
+		weights.forEach(function (weight, index) {
+			if (weight > 0)
+				on.push(index);
+		});
+
+		/* On an edge: its two corners the lesser first, and the weight of the other. */
+		var a = corners[on[0]];
+		var b = corners[on[1]];
+		var wb = weights[on[1]];
+
+		if (on.length === 2 && a > b) {
+			wb = weights[on[0]];
+			b = a;
+			a = corners[on[1]];
+		}
+
+		if (on.length === 1) id = 'h' + n + ':v:' + corners[on[0]];
+		else if (on.length === 2) id = 'h' + n + ':e:' + a + ':' + b + ':' + wb;
+		else id = 'h' + n + ':f:' + face + ':' + i + ':' + j;
+
+		return {Face: face, I: i, J: j, N: n, ID: id, Kind: 'hex'};
 	},
 
 	/*
@@ -829,7 +1698,7 @@ Elemenx.Service('ScenePlanet', {
 
 	/* The workers that paint globes. */
 	Work: function () {
-		return this.$Service('Workers').Pool('ScenePlanet', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], SceneTerrainGenerator: ['Smoothstep', 'Biomes', 'BiomeOf'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Make', 'Project', 'Unproject', 'Planet', 'Color', 'Picture', 'Sphere']});
+		return this.$Service('Workers').Pool('ScenePlanet', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], SceneTerrainGenerator: ['Smoothstep', 'Biomes', 'BiomeOf', 'Face'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Project', 'Unproject', 'Planet', 'Color', 'Picture', 'Face', 'Sphere', 'Heights', 'Drainage', 'Smoothed', 'RiversOf', 'Unit', 'Dot', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'HexAt', 'HexPoint', 'HexCell', 'Icosahedron', 'Wound', 'Slerp', 'Along', 'Cross']});
 	},
 
 	/* What a worker of the planet carries: see Workers. */
