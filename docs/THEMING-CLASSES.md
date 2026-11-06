@@ -1562,6 +1562,20 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-topology-node`: `far`, `selected`, `status-error`, `status-off`, `status-ok`, `status-warning`
 - `elemenx-topology-status`
 - `elemenx-topology-title`
+- `elemenx-topology-view`
+
+## TopologyIso
+
+- `elemenx-topology-iso`
+- `elemenx-topology-iso-canvas`
+- `elemenx-topology-iso-count`
+- `elemenx-topology-iso-kind`
+- `elemenx-topology-iso-legend`
+- `elemenx-topology-iso-legend-item`: `active`
+- `elemenx-topology-iso-minimap`
+- `elemenx-topology-iso-note`
+- `elemenx-topology-iso-notes`
+- `elemenx-topology-iso-swatch`
 
 ## PlanetEditor
 
@@ -1958,12 +1972,21 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-blueprint-board`
 - `elemenx-blueprint-body`
 - `elemenx-blueprint-canvas`
+- `elemenx-blueprint-comment`
+- `elemenx-blueprint-comment-editor`
+- `elemenx-blueprint-comment-mark`
 - `elemenx-blueprint-filter`
 - `elemenx-blueprint-flows`: `out`
+- `elemenx-blueprint-frame`: `selected`
+- `elemenx-blueprint-frame-head`
+- `elemenx-blueprint-frame-rename`
+- `elemenx-blueprint-frame-title`
 - `elemenx-blueprint-group-name`
 - `elemenx-blueprint-head`
 - `elemenx-blueprint-inputs`
+- `elemenx-blueprint-lasso`
 - `elemenx-blueprint-link`: `draft`, `off`, `selected`
+- `elemenx-blueprint-link-comment`
 - `elemenx-blueprint-links`
 - `elemenx-blueprint-outputs`
 - `elemenx-blueprint-palette`

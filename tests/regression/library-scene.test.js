@@ -8493,18 +8493,52 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			});
 		});
 
-		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready">' +
+		var create = graphics.Create;
+		var instanced = [];
+
+		/*
+		 * The copies drawn of each shape, caught as the renderer of the scene is made: a bug of the test, it wrapped the meshes made
+		 * after it mounted, and under load the plate was drawn before that.
+		 */
+		graphics.Create = function () {
+			var made = create.apply(this, arguments);
+			var mesh = made.Mesh;
+
+			made.Mesh = function () {
+				var one = mesh.apply(this, arguments);
+				var instance = one.Instance;
+
+				one.Instance = function (data) {
+					if (data.aInstance2)
+						instanced.push([data.aInstance2.Data[3], data.aInstance3.Data[3]]);
+
+					return instance.apply(this, arguments);
+				};
+
+				return one;
+			};
+
+			return made;
+		};
+
+		var mounted;
+
+		try {
+			mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready">' +
 			'<SceneObject ID="land" Kind="ground" Size="100" Height="0.5" Water="0" Seed="flat" />' +
 			'<SceneObject ID="sun" Kind="sun" Elevation="35" />' +
 			'<SceneObject ID="plate" Kind="thing" Model="' + names.smooth + '" Size="1" X="0" Y="0" Z="1.2" Wet="1" Drops="0" />' +
 		'</Scene>');
+		}
+		finally {
+			graphics.Create = create;
+		}
+
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var engine = scene.Engine();
 		var renderer = engine.Renderer;
 		var gl = renderer.GL;
-		var mesh = renderer.Mesh;
-		var instanced = [];
 		var now = performance.now() + 100;
 
 		inner.Loop.Stop();
@@ -8533,84 +8567,65 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			return sum;
 		}
 
-		renderer.Mesh = function () {
-			var one = mesh.apply(this, arguments);
-			var instance = one.Instance;
+		await waitFor(function () {
+			inner.Rest = 0;
 
-			one.Instance = function (data) {
-				if (data.aInstance2)
-					instanced.push([data.aInstance2.Data[3], data.aInstance3.Data[3]]);
+			engine.Frame(now += 33);
 
-				return instance.apply(this, arguments);
-			};
+			return renderer.Progress().Needed === 0;
+		}, 30000);
 
-			return one;
-		};
+		scene.FocusOn('plate');
 
-		try {
-			await waitFor(function () {
-				inner.Rest = 0;
+		inner.Pitch = 1.2;
+		inner.Wanted = inner.Distance = 2.2;
 
-				engine.Frame(now += 33);
+		/* The view eases to the plate and the ground comes from workers: the measures are of a picture that no longer moves. */
+		await waitFor(function () {
+			var target = inner.Target.slice();
 
-				return renderer.Progress().Needed === 0;
-			}, 30000);
+			inner.Rest = 0;
 
-			scene.FocusOn('plate');
+			engine.Frame(now += 33);
 
-			inner.Pitch = 1.2;
-			inner.Wanted = inner.Distance = 2.2;
+			return Elemenx.Service('SceneTerrainGenerator').Work().Waiting() === 0 && Math.hypot(inner.Target[0] - target[0], inner.Target[1] - target[1], inner.Target[2] - target[2]) < 1e-6 && Math.abs(inner.Distance - inner.Wanted) < 1e-4;
+		}, 30000);
 
-			/* The view eases to the plate and the ground comes from workers: the measures are of a picture that no longer moves. */
-			await waitFor(function () {
-				var target = inner.Target.slice();
+		/* Declared, as a template writes them: regression, read as wet and drops they were left out. */
+		expect(inner.Objects.plate.Values.Wet).toBe(1);
+		expect(inner.Objects.plate.Values.Drops).toBe(0);
 
-				inner.Rest = 0;
+		var none = busy();
 
-				engine.Frame(now += 33);
+		scene.Change('plate', {Drops: 1});
 
-				return Elemenx.Service('SceneTerrainGenerator').Work().Waiting() === 0 && Math.hypot(inner.Target[0] - target[0], inner.Target[1] - target[1], inner.Target[2] - target[2]) < 1e-6 && Math.abs(inner.Distance - inner.Wanted) < 1e-4;
-			}, 30000);
+		var beaded = busy();
 
-			/* Declared, as a template writes them: regression, read as wet and drops they were left out. */
-			expect(inner.Objects.plate.Values.Wet).toBe(1);
-			expect(inner.Objects.plate.Values.Drops).toBe(0);
+		/* Its own wet and drops go with each copy: 1 + them, 0 for the weather's. */
+		expect(instanced.some(function (pair) {
+			return pair[0] === 2 && pair[1] === 2;
+		})).toBe(true);
 
-			var none = busy();
+		expect(beaded).toBeGreaterThan(none * 1.6);
 
-			scene.Change('plate', {Drops: 1});
+		/* No wet of its own and a dry day: nothing beads. */
+		scene.Change('plate', {Wet: ''});
 
-			var beaded = busy();
+		var dry = busy();
 
-			/* Its own wet and drops go with each copy: 1 + them, 0 for the weather's. */
-			expect(instanced.some(function (pair) {
-				return pair[0] === 2 && pair[1] === 2;
-			})).toBe(true);
+		expect(dry).toBeLessThan(beaded / 1.6);
+		expect(instanced.some(function (pair) {
+			return pair[0] === 0 && pair[1] === 2;
+		})).toBe(true);
 
-			expect(beaded).toBeGreaterThan(none * 1.6);
+		/* What is rough takes the water in. */
+		scene.Change('plate', {Model: names.rough, Wet: 1, Drops: 1});
 
-			/* No wet of its own and a dry day: nothing beads. */
-			scene.Change('plate', {Wet: ''});
+		var felt = busy();
 
-			var dry = busy();
+		scene.Change('plate', {Drops: 0});
 
-			expect(dry).toBeLessThan(beaded / 1.6);
-			expect(instanced.some(function (pair) {
-				return pair[0] === 0 && pair[1] === 2;
-			})).toBe(true);
-
-			/* What is rough takes the water in. */
-			scene.Change('plate', {Model: names.rough, Wet: 1, Drops: 1});
-
-			var felt = busy();
-
-			scene.Change('plate', {Drops: 0});
-
-			expect(felt).toBeLessThan(busy() * 1.3);
-		}
-		finally {
-			renderer.Mesh = mesh;
-		}
+		expect(felt).toBeLessThan(busy() * 1.3);
 	});
 
 	it('blurs what is out of focus by its Bokeh: the hero in focus, or the distance given; nothing of it with none', async function () {

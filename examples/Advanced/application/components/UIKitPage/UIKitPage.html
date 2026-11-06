@@ -2043,10 +2043,22 @@
 				<div class="ui-kit-row">
 					<Select [options]="TopologyGraphs" [value]="TopologyGraph" (change)="TopologyPicked" />
 					<Select [options]="TopologyLayouts" [value]="TopologyLayout" (change)="TopologyArranged" />
-					<span>{{TopologyNote}}</span>
+					<Select [options]="TopologyViews" [value]="TopologyView" (change)="TopologyView = $event && $event.detail !== undefined ? $event.detail : $event" />
+					<Button Label="Turn" Icon="rotate-cw" Variant="ghost" [disabled]="TopologyView !== 'isometric'" (click)="TopologyTurn" />
+					<Toggle Label="Live load" [checked]="TopologyLive" (change)="TopologyLiveToggled" />
 				</div>
+				<div class="ui-kit-row">
+					<Input Icon="search" Placeholder="Find a node" Clearable="true" [value]="TopologySearch" (input)="TopologyFound" />
+					<Button Label="Show it" Icon="focus" Variant="ghost" [disabled]="!TopologySearch" (click)="TopologyShowFound" />
+					<Toggle Label="Legend" [checked]="TopologyLegend" (change)="TopologySwitch('TopologyLegend', $event)" />
+					<Toggle Label="Minimap" [checked]="TopologyMinimap" (change)="TopologySwitch('TopologyMinimap', $event)" />
+					<Toggle Label="Read only" [checked]="TopologyReadOnly" (change)="TopologySwitch('TopologyReadOnly', $event)" />
+					<Button Label="Keep the view" Variant="ghost" (click)="TopologyKeep" />
+					<Button Label="Back to it" Variant="ghost" [disabled]="!TopologyKept" (click)="TopologyBack" />
+				</div>
+				<p class="elemenx-text small muted">Shift with a press on a second node lights the way to it; the Core Switch may not be dragged (EditCheck). {{TopologyNote}}</p>
 				<div class="ui-kit-topology">
-					<Topology [nodes]="TopologyOf(TopologyGraph).Nodes" [links]="TopologyOf(TopologyGraph).Links" [layout]="TopologyLayout" [direction]="TopologyGraph === 'modules' ? 'right' : 'down'" [directed]="TopologyGraph !== 'network'" (select)="TopologyChosen" (open)="TopologyOpened" />
+					<Topology #Topology [view]="TopologyView" [nodes]="TopologyOf(TopologyGraph).Nodes" [links]="TopologyOf(TopologyGraph).Links" [groups]="TopologyOf(TopologyGraph).Groups || []" [layout]="TopologyLayout" [direction]="TopologyGraph === 'modules' ? 'right' : 'down'" [directed]="TopologyGraph !== 'network'" (select)="TopologyChosen" (open)="TopologyOpened" (move)="TopologyMoved" (toggle)="TopologyToggled" [search]="TopologySearch" [legend]="TopologyLegend" [minimap]="TopologyMinimap" [readOnly]="TopologyReadOnly" [editCheck]="TopologyCheck" (path)="TopologyPathed" (denied)="TopologyDenied" />
 				</div>
 			</div>
 		</div>

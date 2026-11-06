@@ -15284,6 +15284,15 @@
 					"Description": "Shows the graph alone: blocks still move, nothing else changes."
 				},
 				{
+					"Name": "EditCheck",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A function (action, target): false refuses what the reader would do (add, remove, link, unlink, edit, move, group, ungroup, rename, comment, paste, parameter)."
+				},
+				{
 					"Name": "Errors",
 					"Type": "json",
 					"Default": null,
@@ -15291,6 +15300,19 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "What its owner found wrong as it used the graph: [{Block, Line, Message}] (a Scene tells them in its event shader), marked on the blocks."
+				},
+				{
+					"Name": "Comments",
+					"Type": "select",
+					"Default": "caption",
+					"Options": [
+						"caption",
+						"icon",
+						"hidden"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "How the comments of blocks, links and groups show: a muted line under them, a mark, or not at all."
 				},
 				{
 					"Name": "Label",
@@ -15309,12 +15331,14 @@
 			"Events": [
 				"change",
 				"select",
-				"problems"
+				"problems",
+				"denied"
 			],
 			"EventDescriptions": {
 				"change": "The graph changed: the graph.",
-				"select": "The selection changed: {Block, Link}, their ids or null.",
-				"problems": "What is wrong with the graph: [{Block, Pin, Link, Message}]."
+				"select": "The selection changed: {Block, Link, Group} (their ids or null) and Blocks, all the blocks chosen.",
+				"problems": "What is wrong with the graph: [{Block, Pin, Link, Message}].",
+				"denied": "EditCheck refused what the reader did: {Action, ...its target}."
 			},
 			"Methods": [
 				"Graph()",
@@ -15322,7 +15346,17 @@
 				"Add(type, x, y)",
 				"Remove(id)",
 				"Select(id)",
+				"SelectMany(ids)",
 				"Selected()",
+				"Chosen()",
+				"Undo()",
+				"Redo()",
+				"Copy()",
+				"Paste()",
+				"Group(ids, title)",
+				"Ungroup(id)",
+				"RemoveGroup(id, content)",
+				"Comment(id, text)",
 				"Check()",
 				"Compile(options)",
 				"Arrange()",
@@ -15491,6 +15525,103 @@
 					"Description": "The room between nodes, in pixels (48)."
 				},
 				{
+					"Name": "View",
+					"Type": "select",
+					"Default": "flat",
+					"Options": [
+						"flat",
+						"isometric"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "flat: blocks of a blueprint; isometric: shapes on a floor in 3D."
+				},
+				{
+					"Name": "Groups",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In 3D: the groups, zones round their members: [{ID, Title, Color, Members, Collapsed, Comment}]."
+				},
+				{
+					"Name": "Comments",
+					"Type": "select",
+					"Default": "caption",
+					"Options": [
+						"caption",
+						"icon",
+						"hidden"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "In 3D: how the comments of the nodes show."
+				},
+				{
+					"Name": "Angle",
+					"Type": "number",
+					"Default": 45,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In 3D: the turn of the view, in degrees (45)."
+				},
+				{
+					"Name": "Tilt",
+					"Type": "number",
+					"Default": 35,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In 3D: how far it looks down, in degrees (35)."
+				},
+				{
+					"Name": "Search",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In 3D: a text, the nodes that have it lit."
+				},
+				{
+					"Name": "Legend",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In 3D: the kinds of the nodes in a corner."
+				},
+				{
+					"Name": "Minimap",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In 3D: the floor from above in a corner."
+				},
+				{
+					"Name": "ReadOnly",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In 3D: nothing dragged, no group folded by a press."
+				},
+				{
+					"Name": "EditCheck",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In 3D: a function (action, target), false refuses it."
+				},
+				{
 					"Name": "Label",
 					"Type": "text",
 					"Default": "",
@@ -15506,18 +15637,37 @@
 			"Current": "",
 			"Events": [
 				"select",
-				"open"
+				"open",
+				"move",
+				"toggle",
+				"view",
+				"path",
+				"denied"
 			],
 			"EventDescriptions": {
-				"select": "The selection changed: {Node, Link}, their IDs or null.",
-				"open": "A node was opened (a double press or Enter): {Node}."
+				"select": "The selection changed: {Node, Link}, their IDs or null (and Group in 3D).",
+				"open": "A node was opened (a double press or Enter): {Node}.",
+				"move": "In 3D: a node was dragged to a cell: {Node, X, Y}.",
+				"toggle": "In 3D: a group was folded or unfolded: {Group, Collapsed}.",
+				"view": "In 3D: the view turned, tilted or zoomed: {Angle, Tilt, Zoom}.",
+				"path": "In 3D: the shortest way between two nodes was lit: {From, To, Nodes, Links}.",
+				"denied": "In 3D: ReadOnly or EditCheck refused what was done: {Action, Node or Group}."
 			},
 			"Methods": [
 				"Arrange(layout)",
 				"Fit()",
 				"Select(id)",
 				"Selected()",
-				"Places()"
+				"Places()",
+				"Rotate(degrees)",
+				"Update(id, changes)",
+				"Toggle(group)",
+				"Picture()",
+				"Find(text)",
+				"Show(id)",
+				"Path(from, to)",
+				"Snapshot()",
+				"Restore(snapshot)"
 			],
 			"Sample": {
 				"Nodes": [
@@ -15551,6 +15701,279 @@
 						"From": "api",
 						"To": "db",
 						"Label": "SQL"
+					}
+				]
+			}
+		},
+		{
+			"Name": "TopologyIso",
+			"Kind": "Component",
+			"Group": "codes",
+			"Icon": "box",
+			"Description": "A Topology seen in 3D: nodes as shapes on a floor of cells, turned and tilted, with their status, activity, load, groups and comments.",
+			"Props": [
+				{
+					"Name": "Nodes",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The nodes: [{ID, Label, Kind, Shape, Color, Size, Icon, Status, Active, Load, X, Y, Comment}]."
+				},
+				{
+					"Name": "Links",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The links: [{From, To, Label, Status, Kind, Load, Comment}]."
+				},
+				{
+					"Name": "Groups",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The groups: [{ID, Title, Color, Members, Collapsed, Comment}]."
+				},
+				{
+					"Name": "Layout",
+					"Type": "select",
+					"Default": "auto",
+					"Options": [
+						"auto",
+						"layers",
+						"tree",
+						"star",
+						"circle",
+						"grid",
+						"force"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "How the nodes with no cell of their own are laid out."
+				},
+				{
+					"Name": "Direction",
+					"Type": "select",
+					"Default": "right",
+					"Options": [
+						"right",
+						"down"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Where layers and a tree go."
+				},
+				{
+					"Name": "Center",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The node in the middle of a star, at the root of a tree."
+				},
+				{
+					"Name": "Directed",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Links run from where they come to where they go (their dashes and an arrow)."
+				},
+				{
+					"Name": "Gap",
+					"Type": "number",
+					"Default": 1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The room between nodes, in cells (1)."
+				},
+				{
+					"Name": "Angle",
+					"Type": "number",
+					"Default": 45,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The turn of the view, in degrees (45)."
+				},
+				{
+					"Name": "Tilt",
+					"Type": "number",
+					"Default": 35,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How far it looks down, in degrees (35)."
+				},
+				{
+					"Name": "Grid",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The cells of the floor drawn."
+				},
+				{
+					"Name": "Comments",
+					"Type": "select",
+					"Default": "caption",
+					"Options": [
+						"caption",
+						"icon",
+						"hidden"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "How comments show: a muted line under the name, a mark, or not at all."
+				},
+				{
+					"Name": "Search",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A text: the nodes that have it are lit, the others dimmed."
+				},
+				{
+					"Name": "Legend",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The kinds of the nodes shown in a corner; a press on one lights its nodes."
+				},
+				{
+					"Name": "Minimap",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The floor from above in a corner, the view a frame that a press moves."
+				},
+				{
+					"Name": "ReadOnly",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Nothing is dragged, no group folded by a press."
+				},
+				{
+					"Name": "EditCheck",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A function (action, target): false refuses it (move {Node}, group {Group}, toggle {Group})."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"select",
+				"open",
+				"move",
+				"toggle",
+				"view",
+				"path",
+				"denied"
+			],
+			"EventDescriptions": {
+				"select": "The selection changed: {Node, Link, Group}, their IDs or null.",
+				"open": "A node was opened (a double press or Enter): {Node}.",
+				"move": "A node was dragged to a cell: {Node, X, Y}.",
+				"toggle": "A group was folded or unfolded: {Group, Collapsed}.",
+				"view": "The view turned, tilted or zoomed: {Angle, Tilt, Zoom}.",
+				"path": "The shortest way between two nodes was lit: {From, To, Nodes, Links} (Nodes empty: there is none).",
+				"denied": "ReadOnly or EditCheck refused what was done: {Action (move, group, toggle), Node or Group}."
+			},
+			"Methods": [
+				"Arrange(layout)",
+				"Fit()",
+				"Select(id)",
+				"Selected()",
+				"Places()",
+				"Rotate(degrees)",
+				"Update(id, changes)",
+				"Toggle(group)",
+				"ToScreen(id)",
+				"Picture()",
+				"Find(text)",
+				"Show(id)",
+				"Path(from, to)",
+				"Snapshot()",
+				"Restore(snapshot)"
+			],
+			"Sample": {
+				"Nodes": [
+					{
+						"ID": "core",
+						"Label": "Core Switch",
+						"Kind": "switch",
+						"Active": true,
+						"Status": "ok"
+					},
+					{
+						"ID": "app",
+						"Label": "App",
+						"Kind": "server",
+						"Active": true,
+						"Load": 0.6
+					},
+					{
+						"ID": "db",
+						"Label": "DB",
+						"Kind": "database",
+						"Load": 0.4,
+						"Active": true
+					},
+					{
+						"ID": "storage",
+						"Label": "Storage",
+						"Kind": "storage",
+						"Load": 0.8
+					}
+				],
+				"Links": [
+					{
+						"From": "core",
+						"To": "app",
+						"Load": 0.5
+					},
+					{
+						"From": "core",
+						"To": "db",
+						"Kind": "dashed"
+					},
+					{
+						"From": "app",
+						"To": "storage",
+						"Load": 0.2
 					}
 				]
 			}
@@ -24850,6 +25273,29 @@
 			"Sample": {}
 		},
 		{
+			"Name": "TopologyKinds",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The kinds of the nodes of a Topology in 3D and the shapes they are drawn as: color, size, icon, how they show their load and that they are active.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Define(kind, settings)",
+				"Kind(kind)",
+				"Kinds()",
+				"Shape(name, shape)",
+				"ShapeOf(name)",
+				"Shapes()"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "Audience",
 			"Kind": "Service",
 			"Group": "",
@@ -26949,6 +27395,18 @@
 		"elemenx-blueprint-property": [
 			"code"
 		],
+		"elemenx-blueprint-frame": [
+			"selected"
+		],
+		"elemenx-blueprint-frame-head": [],
+		"elemenx-blueprint-frame-title": [],
+		"elemenx-blueprint-frame-rename": [],
+		"elemenx-blueprint-comment": [],
+		"elemenx-blueprint-comment-mark": [],
+		"elemenx-blueprint-link-comment": [],
+		"elemenx-blueprint-comment-editor": [],
+		"elemenx-blueprint-lasso": [],
+		"elemenx-topology-view": [],
 		"elemenx-topology": [],
 		"elemenx-topology-board": [],
 		"elemenx-topology-canvas": [],
@@ -26976,6 +27434,18 @@
 		"elemenx-topology-icon": [],
 		"elemenx-topology-title": [],
 		"elemenx-topology-status": [],
+		"elemenx-topology-iso": [],
+		"elemenx-topology-iso-canvas": [],
+		"elemenx-topology-iso-notes": [],
+		"elemenx-topology-iso-note": [],
+		"elemenx-topology-iso-legend": [],
+		"elemenx-topology-iso-legend-item": [
+			"active"
+		],
+		"elemenx-topology-iso-swatch": [],
+		"elemenx-topology-iso-kind": [],
+		"elemenx-topology-iso-count": [],
+		"elemenx-topology-iso-minimap": [],
 		"elemenx-emoji": [],
 		"elemenx-emoji-item": [
 			"selected"

@@ -10,7 +10,9 @@
 			"removeParameter": "Remove the parameter",
 			"key": "Key",
 			"type": "Type",
-			"value": "Value"
+			"value": "Value",
+			"group": "Group {n}",
+			"comment": "Comment"
 		}
 	}
 }

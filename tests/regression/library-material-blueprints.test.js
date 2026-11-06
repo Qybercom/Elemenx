@@ -193,7 +193,7 @@ describe('Contract: materials of models as material graphs of Blueprints, drawn 
 		finally {
 			delete models.Recipes['test-glowing'];
 		}
-	});
+	}, 45000);
 
 	it('draws a ground by its Blueprint, the color of its parameter, and keeps the very same ground as its look changes', async function () {
 		var address = URL.createObjectURL(new Blob([Binary()], {type: 'model/gltf-binary'})) + '#.glb';

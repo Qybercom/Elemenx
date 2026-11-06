@@ -413,7 +413,9 @@
 			"removeParameter": "Remove the parameter",
 			"key": "Key",
 			"type": "Type",
-			"value": "Value"
+			"value": "Value",
+			"group": "Group {n}",
+			"comment": "Comment"
 		},
 		"board": {
 			"label": "Canvas",
@@ -1018,7 +1020,8 @@
 			"on": "On"
 		},
 		"topology": {
-			"label": "A graph of nodes and their links"
+			"label": "A graph of nodes and their links",
+			"legend": "The kinds of the nodes"
 		},
 		"tour": {
 			"back": "Back",

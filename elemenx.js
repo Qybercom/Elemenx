@@ -861,20 +861,43 @@
 				Run: function () {
 					if (consumer.destroyed) return;
 
-					cleanup(consumer);
+					/* A bug: a write, while it ran, to what it had read ran it again inside itself, over its own run half done. It runs once more when it ends. */
+					if (consumer.running) {
+						consumer.again = true;
 
-					var previousActive = activeConsumer;
+						return;
+					}
 
-					consumerStack.push(previousActive);
+					var result;
+					var rounds = 0;
 
-					activeConsumer = consumer;
+					consumer.running = true;
 
 					try {
-						return callback();
+						do {
+							consumer.again = false;
+
+							cleanup(consumer);
+
+							consumerStack.push(activeConsumer);
+
+							activeConsumer = consumer;
+
+							try {
+								result = callback();
+							}
+							finally {
+								activeConsumer = consumerStack.pop();
+							}
+
+							rounds++;
+						} while (consumer.again && !consumer.destroyed && rounds < 100);
 					}
 					finally {
-						activeConsumer = consumerStack.pop();
+						consumer.running = false;
 					}
+
+					return result;
 				},
 
 				Destroy: function () {

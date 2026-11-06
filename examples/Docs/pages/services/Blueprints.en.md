@@ -59,4 +59,4 @@ The types of this library: Number, Vector, Color, Text, Bool, Parameter, Time, I
 - [bakes a pass and a material into JSON made again with no block at all; a graph of code is not baked](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L397) — `tests/regression/blueprints.test.js`
 - [runs a generator of numbers with the very noise of the shaders, its parameters and inputs given](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L438) — `tests/regression/blueprints.test.js`
 
-+45 more in the same files
++50 more in the same files

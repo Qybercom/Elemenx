@@ -69,6 +69,8 @@
 	--elemenx-scene-title-font: var(--elemenx-font);
 	--elemenx-scene-subtitle-background: rgba(0, 0, 0, 0.55);
 	--elemenx-scene-subtitle-speaker: #ffd36b;
+	--elemenx-topology-floor: var(--elemenx-surface);
+	--elemenx-topology-link: #3fd6b8;
 	--elemenx-scene-aim: rgba(255, 255, 255, 0.92);
 	--elemenx-scene-aim-shadow: rgba(0, 0, 0, 0.6);
 	--elemenx-scene-aim-kill: #ff4a3d;

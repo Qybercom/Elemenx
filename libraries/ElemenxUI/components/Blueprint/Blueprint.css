@@ -385,3 +385,98 @@
 		border-bottom: 1px solid var(--elemenx-border);
 	}
 }
+
+/* A group: a frame round its members, its title on top and its comment under it, behind the blocks. */
+.elemenx-blueprint-frame {
+	--elemenx-blueprint-frame-rgb: var(--elemenx-accent-rgb);
+	position: absolute;
+	border: 1px solid rgba(var(--elemenx-blueprint-frame-rgb), 0.9);
+	border-radius: var(--elemenx-radius-large);
+	background: rgba(var(--elemenx-blueprint-frame-rgb), 0.06);
+	pointer-events: none;
+}
+
+.elemenx-blueprint-frame.selected {
+	box-shadow: 0 0 0 2px rgba(var(--elemenx-blueprint-frame-rgb), 0.9);
+}
+
+.elemenx-blueprint-frame-head {
+	padding: 6px 10px;
+	border-radius: var(--elemenx-radius-large) var(--elemenx-radius-large) 0 0;
+	background: rgba(var(--elemenx-blueprint-frame-rgb), 0.18);
+	cursor: move;
+	pointer-events: auto;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.elemenx-blueprint-frame-title {
+	font-weight: 600;
+}
+
+.elemenx-blueprint-frame-rename {
+	font: inherit;
+	width: 60%;
+}
+
+/* A comment: a line of Markdown in a small muted text, under its block or its title. */
+.elemenx-blueprint-comment {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	line-height: 1.35;
+}
+
+.elemenx-blueprint-block > .elemenx-blueprint-comment {
+	position: absolute;
+	top: calc(100% + 4px);
+	left: 0;
+	right: 0;
+}
+
+.elemenx-blueprint-comment > :first-child {
+	margin-top: 0;
+}
+
+.elemenx-blueprint-comment > :last-child {
+	margin-bottom: 0;
+}
+
+.elemenx-blueprint-comment-mark {
+	position: absolute;
+	top: -8px;
+	right: -8px;
+	min-width: 16px;
+	height: 16px;
+	border-radius: var(--elemenx-radius-pill);
+	background: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+	font-size: var(--elemenx-font-size-small);
+	line-height: 12px;
+	text-align: center;
+	cursor: help;
+}
+
+.elemenx-blueprint-link-comment {
+	position: absolute;
+	max-width: 200px;
+	transform: translate(-50%, 4px);
+	pointer-events: auto;
+}
+
+.elemenx-blueprint-comment-editor {
+	position: absolute;
+	top: calc(100% + 4px);
+	left: 0;
+	z-index: 2;
+	width: max(100%, 220px);
+	font: inherit;
+	font-size: var(--elemenx-font-size-small);
+}
+
+/* The frame Shift and a drag draw to choose blocks. */
+.elemenx-blueprint-lasso {
+	position: absolute;
+	border: 1px dashed var(--elemenx-accent);
+	background: rgba(var(--elemenx-accent-rgb), 0.08);
+	pointer-events: none;
+}

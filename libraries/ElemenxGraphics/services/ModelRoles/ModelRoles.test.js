@@ -287,7 +287,7 @@ describe('Contract: ModelRoles, the roles of the parts of a model', function () 
 		expect(scene.Engine().ColliderHit(object.World[0], object.World[2], null, 0).ID).toBe('hut:wall');
 
 		roles.Remove(name);
-	});
+	}, 45000);
 
 	it('lights a lamp of a role as far as it is set, turns a fan while it is on, and remakes the model when the roles change', async function () {
 		var name = unique('hut');

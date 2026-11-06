@@ -69,4 +69,4 @@
 - [writes the text of a Markdown and the code of a CodeView as their body, edited in a field of many lines](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L1475) — `tests/examples/designer.spec.js`
 - [Mod+F finds and Mod+H replaces in the editors, Mod+F finds in a terminal; viewers show Markdown and code, formulas are drawn as MathML](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1795) — `tests/examples/ui-kit.spec.js`
 
-+5 ещё в тех же файлах
++6 ещё в тех же файлах

@@ -9,9 +9,25 @@
  * an output of flow goes one way: a new link takes the place of the old one); a drag from an input with a link, let go
  * on no pin, takes the link away. A press on a link selects it; Delete removes the block or the link selected. The
  * properties of a block are edited in it. ReadOnly shows the graph alone: blocks still move, nothing else changes.
+ * EditCheck (action, target), false for what the reader may not do: add {Type}, remove {Blocks, Link, Group, Content},
+ * link {From, To}, unlink {Pin}, edit {Block, Property}, move {Blocks}, group {Blocks}, ungroup {Group}, rename {Group},
+ * comment {Target}, paste {}, parameter {Change, Index, Field}; a refusal is told in denied {Action, ...its target}.
  * Methods: Graph(), Write() (the text of its file), Add(type, x, y), Remove(id), Select(id), Selected(), Check(),
  * Compile(options), Arrange() (the blocks in columns, each after what it reads; a graph whose blocks all stand at 0, 0
  * is arranged when shown) and Fit().
+ *
+ * Many blocks are chosen at once: Shift or Ctrl and a press adds one or takes it away, Shift and a drag on an empty place
+ * frames them, Ctrl+A chooses all (SelectMany(ids), Chosen()); a drag of the head of one moves all that are chosen,
+ * Delete removes them. Ctrl+Z and Ctrl+Y (Ctrl+Shift+Z) undo and redo every change (Undo(), Redo()); Ctrl+C, Ctrl+V and
+ * Ctrl+D copy, paste and duplicate the chosen blocks with the links between them (Copy(), Paste()).
+ * Groups (the key groups of the graph: [{id, title, color, members (the ids of blocks and of groups), comment}]): a frame
+ * round its members with a title, nested in another as a member of it. Ctrl+G groups what is chosen (Group(ids, title)),
+ * a drag of the title moves the frame with all in it, a press on it chooses the group: Delete takes the frame away and
+ * leaves its members, Shift+Delete takes them too (RemoveGroup(id, content)), Ctrl+Shift+G does the same as Delete
+ * (Ungroup(id)); a double press on its title renames it. Comments (comment of blocks, links and groups, in Markdown) are
+ * shown as Comments says: caption (a line in a small muted text under a block, in a frame under its title, by the middle
+ * of a link), icon (a mark with the text as its title) or hidden. A double press on the head of a block or on a comment
+ * edits it (Comment(id, text) from code). select tells {Block, Link, Group, Blocks}.
  */
 Elemenx.Component('Blueprint', {
 	$TemplateURL: 'Blueprint.html',
@@ -22,16 +38,19 @@ Elemenx.Component('Blueprint', {
 		Description: 'The editor of a blueprint in the JSON of Flowprint: blocks, pins and links on a canvas, the types to add and the parameters of the graph.',
 		Events: {
 			change: 'The graph changed: the graph.',
-			select: 'The selection changed: {Block, Link}, their ids or null.',
-			problems: 'What is wrong with the graph: [{Block, Pin, Link, Message}].'
+			select: 'The selection changed: {Block, Link, Group} (their ids or null) and Blocks, all the blocks chosen.',
+			problems: 'What is wrong with the graph: [{Block, Pin, Link, Message}].',
+			denied: 'EditCheck refused what the reader did: {Action, ...its target}.'
 		},
-		Methods: ['Graph()', 'Write()', 'Add(type, x, y)', 'Remove(id)', 'Select(id)', 'Selected()', 'Check()', 'Compile(options)', 'Arrange()', 'Fit()'],
+		Methods: ['Graph()', 'Write()', 'Add(type, x, y)', 'Remove(id)', 'Select(id)', 'SelectMany(ids)', 'Selected()', 'Chosen()', 'Undo()', 'Redo()', 'Copy()', 'Paste()', 'Group(ids, title)', 'Ungroup(id)', 'RemoveGroup(id, content)', 'Comment(id, text)', 'Check()', 'Compile(options)', 'Arrange()', 'Fit()'],
 		Props: {
 			Value: 'The graph: an object or the text of its file.',
 			Type: {Options: ['flow', 'pass', 'material', 'render', 'generator'], Description: 'The type of the graph made when there is no Value.'},
 			Palette: 'Shows the types of blocks to add and the parameters (true by default).',
 			ReadOnly: 'Shows the graph alone: blocks still move, nothing else changes.',
+			EditCheck: 'A function (action, target): false refuses what the reader would do (add, remove, link, unlink, edit, move, group, ungroup, rename, comment, paste, parameter).',
 			Errors: 'What its owner found wrong as it used the graph: [{Block, Line, Message}] (a Scene tells them in its event shader), marked on the blocks.',
+			Comments: {Options: ['caption', 'icon', 'hidden'], Description: 'How the comments of blocks, links and groups show: a muted line under them, a mark, or not at all.'},
 			Label: 'What it shows, for screen readers.'
 		},
 		Sample: {Type: 'generator', Value: {version: 1, type: 'generator', parameters: [{key: 'Scale', type: 'float', value: 2}], blocks: [{id: 'n', type: 'Number', x: 40, y: 40, properties: [{key: 'Value', value: 3}]}, {id: 's', type: 'Parameter', x: 40, y: 160, properties: [{key: 'Key', value: 'Scale'}, {key: 'Type', value: 'float'}]}, {id: 'm', type: 'Multiply', x: 280, y: 90, properties: []}, {id: 'r', type: 'Result', x: 500, y: 100, properties: [{key: 'Key', value: 'Value'}]}], links: [{id: 'a', p1: 'n-out-Value', p2: 'm-in-A'}, {id: 'b', p1: 's-out-Value', p2: 'm-in-B'}, {id: 'c', p1: 'm-out-Out', p2: 'r-in-Value'}]}}
@@ -40,7 +59,9 @@ Elemenx.Component('Blueprint', {
 	Type: 'flow',
 	Palette: true,
 	ReadOnly: false,
+	EditCheck: null,
 	Errors: null,
+	Comments: 'caption',
 	Label: '',
 
 	/* What the template renders: the filter of the palette, the kind of the graph and its parameters. */
@@ -50,7 +71,7 @@ Elemenx.Component('Blueprint', {
 	ParameterTypes: ['float', 'vec2', 'vec3', 'vec4', 'int', 'bool', 'text', 'any'],
 
 	$OnCreate: function () {
-		var own = {Graph: null, Emitted: '', Selected: null, Link: null, Drag: null, Svg: null, Draft: null, Canvas: null, Problems: []};
+		var own = {Graph: null, Emitted: '', Selected: null, Link: null, Group: null, Chosen: [], Drag: null, Svg: null, Draft: null, Canvas: null, Problems: [], History: [], Future: [], Last: '', Clip: null};
 
 		this.Own = function () {
 			return own;
@@ -116,6 +137,10 @@ Elemenx.Component('Blueprint', {
 			self.Edited(event);
 		});
 
+		canvas.addEventListener('dblclick', function (event) {
+			self.Double(event);
+		});
+
 		this.Render();
 
 		/* What is wrong with the graph given is told at once, so its owner knows it before any change. */
@@ -144,6 +169,9 @@ Elemenx.Component('Blueprint', {
 		if ('Errors' in changed)
 			this.Marks();
 
+		if ('Comments' in changed)
+			this.Render();
+
 		if ('Type' in changed && !this.Value) {
 			this.Load(null);
 			this.Render();
@@ -167,6 +195,20 @@ Elemenx.Component('Blueprint', {
 		return this.ReadOnly === true || this.ReadOnly === 'true';
 	},
 
+	/*
+	 * May the reader do it (EditCheck (action, target): false refuses it, told in denied {Action, ...target})? Actions: add
+	 * {Type}, remove {Blocks, Link, Group, Content}, link {From, To} (pins), unlink {Pin}, edit {Block, Property}, move
+	 * {Blocks}, group {Blocks}, ungroup {Group}, rename {Group}, comment {Target}, paste {}, parameter {Change (add, remove,
+	 * set), Index, Field}. What ReadOnly keeps from the reader is not asked. The methods called by code are not asked.
+	 */
+	Can: function (action, target) {
+		var allowed = typeof this.EditCheck !== 'function' || this.EditCheck(action, Object.assign({}, target)) !== false;
+		if (!allowed)
+			this.$Emit('denied', Object.assign({Action: action}, target));
+
+		return allowed;
+	},
+
 	/* A graph given: read as a copy (its text is what was given), or an empty one of Type. */
 	Load: function (value) {
 		var own = this.Own();
@@ -178,7 +220,14 @@ Elemenx.Component('Blueprint', {
 		own.Emitted = typeof value === 'string' ? value : value ? JSON.stringify(value) : '';
 		own.Selected = null;
 		own.Link = null;
+		own.Group = null;
+		own.Chosen = [];
 		own.Problems = blueprints.Check(own.Graph);
+
+		/* A graph given from outside starts a history of its own. */
+		own.History = [];
+		own.Future = [];
+		own.Last = blueprints.Write(own.Graph);
 
 		this.Kind = own.Graph.type;
 
@@ -225,6 +274,8 @@ Elemenx.Component('Blueprint', {
 		var box = board ? board.Viewport().getBoundingClientRect() : null;
 		var middle = box ? board.ToWorld(box.left + box.width / 2, box.top + box.height / 2) : {X: 40, Y: 40};
 
+		if (!this.Can('add', {Type: type})) return;
+
 		this.Select(this.Add(type, Math.round(middle.X - 80), Math.round(middle.Y - 30)).id);
 	},
 
@@ -247,10 +298,18 @@ Elemenx.Component('Blueprint', {
 		return block;
 	},
 
+	/* A block, a link or a group (its frame alone: RemoveGroup(id, true) takes its members too). */
 	Remove: function (id) {
 		var own = this.Own();
 
+		if (this.GroupOf(id)) {
+			this.RemoveGroup(id, false);
+
+			return;
+		}
+
 		this.Blueprints().Remove(own.Graph, id);
+		this.Forget([id]);
 
 		if (own.Selected === id)
 			own.Selected = null;
@@ -258,29 +317,379 @@ Elemenx.Component('Blueprint', {
 		if (own.Link === id)
 			own.Link = null;
 
+		own.Chosen = own.Chosen.filter(function (one) {
+			return one !== id;
+		});
+
 		this.Render();
 		this.Changed();
 	},
 
+	/* A block, a link or a group chosen alone (null: none). */
 	Select: function (id) {
 		var own = this.Own();
 		var graph = own.Graph;
-		var block = this.Blueprints().Find(graph, id);
-		var link = block ? null : graph.links.filter(function (one) {
+		var block = id ? this.Blueprints().Find(graph, id) : null;
+		var link = block || !id ? null : graph.links.filter(function (one) {
 			return one.id === id;
 		})[0];
+		var group = block || link || !id ? null : this.GroupOf(id);
 
 		own.Selected = block ? id : null;
 		own.Link = link ? id : null;
+		own.Group = group ? id : null;
+		own.Chosen = block ? [id] : [];
+
+		this.Told();
+	},
+
+	/* Many blocks chosen at once: the first of them the one selected. */
+	SelectMany: function (ids) {
+		var own = this.Own();
+		var blueprints = this.Blueprints();
+
+		own.Chosen = (ids || []).filter(function (id, index, list) {
+			return !!blueprints.Find(own.Graph, id) && list.indexOf(id) === index;
+		});
+		own.Selected = own.Chosen[0] || null;
+		own.Link = null;
+		own.Group = null;
+
+		this.Told();
+	},
+
+	Told: function () {
+		var own = this.Own();
 
 		this.Marks();
-		this.$Emit('select', {Block: own.Selected, Link: own.Link});
+		this.$Emit('select', {Block: own.Selected, Link: own.Link, Group: own.Group, Blocks: own.Chosen.slice()});
 	},
 
 	Selected: function () {
 		var own = this.Own();
 
-		return {Block: own.Selected, Link: own.Link};
+		return {Block: own.Selected, Link: own.Link, Group: own.Group, Blocks: own.Chosen.slice()};
+	},
+
+	Chosen: function () {
+		return this.Own().Chosen.slice();
+	},
+
+	/* History: each change kept as the text of the graph; undone and done again. */
+	Undo: function () {
+		var own = this.Own();
+		if (!own.History.length) return false;
+
+		own.Future.push(own.Last);
+
+		this.Restore(own.History.pop());
+
+		return true;
+	},
+
+	Redo: function () {
+		var own = this.Own();
+		if (!own.Future.length) return false;
+
+		own.History.push(own.Last);
+
+		this.Restore(own.Future.pop());
+
+		return true;
+	},
+
+	/* A graph of the history back in place, told as a change but kept out of the history. */
+	Restore: function (text) {
+		var own = this.Own();
+		var blueprints = this.Blueprints();
+
+		own.Graph = blueprints.Read(text);
+		own.Last = text;
+		own.Selected = null;
+		own.Link = null;
+		own.Group = null;
+		own.Chosen = [];
+
+		this.Render();
+
+		own.Problems = this.Check();
+		own.Emitted = this.Write();
+
+		this.Refresh();
+		this.Marks();
+		this.$Emit('problems', own.Problems);
+		this.$Emit('change', own.Graph);
+	},
+
+	/* The chosen blocks and the links between them, kept to be pasted (here, or in another Blueprint of the page). */
+	Copy: function () {
+		var own = this.Own();
+		var graph = own.Graph;
+		var blueprints = this.Blueprints();
+		var ids = own.Chosen.length ? own.Chosen : own.Selected ? [own.Selected] : [];
+		var blocks = ids.map(function (id) {
+			return blueprints.Find(graph, id);
+		}).filter(Boolean);
+		var pins = {};
+		var clip;
+
+		if (!blocks.length) return null;
+
+		blocks.forEach(function (block) {
+			(block.pins || []).forEach(function (pin) {
+				pins[pin.id] = {Block: block.id, Key: pin.key};
+			});
+		});
+
+		clip = {Blocks: JSON.parse(JSON.stringify(blocks)), Links: graph.links.filter(function (link) {
+			return pins[link.p1] && pins[link.p2];
+		}).map(function (link) {
+			return {From: pins[link.p1], To: pins[link.p2], Comment: link.comment || ''};
+		})};
+
+		own.Clip = clip;
+		blueprints.Clip = clip;
+
+		return clip;
+	},
+
+	/* What was copied, as new blocks a little aside, chosen; the links between them made again. */
+	Paste: function () {
+		var own = this.Own();
+		var graph = own.Graph;
+		var blueprints = this.Blueprints();
+		var clip = blueprints.Clip || own.Clip;
+		var made = {};
+
+		if (this.Locked() || !clip || !clip.Blocks.length) return [];
+
+		clip.Blocks.forEach(function (block) {
+			var fresh = blueprints.Add(graph, block.type, {x: (Number(block.x) || 0) + 32, y: (Number(block.y) || 0) + 32});
+
+			fresh.properties = JSON.parse(JSON.stringify(block.properties || []));
+			fresh.enabled = block.enabled !== false;
+			fresh.comment = block.comment || '';
+
+			blueprints.Pins(fresh);
+
+			made[block.id] = fresh;
+		});
+
+		clip.Links.forEach(function (link) {
+			var from = made[link.From.Block];
+			var to = made[link.To.Block];
+			var joined;
+
+			if (!from || !to) return;
+
+			try {
+				joined = blueprints.Link(graph, [from.id, link.From.Key], [to.id, link.To.Key]);
+				joined.comment = link.Comment || '';
+			}
+			catch (error) {
+				/* A pin of the copy that is not there any more (the properties changed it): the link is left out. */
+			}
+		});
+
+		/* A second paste goes further aside. */
+		clip.Blocks.forEach(function (block) {
+			block.x = (Number(block.x) || 0) + 32;
+			block.y = (Number(block.y) || 0) + 32;
+		});
+
+		this.Render();
+		this.Changed();
+
+		this.SelectMany(Object.keys(made).map(function (id) {
+			return made[id].id;
+		}));
+
+		return this.Chosen();
+	},
+
+	/* Groups */
+
+	GroupList: function () {
+		var graph = this.Own().Graph;
+		if (!Array.isArray(graph.groups))
+			graph.groups = [];
+
+		return graph.groups;
+	},
+
+	GroupOf: function (id) {
+		var groups = this.Own().Graph.groups || [];
+
+		return groups.filter(function (group) {
+			return group.id === id;
+		})[0] || null;
+	},
+
+	/* The blocks of a group, of the groups in it too. */
+	MembersOf: function (id, seen) {
+		var self = this;
+		var group = this.GroupOf(id);
+		var blocks = [];
+		var met = seen || {};
+		if (!group || met[id]) return blocks;
+
+		met[id] = true;
+
+		(group.members || []).forEach(function (member) {
+			if (self.GroupOf(member)) blocks = blocks.concat(self.MembersOf(member, met));
+			else blocks.push(member);
+		});
+
+		return blocks;
+	},
+
+	/* The ids of the groups and blocks gone: taken out of every group; a group left empty goes too. */
+	Forget: function (ids) {
+		var graph = this.Own().Graph;
+		var changed = true;
+
+		if (!graph.groups) return;
+
+		graph.groups.forEach(function (group) {
+			group.members = (group.members || []).filter(function (member) {
+				return ids.indexOf(member) === -1;
+			});
+		});
+
+		while (changed) {
+			changed = false;
+
+			graph.groups = graph.groups.filter(function (group) {
+				if (group.members.length) return true;
+
+				ids.push(group.id);
+
+				changed = true;
+
+				return false;
+			});
+
+			if (changed) {
+				graph.groups.forEach(function (group) {
+					group.members = group.members.filter(function (member) {
+						return ids.indexOf(member) === -1;
+					});
+				});
+			}
+		}
+	},
+
+	/*
+	 * A group of blocks and groups (the chosen blocks, without ids): a group that holds all of them takes the new one in
+	 * its place, so groups nest. The new group, or null for nothing to group.
+	 */
+	Group: function (ids, title) {
+		var own = this.Own();
+		var self = this;
+		var members = (ids || (own.Group ? [own.Group] : own.Chosen)).filter(function (id) {
+			return !!self.Blueprints().Find(own.Graph, id) || !!self.GroupOf(id);
+		});
+		var groups;
+		var group;
+		var n = 1;
+
+		if (this.Locked() || !members.length) return null;
+
+		groups = this.GroupList();
+
+		while (this.GroupOf('group-' + n))
+			n++;
+
+		/* Each member leaves the group it was in: the new group stands there in its place. */
+		groups.forEach(function (outer) {
+			var had = outer.members.filter(function (member) {
+				return members.indexOf(member) !== -1;
+			});
+			if (!had.length) return;
+
+			outer.members = outer.members.filter(function (member) {
+				return members.indexOf(member) === -1;
+			});
+
+			outer.members.push('group-' + n);
+		});
+
+		group = {id: 'group-' + n, title: title || Elemenx.Locale.Text('ui.blueprint.group', {n: n}), color: '', members: members, comment: ''};
+
+		groups.push(group);
+
+		this.Render();
+		this.Changed();
+		this.Select(group.id);
+
+		return group;
+	},
+
+	/* A group undone: its members go to the group it was in (or to none). */
+	Ungroup: function (id) {
+		return this.RemoveGroup(id, false);
+	},
+
+	/* A group taken away: its frame alone (its members stay, in the group it was in), or with all in it (content). */
+	RemoveGroup: function (id, content) {
+		var own = this.Own();
+		var self = this;
+		var group = this.GroupOf(id);
+		var blocks;
+
+		if (!group || this.Locked()) return false;
+
+		if (content) {
+			blocks = this.MembersOf(id);
+
+			blocks.forEach(function (block) {
+				self.Blueprints().Remove(own.Graph, block);
+			});
+
+			this.Forget(blocks.concat([id]));
+		}
+		else {
+			own.Graph.groups.forEach(function (outer) {
+				if (outer.members.indexOf(id) === -1) return;
+
+				outer.members = outer.members.filter(function (member) {
+					return member !== id;
+				}).concat(group.members);
+			});
+
+			own.Graph.groups = own.Graph.groups.filter(function (one) {
+				return one !== group;
+			});
+		}
+
+		if (own.Group === id)
+			own.Group = null;
+
+		own.Chosen = own.Chosen.filter(function (one) {
+			return !!self.Blueprints().Find(own.Graph, one);
+		});
+
+		this.Render();
+		this.Changed();
+		this.Told();
+
+		return true;
+	},
+
+	/* The comment of a block, a link or a group (Markdown); '' takes it away. */
+	Comment: function (id, text) {
+		var own = this.Own();
+		var target = this.Blueprints().Find(own.Graph, id) || this.GroupOf(id) || own.Graph.links.filter(function (one) {
+			return one.id === id;
+		})[0];
+		if (!target || this.Locked()) return false;
+
+		target.comment = String(text == null ? '' : text);
+
+		this.Render();
+		this.Changed();
+
+		return true;
 	},
 
 	Check: function () {
@@ -372,6 +781,17 @@ Elemenx.Component('Blueprint', {
 		own.Problems = this.Check();
 		own.Emitted = this.Write();
 
+		/* The text before this change into the history; what was undone is gone. */
+		if (own.Emitted !== own.Last) {
+			own.History.push(own.Last);
+
+			if (own.History.length > 100)
+				own.History.shift();
+
+			own.Last = own.Emitted;
+			own.Future = [];
+		}
+
 		this.Refresh();
 		this.Marks();
 		this.$Emit('problems', own.Problems);
@@ -385,6 +805,8 @@ Elemenx.Component('Blueprint', {
 		});
 		var n = graph.parameters.length + 1;
 
+		if (!this.Can('parameter', {Change: 'add'})) return;
+
 		while (keys.indexOf('Parameter' + n) !== -1)
 			n++;
 
@@ -394,6 +816,8 @@ Elemenx.Component('Blueprint', {
 	},
 
 	RemoveParameter: function (index) {
+		if (!this.Can('parameter', {Change: 'remove', Index: index})) return;
+
 		this.Own().Graph.parameters.splice(index, 1);
 
 		this.Changed();
@@ -406,6 +830,14 @@ Elemenx.Component('Blueprint', {
 		var size;
 
 		if (!parameter) return;
+
+		/* Refused: the field shows what it was again. */
+		if (!this.Can('parameter', {Change: 'set', Index: index, Field: field})) {
+			if (event && event.target)
+				event.target.value = field === 'value' ? this.ValueText(parameter.value) : parameter[field];
+
+			return;
+		}
 
 		if (field === 'value') {
 			size = this.Blueprints().Sizes[parameter.type || 'float'];
@@ -439,8 +871,15 @@ Elemenx.Component('Blueprint', {
 
 		own.Sizes.disconnect();
 
-		Array.prototype.slice.call(own.Canvas.querySelectorAll('.elemenx-blueprint-block')).forEach(function (element) {
+		Array.prototype.slice.call(own.Canvas.querySelectorAll('.elemenx-blueprint-block, .elemenx-blueprint-frame, .elemenx-blueprint-link-comment')).forEach(function (element) {
 			element.remove();
+		});
+
+		/* The frames of the groups under the blocks, the outer ones under the inner ones. */
+		(own.Graph.groups || []).slice().sort(function (a, b) {
+			return self.Depth(a.id) - self.Depth(b.id);
+		}).forEach(function (group) {
+			own.Canvas.appendChild(self.FrameElement(group));
 		});
 
 		own.Graph.blocks.forEach(function (block) {
@@ -587,7 +1026,88 @@ Elemenx.Component('Blueprint', {
 		if (properties.childNodes.length)
 			element.appendChild(properties);
 
+		this.CommentOn(element, block);
+
 		return element;
+	},
+
+	/* How deep a group is: the groups it is in. */
+	Depth: function (id) {
+		var groups = this.Own().Graph.groups || [];
+		var depth = 0;
+		var current = id;
+		var guard = 0;
+		var outer;
+
+		do {
+			outer = groups.filter(function (group) {
+				return (group.members || []).indexOf(current) !== -1;
+			})[0];
+
+			if (outer) {
+				depth++;
+				current = outer.id;
+			}
+
+			guard++;
+		} while (outer && guard < 50);
+
+		return depth;
+	},
+
+	/* The frame of a group: its title and its comment over its members, laid round them (Wire). */
+	FrameElement: function (group) {
+		var frame = document.createElement('div');
+		var head = document.createElement('div');
+		var title = document.createElement('span');
+
+		frame.className = 'elemenx-blueprint-frame';
+
+		frame.setAttribute('data-group', group.id);
+
+		/* Its color, #rrggbb, as the channels the frame is drawn of. */
+		if (/^#[0-9a-f]{6}$/i.test(group.color || ''))
+			frame.style.setProperty('--elemenx-blueprint-frame-rgb', [1, 3, 5].map(function (at) {
+				return parseInt(group.color.substr(at, 2), 16);
+			}).join(', '));
+
+		head.className = 'elemenx-blueprint-frame-head';
+		title.className = 'elemenx-blueprint-frame-title';
+		title.textContent = group.title || group.id;
+
+		head.appendChild(title);
+		frame.appendChild(head);
+
+		this.CommentOn(head, group);
+
+		return frame;
+	},
+
+	/* The comment of a block or a group, as Comments says: a muted line of Markdown under it, or a mark with its text. */
+	CommentOn: function (element, owner) {
+		var mode = this.Comments || 'caption';
+		var text = String(owner.comment || '');
+		var note;
+
+		if (!text.trim() || mode === 'hidden') return;
+
+		if (mode === 'icon') {
+			note = document.createElement('span');
+			note.className = 'elemenx-blueprint-comment-mark';
+			note.textContent = '…';
+
+			note.setAttribute('title', text);
+			note.setAttribute('aria-label', text);
+		}
+		else {
+			note = document.createElement('div');
+			note.className = 'elemenx-blueprint-comment';
+			note.innerHTML = this.$Service('RichText').FromMarkdown(text);
+		}
+
+		note.setAttribute('data-comment', owner.id);
+
+		element.appendChild(note);
 	},
 
 	/* A value of a property in its field: numbers of a list by commas, an object as JSON. */
@@ -630,7 +1150,7 @@ Elemenx.Component('Blueprint', {
 			var element = own.Canvas.querySelector('[data-id="' + block.id + '"]');
 			if (!element) return;
 
-			element.classList.toggle('selected', own.Selected === block.id);
+			element.classList.toggle('selected', own.Selected === block.id || own.Chosen.indexOf(block.id) !== -1);
 			element.classList.toggle('off', block.enabled === false);
 			element.classList.toggle('wrong', !!wrong[block.id]);
 
@@ -640,6 +1160,10 @@ Elemenx.Component('Blueprint', {
 
 		Array.prototype.slice.call(own.Svg.querySelectorAll('path[data-link]')).forEach(function (path) {
 			path.classList.toggle('selected', path.getAttribute('data-link') === own.Link);
+		});
+
+		Array.prototype.slice.call(own.Canvas.querySelectorAll('.elemenx-blueprint-frame')).forEach(function (frame) {
+			frame.classList.toggle('selected', frame.getAttribute('data-group') === own.Group);
 		});
 	},
 
@@ -709,6 +1233,94 @@ Elemenx.Component('Blueprint', {
 
 			own.Svg.appendChild(own.Draft.Path);
 		}
+
+		this.Frames();
+		this.LinkComments();
+	},
+
+	/* The box of a block or of a group on the canvas: a group round its members, with room for its head over them. */
+	BoxOf: function (id, seen) {
+		var own = this.Own();
+		var self = this;
+		var group = this.GroupOf(id);
+		var met = seen || {};
+		var element;
+		var box = null;
+		var head;
+
+		if (!group) {
+			element = own.Canvas.querySelector('[data-id="' + String(id).replace(/"/g, '\\"') + '"]');
+
+			return element ? {Left: element.offsetLeft, Top: element.offsetTop, Right: element.offsetLeft + element.offsetWidth, Bottom: element.offsetTop + element.offsetHeight + (element.querySelector('.elemenx-blueprint-comment') ? element.querySelector('.elemenx-blueprint-comment').offsetHeight + 4 : 0)} : null;
+		}
+
+		if (met[id])
+			return null;
+
+		met[id] = true;
+
+		(group.members || []).forEach(function (member) {
+			var one = self.BoxOf(member, met);
+			if (!one) return;
+
+			box = box ? {Left: Math.min(box.Left, one.Left), Top: Math.min(box.Top, one.Top), Right: Math.max(box.Right, one.Right), Bottom: Math.max(box.Bottom, one.Bottom)} : one;
+		});
+
+		if (!box)
+			return null;
+
+		element = own.Canvas.querySelector('[data-group="' + String(id).replace(/"/g, '\\"') + '"]');
+		head = element ? element.querySelector('.elemenx-blueprint-frame-head') : null;
+
+		return {Left: box.Left - 16, Top: box.Top - 16 - (head ? head.offsetHeight : 28), Right: box.Right + 16, Bottom: box.Bottom + 16};
+	},
+
+	/* Each frame round its members, where they are now. */
+	Frames: function () {
+		var own = this.Own();
+		var self = this;
+
+		if (!own.Canvas) return;
+
+		Array.prototype.forEach.call(own.Canvas.querySelectorAll('.elemenx-blueprint-frame'), function (frame) {
+			var box = self.BoxOf(frame.getAttribute('data-group'));
+			if (!box) return;
+
+			frame.style.left = box.Left + 'px';
+			frame.style.top = box.Top + 'px';
+			frame.style.width = box.Right - box.Left + 'px';
+			frame.style.height = box.Bottom - box.Top + 'px';
+		});
+	},
+
+	/* The comments of the links, by the middle of each. */
+	LinkComments: function () {
+		var own = this.Own();
+		var self = this;
+		var mode = this.Comments || 'caption';
+
+		if (!own.Canvas) return;
+
+		Array.prototype.slice.call(own.Canvas.querySelectorAll('.elemenx-blueprint-link-comment')).forEach(function (element) {
+			element.remove();
+		});
+
+		if (mode === 'hidden') return;
+
+		own.Graph.links.forEach(function (link) {
+			var holder;
+
+			if (!String(link.comment || '').trim() || link.x1 == null) return;
+
+			holder = document.createElement('div');
+			holder.className = 'elemenx-blueprint-link-comment';
+			holder.style.left = Math.round((link.x1 + link.x2) / 2) + 'px';
+			holder.style.top = Math.round((link.y1 + link.y2) / 2) + 'px';
+
+			self.CommentOn(holder, link);
+
+			own.Canvas.appendChild(holder);
+		});
 	},
 
 	/* Pointers */
@@ -723,6 +1335,7 @@ Elemenx.Component('Blueprint', {
 		var block = element ? this.Blueprints().Find(graph, element.getAttribute('data-id')) : null;
 		var board = this.$Ref('Board', true);
 		var typing = /^(INPUT|SELECT|TEXTAREA|OPTION)$/.test(event.target.tagName);
+		var frameHead = event.target.closest && !element ? event.target.closest('.elemenx-blueprint-frame-head') : null;
 		var found;
 
 		if (event.button !== 0) return;
@@ -753,23 +1366,68 @@ Elemenx.Component('Blueprint', {
 			return;
 		}
 
+		/* The head of a frame: the group chosen, and dragged with all in it. */
+		if (frameHead) {
+			event.preventDefault();
+			event.stopPropagation();
+
+			this.Select(frameHead.parentNode.getAttribute('data-group'));
+			this.StartDrag(this.MembersOf(own.Group), event);
+
+			return;
+		}
+
 		if (!block) {
-			if (own.Selected || own.Link)
+			/* Shift and a drag on an empty place: a frame that chooses what it takes in. */
+			if (event.shiftKey) {
+				event.preventDefault();
+				event.stopPropagation();
+
+				own.Lasso = {Start: board ? board.ToWorld(event.clientX, event.clientY) : {X: event.offsetX, Y: event.offsetY}, Element: document.createElement('div')};
+				own.Lasso.Element.className = 'elemenx-blueprint-lasso';
+
+				own.Canvas.appendChild(own.Lasso.Element);
+				own.Canvas.setPointerCapture(event.pointerId);
+
+				return;
+			}
+
+			if (own.Selected || own.Link || own.Group || own.Chosen.length)
 				this.Select(null);
 
 			return;
 		}
 
-		if (own.Selected !== block.id)
+		/* Shift or Ctrl: one more chosen, or one less. */
+		if (event.shiftKey || event.ctrlKey || event.metaKey) {
+			if (own.Chosen.indexOf(block.id) === -1) this.SelectMany(own.Chosen.concat([block.id]));
+			else this.SelectMany(own.Chosen.filter(function (one) {
+				return one !== block.id;
+			}));
+		}
+		else if (own.Chosen.indexOf(block.id) === -1) {
 			this.Select(block.id);
+		}
 
-		if (head) {
+		if (head && own.Chosen.indexOf(block.id) !== -1) {
 			event.preventDefault();
 
-			own.Drag = {Block: block, Element: element, X: Number(block.x) || 0, Y: Number(block.y) || 0, ClientX: event.clientX, ClientY: event.clientY, Moved: false};
-
-			own.Canvas.setPointerCapture(event.pointerId);
+			this.StartDrag(own.Chosen, event);
 		}
+	},
+
+	/* A drag of blocks (all the chosen, or the members of a group): where each was when it began. */
+	StartDrag: function (ids, event) {
+		var own = this.Own();
+		var self = this;
+
+		own.Drag = {Blocks: ids.map(function (id) {
+			var block = self.Blueprints().Find(own.Graph, id);
+
+			return block ? {Block: block, Element: own.Canvas.querySelector('[data-id="' + id.replace(/"/g, '\\"') + '"]'), X: Number(block.x) || 0, Y: Number(block.y) || 0} : null;
+		}).filter(Boolean), ClientX: event.clientX, ClientY: event.clientY, Moved: false};
+
+		own.Canvas.setPointerCapture(event.pointerId);
 	},
 
 	Move: function (event) {
@@ -780,13 +1438,39 @@ Elemenx.Component('Blueprint', {
 		var world;
 
 		if (drag) {
-			drag.Block.x = Math.round(drag.X + (event.clientX - drag.ClientX) / zoom);
-			drag.Block.y = Math.round(drag.Y + (event.clientY - drag.ClientY) / zoom);
+			/* Moved at last: may it be? */
+			if (!drag.Moved && !this.Can('move', {Blocks: drag.Blocks.map(function (one) {
+				return one.Block.id;
+			})})) {
+				own.Drag = null;
+
+				return;
+			}
+
+			drag.Blocks.forEach(function (one) {
+				one.Block.x = Math.round(one.X + (event.clientX - drag.ClientX) / zoom);
+				one.Block.y = Math.round(one.Y + (event.clientY - drag.ClientY) / zoom);
+
+				if (one.Element) {
+					one.Element.style.left = one.Block.x + 'px';
+					one.Element.style.top = one.Block.y + 'px';
+				}
+			});
+
 			drag.Moved = true;
-			drag.Element.style.left = drag.Block.x + 'px';
-			drag.Element.style.top = drag.Block.y + 'px';
 
 			this.Wire();
+
+			return;
+		}
+
+		if (own.Lasso) {
+			world = board ? board.ToWorld(event.clientX, event.clientY) : {X: event.offsetX, Y: event.offsetY};
+			own.Lasso.End = world;
+			own.Lasso.Element.style.left = Math.min(own.Lasso.Start.X, world.X) + 'px';
+			own.Lasso.Element.style.top = Math.min(own.Lasso.Start.Y, world.Y) + 'px';
+			own.Lasso.Element.style.width = Math.abs(world.X - own.Lasso.Start.X) + 'px';
+			own.Lasso.Element.style.height = Math.abs(world.Y - own.Lasso.Start.Y) + 'px';
 
 			return;
 		}
@@ -806,12 +1490,33 @@ Elemenx.Component('Blueprint', {
 		var target;
 		var other;
 
+		var lasso = own.Lasso;
+		var self = this;
+
 		own.Drag = null;
 		own.Draft = null;
+		own.Lasso = null;
 
 		if (drag) {
 			if (drag.Moved)
 				this.Changed();
+
+			return;
+		}
+
+		/* The blocks wholly in the frame drawn are chosen. */
+		if (lasso) {
+			lasso.Element.remove();
+
+			if (lasso.End) {
+				this.SelectMany(own.Graph.blocks.filter(function (block) {
+					var box = self.BoxOf(block.id);
+
+					return box && box.Left >= Math.min(lasso.Start.X, lasso.End.X) && box.Right <= Math.max(lasso.Start.X, lasso.End.X) && box.Top >= Math.min(lasso.Start.Y, lasso.End.Y) && box.Bottom <= Math.max(lasso.Start.Y, lasso.End.Y);
+				}).map(function (block) {
+					return block.id;
+				}));
+			}
 
 			return;
 		}
@@ -842,6 +1547,12 @@ Elemenx.Component('Blueprint', {
 			return;
 		}
 
+		if (!this.Can('link', {From: from.id, To: to.id})) {
+			this.Wire();
+
+			return;
+		}
+
 		graph.links = graph.links.filter(function (link) {
 			return flows ? link.p1 !== from.id : link.p2 !== to.id;
 		});
@@ -855,6 +1566,12 @@ Elemenx.Component('Blueprint', {
 	Detach: function (id) {
 		var graph = this.Own().Graph;
 		var count = graph.links.length;
+
+		if (!this.Can('unlink', {Pin: id})) {
+			this.Wire();
+
+			return;
+		}
 
 		graph.links = graph.links.filter(function (link) {
 			return link.p2 !== id;
@@ -883,6 +1600,13 @@ Elemenx.Component('Blueprint', {
 		var fresh;
 
 		if (!block || !key || this.Locked()) return;
+
+		/* Refused: the block is drawn as it was. */
+		if (!this.Can('edit', {Block: block.id, Property: key})) {
+			this.Render();
+
+			return;
+		}
 
 		if (field.type === 'checkbox') value = field.checked;
 		else if (property && property.Type === 'number') value = field.value === '' ? '' : Number(field.value) || 0;
@@ -918,13 +1642,212 @@ Elemenx.Component('Blueprint', {
 
 	Key: function (event) {
 		var own = this.Own();
+		var self = this;
 		var typing = event.target && /^(INPUT|SELECT|TEXTAREA)$/.test(event.target.tagName);
-		if (typing || this.Locked()) return;
+		var mod = event.ctrlKey || event.metaKey;
+		var key = String(event.key || '').toLowerCase();
+		var chosen;
+
+		if (typing) return;
+
+		/* What only reads: all chosen, and copied. */
+		if (mod && key === 'a') {
+			event.preventDefault();
+
+			this.SelectMany(own.Graph.blocks.map(function (block) {
+				return block.id;
+			}));
+
+			return;
+		}
+
+		if (mod && key === 'c') {
+			if (this.Copy())
+				event.preventDefault();
+
+			return;
+		}
+
+		if (this.Locked()) return;
+
+		if (mod && (key === 'z' && !event.shiftKey)) {
+			event.preventDefault();
+
+			this.Undo();
+
+			return;
+		}
+
+		if (mod && (key === 'y' || key === 'z' && event.shiftKey)) {
+			event.preventDefault();
+
+			this.Redo();
+
+			return;
+		}
+
+		if (mod && key === 'v') {
+			event.preventDefault();
+
+			if (this.Can('paste', {}))
+				this.Paste();
+
+			return;
+		}
+
+		if (mod && key === 'd') {
+			event.preventDefault();
+
+			if (this.Copy() && this.Can('paste', {}))
+				this.Paste();
+
+			return;
+		}
+
+		if (mod && key === 'g') {
+			event.preventDefault();
+
+			if (event.shiftKey && own.Group && this.Can('ungroup', {Group: own.Group})) this.Ungroup(own.Group);
+			else if (!event.shiftKey && this.Can('group', {Blocks: own.Chosen.length ? own.Chosen.slice() : own.Selected ? [own.Selected] : []})) this.Group(null);
+
+			return;
+		}
+
 		if (event.key !== 'Delete' && event.key !== 'Backspace') return;
-		if (!own.Selected && !own.Link) return;
+
+		if (own.Group) {
+			event.preventDefault();
+
+			if (this.Can('remove', {Group: own.Group, Content: event.shiftKey}))
+				this.RemoveGroup(own.Group, event.shiftKey);
+
+			return;
+		}
+
+		chosen = own.Chosen.length ? own.Chosen.slice() : own.Selected ? [own.Selected] : [];
+
+		if (!chosen.length && !own.Link) return;
 
 		event.preventDefault();
 
-		this.Remove(own.Selected || own.Link);
+		if (!this.Can('remove', chosen.length ? {Blocks: chosen} : {Link: own.Link})) return;
+
+		if (!chosen.length) {
+			this.Remove(own.Link);
+
+			return;
+		}
+
+		chosen.forEach(function (id) {
+			self.Blueprints().Remove(own.Graph, id);
+		});
+
+		this.Forget(chosen);
+
+		own.Selected = null;
+		own.Chosen = [];
+
+		this.Render();
+		this.Changed();
+		this.Told();
+	},
+
+	/*
+	 * A double press: on the head of a block or on a comment, its comment edited (Markdown; Ctrl+Enter or leaving keeps it,
+	 * Escape drops it); on the title of a frame, the title of the group.
+	 */
+	Double: function (event) {
+		var own = this.Own();
+		var self = this;
+		var title = event.target.closest ? event.target.closest('.elemenx-blueprint-frame-title') : null;
+		var note = event.target.closest ? event.target.closest('[data-comment]') : null;
+		var head = event.target.closest ? event.target.closest('.elemenx-blueprint-head') : null;
+		var element = event.target.closest ? event.target.closest('.elemenx-blueprint-block') : null;
+		var id = note ? note.getAttribute('data-comment') : head && element ? element.getAttribute('data-id') : null;
+		var group;
+		var target;
+		var field;
+		var done = false;
+
+		if (this.Locked() || /^(INPUT|SELECT|TEXTAREA|OPTION)$/.test(event.target.tagName)) return;
+
+		if (title) {
+			group = this.GroupOf(title.parentNode.parentNode.getAttribute('data-group'));
+
+			if (!this.Can('rename', {Group: group.id})) return;
+
+			field = document.createElement('input');
+			field.className = 'elemenx-blueprint-frame-rename';
+			field.value = group.title || '';
+
+			title.replaceWith(field);
+
+			field.focus();
+			field.select();
+
+			field.addEventListener('keydown', function (key) {
+				if (key.key === 'Enter')
+					field.blur();
+
+				if (key.key === 'Escape') {
+					done = true;
+
+					self.Render();
+				}
+			});
+
+			field.addEventListener('blur', function () {
+				if (done) return;
+
+				done = true;
+				group.title = field.value.trim() || group.title;
+
+				self.Render();
+				self.Changed();
+			});
+
+			return;
+		}
+
+		if (!id) return;
+
+		target = this.Blueprints().Find(own.Graph, id) || this.GroupOf(id) || own.Graph.links.filter(function (one) {
+			return one.id === id;
+		})[0];
+
+		if (!target || !this.Can('comment', {Target: id})) return;
+
+		event.preventDefault();
+
+		field = document.createElement('textarea');
+		field.className = 'elemenx-blueprint-comment-editor';
+		field.value = target.comment || '';
+		field.rows = 3;
+
+		field.setAttribute('aria-label', Elemenx.Locale.Text('ui.blueprint.comment'));
+
+		(element || (note && note.parentNode) || own.Canvas).appendChild(field);
+		field.focus();
+
+		field.addEventListener('keydown', function (key) {
+			key.stopPropagation();
+
+			if (key.key === 'Enter' && (key.ctrlKey || key.metaKey))
+				field.blur();
+
+			if (key.key === 'Escape') {
+				done = true;
+
+				field.remove();
+			}
+		});
+
+		field.addEventListener('blur', function () {
+			if (done) return;
+
+			done = true;
+
+			self.Comment(id, field.value.trim());
+		});
 	}
 });

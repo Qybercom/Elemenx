@@ -1,0 +1,17 @@
+<div class="elemenx-topology-iso">
+	<canvas class="elemenx-topology-iso-canvas" tabindex="0" role="img" [attribute.aria-label]="Label || $T('ui.topology.label')" (keydown)="Key"></canvas>
+	<div class="elemenx-topology-iso-notes" aria-hidden="true"></div>
+	<ul class="elemenx-topology-iso-legend" *if="On(Legend) && LegendItems.length" [attribute.aria-label]="$T('ui.topology.legend')">
+		<li *for="item of LegendItems" *key="item.Kind">
+			<button class="elemenx-topology-iso-legend-item" type="button" [class.active]="item.Kind === LegendKind" [attribute.aria-pressed]="item.Kind === LegendKind ? 'true' : 'false'" (click)="Pick(item.Kind)">
+				<span class="elemenx-topology-iso-swatch" [style.background]="item.Color"></span>
+				<span class="elemenx-topology-iso-kind">{{item.Kind}}</span>
+				<span class="elemenx-topology-iso-count">{{item.Count}}</span>
+			</button>
+		</li>
+	</ul>
+	<canvas class="elemenx-topology-iso-minimap" *if="On(Minimap)" aria-hidden="true"></canvas>
+	<ul class="elemenx-topology-iso-list elemenx-visually-hidden">
+		<li *for="item of Items" *key="item.ID"><button type="button" (focus)="Focused(item.ID)" (keydown)="Key">{{item.Label}}</button></li>
+	</ul>
+</div>

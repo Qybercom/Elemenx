@@ -757,11 +757,11 @@ Elemenx.Component('UIKitPage', {
 		blocks: [
 			{id: 'uv', type: 'UV', x: 20, y: 40, properties: []},
 			{id: 'scale', type: 'Parameter', x: 20, y: 150, properties: [{key: 'Key', value: 'Scale'}, {key: 'Type', value: 'float'}]},
-			{id: 'fbm', type: 'Fbm', x: 240, y: 60, properties: [{key: 'Octaves', value: 5}]},
-			{id: 'dark', type: 'Color', x: 240, y: 230, properties: [{key: 'Color', value: '#0b0e12'}, {key: 'Alpha', value: 1}]},
-			{id: 'tint', type: 'Parameter', x: 240, y: 380, properties: [{key: 'Key', value: 'Tint'}, {key: 'Type', value: 'vec3'}]},
-			{id: 'mix', type: 'Mix', x: 480, y: 180, properties: []},
-			{id: 'out', type: 'Output', x: 700, y: 200, properties: []}
+			{id: 'fbm', type: 'Fbm', x: 240, y: 60, properties: [{key: 'Octaves', value: 5}], comment: 'Five octaves: **soft** clouds'},
+			{id: 'dark', type: 'Color', x: 240, y: 300, properties: [{key: 'Color', value: '#0b0e12'}, {key: 'Alpha', value: 1}]},
+			{id: 'tint', type: 'Parameter', x: 240, y: 450, properties: [{key: 'Key', value: 'Tint'}, {key: 'Type', value: 'vec3'}]},
+			{id: 'mix', type: 'Mix', x: 500, y: 220, properties: [], comment: 'Dark sky to the tint, by the noise'},
+			{id: 'out', type: 'Output', x: 740, y: 240, properties: []}
 		],
 		links: [
 			{id: 'l1', p1: 'uv-out-UV', p2: 'fbm-in-Position'},
@@ -770,13 +770,26 @@ Elemenx.Component('UIKitPage', {
 			{id: 'l4', p1: 'tint-out-Value', p2: 'mix-in-B'},
 			{id: 'l5', p1: 'fbm-out-Value', p2: 'mix-in-T'},
 			{id: 'l6', p1: 'mix-out-Out', p2: 'out-in-Color'}
+		],
+		/* Groups of the graph: a frame round what makes the noise, one round the colors (Ctrl+G groups what is chosen). */
+		groups: [
+			{id: 'group-1', title: 'Noise', color: '', members: ['uv', 'scale', 'fbm'], comment: 'Where the clouds are'},
+			{id: 'group-2', title: 'Colors', color: '#c88a2a', members: ['dark', 'tint'], comment: ''}
 		]
 	},
 	BlueprintState: '',
-	TopologyGraph: 'network',
+	TopologyGraph: 'datacenter',
 	TopologyLayout: 'auto',
 	TopologyNote: '',
-	TopologyGraphs: [{Value: 'network', Label: 'A network: a router and its hosts'}, {Value: 'modules', Label: 'Modules: what depends on what'}, {Value: 'company', Label: 'A company: who reports to whom'}],
+	TopologyViews: [{Value: 'isometric', Label: '3D: shapes on a floor'}, {Value: 'flat', Label: 'Flat: blocks'}],
+	TopologyView: 'isometric',
+	TopologySearch: '',
+	TopologyLegend: true,
+	TopologyMinimap: true,
+	TopologyReadOnly: false,
+	TopologyKept: null,
+	TopologyLive: false,
+	TopologyGraphs: [{Value: 'datacenter', Label: 'A data center: kinds, groups, load'}, {Value: 'thousand', Label: 'A thousand nodes in racks'}, {Value: 'network', Label: 'A network: a router and its hosts'}, {Value: 'modules', Label: 'Modules: what depends on what'}, {Value: 'company', Label: 'A company: who reports to whom'}],
 	TopologyLayouts: ['auto', 'layers', 'tree', 'star', 'circle', 'grid', 'force'].map(function (layout) {
 		return {Value: layout, Label: layout};
 	}),
@@ -1476,8 +1489,181 @@ Elemenx.Component('UIKitPage', {
 	},
 
 	TopologyOf: function (name) {
+		/* Made once each: the same data, the same layout. */
+		if (name === 'datacenter')
+			return this.TopologyMade || (this.TopologyMade = this.TopologyDataCenter());
+
+		if (name === 'thousand')
+			return this.TopologyBig || (this.TopologyBig = this.TopologyThousand());
+
 		return this.TopologyData[name] || this.TopologyData.network;
 	},
+
+	/*
+	 * A data center: a core switch, the racks of the app and of the data in groups (nested), stores that fill, links that
+	 * carry; a few switched off. Its kinds give the shapes; Active a glow round the foot, Load what each kind shows of it.
+	 */
+	TopologyDataCenter: function () {
+		return {
+			Nodes: [
+				{ID: 'internet', Label: 'Internet', Kind: 'internet', Active: true, Comment: 'Two **uplinks**'},
+				{ID: 'fw', Label: 'Firewall', Kind: 'firewall', Active: true, Status: 'ok', Load: 0.35},
+				{ID: 'core', Label: 'Core Switch', Kind: 'switch', Active: true, Status: 'ok', Load: 0.55, Comment: '48 ports, 40 Gb/s'},
+				{ID: 'app1', Label: 'App 1', Kind: 'server', Active: true, Status: 'ok', Load: 0.4},
+				{ID: 'app2', Label: 'App 2', Kind: 'server', Active: true, Status: 'warning', Load: 0.82, Comment: 'CPU at *82%*'},
+				{ID: 'app3', Label: 'App 3', Kind: 'server', Active: false, Status: 'off'},
+				{ID: 'cache', Label: 'Cache', Kind: 'service', Active: true, Load: 0.66},
+				{ID: 'db', Label: 'DB', Kind: 'database', Active: true, Status: 'ok', Load: 0.45},
+				{ID: 'replica', Label: 'Replica', Kind: 'database', Active: true, Load: 0.3},
+				{ID: 'storage', Label: 'Storage', Kind: 'storage', Active: true, Status: 'error', Load: 0.93, Comment: 'Almost full'},
+				{ID: 'queue', Label: 'Queue', Kind: 'queue', Active: true, Load: 0.2},
+				{ID: 'admin', Label: 'Admin', Kind: 'user', Active: false}
+			],
+			Links: [
+				{From: 'internet', To: 'fw', Load: 0.5},
+				{From: 'fw', To: 'core', Load: 0.6},
+				{From: 'core', To: 'app1', Load: 0.4},
+				{From: 'core', To: 'app2', Load: 0.85},
+				{From: 'core', To: 'app3', Status: 'off'},
+				{From: 'app1', To: 'cache', Load: 0.3},
+				{From: 'app2', To: 'cache', Load: 0.5},
+				{From: 'app1', To: 'db', Load: 0.3},
+				{From: 'app2', To: 'db', Load: 0.4},
+				{From: 'db', To: 'replica', Kind: 'dashed', Label: 'sync'},
+				{From: 'db', To: 'storage', Load: 0.9, Status: 'warning'},
+				{From: 'app2', To: 'queue', Load: 0.2},
+				{From: 'admin', To: 'core', Kind: 'dashed'}
+			],
+			Groups: [
+				{ID: 'apps', Title: 'Applications', Members: ['app1', 'app2', 'app3', 'cache'], Comment: 'Behind the core'},
+				{ID: 'data', Title: 'Data', Color: 'accent', Members: ['db', 'replica', 'storage']},
+				{ID: 'backend', Title: 'Backend', Color: 'warning', Members: ['apps', 'data', 'queue']}
+			]
+		};
+	},
+
+	/* A thousand nodes: racks of ten servers on twenty switches, for the speed of it. */
+	TopologyThousand: function () {
+		var nodes = [{ID: 'core', Label: 'Core', Kind: 'switch', Active: true, X: 0, Y: 0, Load: 0.5}];
+		var links = [];
+		var groups = [];
+		var r;
+		var i;
+
+		for (r = 0; r < 100; r++) {
+			var rack = {ID: 'rack-' + r, Label: 'Rack ' + r, Kind: 'router', Active: r % 7 !== 0, X: (r % 10) * 14 - 63, Y: Math.floor(r / 10) * 14 - 63, Load: (r * 37 % 100) / 100};
+			var members = [];
+
+			nodes.push(rack);
+			links.push({From: 'core', To: rack.ID, Load: rack.Load * 0.6});
+
+			for (i = 0; i < 9; i++) {
+				var id = 'host-' + r + '-' + i;
+
+				nodes.push({ID: id, Label: 'Host ' + r + '.' + i, Kind: i % 4 === 3 ? 'database' : 'server', Active: (r + i) % 9 !== 0, Status: (r * 9 + i) % 31 === 0 ? 'error' : '', Load: ((r * 13 + i * 29) % 100) / 100, X: rack.X - 4 + (i % 3) * 3, Y: rack.Y + 3 + Math.floor(i / 3) * 3});
+				links.push({From: rack.ID, To: id, Load: ((r + i) % 10) / 20});
+				members.push(id);
+			}
+
+			groups.push({ID: 'g' + r, Title: 'Rack ' + r, Members: [rack.ID].concat(members), Collapsed: r > 4});
+		}
+
+		return {Nodes: nodes, Links: links, Groups: groups};
+	},
+
+	TopologyTurn: function () {
+		var topology = this.$Ref('Topology', true);
+		if (topology)
+			topology.Rotate(90);
+	},
+
+	/* The load of the nodes and the links, changed every second as a monitor would tell it (Update: no new layout). */
+	TopologyLiveToggled: function (event) {
+		var self = this;
+		var on = event && event.detail !== undefined ? !!event.detail : !!event;
+
+		this.TopologyLive = on;
+
+		window.clearInterval(this.TopologyClock);
+
+		if (!on) return;
+
+		this.TopologyClock = window.setInterval(function () {
+			var topology = self.$Ref('Topology', true);
+			var data = self.TopologyOf(self.TopologyGraph);
+
+			if (!topology || !self.$Element().isConnected) {
+				window.clearInterval(self.TopologyClock);
+
+				return;
+			}
+
+			data.Nodes.forEach(function (node) {
+				if (node.Load !== undefined)
+					topology.Update(node.ID, {Load: Math.max(0, Math.min(1, (node.Load || 0) + (Math.random() - 0.5) * 0.4))});
+			});
+
+			data.Links.forEach(function (link, index) {
+				if (link.Load !== undefined)
+					topology.Update('link:' + index, {Load: Math.max(0, Math.min(1, (link.Load || 0) + (Math.random() - 0.5) * 0.4))});
+			});
+		}, 1000);
+	},
+
+	TopologyFound: function (value) {
+		var topology = this.$Ref('Topology', true);
+		var found;
+
+		this.TopologySearch = value || '';
+		found = topology && value ? topology.Find(value) : [];
+		this.TopologyNote = value ? found.length + ' found' : '';
+	},
+
+	TopologyShowFound: function () {
+		var topology = this.$Ref('Topology', true);
+		var found = topology ? topology.Find(this.TopologySearch) : [];
+		if (found.length)
+			topology.Show(found[0]);
+	},
+
+	TopologySwitch: function (name, event) {
+		this[name] = event && event.detail !== undefined ? !!event.detail : !!event;
+	},
+
+	/* Who may do what: here the Core Switch stays where it is. */
+	TopologyCheck: function (action, target) {
+		return !(action === 'move' && target.Node === 'core');
+	},
+
+	TopologyDenied: function (event) {
+		this.TopologyNote = 'Not allowed: ' + event.Action + ' ' + (event.Node || event.Group);
+	},
+
+	TopologyPathed: function (event) {
+		this.TopologyNote = event.Nodes.length ? 'The way: ' + event.Nodes.join(' → ') : 'No way from ' + event.From + ' to ' + event.To;
+	},
+
+	TopologyKeep: function () {
+		var topology = this.$Ref('Topology', true);
+
+		this.TopologyKept = topology ? topology.Snapshot() : null;
+		this.TopologyNote = 'The view is kept';
+	},
+
+	TopologyBack: function () {
+		var topology = this.$Ref('Topology', true);
+		if (topology && this.TopologyKept)
+			topology.Restore(this.TopologyKept);
+	},
+
+	TopologyMoved: function (event) {
+		this.TopologyNote = 'Moved ' + event.Node + ' to the cell ' + event.X + ', ' + event.Y;
+	},
+
+	TopologyToggled: function (event) {
+		this.TopologyNote = 'Group ' + event.Group + (event.Collapsed ? ' folded' : ' unfolded');
+	},
+
 
 	TopologyPicked: function (value) {
 		this.TopologyGraph = value;

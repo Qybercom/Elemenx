@@ -112,4 +112,5 @@ else {
 	});
 }
 
-if (sink === 42) console.log('');
+if (sink === 42)
+	console.log('');

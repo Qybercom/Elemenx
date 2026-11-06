@@ -1,7 +1,8 @@
 {
 	"ui": {
 		"topology": {
-			"label": "A graph of nodes and their links"
+			"label": "A graph of nodes and their links",
+			"legend": "The kinds of the nodes"
 		}
 	}
 }

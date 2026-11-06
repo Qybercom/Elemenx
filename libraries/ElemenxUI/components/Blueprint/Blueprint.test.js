@@ -203,7 +203,7 @@ describe('Contract: Blueprint, the editor of a graph of the Blueprints Service',
 
 		expect([blueprint.Graph().blocks[2].x, blueprint.Graph().blocks[2].y]).toEqual([340, 130]);
 		expect(editor(host).querySelector('path[data-link="a"]').getAttribute('d')).not.toBe(before);
-		expect(blueprint.Selected()).toEqual({Block: 'm', Link: null});
+		expect(blueprint.Selected()).toEqual({Block: 'm', Link: null, Group: null, Blocks: ['m']});
 	});
 
 	it('edits the code of a GLSL block in a field of lines, and makes its pins again as its properties name them, its gone links dropped', async function () {
@@ -393,5 +393,279 @@ describe('Contract: Blueprint, the editor of a graph of the Blueprints Service',
 					expect(Math.abs(one.y - other.y)).toBeGreaterThanOrEqual(100);
 			});
 		});
+	});
+
+	it('chooses many blocks (Shift and a press, a frame drawn with Shift, Ctrl+A), drags them all by one head, and Delete removes them all', async function () {
+		var host = mount('<div style="height: 100%"><Blueprint #Editor [Value]="Graph" /></div>', {Graph: graph()});
+		var blueprint;
+		var canvas;
+		var head;
+		var start;
+		var corner;
+
+		await tick(30);
+
+		blueprint = host.$Ref('Editor', true);
+		canvas = editor(host).querySelector('.elemenx-blueprint-canvas');
+
+		pointer(editor(host).querySelector('[data-id="n"] .elemenx-blueprint-title'), 'pointerdown', middle(editor(host).querySelector('[data-id="n"] .elemenx-blueprint-title')));
+		pointer(canvas, 'pointerup', middle(editor(host).querySelector('[data-id="n"] .elemenx-blueprint-title')));
+
+		editor(host).querySelector('[data-id="s"] .elemenx-blueprint-title').dispatchEvent(new PointerEvent('pointerdown', {bubbles: true, cancelable: true, clientX: middle(editor(host).querySelector('[data-id="s"]')).X, clientY: middle(editor(host).querySelector('[data-id="s"]')).Y, pointerId: 1, button: 0, shiftKey: true}));
+
+		pointer(canvas, 'pointerup', middle(editor(host).querySelector('[data-id="s"]')));
+
+		expect(blueprint.Chosen()).toEqual(['n', 's']);
+		expect(editor(host).querySelectorAll('.elemenx-blueprint-block.selected')).toHaveLength(2);
+
+		/* A drag of one head moves both. */
+		head = editor(host).querySelector('[data-id="n"] .elemenx-blueprint-title');
+		start = middle(head);
+
+		drag(host, head, {X: start.X + 20, Y: start.Y + 10});
+
+		expect([blueprint.Graph().blocks[0].x, blueprint.Graph().blocks[0].y, blueprint.Graph().blocks[1].x, blueprint.Graph().blocks[1].y]).toEqual([60, 50, 60, 210]);
+
+		/* A frame drawn with Shift from an empty place round the two at the right. */
+		corner = canvas.getBoundingClientRect();
+
+		canvas.dispatchEvent(new PointerEvent('pointerdown', {bubbles: true, cancelable: true, clientX: corner.left + 280, clientY: corner.top + 60, pointerId: 1, button: 0, shiftKey: true}));
+
+		pointer(canvas, 'pointermove', {X: corner.left + 899, Y: corner.top + 590});
+		pointer(canvas, 'pointerup', {X: corner.left + 899, Y: corner.top + 590});
+
+		expect(blueprint.Chosen().sort()).toEqual(['m', 'r']);
+
+		editor(host).dispatchEvent(new KeyboardEvent('keydown', {key: 'a', ctrlKey: true, bubbles: true}));
+
+		expect(blueprint.Chosen()).toHaveLength(4);
+
+		blueprint.SelectMany(['n', 'm']);
+
+		editor(host).dispatchEvent(new KeyboardEvent('keydown', {key: 'Delete', bubbles: true}));
+
+		expect(blueprint.Graph().blocks.map(function (block) {
+			return block.id;
+		})).toEqual(['s', 'r']);
+		expect(blueprint.Graph().links).toHaveLength(0);
+	});
+
+	it('undoes and redoes each change, and copies the chosen blocks with the links between them to paste them aside', async function () {
+		var host = mount('<div style="height: 100%"><Blueprint #Editor [Value]="Graph" /></div>', {Graph: graph()});
+		var blueprint;
+		var pasted;
+
+		await tick(30);
+
+		blueprint = host.$Ref('Editor', true);
+
+		blueprint.Remove('m');
+
+		expect(blueprint.Graph().blocks).toHaveLength(3);
+
+		expect(blueprint.Undo()).toBe(true);
+		expect(blueprint.Graph().blocks).toHaveLength(4);
+		expect(blueprint.Graph().links).toHaveLength(3);
+
+		editor(host).dispatchEvent(new KeyboardEvent('keydown', {key: 'y', ctrlKey: true, bubbles: true}));
+
+		expect(blueprint.Graph().blocks).toHaveLength(3);
+
+		editor(host).dispatchEvent(new KeyboardEvent('keydown', {key: 'z', ctrlKey: true, bubbles: true}));
+
+		expect(blueprint.Graph().blocks).toHaveLength(4);
+		expect(blueprint.Undo()).toBe(false);
+
+		/* Two blocks and the link between them, pasted 32 aside, chosen. */
+		blueprint.SelectMany(['n', 'm']);
+		blueprint.Copy();
+
+		pasted = blueprint.Paste();
+
+		expect(pasted).toHaveLength(2);
+		expect(blueprint.Graph().blocks).toHaveLength(6);
+		expect(blueprint.Graph().links).toHaveLength(4);
+		expect(blueprint.Chosen()).toEqual(pasted);
+		expect(blueprint.Graph().blocks[4]).toMatchObject({type: 'Number', x: 72, y: 72});
+		expect(blueprint.Compile().Run()).toEqual({Value: 6});
+
+		blueprint.Undo();
+
+		expect(blueprint.Graph().blocks).toHaveLength(4);
+	});
+
+	it('groups what is chosen in a frame, nests groups, drags a frame with all in it, and takes a frame away alone or with its content', async function () {
+		var host = mount('<div style="height: 100%"><Blueprint #Editor [Value]="Graph" /></div>', {Graph: graph()});
+		var blueprint;
+		var inner;
+		var outer;
+		var frame;
+		var start;
+
+		await tick(30);
+
+		blueprint = host.$Ref('Editor', true);
+
+		blueprint.SelectMany(['n', 's']);
+
+		editor(host).dispatchEvent(new KeyboardEvent('keydown', {key: 'g', ctrlKey: true, bubbles: true}));
+
+		inner = blueprint.Graph().groups[0];
+
+		expect(inner).toMatchObject({members: ['n', 's'], title: 'Group 1'});
+
+		outer = blueprint.Group([inner.id, 'm'], 'Inputs and math');
+
+		expect(blueprint.Graph().groups[1].members).toEqual([inner.id, 'm']);
+
+		await tick(30);
+
+		/* The outer frame holds the inner one, the inner holds its blocks. */
+		frame = editor(host).querySelector('[data-group="' + inner.id + '"]');
+
+		expect(frame.offsetLeft).toBeLessThan(40);
+		expect(frame.offsetWidth).toBeGreaterThan(150);
+		expect(editor(host).querySelector('[data-group="' + outer.id + '"]').offsetWidth).toBeGreaterThan(frame.offsetLeft + frame.offsetWidth - 40);
+
+		/* Its title dragged: all in it go along. */
+		start = middle(frame.querySelector('.elemenx-blueprint-frame-head'));
+
+		drag(host, frame.querySelector('.elemenx-blueprint-frame-head'), {X: start.X + 10, Y: start.Y + 20});
+
+		expect([blueprint.Graph().blocks[0].x, blueprint.Graph().blocks[1].y, blueprint.Graph().blocks[2].x]).toEqual([50, 220, 300]);
+		expect(blueprint.Selected().Group).toBe(inner.id);
+
+		/* Delete takes the frame alone: its members go to the outer group. */
+		editor(host).dispatchEvent(new KeyboardEvent('keydown', {key: 'Delete', bubbles: true}));
+
+		expect(blueprint.Graph().groups).toHaveLength(1);
+		expect(blueprint.Graph().groups[0].members.sort()).toEqual(['m', 'n', 's']);
+
+		/* Shift+Delete takes the group with all of its blocks. */
+		blueprint.Select(outer.id);
+
+		editor(host).dispatchEvent(new KeyboardEvent('keydown', {key: 'Delete', shiftKey: true, bubbles: true}));
+
+		expect(blueprint.Graph().groups).toHaveLength(0);
+		expect(blueprint.Graph().blocks.map(function (block) {
+			return block.id;
+		})).toEqual(['r']);
+		expect(JSON.parse(blueprint.Write()).groups).toEqual([]);
+	});
+
+	it('shows the comments of blocks, links and groups as Comments says: a muted Markdown line under them, a mark, or nothing', async function () {
+		var host = mount('<div style="height: 100%"><Blueprint #Editor [Value]="Graph" [Comments]="Mode" /></div>', {Graph: graph(), Mode: 'caption'});
+		var blueprint;
+		var note;
+
+		await tick(30);
+
+		blueprint = host.$Ref('Editor', true);
+
+		expect(blueprint.Comment('m', 'Times **two**')).toBe(true);
+
+		blueprint.Comment('a', 'the number');
+		blueprint.Group(['n', 's'], 'Inputs');
+		blueprint.Comment(blueprint.Graph().groups[0].id, 'What goes in');
+
+		await tick(30);
+
+		note = editor(host).querySelector('[data-id="m"] > .elemenx-blueprint-comment');
+
+		expect(note.querySelector('strong').textContent).toBe('two');
+		expect(note.getBoundingClientRect().top).toBeGreaterThanOrEqual(editor(host).querySelector('[data-id="m"]').getBoundingClientRect().bottom);
+		expect(editor(host).querySelector('.elemenx-blueprint-link-comment').textContent).toContain('the number');
+		expect(editor(host).querySelector('.elemenx-blueprint-frame-head > .elemenx-blueprint-comment').textContent).toContain('What goes in');
+		expect(JSON.parse(blueprint.Write()).blocks[2].comment).toBe('Times **two**');
+
+		host.Mode = 'icon';
+
+		await tick(30);
+
+		expect(editor(host).querySelector('[data-id="m"] .elemenx-blueprint-comment-mark').getAttribute('title')).toBe('Times **two**');
+		expect(editor(host).querySelector('.elemenx-blueprint-comment')).toBe(null);
+
+		host.Mode = 'hidden';
+
+		await tick(30);
+
+		expect(editor(host).querySelector('[data-comment]')).toBe(null);
+	});
+	it('asks EditCheck before what the reader does, keeps what it refuses as it was, and tells it in denied', async function () {
+		var told = [];
+		var host = mount('<div style="height: 100%"><Blueprint #Editor [Value]="Graph" [editCheck]="Check" (denied)="Denied" /></div>', {Graph: graph(), Check: function (action, target) {
+			if (action === 'move')
+				return target.Blocks.indexOf('m') === -1;
+
+			if (action === 'add')
+				return target.Type !== 'Fbm';
+
+			return action !== 'remove' && action !== 'link' && action !== 'unlink';
+		}, Denied: function (event) {
+			told.push(event);
+		}});
+		var blueprint;
+		var head;
+		var start;
+		var links;
+
+		function pairs () {
+			return blueprint.Graph().links.map(function (link) {
+				return link.p1 + '>' + link.p2;
+			});
+		}
+
+		await tick(30);
+
+		blueprint = host.$Ref('Editor', true);
+		links = pairs();
+
+		/* A block that may not move. */
+		head = editor(host).querySelector('[data-id="m"] .elemenx-blueprint-title');
+		start = middle(head);
+
+		drag(host, head, {X: start.X + 40, Y: start.Y + 30});
+
+		expect([blueprint.Graph().blocks[2].x, blueprint.Graph().blocks[2].y]).toEqual([300, 100]);
+		expect(told[0]).toEqual({Action: 'move', Blocks: ['m']});
+
+		/* One that may. */
+		head = editor(host).querySelector('[data-id="r"] .elemenx-blueprint-title');
+		start = middle(head);
+
+		drag(host, head, {X: start.X + 40, Y: start.Y + 30});
+
+		expect(blueprint.Graph().blocks[3].x).toBe(580);
+
+		/* A type that may not be added, then one that may. */
+		editor(host).querySelector('.elemenx-blueprint-type[data-type="Fbm"]').click();
+
+		expect(blueprint.Graph().blocks.length).toBe(4);
+		expect(told[told.length - 1]).toEqual({Action: 'add', Type: 'Fbm'});
+
+		editor(host).querySelector('.elemenx-blueprint-type[data-type="Number"]').click();
+
+		expect(blueprint.Graph().blocks.length).toBe(5);
+
+		/* No new link, none taken away, nothing removed. */
+		drag(host, pin(host, 's-out-Value'), middle(pin(host, 'm-in-A')));
+		drag(host, pin(host, 'r-in-Value'), {X: 5, Y: 5});
+
+		expect(pairs()).toEqual(links);
+		expect(told.map(function (one) {
+			return one.Action;
+		})).toEqual(expect.arrayContaining(['link', 'unlink']));
+
+		blueprint.Select('n');
+
+		editor(host).dispatchEvent(new KeyboardEvent('keydown', {key: 'Delete', bubbles: true}));
+
+		expect(blueprint.Graph().blocks.length).toBe(5);
+		expect(told[told.length - 1]).toEqual({Action: 'remove', Blocks: ['n']});
+
+		/* What code does is not asked. */
+		blueprint.Remove('n');
+
+		expect(blueprint.Graph().blocks.length).toBe(4);
 	});
 });

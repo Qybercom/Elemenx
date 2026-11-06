@@ -1,5 +1,8 @@
-<div class="elemenx-topology">
-	<Board #Board class="elemenx-topology-board" Grid="dots" GridSize="16" [Controls]="true">
-		<div class="elemenx-topology-canvas" role="group" [attribute.aria-label]="Label || $T('ui.topology.label')"></div>
-	</Board>
+<div class="elemenx-topology-view">
+	<div class="elemenx-topology" *if="View !== 'isometric'">
+		<Board #Board class="elemenx-topology-board" Grid="dots" GridSize="16" [Controls]="true">
+			<div class="elemenx-topology-canvas" role="group" [attribute.aria-label]="Label || $T('ui.topology.label')"></div>
+		</Board>
+	</div>
+	<TopologyIso *if="View === 'isometric'" #Iso class="elemenx-topology-3d" [nodes]="Nodes" [links]="Links" [groups]="Groups" [layout]="Layout" [direction]="Direction" [center]="Center" [directed]="Directed" [comments]="Comments" [angle]="Angle" [tilt]="Tilt" [search]="Search" [legend]="Legend" [minimap]="Minimap" [readOnly]="ReadOnly" [editCheck]="EditCheck" [label]="Label" (select)="Relay('select', $event)" (open)="Relay('open', $event)" (move)="Relay('move', $event)" (toggle)="Relay('toggle', $event)" (view)="Relay('view', $event)" (path)="Relay('path', $event)" (denied)="Relay('denied', $event)" />
 </div>

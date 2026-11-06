@@ -10,6 +10,11 @@
  * Arrange). The arrows go from node to node, Escape lets the selection go.
  * Methods: Arrange(layout) (laid out again, by another layout when it is given), Fit(), Select(id), Selected(), Places()
  * ({ID: {X, Y, Width, Height}}).
+ * View isometric shows the same graph in 3D (TopologyIso): its nodes as shapes of their kinds (TopologyKinds) on a floor of
+ * cells, turned (Angle) and tilted (Tilt), with Active, Load, Size, Shape, X and Y of the nodes, Load of the links, Groups
+ * ([{ID, Title, Color, Members, Collapsed, Comment}]) and Comments; its events move, toggle and view too, its methods
+ * Rotate(degrees), Update(id, changes), Toggle(group) and Picture() as well; Search, Legend, Minimap, ReadOnly and
+ * EditCheck, the events path and denied, the methods Find(text), Show(id), Path(from, to), Snapshot() and Restore(snapshot).
  */
 Elemenx.Component('Topology', {
 	$TemplateURL: 'Topology.html',
@@ -19,10 +24,15 @@ Elemenx.Component('Topology', {
 		Icon: 'share',
 		Description: 'A graph shown as the blocks of a blueprint, laid out by itself: a network or what depends on what, in layers, a tree, a star, a circle or by force.',
 		Events: {
-			select: 'The selection changed: {Node, Link}, their IDs or null.',
-			open: 'A node was opened (a double press or Enter): {Node}.'
+			select: 'The selection changed: {Node, Link}, their IDs or null (and Group in 3D).',
+			open: 'A node was opened (a double press or Enter): {Node}.',
+			move: 'In 3D: a node was dragged to a cell: {Node, X, Y}.',
+			toggle: 'In 3D: a group was folded or unfolded: {Group, Collapsed}.',
+			view: 'In 3D: the view turned, tilted or zoomed: {Angle, Tilt, Zoom}.',
+			path: 'In 3D: the shortest way between two nodes was lit: {From, To, Nodes, Links}.',
+			denied: 'In 3D: ReadOnly or EditCheck refused what was done: {Action, Node or Group}.'
 		},
-		Methods: ['Arrange(layout)', 'Fit()', 'Select(id)', 'Selected()', 'Places()'],
+		Methods: ['Arrange(layout)', 'Fit()', 'Select(id)', 'Selected()', 'Places()', 'Rotate(degrees)', 'Update(id, changes)', 'Toggle(group)', 'Picture()', 'Find(text)', 'Show(id)', 'Path(from, to)', 'Snapshot()', 'Restore(snapshot)'],
 		Props: {
 			Nodes: 'The nodes: [{ID, Label, Icon, Kind, Status (ok, warning, error, off), Details}].',
 			Links: 'The links: [{From, To, Label, Status, Kind}].',
@@ -31,6 +41,16 @@ Elemenx.Component('Topology', {
 			Center: 'The node in the middle of a star, at the root of a tree.',
 			Directed: 'Arrows to where the links go (true).',
 			Gap: 'The room between nodes, in pixels (48).',
+			View: {Options: ['flat', 'isometric'], Description: 'flat: blocks of a blueprint; isometric: shapes on a floor in 3D.'},
+			Groups: 'In 3D: the groups, zones round their members: [{ID, Title, Color, Members, Collapsed, Comment}].',
+			Comments: {Options: ['caption', 'icon', 'hidden'], Description: 'In 3D: how the comments of the nodes show.'},
+			Angle: 'In 3D: the turn of the view, in degrees (45).',
+			Tilt: 'In 3D: how far it looks down, in degrees (35).',
+			Search: 'In 3D: a text, the nodes that have it lit.',
+			Legend: 'In 3D: the kinds of the nodes in a corner.',
+			Minimap: 'In 3D: the floor from above in a corner.',
+			ReadOnly: 'In 3D: nothing dragged, no group folded by a press.',
+			EditCheck: 'In 3D: a function (action, target), false refuses it.',
 			Label: 'What it shows, for screen readers.'
 		},
 		Sample: {Nodes: [{ID: 'web', Label: 'Web', Icon: 'globe', Status: 'ok'}, {ID: 'api', Label: 'API', Icon: 'server', Status: 'warning', Details: {Latency: '120 ms'}}, {ID: 'db', Label: 'Database', Icon: 'database'}], Links: [{From: 'web', To: 'api'}, {From: 'api', To: 'db', Label: 'SQL'}]}
@@ -42,6 +62,16 @@ Elemenx.Component('Topology', {
 	Center: '',
 	Directed: true,
 	Gap: 48,
+	View: 'flat',
+	Groups: [],
+	Comments: 'caption',
+	Angle: 45,
+	Tilt: 35,
+	Search: '',
+	Legend: false,
+	Minimap: false,
+	ReadOnly: false,
+	EditCheck: null,
 	Label: '',
 
 	$OnCreate: function () {
@@ -86,6 +116,15 @@ Elemenx.Component('Topology', {
 	/* A new graph or another layout: laid out again; where nodes were dragged is let go. */
 	$OnProps: function (changed) {
 		var own = this.Own();
+
+		/* Back to blocks: the canvas of the Board comes again, and is taken as it comes. */
+		if ('View' in changed) {
+			own.Canvas = null;
+
+			if (this.View !== 'isometric')
+				this.Reattach(0);
+		}
+
 		if (!own.Canvas) return;
 
 		if ('Nodes' in changed || 'Links' in changed || 'Layout' in changed || 'Direction' in changed || 'Center' in changed || 'Gap' in changed) {
@@ -137,6 +176,72 @@ Elemenx.Component('Topology', {
 		});
 
 		this.Draw();
+	},
+
+	Reattach: function (tries) {
+		var self = this;
+		var canvas = this.$Element() ? this.$Element().querySelector('.elemenx-topology-canvas') : null;
+
+		if (canvas) {
+			this.Attach(canvas);
+
+			return;
+		}
+
+		if (tries < 60) {
+			window.requestAnimationFrame(function () {
+				self.Reattach(tries + 1);
+			});
+		}
+	},
+
+	/* The view in 3D, when it is the one shown. */
+	Iso: function () {
+		return this.View === 'isometric' ? this.$Ref('Iso', true) : null;
+	},
+
+	/* An event of the view in 3D (select, open, move, toggle, view), told as its own. */
+	Relay: function (name, event) {
+		this.$Emit({select: 'select', open: 'open', move: 'move', toggle: 'toggle', view: 'view', path: 'path', denied: 'denied'}[name], event && event.detail !== undefined ? event.detail : event);
+	},
+
+	Rotate: function (degrees) {
+		if (this.Iso())
+			this.Iso().Rotate(degrees);
+	},
+
+	Update: function (id, changes) {
+		if (this.Iso())
+			this.Iso().Update(id, changes);
+	},
+
+	Toggle: function (group) {
+		return this.Iso() ? this.Iso().Toggle(group) : false;
+	},
+
+	Picture: function () {
+		return this.Iso() ? this.Iso().Picture() : '';
+	},
+
+	Find: function (text) {
+		return this.Iso() ? this.Iso().Find(text) : [];
+	},
+
+	Show: function (id) {
+		return this.Iso() ? this.Iso().Show(id) : false;
+	},
+
+	Path: function (from, to) {
+		return this.Iso() ? this.Iso().Path(from, to) : null;
+	},
+
+	Snapshot: function () {
+		return this.Iso() ? this.Iso().Snapshot() : null;
+	},
+
+	Restore: function (snapshot) {
+		if (this.Iso())
+			this.Iso().Restore(snapshot);
 	},
 
 	List: function () {
@@ -241,6 +346,9 @@ Elemenx.Component('Topology', {
 
 	/* Laid out again, by a layout of its own when given: where nodes were dragged is let go. */
 	Arrange: function (layout) {
+		if (this.Iso())
+			return this.Iso().Arrange(layout);
+
 		var own = this.Own();
 		var canvas = own.Canvas;
 		var sizes = {};
@@ -410,6 +518,12 @@ Elemenx.Component('Topology', {
 
 	/* A node by its ID, or a link by link:<index>; nothing with an empty one. */
 	Select: function (id) {
+		if (this.Iso()) {
+			this.Iso().Select(id);
+
+			return;
+		}
+
 		var own = this.Own();
 		var text = id === null || id === undefined ? '' : String(id);
 		var before = own.Selected;
@@ -430,16 +544,28 @@ Elemenx.Component('Topology', {
 	},
 
 	Selected: function () {
+		if (this.Iso())
+			return this.Iso().Selected();
+
 		var selected = this.Own().Selected;
 
 		return {Node: selected && selected.indexOf('node:') === 0 ? selected.slice(5) : null, Link: selected && selected.indexOf('link:') === 0 ? Number(selected.slice(5)) : null};
 	},
 
 	Places: function () {
+		if (this.Iso())
+			return this.Iso().Places();
+
 		return JSON.parse(JSON.stringify(this.Own().Places));
 	},
 
 	Fit: function () {
+		if (this.Iso()) {
+			this.Iso().Fit();
+
+			return;
+		}
+
 		var board = this.$Ref('Board', true);
 		if (board)
 			board.FitContent(40);
