@@ -336,10 +336,10 @@ describe('Contract: the controls and cards of ElemenxUI', function () {
 		var labels;
 		var box;
 
-		/* Its length comes from a ResizeObserver: on a busy machine later than a tick. */
-		await waitFor(function () {
+		/* Its length comes from a ResizeObserver: on a busy machine later than a tick, and later than the default wait too. */
+		expect(await waitFor(function () {
 			return ruler.querySelectorAll('.elemenx-ruler-label').length >= 3;
-		});
+		}, 10000)).toBe(true);
 
 		labels = Array.prototype.map.call(ruler.querySelectorAll('.elemenx-ruler-label'), function (node) {
 			return Number(node.textContent);

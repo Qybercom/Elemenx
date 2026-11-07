@@ -15,6 +15,8 @@ SceneMaterials: библиотека материалов сцены — из ч
 
 Земля сцены сделана из материалов своих палитр. Каждая часть палитры (Sand, Low, High, Rock, Snow, Deep, Road) берёт материал из Materials палитры, иначе по умолчанию: песок — sand, низины — lawn, возвышенности — soil, скалы — rock, снег — snow, дно — sand, дороги — dirt. То, что кладёт эскиз, берёт Material элемента, иначе по его типу: дорога — dirt, улица и площадь — paving, река — gravel, пляж и дюны — sand, болото — clay, пойма — soil, каньон, обрыв и кратер — rock. Одна земля держит до 8 материалов (слоты шейдера), их веса хранятся в каждой вершине. Полоса дороги рисуется материалом своего покрытия (SceneRoads: Material покрытия), модель — по Pattern своего материала.
 
+Texture материала называет текстуру SceneTextures: на земле материал рисуется её запечённой плиткой (резкой вблизи, гладкой вдали, без повторов), сверху на ровном месте и с боков на склоне (три проекции по нормали, без размазывания по обрыву), чуть подкрашенной цветом земли в этом месте; его Code остаётся тем, что рисует модель из этого материала. Textured(names) — текстуры материалов земли в порядке её слоёв (SceneTextures.Array). С текстурой: lawn (плитка lawn), asphalt (asphalt) и grassy — земля с травой местами (grassy-soil).
+
 ## Методы
 
 - `Names(group)`
@@ -23,6 +25,7 @@ SceneMaterials: библиотека материалов сцены — из ч
 - `Define(name, material)`
 - `Chunk(names)`
 - `Land(names)`
+- `Textured(names)`
 - `LandNames()`
 - `Surface(name)`
 
@@ -31,3 +34,4 @@ SceneMaterials: библиотека материалов сцены — из ч
 - [has the materials of the references and the common ones, by group, and the ground may be made of those of land](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js#L70) — `libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js`
 - [draws each of its materials as a pattern: it compiles, it varies near, and fades to its color where it is too small to see](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js#L90) — `libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js`
 - [defines a material of its own, in the chunk of materials and as the surface of a model](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js#L103) — `libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js`
+- [draws the materials of a ground that name a texture with their tiles, a layer each, bound to its land](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L137) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`

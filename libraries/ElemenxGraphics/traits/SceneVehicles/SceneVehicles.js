@@ -1121,7 +1121,7 @@ Elemenx.Trait('SceneVehicles', {
 			hero.Shifts = !!(keys.KeyE || keys.KeyQ);
 
 			/* What the hands and the feet do, for what moves in the car; the wipers go while it rains. */
-			hero.Controls = {Gas: typeof input.Gas === 'number' ? input.Gas : input.Gas ? 1 : 0, Brake: typeof input.Brake === 'number' ? input.Brake : input.Brake || input.Stop ? 1 : 0, Hand: input.Hand ? 1 : 0};
+			hero.Controls = {Gas: typeof input.Gas === 'number' ? input.Gas : input.Gas ? 1 : 0, Brake: Math.max(typeof input.Brake === 'number' ? input.Brake : input.Brake ? 1 : 0, input.Stop ? 1 : 0), Hand: input.Hand ? 1 : 0};
 
 			signalsStep(hero, keys, settings, input, elapsed);
 

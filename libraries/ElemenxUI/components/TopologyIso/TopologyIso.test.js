@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { loadElemenx, resetDOM, tick, unique } from '../../../../tests/setup.js';
+import { loadElemenx, resetDOM, tick, unique, waitFor } from '../../../../tests/setup.js';
 import { Use } from '../../../../tests/library.js';
 
 var owned = [];
@@ -228,10 +228,15 @@ describe('Contract: TopologyIso, a Topology in 3D on a canvas', function () {
 
 	it('glows round the foot of an active node; an inactive one has no glow', async function () {
 		var host = mount('<div style="height: 100%"><TopologyIso [nodes]="Nodes" [grid]="false" /></div>', {Nodes: [{ID: 'x', Kind: 'server', Active: true}]});
+		var iso;
 
-		await tick(80);
+		/* On a busy machine the view has its size later than a tick: wait for its picture. */
+		expect(await waitFor(function () {
+			iso = isoOf(host);
 
-		var iso = isoOf(host);
+			return iso && painted(iso) > 0;
+		}, 8000)).toBe(true);
+
 		var lit = painted(iso);
 
 		iso.Update('x', {Active: false});

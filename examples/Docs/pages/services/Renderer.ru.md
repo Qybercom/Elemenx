@@ -104,12 +104,12 @@
 - [multiplies, inverts and projects matrices, and makes shapes of triangles](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L153) — `tests/regression/library-scene.test.js`
 - [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L184) — `tests/regression/library-scene.test.js`
 - [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L225) — `tests/regression/library-scene.test.js`
-- [Renderer makes programs behind the page for who is patient, and sets in a program only what changed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3960) — `tests/regression/library-scene.test.js`
-- [Renderer sets the state of the context only where it changes, and only the uniforms a program has](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4071) — `tests/regression/library-scene.test.js`
+- [Renderer makes programs behind the page for who is patient, and sets in a program only what changed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4001) — `tests/regression/library-scene.test.js`
+- [Renderer sets the state of the context only where it changes, and only the uniforms a program has](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4112) — `tests/regression/library-scene.test.js`
 - [makes a texture of one byte a texel with Single, its rows as long as they are](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L17) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 - [counts its draws and the triangles of them, each copy of an instanced mesh, and no triangle of a line](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L51) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 - [makes a mesh of lines by its mode, and a mesh of the weights of the materials of a ground](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L78) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 - [puts planets on their orbits and makes shapes of three dimensions with the Services of the system Libraries](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`
 - [draws its water by the water graph of the library made of blocks, or by a WaterGraph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L301) — `tests/regression/library-material-blueprints.test.js`
 
-+28 ещё в тех же файлах
++29 ещё в тех же файлах

@@ -58,6 +58,7 @@
 ## Тесты
 
 - [Select with Searchable: its search field](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/focus-on-open.test.js#L64) — `tests/regression/focus-on-open.test.js`
+- [selects by a press only what SelectCheck lets; Select from code is not asked](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scene-game-hooks.test.js#L50) — `tests/regression/scene-game-hooks.test.js`
 - [nested structural recreation keeps keyed Components and behavioral directives lifecycle-safe](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/component-directive-integration.test.js#L119) — `tests/regression/component-directive-integration.test.js`
 - [a component named like a native element receives \[prop\] inputs that the element would refuse](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/directive-syntax.test.js#L244) — `tests/regression/directive-syntax.test.js`
 - [chat messages: a tap opens the menu, a long press starts a choice of several, the bar counts and deletes them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1550) — `tests/examples/ui-kit.spec.js`

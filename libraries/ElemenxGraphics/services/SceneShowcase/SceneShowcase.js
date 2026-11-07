@@ -141,7 +141,7 @@ Elemenx.Service('SceneShowcase', {
 				{Type: 'district', Points: ring(260, 330, 120, 8), Kind: 'residential'},
 				{Type: 'square', Points: ring(150, 250, 28, 8)},
 				{Type: 'street', Points: points([[-60, 250], [360, 250]]), Width: 10},
-				{Type: 'landmark', At: at(150, 250), Radius: 14, Model: 'temple', Name: 'Temple'}
+				{Type: 'landmark', At: at(150, 276), Radius: 14, Model: 'temple', Name: 'Temple'}
 			]);
 		}
 
@@ -259,13 +259,17 @@ Elemenx.Service('SceneShowcase', {
 			this.Car(at, add);
 		}
 
-		/* The roads between them: a motorway over the river and under the mountains, a railway, country roads, a junction. */
+		/*
+		 * The roads between them: a motorway round the city and the town (never through them), over the floodplain and under
+		 * the mountains, a road from it to the main street of the town, a railway, country roads, a junction.
+		 */
 		if (on.town || on.river || on.mountains) {
-			add({ID: 'motorway', Kind: 'road', Name: 'Motorway', Type: 'motorway', Structures: true, Points: points([[-1300, 200], [-700, 200], [150, 250], [700, 300], [760, -300], [500, -900], [300, -1400]]), Barriers: ['guardrail']});
+			add({ID: 'motorway', Kind: 'road', Name: 'Motorway', Type: 'motorway', Structures: true, Points: points([[-1300, 0], [-700, 0], [-200, -40], [150, -60], [560, -30], [820, -200], [500, -900], [300, -1400]]), Barriers: ['guardrail']});
+			add({ID: 'town-road', Kind: 'road', Name: 'To the town', Type: 'road', Points: points([[-110, -46], [-90, 120], [-60, 250]])});
 			add({ID: 'railway', Kind: 'road', Name: 'Railway', Type: 'rail-double', Structures: true, Points: points([[-1400, -650], [-500, -600], [0, -500], [500, -650], [1400, -700]])});
-			add({ID: 'country', Kind: 'road', Name: 'Country road', Type: 'country', Points: points([[150, 250], [300, 600], [450, 760]])});
-			add({ID: 'track-to-woods', Kind: 'road', Type: 'gravel', Points: points([[-700, 200], [-950, -100], [-1100, -350]])});
-			add({ID: 'cross', Kind: 'junction', X: 150 * scale, Y: 250 * scale, Radius: 14});
+			add({ID: 'country', Kind: 'road', Name: 'Country road', Type: 'country', Points: points([[360, 250], [420, 600], [450, 760]])});
+			add({ID: 'track-to-woods', Kind: 'road', Type: 'gravel', Points: points([[-700, 0], [-950, -100], [-1100, -350]])});
+			add({ID: 'cross', Kind: 'junction', X: 360 * scale, Y: 250 * scale, Radius: 10});
 		}
 
 		/* The sun, a third of the way through the day. */

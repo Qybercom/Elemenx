@@ -4,10 +4,10 @@ import { Use } from '../../../../tests/library.js';
 
 var owned = [];
 
-async function mount () {
+async function mount (mark, check) {
 	var ready = null;
 	var told = [];
-	var component = Elemenx.Component(unique('DeepHost'), {$Template: '<div style="width: 400px; height: 300px"><Scene Paused="true" Quality="low" Labels="false" (ready)="Ready" (hover)="Hovered">' +
+	var component = Elemenx.Component(unique('DeepHost'), {$Template: '<div style="width: 400px; height: 300px"><Scene Paused="true" Quality="low" Labels="false" [hoverMark]="Mark" [hoverCheck]="Check" (ready)="Ready" (hover)="Hovered">' +
 		'<SceneObject ID="vega" Kind="star" Temperature="9600" />' +
 		'<SceneObject ID="hole" Kind="blackhole" Name="Gargantua" Distance="14" Mass="40" />' +
 		'<SceneObject ID="gate" Kind="wormhole" Distance="7" Leads="Kepler-442" Cosmos="galaxy" />' +
@@ -15,7 +15,7 @@ async function mount () {
 		'<SceneObject ID="beacon" Kind="quasar" Azimuth="70" Elevation="18" />' +
 		'<SceneObject ID="pebble" Kind="planetoid" Distance="2.6" Radius="140" />' +
 		'<SceneObject ID="hidden" Kind="comet" Distance="9" Interactive="false" />' +
-	'</Scene></div>', Ready: function (space) {
+	'</Scene></div>', Mark: mark === undefined ? {Look: 'ring', Cursor: 'pointer'} : mark, Check: check || null, Ready: function (space) {
 		ready = space;
 	}, Hovered: function (event) {
 		told.push(event);
@@ -122,6 +122,53 @@ describe('Contract: the deep space of a Scene: black holes, wormholes, comets, q
 			return one.uKind === 0 && one.uDisk[1] === 14 && one.uReach > one.uHorizon * 20;
 		})).toBe(true);
 	}, 90000);
+
+	/* The ring of the pointer was drawn in every scene, over the walker and the car too: a scene marks nothing unless asked. */
+	it('marks nothing under the pointer and leaves the cursor as it is unless HoverMark asks; HoverCheck says what may be marked and how', async function () {
+		var checked = [];
+		var made = await mount('', function (object) {
+			checked.push(object.ID);
+
+			return object.ID === 'hole' ? {Look: 'outline', Color: '#ff0000', Cursor: 'crosshair'} : false;
+		});
+		var scene = made.Scene;
+		var canvas = scene.$Element().querySelector('.elemenx-scene-canvas');
+		var box;
+		var spot;
+
+		frames(scene, 3);
+
+		scene.FocusOn('hole');
+
+		frames(scene, 60);
+
+		expect(scene.Engine().Mark('hover').Look).toBe('none');
+		expect(scene.Engine().Mark('select').Look).toBe('outline');
+
+		box = canvas.getBoundingClientRect();
+		spot = scene.ToScreen('hole');
+
+		scene.Scene().HoverAt = 0;
+
+		scene.PointerMove({clientX: box.left + spot.X, clientY: box.top + spot.Y, pointerId: 1, target: canvas, preventDefault: function () {}});
+
+		expect(checked).toContain('hole');
+		expect(made.Told[made.Told.length - 1]).toMatchObject({ID: 'hole'});
+		expect(scene.Engine().Mark('hover')).toMatchObject({Look: 'outline', Color: [1, 0, 0, 1], Cursor: 'crosshair'});
+		expect(canvas.style.cursor).toBe('crosshair');
+
+		/* What HoverCheck refuses is not marked at all: the pointer leaves. */
+		scene.HoverCheck = function () {
+			return false;
+		};
+
+		scene.Scene().HoverAt = 0;
+
+		scene.PointerMove({clientX: box.left + spot.X + 1, clientY: box.top + spot.Y, pointerId: 1, target: canvas, preventDefault: function () {}});
+
+		expect(scene.Scene().Hovering).toBe('');
+		expect(canvas.style.cursor).toBe('');
+	}, 30000);
 
 	it('tells what the pointer comes over and leaves (hover), never what is not Interactive; the card of a black hole', async function () {
 		var made = await mount();

@@ -694,7 +694,7 @@
 				<Button Label="Recruit" Icon="add" Variant="ghost" (click)="WorldRecruited" />
 			</div>
 			<div class="ui-kit-world" data-demo="world">
-				<Scene *if="!Far.world" Setting="terrain" Team="blue" Labels="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="WorldReady">
+				<Scene *if="!Far.world" Setting="terrain" Team="blue" Labels="false" [hoverMark]="WorldMark" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="WorldReady">
 					<SceneObject ID="day" Kind="sun" Time="14:00" />
 					<SceneObject ID="land" Kind="ground" [world]="WorldOf('world')" />
 					<SceneObject ID="woods" Kind="forest" Density="0.5" Cover="0.35" />
@@ -752,7 +752,7 @@
 				</RibbonTab>
 			</Ribbon>
 			<div class="ui-kit-space" data-demo="space">
-				<Scene *if="SpaceSystem === 'sol' && !Far.space" Team="blue" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="SpaceCosmos" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused" (arrive)="SpaceArrived">
+				<Scene *if="SpaceSystem === 'sol' && !Far.space" Team="blue" [hoverMark]="SpaceMark" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="SpaceCosmos" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused" (arrive)="SpaceArrived">
 					<SceneObject ID="sun" Kind="star" Name="Sun" Mass="1">
 						<SceneObject ID="mercury" Name="Mercury" Kind="planet" Surface-Type="rocky" Radius="2440" Mass="0.055" Distance="0.387" Eccentricity="0.206" Inclination="7" Node="48" Periapsis="29" Anomaly="174" Day="1408" />
 						<SceneObject ID="venus" Name="Venus" Kind="planet" Surface-Type="desert" Radius="6052" Mass="0.815" Distance="0.723" Eccentricity="0.007" Inclination="3.4" Node="77" Periapsis="55" Anomaly="50" Day="-5832" Tilt="177" Clouds="1" Atmosphere="#f0d9a0" Colors="#8a6a3a, #c49a5a, #e3c48a, #f4e2b8" />
@@ -785,7 +785,7 @@
 					<SceneObject ID="haulers" Kind="fleet" Name="Haulers" Ship="freighter" Parent="jupiter" Team="yellow" Count="3" />
 					<div slot="hud" class="ui-kit-space-hud"><span>Day {{SpaceDay}}</span></div>
 				</Scene>
-				<Scene *if="SpaceSystem === 'seed' && !Far.space" Team="blue" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [seed]="SpaceSeed" [cosmos]="SpaceCosmos" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused">
+				<Scene *if="SpaceSystem === 'seed' && !Far.space" Team="blue" [hoverMark]="SpaceMark" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [seed]="SpaceSeed" [cosmos]="SpaceCosmos" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused">
 					<div slot="hud" class="ui-kit-space-hud"><span>Seed {{SpaceSeed}}</span></div>
 				</Scene>
 			</div>
@@ -853,7 +853,7 @@
 				<span class="elemenx-caption" aria-live="polite">{{TerrainYear}}</span>
 			</div>
 			<div class="ui-kit-space" data-demo="terrain">
-				<Scene *if="!Far.terrain" Setting="terrain" Team="blue" Labels="true" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [season]="TerrainSeason" [aurora]="TerrainAuroraOf(TerrainAurora)" [auroracolors]="TerrainAurora === 'fantasy' ? ['#ff4fd8', '#3fb4ff'] : null" [flare]="SceneFlare" [bokeh]="SceneBokeh" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
+				<Scene *if="!Far.terrain" Setting="terrain" Team="blue" Labels="true" Orders="true" [selectCheck]="TerrainSelectable" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [season]="TerrainSeason" [aurora]="TerrainAuroraOf(TerrainAurora)" [auroracolors]="TerrainAurora === 'fantasy' ? ['#ff4fd8', '#3fb4ff'] : null" [flare]="SceneFlare" [bokeh]="SceneBokeh" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
 					<SceneObject ID="valley" Kind="ground" [world]="TerrainWorld(TerrainBiome, TerrainRelief)" [swell]="TerrainSwell" />
 					<SceneObject ID="sun" Kind="sun" [latitude]="TerrainLatitude" [dayofyear]="TerrainDay" Noon="150" [time]="TerrainHour" />
 					<SceneObject ID="hamlet" Kind="village" X="-70" Y="20" Houses="10" />
@@ -1128,6 +1128,14 @@
 		</div>
 	</Section>
 
+	<Section *if="Shows('Textures')" Title="Textures" Note="TextureLab · SceneTextures: textures of materials made of code, baked once into tiles with no seam, sharp near and far; their params on sliders">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-space" data-demo="textures">
+				<TextureLab Texture="lawn" View="ground" />
+			</div>
+		</div>
+	</Section>
+
 	<Section *if="Shows('Camera and cinema')" Title="Camera and cinema" [note]="'Scene · SceneCamera, SceneScreens, SceneCinema: lenses of real cameras, rigs, screens of a camera, a canvas and live HTML, cutscenes and their video'">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
@@ -1204,7 +1212,7 @@
 			</div>
 			<p class="elemenx-caption" aria-live="polite">{{DeepNote}}</p>
 			<div class="ui-kit-space" data-demo="deep">
-				<Scene *if="!Far.deep" Team="blue" Speed="0.02" DaySeconds="30" Cosmos="nebula" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="DeepReady" (hover)="DeepHovered" (select)="DeepSelected">
+				<Scene *if="!Far.deep" Team="blue" [hoverMark]="SpaceMark" Speed="0.02" DaySeconds="30" Cosmos="nebula" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="DeepReady" (hover)="DeepHovered" (select)="DeepSelected">
 					<SceneObject ID="vega" Kind="star" Name="Vega" Temperature="9600" Mass="2.1" />
 					<SceneObject ID="terra" Kind="planet" Name="Terra" Distance="1.4" Type="terran" />
 					<SceneObject ID="pebble" Kind="planetoid" Name="Pebble" Distance="2.6" Radius="140" />

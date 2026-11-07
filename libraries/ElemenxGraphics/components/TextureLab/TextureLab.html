@@ -1,0 +1,31 @@
+<div class="elemenx-texture-lab">
+	<div class="elemenx-texture-lab-view" #View role="img" [attribute.aria-label]="Label || $T('graphics.textureLab.label')">
+		<canvas class="elemenx-texture-lab-canvas" #Canvas></canvas>
+	</div>
+	<aside class="elemenx-texture-lab-panel">
+		<label class="elemenx-texture-lab-field"><span>{{$T('graphics.textureLab.texture')}}</span>
+			<select (change)="Picked">
+				<option *for="name of Names()" *key="name" [value]="name" [selected]="name === Texture">{{name}}</option>
+			</select>
+		</label>
+		<label class="elemenx-texture-lab-field"><span>{{$T('graphics.textureLab.view')}}</span>
+			<select (change)="Viewed">
+				<option *for="view of Views" *key="view.ID" [value]="view.ID" [selected]="view.ID === View">{{$T(view.Key)}}</option>
+			</select>
+		</label>
+		<label class="elemenx-texture-lab-field"><span>{{$T('graphics.textureLab.mode')}}</span>
+			<select (change)="Moded">
+				<option *for="mode of Modes" *key="mode.ID" [value]="mode.ID" [selected]="mode.ID === Mode">{{$T(mode.Key)}}</option>
+			</select>
+		</label>
+		<div class="elemenx-texture-lab-title">{{$T('graphics.textureLab.params')}}</div>
+		<label class="elemenx-texture-lab-field" *for="slider of Sliders(Version, Texture, Params)" *key="Texture + slider.Key"><span>{{slider.Title}}</span>
+			<input type="range" [attribute.min]="slider.Min" [attribute.max]="slider.Max" [attribute.step]="slider.Step" [value]="slider.Value" [attribute.data-key]="slider.Key" (input)="Slid" />
+		</label>
+		<div class="elemenx-texture-lab-title">{{$T('graphics.textureLab.light')}}</div>
+		<label class="elemenx-texture-lab-field"><span>{{$T('graphics.textureLab.sun')}}</span><input type="range" min="2" max="90" step="1" [value]="Sun" data-key="Sun" (input)="Sunned" /></label>
+		<label class="elemenx-texture-lab-field"><span>{{$T('graphics.textureLab.turn')}}</span><input type="range" min="0" max="360" step="1" [value]="Turn" data-key="Turn" (input)="Sunned" /></label>
+		<label class="elemenx-texture-lab-field"><span>{{$T('graphics.textureLab.height')}}</span><input type="range" min="0.2" max="20" step="0.1" [value]="Height" data-key="Height" (input)="Sunned" /></label>
+		<label class="elemenx-texture-lab-field"><span>{{$T('graphics.textureLab.pitch')}}</span><input type="range" min="5" max="90" step="1" [value]="Pitch" data-key="Pitch" (input)="Sunned" /></label>
+	</aside>
+</div>

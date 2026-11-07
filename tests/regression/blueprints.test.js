@@ -782,28 +782,36 @@ describe('Contract: Blueprints, graphs in the JSON of Flowprint made into shader
 
 		expect(code.Run({}, {At: [1.5, 0.5, 2]})).toEqual(made.Run({}, {At: [1.5, 0.5, 2]}));
 
-		/* Regression: timed cold, under load the first loop paid for the warming of the engine: warmed, the best of three. */
-		function time (run) {
-			var best = Infinity;
-			var round;
+		/*
+		 * Regression: timed cold, under load the first loop paid for the warming of the engine; timed one after the other, a
+		 * load that came between them fell on one alone. Warmed, the two in turn each round, the best of each.
+		 */
+		function once (run) {
 			var k;
 
-			for (round = 0; round < 4; round++) {
-				started = performance.now();
+			started = performance.now();
 
-				for (k = 0; k < 20000; k++)
-					run({}, {At: [k * 0.1, 0.5, k * 0.2]});
+			for (k = 0; k < 20000; k++)
+				run({}, {At: [k * 0.1, 0.5, k * 0.2]});
 
-				/* The first round warms. */
-				if (round)
-					best = Math.min(best, performance.now() - started);
-			}
-
-			return best;
+			return performance.now() - started;
 		}
 
-		slow = time(made.Run);
-		fast = time(code.Run);
+		var round;
+
+		slow = Infinity;
+		fast = Infinity;
+
+		for (round = 0; round < 6; round++) {
+			var a = once(made.Run);
+			var b = once(code.Run);
+
+			/* The first round warms. */
+			if (round) {
+				slow = Math.min(slow, a);
+				fast = Math.min(fast, b);
+			}
+		}
 
 		expect(fast * 5).toBeLessThan(slow);
 

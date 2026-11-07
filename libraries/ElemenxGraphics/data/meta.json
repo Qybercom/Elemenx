@@ -367,6 +367,51 @@
 					"Description": "The ID of the object under the pointer, outlined (--elemenx-scene-hover) as the selected one is (--elemenx-scene-outline)."
 				},
 				{
+					"Name": "HoverMark",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How the object under the pointer is marked: none (the default: the hover event alone), ring, outline, or {Look, Color (#rrggbb), Width (pixels of an outline), Pulse (seconds of a beat, 0 still), Cursor (a CSS cursor over it)}."
+				},
+				{
+					"Name": "SelectMark",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How the selected object is marked: outline (the default, with a ring while it is small on the screen), ring, none, or {Look, Color, Width, Pulse}."
+				},
+				{
+					"Name": "HoverCheck",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A function (object, info) for what the pointer may mark: false passes it by, an object of the fields of HoverMark marks it so; without it all may be but the walker or the vehicle under the keys."
+				},
+				{
+					"Name": "SelectCheck",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A function (object, info) for what a press (on it or on its label) may select: false passes it by. Select(id) from code is not asked."
+				},
+				{
+					"Name": "Orders",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A right press on the ground sends the walker selected there (a game of its own, as GameStrategy, orders as it likes)."
+				},
+				{
 					"Name": "FreeLook",
 					"Type": "bool",
 					"Default": false,
@@ -1669,6 +1714,129 @@
 				"Scene()"
 			],
 			"Sample": {}
+		},
+		{
+			"Name": "TextureLab",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "palette",
+			"Description": "A bench for the textures of SceneTextures: a tile and a ground under the sun, sharp near and far, its params on sliders.",
+			"Props": [
+				{
+					"Name": "Texture",
+					"Type": "text",
+					"Default": "lawn",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the texture (SceneTextures)."
+				},
+				{
+					"Name": "View",
+					"Type": "select",
+					"Default": "ground",
+					"Options": [
+						"ground",
+						"tile"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "A ground under the eye, or the tile Repeat times across."
+				},
+				{
+					"Name": "Mode",
+					"Type": "select",
+					"Default": "lit",
+					"Options": [
+						"lit",
+						"color",
+						"normal",
+						"height"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "What is shown: lit, its color, its normal or its height."
+				},
+				{
+					"Name": "Params",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The params of the recipe ({Name: value}); the others as the recipe has them."
+				},
+				{
+					"Name": "Sun",
+					"Type": "number",
+					"Default": 40,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The elevation of the sun, degrees."
+				},
+				{
+					"Name": "Turn",
+					"Type": "number",
+					"Default": 30,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The azimuth of the sun, degrees."
+				},
+				{
+					"Name": "Repeat",
+					"Type": "number",
+					"Default": 2,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Tiles across the height of the view tile (below 1: nearer than a tile, as a photograph of it)."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 1.7,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The eye over the ground in the view ground, metres."
+				},
+				{
+					"Name": "Pitch",
+					"Type": "number",
+					"Default": 30,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How far the eye looks down in the view ground, degrees."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change"
+			],
+			"EventDescriptions": {
+				"change": "A texture or a param changed: {Texture, Params}."
+			},
+			"Methods": [
+				"Draw()",
+				"Bake()",
+				"Picture()"
+			],
+			"Sample": {}
 		}
 	],
 	"Services": [
@@ -1776,6 +1944,32 @@
 				"Land(names)",
 				"LandNames()",
 				"Surface(name)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneTextures",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Textures of materials made of code and baked once into tiles that repeat with no seam, with mipmaps and anisotropic filtering.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Define(name, recipe)",
+				"Get(name)",
+				"Has(name)",
+				"Names(group)",
+				"Bake(renderer, name, params)",
+				"Array(renderer, names, params)",
+				"Forget(renderer, name)",
+				"Chunk(layered)",
+				"Source(name)"
 			],
 			"Sample": {}
 		},
@@ -2530,6 +2724,12 @@
 		"elemenx-model-editor-hint": [],
 		"elemenx-model-editor-role-part": [],
 		"elemenx-model-editor-role-axis": [],
-		"elemenx-model-editor-role-pivot": []
+		"elemenx-model-editor-role-pivot": [],
+		"elemenx-texture-lab": [],
+		"elemenx-texture-lab-view": [],
+		"elemenx-texture-lab-canvas": [],
+		"elemenx-texture-lab-panel": [],
+		"elemenx-texture-lab-title": [],
+		"elemenx-texture-lab-field": []
 	}
 }

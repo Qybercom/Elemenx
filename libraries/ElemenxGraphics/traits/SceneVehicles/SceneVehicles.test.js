@@ -176,3 +176,120 @@ describe('Contract: the mirrors of a car of a file, in the shape of their glass'
 		expect(shapes.MirrorShapes).toBeUndefined();
 	});
 });
+
+describe('Regression: the brake of a car under Space', function () {
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['Scene', 'SceneObject', 'service:Renderer', 'service:Meshes', 'service:SceneWaves', 'service:SceneModels']);
+	});
+
+	beforeEach(function () {
+		resetDOM();
+	});
+
+	afterEach(function () {
+		while (owned.length) owned.pop().$Destroy();
+	});
+
+	/* Space stopped the car, and its brake lights stayed dark: only S, going back, lit them. */
+	it('presses the brake, and so lights the brake lights, each time Space is held, the car going ahead', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 100;
+		var i;
+
+		function run (keys, frames) {
+			inner.Ground.Keys = keys;
+
+			for (i = 0; i < frames; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		/* On a busy machine the ground comes some frames later. */
+		await waitFor(function () {
+			inner.Rest = 0;
+
+			engine.Frame(now += 33);
+
+			return inner.Ground;
+		}, 15000);
+
+		scene.Add('unit', {ID: 'car', Name: '', Size: 4, X: 0, Y: 0, Vehicle: {Kind: 'car'}});
+		scene.Control('car');
+
+		var car = inner.Objects.car;
+
+		run({KeyW: true}, 30);
+
+		expect(car.Car.Forward).toBeGreaterThan(1);
+		expect(car.Controls.Brake).toBe(0);
+
+		run({Space: true}, 2);
+
+		expect(car.Controls.Brake).toBe(1);
+
+		run({KeyW: true}, 2);
+
+		expect(car.Controls.Brake).toBe(0);
+
+		run({Space: true}, 2);
+
+		expect(car.Controls.Brake).toBe(1);
+	});
+
+	/* A ring followed the car under the keys in every demo: the pointer stood on it. */
+	it('never marks the vehicle under the keys as what the pointer is over, unless HoverCheck lets it', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var canvas = scene.$Element().querySelector('.elemenx-scene-canvas');
+		var now = performance.now() + 100;
+		var box;
+		var spot;
+		var i;
+
+		await waitFor(function () {
+			inner.Rest = 0;
+
+			engine.Frame(now += 33);
+
+			return inner.Ground;
+		}, 15000);
+
+		scene.Add('unit', {ID: 'car', Name: '', Size: 4, X: 0, Y: 0, Vehicle: {Kind: 'car'}});
+		scene.Control('car');
+
+		for (i = 0; i < 10; i++) {
+			inner.Rest = 0;
+
+			engine.Frame(now += 33);
+		}
+
+		box = canvas.getBoundingClientRect();
+		spot = scene.ToScreen('car');
+
+		expect(engine.Pick(spot.X, spot.Y, false)).toBe('car');
+
+		inner.HoverAt = 0;
+
+		scene.HoverAt({X: spot.X, Y: spot.Y});
+
+		expect(inner.Hovering || '').toBe('');
+
+		scene.HoverCheck = function () {
+			return true;
+		};
+
+		inner.HoverAt = 0;
+
+		scene.HoverAt({X: spot.X, Y: spot.Y});
+
+		expect(inner.Hovering).toBe('car');
+		expect(box.width).toBeGreaterThan(0);
+	});
+});

@@ -91,6 +91,48 @@ describe('Contract: GameCombat, the health of what a game of a Scene can hurt: h
 		expect(scene.Get('crate')).toBeFalsy();
 	}, 30000);
 
+	/*
+	 * The health of a game is of the game: the scene gives its kinds none. Vitals gives a unit and a house theirs (Kinds, through
+	 * what a kind extends), the card of what is selected shows it (SceneCard), and the weapons aim at what lives (SceneTarget).
+	 */
+	it('gives the kinds of the scene their health, shows it on the card, and lets the weapons aim only at what lives', async function () {
+		var made = await mount('', '');
+		var scene = made.Scene;
+		var vitals = Elemenx.Service('Vitals');
+		var rows = [];
+
+		Elemenx.Service('SceneKinds').Define('combat-guard', {Extends: 'unit', Traits: {}});
+
+		scene.Add('unit', {ID: 'grunt', X: 0, Y: 10, Team: 'red'});
+		scene.Add('combat-guard', {ID: 'guard', X: 4, Y: 10, Team: 'red'});
+		scene.Add('house', {ID: 'hut', X: 20, Y: 20});
+		scene.Add('thing', {ID: 'stone', Model: 'test-box', Size: 1, X: -6, Y: 10});
+
+		frames(scene, 3);
+
+		expect(scene.Scene().Objects.grunt.Traits.Health).toBe(undefined);
+		expect(vitals.Settings(scene.Scene().Objects.grunt).Max).toBe(100);
+		expect(vitals.Settings(scene.Scene().Objects.guard).Max).toBe(100);
+		expect(vitals.Settings(scene.Scene().Objects.hut).Max).toBe(800);
+		expect(vitals.Settings(scene.Scene().Objects.stone)).toBe(null);
+		expect(made.Combat.HealthOf('grunt')).toMatchObject({Value: 100, Max: 100, Alive: true});
+
+		scene.Engine().Select('grunt');
+
+		expect(scene.Card.Rows).toContainEqual({Key: 'health', Label: Elemenx.Locale.Text('gaming.vitals.health'), Value: '100 / 100'});
+
+		made.Combat.SceneCard(scene.Scene().Objects.grunt, rows);
+		made.Combat.SceneCard(scene.Scene().Objects.grunt, rows);
+
+		expect(rows.length).toBe(1);
+		expect(made.Combat.SceneTarget(scene.Scene().Objects.grunt)).toBe(true);
+		expect(made.Combat.SceneTarget(scene.Scene().Objects.stone)).toBe(false);
+
+		made.Combat.Damage('grunt', {Amount: 500});
+
+		expect(made.Combat.SceneTarget(scene.Scene().Objects.grunt) || false).toBe(false);
+	}, 30000);
+
 	it('breaks what dies with Death break: its pieces fly from where the shot hit', async function () {
 		var made = await mount('', '<SceneObject ID="gun" Kind="thing" Model="test-box" Size="0.5" X="0" Y="0" Weapon="sniper" />');
 		var scene = made.Scene;

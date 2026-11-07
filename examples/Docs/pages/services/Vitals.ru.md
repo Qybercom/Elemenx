@@ -20,6 +20,8 @@ Make(options) создаёт реестр (ledger). Options:
 - Receive(message) — сообщение транспорта. Хозяин принимает запросы клиентов (damage, heal, revive) как свои. Клиент принимает состояния хозяина по одному разу и в порядке хозяина: старый Seq и повтор отбрасываются;
 - Save() и Load(saved) — {Version, States}.
 
+Сама сцена не знает прочности: её даёт игра. Kinds — прочность видов сцены ({unit: {Max: 100}, house: 800, module: 200, station и craft: 1000, ship: 100, cruiser: 600, freighter: 300}); свой вид берёт прочность того, что он расширяет (Extends), а черта Health объекта или его вида — поверх. Settings(object) даёт настройки прочности объекта (или null — его нельзя повредить); Health и MaxHealth, заданные объекту отдельно, тоже учитываются. Card(ledger, object, rows) добавляет строку прочности в карточку объекта, Target(ledger, object) говорит, жив ли он для оружия, — этим пользуются точки подключения SceneCard и SceneTarget компонентов GameCombat и GameStrategy.
+
 Of(scene) — реестр сцены, один на её элемент. Он читает черту Health объектов (Max, Armor, Resist, Parts, Regen, Death) и Values.Health и пишет значение обратно в Values.Health. Каждое попадание оружия сцены (hit) он превращает в Damage. При гибели делает то, что сказано в Death:
 - remove — убрать (по умолчанию);
 - break — разбить (Scene.Break);
@@ -29,6 +31,9 @@ Of(scene) — реестр сцены, один на её элемент. Он �
 ## Методы
 
 - `Make(options)`
+- `Settings(object)`
+- `Card(ledger, object, rows)`
+- `Target(ledger, object)`
 - `Of(scene)`
 
 ## Тесты
@@ -37,3 +42,4 @@ Of(scene) — реестр сцены, один на её элемент. Он �
 - [lets handlers change or cancel a change before it is applied; spares its own team; applies one change ID once](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/services/Vitals/Vitals.test.js#L47) — `libraries/ElemenxGaming/services/Vitals/Vitals.test.js`
 - [keeps a host and its clients the same: a client asks, the host applies and sends the state, in order](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/services/Vitals/Vitals.test.js#L72) — `libraries/ElemenxGaming/services/Vitals/Vitals.test.js`
 - [regenerates, saves and loads, and reads what it does not know yet](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/services/Vitals/Vitals.test.js#L107) — `libraries/ElemenxGaming/services/Vitals/Vitals.test.js`
+- [gives the kinds of the scene their health, shows it on the card, and lets the weapons aim only at what lives](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/components/GameCombat/GameCombat.test.js#L98) — `libraries/ElemenxGaming/components/GameCombat/GameCombat.test.js`

@@ -178,7 +178,6 @@
 			"ms2": "m/s²",
 			"days": "days",
 			"hours": "h",
-			"health": "Health",
 			"parts": "Parts",
 			"surfaces": {
 				"rocky": "Rocky planet",
@@ -290,6 +289,28 @@
 				"line": "Straight",
 				"arc": "Arcs",
 				"curve": "Smooth"
+			}
+		},
+		"textureLab": {
+			"label": "A texture under the sun",
+			"texture": "Texture",
+			"view": "View",
+			"mode": "Show",
+			"params": "Params",
+			"light": "Light and eye",
+			"sun": "Sun",
+			"turn": "Its side",
+			"height": "Eye, m",
+			"pitch": "Looks down",
+			"views": {
+				"ground": "Ground",
+				"tile": "Tile"
+			},
+			"modes": {
+				"lit": "Lit",
+				"color": "Color",
+				"normal": "Normal",
+				"height": "Height"
 			}
 		}
 	}

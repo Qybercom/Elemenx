@@ -24,6 +24,10 @@
  * with it) and the factor of its damage. The event hit: {Weapon, Type, Source, Team, Target (the ID, null for the ground),
  * Part, Point, Normal, Material, Amount, Distance, ID (of the hit)}; fire ({ID, Weapon, From, Way}).
  *
+ * What a weapon locks on and what a blast hurts is for the game to say (the hook SceneTarget of its behaviours: GameCombat
+ * takes what has health and lives); with none that says, a lock takes what stands with a Team other than the hero's, a
+ * blast all that stands in it.
+ *
  * Crosshair of the scene ('' as the weapon of the hero says, none, dot, cross, circle, chevron) is drawn over the view while
  * the hero holds a weapon, wider as it moves and fires; it flashes on a hit and red on a kill (Scene.Killed(id)). Locks are
  * marks on their targets, closing in as they lock, at the edge of the view when the target is out of it.
@@ -184,6 +188,26 @@ Elemenx.Trait('SceneWeapons', {
 		}
 
 		/* Where one aims at an object: the middle of its body. */
+		/*
+		 * Whether a weapon may aim at an object and its blast hurt it: as the behaviours of the scene say (SceneTarget of
+		 * GameCombat: what has health and lives); with none that says, what stands with a team of its own (aim) or anything
+		 * that stands (a blast). The scene knows no health.
+		 */
+		function targetable (object, aiming) {
+			var said = [];
+
+			(self.Behaviours ? self.Behaviours() : []).forEach(function (behaviour) {
+				var answer = typeof behaviour.Target === 'function' ? behaviour.Target(object) : undefined;
+				if (answer === true || answer === false)
+					said.push(answer);
+			});
+
+			if (said.length)
+				return said.indexOf(true) !== -1;
+
+			return aiming ? !!object.Team : true;
+		}
+
 		function centerOf (object) {
 			var body = engine.BodyOf ? engine.BodyOf(object) : null;
 			if (body)
@@ -417,7 +441,7 @@ Elemenx.Trait('SceneWeapons', {
 				if (engine.RigidPush && type.Push)
 					engine.RigidPush(id, vectors.Scale(way, number(type.Push, 0) * (1 - far / radius)), point);
 
-				if (!traitOf(object, 'Health') && !object.Values.Health) return;
+				if (!targetable(object, false)) return;
 
 				hit({ID: shot.ID, Type: type, Name: shot.Name, Source: shot.Source, Team: shot.Team, From: point, Blast: true}, {ID: id, Object: object, Point: middle, Normal: vectors.Scale(way, -1), Material: materialOf(object, null), Part: ''}, number(type.Damage, 0) * (1 - far / radius), way);
 			});
@@ -782,7 +806,7 @@ Elemenx.Trait('SceneWeapons', {
 				var angle;
 				var seen;
 
-				if (id === scene.Hero || !object.World || object.Hidden || object.Owner || !traitOf(object, 'Health') && !object.Values.Health) return null;
+				if (id === scene.Hero || !object.World || object.Hidden || object.Owner || !targetable(object, true)) return null;
 
 				if (hero.Team && object.Team && String(hero.Team) === String(object.Team)) return null;
 

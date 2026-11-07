@@ -183,7 +183,7 @@ Elemenx.Trait('SceneScatter', {
 					if ((item.Type === 'clearing' || item.Type === 'mask' || item.Type === 'lake') && item.Points && item.Points.length > 2)
 						made.Areas.push(item.Points);
 
-					if ((item.Type === 'road' || item.Type === 'river') && item.Points && item.Points.length > 1)
+					if ((item.Type === 'road' || item.Type === 'street' || item.Type === 'railway' || item.Type === 'river') && item.Points && item.Points.length > 1)
 						made.Lines.push({Points: item.Points, Reach: (Number(item.Width) || 6) / 2 + (item.Type === 'river' ? Number(item.Bank === undefined ? 6 : item.Bank) * 0.5 : 1)});
 
 					if (item.Type === 'marker' && item.At || games[item.Type] && (item.At || item.Points))
@@ -233,6 +233,14 @@ Elemenx.Trait('SceneScatter', {
 			var buildings = self.$Service('SceneBuildingGenerator');
 			var sketch = field && field.Options && field.Options.Sketch;
 			var lit = {};
+
+			/* Nothing grows on the streets a settlement laid out itself: they are in no layer of the sketch. */
+			plans.forEach(function (plan) {
+				(plan.Streets || []).forEach(function (street) {
+					if (street.Points && street.Points.length > 1)
+						made.Lines.push({Points: street.Points, Reach: (Number(street.Width) || 6) / 2 + 1.5});
+				});
+			});
 
 			(sketch && sketch.Layers || []).forEach(function (layer) {
 				(layer.Items || []).forEach(function (item) {
@@ -393,6 +401,49 @@ Elemenx.Trait('SceneScatter', {
 		 * hero or enemies come), with what shows of their role: a camp its tent and its fire, ruins their stones, a cave the
 		 * boulders of its mouth, a spring its mist; its triggers and zones.
 		 */
+		/*
+		 * A place off the ways (roads, streets, railways, rivers of the sketch): a thing of a size on one of them is moved aside,
+		 * out of its edge, and told in the console; [x, z] as it was when none is there.
+		 */
+		function aside (x, z, size, name) {
+			var lines = sketched().Lines;
+			var at = [x, z];
+			var moved = false;
+			var round;
+
+			for (round = 0; round < 3; round++) {
+				lines.forEach(function (line) {
+					var i;
+
+					for (i = 0; i + 1 < line.Points.length; i++) {
+						var a = line.Points[i];
+						var b = line.Points[i + 1];
+						var dx = b[0] - a[0];
+						var dz = b[1] - a[1];
+						var long = dx * dx + dz * dz;
+						var t = long ? Math.max(0, Math.min(1, ((at[0] - a[0]) * dx + (at[1] - a[1]) * dz) / long)) : 0;
+						var px = at[0] - (a[0] + dx * t);
+						var pz = at[1] - (a[1] + dz * t);
+						var far = Math.sqrt(px * px + pz * pz);
+						var wanted = line.Reach + size / 2 + 2;
+						var side;
+
+						if (far >= wanted) continue;
+
+						/* Out along the side it is on (on the very line, the left of its way). */
+						side = far > 0.01 ? [px / far, pz / far] : [-dz / Math.sqrt(long || 1), dx / Math.sqrt(long || 1)];
+						at = [at[0] + side[0] * (wanted - far), at[1] + side[1] * (wanted - far)];
+						moved = true;
+					}
+				});
+			}
+
+			if (moved && window.console)
+				window.console.warn('Elemenx Scene: ' + (name || 'a landmark') + ' stood on a way, moved aside to ' + Math.round(at[0]) + ', ' + Math.round(at[1]));
+
+			return at;
+		}
+
 		function mark () {
 			var markers = sketched().Markers;
 			var key = JSON.stringify(markers);
@@ -421,7 +472,14 @@ Elemenx.Trait('SceneScatter', {
 				var z = Number(item.At[1]) || 0;
 				var role = item.Role || 'spawn';
 
-				/* A landmark is a building of the scene, its own model; a marker an object a game finds. */
+				/* A landmark is a building of the scene, its own model, never on a way; a marker an object a game finds. */
+				if (role === 'landmark') {
+					var off = aside(x, z, Number(item.Size) || (library.Info(item.Model || 'temple') || {Size: 10}).Size, item.Name || item.Model);
+
+					x = off[0];
+					z = off[1];
+				}
+
 				if (role === 'landmark') made.push({ID: id, Kind: 'house', Name: item.Name || item.Model || 'temple', X: x, Y: z, Model: item.Model || 'temple', Size: Number(item.Size) || (library.Info(item.Model || 'temple') || {Size: 10}).Size, Facing: Number(item.Facing) || 0});
 				else made.push({ID: id, Kind: 'marker', Name: item.Name || role, X: x, Y: z, Role: role, Team: item.Team || ''});
 

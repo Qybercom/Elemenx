@@ -13,6 +13,10 @@
  * Strip, Surface, Height, Grip, Drag}; Roads() gives the roads as SceneRoads makes them, Junctions() the junctions, for
  * what follows them (a car, a train, a walker on a path); BarrierHit(x, z, fromX, fromZ) whether a point went through a
  * barrier of a road.
+ * The streets of the settlements of its sketch (their plans, SceneTerrainGenerator.SettlementPlan) are roads too, made with
+ * the ground at once: a city or a town has streets, a village country roads, a hamlet gravel, a fort alleys, as wide as the
+ * plan has them; each is drawn by an object of kind road of its own (street-<settlement>-<n>), none for a settlement of
+ * Roads false.
  */
 Elemenx.Trait('SceneRoadNetwork', {
 	RoadsStart: function () {
@@ -23,11 +27,72 @@ Elemenx.Trait('SceneRoadNetwork', {
 		var models = this.$Service('SceneModels');
 		var terrain = this.$Service('SceneTerrainGenerator');
 		var random = this.$Service('Random');
-		var state = {Key: '', Made: [], Free: [], Junctions: [], Sketch: null, Given: null, Names: {}, Version: 0};
+		var state = {Key: '', Made: [], Free: [], Junctions: [], Sketch: null, Given: null, Names: {}, Version: 0, Streets: [], StreetsOf: null, StreetIDs: {}, Carried: ''};
+		var streetTypes = {city: 'street', town: 'street', village: 'country', hamlet: 'gravel', fort: 'alley'};
+
+		/* The streets of the settlements of a sketch as specs of roads; they come of the sketch alone, so the same sketch gives the same ones. */
+		function streetsOf (sketch) {
+			var items = [];
+			var made = [];
+
+			if (state.StreetsOf === sketch) return state.Streets;
+
+			(sketch && sketch.Layers || []).forEach(function (layer) {
+				if (layer.Visible !== false && layer.Visible !== 'false')
+					items = items.concat(layer.Items || []);
+			});
+
+			items.forEach(function (item) {
+				if (item.Type !== 'settlement' || item.Visible === false || item.Roads === false || item.Roads === 'false' || !item.Points || item.Points.length < 3) return;
+
+				terrain.SettlementPlan(item, items, function (name) {
+					return terrain.SettlementSizes[name] || null;
+				}).Streets.forEach(function (street, index) {
+					if (street.Points && street.Points.length > 1)
+						made.push({ID: 'street-' + item.ID + '-' + index, Type: streetTypes[item.Kind] || 'street', Width: Number(street.Width) || 0, Points: street.Points});
+				});
+			});
+
+			state.StreetsOf = sketch;
+			state.Streets = made;
+			state.StreetIDs = {};
+
+			made.forEach(function (street) {
+				state.StreetIDs[street.ID] = true;
+			});
+
+			return made;
+		}
+
+		/* The objects that draw the streets: one of each, added after the frame (and those of streets gone taken away). */
+		function carry (streets) {
+			var key = JSON.stringify(streets);
+			if (state.Carried === key) return;
+
+			state.Carried = key;
+
+			window.setTimeout(function () {
+				var wanted = {};
+
+				streets.forEach(function (street) {
+					wanted[street.ID] = true;
+
+					if (!scene.Objects[street.ID])
+						self.Add('road', Object.assign({Name: ''}, street));
+				});
+
+				(state.CarriedIDs || []).forEach(function (id) {
+					if (!wanted[id] && scene.Objects[id])
+						self.Remove(id);
+				});
+
+				state.CarriedIDs = Object.keys(wanted);
+			}, 0);
+		}
 
 		function objects () {
 			return (scene.Order || []).filter(function (object) {
-				return object.Traits && object.Traits.Road && (object.Traits.Road.Points || []).length > 1;
+				return object.Traits && object.Traits.Road && (object.Traits.Road.Points || []).length > 1 && !state.StreetIDs[object.ID];
 			});
 		}
 
@@ -57,7 +122,7 @@ Elemenx.Trait('SceneRoadNetwork', {
 		}
 
 		/* The network again: the roads, their junctions, a model of each road, and the layer of the sketch under them. */
-		function make (found, settings, sketch, key) {
+		function make (found, settings, sketch, key, streets) {
 			var options = sketch ? Object.assign({}, settings, {Sketch: sketch}) : settings;
 			var field = terrain.Flat(options);
 			var ground = function (x, z) {
@@ -73,7 +138,7 @@ Elemenx.Trait('SceneRoadNetwork', {
 				}).map(barrier));
 
 				return made;
-			}), junctions().map(function (object) {
+			}).concat(streets || []), junctions().map(function (object) {
 				return {ID: object.ID, X: Number(object.Values.X) || 0, Z: Number(object.Values.Y) || 0, Radius: object.Traits.Junction.Radius, Surface: object.Traits.Junction.Surface};
 			}), {Height: ground});
 			var hash = random.Hash(key);
@@ -143,6 +208,7 @@ Elemenx.Trait('SceneRoadNetwork', {
 		engine.RoadsSketch = function (settings, sketch) {
 			var found;
 			var key;
+			var streets;
 			/* Every frame asks: nothing changed in the scene, nothing to look at. */
 			var quick = scene.Version + ':' + JSON.stringify(settings);
 			if (state.Quick === quick && state.Given === sketch)
@@ -150,9 +216,12 @@ Elemenx.Trait('SceneRoadNetwork', {
 
 			state.Quick = quick;
 			state.Given = sketch;
+			streets = streetsOf(sketch);
 			found = objects();
 
-			if (!found.length && !barriers().length) {
+			carry(streets);
+
+			if (!found.length && !barriers().length && !streets.length) {
 				if (state.Made.length || state.Free.length)
 					state.Version++;
 
@@ -164,7 +233,7 @@ Elemenx.Trait('SceneRoadNetwork', {
 				return sketch;
 			}
 
-			key = JSON.stringify([settings, sketch, found.map(function (object) {
+			key = JSON.stringify([settings, sketch, streets, found.map(function (object) {
 				return [object.ID, object.Traits.Road];
 			}), junctions().map(function (object) {
 				return [object.ID, object.Values.X, object.Values.Y, object.Traits.Junction];
@@ -175,11 +244,13 @@ Elemenx.Trait('SceneRoadNetwork', {
 			if (key !== state.Key) {
 				state.Key = key;
 
-				make(found, settings, sketch, key);
+				make(found, settings, sketch, key, streets);
 			}
 
-			/* The model of a road or a barrier is its own: an object made again takes it again. */
-			found.concat(barriers()).forEach(function (object) {
+			/* The model of a road or a barrier is its own: an object made again takes it again (a street, the object that draws it). */
+			found.concat(barriers(), streets.map(function (street) {
+				return scene.Objects[street.ID];
+			}).filter(Boolean)).forEach(function (object) {
 				object.Shape = state.Names[object.ID];
 			});
 

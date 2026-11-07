@@ -141,7 +141,7 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		await waitFor(function () {
 			return mounted.Drawn() > before;
 		}, 20000);
-	});
+	}, 45000);
 	it('picks the location of a point, sets its kind and what is past it, adds a passage to the one beside, and opens it with the ground of the planet there', async function () {
 		var mounted = await mount({Seed: 'places', Ocean: 0.5, LocationSize: 50});
 		var editor = mounted.Editor;

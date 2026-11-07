@@ -336,7 +336,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 				'<SceneObject ID="earth" Kind="planet" Name="Earth" Radius="6371" Mass="1" Distance="1" Tilt="23.4">' +
 					'<SceneObject ID="moon" Kind="moon" Name="Moon" Radius="1737" distance="384400 km" />' +
 					'<SceneObject ID="gateway" Kind="station" Name="Gateway" Team="blue">' +
-						'<SceneObject Part="dock" Max="300" />' +
+						'<SceneObject Part="dock" Color="#ff8800" />' +
 						'<SceneObject ID="lab" Kind="module" Shape="sphere" />' +
 					'</SceneObject>' +
 				'</SceneObject>' +
@@ -361,7 +361,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(scene.Get('gateway').Parts.map(function (part) {
 			return part.Part;
 		})).toEqual(['ring', 'hub', 'panel-a', 'panel-b', 'dock', 'lab']);
-		expect(scene.Get('gateway/dock').Traits.Health.Max).toBe(300);
+		expect(scene.Get('gateway/dock').Traits.Model.Color).toBe('#ff8800');
 		expect(scene.Get('gateway/lab').Traits.Model.Shape).toBe('sphere');
 		expect(scene.Get('first').Parts.map(function (part) {
 			return part.ID;
@@ -418,6 +418,31 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		expect(bright(pixel(scene, spot(1).X, spot(1).Y))).toBeGreaterThan(90);
 		expect(bright(pixel(scene, spot(-1).X, spot(-1).Y))).toBeLessThan(40);
+	});
+
+	/* The clouds of a planet went round it with its days: a day of two minutes drove them at hundreds of metres a second past a ship landing. */
+	it('drives the clouds of a body by a wind of the clock, never by its days made fast', async function () {
+		var mounted = await mount('<Scene Speed="50" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Name="Sun"><SceneObject ID="earth" Kind="planet" Name="Earth" Surface-Type="terran" Radius="6371" Distance="1" /></SceneObject>' +
+		'</Scene>', {});
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var earth = inner.Objects.earth;
+		var now = performance.now() + 100;
+		var start = inner.Seconds;
+		var i;
+
+		for (i = 0; i < 30; i++) {
+			inner.Rest = 0;
+
+			engine.Frame(now += 33);
+		}
+
+		/* A second of the clock: 25 metres a second round 6371 kilometres, however many days went. */
+		expect(inner.Seconds - start).toBeGreaterThan(0.5);
+		expect(engine.CloudDrift(earth)).toBeCloseTo(inner.Seconds * 25 / 6371000, 9);
+		expect(engine.CloudDrift(earth) * 6371000 / Math.max(0.001, inner.Seconds)).toBeLessThan(26);
 	});
 
 	it('selects an object by its label and a part by a press when near, flies to it, sends a fleet that arrives', async function () {
@@ -499,10 +524,10 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		/* A field of a trait by its name, a part of its own. */
 		scene.Change('outpost-1', {distance: 3});
-		scene.Change('outpost-1/dock', {Max: 999});
+		scene.Change('outpost-1/dock', {Color: '#00ff88'});
 
 		expect(scene.Get('outpost-1').Traits.Orbit.Distance).toBe(3);
-		expect(scene.Get('outpost-1/dock').Traits.Health.Max).toBe(999);
+		expect(scene.Get('outpost-1/dock').Traits.Model.Color).toBe('#00ff88');
 
 		expect(scene.Attach('outpost-1', {ID: 'antenna', Kind: 'module', Traits: {Model: {Shape: 'cone'}}}, [0, 1, 0])).toBe('outpost-1/antenna');
 		expect(scene.Get('outpost-1/antenna').Values.Position).toEqual([0, 1, 0]);
@@ -831,7 +856,9 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		expect(hero.Traits.Walker.Speed).toBe(8);
 		expect(scene.Get('keep').Values.Blocks).toBe(true);
-		expect(scene.Get('keep').Traits.Health.Max).toBe(800);
+		/* A house of a scene can be selected; its health is of a game (Vitals of ElemenxGaming), none of the scene. */
+		expect(scene.Get('keep').Traits.Selectable).toEqual({});
+		expect(scene.Get('keep').Traits.Health).toBe(undefined);
 
 		frame(0.1);
 
@@ -1339,6 +1366,20 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		/* A highlight that falls between pixels is spread by what the normal does there, or it flickers on carbon and paint. */
 		expect(space.Shaders(graphics).Pbr).toMatch(/roughness = sqrt\(min\(1\.0, roughness \* roughness \+ spread\)\)/);
+
+		/*
+		 * Regression: a rough steel rail mirrored the grass sharp, at half the size, in steps of two pixels at its edges. Only
+		 * what is smooth mirrors the screen.
+		 */
+		expect(space.Shaders(graphics).Pbr).toContain('(1.0 - smoothstep(0.15, 0.3, roughness))');
+
+		/*
+		 * Regression: the sea of a globe took its waves of a place that was always nought (a noise of rounding: streaks that
+		 * flickered), and a grain of kilometres where a pixel covers more. Its waves are of the very place, past two pixels none.
+		 */
+		expect(space.Shaders(graphics).Ground).not.toContain('dot(place, side)');
+		expect(space.Shaders(graphics).Ground).toContain('float foot = length(fwidth(place));');
+		expect(space.Shaders(graphics).Ground).toContain('uCloudsOn');
 
 		/* What moves keeps few frames: its shadow has a pattern that stands, not a grain they would take away. */
 		expect(graphics.Chunks.Shadow).toMatch(/uSteady > 0\.5 \? 0\.0 :/);

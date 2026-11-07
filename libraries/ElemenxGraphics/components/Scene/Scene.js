@@ -11,7 +11,7 @@
  * Inclination, Node, Periapsis, Anomaly, Period; Body: Radius, Mass, Day, Tilt, Albedo; Surface: Type, Colors, Water,
  * Ocean, Ice, Clouds, Atmosphere, Seed), moon (a planet, small, one face to its planet), belt (Belt: Inner, Outer, Count,
  * Inclination, Colors), ring (Ring: Inner, Outer, Inclination, Colors), station and outpost (an Orbit in radii of what
- * they go round, a Model and parts: modules, a dock), fighter, cruiser and freighter (ships: Model, Health), fleet
+ * they go round, a Model and parts: modules, a dock), fighter, cruiser and freighter (ships: Model; their health is of a game: Vitals of ElemenxGaming), fleet
  * (Mover: Speed; Formation: Count, Ship, Spacing: its ships are parts). An application defines its own (SceneKinds.Define)
  * and systems of its own for traits of its own (Systems: {Trait: {Update(object, scene), Draw(object, scene)}}).
  *
@@ -162,6 +162,11 @@ Elemenx.Component('Scene', {
 			Wireframe: 'Draws the wire of the scene over it: each edge of the ground and of the models (--elemenx-scene-wire).',
 			Edges: 'Draws the edges of the models: where their faces meet at an angle and their rims (--elemenx-scene-edges).',
 			Hovered: 'The ID of the object under the pointer, outlined (--elemenx-scene-hover) as the selected one is (--elemenx-scene-outline).',
+			HoverMark: 'How the object under the pointer is marked: none (the default: the hover event alone), ring, outline, or {Look, Color (#rrggbb), Width (pixels of an outline), Pulse (seconds of a beat, 0 still), Cursor (a CSS cursor over it)}.',
+			SelectMark: 'How the selected object is marked: outline (the default, with a ring while it is small on the screen), ring, none, or {Look, Color, Width, Pulse}.',
+			HoverCheck: 'A function (object, info) for what the pointer may mark: false passes it by, an object of the fields of HoverMark marks it so; without it all may be but the walker or the vehicle under the keys.',
+			SelectCheck: 'A function (object, info) for what a press (on it or on its label) may select: false passes it by. Select(id) from code is not asked.',
+			Orders: 'A right press on the ground sends the walker selected there (a game of its own, as GameStrategy, orders as it likes).',
 			FreeLook: 'A walker that stands does not turn with the view, so it can be looked at from all sides: it comes round when it sets off.',
 			DaySeconds: 'The seconds a day of 24 hours takes, on a body and from space alike, however fast the orbits go (0: as Speed says).',
 			SurfaceSpeed: 'The days a second on the surface of a body (1/120: a day of two minutes).',
@@ -247,6 +252,11 @@ Elemenx.Component('Scene', {
 	Wireframe: false,
 	Edges: false,
 	Hovered: '',
+	HoverMark: '',
+	SelectMark: '',
+	HoverCheck: null,
+	SelectCheck: null,
+	Orders: false,
 	ViewYaw: 0,
 	ViewPitch: 0,
 	Details: true,
@@ -341,10 +351,10 @@ Elemenx.Component('Scene', {
 			'light': {Traits: {Light: {Color: '#ffd39a', Power: 1, Radius: 14, Height: 2.5, Spot: 0, Aim: null, Flicker: 0}}},
 			'location': {Traits: {Model: {Shape: 'rock', Size: 1, Color: '#ffffff'}, Location: {}}},
 			'sun': {Traits: {Sun: {Elevation: 35, Azimuth: 140, Color: '#fff4e0', Disc: 0.533, Time: '', Noon: 180, Shade: '#ffffff', DayHours: 24, Latitude: null, Tilt: 23.44, DayOfYear: 172, YearDays: 365, Moon: true, MoonLight: 1, MoonSize: 1, MoonPhase: 0.5, MoonElevation: null, MoonAzimuth: null, MoonTilt: 5.14, MoonNode: 80, NightLight: 1, SkyGlow: 0, SkyGlowColor: '#ffa860', SkyGlowAzimuth: null, Galaxy: 1}}},
-			'unit': {Traits: {Walker: {Speed: 8, MaxSlope: 0.45}, Model: {Shape: 'soldier', Size: 1.8, Color: '#ffffff'}, Health: {Max: 100}, Selectable: {}}},
+			'unit': {Traits: {Walker: {Speed: 8, MaxSlope: 0.45}, Model: {Shape: 'soldier', Size: 1.8, Color: '#ffffff'}, Selectable: {}}},
 			'tree': {Traits: {Model: {Shape: 'pine', Size: 8, Color: '#ffffff'}}, Values: {Blocks: true}},
 			'rock': {Traits: {Model: {Shape: 'rock', Size: 2.5, Color: '#ffffff'}}, Values: {Blocks: true}},
-			'house': {Traits: {Model: {Shape: 'house', Size: 8, Color: '#ffffff'}, Health: {Max: 800}, Selectable: {}}, Values: {Blocks: true}},
+			'house': {Traits: {Model: {Shape: 'house', Size: 8, Color: '#ffffff'}, Selectable: {}}, Values: {Blocks: true}},
 			'building': {Extends: 'house'},
 			'thing': {Traits: {Model: {Shape: 'crystal', Size: 1, Color: '#ffffff'}}},
 			'collider': {Traits: {Collider: {Points: null, Height: null, Lift: 0, Model: ''}}},
@@ -380,14 +390,14 @@ Elemenx.Component('Scene', {
 			'planetoid': {Extends: 'moon', Traits: {Body: {Radius: 120, Day: 9}, Surface: {Type: 'dwarf', Atmosphere: 'none', Clouds: 0}}},
 			'belt': {Traits: {Belt: {Inner: 2.2, Outer: 3.2, Count: 260, Inclination: 0, Colors: '', Rocks: 1}}},
 			'ring': {Traits: {Ring: {Inner: 1.3, Outer: 2.3, Inclination: 0, Colors: ''}}},
-			'module': {Traits: {Model: {Shape: 'box', Size: 1, Scale: [1, 1, 1], Color: '#d6d9e0'}, Health: {Max: 200}}},
+			'module': {Traits: {Model: {Shape: 'box', Size: 1, Scale: [1, 1, 1], Color: '#d6d9e0'}}},
 			'station': {
-				Traits: {Orbit: {Distance: 1.8, Unit: 'radii', Period: 0.6, Inclination: 12}, Model: {Shape: '', Size: 0.11, Relative: true, Spin: 2}, Health: {Max: 1000}, Selectable: {}},
+				Traits: {Orbit: {Distance: 1.8, Unit: 'radii', Period: 0.6, Inclination: 12}, Model: {Shape: '', Size: 0.11, Relative: true, Spin: 2}, Selectable: {}},
 				Parts: [
 					{ID: 'ring', Kind: 'module', Traits: {Model: {Shape: 'torus', Color: '#dcdfe6'}}},
 					{ID: 'hub', Kind: 'module', Traits: {Model: {Shape: 'cylinder', Scale: [0.4, 0.8, 0.4], Color: '#8d929c'}}},
-					{ID: 'panel-a', Kind: 'module', Position: [0, 0.55, 0], Traits: {Model: {Shape: 'box', Scale: [1.1, 0.03, 0.34], Color: '#1f3366'}, Health: {Max: 80}}},
-					{ID: 'panel-b', Kind: 'module', Position: [0, -0.55, 0], Traits: {Model: {Shape: 'box', Scale: [1.1, 0.03, 0.34], Color: '#1f3366'}, Health: {Max: 80}}},
+					{ID: 'panel-a', Kind: 'module', Position: [0, 0.55, 0], Traits: {Model: {Shape: 'box', Scale: [1.1, 0.03, 0.34], Color: '#1f3366'}}},
+					{ID: 'panel-b', Kind: 'module', Position: [0, -0.55, 0], Traits: {Model: {Shape: 'box', Scale: [1.1, 0.03, 0.34], Color: '#1f3366'}}},
 					{ID: 'dock', Kind: 'module', Position: [0, 0, 1.1], Traits: {Model: {Shape: 'box', Scale: [0.3, 0.2, 0.3], Color: '#aeb3bd'}, Container: {Size: 20}}}
 				]
 			},
@@ -401,11 +411,11 @@ Elemenx.Component('Scene', {
 					{ID: 'panel-b', Removed: true}
 				]
 			},
-			'craft': {Traits: {Orbit: {Distance: 1.8, Unit: 'radii', Period: 0.6, Inclination: 12, Anomaly: null}, Model: {Shape: '', Size: 0.11, Relative: true}, Health: {Max: 1000}, Selectable: {}}},
-			'ship': {Traits: {Model: {Shape: 'fighter', Size: 0.07, Relative: false}, Health: {Max: 100}, Selectable: {}, Entry: {Mode: 'landing', Pace: 30, Cruise: 40, Parking: 400, Exit: 0.6}, Flight: {Airspeed: 160, Climb: 30, Hover: 40, Agility: 1}}},
+			'craft': {Traits: {Orbit: {Distance: 1.8, Unit: 'radii', Period: 0.6, Inclination: 12, Anomaly: null}, Model: {Shape: '', Size: 0.11, Relative: true}, Selectable: {}}},
+			'ship': {Traits: {Model: {Shape: 'fighter', Size: 0.07, Relative: false}, Selectable: {}, Entry: {Mode: 'landing', Pace: 30, Cruise: 40, Parking: 400, Exit: 0.6}, Flight: {Airspeed: 160, Climb: 30, Hover: 40, Agility: 1}}},
 			'fighter': {Extends: 'ship'},
-			'cruiser': {Extends: 'ship', Traits: {Model: {Shape: 'cruiser'}, Health: {Max: 600}}},
-			'freighter': {Extends: 'ship', Traits: {Model: {Shape: 'freighter'}, Health: {Max: 300}, Container: {Size: 80}}},
+			'cruiser': {Extends: 'ship', Traits: {Model: {Shape: 'cruiser'}}},
+			'freighter': {Extends: 'ship', Traits: {Model: {Shape: 'freighter'}, Container: {Size: 80}}},
 			'fleet': {Traits: {Mover: {Speed: 0.25}, Formation: {Count: 5, Ship: 'fighter', Spacing: 2.4}, Selectable: {}}}
 		};
 	},
@@ -2752,16 +2762,16 @@ Elemenx.Component('Scene', {
 						shade = occluders(object);
 
 						if (near && drawGlobe(object, planes)) {
-							if (object.Look.Clouds) {
+							if (object.Look.Clouds && !scene.Globes[object.ID].CloudsOver) {
 								var high = math.Compose(local(object.World), object.Turn, size * 1.004);
 
 								later.push(function () {
-									renderer.Draw(gpu.Sphere, gpu.Planet, uniforms({uModel: high, uNormalMatrix: math.NormalMatrix(high), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: [0, 0, 0, 0], uCloudsOnly: 1, uLights: noLights(), uLightsOn: 0}), {Blend: 'alpha', DepthWrite: false});
+									renderer.Draw(gpu.Sphere, gpu.Planet, uniforms({uModel: high, uNormalMatrix: math.NormalMatrix(high), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: [0, 0, 0, 0], uCloudsOnly: 1, uDrift: engine.CloudDrift(object), uLights: noLights(), uLightsOn: 0}), {Blend: 'alpha', DepthWrite: false});
 								});
 							}
 						}
 						else {
-							renderer.Draw(gpu.Sphere, gpu.Planet, uniforms({uModel: model, uNormalMatrix: math.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object), uCloudsOnly: 0, uLights: surface.Lights || noLights(), uLightsOn: surface.Lights ? 1 : 0}));
+							renderer.Draw(gpu.Sphere, gpu.Planet, uniforms({uModel: model, uNormalMatrix: math.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object), uCloudsOnly: 0, uDrift: engine.CloudDrift(object), uLights: surface.Lights || noLights(), uLightsOn: surface.Lights ? 1 : 0}));
 						}
 
 						if (object.Look.Atmosphere[3]) {
@@ -2836,7 +2846,7 @@ Elemenx.Component('Scene', {
 				Object.keys(scene.OutlineLists || {}).forEach(function (name) {
 					var list = scene.OutlineLists[name];
 					if (list.Count)
-						renderer.Draw(shape(name, list.Geometry), list.Skinned ? gpu.OutlineSkinned : gpu.Outline, Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uOutline: Math.tan(scene.Camera.Fov * Math.PI / 360) * 2 * 3 / Math.max(1, scene.Height), uColor: [list.Tints[0], list.Tints[1], list.Tints[2], 1], uBody: [0, 0, 0, 0]})), {Cull: 'front'});
+						renderer.Draw(shape(name, list.Geometry), list.Skinned ? gpu.OutlineSkinned : gpu.Outline, Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uOutline: Math.tan(scene.Camera.Fov * Math.PI / 360) * 2 * (scene.OutlineWidth || 3) / Math.max(1, scene.Height), uColor: [list.Tints[0], list.Tints[1], list.Tints[2], 1], uBody: [0, 0, 0, 0]})), {Cull: 'front'});
 				});
 
 				/* The wire of all and the edges of the models, over them. */
@@ -2905,14 +2915,27 @@ Elemenx.Component('Scene', {
 
 			engine.EffectsDraw(after, {Right: right, Up: up, Forward: [-viewMatrix[2], -viewMatrix[6], -viewMatrix[10]], Near: camera.Near, Far: split ? split * 1.0001 : camera.Far, Split: !!split});
 
-			/* The ring of what the pointer is over (hover), whatever its size: it is drawn by a shader or by a model. */
+			/*
+			 * The ring of what the pointer is over, with HoverMark ring: whatever its size, hidden by what stands before it. None by
+			 * default: what the pointer marks and how is for the game to say (HoverMark, HoverCheck, the event hover).
+			 */
 			var hovering = scene.Hovering ? scene.Objects[scene.Hovering] : null;
-			if (hovering && hovering.World && hovering !== selected)
-				renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: local(hovering.World), uSize: Math.max(hovering.Size * 1.35, pixels(hovering.World, 16)), uRight: right, uUp: up, uColor: scene.Colors.Hover.slice(0, 3), uInner: 0, uStyle: 1}), {Blend: 'add', DepthWrite: false, Depth: false, Cull: 'none'});
+			var pointed = engine.Mark('hover');
+			/* A ring is drawn before the object, toward the eye: what stands before it hides it, the object itself does not. */
+			var before = function (object) {
+				var at = local(object.World);
+				var far = vectors.Length(at);
 
-			/* The mark of the selected object while it is small on the screen: near, its own glow shows it. */
-			if (selected && selected.World && Math.max(selected.Size, 0.001) < pixels(selected.World, 40)) {
-				renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: local(selected.World), uSize: Math.max(selected.Size * 1.5, pixels(selected.World, 14)), uRight: right, uUp: up, uColor: scene.Colors.Selection.slice(0, 3), uInner: 0, uStyle: 1}), {Blend: 'add', DepthWrite: false, Depth: false, Cull: 'none'});
+				return far > object.Size ? vectors.Scale(at, 1 - object.Size * 0.75 / far) : at;
+			};
+			var chosen = engine.Mark('select');
+
+			if (hovering && hovering.World && hovering !== selected && pointed.Look === 'ring')
+				renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: before(hovering), uSize: Math.max(hovering.Size * 1.35, pixels(hovering.World, 16)), uRight: right, uUp: up, uColor: pointed.Color.slice(0, 3), uInner: 0, uStyle: 1}), {Blend: 'add', DepthWrite: false, Cull: 'none'});
+
+			/* The mark of the selected object: a ring with SelectMark ring; with an outline, a ring while it is small on the screen (near, its outline shows it). */
+			if (selected && selected.World && (chosen.Look === 'ring' || chosen.Look === 'outline' && Math.max(selected.Size, 0.001) < pixels(selected.World, 40))) {
+				renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: chosen.Look === 'ring' ? before(selected) : local(selected.World), uSize: Math.max(selected.Size * 1.5, pixels(selected.World, 14)), uRight: right, uUp: up, uColor: chosen.Look === 'ring' ? chosen.Color.slice(0, 3) : scene.Colors.Selection.slice(0, 3), uInner: 0, uStyle: 1}), {Blend: 'add', DepthWrite: false, Depth: chosen.Look === 'ring', Cull: 'none'});
 			}
 
 			if (split) {
@@ -3072,21 +3095,49 @@ Elemenx.Component('Scene', {
 			return Object.assign(drawn, scene.StillLists);
 		}
 
+		/* How far the clouds of a body went round it (radians): a wind of 25 metres a second, in seconds of the clock, never in its days made fast. */
+		engine.CloudDrift = function (object) {
+			return scene.Seconds * 25 / (Math.max(1, number(object.Radius, 1000)) * 1000);
+		};
+
 		/*
-		 * The outlines of the object chosen (Selected) and of the one under the pointer (Hovered): their models gathered once more,
-		 * each in a list of its own, drawn grown along their normals, their back faces only, in the colour of each.
+		 * How the object under the pointer (hover) or the selected one (select) is marked: HoverMark or SelectMark, a word or
+		 * {Look, Color, Width, Pulse, Cursor}, over them what HoverCheck gave the one under the pointer. Look: none, ring or
+		 * outline; Color as the theme says when none is given; it beats once every Pulse seconds.
+		 */
+		engine.Mark = function (kind) {
+			var hover = kind === 'hover';
+			var given = hover ? self.HoverMark : self.SelectMark;
+			var own = hover && scene.HoverOwn || {};
+			var mark = given && typeof given === 'object' ? given : {Look: given};
+			var look = String(own.Look || mark.Look || (hover ? 'none' : 'outline')).toLowerCase();
+			var color = paint(own.Color || mark.Color || '', hover ? scene.Colors.Hover : scene.Colors.Outline);
+			var pulse = number(own.Pulse !== undefined ? own.Pulse : mark.Pulse, 0);
+			var beat = pulse > 0 ? 0.65 + 0.35 * Math.cos(performance.now() / 1000 / pulse * Math.PI * 2) : 1;
+
+			return {Look: ['none', 'ring', 'outline'].indexOf(look) === -1 ? 'none' : look, Color: [color[0] * beat, color[1] * beat, color[2] * beat, 1], Width: Math.max(0.5, number(own.Width !== undefined ? own.Width : mark.Width, 3)), Cursor: String(own.Cursor || mark.Cursor || '')};
+		};
+
+		/*
+		 * The outlines of the object chosen (Selected, as SelectMark says), of the one under the pointer (as HoverMark says) and
+		 * of the one Hovered names: their models gathered once more, each in a list of its own, drawn grown along their normals,
+		 * their back faces only, in the colour of each.
 		 */
 		function outlines () {
 			var lists = scene.OutlineLists = scene.OutlineLists || {};
+			var chosen = engine.Mark('select');
+			var pointed = engine.Mark('hover');
 
 			Object.keys(lists).forEach(function (name) {
 				lists[name].Count = 0;
 			});
 
-			[[scene.Selected, 'Outline'], [self.Hovered, 'Hover']].forEach(function (pair) {
+			scene.OutlineWidth = Math.max(chosen.Look === 'outline' ? chosen.Width : 0, pointed.Look === 'outline' ? pointed.Width : 0, 3);
+
+			[[chosen.Look === 'outline' ? scene.Selected : '', chosen.Color], [self.Hovered, scene.Colors.Hover], [pointed.Look === 'outline' && scene.Hovering !== self.Hovered ? scene.Hovering : '', pointed.Color]].forEach(function (pair) {
 				var object = pair[0] ? scene.Objects[pair[0]] : null;
 				var settings = object ? trait(object, 'Model') : null;
-				if (!object || !object.World || object.Hidden || !settings || !(settings.Shape || object.Values.Model) || pair[1] === 'Hover' && pair[0] === scene.Selected) return;
+				if (!object || !object.World || object.Hidden || !settings || !(settings.Shape || object.Values.Model) || pair[1] !== chosen.Color && pair[0] === scene.Selected) return;
 
 				scene.Outlining = {Color: pair[1]};
 
@@ -3989,7 +4040,7 @@ Elemenx.Component('Scene', {
 
 			/* An outline: a list of its own, of the same shape, in the colour of the outline. */
 			if (scene.Outlining && models === scene.OutlineLists && name.indexOf('outline:') !== 0) {
-				batch(models, 'outline:' + name, world, matrix, scene.Colors[scene.Outlining.Color], Object.assign({}, settings, {Glow: null, Still: false, Geometry: settings.Geometry || shapeGeometry(name)}));
+				batch(models, 'outline:' + name, world, matrix, scene.Outlining.Color, Object.assign({}, settings, {Glow: null, Still: false, Geometry: settings.Geometry || shapeGeometry(name)}));
 
 				return;
 			}
@@ -7182,7 +7233,14 @@ Elemenx.Component('Scene', {
 			var settings = trait(scene.Objects[ground.ID], 'Terrain');
 			var own = settings && settings.Blueprint ? blueprinted(settings, 'Land', ground.ID) : null;
 			var program = gpu.LandOf(own, field.Materials);
+			/* The tiles of its materials of a texture, the layers of two textures (SceneTextures.Array). */
+			var tiles = self.$Service('SceneTextures').Array(renderer, self.$Service('SceneMaterials').Textured(field.Materials || []));
 			var land = Object.assign({uViewProjection: matrix, uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog, uSea: field.Water ? 1 : 0, uSkyLight: ground.SkyLight, uFloorLight: ground.FloorLight, uWet: ground.Air.Wet, uSnowed: snowed(), uRainDrops: ground.Air.Rain, uTime2: scene.Seconds % 1000}, shade, own ? own.Made.Values(settings.Parameters || {}, {Time: scene.Seconds % 3000}) : null, self.LandValues(scene.Seconds));
+
+			if (tiles) {
+				land.uLandColor = tiles.Color;
+				land.uLandSurface = tiles.Surface;
+			}
 
 			nodes.forEach(function (node) {
 				land.uOffset = vectors.Subtract(node.Center, scene.Eye);
@@ -7509,8 +7567,17 @@ Elemenx.Component('Scene', {
 		 * nearer, each of its colors), in the frame of the body, through the view of the pass it is drawn in (planes: its near
 		 * and far, in the units of the view), its relief made steeper for the light from far. False when it cannot be drawn.
 		 */
+		/* The color of the clouds of a body: white, tinted by its air where they cover all of it. */
+		function cloudTint (object) {
+			var air = object.Look.Atmosphere;
+			var tint = object.Look.Clouds >= 1 ? 0.55 * air[3] : 0;
+
+			return [0.96 + (air[0] - 0.96) * tint, 0.96 + (air[1] - 0.96) * tint, 0.96 + (air[2] - 0.96) * tint];
+		}
+
 		function drawGlobe (object, planes) {
 			var camera = scene.Camera;
+			var clouds;
 			var planet = planetOf(object);
 			var key = JSON.stringify(planet);
 			var globe = scene.Globes[object.ID];
@@ -7537,6 +7604,10 @@ Elemenx.Component('Scene', {
 			eye = vectors.Scale(math.Apply(turn, vectors.Subtract(camera.Position, object.World)), 1 / scale);
 			globe.Eye = eye;
 			globe.Altitude = Math.max(0.002, vectors.Length(eye) - field.Radius - field.Elevation(vectors.Normalize(eye)));
+
+			/* From over 60 kilometres its clouds are drawn on its ground (no shell of them: see Ground); nearer, as a shell. */
+			clouds = !!object.Look.Clouds && !!scene.Baked[object.ID] && globe.Altitude > 60;
+			globe.CloudsOver = clouds;
 			view = math.LookAt([0, 0, 0], math.Apply(turn, vectors.Normalize(vectors.Subtract(camera.Target, camera.Position))), math.Apply(turn, camera.Up));
 			matrix = math.Multiply(math.Perspective(camera.Fov, renderer.Width / Math.max(1, renderer.Height), Math.max(1e-7, planes[0] / scale), planes[1] / scale), view);
 			star = scene.Order.filter(function (each) {
@@ -7564,7 +7635,11 @@ Elemenx.Component('Scene', {
 					uHigh: Math.min(1, globe.Altitude / 100),
 					uRelief: Math.max(1, Math.min(6, globe.Altitude / 150)),
 					uLights: lightsOf(object),
-					uLightsOn: lightsOf(object) === noLights() ? 0 : 1
+					uLightsOn: lightsOf(object) === noLights() ? 0 : 1,
+					uSky: clouds ? scene.Baked[object.ID].Sky : noLights(),
+					uCloudsOn: clouds ? 1 : 0,
+					uDrift: engine.CloudDrift(object),
+					uCloudTint: clouds ? cloudTint(object) : [1, 1, 1]
 				}, idle()), {Cull: 'back'});
 			});
 
@@ -7655,7 +7730,9 @@ Elemenx.Component('Scene', {
 					uHigh: Math.min(1, horizon.Altitude / 100),
 					uRelief: 1,
 					uLights: lightsOf(object),
-					uLightsOn: lightsOf(object) === noLights() ? 0 : 1
+					uLightsOn: lightsOf(object) === noLights() ? 0 : 1,
+					uSky: noLights(),
+					uCloudsOn: 0
 				}, idle()), {Cull: 'back', Depth: 'lequal'});
 			});
 
@@ -7938,7 +8015,9 @@ Elemenx.Component('Scene', {
 					uHigh: Math.min(1, surface.Altitude / thickness),
 					uRelief: 1,
 					uLights: lightsOf(object),
-					uLightsOn: lightsOf(object) === noLights() ? 0 : 1
+					uLightsOn: lightsOf(object) === noLights() ? 0 : 1,
+					uSky: noLights(),
+					uCloudsOn: 0
 				}, shade), {Cull: 'back'});
 			});
 
@@ -8107,7 +8186,6 @@ Elemenx.Component('Scene', {
 			var info = describe(object.ID);
 			var body = trait(object, 'Body');
 			var orbit = trait(object, 'Orbit');
-			var health = trait(object, 'Health');
 			var formation = trait(object, 'Formation');
 			var kind = object.Kind ? t('kinds.' + object.Kind) : '';
 
@@ -8154,9 +8232,6 @@ Elemenx.Component('Scene', {
 			if (object.Team)
 				add('team', object.Team);
 
-			if (health)
-				add('health', number(object.Values.Health, number(health.Max, 0)) + ' / ' + number(health.Max, 0));
-
 			if (formation) add('ships', object.Parts.length);
 			else if (object.Parts.length && !body) add('parts', object.Parts.length);
 
@@ -8165,6 +8240,9 @@ Elemenx.Component('Scene', {
 
 			if (body && trait(object, 'Surface'))
 				kind = t('surfaces.' + trait(object, 'Surface').Type);
+
+			/* What a game tells of it (its health, its orders...): the hook Card of its behaviours adds rows {Key, Label, Value}. */
+			self.RunBehaviours('Card', [object, rows]);
 
 			return {ID: object.ID, Name: object.Name, Kind: /^graphics\.scene\./.test(kind) ? object.Kind : kind, Rows: rows, Land: !!(body && !/gas|giant/.test(trait(object, 'Surface') ? trait(object, 'Surface').Type : ''))};
 		}
@@ -9317,24 +9395,43 @@ Elemenx.Component('Scene', {
 
 	/*
 	 * What is under the pointer as it moves (no button down), looked for now and then: hover tells it ({ID, Object, Info};
-	 * ID empty when it left), the pointer turns to a hand over it and a ring of light marks it. Interactive: false on an
-	 * object keeps it out.
+	 * ID empty when it left). What may be marked is for HoverCheck to say (without it, all but the walker or the vehicle
+	 * under the keys and their parts), how for HoverMark (none by default) and the cursor over it for its Cursor.
+	 * Interactive: false on an object keeps it out.
 	 */
 	HoverAt: function (point) {
 		var scene = this.Scene();
 		var engine = this.Engine();
 		var now = performance.now();
+		var own = null;
+		var hero;
 		var id;
+		var picked;
 
 		if (now - (scene.HoverAt || 0) < 50 || scene.Hero && this.Captured()) return;
 
 		scene.HoverAt = now;
 		id = engine.Pick(point.X, point.Y, false) || '';
+		picked = id ? scene.Objects[id] : null;
+
+		if (id && typeof this.HoverCheck === 'function') {
+			own = this.HoverCheck(this.Get(id), engine.Describe(id));
+
+			if (own === false || own === null)
+				id = '';
+		}
+		else if (id && scene.Hero) {
+			hero = scene.Objects[scene.Hero];
+
+			if (picked === hero || picked && hero && picked.Root === hero)
+				id = '';
+		}
 
 		if (id === (scene.Hovering || '')) return;
 
 		scene.Hovering = id;
-		this.$Element().querySelector('.elemenx-scene-canvas').style.cursor = id ? 'pointer' : '';
+		scene.HoverOwn = id && own && typeof own === 'object' ? own : null;
+		this.$Element().querySelector('.elemenx-scene-canvas').style.cursor = id ? engine.Mark('hover').Cursor : '';
 
 		this.$Emit('hover', {ID: id, Object: id ? this.Get(id) : null, Info: id ? engine.Describe(id) : null});
 	},
@@ -9374,7 +9471,14 @@ Elemenx.Component('Scene', {
 		if (scene.Hero) return;
 
 		if (drag && !drag.Moved && !scene.Surface && drag.Button === 2 && scene.Ground) this.OrderAt(point);
-		else if (drag && !drag.Moved && !scene.Surface) this.Engine().Select(this.Engine().Pick(point.X, point.Y));
+		else if (drag && !drag.Moved && !scene.Surface) this.Engine().Select(this.Allowed(this.Engine().Pick(point.X, point.Y)));
+	},
+
+	/* What a press may select, as SelectCheck says: the ID, or '' when it says no. */
+	Allowed: function (id) {
+		if (!id || typeof this.SelectCheck !== 'function') return id || '';
+
+		return this.SelectCheck(this.Get(id), this.Engine().Describe(id)) === false ? '' : id;
 	},
 
 	PointerCancel: function (event) {
@@ -9389,12 +9493,12 @@ Elemenx.Component('Scene', {
 		event.preventDefault();
 	},
 
-	/* A right press on a ground: the selected walker goes there. */
+	/* A right press on a ground: the selected walker goes there, with Orders. */
 	OrderAt: function (point) {
 		var scene = this.Scene();
 		var at = this.Engine().GroundAt(point.X, point.Y);
 		var walker = scene.Selected ? scene.Objects[scene.Selected] : null;
-		if (!at || !walker || !walker.Traits.Walker) return;
+		if (!(this.Orders === true || this.Orders === 'true') || !at || !walker || !walker.Traits.Walker) return;
 
 		this.Move(walker.ID, at);
 	},
@@ -9456,7 +9560,7 @@ Elemenx.Component('Scene', {
 
 	LabelPressed: function (event) {
 		var button = event.target.closest ? event.target.closest('[data-id]') : null;
-		if (button)
+		if (button && this.Allowed(button.getAttribute('data-id')))
 			this.Engine().Select(button.getAttribute('data-id'));
 	},
 
@@ -11312,8 +11416,12 @@ Elemenx.Component('Scene', {
 				'		outColor = vec4(pow(min(shine / cover, vec3(8.0)), vec3(1.0 / 2.2)), cover);',
 				'		return;',
 				'	}',
-				/* How much it mirrors, seen from here: the alpha of the scene carries it to the picture. */
-				'	float gloss = base.a < 0.99 ? 0.0 : max(pow(1.0 - roughness, 2.0) * max(fresnel.r, max(fresnel.g, fresnel.b)), wet * 0.6 * smoothstep(0.55, 0.95, n.y) * (0.04 + 0.96 * pow(1.0 - nv, 5.0)));',
+				/*
+				 * How much it mirrors, seen from here: the alpha of the scene carries it to the picture. A sharp picture of the
+				 * screen is mirrored only by what is smooth (glass, paint, polished metal, water, what is wet): a rough steel
+				 * mirrors blurred, as its own light has it, never the grass in steps of two pixels.
+				 */
+				'	float gloss = base.a < 0.99 ? 0.0 : max(pow(1.0 - roughness, 2.0) * (1.0 - smoothstep(0.15, 0.3, roughness)) * max(fresnel.r, max(fresnel.g, fresnel.b)), wet * 0.6 * smoothstep(0.55, 0.95, n.y) * (0.04 + 0.96 * pow(1.0 - nv, 5.0)));',
 				'	outColor = vec4(pow(total, vec3(1.0 / 2.2)), uMoving > 0.5 ? 0.0 : base.a < 0.5 ? base.a : 1.0 - gloss * 0.45);',
 				'}'
 			].join('\n'),
@@ -11468,6 +11576,7 @@ Elemenx.Component('Scene', {
 				'uniform samplerCube uGround;',
 				'uniform samplerCube uSky;',
 				'uniform float uCloudsOnly;',
+				'uniform float uDrift;',
 				'uniform samplerCube uLights;',
 				'uniform float uLightsOn;',
 				'out vec4 outColor;',
@@ -11488,7 +11597,8 @@ Elemenx.Component('Scene', {
 				'	float gloss = surface.a;',
 				'	vec3 light = lighting(vWorld, n, v, 12.0 + gloss * 70.0, gloss);',
 				'	vec3 color = surface.rgb * light;',
-				'	float turn = uTime * 0.01;',
+				/* The clouds go with the wind, metres a second of real time round the body (uDrift: radians so far), never with its days made fast. */
+				'	float turn = uDrift;',
 				'	vec3 drifted = vec3(p.x * cos(turn) - p.z * sin(turn), p.y, p.x * sin(turn) + p.z * cos(turn));',
 				'	vec4 sky = texture(uSky, drifted);',
 				/* Its clouds alone, over its ground drawn of its planet (a globe near): their light, as much of them as there is. */
@@ -11755,6 +11865,10 @@ Elemenx.Component('Scene', {
 				'uniform float uRelief;',
 				'uniform samplerCube uLights;',
 				'uniform float uLightsOn;',
+				'uniform samplerCube uSky;',
+				'uniform float uCloudsOn;',
+				'uniform float uDrift;',
+				'uniform vec3 uCloudTint;',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				graphics.Chunks.Shadow,
@@ -11782,7 +11896,9 @@ Elemenx.Component('Scene', {
 				'		albedo = mix(albedo, vec3(0.93, 0.95, 0.98), cap);',
 				'	}',
 				'	vec3 place = up * uRadius;',
-				'	albedo *= 0.85 + 0.3 * noise3(place * 2.0);',
+				/* Kilometres a pixel covers: what is finer than two pixels is not drawn, or it shimmers as the view moves. */
+				'	float foot = length(fwidth(place));',
+				'	albedo *= 1.0 + 0.3 * (noise3(place * 2.0) - 0.5) * (1.0 - smoothstep(0.12, 0.3, foot));',
 				'	float rise = dot(up, uSun);',
 				'	float light = clamp(rise * 3.0 + 0.3, 0.0, 1.0);',
 				'	float dusk = 1.0 - smoothstep(0.0, 0.35, abs(rise));',
@@ -11792,20 +11908,46 @@ Elemenx.Component('Scene', {
 				'	vec3 color = albedo * (uSunColor * day + around);',
 				/* Water mirrors the sky, more at a glance; waves break the sun into a path of glints that reddens as it sets. */
 				'	if (sea > 0.5) {',
-				'		vec3 side = normalize(cross(up, vec3(0.13, 1.0, 0.07)));',
-				'		vec2 flat2 = vec2(dot(place, side), dot(place, cross(up, side)));',
-				'		vec2 slope = wavesAt(flat2 * 9.0, uTime * 1.2, 10) / (1.0 + length(vWorld) * 0.25);',
-				'		vec3 w = normalize(up - (side * slope.x + cross(up, side) * slope.y) * 0.22);',
+				/*
+				 * Its waves: the slope of a noise of the very place (kilometres), seen where a pixel is smaller than a wave; past
+				 * that the sun is not broken into glints but spread wide over the sea, as from high over it.
+				 */
+				'		float seen = 1.0 - smoothstep(0.015, 0.06, foot);',
+				'		vec3 w = up;',
+				'		if (seen > 0.0) {',
+				'			vec3 q = place * 9.0 + vec3(0.0, uTime * 0.05, 0.0);',
+				'			vec3 g = vec3(noise3(q + vec3(0.2, 0.0, 0.0)) - noise3(q - vec3(0.2, 0.0, 0.0)), noise3(q + vec3(0.0, 0.2, 0.0)) - noise3(q - vec3(0.0, 0.2, 0.0)), noise3(q + vec3(0.0, 0.0, 0.2)) - noise3(q - vec3(0.0, 0.0, 0.2))) * 2.5;',
+				'			w = normalize(up - (g - up * dot(g, up)) * 0.22 * seen);',
+				'		}',
 				'		float fresnel = 0.02 + 0.98 * pow(1.0 - max(dot(w, v), 0.0), 5.0);',
 				'		vec3 r = reflect(-v, w);',
 				'		if (dot(r, up) < 0.0) r = r - up * 2.0 * dot(r, up);',
 				'		float toward = max(dot(r, uSun), 0.0);',
 				'		vec3 mirrored = mix(mix(uAir.rgb, vec3(1.0), 0.45), uAir.rgb * vec3(0.45, 0.6, 1.0), pow(max(dot(r, up), 0.0), 0.6)) * light + vec3(1.0, 0.5, 0.2) * dusk * exp(-max(dot(r, up), 0.0) * 5.0) * 0.8;',
-				'		float shine = (pow(toward, 1400.0) * 7.0 + pow(toward, 180.0) * 0.16) * smoothstep(-0.02, 0.1, rise);',
+				'		float shine = (pow(toward, mix(90.0, 1400.0, seen)) * mix(0.9, 7.0, seen) + pow(toward, 180.0) * 0.16) * smoothstep(-0.02, 0.1, rise);',
 				'		color = mix(color, mirrored, fresnel) + uSunColor * mix(vec3(1.0, 0.55, 0.25), vec3(1.0), smoothstep(0.0, 0.3, rise)) * shine;',
 				'	}',
 				/* Its settlements at night (of a globe near). */
 				'	if (uLightsOn > 0.5) color += vec3(1.0, 0.72, 0.38) * texture(uLights, up).r * 1.6 * (1.0 - smoothstep(-0.05, 0.12, rise));',
+				/*
+				 * Its clouds, seen from high over them (uCloudsOn): laid over the ground where it is, as the shell of them would
+				 * be; a shell so far over the ground fights it for the depth thousands of kilometres away, and flickers in stripes.
+				 */
+				'	if (uCloudsOn > 0.0) {',
+				'		vec3 drifted = vec3(up.x * cos(uDrift) - up.z * sin(uDrift), up.y, up.x * sin(uDrift) + up.z * cos(uDrift));',
+				'		float cover = texture(uSky, drifted).r * uCloudsOn;',
+				/* Their own shape: heaps of tens of kilometres and their gaps, as far as a pixel is smaller than they are. */
+				'		vec3 at = drifted * uRadius;',
+				/* Each octave turned against the last, so no grid of the noise shows. */
+				'		mat3 turned = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
+				'		vec3 a1 = turned * at * 0.035;',
+				'		vec3 a2 = turned * a1 * 3.1 + 7.0;',
+				'		float heaps = noise3(a1) * 0.55 + noise3(a2) * 0.3 + noise3(turned * a2 * 2.7 + 3.0) * 0.15;',
+				'		heaps = smoothstep(0.25, 0.75, heaps);',
+				'		cover = clamp(cover * mix(1.0, 0.3 + 1.4 * heaps, 1.0 - smoothstep(4.0, 12.0, foot)), 0.0, 1.0);',
+				'		vec3 cloud = uCloudTint * (uSunColor * clamp(rise * 1.4 + 0.1, 0.0, 1.0) + around);',
+				'		color = mix(color, cloud, clamp(cover, 0.0, 1.0));',
+				'	}',
 				'	float haze = (1.0 - exp(-length(vWorld) / uFog)) * uAir.a * (1.0 - uHigh * 0.7);',
 				'	color = mix(color, mix(uAir.rgb, vec3(0.9), 0.35) * light, clamp(haze, 0.0, 1.0));',
 				'	outColor = vec4(color, 1.0);',

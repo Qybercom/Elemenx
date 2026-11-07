@@ -1596,6 +1596,15 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-planet-editor-toolbar`
 - `elemenx-planet-editor-view`
 
+## TextureLab
+
+- `elemenx-texture-lab`
+- `elemenx-texture-lab-canvas`
+- `elemenx-texture-lab-field`
+- `elemenx-texture-lab-panel`
+- `elemenx-texture-lab-title`
+- `elemenx-texture-lab-view`
+
 ## ModelEditor
 
 - `elemenx-model-editor`

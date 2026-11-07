@@ -87,7 +87,7 @@ Elemenx.Component('GameStrategy', {
 	},
 
 	Foe: function (object) {
-		return !!(object && object.Traits && object.Traits.Health && object.Team && String(object.Team) !== String(this.Team));
+		return !!(object && this.$Service('Vitals').Settings(object) && object.Team && String(object.Team) !== String(this.Team));
 	},
 
 	Units: function () {
@@ -361,13 +361,14 @@ Elemenx.Component('GameStrategy', {
 	/* Who attacks whom: going to it, striking within its range, and the ones near by themselves. */
 	Fight: function (elapsed) {
 		var self = this;
+		var vitals = this.$Service('Vitals');
 		var scene = this.ParentScene();
 		var space = this.Space();
 		var objects = space.Objects;
 		var fighters = Object.keys(objects).map(function (id) {
 			return objects[id];
 		}).filter(function (object) {
-			return object.World && object.Traits.Walker && object.Traits.Health && !object.Owner;
+			return object.World && object.Traits.Walker && vitals.Settings(object) && !object.Owner;
 		});
 
 		fighters.forEach(function (unit) {
@@ -435,6 +436,16 @@ Elemenx.Component('GameStrategy', {
 	 * The health of the scene (Vitals.Of): one for all that hurts there, a death there leaves the orders and the selection.
 	 * The ledger is held in a function: a field would hold a reactive copy of it, never the same.
 	 */
+	/* Its health on the card of what is selected. */
+	SceneCard: function (object, rows) {
+		this.$Service('Vitals').Card(this.Ledger(), object, rows);
+	},
+
+	/* The weapons of the scene aim at what has health and lives. */
+	SceneTarget: function (object) {
+		return this.$Service('Vitals').Target(this.Ledger(), object);
+	},
+
 	Ledger: function () {
 		var self = this;
 		var ledger = this.$Service('Vitals').Of(this.ParentScene());
@@ -528,6 +539,7 @@ Elemenx.Component('GameStrategy', {
 	/* What lies over the picture: the fog, the rings of the selected, the bars of health, the marks of orders and the frame. */
 	Draw: function (elapsed) {
 		var self = this;
+		var vitals = this.$Service('Vitals');
 		var canvas = this.$Element();
 		var space = this.Space();
 		var engine = this.ParentScene().Engine();
@@ -591,9 +603,9 @@ Elemenx.Component('GameStrategy', {
 			var health;
 			var top;
 
-			if (!object.World || object.Hidden || !object.Traits.Health || object.Owner || !object.Team) return;
+			if (!object.World || object.Hidden || !vitals.Settings(object) || object.Owner || !object.Team) return;
 
-			max = self.Value(object.Traits.Health.Max, 100);
+			max = self.Value(vitals.Settings(object).Max, 100);
 			health = self.Value(object.Values.Health, max);
 
 			if (health >= max && self.Chosen.indexOf(id) === -1) return;

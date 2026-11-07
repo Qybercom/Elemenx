@@ -860,6 +860,16 @@ Elemenx.Service('Renderer', {
 					units.Next++;
 
 					break;
+				/* The layers of one texture (SceneTextures.Array: the tiles of the materials of a ground). */
+				case gl.SAMPLER_2D_ARRAY:
+					gl.activeTexture(gl.TEXTURE0 + units.Next);
+					gl.bindTexture(gl.TEXTURE_2D_ARRAY, value ? value.Handle : null);
+
+					sampled(info, location, units.Next);
+
+					units.Next++;
+
+					break;
 				default:
 					break;
 			}

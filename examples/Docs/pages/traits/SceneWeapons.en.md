@@ -9,6 +9,8 @@ Fire(id, options) shoots the weapon of an object (Values.Weapon, or options.Weap
 
 Where a shot hits it asks the material there (Values.Material of an object; the name of the material of the part of the model hit; walkers flesh, vehicles metal, plants wood, buildings and rocks stone; of the ground: water, snow, a road, soil) and the rules (HitRules({material: {Effect, Decal, Factor}, 'type/material': {...}})): the effect it bursts, the mark it leaves (hole, dent, chip, scorch, crack: they stay for MarkSeconds, the oldest go past MarkCount, the marks of a thing go with it) and the factor of its damage. The event hit: {Weapon, Type, Source, Team, Target (the ID, null for the ground), Part, Point, Normal, Material, Amount, Distance, ID (of the hit)}; fire ({ID, Weapon, From, Way}).
 
+What a weapon locks on and what a blast hurts is for the game to say (the hook SceneTarget of its behaviours: GameCombat takes what has health and lives); with none that says, a lock takes what stands with a Team other than the hero's, a blast all that stands in it.
+
 Crosshair of the scene ('' as the weapon of the hero says, none, dot, cross, circle, chevron) is drawn over the view while the hero holds a weapon, wider as it moves and fires; it flashes on a hit and red on a kill (Scene.Killed(id)). Locks are marks on their targets, closing in as they lock, at the edge of the view when the target is out of it.
 
 ## Methods

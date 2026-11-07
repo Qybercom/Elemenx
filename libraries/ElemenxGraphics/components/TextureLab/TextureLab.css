@@ -1,0 +1,73 @@
+.elemenx-texture-lab {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 240px;
+	height: 100%;
+	min-height: 320px;
+	overflow: hidden;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+	font: var(--elemenx-font-size-small) / var(--elemenx-line-height-small) var(--elemenx-font);
+}
+
+.elemenx-texture-lab-view {
+	position: relative;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.elemenx-texture-lab-canvas {
+	display: block;
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.elemenx-texture-lab-panel {
+	overflow: auto;
+	padding: 8px;
+	border-left: 1px solid var(--elemenx-border);
+}
+
+.elemenx-texture-lab-title {
+	margin: 10px 0 4px;
+	color: var(--elemenx-text-muted);
+	font-weight: 600;
+}
+
+.elemenx-texture-lab-field {
+	display: grid;
+	grid-template-columns: 90px minmax(0, 1fr);
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 4px;
+}
+
+.elemenx-texture-lab-field select {
+	min-width: 0;
+	padding: 2px 6px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-surface);
+	color: inherit;
+	font: inherit;
+}
+
+.elemenx-texture-lab-field input {
+	min-width: 0;
+}
+
+@media (max-width: 640px) {
+	.elemenx-texture-lab {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: minmax(240px, 1fr) auto;
+	}
+
+	.elemenx-texture-lab-panel {
+		border-top: 1px solid var(--elemenx-border);
+		border-left: 0;
+	}
+}

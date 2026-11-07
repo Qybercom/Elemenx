@@ -2321,6 +2321,14 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "TextureLab",
+					"Title": {
+						"en": "TextureLab"
+					},
+					"Group": "game",
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "ThemeSwitch",
 					"Title": {
 						"en": "ThemeSwitch"
@@ -3067,6 +3075,13 @@
 					"ID": "SceneTerrainGenerator",
 					"Title": {
 						"en": "SceneTerrainGenerator"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneTextures",
+					"Title": {
+						"en": "SceneTextures"
 					},
 					"Library": "ElemenxGraphics"
 				},

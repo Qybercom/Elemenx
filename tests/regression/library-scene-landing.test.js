@@ -921,6 +921,46 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 		for (i = 0; i < 3; i++)
 			engine.Frame(now += 100, true);
+
+		/*
+		 * Regression: from orbit its clouds were a shell 25 km over its ground, drawn in another depth: thousands of kilometres
+		 * away the two fought for it and flickered in stripes. From over 60 km they are drawn on its ground, no shell.
+		 */
+		var draw = engine.Renderer.Draw;
+		var shells = 0;
+		var clouded = 0;
+
+		/* Clouds over it (none of its own here). */
+		inner.Objects.terra.Look.Clouds = 0.5;
+
+		engine.Renderer.Draw = function (mesh, program, values) {
+			if (values && values.uCloudsOnly === 1)
+				shells++;
+
+			if (values && values.uCloudsOn === 1)
+				clouded++;
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			for (i = 0; i < 6; i++) {
+				inner.Rest = 0;
+				inner.Looping = true;
+
+				engine.Frame(now += 100);
+
+				inner.Looping = false;
+			}
+		}
+		finally {
+			engine.Renderer.Draw = draw;
+		}
+
+		expect(inner.Globes.terra.Altitude).toBeGreaterThan(60);
+		expect(inner.Globes.terra.CloudsOver).toBe(true);
+		expect(shells).toBe(0);
+		expect(clouded).toBeGreaterThan(0);
 	}, 60000);
 
 	/*

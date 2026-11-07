@@ -18,7 +18,12 @@
  * - On(event, handler), Off(event, handler): damage, heal ({ID, Change, Amount, Value, Max, Hit, Source}), death ({ID, By,
  *   Hit}), revive ({ID, Value}), health (any change: {ID, Value, Max}).
  * - Configure({Mode, Send, FriendlyFire}) changes them. Step(elapsed): regeneration. Receive(message): a message of the transport. Save() and Load(saved): {Version, States}.
- * - Of(scene): the ledger of a Scene, made once: it reads the trait Health of its objects (Max, Armor, Resist, Parts, Regen,
+ * - Kinds: the health a game gives the kinds of a Scene ({unit: {Max: 100}, house, module, station, craft, ship, cruiser,
+ *   freighter}; change it or add yours); Settings(object): the health of an object (its trait Health over the one of its kind,
+ *   or a Health or MaxHealth given to it alone), null for what cannot be hurt. Card(ledger, object, rows) adds its row of
+ *   health to its card, Target(ledger, object) whether a weapon may aim at it (it has health and lives): the hooks SceneCard
+ *   and SceneTarget of GameCombat and GameStrategy.
+ * - Of(scene): the ledger of a Scene, made once: it reads the health of its objects (Settings: Max, Armor, Resist, Parts, Regen,
  *   Death) and their Values.Health, writes Values.Health back, turns each hit of the scene (event hit of its weapons) into
  *   Damage, and at death does what Death says: remove (by default), break (Scene.Break), die (the clip die, then it stays),
  *   keep.
@@ -26,7 +31,7 @@
 Elemenx.Service('Vitals', {
 	$Meta: {
 		Description: 'The health of what a game can hurt, as data with one way in: damage and heal through rules, events, a host and its clients.',
-		Methods: ['Make(options)', 'Of(scene)']
+		Methods: ['Make(options)', 'Of(scene)', 'Settings(object)', 'Card(ledger, object, rows)', 'Target(ledger, object)']
 	},
 
 	$OnCreate: function () {
@@ -359,8 +364,68 @@ Elemenx.Service('Vitals', {
 	},
 
 	/* The ledger of a Scene: its objects with Health, the hits of the scene, what death does. */
+	/*
+	 * The health a game gives the kinds of a Scene (the scene itself knows none): a unit, a house, a station and its modules,
+	 * the ships. A kind of its own takes the one of what it extends; the trait Health of an object or of its kind is over it.
+	 */
+	Kinds: {unit: {Max: 100}, house: {Max: 800}, module: {Max: 200}, station: {Max: 1000}, craft: {Max: 1000}, ship: {Max: 100}, cruiser: {Max: 600}, freighter: {Max: 300}},
+
+	/*
+	 * The health settings of an object of a Scene: its trait Health over the health of its kind (Kinds, through what the kind
+	 * extends), or a Health it was given alone (Values.Health); null for what has none (it cannot be hurt).
+	 */
+	Settings: function (object) {
+		var kinds = null;
+		var given = object && object.Traits ? object.Traits.Health : null;
+		var name = object ? object.Kind : '';
+		var base = null;
+		var seen = 0;
+		var kind;
+
+		if (!object)
+			return null;
+
+		try {
+			kinds = this.$Service('SceneKinds');
+		}
+		catch (error) {
+			kinds = null;
+		}
+
+		while (name && !base && seen < 16) {
+			base = this.Kinds[name] || null;
+			kind = kinds && kinds.Get ? kinds.Get(name) : null;
+			name = kind && kind.Extends ? kind.Extends : '';
+
+			seen++;
+		}
+
+		if (!given && !base && (object.Values === undefined || object.Values.Health === undefined || object.Values.Health === null || object.Values.Health === '')) return null;
+
+		/* A MaxHealth given to it alone (an attribute of its tag) is its Max. */
+		return Object.assign({Max: 100}, base || {}, given || {}, object.Values && object.Values.MaxHealth !== undefined && object.Values.MaxHealth !== null && object.Values.MaxHealth !== '' ? {Max: Number(object.Values.MaxHealth)} : {});
+	},
+
+	/* The row of health of an object on the card of its Scene (SceneCard of a behaviour), once whoever adds it. */
+	Card: function (ledger, object, rows) {
+		var state = object && ledger ? ledger.Get(object.ID) : null;
+		if (!state || rows.some(function (row) {
+			return row.Key === 'health';
+		})) return;
+
+		rows.push({Key: 'health', Label: Elemenx.Locale.Text('gaming.vitals.health'), Value: Math.round(state.Value) + ' / ' + Math.round(state.Max)});
+	},
+
+	/* Whether the weapons of a Scene may aim at an object and hurt it (SceneTarget of a behaviour): it has health and lives. */
+	Target: function (ledger, object) {
+		var state = object && ledger ? ledger.Get(object.ID) : null;
+
+		return !!(state && state.Alive);
+	},
+
 	Of: function (scene) {
 		/* Keyed by the element of the scene: a component may come as more than one reactive copy of itself. */
+		var self = this;
 		var key = scene.$Element ? scene.$Element() : scene;
 		var made = this.Scenes ? this.Scenes.get(key) : key.VitalsLedger;
 		var ledger;
@@ -381,7 +446,7 @@ Elemenx.Service('Vitals', {
 		ledger = this.Make({
 			Read: function (id) {
 				var object = objectOf(id);
-				var health = object && object.Traits ? object.Traits.Health : null;
+				var health = self.Settings(object);
 				if (!health)
 					return null;
 

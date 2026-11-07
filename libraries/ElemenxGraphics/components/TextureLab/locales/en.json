@@ -1,0 +1,26 @@
+{
+	"graphics": {
+		"textureLab": {
+			"label": "A texture under the sun",
+			"texture": "Texture",
+			"view": "View",
+			"mode": "Show",
+			"params": "Params",
+			"light": "Light and eye",
+			"sun": "Sun",
+			"turn": "Its side",
+			"height": "Eye, m",
+			"pitch": "Looks down",
+			"views": {
+				"ground": "Ground",
+				"tile": "Tile"
+			},
+			"modes": {
+				"lit": "Lit",
+				"color": "Color",
+				"normal": "Normal",
+				"height": "Height"
+			}
+		}
+	}
+}

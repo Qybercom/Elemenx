@@ -143,6 +143,77 @@ describe('Contract: what a sketch sows over a ground: growth in its areas, rows,
 		})).toBe(false);
 	});
 
+	/*
+	 * Regression: the streets of a settlement were a tint of its ground, grown over by trees and rocks. They are roads of the
+	 * scene now, made with the ground (of its kind: a town street), drawn by an object of their own, and nothing grows on them.
+	 */
+	it('makes the streets of a settlement roads of its kind, with the ground at once, and sows nothing on them', async function () {
+		var scene = await mount([
+			{ID: 'f', Type: 'forest', Points: square(-90, -90, 90, 90), Density: 6},
+			{ID: 'burg', Type: 'settlement', Kind: 'town', Points: square(-60, -60, 60, 60), Roads: true}
+		]);
+		var plan = scene.Scene().Ground.Field.Sketch.Settlements()[0];
+		var made = scene.Engine().Roads().filter(function (road) {
+			return /^street-burg-/.test(road.ID);
+		});
+
+		expect(plan.Streets.length).toBeGreaterThan(1);
+		expect(made.length).toBe(plan.Streets.length);
+		expect(made.every(function (road) {
+			return road.TypeName === 'street';
+		})).toBe(true);
+
+		await waitFor(function () {
+			return !!scene.Scene().Objects['street-burg-0'];
+		}, 4000);
+
+		/* On its streets: nothing sown but what stands beside a street (its lamps, benches, bins). */
+		plan.Streets.forEach(function (street) {
+			var a = street.Points[0];
+			var b = street.Points[street.Points.length - 1];
+			var middle = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+
+			expect(scene.SownNear(middle[0], middle[1], 2).filter(function (one) {
+				return !/streetlamp|bench|bin|planter|bus|hydrant/.test(one.Model);
+			})).toEqual([]);
+		});
+
+		expect(scene.Engine().SurfaceAt(plan.Streets[0].Points[0][0], plan.Streets[0].Points[0][1]).Road).toMatch(/^street-burg-|^junction-/);
+	});
+
+	/* Regression: a temple of a sketch stood on the motorway that went through its place. A landmark never stands on a way. */
+	it('moves a landmark that stands on a way aside, out of its edge, and tells it', async function () {
+		var warned = [];
+		var warn = window.console.warn;
+
+		window.console.warn = function (text) {
+			warned.push(String(text));
+		};
+
+		try {
+			var scene = await mount([
+				{ID: 'way', Type: 'road', Points: [[-80, 0], [80, 0]], Width: 12},
+				{ID: 'shrine', Type: 'landmark', At: [10, 1], Model: 'temple', Size: 10, Name: 'Shrine'}
+			], true);
+
+			await waitFor(function () {
+				return !!scene.Scene().Objects['sketch-shrine'];
+			}, 4000);
+
+			var shrine = scene.Scene().Objects['sketch-shrine'];
+
+			/* Out of the edge (6) by half of it (5) and a little more, on the side it stood. */
+			expect(Number(shrine.Values.Y)).toBeGreaterThanOrEqual(12.9);
+			expect(Number(shrine.Values.X)).toBeCloseTo(10, 3);
+			expect(warned.some(function (text) {
+				return text.indexOf('Shrine') !== -1;
+			})).toBe(true);
+		}
+		finally {
+			window.console.warn = warn;
+		}
+	});
+
 	it('builds a settlement on its plan: a building of its class and size on each lot, its walls but where its gates are, its towers, and nobody walks through them', async function () {
 		var scene = await mount([{ID: 'fort', Type: 'settlement', Kind: 'fort', Points: square(-40, -40, 40, 40), Lit: 0.5}]);
 		var engine = scene.Engine();

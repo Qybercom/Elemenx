@@ -17,7 +17,9 @@
  *   enx_bump(position, normal, h) bends a normal by a height (of the derivatives of the screen: called where all pixels go).
  * - Land(names): the GLSL of the materials of a ground (up to 8, its slots) in the shader of the land: landMaterials(place,
  *   px, color, height), each by the weight of it at the corners (vMaterials, vMaterials2), drawn once where it weighs.
- * - LandNames(): the materials a ground may be made of.
+ * - LandNames(): the materials a ground may be made of. Texture of a material names a texture of SceneTextures: on a
+ *   ground it is its tile baked (sharp near, smooth far, no repeat), Textured(names) the textures of a ground in the order of
+ *   its layers (SceneTextures.Array), its Code what a model of it draws.
  * - Surface(name): a material written by hand for a Blueprint of a material of a model (Blueprints, type material): the
  *   pattern on its body, in metres of it, on the side its normal faces most.
  * The same functions run in Node: they read no page.
@@ -170,17 +172,159 @@ Elemenx.Service('SceneMaterials', {
 	 * weighs anything; none: as it is.
 	 */
 	Land: function (names) {
-		var lines = [this.Functions(names), 'void landMaterials(vec3 place, float px, inout vec3 color, inout float height) {', '\tvec3 sum = vec3(0.0);', '\tfloat total = 0.0;', '\tfloat high = 0.0;', '\tfloat w;'];
+		var self = this;
+		var textured = this.Textured(names);
+		var lines = [this.Functions(names)];
+
+		/* The tiles of the materials of a texture (SceneTextures): the layers of uLandColor and uLandSurface, in the order of Textured. */
+		if (textured.length)
+			lines.push('precision highp sampler2DArray;', this.$Service('SceneTextures').Chunk(true), this.LandTexture, this.LandCliff);
+
+		/* A pattern of code lies on the ground from over it, on a slope from its side: none is drawn out down a hillside. */
+		lines.push('void landMaterials(vec3 place, float px, inout vec3 color, inout float height) {', '\tvec3 slope = normalize(vNormal);', '\tvec2 side = slope.y > 0.72 ? place.xz : abs(slope.x) > abs(slope.z) ? place.zy : place.xy;', '\tvec3 sum = vec3(0.0);', '\tfloat total = 0.0;', '\tfloat high = 0.0;', '\tfloat w;');
 
 		names.slice(0, 8).forEach(function (name, index) {
+			var material = self.Defined[name];
+			var layer = material && material.Texture ? textured.indexOf(material.Texture) : -1;
+			var textures = layer >= 0 ? self.$Service('SceneTextures') : null;
+
 			lines.push('\tw = ' + (index < 4 ? 'vMaterials' : 'vMaterials2') + '.' + 'xyzw'.charAt(index % 4) + ';');
-			lines.push('\tif (w > 0.02) { vec3 c = color; float r = 1.0; float m = 0.0; float h = 0.0; enx_mat' + index + '(place.xz, px, c, r, m, h); sum += c * w; high += h * w; total += w; }');
+
+			if (layer >= 0) {
+				lines.push('\tif (w > 0.02) { vec3 c; float h; float lit; landTexture(' + layer + '.0, ' + Number(textures.Get(material.Texture).Metres).toFixed(4) + ', place, c, h, lit); c *= landTint(color) * mix(1.0, lit, 0.6); sum += c * w; high += h * 0.03 * w; total += w; }');
+
+				return;
+			}
+
+			lines.push('\tif (w > 0.02) { vec3 c = color; float r = 1.0; float m = 0.0; float h = 0.0; enx_mat' + index + '(side, px, c, r, m, h); sum += c * w; high += h * w; total += w; }');
 		});
 
-		lines.push('\tif (total <= 0.0) return;', '\tcolor = mix(color, sum / total, min(1.0, total));', '\theight = high / max(total, 1.0);', '}');
+		lines.push('\tif (total > 0.0) {', '\t\tcolor = mix(color, sum / total, min(1.0, total));', '\t\theight = high / max(total, 1.0);', '\t}');
+
+		/* What is steep: the face of a cliff, its beds of the height in the world; under it, at a gentler slope, scree. */
+		if (textured.indexOf('cliff') !== -1)
+			lines.push('\tlandCliff(' + textured.indexOf('cliff') + '.0, ' + Number(this.$Service('SceneTextures').Get('cliff').Metres).toFixed(4) + ', place, color, height);');
+
+		lines.push('}');
 
 		return lines.join('\n');
 	},
+
+	/*
+	 * The textures (SceneTextures) of the materials of a ground, each once, in the order of its slots, then cliff (the face of
+	 * what is steep): the layers of its tiles.
+	 */
+	Textured: function (names) {
+		var self = this;
+		var found = [];
+
+		(names || []).slice(0, 8).forEach(function (name) {
+			var material = self.Defined[name];
+			if (material && material.Texture && self.$Service('SceneTextures').Has(material.Texture) && found.indexOf(material.Texture) === -1)
+				found.push(material.Texture);
+		});
+
+		/* The face of a cliff, for what is steep on any ground: the last layer. */
+		if ((names || []).length && this.$Service('SceneTextures').Has('cliff') && found.indexOf('cliff') === -1)
+			found.push('cliff');
+
+		return found;
+	},
+
+	/*
+	 * A tile of a material on the ground: seen from over it on what is level, from its side on a slope (three ways of the
+	 * place, weighed by the normal: no smear down a cliff), its color tinted a little by the color of the ground there.
+	 */
+	LandTexture: [
+		'uniform sampler2DArray uLandColor;',
+		'uniform sampler2DArray uLandSurface;',
+		'vec3 landTint(vec3 color) {',
+		'	vec3 tint = color / max(max(color.r, max(color.g, color.b)), 0.01);',
+		'	return mix(vec3(1.0), tint, 0.35) * 1.08;',
+		'}',
+		'void landTexture(float layer, float metres, vec3 place, out vec3 c, out float h, out float lit) {',
+		'	vec3 n = abs(normalize(vNormal));',
+		'	vec3 k = pow(n, vec3(4.0));',
+		'	k /= k.x + k.y + k.z;',
+		'	vec3 a;',
+		'	float r;',
+		'	vec3 bent;',
+		'	float hh;',
+		'	float l;',
+		'	float used = 0.0;',
+		'	c = vec3(0.0);',
+		'	h = 0.0;',
+		'	lit = 0.0;',
+		'	if (k.y > 0.03) { tex_sample_layer(uLandColor, uLandSurface, layer, place.xz, metres, 1.0, a, r, bent, hh, l); c += a * k.y; h += hh * k.y; lit += l * k.y; used += k.y; }',
+		'	if (k.x > 0.03) { tex_sample_layer(uLandColor, uLandSurface, layer, place.zy, metres, 1.0, a, r, bent, hh, l); c += a * k.x; h += hh * k.x; lit += l * k.x; used += k.x; }',
+		'	if (k.z > 0.03) { tex_sample_layer(uLandColor, uLandSurface, layer, place.xy, metres, 1.0, a, r, bent, hh, l); c += a * k.z; h += hh * k.z; lit += l * k.z; used += k.z; }',
+		'	c /= max(used, 1e-4);',
+		'	h /= max(used, 1e-4);',
+		'	lit /= max(used, 1e-4);',
+		'}'
+	].join('\n'),
+
+	/*
+	 * The face of a cliff where the ground is steep: the tile cliff from its two sides (none from over it: nothing smears down
+	 * it), each bed tinted by its height in the world (sandy, ochre, grey, red, brown, a few metres each, warped along it),
+	 * a bed of soil under the grass at its top edge; where it gets gentler below, scree of the same rock.
+	 */
+	LandCliff: [
+		'float cliffHash(float n) {',
+		'	return fract(sin(n * 127.1) * 43758.5453);',
+		'}',
+		'float cliffNoise(vec2 p) {',
+		'	vec2 i = floor(p);',
+		'	vec2 f = fract(p);',
+		'	vec2 u = f * f * (3.0 - 2.0 * f);',
+		'	float a = fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5453);',
+		'	float b = fract(sin(dot(i + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5453);',
+		'	float c = fract(sin(dot(i + vec2(0.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);',
+		'	float d = fract(sin(dot(i + vec2(1.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);',
+		'	return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);',
+		'}',
+		'vec3 cliffBed(float y, float region) {',
+		'	float i = floor(y);',
+		'	vec3 base = mix(mix(vec3(0.74, 0.66, 0.54), vec3(0.7, 0.56, 0.42), smoothstep(0.3, 0.6, region)), vec3(0.6, 0.58, 0.55), smoothstep(0.6, 0.9, region));',
+		'	float t = cliffHash(i + floor(region * 7.0) * 31.0);',
+		'	float t2 = cliffHash(i + 1.0 + floor(region * 7.0) * 31.0);',
+		'	vec3 a = base * (0.82 + 0.3 * t) * mix(vec3(1.0), vec3(1.06, 0.95, 0.86), step(0.82, t));',
+		'	vec3 b = base * (0.82 + 0.3 * t2) * mix(vec3(1.0), vec3(1.06, 0.95, 0.86), step(0.82, t2));',
+		'	return mix(a, b, smoothstep(0.75, 1.0, fract(y)));',
+		'}',
+		'void landCliff(float layer, float metres, vec3 place, inout vec3 color, inout float height) {',
+		'	vec3 n = normalize(vNormal);',
+		'	float steep = 1.0 - smoothstep(0.55, 0.8, n.y);',
+		'	float scree = (1.0 - smoothstep(0.8, 0.92, n.y)) * (1.0 - steep);',
+		'	if (steep < 0.01 && scree < 0.01) return;',
+		'	vec3 a;',
+		'	float r;',
+		'	vec3 bent;',
+		'	float hh;',
+		'	float l;',
+		'	vec3 c = vec3(0.0);',
+		'	float h = 0.0;',
+		'	float lit = 0.0;',
+		'	vec2 k = pow(abs(n.xz), vec2(4.0));',
+		'	k /= max(k.x + k.y, 1e-4);',
+		'	if (k.x > 0.03) { tex_sample_layer(uLandColor, uLandSurface, layer, vec2(place.z, place.y), metres, 0.0, a, r, bent, hh, l); c += a * k.x; h += hh * k.x; lit += l * k.x; }',
+		'	if (k.y > 0.03) { tex_sample_layer(uLandColor, uLandSurface, layer, vec2(place.x, place.y), metres, 0.0, a, r, bent, hh, l); c += a * k.y; h += hh * k.y; lit += l * k.y; }',
+		'	float used = max(step(0.03, k.x) * k.x + step(0.03, k.y) * k.y, 1e-4);',
+		'	c /= used;',
+		'	h /= used;',
+		'	lit /= used;',
+		'	float region = cliffNoise(place.xz / 260.0);',
+		'	float warp = (cliffNoise(place.xz / 40.0) - 0.5) * 4.0 + (cliffNoise(place.xz / 9.0) - 0.5) * 0.8;',
+		'	float thick = 1.6 + 2.2 * cliffNoise(vec2(floor((place.y + warp) / 6.0), region * 9.0));',
+		'	vec3 bed = cliffBed((place.y + warp) / thick, region);',
+		'	vec3 face = c * bed * 1.25 * mix(1.0, lit, 0.7);',
+		'	float bits = cliffNoise(place.xz * 6.0) * 0.6 + cliffNoise(place.xz * 23.0) * 0.4;',
+		'	vec3 loose = cliffBed((place.y + warp + 1.7) / thick, region) * (0.6 + 0.4 * bits) * vec3(0.92, 0.9, 0.86);',
+		'	color = mix(color, face, steep);',
+		'	color = mix(color, loose, scree * 0.6);',
+		'	height = mix(height, h * 0.08, steep);',
+		'}'
+	].join('\n'),
 
 	LandNames: function () {
 		var self = this;
@@ -462,5 +606,20 @@ Elemenx.Service('SceneMaterials', {
 			'	h += abs(a * b) * 0.0003 * s;',
 			'	r = 0.95;'
 		]);
+
+		/* Soil with grass here and there: on a ground, the tile grassy-soil; on a model, a soil with green in it. */
+		define('grassy', 'ground', true, [
+			'	float s = enx_ms(px, 0.02);',
+			'	float spot = enx_mf(q * 1.5, 3);',
+			'	float grain = enx_mn(q * 60.0);',
+			'	c *= mix(vec3(0.95, 0.88, 0.75), vec3(0.7, 0.9, 0.55), smoothstep(0.45, 0.6, spot)) * (0.85 + 0.3 * grain * s);',
+			'	h += (grain - 0.5) * 0.004 * s;',
+			'	r = 0.95;'
+		]);
+
+		/* On a ground, the tiles baked of SceneTextures: sharp as near as the eye comes, never one over and over. */
+		this.Defined.lawn.Texture = 'lawn';
+		this.Defined.grassy.Texture = 'grassy-soil';
+		this.Defined.asphalt.Texture = 'asphalt';
 	}
 });

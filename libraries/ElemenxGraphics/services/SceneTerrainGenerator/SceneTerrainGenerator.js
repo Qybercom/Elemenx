@@ -3240,9 +3240,21 @@ Elemenx.Service('SceneTerrainGenerator', {
 			return other.Type === 'square' && other.Points && other.Points.length > 2;
 		});
 
-		/* The other ways of the sketch through it (roads, streets not its own, rivers, railways): no lot stands on them. */
+		/*
+		 * The other ways of the sketch through it (roads, streets not its own, rivers, railways): no lot stands on them. Its own
+		 * streets made roads of the scene (SceneScatter: road street-<its ID>-<n>) and where only they meet are its streets.
+		 */
+		function own (other) {
+			var mine = 'street-' + item.ID + '-';
+			if (String(other.Road || '').indexOf(mine) === 0) return true;
+
+			return !!(other.Roads && other.Roads.length) && other.Roads.every(function (road) {
+				return String(road).indexOf(mine) === 0;
+			});
+		}
+
 		var ways = others.filter(function (other) {
-			return other !== item && (other.Type === 'road' || other.Type === 'street' || other.Type === 'river' || other.Type === 'railway' || other.Type === 'canyon') && other.Points && other.Points.length > 1;
+			return other !== item && (other.Type === 'road' || other.Type === 'street' || other.Type === 'river' || other.Type === 'railway' || other.Type === 'canyon') && other.Points && other.Points.length > 1 && !own(other);
 		});
 		var districts = others.filter(function (other) {
 			return other.Type === 'district' && other.Points && other.Points.length > 2;

@@ -246,6 +246,9 @@ Elemenx.Component('UIKitPage', {
 	WorldNote: '',
 	WorldFog: false,
 	WorldAdded: 0,
+	/* What the pointer marks is for the game to say (HoverMark): units outlined in gold, bodies of space by a beating ring. */
+	WorldMark: {Look: 'outline', Color: '#ffd27a', Width: 2, Cursor: 'pointer'},
+	SpaceMark: {Look: 'ring', Pulse: 1.6, Cursor: 'pointer'},
 	SpaceNote: '',
 	SpaceSystem: 'sol',
 	SpaceSystems: [{Value: 'sol', Label: 'The Sun'}, {Value: 'seed', Label: 'Of a seed'}],
@@ -542,6 +545,11 @@ Elemenx.Component('UIKitPage', {
 	Far: {},
 	SceneQualities: [{Value: 'auto', Label: 'Auto'}, {Value: 'low', Label: 'Low'}, {Value: 'medium', Label: 'Medium'}, {Value: 'high', Label: 'High'}, {Value: 'ultra', Label: 'Ultra'}],
 	TerrainNote: '',
+
+	/* What a press selects is for the game to say (SelectCheck): here the walkers alone, never a tree or a house. */
+	TerrainSelectable: function (object) {
+		return !!(object && object.Traits && object.Traits.Walker);
+	},
 	TerrainBiome: 'temperate',
 	TerrainClumps: 0.5,
 	SceneBokeh: 0,

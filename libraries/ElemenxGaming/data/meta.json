@@ -249,7 +249,10 @@
 			"EventDescriptions": {},
 			"Methods": [
 				"Make(options)",
-				"Of(scene)"
+				"Of(scene)",
+				"Settings(object)",
+				"Card(ledger, object, rows)",
+				"Target(ledger, object)"
 			],
 			"Sample": {}
 		}

@@ -5,6 +5,7 @@
 	'services/Meshes/Meshes.js',
 	'services/SceneKinds/SceneKinds.js',
 	'services/SceneMaterials/SceneMaterials.js',
+	'services/SceneTextures/SceneTextures.js',
 	'services/SceneTerrainGenerator/SceneTerrainGenerator.js',
 	'services/BlueprintShaders/BlueprintShaders.js',
 	'services/SceneBlueprints/SceneBlueprints.js',
@@ -50,5 +51,6 @@
 	'components/CutsceneEditor/CutsceneEditor.js',
 	'components/SceneEditor/SceneEditor.js',
 	'components/PlanetEditor/PlanetEditor.js',
-	'components/ModelEditor/ModelEditor.js'
+	'components/ModelEditor/ModelEditor.js',
+	'components/TextureLab/TextureLab.js'
 ];

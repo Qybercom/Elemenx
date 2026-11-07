@@ -18,5 +18,5 @@ A kind or a shape a Service declares ($Provides: {TopologyKinds: {Kinds: [...], 
 
 ## Tests
 
-- [knows the kinds and shapes built in; an unknown kind is drawn as a server](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js#L610) — `libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js`
-- [draws a kind defined with a shape of its own, and its load by a function](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js#L625) — `libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js`
+- [knows the kinds and shapes built in; an unknown kind is drawn as a server](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js#L615) — `libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js`
+- [draws a kind defined with a shape of its own, and its load by a function](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js#L630) — `libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js`

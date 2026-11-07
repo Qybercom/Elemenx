@@ -17,6 +17,8 @@ Make(options) создаёт реестр (ledger). Options:
 - Receive(message) — сообщение транспорта. Хозяин принимает запросы клиентов (damage, heal, revive) как свои. Клиент принимает состояния хозяина по одному разу и в порядке хозяина: старый Seq и повтор отбрасываются;
 - Save() и Load(saved) — {Version, States}.
 
+Сама сцена не знает прочности: её даёт игра. Kinds — прочность видов сцены ({unit: {Max: 100}, house: 800, module: 200, station и craft: 1000, ship: 100, cruiser: 600, freighter: 300}); свой вид берёт прочность того, что он расширяет (Extends), а черта Health объекта или его вида — поверх. Settings(object) даёт настройки прочности объекта (или null — его нельзя повредить); Health и MaxHealth, заданные объекту отдельно, тоже учитываются. Card(ledger, object, rows) добавляет строку прочности в карточку объекта, Target(ledger, object) говорит, жив ли он для оружия, — этим пользуются точки подключения SceneCard и SceneTarget компонентов GameCombat и GameStrategy.
+
 Of(scene) — реестр сцены, один на её элемент. Он читает черту Health объектов (Max, Armor, Resist, Parts, Regen, Death) и Values.Health и пишет значение обратно в Values.Health. Каждое попадание оружия сцены (hit) он превращает в Damage. При гибели делает то, что сказано в Death:
 - remove — убрать (по умолчанию);
 - break — разбить (Scene.Break);

@@ -1,0 +1,198 @@
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { loadElemenx, resetDOM, unique, waitFor } from '../../../../tests/setup.js';
+import { Use } from '../../../../tests/library.js';
+
+var owned = [];
+
+/* The pixels of a column of a texture baked (its target read back), as one row of RGBA bytes. */
+function column (renderer, made, x) {
+	var gl = renderer.GL;
+	var data = new Uint8Array(made.Size * 4);
+
+	made.Target.Begin();
+
+	gl.readBuffer(gl.COLOR_ATTACHMENT0);
+	gl.readPixels(x, 0, 1, made.Size, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+	made.Target.End();
+
+	return data;
+}
+
+function apart (a, b) {
+	var sum = 0;
+	var i;
+
+	for (i = 0; i < a.length; i += 4)
+		sum += Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]);
+
+	return sum / (a.length / 4);
+}
+
+describe('Contract: SceneTextures, textures of materials baked once into tiles with no seam', function () {
+	var textures;
+
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:Renderer', 'service:SceneTextures', 'service:SceneMaterials', 'TextureLab', 'Scene', 'SceneObject']);
+
+		textures = Elemenx.Service('SceneTextures');
+	});
+
+	beforeEach(function () {
+		resetDOM();
+	});
+
+	afterEach(function () {
+		while (owned.length) owned.pop().$Destroy();
+	});
+
+	it('bakes a recipe into a tile that repeats with no seam, with mipmaps, once for the same params', function () {
+		var canvas = document.createElement('canvas');
+		var renderer = Elemenx.Service('Renderer').Create(canvas, {Antialias: false});
+		var gl = renderer.GL;
+		var made;
+		var again;
+		var edge;
+		var inside;
+
+		expect(textures.Names('ground')).toEqual(expect.arrayContaining(['lawn', 'grassy-soil']));
+		expect(textures.Names('road')).toContain('asphalt');
+		expect(function () {
+			textures.Define('broken', {});
+		}).toThrow('Elemenx SceneTextures: a texture needs a name and its Code');
+
+		['lawn', 'grassy-soil', 'asphalt'].forEach(function (name) {
+			made = textures.Bake(renderer, name, {Size: 256});
+
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+			expect(made.Size).toBe(256);
+			expect(made.Metres).toBe(textures.Get(name).Metres);
+
+			gl.bindTexture(gl.TEXTURE_2D, made.Color.Handle);
+
+			expect(gl.getTexParameter(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S)).toBe(gl.REPEAT);
+			expect(gl.getTexParameter(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER)).toBe(gl.LINEAR_MIPMAP_LINEAR);
+
+			/* No seam: the last column goes on into the first as one column into the next inside it. */
+			edge = apart(column(renderer, made, made.Size - 1), column(renderer, made, 0));
+			inside = (apart(column(renderer, made, 80), column(renderer, made, 81)) + apart(column(renderer, made, 170), column(renderer, made, 171))) / 2;
+
+			expect(edge).toBeLessThan(inside * 1.6 + 2);
+		});
+
+		made = textures.Bake(renderer, 'lawn', {Dry: 0.2, Size: 128});
+		again = textures.Bake(renderer, 'lawn', {Dry: 0.2, Size: 128});
+
+		expect(again).toBe(made);
+		expect(textures.Bake(renderer, 'lawn', {Dry: 0.3, Size: 128})).not.toBe(made);
+		expect(textures.Bake(renderer, 'nothing')).toBe(null);
+		expect(textures.Source('lawn')).toContain('uniform float p_Dry;');
+		expect(textures.Chunk()).toContain('void tex_sample(');
+
+		renderer.Destroy();
+	});
+
+	it('shows a texture in TextureLab as a tile or a ground, a slider for each param, and tells change', async function () {
+		var told = [];
+		var component = Elemenx.Component(unique('LabHost'), {$Template: '<div style="width: 640px; height: 360px"><TextureLab #Lab Texture="grassy-soil" View="tile" (change)="Changed" /></div>', Changed: function (event) {
+			told.push(event);
+		}})();
+		var lab;
+		var slider;
+
+		owned.push(component);
+
+		document.getElementById('mount').appendChild(component.$Element());
+
+		await waitFor(function () {
+			lab = component.$Ref('Lab', true);
+
+			return lab && lab.Own().Renderer;
+		}, 8000);
+
+		expect(lab.Sliders().map(function (one) {
+			return one.Key;
+		})).toEqual(['Cover', 'Weeds', 'Pebbles']);
+		expect(lab.Picture()).toMatch(/^data:image\/png;base64,/);
+
+		slider = lab.$Element().querySelector('input[data-key="Cover"]');
+		slider.value = '0.2';
+
+		slider.dispatchEvent(new Event('input', {bubbles: true}));
+
+		expect(told[told.length - 1]).toEqual({Texture: 'grassy-soil', Params: {Cover: 0.2, Weeds: 0.5, Pebbles: 0.4}});
+
+		lab.View = 'ground';
+
+		expect(lab.Picture()).toMatch(/^data:image\/png;base64,/);
+		expect(lab.Own().Renderer.GL.getError()).toBe(0);
+	});
+
+	/*
+	 * A ground draws its materials of a texture with their tiles baked: the layers of two textures, each material its own
+	 * layer, seen from over it on what is level and from its side on a slope.
+	 */
+	it('draws the materials of a ground that name a texture with their tiles, a layer each, bound to its land', async function () {
+		var materials = Elemenx.Service('SceneMaterials');
+		var ready = null;
+		var component = Elemenx.Component(unique('LandHost'), {$Template: '<div style="width: 320px; height: 200px"><Scene Paused="true" Quality="low" Labels="false" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="100" Height="2" Water="0" Seed="lawn" />' +
+		'</Scene></div>', Ready: function (space) {
+			ready = space;
+		}})();
+		var bound = [];
+		var draw;
+		var renderer;
+		var i;
+
+		expect(materials.Get('lawn').Texture).toBe('lawn');
+		expect(materials.Get('asphalt').Texture).toBe('asphalt');
+		/* The face of a cliff is the last layer of any ground: what is steep has it. */
+		expect(materials.Textured(['soil', 'lawn', 'asphalt', 'lawn'])).toEqual(['lawn', 'asphalt', 'cliff']);
+		expect(materials.Land(['soil', 'lawn'])).toContain('landCliff(1.0, 3.0000, place, color, height);');
+		expect(materials.Land(['soil', 'lawn'])).toContain('landTexture(0.0, 0.8000, place, c, h, lit);');
+		expect(materials.Land(['soil', 'rock'])).not.toContain('landTexture(0');
+		expect(materials.LandTexture).toContain('place.zy');
+
+		owned.push(component);
+
+		document.getElementById('mount').appendChild(component.$Element());
+
+		await waitFor(function () {
+			return ready;
+		}, 4000);
+
+		ready.Scene().Loop.Stop();
+
+		renderer = ready.Engine().Renderer;
+		draw = renderer.Draw;
+		renderer.Draw = function (mesh, program, values) {
+			if (values && values.uLandColor)
+				bound.push(values.uLandColor);
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			await waitFor(function () {
+				ready.Scene().Rest = 0;
+
+				ready.Engine().Frame(performance.now() + 100 + bound.length);
+
+				return bound.length > 0;
+			}, 20000);
+
+			for (i = 0; i < 2; i++)
+				ready.Engine().Frame(performance.now() + 200 + i);
+		}
+		finally {
+			renderer.Draw = draw;
+		}
+
+		expect(ready.Scene().Ground.Field.Materials).toContain('lawn');
+		expect(bound[0].Handle).toBeTruthy();
+		expect(renderer.GL.getError()).toBe(renderer.GL.NO_ERROR);
+	}, 40000);
+});

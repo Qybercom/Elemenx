@@ -127,13 +127,22 @@ describe('Contract: the weapons of a Scene: shots, what they hit, of what materi
 		expect(scene.Marks()[2].Kind).toBe('scorch');
 	}, 30000);
 
-	it('flies a body that falls and blasts where it lands: each thing with health near it takes less the farther it is', async function () {
+	/*
+	 * The scene knows no health: with no game that says what may be hurt (SceneTarget), its blast hits all that stands near it,
+	 * a crate with no health too; a game that says no keeps the blast off it.
+	 */
+	it('flies a body that falls and blasts where it lands: each thing near it takes less the farther it is, as far as the game lets', async function () {
 		var made = await mount('<SceneObject ID="gun" Kind="thing" Model="test-crate" Size="0.5" X="0" Y="0" />');
 		var scene = made.Scene;
 		var hits;
 
-		scene.Add('thing', {ID: 'near', Model: 'test-crate', Size: 1, X: 40, Y: 1, Traits: {Health: {Max: 100}}});
-		scene.Add('thing', {ID: 'far', Model: 'test-crate', Size: 1, X: 40, Y: 4.5, Traits: {Health: {Max: 100}}});
+		scene.Add('thing', {ID: 'near', Model: 'test-crate', Size: 1, X: 40, Y: 1});
+		scene.Add('thing', {ID: 'far', Model: 'test-crate', Size: 1, X: 40, Y: 4.5});
+		scene.Add('thing', {ID: 'kept', Model: 'test-crate', Size: 1, X: 41, Y: 0});
+
+		var detach = scene.AddBehaviour({Target: function (object) {
+			return object.ID === 'kept' ? false : undefined;
+		}});
 
 		frames(scene, 3);
 
@@ -157,6 +166,10 @@ describe('Contract: the weapons of a Scene: shots, what they hit, of what materi
 
 		expect(hits.near.Type).toBe('explosive');
 		expect(hits.far.Amount).toBeLessThan(hits.near.Amount);
+		expect(hits.kept).toBe(undefined);
+
+		detach();
+
 		expect(scene.Marks().some(function (one) {
 			return one.Kind === 'scorch';
 		})).toBe(true);

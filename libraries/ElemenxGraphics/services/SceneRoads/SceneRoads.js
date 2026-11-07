@@ -734,9 +734,9 @@ Elemenx.Service('SceneRoads', {
 			});
 		});
 
-		/* A junction: its ground level all round it, as a short piece of road as wide as it. */
+		/* A junction: its ground level all round it, as a short piece of road as wide as it (Roads: those that meet at it). */
 		(junctions || []).forEach(function (junction) {
-			items.push({Type: 'road', Road: junction.ID, Points: [[junction.X - junction.Radius, junction.Z, junction.Y], [junction.X + junction.Radius, junction.Z, junction.Y]], Width: junction.Radius * 2, Shoulder: 2});
+			items.push({Type: 'road', Road: junction.ID, Roads: (junction.Roads || []).slice(), Points: [[junction.X - junction.Radius, junction.Z, junction.Y], [junction.X + junction.Radius, junction.Z, junction.Y]], Width: junction.Radius * 2, Shoulder: 2});
 		});
 
 		return items;
@@ -884,8 +884,11 @@ Elemenx.Service('SceneRoads', {
 		return pieces;
 	},
 
-	/* The barriers of a road as pieces of its model, by their kinds. */
-	BarrierPieces: function (road) {
+	/*
+	 * The barriers of a road as pieces of its model, by their kinds. height(x, z), the ground: a post or a tyre beside the road
+	 * where the ground falls away goes down into it, never hangs over it.
+	 */
+	BarrierPieces: function (road, height) {
 		var self = this;
 		var pieces = {};
 
@@ -933,7 +936,11 @@ Elemenx.Service('SceneRoads', {
 					continue;
 				}
 
-				put(barrier.Kind === 'fence' ? 'barrier-fence-post' : 'barrier-steel', self.Box([place.X + side[0] * (o + (o < 0 ? -0.08 : 0.08)), y + h / 2, place.Z + side[1] * (o + (o < 0 ? -0.08 : 0.08))], [0.1, h, 0.1], place.Way));
+				var px = place.X + side[0] * (o + (o < 0 ? -0.08 : 0.08));
+				var pz = place.Z + side[1] * (o + (o < 0 ? -0.08 : 0.08));
+				var foot = height && !self.SpanAt(road, at) ? Math.min(y, Math.max(0, height(px, pz))) - 0.3 : y;
+
+				put(barrier.Kind === 'fence' ? 'barrier-fence-post' : 'barrier-steel', self.Box([px, (foot + y + h) / 2, pz], [0.1, y + h - foot, 0.1], place.Way));
 			}
 		});
 
@@ -1321,7 +1328,7 @@ Elemenx.Service('SceneRoads', {
 				add('marking', {Color: [0.92, 0.92, 0.88], Rough: 0.6}, piece);
 			});
 
-			var fenced = Object.assign(self.BarrierPieces(road), self.MarkPieces(road));
+			var fenced = Object.assign(self.BarrierPieces(road, settings.Height), self.MarkPieces(road));
 			var looks = {'barrier-concrete': {Color: [0.66, 0.65, 0.62], Rough: 0.9}, 'barrier-steel': {Color: [0.7, 0.72, 0.74], Rough: 0.35, Metal: 1}, 'barrier-fence': {Color: [0.3, 0.33, 0.3], Rough: 0.6, Metal: 0.6}, 'barrier-fence-post': {Color: [0.25, 0.27, 0.25], Rough: 0.6, Metal: 0.6}, 'barrier-tyres': {Color: [0.05, 0.05, 0.05], Rough: 0.95}, 'barrier-tyres-white': {Color: [0.85, 0.85, 0.85], Rough: 0.9}, 'mark-white': {Color: [0.93, 0.93, 0.93], Rough: 0.6}, 'mark-black': {Color: [0.05, 0.05, 0.06], Rough: 0.6}, 'mark-gantry': {Color: [0.2, 0.2, 0.22], Rough: 0.5, Metal: 0.6}, 'mark-gantry-beam': {Color: [0.92, 0.92, 0.95], Rough: 0.5}};
 
 			Object.keys(fenced).forEach(function (name) {

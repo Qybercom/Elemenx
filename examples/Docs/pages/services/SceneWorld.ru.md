@@ -42,7 +42,7 @@ ID вещей мира — world-<номер по порядку>, а у вещ�
 - [makes the objects of the World of a ground in the scene, marked in the tree, not saved: they come again of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L734) — `tests/regression/library-scene-editor.test.js`
 - [preloads the globe of a planet into the store of the browser, and a scene of it takes it from there at once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L147) — `tests/regression/library-scene-landing.test.js`
 - [edits what is generated: its changes kept over it as it is made again, or it unlinked as an object of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L219) — `tests/regression/library-scene-roads.test.js`
-- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1778) — `tests/regression/library-scene.test.js`
-- [lets go of neither a hero nor the view on Escape, and takes no leap of the pointer](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2824) — `tests/regression/library-scene.test.js`
+- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1819) — `tests/regression/library-scene.test.js`
+- [lets go of neither a hero nor the view on Escape, and takes no leap of the pointer](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2865) — `tests/regression/library-scene.test.js`
 
 +30 ещё в тех же файлах

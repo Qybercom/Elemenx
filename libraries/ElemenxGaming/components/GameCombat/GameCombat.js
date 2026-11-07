@@ -97,6 +97,7 @@ Elemenx.Component('GameCombat', {
 
 	/* The bars over what has health: hurt ones, or all, where they are seen. */
 	DrawBars: function () {
+		var vitals = this.$Service('Vitals');
 		var scene = this.ParentScene();
 		var inner = scene ? scene.Scene() : null;
 		var canvas = this.$Element();
@@ -132,7 +133,7 @@ Elemenx.Component('GameCombat', {
 			var body;
 			var top;
 
-			if (!object.World || object.Hidden || object.Owner || id === inner.Hero || !object.Traits || !object.Traits.Health) return;
+			if (!object.World || object.Hidden || object.Owner || id === inner.Hero || !vitals.Settings(object)) return;
 
 			state = ledger.Get(id);
 
@@ -151,6 +152,16 @@ Elemenx.Component('GameCombat', {
 
 			context.fillRect(top.X - 20, top.Y - 2, 40 * Math.max(0, state.Part), 4);
 		});
+	},
+
+	/* Its health on the card of what is selected. */
+	SceneCard: function (object, rows) {
+		this.$Service('Vitals').Card(this.Ledger(), object, rows);
+	},
+
+	/* The weapons of the scene aim at what has health and lives, and hurt only that. */
+	SceneTarget: function (object) {
+		return this.$Service('Vitals').Target(this.Ledger(), object);
 	},
 
 	Damage: function (id, hit) {
