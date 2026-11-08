@@ -41,6 +41,26 @@ describe('Contract: Physics World, solid bodies that fall, strike and rest', fun
 		expect(ball.Sleeping).toBe(true);
 	});
 
+	/*
+	 * A tower of twelve boxes stands: it settles and sleeps, its top where it was. The solver was made of numbers (no arrays
+	 * made for each push) and must hold it as it did; a start of each contact from what it pressed before made it fall.
+	 */
+	it('holds a tower of twelve boxes standing till it sleeps, its top where it was', function () {
+		var physics = Elemenx.Service('Physics');
+		var world = physics.World();
+		var boxes = [];
+		var i;
+
+		for (i = 0; i < 12; i++)
+			boxes.push(world.Add({Shape: 'box', Size: [1, 1, 1], At: [0, 0.5 + i * 1.001, 0]}));
+
+		run(world, 10);
+
+		expect(Math.hypot(boxes[11].At[0], boxes[11].At[2])).toBeLessThan(0.1);
+		expect(0.5 + 11 * 1.001 - boxes[11].At[1]).toBeLessThan(0.2);
+		expect(boxes[11].Sleeping).toBe(true);
+	});
+
 	it('bounces as much as it is told', function () {
 		function peak (bounce) {
 			var world = physics.World({Bounce: bounce, Sleep: false});

@@ -40,7 +40,7 @@ Elemenx.Directive('itemcard', {
 			var classes = (Array.isArray(item.Class) ? item.Class : String(item.Class || '').split(/\s+/)).filter(function (name) {
 				return /^[A-Za-z][\w-]*$/.test(name);
 			});
-			var kind = [item.Rarity ? data.Text('ui.game.' + item.Rarity, item.Rarity) : '', item.Type || ''].filter(Boolean).join(' · ');
+			var kind = [item.Rarity ? data.Text('gaming.ui.' + item.Rarity, item.Rarity) : '', item.Type || ''].filter(Boolean).join(' · ');
 
 			card.className = ['elemenx-game-panel', 'elemenx-game-inventory-card', 'elemenx-item-card', /^(common|uncommon|rare|epic|legendary)$/.test(item.Rarity) ? item.Rarity : 'common'].concat(classes).join(' ');
 

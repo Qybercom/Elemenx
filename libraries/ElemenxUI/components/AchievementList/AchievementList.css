@@ -42,19 +42,19 @@
 }
 
 .elemenx-achievement-card.uncommon {
-	--elemenx-achievement-color: var(--elemenx-game-uncommon);
+	--elemenx-achievement-color: var(--elemenx-achievement-uncommon);
 }
 
 .elemenx-achievement-card.rare {
-	--elemenx-achievement-color: var(--elemenx-game-rare);
+	--elemenx-achievement-color: var(--elemenx-achievement-rare);
 }
 
 .elemenx-achievement-card.epic {
-	--elemenx-achievement-color: var(--elemenx-game-epic);
+	--elemenx-achievement-color: var(--elemenx-achievement-epic);
 }
 
 .elemenx-achievement-card.legendary {
-	--elemenx-achievement-color: var(--elemenx-game-legendary);
+	--elemenx-achievement-color: var(--elemenx-achievement-legendary);
 }
 
 .elemenx-achievement-card-badge {

@@ -1368,10 +1368,12 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(space.Shaders(graphics).Pbr).toMatch(/roughness = sqrt\(min\(1\.0, roughness \* roughness \+ spread\)\)/);
 
 		/*
-		 * Regression: a rough steel rail mirrored the grass sharp, at half the size, in steps of two pixels at its edges. Only
-		 * what is smooth mirrors the screen.
+		 * Regression: a rough steel rail mirrored the grass sharp, at half the size, in steps of two pixels at its edges. What is
+		 * rough mirrors blurred (its rays spread by its roughness, the frames add them up), what is very rough none of the screen.
 		 */
-		expect(space.Shaders(graphics).Pbr).toContain('(1.0 - smoothstep(0.15, 0.3, roughness))');
+		expect(space.Shaders(graphics).Pbr).toContain('float code = base.a < 0.99 ? 0.0 :');
+		expect(lights.Mirror).toContain('if (rough > 0.65) break;');
+		expect(lights.Mirror).toContain('vec3 bent = reflect(v, h);');
 
 		/*
 		 * Regression: the sea of a globe took its waves of a place that was always nought (a noise of rounding: streaks that
@@ -8295,8 +8297,8 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(wet[0].uWet).toBeGreaterThan(0);
 
 		/* The alpha of a cut-out edge is no gloss, and which side faces the eye comes from the view: walls wound backwards are lit. */
-		expect(gameSceneSource).toContain("'	float gloss = base.a < 0.99 ? 0.0 : max(");
-		expect(gameSceneSource).toContain('base.a < 0.5 ? base.a : 1.0 - gloss * 0.45');
+		expect(gameSceneSource).toContain("'	float code = base.a < 0.99 ? 0.0 :");
+		expect(gameSceneSource).toContain('base.a < 0.5 ? base.a : 1.0 - code * 0.45');
 		expect(gameSceneSource).toContain("'	if (dot(n, v) < -0.3) n = -n;',");
 		expect(gameSceneSource).not.toContain('gl_FrontFacing');
 
@@ -8305,7 +8307,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(lightingSource).not.toContain('step(abs(uSpot.x - 0.5), 0.75)');
 
 		/* Nothing mirrors by a body: the smoothed edge of one is no gloss. */
-		expect(lightingSource).toContain('gloss < 0.02 || near < 0.5');
+		expect(lightingSource).toContain('code < 0.004 || near < 0.5');
 
 		/* A location has floors over floors: no map of the light of a field holds it, and with none it would lose the sky. */
 		inner.Ground.Field = terrain.FromModel([{Positions: [-30, 0, -30, 30, 0, -30, 30, 0, 30, -30, 0, 30], Indices: [0, 2, 1, 0, 3, 2]}]);

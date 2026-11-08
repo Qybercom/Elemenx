@@ -736,10 +736,74 @@ Elemenx.Service('Physics', {
 		}
 
 		function impulse (record, push, r) {
-			if (!free(record)) return;
+			pushed(record, push[0], push[1], push[2], r);
+		}
 
-			record.Body.Way = add(record.Body.Way, scale(push, record.Mass));
-			record.Body.Spin = add(record.Body.Spin, turning(record, cross(r, push)));
+		/* The turn a twist (x, y, z) gives a free body, as turning, of numbers: into out, no array made. */
+		function turned (record, x, y, z, out) {
+			var m = record.Matrix;
+			var k = record.Inertia;
+			var a = (m[0] * x + m[3] * y + m[6] * z) * k[0];
+			var b = (m[1] * x + m[4] * y + m[7] * z) * k[1];
+			var c = (m[2] * x + m[5] * y + m[8] * z) * k[2];
+
+			out[0] = m[0] * a + m[1] * b + m[2] * c;
+			out[1] = m[3] * a + m[4] * b + m[5] * c;
+			out[2] = m[6] * a + m[7] * b + m[8] * c;
+		}
+
+		var twist = [0, 0, 0];
+
+		/*
+		 * A push (x, y, z) at the arm r of a body, as impulse, of numbers (the solver gave each contact tens of them a step, each
+		 * making arrays): its way and its spin are new arrays each step still, so what holds the old ones keeps them.
+		 */
+		function pushed (record, x, y, z, r) {
+			var way;
+			var spin;
+
+			if (!record || record.Static || record.Body.Sleeping) return;
+
+			way = record.Body.Way;
+			spin = record.Body.Spin;
+
+			turned(record, r[1] * z - r[2] * y, r[2] * x - r[0] * z, r[0] * y - r[1] * x, twist);
+
+			/* While it is solved its arrays are its own (made for that step): changed in their place. */
+			if (record.Solving) {
+				way[0] += x * record.Mass;
+				way[1] += y * record.Mass;
+				way[2] += z * record.Mass;
+				spin[0] += twist[0];
+				spin[1] += twist[1];
+				spin[2] += twist[2];
+
+				return;
+			}
+
+			record.Body.Way = [way[0] + x * record.Mass, way[1] + y * record.Mass, way[2] + z * record.Mass];
+			record.Body.Spin = [spin[0] + twist[0], spin[1] + twist[1], spin[2] + twist[2]];
+		}
+
+		/* How fast the two points of a contact close along a line d: of numbers, as dot(velocity(a) - velocity(b), d). */
+		function closing (item, d) {
+			var a = item.A.Body;
+			var ra = item.RA;
+			var x = a.Way[0] + a.Spin[1] * ra[2] - a.Spin[2] * ra[1];
+			var y = a.Way[1] + a.Spin[2] * ra[0] - a.Spin[0] * ra[2];
+			var z = a.Way[2] + a.Spin[0] * ra[1] - a.Spin[1] * ra[0];
+			var b;
+			var rb;
+
+			if (item.B) {
+				b = item.B.Body;
+				rb = item.RB;
+				x -= b.Way[0] + b.Spin[1] * rb[2] - b.Spin[2] * rb[1];
+				y -= b.Way[1] + b.Spin[2] * rb[0] - b.Spin[0] * rb[2];
+				z -= b.Way[2] + b.Spin[0] * rb[1] - b.Spin[1] * rb[0];
+			}
+
+			return x * d[0] + y * d[1] + z * d[2];
 		}
 
 		function wake (record) {
@@ -1381,46 +1445,67 @@ Elemenx.Service('Physics', {
 			item.Bias = Math.max(parting < -1 ? -bounce * parting : 0, 0.2 / elapsed * Math.max(0, item.Depth - 0.005));
 		}
 
+		/* A contact solved once more (of numbers: it runs for each contact as many times as the iterations, each step). */
 		function solve (item) {
 			var a = item.A;
 			var b = item.B;
 			var n = item.Normal;
-			var relative = sub(velocity(a, item.RA), velocity(b, item.RB));
-			var amount = (item.Bias - dot(relative, n)) * item.Firm;
+			var amount = (item.Bias - closing(item, n)) * item.Firm;
 			var total = Math.max(0, item.Pressed + amount);
 			var limit;
-			var spun;
+			var spin;
+			var sx;
+			var sy;
+			var sz;
+			var t;
 			var i = 0;
 
 			amount = total - item.Pressed;
 			item.Pressed = total;
 
-			impulse(a, scale(n, amount), item.RA);
-			impulse(b, scale(n, -amount), item.RB);
+			pushed(a, n[0] * amount, n[1] * amount, n[2] * amount, item.RA);
+			pushed(b, -n[0] * amount, -n[1] * amount, -n[2] * amount, item.RB);
 
 			limit = item.Friction * item.Pressed;
 
 			while (i < 2) {
-				relative = sub(velocity(a, item.RA), velocity(b, item.RB));
-				amount = -dot(relative, item.Tangents[i]) * item.Slide[i];
+				t = item.Tangents[i];
+				amount = -closing(item, t) * item.Slide[i];
 				total = Math.max(-limit, Math.min(limit, item.Slid[i] + amount));
 				amount = total - item.Slid[i];
 				item.Slid[i] = total;
 
-				impulse(a, scale(item.Tangents[i], amount), item.RA);
-				impulse(b, scale(item.Tangents[i], -amount), item.RB);
+				pushed(a, t[0] * amount, t[1] * amount, t[2] * amount, item.RA);
+				pushed(b, -t[0] * amount, -t[1] * amount, -t[2] * amount, item.RB);
 
 				i++;
 			}
 
 			/* What holds back rolling: the spin of one on the other is slowed, as far as the press allows. */
-			spun = sub(a.Body.Spin, b ? b.Body.Spin : [0, 0, 0]);
-			amount = size(spun);
+			spin = a.Body.Spin;
+			sx = spin[0] - (b ? b.Body.Spin[0] : 0);
+			sy = spin[1] - (b ? b.Body.Spin[1] : 0);
+			sz = spin[2] - (b ? b.Body.Spin[2] : 0);
+			amount = Math.sqrt(sx * sx + sy * sy + sz * sz);
 
 			if (amount < 1e-9) return;
 
-			spun = scale(spun, 1 / amount);
-			limit = dot(spun, turning(a, spun)) + dot(spun, turning(b, spun));
+			sx /= amount;
+			sy /= amount;
+			sz /= amount;
+			limit = 0;
+
+			if (free(a)) {
+				turned(a, sx, sy, sz, twist);
+
+				limit += sx * twist[0] + sy * twist[1] + sz * twist[2];
+			}
+
+			if (free(b)) {
+				turned(b, sx, sy, sz, twist);
+
+				limit += sx * twist[0] + sy * twist[1] + sz * twist[2];
+			}
 
 			if (limit < 1e-12) return;
 
@@ -1430,11 +1515,19 @@ Elemenx.Service('Physics', {
 
 			if (amount <= 0) return;
 
-			if (free(a))
-				a.Body.Spin = sub(a.Body.Spin, turning(a, scale(spun, amount)));
+			if (free(a)) {
+				turned(a, sx * amount, sy * amount, sz * amount, twist);
 
-			if (free(b))
-				b.Body.Spin = add(b.Body.Spin, turning(b, scale(spun, amount)));
+				spin = a.Body.Spin;
+				a.Body.Spin = [spin[0] - twist[0], spin[1] - twist[1], spin[2] - twist[2]];
+			}
+
+			if (free(b)) {
+				turned(b, sx * amount, sy * amount, sz * amount, twist);
+
+				spin = b.Body.Spin;
+				b.Body.Spin = [spin[0] + twist[0], spin[1] + twist[1], spin[2] + twist[2]];
+			}
 		}
 
 		function anchor (record, point) {
@@ -1611,6 +1704,17 @@ Elemenx.Service('Physics', {
 				ready(item, elapsed);
 			});
 
+			/* Its own arrays for the way and the spin of each free body while it is solved: changed in their place, never one it was given. */
+			records.forEach(function (record) {
+				var body = record.Body;
+
+				if (!free(record)) return;
+
+				body.Way = [body.Way[0], body.Way[1], body.Way[2]];
+				body.Spin = [body.Spin[0], body.Spin[1], body.Spin[2]];
+				record.Solving = true;
+			});
+
 			while (i < iterations) {
 				contacts.forEach(solve);
 
@@ -1620,6 +1724,10 @@ Elemenx.Service('Physics', {
 
 				i++;
 			}
+
+			records.forEach(function (record) {
+				record.Solving = false;
+			});
 
 			records.forEach(function (record) {
 				if (free(record))
@@ -1794,7 +1902,7 @@ Elemenx.Service('Physics', {
 
 		api = {
 			Add: function (body) {
-				var record = {Body: body, Key: next, Still: 0};
+				var record = {Body: body, Key: next, Still: 0, Solving: false};
 
 				body.ID = body.ID === undefined ? 'body' + next : body.ID;
 				body.Shape = body.Shape === 'box' || body.Shape === 'capsule' || body.Shape === 'prism' || body.Shape === 'tube' ? body.Shape : 'sphere';
@@ -2052,41 +2160,54 @@ Elemenx.Service('Physics', {
 			var j;
 			var p;
 			var was;
+			var x;
+			var y;
+			var z;
+			var k;
 
 			while (i < points.length) {
 				if (!pinned[i]) {
 					p = points[i];
-					was = p.slice();
-					p[0] += (p[0] - last[i][0]) * (1 - damping) + pull[0];
-					p[1] += (p[1] - last[i][1]) * (1 - damping) + pull[1];
-					p[2] += (p[2] - last[i][2]) * (1 - damping) + pull[2];
-					last[i] = was;
+					was = last[i];
+					x = p[0];
+					y = p[1];
+					z = p[2];
+					p[0] += (x - was[0]) * (1 - damping) + pull[0];
+					p[1] += (y - was[1]) * (1 - damping) + pull[1];
+					p[2] += (z - was[2]) * (1 - damping) + pull[2];
+					was[0] = x;
+					was[1] = y;
+					was[2] = z;
 				}
 
 				i++;
 			}
 
+			/* Each link held at its length, of numbers (a step went through all of them ten times, each making an array). */
 			for (j = 0; j < iterations; j++) {
-				links.forEach(function (item) {
+				for (k = 0; k < links.length; k++) {
+					var item = links[k];
 					var a = points[item[0]];
 					var b = points[item[1]];
 					var wa = pinned[item[0]] ? 0 : 1;
 					var wb = pinned[item[1]] ? 0 : 1;
-					var d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-					var l = Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+					var dx = b[0] - a[0];
+					var dy = b[1] - a[1];
+					var dz = b[2] - a[2];
+					var l = Math.sqrt(dx * dx + dy * dy + dz * dz);
 					var part;
 
-					if (l < 1e-9 || wa + wb === 0) return;
+					if (l < 1e-9 || wa + wb === 0) continue;
 
 					part = (l - item[2]) / l / (wa + wb);
 
-					a[0] += d[0] * part * wa;
-					a[1] += d[1] * part * wa;
-					a[2] += d[2] * part * wa;
-					b[0] -= d[0] * part * wb;
-					b[1] -= d[1] * part * wb;
-					b[2] -= d[2] * part * wb;
-				});
+					a[0] += dx * part * wa;
+					a[1] += dy * part * wa;
+					a[2] += dz * part * wa;
+					b[0] -= dx * part * wb;
+					b[1] -= dy * part * wb;
+					b[2] -= dz * part * wb;
+				}
 			}
 
 			/* Out of the balls and over the ground; on the ground it drags. */
@@ -2284,74 +2405,175 @@ Elemenx.Service('Physics', {
 			return (x * 73856093 ^ y * 19349663 ^ z * 83492791) | 0;
 		}
 
-		/* The particles within reach of each, after it (each pair once): a grid of cells the size of the reach. */
+		/*
+		 * The particles within reach of each, after it (each pair once): a grid of cells the size of the reach, hashed into a
+		 * table of numbers (twice as many places as particles; cells that meet in a place are only looked through, never trusted),
+		 * the particles of each place one after the other in a list of numbers. Kept from step to step: nothing made but as the
+		 * water grows.
+		 */
+		var table = {Size: 0, Start: null, Count: null, Order: null, Cell: null};
+
 		function neighbours () {
-			var grid = new Map();
 			var count = particles.length;
+			var size = 16;
+			var mask;
 			var i;
-			var cell;
+			var at;
+
+			while (size < count * 2)
+				size *= 2;
+
+			if (table.Size !== size) {
+				table.Size = size;
+				table.Start = new Int32Array(size + 1);
+				table.Count = new Int32Array(size);
+			}
+
+			if (!table.Order || table.Order.length < count) {
+				table.Order = new Int32Array(Math.max(16, count * 2));
+				table.Cell = new Int32Array(Math.max(16, count * 2));
+			}
+
+			mask = size - 1;
+
+			table.Count.fill(0);
 
 			for (i = 0; i < count; i++) {
 				var p = particles[i];
 
-				p.Cell = [Math.floor(p.At[0] / h), Math.floor(p.At[1] / h), Math.floor(p.At[2] / h)];
-				cell = key(p.Cell[0], p.Cell[1], p.Cell[2]);
+				p.Cx = Math.floor(p.At[0] / h);
+				p.Cy = Math.floor(p.At[1] / h);
+				p.Cz = Math.floor(p.At[2] / h);
+				at = key(p.Cx, p.Cy, p.Cz) & mask;
+				table.Cell[i] = at;
+				table.Count[at]++;
+			}
 
-				if (!grid.has(cell))
-					grid.set(cell, []);
+			table.Start[0] = 0;
 
-				grid.get(cell).push(i);
+			for (i = 0; i < size; i++)
+				table.Start[i + 1] = table.Start[i] + table.Count[i];
+
+			table.Count.fill(0);
+
+			for (i = 0; i < count; i++) {
+				at = table.Cell[i];
+				table.Order[table.Start[at] + table.Count[at]] = i;
+				table.Count[at]++;
 			}
 
 			for (i = 0; i < count; i++) {
 				var q = particles[i];
-				var near = [];
+				var near = q.Near;
 				var x;
 				var y;
 				var z;
 				var k;
+				var last;
+				var seen = [];
 
-				for (x = q.Cell[0] - 1; x <= q.Cell[0] + 1; x++) {
-					for (y = q.Cell[1] - 1; y <= q.Cell[1] + 1; y++) {
-						for (z = q.Cell[2] - 1; z <= q.Cell[2] + 1; z++) {
-							var list = grid.get(key(x, y, z));
-							if (!list) continue;
+				near.length = 0;
 
-							for (k = 0; k < list.length; k++) {
-								if (list[k] > i)
-									near.push(list[k]);
+				for (x = q.Cx - 1; x <= q.Cx + 1; x++) {
+					for (y = q.Cy - 1; y <= q.Cy + 1; y++) {
+						for (z = q.Cz - 1; z <= q.Cz + 1; z++) {
+							at = key(x, y, z) & mask;
+
+							/* Two cells of one place: it is looked through once. */
+							if (seen.indexOf(at) >= 0) continue;
+
+							seen.push(at);
+
+							last = table.Start[at + 1];
+
+							for (k = table.Start[at]; k < last; k++) {
+								if (table.Order[k] > i)
+									near.push(table.Order[k]);
 							}
 						}
 					}
 				}
-
-				q.Near = near;
 			}
 		}
 
-		/* Each pair near enough once: the callback gets both, the line from the first to the second, its length and how near (1 - r / h). */
-		function pairs (callback) {
+		/*
+		 * Each pair near enough once, in its order: kind 0 slows them against each other (the viscosity), 1 counts how crowded
+		 * each is, 2 pushes them apart. Of numbers alone, no array made for a pair (three runs of every pair a step made them in
+		 * millions). n: the line from the first to the second, near: 1 - r / h.
+		 */
+		function pairs (kind, elapsed) {
 			var count = particles.length;
+			var reach = h * h;
 			var i;
 			var k;
 
 			for (i = 0; i < count; i++) {
 				var p = particles[i];
+				var near = p.Near;
+				var pa = p.At;
 
-				for (k = 0; k < p.Near.length; k++) {
-					var j = p.Near[k];
-					var q = particles[j];
-					var d = [q.At[0] - p.At[0], q.At[1] - p.At[1], q.At[2] - p.At[2]];
-					var r = Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
-					if (r >= h) continue;
+				for (k = 0; k < near.length; k++) {
+					var q = particles[near[k]];
+					var qa = q.At;
+					var dx = qa[0] - pa[0];
+					var dy = qa[1] - pa[1];
+					var dz = qa[2] - pa[2];
+					var r2 = dx * dx + dy * dy + dz * dz;
+					var r;
+					var s;
+					var close;
+					var u;
+					var slow;
+					var press;
+
+					/* Past the reach: no root taken. */
+					if (r2 >= reach) continue;
+
+					r = Math.sqrt(r2);
 
 					/* Two in one place are set apart along a line of their own. */
 					if (r < 1e-9) {
-						d = [Math.cos(i), 0.5, Math.sin(i)];
+						dx = Math.cos(i);
+						dy = 0.5;
+						dz = Math.sin(i);
 						r = 1e-9;
 					}
 
-					callback(p, q, [d[0] / Math.max(r, 1e-6), d[1] / Math.max(r, 1e-6), d[2] / Math.max(r, 1e-6)], 1 - r / h);
+					s = Math.max(r, 1e-6);
+					dx /= s;
+					dy /= s;
+					dz /= s;
+					close = 1 - r / h;
+
+					if (kind === 0) {
+						u = (p.Way[0] - q.Way[0]) * dx + (p.Way[1] - q.Way[1]) * dy + (p.Way[2] - q.Way[2]) * dz;
+
+						if (u <= 0) continue;
+
+						slow = elapsed * close * (viscosity * u + 0.3 * u * u) / 2;
+						slow = Math.min(slow, u / 2);
+						p.Way[0] -= dx * slow;
+						q.Way[0] += dx * slow;
+						p.Way[1] -= dy * slow;
+						q.Way[1] += dy * slow;
+						p.Way[2] -= dz * slow;
+						q.Way[2] += dz * slow;
+					}
+					else if (kind === 1) {
+						p.Crowd += close * close;
+						q.Crowd += close * close;
+						p.Close += close * close * close;
+						q.Close += close * close * close;
+					}
+					else {
+						press = (stiffness * (p.Crowd + q.Crowd - 2 * crowd) / 2 * close + closeness * (p.Close + q.Close) / 2 * close * close) * h / 2;
+						pa[0] -= dx * press;
+						qa[0] += dx * press;
+						pa[1] -= dy * press;
+						qa[1] += dy * press;
+						pa[2] -= dz * press;
+						qa[2] += dz * press;
+					}
 				}
 			}
 		}
@@ -2364,28 +2586,14 @@ Elemenx.Service('Physics', {
 		function step (elapsed) {
 			neighbours();
 
-			pairs(function (p, q, n, near) {
-				var u = (p.Way[0] - q.Way[0]) * n[0] + (p.Way[1] - q.Way[1]) * n[1] + (p.Way[2] - q.Way[2]) * n[2];
-				var slow;
-				var i = 0;
-
-				if (u <= 0) return;
-
-				slow = elapsed * near * (viscosity * u + 0.3 * u * u) / 2;
-				slow = Math.min(slow, u / 2);
-
-				while (i < 3) {
-					p.Way[i] -= n[i] * slow;
-					q.Way[i] += n[i] * slow;
-
-					i++;
-				}
-			});
+			pairs(0, elapsed);
 
 			particles.forEach(function (p) {
 				var i = 0;
 
-				p.Was = p.At.slice();
+				p.Was[0] = p.At[0];
+				p.Was[1] = p.At[1];
+				p.Was[2] = p.At[2];
 
 				while (i < 3) {
 					p.Way[i] += gravity[i] * elapsed;
@@ -2398,24 +2606,8 @@ Elemenx.Service('Physics', {
 				p.Close = 0;
 			});
 
-			pairs(function (p, q, n, near) {
-				p.Crowd += near * near;
-				q.Crowd += near * near;
-				p.Close += near * near * near;
-				q.Close += near * near * near;
-			});
-
-			pairs(function (p, q, n, near) {
-				var press = (stiffness * (p.Crowd + q.Crowd - 2 * crowd) / 2 * near + closeness * (p.Close + q.Close) / 2 * near * near) * h / 2;
-				var i = 0;
-
-				while (i < 3) {
-					p.At[i] -= n[i] * press;
-					q.At[i] += n[i] * press;
-
-					i++;
-				}
-			});
+			pairs(1, elapsed);
+			pairs(2, elapsed);
 
 			particles.forEach(function (p) {
 				var i = 0;
@@ -2467,7 +2659,7 @@ Elemenx.Service('Physics', {
 
 		return {
 			Add: function (at, way) {
-				particles.push({At: at.slice(), Way: way ? way.slice() : [0, 0, 0], Density: rest, Near: [], Was: at.slice(), Crowd: 0, Close: 0, Age: 0});
+				particles.push({At: at.slice(), Way: way ? way.slice() : [0, 0, 0], Density: rest, Near: [], Was: at.slice(), Crowd: 0, Close: 0, Age: 0, Cx: 0, Cy: 0, Cz: 0});
 
 				return particles.length - 1;
 			},

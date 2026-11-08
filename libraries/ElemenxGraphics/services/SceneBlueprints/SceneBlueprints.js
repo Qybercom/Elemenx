@@ -787,7 +787,7 @@ Elemenx.Service('SceneBlueprints', {
 
 			context.Lines.push('float ' + name + '_sunlit = sunLit(' + inputs.World + ', ' + inputs.Normal + ') * smoothstep(0.0, 0.6, ' + inputs.Open + ');');
 
-			return {Light: '((uSunColor * 1.35 * max(dot(' + inputs.Normal + ', uSun), 0.0) * ' + name + '_sunlit + (mix(uFloorLight, uSkyLight, ' + inputs.Normal + '.y * 0.5 + 0.5) * skySeen(' + inputs.World + ') + sunBounce(' + inputs.World + ')) * ' + inputs.Open + ') + localLight(' + inputs.World + ', ' + inputs.Normal + '))', Sunlit: name + '_sunlit'};
+			return {Light: '((uSunColor * 1.35 * max(dot(' + inputs.Normal + ', uSun), 0.0) * ' + name + '_sunlit + aroundLight(' + inputs.World + ', ' + inputs.Normal + ', mix(uFloorLight, uSkyLight, ' + inputs.Normal + '.y * 0.5 + 0.5)) * ' + inputs.Open + ') + localLight(' + inputs.World + ', ' + inputs.Normal + '))', Sunlit: name + '_sunlit'};
 		});
 
 		/*
@@ -834,8 +834,11 @@ Elemenx.Service('SceneBlueprints', {
 			context.Lines.push('vec3 ' + name + '_lit = pow(' + inputs.Albedo + ' * ' + inputs.Light + ' + uSunColor * ' + inputs.Sheen + ' * ' + inputs.Sunlit + ' + ' + inputs.Glow + ', vec3(1.0 / 2.2));');
 			context.Lines.push('float ' + name + '_mirror = ' + inputs.Pool + ' * (0.25 + 0.65 * pow(1.0 - max(' + name + '_v.y, 0.0), 3.0));');
 			context.Lines.push(name + '_lit = mix(' + name + '_lit, mix(uAir.rgb, vec3(1.0), 0.5) * clamp(uSkyLight.b * 2.4, 0.03, 1.0), ' + name + '_mirror);');
+			/* What it mirrors for the picture (MirrorCode): the pools and what is wet, as strong as they are, in the last third of the codes. */
+			context.Lines.push('float ' + name + '_strength = clamp(' + name + '_mirror + uWet * 0.27 * (1.0 - ' + inputs.Pool + '), 0.0, 1.0);');
+			context.Lines.push('float ' + name + '_code = ' + name + '_strength > 0.002 ? 1.0 - 0.45 * (0.7 + ' + name + '_strength * 0.3) : 1.0;');
 
-			return {Color: 'mix(' + name + '_lit, ' + name + '_horizon, 1.0 - exp(-length(' + inputs.World + ') / uFog))', Alpha: '(1.0 - ' + name + '_mirror * 0.45 - uWet * 0.12 * (1.0 - ' + inputs.Pool + '))'};
+			return {Color: 'mix(' + name + '_lit, ' + name + '_horizon, 1.0 - exp(-length(' + inputs.World + ') / uFog))', Alpha: name + '_code'};
 		});
 
 		/* The end: the color of the land at the point, and how much of it covers what is under it. */

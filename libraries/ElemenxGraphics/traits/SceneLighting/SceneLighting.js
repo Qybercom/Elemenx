@@ -50,8 +50,8 @@ Elemenx.Trait('SceneLighting', {
 		var sets = {
 			low: {Post: false, Cascades: 1, Bounce: false, Occlusion: 0, Rays: false, Samples: 0, Reach: 0.6, Grass: false},
 			medium: {Post: true, Cascades: 1, Bounce: false, Occlusion: 0, Rays: false, Samples: 4, Reach: 0.8, Clouds: 9},
-			high: {Post: true, Cascades: 4, ShadowFar: 300, Bounce: true, Occlusion: 0.5, Contact: true, Rays: true, Samples: 4, Reach: 1, Mirror: true, Frames: true, Field: true, Clouds: 16, Lamps: 2},
-			ultra: {Post: true, Cascades: 4, ShadowFar: 500, Bounce: true, Occlusion: 1, Contact: true, Rays: true, Samples: 4, Reach: 1.4, Mirror: true, Frames: true, Field: true, Clouds: 26, Lamps: 2}
+			high: {Post: true, Cascades: 4, ShadowFar: 300, Bounce: true, Occlusion: 0.5, Contact: true, Rays: true, Samples: 4, Reach: 1, Mirror: true, Frames: true, Field: true, Clouds: 16, Lamps: 2, Probes: 8, ProbeSubset: 8},
+			ultra: {Post: true, Cascades: 4, ShadowFar: 500, Bounce: true, Occlusion: 1, Contact: true, Rays: true, Samples: 4, Reach: 1.4, Mirror: true, Frames: true, Field: true, Clouds: 26, Lamps: 2, Probes: 16, ProbeSubset: 4}
 		};
 
 		state.Floats = !!renderer.GL.getExtension('EXT_color_buffer_float');
@@ -127,7 +127,7 @@ Elemenx.Trait('SceneLighting', {
 		}
 
 		function destroy () {
-			[state.Scene, state.Dark, state.Soft, state.Touch, state.Now, state.Before, state.Shaft, state.ShaftSoft, state.Cloud, state.CloudPast, state.CloudNext, state.Mirror, state.Circle, state.Disc, state.Focused].concat(state.Bloom).forEach(function (target) {
+			[state.Scene, state.Dark, state.Soft, state.Touch, state.Now, state.Before, state.Shaft, state.ShaftSoft, state.Cloud, state.CloudPast, state.CloudNext, state.Mirror, state.Normals, state.Circle, state.Disc, state.Focused].concat(state.Bloom).forEach(function (target) {
 				if (target)
 					target.Destroy();
 			});
@@ -144,6 +144,7 @@ Elemenx.Trait('SceneLighting', {
 			state.CloudPast = null;
 			state.CloudNext = null;
 			state.Mirror = null;
+			state.Normals = null;
 			state.Past = null;
 			state.Bloom = [];
 			state.Circle = null;
@@ -156,7 +157,7 @@ Elemenx.Trait('SceneLighting', {
 		function prepare (set) {
 			var width = renderer.Width;
 			var height = renderer.Height;
-			var key = width + ':' + height + ':' + set.Samples + ':' + set.Occlusion;
+			var key = width + ':' + height + ':' + set.Samples + ':' + set.Occlusion + ':' + !!set.Mirror;
 			var i;
 
 			if (state.Key === key) return;
@@ -177,8 +178,16 @@ Elemenx.Trait('SceneLighting', {
 				state.CloudMatrix = null;
 			}
 
-			if (set.Mirror)
-				state.Mirror = renderer.Target(Math.max(1, width >> 1), Math.max(1, height >> 1), {Float: true});
+			/*
+			 * The reflections, as large as the view (at half the size the reflection on a curved body broke into patches; whole it
+			 * costs a tenth of a millisecond more), and of each point its depth and kind.
+			 */
+			if (set.Mirror) {
+				state.Mirror = renderer.Target(width, height, {Float: true, Colors: 2});
+
+				/* The normals of the models of files, over the depth of the scene (scene.Normals). */
+				state.Normals = renderer.Target(width, height, {Float: true, DepthFrom: state.Scene});
+			}
 
 			if (set.Rays) {
 				state.Shaft = renderer.Target(Math.max(1, width >> 1), Math.max(1, height >> 1), {Float: true});
@@ -250,6 +259,13 @@ Elemenx.Trait('SceneLighting', {
 			state.Scene.Begin();
 
 			return {Color: state.Scene.Textures[0], Depth: state.Scene.Depth};
+		};
+
+		/* Whether the reflections of the screen are drawn this frame: a dielectric leaves what it mirrors to them. */
+		engine.ScreenMirror = function () {
+			var set = Object.assign({}, sets[level()], scene.Tuned);
+
+			return !!(set.Post && set.Mirror && scene.Ground && !scene.Camera.Ortho);
 		};
 
 		engine.FieldOn = function () {
@@ -1097,9 +1113,27 @@ Elemenx.Trait('SceneLighting', {
 			/* What glossy surfaces mirror of what is on the screen. */
 			Mirror: function (frame, inputs) {
 				var view = frame.View;
-				if (!state.Mirror || !view.Eye) return {Mirror: null};
+				/* scene.Tuned.Mirror false: none, to see the picture without them. */
+				if (!state.Mirror || !view.Eye || frame.Set.Mirror === false) return {Mirror: null};
 
-				pass(state.Mirror, frame.Run.Mirror, {uColor: inputs.Color, uDepth: inputs.Depth, uMask: state.Scene.Textures[0], uInverse: math.Invert(frame.Plain), uMatrix: frame.Plain, uAir: view.Air || [0, 0, 0, 0], uAirLight: frame.AirLight, uAirGlow: view.AirGlow || [0, 0, 0], uDark: frame.Touched ? state.Touch.Textures[0] : scene.White || inputs.Color, uDarkOn: frame.Touched ? 1 : 0});
+				/* What is round the eye (SceneProbes), for what is not on the screen. */
+				var around = engine.ProbeAround ? engine.ProbeAround() : {On: false};
+				var normals = !!(state.Normals && scene.Normals);
+
+				/* The normals the models of files are drawn by, where they are seen. */
+				if (normals) {
+					state.Normals.Begin();
+
+					renderer.Clear([0, 0, 0, 0], true);
+
+					scene.Normals();
+
+					state.Normals.End();
+				}
+
+				pass(state.Mirror, frame.Run.Mirror, {uColor: inputs.Color, uDepth: inputs.Depth, uMask: state.Scene.Textures[0], uInverse: math.Invert(frame.Plain), uMatrix: frame.Plain, uAir: view.Air || [0, 0, 0, 0], uAirLight: frame.AirLight, uAirGlow: view.AirGlow || [0, 0, 0], uDark: frame.Touched ? state.Touch.Textures[0] : scene.White || inputs.Color, uDarkOn: frame.Touched ? 1 : 0, uAround: around.Texture || scene.White || inputs.Color, uAroundOn: around.On ? 1 : 0, uSeed: state.Step || 0, uNormals: normals ? state.Normals.Textures[0] : scene.White || inputs.Color, uNormalsOn: normals ? 1 : 0, uScale: state.Scene.Width / state.Mirror.Width});
+
+				state.MirrorInfo = state.Mirror.Textures[1];
 
 				return {Mirror: state.Mirror.Textures[0]};
 			},
@@ -1199,7 +1233,8 @@ Elemenx.Trait('SceneLighting', {
 					uSharp: frame.Set.Frames ? 0.16 : 0.12,
 					uHeat: view.Heat || 0,
 					uMirror: inputs.Mirror || white,
-					uMirrorOn: inputs.Mirror ? 1 : 0,
+					uMirrorOn: inputs.Mirror ? frame.Set.Show === 'mirror' ? 2 : 1 : 0,
+					uMirrorInfo: inputs.Mirror && state.MirrorInfo ? state.MirrorInfo : white,
 					uFlash: now.Flash * (now.Strike && now.Strike.Ground === false ? 0.06 : 0.18),
 					uShimmer: view.Shimmer || new Array(16).fill(0),
 					uTick: scene.Seconds % 1000,
@@ -2309,37 +2344,98 @@ Elemenx.Trait('SceneLighting', {
 				'uniform vec3 uAirGlow;',
 				'uniform sampler2D uDark;',
 				'uniform float uDarkOn;',
-				'out vec4 outColor;',
+				'uniform sampler2D uAround;',
+				'uniform float uAroundOn;',
+				'uniform float uSeed;',
+				/* The normals the scene wrote (uNormalsOn: alpha 1 where one was written), and how many texels of the scene a texel of this is (1 or 2). */
+				'uniform sampler2D uNormals;',
+				'uniform float uNormalsOn;',
+				'uniform float uScale;',
+				'layout(location = 0) out vec4 outColor;',
+				/* Of the point it mirrors for: its depth and its kind (0 a dielectric, 1 a metal, 2 a strength told), for the picture to put it back. */
+				'layout(location = 1) out vec4 outInfo;',
 				'vec3 place(vec2 uv) {',
 				'	vec4 p = uInverse * vec4(uv * 2.0 - 1.0, texture(uDepth, uv).r * 2.0 - 1.0, 1.0);',
 				'	return p.xyz / p.w;',
 				'}',
 				'void main() {',
-				'	vec2 uv = vQuad * 0.5 + 0.5;',
 				/* The edge of a body against what is behind it comes smoothed, between their values: nothing mirrors by a body, the rest as what is whole. */
 				'	ivec2 top = textureSize(uMask, 0) - 1;',
-				'	ivec2 texel = ivec2(gl_FragCoord.xy) * 2;',
+				'	int across = int(uScale + 0.5);',
+				'	ivec2 texel = ivec2(gl_FragCoord.xy) * across;',
+				'	vec2 uv = (vec2(texel) + 0.5) / vec2(top + 1);',
 				'	float mask = texelFetch(uMask, clamp(texel, ivec2(0), top), 0).a;',
 				'	float near = mask;',
-				'	ivec2 sides[4] = ivec2[4](ivec2(2, 0), ivec2(-2, 0), ivec2(0, 2), ivec2(0, -2));',
+				'	ivec2 sides[4] = ivec2[4](ivec2(across, 0), ivec2(-across, 0), ivec2(0, across), ivec2(0, -across));',
 				'	for (int i = 0; i < 4; i++) {',
 				'		float side = texelFetch(uMask, clamp(texel + sides[i], ivec2(0), top), 0).a;',
 				'		near = min(near, side);',
 				'		mask = max(mask, side);',
 				'	}',
-				'	float gloss = clamp((1.0 - mask) / 0.45, 0.0, 1.0);',
-				'	float depth = texture(uDepth, uv).r;',
+				/*
+				 * What it is (MirrorCode): 0 to 0.3 a dielectric (its smoothness), 0.36 to 0.63 a metal, 0.7 to 1 a strength told as
+				 * it is (pools of the ground), gaps between, so a little blur of an edge keeps the kind.
+				 */
+				'	float middle = texelFetch(uMask, clamp(texel, ivec2(0), top), 0).a;',
+				'	float code = clamp((1.0 - middle) / 0.45, 0.0, 1.0);',
+				'	float edged = clamp((1.0 - mask) / 0.45, 0.0, 1.0);',
+				/* What moves by itself (alpha under a half, for the frames) carries its code in 0.05 to 0.45. */
+				'	if (middle < 0.5) {',
+				'		code = middle < 0.04 ? 0.0 : clamp((0.45 - middle) / 0.4, 0.0, 1.0);',
+				'		edged = code;',
+				'		near = 1.0;',
+				'	}',
+				/* Where the texels round are of other kinds (an edge smoothed between two, a code of neither): the least of them. */
+				'	float most = middle < 0.5 ? code : clamp((1.0 - near) / 0.45, 0.0, 1.0);',
+				'	if (step(0.33, edged) + step(0.665, edged) != step(0.33, most) + step(0.665, most)) code = edged;',
+				'	float kind = code < 0.33 ? 0.0 : code < 0.665 ? 1.0 : 2.0;',
+				'	float sleek = clamp(kind == 0.0 ? min(edged, code) / 0.3 : kind == 1.0 ? (min(edged, code) - 0.36) / 0.27 : 1.0, 0.0, 1.0);',
+				'	float depth = texelFetch(uDepth, clamp(texel, ivec2(0), top), 0).r;',
 				'	outColor = vec4(0.0);',
-				'	if (depth >= 1.0 || gloss < 0.02 || near < 0.5) return;',
+				'	outInfo = vec4(depth, kind, 0.0, 0.0);',
+				'	if (depth >= 1.0 || code < 0.004 || near < 0.5) return;',
 				'	vec3 p = place(uv);',
-				'	vec3 n = normalize(cross(dFdx(p), dFdy(p)));',
+				/* The smooth normal the surface was drawn by: of the slopes of the depth (flat over each triangle, in steps of two pixels) only where none was written. */
+				'	vec4 drawn = uNormalsOn > 0.5 ? texelFetch(uNormals, clamp(texel, ivec2(0), top), 0) : vec4(0.0);',
+				'	vec3 n = drawn.a > 0.5 && dot(drawn.xyz, drawn.xyz) > 0.01 ? normalize(drawn.xyz) : normalize(cross(dFdx(p), dFdy(p)));',
 				'	vec3 v = normalize(p);',
 				'	if (dot(n, v) > 0.0) n = -n;',
+				'	float nv = clamp(dot(n, -v), 0.0, 1.0);',
+				'	float glance = pow(1.0 - nv, 5.0);',
+				/* As much as it mirrors seen from here (Schlick), less the rougher it is; a metal much, of its own color. */
+				'	float gloss = kind == 2.0 ? clamp((code - 0.7) / 0.3, 0.0, 1.0) : kind == 1.0 ? sleek * sleek * mix(0.6, 1.0, glance) : sleek * sleek * (0.04 + 0.96 * glance);',
+				'	if (gloss < 0.01) return;',
+				'	float rough = 1.0 - sleek;',
+				/*
+				 * A rough surface mirrors along ways spread by its roughness (GGX), another each pixel and frame: the frames add them up
+				 * into a blur. What moves keeps few frames (it would be grain): it takes the blur of what is round alone.
+				 */
 				'	vec3 r = reflect(v, n);',
+				'	if (rough > 0.02 && middle >= 0.5) {',
+				'		float a = rough * rough;',
+				'		float r1 = fract(52.9829189 * fract(dot(gl_FragCoord.xy + uSeed * 5.588238, vec2(0.06711056, 0.00583715))));',
+				'		float r2 = fract(r1 * 7.31 + uSeed * 0.618034);',
+				'		float phi = 6.2831853 * r1;',
+				'		float c = sqrt((1.0 - r2) / (1.0 + (a * a - 1.0) * r2));',
+				'		float s = sqrt(1.0 - c * c);',
+				'		vec3 side = normalize(abs(n.y) < 0.99 ? cross(n, vec3(0.0, 1.0, 0.0)) : cross(n, vec3(1.0, 0.0, 0.0)));',
+				'		vec3 h = normalize(side * cos(phi) * s + cross(n, side) * sin(phi) * s + n * c);',
+				'		vec3 bent = reflect(v, h);',
+				'		if (dot(bent, n) > 0.0) r = bent;',
+				'	}',
 				'	vec3 found = mix(mix(uAir.rgb, vec3(1.0), 0.5), uAir.rgb * vec3(0.38, 0.55, 1.0), pow(max(r.y, 0.0), 0.5)) * uAirLight + uAirGlow * 0.2;',
+				/* Past the screen what is round the eye (SceneProbes), as blurred as it is rough; where nothing is there, the sky. */
+				'	if (uAroundOn > 0.5) {',
+				'		vec2 o = r.xz / (abs(r.x) + abs(r.y) + abs(r.z));',
+				'		if (r.y < 0.0) o = (1.0 - abs(o.yx)) * vec2(o.x >= 0.0 ? 1.0 : -1.0, o.y >= 0.0 ? 1.0 : -1.0);',
+				'		vec4 seen = textureLod(uAround, o * 0.5 + 0.5, rough * 5.0);',
+				'		found = found * (1.0 - seen.a) + pow(max(seen.rgb, vec3(0.0)), vec3(1.0 / 2.2));',
+				'	}',
 				'	float stride = max(length(p) * 0.015, 0.05);',
 				'	vec3 at = p + n * 0.02;',
 				'	for (int i = 0; i < 26; i++) {',
+				/* What is very rough mirrors no sharp picture of the screen: what is round is enough. */
+				'		if (rough > 0.65) break;',
 				'		at += r * stride;',
 				'		vec4 s = uMatrix * vec4(at, 1.0);',
 				'		vec2 suv = s.xy / s.w * 0.5 + 0.5;',
@@ -2356,9 +2452,15 @@ Elemenx.Trait('SceneLighting', {
 				/* What a fold hides of the sky it hides of what it mirrors: the less, the glossier and the more it is seen straight on (Lagarde). */
 				'	if (uDarkOn > 0.5) {',
 				'		float open = texture(uDark, uv).r;',
-				'		gloss *= clamp(pow(clamp(dot(n, -v), 0.0, 1.0) + open, exp2(-16.0 * (1.0 - gloss) - 1.0)) - 1.0 + open, 0.0, 1.0);',
+				'		gloss *= clamp(pow(clamp(dot(n, -v), 0.0, 1.0) + open, exp2(-16.0 * (1.0 - sleek) - 1.0)) - 1.0 + open, 0.0, 1.0);',
+				'	}',
+				'	if (kind == 1.0) {',
+				'		vec3 own = texture(uColor, uv).rgb;',
+				/* A metal mirrors in its own color, a dark one darkly (never its hue blown up out of black). */
+				'		found *= mix(vec3(1.0), clamp(own * 2.0, 0.0, 1.0), 0.85);',
 				'	}',
 				'	outColor = vec4(found, gloss);',
+				'	outInfo = vec4(depth, kind, 0.0, 1.0);',
 				'}'
 			].join('\n'),
 
@@ -2536,6 +2638,8 @@ Elemenx.Trait('SceneLighting', {
 				'uniform float uHeat;',
 				'uniform sampler2D uMirror;',
 				'uniform float uMirrorOn;',
+				/* Of each texel of the reflections: the depth and the kind of the point it was made for. */
+				'uniform sampler2D uMirrorInfo;',
 				'uniform float uFlash;',
 				'uniform vec4 uShimmer[4];',
 				'uniform float uTick;',
@@ -2590,7 +2694,14 @@ Elemenx.Trait('SceneLighting', {
 				'	}',
 				'	if (uMirrorOn > 0.5) {',
 				'		vec4 mirrored = texture(uMirror, uv);',
-				'		color = mix(color, pow(max(mirrored.rgb, vec3(0.0)), vec3(2.2)), mirrored.a * (1.0 - uWarp.z * 0.8));',
+				'		float kind = texture(uMirrorInfo, uv).g;',
+				'		vec3 seen = pow(max(mirrored.rgb, vec3(0.0)), vec3(2.2));',
+				'		float strength = mirrored.a * (1.0 - uWarp.z * 0.8);',
+				/* scene.Tuned.Show mirror: how much each point mirrors (red), what (the rest dimmed), to look at them. */
+				'		if (uMirrorOn > 1.5) color = mix(color * 0.15, vec3(1.0, 0.25, 0.1), clamp(mirrored.a * 2.0, 0.0, 1.0)) + seen * mirrored.a;',
+				/* A dielectric: what it mirrors is added over it (its model left the sky out of its gloss). A metal and a pool: in place of what is there. */
+				'		else if (kind < 0.5) color += seen * strength;',
+				'		else color = mix(color, seen, strength);',
 				'	}',
 				/* A grey day takes the color out of things. */
 				'	if (uGrade.a > 0.0) color = mix(color, vec3(dot(color, vec3(0.3, 0.59, 0.11))), uGrade.a) * uGrade.rgb;',

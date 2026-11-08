@@ -1,6 +1,6 @@
 # ElemenxUI classes
 
-The classes of ElemenxUI are its public API for themes: a theme restyles a Component by its classes (see `THEMING.md`). This list names every `elemenx-*` class of the Library with the modifier classes it takes (`elemenx-button` with `primary` is `.elemenx-button.primary`), grouped by the stylesheet that defines it. `tests/regression/theming.test.js` checks it against the stylesheets: a class is not renamed or removed without a change here.
+The classes of ElemenxUI are its public API for themes: a theme restyles a Component by its classes (see `THEMING.md`). This list names every `elemenx-*` class of the Library with the modifier classes it takes (`elemenx-button` with `primary` is `.elemenx-button.primary`), grouped by the stylesheet that defines it. The game components and their classes are in ElemenxGaming; they are listed here too, as the themes of ElemenxUI style them. `tests/regression/theming.test.js` checks it against the stylesheets: a class is not renamed or removed without a change here.
 
 ## Foundation (index.css)
 
@@ -59,21 +59,12 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-file-icon`
 - `elemenx-footnote`
 - `elemenx-footnote-mark`
-- `elemenx-game-bad`
-- `elemenx-game-good`
-- `elemenx-game-hotbar`
-- `elemenx-game-panel`: `light`
-- `elemenx-game-section`
-- `elemenx-game-section-title`
-- `elemenx-game-separator`
-- `elemenx-game-special`
 - `elemenx-native-drag`
 - `elemenx-native-menu`
 - `elemenx-native-menu-bar`
 - `elemenx-native-menu-panel`
 - `elemenx-native-nodrag`
 - `elemenx-native-window`: `transparent`
-- `elemenx-game-stats`: `double`
 - `elemenx-icon`: `colored`, `spin`
 - `elemenx-input`: `disabled`, `giant`, `invalid`, `large`, `multiple`, `readonly`, `round`, `small`
 - `elemenx-input-action`
@@ -161,6 +152,14 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-title`
 - `elemenx-ul`: `check`
 - `elemenx-visually-hidden`
+
+## Foundation of ElemenxGaming (index.css of ElemenxGaming)
+
+The classes the game components share, and the modifier `game` of `elemenx-window` (`Window` with `Variant="game"`) that this stylesheet styles.
+
+- `elemenx-game-bad`
+- `elemenx-game-good`
+- `elemenx-game-hotbar`
 - `elemenx-game-inventory-card`: `common`, `epic`, `legendary`, `rare`, `uncommon`
 - `elemenx-game-inventory-description`
 - `elemenx-game-inventory-name`
@@ -169,6 +168,12 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-game-inventory-stat-value`
 - `elemenx-game-inventory-stats`
 - `elemenx-game-inventory-type`
+- `elemenx-game-panel`: `light`
+- `elemenx-game-section`
+- `elemenx-game-section-title`
+- `elemenx-game-separator`
+- `elemenx-game-special`
+- `elemenx-game-stats`: `double`
 
 ## ButtonGroup
 

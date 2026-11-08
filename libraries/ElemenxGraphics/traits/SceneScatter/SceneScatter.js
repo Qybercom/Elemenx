@@ -1281,7 +1281,7 @@ Elemenx.Trait('SceneScatter', {
 						return [made[0] + (0.86 - made[0]) * snow * 0.8, made[1] + (0.9 - made[1]) * snow * 0.8, made[2] + (0.95 - made[2]) * snow * 0.8];
 					};
 
-					renderer.Draw(each[0], programs().Grass, Object.assign({}, uniforms, {uOrigin: vectors.Subtract([0, 0, 0], eye), uField: grass.Texture, uFree: grass.Free, uFieldSize: [ground.Field.Size, grass.Side], uBlade: [(Number(rule.Height) || 0.7) * (1 - snow * 0.85), Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: seasoned(engine.Paint(rule.Root || '#2f5a22'), 0.5), uTip: seasoned(engine.Paint(rule.Color || '#7fae4a'), 1), uSun: ground.Sun, uSunColor: ground.SunColor, uEye: target}), {Cull: 'none'});
+					renderer.Draw(each[0], programs().Grass, Object.assign(Object.create(uniforms), {uOrigin: vectors.Subtract([0, 0, 0], eye), uField: grass.Texture, uFree: grass.Free, uFieldSize: [ground.Field.Size, grass.Side], uBlade: [(Number(rule.Height) || 0.7) * (1 - snow * 0.85), Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: seasoned(engine.Paint(rule.Root || '#2f5a22'), 0.5), uTip: seasoned(engine.Paint(rule.Color || '#7fae4a'), 1), uSun: ground.Sun, uSunColor: ground.SunColor, uEye: target}), {Cull: 'none'});
 				}
 			});
 		}
@@ -1375,6 +1375,21 @@ Elemenx.Trait('SceneScatter', {
 			});
 		};
 
+		/* The same copies in their colors, for a slab of the voxels of the light of probes (SceneProbes; fragment: Voxel of the Scene). */
+		engine.ScatterVoxels = function (matrix, fragment) {
+			var origin = vectors.Subtract([0, 0, 0], scene.Eye);
+
+			if (!state.Voxel)
+				state.Voxel = renderer.Program(shaders.Vertex, fragment);
+
+			each(function (one) {
+				/* The far levels are past the voxels (some 45 m round the eye). */
+				if (one.Level >= 2 || one.Level === 0 && surfaces(one.Key)) return;
+
+				renderer.Draw(levels(one.Key)[one.Level], state.Voxel, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: 0, uSway: 0, uFade: fadeOf(one.Level), uLod: scene.Camera.Ortho ? 0 : lodScale()}, self.WindValues(scene.Seconds)), {Cull: 'none', Depth: false, DepthWrite: false});
+			});
+		};
+
 		engine.ScatterDraw = function (uniforms, matrix) {
 			var origin = vectors.Subtract([0, 0, 0], scene.Eye);
 			var ground = scene.Ground;
@@ -1387,9 +1402,9 @@ Elemenx.Trait('SceneScatter', {
 			if (!ground) return;
 
 			/* The uniforms of a program made once a frame, what differs set for each draw: no copy of them all for each. */
-			files = Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Gust || 0, uFade: fadeOf(0), uDither: dither, uLod: lod});
-			many = Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Gust || 0, uShine: 8, uSpecular: 0.05, uRough: 0.5, uDither: dither, uLod: lod});
-			far = Object.assign({}, uniforms, {uOrigin: origin, uFade: fadeOf(3), uDither: dither, uLod: lod, uSun: ground.Sun, uSunColor: ground.SunColor, uParallel: scene.Camera.Ortho ? vectors.Normalize(vectors.Subtract(scene.Camera.Position, scene.Camera.Target)).concat([1]) : [0, 0, 0, 0]});
+			files = Object.assign(Object.create(uniforms), {uOrigin: origin, uWind: scene.Gust || 0, uFade: fadeOf(0), uDither: dither, uLod: lod});
+			many = Object.assign(Object.create(uniforms), {uOrigin: origin, uWind: scene.Gust || 0, uShine: 8, uSpecular: 0.05, uRough: 0.5, uDither: dither, uLod: lod});
+			far = Object.assign(Object.create(uniforms), {uOrigin: origin, uFade: fadeOf(3), uDither: dither, uLod: lod, uSun: ground.Sun, uSunColor: ground.SunColor, uParallel: scene.Camera.Ortho ? vectors.Normalize(vectors.Subtract(scene.Camera.Position, scene.Camera.Target)).concat([1]) : [0, 0, 0, 0]});
 
 			each(function (one) {
 				var parts = one.Key.split('~');
@@ -1728,7 +1743,7 @@ Elemenx.Trait('SceneScatter', {
 				'	n = normalize(vec3(vTurn.x * n.x + vTurn.y * n.z, n.y, vTurn.x * n.z - vTurn.y * n.x));',
 				'	float light = max(dot(n, uSun), 0.0) * sunShadow(vWorld, n);',
 				'	vec3 albedo = pow(color.rgb * vTint, vec3(2.2));',
-				'	outColor = vec4(pow(albedo * (uSunColor * light * 1.35 + mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) + sunBounce(vWorld)), vec3(1.0 / 2.2)), 1.0);',
+				'	outColor = vec4(pow(albedo * (uSunColor * light * 1.35 + aroundLight(vWorld, n, mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5))), vec3(1.0 / 2.2)), 1.0);',
 				'}'
 			].join('\n'),
 
@@ -1828,7 +1843,7 @@ Elemenx.Trait('SceneScatter', {
 				'	vec3 tip = mix(uTip, uTip * vec3(1.25, 1.05, 0.55), vDry);',
 				'	vec3 color = pow(mix(uRoot, tip, vAlong) * vTone * (1.0 + vWave * 0.05 * vAlong), vec3(2.2));',
 				'	float through = 1.0 + vAlong * 0.6;',
-				'	outColor = vec4(pow(color * (uSunColor * light * 1.35 * through + mix(uFloorLight, uSkyLight, 0.5 + vAlong * 0.5) * (0.4 + vAlong * 0.6) * skySeen(vWorld) + sunBounce(vWorld) + localLight(vWorld, vec3(0.0, 1.0, 0.0))), vec3(1.0 / 2.2)), 1.0);',
+				'	outColor = vec4(pow(color * (uSunColor * light * 1.35 * through + aroundSoft(vWorld, vec3(0.0, 1.0, 0.0), mix(uFloorLight, uSkyLight, 0.5 + vAlong * 0.5)) * (0.4 + vAlong * 0.6) + localLight(vWorld, vec3(0.0, 1.0, 0.0))), vec3(1.0 / 2.2)), 1.0);',
 				'}'
 			].join('\n')
 		};

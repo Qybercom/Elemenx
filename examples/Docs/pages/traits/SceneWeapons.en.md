@@ -20,3 +20,7 @@ Crosshair of the scene ('' as the weapon of the hero says, none, dot, cross, cir
 - `Fire(id, options)`
 - `Locked()`
 - `Killed(id)`
+
+## Tests
+
+- [breaks a thing by the pieces of its model (Pattern parts), and a shot of SceneWeapons hurts it by itself](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/traits/SceneFracture/SceneFracture.test.js#L199) — `libraries/ElemenxGraphics/traits/SceneFracture/SceneFracture.test.js`

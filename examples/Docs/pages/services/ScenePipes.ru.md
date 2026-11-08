@@ -1,0 +1,43 @@
+<!-- generated -->
+# ScenePipes
+
+ScenePipes: трубы любого размера — от трубки в несколько сантиметров до коллектора, по которому ходит человек, — как геометрия и как то, что в них течёт. Сервис ничего не знает о сцене: на входе описание трубы, на выходе — её раскладка, модель или вырезы в земле.
+
+Описание трубы: {ID, Points ([[x, z] или [x, z, y]...]), Radius (0.3), Wall (толщина стенки, десятая часть радиуса), Laid (above — на опорах в Lift (1.5) м над землёй; ground — на земле; buried — на глубине Depth (1) под ней), Bend (радиус изгибов, три своих радиуса), Ends ([начало, конец]: open или closed, открыты оба), Flanges (через сколько метров стыки с фланцами, 6; 0 — без них), Spacing (шаг опор), Color, Inside (цвет внутри), Metal (0–1), Fluid ({Type, Fill (насколько заполнена, 0–1), Flow (м/с вдоль точек, меньше 0 — назад), Pressure (бар)})}.
+
+- Fluids() — что может течь в трубе: {имя: {Kind (liquid или gas), Density (кг/м³), Viscosity (во сколько раз вязче воды), Color, Opacity, Burns, Hot}}: water, sewage, mud, oil, fuel, gas, steam, air.
+- Lay(spec, height) — раскладка трубы: {ID, Radius, Wall, Laid, Ends, Fluid, Points: [{X, Y (ось), Z, Along, Tangent, Normal, Binormal}]}; height(x, z) — земля (без неё 0). Углы скругляются радиусом изгиба, кадры переносятся от точки к точке и не перекручиваются.
+- Asset(pipes, {Height}) — модель: стенка снаружи и изнутри (внутри темнее), кромки открытых концов и заглушки закрытых, фланцы, опоры до земли и зеркало жидкости на уровне Fill.
+- Carves(pipes) — что подземные трубы вырезают в земле (вырезы tunnel, круглые): всю трубу, в которую может войти человек (радиус от 0,4 м), у меньшей — только открытые концы.
+- At(pipe, metres) — точка трубы на расстоянии от начала; Near(pipe, point) — ближайшая точка оси: {Along, Distance, At, Tangent}.
+
+Описание трубы принимает и Leaks — отверстия в стенке: [{Along (метры вдоль), Angle (градусы вокруг от верха), Size (радиус отверстия, м)}].
+
+- Mouth(pipe) — откуда выходит то, что течёт: открытый конец, куда направлен Flow ({At — в устье, посередине того, что заполняет жидкость; Way — наружу вдоль трубы; Across — ширина струи; Rate — м³/с}), или null (там заглушка, пусто или ничего не течёт).
+- Hole(pipe, along, angle) — точка стенки: {At, Normal (наружу), Wet — достаёт ли туда содержимое: жидкость только ниже своего уровня, газ — везде}.
+- Spurt(pipe, size) — как быстро и сколько бьёт из отверстия радиусом size: {Speed (м/с — по давлению над воздухом, как из крана, не больше 20; газ почти не бьёт), Rate (м³/с)}.
+
+## Методы
+
+- `Fluids()`
+- `Lay(spec, height)`
+- `At(pipe, metres)`
+- `Near(pipe, point)`
+- `Floor(pipes, x, z, y, climb)`
+- `Mouth(pipe)`
+- `Hole(pipe, along, angle)`
+- `Spurt(pipe, size)`
+- `Blocks(pipes, x, z, y, round, heights)`
+- `Asset(pipes, options)`
+- `Carves(pipes)`
+
+## Тесты
+
+- [lays a pipe out as it is laid, its corners rounded and its frames never twisted](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePipes/ScenePipes.node.test.js#L28) — `libraries/ElemenxGraphics/services/ScenePipes/ScenePipes.node.test.js`
+- [holds a fluid of a known type, as full and as fast as told, water by default and none when none is told](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePipes/ScenePipes.node.test.js#L54) — `libraries/ElemenxGraphics/services/ScenePipes/ScenePipes.node.test.js`
+- [makes its model: outside and inside, the rims of its ends, flanges, supports and the face of the liquid in it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePipes/ScenePipes.node.test.js#L65) — `libraries/ElemenxGraphics/services/ScenePipes/ScenePipes.node.test.js`
+- [cuts the ground for all of a buried pipe a man may go in, and only at the open ends of a smaller one](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePipes/ScenePipes.node.test.js#L82) — `libraries/ElemenxGraphics/services/ScenePipes/ScenePipes.node.test.js`
+- [finds the nearest point of its axis, and its point at metres along it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePipes/ScenePipes.node.test.js#L97) — `libraries/ElemenxGraphics/services/ScenePipes/ScenePipes.node.test.js`
+- [stands what is in a pipe on its bottom and what is on it on its top, and keeps a body out of its wall but at its open ends](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePipes/ScenePipes.node.test.js#L107) — `libraries/ElemenxGraphics/services/ScenePipes/ScenePipes.node.test.js`
+- [tells where what flows comes out of an open end and how much, where a hole of its wall is wet, and how fast a hole spurts](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePipes/ScenePipes.node.test.js#L127) — `libraries/ElemenxGraphics/services/ScenePipes/ScenePipes.node.test.js`
+- [lays out a pipe of its points, draws it by a model in the world itself, and gives it to Pipes()](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/traits/ScenePiping/ScenePiping.test.js#L57) — `libraries/ElemenxGraphics/traits/ScenePiping/ScenePiping.test.js`

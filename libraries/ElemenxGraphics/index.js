@@ -30,6 +30,7 @@
 	'services/SceneLocations/SceneLocations.js',
 	'traits/SceneScatter/SceneScatter.js',
 	'traits/SceneLighting/SceneLighting.js',
+	'traits/SceneProbes/SceneProbes.js',
 	'traits/SceneEffects/SceneEffects.js',
 	'traits/SceneVehicles/SceneVehicles.js',
 	'traits/SceneTriggers/SceneTriggers.js',

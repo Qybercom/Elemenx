@@ -389,7 +389,7 @@ describe('Contract: materials of models as material graphs of Blueprints, drawn 
 		made = blueprints.Compile(JSON.parse(JSON.stringify(scene.LibraryLand())));
 
 		expect(made.Type).toBe('land');
-		['noise3(', 'rings(', 'uRainDrops', 'uWet', 'uSnowed', 'blueprintSurface(', 'sunLit(', 'skySeen(', 'sunBounce(', 'localLight(', 'mix(28.0, 1400.0', '1.0 / 2.2', 'uFog', '0.45'].forEach(function (part) {
+		['noise3(', 'rings(', 'uRainDrops', 'uWet', 'uSnowed', 'blueprintSurface(', 'sunLit(', 'aroundLight(', 'localLight(', 'mix(28.0, 1400.0', '1.0 / 2.2', 'uFog', '0.45'].forEach(function (part) {
 			expect(made.Function).toContain(part);
 		});
 

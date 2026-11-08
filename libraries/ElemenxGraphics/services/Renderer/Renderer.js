@@ -518,6 +518,53 @@ Elemenx.Service('Renderer', {
 			'float skySeen(vec3 position) {',
 			/* By night the air fills what the day leaves dark: a wood has no holes of pure black. */
 			'	return uGlowOn > 0.5 ? max(texture(uGlow, (position.xz + uGlowPlace.xy) / uGlowPlace.z + 0.5).a, uSkyFloor) : 1.0;',
+			'}',
+			/*
+			 * The light of probes (uProbeOn, of SceneProbes): what comes to each voxel round the eye from all round, worked out of
+			 * its probes as far as they see it (no light through a wall), uProbeCount voxels along x, y and z, the first at
+			 * uProbeBox.xyz from the eye, uProbeBox.w metres wide. In uProbe (one texture: the programs of models have no unit
+			 * more free), four blocks one over the other: the spherical harmonics of the first band of red, green and blue, and
+			 * how much of each voxel is free; each block the layers of y, 8 a row, each of x by z. What is read there is of the
+			 * free voxels alone (divided by the free part): a wall beside gives nothing.
+			 */
+			'uniform float uProbeOn;',
+			'uniform sampler2D uProbe;',
+			'uniform vec4 uProbeBox;',
+			'uniform vec3 uProbeCount;',
+			/* What a surface gets round it (the mean of what comes over its side), half a voxel out along its normal; weight: 1 inside the voxels, to 0 over their last 4. */
+			'vec3 probeLight(vec3 position, vec3 normal, out float weight) {',
+			'	vec3 c = (position + normal * uProbeBox.w * 0.5 - uProbeBox.xyz) / uProbeBox.w;',
+			'	vec3 edge = min(c, uProbeCount - c);',
+			'	weight = clamp(min(min(edge.x, edge.y), edge.z) * 0.25, 0.0, 1.0);',
+			'	if (weight <= 0.0) return vec3(0.0);',
+			'	vec2 at = clamp(c.xz, vec2(0.5), uProbeCount.xz - 0.5);',
+			'	float y = clamp(c.y - 0.5, 0.0, uProbeCount.y - 1.001);',
+			'	float layer = floor(y);',
+			'	float t = y - layer;',
+			'	vec2 size = vec2(uProbeCount.x * 8.0, uProbeCount.z * uProbeCount.y / 2.0);',
+			'	vec2 low = (at + vec2(mod(layer, 8.0) * uProbeCount.x, floor(layer / 8.0) * uProbeCount.z)) / size;',
+			'	vec2 high = (at + vec2(mod(layer + 1.0, 8.0) * uProbeCount.x, floor((layer + 1.0) / 8.0) * uProbeCount.z)) / size;',
+			'	vec2 block = vec2(0.0, 0.25);',
+			'	float free = mix(textureLod(uProbe, low + block * 3.0, 0.0).r, textureLod(uProbe, high + block * 3.0, 0.0).r, t);',
+			'	if (free < 0.02) {',
+			'		weight = 0.0;',
+			'		return vec3(0.0);',
+			'	}',
+			'	vec4 lobe = vec4(0.886227, 1.023328 * normal.y, 1.023328 * normal.z, 1.023328 * normal.x) / free;',
+			'	vec3 seen = vec3(dot(mix(textureLod(uProbe, low, 0.0), textureLod(uProbe, high, 0.0), t), lobe), dot(mix(textureLod(uProbe, low + block, 0.0), textureLod(uProbe, high + block, 0.0), t), lobe), dot(mix(textureLod(uProbe, low + block * 2.0, 0.0), textureLod(uProbe, high + block * 2.0, 0.0), t), lobe));',
+			'	return max(seen, vec3(0.0)) / 3.14159265;',
+			'}',
+			/* What a surface gets round it: of the probes where they are, else the sky it sees (sky: of its side) and the bounce of the sun. */
+			'vec3 aroundLight(vec3 position, vec3 normal, vec3 sky) {',
+			'	vec3 open = sky * skySeen(position) + sunBounce(position);',
+			'	if (uProbeOn < 0.5) return open;',
+			'	float weight;',
+			'	vec3 probed = probeLight(position, normal, weight);',
+			'	return mix(open, probed, weight);',
+			'}',
+			/* The same for what is drawn very many times (grass): one and the same now, its name kept for them. */
+			'vec3 aroundSoft(vec3 position, vec3 normal, vec3 sky) {',
+			'	return aroundLight(position, normal, sky);',
 			'}'
 		].join('\n')
 	},
@@ -536,6 +583,8 @@ Elemenx.Service('Renderer', {
 		var parallel = null;
 		var current = {};
 		var counts = {Draws: 0, Triangles: 0};
+		/* The arrays held till the next Hold (the common ones of a frame): given again, the very same, they are what they were. */
+		var held = new WeakSet();
 		var bound;
 		var renderer;
 
@@ -791,6 +840,8 @@ Elemenx.Service('Renderer', {
 
 				gl.bindVertexArray(null);
 
+				current.VAO = null;
+
 				return made;
 			};
 
@@ -803,6 +854,8 @@ Elemenx.Service('Renderer', {
 				});
 
 				gl.bindVertexArray(null);
+
+				current.VAO = null;
 
 				made.Instances = count;
 
@@ -817,6 +870,9 @@ Elemenx.Service('Renderer', {
 				if (made.Index)
 					gl.deleteBuffer(made.Index);
 
+				if (current.VAO === made.VAO)
+					current.VAO = null;
+
 				gl.deleteVertexArray(made.VAO);
 
 				meshes.splice(meshes.indexOf(made), 1);
@@ -828,9 +884,16 @@ Elemenx.Service('Renderer', {
 		}
 
 		/* A program keeps what was set in it: most of what a frame sets, for each batch again, is what stands there already. */
+		/*
+		 * An array held (Hold: the common ones of a frame, never changed in their place till the next) and given again, the very
+		 * same, is what it was: not read again (a list of 72 lamps for each of thousands of draws took milliseconds). Another is
+		 * read against what was set (one changed in its place is a change), kept in numbers of its own made once (no copy for
+		 * each draw).
+		 */
 		function unchanged (info, value, data) {
 			var last = info.Last;
 			var i = 0;
+			var size;
 
 			if (!data) {
 				if (last === value) return true;
@@ -840,16 +903,38 @@ Elemenx.Service('Renderer', {
 				return false;
 			}
 
-			if (last && last.length === data.length) {
-				while (i < data.length && last[i] === data[i])
+			if (data === info.Given && held.has(data)) return true;
+
+			info.Given = data;
+			size = data.length;
+
+			if (last && info.Size === size) {
+				while (i < size && last[i] === data[i])
 					i++;
 
-				if (i === data.length) return true;
+				if (i === size) return true;
+			}
+			else {
+				info.Last = new Float64Array(size);
+				info.Size = size;
 			}
 
-			info.Last = data.slice ? data.slice() : Array.from(data);
+			info.Last.set(data);
 
 			return false;
+		}
+
+		/* How many colors a fragment shader writes: its highest layout(location = n) out, plus one; 1 with none. */
+		function outputsOf (fragment) {
+			var most = 0;
+
+			String(fragment).replace(/layout\s*\(\s*location\s*=\s*(\d+)\s*\)\s*out\b/g, function (all, at) {
+				most = Math.max(most, Number(at) + 1);
+
+				return all;
+			});
+
+			return most || 1;
 		}
 
 		/* The unit a sampler of a program reads: told to the program only when it is another one than the last. */
@@ -970,7 +1055,8 @@ Elemenx.Service('Renderer', {
 
 				gl.linkProgram(handle);
 
-				program = {Handle: handle, Uniforms: {}, Settled: false, Behind: !!behind};
+				/* Outputs: how many colors it writes (its last layout(location = n) out, plus one); into a target of more, the rest are left as they were. */
+				program = {Handle: handle, Uniforms: {}, Settled: false, Behind: !!behind, Outputs: outputsOf(fragment)};
 
 				if (!patient)
 					settle(program);
@@ -1054,6 +1140,8 @@ Elemenx.Service('Renderer', {
 					attribute(made, 'aColor', extra.aColor.Size, extra.aColor.Data);
 
 					gl.bindVertexArray(null);
+
+					current.VAO = null;
 				}
 
 				return made;
@@ -1196,6 +1284,8 @@ Elemenx.Service('Renderer', {
 				if (!gpuQuad)
 					gpuQuad = mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
 
+				current.Target = null;
+
 				gl.bindFramebuffer(gl.FRAMEBUFFER, target);
 				gl.viewport(0, 0, cube.Size, cube.Size);
 
@@ -1233,10 +1323,10 @@ Elemenx.Service('Renderer', {
 				var count = settings.Colors || 1;
 				var frame = gl.createFramebuffer();
 				var depth = settings.Depth ? gl.createRenderbuffer() : null;
-				var made = {Width: width, Height: height, Textures: [], Depth: null};
+				var made = {Width: width, Height: height, Textures: [], Depth: null, Count: count, Buffers: count};
 				var outputs = [];
 				var many = settings.Samples ? gl.createFramebuffer() : null;
-				var color = settings.Samples ? gl.createRenderbuffer() : null;
+				var colors = [];
 				var deep = settings.Samples ? gl.createRenderbuffer() : null;
 				var i;
 
@@ -1277,12 +1367,23 @@ Elemenx.Service('Renderer', {
 					gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, made.Depth.Handle, 0);
 				}
 
-				/* What is drawn with samples goes to buffers of its own, and to the textures when it ends. */
+				/* DepthFrom: the depth texture of another target (of DepthTexture, as large), to draw over what it holds (tested, not written). */
+				if (settings.DepthFrom && settings.DepthFrom.Depth)
+					gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, settings.DepthFrom.Depth.Handle, 0);
+
+				/* What is drawn with samples goes to buffers of its own (one for each color), and to the textures when it ends. */
 				if (many) {
 					gl.bindFramebuffer(gl.FRAMEBUFFER, many);
-					gl.bindRenderbuffer(gl.RENDERBUFFER, color);
-					gl.renderbufferStorageMultisample(gl.RENDERBUFFER, settings.Samples, settings.Float ? gl.RGBA16F : gl.RGBA8, width, height);
-					gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, color);
+
+					for (i = 0; i < count; i++) {
+						colors.push(gl.createRenderbuffer());
+
+						gl.bindRenderbuffer(gl.RENDERBUFFER, colors[i]);
+						gl.renderbufferStorageMultisample(gl.RENDERBUFFER, settings.Samples, settings.Float ? gl.RGBA16F : gl.RGBA8, width, height);
+						gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.RENDERBUFFER, colors[i]);
+					}
+
+					gl.drawBuffers(outputs);
 					gl.bindRenderbuffer(gl.RENDERBUFFER, deep);
 					gl.renderbufferStorageMultisample(gl.RENDERBUFFER, settings.Samples, gl.DEPTH_COMPONENT24, width, height);
 					gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, deep);
@@ -1293,13 +1394,57 @@ Elemenx.Service('Renderer', {
 				made.Begin = function () {
 					gl.bindFramebuffer(gl.FRAMEBUFFER, many || frame);
 					gl.viewport(0, 0, width, height);
+
+					current.Target = made;
+
+					made.Outputs(count);
+				};
+
+				/* How many of its colors the draws write: the first n (the rest left as they are). */
+				made.Outputs = function (n) {
+					var list = [];
+					var k;
+
+					if (made.Buffers === n) return;
+
+					for (k = 0; k < count; k++)
+						list.push(k < n ? gl.COLOR_ATTACHMENT0 + k : gl.NONE);
+
+					gl.drawBuffers(list);
+
+					made.Buffers = n;
+				};
+
+				/* One of its colors cleared to a value (the others kept). */
+				made.ClearColor = function (index, value) {
+					gl.clearBufferfv(gl.COLOR, index, value);
 				};
 
 				made.End = function () {
+					var k;
+					var list;
+
+					if (current.Target === made)
+						current.Target = null;
+
 					if (many) {
 						gl.bindFramebuffer(gl.READ_FRAMEBUFFER, many);
 						gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, frame);
-						gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+
+						/* Each color to its texture, one at a time (a blit reads one buffer). */
+						for (k = 0; k < count; k++) {
+							list = [];
+
+							for (i = 0; i < count; i++)
+								list.push(i === k ? gl.COLOR_ATTACHMENT0 + k : gl.NONE);
+
+							gl.readBuffer(gl.COLOR_ATTACHMENT0 + k);
+							gl.drawBuffers(list);
+							gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+						}
+
+						gl.readBuffer(gl.COLOR_ATTACHMENT0);
+						gl.drawBuffers(outputs);
 						gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.DEPTH_BUFFER_BIT, gl.NEAREST);
 						gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
 						gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
@@ -1324,7 +1469,11 @@ Elemenx.Service('Renderer', {
 
 					if (many) {
 						gl.deleteFramebuffer(many);
-						gl.deleteRenderbuffer(color);
+
+						colors.forEach(function (one) {
+							gl.deleteRenderbuffer(one);
+						});
+
 						gl.deleteRenderbuffer(deep);
 					}
 
@@ -1378,6 +1527,8 @@ Elemenx.Service('Renderer', {
 				/* Region [x, y, width, height] in texels: only that part drawn and cleared (a cascade in its quarter); all of it by default. */
 				map.Begin = function (region) {
 					var part = region || [0, 0, side, side];
+
+					current.Target = null;
 
 					gl.bindFramebuffer(gl.FRAMEBUFFER, target);
 					gl.viewport(part[0], part[1], part[2], part[3]);
@@ -1434,14 +1585,51 @@ Elemenx.Service('Renderer', {
 				gl.frontFace(clockwise ? gl.CW : gl.CCW);
 			},
 
-			Clear: function (color) {
+			/*
+			 * Arrays (and typed arrays) of uniforms the caller will not change in their place till the next Hold, the common ones of
+			 * a frame: given again, the very same, they are not read again. Those of the Hold before are let go.
+			 */
+			Hold: function (values) {
+				held = new WeakSet();
+
+				(values || []).forEach(function (value) {
+					if (value && typeof value === 'object' && typeof value.length === 'number')
+						held.add(value);
+				});
+			},
+
+			/* colorOnly: the depth kept (a target that draws over the depth of another). */
+			Clear: function (color, colorOnly) {
 				var value = color || [0, 0, 0, 1];
+				var k;
+
+
+				gl.clearColor(value[0], value[1], value[2], value[3] === undefined ? 1 : value[3]);
+
+				if (colorOnly) {
+					gl.clear(gl.COLOR_BUFFER_BIT);
+
+					return;
+				}
 
 				gl.depthMask(true);
 
 				current.Write = true;
 
-				gl.clearColor(value[0], value[1], value[2], value[3] === undefined ? 1 : value[3]);
+				/* A target of more colors: the first takes the color, the others nought (nothing written there yet). */
+				if (current.Target && current.Target.Count > 1) {
+					current.Target.Outputs(1);
+
+					gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+					current.Target.Outputs(current.Target.Count);
+
+					for (k = 1; k < current.Target.Count; k++)
+						gl.clearBufferfv(gl.COLOR, k, [0, 0, 0, 0]);
+
+					return;
+				}
+
 				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 			},
 
@@ -1467,6 +1655,10 @@ Elemenx.Service('Renderer', {
 
 					current.Program = program.Handle;
 				}
+
+				/* Into a target of more colors: as many as the program writes, the rest left as they were. */
+				if (current.Target && current.Target.Count > 1)
+					current.Target.Outputs(Math.min(current.Target.Count, program.Outputs));
 
 				/* The uniforms of the program, not all that was given: a set of them is shared by many programs. */
 				list = uniforms ? program.List : [];
@@ -1522,7 +1714,12 @@ Elemenx.Service('Renderer', {
 						gl.cullFace(cull === 'front' ? gl.FRONT : gl.BACK);
 				}
 
-				gl.bindVertexArray(made.VAO);
+				/* Its mesh bound only when another was: what makes or changes a mesh binds its own and lets it go (current.VAO null). */
+				if (current.VAO !== made.VAO) {
+					gl.bindVertexArray(made.VAO);
+
+					current.VAO = made.VAO;
+				}
 
 				counts.Draws++;
 
@@ -1533,8 +1730,6 @@ Elemenx.Service('Renderer', {
 				else if (made.Indexed) gl.drawElements(mode, made.Count, made.IndexType, 0);
 				else if (instances) gl.drawArraysInstanced(mode, 0, made.Count, instances);
 				else gl.drawArrays(mode, 0, made.Count);
-
-				gl.bindVertexArray(null);
 			},
 
 			Destroy: function () {

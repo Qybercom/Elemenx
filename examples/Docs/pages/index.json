@@ -1374,7 +1374,7 @@
 						"en": "GameBar"
 					},
 					"Group": "game",
-					"Library": "ElemenxUI"
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "GameCombat",
@@ -1390,7 +1390,7 @@
 						"en": "GameDialogue"
 					},
 					"Group": "game",
-					"Library": "ElemenxUI"
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "GameHud",
@@ -1398,7 +1398,7 @@
 						"en": "GameHud"
 					},
 					"Group": "game",
-					"Library": "ElemenxUI"
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "GameInventory",
@@ -1406,7 +1406,7 @@
 						"en": "GameInventory"
 					},
 					"Group": "game",
-					"Library": "ElemenxUI"
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "GameItemCard",
@@ -1414,7 +1414,7 @@
 						"en": "GameItemCard"
 					},
 					"Group": "game",
-					"Library": "ElemenxUI"
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "GameKey",
@@ -1422,7 +1422,7 @@
 						"en": "GameKey"
 					},
 					"Group": "game",
-					"Library": "ElemenxUI"
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "GameLeaderboard",
@@ -1430,7 +1430,7 @@
 						"en": "GameLeaderboard"
 					},
 					"Group": "game",
-					"Library": "ElemenxUI"
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "GameMenu",
@@ -1438,7 +1438,7 @@
 						"en": "GameMenu"
 					},
 					"Group": "game",
-					"Library": "ElemenxUI"
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "GameMinimap",
@@ -1446,7 +1446,7 @@
 						"en": "GameMinimap"
 					},
 					"Group": "game",
-					"Library": "ElemenxUI"
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "GameQuests",
@@ -1454,7 +1454,7 @@
 						"en": "GameQuests"
 					},
 					"Group": "game",
-					"Library": "ElemenxUI"
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "GameRace",
@@ -1470,7 +1470,7 @@
 						"en": "GameSlot"
 					},
 					"Group": "game",
-					"Library": "ElemenxUI"
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "GameStrategy",
@@ -1486,7 +1486,7 @@
 						"en": "GameTabs"
 					},
 					"Group": "game",
-					"Library": "ElemenxUI"
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "Icon",
@@ -3037,6 +3037,13 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "ScenePipes",
+					"Title": {
+						"en": "ScenePipes"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "ScenePlanet",
 					"Title": {
 						"en": "ScenePlanet"
@@ -3054,6 +3061,13 @@
 					"ID": "SceneRoads",
 					"Title": {
 						"en": "SceneRoads"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneShards",
+					"Title": {
+						"en": "SceneShards"
 					},
 					"Library": "ElemenxGraphics"
 				},
@@ -3412,6 +3426,13 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "SceneFracture",
+					"Title": {
+						"en": "SceneFracture"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneLanding",
 					"Title": {
 						"en": "SceneLanding"
@@ -3429,6 +3450,20 @@
 					"ID": "ScenePhysics",
 					"Title": {
 						"en": "ScenePhysics"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "ScenePiping",
+					"Title": {
+						"en": "ScenePiping"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneProbes",
+					"Title": {
+						"en": "SceneProbes"
 					},
 					"Library": "ElemenxGraphics"
 				},

@@ -113,7 +113,7 @@ describe('The dictionaries of the system Libraries', function () {
 			return Object.assign(all, dictionary('en', one.Root));
 		}, {});
 		var keys = used();
-		var dynamic = /^ui\.presence\.|^ui\.forms\.|^ui\.designer\.(groups|kinds|hints)\.|^ui\.designer\.rules\.(node|kind|within|when-|where-|scheme-)|^ui\.designer\.(before|after)$|^ui\.emojiPicker\.(group\.|tone\d)|^ui\.game\.(health|mana|experience|stamina|common|uncommon|rare|epic|legendary)$|^ui\.call\.layouts\.|^ui\.signal\.(good|fair|poor)$|^ui\.signaturePad\.(match|mismatch)$|^ui\.pipeline\.(retry|cancel|play|status\.)|^ui\.calculator\.keys\.|^ui\.quiz\.(check|next|right|wrong|passed|failed)$|^graphics\.scene\.(class|temperature|mass|radius|luminosity|gravity|distance|period|day|habitable|at|team|ships|heading|yes|locked|km|au|ms2|days|hours|health|parts|horizon|innermost|leads|nucleus|kinds\.|surfaces\.)|^graphics\.cutsceneEditor\.types\./;
+		var dynamic = /^ui\.presence\.|^ui\.forms\.|^ui\.designer\.(groups|kinds|hints)\.|^ui\.designer\.rules\.(node|kind|within|when-|where-|scheme-)|^ui\.designer\.(before|after)$|^ui\.emojiPicker\.(group\.|tone\d)|^gaming\.ui\.(health|mana|experience|stamina|common|uncommon|rare|epic|legendary)$|^ui\.call\.layouts\.|^ui\.signal\.(good|fair|poor)$|^ui\.signaturePad\.(match|mismatch)$|^ui\.pipeline\.(retry|cancel|play|status\.)|^ui\.calculator\.keys\.|^ui\.quiz\.(check|next|right|wrong|passed|failed)$|^graphics\.scene\.(class|temperature|mass|radius|luminosity|gravity|distance|period|day|habitable|at|team|ships|heading|yes|locked|km|au|ms2|days|hours|health|parts|horizon|innermost|leads|nucleus|kinds\.|surfaces\.)|^graphics\.cutsceneEditor\.types\./;
 
 		expect(Object.keys(keys).filter(function (key) {
 			return !(key in english);

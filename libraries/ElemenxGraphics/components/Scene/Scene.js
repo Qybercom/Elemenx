@@ -110,7 +110,7 @@
 Elemenx.Component('Scene', {
 	$TemplateURL: 'Scene.html',
 	$StyleURL: 'Scene.css',
-	$Traits: ['SceneScatter', 'SceneLighting', 'SceneEffects', 'SceneCosmos', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneDebris', 'SceneFracture', 'ScenePiping', 'SceneDeepSpace'],
+	$Traits: ['SceneScatter', 'SceneLighting', 'SceneProbes', 'SceneEffects', 'SceneCosmos', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneDebris', 'SceneFracture', 'ScenePiping', 'SceneDeepSpace'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'star',
@@ -2590,6 +2590,9 @@ Elemenx.Component('Scene', {
 			var projection = camera.Projection(aspect);
 			var plain = math.Multiply(projection, viewMatrix);
 			var matrix = scene.Ground ? math.Multiply(engine.PostJitter(projection), viewMatrix) : plain;
+
+			scene.NormalsMatrix = matrix;
+
 			var right = [viewMatrix[0], viewMatrix[4], viewMatrix[8]];
 			var up = [viewMatrix[1], viewMatrix[5], viewMatrix[9]];
 			var light = lights();
@@ -2613,17 +2616,28 @@ Elemenx.Component('Scene', {
 			if (scene.Ground)
 				Object.assign(shade, engine.FieldLight(matrix), localLights(), scene.Camera.Ortho ? {uCloudShade: [0, 0, 1, 0], uSkyFloor: 0} : Object.assign(engine.CloudShade(groundClouds(), scene.Ground.Sun), {uSkyFloor: Math.max(0, 1 - scene.Ground.Day * 3) * 0.55}));
 
+			/* The light of probes (SceneProbes), worked out with the lights of the frame: what each surface gets round it. */
+			if (scene.Ground && engine.ProbeLight)
+				Object.assign(shade, engine.ProbeLight(shade));
+
 			/* What burns on a ship lights it in space as well. */
 			if (!scene.Ground)
 				Object.assign(shade, localLights());
 
-			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uSkyLight: scene.Ground ? scene.Ground.SkyLight : [0.004, 0.004, 0.006], uFloorLight: scene.Ground ? scene.Ground.FloorLight : [0.004, 0.004, 0.006], uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : scene.CosmosShade ? [0.025 + scene.CosmosShade[0], 0.027 + scene.CosmosShade[1], 0.035 + scene.CosmosShade[2]] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Gust || 0, uWet: scene.Ground ? scene.Ground.Air.Wet : 0, uSnowed: snowed(), uRainDrops: scene.Ground ? scene.Ground.Air.Rain : 0, uEyeAt: scene.Eye || [0, 0, 0], uTime2: scene.Seconds % 1000, uNightGlow: scene.Ground ? scene.Ground.Night || 0 : 1}, shade, self.WindValues(scene.Seconds));
+			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uSkyLight: scene.Ground ? scene.Ground.SkyLight : [0.004, 0.004, 0.006], uFloorLight: scene.Ground ? scene.Ground.FloorLight : [0.004, 0.004, 0.006], uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : scene.CosmosShade ? [0.025 + scene.CosmosShade[0], 0.027 + scene.CosmosShade[1], 0.035 + scene.CosmosShade[2]] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Gust || 0, uWet: scene.Ground ? scene.Ground.Air.Wet : 0, uSnowed: snowed(), uRainDrops: scene.Ground ? scene.Ground.Air.Rain : 0, uEyeAt: scene.Eye || [0, 0, 0], uTime2: scene.Seconds % 1000, uNightGlow: scene.Ground ? scene.Ground.Night || 0 : 1, uScreenMirror: engine.ScreenMirror && engine.ScreenMirror() ? 1 : 0}, shade, self.WindValues(scene.Seconds));
+
+			/* The arrays of the frame stay as they are till the next one: given again to each draw, they are not read again. */
+			renderer.Hold(Object.keys(common).map(function (key) {
+				return common[key];
+			}));
+
 			var selected = scene.Selected ? scene.Objects[scene.Selected] : null;
 
 			scene.BakedThisFrame = 0;
 
+			/* The uniforms of a draw: its own over the common ones of the frame (read through, never copied: a copy of all of them for each draw took milliseconds). */
 			function uniforms (extra) {
-				return Object.assign({}, common, extra);
+				return Object.assign(Object.create(common), extra);
 			}
 
 			/* A turn of an object with its place relative to the eye and its size: its model matrix. */
@@ -2654,7 +2668,7 @@ Elemenx.Component('Scene', {
 				scene.Ground.Under = !!scene.Ground.Field.Water && !scene.Camera.Ortho && scene.Eye[1] < self.$Service('SceneWaves').At(scene.Ground.Waves, scene.Eye[0], scene.Eye[2], scene.Seconds).Height;
 
 			var worldOf = function (vp, eye, small) {
-				var mine = Object.assign({}, common, {uViewProjection: vp, uCamera: eye, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0]});
+				var mine = Object.assign(Object.create(common), {uViewProjection: vp, uCamera: eye, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0]});
 
 				drawGround(vp, nodes, shade, true);
 
@@ -2663,8 +2677,8 @@ Elemenx.Component('Scene', {
 					/* The glass of a mirror is not in its own picture, nor in another's. */
 					if (list.Material && seeThrough(list.Material) || list.MirrorKey) return;
 
-					if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign({}, mine, {uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft}, surface(list), blueprintValues(list), engine.SeasonValues(name), engine.DissolveValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back'});
-					else renderer.Draw(shape(name), gpu.Many, Object.assign({}, mine, {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list)}, engine.SeasonValues(name), engine.DissolveValues(list)));
+					if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign(Object.create(mine), {uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft}, surface(list), blueprintValues(list), engine.SeasonValues(name), engine.DissolveValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back'});
+					else renderer.Draw(shape(name), gpu.Many, Object.assign(Object.create(mine), {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list)}, engine.SeasonValues(name), engine.DissolveValues(list)));
 				});
 
 				/* A mirror of a car shows the trees and the grass too at high and ultra: its picture is as fine as the screen now, and no bigger than the mirror. */
@@ -4157,7 +4171,7 @@ Elemenx.Component('Scene', {
 
 			(nearMap || gpu.ShadowMap).End();
 
-			return {uShadowMap: nearMap || gpu.ShadowMap, uShadowNear: nearMap || gpu.ShadowMap, uShadowRaw: (nearMap || gpu.ShadowMap).Raw, uShadowNearRaw: (nearMap || gpu.ShadowMap).Raw, uShadowSoft: [depth * side * sunWidth / extent, depth * side * sunWidth / extent, self.Graphics().Cascades > 1 ? 1 : 0], uBounce: gpu.NoBounce, uCloudMap: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uLampShadow0: gpu.NoShadow, uLampShadow1: gpu.NoShadow, uShadowMatrix: matrix, uShadowBias: texel * 1.6, uShadowOn: 1, uCascadeOn: 0};
+			return {uShadowMap: nearMap || gpu.ShadowMap, uShadowNear: nearMap || gpu.ShadowMap, uShadowRaw: (nearMap || gpu.ShadowMap).Raw, uShadowNearRaw: (nearMap || gpu.ShadowMap).Raw, uShadowSoft: [depth * side * sunWidth / extent, depth * side * sunWidth / extent, self.Graphics().Cascades > 1 ? 1 : 0], uBounce: gpu.NoBounce, uCloudMap: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uProbeOn: 0, uProbe: gpu.NoBounce, uLampShadow0: gpu.NoShadow, uLampShadow1: gpu.NoShadow, uShadowMatrix: matrix, uShadowBias: texel * 1.6, uShadowOn: 1, uCascadeOn: 0};
 		}
 
 		/*
@@ -4204,7 +4218,7 @@ Elemenx.Component('Scene', {
 				drawn(i, i === 0 ? near : splits[i - 1], splits[i]);
 			}
 
-			return {uShadowMap: gpu.Cascades, uShadowNear: gpu.Cascades, uShadowRaw: gpu.Cascades.Raw, uShadowNearRaw: gpu.Cascades.Raw, uShadowSoft: [soft[3], soft[0], 1], uBounce: gpu.NoBounce, uCloudMap: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uLampShadow0: gpu.NoShadow, uLampShadow1: gpu.NoShadow, uShadowMatrix: Array.prototype.slice.call(matrices, 32, 48), uShadowBias: bias[2], uShadowOn: 1, uCascadeOn: 1, uCascades: matrices, uCascadeSplits: splits, uCascadeSoft: soft, uCascadeBias: bias};
+			return {uShadowMap: gpu.Cascades, uShadowNear: gpu.Cascades, uShadowRaw: gpu.Cascades.Raw, uShadowNearRaw: gpu.Cascades.Raw, uShadowSoft: [soft[3], soft[0], 1], uBounce: gpu.NoBounce, uCloudMap: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uProbeOn: 0, uProbe: gpu.NoBounce, uLampShadow0: gpu.NoShadow, uLampShadow1: gpu.NoShadow, uShadowMatrix: Array.prototype.slice.call(matrices, 32, 48), uShadowBias: bias[2], uShadowOn: 1, uCascadeOn: 1, uCascades: matrices, uCascadeSplits: splits, uCascadeSoft: soft, uCascadeBias: bias};
 
 			/* A slice from a to b: its ball, its view of the sun from where it was last drawn, drawn again when its turn comes. */
 			function drawn (index, a, b) {
@@ -4367,7 +4381,7 @@ Elemenx.Component('Scene', {
 				gpu.NoBounce = renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([0, 0, 0, 255])}, {Nearest: true});
 			}
 
-			return {uShadowOn: 0, uShadowMap: gpu.NoShadow, uShadowNear: gpu.NoShadow, uShadowRaw: gpu.NoBounce, uShadowNearRaw: gpu.NoBounce, uShadowSoft: [0, 0, 0], uBounce: gpu.NoBounce, uCloudMap: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uLampShadow0: gpu.NoShadow, uLampShadow1: gpu.NoShadow, uCascadeOn: 0};
+			return {uShadowOn: 0, uShadowMap: gpu.NoShadow, uShadowNear: gpu.NoShadow, uShadowRaw: gpu.NoBounce, uShadowNearRaw: gpu.NoBounce, uShadowSoft: [0, 0, 0], uBounce: gpu.NoBounce, uCloudMap: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uProbeOn: 0, uProbe: gpu.NoBounce, uLampShadow0: gpu.NoShadow, uLampShadow1: gpu.NoShadow, uCascadeOn: 0};
 		}
 
 		function shadowsWanted () {
@@ -4419,6 +4433,56 @@ Elemenx.Component('Scene', {
 			}
 
 			scene.Casters = casters;
+
+			/*
+			 * The same in their colors, for a slab of the voxels of the light of probes (SceneProbes): the ground, what stands
+			 * still and what grows; what moves (what has a skeleton, a car) is gone from there at once: it gets light, it leaves none on the walls.
+			 */
+			/*
+			 * The normals the models of files are drawn by (what is glossy: paint, metal, glass), for the reflections of the screen
+			 * (SceneLighting): into a target of their own over the depth of the scene, where they are seen; the rest takes its
+			 * normal from the depth. Not a second color of the scene: the graphics card made each program again for that.
+			 */
+			scene.Normals = function () {
+				var matrix = scene.NormalsMatrix;
+				if (!matrix) return;
+
+				if (!gpu.NormalMany) {
+					gpu.NormalMany = renderer.Program(shaders.Instanced, shaders.Normal);
+					gpu.NormalSkin = renderer.Program(shaders.Skinned, shaders.Normal);
+				}
+
+				Object.keys(models).forEach(function (name) {
+					var list = models[name];
+					if (!list.Material || list.Material.Transmission && seeThrough(list.Material)) return;
+
+					renderer.Draw(shape(name), moved(list, list.Skinned ? gpu.NormalSkin : gpu.NormalMany, 'Normal'), Object.assign({uViewProjection: matrix, uWind: scene.Gust || 0, uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : undefined, uJointOffset: list.Offset}, movedValues(list)), {Cull: 'none', Depth: true, DepthWrite: false});
+				});
+			};
+
+			scene.Voxels = function (matrix) {
+				if (!gpu.VoxelLand) {
+					gpu.VoxelLand = renderer.Program(shaders.LandVertex, shaders.Voxel);
+					gpu.VoxelMany = renderer.Program(shaders.Instanced, shaders.Voxel);
+				}
+
+				(nodes || []).forEach(function (node) {
+					/* A square far from the eye has nothing in the voxels (some 45 m round it). */
+					if (vectors.Distance(node.Center, scene.Eye) > 120) return;
+
+					renderer.Draw(node.Mesh, gpu.VoxelLand, {uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye)}, {Cull: 'none', Depth: false, DepthWrite: false});
+				});
+
+				Object.keys(models).forEach(function (name) {
+					var list = models[name];
+					if (list.Skinned || !list.Still || list.Material && list.Material.Transmission && seeThrough(list.Material)) return;
+
+					renderer.Draw(shape(name), moved(list, gpu.VoxelMany, 'Voxel'), Object.assign({uViewProjection: matrix, uWind: 0, uOrigin: originOf(list)}, movedValues(list)), {Cull: 'none', Depth: false, DepthWrite: false});
+				});
+
+				if (engine.ScatterVoxels)
+					engine.ScatterVoxels(matrix, shaders.Voxel);
+			};
 
 			if (!shadowsWanted()) return off;
 
@@ -8298,8 +8362,8 @@ Elemenx.Component('Scene', {
 
 				upload(name, list);
 
-				if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign({}, common, {uOrigin: [0, 0, 0], uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft, uSeasonOn: 0, uDissolve: [0, 0, 1, 0]}, surface(list), blueprintValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back'});
-				else renderer.Draw(shape(name), gpu.Many, Object.assign({}, common, {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: [0, 0, 0], uSeasonOn: 0, uDissolve: [0, 0, 1, 0]}));
+				if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign(Object.create(common), {uOrigin: [0, 0, 0], uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft, uSeasonOn: 0, uDissolve: [0, 0, 1, 0]}, surface(list), blueprintValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back'});
+				else renderer.Draw(shape(name), gpu.Many, Object.assign(Object.create(common), {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: [0, 0, 0], uSeasonOn: 0, uDissolve: [0, 0, 1, 0]}));
 			});
 
 			/* Its engines burn as they did in space: its own effects, where it is over the surface. */
@@ -9521,6 +9585,7 @@ Elemenx.Component('Scene', {
 		if (renderer) {
 			this.ScatterStart();
 			this.LightingStart();
+			this.ProbesStart();
 			this.EffectsStart();
 			this.WeaponsStart();
 			this.DebrisStart();
@@ -11563,6 +11628,7 @@ Elemenx.Component('Scene', {
 				'uniform vec4 uBaseColor;',
 				'uniform float uMetallic;',
 				'uniform float uRoughness;',
+				'uniform float uScreenMirror;',
 				'uniform vec3 uEmissive;',
 				'uniform float uClearcoat;',
 				'uniform float uWet;',
@@ -11778,10 +11844,12 @@ Elemenx.Component('Scene', {
 				'	total += albedo * (1.0 - metallic) * localLight(vWorld, n);',
 				'	float occlusion = mix(1.0, texture(uOcclusionMap, vUV).r, uOcclusion);',
 				'	vec3 reflected = reflect(-v, n);',
-				'	vec3 around = mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) * skySeen(vWorld) + sunBounce(vWorld);',
+				'	vec3 around = aroundLight(vWorld, n, mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5));',
 				'	vec3 mirrored = mix(uFloorLight, uSkyLight, reflected.y * 0.5 + 0.5);',
 				'	vec3 fresnel = f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(1.0 - nv, 5.0);',
-				'	total += (albedo * (1.0 - metallic) * around + fresnel * mirrored) * occlusion;',
+				/* With the reflections of the screen on (uScreenMirror), what a dielectric mirrors is theirs, added over it: not the sky here too. */
+				'	float screened = uScreenMirror > 0.5 && (metallic < 0.5 || uClearcoat * (1.0 - uCoatRough) > 1.0 - roughness) ? 0.0 : 1.0;',
+				'	total += (albedo * (1.0 - metallic) * around + fresnel * mirrored * screened) * occlusion;',
 				'	total += ownGlow;',
 				/* Glass lets through what lies behind it, a little darker, and shows the sky the more the flatter it is seen. */
 				'	if (uGlass > 0.0) {',
@@ -11792,12 +11860,13 @@ Elemenx.Component('Scene', {
 				'		return;',
 				'	}',
 				/*
-				 * How much it mirrors, seen from here: the alpha of the scene carries it to the picture. A sharp picture of the
-				 * screen is mirrored only by what is smooth (glass, paint, polished metal, water, what is wet): a rough steel
-				 * mirrors blurred, as its own light has it, never the grass in steps of two pixels.
+				 * What it mirrors, for the picture (the alpha of the scene, MirrorCode): how smooth it is, a metal or not; its coat of
+				 * lacquer as smooth as it is, what is wet and looks up as smooth as water. The reflections of the screen work out how much it mirrors from here and how
+				 * blurred, of its roughness.
 				 */
-				'	float gloss = base.a < 0.99 ? 0.0 : max(pow(1.0 - roughness, 2.0) * (1.0 - smoothstep(0.15, 0.3, roughness)) * max(fresnel.r, max(fresnel.g, fresnel.b)), wet * 0.6 * smoothstep(0.55, 0.95, n.y) * (0.04 + 0.96 * pow(1.0 - nv, 5.0)));',
-				'	outColor = vec4(pow(total, vec3(1.0 / 2.2)), uMoving > 0.5 ? 0.0 : base.a < 0.5 ? base.a : 1.0 - gloss * 0.45);',
+				'	float sleek = max(max(1.0 - roughness, uClearcoat * (1.0 - uCoatRough)), wet * 0.95 * smoothstep(0.55, 0.95, n.y));',
+				'	float code = base.a < 0.99 ? 0.0 : metallic > 0.5 && 1.0 - roughness >= sleek ? 0.36 + sleek * 0.27 : sleek * 0.3;',
+				'	outColor = vec4(pow(total, vec3(1.0 / 2.2)), uMoving > 0.5 ? (code > 0.004 ? 0.45 - code * 0.4 : 0.0) : base.a < 0.5 ? base.a : 1.0 - code * 0.45);',
 				'}'
 			].join('\n'),
 
@@ -12154,14 +12223,18 @@ Elemenx.Component('Scene', {
 				'	float beamed = dissolved(vWorld, color);',
 				'	vec3 hot = max(vColor - vec3(1.0), 0.0) + uDissolveColor * beamed * 3.0;',
 				'	lightShade = sunLit(vWorld, n);',
-				'	vec3 light = lighting(vWorld, n, v, uShine, uSpecular) - mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) * (1.0 - skySeen(vWorld));',
-				'	light = (max(light, vec3(0.0)) + sunBounce(vWorld) + localLight(vWorld, n)) * (1.0 - (vWet.x > 0.5 ? clamp(vWet.x - 1.0, 0.0, 1.0) : uWet) * 0.25);',
+				'	vec3 sky = mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5);',
+				'	vec3 light = lighting(vWorld, n, v, uShine, uSpecular) - sky + aroundLight(vWorld, n, sky);',
+				'	light = (max(light, vec3(0.0)) + localLight(vWorld, n)) * (1.0 - (vWet.x > 0.5 ? clamp(vWet.x - 1.0, 0.0, 1.0) : uWet) * 0.25);',
 				'	if (uSoft > 0.0 && uLightCount > 0) {',
 				'		vec3 l = normalize(uLightPositions[0] - vWorld);',
 				'		float through = pow(max(dot(v, -l), 0.0), 3.0) * 0.8 + max(-dot(n, l), 0.0) * 0.35;',
 				'		light += uLightColors[0] * through * lightShade * uSoft * vec3(1.0, 1.05, 0.55);',
 				'	}',
-				'	outColor = vec4(pow(color * light + hot * hot * 4.0 * (0.12 + 0.88 * uNightGlow), vec3(1.0 / 2.2)), uMoving > 0.5 ? 0.0 : 1.0);',
+				/* What it mirrors (MirrorCode): a little where it shines, as water where it is wet and looks up. */
+				'	float wetness = vWet.x > 0.5 ? clamp(vWet.x - 1.0, 0.0, 1.0) : uWet;',
+				'	float sleek = max(uShine > 20.0 ? 0.45 : 0.1, wetness * 0.9 * smoothstep(0.55, 0.95, normalize(vNormal).y));',
+				'	outColor = vec4(pow(color * light + hot * hot * 4.0 * (0.12 + 0.88 * uNightGlow), vec3(1.0 / 2.2)), uMoving > 0.5 ? 0.45 - sleek * 0.3 * 0.4 : 1.0 - sleek * 0.3 * 0.45);',
 				'}'
 			].join('\n'),
 
@@ -12758,6 +12831,24 @@ Elemenx.Component('Scene', {
 				'out vec4 outColor;',
 				'void main() {',
 				'	outColor = vec4(min(vColor, vec3(1.0)) * uSunColor * max(dot(normalize(vNormal), uSun), 0.0), 1.0);',
+				'}'
+			].join('\n'),
+
+			/* The normal a model is drawn by, for the reflections of the screen (scene.Normals). */
+			Normal: head + [
+				'in vec3 vNormal;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	outColor = vec4(normalize(vNormal), 1.0);',
+				'}'
+			].join('\n'),
+
+			/* What a slab of the voxels of the light of probes holds (SceneProbes): the color of a surface, as it is, and that it is there. */
+			Voxel: head + [
+				'in vec3 vColor;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	outColor = vec4(clamp(vColor, vec3(0.02), vec3(0.85)), 1.0);',
 				'}'
 			].join('\n'),
 

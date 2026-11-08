@@ -1,0 +1,42 @@
+{
+	"gaming": {
+		"ui": {
+			"health": "Здоровье",
+			"mana": "Мана",
+			"experience": "Опыт",
+			"stamina": "Выносливость",
+			"emptySlot": "Пустая ячейка",
+			"cooldown": "готово через {seconds} с",
+			"inventory": "Инвентарь",
+			"dialogue": "Диалог",
+			"continue": "Дальше",
+			"menu": "Меню",
+			"screen": "Игровой экран",
+			"button": "кнопка {button}",
+			"common": "Обычный",
+			"uncommon": "Необычный",
+			"rare": "Редкий",
+			"epic": "Эпический",
+			"legendary": "Легендарный",
+			"tabs": "Разделы",
+			"quests": "Задания",
+			"noQuests": "Заданий нет",
+			"level": "Уровень {level}",
+			"questDone": "Выполнено",
+			"questFailed": "Провалено",
+			"objectives": "Цели",
+			"rewards": "Награды",
+			"track": "Отслеживать",
+			"untrack": "Не отслеживать",
+			"map": "Карта",
+			"marker": "Метка",
+			"zoomIn": "Приблизить",
+			"zoomOut": "Отдалить",
+			"leaderboard": "Таблица лидеров",
+			"player": "Игрок",
+			"score": "Очки",
+			"rose": "выше на {count}",
+			"fell": "ниже на {count}"
+		}
+	}
+}

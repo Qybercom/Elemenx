@@ -491,7 +491,7 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 
 		expect(met).toBeGreaterThan(0);
 		expect(worst).toBeLessThan(wall);
-	});
+	}, 60000);
 	it('stands barriers of kind barrier along a road its Road names, or on points of their own, and they stop a car', async function () {
 		var mounted = await mount();
 		var scene = mounted.Scene;

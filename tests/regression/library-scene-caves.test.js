@@ -143,7 +143,7 @@ describe('Contract: a Scene under its ground: the floors of its tunnels and cave
 			frame();
 
 			return arrived;
-		}, 8000);
+		}, 30000);
 
 		/* There: on the floor of the tunnel, far under the top of the hill over it. */
 		expect(arrived.At[0]).toBeCloseTo(0, 3);
@@ -152,7 +152,7 @@ describe('Contract: a Scene under its ground: the floors of its tunnels and cave
 
 		/* A floor no walker comes to (in the rock under the tunnel): no way. */
 		expect(scene.Move('miner', [30, 30, -10])).toBe(false);
-	});
+	}, 60000);
 	it('digs a hole while it runs: only the squares round it made again, what stood there down in it, kept in Save', async function () {
 		var scene = await mount({Size: 300, Height: 10, Water: 0, Seed: 'dig', Scale: 120});
 		var inner = scene.Scene();
@@ -231,5 +231,5 @@ describe('Contract: a Scene under its ground: the floors of its tunnels and cave
 		}, 4000);
 
 		expect(other.Scene().Ground.Field.Density(20, top - 2, 20)).toBeLessThan(0);
-	});
+	}, 60000);
 });

@@ -53,19 +53,19 @@
 }
 
 .elemenx-achievement.uncommon {
-	--elemenx-achievement-color: var(--elemenx-game-uncommon);
+	--elemenx-achievement-color: var(--elemenx-achievement-uncommon);
 }
 
 .elemenx-achievement.rare {
-	--elemenx-achievement-color: var(--elemenx-game-rare);
+	--elemenx-achievement-color: var(--elemenx-achievement-rare);
 }
 
 .elemenx-achievement.epic {
-	--elemenx-achievement-color: var(--elemenx-game-epic);
+	--elemenx-achievement-color: var(--elemenx-achievement-epic);
 }
 
 .elemenx-achievement.legendary {
-	--elemenx-achievement-color: var(--elemenx-game-legendary);
+	--elemenx-achievement-color: var(--elemenx-achievement-legendary);
 }
 
 /* The light that runs over the band once it is open. */

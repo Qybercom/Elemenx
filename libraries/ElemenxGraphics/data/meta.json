@@ -857,6 +857,7 @@
 				"cue",
 				"part",
 				"touch",
+				"crack",
 				"shader",
 				"error"
 			],
@@ -888,6 +889,7 @@
 				"cue": "A cue of a cutscene came: {Cutscene, Name, Data, At}.",
 				"part": "A part of an object was set by its role (Part(id, role).Set): {ID, Role, Value}.",
 				"touch": "Two solid things began to touch (trait Rigid): {ID, With (null: the ground), At, Normal, Impulse}.",
+				"crack": "A thing with the trait Fracture was hurt and still holds (SceneFracture): {ID, Integrity, Point, Amount}.",
 				"shader": "A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.",
 				"error": "There is no WebGL2 ({Reason: webgl2})."
 			},
@@ -931,6 +933,11 @@
 				"Killed(id)",
 				"Break(id, options)",
 				"Debris()",
+				"Pipes()",
+				"Fluids()",
+				"Damage(id, amount, hit)",
+				"Integrity(id)",
+				"Fractures(materials)",
 				"Teleport(id, place, options, callback)",
 				"CastOn(type, at, options)",
 				"Dispel(id, seconds)",
@@ -1974,6 +1981,56 @@
 			"Sample": {}
 		},
 		{
+			"Name": "SceneShards",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "How a solid thing breaks: Voronoi cells denser near the hit, its triangles cut by them, the convex hull of each piece.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Seeds(min, max, count, hit, options)",
+				"Clip(polygon, normal, offset)",
+				"Pieces(triangles, seeds)",
+				"Hull(points)",
+				"Random(seed)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "ScenePipes",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Pipes of any size laid on supports, on the ground or under it: their model outside and inside, flanges and supports, what they cut out of the ground, the fluids they hold.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Fluids()",
+				"Lay(spec, height)",
+				"Asset(pipes, options)",
+				"Carves(pipes)",
+				"At(pipe, metres)",
+				"Near(pipe, point)",
+				"Floor(pipes, x, z, y, climb)",
+				"Blocks(pipes, x, z, y, round, heights)",
+				"Mouth(pipe)",
+				"Hole(pipe, along, angle)",
+				"Spurt(pipe, size)"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "SceneTerrainGenerator",
 			"Kind": "Service",
 			"Group": "",
@@ -2161,6 +2218,8 @@
 				"BarrierHit(roads, x, z, fromX, fromZ, hints, size)",
 				"FreeBarrier(spec, options)",
 				"Sketch(roads, junctions)",
+				"Carves(roads)",
+				"TunnelLamps(road)",
 				"Asset(roads, options)",
 				"AssetOf(roads, options)",
 				"Work()"

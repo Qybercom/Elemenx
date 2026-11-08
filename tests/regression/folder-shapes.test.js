@@ -4,15 +4,18 @@ import blockStyle from '../../libraries/ElemenxUI/components/Block/Block.css?raw
 import windowStyle from '../../libraries/ElemenxUI/components/Window/Window.css?raw';
 import fantasy from '../../libraries/ElemenxUI/themes/fantasy.css?raw';
 import scifi from '../../libraries/ElemenxUI/themes/scifi.css?raw';
+import gaming from '../../libraries/ElemenxGaming/index.css?raw';
+import gameFantasy from '../../libraries/ElemenxGaming/themes/fantasy.css?raw';
+import gameScifi from '../../libraries/ElemenxGaming/themes/scifi.css?raw';
 
 /*
  * The folders of HeaderShape="trapezoid" (Block and Window) in the default theme, in a part of the page with a scheme
- * of its own and in the game themes: the stylesheets of the Library, as the page loads them.
+ * of its own and in the game themes: the stylesheets of ElemenxUI and ElemenxGaming, as the page loads them.
  */
 var host;
 
 beforeAll(function () {
-	[index, blockStyle, windowStyle, fantasy, scifi].forEach(function (text) {
+	[index, blockStyle, windowStyle, fantasy, scifi, gaming, gameFantasy, gameScifi].forEach(function (text) {
 		var style = document.createElement('style');
 
 		style.textContent = text;

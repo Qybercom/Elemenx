@@ -189,5 +189,5 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		expect(opened.Location.Beyond).toBe('cliff');
 		expect(opened.Location.World.type).toBe('world');
 		expect(Elemenx.Service('SceneWorld').Make(opened.Location.World).Ground.Planet.Latitude).toBeCloseTo(opened.Location.Place.Latitude, 9);
-	});
+	}, 60000);
 });

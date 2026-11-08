@@ -39,5 +39,6 @@
 ## Тесты
 
 - [bakes a recipe into a tile that repeats with no seam, with mipmaps, once for the same params](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L51) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
-- [shows a texture in TextureLab as a tile or a ground, a slider for each param, and tells change](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L97) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
-- [draws the materials of a ground that name a texture with their tiles, a layer each, bound to its land](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L137) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
+- [shows a texture in TextureLab as a tile or a ground, a slider for each param, and tells change](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L98) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
+- [draws the materials of a ground that name a texture with their tiles, a layer each, bound to its land](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L138) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
+- [draws a road by the materials of its surfaces and the ground by its own, all of them compiled](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L113) — `tests/regression/library-scene-roads.test.js`

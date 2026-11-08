@@ -138,13 +138,19 @@ describe('Contract: the lights of the sky of a Scene: the northern lights and th
 		};
 
 		try {
+			/*
+			 * Regression: the programs of the high quality were still being made (quiet frames, under load for long), the weather
+			 * went on meanwhile and the flash asked for had faded before a frame drew it. It is asked for once the scene draws.
+			 */
 			await waitFor(function () {
+				var made = renderer.Progress();
+
 				scene.Scene().Rest = 0;
 
 				scene.Engine().Frame(now += 33);
 
-				return flashes.length > 0;
-			}, 10000);
+				return flashes.length > 0 && made.Done === made.Total;
+			}, 30000);
 
 			expect(scene.Lightning('sheet')).toBe(true);
 

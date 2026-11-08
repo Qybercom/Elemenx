@@ -15,6 +15,8 @@
 
 У типа дороги может быть свой Along — ряды предметов вдоль неё (если у самой дороги Along не задан). Улицы (street, avenue, boulevard, alley, tram) ставят фонари на тротуарах через 28 м, скамьи, урны, гидранты и клумбы, а street и avenue — ещё остановки и киоски. Шоссе (highway, motorway) ставят мачты освещения через 60 м. Ряды дороги сеются там, где она проходит, на любой высоте (MinHeight −1000).
 
+Carves(roads) — то, что тоннели дорог вырезают в земле (Carves земли типа tunnel), чтобы дорога входила в холм через дыру, а не шла открытой выемкой: по стволу на каждые 12 м ширины (у автострады два рядом), круг шириной со свою часть дороги и ещё метр, не меньше 5 м радиусом, пол срезан ровно чуть ниже дороги, а ближе метра к поверхности ничего не вырезается (Crust: у мелкого тоннеля потолок из земли, склон остаётся целым). Вырез начинается за радиус до тоннеля и кончается через радиус после, так что дыра открывается там, где кончается подъезд. TunnelLamps(road) — ряд ламп под сводом по середине тоннеля через каждые 10 м; в модели дороги они светятся сами.
+
 ## Методы
 
 - `Surface(name, surface)`
@@ -45,4 +47,4 @@
 - [has barriers only where asked, of their kinds, sides and stretches, and they stop what drives into them from either side](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scene-roads.test.js#L233) — `tests/regression/scene-roads.test.js`
 - [finds the junctions of a network where roads cross or end on one another, brings the roads to one level there and stops their paint](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scene-roads.test.js#L261) — `tests/regression/scene-roads.test.js`
 
-+12 ещё в тех же файлах
++13 ещё в тех же файлах

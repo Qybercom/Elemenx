@@ -77,8 +77,8 @@ PieceList(name) перечисляет части для редактора: {ID
 - [offers the models it is given that Models has, and places each as the kind its Type fits, as large as it is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L108) — `tests/regression/library-scene-editor.test.js`
 - [draws what moves together of a model of a file as one for each material: all that stands still, each wheel, each opening](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-frames.test.js#L175) — `tests/regression/library-scene-frames.test.js`
 - [makes the ground level across a road, tells its strips and the ground off it, and its model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L58) — `tests/regression/library-scene-roads.test.js`
-- [draws a road by the materials of its surfaces and the ground by its own, all of them compiled](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L111) — `tests/regression/library-scene-roads.test.js`
-- [stands barriers of kind barrier along a road its Road names, or on points of their own, and they stop a car](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L454) — `tests/regression/library-scene-roads.test.js`
-- [gives each scene of a page its own textures of a model they share](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1585) — `tests/regression/library-scene.test.js`
+- [draws a road by the materials of its surfaces and the ground by its own, all of them compiled](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L113) — `tests/regression/library-scene-roads.test.js`
+- [stands barriers of kind barrier along a road its Road names, or on points of their own, and they stop a car](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L495) — `tests/regression/library-scene-roads.test.js`
+- [gives each scene of a page its own textures of a model they share](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1587) — `tests/regression/library-scene.test.js`
 
 +21 ещё в тех же файлах

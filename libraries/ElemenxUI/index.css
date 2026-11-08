@@ -41,14 +41,6 @@
 	--elemenx-overlay-text: #ffffff;
 	--elemenx-badge-text: #ffffff;
 	--elemenx-avatar-text: #ffffff;
-	--elemenx-gamepad-face: #2a2d34;
-	--elemenx-gamepad-glyph: #ffffff;
-	--elemenx-gamepad-ring: #5b606b;
-	--elemenx-gamepad-green: #3fa34d;
-	--elemenx-gamepad-red: #d8453c;
-	--elemenx-gamepad-blue: #3d7be0;
-	--elemenx-gamepad-yellow: #e2a915;
-	--elemenx-gamepad-pink: #d873c1;
 	--elemenx-call-stage: #0f1114;
 	--elemenx-call-tile: #1b1d21;
 	--elemenx-call-text: #f2f3f5;
@@ -124,9 +116,11 @@
 	--elemenx-achievement-badge-text: #ffffff;
 	--elemenx-achievement-shine: rgba(255, 255, 255, 0.28);
 	--elemenx-achievement-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.12);
+	--elemenx-achievement-uncommon: #3fa86b;
+	--elemenx-achievement-rare: #3f73c9;
+	--elemenx-achievement-epic: #8f4fc9;
+	--elemenx-achievement-legendary: #d98a1e;
 }
-
-
 
 html, body {
 	padding: 0;
@@ -146,8 +140,6 @@ body {
 	line-height: var(--elemenx-line-height);
 	font-weight: 400;
 }
-
-
 
 body,
 [data-theme='light'],
@@ -200,117 +192,6 @@ body,
 	--elemenx-property-label: transparent;
 	--elemenx-property-value: transparent;
 	--elemenx-property-value-frame: 0;
-	--elemenx-game-title-shadow: none;
-	--elemenx-game-letter-spacing: normal;
-	--elemenx-game-text-transform: none;
-	--elemenx-game-shape: none;
-	--elemenx-game-bar-frame-image: none;
-	--elemenx-game-bar-ornament: none;
-	--elemenx-game-bar-ornament-inset: 0;
-	--elemenx-game-bar-gauge-margin: 0;
-	--elemenx-game-bar-fill-opacity: 1;
-	--elemenx-game-bar-pattern: none;
-	--elemenx-game-bar-edge: none;
-	--elemenx-game-bar-value-align: center;
-	--elemenx-game-bar-value-padding: 0;
-	--elemenx-game-bar-shadow: none;
-	--elemenx-game-bar-shine: linear-gradient(to bottom, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 60%);
-	--elemenx-game-bar-text: #ffffff;
-	--elemenx-game-bar-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.64);
-	--elemenx-game-damage-delay: 400ms;
-	--elemenx-game-damage-duration: 500ms;
-	--elemenx-game-cooldown: rgba(0, 0, 0, 0.6);
-	--elemenx-game-health: #c94a4a;
-	--elemenx-game-mana: #3f73c9;
-	--elemenx-game-experience: #c99a27;
-	--elemenx-game-stamina: #3fa86b;
-	--elemenx-game-uncommon: #3fa86b;
-	--elemenx-game-rare: #3f73c9;
-	--elemenx-game-epic: #8f4fc9;
-	--elemenx-game-legendary: #d98a1e;
-	--elemenx-game-medal-gold: #e0b53a;
-	--elemenx-game-medal-silver: #b9c2cf;
-	--elemenx-game-medal-bronze: #c27c45;
-	--elemenx-game-marker-frame: 1px solid rgba(0, 0, 0, 0.6);
-	--elemenx-game-marker-text: #101216;
-	--elemenx-game-minimap-shadow: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
-	--elemenx-game-frame-image: none;
-	--elemenx-game-blur: none;
-	--elemenx-game-decor: none;
-	--elemenx-game-decor-inset: 0px;
-	--elemenx-game-folder-line: 1px;
-	--elemenx-game-folder-end: 0;
-	--elemenx-game-active: 0 0 0 0 transparent;
-	--elemenx-game-header-inset: 0;
-	--elemenx-game-header-radius: 0;
-	--elemenx-game-header-padding: 0 4px 0 10px;
-	--elemenx-game-title-inset: 0 96px 0 10px;
-	--elemenx-game-title-align: flex-start;
-	--elemenx-game-ornament: none;
-	--elemenx-game-ornament-top: 0;
-	--elemenx-game-ornament-width: 0;
-	--elemenx-game-ornament-height: 0;
-	--elemenx-game-separator-ornament: none;
-	--elemenx-game-button-shadow: none;
-	--elemenx-game-field-shadow: none;
-	--elemenx-game-tab: transparent;
-	--elemenx-game-text-shadow: none;
-	--elemenx-game-item-tint: 0;
-	--elemenx-game-item-gloss: none;
-	--elemenx-game-item-inset: 2px;
-	--elemenx-game-item-bevel: 0 0 0 0 transparent;
-	--elemenx-game-item-icon-shadow: none;
-	--elemenx-game-item-icon-scale: 1;
-	--elemenx-game-inventory-gap: 4px;
-	--elemenx-game-menu-item-frame-image: none;
-	--elemenx-game-menu-item-shadow: 0 0 0 0 transparent;
-	--elemenx-game-menu-item-ornament: none;
-	--elemenx-game-menu-item-ornament-inset: 0;
-	--elemenx-game-menu-item-align: start;
-	--elemenx-game-menu-item-padding: 10px 16px;
-	--elemenx-game-menu-item-shift: translateX(4px);
-	--elemenx-game-menu-title-ornament: none;
-	--elemenx-game-menu-title-ornament-height: 0;
-	--elemenx-game-light-decor: none;
-	--elemenx-game-light-decor-inset: 0;
-	--elemenx-game-dialogue-portrait-frame-image: none;
-	--elemenx-game-dialogue-portrait-shadow: none;
-	--elemenx-game-dialogue-choice-frame-image: none;
-	--elemenx-game-dialogue-choice-padding: 6px 10px;
-	--elemenx-game-dialogue-next-padding: 6px 10px;
-	--elemenx-game-dialogue-next-align: flex-end;
-	--elemenx-game-dialogue-next-margin: 0;
-	--elemenx-game-body-padding: 12px;
-	--elemenx-game-body: transparent;
-	--elemenx-game-body-frame: 0;
-	--elemenx-game-body-margin: 0;
-	--elemenx-game-section-gap: 6px;
-	--elemenx-game-section-padding: 0;
-	--elemenx-game-section-frame: 0;
-	--elemenx-game-section-edge: transparent;
-	--elemenx-game-section-title-margin: 0;
-	--elemenx-game-section-title-padding: 3px 8px;
-	--elemenx-game-stats-gap: 2px 12px;
-	--elemenx-game-stats-pair-gap: 0px;
-	--elemenx-game-stats-cell-gap: 12px;
-	--elemenx-game-stat-padding: 0;
-	--elemenx-game-stat-label: transparent;
-	--elemenx-game-stat-value: transparent;
-	--elemenx-game-stat-value-frame: 0;
-	--elemenx-game-hotbar-gap: 4px;
-	--elemenx-game-hotbar-padding: 6px;
-	--elemenx-game-table-spacing: 0;
-	--elemenx-game-table-cell: transparent;
-	--elemenx-game-table-divider: 0;
-	--elemenx-game-meter-value-size: inherit;
-	--elemenx-game-scrollbar-width: thin;
-	--elemenx-game-scrollbar-track: transparent;
-	--elemenx-game-scrollbar-thumb-inset: 3px;
-	--elemenx-game-item-selected: none;
-	--elemenx-game-item-selected-inset: 0;
-	--elemenx-game-button-padding: 12px;
-	--elemenx-game-button-min-width: 0;
-	--elemenx-game-header-image: none;
 	--elemenx-syntax-comment: #8a857e;
 	--elemenx-syntax-keyword: #9c3d7a;
 	--elemenx-syntax-string: #2f7d4f;
@@ -464,89 +345,8 @@ body,
 	--elemenx-block-title-text: var(--elemenx-text);
 	--elemenx-property-label-text: var(--elemenx-text-muted);
 	--elemenx-property-value-text: var(--elemenx-text);
-	--elemenx-game-font: var(--elemenx-font);
-	--elemenx-game-title-font: var(--elemenx-font);
-	--elemenx-game-text: var(--elemenx-text);
-	--elemenx-game-muted: var(--elemenx-text-muted);
-	--elemenx-game-accent: var(--elemenx-accent);
-	--elemenx-game-panel: var(--elemenx-surface);
-	--elemenx-game-frame: 1px solid var(--elemenx-border-strong);
-	--elemenx-game-panel-shadow: var(--elemenx-shadow);
-	--elemenx-game-radius: var(--elemenx-radius-large);
-	--elemenx-game-glow: 0 0 0 2px var(--elemenx-focus);
-	--elemenx-game-cell: var(--elemenx-surface-raised);
-	--elemenx-game-cell-frame: 1px solid var(--elemenx-border);
-	--elemenx-game-cell-radius: var(--elemenx-radius);
-	--elemenx-game-bar-track: rgba(var(--elemenx-text-rgb), 0.12);
-	--elemenx-game-bar-frame: 1px solid var(--elemenx-border);
-	--elemenx-game-bar-radius: var(--elemenx-radius-pill);
-	--elemenx-game-bar-damage: var(--elemenx-warning);
-	--elemenx-game-common: var(--elemenx-text-muted);
-	--elemenx-game-folder-slant: var(--elemenx-block-tab-slant);
 	--elemenx-block-tab-edge: var(--elemenx-border);
-	--elemenx-game-folder-edge: var(--elemenx-border-strong);
-	--elemenx-game-appear: elemenx-window-appear var(--elemenx-duration-slow) var(--elemenx-easing);
-	--elemenx-game-header: var(--elemenx-surface-raised);
-	--elemenx-game-header-line: 1px solid var(--elemenx-border);
-	--elemenx-game-title: var(--elemenx-game-text);
-	--elemenx-game-good: var(--elemenx-success);
-	--elemenx-game-bad: var(--elemenx-danger);
-	--elemenx-game-special: var(--elemenx-warning);
-	--elemenx-game-section: var(--elemenx-surface-raised);
-	--elemenx-game-section-title: var(--elemenx-game-accent);
-	--elemenx-game-separator: linear-gradient(to right, transparent, var(--elemenx-border-strong), transparent);
-	--elemenx-game-button: linear-gradient(var(--elemenx-surface-raised), var(--elemenx-surface-raised));
-	--elemenx-game-button-edge: linear-gradient(var(--elemenx-border-strong), var(--elemenx-border-strong));
-	--elemenx-game-button-radius: var(--elemenx-radius);
-	--elemenx-game-button-hover: linear-gradient(var(--elemenx-surface-hover), var(--elemenx-surface-hover));
-	--elemenx-game-button-text: var(--elemenx-game-text);
-	--elemenx-game-field: var(--elemenx-surface);
-	--elemenx-game-field-frame: 1px solid var(--elemenx-border-strong);
-	--elemenx-game-scrollbar: var(--elemenx-scrollbar);
-	--elemenx-game-tab-active: var(--elemenx-game-cell);
-	--elemenx-game-tab-marker: var(--elemenx-game-accent);
-	--elemenx-game-item-icon: var(--elemenx-game-text);
-	--elemenx-game-menu-item: var(--elemenx-game-cell);
-	--elemenx-game-menu-item-hover: var(--elemenx-game-cell);
-	--elemenx-game-menu-item-hover-text: var(--elemenx-game-text);
-	--elemenx-game-menu-item-frame: var(--elemenx-game-cell-frame);
-	--elemenx-game-light-panel: var(--elemenx-game-panel);
-	--elemenx-game-light-frame: var(--elemenx-game-frame);
-	--elemenx-game-light-frame-image: var(--elemenx-game-frame-image);
-	--elemenx-game-light-radius: var(--elemenx-game-radius);
-	--elemenx-game-light-shadow: var(--elemenx-game-panel-shadow);
-	--elemenx-game-dialogue-portrait-frame: var(--elemenx-game-cell-frame);
-	--elemenx-game-dialogue-portrait-radius: var(--elemenx-game-cell-radius);
-	--elemenx-game-dialogue-choice: var(--elemenx-game-cell);
-	--elemenx-game-dialogue-choice-hover: var(--elemenx-game-cell);
-	--elemenx-game-dialogue-choice-hover-text: var(--elemenx-game-text);
-	--elemenx-game-dialogue-choice-frame: var(--elemenx-game-cell-frame);
-	--elemenx-game-heading: var(--elemenx-game-title);
-	--elemenx-game-heading-line: 1px solid var(--elemenx-border);
-	--elemenx-game-stat-label-text: var(--elemenx-game-muted);
-	--elemenx-game-table-frame: 1px solid var(--elemenx-border);
-	--elemenx-game-table-head: var(--elemenx-surface-raised);
-	--elemenx-game-table-head-text: var(--elemenx-text-muted);
-	--elemenx-game-table-line: 1px solid var(--elemenx-border);
-	--elemenx-game-table-stripe: var(--elemenx-surface-raised);
-	--elemenx-game-table-hover: rgba(var(--elemenx-surface-hover-rgb), 0.64);
-	--elemenx-game-table-selected: linear-gradient(rgba(var(--elemenx-accent-rgb), 0.12), rgba(var(--elemenx-accent-rgb), 0.12)), var(--elemenx-surface);
-	--elemenx-game-table-selected-text: var(--elemenx-game-text);
-	--elemenx-game-meter-track: var(--elemenx-border);
-	--elemenx-game-meter-radius: var(--elemenx-radius-pill);
-	--elemenx-game-meter-ring: var(--elemenx-border);
-	--elemenx-game-meter-needle: var(--elemenx-game-text);
-	--elemenx-game-meter-value-weight: var(--elemenx-font-weight-strong);
-	--elemenx-game-meter-readout: var(--elemenx-game-text);
-	--elemenx-game-meter-readout-text: var(--elemenx-surface);
-	--elemenx-game-scrollbar-color: var(--elemenx-game-scrollbar) transparent;
-	--elemenx-game-scrollbar-thumb: var(--elemenx-game-scrollbar);
-	--elemenx-game-scrollbar-radius: var(--elemenx-radius-pill);
-	--elemenx-game-item-active: var(--elemenx-game-glow);
-	--elemenx-game-item-active-fill: var(--elemenx-game-cell);
 }
-
-
 
 * {
 	box-sizing: border-box;
@@ -599,8 +399,6 @@ body {
 ::-webkit-scrollbar-thumb:active {
 	background: var(--elemenx-scrollbar-active);
 }
-
-
 
 h1, h2, h3 {
 	margin: 0;
@@ -715,8 +513,6 @@ h3 {
 	flex: none !important;
 }
 
-
-
 h4 {
 	font-size: var(--elemenx-font-size-large);
 	line-height: var(--elemenx-line-height);
@@ -745,8 +541,6 @@ a {
 ::selection {
 	background: rgba(var(--elemenx-accent-rgb), 0.24);
 }
-
-
 
 .elemenx-title {
 	margin: 0;
@@ -1134,433 +928,6 @@ span.elemenx-rich-plugin {
 	background: rgba(var(--elemenx-background-rgb), 0.7);
 }
 
-/* The panel of a game: its background, frame and shape come from the --elemenx-game-* tokens of the theme. */
-.elemenx-game-panel {
-	position: relative;
-	isolation: isolate;
-	color: var(--elemenx-game-text);
-	font-family: var(--elemenx-game-font);
-}
-
-.elemenx-game-panel::before {
-	position: absolute;
-	inset: 0;
-	z-index: -1;
-	background: var(--elemenx-game-panel);
-	border: var(--elemenx-game-frame);
-	border-image: var(--elemenx-game-frame-image);
-	border-radius: var(--elemenx-game-radius);
-	box-shadow: var(--elemenx-game-panel-shadow);
-	backdrop-filter: var(--elemenx-game-blur);
-	clip-path: var(--elemenx-game-shape);
-	content: '';
-}
-
-/* The decor of the theme over the frame and under the content: corners, crests, marks, lines of light. */
-.elemenx-game-panel::after {
-	position: absolute;
-	inset: var(--elemenx-game-decor-inset);
-	z-index: -1;
-	background: var(--elemenx-game-decor);
-	content: '';
-	pointer-events: none;
-}
-
-/* A light panel, for the small panels of a HUD: a thin frame and small figures (the --elemenx-game-light-* tokens). */
-.elemenx-game-panel.light::before {
-	background: var(--elemenx-game-light-panel);
-	border: var(--elemenx-game-light-frame);
-	border-image: var(--elemenx-game-light-frame-image);
-	border-radius: var(--elemenx-game-light-radius);
-	box-shadow: var(--elemenx-game-light-shadow);
-}
-
-.elemenx-game-panel.light::after {
-	inset: var(--elemenx-game-light-decor-inset);
-	background: var(--elemenx-game-light-decor);
-}
-
-.elemenx-game-panel,
-.elemenx-window.game {
-	scrollbar-color: var(--elemenx-game-scrollbar) transparent;
-	text-shadow: var(--elemenx-game-text-shadow);
-}
-
-/* A section of a game window: its title on a band. */
-.elemenx-game-section {
-	display: flex;
-	flex-direction: column;
-	gap: var(--elemenx-game-section-gap);
-	padding: var(--elemenx-game-section-padding);
-	border: var(--elemenx-game-section-frame);
-}
-
-/* The title of a section: a band, that a theme may set into the frame of its section (a negative margin). */
-.elemenx-game-section-title {
-	margin: var(--elemenx-game-section-title-margin);
-	padding: var(--elemenx-game-section-title-padding);
-	background: var(--elemenx-game-section);
-	color: var(--elemenx-game-section-title);
-	font-family: var(--elemenx-game-title-font);
-	font-size: var(--elemenx-font-size);
-	font-weight: var(--elemenx-font-weight-strong);
-	letter-spacing: var(--elemenx-game-letter-spacing);
-	text-transform: var(--elemenx-game-text-transform);
-}
-
-/* A line between the parts of a game window, with the ornament of the theme in its middle. */
-.elemenx-game-separator {
-	height: 12px;
-	margin: 6px 0;
-	background: var(--elemenx-game-separator-ornament) center / auto 12px no-repeat, var(--elemenx-game-separator) center / 100% 1px no-repeat;
-	border: 0;
-}
-
-/* Names and values: a dl of dt and dd, in one column or two (double). */
-.elemenx-game-stats {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto;
-	gap: var(--elemenx-game-stats-gap);
-	margin: 0;
-}
-
-.elemenx-game-stats.double {
-	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
-}
-
-/* A pair of a stat: its name and its value, each in a cell of the theme. */
-.elemenx-game-stats > dt {
-	padding: var(--elemenx-game-stat-padding);
-	background: var(--elemenx-game-stat-label);
-	color: var(--elemenx-game-stat-label-text);
-}
-
-.elemenx-game-stats > dd {
-	margin: 0;
-	padding: var(--elemenx-game-stat-padding);
-	background: var(--elemenx-game-stat-value);
-	border: var(--elemenx-game-stat-value-frame);
-	font-variant-numeric: tabular-nums;
-	text-align: end;
-}
-
-/* The second pair of a row of a double list keeps away from the first. */
-.elemenx-game-stats.double > dt:nth-of-type(2n) {
-	margin-inline-start: var(--elemenx-game-stats-pair-gap);
-}
-
-/*
- * The card of an item of a game (GameItemCard, *itemcard): its name in the color of its rarity, its type, stats and
- * description. *itemcard opens it as a popover: the defaults of the browser for one are taken back.
- */
-.elemenx-game-inventory-card {
-	position: fixed;
-	z-index: 1000;
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	width: 240px;
-	color: var(--elemenx-game-text);
-	font-family: var(--elemenx-game-font);
-	font-size: var(--elemenx-font-size);
-	line-height: var(--elemenx-line-height);
-	text-align: start;
-	white-space: normal;
-	padding: 10px 12px;
-	pointer-events: none;
-}
-
-.elemenx-game-inventory-name {
-	display: block;
-	font-family: var(--elemenx-game-title-font);
-	font-size: var(--elemenx-font-size-large);
-	letter-spacing: var(--elemenx-game-letter-spacing);
-}
-
-.elemenx-game-inventory-card.common .elemenx-game-inventory-name {
-	color: var(--elemenx-game-common);
-}
-
-.elemenx-game-inventory-card.uncommon .elemenx-game-inventory-name {
-	color: var(--elemenx-game-uncommon);
-}
-
-.elemenx-game-inventory-card.rare .elemenx-game-inventory-name {
-	color: var(--elemenx-game-rare);
-}
-
-.elemenx-game-inventory-card.epic .elemenx-game-inventory-name {
-	color: var(--elemenx-game-epic);
-}
-
-.elemenx-game-inventory-card.legendary .elemenx-game-inventory-name {
-	color: var(--elemenx-game-legendary);
-}
-
-.elemenx-game-inventory-type {
-	display: block;
-	color: var(--elemenx-game-muted);
-	font-size: var(--elemenx-font-size-small);
-}
-
-.elemenx-game-inventory-stats {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-	margin: 4px 0 0;
-}
-
-.elemenx-game-inventory-stat {
-	display: flex;
-	justify-content: space-between;
-	gap: 8px;
-}
-
-.elemenx-game-inventory-stat-label {
-	color: var(--elemenx-game-muted);
-}
-
-.elemenx-game-inventory-stat-value {
-	font-weight: var(--elemenx-font-weight-strong);
-}
-
-.elemenx-game-inventory-description {
-	display: block;
-	margin: 4px 0 0;
-	color: var(--elemenx-game-muted);
-	font-size: var(--elemenx-font-size-small);
-	font-style: italic;
-}
-
-.elemenx-game-inventory-card[popover] {
-	overflow: visible;
-	background: transparent;
-	border: 0;
-}
-
-.elemenx-game-good {
-	color: var(--elemenx-game-good);
-}
-
-.elemenx-game-bad {
-	color: var(--elemenx-game-bad);
-}
-
-.elemenx-game-special {
-	color: var(--elemenx-game-special);
-}
-
-/* The buttons and the fields inside a game panel or window take the look of the game theme. */
-.elemenx-game-panel .elemenx-button:not(.ghost):not(.link),
-.elemenx-window.game .elemenx-button:not(.ghost):not(.link) {
-	background: var(--elemenx-game-button) padding-box, var(--elemenx-game-button-edge) border-box;
-	border: 1px solid transparent;
-	border-radius: var(--elemenx-game-button-radius);
-	box-shadow: var(--elemenx-game-button-shadow);
-	color: var(--elemenx-game-button-text);
-}
-
-.elemenx-game-panel .elemenx-button:not(.ghost):not(.link):not(.icon-only),
-.elemenx-window.game .elemenx-button:not(.ghost):not(.link):not(.icon-only) {
-	min-width: var(--elemenx-game-button-min-width);
-	padding-inline: var(--elemenx-game-button-padding);
-}
-
-.elemenx-game-panel .elemenx-button:not(.ghost):not(.link):hover,
-.elemenx-window.game .elemenx-button:not(.ghost):not(.link):hover {
-	background: var(--elemenx-game-button-hover) padding-box, var(--elemenx-game-button-edge) border-box;
-}
-
-.elemenx-game-panel .elemenx-input,
-.elemenx-window.game .elemenx-input {
-	background: var(--elemenx-game-field);
-	border: var(--elemenx-game-field-frame);
-	box-shadow: var(--elemenx-game-field-shadow);
-	color: var(--elemenx-game-text);
-}
-
-/* The tables inside a game panel or window: their header, lines, stripes, columns and selected rows by the theme. */
-.elemenx-game-panel .elemenx-table,
-.elemenx-window.game .elemenx-table {
-	border-spacing: var(--elemenx-game-table-spacing);
-	color: var(--elemenx-game-text);
-}
-
-.elemenx-game-panel .elemenx-table-wrap.scrolling,
-.elemenx-window.game .elemenx-table-wrap.scrolling {
-	border: var(--elemenx-game-table-frame);
-}
-
-.elemenx-game-panel .elemenx-table td,
-.elemenx-window.game .elemenx-table td {
-	background: var(--elemenx-game-table-cell);
-}
-
-.elemenx-game-panel .elemenx-table th,
-.elemenx-game-panel .elemenx-table td,
-.elemenx-window.game .elemenx-table th,
-.elemenx-window.game .elemenx-table td {
-	border-bottom: var(--elemenx-game-table-line);
-}
-
-.elemenx-game-panel .elemenx-table th,
-.elemenx-window.game .elemenx-table th {
-	background: var(--elemenx-game-table-head);
-	color: var(--elemenx-game-table-head-text);
-	letter-spacing: var(--elemenx-game-letter-spacing);
-	text-transform: var(--elemenx-game-text-transform);
-}
-
-.elemenx-game-panel .elemenx-table td + td,
-.elemenx-window.game .elemenx-table td + td {
-	border-inline-start: var(--elemenx-game-table-divider);
-}
-
-.elemenx-game-panel .elemenx-table.striped tbody tr:where(:nth-child(even)) td,
-.elemenx-window.game .elemenx-table.striped tbody tr:where(:nth-child(even)) td {
-	background: var(--elemenx-game-table-stripe);
-}
-
-.elemenx-game-panel .elemenx-table tbody tr:hover td,
-.elemenx-window.game .elemenx-table tbody tr:hover td {
-	background: var(--elemenx-game-table-hover);
-}
-
-.elemenx-game-panel .elemenx-table tbody tr.selected td,
-.elemenx-game-panel .elemenx-table tbody tr.selected:hover td,
-.elemenx-window.game .elemenx-table tbody tr.selected td,
-.elemenx-window.game .elemenx-table tbody tr.selected:hover td {
-	background: var(--elemenx-game-table-selected);
-	color: var(--elemenx-game-table-selected-text);
-}
-
-/* The meters inside a game panel or window: their track, ring, needle and value by the theme. */
-.elemenx-game-panel .elemenx-meter-track,
-.elemenx-window.game .elemenx-meter-track {
-	background: var(--elemenx-game-meter-track);
-	border-radius: var(--elemenx-game-meter-radius);
-}
-
-.elemenx-game-panel .elemenx-meter-fill,
-.elemenx-window.game .elemenx-meter-fill {
-	border-radius: var(--elemenx-game-meter-radius);
-}
-
-.elemenx-game-panel .elemenx-meter-ring,
-.elemenx-window.game .elemenx-meter-ring {
-	stroke: var(--elemenx-game-meter-ring);
-}
-
-.elemenx-game-panel .elemenx-meter-needle,
-.elemenx-game-panel .elemenx-meter-face .elemenx-meter-mark,
-.elemenx-window.game .elemenx-meter-needle,
-.elemenx-window.game .elemenx-meter-face .elemenx-meter-mark {
-	stroke: var(--elemenx-game-meter-needle);
-}
-
-.elemenx-game-panel .elemenx-meter-value,
-.elemenx-window.game .elemenx-meter-value {
-	font-size: var(--elemenx-game-meter-value-size);
-	font-weight: var(--elemenx-game-meter-value-weight);
-}
-
-.elemenx-game-panel .elemenx-meter-readout,
-.elemenx-window.game .elemenx-meter-readout {
-	background: var(--elemenx-game-meter-readout);
-	color: var(--elemenx-game-meter-readout-text);
-}
-
-.elemenx-game-panel .elemenx-meter-min,
-.elemenx-game-panel .elemenx-meter-max,
-.elemenx-window.game .elemenx-meter-min,
-.elemenx-window.game .elemenx-meter-max {
-	color: var(--elemenx-game-muted);
-}
-
-/*
- * The scrollbars inside a game panel or window: a track and a thumb of the theme where the browser draws them. :where
- * keeps the rule as weak as the one for every element, so a Component that hides its scrollbar (the tabs) keeps it hidden.
- */
-:where(.elemenx-game-panel, .elemenx-window.game) * {
-	scrollbar-width: var(--elemenx-game-scrollbar-width);
-	scrollbar-color: var(--elemenx-game-scrollbar-color);
-}
-
-.elemenx-game-panel ::-webkit-scrollbar-track,
-.elemenx-window.game ::-webkit-scrollbar-track {
-	background: var(--elemenx-game-scrollbar-track);
-	border: 0;
-	backdrop-filter: none;
-}
-
-.elemenx-game-panel ::-webkit-scrollbar-thumb,
-.elemenx-window.game ::-webkit-scrollbar-thumb {
-	background: var(--elemenx-game-scrollbar-thumb) padding-box;
-	border: var(--elemenx-game-scrollbar-thumb-inset) solid transparent;
-	border-radius: var(--elemenx-game-scrollbar-radius);
-}
-
-/* A Block inside a game panel or window takes the look of a section of the game theme. */
-:where(.elemenx-game-panel, .elemenx-window.game) .elemenx-block.framed {
-	--elemenx-block-padding: 10px;
-	--elemenx-block-background: transparent;
-	--elemenx-block-frame: var(--elemenx-game-section-frame);
-	--elemenx-block-tab-edge: var(--elemenx-game-section-edge);
-	--elemenx-block-radius: 0;
-	--elemenx-block-gap: var(--elemenx-game-section-gap);
-	--elemenx-block-title-band: var(--elemenx-game-section);
-	--elemenx-block-title-text: var(--elemenx-game-section-title);
-	--elemenx-block-title-spacing: var(--elemenx-game-letter-spacing);
-	--elemenx-block-title-transform: var(--elemenx-game-text-transform);
-	font-family: var(--elemenx-game-font);
-}
-
-/* Properties inside a game panel or window take the look of the stats of the game theme, their tones its colors. */
-:where(.elemenx-game-panel, .elemenx-window.game) .elemenx-properties {
-	--elemenx-properties-gap: var(--elemenx-game-stats-gap);
-	--elemenx-properties-pair-gap: max(var(--elemenx-game-stats-pair-gap), 12px);
-	--elemenx-property-gap: var(--elemenx-game-stats-cell-gap);
-	--elemenx-property-padding: var(--elemenx-game-stat-padding);
-	--elemenx-property-label: var(--elemenx-game-stat-label);
-	--elemenx-property-label-text: var(--elemenx-game-stat-label-text);
-	--elemenx-property-value: var(--elemenx-game-stat-value);
-	--elemenx-property-value-frame: var(--elemenx-game-stat-value-frame);
-	--elemenx-property-value-text: var(--elemenx-game-text);
-}
-
-:where(.elemenx-game-panel, .elemenx-window.game) .elemenx-property.success .elemenx-property-value {
-	color: var(--elemenx-game-good);
-}
-
-:where(.elemenx-game-panel, .elemenx-window.game) .elemenx-property.danger .elemenx-property-value {
-	color: var(--elemenx-game-bad);
-}
-
-:where(.elemenx-game-panel, .elemenx-window.game) .elemenx-property.warning .elemenx-property-value,
-:where(.elemenx-game-panel, .elemenx-window.game) .elemenx-property.accent .elemenx-property-value {
-	color: var(--elemenx-game-special);
-}
-
-/* A Section inside a game panel or window: its heading in the colors and the letters of the game theme. */
-.elemenx-game-panel .elemenx-section-header,
-.elemenx-window.game .elemenx-section-header {
-	border-bottom: var(--elemenx-game-heading-line);
-}
-
-.elemenx-game-panel .elemenx-section-title,
-.elemenx-window.game .elemenx-section-title {
-	color: var(--elemenx-game-heading);
-	font-family: var(--elemenx-game-title-font);
-	letter-spacing: var(--elemenx-game-letter-spacing);
-	text-transform: var(--elemenx-game-text-transform);
-}
-
-.elemenx-game-hotbar {
-	display: flex;
-	gap: var(--elemenx-game-hotbar-gap);
-	padding: var(--elemenx-game-hotbar-padding);
-}
-
 .elemenx-syntax-attribute {
 	color: var(--elemenx-syntax-attribute);
 }
@@ -1624,8 +991,6 @@ span.elemenx-rich-plugin {
 	line-height: var(--elemenx-line-height-small);
 	text-align: center;
 }
-
-
 
 .elemenx-panel {
 	padding: 16px;
@@ -1961,8 +1326,6 @@ span.elemenx-rich-plugin {
 	transform: translateY(-4px) rotate(-45deg);
 }
 
-
-
 /* The layer of a modal dialog (*modal) under it, over the page: it takes the presses outside the dialog. */
 /* Picture-in-Picture (the PictureInPicture Service): the frame left in the page, and the body of the window. */
 .elemenx-pip-placeholder {
@@ -2148,8 +1511,6 @@ span.elemenx-rich-plugin {
 	height: 16px;
 }
 
-
-
 /* *blur: a surface of frosted glass, what is behind it blurred and seen through its tint (the tokens --elemenx-blur-*). */
 .elemenx-blur {
 	background: rgba(var(--elemenx-surface-rgb), var(--elemenx-blur-tint));
@@ -2183,8 +1544,6 @@ span.elemenx-rich-plugin {
 	white-space: nowrap;
 	border: 0;
 }
-
-
 
 .elemenx-input {
 	display: flex;
@@ -2294,8 +1653,6 @@ span.elemenx-rich-plugin {
 	outline: 2px solid var(--elemenx-focus);
 }
 
-
-
 .elemenx-input.small {
 	gap: 4px;
 	height: var(--elemenx-control-small);
@@ -2334,7 +1691,6 @@ span.elemenx-rich-plugin {
 	width: 24px;
 	height: 24px;
 }
-
 
 .elemenx-select {
 	position: relative;
@@ -2427,8 +1783,6 @@ span.elemenx-rich-plugin {
 	flex-direction: column;
 	min-width: 0;
 }
-
-
 
 .elemenx-check {
 	position: relative;
@@ -2530,8 +1884,6 @@ span.elemenx-rich-plugin {
 	height: 8px;
 }
 
-
-
 .elemenx-check.chip {
 	align-items: center;
 	height: var(--elemenx-control);
@@ -2573,8 +1925,6 @@ span.elemenx-rich-plugin {
 	padding: 0 8px;
 }
 
-
-
 .elemenx-check.tile {
 	display: flex;
 	padding: 12px;
@@ -2600,8 +1950,6 @@ span.elemenx-rich-plugin {
 	outline: 2px solid var(--elemenx-focus);
 	outline-offset: 2px;
 }
-
-
 
 .elemenx-radio .elemenx-check-box {
 	border-radius: 50%;
@@ -2690,7 +2038,6 @@ span.elemenx-rich-plugin {
 	margin-top: 0;
 }
 
-
 .elemenx-input.round {
 	padding-inline-end: 12px;
 	padding-inline-start: 12px;
@@ -2730,7 +2077,6 @@ span.elemenx-rich-plugin {
 .elemenx-input.round .elemenx-phone-country {
 	padding-inline-start: 12px;
 }
-
 
 :where(.elemenx-resizable) {
 	position: relative;
@@ -2831,7 +2177,6 @@ span.elemenx-rich-plugin {
 	border-color: var(--elemenx-accent);
 }
 
-
 .elemenx-table {
 	width: 100%;
 	border-collapse: separate;
@@ -2924,14 +2269,10 @@ span.elemenx-rich-plugin {
 	z-index: 1;
 }
 
-
-
 .elemenx-file-icon {
 	display: inline-flex;
 	flex: none;
 }
-
-
 
 @keyframes elemenx-spin {
 	to {
@@ -3050,7 +2391,6 @@ span.elemenx-rich-plugin {
 	}
 }
 
-
 /* *tip: a tip of the theme over an element; rich, a bold title over its text, as the ScreenTips of Office. */
 .elemenx-tip {
 	position: fixed;
@@ -3095,7 +2435,6 @@ span.elemenx-rich-plugin {
 .elemenx-tip.rich .elemenx-tip-text {
 	color: var(--elemenx-text-muted);
 }
-
 
 .elemenx-draggable {
 	touch-action: none;
@@ -3158,8 +2497,6 @@ span.elemenx-rich-plugin {
 	outline: 2px solid var(--elemenx-accent);
 	outline-offset: 2px;
 }
-
-
 
 /* A layout area shows only while its slot renders an element: an empty slot, or one whose *if is false, hides it. */
 .elemenx-layout-area:not(:has(> span:not(.elemenx-resize-handle) > *)) {
@@ -3455,8 +2792,6 @@ span.elemenx-rich-plugin {
 		aspect-ratio: 16 / 9;
 	}
 }
-
-
 
 /* Pickers: the search, the tabs and the empty state of EmojiPicker and StickerPicker. */
 .elemenx-picker-head {
@@ -3760,8 +3095,7 @@ span.elemenx-rich-plugin {
 	.elemenx-gallery-dot,
 	.elemenx-product-dot,
 	.elemenx-chat-views,
-	.elemenx-comment-token,
-	.elemenx-game-minimap-zoom .elemenx-button {
+	.elemenx-comment-token {
 		position: relative;
 	}
 
@@ -3774,7 +3108,6 @@ span.elemenx-rich-plugin {
 	.elemenx-product-dot::after,
 	.elemenx-chat-views::after,
 	.elemenx-comment-token::after,
-	.elemenx-game-minimap-zoom .elemenx-button::after,
 	.elemenx-slider-thumb::after {
 		position: absolute;
 		inset: min(0px, calc((100% - 40px) / 2));

@@ -59,3 +59,7 @@ Fire(id, {At, Way, Weapon, Spread, From}) стреляет оружием объ
 - `Fire(id, options)`
 - `Locked()`
 - `Killed(id)`
+
+## Тесты
+
+- [breaks a thing by the pieces of its model (Pattern parts), and a shot of SceneWeapons hurts it by itself](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/traits/SceneFracture/SceneFracture.test.js#L199) — `libraries/ElemenxGraphics/traits/SceneFracture/SceneFracture.test.js`

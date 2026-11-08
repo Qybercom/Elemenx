@@ -2082,1019 +2082,6 @@
 			}
 		},
 		{
-			"Name": "GameHud",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "trophy",
-			"Description": "The frame of a game screen: the scene (the default slot: a canvas, a picture) and the HUD over it, in nine areas named by slots: top-start, top, top-end, start, center, end, bottom-start, bottom, bottom-end.",
-			"Props": [
-				{
-					"Name": "Padding",
-					"Type": "number",
-					"Default": 16,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The distance of the areas from the edges, in pixels."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the screen for screen readers."
-				}
-			],
-			"Slots": [
-				"top-start",
-				"top",
-				"top-end",
-				"start",
-				"center",
-				"end",
-				"bottom-start",
-				"bottom",
-				"bottom-end"
-			],
-			"Container": true,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {
-				"Label": "An example game"
-			}
-		},
-		{
-			"Name": "GameBar",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "trophy",
-			"Description": "A bar of a game: health, mana, experience, stamina or any other amount.",
-			"Props": [
-				{
-					"Name": "Value",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The amount."
-				},
-				{
-					"Name": "Max",
-					"Type": "number",
-					"Default": 100,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The most it holds."
-				},
-				{
-					"Name": "Kind",
-					"Type": "text",
-					"Default": "health",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "health, mana, experience, stamina or a name of its own (its color: --elemenx-game-<Kind>)."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name shown with the bar."
-				},
-				{
-					"Name": "ShowValue",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Shows the value on the bar."
-				},
-				{
-					"Name": "Segments",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Draws the bar in so many parts (0: one)."
-				},
-				{
-					"Name": "Size",
-					"Type": "select",
-					"Default": "medium",
-					"Options": [
-						"small",
-						"medium",
-						"large"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "small, medium or large."
-				},
-				{
-					"Name": "Color",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A color of its own."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {
-				"Label": "Health"
-			}
-		},
-		{
-			"Name": "GameItemCard",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "trophy",
-			"Description": "The card of an item of a game: its Name in the color of its Rarity, its Rarity and Type, its Stats [{Label, Value}] and its Description, on the panel of the theme.",
-			"Props": [
-				{
-					"Name": "Item",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The item: {Name, Rarity, Type, Stats, Description}."
-				},
-				{
-					"Name": "Place",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The style that places the card (fixed beside an element: GameItems.Place)."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {
-				"Item": {
-					"Name": "Sword of dawn",
-					"Rarity": "rare",
-					"Type": "Weapon",
-					"Stats": [
-						{
-							"Label": "Attack",
-							"Value": 42
-						}
-					],
-					"Description": "Forged at first light."
-				},
-				"Place": "position: static;"
-			}
-		},
-		{
-			"Name": "GameSlot",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "trophy",
-			"Description": "A slot of an action bar (hotbar): a button with an Icon or an Image, a Label for the hint and screen readers, Count and Rarity (common, uncommon, rare, epic, legendary).",
-			"Props": [
-				{
-					"Name": "Icon",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The icon of the action."
-				},
-				{
-					"Name": "Image",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A picture in place of the icon."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The hint, and the name for screen readers."
-				},
-				{
-					"Name": "Key",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The shortcut that presses it (1, Q)."
-				},
-				{
-					"Name": "Count",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A count in the corner (0 hides it)."
-				},
-				{
-					"Name": "Rarity",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "common, uncommon, rare, epic or legendary: its frame and its tint."
-				},
-				{
-					"Name": "Cooldown",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The time it cools down after use, in milliseconds."
-				},
-				{
-					"Name": "Active",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Marks a toggled action."
-				},
-				{
-					"Name": "Disabled",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Turns it off: it takes no input and looks so."
-				},
-				{
-					"Name": "Size",
-					"Type": "select",
-					"Default": "medium",
-					"Options": [
-						"small",
-						"medium",
-						"large"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "small, medium or large."
-				},
-				{
-					"Name": "Color",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The tint of the glass under its icon."
-				},
-				{
-					"Name": "Accept",
-					"Type": "json",
-					"Default": [
-						"game-item"
-					],
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The types of drags it takes (['game-item']; [] takes nothing)."
-				},
-				{
-					"Name": "Draggable",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Lets its content be dragged."
-				},
-				{
-					"Name": "Data",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "What the slot holds: an item or a skill."
-				},
-				{
-					"Name": "Group",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the bar in the places of a drag."
-				},
-				{
-					"Name": "Badge",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A mark in a corner (+5)."
-				},
-				{
-					"Name": "Classes",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "More classes, for a look of its own."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [
-				"use",
-				"ready",
-				"drop"
-			],
-			"EventDescriptions": {
-				"use": "Pressed (or its key) while ready: {Label, Key}.",
-				"ready": "Its cooldown ended: {Label, Key}.",
-				"drop": "An item was dropped on it: {Item, From, To, Current, Type}."
-			},
-			"Methods": [
-				"Cool(milliseconds)"
-			],
-			"Sample": {
-				"Icon": "fire",
-				"Label": "Fireball",
-				"Key": "1",
-				"Cooldown": 3000,
-				"Color": "#b8402a"
-			}
-		},
-		{
-			"Name": "GameInventory",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "trophy",
-			"Description": "An inventory: a grid of Slots cells (Items.length by default) in Columns columns.",
-			"Props": [
-				{
-					"Name": "Items",
-					"Type": "json",
-					"Default": [],
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The items by cell (null for an empty one): {ID, Name, Icon or Image, Count, Stack, Rarity...}."
-				},
-				{
-					"Name": "Slots",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "How many cells (the count of Items by default)."
-				},
-				{
-					"Name": "Columns",
-					"Type": "number",
-					"Default": 6,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "How many cells in a row."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the grid for screen readers."
-				},
-				{
-					"Name": "Name",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the inventory in the places of a drag."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [
-				"select",
-				"use",
-				"move",
-				"discard",
-				"receive",
-				"give"
-			],
-			"EventDescriptions": {
-				"select": "Another cell was selected: {Index, Item}.",
-				"use": "An item was used (Enter or a double press): {Index, Item}.",
-				"move": "An item moved to another cell: {From, To, Items}, the cells after the move.",
-				"discard": "An item was discarded (Delete): {Index, Item}.",
-				"receive": "An item came from another inventory or slot: {Item, From, To, Current}.",
-				"give": "An item was dropped on another place: {Index, Item, From, Target}."
-			},
-			"Methods": [
-				"Move(from, to)"
-			],
-			"Sample": {
-				"Slots": 12,
-				"Columns": 4,
-				"Label": "Bag",
-				"Name": "bag"
-			}
-		},
-		{
-			"Name": "GameDialogue",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "trophy",
-			"Description": "The line of a character in a dialogue: Speaker, Portrait (an image URL) and Text, typed out at Speed characters a second (0 shows it at once).",
-			"Props": [
-				{
-					"Name": "Speaker",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the one who speaks."
-				},
-				{
-					"Name": "Portrait",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The URL of the portrait."
-				},
-				{
-					"Name": "Text",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The line, typed out."
-				},
-				{
-					"Name": "Choices",
-					"Type": "json",
-					"Default": [],
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The answers: [{ID, Text, Disabled}]."
-				},
-				{
-					"Name": "Speed",
-					"Type": "number",
-					"Default": 40,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Characters a second (0 shows the line at once)."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [
-				"next",
-				"choose"
-			],
-			"EventDescriptions": {
-				"next": "The line without choices was read on (its continue button).",
-				"choose": "A choice was made: {ID, Choice}."
-			},
-			"Methods": [],
-			"Sample": {
-				"Speed": 60
-			}
-		},
-		{
-			"Name": "GameMenu",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "trophy",
-			"Description": "A menu of a game: the main menu, a pause menu, a list of saves.",
-			"Props": [
-				{
-					"Name": "Title",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The title above the items."
-				},
-				{
-					"Name": "Subtitle",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A line under the title."
-				},
-				{
-					"Name": "Items",
-					"Type": "json",
-					"Default": [],
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The items: [{ID, Label, Hint, Icon, Disabled}]."
-				},
-				{
-					"Name": "AutoFocus",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Puts the focus on the first item when it shows."
-				}
-			],
-			"Slots": [],
-			"Container": true,
-			"Children": [],
-			"Current": "",
-			"Events": [
-				"select",
-				"back"
-			],
-			"EventDescriptions": {
-				"select": "An item was chosen: {ID, Item}.",
-				"back": "Escape was pressed: go back."
-			},
-			"Methods": [],
-			"Sample": {
-				"Title": "Paused",
-				"Subtitle": "Chapter II · The northern road"
-			}
-		},
-		{
-			"Name": "GameKey",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "trophy",
-			"Description": "The prompt of a control: \"[A] Continue\".",
-			"Props": [
-				{
-					"Name": "Button",
-					"Type": "text",
-					"Default": "a",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The button of the gamepad: a, b, x, y, lb, rb, lt, rt, select, start..."
-				},
-				{
-					"Name": "Keyboard",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The key of the keyboard shown without a gamepad: Enter, E, Escape."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The text after the button."
-				},
-				{
-					"Name": "Pad",
-					"Type": "select",
-					"Default": "",
-					"Options": [
-						"",
-						"xbox",
-						"playstation",
-						"nintendo",
-						"generic"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "Shows the buttons of a kind of pad whatever is plugged in: xbox, playstation, nintendo or generic."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {
-				"Label": "Jump",
-				"Pad": "xbox"
-			}
-		},
-		{
-			"Name": "GameTabs",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "trophy",
-			"Description": "The tabs of a game window: Items [{ID, Label, Disabled}] in a column (Orientation 'vertical', the default) or a row, numbered 01, 02...",
-			"Props": [
-				{
-					"Name": "Items",
-					"Type": "json",
-					"Default": [],
-					"Options": null,
-					"Schema": {
-						"ID": "text",
-						"Label": "text",
-						"Icon": "icon"
-					},
-					"Body": false,
-					"Description": "The tabs: [{ID, Label, Disabled}]."
-				},
-				{
-					"Name": "Value",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The ID of the open tab."
-				},
-				{
-					"Name": "Numbered",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Numbers the tabs: 01, 02..."
-				},
-				{
-					"Name": "Orientation",
-					"Type": "select",
-					"Default": "vertical",
-					"Options": [
-						"vertical",
-						"horizontal"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "vertical (a column) or horizontal (a row)."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the list for screen readers."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [
-				"change"
-			],
-			"EventDescriptions": {
-				"change": "Another tab was opened: its ID."
-			},
-			"Methods": [],
-			"Sample": {
-				"Items": [
-					{
-						"ID": "items",
-						"Label": "Items"
-					},
-					{
-						"ID": "skills",
-						"Label": "Skills"
-					},
-					{
-						"ID": "map",
-						"Label": "Map"
-					}
-				],
-				"Value": "items",
-				"Label": "Record"
-			}
-		},
-		{
-			"Name": "GameQuests",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "trophy",
-			"Description": "The quests of a game.",
-			"Props": [
-				{
-					"Name": "Items",
-					"Type": "json",
-					"Default": [],
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The quests: [{ID, Title, Group, Level, Status, Tracked, Text, Objectives, Rewards}]."
-				},
-				{
-					"Name": "Value",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The ID of the open quest."
-				},
-				{
-					"Name": "Variant",
-					"Type": "select",
-					"Default": "log",
-					"Options": [
-						"log",
-						"tracker"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "log (the journal) or tracker (the objectives of the tracked quests)."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the list for screen readers."
-				},
-				{
-					"Name": "Empty",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The text without quests."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [
-				"change",
-				"track"
-			],
-			"EventDescriptions": {
-				"change": "Another quest was opened: its ID.",
-				"track": "A quest was tracked or untracked: {ID, Tracked}."
-			},
-			"Methods": [],
-			"Sample": {
-				"Label": "Quest log"
-			}
-		},
-		{
-			"Name": "GameMinimap",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "trophy",
-			"Description": "The frame of a minimap: the map in its default slot (an image, a canvas), round or square (Shape), Size pixels wide.",
-			"Props": [
-				{
-					"Name": "Shape",
-					"Type": "select",
-					"Default": "round",
-					"Options": [
-						"round",
-						"square"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "round or square."
-				},
-				{
-					"Name": "Size",
-					"Type": "number",
-					"Default": 160,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The width in pixels."
-				},
-				{
-					"Name": "Markers",
-					"Type": "json",
-					"Default": [],
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The marks over the map: [{ID, X, Y, Kind, Icon, Label, Color}], X and Y from 0 to 1."
-				},
-				{
-					"Name": "Heading",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The direction of the player, in degrees."
-				},
-				{
-					"Name": "Player",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Shows the arrow of the player."
-				},
-				{
-					"Name": "North",
-					"Type": "bool",
-					"Default": true,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Shows the letter N on the frame."
-				},
-				{
-					"Name": "Title",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the place on the band under the map."
-				},
-				{
-					"Name": "Note",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A note on the band (coordinates, the time)."
-				},
-				{
-					"Name": "Zoomable",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Adds the + and - buttons."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the map for screen readers."
-				}
-			],
-			"Slots": [],
-			"Container": true,
-			"Children": [],
-			"Current": "",
-			"Events": [
-				"marker",
-				"zoom"
-			],
-			"EventDescriptions": {
-				"marker": "A marker was pressed: the marker.",
-				"zoom": "A zoom button was pressed: 1 (in) or -1 (out)."
-			},
-			"Methods": [],
-			"Sample": {
-				"Heading": 35,
-				"Title": "Northern woods",
-				"Zoomable": true
-			}
-		},
-		{
-			"Name": "GameLeaderboard",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "trophy",
-			"Description": "The leaderboard of a game.",
-			"Props": [
-				{
-					"Name": "Items",
-					"Type": "json",
-					"Default": [],
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The players: [{ID, Name, Score, Rank, Avatar, Icon, Note, Change, Me}]."
-				},
-				{
-					"Name": "Limit",
-					"Type": "number",
-					"Default": 10,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "How many rows of the top show."
-				},
-				{
-					"Name": "ScoreLabel",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the score."
-				},
-				{
-					"Name": "Selectable",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The rows emit select with their item."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the board for screen readers."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [
-				"select"
-			],
-			"EventDescriptions": {
-				"select": "A row was pressed: its item."
-			},
-			"Methods": [],
-			"Sample": {
-				"Limit": 5,
-				"ScoreLabel": "Glory",
-				"Selectable": true
-			}
-		},
-		{
 			"Name": "NumberInput",
 			"Kind": "Component",
 			"Group": "inputs",
@@ -25589,112 +24576,6 @@
 		"elemenx-syntax-tag": [],
 		"elemenx-native-drag": [],
 		"elemenx-native-nodrag": [],
-		"elemenx-game-panel": [
-			"light"
-		],
-		"elemenx-window": [
-			"active",
-			"fixed",
-			"game",
-			"maximized",
-			"minimized",
-			"moving",
-			"trapezoid"
-		],
-		"elemenx-game-section": [],
-		"elemenx-game-section-title": [],
-		"elemenx-game-separator": [],
-		"elemenx-game-stats": [
-			"double"
-		],
-		"elemenx-game-inventory-card": [
-			"common",
-			"epic",
-			"legendary",
-			"rare",
-			"uncommon"
-		],
-		"elemenx-game-inventory-name": [],
-		"elemenx-game-inventory-type": [],
-		"elemenx-game-inventory-stats": [],
-		"elemenx-game-inventory-stat": [],
-		"elemenx-game-inventory-stat-label": [],
-		"elemenx-game-inventory-stat-value": [],
-		"elemenx-game-inventory-description": [],
-		"elemenx-game-good": [],
-		"elemenx-game-bad": [],
-		"elemenx-game-special": [],
-		"elemenx-button": [
-			"badged",
-			"block",
-			"danger",
-			"ghost",
-			"giant",
-			"icon-only",
-			"large",
-			"link",
-			"loading",
-			"pressed",
-			"primary",
-			"round",
-			"secondary",
-			"small"
-		],
-		"elemenx-input": [
-			"disabled",
-			"giant",
-			"invalid",
-			"large",
-			"multiple",
-			"readonly",
-			"round",
-			"small"
-		],
-		"elemenx-table": [
-			"bordered",
-			"compact",
-			"selectable",
-			"sticky",
-			"striped",
-			"tree"
-		],
-		"elemenx-table-wrap": [
-			"scrolling"
-		],
-		"elemenx-meter-track": [],
-		"elemenx-meter-fill": [],
-		"elemenx-meter-ring": [],
-		"elemenx-meter-needle": [],
-		"elemenx-meter-face": [],
-		"elemenx-meter-mark": [],
-		"elemenx-meter-value": [],
-		"elemenx-meter-readout": [],
-		"elemenx-meter-min": [],
-		"elemenx-meter-max": [],
-		"elemenx-block": [
-			"compact",
-			"framed",
-			"spacious",
-			"trapezoid"
-		],
-		"elemenx-properties": [
-			"double"
-		],
-		"elemenx-property": [
-			"accent",
-			"danger",
-			"success",
-			"warning"
-		],
-		"elemenx-property-value": [],
-		"elemenx-section-header": [],
-		"elemenx-section-title": [
-			"level-1",
-			"level-2",
-			"level-3",
-			"level-4"
-		],
-		"elemenx-game-hotbar": [],
 		"elemenx-syntax-attribute": [],
 		"elemenx-syntax-selector": [],
 		"elemenx-syntax-variable": [],
@@ -25722,9 +24603,16 @@
 			"spacious",
 			"structured"
 		],
+		"elemenx-block": [
+			"compact",
+			"framed",
+			"spacious",
+			"trapezoid"
+		],
 		"elemenx-section": [
 			"collapsed"
 		],
+		"elemenx-section-header": [],
 		"elemenx-divider": [
 			"vertical"
 		],
@@ -25744,6 +24632,22 @@
 			"warning"
 		],
 		"elemenx-badged": [],
+		"elemenx-button": [
+			"badged",
+			"block",
+			"danger",
+			"ghost",
+			"giant",
+			"icon-only",
+			"large",
+			"link",
+			"loading",
+			"pressed",
+			"primary",
+			"round",
+			"secondary",
+			"small"
+		],
 		"elemenx-list": [
 			"divided"
 		],
@@ -25779,6 +24683,16 @@
 		"elemenx-option-check": [],
 		"elemenx-blur": [],
 		"elemenx-visually-hidden": [],
+		"elemenx-input": [
+			"disabled",
+			"giant",
+			"invalid",
+			"large",
+			"multiple",
+			"readonly",
+			"round",
+			"small"
+		],
 		"elemenx-input-control": [
 			"concealed"
 		],
@@ -25844,6 +24758,14 @@
 			"left",
 			"right",
 			"top"
+		],
+		"elemenx-table": [
+			"bordered",
+			"compact",
+			"selectable",
+			"sticky",
+			"striped",
+			"tree"
 		],
 		"elemenx-file-icon": [],
 		"elemenx-spinner": [
@@ -25943,7 +24865,6 @@
 		],
 		"elemenx-chat-views": [],
 		"elemenx-comment-token": [],
-		"elemenx-game-minimap-zoom": [],
 		"elemenx-slider-thumb": [
 			"active"
 		],
@@ -26068,6 +24989,14 @@
 		"elemenx-rich-editor-link": [],
 		"elemenx-rich-editor-print": [],
 		"elemenx-rich-editor-find": [],
+		"elemenx-window": [
+			"active",
+			"fixed",
+			"maximized",
+			"minimized",
+			"moving",
+			"trapezoid"
+		],
 		"elemenx-window-header": [],
 		"elemenx-window-tab": [],
 		"elemenx-window-titles": [],
@@ -26090,198 +25019,6 @@
 			"sw",
 			"w"
 		],
-		"elemenx-game-hud": [],
-		"elemenx-game-hud-scene": [],
-		"elemenx-game-hud-layer": [],
-		"elemenx-game-hud-area": [
-			"bottom",
-			"bottom-end",
-			"bottom-start",
-			"center",
-			"end",
-			"start",
-			"top",
-			"top-end"
-		],
-		"elemenx-game-bar": [
-			"large",
-			"low",
-			"segmented",
-			"small"
-		],
-		"elemenx-game-bar-label": [],
-		"elemenx-game-bar-gauge": [],
-		"elemenx-game-bar-track": [],
-		"elemenx-game-bar-ornament": [],
-		"elemenx-game-bar-fill": [],
-		"elemenx-game-bar-trail": [],
-		"elemenx-game-bar-value": [],
-		"elemenx-game-slot": [
-			"active",
-			"drop-over",
-			"empty",
-			"epic",
-			"filled",
-			"large",
-			"legendary",
-			"rare",
-			"small",
-			"uncommon"
-		],
-		"elemenx-game-slot-glass": [],
-		"elemenx-game-slot-gloss": [],
-		"elemenx-game-slot-image": [],
-		"elemenx-game-slot-sweep": [],
-		"elemenx-game-slot-timer": [],
-		"elemenx-game-slot-key": [],
-		"elemenx-game-slot-badge": [],
-		"elemenx-game-slot-count": [],
-		"elemenx-game-inventory": [],
-		"elemenx-game-inventory-grid": [],
-		"elemenx-game-inventory-cell": [
-			"active",
-			"drop-over",
-			"empty",
-			"epic",
-			"filled",
-			"held",
-			"legendary",
-			"rare",
-			"uncommon"
-		],
-		"elemenx-game-inventory-mark": [],
-		"elemenx-game-inventory-image": [],
-		"elemenx-game-inventory-badge": [],
-		"elemenx-game-inventory-count": [],
-		"elemenx-game-dialogue": [],
-		"elemenx-game-dialogue-portrait": [],
-		"elemenx-game-dialogue-body": [],
-		"elemenx-game-dialogue-speaker": [],
-		"elemenx-game-dialogue-text": [],
-		"elemenx-game-dialogue-caret": [],
-		"elemenx-game-dialogue-choices": [],
-		"elemenx-game-dialogue-choice": [],
-		"elemenx-game-dialogue-next": [],
-		"elemenx-game-dialogue-number": [],
-		"elemenx-game-menu": [],
-		"elemenx-game-menu-title": [],
-		"elemenx-game-menu-subtitle": [],
-		"elemenx-game-menu-items": [],
-		"elemenx-game-menu-item": [],
-		"elemenx-game-menu-label": [],
-		"elemenx-game-menu-hint": [],
-		"elemenx-game-key": [
-			"button-a",
-			"button-b",
-			"button-down",
-			"button-home",
-			"button-left",
-			"button-right",
-			"button-select",
-			"button-start",
-			"button-up",
-			"button-x",
-			"button-y",
-			"generic",
-			"keyboard",
-			"nintendo",
-			"playstation",
-			"xbox"
-		],
-		"elemenx-game-key-glyph": [],
-		"elemenx-game-key-label": [],
-		"elemenx-game-tabs": [
-			"horizontal",
-			"vertical"
-		],
-		"elemenx-game-tab": [
-			"active"
-		],
-		"elemenx-game-tab-number": [],
-		"elemenx-game-tab-label": [],
-		"elemenx-game-quests": [
-			"log"
-		],
-		"elemenx-game-quests-list": [],
-		"elemenx-game-quests-group": [],
-		"elemenx-game-quests-heading": [],
-		"elemenx-game-quest": [
-			"active",
-			"done",
-			"failed"
-		],
-		"elemenx-game-quest-mark": [],
-		"elemenx-game-objective-mark": [],
-		"elemenx-game-quest-title": [],
-		"elemenx-game-quest-level": [],
-		"elemenx-game-quests-empty": [],
-		"elemenx-game-quests-detail": [],
-		"elemenx-game-quests-header": [],
-		"elemenx-game-quests-title": [],
-		"elemenx-game-quests-meta": [],
-		"elemenx-game-quests-text": [],
-		"elemenx-game-objectives": [],
-		"elemenx-game-rewards": [],
-		"elemenx-game-objective": [
-			"done"
-		],
-		"elemenx-game-objective-count": [],
-		"elemenx-game-objective-bar": [],
-		"elemenx-game-reward": [
-			"common",
-			"epic",
-			"legendary",
-			"rare",
-			"uncommon"
-		],
-		"elemenx-game-reward-icon": [],
-		"elemenx-game-reward-count": [],
-		"elemenx-game-reward-label": [],
-		"elemenx-game-quests-actions": [],
-		"elemenx-game-tracker": [],
-		"elemenx-game-tracker-quest": [],
-		"elemenx-game-tracker-title": [],
-		"elemenx-game-tracker-objective": [
-			"done"
-		],
-		"elemenx-game-minimap": [
-			"round"
-		],
-		"elemenx-game-minimap-map": [],
-		"elemenx-game-minimap-view": [],
-		"elemenx-game-marker": [
-			"ally",
-			"edge",
-			"enemy",
-			"quest"
-		],
-		"elemenx-game-minimap-player": [],
-		"elemenx-game-minimap-north": [],
-		"elemenx-game-minimap-caption": [],
-		"elemenx-game-minimap-title": [],
-		"elemenx-game-minimap-note": [],
-		"elemenx-game-leaderboard": [
-			"selectable"
-		],
-		"elemenx-game-leaderboard-head": [],
-		"elemenx-game-leaderboard-row": [
-			"bronze",
-			"gap",
-			"gold",
-			"me",
-			"silver"
-		],
-		"elemenx-game-leaderboard-gap": [],
-		"elemenx-game-leaderboard-rank": [],
-		"elemenx-game-leaderboard-player": [],
-		"elemenx-game-leaderboard-avatar": [],
-		"elemenx-game-leaderboard-name": [],
-		"elemenx-game-leaderboard-note": [],
-		"elemenx-game-leaderboard-change": [
-			"down",
-			"up"
-		],
-		"elemenx-game-leaderboard-score": [],
 		"elemenx-number-controls": [],
 		"elemenx-date": [],
 		"elemenx-time": [],
@@ -26872,13 +25609,29 @@
 		"elemenx-section-actions": [],
 		"elemenx-section-aside": [],
 		"elemenx-section-static": [],
+		"elemenx-section-title": [
+			"level-1",
+			"level-2",
+			"level-3",
+			"level-4"
+		],
 		"elemenx-block-header": [],
 		"elemenx-block-body": [],
 		"elemenx-block-tab": [],
 		"elemenx-block-actions": [],
 		"elemenx-block-title": [],
 		"elemenx-block-note": [],
+		"elemenx-properties": [
+			"double"
+		],
+		"elemenx-property": [
+			"accent",
+			"danger",
+			"success",
+			"warning"
+		],
 		"elemenx-property-label": [],
+		"elemenx-property-value": [],
 		"elemenx-property-content": [],
 		"elemenx-property-text": [],
 		"elemenx-pagination": [],
@@ -26952,6 +25705,9 @@
 		"elemenx-image-picture": [],
 		"elemenx-image-placeholder": [],
 		"elemenx-image-broken": [],
+		"elemenx-table-wrap": [
+			"scrolling"
+		],
 		"elemenx-table-check": [],
 		"elemenx-table-empty": [],
 		"elemenx-table-box": [],
@@ -27159,11 +25915,21 @@
 		],
 		"elemenx-meter-head": [],
 		"elemenx-meter-label": [],
+		"elemenx-meter-value": [],
 		"elemenx-meter-scale": [],
 		"elemenx-meter-range": [],
+		"elemenx-meter-readout": [],
+		"elemenx-meter-min": [],
+		"elemenx-meter-max": [],
+		"elemenx-meter-track": [],
+		"elemenx-meter-fill": [],
+		"elemenx-meter-mark": [],
 		"elemenx-meter-dial": [],
+		"elemenx-meter-face": [],
+		"elemenx-meter-ring": [],
 		"elemenx-meter-arc": [],
 		"elemenx-meter-tick": [],
+		"elemenx-meter-needle": [],
 		"elemenx-meter-center": [],
 		"elemenx-meter-content": [],
 		"elemenx-fps-meter": [
