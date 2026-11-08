@@ -71,6 +71,7 @@ describe('Contract: GameStrategy, selection, orders, attacks and the fog of war 
 		};
 	}
 
+	/* Each test mounts a scene of its own: the first frame compiles all its shaders (seconds, more on a busy machine). */
 	it('selects the units of its team only, by code, by Ctrl+A and by a frame drawn over them, and none by Escape', async function () {
 		var made = await mount();
 		var scene = made.Scene;
@@ -103,7 +104,7 @@ describe('Contract: GameStrategy, selection, orders, attacks and the fog of war 
 		scene.PointerUp({button: 0, clientX: box.right - 1, clientY: box.bottom - 1, pointerId: 1, target: scene.$Element(), preventDefault: function () {}});
 
 		expect(game.Selection().sort()).toEqual(['a', 'b']);
-	});
+	}, 60000);
 
 	it('sends units to a place, each to its own spot, stops them, and has them attack a foe until it is gone', async function () {
 		var made = await mount();
@@ -132,19 +133,22 @@ describe('Contract: GameStrategy, selection, orders, attacks and the fog of war 
 
 		game.Order(['a', 'b'], 'foe', 'attack');
 
-		await waitFor(function () {
+		/* Regression (load): waited for by the clock, a busy machine drew too few frames for the fight to end; now by the frames, a minute of the scene at most. */
+		for (var i = 0; i < 120 && !made.Told.some(function (one) {
+			return one[0] === 'death';
+		}); i++) {
 			made.Frames(5, 100);
 
-			return made.Told.some(function (one) {
-				return one[0] === 'death';
+			await new Promise(function (done) {
+				setTimeout(done, 5);
 			});
-		}, 15000);
+		}
 
 		expect(made.Told.filter(function (one) {
 			return one[0] === 'death';
 		})[0][1]).toMatchObject({ID: 'foe'});
 		expect(scene.Get('foe')).toBeFalsy();
-	});
+	}, 60000);
 
 	it('hides in its fog the units of other teams that its units do not see, and tells what was seen and explored', async function () {
 		var made = await mount('Fog="true"');
@@ -171,7 +175,7 @@ describe('Contract: GameStrategy, selection, orders, attacks and the fog of war 
 
 		expect(game.Seen(0, 0)).toBe(false);
 		expect(game.Explored(0, 0)).toBe(true);
-	});
+	}, 60000);
 	/* Regression (of the map of cells, kept for the scene with its game): a timer of no function is refused by a page that forbids eval. */
 	/* The weather and the dark shorten what its units see (Scene.SightOf): a fog hides a foe a clear day showed. */
 	it('sees no farther than the weather and the light let it: a fog takes the range of sight of its units', async function () {

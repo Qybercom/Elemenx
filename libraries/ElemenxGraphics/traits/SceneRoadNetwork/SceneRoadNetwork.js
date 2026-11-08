@@ -4,7 +4,8 @@
  * Structures: true to find them where it goes Clear metres over the ground or Cover under it; Barriers; Along: lines of
  * things beside it) is drawn as its model, and the ground is made level under it, cut where it goes through a hill and
  * filled where it crosses a hollow: a point with no height of its own takes the one of the ground there, and the road goes
- * smoothly between them. A bridge stands on piers over the ground as it is, a tunnel goes under it between its portals.
+ * smoothly between them. A bridge stands on piers over the ground as it is, a tunnel goes under it between its portals,
+ * through a hole cut in the ground (Carves of tunnel: RoadsCarves of the engine, SceneRoads.Carves), lit by lamps along its vault.
  * Roads that cross or end on one another meet at a junction, found by itself, or an object of kind junction (the trait
  * Junction: Radius, Surface) at its X and Y; the roads come to its level and their paint stops at it. An object of kind
  * barrier (the trait Barrier: Type (guardrail, wall, jersey, tyres, fence), Height, Color, Step) stands along the road its Road names (Side, Gap, From, To) or on
@@ -205,6 +206,22 @@ Elemenx.Trait('SceneRoadNetwork', {
 		 * The sketch of a ground with the roads over it, a layer of their lines at the levels of the roads. The roads take their
 		 * heights from the ground as it is without them, made again only when a road or the ground changes.
 		 */
+		/* What the tunnels of the roads cut out of the ground: carves of its volume. */
+		engine.RoadsCarves = function () {
+			var made;
+
+			/* Made again with the roads; the very same list while what it holds is the same, so the ground is not made again for nothing. */
+			if (state.CarvedOf !== state.Made) {
+				state.CarvedOf = state.Made;
+				made = roads.Carves(state.Made);
+
+				if (!state.Carved || JSON.stringify(made) !== JSON.stringify(state.Carved))
+					state.Carved = made;
+			}
+
+			return state.Carved;
+		};
+
 		engine.RoadsSketch = function (settings, sketch) {
 			var found;
 			var key;

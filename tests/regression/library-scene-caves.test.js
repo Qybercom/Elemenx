@@ -41,6 +41,7 @@ describe('Contract: a Scene under its ground: the floors of its tunnels and cave
 		while (owned.length) owned.pop().$Destroy();
 	});
 
+	/* The first frames compile the shaders of a scene and make its squares of rock: seconds, more on a busy machine. */
 	it('stands what is set in a tunnel on its floor, and walks a hero along it under the hill, the rock its walls', async function () {
 		var scene = await mount();
 		var inner = scene.Scene();
@@ -101,7 +102,7 @@ describe('Contract: a Scene under its ground: the floors of its tunnels and cave
 
 		expect(Math.abs(Number(hero.Values.Y))).toBeLessThan(4);
 		expect(hero.World[1]).toBeLessThan(4.5);
-	});
+	}, 60000);
 	it('finds a unit a way into a tunnel from the hill outside, as the hero goes, and walks it there on the floor under the hill', async function () {
 		var scene = await mount(Object.assign({}, LAND, {Tunnels: [{Points: [[-70, 0], [0, 0, 4], [70, 0]], Radius: 4, Flat: 0.5}]}));
 		var inner = scene.Scene();

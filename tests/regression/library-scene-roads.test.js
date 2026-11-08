@@ -101,19 +101,31 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 		expect(object.Shape.indexOf('road:main:')).toBe(0);
 		expect(object.World).toEqual([0, 0, 0]);
 		expect(Elemenx.Service('SceneModels').Ready(object.Shape)).toBe(true);
-	});
+	}, 60000);
 
 	/*
 	 * Regression: roads and the ground were of flat colors, the same near as far. A strip is drawn by the material of its
 	 * surface (SceneMaterials, the Pattern of its material made the Blueprint of it), the ground by the materials of its
-	 * palettes; all of them compile.
+	 * palettes; all of them compile. Regression too: asphalt and paving were patterns of code laid on the body of the model
+	 * (paving in rows of the world, not of the road, so they ran askew where it turned): now their tiles baked (SceneTextures),
+	 * by the UV of the road (across and along it), bound when the strip is drawn.
 	 */
 	it('draws a road by the materials of its surfaces and the ground by its own, all of them compiled', async function () {
 		var mounted = await mount();
 		var scene = mounted.Scene;
 		var told = [];
+		var tiles = [];
 		var made;
 		var patterns;
+		var renderer = scene.Engine().Renderer;
+		var draw = renderer.Draw;
+
+		renderer.Draw = function (mesh, program, values) {
+			if (values && values.uEmissiveMap)
+				tiles.push(values.uEmissiveMap);
+
+			return draw.apply(this, arguments);
+		};
 
 		scene.$On('shader', function (event) {
 			told.push(event.Message);
@@ -142,6 +154,27 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 			return piece.Material.Pattern === 'asphalt' && /void blueprintSurface\(/.test(piece.Material.Blueprint || '');
 		})).toBe(true);
 		expect(scene.Scene().Ground.Field.Materials).toContain('lawn');
+
+		/* By the UV of the road, the tiles of asphalt and paving (paving as it is: no hexagons to break its rows). */
+		made.Pieces.forEach(function (piece) {
+			if (piece.Material.Pattern === 'asphalt' || piece.Material.Pattern === 'paving') {
+				expect(piece.Material.Along).toBe(true);
+				expect(piece.Material.Blueprint).toContain('vec2 q = uv * 4.0;');
+				expect(piece.Material.Blueprint).toContain('#define uTileColor uEmissiveMap');
+			}
+
+			if (piece.Material.Pattern === 'paving')
+				expect(piece.Material.Blueprint).toContain(', -1.0, a, r, n, h, lit);');
+		});
+
+		await waitFor(function () {
+			mounted.Frames(1);
+
+			return tiles.indexOf(scene.$Service('SceneTextures').Bake(renderer, 'asphalt').Color) !== -1;
+		}, 20000);
+
+		renderer.Draw = draw;
+
 		expect(told).toEqual([]);
 	});
 
@@ -343,7 +376,15 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 
 		expect(scene.Roads()[0].Spans.length).toBe(2);
 		expect(scene.Scene().Ground.Field.Height(-20, 20)).toBeCloseTo(under, 3);
-		expect(scene.Scene().Ground.Field.Height(80, 20)).toBeCloseTo(over, 3);
+		/* Over the tunnel the ground as it was (found in its volume now, to a few millimetres)... */
+		expect(scene.Scene().Ground.Field.Height(80, 20)).toBeCloseTo(over, 2);
+
+		/* ...and under it a hole cut through the hill (Carves of the roads), its floor just under the road. */
+		expect(scene.Engine().RoadsCarves().length).toBeGreaterThan(0);
+		expect(scene.Scene().Ground.Field.Volume).toBeTruthy();
+		expect(scene.Scene().Ground.Field.Height(80, 20, scene.Roads()[0].Points.filter(function (point) {
+			return Math.abs(point.X - 80) < 3;
+		})[0].Y + 0.5)).toBeLessThan(over - 2);
 		/* Off them the ground is levelled under it. */
 		expect(scene.Scene().Ground.Field.Height(10, 20)).toBeCloseTo(scene.SurfaceAt(10, 20).Height - 0.05, 0);
 	});

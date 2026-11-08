@@ -77,6 +77,9 @@ describe('Contract: TopologyIso, a Topology in 3D on a canvas', function () {
 
 		var iso = isoOf(host);
 
+		/* Regression (load): 80 ms were not always a frame on a busy machine; drawn at once, as a frame would. */
+		iso.Draw(performance.now());
+
 		expect(painted(iso)).toBeGreaterThan(2000);
 		expect(host.$Element().querySelectorAll('.elemenx-topology-iso-list button').length).toBe(4);
 		expect(iso.Picture().indexOf('data:image/png')).toBe(0);

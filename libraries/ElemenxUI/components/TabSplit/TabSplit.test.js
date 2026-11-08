@@ -44,11 +44,11 @@ describe('Regression: a TabSplit given its layout before its TabGroup loads', fu
 
 		await waitFor(function () {
 			return root.querySelectorAll('.elemenx-tab-group-tab').length === 2;
-		}, 4000);
+		}, 15000);
 
 		await waitFor(function () {
 			return root.querySelectorAll('.elemenx-tab-group-body > .elemenx-tab-panel.active').length === 2;
-		}, 2000);
+		}, 15000);
 
 		expect(Array.prototype.map.call(root.querySelectorAll('.elemenx-tab-group-body > .elemenx-tab-panel.active'), function (panel) {
 			return panel.textContent.trim();

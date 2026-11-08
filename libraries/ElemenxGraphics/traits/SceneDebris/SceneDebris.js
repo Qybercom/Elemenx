@@ -1,6 +1,9 @@
 /*
  * SceneDebris: what breaks, and what is beamed away. Break(id, options) breaks a thing with a model into pieces that fly from where it was hit
- * (options Point, Normal, Force (1), Pieces (how many across: 3)), tumble, fall, bounce on the ground and stay a while
+ * (options Point, Normal, Force (1), Pieces (how many across: 3; of Pattern voronoi how many in all: 8), Pattern (grid, the
+ * default: cells of a grid over it; voronoi: solid pieces of the cells of points scattered in it, smaller near the hit,
+ * closed by the faces they broke along, of the color Inner (else of the thing, paler); parts: each piece of its model),
+ * Seed (the same pieces for the same seed)), tumble, fall, bounce on the ground and stay a while
  * (Values.DebrisSeconds of the thing, 8) before they sink and go; its glass breaks into shards. The thing is gone (Remove)
  * and the scene tells break ({ID, Pieces, Point}). The Vitals of ElemenxGaming break what dies with Health.Death break.
  *
@@ -137,6 +140,72 @@ Elemenx.Trait('SceneDebris', {
 				groups[key] = groups[key] || [];
 
 				groups[key].push({Points: points, Color: color});
+			}
+
+			/*
+			 * Voronoi (Pattern voronoi): solid pieces, smaller near the hit, each closed by the faces it broke along, of the raw
+			 * color inside (Inner); parts (Pattern parts): each piece of its model on its own, as it was made.
+			 */
+			if (settings.Pattern === 'voronoi') {
+				var cutter = self.$Service('SceneShards');
+				var surface = [];
+				var inner = settings.Inner || null;
+
+				Object.keys(groups).forEach(function (key) {
+					surface = surface.concat(groups[key]);
+				});
+
+				groups = {};
+
+				cutter.Pieces(surface, cutter.Seeds(body.Min, body.Max, Math.max(2, number(settings.Pieces, 8)), hit, {Seed: settings.Seed})).forEach(function (one, index) {
+					var middle = [0, 0, 0];
+					var raw = inner;
+
+					one.Corners.forEach(function (p) {
+						middle = vectors.Add(middle, p);
+					});
+
+					middle = vectors.Scale(middle, 1 / one.Corners.length);
+
+					/* What is inside, of no color told: the color of the thing, paler and duller. */
+					if (!raw) {
+						raw = [0, 0, 0];
+
+						one.Surface.forEach(function (face) {
+							raw = vectors.Add(raw, vectors.Scale(face.Color, 1 / one.Surface.length));
+						});
+
+						raw = [raw[0] * 0.8 + 0.12, raw[1] * 0.8 + 0.11, raw[2] * 0.8 + 0.1];
+					}
+
+					/* The faces it broke along: its hull a little inside its faces, so only what has none shows it. */
+					groups['v' + index] = one.Surface.concat(cutter.Hull(one.Corners).map(function (face) {
+						return {Points: face.map(function (p) {
+							return vectors.Lerp(middle, p, 0.985);
+						}), Color: raw};
+					}));
+				});
+			}
+			else if (settings.Pattern === 'parts') {
+				var owners = [];
+
+				groups = {};
+
+				for (i = 0; i < count; i++) {
+					var at = i * 9;
+					var corners = [0, 3, 6].map(function (k) {
+						return vectors.Add(object.World, math.Apply(body.Base, [mesh.Points[at + k], mesh.Points[at + k + 1], mesh.Points[at + k + 2]]));
+					});
+
+					if (mesh.Glass[i] || object.Values.Material === 'glass') continue;
+
+					if (owners.indexOf(mesh.Pieces[i]) === -1)
+						owners.push(mesh.Pieces[i]);
+
+					groups['p' + owners.indexOf(mesh.Pieces[i])] = groups['p' + owners.indexOf(mesh.Pieces[i])] || [];
+
+					groups['p' + owners.indexOf(mesh.Pieces[i])].push({Points: corners, Color: [mesh.Colors[i * 3], mesh.Colors[i * 3 + 1], mesh.Colors[i * 3 + 2]]});
+				}
 			}
 
 			Object.keys(groups).forEach(function (key) {
@@ -320,7 +389,7 @@ Elemenx.Trait('SceneDebris', {
 		};
 	},
 
-	/* Breaks a thing with a model into pieces that fly from the point hit: Break(id, {Point, Normal, Force, Pieces}). How many pieces, or false. */
+	/* Breaks a thing with a model into pieces that fly from the point hit: Break(id, {Point, Normal, Force, Pieces, Pattern, Inner, Seed}). How many pieces, or false. */
 	Break: function (id, options) {
 		var engine = this.Engine();
 

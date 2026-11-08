@@ -50,8 +50,8 @@ Elemenx.Trait('SceneLighting', {
 		var sets = {
 			low: {Post: false, Cascades: 1, Bounce: false, Occlusion: 0, Rays: false, Samples: 0, Reach: 0.6, Grass: false},
 			medium: {Post: true, Cascades: 1, Bounce: false, Occlusion: 0, Rays: false, Samples: 4, Reach: 0.8, Clouds: 9},
-			high: {Post: true, Cascades: 2, Bounce: true, Occlusion: 0.5, Rays: true, Samples: 4, Reach: 1, Mirror: true, Frames: true, Field: true, Clouds: 16, Lamps: 2},
-			ultra: {Post: true, Cascades: 2, Bounce: true, Occlusion: 1, Rays: true, Samples: 4, Reach: 1.4, Mirror: true, Frames: true, Field: true, Clouds: 26, Lamps: 2}
+			high: {Post: true, Cascades: 4, ShadowFar: 300, Bounce: true, Occlusion: 0.5, Contact: true, Rays: true, Samples: 4, Reach: 1, Mirror: true, Frames: true, Field: true, Clouds: 16, Lamps: 2},
+			ultra: {Post: true, Cascades: 4, ShadowFar: 500, Bounce: true, Occlusion: 1, Contact: true, Rays: true, Samples: 4, Reach: 1.4, Mirror: true, Frames: true, Field: true, Clouds: 26, Lamps: 2}
 		};
 
 		state.Floats = !!renderer.GL.getExtension('EXT_color_buffer_float');
@@ -100,6 +100,7 @@ Elemenx.Trait('SceneLighting', {
 					Up: renderer.Program(graphics.Shaders.Quad, shaders.Up),
 					Dark: renderer.Program(graphics.Shaders.Quad, shaders.Dark),
 					Soft: renderer.Program(graphics.Shaders.Quad, shaders.Soft),
+					Touch: renderer.Program(graphics.Shaders.Quad, shaders.Touch),
 					Picture: renderer.Program(graphics.Shaders.Quad, shaders.Picture),
 					Frames: renderer.Program(graphics.Shaders.Quad, shaders.Frames),
 					FieldLit: renderer.Program(graphics.Shaders.Quad, shaders.FieldLit),
@@ -126,7 +127,7 @@ Elemenx.Trait('SceneLighting', {
 		}
 
 		function destroy () {
-			[state.Scene, state.Dark, state.Soft, state.Now, state.Before, state.Shaft, state.ShaftSoft, state.Cloud, state.CloudPast, state.CloudNext, state.Mirror, state.Circle, state.Disc, state.Focused].concat(state.Bloom).forEach(function (target) {
+			[state.Scene, state.Dark, state.Soft, state.Touch, state.Now, state.Before, state.Shaft, state.ShaftSoft, state.Cloud, state.CloudPast, state.CloudNext, state.Mirror, state.Circle, state.Disc, state.Focused].concat(state.Bloom).forEach(function (target) {
 				if (target)
 					target.Destroy();
 			});
@@ -134,6 +135,7 @@ Elemenx.Trait('SceneLighting', {
 			state.Scene = null;
 			state.Dark = null;
 			state.Soft = null;
+			state.Touch = null;
 			state.Now = null;
 			state.Before = null;
 			state.Shaft = null;
@@ -194,6 +196,7 @@ Elemenx.Trait('SceneLighting', {
 			if (set.Occlusion) {
 				state.Dark = renderer.Target(Math.max(1, Math.round(width * set.Occlusion)), Math.max(1, Math.round(height * set.Occlusion)));
 				state.Soft = renderer.Target(state.Dark.Width, state.Dark.Height);
+				state.Touch = renderer.Target(width, height);
 			}
 
 			if (set.Frames) {
@@ -1025,12 +1028,16 @@ Elemenx.Trait('SceneLighting', {
 			/* The darkening of corners, where there is a sky. */
 			Occlusion: function (frame, inputs) {
 				var view = frame.View;
-				if (!state.Dark || !view.Sky) return {Dark: null};
+				if (!state.Dark || !view.Sky || !frame.Set.Occlusion) return {Dark: null};
 
-				pass(state.Dark, frame.Run.Dark, {uDepth: inputs.Depth, uInverse: frame.Inverse, uMatrix: view.Matrix, uReach: view.Reach || 2, uSunWay: frame.Sun, uSunOn: view.Sky ? Math.min(1, ((view.SunColor || [0, 0, 0])[0] + (view.SunColor || [0, 0, 0])[1]) * 1.2) : 0, uSeed: scene.Frames = (scene.Frames || 0) + 1});
+				pass(state.Dark, frame.Run.Dark, {uDepth: inputs.Depth, uInverse: frame.Inverse, uMatrix: view.Matrix, uReach: view.Reach || 2, uSeed: scene.Frames = (scene.Frames || 0) + 1});
 				pass(state.Soft, frame.Run.Soft, {uColor: state.Dark.Textures[0], uDepth: inputs.Depth, uPixel: [1 / state.Dark.Width, 1 / state.Dark.Height]});
+				/* At the size of the picture: the darkened corners in red, the contact shadows of the sun in green. */
+				pass(state.Touch, frame.Run.Touch, Object.assign({}, view.Shade, {uDepth: inputs.Depth, uDark: state.Soft.Textures[0], uInverse: frame.Inverse, uMatrix: view.Matrix, uSunWay: frame.Sun, uSunOn: frame.Set.Contact && view.Shade && view.Shade.uShadowOn ? Math.min(1, ((view.SunColor || [0, 0, 0])[0] + (view.SunColor || [0, 0, 0])[1]) * 1.2) : 0, uSteady: 0}));
 
-				return {Dark: state.Soft.Textures[0]};
+				frame.Touched = true;
+
+				return {Dark: state.Touch.Textures[0]};
 			},
 
 			/* The air between the eye and what it sees, with the clouds and the darkened corners laid in. */
@@ -1043,6 +1050,7 @@ Elemenx.Trait('SceneLighting', {
 					uDepth: inputs.Depth,
 					uDark: inputs.Dark || scene.White || inputs.Color,
 					uDarkOn: inputs.Dark ? 1 : 0,
+					uDarkShow: inputs.Dark && frame.Set.Show === 'dark' ? 1 : 0,
 					uCloud: inputs.Cloud || scene.White || inputs.Color,
 					uCover: inputs.Cloud && now.Clouds > 0.02 ? 1 : 0,
 					uBehind: view.Clouds && view.Clouds.Over ? 0 : 1,
@@ -1091,7 +1099,7 @@ Elemenx.Trait('SceneLighting', {
 				var view = frame.View;
 				if (!state.Mirror || !view.Eye) return {Mirror: null};
 
-				pass(state.Mirror, frame.Run.Mirror, {uColor: inputs.Color, uDepth: inputs.Depth, uMask: state.Scene.Textures[0], uInverse: math.Invert(frame.Plain), uMatrix: frame.Plain, uAir: view.Air || [0, 0, 0, 0], uAirLight: frame.AirLight, uAirGlow: view.AirGlow || [0, 0, 0]});
+				pass(state.Mirror, frame.Run.Mirror, {uColor: inputs.Color, uDepth: inputs.Depth, uMask: state.Scene.Textures[0], uInverse: math.Invert(frame.Plain), uMatrix: frame.Plain, uAir: view.Air || [0, 0, 0, 0], uAirLight: frame.AirLight, uAirGlow: view.AirGlow || [0, 0, 0], uDark: frame.Touched ? state.Touch.Textures[0] : scene.White || inputs.Color, uDarkOn: frame.Touched ? 1 : 0});
 
 				return {Mirror: state.Mirror.Textures[0]};
 			},
@@ -1308,7 +1316,8 @@ Elemenx.Trait('SceneLighting', {
 		 * (how thick the air is), Sky (true: there is a sky to see the sun in)}.
 		 */
 		engine.PostEnd = function (view) {
-			var set = sets[level()];
+			/* scene.Tuned: what is told over the set of the level, to see a picture with and without a part of it. */
+			var set = Object.assign({}, sets[level()], scene.Tuned);
 			var run = programs();
 			var plain = view.Plain || view.Matrix;
 			var sun = view.Sun || [0, 1, 0];
@@ -2055,6 +2064,7 @@ Elemenx.Trait('SceneLighting', {
 				'uniform sampler2D uDepth;',
 				'uniform sampler2D uDark;',
 				'uniform float uDarkOn;',
+				'uniform float uDarkShow;',
 				'uniform mat4 uInverse;',
 				'uniform vec3 uSun;',
 				'uniform vec3 uSunColor;',
@@ -2093,7 +2103,13 @@ Elemenx.Trait('SceneLighting', {
 				'		outColor = vec4(pow(max(color, vec3(0.0)), vec3(1.0 / 2.2)), given.a);',
 				'		return;',
 				'	}',
-				'	if (uDarkOn > 0.5 && depth < 1.0) color *= mix(1.0, texture(uDark, uv).r, 0.85);',
+				/* The darkened corners (red) and the contact shadows of the sun (green). */
+				'	if (uDarkOn > 0.5 && depth < 1.0) color *= mix(1.0, texture(uDark, uv).r, 0.85) * texture(uDark, uv).g;',
+				/* scene.Tuned.Show dark: the darkened corners and the contact shadows alone, to look at them. */
+				'	if (uDarkShow > 0.5) {',
+				'		outColor = vec4(vec3(depth < 1.0 ? texture(uDark, uv).r * texture(uDark, uv).g : 1.0), 1.0);',
+				'		return;',
+				'	}',
 				/* Thick air hides the sky too. */
 				'	if (uFogSky > 0.0 && depth >= 1.0) color = mix(color, pow(mix(uAir.rgb, vec3(1.0), 0.55), vec3(2.2)) * uAirLight + pow(uAirGlow, vec3(2.2)) * 0.3, uFogSky);',
 				'	if (uFog > 0.0 && depth < 1.0 && uParallel < 0.5) {',
@@ -2291,6 +2307,8 @@ Elemenx.Trait('SceneLighting', {
 				'uniform vec4 uAir;',
 				'uniform float uAirLight;',
 				'uniform vec3 uAirGlow;',
+				'uniform sampler2D uDark;',
+				'uniform float uDarkOn;',
 				'out vec4 outColor;',
 				'vec3 place(vec2 uv) {',
 				'	vec4 p = uInverse * vec4(uv * 2.0 - 1.0, texture(uDepth, uv).r * 2.0 - 1.0, 1.0);',
@@ -2335,19 +2353,26 @@ Elemenx.Trait('SceneLighting', {
 				'		}',
 				'		stride *= 1.14;',
 				'	}',
+				/* What a fold hides of the sky it hides of what it mirrors: the less, the glossier and the more it is seen straight on (Lagarde). */
+				'	if (uDarkOn > 0.5) {',
+				'		float open = texture(uDark, uv).r;',
+				'		gloss *= clamp(pow(clamp(dot(n, -v), 0.0, 1.0) + open, exp2(-16.0 * (1.0 - gloss) - 1.0)) - 1.0 + open, 0.0, 1.0);',
+				'	}',
 				'	outColor = vec4(found, gloss);',
 				'}'
 			].join('\n'),
 
-			/* How much of the sky a point sees: a spiral of samples round it, of the depth. */
+			/*
+			 * How much of the sky a point sees (ground truth ambient occlusion, Jimenez): in two slices of the view through it, turned
+			 * each pixel and frame, the highest thing on each side within its reach over the depth; the part of the sky between those
+			 * horizons, as much as it lights a face of that normal; a little given back for the light that bounces in a fold.
+			 */
 			Dark: head + [
 				'in vec2 vQuad;',
 				'uniform sampler2D uDepth;',
 				'uniform mat4 uInverse;',
 				'uniform mat4 uMatrix;',
 				'uniform float uReach;',
-				'uniform vec3 uSunWay;',
-				'uniform float uSunOn;',
 				'uniform float uSeed;',
 				'out vec4 outColor;',
 				'vec3 place(vec2 uv) {',
@@ -2359,40 +2384,113 @@ Elemenx.Trait('SceneLighting', {
 				'	float depth = texture(uDepth, uv).r;',
 				'	if (depth >= 1.0) { outColor = vec4(1.0); return; }',
 				'	vec3 p = place(uv);',
+				'	vec3 dx = dFdx(p);',
+				'	vec3 dy = dFdy(p);',
+				'	vec3 n = normalize(cross(dx, dy));',
+				'	vec3 v = normalize(-p);',
+				'	if (dot(n, v) < 0.0) n = -n;',
+				'	vec2 pixel = vec2(dFdx(uv).x, dFdy(uv).y);',
+				/* Two slices, turned by the pixel and by the frame: the frames that add up see all round. */
+				'	float noise = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));',
+				'	float turn = (noise + fract(uSeed * 0.618034)) * 3.14159265;',
+				'	float reach = uReach;',
+				'	float seen = 0.0;',
+				'	float total = 0.0;',
+				'	for (int k = 0; k < 2; k++) {',
+				'		float angle = turn + float(k) * 1.5707963;',
+				'		vec2 d = vec2(cos(angle), sin(angle));',
+				/* The slice: the way on the screen and the ray of the eye; t across the ray in it, as long as a pixel there. */
+				'		vec3 w = dx * d.x + dy * d.y;',
+				'		vec3 across = w - v * dot(w, v);',
+				'		float size = max(length(across), 1e-5);',
+				'		vec3 t = across / size;',
+				'		float span = clamp(reach / size, 2.0, 48.0);',
+				'		float jitter = fract(noise * 7.13 + float(k) * 0.37);',
+				'		float far1 = -1.0;',
+				'		float far2 = -1.0;',
+				'		for (int i = 0; i < 6; i++) {',
+				'			float stride = span * (float(i) + jitter) / 6.0 + 1.0;',
+				'			vec3 a = place(uv + d * pixel * stride) - p;',
+				'			vec3 b = place(uv - d * pixel * stride) - p;',
+				'			float la = length(a);',
+				'			float lb = length(b);',
+				/* Past its reach a thing hides less, and none twice as far. */
+				'			far2 = max(far2, mix(dot(a, v) / max(la, 1e-5), -1.0, clamp(la / reach - 1.0, 0.0, 1.0)));',
+				'			far1 = max(far1, mix(dot(b, v) / max(lb, 1e-5), -1.0, clamp(lb / reach - 1.0, 0.0, 1.0)));',
+				'		}',
+				/* The normal in the slice, its angle from the ray; the horizons on both sides, within a half turn of it; the cosine-weighted part of the sky between. */
+				'		vec3 side = normalize(cross(t, v));',
+				'		vec3 lying = n - side * dot(n, side);',
+				'		float length2 = length(lying);',
+				'		float gamma = atan(dot(lying, t), dot(lying, v));',
+				'		float h1 = gamma + max(-acos(clamp(far1, -1.0, 1.0)) - gamma, -1.5707963);',
+				'		float h2 = gamma + min(acos(clamp(far2, -1.0, 1.0)) - gamma, 1.5707963);',
+				'		float cg = cos(gamma);',
+				'		float sg = sin(gamma);',
+				'		seen += length2 * 0.25 * (-cos(2.0 * h1 - gamma) + cg + 2.0 * h1 * sg - cos(2.0 * h2 - gamma) + cg + 2.0 * h2 * sg);',
+				'		total += length2;',
+				'	}',
+				'	float open = clamp(seen / max(total, 1e-5), 0.0, 1.0);',
+				/* Light bounces in a fold too: a fold of a ground of middle color is not as dark as its sky alone (Jimenez). */
+				'	open = max(open, ((open * 0.5858 - 1.5159) * open + 1.9301) * open);',
+				'	outColor = vec4(vec3(open), 1.0);',
+				'}'
+			].join('\n'),
+
+			/*
+			 * Contact shadows of the sun, at the size of the picture: from each point lit by the sun (facing it, out of the shadow of
+			 * its maps) a short way toward it over the depth of the screen, as long as a fiftieth of its distance (8 cm to 3 m): what
+			 * the maps are too coarse for, a pebble on the ground, a foot on a floor, a crease, grass at its root. What it meets
+			 * takes away the part of the sun in its light; the light of the sky stays. The darkened corners go along in red.
+			 */
+			Touch: head + [
+				'in vec2 vQuad;',
+				'uniform sampler2D uDepth;',
+				'uniform sampler2D uDark;',
+				'uniform mat4 uInverse;',
+				'uniform mat4 uMatrix;',
+				'uniform vec3 uSunWay;',
+				'uniform float uSunOn;',
+				'out vec4 outColor;',
+				graphics.Chunks.Shadow,
+				'vec3 place(vec2 uv) {',
+				'	vec4 p = uInverse * vec4(uv * 2.0 - 1.0, texture(uDepth, uv).r * 2.0 - 1.0, 1.0);',
+				'	return p.xyz / p.w;',
+				'}',
+				'void main() {',
+				'	vec2 uv = vQuad * 0.5 + 0.5;',
+				'	float dark = texture(uDark, uv).r;',
+				'	float depth = texture(uDepth, uv).r;',
+				'	outColor = vec4(dark, 1.0, 0.0, 1.0);',
+				'	if (depth >= 1.0 || uSunOn < 0.02) return;',
+				'	vec3 p = place(uv);',
 				'	vec3 n = normalize(cross(dFdx(p), dFdy(p)));',
 				'	if (dot(n, p) > 0.0) n = -n;',
+				'	float facing = dot(n, uSunWay);',
+				'	if (facing <= 0.0) return;',
+				'	float lit = sunShadow(p, n);',
+				'	if (lit < 0.02) return;',
+				'	float far = length(p);',
+				'	float reach = clamp(far * 0.02, 0.08, 3.0);',
+				'	float near = far * 0.003 + 0.01;',
 				'	float noise = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));',
-				'	float reach = uReach;',
-				'	float dark = 0.0;',
-				'	for (int i = 0; i < 10; i++) {',
-				'		float t = (float(i) + 0.5) / 10.0;',
-				'		float angle = t * 15.0 + noise * 6.2831853;',
-				'		vec3 way = vec3(cos(angle), sin(angle), cos(angle * 1.7)) * sqrt(t) * reach;',
-				'		if (dot(way, n) < 0.0) way = -way;',
-				'		vec3 at = p + way + n * reach * 0.05;',
+				'	vec3 from = p + n * near;',
+				'	float hit = 0.0;',
+				'	for (int i = 0; i < 16; i++) {',
+				'		float t = (float(i) + noise) / 16.0;',
+				'		vec3 at = from + uSunWay * reach * t;',
 				'		vec4 s = uMatrix * vec4(at, 1.0);',
+				'		if (s.w <= 0.0) break;',
 				'		vec2 suv = s.xy / s.w * 0.5 + 0.5;',
-				'		if (suv.x < 0.0 || suv.y < 0.0 || suv.x > 1.0 || suv.y > 1.0) continue;',
-				'		vec3 q = place(suv);',
-				'		float near = length(q) + reach * 0.03 < length(at) ? 1.0 : 0.0;',
-				'		dark += near * smoothstep(reach * 2.0, reach * 0.5, abs(length(q) - length(p)));',
-				'	}',
-				/* A short way to the sun on the screen: what the shadow maps are too coarse for, under a foot, in a fold. */
-				'	float touch = 0.0;',
-				'	if (uSunOn > 0.02) {',
-				'		for (int i = 0; i < 8; i++) {',
-				'			vec3 at = p + n * reach * 0.02 + uSunWay * reach * 0.3 * (float(i) + noise) / 8.0;',
-				'			vec4 s = uMatrix * vec4(at, 1.0);',
-				'			vec2 suv = s.xy / s.w * 0.5 + 0.5;',
-				'			if (s.w <= 0.0 || suv.x < 0.0 || suv.y < 0.0 || suv.x > 1.0 || suv.y > 1.0) break;',
-				'			float gap = length(at) - length(place(suv));',
-				'			if (gap > reach * 0.015 && gap < reach * 0.3) {',
-				'				touch = 1.0;',
-				'				break;',
-				'			}',
+				'		if (suv.x < 0.0 || suv.y < 0.0 || suv.x > 1.0 || suv.y > 1.0) break;',
+				'		float gap = length(at) - length(place(suv));',
+				'		if (gap > near && gap < reach * 1.5 + 0.05) {',
+				'			vec2 edge = min(suv, 1.0 - suv);',
+				'			hit = (1.0 - t * t) * smoothstep(0.0, 0.03, min(edge.x, edge.y));',
+				'			break;',
 				'		}',
 				'	}',
-				'	outColor = vec4(vec3((1.0 - dark / 10.0) * (1.0 - touch * uSunOn * 0.5)), 1.0);',
+				'	outColor.g = 1.0 - hit * lit * clamp(facing * 2.5, 0.0, 1.0) * uSunOn * 0.75;',
 				'}'
 			].join('\n'),
 

@@ -1171,7 +1171,7 @@
 		</div>
 	</Section>
 
-	<Section *if="Shows('Combat and magic')" Title="Combat and magic" [note]="'Scene · SceneWeapons, SceneDebris, SceneEffects; GameCombat and GameStrategy of ElemenxGaming: weapons, hits by material, marks, locks, health, what breaks, a transporter beam, circles on any surface'">
+	<Section *if="Shows('Combat and magic')" Title="Combat and magic" [note]="'Scene · SceneWeapons, SceneDebris, SceneFracture, SceneEffects; GameCombat and GameStrategy of ElemenxGaming: weapons, hits by material, marks, locks, health, what breaks, a transporter beam, circles on any surface'">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<Select Label="Weapon" [options]="CombatWeapons" [value]="CombatWeapon" (change)="CombatWeaponChosen" />
@@ -1190,10 +1190,11 @@
 				<Button Label="Circle on the ground" Icon="circle-dot" Variant="ghost" (click)="CombatGroundCircle" />
 				<Button Label="Dispel" Icon="x" Variant="ghost" (click)="CombatDispel" />
 				<Button Label="Break the crate" Icon="box" Variant="ghost" (click)="CombatBreak" />
+				<Button Label="Crack the wall" Icon="zap" Variant="ghost" (click)="CombatCrack" />
 			</div>
 			<p class="elemenx-caption" aria-live="polite">{{CombatNote}}</p>
 			<div class="ui-kit-space" data-demo="combat">
-				<Scene *if="!Far.combat" Setting="terrain" Labels="false" Person="shoulder" [crosshair]="CombatCrosshair" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="CombatReady" (hit)="CombatHit" (lock)="CombatLocked" (break)="CombatBroke">
+				<Scene *if="!Far.combat" Setting="terrain" Labels="false" Person="shoulder" [crosshair]="CombatCrosshair" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="CombatReady" (hit)="CombatHit" (lock)="CombatLocked" (crack)="CombatCracked" (break)="CombatBroke">
 					<SceneObject ID="range" Kind="ground" [world]="WorldOf('meadow')" />
 					<SceneObject ID="noon" Kind="sun" Time="14" Latitude="45" />
 					<GameCombat Bars="hurt" (death)="CombatDied" />

@@ -268,11 +268,11 @@ describe('Contract: the zones of a ground and where things may grow on it', func
 
 	/*
 	 * What a ground is made of (SceneMaterials): the materials of its palettes and its sketch in slots, the weights of them at
-	 * a point as its colors go (Paint into), and those of each corner of its squares (Materials: 8 a vertex).
+	 * a point as its colors go (Paint into), and those of each corner of its squares (Materials: 12 a vertex).
 	 */
 	it('makes its ground of materials: slots of its palettes and sketch, their weights at a point and at each corner', function () {
 		var field = terrain.Flat({Size: 400, Height: 100, Rock: 0.6, Snow: 0.9, Water: 0, Seed: 'stuff', Palette: {Materials: {Low: 'clay'}}, Sketch: {Layers: [{ID: 'a', Items: [{Type: 'beach', Points: [[-50, -50], [50, -50], [50, 50], [-50, 50]]}, {Type: 'road', Points: [[100, -150], [100, 150]], Width: 8, Material: 'cobbles'}]}]}});
-		var stuff = [0, 0, 0, 0, 0, 0, 0, 0];
+		var stuff = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 		var geometry;
 		var count;
 
@@ -284,32 +284,72 @@ describe('Contract: the zones of a ground and where things may grow on it', func
 		expect(stuff[0] + stuff[1]).toBeCloseTo(1, 5);
 		expect(stuff[0]).toBeGreaterThan(stuff[1]);
 
-		stuff = [0, 0, 0, 0, 0, 0, 0, 0];
+		stuff = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 		terrain.Paint(field, -150, -150, 30, 0.5, stuff);
 
 		expect(stuff[2]).toBe(1);
 
-		stuff = [0, 0, 0, 0, 0, 0, 0, 0];
+		stuff = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-		terrain.Paint(field, -150, -150, 95, 0, stuff);
+		terrain.Paint(field, -150, -150, 99, 0, stuff);
 
 		expect(stuff[6]).toBe(1);
 
-		stuff = [0, 0, 0, 0, 0, 0, 0, 0];
+		stuff = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 		terrain.Paint(field, 100, 0, 30, 0, stuff);
 
 		expect(stuff[5]).toBeGreaterThan(0.9);
 
-		/* Its squares: 8 weights of each corner, the skirt too. */
+		/* Its squares: 12 weights of each corner, the skirt too. */
 		geometry = field.Chunk(0, 0, 100, 8);
 		count = geometry.Positions.length / 3;
 
-		expect(geometry.Materials.length).toBe(count * 8);
-		expect(geometry.Materials.slice(0, 8).reduce(function (sum, value) {
+		expect(geometry.Materials.length).toBe(count * 12);
+		expect(geometry.Materials.slice(0, 12).reduce(function (sum, value) {
 			return sum + value;
 		}, 0)).toBeCloseTo(1, 5);
+	});
+
+	/*
+	 * Regression: a hillside had teeth of white and brown, a triangle each, down it: a corner was snow or rock or grass by
+	 * a line of its height or its slope, so the next corner, a little higher or steeper, was all of another; and a ground
+	 * of many materials had no slot left for its snow, which was so its color alone.
+	 */
+	it('goes from grass to rock to snow over a band of height and of slope, and has a slot for the snow of a ground of many materials', function () {
+		var field = terrain.Flat({Size: 400, Height: 100, Rock: 0.6, Snow: 0.9, Water: 0, Seed: 'band'});
+		var many = terrain.Flat({Size: 400, Height: 100, Water: 0, Seed: 'many', Sketch: {Layers: [{ID: 'a', Items: ['beach', 'road', 'street', 'river', 'swamp', 'floodplain', 'canyon'].map(function (type, index) {
+			return {Type: type, Points: [[-150 + index * 40, -150], [-150 + index * 40, 150]], Width: 6, Material: ['sand', 'dirt', 'paving', 'gravel', 'clay', 'grassy', 'cobbles'][index]};
+		})}]}});
+
+		function weights (x, y, slope) {
+			var stuff = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+			terrain.Paint(field, x, 0, y, slope, stuff);
+
+			return stuff;
+		}
+
+		/* A metre higher, a little steeper: the weights move a little, not from one material to the next. */
+		[0, 37, 120].forEach(function (x) {
+			var y;
+
+			for (y = 80; y < 100; y++)
+				expect(Math.abs(weights(x, y + 1, 0)[field.MaterialSlot.snow] - weights(x, y, 0)[field.MaterialSlot.snow])).toBeLessThan(0.3);
+
+			for (y = 50; y < 70; y++)
+				expect(Math.abs(weights(x, y + 1, 0)[field.MaterialSlot.rock] - weights(x, y, 0)[field.MaterialSlot.rock])).toBeLessThan(0.3);
+		});
+
+		expect(Math.abs(weights(0, 20, 0.34)[field.MaterialSlot.rock] - weights(0, 20, 0.3)[field.MaterialSlot.rock])).toBeLessThan(0.3);
+		expect(weights(0, 20, 0.1)[field.MaterialSlot.rock]).toBe(0);
+		expect(weights(0, 20, 0.5)[field.MaterialSlot.rock]).toBe(1);
+
+		/* Snow still has a slot after the seven of a sketch. */
+		expect(many.Materials.length).toBeGreaterThan(8);
+		expect(many.Materials).toContain('snow');
+		expect(many.Materials).toContain('cobbles');
 	});
 
 	/* Regression: grass grew on the roads, which the ground under them made level: nothing kept them bare. */
@@ -556,6 +596,35 @@ describe('Contract: the volume of a ground: tunnels, caves and overhangs cut out
 		expect(piece.Positions.some(function (value, index) {
 			return index % 3 === 1 && value < 4 && value > 2.5;
 		})).toBe(true);
+	});
+
+	/*
+	 * Regression: a tunnel made each square in the box of all of it of the volume, though far from most, and the points
+	 * of such a square where nothing is cut were off the heights: beside a square of heights, a step.
+	 */
+	it('makes of the volume only the squares near a tunnel, and puts the points of one where nothing is cut on the heights', function () {
+		var options = {Size: 400, Height: 40, Water: 0, Seed: 'hill', Scale: 90};
+		var field = terrain.Flat(Object.assign({}, options, {Carves: [{Type: 'tunnel', Points: [[-60, 0, 6], [60, 0, 6], [60, 120, 6]], Radius: 4}]}));
+		var piece = field.Chunk(0, 20, 32, 16);
+		var worst = 0;
+		var i;
+
+		/* In the box of the tunnel, far from its axis: of heights; across its axis or by it: of the volume. */
+		expect(field.Volume.Touches(-40, 80, -20, 100)).toBe(false);
+		expect(field.Chunk(-30, 90, 20, 16).Volume).toBeUndefined();
+		expect(field.Volume.Touches(-10, -10, 10, 10)).toBe(true);
+		expect(field.Volume.Touches(50, 50, 70, 70)).toBe(true);
+		expect(field.Volume.Touches(-10, 4.2, 10, 20)).toBe(true);
+		expect(piece.Volume).toBe(true);
+
+		/* Its skirt, two cells under its edges, left out. */
+		for (i = 0; i < piece.Positions.length; i += 3) {
+			var off = Math.abs(piece.Positions[i + 1] - field.Height(piece.Positions[i], piece.Positions[i + 2] + 20));
+			if (piece.Positions[i + 2] + 20 > 12 && piece.Normals[i + 1] > 0.5 && off < 1)
+				worst = Math.max(worst, off);
+		}
+
+		expect(worst).toBeLessThan(1e-4);
 	});
 
 	it('makes natural caves of ways and halls under the ground in their band, and rock jutting out of steep slopes', function () {

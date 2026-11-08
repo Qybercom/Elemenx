@@ -38,7 +38,7 @@ Elemenx.Trait('SceneScatter', {
 		var shaders = this.Grassed(this.Winded(this.ScatterShaders(graphics)));
 		var size = 48;
 		var steps = [[62, 74], [140, 165], [270, 310]];
-		var state = {Sown: Math.random().toString(36).slice(2, 8), Generation: 0, Running: 0, Flying: 0, Kept: {}, Houses: [], Settled: '', Surfaces: {}, Key: '', Squares: [], Waiting: [], Streams: {}, Meshes: {}, Baked: {}, Blocked: {}, Things: 0, Moved: true, Eye: null, Look: null, Grass: null, Field: null, Programs: null, Edits: {}};
+		var state = {Sown: Math.random().toString(36).slice(2, 8), Generation: 0, Running: 0, Flying: 0, Kept: {}, Houses: [], Settled: '', Surfaces: {}, Facades: {}, Buildings: {}, Key: '', Squares: [], Waiting: [], Streams: {}, Meshes: {}, Baked: {}, Blocked: {}, Things: 0, Moved: true, Eye: null, Look: null, Grass: null, Field: null, Programs: null, Edits: {}};
 
 		this.Sown = function () {
 			return {Things: state.Things, Squares: state.Squares.length, Waiting: state.Waiting.length + state.Flying, Draws: Object.keys(state.Streams).filter(function (key) {
@@ -56,6 +56,117 @@ Elemenx.Trait('SceneScatter', {
 			var at = fragment.lastIndexOf('void main() {');
 
 			return fragment.slice(0, at) + 'in vec2 vFade;\nuniform float uDither;\nvoid main() {\n\tfloat hole = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uDither * 0.618034);\n\tif (hole >= vFade.y || hole < 1.0 - vFade.x) discard;' + fragment.slice(at + 13);
+		}
+
+		/*
+		 * A building far away: its simpler shape colored by its facades baked once (facade), each face by the side it looks
+		 * to (four sides and the roof, in the space of the model), so its windows stay where they were and it is never a
+		 * picture turned to the eye. Where the picture has nothing (a face the bake did not see), its own color.
+		 */
+		function faced (fragment) {
+			var at = fragment.lastIndexOf('void main() {');
+
+			return fragment.slice(0, at) + [
+				'in vec3 vBodyNormal;',
+				'uniform sampler2D uFacade;',
+				'uniform vec3 uBoxMin;',
+				'uniform vec3 uBoxMax;',
+				'vec3 facadeColor(vec3 p, vec3 normal, vec3 own) {',
+				'	vec3 a = abs(normal);',
+				'	vec3 t = clamp((p - uBoxMin) / max(uBoxMax - uBoxMin, vec3(1e-4)), 0.001, 0.999);',
+				'	vec2 uv;',
+				'	float cell;',
+				'	if (a.y > a.x && a.y > a.z) {',
+				'		uv = t.xz;',
+				'		cell = 4.0;',
+				'	}',
+				'	else if (a.x > a.z) {',
+				'		uv = t.zy;',
+				'		cell = normal.x > 0.0 ? 0.0 : 1.0;',
+				'	}',
+				'	else {',
+				'		uv = t.xy;',
+				'		cell = normal.z > 0.0 ? 2.0 : 3.0;',
+				'	}',
+				'	vec4 baked = texture(uFacade, (vec2(mod(cell, 3.0), floor(cell / 3.0)) + uv) / vec2(3.0, 2.0));',
+				'	return baked.a > 0.5 ? baked.rgb : min(own, vec3(1.0));',
+				'}'
+			].join('\n') + '\n' + fragment.slice(at).replace('vec3 color = pow(min(vColor, vec3(1.0)), vec3(2.2));', 'vec3 color = pow(facadeColor(vLocal, normalize(vBodyNormal), vColor), vec3(2.2));');
+		}
+
+		/* Whether a model is a building: far away it is drawn of its facades, not of a picture. */
+		function building (key) {
+			var name = key.split('~')[0];
+			var info;
+
+			if (state.Buildings[name] === undefined) {
+				info = library.Info(name);
+				state.Buildings[name] = !!info && (info.Group === 'buildings' || info.Type === 'building');
+			}
+
+			return state.Buildings[name];
+		}
+
+		/*
+		 * The facades of a building, baked once: a view of it in parallel rays from each side and from over it, 256 texels
+		 * each, three across and two down (+x, -x, +z, -z, the roof), each cell as large as its box seen from there.
+		 */
+		function facade (key) {
+			var parts = key.split('~');
+			var side = 256;
+			var whole;
+			var mesh;
+			var target;
+			var min = [Infinity, Infinity, Infinity];
+			var max = [-Infinity, -Infinity, -Infinity];
+			var size;
+			var i;
+
+			if (state.Facades[key])
+				return state.Facades[key];
+
+			whole = library.Whole(library.Make(parts[0], {Variant: Number(parts[1])}));
+
+			for (i = 0; i < whole.Positions.length; i += 3) {
+				min = [Math.min(min[0], whole.Positions[i]), Math.min(min[1], whole.Positions[i + 1]), Math.min(min[2], whole.Positions[i + 2])];
+				max = [Math.max(max[0], whole.Positions[i]), Math.max(max[1], whole.Positions[i + 1]), Math.max(max[2], whole.Positions[i + 2])];
+			}
+
+			size = [Math.max(1e-4, max[0] - min[0]), Math.max(1e-4, max[1] - min[1]), Math.max(1e-4, max[2] - min[2])];
+			target = renderer.Target(side * 3, side * 2, {Colors: 2, Depth: true});
+			mesh = renderer.Mesh(whole);
+
+			target.Begin();
+
+			renderer.Clear([0, 0, 0, 0]);
+
+			/* Each view: across (b) and up (c) of its cell, and the way it looks along (a, sign: from that side). */
+			[[0, 1, 2, 1], [0, -1, 2, 1], [2, 1, 0, 1], [2, -1, 0, 1], [1, 1, 0, 2]].forEach(function (view, cell) {
+				var a = view[0];
+				var sign = view[1];
+				var b = view[2];
+				var c = view[3];
+				var matrix = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+
+				/* Column-major: clip x of b, clip y of c, depth of a (nearest to the side it is seen from, the least). */
+				matrix[b * 4] = 2 / size[b];
+				matrix[12] += -2 * min[b] / size[b] - 1;
+				matrix[c * 4 + 1] = 2 / size[c];
+				matrix[13] += -2 * min[c] / size[c] - 1;
+				matrix[a * 4 + 2] = -sign * 2 / size[a];
+				matrix[14] += sign * (1 + 2 * min[a] / size[a]) + (sign > 0 ? 0 : -2);
+
+				renderer.Viewport(cell % 3 * side, Math.floor(cell / 3) * side, side, side);
+				renderer.Draw(mesh, programs().Bake, {uViewProjection: matrix}, {Cull: 'none'});
+			});
+
+			target.End();
+
+			mesh.Destroy();
+
+			state.Facades[key] = {Target: target, Min: min, Max: max};
+
+			return state.Facades[key];
 		}
 
 		engine.ScatterWarm = function () {
@@ -76,6 +187,7 @@ Elemenx.Trait('SceneScatter', {
 					Depth: renderer.Program(shaders.Vertex, self.Shaders(graphics).Depth),
 					Bake: renderer.Program(shaders.BakeVertex, shaders.Bake),
 					Picture: renderer.Program(shaders.PictureVertex, dithered(shaders.Picture)),
+					Facade: renderer.Program(shaders.Vertex, dithered(faced(self.Shaders(graphics).Solid))),
 					Grass: renderer.Program(shaders.GrassVertex, shaders.Grass)
 				};
 			}
@@ -158,12 +270,24 @@ Elemenx.Trait('SceneScatter', {
 			var text;
 			var made;
 
-			/* Asked for each place a thing may grow: the same sketch in the same scene is what it was. */
-			if (state.Sketched && state.SketchOf === sketch && state.SketchVersion === scene.Version) return state.Sketched;
+			/* Pipes laid on the ground (ScenePiping): nothing grows under them; a pipe laid out again, its count tells. */
+			var laid = scene.Piping ? scene.Piping.Made : 0;
+			var pipes = [];
 
-			text = sketch ? JSON.stringify(sketch) : '';
+			/* Asked for each place a thing may grow: the same sketch in the same scene is what it was. */
+			if (state.Sketched && state.SketchOf === sketch && state.SketchVersion === scene.Version && state.PipesLaid === laid) return state.Sketched;
+
+			pipes = (engine.Pipes ? engine.Pipes() : []).filter(function (pipe) {
+				return pipe.Laid === 'ground';
+			}).map(function (pipe) {
+				return {Points: pipe.Points.map(function (point) {
+					return [Math.round(point.X * 100) / 100, Math.round(point.Z * 100) / 100];
+				}), Reach: pipe.Radius + 0.2};
+			});
+			text = (sketch ? JSON.stringify(sketch) : '') + (pipes.length ? JSON.stringify(pipes) : '');
 			state.SketchOf = sketch;
 			state.SketchVersion = scene.Version;
+			state.PipesLaid = laid;
 
 			if (state.SketchText === text && state.Sketched) return state.Sketched;
 
@@ -215,6 +339,10 @@ Elemenx.Trait('SceneScatter', {
 			});
 
 			settlements(made);
+
+			pipes.forEach(function (line) {
+				made.Lines.push(line);
+			});
 
 			state.SketchText = text;
 			state.Sketched = made;
@@ -744,7 +872,13 @@ Elemenx.Trait('SceneScatter', {
 			var parts = key.split('~');
 
 			if (!state.Meshes[key]) {
-				state.Meshes[key] = library.Levels(parts[0], {Variant: Number(parts[1])}).map(function (geometry) {
+				var made = library.Levels(parts[0], {Variant: Number(parts[1])});
+
+				/* A building has a fourth, the shape of the third again: the copies of the farthest of its own. */
+				if (building(key))
+					made = made.concat([made[made.length - 1]]);
+
+				state.Meshes[key] = made.map(function (geometry) {
 					return renderer.Mesh(geometry);
 				});
 			}
@@ -760,6 +894,7 @@ Elemenx.Trait('SceneScatter', {
 			var quality = self.ScatterReach ? self.ScatterReach() : 1;
 			var radius = size * 0.75 + 12;
 			var margin = reach ? size * 0.75 + 8 : 0;
+			var lod = lodScale();
 
 			Object.keys(state.Streams).forEach(function (name) {
 				state.Streams[name].Count = 0;
@@ -769,8 +904,10 @@ Elemenx.Trait('SceneScatter', {
 				var x = square.Center[0] - eye[0];
 				var y = square.Center[1] - eye[1];
 				var z = square.Center[2] - eye[2];
+				/* As far round its middle as its tallest thing reaches: a tower whose top is in view is drawn, its square's middle out of it. */
+				var round = radius + tallest(square);
 				var inside = view.every(function (plane) {
-					return plane[0] * x + plane[1] * y + plane[2] * z + plane[3] > -radius;
+					return plane[0] * x + plane[1] * y + plane[2] * z + plane[3] > -round;
 				});
 				var distance = reach ? Math.sqrt(x * x + y * y + z * z) : scene.Camera.Ortho;
 				var level;
@@ -789,13 +926,24 @@ Elemenx.Trait('SceneScatter', {
 				[0, 1, 2, 3].forEach(function (one) {
 					var from = one ? steps[one - 1][0] * quality : -Infinity;
 					var to = one < 3 ? steps[one][1] * quality : Infinity;
-					if (reach ? distance + margin <= from || distance - margin >= to : one !== level) return;
+
+					if (!reach && one !== level) return;
 
 					Object.keys(square.Lists).forEach(function (key) {
-						/* What grows only round the eye is not asked for farther. */
-						if (reach && square.Lists[key].Reach && distance - margin > square.Lists[key].Reach) return;
+						var list = square.Lists[key];
+						var sizes;
 
-						append(stream(key, one), square.Lists[key]);
+						/* What grows only round the eye is not asked for farther. */
+						if (reach && list.Reach && distance - margin > list.Reach) return;
+
+						/* In each level its copies may be in by their sizes on the screen: the smallest come into it first, the largest last. */
+						if (reach) {
+							sizes = sizesOf(list);
+
+							if ((distance + margin) * lod / Math.max(sizes[0], 1.5) <= from || Math.max(0, distance - margin) * lod / Math.max(sizes[1], 1.5) >= to) return;
+						}
+
+						append(stream(key, one), list);
 					});
 				});
 			});
@@ -814,7 +962,7 @@ Elemenx.Trait('SceneScatter', {
 					return;
 				}
 
-				(each.Level === 3 ? picture(each.Key).Quad : levels(each.Key)[each.Level]).Instance(data, each.Count);
+				(each.Level === 3 && !building(each.Key) ? picture(each.Key).Quad : levels(each.Key)[each.Level]).Instance(data, each.Count);
 			});
 		}
 
@@ -831,6 +979,47 @@ Elemenx.Trait('SceneScatter', {
 			}
 
 			return state.Surfaces[key];
+		}
+
+		/*
+		 * How far a thing is by its size on the screen (uLod): the distances of the levels are those of a thing of 4 metres
+		 * on a screen 750 pixels to the focus (700 high at 50 degrees); a thing ten times as large is as small on the screen
+		 * ten times as far, a screen of more pixels shows it fine farther. Each copy divides it by its own size.
+		 */
+		function lodScale () {
+			var height = renderer.Height / Math.max(1, renderer.Ratio || 1);
+			var focal = height / (2 * Math.tan((scene.Camera.Fov || 50) * Math.PI / 360));
+
+			return 4 * 750 / Math.max(100, focal);
+		}
+
+		/* How far over the ground of a square its tallest thing reaches, past what the square's own reach holds. */
+		function tallest (square) {
+			if (square.Tallest === undefined) {
+				square.Tallest = 0;
+
+				Object.keys(square.Lists).forEach(function (key) {
+					square.Tallest = Math.max(square.Tallest, sizesOf(square.Lists[key])[1] - 12);
+				});
+			}
+
+			return square.Tallest;
+		}
+
+		/* The sizes of the copies of a list ([smallest, largest]), found once. */
+		function sizesOf (list) {
+			var i;
+
+			if (list.Sizes && list.Sizes[2] === list.Count) return list.Sizes;
+
+			list.Sizes = [Infinity, 0, list.Count];
+
+			for (i = 0; i < list.Count; i++) {
+				list.Sizes[0] = Math.min(list.Sizes[0], list.Places[i * 4 + 3]);
+				list.Sizes[1] = Math.max(list.Sizes[1], list.Places[i * 4 + 3]);
+			}
+
+			return list.Sizes;
 		}
 
 		/* Where a level is seen: it comes in between the first two distances, and goes between the last two. */
@@ -1180,9 +1369,9 @@ Elemenx.Trait('SceneScatter', {
 			 * overlap (at ultra: farther apart).
 			 */
 			each(function (one) {
-				if (one.Level === 3 || one.Level === 0 && surfaces(one.Key)) return;
+				if (one.Level === 3 && !building(one.Key) || one.Level === 0 && surfaces(one.Key)) return;
 
-				renderer.Draw(levels(one.Key)[one.Level], programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: 0, uFade: fadeOf(one.Level)}, self.WindValues(scene.Seconds)), {Cull: 'none'});
+				renderer.Draw(levels(one.Key)[one.Level], programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: 0, uFade: fadeOf(one.Level), uLod: scene.Camera.Ortho ? 0 : lodScale()}, self.WindValues(scene.Seconds)), {Cull: 'none'});
 			});
 		};
 
@@ -1190,6 +1379,7 @@ Elemenx.Trait('SceneScatter', {
 			var origin = vectors.Subtract([0, 0, 0], scene.Eye);
 			var ground = scene.Ground;
 			var dither = engine.PostStep ? engine.PostStep() : 0;
+			var lod = scene.Camera.Ortho ? 0 : lodScale();
 			var files;
 			var many;
 			var far;
@@ -1197,9 +1387,9 @@ Elemenx.Trait('SceneScatter', {
 			if (!ground) return;
 
 			/* The uniforms of a program made once a frame, what differs set for each draw: no copy of them all for each. */
-			files = Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Gust || 0, uFade: fadeOf(0), uDither: dither});
-			many = Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Gust || 0, uShine: 8, uSpecular: 0.05, uRough: 0.5, uDither: dither});
-			far = Object.assign({}, uniforms, {uOrigin: origin, uFade: fadeOf(3), uDither: dither, uSun: ground.Sun, uSunColor: ground.SunColor, uParallel: scene.Camera.Ortho ? vectors.Normalize(vectors.Subtract(scene.Camera.Position, scene.Camera.Target)).concat([1]) : [0, 0, 0, 0]});
+			files = Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Gust || 0, uFade: fadeOf(0), uDither: dither, uLod: lod});
+			many = Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Gust || 0, uShine: 8, uSpecular: 0.05, uRough: 0.5, uDither: dither, uLod: lod});
+			far = Object.assign({}, uniforms, {uOrigin: origin, uFade: fadeOf(3), uDither: dither, uLod: lod, uSun: ground.Sun, uSunColor: ground.SunColor, uParallel: scene.Camera.Ortho ? vectors.Normalize(vectors.Subtract(scene.Camera.Position, scene.Camera.Target)).concat([1]) : [0, 0, 0, 0]});
 
 			each(function (one) {
 				var parts = one.Key.split('~');
@@ -1213,6 +1403,22 @@ Elemenx.Trait('SceneScatter', {
 
 						renderer.Draw(each.Mesh, programs().Files, Object.assign(files, engine.Surface(each), engine.SeasonValues ? engine.SeasonValues(parts[0]) : null), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
 					});
+
+					return;
+				}
+
+				/* A building past its nearest: its simpler shape with its facades. */
+				if (one.Level > 0 && building(one.Key)) {
+					var faces = facade(one.Key);
+
+					many.uSway = 0;
+					many.uSoft = 0;
+					many.uFade = fadeOf(one.Level);
+					many.uFacade = faces.Target.Textures[0];
+					many.uBoxMin = faces.Min;
+					many.uBoxMax = faces.Max;
+
+					renderer.Draw(levels(one.Key)[one.Level], programs().Facade, many, {Cull: 'back'});
 
 					return;
 				}
@@ -1399,6 +1605,7 @@ Elemenx.Trait('SceneScatter', {
 				'uniform float uWind;',
 				'uniform float uSway;',
 				'uniform vec4 uFade;',
+				'uniform float uLod;',
 				'out vec3 vWorld;',
 				'out vec3 vNormal;',
 				'out vec3 vLocal;',
@@ -1431,7 +1638,7 @@ Elemenx.Trait('SceneScatter', {
 				'	vColor = aColor * aInstance2.yzw;',
 				'	vUV = aUV;',
 				'	vTint = aInstance2.yzw;',
-				'	float far = length(aInstance.xyz + uOrigin);',
+				'	float far = length(aInstance.xyz + uOrigin) * (uLod > 0.0 ? uLod / max(aInstance.w, 1.5) : 1.0);',
 				'	vFade = vec2(smoothstep(uFade.x, uFade.y, far), 1.0 - smoothstep(uFade.z, uFade.w, far));',
 				'	gl_Position = vFade.x > 0.0 && vFade.y > 0.0 ? uViewProjection * vec4(world, 1.0) : vec4(0.0, 0.0, 2.0, 1.0);',
 				'}'
@@ -1473,6 +1680,7 @@ Elemenx.Trait('SceneScatter', {
 				'uniform float uMiddle;',
 				'uniform vec4 uParallel;',
 				'uniform vec4 uFade;',
+				'uniform float uLod;',
 				'out vec2 vUV;',
 				'out vec3 vTint;',
 				'out vec3 vWorld;',
@@ -1494,7 +1702,7 @@ Elemenx.Trait('SceneScatter', {
 				'	vTint = aInstance2.yzw;',
 				'	vWorld = world;',
 				'	vTurn = vec2(c, s);',
-				'	float far = length(aInstance.xyz + uOrigin);',
+				'	float far = length(aInstance.xyz + uOrigin) * (uLod > 0.0 ? uLod / max(aInstance.w, 1.5) : 1.0);',
 				'	vFade = vec2(smoothstep(uFade.x, uFade.y, far), 1.0 - smoothstep(uFade.z, uFade.w, far));',
 				'	gl_Position = vFade.x > 0.0 && vFade.y > 0.0 ? uViewProjection * vec4(world, 1.0) : vec4(0.0, 0.0, 2.0, 1.0);',
 				'}'
@@ -1541,7 +1749,15 @@ Elemenx.Trait('SceneScatter', {
 				'out float vAlong;',
 				'out float vTone;',
 				'out float vWave;',
+				'out float vDry;',
 				'void blueprintGrass(vec3 position, vec3 normal, vec2 uv, float sway, float phase, float size, inout vec3 world, inout vec3 bent) {}',
+				/* A value noise of the place: the tufts of the grass. */
+				'float tuftNoise(vec2 p) {',
+				'	vec2 i = mod(floor(p), 289.0);',
+				'	vec2 f = fract(p);',
+				'	f = f * f * (3.0 - 2.0 * f);',
+				'	return mix(mix(fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5), fract(sin(dot(i + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5), f.x), mix(fract(sin(dot(i + vec2(0.0, 1.0), vec2(127.1, 311.7))) * 43758.5), fract(sin(dot(i + vec2(1.0, 1.0), vec2(127.1, 311.7))) * 43758.5), f.x), f.y);',
+				'}',
 				'vec2 ground(vec2 place) {',
 				'	vec2 at = (place / uFieldSize.x + 0.5) * (uFieldSize.y - 1.0);',
 				'	ivec2 cell = ivec2(floor(at));',
@@ -1564,10 +1780,14 @@ Elemenx.Trait('SceneScatter', {
 				'	float n = mix(mix(fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5), fract(sin(dot(i + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5), f.x), mix(fract(sin(dot(i + vec2(0.0, 1.0), vec2(127.1, 311.7))) * 43758.5), fract(sin(dot(i + vec2(1.0, 1.0), vec2(127.1, 311.7))) * 43758.5), f.x), f.y);',
 				'	float thick = mix(1.0, smoothstep(0.3, 0.7, n), uClump.x);',
 				'	float own = fract(seed * 7.31 + 0.13);',
+				/* Tufts half a metre across and the patches of a few metres they gather in: taller, shorter, greener, drier, so no lawn is a carpet. */
+				'	float tuft = tuftNoise(place / 0.55) * 0.6 + tuftNoise(place / 2.7 + 13.1) * 0.4;',
+				'	float dry = tuftNoise(place / 3.9 + 41.7);',
+				'	float shape = 0.55 + 0.9 * tuft;',
 				/* Where the ground is kept bare (a road, a river, a clearing), a metre a texel: its texels are at its edges. */
 				'	vec2 freeSide = vec2(textureSize(uFree, 0));',
 				'	float free = texture(uFree, ((place / uFieldSize.x + 0.5) * (freeSide - 1.0) + 0.5) / freeSide).r;',
-				'	float tall = uBlade.x * (1.0 + (own - 0.5) * 2.0 * uClump.z) * mix(1.0, 0.6 + 0.6 * thick, uClump.x) * smoothstep(0.35, 0.8, land.y) * smoothstep(0.1, 0.9, free) * fade * step(seed, uBlade.y * thick);',
+				'	float tall = uBlade.x * shape * (1.0 + (own - 0.5) * 2.0 * uClump.z) * mix(1.0, 0.6 + 0.6 * thick, uClump.x) * smoothstep(0.35, 0.8, land.y) * smoothstep(0.1, 0.9, free) * fade * step(seed, uBlade.y * thick);',
 				'	vec2 side = vec2(cos(aNormal.y), sin(aNormal.y));',
 				'	vec3 world = vec3(place.x, land.x, place.y) + uOrigin;',
 				/* The wind is waves over the field, one for all the blades of a place; a blade of its own stirs only near the eye. */
@@ -1579,7 +1799,8 @@ Elemenx.Trait('SceneScatter', {
 				'	world.y += along * tall * step(0.01, tall);',
 				'	vWorld = world;',
 				'	vAlong = along;',
-				'	vTone = 0.85 + seed * 0.3 * near + 0.15 * (1.0 - near);',
+				'	vTone = (0.85 + seed * 0.3 * near + 0.15 * (1.0 - near)) * (0.88 + 0.24 * tuft);',
+				'	vDry = smoothstep(0.55, 0.85, dry) * 0.6;',
 				'	vWave = bent.x;',
 				/* A blade with no height, under water or on a rock, is not a sliver on the ground: it is not there. */
 				'	gl_Position = tall > 0.01 ? uViewProjection * vec4(world, 1.0) : vec4(0.0, 0.0, 2.0, 1.0);',
@@ -1591,6 +1812,7 @@ Elemenx.Trait('SceneScatter', {
 				'in float vAlong;',
 				'in float vTone;',
 				'in float vWave;',
+				'in float vDry;',
 				'uniform vec3 uRoot;',
 				'uniform vec3 uTip;',
 				'uniform vec3 uSun;',
@@ -1602,7 +1824,9 @@ Elemenx.Trait('SceneScatter', {
 				'void main() {',
 				'	float light = max(uSun.y, 0.0) * sunLit(vWorld, vec3(0.0, 1.0, 0.0));',
 				/* What bends in the wind shows its pale side: from afar the wind is a slow sheen. */
-				'	vec3 color = pow(mix(uRoot, uTip, vAlong) * vTone * (1.0 + vWave * 0.05 * vAlong), vec3(2.2));',
+				/* A patch gone dry: its tips straw. */
+				'	vec3 tip = mix(uTip, uTip * vec3(1.25, 1.05, 0.55), vDry);',
+				'	vec3 color = pow(mix(uRoot, tip, vAlong) * vTone * (1.0 + vWave * 0.05 * vAlong), vec3(2.2));',
 				'	float through = 1.0 + vAlong * 0.6;',
 				'	outColor = vec4(pow(color * (uSunColor * light * 1.35 * through + mix(uFloorLight, uSkyLight, 0.5 + vAlong * 0.5) * (0.4 + vAlong * 0.6) * skySeen(vWorld) + sunBounce(vWorld) + localLight(vWorld, vec3(0.0, 1.0, 0.0))), vec3(1.0 / 2.2)), 1.0);',
 				'}'

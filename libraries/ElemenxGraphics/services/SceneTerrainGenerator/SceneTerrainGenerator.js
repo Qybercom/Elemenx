@@ -353,6 +353,8 @@ Elemenx.Service('SceneTerrainGenerator', {
 				Name: name || '',
 				Ground: typeof entry === 'object' && entry.Ground || known && known.Ground || {},
 				Grass: typeof entry === 'object' && entry.Grass !== undefined ? !!entry.Grass : known ? !!known.Grass : true,
+				/* What it sows (rules of Scatter): a planet draws its woods of them on its globe (ScenePlanet.PatchPicture). */
+				Scatter: typeof entry === 'object' && entry.Scatter || known && known.Scatter || [],
 				Climate: Array.isArray(climate) ? climate : [climate]
 			};
 		});
@@ -641,7 +643,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 			};
 		}
 
-		/* What its ground is made of (SceneMaterials): up to 8 materials of its palettes and its sketch, by their slots. */
+		/* What its ground is made of (SceneMaterials): up to 12 materials of its palettes and its sketch, by their slots. */
 		field.Materials = this.MaterialsOf(field);
 		field.MaterialSlot = {};
 
@@ -1218,7 +1220,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	/*
-	 * The colors of a point of a flat map of a palette (Paint); into (8 numbers): the weight of each material of the field
+	 * The colors of a point of a flat map of a palette (Paint); into (12 numbers): the weight of each material of the field
 	 * there (its slots, field.Materials), weight: how much of the point this palette is.
 	 */
 	Painted: function (field, x, z, y, slope, look, palette, into, weight) {
@@ -1233,29 +1235,47 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var color;
 
 		/* Under the sea the sand goes on, darker and darker as it goes down (seen through the water now). */
-		if (y < -0.5) color = [0, 1, 2].map(function (k) {
-			var sand = (palette.Sand || [0.76, 0.7, 0.52])[k];
+		if (y < -0.5) {
+			color = [0, 1, 2].map(function (k) {
+				var sand = (palette.Sand || [0.76, 0.7, 0.52])[k];
 
-			return sand + ((palette.Deep || [0.2, 0.26, 0.3])[k] - sand) * Math.min(1, (-0.5 - y) / 7.5);
-		});
-		else if (y < 1.2) color = palette.Sand || [0.76, 0.7, 0.52];
-		else if (y < rock && y < snow) color = [low[0] + (upper[0] - low[0]) * part, low[1] + (upper[1] - low[1]) * part, low[2] + (upper[2] - low[2]) * part];
-		else if (y < snow) color = palette.Rock || [0.45, 0.42, 0.36];
-		else color = palette.Snow || [0.93, 0.94, 0.96];
+				return sand + ((palette.Deep || [0.2, 0.26, 0.3])[k] - sand) * Math.min(1, (-0.5 - y) / 7.5);
+			});
+		}
+		else if (y < 1.2) {
+			color = palette.Sand || [0.76, 0.7, 0.52];
+		}
+		else {
+			/*
+			 * Grass, rock and snow by the height and the slope, each a little into the next over a band (the snow line
+			 * wavy): the corners of a triangle of a hillside on both sides of a line have near weights, so no teeth of one
+			 * triangle and the next run down it.
+			 */
+			var band = Math.max(2, top * 0.03);
+			var wave = (Math.sin(x * 0.013 + z * 0.004) + Math.sin(z * 0.017 - x * 0.007)) * band * 0.5;
+			var high = isFinite(rock) ? this.Smoothstep(rock - band, rock + band, y + wave * 0.5) : 0;
+			var snowy = isFinite(snow) ? this.Smoothstep(snow - band, snow + band, y + wave) : 0;
+			var steep = this.Smoothstep(0.2, 0.45, slope);
+			var grass = (1 - high) * (1 - snowy) * (1 - steep);
+			var stone = high * (1 - snowy) * (1 - steep) + steep;
+			var white = snowy * (1 - steep);
+			var green = [low[0] + (upper[0] - low[0]) * part, low[1] + (upper[1] - low[1]) * part, low[2] + (upper[2] - low[2]) * part];
+			var grey = steep > 0 ? palette.Rock || [0.42, 0.39, 0.35] : palette.Rock || [0.45, 0.42, 0.36];
+			var snowColor = palette.Snow || [0.93, 0.94, 0.96];
+
+			color = [0, 1, 2].map(function (k) {
+				return green[k] * grass + grey[k] * stone + snowColor[k] * white;
+			});
+
+			if (into)
+				made = [[own.Low || this.GroundMaterials.Low, (1 - part) * grass], [own.High || this.GroundMaterials.High, part * grass], [own.Rock || this.GroundMaterials.Rock, stone], [own.Snow || this.GroundMaterials.Snow, white]].filter(function (one) {
+					return one[1] > 0;
+				});
+		}
 
 		/* What it is made of, as its color goes. */
-		if (into) {
-			if (y < -0.5) made = [[own.Deep || this.GroundMaterials.Deep, 1]];
-			else if (y < 1.2) made = [[own.Sand || this.GroundMaterials.Sand, 1]];
-			else if (y < rock && y < snow) made = [[own.Low || this.GroundMaterials.Low, 1 - part], [own.High || this.GroundMaterials.High, part]];
-			else if (y < snow) made = [[own.Rock || this.GroundMaterials.Rock, 1]];
-			else made = [[own.Snow || this.GroundMaterials.Snow, 1]];
-		}
-
-		if (slope > 0.32 && y > 1.2) {
-			color = palette.Rock || [0.42, 0.39, 0.35];
-			made = [[own.Rock || this.GroundMaterials.Rock, 1]];
-		}
+		if (into && y < 1.2)
+			made = [[y < -0.5 ? own.Deep || this.GroundMaterials.Deep : own.Sand || this.GroundMaterials.Sand, 1]];
 
 		if (field.Roads && this.OnRoad(field, x, z, 1.8)) {
 			color = palette.Road || [0.5, 0.42, 0.32];
@@ -1291,7 +1311,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 	/*
 	 * The materials a field is made of: those of its palettes (its own, of its lands, of the biomes of its sketch) and of
-	 * the items of its sketch, the first 8 (the slots of the shader of its ground).
+	 * the items of its sketch, the first 12 (the slots of the shader of its ground).
 	 */
 	MaterialsOf: function (field) {
 		var self = this;
@@ -1301,7 +1321,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		}) : [field.Palette];
 
 		function add (name) {
-			if (name && names.indexOf(name) === -1 && names.length < 8)
+			if (name && names.indexOf(name) === -1 && names.length < 12)
 				names.push(name);
 		}
 
@@ -1364,7 +1384,8 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * heights: solid where Density(x, y, z) is over 0, the heights of the ground under the sky where nothing is told. null
 	 * with no Carves. Each carve:
 	 * - tunnel: Points [[x, z, y]...] (y: the height of its axis; none: Depth under the ground there), Radius (2.5), Flat
-	 *   (0 to 1: how much of its bottom is cut level to walk on, 0.5);
+	 *   (0 to 1: how much of its bottom is cut level to walk on, 0.5), Crust (metres of the ground over it never cut, so a
+	 *   shallow one keeps a roof; none: it opens where it reaches the surface);
 	 * - sphere: At [x, y, z], Radius: a hole dug;
 	 * - caves: natural caves of noise, ways and halls, under the ground round Center [x, z] within Radius: Top and Bottom
 	 *   (metres under the ground where they are, 3 and 40; Top 0 lets them open to the sky), Scale (the size of their
@@ -1402,6 +1423,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 				one.Points = points;
 				one.Radius = number(carve.Radius, 2.5);
 				one.Flat = Math.max(0, Math.min(1, number(carve.Flat, 0.5)));
+				one.Crust = carve.Crust === undefined || carve.Crust === null || carve.Crust === '' ? -1 : number(carve.Crust, -1);
 				one.Bounds = points.reduce(function (box, point) {
 					return [Math.min(box[0], point[0]), Math.min(box[1], point[1]), Math.min(box[2], point[2]), Math.max(box[3], point[0]), Math.max(box[4], point[1]), Math.max(box[5], point[2])];
 				}, [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]);
@@ -1470,7 +1492,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 			}
 
 			/* Its floor cut level: nothing of it under the axis by more than (1 - Flat) of its radius. */
-			return Math.max(best - one.Radius, axis - one.Radius * (1 - one.Flat * 0.6) - y);
+			best = Math.max(best - one.Radius, axis - one.Radius * (1 - one.Flat * 0.6) - y);
+
+			/* Crust: nothing cut within so many metres of the ground over it (a shallow tunnel keeps a roof of earth). */
+			return one.Crust >= 0 && best < 0 ? Math.max(best, y - (ground(x, z) - one.Crust)) : best;
 		}
 
 		/* Natural caves: ways where two noises are both near their middle, halls where a third is high; only in their band. */
@@ -1492,6 +1517,38 @@ Elemenx.Service('SceneTerrainGenerator', {
 			var dz = ground(x, z + 0.5) - ground(x, z - 0.5);
 
 			return 1 - 1 / Math.sqrt(dx * dx + 1 + dz * dz);
+		}
+
+		/* How far a square [x0, z0, x1, z1] is from a piece of an axis from a to b ([x, y, z]), across the ground: 0 where it crosses it. */
+		function squareNear (x0, z0, x1, z1, a, b) {
+			var corners = [[x0, z0], [x1, z0], [x1, z1], [x0, z1]];
+			var dx = b[0] - a[0];
+			var dz = b[2] - a[2];
+			var length = dx * dx + dz * dz || 1;
+
+			function out (x, z) {
+				return Math.hypot(Math.max(x0 - x, 0, x - x1), Math.max(z0 - z, 0, z - z1));
+			}
+
+			/* Crossing one of its sides, or inside it. */
+			function crosses (p, q) {
+				var d1 = (q[0] - p[0]) * (a[2] - p[1]) - (q[1] - p[1]) * (a[0] - p[0]);
+				var d2 = (q[0] - p[0]) * (b[2] - p[1]) - (q[1] - p[1]) * (b[0] - p[0]);
+				var d3 = dx * (p[1] - a[2]) - dz * (p[0] - a[0]);
+				var d4 = dx * (q[1] - a[2]) - dz * (q[0] - a[0]);
+
+				return d1 * d2 <= 0 && d3 * d4 <= 0;
+			}
+
+			if (!out(a[0], a[2]) || !out(b[0], b[2]) || corners.some(function (corner, index) {
+				return crosses(corner, corners[(index + 1) % 4]);
+			})) return 0;
+
+			return Math.min(out(a[0], a[2]), out(b[0], b[2]), Math.min.apply(Math, corners.map(function (corner) {
+				var t = Math.max(0, Math.min(1, ((corner[0] - a[0]) * dx + (corner[1] - a[2]) * dz) / length));
+
+				return Math.hypot(a[0] + dx * t - corner[0], a[2] + dz * t - corner[1]);
+			})));
 		}
 
 		function inside (one, x, y, z) {
@@ -1558,6 +1615,15 @@ Elemenx.Service('SceneTerrainGenerator', {
 							});
 						});
 					}
+
+					/*
+					 * Regression: a tunnel by the box of all of it made each square in that box of the volume, though it was far
+					 * from most, and a square of the volume beside one of heights showed a step: by how far it is from its axis.
+					 */
+					if (one.Type === 'tunnel')
+						return one.Points.some(function (point, index) {
+							return squareNear(x0, z0, x1, z1, point, one.Points[index + 1] || point) <= one.Radius + 0.5;
+						});
 
 					return true;
 				});
@@ -1830,6 +1896,16 @@ Elemenx.Service('SceneTerrainGenerator', {
 					var px = Math.max(x0, Math.min(x0 + extent, x0 + (i + sum[0] / count) * step));
 					var py = y0 + (j + sum[1] / count) * step;
 					var pz = Math.max(z0, Math.min(z0 + extent, z0 + (k + sum[2] / count) * step));
+					/*
+					 * Regression: a cell where nothing is cut is only the ground: its point at the mean of its crossings was off its
+					 * heights by up to a tenth of a cell, and a square of heights beside it showed a step. There it is on them.
+					 */
+					var plain = corners.every(function (value, corner) {
+						return Math.abs(value - (columns[(k + (corner >> 1 & 1) + 1) * side + (i + (corner & 1) + 1)][0] - y0 - (j + (corner >> 2 & 1)) * step)) < 1e-6;
+					});
+					if (plain)
+						py = field.Height(px, pz);
+
 					/* The way the density grows, of the corners of the cell: no more of it reckoned. */
 					var gx = corners[1] - corners[0] + corners[3] - corners[2] + corners[5] - corners[4] + corners[7] - corners[6];
 					var gy = corners[4] - corners[0] + corners[5] - corners[1] + corners[6] - corners[2] + corners[7] - corners[3];
@@ -1837,7 +1913,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 					var length = Math.sqrt(gx * gx + gy * gy + gz * gz) || 1;
 					var normal = [-gx / length, -gy / length, -gz / length];
 					var top = field.Height(px, pz);
-					var stuff = [0, 0, 0, 0, 0, 0, 0, 0];
+					var stuff = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 					var color;
 
 					/* The ground under the sky has its colors; what is under it or juts out, rock, darker the deeper. */
@@ -1917,12 +1993,13 @@ Elemenx.Service('SceneTerrainGenerator', {
 			var z = z0 + point[1] * step;
 			var top = columns[(point[1] + 1) * side + (point[0] + 1)][0];
 			var plain = volume.Density(x, top - step * 0.5, z) > 0 && volume.Density(x, top + step * 0.5, z) <= 0;
-			var stuff = [0, 0, 0, 0, 0, 0, 0, 0];
+			var stuff = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 			var color = self.Paint(field, x, z, top, 0, stuff);
 			var index = geometry.Positions.length / 3;
 
 			geometry.Positions.push(x - cx, top, z - cz, x - cx, top - step * 2, z - cz);
-			geometry.Normals.push(0, 1, 0, 0, 1, 0);
+			/* Half as long: the mark of a skirt, so the ground on it is painted as the ground over it, never as a wall. */
+			geometry.Normals.push(0, 0.5, 0, 0, 0.5, 0);
 			geometry.UVs.push(top, 1, top, 1);
 			geometry.Colors.push(color[0], color[1], color[2], color[0] * 0.8, color[1] * 0.8, color[2] * 0.8);
 			geometry.Materials.push.apply(geometry.Materials, stuff.concat(stuff));
@@ -1967,7 +2044,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 				z = cz - extent / 2 + row * step;
 				y = field.Height(x, z);
 				normal = field.Normal(x, z);
-				stuff = [0, 0, 0, 0, 0, 0, 0, 0];
+				stuff = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 				color = this.Paint(field, x, z, y, 1 - normal[1], stuff);
 
 				geometry.Positions.push(x - cx, y, z - cz);
@@ -1975,7 +2052,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 				/* Its height, and how much of the sky it sees: all of it, over a ground of heights. */
 				geometry.UVs.push(y, 1);
 				geometry.Colors.push(color[0], color[1], color[2]);
-				geometry.Materials.push(stuff[0], stuff[1], stuff[2], stuff[3], stuff[4], stuff[5], stuff[6], stuff[7]);
+				geometry.Materials.push.apply(geometry.Materials, stuff);
 			}
 		}
 
@@ -2003,20 +2080,26 @@ Elemenx.Service('SceneTerrainGenerator', {
 		for (row = resolution - 1; row >= 1; row--)
 			edges.push(row * side);
 
+		/*
+		 * Regression: the skirt shared the vertices of the edge, its face a wall, and where a square beside left a crack of
+		 * centimetres it showed as a brown cliff. Its own vertices, its normals half as long (the mark of a skirt: its ground
+		 * painted as the ground over it), of the colors of the edge: a crack shows the ground.
+		 */
 		edges.forEach(function (index) {
-			geometry.Positions.push(geometry.Positions[index * 3], geometry.Positions[index * 3 + 1] - step * 2, geometry.Positions[index * 3 + 2]);
-			geometry.Normals.push(geometry.Normals[index * 3], geometry.Normals[index * 3 + 1], geometry.Normals[index * 3 + 2]);
-			geometry.UVs.push(geometry.UVs[index * 2], geometry.UVs[index * 2 + 1]);
-			geometry.Colors.push(geometry.Colors[index * 3] * 0.8, geometry.Colors[index * 3 + 1] * 0.8, geometry.Colors[index * 3 + 2] * 0.8);
-			geometry.Materials.push.apply(geometry.Materials, geometry.Materials.slice(index * 8, index * 8 + 8));
+			[0, step * 2].forEach(function (down) {
+				geometry.Positions.push(geometry.Positions[index * 3], geometry.Positions[index * 3 + 1] - down, geometry.Positions[index * 3 + 2]);
+				geometry.Normals.push(geometry.Normals[index * 3] * 0.5, geometry.Normals[index * 3 + 1] * 0.5, geometry.Normals[index * 3 + 2] * 0.5);
+				geometry.UVs.push(geometry.UVs[index * 2], geometry.UVs[index * 2 + 1]);
+				geometry.Colors.push(geometry.Colors[index * 3], geometry.Colors[index * 3 + 1], geometry.Colors[index * 3 + 2]);
+				geometry.Materials.push.apply(geometry.Materials, geometry.Materials.slice(index * 12, index * 12 + 12));
+			});
 		});
 
 		edges.forEach(function (index, at) {
-			var next = edges[(at + 1) % edges.length];
-			var low = base + at;
-			var lowNext = base + (at + 1) % edges.length;
+			var top = base + at * 2;
+			var next = base + (at + 1) % edges.length * 2;
 
-			geometry.Indices.push(index, next, low, next, lowNext, low);
+			geometry.Indices.push(top, next, top + 1, next, next + 1, top + 1);
 		});
 
 		return geometry;
@@ -2555,7 +2638,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf', 'HighwaysOf', 'TownsOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'GroundMaterials', 'LookMaterials', 'MaterialsOf', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan']});
+		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'PatchPicture', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf', 'HighwaysOf', 'TownsOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'GroundMaterials', 'LookMaterials', 'MaterialsOf', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan']});
 	},
 
 	/*
@@ -3502,18 +3585,23 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	Piece: function (shape, options, roads, args) {
-		var field = this.Field(shape, options);
+		var field = this.Field(shape === 'SpherePicture' ? 'Sphere' : shape, options);
 		var made;
 
 		function typed (geometry) {
 			return {Positions: new Float32Array(geometry.Positions), Normals: new Float32Array(geometry.Normals), UVs: new Float32Array(geometry.UVs), Colors: new Float32Array(geometry.Colors || []), Materials: new Float32Array(geometry.Materials || []), Indices: new Uint32Array(geometry.Indices)};
 		}
 
+		/* A square of a globe; with a size (args[5]) and a field that paints itself (ScenePlanet), its picture too. */
 		if (shape === 'Sphere') {
 			made = field.Patch(args[0], args[1], args[2], args[3], args[4]);
 
-			return {Geometry: typed(made.Geometry), Center: made.Center};
+			return {Geometry: typed(made.Geometry), Center: made.Center, Picture: args[5] && field.Picture ? field.Picture(args[0], args[1], args[2], args[3], args[5]) : null};
 		}
+
+		/* The picture of a square of a globe alone (a face made at once, its picture after). */
+		if (shape === 'SpherePicture')
+			return {Picture: field.Picture ? field.Picture(args[0], args[1], args[2], args[3], args[4]) : null};
 
 		field.Roads = roads || null;
 
@@ -3680,9 +3768,14 @@ Elemenx.Service('SceneTerrainGenerator', {
 		return [-u, -v, -1];
 	},
 
+	/*
+	 * A square of a face of a globe: its points relative to its middle, their normals, UVs [height, 1 on the sea], colors
+	 * (a ground that paints itself), and in Materials (8 a point) where each is on the square, 0 to 1, for its picture
+	 * (PatchPicture). A skirt under its edges hides what a finer square beside leaves between them.
+	 */
 	SpherePatch: function (field, face, cu, cv, extent, resolution) {
 		var math = this.$Service('Math');
-		var geometry = {Positions: [], Normals: [], UVs: [], Colors: [], Indices: []};
+		var geometry = {Positions: [], Normals: [], UVs: [], Colors: [], Materials: [], Indices: []};
 		var side = resolution + 1;
 		var step = extent / resolution;
 		var center = field.Point(this.Face(face, cu, cv));
@@ -3706,6 +3799,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 				points.push(point);
 				geometry.Positions.push(point[0] - center[0], point[1] - center[1], point[2] - center[2]);
 				geometry.UVs.push(value, field.Ocean > 0 && value < 0 ? 1 : 0);
+				geometry.Materials.push(column / resolution, row / resolution, 0, 0, 0, 0, 0, 0);
 
 				/* A ground that tells its colors (ScenePlanet) has them on each point. */
 				if (field.Color)
@@ -3741,6 +3835,47 @@ Elemenx.Service('SceneTerrainGenerator', {
 				else geometry.Indices.push(a, a + side, a + 1, a + 1, a + side, a + side + 1);
 			}
 		}
+
+		/*
+		 * Regression: squares of other sizes side by side left cracks between them, a dark dotted line from high over the
+		 * ground. A skirt of each edge point again, a tenth of a cell lower (at least 50 m), seen from both of its sides.
+		 */
+		var edges = [];
+		var drop = Math.max(0.05, step * Math.PI / 4 * field.Radius * 0.1 + field.Height * 0.02);
+		var base = points.length;
+
+		for (column = 0; column <= resolution; column++)
+			edges.push(column);
+
+		for (row = 1; row <= resolution; row++)
+			edges.push(row * side + resolution);
+
+		for (column = resolution - 1; column >= 0; column--)
+			edges.push(resolution * side + column);
+
+		for (row = resolution - 1; row >= 1; row--)
+			edges.push(row * side);
+
+		edges.forEach(function (index) {
+			var length = Math.sqrt(points[index][0] * points[index][0] + points[index][1] * points[index][1] + points[index][2] * points[index][2]) || 1;
+			var lower = (length - drop) / length;
+
+			geometry.Positions.push(points[index][0] * lower - center[0], points[index][1] * lower - center[1], points[index][2] * lower - center[2]);
+			geometry.Normals.push(geometry.Normals[index * 3], geometry.Normals[index * 3 + 1], geometry.Normals[index * 3 + 2]);
+			geometry.UVs.push(geometry.UVs[index * 2], geometry.UVs[index * 2 + 1]);
+			geometry.Materials.push.apply(geometry.Materials, geometry.Materials.slice(index * 8, index * 8 + 8));
+
+			if (field.Color)
+				geometry.Colors.push(geometry.Colors[index * 3], geometry.Colors[index * 3 + 1], geometry.Colors[index * 3 + 2]);
+		});
+
+		edges.forEach(function (index, at) {
+			var next = edges[(at + 1) % edges.length];
+			var low = base + at;
+			var lowNext = base + (at + 1) % edges.length;
+
+			geometry.Indices.push(index, next, low, next, lowNext, low, index, low, next, next, low, lowNext);
+		});
 
 		return {Geometry: geometry, Center: center};
 	}

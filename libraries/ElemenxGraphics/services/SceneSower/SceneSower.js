@@ -146,8 +146,11 @@ Elemenx.Service('SceneSower', {
 		})};
 	},
 
-	/* Nothing of any rule grows where the sketch keeps the ground free; the things of a line stand on its way all the same. */
-	Free: function (rule, x, z, keep) {
+	/*
+	 * Nothing of any rule grows where the sketch keeps the ground free; the things of a line stand on its way all the same.
+	 * Radius: how far the thing reaches round its place (a large rock): none of it on a road.
+	 */
+	Free: function (rule, x, z, keep, radius) {
 		var self = this;
 
 		if (rule.Line) return true;
@@ -155,7 +158,7 @@ Elemenx.Service('SceneSower', {
 		return !keep.Areas.some(function (points) {
 			return self.Within(points, x, z);
 		}) && !keep.Lines.some(function (line) {
-			return self.Near(line.Points, x, z, line.Reach);
+			return self.Near(line.Points, x, z, line.Reach + (radius || 0));
 		});
 	},
 
@@ -597,6 +600,9 @@ Elemenx.Service('SceneSower', {
 
 					if (grown && grown.Turn !== undefined && isFinite(grown.Turn))
 						turn = Number(grown.Turn);
+
+					/* A thing as large as it came out reaches past its place: none of it on a road or a street. */
+					if (!rule.Fixed && !self.Free(rule, place[0], place[1], keep, large * 0.5)) continue;
 
 					/* The chances of it all taken, so what comes after it is the same whatever was done to it. */
 					var green = tone * random(0.94, 1.04);

@@ -10,7 +10,8 @@
  * The ground holds the sketch of all of them: mountains, a crater and a canyon, a river from the hills to a sea with its
  * beach and dunes, a lake and a swamp, towns of each kind with their districts, squares, walls and a landmark, farms in
  * rows, woods of each kind, the strokes and stamps of an editor, the triggers and zones of a game. Over it stand the
- * roads (motorway with its bridges and tunnels, railway, a race track with its barriers, a gallery of every type of road),
+ * roads (motorway with its bridges and tunnels, railway, a race track with its barriers and a paved street bending inside it, a
+ * gallery of every type of road),
  * a gallery of every model of SceneModels and every class of SceneBuildingGenerator, the effects and lights, a mirror and
  * a glass, walkers, a car and a boat. Its galleries are read from the Services, so a model or a type added shows too.
  * The same functions run in Node: they read no page (World defines the buildings of its gallery in SceneModels).
@@ -47,6 +48,7 @@ Elemenx.Service('SceneShowcase', {
 		var seed = settings.Seed === undefined ? 'showcase' : String(settings.Seed);
 		var wanted = settings.Districts || null;
 		var scale = size / 3000;
+		var models = this.$Service('SceneModels');
 		var objects = [];
 		var layers = [];
 		var districts = this.Districts().filter(function (district) {
@@ -256,6 +258,13 @@ Elemenx.Service('SceneShowcase', {
 			add({ID: 'rails', Kind: 'barrier', Road: 'track', Type: 'guardrail', Side: 'left'});
 			add({ID: 'pit', Kind: 'barrier', Type: 'jersey', Points: points([[1000, 880], [1100, 880]])});
 
+			/* A street that bends inside the ring: its paving and asphalt turn with it (tiles laid by its way, not by the world). */
+			add({ID: 'bend', Kind: 'road', Name: 'Paved bend', Type: 'street', Points: points([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(function (i) {
+				var angle = Math.PI * (-0.15 + 1.3 * i / 12);
+
+				return [1050 + Math.cos(angle) * 75, 1040 + Math.sin(angle) * 75];
+			}))});
+
 			this.Car(at, add);
 		}
 
@@ -270,6 +279,28 @@ Elemenx.Service('SceneShowcase', {
 			add({ID: 'country', Kind: 'road', Name: 'Country road', Type: 'country', Points: points([[360, 250], [420, 600], [450, 760]])});
 			add({ID: 'track-to-woods', Kind: 'road', Type: 'gravel', Points: points([[-700, 0], [-950, -100], [-1100, -350]])});
 			add({ID: 'cross', Kind: 'junction', X: 360 * scale, Y: 250 * scale, Radius: 10});
+		}
+
+		/*
+		 * Pipes by the river: a water main on supports, half full, running out of its end and out of a hole in its side; a steam line with a leak; a culvert on the ground a ball rests in; a sewer under the ground a man may walk in,
+		 * open where it comes out by the river; a thin gas pipe on the ground, closed at both ends.
+		 */
+		if (on.river) {
+			add({ID: 'water-main', Kind: 'pipe', Name: 'Water main', Points: points([[-600, -180], [-500, -180], [-460, -220], [-420, -220]]), Radius: 0.5, Laid: 'above', Lift: 2, Fluid: {Type: 'water', Fill: 0.5, Flow: 1.5, Pressure: 2}, Leaks: [{Along: 115, Angle: -115, Size: 0.05}]});
+			add({ID: 'sewer', Kind: 'pipe', Name: 'Sewer', Points: points([[-600, -300], [-450, -300], [-260, -351], [-196, -370, 11.5]]), Radius: 1.1, Laid: 'buried', Depth: 1.5, Color: [0.5, 0.49, 0.46], Metal: 0, Fluid: {Type: 'sewage', Fill: 0.25, Flow: 0.8}});
+			/* A culvert a man walks in, on the ground: a ball rolls down in it, a crate lies on it (trait Rigid: the Physics hold them in and on it). */
+			add({ID: 'culvert', Kind: 'pipe', Name: 'Culvert', Points: points([[-600, -140], [-540, -140]]), Radius: 1.6, Wall: 0.18, Laid: 'ground', Color: [0.6, 0.59, 0.56], Metal: 0, Flanges: 4});
+
+			if (!models.Has('showcase-ball'))
+				models.Define('showcase-ball', {Group: 'props', Type: 'thing', Size: 1, Parts: [{ID: 'ball', Shape: 'ball', Size: [1, 1, 1], At: [0, 0.5, 0], Color: '#c8402e'}]});
+
+			if (!models.Has('showcase-crate'))
+				models.Define('showcase-crate', {Group: 'props', Type: 'thing', Size: 1, Parts: [{ID: 'crate', Shape: 'box', Size: [1, 1, 1], At: [0, 0.5, 0], Color: '#9a6a3a'}]});
+
+			add({ID: 'ball-in', Kind: 'thing', Name: 'Ball in the culvert', Model: 'showcase-ball', Size: 0.8, X: -570 * scale, Y: -140 * scale, Lift: 0.8, Traits: {Rigid: {Shape: 'sphere', Radius: 0.4, Mass: 20}}});
+			add({ID: 'crate-on', Kind: 'thing', Name: 'Crate on the culvert', Model: 'showcase-crate', Size: 0.8, X: -560 * scale, Y: -140 * scale, Lift: 4.5, Traits: {Rigid: {Shape: 'box', Size: [0.8, 0.8, 0.8], Mass: 20}}});
+			add({ID: 'steam-line', Kind: 'pipe', Name: 'Steam line', Points: points([[-600, -115], [-520, -115]]), Radius: 0.15, Laid: 'above', Lift: 1.2, Color: [0.75, 0.73, 0.7], Ends: 'closed', Fluid: {Type: 'steam', Fill: 1, Pressure: 6}, Leaks: [{Along: 40, Angle: 0, Size: 0.02}]});
+			add({ID: 'gas-line', Kind: 'pipe', Name: 'Gas line', Points: points([[-600, -250], [-480, -250], [-470, -262]]), Radius: 0.08, Laid: 'ground', Ends: 'closed', Color: [0.85, 0.7, 0.1], Fluid: {Type: 'gas', Pressure: 4}});
 		}
 
 		/* The sun, a third of the way through the day. */

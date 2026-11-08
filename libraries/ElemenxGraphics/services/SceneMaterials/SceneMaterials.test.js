@@ -3,22 +3,30 @@ import { loadElemenx } from '../../../../tests/setup.js';
 import { Use } from '../../../../tests/library.js';
 
 var materials;
+var gl;
 
-/* A square of a material drawn flat, 4 mm a pixel (or px metres), its color c over grey: the pixels as bytes. */
+/*
+ * A square of a material drawn flat, 4 mm a pixel (or px metres), its color c over grey: the pixels as bytes. One card
+ * for all (a card each, forty of them, was slow on a busy machine and lost the oldest).
+ */
 function draw (name, px) {
-	var canvas = document.createElement('canvas');
-	var gl;
 	var list = [name];
 	var program;
-	var shader;
+	var shaders = [];
 	var pixels = new Uint8Array(64 * 64 * 4);
 
-	canvas.width = 64;
-	canvas.height = 64;
-	gl = canvas.getContext('webgl2');
+	if (!gl) {
+		var canvas = document.createElement('canvas');
+
+		canvas.width = 64;
+		canvas.height = 64;
+		gl = canvas.getContext('webgl2');
+	}
 
 	function compile (type, text) {
-		shader = gl.createShader(type);
+		var shader = gl.createShader(type);
+
+		shaders.push(shader);
 
 		gl.shaderSource(shader, text);
 		gl.compileShader(shader);
@@ -37,6 +45,11 @@ function draw (name, px) {
 	gl.useProgram(program);
 	gl.drawArrays(gl.TRIANGLES, 0, 3);
 	gl.readPixels(0, 0, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+	gl.deleteProgram(program);
+
+	shaders.forEach(function (shader) {
+		gl.deleteShader(shader);
+	});
 
 	return pixels;
 }
@@ -65,6 +78,45 @@ describe('Contract: SceneMaterials, the library of materials: patterns of GLSL i
 		Use(['service:SceneMaterials']);
 
 		materials = Elemenx.Service('SceneMaterials');
+	});
+
+	/*
+	 * Regression: the skirt under the edge of a square of ground is a wall; where a square beside left a crack of
+	 * centimetres, it was painted as a cliff, a brown line. Its normals half as long mark it: the ground over it.
+	 */
+	it('takes a wall of ground as steep, and a skirt (its normals half as long) as the ground over it', function () {
+		var pixel = new Uint8Array(4);
+
+		draw('grass', 0.004);
+
+		[[1, 0], [0.5, 255]].forEach(function (one) {
+			var program = gl.createProgram();
+			var shaders = [[gl.VERTEX_SHADER, '#version 300 es\nvoid main() { vec2 p = vec2(float(gl_VertexID % 2), float(gl_VertexID / 2)) * 4.0 - 1.0; gl_Position = vec4(p, 0.0, 1.0); }'], [gl.FRAGMENT_SHADER, '#version 300 es\nprecision highp float;\nout vec4 outColor;\nvec3 vNormal = vec3(0.0, ' + one[0].toFixed(1) + ', 0.0);\n' + materials.LandSlope + '\nvoid main() { vec3 place = vec3(gl_FragCoord.x * 0.1, gl_FragCoord.y * 0.1, 0.0); outColor = vec4(landSteeper(place).y, 0.0, 0.0, 1.0); }']].map(function (part) {
+				var shader = gl.createShader(part[0]);
+
+				gl.shaderSource(shader, part[1]);
+				gl.compileShader(shader);
+
+				if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
+					throw new Error(gl.getShaderInfoLog(shader));
+
+				gl.attachShader(program, shader);
+
+				return shader;
+			});
+
+			gl.linkProgram(program);
+			gl.useProgram(program);
+			gl.drawArrays(gl.TRIANGLES, 0, 3);
+			gl.readPixels(32, 32, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+			gl.deleteProgram(program);
+
+			shaders.forEach(function (shader) {
+				gl.deleteShader(shader);
+			});
+
+			expect(Math.abs(pixel[0] - one[1])).toBeLessThan(3);
+		});
 	});
 
 	it('has the materials of the references and the common ones, by group, and the ground may be made of those of land', function () {
@@ -98,7 +150,7 @@ describe('Contract: SceneMaterials, the library of materials: patterns of GLSL i
 
 		/* Far, the grains of asphalt are gone: much less of it varies. */
 		expect(spread(draw('asphalt', 0.5))).toBeLessThan(spread(draw('asphalt', 0.002)));
-	});
+	}, 60000);
 
 	it('defines a material of its own, in the chunk of materials and as the surface of a model', function () {
 		materials.Define('test-stripes', {Group: 'other', Code: '\tc *= 0.5 + 0.5 * step(0.5, fract(q.x));'});

@@ -59,4 +59,34 @@ describe('Regression: SceneRoads with large lists', function () {
 		expect(roads.Near(network.Roads[0], 0, 160).Far).toBeCloseTo(60, 0);
 		expect(Math.abs(roads.Near(network.Roads[0], 0, 160).Offset)).toBeLessThan(1);
 	});
+
+	/* What the tunnels of roads cut out of the ground: a bore for each 12 metres of width, its floor just under the road, a crust of earth kept. */
+	it('cuts a bore of the ground for each 12 metres of the width of a tunnel, from before it to after it, its floor under the road', function () {
+		var roads = create();
+		var points = [];
+		var x;
+		var road;
+		var carves;
+
+		for (x = 0; x <= 200; x += 5)
+			points.push({X: x, Y: 10, Z: 0, Along: x, Way: [1, 0]});
+
+		road = {ID: 'tube', Width: 24, Height: 0, Points: points, Spans: [{Kind: 'tunnel', From: 50, To: 150}, {Kind: 'bridge', From: 160, To: 190}]};
+		carves = roads.Carves([road]);
+
+		expect(carves.length).toBe(2);
+		expect(carves[0]).toMatchObject({Type: 'tunnel', Road: 'tube', Flat: 0.8, Crust: 1});
+		expect(carves[0].Radius).toBeCloseTo(7.2, 6);
+		/* On both sides of the middle, a quarter of the width out. */
+		expect(carves[0].Points[0][1]).toBeCloseTo(6, 6);
+		expect(carves[1].Points[0][1]).toBeCloseTo(-6, 6);
+		/* From a radius before its start to a radius after its end. */
+		expect(carves[0].Points[0][0]).toBeCloseTo(50 - 7.2, 6);
+		expect(carves[0].Points[carves[0].Points.length - 1][0]).toBeCloseTo(150 + 7.2, 6);
+		/* Its floor (0.52 of the radius under the axis) 0.2 under the road. */
+		expect(carves[0].Points[0][2] - 0.52 * carves[0].Radius).toBeCloseTo(9.8, 6);
+		/* A road of a lane: one bore, at least 5 metres round. */
+		expect(roads.Carves([Object.assign({}, road, {Width: 6})]).length).toBe(1);
+		expect(roads.Carves([Object.assign({}, road, {Width: 6})])[0].Radius).toBe(5);
+	});
 });

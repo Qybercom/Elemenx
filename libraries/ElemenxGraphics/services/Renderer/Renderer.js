@@ -22,8 +22,8 @@
  *   whether it is done, Progress() is {Done, Total, Needed} of the programs (behind: one nothing waits for), and a Draw with
  *   one not done yet waits, as it must. A slow shader so holds no frame up. Check(vertex, fragment) asks the card at once
  *   whether two shaders compile: their logs, or null. The attributes have fixed places: aPosition, aNormal, aUV, aColor, aInstance (and aInstance2 to
- *   aInstance5, one of each copy of an instanced mesh), aMaterials and aMaterials2 (the weights of 8 materials of a
- *   ground, Materials of a geometry: 8 numbers a vertex; 0 where it has none).
+ *   aInstance5, one of each copy of an instanced mesh), aMaterials, aMaterials2 and aMaterials3 (the weights of 12
+ *   materials of a ground, Materials of a geometry: 12 numbers a vertex, or 8 for the first two; 0 where it has none).
  * - Mesh(geometry, mode) returns a mesh (mode: triangles, lines, line-strip, line-loop or points; triangles by default): Update(geometry), Instance(data, count) (data {aInstance: {Size, Data}, ...}: the
  *   copies of the mesh drawn at once), Destroy(); Lines(points, loop) and Points(positions, extra) (extra {aColor:
  *   {Size, Data}}) make meshes of lines and of points.
@@ -35,7 +35,8 @@
  *   Depth (with DepthTexture), Begin(), End() (it resolves the samples and makes the mipmaps), Destroy();
  *   Viewport(x, y, width, height) draws in a part of it. Texture takes options Float for an array of floats, Single for
  *   one byte a texel (a mask, read as .r), Srgb for the colors of a picture, Mipmaps, and Wrap and Filter of a sampler of glTF.
- * - Shadow(size) returns a shadow map, a depth texture for a uniform sampler2DShadow (Raw: the same for a sampler2D, to read
+ * - Shadow(size) returns a shadow map, a depth texture for a uniform sampler2DShadow (Begin(region): what is drawn till End()
+ *   goes into it, region [x, y, width, height] of texels only that part of it, cleared; Raw: the same for a sampler2D, to read
  *   its depths): between its Begin() and End() the
  *   draws write only its depth, as seen from the light; Destroy().
  * - Draw(mesh, program, uniforms, settings): settings Mode (triangles, lines, line-strip, line-loop, points), Blend
@@ -55,7 +56,7 @@ Elemenx.Service('Renderer', {
 	},
 
 	/* The places of the attributes, the same in every program: a mesh binds its buffers to them. */
-	Locations: {aPosition: 0, aNormal: 1, aUV: 2, aColor: 3, aInstance: 4, aInstance2: 5, aInstance3: 6, aInstance4: 7, aInstance5: 8, aJoints: 9, aWeights: 10, aFrames: 11, aMaterials: 12, aMaterials2: 13},
+	Locations: {aPosition: 0, aNormal: 1, aUV: 2, aColor: 3, aInstance: 4, aInstance2: 5, aInstance3: 6, aInstance4: 7, aInstance5: 8, aJoints: 9, aWeights: 10, aFrames: 11, aMaterials: 12, aMaterials2: 13, aMaterials3: 14},
 
 	Camera: function (options) {
 		var math = this.$Service('Math');
@@ -361,6 +362,12 @@ Elemenx.Service('Renderer', {
 			'uniform float uShadowNearBias;',
 			'uniform float uShadowOn;',
 			'uniform float uBounceOn;',
+			/* Cascades: four views of the sun in the quarters of the map, each of a slice of the view, farther ones wider; splits: where each ends from the eye. */
+			'uniform mat4 uCascades[4];',
+			'uniform vec4 uCascadeSplits;',
+			'uniform vec4 uCascadeSoft;',
+			'uniform vec4 uCascadeBias;',
+			'uniform float uCascadeOn;',
 			'float shadowIn(highp sampler2DShadow map, vec3 place, float texel) {',
 			'	float sum = 0.0;',
 			'	for (int x = -1; x <= 1; x++) {',
@@ -400,18 +407,69 @@ Elemenx.Service('Renderer', {
 			'	}',
 			'	return sum / 12.0;',
 			'}',
+			/*
+			 * Where a point falls in the far map: in cascade i, its quarter, kept off its edge so its neighbour is never read; with no
+			 * cascades (i -1), in all of the map. w: how much of the map is taken there (its edge fades), 0 out of it.
+			 */
+			'vec4 farPlace(int i, vec3 position, vec3 normal) {',
+			'	int c = max(i, 0);',
+			'	vec4 at = i < 0 ? uShadowMatrix * vec4(position + normal * uShadowBias, 1.0) : uCascades[c] * vec4(position + normal * uCascadeBias[c], 1.0);',
+			'	float edge = max(abs(at.x), abs(at.y));',
+			'	if (edge >= 1.0 || at.z >= 1.0) return vec4(0.0);',
+			'	vec3 place = at.xyz * 0.5 + 0.5;',
+			'	if (i >= 0) place.xy = vec2(float(c - (c / 2) * 2), float(c / 2)) * 0.5 + clamp(place.xy, 0.012, 0.988) * 0.5;',
+			'	return vec4(place, i < 0 ? 1.0 - smoothstep(0.85, 1.0, edge) : 1.0);',
+			'}',
+			/*
+			 * The far map: by the cascade the distance from the eye falls in, and into the next over the last eighth of it, so no seam
+			 * shows. One place reads the map, in a loop of at most two: each read inlines a search, and every program has the chunk.
+			 */
+			'float farShadow(vec3 position, vec3 normal) {',
+			'	int first = -1;',
+			'	float blend = 0.0;',
+			'	if (uCascadeOn > 0.5) {',
+			'		float d = length(position);',
+			'		if (d >= uCascadeSplits.w) return 1.0;',
+			'		first = d < uCascadeSplits.x ? 0 : d < uCascadeSplits.y ? 1 : d < uCascadeSplits.z ? 2 : 3;',
+			'		float end = uCascadeSplits[first];',
+			'		float start = first == 0 ? 0.0 : uCascadeSplits[first - 1];',
+			'		blend = smoothstep(end - (end - start) * 0.12, end, d);',
+			'	}',
+			'	float texel = 1.0 / float(textureSize(uShadowMap, 0).x);',
+			'	float lit = 0.0;',
+			'	for (int k = 0; k < 2; k++) {',
+			'		if (k == 1 && blend <= 0.0) break;',
+			'		float share = k == 0 ? 1.0 - blend : blend;',
+			'		int i = first < 0 ? -1 : first + k;',
+			'		if (i > 3) {',
+			'			lit += share;',
+			'			break;',
+			'		}',
+			'		vec4 place = farPlace(i, position, normal);',
+			'		float one = 1.0;',
+			'		if (place.w > 0.0) one = mix(1.0, uShadowSoft.z > 0.5 ? softIn(uShadowMap, uShadowRaw, place.xyz, texel, i < 0 ? uShadowSoft.x : uCascadeSoft[max(i, 0)]) : shadowIn(uShadowMap, place.xyz, texel), place.w);',
+			'		lit += one * share;',
+			'	}',
+			'	return lit;',
+			'}',
+			/*
+			 * The near map first (of what is near the eye, or of the hero alone with the cascades): as sharp as its texel is small;
+			 * with the cascades it gives way to them over the edge of its square, so no line shows where it ends.
+			 */
 			'float sunShadow(vec3 position, vec3 normal) {',
 			'	if (uShadowOn < 0.5) return 1.0;',
+			'	float near = 1.0;',
+			'	float away = 1.0;',
 			'	if (uShadowOn > 1.5) {',
-			'		vec4 near = uShadowNearMatrix * vec4(position + normal * uShadowNearBias, 1.0);',
-			'		float inside = max(abs(near.x), abs(near.y));',
-			'		if (inside < 0.92 && abs(near.z) < 1.0) return uShadowSoft.z > 0.5 ? softIn(uShadowNear, uShadowNearRaw, near.xyz * 0.5 + 0.5, 1.0 / float(textureSize(uShadowNear, 0).x), uShadowSoft.y) : shadowIn(uShadowNear, near.xyz * 0.5 + 0.5, 1.0 / float(textureSize(uShadowNear, 0).x));',
+			'		vec4 at = uShadowNearMatrix * vec4(position + normal * uShadowNearBias, 1.0);',
+			'		float inside = max(abs(at.x), abs(at.y));',
+			'		if (inside < (uCascadeOn > 0.5 ? 0.97 : 0.92) && abs(at.z) < 1.0) {',
+			'			float texel = 1.0 / float(textureSize(uShadowNear, 0).x);',
+			'			near = uShadowSoft.z > 0.5 ? softIn(uShadowNear, uShadowNearRaw, at.xyz * 0.5 + 0.5, texel, uShadowSoft.y) : shadowIn(uShadowNear, at.xyz * 0.5 + 0.5, texel);',
+			'			away = uCascadeOn > 0.5 ? smoothstep(0.75, 0.97, inside) : 0.0;',
+			'		}',
 			'	}',
-			'	vec4 at = uShadowMatrix * vec4(position + normal * uShadowBias, 1.0);',
-			'	vec3 place = at.xyz * 0.5 + 0.5;',
-			'	float edge = max(abs(at.x), abs(at.y));',
-			'	if (edge >= 1.0 || place.z >= 1.0) return 1.0;',
-			'	return mix(uShadowSoft.z > 0.5 ? softIn(uShadowMap, uShadowRaw, place, 1.0 / float(textureSize(uShadowMap, 0).x), uShadowSoft.x) : shadowIn(uShadowMap, place, 1.0 / float(textureSize(uShadowMap, 0).x)), 1.0, smoothstep(0.85, 1.0, edge));',
+			'	return away > 0.0 ? mix(near, farShadow(position, normal), away) : near;',
 			'}',
 			'vec3 sunBounce(vec3 position) {',
 			'	if (uGlowOn > 0.5) return texture(uGlow, (position.xz + uGlowPlace.xy) / uGlowPlace.z + 0.5).rgb;',
@@ -654,16 +712,16 @@ Elemenx.Service('Renderer', {
 			gl.vertexAttribDivisor(location, divisor || 0);
 		}
 
-		/* Four numbers of each eight, from the first of them. */
-		function split (values, count, from) {
+		/* Four numbers of each group of a vertex (stride of them), from the first of them. */
+		function split (values, count, from, stride) {
 			var part = new Float32Array(count * 4);
 			var i;
 
 			for (i = 0; i < count; i++) {
-				part[i * 4] = values[i * 8 + from];
-				part[i * 4 + 1] = values[i * 8 + from + 1];
-				part[i * 4 + 2] = values[i * 8 + from + 2];
-				part[i * 4 + 3] = values[i * 8 + from + 3];
+				part[i * 4] = values[i * stride + from];
+				part[i * 4 + 1] = values[i * stride + from + 1];
+				part[i * 4 + 2] = values[i * stride + from + 2];
+				part[i * 4 + 3] = values[i * stride + from + 3];
 			}
 
 			return part;
@@ -695,14 +753,24 @@ Elemenx.Service('Renderer', {
 					attribute(made, 'aWeights', 4, shape.Weights);
 				}
 
-				/* The weights of the materials of a ground: 8 a vertex, as two attributes of 4. */
-				if (shape.Materials && shape.Materials.length === count * 8) {
-					attribute(made, 'aMaterials', 4, split(shape.Materials, count, 0));
-					attribute(made, 'aMaterials2', 4, split(shape.Materials, count, 4));
+				/* The weights of the materials of a ground: 12 a vertex (or 8), as attributes of 4; none: 0. */
+				if (shape.Materials && count && (shape.Materials.length === count * 12 || shape.Materials.length === count * 8)) {
+					attribute(made, 'aMaterials', 4, split(shape.Materials, count, 0, shape.Materials.length / count));
+					attribute(made, 'aMaterials2', 4, split(shape.Materials, count, 4, shape.Materials.length / count));
+
+					if (shape.Materials.length === count * 12) {
+						attribute(made, 'aMaterials3', 4, split(shape.Materials, count, 8, 12));
+					}
+					else {
+						gl.disableVertexAttribArray(self.Locations.aMaterials3);
+						gl.vertexAttrib4f(self.Locations.aMaterials3, 0, 0, 0, 0);
+					}
 				}
 				else {
 					gl.disableVertexAttribArray(self.Locations.aMaterials);
 					gl.disableVertexAttribArray(self.Locations.aMaterials2);
+					gl.disableVertexAttribArray(self.Locations.aMaterials3);
+					gl.vertexAttrib4f(self.Locations.aMaterials3, 0, 0, 0, 0);
 				}
 
 				if (shape.Indices && shape.Indices.length) {
@@ -1307,19 +1375,25 @@ Elemenx.Service('Renderer', {
 				gl.readBuffer(gl.NONE);
 				gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-				map.Begin = function () {
+				/* Region [x, y, width, height] in texels: only that part drawn and cleared (a cascade in its quarter); all of it by default. */
+				map.Begin = function (region) {
+					var part = region || [0, 0, side, side];
+
 					gl.bindFramebuffer(gl.FRAMEBUFFER, target);
-					gl.viewport(0, 0, side, side);
+					gl.viewport(part[0], part[1], part[2], part[3]);
 					gl.depthMask(true);
 
 					current.Write = true;
 
+					gl.enable(gl.SCISSOR_TEST);
+					gl.scissor(part[0], part[1], part[2], part[3]);
 					gl.clear(gl.DEPTH_BUFFER_BIT);
 					gl.enable(gl.POLYGON_OFFSET_FILL);
 					gl.polygonOffset(1.5, 3);
 				};
 
 				map.End = function () {
+					gl.disable(gl.SCISSOR_TEST);
 					gl.disable(gl.POLYGON_OFFSET_FILL);
 					gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 					gl.viewport(0, 0, renderer.Width, renderer.Height);

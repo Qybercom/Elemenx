@@ -237,7 +237,7 @@ Elemenx.Trait('ScenePhysics', {
 			return state.Colliders;
 		}
 
-		/* The colliders as prisms of the world: made again when they change. */
+		/* The colliders as prisms of the world, and the pipes as tubes: made again when they change. */
 		function prisms () {
 			var list = colliders();
 			var wanted = {};
@@ -258,6 +258,23 @@ Elemenx.Trait('ScenePhysics', {
 					world().Remove(body);
 
 				state.Prisms[id] = world().Add({ID: one.ID, Shape: 'prism', Points: points, Height: one.Top - one.Bottom, At: at, Mass: 0, Friction: 0.6, Bounce: 0.1});
+			});
+
+			/* The pipes (ScenePiping): a tube each, held in or out of; made again when one is laid out again. */
+			(engine.Pipes ? engine.Pipes() : []).forEach(function (pipe) {
+				var id = 'pipe:' + pipe.ID;
+				var body = state.Prisms[id];
+
+				wanted[id] = true;
+
+				if (body && body.Pipe === pipe) return;
+
+				if (body)
+					world().Remove(body);
+
+				state.Prisms[id] = world().Add({ID: pipe.ID, Shape: 'tube', Points: pipe.Points.map(function (point) {
+					return [point.X, point.Y, point.Z];
+				}), Radius: pipe.Radius, Wall: pipe.Wall, At: [0, 0, 0], Mass: 0, Friction: 0.5, Bounce: 0.1, Pipe: pipe});
 			});
 
 			Object.keys(state.Prisms).forEach(function (id) {

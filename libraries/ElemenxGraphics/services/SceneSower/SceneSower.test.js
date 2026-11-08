@@ -238,6 +238,32 @@ describe('Contract: SceneSower, what a Scatter sows, in workers', function () {
 	});
 
 	/* Regression: a line of short pieces (the way of a road, a point every 2 m) had nothing on it when its step was longer than a piece. */
+	/* Regression: a large rock stood by a street, its center off it and half of it over the sidewalk. */
+	it('keeps the whole of a large thing off a road, not only its place', function () {
+		var given = world();
+		var result;
+		var count = 0;
+
+		given.Rules = [{ID: 'boulders', Shapes: ['rock'], Density: 6, Size: [1, 1], MaxSlope: 1}];
+		given.Models = {rock: {Size: 8, Keys: ['rock~0']}};
+		result = sower.Sow(Object.assign(job(given, Elemenx.Service('SceneTerrainGenerator').Field('Flat', given.Options)), {Squares: [{X: -48, Z: 0}, {X: 0, Z: 0}, {X: 48, Z: 0}]}));
+
+		result.Squares.forEach(function (square) {
+			Object.keys(square.Lists).forEach(function (key) {
+				var places = square.Lists[key].Places;
+				var i;
+
+				for (i = 0; i < places.length; i += 4) {
+					count++;
+
+					expect(Math.abs(places[i + 2] - 20)).toBeGreaterThanOrEqual(4 + places[i + 3] / 2 - 0.01);
+				}
+			});
+		});
+
+		expect(count).toBeGreaterThan(5);
+	});
+
 	it('places the things of a line every step of it, whatever its pieces, the same from its start in every square', function () {
 		var line = [];
 		var rule;

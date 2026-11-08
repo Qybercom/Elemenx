@@ -136,6 +136,16 @@ Elemenx.Service('ScenePlanet', {
 				});
 			}
 		});
+		/* Its settlements (Settlements: [{Point, Size, Kind}]): kept in squares of the same grid round their points. */
+		var dwellings = {};
+
+		(Array.isArray(given.Settlements) ? given.Settlements : given.Settlements ? self.TownsOf(given.Settlements) : []).forEach(function (town) {
+			var cell = self.CellAt(1, Math.PI / 2 / 48, town.Point);
+
+			[cell].concat(self.CellNeighbours(1, Math.PI / 2 / 48, cell)).forEach(function (near) {
+				(dwellings[near.ID] = dwellings[near.ID] || []).push(town);
+			});
+		});
 		/* Its highways (Highways: [{Points (directions), Class}]): kept in squares of the same grid, as its rivers. */
 		var trunks = {};
 
@@ -701,6 +711,15 @@ Elemenx.Service('ScenePlanet', {
 			/* The nearest of its highways to a direction: {Far (km), Class}, null with none near. */
 			Highway: function (direction) {
 				return nearestHighway(normalize(direction));
+			},
+
+			/* Its settlements near a direction (within some 200 km): [{Far (km), Kind, Size, Point}]. */
+			Towns: function (direction) {
+				var p = normalize(direction);
+
+				return (dwellings[self.CellAt(1, Math.PI / 2 / 48, p).ID] || []).map(function (town) {
+					return {Far: Math.acos(Math.max(-1, Math.min(1, dot(p, town.Point)))) * radius, Kind: town.Kind, Size: town.Size, Point: town.Point};
+				});
 			}
 		};
 
@@ -2161,15 +2180,291 @@ Elemenx.Service('ScenePlanet', {
 
 			Patch: function (face, u, v, extent, resolution) {
 				return terrain.SpherePatch(field, face, u, v, extent, resolution || 32);
+			},
+
+			/* The picture of a square of a face, size texels a side: see PatchPicture. */
+			Picture: function (face, u, v, extent, size) {
+				return self.PatchPicture(field, face, u, v, extent, size);
 			}
 		};
 
 		return field;
 	},
 
+	/*
+	 * The picture of a square of a face of the globe of a field of Sphere, as fine as its texels, size a side (the first and
+	 * the last on its edges, so the squares beside have the same there): Color (RGBA bytes: its color, and in alpha how
+	 * much of it is water, soft along the coast within a texel) and Normal (RGB bytes: the normal of its ground in the frame
+	 * of the body, of its heights a texel apart). Its snow comes and goes with the cold, its rock with the slope, its rivers
+	 * and highways as much of a texel as they cover: from far a thin line is faint, not a row of steps.
+	 */
+	PatchPicture: function (field, face, cu, cv, extent, size) {
+		var self = this;
+		var terrain = this.$Service('SceneTerrainGenerator');
+		var planet = field.Planet;
+		var n = Math.max(2, Math.round(size));
+		var step = extent / (n - 1);
+		var side = n + 2;
+		var texel = step * Math.PI / 4 * field.Radius;
+		var heights = new Float32Array(side * side);
+		var points = new Array(side * side);
+		var samples = new Array(n * n);
+		var color = new Uint8Array(n * n * 4);
+		var normal = new Uint8Array(n * n * 4);
+		/* Where people live (Use, RGBA bytes): how much of it is fields, how much houses, and of what settlement (a city 255, a town 170, a village 85). */
+		var use = new Uint8Array(n * n * 4);
+		var i;
+		var k;
+
+		function unit (direction) {
+			var length = Math.sqrt(direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2]) || 1;
+
+			return [direction[0] / length, direction[1] / length, direction[2] / length];
+		}
+
+		function smooth (a, b, x) {
+			var t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+
+			return t * t * (3 - 2 * t);
+		}
+
+		function mix (a, b, t) {
+			return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+		}
+
+		/* The heights a texel round each, one more round the square for its slopes; the samples of its own texels. */
+		for (k = -1; k <= n; k++) {
+			for (i = -1; i <= n; i++) {
+				var direction = unit(terrain.Face(face, cu - extent / 2 + i * step, cv - extent / 2 + k * step));
+				var at = (k + 1) * side + i + 1;
+
+				points[at] = direction;
+
+				if (i >= 0 && k >= 0 && i < n && k < n) {
+					samples[k * n + i] = planet.Sample(direction);
+					heights[at] = samples[k * n + i].Elevation;
+				}
+				else {
+					heights[at] = planet.Elevation(direction);
+				}
+			}
+		}
+
+		/*
+		 * How much of the land trees cover, 0 to 1, by the rules its biome sows them by (Scatter of SceneBiomes): each rule of
+		 * trees as much as its Cover and its Density, none where it is steeper than they grow or higher than they may; snow
+		 * takes them. In the alpha of Normal: the Ground shader draws woods of it, the same share as a location sows.
+		 */
+		var trees = ['pine', 'oak', 'birch', 'palm', 'spruce', 'willow', 'cypress', 'fir'];
+		var lands = {};
+
+		(planet.Lands || []).forEach(function (land) {
+			lands[land.Name] = land;
+		});
+
+		function woods (sample, height, slope) {
+			var land = lands[sample.Biome];
+			var bare = 1;
+
+			if (!land || !sample.Land) return 0;
+
+			(land.Scatter || []).forEach(function (rule) {
+				var share = (rule.Shapes || []).filter(function (shape) {
+					return trees.indexOf(shape) >= 0;
+				}).length / Math.max(1, (rule.Shapes || []).length);
+				var part = share * (rule.Cover === undefined ? 0.5 : Number(rule.Cover)) * Math.min(1, (Number(rule.Density) || 0) / 3);
+
+				if (rule.MaxSlope !== undefined)
+					part *= 1 - smooth(Number(rule.MaxSlope) * 0.6, Number(rule.MaxSlope), slope);
+
+				if (rule.MaxHeight !== undefined)
+					part *= 1 - smooth(Number(rule.MaxHeight), Number(rule.MaxHeight) * 3 + 20, height);
+
+				bare *= 1 - Math.max(0, Math.min(1, part));
+			});
+
+			return (1 - bare) * (1 - smooth(-3, -9, sample.Celsius));
+		}
+
+		function lifted (at) {
+			var r = field.Radius + Math.max(0, heights[at]) / 1000;
+
+			return [points[at][0] * r, points[at][1] * r, points[at][2] * r];
+		}
+
+		/*
+		 * Where people live: its settlements near (of a square small enough, those near its middle once), each its built middle
+		 * as large as a location lays it (a city 0.9 km round, a town 0.45, a village 0.18) and thinner houses round it, and
+		 * its fields farther (a city 30 km, a town 14, a village 5), ragged; fields only on flat land, not too dry nor cold.
+		 */
+		var km = Math.PI / 4 * field.Radius;
+		var centre = unit(terrain.Face(face, cu, cv));
+		var nearTowns = extent * km * 0.71 < 160 && planet.Towns ? planet.Towns(centre).filter(function (town) {
+			return town.Far < extent * km * 0.71 + 45;
+		}) : null;
+
+		function hash (x, y, salt) {
+			var h = Math.imul((x | 0) ^ Math.imul((y | 0) + 0x9e3779b9, 0x85ebca6b) ^ salt, 0xc2b2ae35);
+
+			h = Math.imul(h ^ (h >>> 15), 0x27d4eb2d);
+
+			return ((h ^ (h >>> 13)) >>> 0) / 4294967296;
+		}
+
+		/* A smooth noise of the plane of the face (km), 0 to 1. */
+		function wave (x, y, salt) {
+			var fx = Math.floor(x);
+			var fy = Math.floor(y);
+			var tx = x - fx;
+			var ty = y - fy;
+			var sx = tx * tx * (3 - 2 * tx);
+			var sy = ty * ty * (3 - 2 * ty);
+			var top = hash(fx, fy, salt) + (hash(fx + 1, fy, salt) - hash(fx, fy, salt)) * sx;
+			var bottom = hash(fx, fy + 1, salt) + (hash(fx + 1, fy + 1, salt) - hash(fx, fy + 1, salt)) * sx;
+
+			return top + (bottom - top) * sy;
+		}
+
+		function dwelt (up, x, y, sample, slope, height) {
+			var towns = nearTowns || (planet.Towns ? planet.Towns(up) : []);
+			var built = 0;
+			var farm = 0;
+			var kind = 'village';
+			var j;
+
+			if (!sample.Land || height <= 0)
+				return {Built: 0, Farm: 0, Kind: kind};
+
+			for (j = 0; j < towns.length; j++) {
+				var town = towns[j];
+				var far = Math.acos(Math.max(-1, Math.min(1, up[0] * town.Point[0] + up[1] * town.Point[1] + up[2] * town.Point[2]))) * field.Radius;
+				var core = (town.Kind === 'city' ? 0.9 : town.Kind === 'town' ? 0.45 : 0.18) * (0.8 + town.Size * 0.4);
+				var fields = (town.Kind === 'city' ? 30 : town.Kind === 'town' ? 14 : 5) * (0.7 + town.Size * 0.6);
+				var rag = (wave(x / 2.3, y / 2.3, 71) - 0.5) * 0.5 + (wave(x / 0.7, y / 0.7, 72) - 0.5) * 0.2;
+				var houses;
+
+				if (far > fields * 1.4) continue;
+
+				houses = 1 - smooth(core * 0.85, core * 1.1, far * (1 + rag * 0.4));
+				houses = Math.max(houses, (1 - smooth(core, core * 2.6, far * (1 + rag * 0.6))) * 0.45);
+
+				if (houses > built) {
+					built = houses;
+					kind = town.Kind;
+				}
+
+				farm = Math.max(farm, 1 - smooth(0.5, 1, far / fields + rag));
+			}
+
+			farm *= (1 - smooth(0.07, 0.16, slope)) * smooth(0.18, 0.32, sample.Moisture) * smooth(0, 7, sample.Celsius) * (1 - built);
+
+			return {Built: built * (1 - smooth(0.2, 0.35, slope)), Farm: farm, Kind: kind};
+		}
+
+		/*
+		 * The mean of its fields (their crops: see FIELDS of the Ground shader, which draws each parcel of it) and of its
+		 * houses by the kind of the settlement (roofs, streets and gardens).
+		 */
+		var cropMean = [0.48, 0.47, 0.27];
+		var roofsMean = {city: [0.46, 0.45, 0.43], town: [0.46, 0.42, 0.36], village: [0.41, 0.41, 0.3]};
+
+		for (k = 0; k < n; k++) {
+			for (i = 0; i < n; i++) {
+				var at = (k + 1) * side + i + 1;
+				var up = points[at];
+				var sample = samples[k * n + i];
+				var height = heights[at];
+				var dx = (heights[at + 1] - heights[at - 1]) / 2;
+				var dy = (heights[at + side] - heights[at - side]) / 2;
+				/* Metres of height across a texel (for its coast). */
+				var rise = Math.sqrt(dx * dx + dy * dy);
+				/*
+				 * Regression: its slope of its own texels made a square of rock and woods other than the finer one beside (its
+				 * texels farther apart see the ground gentler), a straight edge across them: of 300 metres at any size.
+				 */
+				var east = unit([points[at + 1][0] - points[at - 1][0], points[at + 1][1] - points[at - 1][1], points[at + 1][2] - points[at - 1][2]]);
+				var south = unit([points[at + side][0] - points[at - side][0], points[at + side][1] - points[at - side][1], points[at + side][2] - points[at - side][2]]);
+				var reach = 0.3 / field.Radius;
+				var slope = height <= 0 ? 0 : Math.sqrt(Math.pow(planet.Elevation([up[0] + east[0] * reach, up[1] + east[1] * reach, up[2] + east[2] * reach]) - height, 2) + Math.pow(planet.Elevation([up[0] + south[0] * reach, up[1] + south[1] * reach, up[2] + south[2] * reach]) - height, 2)) / 300;
+				var water = Math.max(0, Math.min(1, 0.5 - height / Math.max(1, rise)));
+				var a = lifted(at + 1);
+				var b = lifted(at - 1);
+				var c = lifted(at + side);
+				var d = lifted(at - side);
+				var made = unit([(c[1] - d[1]) * (a[2] - b[2]) - (c[2] - d[2]) * (a[1] - b[1]), (c[2] - d[2]) * (a[0] - b[0]) - (c[0] - d[0]) * (a[2] - b[2]), (c[0] - d[0]) * (a[1] - b[1]) - (c[1] - d[1]) * (a[0] - b[0])]);
+				var land;
+				var sea;
+				var paint;
+				var river;
+				var road;
+				var fx = (cu - extent / 2 + i * step) * km;
+				var fy = (cv - extent / 2 + k * step) * km;
+				var used;
+				var o = (k * n + i) * 4;
+
+				if (made[0] * up[0] + made[1] * up[1] + made[2] * up[2] < 0)
+					made = [-made[0], -made[1], -made[2]];
+
+				/* The sea is level; a coast tilts toward it as the land does. */
+				if (height <= 0)
+					made = up;
+
+				/* Its land: of its biome and height, rock where it is steep, snow where it is cold and not too steep. */
+				land = self.Color(planet, Object.assign({}, sample, {Land: true, Elevation: Math.max(0, height), Celsius: 20}), 'relief', 1);
+				land = mix(land, [0.42, 0.39, 0.35], smooth(0.18, 0.55, slope) * 0.75);
+				land = mix(land, [0.92, 0.94, 0.97], smooth(-3, -9, sample.Celsius) * (1 - smooth(0.45, 0.9, slope)));
+
+				/* Its fields and houses: their mean here, each parcel and house drawn by the shader (of Use). */
+				used = dwelt(up, fx, fy, sample, slope, height);
+				land = mix(land, cropMean, used.Farm * 0.85);
+				land = mix(land, roofsMean[used.Kind], used.Built);
+
+				/* Its sea: by its depth (a coast of land by the shallows), ice where it is colder still. */
+				sea = self.Color(planet, Object.assign({}, sample, {Land: false, Elevation: Math.min(-1, height), Celsius: 20}), 'relief', 1);
+				sea = mix(sea, [0.85, 0.9, 0.95], smooth(-10, -14, sample.Celsius));
+				paint = mix(land, sea, water);
+
+				if (sample.Land) {
+					river = planet.River(up);
+					road = planet.Highway(up);
+
+					if (river) {
+						var channel = 0.04 * Math.sqrt(river.Flow);
+						var plain = 0.6 * Math.pow(river.Flow, 0.4);
+						var wet = river.Flow > 25 ? Math.max(0, Math.min(1, (channel - river.Far) / texel + 0.5)) : 0;
+
+						if (river.Far < plain)
+							paint = mix(paint, [paint[0] * 0.85 + 0.03, paint[1] * 0.9 + 0.08, paint[2] * 0.85], smooth(plain, plain * 0.5, river.Far));
+
+						paint = mix(paint, [0.16, 0.34, 0.58], wet);
+						water = Math.max(water, wet);
+					}
+
+					if (road)
+						paint = mix(paint, [0.42, 0.4, 0.38], Math.max(0, Math.min(1, (0.015 - road.Far) / texel + 0.5)) * 0.8);
+				}
+
+				color[o] = Math.round(Math.max(0, Math.min(1, paint[0])) * 255);
+				color[o + 1] = Math.round(Math.max(0, Math.min(1, paint[1])) * 255);
+				color[o + 2] = Math.round(Math.max(0, Math.min(1, paint[2])) * 255);
+				color[o + 3] = Math.round(water * 255);
+				normal[o] = Math.round((made[0] * 0.5 + 0.5) * 255);
+				normal[o + 1] = Math.round((made[1] * 0.5 + 0.5) * 255);
+				normal[o + 2] = Math.round((made[2] * 0.5 + 0.5) * 255);
+				/* Fields and houses take the woods: a hedge or a grove left, no more. */
+				normal[o + 3] = Math.round(woods(sample, height, slope) * (1 - water) * (1 - used.Farm * 0.9) * (1 - used.Built) * 255);
+				use[o] = Math.round(used.Farm * (1 - water) * 255);
+				use[o + 1] = Math.round(used.Built * (1 - water) * 255);
+				use[o + 2] = used.Kind === 'city' ? 255 : used.Kind === 'town' ? 170 : 85;
+			}
+		}
+
+		return {Size: n, Color: color, Normal: normal, Use: use};
+	},
+
 	/* The workers that paint globes. */
 	Work: function () {
-		return this.$Service('Workers').Pool('ScenePlanet', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], SceneTerrainGenerator: ['Smoothstep', 'Biomes', 'BiomeOf', 'Face'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Project', 'Unproject', 'Planet', 'Color', 'Picture', 'Face', 'Sphere', 'Heights', 'Drainage', 'Smoothed', 'RiversOf', 'Settlements', 'TownsOf', 'Lights', 'Highways', 'HighwaysOf', 'Unit', 'Dot', 'Cells', 'CellAt', 'CellPoint', 'CellCenter', 'CellNeighbours', 'HexAt', 'HexPoint', 'HexCell', 'Icosahedron', 'Wound', 'Slerp', 'Along', 'Cross']});
+		return this.$Service('Workers').Pool('ScenePlanet', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], SceneTerrainGenerator: ['Smoothstep', 'Biomes', 'BiomeOf', 'Face'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Project', 'Unproject', 'Planet', 'Color', 'Picture', 'Face', 'Sphere', 'PatchPicture', 'Heights', 'Drainage', 'Smoothed', 'RiversOf', 'Settlements', 'TownsOf', 'Lights', 'Highways', 'HighwaysOf', 'Unit', 'Dot', 'Cells', 'CellAt', 'CellPoint', 'CellCenter', 'CellNeighbours', 'HexAt', 'HexPoint', 'HexCell', 'Icosahedron', 'Wound', 'Slerp', 'Along', 'Cross']});
 	},
 
 	/* What a worker of the planet carries: see Workers. */

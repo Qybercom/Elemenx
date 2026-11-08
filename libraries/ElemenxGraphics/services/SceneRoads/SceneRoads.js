@@ -35,7 +35,7 @@
 Elemenx.Service('SceneRoads', {
 	$Meta: {
 		Description: 'The roads of a scene, of any kind: motorways, streets, country roads, race tracks, paths, runways and railways, their cross-sections, lines and models.',
-		Methods: ['Surface(name, surface)', 'Define(name, type)', 'Type(name)', 'Types()', 'Line(points, options)', 'Road(spec)', 'Network(specs, junctions, options)', 'JunctionAt(junctions, x, z)', 'Near(road, x, z, hint)', 'Under(roads, x, z, hints)', 'BarrierHit(roads, x, z, fromX, fromZ, hints, size)', 'FreeBarrier(spec, options)', 'Sketch(roads, junctions)', 'Asset(roads, options)', 'AssetOf(roads, options)', 'Work()']
+		Methods: ['Surface(name, surface)', 'Define(name, type)', 'Type(name)', 'Types()', 'Line(points, options)', 'Road(spec)', 'Network(specs, junctions, options)', 'JunctionAt(junctions, x, z)', 'Near(road, x, z, hint)', 'Under(roads, x, z, hints)', 'BarrierHit(roads, x, z, fromX, fromZ, hints, size)', 'FreeBarrier(spec, options)', 'Sketch(roads, junctions)', 'Carves(roads)', 'TunnelLamps(road)', 'Asset(roads, options)', 'AssetOf(roads, options)', 'Work()']
 	},
 
 	$OnCreate: function () {
@@ -1258,6 +1258,78 @@ Elemenx.Service('SceneRoads', {
 		return pieces;
 	},
 
+	/* The lamps of the tunnels of a road: a row of them under the vault over its middle, every 10 metres. */
+	TunnelLamps: function (road) {
+		var self = this;
+		var lamps = [];
+		var left = road.Strips.length ? road.Strips[0].Left : 0;
+		var right = road.Strips.length ? road.Strips[road.Strips.length - 1].Right : 0;
+
+		(road.Spans || []).forEach(function (span) {
+			var metres;
+
+			if (span.Kind !== 'tunnel') return;
+
+			for (metres = span.From + 5; metres < span.To - 2; metres += 10) {
+				var place = self.At(road, metres);
+				var middle = (left + right) / 2;
+
+				lamps.push(self.Box([place.X + place.Way[1] * middle, place.Y + road.Height + 5.85, place.Z - place.Way[0] * middle], [0.35, 0.12, 1.6], place.Way));
+			}
+		});
+
+		return lamps;
+	},
+
+	/*
+	 * What the tunnels of roads cut out of the ground (Carves of a ground: tunnel), so a road goes into a hill through a
+	 * hole of it, not along a cut open to the sky: one bore for each 12 metres of its width (a motorway two, side by side),
+	 * a circle as wide as its part of the road and a metre more, at least 5 metres round, its floor cut level just under
+	 * the road, never nearer than a metre to the ground over it (Crust: a shallow tunnel has a roof of earth, the hill stays
+	 * whole); on from each end by its radius, so the hole opens where the cut before it ends.
+	 */
+	Carves: function (roads) {
+		var self = this;
+		var carves = [];
+
+		(roads || []).forEach(function (road) {
+			var width = Math.max(4, road.Width || 8);
+			var bores = Math.max(1, Math.ceil(width / 12));
+			var radius = Math.max(5, width / bores / 2 + 1.2);
+			var last = road.Points.length ? road.Points[road.Points.length - 1].Along : 0;
+
+			(road.Spans || []).forEach(function (span) {
+				var from;
+				var to;
+				var k;
+
+				if (span.Kind !== 'tunnel') return;
+
+				from = Math.max(0, span.From - radius);
+				to = Math.min(last, span.To + radius);
+
+				for (k = 0; k < bores; k++) {
+					var offset = -width / 2 + (k + 0.5) * width / bores;
+					var points = [];
+					var metres;
+
+					/* Every 6 metres, the last one at its very end. */
+					for (metres = from; metres < to + 6; metres += 6) {
+						var place = self.At(road, Math.min(metres, to));
+
+						/* The floor (1 - 0.6 Flat of the radius under the axis: 0.52 of it) just under the road. */
+						points.push([place.X + place.Way[1] * offset, place.Z - place.Way[0] * offset, place.Y + road.Height - 0.2 + radius * 0.52]);
+					}
+
+					if (points.length > 1)
+						carves.push({Type: 'tunnel', Road: road.ID, Points: points, Radius: radius, Flat: 0.8, Crust: 1});
+				}
+			});
+		});
+
+		return carves;
+	},
+
 	/* The point of a road at metres from its start. */
 	At: function (road, metres) {
 		var points = road.Points;
@@ -1293,7 +1365,7 @@ Elemenx.Service('SceneRoads', {
 			if (named[name] === undefined) {
 				named[name] = materials.length;
 
-				materials.push({Name: name, Pattern: surface.Material || '', BaseColor: surface.Color.concat([1]), Metallic: surface.Metal || 0, Roughness: surface.Rough, Emissive: [0, 0, 0], Clearcoat: 0, CoatRoughness: 0, Transmission: 0, ColorMap: null, MetalMap: null, NormalMap: null, OcclusionMap: null, EmissiveMap: null, Alpha: 'OPAQUE', Cutoff: 0.5, DoubleSided: true, Unlit: false, Specular: 1, SpecularColor: [1, 1, 1], SpecularMap: null});
+				materials.push({Name: name, Pattern: surface.Material || '', Along: true, BaseColor: surface.Color.concat([1]), Metallic: surface.Metal || 0, Roughness: surface.Rough, Emissive: surface.Glow || [0, 0, 0], Clearcoat: 0, CoatRoughness: 0, Transmission: 0, ColorMap: null, MetalMap: null, NormalMap: null, OcclusionMap: null, EmissiveMap: null, Alpha: 'OPAQUE', Cutoff: 0.5, DoubleSided: true, Unlit: false, Specular: 1, SpecularColor: [1, 1, 1], SpecularMap: null});
 			}
 
 			return named[name];
@@ -1345,6 +1417,11 @@ Elemenx.Service('SceneRoads', {
 
 			self.Structures(road, settings.Height).forEach(function (piece) {
 				add('structure', self.Surface('concrete'), piece);
+			});
+
+			/* The lamps of its tunnels: warm and glowing by themselves. */
+			self.TunnelLamps(road).forEach(function (piece) {
+				add('tunnel-lamp', {Color: [1, 0.94, 0.8], Rough: 0.4, Glow: [4, 3.4, 2.4]}, piece);
 			});
 
 			if ((road.Type.Rails || []).length) {

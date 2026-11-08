@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { loadElemenx, resetDOM, tick, unique } from '../setup.js';
+import { loadElemenx, resetDOM, tick, unique, waitFor } from '../setup.js';
 import boardSource from '../../libraries/ElemenxUI/components/Board/Board.js?raw';
 import boardTemplate from '../../libraries/ElemenxUI/components/Board/Board.html?raw';
 import boardStyle from '../../libraries/ElemenxUI/components/Board/Board.css?raw';
@@ -238,7 +238,10 @@ describe('Contract: Board, an infinite canvas', function () {
 		/* The frame grows: the view follows it. */
 		host.$Element().querySelector('.about').style.width = '1200px';
 
-		await tick(60);
+		/* Regression (load): told by an observer of its size, which a busy machine calls later than 60 ms. */
+		await waitFor(function () {
+			return component.X === 2000;
+		}, 3000);
 
 		expect(component.X).toBe(2000);
 

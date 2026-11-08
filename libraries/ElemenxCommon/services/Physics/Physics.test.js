@@ -348,6 +348,35 @@ describe('Contract: Physics World, solid bodies that fall, strike and rest', fun
 		expect(world.Ray([5, 3, 0], [-1, 0, 0], 20)).toBe(null);
 	});
 
+	/*
+	 * A tube (a pipe that never moves): what is in it stays in it and rests on its bottom, what is on it rests on its top, a
+	 * capsule stands in it, what rolls in it goes out at its open end; a ray meets its wall from outside and from inside.
+	 */
+	it('holds what is in a tube in it and what is out of it out, open at its ends, and lets a ray meet its wall', function () {
+		var world = physics.World({Sleep: false});
+		var pipe = world.Add({Shape: 'tube', Points: [[-10, 3, 0], [10, 3, 0]], Radius: 1.2, Wall: 0.1});
+		var inside = world.Add({Shape: 'sphere', Radius: 0.3, At: [0, 3, 0], Mass: 5});
+		var over = world.Add({Shape: 'sphere', Radius: 0.3, At: [2, 5.5, 0], Mass: 5});
+		var rolling = world.Add({Shape: 'sphere', Radius: 0.3, At: [8, 2.2, 0], Way: [4, 0, 0], Mass: 5});
+		var man = world.Add({Shape: 'capsule', Radius: 0.35, Height: 1, At: [-3, 2.6, 0], Mass: 70});
+
+		run(world, 4);
+
+		expect(pipe.At).toEqual([0, 0, 0]);
+		expect(inside.At[1]).toBeCloseTo(2.2, 1);
+		expect(over.At[1]).toBeCloseTo(4.5, 1);
+		/* Out at the open end, down to the ground. */
+		expect(rolling.At[0]).toBeGreaterThan(10);
+		expect(rolling.At[1]).toBeCloseTo(0.3, 1);
+		/* The capsule on the bottom: its foot at the inside of the wall, 1.1 under the axis. */
+		expect(man.At[1] - 0.5 - 0.35).toBeCloseTo(1.9, 1);
+
+		expect(world.Ray([-5, 10, 0], [0, -1, 0], 20).Body).toBe(pipe);
+		expect(world.Ray([-5, 10, 0], [0, -1, 0], 20).Distance).toBeCloseTo(5.8, 3);
+		expect(world.Ray([-5, 3, 0], [0, 1, 0], 20).Distance).toBeCloseTo(1.1, 3);
+		expect(world.Ray([-5, 3, 0], [0, 1, 0], 20).Normal[1]).toBeCloseTo(-1, 3);
+	});
+
 	it('floats a light board on water, face up, and lets a heavy box sink', function () {
 		var world = physics.World({Ground: -10, Water: {Level: 0}});
 		var light = world.Add({Shape: 'box', Size: [2, 0.4, 2], Mass: 640, At: [0, 1, 0], Turn: [Math.sin(0.3), 0, 0, Math.cos(0.3)]});
@@ -519,6 +548,39 @@ describe('Contract: Physics World, solid bodies that fall, strike and rest', fun
 		fluid.Clear();
 
 		expect(fluid.Count()).toBe(0);
+	});
+
+	/* Fluid over a ground of its own: it lies on it and runs down its slope; no particle faster than MaxSpeed; Keep lets go of those it should not hold. */
+	it('lays a fluid on a ground and runs it down its slope, holds it under its MaxSpeed, and keeps only what Keep says', function () {
+		var fluid = physics.Fluid({Radius: 0.2, Min: [-1e5, -1e5, -1e5], Max: [1e5, 1e5, 1e5], Ground: function (x) {
+			return -0.1 * x;
+		}, Step: 1 / 60, MaxSpeed: 5});
+		var i;
+
+		fluid.Pour([0, 0.5, 0], 120, 5);
+		fluid.Add([0, 3, 0], [50, 0, 0]);
+
+		for (i = 0; i < 120; i++)
+			fluid.Step(1 / 60);
+
+		fluid.Particles().forEach(function (p) {
+			expect(p.At[1]).toBeGreaterThan(-0.1 * p.At[0] - 1e-6);
+			expect(Math.hypot(p.Way[0], p.Way[1], p.Way[2])).toBeLessThan(5.01);
+			expect(p.Age).toBeCloseTo(2, 1);
+		});
+
+		/* Down the slope: its middle further along x than where it was poured. */
+		expect(fluid.Particles().reduce(function (sum, p) {
+			return sum + p.At[0];
+		}, 0) / fluid.Count()).toBeGreaterThan(0.6);
+
+		fluid.Keep(function (p) {
+			return p.At[0] < 1;
+		});
+
+		expect(fluid.Particles().every(function (p) {
+			return p.At[0] < 1;
+		})).toBe(true);
 	});
 
 	it('tells once when two begin to touch, and lists what touches', function () {

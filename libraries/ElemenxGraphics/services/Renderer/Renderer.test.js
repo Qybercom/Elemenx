@@ -82,8 +82,9 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 			'in vec3 aPosition;',
 			'in vec4 aMaterials;',
 			'in vec4 aMaterials2;',
+			'in vec4 aMaterials3;',
 			'out vec4 vPaint;',
-			'void main() { vPaint = vec4(aMaterials.x, aMaterials2.w, 0.0, 1.0); gl_Position = vec4(aPosition.xy, 0.0, 1.0); }'
+			'void main() { vPaint = vec4(aMaterials.x, aMaterials2.w, aMaterials3.z, 1.0); gl_Position = vec4(aPosition.xy, 0.0, 1.0); }'
 		].join('\n'), [
 			'#version 300 es',
 			'precision highp float;',
@@ -94,6 +95,9 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 		var lines = renderer.Mesh({Positions: [-1, 0, 0, 1, 0, 0, 0, -1, 0, 0, 1, 0], Indices: []}, 'lines');
 		var quad = renderer.Mesh({Positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0], Indices: [0, 1, 2], Materials: [1, 0, 0, 0, 0, 0, 0, 0.5, 1, 0, 0, 0, 0, 0, 0, 0.5, 1, 0, 0, 0, 0, 0, 0, 0.5]});
 		var plain = renderer.Mesh({Positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0], Indices: [0, 1, 2]});
+		var twelve = renderer.Mesh({Positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0], Indices: [0, 1, 2], Materials: [0, 1, 2].reduce(function (all) {
+			return all.concat([1, 0, 0, 0, 0, 0, 0, 0.5, 0, 0, 0.5, 0]);
+		}, [])});
 		var target = renderer.Target(2, 2, {});
 		var pixel = new Uint8Array(4);
 		var before = renderer.Counts();
@@ -108,7 +112,14 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 
 		gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
 
-		expect([pixel[0], Math.round(pixel[1] / 255 * 10) / 10]).toEqual([255, 0.5]);
+		expect([pixel[0], Math.round(pixel[1] / 255 * 10) / 10, pixel[2]]).toEqual([255, 0.5, 0]);
+
+		/* 12 a vertex: the third four too. */
+		renderer.Draw(twelve, program, {}, {Depth: false, Cull: 'none'});
+
+		gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+		expect([pixel[0], Math.round(pixel[1] / 255 * 10) / 10, Math.round(pixel[2] / 255 * 10) / 10]).toEqual([255, 0.5, 0.5]);
 
 		/* None: 0, not the 1 of what is not given. */
 		renderer.Draw(plain, program, {}, {Depth: false, Cull: 'none'});

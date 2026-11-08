@@ -37,7 +37,9 @@
  *   of the height, or null for none; 0 by default), Friction, Bounce and Rolling of the ground, Step (1/120 s), Iterations (10), Sleep (false:
  *   none sleep), Touch(a, b, {At, Normal, Impulse}) (when two begin to touch; b is null for the ground). It has:
  *   - Add(body): body {ID, Shape ('sphere', 'box', 'capsule' standing along its y, 'prism': a convex outline Points [[x, z]...]
- *     round its middle standing Height high, that never moves), Radius, Size [x, y, z] (a box), Height (a capsule, between the
+ *     round its middle standing Height high, that never moves; 'tube': a pipe that never moves, its axis Points [[x, y, z]...]
+ *     from its At, Radius out to its outside, Wall (its thickness, a tenth of it): what is outside stays out of it, what is in
+ *     it stays in, its ends open), Radius, Size [x, y, z] (a box), Height (a capsule, between the
  *     middles of its ends; a prism, all of it), Mass (0: it never moves), Static, At, Turn [x, y, z, w], Way, Spin (radians a second round
  *     each axis), Bounce, Friction, Rolling (what holds back its rolling: 0 rolls on for ever, 0.03 by default), Damping, Angular
  *     (how it slows by itself), Gravity (how much of it the body feels), Sleeping};
@@ -59,8 +61,11 @@
  * - Rope({From, To, Segments, Pinned (start by default)} and those of Cloth): a cloth one point wide.
  * - Waves({Columns, Rows, Cell, At [x, z], Speed, Damping}): the face of water as a grid of heights: {Heights, Step(elapsed),
  *   Disturb(x, z, amount, radius), Height(x, z)}.
- * - Fluid({Radius (how far a particle feels the others), Density, Stiffness, Viscosity, Gravity, Min, Max (its box)}): water of
- *   particles: Add(at, way), Pour(at, count, across), Step(elapsed), Particles() ([{At, Way, Density}]), Count(), Clear().
+ * - Fluid({Radius (how far a particle feels the others), Density, Stiffness, Viscosity, Gravity, Min, Max (its box), Ground (a
+ *   height or a function (x, z) of it: it lies on it and spreads over it), Friction (of the ground: the part of its speed along it it loses in a second, 0.3), Step (seconds, 1/120;
+ *   longer is cheaper and coarser), MaxSpeed (m/s: no particle faster)}): water of particles:
+ *   Add(at, way), Pour(at, count, across), Step(elapsed), Particles() ([{At, Way, Density, Age}]), Count(), Clear(), Keep(test)
+ *   (only the particles test(particle, index) is true of stay: what soaked away, what ran off).
  */
 Elemenx.Service('Physics', {
 	$Meta: {
@@ -688,8 +693,8 @@ Elemenx.Service('Physics', {
 			if (!body.Sleeping && record.Still > 0.6)
 				record.Still = 0;
 
-			/* A prism (a wall of a shape of its own) never moves. */
-			record.Static = body.Static === true || !(mass > 0) || body.Shape === 'prism';
+			/* A prism (a wall of a shape of its own) and a tube never move. */
+			record.Static = body.Static === true || !(mass > 0) || body.Shape === 'prism' || body.Shape === 'tube';
 			record.Mass = record.Static ? 0 : 1 / mass;
 			record.Inertia = inertia.map(function (value) {
 				return record.Static || !(value > 0) ? 0 : 1 / value;
@@ -700,6 +705,9 @@ Elemenx.Service('Physics', {
 
 			if (body.Shape === 'prism')
 				prismOf(record);
+
+			if (body.Shape === 'tube')
+				tubeOf(record);
 		}
 
 		function free (record) {
@@ -960,6 +968,114 @@ Elemenx.Service('Physics', {
 			return {Inside: false, Near: add(record.Body.At, apply(record.Matrix, near)), Normal: apply(record.Matrix, unit(d)), Distance: size(d)};
 		}
 
+		/* A tube: the segments of its axis in the world, its radius in and out, its reach round its At; once for the same points. */
+		function tubeOf (record) {
+			var body = record.Body;
+			var key = JSON.stringify([body.Points, body.Radius, body.Wall, body.At]);
+			var points;
+			var far = 0;
+
+			if (record.TubeKey !== key) {
+				points = (body.Points || []).map(function (point) {
+					return [number(point[0], 0) + body.At[0], number(point[1], 0) + body.At[1], number(point[2], 0) + body.At[2]];
+				});
+
+				points.forEach(function (point) {
+					far = Math.max(far, size(sub(point, body.At)));
+				});
+
+				record.TubeKey = key;
+				record.Axis = points;
+				record.Outer = body.Radius;
+				record.Inner = Math.max(0, body.Radius - Math.max(0.001, number(body.Wall, body.Radius * 0.1)));
+				record.TubeReach = far + body.Radius;
+			}
+
+			record.Half = [record.TubeReach, record.TubeReach, record.TubeReach];
+			record.Reach = record.TubeReach;
+		}
+
+		/* The nearest point of the axis of a tube to c: {At, Distance, End (beyond its first or last point: none of its wall there)}. */
+		function tubeNear (record, c) {
+			var best = {At: null, Distance: Infinity, End: false};
+			var axis = record.Axis;
+			var i;
+
+			for (i = 0; i + 1 < axis.length; i++) {
+				var a = axis[i];
+				var d = sub(axis[i + 1], a);
+				var l = dot(d, d);
+				var t = l > 1e-12 ? dot(sub(c, a), d) / l : 0;
+				var q = add(a, scale(d, Math.max(0, Math.min(1, t))));
+				var far = size(sub(c, q));
+				if (far < best.Distance)
+					best = {At: q, Distance: far, End: i === 0 && t < 0 || i === axis.length - 2 && t > 1};
+			}
+
+			return best;
+		}
+
+		/*
+		 * A ball (its middle c, radius r) of a against a tube b: within it (its middle nearer the axis than halfway through
+		 * its wall) it is held in, out of it out; past its open ends nothing holds it.
+		 */
+		function ballTube (a, c, r, b) {
+			var met = tubeNear(b, c);
+			var n;
+
+			if (!met.At || met.End) return;
+
+			n = met.Distance > 1e-9 ? scale(sub(c, met.At), 1 / met.Distance) : [0, 1, 0];
+
+			if (met.Distance < (b.Outer + b.Inner) / 2) {
+				if (met.Distance > b.Inner - r)
+					contact(a, b, add(met.At, scale(n, b.Inner)), scale(n, -1), met.Distance - (b.Inner - r));
+
+				return;
+			}
+
+			if (met.Distance < b.Outer + r)
+				contact(a, b, add(met.At, scale(n, b.Outer)), n, b.Outer + r - met.Distance);
+		}
+
+		/* A ray into a tube: its wall from outside, or from inside out; -1 when it meets none. */
+		function castTube (record, from, direction) {
+			var axis = record.Axis;
+			var inside = tubeNear(record, from);
+			var radius = inside.At && !inside.End && inside.Distance < (record.Outer + record.Inner) / 2 ? record.Inner : record.Outer;
+			var best = {Distance: -1};
+			var i;
+
+			for (i = 0; i + 1 < axis.length; i++) {
+				var a = axis[i];
+				var u = unit(sub(axis[i + 1], a));
+				var l = size(sub(axis[i + 1], a));
+				var o = sub(from, a);
+				var d = sub(direction, scale(u, dot(direction, u)));
+				var p = sub(o, scale(u, dot(o, u)));
+				var qa = dot(d, d);
+				var qb = 2 * dot(p, d);
+				var disc = qb * qb - 4 * qa * (dot(p, p) - radius * radius);
+				if (qa < 1e-12 || disc < 0) continue;
+
+				[(-qb - Math.sqrt(disc)) / (2 * qa), (-qb + Math.sqrt(disc)) / (2 * qa)].some(function (t) {
+					var hit = add(from, scale(direction, t));
+					var along = dot(sub(hit, a), u);
+					if (t < 0 || along < 0 || along > l) return false;
+
+					if (best.Distance < 0 || t < best.Distance) {
+						var normal = unit(sub(hit, add(a, scale(u, along))));
+
+						best = {Distance: t, Normal: radius === record.Inner ? scale(normal, -1) : normal};
+					}
+
+					return true;
+				});
+			}
+
+			return best;
+		}
+
 		/* A ball (its middle c, radius r) of a against a prism b. */
 		function ballPrism (a, c, r, b) {
 			var met = prismNear(b, c);
@@ -1166,7 +1282,22 @@ Elemenx.Service('Physics', {
 			else if (kinds === 'box|prism') {
 				boxPrism(a, b);
 			}
-			else if (kinds !== 'prism|prism') {
+			else if (kinds === 'sphere|tube') {
+				ballTube(a, a.Body.At, a.Body.Radius, b);
+			}
+			else if (kinds === 'capsule|tube') {
+				pair = ends(a);
+
+				[pair[0], pair[1], scale(add(pair[0], pair[1]), 0.5)].forEach(function (point) {
+					ballTube(a, point, a.Body.Radius, b);
+				});
+			}
+			else if (kinds === 'box|tube') {
+				corners(a).forEach(function (corner) {
+					ballTube(a, corner, 0, b);
+				});
+			}
+			else if (kinds !== 'prism|prism' && kinds !== 'tube|tube' && kinds !== 'prism|tube' && kinds !== 'tube|prism') {
 				collide(b, a);
 			}
 		}
@@ -1666,7 +1797,7 @@ Elemenx.Service('Physics', {
 				var record = {Body: body, Key: next, Still: 0};
 
 				body.ID = body.ID === undefined ? 'body' + next : body.ID;
-				body.Shape = body.Shape === 'box' || body.Shape === 'capsule' || body.Shape === 'prism' ? body.Shape : 'sphere';
+				body.Shape = body.Shape === 'box' || body.Shape === 'capsule' || body.Shape === 'prism' || body.Shape === 'tube' ? body.Shape : 'sphere';
 				body.Radius = number(body.Radius, 0.5);
 				body.Size = Array.isArray(body.Size) ? body.Size : [1, 1, 1];
 				body.Height = number(body.Height, 1);
@@ -1759,7 +1890,7 @@ Elemenx.Service('Physics', {
 
 					if (typeof filter === 'function' && !filter(record.Body)) return;
 
-					hit = shape === 'box' ? castBox(record, from, way) : shape === 'capsule' ? castCapsule(record, from, way) : shape === 'prism' ? castPrism(record, from, way) : castBall(record, from, way);
+					hit = shape === 'box' ? castBox(record, from, way) : shape === 'capsule' ? castCapsule(record, from, way) : shape === 'prism' ? castPrism(record, from, way) : shape === 'tube' ? castTube(record, from, way) : castBall(record, from, way);
 
 					if (hit.Distance >= 0 && hit.Distance <= limit && (!best || hit.Distance < best.Distance))
 						best = {Body: record.Body, At: add(from, scale(way, hit.Distance)), Normal: hit.Normal, Distance: hit.Distance};
@@ -2122,6 +2253,15 @@ Elemenx.Service('Physics', {
 		var gravity = Array.isArray(options.Gravity) ? options.Gravity.slice() : [0, -number(options.Gravity, self.Gravity), 0];
 		var min = options.Min || [-2, 0, -2];
 		var max = options.Max || [2, 4, 2];
+		var ground = options.Ground === undefined || options.Ground === null ? null : options.Ground;
+		var friction = number(options.Friction, 0.3);
+		var length = number(options.Step, 1 / 120);
+		var fastest = number(options.MaxSpeed, Infinity);
+
+		function groundAt (x, z) {
+			return typeof ground === 'function' ? ground(x, z) : ground;
+		}
+
 		var crowd = 0;
 		var clock = {};
 		var particles = [];
@@ -2139,57 +2279,71 @@ Elemenx.Service('Physics', {
 			}
 		}
 
+		/* A cell of the grid as one number (cells far apart may share one: they are only looked through, never trusted). */
 		function key (x, y, z) {
-			return Math.floor(x / h) + ',' + Math.floor(y / h) + ',' + Math.floor(z / h);
+			return (x * 73856093 ^ y * 19349663 ^ z * 83492791) | 0;
 		}
 
-		/* The particles within reach of each: a grid of cells the size of the reach. */
+		/* The particles within reach of each, after it (each pair once): a grid of cells the size of the reach. */
 		function neighbours () {
-			var grid = {};
+			var grid = new Map();
+			var count = particles.length;
+			var i;
+			var cell;
 
-			particles.forEach(function (p, i) {
-				var k = key(p.At[0], p.At[1], p.At[2]);
+			for (i = 0; i < count; i++) {
+				var p = particles[i];
 
-				(grid[k] = grid[k] || []).push(i);
-			});
+				p.Cell = [Math.floor(p.At[0] / h), Math.floor(p.At[1] / h), Math.floor(p.At[2] / h)];
+				cell = key(p.Cell[0], p.Cell[1], p.Cell[2]);
 
-			particles.forEach(function (p) {
-				var cx = Math.floor(p.At[0] / h);
-				var cy = Math.floor(p.At[1] / h);
-				var cz = Math.floor(p.At[2] / h);
+				if (!grid.has(cell))
+					grid.set(cell, []);
+
+				grid.get(cell).push(i);
+			}
+
+			for (i = 0; i < count; i++) {
+				var q = particles[i];
 				var near = [];
 				var x;
 				var y;
 				var z;
+				var k;
 
-				for (x = cx - 1; x <= cx + 1; x++) {
-					for (y = cy - 1; y <= cy + 1; y++) {
-						for (z = cz - 1; z <= cz + 1; z++) {
-							(grid[x + ',' + y + ',' + z] || []).forEach(function (j) {
-								near.push(j);
-							});
+				for (x = q.Cell[0] - 1; x <= q.Cell[0] + 1; x++) {
+					for (y = q.Cell[1] - 1; y <= q.Cell[1] + 1; y++) {
+						for (z = q.Cell[2] - 1; z <= q.Cell[2] + 1; z++) {
+							var list = grid.get(key(x, y, z));
+							if (!list) continue;
+
+							for (k = 0; k < list.length; k++) {
+								if (list[k] > i)
+									near.push(list[k]);
+							}
 						}
 					}
 				}
 
-				p.Near = near;
-			});
+				q.Near = near;
+			}
 		}
 
 		/* Each pair near enough once: the callback gets both, the line from the first to the second, its length and how near (1 - r / h). */
 		function pairs (callback) {
-			particles.forEach(function (p, i) {
-				p.Near.forEach(function (j) {
+			var count = particles.length;
+			var i;
+			var k;
+
+			for (i = 0; i < count; i++) {
+				var p = particles[i];
+
+				for (k = 0; k < p.Near.length; k++) {
+					var j = p.Near[k];
 					var q = particles[j];
-					var d;
-					var r;
-
-					if (j <= i) return;
-
-					d = [q.At[0] - p.At[0], q.At[1] - p.At[1], q.At[2] - p.At[2]];
-					r = Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
-
-					if (r >= h) return;
+					var d = [q.At[0] - p.At[0], q.At[1] - p.At[1], q.At[2] - p.At[2]];
+					var r = Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+					if (r >= h) continue;
 
 					/* Two in one place are set apart along a line of their own. */
 					if (r < 1e-9) {
@@ -2198,8 +2352,8 @@ Elemenx.Service('Physics', {
 					}
 
 					callback(p, q, [d[0] / Math.max(r, 1e-6), d[1] / Math.max(r, 1e-6), d[2] / Math.max(r, 1e-6)], 1 - r / h);
-				});
-			});
+				}
+			}
 		}
 
 		/*
@@ -2274,13 +2428,46 @@ Elemenx.Service('Physics', {
 					i++;
 				}
 
+				/* No faster than MaxSpeed: what was pushed apart hard does not fly off. */
+				var speed = Math.sqrt(p.Way[0] * p.Way[0] + p.Way[1] * p.Way[1] + p.Way[2] * p.Way[2]);
+
+				if (speed > fastest) {
+					p.Way = [p.Way[0] * fastest / speed, p.Way[1] * fastest / speed, p.Way[2] * fastest / speed];
+					p.At = [p.Was[0] + p.Way[0] * elapsed, p.Was[1] + p.Way[1] * elapsed, p.Was[2] + p.Way[2] * elapsed];
+				}
+
+				/* The ground under it: out of it along its slope (so it runs down it), its way into it gone, slowed along it as it spreads. */
+				if (ground !== null) {
+					var floor = groundAt(p.At[0], p.At[2]) + h * 0.25;
+
+					if (p.At[1] < floor) {
+						var e = h * 0.5;
+						var n = [groundAt(p.At[0] - e, p.At[2]) - groundAt(p.At[0] + e, p.At[2]), 2 * e, groundAt(p.At[0], p.At[2] - e) - groundAt(p.At[0], p.At[2] + e)];
+						var l = Math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+						var depth;
+						var into;
+						var keep = Math.pow(1 - Math.min(0.99, friction), elapsed);
+
+						n = [n[0] / l, n[1] / l, n[2] / l];
+						depth = (floor - p.At[1]) * n[1];
+						p.At = [p.At[0] + n[0] * depth, p.At[1] + n[1] * depth, p.At[2] + n[2] * depth];
+						p.At[1] = Math.max(p.At[1], groundAt(p.At[0], p.At[2]) + h * 0.25 - 1e-6);
+						into = Math.min(0, p.Way[0] * n[0] + p.Way[1] * n[1] + p.Way[2] * n[2]);
+						/* Struck hard, it splashes: the harder it came into it, the less of its way along it is left. */
+						keep /= 1 - into * 0.15;
+						p.Way = [(p.Way[0] - n[0] * into) * keep, p.Way[1] - n[1] * into, (p.Way[2] - n[2] * into) * keep];
+					}
+				}
+
+				p.Age += elapsed;
+
 				p.Density = rest * p.Crowd / crowd;
 			});
 		}
 
 		return {
 			Add: function (at, way) {
-				particles.push({At: at.slice(), Way: way ? way.slice() : [0, 0, 0], Density: rest, Near: [], Was: at.slice(), Crowd: 0, Close: 0});
+				particles.push({At: at.slice(), Way: way ? way.slice() : [0, 0, 0], Density: rest, Near: [], Was: at.slice(), Crowd: 0, Close: 0, Age: 0});
 
 				return particles.length - 1;
 			},
@@ -2297,11 +2484,11 @@ Elemenx.Service('Physics', {
 				}
 			},
 			Step: function (elapsed) {
-				return self.Steps(clock, Math.min(0.1, Math.max(0, number(elapsed, 0))), 1 / 120, step);
+				return self.Steps(clock, Math.min(0.1, Math.max(0, number(elapsed, 0))), length, step);
 			},
 			Particles: function () {
 				return particles.map(function (p) {
-					return {At: p.At, Way: p.Way, Density: p.Density};
+					return {At: p.At, Way: p.Way, Density: p.Density, Age: p.Age};
 				});
 			},
 			Count: function () {
@@ -2309,6 +2496,11 @@ Elemenx.Service('Physics', {
 			},
 			Clear: function () {
 				particles = [];
+			},
+			Keep: function (test) {
+				particles = particles.filter(function (p, index) {
+					return test({At: p.At, Way: p.Way, Density: p.Density, Age: p.Age}, index);
+				});
 			}
 		};
 	}

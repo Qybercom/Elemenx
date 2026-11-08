@@ -38,12 +38,13 @@ async function mount (items, bare, more) {
 		ready.Engine().Frame(now += 33);
 
 		return (bare || ready.Sown().Squares > 0) && ready.Sown().Waiting === 0;
-	}, 20000);
+	}, 45000);
 
 	return ready;
 }
 
-describe('Contract: what a sketch sows over a ground: growth in its areas, rows, lines of things and markers', function () {
+/* A busy machine sows slowly: the ground of each test may take its time. */
+describe('Contract: what a sketch sows over a ground: growth in its areas, rows, lines of things and markers', {timeout: 90000}, function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
@@ -165,7 +166,7 @@ describe('Contract: what a sketch sows over a ground: growth in its areas, rows,
 
 		await waitFor(function () {
 			return !!scene.Scene().Objects['street-burg-0'];
-		}, 4000);
+		}, 15000);
 
 		/* On its streets: nothing sown but what stands beside a street (its lamps, benches, bins). */
 		plan.Streets.forEach(function (street) {

@@ -4,7 +4,8 @@
  * cells across the tile), with their mipmaps and seen at a slant without a blur (anisotropic filtering).
  *
  * A recipe is {Title, Group (ground, road, build, other), Metres (the side of its tile in metres of the world), Size (texels
- * across, 1024), Params ({Name: {Value, Min, Max, Title}}: what a lab or a game turns, uniforms p_<Name> of its code), Code}.
+ * across, 1024), Rows (true: laid in rows, sampled as it is, with no hexagons), Params ({Name: {Value, Min, Max,
+ * Title}}: what a lab or a game turns, uniforms p_<Name> of its code), Code}.
  * Code is the body of a function of GLSL over uv (vec2, 0 to 1 across the tile), px (float: a texel in uv) and seed
  * (float), writing c (vec3: the color, linear), r (roughness), h (height, 0 to 1) and ao (how much light reaches it, 0 to 1).
  * Its helpers repeat at the tile: tex_hash(cell, period, seed) and tex_hash2, tex_noise(p, period, seed) (value noise of
@@ -21,15 +22,18 @@
  *   Metres: {name: metres}}), for a ground of many materials: one sampler each, however many materials; params {name:
  *   {param: value}}. Made again only when one of its tiles is.
  * - Chunk(layered): the GLSL of tex_sample(Color, Surface, place, metres, spin, ...) (spin 1: each hexagon turns the tile its
- *   own way, for what has no way of its own; 0: only shifted, for beds and flutes that must stay level and upright) a ground samples a tile with: a grid of hexagons
+ *   own way, for what has no way of its own; 0: only shifted, for beds and flutes that must stay level and upright; below 0:
+ *   the tile as it is, no hexagons, for blocks laid in rows) a ground samples a tile with: a grid of hexagons
  *   over the ground, each with the tile turned and shifted its own way, the three round a point blended by their heights
  *   (hex-tiling), and patches of metres of the place itself, so no repeat shows at any distance. Layered: tex_sample_layer
  *   (Color, Surface, layer, place, metres, ...) of the textures of Array.
  * - Source(name): the fragment shader that bakes a recipe (to read, or to check).
  * Built in: lawn (a dense lawn of blades, light and dark tufts, dry blades and fallen leaves as params say), grassy-soil
  * (sandy soil with patches of grass and rosettes of weeds, its Cover from 0 to 1), asphalt (stones of its aggregate in
- * the binder, worn patches, sealed cracks and stains), cliff (the face of a cliff of soft rock or earth seen from its side:
- * beds and their ledges, flutes the rain cut down it, cracks, stones; neutral, a ground tints its beds by their height).
+ * the binder, worn patches, sealed cracks and stains), paving (concrete blocks in rows across the way, bevelled,
+ * sand and moss in the joints, tones, wear), dirt (earth trodden hard: grains, stones, dry cracks, damp hollows, dust),
+ * cliff (the face of a cliff of soft rock or earth seen from its side: beds and their ledges, flutes the rain cut down
+ * it, cracks, stones; neutral, a ground tints its beds by their height).
  */
 Elemenx.Service('SceneTextures', {
 	$Meta: {
@@ -459,24 +463,34 @@ Elemenx.Service('SceneTextures', {
 			'	vec2 uv = place / metres;',
 			'	vec2 dx = dFdx(uv);',
 			'	vec2 dy = dFdy(uv);',
-			'	vec3 w;',
-			'	vec2 v1;',
-			'	vec2 v2;',
-			'	vec2 v3;',
-			'	tex_hexes(uv / 1.6, w, v1, v2, v3);',
-			'	vec4 c1;',
-			'	vec4 c2;',
-			'	vec4 c3;',
-			'	vec4 s1;',
-			'	vec4 s2;',
-			'	vec4 s3;',
-			'	tex_piece(color, surface, uv, dx, dy, v1, spin, c1, s1);',
-			'	tex_piece(color, surface, uv, dx, dy, v2, spin, c2, s2);',
-			'	tex_piece(color, surface, uv, dx, dy, v3, spin, c3, s3);',
-			'	vec3 k = pow(max(w, 0.0), vec3(8.0)) * exp(vec3(s1.b, s2.b, s3.b) * 5.0);',
-			'	k /= k.x + k.y + k.z;',
-			'	vec4 c = c1 * k.x + c2 * k.y + c3 * k.z;',
-			'	vec4 s = s1 * k.x + s2 * k.y + s3 * k.z;',
+			'	vec4 c;',
+			'	vec4 s;',
+			/* Below 0: the tile as it is, for what is laid in rows (paving), which a hexagon shifted would break. */
+			'	if (spin < 0.0) {',
+			'		vec2 at = uv;',
+			'		c = textureGrad(color, at, dx, dy);',
+			'		s = textureGrad(surface, at, dx, dy);',
+			'	}',
+			'	else {',
+			'		vec3 w;',
+			'		vec2 v1;',
+			'		vec2 v2;',
+			'		vec2 v3;',
+			'		tex_hexes(uv / 1.6, w, v1, v2, v3);',
+			'		vec4 c1;',
+			'		vec4 c2;',
+			'		vec4 c3;',
+			'		vec4 s1;',
+			'		vec4 s2;',
+			'		vec4 s3;',
+			'		tex_piece(color, surface, uv, dx, dy, v1, spin, c1, s1);',
+			'		tex_piece(color, surface, uv, dx, dy, v2, spin, c2, s2);',
+			'		tex_piece(color, surface, uv, dx, dy, v3, spin, c3, s3);',
+			'		vec3 k = pow(max(w, 0.0), vec3(8.0)) * exp(vec3(s1.b, s2.b, s3.b) * 5.0);',
+			'		k /= k.x + k.y + k.z;',
+			'		c = c1 * k.x + c2 * k.y + c3 * k.z;',
+			'		s = s1 * k.x + s2 * k.y + s3 * k.z;',
+			'	}',
 			'	vec2 n = s.xy * 2.0 - 1.0;',
 			/* Patches of the place: a few metres and tens of metres, lighter and darker, a little warmer where lighter. */
 			'	float m = tex_blend(place / 4.3) * 0.5 + tex_blend(place / 13.7 + 3.1) * 0.35 + tex_blend(place / 37.0 + 7.7) * 0.15;',
@@ -667,6 +681,88 @@ Elemenx.Service('SceneTextures', {
 			'	float stain = smoothstep(0.62, 0.8, tex_fbm(uv, 4.0, 4, seed + 7.0)) * p_Stains;',
 			'	c *= 1.0 - stain * 0.45;',
 			'	r -= stain * 0.2;'
+		]);
+
+		/*
+		 * Paving of concrete blocks, 20 by 10 cm, laid across the way (uv.y along it) in rows, each row half a block on from
+		 * the last: their edges bevelled, sand in the joints and moss in some, each block a tone of its own, worn and stained
+		 * in patches.
+		 */
+		define('paving', 'road', 1, {
+			Tones: {Value: 0.35, Min: 0, Max: 1, Title: 'Tones'},
+			Moss: {Value: 0.2, Min: 0, Max: 1, Title: 'Moss in the joints'},
+			Wear: {Value: 0.3, Min: 0, Max: 1, Title: 'Wear'}
+		}, [
+			'	vec2 g = uv * vec2(5.0, 10.0);',
+			'	float row = floor(g.y);',
+			'	g.x += mod(row, 2.0) * 0.5;',
+			'	vec2 cell = vec2(mod(floor(g.x), 5.0), row);',
+			'	vec2 f = fract(g);',
+			'	vec2 e = min(f, 1.0 - f) * vec2(0.2, 0.1);',
+			'	float edge = min(e.x, e.y);',
+			'	float joint = 1.0 - smoothstep(0.0025, 0.0045, edge);',
+			'	float bevel = smoothstep(0.002, 0.008, edge);',
+			'	float id = tex_hash(cell, 100.0, seed + 1.0);',
+			'	float id2 = tex_hash(cell, 100.0, seed + 2.0);',
+			'	float grain = tex_noise(uv * 400.0, 400.0, seed + 3.0) * 0.6 + tex_noise(uv * 130.0, 130.0, seed + 4.0) * 0.4;',
+			'	vec3 block = mix(vec3(0.5, 0.49, 0.47), mix(vec3(0.42, 0.4, 0.38), vec3(0.58, 0.5, 0.44), id2), p_Tones * step(0.5, id)) * (0.88 + 0.2 * id);',
+			'	c = block * (0.86 + 0.24 * grain);',
+			'	h = 0.55 * bevel + grain * 0.04;',
+			'	r = 0.9 - 0.06 * id;',
+			'	ao = mix(0.55, 1.0, bevel);',
+			/* The joints: sand, and moss in some of them. */
+			'	float moss = smoothstep(0.55, 0.75, tex_fbm(uv, 4.0, 4, seed + 5.0)) * p_Moss;',
+			'	vec3 fill = mix(vec3(0.11, 0.1, 0.085), vec3(0.08, 0.12, 0.04), moss);',
+			'	c = mix(c, fill * (0.7 + 0.5 * grain), joint);',
+			'	r = mix(r, 1.0, joint);',
+			/* Worn lighter where most feet go, stained darker in spots. */
+			'	float worn = smoothstep(0.45, 0.8, tex_fbm(uv, 3.0, 4, seed + 6.0)) * p_Wear;',
+			'	c = mix(c, c * 1.15 + 0.02, worn * (1.0 - joint));',
+			'	float stain = smoothstep(0.65, 0.85, tex_fbm(uv, 5.0, 4, seed + 7.0)) * p_Wear;',
+			'	c *= 1.0 - stain * 0.3;'
+		]);
+
+		/* Laid in rows: drawn as it is, no hexagons shifted over it. */
+		this.Defined.paving.Rows = true;
+
+		/*
+		 * A dirt road, earth trodden hard: its grains and clods, small stones pressed into it and some loose on it, a fine
+		 * crust cracked where it dried, darker damp hollows and a little dust lighter over the rest.
+		 */
+		define('dirt', 'road', 2, {
+			Stones: {Value: 0.5, Min: 0, Max: 1, Title: 'Stones'},
+			Cracks: {Value: 0.3, Min: 0, Max: 1, Title: 'Dry cracks'},
+			Damp: {Value: 0.3, Min: 0, Max: 1, Title: 'Damp hollows'}
+		}, [
+			'	float grain = tex_noise(uv * 520.0, 520.0, seed + 1.0) * 0.5 + tex_noise(uv * 170.0, 170.0, seed + 2.0) * 0.3 + tex_noise(uv * 48.0, 48.0, seed + 3.0) * 0.2;',
+			'	float lumps = tex_fbm(uv, 12.0, 4, seed + 4.0);',
+			'	vec3 earth = mix(vec3(0.36, 0.28, 0.2), vec3(0.52, 0.42, 0.31), lumps);',
+			'	c = earth * (0.8 + 0.4 * grain);',
+			'	h = 0.4 + lumps * 0.25 + grain * 0.08;',
+			'	r = 0.95;',
+			'	ao = 0.8 + 0.2 * lumps;',
+			/* Hollows: darker, damp. */
+			'	float hollow = smoothstep(0.62, 0.8, 1.0 - tex_fbm(uv, 3.0, 4, seed + 5.0)) * p_Damp;',
+			'	c *= 1.0 - hollow * 0.35;',
+			'	r -= hollow * 0.25;',
+			'	h -= hollow * 0.15;',
+			/* The crust cracked where it dried: thin dark lines of cells, only where it is dry. */
+			'	vec4 cr = tex_cells(uv + (vec2(tex_noise(uv * 40.0, 40.0, seed + 6.0), tex_noise(uv * 40.0, 40.0, seed + 7.0)) - 0.5) * 0.02, 14.0, seed + 8.0);',
+			'	float crack = (1.0 - smoothstep(0.004, 0.012, cr.y - cr.x)) * p_Cracks * (1.0 - hollow) * step(0.3, cr.z);',
+			'	c *= 1.0 - crack * 0.45;',
+			'	h -= crack * 0.12;',
+			/* Stones: pressed in, grey and ochre, a light rim where the sun catches them. */
+			'	vec4 st = tex_cells(uv + (vec2(tex_noise(uv * 90.0, 90.0, seed + 9.0), tex_noise(uv * 90.0, 90.0, seed + 10.0)) - 0.5) * 0.01, 40.0, seed + 11.0);',
+			'	float size = 0.15 + 0.3 * fract(st.z * 13.7);',
+			'	float stone = (1.0 - smoothstep(size - 0.04, size + 0.01, st.x)) * step(1.0 - p_Stones * 0.5, st.z);',
+			'	vec3 rock = mix(vec3(0.42, 0.4, 0.37), vec3(0.6, 0.5, 0.36), st.w) * (0.8 + 0.35 * (1.0 - st.x / size));',
+			'	c = mix(c, rock, stone);',
+			'	h = mix(h, 0.7 + 0.15 * (1.0 - st.x / size), stone);',
+			'	r = mix(r, 0.75, stone);',
+			'	ao = mix(ao, 1.0, stone) * (1.0 - (1.0 - stone) * smoothstep(size + 0.01, size + 0.08, st.x) * (1.0 - smoothstep(size + 0.08, size + 0.2, st.x)) * 0.3 * step(1.0 - p_Stones * 0.5, st.z));',
+			/* Dust over the dry rest, lighter. */
+			'	float dust = smoothstep(0.5, 0.75, tex_fbm(uv, 5.0, 3, seed + 12.0)) * (1.0 - hollow);',
+			'	c = mix(c, c * 1.18 + vec3(0.03, 0.025, 0.015), dust * 0.6 * (1.0 - stone));'
 		]);
 
 		/*

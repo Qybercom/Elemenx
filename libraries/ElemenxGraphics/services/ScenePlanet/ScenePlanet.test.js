@@ -545,4 +545,213 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 		expect(planet.Highway(middle).Far).toBeLessThan(0.01);
 		expect(plain.Highway(middle)).toBe(null);
 	}, 120000);
+
+	/*
+	 * Regression: near, a globe had the colors of the points of its squares alone (steps where biomes meet, blurred between,
+	 * cracks between squares of two sizes). Each square now has a picture finer than its points, the same on an edge as the
+	 * square beside, a soft coast, normals of its heights, and a skirt under its edges.
+	 */
+	it('paints a square of its globe finer than its points, seamless with the square beside, with a soft coast and the normals of its relief', async function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var field = terrain.Sphere({Planet: {Seed: 'picture', Ocean: 0.55}});
+		var left = field.Picture(4, -0.1, 0, 0.2, 24);
+		var right = field.Picture(4, 0.1, 0, 0.2, 24);
+		var patch = field.Patch(4, -0.1, 0, 0.2, 8);
+		var side = 9;
+		var coast = null;
+		var soft = 0;
+		var row;
+		var i;
+
+		expect(left.Size).toBe(24);
+		expect(left.Color.length).toBe(24 * 24 * 4);
+
+		/* The last column of the left one is the first of the right one: the same directions. */
+		for (row = 0; row < 24; row++) {
+			for (i = 0; i < 4; i++)
+				expect(Math.abs(left.Color[(row * 24 + 23) * 4 + i] - right.Color[(row * 24) * 4 + i])).toBeLessThan(2);
+		}
+
+		/* Its normals of unit length, and up over the sea. */
+		for (i = 0; i < left.Normal.length; i += 4) {
+			var n = [left.Normal[i] / 127.5 - 1, left.Normal[i + 1] / 127.5 - 1, left.Normal[i + 2] / 127.5 - 1];
+
+			expect(Math.abs(Math.hypot(n[0], n[1], n[2]) - 1)).toBeLessThan(0.03);
+		}
+
+		/* A coast found on some square of a face: between land and sea, texels partly water. */
+		[[0, 0], [2, 0.3], [4, 0.5], [1, -0.4], [5, 0.2], [3, -0.6]].some(function (one) {
+			var picture = field.Picture(one[0], one[1], 0, 0.3, 32);
+			var waters = [];
+
+			for (i = 3; i < picture.Color.length; i += 4)
+				waters.push(picture.Color[i]);
+
+			if (waters.indexOf(0) >= 0 && waters.indexOf(255) >= 0) {
+				coast = picture;
+				soft = waters.filter(function (value) {
+					return value > 0 && value < 255;
+				}).length;
+			}
+
+			return coast;
+		});
+
+		expect(coast).not.toBe(null);
+		expect(soft).toBeGreaterThan(0);
+
+		/* Where each point is on its square, and a skirt under each edge point, lower. */
+		expect(patch.Geometry.Positions.length / 3).toBe(side * side + 4 * 8);
+		expect(patch.Geometry.Materials.length).toBe(patch.Geometry.Positions.length / 3 * 8);
+		expect(patch.Geometry.Materials.slice(0, 2)).toEqual([0, 0]);
+		expect(patch.Geometry.Materials.slice((side * side - 1) * 8, (side * side - 1) * 8 + 2)).toEqual([1, 1]);
+
+		[0, 4, 8].forEach(function (column) {
+			var top = [patch.Geometry.Positions[column * 3] + patch.Center[0], patch.Geometry.Positions[column * 3 + 1] + patch.Center[1], patch.Geometry.Positions[column * 3 + 2] + patch.Center[2]];
+			var skirt = [patch.Geometry.Positions[(side * side + column) * 3] + patch.Center[0], patch.Geometry.Positions[(side * side + column) * 3 + 1] + patch.Center[1], patch.Geometry.Positions[(side * side + column) * 3 + 2] + patch.Center[2]];
+
+			expect(Math.hypot(skirt[0], skirt[1], skirt[2])).toBeLessThan(Math.hypot(top[0], top[1], top[2]) - 0.04);
+		});
+
+		/* Regression: the picture alone, asked of a worker, was of a field of the wrong shape (a flat one): none came. */
+		var piece = await new Promise(function (done, failed) {
+			terrain.Work().Run('SceneTerrainGenerator', 'Piece', ['SpherePicture', field.Options, null, [4, 0.1, 0, 0.2, 24]], function (error, result) {
+				if (error) failed(error);
+				else done(result);
+			});
+		});
+
+		expect(Array.from(piece.Picture.Color)).toEqual(Array.from(right.Color));
+	}, 120000);
+
+	/*
+	 * Its woods: in the alpha of Normal, the share trees cover by the rules its biome sows them by. Regression: of the slope
+	 * of its own texels, a square differed from the finer one beside, a straight edge across woods and rock.
+	 */
+	it('tells in its picture how much trees cover, by its biome, the same in a square and in a finer one there', function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var field = terrain.Sphere({Planet: {Seed: 'woods', Ocean: 0.4, BiomeList: terrain.Biomes({Biomes: ['temperate', 'taiga', 'desert', 'tundra']})}});
+		var planet = field.Planet;
+		var found = 0;
+		var same = 0;
+		var wooded = 0;
+		var squares = [];
+		var face;
+		var u;
+		var v;
+
+		expect(planet.Lands[0].Scatter.length).toBeGreaterThan(0);
+
+		/* Squares of its mountains, where the slope tells, and of its lowlands. */
+		for (face = 0; face < 6; face++) {
+			for (u = -0.6; u <= 0.61; u += 0.3) {
+				for (v = -0.6; v <= 0.61; v += 0.3) {
+					var height = planet.Elevation(terrain.Face(face, u + 0.002, v));
+					if (height > 1200 && squares.length < 6 || height > 50 && height < 400 && squares.length < 10)
+						squares.push([face, u, v]);
+				}
+			}
+		}
+
+		squares.forEach(function (square) {
+			/* A square, and a finer one of half of it (texels half as far apart): texel 2j of the finer is texel j + 8 of the other, in their middle rows. */
+			var coarse = field.Picture(square[0], square[1], square[2], 0.004, 17);
+			var fine = field.Picture(square[0], square[1] + 0.001, square[2], 0.002, 17);
+			var j;
+
+			for (j = 0; j < 9; j++) {
+				var a = (8 * 17 + j + 8) * 4;
+				var b = (8 * 17 + j * 2) * 4;
+				if (coarse.Color[a + 3] !== 0 || fine.Color[b + 3] !== 0) continue;
+
+				found++;
+
+				if ([0, 1, 2, 3].every(function (k) {
+					return Math.abs(coarse.Normal[a + 3] - fine.Normal[b + 3]) <= 1 && (k === 3 || Math.abs(coarse.Color[a + k] - fine.Color[b + k]) <= 2);
+				}))
+					same++;
+
+				if (fine.Normal[b + 3] > 40)
+					wooded++;
+			}
+
+			/* No woods on the sea. */
+			for (j = 3; j < coarse.Color.length; j += 4) {
+				if (coarse.Color[j] === 255)
+					expect(coarse.Normal[j]).toBe(0);
+			}
+		});
+
+		expect(found).toBeGreaterThan(20);
+		expect(same).toBe(found);
+		expect(wooded).toBeGreaterThan(0);
+	}, 120000);
+
+	/*
+	 * Where people live: a settlement is its houses in its middle (roofs and streets, no woods), its fields round it (parcels
+	 * of crops apart, finer than its texels), the land far from it as it was.
+	 */
+	it('paints the houses of a settlement in its middle and its fields round it, the land far from it as it was', function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var options = {Seed: 'fields', Ocean: 0.45, BiomeList: terrain.Biomes({Biomes: ['temperate', 'grassland', 'desert', 'tundra']})};
+		var plain = terrain.Sphere({Planet: options});
+		var place = null;
+		var face;
+		var u;
+		var v;
+
+		/* A low, flat, mild and wet enough land. */
+		for (face = 0; face < 6 && !place; face++) {
+			for (u = -0.5; u <= 0.5 && !place; u += 0.05) {
+				for (v = -0.5; v <= 0.5 && !place; v += 0.05) {
+					var direction = terrain.Face(face, u, v);
+					var sample = plain.Planet.Sample(direction);
+					var beside = plain.Planet.Elevation(terrain.Face(face, u + 0.0006, v));
+					if (sample.Land && sample.Elevation > 30 && sample.Elevation < 400 && Math.abs(beside - sample.Elevation) < 25 && sample.Moisture > 0.4 && sample.Celsius > 8 && sample.Celsius < 24)
+						place = [face, u, v, Elemenx.Service('ScenePlanet').Unit(direction)];
+				}
+			}
+		}
+
+		expect(place).not.toBe(null);
+
+		var dwelt = terrain.Sphere({Planet: Object.assign({}, options, {Settlements: [{Point: place[3], Size: 0.5, Kind: 'city'}]})});
+		var km = Math.PI / 4 * 6371;
+		var middle = (16 * 33 + 16) * 4;
+		var town = dwelt.Picture(place[0], place[1], place[2], 1.2 / km, 33);
+		var bare = plain.Picture(place[0], place[1], place[2], 1.2 / km, 33);
+		var fields = dwelt.Picture(place[0], place[1] + 7 / km, place[2], 3 / km, 33);
+		var wild = plain.Picture(place[0], place[1] + 7 / km, place[2], 3 / km, 33);
+		var far = dwelt.Picture(place[0], place[1] + 80 / km, place[2], 3 / km, 33);
+		var away = plain.Picture(place[0], place[1] + 80 / km, place[2], 3 / km, 33);
+		var farmed = 0;
+		var i;
+
+		/* Its middle: houses of a city, the mean of their roofs, no trees. */
+		expect(town.Use.length).toBe(33 * 33 * 4);
+		expect(town.Use[middle + 1]).toBeGreaterThan(240);
+		expect(town.Use[middle]).toBe(0);
+		expect(town.Use[middle + 2]).toBe(255);
+		expect(Math.abs(town.Color[middle] - bare.Color[middle]) + Math.abs(town.Color[middle + 1] - bare.Color[middle + 1])).toBeGreaterThan(10);
+		expect(town.Normal[middle + 3]).toBe(0);
+
+		/* Its fields: the most of the square fields, of their mean, fewer trees. */
+		for (i = 0; i < fields.Use.length; i += 4) {
+			if (fields.Use[i] > 128 && fields.Use[i + 1] === 0) {
+				farmed++;
+
+				expect(fields.Normal[i + 3]).toBeLessThanOrEqual(wild.Normal[i + 3]);
+			}
+		}
+
+		expect(farmed).toBeGreaterThan(33 * 33 * 0.6);
+		expect(fields.Color[middle] === wild.Color[middle] && fields.Color[middle + 1] === wild.Color[middle + 1]).toBe(false);
+
+		/* Far from it, the land as it was, nothing of people. */
+		expect(Array.from(far.Color)).toEqual(Array.from(away.Color));
+		expect(Array.from(far.Normal)).toEqual(Array.from(away.Normal));
+		expect(far.Use.every(function (value, index) {
+			return index % 4 > 1 || value === 0;
+		})).toBe(true);
+	}, 120000);
 });

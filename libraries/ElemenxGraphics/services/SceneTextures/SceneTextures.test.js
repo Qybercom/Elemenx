@@ -58,12 +58,13 @@ describe('Contract: SceneTextures, textures of materials baked once into tiles w
 		var inside;
 
 		expect(textures.Names('ground')).toEqual(expect.arrayContaining(['lawn', 'grassy-soil']));
-		expect(textures.Names('road')).toContain('asphalt');
+		expect(textures.Names('road')).toEqual(expect.arrayContaining(['asphalt', 'paving', 'dirt']));
+		expect(textures.Get('paving').Rows).toBe(true);
 		expect(function () {
 			textures.Define('broken', {});
 		}).toThrow('Elemenx SceneTextures: a texture needs a name and its Code');
 
-		['lawn', 'grassy-soil', 'asphalt'].forEach(function (name) {
+		['lawn', 'grassy-soil', 'asphalt', 'paving', 'dirt', 'cliff'].forEach(function (name) {
 			made = textures.Bake(renderer, name, {Size: 256});
 
 			expect(gl.getError()).toBe(gl.NO_ERROR);
@@ -92,7 +93,7 @@ describe('Contract: SceneTextures, textures of materials baked once into tiles w
 		expect(textures.Chunk()).toContain('void tex_sample(');
 
 		renderer.Destroy();
-	});
+	}, 60000);
 
 	it('shows a texture in TextureLab as a tile or a ground, a slider for each param, and tells change', async function () {
 		var told = [];
@@ -149,12 +150,20 @@ describe('Contract: SceneTextures, textures of materials baked once into tiles w
 
 		expect(materials.Get('lawn').Texture).toBe('lawn');
 		expect(materials.Get('asphalt').Texture).toBe('asphalt');
-		/* The face of a cliff is the last layer of any ground: what is steep has it. */
-		expect(materials.Textured(['soil', 'lawn', 'asphalt', 'lawn'])).toEqual(['lawn', 'asphalt', 'cliff']);
-		expect(materials.Land(['soil', 'lawn'])).toContain('landCliff(1.0, 3.0000, place, color, height);');
-		expect(materials.Land(['soil', 'lawn'])).toContain('landTexture(0.0, 0.8000, place, c, h, lit);');
+		/* Earth and the face of a cliff are the last layers of any ground: what is fairly steep and what is steep have them. */
+		expect(materials.Textured(['soil', 'lawn', 'asphalt', 'lawn'])).toEqual(['lawn', 'asphalt', 'dirt', 'cliff']);
+		expect(materials.Land(['soil', 'lawn'])).toContain('landCliff(2.0, 3.0000, 1.0, 2.0000, place, color, height);');
+		expect(materials.Land(['soil', 'lawn'])).toContain('landTexture(0.0, 0.8000, 1.0, place, c, h, lit);');
+		/* Paving, laid in rows, is sampled as it is. */
+		expect(materials.Land(['paving'])).toContain('landTexture(0.0, 1.0000, -1.0, place, c, h, lit);');
+		/* The steepness of the triangle too, where it is steeper than its corners say (a wall of a cliff). */
+		expect(materials.Land(['lawn'])).toContain('landSlope = landSteeper(place);');
 		expect(materials.Land(['soil', 'rock'])).not.toContain('landTexture(0');
 		expect(materials.LandTexture).toContain('place.zy');
+		/* The wear of years, larger than a tile (cracks, patches), on the asphalt of a road only: by its place on the road. */
+		expect(materials.Surface('asphalt', true)).toContain('roadWear(q, length(fwidth(q)), color, r, h);');
+		expect(materials.Surface('asphalt')).not.toContain('roadWear(q');
+		expect(materials.Surface('paving', true)).not.toContain('roadWear(q');
 
 		owned.push(component);
 

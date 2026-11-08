@@ -109,4 +109,59 @@ describe('Regression: what is sown casts its shadow', function () {
 			engine.ScatterDraw = sown;
 		}
 	});
+
+
+	/*
+	 * Regression: buildings far away were pictures of 96 texels turned to the eye, pixelized and with no facades, and every
+	 * level came at the same metres for a bush and a tower. Now a level comes by the size on the screen, and a building past
+	 * its nearest is its simpler shape with its facades baked.
+	 */
+	it('draws a far building by its shape with its facades baked, not by a picture', async function () {
+		var ready = null;
+		var component = Elemenx.Component(unique('FacadeHost'), {$Template: '<div style="width: 320px; height: 200px"><Scene Paused="true" Quality="high" Labels="false" (ready)="Ready"></Scene></div>', Ready: function (space) {
+			ready = space;
+		}})();
+		var engine;
+		var renderer;
+		var draw;
+		var faced = [];
+		var now = performance.now() + 100;
+
+		owned.push(component);
+
+		document.getElementById('mount').appendChild(component.$Element());
+
+		await waitFor(function () {
+			return ready;
+		}, 4000);
+
+		ready.Scene().Loop.Stop();
+		ready.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 1600, Height: 2, Water: 0, Scale: 300, Ridges: 0, Seed: 'far', Sketch: {Layers: [{ID: 'base', Items: [{ID: 'burg', Type: 'settlement', Kind: 'town', Points: [[400, 400], [520, 400], [520, 520], [400, 520]]}]}]}})});
+		ready.SetViewpoint({Target: [-300, 2, -300], Yaw: -2.36, Pitch: 0.1, Distance: 20});
+
+		engine = ready.Engine();
+		renderer = engine.Renderer;
+		draw = renderer.Draw;
+		renderer.Draw = function (mesh, program, uniforms) {
+			if (uniforms && uniforms.uFacade)
+				faced.push(uniforms.uFacade);
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			await waitFor(function () {
+				ready.Scene().Rest = 0;
+
+				engine.Frame(now += 33);
+
+				return ready.Sown().Squares > 0 && ready.Sown().Waiting === 0 && faced.length > 0;
+			}, 60000);
+
+			expect(faced.length).toBeGreaterThan(0);
+		}
+		finally {
+			renderer.Draw = draw;
+		}
+	}, 90000);
 });

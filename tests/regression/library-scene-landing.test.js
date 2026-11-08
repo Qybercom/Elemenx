@@ -38,6 +38,7 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		var gl = engine.Renderer.GL;
 		var now = performance.now() + 1000;
 		var options = Object.assign({Radius: 6371}, PLANET);
+		var size;
 		var face;
 		var reader;
 		var pixel = new Uint8Array(4);
@@ -47,20 +48,22 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 			engine.Frame(now += 100);
 
-			return inner.Baked.terra && inner.Baked.terra.Painted === 256;
-		}, 30000);
+			return inner.Baked.terra && inner.Baked.terra.Painted >= 256;
+		}, 60000);
 
-		face = Elemenx.Service('ScenePlanet').Face(options, 2, 256, 100, 1);
+		/* Regression (load): painted on, a busy frame went past 256 to its finer size before it was looked at; of the size it has. */
+		size = inner.Baked.terra.Ground.Size;
+		face = Elemenx.Service('ScenePlanet').Face(options, 2, size, Math.round(100 * size / 256), 1);
 		reader = gl.createFramebuffer();
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, reader);
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, inner.Baked.terra.Ground.Handle, 0);
-		gl.readPixels(37, 100, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+		gl.readPixels(Math.round(37 * size / 256), Math.round(100 * size / 256), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.deleteFramebuffer(reader);
 
-		expect(inner.Baked.terra.Ground.Size).toBe(256);
-		expect(Array.from(pixel)).toEqual(Array.from(face.Data.slice(37 * 4, 37 * 4 + 4)));
+		expect([256, 512]).toContain(size);
+		expect(Array.from(pixel)).toEqual(Array.from(face.Data.slice(Math.round(37 * size / 256) * 4, Math.round(37 * size / 256) * 4 + 4)));
 	}, 60000);
 
 	/*
@@ -962,6 +965,166 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		expect(shells).toBe(0);
 		expect(clouded).toBeGreaterThan(0);
 	}, 60000);
+
+	/*
+	 * Regression: near, the colors of the ground of a planet were those of the points of its squares: a row of steps where
+	 * one biome meets another, blurred between, and cracks between squares of two sizes. Each square now has its picture,
+	 * finer than its points, drawn with it; and a skirt.
+	 */
+	it('gives each square of a planet near its picture, colors and relief finer than its points', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var draw = engine.Renderer.Draw;
+		var tiled = 0;
+		var plain = 0;
+		var i;
+
+		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'terra', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'terra', From: [0, 0, 1.3], Facing: [-1, 0, 0], Length: 30}});
+		scene.Control('me');
+
+		/* Until all of it in view has its picture, the faces of the cube too. */
+		await waitFor(function () {
+			var nodes;
+
+			inner.Rest = 0;
+			inner.Looping = true;
+
+			engine.Frame(now += 100);
+
+			inner.Looping = false;
+			nodes = inner.Globes.terra ? Object.keys(inner.Globes.terra.Nodes).map(function (key) {
+				return inner.Globes.terra.Nodes[key];
+			}) : [];
+
+			return nodes.length > 6 && nodes.every(function (node) {
+				return node.Colors && node.Relief;
+			});
+		}, 60000);
+
+		engine.Renderer.Draw = function (mesh, program, uniforms) {
+			if (uniforms && uniforms.uTiled !== undefined) {
+				if (uniforms.uTiled === 1 && uniforms.uTexels === 64) tiled++;
+				else plain++;
+			}
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			for (i = 0; i < 2; i++) {
+				inner.Rest = 0;
+				inner.Looping = true;
+
+				engine.Frame(now += 100);
+
+				inner.Looping = false;
+			}
+		}
+		finally {
+			engine.Renderer.Draw = draw;
+		}
+
+		expect(tiled).toBeGreaterThan(6);
+		expect(plain).toBe(0);
+	}, 120000);
+
+	/*
+	 * Near, the tiles of the materials (grass, soil, dirt, cliff) on the ground of a planet, laid in a plane at an anchor
+	 * near the eye: metres from it exact in the floats of the shader. Far, none; the anchor always.
+	 */
+	it('lays the tiles of the materials on the ground of a planet near, from an anchor by the eye, and none from far', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var draw = engine.Renderer.Draw;
+		var seen = [];
+
+		function frames (count) {
+			var i;
+
+			for (i = 0; i < count; i++) {
+				inner.Rest = 0;
+				inner.Looping = true;
+
+				engine.Frame(now += 100);
+
+				inner.Looping = false;
+			}
+		}
+
+		engine.Renderer.Draw = function (mesh, program, uniforms) {
+			if (uniforms && uniforms.uTiled !== undefined)
+				seen.push({Textured: uniforms.uTextured, Anchor: uniforms.uAnchor, Metres: uniforms.uMetres, Tiled: uniforms.uTiled, Dwelt: uniforms.uDwelt, Square: uniforms.uSquare, Cell: uniforms.uSquareCell});
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			/* From space, by the ship near it: none, the anchor told. */
+			scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'terra', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'terra', From: [0, 0, 1.3], Facing: [-1, 0, 0], Length: 30}});
+			scene.Control('me');
+
+			await waitFor(function () {
+				frames(1);
+
+				return seen.length > 6;
+			}, 30000);
+
+			expect(seen.every(function (one) {
+				return one.Textured === 0 && one.Anchor.length === 3;
+			})).toBe(true);
+
+			/* A kilometre over its ground: the tiles, the anchor within 10 km of the eye. */
+			scene.Control('');
+			scene.Change('terra', {Tilt: 23.44});
+			scene.Land('terra', {Latitude: 20, Longitude: 30, Altitude: 1, Instant: true});
+
+			/* Regression: the place was taken as of space and turned by the tilt of the body; it is of the body, as Surface tells it. */
+			expect(scene.Surface().Latitude).toBeCloseTo(20, 4);
+			expect(scene.Surface().Longitude).toBeCloseTo(30, 4);
+
+			seen = [];
+
+			await waitFor(function () {
+				frames(1);
+
+				return inner.Surface && seen.some(function (one) {
+					return one.Textured === 1;
+				}) && seen.some(function (one) {
+					return one.Tiled === 1;
+				});
+			}, 30000);
+
+			seen.filter(function (one) {
+				return one.Textured === 1;
+			}).forEach(function (one) {
+				expect(Math.hypot(one.Anchor[0], one.Anchor[1], one.Anchor[2])).toBeLessThan(9);
+				expect(one.Metres).toEqual([0.8, 2, 2, 3]);
+			});
+
+			/* Each square of a picture: where people live (its Use), its corner on its face (km in 48, the number of those), its size. */
+			var dwelt = seen.filter(function (one) {
+				return one.Tiled === 1 && one.Dwelt === 1;
+			});
+
+			expect(dwelt.length).toBeGreaterThan(0);
+
+			dwelt.forEach(function (one) {
+				expect(one.Square[0]).toBeGreaterThanOrEqual(0);
+				expect(one.Square[0]).toBeLessThan(48);
+				expect(one.Square[1]).toBeGreaterThanOrEqual(0);
+				expect(one.Square[1]).toBeLessThan(48);
+				expect(one.Square[2]).toBeGreaterThan(0);
+				expect(Number.isInteger(one.Cell[0]) && Number.isInteger(one.Cell[1])).toBe(true);
+			});
+		}
+		finally {
+			engine.Renderer.Draw = draw;
+		}
+	}, 120000);
 
 	/*
 	 * Regression: at night the globe was all dark, its settlements unseen. Its settlements are made once after its rivers

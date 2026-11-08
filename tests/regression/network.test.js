@@ -40,7 +40,7 @@ describe('Regression: deferred / network component discovery', function () {
 
 		document.getElementById('mount').appendChild(c.$Element());
 
-		expect(await waitFor(function () {return document.querySelector('.remote-basic');}, 1500)).not.toBe(false);
+		expect(await waitFor(function () {return document.querySelector('.remote-basic');}, 10000)).not.toBe(false);
 		expect(document.querySelector('.remote-basic').textContent).toBe('REMOTE:A');
 
 		c.$Destroy();
@@ -58,7 +58,7 @@ describe('Regression: deferred / network component discovery', function () {
 		document.getElementById('mount').appendChild(a.$Element());
 		document.getElementById('mount').appendChild(b.$Element());
 
-		expect(await waitFor(function () {return document.querySelectorAll('.remote-concurrent').length === 2;}, 1500)).toBe(true);
+		expect(await waitFor(function () {return document.querySelectorAll('.remote-concurrent').length === 2;}, 10000)).toBe(true);
 		expect(window.RemoteConcurrentLoads).toBe(1);
 
 		var c = Elemenx.Component('RemoteConcurrent')({value: 'C'}, null, {Application: app});

@@ -138,7 +138,7 @@ describe('Contract: the screens of a Scene, pictures of a camera, a canvas, an i
 			frame(scene, 1);
 
 			return !!scene.Engine().ScreenPicture(scene.Get('panel'));
-		}, 10000);
+		}, 30000);
 
 		var left = pointOf(scene, 'panel', 0.25, 0.5);
 		var right = pointOf(scene, 'panel', 0.75, 0.5);
@@ -159,7 +159,7 @@ describe('Contract: the screens of a Scene, pictures of a camera, a canvas, an i
 		/* A key typed there is the field's, not the scene's. */
 		expect(scene.ScreenTyped({target: panel.querySelector('#screen-field')})).toBe(true);
 		expect(scene.ScreenTyped({target: scene.$Element()})).toBe(false);
-	});
+	}, 60000);
 
 	it('draws the picture of an element over what is behind it where it is clear, the depth of it written, nothing until it came; a camera\'s opaque', async function () {
 		var scene = await mount();

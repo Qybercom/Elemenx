@@ -2759,10 +2759,10 @@ Elemenx.Component('UIKitPage', {
 	CombatReset: function () {
 		var scene = this.CombatScene ? this.CombatScene() : null;
 		var targets = [
-			{ID: 'crate', Kind: 'thing', Model: 'demo-crate', Size: 1.2, X: -6, Y: 14, Traits: {Health: {Max: 60, Death: 'break'}}},
-			{ID: 'plate', Kind: 'thing', Model: 'demo-plate', Size: 1.6, X: -2, Y: 14, Material: 'metal', Traits: {Health: {Max: 400, Death: 'keep'}}},
-			{ID: 'pane', Kind: 'thing', Model: 'demo-pane', Size: 1.7, X: 2, Y: 14, Material: 'glass', Traits: {Health: {Max: 8, Death: 'break'}}},
-			{ID: 'wall', Kind: 'thing', Model: 'demo-wall', Size: 2.5, X: 7, Y: 16, Material: 'stone'},
+			{ID: 'crate', Kind: 'thing', Model: 'demo-crate', Size: 1.2, X: -6, Y: 14, Material: 'wood', Traits: {Fracture: {Material: 'wood', Pieces: 7}}},
+			{ID: 'plate', Kind: 'thing', Model: 'demo-plate', Size: 1.6, X: -2, Y: 14, Material: 'metal', Traits: {Health: {Max: 400, Death: 'keep'}, Fracture: {Material: 'metal', Pattern: 'parts'}}},
+			{ID: 'pane', Kind: 'thing', Model: 'demo-pane', Size: 1.7, X: 2, Y: 14, Material: 'glass', Traits: {Fracture: {Material: 'glass'}}},
+			{ID: 'wall', Kind: 'thing', Model: 'demo-wall', Size: 2.5, X: 7, Y: 16, Material: 'stone', Traits: {Fracture: {Material: 'stone', Pieces: 14}}},
 			{ID: 'robot-1', Kind: 'unit', Model: 'robot', X: -3, Y: 24, Team: 'red', Health: 120, Damage: 0, Sight: 1},
 			{ID: 'robot-2', Kind: 'unit', Model: 'robot', X: 3, Y: 26, Team: 'red', Health: 120, Damage: 0, Sight: 1}
 		];
@@ -2775,6 +2775,30 @@ Elemenx.Component('UIKitPage', {
 		});
 
 		scene.Add(targets);
+
+		/* The wall already hit twice: its cracks show at once, and grow with each shot. */
+		this.CombatCrack();
+	},
+
+	/* Two blows to the wall: a web of cracks where they struck (SceneFracture). */
+	CombatCrack: function () {
+		var scene = this.CombatScene ? this.CombatScene() : null;
+		var self = this;
+		var wall = scene ? scene.Scene().Objects.wall : null;
+		if (!wall) return;
+
+		/* Not standing on its ground yet (the ground comes after the scene is ready): a little later. */
+		if (!wall.World || !scene.Scene().Ground) {
+			setTimeout(function () {
+				self.CombatCrack();
+			}, 300);
+
+			return;
+		}
+
+		[[-1, 1.2], [0.8, 1.9]].forEach(function (at) {
+			scene.Damage('wall', 90, {Point: [wall.World[0] + at[0], wall.World[1] + at[1], wall.World[2] - 0.52], Normal: [0, 0, -1]});
+		});
 	},
 
 	CombatWeaponChosen: function (value) {
@@ -3012,7 +3036,7 @@ Elemenx.Component('UIKitPage', {
 	CombatBreak: function () {
 		var scene = this.CombatScene ? this.CombatScene() : null;
 		if (scene && scene.Get('crate'))
-			scene.Break('crate', {Point: [-6, this.CombatGround(-6, 13.4) + 0.6, 13.4]});
+			scene.Break('crate', {Point: [-6, this.CombatGround(-6, 13.4) + 0.6, 13.4], Pattern: 'voronoi', Pieces: 9, Inner: [0.78, 0.62, 0.42]});
 	},
 
 	CombatHit: function (event) {
@@ -3027,6 +3051,10 @@ Elemenx.Component('UIKitPage', {
 
 	CombatLocked: function (event) {
 		this.CombatNote = 'Locked ' + event.ID + ': a rocket fired now flies to it.';
+	},
+
+	CombatCracked: function (event) {
+		this.CombatNote = event.ID + ' cracked: ' + Math.round(event.Integrity * 100) + '% of it still whole.';
 	},
 
 	CombatBroke: function (event) {

@@ -87,7 +87,10 @@
  * arrive ({ID, At}), land ({ID}), takeoff ({ID}), error ({Reason: webgl2}); enter and leave of a trigger ({Trigger,
  * ID, Object}) and action ({Trigger, Name, Data}): kind trigger and kind zone (trait Triggers: Trigger(id),
  * TriggerActions(actions), ZonesAt(x, z)); touch ({ID, With, At, Normal, Impulse}) of solid things that fall and are
- * knocked over (trait Rigid: Push(id, impulse, at), CastRay(from, direction, max), RigidWorld()).
+ * knocked over (trait Rigid: Push(id, impulse, at), CastRay(from, direction, max), RigidWorld()); crack ({ID, Integrity,
+ * Point, Amount}) of a thing hurt as its material is, that breaks when nothing of it is whole (trait Fracture: Damage(id,
+ * amount, hit), Integrity(id), Fractures(materials)). Kind pipe (trait Pipe: Points, Radius, Wall, Laid, Fluid...) is a pipe of
+ * any size on supports, on the ground or buried in it, drawn outside and inside (trait Piping: Pipes()).
  * Cosmos (nebula, pillars, galaxy, galaxies, cluster, void, or {Kind, Seed, Colors, Gas, Dust, Stars, Pillars, Band, Galaxies, Clusters, Beacon}) is what lies far behind a system (trait Cosmos).
  * Kind effect (Type: spark, torch, campfire, smoke, steam, dust, exhaust; Size, Power, Aim, Height, Light, Follow, Offset) burns
  * and smokes where it stands, or goes with an object; Burst(type, place, options) happens once, as an explosion (trait Effects).
@@ -107,7 +110,7 @@
 Elemenx.Component('Scene', {
 	$TemplateURL: 'Scene.html',
 	$StyleURL: 'Scene.css',
-	$Traits: ['SceneScatter', 'SceneLighting', 'SceneEffects', 'SceneCosmos', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneDebris', 'SceneDeepSpace'],
+	$Traits: ['SceneScatter', 'SceneLighting', 'SceneEffects', 'SceneCosmos', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneDebris', 'SceneFracture', 'ScenePiping', 'SceneDeepSpace'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'star',
@@ -143,10 +146,11 @@ Elemenx.Component('Scene', {
 			cue: 'A cue of a cutscene came: {Cutscene, Name, Data, At}.',
 			part: 'A part of an object was set by its role (Part(id, role).Set): {ID, Role, Value}.',
 			touch: 'Two solid things began to touch (trait Rigid): {ID, With (null: the ground), At, Normal, Impulse}.',
+			crack: 'A thing with the trait Fracture was hurt and still holds (SceneFracture): {ID, Integrity, Point, Amount}.',
 			shader: 'A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}).'
 		},
-		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
+		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
 		Props: {
 			Setting: {Options: ['space', 'terrain'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers).'},
 			System: 'The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}.',
@@ -365,6 +369,7 @@ Elemenx.Component('Scene', {
 			'zone': {Traits: {Zone: {Points: null, Radius: 0, Tags: null, Team: ''}}},
 			'road': {Traits: {Road: {Type: 'road', Points: null, Closed: false, Width: 0, Height: 0, Bridges: null, Tunnels: null, Structures: false, Clear: 5, Cover: 8, Barriers: null, Along: null, Marks: null, Straight: false, Segments: null, Radii: null}, Model: {Shape: 'road', Size: 1, Color: '#ffffff'}}},
 			'junction': {Traits: {Junction: {Radius: 0, Surface: 'asphalt'}}},
+			'pipe': {Traits: {Pipe: {Points: null, Radius: 0.3, Wall: null, Laid: 'above', Lift: 1.5, Depth: 1, Bend: null, Ends: null, Flanges: null, Spacing: null, Color: null, Inside: null, Metal: 0.6, Fluid: null, Leaks: null}, Model: {Shape: 'pipe', Size: 1, Color: '#ffffff'}}},
 			'barrier': {Traits: {Barrier: {Road: '', Side: 'both', Type: 'guardrail', Height: 0, Gap: 0.3, From: 0, To: null, Points: null, Closed: false, Smooth: false, Color: '', Step: 0}, Model: {Shape: 'road', Size: 1, Color: '#ffffff'}}},
 			'forest': {Traits: {Scatter: {Shapes: ['pine', 'pine', 'oak', 'birch', 'bush', 'stump'], Density: 3, Cover: 0.55, Patch: 70, MaxSlope: 0.3}}},
 			'grove': {Traits: {Scatter: {Shapes: ['oak', 'birch', 'bush'], Density: 0.8, Cover: 0.45, Patch: 40, MaxSlope: 0.25}}},
@@ -2885,6 +2890,13 @@ Elemenx.Component('Scene', {
 				if (engine.DebrisDraw)
 					engine.DebrisDraw(matrix);
 
+				if (engine.FractureDraw)
+					engine.FractureDraw(matrix);
+
+				/* What flows out of the pipes (ScenePiping). */
+				if (engine.PipingDraw)
+					engine.PipingDraw(matrix);
+
 				if (engine.WeaponsDraw)
 					engine.WeaponsDraw(matrix);
 
@@ -2945,7 +2957,7 @@ Elemenx.Component('Scene', {
 			}
 
 			if (posted)
-				engine.PostEnd(scene.Ground ? {Matrix: matrix, Plain: plain, Eye: scene.Eye, Under: scene.Ground.Under ? 1 : 0, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Night: scene.Ground.Night, Shimmer: engine.EffectHeat(matrix, width / Math.max(1, height)), Exposure: self.Exposure, Air: scene.Ground.AirTint, Veil: scene.Ground.Air.Fog * (scene.Ground.Air.Rain > 0.05 ? 1 : 0.6), Clouds: scene.Camera.Ortho ? null : groundClouds(), Glare: scene.Ground.Glare, AirLight: scene.Ground.AirLight, AirGlow: scene.Ground.Glow, AirGlowWay: scene.Ground.GlowWay, Fog: scene.Camera.Ortho ? 0 : (scene.Horizon ? 0.4 / 40000 : (scene.Ground.Field.Whole ? 0.12 : 0.4) / Math.max(scene.Ground.Field.Size, 300)) + scene.Ground.Air.Fog * 0.011, FogLow: scene.Camera.Ortho ? [0, 0, 0] : [Math.max(0, scene.Eye[1] - Math.max(0, scene.Ground.Field.Height(scene.Eye[0], scene.Eye[2]))), 1 / Math.max(6, scene.Ground.Field.Top * 0.2), scene.Ground.Air.Fog * 0.03], Sky: true, Reach: Math.max(1, scene.Distance * 0.05), Bokeh: lens().Bokeh, Focus: lens().Focus, Lens: lens().Lens} : Object.assign({Matrix: matrix, Plain: sky}, spaceSun(plain, camera), lens()));
+				engine.PostEnd(scene.Ground ? {Matrix: matrix, Plain: plain, Eye: scene.Eye, Shade: shade, Under: scene.Ground.Under ? 1 : 0, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Night: scene.Ground.Night, Shimmer: engine.EffectHeat(matrix, width / Math.max(1, height)), Exposure: self.Exposure, Air: scene.Ground.AirTint, Veil: scene.Ground.Air.Fog * (scene.Ground.Air.Rain > 0.05 ? 1 : 0.6), Clouds: scene.Camera.Ortho ? null : groundClouds(), Glare: scene.Ground.Glare, AirLight: scene.Ground.AirLight, AirGlow: scene.Ground.Glow, AirGlowWay: scene.Ground.GlowWay, Fog: scene.Camera.Ortho ? 0 : (scene.Horizon ? 0.4 / 40000 : (scene.Ground.Field.Whole ? 0.12 : 0.4) / Math.max(scene.Ground.Field.Size, 300)) + scene.Ground.Air.Fog * 0.011, FogLow: scene.Camera.Ortho ? [0, 0, 0] : [Math.max(0, scene.Eye[1] - Math.max(0, scene.Ground.Field.Height(scene.Eye[0], scene.Eye[2]))), 1 / Math.max(6, scene.Ground.Field.Top * 0.2), scene.Ground.Air.Fog * 0.03], Sky: true, Reach: Math.max(1, scene.Distance * 0.05), Bokeh: lens().Bokeh, Focus: lens().Focus, Lens: lens().Lens} : Object.assign({Matrix: matrix, Plain: sky}, spaceSun(plain, camera), lens()));
 		}
 
 		/* Where space is split for its depth (Scene: draw): half the way to the surface of the nearest body or star, 0 when one view of depth is enough. */
@@ -3512,13 +3524,13 @@ Elemenx.Component('Scene', {
 
 		/*
 		 * A material with a Pattern (a material of SceneMaterials) and no Blueprint of its own: drawn by the pattern, its
-		 * Blueprint the GLSL of it (SceneMaterials.Surface), once.
+		 * Blueprint the GLSL of it (SceneMaterials.Surface), once; Along: by its UV, as a band of a road is.
 		 */
 		function patterned (material) {
 			var text;
 
 			if (material.Pattern && !material.Blueprint && material.Patterned !== material.Pattern) {
-				text = self.$Service('SceneMaterials').Surface(material.Pattern);
+				text = self.$Service('SceneMaterials').Surface(material.Pattern, !!material.Along);
 				material.Patterned = material.Pattern;
 
 				if (text)
@@ -3547,11 +3559,15 @@ Elemenx.Component('Scene', {
 			return own.Programs[key];
 		}
 
-		/* The uniforms of the Blueprint and of the Vertex of a material: its parameters (those of the material over their values) and the time. */
+		/* The uniforms of the Blueprint and of the Vertex of a material: its parameters (those of the material over their values), the time, the tiles of its Pattern. */
 		function blueprintValues (list) {
 			var own = list.Material.Blueprint ? blueprinted(list.Material) : null;
+			var tiles = own && list.Material.Pattern ? self.$Service('SceneMaterials').SurfaceTextures(renderer, list.Material.Pattern) : null;
 			var made = own ? own.Made.Values(list.Material.Parameters || {}, {Time: scene.Seconds % 3000}) : null;
 			var corners = movedValues(list);
+
+			if (tiles)
+				made = Object.assign(made || {}, tiles);
 
 			return corners ? Object.assign(made || {}, corners) : made;
 		}
@@ -4141,7 +4157,104 @@ Elemenx.Component('Scene', {
 
 			(nearMap || gpu.ShadowMap).End();
 
-			return {uShadowMap: gpu.ShadowMap, uShadowNear: nearMap || gpu.ShadowMap, uShadowRaw: gpu.ShadowMap.Raw, uShadowNearRaw: (nearMap || gpu.ShadowMap).Raw, uShadowSoft: [depth * side * sunWidth / extent, depth * side * sunWidth / extent, self.Graphics().Cascades > 1 ? 1 : 0], uBounce: gpu.NoBounce, uCloudMap: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uLampShadow0: gpu.NoShadow, uLampShadow1: gpu.NoShadow, uShadowMatrix: matrix, uShadowBias: texel * 1.6, uShadowOn: 1};
+			return {uShadowMap: nearMap || gpu.ShadowMap, uShadowNear: nearMap || gpu.ShadowMap, uShadowRaw: (nearMap || gpu.ShadowMap).Raw, uShadowNearRaw: (nearMap || gpu.ShadowMap).Raw, uShadowSoft: [depth * side * sunWidth / extent, depth * side * sunWidth / extent, self.Graphics().Cascades > 1 ? 1 : 0], uBounce: gpu.NoBounce, uCloudMap: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uLampShadow0: gpu.NoShadow, uLampShadow1: gpu.NoShadow, uShadowMatrix: matrix, uShadowBias: texel * 1.6, uShadowOn: 1, uCascadeOn: 0};
+		}
+
+		/*
+		 * Four shadows of the sun, each of a slice of the view out to far, farther ones wider, in the quarters of one map.
+		 * A slice is held in a ball whose size keeps as the eye turns, its middle kept to whole texels of the world: no edge
+		 * crawls. The two near ones are drawn each frame, the third each second, the last each fourth; between, what they
+		 * hold is kept where it was in the world, and only the eye it is seen from moves.
+		 */
+		function cascades (direction, depth, far, casters) {
+			var camera = scene.Camera;
+			var side = 2048;
+			var aspect = renderer.Width / Math.max(1, renderer.Height);
+			var tangent = Math.tan(camera.Fov * Math.PI / 360);
+			var spread = tangent * tangent * (1 + aspect * aspect);
+			var forward = vectors.Normalize(vectors.Subtract(camera.Target, camera.Position));
+			var sunWidth = scene.Ground && scene.Ground.Night > 0.5 ? 0.05 : 0.012;
+			var up = Math.abs(direction[1]) > 0.95 ? [0, 0, 1] : [0, 1, 0];
+			var x = vectors.Normalize(vectors.Cross(up, direction));
+			var y = vectors.Cross(direction, x);
+			var near = 0.5;
+			var store = scene.Cascaded;
+			var splits = [];
+			var matrices = new Float32Array(64);
+			var soft = [];
+			var bias = [];
+			var all;
+			var i;
+
+			if (!gpu.Cascades)
+				gpu.Cascades = renderer.Shadow(side * 2);
+
+			if (!store || store.Far !== far || vectors.Distance(store.Sun, direction) > 0.002) {
+				store = scene.Cascaded = {Far: far, Sun: direction.slice(), Frame: 0, Slices: []};
+				all = true;
+			}
+
+			store.Frame++;
+
+			for (i = 0; i < 4; i++) {
+				splits[i] = 0.9 * near * Math.pow(far / near, (i + 1) / 4) + 0.1 * (near + (far - near) * (i + 1) / 4);
+			}
+
+			for (i = 0; i < 4; i++) {
+				drawn(i, i === 0 ? near : splits[i - 1], splits[i]);
+			}
+
+			return {uShadowMap: gpu.Cascades, uShadowNear: gpu.Cascades, uShadowRaw: gpu.Cascades.Raw, uShadowNearRaw: gpu.Cascades.Raw, uShadowSoft: [soft[3], soft[0], 1], uBounce: gpu.NoBounce, uCloudMap: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uLampShadow0: gpu.NoShadow, uLampShadow1: gpu.NoShadow, uShadowMatrix: Array.prototype.slice.call(matrices, 32, 48), uShadowBias: bias[2], uShadowOn: 1, uCascadeOn: 1, uCascades: matrices, uCascadeSplits: splits, uCascadeSoft: soft, uCascadeBias: bias};
+
+			/* A slice from a to b: its ball, its view of the sun from where it was last drawn, drawn again when its turn comes. */
+			function drawn (index, a, b) {
+				var middle = 0.5 * (a + b) * (1 + spread);
+				var radius;
+				var texel;
+				var center;
+				var along;
+				var across;
+				var slice = store.Slices[index];
+				var target;
+				var matrix;
+
+				if (middle >= b) {
+					middle = b;
+					radius = b * Math.sqrt(spread);
+				}
+				else {
+					radius = Math.sqrt((b - middle) * (b - middle) + b * b * spread);
+				}
+
+				/* Whole quarter metres: a little zoom does not change the size of a texel. */
+				radius = Math.ceil(radius * 4) / 4;
+				texel = radius * 2 / side;
+
+				if (all || !slice || slice.Radius !== radius || index === 2 && store.Frame % 2 === 0 || index === 3 && store.Frame % 4 === 1 || index < 2) {
+					center = vectors.Add(scene.Eye, vectors.Scale(forward, middle));
+					along = vectors.Dot(center, x);
+					across = vectors.Dot(center, y);
+					slice = store.Slices[index] = {Radius: radius, Center: vectors.Add(vectors.Add(center, vectors.Scale(x, Math.round(along / texel) * texel - along)), vectors.Scale(y, Math.round(across / texel) * texel - across)), Draw: true};
+				}
+
+				target = vectors.Subtract(slice.Center, scene.Eye);
+				matrix = math.Multiply(math.Orthographic(-radius, radius, -radius, radius, 0, Math.max(depth, radius) * 2), math.LookAt(vectors.Add(target, vectors.Scale(direction, Math.max(depth, radius))), target, up));
+
+				if (slice.Draw) {
+					gpu.Cascades.Begin([index % 2 * side, Math.floor(index / 2) * side, side, side]);
+
+					casters(matrix);
+
+					gpu.Cascades.End();
+
+					slice.Draw = false;
+				}
+
+				matrices.set(matrix, index * 16);
+
+				soft[index] = Math.max(depth, radius) * side * sunWidth / radius;
+				bias[index] = texel * 1.6;
+			}
 		}
 
 		/* A second map, of what is near the eye: its shadows are as sharp as a texel of it is small. */
@@ -4254,7 +4367,7 @@ Elemenx.Component('Scene', {
 				gpu.NoBounce = renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([0, 0, 0, 255])}, {Nearest: true});
 			}
 
-			return {uShadowOn: 0, uShadowMap: gpu.NoShadow, uShadowNear: gpu.NoShadow, uShadowRaw: gpu.NoBounce, uShadowNearRaw: gpu.NoBounce, uShadowSoft: [0, 0, 0], uBounce: gpu.NoBounce, uCloudMap: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uLampShadow0: gpu.NoShadow, uLampShadow1: gpu.NoShadow};
+			return {uShadowOn: 0, uShadowMap: gpu.NoShadow, uShadowNear: gpu.NoShadow, uShadowRaw: gpu.NoBounce, uShadowNearRaw: gpu.NoBounce, uShadowSoft: [0, 0, 0], uBounce: gpu.NoBounce, uCloudMap: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uLampShadow0: gpu.NoShadow, uLampShadow1: gpu.NoShadow, uCascadeOn: 0};
 		}
 
 		function shadowsWanted () {
@@ -4270,6 +4383,24 @@ Elemenx.Component('Scene', {
 			var extent;
 			var set;
 			var made;
+			var aimed;
+
+			/*
+			 * A map of its own for the hero (the one Control gives the keys, on foot or in what it drives), else the model in the
+			 * focus, while near the eye: its square round it, a few metres, a texel of millimetres: the folds of its clothes, its
+			 * arms on its body, the arches over the wheels.
+			 */
+			function heroShadowed () {
+				var object = scene.Objects[scene.Hero] || (scene.Focus ? scene.Objects[scene.Focus] : null);
+				var size;
+
+				/* scene.Tuned.Hero false: none, to see the picture without it. */
+				if (!object || !object.World || !trait(object, 'Model') || vectors.Distance(object.World, scene.Eye) > 80 || scene.Tuned && scene.Tuned.Hero === false) return null;
+
+				size = Math.max(0.5, Number(object.Size) || 1);
+
+				return {Center: [object.World[0], object.World[1] + size * 0.4, object.World[2]], Extent: Math.max(2.5, Math.min(8, size * 1.4))};
+			}
 
 			function casters (matrix) {
 				Object.keys(models).forEach(function (name) {
@@ -4297,10 +4428,11 @@ Elemenx.Component('Scene', {
 				/* A location needs room: past the map of the shadows nothing is in shadow, and its edge shows as a square. */
 				extent = Math.max(ground.Field.Whole ? ground.Field.Blocked ? Math.max(90, ground.Field.Size * 0.55) : 8 : 30, Math.min(ground.Field.Size, scene.Distance * 1.5));
 				set = self.Graphics();
-				made = castShadow(ground.Sun, ground.Target, scene.Eye, extent, Math.max(extent * 2, ground.Field.Top * 4), casters);
+				/* Four cascades out to its far shadow, but in parallel rays (a view from above: one map). */
+				made = set.Cascades >= 4 && !scene.Camera.Ortho ? cascades(ground.Sun, Math.max(60, ground.Field.Top * 2), Math.min(set.ShadowFar || 300, scene.Camera.Far || 5000), casters) : castShadow(ground.Sun, ground.Target, scene.Eye, extent, Math.max(extent * 2, ground.Field.Top * 4), casters);
 
-				if (set.Cascades > 1)
-					closer(made, ground.Sun, ground.Target, scene.Eye, Math.min(extent * 0.3, 30), Math.max(extent * 2, ground.Field.Top * 4), casters);
+				if (set.Cascades > 1 && !made.uCascadeOn) closer(made, ground.Sun, ground.Target, scene.Eye, Math.min(extent * 0.3, 30), Math.max(extent * 2, ground.Field.Top * 4), casters);
+				else if (made.uCascadeOn && (aimed = heroShadowed())) closer(made, ground.Sun, aimed.Center, scene.Eye, aimed.Extent, Math.max(60, ground.Field.Top * 2), casters);
 
 				return set.Bounce && !engine.FieldOn() ? bounced(made, nodes, models) : made;
 			}
@@ -4495,6 +4627,7 @@ Elemenx.Component('Scene', {
 			var dark;
 			var air;
 			var shut;
+			var carvesOf;
 
 			if (site && !locationReady(site))
 				site = null;
@@ -4540,11 +4673,22 @@ Elemenx.Component('Scene', {
 			if (settings && !site && engine.RoadsSketch)
 				sketch = engine.RoadsSketch(settings, sketch);
 
+			/* Their tunnels: holes cut in the ground, its volume made of them where they go. */
+			if (settings && !site && engine.RoadsCarves && engine.RoadsCarves().length)
+				settings.Carves = (settings.Carves || []).concat(engine.RoadsCarves());
+
+			/* The buried pipes: what they cut out of it (ScenePiping). */
+			if (settings && !site && engine.PipingCarves && engine.PipingCarves().length)
+				settings.Carves = (settings.Carves || []).concat(engine.PipingCarves());
+
 			/* What stands on it for good, on level places of their own (a World with the step Footings). */
 			if (settings && !site && settings.Footings && engine.FootingsSketch)
 				sketch = engine.FootingsSketch(settings, sketch);
 
 			key = site ? 'location:' + site.ID + ':' + site.Values.Model : world.Shape.Key;
+
+			/* The lists of what the roads and the pipes cut out of it: the same lists while they do not change. */
+			carvesOf = site ? [] : [engine.RoadsCarves ? engine.RoadsCarves() : null, engine.PipingCarves ? engine.PipingCarves() : null];
 
 			/* Its text, made again only when the sketch or the scene changed: with the roads over it it is long, and this runs every frame. */
 			if (!sketch) sketched = '';
@@ -4560,9 +4704,13 @@ Elemenx.Component('Scene', {
 				var ahead = options && scene.Prefetch && scene.Prefetch.Text === JSON.stringify(options) ? scene.Prefetch : null;
 
 				scene.Prefetch = null;
-				scene.Ground = {Shape: key, Key: key + sketched + (scene.Digs.length ? '#dug' + scene.Digs.length : ''), Sketched: sketched, Dug: scene.Digs.length, ID: object ? object.ID : '', Field: site ? locationField(site) : ahead ? ahead.Field : terrain.Flat(options), Nodes: {}, Frame: 0, Keys: {}, Prefetched: ahead ? ahead.Pieces : null};
+				scene.Ground = {Shape: key, Key: key + sketched + (scene.Digs.length ? '#dug' + scene.Digs.length : ''), Sketched: sketched, Dug: scene.Digs.length, CarvesOf: carvesOf, ID: object ? object.ID : '', Field: site ? locationField(site) : ahead ? ahead.Field : terrain.Flat(options), Nodes: {}, Frame: 0, Keys: {}, Prefetched: ahead ? ahead.Pieces : null};
 			}
-			else if ((scene.Ground.Sketched !== sketched || scene.Ground.Dug !== scene.Digs.length) && !site) {
+			else if ((scene.Ground.Sketched !== sketched || scene.Ground.Dug !== scene.Digs.length || !sameCarves(scene.Ground.CarvesOf, carvesOf)) && !site) {
+				/* What the tunnels of roads and the pipes cut came or changed: the squares round them made again. */
+				scene.Ground.Recarved = carvesBounds(scene.Ground.CarvesOf).concat(carvesBounds(carvesOf));
+				scene.Ground.CarvesOf = carvesOf;
+
 				resketch(settings, sketch, sketched);
 			}
 
@@ -4719,6 +4867,34 @@ Elemenx.Component('Scene', {
 		 * where it changed made again, the far mesh of all of it again, what stands there set on it again; what reads the ground by
 		 * its Key (the grass, the scatter, the light of the field) takes the new one.
 		 */
+		/* Whether two lists of the lists of carves are the same lists (two empty ones, or none, are the same). */
+		function sameCarves (a, b) {
+			return !!a && !!b && a.length === b.length && a.every(function (one, index) {
+				return one === b[index] || !(one && one.length) && !(b[index] && b[index].length);
+			});
+		}
+
+		/* The squares of the ground [x0, z0, x1, z1] the carves of lists of them touch. */
+		function carvesBounds (lists) {
+			var made = [];
+
+			(lists || []).forEach(function (list) {
+				(list || []).forEach(function (carve) {
+					var reach = (Number(carve.Radius) || 2) + 1;
+					var box = [Infinity, Infinity, -Infinity, -Infinity];
+
+					(carve.Points || []).forEach(function (point) {
+						box = [Math.min(box[0], point[0]), Math.min(box[1], point[1]), Math.max(box[2], point[0]), Math.max(box[3], point[1])];
+					});
+
+					if (isFinite(box[0]))
+						made.push([box[0] - reach, box[1] - reach, box[2] + reach, box[3] + reach]);
+				});
+			});
+
+			return made;
+		}
+
 		function resketch (settings, sketch, sketched) {
 			var ground = scene.Ground;
 			var before = ground.Field.Options ? ground.Field.Options.Sketch : null;
@@ -4730,6 +4906,12 @@ Elemenx.Component('Scene', {
 			});
 
 			ground.Dug = scene.Digs.length;
+
+			(ground.Recarved || []).forEach(function (bounds) {
+				changed.push(bounds);
+			});
+
+			ground.Recarved = null;
 
 			ground.Field = terrain.Flat(sketch ? Object.assign({}, settings, {Sketch: sketch}) : settings);
 			ground.Sketched = sketched;
@@ -5002,11 +5184,11 @@ Elemenx.Component('Scene', {
 			return !!parent && parent !== object && ofSpace(parent);
 		}
 
-		/* A thing on the ground: at its X and Y, or along its way at the time of the scene. */
+		/* A thing on the ground: at its X and Y, or along its way at the time of the scene; a road, a barrier, a pipe: its model is of the world itself. */
 		function stand (object) {
 			var field = scene.Ground.Field;
 
-			if (trait(object, 'Road') || trait(object, 'Barrier')) {
+			if (trait(object, 'Road') || trait(object, 'Barrier') || trait(object, 'Pipe')) {
 				object.World = [0, 0, 0];
 				object.Position = object.World;
 				object.Relative = [0, 0, 0];
@@ -5065,6 +5247,11 @@ Elemenx.Component('Scene', {
 
 				/* Z: the floor it is told, where one stands over another. */
 				object.World = [x, Math.max(0, field.Height(x, z, object.World ? object.World[1] - (object.Lifted || 0) : object.Values.Z === undefined ? undefined : number(object.Values.Z, 0))), z];
+
+				/* In a pipe, or on one: its floor (ScenePiping). */
+				if (engine.PipeFloor && object.World)
+					object.World[1] = Math.max(object.World[1], engine.PipeFloor(x, z, object.World[1]));
+
 				object.Lifted = number(object.Values.Lift, 0);
 				object.World[1] += object.Lifted;
 			}
@@ -5198,8 +5385,9 @@ Elemenx.Component('Scene', {
 			var steps;
 			var i;
 
+			/* Where it may step: the ground lets it, and no wall of a pipe stands there (ScenePiping). */
 			function can (at, on) {
-				return !field.CanStep || field.CanStep(at, on, y);
+				return (!field.CanStep || field.CanStep(at, on, y)) && !(engine.PipeBlocks && engine.PipeBlocks(at, on, y, hero.Size * 0.15, [hero.Size * 0.3, hero.Size * 0.7]));
 			}
 
 			/* A body by what stands round it: in a location it goes as far as its sides let it, and slides along what it meets. */
@@ -5247,7 +5435,7 @@ Elemenx.Component('Scene', {
 				}
 			}
 
-			var floor = Math.max(0, field.Height(x, z, y));
+			var floor = Math.max(0, field.Height(x, z, y), engine.PipeFloor ? engine.PipeFloor(x, z, y) : -Infinity);
 
 			if (keys.Space && landed)
 				rise = hero.Size * 3;
@@ -5670,6 +5858,16 @@ Elemenx.Component('Scene', {
 			var missing = [];
 			var started = window.performance.now();
 
+			/*
+			 * Regression: a square made again at once (the whole ground, its sketch changed) destroyed the mesh of the one it
+			 * replaced while that one was still to be drawn in the frame: what was replaced the frame before goes now.
+			 */
+			(ground.Retired || []).forEach(function (mesh) {
+				mesh.Destroy();
+			});
+
+			ground.Retired = [];
+
 			/* A map of cells is of one piece. */
 			if (field.Whole) {
 				ground.Missing = 0;
@@ -5686,14 +5884,41 @@ Elemenx.Component('Scene', {
 				return x.toFixed(3) + ':' + z.toFixed(3) + ':' + level;
 			}
 
+			/*
+			 * How far the grid of a square (32 cells across) is from the ground it stands for, in metres: the ground at points
+			 * between its corners against what the grid makes of them there, the most of nine. Level ground: nothing; a ridge,
+			 * a cliff, a cut: much.
+			 */
+			function errorOf (x, z, size) {
+				var cell = size / 32;
+				var most = 0;
+				var i;
+
+				for (i = 0; i < 9; i++) {
+					var gx = Math.floor((i % 3 + 0.5) / 3 * 32);
+					var gz = Math.floor((Math.floor(i / 3) + 0.5) / 3 * 32);
+					var x0 = x - size / 2 + gx * cell;
+					var z0 = z - size / 2 + gz * cell;
+					var grid = (field.Height(x0, z0) + field.Height(x0 + cell, z0) + field.Height(x0, z0 + cell) + field.Height(x0 + cell, z0 + cell)) / 4;
+
+					most = Math.max(most, Math.abs(field.Height(x0 + cell / 2, z0 + cell / 2) - grid));
+				}
+
+				return most;
+			}
+
 			/* The first square at once, the others of noise by a worker; each knows the height of its middle. */
 			function build (x, z, size, level) {
 				var key = keyOf(x, z, level);
 				var ready = ground.Prefetched && !field.Roads ? ground.Prefetched[key] : null;
 
+				/* The one it takes the place of goes when this frame is drawn: it may be among what it draws already. */
 				function replace () {
 					if (ground.Nodes[key] && ground.Nodes[key].Mesh)
-						ground.Nodes[key].Mesh.Destroy();
+						ground.Retired.push(ground.Nodes[key].Mesh);
+
+					if (ground.Nodes[key] && ground.Nodes[key].Wire)
+						ground.Retired.push(ground.Nodes[key].Wire);
 				}
 
 				/* Made before the ground came (PrefetchGround). */
@@ -5702,7 +5927,7 @@ Elemenx.Component('Scene', {
 
 					replace();
 
-					ground.Nodes[key] = {Mesh: renderer.Mesh(ready), Center: [x, 0, z], Size: size, Top: Math.max(0, field.Height(x, z)), Used: ground.Frame};
+					ground.Nodes[key] = {Mesh: renderer.Mesh(ready), Center: [x, 0, z], Size: size, Top: Math.max(0, field.Height(x, z)), Error: errorOf(x, z, size), Used: ground.Frame};
 
 					return;
 				}
@@ -5713,7 +5938,7 @@ Elemenx.Component('Scene', {
 
 						var made = piece || field.Chunk(x, z, size, 32);
 
-						ground.Nodes[key] = {Mesh: renderer.Mesh(made), Wire: wired() ? renderer.Mesh({Positions: linesOf(made, false), Indices: []}, 'lines') : null, Center: [x, 0, z], Size: size, Top: Math.max(0, field.Height(x, z)), Used: ground.Frame};
+						ground.Nodes[key] = {Mesh: renderer.Mesh(made), Wire: wired() ? renderer.Mesh({Positions: linesOf(made, false), Indices: []}, 'lines') : null, Center: [x, 0, z], Size: size, Top: Math.max(0, field.Height(x, z)), Error: errorOf(x, z, size), Used: ground.Frame};
 					});
 
 					return;
@@ -5721,17 +5946,23 @@ Elemenx.Component('Scene', {
 
 				replace();
 
-				ground.Nodes[key] = {Mesh: renderer.Mesh(field.Chunk(x, z, size, 32)), Center: [x, 0, z], Size: size, Top: Math.max(0, field.Height(x, z)), Used: ground.Frame};
+				ground.Nodes[key] = {Mesh: renderer.Mesh(field.Chunk(x, z, size, 32)), Center: [x, 0, z], Size: size, Top: Math.max(0, field.Height(x, z)), Error: errorOf(x, z, size), Used: ground.Frame};
 			}
 
 			/*
 			 * A square gives way to its four parts only when all of them are made: until then it stays, coarser, and there is
 			 * never a hole in the ground. Squares in use keep their parents, so going back up needs nothing to be made.
 			 */
+			var focal = renderer.Height / Math.max(1, renderer.Ratio || 1) / (2 * Math.tan((scene.Camera.Fov || 45) * Math.PI / 360));
+
 			function visit (x, z, size, level) {
 				var node = ground.Nodes[keyOf(x, z, level)];
-				var near = vectors.Distance(scene.Eye, [x, node.Top, z]);
 				var half = size / 2;
+				/*
+				 * Regression: measured to its middle, a large square the eye stood by the corner of was far, stayed coarse, and its
+				 * edge with the fine ones beside it showed as a step: to the nearest point of it.
+				 */
+				var near = vectors.Distance(scene.Eye, [Math.max(x - half, Math.min(x + half, scene.Eye[0])), node.Top, Math.max(z - half, Math.min(z + half, scene.Eye[2]))]);
 				var parts = [[x - half / 2, z - half / 2], [x + half / 2, z - half / 2], [x - half / 2, z + half / 2], [x + half / 2, z + half / 2]];
 				var absent;
 
@@ -5744,7 +5975,11 @@ Elemenx.Component('Scene', {
 				if (node.Stale)
 					missing.push({X: x, Z: z, Size: size, Level: level, Near: -1});
 
-				if (level < 6 && near < size * 1.4) {
+				/*
+				 * Finer where the eye would see its grid: how far it is from the ground, in pixels of the screen (more than 1.5:
+				 * its four parts), down to squares a 256th of the ground; and always near the eye, as near as half its size.
+				 */
+				if (level < 8 && (near < size * 0.35 && level < 6 || near < size * 4 && (node.Error || 0) / Math.max(near, 1) * focal > 1.5)) {
 					absent = parts.filter(function (part) {
 						return !ground.Nodes[keyOf(part[0], part[1], level + 1)];
 					});
@@ -7319,10 +7554,17 @@ Elemenx.Component('Scene', {
 				return true;
 			}
 
-			up = vectors.Normalize(settings.Latitude !== undefined ? toDirection(Number(settings.Latitude) || 0, Number(settings.Longitude) || 0) : vectors.Subtract(scene.Camera.Position, object.World));
-
-			/* The direction in the frame of the body: its own turn taken away, so the ground under the eye stays. */
-			up = math.Apply(math.Invert(object.Turn) || math.Identity(), up);
+			/*
+			 * The direction in the frame of the body: its own turn taken away from the eye, so the ground under it stays.
+			 * Regression: a latitude and a longitude were taken as of space and turned too, the eye far from the place (by the
+			 * tilt of its axis); they are of the body, as Surface tells them, its markers and its settlements.
+			 */
+			if (settings.Latitude !== undefined) {
+				up = vectors.Normalize(toDirection(Number(settings.Latitude) || 0, Number(settings.Longitude) || 0));
+			}
+			else {
+				up = math.Apply(math.Invert(object.Turn) || math.Identity(), vectors.Normalize(vectors.Subtract(scene.Camera.Position, object.World)));
+			}
 
 			/* It starts where the eye stands now: at the height from which the body looks as large as it does from here. */
 			high = Math.max(object.Radius * 0.4, Math.min(object.Radius * 8, object.Radius * (vectors.Distance(scene.Camera.Position, object.World) / Math.max(object.Size, 1e-6) - 1)));
@@ -7552,8 +7794,88 @@ Elemenx.Component('Scene', {
 			scene.Horizon = null;
 		}
 
+		/*
+		 * The picture of a square of a globe (PatchPicture) as its textures, mipmapped; none: as it was. square: [face, u, v,
+		 * size, radius], where it is on its face: its corner in kilometres of the face, as the rest of 48 km and the number of
+		 * those (the Ground shader lays the parcels of its fields and its houses by them, exact in its floats).
+		 */
+		function pictured (node, picture, square) {
+			var km;
+			var x;
+			var y;
+
+			if (!picture || !picture.Color) return node;
+
+			unpictured(node);
+
+			node.Colors = renderer.Texture({Width: picture.Size, Height: picture.Size, Data: picture.Color}, {Mipmaps: true});
+			node.Relief = renderer.Texture({Width: picture.Size, Height: picture.Size, Data: picture.Normal}, {Mipmaps: true});
+			node.Uses = picture.Use ? renderer.Texture({Width: picture.Size, Height: picture.Size, Data: picture.Use}, {Mipmaps: true}) : null;
+			node.Texels = picture.Size;
+
+			if (square) {
+				km = Math.PI / 4 * square[4];
+				x = (square[1] - square[3] / 2) * km;
+				y = (square[2] - square[3] / 2) * km;
+				node.Square = [x - Math.floor(x / 48) * 48, y - Math.floor(y / 48) * 48, square[3] * km, square[0]];
+				node.Cell = [Math.floor(x / 48), Math.floor(y / 48)];
+			}
+
+			return node;
+		}
+
+		/*
+		 * The tiles of the materials for a ground of a body near (the Ground shader): lawn, grassy soil, dirt and cliff, as the
+		 * ground of a location draws them, laid in a plane touching the body at an anchor (the eye to 10 km): metres from it
+		 * stay exact in the floats of the shader (a tile of 0.8 m in parts of a texel), and the plane is the same until the eye
+		 * goes into the next 10 km, which it does not while it is low enough to see them. Over
+		 * 40 km up: none (they are finer than a pixel).
+		 */
+		function groundTiles (eye, altitude) {
+			var textures = self.$Service('SceneTextures');
+			var names = ['lawn', 'grassy-soil', 'dirt', 'cliff'];
+			var made;
+			var anchor;
+			var up;
+			var east;
+
+			anchor = eye.map(function (part) {
+				return Math.round(part / 10) * 10;
+			});
+			up = vectors.Normalize(vectors.Length(anchor) > 1 ? anchor : eye);
+			east = Math.abs(up[1]) > 0.99 ? [1, 0, 0] : vectors.Normalize(vectors.Cross([0, 1, 0], up));
+
+			made = altitude > 40 || !names.every(function (name) {
+				return textures.Has(name);
+			}) ? null : textures.Array(renderer, names);
+			gpu.NoArray = gpu.NoArray || made && made.Color;
+
+			/* The anchor always: what is finer than a kilometre is of the point from it (see Ground), near or not. */
+			return {uTextured: made ? 1 : 0, uLandColor: made ? made.Color : gpu.NoArray || null, uLandSurface: made ? made.Surface : gpu.NoArray || null, uAnchor: vectors.Subtract(eye, anchor), uUp: up, uEast: east, uNorth: vectors.Cross(up, east), uMetres: names.map(function (name) {
+				return textures.Has(name) ? textures.Get(name).Metres : 1;
+			})};
+		}
+
+		/* The uniforms of the picture of a square for the Ground shader: its textures, or none yet (its colors of its points). */
+		function tiled (node) {
+			var dwelt = node.Uses && node.Square && !(scene.Tuned && scene.Tuned.Fields === false);
+
+			return {uTiled: node.Colors ? 1 : 0, uColorMap: node.Colors || gpu.NoBounce, uReliefMap: node.Relief || gpu.NoBounce, uTexels: node.Texels || 2, uWoods: scene.Tuned && scene.Tuned.Woods === false ? 0 : 1, uDwelt: dwelt ? 1 : 0, uUseMap: dwelt ? node.Uses : gpu.NoBounce, uSquare: dwelt ? node.Square : [0, 0, 1, 0], uSquareCell: dwelt ? node.Cell : [0, 0]};
+		}
+
+		function unpictured (node) {
+			['Colors', 'Relief', 'Uses'].forEach(function (name) {
+				if (node[name])
+					node[name].Destroy();
+
+				node[name] = null;
+			});
+		}
+
 		function destroyNodes (nodes) {
 			Object.keys(nodes).forEach(function (key) {
+				unpictured(nodes[key]);
+
 				if (nodes[key].Mesh)
 					nodes[key].Mesh.Destroy();
 
@@ -7591,6 +7913,7 @@ Elemenx.Component('Scene', {
 			var sun;
 			var sunColor;
 			var nodes;
+			var laid;
 
 			if (!globe || globe.Key !== key) {
 				if (globe)
@@ -7616,6 +7939,7 @@ Elemenx.Component('Scene', {
 			sun = vectors.Normalize(star ? math.Apply(turn, vectors.Normalize(vectors.Subtract(star.World, object.World))) : [0, 1, 0]);
 			sunColor = star ? paint(star.Color).slice(0, 3) : [1, 1, 1];
 			nodes = patches(globe);
+			laid = groundTiles(eye, globe.Altitude);
 
 			nodes.forEach(function (node) {
 				renderer.Draw(node.Mesh, gpu.Ground, Object.assign({
@@ -7640,7 +7964,7 @@ Elemenx.Component('Scene', {
 					uCloudsOn: clouds ? 1 : 0,
 					uDrift: engine.CloudDrift(object),
 					uCloudTint: clouds ? cloudTint(object) : [1, 1, 1]
-				}, idle()), {Cull: 'back'});
+				}, idle(), tiled(node), laid), {Cull: 'back'});
 			});
 
 			forget(globe);
@@ -7672,6 +7996,7 @@ Elemenx.Component('Scene', {
 			var sunColor;
 			var nodes;
 			var depth;
+			var laid;
 
 			if (!object || !frame || !object.Look) return;
 
@@ -7709,6 +8034,7 @@ Elemenx.Component('Scene', {
 			});
 
 			depth = horizonDepth();
+			laid = groundTiles(eye, horizon.Altitude);
 
 			renderer.GL.depthRange(depth, depth);
 
@@ -7733,7 +8059,7 @@ Elemenx.Component('Scene', {
 					uLightsOn: lightsOf(object) === noLights() ? 0 : 1,
 					uSky: noLights(),
 					uCloudsOn: 0
-				}, idle()), {Cull: 'back', Depth: 'lequal'});
+				}, idle(), tiled(each.Node), laid), {Cull: 'back', Depth: 'lequal'});
 			});
 
 			renderer.GL.depthRange(0, 1);
@@ -7767,21 +8093,53 @@ Elemenx.Component('Scene', {
 			var missing = [];
 			var started = window.performance.now();
 			var face;
+			var focal = renderer.Height / Math.max(1, renderer.Ratio || 1) / (2 * Math.tan((scene.Camera.Fov || 45) * Math.PI / 360));
 
 			function keyOf (face, u, v, level) {
 				return face + ':' + u.toFixed(6) + ':' + v.toFixed(6) + ':' + level;
 			}
 
-			/* The faces at once, their parts by a worker. */
+			/*
+			 * How far the grid of a square of a face is from the ground of the body, in its units: its elevation between corners
+			 * against what the grid makes of it there, the most of nine; a range of mountains much, a sea nothing.
+			 */
+			function errorOf (face, u, v, size) {
+				var cells = surface.Resolution || 24;
+				var cell = size / cells;
+				var most = 0;
+				var i;
+
+				if (!field.Elevation) return 0;
+
+				function at (a, b) {
+					return field.Elevation(vectors.Normalize(terrain.Face(face, a, b)));
+				}
+
+				for (i = 0; i < 9; i++) {
+					var a = u - size / 2 + Math.floor((i % 3 + 0.5) / 3 * cells) * cell;
+					var b = v - size / 2 + Math.floor((Math.floor(i / 3) + 0.5) / 3 * cells) * cell;
+					var grid = (at(a, b) + at(a + cell, b) + at(a, b + cell) + at(a + cell, b + cell)) / 4;
+
+					most = Math.max(most, Math.abs(at(a + cell / 2, b + cell / 2) - grid));
+				}
+
+				return most;
+			}
+
+			/*
+			 * The faces at once, their parts by a worker; a ground that paints itself (ScenePlanet) gives each its picture, PICTURE
+			 * texels a side, its colors and its relief finer than its points (a face made at once gets it after, by a worker).
+			 */
 			function build (face, u, v, size, level) {
 				var key = keyOf(face, u, v, level);
+				var picture = field.Picture ? 64 : 0;
 				var made;
 
 				if (level) {
-					askPiece(surface, key, 'Sphere', [face, u, v, size, surface.Resolution || 24], function (piece) {
+					askPiece(surface, key, 'Sphere', [face, u, v, size, surface.Resolution || 24, picture], function (piece) {
 						made = piece || field.Patch(face, u, v, size, surface.Resolution || 24);
 
-						surface.Nodes[key] = {Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Used: surface.Frame};
+						surface.Nodes[key] = pictured({Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Error: errorOf(face, u, v, size), Used: surface.Frame}, made.Picture, [face, u, v, size, field.Radius]);
 					});
 
 					return;
@@ -7789,7 +8147,13 @@ Elemenx.Component('Scene', {
 
 				made = field.Patch(face, u, v, size, surface.Resolution || 24);
 
-				surface.Nodes[key] = {Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Used: surface.Frame};
+				surface.Nodes[key] = {Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Error: errorOf(face, u, v, size), Used: surface.Frame};
+
+				if (picture)
+					askPiece(surface, key + ':picture', 'SpherePicture', [face, u, v, size, picture], function (piece) {
+						if (surface.Nodes[key] && piece)
+							pictured(surface.Nodes[key], piece.Picture, [face, u, v, size, field.Radius]);
+					});
 			}
 
 			/* Behind the horizon: not drawn. */
@@ -7818,7 +8182,8 @@ Elemenx.Component('Scene', {
 
 				node.Used = surface.Frame;
 
-				if (level < 17 && near < field.Radius * size * 0.75 * 2.2 * (surface.Eager || 1) && size * Math.PI / 4 * field.Radius > (surface.Finest || 0)) {
+				/* By its distance; and finer still where its grid would show on the screen (more than 1.5 pixels from the ground). */
+				if (level < 17 && (near < field.Radius * size * 0.75 * 2.2 * (surface.Eager || 1) || near < field.Radius * size * 6 && (node.Error || 0) / Math.max(near, 1e-6) * focal > 1.5) && size * Math.PI / 4 * field.Radius > (surface.Finest || 0)) {
 					parts = [[u - half / 2, v - half / 2], [u + half / 2, v - half / 2], [u - half / 2, v + half / 2], [u + half / 2, v + half / 2]].filter(function (part) {
 						return !hidden(vectors.Normalize(terrain.Face(face, part[0], part[1])), half);
 					});
@@ -7870,6 +8235,8 @@ Elemenx.Component('Scene', {
 
 			Object.keys(surface.Nodes).forEach(function (key) {
 				if (surface.Frame - (surface.Nodes[key].Used || 0) > 240) {
+					unpictured(surface.Nodes[key]);
+
 					surface.Nodes[key].Mesh.Destroy();
 
 					delete surface.Nodes[key];
@@ -7970,6 +8337,7 @@ Elemenx.Component('Scene', {
 			var shade = idle();
 			var extent;
 			var posted;
+			var laid;
 
 			sun = vectors.Normalize(sun);
 
@@ -7997,6 +8365,8 @@ Elemenx.Component('Scene', {
 
 			renderer.Draw(gpu.Quad, gpu.Sky, Object.assign({uInverse: math.Invert(matrix), uSun: sun, uSunColor: sunColor, uAir: air, uUp: surface.Axes.Up, uHigh: Math.min(1, surface.Altitude / thickness), uSunRadius: discOf(star, object)}, self.SkyValues(scene.Seconds)), {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
 
+			laid = groundTiles(surface.Eye, surface.Altitude);
+
 			nodes.forEach(function (node) {
 				renderer.Draw(node.Mesh, gpu.Ground, Object.assign({
 					uViewProjection: matrix,
@@ -8018,7 +8388,7 @@ Elemenx.Component('Scene', {
 					uLightsOn: lightsOf(object) === noLights() ? 0 : 1,
 					uSky: noLights(),
 					uCloudsOn: 0
-				}, shade), {Cull: 'back'});
+				}, shade, tiled(node), laid), {Cull: 'back'});
 			});
 
 			if (surface.Ship)
@@ -8100,6 +8470,9 @@ Elemenx.Component('Scene', {
 
 			if (engine.DebrisStep)
 				engine.DebrisStep(elapsed);
+
+			if (engine.PipingStep)
+				engine.PipingStep(elapsed);
 
 			if (engine.RigsStep)
 				engine.RigsStep(elapsed);
@@ -9140,6 +9513,8 @@ Elemenx.Component('Scene', {
 		this.FootingsStart();
 		this.TriggersStart();
 		this.RigidStart();
+		this.FractureStart();
+		this.PipingStart();
 		this.CameraStart();
 		this.CinemaStart();
 
@@ -11827,6 +12202,9 @@ Elemenx.Component('Scene', {
 				'in vec2 aUV;',
 				/* The colors of a ground that tells them (ScenePlanet): its biomes, its snow, its seas by their depth. */
 				'in vec3 aColor;',
+				/* Where it is on its square, 0 to 1: for the picture of the square (PatchPicture). */
+				'in vec4 aMaterials;',
+				'out vec2 vPatch;',
 				'out vec3 vPainted;',
 				'uniform mat4 uViewProjection;',
 				'uniform vec3 uOffset;',
@@ -11841,6 +12219,7 @@ Elemenx.Component('Scene', {
 				'	vDirection = normalize(aPosition + uCenter);',
 				'	vLand = aUV;',
 				'	vPainted = aColor;',
+				'	vPatch = aMaterials.xy;',
 				'	gl_Position = uViewProjection * vec4(vWorld, 1.0);',
 				'}'
 			].join('\n'),
@@ -11851,7 +12230,26 @@ Elemenx.Component('Scene', {
 				'in vec3 vDirection;',
 				'in vec2 vLand;',
 				'in vec3 vPainted;',
+				'in vec2 vPatch;',
 				'uniform float uPainted;',
+				/* The picture of its square (uTiled): colors and how much is water, and the normal of its ground, uTexels a side. */
+				'uniform float uTiled;',
+				'uniform sampler2D uColorMap;',
+				'uniform sampler2D uReliefMap;',
+				'uniform float uTexels;',
+				'uniform float uWoods;',
+				/* Where people live (uDwelt, PatchPicture Use: fields, houses, the kind of the settlement); uSquare: its corner (km of its face, the rest of 48), its size (km), its face; uSquareCell: the number of 48 km. */
+				'uniform float uDwelt;',
+				'uniform sampler2D uUseMap;',
+				'uniform vec4 uSquare;',
+				'uniform vec2 uSquareCell;',
+				/* The tiles of materials near (uTextured): metres in the plane at the anchor (uAnchor: the eye from it, km; uEast, uUp, uNorth its axes), uMetres the tile of each. */
+				'uniform float uTextured;',
+				'uniform vec3 uAnchor;',
+				'uniform vec3 uEast;',
+				'uniform vec3 uUp;',
+				'uniform vec3 uNorth;',
+				'uniform vec4 uMetres;',
 				'uniform vec3 uSun;',
 				'uniform vec3 uSunColor;',
 				'uniform vec3 uColors[4];',
@@ -11873,6 +12271,120 @@ Elemenx.Component('Scene', {
 				graphics.Chunks.Noise,
 				graphics.Chunks.Shadow,
 				waves,
+				'precision highp sampler2DArray;',
+				this.$Service('SceneTextures').Chunk(true),
+				materials.LandSlope,
+				materials.LandTexture,
+				/*
+				 * A tile of the materials at a point of a plane (metres), its gradients on the screen told: taken where all pixels
+				 * go, never in a branch (there a gradient of D3D is any number, and the tile is read without its mipmaps, in
+				 * specks). The hexagons of SceneTextures, the tile as it is (in the space of the colors of the globe), its light.
+				 */
+				'vec4 groundTile(float layer, float metres, vec2 at, vec2 gx, vec2 gy) {',
+				'	vec2 uv = at / metres;',
+				'	vec2 dx = gx / metres;',
+				'	vec2 dy = gy / metres;',
+				'	vec3 w;',
+				'	vec2 v1;',
+				'	vec2 v2;',
+				'	vec2 v3;',
+				'	vec4 c1;',
+				'	vec4 c2;',
+				'	vec4 c3;',
+				'	vec4 s1;',
+				'	vec4 s2;',
+				'	vec4 s3;',
+				'	tex_hexes_layer(uv / 1.6, w, v1, v2, v3);',
+				'	tex_piece_layer(uLandColor, uLandSurface, layer, uv, dx, dy, v1, 1.0, c1, s1);',
+				'	tex_piece_layer(uLandColor, uLandSurface, layer, uv, dx, dy, v2, 1.0, c2, s2);',
+				'	tex_piece_layer(uLandColor, uLandSurface, layer, uv, dx, dy, v3, 1.0, c3, s3);',
+				'	vec3 k = pow(max(w, 0.0), vec3(8.0)) * exp(vec3(s1.b, s2.b, s3.b) * 5.0);',
+				'	k /= k.x + k.y + k.z;',
+				/* Of its mean (its last mipmap): the tile brings its grain to the color of the place, never a color of its own. */
+				'	vec3 mean = max(textureLod(uLandColor, vec3(0.5, 0.5, layer), 12.0).rgb, vec3(0.02));',
+				'	return vec4((c1 * k.x + c2 * k.y + c3 * k.z).rgb / mean, s1.a * k.x + s2.a * k.y + s3.a * k.z);',
+				'}',
+				'float dwellHash(int x, int y, int z) {',
+				'	uint h = uint(x) * 1597334677u ^ uint(y) * 3812015801u ^ uint(z) * 2798796415u;',
+				'	h = (h ^ (h >> 15u)) * 2246822519u;',
+				'	h = (h ^ (h >> 13u)) * 3266489917u;',
+				'	return float((h ^ (h >> 16u)) & 16777215u) / 16777216.0;',
+				'}',
+				/*
+				 * FIELDS: where people live, at a point of the face (f: km in its 48, cell: the number of those), over the mean color
+				 * its picture has there (albedo; use: fields, houses, the kind of the settlement). Lands of 6 km, each its grid turned
+				 * its way and its parcels of its width, tracks between them; each parcel a crop (wheat, young green, pasture, fallow,
+				 * ploughed, hay) as a share of their mean, its furrows near, hedges round it in some lands. Houses in blocks between
+				 * streets, as many lots built as it is built (gardens or the land between; a city of larger houses, paved, a park
+				 * here and there), roofs of tiles or of slate (grey, light and flat in a city). Each as long as a pixel is finer than
+				 * it (foot: km), farther the mean of the picture; its edges as wide as a pixel (aa), its lines (hedges, tracks, streets)
+				 * as much as they cover of it; rise: km its hedges stand up.
+				 */
+				'float dwellHouse(vec2 q, ivec2 land, int face, float fill, float city, vec2 aa, out float h) {',
+				'	vec2 lid = floor(q);',
+				'	vec2 lot = q - lid;',
+				'	h = dwellHash(int(lid.x) + land.x * 4099, int(lid.y) + land.y * 4099, face * 8 + 6);',
+				'	vec2 low = mix(vec2(0.12), vec2(0.05), city) + vec2(fract(h * 31.0), fract(h * 57.0)) * mix(0.22, 0.12, city);',
+				'	vec2 high = mix(vec2(0.12), vec2(0.05), city) + vec2(fract(h * 71.0), fract(h * 97.0)) * mix(0.22, 0.12, city);',
+				'	vec2 inside = smoothstep(low, low + aa, lot) * smoothstep(high, high + aa, 1.0 - lot);',
+				'	return inside.x * inside.y * step(1.0 - fill, h);',
+				'}',
+				'vec3 dwelling(vec3 albedo, vec2 f, ivec2 cell, int face, vec3 use, float aa, float foot, out float rise) {',
+				'	vec2 rf = floor(f / 6.0);',
+				'	ivec2 land = ivec2(rf) + cell * 8;',
+				'	float turn = dwellHash(land.x, land.y, face * 8 + 1) * 3.14159;',
+				'	vec2 l = f - rf * 6.0;',
+				'	vec2 r = vec2(l.x * cos(turn) - l.y * sin(turn), l.x * sin(turn) + l.y * cos(turn));',
+				'	rise = 0.0;',
+				'	float seen = 1.0 - smoothstep(0.08, 0.25, foot);',
+				'	if (use.x > 0.01 && seen > 0.0) {',
+				'		float wide = 0.3 + dwellHash(land.x, land.y, face * 8 + 2) * 0.35;',
+				'		vec2 size = vec2(wide, wide * (0.45 + dwellHash(land.x, land.y, face * 8 + 3) * 0.4));',
+				'		vec2 p = r / size;',
+				'		vec2 id = floor(p);',
+				'		vec2 fr = p - id;',
+				'		float k = dwellHash(int(id.x) + land.x * 97, int(id.y) + land.y * 97, face * 8 + 4);',
+				'		vec3 crop = k < 0.2 ? vec3(0.66, 0.58, 0.32) : k < 0.38 ? vec3(0.36, 0.48, 0.2) : k < 0.58 ? vec3(0.42, 0.52, 0.26) : k < 0.72 ? vec3(0.5, 0.43, 0.3) : k < 0.84 ? vec3(0.42, 0.35, 0.26) : vec3(0.58, 0.56, 0.3);',
+				'		crop *= 1.0 + sin((k > 0.5 ? r.x : r.y) * 523.6) * 0.07 * (1.0 - smoothstep(0.002, 0.006, foot)) * step(0.38, k);',
+				'		float edge = min(min(fr.x, 1.0 - fr.x) * size.x, min(fr.y, 1.0 - fr.y) * size.y);',
+				'		float hedges = step(0.55, dwellHash(land.x, land.y, face * 8 + 5));',
+				'		float hedge = (1.0 - smoothstep(0.003, 0.003 + aa, edge)) * hedges * min(1.0, 0.006 / aa);',
+				'		float track = (1.0 - smoothstep(0.004, 0.004 + aa, min(min(l.x, 6.0 - l.x), min(l.y, 6.0 - l.y)))) * min(1.0, 0.008 / aa);',
+				'		crop = mix(crop, vec3(0.13, 0.2, 0.09), hedge * (1.0 - use.y));',
+				'		crop = mix(crop, vec3(0.55, 0.5, 0.42), track * (1.0 - use.y));',
+				'		albedo *= mix(vec3(1.0), crop / vec3(0.48, 0.47, 0.27), use.x * seen);',
+				'		rise += hedge * 0.004 * use.x * seen;',
+				'	}',
+				'	float near = 1.0 - smoothstep(0.015, 0.05, foot);',
+				'	if (use.y > 0.01 && near > 0.0) {',
+				'		float city = step(0.9, use.z);',
+				'		vec2 block = mix(vec2(0.12, 0.09), vec2(0.15, 0.11), city);',
+				'		vec2 p = r / block;',
+				'		vec2 bid = floor(p);',
+				'		vec2 fr = p - bid;',
+				'		float bh = dwellHash(int(bid.x) + land.x * 389, int(bid.y) + land.y * 389, face * 8 + 7);',
+				'		float street = (1.0 - smoothstep(0.003, 0.003 + aa, min(min(fr.x, 1.0 - fr.x) * block.x, min(fr.y, 1.0 - fr.y) * block.y))) * smoothstep(0.12, 0.3, use.y) * min(1.0, 0.006 / aa);',
+				'		float park = step(0.93, bh) * city;',
+				'		vec2 split = mix(vec2(5.0, 4.0), vec2(3.0, 2.0), city);',
+				'		vec2 lotAa = aa / (block / split);',
+				'		vec2 at = (bid * 8.0 + fr) * split;',
+				'		float fill = use.y * mix(0.75, 0.97, city);',
+				'		float h;',
+				'		float h2;',
+				'		float house = dwellHouse(at, land, face, fill, city, lotAa, h) * (1.0 - park);',
+				'		float shade = dwellHouse(at + vec2(0.18, -0.14) * mix(1.0, 1.8, city), land, face, fill, city, lotAa, h2) * (1.0 - house) * (1.0 - park);',
+				'		float lots = 1.0 - smoothstep(0.005, 0.015, foot);',
+				'		float hue = fract(h * 13.0);',
+				'		vec3 roof = city > 0.5 ? (hue < 0.35 ? vec3(0.3, 0.3, 0.32) : hue < 0.7 ? vec3(0.47, 0.46, 0.44) : hue < 0.85 ? vec3(0.55, 0.54, 0.51) : vec3(0.42, 0.33, 0.28)) : (hue < 0.6 ? vec3(0.56, 0.3, 0.21) * (0.8 + hue * 0.4) : hue < 0.85 ? vec3(0.36, 0.35, 0.35) : vec3(0.5, 0.45, 0.38));',
+				'		vec3 yard = mix(mix(vec3(0.26, 0.35, 0.16), vec3(0.4, 0.4, 0.38), city), vec3(0.2, 0.32, 0.13), park);',
+				'		vec3 drawn = mix(albedo, yard, smoothstep(0.45, 0.8, use.y) * lots);',
+				'		drawn *= 1.0 - shade * lots * 0.45;',
+				'		drawn = mix(drawn, roof, house * lots);',
+				'		drawn = mix(drawn, vec3(0.36, 0.36, 0.37), street * near);',
+				'		albedo = drawn;',
+				'	}',
+				'	return albedo;',
+				'}',
 				'vec3 ground(float h) {',
 				'	if (h < 0.33) return mix(uColors[0], uColors[1], h / 0.33);',
 				'	if (h < 0.66) return mix(uColors[1], uColors[2], (h - 0.33) / 0.33);',
@@ -11890,6 +12402,22 @@ Elemenx.Component('Scene', {
 				'	float rock = 1.0 - smoothstep(0.55, 0.75, dot(n, up));',
 				'	if (sea < 0.5) albedo = mix(albedo, uColors[1] * 0.8, rock * 0.6);',
 				'	if (uPainted > 0.5) albedo = sea > 0.5 ? vPainted : mix(vPainted, vec3(0.42, 0.39, 0.35), rock * 0.55);',
+				'	float water = sea;',
+				/*
+				 * Its picture: read a little aside by a noise of its texels, so the edges between its colors are ragged within a texel
+				 * and never a row of steps; its relief of its own normals, finer than its points, the slopes made steeper as above.
+				 */
+				'	if (uTiled > 0.5) {',
+				'		vec2 tc = vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels;',
+				'		vec2 grid = tc * uTexels;',
+				'		vec2 aside = vec2(noise3(vec3(grid * 1.7, 3.1)) + noise3(vec3(grid * 4.3, 5.7)) * 0.5, noise3(vec3(grid * 1.7, 9.7)) + noise3(vec3(grid * 4.3, 1.3)) * 0.5) - 0.75;',
+				'		vec4 painted = texture(uColorMap, tc + aside * 1.1 / uTexels);',
+				'		albedo = painted.rgb;',
+				'		water = painted.a;',
+				'		n = normalize(texture(uReliefMap, tc).xyz * 2.0 - 1.0);',
+				'		if (uRelief > 1.0) n = normalize(up + (n - up * dot(n, up)) * uRelief);',
+				'		n = normalize(mix(n, up, water));',
+				'	}',
 				'	if (uIce > 0.0 && uPainted < 0.5) {',
 				'		float pole = abs(up.y) + (fbm3(up * 6.6, 3) - 0.5) * 0.3;',
 				'		float cap = uIce >= 1.0 ? 1.0 : smoothstep(1.0 - uIce, 1.0 - uIce + 0.04, pole);',
@@ -11898,7 +12426,88 @@ Elemenx.Component('Scene', {
 				'	vec3 place = up * uRadius;',
 				/* Kilometres a pixel covers: what is finer than two pixels is not drawn, or it shimmers as the view moves. */
 				'	float foot = length(fwidth(place));',
-				'	albedo *= 1.0 + 0.3 * (noise3(place * 2.0) - 0.5) * (1.0 - smoothstep(0.12, 0.3, foot));',
+				/* Its land mottled at kilometres, hundreds and tens of metres (fields, woods, stone), each as long as it is over two pixels. */
+				/*
+				 * Regression: the place of the very point (its direction times the radius, thousands of km) trembles in the floats by
+				 * half a metre from pixel to pixel; noises of tens of metres of it, and their slopes, were specks. What is finer than
+				 * a kilometre is of the point from the anchor (uAnchor, km), exact.
+				 */
+				'	vec3 near = vWorld + uAnchor;',
+				'	float mottle = (noise3(place * 0.35) - 0.5) * 0.2 * (1.0 - smoothstep(1.2, 4.0, foot)) + (noise3(place * 1.9 + 7.0) - 0.5) * 0.14 * (1.0 - smoothstep(0.25, 0.8, foot)) + (noise3(near * 9.0 + 3.0) - 0.5) * 0.1 * (1.0 - smoothstep(0.05, 0.15, foot));',
+				'	albedo *= 1.0 + mottle * (1.0 - water);',
+				/*
+				 * Near, finer than the ground of the body tells (a planet knows nothing under a kilometre): what grows there in
+				 * crowns and gaps, dry ground in ripples, and the relief of tens of metres, by the slope of a noise of the place on
+				 * the screen, each as long as it is over two pixels. Its derivatives taken where all pixels go.
+				 */
+				/*
+				 * Its woods (the share trees cover, of its picture): stands of tens and hundreds of metres, as many as the share;
+				 * from far their mean, a darker green; near, their edges, the crowns over the ground in the relief below.
+				 */
+				'	float cover = uTiled * uWoods > 0.5 ? texture(uReliefMap, vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels).a : 0.0;',
+				/* Each octave turned against the last, so no grid of the noise shows in the edges of the woods. */
+				'	mat3 askew = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
+				'	float stands = noise3(askew * place * 14.0 + 21.0) * 0.5 + noise3(place * 2.6 + 9.0) * 0.32 + noise3(askew * (askew * near) * 61.0 + 4.0) * 0.18 * (1.0 - smoothstep(0.004, 0.012, foot));',
+				/* Its edges a pixel and a half wide at least: no specks along them near. */
+				'	float spread = clamp(max(foot * 6.0, fwidth(stands) * 1.5), 0.02, 0.5);',
+				'	float wooded = mix(smoothstep(0.5 + (0.5 - cover) * 0.5 - spread, 0.5 + (0.5 - cover) * 0.5 + spread, stands), cover, smoothstep(0.05, 0.2, foot)) * step(0.01, cover) * (1.0 - water);',
+				'	albedo = mix(albedo, albedo * vec3(0.42, 0.56, 0.4) + vec3(0.0, 0.015, 0.0), wooded);',
+				/* Its fields and houses (FIELDS), of the place on its face; the width of a pixel there taken where all pixels go. */
+				'	vec2 dwellAt = uSquare.xy + vPatch * uSquare.z;',
+				'	vec2 dwellWide = fwidth(dwellAt);',
+				'	float standing = 0.0;',
+				'	if (uDwelt > 0.5) {',
+				'		vec3 use = texture(uUseMap, vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels).rgb;',
+				'		albedo = mix(dwelling(albedo, dwellAt, ivec2(uSquareCell), int(uSquare.w + 0.5), use, max(dwellWide.x, dwellWide.y) * 1.5, foot, standing), albedo, water);',
+				'	}',
+				'	float green = clamp((albedo.g - max(albedo.r, albedo.b)) * 6.0, 0.0, 1.0) * (1.0 - water);',
+				'	float near1 = 1.0 - smoothstep(0.03, 0.09, foot);',
+				'	float near2 = 1.0 - smoothstep(0.006, 0.02, foot);',
+				'	float crowns = noise3(near * 34.0 + 11.0);',
+				'	albedo *= mix(1.0, 0.7 + 0.55 * smoothstep(0.3, 0.75, crowns), green * near2);',
+				'	float bumps = ((noise3(near * 11.0 + 5.0) - 0.5) * 0.04 * near1 + (noise3(near * 52.0 + 2.0) - 0.5) * 0.008 * near2 + (crowns - 0.5) * 0.006 * green * near2 + wooded * 0.006 * near1 + standing) * (1.0 - water);',
+				/* The normal before them: what picks the ways the tiles are laid, the same over a few pixels (their derivatives are taken in branches by it). */
+				'	vec3 smoothed = n;',
+				'	vec3 px = dFdx(vWorld);',
+				'	vec3 py = dFdy(vWorld);',
+				'	vec3 across = cross(py, n);',
+				'	float area = dot(px, across);',
+				'	vec3 tilt = (dFdx(bumps) * across + dFdy(bumps) * cross(n, px)) / (abs(area) > 1e-12 ? area : 1e-12);',
+				'	n = normalize(n - tilt * step(1e-12, abs(area)));',
+				/*
+				 * Nearer still: the tiles of the materials (uTextured), as the ground of a location draws them: grass where it is
+				 * green, grassy soil under the woods, dirt where it is dry, cliff where it is steep, each tinted by the color of
+				 * the place and only where a pixel is finer than its features; laid in the plane at the anchor (metres from it).
+				 */
+				'	vec3 q = near * 1000.0;',
+				'	vec3 local = vec3(dot(q, uEast), dot(q, uUp), dot(q, uNorth));',
+				'	vec2 topX = dFdx(local.xz);',
+				'	vec2 topY = dFdy(local.xz);',
+				'	vec2 alongX = dFdx(local.zy);',
+				'	vec2 alongY = dFdy(local.zy);',
+				'	vec2 acrossX = dFdx(local.xy);',
+				'	vec2 acrossY = dFdy(local.xy);',
+				'	if (uTextured > 0.5) {',
+				'		landSlope = normalize(vec3(dot(smoothed, uEast), dot(smoothed, uUp), dot(smoothed, uNorth)));',
+				'		float metresPx = foot * 1000.0;',
+				'		float steep = 1.0 - smoothstep(0.6, 0.8, landSlope.y);',
+				/* Woods show their crowns, not the ground under them: no tile there (the second, grassy soil, for none now). */
+				'		vec4 parts = vec4(green, 0.0, 1.0 - green, 0.0) * (1.0 - wooded) * (1.0 - steep);',
+				'		parts.w = steep * (1.0 - wooded * 0.5);',
+				'		parts *= 1.0 - water;',
+				'		bool side = abs(landSlope.x) > abs(landSlope.z);',
+				'		vec3 laid = vec3(0.0);',
+				'		float total = 0.0;',
+				'		for (int k = 0; k < 4; k++) {',
+				'			float seen = (1.0 - smoothstep(uMetres[k] * 0.6, uMetres[k] * 3.0, metresPx)) * parts[k];',
+				'			if (seen > 0.01) {',
+				'				vec4 tile = k < 3 ? groundTile(float(k), uMetres[k], local.xz, topX, topY) : side ? groundTile(3.0, uMetres[3], local.zy, alongX, alongY) : groundTile(3.0, uMetres[3], local.xy, acrossX, acrossY);',
+				'				laid += albedo * mix(vec3(1.0), tile.rgb, 0.85) * mix(1.0, tile.a / 0.8, 0.4) * seen;',
+				'				total += seen;',
+				'			}',
+				'		}',
+				'		albedo = mix(albedo, laid / max(total, 1e-4), clamp(total, 0.0, 1.0));',
+				'	}',
 				'	float rise = dot(up, uSun);',
 				'	float light = clamp(rise * 3.0 + 0.3, 0.0, 1.0);',
 				'	float dusk = 1.0 - smoothstep(0.0, 0.35, abs(rise));',
@@ -11907,7 +12516,7 @@ Elemenx.Component('Scene', {
 				'	float day = max(dot(n, uSun), 0.0) * sunShadow(vWorld, n);',
 				'	vec3 color = albedo * (uSunColor * day + around);',
 				/* Water mirrors the sky, more at a glance; waves break the sun into a path of glints that reddens as it sets. */
-				'	if (sea > 0.5) {',
+				'	if (water > 0.01) {',
 				/*
 				 * Its waves: the slope of a noise of the very place (kilometres), seen where a pixel is smaller than a wave; past
 				 * that the sun is not broken into glints but spread wide over the sea, as from high over it.
@@ -11925,7 +12534,7 @@ Elemenx.Component('Scene', {
 				'		float toward = max(dot(r, uSun), 0.0);',
 				'		vec3 mirrored = mix(mix(uAir.rgb, vec3(1.0), 0.45), uAir.rgb * vec3(0.45, 0.6, 1.0), pow(max(dot(r, up), 0.0), 0.6)) * light + vec3(1.0, 0.5, 0.2) * dusk * exp(-max(dot(r, up), 0.0) * 5.0) * 0.8;',
 				'		float shine = (pow(toward, mix(90.0, 1400.0, seen)) * mix(0.9, 7.0, seen) + pow(toward, 180.0) * 0.16) * smoothstep(-0.02, 0.1, rise);',
-				'		color = mix(color, mirrored, fresnel) + uSunColor * mix(vec3(1.0, 0.55, 0.25), vec3(1.0), smoothstep(0.0, 0.3, rise)) * shine;',
+				'		color = mix(color, mix(color, mirrored, fresnel) + uSunColor * mix(vec3(1.0, 0.55, 0.25), vec3(1.0), smoothstep(0.0, 0.3, rise)) * shine, water);',
 				'	}',
 				/* Its settlements at night (of a globe near). */
 				'	if (uLightsOn > 0.5) color += vec3(1.0, 0.72, 0.38) * texture(uLights, up).r * 1.6 * (1.0 - smoothstep(-0.05, 0.12, rise));',
@@ -11995,9 +12604,10 @@ Elemenx.Component('Scene', {
 				'in vec3 aColor;',
 				/* Its height, and how much of the sky it sees (under rock of a volume: less). */
 				'in vec2 aUV;',
-				/* What it is made of: the weights of the 8 materials of its ground (SceneMaterials). */
+				/* What it is made of: the weights of the 12 materials of its ground (SceneMaterials). */
 				'in vec4 aMaterials;',
 				'in vec4 aMaterials2;',
+				'in vec4 aMaterials3;',
 				'uniform mat4 uViewProjection;',
 				'uniform vec3 uOffset;',
 				'uniform vec3 uCenter;',
@@ -12008,10 +12618,12 @@ Elemenx.Component('Scene', {
 				'out float vOpen;',
 				'out vec4 vMaterials;',
 				'out vec4 vMaterials2;',
+				'out vec4 vMaterials3;',
 				'void main() {',
 				'	vOpen = aUV.y;',
 				'	vMaterials = aMaterials;',
 				'	vMaterials2 = aMaterials2;',
+				'	vMaterials3 = aMaterials3;',
 				'	vWorld = aPosition + uOffset;',
 				'	vNormal = aNormal;',
 				'	vColor = aColor;',
@@ -12028,6 +12640,7 @@ Elemenx.Component('Scene', {
 				'in float vOpen;',
 				'in vec4 vMaterials;',
 				'in vec4 vMaterials2;',
+				'in vec4 vMaterials3;',
 				'uniform vec3 uSun;',
 				'uniform vec3 uSunColor;',
 				'uniform vec4 uAir;',

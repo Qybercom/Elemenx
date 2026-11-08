@@ -8952,7 +8952,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		frame();
 
-		expect(scene.Graphics()).toMatchObject({Level: 'ultra', Post: true, Cascades: 2, Bounce: true, Occlusion: 1});
+		expect(scene.Graphics()).toMatchObject({Level: 'ultra', Post: true, Cascades: 4, ShadowFar: 500, Bounce: true, Occlusion: 1});
 		expect(gl.getError()).toBe(gl.NO_ERROR);
 
 		['high', 'medium', 'low'].forEach(function (level) {
@@ -10185,7 +10185,10 @@ describe('Contract: Terrain, the ground of a game', function () {
 		var way;
 
 		expect(Math.abs(field.Height(10, 10) - field.Height(10.01, 10))).toBeLessThan(0.05);
-		expect(chunk.Positions.length / 3).toBe(81 + 32);
+		/* The skirt: each vertex of the edge again and lower, its normals half as long (its ground painted as the one over it, never as a wall). */
+		expect(chunk.Positions.length / 3).toBe(81 + 32 * 2);
+		expect(Math.hypot(chunk.Normals[81 * 3], chunk.Normals[81 * 3 + 1], chunk.Normals[81 * 3 + 2])).toBeCloseTo(0.5, 6);
+		expect(chunk.Positions[82 * 3 + 1]).toBeLessThan(chunk.Positions[81 * 3 + 1]);
 		expect(chunk.Colors.length).toBe(chunk.Positions.length);
 
 		for (x = -280; x <= 280 && !wet; x += 10) {
