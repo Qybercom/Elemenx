@@ -36,6 +36,25 @@ Elemenx.Trait('SceneLighting', {
 	Pipeline: null,
 	PipelineParameters: null,
 
+	/* What each level of the graphics draws. */
+	LightingSets: function () {
+		return {
+			low: {Post: false, Cascades: 1, Bounce: false, Occlusion: 0, Rays: false, Samples: 0, Reach: 0.6, Grass: false},
+			medium: {Post: true, Cascades: 1, Bounce: false, Occlusion: 0, Rays: false, Samples: 4, Reach: 0.8, Clouds: 9},
+			high: {Post: true, Cascades: 4, ShadowFar: 300, Bounce: true, Occlusion: 0.5, Contact: true, Rays: true, Samples: 4, Reach: 1, Mirror: true, Frames: true, Field: true, Clouds: 16, Lamps: 2, Probes: 8, ProbeSubset: 8},
+			ultra: {Post: true, Cascades: 4, ShadowFar: 500, Bounce: true, Occlusion: 1, Contact: true, Rays: true, Samples: 4, Reach: 1.4, Mirror: true, Frames: true, Field: true, Clouds: 26, Lamps: 2, Probes: 16, ProbeSubset: 4}
+		};
+	},
+
+	/* The level of the graphics and what it draws, before LightingStart gives its own (a scene with no WebGL: low). */
+	Graphics: function () {
+		return Object.assign({Level: 'low'}, this.LightingSets().low);
+	},
+
+	ScatterReach: function () {
+		return this.LightingSets().low.Reach;
+	},
+
 	LightingStart: function () {
 		var self = this;
 		var scene = this.Scene();
@@ -47,12 +66,7 @@ Elemenx.Trait('SceneLighting', {
 		var blueprints = this.$Service('Blueprints');
 		var state = {Width: 0, Height: 0, Level: '', Scene: null, Bloom: [], Dark: null, Soft: null, Programs: null, Late: 0, Frames: 0, Step: 0, Screen: {}, Shaders: {}};
 		var levels = ['low', 'medium', 'high', 'ultra'];
-		var sets = {
-			low: {Post: false, Cascades: 1, Bounce: false, Occlusion: 0, Rays: false, Samples: 0, Reach: 0.6, Grass: false},
-			medium: {Post: true, Cascades: 1, Bounce: false, Occlusion: 0, Rays: false, Samples: 4, Reach: 0.8, Clouds: 9},
-			high: {Post: true, Cascades: 4, ShadowFar: 300, Bounce: true, Occlusion: 0.5, Contact: true, Rays: true, Samples: 4, Reach: 1, Mirror: true, Frames: true, Field: true, Clouds: 16, Lamps: 2, Probes: 8, ProbeSubset: 8},
-			ultra: {Post: true, Cascades: 4, ShadowFar: 500, Bounce: true, Occlusion: 1, Contact: true, Rays: true, Samples: 4, Reach: 1.4, Mirror: true, Frames: true, Field: true, Clouds: 26, Lamps: 2, Probes: 16, ProbeSubset: 4}
-		};
+		var sets = this.LightingSets();
 
 		state.Floats = !!renderer.GL.getExtension('EXT_color_buffer_float');
 

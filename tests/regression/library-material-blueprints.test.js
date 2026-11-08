@@ -295,7 +295,9 @@ describe('Contract: materials of models as material graphs of Blueprints, drawn 
 
 			delete models.Recipes['test-broken'];
 		}
-	});
+
+	/* Regression: the wait for the model (20 s) was longer than the test was let run (15 s): under load it was cut off. */
+	}, 45000);
 
 	/* The water is a graph: the one of the library keeps the sums of the shader it came from, a WaterGraph takes its place. */
 	it('draws its water by the water graph of the library made of blocks, or by a WaterGraph of its own', async function () {

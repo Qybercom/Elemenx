@@ -106,6 +106,7 @@
 
 ## Тесты
 
+- [looks the same in the theme ](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/gaming-window-order.test.js#L70) — `tests/regression/gaming-window-order.test.js`
 - [Messaging.Window and a Component $Messaging declaration validate their arguments](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging-contracts.test.js#L95) — `tests/regression/messaging-contracts.test.js`
 - [posts Messaging packets to a Window with the configured target origin](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L285) — `tests/regression/messaging.test.js`
 - [does not inspect contentWindow on a Window-like target](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L304) — `tests/regression/messaging.test.js`
@@ -117,6 +118,5 @@
 - [requires explicit mutual trust before accepting a cross-origin Window announcement](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L408) — `tests/regression/messaging.test.js`
 - [queues Window Messaging until a trusted discovery bridge becomes active](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L438) — `tests/regression/messaging.test.js`
 - [accepts only messages from the attached Window and configured origin](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L475) — `tests/regression/messaging.test.js`
-- [owner-aware $Messaging.Window is destroyed with its Component](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L510) — `tests/regression/messaging.test.js`
 
-+5 ещё в тех же файлах
++6 ещё в тех же файлах

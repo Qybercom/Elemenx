@@ -18,6 +18,32 @@
 Elemenx.Trait('SceneCosmos', {
 	Cosmos: '',
 
+	/* The kinds of a backdrop, what each is filled with (a Palettes of its own: the pairs a seed chooses from). */
+	CosmosTable: function () {
+		return {
+			nebula: {Gas: 1, Dust: 0.7, Stars: 0.6, Band: 0, Knots: 3, Beacon: 1, Galaxies: 1, Clusters: 0, Pillars: 0, Bursts: 1},
+			pillars: {Gas: 0.25, Dust: 0.3, Stars: 0.6, Band: 0, Knots: 2, Beacon: 0, Galaxies: 0, Clusters: 0, Pillars: 1, Bursts: 0, Palettes: [['#0a0705', '#8a4c1c', '#2a8cc0', '#ffe2a0'], ['#07090e', '#8c3016', '#3a5cd0', '#ffcc94'], ['#0c0714', '#6a2a70', '#c0449c', '#ffd8e8'], ['#050b0b', '#70601f', '#1aa090', '#fff0b8']]},
+			galaxy: {Gas: 0, Dust: 1, Stars: 1, Band: 1, Knots: 0, Beacon: 0, Galaxies: 1, Clusters: 0, Pillars: 0, Bursts: 0},
+			galaxies: {Gas: 0.04, Dust: 0.1, Stars: 0.35, Band: 0, Knots: 0, Beacon: 0, Galaxies: 16, Clusters: 0, Pillars: 0, Bursts: 0},
+			cluster: {Gas: 0.08, Dust: 0.1, Stars: 0.8, Band: 0, Knots: 0, Beacon: 0, Galaxies: 0, Clusters: 4, Pillars: 0, Bursts: 0},
+			void: {Gas: 0.1, Dust: 0.1, Stars: 0.25, Band: 0, Knots: 1, Beacon: 0, Galaxies: 2, Clusters: 0, Pillars: 0, Bursts: 1}
+		};
+	},
+
+	/* The kinds and what each is filled with: data, there with no WebGL too. */
+	CosmosKinds: function () {
+		var kinds = this.CosmosTable();
+		var told = {};
+
+		Object.keys(kinds).forEach(function (name) {
+			var kind = kinds[name];
+
+			told[name] = {Gas: kind.Gas, Dust: kind.Dust, Stars: kind.Stars, Band: kind.Band, Galaxies: kind.Galaxies, Clusters: kind.Clusters, Pillars: kind.Pillars, Beacon: kind.Beacon, Bursts: kind.Bursts};
+		});
+
+		return told;
+	},
+
 	CosmosStart: function () {
 		var self = this;
 		var scene = this.Scene();
@@ -41,26 +67,7 @@ Elemenx.Trait('SceneCosmos', {
 			['#1c0b33', '#5a2a8c', '#c8589c', '#ffe0e8'],
 			['#0a1830', '#1e5a8c', '#30b0b8', '#e8fff8']
 		];
-		var kinds = {
-			nebula: {Gas: 1, Dust: 0.7, Stars: 0.6, Band: 0, Knots: 3, Beacon: 1, Galaxies: 1, Clusters: 0, Pillars: 0, Bursts: 1},
-			pillars: {Gas: 0.25, Dust: 0.3, Stars: 0.6, Band: 0, Knots: 2, Beacon: 0, Galaxies: 0, Clusters: 0, Pillars: 1, Bursts: 0, Palettes: [['#0a0705', '#8a4c1c', '#2a8cc0', '#ffe2a0'], ['#07090e', '#8c3016', '#3a5cd0', '#ffcc94'], ['#0c0714', '#6a2a70', '#c0449c', '#ffd8e8'], ['#050b0b', '#70601f', '#1aa090', '#fff0b8']]},
-			galaxy: {Gas: 0, Dust: 1, Stars: 1, Band: 1, Knots: 0, Beacon: 0, Galaxies: 1, Clusters: 0, Pillars: 0, Bursts: 0},
-			galaxies: {Gas: 0.04, Dust: 0.1, Stars: 0.35, Band: 0, Knots: 0, Beacon: 0, Galaxies: 16, Clusters: 0, Pillars: 0, Bursts: 0},
-			cluster: {Gas: 0.08, Dust: 0.1, Stars: 0.8, Band: 0, Knots: 0, Beacon: 0, Galaxies: 0, Clusters: 4, Pillars: 0, Bursts: 0},
-			void: {Gas: 0.1, Dust: 0.1, Stars: 0.25, Band: 0, Knots: 1, Beacon: 0, Galaxies: 2, Clusters: 0, Pillars: 0, Bursts: 1}
-		};
-
-		this.CosmosKinds = function () {
-			var told = {};
-
-			Object.keys(kinds).forEach(function (name) {
-				var kind = kinds[name];
-
-				told[name] = {Gas: kind.Gas, Dust: kind.Dust, Stars: kind.Stars, Band: kind.Band, Galaxies: kind.Galaxies, Clusters: kind.Clusters, Pillars: kind.Pillars, Beacon: kind.Beacon, Bursts: kind.Bursts};
-			});
-
-			return told;
-		};
+		var kinds = this.CosmosTable();
 
 		function given (value, fallback) {
 			return value === null || value === undefined || value === '' || isNaN(Number(value)) ? fallback : Number(value);

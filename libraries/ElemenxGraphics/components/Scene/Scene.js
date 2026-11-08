@@ -5160,7 +5160,7 @@ Elemenx.Component('Scene', {
 
 		/* What blocks the way at a point: a thing that Blocks, within its size. */
 		function blocked (x, z, mover) {
-			if (engine.ScatterBlocked(x, z)) return true;
+			if (engine.ScatterBlocked && engine.ScatterBlocked(x, z)) return true;
 
 			/* A collider, as far as a walker is wide. */
 			if (engine.ColliderHit && engine.ColliderHit(x, z, null, 0.4)) return true;
@@ -9568,10 +9568,13 @@ Elemenx.Component('Scene', {
 			}
 		}});
 
-		scene.Loop.Start();
-
-		if (!renderer)
-			this.Unsupported = true;
+		/*
+		 * Regression: with no WebGL (none given: a page past the contexts a browser keeps) there is no picture to make, and
+		 * the frames ran what only a renderer starts (the vehicles, the weather) and threw at each. The scene says error and
+		 * ready, shows that it cannot draw, and its methods answer, but no frame goes.
+		 */
+		if (renderer) scene.Loop.Start();
+		else this.Unsupported = true;
 
 		this.RoadsStart();
 		this.FootingsStart();

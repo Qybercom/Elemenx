@@ -1883,8 +1883,13 @@ Elemenx.Component('UIKitPage', {
 
 	$OnDestroy: function () {
 		var hotkeys = this.$Service('Hotkeys');
+		var preview = this.$Ref('BlueprintPreview');
 
 		window.clearInterval(this.FarClock);
+
+		/* The context of the preview of a material is given back with the page (a browser keeps some 16). */
+		if (preview && preview.BlueprintView)
+			preview.BlueprintView.Renderer.Destroy();
 
 		if (this.FarSight)
 			this.FarSight().disconnect();
@@ -6788,7 +6793,16 @@ Elemenx.Component('UIKitPage', {
 		}
 
 		if (!view) {
-			view = canvas.BlueprintView = {Renderer: graphics.Create(canvas, {Antialias: false})};
+			var renderer = graphics.Create(canvas, {Antialias: false});
+
+			/* No WebGL given (a browser past the contexts it keeps): the graph is told, not drawn. */
+			if (!renderer) {
+				this.BlueprintState = made.Fragment.split('\n').length + ' lines of GLSL, ' + made.Uniforms.length + ' uniforms; no WebGL to draw them';
+
+				return;
+			}
+
+			view = canvas.BlueprintView = {Renderer: renderer};
 			view.Quad = view.Renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
 		}
 

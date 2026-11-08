@@ -25,6 +25,23 @@
  * scene of its own, kind thing, where it stood: its ID; it is sown no more).
  */
 Elemenx.Trait('SceneScatter', {
+	/* What is sown before ScatterStart gives its own (a scene with no WebGL never sows): nothing. */
+	Sown: function () {
+		return {Things: 0, Squares: 0, Waiting: 0, Draws: 0, Copies: 0, Blades: 0};
+	},
+
+	SownNear: function () {
+		return [];
+	},
+
+	ChangeSown: function () {
+		return false;
+	},
+
+	UnlinkSown: function () {
+		return null;
+	},
+
 	ScatterStart: function () {
 		var self = this;
 		var scene = this.Scene();

@@ -1754,6 +1754,15 @@ Elemenx.Service('Renderer', {
 
 				canvas.removeEventListener('webglcontextlost', lost);
 				canvas.removeEventListener('webglcontextrestored', restored);
+
+				/*
+				 * Regression: the context itself is given back now, not when the canvas is collected. A browser keeps some 16 of
+				 * them; a page that made and dropped many scenes (the catalogue: 30) had the browser lose the oldest, living ones,
+				 * and then give no more.
+				 */
+				var lose = gl.getExtension('WEBGL_lose_context');
+				if (lose)
+					lose.loseContext();
 			}
 		};
 

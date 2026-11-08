@@ -264,4 +264,17 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 			target.Destroy();
 		}
 	});
+
+	/* Regression: a page that made and dropped many scenes went past the contexts a browser keeps, which then gave no more. */
+	it('gives its context back on Destroy, at once and not when the canvas is collected', function () {
+		var own = Elemenx.Service('Renderer').Create(document.createElement('canvas'), {Antialias: false});
+		var gl = own.GL;
+
+		expect(gl.isContextLost()).toBe(false);
+
+		own.Destroy();
+
+		expect(gl.isContextLost()).toBe(true);
+		expect(renderer.GL.isContextLost()).toBe(false);
+	});
 });

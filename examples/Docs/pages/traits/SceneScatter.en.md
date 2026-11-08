@@ -12,6 +12,6 @@ Methods: Sown() ({Things, Squares, Waiting (the squares not sown yet, those in a
 ## Methods
 
 - `Sown()`
-- `ChangeSown(key, changes)`
-- `UnlinkSown(key)`
-- `SownNear(x, z, radius)`
+- `SownNear()`
+- `ChangeSown()`
+- `UnlinkSown()`
