@@ -37,7 +37,7 @@ describe('Contract: the Directives of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['*modal', '*hotkey', '*resizable', '*draggable', '*droppable', '*itemcard', '*layer', '*blur']);
+		Use(['*modal', '*hotkey', '*resizable', '*draggable', '*droppable', '*layer', '*blur']);
 
 		/* As the stylesheet of the library: an element of *layer keeps its own place, not the one of a popover. */
 		document.head.appendChild(document.createElement('style')).textContent = ':where(.elemenx-layer[popover]) { inset: auto; margin: 0; }';
@@ -207,35 +207,6 @@ describe('Contract: the Directives of ElemenxUI', function () {
 		expect(events).toEqual([['dropped', 'item', 'task', 7], ['finished', true]]);
 	});
 
-	it('*itemcard shows the card of an item with more than its name on the focus, and none for a name alone', async function () {
-		var host = mount('<div><span class="sword" tabindex="0" *itemcard="Sword">Sword</span><span class="stone" tabindex="0" *itemcard="Stone">Stone</span></div>', {
-			Sword: {Name: 'Old sword', Rarity: 'rare', Stats: [{Label: 'Damage', Value: 12}]},
-			Stone: {Name: 'Stone'}
-		});
-		var card;
-
-		await tick();
-
-		host.$Element().querySelector('.sword').focus();
-
-		card = await waitFor(function () {
-			return Array.prototype.filter.call(document.querySelectorAll('.elemenx-game-inventory-card'), function (node) {
-				return node.matches(':popover-open');
-			})[0];
-		});
-
-		expect(card.textContent).toContain('Old sword');
-		expect(card.textContent).toContain('Damage');
-
-		host.$Element().querySelector('.stone').focus();
-
-		await tick();
-
-		expect(Array.prototype.some.call(document.querySelectorAll('.elemenx-game-inventory-card'), function (node) {
-			return node.matches(':popover-open') && node.textContent.indexOf('Stone') !== -1;
-		})).toBe(false);
-	});
-
 	it('*layer puts its element in the top layer, placed by the viewport inside a box with containment and a transform', async function () {
 		var host = mount('<div style="margin-top: 200px; content-visibility: auto; contain: strict; height: 50px; transform: translateX(30px)"><span class="point" *layer style="position: fixed; top: 7px; left: 9px; width: 4px; height: 4px"></span></div>');
 		var point = host.$Element().querySelector('.point');
@@ -299,67 +270,6 @@ describe('Contract: the Directives of ElemenxUI', function () {
 		await null;
 
 		expect(host.$Element().querySelector('.sheet').matches(':popover-open')).toBe(true);
-	});
-
-	it('*itemcard follows its element when the page moves it without a scroll (a part above that renders later)', async function () {
-		var host = mount('<div><div class="above" style="height: 10px"></div><span class="sword" tabindex="0" *itemcard="Sword" style="display: inline-block">Sword</span></div>', {
-			Sword: {Name: 'Old sword', Rarity: 'rare', Stats: [{Label: 'Damage', Value: 12}]}
-		});
-		var sword;
-		var card;
-
-		await tick();
-
-		sword = host.$Element().querySelector('.sword');
-
-		sword.focus();
-
-		card = await waitFor(function () {
-			return Array.prototype.filter.call(document.querySelectorAll('.elemenx-game-inventory-card'), function (node) {
-				return node.matches(':popover-open');
-			})[0];
-		});
-
-		host.$Element().querySelector('.above').style.height = '120px';
-
-		await frame();
-		await frame();
-
-		expect(Math.round(card.getBoundingClientRect().top)).toBe(Math.round(sword.getBoundingClientRect().top));
-	});
-
-	/* A bug: on a tablet the card a tap opened went along with the page as it scrolled, over everything it passed. */
-	it('*itemcard opened by a finger closes when the page scrolls, one opened by the mouse follows its element', async function () {
-		var host = mount('<div><span class="sword" tabindex="0" *itemcard="Sword">Sword</span></div>', {
-			Sword: {Name: 'Old sword', Rarity: 'rare', Stats: [{Label: 'Damage', Value: 12}]}
-		});
-		var sword;
-		var open = function () {
-			return Array.prototype.filter.call(document.querySelectorAll('.elemenx-game-inventory-card'), function (node) {
-				return node.matches(':popover-open');
-			}).length;
-		};
-
-		await tick();
-
-		sword = host.$Element().querySelector('.sword');
-
-		sword.dispatchEvent(new PointerEvent('pointerdown', {pointerType: 'touch', bubbles: true}));
-		sword.dispatchEvent(new MouseEvent('mouseenter'));
-
-		expect(open()).toBe(1);
-
-		window.dispatchEvent(new Event('scroll'));
-
-		expect(open()).toBe(0);
-
-		sword.dispatchEvent(new PointerEvent('pointerdown', {pointerType: 'mouse', bubbles: true}));
-		sword.dispatchEvent(new MouseEvent('mouseenter'));
-		window.dispatchEvent(new Event('scroll'));
-
-		expect(open()).toBe(1);
-
-		sword.dispatchEvent(new MouseEvent('mouseleave'));
 	});
 });
 

@@ -52,6 +52,38 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		while (owned.length) owned.pop().$Destroy();
 	});
 
+	/*
+	 * Regression: a view of no size (hidden, or taken out of the page as it drew) is one pixel high, lower than its bands:
+	 * a band of no height made a picture of none, which threw.
+	 */
+	it('draws a globe in a view of no size, lower than its bands, some of them of no height', async function () {
+		var drawn = 0;
+		var errors = [];
+		var caught = function (event) {
+			errors.push(String(event.message || event.error));
+		};
+		var component = Elemenx.Component(unique('PlanetLow'), {$Template: '<div style="display: none"><PlanetEditor [value]="Planet" (drawn)="Drawn" /></div>', Planet: {Seed: 'low', Ocean: 0.6}, Drawn: function () {
+			drawn++;
+		}})();
+
+		owned.push(component);
+
+		window.addEventListener('error', caught);
+
+		try {
+			document.getElementById('mount').appendChild(component.$Element());
+
+			expect(await waitFor(function () {
+				return drawn > 0;
+			}, 20000)).toBe(true);
+
+			expect(errors).toEqual([]);
+		}
+		finally {
+			window.removeEventListener('error', caught);
+		}
+	});
+
 	it('paints the globe of the planet in workers, each pixel of it, and tells the point under the pointer', async function () {
 		var mounted = await mount({Seed: 'editor', Ocean: 0.6});
 		var editor = mounted.Editor;

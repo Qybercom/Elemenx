@@ -1,4 +1,5 @@
 [
+	'index.css',
 	'locales/en.json',
 	'locales/ru.json',
 	'services/Renderer/Renderer.js',

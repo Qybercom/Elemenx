@@ -12,8 +12,8 @@
  * (Draggable, true by default; a *draggable of Type 'game-item' with Data {Item, From}, From {Kind: 'slot', Key, Name:
  * Group}) and takes what is dropped on it (Accept: the Types it takes, ['game-item'] by default; [] takes nothing):
  * drop carries {Item, From, To, Current} (Current is Data) and the owner moves the item, with GameItems.Move.
- * The pointer or the focus on a slot whose Data has more than a name (Description, Type, Rarity, Stats) shows its card
- * (GameItemCard), as in an inventory; it follows the slot when the page scrolls.
+ * The pointer, the focus or a finger on a slot whose Data has more than a name (Description, Type, Rarity, Stats) shows
+ * its card (GameItemCard, by *tip), as in an inventory; it follows the slot when the page scrolls.
  */
 Elemenx.Component('GameSlot', {
 	$TemplateURL: 'GameSlot.html',
@@ -68,8 +68,6 @@ Elemenx.Component('GameSlot', {
 	Classes: '',
 	Cooling: false,
 	Seconds: '',
-	CardOpen: false,
-	CardStyle: '',
 
 	$OnCreate: function () {
 		var self = this;
@@ -121,57 +119,13 @@ Elemenx.Component('GameSlot', {
 
 		window.cancelAnimationFrame(own.Frame);
 
-		this.HideCard();
-
 		if (own.Binding !== null)
 			this.Hotkeys().Unbind(own.Binding);
 	},
 
-	/* The card of what the slot holds, beside it; a scroll of the page, or a move of the slot without one, takes it along. */
-	ShowCard: function (event, node) {
-		var self = this;
-		var own = this.Own();
-		var items = this.$Service('GameItems');
-		if (!items.Carded(this.Data)) return;
-
-		own.Node = node;
-
-		if (!own.Scroll) {
-			own.Scroll = function () {
-				if (own.Node)
-					self.CardStyle = items.Place(own.Node);
-			};
-
-			own.View = (this.$Element().ownerDocument || document).defaultView || window;
-
-			own.View.addEventListener('scroll', own.Scroll, true);
-
-			/* The page moves the slot without a scroll too (a part above it renders later): the card looks at each frame. */
-			own.Follow = function () {
-				own.Scroll();
-
-				own.CardFrame = own.View.requestAnimationFrame(own.Follow);
-			};
-
-			own.CardFrame = own.View.requestAnimationFrame(own.Follow);
-		}
-
-		this.CardStyle = items.Place(node);
-		this.CardOpen = true;
-	},
-
-	HideCard: function () {
-		var own = this.Own();
-
-		if (own.Scroll) {
-			(own.View || window).removeEventListener('scroll', own.Scroll, true);
-			(own.View || window).cancelAnimationFrame(own.CardFrame);
-
-			own.Scroll = null;
-		}
-
-		own.Node = null;
-		this.CardOpen = false;
+	/* The card of what the slot holds, beside it under the pointer, the focus or a finger (*tip). */
+	ItemTip: function (item) {
+		return this.$Service('GameItems').Tip(item);
 	},
 
 	Hotkeys: function () {

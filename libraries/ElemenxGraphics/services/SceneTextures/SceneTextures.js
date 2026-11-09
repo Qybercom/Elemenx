@@ -391,8 +391,26 @@ Elemenx.Service('SceneTextures', {
 			arrays.Metres[one.Name] = one.Metres;
 		});
 
-		kept.Arrays = {};
+		/*
+		 * Regression: only the last array was kept, the one before dropped without its textures given back. Two grounds of
+		 * other materials asked in turn (a planet near and the ground of a location, as a ship hovers over it) made two
+		 * arrays a frame (some 20 MB each), till the card had no memory left and lost the context. The last few are kept
+		 * now, by their materials; one older than those is given back.
+		 */
+		kept.Arrays = kept.Arrays || {};
+		kept.ArrayOrder = kept.ArrayOrder || [];
 		kept.Arrays[key] = arrays;
+
+		kept.ArrayOrder.push(key);
+
+		while (kept.ArrayOrder.length > 6) {
+			var old = kept.Arrays[kept.ArrayOrder.shift()];
+
+			delete kept.Arrays[old.Key];
+
+			gl.deleteTexture(old.Color.Handle);
+			gl.deleteTexture(old.Surface.Handle);
+		}
 
 		return arrays;
 	},

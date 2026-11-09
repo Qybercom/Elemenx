@@ -57,18 +57,22 @@ describe('Regression: deferred structural composition', function () {
 		while (live.length) destroy(live[0]);
 	});
 
+	/*
+	 * Three loads one after another (the parent, then the child it shows, then the grandchild): under the load of the whole
+	 * suite (the 3D tests at once) they took more than 5 s, the grandchild shown just after. Regression: a fixed 5 s.
+	 */
 	it('nested-chain: remote parent discovers child and grandchild', async function () {
 		var app = appWithTemplate('<main><DeferredNestedParent value="{{value}}"></DeferredNestedParent></main>', function () { this.value = 'A'; });
 
 		expect(await appReady(app)).not.toBe(false);
-		expect(await waitFor(function () { return document.querySelector('.deferred-nested-grand'); }, 5000)).not.toBe(false);
+		expect(await waitFor(function () { return document.querySelector('.deferred-nested-grand'); }, 15000)).not.toBe(false);
 		expect(document.querySelector('.deferred-nested-grand').textContent).toBe('G:A');
 		expect(window.DeferredNestedParentLoads).toBe(1);
 		expect(window.DeferredNestedChildLoads).toBe(1);
 		expect(window.DeferredNestedGrandLoads).toBe(1);
 
 		destroy(app);
-	});
+	}, 30000);
 
 	it('discovered child keeps its (events) and receives later [prop] updates under the declared spelling', async function () {
 		var root = unique('DeferredInputRoot');

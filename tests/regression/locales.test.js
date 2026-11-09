@@ -18,7 +18,8 @@ var plurals = ['zero', 'one', 'two', 'few', 'many', 'other'];
 /* The phrases by key; the plural forms of a phrase are one value, its forms joined. */
 function flatten (node, prefix, result) {
 	Object.keys(node).forEach(function (key) {
-		var forms = typeof node[key] === 'object' && Object.keys(node[key]).every(function (name) {
+		/* An empty part (a Library with no phrase yet: ElemenxCommon) is no phrase, not one of no forms. */
+		var forms = typeof node[key] === 'object' && Object.keys(node[key]).length > 0 && Object.keys(node[key]).every(function (name) {
 			return plurals.indexOf(name) !== -1;
 		});
 
@@ -67,6 +68,13 @@ function used () {
 				keys[match[1]] = path.relative(process.cwd(), file);
 			});
 		});
+
+		/* The phrases of the kinds a Library brings to a builder (data/kinds.json: their Label, Hint and Groups). */
+		if (fs.existsSync(path.join(one.Root, 'data', 'kinds.json'))) {
+			Array.from(fs.readFileSync(path.join(one.Root, 'data', 'kinds.json'), 'utf8').matchAll(/"((?:common|ui|graphics|gaming)\.[\w.]+)"/g)).forEach(function (match) {
+				keys[match[1]] = path.relative(process.cwd(), path.join(one.Root, 'data', 'kinds.json'));
+			});
+		}
 	});
 
 	return keys;

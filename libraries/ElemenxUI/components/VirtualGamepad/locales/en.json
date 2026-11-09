@@ -1,5 +1,5 @@
 {
-	"common": {
+	"ui": {
 		"virtualGamepad": {
 			"label": "Gamepad on the screen",
 			"look": "Look round",

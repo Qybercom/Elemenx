@@ -1,0 +1,40 @@
+/*
+ * The template of the part of a theme for the scenes of ElemenxGraphics: every token of its index.css with its default
+ * value. Copy it with the template of ElemenxUI, rename my-theme, keep the tokens you change and delete the rest.
+ * Every rule starts with [data-theme][data-theme='my-theme'].
+ */
+[data-theme][data-theme='my-theme'] {
+	--elemenx-scene-background: #03050a;
+	--elemenx-scene-orbit: rgba(140, 165, 215, 0.32);
+	--elemenx-scene-selection: #7fc4ff;
+	--elemenx-scene-wire: rgba(90, 216, 115, 0.7);
+	--elemenx-scene-outline: #ffb826;
+	--elemenx-scene-hover: #80d1ff;
+	--elemenx-scene-edges: #e040fb;
+	--elemenx-scene-collider: rgba(255, 140, 38, 0.9);
+	--elemenx-scene-title: #ffffff;
+	--elemenx-scene-title-shadow: 0 2px 12px rgba(0, 0, 0, 0.75);
+	--elemenx-scene-title-font: var(--elemenx-font);
+	--elemenx-scene-subtitle-background: rgba(0, 0, 0, 0.55);
+	--elemenx-scene-subtitle-speaker: #ffd36b;
+	--elemenx-scene-aim: rgba(255, 255, 255, 0.92);
+	--elemenx-scene-aim-shadow: rgba(0, 0, 0, 0.6);
+	--elemenx-scene-aim-kill: #ff4a3d;
+	--elemenx-scene-lock: #ffb826;
+	--elemenx-scene-lock-locked: #ff4a3d;
+	--elemenx-scene-label: #d9e2f0;
+	--elemenx-scene-shadow: rgba(0, 0, 0, 0.9);
+	--elemenx-scene-veil: #000000;
+	--elemenx-scene-editor-x: #e5484d;
+	--elemenx-scene-editor-y: #46a758;
+	--elemenx-scene-editor-z: #3e7bfa;
+	--elemenx-scene-editor-plane: rgba(255, 214, 10, 0.55);
+	--elemenx-scene-editor-sketch: rgba(255, 255, 255, 0.85);
+	--elemenx-scene-editor-sketch-fill: rgba(255, 255, 255, 0.12);
+	--elemenx-planet-editor-space: #05070d;
+	--elemenx-planet-editor-stroke: #ffffff;
+	--elemenx-planet-editor-range: #ffcf6e;
+	--elemenx-planet-editor-river: #6ec8ff;
+	--elemenx-planet-editor-draft: #ffe14d;
+	--elemenx-planet-editor-arrow: rgba(255, 255, 255, 0.85);
+}

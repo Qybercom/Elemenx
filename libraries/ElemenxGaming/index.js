@@ -5,6 +5,7 @@
 	'locales/en.json',
 	'locales/ru.json',
 	'services/Vitals/Vitals.js',
+	'services/GameItems/GameItems.js',
 	'components/GameHud/GameHud.js',
 	'components/GameBar/GameBar.js',
 	'components/GameItemCard/GameItemCard.js',

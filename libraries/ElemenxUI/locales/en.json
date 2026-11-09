@@ -105,7 +105,6 @@
 				"commerce": "Commerce",
 				"landing": "Landings",
 				"music": "Music",
-				"game": "Game",
 				"tools": "Designer",
 				"other": "Other",
 				"project": "Project",
@@ -124,7 +123,6 @@
 				"text": "Text",
 				"screen": "Screen",
 				"panel": "Panel",
-				"gamepanel": "Game panel",
 				"textstyle": "Text style",
 				"link": "Link",
 				"badge": "Badge",
@@ -134,7 +132,6 @@
 				"numbers": "Numbered list",
 				"chips": "Chips",
 				"table": "Table",
-				"stats": "Stats",
 				"document": "Document",
 				"slot": "Slot",
 				"outlet": "Page place"
@@ -147,7 +144,6 @@
 				"panel": "A frame on the surface, with its padding.",
 				"divider": "A line between elements, across or upright.",
 				"spacer": "Takes the room left in a row: what follows goes to its end.",
-				"gamepanel": "A panel of a game interface.",
 				"heading": "A heading of a level from 1 to 6.",
 				"paragraph": "A paragraph of text, of a size and a tone.",
 				"textstyle": "A text in a style of the Library: a title, an eyebrow, a caption...",
@@ -160,7 +156,6 @@
 				"numbers": "A list with numbers.",
 				"chips": "Tags in a row.",
 				"table": "A table of columns and rows.",
-				"stats": "Names and their values, as the stats of a game.",
 				"document": "Text as a document: headings, paragraphs and lists in their rhythm.",
 				"slot": "Where the component puts what it is given: the default slot, or the one of its name.",
 				"outlet": "Where the component of the Application puts the page of the route."
@@ -1005,6 +1000,11 @@
 			"mute": "Mute",
 			"hide": "Hide",
 			"lock": "Lock"
+		},
+		"virtualGamepad": {
+			"label": "Gamepad on the screen",
+			"look": "Look round",
+			"stick": "Stick"
 		},
 		"virtualList": {
 			"empty": "No items",

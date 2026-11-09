@@ -26,7 +26,6 @@
 	'directives/Glyph/Glyph.js',
 	'directives/Hotkey/Hotkey.js',
 	'directives/Copy/Copy.js',
-	'directives/ItemCard/ItemCard.js',
 	'directives/Layer/Layer.js',
 	'directives/Badge/Badge.js',
 	'directives/Tip/Tip.js',
@@ -46,7 +45,6 @@
 	'services/Pictures/Pictures.js',
 	'services/Diagrams/Diagrams.js',
 	'services/Audio/Audio.js',
-	'services/GameItems/GameItems.js',
 	'services/AchievementQueue/AchievementQueue.js',
 	'services/Push/Push.js',
 	'services/Serial/Serial.js',
@@ -278,5 +276,6 @@
 	'components/Rating/Rating.js',
 	'components/Sparkline/Sparkline.js',
 	'components/Chart/Chart.js',
-	'components/Calendar/Calendar.js'
+	'components/Calendar/Calendar.js',
+	'components/VirtualGamepad/VirtualGamepad.js'
 ];

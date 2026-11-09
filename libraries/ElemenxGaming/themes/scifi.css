@@ -6,7 +6,7 @@
  * inside and a cap of light on its end, the value a large light figure over it; buttons of dark glass in a line of
  * light with a small square of light on each corner; windows that open as a projection. Calm colors: cyan light,
  * white for what matters, orange for a threat. Dark only. Made for the game components and Window with
- * Variant="game" (the --elemenx-game-* tokens); the colors of the other components are in themes/scifi.css of
+ * the class game (the --elemenx-game-* tokens); the colors of the other components are in themes/scifi.css of
  * ElemenxUI. Every rule starts with [data-theme][data-theme='scifi'].
  */
 [data-theme][data-theme='scifi'],

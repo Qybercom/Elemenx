@@ -112,4 +112,4 @@
 - [draws into a target of two colors with samples, each color to its texture, as many as a program writes, the second cleared to nought](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L140) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 - [draws over the depth of another target with DepthFrom, and clears its color alone with Clear(color, true)](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L187) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 
-+34 ещё в тех же файлах
++36 ещё в тех же файлах

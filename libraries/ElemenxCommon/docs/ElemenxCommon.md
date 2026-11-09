@@ -39,14 +39,10 @@ Back to [the Libraries](../../../docs/LIBRARIES.md).
 
 ## Directives
 
-Their styles (the handles, the ghost of a drag, the marks of a drop) are of the themes of ElemenxUI.
+Their look (the handles, the ghost of a drag, the marks of a drop) is in the index.css of ElemenxCommon: each token of ElemenxUI it reads has its default as a fallback, so it looks right in a page with no ElemenxUI, and with it takes the theme.
 
 - `*resizable` adds resize handles (`right`, `left`, `bottom`, `top`, `corner`) with limits and keyboard support.
 - `*draggable` and `*droppable` drag items by pointer onto targets that accept their `Type` (`Hold`: on a touch screen a finger scrolls the page and a press held still that many milliseconds takes the item); a target can also take files and text dragged from outside the browser. A target with `Sort` (`vertical`, `horizontal` or `grid`) is an ordered list: a line marks the place of the item and `Index` in the `dropmove` and `dropped` events tells it, so items can be reordered within a list and between lists. `OffsetX` and `OffsetY` in the detail are the point of the item that the pointer holds. A drag selects no text and survives a new rendering of its element.
 - `*infinite` asks for more when the end of a list comes near (`*infinite="{Margin, Direction, Busy, Done}"`, on an element that scrolls or in the page): the event `more` (`{Direction}`) once, again when the list grew or the view went away and came back, never while `Busy` or once `Done`; at once when it is too short to scroll. `Direction: 'up'` asks at the start (the older messages of a chat) and keeps the rows in view where they were when rows come above. `InfiniteList` is a list of it: its rows in its slot, a spinner while `Busy`, a word at its end when `Done` (`EndText`), `Height`, `Margin`, `Label`, `role="feed"`. `VirtualList` tells `more` (`{Count}`) when its last rows are drawn, once for each length; `Chat` tells `history` near its first message (`HistoryBusy`, `HistoryDone`).
 - `*swipe` makes an element follow a finger along an axis (`*swipe`, `*swipe="'y'"` or `{Axis, Threshold, Mouse}`; the page still scrolls along the other one) and dispatches `swipemove` (`{DX, DY}`) while it moves, then `swipe` (`{Direction, DX, DY}`: left, right, up or down) past `Threshold` pixels or on a flick, or `swipecancel`; a move that begins on a field, a slider or `[data-no-swipe]` is left to it. `Gallery` and the pictures of a `ProductCard` swipe by it, and a menu sheet closes by a swipe down on its top.
 - `*mount` puts custom content into an element: a DOM node, or an object with `Render(container, item)`.
-
-## Components
-
-- `VirtualGamepad`: a gamepad on the screen for the fingers (in the slot `hud` of a `Scene`): a stick, a second one with `Right`, `Buttons` (a, b, x, y, lb, rb, lt, rt, start, select), `Show` auto (where the screen is touched), always or never, `Tilt` (its stick across follows the lean of the device as a wheel), `Navigate`, `Size`; a `Virtual` pad of `InputDevices`; event `button` (`{Button, Down}`).

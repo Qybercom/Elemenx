@@ -2,4 +2,21 @@
 	<button class="elemenx-button" *tip="'Save the page'">Plain</button>
 	<button class="elemenx-button" *tip="{Title: 'Number input', Text: 'A number typed or stepped by its arrows, within Min and Max.'}">Rich</button>
 	<button class="elemenx-button" *tip="{Title: 'Above', Text: 'Placement top, shown at once.', Placement: 'top', Delay: 0}">Top</button>
+	<button class="elemenx-button" *tip="{Element: Card(), Placement: 'right', Delay: 0, Touch: true, Bare: true}">Card, a tap too</button>
 </div>
+<div data-theme="darcula" data-scheme="dark" style="margin-top: 8px; padding: 8px; display: inline-block;">
+	<button class="elemenx-button" *tip="{Title: 'In its own theme', Text: 'The tip takes the theme of this part of the page.'}">Darcula part</button>
+</div>
+<script>
+({
+	Card: function () {
+		var card = document.createElement('div');
+
+		card.className = 'elemenx-card';
+		card.style.padding = '12px';
+		card.textContent = 'Content of its own, with its own look: the tip is bare.';
+
+		return card;
+	}
+})
+</script>

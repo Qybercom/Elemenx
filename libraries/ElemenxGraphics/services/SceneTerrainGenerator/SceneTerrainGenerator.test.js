@@ -599,6 +599,36 @@ describe('Contract: the volume of a ground: tunnels, caves and overhangs cut out
 	});
 
 	/*
+	 * Regression: the tunnel of a wide road was round bores side by side, and the ground between them stood inside the box of
+	 * its lining. A tunnel of a Width is a box round its axis: as wide and as high as told, its floor and vault level, its
+	 * corners round, nothing left across it.
+	 */
+	it('cuts a tunnel of a Width as a box round its axis, level floor and vault, round corners, nothing left across it', function () {
+		var options = {Size: 400, Height: 40, Water: 0, Seed: 'hill', Scale: 90};
+		var field = terrain.Flat(Object.assign({}, options, {Carves: [{Type: 'tunnel', Points: [[-60, 0, 6], [60, 0, 6]], Width: 30, Height: 8, Corner: 1.5}]}));
+
+		/* Across all of its width at the height of its axis, where round bores left ground between them. */
+		[-14, -7, 0, 7, 14].forEach(function (z) {
+			expect(field.Density(0, 6, z)).toBeLessThan(0);
+		});
+
+		/* Its floor and its vault: 4 m under and over its axis, level. */
+		expect(field.Density(0, 2.2, 0)).toBeLessThan(0);
+		expect(field.Density(0, 1.8, 0)).toBeGreaterThan(0);
+		expect(field.Density(0, 9.8, 0)).toBeLessThan(0);
+		expect(field.Density(0, 10.2, 10)).toBeGreaterThan(0);
+		expect(field.Density(0, 6, 15.4)).toBeGreaterThan(0);
+
+		/* Its corner round: by the wall, low, still cut; in the very corner, ground. */
+		expect(field.Density(0, 3, 14)).toBeLessThan(0);
+		expect(field.Density(0, 2.05, 14.95)).toBeGreaterThan(0);
+
+		/* The squares by it of the volume, far from it of heights. */
+		expect(field.Volume.Touches(-10, 12, 10, 20)).toBe(true);
+		expect(field.Volume.Touches(-10, 60, 10, 80)).toBe(false);
+	});
+
+	/*
 	 * Regression: a tunnel made each square in the box of all of it of the volume, though far from most, and the points
 	 * of such a square where nothing is cut were off the heights: beside a square of heights, a step.
 	 */

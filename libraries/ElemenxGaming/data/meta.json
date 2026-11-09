@@ -165,7 +165,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The style that places the card (fixed beside an element: GameItems.Place)."
+					"Description": "A style that places the card: fixed, it floats over the page; none, it is in the flow."
 				}
 			],
 			"Slots": [],
@@ -1268,6 +1268,28 @@
 				"Target(ledger, object)"
 			],
 			"Sample": {}
+		},
+		{
+			"Name": "GameItems",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The rules of moving the items of a game: what lies where after an item is moved onto a place.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Stacks(a, b)",
+				"Move(item, current)",
+				"Take(item, count)",
+				"Tip(item)",
+				"Carded(item)"
+			],
+			"Sample": {}
 		}
 	],
 	"Directives": [],
@@ -1541,5 +1563,55 @@
 			"up"
 		],
 		"elemenx-game-leaderboard-score": []
+	},
+	"Kinds": [
+		{
+			"ID": "gamepanel",
+			"Group": "game",
+			"Icon": "trophy",
+			"Tag": "div",
+			"Base": "elemenx-game-panel",
+			"Container": true,
+			"Label": "gaming.ui.designer.kinds.gamepanel",
+			"Hint": "gaming.ui.designer.hints.gamepanel",
+			"Props": {
+				"Light": false
+			},
+			"Fields": [
+				{
+					"Name": "Light",
+					"Type": "bool",
+					"Class": "light"
+				}
+			]
+		},
+		{
+			"ID": "stats",
+			"Group": "game",
+			"Icon": "list",
+			"Tag": "dl",
+			"Base": "elemenx-game-stats",
+			"Inner": "pairs",
+			"Label": "gaming.ui.designer.kinds.stats",
+			"Hint": "gaming.ui.designer.hints.stats",
+			"Props": {
+				"Items": "Attack: 1017, Defense: 1162",
+				"Double": false
+			},
+			"Fields": [
+				{
+					"Name": "Items",
+					"Type": "list"
+				},
+				{
+					"Name": "Double",
+					"Type": "bool",
+					"Class": "double"
+				}
+			]
+		}
+	],
+	"Groups": {
+		"game": "gaming.ui.designer.groups.game"
 	}
 }

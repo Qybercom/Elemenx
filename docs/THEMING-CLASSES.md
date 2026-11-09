@@ -49,11 +49,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-bare`
 - `elemenx-focus-ring`
 - `elemenx-divider`: `vertical`
-- `elemenx-drag-ghost`
 - `elemenx-document`
-- `elemenx-draggable`: `dragging`, `held`, `hold`
-- `elemenx-drop-marker`
-- `elemenx-droppable`: `drop-over`, `drop-target`
 - `elemenx-eyebrow`
 - `elemenx-field-control`
 - `elemenx-file-icon`
@@ -106,8 +102,6 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-popup-separator`
 - `elemenx-radio`: `checked`, `segment`, `small`
 - `elemenx-radio-group`: `horizontal`, `segmented`, `small`, `tile`
-- `elemenx-resizable`: `resizing`
-- `elemenx-resize-handle`: `bottom`, `corner`, `left`, `right`, `top`
 - `elemenx-rich-plugin`: `editing`, `error`
 - `elemenx-rich-plugin-editor`
 - `elemenx-screen`: `fill`, `fill-fixed`, `non-fill`
@@ -146,16 +140,27 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-table`: `bordered`, `compact`, `selectable`, `sticky`, `striped`, `tree`
 - `elemenx-text`: `danger`, `large`, `mono`, `muted`, `small`, `strong`, `success`, `warning`
 - `elemenx-textarea`: `round`
-- `elemenx-tip`: `rich`
+- `elemenx-tip`: `bare`, `rich`
 - `elemenx-tip-text`
 - `elemenx-tip-title`
 - `elemenx-title`
 - `elemenx-ul`: `check`
 - `elemenx-visually-hidden`
 
+## Foundation of ElemenxCommon (index.css of ElemenxCommon)
+
+What its directives put on elements: *draggable, *droppable and *resizable.
+
+- `elemenx-drag-ghost`
+- `elemenx-draggable`: `dragging`, `held`, `hold`
+- `elemenx-drop-marker`
+- `elemenx-droppable`: `drop-over`, `drop-target`
+- `elemenx-resizable`: `resizing`
+- `elemenx-resize-handle`: `bottom`, `corner`, `left`, `right`, `top`
+
 ## Foundation of ElemenxGaming (index.css of ElemenxGaming)
 
-The classes the game components share, and the modifier `game` of `elemenx-window` (`Window` with `Variant="game"`) that this stylesheet styles.
+The classes the game components share, and the modifier `game` of `elemenx-window` (`<Window class="game">`, with `secondary` or `plain` for its kind) that this stylesheet styles.
 
 - `elemenx-game-bad`
 - `elemenx-game-good`

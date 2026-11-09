@@ -31,7 +31,7 @@ The policy and the theme are kept in `localStorage` and come back on the next vi
 | `Channels(color)` | the channels of a color (`'75, 68, 61'`) for the `-rgb` tokens |
 | `OnChange(callback)`, `OffChange(callback)` | `{Policy, Theme, Name}` after every change, including a change of the system under `system` |
 
-ElemenxUI brings `contrast` (high contrast, light and dark), `darcula` (the dark theme of the JetBrains IDEs), `soft` (round corners, roomier controls, a violet accent), and two themes for games, `fantasy` and `scifi`. A build takes a theme only when the Application names it (`Theme.Use('soft')`, `data-theme="soft"`) or lists the themes (`Theme.Themes()`); `--packs soft` adds one it cannot see.
+ElemenxUI brings `contrast` (high contrast, light and dark), `darcula` (the dark theme of the JetBrains IDEs), `soft` (round corners, roomier controls, a violet accent), and `fantasy` and `scifi`, whose game look (windows, gauges, items) ElemenxGaming brings on the same attribute. A build takes a theme only when the Application names it (`Theme.Use('soft')`, `data-theme="soft"`) or lists the themes (`Theme.Themes()`); `--packs soft` adds one it cannot see.
 
 ## A theme file
 
@@ -76,8 +76,8 @@ theme.Use('ocean', function (error) {});
 | Geometry | `--elemenx-control-small` / `--elemenx-control` / `-large` / `-giant` (24, 32, 40, 56px; larger on a touch screen), `--elemenx-grid-min`, `--elemenx-radius-small` / `--elemenx-radius` / `-large` / `-huge` / `-giant` / `-pill` |
 | Motion | `--elemenx-duration`, `--elemenx-duration-slow`, `--elemenx-easing` |
 | Colors of a scheme | `--elemenx-background`, `--elemenx-surface`, `--elemenx-surface-raised`, `--elemenx-surface-hover`, `--elemenx-text`, `--elemenx-text-muted`, `--elemenx-accent`, `--elemenx-accent-hover`, `--elemenx-accent-text`, `--elemenx-danger`, `--elemenx-success`, `--elemenx-warning`, `--elemenx-info`, `--elemenx-border`, `--elemenx-border-strong`, `--elemenx-shadow`, `--elemenx-focus`, and their `-rgb` channels |
-| Both schemes | `--elemenx-shadow-small`, `--elemenx-shadow-subtle`, `--elemenx-backdrop`, `--elemenx-overlay`, the scrollbars, the badges and avatars, the gamepad buttons |
-| Components | `--elemenx-block-*`, `--elemenx-property-*`, `--elemenx-rating-color`, `--elemenx-tile-color`, `--elemenx-weather-*`, `--elemenx-syntax-*` (highlighted code), `--elemenx-achievement-*`, and the `--elemenx-game-*` tokens of the game components |
+| Both schemes | `--elemenx-shadow-small`, `--elemenx-shadow-subtle`, `--elemenx-backdrop`, `--elemenx-overlay`, the scrollbars, the badges and avatars |
+| Components | `--elemenx-block-*`, `--elemenx-property-*`, `--elemenx-rating-color`, `--elemenx-tile-color`, `--elemenx-weather-*`, `--elemenx-syntax-*` (highlighted code), `--elemenx-achievement-*`; of ElemenxGraphics the `--elemenx-scene-*` tokens of the scenes; of ElemenxGaming the `--elemenx-game-*` tokens of the game components and the `--elemenx-gamepad-*` buttons of a pad |
 
 A component has variables of its own, set by its variants (`--elemenx-progress-color`, `--elemenx-drawer-size`...): a theme changes them on its class.
 

@@ -30,4 +30,4 @@ TextureLab: a bench for the textures of SceneTextures, to see one as sharp as th
 
 ## Tests
 
-- [shows a texture in TextureLab as a tile or a ground, a slider for each param, and tells change](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L98) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
+- [shows a texture in TextureLab as a tile or a ground, a slider for each param, and tells change](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L149) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`

@@ -359,6 +359,84 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 		expect(inner.Objects[id]).toBeTruthy();
 	}, 120000);
 
+	/*
+	 * Regression: where the hill over a tunnel is lower than its vault the cut opens it to the sky, and grass grew there at the
+	 * height of the ground before the cut, inside the lining. Those parts are kept bare as a road is.
+	 */
+	it('keeps no grass where a tunnel cut the ground away under the sky', async function () {
+		var mounted = await mount();
+		var scene = mounted.Scene;
+		var pool = Elemenx.Service('SceneTerrainGenerator').Work();
+		var run = pool.Run;
+		var freed = [];
+
+		pool.Run = function (service, method, args) {
+			if (method === 'Free')
+				freed.push(args[2]);
+
+			return run.apply(this, arguments);
+		};
+
+		try {
+			scene.Quality = 'medium';
+
+			scene.Add('grass', {ID: 'lawn'});
+			scene.Add('road', {ID: 'low', Type: 'road', Tunnels: [[40, 140]], Points: [[-80, 20], [120, 20]]});
+
+			await waitFor(function () {
+				mounted.Frames(1);
+
+				return freed.some(function (lines) {
+					return lines.some(function (line) {
+						return line.Reach > 5 && line.Points.length > 1 && line.Points.every(function (point) {
+							return Math.abs(point[1] - 20) < 1;
+						});
+					});
+				});
+			}, 20000);
+
+			var cut = scene.Engine().RoadsCarves()[0];
+
+			expect(freed.slice(-1)[0].some(function (line) {
+				return line.Reach === cut.Width / 2 + 1;
+			})).toBe(true);
+		}
+		finally {
+			pool.Run = run;
+		}
+	}, 60000);
+
+	/*
+	 * Regression: the squares of the volume over a tunnel stayed as coarse as the ground round them, and on a grid of metres
+	 * its roof and floor broke into slabs with holes. Near the eye they are made as fine as a metre a cell.
+	 */
+	it('makes the squares of the ground over a tunnel near the eye as fine as a metre a cell', async function () {
+		var mounted = await mount();
+		var scene = mounted.Scene;
+		var fine;
+
+		scene.Add('road', {ID: 'low', Type: 'road', Tunnels: [[40, 140]], Points: [[-80, 20], [120, 20]]});
+
+		mounted.Frames(2);
+
+		scene.SetViewpoint({Target: [40, 10, 20], Yaw: 0, Pitch: 0.5, Distance: 150});
+
+		fine = await waitFor(function () {
+			var ground = scene.Scene().Ground;
+			var volume = ground.Field.Volume;
+
+			mounted.Frames(1);
+
+			return volume && Object.keys(ground.Nodes).some(function (key) {
+				var node = ground.Nodes[key];
+
+				return node.Size && node.Size / 32 <= 1 && volume.Touches(node.Center[0] - node.Size / 2, node.Center[2] - node.Size / 2, node.Center[0] + node.Size / 2, node.Center[2] + node.Size / 2);
+			});
+		}, 30000);
+
+		expect(fine).toBe(true);
+	}, 60000);
+
 	it('leaves the ground as it is under a bridge and over a tunnel, and gives the road its piers and portals', async function () {
 		var mounted = await mount();
 		var scene = mounted.Scene;
@@ -376,8 +454,17 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 
 		expect(scene.Roads()[0].Spans.length).toBe(2);
 		expect(scene.Scene().Ground.Field.Height(-20, 20)).toBeCloseTo(under, 3);
-		/* Over the tunnel the ground as it was (found in its volume now, to a few millimetres)... */
-		expect(scene.Scene().Ground.Field.Height(80, 20)).toBeCloseTo(over, 2);
+
+		/*
+		 * Over the tunnel the ground as it was where the hill is over its vault (found in its volume now, to a few millimetres);
+		 * where it is lower, its box is cut whole, no crust kept, down to the vault of its lining (7 m over the road)...
+		 */
+		var vault = scene.Roads()[0].Points.filter(function (point) {
+			return Math.abs(point.X - 80) < 3;
+		})[0].Y + 7;
+
+		if (over > vault + 0.5) expect(Math.abs(scene.Scene().Ground.Field.Height(80, 20) - over)).toBeLessThan(0.2);
+		else expect(scene.Scene().Ground.Field.Height(80, 20)).toBeLessThan(vault + 0.5);
 
 		/* ...and under it a hole cut through the hill (Carves of the roads), its floor just under the road. */
 		expect(scene.Engine().RoadsCarves().length).toBeGreaterThan(0);

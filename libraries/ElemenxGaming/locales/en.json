@@ -36,7 +36,20 @@
 			"player": "Player",
 			"score": "Score",
 			"rose": "up {count}",
-			"fell": "down {count}"
+			"fell": "down {count}",
+			"designer": {
+				"groups": {
+					"game": "Game"
+				},
+				"kinds": {
+					"gamepanel": "Game panel",
+					"stats": "Stats"
+				},
+				"hints": {
+					"gamepanel": "A panel of a game interface.",
+					"stats": "Names and their values, as the stats of a game."
+				}
+			}
 		},
 		"vitals": {
 			"health": "Health"

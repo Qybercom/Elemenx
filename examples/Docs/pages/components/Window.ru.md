@@ -7,7 +7,7 @@
 - Minimize сворачивает его до шапки (Minimizable; повторно — разворачивает), Maximize заполняет границы (Maximizable; также двойное нажатие на шапку), Close скрывает его (Closable; событие close, Open false).
 - X, Y, Width и Height размещают его (в пикселях); без X и Y оно встаёт в каскад новых окон. Bounds: 'parent' (позиционированный элемент, в котором оно находится; по умолчанию) или 'viewport' (закреплено в окне браузера). Persist именует окно, чьё место, размер и состояние запоминаются.
 - Нажатие или фокус поднимают его над другими окнами (сервис Windows) и делают активным (класс active).
-- Variant: 'default' или 'game' — вид игровой темы (токены --elemenx-game-*). Level: 'primary' (главные окна), 'secondary' (меньшие) или 'plain' (диалог, сообщение): тема рисует каждое по-своему.
+- Вид окна — его классы, заданные на теге, как у любого элемента: <Window class="game secondary"> берёт игровой вид ElemenxGaming (game; secondary или plain — какое окно рисует его тема: второстепенное или диалог, без них — главное).
 - HeaderShape 'trapezoid' делает окно папкой: Icon и заголовки на вкладке шириной с заголовок, её конец скошен вниз к телу; слот header и кнопки стоят за скосом, а шапка по-прежнему перемещает окно.
 - PopOut добавляет кнопку, переносящую тело в отдельное окно поверх других окон системы (Document Picture-in-Picture: Chrome и Edge; сервис PictureInPicture), и обратно; Popped сообщает, что оно там.
 - События: move ({X, Y}), resize ({Width, Height}), minimize, maximize, restore, close, front, popout, popin.
@@ -38,8 +38,6 @@
 | `Minimized` | `false` |
 | `Maximized` | `false` |
 | `Persist` | `''` |
-| `Variant` | `'default'` |
-| `Level` | `'primary'` |
 | `PopOut` | `false` |
 | `Popped` | `false` |
 | `HeaderShape` | `'default'` |

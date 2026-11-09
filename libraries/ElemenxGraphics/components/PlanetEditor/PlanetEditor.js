@@ -234,7 +234,8 @@ Elemenx.Component('PlanetEditor', {
 
 						if (pass !== own.Pass) return;
 
-						if (!error && made && made.Width) {
+						/* Regression: a view lower than its bands made a band of no height, and a picture of none threw. */
+						if (!error && made && made.Width && made.Height) {
 							piece = document.createElement('canvas');
 							piece.width = made.Width;
 							piece.height = made.Height;

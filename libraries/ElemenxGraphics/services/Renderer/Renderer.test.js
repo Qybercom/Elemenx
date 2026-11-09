@@ -265,6 +265,49 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 		}
 	});
 
+	/*
+	 * Regression: a sampler given no texture kept the unit it had; a texture of another type there (the arrays of the land
+	 * of a planet near beside its colour map, before the first array came) made the browser drop the draw.
+	 */
+	it('gives a sampler that is given no texture a blank one of its type, so no draw has two types on one unit', function () {
+		var gl = renderer.GL;
+		var program = renderer.Program([
+			'#version 300 es',
+			'in vec3 aPosition;',
+			'void main() { gl_Position = vec4(aPosition.xy, 0.0, 1.0); }'
+		].join('\n'), [
+			'#version 300 es',
+			'precision highp float;',
+			'precision highp sampler2DArray;',
+			'uniform sampler2D uColorMap;',
+			'uniform sampler2DArray uLandColor;',
+			'uniform samplerCube uSky;',
+			'out vec4 outColor;',
+			'void main() { outColor = texture(uColorMap, vec2(0.5)) + texture(uLandColor, vec3(0.5, 0.5, 0.0)) + texture(uSky, vec3(0.0, 1.0, 0.0)); }'
+		].join('\n'));
+		var color = renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([255, 0, 0, 255])}, {Nearest: true});
+		var target = renderer.Target(1, 1, {});
+		var quad = renderer.Mesh({Positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0], Indices: [0, 1, 2]});
+		var pixel = new Uint8Array(4);
+
+		while (gl.getError() !== gl.NO_ERROR);
+
+		target.Begin();
+
+		renderer.Draw(quad, program, {uColorMap: color, uLandColor: null}, {Depth: false, Cull: 'none'});
+
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+
+		gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+		target.End();
+
+		/* Drawn: the red of the colour map, the blanks adding nothing. */
+		expect(Array.from(pixel)).toEqual([255, 0, 0, 255]);
+
+		target.Destroy();
+	});
+
 	/* Regression: a page that made and dropped many scenes went past the contexts a browser keeps, which then gave no more. */
 	it('gives its context back on Destroy, at once and not when the canvas is collected', function () {
 		var own = Elemenx.Service('Renderer').Create(document.createElement('canvas'), {Antialias: false});

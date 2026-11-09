@@ -174,19 +174,19 @@ describe('elemenx meta', function () {
 			return meta.Name;
 		})).toEqual([]);
 
-		/* The folder of a Window, its levels and its look are choices; the classes of the layouts take their modifiers. */
+		/* The folder of a Window is a choice; its look is its classes (<Window class="game">), no prop of a game. */
 		expect(result.Components.find(function (meta) {
 			return meta.Name === 'Window';
 		}).Props.filter(function (prop) {
 			return ['Variant', 'Level', 'HeaderShape'].indexOf(prop.Name) !== -1;
 		}).map(function (prop) {
-			return prop.Options;
-		})).toEqual([['default', 'game'], ['primary', 'secondary', 'plain'], ['default', 'trapezoid']]);
+			return [prop.Name, prop.Options];
+		})).toEqual([['HeaderShape', ['default', 'trapezoid']]]);
 
 		expect(result.Classes['elemenx-screen']).toEqual(['fill', 'fill-fixed', 'non-fill']);
 		expect(result.Classes['elemenx-container']).toEqual(expect.arrayContaining(['wrappable', 'centered', 'grid', 'fill']));
 		expect(result.Services.length).toBeGreaterThan(30);
-		expect(result.Directives.length).toBeGreaterThan(10);
+		expect(result.Directives.length).toBeGreaterThan(8);
 	});
 
 	/* Regression: MoneyInput emitted input and change without declaring them, CallStage declared a layout it never emitted. */
@@ -244,6 +244,19 @@ describe('elemenx meta', function () {
 		expect(made.Services.find(function (meta) {
 			return meta.Name === 'Designer';
 		}).Methods).toEqual(expect.arrayContaining(['Load(callback)', 'Use(meta)', 'SetStyle(id, property, value)']));
+	});
+
+	/* A builder knows the kinds of classes of a Library above ElemenxUI from its meta, not from its own code. */
+	it('writes the kinds of classes a Library brings (data/kinds.json) and the phrases of their groups into its meta', function () {
+		var gaming = path.resolve(process.cwd(), 'libraries', 'ElemenxGaming');
+		var made = Meta.Build(gaming, path.join(folder(), 'meta.json'));
+
+		expect(made.Kinds.map(function (kind) {
+			return [kind.ID, kind.Group, kind.Base, kind.Label];
+		})).toEqual([['gamepanel', 'game', 'elemenx-game-panel', 'gaming.ui.designer.kinds.gamepanel'], ['stats', 'game', 'elemenx-game-stats', 'gaming.ui.designer.kinds.stats']]);
+		expect(made.Groups).toEqual({game: 'gaming.ui.designer.groups.game'});
+		expect(JSON.parse(fs.readFileSync(path.join(gaming, 'data', 'meta.json'), 'utf8'))).toEqual(JSON.parse(JSON.stringify(made)));
+		expect(Meta.Build(library, null).Kinds).toBe(undefined);
 	});
 
 	it('leaves $Meta out of a build of the Library that asks nothing of it, braces in its texts and all', function () {

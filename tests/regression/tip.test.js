@@ -167,4 +167,147 @@ describe('Contract: the *tip directive of ElemenxUI', function () {
 
 		panel.hidePopover();
 	});
+
+	/* What *itemcard did, for any content: the card of an item of a game is GameItemCard in a *tip. */
+	it('shows a Component made with its Props in a bare tip, made again when they change, and destroyed when it hides', async function () {
+		var card = unique('TipCard');
+		var made = [];
+		var component;
+		var root;
+		var tip;
+
+		Elemenx.Component(card, {
+			$Template: '<b class="probe">{{Name}}</b>',
+			Name: '',
+
+			$OnCreate: function () {
+				made.push(this);
+			}
+		});
+
+		component = mounted(Elemenx.Component(unique('TippedCard'), {
+			$Template: '<div><button type="button" class="sword" *tip="{Component: \x27' + card + '\x27, Props: {Name: Name}, Delay: 0}">a</button></div>',
+			Name: 'Old sword'
+		})());
+		root = component.$Element();
+
+		pointer(root.querySelector('.sword'), 'pointerenter');
+
+		await tick(20);
+
+		tip = document.getElementById('elemenx-tip');
+
+		expect(tip.querySelector('.probe').textContent).toBe('Old sword');
+		expect(tip.classList.contains('bare')).toBe(true);
+		expect(getComputedStyle(tip).paddingTop).toBe('0px');
+
+		component.Name = 'New sword';
+
+		await tick(20);
+
+		expect(tip.querySelector('.probe').textContent).toBe('New sword');
+		expect(made.length).toBe(2);
+
+		pointer(root.querySelector('.sword'), 'pointerleave');
+
+		expect(tip.hidden).toBe(true);
+		expect(tip.querySelector('.probe')).toBe(null);
+	});
+
+	it('takes the theme of the part of the page its element is in, and keeps beside it when the page moves it', async function () {
+		var component = mounted(Elemenx.Component(unique('TippedThemed'), {
+			$Template: '<div data-theme="darcula" data-scheme="dark"><div class="above" style="height: 10px"></div><button type="button" class="themed" *tip="{Text: \x27Here\x27, Placement: \x27right\x27, Delay: 0}">a</button></div>'
+		})());
+		var root = component.$Element();
+		var button = root.querySelector('.themed');
+		var tip;
+
+		pointer(button, 'pointerenter');
+
+		await tick(20);
+
+		tip = document.getElementById('elemenx-tip');
+
+		expect(tip.parentNode).toBe(root);
+
+		root.querySelector('.above').style.height = '120px';
+
+		await new Promise(function (resolve) {
+			requestAnimationFrame(function () {
+				requestAnimationFrame(resolve);
+			});
+		});
+
+		var box = button.getBoundingClientRect();
+
+		expect(Math.abs(tip.getBoundingClientRect().top + tip.offsetHeight / 2 - (box.top + box.height / 2))).toBeLessThan(2);
+
+		pointer(button, 'pointerleave');
+	});
+
+	/* A bug of *itemcard, kept fixed: on a tablet the card a tap opened went along with the page as it scrolled, over everything. */
+	it('with Touch shows on a tap and hides on a scroll or a tap elsewhere; one the mouse opened follows a scroll', async function () {
+		var component = mounted(Elemenx.Component(unique('TippedTouch'), {
+			$Template: '<div><button type="button" class="tapped" *tip="{Text: \x27Tapped\x27, Delay: 0, Touch: true}">a</button><button type="button" class="other">b</button></div>'
+		})());
+		var root = component.$Element();
+		var button = root.querySelector('.tapped');
+		var tip;
+
+		button.dispatchEvent(new PointerEvent('pointerdown', {pointerType: 'touch', bubbles: true}));
+
+		tip = document.getElementById('elemenx-tip');
+
+		expect(tip.hidden).toBe(false);
+
+		window.dispatchEvent(new Event('scroll'));
+
+		expect(tip.hidden).toBe(true);
+
+		button.dispatchEvent(new PointerEvent('pointerdown', {pointerType: 'touch', bubbles: true}));
+		root.querySelector('.other').dispatchEvent(new PointerEvent('pointerdown', {pointerType: 'touch', bubbles: true}));
+
+		expect(tip.hidden).toBe(true);
+
+		pointer(button, 'pointerenter');
+
+		await tick(20);
+
+		window.dispatchEvent(new Event('scroll'));
+
+		expect(tip.hidden).toBe(false);
+
+		pointer(button, 'pointerleave');
+
+		expect(tip.hidden).toBe(true);
+	});
+
+	it('hides on a press, but not with Stay (the card of an item pressed to choose it)', async function () {
+		var component = mounted(Elemenx.Component(unique('TippedStay'), {
+			$Template: '<div><button type="button" class="plain" *tip="{Text: \x27Plain\x27, Delay: 0}">a</button><button type="button" class="stay" *tip="{Text: \x27Stays\x27, Delay: 0, Stay: true}">b</button></div>'
+		})());
+		var root = component.$Element();
+		var tip;
+
+		pointer(root.querySelector('.plain'), 'pointerenter');
+
+		await tick(20);
+
+		tip = document.getElementById('elemenx-tip');
+
+		pointer(root.querySelector('.plain'), 'pointerdown');
+
+		expect(tip.hidden).toBe(true);
+
+		pointer(root.querySelector('.plain'), 'pointerleave');
+		pointer(root.querySelector('.stay'), 'pointerenter');
+
+		await tick(20);
+
+		pointer(root.querySelector('.stay'), 'pointerdown');
+
+		expect([tip.hidden, tip.textContent]).toEqual([false, 'Stays']);
+
+		pointer(root.querySelector('.stay'), 'pointerleave');
+	});
 });

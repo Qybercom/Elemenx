@@ -153,4 +153,4 @@ The two directives of this page, declared in the example. A directive must be re
 </script>
 ```
 
-ElemenxUI brings `*popup`, `*modal`, `*draggable`, `*droppable`, `*resizable`, `*hotkey`, `*copy`, `*badge`, `*swipe`, `*mask`, `*mount`, `*glyph` and `*itemcard` (see the section Directives).
+ElemenxUI brings `*popup`, `*modal`, `*draggable`, `*droppable`, `*resizable`, `*hotkey`, `*copy`, `*badge`, `*swipe`, `*mask`, `*mount` and `*glyph` (see the section Directives).

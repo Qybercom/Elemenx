@@ -5,8 +5,9 @@
  * history (Undo, Redo) and in the storage of the browser (StorageKey), and listeners hear of every change (OnChange).
  *
  * - The kinds are the classes of the layouts of ElemenxUI (a screen, a row, a heading, a table...), their modifiers
- *   as fields, and every Component of the Libraries (Library: a name or a list, the system Libraries by default) from
- *   what it declares in $Meta: data/meta.json of each Library, made by elemenx meta. Load(callback) reads them once
+ *   as fields, the kinds of classes another Library brings (Kinds of its meta, from its data/kinds.json), and every
+ *   Component of the Libraries (Library: a name or a list; by default the Libraries of the Application with those they
+ *   use) from what it declares in $Meta: data/meta.json of each Library, made by elemenx meta. Load(callback) reads them once
  *   (Ready() tells they are there); Use(meta) gives one instead.
  * - A node is {ID, Kind, Props, Text, Slot, Style, Children}: Slot is the named slot of its parent it goes to, '' for
  *   the default one; Style holds its layout (padding, margin, the size with its least and greatest and, in a flex
@@ -70,18 +71,18 @@ Elemenx.Service('Designer', {
 		Description: 'The document of a designer of pages: its nodes, their props and layout, the selection, the history and the template.',
 		Methods: ['Load(callback)', 'Use(meta)', 'Ready()', 'Literal(value)', 'Parse(expression)', 'Rules()', 'Rule(context)', 'SetRule(context, property, value)', 'RootClass(id)', 'Kinds()', 'Kind(id)', 'Label(kind)', 'Hint(kind)', 'GroupLabel(group)', 'Root()', 'Find(id)', 'Parent(id)', 'Container(id)', 'Within(id, within)', 'Slots(id)', 'Insert(kind, parent, index)', 'Move(id, parent, index)', 'Remove(id)', 'Duplicate(id)', 'Set(id, name, value)', 'SetStyle(id, property, value)', 'Clear()', 'Select(id)', 'Selected()', 'Count()', 'CanUndo()', 'CanRedo()', 'Undo()', 'Redo()', 'Template(canvas, empty, id)', 'Import(text)', 'Project()', 'Opened()', 'Projects()', 'Create(mode, name)', 'Switch(id)', 'RemoveProject(id)', 'ExportProject()', 'ImportProject(text)', 'AddDocument(type, name)', 'RemoveDocument(id)', 'Used(id)', 'Open(id)', 'Close(id)', 'SetDocument(id, name, value)', 'AddRoute(path, page)', 'SetRoute(id, name, value)', 'RemoveRoute(id)', 'AddGuard(name)', 'SetGuard(name, field, value)', 'RemoveGuard(name)', 'SetSetting(name, value)', 'Source(id)', 'Map()', 'Scope(name)', 'Extend(components)', 'Copy(name)', 'OnChange(listener)', 'OffChange(listener)']
 	},
-	Library: ['ElemenxCommon', 'ElemenxUI', 'ElemenxGraphics', 'ElemenxGaming'],
+	Library: null,
 	StorageKey: 'elemenx-designer:document',
 	ProjectKey: 'elemenx-designer:project',
 	ProjectsKey: 'elemenx-designer:projects',
-	Groups: ['layout', 'text', 'inputs', 'buttons', 'menus', 'navigation', 'display', 'feedback', 'data', 'codes', 'media', 'overlays', 'social', 'commerce', 'landing', 'music', 'game'],
+	Groups: ['layout', 'text', 'inputs', 'buttons', 'menus', 'navigation', 'display', 'feedback', 'data', 'codes', 'media', 'overlays', 'social', 'commerce', 'landing', 'music'],
 
 	/* The layout a node may set, in the order of its style; the last five in a flex container only. */
 	Layout: ['padding', 'margin', 'width', 'height', 'min-width', 'max-width', 'min-height', 'max-height', 'flex-direction', 'flex-wrap', 'align-items', 'justify-content', 'gap'],
 
 	$OnCreate: function () {
 		var self = this;
-		var bases = [].concat(this.Library).map(function (name) {
+		var bases = [].concat(this.Library || libraries()).map(function (name) {
 			var library = Elemenx.Library(name);
 
 			return String(library && library.$Root || '').replace(/\/$/, '');
@@ -96,6 +97,28 @@ Elemenx.Service('Designer', {
 		var state = 'idle';
 		var waiting = [];
 		var keys = {Storage: this.StorageKey, Project: this.ProjectKey, Projects: this.ProjectsKey};
+
+		/*
+		 * The Libraries of the Application with those each uses ($Use of a Library), each once, after those it uses: a
+		 * builder knows every one of them, the game ones too. With no Application, ElemenxUI itself.
+		 */
+		function libraries () {
+			var application = self.$Application ? self.$Application() : null;
+			var result = [];
+
+			function visit (name) {
+				var library = Elemenx.Library(name);
+				if (!library || result.indexOf(name) !== -1) return;
+
+				[].concat(library.$Use || []).forEach(visit);
+
+				result.push(name);
+			}
+
+			(application && application.$Libraries ? application.$Libraries() : []).forEach(visit);
+
+			return result.length ? result : ['ElemenxCommon', 'ElemenxUI'];
+		}
 
 		/*
 		 * The project: its documents and the one being edited (its tree is root, kept in its Root on every change), the
@@ -165,7 +188,6 @@ Elemenx.Service('Designer', {
 			{ID: 'panel', Group: 'layout', Icon: 'layout', Tag: 'div', Base: 'elemenx-panel', Container: true, Props: {Padding: ''}, Fields: [{Name: 'Padding', Type: 'select', Options: ['', 'compact', 'spacious'], Class: true}]},
 			{ID: 'divider', Group: 'layout', Icon: 'remove', Tag: 'div', Base: 'elemenx-divider', Props: {Vertical: false}, Fields: [{Name: 'Vertical', Type: 'bool', Class: 'vertical'}]},
 			{ID: 'spacer', Group: 'layout', Icon: 'more', Tag: 'span', Base: 'elemenx-spacer', Props: {}, Fields: []},
-			{ID: 'gamepanel', Group: 'layout', Icon: 'trophy', Tag: 'div', Base: 'elemenx-game-panel', Container: true, Props: {Light: false}, Fields: [{Name: 'Light', Type: 'bool', Class: 'light'}]},
 
 			{ID: 'heading', Group: 'text', Icon: 'heading', Tag: 'h2', Text: 'Heading', Props: {Level: '2'}, Fields: [{Name: 'Level', Type: 'select', Options: ['1', '2', '3', '4', '5', '6']}],
 				TagOf: function (props) {
@@ -214,14 +236,6 @@ Elemenx.Service('Designer', {
 						return '<th>' + text(column) + '</th>';
 					}).join('') + '</tr>', '</thead>', '<tbody>'].concat(rows, ['</tbody>']);
 				}},
-			{ID: 'stats', Group: 'text', Icon: 'list', Tag: 'dl', Base: 'elemenx-game-stats', Props: {Items: 'Attack: 1017, Defense: 1162', Double: false}, Fields: [{Name: 'Items', Type: 'list'}, {Name: 'Double', Type: 'bool', Class: 'double'}],
-				Inner: function (props) {
-					return list(props.Items).map(function (item) {
-						var parts = item.split(':');
-
-						return '<dt>' + text(parts[0].trim()) + '</dt><dd>' + text(parts.slice(1).join(':').trim()) + '</dd>';
-					});
-				}},
 			{ID: 'document', Group: 'text', Icon: 'file-text', Tag: 'div', Base: 'elemenx-document', Container: true, Gap: true, Props: {}, Fields: []},
 
 			/* In a component of the project: where it puts what it is given, the slot of its Name ('' the default one). */
@@ -234,8 +248,23 @@ Elemenx.Service('Designer', {
 			{ID: 'element', Group: '', Icon: 'code', Tag: 'div', Container: true, Gap: true, Props: {Tag: 'div', Attributes: ''}, Fields: [{Name: 'Tag', Type: 'text'}, {Name: 'Attributes', Type: 'text'}]},
 			{ID: 'text', Group: '', Icon: 'text-color', Tag: '', Text: '', Props: {}, Fields: []}
 		];
+		/*
+		 * The kinds of classes another Library brings in its meta (Kinds, of its data/kinds.json) are data: their Inner is the
+		 * name of one of these. pairs: the items 'Name: value' as the dt and the dd of a dl.
+		 */
+		var inners = {
+			pairs: function (props) {
+				return list(props.Items).map(function (item) {
+					var parts = item.split(':');
+
+					return '<dt>' + text(parts[0].trim()) + '</dt><dd>' + text(parts.slice(1).join(':').trim()) + '</dd>';
+				});
+			}
+		};
 		var kinds = [];
 		var byID = {};
+		/* The phrases of the groups another Library brings (Groups of its meta): {group: key}. */
+		var groupKeys = {};
 
 		function clone (value) {
 			return JSON.parse(JSON.stringify(value));
@@ -672,14 +701,32 @@ Elemenx.Service('Designer', {
 		/* The kinds of classes and the Components of a meta; a class takes the modifiers no field of its kind names. */
 		function prepare (meta) {
 			var classes = meta && meta.Classes || {};
+
+			groupKeys = meta && meta.Groups || {};
+
 			var bases = [];
 
-			kinds = builtin.map(function (kind) {
+			var brought = (meta && meta.Kinds || []).filter(function (kind) {
+				return !!kind && !!kind.ID && !builtin.some(function (own) {
+					return own.ID === kind.ID;
+				});
+			});
+
+			kinds = builtin.concat(brought).map(function (kind) {
 				var copy = {};
 
 				Object.keys(kind).forEach(function (key) {
 					copy[key] = typeof kind[key] === 'function' ? kind[key] : clone(kind[key]);
 				});
+
+				if (typeof copy.Inner === 'string')
+					copy.Inner = inners[copy.Inner];
+
+				if (!copy.Inner)
+					delete copy.Inner;
+
+				copy.Props = copy.Props || {};
+				copy.Fields = copy.Fields || [];
 
 				return copy;
 			});
@@ -1678,7 +1725,7 @@ Elemenx.Service('Designer', {
 
 		/* The metas of the Libraries as one: their Components, Services and Directives one after another, their classes together. */
 		function metas (callback) {
-			var whole = {Components: [], Services: [], Directives: [], Classes: {}};
+			var whole = {Components: [], Services: [], Directives: [], Classes: {}, Kinds: [], Groups: {}};
 			var parts = [];
 			var left = bases.length;
 			var failed = null;
@@ -1712,12 +1759,16 @@ Elemenx.Service('Designer', {
 					}
 
 					parts.forEach(function (meta) {
-						['Components', 'Services', 'Directives'].forEach(function (key) {
+						['Components', 'Services', 'Directives', 'Kinds'].forEach(function (key) {
 							whole[key] = whole[key].concat(meta[key] || []);
 						});
 
 						Object.keys(meta.Classes || {}).forEach(function (name) {
 							whole.Classes[name] = meta.Classes[name];
+						});
+
+						Object.keys(meta.Groups || {}).forEach(function (name) {
+							whole.Groups[name] = meta.Groups[name];
 						});
 					});
 
@@ -1824,6 +1875,8 @@ Elemenx.Service('Designer', {
 		/* The name of a kind in the language of the page: a Component by its own name. */
 		this.Label = function (id) {
 			var kind = byID[id];
+			if (kind && kind.Label)
+				return Elemenx.Locale.Text(kind.Label);
 
 			return kind && kind.Component ? kind.ID : Elemenx.Locale.Text('ui.designer.kinds.' + id);
 		};
@@ -1834,11 +1887,15 @@ Elemenx.Service('Designer', {
 			if (!kind)
 				return '';
 
+			if (kind.Hint)
+				return Elemenx.Locale.Has(kind.Hint) ? Elemenx.Locale.Text(kind.Hint) : '';
+
 			return kind.Component ? kind.Description : Elemenx.Locale.Has('ui.designer.hints.' + id) ? Elemenx.Locale.Text('ui.designer.hints.' + id) : '';
 		};
 
+		/* The phrase of a group: its own, or the one its Library names (Groups of its meta). */
 		this.GroupLabel = function (group) {
-			return Elemenx.Locale.Text('ui.designer.groups.' + group);
+			return Elemenx.Locale.Text(groupKeys[group] || 'ui.designer.groups.' + group);
 		};
 
 		/* The named slots of the parent of a node, where it may go instead of the default slot. */

@@ -1385,7 +1385,9 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * with no Carves. Each carve:
 	 * - tunnel: Points [[x, z, y]...] (y: the height of its axis; none: Depth under the ground there), Radius (2.5), Flat
 	 *   (0 to 1: how much of its bottom is cut level to walk on, 0.5), Crust (metres of the ground over it never cut, so a
-	 *   shallow one keeps a roof; none: it opens where it reaches the surface);
+	 *   shallow one keeps a roof; none: it opens where it reaches the surface); of a Width, a box round its axis in place of a
+	 *   round bore: Width, Height (two radii), its floor and vault level, its corners round by Corner (1.5): the bore of a
+	 *   wide road;
 	 * - sphere: At [x, y, z], Radius: a hole dug;
 	 * - caves: natural caves of noise, ways and halls, under the ground round Center [x, z] within Radius: Top and Bottom
 	 *   (metres under the ground where they are, 3 and 40; Top 0 lets them open to the sky), Scale (the size of their
@@ -1424,10 +1426,17 @@ Elemenx.Service('SceneTerrainGenerator', {
 				one.Radius = number(carve.Radius, 2.5);
 				one.Flat = Math.max(0, Math.min(1, number(carve.Flat, 0.5)));
 				one.Crust = carve.Crust === undefined || carve.Crust === null || carve.Crust === '' ? -1 : number(carve.Crust, -1);
+				/* Of a Width: a box round its axis (Height, its corners round by Corner), not a round bore. */
+				one.Width = number(carve.Width, 0);
+				one.Height = number(carve.Height, one.Radius * 2);
+				one.Corner = Math.max(0.01, Math.min(number(carve.Corner, 1.5), one.Width / 2, one.Height / 2));
 				one.Bounds = points.reduce(function (box, point) {
 					return [Math.min(box[0], point[0]), Math.min(box[1], point[1]), Math.min(box[2], point[2]), Math.max(box[3], point[0]), Math.max(box[4], point[1]), Math.max(box[5], point[2])];
 				}, [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]);
-				one.Bounds = [one.Bounds[0] - one.Radius, one.Bounds[1] - one.Radius, one.Bounds[2] - one.Radius, one.Bounds[3] + one.Radius, one.Bounds[4] + one.Radius, one.Bounds[5] + one.Radius];
+
+				var reach = Math.max(one.Radius, one.Width > 0 ? Math.max(one.Width, one.Height) / 2 : 0);
+
+				one.Bounds = [one.Bounds[0] - reach, one.Bounds[1] - reach, one.Bounds[2] - reach, one.Bounds[3] + reach, one.Bounds[4] + reach, one.Bounds[5] + reach];
 			}
 			else if (carve.Type === 'sphere') {
 				one.At = (carve.At || [0, 0, 0]).map(Number);
@@ -1462,6 +1471,33 @@ Elemenx.Service('SceneTerrainGenerator', {
 			return one;
 		}).filter(Boolean);
 
+		/*
+		 * The distance of a point to a tunnel of a Width: across its axis (level, square to it) and up from it, to a box of its
+		 * Width and Height with round corners. Regression: a wide road was cut as round bores side by side, and the ground left
+		 * between them came into the box of its lining.
+		 */
+		function boxed (one, x, y, z) {
+			var best = Infinity;
+			var i;
+
+			for (i = 0; i + 1 < one.Points.length; i++) {
+				var a = one.Points[i];
+				var b = one.Points[i + 1];
+				var dx = b[0] - a[0];
+				var dy = b[1] - a[1];
+				var dz = b[2] - a[2];
+				var level = Math.sqrt(dx * dx + dz * dz) || 1;
+				var t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[2]) * dz) / (level * level)));
+				var across = Math.abs(((x - a[0] - dx * t) * -dz + (z - a[2] - dz * t) * dx) / level) - (one.Width / 2 - one.Corner);
+				var up = Math.abs(y - (a[1] + dy * t)) - (one.Height / 2 - one.Corner);
+				var d = Math.sqrt(Math.max(across, 0) * Math.max(across, 0) + Math.max(up, 0) * Math.max(up, 0)) + Math.min(Math.max(across, up), 0) - one.Corner;
+				if (d < best)
+					best = d;
+			}
+
+			return best;
+		}
+
 		/* The distance of a point to a tunnel, and the height of its axis at the nearest point of it. */
 		function tunnel (one, x, y, z) {
 			var best = Infinity;
@@ -1491,8 +1527,11 @@ Elemenx.Service('SceneTerrainGenerator', {
 				axis = one.Points[0][1];
 			}
 
+			/* Of a Width: a box of its Width and Height round its axis, its corners round by Corner (the bore of a wide road). */
+			if (one.Width > 0) best = boxed(one, x, y, z);
+
 			/* Its floor cut level: nothing of it under the axis by more than (1 - Flat) of its radius. */
-			best = Math.max(best - one.Radius, axis - one.Radius * (1 - one.Flat * 0.6) - y);
+			else best = Math.max(best - one.Radius, axis - one.Radius * (1 - one.Flat * 0.6) - y);
 
 			/* Crust: nothing cut within so many metres of the ground over it (a shallow tunnel keeps a roof of earth). */
 			return one.Crust >= 0 && best < 0 ? Math.max(best, y - (ground(x, z) - one.Crust)) : best;
@@ -1622,7 +1661,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 					 */
 					if (one.Type === 'tunnel')
 						return one.Points.some(function (point, index) {
-							return squareNear(x0, z0, x1, z1, point, one.Points[index + 1] || point) <= one.Radius + 0.5;
+							return squareNear(x0, z0, x1, z1, point, one.Points[index + 1] || point) <= (one.Width > 0 ? Math.hypot(one.Width, one.Height) / 2 : one.Radius) + 0.5;
 						});
 
 					return true;

@@ -7408,13 +7408,15 @@ for (const origin of origins) {
 
 			await expect(game.getByRole('button', {name: 'Health potion'}).locator('.elemenx-game-slot-count')).toHaveText('2');
 
-			/* A slot of the hotbar shows the card of what it holds too, beside it, under the pointer or the focus. */
+			/* A slot of the hotbar shows the card of what it holds too, beside it, under the pointer or the focus (*tip). */
+			var card = page.locator('#elemenx-tip .elemenx-game-inventory-card');
+
 			await game.getByRole('button', {name: 'Fireball'}).hover();
 
-			await expect(game.getByRole('button', {name: 'Fireball'}).locator('.elemenx-game-inventory-card')).toContainText('Fireball');
-			await expect(game.getByRole('button', {name: 'Fireball'}).locator('.elemenx-game-inventory-card')).toContainText('Damage24–30');
+			await expect(card).toContainText('Fireball');
+			await expect(card).toContainText('Damage24–30');
 			expect(await game.getByRole('button', {name: 'Fireball'}).evaluate(function (node) {
-				var card = node.querySelector('.elemenx-game-inventory-card').getBoundingClientRect();
+				var card = document.querySelector('#elemenx-tip .elemenx-game-inventory-card').getBoundingClientRect();
 				var slot = node.getBoundingClientRect();
 
 				return [card.width, card.left >= slot.right || card.right <= slot.left];
@@ -7427,39 +7429,47 @@ for (const origin of origins) {
 
 			await expect.poll(function () {
 				return game.getByRole('button', {name: 'Fireball'}).evaluate(function (node) {
-					var card = node.querySelector('.elemenx-game-inventory-card');
+					var tip = document.getElementById('elemenx-tip');
+					var box = node.getBoundingClientRect();
+					var own = tip && !tip.hidden ? tip.getBoundingClientRect() : null;
 
-					return card ? Math.round(card.getBoundingClientRect().top - Math.max(4, Math.min(node.getBoundingClientRect().top, window.innerHeight - 200))) + 0 : null;
+					/* Beside it, its middle at the middle of the slot (or kept on the screen). */
+					return own ? Math.abs(own.top + own.height / 2 - (box.top + box.height / 2)) < 2 || own.top <= 4 || own.bottom >= window.innerHeight - 4 : null;
 				}).catch(function () {
 					/* Not drawn yet: read again. */
 					return null;
 				});
-			}).toBe(0);
+			}).toBe(true);
 
 			await page.mouse.move(0, 0);
 
-			await expect(game.locator('.elemenx-game-slot .elemenx-game-inventory-card')).toHaveCount(0);
+			await expect(card).toHaveCount(0);
+
+			/* A focus from the keyboard shows it at once. */
+			await page.keyboard.press('Shift');
 
 			await game.getByRole('button', {name: 'Health potion'}).focus();
 
-			await expect(game.getByRole('button', {name: 'Health potion'}).locator('.elemenx-game-inventory-card')).toContainText('Common · Potion');
+			await expect(card).toContainText('Common · Potion');
 
 			await game.getByRole('button', {name: 'Health potion'}).blur();
 
 			/* The inventory: the card of an item, Space to pick it up and put it down, dragging, Delete. */
 			await bag.getByRole('option', {name: 'Moonblade'}).click();
 
-			await expect(bag.locator('.elemenx-game-inventory-card')).toContainText('Moonblade');
-			await expect(bag.locator('.elemenx-game-inventory-card')).toContainText('Legendary · Sword');
-			await expect(bag.locator('.elemenx-game-inventory-card')).toContainText('Damage42–58');
+			/* The pointer on it shows its card, and the press that chose it leaves it (Stay). */
+			await expect(card).toContainText('Moonblade');
+			await expect(card).toContainText('Legendary · Sword');
+			await expect(card).toContainText('Damage42–58');
 
-			/* The card is fixed to the viewport: the window that scrolls the bag does not cut it. */
-			expect(await bag.locator('.elemenx-game-inventory-card').evaluate(function (node) {
-				var card = node.getBoundingClientRect();
-				var body = node.closest('.elemenx-window-body').getBoundingClientRect();
+			/* The card is in the top layer, fixed to the viewport: the window that scrolls the bag does not cut it. */
+			expect(await bag.locator('.elemenx-window-body').evaluate(function (body) {
+				var tip = document.getElementById('elemenx-tip');
+				var own = tip.getBoundingClientRect();
+				var box = body.getBoundingClientRect();
 
-				return [getComputedStyle(node).position, card.right > body.right || card.left < body.left];
-			})).toEqual(['fixed', true]);
+				return [getComputedStyle(tip).position, tip.matches(':popover-open'), own.right > box.right || own.left < box.left];
+			})).toEqual(['fixed', true, true]);
 
 			await page.keyboard.press('Space');
 			await page.keyboard.press('ArrowRight');

@@ -10,8 +10,8 @@
  * under its text; buttons have a dark face and an edge light at the top and dark at the bottom; items are painted
  * tiles of their color lit from the middle, bevelled, with a large light icon outlined in black; gauges are one vessel
  * rounded at both ends in a ring of metal, with a clear fill, a faint lattice in it and a light at its end. Dark
- * only. Made for the game components and Window with Variant="game" (the --elemenx-game-* tokens; Level picks the
- * window); the colors of the other components are in themes/fantasy.css of ElemenxUI. Every rule starts with
+ * only. Made for the game components and Window with the class game (the --elemenx-game-* tokens; secondary or plain
+ * picks the window); the colors of the other components are in themes/fantasy.css of ElemenxUI. Every rule starts with
  * [data-theme][data-theme='fantasy']; a game changes any token on the same selector.
  */
 [data-theme][data-theme='fantasy'],

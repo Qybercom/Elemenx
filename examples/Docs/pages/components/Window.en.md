@@ -7,7 +7,7 @@ A window over the page or over its container: a header with its Title (and an Ov
 - Minimize folds it to its header (Minimizable; again unfolds it), Maximize fills its bounds (Maximizable; a double press on the header too), Close hides it (Closable; the close event, Open false).
 - X, Y, Width and Height place it (pixels); without X and Y it goes into a cascade of the new windows. Bounds: 'parent' (the positioned element it is in; the default) or 'viewport' (fixed to the window of the browser). Persist names a window whose place, size and state are remembered.
 - A press or the focus puts it over the other windows (the Windows Service) and makes it active (class active).
-- Variant: 'default', or 'game' for the look of the game theme (the --elemenx-game-* tokens). Level: 'primary' (the main windows), 'secondary' (the smaller ones) or 'plain' (a dialog, a message): a theme draws each its way.
+- Its look is its classes, given on the tag as on any element: <Window class="game secondary"> takes the game look of ElemenxGaming (game; secondary or plain: the kind of window its theme draws).
 - HeaderShape 'trapezoid' makes the window a folder: the Icon and the titles on a tab as wide as the title, its end sloping down to the body; the slot header and the buttons stand beyond the slope, and the header still moves it.
 - PopOut adds a button that moves the body into a window of its own over the other windows of the system (Document Picture-in-Picture: Chrome and Edge; the PictureInPicture Service), and back; Popped tells it is there.
 - Events: move ({X, Y}), resize ({Width, Height}), minimize, maximize, restore, close, front, popout, popin.
@@ -38,8 +38,6 @@ A window over the page or over its container: a header with its Title (and an Ov
 | `Minimized` | `false` |
 | `Maximized` | `false` |
 | `Persist` | `''` |
-| `Variant` | `'default'` |
-| `Level` | `'primary'` |
 | `PopOut` | `false` |
 | `Popped` | `false` |
 | `HeaderShape` | `'default'` |

@@ -81,10 +81,10 @@
 
 ## Тесты
 
-- [*infinite asks once near the end, again when the list grew, never while Busy or Done, and at once when too short](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L387) — `tests/regression/library-directives.test.js`
-- [*infinite up asks at the start, and keeps what the reader sees when rows come above](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L495) — `tests/regression/library-directives.test.js`
-- [InfiniteList shows a spinner while busy and a word at its end, and tells more; up its spinner takes no room](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L536) — `tests/regression/library-directives.test.js`
-- [VirtualList asks for more when its last rows are drawn, once for each length; Chat asks for its history at its start](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L580) — `tests/regression/library-directives.test.js`
+- [*infinite asks once near the end, again when the list grew, never while Busy or Done, and at once when too short](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L297) — `tests/regression/library-directives.test.js`
+- [*infinite up asks at the start, and keeps what the reader sees when rows come above](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L405) — `tests/regression/library-directives.test.js`
+- [InfiniteList shows a spinner while busy and a word at its end, and tells more; up its spinner takes no room](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L446) — `tests/regression/library-directives.test.js`
+- [VirtualList asks for more when its last rows are drawn, once for each length; Chat asks for its history at its start](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L490) — `tests/regression/library-directives.test.js`
 - [chat composer puts emoji at the caret and sends stickers; messages take reactions](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1000) — `tests/examples/ui-kit.spec.js`
 - [chat composer suggests emoji for a word and for :word, the stickers of a message of one emoji, and keeps to its setting](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1071) — `tests/examples/ui-kit.spec.js`
 - [chat messages: a tap opens the menu, a long press starts a choice of several, the bar counts and deletes them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1550) — `tests/examples/ui-kit.spec.js`

@@ -27,7 +27,7 @@ describe('Contract: more components of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['DateRangeInput', 'ColorInput', 'CurrencySelect', 'ButtonGroup', 'FileIcon', 'CallControls', 'Chronicle', 'RibbonGallery', 'GameItemCard', 'GameSlot', 'GameInventory', 'Button']);
+		Use(['DateRangeInput', 'ColorInput', 'CurrencySelect', 'ButtonGroup', 'FileIcon', 'CallControls', 'Chronicle', 'RibbonGallery', 'GameItemCard', 'GameSlot', 'GameInventory', 'Button', '*tip', 'service:GameItems']);
 	});
 
 	beforeEach(function () {
@@ -238,12 +238,13 @@ describe('Contract: more components of ElemenxUI', function () {
 		expect(host.$Element().querySelector('.elemenx-game-inventory-card')).toBe(null);
 	});
 
-	it('the card of a GameSlot and of a GameInventory follows its element when the page moves it without a scroll', async function () {
+	/* By *tip (GameItems.Tip): the card of the item beside what holds it, under the pointer, kept beside it when the page moves it. */
+	it('the card of a GameSlot and of a GameInventory shows by *tip and follows its element when the page moves it without a scroll', async function () {
 		var item = {Name: 'Old sword', Rarity: 'rare', Icon: 'star', Stats: [{Label: 'Damage', Value: 12}]};
-		/* Fixed to the viewport, as the stylesheet of the library places it (in the top layer: without the place of a popover). */
+		/* The tip fixed to the viewport in the top layer, as the stylesheet of the library places it. */
 		var style = document.createElement('style');
 
-		style.textContent = '.elemenx-game-inventory-card { position: fixed; } :where(.elemenx-layer[popover]) { inset: auto; margin: 0; }';
+		style.textContent = '.elemenx-tip { position: fixed; } .elemenx-tip[popover] { inset: auto; margin: 0; } .elemenx-tip[hidden] { display: none; }';
 
 		document.head.appendChild(style);
 
@@ -251,6 +252,11 @@ describe('Contract: more components of ElemenxUI', function () {
 			Item: item,
 			Items: [item]
 		});
+		var middle = function (node) {
+			var box = node.getBoundingClientRect();
+
+			return box.top + box.height / 2;
+		};
 		var above;
 		var targets;
 
@@ -262,27 +268,26 @@ describe('Contract: more components of ElemenxUI', function () {
 		for (var target of targets) {
 			above.style.height = '10px';
 
-			target.dispatchEvent(new MouseEvent('mouseenter'));
+			target.dispatchEvent(new PointerEvent('pointerenter', {pointerType: 'mouse'}));
 
-			var card = await waitFor(function () {
-				return host.$Element().querySelector('.elemenx-game-inventory-card');
+			var tip = await waitFor(function () {
+				var node = document.getElementById('elemenx-tip');
+
+				return node && !node.hidden && node.querySelector('.elemenx-game-inventory-card') ? node : null;
 			});
 
-			expect(await waitFor(function () {
-				return Math.round(card.getBoundingClientRect().top) === Math.round(Math.max(4, target.getBoundingClientRect().top));
-			})).toBe(true);
+			expect(tip.textContent).toContain('Old sword');
+			expect(tip.textContent).toContain('Damage');
 
 			above.style.height = '140px';
 
 			expect(await waitFor(function () {
-				return Math.round(card.getBoundingClientRect().top) === Math.round(target.getBoundingClientRect().top);
+				return Math.abs(middle(tip) - middle(target)) < 2;
 			})).toBe(true);
 
-			target.dispatchEvent(new MouseEvent('mouseleave'));
+			target.dispatchEvent(new PointerEvent('pointerleave', {pointerType: 'mouse'}));
 
-			await waitFor(function () {
-				return !host.$Element().querySelector('.elemenx-game-inventory-card');
-			});
+			expect(tip.hidden).toBe(true);
 		}
 
 		style.remove();

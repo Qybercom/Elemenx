@@ -152,6 +152,11 @@ describe('Contract: the Services of ElemenxUI', function () {
 		expect(items.Move({ID: 'sword', Count: 1}, null)).toEqual({To: {ID: 'sword', Count: 1}, From: null});
 		expect(items.Take({ID: 'potion', Count: 2})).toEqual({ID: 'potion', Count: 1});
 		expect(items.Take({ID: 'potion', Count: 1})).toBe(null);
+
+		/* What *tip takes for the card of an item: none for an item with only its name. */
+		expect(items.Tip({Name: 'Sword', Rarity: 'rare'})).toEqual({Component: 'GameItemCard', Props: {Item: {Name: 'Sword', Rarity: 'rare'}}, Placement: 'right', Delay: 0, Touch: true, Stay: true, Disabled: false});
+		expect(items.Tip({Name: 'Stone'}).Disabled).toBe(true);
+		expect(items.Tip(null).Disabled).toBe(true);
 	});
 
 	it('Dialogs: a confirmation and an alert in the list, closed with the action pressed or with none', function () {

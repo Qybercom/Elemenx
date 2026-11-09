@@ -132,7 +132,12 @@ describe('Contract: the screens of a Scene, pictures of a camera, a canvas, an i
 		scene.Add('screen', {ID: 'panel', X: 0, Y: 0, Lift: 1.5, Width: 1.6, Height: 0.9, Element: '#screen-panel'});
 		scene.SetViewpoint({Target: [0, 1.5, 0], Yaw: 0, Pitch: 0, Distance: 2.4});
 
+		/*
+		 * Regression: under load the view had not come to its distance yet (it eases there frame by frame): the panel was
+		 * partly out of the canvas and the point a quarter across it not on it. The view is put at its distance at once.
+		 */
 		scene.Scene().Wanted = 2.4;
+		scene.Scene().Distance = 2.4;
 
 		await waitFor(function () {
 			frame(scene, 1);

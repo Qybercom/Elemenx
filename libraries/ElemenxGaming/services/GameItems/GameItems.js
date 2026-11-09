@@ -6,13 +6,15 @@
  *   held), and what goes back to the place the item came from. Piles join (up to Stack, the rest stays where it came
  *   from); other items swap. To and From are new objects (or null): the old ones are not changed.
  * - Take(item, count) returns the item with count less (null when none is left), for an item that is used up.
- * - Place(element) is where the card of an item (GameItemCard) shows beside an element: a style that fixes it to the
- *   viewport, on the side with room. Carded(item) tells whether an item has more to show than its name.
+ * - Tip(item) is what *tip takes to show the card of an item (GameItemCard) beside an element, under the pointer, the
+ *   focus or a finger: *tip="ItemTip(item)", a method of the component returning this.$Service('GameItems').Tip(item);
+ *   none for an item with nothing more than its name.
+ *   Carded(item) tells whether an item has more to show than its name.
  */
 Elemenx.Service('GameItems', {
 	$Meta: {
 		Description: 'The rules of moving the items of a game: what lies where after an item is moved onto a place.',
-		Methods: ['Stacks(a, b)', 'Move(item, current)', 'Take(item, count)', 'Place(element)', 'Carded(item)']
+		Methods: ['Stacks(a, b)', 'Move(item, current)', 'Take(item, count)', 'Tip(item)', 'Carded(item)']
 	},
 	Count: function (item) {
 		return item ? Math.max(1, Number(item.Count) || 1) : 0;
@@ -63,16 +65,8 @@ Elemenx.Service('GameItems', {
 		return item && left > 0 ? this.Copy(item, left) : null;
 	},
 
-	Place: function (element) {
-		var view = (element.ownerDocument || document).defaultView || window;
-		var rect = element.getBoundingClientRect();
-		var left = rect.right + 8;
-		var top = Math.max(4, Math.min(rect.top, view.innerHeight - 200));
-
-		if (left + 240 > view.innerWidth && rect.left - 248 >= 0)
-			left = rect.left - 248;
-
-		return 'left: ' + Math.round(left) + 'px; top: ' + Math.round(top) + 'px;';
+	Tip: function (item) {
+		return {Component: 'GameItemCard', Props: {Item: item || null}, Placement: 'right', Delay: 0, Touch: true, Stay: true, Disabled: !this.Carded(item)};
 	},
 
 	Carded: function (item) {

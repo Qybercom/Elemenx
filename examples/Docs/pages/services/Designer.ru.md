@@ -143,12 +143,12 @@
 - [answers its description and its files, read only, and nothing outside the project or in node_modules](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-cli.test.js#L86) — `tests/regression/designer-cli.test.js`
 - [gives the page of the Designer the description as a script, before the application starts](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-cli.test.js#L116) — `tests/regression/designer-cli.test.js`
 - [takes into its palette the Components of every Library it is told of, from the meta of each of them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L24) — `tests/regression/designer-project.test.js`
-- [takes a project kept before as the first of the projects, its routes from its pages](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L53) — `tests/regression/designer-project.test.js`
-- [makes a project of a mode that stays its own: an application of a page on /, a component, a template](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L68) — `tests/regression/designer-project.test.js`
-- [opens documents in tabs, each with its tree, and closes them, never the last one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L96) — `tests/regression/designer-project.test.js`
-- [writes the template of another document of the project, the one being edited as it is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L123) — `tests/regression/designer-project.test.js`
-- [adds a component with a slot: the slot is a kind of a component only, its name what the component makes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L144) — `tests/regression/designer-project.test.js`
-- [declares the props of a component, which become the fields of its kind on the pages](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L168) — `tests/regression/designer-project.test.js`
-- [shows a component of the project on the canvas as a Component made of its document](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L197) — `tests/regression/designer-project.test.js`
+- [takes the kinds of classes and the groups another Library brings in its meta, their phrases and their Inner](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L54) — `tests/regression/designer-project.test.js`
+- [takes a project kept before as the first of the projects, its routes from its pages](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L87) — `tests/regression/designer-project.test.js`
+- [makes a project of a mode that stays its own: an application of a page on /, a component, a template](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L102) — `tests/regression/designer-project.test.js`
+- [opens documents in tabs, each with its tree, and closes them, never the last one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L130) — `tests/regression/designer-project.test.js`
+- [writes the template of another document of the project, the one being edited as it is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L157) — `tests/regression/designer-project.test.js`
+- [adds a component with a slot: the slot is a kind of a component only, its name what the component makes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L178) — `tests/regression/designer-project.test.js`
+- [declares the props of a component, which become the fields of its kind on the pages](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L202) — `tests/regression/designer-project.test.js`
 
-+11 ещё в тех же файлах
++12 ещё в тех же файлах

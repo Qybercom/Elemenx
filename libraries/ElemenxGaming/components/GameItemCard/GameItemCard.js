@@ -1,9 +1,9 @@
 /*
  * The card of an item of a game: its Name in the color of its Rarity, its Rarity and Type, its Stats [{Label, Value}]
- * and its Description, on the panel of the theme. Item is the item; Place is where it shows: a style that fixes it to
- * the viewport (GameItems.Place(element) gives the one beside an element). GameInventory and GameSlot show it for the
- * item under the pointer or the focus; any place of the items of a game may show it the same way. Its markup is
- * phrasing content, so it fits inside a button.
+ * and its Description, on the panel of the theme. Item is the item; Place a style of its own place (fixed: it floats
+ * over the page in the top layer). GameInventory, GameSlot and GameQuests show it by *tip for the item under the
+ * pointer, the focus or a finger (GameItems.Tip); any place of the items of a game may show it the same way. Its
+ * markup is phrasing content, so it fits inside a button.
  */
 Elemenx.Component('GameItemCard', {
 	$TemplateURL: 'GameItemCard.html',
@@ -13,7 +13,7 @@ Elemenx.Component('GameItemCard', {
 		Description: 'The card of an item of a game: its Name in the color of its Rarity, its Rarity and Type, its Stats [{Label, Value}] and its Description, on the panel of the theme.',
 		Props: {
 			Item: 'The item: {Name, Rarity, Type, Stats, Description}.',
-			Place: 'The style that places the card (fixed beside an element: GameItems.Place).'
+			Place: 'A style that places the card: fixed, it floats over the page; none, it is in the flow.'
 		},
 		Sample: {Item: {Name: 'Sword of dawn', Rarity: 'rare', Type: 'Weapon', Stats: [{Label: 'Attack', Value: 42}], Description: 'Forged at first light.'}, Place: 'position: static;'}
 	},
@@ -21,7 +21,7 @@ Elemenx.Component('GameItemCard', {
 	Place: '',
 
 	$OnCreate: function () {
-		/* A card placed beside an element (GameItems.Place) floats over the page in the top layer; one placed in the flow (position: static) stays there. */
+		/* A card placed fixed floats over the page in the top layer; one placed in the flow (position: static) stays there. */
 		this.Floating = function (place) {
 			return !!place && !/position\s*:\s*(static|relative)/.test(place);
 		};

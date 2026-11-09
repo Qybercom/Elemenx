@@ -1963,31 +1963,6 @@
 					"Description": "A key that remembers its place, its size and its state between visits."
 				},
 				{
-					"Name": "Variant",
-					"Type": "select",
-					"Default": "default",
-					"Options": [
-						"default",
-						"game"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "default, or game: the look of the game theme."
-				},
-				{
-					"Name": "Level",
-					"Type": "select",
-					"Default": "primary",
-					"Options": [
-						"primary",
-						"secondary",
-						"plain"
-					],
-					"Schema": null,
-					"Body": false,
-					"Description": "How a game theme draws it: primary (the main windows), secondary (the smaller ones) or plain (a dialog)."
-				},
-				{
 					"Name": "PopOut",
 					"Type": "bool",
 					"Default": false,
@@ -23249,6 +23224,102 @@
 			"Sample": {
 				"Editable": true
 			}
+		},
+		{
+			"Name": "VirtualGamepad",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "gamepad",
+			"Description": "A gamepad on the screen for the fingers: a stick, buttons and triggers; a pad of the Gamepad Service as a real one.",
+			"Props": [
+				{
+					"Name": "Buttons",
+					"Type": "json",
+					"Default": [
+						"a",
+						"b",
+						"x",
+						"y"
+					],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The buttons it shows: a, b, x, y, lb, rb, lt, rt, start, select (a list, or a text with commas)."
+				},
+				{
+					"Name": "Right",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A second stick, at the right, to look round."
+				},
+				{
+					"Name": "Show",
+					"Type": "select",
+					"Default": "auto",
+					"Options": [
+						"auto",
+						"always",
+						"never"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "auto: where the screen is touched; always; never."
+				},
+				{
+					"Name": "Tilt",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The left stick across follows the lean of the device as a wheel."
+				},
+				{
+					"Name": "Navigate",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its buttons also move the focus and press the controls of the page, as a real pad does."
+				},
+				{
+					"Name": "Size",
+					"Type": "number",
+					"Default": 120,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The size of a stick, in pixels."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the pad for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"button"
+			],
+			"EventDescriptions": {
+				"button": "A button went down or up: {Button, Down}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Show": "always",
+				"Buttons": "a,b,x,y"
+			}
 		}
 	],
 	"Services": [
@@ -23588,28 +23659,6 @@
 				"Frequency(note)",
 				"Instrument(options)",
 				"Transport(options)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "GameItems",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The rules of moving the items of a game: what lies where after an item is moved onto a place.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Stacks(a, b)",
-				"Move(item, current)",
-				"Take(item, count)",
-				"Place(element)",
-				"Carded(item)"
 			],
 			"Sample": {}
 		},
@@ -24428,22 +24477,6 @@
 			"Sample": {}
 		},
 		{
-			"Name": "itemcard",
-			"Kind": "Directive",
-			"Group": "",
-			"Icon": "",
-			"Description": "*itemcard=\"item\" shows the card of an item of a game on any element: under the pointer or the focus, beside the element (GameItems.Place), as GameInventory and GameSlot show it.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {}
-		},
-		{
 			"Name": "layer",
 			"Kind": "Directive",
 			"Group": "",
@@ -24480,7 +24513,7 @@
 			"Kind": "Directive",
 			"Group": "",
 			"Icon": "",
-			"Description": "*tip shows a tip of the theme over an element, as the ScreenTips of Microsoft Office: a bold Title with Text under it, or any content.",
+			"Description": "*tip shows a tip of the theme over an element, as the ScreenTips of Microsoft Office: a bold Title with Text under it, or any content, a Component among them.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -24749,16 +24782,6 @@
 		],
 		"elemenx-color-swatch": [],
 		"elemenx-phone-country": [],
-		"elemenx-resizable": [
-			"resizing"
-		],
-		"elemenx-resize-handle": [
-			"bottom",
-			"corner",
-			"left",
-			"right",
-			"top"
-		],
 		"elemenx-table": [
 			"bordered",
 			"compact",
@@ -24780,22 +24803,15 @@
 		],
 		"elemenx-skeleton-line": [],
 		"elemenx-tip": [
+			"bare",
 			"rich"
 		],
 		"elemenx-tip-title": [],
 		"elemenx-tip-text": [],
-		"elemenx-draggable": [
-			"dragging",
-			"held",
-			"hold"
-		],
-		"elemenx-drag-ghost": [],
-		"elemenx-droppable": [
-			"drop-over",
-			"drop-target"
-		],
-		"elemenx-drop-marker": [],
 		"elemenx-layout-area": [],
+		"elemenx-resize-handle": [
+			"right"
+		],
 		"elemenx-card-link": [],
 		"elemenx-card-media": [],
 		"elemenx-card-content": [],
@@ -26561,6 +26577,14 @@
 			"drop-target",
 			"side"
 		],
+		"elemenx-droppable": [
+			"drop-over",
+			"drop-target"
+		],
+		"elemenx-drag-ghost": [],
+		"elemenx-draggable": [
+			"dragging"
+		],
 		"elemenx-tile-new": [],
 		"elemenx-mosaic": [
 			"selectable",
@@ -27130,6 +27154,30 @@
 		"elemenx-cal-now": [],
 		"elemenx-cal-item": [],
 		"elemenx-cal-spacer": [],
-		"elemenx-cal-label": []
+		"elemenx-cal-label": [],
+		"elemenx-virtual-pad": [
+			"with-right"
+		],
+		"elemenx-scene-hud": [],
+		"elemenx-virtual-pad-stick": [
+			"left",
+			"right"
+		],
+		"elemenx-virtual-pad-button": [
+			"down",
+			"face-a",
+			"face-b",
+			"face-x",
+			"face-y",
+			"shoulder",
+			"small"
+		],
+		"elemenx-virtual-pad-knob": [],
+		"elemenx-virtual-pad-face": [],
+		"elemenx-virtual-pad-shoulders": [
+			"left",
+			"right"
+		],
+		"elemenx-virtual-pad-middle": []
 	}
 }

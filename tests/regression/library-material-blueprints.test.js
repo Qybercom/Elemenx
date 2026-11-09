@@ -646,5 +646,7 @@ describe('Contract: materials of models as material graphs of Blueprints, drawn 
 			delete models.Recipes['test-written'];
 			delete models.Recipes['test-file'];
 		}
-	});
+
+	/* Regression: the wait for the model (30 s) was longer than the test was let run (15 s): under load it was cut off. */
+	}, 45000);
 });

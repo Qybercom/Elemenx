@@ -22,7 +22,8 @@
  * Paused holds it; Scale compressed (the default: large bodies, short distances) or real (crafts as long as their Length
  * in metres, of them or of their Vehicle). The scene starts behind a veil (Veiled, 0 to 1), its time still, until all the
  * view needs is made (the globes of its planets painted, the squares of its ground near the eye, what grows round it); a
- * location a ship comes into is made the same way, darker only if it keeps waiting.
+ * location a ship comes into is made the same way, darker only if it keeps waiting: there, its ground, what grows on it
+ * and the programs it needs, made by the card behind the page (no globe is drawn on a ground).
  *
  * The view: a drag turns it round the object in focus, the wheel or two fingers zoom, a click selects an object (or
  * its label; a part of an object near enough), a double click flies to it (from its day side), Escape goes back, the
@@ -368,7 +369,7 @@ Elemenx.Component('Scene', {
 			'trigger': {Traits: {Trigger: {Shape: '', Points: null, Radius: 4, Width: 4, Height: 0, Team: '', Kinds: null, Once: false, Enabled: true, Achievement: null, Blueprint: null, Parameters: null}}},
 			'zone': {Traits: {Zone: {Points: null, Radius: 0, Tags: null, Team: ''}}},
 			'road': {Traits: {Road: {Type: 'road', Points: null, Closed: false, Width: 0, Height: 0, Bridges: null, Tunnels: null, Structures: false, Clear: 5, Cover: 8, Barriers: null, Along: null, Marks: null, Straight: false, Segments: null, Radii: null}, Model: {Shape: 'road', Size: 1, Color: '#ffffff'}}},
-			'junction': {Traits: {Junction: {Radius: 0, Surface: 'asphalt'}}},
+			'junction': {Traits: {Junction: {Radius: 0, Surface: 'asphalt', Form: ''}}},
 			'pipe': {Traits: {Pipe: {Points: null, Radius: 0.3, Wall: null, Laid: 'above', Lift: 1.5, Depth: 1, Bend: null, Ends: null, Flanges: null, Spacing: null, Color: null, Inside: null, Metal: 0.6, Fluid: null, Leaks: null}, Model: {Shape: 'pipe', Size: 1, Color: '#ffffff'}}},
 			'barrier': {Traits: {Barrier: {Road: '', Side: 'both', Type: 'guardrail', Height: 0, Gap: 0.3, From: 0, To: null, Points: null, Closed: false, Smooth: false, Color: '', Step: 0}, Model: {Shape: 'road', Size: 1, Color: '#ffffff'}}},
 			'forest': {Traits: {Scatter: {Shapes: ['pine', 'pine', 'oak', 'birch', 'bush', 'stump'], Density: 3, Cover: 0.55, Patch: 70, MaxSlope: 0.3}}},
@@ -712,7 +713,7 @@ Elemenx.Component('Scene', {
 
 		/* The objects declared inside the scene: the SceneObject of the template, their nesting their meaning. */
 		function declarations () {
-			var nodes = element.querySelectorAll('.elemenx-scene-sources .elemenx-game-source[data-type="object"]');
+			var nodes = element.querySelectorAll('.elemenx-scene-sources .elemenx-scene-source[data-type="object"]');
 			var specs = [];
 			var byNode = [];
 			var before = JSON.stringify(scene.Declared);
@@ -720,7 +721,7 @@ Elemenx.Component('Scene', {
 			Array.prototype.forEach.call(nodes, function (node, index) {
 				var raw;
 				var spec;
-				var holder = node.parentElement ? node.parentElement.closest('.elemenx-game-source[data-type="object"]') : null;
+				var holder = node.parentElement ? node.parentElement.closest('.elemenx-scene-source[data-type="object"]') : null;
 				var owner;
 
 				try {
@@ -6043,7 +6044,11 @@ Elemenx.Component('Scene', {
 				 * Finer where the eye would see its grid: how far it is from the ground, in pixels of the screen (more than 1.5:
 				 * its four parts), down to squares a 256th of the ground; and always near the eye, as near as half its size.
 				 */
-				if (level < 8 && (near < size * 0.35 && level < 6 || near < size * 4 && (node.Error || 0) / Math.max(near, 1) * focal > 1.5)) {
+				/*
+				 * And what touches the volume of the ground (a tunnel, a cave) near the eye, till its grid is of a metre: only that
+				 * fine is it made of the volume (SceneTerrainGenerator, Chunk), its roof and floor whole.
+				 */
+				if (level < 8 && (near < size * 0.35 && level < 6 || near < size * 4 && (node.Error || 0) / Math.max(near, 1) * focal > 1.5 || size / 32 > 1 && near < size * 6 && field.Volume && field.Volume.Touches(x - half, z - half, x + half, z + half))) {
 					absent = parts.filter(function (part) {
 						return !ground.Nodes[keyOf(part[0], part[1], level + 1)];
 					});
@@ -7541,12 +7546,19 @@ Elemenx.Component('Scene', {
 				land.uLandSurface = tiles.Surface;
 			}
 
-			nodes.forEach(function (node) {
-				land.uOffset = vectors.Subtract(node.Center, scene.Eye);
-				land.uCenter = node.Center;
+			/*
+			 * Regression: the program of the land of a location (its materials) is made when the location comes, and drawn at
+			 * once: the page waited seconds for the card to make it, frozen, as the ship touched down. Till the card has it, the
+			 * land is not drawn (the veil waits for it, see waiting).
+			 */
+			if (renderer.Ready(program)) {
+				nodes.forEach(function (node) {
+					land.uOffset = vectors.Subtract(node.Center, scene.Eye);
+					land.uCenter = node.Center;
 
-				renderer.Draw(node.Mesh, program, land, {Cull: 'back'});
-			});
+					renderer.Draw(node.Mesh, program, land, {Cull: 'back'});
+				});
+			}
 
 			/* The wire of the ground: the edges of its squares over them. */
 			if (wired() && !mirror) {
@@ -9349,7 +9361,8 @@ Elemenx.Component('Scene', {
 			var grown;
 
 			scene.Order.forEach(function (object) {
-				if (!object.World || object.Away || !trait(object, 'Body') || !planetOf(object)) return;
+				/* On the ground of a location no globe is drawn: none is waited for (see waiting). */
+				if (ground || !object.World || object.Away || !trait(object, 'Body') || !planetOf(object)) return;
 
 				if (scene.Rivers[object.ID]) {
 					flowing.Total += 25;
@@ -9430,6 +9443,14 @@ Elemenx.Component('Scene', {
 		function waiting () {
 			var left = 0;
 
+			/*
+			 * Regression: on the ground of a location the globes are drawn no more, neither the near one of its body nor the
+			 * paint of the others (a moon): what they still missed was never made, and the veil over the location never went.
+			 * There, the view waits for its ground and what grows on it alone.
+			 */
+			if (scene.Ground)
+				return (scene.Ground.Missing === undefined ? 1 : scene.Ground.Missing) + (engine.ScatterPending ? engine.ScatterPending(240) : 0) + (renderer ? renderer.Progress().Needed : 0);
+
 			scene.Order.forEach(function (object) {
 				var made;
 
@@ -9445,11 +9466,6 @@ Elemenx.Component('Scene', {
 			Object.keys(scene.Globes).forEach(function (id) {
 				left += scene.Globes[id].Missing || 0;
 			});
-
-			if (scene.Ground) {
-				left += scene.Ground.Missing === undefined ? 1 : scene.Ground.Missing;
-				left += engine.ScatterPending ? engine.ScatterPending(240) : 0;
-			}
 
 			return left;
 		}

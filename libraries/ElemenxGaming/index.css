@@ -1,8 +1,9 @@
 /*
  * The game look of ElemenxGaming: the --elemenx-game-* tokens with their defaults (they follow the tokens of ElemenxUI,
  * so a theme of colors themes the game too), the classes the game components share (elemenx-game-panel, -section,
- * -stats, -inventory-card...) and Window with Variant="game". The themes of a game look are in themes/: fantasy and scifi
- * set these tokens, themes/template.css lists them all. ElemenxUI loads first, so its tokens are there.
+ * -stats, -inventory-card...) and Window with the class game (<Window class="game">; secondary or plain for its
+ * kind). The themes of a game look are in themes/: fantasy and scifi set these tokens, themes/template.css lists them
+ * all. ElemenxUI loads first, so its tokens are there.
  */
 
 :root {

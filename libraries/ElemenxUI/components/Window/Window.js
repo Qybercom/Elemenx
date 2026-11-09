@@ -9,8 +9,8 @@
  *   'parent' (the positioned element it is in; the default) or 'viewport' (fixed to the window of the browser).
  *   Persist names a window whose place, size and state are remembered.
  * - A press or the focus puts it over the other windows (the Windows Service) and makes it active (class active).
- * - Variant: 'default', or 'game' for the look of the game theme (the --elemenx-game-* tokens). Level: 'primary'
- *   (the main windows), 'secondary' (the smaller ones) or 'plain' (a dialog, a message): a theme draws each its way.
+ * - Its look is its classes, given on the tag as on any element: <Window class="game secondary"> takes the game look of
+ *   ElemenxGaming (game; secondary or plain: the kind of window its theme draws).
  * - HeaderShape 'trapezoid' makes the window a folder: the Icon and the titles on a tab as wide as the title, its end
  *   sloping down to the body; the slot header and the buttons stand beyond the slope, and the header still moves it.
  * - PopOut adds a button that moves the body into a window of its own over the other windows of the system
@@ -59,8 +59,6 @@ Elemenx.Component('Window', {
 			Minimized: 'Folded to its header.',
 			Maximized: 'Filling its bounds.',
 			Persist: 'A key that remembers its place, its size and its state between visits.',
-			Variant: {Options: ['default', 'game'], Description: 'default, or game: the look of the game theme.'},
-			Level: {Options: ['primary', 'secondary', 'plain'], Description: 'How a game theme draws it: primary (the main windows), secondary (the smaller ones) or plain (a dialog).'},
 			PopOut: 'Adds the button that moves the body into a window of its own (Picture-in-Picture).',
 			Popped: 'The body is in its own window.',
 			HeaderShape: {Options: ['default', 'trapezoid'], Description: 'default, or trapezoid: a folder, the title on a tab.'},
@@ -90,8 +88,6 @@ Elemenx.Component('Window', {
 	Minimized: false,
 	Maximized: false,
 	Persist: '',
-	Variant: 'default',
-	Level: 'primary',
 	TabWidth: 0,
 	PopOut: false,
 	Popped: false,

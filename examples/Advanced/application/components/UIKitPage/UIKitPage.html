@@ -2194,16 +2194,16 @@
 				<div class="ui-kit-game-hud">
 					<GameHud Label="Example game">
 						<div class="ui-kit-game-scene">
-							<Window *if="GameAchievementsOpen" Variant="game" Title="Achievements" X="80" Y="70" Width="600" Height="380" (close)="GameAchievementsOpen = false">
+							<Window *if="GameAchievementsOpen" class="game" Title="Achievements" X="80" Y="70" Width="600" Height="380" (close)="GameAchievementsOpen = false">
 								<AchievementList Label="Achievements of the game" />
 							</Window>
-							<Window *if="GameQuestsOpen" Variant="game" Title="Quests" X="60" Y="60" Width="560" Height="400" (close)="GameQuestsClosed">
+							<Window *if="GameQuestsOpen" class="game" Title="Quests" X="60" Y="60" Width="560" Height="400" (close)="GameQuestsClosed">
 								<GameQuests [items]="GameQuestList" [value]="GameQuest" Label="Quest log" (change)="GameQuestChosen" (track)="GameQuestTracked" />
 							</Window>
-							<Window *if="GameRankingOpen" Variant="game" Level="secondary" Title="Ranking" Overline="Season 3" X="240" Y="80" Width="380" Maximizable="false" (close)="GameRankingClosed">
+							<Window *if="GameRankingOpen" class="game secondary" Title="Ranking" Overline="Season 3" X="240" Y="80" Width="380" Maximizable="false" (close)="GameRankingClosed">
 								<GameLeaderboard [items]="GameRanking" Limit="5" ScoreLabel="Glory" Selectable="true" (select)="GameRankChosen" />
 							</Window>
-							<Window *if="GameStatusOpen" Variant="game" Title="Status" X="16" Y="176" Width="300" MinWidth="260" Maximizable="false" (close)="GameStatusClosed">
+							<Window *if="GameStatusOpen" class="game" Title="Status" X="16" Y="176" Width="300" MinWidth="260" Maximizable="false" (close)="GameStatusClosed">
 								<div class="ui-kit-game-window">
 									<div class="ui-kit-row"><strong>Aria</strong><span class="elemenx-game-special">Level 7 · Warden</span></div>
 									<GameBar Kind="health" [value]="GameHealth" Max="100" Label="HP" />
@@ -2227,10 +2227,10 @@
 								</div>
 								<Button slot="footer" Label="Get buffs" Size="small" (click)="GameBuffs" />
 							</Window>
-							<Window *if="GameBagOpen" Variant="game" Level="secondary" HeaderShape="trapezoid" Title="Bag" X="620" Y="96" Width="280" Resizable="false" Maximizable="false" (close)="GameBagClosed">
+							<Window *if="GameBagOpen" class="game secondary" HeaderShape="trapezoid" Title="Bag" X="620" Y="96" Width="280" Resizable="false" Maximizable="false" (close)="GameBagClosed">
 								<GameInventory Columns="4" Slots="16" Label="Bag" Name="bag" [items]="GameItems" (move)="GameItemMoved" (receive)="GameBagReceived" (use)="GameItemUsed" (discard)="GameItemDiscarded" />
 							</Window>
-							<Window *if="GameLoginOpen" Variant="game" Level="plain" Title="Sign in" X="300" Y="230" Width="320" Resizable="false" Minimizable="false" Maximizable="false" (close)="GameLoginClosed">
+							<Window *if="GameLoginOpen" class="game plain" Title="Sign in" X="300" Y="230" Width="320" Resizable="false" Minimizable="false" Maximizable="false" (close)="GameLoginClosed">
 								<div class="ui-kit-game-login">
 									<label class="ui-kit-game-label" for="ui-kit-game-id">ID</label>
 									<input id="ui-kit-game-id" class="elemenx-input elemenx-input-control ui-kit-game-field" type="text" autocomplete="username" />
@@ -2242,7 +2242,7 @@
 									<Button Label="Exit" (click)="GameLoginClosed" />
 								</div>
 							</Window>
-							<Window *if="GameRecordOpen" Variant="game" Overline="Free Planets Fleets" Title="Bureau of Fleet Personnel" X="200" Y="40" Width="520" Height="320" (close)="GameRecordClosed">
+							<Window *if="GameRecordOpen" class="game" Overline="Free Planets Fleets" Title="Bureau of Fleet Personnel" X="200" Y="40" Width="520" Height="320" (close)="GameRecordClosed">
 								<div class="ui-kit-game-record">
 									<GameTabs [items]="GameRecordTabs" [value]="GameRecordTab" Label="Record" (change)="GameRecordChosen" />
 									<img class="ui-kit-game-portrait" src="data/cards/city.svg" alt="" />
@@ -2259,7 +2259,7 @@
 									</div>
 								</div>
 							</Window>
-							<Window *if="GameSystemsOpen" Variant="game" Overline="v.2.32" Title="Systems" X="330" Y="16" Width="480" Height="520" (close)="GameSystemsClosed">
+							<Window *if="GameSystemsOpen" class="game" Overline="v.2.32" Title="Systems" X="330" Y="16" Width="480" Height="520" (close)="GameSystemsClosed">
 								<div class="ui-kit-game-systems">
 									<Tabs [tabs]="GameSystemTabs" [value]="GameSystemTab" (change)="GameSystemChosen" />
 									<div class="ui-kit-game-power" *if="GameSystemTab === 'power'">

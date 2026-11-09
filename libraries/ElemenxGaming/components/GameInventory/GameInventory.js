@@ -48,8 +48,6 @@ Elemenx.Component('GameInventory', {
 	Name: '',
 	Selected: 0,
 	Held: -1,
-	Card: -1,
-	CardStyle: '',
 
 	$OnCreate: function () {
 		var self = this;
@@ -109,10 +107,6 @@ Elemenx.Component('GameInventory', {
 		};
 	},
 
-	$OnDestroy: function () {
-		this.HideCard();
-	},
-
 	Count: function () {
 		return Math.max(Number(this.Slots) || 0, (this.Items || []).length);
 	},
@@ -136,61 +130,6 @@ Elemenx.Component('GameInventory', {
 		this.$Emit('select', {Index: this.Selected, Item: this.ItemAt(this.Selected)});
 	},
 
-	/*
-	 * Shows the card of the item of a cell next to it, on the side with room. The card is fixed to the viewport, so a
-	 * window or a panel that scrolls its content does not cut it; it follows the cell when the page scrolls or moves it.
-	 */
-	ShowCard: function (index) {
-		var self = this;
-		var own = this.Own();
-		var cell = this.Cell(index);
-
-		if (!this.ItemAt(index) || !cell) {
-			this.HideCard();
-
-			return;
-		}
-
-		own.Cell = cell;
-
-		if (!own.Scroll) {
-			own.Scroll = function () {
-				if (own.Cell && own.Cell.isConnected)
-					self.CardStyle = self.$Service('GameItems').Place(own.Cell);
-			};
-
-			own.View = (this.$Element().ownerDocument || document).defaultView || window;
-
-			own.View.addEventListener('scroll', own.Scroll, true);
-
-			/* The page moves the cell without a scroll too (a part above it renders later): the card looks at each frame. */
-			own.Follow = function () {
-				own.Scroll();
-
-				own.Frame = own.View.requestAnimationFrame(own.Follow);
-			};
-
-			own.Frame = own.View.requestAnimationFrame(own.Follow);
-		}
-
-		this.CardStyle = this.$Service('GameItems').Place(cell);
-		this.Card = index;
-	},
-
-	HideCard: function () {
-		var own = this.Own();
-
-		if (own.Scroll) {
-			(own.View || window).removeEventListener('scroll', own.Scroll, true);
-			(own.View || window).cancelAnimationFrame(own.Frame);
-
-			own.Scroll = null;
-		}
-
-		own.Cell = null;
-		this.Card = -1;
-	},
-
 	Index: function (node) {
 		return Number(node.getAttribute('data-index'));
 	},
@@ -207,29 +146,11 @@ Elemenx.Component('GameInventory', {
 
 	Focused: function (event, node) {
 		this.Selected = this.Index(node);
-
-		this.ShowCard(this.Selected);
 	},
 
-	Blurred: function () {
-		var self = this;
-
-		window.setTimeout(function () {
-			var root = self.$Element();
-			if (root && !root.contains(root.getRootNode().activeElement))
-				self.HideCard();
-		}, 0);
-	},
-
-	Hovered: function (event, node) {
-		this.ShowCard(this.Index(node));
-	},
-
-	Left: function () {
-		var root = this.$Element();
-
-		if (root && root.contains(root.getRootNode().activeElement)) this.ShowCard(this.Selected);
-		else this.HideCard();
+	/* The card of the item of a cell, beside it under the pointer, the focus or a finger (*tip). */
+	ItemTip: function (item) {
+		return this.$Service('GameItems').Tip(item);
 	},
 
 	/* The two cells swapped: the move event, with the new list for the owner. */
@@ -311,10 +232,6 @@ Elemenx.Component('GameInventory', {
 
 			this.$Emit('discard', {Index: index, Item: this.ItemAt(index)});
 		}
-	},
-
-	DragBegan: function () {
-		this.HideCard();
 	},
 
 	/* An item dropped on a cell: from this inventory it swaps the cells, from another one it is received. */

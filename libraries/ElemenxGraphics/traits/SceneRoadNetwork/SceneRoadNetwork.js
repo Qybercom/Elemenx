@@ -7,7 +7,8 @@
  * smoothly between them. A bridge stands on piers over the ground as it is, a tunnel goes under it between its portals,
  * through a hole cut in the ground (Carves of tunnel: RoadsCarves of the engine, SceneRoads.Carves), lit by lamps along its vault.
  * Roads that cross or end on one another meet at a junction, found by itself, or an object of kind junction (the trait
- * Junction: Radius, Surface) at its X and Y; the roads come to its level and their paint stops at it. An object of kind
+ * Junction: Radius, Surface, Form: ring for a roundabout, else found by its arms) at its X and Y; the roads come to its level
+ * and their paint stops at it. An object of kind
  * barrier (the trait Barrier: Type (guardrail, wall, jersey, tyres, fence), Height, Color, Step) stands along the road its Road names (Side, Gap, From, To) or on
  * Points of its own (Closed), apart from any road.
  * SurfaceAt(x, z) tells what is under a point, a road, a junction or the ground: {Road (its ID, empty on the ground),
@@ -140,7 +141,7 @@ Elemenx.Trait('SceneRoadNetwork', {
 
 				return made;
 			}).concat(streets || []), junctions().map(function (object) {
-				return {ID: object.ID, X: Number(object.Values.X) || 0, Z: Number(object.Values.Y) || 0, Radius: object.Traits.Junction.Radius, Surface: object.Traits.Junction.Surface};
+				return {ID: object.ID, X: Number(object.Values.X) || 0, Z: Number(object.Values.Y) || 0, Radius: object.Traits.Junction.Radius, Surface: object.Traits.Junction.Surface, Kind: object.Traits.Junction.Form};
 			}), {Height: ground});
 			var hash = random.Hash(key);
 

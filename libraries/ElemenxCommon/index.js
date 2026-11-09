@@ -1,4 +1,5 @@
 [
+	'index.css',
 	'locales/en.json',
 	'locales/ru.json',
 	'services/Math/Math.js',
@@ -30,6 +31,5 @@
 	'directives/Droppable/Droppable.js',
 	'directives/Resizable/Resizable.js',
 	'directives/Infinite/Infinite.js',
-	'directives/Mount/Mount.js',
-	'components/VirtualGamepad/VirtualGamepad.js'
+	'directives/Mount/Mount.js'
 ];

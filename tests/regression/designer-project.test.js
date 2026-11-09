@@ -30,7 +30,7 @@ describe('Contract: the Designer Service edits projects of pages, components, ro
 		Elemenx.Library(one, {$Root: '/library-meta-one'});
 		Elemenx.Library(two, {$Root: '/library-meta-two'});
 
-		new Function(designerSource.replace("Elemenx.Service('Designer'", "Elemenx.Service('" + name + "'").replace("Library: ['ElemenxCommon', 'ElemenxUI', 'ElemenxGraphics', 'ElemenxGaming'],", "Library: ['" + one + "', '" + two + "'], StorageKey: 'elemenx-designer:" + name + "',"))();
+		new Function(designerSource.replace("Elemenx.Service('Designer'", "Elemenx.Service('" + name + "'").replace('Library: null,', "Library: ['" + one + "', '" + two + "'], StorageKey: 'elemenx-designer:" + name + "',"))();
 
 		other = Elemenx.Service(name);
 
@@ -48,6 +48,40 @@ describe('Contract: the Designer Service edits projects of pages, components, ro
 		}).map(function (kind) {
 			return kind.ID;
 		})).toEqual(['MetaOne', 'MetaTwo']);
+	});
+
+	/* The Designer named the kinds of classes of ElemenxGaming in its own code: they come from the meta of that Library now. */
+	it('takes the kinds of classes and the groups another Library brings in its meta, their phrases and their Inner', function () {
+		var name = unique('DesignerKinds');
+		var other;
+		var node;
+
+		new Function(designerSource.replace("Elemenx.Service('Designer'", "Elemenx.Service('" + name + "'").replace('Library: null,', "Library: [], StorageKey: 'elemenx-designer:" + name + "', ProjectKey: 'elemenx-designer:" + name + ":project', ProjectsKey: 'elemenx-designer:" + name + ":projects',"))();
+
+		other = Elemenx.Service(name);
+
+		other.Use({Components: [], Classes: {'elemenx-game-stats': ['double']}, Groups: {game: 'gaming.ui.designer.groups.game'}, Kinds: [
+			{ID: 'stats', Group: 'game', Icon: 'list', Tag: 'dl', Base: 'elemenx-game-stats', Inner: 'pairs', Label: 'gaming.ui.designer.kinds.stats', Props: {Items: 'Attack: 1017, Defense: 1162', Double: false}, Fields: [{Name: 'Items', Type: 'list'}, {Name: 'Double', Type: 'bool', Class: 'double'}]},
+			{ID: 'paragraph', Group: 'game', Tag: 'b'}
+		]});
+
+		expect(other.Kinds().filter(function (group) {
+			return group.ID === 'game';
+		}).map(function (group) {
+			return group.Kinds.map(function (kind) {
+				return kind.ID;
+			});
+		})).toEqual([['stats']]);
+		expect(other.Kind('paragraph').Group).toBe('text');
+		expect(other.GroupLabel('game')).toBe(Elemenx.Locale.Text('gaming.ui.designer.groups.game'));
+		expect(other.Label('stats')).toBe(Elemenx.Locale.Text('gaming.ui.designer.kinds.stats'));
+
+		other.Clear();
+
+		node = other.Insert('stats', 'root');
+
+		expect(node).toBeTruthy();
+		expect(other.Template()).toContain('<dl class="elemenx-game-stats">\n\t<dt>Attack</dt><dd>1017</dd>\n\t<dt>Defense</dt><dd>1162</dd>\n</dl>');
 	});
 
 	it('takes a project kept before as the first of the projects, its routes from its pages', function () {

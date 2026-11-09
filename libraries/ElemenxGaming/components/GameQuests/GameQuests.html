@@ -30,7 +30,7 @@
 		<section class="elemenx-game-section" *if="(Current(Items, Value).Rewards || []).length">
 			<h4 class="elemenx-game-section-title">{{$T('gaming.ui.rewards')}}</h4>
 			<ul class="elemenx-game-rewards">
-				<li class="elemenx-game-reward" *for="reward of Current(Items, Value).Rewards" *key="$index" [class]="[reward.Rarity || '']" [attribute.title]="RewardItem(reward) ? null : reward.Label" [attribute.tabindex]="RewardItem(reward) ? 0 : null" *itemcard="RewardItem(reward)">
+				<li class="elemenx-game-reward" *for="reward of Current(Items, Value).Rewards" *key="$index" [class]="[reward.Rarity || '']" [attribute.title]="RewardItem(reward) ? null : reward.Label" [attribute.tabindex]="RewardItem(reward) ? 0 : null" *tip="ItemTip(RewardItem(reward))">
 					<span class="elemenx-game-reward-icon" [style.--elemenx-game-reward-color]="reward.Color || null">
 						<img *if="reward.Image" [src]="reward.Image" alt="" />
 						<Icon *if="!reward.Image && reward.Icon" [name]="reward.Icon" />

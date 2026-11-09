@@ -1,0 +1,165 @@
+/*
+ * The look of what the directives of ElemenxCommon put on elements: *draggable (the element held, its ghost under the
+ * pointer), *droppable (a target, where a drop lands) and *resizable (its handles). Every token of ElemenxUI it reads
+ * has its default as a fallback, so it looks right in a page with no ElemenxUI; with it, it takes the theme.
+ */
+:where(.elemenx-resizable) {
+	position: relative;
+}
+
+.elemenx-resizable.resizing {
+	user-select: none;
+}
+
+.elemenx-resize-handle {
+	position: absolute;
+	z-index: 2;
+	outline: none;
+	touch-action: none;
+}
+
+.elemenx-resize-handle::after {
+	content: '';
+	position: absolute;
+	background: transparent;
+	transition: background var(--elemenx-duration, 120ms) var(--elemenx-easing, ease);
+}
+
+.elemenx-resize-handle.right,
+.elemenx-resize-handle.left {
+	top: 0;
+	bottom: 0;
+	width: 8px;
+	cursor: col-resize;
+}
+
+.elemenx-resize-handle.right {
+	inset-inline-end: -4px;
+}
+
+.elemenx-resize-handle.left {
+	inset-inline-start: -4px;
+}
+
+.elemenx-resize-handle.right::after,
+.elemenx-resize-handle.left::after {
+	top: 0;
+	bottom: 0;
+	inset-inline-start: 3px;
+	width: 2px;
+}
+
+.elemenx-resize-handle.top,
+.elemenx-resize-handle.bottom {
+	inset-inline-end: 0;
+	inset-inline-start: 0;
+	height: 8px;
+	cursor: row-resize;
+}
+
+.elemenx-resize-handle.top {
+	top: -4px;
+}
+
+.elemenx-resize-handle.bottom {
+	bottom: -4px;
+}
+
+.elemenx-resize-handle.top::after,
+.elemenx-resize-handle.bottom::after {
+	top: 3px;
+	inset-inline-end: 0;
+	inset-inline-start: 0;
+	height: 2px;
+}
+
+.elemenx-resize-handle:hover::after,
+.elemenx-resize-handle:focus-visible::after,
+.elemenx-resizable.resizing > .elemenx-resize-handle::after {
+	background: var(--elemenx-accent, #4b443d);
+}
+
+.elemenx-resize-handle.corner {
+	inset-inline-end: 0;
+	bottom: 0;
+	width: 12px;
+	height: 12px;
+	cursor: nwse-resize;
+}
+
+.elemenx-resize-handle.corner::after {
+	inset-inline-end: 2px;
+	bottom: 2px;
+	width: 6px;
+	height: 6px;
+	border-inline-end: 2px solid var(--elemenx-border-strong, #c2bdb6);
+	border-bottom: 2px solid var(--elemenx-border-strong, #c2bdb6);
+}
+
+.elemenx-resize-handle.corner:hover::after,
+.elemenx-resize-handle.corner:focus-visible::after {
+	background: transparent;
+	border-color: var(--elemenx-accent, #4b443d);
+}
+
+.elemenx-draggable {
+	touch-action: none;
+}
+
+/* With Hold a finger scrolls the page; held still, it takes the element, which shows it. */
+.elemenx-draggable.hold {
+	touch-action: manipulation;
+}
+
+.elemenx-draggable.held {
+	transform: scale(1.04);
+	transition: transform var(--elemenx-duration, 120ms) var(--elemenx-easing, ease);
+}
+
+.elemenx-draggable.dragging {
+	opacity: 0.4;
+}
+
+.elemenx-drag-ghost {
+	position: fixed;
+	top: 0;
+	inset-inline-start: 0;
+	z-index: 1300;
+	margin: 0;
+	opacity: 0.92;
+	box-shadow: var(--elemenx-shadow, 0 8px 24px rgba(35, 33, 30, 0.12));
+	pointer-events: none;
+	will-change: transform;
+	contain: layout style paint;
+}
+
+.elemenx-draggable:not(.disabled) {
+	cursor: grab;
+}
+
+.elemenx-droppable {
+	transition: background var(--elemenx-duration, 120ms) var(--elemenx-easing, ease),
+		outline-color var(--elemenx-duration, 120ms) var(--elemenx-easing, ease);
+}
+
+.elemenx-droppable.drop-target {
+	outline: 1px dashed var(--elemenx-border-strong, #c2bdb6);
+	outline-offset: 2px;
+}
+
+.elemenx-drop-marker {
+	position: fixed;
+	top: 0;
+	inset-inline-start: 0;
+	z-index: 1300;
+	background: var(--elemenx-accent, #4b443d);
+	border-radius: 1px;
+	pointer-events: none;
+	will-change: transform;
+}
+
+.elemenx-droppable.drop-over {
+	background: rgba(var(--elemenx-accent-rgb, 75, 68, 61), 0.06);
+	outline: 2px solid var(--elemenx-accent, #4b443d);
+	outline-offset: 2px;
+}

@@ -579,6 +579,8 @@ Elemenx.Service('Renderer', {
 		var textures = [];
 		var modes;
 		var gpuQuad = null;
+		/* The blank textures of the samplers a draw gives none, by the type of the sampler (see blank). */
+		var blanks = {};
 		var patient = !!settings.Patient;
 		var parallel = null;
 		var current = {};
@@ -944,6 +946,49 @@ Elemenx.Service('Renderer', {
 			info.Unit = unit;
 
 			gl.uniform1i(location, unit);
+		}
+
+		/*
+		 * The blank texture of a type of sampler: one texel of nothing (a depth of 1 that compares as lit, for a shadow), made
+		 * once. A sampler given no texture reads it: left on the unit it had, it could meet a texture of another type there,
+		 * and the browser drops a draw with two types of texture on one unit.
+		 */
+		function blank (type) {
+			var handle;
+			var pixel = new Uint8Array(4);
+			var face;
+
+			if (blanks[type])
+				return blanks[type];
+
+			handle = gl.createTexture();
+
+			if (type === gl.SAMPLER_3D || type === gl.SAMPLER_2D_ARRAY) {
+				gl.bindTexture(type === gl.SAMPLER_3D ? gl.TEXTURE_3D : gl.TEXTURE_2D_ARRAY, handle);
+				gl.texImage3D(type === gl.SAMPLER_3D ? gl.TEXTURE_3D : gl.TEXTURE_2D_ARRAY, 0, gl.RGBA8, 1, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+			}
+			else if (type === gl.SAMPLER_CUBE) {
+				gl.bindTexture(gl.TEXTURE_CUBE_MAP, handle);
+
+				for (face = 0; face < 6; face++)
+					gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+			}
+			else if (type === gl.SAMPLER_2D_SHADOW) {
+				gl.bindTexture(gl.TEXTURE_2D, handle);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT16, 1, 1, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, new Uint16Array([65535]));
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+			}
+			else {
+				gl.bindTexture(gl.TEXTURE_2D, handle);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+			}
+
+			gl.texParameteri(type === gl.SAMPLER_3D ? gl.TEXTURE_3D : type === gl.SAMPLER_2D_ARRAY ? gl.TEXTURE_2D_ARRAY : type === gl.SAMPLER_CUBE ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+			gl.texParameteri(type === gl.SAMPLER_3D ? gl.TEXTURE_3D : type === gl.SAMPLER_2D_ARRAY ? gl.TEXTURE_2D_ARRAY : type === gl.SAMPLER_CUBE ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+			blanks[type] = {Handle: handle};
+
+			return blanks[type];
 		}
 
 		/* The value of a uniform set by its type, as the program found it. */
@@ -1666,8 +1711,8 @@ Elemenx.Service('Renderer', {
 				for (i = 0; i < list.length; i++) {
 					value = uniforms[list[i].Name];
 
-					if (value !== undefined && value !== null)
-						uniform(list[i], value, units);
+					if (value !== undefined && value !== null) uniform(list[i], value, units);
+					else if (list[i].Sampler) uniform(list[i], blank(list[i].Type), units);
 				}
 
 				if (current.Depth !== (draw.Depth !== false)) {
@@ -1779,6 +1824,7 @@ Elemenx.Service('Renderer', {
 			meshes = [];
 			textures = [];
 			gpuQuad = null;
+			blanks = {};
 			current = {};
 			bound.Unit = 0;
 			bound.Units = [];

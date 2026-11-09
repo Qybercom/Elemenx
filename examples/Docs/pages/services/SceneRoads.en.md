@@ -5,8 +5,11 @@ SceneRoads: the roads of a scene, of any kind, and what they are made of: motorw
 
 - Surfaces: what a strip is made of, by name (asphalt, concrete, cobbles, paving, gravel, dirt, sand, grass, ballast, runoff, rumble, cycle, steel, wood): {Color, Rough, Metal, Grip (1 holds as dry asphalt does), Drag (0: none), Material (its pattern: a material of SceneMaterials, none: plain)}. Surface(name, surface) adds one or replaces it, Surface(name) gives it.
 - Types: Define(name, type) adds one or replaces it, Type(name) gives it, Types() lists the names. A type is {Title, Group (road, street, path, race, air, rail), Strips: [{Kind (lane, shoulder, verge, kerb, sidewalk, median, parking, cycle, runoff, rumble, bed, ditch...), Width (m), Surface, Height (over the level of the road; a kerb, a sidewalk, the bed of a railway), Way (of a lane: 1 the way of the line, -1 back, 0 both), Left and Right (the marking of its edge: solid, dashed, double, dotted or none), Marking (its color)}], Rails ([{Offset (from the middle), Gauge (m)}]: rails on sleepers), Sleepers ({Step, Length, Surface}), Speed (km/h), Catenary (wires over it: a railway or a tram)}. Types of any Library come declared in $Provides ({SceneRoads: {Types: [...]}}).
-- Line(points, options): a road's line made smooth and even: points [[x, z] or [x, z, y]] through which it goes (Closed: a ring), sampled every Step metres (2): [{X, Y, Z, Way [x, z], Along (metres from its start), Bend}]; Height(x, z), when given, is the height of a point with none of its own.
-- Road(spec): a road made of {ID, Type, Points, Closed, Width (in place of the width of the type: its strips scaled), Height} with its Line, its Width and its strips at their offsets ({Left, Right} from the middle).
+- Line(points, options): a road's line made smooth and even: points [[x, z] or [x, z, y]] through which it goes (Closed: a ring), sampled every Step metres (2): [{X, Y, Z, Way [x, z], Along (metres from its start), Bend}]; Height(x, z), when given, is the height of a point with none of its own; with Follow too (and no knot of a height of its own) the line keeps to the ground between its knots, smoothed over 40 m and no steeper than Grade.
+- Grade(type): how steep a road of a type may climb (rise over run): its Grade, else by its kind and speed (a railway 2.5%, a runway 1.5%, a race track 6%, a road 5% from 110 km/h, 7% from 80, 9% under, a street 10%, a path 15%).
+- Meeting(a, b): what two roads of two types do where they cross: junction (streets and roads, at one level), crossing (a railway and a road: a level crossing), interchange (two motorways, 110 km/h or more), over (one over the other).
+- Network(specs, junctions, options): roads that meet and their junctions ({ID, X, Y, Z, Radius, Surface, Roads, Arms [{Road, Angle, Half}], Kind (T, Y, X, star, ring, railway)}), the roads at the level of each.
+- Road(spec): a road made of {ID, Type, Points, Closed, Width (in place of the width of the type: its strips scaled), Height, Follow (false: not along the ground), Grade} with its Line, its Width and its strips at their offsets ({Left, Right} from the middle).
 - Near(road, x, z, hint): {Offset (from the middle, left below 0, across the way), Far (how far the point is from the line: past an end, more than its Offset), Along (the index of the point nearest), At (the metres from its start), Way, Y (of the road there)}; hint, the Along of a moment ago, looks only round it.
 - Under(roads, x, z, hints): what is under a point, the road on top: {Road (its ID), Strip (its kind), Surface, Height, Grip, Drag, Offset, Along} or null off every road.
 - Sketch(roads): the lines a ground is made level under ({Type: road, Points, Width, Shoulder}).
@@ -22,7 +25,10 @@ The same functions run in Node: they read no page.
 - `Type(name)`
 - `Types()`
 - `Line(given, options)`
+- `Grade(type)`
 - `Road(spec, options)`
+- `Network(specs, given, options)`
+- `Meeting(a, b)`
 - `Near(road, x, z, hint)`
 - `Under(roads, x, z, hints)`
 - `Sketch(roads, junctions)`
@@ -45,4 +51,4 @@ The same functions run in Node: they read no page.
 - [has barriers only where asked, of their kinds, sides and stretches, and they stop what drives into them from either side](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scene-roads.test.js#L233) — `tests/regression/scene-roads.test.js`
 - [finds the junctions of a network where roads cross or end on one another, brings the roads to one level there and stops their paint](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scene-roads.test.js#L261) — `tests/regression/scene-roads.test.js`
 
-+13 more in the same files
++21 more in the same files

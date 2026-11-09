@@ -1,7 +1,7 @@
 <!-- generated -->
 # GameQuests
 
-The quests of a game. Items [{ID, Title, Group, Level, Status ('active', 'done' or 'failed'), Tracked, Text, Objectives [{Label, Value, Max}], Rewards [{Icon, Image, Label, Count, Rarity, Color, Type, Stats, Description, or Item: the item itself}]}]. A reward with more than a name shows its card under the pointer or the focus (*itemcard).
+The quests of a game. Items [{ID, Title, Group, Level, Status ('active', 'done' or 'failed'), Tracked, Text, Objectives [{Label, Value, Max}], Rewards [{Icon, Image, Label, Count, Rarity, Color, Type, Stats, Description, or Item: the item itself}]}]. A reward with more than a name shows its card under the pointer, the focus or a finger (*tip).
 
 - Variant 'log' (the default): the journal, the quests by Group on the left (the arrows, Home and End move), the open one on the right with its text, objectives and rewards, and a button that tracks it. Value is the ID of the open quest; change emits the ID of another, track {ID, Tracked}.
 - Variant 'tracker': the objectives of the tracked active quests, for the screen of the game; a press on a quest emits change with its ID.

@@ -691,10 +691,7 @@
 				},
 				{
 					"ID": "game",
-					"Title": {
-						"en": "Game",
-						"ru": "Игра"
-					}
+					"Title": {}
 				},
 				{
 					"ID": "tools",
@@ -2494,7 +2491,7 @@
 						"en": "VirtualGamepad"
 					},
 					"Group": "game",
-					"Library": "ElemenxCommon"
+					"Library": "ElemenxUI"
 				},
 				{
 					"ID": "VirtualList",
@@ -2775,7 +2772,7 @@
 					"Title": {
 						"en": "GameItems"
 					},
-					"Library": "ElemenxUI"
+					"Library": "ElemenxGaming"
 				},
 				{
 					"ID": "Gamepad",
@@ -3289,13 +3286,6 @@
 						"en": "*infinite"
 					},
 					"Library": "ElemenxCommon"
-				},
-				{
-					"ID": "itemCard",
-					"Title": {
-						"en": "*itemCard"
-					},
-					"Library": "ElemenxUI"
 				},
 				{
 					"ID": "layer",

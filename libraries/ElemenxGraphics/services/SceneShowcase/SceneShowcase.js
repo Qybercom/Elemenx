@@ -157,7 +157,8 @@ Elemenx.Service('SceneShowcase', {
 			]);
 
 			add({ID: 'runway', Kind: 'road', Name: 'Runway', Type: 'runway', Points: points([[-1000, 640], [-500, 640]])});
-			add({ID: 'taxiway', Kind: 'road', Type: 'taxiway', Points: points([[-900, 640], [-900, 580], [-650, 580], [-650, 640]])});
+			/* Its taxiway on the side away from the city (Regression: it ran through the streets, crossing them at no level). */
+			add({ID: 'taxiway', Kind: 'road', Type: 'taxiway', Points: points([[-900, 640], [-900, 700], [-650, 700], [-650, 640]])});
 		}
 
 		/* Villages of each kind, a fort with its wall, and a village of the kind village (SceneBiomes). */
@@ -278,7 +279,8 @@ Elemenx.Service('SceneShowcase', {
 			add({ID: 'railway', Kind: 'road', Name: 'Railway', Type: 'rail-double', Structures: true, Points: points([[-1400, -650], [-500, -600], [0, -500], [500, -650], [1400, -700]])});
 			add({ID: 'country', Kind: 'road', Name: 'Country road', Type: 'country', Points: points([[360, 250], [420, 600], [450, 760]])});
 			add({ID: 'track-to-woods', Kind: 'road', Type: 'gravel', Points: points([[-700, 0], [-950, -100], [-1100, -350]])});
-			add({ID: 'cross', Kind: 'junction', X: 360 * scale, Y: 250 * scale, Radius: 10});
+			/* Where the country road leaves the main street of the town: a roundabout. */
+			add({ID: 'cross', Kind: 'junction', X: 360 * scale, Y: 250 * scale, Radius: 14, Form: 'ring'});
 		}
 
 		/*

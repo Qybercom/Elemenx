@@ -9,7 +9,9 @@ var writeFile = require('./common.js').writeFile;
 /*
  * The meta of a library for its tools (a builder, a reference): what its Components, Services and Directives declare
  * of themselves in $Meta, normalized as Elemenx.Meta(name) does it, and the classes of its stylesheets with the
- * modifier classes each one takes. Build(library, output) writes it as JSON and returns it.
+ * modifier classes each one takes, and the kinds of classes it brings to a builder (Kinds, of its data/kinds.json: an
+ * element of its classes with its fields, as the Designer Service takes them). Build(library, output) writes it as JSON
+ * and returns it.
  */
 
 /* The type of a prop from its default value, as Elemenx.Meta tells it. */
@@ -273,6 +275,14 @@ function Build (library, output) {
 	Object.keys(result.Classes).forEach(function (name) {
 		result.Classes[name].sort();
 	});
+
+	/* The kinds of classes the Library brings to a builder and the phrases of their groups (data/kinds.json), as written. */
+	if (fs.existsSync(path.join(library, 'data', 'kinds.json'))) {
+		var brought = JSON.parse(fs.readFileSync(path.join(library, 'data', 'kinds.json'), 'utf8'));
+
+		result.Kinds = brought.Kinds || [];
+		result.Groups = brought.Groups || {};
+	}
 
 	if (output)
 		/* Regression: the IDE that indexed data/meta.json held it, and the write failed (UNKNOWN on Windows). */

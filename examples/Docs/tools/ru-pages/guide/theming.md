@@ -25,7 +25,7 @@
 | `Channels(color)` | каналы цвета (`'75, 68, 61'`) для токенов `-rgb` |
 | `OnChange(callback)`, `OffChange(callback)` | `{Policy, Theme, Name}` после каждого изменения, включая смену системной схемы при `system` |
 
-ElemenxUI приносит `contrast` (высокий контраст, светлая и тёмная), `darcula` (тёмная тема IDE JetBrains), `soft` (скруглённые углы, просторные элементы управления, фиолетовый акцент) и две темы для игр — `fantasy` и `scifi`.
+ElemenxUI приносит `contrast` (высокий контраст, светлая и тёмная), `darcula` (тёмная тема IDE JetBrains), `soft` (скруглённые углы, просторные элементы управления, фиолетовый акцент) и `fantasy` и `scifi`, игровой вид которых (окна, шкалы, предметы) приносит ElemenxGaming на том же атрибуте.
 
 ## Файл темы
 
@@ -45,8 +45,8 @@ ElemenxUI приносит `contrast` (высокий контраст, свет
 | Геометрия | `--elemenx-control-small` / `--elemenx-control` / `-large` / `-giant` (24, 32, 40, 56px; больше на сенсорном экране), `--elemenx-grid-min`, `--elemenx-radius-small` / `--elemenx-radius` / `-large` / `-huge` / `-giant` / `-pill` |
 | Движение | `--elemenx-duration`, `--elemenx-duration-slow`, `--elemenx-easing` |
 | Цвета схемы | `--elemenx-background`, `--elemenx-surface`, `--elemenx-surface-raised`, `--elemenx-surface-hover`, `--elemenx-text`, `--elemenx-text-muted`, `--elemenx-accent`, `--elemenx-accent-hover`, `--elemenx-accent-text`, `--elemenx-danger`, `--elemenx-success`, `--elemenx-warning`, `--elemenx-info`, `--elemenx-border`, `--elemenx-border-strong`, `--elemenx-shadow`, `--elemenx-focus` и их каналы `-rgb` |
-| Обе схемы | `--elemenx-shadow-small`, `--elemenx-shadow-subtle`, `--elemenx-backdrop`, `--elemenx-overlay`, полосы прокрутки, значки и аватары, кнопки геймпада |
-| Компоненты | `--elemenx-block-*`, `--elemenx-property-*`, `--elemenx-rating-color`, `--elemenx-tile-color`, `--elemenx-weather-*`, `--elemenx-syntax-*` (подсветка кода), `--elemenx-achievement-*` и токены `--elemenx-game-*` игровых компонентов |
+| Обе схемы | `--elemenx-shadow-small`, `--elemenx-shadow-subtle`, `--elemenx-backdrop`, `--elemenx-overlay`, полосы прокрутки, значки и аватары |
+| Компоненты | `--elemenx-block-*`, `--elemenx-property-*`, `--elemenx-rating-color`, `--elemenx-tile-color`, `--elemenx-weather-*`, `--elemenx-syntax-*` (подсветка кода), `--elemenx-achievement-*`; у ElemenxGraphics — токены сцен `--elemenx-scene-*`; у ElemenxGaming — токены `--elemenx-game-*` игровых компонентов и кнопки геймпада `--elemenx-gamepad-*` |
 
 У компонента есть собственные переменные, задаваемые его вариантами (`--elemenx-progress-color`, `--elemenx-drawer-size`...): тема меняет их на его классе.
 

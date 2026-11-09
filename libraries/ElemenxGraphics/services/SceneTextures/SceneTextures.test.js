@@ -95,6 +95,57 @@ describe('Contract: SceneTextures, textures of materials baked once into tiles w
 		renderer.Destroy();
 	}, 60000);
 
+	/*
+	 * Regression: only the last array of tiles was kept and the one before was dropped with its textures still on the card;
+	 * two grounds asking in turn (a planet near and a location under a hovering ship) made two arrays a frame, till the
+	 * card ran out of memory and lost the context.
+	 */
+	it('keeps the arrays of grounds asked in turn, and gives back the textures of one it lets go', function () {
+		var canvas = document.createElement('canvas');
+		var renderer = Elemenx.Service('Renderer').Create(canvas, {Antialias: false});
+		var gl = renderer.GL;
+		var deleted = [];
+		var remove = gl.deleteTexture;
+		var first;
+		var second;
+		var sets = [['lawn'], ['asphalt'], ['dirt'], ['paving'], ['cliff'], ['grassy-soil'], ['lawn', 'dirt']];
+
+		gl.deleteTexture = function (handle) {
+			deleted.push(handle);
+
+			return remove.apply(this, arguments);
+		};
+
+		try {
+			first = textures.Array(renderer, ['lawn'], {lawn: {Size: 64}});
+			second = textures.Array(renderer, ['asphalt'], {asphalt: {Size: 64}});
+
+			/* Asked again in turn: the very same arrays, nothing made again. */
+			expect(textures.Array(renderer, ['lawn'], {lawn: {Size: 64}})).toBe(first);
+			expect(textures.Array(renderer, ['asphalt'], {asphalt: {Size: 64}})).toBe(second);
+			expect(deleted).toEqual([]);
+
+			/* More sets than are kept: the oldest goes, its two textures given back. */
+			sets.slice(2).forEach(function (names) {
+				var params = {};
+
+				names.forEach(function (name) {
+					params[name] = {Size: 64};
+				});
+
+				textures.Array(renderer, names, params);
+			});
+
+			expect(deleted).toEqual([first.Color.Handle, first.Surface.Handle]);
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+		}
+		finally {
+			gl.deleteTexture = remove;
+
+			renderer.Destroy();
+		}
+	}, 60000);
+
 	it('shows a texture in TextureLab as a tile or a ground, a slider for each param, and tells change', async function () {
 		var told = [];
 		var component = Elemenx.Component(unique('LabHost'), {$Template: '<div style="width: 640px; height: 360px"><TextureLab #Lab Texture="grassy-soil" View="tile" (change)="Changed" /></div>', Changed: function (event) {

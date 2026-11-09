@@ -1,7 +1,7 @@
 /*
  * The quests of a game. Items [{ID, Title, Group, Level, Status ('active', 'done' or 'failed'), Tracked, Text,
  * Objectives [{Label, Value, Max}], Rewards [{Icon, Image, Label, Count, Rarity, Color, Type, Stats, Description, or
- * Item: the item itself}]}]. A reward with more than a name shows its card under the pointer or the focus (*itemcard).
+ * Item: the item itself}]}]. A reward with more than a name shows its card under the pointer, the focus or a finger (*tip).
  * - Variant 'log' (the default): the journal, the quests by Group on the left (the arrows, Home and End move), the open
  *   one on the right with its text, objectives and rewards, and a button that tracks it. Value is the ID of the open
  *   quest; change emits the ID of another, track {ID, Tracked}.
@@ -91,7 +91,11 @@ Elemenx.Component('GameQuests', {
 			return objective.Max == null ? '' : Math.min(Number(objective.Value) || 0, Number(objective.Max)) + ' / ' + objective.Max;
 		};
 
-		/* The item of a reward for its card (*itemcard): its Item, or the reward itself; null for a reward with only a name. */
+		/* The item of a reward for its card (*tip): its Item, or the reward itself; null for a reward with only a name. */
+		this.ItemTip = function (item) {
+			return self.$Service('GameItems').Tip(item);
+		};
+
 		this.RewardItem = function (reward) {
 			var item = reward && (reward.Item || {Name: reward.Name || reward.Label, Rarity: reward.Rarity, Type: reward.Type, Stats: reward.Stats, Description: reward.Description, Class: reward.Class});
 

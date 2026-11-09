@@ -6,14 +6,14 @@ The rules of moving the items of a game: what lies where after an item is moved 
 - Stacks(a, b) tells whether b piles onto a: the same ID, a Stack over 1, and room left on a.
 - Move(item, current) returns {To, From}: what the target place holds after item comes onto it (current is what it held), and what goes back to the place the item came from. Piles join (up to Stack, the rest stays where it came from); other items swap. To and From are new objects (or null): the old ones are not changed.
 - Take(item, count) returns the item with count less (null when none is left), for an item that is used up.
-- Place(element) is where the card of an item (GameItemCard) shows beside an element: a style that fixes it to the viewport, on the side with room. Carded(item) tells whether an item has more to show than its name.
+- Tip(item) is what *tip takes to show the card of an item (GameItemCard) beside an element, under the pointer, the focus or a finger: *tip="ItemTip(item)", a method of the component returning this.$Service('GameItems').Tip(item); none for an item with nothing more than its name. Carded(item) tells whether an item has more to show than its name.
 
 ## Methods
 
 - `Stacks(a, b)`
 - `Move(item, current)`
 - `Take(item, count)`
-- `Place(element)`
+- `Tip(item)`
 - `Carded(item)`
 
 ## Example

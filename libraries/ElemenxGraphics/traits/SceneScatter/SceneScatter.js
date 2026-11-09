@@ -1132,6 +1132,36 @@ Elemenx.Trait('SceneScatter', {
 		 * not, finer (a metre a texel, up to 2048): the roads and their shoulders, the rivers and their banks, the clearings,
 		 * the lakes and the masks of the sketch, made by a worker.
 		 */
+		/*
+		 * Where the tunnels of roads cut the ground away under the sky: the parts of them whose vault is over the ground (a hill
+		 * lower than it), lines kept bare as a road is. Regression: grass grew there at the height of the ground before the cut,
+		 * inside the lining of the tunnel.
+		 */
+		function tunnelled (field) {
+			var lines = [];
+
+			(engine.RoadsCarves ? engine.RoadsCarves() : []).forEach(function (carve) {
+				var reach = (carve.Width || carve.Radius * 2) / 2 + 1;
+				var top = (carve.Height || carve.Radius * 2) / 2 + 0.5;
+				var piece = [];
+
+				carve.Points.concat([null]).forEach(function (point) {
+					if (point && field.Height(point[0], point[1]) < point[2] + top) {
+						piece.push([point[0], point[1]]);
+
+						return;
+					}
+
+					if (piece.length > 1)
+						lines.push({Points: piece, Reach: reach});
+
+					piece = [];
+				});
+			});
+
+			return lines;
+		}
+
 		function fieldOf (rule) {
 			var ground = scene.Ground;
 			var field = ground.Field;
@@ -1145,8 +1175,11 @@ Elemenx.Trait('SceneScatter', {
 			var top = rule.MaxHeight === undefined || rule.MaxHeight === '' ? Math.min(field.Rock === undefined ? field.Top * 0.45 : field.Rock, field.Snow === undefined ? Infinity : field.Snow) : Number(rule.MaxHeight);
 			var steep = rule.MaxSlope === undefined ? 0.28 : Number(rule.MaxSlope);
 			var fine = Math.max(2, Math.min(2048, Math.ceil(field.Size) + 1));
+			var cut = tunnelled(field);
 			var row;
 			var x;
+
+			key += JSON.stringify(cut);
 
 			if (!grass || grass.Key !== key) {
 				if (grass && grass.Texture)
@@ -1158,10 +1191,10 @@ Elemenx.Trait('SceneScatter', {
 				grass = state.Grass = {Key: key, Data: new Float32Array(side * side * 4), Row: 0, Side: side, Texture: null, Free: null, Blades: 0, Near: bladesMesh(1300, 7), Far: bladesMesh(330, 7), Patches: null};
 
 				/* What is kept bare: nothing to make when nothing is. */
-				if (made.Lines.length || made.Areas.length) {
+				if (made.Lines.length || made.Areas.length || cut.length) {
 					grass.Freeing = true;
 
-					self.$Service('SceneTerrainGenerator').Work().Run('SceneTerrainGenerator', 'Free', [field.Size, fine, made.Lines, made.Areas], function (error, data) {
+					self.$Service('SceneTerrainGenerator').Work().Run('SceneTerrainGenerator', 'Free', [field.Size, fine, made.Lines.concat(cut), made.Areas], function (error, data) {
 						if (state.Grass !== grass) return;
 
 						grass.Freeing = false;

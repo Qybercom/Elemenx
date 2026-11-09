@@ -48,29 +48,8 @@
 	--elemenx-call-control-hover: rgba(255, 255, 255, 0.2);
 	--elemenx-call-chip: rgba(0, 0, 0, 0.5);
 	--elemenx-call-dim: rgba(255, 255, 255, 0.35);
-	--elemenx-scene-background: #03050a;
-	--elemenx-scene-orbit: rgba(140, 165, 215, 0.32);
-	--elemenx-scene-selection: #7fc4ff;
-	--elemenx-scene-wire: rgba(90, 216, 115, 0.7);
-	--elemenx-scene-outline: #ffb826;
-	--elemenx-scene-hover: #80d1ff;
-	--elemenx-scene-edges: #e040fb;
-	--elemenx-scene-collider: rgba(255, 140, 38, 0.9);
-	--elemenx-scene-title: #ffffff;
-	--elemenx-scene-title-shadow: 0 2px 12px rgba(0, 0, 0, 0.75);
-	--elemenx-scene-title-font: var(--elemenx-font);
-	--elemenx-scene-subtitle-background: rgba(0, 0, 0, 0.55);
-	--elemenx-scene-subtitle-speaker: #ffd36b;
 	--elemenx-topology-floor: var(--elemenx-surface);
 	--elemenx-topology-link: #3fd6b8;
-	--elemenx-scene-aim: rgba(255, 255, 255, 0.92);
-	--elemenx-scene-aim-shadow: rgba(0, 0, 0, 0.6);
-	--elemenx-scene-aim-kill: #ff4a3d;
-	--elemenx-scene-lock: #ffb826;
-	--elemenx-scene-lock-locked: #ff4a3d;
-	--elemenx-scene-label: #d9e2f0;
-	--elemenx-scene-shadow: rgba(0, 0, 0, 0.9);
-	--elemenx-scene-veil: #000000;
 	--elemenx-virtual-pad-fill: rgba(0, 0, 0, 0.25);
 	--elemenx-virtual-pad-edge: rgba(255, 255, 255, 0.38);
 	--elemenx-virtual-pad-knob: rgba(255, 255, 255, 0.72);
@@ -84,18 +63,6 @@
 	--elemenx-blueprint-texture: #4f8fd6;
 	--elemenx-blueprint-text: #c16ad8;
 	--elemenx-blueprint-any: #8a8f98;
-	--elemenx-scene-editor-x: #e5484d;
-	--elemenx-scene-editor-y: #46a758;
-	--elemenx-scene-editor-z: #3e7bfa;
-	--elemenx-scene-editor-plane: rgba(255, 214, 10, 0.55);
-	--elemenx-scene-editor-sketch: rgba(255, 255, 255, 0.85);
-	--elemenx-scene-editor-sketch-fill: rgba(255, 255, 255, 0.12);
-	--elemenx-planet-editor-space: #05070d;
-	--elemenx-planet-editor-stroke: #ffffff;
-	--elemenx-planet-editor-range: #ffcf6e;
-	--elemenx-planet-editor-river: #6ec8ff;
-	--elemenx-planet-editor-draft: #ffe14d;
-	--elemenx-planet-editor-arrow: rgba(255, 255, 255, 0.85);
 	--elemenx-blur-radius: 20px;
 	--elemenx-blur-saturate: 180%;
 	--elemenx-blur-tint: 0.72;
@@ -2078,105 +2045,6 @@ span.elemenx-rich-plugin {
 	padding-inline-start: 12px;
 }
 
-:where(.elemenx-resizable) {
-	position: relative;
-}
-
-.elemenx-resizable.resizing {
-	user-select: none;
-}
-
-.elemenx-resize-handle {
-	position: absolute;
-	z-index: 2;
-	outline: none;
-	touch-action: none;
-}
-
-.elemenx-resize-handle::after {
-	content: '';
-	position: absolute;
-	background: transparent;
-	transition: background var(--elemenx-duration) var(--elemenx-easing);
-}
-
-.elemenx-resize-handle.right,
-.elemenx-resize-handle.left {
-	top: 0;
-	bottom: 0;
-	width: 8px;
-	cursor: col-resize;
-}
-
-.elemenx-resize-handle.right {
-	inset-inline-end: -4px;
-}
-
-.elemenx-resize-handle.left {
-	inset-inline-start: -4px;
-}
-
-.elemenx-resize-handle.right::after,
-.elemenx-resize-handle.left::after {
-	top: 0;
-	bottom: 0;
-	inset-inline-start: 3px;
-	width: 2px;
-}
-
-.elemenx-resize-handle.top,
-.elemenx-resize-handle.bottom {
-	inset-inline-end: 0;
-	inset-inline-start: 0;
-	height: 8px;
-	cursor: row-resize;
-}
-
-.elemenx-resize-handle.top {
-	top: -4px;
-}
-
-.elemenx-resize-handle.bottom {
-	bottom: -4px;
-}
-
-.elemenx-resize-handle.top::after,
-.elemenx-resize-handle.bottom::after {
-	top: 3px;
-	inset-inline-end: 0;
-	inset-inline-start: 0;
-	height: 2px;
-}
-
-.elemenx-resize-handle:hover::after,
-.elemenx-resize-handle:focus-visible::after,
-.elemenx-resizable.resizing > .elemenx-resize-handle::after {
-	background: var(--elemenx-accent);
-}
-
-.elemenx-resize-handle.corner {
-	inset-inline-end: 0;
-	bottom: 0;
-	width: 12px;
-	height: 12px;
-	cursor: nwse-resize;
-}
-
-.elemenx-resize-handle.corner::after {
-	inset-inline-end: 2px;
-	bottom: 2px;
-	width: 6px;
-	height: 6px;
-	border-inline-end: 2px solid var(--elemenx-border-strong);
-	border-bottom: 2px solid var(--elemenx-border-strong);
-}
-
-.elemenx-resize-handle.corner:hover::after,
-.elemenx-resize-handle.corner:focus-visible::after {
-	background: transparent;
-	border-color: var(--elemenx-accent);
-}
-
 .elemenx-table {
 	width: 100%;
 	border-collapse: separate;
@@ -2416,6 +2284,19 @@ span.elemenx-rich-plugin {
 	padding: 8px 10px;
 }
 
+/* A bare tip has no look of its own: what it shows brings one (the card of an item, a person). */
+.elemenx-tip.bare {
+	max-width: none;
+	padding: 0;
+	color: inherit;
+	font-size: inherit;
+	line-height: inherit;
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+}
+
 /* In the top layer (a popover of the browser) the tip keeps its own place, size and look, not those of a popover. */
 .elemenx-tip[popover] {
 	inset: auto;
@@ -2434,68 +2315,6 @@ span.elemenx-rich-plugin {
 
 .elemenx-tip.rich .elemenx-tip-text {
 	color: var(--elemenx-text-muted);
-}
-
-.elemenx-draggable {
-	touch-action: none;
-}
-
-/* With Hold a finger scrolls the page; held still, it takes the element, which shows it. */
-.elemenx-draggable.hold {
-	touch-action: manipulation;
-}
-
-.elemenx-draggable.held {
-	transform: scale(1.04);
-	transition: transform var(--elemenx-duration) var(--elemenx-easing);
-}
-
-.elemenx-draggable.dragging {
-	opacity: 0.4;
-}
-
-.elemenx-drag-ghost {
-	position: fixed;
-	top: 0;
-	inset-inline-start: 0;
-	z-index: 1300;
-	margin: 0;
-	opacity: 0.92;
-	box-shadow: var(--elemenx-shadow);
-	pointer-events: none;
-	will-change: transform;
-	contain: layout style paint;
-}
-
-.elemenx-draggable:not(.disabled) {
-	cursor: grab;
-}
-
-.elemenx-droppable {
-	transition: background var(--elemenx-duration) var(--elemenx-easing),
-		outline-color var(--elemenx-duration) var(--elemenx-easing);
-}
-
-.elemenx-droppable.drop-target {
-	outline: 1px dashed var(--elemenx-border-strong);
-	outline-offset: 2px;
-}
-
-.elemenx-drop-marker {
-	position: fixed;
-	top: 0;
-	inset-inline-start: 0;
-	z-index: 1300;
-	background: var(--elemenx-accent);
-	border-radius: 1px;
-	pointer-events: none;
-	will-change: transform;
-}
-
-.elemenx-droppable.drop-over {
-	background: rgba(var(--elemenx-accent-rgb), 0.06);
-	outline: 2px solid var(--elemenx-accent);
-	outline-offset: 2px;
 }
 
 /* A layout area shows only while its slot renders an element: an empty slot, or one whose *if is false, hides it. */

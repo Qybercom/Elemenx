@@ -4,9 +4,11 @@ import path from 'path';
 
 var library = path.resolve(process.cwd(), 'libraries', 'ElemenxUI');
 var gaming = path.resolve(process.cwd(), 'libraries', 'ElemenxGaming');
+var graphics = path.resolve(process.cwd(), 'libraries', 'ElemenxGraphics');
 
-/* The stylesheets of the Libraries themselves: ElemenxUI and the game look of ElemenxGaming. */
-var indexes = [path.join(library, 'index.css'), path.join(gaming, 'index.css')];
+/* The stylesheets of the Libraries themselves: the directives of ElemenxCommon, ElemenxUI, the tokens of the scenes of ElemenxGraphics, the game look of ElemenxGaming. */
+var common = path.resolve(process.cwd(), 'libraries', 'ElemenxCommon');
+var indexes = [path.join(common, 'index.css'), path.join(library, 'index.css'), path.join(graphics, 'index.css'), path.join(gaming, 'index.css')];
 var docs = path.resolve(process.cwd(), 'docs');
 
 function read (file) {
@@ -132,10 +134,10 @@ describe('ElemenxUI theming', function () {
 	it('gives every token of an index.css a line in the theme template of its Library and in docs/THEMING.md', function () {
 		var guide = fs.readFileSync(path.join(docs, 'THEMING.md'), 'utf8');
 
-		[library, gaming].forEach(function (root) {
+		[library, graphics, gaming].forEach(function (root) {
 			var template = fs.readFileSync(path.join(root, 'themes', 'template.css'), 'utf8');
 
-			expect(tokens(root).length, root).toBeGreaterThan(50);
+			expect(tokens(root).length, root).toBeGreaterThan(30);
 
 			expect(tokens(root).filter(function (token) {
 				return template.indexOf(token + ':') === -1;
@@ -200,7 +202,7 @@ describe('ElemenxUI theming', function () {
 	});
 
 	it('mixes no colors with color-mix(), and gives every color with channels channels that match it', function () {
-		var files = indexes.concat(componentStyles()).concat([library, gaming].flatMap(function (root) {
+		var files = indexes.concat(componentStyles()).concat([library, graphics, gaming].flatMap(function (root) {
 			return fs.readdirSync(path.join(root, 'themes')).map(function (file) {
 				return path.join(root, 'themes', file);
 			});
@@ -232,6 +234,7 @@ describe('ElemenxUI theming', function () {
 	it('starts every rule of a Library theme with the attribute of the theme, and loads every theme with the Library', function () {
 		[
 			{Root: library, Files: ['contrast.css', 'darcula.css', 'fantasy.css', 'glassy.css', 'scifi.css', 'soft.css', 'template.css']},
+			{Root: graphics, Files: ['template.css']},
 			{Root: gaming, Files: ['fantasy.css', 'scifi.css', 'template.css']}
 		].forEach(function (one) {
 			var index = fs.readFileSync(path.join(one.Root, 'index.js'), 'utf8');

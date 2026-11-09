@@ -154,4 +154,4 @@ Elemenx.Directive('unless', {
 </script>
 ```
 
-ElemenxUI приносит `*popup`, `*modal`, `*draggable`, `*droppable`, `*resizable`, `*hotkey`, `*copy`, `*badge`, `*swipe`, `*mask`, `*mount`, `*glyph` и `*itemcard` (см. раздел «Директивы»).
+ElemenxUI приносит `*popup`, `*modal`, `*draggable`, `*droppable`, `*resizable`, `*hotkey`, `*copy`, `*badge`, `*swipe`, `*mask`, `*mount` и `*glyph` (см. раздел «Директивы»).
