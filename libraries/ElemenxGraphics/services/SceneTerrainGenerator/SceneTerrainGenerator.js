@@ -67,7 +67,7 @@
 Elemenx.Service('SceneTerrainGenerator', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['Flat(options)', 'Border(options)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)']
+		Methods: ['Flat(options)', 'Border(options)', 'Passages(carve, height)', 'PassageRoute(graph, from, to)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['terrain']}},
@@ -1392,6 +1392,9 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * - caves: natural caves of noise, ways and halls, under the ground round Center [x, z] within Radius: Top and Bottom
 	 *   (metres under the ground where they are, 3 and 40; Top 0 lets them open to the sky), Scale (the size of their
 	 *   features, 24), Width (of their ways, 0 to 1, 0.35), Halls (0 to 1, how much of them are halls, 0.5), Seed;
+	 * - passages: a graph of ways under the ground and halls where they part (Passages: Nodes, Ways), for walkers (round
+	 *   bores, their floors level) or roads (ways of a Width); Rough (0 to 1: walls of a natural cave, a noise as deep as so
+	 *   much of the widest half; 0: smooth), Scale (of its noise, 6), Crust, Seed; the ways and halls joined smoothly;
 	 * - overhangs: rock that juts out of the steep slopes, round Center within Radius (none: all the ground): Amount (how
 	 *   far, metres, 6), Scale (24), Slope (where it begins, 0.45), Seed.
 	 * Gives {Density(x, y, z), Touches(x0, z0, x1, z1) (whether a square of the ground is more than its heights),
@@ -1437,6 +1440,53 @@ Elemenx.Service('SceneTerrainGenerator', {
 				var reach = Math.max(one.Radius, one.Width > 0 ? Math.max(one.Width, one.Height) / 2 : 0);
 
 				one.Bounds = [one.Bounds[0] - reach, one.Bounds[1] - reach, one.Bounds[2] - reach, one.Bounds[3] + reach, one.Bounds[4] + reach, one.Bounds[5] + reach];
+			}
+			else if (carve.Type === 'passages') {
+				/* A graph of ways and halls: each way a tunnel from its node through its points to its other node, a hall at a fork. */
+				var graph = self.Passages(carve, ground);
+				var crust = carve.Crust === undefined || carve.Crust === null || carve.Crust === '' ? -1 : number(carve.Crust, -1);
+				var widest = 0;
+
+				one.Graph = graph;
+				one.Crust = crust;
+				one.Rough = Math.max(0, number(carve.Rough, 0));
+				one.Tunnels = graph.Ways.map(function (way) {
+					var made = {Points: way.Points, Radius: way.Radius, Flat: way.Flat, Crust: crust, Width: way.Width, Height: way.Height};
+
+					made.Corner = Math.max(0.01, Math.min(1.5, made.Width / 2, made.Height / 2));
+					made.Reach = made.Width > 0 ? Math.hypot(made.Width, made.Height) / 2 : made.Radius;
+					made.Low = made.Width > 0 ? made.Height / 2 : made.Radius * (1 - made.Flat * 0.6);
+					widest = Math.max(widest, made.Reach);
+
+					return made;
+				});
+				one.Halls = graph.Nodes.filter(function (node) {
+					return node.Hall > 0;
+				}).map(function (node) {
+					return {At: node.At, Radius: node.Hall, Floor: node.Floor, Crust: crust};
+				});
+				one.Blend = Math.min(1.5, widest * 0.6);
+				one.Amount = one.Rough * widest * 0.5;
+				one.Noise = noise.Make({Type: 'simplex', Seed: seed + '-rough', Fractal: 'fbm', Octaves: 2});
+				one.Scale = number(carve.Scale, 6);
+
+				var box = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity];
+
+				one.Tunnels.forEach(function (tunnel) {
+					tunnel.Points.forEach(function (point) {
+						box = [Math.min(box[0], point[0] - tunnel.Reach), Math.min(box[1], point[1] - tunnel.Reach), Math.min(box[2], point[2] - tunnel.Reach), Math.max(box[3], point[0] + tunnel.Reach), Math.max(box[4], point[1] + tunnel.Reach), Math.max(box[5], point[2] + tunnel.Reach)];
+					});
+				});
+
+				one.Halls.forEach(function (hall) {
+					box = [Math.min(box[0], hall.At[0] - hall.Radius), Math.min(box[1], hall.At[1] - hall.Radius), Math.min(box[2], hall.At[2] - hall.Radius), Math.max(box[3], hall.At[0] + hall.Radius), Math.max(box[4], hall.At[1] + hall.Radius), Math.max(box[5], hall.At[2] + hall.Radius)];
+				});
+
+				if (!isFinite(box[0])) return null;
+
+				var more = one.Amount + one.Blend;
+
+				one.Bounds = [box[0] - more, box[1] - more, box[2] - more, box[3] + more, box[4] + more, box[5] + more];
 			}
 			else if (carve.Type === 'sphere') {
 				one.At = (carve.At || [0, 0, 0]).map(Number);
@@ -1527,6 +1577,9 @@ Elemenx.Service('SceneTerrainGenerator', {
 				axis = one.Points[0][1];
 			}
 
+			/* The height of its axis by the point, for what joins it (Passages: the floor of the nearest way). */
+			one.Axis = axis;
+
 			/* Of a Width: a box of its Width and Height round its axis, its corners round by Corner (the bore of a wide road). */
 			if (one.Width > 0) best = boxed(one, x, y, z);
 
@@ -1597,6 +1650,64 @@ Elemenx.Service('SceneTerrainGenerator', {
 		}
 
 		/*
+		 * The distance of a point to the ways and halls of a graph of passages: each way a tunnel, each hall a ball with its
+		 * floor cut level, all joined smoothly (Blend), so a fork opens into a hall with no edge where they meet. Rough walls:
+		 * a noise as deep as Rough of the widest half, none by the floor (a way stays walkable). Crust as of a tunnel.
+		 */
+		function passage (one, x, y, z) {
+			var best = Infinity;
+			var nearest = Infinity;
+			var floor = y - 100;
+			var lowest = Infinity;
+			var k = one.Blend;
+
+			function join (a, b) {
+				var h = Math.max(k - Math.abs(a - b), 0) / k;
+
+				return Math.min(a, b) - h * h * k / 4;
+			}
+
+			one.Tunnels.forEach(function (way) {
+				var d = tunnel(way, x, y, z);
+
+				if (d < nearest) {
+					nearest = d;
+					floor = way.Axis - way.Low;
+				}
+
+				if (d < k)
+					lowest = Math.min(lowest, way.Axis - way.Low);
+
+				best = k > 0 ? join(best, d) : Math.min(best, d);
+			});
+
+			one.Halls.forEach(function (hall) {
+				var d = Math.max(Math.sqrt((x - hall.At[0]) * (x - hall.At[0]) + (y - hall.At[1]) * (y - hall.At[1]) + (z - hall.At[2]) * (z - hall.At[2])) - hall.Radius, hall.Floor - y);
+
+				if (d < nearest) {
+					nearest = d;
+					floor = hall.Floor;
+				}
+
+				if (d < k)
+					lowest = Math.min(lowest, hall.Floor);
+
+				best = k > 0 ? join(best, d) : Math.min(best, d);
+			});
+
+			/* The join digs nothing under the floors of what it joins (Regression: a hollow under the floor where ways met). */
+			if (lowest < Infinity)
+				best = Math.max(best, lowest - y);
+
+			if (one.Amount > 0 && best < one.Amount * 2) {
+				/* None by the floor: it stays level to walk on, the walls and the vault rough. */
+				best += (one.Noise.At(x / one.Scale, y / one.Scale, z / one.Scale) - 0.5) * 2 * one.Amount * self.Smoothstep(0.3, 1.5, y - floor);
+			}
+
+			return one.Crust >= 0 && best < 0 ? Math.max(best, y - (ground(x, z) - one.Crust)) : best;
+		}
+
+		/*
 		 * The density of a point: the ground (its height over the point), pushed aside on steep slopes by overhangs, then each
 		 * carve cut out of it. column: [height, slope] of the point's x and z, when they are known already.
 		 */
@@ -1631,6 +1742,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 				if (carve.Type === 'tunnel') value = Math.min(value, tunnel(carve, x, y, z));
 				else if (carve.Type === 'sphere') value = Math.min(value, Math.sqrt((x - carve.At[0]) * (x - carve.At[0]) + (y - carve.At[1]) * (y - carve.At[1]) + (z - carve.At[2]) * (z - carve.At[2])) - carve.Radius);
 				else if (carve.Type === 'caves') value = Math.min(value, caves(carve, x, y, z, top));
+				else if (carve.Type === 'passages') value = Math.min(value, passage(carve, x, y, z));
 			}
 
 			return value;
@@ -1664,6 +1776,16 @@ Elemenx.Service('SceneTerrainGenerator', {
 							return squareNear(x0, z0, x1, z1, point, one.Points[index + 1] || point) <= (one.Width > 0 ? Math.hypot(one.Width, one.Height) / 2 : one.Radius) + 0.5;
 						});
 
+					/* Passages: by how far it is from the axis of each way and the middle of each hall. */
+					if (one.Type === 'passages')
+						return one.Tunnels.some(function (way) {
+							return way.Points.some(function (point, index) {
+								return squareNear(x0, z0, x1, z1, point, way.Points[index + 1] || point) <= way.Reach + one.Amount + one.Blend + 0.5;
+							});
+						}) || one.Halls.some(function (hall) {
+							return squareNear(x0, z0, x1, z1, hall.At, hall.At) <= hall.Radius + one.Amount + one.Blend + 0.5;
+						});
+
 					return true;
 				});
 			},
@@ -1681,6 +1803,170 @@ Elemenx.Service('SceneTerrainGenerator', {
 				return [low, high];
 			}
 		};
+	},
+
+	/*
+	 * The graph of a carve of passages (forks of ways under the ground, for walkers or for roads): its Nodes [{ID, At [x, z]
+	 * or [x, z, y] (none: Depth under the ground there, 6), Radius (of its hall), Depth}] and its Ways [{ID, From, To (IDs of
+	 * nodes), Points (between them, [x, z] or [x, z, y]: none, in a straight grade from one end to the other), Radius (of
+	 * its bore, Radius of the carve, 2.5), Flat (0.5), Width and Height (a box, as a tunnel of a road)}]. height(x, z): the
+	 * ground. Gives {Nodes: [{ID, At [x, y, z], Ways (their IDs), Kind (end, bend, fork, cross: by their count), Hall (the
+	 * radius of its hall: its Radius, else at a fork or a cross half again its widest way and more; 0: none), Floor}], Ways:
+	 * [{ID, From, To, Points [[x, y, z]...] from its node to the other, Length, Radius, Flat, Width, Height}]}. A way of a
+	 * node not told is left out.
+	 */
+	Passages: function (carve, height) {
+		var given = carve || {};
+		var radius = Number(given.Radius) > 0 ? Number(given.Radius) : 2.5;
+		var flat = given.Flat === undefined || given.Flat === null || given.Flat === '' ? 0.5 : Math.max(0, Math.min(1, Number(given.Flat)));
+		var depth = given.Depth === undefined || given.Depth === null || given.Depth === '' ? 6 : Number(given.Depth);
+		var ground = typeof height === 'function' ? height : function () {
+			return 0;
+		};
+		var byID = {};
+		var nodes = (given.Nodes || []).map(function (node, index) {
+			var at = node.At || [0, 0];
+			var deep = node.Depth === undefined || node.Depth === null || node.Depth === '' ? depth : Number(node.Depth);
+			var made = {ID: node.ID === undefined || node.ID === null ? String(index) : String(node.ID), At: [Number(at[0]) || 0, at.length > 2 && at[2] !== null && at[2] !== undefined ? Number(at[2]) : ground(Number(at[0]) || 0, Number(at[1]) || 0) - deep, Number(at[1]) || 0], Ways: [], Kind: 'end', Hall: Number(node.Radius) > 0 ? Number(node.Radius) : 0, Told: Number(node.Radius) > 0, Floor: 0, Widest: 0, Low: 0};
+
+			byID[made.ID] = made;
+
+			return made;
+		});
+		var ways = (given.Ways || []).map(function (way, index) {
+			var from = byID[String(way.From)];
+			var to = byID[String(way.To)];
+			if (!from || !to) return null;
+
+			var bore = Number(way.Radius) > 0 ? Number(way.Radius) : radius;
+			var width = Number(way.Width) > 0 ? Number(way.Width) : 0;
+			var high = Number(way.Height) > 0 ? Number(way.Height) : bore * 2;
+			var level = way.Flat === undefined || way.Flat === null || way.Flat === '' ? flat : Math.max(0, Math.min(1, Number(way.Flat)));
+			var between = (way.Points || []).map(function (point) {
+				return [Number(point[0]) || 0, point.length > 2 && point[2] !== null && point[2] !== undefined ? Number(point[2]) : null, Number(point[1]) || 0];
+			});
+			var points = [from.At.slice()].concat(between).concat([to.At.slice()]);
+			var along = [0];
+			var length;
+			var i;
+
+			for (i = 1; i < points.length; i++)
+				along.push(along[i - 1] + Math.hypot(points[i][0] - points[i - 1][0], points[i][2] - points[i - 1][2]));
+
+			length = along[along.length - 1] || 1;
+
+			/* A point of no height: on the straight grade from its node to the other. */
+			points.forEach(function (point, at) {
+				if (point[1] === null)
+					point[1] = from.At[1] + (to.At[1] - from.At[1]) * along[at] / length;
+			});
+
+			var made = {ID: way.ID === undefined || way.ID === null ? String(index) : String(way.ID), From: from.ID, To: to.ID, Points: points, Length: 0, Radius: bore, Flat: level, Width: width, Height: high};
+
+			for (i = 1; i < points.length; i++)
+				made.Length += Math.hypot(points[i][0] - points[i - 1][0], points[i][1] - points[i - 1][1], points[i][2] - points[i - 1][2]);
+
+			[from, to].forEach(function (node) {
+				node.Ways.push(made.ID);
+
+				node.Widest = Math.max(node.Widest, width > 0 ? Math.max(width, high) / 2 : bore);
+				node.Low = Math.max(node.Low, width > 0 ? high / 2 : bore * (1 - level * 0.6));
+			});
+
+			return made;
+		}).filter(Boolean);
+
+		nodes.forEach(function (node) {
+			var count = node.Ways.length;
+
+			node.Kind = count >= 4 ? 'cross' : count === 3 ? 'fork' : count === 2 ? 'bend' : 'end';
+
+			/* A hall where ways part: half again its widest way, more of more ways; its floor at the floor of its ways. */
+			if (!node.Told && count >= 3)
+				node.Hall = node.Widest * (1.5 + (count - 3) * 0.25);
+
+			node.Floor = node.At[1] - (node.Low || radius * (1 - flat * 0.6));
+
+			delete node.Told;
+			delete node.Widest;
+			delete node.Low;
+		});
+
+		return {Nodes: nodes, Ways: ways};
+	},
+
+	/*
+	 * The shortest way through a graph of passages (Passages, or a graph of tunnels of roads, SceneRoads.TunnelGraph) from
+	 * one node to another, by the length of its ways: {Nodes (their IDs, in order), Ways, Points [[x, y, z]...], Length};
+	 * null when none goes there.
+	 */
+	PassageRoute: function (graph, from, to) {
+		var nodes = {};
+		var cost = {};
+		var came = {};
+		var done = {};
+		var open = [];
+		var route = {Nodes: [], Ways: [], Points: [], Length: 0};
+		var current;
+
+		(graph.Nodes || []).forEach(function (node) {
+			nodes[node.ID] = node;
+		});
+
+		from = String(from);
+		to = String(to);
+
+		if (!nodes[from] || !nodes[to]) return null;
+
+		cost[from] = 0;
+
+		open.push(from);
+
+		while (open.length) {
+			open.sort(function (a, b) {
+				return cost[a] - cost[b];
+			});
+
+			current = open.shift();
+
+			if (done[current]) continue;
+			if (current === String(to)) break;
+
+			done[current] = true;
+
+			(graph.Ways || []).forEach(function (way) {
+				var next = way.From === current ? way.To : way.To === current ? way.From : null;
+				if (next === null || done[next]) return;
+
+				if (cost[next] === undefined || cost[current] + way.Length < cost[next]) {
+					cost[next] = cost[current] + way.Length;
+					came[next] = {Node: current, Way: way};
+
+					open.push(next);
+				}
+			});
+		}
+
+		if (cost[to] === undefined) return null;
+
+		current = String(to);
+		route.Length = cost[to];
+
+		while (current !== String(from)) {
+			var step = came[current];
+			var points = step.Way.From === step.Node ? step.Way.Points.slice() : step.Way.Points.slice().reverse();
+
+			route.Nodes.unshift(current);
+			route.Ways.unshift(step.Way.ID);
+
+			route.Points = points.slice(0, -1).concat(route.Points);
+			current = step.Node;
+		}
+
+		route.Nodes.unshift(String(from));
+		route.Points.push(nodes[to].At.slice());
+
+		return route;
 	},
 
 	/*
@@ -2677,7 +2963,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'PatchPicture', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf', 'HighwaysOf', 'TownsOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'GroundMaterials', 'LookMaterials', 'MaterialsOf', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan']});
+		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'PatchPicture', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf', 'HighwaysOf', 'TownsOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Passages', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'GroundMaterials', 'LookMaterials', 'MaterialsOf', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan']});
 	},
 
 	/*

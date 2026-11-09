@@ -1716,6 +1716,14 @@ Elemenx.Component('TopologyIso', {
 		if (!node)
 			return false;
 
+		/*
+		 * Its size as it is now: under load the watch of its size had not told it yet, and the node came to the middle of a
+		 * view of the size it had before (Regression: half its width aside).
+		 */
+		var box = own.Canvas.parentNode ? own.Canvas.parentNode.getBoundingClientRect() : null;
+		if (box && (Math.round(box.width) !== own.Width || Math.round(box.height) !== own.Height) && box.width > 0)
+			this.Resize();
+
 		place = this.PlaceOf(node);
 		own.Camera.Zoom = Math.max(own.Camera.Zoom, 28);
 		point = this.Project([place.X, 0, place.Y]);

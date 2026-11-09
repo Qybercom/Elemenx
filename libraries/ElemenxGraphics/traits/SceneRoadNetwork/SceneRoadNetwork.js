@@ -1,19 +1,22 @@
 /*
  * The roads of a Scene: an object of kind road (the trait Road: Type of the SceneRoads Service, Points [[x, z] or [x, z, y]]
  * through which it goes, Closed, Width, Height over its line; Bridges and Tunnels [[from, to]] in metres along it, or
- * Structures: true to find them where it goes Clear metres over the ground or Cover under it; Barriers; Along: lines of
+ * Structures: true to find them where it goes Clear metres over the ground or Cover under it; Elevated [[from, to, height]]: on
+ * a viaduct there; Viaducts: false, no viaduct in place of a bank higher than Bank (8 m); Barriers; Along: lines of
  * things beside it) is drawn as its model, and the ground is made level under it, cut where it goes through a hill and
  * filled where it crosses a hollow: a point with no height of its own takes the one of the ground there, and the road goes
  * smoothly between them. A bridge stands on piers over the ground as it is, a tunnel goes under it between its portals,
  * through a hole cut in the ground (Carves of tunnel: RoadsCarves of the engine, SceneRoads.Carves), lit by lamps along its vault.
  * Roads that cross or end on one another meet at a junction, found by itself, or an object of kind junction (the trait
- * Junction: Radius, Surface, Form: ring for a roundabout, else found by its arms) at its X and Y; the roads come to its level
+ * Junction: Radius, Surface, Form: ring for a roundabout, else found by its arms; diamond, cloverleaf, trumpet, roundabout, stack or none: the interchange there;
+ * Closed: the barriers of a level crossing down; Under: under the ground, of roads in their tunnels) at its X and Y; the roads come to its level
  * and their paint stops at it. An object of kind
  * barrier (the trait Barrier: Type (guardrail, wall, jersey, tyres, fence), Height, Color, Step) stands along the road its Road names (Side, Gap, From, To) or on
  * Points of its own (Closed), apart from any road.
  * SurfaceAt(x, z) tells what is under a point, a road, a junction or the ground: {Road (its ID, empty on the ground),
  * Strip, Surface, Height, Grip, Drag}; Roads() gives the roads as SceneRoads makes them, Junctions() the junctions, for
- * what follows them (a car, a train, a walker on a path); BarrierHit(x, z, fromX, fromZ) whether a point went through a
+ * what follows them (a car, a train, a walker on a path), Interchanges() the interchanges ({ID, Form, X, Z, Roads, Ramps}: their
+ * ramps are roads of the network, drawn by objects of their own); BarrierHit(x, z, fromX, fromZ) whether a point went through a
  * barrier of a road.
  * The streets of the settlements of its sketch (their plans, SceneTerrainGenerator.SettlementPlan) are roads too, made with
  * the ground at once: a city or a town has streets, a village country roads, a hamlet gravel, a fort alleys, as wide as the
@@ -29,7 +32,7 @@ Elemenx.Trait('SceneRoadNetwork', {
 		var models = this.$Service('SceneModels');
 		var terrain = this.$Service('SceneTerrainGenerator');
 		var random = this.$Service('Random');
-		var state = {Key: '', Made: [], Free: [], Junctions: [], Sketch: null, Given: null, Names: {}, Version: 0, Streets: [], StreetsOf: null, StreetIDs: {}, Carried: ''};
+		var state = {Key: '', Made: [], Free: [], Junctions: [], Interchanges: [], Sketch: null, Given: null, Names: {}, Version: 0, Streets: [], StreetsOf: null, StreetIDs: {}, Ramps: [], RampIDs: {}, Carried: ''};
 		var streetTypes = {city: 'street', town: 'street', village: 'country', hamlet: 'gravel', fort: 'alley'};
 
 		/* The streets of the settlements of a sketch as specs of roads; they come of the sketch alone, so the same sketch gives the same ones. */
@@ -94,7 +97,7 @@ Elemenx.Trait('SceneRoadNetwork', {
 
 		function objects () {
 			return (scene.Order || []).filter(function (object) {
-				return object.Traits && object.Traits.Road && (object.Traits.Road.Points || []).length > 1 && !state.StreetIDs[object.ID];
+				return object.Traits && object.Traits.Road && (object.Traits.Road.Points || []).length > 1 && !state.StreetIDs[object.ID] && !state.RampIDs[object.ID];
 			});
 		}
 
@@ -120,7 +123,7 @@ Elemenx.Trait('SceneRoadNetwork', {
 		function spec (object) {
 			var given = object.Traits.Road;
 
-			return {ID: object.ID, Type: given.Type, Points: given.Points, Closed: given.Closed === true || given.Closed === 'true', Width: given.Width, Height: given.Height, Bridges: given.Bridges, Tunnels: given.Tunnels, Structures: given.Structures, Clear: given.Clear, Cover: given.Cover, Barriers: given.Barriers, Along: given.Along, Marks: given.Marks, Straight: given.Straight, Segments: given.Segments, Radii: given.Radii};
+			return {ID: object.ID, Type: given.Type, Points: given.Points, Closed: given.Closed === true || given.Closed === 'true', Width: given.Width, Height: given.Height, Bridges: given.Bridges, Tunnels: given.Tunnels, Structures: given.Structures, Clear: given.Clear, Cover: given.Cover, Elevated: given.Elevated, Viaducts: given.Viaducts, Bank: given.Bank, Barriers: given.Barriers, Along: given.Along, Marks: given.Marks, Straight: given.Straight, Segments: given.Segments, Radii: given.Radii};
 		}
 
 		/* The network again: the roads, their junctions, a model of each road, and the layer of the sketch under them. */
@@ -129,6 +132,10 @@ Elemenx.Trait('SceneRoadNetwork', {
 			var field = terrain.Flat(options);
 			var ground = function (x, z) {
 				return Math.max(0, field.Height(x, z));
+			};
+			/* The ground as it is, under the sea too: the roads find the water they cross (a bridge over it). */
+			var level = function (x, z) {
+				return field.Height(x, z);
 			};
 			var pool = roads.Work();
 			var fences = barriers();
@@ -141,13 +148,30 @@ Elemenx.Trait('SceneRoadNetwork', {
 
 				return made;
 			}).concat(streets || []), junctions().map(function (object) {
-				return {ID: object.ID, X: Number(object.Values.X) || 0, Z: Number(object.Values.Y) || 0, Radius: object.Traits.Junction.Radius, Surface: object.Traits.Junction.Surface, Kind: object.Traits.Junction.Form};
-			}), {Height: ground});
+				return {ID: object.ID, X: Number(object.Values.X) || 0, Z: Number(object.Values.Y) || 0, Radius: object.Traits.Junction.Radius, Surface: object.Traits.Junction.Surface, Kind: object.Traits.Junction.Form, Closed: object.Traits.Junction.Closed, Under: object.Traits.Junction.Under};
+			}), {Height: level});
 			var hash = random.Hash(key);
 
 			state.Made = network.Roads;
 			state.Junctions = network.Junctions;
+			state.Interchanges = network.Interchanges || [];
 			state.Version++;
+
+			/* The ramps of its interchanges: roads of the network, drawn by objects of their own as the streets are. */
+			state.Ramps = network.Roads.filter(function (road) {
+				return road.Ramp;
+			}).map(function (road) {
+				return {ID: road.ID, Type: 'ramp', Points: road.Points.filter(function (point, index) {
+					return index % 10 === 0 || index === road.Points.length - 1;
+				}).map(function (point) {
+					return [point.X, point.Z, point.Y];
+				})};
+			});
+			state.RampIDs = {};
+
+			state.Ramps.forEach(function (one) {
+				state.RampIDs[one.ID] = true;
+			});
 
 			/* A barrier of a line of its own: a model of its own. */
 			state.Free = fences.filter(function (fence) {
@@ -214,7 +238,7 @@ Elemenx.Trait('SceneRoadNetwork', {
 			/* Made again with the roads; the very same list while what it holds is the same, so the ground is not made again for nothing. */
 			if (state.CarvedOf !== state.Made) {
 				state.CarvedOf = state.Made;
-				made = roads.Carves(state.Made);
+				made = roads.Carves(state.Made, state.Junctions);
 
 				if (!state.Carved || JSON.stringify(made) !== JSON.stringify(state.Carved))
 					state.Carved = made;
@@ -236,8 +260,6 @@ Elemenx.Trait('SceneRoadNetwork', {
 			state.Given = sketch;
 			streets = streetsOf(sketch);
 			found = objects();
-
-			carry(streets);
 
 			if (!found.length && !barriers().length && !streets.length) {
 				if (state.Made.length || state.Free.length)
@@ -265,8 +287,10 @@ Elemenx.Trait('SceneRoadNetwork', {
 				make(found, settings, sketch, key, streets);
 			}
 
+			carry(streets.concat(state.Ramps));
+
 			/* The model of a road or a barrier is its own: an object made again takes it again (a street, the object that draws it). */
-			found.concat(barriers(), streets.map(function (street) {
+			found.concat(barriers(), streets.concat(state.Ramps).map(function (street) {
 				return scene.Objects[street.ID];
 			}).filter(Boolean)).forEach(function (object) {
 				object.Shape = state.Names[object.ID];
@@ -283,6 +307,10 @@ Elemenx.Trait('SceneRoadNetwork', {
 			return state.Junctions;
 		};
 
+		engine.Interchanges = function () {
+			return state.Interchanges;
+		};
+
 		engine.SurfaceAt = function (x, z) {
 			var under = roads.Under(state.Made, x, z);
 			var junction = under ? null : roads.JunctionAt(state.Junctions, x, z);
@@ -295,7 +323,7 @@ Elemenx.Trait('SceneRoadNetwork', {
 			if (junction) {
 				surface = roads.Surface(junction.Surface);
 
-				return {Road: junction.ID, Strip: 'junction', Surface: junction.Surface, Height: junction.Y, Grip: surface.Grip, Drag: surface.Drag};
+				return {Road: junction.ID, Strip: 'junction', Surface: junction.Surface, Height: junction.Y + (junction.Deck || 0), Grip: surface.Grip, Drag: surface.Drag};
 			}
 
 			return {Road: '', Strip: '', Surface: 'ground', Height: field ? Math.max(0, field.Height(x, z)) : 0, Grip: 1, Drag: 0};
@@ -321,5 +349,10 @@ Elemenx.Trait('SceneRoadNetwork', {
 	/* The junctions of the roads of the scene: [{ID, X, Y, Z, Radius, Surface, Roads}]. */
 	Junctions: function () {
 		return this.Engine().Junctions();
+	},
+
+	/* The interchanges of the roads of the scene: [{ID, Form, X, Z, Roads, Ramps (the IDs of their ramps, roads too)}]. */
+	Interchanges: function () {
+		return this.Engine().Interchanges();
 	}
 });

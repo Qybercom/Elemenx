@@ -130,6 +130,109 @@ describe('Regression: the squares of a ground as fine as the eye sees their grid
 		})).toEqual([]);
 	}, 120000);
 
+	/*
+	 * Regression: measured to the height of its middle (the top of a mountain), a square the eye stood by in a cave under it
+	 * was 160 m away: the squares of the low ground round the mountain came first, the cave's never, and the eye saw out of the
+	 * cave through the coarse one. Now from its lowest to its highest: the squares of the cave by the eye are asked first.
+	 */
+	it('asks first for the squares of a cave under a mountain the eye is in, before the low ground round the mountain', async function () {
+		var scene = await mount({Size: 2000, Height: 2, Water: 0, Scale: 500, Ridges: 0, Seed: 'cave-lod', Sketch: {Layers: [{ID: 'base', Visible: true, Strength: 1, Items: [{ID: 'm', Type: 'mountain', At: [0, 0], Radius: 160, Height: 220}]}]}, Passages: [{Radius: 2.5, Nodes: [{ID: 'a', At: [-300, 0, 3]}, {ID: 'b', At: [300, 0, 3]}], Ways: [{From: 'a', To: 'b'}]}]});
+		var ground = scene.Scene().Ground;
+		var work = scene.$Service('SceneTerrainGenerator').Work();
+		var run = work.Run;
+		var now = performance.now() + 5000;
+		var asked = [];
+		var arrived = false;
+		var eye;
+		var i;
+
+		work.Run = function (service, name, args, callback) {
+			if (arrived && name === 'Piece')
+				asked.push(args[3]);
+
+			return run.apply(work, arguments);
+		};
+
+		scene.SetViewpoint({Target: [-60, 4, 0], Yaw: Math.PI / 2, Pitch: 0, Distance: 3});
+
+		for (i = 0; i < 600 && asked.length < 3; i++) {
+			scene.Scene().Rest = 0;
+
+			scene.Engine().Frame(now += 33);
+
+			eye = scene.Scene().Eye;
+			arrived = Math.hypot(eye[0] + 60, eye[2]) < 5;
+
+			await new Promise(function (done) {
+				setTimeout(done, 5);
+			});
+		}
+
+		work.Run = run;
+
+		expect(ground.Field.Height(-60, 0)).toBeGreaterThan(100);
+		expect(ground.Field.Height(-400, 0)).toBeLessThan(10);
+		/* The first square asked once the eye is in the cave: one round the eye, not of the low ground 90 m away. */
+		expect(asked.length).toBeGreaterThan(0);
+		expect(asked.slice(0, 1).map(function (one) {
+			return Math.max(Math.abs(one[0] + 60), Math.abs(one[1])) <= one[2] / 2 + 20;
+		})).toEqual([true]);
+	}, 240000);
+
+	/*
+	 * Regression: the 4 ms a frame has to ask for squares were counted from the start of the walk over them: a walk of more
+	 * than 4 ms (a volume of many carves to look at) left one square a frame, often one asked already, and the ground waited
+	 * for ever. Now they are counted from the first ask.
+	 */
+	it('asks for as many squares a frame as the workers take, however long the walk over them took', async function () {
+		var scene = await mount({Size: 2000, Height: 60, Water: 0, Scale: 300, Ridges: 0, Seed: 'slow-walk', Passages: [{Radius: 2.5, Nodes: [{ID: 'a', At: [-300, 0, -10]}, {ID: 'b', At: [300, 0, -10]}], Ways: [{From: 'a', To: 'b'}]}]});
+		var ground = scene.Scene().Ground;
+		var volume = ground.Field.Volume;
+		var touches = volume.Touches;
+		var work = scene.$Service('SceneTerrainGenerator').Work();
+		var run = work.Run;
+		var now = performance.now() + 5000;
+		var asked = 0;
+		var most = 0;
+		var i;
+
+		/* A slow walk: each look at the volume 0.2 ms. */
+		volume.Touches = function () {
+			var until = performance.now() + 0.2;
+
+			while (performance.now() < until);
+
+			return touches.apply(volume, arguments);
+		};
+
+		work.Run = function (service, name) {
+			if (name === 'Piece')
+				asked++;
+
+			return run.apply(work, arguments);
+		};
+
+		scene.SetViewpoint({Target: [200, 0, 300], Yaw: 1, Pitch: 0.3, Distance: 20});
+
+		for (i = 0; i < 40; i++) {
+			asked = 0;
+			scene.Scene().Rest = 0;
+
+			scene.Engine().Frame(now += 33);
+
+			most = Math.max(most, asked);
+
+			await new Promise(function (done) {
+				setTimeout(done, 5);
+			});
+		}
+
+		work.Run = run;
+		volume.Touches = touches;
+
+		expect(most).toBeGreaterThan(2);
+	}, 240000);
+
 	/* Regression: a square made again at once destroyed the mesh of the one it replaced, still to be drawn that frame (GL INVALID_OPERATION). */
 	it('draws no square of a ground whose mesh is gone while the ground is made again', async function () {
 		var scene = await mount({Size: 600, Height: 20, Water: 0, Scale: 200, Ridges: 0.3, Seed: 'again'});

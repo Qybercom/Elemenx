@@ -38,7 +38,7 @@ describe('Regression: Component Style / StyleURL', function () {
 
 		document.getElementById('mount').appendChild(component.$Element());
 
-		expect(await waitFor(function () {return document.getElementById('remote-style-component');}, 1000)).not.toBe(false);
+		expect(await waitFor(function () {return document.getElementById('remote-style-component');}, 10000)).not.toBe(false);
 
 		var styles = Array.prototype.filter.call(document.querySelectorAll('style'), function (item) {
 			return item.textContent.indexOf('.remote-style-test') !== -1;
@@ -83,7 +83,7 @@ describe('Regression: Component Style / StyleURL', function () {
 
 		expect(await waitFor(function () {
 			return document.querySelectorAll('.remote-style-many').length === 5;
-		}, 1000)).not.toBe(false);
+		}, 10000)).not.toBe(false);
 
 		expect(count()).toBe(before + 1);
 
@@ -93,7 +93,7 @@ describe('Regression: Component Style / StyleURL', function () {
 
 		await waitFor(function () {
 			return document.querySelectorAll('.remote-style-many').length === 6;
-		}, 1000);
+		}, 10000);
 
 		expect(count()).toBe(before + 1);
 

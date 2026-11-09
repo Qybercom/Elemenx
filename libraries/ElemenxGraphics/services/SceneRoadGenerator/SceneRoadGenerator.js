@@ -3,8 +3,11 @@
  * road of kind road for a Scene ({ID, Type, Closed, Points, Barriers, Marks}) with where it starts, round a middle, nearer
  * and farther, so it never crosses itself. Options: Length (the way round, metres, 2400), Corners (how many bends, 9 to
  * 14), Wild (how far it strays from a round, 0 to 1, 0.55), Type (of SceneRoads, track), Barrier (the kind of its barriers,
- * tyres; none: no barriers), Gap (metres from the edge of the road to them, 2). It returns {Seed, Spec, Length, Start: {X,
- * Z, Heading, At}}: Start is on the middle of its longest straight, At metres from the start of its line.
+ * tyres; none: no barriers), Gap (metres from the edge of the road to them, 2), Scenery (true: a land of mountains for it,
+ * its tunnels and bridges found). It returns {Seed, Spec, Length, Start: {X, Z, Heading, At}}: Start is on the middle of
+ * its longest straight, At metres from the start of its line; of Scenery also Sketch ({Layers} of a world for it: on its
+ * line a mountain it goes under, a canyon and a wide valley it goes over, a ridge across it; mountains round it) and Size
+ * (of a world that holds it all).
  */
 Elemenx.Service('SceneRoadGenerator', {
 	$Meta: {
@@ -68,6 +71,51 @@ Elemenx.Service('SceneRoadGenerator', {
 		if (barrier && barrier !== 'none')
 			spec.Barriers = [{Side: 'both', Kind: barrier, Gap: settings.Gap === undefined ? 2 : Number(settings.Gap)}];
 
-		return {Seed: seed, Spec: spec, Length: length, Start: {X: start.X, Z: start.Z, Heading: Math.atan2(start.Way[0], start.Way[1]), At: start.Along}};
+		var result = {Seed: seed, Spec: spec, Length: length, Start: {X: start.X, Z: start.Z, Heading: Math.atan2(start.Way[0], start.Way[1]), At: start.Along}};
+
+		/*
+		 * Scenery: a land of mountains for it to go through, its bridges and tunnels found (Structures). On its line, from its
+		 * start: a mountain it goes under (a tunnel), a canyon across it (a bridge), a ridge across it (a tunnel or a deep cut),
+		 * a wide valley (a viaduct); round it, mountains to look at. Sketch: {Layers} of a world for it (SceneWorld.Library).
+		 */
+		if (settings.Scenery) {
+			var total2 = line[line.length - 1].Along + Math.hypot(line[0].X - line[line.length - 1].X, line[0].Z - line[line.length - 1].Z);
+			var place = function (share) {
+				var metres = (start.Along + total2 * share) % total2;
+
+				return line.reduce(function (best, point) {
+					return Math.abs(point.Along - metres) < Math.abs(best.Along - metres) ? point : best;
+				});
+			};
+			var across = function (point, reach) {
+				var side = [-point.Way[1], point.Way[0]];
+
+				return [[point.X - side[0] * reach, point.Z - side[1] * reach], [point.X, point.Z], [point.X + side[0] * reach, point.Z + side[1] * reach]];
+			};
+			var mountain = place(0.22);
+			var canyon = place(0.48);
+			var ridge = place(0.72);
+			var valley = place(0.88);
+			var items = [
+				{ID: 'track-mountain', Type: 'mountain', At: [mountain.X, mountain.Z], Radius: 320, Height: 160, Ridged: true},
+				{ID: 'track-canyon', Type: 'canyon', Points: across(canyon, 420), Width: 70, Depth: 45},
+				{ID: 'track-ridge', Type: 'ridge', Points: across(ridge, 600), Width: 160, Height: 70, Sharp: 0.5},
+				{ID: 'track-valley', Type: 'valley', Points: across(valley, 700), Width: 260, Depth: 30}
+			];
+
+			/* Mountains round it, out of its way: out of the round it makes, between its corners. */
+			for (i = 0; i < 6; i++) {
+				var turn = (i + 0.5) / 6 * Math.PI * 2;
+				var out = radius * fit * 1.85;
+
+				items.push({ID: 'track-peak-' + i, Type: 'mountain', At: [Math.cos(turn) * out, Math.sin(turn) * out], Radius: 260 + random() * 160, Height: 160 + random() * 140, Ridged: random() > 0.5});
+			}
+
+			spec.Structures = true;
+			result.Sketch = {Layers: [{ID: 'track-land', Name: 'Track land', Visible: true, Strength: 1, Items: items}]};
+			result.Size = Math.ceil(radius * fit * 2.2 * 2 / 200) * 200;
+		}
+
+		return result;
 	}
 });

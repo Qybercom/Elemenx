@@ -264,7 +264,7 @@ describe('Contract: Scene trait Rigid, solid things of a ground that fall and ar
 		var renderer;
 		var inner;
 
-		function drawn () {
+		function once () {
 			var before = renderer.Counts().Draws;
 
 			scene.Scene().Rest = 0;
@@ -272,6 +272,25 @@ describe('Contract: Scene trait Rigid, solid things of a ground that fall and ar
 			scene.Engine().Frame(now.At += 33);
 
 			return renderer.Counts().Draws - before;
+		}
+
+		/*
+		 * The draws of a frame once the ground is made: the squares of the ground come from the workers when they come, and the
+		 * wire makes them again (each with its lines). Regression: measured before, the frame of the outlines had the ground
+		 * in 5 squares and that of the wire in 1, and drew more.
+		 */
+		async function drawn () {
+			var i;
+
+			for (i = 0; i < 300 && (i < 2 || inner.Ground.Missing); i++) {
+				once();
+
+				await new Promise(function (done) {
+					setTimeout(done, 5);
+				});
+			}
+
+			return once();
 		}
 
 		frames(scene, 0.1, now);
@@ -285,16 +304,16 @@ describe('Contract: Scene trait Rigid, solid things of a ground that fall and ar
 		renderer = scene.Engine().Renderer;
 		inner = scene.Scene();
 
-		var plain = drawn();
+		var plain = await drawn();
 
 		/* The outlines: a list of each, in the colour of each. */
 		scene.Select('hut');
 
 		scene.Hovered = 'stop';
 
-		drawn();
+		await drawn();
 
-		var outlined = drawn();
+		var outlined = await drawn();
 		var lists = inner.OutlineLists;
 		var names = Object.keys(lists).filter(function (name) {
 			return lists[name].Count;
@@ -311,27 +330,28 @@ describe('Contract: Scene trait Rigid, solid things of a ground that fall and ar
 		/* The wire of all, then the edges: more again; off, as before. */
 		scene.Wireframe = true;
 
-		drawn();
+		await drawn();
 
-		var wired = drawn();
+		var wired = await drawn();
+
 
 		expect(wired).toBeGreaterThan(outlined);
 
 		scene.Wireframe = false;
 		scene.Edges = true;
 
-		drawn();
+		await drawn();
 
-		expect(drawn()).toBeGreaterThan(outlined);
+		expect(await drawn()).toBeGreaterThan(outlined);
 
 		scene.Edges = false;
 		scene.Hovered = '';
 
 		scene.Select(null);
 
-		drawn();
+		await drawn();
 
-		expect(drawn()).toBe(plain);
+		expect(await drawn()).toBe(plain);
 		expect(inner.Colors.Wire).not.toEqual(inner.Colors.Edges);
 		expect(inner.Colors.Outline).not.toEqual(inner.Colors.Hover);
 	});

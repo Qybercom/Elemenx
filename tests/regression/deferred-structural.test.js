@@ -3,6 +3,12 @@ import { loadElemenx, resetDOM, tick, waitFor, unique } from '../setup.js';
 
 var live = [];
 
+/*
+ * How long a load of a Component of its own file may take: the page loads several one after another, and under the load of
+ * the whole suite (the 3D tests at once) 5 s were not enough for them (Regression: two tests of the file failed so).
+ */
+var LOAD = 15000;
+
 function appWithTemplate (template, create) {
 	var root = unique('DeferredRoot');
 
@@ -26,7 +32,7 @@ function appWithTemplate (template, create) {
 async function appReady (app) {
 	return await waitFor(function () {
 		return app.$Component();
-	}, 5000);
+	}, LOAD);
 }
 
 function destroy (app) {
@@ -39,7 +45,7 @@ function destroy (app) {
 		live.splice(i, 1);
 }
 
-describe('Regression: deferred structural composition', function () {
+describe('Regression: deferred structural composition', {timeout: 60000}, function () {
 	beforeAll(async function () { await loadElemenx(); });
 
 	beforeEach(function () {
@@ -97,7 +103,7 @@ describe('Regression: deferred structural composition', function () {
 		live.push(app);
 
 		expect(await appReady(app)).not.toBe(false);
-		expect(await waitFor(function () { return document.querySelector('.deferred-input-label'); }, 5000)).not.toBe(false);
+		expect(await waitFor(function () { return document.querySelector('.deferred-input-label'); }, LOAD)).not.toBe(false);
 		expect(document.querySelector('.deferred-input-label').textContent).toBe('first');
 
 		app.$Component().$Update({Text: 'second'});
@@ -117,7 +123,7 @@ describe('Regression: deferred structural composition', function () {
 		});
 
 		expect(await appReady(app)).not.toBe(false);
-		expect(await waitFor(function () { return document.querySelectorAll('.deferred-concurrent-grand').length === 3; }, 5000)).toBe(true);
+		expect(await waitFor(function () { return document.querySelectorAll('.deferred-concurrent-grand').length === 3; }, LOAD)).toBe(true);
 		expect(window.DeferredConcurrentChildLoads).toBe(1);
 		expect(window.DeferredConcurrentGrandLoads).toBe(1);
 		expect(Array.from(document.querySelectorAll('.deferred-concurrent-child')).map(function (n) { return n.firstChild.nodeValue; })).toEqual(['A', 'B', 'C']);
@@ -132,7 +138,7 @@ describe('Regression: deferred structural composition', function () {
 		});
 
 		expect(await appReady(app)).not.toBe(false);
-		expect(await waitFor(function () { return document.querySelectorAll('.deferred-keyed-child').length === 2; }, 5000)).toBe(true);
+		expect(await waitFor(function () { return document.querySelectorAll('.deferred-keyed-child').length === 2; }, LOAD)).toBe(true);
 
 		var root = app.$Component();
 		var nodes = document.querySelectorAll('.deferred-keyed-child');
@@ -183,7 +189,7 @@ describe('Regression: deferred structural composition', function () {
 			var app = appWithTemplate('<div class="deferred-held-parent"><DeferredHeldChild value="X"></DeferredHeldChild></div>');
 
 			expect(await appReady(app)).not.toBe(false);
-			expect(await waitFor(function () { return held; }, 5000)).not.toBe(false);
+			expect(await waitFor(function () { return held; }, LOAD)).not.toBe(false);
 
 			destroy(app);
 
@@ -242,7 +248,7 @@ describe('Regression: deferred structural composition', function () {
 			live.push(app);
 
 			expect(await appReady(app)).not.toBe(false);
-			expect(await waitFor(function () { return held; }, 5000)).not.toBe(false);
+			expect(await waitFor(function () { return held; }, LOAD)).not.toBe(false);
 
 			app.$Component().$Update({Text: 'second'});
 
@@ -250,7 +256,7 @@ describe('Regression: deferred structural composition', function () {
 
 			append.call(head, held);
 
-			expect(await waitFor(function () { return document.querySelector('.deferred-late-child'); }, 5000)).not.toBe(false);
+			expect(await waitFor(function () { return document.querySelector('.deferred-late-child'); }, LOAD)).not.toBe(false);
 
 			expect(window.DeferredLateReady).toEqual({Label: 'second', Node: 'B'});
 			expect(document.querySelector('.deferred-late-label').textContent).toBe('second');
@@ -274,7 +280,7 @@ describe('Regression: deferred structural composition', function () {
 		});
 
 		expect(await appReady(app)).not.toBe(false);
-		expect(await waitFor(function () { return document.querySelectorAll('.deferred-direct-child').length === 2; }, 5000)).toBe(true);
+		expect(await waitFor(function () { return document.querySelectorAll('.deferred-direct-child').length === 2; }, LOAD)).toBe(true);
 
 		var nodes = document.querySelectorAll('.deferred-direct-child');
 		var a = nodes[0];
@@ -303,7 +309,7 @@ describe('Regression: deferred structural composition', function () {
 
 		document.querySelector('.deferred-preload-host').appendChild(child.$Element());
 
-		expect(await waitFor(function () { return document.querySelector('.deferred-preload-child'); }, 5000)).not.toBe(false);
+		expect(await waitFor(function () { return document.querySelector('.deferred-preload-child'); }, LOAD)).not.toBe(false);
 		expect(window.DeferredPreloadChildLoads).toBe(1);
 
 		child.$Destroy();
@@ -312,7 +318,7 @@ describe('Regression: deferred structural composition', function () {
 
 		document.querySelector('.deferred-preload-host').appendChild(parent.$Element());
 
-		expect(await waitFor(function () { return document.querySelectorAll('.deferred-preload-child').length === 2; }, 5000)).toBe(true);
+		expect(await waitFor(function () { return document.querySelectorAll('.deferred-preload-child').length === 2; }, LOAD)).toBe(true);
 		expect(window.DeferredPreloadChildLoads).toBe(1);
 		expect(Array.from(document.querySelectorAll('.deferred-preload-child')).map(function (n) { return n.textContent; })).toEqual(['A', 'B']);
 
@@ -325,7 +331,7 @@ describe('Regression: deferred structural composition', function () {
 		var app = appWithTemplate('<div><DeferredCompileRemote value="A"></DeferredCompileRemote><DeferredCompileRemote value="B"></DeferredCompileRemote></div>');
 
 		expect(await appReady(app)).not.toBe(false);
-		expect(await waitFor(function () { return document.querySelectorAll('.deferred-compile-remote').length === 2; }, 5000)).toBe(true);
+		expect(await waitFor(function () { return document.querySelectorAll('.deferred-compile-remote').length === 2; }, LOAD)).toBe(true);
 		expect(window.DeferredCompileRemoteLoads).toBe(1);
 		expect(Array.from(document.querySelectorAll('.deferred-compile-remote')).map(function (n) { return n.textContent; })).toEqual(['A', 'B']);
 
@@ -339,7 +345,7 @@ describe('Regression: deferred structural composition', function () {
 		});
 
 		expect(await appReady(app)).not.toBe(false);
-		expect(await waitFor(function () { return document.querySelector('.deferred-cache-remote'); }, 5000)).not.toBe(false);
+		expect(await waitFor(function () { return document.querySelector('.deferred-cache-remote'); }, LOAD)).not.toBe(false);
 		expect(window.DeferredCacheRemoteLoads).toBe(1);
 
 		app.$Component().show = false;
@@ -377,7 +383,7 @@ describe('Regression: deferred structural composition', function () {
 			var app = appWithTemplate('<section><DeferredFinalHeldChild value="FINAL"></DeferredFinalHeldChild></section>');
 
 			expect(await appReady(app)).not.toBe(false);
-			expect(await waitFor(function () { return held; }, 5000)).not.toBe(false);
+			expect(await waitFor(function () { return held; }, LOAD)).not.toBe(false);
 
 			destroy(app);
 
@@ -413,7 +419,7 @@ describe('Regression: deferred structural composition', function () {
 		});
 
 		expect(await appReady(app)).not.toBe(false);
-		expect(await waitFor(function () { return document.querySelector('.deferred-hybrid-remote-child'); }, 5000)).not.toBe(false);
+		expect(await waitFor(function () { return document.querySelector('.deferred-hybrid-remote-child'); }, LOAD)).not.toBe(false);
 		expect(document.querySelector('.deferred-hybrid-remote-child').textContent).toBe('HYBRID');
 		expect(window.DeferredHybridRemoteChildLoads).toBe(1);
 
@@ -439,7 +445,7 @@ describe('Regression: deferred structural composition', function () {
 		var app = appWithTemplate('<main><DeferredHybridRemoteParent value="BUNDLE"></DeferredHybridRemoteParent></main>');
 
 		expect(await appReady(app)).not.toBe(false);
-		expect(await waitFor(function () { return document.querySelector('.deferred-hybrid-bundled-child'); }, 5000)).not.toBe(false);
+		expect(await waitFor(function () { return document.querySelector('.deferred-hybrid-bundled-child'); }, LOAD)).not.toBe(false);
 		expect(document.querySelector('.deferred-hybrid-bundled-child').textContent).toBe('BUNDLE');
 		expect(window.DeferredHybridRemoteParentLoads).toBe(1);
 		expect(bundledLoads).toBe(1);
@@ -480,7 +486,7 @@ describe('Regression: deferred structural composition', function () {
 
 		expect(await waitFor(function () {
 			return document.querySelector('.deferred-multi-app-child') && document.querySelector('.deferred-multi-app-b');
-		}, 5000)).not.toBe(false);
+		}, LOAD)).not.toBe(false);
 		expect(document.querySelector('.deferred-multi-app-child').textContent).toBe('A');
 		expect(document.querySelector('.deferred-multi-app-b').textContent).toBe('B');
 		expect(a.$Component().$Application()).toBe(a);
@@ -520,7 +526,7 @@ describe('Regression: deferred structural composition', function () {
 
 		live.push(app);
 
-		expect(await waitFor(function () { return document.querySelector('.deferred-router-route'); }, 5000)).not.toBe(false);
+		expect(await waitFor(function () { return document.querySelector('.deferred-router-route'); }, LOAD)).not.toBe(false);
 		expect(document.querySelector('.deferred-router-route').textContent).toBe('Ready');
 
 		if (router)

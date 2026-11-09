@@ -394,6 +394,13 @@ describe('Contract: TopologyIso, finding, ways, legend, minimap, rights and view
 
 		expect(Math.abs(at.X - (box.left + box.width / 2))).toBeLessThan(40);
 		expect(iso.Show('nothing')).toBe(false);
+
+		/* Regression: under load the watch of its size had not told it yet: Show measures it itself. */
+		iso.Own().Width = 1;
+		iso.Own().Camera.X = 4000;
+
+		expect(iso.Show('b')).toBe(true);
+		expect(Math.abs(iso.ToScreen('b').X - (box.left + box.width / 2))).toBeLessThan(40);
 	});
 
 	it('lights the shortest way between two nodes: Path, Shift with a press, told in path; Escape lets it go', async function () {

@@ -15,7 +15,8 @@
  * - Border: the outline of a location (Points, Sides), what is past it (Beyond: far, cliff, void, sea, wall; Edge, Depth)
  *   and its passages (Passages of SceneLocations: roads, rivers and gates out of it).
  * - Tunnel (Points [[x, z, y]...], Radius, Flat, Depth), Caves (natural ways and halls of noise under the ground round X, Z
- *   within Radius: Top, Bottom, Scale, Width, Halls, Seed) and Overhangs (rock jutting out of steep slopes: Amount, Scale,
+ *   within Radius: Top, Bottom, Scale, Width, Halls, Seed), Passages (a graph of ways and of halls where they part: Nodes,
+ *   Ways, Radius, Flat, Depth, Rough, Seed: SceneTerrainGenerator.Passages) and Overhangs (rock jutting out of steep slopes: Amount, Scale,
  *   Slope; X, Z and Radius for a place of them): the volume of the land, cut and grown (Carves of
  *   SceneTerrainGenerator.Volume); the squares of the ground they touch are made of its density.
  * - Footings: the ground gives way under what stands on it: a level place under each building, Margin metres round it,
@@ -33,7 +34,7 @@
  *   of the objects it makes: {ID, Kind, Values}, their IDs of their order), Problems (what keeps the graph from running)},
  *   made once for the same graph and parameters.
  * - Library(options): the graph of a usual world of options (Size, Height, Water, Seed, Rock, Snow, Scale, Ridges, Noise,
- *   Relief, Planet ({Options, Latitude, Longitude, Turn}), Climate, Biomes, Sketch, Border (its properties), Tunnels and Caves (lists of the properties of such steps), Overhangs, Footings and Roads (true or their properties); and Settlements, Scatters: lists of the properties of such blocks): what an editor or
+ *   Relief, Planet ({Options, Latitude, Longitude, Turn}), Climate, Biomes, Sketch, Border (its properties), Tunnels, Caves and Passages (lists of the properties of such steps), Overhangs, Footings and Roads (true or their properties); and Settlements, Scatters: lists of the properties of such blocks): what an editor or
  *   a page starts from.
  * The same functions run in Node: they read no page.
  */
@@ -44,7 +45,7 @@ Elemenx.Service('SceneWorld', {
 	},
 
 	$Provides: {
-		Blueprints: {Graphs: ['world'], Nodes: ['Ground', 'Planet', 'Relief', 'Climate', 'Biomes', 'Sketch', 'Border', 'Footings', 'Tunnel', 'Caves', 'Overhangs', 'Roads', 'Settlement', 'Scatter', 'Terrain']}
+		Blueprints: {Graphs: ['world'], Nodes: ['Ground', 'Planet', 'Relief', 'Climate', 'Biomes', 'Sketch', 'Border', 'Footings', 'Tunnel', 'Caves', 'Passages', 'Overhangs', 'Roads', 'Settlement', 'Scatter', 'Terrain']}
 	},
 
 	$OnCreate: function () {
@@ -309,6 +310,18 @@ Elemenx.Service('SceneWorld', {
 			Outputs: [{Key: 'Land', Type: 'land'}],
 			Compute: function (inputs, properties) {
 				return carve(inputs, {Type: 'caves', Center: [Number(properties.X) || 0, Number(properties.Z) || 0], Radius: Number(properties.Radius), Top: Number(properties.Top), Bottom: Number(properties.Bottom), Scale: Number(properties.Scale), Width: Number(value(inputs, properties, 'Width')), Halls: Number(value(inputs, properties, 'Halls')), Seed: properties.Seed || undefined});
+			}
+		});
+
+		/* A graph of passages under the ground: ways and halls where they part (SceneTerrainGenerator.Passages). */
+		blueprints.Node('Passages', {
+			Graphs: ['world'],
+			Group: 'world',
+			Properties: [{Key: 'Nodes', Type: 'object', Value: []}, {Key: 'Ways', Type: 'object', Value: []}, {Key: 'Radius', Type: 'number', Value: 2.5}, {Key: 'Flat', Type: 'number', Value: 0.5}, {Key: 'Depth', Type: 'number', Value: 6}, {Key: 'Rough', Type: 'number', Value: 0}, {Key: 'Seed', Type: 'text', Value: ''}],
+			Inputs: [{Key: 'Land', Type: 'land'}, {Key: 'Rough', Type: 'float'}],
+			Outputs: [{Key: 'Land', Type: 'land'}],
+			Compute: function (inputs, properties) {
+				return carve(inputs, {Type: 'passages', Nodes: list(properties.Nodes) || [], Ways: list(properties.Ways) || [], Radius: Number(properties.Radius) || 2.5, Flat: Number(properties.Flat), Depth: Number(properties.Depth), Rough: Number(value(inputs, properties, 'Rough')) || 0, Seed: properties.Seed || undefined});
 			}
 		});
 
@@ -644,6 +657,10 @@ Elemenx.Service('SceneWorld', {
 
 		(given.Caves || []).forEach(function (caves) {
 			land = step('Caves', caves, 'Land', 'Land', land);
+		});
+
+		(given.Passages || []).forEach(function (passages) {
+			land = step('Passages', passages, 'Land', 'Land', land);
 		});
 
 		if (given.Overhangs)

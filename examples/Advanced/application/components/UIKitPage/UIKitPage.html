@@ -1013,6 +1013,7 @@
 					<RibbonGroup Title="Car" Icon="map-pin" Keep="true">
 						<Select Label="Car" Size="small" [options]="RaceCars" [value]="RaceCar" (change)="RaceCarChosen" />
 						<Select Label="Camera" Size="small" [options]="PlacePersons" [value]="RacePerson" (change)="RacePerson = $event" />
+						<Select Label="Track" Size="small" [options]="RaceTracks" [value]="RaceKind" (change)="RaceKindChosen" />
 						<Button Label="New track" Icon="map-pin" Variant="ghost" Size="small" (click)="RaceNewTrack" />
 						<Toggle Label="Doors" [checked]="RaceDoors" (change)="RaceDoorsOpened" />
 						<span>{{RaceSpeed}} km/h{{RaceGear ? ' · ' + RaceGear : ''}}{{RaceLapText ? ' · ' + RaceLapText : ''}}{{RaceWrong ? ' · wrong way' : ''}}</span>

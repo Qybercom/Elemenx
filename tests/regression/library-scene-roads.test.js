@@ -505,6 +505,39 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 
 		expect(scene.Roads()).toEqual([]);
 	});
+	/* Interchanges: found where a motorway and a road meet one over the other, their ramps roads drawn by objects of their own. */
+	it('makes the interchanges of its roads, tells them in Interchanges, and draws their ramps as roads of their own', async function () {
+		var mounted = await mount();
+		var scene = mounted.Scene;
+		var found;
+
+		scene.Add('road', {ID: 'main', Type: 'motorway', Points: [[-600, 0], [600, 0]]});
+		scene.Add('road', {ID: 'side', Type: 'road', Points: [[0, -300], [0, 300]]});
+
+		mounted.Frames(2);
+
+		found = scene.Interchanges();
+
+		expect(found.map(function (one) {
+			return [one.Form, one.Roads.slice().sort(), one.Ramps.length];
+		})).toEqual([['diamond', ['main', 'side'], 4]]);
+		expect(scene.Roads().filter(function (road) {
+			return road.Ramp === found[0].ID;
+		}).length).toBe(4);
+
+		/* Their objects come after the frame, and the roads of the network are not made again of them. */
+		await waitFor(function () {
+			return found[0].Ramps.every(function (id) {
+				return scene.Get(id);
+			});
+		}, 4000);
+
+		mounted.Frames(2);
+
+		expect(scene.Roads().length).toBe(6);
+		expect(scene.Interchanges().length).toBe(1);
+	});
+
 	it('meets roads at junctions, found or of kind junction, and tells their ground', async function () {
 		var mounted = await mount();
 		var scene = mounted.Scene;

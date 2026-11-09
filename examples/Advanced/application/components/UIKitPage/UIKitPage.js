@@ -425,6 +425,9 @@ Elemenx.Component('UIKitPage', {
 	RaceCar: 'mclaren',
 	RacePerson: 'third',
 	RaceSeed: 1,
+	/* The tracks: a short one over rolling land, a long one through mountains (its tunnels, bridges and a viaduct). */
+	RaceTracks: [{Value: 'short', Label: 'Short · 2.4 km'}, {Value: 'mountains', Label: 'Mountains · 8 km'}],
+	RaceKind: 'short',
 	RaceLapText: '',
 	RaceWrong: false,
 	RaceNote: '',
@@ -3368,7 +3371,8 @@ Elemenx.Component('UIKitPage', {
 
 		if (!scene) return;
 
-		var track = this.$Service('SceneRoadGenerator').Track(seed, {Length: 2400});
+		var long = this.RaceKind === 'mountains';
+		var track = this.$Service('SceneRoadGenerator').Track(seed, long ? {Length: 8000, Scenery: true} : {Length: 2400});
 
 		this.RaceTrack = track;
 
@@ -3377,7 +3381,7 @@ Elemenx.Component('UIKitPage', {
 		});
 
 		scene.Add('sun', {ID: 'day', Time: this.RaceHour, Latitude: 45, DayOfYear: 172, Color: '#fff4e0'});
-		scene.Add('ground', {ID: 'land', World: this.$Service('SceneWorld').Library({Size: 2400, Height: 22, Water: 0, Scale: 420, Ridges: 0.15, Rock: false, Snow: false, Seed: seed})});
+		scene.Add('ground', {ID: 'land', World: this.$Service('SceneWorld').Library(long ? {Size: track.Size, Height: 40, Water: 0, Scale: 520, Ridges: 0.3, Rock: 0.75, Snow: 0.95, Seed: seed, Sketch: track.Sketch} : {Size: 2400, Height: 22, Water: 0, Scale: 420, Ridges: 0.15, Rock: false, Snow: false, Seed: seed})});
 		scene.Add('forest', {ID: 'woods', Density: 1.2, Cover: 0.4, Patch: 120});
 		scene.Add('grass', {ID: 'meadow', Density: 0.6, Height: 0.5});
 		scene.Add('road', track.Spec);
@@ -3564,6 +3568,13 @@ Elemenx.Component('UIKitPage', {
 
 	RaceNewTrack: function () {
 		this.RaceSeed++;
+
+		this.RaceBuild();
+	},
+
+	/* The other track: made at once. */
+	RaceKindChosen: function (value) {
+		this.RaceKind = value;
 
 		this.RaceBuild();
 	},

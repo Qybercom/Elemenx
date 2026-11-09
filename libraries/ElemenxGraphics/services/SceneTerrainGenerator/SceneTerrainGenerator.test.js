@@ -629,6 +629,88 @@ describe('Contract: the volume of a ground: tunnels, caves and overhangs cut out
 	});
 
 	/*
+	 * Forks under the ground had no form: a tunnel was one line, caves a noise. Passages are a graph: ways from node to node,
+	 * a hall where they part, the kind of each node by its ways, the points of a way on a straight grade between its nodes.
+	 */
+	it('makes a graph of passages: its nodes by their ways, a hall at a fork, its ways from node to node on their grade', function () {
+		var graph = terrain.Passages({Radius: 2, Flat: 0.5, Depth: 10, Nodes: [{ID: 'mouth', At: [-80, 0], Depth: 1}, {ID: 'fork', At: [0, 0]}, {ID: 'hall', At: [60, 40], Radius: 9}, {ID: 'well', At: [60, -40, -30]}], Ways: [{From: 'mouth', To: 'fork', Points: [[-40, 0]]}, {From: 'fork', To: 'hall'}, {From: 'fork', To: 'well', Radius: 3}, {From: 'fork', To: 'nowhere'}]}, function () {
+			return 20;
+		});
+		var kinds = {};
+
+		graph.Nodes.forEach(function (node) {
+			kinds[node.ID] = [node.Kind, +node.Hall.toFixed(2), +node.At[1].toFixed(2)];
+		});
+
+		expect(graph.Ways.length).toBe(3);
+		/* The fork: a hall half again its widest way (3); the hall told; the ends none. */
+		expect(kinds).toEqual({mouth: ['end', 0, 19], fork: ['fork', 4.5, 10], hall: ['end', 9, 10], well: ['end', 0, -30]});
+		/* A point of no height halfway: halfway down from the mouth to the fork. */
+		expect(graph.Ways[0].Points.map(function (point) {
+			return +point[1].toFixed(3);
+		})).toEqual([19, 14.5, 10]);
+		/* Its floor at the floor of its ways: the widest, 0.7 of a radius of 3 under its middle. */
+		expect(graph.Nodes[1].Floor).toBeCloseTo(10 - 3 * 0.7, 6);
+	});
+
+	it('finds the shortest way through a graph of passages, and none to a node no way reaches', function () {
+		var graph = terrain.Passages({Nodes: [{ID: 'a', At: [0, 0, 0]}, {ID: 'b', At: [100, 0, 0]}, {ID: 'c', At: [50, 10, 0]}, {ID: 'd', At: [50, 300, 0]}, {ID: 'lone', At: [0, 500, 0]}], Ways: [{ID: 'long', From: 'a', To: 'd'}, {From: 'd', To: 'b'}, {ID: 'one', From: 'a', To: 'c'}, {ID: 'two', From: 'b', To: 'c'}]});
+		var route = terrain.PassageRoute(graph, 'a', 'b');
+
+		expect(route.Nodes).toEqual(['a', 'c', 'b']);
+		expect(route.Ways).toEqual(['one', 'two']);
+		expect(route.Length).toBeCloseTo(2 * Math.hypot(50, 10), 6);
+		expect(route.Points).toEqual([[0, 0, 0], [50, 0, 10], [100, 0, 0]]);
+		expect(terrain.PassageRoute(graph, 'a', 'lone')).toBe(null);
+		expect(terrain.PassageRoute(graph, 'a', 'missing')).toBe(null);
+	});
+
+	/*
+	 * The volume of a fork: each way a bore with its floor level, a hall where they part joined to them with no edge, its
+	 * floor the floor of the ways; rough walls of a natural cave, none by the floor, so it stays walkable.
+	 */
+	it('cuts the ways and the hall of a fork of passages, joined, their floors level and walkable, rough walls or smooth', function () {
+		var options = {Size: 400, Height: 40, Water: 0, Seed: 'hill', Scale: 90};
+		var carve = {Type: 'passages', Radius: 2.5, Nodes: [{ID: 'w', At: [-60, 0, -4]}, {ID: 'f', At: [0, 0, -4]}, {ID: 'n', At: [40, 40, -4]}, {ID: 's', At: [40, -40, -4]}], Ways: [{From: 'w', To: 'f'}, {From: 'f', To: 'n'}, {From: 'f', To: 's'}]};
+		var field = terrain.Flat(Object.assign({}, options, {Carves: [carve]}));
+		var rough = terrain.Flat(Object.assign({}, options, {Carves: [Object.assign({}, carve, {Rough: 0.8, Seed: 'cave'})]}));
+		var floor = -4 - 2.5 * 0.7;
+		var hall = field.Volume.Carves[0].Halls[0];
+		var walk = terrain.Underground(field, {});
+
+		expect(hall.Radius).toBeCloseTo(2.5 * 1.5, 6);
+		/* In the ways, in the hall, and in between where they meet. */
+		[[-30, 0], [20, 20], [20, -20], [0, 0], [-3, 0], [2, 2]].forEach(function (point) {
+			expect(field.Density(point[0], -4, point[1])).toBeLessThan(0);
+			expect(field.Density(point[0], floor + 0.3, point[1])).toBeLessThan(0);
+			expect(field.Density(point[0], floor - 0.3, point[1])).toBeGreaterThan(0);
+		});
+
+		/* Out of them, rock. */
+		expect(field.Density(0, -4, 12)).toBeGreaterThan(0);
+		expect(field.Density(-30, -4, 6)).toBeGreaterThan(0);
+		/* Walked: the floor under a walker in the hall, the same as in a way. */
+		expect(walk.Height(0, 0, -4)).toBeCloseTo(floor, 0);
+		expect(walk.Height(-30, 0, -4)).toBeCloseTo(floor, 0);
+
+		/* Rough: the walls move, the floor does not. */
+		var moved = 0;
+
+		[-50, -40, -30, -20, -10].forEach(function (x) {
+			[1.6, 2.2, 2.8].forEach(function (z) {
+				if (Math.abs(rough.Density(x, -3.5, z) - field.Density(x, -3.5, z)) > 0.05)
+					moved++;
+			});
+
+			expect(rough.Density(x, floor + 0.2, 0)).toBeCloseTo(field.Density(x, floor + 0.2, 0), 6);
+		});
+
+		expect(moved).toBeGreaterThan(5);
+		expect(field.Volume.Touches(-10, -10, 10, 10)).toBe(true);
+		expect(field.Volume.Touches(-150, 100, -120, 140)).toBe(false);
+	});
+
+	/*
 	 * Regression: a tunnel made each square in the box of all of it of the volume, though far from most, and the points
 	 * of such a square where nothing is cut were off the heights: beside a square of heights, a step.
 	 */

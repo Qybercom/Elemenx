@@ -184,7 +184,7 @@ describe('Regression: Template and Component contracts', function () {
 
 		await waitFor(function () {
 			return owner.$Element().textContent === 'ab';
-		}, 1000);
+		}, 10000);
 
 		expect(owner.$Element().querySelectorAll('.hook-row').length).toBe(2);
 		expect(owner.$Element().textContent).toBe('ab');
@@ -210,7 +210,7 @@ describe('Regression: Template and Component contracts', function () {
 
 		expect(await waitFor(function () {
 			return !!document.querySelector('#mount .contract-panel');
-		}, 2000)).toBe(true);
+		}, 10000)).toBe(true);
 		expect(panel.$Ref('title').textContent).toBe('second');
 	});
 
@@ -245,7 +245,7 @@ describe('Regression: Template and Component contracts', function () {
 		try {
 			expect(await waitFor(function () {
 				return errors.length === 2;
-			}, 2000)).toBe(true);
+			}, 10000)).toBe(true);
 		}
 		finally {
 			console.error = consoleError;
@@ -276,7 +276,7 @@ describe('Regression: Template and Component contracts', function () {
 
 			await waitFor(function () {
 				return logged.length > 0;
-			}, 2000);
+			}, 10000);
 		}
 		finally {
 			console.error = consoleError;

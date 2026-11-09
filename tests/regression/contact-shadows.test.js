@@ -39,6 +39,36 @@ async function create (quality) {
 		return ground && ground.Nodes && Object.keys(ground.Nodes).length > 4 && ground.Missing === 0;
 	}, 60000);
 
+	/*
+	 * And till the card has made every program, as the veil of a scene waits: the land is not drawn before. Regression: the
+	 * program of the land, long to make on a card of software, was not ready, and the pictures were of the sky alone.
+	 */
+	await waitFor(function () {
+		ready.Scene().Rest = 0;
+
+		ready.Engine().Frame(now += 33);
+
+		return ready.Engine().Renderer.Progress().Needed === 0;
+	}, 180000);
+
+	/*
+	 * And calm for ten frames: no square of the ground asked for, the grid of the probes not being laid. Regression: under
+	 * load they still came between the picture with contact shadows and the one without, and the second was lighter.
+	 */
+	var calm = 0;
+
+	await waitFor(function () {
+		var read = ready.Engine().ProbesRead ? ready.Engine().ProbesRead() : null;
+
+		ready.Scene().Rest = 0;
+
+		ready.Engine().Frame(now += 33);
+
+		calm = !ready.Scene().Ground.Missing && !(read && read.Laying) ? calm + 1 : 0;
+
+		return calm >= 10;
+	}, 60000);
+
 	ready.Now = now;
 
 	return ready;

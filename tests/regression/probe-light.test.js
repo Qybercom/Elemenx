@@ -56,6 +56,25 @@ function frames (scene, count) {
 	}
 }
 
+/*
+ * Frames till the ground is made and the grid of voxels laid of it (a few slabs a frame): under load the squares of the
+ * ground come late, and the grid is laid again of them. Regression: read after a fixed count of frames, half laid.
+ */
+async function settled (scene) {
+	var i;
+
+	for (i = 0; i < 600; i++) {
+		var read = scene.Engine().ProbesRead();
+		if (read && !read.Laying && !scene.Scene().Ground.Missing && i > 2) return;
+
+		frames(scene, 1);
+
+		await new Promise(function (done) {
+			setTimeout(done, 2);
+		});
+	}
+}
+
 /* The red of the light a probe holds (its first harmonic), of a place: the probe nearest to it. */
 function probeAt (read, place) {
 	var index = [0, 1, 2].map(function (axis) {
@@ -92,6 +111,8 @@ describe('Contract: the light that bounces, of probes round the eye, on high and
 		var y;
 
 		frames(scene, 20);
+
+		await settled(scene);
 
 		voxels = scene.Engine().VoxelsRead();
 
@@ -132,6 +153,29 @@ describe('Contract: the light that bounces, of probes round the eye, on high and
 		expect(hollow).toBe(true);
 		expect(top).toBeGreaterThan(low + 1);
 		expect(solid(x, top + 2, z)).toBe(false);
+	}, 120000);
+
+	/* Regression: laid while the squares of the ground were still coming, the grid had no ground till ten seconds were gone. */
+	it('lays the grid of voxels again when the squares of the ground change', async function () {
+		var scene = await mount();
+		var ground = scene.Scene().Ground;
+		var key = Object.keys(ground.Nodes)[0];
+		var node = ground.Nodes[key];
+
+		await settled(scene);
+
+		expect(scene.Engine().ProbesRead().Laying).toBe(false);
+
+		/* One square more: the ground changed under the grid. */
+		ground.Nodes['test:square'] = node;
+
+		frames(scene, 1);
+
+		expect(scene.Engine().ProbesRead().Laying).toBe(true);
+
+		delete ground.Nodes['test:square'];
+
+		await settled(scene);
 	}, 120000);
 
 	it('gathers less light in the hollow of the culvert than in the open beside it, and none of its probes stays in a wall', async function () {
@@ -182,6 +226,10 @@ describe('Contract: the light that bounces, of probes round the eye, on high and
 
 		frames(scene, 40);
 
+		await settled(scene);
+
+		frames(scene, 4);
+
 		read = engine.ProbesRead();
 
 		expect(engine.ProbeAround().On).toBe(true);
@@ -192,6 +240,10 @@ describe('Contract: the light that bounces, of probes round the eye, on high and
 		scene.SetViewpoint({Target: [6, height, 0], Yaw: Math.PI / 2, Pitch: 0, Distance: 0.5});
 
 		frames(scene, 60);
+
+		await settled(scene);
+
+		frames(scene, 4);
 
 		read = engine.ProbesRead();
 

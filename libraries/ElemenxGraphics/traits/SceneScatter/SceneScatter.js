@@ -1140,24 +1140,73 @@ Elemenx.Trait('SceneScatter', {
 		function tunnelled (field) {
 			var lines = [];
 
-			(engine.RoadsCarves ? engine.RoadsCarves() : []).forEach(function (carve) {
-				var reach = (carve.Width || carve.Radius * 2) / 2 + 1;
-				var top = (carve.Height || carve.Radius * 2) / 2 + 0.5;
-				var piece = [];
+			/* Once for a field: it is made again when what is cut out of it changes. Regression: made again at every look, slow. */
+			if (field.Tunnelled)
+				return field.Tunnelled;
 
-				carve.Points.concat([null]).forEach(function (point) {
-					if (point && field.Height(point[0], point[1]) < point[2] + top) {
-						piece.push([point[0], point[1]]);
+			/* Of a ground with no volume made yet, the tunnels of the roads alone; their points are [x, z, y]. */
+			if (!field.Volume) {
+				(engine.RoadsCarves ? engine.RoadsCarves() : []).forEach(function (carve) {
+					var reach = (carve.Width || carve.Radius * 2) / 2 + 1;
+					var top = (carve.Height || carve.Radius * 2) / 2 + 0.5;
+					var piece = [];
 
-						return;
-					}
+					carve.Points.concat([null]).forEach(function (point) {
+						if (point && field.Height(point[0], point[1]) < point[2] + top) {
+							piece.push([point[0], point[1]]);
 
-					if (piece.length > 1)
-						lines.push({Points: piece, Reach: reach});
+							return;
+						}
 
-					piece = [];
+						if (piece.length > 1)
+							lines.push({Points: piece, Reach: reach});
+
+						piece = [];
+					});
+				});
+
+				return lines;
+			}
+
+			/*
+			 * The tunnels (of the roads too) and passages of the ground where they open to the sky: no grass over their holes.
+			 * Regression: grass grew over the mouth of a passage, in the air. Their points are [x, y, z].
+			 */
+			field.Volume.Carves.forEach(function (one) {
+				var bores = one.Type === 'tunnel' ? [one] : one.Type === 'passages' ? one.Tunnels : [];
+
+				bores.forEach(function (bore) {
+					var reach = (bore.Width > 0 ? bore.Width : bore.Radius * 2) / 2 + 1;
+					var top = (bore.Width > 0 ? bore.Height : bore.Radius * 2) / 2 + 0.5;
+					var piece = [];
+					var fine = [];
+
+					/* Every 6 m along it at most: its points may be far apart (a way from a node to the next). */
+					bore.Points.forEach(function (point, index) {
+						var next = bore.Points[index + 1];
+						var steps = next ? Math.max(1, Math.ceil(Math.hypot(next[0] - point[0], next[2] - point[2]) / 6)) : 1;
+						var k;
+
+						for (k = 0; k < steps; k++)
+							fine.push(next ? [point[0] + (next[0] - point[0]) * k / steps, point[1] + (next[1] - point[1]) * k / steps, point[2] + (next[2] - point[2]) * k / steps] : point);
+					});
+
+					fine.concat([null]).forEach(function (point) {
+						if (point && field.Height(point[0], point[2]) < point[1] + top) {
+							piece.push([point[0], point[2]]);
+
+							return;
+						}
+
+						if (piece.length)
+							lines.push({Points: piece.length > 1 ? piece : [piece[0], [piece[0][0] + 0.01, piece[0][1]]], Reach: reach});
+
+						piece = [];
+					});
 				});
 			});
+
+			field.Tunnelled = lines;
 
 			return lines;
 		}

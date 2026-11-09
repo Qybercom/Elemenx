@@ -23,10 +23,25 @@
  * - Meeting(a, b): what two roads of two types do where they cross: junction (streets and roads, at one level), crossing (a
  *   railway and a road: a level crossing), interchange (two motorways, 110 km/h or more), over (one over the other).
  * - Network(specs, junctions, options): roads that meet and their junctions ({ID, X, Y, Z, Radius, Surface, Roads, Arms
- *   [{Road, Angle, Half}], Kind (T, Y, X, star, ring, railway)}), the roads at the level of each.
+ *   [{Road, Angle, Half, Rail}], Kind (T, Y, X, star, ring, railway), Deck (a level crossing: the road at the heads of the
+ *   rails), Closed (its barriers down), Under (under the ground: where roads in their tunnels meet or one ends in the
+ *   tunnel of another, or told; at the level of the roads through it, a chamber cut and lined for it)}), the roads at the
+ *   level of each; roads that meet one over the other get an
+ *   overpass (Overpasses: false of options, none): the one over climbs by its grade to the Clearance of the other and a
+ *   bridge over it, a road under an airfield or in a tunnel there goes down into a tunnel.
+ * - Interchanges: where two roads meet one over the other (or one ends on a motorway) Network makes ramps between them
+ *   (one-way roads of type ramp, Ramp: the ID of their interchange): stack, cloverleaf, diamond, roundabout, trumpet, by
+ *   InterchangeForm(a, b, ending) or told by a junction given there of that Kind (none: no interchange); none where the
+ *   crossing or a ramp's end is in a tunnel, nor of a road too short. Its result has Interchanges: [{ID, Form, X, Z, Roads,
+ *   Ramps}]; Interchanges: false of options makes none.
+ * - TunnelGraph(roads, junctions): the tunnels of roads as a graph of passages ({Nodes: portals and junctions under the
+ *   ground, Ways}), for SceneTerrainGenerator.PassageRoute. Carves(roads, junctions): what their tunnels and chambers cut.
+ * - Clearance(type): the room a road of a type needs over it (its Clearance, 5.5 m, 7 m over a railway with wires).
  * - Road(spec): a road made of {ID, Type, Points, Closed, Width (in place of the width of the type: its strips scaled),
- *   Height, Follow (false: not along the ground), Grade} with its Line, its Width and its strips at their offsets
- *   ({Left, Right} from the middle).
+ *   Height, Follow (false: not along the ground), Grade, Elevated ([[from, to, height]]: on a viaduct there, so high over
+ *   the ground, 7), Viaducts (false: none found), Bank (8)} with its Line, its Width and its strips at their offsets
+ *   ({Left, Right} from the middle). Over water (the ground under 0) a road keeps 5.5 m, on a bridge; on a bank higher
+ *   than Bank it stands on a viaduct (Viaducts: false of the options of Network, none for all).
  * - Near(road, x, z, hint): {Offset (from the middle, left below 0, across the way), Far (how far the point is from
  *   the line: past an end, more than its Offset), Along (the index of the point nearest), At (the metres from its start),
  *   Way, Y (of the road there)}; hint, the Along of a moment ago, looks only round it.
@@ -43,7 +58,7 @@
 Elemenx.Service('SceneRoads', {
 	$Meta: {
 		Description: 'The roads of a scene, of any kind: motorways, streets, country roads, race tracks, paths, runways and railways, their cross-sections, lines and models.',
-		Methods: ['Surface(name, surface)', 'Define(name, type)', 'Type(name)', 'Types()', 'Line(points, options)', 'Road(spec)', 'Grade(type)', 'Meeting(a, b)', 'Network(specs, junctions, options)', 'JunctionAt(junctions, x, z)', 'Near(road, x, z, hint)', 'Under(roads, x, z, hints)', 'BarrierHit(roads, x, z, fromX, fromZ, hints, size)', 'FreeBarrier(spec, options)', 'Sketch(roads, junctions)', 'Carves(roads)', 'TunnelLamps(road)', 'Asset(roads, options)', 'AssetOf(roads, options)', 'Work()']
+		Methods: ['Surface(name, surface)', 'Define(name, type)', 'Type(name)', 'Types()', 'Line(points, options)', 'Road(spec)', 'Grade(type)', 'Meeting(a, b)', 'Clearance(type)', 'InterchangeForm(a, b, ending)', 'Network(specs, junctions, options)', 'JunctionAt(junctions, x, z)', 'Near(road, x, z, hint)', 'Under(roads, x, z, hints)', 'BarrierHit(roads, x, z, fromX, fromZ, hints, size)', 'FreeBarrier(spec, options)', 'Sketch(roads, junctions)', 'Carves(roads, junctions)', 'TunnelGraph(roads, junctions)', 'TunnelLamps(road)', 'Asset(roads, options)', 'AssetOf(roads, options)', 'Work()']
 	},
 
 	$OnCreate: function () {
@@ -286,7 +301,7 @@ Elemenx.Service('SceneRoads', {
 		/* A knot with no height of its own takes the one of the ground, or the ones round it. */
 		knots.forEach(function (knot) {
 			if (knot[2] === null)
-				knot[2] = height ? height(knot[0], knot[1]) : 0;
+				knot[2] = height ? Math.max(0, height(knot[0], knot[1])) : 0;
 		});
 
 		/* Fine along the parts through the knots (each straight, an arc or a smooth curve), then even steps along it. */
@@ -346,16 +361,49 @@ Elemenx.Service('SceneRoads', {
 	 * about 40 metres, then no steeper than Grade (rise over run) either way. Regression: a street took the ground at its
 	 * knots alone and went straight from one to the next, in a cut or on a bank across a hill, and two such streets crossed
 	 * metres apart, one on its bank over the other. Where the ground is steeper than the grade the line keeps it, over the
-	 * ground or under it: a bridge or a tunnel is found there.
+	 * ground or under it: a bridge or a tunnel is found there. Over water (the ground under 0, the level of the sea: a sea, a
+	 * river, a gorge down to it) it goes from bank to bank, on the straight between the dry ground of each, and never under
+	 * 5.5 m, a bridge's room (Regression: a motorway ran on the sea at its level; a track went down into a canyon to its
+	 * floor, and into tunnels in its walls).
 	 */
 	Follow: function (points, height, grade, closed) {
 		var count = points.length;
+		var wet = [];
 		var ground = points.map(function (point) {
-			return Math.max(0, height(point.X, point.Z));
+			var at = height(point.X, point.Z);
+
+			wet.push(at < 0);
+
+			return at < 0 ? 5.5 : at;
 		});
 		var step = count > 1 ? (points[count - 1].Along - points[0].Along) / (count - 1) || 2 : 2;
 		var reach = Math.max(1, Math.round(20 / step));
 		var smooth = [];
+		var run;
+
+		/* Each run over water: the straight between its banks. */
+		for (run = 0; run < count; run++) {
+			if (!wet[run]) continue;
+
+			var end = run;
+
+			while (end + 1 < count && wet[end + 1])
+				end++;
+
+			/* Its banks: the highest of the ground within 80 m of each side, the rim of a gorge, not the foot of its wall. */
+			var near = Math.max(1, Math.round(80 / step));
+			var before = run > 0 ? Math.max.apply(null, ground.slice(Math.max(0, run - near), run)) : null;
+			var after = end + 1 < count ? Math.max.apply(null, ground.slice(end + 1, Math.min(count, end + 1 + near))) : null;
+
+			before = before === null ? (after === null ? 5.5 : after) : before;
+			after = after === null ? before : after;
+
+			for (k = run; k <= end; k++)
+				ground[k] = Math.max(5.5, before + (after - before) * (k - run + 1) / (end - run + 2));
+
+			run = end;
+		}
+
 		var i;
 		var k;
 		var pass;
@@ -375,22 +423,36 @@ Elemenx.Service('SceneRoads', {
 			smooth.push(sum / weight);
 		}
 
-		/* No steeper than the grade: forth and back, twice round a ring. */
-		for (pass = 0; pass < (closed ? 2 : 1); pass++) {
-			for (i = 1; i < count + (closed ? 1 : 0); i++) {
-				var a = smooth[(i - 1) % count];
-				var b = i % count;
-				var run = step * grade;
+		/*
+		 * No steeper than the grade, both ways alike: its tops cut down from each side (under a hill: a tunnel), then its
+		 * hollows filled up from each side (over a valley: a bridge), again till it holds (twice round a ring). Regression:
+		 * one pass forth carried a hill on past its top, and the road came down the far side late, on a bank or a bridge.
+		 */
+		var run = step * grade;
 
-				smooth[b] = Math.max(a - run, Math.min(a + run, smooth[b]));
+		function limit (down) {
+			var turns;
+			var k;
+
+			for (turns = 0; turns < (closed ? 2 : 1); turns++) {
+				for (k = 1; k < count + (closed ? 1 : 0); k++)
+					smooth[k % count] = down ? Math.min(smooth[k % count], smooth[(k - 1) % count] + run) : Math.max(smooth[k % count], smooth[(k - 1) % count] - run);
+
+				for (k = count - 2 + (closed ? 1 : 0); k >= 0; k--)
+					smooth[k] = down ? Math.min(smooth[k], smooth[(k + 1) % count] + run) : Math.max(smooth[k], smooth[(k + 1) % count] - run);
 			}
+		}
 
-			for (i = count - 2 + (closed ? 1 : 0); i >= 0; i--) {
-				var c = smooth[(i + 1) % count];
-				var run2 = step * grade;
+		/* Over water never under its room (5.5 m), however narrow the water: the smoothing and the cuts lower it no more. */
+		for (pass = 0; pass < 4; pass++) {
+			limit(true);
 
-				smooth[i] = Math.max(c - run2, Math.min(c + run2, smooth[i]));
-			}
+			wet.forEach(function (water, index) {
+				if (water)
+					smooth[index] = Math.max(smooth[index], 5.5);
+			});
+
+			limit(false);
 		}
 
 		points.forEach(function (point, index) {
@@ -433,7 +495,15 @@ Elemenx.Service('SceneRoads', {
 		var settings = options || {};
 		var road = {ID: spec.ID || '', Type: type, TypeName: spec.Type || 'road', Closed: !!spec.Closed, Width: width, Scale: scale, Strips: strips, Height: Number(spec.Height) || 0, Points: this.Line(spec.Points, Object.assign({Closed: spec.Closed, Straight: spec.Straight, Segments: spec.Segments, Radii: spec.Radii, Follow: spec.Follow !== false && spec.Follow !== 'false' && !(spec.Bridges || []).length && !(spec.Tunnels || []).length, Grade: this.Grade(type)}, settings))};
 
+		/* Elevated: on piers over the ground there, a viaduct. */
+		if ((spec.Elevated || []).length && settings.Height)
+			this.Elevate(road, spec.Elevated, settings.Height);
+
 		road.Spans = this.Spans(road, spec, settings.Height);
+
+		(road.Elevated || []).forEach(function (span) {
+			this.Span(road, span);
+		}, this);
 		road.Barriers = this.Barriers(road, spec.Barriers);
 		road.Beside = (spec.Along || type.Along || []).slice();
 		road.Marks = (spec.Marks || []).slice();
@@ -506,63 +576,30 @@ Elemenx.Service('SceneRoads', {
 		var made = (specs || []).map(function (spec) {
 			return self.Road(spec, settings);
 		});
-		var junctions = (given || []).map(function (one, index) {
-			return {ID: one.ID || 'junction-' + index, X: Number(one.X) || 0, Z: Number(one.Z) || 0, Y: null, Radius: Number(one.Radius) || 0, Surface: one.Surface || 'asphalt', Roads: [], Kind: one.Kind || ''};
+		var forms = ['diamond', 'cloverleaf', 'trumpet', 'roundabout', 'stack', 'none'];
+		/* A junction given of the form of an interchange (or none) is no junction: it tells the interchange there. */
+		var told = (given || []).filter(function (one) {
+			return forms.indexOf(one.Kind) !== -1;
+		}).map(function (one, index) {
+			return {ID: one.ID || 'interchange-told-' + index, X: Number(one.X) || 0, Z: Number(one.Z) || 0, Kind: one.Kind};
+		});
+		var junctions = (given || []).filter(function (one) {
+			return forms.indexOf(one.Kind) === -1;
+		}).map(function (one, index) {
+			return {ID: one.ID || 'junction-' + index, X: Number(one.X) || 0, Z: Number(one.Z) || 0, Y: null, Radius: Number(one.Radius) || 0, Surface: one.Surface || 'asphalt', Roads: [], Kind: one.Kind || '', Under: one.Under === true || one.Under === 'true'};
 		});
 
 		if (settings.Junctions !== false)
 			this.Crossings(made, junctions);
 
-		/* Each junction: the roads it holds, as wide as the widest of them, at their mean level there. */
+		/*
+		 * Each junction: the roads it holds, as wide as the widest of them, at their mean level there. One under the ground
+		 * (Under: found where roads in their tunnels meet, or told) holds the roads in their tunnels there, at the level of
+		 * those that go through it (a road that ends in a tunnel comes to the one it ends on); one on the ground, the roads on
+		 * the ground (not one in a tunnel under it).
+		 */
 		junctions.forEach(function (junction) {
-			var levels = [];
-			var widest = 0;
-
-			made.forEach(function (road) {
-				var near = self.Near(road, junction.X, junction.Z);
-				if (near.Far > road.Width / 2 + 1 || self.SpanAt(road, near.At)) return;
-
-				junction.Roads.push(road.ID);
-				levels.push(near.Y - road.Height);
-
-				widest = Math.max(widest, road.Width);
-			});
-
-			junction.Radius = junction.Radius || widest * 0.75 + 1;
-			junction.Y = levels.length ? levels.reduce(function (sum, one) {
-				return sum + one;
-			}, 0) / levels.length : settings.Height ? Math.max(0, settings.Height(junction.X, junction.Z)) : 0;
-
-			/*
-			 * Its arms: each road out of it, one way for a road that ends in it, both ways for one through it ([{Road, Angle,
-			 * Half}], round the junction). The kind of junction of them: T (three, two of them on one line), Y (three, none),
-			 * X (four), star (more), ring (a roundabout: told, or of five arms or more); railway stays as found.
-			 */
-			junction.Arms = [];
-
-			made.forEach(function (road) {
-				if (junction.Roads.indexOf(road.ID) === -1) return;
-
-				var near = self.Near(road, junction.X, junction.Z);
-				var last = road.Points[road.Points.length - 1].Along;
-				var angle = Math.atan2(near.Way[1], near.Way[0]);
-
-				if (road.Closed || near.At > junction.Radius + 2)
-					junction.Arms.push({Road: road.ID, Angle: angle + Math.PI, Half: road.Width / 2});
-
-				if (road.Closed || near.At < last - junction.Radius - 2)
-					junction.Arms.push({Road: road.ID, Angle: angle, Half: road.Width / 2});
-			});
-
-			junction.Arms.forEach(function (arm) {
-				arm.Angle = Math.atan2(Math.sin(arm.Angle), Math.cos(arm.Angle));
-			});
-			junction.Arms.sort(function (a, b) {
-				return a.Angle - b.Angle;
-			});
-
-			if (junction.Kind !== 'railway')
-				junction.Kind = junction.Kind === 'ring' || junction.Arms.length >= 5 ? 'ring' : self.Shape(junction.Arms);
+			self.Settle(junction, made, settings, given);
 		});
 
 		/*
@@ -582,8 +619,9 @@ Elemenx.Service('SceneRoads', {
 				return junction.Roads.indexOf(road.ID) !== -1;
 			}).map(function (junction) {
 				var near = self.Near(road, junction.X, junction.Z);
+				var level = self.LevelAt(junction, road);
 
-				return {Junction: junction, At: near.At, Fix: junction.Y - (near.Y - road.Height)};
+				return {Junction: junction, At: near.At, Level: level, Fix: level - (near.Y - road.Height)};
 			}).sort(function (a, b) {
 				return a.At - b.At;
 			});
@@ -597,7 +635,7 @@ Elemenx.Service('SceneRoads', {
 
 				for (k = 0; k < marks.length; k++) {
 					if (Math.abs(point.Along - marks[k].At) <= marks[k].Junction.Radius) {
-						point.Y = marks[k].Junction.Y;
+						point.Y = marks[k].Level;
 
 						return;
 					}
@@ -639,13 +677,14 @@ Elemenx.Service('SceneRoads', {
 
 				var near = self.Near(road, junction.X, junction.Z);
 				var loop = road.Closed ? road.Points[road.Points.length - 1].Along : 0;
+				var level = self.LevelAt(junction, road);
 
 				road.Points.forEach(function (point) {
 					var along = Math.abs(point.Along - near.At);
 					var far = loop ? Math.min(along, loop - along) : along;
 					var weight = far < junction.Radius ? 1 : far < junction.Radius + blend ? 1 - self.Smooth((far - junction.Radius) / blend) : 0;
 					if (weight > 0)
-						point.Y += (junction.Y - point.Y) * weight;
+						point.Y += (level - point.Y) * weight;
 
 					if (Math.hypot(point.X - junction.X, point.Z - junction.Z) < junction.Radius)
 						point.Cut = true;
@@ -653,7 +692,669 @@ Elemenx.Service('SceneRoads', {
 			});
 		});
 
-		return {Roads: made, Junctions: junctions};
+		/*
+		 * A road of Structures brought to the level of its junctions: its bridges and tunnels found again on its new line.
+		 * Regression: they were found on its line before, and a road that ends in a tunnel came out of the hill on its way down to it.
+		 */
+		made.forEach(function (road, index) {
+			var spec = (specs || [])[index] || {};
+			if (!(spec.Structures === true || spec.Structures === 'true') || !settings.Height || !junctions.some(function (junction) {
+				return junction.Roads.indexOf(road.ID) !== -1;
+			})) return;
+
+			road.Spans = self.Spans(road, spec, settings.Height);
+		});
+
+		if (settings.Overpasses !== false)
+			this.Overpasses(made, specs || [], settings.Height || null);
+
+		var interchanges = settings.Interchanges !== false ? this.Interchanges(made, junctions, told, settings).Interchanges : [];
+
+		/* Where a road is left on a bank higher than Bank (8 m): a viaduct (Viaducts: false of its spec or of options, none). */
+		if (settings.Viaducts !== false && settings.Height) {
+			made.forEach(function (road, index) {
+				var spec = (specs || [])[index] || {};
+				if (spec.Viaducts !== false && spec.Viaducts !== 'false')
+					self.Viaducts(road, settings.Height, Number(spec.Bank) > 0 ? Number(spec.Bank) : Number(settings.Bank) > 0 ? Number(settings.Bank) : 8, Number(spec.Shortest) > 0 ? Number(spec.Shortest) : 12);
+			});
+		}
+
+		return {Roads: made, Junctions: junctions, Interchanges: interchanges};
+	},
+
+	/*
+	 * The form of interchange two roads that meet one over the other get (or one that ends on the other, ending): stack (two
+	 * motorways of 130 km/h), cloverleaf (two of a motorway, one slower), diamond (a motorway and a road of 80 km/h or more),
+	 * trumpet (a road of 70 km/h or more that ends on a motorway); '' for none (an overpass alone, or a road that just ends
+	 * by it). A motorway is a road of 110 km/h or more.
+	 */
+	InterchangeForm: function (a, b, ending) {
+		function motorway (type) {
+			return !!type && type.Group === 'road' && (type.Speed || 50) >= 110;
+		}
+
+		function road (type, speed) {
+			return !!type && type.Group === 'road' && (type.Speed || 50) >= speed;
+		}
+
+		if (ending)
+			return motorway(b) && road(a, 70) && !motorway(a) ? 'trumpet' : '';
+
+		if (motorway(a) && motorway(b))
+			return (a.Speed || 50) >= 130 && (b.Speed || 50) >= 130 ? 'stack' : 'cloverleaf';
+
+		if (motorway(a) && road(b, 80) || motorway(b) && road(a, 80)) return 'diamond';
+
+		return '';
+	},
+
+	/*
+	 * Interchanges: where two roads meet one over the other, or one ends on the other, ramps between them by the form told
+	 * (a junction given there of Kind diamond, cloverleaf, trumpet, roundabout, stack or none, within 40 m) or found
+	 * (InterchangeForm). Each ramp a one-way road of type ramp (Ramp: the ID of its interchange, Structures: its bridges
+	 * found), from the edge of the motorway, where it leaves it or comes onto it, to the other road: at its edge (a motorway
+	 * too) or at a junction on it (diamond: one each side; roundabout: a ring each side; trumpet: one at the end of the road,
+	 * cut back from the motorway). Its heights from those of the two roads, straight between. Made after the overpasses
+	 * (Network), its ramps and junctions added to them. {Interchanges: [{ID, Form, X, Z, Roads, Ramps}]}.
+	 */
+	Interchanges: function (made, junctions, told, settings) {
+		var self = this;
+		var found = [];
+		var count = 0;
+		var roads = made.filter(function (road) {
+			return !road.Ramp;
+		});
+
+		function kind (type) {
+			return type.Group === 'road' && (type.Speed || 50) >= 110 ? 3 : type.Group === 'road' ? 2 : 1;
+		}
+
+		/*
+		 * The form told there, or the one found: of roads long enough for ramps alone (the main one 400 m, the other 200 m), not
+		 * a short piece (a sample of a gallery).
+		 */
+		function formAt (x, z, auto, main, other) {
+			var given = (told || []).filter(function (one) {
+				return Math.hypot(one.X - x, one.Z - z) <= 40;
+			})[0];
+			var long = main.Points[main.Points.length - 1].Along >= 400 && other.Points[other.Points.length - 1].Along >= 200;
+
+			return given ? {Form: given.Kind === 'none' ? '' : given.Kind, ID: given.ID} : {Form: long ? auto : '', ID: ''};
+		}
+
+		/* Once for a pair at a place: a crossing at a corner of their lines is found by two pieces of each. */
+		function add (one) {
+			if (!found.some(function (other) {
+				return (other.A === one.A && other.B === one.B || other.A === one.B && other.B === one.A) && Math.hypot(other.X - one.X, other.Z - one.Z) < 40;
+			}))
+				found.push(one);
+		}
+
+		/* The point of a road at metres along it, so far aside of it (side: to the left of its way, below 0 to the right). */
+		function at (road, metres, side) {
+			var place = self.At(road, Math.max(0, Math.min(road.Points[road.Points.length - 1].Along, metres)));
+			var left = [-place.Way[1], place.Way[0]];
+
+			return {X: place.X + left[0] * side, Z: place.Z + left[1] * side, Y: place.Y + road.Height, Way: place.Way, Left: left};
+		}
+
+		function dot (u, v) {
+			return u[0] * v[0] + u[1] * v[1];
+		}
+
+		function sign (value) {
+			return value < 0 ? -1 : 1;
+		}
+
+		/*
+		 * A ramp through its knots ({X, Z, Y}, or {X, Z} for a height on the straight between the knots of a height round it).
+		 * Regression: between its ends alone, and a knot of a height of its own (over the motorway) made a step of a loop.
+		 */
+		function ramp (id, knots, end) {
+			var gone = [0];
+			var told = [];
+			var i;
+
+			for (i = 1; i < knots.length; i++)
+				gone.push(gone[i - 1] + Math.hypot(knots[i].X - knots[i - 1].X, knots[i].Z - knots[i - 1].Z));
+
+			knots.forEach(function (knot, index) {
+				if (knot.Y !== undefined && knot.Y !== null)
+					told.push(index);
+			});
+
+			var spec = {ID: id, Type: 'ramp', Viaducts: true, Points: knots.map(function (knot, index) {
+				var before = told.filter(function (one) {
+					return one <= index;
+				}).pop();
+				var after = told.filter(function (one) {
+					return one >= index;
+				})[0];
+				var share = after === before ? 0 : (gone[index] - gone[before]) / (gone[after] - gone[before] || 1);
+
+				return [knot.X, knot.Z, knots[before].Y + (knots[after].Y - knots[before].Y) * share];
+			})};
+
+			var road = self.Road(spec, settings);
+
+			road.Ramp = end;
+
+			made.push(road);
+
+			return road;
+		}
+
+		/* A junction on a road at a point, of the ramps that end there (a ring of Radius of a roundabout). */
+		function junctionOn (id, point, ring) {
+			var junction = {ID: id, X: point.X, Z: point.Z, Y: null, Radius: ring ? 20 : 0, Surface: 'asphalt', Roads: [], Kind: ring ? 'ring' : '', Under: false};
+
+			junctions.push(junction);
+
+			return junction;
+		}
+
+		/* The places to make them: crossings of two roads that do not meet at one level, and ends of roads on others. */
+		roads.forEach(function (a, first) {
+			roads.forEach(function (b, second) {
+				if (second <= first) return;
+
+				var meeting = self.Meeting(a.Type, b.Type);
+				if (meeting !== 'over' && meeting !== 'interchange') return;
+
+				self.Cross(a, b).forEach(function (cross) {
+					if (self.Ending(a, cross.AtA, b.Width / 2 + 4) || self.Ending(b, cross.AtB, a.Width / 2 + 4)) return;
+
+					var main = kind(a.Type) >= kind(b.Type) ? a : b;
+					var chosen = formAt(cross.X, cross.Z, self.InterchangeForm(a.Type, b.Type, false), main, main === a ? b : a);
+					if (chosen.Form && chosen.Form !== 'trumpet')
+						add({Form: chosen.Form, ID: chosen.ID, A: main, B: main === a ? b : a, AtA: main === a ? cross.AtA : cross.AtB, AtB: main === a ? cross.AtB : cross.AtA, X: cross.X, Z: cross.Z});
+				});
+			});
+
+			if (a.Closed) return;
+
+			[0, a.Points[a.Points.length - 1].Along].forEach(function (metres) {
+				var end = self.At(a, metres);
+
+				roads.forEach(function (b) {
+					if (b === a) return;
+
+					var near = self.Near(b, end.X, end.Z);
+					var meeting = self.Meeting(a.Type, b.Type);
+					var chosen;
+
+					if (near.Far > b.Width / 2 + 4 || meeting !== 'over' && meeting !== 'interchange') return;
+
+					chosen = formAt(end.X, end.Z, self.InterchangeForm(a.Type, b.Type, true), b, a);
+
+					if (chosen.Form === 'trumpet')
+						add({Form: 'trumpet', ID: chosen.ID, A: b, B: a, AtA: near.At, AtB: metres, X: end.X, Z: end.Z, End: metres ? 1 : -1});
+				});
+			});
+		});
+
+		/*
+		 * None where the crossing, or a place a ramp comes onto a road or leaves it, is in a tunnel of it: the ramps would come
+		 * onto it under a hill. Regression: a road over a hill that a motorway went under in a tunnel got ramps down to it. The
+		 * places along the motorway of each form (metres from the crossing), and along the other road.
+		 */
+		var places = {diamond: [-260, 260], roundabout: [-260, 260], cloverleaf: [-260, -70, 70, 260], stack: [-430, -320, 320, 430], trumpet: [-215, -205, 98, 205]};
+
+		found = found.filter(function (one) {
+			var inTunnel = function (road, metres) {
+				var span = self.SpanAt(road, metres);
+
+				return !!span && span.Kind === 'tunnel';
+			};
+			var along = [0].concat(places[one.Form] || []);
+			var across = one.Form === 'trumpet' ? [0] : [0].concat(places[one.Form] || []);
+
+			return !along.some(function (metres) {
+				return inTunnel(one.A, one.AtA + metres);
+			}) && !across.some(function (metres) {
+				return inTunnel(one.B, one.AtB + metres);
+			});
+		});
+
+		found.forEach(function (one) {
+			var id = one.ID || 'interchange-' + count++;
+			var A = one.A;
+			var B = one.B;
+			var a = at(A, one.AtA, 0).Way;
+			var b = at(B, one.AtB, 0).Way;
+			var halfA = A.Width / 2;
+			var halfB = B.Width / 2;
+			var sine = Math.max(0.4, Math.abs(a[0] * b[1] - a[1] * b[0]));
+			var ramps = [];
+			var lasts = {};
+
+			/* Each quadrant: sa along A, sb along B; the side of A it is on and the side of B. */
+			function quadrant (sa, sb) {
+				var onA = sign(dot([sb * b[0], sb * b[1]], at(A, one.AtA, 0).Left));
+				var onB = sign(dot([sa * a[0], sa * a[1]], at(B, one.AtB, 0).Left));
+
+				return {SA: sa, SB: sb, OnA: onA, OnB: onB};
+			}
+
+			var quadrants = [quadrant(1, 1), quadrant(1, -1), quadrant(-1, 1), quadrant(-1, -1)];
+
+			if (one.Form === 'diamond' || one.Form === 'roundabout') {
+				var reach = (halfA + 45) / sine;
+				var ends = {};
+
+				quadrants.forEach(function (q, index) {
+					var mA = one.AtA + q.SA * 260;
+					var mB = one.AtB + q.SB * reach;
+					var start = at(A, mA, q.OnA * (halfA - 3));
+					var bend = at(A, mA - q.SA * 70, q.OnA * (halfA + 10));
+					var near = at(B, mB, q.OnB * (halfB + (one.Form === 'roundabout' ? 32 : 22)));
+					var end = at(B, mB, 0);
+
+					ramps.push(ramp(id + '-ramp-' + index, [start, {X: bend.X, Z: bend.Z}, {X: near.X, Z: near.Z}, end], id));
+
+					ends[q.SB] = end;
+				});
+
+				Object.keys(ends).forEach(function (side) {
+					lasts[side] = junctionOn(id + '-' + (side < 0 ? 'a' : 'b'), ends[side], one.Form === 'roundabout');
+				});
+			}
+			else if (one.Form === 'cloverleaf') {
+				var radius = 45;
+
+				quadrants.forEach(function (q, index) {
+					/* Its loop: round a middle in the quadrant, from the edge of A to the edge of B, three quarters of a turn. */
+					var middleA = (halfB + radius + 12) / sine;
+					var middleB = (halfA + radius + 12) / sine;
+					var c = at(A, one.AtA, 0);
+					var middle = {X: c.X + q.SA * a[0] * middleA + q.SB * b[0] * middleB, Z: c.Z + q.SA * a[1] * middleA + q.SB * b[1] * middleB};
+					var from = at(A, one.AtA + q.SA * middleA, q.OnA * (halfA - 3));
+					var to = at(B, one.AtB + q.SB * middleB, q.OnB * (halfB - 3));
+					var start = Math.atan2(from.Z - middle.Z, from.X - middle.X);
+					var stop = Math.atan2(to.Z - middle.Z, to.X - middle.X);
+					var turn = stop - start;
+					var knots = [from];
+					var k;
+
+					/* The long way round: three quarters of a turn, not one. */
+					while (turn <= 0) turn += Math.PI * 2;
+
+					if (turn < Math.PI)
+						turn -= Math.PI * 2;
+
+					for (k = 1; k < 10; k++) {
+						var angle = start + turn * k / 10;
+
+						knots.push({X: middle.X + Math.cos(angle) * radius, Z: middle.Z + Math.sin(angle) * radius});
+					}
+
+					knots.push(to);
+					ramps.push(ramp(id + '-loop-' + index, knots, id));
+
+					/* Its outer ramp: round the loop, from farther along A to farther along B. */
+					var far = 2 * radius + 90;
+					var out = Math.hypot(middle.X - c.X, middle.Z - c.Z) || 1;
+					var corner = {X: middle.X + (middle.X - c.X) / out * (radius + 22), Z: middle.Z + (middle.Z - c.Z) / out * (radius + 22)};
+					var outer = [at(A, one.AtA + q.SA * (far + middleA), q.OnA * (halfA - 3)), at(A, one.AtA + q.SA * (far * 0.6 + middleA), q.OnA * (halfA + 12)), corner, at(B, one.AtB + q.SB * (far * 0.6 + middleB), q.OnB * (halfB + 12)), at(B, one.AtB + q.SB * (far + middleB), q.OnB * (halfB - 3))];
+
+					ramps.push(ramp(id + '-ramp-' + index, outer.map(function (knot, place) {
+						return place === 0 || place === outer.length - 1 ? knot : {X: knot.X, Z: knot.Z};
+					}), id));
+				});
+			}
+			else if (one.Form === 'stack') {
+				var top = Math.max(at(A, one.AtA, 0).Y, at(B, one.AtB, 0).Y);
+
+				quadrants.forEach(function (q, index) {
+					var c = at(A, one.AtA, 0);
+					/* The higher a ramp, the farther it starts: no steeper than a ramp may climb. */
+					var reach = 320 + (index === 2 ? 110 : 0);
+					var start = at(A, one.AtA + q.SA * reach, q.OnA * (halfA - 3));
+					var end = at(B, one.AtB + q.SB * reach, q.OnB * (halfB - 3));
+					/* Two levels over the upper road: the two that turn left cross one over the other at the middle. */
+					var lift = top + 7.5 * (index === 1 ? 1 : 2);
+					var knots;
+
+					/* Turning right: in its quadrant, low; turning left: over the middle on a level of its own. */
+					if (index === 0 || index === 3) {
+						knots = [start, {X: c.X + q.SA * a[0] * 70 + q.SB * b[0] * 70, Z: c.Z + q.SA * a[1] * 70 + q.SB * b[1] * 70}, end];
+					}
+					else {
+						knots = [start, {X: c.X + q.SA * a[0] * 90 - q.SB * b[0] * 30, Z: c.Z + q.SA * a[1] * 90 - q.SB * b[1] * 30, Y: lift}, {X: c.X - q.SA * a[0] * 30 + q.SB * b[0] * 90, Z: c.Z - q.SA * a[1] * 30 + q.SB * b[1] * 90, Y: lift}, end];
+					}
+
+					ramps.push(ramp(id + '-ramp-' + index, knots, id));
+				});
+			}
+			else if (one.Form === 'trumpet') {
+				/* The road cut back from the motorway; its end where the ramps part. */
+				var back = halfA + 150;
+				var total = B.Points[B.Points.length - 1].Along;
+				var keep = one.End > 0 ? total - back : back;
+
+				B.Points = B.Points.filter(function (point) {
+					return one.End > 0 ? point.Along <= keep : point.Along >= keep;
+				});
+
+				if (one.End < 0) {
+					B.Points.forEach(function (point) {
+						point.Along -= keep;
+					});
+				}
+
+				B.Spans = (B.Spans || []).map(function (span) {
+					return Object.assign({}, span, one.End < 0 ? {From: span.From - keep, To: span.To - keep} : {To: Math.min(span.To, keep)});
+				}).filter(function (span) {
+					return span.To > span.From && span.To > 0;
+				});
+
+				var head = at(B, one.End > 0 ? B.Points[B.Points.length - 1].Along : 0, 0);
+				var c2 = at(A, one.AtA, 0);
+				var nearSide = sign(dot([head.X - c2.X, head.Z - c2.Z], c2.Left));
+				var over = c2.Y + 7.2;
+				var loop = 40;
+				var side = halfA + 14;
+				var turn;
+
+				/* A point by the motorway: u metres along it from the crossing, v aside of it, towards the road (v over 0) or away. */
+				var uv = function (u, v, y) {
+					var made = at(A, one.AtA + u, nearSide * v);
+
+					return y === undefined ? {X: made.X, Z: made.Z} : {X: made.X, Z: made.Z, Y: y};
+				};
+
+				/*
+				 * The loop on the far side: off the far carriageway, three quarters of a turn round a middle away from the motorway,
+				 * then straight across over it, 8 m aside of the road, into the head of the road.
+				 */
+				var knots2 = [at(A, one.AtA + 8 - loop + 130, -nearSide * (halfA - 3)), uv(8 - loop + 55, -(halfA + 8))];
+
+				for (turn = 0; turn <= 6; turn++) {
+					var angle2 = Math.PI / 2 + Math.PI * 1.5 * turn / 6;
+
+					knots2.push(uv(8 - loop + Math.cos(angle2) * loop, -(side + loop) + Math.sin(angle2) * loop));
+				}
+
+				knots2.push(uv(8, 0, over), uv(8, side), head);
+
+				/* Near side: off it and onto it straight; far side, onto it: over the motorway 8 m the other side of the road, then out along it. */
+				ramps.push(ramp(id + '-ramp-0', [at(A, one.AtA - 205, nearSide * (halfA - 3)), uv(-125, side), head], id));
+				ramps.push(ramp(id + '-ramp-1', [head, uv(125, side), at(A, one.AtA + 205, nearSide * (halfA - 3))], id));
+				ramps.push(ramp(id + '-ramp-2', [head, uv(-8, side), uv(-8, 0, over), uv(-30, -(side + 6)), uv(-115, -(halfA + 8)), at(A, one.AtA - 215, -nearSide * (halfA - 3))], id));
+				ramps.push(ramp(id + '-loop-3', knots2, id));
+
+				lasts.head = junctionOn(id + '-head', head, true);
+			}
+
+			/*
+			 * A bridge of a ramp where it goes over a road of the interchange or another of its ramps (4 m over it or more), as
+			 * wide as that one and 6 m on each side: they are not overpasses of the network (made before them).
+			 */
+			ramps.forEach(function (one) {
+				[A, B].concat(ramps).forEach(function (other) {
+					if (other === one) return;
+
+					self.Cross(one, other).forEach(function (cross) {
+						var high = self.At(one, cross.AtA).Y + one.Height - self.At(other, cross.AtB).Y - other.Height;
+						var half = (other.Width / 2 + 6) / Math.max(0.3, cross.Sine);
+
+						if (high >= 4)
+							self.Span(one, {Kind: 'bridge', From: cross.AtA - half, To: cross.AtA + half, Over: other.ID, Clear: [[cross.AtA, (other.Width / 2 + 2) / Math.max(0.3, cross.Sine)]]});
+					});
+				});
+			});
+
+			/* The junctions of its ramps on the other road: made whole, the roads in them cut there. */
+			Object.keys(lasts).forEach(function (key) {
+				var junction = lasts[key];
+
+				self.Settle(junction, made, settings, []);
+
+				made.forEach(function (road) {
+					if (junction.Roads.indexOf(road.ID) === -1) return;
+
+					road.Points.forEach(function (point) {
+						if (Math.hypot(point.X - junction.X, point.Z - junction.Z) < junction.Radius)
+							point.Cut = true;
+					});
+				});
+			});
+
+			one.Ramps = ramps.map(function (road) {
+				return road.ID;
+			});
+			one.ID = id;
+		});
+
+		return {Interchanges: found.map(function (one) {
+			return {ID: one.ID, Form: one.Form, X: one.X, Z: one.Z, Roads: [one.A.ID, one.B.ID], Ramps: one.Ramps};
+		})};
+	},
+
+	/*
+	 * A road raised on piers (Elevated: [[from, to, height]] in metres along it, height over the ground, 7): within the
+	 * range at least so high over the ground, coming up to it and down again by its grade; a viaduct over all of it that
+	 * stands more than 2 m over the ground (its Elevated: spans of bridges, Viaduct). Regression: none, a road over a town
+	 * or a marsh went on its ground or a bank.
+	 */
+	Elevate: function (road, ranges, height) {
+		var self = this;
+		var grade = this.Grade(road.Type);
+		var points = road.Points;
+		var ground = points.map(function (point) {
+			return Math.max(0, height(point.X, point.Z));
+		});
+
+		road.Elevated = [];
+
+		ranges.forEach(function (range) {
+			var from = Math.min(Number(range[0]) || 0, Number(range[1]) || 0);
+			var to = Math.max(Number(range[0]) || 0, Number(range[1]) || 0);
+			var over = range.length > 2 && Number(range[2]) > 0 ? Number(range[2]) : 7;
+			var start = null;
+			var end = null;
+			var i;
+
+			points.forEach(function (point, index) {
+				if (point.Along >= from && point.Along <= to)
+					point.Y = Math.max(point.Y, ground[index] + over);
+			});
+
+			/* Up to it and down from it by its grade (90% of it): no steeper than it may climb. */
+			for (i = 1; i < points.length; i++)
+				points[i].Y = Math.max(points[i].Y, points[i - 1].Y - (points[i].Along - points[i - 1].Along) * grade * 0.9);
+
+			for (i = points.length - 2; i >= 0; i--)
+				points[i].Y = Math.max(points[i].Y, points[i + 1].Y - (points[i + 1].Along - points[i].Along) * grade * 0.9);
+
+			/* Its viaduct: the run round the range where it stands more than 2 m over the ground. */
+			points.forEach(function (point, index) {
+				if (point.Along < from || point.Along > to) return;
+
+				start = start === null ? index : start;
+				end = index;
+			});
+
+			if (start === null) return;
+
+			while (start > 0 && points[start - 1].Y - ground[start - 1] > 2)
+				start--;
+
+			while (end < points.length - 1 && points[end + 1].Y - ground[end + 1] > 2)
+				end++;
+
+			road.Elevated.push({Kind: 'bridge', From: points[start].Along, To: points[end].Along, Viaduct: true});
+		});
+
+		return self;
+	},
+
+	/*
+	 * A viaduct where a road stands on a bank higher than bank (8 m) over the ground for shortest metres or more, out to
+	 * where it is 3 m over it: a bridge of piers (Viaduct) in place of the bank; and a bridge wherever it goes over water
+	 * (the ground under 0), however short. Regression: a road over a deep valley was carried on a bank tens of metres
+	 * high, and one over a river on a bank through it.
+	 */
+	Viaducts: function (road, height, bank, shortest) {
+		var self = this;
+		var points = road.Points;
+		var raw = points.map(function (point) {
+			return height(point.X, point.Z);
+		});
+		var over = function (index) {
+			return points[index].Y + road.Height - Math.max(0, raw[index]);
+		};
+		var high = function (index) {
+			return (over(index) > bank || raw[index] < 0) && !self.SpanAt(road, points[index].Along);
+		};
+		var i = 0;
+
+		while (i < points.length) {
+			if (!high(i)) {
+				i++;
+
+				continue;
+			}
+
+			var start = i;
+			var end = i;
+			var wet = false;
+			var k;
+
+			while (end + 1 < points.length && high(end + 1))
+				end++;
+
+			i = end + 1;
+
+			for (k = start; k <= end; k++)
+				wet = wet || raw[k] < 0;
+
+			if (!wet && points[end].Along - points[start].Along < shortest) continue;
+
+			while (start > 0 && over(start - 1) > 3)
+				start--;
+
+			while (end < points.length - 1 && over(end + 1) > 3)
+				end++;
+
+			self.Span(road, {Kind: 'bridge', From: points[start].Along, To: points[end].Along, Viaduct: true});
+		}
+	},
+
+	/* The level a road takes in a junction: its own, or on a level crossing the deck at the heads of the rails (not for the railway). */
+	LevelAt: function (junction, road) {
+		return junction.Y + (road && road.Type.Group === 'rail' ? 0 : junction.Deck || 0);
+	},
+
+	/*
+	 * A junction made whole of the roads round it (Network): the roads it holds, its Radius, its level, its Arms and Kind, the
+	 * Deck of a level crossing and whether its barriers are down (Closed of the junction given of that ID).
+	 */
+	Settle: function (junction, made, settings, given) {
+		var self = this;
+		var held = [];
+		var widest = 0;
+
+		made.forEach(function (road) {
+			var near = self.Near(road, junction.X, junction.Z);
+			var span = self.SpanAt(road, near.At);
+
+			if (near.Far > road.Width / 2 + 1) return;
+
+			held.push({Road: road, Near: near, Span: span});
+		});
+
+		/* Of nothing on the ground there but roads in tunnels: under it. */
+		if (!junction.Under && held.length > 1 && held.every(function (one) {
+			return one.Span && one.Span.Kind === 'tunnel';
+		}))
+			junction.Under = true;
+
+		held = held.filter(function (one) {
+			return junction.Under ? !one.Span || one.Span.Kind === 'tunnel' : !one.Span;
+		});
+
+		held.forEach(function (one) {
+			junction.Roads.push(one.Road.ID);
+
+			widest = Math.max(widest, one.Road.Width);
+		});
+
+		junction.Radius = junction.Radius || widest * 0.75 + 1;
+
+		var through = held.filter(function (one) {
+			return one.Road.Closed || one.Near.At > junction.Radius + 2 && one.Near.At < one.Road.Points[one.Road.Points.length - 1].Along - junction.Radius - 2;
+		});
+		var levels = (junction.Under && through.length ? through : held).map(function (one) {
+			return one.Near.Y - one.Road.Height;
+		});
+
+		junction.Y = levels.length ? levels.reduce(function (sum, one) {
+			return sum + one;
+		}, 0) / levels.length : settings.Height ? Math.max(0, settings.Height(junction.X, junction.Z)) : 0;
+
+		/*
+		 * Its arms: each road out of it, one way for a road that ends in it, both ways for one through it ([{Road, Angle,
+		 * Half}], round the junction). The kind of junction of them: T (three, two of them on one line), Y (three, none),
+		 * X (four), star (more), ring (a roundabout: told, or of five arms or more); railway stays as found.
+		 */
+		junction.Arms = [];
+
+		made.forEach(function (road) {
+			if (junction.Roads.indexOf(road.ID) === -1) return;
+
+			var near = self.Near(road, junction.X, junction.Z);
+			var last = road.Points[road.Points.length - 1].Along;
+			var angle = Math.atan2(near.Way[1], near.Way[0]);
+
+			var rail = road.Type.Group === 'rail';
+
+			if (road.Closed || near.At > junction.Radius + 2)
+				junction.Arms.push({Road: road.ID, Angle: angle + Math.PI, Half: road.Width / 2, Rail: rail});
+
+			if (road.Closed || near.At < last - junction.Radius - 2)
+				junction.Arms.push({Road: road.ID, Angle: angle, Half: road.Width / 2, Rail: rail});
+		});
+
+		junction.Arms.forEach(function (arm) {
+			arm.Angle = Math.atan2(Math.sin(arm.Angle), Math.cos(arm.Angle));
+		});
+		junction.Arms.sort(function (a, b) {
+			return a.Angle - b.Angle;
+		});
+
+		if (junction.Arms.some(function (arm) {
+			return arm.Rail;
+		}))
+			junction.Kind = 'railway';
+
+		if (junction.Kind !== 'railway')
+			junction.Kind = junction.Kind === 'ring' || junction.Arms.length >= 5 ? 'ring' : self.Shape(junction.Arms);
+
+		/*
+		 * A level crossing: its deck at the heads of the rails (the bed of the railway and its rails on it, 4.5 cm under their
+		 * tops), the roads coming up to it, the railway at its own level. Regression: the road crossed at the foot of the bed,
+		 * and the rails stood half a metre over it. Closed: its barriers down.
+		 */
+		junction.Deck = 0;
+
+		if (junction.Kind === 'railway') {
+			made.forEach(function (road) {
+				if (junction.Roads.indexOf(road.ID) === -1 || road.Type.Group !== 'rail') return;
+
+				var bed = road.Strips.filter(function (strip) {
+					return strip.Kind === 'bed';
+				})[0];
+
+				junction.Deck = Math.max(junction.Deck, (bed ? bed.Height || 0 : 0) + (road.Type.Sleepers && road.Type.Sleepers.Length > 0 ? 0.17 : 0.012) - 0.045);
+			});
+		}
+
+		junction.Closed = !!(given || []).filter(function (one) {
+			return (one.ID || '') === junction.ID;
+		}).map(function (one) {
+			return one.Closed === true || one.Closed === 'true';
+		})[0];
 	},
 
 	Smooth: function (t) {
@@ -663,8 +1364,8 @@ Elemenx.Service('SceneRoads', {
 	},
 
 	/*
-	 * How two roads of two types meet where they cross: junction (streets and roads, at one level whatever the ground: they
-	 * are brought to it), crossing (a railway and a road of the ground: a level crossing with its barriers), over (one passes
+	 * How two roads of two types meet where they cross: junction (streets and roads, a runway and its taxiways, at one level
+	 * whatever the ground: they are brought to it), crossing (a railway and a road of the ground: a level crossing with its barriers), over (one passes
 	 * over the other: an airfield, two railways, a railway and a motorway, a motorway and a road of the ground), interchange
 	 * (two motorways). A motorway is a road of 110 km/h or more.
 	 */
@@ -677,7 +1378,7 @@ Elemenx.Service('SceneRoads', {
 		}
 
 		var pair = [kind(a), kind(b)].sort().join('+');
-		if (pair === 'local+local') return 'junction';
+		if (pair === 'local+local' || pair === 'air+air') return 'junction';
 		if (pair === 'local+rail') return 'crossing';
 		if (pair === 'motorway+motorway') return 'interchange';
 
@@ -689,68 +1390,40 @@ Elemenx.Service('SceneRoads', {
 		var self = this;
 
 		/* Kind: railway for a level crossing of a railway and a road, empty for a junction of roads. */
-		function put (x, z, kind) {
+		function put (x, z, kind, under) {
 			var known = junctions.some(function (one) {
 				return Math.hypot(one.X - x, one.Z - z) < Math.max(8, one.Radius);
 			});
 			if (!known)
-				junctions.push({ID: 'junction-' + junctions.length, X: x, Z: z, Y: null, Radius: 0, Surface: 'asphalt', Roads: [], Kind: kind || ''});
+				junctions.push({ID: 'junction-' + junctions.length, X: x, Z: z, Y: null, Radius: 0, Surface: 'asphalt', Roads: [], Kind: kind || '', Under: !!under});
 		}
 
-		/* The bounds of the line of each road, once: two that do not meet need no look at their points. */
-		var bounds = roads.map(function (road) {
-			var box = {X0: Infinity, Z0: Infinity, X1: -Infinity, Z1: -Infinity};
+		/* In a tunnel at so many metres from the start of a road. */
+		function tunnel (road, metres) {
+			var span = self.SpanAt(road, metres);
 
-			road.Points.forEach(function (point) {
-				box.X0 = Math.min(box.X0, point.X);
-				box.Z0 = Math.min(box.Z0, point.Z);
-				box.X1 = Math.max(box.X1, point.X);
-				box.Z1 = Math.max(box.Z1, point.Z);
-			});
-
-			return box;
-		});
+			return !!span && span.Kind === 'tunnel';
+		}
 
 		roads.forEach(function (a, first) {
 			roads.forEach(function (b, second) {
-				var i;
-				var j;
+				if (second <= first) return;
 
-				if (second <= first || bounds[first].X1 < bounds[second].X0 || bounds[second].X1 < bounds[first].X0 || bounds[first].Z1 < bounds[second].Z0 || bounds[second].Z1 < bounds[first].Z0) return;
+				/*
+				 * A crossing of two on the ground: one over the other (a bridge, a tunnel) is no junction. Two that meet at one
+				 * level (Meeting: junction, crossing) do whatever their heights: they are brought to the level of the junction
+				 * (Regression: two streets more than 3 m apart there met in nothing, one on its bank over the other).
+				 */
+				var meeting = self.Meeting(a.Type, b.Type);
+				if (meeting !== 'junction' && meeting !== 'crossing') return;
 
-				var meeting;
+				/* Both in their tunnels there: a junction under the ground (a chamber of it). */
+				self.Cross(a, b).forEach(function (cross) {
+					var under = tunnel(a, cross.AtA) && tunnel(b, cross.AtB);
+					if (!under && (self.SpanAt(a, cross.AtA) || self.SpanAt(b, cross.AtB))) return;
 
-				for (i = 0; i + 1 < a.Points.length; i++) {
-					for (j = 0; j + 1 < b.Points.length; j++) {
-						var p = a.Points[i];
-						var q = a.Points[i + 1];
-						var r = b.Points[j];
-						var s = b.Points[j + 1];
-						var d = (q.X - p.X) * (s.Z - r.Z) - (q.Z - p.Z) * (s.X - r.X);
-						var t;
-						var u;
-
-						if (!d)
-							continue;
-
-						t = ((r.X - p.X) * (s.Z - r.Z) - (r.Z - p.Z) * (s.X - r.X)) / d;
-						u = ((r.X - p.X) * (q.Z - p.Z) - (r.Z - p.Z) * (q.X - p.X)) / d;
-
-						/*
-						 * A crossing of two on the ground: one over the other (a bridge, a tunnel) is no junction. Two that meet at one
-						 * level (Meeting: junction, crossing) do whatever their heights: they are brought to the level of the junction
-						 * (Regression: two streets more than 3 m apart there met in nothing, one on its bank over the other).
-						 */
-						if (t < 0 || t > 1 || u < 0 || u > 1) continue;
-						if (self.SpanAt(a, p.Along) || self.SpanAt(b, r.Along)) continue;
-
-						meeting = self.Meeting(a.Type, b.Type);
-
-						if (meeting !== 'junction' && meeting !== 'crossing') continue;
-
-						put(p.X + (q.X - p.X) * t, p.Z + (q.Z - p.Z) * t, meeting === 'crossing' ? 'railway' : '');
-					}
-				}
+					put(cross.X, cross.Z, meeting === 'crossing' ? 'railway' : '', under);
+				});
 			});
 
 			/* An end of a road on another one. */
@@ -760,12 +1433,270 @@ Elemenx.Service('SceneRoads', {
 				roads.forEach(function (b) {
 					if (b === a) return;
 
+					/* Of a road that meets it one over the other (a motorway): no junction; an interchange, or its end by it. */
+					var meeting = self.Meeting(a.Type, b.Type);
+					if (meeting !== 'junction' && meeting !== 'crossing') return;
+
 					var near = self.Near(b, end.X, end.Z);
-					if (near.Far <= b.Width / 2 + 1 && !self.SpanAt(b, near.At))
-						put(end.X - near.Way[1] * near.Offset, end.Z + near.Way[0] * near.Offset);
+					/* Of one in its tunnel ending in the tunnel of the other: under the ground (a fork in a tunnel). */
+					var under = tunnel(b, near.At) && tunnel(a, end === a.Points[0] ? 0 : end.Along);
+					if (near.Far <= b.Width / 2 + 1 && (under || !self.SpanAt(b, near.At)))
+						put(end.X - near.Way[1] * near.Offset, end.Z + near.Way[0] * near.Offset, '', under);
 				});
 			});
 		});
+	},
+
+	/*
+	 * Where the lines of two roads cross: [{X, Z, AtA, AtB (the metres from the start of each), Sine (of the angle between
+	 * them)}]. Their bounds first: two that do not meet need no look at their points.
+	 */
+	Cross: function (a, b) {
+		var found = [];
+		var i;
+		var j;
+
+		function bounds (road) {
+			var box = road.Bounds;
+			if (box && box.Count === road.Points.length) return box;
+
+			box = road.Bounds = {X0: Infinity, Z0: Infinity, X1: -Infinity, Z1: -Infinity, Count: road.Points.length};
+
+			road.Points.forEach(function (point) {
+				box.X0 = Math.min(box.X0, point.X);
+				box.Z0 = Math.min(box.Z0, point.Z);
+				box.X1 = Math.max(box.X1, point.X);
+				box.Z1 = Math.max(box.Z1, point.Z);
+			});
+
+			return box;
+		}
+
+		var one = bounds(a);
+		var two = bounds(b);
+		if (one.X1 < two.X0 || two.X1 < one.X0 || one.Z1 < two.Z0 || two.Z1 < one.Z0) return found;
+
+		for (i = 0; i + 1 < a.Points.length; i++) {
+			for (j = 0; j + 1 < b.Points.length; j++) {
+				var p = a.Points[i];
+				var q = a.Points[i + 1];
+				var r = b.Points[j];
+				var s = b.Points[j + 1];
+				var d = (q.X - p.X) * (s.Z - r.Z) - (q.Z - p.Z) * (s.X - r.X);
+				var t;
+				var u;
+
+				if (!d)
+					continue;
+
+				t = ((r.X - p.X) * (s.Z - r.Z) - (r.Z - p.Z) * (s.X - r.X)) / d;
+				u = ((r.X - p.X) * (q.Z - p.Z) - (r.Z - p.Z) * (q.X - p.X)) / d;
+
+				if (t < 0 || t > 1 || u < 0 || u > 1) continue;
+
+				found.push({X: p.X + (q.X - p.X) * t, Z: p.Z + (q.Z - p.Z) * t, AtA: p.Along + (q.Along - p.Along) * t, AtB: r.Along + (s.Along - r.Along) * u, Sine: Math.abs(d) / (Math.hypot(q.X - p.X, q.Z - p.Z) * Math.hypot(s.X - r.X, s.Z - r.Z))});
+			}
+		}
+
+		return found;
+	},
+
+	/*
+	 * How high a road needs the room over it to pass under another (its Clearance, or 5.5 m: a lorry; 7 m over a railway with
+	 * wires), the deck of the bridge over it not counted.
+	 */
+	Clearance: function (type) {
+		var given = type || {};
+		if (Number(given.Clearance) > 0) return Number(given.Clearance);
+
+		return given.Group === 'rail' && given.Catenary ? 7 : 5.5;
+	},
+
+	/*
+	 * Two roads that meet one over the other (Meeting: over; interchange too, before its ramps): an overpass. The one to go
+	 * over climbs to the clearance of the other and the deck of its bridge (1.2 m) and back, by its own grade, and a bridge
+	 * span lies over the other with room on each side (its Over: the road under it). Which goes over: the one not in a tunnel
+	 * there; a road over a railway, a road of the ground over a motorway, else the higher already; a road under an airfield
+	 * goes down into a tunnel under it. Two roads far enough apart already only get their span. A road of Structures finds
+	 * its other spans again on its new line. Regression: such roads crossed on the ground or metres apart, a motorway under
+	 * a railway with 1.7 m over it.
+	 */
+	Overpasses: function (roads, specs, height) {
+		var self = this;
+		var crossings = [];
+		var touched = [];
+
+		function kind (type) {
+			return type.Group === 'air' || type.Group === 'rail' ? type.Group : type.Group === 'road' && (type.Speed || 50) >= 110 ? 'motorway' : 'local';
+		}
+
+		roads.forEach(function (a, first) {
+			roads.forEach(function (b, second) {
+				if (second <= first) return;
+
+				var meeting = self.Meeting(a.Type, b.Type);
+				if (meeting !== 'over' && meeting !== 'interchange') return;
+
+				/* A road that ends on the other does not cross it: its way onto it is a junction of an interchange. */
+				self.Cross(a, b).forEach(function (cross) {
+					if (self.Ending(a, cross.AtA, b.Width / 2 + 4) || self.Ending(b, cross.AtB, a.Width / 2 + 4)) return;
+
+					crossings.push({A: a, B: b, Cross: cross});
+				});
+			});
+		});
+
+		roads.forEach(function (road) {
+			road.Own = road.Points.map(function (point) {
+				return point.Y;
+			});
+		});
+
+		crossings.forEach(function (one) {
+			var a = one.A;
+			var b = one.B;
+			var cross = one.Cross;
+			var spanA = self.SpanAt(a, cross.AtA);
+			var spanB = self.SpanAt(b, cross.AtB);
+			var ya = self.At(a, cross.AtA).Y + a.Height;
+			var yb = self.At(b, cross.AtB).Y + b.Height;
+			var ka = kind(a.Type);
+			var kb = kind(b.Type);
+			var upper;
+
+			if (spanA && spanA.Kind === 'tunnel') upper = b;
+			else if (spanB && spanB.Kind === 'tunnel') upper = a;
+			else if (ka === 'air' || kb === 'air') upper = ka === 'air' ? a : b;
+			else if (ka === 'rail' && kb !== 'rail') upper = b;
+			else if (kb === 'rail' && ka !== 'rail') upper = a;
+			else if (ka === 'motorway' && kb === 'local') upper = b;
+			else if (kb === 'motorway' && ka === 'local') upper = a;
+			else upper = ya >= yb ? a : b;
+
+			var lower = upper === a ? b : a;
+			var atUpper = upper === a ? cross.AtA : cross.AtB;
+			var atLower = upper === a ? cross.AtB : cross.AtA;
+			var gap = upper === a ? ya - yb : yb - ya;
+			var sine = Math.max(0.3, cross.Sine);
+			var under = self.SpanAt(lower, atLower);
+			/*
+			 * Under an airfield, or in a tunnel there already: a tunnel, deep enough for its cut (7 m over the road) and a metre
+			 * of ground over that. Regression: a railway out of its tunnel crossed a motorway still in its own 1.7 m over it,
+			 * through its lining. Else the clearance and the deck of a bridge.
+			 */
+			var sinks = kind(upper.Type) === 'air' || !!under && under.Kind === 'tunnel';
+			var need = sinks ? 9 : self.Clearance(lower.Type) + 1.2;
+
+			if (sinks) {
+				var down = (upper.Width / 2 + 3) / sine;
+
+				if (gap < need)
+					self.Lift(lower, atLower, gap - need, down);
+
+				self.Span(lower, {Kind: 'tunnel', From: atLower - down, To: atLower + down, Under: upper.ID});
+
+				touched.push(lower);
+
+				return;
+			}
+
+			var half = (lower.Width / 2 + 6) / sine;
+
+			if (gap < need)
+				self.Lift(upper, atUpper, need - gap, half);
+
+			self.Span(upper, {Kind: 'bridge', From: atUpper - half, To: atUpper + half, Over: lower.ID, Clear: [[atUpper, (lower.Width / 2 + 2) / sine]]});
+
+			touched.push(upper);
+		});
+
+		/* A road of Structures: its bridges and tunnels found on its new line, with the spans of its crossings. */
+		touched.forEach(function (road) {
+			var spec = specs[roads.indexOf(road)] || {};
+			if (!(spec.Structures === true || spec.Structures === 'true') || !height || road.Rescanned) return;
+
+			var kept = road.Spans.filter(function (span) {
+				return span.Over || span.Under;
+			});
+
+			road.Rescanned = true;
+			road.Spans = [];
+
+			self.Spans(road, spec, height).forEach(function (span) {
+				self.Span(road, span);
+			});
+
+			kept.forEach(function (span) {
+				self.Span(road, span);
+			});
+		});
+
+		roads.forEach(function (road) {
+			delete road.Own;
+			delete road.Rescanned;
+		});
+	},
+
+	/* Whether metres from the start of a road (not a ring) are within reach of one of its ends. */
+	Ending: function (road, metres, reach) {
+		return !road.Closed && (metres < reach || metres > road.Points[road.Points.length - 1].Along - reach);
+	},
+
+	/*
+	 * A road raised (or lowered, fix below 0) by fix metres within half of a point at metres from its start, coming back to
+	 * its line by its own grade: half again the length the step needs, the steepest of a smooth curve. Of two near, the
+	 * greater keeps.
+	 */
+	Lift: function (road, metres, fix, half) {
+		var self = this;
+		var reach = Math.abs(fix) / this.Grade(road.Type) * 1.5;
+		var loop = road.Closed ? road.Points[road.Points.length - 1].Along : 0;
+		var own = road.Own || road.Points.map(function (point) {
+			return point.Y;
+		});
+
+		road.Points.forEach(function (point, index) {
+			var along = Math.abs(point.Along - metres);
+			var far = (loop ? Math.min(along, loop - along) : along) - half;
+			var weight = far <= 0 ? 1 : 1 - self.Smooth(far / reach);
+			var y = own[index] + fix * weight;
+
+			point.Y = fix > 0 ? Math.max(point.Y, y) : Math.min(point.Y, y);
+		});
+	},
+
+	/*
+	 * A span added to a road, joined to all of its kind it overlaps (taking their Over, Under, Viaduct and Clear), the spans
+	 * kept in order. Regression: joined to the first alone, a long one over several left them overlapping it.
+	 */
+	Span: function (road, span) {
+		var length = road.Points[road.Points.length - 1].Along;
+		var spans = (road.Spans || []).concat([Object.assign({}, span, {From: Math.max(0, span.From), To: Math.min(length, span.To)})]);
+		var joined = [];
+
+		spans.sort(function (a, b) {
+			return a.From - b.From;
+		});
+
+		spans.forEach(function (one) {
+			var same = joined.filter(function (other) {
+				return other.Kind === one.Kind && other.From <= one.To && one.From <= other.To;
+			})[0];
+
+			if (!same) {
+				joined.push(Object.assign({}, one));
+
+				return;
+			}
+
+			same.To = Math.max(same.To, one.To);
+			same.Over = same.Over || one.Over;
+			same.Under = same.Under || one.Under;
+			same.Viaduct = same.Viaduct || one.Viaduct;
+			same.Clear = (same.Clear || []).concat(one.Clear || []);
+		});
+
+		road.Spans = joined;
 	},
 
 	/* The junction under a point: null off them. */
@@ -802,16 +1733,12 @@ Elemenx.Service('SceneRoads', {
 	 * disc of the radius of the widest road lay over the corners of the sidewalks and the ground between the roads.
 	 */
 	JunctionPiece: function (junction) {
-		var y = junction.Y + 0.012;
+		var y = junction.Y + (junction.Deck || 0) + 0.012;
 		var made = {Positions: [junction.X, y, junction.Z], Normals: [0, 1, 0], UVs: [0, 0], Indices: []};
 		var arms = junction.Arms || [];
 		var outline = [];
 		var sides = 32;
 		var i;
-
-		function at (angle, distance, across) {
-			return [junction.X + Math.cos(angle) * distance - Math.sin(angle) * across, junction.Z + Math.sin(angle) * distance + Math.cos(angle) * across];
-		}
 
 		if (junction.Kind === 'ring' || arms.length < 2) {
 			var inner = junction.Kind === 'ring' ? this.IslandRadius(junction) : 0;
@@ -841,22 +1768,8 @@ Elemenx.Service('SceneRoads', {
 			}
 		}
 		else {
-			arms.forEach(function (arm, index) {
-				var next = arms[(index + 1) % arms.length];
-				var gap = next.Angle - arm.Angle + (index === arms.length - 1 ? Math.PI * 2 : 0);
-				var right = at(arm.Angle, junction.Radius, arm.Half);
-				var left = at(next.Angle, junction.Radius, -next.Half);
-				var corner = [junction.X + (Math.cos(arm.Angle + gap / 2)) * Math.max(arm.Half, next.Half) * 1.05, junction.Z + (Math.sin(arm.Angle + gap / 2)) * Math.max(arm.Half, next.Half) * 1.05];
-				var k;
-
-				outline.push(at(arm.Angle, junction.Radius, -arm.Half), right);
-
-				/* The kerb round the corner: from the side of this road to the side of the next, bent in towards their corner. */
-				for (k = 1; k < 8; k++) {
-					var t = k / 8;
-
-					outline.push([(1 - t) * (1 - t) * right[0] + 2 * (1 - t) * t * corner[0] + t * t * left[0], (1 - t) * (1 - t) * right[1] + 2 * (1 - t) * t * corner[1] + t * t * left[1]]);
-				}
+			outline = this.Outline(junction).map(function (point) {
+				return point.At;
 			});
 
 			outline.push(outline[0]);
@@ -869,6 +1782,165 @@ Elemenx.Service('SceneRoads', {
 
 			if (index < outline.length - 1)
 				made.Indices.push(0, index + 2, index + 1);
+		});
+
+		return made;
+	},
+
+	/*
+	 * The barriers of a level crossing: on each road into it (not the railway), a post on each side a metre out of the deck,
+	 * its boom in red and white over half of the road when the junction is Closed, up when open; and a post of two lights
+	 * beside it, with a white plate. {Red, White, Posts, Lights}: pieces of each look.
+	 */
+	CrossingGear: function (junction) {
+		var self = this;
+		var gear = {Red: [], White: [], Posts: [], Lights: []};
+		var level = this.LevelAt(junction, null);
+
+		(junction.Arms || []).forEach(function (arm) {
+			if (arm.Rail) return;
+
+			var way = [Math.cos(arm.Angle), Math.sin(arm.Angle)];
+			var side = [way[1], -way[0]];
+			var out = junction.Radius + 1;
+
+			[-1, 1].forEach(function (sign) {
+				var across = sign * (arm.Half + 0.6);
+				var foot = [junction.X + way[0] * out + side[0] * across, junction.Z + way[1] * out + side[1] * across];
+				var pieces = Math.max(2, Math.ceil(arm.Half / 0.5));
+				var k;
+
+				gear.Posts.push(self.Box([foot[0], level + 0.6, foot[1]], [0.18, 1.2, 0.18], way));
+
+				for (k = 0; k < pieces; k++) {
+					var middle = 0.25 + k * 0.5;
+					var center = junction.Closed ? [foot[0] - side[0] * sign * middle, level + 1.05, foot[1] - side[1] * sign * middle] : [foot[0], level + 1.05 + middle, foot[1]];
+
+					(k % 2 ? gear.White : gear.Red).push(self.Box(center, junction.Closed ? [0.5, 0.1, 0.1] : [0.1, 0.5, 0.1], way));
+				}
+
+				/* The lights a little further out, facing the road. */
+				var light = [foot[0] + side[0] * sign * 0.6 + way[0] * 0.8, foot[1] + side[1] * sign * 0.6 + way[1] * 0.8];
+
+				gear.Posts.push(self.Box([light[0], level + 1.4, light[1]], [0.12, 2.8, 0.12], way));
+				gear.White.push(self.Box([light[0], level + 2.65, light[1]], [0.9, 0.22, 0.04], way));
+				gear.Posts.push(self.Box([light[0], level + 2.05, light[1]], [0.75, 0.3, 0.06], way));
+
+				[-0.24, 0.24].forEach(function (offset) {
+					gear.Lights.push(self.Box([light[0] + side[0] * offset + way[0] * 0.05, level + 2.05, light[1] + side[1] * offset + way[1] * 0.05], [0.18, 0.18, 0.06], way));
+				});
+			});
+		});
+
+		return gear;
+	},
+
+	/*
+	 * The outline of a junction of arms, round it: [{At [x, z], Wall}], Wall telling whether from this point to the next
+	 * is a side (the kerb round a corner) or the mouth of an arm (the road out of it). Of each arm its end at the Radius,
+	 * across its width, then the kerb to the next one, bent in towards their corner. Of none or one arm a circle of walls.
+	 */
+	Outline: function (junction) {
+		var arms = junction.Arms || [];
+		var outline = [];
+		var i;
+
+		function at (angle, distance, across) {
+			return [junction.X + Math.cos(angle) * distance - Math.sin(angle) * across, junction.Z + Math.sin(angle) * distance + Math.cos(angle) * across];
+		}
+
+		if (arms.length < 2) {
+			for (i = 0; i < 32; i++)
+				outline.push({At: [junction.X + Math.cos(i / 32 * Math.PI * 2) * junction.Radius, junction.Z + Math.sin(i / 32 * Math.PI * 2) * junction.Radius], Wall: true});
+
+			return outline;
+		}
+
+		arms.forEach(function (arm, index) {
+			var next = arms[(index + 1) % arms.length];
+			var gap = next.Angle - arm.Angle + (index === arms.length - 1 ? Math.PI * 2 : 0);
+			var right = at(arm.Angle, junction.Radius, arm.Half);
+			var left = at(next.Angle, junction.Radius, -next.Half);
+			var corner = [junction.X + Math.cos(arm.Angle + gap / 2) * Math.max(arm.Half, next.Half) * 1.05, junction.Z + Math.sin(arm.Angle + gap / 2) * Math.max(arm.Half, next.Half) * 1.05];
+			var k;
+
+			outline.push({At: at(arm.Angle, junction.Radius, -arm.Half), Wall: false}, {At: right, Wall: true});
+
+			/* The kerb round the corner: from the side of this road to the side of the next, bent in towards their corner. */
+			for (k = 1; k < 8; k++) {
+				var t = k / 8;
+
+				outline.push({At: [(1 - t) * (1 - t) * right[0] + 2 * (1 - t) * t * corner[0] + t * t * left[0], (1 - t) * (1 - t) * right[1] + 2 * (1 - t) * t * corner[1] + t * t * left[1]], Wall: true});
+			}
+		});
+
+		return outline;
+	},
+
+	/*
+	 * The lining of a junction under the ground (Under), as the tunnels of its roads have theirs: a vault 6 m over it on its
+	 * outline, and walls from the road up to it along the kerbs between its arms, none across the mouths of the arms (their
+	 * tunnels go on from there). Regression: the walls of each tunnel went on across the junction, over the way of the others.
+	 */
+	JunctionVault: function (junction) {
+		var outline = this.Outline(junction);
+		var low = junction.Y;
+		var high = junction.Y + 6;
+		var made = {Positions: [junction.X, high, junction.Z], Normals: [0, -1, 0], UVs: [0, 0], Indices: []};
+		var count = outline.length;
+
+		outline.forEach(function (point, index) {
+			made.Positions.push(point.At[0], high, point.At[1]);
+			made.Normals.push(0, -1, 0);
+			made.UVs.push((point.At[0] - junction.X) / 4, (point.At[1] - junction.Z) / 4);
+			made.Indices.push(0, 1 + index, 1 + (index + 1) % count);
+		});
+
+		outline.forEach(function (point, index) {
+			var next = outline[(index + 1) % count];
+			var dx = next.At[0] - point.At[0];
+			var dz = next.At[1] - point.At[1];
+			var size = Math.hypot(dx, dz) || 1;
+			/* Facing in: towards the middle of the junction. */
+			var normal = [-dz / size, 0, dx / size];
+			var at = made.Positions.length / 3;
+
+			if (!point.Wall) return;
+
+			if ((junction.X - point.At[0]) * normal[0] + (junction.Z - point.At[1]) * normal[2] < 0)
+				normal = [-normal[0], 0, -normal[2]];
+
+			made.Positions.push(point.At[0], low, point.At[1], next.At[0], low, next.At[1], next.At[0], high, next.At[1], point.At[0], high, point.At[1]);
+			made.Normals.push(normal[0], 0, normal[2], normal[0], 0, normal[2], normal[0], 0, normal[2], normal[0], 0, normal[2]);
+			made.UVs.push(0, 0, size / 4, 0, size / 4, 1.5, 0, 1.5);
+			made.Indices.push(at, at + 1, at + 2, at, at + 2, at + 3);
+		});
+
+		/*
+		 * A collar at the mouth of each arm, its vault and its walls on 2.2 m along it: the lining of its tunnel stops at the
+		 * last point of the road out of the junction, up to a step of it away. Regression: it went on into the chamber.
+		 */
+		(junction.Arms || []).forEach(function (arm) {
+			var way = [Math.cos(arm.Angle), Math.sin(arm.Angle)];
+			var side = [-way[1], way[0]];
+			var from = junction.Radius - 0.1;
+			var to = junction.Radius + 2.2;
+
+			function corner (along, across, y) {
+				return [junction.X + way[0] * along + side[0] * across, y, junction.Z + way[1] * along + side[1] * across];
+			}
+
+			[[corner(from, -arm.Half, high), corner(to, -arm.Half, high), corner(to, arm.Half, high), corner(from, arm.Half, high), [0, -1, 0]], [corner(from, -arm.Half, low), corner(to, -arm.Half, low), corner(to, -arm.Half, high), corner(from, -arm.Half, high), [side[0], 0, side[1]]], [corner(from, arm.Half, low), corner(to, arm.Half, low), corner(to, arm.Half, high), corner(from, arm.Half, high), [-side[0], 0, -side[1]]]].forEach(function (quad) {
+				var at = made.Positions.length / 3;
+
+				quad.slice(0, 4).forEach(function (point) {
+					made.Positions.push(point[0], point[1], point[2]);
+					made.Normals.push(quad[4][0], quad[4][1], quad[4][2]);
+				});
+
+				made.UVs.push(0, 0, 0.6, 0, 0.6, 1.5, 0, 1.5);
+				made.Indices.push(at, at + 1, at + 2, at, at + 2, at + 3);
+			});
 		});
 
 		return made;
@@ -1035,7 +2107,11 @@ Elemenx.Service('SceneRoads', {
 
 			function close () {
 				if (piece.length > 1)
-					items.push({Type: 'road', Road: road.ID, Points: piece, Width: road.Width, Shoulder: 2});
+					/*
+					 * A ramp: its ground level 3 m out of each side and on 4 m more. Regression: a ramp narrow and bent round a hill
+					 * was under the coarse squares of the ground seen from afar, that went over it from the hill to its edge.
+					 */
+					items.push({Type: 'road', Road: road.ID, Points: piece, Width: road.Ramp ? road.Width + 6 : road.Width, Shoulder: road.Ramp ? 4 : 2});
 
 				piece = [];
 			}
@@ -1076,6 +2152,9 @@ Elemenx.Service('SceneRoads', {
 
 		/* A junction: its ground level all round it, as a short piece of road as wide as it (Roads: those that meet at it). */
 		(junctions || []).forEach(function (junction) {
+			/* Under the ground: none (Regression: the ground of a mountain over one was levelled down to it, a pit). */
+			if (junction.Under) return;
+
 			/*
 			 * A disc of its radius (a piece of no length): Regression: a piece from one side of it to the other, as wide as it,
 			 * levelled the ground twice its radius out along X, over the roads coming to it there at their own heights.
@@ -1568,10 +2647,61 @@ Elemenx.Service('SceneRoads', {
 				pieces.push(self.Band(road, left - 0.3, left, 1, keep));
 				pieces.push(self.Band(road, right, right + 0.3, 1, keep));
 
+				/*
+				 * Over a road (an overpass): an abutment at each end, as wide as the deck, none on the road under it. Regression: the
+				 * one pier of a short bridge stood in its middle, on the road it crossed.
+				 */
+				if (span.Over) {
+					[span.From, span.To].forEach(function (metres, end) {
+						var place = self.At(road, metres + (end ? -0.9 : 0.9));
+						var bottom = height ? Math.max(0, height(place.X, place.Z)) - 1 : place.Y - 2;
+						var top = place.Y + road.Height - 0.1;
+						if (top - bottom > 0.3)
+							pieces.push(self.Box([place.X + place.Way[1] * (left + right) / 2, (top + bottom) / 2, place.Z - place.Way[0] * (left + right) / 2], [right - left + 0.6, top - bottom, 1.8], place.Way));
+					});
+				}
+
+				/*
+				 * A viaduct: piers every 25 m or so, each a cap under the deck on columns, two of a road wider than 12 m (one at
+				 * a quarter of its width from each side), one of a narrower one; none on a road it goes over.
+				 */
+				if (span.Viaduct) {
+					var count = Math.max(1, Math.round((span.To - span.From) / 25));
+					var wide = right - left > 12;
+					var n;
+
+					for (n = 1; n < count; n++) {
+						var along = span.From + (span.To - span.From) * n / count;
+						var spot = self.At(road, along);
+						var floor = height ? Math.max(0, height(spot.X, spot.Z)) - 1 : 0;
+						var under = spot.Y + road.Height - 1.2;
+						var middle = (left + right) / 2;
+
+						if (under - floor < 1.5 || (span.Clear || []).some(function (clear) {
+							return Math.abs(along - clear[0]) < clear[1] + 1;
+						})) continue;
+
+						pieces.push(self.Box([spot.X + spot.Way[1] * middle, under - 0.5, spot.Z - spot.Way[0] * middle], [right - left + 0.6, 1, 2.2], spot.Way));
+
+						(wide ? [left + (right - left) / 4, right - (right - left) / 4] : [middle]).forEach(function (offset) {
+							pieces.push(self.Box([spot.X + spot.Way[1] * offset, (under - 1 + floor) / 2, spot.Z - spot.Way[0] * offset], [1.6, under - 1 - floor, 1.6], spot.Way));
+						});
+					}
+
+					return;
+				}
+
 				var piers = Math.max(1, Math.round((span.To - span.From) / 30));
 
+				/* Piers under a long one, none on the roads it goes over (Clear: [[metres, half]] round each). */
 				for (at = 1; at < piers || piers === 1 && at === 1; at++) {
-					var place = self.At(road, span.From + (span.To - span.From) * at / Math.max(2, piers));
+					var metres = span.From + (span.To - span.From) * at / Math.max(2, piers);
+					var place = self.At(road, metres);
+
+					if (span.Over && (span.To - span.From < 60 || (span.Clear || []).some(function (clear) {
+						return Math.abs(metres - clear[0]) < clear[1] + 1;
+					}))) continue;
+
 					var bottom = height ? Math.max(0, height(place.X, place.Z)) - 1 : 0;
 					var top = place.Y + road.Height - 1.2;
 					if (top - bottom > 0.5)
@@ -1581,12 +2711,24 @@ Elemenx.Service('SceneRoads', {
 				return;
 			}
 
-			/* A tunnel: its walls and its vault over the road, as high as a lorry needs, and the portals. */
-			pieces.push(self.Side(road, left, 6, 0, 1, keep));
-			pieces.push(self.Side(road, right, 6, 0, -1, keep));
-			pieces.push(self.Band(road, left, right, 6, keep));
+			/*
+			 * A tunnel: its walls and its vault over the road, as high as a lorry needs, and the portals; none in a junction under
+			 * the ground (its chamber has its own, JunctionVault), and no portal at an end in one.
+			 */
+			var lined = function (point, index) {
+				return keep(point, index) && !point.Cut && !road.Points[(index + 1) % road.Points.length].Cut;
+			};
+
+			pieces.push(self.Side(road, left, 6, 0, 1, lined));
+			pieces.push(self.Side(road, right, 6, 0, -1, lined));
+			pieces.push(self.Band(road, left, right, 6, lined));
 
 			[span.From, span.To].forEach(function (metres) {
+				var nearest = road.Points.reduce(function (best, point) {
+					return Math.abs(point.Along - metres) < Math.abs(best.Along - metres) ? point : best;
+				});
+				if (nearest.Cut) return;
+
 				var place = self.At(road, metres);
 				var side = [place.Way[1], -place.Way[0]];
 				var y = place.Y + road.Height;
@@ -1634,9 +2776,21 @@ Elemenx.Service('SceneRoads', {
 	 * vault shows the roof of the lining (Regression: a crust kept the ground over the box where the hill was low, and it hung
 	 * inside the lining). On from each end by its half width, so the hole opens where the cut before it ends.
 	 */
-	Carves: function (roads) {
+	Carves: function (roads, junctions) {
 		var self = this;
 		var carves = [];
+
+		/*
+		 * A junction under the ground: a chamber of it, a box as wide as it each way and as high as the tunnels, a metre under
+		 * its road. Regression: the boxes of the tunnels met in it at their corners, and the ground stood between them.
+		 */
+		(junctions || []).forEach(function (junction) {
+			if (!junction.Under) return;
+
+			var reach = junction.Radius + 1;
+
+			carves.push({Type: 'tunnel', Road: junction.ID, Points: [[junction.X - reach, junction.Z, junction.Y - 1 + 4], [junction.X + reach, junction.Z, junction.Y - 1 + 4]], Radius: 4, Width: reach * 2 + 2, Height: 8, Corner: 1.5});
+		});
 
 		(roads || []).forEach(function (road) {
 			var left = road.Strips.length ? road.Strips[0].Left : -(road.Width || 8) / 2;
@@ -1670,6 +2824,96 @@ Elemenx.Service('SceneRoads', {
 		});
 
 		return carves;
+	},
+
+	/*
+	 * The graph of the tunnels of roads, as SceneTerrainGenerator.Passages gives one (its PassageRoute finds a way through
+	 * it): its Nodes, the portals of the tunnels (portal-<road>-<n>, where a tunnel opens to the sky) and the junctions under
+	 * the ground (Under: their IDs), [{ID, At [x, y, z], Ways, Kind (end, bend, fork, cross), Portal (true of a portal),
+	 * Road}]; its Ways, each a piece of a tunnel from a node to the next along its road, [{ID, From, To, Road, Points [[x, y,
+	 * z]...] every 10 m, Length}].
+	 */
+	TunnelGraph: function (roads, junctions) {
+		var self = this;
+		var nodes = {};
+		var list = [];
+		var ways = [];
+
+		function node (id, at, portal, road) {
+			if (!nodes[id]) {
+				nodes[id] = {ID: id, At: at, Ways: [], Kind: 'end', Portal: portal, Road: road};
+
+				list.push(nodes[id]);
+			}
+
+			return nodes[id];
+		}
+
+		function point (road, metres) {
+			var place = self.At(road, metres);
+
+			return [place.X, place.Y + road.Height, place.Z];
+		}
+
+		(roads || []).forEach(function (road) {
+			var under = (junctions || []).filter(function (junction) {
+				return junction.Under && junction.Roads.indexOf(road.ID) !== -1;
+			}).map(function (junction) {
+				return {Junction: junction, At: self.Near(road, junction.X, junction.Z).At};
+			});
+			var count = 0;
+
+			(road.Spans || []).forEach(function (span) {
+				if (span.Kind !== 'tunnel') return;
+
+				/* Its stops along it: its ends (a portal, or a junction an end lies in) and the junctions in it. */
+				var stops = [span.From, span.To].map(function (metres) {
+					var inside = under.filter(function (one) {
+						return Math.abs(one.At - metres) <= one.Junction.Radius + 2;
+					})[0];
+
+					count++;
+
+					return inside ? {At: inside.At, Node: node(inside.Junction.ID, [inside.Junction.X, inside.Junction.Y, inside.Junction.Z], false, '')} : {At: metres, Node: node('portal-' + road.ID + '-' + count, point(road, metres), true, road.ID)};
+				});
+
+				under.forEach(function (one) {
+					if (one.At > span.From + one.Junction.Radius + 2 && one.At < span.To - one.Junction.Radius - 2)
+						stops.push({At: one.At, Node: node(one.Junction.ID, [one.Junction.X, one.Junction.Y, one.Junction.Z], false, '')});
+				});
+
+				stops.sort(function (a, b) {
+					return a.At - b.At;
+				});
+
+				stops.forEach(function (stop, index) {
+					var next = stops[index + 1];
+					var points = [];
+					var metres;
+
+					if (!next || next.Node === stop.Node) return;
+
+					for (metres = stop.At; metres < next.At; metres += 10)
+						points.push(point(road, metres));
+
+					points.push(point(road, next.At));
+
+					var way = {ID: road.ID + '-' + ways.length, From: stop.Node.ID, To: next.Node.ID, Road: road.ID, Points: points, Length: next.At - stop.At};
+
+					ways.push(way);
+					stop.Node.Ways.push(way.ID);
+					next.Node.Ways.push(way.ID);
+				});
+			});
+		});
+
+		list.forEach(function (one) {
+			var count = one.Ways.length;
+
+			one.Kind = count >= 4 ? 'cross' : count === 3 ? 'fork' : count === 2 ? 'bend' : 'end';
+		});
+
+		return {Nodes: list, Ways: ways};
 	},
 
 	/* The point of a road at metres from its start. */
@@ -1769,6 +3013,23 @@ Elemenx.Service('SceneRoads', {
 				add('structure', self.Surface('concrete'), piece);
 			});
 
+			/*
+			 * Over the vault of its tunnels, earth with grass: where a hill is lower than the vault its roof shows, covered as a
+			 * cut and cover is. Regression: a long white roof of concrete lay over a low hill.
+			 */
+			(road.Spans || []).forEach(function (span) {
+				if (span.Kind !== 'tunnel') return;
+
+				var left = road.Strips.length ? road.Strips[0].Left : 0;
+				var right = road.Strips.length ? road.Strips[road.Strips.length - 1].Right : 0;
+
+				add('grass', self.Surface('grass'), self.Band(road, left - 0.6, right + 0.6, 6.25, function (point, index) {
+					var next = road.Points[(index + 1) % road.Points.length];
+
+					return point.Along >= span.From - 0.01 && next.Along <= span.To + 0.01 && index + 1 < road.Points.length && !point.Cut && !next.Cut;
+				}));
+			});
+
 			/* The lamps of its tunnels: warm and glowing by themselves. */
 			self.TunnelLamps(road).forEach(function (piece) {
 				add('tunnel-lamp', {Color: [1, 0.94, 0.8], Rough: 0.4, Glow: [4, 3.4, 2.4]}, piece);
@@ -1803,6 +3064,22 @@ Elemenx.Service('SceneRoads', {
 			/* A roundabout: its island in the middle, a kerb high, grass on it. */
 			if (junction.Kind === 'ring')
 				add('grass', self.Surface('grass'), self.JunctionIsland(junction));
+
+			/* Under the ground: the lining of its chamber, as of the tunnels. */
+			if (junction.Under)
+				add('structure', self.Surface('concrete'), self.JunctionVault(junction));
+
+			/* A level crossing: its barriers and lights on each road (lit while the barriers are down). */
+			if (junction.Kind === 'railway') {
+				var gear = self.CrossingGear(junction);
+				var looks = {Red: {Color: [0.78, 0.08, 0.06], Rough: 0.5}, White: {Color: [0.92, 0.92, 0.9], Rough: 0.5}, Posts: {Color: [0.35, 0.36, 0.38], Rough: 0.5, Metal: 0.7}, Lights: junction.Closed ? {Color: [1, 0.15, 0.08], Rough: 0.3, Glow: [5, 0.25, 0.08]} : {Color: [0.25, 0.04, 0.03], Rough: 0.3}};
+
+				Object.keys(looks).forEach(function (name) {
+					gear[name].forEach(function (piece) {
+						add('crossing-' + name.toLowerCase(), looks[name], piece);
+					});
+				});
+			}
 		});
 
 		Object.keys(parts).forEach(function (key) {
@@ -1836,7 +3113,7 @@ Elemenx.Service('SceneRoads', {
 	Work: function () {
 		var self = this;
 
-		return this.$Service('Workers').Pool('SceneRoads', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf', 'HighwaysOf', 'TownsOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'GroundMaterials', 'LookMaterials', 'MaterialsOf', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan'], SceneRoads: Object.keys(this).filter(function (name) {
+		return this.$Service('Workers').Pool('SceneRoads', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf', 'HighwaysOf', 'TownsOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Passages', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'GroundMaterials', 'LookMaterials', 'MaterialsOf', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan'], SceneRoads: Object.keys(this).filter(function (name) {
 			return name.charAt(0) !== '$' && name !== 'Work' && name !== 'Source' && name !== 'Library' && (typeof self[name] === 'function' || name === 'Surfaces' || name === 'Defined');
 		})});
 	},
@@ -1882,6 +3159,7 @@ Elemenx.Service('SceneRoads', {
 		self.Define('highway', {Title: 'Highway', Group: 'road', Speed: 110, Strips: [strip('verge', 1.5, 'grass'), strip('shoulder', 2, 'asphalt', 0, {Right: 'solid'}), lane(-1, 'asphalt', 3.6, 'none', 'dashed'), lane(-1, 'asphalt', 3.6, 'none', 'solid'), strip('median', 4, 'grass', 0.1), lane(1, 'asphalt', 3.6, 'solid', 'dashed'), lane(1, 'asphalt', 3.6, 'none', 'solid'), strip('shoulder', 2, 'asphalt'), strip('verge', 1.5, 'grass')], Along: [{Type: 'row', Side: 'both', Gap: 0.8, Shapes: 'roadlamp', Spacing: 60}]});
 		self.Define('road', {Title: 'Road', Group: 'road', Speed: 90, Strips: [strip('shoulder', 1, 'gravel'), lane(-1, 'asphalt', 3.5, 'solid', 'dashed'), lane(1, 'asphalt', 3.5, 'none', 'solid'), strip('shoulder', 1, 'gravel')]});
 		self.Define('country', {Title: 'Country road', Group: 'road', Speed: 70, Strips: [strip('verge', 0.8, 'grass'), lane(-1, 'asphalt', 2.9), lane(1, 'asphalt', 2.9), strip('verge', 0.8, 'grass')]});
+		self.Define('ramp', {Title: 'Ramp', Group: 'road', Speed: 60, Strips: [strip('shoulder', 1, 'asphalt', 0, {Right: 'solid'}), lane(1, 'asphalt', 4, 'none', 'solid'), strip('shoulder', 1.5, 'asphalt')]});
 		self.Define('lane', {Title: 'One-way lane', Group: 'road', Speed: 50, Strips: [lane(1, 'asphalt', 4, 'solid', 'solid')]});
 
 		/* Streets of towns. */

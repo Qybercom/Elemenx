@@ -7,12 +7,13 @@ SceneWorld: мир земли как граф её шагов — единств
 - Sketch — эскиз поверх земли (Sketch: {Layers}, как его рисует SceneEditor).
 - Border — контур локации (Points, Sides из ScenePlanet.CellPlace), что за ним (Beyond: far, cliff, void, sea, wall; Edge, Depth — SceneTerrainGenerator.Border) и её проходы (Passages из SceneLocations): из каждого дорога (у вида river — река) от стороны к середине; при wall по контуру стоит стена, открытая у проходов, в проходах вида gate — ворота. Open — стороны, на которых стены и обрыва нет: рядом задана локация.
 - Footings — земля подстраивается под здания: ровная площадка под каждым, Margin метров вокруг, на высоте земли там (Mode: mean, low, high), земля подходит к ней в пределах Edge (трейт SceneFootings сцены).
+- Tunnel, Caves, Passages и Overhangs — объём земли (Carves у SceneTerrainGenerator.Volume): тоннель по точкам, естественные пещеры из шума, граф ходов с залами на развилках (Passages: Nodes, Ways, Radius, Flat, Depth, Rough, Seed — SceneTerrainGenerator.Passages) и нависающие скалы; куски земли, которых они касаются, строятся по плотности.
 - Settlement — деревня (X, Y, Houses, Radius, Seed, Shapes); Scatter — посев по правилу (Kind, Shapes, Density, Size, MinHeight, MaxHeight, MaxSlope, Cover, Patch, Clumps, Seed, Blocks, Biome и Graph — своё правило-граф, начать с LibraryScatter у SceneSower). Каждый берёт то, что было до него (Under), и отдаёт со своим.
 
 Выключенный блок пропускает то, что к нему пришло. Любой сервис может добавить свои шаги — блоки вида world, объявленные в $Provides: земля на входе и земля на выходе или вещи на входе и вещи на выходе. Блоки генераторов (числа, параметры) тоже доступны.
 
 - Make(graph, parameters) → {Ground (параметры земли; null без графа или без земли), Things (объекты: {ID, Kind, Values}, ID по порядку), Problems (что мешает графу работать)}; для одного графа и параметров считается один раз.
-- Library(options) — граф обычного мира из параметров (Size, Height, Water, Seed, Rock, Snow, Scale, Ridges, Noise, Relief, Planet, Climate, Biomes, Sketch, Border; Settlements и Scatters — списки свойств таких блоков): с него начинает редактор или страница.
+- Library(options) — граф обычного мира из параметров (Size, Height, Water, Seed, Rock, Snow, Scale, Ridges, Noise, Relief, Planet, Climate, Biomes, Sketch, Border; Tunnels, Caves, Passages, Settlements и Scatters — списки свойств таких блоков): с него начинает редактор или страница.
 
 В сцене земля — `<SceneObject Kind="ground" [world]="World" />`; объекты её графа появляются в сцене с пометкой Generated (ID земли и номер), пересоздаются вместе с графом и не сохраняются. В SceneEditor граф открывается вкладкой «Мир» нижней панели; граф шага Relief или Scatter открывается своей вкладкой, когда этот блок выбран. Работает и в Node.
 

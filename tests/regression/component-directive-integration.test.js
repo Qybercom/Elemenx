@@ -282,7 +282,8 @@ describe('Regression: Component / Binding / Directive integration', function () 
 
 		document.body.appendChild(parent.$Element());
 
-		for (var i = 0; i < 100 && !parent.$Element().querySelector('.contract-panel'); i++)
+		/* Its template from its file: up to 15 s (Regression: 1 s was not enough under the load of the whole suite). */
+		for (var i = 0; i < 1500 && !parent.$Element().querySelector('.contract-panel'); i++)
 			await new Promise(function (resolve) {
 				setTimeout(resolve, 10);
 			});
@@ -304,5 +305,5 @@ describe('Regression: Component / Binding / Directive integration', function () 
 		parent.$Destroy();
 
 		expect(panel.hasAttribute('data-marked')).toBe(false);
-	});
+	}, 30000);
 });

@@ -219,7 +219,16 @@ Elemenx.Trait('SceneProbes', {
 				make();
 
 			state.Frame++;
-			stands = (self.Sown ? self.Sown().Things : 0) + ':' + scene.Order.length;
+
+			/*
+			 * What stands, and the squares of the ground once they are all made: laid while they were still coming, the grid had
+			 * no ground till ten seconds were gone (Regression: under load, a ground missing from the voxels). Not while they
+			 * come: laid again at each, the light the probes gather changed from frame to frame.
+			 */
+			if (scene.Ground && scene.Ground.Nodes && !scene.Ground.Missing)
+				state.GroundKey = Object.keys(scene.Ground.Nodes).length;
+
+			stands = (self.Sown ? self.Sown().Things : 0) + ':' + scene.Order.length + ':' + (state.GroundKey || 0);
 			corner = cornerOf(scene.Eye);
 
 			/* Laid again when the eye went into the next 16 metres, when what stands changed, and every ten seconds. */

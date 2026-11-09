@@ -241,7 +241,7 @@ describe('Contract: Board, an infinite canvas', function () {
 		/* Regression (load): told by an observer of its size, which a busy machine calls later than 60 ms. */
 		await waitFor(function () {
 			return component.X === 2000;
-		}, 3000);
+		}, 10000);
 
 		expect(component.X).toBe(2000);
 

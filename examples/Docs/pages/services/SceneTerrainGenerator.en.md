@@ -65,6 +65,8 @@ The same functions run in Node: they read no page.
 
 - [gives its ground to land on as the Sphere of SceneTerrainGenerator does: its heights, squares with its colors, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L176) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 - [makes the buildings of a town of their own shapes, each as tall as its Size, its wings within its width and depth](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/buildings.test.js#L118) — `tests/regression/buildings.test.js`
+- [asks first for the squares of a cave under a mountain the eye is in, before the low ground round the mountain](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-lod.test.js#L138) — `tests/regression/ground-lod.test.js`
+- [asks for as many squares a frame as the workers take, however long the walk over them took](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-lod.test.js#L187) — `tests/regression/ground-lod.test.js`
 - [draws a material of a recipe by its Blueprint, its parameters uniforms that change it without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L72) — `tests/regression/library-material-blueprints.test.js`
 - [draws a ground by its Blueprint, the color of its parameter, and keeps the very same ground as its look changes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L198) — `tests/regression/library-material-blueprints.test.js`
 - [keeps no grass where a tunnel cut the ground away under the sky](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L366) — `tests/regression/library-scene-roads.test.js`
@@ -73,7 +75,5 @@ The same functions run in Node: they read no page.
 - [makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2131) — `tests/regression/library-scene.test.js`
 - [Workers runs the methods of Services in workers made of their source, and in the page when it cannot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4171) — `tests/regression/library-scene.test.js`
 - [makes the squares of a ground of noise in workers, lets go of what came for roads that changed, and grows grass with no noise in a frame](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4275) — `tests/regression/library-scene.test.js`
-- [looks from what it follows to where it looks by degrees, so a raised eye makes no leap under the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6881) — `tests/regression/library-scene.test.js`
-- [leaves a hero where it stands when the scene changes round it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7016) — `tests/regression/library-scene.test.js`
 
-+38 more in the same files
++40 more in the same files

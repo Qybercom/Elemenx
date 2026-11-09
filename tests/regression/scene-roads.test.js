@@ -352,6 +352,46 @@ describe('Contract: SceneRoads, roads of every kind, their lines, surfaces and m
 		})).toEqual(expect.arrayContaining(['mark-white', 'mark-black', 'mark-gantry', 'barrier-tyres']));
 	});
 
+	/* Scenery: a land of mountains for a long track, on its line what it goes under and over, mountains round it, a world to hold it. */
+	it('makes the land of a track with its scenery: on its line a mountain, a canyon, a ridge and a valley, peaks round it, out of its way', function () {
+		var generator = Elemenx.Service('SceneRoadGenerator');
+		var made = generator.Track('t', {Length: 8000, Scenery: true});
+		var road = roads.Road(made.Spec);
+		var items = made.Sketch.Layers[0].Items;
+		var peaks = items.filter(function (item) {
+			return /peak/.test(item.ID);
+		});
+		var extent = Math.max.apply(null, road.Points.map(function (point) {
+			return Math.max(Math.abs(point.X), Math.abs(point.Z));
+		}));
+
+		expect(made.Spec.Structures).toBe(true);
+		expect(generator.Track('t', {Length: 8000}).Sketch).toBeUndefined();
+		expect(items.filter(function (item) {
+			return !/peak/.test(item.ID);
+		}).map(function (item) {
+			return item.Type;
+		})).toEqual(['mountain', 'canyon', 'ridge', 'valley']);
+
+		/* On its line: the middle of each. */
+		items.slice(0, 4).forEach(function (item) {
+			var at = item.At || item.Points[1];
+
+			expect(roads.Near(road, at[0], at[1]).Far).toBeLessThan(1);
+		});
+
+		/* The peaks out of its way, and the world holds all. */
+		expect(peaks.length).toBe(6);
+
+		peaks.forEach(function (peak) {
+			expect(Math.min.apply(null, road.Points.map(function (point) {
+				return Math.hypot(point.X - peak.At[0], point.Z - peak.At[1]);
+			}))).toBeGreaterThan(peak.Radius * 0.5);
+		});
+
+		expect(made.Size / 2).toBeGreaterThan(extent);
+	});
+
 	/* Regression (of Tracks): a step of the road threw a car up on a flat road; nearness to a point and not to the line misplaced a kerb. */
 	it('says what a wheel stands on: smooth along the road all the way round, the grass beside it, near to its line', function () {
 		var hills = function (x, z) {

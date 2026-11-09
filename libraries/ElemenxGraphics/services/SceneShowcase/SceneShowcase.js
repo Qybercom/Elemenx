@@ -10,7 +10,9 @@
  * The ground holds the sketch of all of them: mountains, a crater and a canyon, a river from the hills to a sea with its
  * beach and dunes, a lake and a swamp, towns of each kind with their districts, squares, walls and a landmark, farms in
  * rows, woods of each kind, the strokes and stamps of an editor, the triggers and zones of a game. Over it stand the
- * roads (motorway with its bridges and tunnels, railway, a race track with its barriers and a paved street bending inside it, a
+ * roads (motorway with its bridges and tunnels, railway, a lane over the motorway, a level crossing with its barriers down, a
+ * roundabout, interchanges of every form (stack, cloverleaf, diamond, roundabout, trumpet), a country road on a viaduct, the motorway on one over the sea, a road under the big mountain with a branch ending on it in a tunnel, a race track with its barriers and a
+ * paved street bending inside it, a
  * gallery of every type of road),
  * a gallery of every model of SceneModels and every class of SceneBuildingGenerator, the effects and lights, a mirror and
  * a glass, walkers, a car and a boat. Its galleries are read from the Services, so a model or a type added shows too.
@@ -27,7 +29,7 @@ Elemenx.Service('SceneShowcase', {
 
 	Districts: function () {
 		return [
-			{ID: 'mountains', Name: 'Mountains', X: -100, Y: -1050, Radius: 520, Shows: ['mountain', 'ridge', 'cliff', 'canyon', 'crater', 'rock', 'snow', 'tunnel', 'rocks']},
+			{ID: 'mountains', Name: 'Mountains', X: -100, Y: -1050, Radius: 520, Shows: ['mountain', 'ridge', 'cliff', 'canyon', 'crater', 'rock', 'snow', 'tunnel', 'rocks', 'cave']},
 			{ID: 'river', Name: 'River and lake', X: -350, Y: -350, Radius: 380, Shows: ['river', 'valley', 'floodplain', 'lake', 'swamp', 'bridge']},
 			{ID: 'sea', Name: 'Sea', X: 1150, Y: 150, Radius: 420, Shows: ['basin', 'beach', 'dunes', 'waves', 'boat']},
 			{ID: 'town', Name: 'Town', X: 150, Y: 250, Radius: 260, Shows: ['settlement', 'district', 'square', 'street', 'landmark', 'junction']},
@@ -274,13 +276,48 @@ Elemenx.Service('SceneShowcase', {
 		 * the mountains, a road from it to the main street of the town, a railway, country roads, a junction.
 		 */
 		if (on.town || on.river || on.mountains) {
-			add({ID: 'motorway', Kind: 'road', Name: 'Motorway', Type: 'motorway', Structures: true, Points: points([[-1300, 0], [-700, 0], [-200, -40], [150, -60], [560, -30], [820, -200], [500, -900], [300, -1400]]), Barriers: ['guardrail']});
+			add({ID: 'motorway', Kind: 'road', Name: 'Motorway', Type: 'motorway', Structures: true, Points: points([[-1480, 0], [-700, 0], [-200, -40], [150, -60], [560, -30], [820, -200], [500, -900], [300, -1400]]), Barriers: ['guardrail']});
 			add({ID: 'town-road', Kind: 'road', Name: 'To the town', Type: 'road', Points: points([[-110, -46], [-90, 120], [-60, 250]])});
 			add({ID: 'railway', Kind: 'road', Name: 'Railway', Type: 'rail-double', Structures: true, Points: points([[-1400, -650], [-500, -600], [0, -500], [500, -650], [1400, -700]])});
-			add({ID: 'country', Kind: 'road', Name: 'Country road', Type: 'country', Points: points([[360, 250], [420, 600], [450, 760]])});
-			add({ID: 'track-to-woods', Kind: 'road', Type: 'gravel', Points: points([[-700, 0], [-950, -100], [-1100, -350]])});
+			/* The country road on a viaduct for a stretch (Elevated: 8 m over the fields), as a road over a marsh is. */
+			add({ID: 'country', Kind: 'road', Name: 'Country road', Type: 'country', Points: points([[360, 250], [420, 600], [450, 760]]), Elevated: [[170, 330, 8]]});
+			/*
+			 * Under the big mountain: a road through it west to east in a tunnel, and a branch from the south that ends on it
+			 * in the mountain, a fork under the ground (a chamber where they meet, the tunnels a graph: SceneRoads.TunnelGraph).
+			 */
+			add({ID: 'pass-road', Kind: 'road', Name: 'Road under the mountain', Type: 'road', Structures: true, Points: points([[-900, -1100], [-180, -1100]])});
+			add({ID: 'pass-branch', Kind: 'road', Name: 'Branch in the mountain', Type: 'country', Structures: true, Points: points([[-520, -1460], [-520, -1100]])});
+			add({ID: 'track-to-woods', Kind: 'road', Type: 'gravel', Points: points([[-900, -90], [-1000, -160], [-1100, -350]])});
+			/* A road from the city that ends on the motorway: a trumpet (the ramps where the motorway goes on the ground). */
+			add({ID: 'city-link', Kind: 'road', Name: 'Road to the city', Type: 'road', Points: points([[-510, 210], [-510, 0]])});
 			/* Where the country road leaves the main street of the town: a roundabout. */
 			add({ID: 'cross', Kind: 'junction', X: 360 * scale, Y: 250 * scale, Radius: 14, Form: 'ring'});
+
+			/*
+			 * A lane over the railway west of the city: a level crossing, its barriers down. Where the line of the railway is at
+			 * x = -800 (its curve, as SceneRoads makes it; on the ground there), the lane straight across it.
+			 */
+			var rail = this.$Service('SceneRoads').Line(points([[-1400, -650], [-500, -600], [0, -500], [500, -650], [1400, -700]]), {}).reduce(function (best, point) {
+				return Math.abs(point.X + 800 * scale) < Math.abs(best.X + 800 * scale) ? point : best;
+			});
+
+			add({ID: 'level-lane', Kind: 'road', Name: 'Lane over the railway', Type: 'country', Points: [[rail.X, rail.Z - 140 * scale], [rail.X, rail.Z + 140 * scale]]});
+			add({ID: 'level-crossing', Kind: 'junction', X: rail.X, Y: rail.Z, Closed: true});
+
+			/* A lane over the motorway west of the town: an overpass, the lane up on its banks and a bridge over it. */
+			add({ID: 'overpass-lane', Kind: 'road', Name: 'Lane over the motorway', Type: 'country', Points: points([[-860, 220], [-860, -130]])});
+
+			/*
+			 * Interchanges along a motorway on the west edge, north to south: a roundabout one (two rings) and a diamond with roads
+			 * across it, a cloverleaf where it crosses the main motorway (told: two motorways would make a stack), a stack where
+			 * it crosses another motorway; the road to the town ends on the main motorway in a trumpet. Their ramps: SceneRoads.
+			 */
+			add({ID: 'motorway-west', Kind: 'road', Name: 'West motorway', Type: 'motorway', Structures: true, Points: points([[-1260, -1450], [-1260, 1450]])});
+			add({ID: 'motorway-south', Kind: 'road', Name: 'South motorway', Type: 'motorway', Structures: true, Points: points([[-1480, -1000], [-700, -1000]])});
+			add({ID: 'diamond-road', Kind: 'road', Name: 'Road to the west', Type: 'road', Points: points([[-1480, 600], [-1060, 600]])});
+			add({ID: 'ring-road', Kind: 'road', Name: 'Road of two rings', Type: 'road', Points: points([[-1480, 1150], [-1100, 1150]])});
+			add({ID: 'clover', Kind: 'junction', X: -1260 * scale, Y: 0, Form: 'cloverleaf'});
+			add({ID: 'rings', Kind: 'junction', X: -1260 * scale, Y: 1150 * scale, Form: 'roundabout'});
 		}
 
 		/*
@@ -314,7 +351,16 @@ Elemenx.Service('SceneShowcase', {
 		add({ID: 'thickets', Kind: 'thicket', Density: 2, Cover: 0.2});
 		add({ID: 'stones', Kind: 'rocks', Density: 0.3});
 
-		objects.unshift({ID: 'land', Kind: 'ground', Name: '', Swell: 0.5, World: this.$Service('SceneWorld').Library({Size: size, Height: 60, Water: 0.12, Scale: 380, Ridges: 0.2, Rock: 0.8, Snow: 0.95, Seed: seed, Sketch: {Layers: layers}})});
+		/*
+		 * A cave in the big mountain, a graph of passages: a mouth at its foot, a way level into its slope to a fork, a hall at
+		 * the end of one branch, and down the other to a lower hall; its walls rough.
+		 */
+		if (on.mountains)
+			add({ID: 'cave-mouth', Kind: 'marker', Name: 'Cave', X: -540 * scale, Y: -905 * scale});
+
+		var passages = on.mountains ? [{Rough: 0.6, Seed: 'showcase-cave', Radius: 2.6, Crust: 1.5, Nodes: [{ID: 'mouth', At: at(-540, -895, 49)}, {ID: 'fork', At: at(-540, -990, 48)}, {ID: 'hall', At: at(-490, -1040, 47), Radius: 12}, {ID: 'deep', At: at(-590, -1050, 34), Radius: 7}], Ways: [{From: 'mouth', To: 'fork'}, {From: 'fork', To: 'hall', Radius: 3}, {From: 'fork', To: 'deep', Points: [at(-580, -1010)]}]}] : [];
+
+		objects.unshift({ID: 'land', Kind: 'ground', Name: '', Swell: 0.5, World: this.$Service('SceneWorld').Library({Size: size, Height: 60, Water: 0.12, Scale: 380, Ridges: 0.2, Rock: 0.8, Snow: 0.95, Seed: seed, Sketch: {Layers: layers}, Passages: passages})});
 
 		route = districts.map(function (district) {
 			return {ID: district.ID, Name: district.Name, Target: [district.X * scale, 0, district.Y * scale], Yaw: 0.6, Pitch: 0.5, Distance: district.Radius * scale * (district.Near || 1.6)};

@@ -151,7 +151,7 @@ Elemenx.Component('Scene', {
 			shader: 'A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}).'
 		},
-		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
+		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
 		Props: {
 			Setting: {Options: ['space', 'terrain'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers).'},
 			System: 'The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}.',
@@ -368,8 +368,8 @@ Elemenx.Component('Scene', {
 			'camera': {Traits: {Camera: {Lift: 1.6, Yaw: 0, Pitch: 0, Roll: 0, Target: '', Follow: '', At: null, Rig: 'tripod', Shake: null, Smooth: null, Lag: null, Tilt: 0.3, PitchMin: -90, PitchMax: 30, Focal: 35, Sensor: 36, Aperture: null, Focus: null, ISO: null, Shutter: null, ND: 0, Compensation: 0, Polarizer: 0, Filter: '', Temperature: 6500, Tint: 0, Saturation: 1, Contrast: 1, LUT: '', Aberration: 0, Distortion: 0, Vignette: null, Grain: null}}},
 			'trigger': {Traits: {Trigger: {Shape: '', Points: null, Radius: 4, Width: 4, Height: 0, Team: '', Kinds: null, Once: false, Enabled: true, Achievement: null, Blueprint: null, Parameters: null}}},
 			'zone': {Traits: {Zone: {Points: null, Radius: 0, Tags: null, Team: ''}}},
-			'road': {Traits: {Road: {Type: 'road', Points: null, Closed: false, Width: 0, Height: 0, Bridges: null, Tunnels: null, Structures: false, Clear: 5, Cover: 8, Barriers: null, Along: null, Marks: null, Straight: false, Segments: null, Radii: null}, Model: {Shape: 'road', Size: 1, Color: '#ffffff'}}},
-			'junction': {Traits: {Junction: {Radius: 0, Surface: 'asphalt', Form: ''}}},
+			'road': {Traits: {Road: {Type: 'road', Points: null, Closed: false, Width: 0, Height: 0, Bridges: null, Tunnels: null, Structures: false, Clear: 5, Cover: 8, Elevated: null, Viaducts: true, Bank: 8, Barriers: null, Along: null, Marks: null, Straight: false, Segments: null, Radii: null}, Model: {Shape: 'road', Size: 1, Color: '#ffffff'}}},
+			'junction': {Traits: {Junction: {Radius: 0, Surface: 'asphalt', Form: '', Closed: false, Under: false}}},
 			'pipe': {Traits: {Pipe: {Points: null, Radius: 0.3, Wall: null, Laid: 'above', Lift: 1.5, Depth: 1, Bend: null, Ends: null, Flanges: null, Spacing: null, Color: null, Inside: null, Metal: 0.6, Fluid: null, Leaks: null}, Model: {Shape: 'pipe', Size: 1, Color: '#ffffff'}}},
 			'barrier': {Traits: {Barrier: {Road: '', Side: 'both', Type: 'guardrail', Height: 0, Gap: 0.3, From: 0, To: null, Points: null, Closed: false, Smooth: false, Color: '', Step: 0}, Model: {Shape: 'road', Size: 1, Color: '#ffffff'}}},
 			'forest': {Traits: {Scatter: {Shapes: ['pine', 'pine', 'oak', 'birch', 'bush', 'stump'], Density: 3, Cover: 0.55, Patch: 70, MaxSlope: 0.3}}},
@@ -5921,7 +5921,6 @@ Elemenx.Component('Scene', {
 			var field = ground.Field;
 			var wanted = [];
 			var missing = [];
-			var started = window.performance.now();
 
 			/*
 			 * Regression: a square made again at once (the whole ground, its sketch changed) destroyed the mesh of the one it
@@ -5992,7 +5991,7 @@ Elemenx.Component('Scene', {
 
 					replace();
 
-					ground.Nodes[key] = {Mesh: renderer.Mesh(ready), Center: [x, 0, z], Size: size, Top: Math.max(0, field.Height(x, z)), Error: errorOf(x, z, size), Used: ground.Frame};
+					ground.Nodes[key] = {Mesh: renderer.Mesh(ready), Center: [x, 0, z], Size: size, Top: Math.max(0, field.Height(x, z)), Span: spanOf(ready), Error: errorOf(x, z, size), Used: ground.Frame};
 
 					return;
 				}
@@ -6003,7 +6002,7 @@ Elemenx.Component('Scene', {
 
 						var made = piece || field.Chunk(x, z, size, 32);
 
-						ground.Nodes[key] = {Mesh: renderer.Mesh(made), Wire: wired() ? renderer.Mesh({Positions: linesOf(made, false), Indices: []}, 'lines') : null, Center: [x, 0, z], Size: size, Top: Math.max(0, field.Height(x, z)), Error: errorOf(x, z, size), Used: ground.Frame};
+						ground.Nodes[key] = {Mesh: renderer.Mesh(made), Wire: wired() ? renderer.Mesh({Positions: linesOf(made, false), Indices: []}, 'lines') : null, Center: [x, 0, z], Size: size, Top: Math.max(0, field.Height(x, z)), Span: spanOf(made), Error: errorOf(x, z, size), Used: ground.Frame};
 					});
 
 					return;
@@ -6011,7 +6010,23 @@ Elemenx.Component('Scene', {
 
 				replace();
 
-				ground.Nodes[key] = {Mesh: renderer.Mesh(field.Chunk(x, z, size, 32)), Center: [x, 0, z], Size: size, Top: Math.max(0, field.Height(x, z)), Error: errorOf(x, z, size), Used: ground.Frame};
+				var first = field.Chunk(x, z, size, 32);
+
+				ground.Nodes[key] = {Mesh: renderer.Mesh(first), Center: [x, 0, z], Size: size, Top: Math.max(0, field.Height(x, z)), Span: spanOf(first), Error: errorOf(x, z, size), Used: ground.Frame};
+			}
+
+			/* The lowest and the highest of a square as made ([y, y]): a square on a mountain, a cave under it. */
+			function spanOf (made) {
+				var low = Infinity;
+				var high = -Infinity;
+				var i;
+
+				for (i = 1; made && made.Positions && i < made.Positions.length; i += 3) {
+					low = Math.min(low, made.Positions[i]);
+					high = Math.max(high, made.Positions[i]);
+				}
+
+				return low <= high ? [low, high] : null;
 			}
 
 			/*
@@ -6025,9 +6040,12 @@ Elemenx.Component('Scene', {
 				var half = size / 2;
 				/*
 				 * Regression: measured to its middle, a large square the eye stood by the corner of was far, stayed coarse, and its
-				 * edge with the fine ones beside it showed as a step: to the nearest point of it.
+				 * edge with the fine ones beside it showed as a step: to the nearest point of it. Up and down too, from its lowest
+				 * to its highest (Regression: measured to the height of its middle, the top of a mountain, a square the eye stood
+				 * by in a cave under it was 160 m away, stayed coarse, and the eye saw out of the cave through it).
 				 */
-				var near = vectors.Distance(scene.Eye, [Math.max(x - half, Math.min(x + half, scene.Eye[0])), node.Top, Math.max(z - half, Math.min(z + half, scene.Eye[2]))]);
+				var height = node.Span ? Math.max(node.Span[0], Math.min(node.Span[1], scene.Eye[1])) : node.Top;
+				var near = vectors.Distance(scene.Eye, [Math.max(x - half, Math.min(x + half, scene.Eye[0])), height, Math.max(z - half, Math.min(z + half, scene.Eye[2]))]);
 				var parts = [[x - half / 2, z - half / 2], [x + half / 2, z - half / 2], [x - half / 2, z + half / 2], [x + half / 2, z + half / 2]];
 				var absent;
 
@@ -6084,10 +6102,17 @@ Elemenx.Component('Scene', {
 			/* How many squares the view still waits for (Preparing). */
 			ground.Missing = missing.length;
 
+			/*
+			 * Its 4 ms counted from here, not from the walk over the squares. Regression: a walk of more than 4 ms (a volume of
+			 * many carves to look at) left one square a frame, and the first of them, one already asked of a worker, asked
+			 * nothing: the squares of a cave the eye stood in were never made, and it saw out of it through the coarse one.
+			 */
+			var building = window.performance.now();
+
 			missing.some(function (one) {
 				build(one.X, one.Z, one.Size, one.Level);
 
-				return window.performance.now() - started > 4 || field.Options && terrain.Work().Waiting() > 8;
+				return window.performance.now() - building > 4 || field.Options && terrain.Work().Waiting() > 8;
 			});
 
 			return wanted;
