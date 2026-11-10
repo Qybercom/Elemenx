@@ -1,0 +1,15 @@
+{
+	"Order": 11,
+	"Width": 26,
+	"Depth": 26,
+	"Floors": [
+		20,
+		35
+	],
+	"FloorHeight": 3.6,
+	"Roof": "flat",
+	"Walls": "glass",
+	"Windows": 0.8,
+	"Setbacks": 2,
+	"Crown": "antenna"
+}

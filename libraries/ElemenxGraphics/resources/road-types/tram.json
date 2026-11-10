@@ -1,0 +1,70 @@
+{
+	"Order": 10,
+	"Title": "Street with a tram",
+	"Group": "street",
+	"Speed": 50,
+	"Catenary": true,
+	"Rails": [
+		{
+			"Offset": 0,
+			"Gauge": 1.435
+		}
+	],
+	"Sleepers": {
+		"Step": 0.75,
+		"Length": 0,
+		"Surface": "concrete"
+	},
+	"Strips": [
+		{
+			"Kind": "sidewalk",
+			"Width": 2.5,
+			"Surface": "paving",
+			"Height": 0.15
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.2,
+			"Surface": "asphalt",
+			"Way": -1,
+			"Left": "none",
+			"Right": "solid"
+		},
+		{
+			"Kind": "bed",
+			"Width": 3,
+			"Surface": "concrete",
+			"Height": 0
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.2,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "solid",
+			"Right": "none"
+		},
+		{
+			"Kind": "sidewalk",
+			"Width": 2.5,
+			"Surface": "paving",
+			"Height": 0.15
+		}
+	],
+	"Along": [
+		{
+			"Type": "row",
+			"Side": "both",
+			"Gap": -0.6,
+			"Shapes": "streetlamp",
+			"Spacing": 28
+		},
+		{
+			"Type": "row",
+			"Side": "both",
+			"Gap": -1.2,
+			"Shapes": "bench, bin",
+			"Spacing": 50
+		}
+	]
+}

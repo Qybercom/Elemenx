@@ -1,0 +1,85 @@
+{
+	"Order": 6,
+	"Title": "Street",
+	"Group": "street",
+	"Speed": 50,
+	"Strips": [
+		{
+			"Kind": "sidewalk",
+			"Width": 2.5,
+			"Surface": "paving",
+			"Height": 0.15
+		},
+		{
+			"Kind": "kerb",
+			"Width": 0.2,
+			"Surface": "concrete",
+			"Height": 0.15
+		},
+		{
+			"Kind": "parking",
+			"Width": 2.2,
+			"Surface": "asphalt",
+			"Height": 0,
+			"Right": "dotted"
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.2,
+			"Surface": "asphalt",
+			"Way": -1,
+			"Left": "none",
+			"Right": "dashed"
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.2,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "none",
+			"Right": "none"
+		},
+		{
+			"Kind": "parking",
+			"Width": 2.2,
+			"Surface": "asphalt",
+			"Height": 0,
+			"Left": "dotted"
+		},
+		{
+			"Kind": "kerb",
+			"Width": 0.2,
+			"Surface": "concrete",
+			"Height": 0.15
+		},
+		{
+			"Kind": "sidewalk",
+			"Width": 2.5,
+			"Surface": "paving",
+			"Height": 0.15
+		}
+	],
+	"Along": [
+		{
+			"Type": "row",
+			"Side": "both",
+			"Gap": -0.6,
+			"Shapes": "streetlamp",
+			"Spacing": 28
+		},
+		{
+			"Type": "row",
+			"Side": "both",
+			"Gap": -1.2,
+			"Shapes": "bench, bin, hydrant",
+			"Spacing": 45
+		},
+		{
+			"Type": "row",
+			"Side": "right",
+			"Gap": -1.4,
+			"Shapes": "bus-stop",
+			"Spacing": 320
+		}
+	]
+}

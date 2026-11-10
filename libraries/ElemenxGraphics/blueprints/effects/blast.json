@@ -1,0 +1,526 @@
+{
+	"version": 1,
+	"type": "effect",
+	"name": "blast",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "layer1",
+			"type": "Layer",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Kind",
+					"value": "flame"
+				},
+				{
+					"key": "Blend",
+					"value": "add"
+				},
+				{
+					"key": "Hold",
+					"value": false
+				},
+				{
+					"key": "Rings",
+					"value": null
+				},
+				{
+					"key": "Speed",
+					"value": [
+						3,
+						11
+					]
+				},
+				{
+					"key": "Size",
+					"value": [
+						0.8,
+						1.8
+					]
+				},
+				{
+					"key": "Color",
+					"value": [
+						[
+							1,
+							0.96,
+							0.7
+						],
+						[
+							1,
+							0.62,
+							0.18
+						],
+						[
+							0.5,
+							0.16,
+							0.04
+						]
+					]
+				},
+				{
+					"key": "Hot"
+				},
+				{
+					"key": "Count",
+					"value": 70
+				},
+				{
+					"key": "Life",
+					"value": 0.45
+				},
+				{
+					"key": "Spread",
+					"value": 1.6
+				},
+				{
+					"key": "Gravity"
+				},
+				{
+					"key": "Rise",
+					"value": 1.6
+				},
+				{
+					"key": "Drag",
+					"value": 3.4
+				},
+				{
+					"key": "Bounce"
+				},
+				{
+					"key": "Stretch"
+				},
+				{
+					"key": "Wander",
+					"value": 0.3
+				},
+				{
+					"key": "Wind"
+				},
+				{
+					"key": "Opacity"
+				},
+				{
+					"key": "Start"
+				},
+				{
+					"key": "Base"
+				},
+				{
+					"key": "Hollow"
+				},
+				{
+					"key": "Soft"
+				},
+				{
+					"key": "Reach"
+				},
+				{
+					"key": "Seed"
+				}
+			]
+		},
+		{
+			"id": "layer2",
+			"type": "Layer",
+			"x": 300,
+			"y": 100,
+			"properties": [
+				{
+					"key": "Kind",
+					"value": "smoke"
+				},
+				{
+					"key": "Blend",
+					"value": "alpha"
+				},
+				{
+					"key": "Hold",
+					"value": false
+				},
+				{
+					"key": "Rings",
+					"value": null
+				},
+				{
+					"key": "Speed",
+					"value": [
+						2,
+						8
+					]
+				},
+				{
+					"key": "Size",
+					"value": [
+						0.8,
+						4
+					]
+				},
+				{
+					"key": "Color",
+					"value": [
+						0.82,
+						0.76,
+						0.66
+					]
+				},
+				{
+					"key": "Hot"
+				},
+				{
+					"key": "Count",
+					"value": 34
+				},
+				{
+					"key": "Life",
+					"value": 3
+				},
+				{
+					"key": "Spread",
+					"value": 1.3
+				},
+				{
+					"key": "Gravity",
+					"value": 1.5
+				},
+				{
+					"key": "Rise",
+					"value": 0.7
+				},
+				{
+					"key": "Drag",
+					"value": 2
+				},
+				{
+					"key": "Bounce"
+				},
+				{
+					"key": "Stretch"
+				},
+				{
+					"key": "Wander",
+					"value": 0.6
+				},
+				{
+					"key": "Wind"
+				},
+				{
+					"key": "Opacity",
+					"value": 0.3
+				},
+				{
+					"key": "Start",
+					"value": 0.08
+				},
+				{
+					"key": "Base"
+				},
+				{
+					"key": "Hollow"
+				},
+				{
+					"key": "Soft"
+				},
+				{
+					"key": "Reach"
+				},
+				{
+					"key": "Seed"
+				}
+			]
+		},
+		{
+			"id": "layer3",
+			"type": "Layer",
+			"x": 560,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Kind",
+					"value": "spark"
+				},
+				{
+					"key": "Blend",
+					"value": "alpha"
+				},
+				{
+					"key": "Hold",
+					"value": false
+				},
+				{
+					"key": "Rings",
+					"value": null
+				},
+				{
+					"key": "Speed",
+					"value": [
+						4,
+						14
+					]
+				},
+				{
+					"key": "Size",
+					"value": [
+						0.03,
+						0.03
+					]
+				},
+				{
+					"key": "Color",
+					"value": [
+						0.28,
+						0.22,
+						0.15
+					]
+				},
+				{
+					"key": "Hot"
+				},
+				{
+					"key": "Count",
+					"value": 60
+				},
+				{
+					"key": "Life",
+					"value": 1.6
+				},
+				{
+					"key": "Spread",
+					"value": 1.2
+				},
+				{
+					"key": "Gravity",
+					"value": 9
+				},
+				{
+					"key": "Rise"
+				},
+				{
+					"key": "Drag",
+					"value": 0.6
+				},
+				{
+					"key": "Bounce",
+					"value": 0.3
+				},
+				{
+					"key": "Stretch",
+					"value": 0
+				},
+				{
+					"key": "Wander"
+				},
+				{
+					"key": "Wind"
+				},
+				{
+					"key": "Opacity"
+				},
+				{
+					"key": "Start"
+				},
+				{
+					"key": "Base"
+				},
+				{
+					"key": "Hollow"
+				},
+				{
+					"key": "Soft"
+				},
+				{
+					"key": "Reach"
+				},
+				{
+					"key": "Seed"
+				}
+			]
+		},
+		{
+			"id": "layer4",
+			"type": "Layer",
+			"x": 820,
+			"y": 100,
+			"properties": [
+				{
+					"key": "Kind",
+					"value": "spark"
+				},
+				{
+					"key": "Blend",
+					"value": "add"
+				},
+				{
+					"key": "Hold",
+					"value": false
+				},
+				{
+					"key": "Rings",
+					"value": null
+				},
+				{
+					"key": "Speed",
+					"value": [
+						6,
+						20
+					]
+				},
+				{
+					"key": "Size",
+					"value": [
+						0.025,
+						0.008
+					]
+				},
+				{
+					"key": "Color",
+					"value": [
+						1,
+						0.7,
+						0.3
+					]
+				},
+				{
+					"key": "Hot"
+				},
+				{
+					"key": "Count",
+					"value": 50
+				},
+				{
+					"key": "Life",
+					"value": 1.2
+				},
+				{
+					"key": "Spread",
+					"value": 1.6
+				},
+				{
+					"key": "Gravity",
+					"value": 10
+				},
+				{
+					"key": "Rise"
+				},
+				{
+					"key": "Drag",
+					"value": 0.9
+				},
+				{
+					"key": "Bounce"
+				},
+				{
+					"key": "Stretch",
+					"value": 0.02
+				},
+				{
+					"key": "Wander"
+				},
+				{
+					"key": "Wind"
+				},
+				{
+					"key": "Opacity"
+				},
+				{
+					"key": "Start"
+				},
+				{
+					"key": "Base"
+				},
+				{
+					"key": "Hollow"
+				},
+				{
+					"key": "Soft"
+				},
+				{
+					"key": "Reach"
+				},
+				{
+					"key": "Seed"
+				}
+			]
+		},
+		{
+			"id": "effect",
+			"type": "Effect",
+			"x": 1080,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Once",
+					"value": true
+				},
+				{
+					"key": "Then",
+					"value": ""
+				},
+				{
+					"key": "Heat",
+					"value": 1.5
+				},
+				{
+					"key": "Stand"
+				},
+				{
+					"key": "Lasts",
+					"value": 3
+				},
+				{
+					"key": "Fly"
+				},
+				{
+					"key": "Aim"
+				},
+				{
+					"key": "Glow"
+				},
+				{
+					"key": "LampColor",
+					"value": "#ffa050"
+				},
+				{
+					"key": "LampPower",
+					"value": 2
+				},
+				{
+					"key": "LampRadius",
+					"value": 22
+				},
+				{
+					"key": "LampFlicker",
+					"value": 0
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "flowprint-link-mw9qbx0u2z",
+			"p1": "layer1-out-Layers",
+			"p2": "layer2-in-Under",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9qbx0u30",
+			"p1": "layer2-out-Layers",
+			"p2": "layer3-in-Under",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9qbx0u31",
+			"p1": "layer3-out-Layers",
+			"p2": "layer4-in-Under",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9qbx0u32",
+			"p1": "layer4-out-Layers",
+			"p2": "effect-in-Layers",
+			"kind": "value"
+		}
+	]
+}

@@ -20,14 +20,14 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Application, Bundle, Cache, Directive registry, Discovery, Locale, Messaging, Meta, Network, Reactive, Router, SSR, Service and Guard, Storage, Structural, Template and Component, Widgets |
+| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Application, Bundle, Cache, Compilers, Directive registry, Discovery, Locale, Messaging, Meta, Network, Reactive, Resources, Router, SSR, Service and Guard, Storage, Structural, Template and Component, Widgets |
 | `BaseURL` | the base of the relative URLs of the document: its address, or for one that is no base (a page of a `blob:` or `about:` URL) its base URI, the root of its origin or `file:///` | Application, Bundle, Discovery |
-| `AbsoluteURL` | resolves a URL against the document; in a worker the value is kept as it is | Locale, Resource, ServiceWorker, WebWorker |
+| `AbsoluteURL` | resolves a URL against the document; in a worker the value is kept as it is | Application, Library, Locale, Resource, ServiceWorker, WebWorker |
 | `CurrentScriptURL` | the URL of the executing script without query and hash, or `null`: the base of the relative paths of its definitions | Application, Bundle, Library, Template and Component |
 | `DefinitionURL` | resolves a relative path of a definition against its `$DefinitionURL`; absolute and root paths are kept | Library, Template and Component, Application |
 | `OwnerRegistry` | registry of the resources an owner created: `Add`, `Remove`, `Destroyed`, `Destroy` (destroys the rest with the owner) | Events, Messaging, WebWorker, ServiceWorker |
 | `EventList` | listeners of the named events of one object: `Add`, `Remove`, `Emit` (each listener isolated, one shared event), `Clear` | Storage, WebWorker, ServiceWorker |
-| `Countdown` | waits for N asynchronous steps: the callback gets the first error, or `null` once all succeeded | Discovery, Install, Locale |
+| `Countdown` | waits for N asynchronous steps: the callback gets the first error, or `null` once all succeeded | Discovery, Install, Locale, Resources |
 | `MessageListeners` | listeners of the global `message` event added through a wrapper, removable by their own callback | Messaging, WebWorker |
 | `CaseName` | the own key of an object that is a key in another case (a lower-case attribute of a template for a prop), or `null` when none or several are (of a value and a method of the same letters, the value); its names are kept by their lower case for each object (read again when its count of keys changes) | Template and Component, Structural |
 | `Assign` | copies the own enumerable properties of a source into a target and returns the target | Template and Component, Router, SSR, Structural, Storage, WebWorker, ServiceWorker |
@@ -56,6 +56,18 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `Bundle` | production bundle registry: `Install`, `Reload`, `Ready`, `ResolvedName`, `Names` (the names of a type, those of its parts too), `Load`, `LoadType`, `Deferred` (the URL of the part of an entity not loaded yet), `Fetch` (fetches that part) | Library, Template and Component, Router, Structural, Application |
+
+## Resource
+
+| Field | Purpose | Used by |
+|---|---|---|
+| `EmbeddedURLs` | the URLs of the files a bundle embedded (`Elemenx.Resource(url, text)`) | Resources |
+
+## Resources
+
+| Field | Purpose | Used by |
+|---|---|---|
+| `LoadResources` | loads what `$Resources` names (`{Group: folder or list}`) into `Elemenx.Resources`: `Resolve`, `Namespace`, `Files`, `Application` (wins over a Library) | Library, Application |
 
 ## Locale
 

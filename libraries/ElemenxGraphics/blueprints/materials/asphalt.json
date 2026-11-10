@@ -1,0 +1,41 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "asphalt",
+	"material": {
+		"Order": 8,
+		"Title": "Asphalt",
+		"Group": "road",
+		"Land": true,
+		"Texture": "asphalt"
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat s = enx_ms(px, 0.011);\n\tvec4 g = enx_mc(q * 90.0, 1.0);\n\tfloat stone = smoothstep(0.55, 0.2, g.x) * s;\n\tfloat mid = enx_mf(q * 14.0, 3) - 0.5;\n\tfloat worn = enx_mf(vec2(q.x * 0.08, q.y * 0.9), 3);\n\tc *= 1.0 + (g.z - 0.5) * 0.5 * stone + mid * 0.3 * enx_ms(px, 0.05) + (enx_mf(q * 0.4, 3) - 0.5) * 0.22 + (worn - 0.5) * 0.18;\n\tfloat straw = step(0.985, g.w) * stone;\n\tc = mix(c, vec3(0.55, 0.47, 0.32), straw * 0.7);\n\th += stone * 0.002 + g.z * 0.001 * s;\n\tr = 0.86 - stone * 0.08;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Roads. Fresh asphalt: dark, its aggregate in grains, a bit of straw now and then."
+		}
+	],
+	"links": []
+}

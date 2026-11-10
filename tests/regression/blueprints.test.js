@@ -827,3 +827,144 @@ describe('Contract: Blueprints, graphs in the JSON of Flowprint made into shader
 		expect(blueprints.Code(stored(other))).toBe(null);
 	});
 });
+
+describe('Contract: the graphs of the Libraries as resources, made for their options', function () {
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:Blueprints', 'service:SceneSower', 'service:SceneTerrainGenerator', 'service:SceneWorld', 'service:SceneMaterials', 'service:SceneTextures', 'service:SceneRoads', 'service:SceneBiomes', 'service:Noise', 'service:Math', 'service:Random', 'service:Workers']);
+	});
+
+	it('fills the parameters of a graph by key and the {Key} of the texts of its properties', function () {
+		var blueprints = Elemenx.Service('Blueprints');
+		var graph = blueprints.Create('generator', {parameters: [{key: 'Size', type: 'float', value: 1}, {key: 'Other', type: 'float', value: 2}]});
+		var noise = blueprints.Add(graph, 'NoiseSpec', {properties: {Type: 'value', Seed: '{Seed}-wet {Missing}'}});
+
+		expect(blueprints.Fill(graph, {Size: 5, Other: null, Seed: 'hill'})).toBe(graph);
+		expect(graph.parameters.map(function (parameter) {
+			return parameter.value;
+		})).toEqual([5, 2]);
+		expect(blueprints.Find(graph, noise.id).properties.filter(function (property) {
+			return property.key === 'Seed';
+		})[0].value).toBe('hill-wet {Missing}');
+	});
+
+	/* The graphs a Library built of code: now its resources, which an Application may give in their place. */
+	it('reads the graphs of the library from its resources, one of the same name of an Application in their place', function () {
+		var sower = Elemenx.Service('SceneSower');
+		var kept = Elemenx.Resources('Blueprints', 'ElemenxGraphics/scatter');
+		var graph = sower.LibraryScatter({ID: 'pines', MaxSlope: 0.5, Clumps: 3});
+
+		expect(Elemenx.Resources('Blueprints')).toEqual(expect.arrayContaining(['ElemenxGraphics/water', 'ElemenxGraphics/wind', 'ElemenxGraphics/grass', 'ElemenxGraphics/land', 'ElemenxGraphics/sky', 'ElemenxGraphics/picture', 'ElemenxGraphics/relief', 'ElemenxGraphics/scatter']));
+		expect(graph.name).toBe('Scatter');
+		expect(graph.parameters.filter(function (parameter) {
+			return parameter.key === 'MaxSlope' || parameter.key === 'Clumps';
+		}).map(function (parameter) {
+			return parameter.value;
+		})).toEqual([0.5, 1]);
+		expect(JSON.stringify(graph)).toContain('"value":"pines"');
+
+		try {
+			Elemenx.Resources('Blueprints', 'ElemenxGraphics/scatter', {name: 'Mine', type: 'generator', parameters: [], blocks: [], links: []});
+
+			expect(sower.LibraryScatter({}).name).toBe('Mine');
+		}
+		finally {
+			Elemenx.Resources('Blueprints', 'ElemenxGraphics/scatter', kept);
+		}
+	});
+
+	/* The world of options was a chain built in code: now the template of a resource, its steps turned on as they are told. */
+	it('makes the world of options of the template of its resource, a step for each item of a list, the others turned off', function () {
+		var blueprints = Elemenx.Service('Blueprints');
+		var graph = Elemenx.Service('SceneWorld').Library({Size: 300, Tunnels: [{Radius: 3}, {Radius: 4}], Scatters: [{ID: 'pines'}]});
+		var on = graph.blocks.filter(function (block) {
+			return block.enabled !== false;
+		}).map(function (block) {
+			return block.id;
+		}).sort();
+
+		expect(on).toEqual(['climate', 'ground', 'relief', 'scatter', 'terrain', 'tunnel', 'tunnel-2']);
+		expect(blueprints.Check(graph)).toEqual([]);
+		expect(blueprints.Properties(blueprints.Find(graph, 'tunnel-2')).Radius).toBe(4);
+		expect(graph.links.filter(function (link) {
+			return link.p1 === 'tunnel-out-Land';
+		})[0].p2).toBe('tunnel-2-in-Land');
+		expect(graph.links.filter(function (link) {
+			return link.p1 === 'tunnel-2-out-Land';
+		})[0].p2).toBe('caves-in-Land');
+	});
+
+	/* Regression: a block turned off gave its first input to every output: a step of roads turned off gave its land as its things. */
+	it('passes on what comes to a block turned off by the name and the type of each output', function () {
+		var blueprints = Elemenx.Service('Blueprints');
+		var graph = Elemenx.Service('SceneWorld').Library({Size: 300});
+		var plan = blueprints.Plan(graph);
+
+		expect(blueprints.Passed(plan, 'roads')).toEqual({Land: 'Land', Things: null});
+		expect(blueprints.Passed(plan, 'scatter')).toEqual({Things: 'Under'});
+		expect(blueprints.Passed(plan, 'planet')).toEqual({Land: 'Land'});
+	});
+
+	/* The materials and the textures were code of their Services: now graphs of a block GLSL each, in the resources. */
+	it('defines the materials and the textures of their resources, one of an Application in the place of one of them', function () {
+		var materials = Elemenx.Service('SceneMaterials');
+		var textures = Elemenx.Service('SceneTextures');
+		var kept = Elemenx.Resources('Blueprints', 'ElemenxGraphics/materials/sand');
+		var mine = JSON.parse(JSON.stringify(kept));
+
+		expect(materials.Names().slice(0, 3)).toEqual(['lawn', 'soil', 'gravel']);
+		expect(materials.Get('lawn')).toMatchObject({Title: 'Lawn', Group: 'ground', Land: true, Texture: 'lawn'});
+		expect(materials.Get('sand').Code).toContain('ripple');
+		expect(textures.Get('lawn').Params.Density).toEqual({Value: 1, Min: 0.4, Max: 1.6, Title: 'Density'});
+		expect(textures.Get('paving').Rows).toBe(true);
+		expect(textures.Get('lawn').Code).toContain('// Its midrib');
+
+		mine.blocks[0].properties[0].value = '	r = 0.5;';
+
+		try {
+			Elemenx.Resources('Blueprints', 'ElemenxGraphics/materials/sand', mine);
+
+			materials.Library();
+
+			expect(materials.Get('sand').Code).toBe('	r = 0.5;');
+		}
+		finally {
+			Elemenx.Resources('Blueprints', 'ElemenxGraphics/materials/sand', kept);
+
+			materials.Library();
+		}
+	});
+
+	/* The surfaces and the types of roads were data written in the code: now data of the resources. */
+	it('defines the surfaces and the types of roads of their resources, in their order, one of an Application in the place of one', function () {
+		var roads = Elemenx.Service('SceneRoads');
+		var kept = Elemenx.Resources('Data', 'ElemenxGraphics/road-types/lane');
+
+		expect(roads.Type('road')).toMatchObject({Title: 'Road', Group: 'road', Speed: 90});
+		expect(roads.Type('road').Order).toBe(undefined);
+
+		try {
+			Elemenx.Resources('Data', 'ElemenxGraphics/road-types/lane', Object.assign({}, kept, {Speed: 33}));
+
+			roads.Library();
+
+			expect(roads.Type('lane').Speed).toBe(33);
+		}
+		finally {
+			Elemenx.Resources('Data', 'ElemenxGraphics/road-types/lane', kept);
+
+			roads.Library();
+		}
+	});
+
+	/* The lands were data written in the code: now data of the resources. */
+	it('reads the lands of their resources, in their order', function () {
+		var biomes = Elemenx.Service('SceneBiomes');
+
+		expect(biomes.Names()).toEqual(['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'alien']);
+		expect(biomes.Get('taiga').Ground.Materials).toEqual({Low: 'soil', Sand: 'gravel'});
+		expect(biomes.Get('taiga').Order).toBe(undefined);
+	});
+});
+

@@ -1,0 +1,37 @@
+{
+	"Order": 21,
+	"Title": "Runway",
+	"Group": "air",
+	"Speed": 300,
+	"Strips": [
+		{
+			"Kind": "shoulder",
+			"Width": 7.5,
+			"Surface": "asphalt",
+			"Height": 0,
+			"Right": "solid"
+		},
+		{
+			"Kind": "lane",
+			"Width": 15,
+			"Surface": "concrete",
+			"Way": 0,
+			"Left": "none",
+			"Right": "dashed"
+		},
+		{
+			"Kind": "lane",
+			"Width": 15,
+			"Surface": "concrete",
+			"Way": 0,
+			"Left": "none",
+			"Right": "solid"
+		},
+		{
+			"Kind": "shoulder",
+			"Width": 7.5,
+			"Surface": "asphalt",
+			"Height": 0
+		}
+	]
+}

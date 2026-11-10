@@ -1,0 +1,79 @@
+{
+	"Order": 5,
+	"Climate": {
+		"Temperature": [
+			0.65,
+			null
+		],
+		"Moisture": [
+			0.6,
+			null
+		],
+		"Height": [
+			null,
+			0.12
+		]
+	},
+	"Ground": {
+		"Low": [
+			0.22,
+			0.3,
+			0.18
+		],
+		"High": [
+			0.28,
+			0.32,
+			0.2
+		],
+		"Sand": [
+			0.3,
+			0.3,
+			0.2
+		],
+		"Deep": [
+			0.12,
+			0.16,
+			0.12
+		],
+		"Materials": {
+			"Low": "soil",
+			"Sand": "clay",
+			"Deep": "clay"
+		}
+	},
+	"Scatter": [
+		{
+			"Shapes": [
+				"oak",
+				"birch",
+				"stump"
+			],
+			"Density": 1.8,
+			"Cover": 0.7,
+			"Patch": 45,
+			"MaxSlope": 0.3
+		},
+		{
+			"Shapes": [
+				"bush",
+				"mushroom",
+				"mushroom",
+				"stump"
+			],
+			"Density": 6,
+			"Cover": 0.6,
+			"Patch": 20,
+			"MaxSlope": 0.3,
+			"Size": [
+				0.6,
+				1.4
+			]
+		}
+	],
+	"Grass": {
+		"Density": 1,
+		"Height": 1,
+		"Color": "#7c8a3c",
+		"Root": "#2c3a1e"
+	}
+}

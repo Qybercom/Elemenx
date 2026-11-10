@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "soil",
+	"material": {
+		"Order": 1,
+		"Title": "Soil",
+		"Group": "ground",
+		"Land": true
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat s1 = enx_ms(px, 0.03);\n\tfloat s2 = enx_ms(px, 0.08);\n\tfloat grain = enx_mf(q * 18.0, 3);\n\tc *= 0.8 + grain * 0.4 * s1 + (1.0 - s1) * 0.2;\n\tfloat moss = smoothstep(0.42, 0.78, enx_mf(q * 0.6 + 3.0, 4) + (enx_mn(q * 14.0) - 0.5) * 0.25 * s1);\n\tc = mix(c, c * vec3(0.78, 1.0, 0.62) * (0.8 + enx_mn(q * 30.0) * 0.4 * s1), moss * 0.7);\n\th += moss * 0.006 + grain * 0.004 * s1;\n\tvec4 l = enx_mc(q * 9.0, 0.9);\n\tfloat leaf = step(0.72, l.z) * smoothstep(0.32, 0.18, l.x) * s2 * (1.0 - moss * 0.7);\n\tc = mix(c, mix(vec3(0.55, 0.3, 0.1), vec3(0.75, 0.55, 0.18), l.w), leaf);\n\th += leaf * 0.003;\n\tvec4 p = enx_mc(q * 6.0 + 31.0, 1.0);\n\tfloat pebble = step(0.85, p.z) * smoothstep(0.3, 0.15, p.x) * s2;\n\tc = mix(c, vec3(0.5, 0.48, 0.44) * (0.75 + p.w * 0.5), pebble);\n\th += pebble * smoothstep(0.3, 0.0, p.x) * 0.015;\n\tr = mix(0.95, 0.8, pebble);"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Soil under trees: its grain, patches of moss, fallen leaves and pebbles."
+		}
+	],
+	"links": []
+}

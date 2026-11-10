@@ -29,7 +29,7 @@ Elemenx.Service('SceneSower', {
 
 	/* The workers of the sowing: the field of the ground made as the page makes it, the noise and the chances of Models. */
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneSower', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf', 'HighwaysOf', 'TownsOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Passages', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'GroundMaterials', 'LookMaterials', 'MaterialsOf', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan'], SceneSower: ['Land', 'Grown', 'Sow', 'Random', 'Ground', 'Within', 'Near', 'Box', 'Touches', 'Keeping', 'Free', 'Footing', 'Footprint', 'Places', 'Chance']});
+		return this.$Service('Workers').Pool('SceneSower', {Math: true, Noise: true, Random: true, Blueprints: true, ScenePlanet: true, SceneTerrainGenerator: true, SceneSower: true});
 	},
 
 	/* The numbers of a seed, as SceneModels.Random gives them: the same things for the same seed in a worker and in the page. */
@@ -366,132 +366,17 @@ Elemenx.Service('SceneSower', {
 	LibraryScatter: function (rule) {
 		var given = rule || {};
 		var blueprints = this.$Service('Blueprints');
-		var graph = blueprints.Create('generator', {name: 'Scatter'});
-		var seed = String(given.Seed === undefined ? given.ID : given.Seed);
-		var patch = Number(given.Patch) || 60;
-		var cover = given.Cover === undefined ? 1 : Number(given.Cover);
-		var clumps = Number(given.Clumps) || 0;
-		var all = null;
-		var x;
-		var z;
-		var height;
-		var slope;
-		var random;
-		var grow;
 
-		function add (type, properties) {
-			return blueprints.Add(graph, type, {x: 0, y: 0, properties: properties || {}});
-		}
-
-		function link (from, key, to, input) {
-			blueprints.Link(graph, [from.id, key], [to.id, input]);
-		}
-
-		function number (value) {
-			return add('Number', {Value: value});
-		}
-
-		/* A test of a value against a number: a and b, linked; true where it holds. */
-		function compare (from, key, operator, value) {
-			var test = add('Compare', {Operator: operator});
-
-			link(from, key, test, 'A');
-			link(number(value), 'Value', test, 'B');
-
-			return both(test);
-		}
-
-		/* All the tests so far, and this one. */
-		function both (test) {
-			var and;
-
-			if (!all) {
-				all = test;
-
-				return test;
-			}
-
-			and = add('And');
-
-			link(all, 'Out', and, 'A');
-			link(test, 'Out', and, 'B');
-
-			all = and;
-
-			return and;
-		}
-
-		/* The noise of its patches at [X / Patch, y, Z / Patch]. */
-		function patches (y) {
-			var u = add('Divide');
-			var w = add('Divide');
-			var size = number(patch);
-			var at = add('Combine');
-			var noise = add('NoiseSpec', {Type: 'value', Seed: seed, Fractal: 'fbm', Octaves: 3, Gain: 0.5});
-
-			link(x, 'Value', u, 'A');
-			link(size, 'Value', u, 'B');
-			link(z, 'Value', w, 'A');
-			link(size, 'Value', w, 'B');
-			link(u, 'Out', at, 'X');
-			link(number(y), 'Value', at, 'Y');
-			link(w, 'Out', at, 'Z');
-			link(at, 'XYZ', noise, 'Position');
-
-			return noise;
-		}
-
-		x = add('Input', {Name: 'X'});
-		z = add('Input', {Name: 'Z'});
-		height = add('Input', {Name: 'Height'});
-		slope = add('Input', {Name: 'Slope'});
-		random = add('Input', {Name: 'Random'});
-		grow = add('Result', {Key: 'Grow'});
-
-		compare(height, 'Value', '>=', given.MinHeight === undefined ? 1 : Number(given.MinHeight));
-
-		if (given.MaxHeight !== undefined)
-			compare(height, 'Value', '<=', Number(given.MaxHeight));
-
-		compare(slope, 'Value', '<=', given.MaxSlope === undefined ? 0.3 : Number(given.MaxSlope));
-
-		/* Its patches: where the noise of them is over its Cover, none. */
-		if (cover < 1) {
-			var scaled = add('Multiply');
-			var lowered = add('Subtract');
-
-			link(patches(0.5), 'Value', scaled, 'A');
-			link(number(1.6), 'Value', scaled, 'B');
-			link(scaled, 'Out', lowered, 'A');
-			link(number(0.3), 'Value', lowered, 'B');
-
-			compare(lowered, 'Out', '<=', cover);
-		}
-
-		/* Its clumps: thick in groves and thin between them, the number of the place against how thick they are there. */
-		if (clumps > 0) {
-			var steep = add('Smoothstep');
-			var open = add('OneMinus');
-			var thin = add('Multiply');
-			var thick = add('OneMinus');
-			var test = add('Compare', {Operator: '<='});
-
-			link(number(0.35), 'Value', steep, 'Low');
-			link(number(0.65), 'Value', steep, 'High');
-			link(patches(1.7), 'Value', steep, 'X');
-			link(steep, 'Out', open, 'X');
-			link(number(Math.min(1, clumps)), 'Value', thin, 'A');
-			link(open, 'Out', thin, 'B');
-			link(thin, 'Out', thick, 'X');
-			link(random, 'Value', test, 'A');
-			link(thick, 'Out', test, 'B');
-
-			both(test);
-		}
-
-		link(all, 'Out', grow, 'Value');
-
-		return graph;
+		/* Its tests that are not told hold everywhere: no MaxHeight, a Cover of 1, no Clumps. */
+		return blueprints.Fill(blueprints.Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/scatter')), {
+			Seed: String(given.Seed === undefined ? given.ID : given.Seed),
+			MinHeight: given.MinHeight === undefined ? 1 : Number(given.MinHeight),
+			MaxHeight: given.MaxHeight === undefined ? 1000000000 : Number(given.MaxHeight),
+			MaxSlope: given.MaxSlope === undefined ? 0.3 : Number(given.MaxSlope),
+			Cover: given.Cover === undefined ? 1 : Number(given.Cover),
+			Patch: Number(given.Patch) || 60,
+			Clumps: Math.min(1, Number(given.Clumps) || 0)
+		});
 	},
 
 	/* The height a thing of a rule stands at, at a place; null where it does not grow. */

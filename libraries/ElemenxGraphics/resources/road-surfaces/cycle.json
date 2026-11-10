@@ -1,0 +1,12 @@
+{
+	"Order": 11,
+	"Color": [
+		0.5,
+		0.2,
+		0.17
+	],
+	"Rough": 0.9,
+	"Grip": 0.95,
+	"Drag": 0,
+	"Material": "asphalt"
+}

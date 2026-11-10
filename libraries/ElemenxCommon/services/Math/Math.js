@@ -323,6 +323,9 @@ Elemenx.Service('Math', {
 	},
 
 	/* The source of its members, for a worker (Workers): they run there as they do here. */
+	/* What a worker carries of this Service besides its methods. */
+	Carried: ['Vectors'],
+
 	Source: function (names) {
 		return this.$Service('Workers').Source(this, names);
 	},

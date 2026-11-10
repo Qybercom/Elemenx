@@ -1,0 +1,271 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "roof-unit",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Index"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "W"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "D"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Top"
+				}
+			]
+		},
+		{
+			"id": "input5",
+			"type": "Input",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "random6",
+			"type": "Random",
+			"x": 1360,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "formula7",
+			"type": "Formula",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 2 + 31"
+				}
+			]
+		},
+		{
+			"id": "random8",
+			"type": "Random",
+			"x": 1800,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "formula9",
+			"type": "Formula",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 2 + 32"
+				}
+			]
+		},
+		{
+			"id": "box10",
+			"type": "Box",
+			"x": 40,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "formula11",
+			"type": "Formula",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[1.4, 0.9, 1.0]"
+				}
+			]
+		},
+		{
+			"id": "formula12",
+			"type": "Formula",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3((u - 0.5) * (W - 3), Top + 0.45, (v - 0.5) * (D - 3))"
+				}
+			]
+		},
+		{
+			"id": "formula13",
+			"type": "Formula",
+			"x": 700,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.8, 0.81, 0.8]"
+				}
+			]
+		},
+		{
+			"id": "formula14",
+			"type": "Formula",
+			"x": 920,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "'metal'"
+				}
+			]
+		},
+		{
+			"id": "result15",
+			"type": "Result",
+			"x": 1140,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input5-out-Value",
+			"p2": "random6-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input1-out-Value",
+			"p2": "formula7-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "formula7-out-Value",
+			"p2": "random6-in-Key",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "input5-out-Value",
+			"p2": "random8-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "input1-out-Value",
+			"p2": "formula9-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "formula9-out-Value",
+			"p2": "random8-in-Key",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "formula11-out-Value",
+			"p2": "box10-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "random6-out-Value",
+			"p2": "formula12-in-u",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "input2-out-Value",
+			"p2": "formula12-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "input4-out-Value",
+			"p2": "formula12-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "random8-out-Value",
+			"p2": "formula12-in-v",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "input3-out-Value",
+			"p2": "formula12-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "formula12-out-Value",
+			"p2": "box10-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "formula13-out-Value",
+			"p2": "box10-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l15",
+			"p1": "formula14-out-Value",
+			"p2": "box10-in-Material",
+			"kind": "value"
+		},
+		{
+			"id": "l16",
+			"p1": "box10-out-Parts",
+			"p2": "result15-in-Value",
+			"kind": "value"
+		}
+	]
+}

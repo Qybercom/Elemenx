@@ -43,11 +43,12 @@ function packFiles (directory) {
 }
 
 describe('Elemenx npm release surface', function () {
+	/* The build of dist and the pack: some 40 s alone (Regression: 60 s was not enough beside the other tests of tools). */
 	beforeAll(function () {
 		require('../../tools/dist.js').Build();
 
 		files = packFiles();
-	}, 60000);
+	}, 180000);
 
 	it('ships the runtime, the CLI, the tooling, ElemenxUI, the documentation and the built dist', function () {
 		expect(files).toContain('package.json');
@@ -62,6 +63,7 @@ describe('Elemenx npm release surface', function () {
 		expect(files).toContain('tools/server.js');
 		expect(files).toContain('libraries/ElemenxUI/index.js');
 		expect(files).toContain('libraries/ElemenxUI/packs.json');
+		expect(files).toContain('libraries/ElemenxGraphics/blueprints/water.json');
 		expect(files).toContain('docs/BUILDER.md');
 		expect(files).toContain('docs/PUBLIC-API.md');
 		expect(files).toContain('dist/elemenx.min.js');

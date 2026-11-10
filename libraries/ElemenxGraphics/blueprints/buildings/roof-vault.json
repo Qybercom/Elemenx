@@ -1,0 +1,384 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "roof-vault",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "W"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "D"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "input5",
+			"type": "Input",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Top"
+				}
+			]
+		},
+		{
+			"id": "input6",
+			"type": "Input",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Roof"
+				}
+			]
+		},
+		{
+			"id": "input7",
+			"type": "Input",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofColor"
+				}
+			]
+		},
+		{
+			"id": "input8",
+			"type": "Input",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Shut"
+				}
+			]
+		},
+		{
+			"id": "input9",
+			"type": "Input",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofMaterial"
+				}
+			]
+		},
+		{
+			"id": "formula10",
+			"type": "Formula",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "W > D"
+				}
+			]
+		},
+		{
+			"id": "formula11",
+			"type": "Formula",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(W, D) * 0.5"
+				}
+			]
+		},
+		{
+			"id": "repeat12",
+			"type": "Repeat",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/vault-slab"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula13",
+			"type": "Formula",
+			"x": 700,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "10"
+				}
+			]
+		},
+		{
+			"id": "repeat14",
+			"type": "Repeat",
+			"x": 920,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/vault-end"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula15",
+			"type": "Formula",
+			"x": 1140,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "24"
+				}
+			]
+		},
+		{
+			"id": "join16",
+			"type": "Join",
+			"x": 1360,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "result17",
+			"type": "Result",
+			"x": 1580,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input1-out-Value",
+			"p2": "formula10-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input2-out-Value",
+			"p2": "formula10-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input1-out-Value",
+			"p2": "formula11-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "input2-out-Value",
+			"p2": "formula11-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "formula13-out-Value",
+			"p2": "repeat12-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "input1-out-Value",
+			"p2": "repeat12-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "input2-out-Value",
+			"p2": "repeat12-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "input3-out-Value",
+			"p2": "repeat12-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "input4-out-Value",
+			"p2": "repeat12-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "input5-out-Value",
+			"p2": "repeat12-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "input6-out-Value",
+			"p2": "repeat12-in-Roof",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "input7-out-Value",
+			"p2": "repeat12-in-RoofColor",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "input8-out-Value",
+			"p2": "repeat12-in-Shut",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "input9-out-Value",
+			"p2": "repeat12-in-RoofMaterial",
+			"kind": "value"
+		},
+		{
+			"id": "l15",
+			"p1": "formula15-out-Value",
+			"p2": "repeat14-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l16",
+			"p1": "input1-out-Value",
+			"p2": "repeat14-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l17",
+			"p1": "input2-out-Value",
+			"p2": "repeat14-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l18",
+			"p1": "input3-out-Value",
+			"p2": "repeat14-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "l19",
+			"p1": "input4-out-Value",
+			"p2": "repeat14-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "l20",
+			"p1": "input5-out-Value",
+			"p2": "repeat14-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l21",
+			"p1": "input6-out-Value",
+			"p2": "repeat14-in-Roof",
+			"kind": "value"
+		},
+		{
+			"id": "l22",
+			"p1": "input7-out-Value",
+			"p2": "repeat14-in-RoofColor",
+			"kind": "value"
+		},
+		{
+			"id": "l23",
+			"p1": "input8-out-Value",
+			"p2": "repeat14-in-Shut",
+			"kind": "value"
+		},
+		{
+			"id": "l24",
+			"p1": "input9-out-Value",
+			"p2": "repeat14-in-RoofMaterial",
+			"kind": "value"
+		},
+		{
+			"id": "l25",
+			"p1": "repeat12-out-List",
+			"p2": "join16-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "l26",
+			"p1": "repeat14-out-List",
+			"p2": "join16-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "l27",
+			"p1": "join16-out-Parts",
+			"p2": "result17-in-Value",
+			"kind": "value"
+		}
+	]
+}

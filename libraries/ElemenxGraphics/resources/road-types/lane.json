@@ -1,0 +1,16 @@
+{
+	"Order": 5,
+	"Title": "One-way lane",
+	"Group": "road",
+	"Speed": 50,
+	"Strips": [
+		{
+			"Kind": "lane",
+			"Width": 4,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "solid",
+			"Right": "solid"
+		}
+	]
+}

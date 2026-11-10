@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "terrazzo",
+	"material": {
+		"Order": 9,
+		"Title": "Terrazzo",
+		"Group": "road",
+		"Land": true
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat s = enx_ms(px, 0.008);\n\tvec4 g = enx_mc(q * 110.0, 1.0);\n\tfloat fleck = smoothstep(0.45, 0.3, g.x) * s;\n\tc *= 1.0 + (enx_mf(q * 0.5, 3) - 0.5) * 0.15 + (enx_mf(q * 14.0, 3) - 0.5) * 0.25 * enx_ms(px, 0.05);\n\tc = mix(c, g.z > 0.7 ? vec3(0.85, 0.85, 0.82) : g.z < 0.25 ? c * 0.55 : c * (0.9 + g.w * 0.2), fleck);\n\th += fleck * 0.0015;\n\tr = 0.8;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Grey speckled asphalt: white flecks and dark ones in a fine aggregate."
+		}
+	],
+	"links": []
+}

@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "rock",
+	"material": {
+		"Order": 5,
+		"Title": "Rock",
+		"Group": "ground",
+		"Land": true
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat s = enx_ms(px, 0.05);\n\tfloat f = enx_mf(q * 1.2, 5);\n\tfloat fine = enx_mn(q * 25.0);\n\tc *= 0.75 + f * 0.45 + (fine - 0.5) * 0.15 * s;\n\tfloat lichen = step(0.82, enx_mn(q * 6.0 + 2.0)) * s;\n\tc = mix(c, vec3(0.62, 0.62, 0.42), lichen * 0.5);\n\th += f * 0.08 + fine * 0.004 * s;\n\tr = 0.85;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Rock: its crust, its grain and spots of lichen."
+		}
+	],
+	"links": []
+}

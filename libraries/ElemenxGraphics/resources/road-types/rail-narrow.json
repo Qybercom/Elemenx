@@ -1,0 +1,25 @@
+{
+	"Order": 25,
+	"Title": "Narrow gauge railway",
+	"Group": "rail",
+	"Speed": 50,
+	"Rails": [
+		{
+			"Offset": 0,
+			"Gauge": 1
+		}
+	],
+	"Sleepers": {
+		"Step": 0.7,
+		"Length": 1.8,
+		"Surface": "wood"
+	},
+	"Strips": [
+		{
+			"Kind": "bed",
+			"Width": 2.6,
+			"Surface": "ballast",
+			"Height": 0.2
+		}
+	]
+}

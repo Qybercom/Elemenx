@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "awning",
+	"material": {
+		"Order": 34,
+		"Title": "Awning",
+		"Group": "other",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat stripe = step(0.5, fract(q.x / 0.6));\n\tfloat s = enx_ms(px, 0.003);\n\tfloat weave = (step(0.0, sin(q.x * 700.0) * sin(q.y * 700.0)) - 0.5) * 0.12 * s;\n\tc = mix(c, vec3(0.92, 0.9, 0.86), stripe) * (1.0 + weave) * (0.95 + enx_mf(q * 4.0, 2) * 0.08);\n\tr = 0.95;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Cloth of an awning: wide stripes of its color and white, the weave seen near."
+		}
+	],
+	"links": []
+}

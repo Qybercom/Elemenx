@@ -649,4 +649,59 @@ describe('Contract: materials of models as material graphs of Blueprints, drawn 
 
 	/* Regression: the wait for the model (30 s) was longer than the test was let run (15 s): under load it was cut off. */
 	}, 45000);
+
+	/*
+	 * A part of a model of shapes of a material of SceneMaterials (a building of the graph: its walls of brick, its plinth of
+	 * stone) is a piece of its own drawn by its pattern. Regression: the scene drew the pieces of such a model with no material.
+	 */
+	it('draws the parts of a material of a model of shapes by their pattern, each material and color a piece of its own', async function () {
+		var made;
+		var scene;
+		var drawn;
+
+		Use(['service:SceneBuildingGenerator', 'service:ModelBlueprints']);
+
+		Elemenx.Service('SceneBuildingGenerator').Define('test-brick-house', {Class: 'house', Seed: 'brick'});
+
+		made = models.Make('test-brick-house');
+
+		var patterns = made.Pieces.filter(function (piece) {
+			return piece.Material;
+		}).map(function (piece) {
+			return piece.Material.Pattern;
+		});
+
+		/* Its walls of brick or clinker (by its seed), its slabs of concrete, its plinth of stone. */
+		expect(patterns.filter(function (one) {
+			return one === 'brick' || one === 'clinker';
+		}).length).toBeGreaterThan(0);
+		expect(patterns).toEqual(expect.arrayContaining(['concrete', 'stone']));
+
+		scene = await mount('test-brick-house');
+
+		await waitFor(function () {
+			scene.Scene().Rest = 0;
+
+			scene.Engine().Frame(performance.now());
+
+			return scene.Scene().Lists && Object.keys(scene.Scene().Lists).some(function (key) {
+				return /test-brick-house/.test(key);
+			});
+		}, 20000);
+
+		drawn = Object.keys(scene.Scene().Lists).filter(function (key) {
+			return /test-brick-house/.test(key) && scene.Scene().Lists[key].Count;
+		}).map(function (key) {
+			var material = scene.Scene().Lists[key].Material;
+
+			return material ? material.Pattern : '';
+		}).filter(function (one, index, all) {
+			return all.indexOf(one) === index;
+		}).sort();
+
+		expect(drawn).toEqual([''].concat(patterns).filter(function (one, index, all) {
+			return all.indexOf(one) === index;
+		}).sort());
+	}, 45000);
 });
+

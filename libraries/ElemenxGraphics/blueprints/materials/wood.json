@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "wood",
+	"material": {
+		"Order": 17,
+		"Title": "Wood",
+		"Group": "build",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat w = 0.16;\n\tfloat row = floor(q.y / w);\n\tfloat f = fract(q.y / w) * w;\n\tfloat gap = (1.0 - smoothstep(0.002, 0.005, min(f, w - f))) * enx_ms(px, 0.04);\n\tfloat tone = enx_mh(vec2(row, 2.0));\n\tfloat grain = sin((q.y + enx_mf(vec2(q.x * 0.6, q.y * 9.0) + row, 3) * 0.08) * 260.0) * 0.5 + 0.5;\n\tc *= (0.8 + tone * 0.35) * (0.88 + grain * 0.2 * enx_ms(px, 0.006)) * (1.0 - gap * 0.6);\n\th += (1.0 - gap) * 0.003 + grain * 0.0005;\n\tr = 0.75;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Planks: their grain, each its own tone, gaps between them."
+		}
+	],
+	"links": []
+}

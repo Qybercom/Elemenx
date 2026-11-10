@@ -1,0 +1,9 @@
+{
+	"Sand": "sand",
+	"Deep": "sand",
+	"Low": "lawn",
+	"High": "soil",
+	"Rock": "rock",
+	"Snow": "snow",
+	"Road": "dirt"
+}

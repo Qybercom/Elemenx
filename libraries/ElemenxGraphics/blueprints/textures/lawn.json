@@ -1,0 +1,82 @@
+{
+	"version": 1,
+	"type": "texture",
+	"name": "lawn",
+	"texture": {
+		"Order": 0,
+		"Title": "lawn",
+		"Group": "ground",
+		"Metres": 0.8,
+		"Size": 1024
+	},
+	"parameters": [
+		{
+			"key": "Density",
+			"type": "float",
+			"value": 1,
+			"min": 0.4,
+			"max": 1.6,
+			"comment": "Density"
+		},
+		{
+			"key": "Length",
+			"type": "float",
+			"value": 1,
+			"min": 0.5,
+			"max": 2,
+			"comment": "Length"
+		},
+		{
+			"key": "Dry",
+			"type": "float",
+			"value": 0.04,
+			"min": 0,
+			"max": 0.6,
+			"comment": "Dry blades"
+		},
+		{
+			"key": "Leaves",
+			"type": "float",
+			"value": 0.25,
+			"min": 0,
+			"max": 1,
+			"comment": "Fallen leaves"
+		},
+		{
+			"key": "Tufts",
+			"type": "float",
+			"value": 0.3,
+			"min": 0,
+			"max": 1,
+			"comment": "Tufts"
+		}
+	],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat tuft = tex_fbm(uv, 3.0, 4, seed + 1.0);\n\tfloat tint = tex_fbm(uv, 5.0, 3, seed + 2.0);\n\tc = vec3(0.012, 0.03, 0.006);\n\th = 0.0;\n\tao = 0.35;\n\tr = 0.9;\n\tfor (int layer = 0; layer < 7; layer++) {\n\t\tfloat k = float(layer) / 6.0;\n\t\tfloat cells = floor(46.0 * p_Density + float(layer) * 3.0);\n\t\tvec4 b = tex_blades(uv, cells, 1.9 * p_Length * (0.8 + 0.4 * tuft), 0.13, tint * 6.2831853, 1.0, seed + float(layer) * 7.0);\n\t\tif (b.x <= 0.0) continue;\n\t\tfloat dry = step(1.0 - p_Dry, fract(b.z * 7.13));\n\t\tvec3 deep = mix(vec3(0.025, 0.09, 0.012), vec3(0.04, 0.12, 0.015), b.z);\n\t\tvec3 lit = mix(vec3(0.1, 0.32, 0.03), vec3(0.16, 0.42, 0.04), b.z);\n\t\tvec3 tip = mix(vec3(0.32, 0.6, 0.08), vec3(0.45, 0.68, 0.14), b.z);\n\t\tvec3 blade = tex_ramp(clamp(k * 0.75 + b.y * 0.35, 0.0, 1.0), deep, lit, tip);\n\t// Its midrib: lighter along its middle, darker at its edges, as a blade turned to the light.\n\t\tblade *= 0.82 + 0.3 * (1.0 - abs(b.w));\n\t\tblade = mix(blade, vec3(0.42, 0.36, 0.14) * (0.6 + 0.5 * b.y + 0.3 * k), dry * 0.85);\n\t\tblade *= mix(1.0, 0.72 + 0.56 * tuft, p_Tufts);\n\t\tc = mix(c, blade, b.x);\n\t\th = mix(h, (float(layer) + 0.4 + 0.6 * (1.0 - b.y)) / 7.0, b.x);\n\t\tao = mix(ao, 0.45 + 0.55 * k, b.x);\n\t\tr = mix(r, 0.75 - dry * 0.1, b.x);\n\t}\n\t// Fallen leaves, over the blades: an oval along its own way, its vein darker, brown to orange.\n\tvec2 lp = uv * 9.0;\n\tfor (int y = -1; y <= 1; y++) {\n\t\tfor (int x = -1; x <= 1; x++) {\n\t\t\tvec2 cell = floor(lp) + vec2(float(x), float(y));\n\t\t\tif (tex_hash(cell, 9.0, seed + 40.0) >= p_Leaves * 0.3) continue;\n\t\t\tvec2 mid = cell + tex_hash2(cell, 9.0, seed + 41.0);\n\t\t\tfloat a = tex_hash(cell, 9.0, seed + 42.0) * 6.2831853;\n\t\t\tvec2 d = vec2(cos(a), sin(a));\n\t\t\tvec2 q = lp - mid;\n\t\t\tfloat size = 0.1 + 0.08 * tex_hash(cell, 9.0, seed + 43.0);\n\t\t\tvec2 e = vec2(dot(q, d), dot(q, vec2(-d.y, d.x))) / vec2(size, size * 0.55);\n\t\t\tfloat oval = length(e);\n\t\t\tfloat edge = 1.0 - smoothstep(0.9, 1.0, oval);\n\t\t\tif (edge <= 0.0) continue;\n\t\t\tvec3 brown = mix(vec3(0.3, 0.12, 0.04), vec3(0.62, 0.3, 0.08), tex_hash(cell, 9.0, seed + 44.0));\n\t\t\tbrown *= 1.0 - (1.0 - smoothstep(0.0, 0.08, abs(e.y))) * 0.35 * step(-1.0, e.x);\n\t\t\tc = mix(c, brown * (0.85 + 0.25 * (1.0 - oval)), edge);\n\t\t\th = mix(h, 1.0, edge);\n\t\t\tao = mix(ao, 1.0, edge);\n\t\t\tr = mix(r, 0.6, edge);\n\t\t}\n\t}"
+				},
+				{
+					"key": "Inputs",
+					"value": "uv: vec2, px: float, seed: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, h: float, ao: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "A lawn seen from over it, as a photograph of one: blades crowded in layers, the lower ones in the shade of those over them, light tips, tufts lighter and darker, blades gone dry and a few fallen leaves."
+		}
+	],
+	"links": []
+}

@@ -1,0 +1,84 @@
+{
+	"Order": 0,
+	"Title": "Motorway",
+	"Group": "road",
+	"Speed": 130,
+	"Strips": [
+		{
+			"Kind": "shoulder",
+			"Width": 3,
+			"Surface": "asphalt",
+			"Height": 0,
+			"Right": "solid"
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.75,
+			"Surface": "asphalt",
+			"Way": -1,
+			"Left": "none",
+			"Right": "dashed"
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.75,
+			"Surface": "asphalt",
+			"Way": -1,
+			"Left": "none",
+			"Right": "dashed"
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.75,
+			"Surface": "asphalt",
+			"Way": -1,
+			"Left": "none",
+			"Right": "solid"
+		},
+		{
+			"Kind": "median",
+			"Width": 3,
+			"Surface": "concrete",
+			"Height": 0.15
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.75,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "solid",
+			"Right": "dashed"
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.75,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "none",
+			"Right": "dashed"
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.75,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "none",
+			"Right": "solid"
+		},
+		{
+			"Kind": "shoulder",
+			"Width": 3,
+			"Surface": "asphalt",
+			"Height": 0
+		}
+	],
+	"Along": [
+		{
+			"Type": "row",
+			"Side": "both",
+			"Gap": 0.8,
+			"Shapes": "roadlamp",
+			"Spacing": 60
+		}
+	]
+}

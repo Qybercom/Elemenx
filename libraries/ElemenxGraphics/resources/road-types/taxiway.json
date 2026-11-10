@@ -1,0 +1,28 @@
+{
+	"Order": 22,
+	"Title": "Taxiway",
+	"Group": "air",
+	"Speed": 40,
+	"Strips": [
+		{
+			"Kind": "shoulder",
+			"Width": 3,
+			"Surface": "asphalt",
+			"Height": 0
+		},
+		{
+			"Kind": "lane",
+			"Width": 23,
+			"Surface": "concrete",
+			"Way": 0,
+			"Left": "none",
+			"Right": "none"
+		},
+		{
+			"Kind": "shoulder",
+			"Width": 3,
+			"Surface": "asphalt",
+			"Height": 0
+		}
+	]
+}

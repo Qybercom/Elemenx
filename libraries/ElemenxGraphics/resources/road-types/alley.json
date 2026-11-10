@@ -1,0 +1,25 @@
+{
+	"Order": 8,
+	"Title": "Alley",
+	"Group": "street",
+	"Speed": 20,
+	"Strips": [
+		{
+			"Kind": "lane",
+			"Width": 4,
+			"Surface": "cobbles",
+			"Way": 0,
+			"Left": "none",
+			"Right": "none"
+		}
+	],
+	"Along": [
+		{
+			"Type": "row",
+			"Side": "left",
+			"Gap": -0.4,
+			"Shapes": "streetlamp",
+			"Spacing": 30
+		}
+	]
+}

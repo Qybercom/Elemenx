@@ -1,0 +1,311 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "roof-hip",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "W"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "D"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "input5",
+			"type": "Input",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Top"
+				}
+			]
+		},
+		{
+			"id": "input6",
+			"type": "Input",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Roof"
+				}
+			]
+		},
+		{
+			"id": "input7",
+			"type": "Input",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofColor"
+				}
+			]
+		},
+		{
+			"id": "input8",
+			"type": "Input",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Shut"
+				}
+			]
+		},
+		{
+			"id": "input9",
+			"type": "Input",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofMaterial"
+				}
+			]
+		},
+		{
+			"id": "formula10",
+			"type": "Formula",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "W > D"
+				}
+			]
+		},
+		{
+			"id": "formula11",
+			"type": "Formula",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(W, D) * 0.35"
+				}
+			]
+		},
+		{
+			"id": "wedge12",
+			"type": "Wedge",
+			"x": 480,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "formula13",
+			"type": "Formula",
+			"x": 700,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "wide ? vec3(D * 1.06, height, W * 0.9) : vec3(W * 1.06, height, D * 0.9)"
+				}
+			]
+		},
+		{
+			"id": "formula14",
+			"type": "Formula",
+			"x": 920,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(X, Top + height / 2, Z)"
+				}
+			]
+		},
+		{
+			"id": "formula15",
+			"type": "Formula",
+			"x": 1140,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "wide ? [0, 90, 0] : [0, 0, 0]"
+				}
+			]
+		},
+		{
+			"id": "result16",
+			"type": "Result",
+			"x": 1360,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input1-out-Value",
+			"p2": "formula10-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input2-out-Value",
+			"p2": "formula10-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input1-out-Value",
+			"p2": "formula11-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "input2-out-Value",
+			"p2": "formula11-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "formula10-out-Value",
+			"p2": "formula13-in-wide",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "input2-out-Value",
+			"p2": "formula13-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "formula11-out-Value",
+			"p2": "formula13-in-height",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "input1-out-Value",
+			"p2": "formula13-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "formula13-out-Value",
+			"p2": "wedge12-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "input3-out-Value",
+			"p2": "formula14-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "input5-out-Value",
+			"p2": "formula14-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "formula11-out-Value",
+			"p2": "formula14-in-height",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "input4-out-Value",
+			"p2": "formula14-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "formula14-out-Value",
+			"p2": "wedge12-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l15",
+			"p1": "formula10-out-Value",
+			"p2": "formula15-in-wide",
+			"kind": "value"
+		},
+		{
+			"id": "l16",
+			"p1": "formula15-out-Value",
+			"p2": "wedge12-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "l17",
+			"p1": "input7-out-Value",
+			"p2": "wedge12-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l18",
+			"p1": "input9-out-Value",
+			"p2": "wedge12-in-Material",
+			"kind": "value"
+		},
+		{
+			"id": "l19",
+			"p1": "wedge12-out-Parts",
+			"p2": "result16-in-Value",
+			"kind": "value"
+		}
+	]
+}

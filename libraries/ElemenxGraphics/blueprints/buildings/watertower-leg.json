@@ -1,0 +1,227 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "watertower-leg",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Index"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Depth"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "formula5",
+			"type": "Formula",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Height - Height * 0.3 * 1.25"
+				}
+			]
+		},
+		{
+			"id": "formula6",
+			"type": "Formula",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index == 1 || Index == 2 ? 1 : -1"
+				}
+			]
+		},
+		{
+			"id": "formula7",
+			"type": "Formula",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index >= 2 ? 1 : -1"
+				}
+			]
+		},
+		{
+			"id": "box8",
+			"type": "Box",
+			"x": 1800,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "formula9",
+			"type": "Formula",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(0.5, legs, 0.5)"
+				}
+			]
+		},
+		{
+			"id": "formula10",
+			"type": "Formula",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(cx * Width * 0.32, legs / 2, cz * Depth * 0.32)"
+				}
+			]
+		},
+		{
+			"id": "formula11",
+			"type": "Formula",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.42, 0.44, 0.46]"
+				}
+			]
+		},
+		{
+			"id": "result12",
+			"type": "Result",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input4-out-Value",
+			"p2": "formula5-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input1-out-Value",
+			"p2": "formula6-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input1-out-Value",
+			"p2": "formula7-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "formula5-out-Value",
+			"p2": "formula9-in-legs",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "formula9-out-Value",
+			"p2": "box8-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "formula6-out-Value",
+			"p2": "formula10-in-cx",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "input2-out-Value",
+			"p2": "formula10-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "formula5-out-Value",
+			"p2": "formula10-in-legs",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "formula7-out-Value",
+			"p2": "formula10-in-cz",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "input3-out-Value",
+			"p2": "formula10-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "formula10-out-Value",
+			"p2": "box8-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "formula11-out-Value",
+			"p2": "box8-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "box8-out-Parts",
+			"p2": "result12-in-Value",
+			"kind": "value"
+		}
+	]
+}

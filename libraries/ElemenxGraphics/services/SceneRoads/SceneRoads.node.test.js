@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
+import { createRequire } from 'module';
+
+var Resources = createRequire(import.meta.url)('../../../../tools/resources.js');
+var resources = Resources.Reader();
 
 var source = fs.readFileSync(path.join(import.meta.dirname, 'SceneRoads.js'), 'utf8');
 
@@ -13,7 +17,8 @@ function create () {
 		Elemenx: {
 			Service: function (name, value) {
 				definition = value;
-			}
+			},
+			Resources: resources
 		}
 	});
 
@@ -909,5 +914,64 @@ describe('Regression: SceneRoads over a gorge', function () {
 		expect(road.Spans.map(function (span) {
 			return span.Kind;
 		})).toEqual(['bridge']);
+	});
+});
+
+describe('Regression: SceneRoads grades and classes told once', function () {
+	function made () {
+		var roads = create();
+
+		roads.$OnCreate();
+		roads.Library();
+
+		return roads;
+	}
+
+	function steepest (road) {
+		var most = 0;
+		var i;
+
+		for (i = 1; i < road.Points.length; i++)
+			most = Math.max(most, Math.abs(road.Points[i].Y - road.Points[i - 1].Y) / Math.max(1e-6, road.Points[i].Along - road.Points[i - 1].Along));
+
+		return most;
+	}
+
+	/* The Grade of a road was told in its spec and never read: its line, its levels and its lifts took the one of its type. */
+	it('climbs as steep as the Grade of its own spec, else as its type', function () {
+		var roads = made();
+		var hill = function (x) {
+			return Math.max(0, 40 - Math.abs(x - 300) * 0.5);
+		};
+		var own = roads.Road({ID: 'a', Type: 'road', Points: [[0, 0], [600, 0]], Grade: 0.03}, {Height: hill});
+		var typed = roads.Road({ID: 'b', Type: 'road', Points: [[0, 0], [600, 0]]}, {Height: hill});
+
+		expect(own.Grade).toBe(0.03);
+		expect(typed.Grade).toBe(roads.Grade(roads.Type('road')));
+		expect(steepest(own)).toBeLessThanOrEqual(0.03 + 1e-6);
+		expect(steepest(typed)).toBeGreaterThan(0.03 + 1e-3);
+	});
+
+	/* The speed of a motorway (110 km/h) was told in five places: now its class, once. */
+	it('tells the class of a road once: air, rail, motorway from 110 km/h, local', function () {
+		var roads = made();
+
+		expect(['runway', 'rail', 'motorway', 'highway', 'road', 'street', 'path'].map(function (name) {
+			return roads.Class(roads.Type(name));
+		})).toEqual(['air', 'rail', 'motorway', 'motorway', 'local', 'local', 'local']);
+		expect(roads.Class({Group: 'road', Speed: 109})).toBe('local');
+		expect(roads.Class({Group: 'road', Speed: 110})).toBe('motorway');
+		expect(roads.Class()).toBe('local');
+	});
+
+	/* A line that followed the ground with no Grade climbed 8%, as steep as no road of any type. */
+	it('follows the ground no steeper than a road of no type, when no Grade is told', function () {
+		var roads = made();
+		var line = roads.Line([[0, 0], [600, 0]], {Follow: true, Height: function (x) {
+			return Math.max(0, 40 - Math.abs(x - 300) * 0.5);
+		}});
+
+		expect(steepest({Points: line})).toBeLessThanOrEqual(roads.Grade({}) + 1e-6);
+		expect(steepest({Points: line})).toBeGreaterThan(0.08 + 1e-3);
 	});
 });

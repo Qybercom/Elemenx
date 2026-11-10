@@ -1,0 +1,28 @@
+{
+	"Order": 18,
+	"Title": "Rally stage",
+	"Group": "race",
+	"Speed": 160,
+	"Strips": [
+		{
+			"Kind": "verge",
+			"Width": 1,
+			"Surface": "grass",
+			"Height": 0
+		},
+		{
+			"Kind": "lane",
+			"Width": 7,
+			"Surface": "gravel",
+			"Way": 0,
+			"Left": "none",
+			"Right": "none"
+		},
+		{
+			"Kind": "verge",
+			"Width": 1,
+			"Surface": "grass",
+			"Height": 0
+		}
+	]
+}

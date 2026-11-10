@@ -33,7 +33,9 @@
  * the binder, worn patches, sealed cracks and stains), paving (concrete blocks in rows across the way, bevelled,
  * sand and moss in the joints, tones, wear), dirt (earth trodden hard: grains, stones, dry cracks, damp hollows, dust),
  * cliff (the face of a cliff of soft rock or earth seen from its side: beds and their ledges, flutes the rain cut down
- * it, cracks, stones; neutral, a ground tints its beds by their height).
+ * it, cracks, stones; neutral, a ground tints its beds by their height). They are resources, texture graphs of a block
+ * GLSL each and its Params as parameters (blueprints/textures, ElemenxGraphics/textures/<name>): an Application gives one
+ * of that name in its place.
  */
 Elemenx.Service('SceneTextures', {
 	$Meta: {
@@ -532,296 +534,34 @@ Elemenx.Service('SceneTextures', {
 
 	Library: function () {
 		var self = this;
-
-		function define (name, group, metres, params, code) {
-			self.Define(name, {Title: name, Group: group, Metres: metres, Size: 1024, Params: params, Code: code.join('\n')});
-		}
+		var prefix = 'ElemenxGraphics/textures/';
 
 		/*
-		 * A lawn seen from over it, as a photograph of one: blades crowded in layers, the lower ones in the shade of those over
-		 * them, light tips, tufts lighter and darker, blades gone dry and a few fallen leaves.
+		 * Its recipes: the texture graphs of its resources (blueprints/textures, named ElemenxGraphics/textures/<name>), each
+		 * its block GLSL (pattern: the body of tex_recipe), its parameters the Params a lab turns and what it is (texture:
+		 * Title, Group, Metres, Size, Rows, its Order among them); one an Application gives of that name takes its place.
 		 */
-		define('lawn', 'ground', 0.8, {
-			Density: {Value: 1, Min: 0.4, Max: 1.6, Title: 'Density'},
-			Length: {Value: 1, Min: 0.5, Max: 2, Title: 'Length'},
-			Dry: {Value: 0.04, Min: 0, Max: 0.6, Title: 'Dry blades'},
-			Leaves: {Value: 0.25, Min: 0, Max: 1, Title: 'Fallen leaves'},
-			Tufts: {Value: 0.3, Min: 0, Max: 1, Title: 'Tufts'}
-		}, [
-			'	float tuft = tex_fbm(uv, 3.0, 4, seed + 1.0);',
-			'	float tint = tex_fbm(uv, 5.0, 3, seed + 2.0);',
-			'	c = vec3(0.012, 0.03, 0.006);',
-			'	h = 0.0;',
-			'	ao = 0.35;',
-			'	r = 0.9;',
-			'	for (int layer = 0; layer < 7; layer++) {',
-			'		float k = float(layer) / 6.0;',
-			'		float cells = floor(46.0 * p_Density + float(layer) * 3.0);',
-			'		vec4 b = tex_blades(uv, cells, 1.9 * p_Length * (0.8 + 0.4 * tuft), 0.13, tint * 6.2831853, 1.0, seed + float(layer) * 7.0);',
-			'		if (b.x <= 0.0) continue;',
-			'		float dry = step(1.0 - p_Dry, fract(b.z * 7.13));',
-			'		vec3 deep = mix(vec3(0.025, 0.09, 0.012), vec3(0.04, 0.12, 0.015), b.z);',
-			'		vec3 lit = mix(vec3(0.1, 0.32, 0.03), vec3(0.16, 0.42, 0.04), b.z);',
-			'		vec3 tip = mix(vec3(0.32, 0.6, 0.08), vec3(0.45, 0.68, 0.14), b.z);',
-			'		vec3 blade = tex_ramp(clamp(k * 0.75 + b.y * 0.35, 0.0, 1.0), deep, lit, tip);',
-			/* Its midrib: lighter along its middle, darker at its edges, as a blade turned to the light. */
-			'		blade *= 0.82 + 0.3 * (1.0 - abs(b.w));',
-			'		blade = mix(blade, vec3(0.42, 0.36, 0.14) * (0.6 + 0.5 * b.y + 0.3 * k), dry * 0.85);',
-			'		blade *= mix(1.0, 0.72 + 0.56 * tuft, p_Tufts);',
-			'		c = mix(c, blade, b.x);',
-			'		h = mix(h, (float(layer) + 0.4 + 0.6 * (1.0 - b.y)) / 7.0, b.x);',
-			'		ao = mix(ao, 0.45 + 0.55 * k, b.x);',
-			'		r = mix(r, 0.75 - dry * 0.1, b.x);',
-			'	}',
-			/* Fallen leaves, over the blades: an oval along its own way, its vein darker, brown to orange. */
-			'	vec2 lp = uv * 9.0;',
-			'	for (int y = -1; y <= 1; y++) {',
-			'		for (int x = -1; x <= 1; x++) {',
-			'			vec2 cell = floor(lp) + vec2(float(x), float(y));',
-			'			if (tex_hash(cell, 9.0, seed + 40.0) >= p_Leaves * 0.3) continue;',
-			'			vec2 mid = cell + tex_hash2(cell, 9.0, seed + 41.0);',
-			'			float a = tex_hash(cell, 9.0, seed + 42.0) * 6.2831853;',
-			'			vec2 d = vec2(cos(a), sin(a));',
-			'			vec2 q = lp - mid;',
-			'			float size = 0.1 + 0.08 * tex_hash(cell, 9.0, seed + 43.0);',
-			'			vec2 e = vec2(dot(q, d), dot(q, vec2(-d.y, d.x))) / vec2(size, size * 0.55);',
-			'			float oval = length(e);',
-			'			float edge = 1.0 - smoothstep(0.9, 1.0, oval);',
-			'			if (edge <= 0.0) continue;',
-			'			vec3 brown = mix(vec3(0.3, 0.12, 0.04), vec3(0.62, 0.3, 0.08), tex_hash(cell, 9.0, seed + 44.0));',
-			'			brown *= 1.0 - (1.0 - smoothstep(0.0, 0.08, abs(e.y))) * 0.35 * step(-1.0, e.x);',
-			'			c = mix(c, brown * (0.85 + 0.25 * (1.0 - oval)), edge);',
-			'			h = mix(h, 1.0, edge);',
-			'			ao = mix(ao, 1.0, edge);',
-			'			r = mix(r, 0.6, edge);',
-			'		}',
-			'	}'
-		]);
+		Elemenx.Resources('Blueprints').filter(function (name) {
+			return name.indexOf(prefix) === 0;
+		}).map(function (name) {
+			return Elemenx.Resources('Blueprints', name);
+		}).sort(function (a, b) {
+			return (a.texture && a.texture.Order || 0) - (b.texture && b.texture.Order || 0);
+		}).forEach(function (graph) {
+			var pattern = graph.blocks.filter(function (block) {
+				return block.type === 'GLSL';
+			})[0];
+			var code = pattern ? pattern.properties.filter(function (property) {
+				return property.key === 'Code';
+			})[0] : null;
+			var meta = graph.texture || {};
+			var params = {};
 
-		/*
-		 * Soil with grass on it here and there (Cover: how much of it), as by a path or a lot left alone: sandy grey soil,
-		 * its grains and pebbles, patches of short grass and rosettes of weeds.
-		 */
-		define('grassy-soil', 'ground', 2, {
-			Cover: {Value: 0.55, Min: 0, Max: 1, Title: 'Cover'},
-			Weeds: {Value: 0.5, Min: 0, Max: 1, Title: 'Weeds'},
-			Pebbles: {Value: 0.4, Min: 0, Max: 1, Title: 'Pebbles'}
-		}, [
-			'	float grain = tex_noise(uv * 512.0, 512.0, seed + 1.0);',
-			'	float clod = tex_fbm(uv, 12.0, 4, seed + 2.0);',
-			'	c = mix(vec3(0.36, 0.31, 0.24), vec3(0.5, 0.44, 0.34), clod) * (0.86 + 0.28 * grain);',
-			'	h = clod * 0.25;',
-			'	r = 0.95;',
-			'	ao = 0.85 + 0.15 * clod;',
-			/* Pebbles: cells of a few centimetres, a few of them showing. */
-			'	vec2 warp = vec2(tex_noise(uv * 90.0, 90.0, seed + 12.0), tex_noise(uv * 90.0, 90.0, seed + 13.0)) - 0.5;',
-			'	vec4 peb = tex_cells(uv + warp * 0.004, 55.0, seed + 3.0);',
-			'	float pebSize = 0.12 + 0.3 * fract(peb.z * 13.7);',
-			'	float stone = (1.0 - smoothstep(pebSize - 0.04, pebSize + 0.02, peb.x)) * step(1.0 - p_Pebbles * 0.25, peb.z);',
-			'	vec3 pebColor = mix(mix(vec3(0.33, 0.3, 0.27), vec3(0.58, 0.55, 0.5), peb.w), vec3(0.5, 0.36, 0.26), step(0.8, fract(peb.w * 7.1)));',
-			'	c = mix(c, pebColor * (0.75 + 0.45 * (1.0 - peb.x / pebSize)), stone);',
-			'	h = mix(h, 0.3 + 0.25 * (1.0 - peb.x / pebSize), stone);',
-			/* Where grass is: its mask, with fringes. */
-			'	float mask = tex_fbm(uv, 4.0, 5, seed + 4.0);',
-			'	float grow = smoothstep(1.0 - p_Cover - 0.06, 1.0 - p_Cover + 0.06, mask + (tex_noise(uv * 64.0, 64.0, seed + 5.0) - 0.5) * 0.12);',
-			'	for (int layer = 0; layer < 4; layer++) {',
-			'		float k = float(layer) / 3.0;',
-			'		vec4 b = tex_blades(uv, 70.0 + float(layer) * 6.0, 1.6, 0.14, k * 2.0, 1.0, seed + 10.0 + float(layer) * 7.0);',
-			'		float here = b.x * grow * step(0.15 + 0.5 * (1.0 - grow), fract(b.z * 3.7 + k));',
-			'		vec3 blade = tex_ramp(clamp(k * 0.6 + b.y * 0.5, 0.0, 1.0), vec3(0.06, 0.14, 0.03), vec3(0.2, 0.38, 0.08), vec3(0.42, 0.55, 0.18));',
-			'		blade = mix(blade, vec3(0.5, 0.46, 0.3), step(0.8, fract(b.z * 11.0)) * 0.7);',
-			'		c = mix(c, blade, here);',
-			'		h = mix(h, 0.28 + 0.04 * float(layer) + 0.04 * (1.0 - b.y), here);',
-			'		ao = mix(ao, 0.6 + 0.4 * k, here);',
-			'		r = mix(r, 0.8, here);',
-			'	}',
-			/* Rosettes of weeds: leaves round a middle, broad and light green. */
-			'	vec4 ros = tex_cells(uv, 14.0, seed + 6.0);',
-			'	if (ros.z < p_Weeds * 0.7 * (0.4 + 0.6 * grow)) {',
-			'		vec2 p = uv * 14.0;',
-			'		vec2 centre = floor(p) + tex_hash2(floor(p), 14.0, seed + 6.0);',
-			'		float best = 0.0;',
-			'		for (int y = -1; y <= 1; y++) {',
-			'			for (int x = -1; x <= 1; x++) {',
-			'				vec2 cell = floor(p) + vec2(float(x), float(y));',
-			'				vec2 mid = cell + tex_hash2(cell, 14.0, seed + 6.0);',
-			'				if (tex_hash(cell, 14.0, seed + 6.0 + 3.1) >= p_Weeds * 0.7 * (0.4 + 0.6 * grow)) continue;',
-			'				vec2 q = p - mid;',
-			'				float a = atan(q.y, q.x);',
-			'				float count = 5.0 + floor(tex_hash(cell, 14.0, seed + 8.0) * 5.0);',
-			'				float petal = pow(abs(sin(a * count * 0.5 + tex_hash(cell, 14.0, seed + 9.0) * 6.2831853)), 1.4);',
-			'				float reach = 0.24 + 0.2 * tex_hash(cell, 14.0, seed + 10.0);',
-			'				float along = length(q) / reach;',
-			'				float leafy = (1.0 - smoothstep(petal * (1.0 - along * 0.6) - 0.08, petal * (1.0 - along * 0.6), 0.25 + along * 0.35)) * step(along, 1.0);',
-			'				best = max(best, leafy * (0.55 + 0.45 * along));',
-			'			}',
-			'		}',
-			'		c = mix(c, mix(vec3(0.1, 0.22, 0.05), vec3(0.3, 0.46, 0.12), best), step(0.01, best));',
-			'		h = mix(h, 0.3 + 0.15 * best, step(0.01, best));',
-			'		ao = mix(ao, 0.75 + 0.25 * best, step(0.01, best));',
-			'	}'
-		]);
+			(graph.parameters || []).forEach(function (parameter) {
+				params[parameter.key] = {Value: parameter.value, Min: parameter.min, Max: parameter.max, Title: parameter.comment || parameter.key};
+			});
 
-		/*
-		 * Asphalt: the stones of its aggregate in a dark binder, some polished light by the wheels, fine pores, patches worn
-		 * lighter, cracks sealed with tar and stains of oil.
-		 */
-		define('asphalt', 'road', 2, {
-			Wear: {Value: 0.25, Min: 0, Max: 1, Title: 'Wear'},
-			Cracks: {Value: 0, Min: 0, Max: 1, Title: 'Sealed cracks'},
-			Stains: {Value: 0.3, Min: 0, Max: 1, Title: 'Stains'}
-		}, [
-			'	vec4 agg = tex_cells(uv, 260.0, seed + 1.0);',
-			'	vec4 fine = tex_cells(uv, 640.0, seed + 11.0);',
-			'	float binder = smoothstep(0.12, 0.3, agg.y - agg.x) * step(0.35, agg.w);',
-			'	float sand = smoothstep(0.1, 0.25, fine.y - fine.x) * step(0.5, fine.w) * (1.0 - binder);',
-			'	float pore = step(0.93, tex_noise(uv * 700.0, 700.0, seed + 2.0));',
-			'	vec3 stone = mix(vec3(0.13, 0.13, 0.13), vec3(0.34, 0.33, 0.31), agg.z * agg.z) * mix(vec3(1.0), vec3(1.1, 1.0, 0.9), step(0.85, agg.w));',
-			'	c = mix(vec3(0.045, 0.045, 0.05), stone, binder);',
-			'	c = mix(c, vec3(0.16, 0.155, 0.15) * (0.7 + 0.6 * fine.z), sand * 0.8);',
-			'	h = binder * (0.4 + 0.3 * agg.z);',
-			'	r = mix(0.95, 0.82, binder);',
-			'	ao = mix(0.6, 1.0, binder);',
-			'	c *= 1.0 - pore * 0.6;',
-			'	h -= pore * 0.2;',
-			/* Worn by the wheels: lighter and smoother in patches. */
-			'	float worn = tex_fbm(uv, 6.0, 4, seed + 3.0);',
-			'	float w = smoothstep(0.45, 0.75, worn) * p_Wear;',
-			'	c = mix(c, c * 1.35 + 0.03, w);',
-			'	r -= w * 0.1;',
-			/* Cracks sealed with tar: thin dark lines of large cells, shining a little. */
-			'	vec4 big = tex_cells(uv + vec2(tex_noise(uv * 24.0, 24.0, seed + 4.0), tex_noise(uv * 24.0, 24.0, seed + 5.0)) * 0.02, 3.0, seed + 6.0);',
-			'	float crack = (1.0 - smoothstep(0.012, 0.03, big.y - big.x)) * step(1.0 - p_Cracks, big.z);',
-			'	c = mix(c, vec3(0.03, 0.03, 0.035), crack);',
-			'	r = mix(r, 0.45, crack);',
-			'	h = mix(h, 0.55, crack);',
-			/* Stains of oil: dark soft spots. */
-			'	float stain = smoothstep(0.62, 0.8, tex_fbm(uv, 4.0, 4, seed + 7.0)) * p_Stains;',
-			'	c *= 1.0 - stain * 0.45;',
-			'	r -= stain * 0.2;'
-		]);
-
-		/*
-		 * Paving of concrete blocks, 20 by 10 cm, laid across the way (uv.y along it) in rows, each row half a block on from
-		 * the last: their edges bevelled, sand in the joints and moss in some, each block a tone of its own, worn and stained
-		 * in patches.
-		 */
-		define('paving', 'road', 1, {
-			Tones: {Value: 0.35, Min: 0, Max: 1, Title: 'Tones'},
-			Moss: {Value: 0.2, Min: 0, Max: 1, Title: 'Moss in the joints'},
-			Wear: {Value: 0.3, Min: 0, Max: 1, Title: 'Wear'}
-		}, [
-			'	vec2 g = uv * vec2(5.0, 10.0);',
-			'	float row = floor(g.y);',
-			'	g.x += mod(row, 2.0) * 0.5;',
-			'	vec2 cell = vec2(mod(floor(g.x), 5.0), row);',
-			'	vec2 f = fract(g);',
-			'	vec2 e = min(f, 1.0 - f) * vec2(0.2, 0.1);',
-			'	float edge = min(e.x, e.y);',
-			'	float joint = 1.0 - smoothstep(0.0025, 0.0045, edge);',
-			'	float bevel = smoothstep(0.002, 0.008, edge);',
-			'	float id = tex_hash(cell, 100.0, seed + 1.0);',
-			'	float id2 = tex_hash(cell, 100.0, seed + 2.0);',
-			'	float grain = tex_noise(uv * 400.0, 400.0, seed + 3.0) * 0.6 + tex_noise(uv * 130.0, 130.0, seed + 4.0) * 0.4;',
-			'	vec3 block = mix(vec3(0.5, 0.49, 0.47), mix(vec3(0.42, 0.4, 0.38), vec3(0.58, 0.5, 0.44), id2), p_Tones * step(0.5, id)) * (0.88 + 0.2 * id);',
-			'	c = block * (0.86 + 0.24 * grain);',
-			'	h = 0.55 * bevel + grain * 0.04;',
-			'	r = 0.9 - 0.06 * id;',
-			'	ao = mix(0.55, 1.0, bevel);',
-			/* The joints: sand, and moss in some of them. */
-			'	float moss = smoothstep(0.55, 0.75, tex_fbm(uv, 4.0, 4, seed + 5.0)) * p_Moss;',
-			'	vec3 fill = mix(vec3(0.11, 0.1, 0.085), vec3(0.08, 0.12, 0.04), moss);',
-			'	c = mix(c, fill * (0.7 + 0.5 * grain), joint);',
-			'	r = mix(r, 1.0, joint);',
-			/* Worn lighter where most feet go, stained darker in spots. */
-			'	float worn = smoothstep(0.45, 0.8, tex_fbm(uv, 3.0, 4, seed + 6.0)) * p_Wear;',
-			'	c = mix(c, c * 1.15 + 0.02, worn * (1.0 - joint));',
-			'	float stain = smoothstep(0.65, 0.85, tex_fbm(uv, 5.0, 4, seed + 7.0)) * p_Wear;',
-			'	c *= 1.0 - stain * 0.3;'
-		]);
-
-		/* Laid in rows: drawn as it is, no hexagons shifted over it. */
-		this.Defined.paving.Rows = true;
-
-		/*
-		 * A dirt road, earth trodden hard: its grains and clods, small stones pressed into it and some loose on it, a fine
-		 * crust cracked where it dried, darker damp hollows and a little dust lighter over the rest.
-		 */
-		define('dirt', 'road', 2, {
-			Stones: {Value: 0.5, Min: 0, Max: 1, Title: 'Stones'},
-			Cracks: {Value: 0.3, Min: 0, Max: 1, Title: 'Dry cracks'},
-			Damp: {Value: 0.3, Min: 0, Max: 1, Title: 'Damp hollows'}
-		}, [
-			'	float grain = tex_noise(uv * 520.0, 520.0, seed + 1.0) * 0.5 + tex_noise(uv * 170.0, 170.0, seed + 2.0) * 0.3 + tex_noise(uv * 48.0, 48.0, seed + 3.0) * 0.2;',
-			'	float lumps = tex_fbm(uv, 12.0, 4, seed + 4.0);',
-			'	vec3 earth = mix(vec3(0.36, 0.28, 0.2), vec3(0.52, 0.42, 0.31), lumps);',
-			'	c = earth * (0.8 + 0.4 * grain);',
-			'	h = 0.4 + lumps * 0.25 + grain * 0.08;',
-			'	r = 0.95;',
-			'	ao = 0.8 + 0.2 * lumps;',
-			/* Hollows: darker, damp. */
-			'	float hollow = smoothstep(0.62, 0.8, 1.0 - tex_fbm(uv, 3.0, 4, seed + 5.0)) * p_Damp;',
-			'	c *= 1.0 - hollow * 0.35;',
-			'	r -= hollow * 0.25;',
-			'	h -= hollow * 0.15;',
-			/* The crust cracked where it dried: thin dark lines of cells, only where it is dry. */
-			'	vec4 cr = tex_cells(uv + (vec2(tex_noise(uv * 40.0, 40.0, seed + 6.0), tex_noise(uv * 40.0, 40.0, seed + 7.0)) - 0.5) * 0.02, 14.0, seed + 8.0);',
-			'	float crack = (1.0 - smoothstep(0.004, 0.012, cr.y - cr.x)) * p_Cracks * (1.0 - hollow) * step(0.3, cr.z);',
-			'	c *= 1.0 - crack * 0.45;',
-			'	h -= crack * 0.12;',
-			/* Stones: pressed in, grey and ochre, a light rim where the sun catches them. */
-			'	vec4 st = tex_cells(uv + (vec2(tex_noise(uv * 90.0, 90.0, seed + 9.0), tex_noise(uv * 90.0, 90.0, seed + 10.0)) - 0.5) * 0.01, 40.0, seed + 11.0);',
-			'	float size = 0.15 + 0.3 * fract(st.z * 13.7);',
-			'	float stone = (1.0 - smoothstep(size - 0.04, size + 0.01, st.x)) * step(1.0 - p_Stones * 0.5, st.z);',
-			'	vec3 rock = mix(vec3(0.42, 0.4, 0.37), vec3(0.6, 0.5, 0.36), st.w) * (0.8 + 0.35 * (1.0 - st.x / size));',
-			'	c = mix(c, rock, stone);',
-			'	h = mix(h, 0.7 + 0.15 * (1.0 - st.x / size), stone);',
-			'	r = mix(r, 0.75, stone);',
-			'	ao = mix(ao, 1.0, stone) * (1.0 - (1.0 - stone) * smoothstep(size + 0.01, size + 0.08, st.x) * (1.0 - smoothstep(size + 0.08, size + 0.2, st.x)) * 0.3 * step(1.0 - p_Stones * 0.5, st.z));',
-			/* Dust over the dry rest, lighter. */
-			'	float dust = smoothstep(0.5, 0.75, tex_fbm(uv, 5.0, 3, seed + 12.0)) * (1.0 - hollow);',
-			'	c = mix(c, c * 1.18 + vec3(0.03, 0.025, 0.015), dust * 0.6 * (1.0 - stone));'
-		]);
-
-		/*
-		 * The face of a cliff of soft rock or of earth cut steep, seen from its side (uv.y up): beds laid one over another,
-		 * the harder ones standing out with a shadow under them, gullies the rain cut down it, cracks, and pebbles in it. Its
-		 * colors are neutral: a ground tints each bed by its height in the world, so no bed comes back with the tile.
-		 */
-		define('cliff', 'ground', 3, {
-			Beds: {Value: 0.7, Min: 0, Max: 1, Title: 'Beds'},
-			Flutes: {Value: 0.6, Min: 0, Max: 1, Title: 'Flutes'},
-			Pebbles: {Value: 0.3, Min: 0, Max: 1, Title: 'Pebbles'}
-		}, [
-			'	float warp = (tex_fbm(vec2(uv.x, 0.5), 2.0, 3, seed + 1.0) - 0.5) * 0.08;',
-			'	float y = uv.y + warp;',
-			'	float beds = tex_noise(vec2(0.5, y * 7.0), 7.0, seed + 2.0) * 0.6 + tex_noise(vec2(0.5, y * 23.0), 23.0, seed + 3.0) * 0.4;',
-			'	float hard = smoothstep(0.5, 0.62, beds) * p_Beds;',
-			'	float ledge = smoothstep(0.5, 0.62, tex_noise(vec2(0.5, (y + 0.01) * 7.0), 7.0, seed + 2.0) * 0.6 + tex_noise(vec2(0.5, (y + 0.01) * 23.0), 23.0, seed + 3.0) * 0.4) * p_Beds;',
-			'	float flute = tex_fbm(vec2(uv.x, uv.y * 0.12 + warp), 18.0, 3, seed + 4.0);',
-			'	float groove = (1.0 - abs(flute * 2.0 - 1.0));',
-			'	groove = pow(groove, 2.0) * p_Flutes * (1.0 - hard * 0.5);',
-			'	float grain = tex_noise(uv * 300.0, 300.0, seed + 5.0) * 0.6 + tex_noise(uv * 90.0, 90.0, seed + 6.0) * 0.4;',
-			'	vec3 tone = mix(vec3(0.48, 0.44, 0.39), vec3(0.86, 0.8, 0.7), smoothstep(0.25, 0.75, beds));',
-			'	c = tone * (0.82 + 0.3 * grain);',
-			'	h = 0.4 + hard * 0.35 - groove * 0.45 + grain * 0.08;',
-			'	r = 0.95;',
-			'	ao = 1.0 - groove * 0.45;',
-			'	float under = max(0.0, ledge - hard);',
-			'	c *= 1.0 - under * 0.6 - groove * 0.4;',
-			/* Where it fell off lately: lighter, smoother spalls. */
-			'	vec4 sp = tex_cells(uv + vec2(tex_noise(uv * 20.0, 20.0, seed + 12.0)) * 0.03, 9.0, seed + 13.0);',
-			'	float spall = (1.0 - smoothstep(0.3, 0.45, sp.x)) * step(0.7, sp.z);',
-			'	c = mix(c, c * 1.18 + 0.03, spall);',
-			'	h += spall * 0.08;',
-			'	ao *= 1.0 - under * 0.55;',
-			'	vec4 pb = tex_cells(uv + (vec2(tex_noise(uv * 120.0, 120.0, seed + 10.0), tex_noise(uv * 120.0, 120.0, seed + 11.0)) - 0.5) * 0.012, 22.0, seed + 9.0);',
-			'	float size = 0.12 + 0.28 * fract(pb.z * 17.3);',
-			'	float stone = (1.0 - smoothstep(size - 0.03, size + 0.01, pb.x)) * step(1.0 - p_Pebbles * 0.35, pb.z);',
-			'	vec3 rock = mix(vec3(0.38, 0.36, 0.33), vec3(0.6, 0.55, 0.47), pb.w) * (0.75 + 0.4 * (1.0 - pb.x / size));',
-			'	c = mix(c, rock, stone);',
-			'	h = mix(h, 0.62 + 0.08 * smoothstep(0.0, 0.6, 1.0 - pb.x / size), stone);',
-			'	ao = mix(ao, 1.0, stone);'
-		]);
+			self.Define(graph.name, Object.assign({Title: meta.Title || graph.name, Group: meta.Group || 'other', Metres: meta.Metres || 1, Size: meta.Size || 1024, Params: params}, meta.Rows ? {Rows: true} : {}, {Code: code ? String(code.value) : ''}));
+		});
 	}
 });

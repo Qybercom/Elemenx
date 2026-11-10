@@ -1,0 +1,16 @@
+{
+	"Order": 12,
+	"Title": "Gravel road",
+	"Group": "path",
+	"Speed": 50,
+	"Strips": [
+		{
+			"Kind": "lane",
+			"Width": 5,
+			"Surface": "gravel",
+			"Way": 0,
+			"Left": "none",
+			"Right": "none"
+		}
+	]
+}

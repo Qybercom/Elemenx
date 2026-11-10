@@ -813,3 +813,46 @@ describe('Contract: the volume of a ground: tunnels, caves and overhangs cut out
 		expect(Array.from(piece.Indices)).toEqual(here.Indices);
 	});
 });
+
+describe('Regression: the numbers of a flat map told once', function () {
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:SceneTerrainGenerator', 'service:SceneWorld', 'service:Blueprints', 'service:Noise', 'service:Math', 'service:Random', 'service:Workers']);
+	});
+
+	/* Size 1000, Height 60, Water 0.35, Scale 180, Ridges 0.4 and the radius of a tunnel were told again in each place. */
+	it('starts Flat, LibraryRelief and the blocks of SceneWorld from FlatOf and TunnelRadius', function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var flat = terrain.FlatOf({});
+		var blueprints = Elemenx.Service('Blueprints');
+		var relief = terrain.LibraryRelief({});
+		var field = terrain.Flat({});
+
+		function defaults (type) {
+			var made = {};
+
+			blueprints.NodeOf(type).Properties.forEach(function (property) {
+				made[property.Key] = property.Value;
+			});
+
+			return made;
+		}
+
+		Elemenx.Service('SceneWorld').Steps();
+
+		expect(flat).toEqual({Seed: 'ground', Size: 1000, Height: 60, Water: 0.35, Scale: 180, Ridges: 0.4});
+		expect(terrain.FlatOf({Height: 0, Water: 0, Ridges: 0}).Height).toBe(0);
+		expect(field.Size).toBe(flat.Size);
+		expect(field.Top).toBe(flat.Height);
+		expect(relief.parameters.map(function (parameter) {
+			return parameter.value;
+		})).toEqual([flat.Scale, flat.Ridges, flat.Water, flat.Height].concat(relief.parameters.slice(4).map(function (parameter) {
+			return parameter.value;
+		})));
+		expect(defaults('Ground')).toMatchObject({Size: flat.Size, Height: flat.Height, Water: flat.Water, Seed: flat.Seed});
+		expect(defaults('Relief')).toMatchObject({Scale: flat.Scale, Ridges: flat.Ridges});
+		expect(defaults('Tunnel').Radius).toBe(terrain.TunnelRadius);
+		expect(terrain.TunnelRadius).toBe(2.5);
+	});
+});

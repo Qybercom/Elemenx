@@ -1,0 +1,41 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "dirt",
+	"material": {
+		"Order": 7,
+		"Title": "Dirt",
+		"Group": "road",
+		"Land": true,
+		"Texture": "dirt"
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat s = enx_ms(px, 0.03);\n\tfloat grain = enx_mf(q * 16.0, 3);\n\tc *= 0.82 + grain * 0.36 * s + (1.0 - s) * 0.18;\n\tvec4 p = enx_mc(q * 8.0 + 13.0, 1.0);\n\tfloat pebble = step(0.8, p.z) * smoothstep(0.3, 0.12, p.x) * enx_ms(px, 0.06);\n\tc = mix(c, vec3(0.55, 0.52, 0.47) * (0.8 + p.w * 0.4), pebble);\n\th += grain * 0.004 * s + pebble * 0.008;\n\tr = 0.92;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Dirt of a way: trodden soil, pebbles."
+		}
+	],
+	"links": []
+}

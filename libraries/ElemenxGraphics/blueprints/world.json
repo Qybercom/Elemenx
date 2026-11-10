@@ -1,0 +1,584 @@
+{
+	"version": 1,
+	"type": "world",
+	"name": "World",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "ground",
+			"type": "Ground",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Size",
+					"value": 1000
+				},
+				{
+					"key": "Height",
+					"value": 60
+				},
+				{
+					"key": "Water",
+					"value": 0.35
+				},
+				{
+					"key": "Seed",
+					"value": "ground"
+				},
+				{
+					"key": "Rock",
+					"value": ""
+				},
+				{
+					"key": "Snow",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "planet",
+			"type": "Planet",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Planet",
+					"value": null
+				},
+				{
+					"key": "Latitude",
+					"value": 0
+				},
+				{
+					"key": "Longitude",
+					"value": 0
+				},
+				{
+					"key": "Turn",
+					"value": 0
+				}
+			],
+			"enabled": false
+		},
+		{
+			"id": "relief",
+			"type": "Relief",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Scale",
+					"value": 180
+				},
+				{
+					"key": "Ridges",
+					"value": 0.4
+				},
+				{
+					"key": "Graph",
+					"value": null
+				},
+				{
+					"key": "Noise",
+					"value": null
+				}
+			]
+		},
+		{
+			"id": "climate",
+			"type": "Climate",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Warmth",
+					"value": 0.72
+				},
+				{
+					"key": "Lapse",
+					"value": 0.7
+				},
+				{
+					"key": "Spread",
+					"value": 0.7
+				},
+				{
+					"key": "Stretch",
+					"value": 2.2
+				}
+			]
+		},
+		{
+			"id": "biomes",
+			"type": "Biomes",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "List",
+					"value": [
+						"temperate",
+						"taiga",
+						"tundra",
+						"desert",
+						"savanna",
+						"swamp"
+					]
+				}
+			],
+			"enabled": false
+		},
+		{
+			"id": "sketch",
+			"type": "Sketch",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Sketch",
+					"value": null
+				}
+			],
+			"enabled": false
+		},
+		{
+			"id": "border",
+			"type": "Border",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Points",
+					"value": null
+				},
+				{
+					"key": "Sides",
+					"value": null
+				},
+				{
+					"key": "Beyond",
+					"value": "far"
+				},
+				{
+					"key": "Passages",
+					"value": null
+				},
+				{
+					"key": "Open",
+					"value": null
+				},
+				{
+					"key": "Edge",
+					"value": 40
+				},
+				{
+					"key": "Depth",
+					"value": ""
+				}
+			],
+			"enabled": false
+		},
+		{
+			"id": "tunnel",
+			"type": "Tunnel",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Points",
+					"value": []
+				},
+				{
+					"key": "Radius",
+					"value": 2.5
+				},
+				{
+					"key": "Flat",
+					"value": 0.5
+				},
+				{
+					"key": "Depth",
+					"value": 0
+				}
+			],
+			"enabled": false
+		},
+		{
+			"id": "caves",
+			"type": "Caves",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "X",
+					"value": 0
+				},
+				{
+					"key": "Z",
+					"value": 0
+				},
+				{
+					"key": "Radius",
+					"value": 100
+				},
+				{
+					"key": "Top",
+					"value": 3
+				},
+				{
+					"key": "Bottom",
+					"value": 40
+				},
+				{
+					"key": "Scale",
+					"value": 24
+				},
+				{
+					"key": "Width",
+					"value": 0.35
+				},
+				{
+					"key": "Halls",
+					"value": 0.5
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			],
+			"enabled": false
+		},
+		{
+			"id": "passages",
+			"type": "Passages",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Nodes",
+					"value": []
+				},
+				{
+					"key": "Ways",
+					"value": []
+				},
+				{
+					"key": "Radius",
+					"value": 2.5
+				},
+				{
+					"key": "Flat",
+					"value": 0.5
+				},
+				{
+					"key": "Depth",
+					"value": 6
+				},
+				{
+					"key": "Rough",
+					"value": 0
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			],
+			"enabled": false
+		},
+		{
+			"id": "overhangs",
+			"type": "Overhangs",
+			"x": 2240,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Amount",
+					"value": 6
+				},
+				{
+					"key": "Scale",
+					"value": 24
+				},
+				{
+					"key": "Slope",
+					"value": 0.45
+				},
+				{
+					"key": "X",
+					"value": ""
+				},
+				{
+					"key": "Z",
+					"value": ""
+				},
+				{
+					"key": "Radius",
+					"value": ""
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			],
+			"enabled": false
+		},
+		{
+			"id": "footings",
+			"type": "Footings",
+			"x": 2460,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Edge",
+					"value": 6
+				},
+				{
+					"key": "Margin",
+					"value": 1
+				},
+				{
+					"key": "Mode",
+					"value": "mean"
+				}
+			],
+			"enabled": false
+		},
+		{
+			"id": "roads",
+			"type": "Roads",
+			"x": 2680,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Main",
+					"value": "road"
+				},
+				{
+					"key": "Minor",
+					"value": "country"
+				},
+				{
+					"key": "Paths",
+					"value": "gravel"
+				},
+				{
+					"key": "Rail",
+					"value": false
+				}
+			],
+			"enabled": false
+		},
+		{
+			"id": "settlement",
+			"type": "Settlement",
+			"x": 2900,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Name",
+					"value": ""
+				},
+				{
+					"key": "X",
+					"value": 0
+				},
+				{
+					"key": "Y",
+					"value": 0
+				},
+				{
+					"key": "Houses",
+					"value": 8
+				},
+				{
+					"key": "Radius",
+					"value": 30
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Shapes",
+					"value": ""
+				}
+			],
+			"enabled": false
+		},
+		{
+			"id": "scatter",
+			"type": "Scatter",
+			"x": 3120,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Kind",
+					"value": "forest"
+				},
+				{
+					"key": "Name",
+					"value": ""
+				},
+				{
+					"key": "Shapes",
+					"value": ""
+				},
+				{
+					"key": "Density",
+					"value": ""
+				},
+				{
+					"key": "Size",
+					"value": null
+				},
+				{
+					"key": "MinHeight",
+					"value": ""
+				},
+				{
+					"key": "MaxHeight",
+					"value": ""
+				},
+				{
+					"key": "MaxSlope",
+					"value": ""
+				},
+				{
+					"key": "Cover",
+					"value": ""
+				},
+				{
+					"key": "Patch",
+					"value": ""
+				},
+				{
+					"key": "Clumps",
+					"value": ""
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Blocks",
+					"value": ""
+				},
+				{
+					"key": "Biome",
+					"value": ""
+				},
+				{
+					"key": "Graph",
+					"value": null
+				}
+			],
+			"enabled": false
+		},
+		{
+			"id": "terrain",
+			"type": "Terrain",
+			"x": 3340,
+			"y": 260,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "link-1",
+			"p1": "ground-out-Land",
+			"p2": "planet-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "link-2",
+			"p1": "planet-out-Land",
+			"p2": "relief-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "link-3",
+			"p1": "relief-out-Land",
+			"p2": "climate-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "link-4",
+			"p1": "climate-out-Land",
+			"p2": "biomes-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "link-5",
+			"p1": "biomes-out-Land",
+			"p2": "sketch-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "link-6",
+			"p1": "sketch-out-Land",
+			"p2": "border-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "link-7",
+			"p1": "border-out-Land",
+			"p2": "tunnel-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "link-8",
+			"p1": "tunnel-out-Land",
+			"p2": "caves-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "link-9",
+			"p1": "caves-out-Land",
+			"p2": "passages-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "link-10",
+			"p1": "passages-out-Land",
+			"p2": "overhangs-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "link-11",
+			"p1": "overhangs-out-Land",
+			"p2": "footings-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "link-12",
+			"p1": "footings-out-Land",
+			"p2": "roads-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "link-13",
+			"p1": "roads-out-Land",
+			"p2": "terrain-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "link-14",
+			"p1": "roads-out-Things",
+			"p2": "settlement-in-Under",
+			"kind": "value"
+		},
+		{
+			"id": "link-15",
+			"p1": "settlement-out-Things",
+			"p2": "scatter-in-Under",
+			"kind": "value"
+		},
+		{
+			"id": "link-16",
+			"p1": "scatter-out-Things",
+			"p2": "terrain-in-Things",
+			"kind": "value"
+		}
+	]
+}

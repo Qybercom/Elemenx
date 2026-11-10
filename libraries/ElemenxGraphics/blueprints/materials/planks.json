@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "planks",
+	"material": {
+		"Order": 23,
+		"Title": "Planks",
+		"Group": "build",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat w = 0.19;\n\tfloat row = floor(q.y / w);\n\tfloat f = fract(q.y / w);\n\tfloat lap = smoothstep(0.0, 0.12, f);\n\tfloat tone = enx_mh(vec2(row, 4.0));\n\tfloat grain = sin((q.y + enx_mf(vec2(q.x * 0.5, q.y * 8.0) + row, 3) * 0.06) * 300.0) * 0.5 + 0.5;\n\tfloat knot = smoothstep(0.035, 0.0, length(fract(vec2(q.x * 0.9 + tone * 3.0, f) ) * vec2(1.1, w) - vec2(0.5, w * 0.5))) * step(0.7, enx_mh(vec2(floor(q.x * 0.9 + tone * 3.0), row)));\n\tc *= (0.82 + tone * 0.3) * (0.9 + grain * 0.15 * enx_ms(px, 0.006)) * mix(0.55, 1.0, lap) * (1.0 - knot * 0.35);\n\th += f * 0.012;\n\tr = 0.8;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Lap siding: boards over one another, a shadow under each, the grain along them."
+		}
+	],
+	"links": []
+}

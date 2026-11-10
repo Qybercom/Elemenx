@@ -206,5 +206,19 @@ describe('Elemenx without a DOM', function () {
 			globalThis.WebSocket = Socket;
 		}
 	});
+
+	/* Node loads no page, so no Library loads its resources: tools/resources.js reads them from their folders. */
+	it('gives Node the resources of the system Libraries read from their folders, as a page has them', function () {
+		var Resources = require('../../tools/resources.js');
+		var read = Resources.Reader();
+
+		expect(read('Blueprints')).toEqual(expect.arrayContaining(['ElemenxGraphics/water', 'ElemenxGraphics/materials/lawn', 'ElemenxGraphics/effects/torch']));
+		expect(read('Data', 'ElemenxGraphics/road-types/road')).toMatchObject({Title: 'Road', Speed: 90});
+		expect(read('Data', 'nothing')).toBe(null);
+
+		Resources.Define(Elemenx);
+
+		expect(Elemenx.Resources('Data', 'ElemenxGraphics/road-surfaces/asphalt')).toMatchObject({Material: 'asphalt', Grip: 1});
+	});
 });
 

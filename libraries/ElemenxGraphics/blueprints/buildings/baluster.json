@@ -1,0 +1,274 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "baluster",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Index"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Count"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "W"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "D"
+				}
+			]
+		},
+		{
+			"id": "input5",
+			"type": "Input",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "input6",
+			"type": "Input",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "input7",
+			"type": "Input",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Y"
+				}
+			]
+		},
+		{
+			"id": "cylinder8",
+			"type": "Cylinder",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Segments",
+					"value": 5
+				}
+			]
+		},
+		{
+			"id": "formula9",
+			"type": "Formula",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.02"
+				}
+			]
+		},
+		{
+			"id": "formula10",
+			"type": "Formula",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"id": "formula11",
+			"type": "Formula",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.95"
+				}
+			]
+		},
+		{
+			"id": "formula12",
+			"type": "Formula",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(X - W * 0.25 + Index / max(1, Count - 1) * W * 0.5, Y + 0.6, Z + D / 2 + 1.18)"
+				}
+			]
+		},
+		{
+			"id": "formula13",
+			"type": "Formula",
+			"x": 700,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.32, 0.33, 0.35]"
+				}
+			]
+		},
+		{
+			"id": "formula14",
+			"type": "Formula",
+			"x": 920,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "'metal'"
+				}
+			]
+		},
+		{
+			"id": "result15",
+			"type": "Result",
+			"x": 1140,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "formula9-out-Value",
+			"p2": "cylinder8-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "formula10-out-Value",
+			"p2": "cylinder8-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "formula11-out-Value",
+			"p2": "cylinder8-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "input5-out-Value",
+			"p2": "formula12-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "input3-out-Value",
+			"p2": "formula12-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "input1-out-Value",
+			"p2": "formula12-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "input2-out-Value",
+			"p2": "formula12-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "input7-out-Value",
+			"p2": "formula12-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "input6-out-Value",
+			"p2": "formula12-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "input4-out-Value",
+			"p2": "formula12-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "formula12-out-Value",
+			"p2": "cylinder8-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "formula13-out-Value",
+			"p2": "cylinder8-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "formula14-out-Value",
+			"p2": "cylinder8-in-Material",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "cylinder8-out-Parts",
+			"p2": "result15-in-Value",
+			"kind": "value"
+		}
+	]
+}

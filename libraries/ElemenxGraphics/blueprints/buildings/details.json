@@ -1,0 +1,1013 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "details",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Class"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Depth"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "W"
+				}
+			]
+		},
+		{
+			"id": "input5",
+			"type": "Input",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "D"
+				}
+			]
+		},
+		{
+			"id": "input6",
+			"type": "Input",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Top"
+				}
+			]
+		},
+		{
+			"id": "input7",
+			"type": "Input",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Floors"
+				}
+			]
+		},
+		{
+			"id": "input8",
+			"type": "Input",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "FloorHeight"
+				}
+			]
+		},
+		{
+			"id": "input9",
+			"type": "Input",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Roof"
+				}
+			]
+		},
+		{
+			"id": "input10",
+			"type": "Input",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "input11",
+			"type": "Input",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Special"
+				}
+			]
+		},
+		{
+			"id": "input12",
+			"type": "Input",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Chimneys"
+				}
+			]
+		},
+		{
+			"id": "input13",
+			"type": "Input",
+			"x": 700,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Dormers"
+				}
+			]
+		},
+		{
+			"id": "input14",
+			"type": "Input",
+			"x": 920,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Rooftop"
+				}
+			]
+		},
+		{
+			"id": "input15",
+			"type": "Input",
+			"x": 1140,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Awning"
+				}
+			]
+		},
+		{
+			"id": "input16",
+			"type": "Input",
+			"x": 1360,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "AwningColor"
+				}
+			]
+		},
+		{
+			"id": "input17",
+			"type": "Input",
+			"x": 1580,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SignColor"
+				}
+			]
+		},
+		{
+			"id": "input18",
+			"type": "Input",
+			"x": 1800,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Downpipes"
+				}
+			]
+		},
+		{
+			"id": "input19",
+			"type": "Input",
+			"x": 2020,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Lamp"
+				}
+			]
+		},
+		{
+			"id": "input20",
+			"type": "Input",
+			"x": 40,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Trim"
+				}
+			]
+		},
+		{
+			"id": "formula21",
+			"type": "Formula",
+			"x": 260,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Roof == 'gable' || Roof == 'hip' || Roof == 'gambrel' || Roof == 'shed'"
+				}
+			]
+		},
+		{
+			"id": "formula22",
+			"type": "Formula",
+			"x": 480,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(W, D) * (Roof == 'gable' ? 0.45 : Roof == 'hip' ? 0.35 : Roof == 'shed' ? 0.18 : Roof == 'gambrel' ? 0.5 : 0.04)"
+				}
+			]
+		},
+		{
+			"id": "random23",
+			"type": "Random",
+			"x": 700,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "formula24",
+			"type": "Formula",
+			"x": 920,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "'chimney'"
+				}
+			]
+		},
+		{
+			"id": "random25",
+			"type": "Random",
+			"x": 1140,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "formula26",
+			"type": "Formula",
+			"x": 1360,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "'dormer'"
+				}
+			]
+		},
+		{
+			"id": "random27",
+			"type": "Random",
+			"x": 1580,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "formula28",
+			"type": "Formula",
+			"x": 1800,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "'lamp'"
+				}
+			]
+		},
+		{
+			"id": "formula29",
+			"type": "Formula",
+			"x": 2020,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Downpipes > 0 && pitched ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "repeat30",
+			"type": "Repeat",
+			"x": 40,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/downpipe"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula31",
+			"type": "Formula",
+			"x": 260,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "pipes * 4"
+				}
+			]
+		},
+		{
+			"id": "repeat32",
+			"type": "Repeat",
+			"x": 480,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/gutter"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula33",
+			"type": "Formula",
+			"x": 700,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "pipes * 2"
+				}
+			]
+		},
+		{
+			"id": "repeat34",
+			"type": "Repeat",
+			"x": 920,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/chimney"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula35",
+			"type": "Formula",
+			"x": 1140,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "pitched && chimneyChance < Chimneys ? (chimneyChance < Chimneys * 0.4 ? 2 : 1) : 0"
+				}
+			]
+		},
+		{
+			"id": "repeat36",
+			"type": "Repeat",
+			"x": 1360,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/dormer"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula37",
+			"type": "Formula",
+			"x": 1580,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Roof == \"gable\" && W > D && Floors <= 3 && dormerChance < Dormers ? max(1, floor(W / 6)) : 0"
+				}
+			]
+		},
+		{
+			"id": "repeat38",
+			"type": "Repeat",
+			"x": 1800,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/rooftop"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula39",
+			"type": "Formula",
+			"x": 2020,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Rooftop > 0 && !pitched && Roof != 'dome' && Roof != 'spire' && Roof != 'vault' ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "formula40",
+			"type": "Formula",
+			"x": 40,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Top + max(0.3, min(W, D) * 0.04)"
+				}
+			]
+		},
+		{
+			"id": "repeat41",
+			"type": "Repeat",
+			"x": 260,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/awning"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula42",
+			"type": "Formula",
+			"x": 480,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Awning > 0 ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "repeat43",
+			"type": "Repeat",
+			"x": 700,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/lamp"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula44",
+			"type": "Formula",
+			"x": 920,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "lampChance < Lamp ? 2 : 0"
+				}
+			]
+		},
+		{
+			"id": "join45",
+			"type": "Join",
+			"x": 1140,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 7
+				}
+			]
+		},
+		{
+			"id": "result46",
+			"type": "Result",
+			"x": 1360,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input9-out-Value",
+			"p2": "formula21-in-Roof",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input4-out-Value",
+			"p2": "formula22-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input5-out-Value",
+			"p2": "formula22-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "input9-out-Value",
+			"p2": "formula22-in-Roof",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "input10-out-Value",
+			"p2": "random23-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "formula24-out-Value",
+			"p2": "random23-in-Key",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "input10-out-Value",
+			"p2": "random25-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "formula26-out-Value",
+			"p2": "random25-in-Key",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "input10-out-Value",
+			"p2": "random27-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "formula28-out-Value",
+			"p2": "random27-in-Key",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "input18-out-Value",
+			"p2": "formula29-in-Downpipes",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "formula21-out-Value",
+			"p2": "formula29-in-pitched",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "formula29-out-Value",
+			"p2": "formula31-in-pipes",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "formula31-out-Value",
+			"p2": "repeat30-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l15",
+			"p1": "input4-out-Value",
+			"p2": "repeat30-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l16",
+			"p1": "input5-out-Value",
+			"p2": "repeat30-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l17",
+			"p1": "input6-out-Value",
+			"p2": "repeat30-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l18",
+			"p1": "formula29-out-Value",
+			"p2": "formula33-in-pipes",
+			"kind": "value"
+		},
+		{
+			"id": "l19",
+			"p1": "formula33-out-Value",
+			"p2": "repeat32-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l20",
+			"p1": "input4-out-Value",
+			"p2": "repeat32-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l21",
+			"p1": "input5-out-Value",
+			"p2": "repeat32-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l22",
+			"p1": "input6-out-Value",
+			"p2": "repeat32-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l23",
+			"p1": "formula21-out-Value",
+			"p2": "formula35-in-pitched",
+			"kind": "value"
+		},
+		{
+			"id": "l24",
+			"p1": "random23-out-Value",
+			"p2": "formula35-in-chimneyChance",
+			"kind": "value"
+		},
+		{
+			"id": "l25",
+			"p1": "input12-out-Value",
+			"p2": "formula35-in-Chimneys",
+			"kind": "value"
+		},
+		{
+			"id": "l26",
+			"p1": "formula35-out-Value",
+			"p2": "repeat34-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l27",
+			"p1": "input4-out-Value",
+			"p2": "repeat34-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l28",
+			"p1": "input5-out-Value",
+			"p2": "repeat34-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l29",
+			"p1": "input6-out-Value",
+			"p2": "repeat34-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l30",
+			"p1": "formula22-out-Value",
+			"p2": "repeat34-in-rise",
+			"kind": "value"
+		},
+		{
+			"id": "l31",
+			"p1": "input9-out-Value",
+			"p2": "formula37-in-Roof",
+			"kind": "value"
+		},
+		{
+			"id": "l32",
+			"p1": "input4-out-Value",
+			"p2": "formula37-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l33",
+			"p1": "input5-out-Value",
+			"p2": "formula37-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l34",
+			"p1": "input7-out-Value",
+			"p2": "formula37-in-Floors",
+			"kind": "value"
+		},
+		{
+			"id": "l35",
+			"p1": "random25-out-Value",
+			"p2": "formula37-in-dormerChance",
+			"kind": "value"
+		},
+		{
+			"id": "l36",
+			"p1": "input13-out-Value",
+			"p2": "formula37-in-Dormers",
+			"kind": "value"
+		},
+		{
+			"id": "l37",
+			"p1": "formula37-out-Value",
+			"p2": "repeat36-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l38",
+			"p1": "input4-out-Value",
+			"p2": "repeat36-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l39",
+			"p1": "input5-out-Value",
+			"p2": "repeat36-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l40",
+			"p1": "input6-out-Value",
+			"p2": "repeat36-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l41",
+			"p1": "formula22-out-Value",
+			"p2": "repeat36-in-rise",
+			"kind": "value"
+		},
+		{
+			"id": "l42",
+			"p1": "input20-out-Value",
+			"p2": "repeat36-in-Trim",
+			"kind": "value"
+		},
+		{
+			"id": "l43",
+			"p1": "input14-out-Value",
+			"p2": "formula39-in-Rooftop",
+			"kind": "value"
+		},
+		{
+			"id": "l44",
+			"p1": "formula21-out-Value",
+			"p2": "formula39-in-pitched",
+			"kind": "value"
+		},
+		{
+			"id": "l45",
+			"p1": "input9-out-Value",
+			"p2": "formula39-in-Roof",
+			"kind": "value"
+		},
+		{
+			"id": "l46",
+			"p1": "formula39-out-Value",
+			"p2": "repeat38-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l47",
+			"p1": "input4-out-Value",
+			"p2": "repeat38-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l48",
+			"p1": "input5-out-Value",
+			"p2": "repeat38-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l49",
+			"p1": "input6-out-Value",
+			"p2": "formula40-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l50",
+			"p1": "input4-out-Value",
+			"p2": "formula40-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l51",
+			"p1": "input5-out-Value",
+			"p2": "formula40-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l52",
+			"p1": "formula40-out-Value",
+			"p2": "repeat38-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l53",
+			"p1": "input10-out-Value",
+			"p2": "repeat38-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "l54",
+			"p1": "input15-out-Value",
+			"p2": "formula42-in-Awning",
+			"kind": "value"
+		},
+		{
+			"id": "l55",
+			"p1": "formula42-out-Value",
+			"p2": "repeat41-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l56",
+			"p1": "input2-out-Value",
+			"p2": "repeat41-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l57",
+			"p1": "input3-out-Value",
+			"p2": "repeat41-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l58",
+			"p1": "input8-out-Value",
+			"p2": "repeat41-in-FloorHeight",
+			"kind": "value"
+		},
+		{
+			"id": "l59",
+			"p1": "input16-out-Value",
+			"p2": "repeat41-in-AwningColor",
+			"kind": "value"
+		},
+		{
+			"id": "l60",
+			"p1": "input17-out-Value",
+			"p2": "repeat41-in-SignColor",
+			"kind": "value"
+		},
+		{
+			"id": "l61",
+			"p1": "random27-out-Value",
+			"p2": "formula44-in-lampChance",
+			"kind": "value"
+		},
+		{
+			"id": "l62",
+			"p1": "input19-out-Value",
+			"p2": "formula44-in-Lamp",
+			"kind": "value"
+		},
+		{
+			"id": "l63",
+			"p1": "formula44-out-Value",
+			"p2": "repeat43-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l64",
+			"p1": "input2-out-Value",
+			"p2": "repeat43-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l65",
+			"p1": "input3-out-Value",
+			"p2": "repeat43-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l66",
+			"p1": "repeat30-out-List",
+			"p2": "join45-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "l67",
+			"p1": "repeat32-out-List",
+			"p2": "join45-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "l68",
+			"p1": "repeat34-out-List",
+			"p2": "join45-in-Parts3",
+			"kind": "value"
+		},
+		{
+			"id": "l69",
+			"p1": "repeat36-out-List",
+			"p2": "join45-in-Parts4",
+			"kind": "value"
+		},
+		{
+			"id": "l70",
+			"p1": "repeat38-out-List",
+			"p2": "join45-in-Parts5",
+			"kind": "value"
+		},
+		{
+			"id": "l71",
+			"p1": "repeat41-out-List",
+			"p2": "join45-in-Parts6",
+			"kind": "value"
+		},
+		{
+			"id": "l72",
+			"p1": "repeat43-out-List",
+			"p2": "join45-in-Parts7",
+			"kind": "value"
+		},
+		{
+			"id": "l73",
+			"p1": "join45-out-Parts",
+			"p2": "result46-in-Value",
+			"kind": "value"
+		}
+	]
+}

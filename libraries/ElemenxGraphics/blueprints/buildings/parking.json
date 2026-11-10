@@ -1,0 +1,331 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "parking",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Depth"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Floors"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "FloorHeight"
+				}
+			]
+		},
+		{
+			"id": "repeat5",
+			"type": "Repeat",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/parking-floor"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula6",
+			"type": "Formula",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Floors + 1"
+				}
+			]
+		},
+		{
+			"id": "repeat7",
+			"type": "Repeat",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/parking-column"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula8",
+			"type": "Formula",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(max(1, round((Width - 2) / 8)) + 1) * (max(1, round((Depth - 2) / 8)) + 1)"
+				}
+			]
+		},
+		{
+			"id": "box9",
+			"type": "Box",
+			"x": 2020,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "formula10",
+			"type": "Formula",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[4, 0.3, 14]"
+				}
+			]
+		},
+		{
+			"id": "formula11",
+			"type": "Formula",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(Width / 2 + 2, FloorHeight / 2, 0)"
+				}
+			]
+		},
+		{
+			"id": "formula12",
+			"type": "Formula",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(atan2(FloorHeight, 14) * 57.3, 0, 0)"
+				}
+			]
+		},
+		{
+			"id": "formula13",
+			"type": "Formula",
+			"x": 700,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.6, 0.6, 0.58]"
+				}
+			]
+		},
+		{
+			"id": "join14",
+			"type": "Join",
+			"x": 920,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 3
+				}
+			]
+		},
+		{
+			"id": "result15",
+			"type": "Result",
+			"x": 1140,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input3-out-Value",
+			"p2": "formula6-in-Floors",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "formula6-out-Value",
+			"p2": "repeat5-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input1-out-Value",
+			"p2": "repeat5-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "input2-out-Value",
+			"p2": "repeat5-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "input4-out-Value",
+			"p2": "repeat5-in-FloorHeight",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "input1-out-Value",
+			"p2": "formula8-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "input2-out-Value",
+			"p2": "formula8-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "formula8-out-Value",
+			"p2": "repeat7-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "input1-out-Value",
+			"p2": "repeat7-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "input2-out-Value",
+			"p2": "repeat7-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "input3-out-Value",
+			"p2": "repeat7-in-Floors",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "input4-out-Value",
+			"p2": "repeat7-in-FloorHeight",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "formula10-out-Value",
+			"p2": "box9-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "input1-out-Value",
+			"p2": "formula11-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l15",
+			"p1": "input4-out-Value",
+			"p2": "formula11-in-FloorHeight",
+			"kind": "value"
+		},
+		{
+			"id": "l16",
+			"p1": "formula11-out-Value",
+			"p2": "box9-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l17",
+			"p1": "input4-out-Value",
+			"p2": "formula12-in-FloorHeight",
+			"kind": "value"
+		},
+		{
+			"id": "l18",
+			"p1": "formula12-out-Value",
+			"p2": "box9-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "l19",
+			"p1": "formula13-out-Value",
+			"p2": "box9-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l20",
+			"p1": "repeat5-out-List",
+			"p2": "join14-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "l21",
+			"p1": "repeat7-out-List",
+			"p2": "join14-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "l22",
+			"p1": "box9-out-Parts",
+			"p2": "join14-in-Parts3",
+			"kind": "value"
+		},
+		{
+			"id": "l23",
+			"p1": "join14-out-Parts",
+			"p2": "result15-in-Value",
+			"kind": "value"
+		}
+	]
+}

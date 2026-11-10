@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "shingles",
+	"material": {
+		"Order": 26,
+		"Title": "Shingles",
+		"Group": "roof",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tvec2 b = vec2(0.16, 0.2);\n\tvec2 t = q / b;\n\tt.x += mod(floor(t.y), 2.0) * 0.5 + enx_mh(vec2(floor(t.y), 2.0)) * 0.3;\n\tvec2 id = floor(t);\n\tvec2 f = fract(t);\n\tfloat edge = (1.0 - smoothstep(0.02, 0.06, min(f.x, 1.0 - f.x))) * enx_ms(px, 0.03);\n\tfloat under = 1.0 - smoothstep(0.0, 0.18, f.y);\n\tfloat tone = enx_mh(id + 2.2);\n\tc *= (0.72 + tone * 0.4) * (1.0 - edge * 0.5) * (1.0 - under * 0.45) * (0.9 + enx_mn(q * vec2(20.0, 120.0)) * 0.2 * enx_ms(px, 0.01));\n\th += f.y * 0.01;\n\tr = 0.92;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Shingles: rows of small boards of their own tones, each row over half of the one under it."
+		}
+	],
+	"links": []
+}

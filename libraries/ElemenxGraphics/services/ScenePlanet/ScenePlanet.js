@@ -1182,18 +1182,8 @@ Elemenx.Service('ScenePlanet', {
 		var radius = planet.Radius;
 		var places = [];
 		var kept = [];
-		var seed = 0;
-		var text = String(options.Seed === undefined ? 'planet' : options.Seed) + ':towns';
+		var random = this.$Service('Random').Sequence(String(options.Seed === undefined ? 'planet' : options.Seed) + ':towns');
 		var i;
-
-		for (i = 0; i < text.length; i++)
-			seed = (seed * 31 + text.charCodeAt(i)) >>> 0;
-
-		function random () {
-			seed = (seed * 1664525 + 1013904223) >>> 0;
-
-			return seed / 4294967296;
-		}
 
 		for (i = 0; i < tries; i++) {
 			var y = 1 - (i + 0.5) / tries * 2;
@@ -2464,7 +2454,7 @@ Elemenx.Service('ScenePlanet', {
 
 	/* The workers that paint globes. */
 	Work: function () {
-		return this.$Service('Workers').Pool('ScenePlanet', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], SceneTerrainGenerator: ['Smoothstep', 'Biomes', 'BiomeOf', 'Face'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Project', 'Unproject', 'Planet', 'Color', 'Picture', 'Face', 'Sphere', 'PatchPicture', 'Heights', 'Drainage', 'Smoothed', 'RiversOf', 'Settlements', 'TownsOf', 'Lights', 'Highways', 'HighwaysOf', 'Unit', 'Dot', 'Cells', 'CellAt', 'CellPoint', 'CellCenter', 'CellNeighbours', 'HexAt', 'HexPoint', 'HexCell', 'Icosahedron', 'Wound', 'Slerp', 'Along', 'Cross']});
+		return this.$Service('Workers').Pool('ScenePlanet', {Math: true, Noise: true, Random: true, SceneTerrainGenerator: true, ScenePlanet: true});
 	},
 
 	/* What a worker of the planet carries: see Workers. */

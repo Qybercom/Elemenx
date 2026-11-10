@@ -66,150 +66,24 @@ Elemenx.Trait('SceneEffects', {
 		var box = null;
 		var plate = null;
 		var ribbon = null;
-		var fire = [1, 0.62, 0.3];
 		var compiled = {Graphs: new WeakMap(), Texts: {}};
+		var blueprints = this.$Service('Blueprints');
+		var types = scene.EffectTypes = {};
 
-		var types = scene.EffectTypes = {
-			spark: {Lamp: null, Layers: [
-				{Kind: 'spark', Count: 48, Life: 1.3, Speed: [2, 7], Spread: 0.8, Gravity: 9, Drag: 0.6, Bounce: 0.35, Size: [0.022, 0.008], Stretch: 0.03, Color: [1, 0.72, 0.35], Blend: 'add'}
-			]},
-			torch: {Lamp: {Color: '#ff9a4a', Power: 0.07, Radius: 7, Flicker: 0.32}, Heat: 0.5, Layers: [
-				{Kind: 'fire', Life: 1, Speed: [1.1, 1.1], Size: [0.26, 0.26], Color: fire, Blend: 'alpha'},
-				{Kind: 'smoke', Count: 12, Life: 2.6, Speed: [0.5, 1], Spread: 0.2, Rise: 0.4, Drag: 0.5, Size: [0.14, 0.7], Wander: 0.3, Color: [0.2, 0.19, 0.18], Opacity: 0.16, Blend: 'alpha', Start: 0.3},
-				{Kind: 'spark', Count: 7, Life: 1, Speed: [0.8, 2], Spread: 0.45, Rise: 0.8, Drag: 1.2, Size: [0.01, 0.004], Stretch: 0.025, Wander: 0.2, Color: [1, 0.6, 0.25], Blend: 'add'}
-			]},
-			campfire: {Lamp: {Color: '#ff8c3c', Power: 0.12, Radius: 10, Flicker: 0.28}, Heat: 1, Layers: [
-				{Kind: 'fire', Life: 1, Speed: [1.7, 1.7], Size: [0.42, 0.42], Color: fire, Blend: 'alpha'},
-				{Kind: 'smoke', Count: 26, Life: 4.2, Speed: [0.7, 1.4], Spread: 0.25, Rise: 0.5, Drag: 0.4, Size: [0.3, 2.2], Wander: 0.5, Color: [0.16, 0.15, 0.15], Opacity: 0.22, Blend: 'alpha', Start: 0.6},
-				{Kind: 'spark', Count: 22, Life: 1.7, Speed: [1.2, 3.4], Spread: 0.42, Rise: 1, Drag: 1, Size: [0.012, 0.004], Stretch: 0.025, Wander: 0.4, Color: [1, 0.55, 0.2], Blend: 'add'}
-			]},
-			smoke: {Lamp: null, Layers: [
-				{Kind: 'smoke', Count: 44, Life: 5, Speed: [0.8, 1.6], Spread: 0.3, Rise: 0.5, Drag: 0.4, Size: [0.5, 3], Wander: 0.6, Color: [0.26, 0.26, 0.27], Opacity: 0.32, Blend: 'alpha'}
-			]},
-			steam: {Lamp: null, Layers: [
-				{Kind: 'smoke', Count: 30, Life: 1.8, Speed: [1, 2], Spread: 0.3, Rise: 0.8, Drag: 1, Size: [0.2, 1.4], Wander: 0.4, Color: [0.82, 0.84, 0.86], Opacity: 0.2, Blend: 'alpha'}
-			]},
-			/* What a boat leaves on the water behind it: foam that spreads and fades where it lies. */
-			wake: {Lamp: null, Lasts: 0.5, Layers: [
-				{Kind: 'smoke', Count: 10, Life: 3, Speed: [0.2, 0.8], Spread: 1.4, Rise: 0, Drag: 1.8, Size: [0.5, 2.2], Wander: 0.15, Wind: 0, Color: [1, 1, 1], Opacity: 0.42, Blend: 'alpha'}
-			]},
-			/* Water thrown up by a bow that strikes a wave, falling back. */
-			spray: {Lamp: null, Lasts: 0.3, Layers: [
-				{Kind: 'smoke', Count: 16, Life: 0.9, Speed: [2, 4.5], Spread: 0.6, Rise: 0.6, Gravity: 9, Drag: 0.8, Size: [0.1, 0.6], Wander: 0.1, Wind: 0.2, Color: [0.92, 0.95, 0.97], Opacity: 0.4, Blend: 'alpha'}
-			]},
-			/* The mist the wheels throw up off a wet road: wide, light, hanging a while behind what drives; it scatters light (adds), never darkens. */
-			roadspray: {Lamp: null, Lasts: 0.5, Layers: [
-				{Kind: 'smoke', Count: 10, Life: 1.1, Speed: [1, 3.2], Spread: 0.9, Rise: 0.5, Gravity: 1.5, Drag: 1.4, Size: [0.5, 2.2], Wander: 0.2, Wind: 0.4, Color: [0.5, 0.54, 0.6], Opacity: 0.07, Blend: 'add'},
-				{Kind: 'smoke', Count: 8, Life: 0.5, Speed: [3, 6], Spread: 0.35, Rise: 0.4, Gravity: 9, Drag: 0.6, Size: [0.08, 0.3], Wander: 0.05, Wind: 0.1, Color: [0.7, 0.75, 0.8], Opacity: 0.25, Blend: 'add'}
-			]},
-			dust: {Lamp: null, Layers: [
-				{Kind: 'smoke', Count: 20, Life: 1.6, Speed: [0.3, 1], Spread: 1.2, Rise: 0.1, Drag: 1.6, Size: [0.2, 1.2], Wander: 0.2, Color: [0.5, 0.42, 0.32], Opacity: 0.2, Blend: 'alpha'}
-			]},
-			fumes: {Lamp: null, Aim: [0, 0, -1], Layers: [
-				{Kind: 'smoke', Count: 22, Life: 0.8, Speed: [1.6, 3.2], Spread: 0.14, Rise: 0.25, Drag: 1.1, Size: [0.08, 0.55], Wander: 0.12, Color: [0.3, 0.3, 0.32], Opacity: 0.3, Blend: 'alpha'}
-			]},
-			backfire: {Lasts: 0.4, Lamp: {Color: '#ff9a4a', Power: 0.2, Radius: 5, Flicker: 0.4}, Layers: [
-				{Kind: 'ball', Life: 0.2, Speed: [1, 1], Size: [0.42, 0.42], Color: [1, 0.5, 0.15], Blend: 'add'},
-				{Kind: 'spark', Count: 14, Life: 0.35, Speed: [2, 7], Spread: 0.32, Drag: 1.2, Size: [0.03, 0.01], Stretch: 0.03, Color: [1, 0.68, 0.3], Blend: 'add'}
-			]},
-			exhaust: {Lamp: {Color: '#7fb6ff', Power: 0.22, Radius: 10, Flicker: 0.12}, Heat: 1.4, Aim: [0, 0, -1], Layers: [
-				{Kind: 'stream', Life: 1, Speed: [5.5, 5.5], Size: [0.42, 0.42], Color: [0.3, 0.55, 1], Blend: 'alpha'},
-				{Kind: 'nozzle', Size: [0.5, 0.5], Color: [0.35, 0.6, 1], Blend: 'add'},
-				{Kind: 'smoke', Count: 16, Life: 1.1, Speed: [10, 14], Spread: 0.1, Drag: 2.2, Size: [0.4, 1.6], Wander: 0.3, Color: [0.5, 0.5, 0.52], Opacity: 0.035, Blend: 'alpha', Start: 0.25}
-			]},
-			/* Bubbles of mana: slow, wobbling as they rise, a bright rim and a glint, growing until they burst. */
-			mana: {Lamp: {Color: '#7aa8ff', Power: 0.08, Radius: 6, Flicker: 0.05}, Layers: [
-				{Kind: 'pool', Size: [1.6, 1.6], Color: [0.3, 0.5, 1], Blend: 'add'},
-				{Kind: 'bubble', Count: 30, Life: 5, Speed: [0.04, 0.12], Spread: 0.5, Rise: 0.28, Drag: 0.5, Size: [0.04, 0.1], Wander: 0.2, Wind: 0.15, Color: [0.4, 0.62, 1], Hot: [0.9, 0.96, 1], Blend: 'add', Base: 12},
-				{Kind: 'mote', Count: 18, Life: 2.4, Speed: [0.05, 0.2], Spread: 0.8, Rise: 0.4, Drag: 0.5, Size: [0.03, 0.008], Wander: 0.3, Wind: 0.3, Color: [0.5, 0.7, 1], Blend: 'add', Base: 12}
-			]},
-			/* The glow of what it follows: its body (or what it holds, Where) lit from within, brighter at its edges; a few motes round it. */
-			glow: {Lamp: {Color: '#8fc8ff', Power: 0.1, Radius: 5, Flicker: 0.04}, Glow: [0.45, 0.75, 1], Layers: [
-				{Kind: 'mote', Count: 22, Life: 1.8, Speed: [0.05, 0.2], Spread: 0.8, Rise: 0.45, Drag: 0.6, Size: [0.025, 0.006], Wander: 0.3, Wind: 0.3, Color: [0.55, 0.8, 1], Blend: 'add', Base: 10}
-			]},
-			aura: {Lamp: {Color: '#ffd27a', Power: 0.14, Radius: 8, Flicker: 0.1}, Layers: [
-				{Kind: 'pool', Size: [2.4, 2.4], Color: [1, 0.66, 0.24], Blend: 'add'},
-				{Kind: 'sigil', Size: [1.7, 1.7], Color: [1, 0.72, 0.3], Hot: [1, 0.95, 0.8], Blend: 'add', Rings: [{Kind: 'double', Radius: 0.97, Speed: 0}, {Kind: 'ticks', Radius: 0.9, Count: 48, Speed: 0.05}, {Kind: 'arcs', Radius: 0.78, Count: 6, Speed: -0.09}]},
-				{Kind: 'beam', Life: 1, Speed: [2.6, 2.6], Size: [0.95, 0.95], Hollow: 0.82, Color: [1, 0.66, 0.24], Blend: 'add'},
-				{Kind: 'mote', Count: 70, Life: 2.4, Speed: [0.3, 0.9], Spread: 1.5, Rise: 0.9, Drag: 0.4, Size: [0.05, 0.015], Wander: 0.35, Color: [1, 0.78, 0.36], Blend: 'add', Base: 12}
-			]},
-			circle: {Lamp: {Color: '#7fc4ff', Power: 0.16, Radius: 9, Flicker: 0.06}, Layers: [
-				{Kind: 'pool', Size: [3.4, 3.4], Color: [0.3, 0.6, 1], Blend: 'add'},
-				{Kind: 'sigil', Size: [2.4, 2.4], Color: [0.3, 0.62, 1], Hot: [0.86, 0.96, 1], Blend: 'add'},
-				{Kind: 'beam', Life: 1, Speed: [1.1, 1.1], Size: [1.9, 1.9], Hollow: 0.96, Color: [0.3, 0.6, 1], Blend: 'add'},
-				{Kind: 'mote', Count: 50, Life: 2.2, Speed: [0.2, 0.7], Spread: 1.6, Rise: 0.7, Drag: 0.5, Size: [0.04, 0.012], Wander: 0.3, Color: [0.5, 0.78, 1], Blend: 'add', Base: 14}
-			]},
-			portal: {Lamp: {Color: '#a070ff', Power: 0.3, Radius: 12, Flicker: 0.14}, Heat: 0.6, Aim: [0, 0, 1], Stand: 1.85, Layers: [
-				{Kind: 'swirl', Size: [1.5, 1.5], Color: [0.55, 0.3, 1], Hot: [0.86, 0.72, 1], Blend: 'alpha'},
-				{Kind: 'sigil', Size: [1.72, 1.72], Color: [0.6, 0.36, 1], Hot: [0.92, 0.84, 1], Blend: 'add', Rings: [{Kind: 'double', Radius: 0.97, Speed: 0.02}, {Kind: 'runes', Radius: 0.9, Count: 22, Speed: -0.06}]},
-				{Kind: 'mote', Count: 60, Life: 1.8, Speed: [0.6, 1.6], Spread: 1.6, Drag: 1.2, Size: [0.05, 0.01], Wander: 0.4, Color: [0.72, 0.5, 1], Blend: 'add', Base: 9},
-				{Kind: 'spark', Count: 16, Life: 1.1, Speed: [1, 3], Spread: 1.2, Gravity: 3, Drag: 1, Size: [0.012, 0.004], Stretch: 0.03, Color: [0.8, 0.6, 1], Blend: 'add', Base: 9}
-			]},
-			shield: {Lamp: {Color: '#7ad8ff', Power: 0.12, Radius: 8, Flicker: 0.05}, Layers: [
-				{Kind: 'pool', Size: [2.3, 2.3], Color: [0.28, 0.72, 1], Blend: 'add'},
-				{Kind: 'sigil', Size: [1.55, 1.55], Color: [0.3, 0.8, 1], Hot: [0.86, 1, 1], Blend: 'add', Rings: [{Kind: 'double', Radius: 0.97, Speed: 0.03}, {Kind: 'runes', Radius: 0.88, Count: 18, Speed: -0.05}, {Kind: 'star', Radius: 0.7, Count: 6, Step: 2, Speed: 0.04}]},
-				{Kind: 'shell', Life: 1, Speed: [3, 3], Size: [1.5, 1.5], Color: [0.28, 0.72, 1], Hot: [0.86, 1, 1], Blend: 'add'},
-				{Kind: 'mote', Count: 36, Life: 2, Speed: [0.2, 0.5], Spread: 1.6, Rise: 0.5, Drag: 0.6, Size: [0.035, 0.01], Wander: 0.25, Color: [0.6, 0.9, 1], Blend: 'add', Base: 13}
-			]},
-			lightning: {Lamp: {Color: '#a8c8ff', Power: 0.6, Radius: 14, Flicker: 0.9}, Layers: [
-				{Kind: 'pool', Size: [1.8, 1.8], Color: [0.5, 0.68, 1], Blend: 'add'},
-				{Kind: 'bolt', Life: 1, Speed: [7, 7], Size: [0.09, 0.09], Reach: 0.1, Color: [0.5, 0.68, 1], Hot: [0.96, 0.98, 1], Blend: 'add', Seed: 1},
-				{Kind: 'bolt', Life: 1, Speed: [6, 6], Size: [0.06, 0.06], Reach: 0.14, Color: [0.5, 0.68, 1], Hot: [0.96, 0.98, 1], Blend: 'add', Seed: 2},
-				{Kind: 'bolt', Life: 1, Speed: [4.5, 4.5], Size: [0.04, 0.04], Reach: 0.2, Color: [0.62, 0.5, 1], Hot: [0.96, 0.98, 1], Blend: 'add', Seed: 3},
-				{Kind: 'spark', Count: 24, Life: 0.7, Speed: [2, 6], Spread: 1.3, Gravity: 8, Drag: 0.8, Bounce: 0.3, Size: [0.012, 0.004], Stretch: 0.03, Color: [0.7, 0.82, 1], Blend: 'add'},
-				{Kind: 'mote', Count: 14, Life: 0.5, Speed: [0.2, 0.8], Spread: 1.4, Drag: 1, Size: [0.14, 0.04], Color: [0.6, 0.76, 1], Blend: 'add'}
-			]},
-			healing: {Lamp: {Color: '#8affb0', Power: 0.14, Radius: 8, Flicker: 0.08}, Layers: [
-				{Kind: 'pool', Size: [2.2, 2.2], Color: [0.3, 1, 0.55], Blend: 'add'},
-				{Kind: 'sigil', Size: [1.6, 1.6], Color: [0.3, 1, 0.55], Hot: [0.9, 1, 0.9], Blend: 'add', Rings: [{Kind: 'line', Radius: 0.97, Speed: 0}, {Kind: 'dots', Radius: 0.9, Count: 24, Speed: 0.07}, {Kind: 'runes', Radius: 0.78, Count: 16, Speed: -0.05}, {Kind: 'star', Radius: 0.56, Count: 8, Step: 3, Speed: 0.05}]},
-				{Kind: 'beam', Life: 1, Speed: [3.2, 3.2], Size: [1, 1], Hollow: 0.35, Soft: 0.5, Color: [0.3, 1, 0.55], Blend: 'add'},
-				{Kind: 'mote', Count: 90, Life: 2.2, Speed: [0.3, 0.8], Spread: 1.4, Rise: 1.3, Drag: 0.5, Size: [0.06, 0.012], Wander: 0.3, Color: [0.5, 1, 0.66], Blend: 'add', Base: 10}
-			]},
-			frost: {Lamp: {Color: '#a8e4ff', Power: 0.12, Radius: 8, Flicker: 0.04}, Layers: [
-				{Kind: 'pool', Size: [2.5, 2.5], Color: [0.45, 0.85, 1], Blend: 'add'},
-				{Kind: 'sigil', Size: [1.9, 1.9], Color: [0.45, 0.85, 1], Hot: [0.92, 1, 1], Blend: 'add', Rings: [{Kind: 'double', Radius: 0.97, Speed: 0.01}, {Kind: 'star', Radius: 0.9, Count: 6, Step: 1, Speed: -0.015}, {Kind: 'star', Radius: 0.9, Count: 12, Step: 5, Speed: 0.02}, {Kind: 'ticks', Radius: 0.56, Count: 36, Speed: -0.03}]},
-				{Kind: 'smoke', Count: 30, Life: 3, Speed: [0.2, 0.6], Spread: 1.5, Rise: 0.08, Drag: 1, Size: [0.3, 1.4], Wander: 0.3, Color: [0.72, 0.88, 1], Opacity: 0.16, Blend: 'alpha', Base: 9},
-				{Kind: 'spark', Count: 44, Life: 1.6, Speed: [0.8, 2.2], Spread: 0.6, Gravity: 2.5, Drag: 0.9, Size: [0.016, 0.008], Stretch: 0.06, Color: [0.72, 0.92, 1], Hot: [0.92, 1, 1], Blend: 'add', Base: 8},
-				{Kind: 'mote', Count: 36, Life: 2.6, Speed: [0.1, 0.4], Spread: 1.5, Rise: 0.25, Drag: 0.4, Size: [0.03, 0.008], Wander: 0.3, Color: [0.8, 0.96, 1], Blend: 'add', Base: 12}
-			]},
-			poison: {Lamp: {Color: '#9cff5a', Power: 0.1, Radius: 7, Flicker: 0.2}, Layers: [
-				{Kind: 'pool', Size: [2.1, 2.1], Color: [0.5, 1, 0.2], Blend: 'add'},
-				{Kind: 'sigil', Size: [1.5, 1.5], Color: [0.5, 1, 0.2], Hot: [0.9, 1, 0.6], Blend: 'add', Rings: [{Kind: 'arcs', Radius: 0.96, Count: 9, Speed: 0.04}, {Kind: 'runes', Radius: 0.84, Count: 14, Speed: -0.03}]},
-				{Kind: 'smoke', Count: 44, Life: 3.6, Speed: [0.2, 0.7], Spread: 1.4, Rise: 0.3, Drag: 0.6, Size: [0.3, 1.5], Wander: 0.5, Color: [0.3, 0.55, 0.12], Opacity: 0.3, Blend: 'alpha', Base: 8},
-				{Kind: 'mote', Count: 46, Life: 1.8, Speed: [0.2, 0.7], Spread: 1.3, Rise: 0.8, Drag: 0.8, Size: [0.04, 0.09], Wander: 0.2, Color: [0.6, 1, 0.25], Blend: 'add', Base: 9}
-			]},
-			beam: {Lamp: {Color: '#ff8ae0', Power: 0.34, Radius: 12, Flicker: 0.12}, Aim: [0, 0, 1], Stand: 1.2, Heat: 0.5, Layers: [
-				{Kind: 'beam', Life: 1, Speed: [14, 14], Size: [0.3, 0.3], Hollow: 0, Color: [1, 0.3, 0.8], Hot: [1, 0.92, 1], Blend: 'add'},
-				{Kind: 'sigil', Size: [0.75, 0.75], Color: [1, 0.36, 0.8], Hot: [1, 0.9, 1], Blend: 'add', Rings: [{Kind: 'double', Radius: 0.97, Speed: 0.3}, {Kind: 'star', Radius: 0.88, Count: 5, Step: 2, Speed: -0.2}, {Kind: 'runes', Radius: 0.64, Count: 10, Speed: 0.2}]},
-				{Kind: 'mote', Count: 40, Life: 1, Speed: [3, 9], Spread: 0.16, Drag: 0.3, Size: [0.06, 0.015], Wander: 0.2, Color: [1, 0.5, 0.9], Blend: 'add'},
-				{Kind: 'spark', Count: 18, Life: 0.8, Speed: [3, 8], Spread: 0.5, Gravity: 4, Drag: 0.9, Size: [0.012, 0.004], Stretch: 0.03, Color: [1, 0.66, 0.9], Blend: 'add'}
-			]},
-			pillar: {Lamp: {Color: '#ffeec0', Power: 0.5, Radius: 14, Flicker: 0.04}, Layers: [
-				{Kind: 'pool', Size: [3.2, 3.2], Color: [1, 0.8, 0.45], Blend: 'add'},
-				{Kind: 'beam', Life: 1, Speed: [18, 18], Size: [0.9, 0.9], Hollow: 0, Soft: 1, Color: [1, 0.86, 0.5], Hot: [1, 0.98, 0.9], Blend: 'add'},
-				{Kind: 'beam', Life: 1, Speed: [18, 18], Size: [1.8, 1.8], Hollow: 0, Soft: 3, Color: [1, 0.8, 0.45], Hot: [1, 0.9, 0.7], Blend: 'add'},
-				{Kind: 'sigil', Size: [2.2, 2.2], Color: [1, 0.8, 0.4], Hot: [1, 0.98, 0.9], Blend: 'add', Rings: [{Kind: 'line', Radius: 0.96, Speed: 0}, {Kind: 'ticks', Radius: 0.9, Count: 60, Speed: 0.03}, {Kind: 'line', Radius: 0.5, Speed: 0}]},
-				{Kind: 'mote', Count: 80, Life: 3.2, Speed: [0.3, 1], Spread: 1.5, Rise: 2.4, Drag: 0.3, Size: [0.05, 0.012], Wander: 0.25, Color: [1, 0.9, 0.6], Blend: 'add', Base: 9}
-			]},
-			fireball: {Lamp: {Color: '#ff8c3c', Power: 0.5, Radius: 12, Flicker: 0.26}, Heat: 1, Once: true, Lasts: 2.6, Fly: 11, Then: 'explosion', Layers: [
-				{Kind: 'ball', Life: 3, Hold: true, Speed: [0.8, 0.8], Size: [0.8, 0.8], Color: fire, Blend: 'alpha'},
-				{Kind: 'mote', Count: 30, Life: 3, Hold: true, Speed: [0.4, 1.2], Spread: 1.6, Drag: 1, Size: [0.12, 0.03], Color: [1, 0.6, 0.2], Blend: 'add'},
-				{Kind: 'spark', Count: 30, Life: 3, Hold: true, Speed: [0.8, 2.4], Spread: 1.6, Gravity: 3, Drag: 1, Size: [0.012, 0.004], Stretch: 0.03, Color: [1, 0.6, 0.25], Blend: 'add'}
-			]},
-			teleport: {Lamp: {Color: '#8ad4ff', Power: 1.4, Radius: 16, Flicker: 0}, Heat: 1, Once: true, Lasts: 1.6, Layers: [
-				{Kind: 'wave', Life: 0.9, Size: [4, 4], Color: [0.4, 0.8, 1], Hot: [0.9, 1, 1], Blend: 'add'},
-				{Kind: 'beam', Life: 1.2, Speed: [8, 8], Size: [0.9, 0.9], Hollow: 0, Color: [0.4, 0.75, 1], Hot: [0.95, 1, 1], Blend: 'add'},
-				{Kind: 'sigil', Life: 1.5, Size: [2.2, 2.2], Color: [0.35, 0.75, 1], Hot: [0.9, 1, 1], Blend: 'add'},
-				{Kind: 'mote', Count: 90, Life: 1.3, Speed: [0.8, 3], Spread: 1.6, Rise: 2.4, Drag: 1.4, Size: [0.06, 0.012], Wander: 0.2, Color: [0.5, 0.82, 1], Blend: 'add', Base: 9},
-				{Kind: 'spark', Count: 40, Life: 1, Speed: [2, 7], Spread: 1.5, Gravity: 6, Drag: 1, Size: [0.012, 0.004], Stretch: 0.03, Color: [0.7, 0.9, 1], Blend: 'add'}
-			]},
-			explosion: {Lamp: {Color: '#ffa050', Power: 2, Radius: 26, Flicker: 0}, Heat: 2, Once: true, Lasts: 3.6, Layers: [
-				{Kind: 'ball', Life: 1.5, Speed: [4.2, 4.2], Size: [4.2, 4.2], Color: fire, Blend: 'alpha'},
-				{Kind: 'flame', Count: 80, Life: 0.9, Speed: [3, 13], Spread: 1.9, Rise: 2, Drag: 3.2, Size: [1.1, 2.4], Wander: 0.3, Color: fire, Blend: 'add'},
-				{Kind: 'smoke', Count: 46, Life: 3.4, Speed: [2, 9], Spread: 1.7, Rise: 0.9, Drag: 2, Size: [1, 5], Wander: 0.7, Color: [0.11, 0.1, 0.1], Opacity: 0.6, Blend: 'alpha', Start: 0.12},
-				{Kind: 'spark', Count: 90, Life: 2, Speed: [6, 24], Spread: 1.9, Gravity: 12, Drag: 0.9, Bounce: 0.3, Size: [0.03, 0.01], Stretch: 0.02, Color: [1, 0.7, 0.3], Blend: 'add'}
-			]}
-		};
+		/*
+		 * Its types: the effect graphs of the library (blueprints/effects, named ElemenxGraphics/effects/<type>), each made into
+		 * the data of a type that keeps its graph (Blueprint: what EffectGraph gives, and the Parameters of an effect tune);
+		 * one an Application gives of that name takes its place.
+		 */
+		Elemenx.Resources('Blueprints').forEach(function (name) {
+			var graph;
+
+			if (name.indexOf('ElemenxGraphics/effects/') !== 0) return;
+
+			graph = blueprints.Read(Elemenx.Resources('Blueprints', name));
+
+			types[name.substring('ElemenxGraphics/effects/'.length)] = blueprinted(graph);
+		});
 
 		/* A depth of nothing, for a picture that has none to read. */
 		function blank () {

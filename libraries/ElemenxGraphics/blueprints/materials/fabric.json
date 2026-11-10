@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "fabric",
+	"material": {
+		"Order": 20,
+		"Title": "Fabric",
+		"Group": "other",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat s = enx_ms(px, 0.004);\n\tfloat a = sin(q.x * 900.0);\n\tfloat b = sin(q.y * 900.0);\n\tc *= 1.0 + (step(0.0, a * b) - 0.5) * 0.15 * s + (enx_mf(q * 5.0, 3) - 0.5) * 0.1 + (enx_mn(vec2(q.x * 40.0, q.y * 3.0)) - 0.5) * 0.12 * enx_ms(px, 0.05);\n\th += abs(a * b) * 0.0003 * s;\n\tr = 0.95;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Fabric: a weave of threads."
+		}
+	],
+	"links": []
+}

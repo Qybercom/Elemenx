@@ -1,5 +1,7 @@
 /*
  * The ground of a game, continuous: heights of noise anywhere (no cells), its meshes in chunks, and ways over it.
+ * - FlatOf(options): the numbers of a flat map told or its defaults, {Seed, Size, Height, Water, Scale, Ridges}: what
+ *   Flat, its climate, LibraryRelief and the blocks of SceneWorld start from (Regression: each told them again).
  * - Flat(options) returns a field of a flat map: options Size (of the map, 1000), Height (of its highest hills, 60),
  *   Water (the level of the sea, 0 to 1, 0.35), Scale (the size of its hills, 180), Ridges (0 to 1: how much of it is
  *   folded into mountains, 0.4), Rock and Snow (the parts of its Height where rock and snow begin, 0.45 and 0.75; false:
@@ -67,7 +69,7 @@
 Elemenx.Service('SceneTerrainGenerator', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['Flat(options)', 'Border(options)', 'Passages(carve, height)', 'PassageRoute(graph, from, to)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)']
+		Methods: ['FlatOf(options)', 'Flat(options)', 'Border(options)', 'Passages(carve, height)', 'PassageRoute(graph, from, to)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['terrain']}},
@@ -75,6 +77,21 @@ Elemenx.Service('SceneTerrainGenerator', {
 	/* Its ground is a kind of the Seeded Service: saved as its recipe, or baked as its heights. */
 	$OnCreate: function () {
 		var self = this;
+
+		/*
+		 * Its tables: data of its resources (resources/terrain), read as it is made, so its workers carry them; the sizes of
+		 * the buildings of a settlement those of the classes of buildings (resources/buildings: Width, Depth).
+		 */
+		Object.assign(this.GroundMaterials, Elemenx.Resources('Data', 'ElemenxGraphics/terrain/ground-materials') || {});
+		Object.assign(this.LookMaterials, Elemenx.Resources('Data', 'ElemenxGraphics/terrain/look-materials') || {});
+		Object.assign(this.SettlementKinds, Elemenx.Resources('Data', 'ElemenxGraphics/terrain/settlement-kinds') || {});
+		Object.assign(this.SettlementDistricts, Elemenx.Resources('Data', 'ElemenxGraphics/terrain/settlement-districts') || {});
+
+		Elemenx.Resources('Data').forEach(function (name) {
+			var building = name.indexOf('ElemenxGraphics/buildings/') === 0 ? Elemenx.Resources('Data', name) : null;
+			if (building)
+				self.SettlementSizes[name.substring('ElemenxGraphics/buildings/'.length)] = [building.Width, building.Depth];
+		});
 
 		this.$Service('Seeded').Define('terrain', {
 			Version: 1,
@@ -154,11 +171,28 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * to the top: by Lapse), a noise round it (by Spread); the moisture a noise of its own, five times wider than its hills. raw is its
 	 * height, 0 to 1. LibraryRelief makes the very same of blocks.
 	 */
+	/* The radius of a tunnel or a passage carved with none told, in metres. */
+	TunnelRadius: 2.5,
+
+	FlatOf: function (options) {
+		var given = options || {};
+
+		return {
+			Seed: given.Seed === undefined ? 'ground' : given.Seed,
+			Size: Number(given.Size) || 1000,
+			Height: given.Height === undefined ? 60 : Number(given.Height),
+			Water: given.Water === undefined ? 0.35 : Number(given.Water),
+			Scale: Number(given.Scale) || 180,
+			Ridges: given.Ridges === undefined ? 0.4 : Number(given.Ridges)
+		};
+	},
+
 	Climate: function (settings) {
 		var noise = this.$Service('Noise');
-		var seed = settings.Seed === undefined ? 'ground' : String(settings.Seed);
-		var scale = Number(settings.Scale) || 180;
-		var water = settings.Water === undefined ? 0.35 : Number(settings.Water);
+		var flat = this.FlatOf(settings);
+		var seed = String(flat.Seed);
+		var scale = flat.Scale;
+		var water = flat.Water;
 		var numbers = this.ClimateOf(settings);
 		var wet = null;
 		var warm = null;
@@ -187,146 +221,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 	LibraryRelief: function (options) {
 		var given = options || {};
 		var climate = this.ClimateOf(given);
-		var seed = given.Seed === undefined ? 'ground' : given.Seed;
+		var flat = this.FlatOf(given);
 		var blueprints = this.$Service('Blueprints');
-		var graph = blueprints.Create('generator', {name: 'Relief', parameters: [
-			{key: 'Scale', type: 'float', value: Number(given.Scale) || 180},
-			{key: 'Ridges', type: 'float', value: given.Ridges === undefined ? 0.4 : Number(given.Ridges)},
-			{key: 'Water', type: 'float', value: given.Water === undefined ? 0.35 : Number(given.Water)},
-			{key: 'Height', type: 'float', value: given.Height === undefined ? 60 : Number(given.Height)}
-		]});
 
-		function add (type, properties) {
-			return blueprints.Add(graph, type, {x: 0, y: 0, properties: properties || {}});
-		}
-
-		function link (from, key, to, input) {
-			blueprints.Link(graph, [from.id, key], [to.id, input]);
-		}
-
-		/* A point of a noise: [X / divide * times + plusX, y, Z / divide * times + plusZ]. */
-		function point (x, z, divide, times, plus, y) {
-			var size = add('Multiply');
-			var u = add('Divide');
-			var w = add('Divide');
-			var su = add('Multiply', {});
-			var sw = add('Multiply', {});
-			var pu = add('Add');
-			var pw = add('Add');
-			var k = add('Number', {Value: times});
-			var d = add('Number', {Value: divide});
-			var ax = add('Number', {Value: plus[0]});
-			var az = add('Number', {Value: plus[1]});
-			var yy = add('Number', {Value: y});
-			var at = add('Combine');
-
-			link(scale, 'Value', size, 'A');
-			link(d, 'Value', size, 'B');
-			link(x, 'Value', u, 'A');
-			link(size, 'Out', u, 'B');
-			link(z, 'Value', w, 'A');
-			link(size, 'Out', w, 'B');
-			link(u, 'Out', su, 'A');
-			link(k, 'Value', su, 'B');
-			link(w, 'Out', sw, 'A');
-			link(k, 'Value', sw, 'B');
-			link(su, 'Out', pu, 'A');
-			link(ax, 'Value', pu, 'B');
-			link(sw, 'Out', pw, 'A');
-			link(az, 'Value', pw, 'B');
-			link(pu, 'Out', at, 'X');
-			link(yy, 'Value', at, 'Y');
-			link(pw, 'Out', at, 'Z');
-
-			return at;
-		}
-
-		function noise (spec, at) {
-			var made = add('NoiseSpec', spec);
-
-			link(at, 'XYZ', made, 'Position');
-
-			return made;
-		}
-
-		var x = add('Input', {Name: 'X'});
-		var z = add('Input', {Name: 'Z'});
-		var scale = add('Parameter', {Key: 'Scale'});
-		var ridges = add('Parameter', {Key: 'Ridges'});
-		var water = add('Parameter', {Key: 'Water'});
-		var soft = noise({Type: 'value', Seed: seed, Fractal: 'fbm', Octaves: 6, Gain: 0.5}, point(x, z, 1, 1, [0, 0], 0.37));
-		var folded = noise({Type: 'value', Seed: seed, Fractal: 'ridged', Octaves: 5, Gain: 0.5}, point(x, z, 1, 0.7, [11, -5], 1.3));
-		var wide = noise({Type: 'value', Seed: seed, Fractal: 'fbm', Octaves: 3, Gain: 0.5}, point(x, z, 1, 0.25, [3, 0], 2.1));
-		var steep = add('Smoothstep');
-		var low = add('Number', {Value: 0.45});
-		var high = add('Number', {Value: 0.75});
-		var mountains = add('Multiply');
-		var rest = add('OneMinus');
-		var softPart = add('Multiply');
-		var foldedPart = add('Multiply');
-		var mixed = add('Add');
-		var height = add('Result', {Key: 'Height'});
-		var wet = noise({Type: 'value', Seed: String(seed) + '-moisture', Fractal: 'fbm', Octaves: 4, Gain: 0.5}, point(x, z, 5, 1, [0, 0], 5.5));
-		var warm = noise({Type: 'value', Seed: String(seed) + '-warmth', Fractal: 'fbm', Octaves: 3, Gain: 0.5}, point(x, z, 4, 1, [0, 0], 7.5));
-		var one = add('Number', {Value: 1});
-		var coldness = add('Smoothstep');
-		var lapse = add('Multiply');
-		var lapsed = add('Subtract');
-		var half = add('Number', {Value: 0.5});
-		var shift = add('Subtract');
-		var spread = add('Multiply');
-		var warmth = add('Add');
-		var warmSaturate = add('Saturate');
-		var wetSaturate = add('Saturate');
-		var moisture = add('Result', {Key: 'Moisture'});
-		var temperature = add('Result', {Key: 'Temperature'});
-		var factor = add('Number', {Value: climate.Lapse});
-		var width = add('Number', {Value: climate.Spread});
-		var base = add('Number', {Value: climate.Warmth});
-		var stretch = add('Number', {Value: climate.Stretch});
-		var wetShift = add('Subtract');
-		var wetSpread = add('Multiply');
-		var wetSum = add('Add');
-
-		link(low, 'Value', steep, 'Low');
-		link(high, 'Value', steep, 'High');
-		link(wide, 'Value', steep, 'X');
-		link(steep, 'Out', mountains, 'A');
-		link(ridges, 'Value', mountains, 'B');
-		link(mountains, 'Out', rest, 'X');
-		link(soft, 'Value', softPart, 'A');
-		link(rest, 'Out', softPart, 'B');
-		link(folded, 'Value', foldedPart, 'A');
-		link(mountains, 'Out', foldedPart, 'B');
-		link(softPart, 'Out', mixed, 'A');
-		link(foldedPart, 'Out', mixed, 'B');
-		link(mixed, 'Out', height, 'Value');
-
-		link(wet, 'Value', wetShift, 'A');
-		link(half, 'Value', wetShift, 'B');
-		link(wetShift, 'Out', wetSpread, 'A');
-		link(stretch, 'Value', wetSpread, 'B');
-		link(half, 'Value', wetSum, 'A');
-		link(wetSpread, 'Out', wetSum, 'B');
-		link(wetSum, 'Out', wetSaturate, 'X');
-		link(wetSaturate, 'Out', moisture, 'Value');
-		link(water, 'Value', coldness, 'Low');
-		link(one, 'Value', coldness, 'High');
-		link(mixed, 'Out', coldness, 'X');
-		link(coldness, 'Out', lapse, 'A');
-		link(factor, 'Value', lapse, 'B');
-		link(base, 'Value', lapsed, 'A');
-		link(lapse, 'Out', lapsed, 'B');
-		link(warm, 'Value', shift, 'A');
-		link(half, 'Value', shift, 'B');
-		link(shift, 'Out', spread, 'A');
-		link(width, 'Value', spread, 'B');
-		link(lapsed, 'Out', warmth, 'A');
-		link(spread, 'Out', warmth, 'B');
-		link(warmth, 'Out', warmSaturate, 'X');
-		link(warmSaturate, 'Out', temperature, 'Value');
-
-		return graph;
+		return blueprints.Fill(blueprints.Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/relief')), {Seed: flat.Seed, Scale: flat.Scale, Ridges: flat.Ridges, Water: flat.Water, Height: flat.Height, Lapse: climate.Lapse, Spread: climate.Spread, Warmth: climate.Warmth, Stretch: climate.Stretch});
 	},
 
 	/*
@@ -499,12 +397,13 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var self = this;
 		var settings = options || {};
 		var math = this.$Service('Math');
-		var noise = math.Noise(settings.Seed === undefined ? 'ground' : settings.Seed);
-		var size = Number(settings.Size) || 1000;
-		var height = settings.Height === undefined ? 60 : Number(settings.Height);
-		var water = settings.Water === undefined ? 0.35 : Number(settings.Water);
-		var scale = Number(settings.Scale) || 180;
-		var ridges = settings.Ridges === undefined ? 0.4 : Number(settings.Ridges);
+		var flat = this.FlatOf(settings);
+		var noise = math.Noise(flat.Seed);
+		var size = flat.Size;
+		var height = flat.Height;
+		var water = flat.Water;
+		var scale = flat.Scale;
+		var ridges = flat.Ridges;
 		/* Its hills of a noise of its own (a spec of the Noise Service), in metres; else those of Scale and Ridges. */
 		var own = settings.Noise ? this.$Service('Noise').Make(settings.Noise) : null;
 		/* Of a graph (Relief): its heights, its moisture and its warmth at each point; else the climate of the hills of noise. */
@@ -1304,10 +1203,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	/* What each part of a palette is made of, unless its Materials say otherwise (SceneMaterials). */
-	GroundMaterials: {Sand: 'sand', Deep: 'sand', Low: 'lawn', High: 'soil', Rock: 'rock', Snow: 'snow', Road: 'dirt'},
+	GroundMaterials: {},
 
 	/* What each item of a sketch lays on the ground, unless its Material says otherwise. */
-	LookMaterials: {road: 'dirt', street: 'paving', square: 'paving', river: 'gravel', beach: 'sand', swamp: 'clay', floodplain: 'soil', canyon: 'rock', cliff: 'rock', crater: 'rock', dunes: 'sand'},
+	LookMaterials: {},
 
 	/*
 	 * The materials a field is made of: those of its palettes (its own, of its lands, of the biomes of its sketch) and of
@@ -1426,7 +1325,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 					return [Number(point[0]), point[2] === undefined || point[2] === null ? ground(point[0], point[1]) - number(carve.Depth, 0) : Number(point[2]), Number(point[1])];
 				});
 				one.Points = points;
-				one.Radius = number(carve.Radius, 2.5);
+				one.Radius = number(carve.Radius, self.TunnelRadius);
 				one.Flat = Math.max(0, Math.min(1, number(carve.Flat, 0.5)));
 				one.Crust = carve.Crust === undefined || carve.Crust === null || carve.Crust === '' ? -1 : number(carve.Crust, -1);
 				/* Of a Width: a box round its axis (Height, its corners round by Corner), not a round bore. */
@@ -1817,7 +1716,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 */
 	Passages: function (carve, height) {
 		var given = carve || {};
-		var radius = Number(given.Radius) > 0 ? Number(given.Radius) : 2.5;
+		var radius = Number(given.Radius) > 0 ? Number(given.Radius) : this.TunnelRadius;
 		var flat = given.Flat === undefined || given.Flat === null || given.Flat === '' ? 0.5 : Math.max(0, Math.min(1, Number(given.Flat)));
 		var depth = given.Depth === undefined || given.Depth === null || given.Depth === '' ? 6 : Number(given.Depth);
 		var ground = typeof height === 'function' ? height : function () {
@@ -2963,7 +2862,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'PatchPicture', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf', 'HighwaysOf', 'TownsOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Passages', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'GroundMaterials', 'LookMaterials', 'MaterialsOf', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan']});
+		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: true, Noise: true, Random: true, Blueprints: true, ScenePlanet: true, SceneTerrainGenerator: true});
 	},
 
 	/*
@@ -3444,31 +3343,18 @@ Elemenx.Service('SceneTerrainGenerator', {
 		trigger: 'area', triggerpoint: 'circle', triggerline: 'line', zone: 'area', collider: 'area'
 	},
 
-	/* The size of a building of each class, its Width and Depth in metres: what a settlement lays out, and Buildings makes. */
-	SettlementSizes: {shack: [3.5, 3], cabin: [5, 4], cottage: [7, 6], house: [9, 8], villa: [16, 12], townhouse: [6, 10], shop: [10, 10], warehouse: [30, 20], factory: [40, 28], apartments: [24, 14], office: [30, 24], tower: [26, 26], skyscraper: [34, 34], business: [40, 32], school: [40, 30], church: [12, 32], station: [46, 28], fuel: [22, 20], hangar: [30, 40], garage: [6, 7], barn: [14, 22], watertower: [9, 9], parking: [40, 32]},
+	/*
+	 * The size of a building of each class, its Width and Depth in metres: what a settlement lays out, and Buildings makes
+	 * (those of the classes of buildings of the resources, as SceneBuildingGenerator.Defaults: Regression: a church, a
+	 * station and a car park were laid out larger). Made as the Service is (its $OnCreate).
+	 */
+	SettlementSizes: {},
 
 	/* What each kind of settlement is: the step of its streets, their width, a grid of them or a main one, its buildings. */
-	SettlementKinds: {
-		hamlet: {Block: 50, Street: 5, Grid: false, Classes: {shack: 2, cabin: 3, cottage: 2}},
-		village: {Block: 45, Street: 6, Grid: false, Classes: {cottage: 4, house: 3, cabin: 1, shop: 1, barn: 0.6, garage: 0.4, church: 0.1}},
-		town: {Block: 60, Street: 8, Grid: true, Classes: {townhouse: 4, house: 2, shop: 2, apartments: 1, school: 0.2, church: 0.15, fuel: 0.2, garage: 0.3}},
-		city: {Block: 80, Street: 12, Grid: true, Classes: {apartments: 4, office: 3, shop: 1, townhouse: 1, school: 0.2, parking: 0.3, fuel: 0.15, church: 0.1}, Core: {tower: 2, skyscraper: 1, business: 1}},
-		fort: {Block: 55, Street: 7, Grid: true, Walls: true, Classes: {house: 3, townhouse: 2, shop: 1}}
-	},
+	SettlementKinds: {},
 
 	/* The buildings of each kind of district. */
-	SettlementDistricts: {
-		residential: {house: 3, townhouse: 2, cottage: 1},
-		market: {shop: 4, townhouse: 1},
-		craft: {house: 2, warehouse: 1, shop: 1},
-		noble: {villa: 4},
-		business: {office: 3, tower: 2, business: 1, skyscraper: 1},
-		industry: {warehouse: 3, factory: 2, hangar: 1, watertower: 0.3},
-		civic: {school: 2, church: 1, station: 1},
-		service: {fuel: 2, garage: 2, parking: 1},
-		farm: {barn: 3, watertower: 0.5, cottage: 1},
-		fields: {}
-	},
+	SettlementDistricts: {},
 
 	/*
 	 * The plan of a settlement of a sketch: its streets (those drawn in it, else its own: a grid along its longest side, or a main
@@ -3483,22 +3369,11 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var kind = this.SettlementKinds[item.Kind] || this.SettlementKinds.village;
 		var points = item.Points;
 		var density = item.Density === undefined ? 0.85 : Number(item.Density);
-		var seed = 0;
-		var text = String(item.Seed === undefined ? item.ID : item.Seed);
+		var random = this.$Service('Random').Sequence(String(item.Seed === undefined ? item.ID : item.Seed));
 		var plan = {ID: item.ID, Kind: item.Kind || 'village', Streets: [], Lots: [], Walls: [], Gates: [], Towers: []};
 		var center = [0, 0];
 		var longest = 0;
 		var angle = 0;
-		var i;
-
-		for (i = 0; i < text.length; i++)
-			seed = (seed * 31 + text.charCodeAt(i)) >>> 0;
-
-		function random () {
-			seed = (seed * 1664525 + 1013904223) >>> 0;
-
-			return seed / 4294967296;
-		}
 
 		function inside (polygon, x, z) {
 			var within = false;
@@ -4069,6 +3944,9 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	/* What a worker of the ground carries: see Workers. */
+	/* What a worker carries of this Service besides its methods: its tables. */
+	Carried: ['TunnelRadius', 'GroundMaterials', 'LookMaterials', 'SketchTypes', 'SketchPlaced', 'SettlementSizes', 'SettlementKinds', 'SettlementDistricts'],
+
 	Source: function (names) {
 		return this.$Service('Workers').Source(this, names);
 	},

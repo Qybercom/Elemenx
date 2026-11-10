@@ -1,0 +1,536 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "porch",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Class"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Depth"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Floors"
+				}
+			]
+		},
+		{
+			"id": "input5",
+			"type": "Input",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "FloorHeight"
+				}
+			]
+		},
+		{
+			"id": "input6",
+			"type": "Input",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "input7",
+			"type": "Input",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Wall"
+				}
+			]
+		},
+		{
+			"id": "input8",
+			"type": "Input",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "WallMaterial"
+				}
+			]
+		},
+		{
+			"id": "input9",
+			"type": "Input",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofMaterial"
+				}
+			]
+		},
+		{
+			"id": "input10",
+			"type": "Input",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofColor"
+				}
+			]
+		},
+		{
+			"id": "input11",
+			"type": "Input",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Cornice"
+				}
+			]
+		},
+		{
+			"id": "input12",
+			"type": "Input",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Porch"
+				}
+			]
+		},
+		{
+			"id": "input13",
+			"type": "Input",
+			"x": 700,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Annex"
+				}
+			]
+		},
+		{
+			"id": "input14",
+			"type": "Input",
+			"x": 920,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Special"
+				}
+			]
+		},
+		{
+			"id": "input15",
+			"type": "Input",
+			"x": 1140,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "formula16",
+			"type": "Formula",
+			"x": 1360,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Wall * 0.78"
+				}
+			]
+		},
+		{
+			"id": "box17",
+			"type": "Box",
+			"x": 1580,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "formula18",
+			"type": "Formula",
+			"x": 1800,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(min(4, Width * 0.5), 0.15, 1.8)"
+				}
+			]
+		},
+		{
+			"id": "formula19",
+			"type": "Formula",
+			"x": 2020,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(0, 0.07, Depth / 2 + 0.9)"
+				}
+			]
+		},
+		{
+			"id": "box20",
+			"type": "Box",
+			"x": 40,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "formula21",
+			"type": "Formula",
+			"x": 260,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(min(4.2, Width * 0.52), 0.12, 2)"
+				}
+			]
+		},
+		{
+			"id": "formula22",
+			"type": "Formula",
+			"x": 480,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(0, 2.6, Depth / 2 + 1)"
+				}
+			]
+		},
+		{
+			"id": "box23",
+			"type": "Box",
+			"x": 700,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "formula24",
+			"type": "Formula",
+			"x": 920,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.15, 2.5, 0.15]"
+				}
+			]
+		},
+		{
+			"id": "formula25",
+			"type": "Formula",
+			"x": 1140,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(-min(1.9, Width * 0.24), 1.3, Depth / 2 + 1.8)"
+				}
+			]
+		},
+		{
+			"id": "formula26",
+			"type": "Formula",
+			"x": 1360,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.9, 0.9, 0.88]"
+				}
+			]
+		},
+		{
+			"id": "box27",
+			"type": "Box",
+			"x": 1580,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "formula28",
+			"type": "Formula",
+			"x": 1800,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.15, 2.5, 0.15]"
+				}
+			]
+		},
+		{
+			"id": "formula29",
+			"type": "Formula",
+			"x": 2020,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(min(1.9, Width * 0.24), 1.3, Depth / 2 + 1.8)"
+				}
+			]
+		},
+		{
+			"id": "formula30",
+			"type": "Formula",
+			"x": 40,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.9, 0.9, 0.88]"
+				}
+			]
+		},
+		{
+			"id": "join31",
+			"type": "Join",
+			"x": 260,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 4
+				}
+			]
+		},
+		{
+			"id": "result32",
+			"type": "Result",
+			"x": 480,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input7-out-Value",
+			"p2": "formula16-in-Wall",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input2-out-Value",
+			"p2": "formula18-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "formula18-out-Value",
+			"p2": "box17-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "input3-out-Value",
+			"p2": "formula19-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "formula19-out-Value",
+			"p2": "box17-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "formula16-out-Value",
+			"p2": "box17-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "input2-out-Value",
+			"p2": "formula21-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "formula21-out-Value",
+			"p2": "box20-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "input3-out-Value",
+			"p2": "formula22-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "formula22-out-Value",
+			"p2": "box20-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "input10-out-Value",
+			"p2": "box20-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "input9-out-Value",
+			"p2": "box20-in-Material",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "formula24-out-Value",
+			"p2": "box23-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "input2-out-Value",
+			"p2": "formula25-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l15",
+			"p1": "input3-out-Value",
+			"p2": "formula25-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l16",
+			"p1": "formula25-out-Value",
+			"p2": "box23-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l17",
+			"p1": "formula26-out-Value",
+			"p2": "box23-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l18",
+			"p1": "formula28-out-Value",
+			"p2": "box27-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l19",
+			"p1": "input2-out-Value",
+			"p2": "formula29-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l20",
+			"p1": "input3-out-Value",
+			"p2": "formula29-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l21",
+			"p1": "formula29-out-Value",
+			"p2": "box27-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l22",
+			"p1": "formula30-out-Value",
+			"p2": "box27-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l23",
+			"p1": "box17-out-Parts",
+			"p2": "join31-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "l24",
+			"p1": "box20-out-Parts",
+			"p2": "join31-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "l25",
+			"p1": "box23-out-Parts",
+			"p2": "join31-in-Parts3",
+			"kind": "value"
+		},
+		{
+			"id": "l26",
+			"p1": "box27-out-Parts",
+			"p2": "join31-in-Parts4",
+			"kind": "value"
+		},
+		{
+			"id": "l27",
+			"p1": "join31-out-Parts",
+			"p2": "result32-in-Value",
+			"kind": "value"
+		}
+	]
+}

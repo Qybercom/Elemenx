@@ -1,0 +1,296 @@
+{
+	"version": 1,
+	"type": "effect",
+	"name": "backblast",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "layer1",
+			"type": "Layer",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Kind",
+					"value": "flame"
+				},
+				{
+					"key": "Blend",
+					"value": "add"
+				},
+				{
+					"key": "Hold",
+					"value": false
+				},
+				{
+					"key": "Rings",
+					"value": null
+				},
+				{
+					"key": "Speed",
+					"value": [
+						4,
+						10
+					]
+				},
+				{
+					"key": "Size",
+					"value": [
+						0.2,
+						0.7
+					]
+				},
+				{
+					"key": "Color",
+					"value": [
+						[
+							1,
+							0.96,
+							0.7
+						],
+						[
+							1,
+							0.62,
+							0.18
+						],
+						[
+							0.5,
+							0.16,
+							0.04
+						]
+					]
+				},
+				{
+					"key": "Hot"
+				},
+				{
+					"key": "Count",
+					"value": 16
+				},
+				{
+					"key": "Life",
+					"value": 0.12
+				},
+				{
+					"key": "Spread",
+					"value": 0.5
+				},
+				{
+					"key": "Gravity"
+				},
+				{
+					"key": "Rise"
+				},
+				{
+					"key": "Drag",
+					"value": 4
+				},
+				{
+					"key": "Bounce"
+				},
+				{
+					"key": "Stretch"
+				},
+				{
+					"key": "Wander"
+				},
+				{
+					"key": "Wind"
+				},
+				{
+					"key": "Opacity"
+				},
+				{
+					"key": "Start"
+				},
+				{
+					"key": "Base"
+				},
+				{
+					"key": "Hollow"
+				},
+				{
+					"key": "Soft"
+				},
+				{
+					"key": "Reach"
+				},
+				{
+					"key": "Seed"
+				}
+			]
+		},
+		{
+			"id": "layer2",
+			"type": "Layer",
+			"x": 300,
+			"y": 100,
+			"properties": [
+				{
+					"key": "Kind",
+					"value": "smoke"
+				},
+				{
+					"key": "Blend",
+					"value": "alpha"
+				},
+				{
+					"key": "Hold",
+					"value": false
+				},
+				{
+					"key": "Rings",
+					"value": null
+				},
+				{
+					"key": "Speed",
+					"value": [
+						1,
+						4
+					]
+				},
+				{
+					"key": "Size",
+					"value": [
+						0.3,
+						1.8
+					]
+				},
+				{
+					"key": "Color",
+					"value": [
+						0.62,
+						0.62,
+						0.62
+					]
+				},
+				{
+					"key": "Hot"
+				},
+				{
+					"key": "Count",
+					"value": 18
+				},
+				{
+					"key": "Life",
+					"value": 2
+				},
+				{
+					"key": "Spread",
+					"value": 0.9
+				},
+				{
+					"key": "Gravity"
+				},
+				{
+					"key": "Rise",
+					"value": 0.4
+				},
+				{
+					"key": "Drag",
+					"value": 1.6
+				},
+				{
+					"key": "Bounce"
+				},
+				{
+					"key": "Stretch"
+				},
+				{
+					"key": "Wander",
+					"value": 0.4
+				},
+				{
+					"key": "Wind"
+				},
+				{
+					"key": "Opacity",
+					"value": 0.25
+				},
+				{
+					"key": "Start"
+				},
+				{
+					"key": "Base"
+				},
+				{
+					"key": "Hollow"
+				},
+				{
+					"key": "Soft"
+				},
+				{
+					"key": "Reach"
+				},
+				{
+					"key": "Seed"
+				}
+			]
+		},
+		{
+			"id": "effect",
+			"type": "Effect",
+			"x": 560,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Once",
+					"value": true
+				},
+				{
+					"key": "Then",
+					"value": ""
+				},
+				{
+					"key": "Heat"
+				},
+				{
+					"key": "Stand"
+				},
+				{
+					"key": "Lasts",
+					"value": 0.2
+				},
+				{
+					"key": "Fly"
+				},
+				{
+					"key": "Aim"
+				},
+				{
+					"key": "Glow"
+				},
+				{
+					"key": "LampColor",
+					"value": "#ffb060"
+				},
+				{
+					"key": "LampPower",
+					"value": 1
+				},
+				{
+					"key": "LampRadius",
+					"value": 10
+				},
+				{
+					"key": "LampFlicker",
+					"value": 0
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "flowprint-link-mw9qbwzc2d",
+			"p1": "layer1-out-Layers",
+			"p2": "layer2-in-Under",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9qbwzc2e",
+			"p1": "layer2-out-Layers",
+			"p2": "effect-in-Layers",
+			"kind": "value"
+		}
+	]
+}

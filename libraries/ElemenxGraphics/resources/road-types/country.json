@@ -1,0 +1,36 @@
+{
+	"Order": 3,
+	"Title": "Country road",
+	"Group": "road",
+	"Speed": 70,
+	"Strips": [
+		{
+			"Kind": "verge",
+			"Width": 0.8,
+			"Surface": "grass",
+			"Height": 0
+		},
+		{
+			"Kind": "lane",
+			"Width": 2.9,
+			"Surface": "asphalt",
+			"Way": -1,
+			"Left": "none",
+			"Right": "none"
+		},
+		{
+			"Kind": "lane",
+			"Width": 2.9,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "none",
+			"Right": "none"
+		},
+		{
+			"Kind": "verge",
+			"Width": 0.8,
+			"Surface": "grass",
+			"Height": 0
+		}
+	]
+}

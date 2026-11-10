@@ -1,0 +1,179 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "parapet",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Index"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Depth"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Y"
+				}
+			]
+		},
+		{
+			"id": "box5",
+			"type": "Box",
+			"x": 1140,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "formula6",
+			"type": "Formula",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index < 2 ? vec3(Width, 0.9, 0.2) : vec3(0.2, 0.9, Depth)"
+				}
+			]
+		},
+		{
+			"id": "formula7",
+			"type": "Formula",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index == 0 ? vec3(0, Y + 0.75, Depth / 2) : Index == 1 ? vec3(0, Y + 0.75, -Depth / 2) : Index == 2 ? vec3(Width / 2, Y + 0.75, 0) : vec3(-Width / 2, Y + 0.75, 0)"
+				}
+			]
+		},
+		{
+			"id": "formula8",
+			"type": "Formula",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.66, 0.66, 0.64]"
+				}
+			]
+		},
+		{
+			"id": "result9",
+			"type": "Result",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input1-out-Value",
+			"p2": "formula6-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input2-out-Value",
+			"p2": "formula6-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input3-out-Value",
+			"p2": "formula6-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "formula6-out-Value",
+			"p2": "box5-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "input1-out-Value",
+			"p2": "formula7-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "input4-out-Value",
+			"p2": "formula7-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "input3-out-Value",
+			"p2": "formula7-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "input2-out-Value",
+			"p2": "formula7-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "formula7-out-Value",
+			"p2": "box5-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "formula8-out-Value",
+			"p2": "box5-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "box5-out-Parts",
+			"p2": "result9-in-Value",
+			"kind": "value"
+		}
+	]
+}

@@ -1,0 +1,13 @@
+{
+	"road": "dirt",
+	"street": "paving",
+	"square": "paving",
+	"river": "gravel",
+	"beach": "sand",
+	"swamp": "clay",
+	"floodplain": "soil",
+	"canyon": "rock",
+	"cliff": "rock",
+	"crater": "rock",
+	"dunes": "sand"
+}

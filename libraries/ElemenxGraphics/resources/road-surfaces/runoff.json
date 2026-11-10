@@ -1,0 +1,12 @@
+{
+	"Order": 9,
+	"Color": [
+		0.32,
+		0.32,
+		0.33
+	],
+	"Rough": 0.85,
+	"Grip": 0.95,
+	"Drag": 0.02,
+	"Material": "terrazzo"
+}

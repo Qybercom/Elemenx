@@ -1,0 +1,80 @@
+{
+	"Order": 1,
+	"Title": "Highway",
+	"Group": "road",
+	"Speed": 110,
+	"Strips": [
+		{
+			"Kind": "verge",
+			"Width": 1.5,
+			"Surface": "grass",
+			"Height": 0
+		},
+		{
+			"Kind": "shoulder",
+			"Width": 2,
+			"Surface": "asphalt",
+			"Height": 0,
+			"Right": "solid"
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.6,
+			"Surface": "asphalt",
+			"Way": -1,
+			"Left": "none",
+			"Right": "dashed"
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.6,
+			"Surface": "asphalt",
+			"Way": -1,
+			"Left": "none",
+			"Right": "solid"
+		},
+		{
+			"Kind": "median",
+			"Width": 4,
+			"Surface": "grass",
+			"Height": 0.1
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.6,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "solid",
+			"Right": "dashed"
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.6,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "none",
+			"Right": "solid"
+		},
+		{
+			"Kind": "shoulder",
+			"Width": 2,
+			"Surface": "asphalt",
+			"Height": 0
+		},
+		{
+			"Kind": "verge",
+			"Width": 1.5,
+			"Surface": "grass",
+			"Height": 0
+		}
+	],
+	"Along": [
+		{
+			"Type": "row",
+			"Side": "both",
+			"Gap": 0.8,
+			"Shapes": "roadlamp",
+			"Spacing": 60
+		}
+	]
+}

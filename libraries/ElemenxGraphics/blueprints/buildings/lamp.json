@@ -1,0 +1,143 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "lamp",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Index"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Depth"
+				}
+			]
+		},
+		{
+			"id": "box4",
+			"type": "Box",
+			"x": 920,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "formula5",
+			"type": "Formula",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.16, 0.3, 0.16]"
+				}
+			]
+		},
+		{
+			"id": "formula6",
+			"type": "Formula",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3((Index == 0 ? -1 : 1) * min(1.4, Width * 0.18), 2.3, Depth / 2 + 0.14)"
+				}
+			]
+		},
+		{
+			"id": "formula7",
+			"type": "Formula",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[3.0, 2.6, 1.8]"
+				}
+			]
+		},
+		{
+			"id": "result8",
+			"type": "Result",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "formula5-out-Value",
+			"p2": "box4-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input1-out-Value",
+			"p2": "formula6-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input2-out-Value",
+			"p2": "formula6-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "input3-out-Value",
+			"p2": "formula6-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "formula6-out-Value",
+			"p2": "box4-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "formula7-out-Value",
+			"p2": "box4-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "box4-out-Parts",
+			"p2": "result8-in-Value",
+			"kind": "value"
+		}
+	]
+}

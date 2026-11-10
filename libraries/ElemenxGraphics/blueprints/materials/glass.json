@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "glass",
+	"material": {
+		"Order": 19,
+		"Title": "Glass",
+		"Group": "build",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tr *= 0.9 + enx_mf(q * 3.0, 3) * 0.3;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Glass: smooth, smudged a little."
+		}
+	],
+	"links": []
+}

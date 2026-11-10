@@ -1,0 +1,465 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "balcony",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "W"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "D"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "input5",
+			"type": "Input",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Y"
+				}
+			]
+		},
+		{
+			"id": "box6",
+			"type": "Box",
+			"x": 1360,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "formula7",
+			"type": "Formula",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(W * 0.5, 0.15, 1.2)"
+				}
+			]
+		},
+		{
+			"id": "formula8",
+			"type": "Formula",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(X, Y + 0.08, Z + D / 2 + 0.6)"
+				}
+			]
+		},
+		{
+			"id": "formula9",
+			"type": "Formula",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.32, 0.33, 0.35]"
+				}
+			]
+		},
+		{
+			"id": "formula10",
+			"type": "Formula",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "'concrete'"
+				}
+			]
+		},
+		{
+			"id": "tube11",
+			"type": "Tube",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Segments",
+					"value": 6
+				}
+			]
+		},
+		{
+			"id": "formula12",
+			"type": "Formula",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[[X - W * 0.25, Y + 1.05, Z + D / 2 + 0.02], [X - W * 0.25, Y + 1.05, Z + D / 2 + 1.18], [X + W * 0.25, Y + 1.05, Z + D / 2 + 1.18], [X + W * 0.25, Y + 1.05, Z + D / 2 + 0.02]]"
+				}
+			]
+		},
+		{
+			"id": "formula13",
+			"type": "Formula",
+			"x": 700,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.035"
+				}
+			]
+		},
+		{
+			"id": "formula14",
+			"type": "Formula",
+			"x": 920,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"id": "formula15",
+			"type": "Formula",
+			"x": 1140,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.32, 0.33, 0.35]"
+				}
+			]
+		},
+		{
+			"id": "formula16",
+			"type": "Formula",
+			"x": 1360,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "'metal'"
+				}
+			]
+		},
+		{
+			"id": "repeat17",
+			"type": "Repeat",
+			"x": 1580,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/baluster"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula18",
+			"type": "Formula",
+			"x": 1800,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(2, round(W * 0.5 / 0.5)) + 1"
+				}
+			]
+		},
+		{
+			"id": "join19",
+			"type": "Join",
+			"x": 2020,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "piece20",
+			"type": "Piece",
+			"x": 40,
+			"y": 360,
+			"properties": [
+				{
+					"key": "ID",
+					"value": "detail"
+				}
+			]
+		},
+		{
+			"id": "join21",
+			"type": "Join",
+			"x": 260,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "result22",
+			"type": "Result",
+			"x": 480,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input1-out-Value",
+			"p2": "formula7-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "formula7-out-Value",
+			"p2": "box6-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input3-out-Value",
+			"p2": "formula8-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "input5-out-Value",
+			"p2": "formula8-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "input4-out-Value",
+			"p2": "formula8-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "input2-out-Value",
+			"p2": "formula8-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "formula8-out-Value",
+			"p2": "box6-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "formula9-out-Value",
+			"p2": "box6-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "formula10-out-Value",
+			"p2": "box6-in-Material",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "input3-out-Value",
+			"p2": "formula12-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "input1-out-Value",
+			"p2": "formula12-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "input5-out-Value",
+			"p2": "formula12-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "input4-out-Value",
+			"p2": "formula12-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "input2-out-Value",
+			"p2": "formula12-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l15",
+			"p1": "formula12-out-Value",
+			"p2": "tube11-in-Points",
+			"kind": "value"
+		},
+		{
+			"id": "l16",
+			"p1": "formula13-out-Value",
+			"p2": "tube11-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "l17",
+			"p1": "formula14-out-Value",
+			"p2": "tube11-in-Tip",
+			"kind": "value"
+		},
+		{
+			"id": "l18",
+			"p1": "formula15-out-Value",
+			"p2": "tube11-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l19",
+			"p1": "formula16-out-Value",
+			"p2": "tube11-in-Material",
+			"kind": "value"
+		},
+		{
+			"id": "l20",
+			"p1": "input1-out-Value",
+			"p2": "formula18-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l21",
+			"p1": "formula18-out-Value",
+			"p2": "repeat17-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l22",
+			"p1": "input1-out-Value",
+			"p2": "repeat17-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l23",
+			"p1": "input2-out-Value",
+			"p2": "repeat17-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l24",
+			"p1": "input3-out-Value",
+			"p2": "repeat17-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "l25",
+			"p1": "input4-out-Value",
+			"p2": "repeat17-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "l26",
+			"p1": "input5-out-Value",
+			"p2": "repeat17-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "l27",
+			"p1": "tube11-out-Parts",
+			"p2": "join19-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "l28",
+			"p1": "repeat17-out-List",
+			"p2": "join19-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "l29",
+			"p1": "join19-out-Parts",
+			"p2": "piece20-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "l30",
+			"p1": "box6-out-Parts",
+			"p2": "join21-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "l31",
+			"p1": "piece20-out-Parts",
+			"p2": "join21-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "l32",
+			"p1": "join21-out-Parts",
+			"p2": "result22-in-Value",
+			"kind": "value"
+		}
+	]
+}

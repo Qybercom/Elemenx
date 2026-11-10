@@ -368,7 +368,7 @@ Elemenx.Component('Scene', {
 			'camera': {Traits: {Camera: {Lift: 1.6, Yaw: 0, Pitch: 0, Roll: 0, Target: '', Follow: '', At: null, Rig: 'tripod', Shake: null, Smooth: null, Lag: null, Tilt: 0.3, PitchMin: -90, PitchMax: 30, Focal: 35, Sensor: 36, Aperture: null, Focus: null, ISO: null, Shutter: null, ND: 0, Compensation: 0, Polarizer: 0, Filter: '', Temperature: 6500, Tint: 0, Saturation: 1, Contrast: 1, LUT: '', Aberration: 0, Distortion: 0, Vignette: null, Grain: null}}},
 			'trigger': {Traits: {Trigger: {Shape: '', Points: null, Radius: 4, Width: 4, Height: 0, Team: '', Kinds: null, Once: false, Enabled: true, Achievement: null, Blueprint: null, Parameters: null}}},
 			'zone': {Traits: {Zone: {Points: null, Radius: 0, Tags: null, Team: ''}}},
-			'road': {Traits: {Road: {Type: 'road', Points: null, Closed: false, Width: 0, Height: 0, Bridges: null, Tunnels: null, Structures: false, Clear: 5, Cover: 8, Elevated: null, Viaducts: true, Bank: 8, Barriers: null, Along: null, Marks: null, Straight: false, Segments: null, Radii: null}, Model: {Shape: 'road', Size: 1, Color: '#ffffff'}}},
+			'road': {Traits: {Road: {Type: 'road', Points: null, Closed: false, Width: 0, Height: 0, Bridges: null, Tunnels: null, Structures: false, Clear: 5, Cover: 8, Shortest: 12, Follow: true, Grade: 0, Elevated: null, Viaducts: true, Bank: 8, Barriers: null, Along: null, Marks: null, Straight: false, Segments: null, Radii: null}, Model: {Shape: 'road', Size: 1, Color: '#ffffff'}}},
 			'junction': {Traits: {Junction: {Radius: 0, Surface: 'asphalt', Form: '', Closed: false, Under: false}}},
 			'pipe': {Traits: {Pipe: {Points: null, Radius: 0.3, Wall: null, Laid: 'above', Lift: 1.5, Depth: 1, Bend: null, Ends: null, Flanges: null, Spacing: null, Color: null, Inside: null, Metal: 0.6, Fluid: null, Leaks: null}, Model: {Shape: 'pipe', Size: 1, Color: '#ffffff'}}},
 			'barrier': {Traits: {Barrier: {Road: '', Side: 'both', Type: 'guardrail', Height: 0, Gap: 0.3, From: 0, To: null, Points: null, Closed: false, Smooth: false, Color: '', Step: 0}, Model: {Shape: 'road', Size: 1, Color: '#ffffff'}}},
@@ -3769,11 +3769,11 @@ Elemenx.Component('Scene', {
 					return;
 				}
 
-				/* A part of a model of shapes moves as its role says, as one of a file does. */
+				/* A part of a model of shapes moves as its role says, as one of a file does; one of a material is drawn by its pattern (Regression: its material was not given, and it came out plain). */
 				var moved = piece.Opening ? engine.OpeningMove(object, piece) : null;
 				var placed = moved ? math.Multiply(base, moved) : base;
 
-				batch(models, (still ? 'still:' : '') + dissolving + made.Key + '/' + piece.ID, object.World, pose ? math.Multiply(placed, pose[piece.ID]) : placed, piece.Team ? team : color, {Matte: made.Matte, Rough: made.Matte ? 0.5 : 0.15, Sway: made.Sway, Geometry: piece.Geometry, Still: still, Glow: object.Glow && object.Glow.Body ? object.Glow.Color : null, Wet: object.Values.Wet, Drops: object.Values.Drops, Dissolve: dissolve});
+				batch(models, (still ? 'still:' : '') + dissolving + made.Key + '/' + piece.ID, object.World, pose ? math.Multiply(placed, pose[piece.ID]) : placed, piece.Team ? team : color, {Matte: made.Matte, Rough: made.Matte ? 0.5 : 0.15, Sway: made.Sway, Geometry: piece.Geometry, Material: piece.Material || null, Still: still, Glow: object.Glow && object.Glow.Body ? object.Glow.Color : null, Wet: object.Values.Wet, Drops: object.Values.Drops, Dissolve: dissolve});
 			});
 		}
 
@@ -4012,7 +4012,7 @@ Elemenx.Component('Scene', {
 						return;
 					}
 
-					batch(models, item.Key + '/' + piece.ID, object.World, place, [1, 1, 1], {Matte: item.Matte, Rough: item.Matte ? 0.5 : 0.15, Geometry: piece.Geometry});
+					batch(models, item.Key + '/' + piece.ID, object.World, place, [1, 1, 1], {Matte: item.Matte, Rough: item.Matte ? 0.5 : 0.15, Geometry: piece.Geometry, Material: piece.Material || null});
 				});
 			});
 		}
@@ -10748,101 +10748,7 @@ Elemenx.Component('Scene', {
 	 * sums of the shader it came from.
 	 */
 	LibraryWater: function () {
-		var blueprints = this.$Service('Blueprints');
-		var graph = blueprints.Create('water', {name: 'Water'});
-		var ids = {};
-
-		function add (id, type, properties) {
-			ids[id] = blueprints.Add(graph, type, {id: id, properties: properties}).id;
-		}
-
-		function link (from, out, to, key) {
-			blueprints.Link(graph, [ids[from], out], [ids[to], key]);
-		}
-
-		add('place', 'Place');
-		add('view', 'View');
-		add('far', 'Far');
-		add('flow', 'Flow');
-		add('time', 'Time');
-		add('waves', 'Waves');
-		add('normal', 'WaterNormal');
-		add('fresnel', 'Fresnel');
-		add('glints', 'Glints');
-		add('sky', 'Sky');
-		add('body', 'Body');
-		add('mirrored', 'Mix');
-		add('lit', 'Add');
-		add('foam', 'Foam');
-		add('under', 'Under');
-		add('absorb', 'Absorb');
-		add('cover', 'Max');
-		add('below', 'Below');
-		add('reflection', 'Reflection');
-		add('fog', 'WaterFog');
-		add('base', 'Number', {Value: 0.86});
-		add('more', 'Number', {Value: 0.14});
-		add('facing', 'Multiply');
-		add('alpha', 'Add');
-		add('end', 'Water');
-
-		link('place', 'Place', 'waves', 'Place');
-		link('far', 'Far', 'waves', 'Far');
-		link('flow', 'Speed', 'waves', 'Speed');
-		link('flow', 'Way', 'waves', 'Way');
-		link('time', 'Seconds', 'waves', 'Time');
-		link('waves', 'Slope', 'normal', 'Slope');
-		link('normal', 'Normal', 'fresnel', 'Normal');
-		link('view', 'View', 'fresnel', 'View');
-		link('normal', 'Normal', 'glints', 'Normal');
-		link('view', 'View', 'glints', 'View');
-		link('normal', 'Normal', 'sky', 'Normal');
-		link('view', 'View', 'sky', 'View');
-		link('flow', 'Speed', 'body', 'Speed');
-
-		/* What is under it, through it, its light taken as it is deep (the body of the water where it is deep, or where nothing is seen through it). */
-		link('normal', 'Normal', 'under', 'Normal');
-		link('under', 'Color', 'absorb', 'Color');
-		link('under', 'Depth', 'absorb', 'Depth');
-		link('under', 'Cover', 'absorb', 'Cover');
-		link('body', 'Color', 'absorb', 'Body');
-		link('under', 'Depth', 'foam', 'Shore');
-
-		/* mix(that, sky, fresnel) + the sun, white where it rushes, what is round it, the fog. */
-		link('absorb', 'Color', 'mirrored', 'A');
-		link('sky', 'Color', 'mirrored', 'B');
-		link('fresnel', 'Fresnel', 'mirrored', 'T');
-		link('mirrored', 'Out', 'lit', 'A');
-		link('glints', 'Shine', 'lit', 'B');
-		link('lit', 'Out', 'foam', 'Color');
-		link('waves', 'Rush', 'foam', 'Rush');
-		link('foam', 'Color', 'reflection', 'Color');
-		link('normal', 'Normal', 'reflection', 'Normal');
-		link('view', 'View', 'reflection', 'View');
-		link('fresnel', 'Fresnel', 'reflection', 'Fresnel');
-		link('reflection', 'Color', 'fog', 'Color');
-		link('fog', 'Color', 'below', 'Color');
-		link('normal', 'Normal', 'below', 'Normal');
-		link('below', 'Color', 'end', 'Color');
-
-		/* 0.86 + fresnel * 0.14 */
-		link('fresnel', 'Fresnel', 'facing', 'A');
-		link('more', 'Value', 'facing', 'B');
-		link('base', 'Value', 'alpha', 'A');
-		link('facing', 'Out', 'alpha', 'B');
-
-		/* Whole where it draws what is under it itself. */
-		link('alpha', 'Out', 'cover', 'A');
-		link('under', 'Cover', 'cover', 'B');
-		link('cover', 'Out', 'below', 'Alpha');
-		link('below', 'Alpha', 'end', 'Alpha');
-
-		graph.blocks.forEach(function (block, index) {
-			block.x = 40 + index % 6 * 220;
-			block.y = 40 + Math.floor(index / 6) * 160;
-		});
-
-		return graph;
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/water'));
 	},
 
 	/*
@@ -10851,86 +10757,7 @@ Elemenx.Component('Scene', {
 	 * shader it came from.
 	 */
 	LibraryWind: function () {
-		var blueprints = this.$Service('Blueprints');
-		var graph = blueprints.Create('vertex', {name: 'Wind'});
-		var ids = {};
-
-		function add (id, type, properties) {
-			ids[id] = blueprints.Add(graph, type, {id: id, properties: properties}).id;
-		}
-
-		function link (from, out, to, key) {
-			blueprints.Link(graph, [ids[from], out], [ids[to], key]);
-		}
-
-		add('sway', 'Sway');
-		add('phase', 'Phase');
-		add('size', 'Size');
-		add('gust', 'Wind');
-		add('world', 'World');
-		add('position', 'Position');
-		add('height', 'Split');
-		add('once', 'Multiply');
-		add('twice', 'Multiply');
-		add('sized', 'Multiply');
-		add('scale', 'Number', {Value: 0.035});
-		add('bend', 'Multiply');
-		add('quick', 'Number', {Value: 1.3});
-		add('slow', 'Number', {Value: 0.9});
-		add('turn', 'Number', {Value: 1.7});
-		add('quicker', 'Multiply');
-		add('slower', 'Multiply');
-		add('turned', 'Multiply');
-		add('aside', 'Add');
-		add('ahead', 'Add');
-		add('sin', 'Sin');
-		add('cos', 'Cos');
-		add('x', 'Multiply');
-		add('z', 'Multiply');
-		add('way', 'Combine');
-		add('moved', 'Add');
-		add('end', 'Vertex');
-
-		/* bend = sway * y * y * size * 0.035 */
-		link('position', 'Position', 'height', 'Vector');
-		link('sway', 'Sway', 'once', 'A');
-		link('height', 'Y', 'once', 'B');
-		link('once', 'Out', 'twice', 'A');
-		link('height', 'Y', 'twice', 'B');
-		link('twice', 'Out', 'sized', 'A');
-		link('size', 'Size', 'sized', 'B');
-		link('sized', 'Out', 'bend', 'A');
-		link('scale', 'Value', 'bend', 'B');
-
-		/* world.xz += vec2(sin(gust * 1.3 + phase), cos(gust * 0.9 + phase * 1.7)) * bend */
-		link('gust', 'Gust', 'quicker', 'A');
-		link('quick', 'Value', 'quicker', 'B');
-		link('quicker', 'Out', 'aside', 'A');
-		link('phase', 'Phase', 'aside', 'B');
-		link('aside', 'Out', 'sin', 'X');
-		link('gust', 'Gust', 'slower', 'A');
-		link('slow', 'Value', 'slower', 'B');
-		link('phase', 'Phase', 'turned', 'A');
-		link('turn', 'Value', 'turned', 'B');
-		link('slower', 'Out', 'ahead', 'A');
-		link('turned', 'Out', 'ahead', 'B');
-		link('ahead', 'Out', 'cos', 'X');
-		link('sin', 'Out', 'x', 'A');
-		link('bend', 'Out', 'x', 'B');
-		link('cos', 'Out', 'z', 'A');
-		link('bend', 'Out', 'z', 'B');
-		link('x', 'Out', 'way', 'X');
-		link('z', 'Out', 'way', 'Z');
-		link('world', 'World', 'moved', 'A');
-		link('way', 'XYZ', 'moved', 'B');
-		link('moved', 'Out', 'end', 'World');
-
-		graph.blocks.forEach(function (block, index) {
-			block.x = 40 + index % 6 * 220;
-			block.y = 40 + Math.floor(index / 6) * 160;
-		});
-
-		return graph;
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/wind'));
 	},
 
 	/*
@@ -10946,88 +10773,7 @@ Elemenx.Component('Scene', {
 	 * world.xz += lean * y * y * size.
 	 */
 	LibraryGrass: function () {
-		var blueprints = this.$Service('Blueprints');
-		var graph = blueprints.Create('vertex', {name: 'Grass'});
-		var count = 0;
-
-		/* A block and its first output, as [id, key]. */
-		function block (type, out, properties) {
-			var id = 'b' + count++;
-
-			blueprints.Add(graph, type, {id: id, properties: properties});
-
-			return [id, out];
-		}
-
-		function number (value) {
-			return block('Number', 'Value', {Value: value});
-		}
-
-		/* An operation of two: its inputs A and B linked from what is given (an output, or a number). */
-		function op (type, a, b) {
-			var made = block(type, 'Out');
-
-			blueprints.Link(graph, Array.isArray(a) ? a : number(a), [made[0], 'A']);
-			blueprints.Link(graph, Array.isArray(b) ? b : number(b), [made[0], 'B']);
-
-			return made;
-		}
-
-		function one (type, x) {
-			var made = block(type, 'Out');
-
-			blueprints.Link(graph, x, [made[0], 'X']);
-
-			return made;
-		}
-
-		function split (vector) {
-			var made = block('Split', 'X');
-
-			blueprints.Link(graph, vector, [made[0], 'Vector']);
-
-			return {X: [made[0], 'X'], Y: [made[0], 'Y'], Z: [made[0], 'Z']};
-		}
-
-		var position = split(block('Position', 'Position'));
-		var side = split(block('Normal', 'Normal'));
-		var uv = split(block('UV', 'UV'));
-		var gust = block('Wind', 'Gust');
-		var seed = block('Phase', 'Phase');
-		var size = block('Size', 'Size');
-		var world = block('World', 'World');
-		var near = uv.X;
-
-		/* The wave over the field. */
-		var first = one('Sin', op('Add', op('Add', op('Multiply', gust, 0.9), op('Multiply', position.X, 0.11)), op('Multiply', position.Z, 0.07)));
-		var second = one('Sin', op('Add', op('Subtract', op('Multiply', gust, 0.53), op('Multiply', position.X, 0.05)), op('Multiply', position.Z, 0.13)));
-		var wave = op('Add', op('Multiply', first, 0.6), op('Multiply', second, 0.4));
-
-		/* The lean: aside by the seed, with the wind over the field, and a stir of its own near the eye. */
-		var own = op('Multiply', op('Subtract', seed, 0.5), 0.5);
-		var field = op('Add', op('Multiply', op('Multiply', wave, 0.16), near), 0.14);
-		var stir = op('Multiply', op('Multiply', near, near), 0.05);
-		var stirX = op('Multiply', one('Sin', op('Add', op('Multiply', gust, 2.6), op('Multiply', seed, 6.28))), stir);
-		var stirZ = op('Multiply', one('Cos', op('Add', op('Multiply', gust, 2.1), op('Multiply', seed, 9))), stir);
-		var leanX = op('Add', op('Add', op('Multiply', op('Multiply', side.Z, -1), own), op('Multiply', field, 0.8)), stirX);
-		var leanZ = op('Add', op('Add', op('Multiply', side.X, own), op('Multiply', field, 0.6)), stirZ);
-		var reach = op('Multiply', op('Multiply', position.Y, position.Y), size);
-		var way = block('Combine', 'XYZ');
-		var bent = block('Combine', 'XYZ');
-		var end = block('Vertex', '');
-
-		blueprints.Link(graph, op('Multiply', leanX, reach), [way[0], 'X']);
-		blueprints.Link(graph, op('Multiply', leanZ, reach), [way[0], 'Z']);
-		blueprints.Link(graph, op('Add', world, way), [end[0], 'World']);
-		blueprints.Link(graph, wave, [bent[0], 'X']);
-		blueprints.Link(graph, bent, [end[0], 'Normal']);
-
-		graph.blocks.forEach(function (one, index) {
-			one.x = 40 + index % 8 * 200;
-			one.y = 40 + Math.floor(index / 8) * 140;
-		});
-
-		return graph;
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/grass'));
 	},
 
 	/* The wind of the grass in its shader (blueprintGrass): GrassGraph of the scene, else LibraryGrass, made once. */
@@ -11085,36 +10831,7 @@ Elemenx.Component('Scene', {
 	 * the light of the sun, the sky, the bounce and the lamps, the sheen of what is wet, the haze and the pools that mirror.
 	 */
 	LibraryLand: function () {
-		var blueprints = this.$Service('Blueprints');
-		var graph = blueprints.Create('land', {name: 'Land'});
-		var ids = {};
-
-		[['point', 'LandPoint'], ['material', 'LandMaterial'], ['grain', 'LandGrain'], ['pools', 'LandPools'], ['albedo', 'LandAlbedo'], ['paint', 'LandPaint'], ['light', 'LandLight'], ['caustics', 'LandCaustics'], ['sheen', 'LandSheen'], ['compose', 'LandCompose'], ['end', 'LandEnd']].forEach(function (pair) {
-			ids[pair[0]] = blueprints.Add(graph, pair[1], {id: pair[0]}).id;
-		});
-
-		/* The light and the sheen take the normal the Blueprint of the ground leaves. */
-		[
-			['point', 'Place', 'grain', 'Place'],
-			['point', 'Place', 'material', 'Place'], ['point', 'Color', 'material', 'Color'], ['point', 'Normal', 'material', 'Normal'],
-			['point', 'Place', 'pools', 'Place'], ['material', 'Normal', 'pools', 'Normal'],
-			['material', 'Color', 'albedo', 'Color'], ['grain', 'Grain', 'albedo', 'Grain'], ['pools', 'Pool', 'albedo', 'Pool'], ['material', 'Normal', 'albedo', 'Normal'],
-			['albedo', 'Albedo', 'paint', 'Albedo'], ['point', 'Place', 'paint', 'Place'], ['material', 'Normal', 'paint', 'Normal'],
-			['point', 'World', 'light', 'World'], ['paint', 'Normal', 'light', 'Normal'],
-			['point', 'World', 'sheen', 'World'], ['paint', 'Normal', 'sheen', 'Normal'], ['pools', 'Water', 'sheen', 'Water'], ['pools', 'Pool', 'sheen', 'Pool'],
-			['point', 'Place', 'caustics', 'Place'], ['light', 'Light', 'caustics', 'Light'], ['light', 'Sunlit', 'caustics', 'Sunlit'],
-			['point', 'World', 'compose', 'World'], ['paint', 'Albedo', 'compose', 'Albedo'], ['caustics', 'Light', 'compose', 'Light'], ['sheen', 'Sheen', 'compose', 'Sheen'], ['light', 'Sunlit', 'compose', 'Sunlit'], ['paint', 'Glow', 'compose', 'Glow'], ['pools', 'Pool', 'compose', 'Pool'],
-			['compose', 'Color', 'end', 'Color'], ['compose', 'Alpha', 'end', 'Alpha']
-		].forEach(function (one) {
-			blueprints.Link(graph, [ids[one[0]], one[1]], [ids[one[2]], one[3]]);
-		});
-
-		graph.blocks.forEach(function (block, index) {
-			block.x = 40 + index % 5 * 240;
-			block.y = 40 + Math.floor(index / 5) * 200;
-		});
-
-		return graph;
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/land'));
 	},
 
 	/* The uniforms of the sky of the scene: its parameters and the time. */
@@ -11128,49 +10845,7 @@ Elemenx.Component('Scene', {
 	 * eclipse, the glow of towns, a rainbow, the haze and the ball of the moon, the air over the stars and the disc of the sun.
 	 */
 	LibrarySky: function () {
-		var blueprints = this.$Service('Blueprints');
-		var graph = blueprints.Create('sky', {name: 'Sky'});
-		var ids = {};
-
-		function add (id, type) {
-			ids[id] = blueprints.Add(graph, type, {id: id}).id;
-		}
-
-		function link (from, out, to, key) {
-			blueprints.Link(graph, [ids[from], out], [ids[to], key]);
-		}
-
-		[['ray', 'SkyRay'], ['day', 'SkyDay'], ['air', 'SkyAir'], ['dusk', 'SkyDusk'], ['halo', 'SkyHalo'], ['pink', 'SkyPink'], ['wisps', 'SkyWisps'], ['cover', 'SkyCover'], ['eclipse', 'SkyEclipse'], ['towns', 'SkyTowns'], ['aurora', 'SkyAurora'], ['rainbow', 'SkyRainbow'], ['haze', 'SkyMoonHaze'], ['moon', 'SkyMoon'], ['compose', 'SkyCompose'], ['end', 'SkyEnd']].forEach(function (pair) {
-			add(pair[0], pair[1]);
-		});
-
-		[
-			['ray', 'Sun', 'day', 'Sun'], ['ray', 'Height', 'day', 'Height'],
-			['day', 'Up', 'air', 'Up'], ['day', 'Day', 'air', 'Day'], ['day', 'Low', 'air', 'Low'],
-			['air', 'Color', 'dusk', 'Color'], ['ray', 'Ray', 'dusk', 'Ray'], ['day', 'Up', 'dusk', 'Up'], ['day', 'Low', 'dusk', 'Low'],
-			['dusk', 'Color', 'halo', 'Color'], ['ray', 'Toward', 'halo', 'Toward'], ['ray', 'Sun', 'halo', 'Sun'],
-			['halo', 'Color', 'pink', 'Color'], ['day', 'Low', 'pink', 'Low'], ['day', 'Up', 'pink', 'Up'], ['ray', 'Sun', 'pink', 'Sun'],
-			['pink', 'Color', 'wisps', 'Color'], ['ray', 'Ray', 'wisps', 'Ray'], ['ray', 'Height', 'wisps', 'Height'], ['day', 'Day', 'wisps', 'Day'], ['day', 'Low', 'wisps', 'Low'],
-			['wisps', 'Color', 'cover', 'Color'], ['day', 'Day', 'cover', 'Day'],
-			['cover', 'Color', 'eclipse', 'Color'], ['ray', 'Toward', 'eclipse', 'Toward'],
-			['eclipse', 'Color', 'towns', 'Color'], ['ray', 'Ray', 'towns', 'Ray'], ['ray', 'Height', 'towns', 'Height'],
-			['towns', 'Color', 'aurora', 'Color'], ['ray', 'Ray', 'aurora', 'Ray'], ['ray', 'Height', 'aurora', 'Height'],
-			['aurora', 'Color', 'rainbow', 'Color'], ['ray', 'Ray', 'rainbow', 'Ray'], ['ray', 'Sun', 'rainbow', 'Sun'], ['ray', 'Height', 'rainbow', 'Height'],
-			['rainbow', 'Color', 'haze', 'Color'], ['ray', 'Ray', 'haze', 'Ray'], ['day', 'Day', 'haze', 'Day'],
-			['ray', 'Ray', 'moon', 'Ray'], ['day', 'Day', 'moon', 'Day'],
-			['haze', 'Color', 'compose', 'Color'], ['eclipse', 'Crown', 'compose', 'Crown'], ['halo', 'Tint', 'compose', 'Tint'], ['ray', 'Toward', 'compose', 'Toward'], ['ray', 'Sun', 'compose', 'Sun'],
-			['day', 'Day', 'compose', 'Day'], ['dusk', 'Dusk', 'compose', 'Dusk'], ['haze', 'Haze', 'compose', 'Haze'], ['towns', 'Towns', 'compose', 'Towns'], ['aurora', 'Aurora', 'compose', 'Aurora'], ['moon', 'Color', 'compose', 'Moon'], ['moon', 'Shape', 'compose', 'Shape'],
-			['compose', 'Color', 'end', 'Color'], ['compose', 'Alpha', 'end', 'Alpha']
-		].forEach(function (one) {
-			link(one[0], one[1], one[2], one[3]);
-		});
-
-		graph.blocks.forEach(function (block, index) {
-			block.x = 40 + index % 5 * 240;
-			block.y = 40 + Math.floor(index / 5) * 200;
-		});
-
-		return graph;
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/sky'));
 	},
 
 	/* The uniforms of the water of the scene: its parameters and the time, as the shader of water has it. */

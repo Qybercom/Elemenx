@@ -1,0 +1,12 @@
+{
+	"Order": 4,
+	"Color": [
+		0.56,
+		0.51,
+		0.43
+	],
+	"Rough": 1,
+	"Grip": 0.62,
+	"Drag": 0.22,
+	"Material": "gravel"
+}

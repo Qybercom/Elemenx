@@ -1,0 +1,93 @@
+{
+	"Order": 7,
+	"Title": "Avenue",
+	"Group": "street",
+	"Speed": 60,
+	"Strips": [
+		{
+			"Kind": "sidewalk",
+			"Width": 4,
+			"Surface": "paving",
+			"Height": 0.15
+		},
+		{
+			"Kind": "kerb",
+			"Width": 0.2,
+			"Surface": "concrete",
+			"Height": 0.15
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.3,
+			"Surface": "asphalt",
+			"Way": -1,
+			"Left": "none",
+			"Right": "dashed"
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.3,
+			"Surface": "asphalt",
+			"Way": -1,
+			"Left": "none",
+			"Right": "none"
+		},
+		{
+			"Kind": "median",
+			"Width": 5,
+			"Surface": "grass",
+			"Height": 0.15
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.3,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "none",
+			"Right": "dashed"
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.3,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "none",
+			"Right": "none"
+		},
+		{
+			"Kind": "kerb",
+			"Width": 0.2,
+			"Surface": "concrete",
+			"Height": 0.15
+		},
+		{
+			"Kind": "sidewalk",
+			"Width": 4,
+			"Surface": "paving",
+			"Height": 0.15
+		}
+	],
+	"Along": [
+		{
+			"Type": "row",
+			"Side": "both",
+			"Gap": -0.6,
+			"Shapes": "streetlamp",
+			"Spacing": 28
+		},
+		{
+			"Type": "row",
+			"Side": "both",
+			"Gap": -1.6,
+			"Shapes": "bench, bin, planter",
+			"Spacing": 36
+		},
+		{
+			"Type": "row",
+			"Side": "right",
+			"Gap": -2,
+			"Shapes": "bus-stop, kiosk",
+			"Spacing": 260
+		}
+	]
+}

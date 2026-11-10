@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "marble",
+	"material": {
+		"Order": 31,
+		"Title": "Marble",
+		"Group": "build",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tvec2 w = q * 1.6 + vec2(enx_mf(q * 0.9, 4), enx_mf(q * 0.9 + 5.0, 4)) * 1.8;\n\tfloat vein = 1.0 - smoothstep(0.0, 0.05, abs(sin((w.x + w.y * 0.6) * 4.0 + enx_mf(w * 2.0, 3) * 3.0)));\n\tfloat fine = 1.0 - smoothstep(0.0, 0.02, abs(sin((w.x - w.y) * 11.0 + enx_mf(w * 4.0, 3) * 4.0)));\n\tc *= (0.95 + enx_mf(q * 3.0, 3) * 0.08) * (1.0 - vein * 0.35 - fine * 0.15 * enx_ms(px, 0.01));\n\tr = 0.18;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Marble: light, veins of grey wandering through it, polished."
+		}
+	],
+	"links": []
+}

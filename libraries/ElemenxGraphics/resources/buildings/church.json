@@ -1,0 +1,14 @@
+{
+	"Order": 15,
+	"Width": 12,
+	"Depth": 26,
+	"Floors": [
+		1,
+		1
+	],
+	"FloorHeight": 9,
+	"Roof": "gable",
+	"Walls": "stone",
+	"Windows": 0.15,
+	"Special": "church"
+}

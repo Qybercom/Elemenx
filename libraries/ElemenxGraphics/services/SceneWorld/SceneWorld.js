@@ -35,7 +35,8 @@
  *   made once for the same graph and parameters.
  * - Library(options): the graph of a usual world of options (Size, Height, Water, Seed, Rock, Snow, Scale, Ridges, Noise,
  *   Relief, Planet ({Options, Latitude, Longitude, Turn}), Climate, Biomes, Sketch, Border (its properties), Tunnels, Caves and Passages (lists of the properties of such steps), Overhangs, Footings and Roads (true or their properties); and Settlements, Scatters: lists of the properties of such blocks): what an editor or
- *   a page starts from.
+ *   a page starts from. It is the template of the resource ElemenxGraphics/world (blueprints/world.json: every step in
+ *   its order, those not asked for turned off) with what is told put in, a step for each item of a list.
  * The same functions run in Node: they read no page.
  */
 Elemenx.Service('SceneWorld', {
@@ -56,6 +57,9 @@ Elemenx.Service('SceneWorld', {
 	Steps: function () {
 		var self = this;
 		var blueprints = this.$Service('Blueprints');
+		/* The numbers of a flat map by default, those of the ground itself. */
+		var flat = this.$Service('SceneTerrainGenerator').FlatOf({});
+		var tunnel = this.$Service('SceneTerrainGenerator').TunnelRadius;
 
 		/* What comes to an input, else the property; none is left out. */
 		function value (inputs, properties, key) {
@@ -120,11 +124,11 @@ Elemenx.Service('SceneWorld', {
 		blueprints.Node('Ground', {
 			Graphs: ['world'],
 			Group: 'world',
-			Properties: [{Key: 'Size', Type: 'number', Value: 1000}, {Key: 'Height', Type: 'number', Value: 60}, {Key: 'Water', Type: 'number', Value: 0.35}, {Key: 'Seed', Type: 'text', Value: 'ground'}, {Key: 'Rock', Type: 'text', Value: ''}, {Key: 'Snow', Type: 'text', Value: ''}],
+			Properties: [{Key: 'Size', Type: 'number', Value: flat.Size}, {Key: 'Height', Type: 'number', Value: flat.Height}, {Key: 'Water', Type: 'number', Value: flat.Water}, {Key: 'Seed', Type: 'text', Value: flat.Seed}, {Key: 'Rock', Type: 'text', Value: ''}, {Key: 'Snow', Type: 'text', Value: ''}],
 			Inputs: [{Key: 'Size', Type: 'float'}, {Key: 'Height', Type: 'float'}, {Key: 'Water', Type: 'float'}],
 			Outputs: [{Key: 'Land', Type: 'land'}],
 			Compute: function (inputs, properties) {
-				var made = {Size: Number(value(inputs, properties, 'Size')) || 1000, Height: Number(value(inputs, properties, 'Height') || 0), Water: Number(value(inputs, properties, 'Water') || 0), Seed: properties.Seed === undefined || properties.Seed === null ? 'ground' : properties.Seed};
+				var made = {Size: Number(value(inputs, properties, 'Size')) || flat.Size, Height: Number(value(inputs, properties, 'Height') || 0), Water: Number(value(inputs, properties, 'Water') || 0), Seed: properties.Seed === undefined || properties.Seed === null ? flat.Seed : properties.Seed};
 
 				/* Rock and Snow: a part of its Height, false for none, nothing for the usual. */
 				['Rock', 'Snow'].forEach(function (key) {
@@ -155,11 +159,11 @@ Elemenx.Service('SceneWorld', {
 		blueprints.Node('Relief', {
 			Graphs: ['world'],
 			Group: 'world',
-			Properties: [{Key: 'Scale', Type: 'number', Value: 180}, {Key: 'Ridges', Type: 'number', Value: 0.4}, {Key: 'Graph', Type: 'object', Value: null}, {Key: 'Noise', Type: 'object', Value: null}],
+			Properties: [{Key: 'Scale', Type: 'number', Value: flat.Scale}, {Key: 'Ridges', Type: 'number', Value: flat.Ridges}, {Key: 'Graph', Type: 'object', Value: null}, {Key: 'Noise', Type: 'object', Value: null}],
 			Inputs: [{Key: 'Land', Type: 'land'}, {Key: 'Scale', Type: 'float'}, {Key: 'Ridges', Type: 'float'}],
 			Outputs: [{Key: 'Land', Type: 'land'}],
 			Compute: function (inputs, properties) {
-				return land(inputs, {Scale: Number(value(inputs, properties, 'Scale')) || 180, Ridges: Number(value(inputs, properties, 'Ridges') || 0), Relief: properties.Graph || undefined, Noise: properties.Noise || undefined, ReliefSource: undefined});
+				return land(inputs, {Scale: Number(value(inputs, properties, 'Scale')) || flat.Scale, Ridges: Number(value(inputs, properties, 'Ridges') || 0), Relief: properties.Graph || undefined, Noise: properties.Noise || undefined, ReliefSource: undefined});
 			}
 		});
 
@@ -294,11 +298,11 @@ Elemenx.Service('SceneWorld', {
 		blueprints.Node('Tunnel', {
 			Graphs: ['world'],
 			Group: 'world',
-			Properties: [{Key: 'Points', Type: 'object', Value: []}, {Key: 'Radius', Type: 'number', Value: 2.5}, {Key: 'Flat', Type: 'number', Value: 0.5}, {Key: 'Depth', Type: 'number', Value: 0}],
+			Properties: [{Key: 'Points', Type: 'object', Value: []}, {Key: 'Radius', Type: 'number', Value: tunnel}, {Key: 'Flat', Type: 'number', Value: 0.5}, {Key: 'Depth', Type: 'number', Value: 0}],
 			Inputs: [{Key: 'Land', Type: 'land'}, {Key: 'Radius', Type: 'float'}],
 			Outputs: [{Key: 'Land', Type: 'land'}],
 			Compute: function (inputs, properties) {
-				return carve(inputs, {Type: 'tunnel', Points: list(properties.Points) || [], Radius: Number(value(inputs, properties, 'Radius')) || 2.5, Flat: Number(properties.Flat), Depth: Number(properties.Depth) || 0});
+				return carve(inputs, {Type: 'tunnel', Points: list(properties.Points) || [], Radius: Number(value(inputs, properties, 'Radius')) || tunnel, Flat: Number(properties.Flat), Depth: Number(properties.Depth) || 0});
 			}
 		});
 
@@ -317,11 +321,11 @@ Elemenx.Service('SceneWorld', {
 		blueprints.Node('Passages', {
 			Graphs: ['world'],
 			Group: 'world',
-			Properties: [{Key: 'Nodes', Type: 'object', Value: []}, {Key: 'Ways', Type: 'object', Value: []}, {Key: 'Radius', Type: 'number', Value: 2.5}, {Key: 'Flat', Type: 'number', Value: 0.5}, {Key: 'Depth', Type: 'number', Value: 6}, {Key: 'Rough', Type: 'number', Value: 0}, {Key: 'Seed', Type: 'text', Value: ''}],
+			Properties: [{Key: 'Nodes', Type: 'object', Value: []}, {Key: 'Ways', Type: 'object', Value: []}, {Key: 'Radius', Type: 'number', Value: tunnel}, {Key: 'Flat', Type: 'number', Value: 0.5}, {Key: 'Depth', Type: 'number', Value: 6}, {Key: 'Rough', Type: 'number', Value: 0}, {Key: 'Seed', Type: 'text', Value: ''}],
 			Inputs: [{Key: 'Land', Type: 'land'}, {Key: 'Rough', Type: 'float'}],
 			Outputs: [{Key: 'Land', Type: 'land'}],
 			Compute: function (inputs, properties) {
-				return carve(inputs, {Type: 'passages', Nodes: list(properties.Nodes) || [], Ways: list(properties.Ways) || [], Radius: Number(properties.Radius) || 2.5, Flat: Number(properties.Flat), Depth: Number(properties.Depth), Rough: Number(value(inputs, properties, 'Rough')) || 0, Seed: properties.Seed || undefined});
+				return carve(inputs, {Type: 'passages', Nodes: list(properties.Nodes) || [], Ways: list(properties.Ways) || [], Radius: Number(properties.Radius) || tunnel, Flat: Number(properties.Flat), Depth: Number(properties.Depth), Rough: Number(value(inputs, properties, 'Rough')) || 0, Seed: properties.Seed || undefined});
 			}
 		});
 
@@ -605,22 +609,48 @@ Elemenx.Service('SceneWorld', {
 	Library: function (options) {
 		var given = options || {};
 		var blueprints = this.$Service('Blueprints');
-		var graph = blueprints.Create('world', {name: 'World'});
-		var land;
-		var things = null;
+		var graph = blueprints.Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/world'));
 
-		function add (type, properties) {
-			return blueprints.Add(graph, type, {x: 0, y: 0, properties: properties || {}});
+		function at (id) {
+			return blueprints.Find(graph, id);
 		}
 
-		/* A step after the last one: what it takes from it, what it gives the next. */
-		function step (type, properties, input, output, before) {
-			var block = add(type, properties);
+		/* A step of the template turned on, with what it is told (its other properties those of its type). */
+		function put (id, properties) {
+			var block = at(id);
 
-			if (before)
-				blueprints.Link(graph, [before.id, output], [block.id, input]);
+			block.properties = blueprints.Block(block.type, {properties: properties || {}}).properties;
+			block.enabled = true;
 
 			return block;
+		}
+
+		/* A step for each of a list: the first the one of the template, the others after it, each before what came after it. */
+		function each (id, list, input, output) {
+			var last = at(id);
+
+			(list || []).forEach(function (properties, index) {
+				var block;
+				var from;
+
+				if (!index) {
+					put(id, properties);
+
+					return;
+				}
+
+				block = blueprints.Add(graph, last.type, {id: id + '-' + (index + 1), x: last.x, y: last.y + 140, properties: properties});
+				from = blueprints.Pin(last, output, true).id;
+
+				graph.links.forEach(function (link) {
+					if (link.p1 === from)
+						link.p1 = blueprints.Pin(block, output, true).id;
+				});
+
+				blueprints.Link(graph, [last.id, output], [block.id, input]);
+
+				last = block;
+			});
 		}
 
 		function told (keys) {
@@ -634,63 +664,38 @@ Elemenx.Service('SceneWorld', {
 			return made;
 		}
 
-		land = step('Ground', told(['Size', 'Height', 'Water', 'Seed', 'Rock', 'Snow']));
+		put('ground', told(['Size', 'Height', 'Water', 'Seed', 'Rock', 'Snow']));
 
 		if (given.Planet)
-			land = step('Planet', {Planet: given.Planet.Options || {}, Latitude: given.Planet.Latitude || 0, Longitude: given.Planet.Longitude || 0, Turn: given.Planet.Turn || 0}, 'Land', 'Land', land);
+			put('planet', {Planet: given.Planet.Options || {}, Latitude: given.Planet.Latitude || 0, Longitude: given.Planet.Longitude || 0, Turn: given.Planet.Turn || 0});
 
-		land = step('Relief', Object.assign(told(['Scale', 'Ridges', 'Noise']), given.Relief ? {Graph: given.Relief} : {}), 'Land', 'Land', land);
-		land = step('Climate', given.Climate || {}, 'Land', 'Land', land);
+		put('relief', Object.assign(told(['Scale', 'Ridges', 'Noise']), given.Relief ? {Graph: given.Relief} : {}));
+		put('climate', given.Climate || {});
 
 		if (given.Biomes)
-			land = step('Biomes', {List: given.Biomes}, 'Land', 'Land', land);
+			put('biomes', {List: given.Biomes});
 
 		if (given.Sketch)
-			land = step('Sketch', {Sketch: given.Sketch}, 'Land', 'Land', land);
+			put('sketch', {Sketch: given.Sketch});
 
 		if (given.Border)
-			land = step('Border', given.Border, 'Land', 'Land', land);
+			put('border', given.Border);
 
-		(given.Tunnels || []).forEach(function (tunnel) {
-			land = step('Tunnel', tunnel, 'Land', 'Land', land);
-		});
-
-		(given.Caves || []).forEach(function (caves) {
-			land = step('Caves', caves, 'Land', 'Land', land);
-		});
-
-		(given.Passages || []).forEach(function (passages) {
-			land = step('Passages', passages, 'Land', 'Land', land);
-		});
+		each('tunnel', given.Tunnels, 'Land', 'Land');
+		each('caves', given.Caves, 'Land', 'Land');
+		each('passages', given.Passages, 'Land', 'Land');
 
 		if (given.Overhangs)
-			land = step('Overhangs', given.Overhangs === true ? {} : given.Overhangs, 'Land', 'Land', land);
+			put('overhangs', given.Overhangs === true ? {} : given.Overhangs);
 
 		if (given.Footings)
-			land = step('Footings', given.Footings === true ? {} : given.Footings, 'Land', 'Land', land);
+			put('footings', given.Footings === true ? {} : given.Footings);
 
-		/* Its roads: a land in and out, and the first of its things. */
-		if (given.Roads) {
-			var roads = step('Roads', given.Roads === true ? {} : given.Roads, 'Land', 'Land', land);
+		if (given.Roads)
+			put('roads', given.Roads === true ? {} : given.Roads);
 
-			land = roads;
-			things = roads;
-		}
-
-		(given.Settlements || []).forEach(function (settlement) {
-			things = step('Settlement', settlement, 'Under', 'Things', things);
-		});
-
-		(given.Scatters || []).forEach(function (scatter) {
-			things = step('Scatter', scatter, 'Under', 'Things', things);
-		});
-
-		var end = add('Terrain');
-
-		blueprints.Link(graph, [land.id, 'Land'], [end.id, 'Land']);
-
-		if (things)
-			blueprints.Link(graph, [things.id, 'Things'], [end.id, 'Things']);
+		each('settlement', given.Settlements, 'Under', 'Things');
+		each('scatter', given.Scatters, 'Under', 'Things');
 
 		return graph;
 	}

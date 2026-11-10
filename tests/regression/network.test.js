@@ -13,10 +13,11 @@ function application (root) {
 	});
 }
 
+/* Its root, up to 15 s (Regression: 1.5 s was not enough for the files of discovery under the load of the whole suite). */
 async function ready (app) {
 	return await waitFor(function () {
 		return app.$Component();
-	}, 1500);
+	}, 15000);
 }
 
 describe('Regression: deferred / network component discovery', function () {
@@ -96,7 +97,7 @@ describe('Regression: deferred / network component discovery', function () {
 
 		document.getElementById('mount').appendChild(c.$Element());
 
-		expect(await waitFor(function () {return templateRequested;}, 1500)).toBe(true);
+		expect(await waitFor(function () {return templateRequested;}, 15000)).toBe(true);
 		expect(c._Component()).toBeNull();
 
 		resolveTemplate('<button class="remote-nested-template">{{Count}}</button>');
@@ -105,7 +106,7 @@ describe('Regression: deferred / network component discovery', function () {
 			var resolved = c._Component();
 
 			return resolved && typeof resolved.Increment === 'function';
-		}, 1500)).toBe(true);
+		}, 15000)).toBe(true);
 
 		var resolved = c._Component();
 		var changes = [];
@@ -120,7 +121,7 @@ describe('Regression: deferred / network component discovery', function () {
 
 		c.$Destroy();
 		app.$Destroy();
-	});
+	}, 30000);
 
 	it('does not activate a deferred component after owner Destroy', async function () {
 		var app = application('/network');

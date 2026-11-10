@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "clinker",
+	"material": {
+		"Order": 22,
+		"Title": "Clinker",
+		"Group": "build",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tvec2 b = vec2(0.25, 0.065);\n\tvec2 t = q / b;\n\tt.x += mod(floor(t.y), 2.0) * 0.5;\n\tvec2 id = floor(t);\n\tvec2 f = fract(t) * b;\n\tfloat e = min(min(f.x, b.x - f.x), min(f.y, b.y - f.y));\n\tfloat joint = (1.0 - smoothstep(0.003, 0.006, e)) * enx_ms(px, 0.05);\n\tfloat tone = enx_mh(id + 7.3);\n\tfloat burnt = step(0.82, enx_mh(id + 1.9));\n\tvec3 brick = c * (0.7 + tone * 0.45) * mix(1.0, 0.55, burnt) * (0.94 + enx_mn(q * 80.0) * 0.12 * enx_ms(px, 0.015));\n\tc = mix(brick, c * 0.35, joint);\n\th += (1.0 - joint) * 0.005;\n\tr = mix(0.55, 0.95, joint) + burnt * 0.1;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Clinker brick: long and thin, fired dark, each its own tone, a little glazed, dark joints."
+		}
+	],
+	"links": []
+}

@@ -1,0 +1,66 @@
+{
+	"version": 1,
+	"type": "texture",
+	"name": "grassy-soil",
+	"texture": {
+		"Order": 1,
+		"Title": "grassy-soil",
+		"Group": "ground",
+		"Metres": 2,
+		"Size": 1024
+	},
+	"parameters": [
+		{
+			"key": "Cover",
+			"type": "float",
+			"value": 0.55,
+			"min": 0,
+			"max": 1,
+			"comment": "Cover"
+		},
+		{
+			"key": "Weeds",
+			"type": "float",
+			"value": 0.5,
+			"min": 0,
+			"max": 1,
+			"comment": "Weeds"
+		},
+		{
+			"key": "Pebbles",
+			"type": "float",
+			"value": 0.4,
+			"min": 0,
+			"max": 1,
+			"comment": "Pebbles"
+		}
+	],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat grain = tex_noise(uv * 512.0, 512.0, seed + 1.0);\n\tfloat clod = tex_fbm(uv, 12.0, 4, seed + 2.0);\n\tc = mix(vec3(0.36, 0.31, 0.24), vec3(0.5, 0.44, 0.34), clod) * (0.86 + 0.28 * grain);\n\th = clod * 0.25;\n\tr = 0.95;\n\tao = 0.85 + 0.15 * clod;\n\t// Pebbles: cells of a few centimetres, a few of them showing.\n\tvec2 warp = vec2(tex_noise(uv * 90.0, 90.0, seed + 12.0), tex_noise(uv * 90.0, 90.0, seed + 13.0)) - 0.5;\n\tvec4 peb = tex_cells(uv + warp * 0.004, 55.0, seed + 3.0);\n\tfloat pebSize = 0.12 + 0.3 * fract(peb.z * 13.7);\n\tfloat stone = (1.0 - smoothstep(pebSize - 0.04, pebSize + 0.02, peb.x)) * step(1.0 - p_Pebbles * 0.25, peb.z);\n\tvec3 pebColor = mix(mix(vec3(0.33, 0.3, 0.27), vec3(0.58, 0.55, 0.5), peb.w), vec3(0.5, 0.36, 0.26), step(0.8, fract(peb.w * 7.1)));\n\tc = mix(c, pebColor * (0.75 + 0.45 * (1.0 - peb.x / pebSize)), stone);\n\th = mix(h, 0.3 + 0.25 * (1.0 - peb.x / pebSize), stone);\n\t// Where grass is: its mask, with fringes.\n\tfloat mask = tex_fbm(uv, 4.0, 5, seed + 4.0);\n\tfloat grow = smoothstep(1.0 - p_Cover - 0.06, 1.0 - p_Cover + 0.06, mask + (tex_noise(uv * 64.0, 64.0, seed + 5.0) - 0.5) * 0.12);\n\tfor (int layer = 0; layer < 4; layer++) {\n\t\tfloat k = float(layer) / 3.0;\n\t\tvec4 b = tex_blades(uv, 70.0 + float(layer) * 6.0, 1.6, 0.14, k * 2.0, 1.0, seed + 10.0 + float(layer) * 7.0);\n\t\tfloat here = b.x * grow * step(0.15 + 0.5 * (1.0 - grow), fract(b.z * 3.7 + k));\n\t\tvec3 blade = tex_ramp(clamp(k * 0.6 + b.y * 0.5, 0.0, 1.0), vec3(0.06, 0.14, 0.03), vec3(0.2, 0.38, 0.08), vec3(0.42, 0.55, 0.18));\n\t\tblade = mix(blade, vec3(0.5, 0.46, 0.3), step(0.8, fract(b.z * 11.0)) * 0.7);\n\t\tc = mix(c, blade, here);\n\t\th = mix(h, 0.28 + 0.04 * float(layer) + 0.04 * (1.0 - b.y), here);\n\t\tao = mix(ao, 0.6 + 0.4 * k, here);\n\t\tr = mix(r, 0.8, here);\n\t}\n\t// Rosettes of weeds: leaves round a middle, broad and light green.\n\tvec4 ros = tex_cells(uv, 14.0, seed + 6.0);\n\tif (ros.z < p_Weeds * 0.7 * (0.4 + 0.6 * grow)) {\n\t\tvec2 p = uv * 14.0;\n\t\tvec2 centre = floor(p) + tex_hash2(floor(p), 14.0, seed + 6.0);\n\t\tfloat best = 0.0;\n\t\tfor (int y = -1; y <= 1; y++) {\n\t\t\tfor (int x = -1; x <= 1; x++) {\n\t\t\t\tvec2 cell = floor(p) + vec2(float(x), float(y));\n\t\t\t\tvec2 mid = cell + tex_hash2(cell, 14.0, seed + 6.0);\n\t\t\t\tif (tex_hash(cell, 14.0, seed + 6.0 + 3.1) >= p_Weeds * 0.7 * (0.4 + 0.6 * grow)) continue;\n\t\t\t\tvec2 q = p - mid;\n\t\t\t\tfloat a = atan(q.y, q.x);\n\t\t\t\tfloat count = 5.0 + floor(tex_hash(cell, 14.0, seed + 8.0) * 5.0);\n\t\t\t\tfloat petal = pow(abs(sin(a * count * 0.5 + tex_hash(cell, 14.0, seed + 9.0) * 6.2831853)), 1.4);\n\t\t\t\tfloat reach = 0.24 + 0.2 * tex_hash(cell, 14.0, seed + 10.0);\n\t\t\t\tfloat along = length(q) / reach;\n\t\t\t\tfloat leafy = (1.0 - smoothstep(petal * (1.0 - along * 0.6) - 0.08, petal * (1.0 - along * 0.6), 0.25 + along * 0.35)) * step(along, 1.0);\n\t\t\t\tbest = max(best, leafy * (0.55 + 0.45 * along));\n\t\t\t}\n\t\t}\n\t\tc = mix(c, mix(vec3(0.1, 0.22, 0.05), vec3(0.3, 0.46, 0.12), best), step(0.01, best));\n\t\th = mix(h, 0.3 + 0.15 * best, step(0.01, best));\n\t\tao = mix(ao, 0.75 + 0.25 * best, step(0.01, best));\n\t}"
+				},
+				{
+					"key": "Inputs",
+					"value": "uv: vec2, px: float, seed: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, h: float, ao: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Soil with grass on it here and there (Cover: how much of it), as by a path or a lot left alone: sandy grey soil, its grains and pebbles, patches of short grass and rosettes of weeds."
+		}
+	],
+	"links": []
+}

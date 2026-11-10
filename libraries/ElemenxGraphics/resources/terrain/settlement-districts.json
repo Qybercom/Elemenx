@@ -1,0 +1,47 @@
+{
+	"residential": {
+		"house": 3,
+		"townhouse": 2,
+		"cottage": 1
+	},
+	"market": {
+		"shop": 4,
+		"townhouse": 1
+	},
+	"craft": {
+		"house": 2,
+		"warehouse": 1,
+		"shop": 1
+	},
+	"noble": {
+		"villa": 4
+	},
+	"business": {
+		"office": 3,
+		"tower": 2,
+		"business": 1,
+		"skyscraper": 1
+	},
+	"industry": {
+		"warehouse": 3,
+		"factory": 2,
+		"hangar": 1,
+		"watertower": 0.3
+	},
+	"civic": {
+		"school": 2,
+		"church": 1,
+		"station": 1
+	},
+	"service": {
+		"fuel": 2,
+		"garage": 2,
+		"parking": 1
+	},
+	"farm": {
+		"barn": 3,
+		"watertower": 0.5,
+		"cottage": 1
+	},
+	"fields": {}
+}

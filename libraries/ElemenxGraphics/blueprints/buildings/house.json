@@ -1,0 +1,1318 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "house",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "ShutterOn"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "ShutterColor"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "AC"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Trim"
+				}
+			]
+		},
+		{
+			"id": "input5",
+			"type": "Input",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Chimneys"
+				}
+			]
+		},
+		{
+			"id": "input6",
+			"type": "Input",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Dormers"
+				}
+			]
+		},
+		{
+			"id": "input7",
+			"type": "Input",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Rooftop"
+				}
+			]
+		},
+		{
+			"id": "input8",
+			"type": "Input",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Awning"
+				}
+			]
+		},
+		{
+			"id": "input9",
+			"type": "Input",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "AwningColor"
+				}
+			]
+		},
+		{
+			"id": "input10",
+			"type": "Input",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SignColor"
+				}
+			]
+		},
+		{
+			"id": "input11",
+			"type": "Input",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Downpipes"
+				}
+			]
+		},
+		{
+			"id": "input12",
+			"type": "Input",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Lamp"
+				}
+			]
+		},
+		{
+			"id": "input13",
+			"type": "Input",
+			"x": 700,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Class"
+				}
+			]
+		},
+		{
+			"id": "input14",
+			"type": "Input",
+			"x": 920,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "input15",
+			"type": "Input",
+			"x": 1140,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Depth"
+				}
+			]
+		},
+		{
+			"id": "input16",
+			"type": "Input",
+			"x": 1360,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Floors"
+				}
+			]
+		},
+		{
+			"id": "input17",
+			"type": "Input",
+			"x": 1580,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "FloorHeight"
+				}
+			]
+		},
+		{
+			"id": "input18",
+			"type": "Input",
+			"x": 1800,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "input19",
+			"type": "Input",
+			"x": 2020,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Roof"
+				}
+			]
+		},
+		{
+			"id": "input20",
+			"type": "Input",
+			"x": 40,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Wall"
+				}
+			]
+		},
+		{
+			"id": "input21",
+			"type": "Input",
+			"x": 260,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "WallMaterial"
+				}
+			]
+		},
+		{
+			"id": "input22",
+			"type": "Input",
+			"x": 480,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofMaterial"
+				}
+			]
+		},
+		{
+			"id": "input23",
+			"type": "Input",
+			"x": 700,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofColor"
+				}
+			]
+		},
+		{
+			"id": "input24",
+			"type": "Input",
+			"x": 920,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Shut"
+				}
+			]
+		},
+		{
+			"id": "input25",
+			"type": "Input",
+			"x": 1140,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Band"
+				}
+			]
+		},
+		{
+			"id": "input26",
+			"type": "Input",
+			"x": 1360,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Windows"
+				}
+			]
+		},
+		{
+			"id": "input27",
+			"type": "Input",
+			"x": 1580,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Lit"
+				}
+			]
+		},
+		{
+			"id": "input28",
+			"type": "Input",
+			"x": 1800,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Balconies"
+				}
+			]
+		},
+		{
+			"id": "input29",
+			"type": "Input",
+			"x": 2020,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Setbacks"
+				}
+			]
+		},
+		{
+			"id": "input30",
+			"type": "Input",
+			"x": 40,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Podium"
+				}
+			]
+		},
+		{
+			"id": "input31",
+			"type": "Input",
+			"x": 260,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Crown"
+				}
+			]
+		},
+		{
+			"id": "input32",
+			"type": "Input",
+			"x": 480,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Cornice"
+				}
+			]
+		},
+		{
+			"id": "input33",
+			"type": "Input",
+			"x": 700,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Porch"
+				}
+			]
+		},
+		{
+			"id": "input34",
+			"type": "Input",
+			"x": 920,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Annex"
+				}
+			]
+		},
+		{
+			"id": "input35",
+			"type": "Input",
+			"x": 1140,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Special"
+				}
+			]
+		},
+		{
+			"id": "input36",
+			"type": "Input",
+			"x": 1360,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "input37",
+			"type": "Input",
+			"x": 1580,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Variant"
+				}
+			]
+		},
+		{
+			"id": "formula38",
+			"type": "Formula",
+			"x": 1800,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Setbacks + 1"
+				}
+			]
+		},
+		{
+			"id": "formula39",
+			"type": "Formula",
+			"x": 2020,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Width * (Podium > 0 ? 0.62 : 1) * pow(0.82, last)"
+				}
+			]
+		},
+		{
+			"id": "formula40",
+			"type": "Formula",
+			"x": 40,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Depth * (Podium > 0 ? 0.62 : 1) * pow(0.82, last)"
+				}
+			]
+		},
+		{
+			"id": "formula41",
+			"type": "Formula",
+			"x": 260,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0"
+				}
+			]
+		},
+		{
+			"id": "formula42",
+			"type": "Formula",
+			"x": 480,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0"
+				}
+			]
+		},
+		{
+			"id": "formula43",
+			"type": "Formula",
+			"x": 700,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Floors * FloorHeight"
+				}
+			]
+		},
+		{
+			"id": "repeat44",
+			"type": "Repeat",
+			"x": 920,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/tier"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula45",
+			"type": "Formula",
+			"x": 1140,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Podium > 0 ? 1 : 0) + tiers"
+				}
+			]
+		},
+		{
+			"id": "repeat46",
+			"type": "Repeat",
+			"x": 1360,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/roof"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula47",
+			"type": "Formula",
+			"x": 1580,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"id": "repeat48",
+			"type": "Repeat",
+			"x": 1800,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/crown"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula49",
+			"type": "Formula",
+			"x": 2020,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Crown == 'none' ? 0 : 1"
+				}
+			]
+		},
+		{
+			"id": "repeat50",
+			"type": "Repeat",
+			"x": 40,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/door"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula51",
+			"type": "Formula",
+			"x": 260,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"id": "repeat52",
+			"type": "Repeat",
+			"x": 480,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/dress"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula53",
+			"type": "Formula",
+			"x": 700,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"id": "repeat54",
+			"type": "Repeat",
+			"x": 920,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/details"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula55",
+			"type": "Formula",
+			"x": 1140,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"id": "piece56",
+			"type": "Piece",
+			"x": 1360,
+			"y": 840,
+			"properties": [
+				{
+					"key": "ID",
+					"value": "detail"
+				}
+			]
+		},
+		{
+			"id": "join57",
+			"type": "Join",
+			"x": 1580,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 6
+				}
+			]
+		},
+		{
+			"id": "result58",
+			"type": "Result",
+			"x": 1800,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input29-out-Value",
+			"p2": "formula38-in-Setbacks",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input14-out-Value",
+			"p2": "formula39-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input30-out-Value",
+			"p2": "formula39-in-Podium",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "input29-out-Value",
+			"p2": "formula39-in-last",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "input15-out-Value",
+			"p2": "formula40-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "input30-out-Value",
+			"p2": "formula40-in-Podium",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "input29-out-Value",
+			"p2": "formula40-in-last",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "input16-out-Value",
+			"p2": "formula43-in-Floors",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "input17-out-Value",
+			"p2": "formula43-in-FloorHeight",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "input30-out-Value",
+			"p2": "formula45-in-Podium",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "formula38-out-Value",
+			"p2": "formula45-in-tiers",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "formula45-out-Value",
+			"p2": "repeat44-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "input16-out-Value",
+			"p2": "repeat44-in-Floors",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "input30-out-Value",
+			"p2": "repeat44-in-Podium",
+			"kind": "value"
+		},
+		{
+			"id": "l15",
+			"p1": "input29-out-Value",
+			"p2": "repeat44-in-Setbacks",
+			"kind": "value"
+		},
+		{
+			"id": "l16",
+			"p1": "input14-out-Value",
+			"p2": "repeat44-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l17",
+			"p1": "input15-out-Value",
+			"p2": "repeat44-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l18",
+			"p1": "input17-out-Value",
+			"p2": "repeat44-in-FloorHeight",
+			"kind": "value"
+		},
+		{
+			"id": "l19",
+			"p1": "input25-out-Value",
+			"p2": "repeat44-in-Band",
+			"kind": "value"
+		},
+		{
+			"id": "l20",
+			"p1": "input26-out-Value",
+			"p2": "repeat44-in-Windows",
+			"kind": "value"
+		},
+		{
+			"id": "l21",
+			"p1": "input27-out-Value",
+			"p2": "repeat44-in-Lit",
+			"kind": "value"
+		},
+		{
+			"id": "l22",
+			"p1": "input36-out-Value",
+			"p2": "repeat44-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "l23",
+			"p1": "input37-out-Value",
+			"p2": "repeat44-in-Variant",
+			"kind": "value"
+		},
+		{
+			"id": "l24",
+			"p1": "input28-out-Value",
+			"p2": "repeat44-in-Balconies",
+			"kind": "value"
+		},
+		{
+			"id": "l25",
+			"p1": "input20-out-Value",
+			"p2": "repeat44-in-Wall",
+			"kind": "value"
+		},
+		{
+			"id": "l26",
+			"p1": "input21-out-Value",
+			"p2": "repeat44-in-WallMaterial",
+			"kind": "value"
+		},
+		{
+			"id": "l27",
+			"p1": "input1-out-Value",
+			"p2": "repeat44-in-ShutterOn",
+			"kind": "value"
+		},
+		{
+			"id": "l28",
+			"p1": "input2-out-Value",
+			"p2": "repeat44-in-ShutterColor",
+			"kind": "value"
+		},
+		{
+			"id": "l29",
+			"p1": "input3-out-Value",
+			"p2": "repeat44-in-AC",
+			"kind": "value"
+		},
+		{
+			"id": "l30",
+			"p1": "input4-out-Value",
+			"p2": "repeat44-in-Trim",
+			"kind": "value"
+		},
+		{
+			"id": "l31",
+			"p1": "formula47-out-Value",
+			"p2": "repeat46-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l32",
+			"p1": "formula39-out-Value",
+			"p2": "repeat46-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l33",
+			"p1": "formula40-out-Value",
+			"p2": "repeat46-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l34",
+			"p1": "formula41-out-Value",
+			"p2": "repeat46-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "l35",
+			"p1": "formula42-out-Value",
+			"p2": "repeat46-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "l36",
+			"p1": "formula43-out-Value",
+			"p2": "repeat46-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l37",
+			"p1": "input19-out-Value",
+			"p2": "repeat46-in-Roof",
+			"kind": "value"
+		},
+		{
+			"id": "l38",
+			"p1": "input23-out-Value",
+			"p2": "repeat46-in-RoofColor",
+			"kind": "value"
+		},
+		{
+			"id": "l39",
+			"p1": "input24-out-Value",
+			"p2": "repeat46-in-Shut",
+			"kind": "value"
+		},
+		{
+			"id": "l40",
+			"p1": "input22-out-Value",
+			"p2": "repeat46-in-RoofMaterial",
+			"kind": "value"
+		},
+		{
+			"id": "l41",
+			"p1": "input31-out-Value",
+			"p2": "formula49-in-Crown",
+			"kind": "value"
+		},
+		{
+			"id": "l42",
+			"p1": "formula49-out-Value",
+			"p2": "repeat48-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l43",
+			"p1": "input31-out-Value",
+			"p2": "repeat48-in-Crown",
+			"kind": "value"
+		},
+		{
+			"id": "l44",
+			"p1": "formula39-out-Value",
+			"p2": "repeat48-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l45",
+			"p1": "formula40-out-Value",
+			"p2": "repeat48-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l46",
+			"p1": "formula43-out-Value",
+			"p2": "repeat48-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l47",
+			"p1": "input16-out-Value",
+			"p2": "repeat48-in-Floors",
+			"kind": "value"
+		},
+		{
+			"id": "l48",
+			"p1": "input17-out-Value",
+			"p2": "repeat48-in-FloorHeight",
+			"kind": "value"
+		},
+		{
+			"id": "l49",
+			"p1": "formula51-out-Value",
+			"p2": "repeat50-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l50",
+			"p1": "input14-out-Value",
+			"p2": "repeat50-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l51",
+			"p1": "input15-out-Value",
+			"p2": "repeat50-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l52",
+			"p1": "input17-out-Value",
+			"p2": "repeat50-in-FloorHeight",
+			"kind": "value"
+		},
+		{
+			"id": "l53",
+			"p1": "input35-out-Value",
+			"p2": "repeat50-in-Special",
+			"kind": "value"
+		},
+		{
+			"id": "l54",
+			"p1": "formula53-out-Value",
+			"p2": "repeat52-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l55",
+			"p1": "input13-out-Value",
+			"p2": "repeat52-in-Class",
+			"kind": "value"
+		},
+		{
+			"id": "l56",
+			"p1": "input14-out-Value",
+			"p2": "repeat52-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l57",
+			"p1": "input15-out-Value",
+			"p2": "repeat52-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l58",
+			"p1": "input16-out-Value",
+			"p2": "repeat52-in-Floors",
+			"kind": "value"
+		},
+		{
+			"id": "l59",
+			"p1": "input17-out-Value",
+			"p2": "repeat52-in-FloorHeight",
+			"kind": "value"
+		},
+		{
+			"id": "l60",
+			"p1": "input18-out-Value",
+			"p2": "repeat52-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "l61",
+			"p1": "input20-out-Value",
+			"p2": "repeat52-in-Wall",
+			"kind": "value"
+		},
+		{
+			"id": "l62",
+			"p1": "input21-out-Value",
+			"p2": "repeat52-in-WallMaterial",
+			"kind": "value"
+		},
+		{
+			"id": "l63",
+			"p1": "input22-out-Value",
+			"p2": "repeat52-in-RoofMaterial",
+			"kind": "value"
+		},
+		{
+			"id": "l64",
+			"p1": "input23-out-Value",
+			"p2": "repeat52-in-RoofColor",
+			"kind": "value"
+		},
+		{
+			"id": "l65",
+			"p1": "input32-out-Value",
+			"p2": "repeat52-in-Cornice",
+			"kind": "value"
+		},
+		{
+			"id": "l66",
+			"p1": "input33-out-Value",
+			"p2": "repeat52-in-Porch",
+			"kind": "value"
+		},
+		{
+			"id": "l67",
+			"p1": "input34-out-Value",
+			"p2": "repeat52-in-Annex",
+			"kind": "value"
+		},
+		{
+			"id": "l68",
+			"p1": "input35-out-Value",
+			"p2": "repeat52-in-Special",
+			"kind": "value"
+		},
+		{
+			"id": "l69",
+			"p1": "input36-out-Value",
+			"p2": "repeat52-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "l70",
+			"p1": "formula55-out-Value",
+			"p2": "repeat54-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l71",
+			"p1": "input13-out-Value",
+			"p2": "repeat54-in-Class",
+			"kind": "value"
+		},
+		{
+			"id": "l72",
+			"p1": "input14-out-Value",
+			"p2": "repeat54-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l73",
+			"p1": "input15-out-Value",
+			"p2": "repeat54-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l74",
+			"p1": "formula39-out-Value",
+			"p2": "repeat54-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l75",
+			"p1": "formula40-out-Value",
+			"p2": "repeat54-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l76",
+			"p1": "formula43-out-Value",
+			"p2": "repeat54-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l77",
+			"p1": "input16-out-Value",
+			"p2": "repeat54-in-Floors",
+			"kind": "value"
+		},
+		{
+			"id": "l78",
+			"p1": "input17-out-Value",
+			"p2": "repeat54-in-FloorHeight",
+			"kind": "value"
+		},
+		{
+			"id": "l79",
+			"p1": "input19-out-Value",
+			"p2": "repeat54-in-Roof",
+			"kind": "value"
+		},
+		{
+			"id": "l80",
+			"p1": "input36-out-Value",
+			"p2": "repeat54-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "l81",
+			"p1": "input35-out-Value",
+			"p2": "repeat54-in-Special",
+			"kind": "value"
+		},
+		{
+			"id": "l82",
+			"p1": "input5-out-Value",
+			"p2": "repeat54-in-Chimneys",
+			"kind": "value"
+		},
+		{
+			"id": "l83",
+			"p1": "input6-out-Value",
+			"p2": "repeat54-in-Dormers",
+			"kind": "value"
+		},
+		{
+			"id": "l84",
+			"p1": "input7-out-Value",
+			"p2": "repeat54-in-Rooftop",
+			"kind": "value"
+		},
+		{
+			"id": "l85",
+			"p1": "input8-out-Value",
+			"p2": "repeat54-in-Awning",
+			"kind": "value"
+		},
+		{
+			"id": "l86",
+			"p1": "input9-out-Value",
+			"p2": "repeat54-in-AwningColor",
+			"kind": "value"
+		},
+		{
+			"id": "l87",
+			"p1": "input10-out-Value",
+			"p2": "repeat54-in-SignColor",
+			"kind": "value"
+		},
+		{
+			"id": "l88",
+			"p1": "input11-out-Value",
+			"p2": "repeat54-in-Downpipes",
+			"kind": "value"
+		},
+		{
+			"id": "l89",
+			"p1": "input12-out-Value",
+			"p2": "repeat54-in-Lamp",
+			"kind": "value"
+		},
+		{
+			"id": "l90",
+			"p1": "input4-out-Value",
+			"p2": "repeat54-in-Trim",
+			"kind": "value"
+		},
+		{
+			"id": "l91",
+			"p1": "repeat54-out-List",
+			"p2": "piece56-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "l92",
+			"p1": "repeat44-out-List",
+			"p2": "join57-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "l93",
+			"p1": "repeat46-out-List",
+			"p2": "join57-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "l94",
+			"p1": "repeat48-out-List",
+			"p2": "join57-in-Parts3",
+			"kind": "value"
+		},
+		{
+			"id": "l95",
+			"p1": "repeat50-out-List",
+			"p2": "join57-in-Parts4",
+			"kind": "value"
+		},
+		{
+			"id": "l96",
+			"p1": "repeat52-out-List",
+			"p2": "join57-in-Parts5",
+			"kind": "value"
+		},
+		{
+			"id": "l97",
+			"p1": "piece56-out-Parts",
+			"p2": "join57-in-Parts6",
+			"kind": "value"
+		},
+		{
+			"id": "l98",
+			"p1": "join57-out-Parts",
+			"p2": "result58-in-Value",
+			"kind": "value"
+		}
+	]
+}

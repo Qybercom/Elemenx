@@ -25,3 +25,7 @@ RoadWay(field, from, to, options) — путь дороги по полю от [
 
 
 Квадрат грани глобуса (SpherePatch) несёт в Materials (8 чисел на точку) положение точки на квадрате от 0 до 1 — для его картинки — и юбку под краями: каждую точку края ещё раз, ниже на десятую клетки (не меньше 50 м), видимую с обеих сторон, чтобы квадраты разных размеров не оставляли щелей. Piece(«Sphere», options, roads, [face, u, v, size, resolution, picture]) с размером picture и полем, которое красит себя само (ScenePlanet), даёт и Picture; Piece(«SpherePicture», …, [face, u, v, size, picture]) — одну картинку.
+
+FlatOf(options) — числа плоской карты, заданные или по умолчанию: {Seed, Size, Height, Water, Scale, Ridges} (1000, 60, 0.35, 180, 0.4); от них начинают Flat, её климат, LibraryRelief и блоки SceneWorld. TunnelRadius — радиус тоннеля или прохода без заданного, 2.5 м.
+
+LibraryRelief(options) берёт граф ресурса `ElemenxGraphics/relief` (blueprints/relief.json) и заполняет его параметры (Scale, Ridges, Water, Height, Lapse, Spread, Warmth, Stretch) и зерно `{Seed}` через Blueprints.Fill.

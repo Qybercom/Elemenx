@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "granite",
+	"material": {
+		"Order": 32,
+		"Title": "Granite",
+		"Group": "build",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tvec4 g = enx_mc(q * 60.0, 1.0);\n\tfloat s = enx_ms(px, 0.02);\n\tvec3 grain = g.z < 0.3 ? vec3(0.25) : g.z < 0.55 ? vec3(1.25) : g.z < 0.75 ? vec3(1.1, 0.85, 0.8) : vec3(0.85);\n\tc *= mix(vec3(1.0), grain, s * 0.8) * (0.92 + enx_mf(q * 2.0, 3) * 0.12);\n\tr = 0.45;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Granite: grains of black, white and pink, close together."
+		}
+	],
+	"links": []
+}

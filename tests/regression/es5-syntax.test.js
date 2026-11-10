@@ -12,7 +12,11 @@ import * as espree from 'espree';
  */
 
 var root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-var Skipped = {'node_modules': true, 'dist': true, 'tests': true, '.git': true, '.idea': true, '.vitest': true, 'test-results': true, 'playwright-report': true, 'coverage': true};
+/*
+ * What builds write is left out, as dist: their sources are checked here. Regression: the test of the docs site built
+ * docs-site again beside this one, and a page it listed was gone when it read it (ENOENT).
+ */
+var Skipped = {'node_modules': true, 'dist': true, 'docs-site': true, 'designer-site': true, 'tests': true, '.git': true, '.idea': true, '.vitest': true, 'test-results': true, 'playwright-report': true, 'coverage': true};
 
 /* The native projects Capacitor makes in examples/Native (git ignores them): their files are Capacitor's, not shipped by Elemenx. */
 var SkippedPaths = ['examples/Native/android', 'examples/Native/ios', 'editors/vscode/core', 'editors/intellij/build', 'editors/intellij/.gradle', 'editors/intellij/.intellijPlatform'];

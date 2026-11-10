@@ -40,7 +40,19 @@
  *   with its links, or a link; Pin(block, key, out) finds a pin; Pins(block) makes the pins of a block as its type has
  *   them, and Prune(graph) takes away the links of pins that are there no more (it returns them).
  * - Read(json) reads a text or an object of JSON and gives the graph (a version newer than Version is an error; the
- *   pins a type has are added where they are missing); Write(graph) gives it as the text of a file.
+ *   pins a type has are added where they are missing); Write(graph) gives it as the text of a file. Fill(graph,
+ *   values) sets the values of its parameters by key and puts each value in the place of its {Key} in the texts of the
+ *   properties of its blocks (a graph of a resource made for the options it is asked with); it returns the graph.
+ * - A generator graph of the resources (group Blueprints) is a function: its Input blocks what it is given, its Result
+ *   blocks what it gives. Call runs one (its pins those of the graph), Repeat runs it Count times ({Index, Count}), Map
+ *   for each item of a list ({Item, Index}), Reduce for each ({Item, Index, Sum}, from Initial, its result Sum); what
+ *   else the graph takes they pass on as given; Take keeps one result of each. A graph may call itself, as deep as 256
+ *   calls (a Repeat of Count 0 ends it). List, Count and Item make and read lists, Random(Seed, Key) a number of 0 to 1
+ *   of them (Hash2), Select one of two, Table the row of a key (Rows, Default). Invoke(name, inputs) runs one.
+ * - IR(graph, {Name}) gives the graph in the IR of Elemenx.Compilers ({Module, Diagnostics}: a block of no IR, as noise yet,
+ *   is told), each graph a function (P, I) of a record of its results; the kind blueprint goes to ir by it (blueprint-ir),
+ *   and on to js or cpp. A block of a Service tells its own: IR(inputs, properties, context) of its definition (context
+ *   Helper(name, define): a function of the IR the module gets once), and the end of a kind other than Result its IREnd.
  * - Check(graph) lists what is wrong ([{Block, Pin, Link, Message}]): a type not known or not for this graph, a link
  *   of pins not there or of kinds that do not go together, two links to one input, a circle of values, a graph with
  *   no end. Order(graph) gives the blocks so each one comes after what it reads.
@@ -76,7 +88,7 @@
 Elemenx.Service('Blueprints', {
 	$Meta: {
 		Description: 'Graphs of blocks in the JSON of Flowprint, made into code and flows of actions (and into shaders by BlueprintShaders).',
-		Methods: ['Node(type, definition)', 'Nodes(graph)', 'NodeOf(type)', 'Graph(type, definition)', 'Graphs()', 'Create(type, options)', 'Block(type, options)', 'Add(graph, type, options)', 'Link(graph, from, to)', 'Remove(graph, id)', 'Pin(block, key, out)', 'Read(json)', 'Write(graph)', 'Check(graph)', 'Order(graph)', 'Compile(graph, options)', 'Code(graph)', 'Source(names)', 'Bake(graph)', 'Start(graph, context)']
+		Methods: ['Node(type, definition)', 'Nodes(graph)', 'NodeOf(type)', 'Graph(type, definition)', 'Graphs()', 'Create(type, options)', 'Block(type, options)', 'Add(graph, type, options)', 'Link(graph, from, to)', 'Remove(graph, id)', 'Pin(block, key, out)', 'Read(json)', 'Write(graph)', 'Fill(graph, values)', 'Check(graph)', 'Order(graph)', 'Compile(graph, options)', 'Code(graph)', 'Source(names)', 'Bake(graph)', 'Start(graph, context)', 'IR(graph, options)', 'Invoke(name, inputs)', 'Hash2(a, b)']
 	},
 
 	Version: 1,
@@ -86,6 +98,9 @@ Elemenx.Service('Blueprints', {
 	Sizes: {float: 1, vec2: 2, vec3: 3, vec4: 4, int: 1, bool: 1},
 
 	/* What a worker carries of it (Workers.Source): its numbers and its casts, to run a generator made JavaScript (Code). */
+	/* What a worker carries of this Service besides its methods: its constants. */
+	Carried: ['Version', 'Steps', 'Sizes'],
+
 	Source: function (names) {
 		return this.$Service('Workers').Source(this, names);
 	},
@@ -97,6 +112,17 @@ Elemenx.Service('Blueprints', {
 		this.Counter = 0;
 
 		this.Library();
+
+		/* A graph of blocks is a kind of code of Elemenx.Compilers: blueprint into the IR, by IR(graph) (its Value or its JSON). */
+		if (typeof Elemenx !== 'undefined' && Elemenx.Compilers && Elemenx.Compilers.Names().indexOf('blueprint-ir') === -1) {
+			var self = this;
+
+			Elemenx.Compilers.Define('blueprint-ir', {From: 'blueprint', To: 'ir', Compile: function (job, done) {
+				var made = self.IR(job.Value || JSON.parse(job.Files[0].Text), job.Options);
+
+				done(null, {Value: made.Module, Diagnostics: made.Diagnostics, Entry: made.Module.Entry});
+			}});
+		}
 	},
 
 	Node: function (type, definition) {
@@ -464,6 +490,31 @@ Elemenx.Service('Blueprints', {
 				link.p1 = link.p2;
 				link.p2 = kept;
 			}
+		});
+
+		return graph;
+	},
+
+	Fill: function (graph, values) {
+		var given = values || {};
+
+		function own (key) {
+			return Object.prototype.hasOwnProperty.call(given, key) && given[key] !== undefined && given[key] !== null;
+		}
+
+		(graph.parameters || []).forEach(function (parameter) {
+			if (own(parameter.key))
+				parameter.value = given[parameter.key];
+		});
+
+		graph.blocks.forEach(function (block) {
+			(block.properties || []).forEach(function (property) {
+				if (typeof property.value !== 'string') return;
+
+				property.value = property.value.replace(/\{(\w+)\}/g, function (whole, key) {
+					return own(key) ? String(given[key]) : whole;
+				});
+			});
 		});
 
 		return graph;
@@ -857,11 +908,39 @@ Elemenx.Service('Blueprints', {
 
 	Bypass: function (plan, id, run, depth) {
 		var inputs = this.Gather(plan, id, run, depth + 1);
+		var passed = this.Passed(plan, id);
 		var made = {};
-		var first = Object.keys(plan.From[id])[0];
 
-		(this.Outputs(plan.Nodes[id], plan.Blocks[id]) || []).forEach(function (output) {
-			made[output.Key] = first ? inputs[first] : undefined;
+		Object.keys(passed).forEach(function (key) {
+			made[key] = passed[key] ? inputs[passed[key]] : undefined;
+		});
+
+		return made;
+	},
+
+	/*
+	 * What a block turned off passes on: to each output the input of its name, else the first input of its type that is
+	 * linked; an output of a type some input has, none of them linked, nothing; else the first input linked. Regression:
+	 * each output took the first input, and a step of roads turned off gave its land as its things.
+	 */
+	Passed: function (plan, id) {
+		var node = plan.Nodes[id];
+		var block = plan.Blocks[id];
+		var linked = Object.keys(plan.From[id] || {});
+		var declared = this.Inputs(node, block) || [];
+		var made = {};
+
+		(this.Outputs(node, block) || []).forEach(function (output) {
+			var typed = declared.filter(function (input) {
+				return input.Type === output.Type;
+			}).map(function (input) {
+				return input.Key;
+			});
+			var same = linked.indexOf(output.Key) !== -1 ? output.Key : linked.filter(function (key) {
+				return typed.indexOf(key) !== -1;
+			})[0];
+
+			made[output.Key] = same || (typed.length ? null : linked[0] || null);
 		});
 
 		return made;
@@ -957,7 +1036,7 @@ Elemenx.Service('Blueprints', {
 			var inputs = {};
 			var outputs;
 			var code;
-			var first;
+			var passed;
 
 			if (!needed[id] || failed) return;
 
@@ -981,13 +1060,13 @@ Elemenx.Service('Blueprints', {
 				return;
 			}
 
-			/* A block turned off gives what comes to its first input. */
+			/* A block turned off gives what comes to its inputs (Passed). */
 			if (block.enabled === false) {
-				first = Object.keys(plan.From[id])[0];
+				passed = self.Passed(plan, id);
 				code = {};
 
 				outputs.forEach(function (output) {
-					code[output.Key] = first ? inputs[first] : 'undefined';
+					code[output.Key] = passed[output.Key] ? inputs[passed[output.Key]] : 'undefined';
 				});
 			}
 			/* A block of no input and no outside (a number, a vector, a color) is its value. */
@@ -1347,6 +1426,844 @@ Elemenx.Service('Blueprints', {
 		return {Type: given.Type || 'perlin', Seed: given.Seed || '', Fractal: given.Fractal || 'fbm', Octaves: Number(given.Octaves) || 4, Gain: given.Gain === undefined ? 0.5 : Number(given.Gain), Cell: {Return: given.Cell || 'f1', Distance: given.Distance || 'euclid'}, Warp: Number(given.Warp) ? {Amount: Number(given.Warp)} : null, Tile: tile ? [tile, tile, tile] : null};
 	},
 
+	/* Blueprints: functions and the IR */
+
+	/*
+	 * An expression of a block Formula read: {Tree, Names (its inputs: the names it reads, in their order)}, or an error.
+	 * Numbers, texts ('a' or "a"), names, true, false, PI; [a, b] lists; a[i]; f(a, b); - and !; * / %; + -; < <= > >=;
+	 * == !=; &&; ||; a ? b : c. Regression: none, it is new.
+	 */
+	Formula: function (text) {
+		var source = String(text === undefined || text === null ? '' : text);
+		var tokens = [];
+		var at = 0;
+		var names = [];
+		var found = /\s*(\d+\.?\d*(?:[eE][-+]?\d+)?|\.\d+|[A-Za-z_]\w*|'[^']*'|"[^"]*"|==|!=|<=|>=|&&|\|\||[-+*\/%<>!?:,()[\]])/g;
+		var match;
+		var tree;
+
+		this.Formulas = this.Formulas || {};
+
+		if (Object.prototype.hasOwnProperty.call(this.Formulas, source)) return this.Formulas[source];
+
+		while (found.lastIndex < source.length) {
+			var before = found.lastIndex;
+
+			match = found.exec(source);
+
+			if (!match || match.index !== before) {
+				if (/^\s*$/.test(source.slice(before))) break;
+
+				throw new Error('Elemenx Blueprints: cannot read the formula ' + source + ' at ' + before);
+			}
+
+			tokens.push(match[1]);
+		}
+
+		function peek () {
+			return tokens[at];
+		}
+
+		function take (expected) {
+			var token = tokens[at];
+			if (expected !== undefined && token !== expected)
+				throw new Error('Elemenx Blueprints: the formula ' + source + ' expects ' + expected + ' at ' + (token === undefined ? 'its end' : token));
+
+			at++;
+
+			return token;
+		}
+
+		function binary (operators, next) {
+			return function () {
+				var left = next();
+
+				while (operators.indexOf(peek()) !== -1)
+					left = {Op: 'bin', Operator: take(), A: left, B: next()};
+
+				return left;
+			};
+		}
+
+		function primary () {
+			var token = take();
+			var items;
+			var node;
+
+			if (token === undefined)
+				throw new Error('Elemenx Blueprints: the formula ' + source + ' ends too soon');
+
+			if (token === '(') {
+				node = choice();
+
+				take(')');
+			}
+			else if (token === '[') {
+				items = [];
+
+				while (peek() !== ']') {
+					items.push(choice());
+
+					if (peek() === ',')
+						take();
+				}
+
+				take(']');
+
+				node = {Op: 'list', Items: items};
+			}
+			else if (/^[\d.]/.test(token)) {
+				node = {Op: 'const', Value: Number(token)};
+			}
+			else if (/^['"]/.test(token)) {
+				node = {Op: 'const', Value: token.slice(1, -1)};
+			}
+			else if (token === 'true' || token === 'false') {
+				node = {Op: 'const', Value: token === 'true'};
+			}
+			else if (token === 'PI') {
+				node = {Op: 'const', Value: Math.PI};
+			}
+			else if (peek() === '(') {
+				take('(');
+
+				items = [];
+
+				while (peek() !== ')') {
+					items.push(choice());
+
+					if (peek() === ',')
+						take();
+				}
+
+				take(')');
+
+				node = {Op: 'call', Name: token, Args: items};
+			}
+			else if (/^[A-Za-z_]/.test(token)) {
+				if (names.indexOf(token) === -1)
+					names.push(token);
+
+				node = {Op: 'var', Name: token};
+			}
+			else {
+				throw new Error('Elemenx Blueprints: the formula ' + source + ' has ' + token + ' out of place');
+			}
+
+			while (peek() === '[') {
+				take('[');
+
+				node = {Op: 'index', List: node, At: choice()};
+
+				take(']');
+			}
+
+			return node;
+		}
+
+		function unary () {
+			if (peek() === '-' || peek() === '!')
+				return {Op: 'un', Operator: take(), A: unary()};
+
+			return primary();
+		}
+
+		var product = binary(['*', '/', '%'], unary);
+		var sum = binary(['+', '-'], product);
+		var order = binary(['<', '<=', '>', '>='], sum);
+		var equal = binary(['==', '!='], order);
+		var both = binary(['&&'], equal);
+		var either = binary(['||'], both);
+
+		function choice () {
+			var test = either();
+			var a;
+
+			if (peek() !== '?') return test;
+
+			take('?');
+
+			a = choice();
+
+			take(':');
+
+			return {Op: 'select', Test: test, A: a, B: choice()};
+		}
+
+		tree = choice();
+
+		if (at < tokens.length)
+			throw new Error('Elemenx Blueprints: the formula ' + source + ' has ' + tokens[at] + ' out of place');
+
+		this.Formulas[source] = {Tree: tree, Names: names};
+
+		return this.Formulas[source];
+	},
+
+	/* The functions of a formula, each of numbers or of lists of them part by part (Each), as the IR has them. */
+	FormulaCalls: {
+		min: 'min', max: 'max', pow: 'pow', step: 'step', floor: 'floor', abs: 'abs', sqrt: 'sqrt', sin: 'sin', cos: 'cos', fract: 'fract', exp: 'exp', saturate: 'saturate'
+	},
+
+	/* The value of the tree of a formula with the values of its names. */
+	FormulaValue: function (tree, values) {
+		var self = this;
+		var ops = {'+': function (a, b) {
+			return a + b;
+		}, '-': function (a, b) {
+			return a - b;
+		}, '*': function (a, b) {
+			return a * b;
+		}, '/': function (a, b) {
+			return b ? a / b : 0;
+		}};
+		var singles = {min: Math.min, max: Math.max, pow: Math.pow, step: function (e, x) {
+			return x < e ? 0 : 1;
+		}, floor: Math.floor, abs: Math.abs, sqrt: function (x) {
+			return Math.sqrt(Math.max(0, x));
+		}, sin: Math.sin, cos: Math.cos, fract: function (x) {
+			return x - Math.floor(x);
+		}, exp: Math.exp, saturate: function (x) {
+			return Math.max(0, Math.min(1, x));
+		}};
+
+		function value (node) {
+			var args;
+			var a;
+			var b;
+
+			if (node.Op === 'const') return node.Value;
+
+			if (node.Op === 'var')
+				return values[node.Name];
+
+			if (node.Op === 'list')
+				return node.Items.map(value);
+
+			if (node.Op === 'index') {
+				a = value(node.List);
+
+				return a == null ? undefined : a[Math.floor(Number(value(node.At)) || 0)];
+			}
+
+			if (node.Op === 'select')
+				return value(node.Test) ? value(node.A) : value(node.B);
+
+			if (node.Op === 'un')
+				return node.Operator === '!' ? !value(node.A) : self.Each(value(node.A), 0, function (x) {
+					return -x;
+				});
+
+			if (node.Op === 'call') {
+				args = node.Args.map(value);
+
+				if (Object.prototype.hasOwnProperty.call(singles, node.Name))
+					return self.Each(args[0], args[1] === undefined ? 0 : args[1], singles[node.Name]);
+
+				switch (node.Name) {
+					case 'clamp':
+						return self.Each(args[1], self.Each(args[2], args[0], Math.min), Math.max);
+					case 'mix':
+						return self.Each(args[0], self.Each(self.Each(args[1], args[0], ops['-']), args[2], ops['*']), ops['+']);
+					case 'round':
+						return Math.round(Number(args[0]) || 0);
+					case 'atan2':
+						return Math.atan2(Number(args[0]) || 0, Number(args[1]) || 0);
+					case 'hypot':
+						return Math.sqrt(Math.pow(Number(args[0]) || 0, 2) + Math.pow(Number(args[1]) || 0, 2));
+					case 'ceil':
+						return Math.ceil(Number(args[0]) || 0);
+					case 'count':
+						return args[0] && args[0].length || 0;
+					case 'vec2':
+					case 'vec3':
+					case 'vec4':
+						return args.slice(0, Number(node.Name.charAt(3)));
+					case 'text':
+						return String(args[0]);
+					default:
+						throw new Error('Elemenx Blueprints: no function ' + node.Name + ' in a formula');
+				}
+			}
+
+			a = value(node.A);
+			b = value(node.B);
+
+			if (ops[node.Operator])
+				return self.Each(a, b, ops[node.Operator]);
+
+			switch (node.Operator) {
+				case '%':
+					return a % b;
+				case '<':
+					return a < b;
+				case '<=':
+					return a <= b;
+				case '>':
+					return a > b;
+				case '>=':
+					return a >= b;
+				case '==':
+					return a === b;
+				case '!=':
+					return a !== b;
+				case '&&':
+					return a && b;
+				default:
+					return a || b;
+			}
+		}
+
+		return value(tree);
+	},
+
+	/* The tree of a formula in the IR, its names the expressions given for them. */
+	FormulaIR: function (tree, inputs) {
+		var self = this;
+		var each = {'+': 'add', '-': 'sub', '*': 'mul', '/': 'div'};
+
+		function c (value) {
+			return {Op: 'const', Value: value, Type: typeof value === 'string' ? 'text' : typeof value === 'boolean' ? 'bool' : 'float'};
+		}
+
+		function call (name) {
+			return {Op: 'call', Name: name, Args: Array.prototype.slice.call(arguments, 1)};
+		}
+
+		function ir (node) {
+			var args;
+
+			if (node.Op === 'const') return c(node.Value);
+
+			if (node.Op === 'var')
+				return inputs[node.Name] || c(0);
+
+			if (node.Op === 'list')
+				return {Op: 'list', Items: node.Items.map(ir)};
+
+			if (node.Op === 'index')
+				return {Op: 'index', List: ir(node.List), At: call('floor', ir(node.At))};
+
+			if (node.Op === 'select')
+				return {Op: 'select', Test: ir(node.Test), A: ir(node.A), B: ir(node.B)};
+
+			if (node.Op === 'un')
+				return node.Operator === '!' ? {Op: 'un', Operator: '!', A: ir(node.A)} : call('each', c('sub'), c(0), ir(node.A));
+
+			if (node.Op === 'call') {
+				args = node.Args.map(ir);
+
+				if (Object.prototype.hasOwnProperty.call(self.FormulaCalls, node.Name))
+					return call('each', c(self.FormulaCalls[node.Name]), args[0], args[1] || c(0));
+
+				switch (node.Name) {
+					case 'clamp':
+						return call('each', c('max'), args[1], call('each', c('min'), args[2], args[0]));
+					case 'mix':
+						return call('each', c('add'), args[0], call('each', c('mul'), call('each', c('sub'), args[1], args[0]), args[2]));
+					case 'round':
+					case 'ceil':
+						return call(node.Name, call('cast', args[0], c('float')));
+					case 'atan2':
+						return call('atan2', call('cast', args[0], c('float')), call('cast', args[1], c('float')));
+					case 'hypot':
+						return call('sqrt', call('each', c('add'), call('each', c('mul'), args[0], args[0]), call('each', c('mul'), args[1], args[1])));
+					case 'count':
+						return {Op: 'length', List: args[0]};
+					case 'vec2':
+					case 'vec3':
+					case 'vec4':
+						return {Op: 'list', Items: args.slice(0, Number(node.Name.charAt(3)))};
+					case 'text':
+						return call('text', args[0]);
+					default:
+						throw new Error('Elemenx Blueprints: no function ' + node.Name + ' in a formula');
+				}
+			}
+
+			if (each[node.Operator])
+				return call('each', c(each[node.Operator]), ir(node.A), ir(node.B));
+
+			return {Op: 'bin', Operator: node.Operator, A: ir(node.A), B: ir(node.B)};
+		}
+
+		return ir(tree);
+	},
+
+
+	/*
+	 * The graph a block calls (Call, Repeat, Map, Reduce): a generator graph of the resources (group Blueprints) of that
+	 * name, or null. It is a function: its Input blocks what it is given, its Result blocks what it gives.
+	 */
+	Callee: function (name) {
+		var graph;
+
+		/* While a graph runs, each it calls is read once (Calls): a window of a tower is called a thousand times. */
+		if (this.Calls && Object.prototype.hasOwnProperty.call(this.Calls, name)) return this.Calls[name].Graph;
+
+		graph = name && typeof Elemenx !== 'undefined' && Elemenx.Resources ? Elemenx.Resources('Blueprints', String(name)) : null;
+		graph = graph && Array.isArray(graph.blocks) ? graph : null;
+
+		if (this.Calls)
+			this.Calls[name] = {Graph: graph};
+
+		return graph;
+	},
+
+	/*
+	 * Runs work in which the graphs called are read once each (Calls), then forgotten: a resource changed after it is read
+	 * again. Within work of this kind already, it only runs it.
+	 */
+	Calling: function (work) {
+		if (this.Calls) return work();
+
+		this.Calls = {};
+
+		try {
+			return work();
+		}
+		finally {
+			this.Calls = null;
+		}
+	},
+
+	/* The names of the Input blocks and the keys of the Result blocks of a graph that is called: the pins of what calls it. */
+	Signature: function (name) {
+		var graph = this.Callee(name);
+		var made = {Inputs: [], Results: []};
+
+		if (this.Calls && this.Calls[name] && this.Calls[name].Signature) return this.Calls[name].Signature;
+
+		(graph ? graph.blocks : []).forEach(function (block) {
+			var key = (block.properties || []).filter(function (property) {
+				return property.key === (block.type === 'Input' ? 'Name' : 'Key');
+			})[0];
+			if (block.type === 'Input' && key && made.Inputs.indexOf(key.value) === -1)
+				made.Inputs.push(key.value);
+
+			if (block.type === 'Result' && block.enabled !== false)
+				made.Results.push(key ? key.value : 'Value');
+		});
+
+		if (this.Calls && this.Calls[name])
+			this.Calls[name].Signature = made;
+
+		return made;
+	},
+
+	/*
+	 * Runs the graph of a name as a function with inputs ({name: value}): {key: value} of its results. One that calls
+	 * itself goes as deep as 256 calls, then an error. Regression: none, it is new.
+	 */
+	Invoke: function (name, inputs) {
+		var graph = this.Callee(name);
+		var made;
+
+		if (!graph)
+			throw new Error('Elemenx Blueprints: no graph ' + name + ' to call');
+
+		this.Depth = (this.Depth || 0) + 1;
+
+		try {
+			if (this.Depth > 256)
+				throw new Error('Elemenx Blueprints: ' + name + ' goes deeper than 256');
+
+			made = this.Calls && this.Calls[name] && this.Calls[name].Made || this.Compile(graph);
+
+			if (this.Calls && this.Calls[name])
+				this.Calls[name].Made = made;
+
+			return made.Run(null, inputs || {}) || {};
+		}
+		finally {
+			this.Depth--;
+		}
+	},
+
+	/* The inputs of a graph called by a block of a list besides those the block gives it: what it passes on as it is given. */
+	Extras: function (name, taken) {
+		return this.Signature(name).Inputs.filter(function (input) {
+			return taken.indexOf(input) === -1;
+		}).map(function (input) {
+			return {Key: input, Type: 'any', Value: 0};
+		});
+	},
+
+	/* What a block of a list takes of what its graph gives: the result of Take, or all of them ('' or none of that key). */
+	Taken: function (results, take) {
+		return take && Object.prototype.hasOwnProperty.call(results, take) ? results[take] : results;
+	},
+
+	/*
+	 * The IR of a block of a generator graph: {Output: an expression of the IR} of its inputs (expressions too), or null
+	 * for one that has none (noise yet: the graph is run as it is). context: Inputs, Properties, Types (of its inputs as
+	 * they come), Statement(statement) (a statement before its outputs, for what loops), Temp(name) (a name of its own),
+	 * Call(name) (the name of the function of a graph it calls, made too).
+	 */
+	IROf: function (type, context) {
+		var inputs = context.Inputs;
+		var properties = context.Properties;
+		var each = {Add: 'add', Subtract: 'sub', Multiply: 'mul', Divide: 'div', Min: 'min', Max: 'max', Pow: 'pow', Step: 'step'};
+		var single = {Sin: 'sin', Cos: 'cos', Abs: 'abs', Floor: 'floor', Fract: 'fract', Sqrt: 'sqrt', Exp: 'exp', Saturate: 'saturate'};
+		var compare = {'==': '==', '!=': '!=', '<': '<', '<=': '<=', '>': '>', '>=': '>='};
+		var list;
+		var at;
+		var made;
+		var signature;
+
+		function c (value) {
+			return {Op: 'const', Value: value, Type: typeof value === 'string' ? 'text' : typeof value === 'boolean' ? 'bool' : Array.isArray(value) ? 'list' : 'float'};
+		}
+
+		function call (name) {
+			return {Op: 'call', Name: name, Args: Array.prototype.slice.call(arguments, 1)};
+		}
+
+		function e (op, a, b) {
+			return call('each', c(op), a, b || c(0));
+		}
+
+		function v (name) {
+			return {Op: 'var', Name: name};
+		}
+
+		/* A graph called with a record of what it is given: its record of results. */
+		/* A graph called with what it is given: the inputs the block passes on as they are, and record. */
+		function invoke (record) {
+			var fields = {};
+
+			Object.keys(inputs).forEach(function (key) {
+				if (['List', 'Count', 'Initial'].indexOf(key) === -1)
+					fields[key] = inputs[key];
+			});
+
+			return call(context.Call(properties.Graph), {Op: 'record', Fields: {}}, {Op: 'record', Fields: Object.assign(fields, record)});
+		}
+
+		if (each[type])
+			return {Out: e(each[type], inputs.A, inputs.B)};
+
+		if (single[type])
+			return {Out: e(single[type], inputs.X)};
+
+		switch (type) {
+			case 'Parameter':
+				return {Value: call('get', v('P'), c(String(properties.Key)), c(context.Defaults[properties.Key] === undefined ? 0 : context.Defaults[properties.Key]))};
+			case 'Input':
+				return {Value: call('get', v('I'), c(String(properties.Name)))};
+			case 'Time':
+				return {Seconds: call('cast', call('get', v('I'), c('Time'), c(0)), c('float'))};
+			case 'OneMinus':
+				return {Out: e('sub', c(1), inputs.X)};
+			case 'Mix':
+				return {Out: e('add', inputs.A, e('mul', e('sub', inputs.B, inputs.A), inputs.T))};
+			case 'Clamp':
+				return {Out: e('max', inputs.Low, e('min', inputs.High, inputs.X))};
+			case 'Smoothstep':
+				at = context.Temp('t');
+
+				context.Statement({Op: 'let', Name: at, Type: 'any', Value: e('saturate', e('div', e('sub', inputs.X, inputs.Low), {Op: 'select', Test: {Op: 'bin', Operator: '==', A: e('sub', inputs.High, inputs.Low), B: c(0)}, A: c(1), B: e('sub', inputs.High, inputs.Low)}))});
+
+				return {Out: e('mul', e('mul', v(at), v(at)), e('sub', c(3), e('mul', c(2), v(at))))};
+			case 'Combine':
+				return {XYZW: {Op: 'list', Items: [inputs.X, inputs.Y, inputs.Z, inputs.W]}, XYZ: {Op: 'list', Items: [inputs.X, inputs.Y, inputs.Z]}, XY: {Op: 'list', Items: [inputs.X, inputs.Y]}};
+			case 'Split':
+				return {X: {Op: 'index', List: inputs.Vector, At: c(0)}, Y: {Op: 'index', List: inputs.Vector, At: c(1)}, Z: {Op: 'index', List: inputs.Vector, At: c(2)}, W: {Op: 'index', List: inputs.Vector, At: c(3)}};
+			case 'Compare':
+				return {Out: {Op: 'bin', Operator: compare[properties.Operator || '=='] || '==', A: inputs.A, B: inputs.B}};
+			case 'And':
+				return {Out: {Op: 'bin', Operator: '&&', A: inputs.A, B: inputs.B}};
+			case 'Or':
+				return {Out: {Op: 'bin', Operator: '||', A: inputs.A, B: inputs.B}};
+			case 'Not':
+				return {Out: {Op: 'un', Operator: '!', A: inputs.X}};
+			case 'Select':
+				return {Out: {Op: 'select', Test: inputs.Test, A: inputs.A, B: inputs.B}};
+			case 'Formula':
+				try {
+					return {Value: this.FormulaIR(this.Formula(properties.Expression).Tree, inputs)};
+				}
+				catch (error) {
+					return null;
+				}
+			case 'Field':
+				made = inputs.Object;
+
+				String(properties.Path || '').split('.').filter(Boolean).forEach(function (part) {
+					made = call('get', made, /^\d+$/.test(part) ? c(Number(part)) : c(part));
+				});
+
+				return {Value: made};
+			case 'List':
+				return {List: {Op: 'list', Items: Object.keys(inputs).sort(function (a, b) {
+					return Number(a.substring(4)) - Number(b.substring(4));
+				}).map(function (key) {
+					return inputs[key];
+				})}};
+			case 'Count':
+				return {Count: {Op: 'length', List: inputs.List}};
+			case 'Item':
+				return {Value: {Op: 'index', List: inputs.List, At: call('floor', inputs.Index)}};
+			case 'Random':
+				return {Value: call('hash', inputs.Seed, inputs.Key)};
+			case 'Table':
+				made = properties.Default === undefined ? c(0) : c(properties.Default);
+
+				Object.keys(properties.Rows || {}).reverse().forEach(function (key) {
+					made = {Op: 'select', Test: {Op: 'bin', Operator: '==', A: call('text', inputs.Key), B: c(key)}, A: c(properties.Rows[key]), B: made};
+				});
+
+				return {Value: made};
+			case 'Call':
+				at = context.Temp('call');
+				signature = this.Signature(properties.Graph);
+				list = {};
+
+				signature.Inputs.forEach(function (name) {
+					list[name] = inputs[name] === undefined ? c(0) : inputs[name];
+				});
+
+				context.Statement({Op: 'let', Name: at, Type: 'record', Value: invoke(list)});
+
+				made = {};
+
+				signature.Results.forEach(function (key) {
+					made[key] = call('get', v(at), c(key));
+				});
+
+				return made;
+			case 'Repeat':
+			case 'Map':
+			case 'Reduce':
+				list = context.Temp('list');
+				at = context.Temp('i');
+				made = context.Temp('made');
+
+				context.Statement({Op: 'let', Name: list, Type: 'list', Value: type === 'Repeat' ? {Op: 'list', Items: []} : call('cast', inputs.List, c('any'))});
+
+				if (type === 'Reduce') {
+					context.Statement({Op: 'let', Name: made, Type: 'any', Value: inputs.Initial});
+					context.Statement({Op: 'loop', Var: at, From: c(0), To: {Op: 'length', List: v(list)}, Body: [
+						{Op: 'set', Name: made, Value: call('get', invoke({Item: {Op: 'index', List: v(list), At: v(at)}, Index: v(at), Sum: v(made)}), c('Sum'), v(made))}
+					]});
+
+					return {Sum: v(made)};
+				}
+
+				signature = context.Temp('one');
+
+				context.Statement({Op: 'let', Name: made, Type: 'list', Value: {Op: 'list', Items: []}});
+				context.Statement({Op: 'loop', Var: at, From: c(0), To: type === 'Repeat' ? call('floor', call('cast', inputs.Count, c('float'))) : {Op: 'length', List: v(list)}, Body: [
+					{Op: 'let', Name: signature, Type: 'record', Value: invoke(type === 'Repeat' ? {Index: v(at), Count: inputs.Count} : {Item: {Op: 'index', List: v(list), At: v(at)}, Index: v(at)})},
+					{Op: 'push', List: v(made), Value: properties.Take ? call('get', v(signature), c(properties.Take), v(signature)) : v(signature)}
+				]});
+
+				return {List: v(made)};
+			default:
+				/* A block of a Service of its own: its IR, if it tells one (IR(inputs, properties, context)). */
+				return this.Types[type] && typeof this.Types[type].IR === 'function' ? this.Types[type].IR.call(this, inputs, properties, context) || null : null;
+		}
+	},
+
+	/*
+	 * A generator graph in the IR of Elemenx.Compilers: {Module: {Functions, Entry}, Diagnostics}. Each graph is a function
+	 * (P: its parameters, I: what it is given) that gives a record of its results; the graphs it calls (Call, Repeat, Map,
+	 * Reduce) are functions of the module too, one that calls itself too. A block of no IR is told in Diagnostics.
+	 */
+	IR: function (graph, options) {
+		var self = this;
+		var settings = options || {};
+		var functions = [];
+		var diagnostics = [];
+		var made = {};
+		var entry = settings.Name || graph.name || 'main';
+		var helpers = {};
+
+		/* A function of the module a block calls (a Service's own, made of the IR): added once, by its name. */
+		function helper (name, define) {
+			if (!Object.prototype.hasOwnProperty.call(helpers, name)) {
+				helpers[name] = true;
+
+				functions.push(define());
+			}
+
+			return name;
+		}
+
+		function make (source, name) {
+			var plan;
+			var body = [];
+			var names = {};
+			var needed = {};
+			var defaults = {};
+			var serial = 0;
+			var results = {};
+
+			var end;
+
+			if (Object.prototype.hasOwnProperty.call(made, name)) return made[name];
+
+			made[name] = 'g_' + name;
+			/* Read first: a graph of the resources keeps no pins (Regression: its links were not found, and its code gave nothing). */
+			plan = self.Plan(self.Read(JSON.parse(JSON.stringify(source))));
+			end = self.Makers[source.type] && self.Makers[source.type].End || 'Result';
+
+			(source.parameters || []).forEach(function (parameter) {
+				defaults[parameter.key] = parameter.value;
+			});
+
+			/* Only what its results read. */
+			function need (id) {
+				if (needed[id]) return;
+
+				needed[id] = true;
+
+				Object.keys(plan.From[id] || {}).forEach(function (key) {
+					need(plan.From[id][key].Block);
+				});
+			}
+
+			/* Its results: of its Result blocks, or of the end of its kind (Model of a model: its IREnd). */
+			plan.Order.forEach(function (id) {
+				if ((plan.Blocks[id].type === 'Result' || plan.Blocks[id].type === end) && plan.Blocks[id].enabled !== false)
+					need(id);
+			});
+
+			plan.Order.forEach(function (id, index) {
+				var block = plan.Blocks[id];
+				var node = plan.Nodes[id];
+				var properties = self.Properties(block);
+				var inputs = {};
+				var outputs = node ? self.Outputs(node, block) || [] : [];
+				var code;
+				var passed;
+				var constant;
+
+				if (!needed[id] || !node) return;
+
+				names[id] = {};
+
+				(self.Inputs(node, block) || []).forEach(function (input) {
+					var from = plan.From[id][input.Key];
+					var value;
+
+					if (from && names[from.Block] && names[from.Block][from.Key]) {
+						value = {Op: 'var', Name: names[from.Block][from.Key]};
+
+						inputs[input.Key] = !input.Type || input.Type === 'any' || input.Type === 'same' || input.Type === from.Type || input.Type === 'object' ? value : {Op: 'call', Name: 'cast', Args: [value, {Op: 'const', Value: input.Type, Type: 'text'}]};
+					}
+					else {
+						constant = input.Value === undefined ? 0 : self.Cast(input.Value, null, input.Type);
+						inputs[input.Key] = {Op: 'const', Value: constant, Type: typeof constant === 'string' ? 'text' : typeof constant === 'boolean' ? 'bool' : Array.isArray(constant) ? 'list' : 'float'};
+					}
+				});
+
+				if (block.type === 'Result') {
+					results[properties.Key || 'Value'] = inputs.Value;
+
+					return;
+				}
+
+				if (block.type === end && typeof node.IREnd === 'function') {
+					Object.assign(results, node.IREnd.call(self, inputs, properties, {Helper: helper}));
+
+					return;
+				}
+
+				if (block.enabled === false) {
+					passed = self.Passed(plan, id);
+					code = {};
+
+					outputs.forEach(function (output) {
+						code[output.Key] = passed[output.Key] ? inputs[passed[output.Key]] : {Op: 'const', Value: 0, Type: 'float'};
+					});
+				}
+				else if (!(self.Inputs(node, block) || []).length && ['Parameter', 'Time', 'Input', 'Random'].indexOf(block.type) === -1 && typeof node.Compute === 'function') {
+					constant = node.Compute.call(self, {}, properties, {Graph: source, Parameters: {}, Inputs: {}}) || {};
+					code = {};
+
+					outputs.forEach(function (output) {
+						var value = constant[output.Key] === undefined ? 0 : constant[output.Key];
+
+						code[output.Key] = {Op: 'const', Value: value, Type: typeof value === 'string' ? 'text' : typeof value === 'boolean' ? 'bool' : Array.isArray(value) ? 'list' : 'float'};
+					});
+				}
+				else {
+					code = self.IROf(block.type, {Inputs: inputs, Properties: properties, Defaults: defaults, Helper: helper, Statement: function (statement) {
+						body.push(statement);
+					}, Temp: function (word) {
+						serial++;
+
+						return word + '_' + index + '_' + serial;
+					}, Call: function (callee) {
+						var graphOf = self.Callee(callee);
+
+						if (!graphOf) {
+							diagnostics.push({File: name, Line: 0, Column: 0, Severity: 'error', Text: 'Elemenx Blueprints: no graph ' + callee + ' to call', Block: id});
+
+							return 'g_missing';
+						}
+
+						make(graphOf, callee);
+
+						return 'g_' + callee;
+					}});
+				}
+
+				if (!code) {
+					diagnostics.push({File: name, Line: 0, Column: 0, Severity: 'error', Text: 'Elemenx Blueprints: no IR for a block ' + block.type, Block: id});
+
+					return;
+				}
+
+				outputs.forEach(function (output) {
+					var variable = 'v' + index + '_' + String(output.Key).replace(/[^A-Za-z0-9_]/g, '_');
+
+					names[id][output.Key] = variable;
+
+					body.push({Op: 'let', Name: variable, Type: 'any', Value: code[output.Key] || {Op: 'const', Value: 0, Type: 'float'}});
+				});
+			});
+
+			body.push({Op: 'return', Value: {Op: 'record', Fields: results}});
+
+			functions.push({Name: 'g_' + name, Params: [{Name: 'P', Type: 'record'}, {Name: 'I', Type: 'record'}], Returns: 'record', Body: body});
+
+			return made[name];
+		}
+
+		make(graph, entry);
+
+		return {Module: {Functions: functions, Entry: 'g_' + entry}, Diagnostics: diagnostics};
+	},
+
+	/* A number 0 to 1 of two values (of text or numbers), the very one rt_hash(rt_key(a), rt_key(b)) of the IR in JavaScript gives. */
+	Hash2: function (a, b) {
+		function key (value) {
+			var text;
+			var hash = 0;
+			var i;
+
+			if (typeof value === 'number')
+				return Math.round(value * 1000) | 0;
+
+			text = String(value);
+
+			for (i = 0; i < text.length; i++)
+				hash = (Math.imul(hash, 31) + text.charCodeAt(i)) | 0;
+
+			return hash;
+		}
+
+		var h = Math.imul(key(a) ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(key(b) + 0x632be5ab, 0xc2b2ae35);
+
+		h ^= h >>> 15;
+		h = Math.imul(h, 0x2c1b3c6d);
+		h ^= h >>> 12;
+
+		return (h >>> 0) / 4294967296;
+	},
+
 	/* Blueprints: the library */
 
 	Library: function () {
@@ -1370,14 +2287,16 @@ Elemenx.Service('Blueprints', {
 						var run = {Outputs: {}, Parameters: parameters || {}, Inputs: inputs || {}, Memo: true, Graph: {parameters: this && this.Parameters || plan.Graph.parameters}};
 						var result = {};
 
-						plan.Order.forEach(function (id) {
-							var block = plan.Blocks[id];
-							if (block.type !== 'Result' || block.enabled === false) return;
+						return self.Calling(function () {
+							plan.Order.forEach(function (id) {
+								var block = plan.Blocks[id];
+								if (block.type !== 'Result' || block.enabled === false) return;
 
-							result[self.Properties(block).Key || 'Value'] = self.Gather(plan, id, run).Value;
+								result[self.Properties(block).Key || 'Value'] = self.Gather(plan, id, run).Value;
+							});
+
+							return result;
 						});
-
-						return result;
 					}
 				};
 			}
@@ -1667,6 +2586,149 @@ Elemenx.Service('Blueprints', {
 				});
 
 				return {Value: value};
+			}
+		});
+
+		/*
+		 * Functions and lists: a generator graph of the resources is a function (its Input blocks what it is given, its
+		 * Result blocks what it gives). Call runs one, its pins those of the graph; Repeat runs it Count times ({Index,
+		 * Count}), Map for each item of a list ({Item, Index}), each a list of what it gives (Take: that result alone);
+		 * Reduce for each item ({Item, Index, Sum}) its result Sum, from Initial. A graph may call itself.
+		 */
+		this.Node('Call', {Graphs: code, Group: 'function', Properties: [{Key: 'Graph', Type: 'text', Value: ''}],
+			Inputs: function (properties) {
+				return self.Signature(properties.Graph).Inputs.map(function (name) {
+					return {Key: name, Type: 'any'};
+				});
+			},
+			Outputs: function (properties) {
+				return self.Signature(properties.Graph).Results.map(function (key) {
+					return {Key: key, Type: 'any'};
+				});
+			},
+			Compute: function (inputs, properties) {
+				return self.Invoke(properties.Graph, inputs);
+			}
+		});
+
+		this.Node('Repeat', {Graphs: code, Group: 'function', Properties: [{Key: 'Graph', Type: 'text', Value: ''}, {Key: 'Take', Type: 'text', Value: ''}], Inputs: function (properties) {
+			return [{Key: 'Count', Type: 'float', Value: 1}].concat(self.Extras(properties.Graph, ['Index', 'Count']));
+		}, Outputs: [{Key: 'List', Type: 'any'}],
+		Compute: function (inputs, properties) {
+			var list = [];
+			var i;
+
+			for (i = 0; i < Math.floor(Number(inputs.Count) || 0); i++)
+				list.push(self.Taken(self.Invoke(properties.Graph, Object.assign({}, inputs, {Index: i, Count: inputs.Count})), properties.Take));
+
+			return {List: list};
+		}
+		});
+
+		this.Node('Map', {Graphs: code, Group: 'function', Properties: [{Key: 'Graph', Type: 'text', Value: ''}, {Key: 'Take', Type: 'text', Value: ''}], Inputs: function (properties) {
+			return [{Key: 'List', Type: 'any'}].concat(self.Extras(properties.Graph, ['Item', 'Index', 'List']));
+		}, Outputs: [{Key: 'List', Type: 'any'}],
+		Compute: function (inputs, properties) {
+			return {List: (Array.isArray(inputs.List) ? inputs.List : []).map(function (item, index) {
+				return self.Taken(self.Invoke(properties.Graph, Object.assign({}, inputs, {Item: item, Index: index})), properties.Take);
+			})};
+		}
+		});
+
+		this.Node('Reduce', {Graphs: code, Group: 'function', Properties: [{Key: 'Graph', Type: 'text', Value: ''}], Inputs: function (properties) {
+			return [{Key: 'List', Type: 'any'}, {Key: 'Initial', Type: 'any', Value: 0}].concat(self.Extras(properties.Graph, ['Item', 'Index', 'Sum', 'List', 'Initial']));
+		}, Outputs: [{Key: 'Sum', Type: 'any'}],
+		Compute: function (inputs, properties) {
+			var sum = inputs.Initial;
+
+			(Array.isArray(inputs.List) ? inputs.List : []).forEach(function (item, index) {
+				var made = self.Invoke(properties.Graph, Object.assign({}, inputs, {Item: item, Index: index, Sum: sum}));
+
+				sum = Object.prototype.hasOwnProperty.call(made, 'Sum') ? made.Sum : sum;
+			});
+
+			return {Sum: sum};
+		}
+		});
+
+		/* A list of its inputs, as many as Count. */
+		this.Node('List', {Graphs: code, Group: 'function', Properties: [{Key: 'Count', Type: 'number', Value: 2}],
+			Inputs: function (properties) {
+				var list = [];
+				var i;
+
+				for (i = 1; i <= Math.max(0, Math.min(32, Math.floor(Number(properties.Count) || 0))); i++)
+					list.push({Key: 'Item' + i, Type: 'any', Value: 0});
+
+				return list;
+			},
+			Outputs: [{Key: 'List', Type: 'any'}],
+			Compute: function (inputs) {
+				return {List: Object.keys(inputs).sort(function (a, b) {
+					return Number(a.substring(4)) - Number(b.substring(4));
+				}).map(function (key) {
+					return inputs[key];
+				})};
+			}
+		});
+
+		this.Node('Count', {Graphs: code, Group: 'function', Inputs: [{Key: 'List', Type: 'any'}], Outputs: [{Key: 'Count', Type: 'float'}],
+			Compute: function (inputs) {
+				return {Count: inputs.List && inputs.List.length || 0};
+			}
+		});
+
+		this.Node('Item', {Graphs: code, Group: 'function', Inputs: [{Key: 'List', Type: 'any'}, {Key: 'Index', Type: 'float', Value: 0}], Outputs: [{Key: 'Value', Type: 'any'}],
+			Compute: function (inputs) {
+				return {Value: inputs.List ? inputs.List[Math.floor(Number(inputs.Index) || 0)] : undefined};
+			}
+		});
+
+		/*
+		 * A number 0 to 1 of a seed and a key: the same for the same two, another for each other key (a part of a model, a
+		 * window of a floor: Key its index). Seeds and keys of text or numbers.
+		 */
+		this.Node('Random', {Graphs: code, Group: 'function', Inputs: [{Key: 'Seed', Type: 'any', Value: 0}, {Key: 'Key', Type: 'any', Value: 0}], Outputs: [{Key: 'Value', Type: 'float'}],
+			Compute: function (inputs) {
+				return {Value: self.Hash2(inputs.Seed, inputs.Key)};
+			}
+		});
+
+		this.Node('Select', {Graphs: code, Group: 'logic', Inputs: [{Key: 'Test', Type: 'bool', Value: false}, {Key: 'A', Type: 'any'}, {Key: 'B', Type: 'any'}], Outputs: [{Key: 'Out', Type: 'any'}],
+			Compute: function (inputs) {
+				return {Out: inputs.Test ? inputs.A : inputs.B};
+			}
+		});
+
+		/* A formula of its inputs, its names (Formula): (Index + 0.5) * FloorHeight, Roof == 'flat' ? 0 : Width / 2. */
+		this.Node('Formula', {Graphs: code, Group: 'math', Properties: [{Key: 'Expression', Type: 'text', Value: 'A'}],
+			Inputs: function (properties) {
+				var names;
+
+				try {
+					names = self.Formula(properties.Expression).Names;
+				}
+				catch (error) {
+					names = [];
+				}
+
+				return names.map(function (name) {
+					return {Key: name, Type: 'any', Value: 0};
+				});
+			},
+			Outputs: [{Key: 'Value', Type: 'any'}],
+			Compute: function (inputs, properties) {
+				return {Value: self.FormulaValue(self.Formula(properties.Expression).Tree, inputs)};
+			}
+		});
+
+		/* A table of rules: the value of the row of the key (its text), else Default. */
+		this.Node('Table', {Graphs: code, Group: 'logic', Properties: [{Key: 'Rows', Type: 'object', Value: {}}, {Key: 'Default', Type: 'any', Value: 0}], Inputs: [{Key: 'Key', Type: 'any'}], Outputs: [{Key: 'Value', Type: 'any'}],
+			Compute: function (inputs, properties) {
+				var rows = properties.Rows || {};
+				var key = String(inputs.Key);
+
+				return {Value: Object.prototype.hasOwnProperty.call(rows, key) ? rows[key] : properties.Default === undefined ? 0 : properties.Default};
 			}
 		});
 

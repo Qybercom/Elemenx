@@ -1,7 +1,8 @@
 /*
  * The roads of a Scene: an object of kind road (the trait Road: Type of the SceneRoads Service, Points [[x, z] or [x, z, y]]
  * through which it goes, Closed, Width, Height over its line; Bridges and Tunnels [[from, to]] in metres along it, or
- * Structures: true to find them where it goes Clear metres over the ground or Cover under it; Elevated [[from, to, height]]: on
+ * Structures: true to find them where it goes Clear metres over the ground or Cover under it (none shorter than Shortest,
+ * 12 m); Follow: false, not along the ground between its points; Grade: how steep it may climb (else by its type); Elevated [[from, to, height]]: on
  * a viaduct there; Viaducts: false, no viaduct in place of a bank higher than Bank (8 m); Barriers; Along: lines of
  * things beside it) is drawn as its model, and the ground is made level under it, cut where it goes through a hill and
  * filled where it crosses a hollow: a point with no height of its own takes the one of the ground there, and the road goes
@@ -123,7 +124,7 @@ Elemenx.Trait('SceneRoadNetwork', {
 		function spec (object) {
 			var given = object.Traits.Road;
 
-			return {ID: object.ID, Type: given.Type, Points: given.Points, Closed: given.Closed === true || given.Closed === 'true', Width: given.Width, Height: given.Height, Bridges: given.Bridges, Tunnels: given.Tunnels, Structures: given.Structures, Clear: given.Clear, Cover: given.Cover, Elevated: given.Elevated, Viaducts: given.Viaducts, Bank: given.Bank, Barriers: given.Barriers, Along: given.Along, Marks: given.Marks, Straight: given.Straight, Segments: given.Segments, Radii: given.Radii};
+			return {ID: object.ID, Type: given.Type, Points: given.Points, Closed: given.Closed === true || given.Closed === 'true', Width: given.Width, Height: given.Height, Bridges: given.Bridges, Tunnels: given.Tunnels, Structures: given.Structures, Clear: given.Clear, Cover: given.Cover, Shortest: given.Shortest, Follow: given.Follow, Grade: given.Grade, Elevated: given.Elevated, Viaducts: given.Viaducts, Bank: given.Bank, Barriers: given.Barriers, Along: given.Along, Marks: given.Marks, Straight: given.Straight, Segments: given.Segments, Radii: given.Radii};
 		}
 
 		/* The network again: the roads, their junctions, a model of each road, and the layer of the sketch under them. */

@@ -1,0 +1,14 @@
+{
+	"Order": 21,
+	"Width": 9,
+	"Depth": 9,
+	"Floors": [
+		1,
+		1
+	],
+	"FloorHeight": 26,
+	"Roof": "flat",
+	"Walls": "metal",
+	"Windows": 0,
+	"Special": "watertower"
+}

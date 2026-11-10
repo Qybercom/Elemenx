@@ -1,0 +1,527 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "vault-slab",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Index"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "W"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "D"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "input5",
+			"type": "Input",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "input6",
+			"type": "Input",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Top"
+				}
+			]
+		},
+		{
+			"id": "input7",
+			"type": "Input",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Roof"
+				}
+			]
+		},
+		{
+			"id": "input8",
+			"type": "Input",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofColor"
+				}
+			]
+		},
+		{
+			"id": "input9",
+			"type": "Input",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Shut"
+				}
+			]
+		},
+		{
+			"id": "input10",
+			"type": "Input",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofMaterial"
+				}
+			]
+		},
+		{
+			"id": "formula11",
+			"type": "Formula",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "W > D"
+				}
+			]
+		},
+		{
+			"id": "formula12",
+			"type": "Formula",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(W, D) * 0.5"
+				}
+			]
+		},
+		{
+			"id": "formula13",
+			"type": "Formula",
+			"x": 700,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(W, D) / 2 * 1.02"
+				}
+			]
+		},
+		{
+			"id": "formula14",
+			"type": "Formula",
+			"x": 920,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(W, D) * 1.02"
+				}
+			]
+		},
+		{
+			"id": "formula15",
+			"type": "Formula",
+			"x": 1140,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "PI * Index / 10"
+				}
+			]
+		},
+		{
+			"id": "formula16",
+			"type": "Formula",
+			"x": 1360,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "PI * (Index + 1) / 10"
+				}
+			]
+		},
+		{
+			"id": "formula17",
+			"type": "Formula",
+			"x": 1580,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[cos(a0) * half, sin(a0) * height, cos(a1) * half, sin(a1) * height]"
+				}
+			]
+		},
+		{
+			"id": "formula18",
+			"type": "Formula",
+			"x": 1800,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "atan2(p[3] - p[1], p[2] - p[0]) * 180 / PI"
+				}
+			]
+		},
+		{
+			"id": "formula19",
+			"type": "Formula",
+			"x": 2020,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "hypot(p[2] - p[0], p[3] - p[1]) + 0.05"
+				}
+			]
+		},
+		{
+			"id": "formula20",
+			"type": "Formula",
+			"x": 40,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(p[0] + p[2]) / 2"
+				}
+			]
+		},
+		{
+			"id": "formula21",
+			"type": "Formula",
+			"x": 260,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Top + (p[1] + p[3]) / 2"
+				}
+			]
+		},
+		{
+			"id": "box22",
+			"type": "Box",
+			"x": 480,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "formula23",
+			"type": "Formula",
+			"x": 700,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "wide ? vec3(long, 0.3, span) : vec3(span, 0.3, long)"
+				}
+			]
+		},
+		{
+			"id": "formula24",
+			"type": "Formula",
+			"x": 920,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "wide ? vec3(X, my, Z + mx) : vec3(X + mx, my, Z)"
+				}
+			]
+		},
+		{
+			"id": "formula25",
+			"type": "Formula",
+			"x": 1140,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "wide ? vec3(-tilt, 0, 0) : vec3(0, 0, tilt)"
+				}
+			]
+		},
+		{
+			"id": "result26",
+			"type": "Result",
+			"x": 1360,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input2-out-Value",
+			"p2": "formula11-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input3-out-Value",
+			"p2": "formula11-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input2-out-Value",
+			"p2": "formula12-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "input3-out-Value",
+			"p2": "formula12-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "input2-out-Value",
+			"p2": "formula13-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "input3-out-Value",
+			"p2": "formula13-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "input2-out-Value",
+			"p2": "formula14-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "input3-out-Value",
+			"p2": "formula14-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "input1-out-Value",
+			"p2": "formula15-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "input1-out-Value",
+			"p2": "formula16-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "formula15-out-Value",
+			"p2": "formula17-in-a0",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "formula13-out-Value",
+			"p2": "formula17-in-half",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "formula12-out-Value",
+			"p2": "formula17-in-height",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "formula16-out-Value",
+			"p2": "formula17-in-a1",
+			"kind": "value"
+		},
+		{
+			"id": "l15",
+			"p1": "formula17-out-Value",
+			"p2": "formula18-in-p",
+			"kind": "value"
+		},
+		{
+			"id": "l16",
+			"p1": "formula17-out-Value",
+			"p2": "formula19-in-p",
+			"kind": "value"
+		},
+		{
+			"id": "l17",
+			"p1": "formula17-out-Value",
+			"p2": "formula20-in-p",
+			"kind": "value"
+		},
+		{
+			"id": "l18",
+			"p1": "input6-out-Value",
+			"p2": "formula21-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l19",
+			"p1": "formula17-out-Value",
+			"p2": "formula21-in-p",
+			"kind": "value"
+		},
+		{
+			"id": "l20",
+			"p1": "formula11-out-Value",
+			"p2": "formula23-in-wide",
+			"kind": "value"
+		},
+		{
+			"id": "l21",
+			"p1": "formula14-out-Value",
+			"p2": "formula23-in-long",
+			"kind": "value"
+		},
+		{
+			"id": "l22",
+			"p1": "formula19-out-Value",
+			"p2": "formula23-in-span",
+			"kind": "value"
+		},
+		{
+			"id": "l23",
+			"p1": "formula23-out-Value",
+			"p2": "box22-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l24",
+			"p1": "formula11-out-Value",
+			"p2": "formula24-in-wide",
+			"kind": "value"
+		},
+		{
+			"id": "l25",
+			"p1": "input4-out-Value",
+			"p2": "formula24-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "l26",
+			"p1": "formula21-out-Value",
+			"p2": "formula24-in-my",
+			"kind": "value"
+		},
+		{
+			"id": "l27",
+			"p1": "input5-out-Value",
+			"p2": "formula24-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "l28",
+			"p1": "formula20-out-Value",
+			"p2": "formula24-in-mx",
+			"kind": "value"
+		},
+		{
+			"id": "l29",
+			"p1": "formula24-out-Value",
+			"p2": "box22-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l30",
+			"p1": "formula11-out-Value",
+			"p2": "formula25-in-wide",
+			"kind": "value"
+		},
+		{
+			"id": "l31",
+			"p1": "formula18-out-Value",
+			"p2": "formula25-in-tilt",
+			"kind": "value"
+		},
+		{
+			"id": "l32",
+			"p1": "formula25-out-Value",
+			"p2": "box22-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "l33",
+			"p1": "input8-out-Value",
+			"p2": "box22-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l34",
+			"p1": "input10-out-Value",
+			"p2": "box22-in-Material",
+			"kind": "value"
+		},
+		{
+			"id": "l35",
+			"p1": "box22-out-Parts",
+			"p2": "result26-in-Value",
+			"kind": "value"
+		}
+	]
+}

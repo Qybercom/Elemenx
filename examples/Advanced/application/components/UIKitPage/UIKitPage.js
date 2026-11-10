@@ -1906,6 +1906,14 @@ Elemenx.Component('UIKitPage', {
 		window.clearInterval(this.PipClock);
 		window.clearInterval(this.MixerTimer);
 
+		/* Regression: the clocks of the demos of scenes ran on after the page, until a tick of each found its scene gone. */
+		window.clearInterval(this.TopologyClock);
+		window.clearInterval(this.RaceClock);
+		window.clearInterval(this.OrbitClock);
+		window.clearInterval(this.TerrainSeeingClock);
+		window.clearInterval(this.SpaceTimer);
+		window.clearTimeout(this.SampleTimer);
+
 		this.$Service('Reveal').Guard(null);
 		this.$Service('Icons').Override('save', null);
 		this.$Service('Theme').OffChange(this.ThemeListener);

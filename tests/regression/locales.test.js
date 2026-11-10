@@ -135,7 +135,7 @@ describe('The dictionaries of the system Libraries', function () {
 	it('lists the languages of the dictionaries in the default declaration of the system Libraries in elemenx.js, which each of them has', function () {
 		var core = fs.readFileSync(path.resolve(process.cwd(), 'elemenx.js'), 'utf8');
 
-		expect(core).toContain("$Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']}, $Use: uses};");
+		expect(core).toContain("$Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']}, $Resources: {Blueprints: 'blueprints', Data: 'resources'}, $Use: uses};");
 
 		['ElemenxCommon', 'ElemenxUI', 'ElemenxGraphics', 'ElemenxGaming'].forEach(function (name) {
 			expect(core).toContain(name + ": system('" + name + "', ");

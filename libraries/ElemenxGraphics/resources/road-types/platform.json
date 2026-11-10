@@ -1,0 +1,20 @@
+{
+	"Order": 28,
+	"Title": "Railway platform",
+	"Group": "rail",
+	"Speed": 5,
+	"Strips": [
+		{
+			"Kind": "sidewalk",
+			"Width": 6,
+			"Surface": "concrete",
+			"Height": 0.9,
+			"Left": "solid",
+			"Marking": [
+				0.95,
+				0.85,
+				0.1
+			]
+		}
+	]
+}

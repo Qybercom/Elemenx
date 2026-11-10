@@ -1,0 +1,243 @@
+{
+	"version": 1,
+	"type": "render",
+	"name": "Picture",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "scene",
+			"type": "Scene",
+			"x": 40,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "clouds",
+			"type": "Clouds",
+			"x": 260,
+			"y": 220,
+			"properties": []
+		},
+		{
+			"id": "occlusion",
+			"type": "Occlusion",
+			"x": 480,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "air",
+			"type": "Air",
+			"x": 700,
+			"y": 220,
+			"properties": []
+		},
+		{
+			"id": "frames",
+			"type": "Frames",
+			"x": 920,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "mirror",
+			"type": "Mirror",
+			"x": 1140,
+			"y": 220,
+			"properties": []
+		},
+		{
+			"id": "rays",
+			"type": "Rays",
+			"x": 1360,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "exposure",
+			"type": "Exposure",
+			"x": 1580,
+			"y": 220,
+			"properties": []
+		},
+		{
+			"id": "bokeh",
+			"type": "Bokeh",
+			"x": 1800,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "bloom",
+			"type": "Bloom",
+			"x": 2020,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Threshold",
+					"value": 0.85
+				}
+			]
+		},
+		{
+			"id": "picture",
+			"type": "Picture",
+			"x": 2240,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "present",
+			"type": "Present",
+			"x": 2460,
+			"y": 220,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "flowprint-link-mw9lhve4ea",
+			"p1": "scene-out-Depth",
+			"p2": "clouds-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve4eb",
+			"p1": "scene-out-Depth",
+			"p2": "occlusion-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve4ec",
+			"p1": "scene-out-Color",
+			"p2": "air-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve4ed",
+			"p1": "scene-out-Depth",
+			"p2": "air-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve4ee",
+			"p1": "clouds-out-Cloud",
+			"p2": "air-in-Cloud",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve4ef",
+			"p1": "occlusion-out-Dark",
+			"p2": "air-in-Dark",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve4eg",
+			"p1": "air-out-Color",
+			"p2": "frames-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve4eh",
+			"p1": "scene-out-Depth",
+			"p2": "frames-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve4ei",
+			"p1": "frames-out-Color",
+			"p2": "mirror-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve4ej",
+			"p1": "scene-out-Depth",
+			"p2": "mirror-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve4ek",
+			"p1": "scene-out-Depth",
+			"p2": "rays-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve4el",
+			"p1": "clouds-out-Cloud",
+			"p2": "rays-in-Cloud",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve4em",
+			"p1": "frames-out-Color",
+			"p2": "exposure-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve4en",
+			"p1": "frames-out-Color",
+			"p2": "bokeh-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve4eo",
+			"p1": "scene-out-Depth",
+			"p2": "bokeh-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve5ep",
+			"p1": "bokeh-out-Color",
+			"p2": "bloom-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve5eq",
+			"p1": "bokeh-out-Color",
+			"p2": "picture-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve5er",
+			"p1": "scene-out-Depth",
+			"p2": "picture-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve5es",
+			"p1": "bloom-out-Bloom",
+			"p2": "picture-in-Bloom",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve5et",
+			"p1": "mirror-out-Mirror",
+			"p2": "picture-in-Mirror",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve5eu",
+			"p1": "exposure-out-Eye",
+			"p2": "picture-in-Eye",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve5ev",
+			"p1": "rays-out-Shaft",
+			"p2": "picture-in-Shaft",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve5ew",
+			"p1": "rays-out-Sunlit",
+			"p2": "picture-in-Sunlit",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhve5ex",
+			"p1": "picture-out-Color",
+			"p2": "present-in-Color",
+			"kind": "value"
+		}
+	]
+}

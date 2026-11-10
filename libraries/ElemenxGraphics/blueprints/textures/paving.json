@@ -1,0 +1,67 @@
+{
+	"version": 1,
+	"type": "texture",
+	"name": "paving",
+	"texture": {
+		"Order": 3,
+		"Title": "paving",
+		"Group": "road",
+		"Metres": 1,
+		"Size": 1024,
+		"Rows": true
+	},
+	"parameters": [
+		{
+			"key": "Tones",
+			"type": "float",
+			"value": 0.35,
+			"min": 0,
+			"max": 1,
+			"comment": "Tones"
+		},
+		{
+			"key": "Moss",
+			"type": "float",
+			"value": 0.2,
+			"min": 0,
+			"max": 1,
+			"comment": "Moss in the joints"
+		},
+		{
+			"key": "Wear",
+			"type": "float",
+			"value": 0.3,
+			"min": 0,
+			"max": 1,
+			"comment": "Wear"
+		}
+	],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tvec2 g = uv * vec2(5.0, 10.0);\n\tfloat row = floor(g.y);\n\tg.x += mod(row, 2.0) * 0.5;\n\tvec2 cell = vec2(mod(floor(g.x), 5.0), row);\n\tvec2 f = fract(g);\n\tvec2 e = min(f, 1.0 - f) * vec2(0.2, 0.1);\n\tfloat edge = min(e.x, e.y);\n\tfloat joint = 1.0 - smoothstep(0.0025, 0.0045, edge);\n\tfloat bevel = smoothstep(0.002, 0.008, edge);\n\tfloat id = tex_hash(cell, 100.0, seed + 1.0);\n\tfloat id2 = tex_hash(cell, 100.0, seed + 2.0);\n\tfloat grain = tex_noise(uv * 400.0, 400.0, seed + 3.0) * 0.6 + tex_noise(uv * 130.0, 130.0, seed + 4.0) * 0.4;\n\tvec3 block = mix(vec3(0.5, 0.49, 0.47), mix(vec3(0.42, 0.4, 0.38), vec3(0.58, 0.5, 0.44), id2), p_Tones * step(0.5, id)) * (0.88 + 0.2 * id);\n\tc = block * (0.86 + 0.24 * grain);\n\th = 0.55 * bevel + grain * 0.04;\n\tr = 0.9 - 0.06 * id;\n\tao = mix(0.55, 1.0, bevel);\n\t// The joints: sand, and moss in some of them.\n\tfloat moss = smoothstep(0.55, 0.75, tex_fbm(uv, 4.0, 4, seed + 5.0)) * p_Moss;\n\tvec3 fill = mix(vec3(0.11, 0.1, 0.085), vec3(0.08, 0.12, 0.04), moss);\n\tc = mix(c, fill * (0.7 + 0.5 * grain), joint);\n\tr = mix(r, 1.0, joint);\n\t// Worn lighter where most feet go, stained darker in spots.\n\tfloat worn = smoothstep(0.45, 0.8, tex_fbm(uv, 3.0, 4, seed + 6.0)) * p_Wear;\n\tc = mix(c, c * 1.15 + 0.02, worn * (1.0 - joint));\n\tfloat stain = smoothstep(0.65, 0.85, tex_fbm(uv, 5.0, 4, seed + 7.0)) * p_Wear;\n\tc *= 1.0 - stain * 0.3;"
+				},
+				{
+					"key": "Inputs",
+					"value": "uv: vec2, px: float, seed: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, h: float, ao: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Paving of concrete blocks, 20 by 10 cm, laid across the way (uv.y along it) in rows, each row half a block on from the last: their edges bevelled, sand in the joints and moss in some, each block a tone of its own, worn and stained in patches."
+		}
+	],
+	"links": []
+}

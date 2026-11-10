@@ -1,0 +1,52 @@
+{
+	"Order": 17,
+	"Title": "Race track",
+	"Group": "race",
+	"Speed": 300,
+	"Strips": [
+		{
+			"Kind": "verge",
+			"Width": 5,
+			"Surface": "grass",
+			"Height": 0
+		},
+		{
+			"Kind": "runoff",
+			"Width": 4,
+			"Surface": "runoff",
+			"Height": 0
+		},
+		{
+			"Kind": "rumble",
+			"Width": 1.2,
+			"Surface": "rumble",
+			"Height": 0.04
+		},
+		{
+			"Kind": "lane",
+			"Width": 14,
+			"Surface": "asphalt",
+			"Way": 0,
+			"Left": "solid",
+			"Right": "solid"
+		},
+		{
+			"Kind": "rumble",
+			"Width": 1.2,
+			"Surface": "rumble",
+			"Height": 0.04
+		},
+		{
+			"Kind": "runoff",
+			"Width": 4,
+			"Surface": "runoff",
+			"Height": 0
+		},
+		{
+			"Kind": "verge",
+			"Width": 5,
+			"Surface": "grass",
+			"Height": 0
+		}
+	]
+}

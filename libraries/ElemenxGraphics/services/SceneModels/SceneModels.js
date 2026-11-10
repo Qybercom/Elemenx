@@ -14,6 +14,8 @@
  *   A recipe of data has Parts in place of Build (Assemble: shapes with their Piece, Tags, Mirror, Chance and Vary, its
  *   Pieces, Rig for its clips, Seed: its variants of it, not of its name), JSON to keep and to edit (ModelEditor);
  *   Tagged(name, tag) gives the pieces of a tag.
+ *   A recipe of a graph has Graph in place of Build (a graph of the kind model of ModelBlueprints, or the name of one of
+ *   the resources), its Parameters and Seed: the graph gives its parts for each variant.
  *   A recipe may name a file instead of Build (glb, gltf, fbx or obj: ModelFormats): Define('hero', {URL: 'assets/hero.glb', Type, Size, Speed, Clips: {walk:
  *   'Run'}}) (Clips: the clips of the game and the animations of the file that play them; idle, walk, run, attack, die
  *   and work are found by their names). Load(name, callback) fetches it, (error, model), and Ready(name) tells whether
@@ -79,8 +81,18 @@ Elemenx.Service('SceneModels', {
 		var made = this.Made;
 		var given = recipe;
 
-		if (!name || !recipe || typeof recipe.Build !== 'function' && !recipe.URL && !Array.isArray(recipe.Parts) && !Array.isArray(recipe.Of))
+		if (!name || !recipe || typeof recipe.Build !== 'function' && !recipe.URL && !Array.isArray(recipe.Parts) && !Array.isArray(recipe.Of) && !recipe.Graph)
 			throw new Error('Elemenx Models: Define expects (name, {Build}) or (name, {URL})');
+
+		/*
+		 * A recipe of a graph (Graph: a graph of the kind model, its JSON or the name of one of the resources): its parts
+		 * those the graph gives for its Parameters, its Seed (the name, else) and the variant (inputs Seed and Variant).
+		 */
+		if (recipe.Graph && typeof recipe.Build !== 'function') {
+			recipe = Object.assign({}, given, {Build: function (tools, random, variant) {
+				return self.Assemble(self.$Service('ModelBlueprints').Recipe(given.Graph, given.Parameters, {Seed: given.Seed === undefined || given.Seed === '' ? name : given.Seed, Variant: variant || 0}), tools, random, 0);
+			}});
+		}
 
 		/*
 		 * A recipe of data (an editor's): its Build made of its Parts, its clips of its Rig; with a Seed its variants are of
@@ -227,6 +239,7 @@ Elemenx.Service('SceneModels', {
 	},
 
 	Make: function (name, options) {
+		var self = this;
 		var recipe = this.Recipes[name];
 		var settings = options || {};
 		var variants = recipe ? recipe.Variants || 1 : 1;
@@ -270,15 +283,59 @@ Elemenx.Service('SceneModels', {
 			return this.Made[key];
 		}
 
-		pieces = recipe.Build(this.Tools(), this.Random(name + ':' + variant), variant).map(function (piece) {
-			var geometry = meshes.Merge(piece.Parts);
+		pieces = [];
 
-			return {ID: piece.ID, Parent: piece.Parent || '', Pivot: piece.Pivot || [0, 0, 0], Team: !!piece.Team, Geometry: recipe.Smooth ? geometry : meshes.Facets(geometry)};
+		recipe.Build(this.Tools(), this.Random(name + ':' + variant), variant).forEach(function (piece) {
+			self.Patterned(piece).forEach(function (group, index) {
+				var geometry = meshes.Merge(group.Parts);
+
+				pieces.push({ID: index ? piece.ID + '#' + group.Key : piece.ID, Parent: index ? piece.ID : piece.Parent || '', Pivot: piece.Pivot || [0, 0, 0], Team: !!piece.Team, Geometry: recipe.Smooth ? geometry : meshes.Facets(geometry), Material: group.Material});
+			});
 		});
 
 		this.Made[key] = this.Finished(name, {Name: name, Key: shown, Group: recipe.Group || '', Type: recipe.Type || '', Size: recipe.Size || 1, Speed: recipe.Speed || 0, Sway: recipe.Sway || 0, Matte: recipe.Matte !== false, Clips: recipe.Clips || {}, Pieces: pieces, Lamps: (recipe.Lamps || []).slice()}, recipe);
 
 		return this.Made[key];
+	},
+
+	/*
+	 * The parts of a piece by what they are drawn of: those of no material first (drawn by the colors of their corners),
+	 * then one group for each material and color (PatternMaterial: a material of that pattern, that color its base); each
+	 * group after the first a piece of its own under the first, at its pivot. A piece of a team stays one.
+	 */
+	Patterned: function (piece) {
+		var self = this;
+		var groups = [];
+		var found = {};
+
+		piece.Parts.forEach(function (part) {
+			var color = part.Color || [1, 1, 1];
+			var key = part.Material && !piece.Team ? part.Material + ':' + color.map(function (one) {
+				return Math.round(one * 1000);
+			}).join(',') : '';
+
+			if (!Object.prototype.hasOwnProperty.call(found, key)) {
+				found[key] = {Key: key, Parts: [], Material: key ? self.PatternMaterial(part.Material, color) : null};
+
+				groups[key ? 'push' : 'unshift'](found[key]);
+			}
+
+			found[key].Parts.push(part);
+		});
+
+		return groups.length ? groups : [{Key: '', Parts: [], Material: null}];
+	},
+
+	/* A material of a model drawn by a pattern of SceneMaterials, its base the color given: one for each, shared by the models. */
+	PatternMaterial: function (pattern, color) {
+		var key = pattern + ':' + color.join(',');
+
+		this.PatternMaterials = this.PatternMaterials || {};
+
+		if (!this.PatternMaterials[key])
+			this.PatternMaterials[key] = {Name: key, Pattern: pattern, BaseColor: [color[0], color[1], color[2], 1], Metallic: pattern === 'metal' ? 1 : 0, Roughness: 1, Emissive: [0, 0, 0], Alpha: 'OPAQUE', DoubleSided: false};
+
+		return this.PatternMaterials[key];
 	},
 
 	/* SceneModels: edits of models (what is done to a model and its pieces, over its source) */
@@ -2593,7 +2650,11 @@ Elemenx.Service('SceneModels', {
 			return made;
 		}
 
-		function put (id, made) {
+		/* A part of a material of SceneMaterials (Material: its name) keeps it: the model draws it by its pattern. */
+		function put (id, made, part) {
+			if (part && part.Material)
+				made.Material = String(part.Material);
+
 			if (!pieces[id]) {
 				pieces[id] = [];
 
@@ -2613,19 +2674,20 @@ Elemenx.Service('SceneModels', {
 			});
 			var turn = vary(part.Turn, change.Turn, [0, 0, 0]);
 			var shade = 1 + (varied ? Number(change.Color) || 0 : 0) * random(-1, 1);
+			/* Over 1 it glows (a window lit): not cut to 1 (Regression: the lit windows of a building of a graph came out white). */
 			var tint = color(part.Color).map(function (one) {
-				return Math.max(0, Math.min(1, one * shade));
+				return Math.max(0, one * shade);
 			});
 			var id = part.Piece || 'body';
 
 			/* A part a variant may leave out, by its chance. */
 			if (varied && part.Chance !== undefined && part.Chance !== '' && drawn >= Number(part.Chance)) return;
 
-			put(id, shape(part, at, size, turn, tint));
+			put(id, shape(part, at, size, turn, tint), part);
 
 			/* Its mirror: the same, on the other side of X, in the piece of that side. */
 			if (part.Mirror)
-				put(/-l$/.test(id) ? id.slice(0, -2) + '-r' : /-r$/.test(id) ? id.slice(0, -2) + '-l' : id, shape(part, [-at[0], at[1], at[2]], size, [turn[0], -turn[1], -turn[2]], tint));
+				put(/-l$/.test(id) ? id.slice(0, -2) + '-r' : /-r$/.test(id) ? id.slice(0, -2) + '-l' : id, shape(part, [-at[0], at[1], at[2]], size, [turn[0], -turn[1], -turn[2]], tint), part);
 		});
 
 		return order.map(function (id) {

@@ -94,4 +94,34 @@ describe('Contract: Workers, the work of the Services off the main thread', func
 
 		pool.Destroy();
 	});
+
+	/* Regression: the lists of members were written by hand in each pool and drifted apart (a method missing in one). */
+	it('carries a Service told whole: every method of it and the data of its list Carried, not the caches it fills', async function () {
+		var name = unique('Whole');
+		var pool;
+
+		Elemenx.Service(name, {
+			Table: {a: 2},
+			Cache: {},
+			Carried: ['Table', 'Missing'],
+			Scaled: function (key) {
+				return this.Table[key] * this.Doubled(1) + (this.Cache === undefined ? 0 : 100);
+			},
+			Doubled: function (a) {
+				return a * 2;
+			},
+			Source: function (names) {
+				return this.$Service('Workers').Source(this, names);
+			}
+		});
+
+		expect(workers.Members({Table: 1, Carried: ['Table'], Run: function () {}, $Hidden: function () {}})).toEqual(['Run', 'Table']);
+
+		pool = workers.Pool(name, {[name]: true}, 1);
+
+		expect(pool.Inline()).toBe(false);
+		expect(await run(pool, name, 'Scaled', ['a'])).toBe(4);
+
+		pool.Destroy();
+	});
 });

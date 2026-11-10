@@ -1,0 +1,16 @@
+{
+	"Order": 13,
+	"Title": "Path",
+	"Group": "path",
+	"Speed": 6,
+	"Strips": [
+		{
+			"Kind": "lane",
+			"Width": 1.4,
+			"Surface": "dirt",
+			"Way": 0,
+			"Left": "none",
+			"Right": "none"
+		}
+	]
+}

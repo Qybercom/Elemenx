@@ -1,0 +1,798 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "station",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Class"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Depth"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Floors"
+				}
+			]
+		},
+		{
+			"id": "input5",
+			"type": "Input",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "FloorHeight"
+				}
+			]
+		},
+		{
+			"id": "input6",
+			"type": "Input",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "input7",
+			"type": "Input",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Wall"
+				}
+			]
+		},
+		{
+			"id": "input8",
+			"type": "Input",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "WallMaterial"
+				}
+			]
+		},
+		{
+			"id": "input9",
+			"type": "Input",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofMaterial"
+				}
+			]
+		},
+		{
+			"id": "input10",
+			"type": "Input",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofColor"
+				}
+			]
+		},
+		{
+			"id": "input11",
+			"type": "Input",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Cornice"
+				}
+			]
+		},
+		{
+			"id": "input12",
+			"type": "Input",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Porch"
+				}
+			]
+		},
+		{
+			"id": "input13",
+			"type": "Input",
+			"x": 700,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Annex"
+				}
+			]
+		},
+		{
+			"id": "input14",
+			"type": "Input",
+			"x": 920,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Special"
+				}
+			]
+		},
+		{
+			"id": "input15",
+			"type": "Input",
+			"x": 1140,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "formula16",
+			"type": "Formula",
+			"x": 1360,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Floors * FloorHeight"
+				}
+			]
+		},
+		{
+			"id": "formula17",
+			"type": "Formula",
+			"x": 1580,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Depth * 0.4"
+				}
+			]
+		},
+		{
+			"id": "formula18",
+			"type": "Formula",
+			"x": 1800,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Height - top"
+				}
+			]
+		},
+		{
+			"id": "box19",
+			"type": "Box",
+			"x": 2020,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "formula20",
+			"type": "Formula",
+			"x": 40,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(clock, rise * 0.8 + top, clock)"
+				}
+			]
+		},
+		{
+			"id": "formula21",
+			"type": "Formula",
+			"x": 260,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(0, (rise * 0.8 + top) / 2, 0)"
+				}
+			]
+		},
+		{
+			"id": "box22",
+			"type": "Box",
+			"x": 480,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "formula23",
+			"type": "Formula",
+			"x": 700,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(clock * 0.6, clock * 0.6, 0.1)"
+				}
+			]
+		},
+		{
+			"id": "formula24",
+			"type": "Formula",
+			"x": 920,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(0, top + rise * 0.55, clock / 2 + 0.06)"
+				}
+			]
+		},
+		{
+			"id": "formula25",
+			"type": "Formula",
+			"x": 1140,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.95, 0.94, 0.88]"
+				}
+			]
+		},
+		{
+			"id": "cylinder26",
+			"type": "Cylinder",
+			"x": 1360,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Segments",
+					"value": 4
+				}
+			]
+		},
+		{
+			"id": "formula27",
+			"type": "Formula",
+			"x": 1580,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "clock * 0.72"
+				}
+			]
+		},
+		{
+			"id": "formula28",
+			"type": "Formula",
+			"x": 1800,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0"
+				}
+			]
+		},
+		{
+			"id": "formula29",
+			"type": "Formula",
+			"x": 2020,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "rise * 0.2"
+				}
+			]
+		},
+		{
+			"id": "formula30",
+			"type": "Formula",
+			"x": 40,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(0, top + rise * 0.9, 0)"
+				}
+			]
+		},
+		{
+			"id": "box31",
+			"type": "Box",
+			"x": 260,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "formula32",
+			"type": "Formula",
+			"x": 480,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(Width * 0.95, 0.25, 6)"
+				}
+			]
+		},
+		{
+			"id": "formula33",
+			"type": "Formula",
+			"x": 700,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(0, 4.2, -Depth / 2 - 3)"
+				}
+			]
+		},
+		{
+			"id": "formula34",
+			"type": "Formula",
+			"x": 920,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.3, 0.32, 0.34]"
+				}
+			]
+		},
+		{
+			"id": "box35",
+			"type": "Box",
+			"x": 1140,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "formula36",
+			"type": "Formula",
+			"x": 1360,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(Width * 0.95, 0.9, 5)"
+				}
+			]
+		},
+		{
+			"id": "formula37",
+			"type": "Formula",
+			"x": 1580,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(0, 0.45, -Depth / 2 - 3.5)"
+				}
+			]
+		},
+		{
+			"id": "formula38",
+			"type": "Formula",
+			"x": 1800,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.62, 0.6, 0.57]"
+				}
+			]
+		},
+		{
+			"id": "repeat39",
+			"type": "Repeat",
+			"x": 2020,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/station-post"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula40",
+			"type": "Formula",
+			"x": 40,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "5"
+				}
+			]
+		},
+		{
+			"id": "join41",
+			"type": "Join",
+			"x": 260,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 6
+				}
+			]
+		},
+		{
+			"id": "result42",
+			"type": "Result",
+			"x": 480,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input4-out-Value",
+			"p2": "formula16-in-Floors",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input5-out-Value",
+			"p2": "formula16-in-FloorHeight",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input3-out-Value",
+			"p2": "formula17-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "input6-out-Value",
+			"p2": "formula18-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "formula16-out-Value",
+			"p2": "formula18-in-top",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "formula17-out-Value",
+			"p2": "formula20-in-clock",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "formula18-out-Value",
+			"p2": "formula20-in-rise",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "formula16-out-Value",
+			"p2": "formula20-in-top",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "formula20-out-Value",
+			"p2": "box19-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "formula18-out-Value",
+			"p2": "formula21-in-rise",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "formula16-out-Value",
+			"p2": "formula21-in-top",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "formula21-out-Value",
+			"p2": "box19-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "input7-out-Value",
+			"p2": "box19-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "formula17-out-Value",
+			"p2": "formula23-in-clock",
+			"kind": "value"
+		},
+		{
+			"id": "l15",
+			"p1": "formula23-out-Value",
+			"p2": "box22-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l16",
+			"p1": "formula16-out-Value",
+			"p2": "formula24-in-top",
+			"kind": "value"
+		},
+		{
+			"id": "l17",
+			"p1": "formula18-out-Value",
+			"p2": "formula24-in-rise",
+			"kind": "value"
+		},
+		{
+			"id": "l18",
+			"p1": "formula17-out-Value",
+			"p2": "formula24-in-clock",
+			"kind": "value"
+		},
+		{
+			"id": "l19",
+			"p1": "formula24-out-Value",
+			"p2": "box22-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l20",
+			"p1": "formula25-out-Value",
+			"p2": "box22-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l21",
+			"p1": "formula17-out-Value",
+			"p2": "formula27-in-clock",
+			"kind": "value"
+		},
+		{
+			"id": "l22",
+			"p1": "formula27-out-Value",
+			"p2": "cylinder26-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "l23",
+			"p1": "formula28-out-Value",
+			"p2": "cylinder26-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l24",
+			"p1": "formula18-out-Value",
+			"p2": "formula29-in-rise",
+			"kind": "value"
+		},
+		{
+			"id": "l25",
+			"p1": "formula29-out-Value",
+			"p2": "cylinder26-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "l26",
+			"p1": "formula16-out-Value",
+			"p2": "formula30-in-top",
+			"kind": "value"
+		},
+		{
+			"id": "l27",
+			"p1": "formula18-out-Value",
+			"p2": "formula30-in-rise",
+			"kind": "value"
+		},
+		{
+			"id": "l28",
+			"p1": "formula30-out-Value",
+			"p2": "cylinder26-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l29",
+			"p1": "input10-out-Value",
+			"p2": "cylinder26-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l30",
+			"p1": "input9-out-Value",
+			"p2": "cylinder26-in-Material",
+			"kind": "value"
+		},
+		{
+			"id": "l31",
+			"p1": "input2-out-Value",
+			"p2": "formula32-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l32",
+			"p1": "formula32-out-Value",
+			"p2": "box31-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l33",
+			"p1": "input3-out-Value",
+			"p2": "formula33-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l34",
+			"p1": "formula33-out-Value",
+			"p2": "box31-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l35",
+			"p1": "formula34-out-Value",
+			"p2": "box31-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l36",
+			"p1": "input2-out-Value",
+			"p2": "formula36-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l37",
+			"p1": "formula36-out-Value",
+			"p2": "box35-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l38",
+			"p1": "input3-out-Value",
+			"p2": "formula37-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l39",
+			"p1": "formula37-out-Value",
+			"p2": "box35-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l40",
+			"p1": "formula38-out-Value",
+			"p2": "box35-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l41",
+			"p1": "formula40-out-Value",
+			"p2": "repeat39-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l42",
+			"p1": "input2-out-Value",
+			"p2": "repeat39-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l43",
+			"p1": "input3-out-Value",
+			"p2": "repeat39-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l44",
+			"p1": "box19-out-Parts",
+			"p2": "join41-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "l45",
+			"p1": "box22-out-Parts",
+			"p2": "join41-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "l46",
+			"p1": "cylinder26-out-Parts",
+			"p2": "join41-in-Parts3",
+			"kind": "value"
+		},
+		{
+			"id": "l47",
+			"p1": "box31-out-Parts",
+			"p2": "join41-in-Parts4",
+			"kind": "value"
+		},
+		{
+			"id": "l48",
+			"p1": "box35-out-Parts",
+			"p2": "join41-in-Parts5",
+			"kind": "value"
+		},
+		{
+			"id": "l49",
+			"p1": "repeat39-out-List",
+			"p2": "join41-in-Parts6",
+			"kind": "value"
+		},
+		{
+			"id": "l50",
+			"p1": "join41-out-Parts",
+			"p2": "result42-in-Value",
+			"kind": "value"
+		}
+	]
+}

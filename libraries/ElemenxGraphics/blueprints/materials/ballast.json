@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "ballast",
+	"material": {
+		"Order": 13,
+		"Title": "Ballast",
+		"Group": "road",
+		"Land": true
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tvec4 k = enx_mc(q * 22.0, 1.0);\n\tfloat seen = enx_ms(px, 0.04);\n\tfloat stone = smoothstep(0.0, 0.25, k.y - k.x);\n\tc *= mix(1.0, (0.6 + k.z * 0.6) * mix(0.5, 1.0, stone), seen);\n\th += stone * 0.025 * seen;\n\tr = 0.9;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Ballast of a railway: coarse grey stones."
+		}
+	],
+	"links": []
+}

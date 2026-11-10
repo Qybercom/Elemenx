@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "sand",
+	"material": {
+		"Order": 4,
+		"Title": "Sand",
+		"Group": "ground",
+		"Land": true
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat s = enx_ms(px, 0.01);\n\tfloat fine = enx_mn(q * 120.0) - 0.5;\n\tfloat ripple = sin((q.x * 0.8 + q.y * 0.6 + enx_mf(q * 0.3, 3) * 6.0) * 9.0);\n\tc *= (0.94 + fine * 0.16 * s + ripple * 0.03 * enx_ms(px, 0.3)) * (0.96 + enx_mn(q * 30.0) * 0.08 * enx_ms(px, 0.03));\n\th += ripple * 0.008 * enx_ms(px, 0.3) + fine * 0.001 * s;\n\tr = 0.92;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Sand: fine grain, ripples of the wind."
+		}
+	],
+	"links": []
+}

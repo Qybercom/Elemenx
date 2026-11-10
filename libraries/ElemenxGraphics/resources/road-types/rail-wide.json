@@ -1,0 +1,37 @@
+{
+	"Order": 26,
+	"Title": "Wide gauge railway",
+	"Group": "rail",
+	"Speed": 160,
+	"Rails": [
+		{
+			"Offset": 0,
+			"Gauge": 1.52
+		}
+	],
+	"Sleepers": {
+		"Step": 0.55,
+		"Length": 2.75,
+		"Surface": "concrete"
+	},
+	"Strips": [
+		{
+			"Kind": "ditch",
+			"Width": 1,
+			"Surface": "gravel",
+			"Height": -0.2
+		},
+		{
+			"Kind": "bed",
+			"Width": 3.8,
+			"Surface": "ballast",
+			"Height": 0.3
+		},
+		{
+			"Kind": "ditch",
+			"Width": 1,
+			"Surface": "gravel",
+			"Height": -0.2
+		}
+	]
+}

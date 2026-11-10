@@ -1,0 +1,42 @@
+{
+	"Order": 24,
+	"Title": "Double railway",
+	"Group": "rail",
+	"Speed": 200,
+	"Catenary": true,
+	"Rails": [
+		{
+			"Offset": -2.1,
+			"Gauge": 1.435
+		},
+		{
+			"Offset": 2.1,
+			"Gauge": 1.435
+		}
+	],
+	"Sleepers": {
+		"Step": 0.6,
+		"Length": 2.6,
+		"Surface": "concrete"
+	},
+	"Strips": [
+		{
+			"Kind": "ditch",
+			"Width": 1,
+			"Surface": "gravel",
+			"Height": -0.2
+		},
+		{
+			"Kind": "bed",
+			"Width": 7.8,
+			"Surface": "ballast",
+			"Height": 0.3
+		},
+		{
+			"Kind": "ditch",
+			"Width": 1,
+			"Surface": "gravel",
+			"Height": -0.2
+		}
+	]
+}

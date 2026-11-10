@@ -1,0 +1,16 @@
+{
+	"Order": 14,
+	"Title": "Footpath",
+	"Group": "path",
+	"Speed": 6,
+	"Strips": [
+		{
+			"Kind": "lane",
+			"Width": 2,
+			"Surface": "paving",
+			"Way": 0,
+			"Left": "none",
+			"Right": "none"
+		}
+	]
+}

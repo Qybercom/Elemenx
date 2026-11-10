@@ -89,6 +89,40 @@ describe('Contract: effects as effect graphs of Blueprints, their numbers and co
 		expect(blueprints.NodeOf('Layer').Effects).toBeUndefined();
 	});
 
+	/* The types were data written in the code: now effect graphs of the resources, which an Application may give in their place. */
+	it('makes its types of the effect graphs of its resources, one of an Application in the place of one of them', async function () {
+		var name = 'ElemenxGraphics/effects/spark';
+		var kept = Elemenx.Resources('Blueprints', name);
+		var mine = JSON.parse(JSON.stringify(kept));
+		var scene;
+
+		expect(Elemenx.Resources('Blueprints').filter(function (one) {
+			return one.indexOf('ElemenxGraphics/effects/') === 0;
+		}).length).toBeGreaterThan(40);
+
+		mine.blocks.filter(function (block) {
+			return block.type === 'Layer';
+		})[0].properties.filter(function (property) {
+			return property.key === 'Count';
+		})[0].value = 7;
+
+		Elemenx.Resources('Blueprints', name, mine);
+
+		try {
+			scene = await mount();
+
+			expect(scene.Scene().EffectTypes.spark.Layers[0].Count).toBe(7);
+			expect(scene.EffectGraph('spark').blocks.map(function (block) {
+				return block.id;
+			})).toEqual(mine.blocks.map(function (block) {
+				return block.id;
+			}));
+		}
+		finally {
+			Elemenx.Resources('Blueprints', name, kept);
+		}
+	});
+
 	it('gives every type of the library as an effect graph that makes the very same type again', async function () {
 		var scene = await mount();
 		var types = scene.Scene().EffectTypes;
@@ -101,7 +135,8 @@ describe('Contract: effects as effect graphs of Blueprints, their numbers and co
 
 			expect(graph.type).toBe('effect');
 			expect(blueprints.Check(graph)).toEqual([]);
-			expect(blueprints.Compile(graph).Make({})).toEqual(types[name]);
+			/* The type keeps the graph it is made of (Blueprint): the rest is the very type again. */
+			expect(Object.assign(blueprints.Compile(graph).Make({}), {Blueprint: types[name].Blueprint})).toEqual(types[name]);
 		});
 
 		expect(function () {

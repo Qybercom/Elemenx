@@ -1,8 +1,9 @@
 /*
  * Work of the Services of the library off the main thread: workers made of the very source of their methods, with no
  * file of their own to load, so that a long work holds no frame up.
- * - Pool(name, services, size) returns the workers of a name, made once: services {Service: [members]} names what of
- *   each Service they carry (a Service gives the source of its members by its method Source(names)); size how many
+ * - Pool(name, services, size) returns the workers of a name, made once: services {Service: [members] or true} names
+ *   what of each Service they carry, true for all of it (Members); a Service gives the source of its members by its
+ *   method Source(names); size how many
  *   (by the cores of the device, 1 to 4). Its methods: Run(service, method, args, callback(error, result)) (the
  *   method of the Service in a worker, on the data of args; the lists of numbers of the result come back as they
  *   are, Float32Array or Uint32Array, moved, not copied), Share(key, data) (data each worker keeps under a key, sent to
@@ -10,13 +11,17 @@
  *   are not done), Inline() (true with no worker: the runs go at once in the page, as in Node; Share keeps nothing) and
  *   Destroy().
  * - Source(owner, names): the members of an object as the text of an object, its functions as they are written; what a
- *   Service gives by its method Source. A function of it may use only its arguments, this and what a worker has.
+ *   Service gives by its method Source. A function of it may use only its arguments, this and what a worker has. names
+ *   true: the Members of the object.
+ * - Members(owner): what a worker carries of a Service told whole: every method of it (not the $ ones) and the data it
+ *   names in its list Carried (its tables; not the caches it fills as it runs). Regression: the lists of the members
+ *   were written by hand in each pool and drifted apart (a method of one pool was missing in the next).
  * In a worker, this.$Service(name) of a member is what the pool carries of that Service.
  */
 Elemenx.Service('Workers', {
 	$Meta: {
 		Description: 'Work of the Services of the library off the main thread: workers made of the source of their methods.',
-		Methods: ['Pool(name, services, size)', 'Source(owner, names)']
+		Methods: ['Pool(name, services, size)', 'Source(owner, names)', 'Members(owner)']
 	},
 
 	Source: function (owner, names) {
@@ -32,9 +37,19 @@ Elemenx.Service('Workers', {
 			return JSON.stringify(value === undefined ? null : value);
 		}
 
-		return '{' + names.map(function (name) {
+		return '{' + (names === true ? this.Members(owner) : names).map(function (name) {
 			return JSON.stringify(name) + ': ' + text(owner[name]);
 		}).join(',\n') + '}';
+	},
+
+	Members: function (owner) {
+		var carried = Array.isArray(owner.Carried) ? owner.Carried : [];
+
+		return Object.keys(owner).filter(function (name) {
+			return name.charAt(0) !== '$' && typeof owner[name] === 'function';
+		}).concat(carried.filter(function (name) {
+			return owner[name] !== undefined;
+		}));
 	},
 
 	Pool: function (name, services, size) {

@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "concrete",
+	"material": {
+		"Order": 10,
+		"Title": "Concrete",
+		"Group": "road",
+		"Land": true
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat s = enx_ms(px, 0.01);\n\tc *= 0.92 + enx_mf(q * 0.7, 4) * 0.16;\n\tvec4 p = enx_mc(q * 60.0, 1.0);\n\tfloat pore = smoothstep(0.12, 0.05, p.x) * step(0.7, p.z) * s;\n\tc *= 1.0 - pore * 0.35;\n\th -= pore * 0.002;\n\tvec2 j = abs(fract(q / 4.0 + 0.5) - 0.5) * 4.0;\n\tfloat seam = (1.0 - smoothstep(0.004, 0.012, min(j.x, j.y))) * enx_ms(px, 0.08);\n\tc *= 1.0 - seam * 0.4;\n\th -= seam * 0.004;\n\tr = 0.85;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Concrete: blotches, pores, seams every 4 metres."
+		}
+	],
+	"links": []
+}

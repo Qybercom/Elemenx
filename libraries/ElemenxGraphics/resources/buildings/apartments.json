@@ -1,0 +1,14 @@
+{
+	"Order": 9,
+	"Width": 24,
+	"Depth": 14,
+	"Floors": [
+		5,
+		12
+	],
+	"FloorHeight": 3,
+	"Roof": "flat",
+	"Walls": "concrete",
+	"Windows": 0.35,
+	"Balconies": true
+}

@@ -1,0 +1,42 @@
+{
+	"Order": 20,
+	"Title": "Drag strip",
+	"Group": "race",
+	"Speed": 400,
+	"Strips": [
+		{
+			"Kind": "shoulder",
+			"Width": 2,
+			"Surface": "concrete",
+			"Height": 0
+		},
+		{
+			"Kind": "lane",
+			"Width": 5,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "solid",
+			"Right": "solid"
+		},
+		{
+			"Kind": "median",
+			"Width": 1,
+			"Surface": "concrete",
+			"Height": 0.3
+		},
+		{
+			"Kind": "lane",
+			"Width": 5,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "solid",
+			"Right": "solid"
+		},
+		{
+			"Kind": "shoulder",
+			"Width": 2,
+			"Surface": "concrete",
+			"Height": 0
+		}
+	]
+}

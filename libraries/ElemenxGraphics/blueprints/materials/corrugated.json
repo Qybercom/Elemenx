@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "corrugated",
+	"material": {
+		"Order": 29,
+		"Title": "Corrugated metal",
+		"Group": "roof",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat wave = sin(q.x / 0.076 * 6.28318);\n\tfloat sheet = floor(q.y / 2.4);\n\tfloat lap = (1.0 - smoothstep(0.0, 0.03, fract(q.y / 2.4) * 2.4)) * enx_ms(px, 0.05);\n\tfloat rust = smoothstep(0.7, 0.85, enx_mf(q * 1.2 + sheet * 3.0, 4));\n\tc = mix(c * (0.8 + wave * 0.12 * enx_ms(px, 0.03)), vec3(0.42, 0.22, 0.1), rust * 0.7) * (1.0 - lap * 0.4);\n\th += wave * 0.01;\n\tm = mix(m, 0.0, rust);\n\tr = mix(0.45, 0.95, rust);"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Corrugated sheets of metal: waves across, laps where sheets meet, rust here and there."
+		}
+	],
+	"links": []
+}

@@ -1422,32 +1422,7 @@ Elemenx.Trait('SceneLighting', {
 
 	/* The render graph of the library: the passes of the picture as they always ran, in their order; a Pipeline starts from it. */
 	PipelineGraph: function () {
-		var blueprints = this.$Service('Blueprints');
-		var graph;
-		var ids = {};
-
-		graph = blueprints.Create('render', {name: 'Picture'});
-
-		['Scene', 'Clouds', 'Occlusion', 'Air', 'Frames', 'Mirror', 'Rays', 'Exposure', 'Bokeh', 'Bloom', 'Picture', 'Present'].forEach(function (type, index) {
-			ids[type] = blueprints.Add(graph, type, {id: type.toLowerCase(), x: 40 + index * 220, y: index % 2 ? 220 : 40}).id;
-		});
-
-		[
-			['Scene', 'Depth', 'Clouds', 'Depth'], ['Scene', 'Depth', 'Occlusion', 'Depth'],
-			['Scene', 'Color', 'Air', 'Color'], ['Scene', 'Depth', 'Air', 'Depth'], ['Clouds', 'Cloud', 'Air', 'Cloud'], ['Occlusion', 'Dark', 'Air', 'Dark'],
-			['Air', 'Color', 'Frames', 'Color'], ['Scene', 'Depth', 'Frames', 'Depth'],
-			['Frames', 'Color', 'Mirror', 'Color'], ['Scene', 'Depth', 'Mirror', 'Depth'],
-			['Scene', 'Depth', 'Rays', 'Depth'], ['Clouds', 'Cloud', 'Rays', 'Cloud'],
-			['Frames', 'Color', 'Exposure', 'Color'],
-			['Frames', 'Color', 'Bokeh', 'Color'], ['Scene', 'Depth', 'Bokeh', 'Depth'],
-			['Bokeh', 'Color', 'Bloom', 'Color'],
-			['Bokeh', 'Color', 'Picture', 'Color'], ['Scene', 'Depth', 'Picture', 'Depth'], ['Bloom', 'Bloom', 'Picture', 'Bloom'], ['Mirror', 'Mirror', 'Picture', 'Mirror'], ['Exposure', 'Eye', 'Picture', 'Eye'], ['Rays', 'Shaft', 'Picture', 'Shaft'], ['Rays', 'Sunlit', 'Picture', 'Sunlit'],
-			['Picture', 'Color', 'Present', 'Color']
-		].forEach(function (link) {
-			blueprints.Link(graph, [ids[link[0]], link[1]], [ids[link[2]], link[3]]);
-		});
-
-		return graph;
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/picture'));
 	},
 
 	/*

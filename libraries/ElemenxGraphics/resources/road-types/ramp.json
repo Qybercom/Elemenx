@@ -1,0 +1,29 @@
+{
+	"Order": 4,
+	"Title": "Ramp",
+	"Group": "road",
+	"Speed": 60,
+	"Strips": [
+		{
+			"Kind": "shoulder",
+			"Width": 1,
+			"Surface": "asphalt",
+			"Height": 0,
+			"Right": "solid"
+		},
+		{
+			"Kind": "lane",
+			"Width": 4,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "none",
+			"Right": "solid"
+		},
+		{
+			"Kind": "shoulder",
+			"Width": 1.5,
+			"Surface": "asphalt",
+			"Height": 0
+		}
+	]
+}

@@ -1,0 +1,36 @@
+{
+	"Order": 2,
+	"Title": "Road",
+	"Group": "road",
+	"Speed": 90,
+	"Strips": [
+		{
+			"Kind": "shoulder",
+			"Width": 1,
+			"Surface": "gravel",
+			"Height": 0
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.5,
+			"Surface": "asphalt",
+			"Way": -1,
+			"Left": "solid",
+			"Right": "dashed"
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.5,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "none",
+			"Right": "solid"
+		},
+		{
+			"Kind": "shoulder",
+			"Width": 1,
+			"Surface": "gravel",
+			"Height": 0
+		}
+	]
+}

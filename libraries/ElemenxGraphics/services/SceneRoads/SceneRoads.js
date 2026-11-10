@@ -18,6 +18,7 @@
  *   (Closed: a ring), sampled every Step metres (2): [{X, Y, Z, Way [x, z], Along (metres from its start), Bend}];
  *   Height(x, z), when given, is the height of a point with none of its own; with Follow too (and no knot of a height of
  *   its own) the line keeps to the ground between its knots, smoothed over 40 m and no steeper than Grade.
+ * - Class(type): air, rail, motorway (a road of 110 km/h or more) or local, for the rules of how roads meet.
  * - Grade(type): how steep a road of a type may climb (rise over run): its Grade, else by its kind and speed (a railway
  *   2.5%, a runway 1.5%, a race track 6%, a road 5% from 110 km/h, 7% from 80, 9% under, a street 10%, a path 15%).
  * - Meeting(a, b): what two roads of two types do where they cross: junction (streets and roads, at one level), crossing (a
@@ -58,7 +59,7 @@
 Elemenx.Service('SceneRoads', {
 	$Meta: {
 		Description: 'The roads of a scene, of any kind: motorways, streets, country roads, race tracks, paths, runways and railways, their cross-sections, lines and models.',
-		Methods: ['Surface(name, surface)', 'Define(name, type)', 'Type(name)', 'Types()', 'Line(points, options)', 'Road(spec)', 'Grade(type)', 'Meeting(a, b)', 'Clearance(type)', 'InterchangeForm(a, b, ending)', 'Network(specs, junctions, options)', 'JunctionAt(junctions, x, z)', 'Near(road, x, z, hint)', 'Under(roads, x, z, hints)', 'BarrierHit(roads, x, z, fromX, fromZ, hints, size)', 'FreeBarrier(spec, options)', 'Sketch(roads, junctions)', 'Carves(roads, junctions)', 'TunnelGraph(roads, junctions)', 'TunnelLamps(road)', 'Asset(roads, options)', 'AssetOf(roads, options)', 'Work()']
+		Methods: ['Surface(name, surface)', 'Define(name, type)', 'Type(name)', 'Types()', 'Line(points, options)', 'Road(spec)', 'Grade(type)', 'Class(type)', 'Meeting(a, b)', 'Clearance(type)', 'InterchangeForm(a, b, ending)', 'Network(specs, junctions, options)', 'JunctionAt(junctions, x, z)', 'Near(road, x, z, hint)', 'Under(roads, x, z, hints)', 'BarrierHit(roads, x, z, fromX, fromZ, hints, size)', 'FreeBarrier(spec, options)', 'Sketch(roads, junctions)', 'Carves(roads, junctions)', 'TunnelGraph(roads, junctions)', 'TunnelLamps(road)', 'Asset(roads, options)', 'AssetOf(roads, options)', 'Work()']
 	},
 
 	$OnCreate: function () {
@@ -351,7 +352,7 @@ Elemenx.Service('SceneRoads', {
 		});
 
 		if (follow)
-			self.Follow(points, height, Number(settings.Grade) > 0 ? Number(settings.Grade) : 0.08, closed);
+			self.Follow(points, height, Number(settings.Grade) > 0 ? Number(settings.Grade) : self.Grade({}), closed);
 
 		return points;
 	},
@@ -473,7 +474,18 @@ Elemenx.Service('SceneRoads', {
 		if (given.Group === 'street') return 0.1;
 		if (given.Group === 'path') return 0.15;
 
-		return (given.Speed || 50) >= 110 ? 0.05 : (given.Speed || 50) >= 80 ? 0.07 : 0.09;
+		return this.Class(given) === 'motorway' ? 0.05 : (given.Speed || 50) >= 80 ? 0.07 : 0.09;
+	},
+
+	/*
+	 * The class of a road of a type, for the rules of how roads meet: air, rail, motorway (a road of 110 km/h or more) or
+	 * local. Regression: the speed of a motorway was told in five places.
+	 */
+	Class: function (type) {
+		var given = type || {};
+		if (given.Group === 'air' || given.Group === 'rail') return given.Group;
+
+		return given.Group === 'road' && (given.Speed || 50) >= 110 ? 'motorway' : 'local';
 	},
 
 	Road: function (spec, options) {
@@ -493,7 +505,9 @@ Elemenx.Service('SceneRoads', {
 		});
 
 		var settings = options || {};
-		var road = {ID: spec.ID || '', Type: type, TypeName: spec.Type || 'road', Closed: !!spec.Closed, Width: width, Scale: scale, Strips: strips, Height: Number(spec.Height) || 0, Points: this.Line(spec.Points, Object.assign({Closed: spec.Closed, Straight: spec.Straight, Segments: spec.Segments, Radii: spec.Radii, Follow: spec.Follow !== false && spec.Follow !== 'false' && !(spec.Bridges || []).length && !(spec.Tunnels || []).length, Grade: this.Grade(type)}, settings))};
+		/* Its own Grade, else the one of its type (Regression: the Grade of a road was told in its spec and never read). */
+		var grade = Number(spec.Grade) > 0 ? Number(spec.Grade) : this.Grade(type);
+		var road = {ID: spec.ID || '', Type: type, TypeName: spec.Type || 'road', Closed: !!spec.Closed, Width: width, Scale: scale, Strips: strips, Height: Number(spec.Height) || 0, Grade: grade, Points: this.Line(spec.Points, Object.assign({Closed: spec.Closed, Straight: spec.Straight, Segments: spec.Segments, Radii: spec.Radii, Follow: spec.Follow !== false && spec.Follow !== 'false' && !(spec.Bridges || []).length && !(spec.Tunnels || []).length, Grade: grade}, settings))};
 
 		/* Elevated: on piers over the ground there, a viaduct. */
 		if ((spec.Elevated || []).length && settings.Height)
@@ -611,7 +625,7 @@ Elemenx.Service('SceneRoads', {
 		made.forEach(function (road) {
 			if (road.Closed) return;
 
-			var grade = self.Grade(road.Type);
+			var grade = road.Grade || self.Grade(road.Type);
 			var own = road.Points.map(function (point) {
 				return point.Y;
 			});
@@ -729,8 +743,10 @@ Elemenx.Service('SceneRoads', {
 	 * by it). A motorway is a road of 110 km/h or more.
 	 */
 	InterchangeForm: function (a, b, ending) {
+		var self = this;
+
 		function motorway (type) {
-			return !!type && type.Group === 'road' && (type.Speed || 50) >= 110;
+			return self.Class(type) === 'motorway';
 		}
 
 		function road (type, speed) {
@@ -766,7 +782,7 @@ Elemenx.Service('SceneRoads', {
 		});
 
 		function kind (type) {
-			return type.Group === 'road' && (type.Speed || 50) >= 110 ? 3 : type.Group === 'road' ? 2 : 1;
+			return self.Class(type) === 'motorway' ? 3 : type.Group === 'road' ? 2 : 1;
 		}
 
 		/*
@@ -1139,7 +1155,7 @@ Elemenx.Service('SceneRoads', {
 	 */
 	Elevate: function (road, ranges, height) {
 		var self = this;
-		var grade = this.Grade(road.Type);
+		var grade = road.Grade || this.Grade(road.Type);
 		var points = road.Points;
 		var ground = points.map(function (point) {
 			return Math.max(0, height(point.X, point.Z));
@@ -1370,14 +1386,7 @@ Elemenx.Service('SceneRoads', {
 	 * (two motorways). A motorway is a road of 110 km/h or more.
 	 */
 	Meeting: function (a, b) {
-		function kind (type) {
-			var given = type || {};
-			if (given.Group === 'air' || given.Group === 'rail') return given.Group;
-
-			return given.Group === 'road' && (given.Speed || 50) >= 110 ? 'motorway' : 'local';
-		}
-
-		var pair = [kind(a), kind(b)].sort().join('+');
+		var pair = [this.Class(a), this.Class(b)].sort().join('+');
 		if (pair === 'local+local' || pair === 'air+air') return 'junction';
 		if (pair === 'local+rail') return 'crossing';
 		if (pair === 'motorway+motorway') return 'interchange';
@@ -1527,7 +1536,7 @@ Elemenx.Service('SceneRoads', {
 		var touched = [];
 
 		function kind (type) {
-			return type.Group === 'air' || type.Group === 'rail' ? type.Group : type.Group === 'road' && (type.Speed || 50) >= 110 ? 'motorway' : 'local';
+			return self.Class(type);
 		}
 
 		roads.forEach(function (a, first) {
@@ -1649,7 +1658,7 @@ Elemenx.Service('SceneRoads', {
 	 */
 	Lift: function (road, metres, fix, half) {
 		var self = this;
-		var reach = Math.abs(fix) / this.Grade(road.Type) * 1.5;
+		var reach = Math.abs(fix) / (road.Grade || this.Grade(road.Type)) * 1.5;
 		var loop = road.Closed ? road.Points[road.Points.length - 1].Along : 0;
 		var own = road.Own || road.Points.map(function (point) {
 			return point.Y;
@@ -3111,12 +3120,11 @@ Elemenx.Service('SceneRoads', {
 
 	/* The workers of the models of roads: all of this Service, the ground of noise for the height of their piers. */
 	Work: function () {
-		var self = this;
-
-		return this.$Service('Workers').Pool('SceneRoads', {Math: ['Noise', 'SeedOffset', 'Vectors'], Noise: ['Types', 'Fractals', 'Whole', 'Post', 'Finish', 'Hash', 'Make', 'Sampler', 'Read', 'Octaves', 'Base', 'Lattice', 'Fade', 'Value', 'Gradient', 'Perlin', 'Simplex', 'Worley'], Blueprints: ['Sizes', 'Numbers', 'Cast', 'Each'], ScenePlanet: ['Kinds', 'Direction', 'LatLon', 'Tangent', 'Make', 'Planet', 'Color', 'Sphere', 'Cells', 'CellAt', 'CellPoint', 'CellNeighbours', 'RiversOf', 'HighwaysOf', 'TownsOf'], SceneTerrainGenerator: ['Smoothstep', 'Border', 'Relief', 'Climate', 'ClimateOf', 'Site', 'Biomes', 'BiomeOf', 'Grassy', 'Flat', 'Volume', 'Passages', 'Underground', 'WayUnder', 'Volumetric', 'Sphere', 'Paint', 'Painted', 'GroundMaterials', 'LookMaterials', 'MaterialsOf', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid', 'Free', 'Floor', 'Sketched', 'SketchTypes', 'SketchPlaced', 'SketchChanged', 'SettlementKinds', 'SettlementDistricts', 'SettlementSizes', 'SettlementPlan'], SceneRoads: Object.keys(this).filter(function (name) {
-			return name.charAt(0) !== '$' && name !== 'Work' && name !== 'Source' && name !== 'Library' && (typeof self[name] === 'function' || name === 'Surfaces' || name === 'Defined');
-		})});
+		return this.$Service('Workers').Pool('SceneRoads', {Math: true, Noise: true, Random: true, Blueprints: true, ScenePlanet: true, SceneTerrainGenerator: true, SceneRoads: true});
 	},
+
+	/* What a worker carries of this Service besides its methods: the surfaces and the types the library defined. */
+	Carried: ['Surfaces', 'Defined'],
 
 	Source: function (names) {
 		return this.$Service('Workers').Source(this, names);
@@ -3127,72 +3135,31 @@ Elemenx.Service('SceneRoads', {
 	Library: function () {
 		var self = this;
 
-		function lane (way, surface, width, left, right) {
-			return {Kind: 'lane', Width: width || 3.5, Surface: surface || 'asphalt', Way: way, Left: left || 'none', Right: right || 'none'};
+		/* The data of a folder of its resources, in its Order, each without it. */
+		function listed (folder) {
+			return Elemenx.Resources('Data').filter(function (name) {
+				return name.indexOf('ElemenxGraphics/' + folder + '/') === 0;
+			}).map(function (name) {
+				return {Name: name.substring(('ElemenxGraphics/' + folder + '/').length), Data: Elemenx.Resources('Data', name)};
+			}).sort(function (a, b) {
+				return (a.Data.Order || 0) - (b.Data.Order || 0);
+			}).map(function (item) {
+				delete item.Data.Order;
+
+				return item;
+			});
 		}
 
-		function strip (kind, width, surface, height, more) {
-			return Object.assign({Kind: kind, Width: width, Surface: surface, Height: height || 0}, more || {});
-		}
-
-		[
-			['asphalt', {Color: [0.2, 0.2, 0.21], Rough: 0.88, Grip: 1, Drag: 0, Material: 'asphalt'}],
-			['concrete', {Color: [0.58, 0.57, 0.54], Rough: 0.9, Grip: 0.95, Drag: 0, Material: 'concrete'}],
-			['cobbles', {Color: [0.42, 0.4, 0.38], Rough: 0.95, Grip: 0.8, Drag: 0.06, Material: 'cobbles'}],
-			['paving', {Color: [0.62, 0.6, 0.57], Rough: 0.92, Grip: 0.9, Drag: 0.02, Material: 'paving'}],
-			['gravel', {Color: [0.56, 0.51, 0.43], Rough: 1, Grip: 0.62, Drag: 0.22, Material: 'gravel'}],
-			['dirt', {Color: [0.45, 0.36, 0.26], Rough: 1, Grip: 0.58, Drag: 0.3, Material: 'dirt'}],
-			['sand', {Color: [0.8, 0.72, 0.52], Rough: 1, Grip: 0.42, Drag: 0.55, Material: 'sand'}],
-			['grass', {Color: [0.3, 0.46, 0.2], Rough: 1, Grip: 0.5, Drag: 0.45, Material: 'lawn'}],
-			['ballast', {Color: [0.43, 0.41, 0.39], Rough: 1, Grip: 0.5, Drag: 0.4, Material: 'ballast'}],
-			['runoff', {Color: [0.32, 0.32, 0.33], Rough: 0.85, Grip: 0.95, Drag: 0.02, Material: 'terrazzo'}],
-			['rumble', {Color: [0.78, 0.16, 0.12], Rough: 0.7, Grip: 0.85, Drag: 0.04, Material: 'concrete'}],
-			['cycle', {Color: [0.5, 0.2, 0.17], Rough: 0.9, Grip: 0.95, Drag: 0, Material: 'asphalt'}],
-			['steel', {Color: [0.55, 0.55, 0.58], Rough: 0.35, Metal: 1, Grip: 0.4, Drag: 0, Material: 'metal'}],
-			['wood', {Color: [0.35, 0.25, 0.17], Rough: 1, Grip: 0.6, Drag: 0.1, Material: 'wood'}]
-		].forEach(function (pair) {
-			self.Surface(pair[0], pair[1]);
+		/*
+		 * Its surfaces and its types: data of its resources (resources/road-surfaces and resources/road-types, named
+		 * ElemenxGraphics/road-types/<name>); one an Application gives of that name takes its place.
+		 */
+		listed('road-surfaces').forEach(function (item) {
+			self.Surface(item.Name, item.Data);
 		});
 
-		/* Roads of cars. */
-		self.Define('motorway', {Title: 'Motorway', Group: 'road', Speed: 130, Strips: [strip('shoulder', 3, 'asphalt', 0, {Right: 'solid'}), lane(-1, 'asphalt', 3.75, 'none', 'dashed'), lane(-1, 'asphalt', 3.75, 'none', 'dashed'), lane(-1, 'asphalt', 3.75, 'none', 'solid'), strip('median', 3, 'concrete', 0.15), lane(1, 'asphalt', 3.75, 'solid', 'dashed'), lane(1, 'asphalt', 3.75, 'none', 'dashed'), lane(1, 'asphalt', 3.75, 'none', 'solid'), strip('shoulder', 3, 'asphalt')], Along: [{Type: 'row', Side: 'both', Gap: 0.8, Shapes: 'roadlamp', Spacing: 60}]});
-		self.Define('highway', {Title: 'Highway', Group: 'road', Speed: 110, Strips: [strip('verge', 1.5, 'grass'), strip('shoulder', 2, 'asphalt', 0, {Right: 'solid'}), lane(-1, 'asphalt', 3.6, 'none', 'dashed'), lane(-1, 'asphalt', 3.6, 'none', 'solid'), strip('median', 4, 'grass', 0.1), lane(1, 'asphalt', 3.6, 'solid', 'dashed'), lane(1, 'asphalt', 3.6, 'none', 'solid'), strip('shoulder', 2, 'asphalt'), strip('verge', 1.5, 'grass')], Along: [{Type: 'row', Side: 'both', Gap: 0.8, Shapes: 'roadlamp', Spacing: 60}]});
-		self.Define('road', {Title: 'Road', Group: 'road', Speed: 90, Strips: [strip('shoulder', 1, 'gravel'), lane(-1, 'asphalt', 3.5, 'solid', 'dashed'), lane(1, 'asphalt', 3.5, 'none', 'solid'), strip('shoulder', 1, 'gravel')]});
-		self.Define('country', {Title: 'Country road', Group: 'road', Speed: 70, Strips: [strip('verge', 0.8, 'grass'), lane(-1, 'asphalt', 2.9), lane(1, 'asphalt', 2.9), strip('verge', 0.8, 'grass')]});
-		self.Define('ramp', {Title: 'Ramp', Group: 'road', Speed: 60, Strips: [strip('shoulder', 1, 'asphalt', 0, {Right: 'solid'}), lane(1, 'asphalt', 4, 'none', 'solid'), strip('shoulder', 1.5, 'asphalt')]});
-		self.Define('lane', {Title: 'One-way lane', Group: 'road', Speed: 50, Strips: [lane(1, 'asphalt', 4, 'solid', 'solid')]});
-
-		/* Streets of towns. */
-		self.Define('street', {Title: 'Street', Group: 'street', Speed: 50, Strips: [strip('sidewalk', 2.5, 'paving', 0.15), strip('kerb', 0.2, 'concrete', 0.15), strip('parking', 2.2, 'asphalt', 0, {Right: 'dotted'}), lane(-1, 'asphalt', 3.2, 'none', 'dashed'), lane(1, 'asphalt', 3.2), strip('parking', 2.2, 'asphalt', 0, {Left: 'dotted'}), strip('kerb', 0.2, 'concrete', 0.15), strip('sidewalk', 2.5, 'paving', 0.15)], Along: [{Type: 'row', Side: 'both', Gap: -0.6, Shapes: 'streetlamp', Spacing: 28}, {Type: 'row', Side: 'both', Gap: -1.2, Shapes: 'bench, bin, hydrant', Spacing: 45}, {Type: 'row', Side: 'right', Gap: -1.4, Shapes: 'bus-stop', Spacing: 320}]});
-		self.Define('avenue', {Title: 'Avenue', Group: 'street', Speed: 60, Strips: [strip('sidewalk', 4, 'paving', 0.15), strip('kerb', 0.2, 'concrete', 0.15), lane(-1, 'asphalt', 3.3, 'none', 'dashed'), lane(-1, 'asphalt', 3.3), strip('median', 5, 'grass', 0.15), lane(1, 'asphalt', 3.3, 'none', 'dashed'), lane(1, 'asphalt', 3.3), strip('kerb', 0.2, 'concrete', 0.15), strip('sidewalk', 4, 'paving', 0.15)], Along: [{Type: 'row', Side: 'both', Gap: -0.6, Shapes: 'streetlamp', Spacing: 28}, {Type: 'row', Side: 'both', Gap: -1.6, Shapes: 'bench, bin, planter', Spacing: 36}, {Type: 'row', Side: 'right', Gap: -2, Shapes: 'bus-stop, kiosk', Spacing: 260}]});
-		self.Define('alley', {Title: 'Alley', Group: 'street', Speed: 20, Strips: [lane(0, 'cobbles', 4)], Along: [{Type: 'row', Side: 'left', Gap: -0.4, Shapes: 'streetlamp', Spacing: 30}]});
-		self.Define('boulevard', {Title: 'Boulevard', Group: 'street', Speed: 50, Strips: [strip('sidewalk', 3, 'paving', 0.15), lane(-1, 'asphalt', 3.3), strip('median', 8, 'paving', 0.15), lane(1, 'asphalt', 3.3), strip('sidewalk', 3, 'paving', 0.15)], Along: [{Type: 'row', Side: 'both', Gap: -0.6, Shapes: 'streetlamp', Spacing: 28}, {Type: 'row', Side: 'both', Gap: -1.2, Shapes: 'bench, planter, bin', Spacing: 30}]});
-		self.Define('tram', {Title: 'Street with a tram', Group: 'street', Speed: 50, Catenary: true, Rails: [{Offset: 0, Gauge: 1.435}], Sleepers: {Step: 0.75, Length: 0, Surface: 'concrete'}, Strips: [strip('sidewalk', 2.5, 'paving', 0.15), lane(-1, 'asphalt', 3.2, 'none', 'solid'), strip('bed', 3, 'concrete'), lane(1, 'asphalt', 3.2, 'solid'), strip('sidewalk', 2.5, 'paving', 0.15)], Along: [{Type: 'row', Side: 'both', Gap: -0.6, Shapes: 'streetlamp', Spacing: 28}, {Type: 'row', Side: 'both', Gap: -1.2, Shapes: 'bench, bin', Spacing: 50}]});
-
-		/* Ways without a car. */
-		self.Define('dirt', {Title: 'Dirt road', Group: 'path', Speed: 40, Strips: [lane(0, 'dirt', 4.5)]});
-		self.Define('gravel', {Title: 'Gravel road', Group: 'path', Speed: 50, Strips: [lane(0, 'gravel', 5)]});
-		self.Define('path', {Title: 'Path', Group: 'path', Speed: 6, Strips: [lane(0, 'dirt', 1.4)]});
-		self.Define('footpath', {Title: 'Footpath', Group: 'path', Speed: 6, Strips: [lane(0, 'paving', 2)]});
-		self.Define('cycle', {Title: 'Cycle path', Group: 'path', Speed: 25, Strips: [lane(-1, 'cycle', 1.25, 'none', 'dashed'), lane(1, 'cycle', 1.25)]});
-		self.Define('sand', {Title: 'Sand track', Group: 'path', Speed: 30, Strips: [lane(0, 'sand', 4)]});
-
-		/* Races. */
-		self.Define('track', {Title: 'Race track', Group: 'race', Speed: 300, Strips: [strip('verge', 5, 'grass'), strip('runoff', 4, 'runoff'), strip('rumble', 1.2, 'rumble', 0.04), lane(0, 'asphalt', 14, 'solid', 'solid'), strip('rumble', 1.2, 'rumble', 0.04), strip('runoff', 4, 'runoff'), strip('verge', 5, 'grass')]});
-		self.Define('rally', {Title: 'Rally stage', Group: 'race', Speed: 160, Strips: [strip('verge', 1, 'grass'), lane(0, 'gravel', 7), strip('verge', 1, 'grass')]});
-		self.Define('kart', {Title: 'Kart track', Group: 'race', Speed: 100, Strips: [strip('rumble', 0.8, 'rumble', 0.03), lane(0, 'asphalt', 8, 'solid', 'solid'), strip('rumble', 0.8, 'rumble', 0.03)]});
-		self.Define('drag', {Title: 'Drag strip', Group: 'race', Speed: 400, Strips: [strip('shoulder', 2, 'concrete'), lane(1, 'asphalt', 5, 'solid', 'solid'), strip('median', 1, 'concrete', 0.3), lane(1, 'asphalt', 5, 'solid', 'solid'), strip('shoulder', 2, 'concrete')]});
-
-		/* Of aircraft. */
-		self.Define('runway', {Title: 'Runway', Group: 'air', Speed: 300, Strips: [strip('shoulder', 7.5, 'asphalt', 0, {Right: 'solid'}), lane(0, 'concrete', 15, 'none', 'dashed'), lane(0, 'concrete', 15, 'none', 'solid'), strip('shoulder', 7.5, 'asphalt')]});
-		self.Define('taxiway', {Title: 'Taxiway', Group: 'air', Speed: 40, Strips: [strip('shoulder', 3, 'asphalt'), lane(0, 'concrete', 23, 'none', 'none'), strip('shoulder', 3, 'asphalt')]});
-
-		/* Railways. */
-		self.Define('rail', {Title: 'Railway', Group: 'rail', Speed: 160, Catenary: false, Rails: [{Offset: 0, Gauge: 1.435}], Sleepers: {Step: 0.6, Length: 2.6, Surface: 'wood'}, Strips: [strip('ditch', 1, 'gravel', -0.2), strip('bed', 3.6, 'ballast', 0.3), strip('ditch', 1, 'gravel', -0.2)]});
-		self.Define('rail-double', {Title: 'Double railway', Group: 'rail', Speed: 200, Catenary: true, Rails: [{Offset: -2.1, Gauge: 1.435}, {Offset: 2.1, Gauge: 1.435}], Sleepers: {Step: 0.6, Length: 2.6, Surface: 'concrete'}, Strips: [strip('ditch', 1, 'gravel', -0.2), strip('bed', 7.8, 'ballast', 0.3), strip('ditch', 1, 'gravel', -0.2)]});
-		self.Define('rail-narrow', {Title: 'Narrow gauge railway', Group: 'rail', Speed: 50, Rails: [{Offset: 0, Gauge: 1}], Sleepers: {Step: 0.7, Length: 1.8, Surface: 'wood'}, Strips: [strip('bed', 2.6, 'ballast', 0.2)]});
-		self.Define('rail-wide', {Title: 'Wide gauge railway', Group: 'rail', Speed: 160, Rails: [{Offset: 0, Gauge: 1.52}], Sleepers: {Step: 0.55, Length: 2.75, Surface: 'concrete'}, Strips: [strip('ditch', 1, 'gravel', -0.2), strip('bed', 3.8, 'ballast', 0.3), strip('ditch', 1, 'gravel', -0.2)]});
-		self.Define('rail-yard', {Title: 'Yard track', Group: 'rail', Speed: 25, Rails: [{Offset: 0, Gauge: 1.435}], Sleepers: {Step: 0.65, Length: 2.6, Surface: 'wood'}, Strips: [strip('bed', 3.4, 'gravel', 0.1)]});
-		self.Define('platform', {Title: 'Railway platform', Group: 'rail', Speed: 5, Strips: [strip('sidewalk', 6, 'concrete', 0.9, {Left: 'solid', Marking: [0.95, 0.85, 0.1]})]});
+		listed('road-types').forEach(function (item) {
+			self.Define(item.Name, item.Data);
+		});
 	}
 });

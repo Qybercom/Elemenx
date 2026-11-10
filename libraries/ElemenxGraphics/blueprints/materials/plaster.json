@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "plaster",
+	"material": {
+		"Order": 16,
+		"Title": "Plaster",
+		"Group": "build",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat s = enx_ms(px, 0.012);\n\tfloat fine = enx_mn(q * 90.0);\n\tfloat streak = enx_mn(vec2(q.x * 12.0, q.y * 0.4));\n\tc *= (0.92 + enx_mf(q * 4.0, 4) * 0.14 + (fine - 0.5) * 0.06 * s + (enx_mn(q * 20.0) - 0.5) * 0.08 * enx_ms(px, 0.05)) * (1.0 - smoothstep(0.6, 0.9, streak) * 0.08);\n\th += fine * 0.0015 * s;\n\tr = 0.92;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Plaster: fine stucco, streaks down from the rain."
+		}
+	],
+	"links": []
+}

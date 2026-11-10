@@ -1,0 +1,14 @@
+{
+	"Order": 16,
+	"Width": 46,
+	"Depth": 16,
+	"Floors": [
+		1,
+		2
+	],
+	"FloorHeight": 5,
+	"Roof": "hip",
+	"Walls": "brick",
+	"Windows": 0.35,
+	"Special": "station"
+}

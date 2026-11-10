@@ -1667,17 +1667,30 @@ Elemenx.Component('SceneEditor', {
 		})[0] || null : null;
 	},
 
-	/* The step Sketch of a World (a copy of a graph): the first that runs; with none and make, one put before its end. */
+	/*
+	 * The step Sketch of a World (a copy of a graph): the first that runs; with none and make, the one turned off of its
+	 * template turned on (Regression: a second one was put beside it, and the first Sketch of the graph stayed empty), else
+	 * one put before its end.
+	 */
 	SketchStep: function (world, make) {
 		var blueprints = this.$Service('Blueprints');
 		var found = world.blocks.filter(function (block) {
 			return block.type === 'Sketch' && block.enabled !== false;
+		})[0];
+		var off = world.blocks.filter(function (block) {
+			return block.type === 'Sketch' && block.enabled === false;
 		})[0];
 		var end;
 		var into;
 
 		if (found || !make)
 			return found || null;
+
+		if (off) {
+			off.enabled = true;
+
+			return off;
+		}
 
 		end = world.blocks.filter(function (block) {
 			return block.type === 'Terrain';

@@ -1,0 +1,14 @@
+{
+	"Order": 22,
+	"Width": 36,
+	"Depth": 32,
+	"Floors": [
+		3,
+		5
+	],
+	"FloorHeight": 3,
+	"Roof": "flat",
+	"Walls": "concrete",
+	"Windows": 0,
+	"Special": "parking"
+}

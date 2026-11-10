@@ -257,11 +257,12 @@ describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 
 
 		worker.Start();
 
-		expect(await waitFor(function () { return worker.State() === 'Running'; }, 10000)).toBe(true);
+		/* Its script loaded and started: up to 30 s (Regression: 10 s were not enough under the load of the whole suite). */
+		expect(await waitFor(function () { return worker.State() === 'Running'; }, 30000)).toBe(true);
 
 		socket.Destroy();
 		worker.Destroy();
-	});
+	}, 45000);
 
 	it('Destroy terminates a running Worker and stale native events cannot resurrect the handle', async function () {
 		var worker = Elemenx.WebWorker(unique('WorkerDestroyRunning'), {
@@ -270,7 +271,7 @@ describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 
 			Channel: unique('destroy-channel')
 		});
 
-		expect(await waitFor(function () { return worker.State() === 'Running'; }, 10000)).toBe(true);
+		expect(await waitFor(function () { return worker.State() === 'Running'; }, 30000)).toBe(true);
 
 		var native = worker.Native();
 
@@ -287,7 +288,7 @@ describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 
 
 		expect(worker.State()).toBe('Stopped');
 		expect(function () { worker.Start(); }).toThrow();
-	});
+	}, 45000);
 
 	it('restart detaches the previous native Messaging bridge and ignores stale replies', async function () {
 		var channel = unique('worker-stale-bridge');

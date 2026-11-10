@@ -90,11 +90,22 @@ async function mount (quality) {
 	return scene;
 }
 
-/* The pixels of the picture after a few frames (the frames add up). */
-function picture (scene, frames) {
+/*
+ * The pixels of the picture after a few frames (the frames add up), once the card has made every program they need.
+ * Regression: a picture with the contact shadows turned off needs programs of its own; under load they were not made yet.
+ */
+async function picture (scene, frames) {
 	var gl = scene.Engine().Renderer.GL;
 	var pixels = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight * 4);
 	var i;
+
+	await waitFor(function () {
+		scene.Scene().Rest = 0;
+
+		scene.Engine().Frame(scene.Now += 33);
+
+		return scene.Engine().Renderer.Progress().Needed === 0;
+	}, 180000);
 
 	for (i = 0; i < frames; i++) {
 		scene.Scene().Rest = 0;
@@ -105,6 +116,19 @@ function picture (scene, frames) {
 	gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
 	return pixels;
+}
+
+/* How many pixels of two pictures are not the same. */
+function moved (a, b) {
+	var count = 0;
+	var i;
+
+	for (i = 0; i < a.length; i += 4) {
+		if (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) > 6)
+			count++;
+	}
+
+	return count;
 }
 
 describe('Contract: contact shadows of the sun on high and ultra', function () {
@@ -134,15 +158,24 @@ describe('Contract: contact shadows of the sun on high and ultra', function () {
 		expect(scene.Graphics()).toMatchObject({Contact: true});
 		expect(scene.Graphics().Occlusion).toBeGreaterThan(0);
 
-		on = picture(scene, 12);
+		/*
+		 * With them, without them and with them again, till both pictures with them are alike: the scene stood still between
+		 * them. Regression: under load what workers make (the grass, what is sown) came between the two, and the picture
+		 * without them was the darker (darker 56, lighter 654).
+		 */
+		for (var tries = 0; tries < 20; tries++) {
+			on = await picture(scene, 12);
+			scene.Scene().Tuned = {Contact: false};
 
-		scene.Scene().Tuned = {Contact: false};
+			try {
+				off = await picture(scene, 12);
+			}
+			finally {
+				scene.Scene().Tuned = null;
+			}
 
-		try {
-			off = picture(scene, 12);
-		}
-		finally {
-			scene.Scene().Tuned = null;
+			/* Still: some 45 pixels of 153 600 differ anyway (what the frames add up); the scene that moved, hundreds. */
+			if (moved(on, await picture(scene, 12)) < 120) break;
 		}
 
 		for (i = 0; i < on.length; i += 4) {
@@ -152,8 +185,9 @@ describe('Contract: contact shadows of the sun on high and ultra', function () {
 			else if (change > 12) lighter++;
 		}
 
-		expect(darker).toBeGreaterThan(30);
-		expect(lighter).toBeLessThan(darker * 0.2);
+		/* The numbers told when it fails: what of it went wrong under load. */
+		expect(darker, 'darker ' + darker + ', lighter ' + lighter).toBeGreaterThan(30);
+		expect(lighter, 'darker ' + darker + ', lighter ' + lighter).toBeLessThan(darker * 0.2);
 	}, 120000);
 
 	it('darkens the folds by the horizons round each point (GTAO), the open ground hardly', async function () {
@@ -165,7 +199,7 @@ describe('Contract: contact shadows of the sun on high and ultra', function () {
 		scene.Scene().Tuned = {Show: 'dark', Contact: false};
 
 		try {
-			shown = picture(scene, 12);
+			shown = await picture(scene, 12);
 		}
 		finally {
 			scene.Scene().Tuned = null;

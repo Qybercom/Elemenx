@@ -1,0 +1,25 @@
+{
+	"Order": 27,
+	"Title": "Yard track",
+	"Group": "rail",
+	"Speed": 25,
+	"Rails": [
+		{
+			"Offset": 0,
+			"Gauge": 1.435
+		}
+	],
+	"Sleepers": {
+		"Step": 0.65,
+		"Length": 2.6,
+		"Surface": "wood"
+	},
+	"Strips": [
+		{
+			"Kind": "bed",
+			"Width": 3.4,
+			"Surface": "gravel",
+			"Height": 0.1
+		}
+	]
+}

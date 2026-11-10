@@ -1,0 +1,399 @@
+{
+	"version": 1,
+	"type": "vertex",
+	"name": "Wind",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "sway",
+			"type": "Sway",
+			"x": 40,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "phase",
+			"type": "Phase",
+			"x": 260,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "size",
+			"type": "Size",
+			"x": 480,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "gust",
+			"type": "Wind",
+			"x": 700,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "world",
+			"type": "World",
+			"x": 920,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "position",
+			"type": "Position",
+			"x": 1140,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "height",
+			"type": "Split",
+			"x": 40,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "once",
+			"type": "Multiply",
+			"x": 260,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "twice",
+			"type": "Multiply",
+			"x": 480,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "sized",
+			"type": "Multiply",
+			"x": 700,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "scale",
+			"type": "Number",
+			"x": 920,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.035
+				}
+			]
+		},
+		{
+			"id": "bend",
+			"type": "Multiply",
+			"x": 1140,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "quick",
+			"type": "Number",
+			"x": 40,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1.3
+				}
+			]
+		},
+		{
+			"id": "slow",
+			"type": "Number",
+			"x": 260,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.9
+				}
+			]
+		},
+		{
+			"id": "turn",
+			"type": "Number",
+			"x": 480,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1.7
+				}
+			]
+		},
+		{
+			"id": "quicker",
+			"type": "Multiply",
+			"x": 700,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "slower",
+			"type": "Multiply",
+			"x": 920,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "turned",
+			"type": "Multiply",
+			"x": 1140,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "aside",
+			"type": "Add",
+			"x": 40,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "ahead",
+			"type": "Add",
+			"x": 260,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "sin",
+			"type": "Sin",
+			"x": 480,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "cos",
+			"type": "Cos",
+			"x": 700,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "x",
+			"type": "Multiply",
+			"x": 920,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "z",
+			"type": "Multiply",
+			"x": 1140,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "way",
+			"type": "Combine",
+			"x": 40,
+			"y": 680,
+			"properties": []
+		},
+		{
+			"id": "moved",
+			"type": "Add",
+			"x": 260,
+			"y": 680,
+			"properties": []
+		},
+		{
+			"id": "end",
+			"type": "Vertex",
+			"x": 480,
+			"y": 680,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "flowprint-link-mw9lhv988f",
+			"p1": "position-out-Position",
+			"p2": "height-in-Vector",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988g",
+			"p1": "sway-out-Sway",
+			"p2": "once-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988h",
+			"p1": "height-out-Y",
+			"p2": "once-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988i",
+			"p1": "once-out-Out",
+			"p2": "twice-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988j",
+			"p1": "height-out-Y",
+			"p2": "twice-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988k",
+			"p1": "twice-out-Out",
+			"p2": "sized-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988l",
+			"p1": "size-out-Size",
+			"p2": "sized-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988m",
+			"p1": "sized-out-Out",
+			"p2": "bend-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988n",
+			"p1": "scale-out-Value",
+			"p2": "bend-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988o",
+			"p1": "gust-out-Gust",
+			"p2": "quicker-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988p",
+			"p1": "quick-out-Value",
+			"p2": "quicker-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988q",
+			"p1": "quicker-out-Out",
+			"p2": "aside-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988r",
+			"p1": "phase-out-Phase",
+			"p2": "aside-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988s",
+			"p1": "aside-out-Out",
+			"p2": "sin-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988t",
+			"p1": "gust-out-Gust",
+			"p2": "slower-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988u",
+			"p1": "slow-out-Value",
+			"p2": "slower-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988v",
+			"p1": "phase-out-Phase",
+			"p2": "turned-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988w",
+			"p1": "turn-out-Value",
+			"p2": "turned-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988x",
+			"p1": "slower-out-Out",
+			"p2": "ahead-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988y",
+			"p1": "turned-out-Out",
+			"p2": "ahead-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv988z",
+			"p1": "ahead-out-Out",
+			"p2": "cos-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv9890",
+			"p1": "sin-out-Out",
+			"p2": "x-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv9891",
+			"p1": "bend-out-Out",
+			"p2": "x-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv9892",
+			"p1": "cos-out-Out",
+			"p2": "z-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv9893",
+			"p1": "bend-out-Out",
+			"p2": "z-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv9894",
+			"p1": "x-out-Out",
+			"p2": "way-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv9895",
+			"p1": "z-out-Out",
+			"p2": "way-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv9896",
+			"p1": "world-out-World",
+			"p2": "moved-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv9897",
+			"p1": "way-out-XYZ",
+			"p2": "moved-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv9898",
+			"p1": "moved-out-Out",
+			"p2": "end-in-World",
+			"kind": "value"
+		}
+	]
+}

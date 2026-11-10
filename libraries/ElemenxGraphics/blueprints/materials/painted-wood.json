@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "painted-wood",
+	"material": {
+		"Order": 24,
+		"Title": "Painted wood",
+		"Group": "build",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat w = 0.15;\n\tfloat row = floor(q.y / w);\n\tfloat f = fract(q.y / w) * w;\n\tfloat gap = (1.0 - smoothstep(0.002, 0.005, min(f, w - f))) * enx_ms(px, 0.04);\n\tfloat wear = smoothstep(0.62, 0.78, enx_mf(q * vec2(3.0, 9.0) + row * 1.7, 4));\n\tfloat grain = sin((q.y + enx_mf(vec2(q.x * 0.6, q.y * 9.0) + row, 3) * 0.08) * 260.0) * 0.5 + 0.5;\n\tvec3 bare = vec3(0.42, 0.38, 0.33) * (0.85 + grain * 0.2);\n\tc = mix(c * (0.95 + enx_mh(vec2(row, 9.0)) * 0.08), bare, wear * 0.85) * (1.0 - gap * 0.55);\n\th += (1.0 - gap) * 0.003 - wear * 0.0008;\n\tr = mix(0.45, 0.85, wear);"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Painted boards: the paint even, worn here and there to the grey wood under it."
+		}
+	],
+	"links": []
+}

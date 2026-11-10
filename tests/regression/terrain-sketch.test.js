@@ -195,9 +195,10 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 
 		document.getElementById('mount').appendChild(component.$Element());
 
+		/* Up to a minute for each wait (Regression: 20 s were not enough for the workers of the ground under the load of the whole suite). */
 		await waitFor(function () {
 			return ready;
-		}, 4000);
+		}, 30000);
 
 		scene = ready;
 		inner = scene.Scene();
@@ -214,7 +215,7 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 			engine.Frame(now += 33);
 
 			return Elemenx.Service('SceneTerrainGenerator').Work().Waiting() === 0 && Object.keys(inner.Ground.Nodes).length > 8;
-		}, 20000);
+		}, 60000);
 
 
 		ground = inner.Ground;
@@ -270,7 +271,7 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 			return near.every(function (key) {
 				return !ground.Nodes[key] || !ground.Nodes[key].Stale;
 			}) && Elemenx.Service('SceneTerrainGenerator').Work().Waiting() === 0;
-		}, 20000);
+		}, 60000);
 
 		/* What is drawn now is of the new sketch, the square under the hill among it. */
 		await waitFor(function () {
@@ -289,7 +290,7 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 			}) && drawn.some(function (node) {
 				return Math.abs(node.Center[0] - 10) <= node.Size / 2 && Math.abs(node.Center[2]) <= node.Size / 2;
 			});
-		}, 20000);
+		}, 60000);
 
 		/* The squares far from the hill are the very ones they were; those under it, still drawn, new ones. */
 		expect(far.every(function (key) {
@@ -411,5 +412,5 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 		engine.Frame(now += 33);
 
 		expect(inner.Ground.WaterMesh).toBe(null);
-	}, 60000);
+	}, 240000);
 });

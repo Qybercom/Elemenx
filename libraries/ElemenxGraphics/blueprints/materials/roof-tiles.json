@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "roof-tiles",
+	"material": {
+		"Order": 27,
+		"Title": "Roof tiles",
+		"Group": "roof",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tvec2 b = vec2(0.22, 0.3);\n\tvec2 t = q / b;\n\tvec2 id = floor(t);\n\tvec2 f = fract(t);\n\tfloat curve = sin(f.x * 3.14159);\n\tfloat under = 1.0 - smoothstep(0.0, 0.14, f.y);\n\tfloat tone = enx_mh(id + 4.4);\n\tc *= (0.78 + tone * 0.3) * (0.6 + curve * 0.45) * (1.0 - under * 0.4) * (0.94 + enx_mn(q * 50.0) * 0.12 * enx_ms(px, 0.02));\n\th += curve * 0.03 + f.y * 0.01;\n\tr = 0.8;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Clay roof tiles: curved, in rows, each laid over the one under it, their tones a little apart."
+		}
+	],
+	"links": []
+}

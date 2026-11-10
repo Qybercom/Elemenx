@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "brick",
+	"material": {
+		"Order": 14,
+		"Title": "Brick",
+		"Group": "build",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tvec2 b = vec2(0.24, 0.075);\n\tvec2 t = q / b;\n\tt.x += mod(floor(t.y), 2.0) * 0.5;\n\tvec2 id = floor(t);\n\tvec2 f = fract(t) * b;\n\tfloat e = min(min(f.x, b.x - f.x), min(f.y, b.y - f.y));\n\tfloat mortar = (1.0 - smoothstep(0.004, 0.007, e)) * enx_ms(px, 0.06);\n\tfloat tone = enx_mh(id + 3.1);\n\tvec3 brick = c * (0.8 + tone * 0.35) * (0.92 + enx_mn(q * 60.0) * 0.16 * enx_ms(px, 0.02));\n\tc = mix(brick, vec3(0.72, 0.7, 0.66), mortar);\n\th += (1.0 - mortar) * 0.006;\n\tr = mix(0.85, 0.95, mortar);"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Building. Brick in a running bond, its mortar light."
+		}
+	],
+	"links": []
+}

@@ -1,0 +1,904 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "Scatter",
+	"parameters": [
+		{
+			"key": "MinHeight",
+			"type": "float",
+			"value": 1
+		},
+		{
+			"key": "MaxHeight",
+			"type": "float",
+			"value": 1000000000
+		},
+		{
+			"key": "MaxSlope",
+			"type": "float",
+			"value": 0.3
+		},
+		{
+			"key": "Cover",
+			"type": "float",
+			"value": 1
+		},
+		{
+			"key": "Patch",
+			"type": "float",
+			"value": 60
+		},
+		{
+			"key": "Clumps",
+			"type": "float",
+			"value": 0
+		}
+	],
+	"blocks": [
+		{
+			"id": "flowprint-block-mw9ln29z6e",
+			"type": "Input",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln29z6f",
+			"type": "Input",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln29z6g",
+			"type": "Input",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln29z6h",
+			"type": "Input",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Slope"
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln29z6i",
+			"type": "Input",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Random"
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln29z6j",
+			"type": "Result",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Grow"
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln29z6k",
+			"type": "Multiply",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln29z6l",
+			"type": "Subtract",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln29z6m",
+			"type": "Or",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln29z6n",
+			"type": "Smoothstep",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln29z6o",
+			"type": "OneMinus",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln29z6p",
+			"type": "Multiply",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln29z6q",
+			"type": "OneMinus",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln2a06r",
+			"type": "Parameter",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "MinHeight"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a06s",
+			"type": "Compare",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Operator",
+					"value": ">="
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a06v",
+			"type": "Parameter",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "MaxHeight"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a06w",
+			"type": "Compare",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Operator",
+					"value": "<="
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a06z",
+			"type": "And",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln2a072",
+			"type": "Parameter",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "MaxSlope"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a073",
+			"type": "Compare",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Operator",
+					"value": "<="
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a076",
+			"type": "And",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln2a079",
+			"type": "Divide",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln2a07a",
+			"type": "Divide",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln2a07b",
+			"type": "Parameter",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Patch"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a07c",
+			"type": "Combine",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln2a07d",
+			"type": "NoiseSpec",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "value"
+				},
+				{
+					"key": "Seed",
+					"value": "{Seed}"
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 3
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a07j",
+			"type": "Number",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.5
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a07o",
+			"type": "Number",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1.6
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a07r",
+			"type": "Number",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.3
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a07t",
+			"type": "Parameter",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Cover"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a07u",
+			"type": "Compare",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Operator",
+					"value": "<="
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a07y",
+			"type": "Parameter",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Cover"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a07z",
+			"type": "Number",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a080",
+			"type": "Compare",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Operator",
+					"value": ">="
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a084",
+			"type": "And",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln2a087",
+			"type": "Number",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.35
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a089",
+			"type": "Number",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.65
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a08b",
+			"type": "Divide",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln2a08c",
+			"type": "Divide",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln2a08d",
+			"type": "Parameter",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Patch"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a08e",
+			"type": "Combine",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "flowprint-block-mw9ln2a08f",
+			"type": "NoiseSpec",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "value"
+				},
+				{
+					"key": "Seed",
+					"value": "{Seed}"
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 3
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a08l",
+			"type": "Number",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1.7
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a08r",
+			"type": "Parameter",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Clumps"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a08v",
+			"type": "Compare",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Operator",
+					"value": "<="
+				}
+			]
+		},
+		{
+			"id": "flowprint-block-mw9ln2a08y",
+			"type": "And",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "flowprint-link-mw9ln2a06t",
+			"p1": "flowprint-block-mw9ln29z6g-out-Value",
+			"p2": "flowprint-block-mw9ln2a06s-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a06u",
+			"p1": "flowprint-block-mw9ln2a06r-out-Value",
+			"p2": "flowprint-block-mw9ln2a06s-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a06x",
+			"p1": "flowprint-block-mw9ln29z6g-out-Value",
+			"p2": "flowprint-block-mw9ln2a06w-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a06y",
+			"p1": "flowprint-block-mw9ln2a06v-out-Value",
+			"p2": "flowprint-block-mw9ln2a06w-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a070",
+			"p1": "flowprint-block-mw9ln2a06s-out-Out",
+			"p2": "flowprint-block-mw9ln2a06z-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a071",
+			"p1": "flowprint-block-mw9ln2a06w-out-Out",
+			"p2": "flowprint-block-mw9ln2a06z-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a074",
+			"p1": "flowprint-block-mw9ln29z6h-out-Value",
+			"p2": "flowprint-block-mw9ln2a073-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a075",
+			"p1": "flowprint-block-mw9ln2a072-out-Value",
+			"p2": "flowprint-block-mw9ln2a073-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a077",
+			"p1": "flowprint-block-mw9ln2a06z-out-Out",
+			"p2": "flowprint-block-mw9ln2a076-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a078",
+			"p1": "flowprint-block-mw9ln2a073-out-Out",
+			"p2": "flowprint-block-mw9ln2a076-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07e",
+			"p1": "flowprint-block-mw9ln29z6e-out-Value",
+			"p2": "flowprint-block-mw9ln2a079-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07f",
+			"p1": "flowprint-block-mw9ln2a07b-out-Value",
+			"p2": "flowprint-block-mw9ln2a079-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07g",
+			"p1": "flowprint-block-mw9ln29z6f-out-Value",
+			"p2": "flowprint-block-mw9ln2a07a-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07h",
+			"p1": "flowprint-block-mw9ln2a07b-out-Value",
+			"p2": "flowprint-block-mw9ln2a07a-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07i",
+			"p1": "flowprint-block-mw9ln2a079-out-Out",
+			"p2": "flowprint-block-mw9ln2a07c-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07k",
+			"p1": "flowprint-block-mw9ln2a07j-out-Value",
+			"p2": "flowprint-block-mw9ln2a07c-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07l",
+			"p1": "flowprint-block-mw9ln2a07a-out-Out",
+			"p2": "flowprint-block-mw9ln2a07c-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07m",
+			"p1": "flowprint-block-mw9ln2a07c-out-XYZ",
+			"p2": "flowprint-block-mw9ln2a07d-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07n",
+			"p1": "flowprint-block-mw9ln2a07d-out-Value",
+			"p2": "flowprint-block-mw9ln29z6k-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07p",
+			"p1": "flowprint-block-mw9ln2a07o-out-Value",
+			"p2": "flowprint-block-mw9ln29z6k-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07q",
+			"p1": "flowprint-block-mw9ln29z6k-out-Out",
+			"p2": "flowprint-block-mw9ln29z6l-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07s",
+			"p1": "flowprint-block-mw9ln2a07r-out-Value",
+			"p2": "flowprint-block-mw9ln29z6l-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07v",
+			"p1": "flowprint-block-mw9ln29z6l-out-Out",
+			"p2": "flowprint-block-mw9ln2a07u-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07w",
+			"p1": "flowprint-block-mw9ln2a07t-out-Value",
+			"p2": "flowprint-block-mw9ln2a07u-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a07x",
+			"p1": "flowprint-block-mw9ln2a07u-out-Out",
+			"p2": "flowprint-block-mw9ln29z6m-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a081",
+			"p1": "flowprint-block-mw9ln2a07y-out-Value",
+			"p2": "flowprint-block-mw9ln2a080-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a082",
+			"p1": "flowprint-block-mw9ln2a07z-out-Value",
+			"p2": "flowprint-block-mw9ln2a080-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a083",
+			"p1": "flowprint-block-mw9ln2a080-out-Out",
+			"p2": "flowprint-block-mw9ln29z6m-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a085",
+			"p1": "flowprint-block-mw9ln2a076-out-Out",
+			"p2": "flowprint-block-mw9ln2a084-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a086",
+			"p1": "flowprint-block-mw9ln29z6m-out-Out",
+			"p2": "flowprint-block-mw9ln2a084-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a088",
+			"p1": "flowprint-block-mw9ln2a087-out-Value",
+			"p2": "flowprint-block-mw9ln29z6n-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08a",
+			"p1": "flowprint-block-mw9ln2a089-out-Value",
+			"p2": "flowprint-block-mw9ln29z6n-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08g",
+			"p1": "flowprint-block-mw9ln29z6e-out-Value",
+			"p2": "flowprint-block-mw9ln2a08b-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08h",
+			"p1": "flowprint-block-mw9ln2a08d-out-Value",
+			"p2": "flowprint-block-mw9ln2a08b-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08i",
+			"p1": "flowprint-block-mw9ln29z6f-out-Value",
+			"p2": "flowprint-block-mw9ln2a08c-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08j",
+			"p1": "flowprint-block-mw9ln2a08d-out-Value",
+			"p2": "flowprint-block-mw9ln2a08c-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08k",
+			"p1": "flowprint-block-mw9ln2a08b-out-Out",
+			"p2": "flowprint-block-mw9ln2a08e-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08m",
+			"p1": "flowprint-block-mw9ln2a08l-out-Value",
+			"p2": "flowprint-block-mw9ln2a08e-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08n",
+			"p1": "flowprint-block-mw9ln2a08c-out-Out",
+			"p2": "flowprint-block-mw9ln2a08e-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08o",
+			"p1": "flowprint-block-mw9ln2a08e-out-XYZ",
+			"p2": "flowprint-block-mw9ln2a08f-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08p",
+			"p1": "flowprint-block-mw9ln2a08f-out-Value",
+			"p2": "flowprint-block-mw9ln29z6n-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08q",
+			"p1": "flowprint-block-mw9ln29z6n-out-Out",
+			"p2": "flowprint-block-mw9ln29z6o-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08s",
+			"p1": "flowprint-block-mw9ln2a08r-out-Value",
+			"p2": "flowprint-block-mw9ln29z6p-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08t",
+			"p1": "flowprint-block-mw9ln29z6o-out-Out",
+			"p2": "flowprint-block-mw9ln29z6p-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08u",
+			"p1": "flowprint-block-mw9ln29z6p-out-Out",
+			"p2": "flowprint-block-mw9ln29z6q-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08w",
+			"p1": "flowprint-block-mw9ln29z6i-out-Value",
+			"p2": "flowprint-block-mw9ln2a08v-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08x",
+			"p1": "flowprint-block-mw9ln29z6q-out-Out",
+			"p2": "flowprint-block-mw9ln2a08v-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a08z",
+			"p1": "flowprint-block-mw9ln2a084-out-Out",
+			"p2": "flowprint-block-mw9ln2a08y-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a090",
+			"p1": "flowprint-block-mw9ln2a08v-out-Out",
+			"p2": "flowprint-block-mw9ln2a08y-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9ln2a091",
+			"p1": "flowprint-block-mw9ln2a08y-out-Out",
+			"p2": "flowprint-block-mw9ln29z6j-in-Value",
+			"kind": "value"
+		}
+	]
+}

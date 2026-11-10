@@ -1,0 +1,285 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "door",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Depth"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "FloorHeight"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Special"
+				}
+			]
+		},
+		{
+			"id": "formula5",
+			"type": "Formula",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(2.2, FloorHeight * 0.8)"
+				}
+			]
+		},
+		{
+			"id": "formula6",
+			"type": "Formula",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Special == 'garage'"
+				}
+			]
+		},
+		{
+			"id": "box7",
+			"type": "Box",
+			"x": 1580,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "formula8",
+			"type": "Formula",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(min(2, Width * 0.25), high, 0.1)"
+				}
+			]
+		},
+		{
+			"id": "formula9",
+			"type": "Formula",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(0, high / 2, Depth / 2 + 0.05)"
+				}
+			]
+		},
+		{
+			"id": "formula10",
+			"type": "Formula",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "garage ? [0.42, 0.43, 0.45] : [0.3, 0.22, 0.16]"
+				}
+			]
+		},
+		{
+			"id": "repeat11",
+			"type": "Repeat",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/garage-door"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula12",
+			"type": "Formula",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "garage ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "join13",
+			"type": "Join",
+			"x": 700,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "result14",
+			"type": "Result",
+			"x": 920,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input3-out-Value",
+			"p2": "formula5-in-FloorHeight",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input4-out-Value",
+			"p2": "formula6-in-Special",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input1-out-Value",
+			"p2": "formula8-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "formula5-out-Value",
+			"p2": "formula8-in-high",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "formula8-out-Value",
+			"p2": "box7-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "formula5-out-Value",
+			"p2": "formula9-in-high",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "input2-out-Value",
+			"p2": "formula9-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "formula9-out-Value",
+			"p2": "box7-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "formula6-out-Value",
+			"p2": "formula10-in-garage",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "formula10-out-Value",
+			"p2": "box7-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "formula6-out-Value",
+			"p2": "formula12-in-garage",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "formula12-out-Value",
+			"p2": "repeat11-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "input1-out-Value",
+			"p2": "repeat11-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "input2-out-Value",
+			"p2": "repeat11-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "l15",
+			"p1": "input3-out-Value",
+			"p2": "repeat11-in-FloorHeight",
+			"kind": "value"
+		},
+		{
+			"id": "l16",
+			"p1": "box7-out-Parts",
+			"p2": "join13-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "l17",
+			"p1": "repeat11-out-List",
+			"p2": "join13-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "l18",
+			"p1": "join13-out-Parts",
+			"p2": "result14-in-Value",
+			"kind": "value"
+		}
+	]
+}

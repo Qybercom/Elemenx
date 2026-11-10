@@ -1,0 +1,66 @@
+{
+	"version": 1,
+	"type": "texture",
+	"name": "asphalt",
+	"texture": {
+		"Order": 2,
+		"Title": "asphalt",
+		"Group": "road",
+		"Metres": 2,
+		"Size": 1024
+	},
+	"parameters": [
+		{
+			"key": "Wear",
+			"type": "float",
+			"value": 0.25,
+			"min": 0,
+			"max": 1,
+			"comment": "Wear"
+		},
+		{
+			"key": "Cracks",
+			"type": "float",
+			"value": 0,
+			"min": 0,
+			"max": 1,
+			"comment": "Sealed cracks"
+		},
+		{
+			"key": "Stains",
+			"type": "float",
+			"value": 0.3,
+			"min": 0,
+			"max": 1,
+			"comment": "Stains"
+		}
+	],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tvec4 agg = tex_cells(uv, 260.0, seed + 1.0);\n\tvec4 fine = tex_cells(uv, 640.0, seed + 11.0);\n\tfloat binder = smoothstep(0.12, 0.3, agg.y - agg.x) * step(0.35, agg.w);\n\tfloat sand = smoothstep(0.1, 0.25, fine.y - fine.x) * step(0.5, fine.w) * (1.0 - binder);\n\tfloat pore = step(0.93, tex_noise(uv * 700.0, 700.0, seed + 2.0));\n\tvec3 stone = mix(vec3(0.13, 0.13, 0.13), vec3(0.34, 0.33, 0.31), agg.z * agg.z) * mix(vec3(1.0), vec3(1.1, 1.0, 0.9), step(0.85, agg.w));\n\tc = mix(vec3(0.045, 0.045, 0.05), stone, binder);\n\tc = mix(c, vec3(0.16, 0.155, 0.15) * (0.7 + 0.6 * fine.z), sand * 0.8);\n\th = binder * (0.4 + 0.3 * agg.z);\n\tr = mix(0.95, 0.82, binder);\n\tao = mix(0.6, 1.0, binder);\n\tc *= 1.0 - pore * 0.6;\n\th -= pore * 0.2;\n\t// Worn by the wheels: lighter and smoother in patches.\n\tfloat worn = tex_fbm(uv, 6.0, 4, seed + 3.0);\n\tfloat w = smoothstep(0.45, 0.75, worn) * p_Wear;\n\tc = mix(c, c * 1.35 + 0.03, w);\n\tr -= w * 0.1;\n\t// Cracks sealed with tar: thin dark lines of large cells, shining a little.\n\tvec4 big = tex_cells(uv + vec2(tex_noise(uv * 24.0, 24.0, seed + 4.0), tex_noise(uv * 24.0, 24.0, seed + 5.0)) * 0.02, 3.0, seed + 6.0);\n\tfloat crack = (1.0 - smoothstep(0.012, 0.03, big.y - big.x)) * step(1.0 - p_Cracks, big.z);\n\tc = mix(c, vec3(0.03, 0.03, 0.035), crack);\n\tr = mix(r, 0.45, crack);\n\th = mix(h, 0.55, crack);\n\t// Stains of oil: dark soft spots.\n\tfloat stain = smoothstep(0.62, 0.8, tex_fbm(uv, 4.0, 4, seed + 7.0)) * p_Stains;\n\tc *= 1.0 - stain * 0.45;\n\tr -= stain * 0.2;"
+				},
+				{
+					"key": "Inputs",
+					"value": "uv: vec2, px: float, seed: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, h: float, ao: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Asphalt: the stones of its aggregate in a dark binder, some polished light by the wheels, fine pores, patches worn lighter, cracks sealed with tar and stains of oil."
+		}
+	],
+	"links": []
+}

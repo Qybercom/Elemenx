@@ -1,0 +1,58 @@
+{
+	"Order": 9,
+	"Title": "Boulevard",
+	"Group": "street",
+	"Speed": 50,
+	"Strips": [
+		{
+			"Kind": "sidewalk",
+			"Width": 3,
+			"Surface": "paving",
+			"Height": 0.15
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.3,
+			"Surface": "asphalt",
+			"Way": -1,
+			"Left": "none",
+			"Right": "none"
+		},
+		{
+			"Kind": "median",
+			"Width": 8,
+			"Surface": "paving",
+			"Height": 0.15
+		},
+		{
+			"Kind": "lane",
+			"Width": 3.3,
+			"Surface": "asphalt",
+			"Way": 1,
+			"Left": "none",
+			"Right": "none"
+		},
+		{
+			"Kind": "sidewalk",
+			"Width": 3,
+			"Surface": "paving",
+			"Height": 0.15
+		}
+	],
+	"Along": [
+		{
+			"Type": "row",
+			"Side": "both",
+			"Gap": -0.6,
+			"Shapes": "streetlamp",
+			"Spacing": 28
+		},
+		{
+			"Type": "row",
+			"Side": "both",
+			"Gap": -1.2,
+			"Shapes": "bench, planter, bin",
+			"Spacing": 30
+		}
+	]
+}

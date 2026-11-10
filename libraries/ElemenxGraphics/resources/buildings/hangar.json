@@ -1,0 +1,13 @@
+{
+	"Order": 18,
+	"Width": 30,
+	"Depth": 40,
+	"Floors": [
+		1,
+		1
+	],
+	"FloorHeight": 6,
+	"Roof": "vault",
+	"Walls": "metal",
+	"Windows": 0.04
+}

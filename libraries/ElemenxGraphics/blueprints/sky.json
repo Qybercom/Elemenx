@@ -1,0 +1,446 @@
+{
+	"version": 1,
+	"type": "sky",
+	"name": "Sky",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "ray",
+			"type": "SkyRay",
+			"x": 40,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "day",
+			"type": "SkyDay",
+			"x": 280,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "air",
+			"type": "SkyAir",
+			"x": 520,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "dusk",
+			"type": "SkyDusk",
+			"x": 760,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "halo",
+			"type": "SkyHalo",
+			"x": 1000,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "pink",
+			"type": "SkyPink",
+			"x": 40,
+			"y": 240,
+			"properties": []
+		},
+		{
+			"id": "wisps",
+			"type": "SkyWisps",
+			"x": 280,
+			"y": 240,
+			"properties": []
+		},
+		{
+			"id": "cover",
+			"type": "SkyCover",
+			"x": 520,
+			"y": 240,
+			"properties": []
+		},
+		{
+			"id": "eclipse",
+			"type": "SkyEclipse",
+			"x": 760,
+			"y": 240,
+			"properties": []
+		},
+		{
+			"id": "towns",
+			"type": "SkyTowns",
+			"x": 1000,
+			"y": 240,
+			"properties": []
+		},
+		{
+			"id": "aurora",
+			"type": "SkyAurora",
+			"x": 40,
+			"y": 440,
+			"properties": []
+		},
+		{
+			"id": "rainbow",
+			"type": "SkyRainbow",
+			"x": 280,
+			"y": 440,
+			"properties": []
+		},
+		{
+			"id": "haze",
+			"type": "SkyMoonHaze",
+			"x": 520,
+			"y": 440,
+			"properties": []
+		},
+		{
+			"id": "moon",
+			"type": "SkyMoon",
+			"x": 760,
+			"y": 440,
+			"properties": []
+		},
+		{
+			"id": "compose",
+			"type": "SkyCompose",
+			"x": 1000,
+			"y": 440,
+			"properties": []
+		},
+		{
+			"id": "end",
+			"type": "SkyEnd",
+			"x": 40,
+			"y": 640,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "flowprint-link-mw9lhvcgcs",
+			"p1": "ray-out-Sun",
+			"p2": "day-in-Sun",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgct",
+			"p1": "ray-out-Height",
+			"p2": "day-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgcu",
+			"p1": "day-out-Up",
+			"p2": "air-in-Up",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgcv",
+			"p1": "day-out-Day",
+			"p2": "air-in-Day",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgcw",
+			"p1": "day-out-Low",
+			"p2": "air-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgcx",
+			"p1": "air-out-Color",
+			"p2": "dusk-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgcy",
+			"p1": "ray-out-Ray",
+			"p2": "dusk-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgcz",
+			"p1": "day-out-Up",
+			"p2": "dusk-in-Up",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgd0",
+			"p1": "day-out-Low",
+			"p2": "dusk-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgd1",
+			"p1": "dusk-out-Color",
+			"p2": "halo-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgd2",
+			"p1": "ray-out-Toward",
+			"p2": "halo-in-Toward",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgd3",
+			"p1": "ray-out-Sun",
+			"p2": "halo-in-Sun",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgd4",
+			"p1": "halo-out-Color",
+			"p2": "pink-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgd5",
+			"p1": "day-out-Low",
+			"p2": "pink-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgd6",
+			"p1": "day-out-Up",
+			"p2": "pink-in-Up",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgd7",
+			"p1": "ray-out-Sun",
+			"p2": "pink-in-Sun",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgd8",
+			"p1": "pink-out-Color",
+			"p2": "wisps-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgd9",
+			"p1": "ray-out-Ray",
+			"p2": "wisps-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgda",
+			"p1": "ray-out-Height",
+			"p2": "wisps-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdb",
+			"p1": "day-out-Day",
+			"p2": "wisps-in-Day",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdc",
+			"p1": "day-out-Low",
+			"p2": "wisps-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdd",
+			"p1": "wisps-out-Color",
+			"p2": "cover-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgde",
+			"p1": "day-out-Day",
+			"p2": "cover-in-Day",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdf",
+			"p1": "cover-out-Color",
+			"p2": "eclipse-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdg",
+			"p1": "ray-out-Toward",
+			"p2": "eclipse-in-Toward",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdh",
+			"p1": "eclipse-out-Color",
+			"p2": "towns-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdi",
+			"p1": "ray-out-Ray",
+			"p2": "towns-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdj",
+			"p1": "ray-out-Height",
+			"p2": "towns-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdk",
+			"p1": "towns-out-Color",
+			"p2": "aurora-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdl",
+			"p1": "ray-out-Ray",
+			"p2": "aurora-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdm",
+			"p1": "ray-out-Height",
+			"p2": "aurora-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdn",
+			"p1": "aurora-out-Color",
+			"p2": "rainbow-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdo",
+			"p1": "ray-out-Ray",
+			"p2": "rainbow-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdp",
+			"p1": "ray-out-Sun",
+			"p2": "rainbow-in-Sun",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvcgdq",
+			"p1": "ray-out-Height",
+			"p2": "rainbow-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvchdr",
+			"p1": "rainbow-out-Color",
+			"p2": "haze-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvchds",
+			"p1": "ray-out-Ray",
+			"p2": "haze-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvchdt",
+			"p1": "day-out-Day",
+			"p2": "haze-in-Day",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvchdu",
+			"p1": "ray-out-Ray",
+			"p2": "moon-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvchdv",
+			"p1": "day-out-Day",
+			"p2": "moon-in-Day",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvchdw",
+			"p1": "haze-out-Color",
+			"p2": "compose-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvchdx",
+			"p1": "eclipse-out-Crown",
+			"p2": "compose-in-Crown",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvchdy",
+			"p1": "halo-out-Tint",
+			"p2": "compose-in-Tint",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvchdz",
+			"p1": "ray-out-Toward",
+			"p2": "compose-in-Toward",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvche0",
+			"p1": "ray-out-Sun",
+			"p2": "compose-in-Sun",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvche1",
+			"p1": "day-out-Day",
+			"p2": "compose-in-Day",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvche2",
+			"p1": "dusk-out-Dusk",
+			"p2": "compose-in-Dusk",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvche3",
+			"p1": "haze-out-Haze",
+			"p2": "compose-in-Haze",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvche4",
+			"p1": "towns-out-Towns",
+			"p2": "compose-in-Towns",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvche5",
+			"p1": "aurora-out-Aurora",
+			"p2": "compose-in-Aurora",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvche6",
+			"p1": "moon-out-Color",
+			"p2": "compose-in-Moon",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvche7",
+			"p1": "moon-out-Shape",
+			"p2": "compose-in-Shape",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvche8",
+			"p1": "compose-out-Color",
+			"p2": "end-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhvche9",
+			"p1": "compose-out-Alpha",
+			"p2": "end-in-Alpha",
+			"kind": "value"
+		}
+	]
+}

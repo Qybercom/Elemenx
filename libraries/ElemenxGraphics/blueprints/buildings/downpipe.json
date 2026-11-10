@@ -1,0 +1,250 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "downpipe",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Index"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "W"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "D"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Top"
+				}
+			]
+		},
+		{
+			"id": "formula5",
+			"type": "Formula",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index == 1 || Index == 2 ? 1 : -1"
+				}
+			]
+		},
+		{
+			"id": "formula6",
+			"type": "Formula",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index >= 2 ? 1 : -1"
+				}
+			]
+		},
+		{
+			"id": "cylinder7",
+			"type": "Cylinder",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Segments",
+					"value": 6
+				}
+			]
+		},
+		{
+			"id": "formula8",
+			"type": "Formula",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.06"
+				}
+			]
+		},
+		{
+			"id": "formula9",
+			"type": "Formula",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"id": "formula10",
+			"type": "Formula",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(cx * (W / 2 + 0.1), Top / 2, cz * (D / 2 + 0.1))"
+				}
+			]
+		},
+		{
+			"id": "formula11",
+			"type": "Formula",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.42, 0.44, 0.46]"
+				}
+			]
+		},
+		{
+			"id": "formula12",
+			"type": "Formula",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "'metal'"
+				}
+			]
+		},
+		{
+			"id": "result13",
+			"type": "Result",
+			"x": 700,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input1-out-Value",
+			"p2": "formula5-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input1-out-Value",
+			"p2": "formula6-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "formula8-out-Value",
+			"p2": "cylinder7-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "formula9-out-Value",
+			"p2": "cylinder7-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "input4-out-Value",
+			"p2": "cylinder7-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "formula5-out-Value",
+			"p2": "formula10-in-cx",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "input2-out-Value",
+			"p2": "formula10-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "input4-out-Value",
+			"p2": "formula10-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "formula6-out-Value",
+			"p2": "formula10-in-cz",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "input3-out-Value",
+			"p2": "formula10-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "formula10-out-Value",
+			"p2": "cylinder7-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "formula11-out-Value",
+			"p2": "cylinder7-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "formula12-out-Value",
+			"p2": "cylinder7-in-Material",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "cylinder7-out-Parts",
+			"p2": "result13-in-Value",
+			"kind": "value"
+		}
+	]
+}

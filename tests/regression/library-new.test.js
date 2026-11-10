@@ -700,7 +700,10 @@ describe('Contract: the new Components of ElemenxUI', function () {
 
 		root.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight', bubbles: true}));
 
-		await tick();
+		/* The seek of the media: awaited as the other steps are (Regression: one tick was not enough under the load of the whole suite). */
+		await waitFor(function () {
+			return audio.currentTime === 2;
+		});
 
 		expect(audio.currentTime).toBe(2);
 	});

@@ -8,3 +8,5 @@ Scatter отправляет ближайшие квадраты пачками 
 Правило-граф. Graph правила — граф-генератор Blueprints, который решает, где и как растёт вещь, вместо MinHeight, MaxHeight, MaxSlope, Cover и Clumps. Входы: X, Z, Height, Slope, Moisture, Temperature (климат земли), Random и Other (числа 0–1 от места, одинаковые для одного места). Результаты: Grow (true или число больше 0.5), Size (в размерах модели), Turn (радианы), Shape (номер в Shapes); чего граф не говорит, решает правило. Compile(rules) на странице превращает графы в JavaScript (Source) для воркеров. LibraryScatter(rule) строит граф правила таким, каким оно сеется без графа: те же вещи до бита — с него начинает редактор.
 
 Biome правила — биом земли по климату, где оно растёт; на стыке биомов вещи перемешиваются по весам (Land).
+
+LibraryScatter(rule) берёт граф ресурса `ElemenxGraphics/scatter` (blueprints/scatter.json) и заполняет его параметры (MinHeight, MaxHeight, MaxSlope, Cover, Patch, Clumps) и зерно `{Seed}` через Blueprints.Fill; приложение может подложить свой граф под тем же именем.

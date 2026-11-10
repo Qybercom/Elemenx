@@ -91,7 +91,9 @@ describe('Contract: Buildings, a building of any size made of its numbers, a mod
 		var above = bounds(businessModel, 0.3, 0.6);
 
 		expect(models.Info('test-tower').Size).toBeCloseTo(tower.Height, 6);
-		expect(all[4]).toBeCloseTo(1, 2);
+		/* As tall as its Size; what stands on its flat roof (its details) a little over it. */
+		expect(all[4]).toBeGreaterThan(0.995);
+		expect(all[4]).toBeLessThan(1.02);
 		expect(all[1]).toBeGreaterThan(-0.01);
 		expect(high[3] - high[0]).toBeLessThan((low[3] - low[0]) * 0.75);
 		expect(above[3] - above[0]).toBeLessThan((podium[3] - podium[0]) * 0.7);
@@ -176,5 +178,118 @@ describe('Contract: Buildings, a building of any size made of its numbers, a mod
 				});
 			});
 		});
+
+		/* Regression: a church, a station and a car park were laid out larger than Buildings makes them. */
+		Object.keys(buildings.Defaults).forEach(function (name) {
+			expect(terrain.SettlementSizes[name], name).toEqual([buildings.Defaults[name].Width, buildings.Defaults[name].Depth]);
+		});
+	});
+
+	/*
+	 * The buildings are the graph of a building and the functions it calls, of the resources: every class of it, its
+	 * details a piece of their own under its body (what a far level of detail leaves out), each kind of detail where its
+	 * class has it: sills and lintels, downpipes and a chimney of a house, air conditioners and the railings of
+	 * balconies of apartments, the awning and sign of a shop, what stands on the roof of an office.
+	 */
+	it('makes every class of the graph of a building, its details a piece of their own, each where its class has it', function () {
+		var generator = Elemenx.Service('SceneBuildingGenerator');
+		var made = Elemenx.Service('ModelBlueprints');
+
+		function parts (options) {
+			return made.Recipe('ElemenxGraphics/building', generator.Parameters(options), {Variant: 0});
+		}
+
+		function detail (recipe, test) {
+			return recipe.Parts.filter(function (part) {
+				return part.Piece === 'detail' && test(part);
+			}).length;
+		}
+
+		var house = parts({Class: 'house', Seed: 'chimney-1', Roof: 'gable'});
+		var apartments = parts({Class: 'apartments', Seed: 'ac-2', Balconies: true});
+		var shop = parts({Class: 'shop', Seed: 'shop-3'});
+		var office = parts({Class: 'office', Seed: 'roof-4'});
+		var plain = parts({Class: 'house', Seed: 'chimney-1', Roof: 'gable', Details: false});
+
+		generator.Classes().forEach(function (name) {
+			expect(parts({Class: name, Seed: 'all'}).Parts.length, name).toBeGreaterThan(5);
+		});
+
+		expect(house.Pieces).toEqual([{ID: 'detail', Parent: 'body', Pivot: [0, 0, 0], Team: false}]);
+		expect(detail(house, function (part) {
+			return part.Material === 'stone' && part.Size[1] < 0.2;
+		})).toBeGreaterThan(8);
+		expect(detail(house, function (part) {
+			return part.Shape === 'cylinder' && part.Material === 'metal';
+		})).toBe(4);
+		expect(detail(house, function (part) {
+			return part.Material === 'clinker';
+		})).toBeGreaterThan(0);
+		expect(detail(apartments, function (part) {
+			return part.Material === 'metal' && part.Shape === 'box' && Math.abs(part.Size[1] * generator.Options({Class: 'apartments', Seed: 'ac-2'}).Height - 0.55) < 1e-6;
+		})).toBeGreaterThan(3);
+		expect(detail(apartments, function (part) {
+			return part.Shape === 'cylinder' && part.Size[0] < 0.05;
+		})).toBeGreaterThan(10);
+		expect(detail(shop, function (part) {
+			return part.Material === 'awning';
+		})).toBe(1);
+		expect(detail(office, function (part) {
+			return part.Material === 'metal' && part.At[1] * generator.Options({Class: 'office', Seed: 'roof-4'}).Height > 20;
+		})).toBeGreaterThan(0);
+
+		/* With no details told: only what all of them have (sills and lintels), none of its chances. */
+		expect(detail(plain, function (part) {
+			return part.Material === 'clinker' || part.Shape === 'cylinder';
+		})).toBe(0);
+	});
+
+	/* The graph of a building made code (blueprint to js): the very parts of its run, many times faster. */
+	it('makes the graph of a building code: the very parts of the graph run, for every class and its variants, faster', function () {
+		var generator = Elemenx.Service('SceneBuildingGenerator');
+		var blueprints = Elemenx.Service('Blueprints');
+		var graph = Elemenx.Resources('Blueprints', 'ElemenxGraphics/building');
+		var code = Elemenx.Service('ModelBlueprints').Compiled(graph);
+		var run = 0;
+		var made = 0;
+		var started;
+
+		function clean (value) {
+			return JSON.parse(JSON.stringify(value));
+		}
+
+		expect(typeof code).toBe('function');
+
+		generator.Classes().concat(['house:L', 'school:court', 'hangar:vault', 'barn:gambrel', 'house:dome']).forEach(function (spec) {
+			var parts = spec.split(':');
+			var options = {Class: parts[0], Lit: 0.4, Seed: 'code'};
+
+			if (parts[1] && /^[LU]$|^court$/.test(parts[1])) options.Plan = parts[1];
+			else if (parts[1]) options.Roof = parts[1];
+
+			[0, 3].forEach(function (variant) {
+				var parameters = generator.Parameters(options);
+				var interpreted;
+				var compiled;
+
+				started = performance.now();
+				interpreted = blueprints.Calling(function () {
+					return blueprints.Compile(graph).Make(parameters, {Variant: variant});
+				});
+				run += performance.now() - started;
+
+				started = performance.now();
+				compiled = code(parameters, {Variant: variant});
+				made += performance.now() - started;
+
+				expect(clean(compiled.Parts)).toEqual(clean(interpreted.Parts));
+				expect(clean(compiled.Pieces)).toEqual(clean(interpreted.Pieces));
+			});
+		});
+
+		console.log('building graph: run ' + Math.round(run) + ' ms, code ' + Math.round(made) + ' ms');
+
+		expect(made).toBeLessThan(run / 3);
 	});
 });
+

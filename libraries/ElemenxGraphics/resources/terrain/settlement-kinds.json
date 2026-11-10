@@ -1,0 +1,72 @@
+{
+	"hamlet": {
+		"Block": 50,
+		"Street": 5,
+		"Grid": false,
+		"Classes": {
+			"shack": 2,
+			"cabin": 3,
+			"cottage": 2
+		}
+	},
+	"village": {
+		"Block": 45,
+		"Street": 6,
+		"Grid": false,
+		"Classes": {
+			"cottage": 4,
+			"house": 3,
+			"cabin": 1,
+			"shop": 1,
+			"barn": 0.6,
+			"garage": 0.4,
+			"church": 0.1
+		}
+	},
+	"town": {
+		"Block": 60,
+		"Street": 8,
+		"Grid": true,
+		"Classes": {
+			"townhouse": 4,
+			"house": 2,
+			"shop": 2,
+			"apartments": 1,
+			"school": 0.2,
+			"church": 0.15,
+			"fuel": 0.2,
+			"garage": 0.3
+		}
+	},
+	"city": {
+		"Block": 80,
+		"Street": 12,
+		"Grid": true,
+		"Classes": {
+			"apartments": 4,
+			"office": 3,
+			"shop": 1,
+			"townhouse": 1,
+			"school": 0.2,
+			"parking": 0.3,
+			"fuel": 0.15,
+			"church": 0.1
+		},
+		"Core": {
+			"tower": 2,
+			"skyscraper": 1,
+			"business": 1
+		}
+	},
+	"fort": {
+		"Block": 55,
+		"Street": 7,
+		"Grid": true,
+		"Walls": true,
+		"Classes": {
+			"house": 3,
+			"townhouse": 2,
+			"shop": 1
+		}
+	}
+}

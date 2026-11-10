@@ -6,7 +6,8 @@
  *   trait Scatter], Grass: {rule of the trait Grass, or null}, Climate: where it is on a ground of lands by their climate
  *   (Biomes of SceneTerrainGenerator.Flat): {Height, Moisture, Temperature}, or a list of them, each a range [from, to]
  *   (null: no end; Height in parts of the top of the ground, the others 0 to 1)}. temperate, taiga, tundra, desert,
- *   savanna, swamp (their climates hold every one, none twice), alien (none: it is a land of its own).
+ *   savanna, swamp (their climates hold every one, none twice), alien (none: it is a land of its own); data of the
+ *   resources (resources/biomes, ElemenxGraphics/biomes/<name>): an Application gives one of that name in its place.
  * - Check(list, field): whether lands by their climate cover a ground and its heights as they should: the gaps of their
  *   climates in each band of heights, lands the ground never reaches, lands it never has, the part of it of no land.
  * - Village(field, {X, Y, Houses, Radius, Seed, Shapes}) lays out a village on a ground (SceneTerrainGenerator.Flat): {Objects (specs
@@ -33,75 +34,23 @@ Elemenx.Service('SceneBiomes', {
 			}
 		});
 
-		this.Registry = {
-			temperate: {
-				Climate: [{Temperature: [0.42, 0.65]}, {Temperature: [0.65, null], Moisture: [0.6, null], Height: [0.12, null]}],
-				Ground: {},
-				Scatter: [
-					{Shapes: ['pine', 'pine', 'oak', 'birch', 'bush', 'stump'], Density: 2.2, Cover: 0.55, Patch: 70, MaxSlope: 0.3},
-					{Shapes: ['oak', 'birch', 'bush'], Density: 0.8, Cover: 0.45, Patch: 40, MaxSlope: 0.25},
-					{Shapes: ['bush', 'bush', 'mushroom', 'stump'], Density: 5, Cover: 0.5, Patch: 25, MaxSlope: 0.3, Size: [0.6, 1.2]},
-					{Shapes: ['rock', 'rock', 'boulder'], Density: 0.5, MinHeight: 0, MaxSlope: 0.8, Size: [0.5, 1.4]}
-				],
-				Grass: {Density: 1, Height: 0.75, Color: '#7fae4a', Root: '#2f5a22'}
-			},
-			taiga: {
-				Climate: {Temperature: [0.22, 0.42]},
-				Ground: {Low: [0.27, 0.4, 0.26], High: [0.36, 0.42, 0.34], Sand: [0.5, 0.48, 0.4], Materials: {Low: 'soil', Sand: 'gravel'}},
-				Scatter: [
-					{Shapes: ['pine'], Density: 4, Cover: 0.7, Patch: 80, MaxSlope: 0.35, Size: [0.9, 1.6]},
-					{Shapes: ['bush', 'stump', 'rock'], Density: 2, Cover: 0.5, Patch: 30, MaxSlope: 0.4, Size: [0.5, 1.1]},
-					{Shapes: ['boulder', 'rock'], Density: 0.6, MinHeight: 0, MaxSlope: 0.8}
-				],
-				Grass: {Density: 0.7, Height: 0.5, Color: '#6d8f58', Root: '#2c4a2c'}
-			},
-			tundra: {
-				Climate: {Temperature: [null, 0.22]},
-				Ground: {Low: [0.86, 0.88, 0.92], High: [0.92, 0.93, 0.96], Sand: [0.74, 0.76, 0.78], Rock: [0.5, 0.52, 0.56], Materials: {Low: 'snow', High: 'snow', Sand: 'gravel'}},
-				Scatter: [
-					{Shapes: ['pine'], Density: 0.5, Cover: 0.4, Patch: 60, MaxSlope: 0.3, Size: [0.6, 1.1]},
-					{Shapes: ['boulder', 'rock', 'stump'], Density: 0.7, MinHeight: 0, MaxSlope: 0.8}
-				],
-				Grass: null
-			},
-			desert: {
-				Climate: {Temperature: [0.65, null], Moisture: [null, 0.33]},
-				Ground: {Low: [0.82, 0.68, 0.44], High: [0.76, 0.58, 0.36], Sand: [0.88, 0.76, 0.52], Rock: [0.62, 0.42, 0.28], Snow: [0.8, 0.62, 0.42], Road: [0.66, 0.52, 0.34], Materials: {Low: 'sand', High: 'sand', Snow: 'sand'}},
-				Scatter: [
-					{Shapes: ['palm'], Density: 1.6, MaxHeight: 5, Cover: 0.6, Patch: 30, MaxSlope: 0.2},
-					{Shapes: ['rock', 'rock', 'rock', 'boulder'], Density: 0.12, MinHeight: 0, MaxSlope: 0.9},
-					{Shapes: ['crystal'], Density: 0.04, MinHeight: 2, MaxSlope: 0.5}
-				],
-				Grass: null
-			},
-			savanna: {
-				Climate: {Temperature: [0.65, null], Moisture: [0.33, 0.6]},
-				Ground: {Low: [0.66, 0.6, 0.3], High: [0.58, 0.5, 0.28], Sand: [0.78, 0.68, 0.46], Materials: {High: 'clay'}},
-				Scatter: [
-					{Shapes: ['oak'], Density: 0.25, MaxSlope: 0.25, Size: [0.9, 1.5]},
-					{Shapes: ['bush', 'rock'], Density: 0.8, Cover: 0.5, Patch: 40, MaxSlope: 0.4}
-				],
-				Grass: {Density: 0.9, Height: 0.95, Color: '#c9b35a', Root: '#6f6a2e'}
-			},
-			swamp: {
-				Climate: {Temperature: [0.65, null], Moisture: [0.6, null], Height: [null, 0.12]},
-				Ground: {Low: [0.22, 0.3, 0.18], High: [0.28, 0.32, 0.2], Sand: [0.3, 0.3, 0.2], Deep: [0.12, 0.16, 0.12], Materials: {Low: 'soil', Sand: 'clay', Deep: 'clay'}},
-				Scatter: [
-					{Shapes: ['oak', 'birch', 'stump'], Density: 1.8, Cover: 0.7, Patch: 45, MaxSlope: 0.3},
-					{Shapes: ['bush', 'mushroom', 'mushroom', 'stump'], Density: 6, Cover: 0.6, Patch: 20, MaxSlope: 0.3, Size: [0.6, 1.4]}
-				],
-				Grass: {Density: 1, Height: 1, Color: '#7c8a3c', Root: '#2c3a1e'}
-			},
-			alien: {
-				Ground: {Low: [0.36, 0.2, 0.46], High: [0.26, 0.24, 0.5], Sand: [0.5, 0.34, 0.56], Rock: [0.2, 0.16, 0.3], Snow: [0.62, 0.86, 0.9], Road: [0.56, 0.5, 0.66]},
-				Scatter: [
-					{Shapes: ['crystal'], Density: 0.9, Cover: 0.5, Patch: 50, MaxSlope: 0.6, Size: [0.7, 2.2]},
-					{Shapes: ['mushroom'], Density: 3, Cover: 0.5, Patch: 30, MaxSlope: 0.4, Size: [1, 3.5]},
-					{Shapes: ['boulder'], Density: 0.3, MinHeight: 0, MaxSlope: 0.9}
-				],
-				Grass: {Density: 0.8, Height: 0.6, Color: '#5fd6c0', Root: '#2a2a6a'}
-			}
-		};
+		/*
+		 * Its lands: data of its resources (resources/biomes, named ElemenxGraphics/biomes/<name>), in their Order; one an
+		 * Application gives of that name takes its place.
+		 */
+		this.Registry = {};
+
+		Elemenx.Resources('Data').filter(function (name) {
+			return name.indexOf('ElemenxGraphics/biomes/') === 0;
+		}).map(function (name) {
+			return {Name: name.substring('ElemenxGraphics/biomes/'.length), Data: Elemenx.Resources('Data', name)};
+		}).sort(function (a, b) {
+			return (a.Data.Order || 0) - (b.Data.Order || 0);
+		}).forEach(function (item) {
+			delete item.Data.Order;
+
+			self.Registry[item.Name] = item.Data;
+		});
 	},
 
 	Names: function () {

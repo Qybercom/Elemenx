@@ -13,6 +13,7 @@
  *   Reactive                 reactive state: proxies, dependency tracking, effects, batching
  *   Bundle                   Elemenx.Bundle: production bundle registry, resolved before Discovery
  *   Resource                 Elemenx.Resource: files embedded by a bundle, fetched otherwise
+ *   Resources                Elemenx.Resources: groups of named data ($Resources of Libraries and Applications), read at once
  *   Locale                   Elemenx.Locale: phrases by key in the language of the page, $T of the templates
  *   Style                    Elemenx.Style: the stylesheets of the document and of the shadow roots of Applications
  *   Discovery                development loading of index.js graphs and entity scripts
@@ -37,6 +38,7 @@
  *   Widgets                  Elemenx.Widgets: Components of an Application mounted on a page of another site
  *   Splash                   Elemenx.Splash: the splash of the page, gone when the first Application is ready
  *   Motion                   the endless animations of Elemenx rest while their element is out of the viewport
+ *   Compilers                Elemenx.Compilers: transitions of kinds of code, the IR between them, text languages as data (js, cpp)
  *   SSR                      pages rendered on a server: the state of their Components ($OnSSR), their markup replaced
  *   Application              Elemenx.Application: ownership, mounting, startup lifecycle
  *   Export                   Elemenx.Version, Elemenx.NoConflict; the window gets this copy, an isolated build keeps it
@@ -1223,6 +1225,140 @@
 		};
 
 		Elemenx.Resource = resource;
+
+		/* The URLs of the files embedded, for the groups of resources that are folders. */
+		Runtime.EmbeddedURLs = function () {
+			return Object.keys(embedded);
+		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
+	/* Resources */
+	(function (global) {
+		'use strict';
+
+		var own = Runtime.Own;
+		/* group: {name: {Text, Application}}, the text of each kept to give a copy at each read. */
+		var groups = {};
+
+		function define (group, name, text, application) {
+			/* What an Application defined stays: the Libraries of the next Application load after it. */
+			var entries = groups[group] = groups[group] || {};
+			if (!application && own(entries, name) && entries[name].Application) return;
+
+			entries[name] = {Text: text, Application: !!application};
+		}
+
+		/*
+		 * Elemenx.Resources(group): the names of the resources of a group (Blueprints, Data...), sorted.
+		 * Elemenx.Resources(group, name): a copy of the data of one, or null. Elemenx.Resources(group, name, data) defines
+		 * one in code (data: a value of JSON, or its text), in the place of one of the same name. A Library names its
+		 * resources by its name (ElemenxGraphics/water); an Application that gives one of that name takes its place.
+		 */
+		function resources (group, name, data) {
+			var entries;
+			var text;
+
+			if (!group || typeof group !== 'string' || arguments.length > 1 && (!name || typeof name !== 'string') || arguments.length > 3)
+				throw new Error('Elemenx.Resources expects (group), (group, name) or (group, name, data)');
+
+			entries = groups[group] || {};
+
+			if (arguments.length === 1)
+				return Object.keys(entries).sort();
+
+			if (arguments.length === 2)
+				return own(entries, name) ? JSON.parse(entries[name].Text) : null;
+
+			text = typeof data === 'string' ? data : JSON.stringify(data);
+
+			JSON.parse(text);
+
+			define(group, name, text, true);
+
+			return name;
+		}
+
+		/*
+		 * Loads what $Resources names: {Group: folder or list}. A folder (a path, blueprints) takes every .json file under
+		 * it that the graphs of the owner list or a bundle embeds, named by its path in the folder without .json; a list
+		 * takes paths (named by the file without .json) or {Name, URL}. options: Resolve(path) (an absolute URL),
+		 * Namespace (put before the names: the name of a Library; none for an Application), Files (the URLs its graphs
+		 * list), Application (what it defines stays over what a Library defines). callback(error) once all are in.
+		 */
+		Runtime.LoadResources = function (spec, options, callback) {
+			var jobs = [];
+			var wrong = '';
+			var done;
+
+			function named (path) {
+				return (options.Namespace ? options.Namespace + '/' : '') + path.replace(/\.json$/i, '');
+			}
+
+			Object.keys(spec || {}).forEach(function (group) {
+				var value = spec[group];
+				var folder;
+
+				if (typeof value === 'string') {
+					folder = options.Resolve(value.replace(/\/+$/, '') + '/');
+
+					(options.Files || []).concat(Runtime.EmbeddedURLs()).forEach(function (url) {
+						var path = url.indexOf(folder) === 0 ? url.substring(folder.length).split(/[?#]/)[0] : '';
+						var twice = jobs.some(function (job) {
+							return job.URL === url;
+						});
+						if (/\.json$/i.test(path) && !twice)
+							jobs.push({Group: group, Name: named(path), URL: url});
+					});
+
+					return;
+				}
+
+				(Array.isArray(value) ? value : []).forEach(function (item) {
+					if (typeof item === 'string') jobs.push({Group: group, Name: named(item.split('/').pop()), URL: options.Resolve(item)});
+					else if (item && item.Name && item.URL) jobs.push({Group: group, Name: String(item.Name), URL: options.Resolve(item.URL)});
+					else wrong = group;
+				});
+			});
+
+			if (wrong) {
+				callback(new Error('Elemenx $Resources items must be paths or {Name, URL}: ' + wrong));
+
+				return;
+			}
+
+			if (!jobs.length) {
+				callback(null);
+
+				return;
+			}
+
+			done = Runtime.Countdown(jobs.length, callback);
+
+			jobs.forEach(function (job) {
+				Elemenx.Resource.Load(job.URL, function (error, text) {
+					if (error) {
+						done(error);
+
+						return;
+					}
+
+					try {
+						JSON.parse(text);
+					}
+					catch (parseError) {
+						done(new Error('Elemenx Resource is not JSON: ' + job.URL + ': ' + parseError.message));
+
+						return;
+					}
+
+					define(job.Group, job.Name, text, options.Application);
+
+					done(null);
+				});
+			});
+		};
+
+		Elemenx.Resources = resources;
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
 	/* Locale */
@@ -2320,7 +2456,7 @@
 		 * Components of a page), ElemenxGraphics (scenes in 3D), ElemenxGaming (what makes a scene a game).
 		 */
 		function system (name, uses) {
-			return {$Root: systemRoot(name), $Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']}, $Use: uses};
+			return {$Root: systemRoot(name), $Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']}, $Resources: {Blueprints: 'blueprints', Data: 'resources'}, $Use: uses};
 		}
 
 		var definitions = {ElemenxCommon: system('ElemenxCommon', []), ElemenxUI: system('ElemenxUI', ['ElemenxCommon']), ElemenxGraphics: system('ElemenxGraphics', ['ElemenxUI']), ElemenxGaming: system('ElemenxGaming', ['ElemenxGraphics'])};
@@ -2338,6 +2474,28 @@
 
 		function root (definition) {
 			return Runtime.DefinitionURL(definition, definition.$Root || definition.Root) || null;
+		}
+
+		/*
+		 * The resources of a Library ($Resources), named by its name: from the files its graph lists, or those a bundle
+		 * embeds; before its Services, which read them at once.
+		 */
+		function libraryResources (entry, callback) {
+			var base = root(entry.Definition);
+
+			if (!entry.Definition.$Resources || !base) {
+				callback(null);
+
+				return;
+			}
+
+			Runtime.LoadResources(entry.Definition.$Resources, {
+				Namespace: entry.Name,
+				Files: Runtime.Discovery.Files(entry.Owner),
+				Resolve: function (path) {
+					return Runtime.AbsoluteURL(base.replace(/\/+$/, '') + '/' + path.replace(/^\.\//, ''));
+				}
+			}, callback);
 		}
 
 		/*
@@ -2435,9 +2593,23 @@
 				Runtime.Bundle.LoadType('Service');
 				Runtime.Bundle.LoadType('Guard');
 
-				callback(null);
+				bundled(0);
 
 				return;
+			}
+
+			/* In a bundle the resources of each Library are embedded: they are read in their order, those of later ones last. */
+			function bundled (index) {
+				if (!entries[index]) {
+					callback(null);
+
+					return;
+				}
+
+				libraryResources(entries[index], function (error) {
+					if (error) callback(error);
+					else bundled(index + 1);
+				});
 			}
 
 			/* One after another, in their order: what a Library uses is there before it. */
@@ -2479,21 +2651,29 @@
 					if (entry.Discovered)
 						discoveredLocales(entry);
 
-					Runtime.Discovery.LoadDirectives(entry.Owner, function (directiveError) {
-						if (directiveError) {
-							callback(directiveError);
+					libraryResources(entry, function (resourceError) {
+						if (resourceError) {
+							callback(resourceError);
 
 							return;
 						}
 
-						Runtime.Discovery.LoadServices(entry.Owner, function (serviceError) {
-							if (serviceError) {
-								callback(serviceError);
+						Runtime.Discovery.LoadDirectives(entry.Owner, function (directiveError) {
+							if (directiveError) {
+								callback(directiveError);
 
 								return;
 							}
 
-							next(index + 1);
+							Runtime.Discovery.LoadServices(entry.Owner, function (serviceError) {
+								if (serviceError) {
+									callback(serviceError);
+
+									return;
+								}
+
+								next(index + 1);
+							});
 						});
 					});
 				}, entry.Definition.$Graph || null);
@@ -20629,6 +20809,800 @@
 		}, true);
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Compilers */
+	(function (global) {
+		'use strict';
+
+		var own = Runtime.Own;
+		/* name: {Name, From, To, Compile(job, done)}, in the order they were defined. */
+		var transitions = {};
+		var order = [];
+		/* name: a text language, the data its code is written by. */
+		var languages = {};
+
+		/*
+		 * The IR, what every front end gives and every back end reads: a module {Functions: [{Name, Params: [{Name, Type}],
+		 * Returns, Body}], Entry}. A body is a list of statements: {Op: 'let', Name, Type, Value}, {Op: 'set', Name, Value},
+		 * {Op: 'if', Test, Then, Else}, {Op: 'loop', Var, From, To, Body} (Var from From up to To, not it), {Op: 'each', Var,
+		 * List, Body}, {Op: 'push', List, Value}, {Op: 'return', Value}, {Op: 'expr', Value}. An expression: {Op: 'const',
+		 * Value, Type}, {Op: 'var', Name}, {Op: 'call', Name, Args} (a function of the module, or one of the language),
+		 * {Op: 'bin', Operator (+ - * / % < <= > >= == != && ||), A, B}, {Op: 'un', Operator (- !), A}, {Op: 'list', Items,
+		 * Type}, {Op: 'index', List, At}, {Op: 'length', List}, {Op: 'field', Object, Key}, {Op: 'record', Fields: {key:
+		 * expression}}, {Op: 'select', Test, A, B}. Types: float, int, bool, text, vec2, vec3, vec4, list (of anything),
+		 * record, any. Arithmetic on vectors is each of their numbers (a number with a vector: the number for each).
+		 */
+		var Types = ['float', 'int', 'bool', 'text', 'vec2', 'vec3', 'vec4', 'list', 'record', 'any', 'void'];
+		var Statements = ['let', 'set', 'if', 'loop', 'each', 'push', 'return', 'expr'];
+		var Expressions = ['const', 'var', 'call', 'bin', 'un', 'list', 'index', 'length', 'field', 'record', 'select'];
+		var Binary = ['+', '-', '*', '/', '%', '<', '<=', '>', '>=', '==', '!=', '&&', '||'];
+		/* The functions every language has, by the types of what they give. */
+		var Builtins = {
+			sin: 'float', cos: 'float', tan: 'float', asin: 'float', acos: 'float', atan: 'float', atan2: 'float', sqrt: 'float',
+			pow: 'float', exp: 'float', log: 'float', abs: 'float', floor: 'float', ceil: 'float', round: 'float', fract: 'float',
+			min: 'float', max: 'float', clamp: 'float', mix: 'float', step: 'float', smoothstep: 'float', sign: 'float',
+			vec2: 'vec2', vec3: 'vec3', vec4: 'vec4', dot: 'float', cross: 'vec3', length: 'float', normalize: 'vec3',
+			distance: 'float', x: 'float', y: 'float', z: 'float', w: 'float', random: 'float', hash: 'float', text: 'text',
+			/* Of the values of a graph: each(op, a, b) by each number (a number goes with each part), cast(value, type), get(record, key, default). */
+			each: 'any', cast: 'any', get: 'any',
+			/* Of what has no type told: isList(value), has(record, key), ends(text, end), cut(text, count): the text without its last count characters. */
+			isList: 'bool', has: 'bool', ends: 'bool', cut: 'text'
+		};
+
+		function vector (type) {
+			return type === 'vec2' || type === 'vec3' || type === 'vec4';
+		}
+
+		function told (diagnostics, text, place) {
+			diagnostics.push({File: place && place.File || '', Line: place && place.Line || 0, Column: place && place.Column || 0, Severity: 'error', Text: text});
+		}
+
+		/* The type of an expression, its variables in scope ({name: type}); unknown parts are told in diagnostics. */
+		function typeOf (expression, scope, module, diagnostics) {
+			var item = expression || {};
+			var found;
+			var a;
+			var b;
+
+			if (Expressions.indexOf(item.Op) === -1) {
+				told(diagnostics, 'Elemenx IR: no expression ' + item.Op);
+
+				return 'any';
+			}
+
+			if (item.Op === 'const')
+				return item.Type || (typeof item.Value === 'boolean' ? 'bool' : typeof item.Value === 'string' ? 'text' : Array.isArray(item.Value) ? (item.Value.length >= 2 && item.Value.length <= 4 ? 'vec' + item.Value.length : 'list') : 'float');
+
+			if (item.Op === 'var') {
+				/* In scope: its own or of a scope round it (the scopes of bodies are made of the ones round them). */
+				if (!(item.Name in scope))
+					told(diagnostics, 'Elemenx IR: no variable ' + item.Name);
+
+				return item.Name in scope ? scope[item.Name] : 'any';
+			}
+
+			if (item.Op === 'call') {
+				(item.Args || []).forEach(function (arg) {
+					typeOf(arg, scope, module, diagnostics);
+				});
+
+				found = module.Functions.filter(function (one) {
+					return one.Name === item.Name;
+				})[0];
+
+				if (found)
+					return found.Returns || 'void';
+
+				if (own(Builtins, item.Name)) {
+					a = item.Args && item.Args.length ? typeOf(item.Args[0], scope, module, []) : 'float';
+
+					/* What works on each number gives what it was given: abs of a vec3 a vec3. */
+					return Builtins[item.Name] === 'float' && vector(a) && ['dot', 'length', 'distance', 'x', 'y', 'z', 'w'].indexOf(item.Name) === -1 ? a : Builtins[item.Name];
+				}
+
+				told(diagnostics, 'Elemenx IR: no function ' + item.Name);
+
+				return 'any';
+			}
+
+			if (item.Op === 'bin') {
+				if (Binary.indexOf(item.Operator) === -1)
+					told(diagnostics, 'Elemenx IR: no operator ' + item.Operator);
+
+				a = typeOf(item.A, scope, module, diagnostics);
+				b = typeOf(item.B, scope, module, diagnostics);
+
+				if (['<', '<=', '>', '>=', '==', '!=', '&&', '||'].indexOf(item.Operator) !== -1) return 'bool';
+
+				if (vector(a)) return a;
+
+				if (vector(b)) return b;
+
+				return a === 'int' && b === 'int' ? 'int' : a === 'text' || b === 'text' ? 'text' : 'float';
+			}
+
+			if (item.Op === 'un')
+				return item.Operator === '!' ? 'bool' : typeOf(item.A, scope, module, diagnostics);
+
+			if (item.Op === 'list') {
+				(item.Items || []).forEach(function (one) {
+					typeOf(one, scope, module, diagnostics);
+				});
+
+				return 'list';
+			}
+
+			if (item.Op === 'index') {
+				typeOf(item.At, scope, module, diagnostics);
+
+				return vector(typeOf(item.List, scope, module, diagnostics)) ? 'float' : item.Type || 'any';
+			}
+
+			if (item.Op === 'length') {
+				typeOf(item.List, scope, module, diagnostics);
+
+				return 'int';
+			}
+
+			if (item.Op === 'field') {
+				typeOf(item.Object, scope, module, diagnostics);
+
+				return item.Type || 'any';
+			}
+
+			if (item.Op === 'record') {
+				Object.keys(item.Fields || {}).forEach(function (key) {
+					typeOf(item.Fields[key], scope, module, diagnostics);
+				});
+
+				return 'record';
+			}
+
+			typeOf(item.Test, scope, module, diagnostics);
+
+			return typeOf(item.A, scope, module, diagnostics);
+		}
+
+		/* The statements of a body checked, the variables they declare added to their scope. */
+		function checkBody (body, scope, module, fn, diagnostics) {
+			(body || []).forEach(function (statement) {
+				var inner;
+
+				if (!statement || Statements.indexOf(statement.Op) === -1) {
+					told(diagnostics, 'Elemenx IR: no statement ' + (statement && statement.Op) + ' in ' + fn.Name);
+
+					return;
+				}
+
+				if (statement.Op === 'let') {
+					if (Types.indexOf(statement.Type || typeOf(statement.Value, scope, module, diagnostics)) === -1)
+						told(diagnostics, 'Elemenx IR: no type ' + statement.Type);
+
+					scope[statement.Name] = statement.Type || typeOf(statement.Value, scope, module, diagnostics);
+				}
+				else if (statement.Op === 'set') {
+					if (!(statement.Name in scope))
+						told(diagnostics, 'Elemenx IR: no variable ' + statement.Name + ' in ' + fn.Name);
+
+					typeOf(statement.Value, scope, module, diagnostics);
+				}
+				else if (statement.Op === 'if') {
+					typeOf(statement.Test, scope, module, diagnostics);
+
+					checkBody(statement.Then, Object.create(scope), module, fn, diagnostics);
+					checkBody(statement.Else, Object.create(scope), module, fn, diagnostics);
+				}
+				else if (statement.Op === 'loop' || statement.Op === 'each') {
+					inner = Object.create(scope);
+
+					if (statement.Op === 'loop') {
+						typeOf(statement.From, scope, module, diagnostics);
+						typeOf(statement.To, scope, module, diagnostics);
+					}
+					else {
+						typeOf(statement.List, scope, module, diagnostics);
+					}
+
+					inner[statement.Var] = statement.Op === 'loop' ? 'int' : statement.Type || 'any';
+
+					checkBody(statement.Body, inner, module, fn, diagnostics);
+				}
+				else if (statement.Op === 'push') {
+					typeOf(statement.List, scope, module, diagnostics);
+					typeOf(statement.Value, scope, module, diagnostics);
+				}
+				else if (statement.Value) {
+					typeOf(statement.Value, scope, module, diagnostics);
+				}
+			});
+		}
+
+		/* Whether a module is whole: its functions, their statements and expressions, the types of what they declare. */
+		function check (module) {
+			var diagnostics = [];
+			var names = {};
+
+			if (!module || !Array.isArray(module.Functions)) {
+				told(diagnostics, 'Elemenx IR: a module has Functions');
+
+				return diagnostics;
+			}
+
+			module.Functions.forEach(function (fn) {
+				var scope = {};
+
+				if (!fn.Name || own(names, fn.Name))
+					told(diagnostics, 'Elemenx IR: a function needs a name of its own: ' + fn.Name);
+
+				names[fn.Name] = true;
+
+				(fn.Params || []).forEach(function (param) {
+					scope[param.Name] = param.Type || 'any';
+				});
+
+				checkBody(fn.Body, scope, module, fn, diagnostics);
+			});
+
+			if (module.Entry && !own(names, module.Entry))
+				told(diagnostics, 'Elemenx IR: no entry ' + module.Entry);
+
+			return diagnostics;
+		}
+
+		/* The functions that call themselves, by others or not: those a back end keeps from going too deep. */
+		function recursive (module) {
+			var calls = {};
+			var found = {};
+
+			function walk (value, list) {
+				if (!value || typeof value !== 'object') return;
+
+				if (Array.isArray(value)) {
+					value.forEach(function (one) {
+						walk(one, list);
+					});
+
+					return;
+				}
+
+				if (value.Op === 'call')
+					list.push(value.Name);
+
+				Object.keys(value).forEach(function (key) {
+					walk(value[key], list);
+				});
+			}
+
+			module.Functions.forEach(function (fn) {
+				calls[fn.Name] = [];
+
+				walk(fn.Body, calls[fn.Name]);
+			});
+
+			Object.keys(calls).forEach(function (name) {
+				var seen = {};
+				var stack = calls[name].slice();
+
+				while (stack.length) {
+					var next = stack.pop();
+
+					if (next === name) {
+						found[name] = true;
+
+						break;
+					}
+
+					if (own(seen, next) || !own(calls, next)) continue;
+
+					seen[next] = true;
+					stack = stack.concat(calls[next]);
+				}
+			});
+
+			return found;
+		}
+
+		/* A template of a language filled: {name} by what is given. */
+		function fill (template, values) {
+			return String(template).replace(/\{(\w+)\}/g, function (whole, key) {
+				return own(values, key) ? String(values[key]) : whole;
+			});
+		}
+
+		/*
+		 * The code of a module in a text language (its data: Types, Literals, Operators, Vectors, Builtins, Statements,
+		 * Function, Prototype, Runtime, Module), lines indented by tabs. options: MaxDepth (how deep a function that calls
+		 * itself may go, 256).
+		 */
+		function emit (module, language, options) {
+			var lines = [];
+			var settings = options || {};
+			var deep = recursive(module);
+			var diagnostics = [];
+
+			function literal (value, type) {
+				if (type === 'bool' || typeof value === 'boolean')
+					return value ? language.Literals.True : language.Literals.False;
+
+				if (type === 'text' || typeof value === 'string') return JSON.stringify(String(value));
+
+				if (Array.isArray(value)) {
+					return fill(language.Vectors[type || 'vec' + value.length] || language.Expressions.List, {items: value.map(function (one) {
+						return literal(one, 'float');
+					}).join(', '), x: literal(value[0], 'float'), y: literal(value[1], 'float'), z: literal(value[2], 'float'), w: literal(value[3], 'float')});
+				}
+
+				if (type === 'int')
+					return String(Math.round(Number(value) || 0));
+
+				return fill(language.Literals.Float, {value: Number(value) === Math.round(Number(value)) ? String(Number(value)) + language.Literals.Whole : String(Number(value))});
+			}
+
+			function expression (item, scope) {
+				var a;
+				var b;
+				var ta;
+				var tb;
+				var template;
+
+				if (item.Op === 'const')
+					return literal(item.Value, item.Type);
+
+				if (item.Op === 'var')
+					return language.Name(item.Name);
+
+				if (item.Op === 'call') {
+					var args = (item.Args || []).map(function (arg) {
+						return expression(arg, scope);
+					});
+					var typed = item.Args && item.Args.length ? typeOf(item.Args[0], scope, module, diagnostics) : 'float';
+
+					template = own(language.Builtins, item.Name + ':' + typed) ? language.Builtins[item.Name + ':' + typed] : language.Builtins[item.Name];
+
+					if (template && !module.Functions.some(function (fn) {
+						return fn.Name === item.Name;
+					})) {
+						return fill(template, args.reduce(function (made, arg, index) {
+							made[index] = arg;
+
+							return made;
+						}, {args: args.join(', ')}));
+					}
+
+					return fill(language.Expressions.Call, {name: language.Name(item.Name), args: args.join(', ')});
+				}
+
+				if (item.Op === 'bin') {
+					a = expression(item.A, scope);
+					b = expression(item.B, scope);
+					ta = typeOf(item.A, scope, module, diagnostics);
+					tb = typeOf(item.B, scope, module, diagnostics);
+
+					/* Arithmetic of vectors: by the vector operations of the language, a number spread over a vector. */
+					if ((vector(ta) || vector(tb)) && '+-*/'.indexOf(item.Operator) !== -1 && language.Vectors.Operators) {
+						return fill(language.Vectors.Operators[item.Operator], {a: a, b: b, type: vector(ta) ? ta : tb, ta: ta, tb: tb});
+					}
+
+					template = language.Operators[item.Operator];
+
+					if (item.Operator === '/' && ta === 'int' && tb === 'int' && language.Operators.IntDivide)
+						template = language.Operators.IntDivide;
+
+					return fill(template, {a: a, b: b});
+				}
+
+				if (item.Op === 'un')
+					return fill(language.Operators[item.Operator === '!' ? 'Not' : 'Negate'], {a: expression(item.A, scope)});
+
+				if (item.Op === 'list') {
+					return fill(language.Expressions.List, {items: (item.Items || []).map(function (one) {
+						return expression(one, scope);
+					}).join(', ')});
+				}
+
+				if (item.Op === 'index')
+					return fill(language.Expressions.Index, {list: expression(item.List, scope), at: expression(item.At, scope)});
+
+				if (item.Op === 'length')
+					return fill(language.Expressions.Length, {list: expression(item.List, scope)});
+
+				if (item.Op === 'field')
+					return fill(language.Expressions.Field, {object: expression(item.Object, scope), key: item.Key, quoted: JSON.stringify(String(item.Key))});
+
+				if (item.Op === 'record') {
+					return fill(language.Expressions.Record, {fields: Object.keys(item.Fields || {}).map(function (key) {
+						return fill(language.Expressions.RecordField, {key: key, quoted: JSON.stringify(key), value: expression(item.Fields[key], scope)});
+					}).join(', ')});
+				}
+
+				return fill(language.Expressions.Select, {test: expression(item.Test, scope), a: expression(item.A, scope), b: expression(item.B, scope)});
+			}
+
+			function line (depth, text) {
+				lines.push(new Array(depth + 1).join('\t') + text);
+			}
+
+			function body (list, scope, depth, fn) {
+				(list || []).forEach(function (statement) {
+					var inner;
+					var type;
+
+					if (statement.Op === 'let') {
+						type = statement.Type || typeOf(statement.Value, scope, module, diagnostics);
+						scope[statement.Name] = type;
+
+						line(depth, fill(language.Statements.Let, {type: language.Types[type] || language.Types.any, name: language.Name(statement.Name), value: expression(statement.Value, scope)}));
+					}
+					else if (statement.Op === 'set') {
+						line(depth, fill(language.Statements.Set, {name: language.Name(statement.Name), value: expression(statement.Value, scope)}));
+					}
+					else if (statement.Op === 'if') {
+						line(depth, fill(language.Statements.If, {test: expression(statement.Test, scope)}));
+
+						body(statement.Then, Object.create(scope), depth + 1, fn);
+
+						if (statement.Else && statement.Else.length) {
+							line(depth, language.Statements.Else);
+
+							body(statement.Else, Object.create(scope), depth + 1, fn);
+						}
+
+						line(depth, language.Statements.End);
+					}
+					else if (statement.Op === 'loop') {
+						inner = Object.create(scope);
+						inner[statement.Var] = 'int';
+
+						line(depth, fill(language.Statements.Loop, {int: language.Types.int, var: language.Name(statement.Var), end: language.Name(statement.Var + '_to'), from: expression(statement.From, scope), to: expression(statement.To, scope)}));
+
+						body(statement.Body, inner, depth + 1, fn);
+
+						line(depth, language.Statements.End);
+					}
+					else if (statement.Op === 'each') {
+						inner = Object.create(scope);
+						inner[statement.Var] = statement.Type || 'any';
+
+						/* Its list and its end told once: a list of a call is not made again at each step (Regression: m_flat of m_flat went exponential). */
+						line(depth, fill(language.Statements.Each, {type: language.Types[statement.Type || 'any'], var: language.Name(statement.Var), list: expression(statement.List, scope), of: language.Name(statement.Var + '_of'), index: language.Name(statement.Var + '_at')}));
+
+						body(statement.Body, inner, depth + 1, fn);
+
+						line(depth, language.Statements.End);
+					}
+					else if (statement.Op === 'push') {
+						line(depth, fill(language.Statements.Push, {list: expression(statement.List, scope), value: expression(statement.Value, scope)}));
+					}
+					else if (statement.Op === 'return') {
+						line(depth, fill(statement.Value ? language.Statements.Return : language.Statements.ReturnNothing, {value: statement.Value ? expression(statement.Value, scope) : ''}));
+					}
+					else {
+						line(depth, fill(language.Statements.Expr, {value: expression(statement.Value, scope)}));
+					}
+				});
+			}
+
+			function signature (fn, template) {
+				return fill(template, {returns: language.Types[fn.Returns || 'void'] || language.Types.any, name: language.Name(fn.Name), params: (fn.Params || []).map(function (param) {
+					return fill(language.Param, {type: language.Types[param.Type || 'any'] || language.Types.any, name: language.Name(param.Name)});
+				}).join(', ')});
+			}
+
+			if (language.Prototype) {
+				module.Functions.forEach(function (fn) {
+					line(0, signature(fn, language.Prototype));
+				});
+			}
+
+			module.Functions.forEach(function (fn) {
+				var scope = {};
+
+				(fn.Params || []).forEach(function (param) {
+					scope[param.Name] = param.Type || 'any';
+				});
+
+				line(0, signature(fn, language.Function));
+
+				/* One that calls itself: as deep as MaxDepth, then an error, not a stack gone. */
+				if (deep[fn.Name] && language.Guard) {
+					line(1, fill(language.Guard.Enter, {max: Number(settings.MaxDepth) || 256, name: JSON.stringify(fn.Name)}));
+
+					body(fn.Body, scope, 2, fn);
+
+					line(1, language.Guard.Leave);
+				}
+				else {
+					body(fn.Body, scope, 1, fn);
+				}
+
+				line(0, language.Statements.End);
+			});
+
+			return {Text: fill(language.Module, {runtime: language.Runtime || '', functions: lines.join('\n'), entry: language.Name(module.Entry || (module.Functions[0] && module.Functions[0].Name) || ''), names: module.Functions.map(function (fn) {
+				return fill(language.Export || '{name}', {name: language.Name(fn.Name), key: JSON.stringify(fn.Name)});
+			}).join(', ')}), Diagnostics: diagnostics};
+		}
+
+		/*
+		 * JavaScript of ES5: vectors are arrays, lists arrays, records objects. Its module is the text of a function body
+		 * that returns {name: function} of the module (Elemenx.Compilers.Load makes them).
+		 */
+		var javascript = {
+			Name: function (name) {
+				return 'f_' + String(name).replace(/[^A-Za-z0-9_]/g, '_');
+			},
+			Types: {float: 'var', int: 'var', bool: 'var', text: 'var', vec2: 'var', vec3: 'var', vec4: 'var', list: 'var', record: 'var', any: 'var', void: ''},
+			Literals: {True: 'true', False: 'false', Float: '{value}', Whole: ''},
+			Operators: {'+': '({a} + {b})', '-': '({a} - {b})', '*': '({a} * {b})', '/': '({a} / {b})', '%': '({a} % {b})', IntDivide: '(({a} / {b}) | 0)', '<': '({a} < {b})', '<=': '({a} <= {b})', '>': '({a} > {b})', '>=': '({a} >= {b})', '==': '({a} === {b})', '!=': '({a} !== {b})', '&&': '({a} && {b})', '||': '({a} || {b})', Not: '(!{a})', Negate: '(-{a})'},
+			Vectors: {vec2: '[{x}, {y}]', vec3: '[{x}, {y}, {z}]', vec4: '[{x}, {y}, {z}, {w}]', Operators: {'+': 'rt_op({a}, {b}, 0)', '-': 'rt_op({a}, {b}, 1)', '*': 'rt_op({a}, {b}, 2)', '/': 'rt_op({a}, {b}, 3)'}},
+			Builtins: {
+				sin: 'rt_each(Math.sin, {0})', cos: 'rt_each(Math.cos, {0})', tan: 'Math.tan({0})', asin: 'Math.asin({0})', acos: 'Math.acos({0})', atan: 'Math.atan({0})', atan2: 'Math.atan2({0}, {1})',
+				sqrt: 'rt_each(Math.sqrt, {0})', pow: 'Math.pow({0}, {1})', exp: 'Math.exp({0})', log: 'Math.log({0})', abs: 'rt_each(Math.abs, {0})', floor: 'rt_each(Math.floor, {0})', ceil: 'rt_each(Math.ceil, {0})',
+				round: 'rt_each(Math.round, {0})', fract: 'rt_each(rt_fract, {0})', min: 'Math.min({0}, {1})', max: 'Math.max({0}, {1})', clamp: 'Math.min(Math.max({0}, {1}), {2})',
+				mix: 'rt_mix({0}, {1}, {2})', step: '({1} < {0} ? 0 : 1)', smoothstep: 'rt_smooth({0}, {1}, {2})', sign: 'rt_each(rt_sign, {0})',
+				vec2: '[{0}, {1}]', vec3: '[{0}, {1}, {2}]', vec4: '[{0}, {1}, {2}, {3}]', dot: 'rt_dot({0}, {1})', cross: 'rt_cross({0}, {1})', length: 'Math.sqrt(rt_dot({0}, {0}))',
+				normalize: 'rt_op({0}, Math.sqrt(rt_dot({0}, {0})) || 1, 3)', distance: 'Math.sqrt(rt_dot(rt_op({0}, {1}, 1), rt_op({0}, {1}, 1)))', x: '{0}[0]', y: '{0}[1]', z: '{0}[2]', w: '{0}[3]',
+				random: 'rt_random({0})', hash: 'rt_hash(rt_key({0}), rt_key({1}))', text: 'String({0})',
+				each: 'rt_e({0}, {1}, {2})', cast: 'rt_cast({0}, {1})', get: 'rt_get({args})',
+				isList: 'Array.isArray({0})', has: '(!!{0} && typeof {0} === "object" && Object.prototype.hasOwnProperty.call({0}, {1}))', ends: '(String({0}).slice(-String({1}).length) === String({1}))', cut: 'String({0}).slice(0, -({1}))'
+			},
+			Expressions: {Call: '{name}({args})', List: '[{items}]', Index: '{list}[{at}]', Length: '{list}.length', Field: '{object}[{quoted}]', Record: '{{fields}}', RecordField: '{quoted}: {value}', Select: '({test} ? {a} : {b})'},
+			Statements: {Let: 'var {name} = {value};', Set: '{name} = {value};', If: 'if ({test}) {', Else: '} else {', End: '}', Loop: 'for (var {var} = {from}, {end} = {to}; {var} < {end}; {var}++) {', Each: 'for (var {index} = 0, {of} = {list}, {var}; {index} < {of}.length; {index}++) { {var} = {of}[{index}];', Push: '{list}.push({value});', Return: 'return {value};', ReturnNothing: 'return;', Expr: '{value};'},
+			Param: '{name}',
+			Function: 'function {name}({params}) {',
+			Guard: {Enter: 'if (++rt_depth > {max}) { rt_depth = 0; throw new Error("Elemenx IR: " + {name} + " goes deeper than {max}"); } try {', Leave: '} finally { rt_depth--; }'},
+			Runtime: [
+				'var rt_depth = 0;',
+				'function rt_each(f, a) { return typeof a === "number" ? f(a) : a.map(function (v) { return f(v); }); }',
+				'function rt_fract(v) { return v - Math.floor(v); }',
+				'function rt_sign(v) { return v > 0 ? 1 : v < 0 ? -1 : 0; }',
+				'function rt_op(a, b, o) { if (typeof a === "number" && typeof b === "number") return o === 0 ? a + b : o === 1 ? a - b : o === 2 ? a * b : a / b; var n = typeof a === "number" ? b.length : a.length, r = [], i, x, y; for (i = 0; i < n; i++) { x = typeof a === "number" ? a : a[i]; y = typeof b === "number" ? b : b[i]; r.push(o === 0 ? x + y : o === 1 ? x - y : o === 2 ? x * y : x / y); } return r; }',
+				'function rt_dot(a, b) { var s = 0, i; for (i = 0; i < a.length; i++) s += a[i] * b[i]; return s; }',
+				'function rt_cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }',
+				'function rt_mix(a, b, t) { return typeof a === "number" ? a + (b - a) * t : rt_op(a, rt_op(rt_op(b, a, 1), t, 2), 0); }',
+				'function rt_smooth(e0, e1, x) { var t = Math.min(Math.max((x - e0) / (e1 - e0), 0), 1); return t * t * (3 - 2 * t); }',
+				'function rt_hash(a, b) { var h = Math.imul((a | 0) ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul((b | 0) + 0x632be5ab, 0xc2b2ae35); h ^= h >>> 15; h = Math.imul(h, 0x2c1b3c6d); h ^= h >>> 12; return (h >>> 0) / 4294967296; }',
+				'function rt_key(v) { var h = 0, i; if (typeof v === "number") return Math.round(v * 1000) | 0; v = String(v); for (i = 0; i < v.length; i++) h = (Math.imul(h, 31) + v.charCodeAt(i)) | 0; return h; }',
+				'var rt_ops = {add: function (a, b) { return a + b; }, sub: function (a, b) { return a - b; }, mul: function (a, b) { return a * b; }, div: function (a, b) { return b ? a / b : 0; }, min: Math.min, max: Math.max, pow: Math.pow, step: function (e, x) { return x < e ? 0 : 1; }, sin: Math.sin, cos: Math.cos, abs: Math.abs, floor: Math.floor, exp: Math.exp, fract: function (x) { return x - Math.floor(x); }, sqrt: function (x) { return Math.sqrt(Math.max(0, x)); }, saturate: function (x) { return Math.max(0, Math.min(1, x)); }};',
+				'function rt_e(op, a, b) { var f = rt_ops[op], n, r = [], i; if (!Array.isArray(a) && !Array.isArray(b)) return f(Number(a) || 0, Number(b) || 0); n = Math.max(Array.isArray(a) ? a.length : 0, Array.isArray(b) ? b.length : 0); for (i = 0; i < n; i++) r.push(f(Number(Array.isArray(a) ? a[i] : a) || 0, Number(Array.isArray(b) ? b[i] : b) || 0)); return r; }',
+				'var rt_sizes = {float: 1, vec2: 2, vec3: 3, vec4: 4, int: 1, bool: 1};',
+				'function rt_numbers(v, n) { var l, i; if (typeof v === "string" && /^#[0-9a-f]{6,8}$/i.test(v)) { l = []; for (i = 1; i < v.length; i += 2) l.push(parseInt(v.slice(i, i + 2), 16) / 255); } else if (Array.isArray(v)) { l = v.map(Number); } else { l = [Number(v) || 0]; while (l.length < n) l.push(l[0]); } while (l.length < n) l.push(n === 4 && l.length === 3 ? 1 : 0); return l.slice(0, n); }',
+				'function rt_cast(v, to) { var n = rt_sizes[to], l; if (to === "text") return v == null ? "" : String(v); if (to === "bool") return Array.isArray(v) ? !!v[0] : !!v; if (!n) return v; if (typeof v === "string" && !/^#/.test(v)) return n === 1 ? Number(v) || 0 : rt_numbers(Number(v) || 0, n); l = rt_numbers(typeof v === "boolean" ? (v ? 1 : 0) : v, n); return n === 1 ? l[0] : l; }',
+				'function rt_get(r, k, d) { return r && Object.prototype.hasOwnProperty.call(r, k) ? r[k] : d; }',
+				'function rt_random(state) { state[0] = (state[0] + 0x6D2B79F5) >>> 0; var v = Math.imul(state[0] ^ (state[0] >>> 15), state[0] | 1); v ^= v + Math.imul(v ^ (v >>> 7), v | 61); return ((v ^ (v >>> 14)) >>> 0) / 4294967296; }'
+			].join('\n'),
+			Export: '{key}: {name}',
+			Module: '{runtime}\n{functions}\nreturn {{names}};'
+		};
+
+		/*
+		 * C++ (17): vectors are vec2..vec4 of the runtime, lists std::vector<double>, records std::map<std::string, double>;
+		 * what a board or a host builds (the front ends give it the IR, a compiler of the application makes it a binary).
+		 */
+		var cpp = {
+			Name: function (name) {
+				return 'f_' + String(name).replace(/[^A-Za-z0-9_]/g, '_');
+			},
+			Types: {float: 'double', int: 'int', bool: 'bool', text: 'std::string', vec2: 'vec2', vec3: 'vec3', vec4: 'vec4', list: 'std::vector<double>', record: 'std::map<std::string, double>', any: 'auto', void: 'void'},
+			Literals: {True: 'true', False: 'false', Float: '{value}', Whole: '.0'},
+			Operators: {'+': '({a} + {b})', '-': '({a} - {b})', '*': '({a} * {b})', '/': '({a} / {b})', '%': 'std::fmod({a}, {b})', '<': '({a} < {b})', '<=': '({a} <= {b})', '>': '({a} > {b})', '>=': '({a} >= {b})', '==': '({a} == {b})', '!=': '({a} != {b})', '&&': '({a} && {b})', '||': '({a} || {b})', Not: '(!{a})', Negate: '(-{a})'},
+			Vectors: {vec2: 'vec2{{x}, {y}}', vec3: 'vec3{{x}, {y}, {z}}', vec4: 'vec4{{x}, {y}, {z}, {w}}', Operators: {'+': '({a} + {b})', '-': '({a} - {b})', '*': '({a} * {b})', '/': '({a} / {b})'}},
+			Builtins: {
+				sin: 'std::sin({0})', cos: 'std::cos({0})', tan: 'std::tan({0})', asin: 'std::asin({0})', acos: 'std::acos({0})', atan: 'std::atan({0})', atan2: 'std::atan2({0}, {1})',
+				sqrt: 'std::sqrt({0})', pow: 'std::pow({0}, {1})', exp: 'std::exp({0})', log: 'std::log({0})', abs: 'std::abs({0})', floor: 'std::floor({0})', ceil: 'std::ceil({0})',
+				round: 'std::round({0})', fract: 'rt_fract({0})', min: 'std::min<double>({0}, {1})', max: 'std::max<double>({0}, {1})', clamp: 'std::min<double>(std::max<double>({0}, {1}), {2})',
+				mix: '({0} + ({1} - {0}) * {2})', step: '({1} < {0} ? 0.0 : 1.0)', smoothstep: 'rt_smooth({0}, {1}, {2})', sign: '(({0} > 0) - ({0} < 0))',
+				vec2: 'vec2{{0}, {1}}', vec3: 'vec3{{0}, {1}, {2}}', vec4: 'vec4{{0}, {1}, {2}, {3}}', dot: 'dot({0}, {1})', cross: 'cross({0}, {1})', length: 'std::sqrt(dot({0}, {0}))',
+				normalize: '({0} / std::sqrt(dot({0}, {0})))', distance: 'std::sqrt(dot({0} - {1}, {0} - {1}))', x: '{0}.x', y: '{0}.y', z: '{0}.z', w: '{0}.w',
+				random: 'rt_random({0})', hash: 'rt_hash({0}, {1})', text: 'std::to_string({0})',
+				each: 'rt_e({0}, {1}, {2})', cast: '({0})', get: '{0}[{1}]',
+				isList: 'true', has: '({0}.count({1}) > 0)', ends: '({0}.size() >= {1}.size() && {0}.compare({0}.size() - {1}.size(), {1}.size(), {1}) == 0)', cut: '{0}.substr(0, {0}.size() - {1})'
+			},
+			Expressions: {Call: '{name}({args})', List: 'std::vector<double>{{items}}', Index: '{list}[{at}]', Length: '(int){list}.size()', Field: '{object}["{key}"]', Record: 'std::map<std::string, double>{{fields}}', RecordField: '{"{key}", {value}}', Select: '({test} ? {a} : {b})'},
+			Statements: {Let: '{type} {name} = {value};', Set: '{name} = {value};', If: 'if ({test}) {', Else: '} else {', End: '}', Loop: 'for ({int} {var} = {from}; {var} < {to}; {var}++) {', Each: 'for (auto {var} : {list}) {', Push: '{list}.push_back({value});', Return: 'return {value};', ReturnNothing: 'return;', Expr: '{value};'},
+			Param: '{type} {name}',
+			Function: '{returns} {name}({params}) {',
+			Prototype: '{returns} {name}({params});',
+			Guard: {Enter: 'struct rt_guard { rt_guard() { if (++rt_depth > {max}) throw std::runtime_error("deeper than {max}"); } ~rt_guard() { rt_depth--; } } rt_kept; {', Leave: '}'},
+			Runtime: [
+				'#include <cmath>',
+				'#include <cstdint>',
+				'#include <map>',
+				'#include <stdexcept>',
+				'#include <string>',
+				'#include <vector>',
+				'#include <algorithm>',
+				'static int rt_depth = 0;',
+				'struct vec2 { double x, y; };',
+				'struct vec3 { double x, y, z; };',
+				'struct vec4 { double x, y, z, w; };',
+				'inline vec2 operator+(vec2 a, vec2 b) { return {a.x + b.x, a.y + b.y}; }',
+				'inline vec2 operator-(vec2 a, vec2 b) { return {a.x - b.x, a.y - b.y}; }',
+				'inline vec2 operator*(vec2 a, double k) { return {a.x * k, a.y * k}; }',
+				'inline vec2 operator/(vec2 a, double k) { return {a.x / k, a.y / k}; }',
+				'inline vec3 operator+(vec3 a, vec3 b) { return {a.x + b.x, a.y + b.y, a.z + b.z}; }',
+				'inline vec3 operator-(vec3 a, vec3 b) { return {a.x - b.x, a.y - b.y, a.z - b.z}; }',
+				'inline vec3 operator*(vec3 a, vec3 b) { return {a.x * b.x, a.y * b.y, a.z * b.z}; }',
+				'inline vec3 operator*(vec3 a, double k) { return {a.x * k, a.y * k, a.z * k}; }',
+				'inline vec3 operator*(double k, vec3 a) { return a * k; }',
+				'inline vec3 operator/(vec3 a, double k) { return {a.x / k, a.y / k, a.z / k}; }',
+				'inline double dot(vec2 a, vec2 b) { return a.x * b.x + a.y * b.y; }',
+				'inline double dot(vec3 a, vec3 b) { return a.x * b.x + a.y * b.y + a.z * b.z; }',
+				'inline vec3 cross(vec3 a, vec3 b) { return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x}; }',
+				'inline double rt_fract(double v) { return v - std::floor(v); }',
+				'inline double rt_smooth(double e0, double e1, double x) { double t = std::min(std::max((x - e0) / (e1 - e0), 0.0), 1.0); return t * t * (3 - 2 * t); }',
+				'inline double rt_hash(int a, int b) { uint32_t h = (uint32_t)(a ^ 0x9e3779b9) * 0x85ebca6bu ^ (uint32_t)(b + 0x632be5ab) * 0xc2b2ae35u; h ^= h >> 15; h *= 0x2c1b3c6du; h ^= h >> 12; return h / 4294967296.0; }',
+				'inline double rt_e(const std::string& op, double a, double b) { if (op == "add") return a + b; if (op == "sub") return a - b; if (op == "mul") return a * b; if (op == "div") return b != 0 ? a / b : 0; if (op == "min") return std::min(a, b); if (op == "max") return std::max(a, b); if (op == "pow") return std::pow(a, b); if (op == "step") return b < a ? 0 : 1; if (op == "sin") return std::sin(a); if (op == "cos") return std::cos(a); if (op == "abs") return std::abs(a); if (op == "floor") return std::floor(a); if (op == "exp") return std::exp(a); if (op == "fract") return a - std::floor(a); if (op == "sqrt") return std::sqrt(std::max(0.0, a)); return std::min(1.0, std::max(0.0, a)); }',
+				'inline double rt_random(std::vector<double>& state) { uint32_t s = (uint32_t)state[0] + 0x6D2B79F5u; state[0] = s; uint32_t v = (s ^ (s >> 15)) * (s | 1u); v ^= v + (v ^ (v >> 7)) * (v | 61u); return (v ^ (v >> 14)) / 4294967296.0; }'
+			].join('\n'),
+			Module: '{runtime}\n{functions}\n'
+		};
+
+		function define (name, definition) {
+			var given = definition || {};
+			if (!name || typeof name !== 'string' || !given.From || !given.To || typeof given.Compile !== 'function')
+				throw new Error('Elemenx.Compilers.Define expects (name, {From, To, Compile(job, done)})');
+
+			if (!own(transitions, name))
+				order.push(name);
+
+			transitions[name] = {Name: name, From: String(given.From), To: String(given.To), Compile: given.Compile};
+
+			return name;
+		}
+
+		/* The shortest chain of transitions from a kind to another (breadth first, in the order they were defined), or null. */
+		function path (from, to) {
+			var queue = [{At: from, Chain: []}];
+			var seen = {};
+
+			seen[from] = true;
+
+			while (queue.length) {
+				var step = queue.shift();
+				if (step.At === to) return step.Chain;
+
+				order.forEach(function (name) {
+					var transition = transitions[name];
+
+					if (transition.From === step.At && !own(seen, transition.To)) {
+						seen[transition.To] = true;
+
+						queue.push({At: transition.To, Chain: step.Chain.concat([name])});
+					}
+				});
+			}
+
+			return null;
+		}
+
+		/*
+		 * Runs a job {From, To, Files: [{Name, Text}], Entry, Options} along the chain of its kinds, each transition given
+		 * the result of the one before as its job. callback(error, result {To, Files, Diagnostics, Log, Value}): an error
+		 * when no chain goes there or a step fails; diagnostics of type error stop the chain too (the error says the first).
+		 */
+		function run (job, callback) {
+			var given = job || {};
+			var chain;
+			var log = [];
+
+			if (typeof callback !== 'function')
+				throw new Error('Elemenx.Compilers.Run expects (job, callback)');
+
+			chain = given.From && given.To ? path(String(given.From), String(given.To)) : null;
+
+			if (!chain) {
+				callback(new Error('Elemenx Compilers: no way from ' + given.From + ' to ' + given.To));
+
+				return;
+			}
+
+			function next (index, current) {
+				var transition = transitions[chain[index]];
+				var answered = false;
+
+				if (!transition) {
+					callback(null, Object.assign({}, current, {To: given.To, Log: log.join('\n')}));
+
+					return;
+				}
+
+				try {
+					transition.Compile({From: transition.From, To: transition.To, Files: current.Files || [], Entry: current.Entry || given.Entry, Options: given.Options || {}, Value: current.Value}, function (error, result) {
+						var made = result || {};
+						var failed = (made.Diagnostics || []).filter(function (one) {
+							return one.Severity === 'error';
+						})[0];
+
+						if (answered) return;
+
+						answered = true;
+
+						if (made.Log)
+							log.push(made.Log);
+
+						if (error || failed) {
+							callback(error || new Error(failed.Text), {To: transition.To, Files: made.Files || [], Diagnostics: made.Diagnostics || [], Log: log.join('\n')});
+
+							return;
+						}
+
+						next(index + 1, {Files: made.Files || [], Entry: made.Entry || current.Entry, Value: made.Value, Diagnostics: made.Diagnostics || []});
+					});
+				}
+				catch (error) {
+					if (!answered) {
+						answered = true;
+
+						callback(error);
+					}
+				}
+			}
+
+			next(0, {Files: given.Files || [], Entry: given.Entry, Value: given.Value, Diagnostics: []});
+		}
+
+		/* A transition from the IR to a text language: the module is the Value of the job, or the JSON of its first file. */
+		function emitting (name, extension) {
+			return function (job, done) {
+				var module = job.Value || JSON.parse(job.Files[0].Text);
+				var diagnostics = check(module);
+				var made;
+
+				if (diagnostics.length) {
+					done(null, {Diagnostics: diagnostics});
+
+					return;
+				}
+
+				made = emit(module, languages[name], job.Options);
+
+				done(null, {Files: [{Name: (job.Entry || module.Entry || 'module') + '.' + extension, Text: made.Text}], Diagnostics: made.Diagnostics, Value: made.Text});
+			};
+		}
+
+		function language (name, definition) {
+			if (arguments.length === 1)
+				return own(languages, name) ? languages[name] : null;
+
+			if (!name || !definition || !definition.Statements || !definition.Module)
+				throw new Error('Elemenx.Compilers.Language expects (name) or (name, definition)');
+
+			languages[name] = definition;
+
+			define('ir-' + name, {From: 'ir', To: name, Compile: emitting(name, definition.Extension || name)});
+
+			return name;
+		}
+
+		/*
+		 * Elemenx.Compilers: transitions of kinds of code and the IR between them.
+		 * - Define(name, {From, To, Compile(job, done)}), Names(), Path(from, to) (the names of the shortest chain),
+		 *   Run(job, callback(error, result)): a job goes from its From to its To by as many transitions as it takes.
+		 * - Check(module): what is wrong in a module of the IR ([{File, Line, Column, Severity, Text}]).
+		 * - Language(name, definition): a text language described as data, with its transition ir-<name>; Language(name)
+		 *   gives it. Built in: js (ES5) and cpp (C++17).
+		 * - Load(text): the functions of a module of js made ({name: function}).
+		 */
+		Elemenx.Compilers = {
+			Define: define,
+			Names: function () {
+				return order.slice();
+			},
+			Path: function (from, to) {
+				return path(String(from), String(to));
+			},
+			Run: run,
+			Check: check,
+			Language: language,
+			Load: function (text) {
+				return (new Function(String(text)))();
+			}
+		};
+
+		language('js', Object.assign({Extension: 'js'}, javascript));
+		language('cpp', Object.assign({Extension: 'cpp'}, cpp));
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
 	/* SSR */
 	(function (global) {
 		'use strict';
@@ -21808,8 +22782,46 @@
 					if (error)
 						Runtime.Report(error);
 
-					startApplicationRoot();
+					applicationResources(loaded(startApplicationRoot));
 				}, definition.$Locales && typeof definition.$Locales === 'object' ? definition.$Locales : null);
+			}
+
+			/*
+			 * The resources of the Application ($Resources), after those of its Libraries and over them: a folder of it takes
+			 * the files its graph lists (built now for that) or a bundle embeds.
+			 */
+			function applicationResources (next) {
+				var spec = definition.$Resources;
+				var discoveryRoot = Runtime.DefinitionURL(definition, definition.$Root);
+				var folders = Object.keys(spec || {}).some(function (group) {
+					return typeof spec[group] === 'string';
+				});
+
+				function read (files) {
+					Runtime.LoadResources(spec, {
+						Application: true,
+						Files: files,
+						Resolve: function (path) {
+							return Runtime.AbsoluteURL(Runtime.DefinitionURL(definition, path));
+						}
+					}, next);
+				}
+
+				if (!spec) {
+					next(null);
+
+					return;
+				}
+
+				if (!folders || !discoveryRoot || !Runtime.Discovery || Runtime.Bundle.Ready()) {
+					read([]);
+
+					return;
+				}
+
+				Runtime.Discovery.Build(api, discoveryRoot, function (error) {
+					read(error ? [] : Runtime.Discovery.Files(api));
+				});
 			}
 
 			function startRoot () {

@@ -1,0 +1,13 @@
+{
+	"Order": 12,
+	"Color": [
+		0.55,
+		0.55,
+		0.58
+	],
+	"Rough": 0.35,
+	"Metal": 1,
+	"Grip": 0.4,
+	"Drag": 0,
+	"Material": "metal"
+}

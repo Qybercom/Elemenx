@@ -1,0 +1,447 @@
+{
+	"version": 1,
+	"type": "water",
+	"name": "Water",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "place",
+			"type": "Place",
+			"x": 40,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "view",
+			"type": "View",
+			"x": 260,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "far",
+			"type": "Far",
+			"x": 480,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "flow",
+			"type": "Flow",
+			"x": 700,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "time",
+			"type": "Time",
+			"x": 920,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "waves",
+			"type": "Waves",
+			"x": 1140,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "normal",
+			"type": "WaterNormal",
+			"x": 40,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "fresnel",
+			"type": "Fresnel",
+			"x": 260,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "glints",
+			"type": "Glints",
+			"x": 480,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "sky",
+			"type": "Sky",
+			"x": 700,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "body",
+			"type": "Body",
+			"x": 920,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "mirrored",
+			"type": "Mix",
+			"x": 1140,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "lit",
+			"type": "Add",
+			"x": 40,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "foam",
+			"type": "Foam",
+			"x": 260,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "under",
+			"type": "Under",
+			"x": 480,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "absorb",
+			"type": "Absorb",
+			"x": 700,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "cover",
+			"type": "Max",
+			"x": 920,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "below",
+			"type": "Below",
+			"x": 1140,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "reflection",
+			"type": "Reflection",
+			"x": 40,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "fog",
+			"type": "WaterFog",
+			"x": 260,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "base",
+			"type": "Number",
+			"x": 480,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.86
+				}
+			]
+		},
+		{
+			"id": "more",
+			"type": "Number",
+			"x": 700,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.14
+				}
+			]
+		},
+		{
+			"id": "facing",
+			"type": "Multiply",
+			"x": 920,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "alpha",
+			"type": "Add",
+			"x": 1140,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "end",
+			"type": "Water",
+			"x": 40,
+			"y": 680,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "flowprint-link-mw9lhv7i79",
+			"p1": "place-out-Place",
+			"p2": "waves-in-Place",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7a",
+			"p1": "far-out-Far",
+			"p2": "waves-in-Far",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7b",
+			"p1": "flow-out-Speed",
+			"p2": "waves-in-Speed",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7c",
+			"p1": "flow-out-Way",
+			"p2": "waves-in-Way",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7d",
+			"p1": "time-out-Seconds",
+			"p2": "waves-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7e",
+			"p1": "waves-out-Slope",
+			"p2": "normal-in-Slope",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7f",
+			"p1": "normal-out-Normal",
+			"p2": "fresnel-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7g",
+			"p1": "view-out-View",
+			"p2": "fresnel-in-View",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7h",
+			"p1": "normal-out-Normal",
+			"p2": "glints-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7i",
+			"p1": "view-out-View",
+			"p2": "glints-in-View",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7j",
+			"p1": "normal-out-Normal",
+			"p2": "sky-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7k",
+			"p1": "view-out-View",
+			"p2": "sky-in-View",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7l",
+			"p1": "flow-out-Speed",
+			"p2": "body-in-Speed",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7m",
+			"p1": "normal-out-Normal",
+			"p2": "under-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7n",
+			"p1": "under-out-Color",
+			"p2": "absorb-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7o",
+			"p1": "under-out-Depth",
+			"p2": "absorb-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7p",
+			"p1": "under-out-Cover",
+			"p2": "absorb-in-Cover",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7q",
+			"p1": "body-out-Color",
+			"p2": "absorb-in-Body",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7r",
+			"p1": "under-out-Depth",
+			"p2": "foam-in-Shore",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7s",
+			"p1": "absorb-out-Color",
+			"p2": "mirrored-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7t",
+			"p1": "sky-out-Color",
+			"p2": "mirrored-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7u",
+			"p1": "fresnel-out-Fresnel",
+			"p2": "mirrored-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7v",
+			"p1": "mirrored-out-Out",
+			"p2": "lit-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7w",
+			"p1": "glints-out-Shine",
+			"p2": "lit-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7x",
+			"p1": "lit-out-Out",
+			"p2": "foam-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7y",
+			"p1": "waves-out-Rush",
+			"p2": "foam-in-Rush",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i7z",
+			"p1": "foam-out-Color",
+			"p2": "reflection-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i80",
+			"p1": "normal-out-Normal",
+			"p2": "reflection-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i81",
+			"p1": "view-out-View",
+			"p2": "reflection-in-View",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i82",
+			"p1": "fresnel-out-Fresnel",
+			"p2": "reflection-in-Fresnel",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i83",
+			"p1": "reflection-out-Color",
+			"p2": "fog-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i84",
+			"p1": "fog-out-Color",
+			"p2": "below-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i85",
+			"p1": "normal-out-Normal",
+			"p2": "below-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i86",
+			"p1": "below-out-Color",
+			"p2": "end-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i87",
+			"p1": "fresnel-out-Fresnel",
+			"p2": "facing-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i88",
+			"p1": "more-out-Value",
+			"p2": "facing-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i89",
+			"p1": "base-out-Value",
+			"p2": "alpha-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i8a",
+			"p1": "facing-out-Out",
+			"p2": "alpha-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i8b",
+			"p1": "alpha-out-Out",
+			"p2": "cover-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i8c",
+			"p1": "under-out-Cover",
+			"p2": "cover-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i8d",
+			"p1": "cover-out-Out",
+			"p2": "below-in-Alpha",
+			"kind": "value"
+		},
+		{
+			"id": "flowprint-link-mw9lhv7i8e",
+			"p1": "below-out-Alpha",
+			"p2": "end-in-Alpha",
+			"kind": "value"
+		}
+	]
+}

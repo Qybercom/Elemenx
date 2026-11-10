@@ -65,6 +65,24 @@ describe('Contract: the Services of games (Random, SpatialIndex, Pathfinding, Vi
 		}
 	});
 
+	/* Regression: the generator of the towns of planets and of the plans of settlements was written out again in each. */
+	it('Random: Sequence gives the numbers of the old linear generator of a text, that towns and settlements are laid by', function () {
+		var next = random.Sequence('ab');
+		var seed = (97 * 31 + 98) >>> 0;
+		var expected = [];
+		var i;
+
+		for (i = 0; i < 5; i++) {
+			seed = (seed * 1664525 + 1013904223) >>> 0;
+
+			expected.push(seed / 4294967296);
+		}
+
+		expect([next(), next(), next(), next(), next()]).toEqual(expected);
+		expect(random.Sequence('ab')()).toBe(expected[0]);
+		expect(random.Sequence()()).toBe(1013904223 / 4294967296);
+	});
+
 	it('SpatialIndex: the things in a rectangle, within a radius the nearest first, the nearest one, as they move and go', function () {
 		var index = spatial.Create({Cell: 32});
 

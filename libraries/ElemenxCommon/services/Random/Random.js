@@ -6,13 +6,17 @@
  *   Shuffle(list) (a new list), Fork(name) (a generator of its own for a part: the same for the same seed and name),
  *   Seed.
  * - Hash(text): a number of 32 bits of a text.
+ * - Sequence(text): the numbers 0 to 1 of a text one after the other, next() (a linear generator of the text hashed by
+ *   31): the old generator the towns of planets and the plans of settlements are laid by, kept so that they stay where
+ *   they were. Regression: it was written out again in each of them.
+ * - Source(names): the source of its members for a worker of the Workers Service.
  * - Noise(seed, size) returns a smooth noise of a plane, noise(x, y) 0 to 1 (size: the cells of one wave, 16 by
  *   default): the ground of a map, clouds.
  */
 Elemenx.Service('Random', {
 	$Meta: {
 		Description: 'Random numbers of a seed: always the same numbers for the same seed.',
-		Methods: ['Create(seed)', 'Hash(text)', 'Noise(seed, size)']
+		Methods: ['Create(seed)', 'Hash(text)', 'Sequence(text)', 'Noise(seed, size)']
 	},
 
 	Hash: function (text) {
@@ -29,6 +33,26 @@ Elemenx.Service('Random', {
 		hash = Math.imul(hash ^ (hash >>> 13), 3266489909);
 
 		return (hash ^ (hash >>> 16)) >>> 0;
+	},
+
+	Sequence: function (text) {
+		var value = String(text === undefined || text === null ? '' : text);
+		var seed = 0;
+		var i;
+
+		for (i = 0; i < value.length; i++)
+			seed = (seed * 31 + value.charCodeAt(i)) >>> 0;
+
+		return function () {
+			seed = (seed * 1664525 + 1013904223) >>> 0;
+
+			return seed / 4294967296;
+		};
+	},
+
+	/* The source of members of this Service for a worker of the Workers Service. */
+	Source: function (names) {
+		return this.$Service('Workers').Source(this, names);
 	},
 
 	Create: function (seed) {

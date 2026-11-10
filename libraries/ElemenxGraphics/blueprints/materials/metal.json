@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "metal",
+	"material": {
+		"Order": 18,
+		"Title": "Metal",
+		"Group": "build",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat s = enx_ms(px, 0.004);\n\tc *= 0.95 + enx_mn(vec2(q.x * 2.0, q.y * 300.0)) * 0.1 * s;\n\tr *= 0.85 + enx_mn(vec2(q.x * 1.5, q.y * 200.0)) * 0.3 * s;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Brushed metal."
+		}
+	],
+	"links": []
+}

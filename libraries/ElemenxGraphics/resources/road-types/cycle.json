@@ -1,0 +1,24 @@
+{
+	"Order": 15,
+	"Title": "Cycle path",
+	"Group": "path",
+	"Speed": 25,
+	"Strips": [
+		{
+			"Kind": "lane",
+			"Width": 1.25,
+			"Surface": "cycle",
+			"Way": -1,
+			"Left": "none",
+			"Right": "dashed"
+		},
+		{
+			"Kind": "lane",
+			"Width": 1.25,
+			"Surface": "cycle",
+			"Way": 1,
+			"Left": "none",
+			"Right": "none"
+		}
+	]
+}

@@ -1,0 +1,16 @@
+{
+	"Order": 13,
+	"Width": 40,
+	"Depth": 32,
+	"Floors": [
+		25,
+		45
+	],
+	"FloorHeight": 3.8,
+	"Roof": "flat",
+	"Walls": "glass",
+	"Windows": 0.85,
+	"Setbacks": 2,
+	"Podium": 3,
+	"Crown": "helipad"
+}

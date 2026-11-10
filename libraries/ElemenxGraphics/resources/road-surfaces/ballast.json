@@ -1,0 +1,12 @@
+{
+	"Order": 8,
+	"Color": [
+		0.43,
+		0.41,
+		0.39
+	],
+	"Rough": 1,
+	"Grip": 0.5,
+	"Drag": 0.4,
+	"Material": "ballast"
+}

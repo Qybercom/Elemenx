@@ -4,14 +4,15 @@
  * sources, the templates and the styles inline. Use(names) defines them and what they use in turn: the Components of
  * their templates, the Services they ask for ($Service) and the Directives of their templates, their Traits ($Traits) and
  * their bases ($Extends), from whichever Library has them. The phrases of the Libraries in English come with them
- * (Elemenx.Locale). A Service or a Directive is a file of its folder, or the file of its own folder (services/Math/Math.js),
- * its tests beside it left out.
+ * (Elemenx.Locale), their resources too (Elemenx.Resources). A Service or a Directive is a file of its folder, or the
+ * file of its own folder (services/Math/Math.js), its tests beside it left out.
  */
 var english = import.meta.glob('../libraries/*/locales/en.json', {import: 'default', eager: true});
 var components = import.meta.glob('../libraries/*/components/*/*.{js,html,css}', {query: '?raw', import: 'default', eager: true});
 var services = import.meta.glob(['../libraries/*/services/*.js', '../libraries/*/services/*/*.js', '!../libraries/**/*.test.js'], {query: '?raw', import: 'default', eager: true});
 var directives = import.meta.glob(['../libraries/*/directives/*.js', '../libraries/*/directives/*/*.js', '!../libraries/**/*.test.js'], {query: '?raw', import: 'default', eager: true});
 var traits = import.meta.glob(['../libraries/*/traits/*.js', '../libraries/*/traits/*/*.js', '!../libraries/**/*.test.js'], {query: '?raw', import: 'default', eager: true});
+var resources = import.meta.glob(['../libraries/*/blueprints/**/*.json', '../libraries/*/resources/**/*.json'], {query: '?raw', import: 'default', eager: true});
 var defined = {};
 
 function file (list, name) {
@@ -136,6 +137,17 @@ export function Use (names) {
 
 		Object.keys(english).forEach(function (path) {
 			Elemenx.Locale.Add('en', english[path]);
+		});
+	}
+
+	/* The resources of the Libraries, as their $Resources name them: ElemenxGraphics/water of blueprints/water.json. */
+	if (!defined.resources) {
+		defined.resources = true;
+
+		Object.keys(resources).forEach(function (path) {
+			var match = /\/libraries\/(\w+)\/(blueprints|resources)\/(.+)\.json$/.exec(path);
+
+			Elemenx.Resources(match[2] === 'blueprints' ? 'Blueprints' : 'Data', match[1] + '/' + match[3], resources[path]);
 		});
 	}
 

@@ -1,0 +1,75 @@
+{
+	"Order": 1,
+	"Climate": {
+		"Temperature": [
+			0.22,
+			0.42
+		]
+	},
+	"Ground": {
+		"Low": [
+			0.27,
+			0.4,
+			0.26
+		],
+		"High": [
+			0.36,
+			0.42,
+			0.34
+		],
+		"Sand": [
+			0.5,
+			0.48,
+			0.4
+		],
+		"Materials": {
+			"Low": "soil",
+			"Sand": "gravel"
+		}
+	},
+	"Scatter": [
+		{
+			"Shapes": [
+				"pine"
+			],
+			"Density": 4,
+			"Cover": 0.7,
+			"Patch": 80,
+			"MaxSlope": 0.35,
+			"Size": [
+				0.9,
+				1.6
+			]
+		},
+		{
+			"Shapes": [
+				"bush",
+				"stump",
+				"rock"
+			],
+			"Density": 2,
+			"Cover": 0.5,
+			"Patch": 30,
+			"MaxSlope": 0.4,
+			"Size": [
+				0.5,
+				1.1
+			]
+		},
+		{
+			"Shapes": [
+				"boulder",
+				"rock"
+			],
+			"Density": 0.6,
+			"MinHeight": 0,
+			"MaxSlope": 0.8
+		}
+	],
+	"Grass": {
+		"Density": 0.7,
+		"Height": 0.5,
+		"Color": "#6d8f58",
+		"Root": "#2c4a2c"
+	}
+}

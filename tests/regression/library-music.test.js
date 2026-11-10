@@ -457,11 +457,12 @@ describe('Contract: notes, instruments and the transport of the Audio Service, P
 		var pads;
 		var rect;
 
+		/* Its sample decoded: up to 15 s (Regression: under the load of the whole suite 3 s and the 10 s of a test were not enough). */
 		root = await waitFor(function () {
 			var element = host.$Element().querySelector('.elemenx-sampler');
 
 			return element && !element.querySelector('[data-id="tone"]').classList.contains('empty') ? element : null;
-		}, 3000);
+		}, 15000);
 
 		pads = root.querySelectorAll('.elemenx-sampler-pad');
 
@@ -539,8 +540,8 @@ describe('Contract: notes, instruments and the transport of the Audio Service, P
 
 		await waitFor(function () {
 			return !pads[2].classList.contains('empty');
-		}, 3000);
+		}, 15000);
 
 		synth.Destroy();
-	});
+	}, 40000);
 });

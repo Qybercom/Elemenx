@@ -1,0 +1,623 @@
+{
+	"Walls": {
+		"brick": {
+			"Materials": [
+				"brick",
+				"brick",
+				"clinker"
+			],
+			"Colors": [
+				[
+					0.6,
+					0.3,
+					0.22
+				],
+				[
+					0.66,
+					0.38,
+					0.26
+				],
+				[
+					0.52,
+					0.24,
+					0.18
+				],
+				[
+					0.72,
+					0.5,
+					0.36
+				],
+				[
+					0.45,
+					0.3,
+					0.26
+				],
+				[
+					0.78,
+					0.66,
+					0.5
+				]
+			]
+		},
+		"plaster": {
+			"Materials": [
+				"plaster"
+			],
+			"Colors": [
+				[
+					0.9,
+					0.86,
+					0.78
+				],
+				[
+					0.94,
+					0.9,
+					0.72
+				],
+				[
+					0.86,
+					0.9,
+					0.88
+				],
+				[
+					0.92,
+					0.8,
+					0.7
+				],
+				[
+					0.82,
+					0.84,
+					0.9
+				],
+				[
+					0.95,
+					0.94,
+					0.9
+				],
+				[
+					0.88,
+					0.74,
+					0.6
+				]
+			]
+		},
+		"wood": {
+			"Materials": [
+				"planks",
+				"painted-wood",
+				"painted-wood"
+			],
+			"Colors": [
+				[
+					0.5,
+					0.37,
+					0.24
+				],
+				[
+					0.7,
+					0.2,
+					0.16
+				],
+				[
+					0.88,
+					0.86,
+					0.8
+				],
+				[
+					0.36,
+					0.48,
+					0.42
+				],
+				[
+					0.42,
+					0.5,
+					0.64
+				],
+				[
+					0.9,
+					0.8,
+					0.5
+				]
+			]
+		},
+		"log": {
+			"Materials": [
+				"timber"
+			],
+			"Colors": [
+				[
+					0.44,
+					0.31,
+					0.2
+				],
+				[
+					0.52,
+					0.38,
+					0.24
+				],
+				[
+					0.36,
+					0.26,
+					0.18
+				]
+			]
+		},
+		"stone": {
+			"Materials": [
+				"stone",
+				"sandstone",
+				"granite"
+			],
+			"Colors": [
+				[
+					0.62,
+					0.6,
+					0.56
+				],
+				[
+					0.74,
+					0.66,
+					0.52
+				],
+				[
+					0.55,
+					0.55,
+					0.57
+				],
+				[
+					0.8,
+					0.74,
+					0.62
+				]
+			]
+		},
+		"concrete": {
+			"Materials": [
+				"concrete"
+			],
+			"Colors": [
+				[
+					0.66,
+					0.66,
+					0.64
+				],
+				[
+					0.72,
+					0.7,
+					0.66
+				],
+				[
+					0.6,
+					0.62,
+					0.64
+				],
+				[
+					0.78,
+					0.74,
+					0.68
+				]
+			]
+		},
+		"metal": {
+			"Materials": [
+				"corrugated",
+				"metal"
+			],
+			"Colors": [
+				[
+					0.6,
+					0.63,
+					0.66
+				],
+				[
+					0.5,
+					0.56,
+					0.6
+				],
+				[
+					0.66,
+					0.6,
+					0.5
+				],
+				[
+					0.4,
+					0.48,
+					0.42
+				]
+			]
+		},
+		"glass": {
+			"Materials": [
+				"metal"
+			],
+			"Colors": [
+				[
+					0.32,
+					0.33,
+					0.35
+				]
+			]
+		}
+	},
+	"Roofs": {
+		"gable": {
+			"Materials": [
+				"roof-tiles",
+				"shingles",
+				"slate"
+			],
+			"Colors": [
+				[
+					0.55,
+					0.26,
+					0.2
+				],
+				[
+					0.62,
+					0.32,
+					0.22
+				],
+				[
+					0.38,
+					0.39,
+					0.41
+				],
+				[
+					0.3,
+					0.3,
+					0.34
+				],
+				[
+					0.46,
+					0.34,
+					0.26
+				]
+			]
+		},
+		"hip": {
+			"Materials": [
+				"roof-tiles",
+				"slate"
+			],
+			"Colors": [
+				[
+					0.55,
+					0.26,
+					0.2
+				],
+				[
+					0.6,
+					0.36,
+					0.26
+				],
+				[
+					0.35,
+					0.36,
+					0.4
+				]
+			]
+		},
+		"shed": {
+			"Materials": [
+				"corrugated",
+				"shingles"
+			],
+			"Colors": [
+				[
+					0.5,
+					0.52,
+					0.55
+				],
+				[
+					0.46,
+					0.34,
+					0.26
+				],
+				[
+					0.36,
+					0.42,
+					0.36
+				]
+			]
+		},
+		"gambrel": {
+			"Materials": [
+				"shingles",
+				"corrugated"
+			],
+			"Colors": [
+				[
+					0.55,
+					0.26,
+					0.2
+				],
+				[
+					0.42,
+					0.3,
+					0.24
+				],
+				[
+					0.5,
+					0.52,
+					0.55
+				]
+			]
+		},
+		"vault": {
+			"Materials": [
+				"corrugated"
+			],
+			"Colors": [
+				[
+					0.55,
+					0.58,
+					0.6
+				],
+				[
+					0.6,
+					0.6,
+					0.56
+				]
+			]
+		},
+		"dome": {
+			"Materials": [
+				"slate",
+				"metal"
+			],
+			"Colors": [
+				[
+					0.36,
+					0.5,
+					0.46
+				],
+				[
+					0.38,
+					0.39,
+					0.41
+				]
+			]
+		},
+		"spire": {
+			"Materials": [
+				"slate",
+				"metal"
+			],
+			"Colors": [
+				[
+					0.32,
+					0.33,
+					0.37
+				],
+				[
+					0.36,
+					0.5,
+					0.46
+				]
+			]
+		},
+		"flat": {
+			"Materials": [
+				"concrete"
+			],
+			"Colors": [
+				[
+					0.38,
+					0.39,
+					0.41
+				],
+				[
+					0.45,
+					0.45,
+					0.44
+				]
+			]
+		}
+	},
+	"Details": {
+		"shack": {
+			"Shutters": 0.3,
+			"Chimneys": 0.5,
+			"Downpipes": 0,
+			"Lamp": 0.2
+		},
+		"cabin": {
+			"Shutters": 0.5,
+			"Chimneys": 1,
+			"Downpipes": 0.3,
+			"Lamp": 0.5
+		},
+		"cottage": {
+			"Shutters": 0.6,
+			"AC": 0,
+			"Chimneys": 0.9,
+			"Dormers": 0.5,
+			"Rooftop": 0,
+			"Awning": 0,
+			"Downpipes": 1,
+			"Lamp": 0.7
+		},
+		"house": {
+			"Shutters": 0.6,
+			"AC": 0,
+			"Chimneys": 0.9,
+			"Dormers": 0.5,
+			"Rooftop": 0,
+			"Awning": 0,
+			"Downpipes": 1,
+			"Lamp": 0.7
+		},
+		"villa": {
+			"Shutters": 0.3,
+			"AC": 0,
+			"Chimneys": 0.9,
+			"Dormers": 0.5,
+			"Rooftop": 1,
+			"Awning": 0,
+			"Downpipes": 1,
+			"Lamp": 0.7
+		},
+		"townhouse": {
+			"Shutters": 0.6,
+			"AC": 0.08,
+			"Chimneys": 0.9,
+			"Dormers": 0.6,
+			"Rooftop": 0,
+			"Awning": 0,
+			"Downpipes": 1,
+			"Lamp": 0.7
+		},
+		"shop": {
+			"Awning": 1,
+			"Rooftop": 1,
+			"Lamp": 0.8,
+			"Downpipes": 1,
+			"Chimneys": 0.3
+		},
+		"warehouse": {
+			"Downpipes": 1,
+			"Lamp": 0.6
+		},
+		"factory": {
+			"Chimneys": 1,
+			"Downpipes": 1,
+			"Rooftop": 1,
+			"Lamp": 0.5
+		},
+		"apartments": {
+			"AC": 0.22,
+			"Rooftop": 1,
+			"Lamp": 1
+		},
+		"office": {
+			"Rooftop": 1,
+			"Lamp": 1
+		},
+		"tower": {
+			"Rooftop": 1
+		},
+		"skyscraper": {
+			"Rooftop": 1
+		},
+		"business": {
+			"Rooftop": 1,
+			"Lamp": 1
+		},
+		"school": {
+			"Downpipes": 1,
+			"Chimneys": 0.5,
+			"Lamp": 1
+		},
+		"church": {
+			"Downpipes": 1,
+			"Lamp": 1
+		},
+		"station": {
+			"Downpipes": 1,
+			"Lamp": 1
+		},
+		"garage": {
+			"Lamp": 0.6
+		},
+		"barn": {
+			"Downpipes": 0.4,
+			"Lamp": 0.3
+		},
+		"hangar": {
+			"Lamp": 1
+		}
+	},
+	"Palettes": {
+		"Shutters": [
+			[
+				0.22,
+				0.36,
+				0.26
+			],
+			[
+				0.2,
+				0.3,
+				0.45
+			],
+			[
+				0.5,
+				0.2,
+				0.16
+			],
+			[
+				0.86,
+				0.84,
+				0.78
+			],
+			[
+				0.3,
+				0.3,
+				0.32
+			],
+			[
+				0.58,
+				0.46,
+				0.3
+			]
+		],
+		"Awnings": [
+			[
+				0.7,
+				0.16,
+				0.14
+			],
+			[
+				0.16,
+				0.42,
+				0.24
+			],
+			[
+				0.16,
+				0.3,
+				0.6
+			],
+			[
+				0.85,
+				0.6,
+				0.12
+			],
+			[
+				0.4,
+				0.2,
+				0.46
+			]
+		],
+		"Signs": [
+			[
+				1.8,
+				1.5,
+				0.8
+			],
+			[
+				1.6,
+				0.6,
+				0.5
+			],
+			[
+				0.6,
+				1.4,
+				1.8
+			],
+			[
+				1.2,
+				1.6,
+				0.7
+			],
+			[
+				1.7,
+				1.7,
+				1.6
+			]
+		],
+		"Trim": [
+			0.84,
+			0.82,
+			0.77
+		]
+	}
+}

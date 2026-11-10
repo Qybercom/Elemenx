@@ -1,0 +1,171 @@
+{
+	"version": 1,
+	"type": "effect",
+	"name": "wake",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "layer1",
+			"type": "Layer",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Kind",
+					"value": "smoke"
+				},
+				{
+					"key": "Blend",
+					"value": "alpha"
+				},
+				{
+					"key": "Hold",
+					"value": false
+				},
+				{
+					"key": "Rings",
+					"value": null
+				},
+				{
+					"key": "Speed",
+					"value": [
+						0.2,
+						0.8
+					]
+				},
+				{
+					"key": "Size",
+					"value": [
+						0.5,
+						2.2
+					]
+				},
+				{
+					"key": "Color",
+					"value": [
+						1,
+						1,
+						1
+					]
+				},
+				{
+					"key": "Hot"
+				},
+				{
+					"key": "Count",
+					"value": 10
+				},
+				{
+					"key": "Life",
+					"value": 3
+				},
+				{
+					"key": "Spread",
+					"value": 1.4
+				},
+				{
+					"key": "Gravity"
+				},
+				{
+					"key": "Rise",
+					"value": 0
+				},
+				{
+					"key": "Drag",
+					"value": 1.8
+				},
+				{
+					"key": "Bounce"
+				},
+				{
+					"key": "Stretch"
+				},
+				{
+					"key": "Wander",
+					"value": 0.15
+				},
+				{
+					"key": "Wind",
+					"value": 0
+				},
+				{
+					"key": "Opacity",
+					"value": 0.42
+				},
+				{
+					"key": "Start"
+				},
+				{
+					"key": "Base"
+				},
+				{
+					"key": "Hollow"
+				},
+				{
+					"key": "Soft"
+				},
+				{
+					"key": "Reach"
+				},
+				{
+					"key": "Seed"
+				}
+			]
+		},
+		{
+			"id": "effect",
+			"type": "Effect",
+			"x": 300,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Once",
+					"value": false
+				},
+				{
+					"key": "Then",
+					"value": ""
+				},
+				{
+					"key": "Heat"
+				},
+				{
+					"key": "Stand"
+				},
+				{
+					"key": "Lasts",
+					"value": 0.5
+				},
+				{
+					"key": "Fly"
+				},
+				{
+					"key": "Aim"
+				},
+				{
+					"key": "Glow"
+				},
+				{
+					"key": "LampColor"
+				},
+				{
+					"key": "LampPower"
+				},
+				{
+					"key": "LampRadius"
+				},
+				{
+					"key": "LampFlicker"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "flowprint-link-mw9qbw8wa",
+			"p1": "layer1-out-Layers",
+			"p2": "effect-in-Layers",
+			"kind": "value"
+		}
+	]
+}

@@ -1,0 +1,38 @@
+{
+	"Order": 23,
+	"Title": "Railway",
+	"Group": "rail",
+	"Speed": 160,
+	"Catenary": false,
+	"Rails": [
+		{
+			"Offset": 0,
+			"Gauge": 1.435
+		}
+	],
+	"Sleepers": {
+		"Step": 0.6,
+		"Length": 2.6,
+		"Surface": "wood"
+	},
+	"Strips": [
+		{
+			"Kind": "ditch",
+			"Width": 1,
+			"Surface": "gravel",
+			"Height": -0.2
+		},
+		{
+			"Kind": "bed",
+			"Width": 3.6,
+			"Surface": "ballast",
+			"Height": 0.3
+		},
+		{
+			"Kind": "ditch",
+			"Width": 1,
+			"Surface": "gravel",
+			"Height": -0.2
+		}
+	]
+}

@@ -1,4 +1,5 @@
 /.idea
+/.claude
 /.vitest
 node_modules/
 /coverage/

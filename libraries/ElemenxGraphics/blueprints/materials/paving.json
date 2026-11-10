@@ -1,0 +1,41 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "paving",
+	"material": {
+		"Order": 11,
+		"Title": "Paving",
+		"Group": "road",
+		"Land": true,
+		"Texture": "paving"
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tvec2 t = q / 0.5;\n\tt.x += mod(floor(t.y), 2.0) * 0.5;\n\tvec2 id = floor(t);\n\tvec2 f = fract(t);\n\tvec2 e = min(f, 1.0 - f) * 0.5;\n\tfloat joint = (1.0 - smoothstep(0.003, 0.008, min(e.x, e.y))) * enx_ms(px, 0.05);\n\tfloat tone = enx_mh(id);\n\tc *= (0.88 + tone * 0.24) * (0.95 + enx_mn(q * 40.0) * 0.1 * enx_ms(px, 0.02)) * (1.0 - joint * 0.45);\n\th += (1.0 - joint) * 0.004 + (tone - 0.5) * 0.002 * (1.0 - joint);\n\tr = 0.85;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Paving slabs of half a metre, rows offset, each of its own tone."
+		}
+	],
+	"links": []
+}

@@ -1,0 +1,271 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "rooftop",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "input1",
+			"type": "Input",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "W"
+				}
+			]
+		},
+		{
+			"id": "input2",
+			"type": "Input",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "D"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Top"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "random5",
+			"type": "Random",
+			"x": 1140,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "formula6",
+			"type": "Formula",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "'tank'"
+				}
+			]
+		},
+		{
+			"id": "repeat7",
+			"type": "Repeat",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/water-tank"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula8",
+			"type": "Formula",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "tank < 0.5 && min(W, D) > 8 ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "repeat9",
+			"type": "Repeat",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/buildings/roof-unit"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula10",
+			"type": "Formula",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(1, floor(W * D / 120))"
+				}
+			]
+		},
+		{
+			"id": "join11",
+			"type": "Join",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "result12",
+			"type": "Result",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input4-out-Value",
+			"p2": "random5-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "formula6-out-Value",
+			"p2": "random5-in-Key",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "random5-out-Value",
+			"p2": "formula8-in-tank",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "input1-out-Value",
+			"p2": "formula8-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "input2-out-Value",
+			"p2": "formula8-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "formula8-out-Value",
+			"p2": "repeat7-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "input1-out-Value",
+			"p2": "repeat7-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "input2-out-Value",
+			"p2": "repeat7-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "input3-out-Value",
+			"p2": "repeat7-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "input1-out-Value",
+			"p2": "formula10-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "input2-out-Value",
+			"p2": "formula10-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "formula10-out-Value",
+			"p2": "repeat9-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "input1-out-Value",
+			"p2": "repeat9-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "input2-out-Value",
+			"p2": "repeat9-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "l15",
+			"p1": "input3-out-Value",
+			"p2": "repeat9-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "l16",
+			"p1": "input4-out-Value",
+			"p2": "repeat9-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "l17",
+			"p1": "repeat7-out-List",
+			"p2": "join11-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "l18",
+			"p1": "repeat9-out-List",
+			"p2": "join11-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "l19",
+			"p1": "join11-out-Parts",
+			"p2": "result12-in-Value",
+			"kind": "value"
+		}
+	]
+}

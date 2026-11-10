@@ -1,0 +1,16 @@
+{
+	"Order": 11,
+	"Title": "Dirt road",
+	"Group": "path",
+	"Speed": 40,
+	"Strips": [
+		{
+			"Kind": "lane",
+			"Width": 4.5,
+			"Surface": "dirt",
+			"Way": 0,
+			"Left": "none",
+			"Right": "none"
+		}
+	]
+}

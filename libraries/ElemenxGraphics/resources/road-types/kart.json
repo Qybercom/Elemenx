@@ -1,0 +1,28 @@
+{
+	"Order": 19,
+	"Title": "Kart track",
+	"Group": "race",
+	"Speed": 100,
+	"Strips": [
+		{
+			"Kind": "rumble",
+			"Width": 0.8,
+			"Surface": "rumble",
+			"Height": 0.03
+		},
+		{
+			"Kind": "lane",
+			"Width": 8,
+			"Surface": "asphalt",
+			"Way": 0,
+			"Left": "solid",
+			"Right": "solid"
+		},
+		{
+			"Kind": "rumble",
+			"Width": 0.8,
+			"Surface": "rumble",
+			"Height": 0.03
+		}
+	]
+}

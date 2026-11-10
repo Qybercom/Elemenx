@@ -1,0 +1,16 @@
+{
+	"Order": 16,
+	"Title": "Sand track",
+	"Group": "path",
+	"Speed": 30,
+	"Strips": [
+		{
+			"Kind": "lane",
+			"Width": 4,
+			"Surface": "sand",
+			"Way": 0,
+			"Left": "none",
+			"Right": "none"
+		}
+	]
+}

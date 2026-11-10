@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "cobbles",
+	"material": {
+		"Order": 12,
+		"Title": "Cobbles",
+		"Group": "road",
+		"Land": true
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tvec4 k = enx_mc(q * 7.0, 0.8);\n\tfloat seen = enx_ms(px, 0.1);\n\tfloat stone = smoothstep(0.0, 0.12, k.y - k.x);\n\tc *= mix(0.55, 0.85 + k.z * 0.3, mix(1.0, stone, seen));\n\th += stone * 0.02 * seen;\n\tr = mix(0.9, 0.7, stone);"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "Cobbles: rounded stones of their own tones, dark joints."
+		}
+	],
+	"links": []
+}

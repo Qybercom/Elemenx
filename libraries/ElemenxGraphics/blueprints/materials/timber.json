@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "timber",
+	"material": {
+		"Order": 25,
+		"Title": "Timber",
+		"Group": "build",
+		"Land": false
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tfloat d = 0.24;\n\tfloat row = floor(q.y / d);\n\tfloat f = fract(q.y / d);\n\tfloat round_ = sqrt(max(0.0, 1.0 - pow(f * 2.0 - 1.0, 2.0)));\n\tfloat tone = enx_mh(vec2(row, 5.0));\n\tfloat grain = enx_mn(vec2(q.x * 3.0, q.y * 60.0 + row * 13.0));\n\tc *= (0.75 + tone * 0.3) * (0.55 + round_ * 0.5) * (0.9 + grain * 0.2 * enx_ms(px, 0.01));\n\th += round_ * 0.04;\n\tr = 0.9;"
+				},
+				{
+					"key": "Inputs",
+					"value": "q: vec2, px: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, m: float, h: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "A wall of logs: round, one over another, their ends of grain, dark between them."
+		}
+	],
+	"links": []
+}
