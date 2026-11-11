@@ -37,9 +37,13 @@ describe('Regression: a pass of a Scene draws no list of models it does not see'
 		resetDOM();
 	});
 
+	/*
+	 * Regression: under the load of the whole suite (the scenes of other files baking their planets in the same browser)
+	 * letting the scenes go waited longer than the 30 s a hook has: 90 s now.
+	 */
 	afterEach(function () {
 		while (owned.length) owned.pop().$Destroy();
-	});
+	}, 90000);
 
 	/*
 	 * Each list of models (one a model and a piece of it) was drawn in every pass whether the pass saw it or not: the

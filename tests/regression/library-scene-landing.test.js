@@ -1268,6 +1268,72 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 	}, 120000);
 
 	/*
+	 * Regression: the parts of a square of thousands of kilometres were asked by the middle of the square over them, far,
+	 * after the small squares of the view: from 300 km half the view stayed of the coarse square, other in color, a
+	 * straight edge across it, for most of a minute. Now by their nearest edge, right after the squares under the eye.
+	 */
+	it('asks a coarse part near the eye before the small squares far in the view', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var now = performance.now() + 1000;
+		var order = [];
+		var seen = {};
+		var i;
+
+		scene.Land('terra', {Latitude: 20, Longitude: 30, Altitude: 300, Instant: true});
+
+		/* How far the nearest edge of a square is from the eye, km. */
+		function far (key) {
+			var k = key.split(':').map(Number);
+			var d = terrain.Face(k[0], k[1], k[2]);
+			var l = Math.hypot(d[0], d[1], d[2]);
+			var radius = inner.Surface.Field.Radius;
+			var eye = inner.Surface.Eye;
+
+			return Math.hypot(d[0] / l * radius - eye[0], d[1] / l * radius - eye[1], d[2] / l * radius - eye[2]) - 2 / Math.pow(2, k[3]) * Math.PI / 4 * radius * 0.71;
+		}
+
+		for (i = 0; i < 200 && Object.keys(inner.Surface.Nodes).length < 100; i++) {
+			inner.Rest = 0;
+			inner.Looping = true;
+
+			engine.Frame(now += 100);
+
+			inner.Looping = false;
+
+			Object.keys(inner.Surface.Asked || {}).concat(Object.keys(inner.Surface.Nodes)).forEach(function (key) {
+				if (seen[key]) return;
+
+				seen[key] = true;
+
+				order.push({Level: Number(key.split(':')[3]), Far: far(key)});
+			});
+
+			/* The answers of the workers come between frames. */
+			await new Promise(function (done) {
+				setTimeout(done, 30);
+			});
+		}
+
+		var coarse = order.map(function (one, index) {
+			return one.Level > 0 && one.Level <= 3 && one.Far < 200 ? index : -1;
+		}).filter(function (index) {
+			return index >= 0;
+		});
+		var small = order.map(function (one, index) {
+			return one.Level >= 6 && one.Far > 400 ? index : -1;
+		}).filter(function (index) {
+			return index >= 0;
+		});
+
+		expect(coarse.length).toBeGreaterThan(0);
+		expect(small.length).toBeGreaterThan(0);
+		expect(Math.max.apply(null, coarse)).toBeLessThan(Math.min.apply(null, small));
+	}, 120000);
+
+	/*
 	 * Regression: at night the globe was all dark, its settlements unseen. Its settlements are made once after its rivers
 	 * (ScenePlanet.Settlements, kept as its rivers are), and their lights painted on a cube of their own, shown at night.
 	 */

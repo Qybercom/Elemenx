@@ -235,19 +235,25 @@ Elemenx.Service('Noise', {
 
 	/* A value of a whole spec at a point: the space warped, the octaves of its fractal, what is done after. */
 	Read: function (whole, x, y, z) {
-		var p = [x / whole.Scale + whole.Offset[0] + whole.Seed, y / whole.Scale + whole.Offset[1] + whole.Seed, z / whole.Scale + whole.Offset[2] + whole.Seed];
+		var px = x / whole.Scale + whole.Offset[0] + whole.Seed;
+		var py = y / whole.Scale + whole.Offset[1] + whole.Seed;
+		var pz = z / whole.Scale + whole.Offset[2] + whole.Seed;
 		var warp = whole.Warp;
-		var q;
+		var qx;
+		var qy;
+		var qz;
 
+		/* Of no array nor function made at each point (see Simplex). */
 		if (warp) {
-			q = [0, 1, 2].map(function (axis) {
-				return this.Octaves(whole, p[0] * warp.Scale + axis * 5.2, p[1] * warp.Scale + axis * 1.3, p[2] * warp.Scale + axis * 2.8, warp.Octaves, 'fbm');
-			}, this);
-
-			p = [p[0] + (q[0] * 2 - 1) * warp.Amount, p[1] + (q[1] * 2 - 1) * warp.Amount, p[2] + (q[2] * 2 - 1) * warp.Amount];
+			qx = this.Octaves(whole, px * warp.Scale + 0 * 5.2, py * warp.Scale + 0 * 1.3, pz * warp.Scale + 0 * 2.8, warp.Octaves, 'fbm');
+			qy = this.Octaves(whole, px * warp.Scale + 1 * 5.2, py * warp.Scale + 1 * 1.3, pz * warp.Scale + 1 * 2.8, warp.Octaves, 'fbm');
+			qz = this.Octaves(whole, px * warp.Scale + 2 * 5.2, py * warp.Scale + 2 * 1.3, pz * warp.Scale + 2 * 2.8, warp.Octaves, 'fbm');
+			px = px + (qx * 2 - 1) * warp.Amount;
+			py = py + (qy * 2 - 1) * warp.Amount;
+			pz = pz + (qz * 2 - 1) * warp.Amount;
 		}
 
-		return this.Finish(whole.Post, this.Octaves(whole, p[0], p[1], p[2], whole.Fractal === 'none' ? 1 : whole.Octaves, whole.Fractal));
+		return this.Finish(whole.Post, this.Octaves(whole, px, py, pz, whole.Fractal === 'none' ? 1 : whole.Octaves, whole.Fractal));
 	},
 
 	/* The octaves of a fractal, each finer and fainter: fbm as it is, ridged the folds of mountains, billow round heaps. */
@@ -363,8 +369,11 @@ Elemenx.Service('Noise', {
 	},
 
 	/* Simplex noise of three dimensions: four corners of a tetrahedron each point, smoother and lighter than perlin. */
+	/*
+	 * Regression: its corners and their order were arrays and a function made at each call: half the time of a planet's
+	 * picture of a square was spent here and in collecting them. The same numbers, to the bit, of none.
+	 */
 	Simplex: function (x, y, z) {
-		var self = this;
 		var F3 = 1 / 3;
 		var G3 = 1 / 6;
 		var s = (x + y + z) * F3;
@@ -376,23 +385,31 @@ Elemenx.Service('Noise', {
 		var y0 = y - (j - t);
 		var z0 = z - (k - t);
 		var total = 0;
-
 		/* The two corners between the first and the last, by the order of the three coordinates. */
-		var order = x0 >= y0 ? y0 >= z0 ? [1, 0, 0, 1, 1, 0] : x0 >= z0 ? [1, 0, 0, 1, 0, 1] : [0, 0, 1, 1, 0, 1] : y0 < z0 ? [0, 0, 1, 0, 1, 1] : x0 < z0 ? [0, 1, 0, 0, 1, 1] : [0, 1, 0, 1, 1, 0];
+		var order = this.Orders[x0 >= y0 ? y0 >= z0 ? 0 : x0 >= z0 ? 1 : 2 : y0 < z0 ? 3 : x0 < z0 ? 4 : 5];
 
-		[[0, 0, 0, 0], [order[0], order[1], order[2], G3], [order[3], order[4], order[5], 2 * G3], [1, 1, 1, 3 * G3]].forEach(function (corner) {
-			var dx = x0 - corner[0] + corner[3];
-			var dy = y0 - corner[1] + corner[3];
-			var dz = z0 - corner[2] + corner[3];
-			var falloff = 0.6 - dx * dx - dy * dy - dz * dz;
-
-			if (falloff > 0) {
-				falloff *= falloff;
-				total += falloff * falloff * self.Gradient(self.Hash(i + corner[0], j + corner[1], k + corner[2]), dx, dy, dz);
-			}
-		});
+		total += this.Corner(i, j, k, x0, y0, z0);
+		total += this.Corner(i + order[0], j + order[1], k + order[2], x0 - order[0] + G3, y0 - order[1] + G3, z0 - order[2] + G3);
+		total += this.Corner(i + order[3], j + order[4], k + order[5], x0 - order[3] + 2 * G3, y0 - order[4] + 2 * G3, z0 - order[5] + 2 * G3);
+		total += this.Corner(i + 1, j + 1, k + 1, x0 - 1 + 3 * G3, y0 - 1 + 3 * G3, z0 - 1 + 3 * G3);
 
 		return Math.max(0, Math.min(1, total * 16 + 0.5));
+	},
+
+	/* The second and the third corner of a simplex (of Simplex), by the order of its coordinates: made once. */
+	Orders: [[1, 0, 0, 1, 1, 0], [1, 0, 0, 1, 0, 1], [0, 0, 1, 1, 0, 1], [0, 0, 1, 0, 1, 1], [0, 1, 0, 0, 1, 1], [0, 1, 0, 1, 1, 0]],
+
+	/* What a worker carries of this Service besides its methods: its tables. */
+	Carried: ['Orders'],
+
+	/* What a corner of the lattice (i, j, k) gives a point dx, dy, dz from it, of simplex noise: none past its reach. */
+	Corner: function (i, j, k, dx, dy, dz) {
+		var falloff = 0.6 - dx * dx - dy * dy - dz * dz;
+		if (falloff <= 0) return 0;
+
+		falloff *= falloff;
+
+		return falloff * falloff * this.Gradient(this.Hash(i, j, k), dx, dy, dz);
 	},
 
 	/* Worley (cellular) noise: a point in each cell of the lattice; the distance to the nearest, to the next, the edge between them, or a number of its cell. */

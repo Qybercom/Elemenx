@@ -1,0 +1,65 @@
+{
+	"Order": 9,
+	"Over": [
+		"temperate"
+	],
+	"Climate": {
+		"Temperature": [
+			0.42,
+			0.65
+		],
+		"Moisture": [
+			null,
+			0.3
+		]
+	},
+	"Ground": {
+		"Low": [
+			0.6,
+			0.58,
+			0.36
+		],
+		"High": [
+			0.54,
+			0.5,
+			0.34
+		],
+		"Sand": [
+			0.72,
+			0.66,
+			0.48
+		],
+		"Rock": [
+			0.5,
+			0.46,
+			0.4
+		],
+		"Road": [
+			0.56,
+			0.5,
+			0.38
+		],
+		"Materials": {
+			"High": "grass"
+		}
+	},
+	"Scatter": [
+		{
+			"Shapes": [
+				"bush",
+				"bush",
+				"rock"
+			],
+			"Density": 0.3,
+			"Cover": 0.4,
+			"Patch": 50,
+			"MaxSlope": 0.4
+		}
+	],
+	"Grass": {
+		"Density": 1,
+		"Height": 0.8,
+		"Color": "#b7ad62",
+		"Root": "#7a7038"
+	}
+}

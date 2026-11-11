@@ -1,0 +1,75 @@
+{
+	"Order": 8,
+	"Over": [
+		"desert",
+		"savanna"
+	],
+	"Climate": {
+		"Temperature": [
+			0.5,
+			null
+		],
+		"Moisture": [
+			0.15,
+			0.33
+		]
+	},
+	"Ground": {
+		"Low": [
+			0.66,
+			0.56,
+			0.4
+		],
+		"High": [
+			0.58,
+			0.46,
+			0.33
+		],
+		"Sand": [
+			0.8,
+			0.68,
+			0.48
+		],
+		"Rock": [
+			0.55,
+			0.42,
+			0.32
+		],
+		"Road": [
+			0.62,
+			0.5,
+			0.36
+		],
+		"Materials": {
+			"Low": "sand",
+			"High": "clay"
+		}
+	},
+	"Scatter": [
+		{
+			"Shapes": [
+				"bush",
+				"bush",
+				"rock"
+			],
+			"Density": 0.6,
+			"Cover": 0.45,
+			"Patch": 25,
+			"MaxSlope": 0.5
+		},
+		{
+			"Shapes": [
+				"rock",
+				"boulder"
+			],
+			"Density": 0.2,
+			"MaxSlope": 0.9
+		}
+	],
+	"Grass": {
+		"Density": 0.35,
+		"Height": 0.6,
+		"Color": "#a89a5c",
+		"Root": "#6b5f36"
+	}
+}

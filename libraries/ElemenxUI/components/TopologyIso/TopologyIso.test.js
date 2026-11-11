@@ -117,6 +117,7 @@ describe('Contract: TopologyIso, a Topology in 3D on a canvas', function () {
 		expect(told[told.length - 1]).toEqual({Node: 'b', Link: null, Group: null});
 	});
 
+	/* Regression: under the load of the whole suite its frames came slower than the 15 s a test has: 90 s. */
 	it('turns: Rotate moves the nodes on the screen, a quarter at a time, and back', async function () {
 		var host = mount('<div style="height: 100%"><TopologyIso [nodes]="Nodes" [links]="Links" /></div>', {Nodes: nodes, Links: links});
 		var i;
@@ -148,7 +149,7 @@ describe('Contract: TopologyIso, a Topology in 3D on a canvas', function () {
 
 		expect(Math.abs(iso.ToScreen('d').X - before.X)).toBeLessThan(1);
 		expect(Math.abs(iso.ToScreen('d').Y - before.Y)).toBeLessThan(1);
-	});
+	}, 90000);
 
 	it('moves a node dragged by whole cells and tells it in move', async function () {
 		var told = [];

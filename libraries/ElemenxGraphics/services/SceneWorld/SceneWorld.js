@@ -189,7 +189,7 @@ Elemenx.Service('SceneWorld', {
 		blueprints.Node('Biomes', {
 			Graphs: ['world'],
 			Group: 'world',
-			Properties: [{Key: 'List', Type: 'object', Value: ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp']}],
+			Properties: [{Key: 'List', Type: 'object', Value: ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe']}],
 			Inputs: [{Key: 'Land', Type: 'land'}],
 			Outputs: [{Key: 'Land', Type: 'land'}],
 			Compute: function (inputs, properties) {

@@ -4,14 +4,16 @@
  * coast seen from orbit is the coast walked on. Nothing is baked: a point is reckoned when it is asked for, as fine as
  * it is asked.
  * - Make(options): a planet of options {Radius (km, 6371), Seed, Ocean (the part of it under the sea, 0.65), Relief
- *   (metres of its highest mountains, 8000), Depth (metres of its deepest sea, 6000), Plates (how many tectonic plates,
+ *   (metres of its highest mountains, 8000), Mountains (how mountainous, 0 to 1: a flat world, the Earth at 0.5, ranges
+ *   everywhere at 1), Depth (metres of its deepest sea, 6000), Plates (how many tectonic plates,
  *   14), Detail (km: the finest the coasts are told by the globe; finer, the land and the sea are never turned one into
- *   the other, 2), Paint (what a developer drew, below), Biomes (names of SceneBiomes, the usual six), Baked (the
+ *   the other, 2), Paint (what a developer drew, below), Biomes (names of SceneBiomes, the usual nine: temperate, taiga, tundra, desert, savanna, swamp, rainforest, semidesert, steppe), Baked (the
  *   grounds of locations baked into it, SceneLocations.Bake: {ID: {Latitude, Longitude, Turn, Size, Side, Heights, Edge}};
  *   there its heights are theirs, edits and all, its own again over Edge metres at their edge)}. It gives
  *   {Options, Radius, Sample(direction, finest), Elevation(direction, finest) (finest: km, the finest asked; all by default), Land(direction), Plate(direction), Wind(direction),
- *   Climate(direction), Biome(direction), Point(direction), Direction(latitude, longitude), LatLon(direction)}.
- *   Sample gives all of a point at once: {Elevation (metres over the sea), Land (true over it), Plate {ID, Oceanic,
+ *   Climate(direction), Biome(direction), Point(direction), Direction(latitude, longitude), LatLon(direction), Slope(direction,
+ *   reach) (how steep its ground is, rise over run of reach km, 0.3; 0 over the sea)}.
+ *   Sample gives all of a point at once: {Direction (its unit direction), Elevation (metres over the sea), Land (true over it), Plate {ID, Oceanic,
  *   Boundary (km to the next plate), Push (how the two meet: over 0 they close, mountains and trenches; under 0 they part,
  *   rifts and ridges)}, Wind [east, north] (m/s), Celsius, Temperature and Moisture (0 to 1), Biome (a name; '' under the
  *   sea)}.
@@ -62,6 +64,8 @@ Elemenx.Service('ScenePlanet', {
 		var seed = given.Seed === undefined ? 'planet' : String(given.Seed);
 		var ocean = given.Ocean === undefined ? 0.65 : Number(given.Ocean);
 		var relief = Number(given.Relief) || 8000;
+		/* How mountainous (0 flat, 0.5 as the Earth, 1 ranges everywhere): how much of the land its chains take, how high and sharp. */
+		var mountains = given.Mountains === undefined || given.Mountains === null || given.Mountains === '' ? 0.5 : Math.max(0, Math.min(1, Number(given.Mountains) || 0));
 		var depth = Number(given.Depth) || 6000;
 		var detail = Number(given.Detail) || 2;
 		var count = Math.max(2, Math.round(Number(given.Plates) || 14));
@@ -72,6 +76,12 @@ Elemenx.Service('ScenePlanet', {
 		var warp = noise.Make({Type: 'simplex', Seed: seed + '-warp', Fractal: 'fbm', Octaves: 3});
 		var folds = noise.Make({Type: 'simplex', Seed: seed + '-folds', Fractal: 'ridged', Octaves: Math.min(12, octaves), Gain: 0.5});
 		var crags = noise.Make({Type: 'simplex', Seed: seed + '-crags', Fractal: 'ridged', Octaves: 6, Gain: 0.5});
+		/* The peaks over the crests of the ranges, of tens of kilometres. */
+		var peaks = noise.Make({Type: 'simplex', Seed: seed + '-peaks', Fractal: 'ridged', Octaves: 4, Gain: 0.5});
+		/* The ridges and valleys of a range itself, of 20 km down to a few hundred metres (what the ranges of hundreds of km had not). */
+		var sierra = noise.Make({Type: 'simplex', Seed: seed + '-sierra', Fractal: 'ridged', Octaves: 5, Gain: 0.5, Warp: {Amount: 0.35, Scale: 0.5, Octaves: 2}});
+		/* Horns on the crests (a Matterhorn), pyramids of some 20 km (not needles). */
+		var horns = noise.Make({Type: 'simplex', Seed: seed + '-horns', Fractal: 'ridged', Octaves: 3, Gain: 0.5});
 		/*
 		 * The relief over the land, as it is made on the Earth: an uplift of whole regions (highlands, plateaus, shields), chains
 		 * of ranges of a ridged multifractal on bent ways where it rises, and hills and detail down to tens of metres, rougher
@@ -83,7 +93,7 @@ Elemenx.Service('ScenePlanet', {
 		var grain = noise.Make({Type: 'simplex', Seed: seed + '-grain', Fractal: 'fbm', Octaves: 6, Gain: 0.48});
 		var weather = noise.Make({Type: 'simplex', Seed: seed + '-weather', Fractal: 'fbm', Octaves: 3});
 		/* Its lands: BiomeList when given (a worker has no registry of them), else of their names. */
-		var biomes = this.$Service('SceneTerrainGenerator').Biomes(given.BiomeList ? {BiomeList: given.BiomeList} : {Biomes: given.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp']});
+		var biomes = this.$Service('SceneTerrainGenerator').Biomes(given.BiomeList ? {BiomeList: given.BiomeList} : {Biomes: given.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe']});
 		var strokes = (given.Paint || []).map(function (stroke) {
 			return Object.assign({}, stroke, {Directions: (stroke.Points || []).map(function (point) {
 				return self.Direction(Number(point[0]), Number(point[1]));
@@ -202,6 +212,19 @@ Elemenx.Service('ScenePlanet', {
 			var length = Math.sqrt(dot(a, a)) || 1;
 
 			return [a[0] / length, a[1] / length, a[2] / length];
+		}
+
+		/*
+		 * The ridges of a range at a point, 0 to 1: sharp aretes (a ridged noise to its power 2.2), the floors of the valleys
+		 * between them flat (no lower than 0.1, met smoothly): U-shaped glacial valleys, steep walls over a flat floor.
+		 */
+		function aretes (q) {
+			var r = Math.pow(sierra.At(q[0] * 320, q[1] * 320, q[2] * 320), 2.2);
+			var floor = 0.1;
+			var k = 0.06;
+			var h = Math.max(0, Math.min(1, 0.5 + 0.5 * (r - floor) / k));
+
+			return r * h + floor * (1 - h) + k * h * (1 - h);
 		}
 
 		function smoothstep (from, to, value) {
@@ -374,10 +397,15 @@ Elemenx.Service('ScenePlanet', {
 			level = values[Math.max(0, Math.min(599, Math.round(ocean * 600)))];
 		})();
 
-		/* The height of a point over the sea, metres, and what it is made of: its plate, its land. */
-		function raise (p, finest) {
-			var tectonic = plate(p);
-			var land = continent(p, tectonic);
+		/*
+		 * The height of a point over the sea, metres, and what it is made of: its plate, its land. near: what was raised of a
+		 * point a few hundred metres away (Slope): its plate and its land taken as they are (the same there to a hair; its
+		 * land anew near a coast), the rest made again. Not its erosion: of ridges of a kilometre, it is other 300 m away.
+		 */
+		function raise (p, finest, near) {
+			var tectonic = near ? near.Tectonic : plate(p);
+			/* Near a coast its land anew: the sea a few hundred metres off is not land there. */
+			var land = near && near.Land > 0.2 ? near.Land : continent(p, tectonic);
 			var meet = Math.exp(-Math.abs(tectonic.Boundary) / 180);
 			var ridged = folds.At(p[0] * 9, p[1] * 9, p[2] * 9);
 			var height;
@@ -386,7 +414,7 @@ Elemenx.Service('ScenePlanet', {
 			if (land > 0) {
 				var coast = smoothstep(0, 0.12, land);
 				var lift = uplift.At(p[0] * 2.2, p[1] * 2.2, p[2] * 2.2);
-				var chains = smoothstep(0.5, 0.8, lift) + meet * Math.max(0, tectonic.Push) * 1.2;
+				var chains = smoothstep(0.5 + (0.5 - mountains) * 0.4, 0.8 + (0.5 - mountains) * 0.4, lift) + meet * Math.max(0, tectonic.Push) * 1.2;
 				var risen;
 				var rough;
 				var small = finest === undefined ? 0 : finest;
@@ -397,8 +425,29 @@ Elemenx.Service('ScenePlanet', {
 				height = 15 + Math.pow(Math.min(1.5, land), 1.1) * 780 + smoothstep(0.42, 0.8, lift) * 900 * coast;
 
 				/* The ranges: sharp crests and their spurs, where the land is lifted and where plates close. */
+				/*
+				 * Regression: crests of a ridged noise to its power 2.6 times 0.55 of the relief were broad swells under 5 km,
+				 * no peak: sharper and higher now, and peaks of their own over the crests (8 to 9 km where plates close).
+				 */
 				risen = ranges.At(p[0] * 14, p[1] * 14, p[2] * 14);
-				height += Math.pow(risen, 2.6) * relief * 0.55 * chains;
+				height += Math.pow(risen, 2.2) * relief * (0.3 + 0.5 * mountains) * chains;
+				height += Math.pow(peaks.At(p[0] * 48, p[1] * 48, p[2] * 48), 3) * relief * 0.3 * (0.5 + mountains) * chains * smoothstep(0.3, 0.7, risen);
+
+				/*
+				 * Regression: between ranges of 450 km and bumps of a kilometre nothing: no ridge nor valley of a range, a plateau
+				 * of an egg crate. Ridges of 40 km down to a few, sharp, kilometres high in the chains.
+				 */
+				var ridge = 0;
+
+				if (small < 40) {
+					ridge = aretes(p);
+					height += (ridge - 0.3) * relief * 0.45 * (0.5 + mountains) * Math.min(1, chains * 1.5);
+
+					/* Horns where the crests are high: pyramids of rock over the aretes. */
+					if (ridge > 0.35)
+						height += Math.pow(horns.At(p[0] * 300, p[1] * 300, p[2] * 300), 2.5) * relief * 0.1 * (0.5 + mountains) * Math.min(1, chains * 1.5) * smoothstep(0.35, 0.75, ridge);
+				}
+
 				height += Math.max(0, tectonic.Push) * meet * relief * 0.35 * (0.4 + ridged * 0.6);
 				height -= Math.max(0, -tectonic.Push) * meet * 900;
 				height += painted(p, 'mountains', function (stroke) {
@@ -431,18 +480,72 @@ Elemenx.Service('ScenePlanet', {
 
 				rough = Math.max(0.06 + hilly * 0.5, Math.min(1, height / 3200 + chains * 0.5));
 
+				/*
+				 * Erosion, as water carves a range: the slope of its ranges here (of two more samples of them, 3 km east and north),
+				 * the hills and the grain worn away where it is steep, and gullies drawn out down the slope, spurs between them
+				 * (a ridged noise stretched along the way down). Regression: hills and crags the same every way, an egg crate of
+				 * bumps of a kilometre or two over the ranges, no ridge, no valley.
+				 */
+				var steep = 0;
+				var down = null;
+
+				if (chains > 0.02 && small < 20) {
+					var step = 3 / radius;
+					var east = normalize(Math.abs(p[1]) > 0.999 ? [1, 0, 0] : [p[2], 0, -p[0]]);
+					var north = cross(p, east);
+					var lift2 = relief * (0.3 + 0.5 * mountains) * chains;
+					var here = Math.pow(risen, 2.2);
+					var sharp = relief * 0.45 * (0.5 + mountains) * Math.min(1, chains * 1.5);
+					var pe = [p[0] + east[0] * step, p[1] + east[1] * step, p[2] + east[2] * step];
+					var pn = [p[0] + north[0] * step, p[1] + north[1] * step, p[2] + north[2] * step];
+					/* The slope of the ranges and of their ridges. */
+					var ge = ((Math.pow(ranges.At(pe[0] * 14, pe[1] * 14, pe[2] * 14), 2.2) - here) * lift2 + (aretes(pe) - ridge) * sharp) / 3000;
+					var gn = ((Math.pow(ranges.At(pn[0] * 14, pn[1] * 14, pn[2] * 14), 2.2) - here) * lift2 + (aretes(pn) - ridge) * sharp) / 3000;
+
+					steep = Math.sqrt(ge * ge + gn * gn);
+
+					if (steep > 1e-6)
+						down = [-(east[0] * ge + north[0] * gn) / steep, -(east[1] * ge + north[1] * gn) / steep, -(east[2] * ge + north[2] * gn) / steep];
+				}
+
+				var worn = 1 / (1 + steep * steep * 8);
+
 				if (small < 20) {
 					var wide = radius / 40;
 
-					height += (hills.At(p[0] * wide, p[1] * wide, p[2] * wide) - 0.5) * 2 * (40 + 700 * rough) * coast;
+					height += (hills.At(p[0] * wide, p[1] * wide, p[2] * wide) - 0.5) * 2 * (40 + 700 * rough) * coast * worn;
+				}
+
+				/* Gullies and spurs down the slope, of a few kilometres. */
+				if (down && small < 3) {
+					var gully = radius / 3;
+					var x = [p[0] * gully, p[1] * gully, p[2] * gully];
+					var along = (x[0] * down[0] + x[1] * down[1] + x[2] * down[2]) * 0.75;
+
+					height += (crags.At(x[0] - down[0] * along + 17, x[1] - down[1] * along, x[2] - down[2] * along) - 0.55) * Math.min(1, steep * 3) * (300 + Math.max(0, height) * 0.08) * Math.min(1, chains * 2);
 				}
 
 				if (small < 1) {
 					var close = radius / 1.2;
 					var rugged = Math.max(0, Math.min(1, (height - 600) / 2400));
 
-					height += (grain.At(p[0] * close, p[1] * close, p[2] * close) - 0.5) * 2 * (6 + 220 * rough) * coast;
-					height += (crags.At(p[0] * close * 0.6, p[1] * close * 0.6, p[2] * close * 0.6) - 0.45) * rugged * (180 + height * 0.12);
+					/* In the ranges the grain is little (the gullies are their detail): bumps of a kilometre all over buried their ridges. */
+					height += (grain.At(p[0] * close, p[1] * close, p[2] * close) - 0.5) * 2 * (6 + 220 * rough) * coast * (0.4 + 0.6 * worn) * (1 - 0.7 * Math.min(1, chains * 2));
+					/* Crags in the ranges; a high plateau smoother (an egg crate of bumps of most of a kilometre all over it was). */
+					height += (crags.At(p[0] * close * 0.6, p[1] * close * 0.6, p[2] * close * 0.6) - 0.45) * rugged * (180 + height * 0.12) * (0.4 + 0.6 * worn) * Math.min(1, 0.15 + chains * 2);
+				}
+
+				/*
+				 * Strata of the rock (the Dolomites): in the high ranges the slopes in benches and walls of some 250 m, sheer cliffs
+				 * between flat ledges, as much as the ranges hold there.
+				 */
+				if (small < 3 && chains > 0.05 && height > 1500) {
+					var layer = 250;
+					var k2 = height / layer;
+					var f2 = k2 - Math.floor(k2);
+					var stepped = (Math.floor(k2) + f2 * f2 * f2 * (f2 * (f2 * 6 - 15) + 10)) * layer;
+
+					height += (stepped - height) * 0.55 * Math.min(1, chains * 2) * Math.min(1, (height - 1500) / 1000);
 				}
 
 				height = Math.max(1, carved(p, height));
@@ -587,6 +690,10 @@ Elemenx.Service('ScenePlanet', {
 		function sample (direction, finest) {
 			var p = normalize(direction);
 			var raised = raise(p, finest);
+
+			if (finest === undefined)
+				last = {P: p, Raised: raised};
+
 			var tectonic = raised.Tectonic;
 			var land = raised.Land;
 			var height = raised.Height;
@@ -648,8 +755,11 @@ Elemenx.Service('ScenePlanet', {
 					biome = self.$Service('SceneTerrainGenerator').BiomeOf(biomes, height / relief, moisture, Math.max(0, Math.min(1, (celsius + 25) / 60))).List[0].Name;
 			}
 
-			return {Elevation: height, Land: height > 0, Plate: {ID: tectonic.ID, Oceanic: tectonic.Oceanic, Boundary: tectonic.Boundary, Push: tectonic.Push}, Wind: wind, Celsius: celsius, Temperature: Math.max(0, Math.min(1, (celsius + 25) / 60)), Moisture: moisture, Biome: biome};
+			return {Direction: p, Elevation: height, Land: height > 0, Plate: {ID: tectonic.ID, Oceanic: tectonic.Oceanic, Boundary: tectonic.Boundary, Push: tectonic.Push}, Wind: wind, Celsius: celsius, Temperature: Math.max(0, Math.min(1, (celsius + 25) / 60)), Moisture: moisture, Biome: biome};
 		}
+
+		/* The last point sampled whole, for its slope after (Slope). */
+		var last = null;
 
 		planet = {
 			Options: given,
@@ -661,6 +771,27 @@ Elemenx.Service('ScenePlanet', {
 			/* finest: km, the finest that is asked (all by default): a globe of a few hundred texels a side asks for no hills. */
 			Elevation: function (direction, finest) {
 				return raise(normalize(direction), finest).Height;
+			},
+
+			/*
+			 * How steep the ground of a point is, rise over run, of its heights reach km (0.3) east and north of it; 0 over the
+			 * sea. Of the point sampled last when it is that one (Sample); the two heights beside of its plate and land, the same
+			 * as two whole heights to a hair (Regression: two whole heights a texel were half the time of a picture of a square).
+			 */
+			Slope: function (direction, reach) {
+				var p = normalize(direction);
+				var centre = last && last.P[0] === p[0] && last.P[1] === p[1] && last.P[2] === p[2] ? last.Raised : raise(p);
+				var axes = frame(p);
+				var far = (reach || 0.3) / radius;
+				var east;
+				var north;
+
+				if (centre.Height <= 0) return 0;
+
+				east = raise(normalize([p[0] + axes.East[0] * far, p[1] + axes.East[1] * far, p[2] + axes.East[2] * far]), undefined, centre).Height;
+				north = raise(normalize([p[0] + axes.North[0] * far, p[1] + axes.North[1] * far, p[2] + axes.North[2] * far]), undefined, centre).Height;
+
+				return Math.sqrt(Math.pow(east - centre.Height, 2) + Math.pow(north - centre.Height, 2)) / ((reach || 0.3) * 1000);
 			},
 
 			Land: function (direction) {
@@ -789,6 +920,51 @@ Elemenx.Service('ScenePlanet', {
 	 * and its height, snow where it is cold), plates (a color each, red where they close, blue where they part), wind (the
 	 * relief, dimmer), temperature, moisture and biomes (their colors alone). light: how the slope faces the light, 0 to 1.
 	 */
+	/*
+	 * How much of a point (a sample of a planet, its Direction in it) is a desert: Dry (dry and warm, 0 to 1; none where it
+	 * is cold), Erg (of it, a sand sea: dunes) and Stone (a dark stony plateau between them), by a noise of the place of
+	 * tens of kilometres; the same for its globe (Color) and for the picture of a square of it (PatchPicture).
+	 */
+	Arid: function (sample, radius) {
+		var p = sample.Direction;
+		var dry;
+		var erg;
+		var k = (radius || 6371);
+
+		function smooth (a, b, x) {
+			var t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+
+			return t * t * (3 - 2 * t);
+		}
+
+		dry = sample.Land && p ? smooth(0.3, 0.1, sample.Moisture) * smooth(4, 14, sample.Celsius) : 0;
+
+		if (!dry)
+			return {Dry: 0, Erg: 0, Stone: 0};
+
+		this.Ergs = this.Ergs || this.$Service('Noise').Make({Type: 'simplex', Seed: 'ergs', Fractal: 'fbm', Octaves: 3});
+		erg = smooth(0.45, 0.62, this.Ergs.At(p[0] * k / 90, p[1] * k / 90, p[2] * k / 90));
+
+		return {Dry: dry, Erg: erg, Stone: (1 - erg) * smooth(0.5, 0.35, this.Ergs.At(p[0] * k / 30 + 7, p[1] * k / 30, p[2] * k / 30))};
+	},
+
+	/*
+	 * The look of the land of a desert and of a basin (Arid): orange sand seas, dark stony plateaus, a salt flat white in a
+	 * dry basin (its floor at the least height of land, 1 m: basin 1), damp 0 to 1; the water of a wet one is its caller's.
+	 */
+	Desert: function (color, arid, basin, damp) {
+		function mix (a, b, t) {
+			return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+		}
+
+		color = mix(color, [0.84, 0.66, 0.42], arid.Dry * arid.Erg * 0.8);
+		color = mix(color, [0.44, 0.35, 0.27], arid.Dry * arid.Stone * 0.55);
+		/* A wet basin a marsh: dark, its water between the reeds (of its caller). */
+		color = mix(color, [0.2, 0.24, 0.15], basin * damp * 0.6);
+
+		return mix(color, [0.9, 0.87, 0.8], basin * (1 - damp) * 0.85);
+	},
+
 	Color: function (planet, sample, overlay, light) {
 		var lands = planet.Lands || [];
 		var shade = 0.6 + 0.4 * (light === undefined ? 1 : light);
@@ -846,14 +1022,32 @@ Elemenx.Service('ScenePlanet', {
 		else {
 			if (sample.Land) {
 				color = biome();
+
+				/* Its deserts and basins (of the picture of a square its own: Pictured); a wet basin a lake. */
+				if (!sample.Pictured) {
+					var basin = Math.max(0, Math.min(1, (6 - sample.Elevation) / 5));
+					var damp = Math.max(0, Math.min(1, (sample.Moisture - 0.3) / 0.25));
+
+					color = this.Desert(color, this.Arid(sample, planet.Radius), basin * basin * (3 - 2 * basin), damp);
+				}
+
 				t = Math.min(1, sample.Elevation / 4500);
 				color = [color[0] + (0.5 - color[0]) * t * 0.7, color[1] + (0.45 - color[1]) * t * 0.7, color[2] + (0.4 - color[2]) * t * 0.7];
 
-				if (sample.Celsius < -6)
-					color = [0.92, 0.94, 0.97];
+				/*
+				 * High, bare rock grey and brown; snow coming in as it gets colder, never all of it (the rock of the slopes shows).
+				 * Regression: all colder than -6 degrees one white, the ranges a flat field of snow from orbit.
+				 */
+				t = Math.max(0, Math.min(1, (sample.Elevation - 1800) / 2400));
+				t = t * t * (3 - 2 * t) * 0.75;
+				color = [color[0] + (0.38 - color[0]) * t, color[1] + (0.34 - color[1]) * t, color[2] + (0.3 - color[2]) * t];
+				t = Math.max(0, Math.min(1, (-5 - sample.Celsius) / 8));
+				t = t * t * (3 - 2 * t) * 0.85;
+				color = [color[0] + (0.92 - color[0]) * t, color[1] + (0.94 - color[1]) * t, color[2] + (0.97 - color[2]) * t];
 			}
 			else {
-				color = ramp([[-7000, 0.03, 0.08, 0.25], [-2000, 0.06, 0.2, 0.45], [-200, 0.15, 0.42, 0.62], [0, 0.3, 0.6, 0.7]], sample.Elevation);
+				/* Regression: the deep sea was of many blues, patches of camouflage from orbit; as the Earth, one dark blue, lighter only on its shelves. */
+				color = ramp([[-7000, 0.03, 0.09, 0.27], [-2000, 0.04, 0.12, 0.32], [-200, 0.1, 0.3, 0.52], [0, 0.3, 0.6, 0.7]], sample.Elevation);
 
 				if (sample.Celsius < -12)
 					color = [0.85, 0.9, 0.95];
@@ -1561,8 +1755,26 @@ Elemenx.Service('ScenePlanet', {
 		var first = row || 0;
 		var count = Math.min(size - first, rows || size);
 		var data = new Uint8ClampedArray(size * count * 4);
+		/* How its ground leans (Relief): the way and how much, in the frame of the body, 0.5 + 2.5 times, of its heights a texel across. */
+		var relief = new Uint8ClampedArray(size * count * 4);
+		var finest = Math.PI / 2 * planet.Radius / size;
+		/* The heights of its texels and of one more column and row round them, metres (at: of x and y from -1). */
+		var heights = new Float32Array((size + 2) * (count + 2));
 		var x;
 		var y;
+
+		function toward (a, b) {
+			var way = face === 0 ? [1, -b, -a] : face === 1 ? [-1, -b, a] : face === 2 ? [a, 1, b] : face === 3 ? [a, -1, -b] : face === 4 ? [a, -b, 1] : [-a, -b, -1];
+			var length = Math.sqrt(way[0] * way[0] + way[1] * way[1] + way[2] * way[2]);
+
+			return [way[0] / length, way[1] / length, way[2] / length];
+		}
+
+		function point (direction, height) {
+			var r = planet.Radius + Math.max(0, height) / 1000;
+
+			return [direction[0] * r, direction[1] * r, direction[2] * r];
+		}
 
 		for (y = 0; y < count; y++) {
 			for (x = 0; x < size; x++) {
@@ -1587,10 +1799,57 @@ Elemenx.Service('ScenePlanet', {
 				data[at + 1] = color[1] * 255;
 				data[at + 2] = color[2] * 255;
 				data[at + 3] = sample.Land || sample.Celsius < -12 ? 10 : 204;
+
+				heights[(y + 1) * (size + 2) + x + 1] = sample.Elevation;
 			}
 		}
 
-		return {Data: data, Face: face, Row: first, Rows: count};
+		/* The heights of the texels round the strip: the next ones of the face (beyond its edge, the cube goes on). */
+		for (y = -1; y <= count; y++) {
+			for (x = -1; x <= size; x++) {
+				if (y >= 0 && y < count && x >= 0 && x < size) continue;
+
+				heights[(y + 1) * (size + 2) + x + 1] = planet.Elevation(toward(-1 + (x + 0.5) * 2 / size, -1 + (first + y + 0.5) * 2 / size), finest);
+			}
+		}
+
+		/*
+		 * Its slope between the texels on each side: what the globe lights its ranges by from orbit (the sea level). Of the
+		 * heights its colors were made of. Regression: two more heights a texel for it, the globes of all scenes half as slow again.
+		 */
+		for (y = 0; y < count; y++) {
+			for (x = 0; x < size; x++) {
+				var at = (y * size + x) * 4;
+				var a = -1 + (x + 0.5) * 2 / size;
+				var b = -1 + (first + y + 0.5) * 2 / size;
+				var here = toward(a, b);
+				var o = (y + 1) * (size + 2) + x + 1;
+				var pa = point(toward(a + 2 / size, b), heights[o + 1]);
+				var pm = point(toward(a - 2 / size, b), heights[o - 1]);
+				var pb = point(toward(a, b + 2 / size), heights[o + size + 2]);
+				var pn = point(toward(a, b - 2 / size), heights[o - size - 2]);
+				var ea = [pa[0] - pm[0], pa[1] - pm[1], pa[2] - pm[2]];
+				var eb = [pb[0] - pn[0], pb[1] - pn[1], pb[2] - pn[2]];
+				var n = [ea[1] * eb[2] - ea[2] * eb[1], ea[2] * eb[0] - ea[0] * eb[2], ea[0] * eb[1] - ea[1] * eb[0]];
+				var nl = Math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]) || 1;
+				var up = (n[0] * here[0] + n[1] * here[1] + n[2] * here[2]) / nl;
+				var sign = up < 0 ? -1 : 1;
+
+				n = [n[0] / nl * sign, n[1] / nl * sign, n[2] / nl * sign];
+				up = Math.abs(up);
+
+				/* The sea is level. */
+				if (heights[o] <= 0)
+					n = [here[0] * up, here[1] * up, here[2] * up];
+
+				relief[at] = (0.5 + (n[0] - here[0] * up) * 2.5) * 255;
+				relief[at + 1] = (0.5 + (n[1] - here[1] * up) * 2.5) * 255;
+				relief[at + 2] = (0.5 + (n[2] - here[2] * up) * 2.5) * 255;
+				relief[at + 3] = 255;
+			}
+		}
+
+		return {Data: data, Relief: relief, Face: face, Row: first, Rows: count};
 	},
 
 	/*
@@ -2137,7 +2396,7 @@ Elemenx.Service('ScenePlanet', {
 		var field;
 
 		if (!given.BiomeList)
-			given.BiomeList = terrain.Biomes({Biomes: given.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp']});
+			given.BiomeList = terrain.Biomes({Biomes: given.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe']});
 
 		planet = this.Planet(given);
 
@@ -2240,6 +2499,8 @@ Elemenx.Service('ScenePlanet', {
 		var heights = new Float32Array(side * side);
 		var points = new Array(side * side);
 		var samples = new Array(n * n);
+		/* The slope of each texel (Slope of the planet, of 300 metres), right after its sample: of what that raised. */
+		var slopes = new Float32Array(n * n);
 		var color = new Uint8Array(n * n * 4);
 		var normal = new Uint8Array(n * n * 4);
 		/* Where people live (Use, RGBA bytes): how much of it is fields, how much houses, and of what settlement (a city 255, a town 170, a village 85). */
@@ -2274,6 +2535,7 @@ Elemenx.Service('ScenePlanet', {
 				if (i >= 0 && k >= 0 && i < n && k < n) {
 					samples[k * n + i] = planet.Sample(direction);
 					heights[at] = samples[k * n + i].Elevation;
+					slopes[k * n + i] = planet.Slope(direction, 0.3);
 				}
 				else {
 					heights[at] = planet.Elevation(direction);
@@ -2314,7 +2576,8 @@ Elemenx.Service('ScenePlanet', {
 				bare *= 1 - Math.max(0, Math.min(1, part));
 			});
 
-			return (1 - bare) * (1 - smooth(-3, -9, sample.Celsius));
+			/* The tree line: no woods where the year is colder than 0 degrees on the mean (they thin out from 5). */
+			return (1 - bare) * (1 - smooth(5, 0, sample.Celsius));
 		}
 
 		function lifted (at) {
@@ -2421,11 +2684,20 @@ Elemenx.Service('ScenePlanet', {
 				 * Regression: its slope of its own texels made a square of rock and woods other than the finer one beside (its
 				 * texels farther apart see the ground gentler), a straight edge across them: of 300 metres at any size.
 				 */
-				var east = unit([points[at + 1][0] - points[at - 1][0], points[at + 1][1] - points[at - 1][1], points[at + 1][2] - points[at - 1][2]]);
-				var south = unit([points[at + side][0] - points[at - side][0], points[at + side][1] - points[at - side][1], points[at + side][2] - points[at - side][2]]);
-				var reach = 0.3 / field.Radius;
-				var slope = height <= 0 ? 0 : Math.sqrt(Math.pow(planet.Elevation([up[0] + east[0] * reach, up[1] + east[1] * reach, up[2] + east[2] * reach]) - height, 2) + Math.pow(planet.Elevation([up[0] + south[0] * reach, up[1] + south[1] * reach, up[2] + south[2] * reach]) - height, 2)) / 300;
-				var water = Math.max(0, Math.min(1, 0.5 - height / Math.max(1, rise)));
+				var slope = slopes[k * n + i];
+				/*
+				 * The sea by the coast only: the land beside it tilts into it. Regression: a basin of the land (its ground no
+				 * lower than 1 m) had water round its rim by the same rule, steep there, and none in it: rings of water.
+				 */
+				var coast = height <= 0 || heights[at + 1] <= 0 || heights[at - 1] <= 0 || heights[at + side] <= 0 || heights[at - side] <= 0;
+				var water = coast ? Math.max(0, Math.min(1, 0.5 - height / Math.max(1, rise))) : 0;
+				/* A basin of the land, its floor at the least height of land (1 m, its rim to 6): a marsh where it is wet, a salt flat where it is dry. */
+				var basin = sample.Land && !coast ? smooth(6, 1, height) : 0;
+				var damp = smooth(0.3, 0.55, sample.Moisture);
+				/* How dry and warm: sand seas and stony plateaus where it is a desert (none where it is cold). */
+				var arid = self.Arid(sample, field.Radius);
+				/* Rock on the steep: steeper where it is wet and warm (woods hold to a slope there), less where it is dry or cold. */
+				var green = smooth(0.35, 0.7, sample.Moisture) * smooth(2, 16, sample.Celsius);
 				var a = lifted(at + 1);
 				var b = lifted(at - 1);
 				var c = lifted(at + side);
@@ -2449,8 +2721,19 @@ Elemenx.Service('ScenePlanet', {
 					made = up;
 
 				/* Its land: of its biome and height, rock where it is steep, snow where it is cold and not too steep. */
-				land = self.Color(planet, Object.assign({}, sample, {Land: true, Elevation: Math.max(0, height), Celsius: 20}), 'relief', 1);
-				land = mix(land, [0.42, 0.39, 0.35], smooth(0.18, 0.55, slope) * 0.75);
+				land = self.Color(planet, Object.assign({}, sample, {Land: true, Elevation: Math.max(0, height), Celsius: 20, Pictured: true}), 'relief', 1);
+				/*
+				 * Over the tree line alpine meadow, green and brown; rock grey on the steep, more so the higher (the walls of a
+				 * range bare); snow below, only where it is not too steep.
+				 */
+				land = mix(land, [0.46, 0.47, 0.3], smooth(5, 0, sample.Celsius) * (1 - smooth(-4, -9, sample.Celsius)) * 0.6);
+				land = mix(land, [0.44, 0.42, 0.4], smooth(0.15 + 0.6 * green, 0.45 + 0.75 * green, slope) * (0.75 + 0.2 * smooth(1500, 3500, height)));
+				/*
+				 * Its deserts: sand seas, orange, where the noise of their tens of kilometres is high (dunes on them drawn by the
+				 * shader, of Use), dark stony plateaus between; dry basins white with salt, wet ones water.
+				 */
+				land = self.Desert(land, arid, basin, damp);
+				water = Math.max(water, basin * damp * 0.55);
 				land = mix(land, [0.92, 0.94, 0.97], smooth(-3, -9, sample.Celsius) * (1 - smooth(0.45, 0.9, slope)));
 
 				/* Its fields and houses: their mean here, each parcel and house drawn by the shader (of Use). */
@@ -2459,7 +2742,7 @@ Elemenx.Service('ScenePlanet', {
 				land = mix(land, roofsMean[used.Kind], used.Built);
 
 				/* Its sea: by its depth (a coast of land by the shallows), ice where it is colder still. */
-				sea = self.Color(planet, Object.assign({}, sample, {Land: false, Elevation: Math.min(-1, height), Celsius: 20}), 'relief', 1);
+				sea = self.Color(planet, Object.assign({}, sample, {Land: false, Elevation: Math.min(-1, height), Celsius: 20, Pictured: true}), 'relief', 1);
 				sea = mix(sea, [0.85, 0.9, 0.95], smooth(-10, -14, sample.Celsius));
 				paint = mix(land, sea, water);
 
@@ -2495,6 +2778,8 @@ Elemenx.Service('ScenePlanet', {
 				use[o] = Math.round(used.Farm * (1 - water) * 255);
 				use[o + 1] = Math.round(used.Built * (1 - water) * 255);
 				use[o + 2] = used.Kind === 'city' ? 255 : used.Kind === 'town' ? 170 : 85;
+				/* Its sand of dunes (the Ground shader draws them of it). */
+				use[o + 3] = Math.round(arid.Dry * arid.Erg * (1 - water) * (1 - used.Built) * 255);
 			}
 		}
 

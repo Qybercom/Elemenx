@@ -142,7 +142,7 @@ Elemenx.Component('PlanetEditor', {
 		var options = this.Options();
 		var terrain = this.$Service('SceneTerrainGenerator');
 
-		options.BiomeList = terrain.Biomes({Biomes: options.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp']});
+		options.BiomeList = terrain.Biomes({Biomes: options.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe']});
 
 		return options;
 	},

@@ -35,6 +35,82 @@ describe('Contract: Noise, the noise of space by any algorithm, the same in a sh
 		});
 	});
 
+	/*
+	 * Regression: simplex noise made arrays and a function at each point, half the time of the picture of a square of a
+	 * planet (some 650 ms each); made of none now, it must give the very numbers it gave, warped or not.
+	 */
+	it('gives the very numbers of simplex noise it gave before it made no arrays, warped and ridged as well', function () {
+		function simplexBefore (x, y, z) {
+			var G3 = 1 / 6;
+			var s = (x + y + z) * (1 / 3);
+			var i = Math.floor(x + s);
+			var j = Math.floor(y + s);
+			var k = Math.floor(z + s);
+			var t = (i + j + k) * G3;
+			var x0 = x - (i - t);
+			var y0 = y - (j - t);
+			var z0 = z - (k - t);
+			var total = 0;
+			var order = x0 >= y0 ? y0 >= z0 ? [1, 0, 0, 1, 1, 0] : x0 >= z0 ? [1, 0, 0, 1, 0, 1] : [0, 0, 1, 1, 0, 1] : y0 < z0 ? [0, 0, 1, 0, 1, 1] : x0 < z0 ? [0, 1, 0, 0, 1, 1] : [0, 1, 0, 1, 1, 0];
+
+			[[0, 0, 0, 0], [order[0], order[1], order[2], G3], [order[3], order[4], order[5], 2 * G3], [1, 1, 1, 3 * G3]].forEach(function (corner) {
+				var dx = x0 - corner[0] + corner[3];
+				var dy = y0 - corner[1] + corner[3];
+				var dz = z0 - corner[2] + corner[3];
+				var falloff = 0.6 - dx * dx - dy * dy - dz * dz;
+
+				if (falloff > 0) {
+					falloff *= falloff;
+					total += falloff * falloff * noise.Gradient(noise.Hash(i + corner[0], j + corner[1], k + corner[2]), dx, dy, dz);
+				}
+			});
+
+			return Math.max(0, Math.min(1, total * 16 + 0.5));
+		}
+
+		var ridged = noise.Make({Type: 'simplex', Seed: 'ranges', Fractal: 'ridged', Octaves: 7, Gain: 0.5, Warp: {Amount: 0.5, Scale: 0.4, Octaves: 2}});
+		var whole = noise.Whole({Type: 'simplex', Seed: 'ranges', Fractal: 'ridged', Octaves: 7, Gain: 0.5, Warp: {Amount: 0.5, Scale: 0.4, Octaves: 2}});
+		var made = [];
+
+		function octaves (x, y, z, count, fractal) {
+			var total = 0;
+			var amplitude = 0.5;
+			var weight = 0;
+			var octave;
+
+			for (octave = 0; octave < count; octave++) {
+				var n = simplexBefore(x, y, z);
+
+				if (fractal === 'ridged')
+					n = 1 - Math.abs(n * 2 - 1);
+
+				total += n * amplitude;
+				weight += amplitude;
+				x = x * whole.Lacunarity + whole.Shift[0];
+				y = y * whole.Lacunarity + whole.Shift[1];
+				z = z * whole.Lacunarity + whole.Shift[2];
+				amplitude *= whole.Gain;
+			}
+
+			return total / weight;
+		}
+
+		points(2000, 40).concat(points(200, 0.7)).forEach(function (p) {
+			var q = [p[0] + whole.Seed, p[1] + whole.Seed, p[2] + whole.Seed];
+			var warp = [0, 1, 2].map(function (axis) {
+				return octaves(q[0] * 0.4 + axis * 5.2, q[1] * 0.4 + axis * 1.3, q[2] * 0.4 + axis * 2.8, 2, 'fbm');
+			});
+
+			expect(noise.Simplex(p[0], p[1], p[2])).toBe(simplexBefore(p[0], p[1], p[2]));
+			expect(ridged.At(p[0], p[1], p[2])).toBe(octaves(q[0] + (warp[0] * 2 - 1) * 0.5, q[1] + (warp[1] * 2 - 1) * 0.5, q[2] + (warp[2] * 2 - 1) * 0.5, 7, 'ridged'));
+
+			made.push(noise.Simplex(p[0], p[1], p[2]));
+		});
+
+		/* Not of one number: the noise varies. */
+		expect(Math.max.apply(Math, made) - Math.min.apply(Math, made)).toBeGreaterThan(0.5);
+	});
+
 	it('gives each type within 0 and 1, of its seed, smooth where it should be', function () {
 		noise.Types().forEach(function (type) {
 			var one = noise.Make({Type: type, Seed: 'a', Scale: 8});
@@ -120,7 +196,10 @@ describe('Contract: Noise, the noise of space by any algorithm, the same in a sh
 		expect(Math.abs(divergence)).toBeLessThan(0.05);
 	});
 
-	/* The same numbers in a shader: GLSL of a spec drawn to a float target, against At. */
+	/*
+	 * The same numbers in a shader: GLSL of a spec drawn to a float target, against At. Regression: under the load of the
+	 * whole suite (its shader compiled while other files bake planets) longer than the 15 s a test has: 90 s.
+	 */
 	it('writes a spec as a function of a shader that gives the same numbers as the page', function () {
 		var renderer = Elemenx.Service('Renderer').Create(document.createElement('canvas'), {Antialias: false});
 		var gl = renderer.GL;
@@ -174,5 +253,5 @@ describe('Contract: Noise, the noise of space by any algorithm, the same in a sh
 			/* A float of the card and a number of the page part only at the edge of a cell, now and then. */
 			expect(off).toBeLessThanOrEqual(spec.Type === 'worley' || spec.Type === 'white' ? 3 : 0);
 		});
-	});
+	}, 90000);
 });

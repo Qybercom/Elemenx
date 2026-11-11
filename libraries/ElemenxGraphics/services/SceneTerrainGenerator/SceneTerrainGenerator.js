@@ -253,7 +253,9 @@ Elemenx.Service('SceneTerrainGenerator', {
 				Grass: typeof entry === 'object' && entry.Grass !== undefined ? !!entry.Grass : known ? !!known.Grass : true,
 				/* What it sows (rules of Scatter): a planet draws its woods of them on its globe (ScenePlanet.PatchPicture). */
 				Scatter: typeof entry === 'object' && entry.Scatter || known && known.Scatter || [],
-				Climate: Array.isArray(climate) ? climate : [climate]
+				Climate: Array.isArray(climate) ? climate : [climate],
+				/* The lands it takes the place of where it holds (see BiomeOf). */
+				Over: typeof entry === 'object' && entry.Over || known && known.Over || null
 			};
 		});
 
@@ -317,6 +319,30 @@ Elemenx.Service('SceneTerrainGenerator', {
 		if (!found.length)
 			return {List: nearest ? [{Name: nearest.Name, Ground: nearest.Ground, Weight: 1}] : [], Gap: true};
 
+		/*
+		 * A land that takes the place of others where it holds (Over: their names: a rainforest where a swamp, a temperate
+		 * wood or a savanna would be): theirs less by as much as it holds. Without it in the list, they are as they were.
+		 */
+		list.forEach(function (biome) {
+			var over = biome.Over;
+			var holds = found.filter(function (one) {
+				return one.Name === biome.Name;
+			})[0];
+			if (!holds || !Array.isArray(over)) return;
+
+			found.forEach(function (one) {
+				if (over.indexOf(one.Name) >= 0)
+					one.Weight *= 1 - Math.min(1, holds.Weight);
+			});
+		});
+
+		found = found.filter(function (one) {
+			return one.Weight > 1e-6;
+		});
+		sum = found.reduce(function (total, one) {
+			return total + one.Weight;
+		}, 0);
+
 		found.forEach(function (biome) {
 			biome.Weight /= sum;
 		});
@@ -345,7 +371,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var turn = (Number(given.Turn) || 0) * Math.PI / 180;
 
 		if (!options.BiomeList)
-			options.BiomeList = this.Biomes({Biomes: options.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp']});
+			options.BiomeList = this.Biomes({Biomes: options.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe']});
 
 		planet = planets.Planet(options);
 		radius = planet.Radius * 1000;

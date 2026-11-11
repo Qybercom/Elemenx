@@ -151,6 +151,75 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 		expect(whole.Data[at + 3]).toBe(sample.Land || sample.Celsius < -12 ? 10 : 204);
 	});
 
+	/*
+	 * Regression: from orbit its ranges were flat, lit by the sphere alone. A face gives how its ground leans as well
+	 * (Relief): none over the sea, down the slope on its land, more in its ranges; the same in a worker.
+	 */
+	it('gives how the ground of a face leans: level over the sea, down its slopes on land, the same in a worker', async function () {
+		var options = {Seed: 'terra', Ocean: 0.55, Radius: 6371};
+		var planet = planets.Planet(options);
+		/* As a scene paints its globe: 256 texels a side. */
+		var size = 256;
+		var most = 0;
+		var downhill = 0;
+		var checked = 0;
+		var face;
+
+		for (face = 0; face < 6; face++) {
+			var made = planets.Face(options, face, size, 120, 16);
+			var k;
+
+			expect(made.Relief.length).toBe(size * 16 * 4);
+
+			for (k = 0; k < size * 16; k += 7) {
+				var x = k % size;
+				var y = 120 + Math.floor(k / size);
+				var a = -1 + (x + 0.5) * 2 / size;
+				var b = -1 + (y + 0.5) * 2 / size;
+				var way = face === 0 ? [1, -b, -a] : face === 1 ? [-1, -b, a] : face === 2 ? [a, 1, b] : face === 3 ? [a, -1, -b] : face === 4 ? [a, -b, 1] : [-a, -b, -1];
+				var length = Math.hypot(way[0], way[1], way[2]);
+				var p = [way[0] / length, way[1] / length, way[2] / length];
+				var lean = [0, 1, 2].map(function (i) {
+					return (made.Relief[k * 4 + i] / 255 - 0.5) / 2.5;
+				});
+				var tilt = Math.hypot(lean[0], lean[1], lean[2]);
+				var sample = planet.Sample(p, Math.PI / 2 * 6371 / size);
+
+				if (!sample.Land) {
+					expect(tilt).toBeLessThan(0.01);
+
+					continue;
+				}
+
+				most = Math.max(most, tilt);
+
+				/* Down the slope: a step along the lean lower than a step against it. */
+				if (tilt > 0.02) {
+					var step = 20 / 6371;
+					var ahead = planet.Elevation([p[0] + lean[0] / tilt * step, p[1] + lean[1] / tilt * step, p[2] + lean[2] / tilt * step], 40);
+					var back = planet.Elevation([p[0] - lean[0] / tilt * step, p[1] - lean[1] / tilt * step, p[2] - lean[2] / tilt * step], 40);
+
+					checked++;
+
+					if (ahead < back)
+						downhill++;
+				}
+			}
+		}
+
+		var there = await new Promise(function (done, failed) {
+			planets.Work().Run('ScenePlanet', 'Face', [options, 2, size, 120, 4], function (error, made) {
+				if (error) failed(error);
+				else done(made);
+			});
+		});
+
+		expect(Array.from(there.Relief)).toEqual(Array.from(planets.Face(options, 2, size, 120, 4).Relief));
+		expect(most).toBeGreaterThan(0.05);
+		expect(checked).toBeGreaterThan(5);
+		expect(downhill / checked).toBeGreaterThan(0.75);
+	}, 120000);
+
 	it('paints a piece of a globe in a worker byte for byte as in the page, and turns a pixel into a direction and back', async function () {
 		var options = {Seed: 'picture', BiomeList: Elemenx.Service('SceneTerrainGenerator').Biomes({Biomes: ['temperate', 'desert', 'tundra']})};
 		var view = {Yaw: 0.4, Pitch: 0.3, Zoom: 1.2, Width: 64, Height: 48};
@@ -547,6 +616,89 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 	}, 120000);
 
 	/*
+	 * How mountainous it is (Mountains, 0 to 1): the more, the more of its land high in ranges; as the Earth (0.5) its peaks
+	 * reach over 6.5 km. Regression: crests under 5 km, broad swells, no peak.
+	 */
+	it('raises more ranges the more mountainous it is, and peaks of many kilometres', function () {
+		var points = spread(6000);
+
+		function high (mountains) {
+			var planet = planets.Planet({Seed: 'terra', Ocean: 0.55, Radius: 6371, Mountains: mountains});
+			var count = 0;
+			var most = 0;
+
+			points.forEach(function (p) {
+				var height = planet.Elevation(p, 20);
+
+				most = Math.max(most, height);
+
+				if (height > 2500)
+					count++;
+			});
+
+			return {Count: count, Most: most};
+		}
+
+		var flat = high(0);
+		var earth = high(0.5);
+		var rugged = high(1);
+
+		expect(flat.Count).toBeLessThan(earth.Count);
+		expect(earth.Count).toBeLessThan(rugged.Count);
+		expect(earth.Most).toBeGreaterThan(6500);
+	}, 120000);
+
+	/*
+	 * How steep its ground is (Slope, rise over run of 300 m): what the picture of a square paints rock by, of its plate,
+	 * land and erosion of the point itself, the same as two whole heights east and north tell. Regression: those two whole
+	 * heights a texel were half the time of a picture (some 650 ms), half of a view from 300 km coarse for most of a minute.
+	 */
+	it('tells how steep its ground is as its heights 300 m apart do, none over the sea, the point sampled before kept', function () {
+		var planet = planets.Planet({Seed: 'terra', Ocean: 0.55, Radius: 6371});
+		var steep = [];
+		var seas = 0;
+
+		spread(4000).forEach(function (p) {
+			var sample = planet.Sample(p);
+			var slope = planet.Slope(p, 0.3);
+			var length = Math.hypot(p[0], p[1], p[2]);
+			var q = [p[0] / length, p[1] / length, p[2] / length];
+			var east = Math.abs(q[1]) > 0.9999 ? [0, 0, -1] : [q[2], 0, -q[0]];
+			var e = Math.hypot(east[0], east[1], east[2]);
+			var north;
+			var far = 0.3 / 6371;
+			var honest;
+
+			east = [east[0] / e, east[1] / e, east[2] / e];
+			north = [q[1] * east[2] - q[2] * east[1], q[2] * east[0] - q[0] * east[2], q[0] * east[1] - q[1] * east[0]];
+
+			if (!sample.Land) {
+				expect(slope).toBe(0);
+
+				seas++;
+
+				return;
+			}
+
+			honest = Math.hypot(planet.Elevation([q[0] + east[0] * far, q[1] + east[1] * far, q[2] + east[2] * far]) - sample.Elevation, planet.Elevation([q[0] + north[0] * far, q[1] + north[1] * far, q[2] + north[2] * far]) - sample.Elevation) / 300;
+
+			/*
+			 * The same steepness to a little: what was kept of the point (its plate, its land) is the same 300 m away but for
+			 * the rise of a range along the border of its plate (some 15 m a km), far under where rock shows (0.15).
+			 */
+			expect(Math.abs(slope - honest)).toBeLessThan(0.03 + honest * 0.05);
+
+			/* Of the point asked anew, not the one sampled before: the same. */
+			expect(planet.Slope(p, 0.3)).toBeCloseTo(slope, 9);
+
+			steep.push(slope);
+		});
+
+		expect(seas).toBeGreaterThan(100);
+		expect(Math.max.apply(Math, steep)).toBeGreaterThan(0.3);
+	}, 120000);
+
+	/*
 	 * Its climate, what the weather of a scene is made of: a face of RGBA bytes, how wet (more at the equator than at 25
 	 * degrees), how warm (more at the equator than near a pole), its ground (0 the sea, land 64 and up) and how much its
 	 * wind climbs (somewhere on land, none on the sea).
@@ -703,6 +855,105 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 		expect(stream.Fine.Water).toBeGreaterThan(0);
 		expect(stream.Large.Water).toBeLessThan(stream.Fine.Water * 1.8 + 0.2);
 	}, 180000);
+
+	/*
+	 * Regression: a basin of its land (its ground no lower than 1 m) had water round its rim, where it is steep, by the rule
+	 * of a coast, and none in it: rings of water over the wet tropics and the deserts. The sea by the coast only now; a basin
+	 * (its floor 1 m, its rim to 6) a marsh where it is wet, a salt flat where it is dry; deserts of sand seas (their sand
+	 * for the dunes of the shader).
+	 */
+	it('has no water on its land away from the sea but in its wet basins, and sand seas in its hot deserts only', function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var field = terrain.Sphere({Planet: {Seed: 'terra', Ocean: 0.55, Radius: 6371}});
+		var planet = field.Planet;
+		var n = 16;
+		var stray = 0;
+		var basins = 0;
+		var lakes = 0;
+		var sand = 0;
+		var cold = 0;
+		var woody = 0;
+		var bare = 0;
+		var face;
+		var a;
+		var b;
+
+		function point (face, u, v) {
+			var d = terrain.Face(face, u, v);
+			var length = Math.hypot(d[0], d[1], d[2]);
+
+			return [d[0] / length, d[1] / length, d[2] / length];
+		}
+
+		for (face = 0; face < 6; face++) {
+			for (a = 0; a < 3; a++) {
+				for (b = 0; b < 3; b++) {
+					var cu = -2 / 3 + a * 2 / 3;
+					var cv = -2 / 3 + b * 2 / 3;
+					var extent = 2 / 3;
+					var step = extent / (n - 1);
+					var picture = field.Picture(face, cu, cv, extent, n);
+					var i;
+					var k;
+
+					for (k = 1; k < n - 1; k++) {
+						for (i = 1; i < n - 1; i++) {
+							var o = (k * n + i) * 4;
+							var u = cu - extent / 2 + i * step;
+							var v = cv - extent / 2 + k * step;
+							var sample = planet.Sample(point(face, u, v));
+							var near = [[step, 0], [-step, 0], [0, step], [0, -step]].map(function (by) {
+								return planet.Elevation(point(face, u + by[0], v + by[1]));
+							});
+							var inland = sample.Land && near.every(function (height) {
+								return height > 0;
+							});
+							if (inland && sample.Elevation > 6 && picture.Color[o + 3] > 8)
+								stray++;
+
+							if (inland && sample.Elevation <= 1.001) {
+								basins++;
+
+								if (picture.Color[o + 3] > 128)
+									lakes++;
+							}
+
+							/*
+							 * Regression: the slopes of the wet tropics grey with rock from 0.15 as everywhere (hills of forest
+							 * bare): there woods hold to a slope of 0.6 and more, bare rock only on cliffs.
+							 */
+							if (inland && sample.Moisture > 0.75 && sample.Celsius > 17 && sample.Celsius < 30) {
+								var slope = planet.Slope(point(face, u, v), 0.3);
+
+								if (slope > 0.3 && slope < 0.6) {
+									woody++;
+
+									/* Green: more green than red or blue by a twentieth; rock grey has as much of each. */
+									if (picture.Color[o + 1] - Math.max(picture.Color[o], picture.Color[o + 2]) < 13)
+										bare++;
+								}
+							}
+
+							if (picture.Use[o + 3] > 0) {
+								sand++;
+
+								if (sample.Celsius < 4)
+									cold++;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		expect(stray).toBe(0);
+		expect(basins).toBeGreaterThan(0);
+		expect(woody).toBeGreaterThan(2);
+		expect(bare / woody).toBeLessThan(0.1);
+		expect(lakes).toBeLessThan(basins);
+		expect(sand).toBeGreaterThan(0);
+		expect(cold).toBe(0);
+	}, 120000);
 
 	/*
 	 * Regression: near, a globe had the colors of the points of its squares alone (steps where biomes meet, blurred between,

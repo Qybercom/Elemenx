@@ -1687,6 +1687,9 @@ Elemenx.Component('Scene', {
 			if (made) {
 				made.Ground.Destroy();
 				made.Sky.Destroy();
+
+				if (made.Relief)
+					made.Relief.Destroy();
 			}
 
 			uniforms = {uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uWater: object.Look.Water, uOcean: object.Look.Ocean, uIce: object.Look.Ice, uClouds: object.Look.Clouds, uSeed: object.Seed};
@@ -1923,7 +1926,8 @@ Elemenx.Component('Scene', {
 
 				if (scene.Gone || scene.Baked[object.ID] !== made || renderer.Lost) return;
 
-				if (!faces || faces.length !== 6) {
+				/* Its colors and how its ground leans (Relief), six faces each; a globe kept without the second is painted again. */
+				if (!faces || faces.length !== 12) {
 					paintStrips(object, made, planet, size, strip, key);
 
 					return;
@@ -1937,6 +1941,11 @@ Elemenx.Component('Scene', {
 				made.Ground.Destroy();
 
 				made.Ground = cube;
+				made.Relief = renderer.Cube(size);
+
+				for (face = 0; face < 6; face++)
+					made.Relief.Write(face, faces[6 + face], 0, face === 5);
+
 				made.Painted = size;
 				made.Strips = 24;
 
@@ -2080,8 +2089,15 @@ Elemenx.Component('Scene', {
 				return;
 			}
 
-			/* Then a face a frame into the other cube, all six of one time (no seams), shown when all are made. */
+			/*
+			 * Then a face a frame into the other cube, all six of one time (no seams), shown when all are made; a new round only
+			 * when the time of the body went on a minute and half a second went by. Regression: a face of 256 baked in every frame
+			 * while the time ran, the card busy for nothing (the pages of other tests ran late).
+			 */
+			if (made.WeatherNext === undefined && (Math.abs(scene.Time - made.WeatherDays) < 1 / 1440 || performance.now() - (made.WeatherAt || 0) < 500)) return;
+
 			if (made.WeatherNext === undefined) {
+				made.WeatherAt = performance.now();
 				made.WeatherBack = made.WeatherBack || renderer.Cube(256);
 				made.WeatherNext = 0;
 				made.WeatherNextDays = scene.Time;
@@ -2134,8 +2150,12 @@ Elemenx.Component('Scene', {
 
 		function paintStrips (object, made, planet, size, strip, key) {
 			var cube = renderer.Cube(size);
+			var relief = renderer.Cube(size);
 			var left = 24;
 			var faces = [0, 1, 2, 3, 4, 5].map(function () {
+				return new Uint8Array(size * size * 4);
+			});
+			var leans = [0, 1, 2, 3, 4, 5].map(function () {
 				return new Uint8Array(size * size * 4);
 			});
 			var face;
@@ -2144,8 +2164,10 @@ Elemenx.Component('Scene', {
 			function done (face, row) {
 				return function (error, piece) {
 					if (scene.Baked[object.ID] !== made || renderer.Lost) {
-						if (!--left)
+						if (!--left) {
 							cube.Destroy();
+							relief.Destroy();
+						}
 
 						return;
 					}
@@ -2160,18 +2182,25 @@ Elemenx.Component('Scene', {
 						faces[face].set(piece.Data, row * size * 4);
 					}
 
+					if (!error && piece && piece.Relief) {
+						relief.Write(face, piece.Relief, row, !left);
+
+						leans[face].set(piece.Relief, row * size * 4);
+					}
+
 					if (left) return;
 
 					made.Ground.Destroy();
 
 					made.Ground = cube;
+					made.Relief = relief;
 					made.Painted = size;
 
 					paintLights(object, made, planet);
 
 					paintClimate(object, made, planet);
 
-					keepGlobe(key, faces);
+					keepGlobe(key, faces.concat(leans));
 				};
 			}
 
@@ -2186,7 +2215,8 @@ Elemenx.Component('Scene', {
 		 * sum of the source of ScenePlanet, so a globe of an older painter is never taken). None where there is no such store.
 		 */
 		function globeKey (planet, size) {
-			var source = String(planets.Make) + String(planets.Face) + String(planets.Color);
+			/* Arid and Desert: what Color paints deserts and basins by. */
+			var source = String(planets.Make) + String(planets.Face) + String(planets.Color) + String(planets.Arid) + String(planets.Desert);
 			var sum = 0;
 			var i;
 
@@ -2297,7 +2327,8 @@ Elemenx.Component('Scene', {
 					return;
 				}
 
-				faces = [0, 1, 2, 3, 4, 5].map(function () {
+				/* Its colors and how its ground leans, six faces each, as a scene keeps them (paintStrips). */
+				faces = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(function () {
 					return new Uint8Array(size * size * 4);
 				});
 
@@ -2305,6 +2336,9 @@ Elemenx.Component('Scene', {
 					return function (error, piece) {
 						if (!error && piece && piece.Data)
 							faces[face].set(piece.Data, row * size * 4);
+
+						if (!error && piece && piece.Relief)
+							faces[6 + face].set(piece.Relief, row * size * 4);
 
 						if (--left) return;
 
@@ -2988,12 +3022,12 @@ Elemenx.Component('Scene', {
 								var high = math.Compose(local(object.World), object.Turn, size * 1.004);
 
 								later.push(function () {
-									renderer.Draw(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: high, uNormalMatrix: math.NormalMatrix(high), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: [0, 0, 0, 0], uCloudsOnly: 1, uDrift: engine.CloudDrift(object), uLights: noLights(), uLightsOn: 0}, weatherValues(object, surface))), {Blend: 'alpha', DepthWrite: false});
+									renderer.Draw(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: high, uNormalMatrix: math.NormalMatrix(high), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: [0, 0, 0, 0], uCloudsOnly: 1, uDrift: engine.CloudDrift(object), uLights: noLights(), uLightsOn: 0, uRelief: noLights(), uReliefOn: 0}, weatherValues(object, surface))), {Blend: 'alpha', DepthWrite: false});
 								});
 							}
 						}
 						else {
-							renderer.Draw(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: model, uNormalMatrix: math.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object), uCloudsOnly: 0, uDrift: engine.CloudDrift(object), uLights: surface.Lights || noLights(), uLightsOn: surface.Lights ? 1 : 0}, weatherValues(object, surface))));
+							renderer.Draw(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: model, uNormalMatrix: math.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object), uCloudsOnly: 0, uDrift: engine.CloudDrift(object), uLights: surface.Lights || noLights(), uLightsOn: surface.Lights ? 1 : 0, uRelief: surface.Relief || noLights(), uReliefOn: surface.Relief ? 1 : 0}, weatherValues(object, surface))));
 						}
 
 						if (object.Look.Atmosphere[3]) {
@@ -4835,6 +4869,8 @@ Elemenx.Component('Scene', {
 			if (!gpu.NoShadow) {
 				gpu.NoShadow = renderer.Shadow(1);
 				gpu.NoBounce = renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([0, 0, 0, 255])}, {Nearest: true});
+				/* Nothing at all, its alpha too: the use of a square with none (no fields, no houses, no sand). */
+				gpu.NoUse = renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([0, 0, 0, 0])}, {Nearest: true});
 			}
 
 			return {uShadowOn: 0, uShadowMap: gpu.NoShadow, uShadowNear: gpu.NoShadow, uShadowRaw: gpu.NoBounce, uShadowNearRaw: gpu.NoBounce, uShadowSoft: [0, 0, 0], uBounce: gpu.NoBounce, uCloudMap: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uProbeOn: 0, uProbe: gpu.NoBounce, uLampShadow0: gpu.NoShadow, uLampShadow1: gpu.NoShadow, uCascadeOn: 0};
@@ -8536,7 +8572,11 @@ Elemenx.Component('Scene', {
 		function tiled (node) {
 			var dwelt = node.Uses && node.Square && !(scene.Tuned && scene.Tuned.Fields === false);
 
-			return {uTiled: node.Colors ? 1 : 0, uColorMap: node.Colors || gpu.NoBounce, uReliefMap: node.Relief || gpu.NoBounce, uTexels: node.Texels || 2, uWoods: scene.Tuned && scene.Tuned.Woods === false ? 0 : 1, uDwelt: dwelt ? 1 : 0, uUseMap: dwelt ? node.Uses : gpu.NoBounce, uSquare: dwelt ? node.Square : [0, 0, 1, 0], uSquareCell: dwelt ? node.Cell : [0, 0]};
+			/* Its use always (the sand of its dunes in it), none of a square with none. */
+			if (!gpu.NoUse)
+				idle();
+
+			return {uTiled: node.Colors ? 1 : 0, uColorMap: node.Colors || gpu.NoBounce, uReliefMap: node.Relief || gpu.NoBounce, uTexels: node.Texels || 2, uWoods: scene.Tuned && scene.Tuned.Woods === false ? 0 : 1, uDwelt: dwelt ? 1 : 0, uUseMap: node.Uses || gpu.NoUse, uSquare: dwelt ? node.Square : [0, 0, 1, 0], uSquareCell: dwelt ? node.Cell : [0, 0]};
 		}
 
 		function unpictured (node) {
@@ -8806,7 +8846,7 @@ Elemenx.Component('Scene', {
 			 * against what the grid makes of it there, the most of nine; a range of mountains much, a sea nothing.
 			 */
 			function errorOf (face, u, v, size) {
-				var cells = surface.Resolution || 24;
+				var cells = surface.Resolution || 32;
 				var cell = size / cells;
 				var most = 0;
 				var i;
@@ -8838,8 +8878,8 @@ Elemenx.Component('Scene', {
 				var made;
 
 				if (level) {
-					askPiece(surface, key, 'Sphere', [face, u, v, size, surface.Resolution || 24, picture, picture && standsOn(size) ? 64 : 0], function (piece) {
-						made = piece || field.Patch(face, u, v, size, surface.Resolution || 24);
+					askPiece(surface, key, 'Sphere', [face, u, v, size, surface.Resolution || 32, picture, picture && standsOn(size) ? 64 : 0], function (piece) {
+						made = piece || field.Patch(face, u, v, size, surface.Resolution || 32);
 
 						surface.Nodes[key] = pictured({Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Error: errorOf(face, u, v, size), Used: surface.Frame}, made.Picture, [face, u, v, size, field.Radius]);
 
@@ -8850,7 +8890,7 @@ Elemenx.Component('Scene', {
 					return;
 				}
 
-				made = field.Patch(face, u, v, size, surface.Resolution || 24);
+				made = field.Patch(face, u, v, size, surface.Resolution || 32);
 
 				surface.Nodes[key] = {Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Error: errorOf(face, u, v, size), Used: surface.Frame};
 
@@ -8902,7 +8942,7 @@ Elemenx.Component('Scene', {
 						var direction = vectors.Normalize(terrain.Face(at[0], part[0], part[1]));
 
 						if (surface.Nodes[key]) surface.Nodes[key].Used = surface.Frame;
-						else if (!hidden(direction, half)) missing.push({Face: at[0], U: part[0], V: part[1], Size: half, Level: level + 1, Near: vectors.Distance(vectors.Scale(direction, field.Radius), surface.Eye)});
+						else if (!hidden(direction, half)) missing.push({Face: at[0], U: part[0], V: part[1], Size: half, Level: level + 1, Near: vectors.Distance(vectors.Scale(direction, field.Radius), surface.Eye) - field.Radius * 8});
 					});
 
 					u = at[1] < u ? u - half / 2 : u + half / 2;
@@ -8940,7 +8980,7 @@ Elemenx.Component('Scene', {
 				node.Used = surface.Frame;
 
 				/* By its distance; and finer still where its grid would show on the screen (more than 1.5 pixels from the ground). */
-				if (level < 17 && (near < field.Radius * size * 0.75 * 2.2 * (surface.Eager || 1) || near < field.Radius * size * 6 && (node.Error || 0) / Math.max(near, 1e-6) * focal > 1.5) && size * Math.PI / 4 * field.Radius > (surface.Finest || 0)) {
+				if (level < 17 && (near < field.Radius * size * 0.75 * 2.2 * (surface.Eager || 1) || near < field.Radius * size * 10 && (node.Error || 0) / Math.max(near, 1e-6) * focal > 1.5) && size * Math.PI / 4 * field.Radius > (surface.Finest || 0)) {
 					parts = [[u - half / 2, v - half / 2], [u + half / 2, v - half / 2], [u - half / 2, v + half / 2], [u + half / 2, v + half / 2]].filter(function (part) {
 						return !hidden(vectors.Normalize(terrain.Face(face, part[0], part[1])), half);
 					});
@@ -8957,8 +8997,14 @@ Elemenx.Component('Scene', {
 						return;
 					}
 
+					/*
+					 * Each by how near its nearest edge is, not its middle nor that of the square over it, after those under the
+					 * eye (ahead, first of all). Regression: the parts of a square of thousands of kilometres waited behind all the
+					 * small ones of the view (its middle far), so half a view from 300 km stayed of it, other in color, a straight
+					 * edge across, for most of a minute.
+					 */
 					absent.forEach(function (part) {
-						missing.push({Face: face, U: part[0], V: part[1], Size: half, Level: level + 1, Near: near});
+						missing.push({Face: face, U: part[0], V: part[1], Size: half, Level: level + 1, Near: Math.max(0, vectors.Distance(vectors.Scale(vectors.Normalize(terrain.Face(face, part[0], part[1])), field.Radius), surface.Eye) - half * Math.PI / 4 * field.Radius * 0.71)});
 					});
 				}
 
@@ -12704,6 +12750,8 @@ Elemenx.Component('Scene', {
 				'uniform float uDrift;',
 				'uniform samplerCube uLights;',
 				'uniform float uLightsOn;',
+				'uniform samplerCube uRelief;',
+				'uniform float uReliefOn;',
 				'uniform mat4 uModel;',
 				'out vec4 outColor;',
 				graphics.Chunks.Lights,
@@ -12723,7 +12771,16 @@ Elemenx.Component('Scene', {
 				'	vec3 p = normalize(vLocal);',
 				'	vec4 surface = texture(uGround, p);',
 				'	float gloss = surface.a;',
-				'	vec3 light = lighting(vWorld, n, v, 12.0 + gloss * 70.0, gloss);',
+				/*
+				 * Its ranges lit from orbit (uRelief: how its ground leans, of its heights): the slopes made eight times steeper, as
+				 * the eye reads mountains by their light and shade from space (a texel of tens of kilometres sees them gentle).
+				 */
+				'	vec3 lit = n;',
+				'	if (uReliefOn > 0.5) {',
+				'		vec3 lean = (texture(uRelief, p).xyz - 0.5) / 2.5;',
+				'		lit = normalize(mat3(uModel) * normalize(p + lean * 8.0));',
+				'	}',
+				'	vec3 light = lighting(vWorld, lit, v, 12.0 + gloss * 70.0, gloss);',
 				'	vec3 color = surface.rgb * light;',
 				/* The clouds go with the wind, metres a second of real time round the body (uDrift: radians so far), never with its days made fast. */
 				'	float turn = uDrift;',
@@ -13307,7 +13364,24 @@ Elemenx.Component('Scene', {
 				'	float near2 = 1.0 - smoothstep(0.006, 0.02, foot);',
 				'	float crowns = noise3(near * 34.0 + 11.0);',
 				'	albedo *= mix(1.0, 0.7 + 0.55 * smoothstep(0.3, 0.75, crowns), green * near2);',
-				'	float bumps = ((noise3(near * 11.0 + 5.0) - 0.5) * 0.04 * near1 + (noise3(near * 52.0 + 2.0) - 0.5) * 0.008 * near2 + (crowns - 0.5) * 0.006 * green * near2 + wooded * 0.006 * near1 + standing) * (1.0 - water);',
+				/*
+				 * Its dunes (the sand of its deserts, Use.a): ridges of a kilometre or so bent by a noise of a few, a gentle side to
+				 * the wind and a steep one away, some crossing them (star dunes), tens of metres high, as long as a pixel is finer
+				 * than a quarter of them; of the very place (thousands of km, half a metre in the floats: a kilometre is exact).
+				 */
+				'	float sand = uTiled > 0.5 ? texture(uUseMap, vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels + aside * 1.1 / uTexels).a : 0.0;',
+				'	float dunes = 0.0;',
+				'	if (sand > 0.003) {',
+				'		float seenDunes = 1.0 - smoothstep(0.12, 0.45, foot);',
+				'		float bend = noise3(place * 0.28 + 4.0) * 3.2;',
+				'		float duneWave = fract((place.x * 0.6 + place.z * 0.8) / 1.3 + bend);',
+				'		float ridge = duneWave < 0.72 ? duneWave / 0.72 : (1.0 - duneWave) / 0.28;',
+				'		float athwart = fract((place.x * -0.8 + place.z * 0.6 + place.y * 0.3) / 2.1 + bend * 0.7);',
+				'		float star = 1.0 - abs(athwart * 2.0 - 1.0);',
+				'		dunes = (ridge * ridge * (3.0 - 2.0 * ridge) * 0.75 + star * star * 0.25) * sand * seenDunes;',
+				'		albedo *= 1.0 + (dunes - 0.35 * sand * seenDunes) * 0.18;',
+				'	}',
+				'	float bumps = ((noise3(near * 11.0 + 5.0) - 0.5) * 0.04 * near1 + (noise3(near * 52.0 + 2.0) - 0.5) * 0.008 * near2 + (crowns - 0.5) * 0.006 * green * near2 + wooded * 0.006 * near1 + standing + dunes * 0.07) * (1.0 - water);',
 				/* The normal before them: what picks the ways the tiles are laid, the same over a few pixels (their derivatives are taken in branches by it). */
 				'	vec3 smoothed = n;',
 				'	vec3 px = dFdx(vWorld);',
@@ -13361,7 +13435,8 @@ Elemenx.Component('Scene', {
 				'	if (uWeatherOn > 0.5) {',
 				'		vec4 above = texture(uWeather, up);',
 				'		vec3 under = normalize(up + toward * mix(1.5, 6.0, above.g) * sqrt(max(0.0, 1.0 - rise * rise)) / max(0.06, rise) / uRadiusKm);',
-				'		day *= 1.0 - 0.55 * cloudAt(under, max(foot, 0.3)) * smoothstep(0.0, 0.12, rise);',
+				/* Of their thick part only: their thin edges and tops leave little shadow (it was more shadow than cloud). */
+				'		day *= 1.0 - 0.5 * smoothstep(0.3, 1.0, cloudAt(under, max(foot, 0.3))) * smoothstep(0.0, 0.12, rise);',
 				'	}',
 				'	vec3 color = albedo * (uSunColor * day + around);',
 				/* Water mirrors the sky, more at a glance; waves break the sun into a path of glints that reddens as it sets. */

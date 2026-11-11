@@ -1937,6 +1937,12 @@ Elemenx.Trait('SceneLighting', {
 				'	float d = 0.0;',
 				'	if (hn > 0.0 && hn < 1.0 && w.r > 0.02) {',
 				/*
+				 * Cheap (to find cloud, and for the light toward the sun): of the cover of the weather alone at this height, never
+				 * less than the full one. Regression: of another noise than the full one it said nothing where there was cloud, and
+				 * the long steps went over it: near, few clouds and thin.
+				 */
+				'		if (detail < 0.5) return clamp(w.r * mix(smoothstep(0.0, 0.25, hn) * (1.0 - smoothstep(0.55, 1.0, hn)), (1.0 - smoothstep(0.2, 1.0, hn)), heap) * 3.0 + 0.05, 0.0, 1.0);',
+				/*
 				 * Where there is cloud: the very cover its globe and their shadows show (CLOUDS SEEN of Scene), of billows of 80,
 				 * 30, 11, 4 and 1.5 km, as many of them as are asked (the far fewer).
 				 */
@@ -1961,13 +1967,12 @@ Elemenx.Trait('SceneLighting', {
 				/* Cut where the share the cover says is over (as the globe and the shadows do). */
 				'		float level = 0.5 + 0.13 * log((1.0 - clamp(w.r, 0.01, 0.99)) / clamp(w.r, 0.01, 0.99));',
 				/* Unseen billows: the cover of the weather as it is (as on the globe), narrower up high. */
-				'		float cover = mix(clamp(w.r - hn * mix(0.12, 0.35, heap), 0.0, 1.0), smoothstep(level - spread, level + spread, 0.5 + n * 1.6 / max(seen / total, 0.05) - hn * mix(0.12, 0.35, heap)), seen / total);',
+				'		float cover = mix(clamp(w.r - max(hn - 0.3, 0.0) * mix(0.15, 0.5, heap), 0.0, 1.0), smoothstep(level - spread, level + spread, 0.5 + n * 1.6 / max(seen / total, 0.05) - max(hn - 0.3, 0.0) * mix(0.15, 0.5, heap)), seen / total);',
 				/* A sheet flat with a soft top; a heap round, wide below, narrow over. */
 				'		float sheet = smoothstep(0.0, 0.25, hn) * (1.0 - smoothstep(0.55, 1.0, hn));',
-				'		float round1 = smoothstep(0.0, 0.07, hn) * (1.0 - smoothstep(0.2, 1.0, hn));',
+				/* A heap full in its lower half, round over it (as wide as its shadow on the ground). */
+				'		float round1 = smoothstep(0.0, 0.07, hn) * (1.0 - smoothstep(0.45, 1.0, hn));',
 				'		float shape = mix(sheet, round1, heap);',
-				/* Cheap: where cloud may be (to find it, and the light toward the sun), with room for what billows add. */
-				'		if (detail < 0.5) return clamp((cover * shape + 0.08) * 3.0, 0.0, 1.0);',
 				/* Their edges eaten by billows of 1.2 km near (a regular block of noise showed its grid as dots). */
 				/*
 				 * Billows in three dimensions of 0.9 and 0.35 km, other at each height: heaps of cauliflowers, their sides uneven;
@@ -1977,14 +1982,16 @@ Elemenx.Trait('SceneLighting', {
 				'		float closer = 1.0 - smoothstep(0.1, 0.45, foot);',
 				'		float closest = 1.0 - smoothstep(0.04, 0.18, foot);',
 				'		float billow = 0.5 + (noise3(askew * k / 0.9 + 9.0) - 0.5) * near * 0.75 + (noise3(askew * (askew * k) / 0.35 + 3.0) - 0.5) * closer * 0.45 + (noise3(k / 0.14 + 5.0) - 0.5) * closest * 0.3;',
-				'		d = cover * shape - 0.12 - (1.0 - billow) * mix(0.25, 0.5, heap) + 0.5 * mix(0.25, 0.5, heap);',
+				/* As much cloud as its shadows on the ground and the globe show (it was thinner: more shadow than cloud). */
+				'		d = cover * shape - 0.04 - (1.0 - billow) * mix(0.25, 0.5, heap) + 0.5 * mix(0.25, 0.5, heap);',
 				/* Their edges eaten the most where they are thin: cauliflowers, not ovals, near. */
-				'		d -= (1.0 - billow) * 0.4 * (1.0 - clamp(d * 2.0, 0.0, 1.0)) * near;',
+				'		d -= (1.0 - billow) * 0.3 * (1.0 - clamp(d * 2.0, 0.0, 1.0)) * near;',
 				/* Not all of it at once full: the billows show inside a cloud too, not at its edges only. */
-				'		d = clamp(d * 2.0, 0.0, 1.0);',
+				'		d = clamp(d * 2.5, 0.0, 1.0);',
 				'	}',
 				/* Cirrus: a thin veil drawn out east and west. */
-				'	if (h > 8.5 && h < 11.0 && w.b > 0.02) {',
+				/* Not for the light of others (detail 0.25): so thin a veil casts no dark band over the clouds under it. */
+				'	if (h > 8.5 && h < 11.0 && w.b > 0.02 && (detail < 0.2 || detail > 0.5)) {',
 				/*
 				 * Regression: a noise drawn out along the latitudes made them straight bars to the horizon. They are drawn out along
 				 * the wind in the weather itself (its cirrus, B); a noise of their own only frays them.
@@ -2046,7 +2053,8 @@ Elemenx.Trait('SceneLighting', {
 				'			if (i >= uSteps * 6 || seen < 0.02 || t > leave) break;',
 				'			vec3 q = o + ray * t;',
 				'			float coarse = clamp(0.5 + t * 0.012, 0.5, 6.0);',
-				'			float small = clamp(t * across * 1.5, 0.08, 0.6);',
+				/* Short steps near; far, as long as a hundredth of the way, so there are steps enough for the clouds to the horizon. */
+				'			float small = clamp(t * across * 1.5, 0.08, max(0.6, t * 0.01));',
 				'			if (inside < 0.5) {',
 				'				if (shellThick(q, max(t * across, 1.0), 0.0) > 0.0) {',
 				'					inside = 1.0;',
@@ -2061,7 +2069,7 @@ Elemenx.Trait('SceneLighting', {
 				'			if (d > 0.01) {',
 				'				empty = 0.0;',
 				/* Near, the first step toward the sun of its billows too: each one lit on its side to the sun, in shade on the other. */
-				'				float lit = shellThick(q + uSunWay * 0.12, foot, foot < 0.3 ? 1.0 : 0.0) * 1.2 + shellThick(q + uSunWay * 0.35, 1.0, 0.0) + shellThick(q + uSunWay * 0.9, 1.0, 0.0) + shellThick(q + uSunWay * 2.0, 2.0, 0.0) * 0.9 + shellThick(q + uSunWay * 4.0, 4.0, 0.0) * 0.8;',
+				'				float lit = shellThick(q + uSunWay * 0.12, foot, foot < 0.3 ? 1.0 : 0.25) * 1.2 + shellThick(q + uSunWay * 0.35, 1.0, 0.25) + shellThick(q + uSunWay * 0.9, 1.0, 0.25) + shellThick(q + uSunWay * 2.0, 2.0, 0.25) * 0.9 + shellThick(q + uSunWay * 4.0, 4.0, 0.25) * 0.8;',
 				'				float h = clamp((length(q) - R - 0.6) / 4.0, 0.0, 1.0);',
 				/* Lit by the sun through what is toward it, its side away dark; the edges dark too (light goes in, little comes out: powder). */
 				'				float through = (exp(-lit * 1.6) + 0.25 * exp(-lit * 0.4)) * (1.0 - exp(-d * 6.0)) * 1.6;',

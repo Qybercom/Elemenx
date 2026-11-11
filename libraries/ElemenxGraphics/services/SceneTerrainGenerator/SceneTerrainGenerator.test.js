@@ -506,6 +506,26 @@ describe('Contract: the zones of a ground and where things may grow on it', func
 		expect(Array.from(piece.Colors)).toEqual(Array.from(new Float32Array(here.Colors)));
 	});
 
+	/*
+	 * Rainforest, semidesert and steppe take the place of others where they hold (Over): the wet tropics a dark forest, a
+	 * dry temperate land a steppe, a warm half-dry one a semidesert; the usual six alone as they were, none of the nine bare.
+	 */
+	it('lays a rainforest, a semidesert and a steppe in place of others where they hold, the usual six as they were', function () {
+		var nine = terrain.Biomes({Biomes: ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe']});
+		var six = terrain.Biomes({Biomes: ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp']});
+		var field = terrain.Flat({Size: 1600, Height: 80, Water: 0.3, Seed: 'lands', Biomes: ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe']});
+
+		expect(terrain.BiomeOf(nine, 0.2, 0.85, 0.85).List[0].Name).toBe('rainforest');
+		expect(terrain.BiomeOf(nine, 0.2, 0.12, 0.52).List[0].Name).toBe('steppe');
+		expect(terrain.BiomeOf(nine, 0.2, 0.25, 0.8).List[0].Name).toBe('semidesert');
+
+		expect(terrain.BiomeOf(six, 0.2, 0.85, 0.85).List[0].Name).not.toBe('rainforest');
+		expect(terrain.BiomeOf(six, 0.2, 0.12, 0.52).List[0].Name).toBe('temperate');
+		expect(terrain.BiomeOf(six, 0.2, 0.25, 0.8).List[0].Name).toBe('desert');
+
+		expect(Elemenx.Service('SceneBiomes').Check(['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe'], field).Gap).toBe(0);
+	});
+
 	it('tells where lands by their climate leave heights and climates of a ground bare, and lands it never has', function () {
 		var biomes = Elemenx.Service('SceneBiomes');
 		var field = terrain.Flat({Size: 1600, Height: 80, Water: 0.3, Seed: 'lands'});
