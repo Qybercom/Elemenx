@@ -16,7 +16,10 @@
  *   (sunShadow(position, normal): 0 in the shadow, 1 in the light; uniforms uShadowMap, uShadowMatrix, uShadowBias,
  *   uShadowOn).
  *
- * Create(canvas, options) returns a renderer, or null where there is no WebGL2 (options: Alpha, Antialias, Ratio):
+ * Create(canvas, options) returns a renderer, or null where there is no WebGL2 (options: Alpha, Antialias, Ratio); its
+ * Destroy lets go of all it made, its context kept with those let go and given back the oldest first only when the page
+ * would have more than MostContexts (10) living and let go (Contexts: {Live, Released}; Release(room) gives them back):
+ * giving one back waits for the card to finish all it was given.
  * - Program(vertex, fragment, behind): the shaders compiled (each one once), their uniforms found; an error of GLSL is thrown
  *   with its log. With options Patient the card does that in the background and nothing waits for it: Ready(program) tells
  *   whether it is done, Progress() is {Done, Total, Needed} of the programs (behind: one nothing waits for), and a Draw with
@@ -569,6 +572,23 @@ Elemenx.Service('Renderer', {
 		].join('\n')
 	},
 
+	/*
+	 * The contexts of the page (one for all its applications, as the browser counts them): how many renderers live, and the
+	 * contexts of those let go not given back yet (WEBGL_lose_context of each, the oldest first).
+	 */
+	Contexts: {Live: 0, Released: []},
+
+	/* At most this many contexts in the page, living and let go (a browser keeps some 16, and loses the oldest past them). */
+	MostContexts: 10,
+
+	/* Gives back the oldest contexts let go while the page would have more than MostContexts with room more of them. */
+	Release: function (room) {
+		var contexts = this.Contexts;
+
+		while (contexts.Released.length && contexts.Live + contexts.Released.length + (room || 0) > this.MostContexts)
+			contexts.Released.shift().loseContext();
+	},
+
 	Create: function (canvas, options) {
 		var self = this;
 		var settings = options || {};
@@ -577,6 +597,20 @@ Elemenx.Service('Renderer', {
 		var shaders = {};
 		var meshes = [];
 		var textures = [];
+
+		/*
+		 * What is let go off its list: the last in its place (the order of a list is not kept). Regression: each spliced out
+		 * of its place, a renderer letting go of all of them (a scene gone) moved the rest each time, a page held up for most
+		 * of a minute; and one not in it took the last.
+		 */
+		function forget (list, item) {
+			var at = list.indexOf(item);
+			if (at === -1) return;
+
+			list[at] = list[list.length - 1];
+
+			list.pop();
+		}
 		var modes;
 		var gpuQuad = null;
 		/* The blank textures of the samplers a draw gives none, by the type of the sampler (see blank). */
@@ -655,6 +689,9 @@ Elemenx.Service('Renderer', {
 			return state;
 		}
 
+		/* Room for one more context: the oldest let go given back first, while there are too many (Release). */
+		self.Release(1);
+
 		try {
 			gl = canvas.getContext('webgl2', {alpha: !!settings.Alpha, antialias: settings.Antialias !== false, premultipliedAlpha: false, preserveDrawingBuffer: !!settings.Preserve});
 		}
@@ -664,6 +701,8 @@ Elemenx.Service('Renderer', {
 
 		if (!gl)
 			return null;
+
+		self.Contexts.Live++;
 
 		bound = bindings(gl);
 
@@ -904,7 +943,7 @@ Elemenx.Service('Renderer', {
 
 				gl.deleteVertexArray(made.VAO);
 
-				meshes.splice(meshes.indexOf(made), 1);
+				forget(meshes, made);
 			};
 
 			meshes.push(made);
@@ -1254,7 +1293,7 @@ Elemenx.Service('Renderer', {
 				texture.Destroy = function () {
 					gl.deleteTexture(handle);
 
-					textures.splice(textures.indexOf(texture), 1);
+					forget(textures, texture);
 				};
 
 				/* Another picture of a canvas or an image into the same texture, as a screen changes. */
@@ -1290,7 +1329,7 @@ Elemenx.Service('Renderer', {
 				texture.Destroy = function () {
 					gl.deleteTexture(handle);
 
-					textures.splice(textures.indexOf(texture), 1);
+					forget(textures, texture);
 				};
 
 				textures.push(texture);
@@ -1318,7 +1357,7 @@ Elemenx.Service('Renderer', {
 				cube.Destroy = function () {
 					gl.deleteTexture(handle);
 
-					textures.splice(textures.indexOf(cube), 1);
+					forget(textures, cube);
 				};
 
 				/*
@@ -1554,7 +1593,7 @@ Elemenx.Service('Renderer', {
 
 					gl.deleteFramebuffer(frame);
 
-					textures.splice(textures.indexOf(made), 1);
+					forget(textures, made);
 				};
 
 				textures.push(made);
@@ -1626,7 +1665,7 @@ Elemenx.Service('Renderer', {
 					gl.deleteFramebuffer(target);
 					gl.deleteTexture(handle);
 
-					textures.splice(textures.indexOf(map), 1);
+					forget(textures, map);
 				};
 
 				textures.push(map);
@@ -1828,13 +1867,20 @@ Elemenx.Service('Renderer', {
 				canvas.removeEventListener('webglcontextrestored', restored);
 
 				/*
-				 * Regression: the context itself is given back now, not when the canvas is collected. A browser keeps some 16 of
+				 * Regression: the context itself is given back, not when the canvas is collected. A browser keeps some 16 of
 				 * them; a page that made and dropped many scenes (the catalogue: 30) had the browser lose the oldest, living ones,
-				 * and then give no more.
+				 * and then give no more. But not at once: giving it back waits for the card to finish all it was given (a page
+				 * held up for most of a minute as scenes left the view, tests timed out letting theirs go). Kept with those let
+				 * go, given back the oldest first only when the page has more than MostContexts (Release).
 				 */
 				var lose = gl.getExtension('WEBGL_lose_context');
+
+				self.Contexts.Live = Math.max(0, self.Contexts.Live - 1);
+
 				if (lose)
-					lose.loseContext();
+					self.Contexts.Released.push(lose);
+
+				self.Release(0);
 			}
 		};
 

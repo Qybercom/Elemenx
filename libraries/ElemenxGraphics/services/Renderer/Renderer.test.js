@@ -13,6 +13,89 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 		renderer = Elemenx.Service('Renderer').Create(document.createElement('canvas'), {Antialias: false});
 	});
 
+	/*
+	 * Regression: each mesh and texture let go was spliced out of its list, the rest moved each time (a renderer letting go
+	 * of all of them moved them all again and again); and one let go twice spliced out the last of its list, another, which
+	 * then was never let go with its renderer: its buffers kept on the graphics card.
+	 */
+	it('lets go of all its meshes with it, one let go twice taking no other off its list', function () {
+		var own = Elemenx.Service('Renderer').Create(document.createElement('canvas'), {Antialias: false});
+		var gl = own.GL;
+		var geometry = {Positions: [0, 0, 0, 1, 0, 0, 0, 1, 0], Indices: [0, 1, 2]};
+		var gone = own.Mesh(geometry);
+		var others = [];
+		var i;
+
+		for (i = 0; i < 50; i++)
+			others.push(own.Mesh(geometry));
+
+		gone.Destroy();
+		gone.Destroy();
+
+		/* Its context kept, to see its buffers: no extension to give it back. */
+		gl.getExtension = function () {
+			return null;
+		};
+
+		own.Destroy();
+
+		expect(others.filter(function (mesh) {
+			return Object.keys(mesh.Buffers).some(function (name) {
+				return gl.isBuffer(mesh.Buffers[name]);
+			});
+		}).length).toBe(0);
+	});
+
+	/*
+	 * Regression: a renderer let go gave its context back at once, which waits for the card to finish all it was given: a
+	 * page held up for most of a minute as its scenes left the view. Kept with the others let go, given back the oldest
+	 * first only past MostContexts of the page (a browser keeps some 16).
+	 */
+	it('gives the contexts of renderers let go back only past MostContexts of the page, the oldest first', function () {
+		var service = Elemenx.Service('Renderer');
+		var given = [];
+		var made = [];
+		var before = service.Contexts.Released.length;
+		var i;
+
+		/* The contexts let go before by other tests given back now: this one counts its own. */
+		while (service.Contexts.Released.length)
+			service.Contexts.Released.shift().loseContext();
+
+		for (i = 0; i < 4; i++) {
+			var own = service.Create(document.createElement('canvas'), {Antialias: false});
+
+			(function (index) {
+				own.GL.getExtension = function () {
+					return {loseContext: function () {
+						given.push(index);
+					}};
+				};
+			})(i);
+
+			made.push(own);
+		}
+
+		made.forEach(function (own) {
+			own.Destroy();
+		});
+
+		expect(before).toBeGreaterThanOrEqual(0);
+		expect(given).toEqual([]);
+		expect(service.Contexts.Released.length).toBe(4);
+
+		/* Past the most a page has: the oldest let go go back first. */
+		for (i = 0; i < service.MostContexts - 2; i++)
+			made.push(service.Create(document.createElement('canvas'), {Antialias: false}));
+
+		expect(given).toEqual([0, 1, 2]);
+		expect(service.Contexts.Live + service.Contexts.Released.length).toBeLessThanOrEqual(service.MostContexts);
+
+		made.slice(4).forEach(function (own) {
+			own.Destroy();
+		});
+	});
+
 	/* A mask of one byte a texel (the ground kept bare of grass), read as .r: rows of any length, not padded to four bytes. */
 	it('makes a texture of one byte a texel with Single, its rows as long as they are', function () {
 		var gl = renderer.GL;
@@ -343,14 +426,26 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 		target.Destroy();
 	});
 
-	/* Regression: a page that made and dropped many scenes went past the contexts a browser keeps, which then gave no more. */
-	it('gives its context back on Destroy, at once and not when the canvas is collected', function () {
-		var own = Elemenx.Service('Renderer').Create(document.createElement('canvas'), {Antialias: false});
+	/*
+	 * Regression: a page that made and dropped many scenes went past the contexts a browser keeps, which then gave no more.
+	 * A context let go is given back (not when the canvas is collected): at once where the page has room for none more.
+	 */
+	it('gives its context back on Destroy when the page has no room for it, not when the canvas is collected', function () {
+		var service = Elemenx.Service('Renderer');
+		var most = service.MostContexts;
+		var own = service.Create(document.createElement('canvas'), {Antialias: false});
 		var gl = own.GL;
 
 		expect(gl.isContextLost()).toBe(false);
 
-		own.Destroy();
+		service.MostContexts = 0;
+
+		try {
+			own.Destroy();
+		}
+		finally {
+			service.MostContexts = most;
+		}
 
 		expect(gl.isContextLost()).toBe(true);
 		expect(renderer.GL.isContextLost()).toBe(false);

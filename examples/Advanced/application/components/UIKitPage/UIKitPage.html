@@ -1134,6 +1134,14 @@
 		</div>
 	</Section>
 
+	<Section *if="Shows('Plants')" Title="Plants" Note="FloraEditor · SceneFlora: a species of plant of a photograph of it — its trunk, crown and colors read from the picture (on white or clear), grown at once in 3D, each number on a slider, defined as a model the scenes sow">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-space ui-kit-flora" data-demo="plants">
+				<FloraEditor Species="pine" Name="my-pine" />
+			</div>
+		</div>
+	</Section>
+
 	<Section *if="Shows('Textures')" Title="Textures" Note="TextureLab · SceneTextures: textures of materials made of code, baked once into tiles with no seam, sharp near and far; their params on sliders">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-space" data-demo="textures">

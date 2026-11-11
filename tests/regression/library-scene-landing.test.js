@@ -89,9 +89,13 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 			return scene.Veiled === 1;
 		}, 4000);
 
+		/*
+		 * Regression: under the load of the whole suite (its globe painted with its relief too, and the plants of other
+		 * scenes grown in workers) it was more than the 30 s it was given: 90 s.
+		 */
 		await waitFor(function () {
 			return !inner.Preparing;
-		}, 30000);
+		}, 90000);
 
 		/* Then all of the globe was there. */
 		expect(inner.Baked.terra.Painted).toBe(256);
@@ -193,7 +197,7 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		await loadElemenx();
 
 		Use(['Scene', 'SceneObject', 'service:SceneWorld', 'service:SceneLocations', 'service:ScenePlanet']);
-	});
+	}, 150000);
 
 	beforeEach(function () {
 		resetDOM();

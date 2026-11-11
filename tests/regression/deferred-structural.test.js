@@ -5,9 +5,10 @@ var live = [];
 
 /*
  * How long a load of a Component of its own file may take: the page loads several one after another, and under the load of
- * the whole suite (the 3D tests at once) 5 s were not enough for them (Regression: two tests of the file failed so).
+ * the whole suite (the 3D tests at once) 5 s were not enough for them (Regression: two tests of the file failed so),
+ * nor 15 s once the scenes grew their realistic plants in workers (the second structural instance): 30 s.
  */
-var LOAD = 15000;
+var LOAD = 30000;
 
 function appWithTemplate (template, create) {
 	var root = unique('DeferredRoot');
@@ -361,7 +362,7 @@ describe('Regression: deferred structural composition', {timeout: 60000}, functi
 		expect(window.DeferredCacheRemoteLoads).toBe(1);
 
 		destroy(app);
-	});
+	}, 90000);
 
 	it('public discovery path: Application Destroy while nested RemoteChild script is explicitly held', async function () {
 		var head = document.head;

@@ -6,7 +6,11 @@ var owned = [];
 
 async function mount () {
 	var ready = null;
-	var component = Elemenx.Component(unique('ProxyHost'), {$Template: '<div style="width: 480px; height: 320px"><Scene Quality="medium" Labels="false" (ready)="Ready">' +
+	/*
+	 * Of the simple plants: realistic ones (PlantStyle) come from workers after a while and the world is sown again with
+	 * them, its far tiles made again (the cache of the first visit counted twice).
+	 */
+	var component = Elemenx.Component(unique('ProxyHost'), {$Template: '<div style="width: 480px; height: 320px"><Scene Quality="medium" Labels="false" PlantStyle="simple" (ready)="Ready">' +
 		'<SceneObject ID="land" Kind="ground" Size="1536" Height="4" Water="0" Seed="proxies" />' +
 		'<SceneObject ID="sun" Kind="sun" />' +
 		'<SceneObject ID="woods" Kind="forest" Shapes="oak" Density="0.6" Seed="a" Cover="1" />' +

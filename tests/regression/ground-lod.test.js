@@ -55,9 +55,13 @@ describe('Regression: the squares of a ground as fine as the eye sees their grid
 		resetDOM();
 	});
 
+	/*
+	 * Regression: under the load of the whole suite (scenes growing their plants and baking their planets in the same
+	 * browser) letting the scenes go took longer than the 30 s a hook has: 90 s.
+	 */
 	afterEach(function () {
 		while (owned.length) owned.pop().$Destroy();
-	});
+	}, 90000);
 
 	/*
 	 * A square was split by its distance alone, at most 6 times: the ridges of mountains as coarse as a plain. Now it is

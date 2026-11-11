@@ -6,7 +6,11 @@ var owned = [];
 
 async function mount () {
 	var ready = null;
-	var component = Elemenx.Component(unique('ScatterHost'), {$Template: '<div style="width: 320px; height: 200px"><Scene Paused="true" Quality="ultra" Labels="false" (ready)="Ready">' +
+	/*
+	 * Of the simple plants (PlantStyle): the realistic ones come from workers after a while and all is sown again with them,
+	 * nothing sown for some frames (a test that drew its frames then saw none). A test of SceneFlora names its own model.
+	 */
+	var component = Elemenx.Component(unique('ScatterHost'), {$Template: '<div style="width: 320px; height: 200px"><Scene Paused="true" Quality="ultra" Labels="false" PlantStyle="simple" (ready)="Ready">' +
 		'<SceneObject ID="land" Kind="ground" Size="300" Height="4" Water="0" Seed="woods" />' +
 		'<SceneObject ID="woods" Kind="forest" Density="3" Cover="1" />' +
 	'</Scene></div>', Ready: function (space) {
@@ -30,7 +34,7 @@ describe('Regression: what is sown casts its shadow', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['Scene', 'SceneObject', 'service:Renderer', 'service:Meshes', 'service:SceneModels']);
+		Use(['Scene', 'SceneObject', 'service:Renderer', 'service:Meshes', 'service:SceneModels', 'service:SceneFlora']);
 	});
 
 	beforeEach(function () {
@@ -61,13 +65,17 @@ describe('Regression: what is sown casts its shadow', function () {
 
 		scene.SetViewpoint({Target: [0, 1, 0], Yaw: 0.4, Pitch: 0.6, Distance: 20});
 
+		/*
+		 * Regression: the sowing of its squares and their simpler levels in workers took about the 20 s it was given (the
+		 * test some 22 s long), and one run in three found nothing near sown yet: 60 s.
+		 */
 		await waitFor(function () {
 			inner.Rest = 0;
 
 			engine.Frame(now += 33);
 
 			return scene.Sown().Things > 20 && !scene.Sown().Waiting;
-		}, 20000);
+		}, 60000);
 
 		engine.ScatterShadow = function () {
 			where = 'shadow';
@@ -108,8 +116,86 @@ describe('Regression: what is sown casts its shadow', function () {
 			engine.ScatterShadow = shadow;
 			engine.ScatterDraw = sown;
 		}
-	});
+	}, 90000);
 
+
+	/*
+	 * Regression: a plant of cards (SceneFlora) past its nearest level was its simpler shape of corners, colored: its leaves
+	 * plates of the mean of their picture, and its shadow plates or none. A model that tells its own simpler levels (Lods) is
+	 * drawn of its pictures at them too, and casts its shadow cut by the alpha of its leaves.
+	 */
+	it('draws a plant of SceneFlora of its pictures at its simpler levels too, its leaves cut by their alpha in its shadow', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var renderer = engine.Renderer;
+		var draw = renderer.Draw;
+		var shadow = engine.ScatterShadow;
+		var sown = engine.ScatterDraw;
+		var models = scene.$Service('SceneModels');
+		var name = scene.$Service('SceneFlora').Define('scatter-test-birch', 'birch', {Variants: 1});
+		var where = '';
+		var cut = 0;
+		var pictured = 0;
+		var now = performance.now() + 100;
+		var i;
+
+		await new Promise(function (done) {
+			models.Load(name, done);
+		});
+
+		scene.Add({Kind: 'forest', ID: 'birches', Traits: {Scatter: {Shapes: [name], Density: 1.5, Cover: 1, Patch: 60, MaxSlope: 1}}});
+		scene.SetViewpoint({Target: [0, 1, 0], Yaw: 0.4, Pitch: 0.3, Distance: 45});
+
+		await waitFor(function () {
+			inner.Rest = 0;
+
+			engine.Frame(now += 33);
+
+			return scene.Sown().Things > 20 && !scene.Sown().Waiting;
+		}, 60000);
+
+		engine.ScatterShadow = function () {
+			where = 'shadow';
+
+			shadow.apply(this, arguments);
+
+			where = '';
+		};
+		engine.ScatterDraw = function () {
+			where = where || 'view';
+
+			sown.apply(this, arguments);
+
+			where = where === 'view' ? '' : where;
+		};
+		renderer.Draw = function (mesh, program, uniforms) {
+			if (where === 'shadow' && uniforms && uniforms.uCutoff > 0)
+				cut++;
+
+			/* A level past the nearest (its fade starts past the eye) drawn of a picture of its own. */
+			if (where === 'view' && uniforms && uniforms.uFade && uniforms.uFade[0] > 0 && uniforms.uFade[2] < 1e7 && uniforms.uCutoff > 0)
+				pictured++;
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			for (i = 0; i < 3; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+
+			expect(cut).toBeGreaterThan(0);
+			expect(pictured).toBeGreaterThan(0);
+		}
+		finally {
+			renderer.Draw = draw;
+			engine.ScatterShadow = shadow;
+			engine.ScatterDraw = sown;
+		}
+	}, 120000);
 
 	/*
 	 * Regression: buildings far away were pictures of 96 texels turned to the eye, pixelized and with no facades, and every

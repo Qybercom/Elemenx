@@ -66,6 +66,72 @@
 				"clip": "Clip"
 			}
 		},
+		"floraEditor": {
+			"label": "A plant of a picture of it",
+			"hint": "A photograph of a plant on white or clear: its trunk, its crown and its colors are read from it.",
+			"picture": "Picture",
+			"none": "No plant found in the picture.",
+			"failed": "The plant could not be grown.",
+			"growing": "Growing…",
+			"species": "Starts of",
+			"variant": "Plant",
+			"previous": "The plant before",
+			"next": "The next plant",
+			"tall": "Height, m",
+			"grow": "Grows",
+			"kind": "Leaves",
+			"pattern": "Bark",
+			"numbersTitle": "Shape",
+			"colorsTitle": "Colors",
+			"own": "Its own pictures",
+			"bark": "Bark",
+			"leaves": "Leaves (atlas)",
+			"model": "Model",
+			"name": "Name",
+			"define": "Define the model",
+			"grows": {
+				"colonize": "Branches toward the light",
+				"whorls": "Whorls (spruce)",
+				"palm": "Palm"
+			},
+			"kinds": {
+				"broad": "Broad",
+				"needles": "Needles",
+				"frond": "Fronds"
+			},
+			"patterns": {
+				"plates": "Plates (pine)",
+				"birch": "White (birch)",
+				"ridges": "Ridges (oak)",
+				"rings": "Rings (palm)",
+				"smooth": "Smooth"
+			},
+			"numbers": {
+				"Trunk_Bare": "Bare trunk",
+				"Trunk_Radius": "Trunk thickness",
+				"Trunk_Lean": "Trunk lean",
+				"Trunk_Wander": "Trunk bends",
+				"Trunk_Stems": "Stems",
+				"Trunk_Stubs": "Dead stubs",
+				"Crown_Width": "Crown width",
+				"Crown_Clumps": "Crown clumps",
+				"Crown_Hollow": "Leaves to the outside",
+				"Crown_Lean": "Crown to one side",
+				"Crown_Points": "Branches",
+				"Growth_Up": "Toward the light",
+				"Growth_Droop": "Droop",
+				"Growth_Step": "Branch steps",
+				"Leaves_Size": "Leaf cluster, m",
+				"Leaves_Each": "Clusters a tip"
+			},
+			"colors": {
+				"Leaves_Shade": "Leaves in shade",
+				"Leaves_Color": "Leaves",
+				"Leaves_Light": "Leaves in light",
+				"Bark_Low": "Bark below",
+				"Bark_High": "Bark above"
+			}
+		},
 		"modelEditor": {
 			"label": "Object editor",
 			"tools": "Tools of the model",

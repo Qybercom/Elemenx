@@ -3274,10 +3274,11 @@ Elemenx.Component('UIKitPage', {
 
 			/*
 			 * The models of the library itself: not those other demos of the page define in it (each building of the Showcase
-			 * world, showcase-*), a row of them running far off the ground into the sea.
+			 * world, showcase-*), a row of them running far off the ground into the sea; nor the realistic plants a scene makes
+			 * of its species (flora-*: a pine of the row is drawn as one in the realistic style anyway).
 			 */
 			library.Names({Type: row[0]}).filter(function (name) {
-				return name.indexOf('showcase-') !== 0;
+				return name.indexOf('showcase-') !== 0 && name.indexOf('flora-') !== 0;
 			}).forEach(function (name, index) {
 				/* At the edge of the ground (400 metres) the row goes on at its left end, free of models still. */
 				var size = library.Info(name).Size;

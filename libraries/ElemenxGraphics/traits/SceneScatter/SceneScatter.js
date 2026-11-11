@@ -213,7 +213,10 @@ Elemenx.Trait('SceneScatter', {
 					Many: renderer.Program(shaders.Vertex, engine.Leveled(dithered(self.Shaders(graphics).Solid))),
 					Files: renderer.Program(shaders.Vertex, engine.Leveled(dithered(self.Shaders(graphics).Pbr))),
 					Depth: renderer.Program(shaders.Vertex, self.Shaders(graphics).Depth),
+					/* The shadow of what is cut by the alpha of its picture (leaves): only where there is a leaf. */
+					DepthCut: renderer.Program(shaders.Vertex, shaders.DepthCut),
 					Bake: renderer.Program(shaders.BakeVertex, shaders.Bake),
+					BakeCut: renderer.Program(shaders.BakeCutVertex, shaders.BakeCut),
 					Picture: renderer.Program(shaders.PictureVertex, engine.Leveled(dithered(shaders.Picture))),
 					Facade: renderer.Program(shaders.Vertex, engine.Leveled(dithered(faced(self.Shaders(graphics).Solid)))),
 					Grass: renderer.Program(shaders.GrassVertex, shaders.Grass)
@@ -231,7 +234,10 @@ Elemenx.Trait('SceneScatter', {
 				return object.Traits.Scatter ? Object.assign({ID: object.ID}, object.Traits.Scatter, object.Values) : Object.assign({ID: object.ID, Reach: 40, Blocks: false}, object.Traits.Grass, {Density: Number(object.Traits.Grass.Density) * 60}, object.Values);
 			});
 
-			return given.concat(lands()).concat(sketched().Rules);
+			/* Its plants in the style of the scene (PlantStyle: SceneFlora's once they came; sown again then, the rules changed). */
+			return given.concat(lands()).concat(sketched().Rules).map(function (rule) {
+				return rule.Shapes && engine.PlantShape ? Object.assign({}, rule, {Shapes: [].concat(rule.Shapes).map(engine.PlantShape)}) : rule;
+			});
 		}
 
 		/* The grass of a ground of lands by their climate: of the first of them that has one; it grows only in those that have it. */
@@ -892,12 +898,38 @@ Elemenx.Trait('SceneScatter', {
 			return state.Streams[name];
 		}
 
+		/*
+		 * The copies of a list in the range of a level (from, to: as far as the shader shows them, by their size on the screen:
+		 * nearer the lodScale times their Detail). Regression: the copies of a whole square went into each level they might
+		 * be in (48 m and the half of it more), a plant of 20 000 triangles run for each, 17 million triangles a frame.
+		 */
+		function appendNear (target, list, eye, nearer, from, to) {
+			var i;
+
+			/* Room for all of them; then written straight in, no list made each frame. */
+			append(target, {Places: list.Places.subarray(0, 0), Extra: list.Extra.subarray(0, 0), Count: 0, Room: list.Count});
+
+			for (i = 0; i < list.Count; i++) {
+				var x = list.Places[i * 4] - eye[0];
+				var y = list.Places[i * 4 + 1] - eye[1];
+				var z = list.Places[i * 4 + 2] - eye[2];
+				var far = Math.sqrt(x * x + y * y + z * z) * nearer / Math.max(list.Places[i * 4 + 3], 1.5);
+				if (far <= from || far >= to) continue;
+
+				target.Places.set(list.Places.subarray(i * 4, i * 4 + 4), target.Count * 4);
+				target.Extra.set(list.Extra.subarray(i * 4, i * 4 + 4), target.Count * 4);
+
+				target.Count++;
+			}
+		}
+
 		function append (target, list) {
 			var capacity = target.Capacity;
 			var places;
 			var extra;
 
-			while (target.Count + list.Count > capacity)
+			/* Room: as many as it may yet be given (appendNear). */
+			while (target.Count + Math.max(list.Count, list.Room || 0) > capacity)
 				capacity = Math.max(1024, capacity * 2);
 
 			if (capacity !== target.Capacity) {
@@ -1378,6 +1410,7 @@ Elemenx.Trait('SceneScatter', {
 					Object.keys(square.Lists).forEach(function (key) {
 						var list = square.Lists[key];
 						var sizes;
+						var nearer;
 
 						/* What grows only round the eye is not asked for farther. */
 						if (reach && list.Reach && distance - margin > list.Reach) return;
@@ -1385,23 +1418,29 @@ Elemenx.Trait('SceneScatter', {
 						/* In each level its copies may be in by their sizes on the screen: the smallest come into it first, the largest last. */
 						if (reach) {
 							sizes = sizesOf(list);
+							nearer = lod * detail(key);
 
-							if ((distance + margin) * lod / Math.max(sizes[0], 1.5) <= from || Math.max(0, distance - margin) * lod / Math.max(sizes[1], 1.5) >= to) return;
+							if ((distance + margin) * nearer / Math.max(sizes[0], 1.5) <= from || Math.max(0, distance - margin) * nearer / Math.max(sizes[1], 1.5) >= to) return;
 						}
 
-						append(stream(key, one), list);
+						/* A heavy model (Detail): only its copies of this level, not all of its square (their corners all run). */
+						if (reach && detail(key) > 1) appendNear(stream(key, one), list, eye, nearer, from, to);
+						else append(stream(key, one), list);
 					});
 				});
 			});
 
 			Object.keys(state.Streams).forEach(function (name) {
 				var each = state.Streams[name];
-				var data = {aInstance: {Size: 4, Data: each.Places.subarray(0, each.Count * 4)}, aInstance2: {Size: 4, Data: each.Extra.subarray(0, each.Count * 4)}};
+				var data;
 
+				/* A stream asked for none of its copies kept (appendNear) has no arrays yet. */
 				if (!each.Count) return;
 
-				if (each.Level === 0 && surfaces(each.Key)) {
-					surfaces(each.Key).forEach(function (one) {
+				data = {aInstance: {Size: 4, Data: each.Places.subarray(0, each.Count * 4)}, aInstance2: {Size: 4, Data: each.Extra.subarray(0, each.Count * 4)}};
+
+				if (each.Level < 3 && surfaces(each.Key, each.Level)) {
+					surfaces(each.Key, each.Level).forEach(function (one) {
 						one.Mesh.Instance(data, each.Count);
 					});
 
@@ -1412,19 +1451,66 @@ Elemenx.Trait('SceneScatter', {
 			});
 		}
 
-		/* The surfaces of a model of a file, each with its material: near the eye it is drawn with its pictures. */
-		function surfaces (key) {
+		/*
+		 * The surfaces of a model of a file, each with its material: near the eye it is drawn with its pictures. A level past
+		 * the nearest has them too when its asset tells its own simpler levels (Lods: a plant of SceneFlora, its leaves cards
+		 * cut by their alpha that a simpler shape of its corners would make plates of); else none (its simpler shape, colored).
+		 */
+		function surfaces (key, level) {
 			var parts = key.split('~');
 			var model = library.Make(parts[0], {Variant: Number(parts[1])});
+			var at = level || 0;
+			var id = at ? key + '#' + at : key;
+			var lods;
+			var rest;
+
 			if (!model.Asset) return null;
 
-			if (!state.Surfaces[key]) {
-				state.Surfaces[key] = library.Surfaces(model).map(function (one) {
+			lods = model.Asset.Lods;
+
+			if (at && !(lods && lods[at - 1])) return null;
+
+			if (!state.Surfaces[id] && !at) {
+				state.Surfaces[id] = library.Surfaces(model).map(function (one) {
 					return Object.assign(one, {Mesh: renderer.Mesh(one.Geometry)});
 				});
 			}
 
-			return state.Surfaces[key];
+			/* In the space of the model, as its nearest (the place of its node in it: 1 tall). */
+			if (!state.Surfaces[id]) {
+				rest = model.Pieces[0] ? model.Pieces[0].Rest : null;
+
+				state.Surfaces[id] = lods[at - 1].map(function (primitive) {
+					var geometry = meshes.Merge([{Geometry: primitive.Geometry, Matrix: rest}]);
+
+					return {Material: model.Asset.Materials[primitive.Material], Asset: model.Asset, Soft: 0, Geometry: geometry, Mesh: renderer.Mesh(geometry)};
+				});
+			}
+
+			return state.Surfaces[id];
+		}
+
+		/* Whether a model is drawn of its pictures at every level but the farthest (its asset tells its simpler levels). */
+		function textured (key) {
+			return !!surfaces(key, 1);
+		}
+
+		/*
+		 * How many times nearer its levels come than those of a thing as large (its asset's Detail: a plant of SceneFlora is
+		 * tens of thousands of triangles near, its simpler levels a fifth and a twentieth of that); 1 for all else.
+		 */
+		function detail (key) {
+			var parts;
+
+			/* Known once for each model (asked for each list of each square at each level, each frame). */
+			state.Details = state.Details || {};
+
+			if (state.Details[key] === undefined) {
+				parts = key.split('~');
+				state.Details[key] = textured(key) ? Number(library.Make(parts[0], {Variant: Number(parts[1])}).Asset.Detail) || 1 : 1;
+			}
+
+			return state.Details[key];
 		}
 
 		/*
@@ -1469,10 +1555,19 @@ Elemenx.Trait('SceneScatter', {
 		}
 
 		/* Where a level is seen: it comes in between the first two distances, and goes between the last two. */
-		function fadeOf (level) {
+		/*
+		 * narrow: its bands of fading two fifths as wide, at their far ends (a plant of SceneFlora: two levels of thousands of
+		 * cards drawn in the dither of the band at once were a hatching of the crowns where the view stands still).
+		 */
+		function fadeOf (level, narrow) {
 			var quality = self.ScatterReach ? self.ScatterReach() : 1;
 			var from = level ? steps[level - 1] : [-2, -1];
 			var to = level < 3 ? steps[level] : [1e8, 2e8];
+
+			if (narrow) {
+				from = level ? [from[1] - (from[1] - from[0]) * 0.4, from[1]] : from;
+				to = level < 3 ? [to[1] - (to[1] - to[0]) * 0.4, to[1]] : to;
+			}
 
 			return scene.Camera.Ortho ? [-2, -1, 1e8, 2e8] : [from[0] * quality, from[1] * quality, to[0] * quality, to[1] * quality];
 		}
@@ -1487,6 +1582,7 @@ Elemenx.Trait('SceneScatter', {
 			var bounds;
 			var target;
 			var mesh;
+			var cut;
 			var column;
 			var row;
 
@@ -1498,6 +1594,10 @@ Elemenx.Trait('SceneScatter', {
 			bounds = library.Bounds(whole);
 			target = renderer.Target(cells * side, cells * side, {Colors: 2, Depth: true});
 			mesh = renderer.Mesh(whole);
+			/* Of its pictures (a plant of SceneFlora): its simpler level, its leaves cut by their alpha, as near it is drawn. */
+			cut = textured(key) ? surfaces(key, 1).map(function (each) {
+				return {Mesh: renderer.Mesh(each.Geometry), Values: engine.Surface(each)};
+			}) : null;
 
 			target.Begin();
 
@@ -1515,13 +1615,24 @@ Elemenx.Trait('SceneScatter', {
 
 					renderer.Viewport(column * side, row * side, side, side);
 
-					renderer.Draw(mesh, programs().Bake, {uViewProjection: matrix}, {Cull: 'none'});
+					if (cut) {
+						cut.forEach(function (each) {
+							renderer.Draw(each.Mesh, programs().BakeCut, Object.assign({uViewProjection: matrix}, each.Values), {Cull: 'none'});
+						});
+					}
+					else {
+						renderer.Draw(mesh, programs().Bake, {uViewProjection: matrix}, {Cull: 'none'});
+					}
 				}
 			}
 
 			target.End();
 
 			mesh.Destroy();
+
+			(cut || []).forEach(function (each) {
+				each.Mesh.Destroy();
+			});
 
 			state.Baked[key] = {Target: target, Quad: renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]}), Radius: bounds.Radius, Middle: bounds.Middle, Cells: cells};
 
@@ -1921,6 +2032,20 @@ Elemenx.Trait('SceneScatter', {
 			 * overlap (at ultra: farther apart).
 			 */
 			each(function (one) {
+				/*
+				 * Of its pictures (a plant of SceneFlora): its surfaces cast it, its leaves by their alpha. Regression: the near
+				 * level of a model of a file cast no shadow, a plant of cards a shadow of plates or none.
+				 */
+				if (one.Level < 3 && textured(one.Key)) {
+					surfaces(one.Key, one.Level).forEach(function (each) {
+						var cut = engine.Surface(each).uCutoff > 0;
+
+						renderer.Draw(each.Mesh, cut ? programs().DepthCut : programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: library.Make(one.Key.split('~')[0], {Variant: Number(one.Key.split('~')[1])}).Sway, uFade: fadeOf(one.Level, true), uLod: scene.Camera.Ortho ? 0 : lodScale() * detail(one.Key), uFlutter: cut ? library.Make(one.Key.split('~')[0], {Variant: Number(one.Key.split('~')[1])}).Sway || 0 : 0, uFlutterTime: scene.Seconds % 1000}, cut ? engine.Surface(each) : null, self.WindValues(scene.Seconds)), {Cull: 'none'});
+					});
+
+					return;
+				}
+
 				if (one.Level === 3 && !building(one.Key) || one.Level === 0 && surfaces(one.Key)) return;
 
 				renderer.Draw(levels(one.Key)[one.Level], programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: 0, uFade: fadeOf(one.Level), uLod: scene.Camera.Ortho ? 0 : lodScale()}, self.WindValues(scene.Seconds)), {Cull: 'none'});
@@ -1967,10 +2092,14 @@ Elemenx.Trait('SceneScatter', {
 
 			Object.keys(made).forEach(function (name) {
 				var one = made[name];
+				/* A plant of its pictures (SceneFlora): the bark of its simpler level, its leaves no walls in the voxels. */
+				var bark = textured(name) ? surfaces(name, 1).filter(function (each) {
+					return each.Material.Alpha !== 'MASK';
+				})[0] : null;
+				if (!bark)
+					levels(name);
 
-				levels(name);
-
-				state.VoxelMeshes[name] = state.VoxelMeshes[name] || renderer.Mesh(state.Geometries[name][1]);
+				state.VoxelMeshes[name] = state.VoxelMeshes[name] || renderer.Mesh(bark ? bark.Geometry : state.Geometries[name][1]);
 
 				state.VoxelMeshes[name].Instance({aInstance: {Size: 4, Data: one.Places.subarray(0, one.Count * 4)}, aInstance2: {Size: 4, Data: one.Extra.subarray(0, one.Count * 4)}}, one.Count);
 			});
@@ -2004,7 +2133,23 @@ Elemenx.Trait('SceneScatter', {
 
 			each(function (one) {
 				/* The far levels are past the voxels (some 45 m round the eye). */
-				if (one.Level >= 2 || one.Level === 0 && surfaces(one.Key)) return;
+				if (one.Level >= 2) return;
+
+				/*
+				 * A plant of its pictures (SceneFlora): its trunk and branches only. Regression: its simpler shape of corners, its
+				 * leaves cards as walls, filled the voxels of a wood: no light of the sky under it, the ground black.
+				 */
+				if (textured(one.Key)) {
+					surfaces(one.Key, one.Level).forEach(function (each) {
+						if (each.Material.Alpha === 'MASK') return;
+
+						renderer.Draw(each.Mesh, state.Voxel, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: 0, uSway: 0, uFade: fadeOf(one.Level, true), uLod: scene.Camera.Ortho ? 0 : lodScale() * detail(one.Key)}, self.WindValues(scene.Seconds)), {Cull: 'none', Depth: false, DepthWrite: false});
+					});
+
+					return;
+				}
+
+				if (one.Level === 0 && surfaces(one.Key)) return;
 
 				renderer.Draw(levels(one.Key)[one.Level], state.Voxel, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: 0, uSway: 0, uFade: fadeOf(one.Level), uLod: scene.Camera.Ortho ? 0 : lodScale()}, self.WindValues(scene.Seconds)), {Cull: 'none', Depth: false, DepthWrite: false});
 			});
@@ -2036,10 +2181,16 @@ Elemenx.Trait('SceneScatter', {
 				var made = library.Make(parts[0], {Variant: Number(parts[1])});
 				var baked;
 
-				if (one.Level === 0 && surfaces(one.Key)) {
-					surfaces(one.Key).forEach(function (each) {
+				if (one.Level < 3 && surfaces(one.Key, one.Level)) {
+					surfaces(one.Key, one.Level).forEach(function (each) {
 						files.uSway = made.Sway;
 						files.uSoftness = each.Soft;
+						files.uFade = fadeOf(one.Level, textured(one.Key));
+						/* Its leaves flutter (a plant of its pictures); set at each draw, the program keeps what it was last given. */
+						files.uFlutter = textured(one.Key) && each.Material.Alpha === 'MASK' ? made.Sway || 0 : 0;
+						files.uFlutterTime = scene.Seconds % 1000;
+						files.uLevel = engine.LevelColor('near', one.Level);
+						files.uLod = lod * detail(one.Key);
 
 						renderer.Draw(each.Mesh, programs().Files, Object.assign(files, engine.Surface(each), engine.SeasonValues ? engine.SeasonValues(parts[0]) : null), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
 					});
@@ -2081,6 +2232,8 @@ Elemenx.Trait('SceneScatter', {
 				baked = picture(one.Key);
 
 				far.uLevel = engine.LevelColor('near', 3);
+				far.uFade = fadeOf(3, textured(one.Key));
+				far.uLod = lod * detail(one.Key);
 				far.uColors = baked.Target.Textures[0];
 				far.uNormals = baked.Target.Textures[1];
 				far.uCells = baked.Cells;
@@ -2249,6 +2402,9 @@ Elemenx.Trait('SceneScatter', {
 				'uniform float uSway;',
 				'uniform vec4 uFade;',
 				'uniform float uLod;',
+				/* How much its leaves flutter (a plant of SceneFlora: its Sway; 0 none) and the seconds of the scene for it. */
+				'uniform float uFlutter;',
+				'uniform float uFlutterTime;',
 				'out vec3 vWorld;',
 				'out vec3 vNormal;',
 				'out vec3 vLocal;',
@@ -2275,6 +2431,16 @@ Elemenx.Trait('SceneScatter', {
 				'	float phase = aInstance.x * 0.13 + aInstance.z * 0.17;',
 				'	vec3 bent = vec3(c * aNormal.x + s * aNormal.z, aNormal.y, c * aNormal.z - s * aNormal.x);',
 				'	blueprintWind(aPosition, aNormal, aUV, uSway, phase, aInstance.w, world, bent);',
+				/*
+				 * Its leaves flutter: quick, small (some centimetres at the top of a tree of 20 m, none at its foot), each part of its
+				 * crown of its own beat, more in a gust; the bend of the whole of it is the wind's above.
+				 */
+				'	if (uFlutter > 0.0) {',
+				'		vec3 cell = floor(aPosition * 12.0);',
+				'		float seed = fract(sin(dot(cell + aInstance.xyz, vec3(12.9898, 78.233, 37.719))) * 43758.5453) * 6.2832;',
+				'		float beat = uFlutterTime * (5.0 + uWind * 4.0);',
+				'		world += vec3(sin(beat + seed), 0.6 * sin(beat * 1.3 + seed * 2.0), cos(beat * 0.9 + seed)) * uFlutter * aInstance.w * 0.004 * clamp(aPosition.y, 0.0, 1.0) * (0.5 + uWind);',
+				'	}',
 				'	vWorld = world;',
 				'	vNormal = bent;',
 				'	vLocal = aPosition;',
@@ -2298,6 +2464,48 @@ Elemenx.Trait('SceneScatter', {
 				'	vNormal = aNormal;',
 				'	vColor = aColor;',
 				'	gl_Position = uViewProjection * vec4(aPosition, 1.0);',
+				'}'
+			].join('\n'),
+
+			/* The shadow of a surface cut by the alpha of its picture. */
+			DepthCut: head + [
+				'in vec2 vUV;',
+				'uniform sampler2D uColorMap;',
+				'uniform vec4 uBaseColor;',
+				'uniform float uCutoff;',
+				'void main() {',
+				'	if ((uBaseColor * texture(uColorMap, vUV)).a < uCutoff) discard;',
+				'}'
+			].join('\n'),
+
+			BakeCutVertex: head + [
+				'in vec3 aPosition;',
+				'in vec3 aNormal;',
+				'in vec2 aUV;',
+				'uniform mat4 uViewProjection;',
+				'out vec3 vNormal;',
+				'out vec2 vUV;',
+				'void main() {',
+				'	vNormal = aNormal;',
+				'	vUV = aUV;',
+				'	gl_Position = uViewProjection * vec4(aPosition, 1.0);',
+				'}'
+			].join('\n'),
+
+			/* A surface of a picture baked for the far copies: its color of its picture, none where it is cut. */
+			BakeCut: head + [
+				'in vec3 vNormal;',
+				'in vec2 vUV;',
+				'uniform sampler2D uColorMap;',
+				'uniform vec4 uBaseColor;',
+				'uniform float uCutoff;',
+				'layout(location = 0) out vec4 outColor;',
+				'layout(location = 1) out vec4 outNormal;',
+				'void main() {',
+				'	vec4 base = uBaseColor * texture(uColorMap, vUV);',
+				'	if (base.a < max(uCutoff, 0.01)) discard;',
+				'	outColor = vec4(min(base.rgb, vec3(1.0)), 1.0);',
+				'	outNormal = vec4(normalize(vNormal) * 0.5 + 0.5, 1.0);',
 				'}'
 			].join('\n'),
 

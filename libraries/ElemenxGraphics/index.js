@@ -261,6 +261,7 @@
 	'services/SceneProxies/SceneProxies.js',
 	'services/SceneCache/SceneCache.js',
 	'services/SceneClusters/SceneClusters.js',
+	'services/SceneFlora/SceneFlora.js',
 	'services/SceneWorld/SceneWorld.js',
 	'services/ScenePlanet/ScenePlanet.js',
 	'services/SceneLocations/SceneLocations.js',
@@ -293,5 +294,6 @@
 	'components/SceneEditor/SceneEditor.js',
 	'components/PlanetEditor/PlanetEditor.js',
 	'components/ModelEditor/ModelEditor.js',
+	'components/FloraEditor/FloraEditor.js',
 	'components/TextureLab/TextureLab.js'
 ];

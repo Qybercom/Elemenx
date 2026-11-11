@@ -20,7 +20,8 @@
  *   'Run'}}) (Clips: the clips of the game and the animations of the file that play them; idle, walk, run, attack, die
  *   and work are found by their names). Load(name, callback) fetches it, (error, model), and Ready(name) tells whether
  *   it came; a model of a file stands on the ground and is 1 tall, as the others are. With Generate(callback) instead of
- *   a file it is made by that function, (error, asset) as Gltf gives one (SceneMannequin: the model mannequin). Make of one not come yet is null. Apart,
+ *   a file it is made by that function, (error, asset) as Gltf gives one (SceneMannequin: the model mannequin), or a list
+ *   of assets, one for each of its Variants (SceneFlora: a tree, each variant another). Make of one not come yet is null. Apart,
  *   a word of the name of a material or a node, cuts what a file keeps as one piece at its wide gaps: four wheels in one mesh.
  *   Merge: true makes its pieces one for each material when it is made; a Scene draws what moves together of a model
  *   that plays no clips as one for each material anyway (each wheel, each opening), but for Merge: false.
@@ -186,7 +187,9 @@ Elemenx.Service('SceneModels', {
 				var waiting = recipe.Waiting;
 
 				recipe.Waiting = null;
-				recipe.Asset = asset;
+				/* A list: an asset for each variant (the first the asset of the model). */
+				recipe.Assets = Array.isArray(asset) ? asset : null;
+				recipe.Asset = Array.isArray(asset) ? asset[0] || null : asset;
 
 				if (error)
 					recipe.Failed = error;
@@ -249,6 +252,7 @@ Elemenx.Service('SceneModels', {
 		var shown = revision ? key + '~' + revision : key;
 		var meshes = this.$Service('Meshes');
 		var pieces;
+		var own;
 
 		if (!recipe)
 			throw new Error('Elemenx Models: unknown model ' + name);
@@ -266,7 +270,10 @@ Elemenx.Service('SceneModels', {
 			if (this.Made[key])
 				return this.Made[key];
 
-			this.Made[key] = this.Finished(name, this.FromFile(name, shown, recipe), recipe);
+			/* Of a variant of its own: the asset of that variant (Generate gave a list). */
+			own = recipe.Assets && recipe.Assets.length > 1 ? Object.assign(Object.create(recipe), {Asset: recipe.Assets[variant % recipe.Assets.length]}) : recipe;
+
+			this.Made[key] = this.Finished(name, this.FromFile(name, shown, own), recipe);
 
 			return this.Made[key];
 		}

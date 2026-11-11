@@ -44,7 +44,12 @@ export default defineConfig({
 		 * the others: what draws in 3D runs after them, a file at a time.
 		 */
 		projects: [
-			{extends: true, test: {name: 'contracts', include: ['tests/**/*.test.js', 'libraries/**/*.test.js'], exclude: outside.concat(graphics, scenes), sequence: {groupOrder: 0}}},
+			/*
+			 * The contracts run beside the scenes (groupOrder 0), whose workers grow plants and bake planets: under that load a
+			 * contract of a component took more than the 15 s a test has (a different one each run: Noise, TopologyIso,
+			 * SignaturePad, Countdown). 45 s.
+			 */
+			{extends: true, test: {name: 'contracts', include: ['tests/**/*.test.js', 'libraries/**/*.test.js'], exclude: outside.concat(graphics, scenes), testTimeout: 45000, sequence: {groupOrder: 0}}},
 			{extends: true, test: {name: 'scenes', include: scenes, exclude: outside.concat(graphics), testTimeout: 60000, sequence: {groupOrder: 0}}},
 			{extends: true, test: {name: 'graphics', include: graphics, exclude: outside, maxWorkers: 1, testTimeout: 90000, sequence: {groupOrder: 1}}}
 		]

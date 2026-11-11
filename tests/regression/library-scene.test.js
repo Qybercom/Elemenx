@@ -3298,6 +3298,34 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 	 * Regression: the Models demo of the UI kit lined up every building of SceneModels, those the Showcase world of the same
 	 * page defines (showcase-*) too: a row to x 1160 on a ground of 400 metres, into the sea. Its own models only now.
 	 */
+	/*
+	 * Its plants in the style of the scene (PlantStyle): realistic (the default), a plant of SceneFlora of the species once
+	 * it came (the simple model meanwhile); simple, the model of code; a name of no species, itself.
+	 */
+	it('draws its plants in its style: realistic plants of SceneFlora once they came, or the simple models of code', async function () {
+		Use(['service:SceneFlora']);
+
+		var realistic = await mount('<Scene Paused="true" Labels="false" (ready)="Ready"></Scene>');
+		var simple = await mount('<Scene Paused="true" Labels="false" PlantStyle="simple" (ready)="Ready"></Scene>');
+		var engine = realistic.Space.Engine();
+		var library = realistic.Space.$Service('SceneModels');
+
+		expect(realistic.Space.PlantStyle).toBe('realistic');
+		expect(simple.Space.Engine().PlantShape('pine')).toBe('pine');
+		expect(engine.PlantShape('rock')).toBe('rock');
+
+		/* Asked once, it comes from the workers. */
+		engine.PlantShape('palm');
+
+		await waitFor(function () {
+			return library.Ready('flora-palm');
+		}, 60000);
+
+		expect(engine.PlantShape('palm')).toBe('flora-palm');
+		expect(library.Info('flora-palm')).toMatchObject({Type: 'plant', Variants: 8});
+		expect(simple.Space.Engine().PlantShape('palm')).toBe('palm');
+	}, 90000);
+
 	it('lines up in the Models demo only the models of the library, on its ground', function () {
 		var page = null;
 
@@ -3308,6 +3336,10 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		}});
 
 		Elemenx.Service('SceneBuildingGenerator').Define('showcase-test-tower', {Class: 'skyscraper', Seed: 'models'});
+		/* A realistic plant a scene made of a species (PlantStyle): not lined up again. */
+		Elemenx.Service('SceneModels').Define('flora-test-oak', {Type: 'plant', Group: 'nature', Size: 20, Build: function (tools) {
+			return [tools.Piece('trunk', [tools.Cylinder(0.1, 0.1, 1, [0, 0, 0], [0.4, 0.3, 0.2])])];
+		}});
 
 		var state = {ModelsList: [], $Service: function (name) {
 			return Elemenx.Service(name);
@@ -3321,7 +3353,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		expect(state.ModelsList.length).toBeGreaterThan(10);
 		expect(state.ModelsList.filter(function (model) {
-			return model.Kind.indexOf('showcase-') === 0;
+			return model.Kind.indexOf('showcase-') === 0 || model.Kind.indexOf('flora-') === 0;
 		})).toEqual([]);
 		expect(state.ModelsList.filter(function (model) {
 			return Math.abs(model.X) > 190;

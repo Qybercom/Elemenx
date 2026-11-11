@@ -179,6 +179,7 @@ Elemenx.Component('Scene', {
 			FreeLook: 'A walker that stands does not turn with the view, so it can be looked at from all sides: it comes round when it sets off.',
 			DaySeconds: 'The seconds a day of 24 hours takes, on a body and from space alike, however fast the orbits go (0: as Speed says).',
 			SurfaceSpeed: 'The days a second on the surface of a body (1/120: a day of two minutes).',
+			PlantStyle: 'How its plants look: realistic (SceneFlora: grown trees, their bark and leaves drawn, the default) or simple (the models of code of few faces).',
 			Shadows: 'The shadows of a sun on a ground, a surface and a model near the view (true).',
 			Quality: {Options: ['', 'low', 'medium', 'high', 'ultra'], Description: 'What the light costs: empty chooses by the graphics card and steps down while frames are late.'},
 			Pipeline: 'The render graph of the Blueprints Service that makes the picture of a frame (high, ultra and medium): its passes (Scene, Clouds, Occlusion, Air, Frames, Mirror, Rays, Exposure, Bokeh, Bloom, Picture, Shader: a pass graph of its own) up to Present; empty: PipelineGraph(), the passes of the library.',
@@ -231,6 +232,7 @@ Elemenx.Component('Scene', {
 	Capture: true,
 	FreeLook: false,
 	SurfaceSpeed: 1 / 120,
+	PlantStyle: 'realistic',
 	Shadows: true,
 	View: '',
 	Paused: false,
@@ -3809,8 +3811,45 @@ Elemenx.Component('Scene', {
 		}
 
 		function nameOf (object, settings) {
-			return object.Shape || object.Values.Model || settings.Shape;
+			return engine.PlantShape(object.Shape || object.Values.Model || settings.Shape);
 		}
+
+		/*
+		 * The plant of a name in the style of the scene (PlantStyle): realistic, a plant of SceneFlora of that species (pine,
+		 * spruce, oak, birch, palm, bush: flora-<name>) once it has come (asked for the first time it is wanted, grown in
+		 * workers; what is sown is sown again when it comes, an object drawn by it); simple, or a name of no species, the name.
+		 */
+		engine.PlantShape = function (name) {
+			var flora;
+			var styled;
+
+			if (!name || self.PlantStyle === 'simple' || typeof name !== 'string') return name;
+
+			flora = self.$Service('SceneFlora');
+
+			/* No SceneFlora in this page (a library without it): the simple style. */
+			if (!flora || flora.ElemenxDeferred || flora.Species().indexOf(name) === -1) return name;
+
+			styled = 'flora-' + name;
+
+			if (!library.Has(styled))
+				flora.Define(styled, name);
+
+			if (library.Ready(styled)) return styled;
+
+			if (!scene.Asked[styled]) {
+				scene.Asked[styled] = true;
+
+				library.Load(styled, function (error) {
+					if (error)
+						self.$Emit('error', error);
+
+					scene.Version++;
+				});
+			}
+
+			return name;
+		};
 
 		function modelOf (object, settings) {
 			var name = nameOf(object, settings);
