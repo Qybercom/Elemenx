@@ -54,6 +54,18 @@ async function mount (quality) {
 		scene.Engine().Frame(scene.Now += 33);
 	}
 
+	/*
+	 * Regression (load): the programs of another quality are made by the card behind the page, and till they are the land is
+	 * not drawn; four frames were not always enough. It draws on till the card has them all.
+	 */
+	await waitFor(function () {
+		scene.Scene().Rest = 0;
+
+		scene.Engine().Frame(scene.Now += 33);
+
+		return !scene.Engine().Renderer.Progress().Needed;
+	}, 60000);
+
 	return scene;
 }
 
@@ -165,8 +177,8 @@ describe('Contract: the shadows of the sun in four cascades on high and ultra', 
 		expect(scene.Graphics()).toMatchObject({Cascades: 4, ShadowFar: 300});
 		expect(shade.uCascadeSplits[3]).toBeCloseTo(300, 6);
 
-		/* The frame the last slice is drawn in: each fourth. */
-		while (scene.Scene().Cascaded.Frame % 4 !== 1)
+		/* The frame the last slice is drawn in: each eighth. */
+		while (scene.Scene().Cascaded.Frame % 8 !== 3)
 			shade = frame(scene);
 
 		eye = scene.Scene().Eye.slice();
@@ -177,7 +189,7 @@ describe('Contract: the shadows of the sun in four cascades on high and ultra', 
 
 		shade = frame(scene);
 
-		expect(scene.Scene().Cascaded.Frame % 4).toBe(2);
+		expect(scene.Scene().Cascaded.Frame % 8).toBe(4);
 		expect(Math.hypot(scene.Scene().Eye[0] - eye[0], scene.Scene().Eye[2] - eye[2])).toBeGreaterThan(0.01);
 
 		after = placed(shade.uCascades, 3, [point[0] - scene.Scene().Eye[0], point[1] - scene.Scene().Eye[1], point[2] - scene.Scene().Eye[2]]);

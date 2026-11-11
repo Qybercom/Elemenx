@@ -90,7 +90,11 @@ describe('Regression: WebWorker definitions and lifecycle', function () {
 });
 
 /* A worker loads the whole framework: on a busy machine (the full run) its start takes seconds, not milliseconds. */
-describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 45000}, function () {
+/*
+ * Regression (load): a real Worker took more than 10 s to start under a full run of the tests, in each test of these by turns;
+ * each start and reply is waited for up to 30 s, a test up to 90 s.
+ */
+describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 90000}, function () {
 	beforeAll(async function () { await loadElemenx(); });
 
 	beforeEach(function () { resetDOM(); });
@@ -110,7 +114,7 @@ describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 
 
 		expect(worker.State()).toBe('Starting');
 		expect(worker.Native()).not.toBeNull();
-		expect(await waitFor(function () { return worker.State() === 'Running'; }, 10000)).toBe(true);
+		expect(await waitFor(function () { return worker.State() === 'Running'; }, 30000)).toBe(true);
 		expect(states).toEqual(['Starting', 'Running']);
 
 		worker.Destroy();
@@ -131,7 +135,7 @@ describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 
 
 		expect(await waitFor(function () {
 			return worker.State() === 'Error';
-		}, 10000)).toBe(true);
+		}, 30000)).toBe(true);
 		expect(errors.length).toBe(1);
 		expect(String(errors[0].message)).toContain('worker script broke');
 
@@ -152,11 +156,11 @@ describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 
 
 		socket.On(function (event) { reply = event.Data; });
 
-		expect(await waitFor(function () { return worker.State() === 'Running'; }, 10000)).toBe(true);
+		expect(await waitFor(function () { return worker.State() === 'Running'; }, 30000)).toBe(true);
 
 		socket.Send(channel, {Command: 'ping', Value: 73});
 
-		expect(await waitFor(function () { return reply !== null; }, 10000)).toBe(true);
+		expect(await waitFor(function () { return reply !== null; }, 30000)).toBe(true);
 		expect(reply.Type).toBe('pong');
 		expect(reply.Value).toBe(73);
 		expect(reply.WorkerName).toBe(worker.Name());
@@ -182,8 +186,8 @@ describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 
 
 		socket.Send(channel, {Command: 'ping', Value: 'lazy'});
 
-		expect(await waitFor(function () { return worker.State() === 'Running'; }, 10000)).toBe(true);
-		expect(await waitFor(function () { return reply !== null; }, 10000)).toBe(true);
+		expect(await waitFor(function () { return worker.State() === 'Running'; }, 30000)).toBe(true);
+		expect(await waitFor(function () { return reply !== null; }, 30000)).toBe(true);
 		expect(reply.Value).toBe('lazy');
 
 		socket.Destroy();
@@ -204,13 +208,13 @@ describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 
 
 		worker.Start();
 
-		expect(await waitFor(function () { return worker.State() === 'Running'; }, 10000)).toBe(true);
+		expect(await waitFor(function () { return worker.State() === 'Running'; }, 30000)).toBe(true);
 
 		var first = worker.Native();
 
 		socket.Send(channel, {Command: 'ping', Value: 1});
 
-		expect(await waitFor(function () { return replies.length === 1; }, 10000)).toBe(true);
+		expect(await waitFor(function () { return replies.length === 1; }, 30000)).toBe(true);
 
 		worker.Stop();
 
@@ -225,12 +229,12 @@ describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 
 
 		worker.Start();
 
-		expect(await waitFor(function () { return worker.State() === 'Running'; }, 10000)).toBe(true);
+		expect(await waitFor(function () { return worker.State() === 'Running'; }, 30000)).toBe(true);
 		expect(worker.Native()).not.toBe(first);
 
 		socket.Send(channel, {Command: 'ping', Value: 3});
 
-		expect(await waitFor(function () { return replies.length === 2; }, 10000)).toBe(true);
+		expect(await waitFor(function () { return replies.length === 2; }, 30000)).toBe(true);
 		expect(replies[1].Value).toBe(3);
 
 		socket.Destroy();
@@ -262,7 +266,7 @@ describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 
 
 		socket.Destroy();
 		worker.Destroy();
-	}, 45000);
+	}, 90000);
 
 	it('Destroy terminates a running Worker and stale native events cannot resurrect the handle', async function () {
 		var worker = Elemenx.WebWorker(unique('WorkerDestroyRunning'), {
@@ -288,7 +292,7 @@ describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 
 
 		expect(worker.State()).toBe('Stopped');
 		expect(function () { worker.Start(); }).toThrow();
-	}, 45000);
+	}, 90000);
 
 	it('restart detaches the previous native Messaging bridge and ignores stale replies', async function () {
 		var channel = unique('worker-stale-bridge');
@@ -304,14 +308,14 @@ describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 
 
 		worker.Start();
 
-		expect(await waitFor(function () { return worker.State() === 'Running'; }, 10000)).toBe(true);
+		expect(await waitFor(function () { return worker.State() === 'Running'; }, 30000)).toBe(true);
 
 		var first = worker.Native();
 
 		worker.Stop();
 		worker.Start();
 
-		expect(await waitFor(function () { return worker.State() === 'Running'; }, 10000)).toBe(true);
+		expect(await waitFor(function () { return worker.State() === 'Running'; }, 30000)).toBe(true);
 
 		first.dispatchEvent(new MessageEvent('message', {
 			data: {ElemenxMessaging: true, ElemenxMessagingProtocol: 1, Source: 'stale', Channel: socket.ID(), Data: 'stale'}

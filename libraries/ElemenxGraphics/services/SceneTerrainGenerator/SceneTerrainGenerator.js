@@ -3775,9 +3775,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 		return heights;
 	},
 
-	Field: function (shape, options) {
+	Field: function (shape, options, name) {
 		var fields = this.Fields = this.Fields || {};
-		var key = shape + JSON.stringify(options);
+		/* Options a worker keeps by Share: by their name, not their text (a sketch is a megabyte). */
+		var key = name ? shape + '#' + name : shape + JSON.stringify(options);
 
 		fields[key] = fields[key] || this[shape](options);
 
@@ -3785,19 +3786,43 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	Piece: function (shape, options, roads, args) {
-		var field = this.Field(shape === 'SpherePicture' ? 'Sphere' : shape, options);
+		/*
+		 * Options and roads a worker keeps by Share come by their names: sent to it once, not with each square. Regression: the
+		 * options of a ground of a sketch (a megabyte) were copied to a worker with every square asked of it, hundreds of
+		 * milliseconds a second of the page after it flew somewhere new.
+		 */
+		var named = typeof options === 'string' ? options : '';
+		var field;
+
+		if (named)
+			options = this.$Shared(named);
+
+		if (typeof roads === 'string')
+			roads = this.$Shared(roads);
+
+		field = this.Field(shape === 'SpherePicture' || shape === 'SphereThings' ? 'Sphere' : shape, options, named);
+
 		var made;
 
 		function typed (geometry) {
 			return {Positions: new Float32Array(geometry.Positions), Normals: new Float32Array(geometry.Normals), UVs: new Float32Array(geometry.UVs), Colors: new Float32Array(geometry.Colors || []), Materials: new Float32Array(geometry.Materials || []), Indices: new Uint32Array(geometry.Indices)};
 		}
 
-		/* A square of a globe; with a size (args[5]) and a field that paints itself (ScenePlanet), its picture too. */
+		/*
+		 * A square of a globe; with a size (args[5]) and a field that paints itself (ScenePlanet), its picture too; with a size
+		 * of what stands on it (args[6]), that too, of the same picture (ScenePlanet.PatchThings): one job, not two of it.
+		 */
 		if (shape === 'Sphere') {
 			made = field.Patch(args[0], args[1], args[2], args[3], args[4]);
 
-			return {Geometry: typed(made.Geometry), Center: made.Center, Picture: args[5] && field.Picture ? field.Picture(args[0], args[1], args[2], args[3], args[5]) : null};
+			var picture = args[5] && field.Picture ? field.Picture(args[0], args[1], args[2], args[3], args[5]) : null;
+
+			return {Geometry: typed(made.Geometry), Center: made.Center, Picture: picture, Things: args[6] && field.Planet ? this.$Service('ScenePlanet').PatchThings(field, args[0], args[1], args[2], args[3], args[6], picture) : null};
 		}
+
+		/* What stands on a square of a globe that paints itself (ScenePlanet.PatchThings): its woods and houses, one shape. */
+		if (shape === 'SphereThings')
+			return field.Planet ? this.$Service('ScenePlanet').PatchThings(field, args[0], args[1], args[2], args[3], args[4]) : null;
 
 		/* The picture of a square of a globe alone (a face made at once, its picture after). */
 		if (shape === 'SpherePicture')

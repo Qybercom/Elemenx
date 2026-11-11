@@ -1594,6 +1594,47 @@ Elemenx.Service('ScenePlanet', {
 	},
 
 	/*
+	 * The climate of a face of the globe, what its weather is made of (the Weather of a scene, its clouds and fogs): RGBA
+	 * bytes of a face size texels a side, rows from row on (rows of them), as Face lays them. R how wet (Moisture), G how
+	 * warm (Temperature), B its ground (0 the sea, 64 to 255 land from 0 to 6000 m up), A how much its wind climbs where it
+	 * blows (over a slope up the wind, 1500 m in 40 km all of it): where clouds rise against a range. {Data, Face, Row, Rows}.
+	 */
+	ClimateFace: function (options, face, size, row, rows) {
+		var planet = this.Planet(options);
+		var first = row || 0;
+		var count = Math.min(size - first, rows || size);
+		var data = new Uint8Array(size * count * 4);
+		var finest = Math.PI / 2 * planet.Radius / size;
+		var reach = 40 / planet.Radius;
+		var x;
+		var y;
+
+		for (y = 0; y < count; y++) {
+			for (x = 0; x < size; x++) {
+				var a = -1 + (x + 0.5) * 2 / size;
+				var b = -1 + (first + y + 0.5) * 2 / size;
+				var way = this.Unit(face === 0 ? [1, -b, -a] : face === 1 ? [-1, -b, a] : face === 2 ? [a, 1, b] : face === 3 ? [a, -1, -b] : face === 4 ? [a, -b, 1] : [-a, -b, -1]);
+				var sample = planet.Sample(way, finest);
+				var east = this.Unit(Math.abs(way[1]) > 0.999 ? [1, 0, 0] : [way[2], 0, -way[0]]);
+				var north = this.Cross(way, east);
+				var blow = [east[0] * sample.Wind[0] + north[0] * sample.Wind[1], east[1] * sample.Wind[0] + north[1] * sample.Wind[1], east[2] * sample.Wind[0] + north[2] * sample.Wind[1]];
+				var strength = Math.sqrt(blow[0] * blow[0] + blow[1] * blow[1] + blow[2] * blow[2]) || 1;
+				var ahead = [way[0] + blow[0] / strength * reach, way[1] + blow[1] / strength * reach, way[2] + blow[2] / strength * reach];
+				var behind = [way[0] - blow[0] / strength * reach, way[1] - blow[1] / strength * reach, way[2] - blow[2] / strength * reach];
+				var climb = sample.Land ? (Math.max(0, planet.Elevation(ahead, finest)) - Math.max(0, planet.Elevation(behind, finest))) / 1500 : 0;
+				var at = (y * size + x) * 4;
+
+				data[at] = Math.round(Math.max(0, Math.min(1, sample.Moisture)) * 255);
+				data[at + 1] = Math.round(Math.max(0, Math.min(1, sample.Temperature)) * 255);
+				data[at + 2] = sample.Land ? Math.round(64 + Math.min(1, Math.max(0, sample.Elevation) / 6000) * 191) : 0;
+				data[at + 3] = Math.round(Math.max(0, Math.min(1, climb)) * 255);
+			}
+		}
+
+		return {Data: data, Face: face, Row: first, Rows: count};
+	},
+
+	/*
 	 * The cells of the locations of a planet, of two grids (kind): cube (the usual), squares of the faces of a cube
 	 * (SceneTerrainGenerator.Face), N to a side of a face, laid out by equal angles so they are near alike; hex, the cells
 	 * round the points of an icosahedron cut into triangles N to a side, hexagons but for 12 pentagons at its corners. N of
@@ -2315,6 +2356,14 @@ Elemenx.Service('ScenePlanet', {
 			return top + (bottom - top) * sy;
 		}
 
+		/*
+		 * How much of a texel (texel km wide, its middle far km from the middle of a band half km wide) the band covers, 0
+		 * to 1: a road or a river in a texel far wider than it is as much of it as it takes, the same mean at every size.
+		 */
+		function covered (half, far, texel) {
+			return Math.max(0, Math.min(far + texel / 2, half) - Math.max(far - texel / 2, -half)) / texel;
+		}
+
 		function dwelt (up, x, y, sample, slope, height) {
 			var towns = nearTowns || (planet.Towns ? planet.Towns(up) : []);
 			var built = 0;
@@ -2421,7 +2470,7 @@ Elemenx.Service('ScenePlanet', {
 					if (river) {
 						var channel = 0.04 * Math.sqrt(river.Flow);
 						var plain = 0.6 * Math.pow(river.Flow, 0.4);
-						var wet = river.Flow > 25 ? Math.max(0, Math.min(1, (channel - river.Far) / texel + 0.5)) : 0;
+						var wet = river.Flow > 25 ? covered(channel, river.Far, texel) : 0;
 
 						if (river.Far < plain)
 							paint = mix(paint, [paint[0] * 0.85 + 0.03, paint[1] * 0.9 + 0.08, paint[2] * 0.85], smooth(plain, plain * 0.5, river.Far));
@@ -2431,7 +2480,7 @@ Elemenx.Service('ScenePlanet', {
 					}
 
 					if (road)
-						paint = mix(paint, [0.42, 0.4, 0.38], Math.max(0, Math.min(1, (0.015 - road.Far) / texel + 0.5)) * 0.8);
+						paint = mix(paint, [0.42, 0.4, 0.38], covered(0.015, road.Far, texel) * 0.8);
 				}
 
 				color[o] = Math.round(Math.max(0, Math.min(1, paint[0])) * 255);
@@ -2450,6 +2499,197 @@ Elemenx.Service('ScenePlanet', {
 		}
 
 		return {Size: n, Color: color, Normal: normal, Use: use};
+	},
+
+	/*
+	 * What stands on a square of a face of the globe of a field of Sphere, seen from over it (a proxy, as Voxy draws a far
+	 * land): its woods and its houses of its picture (PatchPicture, side a side), a shape of each. Its woods only on a square
+	 * of texels of 12 m or finer (farther, the Ground shader draws them, their crowns and gaps): each texel up to three crowns
+	 * of trees as large as trees are (2.5 to 9 m round, 8 to 24 m high), as many as the share of woods of the texel holds,
+	 * each a dome of its own green, of the color of the ground there darkened as the Ground shader darkens woods. Regression:
+	 * a texel of 600 m was one clump of crowns 270 m wide, a flat pyramid. Each texel of houses one to three blocks of walls
+	 * and a roof, as tall as the settlement (a village low, a city high). They
+	 * stand on the ground, up as it is there. Gives {Geometry (its houses), Trees (its woods), each {Positions, Normals,
+	 * Colors} relative to Center (km, of the body), each face of its own vertices, Center, Woods, Houses}: a scene draws its
+	 * trees near the eye only. Its picture of side texels made already (of PatchPicture) is taken as it is.
+	 */
+	PatchThings: function (field, face, cu, cv, extent, side, made) {
+		var terrain = this.$Service('SceneTerrainGenerator');
+		var planet = field.Planet;
+		var n = Math.max(2, Math.round(side || 32));
+		var picture = made && made.Size === n ? made : this.PatchPicture(field, face, cu, cv, extent, n);
+		var step = extent / (n - 1);
+		var texel = step * Math.PI / 4 * field.Radius;
+		var positions = [];
+		var normals = [];
+		var colors = [];
+		var counts = {Woods: 0, Houses: 0};
+		var center;
+		var i;
+		var k;
+
+		function unit (v) {
+			var length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) || 1;
+
+			return [v[0] / length, v[1] / length, v[2] / length];
+		}
+
+		function cross (a, b) {
+			return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+		}
+
+		function grounded (direction) {
+			var r = field.Radius + Math.max(0, planet.Elevation(direction)) / 1000;
+
+			return [direction[0] * r, direction[1] * r, direction[2] * r];
+		}
+
+		function hash (x, y, salt) {
+			var h = Math.imul((x | 0) ^ Math.imul((y | 0) + 0x9e3779b9, 0x85ebca6b) ^ salt, 0xc2b2ae35);
+
+			h = Math.imul(h ^ (h >>> 15), 0x27d4eb2d);
+
+			return ((h ^ (h >>> 13)) >>> 0) / 4294967296;
+		}
+
+		function triangle (a, b, c, color) {
+			var normal = unit(cross([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]));
+
+			[a, b, c].forEach(function (point) {
+				positions.push(point[0] - center[0], point[1] - center[1], point[2] - center[2]);
+				normals.push(normal[0], normal[1], normal[2]);
+				colors.push(color[0], color[1], color[2]);
+			});
+		}
+
+		/* A point of a frame: from a place along its east, its north and its up (km). */
+		function at (place, frame, x, y, z) {
+			return [place[0] + frame[0][0] * x + frame[1][0] * y + frame[2][0] * z, place[1] + frame[0][1] * x + frame[1][1] * y + frame[2][1] * z, place[2] + frame[0][2] * x + frame[1][2] * y + frame[2][2] * z];
+		}
+
+		/*
+		 * The crown of a tree: a dome of six sides, its widest ring at a third of its height, a narrower one at two thirds,
+		 * a point on top (its underside never seen from over it), turned by its angle; the side away from the sun as lit as
+		 * the shader lights it.
+		 */
+		function crown (place, frame, radius, height, turn, color) {
+			var ring = function (z, wide) {
+				var points = [];
+				var j;
+
+				for (j = 0; j < 6; j++)
+					points.push(at(place, frame, Math.cos(turn + j * Math.PI / 3) * wide, Math.sin(turn + j * Math.PI / 3) * wide, z));
+
+				return points;
+			};
+			var top = at(place, frame, 0, 0, height);
+			var up = ring(height * 0.72, radius * 0.78);
+			var low = ring(height * 0.34, radius);
+			var j;
+			var next;
+
+			for (j = 0; j < 6; j++) {
+				next = (j + 1) % 6;
+
+				triangle(up[j], up[next], top, color);
+				triangle(low[j], low[next], up[next], color);
+				triangle(low[j], up[next], up[j], color);
+			}
+		}
+
+		/* Crowns on a texel of 12 m or finer only, at most three a texel; of their own shape. */
+		var treed = texel <= 0.012;
+		var houses = {Positions: positions, Normals: normals, Colors: colors};
+		var trees = {Positions: [], Normals: [], Colors: []};
+
+		/* A block of walls and a roof, wide by deep by high (km), turned by its angle. */
+		function block (place, frame, wide, deep, high, turn, wall, roof) {
+			var c = Math.cos(turn);
+			var s = Math.sin(turn);
+			var corner = function (x, y, z) {
+				return at(place, frame, x * c - y * s, x * s + y * c, z);
+			};
+			var floor = [corner(-wide, -deep, 0), corner(wide, -deep, 0), corner(wide, deep, 0), corner(-wide, deep, 0)];
+			var top = [corner(-wide, -deep, high), corner(wide, -deep, high), corner(wide, deep, high), corner(-wide, deep, high)];
+			var j;
+			var next;
+
+			for (j = 0; j < 4; j++) {
+				next = (j + 1) % 4;
+
+				triangle(floor[j], floor[next], top[next], wall);
+				triangle(floor[j], top[next], top[j], wall);
+			}
+
+			triangle(top[0], top[1], top[2], roof);
+			triangle(top[0], top[2], top[3], roof);
+		}
+
+		center = grounded(unit(terrain.Face(face, cu, cv)));
+
+		for (k = 0; k < n; k++) {
+			for (i = 0; i < n; i++) {
+				var o = (k * n + i) * 4;
+				var woods = picture.Normal[o + 3] / 255;
+				var built = picture.Use[o + 1] / 255;
+				var kind = picture.Use[o + 2];
+				var seed = Math.round((cu + i * step) * 1e6) ^ Math.round((cv + k * step) * 1e6) * 31 ^ face * 7919;
+				var jitter = [(hash(i, k, seed) - 0.5) * step, (hash(k, i, seed + 1) - 0.5) * step];
+				var direction;
+				var place;
+				var east;
+				var frame;
+				var ground;
+				var count;
+				var j;
+
+				if (picture.Color[o + 3] > 128 || (!treed || woods < 0.12) && built < 0.2) continue;
+
+				direction = unit(terrain.Face(face, cu - extent / 2 + i * step + jitter[0], cv - extent / 2 + k * step + jitter[1]));
+				place = grounded(direction);
+				east = unit(cross(Math.abs(direction[1]) > 0.99 ? [1, 0, 0] : [0, 1, 0], direction));
+				frame = [east, cross(direction, east), direction];
+				ground = [picture.Color[o] / 255, picture.Color[o + 1] / 255, picture.Color[o + 2] / 255];
+
+				if (treed && woods >= 0.12) {
+					/* As many as its share holds, a tree to each 70 square metres of woods, three at most; as wide as their part of it. */
+					count = Math.min(3, Math.floor(woods * texel * texel * 1e6 / 70 + hash(i, k, seed + 2)));
+
+					for (j = 0; j < count; j++) {
+						var radius = Math.max(0.0025, Math.min(0.009, Math.sqrt(woods * texel * texel / count / Math.PI) * 0.62 * (0.75 + 0.5 * hash(j, k, seed + 12))));
+						var shade = 0.8 + 0.4 * hash(i, j, seed + 4);
+
+						positions = trees.Positions;
+						normals = trees.Normals;
+						colors = trees.Colors;
+
+						crown(at(place, frame, (hash(j, i, seed + 13) - 0.5) * texel * 0.8, (hash(i, j, seed + 14) - 0.5) * texel * 0.8, 0), frame, radius, Math.max(0.008, Math.min(0.024, radius * (1.8 + 1.2 * hash(k, j, seed + 3)))), hash(j, j, seed + 15) * Math.PI, [ground[0] * 0.42 * shade, ground[1] * 0.56 * (0.9 + 0.2 * hash(k, j, seed + 16)), ground[2] * 0.4 * shade]);
+
+						counts.Woods++;
+					}
+
+					positions = houses.Positions;
+					normals = houses.Normals;
+					colors = houses.Colors;
+				}
+
+				if (built >= 0.2) {
+					/* As many as its texel holds of them: a block for each hectare it is built over, at most 24. */
+					count = Math.max(1, Math.min(24, Math.round(texel * texel * 100 * built * 0.3 * (0.7 + 0.6 * hash(k, i, seed + 5)))));
+
+					for (j = 0; j < count; j++) {
+						var tall = kind === 255 ? 0.015 + 0.07 * built * hash(i, j, seed + 6) : kind === 170 ? 0.008 + 0.012 * hash(i, j, seed + 6) : 0.005 + 0.004 * hash(i, j, seed + 6);
+						var wide = Math.min(texel * 0.22, 0.006 + 0.01 * hash(j, i, seed + 7));
+
+						block(at(place, frame, (hash(j, k, seed + 8) - 0.5) * texel * 0.9, (hash(k, j, seed + 9) - 0.5) * texel * 0.9, 0), frame, wide, wide * (0.6 + 0.6 * hash(j, j, seed + 10)), tall, hash(i, j, seed + 11) * Math.PI, kind === 255 ? [0.62, 0.62, 0.64] : [0.74, 0.7, 0.62], kind === 255 ? [0.38, 0.38, 0.4] : [0.52, 0.24, 0.17]);
+
+						counts.Houses++;
+					}
+				}
+			}
+		}
+
+		return {Geometry: {Positions: new Float32Array(houses.Positions), Normals: new Float32Array(houses.Normals), Colors: new Float32Array(houses.Colors)}, Trees: {Positions: new Float32Array(trees.Positions), Normals: new Float32Array(trees.Normals), Colors: new Float32Array(trees.Colors)}, Center: center, Woods: counts.Woods, Houses: counts.Houses};
 	},
 
 	/* The workers that paint globes. */

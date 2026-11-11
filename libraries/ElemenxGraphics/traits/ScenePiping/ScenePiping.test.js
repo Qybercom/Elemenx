@@ -90,6 +90,43 @@ describe('Contract: the pipes of a Scene (kind pipe), drawn as their model and c
 		})).toBe(true);
 	}, 60000);
 
+	/*
+	 * Regression: the heights of the ground under each point of each pipe were asked each frame, 18 ms a frame of a world
+	 * of a sketch. Laid once, the pipe asks them no more while it and the ground stay as they are.
+	 */
+	it('asks the ground under a pipe once, not each frame', async function () {
+		var scene = await mount();
+		var field;
+		var height;
+		var asked = 0;
+
+		scene.Add({ID: 'still', Kind: 'pipe', Traits: {Pipe: {Points: [[-20, 10], [0, 12], [20, 10]], Radius: 0.4, Lift: 2}}});
+
+		await waitFor(function () {
+			frames(scene, 1);
+
+			return scene.Pipes().length === 1;
+		}, 10000);
+
+		frames(scene, 2);
+
+		field = scene.Scene().Ground.Field;
+		height = field.Height;
+		/* What the pipes ask, not the camera nor the rest of the scene. */
+		field.Height = function () {
+			if (/PipingStep/.test(new Error().stack))
+				asked++;
+
+			return height.apply(this, arguments);
+		};
+
+		frames(scene, 10);
+
+		field.Height = height;
+
+		expect(asked).toBe(0);
+	}, 60000);
+
 	it('cuts the ground round a buried pipe a man may go in: under its ground, a floor in the pipe', async function () {
 		var scene = await mount();
 		var field;

@@ -3294,6 +3294,47 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(gameSceneSource).toContain("'	if (dot(n, v) < -0.3) n = -n;',");
 	});
 
+	/*
+	 * Regression: the Models demo of the UI kit lined up every building of SceneModels, those the Showcase world of the same
+	 * page defines (showcase-*) too: a row to x 1160 on a ground of 400 metres, into the sea. Its own models only now.
+	 */
+	it('lines up in the Models demo only the models of the library, on its ground', function () {
+		var page = null;
+
+		Use(['service:SceneModels', 'service:SceneBuildingGenerator']);
+
+		new Function('Elemenx', pageSource)({Component: function (name, definition) {
+			page = definition;
+		}});
+
+		Elemenx.Service('SceneBuildingGenerator').Define('showcase-test-tower', {Class: 'skyscraper', Seed: 'models'});
+
+		var state = {ModelsList: [], $Service: function (name) {
+			return Elemenx.Service(name);
+		}, SceneBack: function () {
+			return true;
+		}};
+
+		page.ModelsReady.call(state, {Scene: function () {
+			return {};
+		}});
+
+		expect(state.ModelsList.length).toBeGreaterThan(10);
+		expect(state.ModelsList.filter(function (model) {
+			return model.Kind.indexOf('showcase-') === 0;
+		})).toEqual([]);
+		expect(state.ModelsList.filter(function (model) {
+			return Math.abs(model.X) > 190;
+		}).map(function (model) {
+			return model.Kind + ' ' + model.X;
+		})).toEqual([]);
+	});
+
+	/* Regression: the woods of a planet read where its texel is, its colors aside of it: steps of texels along their edges from far. */
+	it('reads the woods of a planet aside, as its colors, no steps along their edges', function () {
+		expect(gameSceneSource).toContain("'	float cover = uTiled * uWoods > 0.5 ? texture(uReliefMap, vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels + aside * 1.1 / uTexels).a : 0.0;',");
+	});
+
 	it('puts a new character where the last one stands, not where it started', function () {
 		expect(pageSource).toContain('Z: hero.Air === undefined ? hero.Values.Z : hero.Air');
 	});
@@ -4291,8 +4332,9 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 				grids.push({Args: args, Callback: callback});
 		};
 
+		/* What is asked of the workers: none taken from the cache of the browser (CacheSize 0: another test made the same squares). */
 		try {
-			mounted = await mount('<Scene (ready)="Ready">' +
+			mounted = await mount('<Scene CacheSize="0" (ready)="Ready">' +
 				'<SceneObject ID="land" Kind="ground" Size="192" Height="20" Water="0.2" Seed="test" />' +
 				'<SceneObject ID="sun" Kind="sun" />' +
 				'<SceneObject ID="blades" Kind="grass" />' +
@@ -4322,7 +4364,14 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			/* The first square is made at once, the others are asked for. */
 			expect(Object.keys(ground.Nodes).length).toBe(1);
 			expect(held[0].Args[0]).toBe('Flat');
-			expect(held[0].Args[1]).toBe(field.Options);
+			/*
+			 * Regression: its options (of a sketch, a megabyte) were sent with each square; now by a name the pool keeps them
+			 * under (Share), the same for every square of it.
+			 */
+			expect(typeof held[0].Args[1]).toBe('string');
+			expect(held.every(function (each) {
+				return each.Args[1] === held[0].Args[1];
+			})).toBe(true);
 
 			var one = held[0];
 			var count = held.length;
@@ -4330,7 +4379,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			/* Roads came while it was made: what came is let go, and asked for again. */
 			field.Roads = [[[-90, 0], [90, 0]]];
 
-			one.Callback(null, Elemenx.Service('SceneTerrainGenerator').Piece.apply(null, one.Args));
+			one.Callback(null, Elemenx.Service('SceneTerrainGenerator').Piece(one.Args[0], field.Options, null, one.Args[3]));
 
 			expect(Object.keys(ground.Nodes).length).toBe(1);
 
@@ -4340,9 +4389,9 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 				return JSON.stringify(each.Args[3]) === JSON.stringify(one.Args[3]);
 			})[0];
 
-			expect(again.Args[2]).toBe(field.Roads);
+			expect(typeof again.Args[2]).toBe('string');
 
-			again.Callback(null, Elemenx.Service('SceneTerrainGenerator').Piece.apply(null, again.Args));
+			again.Callback(null, Elemenx.Service('SceneTerrainGenerator').Piece(again.Args[0], field.Options, field.Roads, again.Args[3]));
 
 			expect(Object.keys(ground.Nodes).length).toBe(2);
 

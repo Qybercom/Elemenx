@@ -55,6 +55,7 @@ describe('Contract: the cameras of a Scene, each with the lens of a real one', f
 		}
 	}
 
+	/* Regression (load): some 40 s alone; under the whole run the default limit cut it off. */
 	it('shows the world from the camera chosen: where it stands, where it looks, the angle of its focal length; back to the view after', async function () {
 		var scene = await mount();
 		var inner = scene.Scene();
@@ -113,7 +114,7 @@ describe('Contract: the cameras of a Scene, each with the lens of a real one', f
 		expect(scene.Cameras().every(function (one) {
 			return !one.Active;
 		})).toBe(true);
-	});
+	}, 150000);
 
 	it('flies to a camera in Fly seconds, from where the view was', async function () {
 		var scene = await mount();

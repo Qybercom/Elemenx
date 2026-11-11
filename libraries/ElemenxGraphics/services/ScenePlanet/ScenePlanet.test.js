@@ -547,6 +547,164 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 	}, 120000);
 
 	/*
+	 * Its climate, what the weather of a scene is made of: a face of RGBA bytes, how wet (more at the equator than at 25
+	 * degrees), how warm (more at the equator than near a pole), its ground (0 the sea, land 64 and up) and how much its
+	 * wind climbs (somewhere on land, none on the sea).
+	 */
+	it('tells the climate of a face of its globe: wet, warm, its ground and its wind climbing a range', function () {
+		var options = {Seed: 'terra', Ocean: 0.55, Radius: 6371};
+		var size = 32;
+		var faces = [0, 1, 2, 3, 4, 5].map(function (face) {
+			return planets.ClimateFace(options, face, size, 0, size);
+		});
+		var planet = planets.Planet(options);
+		var equator = {Wet: 0, Warm: 0, Count: 0};
+		var tropic = {Wet: 0, Count: 0};
+		var polar = {Warm: 0, Count: 0};
+		var climbs = 0;
+
+		expect(faces[0].Data.length).toBe(size * size * 4);
+		expect(planets.ClimateFace(options, 2, size, 8, 4).Data.length).toBe(size * 4 * 4);
+
+		faces.forEach(function (made, face) {
+			for (var y = 0; y < size; y++) {
+				for (var x = 0; x < size; x++) {
+					var a = -1 + (x + 0.5) * 2 / size;
+					var b = -1 + (y + 0.5) * 2 / size;
+					var way = planets.Unit(face === 0 ? [1, -b, -a] : face === 1 ? [-1, -b, a] : face === 2 ? [a, 1, b] : face === 3 ? [a, -1, -b] : face === 4 ? [a, -b, 1] : [-a, -b, -1]);
+					var at = (y * size + x) * 4;
+					var latitude = Math.abs(Math.asin(way[1]) * 180 / Math.PI);
+					var land = planet.Sample(way, Math.PI / 2 * 6371 / size).Land;
+
+					expect(made.Data[at + 2] === 0).toBe(!land);
+
+					if (!land)
+						expect(made.Data[at + 3]).toBe(0);
+
+					if (made.Data[at + 3] > 10)
+						climbs++;
+
+					if (latitude < 8) {
+						equator.Wet += made.Data[at];
+						equator.Warm += made.Data[at + 1];
+						equator.Count++;
+					}
+
+					if (latitude > 22 && latitude < 28) {
+						tropic.Wet += made.Data[at];
+						tropic.Count++;
+					}
+
+					if (latitude > 70) {
+						polar.Warm += made.Data[at + 1];
+						polar.Count++;
+					}
+				}
+			}
+		});
+
+		expect(equator.Wet / equator.Count).toBeGreaterThan(tropic.Wet / tropic.Count);
+		expect(equator.Warm / equator.Count).toBeGreaterThan(polar.Warm / polar.Count + 40);
+		expect(climbs).toBeGreaterThan(0);
+	}, 120000);
+
+	/*
+	 * Regression: a highway or a river took half of each texel it crossed, however wide the texel: one of 10 km a band of
+	 * grey or of water 10 km wide (from far, the water mirrored the sky, a blue smudge), narrower on each finer square,
+	 * bands that came and went at the edges of squares of two sizes. Each takes as much of a texel as it covers: a large
+	 * square of the mean of its four by four finer ones.
+	 */
+	it('paints a highway and a river as much of a texel as they cover: a large square of the mean of the finer ones', function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var options = {Seed: 'terra', Ocean: 0.62, Radius: 6371};
+		var heights = new Float32Array(6 * 64 * 64);
+		var face;
+
+		for (face = 0; face < 6; face++)
+			heights.set(planets.Heights(options, face, 64, 0, 64).Data, face * 64 * 64);
+
+		planets.UseRivers('cover-rivers', planets.Drainage(heights, 64, 4).Rivers);
+		planets.UseSettlements('cover-towns', planets.Settlements(options, 6000).Settlements);
+		planets.UseHighways('cover-highways', planets.Highways(Object.assign({}, options, {Settlements: 'cover-towns'}), 20).Highways);
+
+		var plain = terrain.Sphere({Planet: options});
+		var roads = terrain.Sphere({Planet: Object.assign({}, options, {Highways: 'cover-highways'})});
+		var rivers = terrain.Sphere({Planet: Object.assign({}, options, {Rivers: 'cover-rivers'})});
+
+		/* Its face, u and v of a direction (as Face of SceneTerrainGenerator lays them). */
+		function faceOf (p) {
+			var x = p[0];
+			var y = p[1];
+			var z = p[2];
+			var ax = Math.abs(x);
+			var ay = Math.abs(y);
+			var az = Math.abs(z);
+			if (ax >= ay && ax >= az)
+				return x > 0 ? [0, -z / x, -y / x] : [1, z / ax, y / x];
+
+			if (ay >= az)
+				return y > 0 ? [2, x / y, z / y] : [3, x / ay, z / y];
+
+			return z > 0 ? [4, x / z, -y / z] : [5, x / z, y / z];
+		}
+
+		/* What a square differs by from the plain one, its mean over its texels: of the colors, and of the water (alpha). */
+		function differs (sphere, at, extent, side) {
+			var with1 = sphere.Picture(at[0], at[1], at[2], extent, side);
+			var without = plain.Picture(at[0], at[1], at[2], extent, side);
+			var color = 0;
+			var water = 0;
+			var i;
+
+			for (i = 0; i < with1.Color.length; i += 4) {
+				color += Math.abs(with1.Color[i] - without.Color[i]) + Math.abs(with1.Color[i + 1] - without.Color[i + 1]) + Math.abs(with1.Color[i + 2] - without.Color[i + 2]);
+				water += Math.abs(with1.Color[i + 3] - without.Color[i + 3]);
+			}
+
+			return {Color: color / (with1.Color.length / 4), Water: water / (with1.Color.length / 4)};
+		}
+
+		/* A square of 200 km over a point (texels of 12.5 km), and the mean of its 16 finer squares (texels of 3 km). */
+		function compared (sphere, point) {
+			var at = faceOf(point);
+			var extent = 200 / (Math.PI / 4 * 6371);
+			var large = differs(sphere, at, extent, 17);
+			var fine = {Color: 0, Water: 0};
+			var a;
+			var b;
+
+			for (a = 0; a < 4; a++) {
+				for (b = 0; b < 4; b++) {
+					var one = differs(sphere, [at[0], at[1] - extent / 2 + (a + 0.5) * extent / 4, at[2] - extent / 2 + (b + 0.5) * extent / 4], extent / 4, 17);
+
+					fine.Color += one.Color / 16;
+					fine.Water += one.Water / 16;
+				}
+			}
+
+			return {Large: large, Fine: fine};
+		}
+
+		/* A point of a highway between two towns, inland. */
+		var highway = [].concat.apply([], planets.HighwaysOf('cover-highways').map(function (one) {
+			return one.Points.slice(1, -1);
+		})).filter(function (point) {
+			return plain.Planet.Elevation(point) > 50;
+		})[0];
+
+		var river = planets.RiversOf('cover-rivers').slice().sort(function (a, b) {
+			return b.Flow[b.Flow.length - 1] - a.Flow[a.Flow.length - 1];
+		})[3];
+		var road = compared(roads, highway);
+		var stream = compared(rivers, river.Points[Math.floor(river.Points.length / 3)]);
+
+		expect(road.Fine.Color).toBeGreaterThan(0);
+		expect(road.Large.Color).toBeLessThan(road.Fine.Color * 1.8 + 0.2);
+		expect(stream.Fine.Water).toBeGreaterThan(0);
+		expect(stream.Large.Water).toBeLessThan(stream.Fine.Water * 1.8 + 0.2);
+	}, 180000);
+
+	/*
 	 * Regression: near, a globe had the colors of the points of its squares alone (steps where biomes meet, blurred between,
 	 * cracks between squares of two sizes). Each square now has a picture finer than its points, the same on an edge as the
 	 * square beside, a soft coast, normals of its heights, and a skirt under its edges.

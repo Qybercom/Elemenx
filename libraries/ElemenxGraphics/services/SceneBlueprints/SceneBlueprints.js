@@ -498,7 +498,7 @@ Elemenx.Service('SceneBlueprints', {
 			context.Lines.push('if (' + inputs.Height + ' > 0.02) {');
 			context.Lines.push('\tvec2 high = ' + inputs.Ray + '.xz / (' + inputs.Height + ' + 0.12);');
 			context.Lines.push('\tfloat wisp = noise3(vec3(high.x * 1.1, high.y * 3.4, uSun.x * 0.0)) * 0.65 + noise3(vec3(high.x * 3.1, high.y * 7.0, 3.0)) * 0.35;');
-			context.Lines.push('\tfloat thin = smoothstep(0.52, 0.8, wisp) * smoothstep(0.02, 0.2, ' + inputs.Height + ') * (1.0 - uCover);');
+			context.Lines.push('\tfloat thin = smoothstep(0.52, 0.8, wisp) * smoothstep(0.02, 0.2, ' + inputs.Height + ') * (1.0 - uCover) * (1.0 - uNoWisps);');
 			context.Lines.push('\t' + name + '_sky = mix(' + name + '_sky, mix(vec3(1.0, 0.98, 0.95), vec3(1.0, 0.62, 0.42), ' + inputs.Low + ') * max(' + inputs.Day + ', 0.04), thin * 0.42);');
 			context.Lines.push('}');
 

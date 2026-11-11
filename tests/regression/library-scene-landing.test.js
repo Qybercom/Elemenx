@@ -49,8 +49,12 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 			engine.Frame(now += 100);
 
 			return inner.Baked.terra && inner.Baked.terra.Painted >= 256;
-		}, 60000);
+		}, 110000);
 
+		/*
+		 * Regression (load): the first test of the file starts the workers that paint the globe; under a full run of the tests
+		 * they took more than the 60 s the whole test had. It waits up to 110 s.
+		 */
 		/* Regression (load): painted on, a busy frame went past 256 to its finer size before it was looked at; of the size it has. */
 		size = inner.Baked.terra.Ground.Size;
 		face = Elemenx.Service('ScenePlanet').Face(options, 2, size, Math.round(100 * size / 256), 1);
@@ -64,7 +68,7 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 		expect([256, 512]).toContain(size);
 		expect(Array.from(pixel)).toEqual(Array.from(face.Data.slice(Math.round(37 * size / 256) * 4, Math.round(37 * size / 256) * 4 + 4)));
-	}, 60000);
+	}, 120000);
 
 	/*
 	 * Regression: a globe of ScenePlanet showed the noise of its look first, then a coarse picture of its lands, then the
@@ -1124,6 +1128,143 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		finally {
 			engine.Renderer.Draw = draw;
 		}
+	}, 120000);
+
+	/*
+	 * The weather of a planet: its climate baked by the workers (ScenePlanet.ClimateFace), its weather a cube baked of it a
+	 * face a frame as its time goes, so its clouds move and change; over its surface they are a shell round it of that very
+	 * weather (SceneLighting), the sky's own wisps off. Regression: a flat layer 3 to 9 km over the eye, cut 180 km away, of
+	 * a noise of the place of the eye: slabs and stripes seen from 20 to 60 km, another sky than the globe's above 60.
+	 */
+	it('bakes the weather of a planet as its time goes, and draws its clouds over the surface as a shell of it', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var gl = engine.Renderer.GL;
+		var now = performance.now() + 1000;
+		var draw = engine.Renderer.Draw;
+		var shell = null;
+		var wisps = null;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+				inner.Looping = true;
+
+				engine.Frame(now += 100);
+
+				inner.Looping = false;
+			}
+		}
+
+		/* The weather of a face, read back: its cover and its kind of all its texels. */
+		function face (index) {
+			var made = inner.Baked.terra.Weather;
+			var reader = gl.createFramebuffer();
+			var data = new Uint8Array(made.Size * made.Size * 4);
+
+			gl.bindFramebuffer(gl.FRAMEBUFFER, reader);
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + index, made.Handle, 0);
+			gl.readPixels(0, 0, made.Size, made.Size, gl.RGBA, gl.UNSIGNED_BYTE, data);
+			gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+			gl.deleteFramebuffer(reader);
+
+			return data;
+		}
+
+		await waitFor(function () {
+			frames(1);
+
+			return inner.Baked.terra && inner.Baked.terra.Climate && inner.Baked.terra.WeatherFaces >= 6;
+		}, 110000);
+
+		var before = face(4);
+		var covered = 0;
+		var i;
+
+		for (i = 0; i < before.length; i += 4) {
+			if (before[i] > 128)
+				covered++;
+		}
+
+		/* Some of it cloudy, not all. */
+		expect(covered).toBeGreaterThan(before.length / 4 * 0.03);
+		expect(covered).toBeLessThan(before.length / 4 * 0.97);
+
+		/* A day later its clouds are elsewhere. */
+		inner.Time += 1;
+
+		frames(7);
+
+		var after = face(4);
+		var moved = 0;
+
+		for (i = 0; i < after.length; i += 4) {
+			if (Math.abs(after[i] - before[i]) > 40)
+				moved++;
+		}
+
+		expect(moved).toBeGreaterThan(after.length / 4 * 0.05);
+
+		/* Over its surface: the shell of its weather, the sky with no wisps of its own. */
+		engine.Renderer.Draw = function (mesh, program, uniforms) {
+			if (uniforms && uniforms.uShell)
+				shell = uniforms.uShell;
+
+			if (uniforms && uniforms.uNoWisps !== undefined)
+				wisps = uniforms.uNoWisps;
+
+			return draw.apply(this, arguments);
+		};
+
+		/* The shell is of the picture after the scene (Post): from medium on; low draws none. */
+		scene.Quality = 'medium';
+
+		try {
+			scene.Land('terra', {Latitude: 20, Longitude: 30, Altitude: 30, Instant: true});
+
+			await waitFor(function () {
+				frames(1);
+
+				return shell && shell[3] === 1;
+			}, 30000);
+		}
+		finally {
+			engine.Renderer.Draw = draw;
+		}
+
+		expect(shell[0]).toBe(6371);
+		expect(wisps).toBe(1);
+	}, 180000);
+
+	/*
+	 * Regression: a square of the surface asked for its parts only once it was made, a level a job after the one over it:
+	 * fourteen jobs one after another (some 20 s) before the ground under a landing was sharp, the workers idle between.
+	 * The squares under the eye, down to the finest, are asked at once.
+	 */
+	it('asks the squares under the eye of every level at once when it lands, not a level after another', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var i;
+
+		scene.Land('terra', {Latitude: 20, Longitude: 30, Altitude: 1, Instant: true});
+
+		for (i = 0; i < 3; i++) {
+			inner.Rest = 0;
+			inner.Looping = true;
+
+			engine.Frame(now += 100);
+
+			inner.Looping = false;
+		}
+
+		var levels = Object.keys(inner.Surface.Asked || {}).concat(Object.keys(inner.Surface.Nodes)).map(function (key) {
+			return Number(key.split(':')[3]);
+		});
+
+		expect(Math.max.apply(null, levels)).toBeGreaterThanOrEqual(12);
 	}, 120000);
 
 	/*

@@ -74,6 +74,41 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 		expect(after.Triangles - before.Triangles).toBe(2 + 2 * 3);
 	});
 
+	/* Its triangles again, its points kept: what a level of detail of clusters draws now (SceneClusters). */
+	it('gives a mesh other triangles of the same points (Triangles)', function () {
+		var program = renderer.Program([
+			'#version 300 es',
+			'in vec3 aPosition;',
+			'void main() { gl_Position = vec4(aPosition.xy, 0.0, 1.0); }'
+		].join('\n'), [
+			'#version 300 es',
+			'precision highp float;',
+			'out vec4 outColor;',
+			'void main() { outColor = vec4(1.0); }'
+		].join('\n'));
+		var quad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
+		var before;
+
+		expect(quad.Triangles([0, 1, 2])).toBe(quad);
+		expect(quad.Count).toBe(3);
+
+		before = renderer.Counts();
+
+		renderer.Draw(quad, program, {}, {Depth: false, Cull: 'none'});
+
+		expect(renderer.Counts().Triangles - before.Triangles).toBe(1);
+
+		quad.Triangles(new Uint32Array([0, 1, 2, 0, 2, 3]));
+
+		before = renderer.Counts();
+
+		renderer.Draw(quad, program, {}, {Depth: false, Cull: 'none'});
+
+		expect(renderer.Counts().Triangles - before.Triangles).toBe(2);
+
+		quad.Destroy();
+	});
+
 	/* A mesh of a mode of its own (lines): its pairs of points drawn as lines, no triangle of them; the weights of materials of a ground taken. */
 	it('makes a mesh of lines by its mode, and a mesh of the weights of the materials of a ground', function () {
 		var gl = renderer.GL;

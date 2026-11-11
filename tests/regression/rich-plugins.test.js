@@ -117,17 +117,18 @@ describe('Contract: the plugins of RichText, in Markdown and in a RichEditor', f
 
 		application = Elemenx.Application(unique('PluginsApplication'), {$Component: root, $Mount: '#mount', $Use: library});
 
+		/* Regression (load): the library came after 4 s under a full run of the tests; it is waited for longer. */
 		try {
 			expect(await waitFor(function () {
 				var greeting = document.querySelector('.elemenx-rich-plugin .library-greeting');
 
 				return greeting && greeting.textContent === 'Hello, Ada';
-			}, 4000)).toBe(true);
+			}, 20000)).toBe(true);
 		}
 		finally {
 			application.$Destroy();
 		}
-	});
+	}, 40000);
 
 	it('RichEditor draws its plugins as blocks the caret does not enter, puts one in by Command, edits its text in place, and writes it in Markdown', async function () {
 		var editor = null;

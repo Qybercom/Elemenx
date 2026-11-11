@@ -151,7 +151,7 @@ Elemenx.Component('Scene', {
 			shader: 'A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}).'
 		},
-		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
+		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
 		Props: {
 			Setting: {Options: ['space', 'terrain'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers).'},
 			System: 'The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}.',
@@ -165,6 +165,10 @@ Elemenx.Component('Scene', {
 			Axes: {Options: ['', 'top-left', 'top-right', 'bottom-left', 'bottom-right'], Description: 'The corner where the Axes of the view stand, none when empty; a press on one looks along it.'},
 			Origin: 'Draws the three axes of the world at its middle (and the colliders as their outlines).',
 			Wireframe: 'Draws the wire of the scene over it: each edge of the ground and of the models (--elemenx-scene-wire).',
+			Levels: 'Colors each thing by the level of detail it is drawn at (near green to red, the proxies of far tiles cyan to pink, the squares of the ground by their depth), with the draws and triangles of a frame in a corner: to see where the detail goes. Ctrl+Shift+L turns it on and off.',
+			Proxies: 'Far tiles of what is sown drawn each as one simpler shape (SceneProxies), as Voxy draws a far land; false: each thing by its own levels.',
+			Clusters: 'Large models that stand alone (3000 faces or more) drawn by their clusters (SceneClusters, as Nanite): each part as fine as the screen needs; false: each at its finest.',
+			CacheSize: 'Megabytes the browser keeps of what the scene made (SceneCache: the proxies of far tiles), the oldest gone over it; 0 keeps nothing.',
 			Edges: 'Draws the edges of the models: where their faces meet at an angle and their rims (--elemenx-scene-edges).',
 			Hovered: 'The ID of the object under the pointer, outlined (--elemenx-scene-hover) as the selected one is (--elemenx-scene-outline).',
 			HoverMark: 'How the object under the pointer is marked: none (the default: the hover event alone), ring, outline, or {Look, Color (#rrggbb), Width (pixels of an outline), Pulse (seconds of a beat, 0 still), Cursor (a CSS cursor over it)}.',
@@ -255,6 +259,10 @@ Elemenx.Component('Scene', {
 	WaterGraph: null,
 	Origin: false,
 	Wireframe: false,
+	Levels: false,
+	Proxies: true,
+	CacheSize: 200,
+	Clusters: true,
 	Edges: false,
 	Hovered: '',
 	HoverMark: '',
@@ -291,6 +299,8 @@ Elemenx.Component('Scene', {
 	/* The stage the loading is at (programs, models, globes, ground, plants, view; '' when none) and its words. */
 	LoadingStage: '',
 	LoadingText: '',
+	/* What Levels shows in its corner: the draws and triangles of a frame, the tiles and copies of what is sown. */
+	LevelsText: '',
 
 	$OnCreate: function () {
 		var self = this;
@@ -533,6 +543,7 @@ Elemenx.Component('Scene', {
 			Flight: null,
 			Pan: [0, 0, 0],
 			Keys: {},
+			DrawnCount: {Frames: 0, Cpu: 0, Draws: 0, Triangles: 0, At: 0},
 			Focus: '',
 			Selected: '',
 			Pointers: {},
@@ -1055,6 +1066,36 @@ Elemenx.Component('Scene', {
 			return number(object.Values.Length, 0) || (vehicle && typeof vehicle === 'object' ? number(vehicle.Length, 0) : 0);
 		}
 
+		/*
+		 * The color of a level of detail while Levels is on, over what is drawn at it ([r, g, b, how much]; nothing while it is
+		 * off): near ones (a model and its simpler levels, the picture of the farthest) green, yellow, orange and red; the
+		 * proxies of tiles (SceneProxies) cyan, blue, violet and pink as they are larger; the squares of a ground by their
+		 * depth, from grey (the coarsest) through the same colors.
+		 */
+		engine.LevelColor = function (kind, level) {
+			var near = [[0.2, 0.85, 0.3], [0.95, 0.85, 0.2], [1, 0.5, 0.1], [0.9, 0.2, 0.25]];
+			var far = [[0.2, 0.8, 0.95], [0.25, 0.45, 1], [0.6, 0.3, 1], [0.95, 0.3, 0.85]];
+			var ground = [[0.5, 0.5, 0.5], [0.95, 0.3, 0.85], [0.6, 0.3, 1], [0.25, 0.45, 1], [0.2, 0.8, 0.95], [0.9, 0.2, 0.25], [1, 0.5, 0.1], [0.95, 0.85, 0.2], [0.2, 0.85, 0.3]];
+			var list = kind === 'proxy' ? far : kind === 'ground' ? ground : near;
+			var color;
+
+			if (!self.Levels || self.Levels === 'false') return [0, 0, 0, 0];
+
+			color = list[Math.max(0, Math.min(list.length - 1, kind === 'proxy' ? level - 1 : level))];
+
+			return [color[0], color[1], color[2], 0.7];
+		};
+
+		/*
+		 * A fragment shader colored by its level: its main run as it was, then what it wrote mixed toward uLevel (by its
+		 * alpha; 0, as it was), kept as light or as dark as it was, so the shapes are still seen.
+		 */
+		engine.Leveled = function (fragment) {
+			var at = fragment.lastIndexOf('void main() {');
+
+			return fragment.slice(0, at) + 'void leveledMain() {' + fragment.slice(at + 13) + '\nuniform vec4 uLevel;\nvoid main() {\n\tleveledMain();\n\tif (uLevel.a > 0.0) outColor.rgb = mix(outColor.rgb, uLevel.rgb * (0.3 + 0.9 * dot(outColor.rgb, vec3(0.333))), uLevel.a);\n}\n';
+		};
+
 		/* A metre in the units of the view, in real sizes; null when compressed. */
 		engine.Metre = function () {
 			return self.Scale === 'real' ? METRE : null;
@@ -1420,7 +1461,7 @@ Elemenx.Component('Scene', {
 			gpu.Star = renderer.Program(shaders.Lit, shaders.Star);
 			gpu.Air = renderer.Program(shaders.Lit, shaders.Air);
 			gpu.Ring = renderer.Program(shaders.Lit, shaders.Ring);
-			gpu.Many = renderer.Program(shaders.Instanced, shaders.Solid);
+			gpu.Many = renderer.Program(shaders.Instanced, engine.Leveled(shaders.Solid));
 			gpu.Glow = renderer.Program(shaders.Billboard, shaders.Glow);
 			gpu.Line = renderer.Program(shaders.Line, shaders.Flat);
 			gpu.Far = renderer.Program(shaders.Far, shaders.Dot);
@@ -1433,15 +1474,15 @@ Elemenx.Component('Scene', {
 				var kept = own ? own.Programs : gpu.LandPrograms;
 				var hook = 'void landMaterials(vec3 place, float px, inout vec3 color, inout float height) {}';
 
-				kept['Land:' + key] = kept['Land:' + key] || renderer.Program(shaders.LandVertex, (own ? own.Fragments.Land : shaders.Land).replace(hook, function () {
+				kept['Land:' + key] = kept['Land:' + key] || renderer.Program(shaders.LandVertex, engine.Leveled((own ? own.Fragments.Land : shaders.Land).replace(hook, function () {
 					return self.$Service('SceneMaterials').Land(names || []);
-				}));
+				})));
 
 				return kept['Land:' + key];
 			};
 			gpu.ManyDepth = renderer.Program(shaders.Instanced, shaders.Depth);
-			gpu.Pbr = renderer.Program(shaders.Instanced, shaders.Pbr);
-			gpu.PbrSkinned = renderer.Program(shaders.Skinned, shaders.Pbr);
+			gpu.Pbr = renderer.Program(shaders.Instanced, engine.Leveled(shaders.Pbr));
+			gpu.PbrSkinned = renderer.Program(shaders.Skinned, engine.Leveled(shaders.Pbr));
 			gpu.GlowMany = renderer.Program(shaders.Instanced, shaders.BodyGlow);
 			gpu.Outline = renderer.Program(shaders.Instanced, shaders.Flat);
 			gpu.OutlineSkinned = renderer.Program(shaders.Skinned, shaders.Flat);
@@ -1450,6 +1491,8 @@ Elemenx.Component('Scene', {
 			gpu.White = null;
 			gpu.LandDepth = renderer.Program(shaders.LandVertex, shaders.Depth);
 			gpu.GroundDepth = renderer.Program(shaders.GroundVertex, shaders.Depth);
+			gpu.Things = renderer.Program(shaders.ThingsVertex, shaders.Things, true);
+			gpu.ThingsDepth = renderer.Program(shaders.ThingsVertex, shaders.Depth, true);
 			gpu.ShadowMap = null;
 			gpu.Sea = renderer.Program(shaders.SeaVertex, shaders.Sea);
 			gpu.Sky = renderer.Program(graphics.Shaders.Quad, shaders.Sky);
@@ -1898,6 +1941,8 @@ Elemenx.Component('Scene', {
 				made.Strips = 24;
 
 				paintLights(object, made, planet);
+
+				paintClimate(object, made, planet);
 			});
 		}
 
@@ -1958,6 +2003,135 @@ Elemenx.Component('Scene', {
 			}
 		}
 
+		/*
+		 * The climate of a planet, what its weather is made of (ScenePlanet.ClimateFace): a cube of 128 a face, in strips by
+		 * its workers; then its weather, a cube of 256 a face baked of it on the card a face a frame (weatherStep).
+		 */
+		function paintClimate (object, made, planet) {
+			var size = 128;
+			var strip = size / 4;
+			var left = 24;
+			var cube = renderer.Cube(size);
+			var face;
+			var row;
+
+			function done (face, row) {
+				return function (error, piece) {
+					if (scene.Gone || scene.Baked[object.ID] !== made || renderer.Lost) {
+						if (!--left)
+							cube.Destroy();
+
+						return;
+					}
+
+					left--;
+
+					if (!error && piece && piece.Data)
+						cube.Write(face, piece.Data, row, !left);
+
+					if (left) return;
+
+					if (made.Climate)
+						made.Climate.Destroy();
+
+					made.Climate = cube;
+					made.Weather = made.Weather || renderer.Cube(256);
+					made.WeatherFaces = 0;
+				};
+			}
+
+			for (face = 0; face < 6; face++) {
+				for (row = 0; row < size; row += strip)
+					planets.Work().Run('ScenePlanet', 'ClimateFace', [planet, face, size, row, strip], done(face, row));
+			}
+		}
+
+		/*
+		 * The weather of a planet as its time goes (WEATHER of the shaders): all six faces of its cube at once, of its climate,
+		 * its days and its sun, when its time went on since. Regression: a face a frame, each of another time: where the time
+		 * runs fast (from orbit) the faces did not meet, straight seams along the edges of the cube, and a face jumped each
+		 * frame (the clouds flickered).
+		 */
+		function weatherStep (object, made) {
+			var star;
+			var sun;
+
+			if (!made || !made.Climate || !made.Weather || made.WeatherFrame === (scene.DrawnCount || {}).Frames || made.WeatherFaces >= 6 && made.WeatherDays === scene.Time && made.WeatherNext === undefined) return;
+
+			star = scene.Order.filter(function (each) {
+				return trait(each, 'Star') && each.World;
+			})[0];
+			sun = star && object.World ? vectors.Normalize(math.Apply(math.Invert(object.Turn) || math.Identity(), vectors.Normalize(vectors.Subtract(star.World, object.World)))) : [0, 1, 0];
+			made.WeatherFrame = (scene.DrawnCount || {}).Frames;
+
+			/* Its program made the first time a planet has a weather (a scene with none never compiles it). */
+			gpu.Weather = gpu.Weather || renderer.Program(graphics.Shaders.Quad, shaders.Weather);
+
+			var values = {uClimate: made.Climate, uDays: scene.Time, uSunAt: sun, uRadiusKm: radiusOf(object), uWeatherSeed: Math.abs(Math.round(Number(object.Seed) || 0)) % 997, uCloudiness: Math.max(0, Math.min(1, Number(object.Look.Clouds) || 0))};
+			var swap;
+
+			/* The first: all at once. */
+			if (!made.WeatherFaces) {
+				renderer.Bake(made.Weather, gpu.Weather, values);
+
+				made.WeatherDays = scene.Time;
+				made.WeatherFaces = 6;
+
+				return;
+			}
+
+			/* Then a face a frame into the other cube, all six of one time (no seams), shown when all are made. */
+			if (made.WeatherNext === undefined) {
+				made.WeatherBack = made.WeatherBack || renderer.Cube(256);
+				made.WeatherNext = 0;
+				made.WeatherNextDays = scene.Time;
+			}
+
+			values.uDays = made.WeatherNextDays;
+
+			renderer.Bake(made.WeatherBack, gpu.Weather, values, made.WeatherNext);
+
+			made.WeatherNext++;
+
+			if (made.WeatherNext < 6) return;
+
+			swap = made.Weather;
+			made.Weather = made.WeatherBack;
+			made.WeatherBack = swap;
+			made.WeatherDays = made.WeatherNextDays;
+			made.WeatherNext = undefined;
+			made.WeatherFaces += 6;
+		}
+
+		/* The weather of each body with one, a face of it, before what a frame draws (a bake draws to a cube, not to the frame). */
+		function weathers () {
+			Object.keys(scene.Baked || {}).forEach(function (id) {
+				if (scene.Objects[id])
+					weatherStep(scene.Objects[id], scene.Baked[id]);
+			});
+		}
+
+		/* 0 under a, 1 over b, smooth between (as smoothstep of a shader). */
+		function fadeBetween (a, b, x) {
+			var t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+
+			return t * t * (3 - 2 * t);
+		}
+
+		/* The radius of a body, km. */
+		function radiusOf (object) {
+			var planet = planetOf(object);
+
+			return planet && planet.Radius ? Number(planet.Radius) : number(object.Radius, 1000);
+		}
+
+		/* The values of the weather of a body for the Planet shader (CLOUDS SEEN): none until it is all made. */
+		function weatherValues (object, made) {
+			var ready = !!made && !!made.Weather && made.WeatherFaces >= 6;
+
+			return {uWeather: ready ? made.Weather : noLights(), uWeatherOn: ready ? 1 : 0, uRadiusKm: radiusOf(object)};
+		}
+
 		function paintStrips (object, made, planet, size, strip, key) {
 			var cube = renderer.Cube(size);
 			var left = 24;
@@ -1994,6 +2168,8 @@ Elemenx.Component('Scene', {
 					made.Painted = size;
 
 					paintLights(object, made, planet);
+
+					paintClimate(object, made, planet);
 
 					keepGlobe(key, faces);
 				};
@@ -2573,6 +2749,21 @@ Elemenx.Component('Scene', {
 			/* By night a cloud shows only by what lights it: without a moon or towns it is dark, and hides the stars. */
 			var tone = (0.5 + 0.7 * day) * Math.min(1, day * 1.6 + ground.MoonLit * 0.6);
 
+			/*
+			 * A location a ship came down to on a planet of a weather (SceneLanding): its sky the shell of that weather, turned as
+			 * the location lies on its body (its +X, its up, its -Z its north), in metres: the very clouds seen coming down.
+			 * Regression: a layer of its own 90 to 200 units up, another sky than the one it came down through.
+			 */
+			var site = scene.Location && scene.Location.Frame ? scene.Location : null;
+			var body = site ? scene.Objects[site.Body] : null;
+			var made = body ? scene.Baked[body.ID] : null;
+			var weather = made && made.Weather && made.WeatherFaces >= 6 && site.Planet ? made.Weather : null;
+			var frame = site ? site.Frame : null;
+
+			if (weather) {
+				return {Turn: [frame.X[0], frame.Middle[0], -frame.North[0], frame.X[1], frame.Middle[1], -frame.North[1], frame.X[2], frame.Middle[2], -frame.North[2]], From: scene.Eye, Sun: ground.Sky[1] > -0.05 ? ground.Sky : ground.Sun, SunLight: [light[0] * moonlit, light[1] * moonlit, light[2] * moonlit], SkyTone: [sky[0] * tone, sky[1] * tone, sky[2] * tone], Under: [1.2 * glow, 0.42 * glow, 0.2 * glow], Below: ground.Glow, BelowWay: ground.GlowWay, Haze: hazeOf(ground), Layer: [low, low * 2.2, 1.1 / low], Over: false, Shell: [radiusOf(body), 0, 1, 1], ShellUnit: 0.001, Weather: weather};
+			}
+
 			/* The moon lights a cloud faintly; a low sun lights it from under, red over gold. */
 			return {Turn: [1, 0, 0, 0, 1, 0, 0, 0, 1], From: scene.Eye, Sun: ground.Sky[1] > -0.05 ? ground.Sky : ground.Sun, SunLight: [light[0] * moonlit, light[1] * moonlit, light[2] * moonlit], SkyTone: [sky[0] * tone, sky[1] * tone, sky[2] * tone], Under: [1.2 * glow, 0.42 * glow, 0.2 * glow], Below: ground.Glow, BelowWay: ground.GlowWay, Haze: hazeOf(ground), Layer: [low, low * 2.2, 1.1 / low], Over: false};
 		}
@@ -2599,6 +2790,13 @@ Elemenx.Component('Scene', {
 			var light = lights();
 			var background = scene.Colors.Background;
 			var models = gather();
+
+			/* What its clusters draw of each large model, for the eye where it is now. */
+			Object.keys(scene.StillLists || {}).forEach(function (name) {
+				if (scene.StillLists[name].Clustered)
+					clusterStep(name, scene.StillLists[name], false);
+			});
+
 			var nodes;
 			var shade;
 			var posted;
@@ -2625,7 +2823,7 @@ Elemenx.Component('Scene', {
 			if (!scene.Ground)
 				Object.assign(shade, localLights());
 
-			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uSkyLight: scene.Ground ? scene.Ground.SkyLight : [0.004, 0.004, 0.006], uFloorLight: scene.Ground ? scene.Ground.FloorLight : [0.004, 0.004, 0.006], uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : scene.CosmosShade ? [0.025 + scene.CosmosShade[0], 0.027 + scene.CosmosShade[1], 0.035 + scene.CosmosShade[2]] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Gust || 0, uWet: scene.Ground ? scene.Ground.Air.Wet : 0, uSnowed: snowed(), uRainDrops: scene.Ground ? scene.Ground.Air.Rain : 0, uEyeAt: scene.Eye || [0, 0, 0], uTime2: scene.Seconds % 1000, uNightGlow: scene.Ground ? scene.Ground.Night || 0 : 1, uScreenMirror: engine.ScreenMirror && engine.ScreenMirror() ? 1 : 0}, shade, self.WindValues(scene.Seconds));
+			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uSkyLight: scene.Ground ? scene.Ground.SkyLight : [0.004, 0.004, 0.006], uFloorLight: scene.Ground ? scene.Ground.FloorLight : [0.004, 0.004, 0.006], uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : scene.CosmosShade ? [0.025 + scene.CosmosShade[0], 0.027 + scene.CosmosShade[1], 0.035 + scene.CosmosShade[2]] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Gust || 0, uWet: scene.Ground ? scene.Ground.Air.Wet : 0, uSnowed: snowed(), uRainDrops: scene.Ground ? scene.Ground.Air.Rain : 0, uEyeAt: scene.Eye || [0, 0, 0], uTime2: scene.Seconds % 1000, uNightGlow: scene.Ground ? scene.Ground.Night || 0 : 1, uScreenMirror: engine.ScreenMirror && engine.ScreenMirror() ? 1 : 0, uLevel: engine.LevelColor('near', 0)}, shade, self.WindValues(scene.Seconds));
 
 			/* The arrays of the frame stay as they are till the next one: given again to each draw, they are not read again. */
 			renderer.Hold(Object.keys(common).map(function (key) {
@@ -2671,12 +2869,14 @@ Elemenx.Component('Scene', {
 			var worldOf = function (vp, eye, small) {
 				var mine = Object.assign(Object.create(common), {uViewProjection: vp, uCamera: eye, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0]});
 
+				var sees = frustum(vp, renderer.Width);
+
 				drawGround(vp, nodes, shade, true);
 
 				Object.keys(models).forEach(function (name) {
 					var list = models[name];
 					/* The glass of a mirror is not in its own picture, nor in another's. */
-					if (list.Material && seeThrough(list.Material) || list.MirrorKey) return;
+					if (list.Material && seeThrough(list.Material) || list.MirrorKey || !seen(list, sees)) return;
 
 					if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign(Object.create(mine), {uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft}, surface(list), blueprintValues(list), engine.SeasonValues(name), engine.DissolveValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back'});
 					else renderer.Draw(shape(name), gpu.Many, Object.assign(Object.create(mine), {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list)}, engine.SeasonValues(name), engine.DissolveValues(list)));
@@ -2691,6 +2891,8 @@ Elemenx.Component('Scene', {
 			/* What the cameras of the screens see (SceneScreens), drawn as the mirrors are. */
 			if (scene.Ground && !scene.Camera.Ortho && engine.ScreensWorld)
 				engine.ScreensWorld(projection, viewMatrix, worldOf);
+
+			weathers();
 
 			posted = engine.PostBegin();
 
@@ -2786,12 +2988,12 @@ Elemenx.Component('Scene', {
 								var high = math.Compose(local(object.World), object.Turn, size * 1.004);
 
 								later.push(function () {
-									renderer.Draw(gpu.Sphere, gpu.Planet, uniforms({uModel: high, uNormalMatrix: math.NormalMatrix(high), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: [0, 0, 0, 0], uCloudsOnly: 1, uDrift: engine.CloudDrift(object), uLights: noLights(), uLightsOn: 0}), {Blend: 'alpha', DepthWrite: false});
+									renderer.Draw(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: high, uNormalMatrix: math.NormalMatrix(high), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: [0, 0, 0, 0], uCloudsOnly: 1, uDrift: engine.CloudDrift(object), uLights: noLights(), uLightsOn: 0}, weatherValues(object, surface))), {Blend: 'alpha', DepthWrite: false});
 								});
 							}
 						}
 						else {
-							renderer.Draw(gpu.Sphere, gpu.Planet, uniforms({uModel: model, uNormalMatrix: math.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object), uCloudsOnly: 0, uDrift: engine.CloudDrift(object), uLights: surface.Lights || noLights(), uLightsOn: surface.Lights ? 1 : 0}));
+							renderer.Draw(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: model, uNormalMatrix: math.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object), uCloudsOnly: 0, uDrift: engine.CloudDrift(object), uLights: surface.Lights || noLights(), uLightsOn: surface.Lights ? 1 : 0}, weatherValues(object, surface))));
 						}
 
 						if (object.Look.Atmosphere[3]) {
@@ -2824,8 +3026,11 @@ Elemenx.Component('Scene', {
 				if (engine.DeepDraw)
 					engine.DeepDraw(matrix, later, right, up, planes);
 
+				var sees = frustum(matrix, renderer.Width);
+
 				Object.keys(models).forEach(function (name) {
 					var list = models[name];
+					if (!seen(list, sees)) return;
 
 					/* The glass of a mirror of a car: the picture of its mirror in its own shape. */
 					if (list.MirrorKey && mirrored[list.MirrorKey]) {
@@ -2838,7 +3043,7 @@ Elemenx.Component('Scene', {
 						var blended = seeThrough(list.Material);
 
 						var drawn = function () {
-							renderer.Draw(shape(name), pbrOf(list), Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft, uMoving: list.Still || blended ? 0 : 1, uSteady: list.Still ? 0 : 1, uCut: heroCut(list)}), surface(list), blueprintValues(list), engine.SeasonValues(name), engine.DissolveValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: blended ? 'over' : 'none', DepthWrite: !blended});
+							renderer.Draw(shape(name), pbrOf(list), Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft, uMoving: list.Still || blended ? 0 : 1, uSteady: list.Still ? 0 : 1, uCut: heroCut(list)}), surface(list), blueprintValues(list), engine.SeasonValues(name), engine.DissolveValues(list), levelOf(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: blended ? 'over' : 'none', DepthWrite: !blended});
 						};
 
 						/* What is seen through comes after all it shows, and hides nothing of what is drawn after it. */
@@ -2848,7 +3053,7 @@ Elemenx.Component('Scene', {
 						return;
 					}
 
-					renderer.Draw(shape(name), gpu.Many, uniforms(Object.assign({uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list), uMoving: list.Still ? 0 : 1}, engine.SeasonValues(name), engine.DissolveValues(list))));
+					renderer.Draw(shape(name), gpu.Many, uniforms(Object.assign({uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list), uMoving: list.Still ? 0 : 1}, engine.SeasonValues(name), engine.DissolveValues(list), levelOf(list))));
 				});
 
 				/* The mirrors as panes of what they show, the glass after all it shows through. */
@@ -2875,7 +3080,7 @@ Elemenx.Component('Scene', {
 
 					Object.keys(models).forEach(function (name) {
 						var list = models[name];
-						if (list.Count && list.Geometry !== undefined && !list.Skinned)
+						if (list.Count && list.Geometry !== undefined && !list.Skinned && seen(list, sees))
 							renderer.Draw(linesMesh(one[0], name, list.Geometry), gpu.Outline, Object.assign(uniforms({uOrigin: originOf(list), uOutline: 0, uColor: one[2], uBody: [0, 0, 0, 0]})), {Blend: 'alpha', DepthWrite: false, Depth: 'lequal'});
 					});
 				});
@@ -3116,10 +3321,104 @@ Elemenx.Component('Scene', {
 
 				Object.keys(scene.StillLists).forEach(function (name) {
 					upload(name, scene.StillLists[name]);
+
+					clustered(name, scene.StillLists[name]);
 				});
 			}
 
 			return Object.assign(drawn, scene.StillLists);
+		}
+
+		/*
+		 * A large model that stands alone (one copy, no skeleton, of 3000 faces or more: a tower, a large model of a file) drawn
+		 * by its clusters (SceneClusters, as Nanite): made once for its shape in a worker, its mesh then of all its levels,
+		 * each part as fine as the screen needs (clusterStep). Clusters false: as it is.
+		 */
+		function clustered (name, list) {
+			var geometry = list.Geometry;
+			var faces = geometry && geometry.Positions ? (geometry.Indices && geometry.Indices.length ? geometry.Indices.length : geometry.Positions.length / 3) / 3 : 0;
+			var known;
+
+			if (list.Count !== 1 || list.Skinned || faces < 3000 || self.Clusters === false || self.Clusters === 'false') return;
+
+			gpu.Clustered = gpu.Clustered || new WeakMap();
+			known = gpu.Clustered.get(geometry);
+
+			if (known && known.Built) {
+				adopt(name, list, known.Built);
+
+				return;
+			}
+
+			if (known) {
+				known.Waiting.push([name, list]);
+
+				return;
+			}
+
+			known = {Waiting: [[name, list]], Built: null};
+
+			gpu.Clustered.set(geometry, known);
+
+			self.$Service('SceneClusters').Work().Run('SceneClusters', 'Build', [{Positions: geometry.Positions, Normals: geometry.Normals, Colors: geometry.Colors, UVs: geometry.UVs, Indices: geometry.Indices}], function (error, built) {
+				if (error || !built || scene.Gone || renderer.Lost) return;
+
+				known.Built = built;
+
+				known.Waiting.forEach(function (one) {
+					adopt(one[0], one[1], built);
+				});
+
+				known.Waiting = [];
+			});
+		}
+
+		/* The mesh of a list of its clusters, its copy as it was: from now on what its clusters choose is drawn. */
+		function adopt (name, list, built) {
+			if (!scene.StillLists || scene.StillLists[name] !== list) return;
+
+			if (gpu.Shapes[name])
+				gpu.Shapes[name].Destroy();
+
+			gpu.Shapes[name] = renderer.Mesh({Positions: built.Positions, Normals: built.Normals, Colors: built.Colors, UVs: built.UVs, Indices: built.Indices});
+			list.Clustered = {Built: built, Key: '', Level: 0, Clusters: 0};
+
+			upload(name, list);
+
+			clusterStep(name, list, true);
+		}
+
+		/*
+		 * The clusters of a list chosen again for the eye where it is (SceneClusters.Select, engine.ClusterPixels the error
+		 * allowed, 1 pixel): only when it went a twentieth of the way to the model since, or the screen changed.
+		 */
+		function clusterStep (name, list, force) {
+			var made = list.Clustered;
+			var eye = scene.Eye || [0, 0, 0];
+			var place = [list.Places[0], list.Places[1], list.Places[2]];
+			var far = Math.hypot(eye[0] - place[0], eye[1] - place[1], eye[2] - place[2]);
+			var step = Math.max(0.25, far * 0.05);
+			var focal = renderer.Height / (2 * Math.tan((scene.Camera.Fov || 50) * Math.PI / 360));
+			var key = Math.round(eye[0] / step) + ':' + Math.round(eye[1] / step) + ':' + Math.round(eye[2] / step) + ':' + Math.round(step * 4) + ':' + Math.round(focal);
+			var chosen;
+
+			if (!force && made.Key === key) return;
+
+			made.Key = key;
+			chosen = self.$Service('SceneClusters').Select(made.Built, [list.X[0], list.X[1], list.X[2], list.Y[0], list.Y[1], list.Y[2], list.Z[0], list.Z[1], list.Z[2], place[0], place[1], place[2]], eye, focal, engine.ClusterPixels);
+			made.Level = chosen.Level;
+			made.Clusters = chosen.Clusters;
+
+			if (gpu.Shapes[name])
+				gpu.Shapes[name].Triangles(chosen.Indices);
+		}
+
+		/* The error a cluster may have on the screen, pixels. */
+		engine.ClusterPixels = 1;
+
+		/* The color of the level a list is drawn at while Levels is on: of its clusters, the coarsest drawn. */
+		function levelOf (list) {
+			return list.Clustered ? {uLevel: engine.LevelColor('near', list.Clustered.Level)} : null;
 		}
 
 		/* How far the clouds of a body went round it (radians): a wind of 25 metres a second, in seconds of the clock, never in its days made fast. */
@@ -3273,6 +3572,7 @@ Elemenx.Component('Scene', {
 
 		function upload (name, list) {
 			list.Idle = 0;
+			list.Box = boxOf(list);
 
 			var size = list.Count * 4;
 			var data = {aInstance: {Size: 4, Data: list.Places.subarray(0, size)}, aInstance2: {Size: 4, Data: list.X.subarray(0, size)}, aInstance3: {Size: 4, Data: list.Y.subarray(0, size)}, aInstance4: {Size: 4, Data: list.Z.subarray(0, size)}, aInstance5: {Size: 4, Data: list.Tints.subarray(0, size)}};
@@ -3289,6 +3589,158 @@ Elemenx.Component('Scene', {
 			if (edged() && name.indexOf('outline:') !== 0)
 				linesMesh('edges', name, list.Geometry).Instance(data, list.Count);
 		}
+
+		/*
+		 * The box round all the copies of a list, in the world: the box of its shape (extentsOf) turned and scaled as each
+		 * copy stands (its matrix), a little more round it (what sways in the wind, a wheel that turns); what has a skeleton,
+		 * twice as far round its place as its shape reaches (its pose may reach past its shape at rest). What a pass sees
+		 * none of is not drawn there (seen). Regression: a box round the origin of the shape was the whole world for a shape
+		 * made where it stands (a road, a wall of a sketch), never culled.
+		 */
+		function boxOf (list) {
+			var extents = extentsOf(list.Geometry);
+			var center = [(extents[0] + extents[3]) / 2, (extents[1] + extents[4]) / 2, (extents[2] + extents[5]) / 2];
+			var half = [(extents[3] - extents[0]) / 2, (extents[4] - extents[1]) / 2, (extents[5] - extents[2]) / 2];
+			var radius = list.Skinned ? Math.sqrt(Math.max(extents[0] * extents[0], extents[3] * extents[3]) + Math.max(extents[1] * extents[1], extents[4] * extents[4]) + Math.max(extents[2] * extents[2], extents[5] * extents[5])) * 2 : 0;
+			var box = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity];
+			var shift = list.Still ? [0, 0, 0] : scene.Eye || [0, 0, 0];
+			var i;
+			var j;
+			var at;
+			var middle;
+			var reach;
+			var scale;
+			var axes;
+
+			for (i = 0; i < list.Count; i++) {
+				j = i * 4;
+				axes = [list.X, list.Y, list.Z];
+
+				for (at = 0; at < 3; at++) {
+					if (radius) {
+						scale = Math.max(Math.sqrt(list.X[j] * list.X[j] + list.X[j + 1] * list.X[j + 1] + list.X[j + 2] * list.X[j + 2]), Math.sqrt(list.Y[j] * list.Y[j] + list.Y[j + 1] * list.Y[j + 1] + list.Y[j + 2] * list.Y[j + 2]), Math.sqrt(list.Z[j] * list.Z[j] + list.Z[j + 1] * list.Z[j + 1] + list.Z[j + 2] * list.Z[j + 2]));
+						middle = list.Places[j + at] + shift[at];
+						reach = radius * scale;
+					}
+					else {
+						middle = list.Places[j + at] + shift[at] + axes[0][j + at] * center[0] + axes[1][j + at] * center[1] + axes[2][j + at] * center[2];
+						reach = Math.abs(axes[0][j + at]) * half[0] + Math.abs(axes[1][j + at]) * half[1] + Math.abs(axes[2][j + at]) * half[2];
+					}
+
+					reach = reach * 1.1 + 0.1;
+					box[at] = Math.min(box[at], middle - reach);
+					box[at + 3] = Math.max(box[at + 3], middle + reach);
+				}
+			}
+
+			return list.Count ? box : null;
+		}
+
+		/* The box of a shape ([minX, minY, minZ, maxX, maxY, maxZ]), found once for each geometry; the plain shapes (no geometry) within 1.6. */
+		function extentsOf (geometry) {
+			var p = geometry && geometry.Positions;
+			var box = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity];
+			var i;
+
+			if (!p || !p.length)
+				return [-1.6, -1.6, -1.6, 1.6, 1.6, 1.6];
+
+			gpu.Extents = gpu.Extents || new WeakMap();
+
+			if (gpu.Extents.has(geometry))
+				return gpu.Extents.get(geometry);
+
+			for (i = 0; i < p.length; i += 3) {
+				box[0] = Math.min(box[0], p[i]);
+				box[1] = Math.min(box[1], p[i + 1]);
+				box[2] = Math.min(box[2], p[i + 2]);
+				box[3] = Math.max(box[3], p[i]);
+				box[4] = Math.max(box[4], p[i + 1]);
+				box[5] = Math.max(box[5], p[i + 2]);
+			}
+
+			gpu.Extents.set(geometry, box);
+
+			return box;
+		}
+
+		/*
+		 * What a matrix of a pass sees (relative to the eye, as all the passes draw): its six planes ([a, b, c, d], inside where
+		 * a x + b y + c z + d >= 0; a pass of parallel rays, a shadow or the voxels, has them too), the matrix, and how many
+		 * pixels (texels of a shadow) its picture is across (pixels; none: no list is too small for it).
+		 */
+		function frustum (m, pixels) {
+			return {Planes: [[m[3] + m[0], m[7] + m[4], m[11] + m[8], m[15] + m[12]], [m[3] - m[0], m[7] - m[4], m[11] - m[8], m[15] - m[12]], [m[3] + m[1], m[7] + m[5], m[11] + m[9], m[15] + m[13]], [m[3] - m[1], m[7] - m[5], m[11] - m[9], m[15] - m[13]], [m[3] + m[2], m[7] + m[6], m[11] + m[10], m[15] + m[14]], [m[3] - m[2], m[7] - m[6], m[11] - m[10], m[15] - m[14]]], Matrix: m, Pixels: pixels || 0, Scale: Math.sqrt(m[0] * m[0] + m[4] * m[4] + m[8] * m[8])};
+		}
+
+		/*
+		 * Whether a pass sees any of a list: its box against the planes of the pass. What it does not see the card would
+		 * have thrown away, every triangle of it, after it went through all of them: a world of hundreds of models drew each
+		 * in every pass (the picture, its mirror, the normals, each slice of the shadow, the voxels), thousands of draws.
+		 * Nor what is less than a pixel and a half of it (Tiny): a draw of its own for a speck (a lamp a kilometre away, a
+		 * bench in a far slice of the shadow).
+		 */
+		function seen (list, sees) {
+			var box = list.Box;
+			var eye = scene.Eye || [0, 0, 0];
+			var planes = sees && sees.Planes;
+			var m = sees && sees.Matrix;
+			var w;
+			var x;
+			var y;
+			var z;
+			var hx;
+			var hy;
+			var hz;
+			var i;
+			var plane;
+
+			if (!box || !planes) return true;
+
+			/* Far, it is in the proxy of its tile (SceneScatter): drawn there, with all the rest of it. */
+			if (list.Covered) return false;
+
+			x = (box[0] + box[3]) / 2 - eye[0];
+			y = (box[1] + box[4]) / 2 - eye[1];
+			z = (box[2] + box[5]) / 2 - eye[2];
+			hx = (box[3] - box[0]) / 2;
+			hy = (box[4] - box[1]) / 2;
+			hz = (box[5] - box[2]) / 2;
+
+			for (i = 0; i < planes.length; i++) {
+				plane = planes[i];
+
+				if (plane[0] * x + plane[1] * y + plane[2] * z + plane[3] < -(Math.abs(plane[0]) * hx + Math.abs(plane[1]) * hy + Math.abs(plane[2]) * hz)) return false;
+			}
+
+			if (!sees.Pixels) return true;
+
+			/*
+			 * Its size on the picture: across its box (the largest half of a side: of one copy, as far as its shape reaches),
+			 * by the scale of the matrix, over how far it is (w; 1 in parallel rays).
+			 */
+			w = m[3] * x + m[7] * y + m[11] * z + m[15];
+
+			return w <= 0.5 || Math.max(hx, hy, hz) * sees.Scale / w * sees.Pixels >= engine.Tiny;
+		}
+
+		/*
+		 * Whether a pass sees a square of the ground: its box (as wide as it is, as high as its heights go, Span) against the
+		 * planes of the pass, never its size. Regression: each square of the ground was drawn in each slice of the shadow and
+		 * in the picture wherever it was, 500 draws and a million triangles a frame of a world of three kilometres.
+		 */
+		function nodeSeen (node, sees) {
+			var half = node.Size / 2;
+
+			if (!node.Span || !node.Center) return true;
+
+			node.Box = node.Box || [node.Center[0] - half, node.Span[0] - 1, node.Center[2] - half, node.Center[0] + half, node.Span[1] + 1, node.Center[2] + half];
+
+			return seen(node, {Planes: sees.Planes});
+		}
+
+		/* How many pixels a list is at least, for a pass to draw it (seen). */
+		engine.Tiny = 1.5;
 
 		function wired () {
 			return !!self.Wireframe && self.Wireframe !== 'false';
@@ -4178,8 +4630,9 @@ Elemenx.Component('Scene', {
 		/*
 		 * Four shadows of the sun, each of a slice of the view out to far, farther ones wider, in the quarters of one map.
 		 * A slice is held in a ball whose size keeps as the eye turns, its middle kept to whole texels of the world: no edge
-		 * crawls. The two near ones are drawn each frame, the third each second, the last each fourth; between, what they
-		 * hold is kept where it was in the world, and only the eye it is seen from moves.
+		 * crawls. The nearest is drawn each frame, the second each second, the third each fourth, the last each eighth;
+		 * between, what they hold is kept where it was in the world, and only the eye it is seen from moves (what moves far
+		 * away casts its shadow a few frames late).
 		 */
 		function cascades (direction, depth, far, casters) {
 			var camera = scene.Camera;
@@ -4245,7 +4698,7 @@ Elemenx.Component('Scene', {
 				radius = Math.ceil(radius * 4) / 4;
 				texel = radius * 2 / side;
 
-				if (all || !slice || slice.Radius !== radius || index === 2 && store.Frame % 2 === 0 || index === 3 && store.Frame % 4 === 1 || index < 2) {
+				if (all || !slice || slice.Radius !== radius || index === 0 || index === 1 && store.Frame % 2 === 0 || index === 2 && store.Frame % 4 === 1 || index === 3 && store.Frame % 8 === 3) {
 					center = vectors.Add(scene.Eye, vectors.Scale(forward, middle));
 					along = vectors.Dot(center, x);
 					across = vectors.Dot(center, y);
@@ -4347,8 +4800,10 @@ Elemenx.Component('Scene', {
 					renderer.Draw(node.Mesh, gpu.BounceLand, {uViewProjection: shade.uShadowMatrix, uOffset: vectors.Subtract(node.Center, scene.Eye), uSun: ground.Sun, uSunColor: ground.SunColor}, {Cull: 'back'});
 				});
 
+				var sees = frustum(shade.uShadowMatrix, 128);
+
 				Object.keys(models).forEach(function (name) {
-					if (!models[name].Skinned)
+					if (!models[name].Skinned && seen(models[name], sees))
 						renderer.Draw(shape(name), moved(models[name], gpu.BounceMany, 'Bounced'), Object.assign({uViewProjection: shade.uShadowMatrix, uWind: 0, uOrigin: originOf(models[name]), uSun: ground.Sun, uSunColor: ground.SunColor}, movedValues(models[name])), {Cull: 'back'});
 				});
 
@@ -4418,16 +4873,20 @@ Elemenx.Component('Scene', {
 			}
 
 			function casters (matrix) {
+				/* A slice of the shadow is 2048 texels across (4096 for a whole ground): what is less than Tiny of them casts nothing seen. */
+				var sees = frustum(matrix, 2048);
+
 				Object.keys(models).forEach(function (name) {
 					var list = models[name];
 					/* Light goes through glass. */
-					if (list.Material && list.Material.Transmission && seeThrough(list.Material)) return;
+					if (list.Material && list.Material.Transmission && seeThrough(list.Material) || !seen(list, sees)) return;
 
 					renderer.Draw(shape(name), moved(list, list.Skinned ? gpu.SkinDepth : gpu.ManyDepth, 'Depth'), Object.assign({uViewProjection: matrix, uWind: scene.Gust || 0, uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : undefined, uJointOffset: list.Offset}, movedValues(list)), {Cull: 'none'});
 				});
 
 				(nodes || []).forEach(function (node) {
-					renderer.Draw(node.Mesh, gpu.LandDepth, {uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye)}, {Cull: 'back'});
+					if (nodeSeen(node, sees))
+						renderer.Draw(node.Mesh, gpu.LandDepth, {uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye)}, {Cull: 'back'});
 				});
 
 				engine.ScatterShadow(matrix);
@@ -4453,9 +4912,11 @@ Elemenx.Component('Scene', {
 					gpu.NormalSkin = renderer.Program(shaders.Skinned, shaders.Normal);
 				}
 
+				var sees = frustum(matrix, renderer.Width);
+
 				Object.keys(models).forEach(function (name) {
 					var list = models[name];
-					if (!list.Material || list.Material.Transmission && seeThrough(list.Material)) return;
+					if (!list.Material || list.Material.Transmission && seeThrough(list.Material) || !seen(list, sees)) return;
 
 					renderer.Draw(shape(name), moved(list, list.Skinned ? gpu.NormalSkin : gpu.NormalMany, 'Normal'), Object.assign({uViewProjection: matrix, uWind: scene.Gust || 0, uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : undefined, uJointOffset: list.Offset}, movedValues(list)), {Cull: 'none', Depth: true, DepthWrite: false});
 				});
@@ -4474,9 +4935,11 @@ Elemenx.Component('Scene', {
 					renderer.Draw(node.Mesh, gpu.VoxelLand, {uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye)}, {Cull: 'none', Depth: false, DepthWrite: false});
 				});
 
+				var sees = frustum(matrix);
+
 				Object.keys(models).forEach(function (name) {
 					var list = models[name];
-					if (list.Skinned || !list.Still || list.Material && list.Material.Transmission && seeThrough(list.Material)) return;
+					if (list.Skinned || !list.Still || list.Material && list.Material.Transmission && seeThrough(list.Material) || !seen(list, sees)) return;
 
 					renderer.Draw(shape(name), moved(list, gpu.VoxelMany, 'Voxel'), Object.assign({uViewProjection: matrix, uWind: 0, uOrigin: originOf(list)}, movedValues(list)), {Cull: 'none', Depth: false, DepthWrite: false});
 				});
@@ -5195,9 +5658,15 @@ Elemenx.Component('Scene', {
 
 		/* Which objects move, after the scene changed: the others stand once. */
 		function settle () {
-			/* The roles of the parts of the models change what moves too. */
-			var key = scene.Version + ':' + (scene.Ground ? scene.Ground.Key : '') + ':' + (engine.RigsVersion ? engine.RigsVersion() : '') + ':' + (scene.Location ? scene.Location.ID : '');
-			if (scene.Settled === key) return;
+			/*
+			 * The roles of the parts of the models change what moves too. Regression: the key was one text of all of them, the
+			 * key of the ground among them (its sketch: a megabyte and more), made and compared each frame: milliseconds a
+			 * frame for nothing. Each part is compared as it is.
+			 */
+			var key = [scene.Version, scene.Ground ? scene.Ground.Key : '', engine.RigsVersion ? engine.RigsVersion() : '', scene.Location ? scene.Location.ID : ''];
+			if (scene.Settled && key.every(function (part, index) {
+				return scene.Settled[index] === part;
+			})) return;
 
 			scene.Settled = key;
 			scene.Active = [];
@@ -5899,20 +6368,119 @@ Elemenx.Component('Scene', {
 			var roads = field.Roads;
 			var asked = owner.Asked = owner.Asked || {};
 			var token = {};
+			var cache = self.$Service('SceneCache');
+			var kept = self.CacheSize !== 0 && self.CacheSize !== '0' ? pieceKey(field, roads, shape, args) : null;
 
 			if (asked[key]) return;
 
 			asked[key] = token;
 
-			self.$Service('SceneTerrainGenerator').Work().Run('SceneTerrainGenerator', 'Piece', [shape, field.Options, roads || null, args], function (error, piece) {
-				if (scene.Gone || asked[key] !== token) return;
+			function given (piece) {
+				if (scene.Gone || asked[key] !== token) return false;
 
 				delete asked[key];
 
-				if (field.Roads !== roads || owner.Field !== field || owner !== scene.Ground && owner !== scene.Surface && owner !== scene.Horizon && !(owner.Globe && scene.Globes[owner.ID] === owner)) return;
+				if (field.Roads !== roads || owner.Field !== field || owner !== scene.Ground && owner !== scene.Surface && owner !== scene.Horizon && !(owner.Globe && scene.Globes[owner.ID] === owner)) return false;
 
-				made(error ? null : piece);
+				made(piece);
+
+				return true;
+			}
+
+			function work () {
+				var pool = self.$Service('SceneTerrainGenerator').Work();
+
+				pool.Run('SceneTerrainGenerator', 'Piece', [shape, shared(pool, field.Options), roads ? shared(pool, roads) : null, args], function (error, piece) {
+					if (given(error ? null : piece) && piece && kept)
+						cache.Put('ground', kept, piece);
+				});
+			}
+
+			var hot = kept ? cache.Peek('ground', kept) : undefined;
+
+			/* Made lately in this page (SceneCache.Peek): in this very frame. */
+			if (hot) {
+				scene.PiecesCached = (scene.PiecesCached || 0) + 1;
+
+				given(hot);
+
+				return;
+			}
+
+			/* Not kept in the browser: made at once, no wait for the database. */
+			if (!kept || !cache.Knows('ground', kept)) {
+				work();
+
+				return;
+			}
+
+			/* Made on a visit before (SceneCache): read, no worker; else made, and kept for the next. */
+			cache.Get('ground', kept, function (error, piece) {
+				if (scene.Gone || asked[key] !== token) return;
+
+				if (piece) {
+					scene.PiecesCached = (scene.PiecesCached || 0) + 1;
+
+					given(piece);
+
+					return;
+				}
+
+				work();
 			});
+		}
+
+		/*
+		 * What a pool of workers keeps of a large thing of a field (its options, its roads), sent to each of its workers once:
+		 * its name, to send in its place. With no workers, the thing itself.
+		 */
+		function shared (pool, data) {
+			var name;
+
+			if (pool.Inline() || !data || typeof data !== 'object') return data;
+
+			gpu.SharedNames = gpu.SharedNames || new WeakMap();
+			name = gpu.SharedNames.get(data);
+
+			if (!name) {
+				name = 'scene-shared:' + Math.random().toString(36).slice(2) + ':' + (gpu.SharedCount = (gpu.SharedCount || 0) + 1);
+
+				gpu.SharedNames.set(data, name);
+
+				pool.Share(name, data);
+			}
+
+			return name;
+		}
+
+		/* A number of a text (FNV-1a). */
+		function digestOf (text, seed) {
+			var value = seed === undefined ? 2166136261 : seed;
+			var i;
+
+			for (i = 0; i < text.length; i++)
+				value = Math.imul(value ^ text.charCodeAt(i), 16777619) >>> 0;
+
+			return value;
+		}
+
+		/*
+		 * The key a square of a ground or of a planet is kept under (SceneCache): what makes it (the source of the generators
+		 * and the graphs of Blueprints, summed once a page), its field (its options, once for each field), its roads, and the
+		 * square itself. Another version of a generator, a graph changed, a road laid: another key.
+		 */
+		function pieceKey (field, roads, shape, args) {
+			if (gpu.PieceMaker === undefined) {
+				gpu.PieceMaker = digestOf(self.$Service('SceneTerrainGenerator').Source(true) + self.$Service('ScenePlanet').Source(true) + self.$Service('Noise').Source(true) + JSON.stringify(Elemenx.Resources('Blueprints') || null));
+			}
+
+			if (field.CacheDigest === undefined)
+				field.CacheDigest = digestOf(JSON.stringify(field.Options || null), gpu.PieceMaker);
+
+			if (roads && roads.CacheDigest === undefined)
+				roads.CacheDigest = digestOf(JSON.stringify(roads));
+
+			return shape + ':' + field.CacheDigest.toString(36) + ':' + (roads ? roads.CacheDigest.toString(36) : '-') + ':' + JSON.stringify(args);
 		}
 
 		/* The squares of the ground in view, the finer the nearer the eye; each made once, a few a frame. */
@@ -6165,7 +6733,7 @@ Elemenx.Component('Scene', {
 					if (!ahead.Asked[key]) {
 						ahead.Asked[key] = true;
 
-						terrain.Work().Run('SceneTerrainGenerator', 'Piece', ['Flat', options, null, [part[0], part[1], half, 32]], function (error, piece) {
+						terrain.Work().Run('SceneTerrainGenerator', 'Piece', ['Flat', shared(terrain.Work(), options), null, [part[0], part[1], half, 32]], function (error, piece) {
 							if (!error && piece)
 								ahead.Pieces[key] = piece;
 						});
@@ -7552,11 +8120,14 @@ Elemenx.Component('Scene', {
 			}
 
 			if (!scene.Camera.Ortho)
-				renderer.Draw(gpu.Quad, gpu.Sky, Object.assign({uInverse: math.Invert(matrix), uSun: ground.Sky, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0, uCover: ground.Shut, uEclipse: ground.Eclipse, uSunRadius: ground.SunRadius || 0.00465, uRainbow: ground.Rainbow || 0, uAurora: [ground.Aurora || 0, scene.Seconds % 3000, 0, 0], uAuroraLow: ground.AuroraLow || [0.2, 1, 0.55], uAuroraHigh: ground.AuroraHigh || [0.75, 0.25, 1], uMoonShade: ground.Moon ? ground.Moon.Shade : 0, uGlow: ground.Glow, uGlowWay: ground.GlowWay, uMoon: ground.Moon ? ground.Moon.Way : [0, 1, 0], uMoonLit: ground.Moon ? ground.Moon.Lit : [0, 1, 0], uMoonSize: ground.Moon ? ground.Moon.Size : 0, uMoonGlow: ground.Moon ? Math.min(1, ground.Moon.Glow) * Math.max(0, Math.min(1, ground.Moon.Way[1] / 0.15)) : 0}, self.SkyValues(scene.Seconds)), {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
+				renderer.Draw(gpu.Quad, gpu.Sky, Object.assign({uInverse: math.Invert(matrix), uSun: ground.Sky, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0, uCover: ground.Shut, uEclipse: ground.Eclipse, uSunRadius: ground.SunRadius || 0.00465, uRainbow: ground.Rainbow || 0, uAurora: [ground.Aurora || 0, scene.Seconds % 3000, 0, 0], uAuroraLow: ground.AuroraLow || [0.2, 1, 0.55], uAuroraHigh: ground.AuroraHigh || [0.75, 0.25, 1], uMoonShade: ground.Moon ? ground.Moon.Shade : 0, uGlow: ground.Glow, uGlowWay: ground.GlowWay, uMoon: ground.Moon ? ground.Moon.Way : [0, 1, 0], uMoonLit: ground.Moon ? ground.Moon.Lit : [0, 1, 0], uMoonSize: ground.Moon ? ground.Moon.Size : 0, uMoonGlow: ground.Moon ? Math.min(1, ground.Moon.Glow) * Math.max(0, Math.min(1, ground.Moon.Way[1] / 0.15)) : 0, uNoWisps: groundClouds().Shell ? 1 : 0}, self.SkyValues(scene.Seconds)), {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
 
 			/* Past the ground of a location: the far ground of its body. */
 			if (!scene.Camera.Ortho && !mirror && scene.Horizon)
 				drawHorizon();
+
+			/* What the view sees of the squares: those wholly out of it are not drawn (nodeSeen). */
+			var sees = frustum(matrix);
 
 			/* One set of uniforms for all the squares, their places set for each; a ground with a Blueprint drawn by its graph. */
 			var settings = trait(scene.Objects[ground.ID], 'Terrain');
@@ -7578,8 +8149,12 @@ Elemenx.Component('Scene', {
 			 */
 			if (renderer.Ready(program)) {
 				nodes.forEach(function (node) {
+					if (!nodeSeen(node, sees)) return;
+
 					land.uOffset = vectors.Subtract(node.Center, scene.Eye);
 					land.uCenter = node.Center;
+					/* Its depth in the tree of squares: the whole ground 0, each split one more. */
+					land.uLevel = engine.LevelColor('ground', Math.round(Math.log(field.Size / node.Size) / Math.LN2));
 
 					renderer.Draw(node.Mesh, program, land, {Cull: 'back'});
 				});
@@ -7971,7 +8546,33 @@ Elemenx.Component('Scene', {
 
 				node[name] = null;
 			});
+
+			if (node.Things)
+				[node.Things.Mesh, node.Things.Trees].forEach(function (mesh) {
+					if (mesh)
+						mesh.Destroy();
+				});
+
+			node.Things = null;
 		}
+
+		/*
+		 * What of what stands on a square of a planet is drawn now: its houses, and its trees while the eye is near them (within
+		 * engine.TreesReach km of the square, 1.2): farther the Ground shader draws its woods.
+		 */
+		function standing (node) {
+			var things = node.Things;
+			var surface = scene.Surface || scene.Horizon;
+			var list = things && things.Mesh ? [things.Mesh] : [];
+
+			if (things && things.Trees && surface && surface.Eye && vectors.Distance(things.Center, surface.Eye) < engine.TreesReach + things.Size * 0.71)
+				list.push(things.Trees);
+
+			return list;
+		}
+
+		/* How near the trees of the squares of a planet are drawn, km. */
+		engine.TreesReach = 1.2;
 
 		function destroyNodes (nodes) {
 			Object.keys(nodes).forEach(function (key) {
@@ -8065,7 +8666,7 @@ Elemenx.Component('Scene', {
 					uCloudsOn: clouds ? 1 : 0,
 					uDrift: engine.CloudDrift(object),
 					uCloudTint: clouds ? cloudTint(object) : [1, 1, 1]
-				}, idle(), tiled(node), laid), {Cull: 'back'});
+				}, idle(), tiled(node), laid, weatherValues(object, scene.Baked[object.ID])), {Cull: 'back'});
 			});
 
 			forget(globe);
@@ -8160,7 +8761,7 @@ Elemenx.Component('Scene', {
 					uLightsOn: lightsOf(object) === noLights() ? 0 : 1,
 					uSky: noLights(),
 					uCloudsOn: 0
-				}, idle(), tiled(each.Node), laid), {Cull: 'back', Depth: 'lequal'});
+				}, idle(), tiled(each.Node), laid, weatherValues(object, scene.Baked[object.ID])), {Cull: 'back', Depth: 'lequal'});
 			});
 
 			renderer.GL.depthRange(0, 1);
@@ -8237,10 +8838,13 @@ Elemenx.Component('Scene', {
 				var made;
 
 				if (level) {
-					askPiece(surface, key, 'Sphere', [face, u, v, size, surface.Resolution || 24, picture], function (piece) {
+					askPiece(surface, key, 'Sphere', [face, u, v, size, surface.Resolution || 24, picture, picture && standsOn(size) ? 64 : 0], function (piece) {
 						made = piece || field.Patch(face, u, v, size, surface.Resolution || 24);
 
 						surface.Nodes[key] = pictured({Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Error: errorOf(face, u, v, size), Used: surface.Frame}, made.Picture, [face, u, v, size, field.Radius]);
+
+						if (made.Things)
+							things(surface.Nodes[key], made.Things, size);
 					});
 
 					return;
@@ -8255,6 +8859,58 @@ Elemenx.Component('Scene', {
 						if (surface.Nodes[key] && piece)
 							pictured(surface.Nodes[key], piece.Picture, [face, u, v, size, field.Radius]);
 					});
+			}
+
+			/*
+			 * What stands on a square of the surface of a planet that paints itself, as fine as 80 km across or finer (the
+			 * squares round the eye low over it: its woods and its houses are seen from there, nearer a location is landed in):
+			 * made with the square, of its picture (64 texels a side) in the same job of a worker, kept in the browser with it
+			 * (SceneCache). Regression: a job of its own made the picture again, a square took twice as long to come.
+			 */
+			function standsOn (size) {
+				return !!field.Planet && !surface.Globe && size * Math.PI / 4 * field.Radius <= 80;
+			}
+
+			function things (node, piece, size) {
+				if (!piece.Geometry.Positions.length && !(piece.Trees && piece.Trees.Positions.length)) return;
+
+				node.Things = {Mesh: piece.Geometry.Positions.length ? renderer.Mesh(piece.Geometry) : null, Trees: piece.Trees && piece.Trees.Positions.length ? renderer.Mesh(piece.Trees) : null, Center: piece.Center, Size: size * Math.PI / 4 * field.Radius, Woods: piece.Woods, Houses: piece.Houses};
+			}
+
+			/*
+			 * The squares under the eye, of every level down to the finest it will want there, and the three beside each: asked
+			 * at once, nearest first, kept while they wait. Regression: a square asked for its parts only when it was made, so
+			 * a level came a job after the one over it, fourteen jobs one after another (some 20 s) before the ground under a
+			 * landing was sharp, its workers idle between.
+			 */
+			function ahead () {
+				var eye = vectors.Normalize(surface.Eye);
+				var ax = Math.abs(eye[0]);
+				var ay = Math.abs(eye[1]);
+				var az = Math.abs(eye[2]);
+				var at = ax >= ay && ax >= az ? (eye[0] > 0 ? [0, -eye[2] / ax, -eye[1] / ax] : [1, eye[2] / ax, -eye[1] / ax]) : ay >= az ? (eye[1] > 0 ? [2, eye[0] / ay, eye[2] / ay] : [3, eye[0] / ay, -eye[2] / ay]) : (eye[2] > 0 ? [4, eye[0] / az, -eye[1] / az] : [5, -eye[0] / az, -eye[1] / az]);
+				var size = 2;
+				var level = 0;
+				var u = 0;
+				var v = 0;
+
+				while (level < 17 && size * Math.PI / 4 * field.Radius > (surface.Finest || 0) && vectors.Distance(vectors.Scale(vectors.Normalize(terrain.Face(at[0], u, v)), field.Radius), surface.Eye) < field.Radius * size * 0.75 * 2.2 * (surface.Eager || 1)) {
+					var half = size / 2;
+
+					[[u - half / 2, v - half / 2], [u + half / 2, v - half / 2], [u - half / 2, v + half / 2], [u + half / 2, v + half / 2]].forEach(function (part) {
+						var key = keyOf(at[0], part[0], part[1], level + 1);
+						var direction = vectors.Normalize(terrain.Face(at[0], part[0], part[1]));
+
+						if (surface.Nodes[key]) surface.Nodes[key].Used = surface.Frame;
+						else if (!hidden(direction, half)) missing.push({Face: at[0], U: part[0], V: part[1], Size: half, Level: level + 1, Near: vectors.Distance(vectors.Scale(direction, field.Radius), surface.Eye)});
+					});
+
+					u = at[1] < u ? u - half / 2 : u + half / 2;
+					v = at[2] < v ? v - half / 2 : v + half / 2;
+					size = half;
+
+					level++;
+				}
 			}
 
 			/* Behind the horizon: not drawn. */
@@ -8314,6 +8970,8 @@ Elemenx.Component('Scene', {
 			for (face = 0; face < 6; face++)
 				visit(face, 0, 0, 2, 0);
 
+			ahead();
+
 			/* The nearest first, for as long as a frame can spare. */
 			missing.sort(function (a, b) {
 				return a.Near - b.Near;
@@ -8355,7 +9013,19 @@ Elemenx.Component('Scene', {
 
 			self.Weather = cover > 0.7 ? 'overcast' : cover > 0.3 ? 'cloudy' : 'clear';
 
-			return {Turn: [axes.East[0], axes.Up[0], axes.North[0], axes.East[1], axes.Up[1], axes.North[1], axes.East[2], axes.Up[2], axes.North[2]], From: [surface.Eye[0] * 0, surface.Altitude, 0], Sun: [vectors.Dot(sun, axes.East), vectors.Dot(sun, axes.Up), vectors.Dot(sun, axes.North)], SunLight: [sunColor[0] * 2 * day, sunColor[1] * 2 * day, sunColor[2] * 2 * day], SkyTone: [0.34 * day + 0.01, 0.4 * day + 0.012, 0.5 * day + 0.02], Under: [0, 0, 0], Layer: [3, 9, 0.25], Over: true};
+			/*
+			 * Of the weather of the planet, when it has one: a shell of its clouds round it (SceneLighting), the very ones its
+			 * globe shows from higher; else a layer of 3 to 9 km over the eye. Regression: a flat layer, cut 180 km away, its
+			 * noise of the place of the eye: slabs and stripes from 20 to 60 km, another sky than the globe's above 60.
+			 */
+			var made = scene.Baked[object.ID];
+			var weather = made && made.Weather && made.WeatherFaces >= 6 ? made.Weather : null;
+			/* How fast the eye goes up or down, for the clouds of frames before: none of them while it comes down fast. */
+			var moving = Math.min(1, Math.abs(surface.Altitude - (surface.CloudAltitude || surface.Altitude)) / Math.max(0.05, surface.Altitude) * 40);
+
+			surface.CloudAltitude = surface.Altitude;
+
+			return {Turn: [axes.East[0], axes.Up[0], axes.North[0], axes.East[1], axes.Up[1], axes.North[1], axes.East[2], axes.Up[2], axes.North[2]], From: [surface.Eye[0] * 0, surface.Altitude, 0], Sun: [vectors.Dot(sun, axes.East), vectors.Dot(sun, axes.Up), vectors.Dot(sun, axes.North)], SunLight: [sunColor[0] * 2 * day, sunColor[1] * 2 * day, sunColor[2] * 2 * day], SkyTone: [0.34 * day + 0.01, 0.4 * day + 0.012, 0.5 * day + 0.02], Under: [0, 0, 0], Layer: [3, 9, 0.25], Over: true, Shell: weather ? [surface.Field.Radius, Math.max(0, surface.Field.Elevation(surface.Up)), 1 - fadeBetween(80, 150, surface.Altitude), 1] : null, Weather: weather, Moving: moving};
 		}
 
 		/*
@@ -8449,11 +9119,18 @@ Elemenx.Component('Scene', {
 				shade = castShadow(sun, surface.Eye, surface.Eye, extent, Math.max(extent * 2, field.Height * 2), function (light) {
 					nodes.forEach(function (node) {
 						renderer.Draw(node.Mesh, gpu.GroundDepth, {uViewProjection: light, uOffset: vectors.Subtract(node.Center, surface.Eye)}, {Cull: 'back'});
+
+						/* Its woods and houses cast their shadows too. */
+						standing(node).forEach(function (mesh) {
+							renderer.Draw(mesh, gpu.ThingsDepth, {uViewProjection: light, uOffset: vectors.Subtract(node.Things.Center, surface.Eye), uCenter: node.Things.Center}, {Cull: 'none'});
+						});
 					});
 				});
 			}
 
 			engine.CosmosBake();
+
+			weathers();
 
 			posted = engine.PostBegin();
 
@@ -8464,7 +9141,7 @@ Elemenx.Component('Scene', {
 			if (self.Background && self.Background !== 'false')
 				renderer.Draw(gpu.Stars, gpu.Far, {uViewProjection: math.Multiply(math.Perspective(scene.Camera.Fov, aspect, 0.1, 200), view), uRatio: renderer.Ratio}, {Depth: false, DepthWrite: false, Blend: 'add'});
 
-			renderer.Draw(gpu.Quad, gpu.Sky, Object.assign({uInverse: math.Invert(matrix), uSun: sun, uSunColor: sunColor, uAir: air, uUp: surface.Axes.Up, uHigh: Math.min(1, surface.Altitude / thickness), uSunRadius: discOf(star, object)}, self.SkyValues(scene.Seconds)), {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
+			renderer.Draw(gpu.Quad, gpu.Sky, Object.assign({uInverse: math.Invert(matrix), uSun: sun, uSunColor: sunColor, uAir: air, uUp: surface.Axes.Up, uHigh: Math.min(1, surface.Altitude / thickness), uSunRadius: discOf(star, object), uNoWisps: weatherValues(object, scene.Baked[object.ID]).uWeatherOn}, self.SkyValues(scene.Seconds)), {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
 
 			laid = groundTiles(surface.Eye, surface.Altitude);
 
@@ -8488,8 +9165,16 @@ Elemenx.Component('Scene', {
 					uLights: lightsOf(object),
 					uLightsOn: lightsOf(object) === noLights() ? 0 : 1,
 					uSky: noLights(),
-					uCloudsOn: 0
-				}, shade, tiled(node), laid), {Cull: 'back'});
+					/* High over its clouds (from 80 km, all from 150), they are drawn on its ground as its globe draws them. */
+					uCloudsOn: weatherValues(object, scene.Baked[object.ID]).uWeatherOn * fadeBetween(80, 150, surface.Altitude)
+				}, shade, tiled(node), laid, weatherValues(object, scene.Baked[object.ID])), {Cull: 'back'});
+			});
+
+			/* What stands on the squares near (ScenePlanet.PatchThings), lit and hazy as the ground under it; Levels shows it as a proxy. */
+			nodes.forEach(function (node) {
+				standing(node).forEach(function (mesh) {
+					renderer.Draw(mesh, gpu.Things, Object.assign({uViewProjection: matrix, uOffset: vectors.Subtract(node.Things.Center, surface.Eye), uCenter: node.Things.Center, uSun: sun, uSunColor: sunColor, uAir: air, uFog: Math.max(field.Radius * 0.02, far * 0.6), uHigh: Math.min(1, surface.Altitude / thickness), uLevel: engine.LevelColor('proxy', 1)}, shade), {Cull: 'back'});
+				});
 			});
 
 			if (surface.Ship)
@@ -8502,6 +9187,9 @@ Elemenx.Component('Scene', {
 		}
 
 		function frame (now, quiet, still) {
+			var started = view.performance ? view.performance.now() : Date.now();
+			var before = !quiet && renderer ? renderer.Counts() : null;
+
 			/*
 			 * The time of the game keeps to the clock on a slow machine too (up to a second, a page may have slept); what eases
 			 * takes small steps. A clock that goes back (a frame given an earlier time) is no time: what eases backwards ran
@@ -8549,6 +9237,8 @@ Elemenx.Component('Scene', {
 					adapt(elapsed);
 
 					scene.Painted++;
+
+					drawnCounted(before, started);
 				}
 
 				return;
@@ -8586,6 +9276,8 @@ Elemenx.Component('Scene', {
 				engine.PostTime(elapsed);
 
 				scene.Painted++;
+
+				drawnCounted(before, started);
 
 				/* A recording takes the picture now, while the canvas still holds it (SceneCinema). */
 				if (engine.RecordFrame)
@@ -9417,6 +10109,48 @@ Elemenx.Component('Scene', {
 
 		var fps = this.$Service('FPS');
 		var source = fps.Name('Scene');
+		var counted = {At: 0, Frames: 0, Draws: 0, Triangles: 0, Time: 0};
+
+		/*
+		 * The numbers in the corner of Levels, twice a second: the draws and triangles of a frame (what it drew from its start
+		 * to its end, all of its passes), its milliseconds of CPU, the tiles drawn as proxies and the copies of what is sown.
+		 */
+		/*
+		 * What a frame it drew cost, added to what it drew since it was made (Drawn): its CPU from its start, its draws and
+		 * triangles. Not the frames it rested through. Levels shows the same in its corner.
+		 */
+		function drawnCounted (before, started) {
+			var ended = view.performance ? view.performance.now() : Date.now();
+			var after = renderer.Counts();
+
+			scene.DrawnCount.Frames++;
+			scene.DrawnCount.Cpu += ended - started;
+			scene.DrawnCount.Draws += after.Draws - before.Draws;
+			scene.DrawnCount.Triangles += after.Triangles - before.Triangles;
+			scene.DrawnCount.At = ended;
+
+			if (self.Levels && self.Levels !== 'false')
+				levelsCounted(before, after, started, ended);
+		}
+
+		function levelsCounted (before, after, started, ended) {
+			var sown;
+
+			counted.Frames++;
+			counted.Draws += after.Draws - before.Draws;
+			counted.Triangles += after.Triangles - before.Triangles;
+			counted.Time += ended - started;
+
+			if (ended - counted.At < 500) return;
+
+			sown = self.Sown();
+			self.LevelsText = Math.round(counted.Draws / counted.Frames) + ' draws · ' + Math.round(counted.Triangles / counted.Frames / 1000) + 'k triangles · ' + (counted.Time / counted.Frames).toFixed(1) + ' ms CPU · ' + (sown.Tiles || 0) + ' tiles · ' + sown.Copies + ' copies';
+			counted.At = ended;
+			counted.Frames = 0;
+			counted.Draws = 0;
+			counted.Triangles = 0;
+			counted.Time = 0;
+		}
 		var timer = {Ext: undefined, Queries: [], Open: null};
 
 		/* Gone, it tells no more: the meter leaves it out. */
@@ -9590,6 +10324,8 @@ Elemenx.Component('Scene', {
 			if (watched)
 				gpuBegin();
 
+			var before = watched && renderer ? renderer.Counts() : null;
+
 			/* Here a frame need not wait for what the card makes behind it; one asked for by hand does. */
 			scene.Looping = true;
 
@@ -9605,8 +10341,12 @@ Elemenx.Component('Scene', {
 			if (watched) {
 				gpuEnd();
 
-				fps.Report(source, {Cpu: ended - started, Quiet: 0, Skipped: 0});
+				/* What the frame drew: its draws and triangles (the copies of an instanced mesh counted), shown by an FPSMeter. */
+				var after = before ? renderer.Counts() : null;
+
+				fps.Report(source, {Cpu: ended - started, Quiet: 0, Skipped: 0, Draws: after ? after.Draws - before.Draws : 0, Triangles: after ? after.Triangles - before.Triangles : 0});
 			}
+
 		}});
 
 		/*
@@ -10060,6 +10800,15 @@ Elemenx.Component('Scene', {
 		if (this.ScreenTyped && this.ScreenTyped(event)) return;
 		if (this.CinemaKey && this.CinemaKey(event)) return;
 
+		/* Ctrl+Shift+L: the colors of the levels of detail on and off, in any scene. */
+		if (event.code === 'KeyL' && event.ctrlKey && event.shiftKey && !event.repeat) {
+			event.preventDefault();
+
+			this.Levels = !this.Levels || this.Levels === 'false';
+
+			return;
+		}
+
 		var scene = this.Scene();
 
 		/* With the pointer taken V goes from one place of the view of a walker to the next. */
@@ -10421,6 +11170,15 @@ Elemenx.Component('Scene', {
 
 	Now: function () {
 		return this.Scene().Time;
+	},
+
+	/*
+	 * What the frames it drew cost, counted since it was made: {Frames, Cpu (ms in all), Draws, Triangles, At (the time of
+	 * the last, performance.now())}. Not the frames of the browser: after a slow frame a scene rests through some, and they
+	 * cost nothing. The difference of two of them is what a while drew: its frames a second, a frame's draws.
+	 */
+	Drawn: function () {
+		return Object.assign({}, this.Scene().DrawnCount);
 	},
 
 	SetTime: function (days) {
@@ -10939,6 +11697,198 @@ Elemenx.Component('Scene', {
 			'		}',
 			'	}',
 			'	return sum;',
+			'}'
+		].join('\n');
+
+		/*
+		 * The weather of a planet at a direction of its body (WEATHER): of its climate (uClimate, ScenePlanet.ClimateFace), its
+		 * time (uDays, days of the body) and its sun (uSunAt, the way to it in the frame of the body). Its fronts go with the
+		 * winds of their belts (trades west, westerlies east, polar easterlies), turned and changed every three days so they
+		 * never smear; its storms of middle latitudes (and a few tropical ones) turn as they go east, grow and fade in a week;
+		 * by day heaps rise over warm wet land, most at the low of the equator; wind up a range makes cloud on it, the deserts
+		 * of 20 to 30 degrees have little. Gives cover (R), kind (G: 0 a sheet, 0.5 heaps, 1 towers of a storm), cirrus (B) and
+		 * rain (A), 0 to 1.
+		 */
+		var weather = [
+			'uniform samplerCube uClimate;',
+			'uniform float uDays;',
+			'uniform vec3 uSunAt;',
+			'uniform float uRadiusKm;',
+			'uniform float uWeatherSeed;',
+			/* How cloudy the world is (Clouds of its surface, 0 to 1): none, dry with a few, as the Earth (0.5), wetter, a shroud (1). */
+			'uniform float uCloudiness;',
+			'vec3 turnY(vec3 p, float a) {',
+			'	float c = cos(a);',
+			'	float s = sin(a);',
+			'	return vec3(p.x * c - p.z * s, p.y, p.x * s + p.z * c);',
+			'}',
+			/* Radians of longitude a day the wind of a latitude takes what it carries (8 m/s, east positive). */
+			'float zonal(float lat) {',
+			'	float band = abs(lat) * 57.29578;',
+			'	float east = mix(-1.0, 1.3, smoothstep(26.0, 34.0, band));',
+			'	east = mix(east, -0.6, smoothstep(56.0, 64.0, band));',
+			'	return east * 8.0 * 86.4 / uRadiusKm;',
+			'}',
+			/*
+			 * The wind of the body at a direction (radians a day, along its ground): the jets of its belts, each storm turning the
+			 * air round its eye (counterclockwise in the north), small eddies of a curl of a noise. storm: how strong a storm is there.
+			 */
+			'vec3 windAt(vec3 q, out float storm) {',
+			'	vec3 east = normalize(vec3(q.z, 0.0, -q.x) + vec3(1e-6, 0.0, 0.0));',
+			'	vec3 north = cross(q, east);',
+			'	float lat = asin(clamp(q.y, -1.0, 1.0));',
+			'	float band = abs(lat) * 57.29578;',
+			'	vec3 v = east * zonal(lat) + north * (band < 30.0 ? -0.12 : band < 60.0 ? 0.1 : -0.06) * sign(lat) * 8.0 * 86.4 / uRadiusKm;',
+			'	storm = 0.0;',
+			'	for (int k = 0; k < 10; k++) {',
+			'		float fk = float(k);',
+			'		float life = uDays / 7.0 + fract(fk * 0.618);',
+			'		float gen = floor(life);',
+			'		float age = fract(life);',
+			'		float h1 = hash3(vec3(fk * 13.0, gen, uWeatherSeed));',
+			'		float h2 = hash3(vec3(fk * 13.0 + 5.0, gen + 3.0, uWeatherSeed));',
+			'		float hemi = mod(fk, 2.0) < 0.5 ? 1.0 : -1.0;',
+			'		bool tropical = k >= 8;',
+			'		float lat0 = hemi * radians(tropical ? mix(12.0, 22.0, h1) : mix(38.0, 64.0, h1));',
+			'		float lon0 = h2 * 6.28318 + zonal(lat0) * age * 7.0 * (tropical ? 0.5 : 1.0);',
+			'		vec3 c = vec3(cos(lat0) * cos(lon0), sin(lat0), cos(lat0) * sin(lon0));',
+			'		float d = acos(clamp(dot(q, c), -1.0, 1.0));',
+			'		float r = radians(tropical ? mix(3.0, 6.0, h1) : mix(7.0, 13.0, h1));',
+			'		float strength = sin(3.14159 * age) * (tropical ? step(0.5, h2) : 1.0);',
+			'		float f = exp(-d * d / (r * r));',
+			'		v += cross(c, q) * hemi * strength * 5.0 * f / max(r, 0.02) * 0.1;',
+			'		storm = max(storm, strength * f);',
+			'	}',
+			/* Eddies: the curl of a noise that changes over days. */
+			'	vec3 at = q * 7.0 + vec3(uWeatherSeed, uDays * 0.15, 0.0);',
+			'	float e = 0.02;',
+			'	vec3 grad = vec3(noise3(at + vec3(e, 0.0, 0.0)) - noise3(at - vec3(e, 0.0, 0.0)), noise3(at + vec3(0.0, e, 0.0)) - noise3(at - vec3(0.0, e, 0.0)), noise3(at + vec3(0.0, 0.0, e)) - noise3(at - vec3(0.0, 0.0, e))) / (2.0 * e);',
+			'	v += cross(q, grad - q * dot(grad, q)) * 0.06;',
+			'	return v;',
+			'}',
+			/*
+			 * Clouds drawn out along the wind: a noise taken along the way the air came (six steps back of a third of a day each),
+			 * the mean of it: streams, bands bent round a storm, its arms spiralling in (as the Earth shows them from space).
+			 */
+			/* Two of them along the same way: fronts (x, of scale) and streams of a few hundred km (y, of fine), drawn out the most. */
+			'vec2 streamed(vec3 p, float scale, float fine, float salt) {',
+			'	mat3 askew = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
+			'	vec3 x = p;',
+			'	vec2 sum = vec2(0.0);',
+			'	float weight = 0.0;',
+			'	float storm;',
+			'	for (int i = 0; i < 6; i++) {',
+			'		float w = 1.0 - float(i) / 6.0;',
+			'		sum += vec2(fbm3(askew * x * scale + vec3(salt, salt * 0.7, uWeatherSeed), 4), fbm3(askew * (askew * x) * fine + vec3(salt * 1.3, 2.0, uWeatherSeed), 3)) * w;',
+			'		weight += w;',
+			'		x = normalize(x - windAt(x, storm) * 0.33);',
+			'	}',
+			'	return sum / weight;',
+			'}',
+			'vec4 weatherAt(vec3 p) {',
+			/* Its climate smoothed over a few texels: the climb of the wind over hills changes from one to the next (clouds in squares). */
+			'	vec4 cl = textureLod(uClimate, p, 1.5);',
+			'	float moist = cl.r;',
+			'	float warm = cl.g;',
+			'	float land = smoothstep(0.03, 0.3, cl.b);',
+			'	float climb = cl.a;',
+			'	float lat = asin(clamp(p.y, -1.0, 1.0));',
+			'	float band = abs(lat) * 57.29578;',
+			'	float storm;',
+			'	vec3 flow = windAt(p, storm);',
+			/* Where the air is now, of where it was (the content goes with it; new every three days, crossed, so nothing smears). */
+			'	float phase = uDays / 3.0;',
+			'	float pa = fract(phase);',
+			'	float pb = fract(phase + 0.5);',
+			'	vec3 qa = normalize(p - flow * pa * 3.0);',
+			'	vec3 qb = normalize(p - flow * pb * 3.0);',
+			'	float wa = 1.0 - abs(2.0 * pa - 1.0);',
+			'	vec2 sa = streamed(qa, 2.6, 14.0, floor(phase) * 7.31);',
+			'	vec2 sb = streamed(qb, 2.6, 14.0, floor(phase + 0.5) * 7.31 + 50.0);',
+			'	float keep = sqrt(wa * wa + (1.0 - wa) * (1.0 - wa));',
+			/* Streams stand out more than the mean of six can (it flattens a noise): its spread made as wide again. */
+			'	vec2 both = clamp((sa * wa + sb * (1.0 - wa) - 0.5) / keep * vec2(1.0, 1.8) + 0.5, 0.0, 1.0);',
+			'	float fronts = both.x * 0.55 + both.y * 0.45;',
+			'	float mid = clamp((fbm3(qa * 9.0 + floor(phase) * 3.1, 3) * wa + fbm3(qb * 9.0 + floor(phase + 0.5) * 3.1 + 20.0, 3) * (1.0 - wa) - 0.5) / sqrt(wa * wa + (1.0 - wa) * (1.0 - wa)) + 0.5, 0.0, 1.0);',
+			'	float itcz = exp(-pow((lat * 57.29578 - 5.0) / 8.0, 2.0));',
+			'	float dry = smoothstep(14.0, 22.0, band) * (1.0 - smoothstep(30.0, 38.0, band));',
+			/* The tracks of the storms (40 to 60 degrees) wetter, a storm wetter still: their commas and fronts. */
+			'	float tracks = smoothstep(35.0, 45.0, band) * (1.0 - smoothstep(60.0, 70.0, band));',
+			'	float humid = moist * 0.7 + (1.0 - land) * 0.1 + climb * 0.45 + itcz * 0.12 + tracks * 0.15 + storm * 0.7 - dry * 0.18 + (uCloudiness - 0.5) * 0.8;',
+			'	float heat = smoothstep(-0.1, 0.55, dot(p, uSunAt));',
+			/* The wetter, the more of it cloud, yet never all of it: the streams and bands of the air show between (a shroud: see below). */
+			'	float cut = clamp(1.15 - humid * 0.8, 0.35, 0.95);',
+			'	float sheet = smoothstep(cut - 0.08, cut + 0.08, fronts * 0.75 + mid * 0.25);',
+			'	float convect = clamp((warm - 0.42) * 2.4, 0.0, 1.0) * mix(0.35 + 0.25 * heat, heat, land) * smoothstep(0.2, 0.55, moist + climb * 0.3);',
+			/* Heaps in clusters cut by the streams, not a band all along the equator. */
+			'	float heaps = convect * smoothstep(0.5, 0.75, both.y * 0.7 + mid * 0.3 + humid * 0.15);',
+			/* Fair weather heaps almost everywhere by day, more over land, as on the Earth: no descent into a sky with none. */
+			'	float fair = heat * smoothstep(0.05, 0.3, moist) * mix(0.22, 0.38, land) * smoothstep(0.2, 0.4, warm) * clamp(uCloudiness * 2.0, 0.0, 1.0);',
+			'	heaps = max(heaps, fair);',
+			'	float cover = max(sheet, heaps * 0.8);',
+			'	float kind = clamp(0.15 + heaps * 0.55 + convect * itcz * 0.6 + storm * 0.25 * (1.0 - sheet) - (1.0 - warm) * 0.2, 0.0, 1.0);',
+			/* Fair weather ones are heaps. */
+			'	kind = max(kind, 0.5 * smoothstep(0.03, 0.1, fair) * (1.0 - sheet));',
+			'	float streak = both.y;',
+			'	float cirrus = smoothstep(0.55, 0.82, streak) * (0.35 + 0.65 * smoothstep(25.0, 45.0, band) + itcz * 0.4) * (1.0 - sheet * 0.5);',
+			'	float rain = sheet * smoothstep(0.62, 0.95, humid + storm * 0.3) + heaps * smoothstep(0.75, 1.0, kind) * 0.8;',
+			/* A shroud all over (as Venus), and none at all on a world with no clouds. */
+			'	cover = mix(cover, 1.0, smoothstep(0.85, 1.0, uCloudiness));',
+			'	kind = mix(kind, 0.1, smoothstep(0.85, 1.0, uCloudiness));',
+			'	return clamp(vec4(cover, kind, cirrus * step(0.001, uCloudiness), rain), 0.0, 1.0) * vec4(step(0.001, uCloudiness), 1.0, 1.0, step(0.001, uCloudiness));',
+			'}'
+		].join('\n');
+
+		/*
+		 * The clouds of the weather of a planet as they are seen from over it (uWeather, its WEATHER baked): sheets as they are,
+		 * heaps a field of puffs of a few kilometres (as many as the cover), cirrus thin over all; foot the kilometres a pixel
+		 * covers, what is finer than it its mean. CLOUDS SEEN.
+		 */
+		var cloudsSeen = [
+			'uniform samplerCube uWeather;',
+			'uniform float uWeatherOn;',
+			'uniform float uRadiusKm;',
+			'float cloudSeen(vec3 p, vec4 w, float foot) {',
+			'	vec3 k = p * uRadiusKm;',
+			'	float heap = smoothstep(0.3, 0.6, w.g);',
+			/* Its billows of 80, 30, 11, 4 and 1.5 km: heaps most of the small, sheets of the large; each only while a pixel sees it. */
+			'	float d = 0.0;',
+			'	float total = 0.0;',
+			'	float seen = 0.0;',
+			'	float size = 80.0;',
+			/* Each turned against the last: a noise of values cut at a level shows squares along its grid. */
+			'	mat3 askew = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
+			'	vec3 turned = k;',
+			'	for (int i = 0; i < 5; i++) {',
+			'		float a = i < 2 ? mix(0.6, 0.3, heap) : mix(0.22, 0.6, heap);',
+			'		float sharp = 1.0 - smoothstep(size * 0.12, size * 0.45, foot);',
+			'		turned = askew * turned;',
+			/* Two turnings of it a level: one noise of values alone, cut, made shapes of squares along its grid. */
+			'		d += ((noise3(turned / size + float(i) * 7.1) + noise3(askew * (turned / size) + float(i) * 3.7 + 11.0)) * 0.5 - 0.5) * 1.4 * a * sharp;',
+			'		total += a;',
+			'		seen += a * sharp;',
+			'		size /= 2.7;',
+			'	}',
+			/* What is not seen of them softens the edge as much: the cover of a texel its mean at any size. */
+			/* Softer the larger a pixel is on the ground: no hard edges of a decal from orbit. */
+			'	float spread = mix(0.12, 0.06, heap) + clamp(foot / 40.0, 0.0, 0.2);',
+			/*
+			 * Regression: cut at 1 less the cover, the noise (about 0.5, spread 0.22) left far less cloud than the cover said (12%
+			 * gave 3%): the cut where that share of it is over (a logit for its quantile).
+			 */
+			'	float level = 0.5 + 0.13 * log((1.0 - clamp(w.r, 0.01, 0.99)) / clamp(w.r, 0.01, 0.99));',
+			/*
+			 * Regression: what a pixel did not see of them only softened the cut, and a cover of 0.9 showed as a veil of 0.6: the
+			 * streams and swirls of the weather washed out from orbit. Unseen, the cloud is the cover of the weather as it is.
+			 */
+			'	float cloud = mix(w.r, smoothstep(level - spread, level + spread, 0.5 + d * 1.6 / max(seen / total, 0.05)), seen / total) * step(0.01, w.r);',
+			/* Cirrus, thin and drawn out east and west. */
+			'	float streak = noise3(vec3(k.x / 90.0, k.y / 9.0, k.z / 90.0) + 5.0) * 0.7 + noise3(vec3(k.x / 30.0, k.y / 3.0, k.z / 30.0)) * 0.3;',
+			'	float thin = w.b * smoothstep(0.45, 0.75, streak) * 0.18;',
+			'	return clamp(cloud + thin * (1.0 - cloud), 0.0, 1.0);',
+			'}',
+			'float cloudAt(vec3 p, float foot) {',
+			'	return cloudSeen(p, texture(uWeather, p), foot);',
 			'}'
 		].join('\n');
 
@@ -11724,6 +12674,18 @@ Elemenx.Component('Scene', {
 				'}'
 			].join('\n'),
 
+			/* The weather of a planet, a face of its cube (WEATHER): baked a face a frame, as its time goes. */
+			Weather: head + [
+				'in vec2 vQuad;',
+				'out vec4 outColor;',
+				graphics.Chunks.Noise,
+				graphics.Chunks.Cube,
+				weather,
+				'void main() {',
+				'	outColor = weatherAt(cubeDirection(uFace, vQuad));',
+				'}'
+			].join('\n'),
+
 			/* A body lit: its baked ground and clouds, the light of the stars, the shadows of balls, the air at its edge. */
 			Planet: head + [
 				'in vec3 vWorld;',
@@ -11742,8 +12704,11 @@ Elemenx.Component('Scene', {
 				'uniform float uDrift;',
 				'uniform samplerCube uLights;',
 				'uniform float uLightsOn;',
+				'uniform mat4 uModel;',
 				'out vec4 outColor;',
 				graphics.Chunks.Lights,
+				graphics.Chunks.Noise,
+				cloudsSeen,
 				'float daylight(vec3 position, vec3 normal) {',
 				'	float day = 0.0;',
 				'	for (int i = 0; i < 4; i++) {',
@@ -11764,6 +12729,38 @@ Elemenx.Component('Scene', {
 				'	float turn = uDrift;',
 				'	vec3 drifted = vec3(p.x * cos(turn) - p.z * sin(turn), p.y, p.x * sin(turn) + p.z * cos(turn));',
 				'	vec4 sky = texture(uSky, drifted);',
+				/*
+				 * The clouds of its weather (CLOUDS SEEN), when it has one: their puffs, each darker on its side away from the sun,
+				 * and their shadows on the ground, as far from them as their height and the sun tell (long at a low sun).
+				 */
+				'	if (uWeatherOn > 0.5) {',
+				'		float foot = max(length(fwidth(p)) * uRadiusKm, 0.05);',
+				'		vec3 sunL = normalize(transpose(mat3(uModel)) * (uLightPositions[0] - vWorld));',
+				'		float high = dot(sunL, p);',
+				'		vec3 toward = normalize(sunL - p * high + vec3(1e-6));',
+				'		vec4 w = texture(uWeather, p);',
+				'		float cloud = cloudSeen(p, w, foot);',
+				'		float ahead = cloudAt(normalize(p + toward * max(3.0, foot) / uRadiusKm), foot);',
+				'		float self = clamp((ahead - cloud) * 1.3, 0.0, 0.55) * smoothstep(-0.05, 0.2, high);',
+				'		float lift = mix(1.5, 6.0, w.g);',
+				'		vec3 under = normalize(p + toward * lift * sqrt(max(0.0, 1.0 - high * high)) / max(0.06, high) / uRadiusKm);',
+				'		float shadow = cloudAt(under, foot) * smoothstep(0.0, 0.12, high);',
+				'		vec3 white = mix(vec3(0.97), uAtmosphere.rgb, 0.12 * uAtmosphere.a) * lighting(vWorld, n, v, 1.0, 0.0) * (1.0 - self);',
+				'		if (uCloudsOnly > 0.5) {',
+				'			outColor = vec4(white, cloud);',
+				'			return;',
+				'		}',
+				'		vec4 heat = texture(uSky, p);',
+				'		if (uKind == 3) color += mix(uColors[2], uColors[3], heat.b) * heat.g * 1.6;',
+				'		color *= 1.0 - 0.7 * shadow;',
+				'		if (uLightsOn > 0.5) color += vec3(1.0, 0.72, 0.38) * texture(uLights, p).r * 1.6 * (1.0 - daylight(vWorld, n)) * (1.0 - cloud * 0.8);',
+				'		color = mix(color, white, cloud);',
+				'		float edge = pow(1.0 - max(dot(n, v), 0.0), 3.0);',
+				'		color += uAtmosphere.rgb * edge * uAtmosphere.a * daylight(vWorld, n);',
+				'		color += uHighlight.rgb * pow(1.0 - max(dot(n, v), 0.0), 6.0) * uHighlight.a;',
+				'		outColor = vec4(color, 1.0);',
+				'		return;',
+				'	}',
 				/* Its clouds alone, over its ground drawn of its planet (a globe near): their light, as much of them as there is. */
 				'	if (uCloudsOnly > 0.5) {',
 				'		vec3 lit = mix(vec3(0.96), uAtmosphere.rgb, uClouds >= 1.0 ? 0.55 * uAtmosphere.a : 0.0) * lighting(vWorld, n, v, 1.0, 0.0);',
@@ -11988,6 +12985,56 @@ Elemenx.Component('Scene', {
 			].join('\n'),
 
 			/* The ground of a body seen from its surface: its squares relative to the eye, the colors of its baked surface. */
+			/* What stands on the ground of a planet (ScenePlanet.PatchThings): its woods and houses, relative to their square. */
+			ThingsVertex: head + [
+				'in vec3 aPosition;',
+				'in vec3 aNormal;',
+				'in vec3 aColor;',
+				'uniform mat4 uViewProjection;',
+				'uniform vec3 uOffset;',
+				'out vec3 vWorld;',
+				'out vec3 vNormal;',
+				'out vec3 vColor;',
+				'out vec3 vUp;',
+				'uniform vec3 uCenter;',
+				'void main() {',
+				'	vWorld = aPosition + uOffset;',
+				'	vNormal = aNormal;',
+				'	vColor = aColor;',
+				'	vUp = normalize(aPosition + uCenter);',
+				'	gl_Position = uViewProjection * vec4(vWorld, 1.0);',
+				'}'
+			].join('\n'),
+
+			/* Lit as the ground is (the sun, the light of the sky round it, the shadow of the sun) and as hazy as it is far. */
+			Things: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'in vec3 vColor;',
+				'in vec3 vUp;',
+				'uniform vec3 uSun;',
+				'uniform vec3 uSunColor;',
+				'uniform vec4 uAir;',
+				'uniform float uFog;',
+				'uniform float uHigh;',
+				'uniform vec4 uLevel;',
+				'out vec4 outColor;',
+				graphics.Chunks.Shadow,
+				'void main() {',
+				'	vec3 n = normalize(vNormal);',
+				'	float rise = dot(vUp, uSun);',
+				'	float light = clamp(rise * 3.0 + 0.3, 0.0, 1.0);',
+				'	float dusk = 1.0 - smoothstep(0.0, 0.35, abs(rise));',
+				'	vec3 around = vec3(0.05, 0.06, 0.08) + uAir.rgb * uAir.a * 0.3 * smoothstep(-0.25, 0.3, rise) + vec3(0.5, 0.25, 0.15) * dusk * uAir.a * 0.35;',
+				'	float day = max(dot(n, uSun), 0.0) * sunShadow(vWorld, n);',
+				'	vec3 color = vColor * (uSunColor * day + around);',
+				'	float haze = (1.0 - exp(-length(vWorld) / uFog)) * uAir.a * (1.0 - uHigh * 0.7);',
+				'	color = mix(color, mix(uAir.rgb, vec3(0.9), 0.35) * light, clamp(haze, 0.0, 1.0));',
+				'	if (uLevel.a > 0.0) color = mix(color, uLevel.rgb * (0.3 + 0.9 * dot(color, vec3(0.333))), uLevel.a);',
+				'	outColor = vec4(color, 1.0);',
+				'}'
+			].join('\n'),
+
 			GroundVertex: head + [
 				'in vec3 aPosition;',
 				'in vec3 aNormal;',
@@ -12062,6 +13109,7 @@ Elemenx.Component('Scene', {
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				graphics.Chunks.Shadow,
+				cloudsSeen,
 				waves,
 				'precision highp sampler2DArray;',
 				this.$Service('SceneTextures').Chunk(true),
@@ -12199,10 +13247,11 @@ Elemenx.Component('Scene', {
 				 * Its picture: read a little aside by a noise of its texels, so the edges between its colors are ragged within a texel
 				 * and never a row of steps; its relief of its own normals, finer than its points, the slopes made steeper as above.
 				 */
+				'	vec2 aside = vec2(0.0);',
 				'	if (uTiled > 0.5) {',
 				'		vec2 tc = vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels;',
 				'		vec2 grid = tc * uTexels;',
-				'		vec2 aside = vec2(noise3(vec3(grid * 1.7, 3.1)) + noise3(vec3(grid * 4.3, 5.7)) * 0.5, noise3(vec3(grid * 1.7, 9.7)) + noise3(vec3(grid * 4.3, 1.3)) * 0.5) - 0.75;',
+				'		aside = vec2(noise3(vec3(grid * 1.7, 3.1)) + noise3(vec3(grid * 4.3, 5.7)) * 0.5, noise3(vec3(grid * 1.7, 9.7)) + noise3(vec3(grid * 4.3, 1.3)) * 0.5) - 0.75;',
 				'		vec4 painted = texture(uColorMap, tc + aside * 1.1 / uTexels);',
 				'		albedo = painted.rgb;',
 				'		water = painted.a;',
@@ -12236,7 +13285,8 @@ Elemenx.Component('Scene', {
 				 * Its woods (the share trees cover, of its picture): stands of tens and hundreds of metres, as many as the share;
 				 * from far their mean, a darker green; near, their edges, the crowns over the ground in the relief below.
 				 */
-				'	float cover = uTiled * uWoods > 0.5 ? texture(uReliefMap, vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels).a : 0.0;',
+				/* Read aside as its colors are: no steps of texels along the edges of the woods from far. */
+				'	float cover = uTiled * uWoods > 0.5 ? texture(uReliefMap, vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels + aside * 1.1 / uTexels).a : 0.0;',
 				/* Each octave turned against the last, so no grid of the noise shows in the edges of the woods. */
 				'	mat3 askew = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
 				'	float stands = noise3(askew * place * 14.0 + 21.0) * 0.5 + noise3(place * 2.6 + 9.0) * 0.32 + noise3(askew * (askew * near) * 61.0 + 4.0) * 0.18 * (1.0 - smoothstep(0.004, 0.012, foot));',
@@ -12306,6 +13356,13 @@ Elemenx.Component('Scene', {
 				/* The sky lights what the sun does not reach: at sunset the land is dim and red, not black. */
 				'	vec3 around = vec3(0.05, 0.06, 0.08) + uAir.rgb * uAir.a * 0.3 * smoothstep(-0.25, 0.3, rise) + vec3(0.5, 0.25, 0.15) * dusk * uAir.a * 0.35;',
 				'	float day = max(dot(n, uSun), 0.0) * sunShadow(vWorld, n);',
+				/* The shadows of the clouds of its weather (CLOUDS SEEN), as far from them as their height and the sun tell. */
+				'	vec3 toward = normalize(uSun - up * rise + vec3(1e-6));',
+				'	if (uWeatherOn > 0.5) {',
+				'		vec4 above = texture(uWeather, up);',
+				'		vec3 under = normalize(up + toward * mix(1.5, 6.0, above.g) * sqrt(max(0.0, 1.0 - rise * rise)) / max(0.06, rise) / uRadiusKm);',
+				'		day *= 1.0 - 0.55 * cloudAt(under, max(foot, 0.3)) * smoothstep(0.0, 0.12, rise);',
+				'	}',
 				'	vec3 color = albedo * (uSunColor * day + around);',
 				/* Water mirrors the sky, more at a glance; waves break the sun into a path of glints that reddens as it sets. */
 				'	if (water > 0.01) {',
@@ -12334,7 +13391,15 @@ Elemenx.Component('Scene', {
 				 * Its clouds, seen from high over them (uCloudsOn): laid over the ground where it is, as the shell of them would
 				 * be; a shell so far over the ground fights it for the depth thousands of kilometres away, and flickers in stripes.
 				 */
-				'	if (uCloudsOn > 0.0) {',
+				/* Of its weather: the cover, each puff darker on its side away from the sun. */
+				'	if (uCloudsOn > 0.0 && uWeatherOn > 0.5) {',
+				'		float cover = cloudAt(up, foot);',
+				'		float ahead = cloudAt(normalize(up + toward * max(3.0, foot) / uRadiusKm), foot);',
+				'		float self = clamp((ahead - cover) * 1.3, 0.0, 0.55) * smoothstep(-0.05, 0.2, rise);',
+				'		vec3 cloud = uCloudTint * (uSunColor * clamp(rise * 1.4 + 0.1, 0.0, 1.0) * (1.0 - self) + around);',
+				'		color = mix(color, cloud, cover * min(uCloudsOn, 1.0));',
+				'	}',
+				'	else if (uCloudsOn > 0.0) {',
 				'		vec3 drifted = vec3(up.x * cos(uDrift) - up.z * sin(uDrift), up.y, up.x * sin(uDrift) + up.z * cos(uDrift));',
 				'		float cover = texture(uSky, drifted).r * uCloudsOn;',
 				/* Their own shape: heaps of tens of kilometres and their gaps, as far as a pixel is smaller than they are. */
@@ -12365,6 +13430,8 @@ Elemenx.Component('Scene', {
 				'uniform vec3 uUp;',
 				'uniform float uHigh;',
 				'uniform float uCover;',
+				/* 1 where a shell of clouds of a weather draws its own cirrus (SceneLighting): none of the sky's own wisps. */
+				'uniform float uNoWisps;',
 				'uniform vec3 uMoon;',
 				'uniform vec3 uMoonLit;',
 				'uniform float uMoonSize;',

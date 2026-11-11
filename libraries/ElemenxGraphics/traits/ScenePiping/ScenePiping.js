@@ -49,14 +49,33 @@ Elemenx.Trait('ScenePiping', {
 
 			found.forEach(function (object) {
 				var spec = Object.assign({ID: object.ID}, object.Traits.Pipe);
-				var heights = height ? spec.Points.map(function (point) {
-					return Math.round(height(point[0], point[1]) * 100);
-				}) : [];
-				var key = JSON.stringify([spec, heights]);
+				var text = JSON.stringify(spec);
+				var held = state.Keys[object.ID];
+				var land = scene.Ground ? scene.Ground.Key : '';
+				var heights;
+				var key;
 				var name;
 				var made;
 
-				if (state.Keys[object.ID] && state.Keys[object.ID].Key === key) {
+				/*
+				 * Regression: the heights of the ground under each point of each pipe were asked each frame (a field of a sketch
+				 * is slow to ask: 18 ms a frame in a world of a few pipes). They are asked again only when the pipe or the ground
+				 * changed.
+				 */
+				if (held && held.Text === text && held.Land === land) {
+					key = held.Key;
+				}
+				else {
+					heights = height ? spec.Points.map(function (point) {
+						return Math.round(height(point[0], point[1]) * 100);
+					}) : [];
+					key = JSON.stringify([spec, heights]);
+				}
+
+				if (held && held.Key === key) {
+					held.Text = text;
+					held.Land = land;
+
 					laid.push(state.Keys[object.ID].Laid);
 
 					object.Shape = state.Names[object.ID];
@@ -71,7 +90,7 @@ Elemenx.Trait('ScenePiping', {
 
 				models.Define(name, {URL: name, Asset: pipes.Asset([made], {Height: height}), Fit: false, Type: 'prop'});
 
-				state.Keys[object.ID] = {Key: key, Laid: made};
+				state.Keys[object.ID] = {Key: key, Laid: made, Text: text, Land: land};
 				state.Names[object.ID] = name;
 				object.Shape = name;
 				scene.StillLists = null;

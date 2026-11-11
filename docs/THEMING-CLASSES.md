@@ -1091,6 +1091,7 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-scene-landing-item`: `pick`
 - `elemenx-scene-landing-list`
 - `elemenx-scene-landing-time`
+- `elemenx-scene-levels`
 - `elemenx-scene-loading`
 - `elemenx-scene-lock`: `locked`, `off`
 - `elemenx-scene-screens`

@@ -32,6 +32,7 @@
 	</div>
 	<div class="elemenx-scene-loading" [hidden]="Loading === null || !Loader || Loader === 'false'"><slot name="loading"></slot><Progress *if="!LoadingOwn" Size="small" [value]="LoadingEndless ? null : Loading" [label]="$T('graphics.scene.loading') + (LoadingText ? ' · ' + LoadingText : '')" /></div>
 	<div class="elemenx-scene-hud"><slot name="hud"></slot></div>
+	<div class="elemenx-scene-levels" *if="Levels && Levels !== 'false'" aria-hidden="true">{{LevelsText}}</div>
 	<div class="elemenx-scene-sources" hidden><slot></slot></div>
 	<div class="elemenx-scene-screens" aria-hidden="true"><slot name="screens"></slot></div>
 	<div class="elemenx-visually-hidden" aria-live="polite">{{Status}}</div>

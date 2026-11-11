@@ -212,6 +212,9 @@ describe('Regression: the squares of a ground as fine as the eye sees their grid
 			return run.apply(work, arguments);
 		};
 
+		/* What is asked of the workers, not taken from the cache of the browser (SceneCache: those of a test before are there). */
+		scene.CacheSize = 0;
+
 		scene.SetViewpoint({Target: [200, 0, 300], Yaw: 1, Pitch: 0.3, Distance: 20});
 
 		for (i = 0; i < 40; i++) {

@@ -28,7 +28,10 @@ describe('Regression: a TabSplit given its layout before its TabGroup loads', fu
 		while (owned.length) owned.pop().$Destroy();
 	});
 
-	/* Its panels were put into the bodies of the groups before the groups had one: they stayed hidden in its source. */
+	/*
+	 * Its panels were put into the bodies of the groups before the groups had one: they stayed hidden in its source.
+	 * Regression (load): its two waits of 15 s each took longer than the 15 s of the test under a full run; it has 45.
+	 */
 	it('puts the panels into the groups once the groups are there', async function () {
 		var component = Elemenx.Component(unique('LateSplit'), {
 			$Template: '<div style="height: 200px"><TabSplit [layout]="Saved"><Tab ID="one" Label="one.js">One</Tab><Tab ID="two" Label="two.js">Two</Tab></TabSplit></div>',
@@ -54,5 +57,5 @@ describe('Regression: a TabSplit given its layout before its TabGroup loads', fu
 			return panel.textContent.trim();
 		})).toEqual(['One', 'Two']);
 		expect(root.querySelectorAll('.elemenx-tab-split-source .elemenx-tab-panel').length).toBe(0);
-	});
+	}, 45000);
 });

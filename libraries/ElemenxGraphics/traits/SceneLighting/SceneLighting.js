@@ -607,6 +607,13 @@ Elemenx.Trait('SceneLighting', {
 			state.EyeFence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
 		}
 
+		/* A cube of nothing, for the clouds of a scene that has no weather of a planet. */
+		function noCube () {
+			state.NoCube = state.NoCube || renderer.Cube(1);
+
+			return state.NoCube;
+		}
+
 		/* For the picture of a scene that has no clouds. */
 		function emptyNoise () {
 			state.NoNoise = state.NoNoise || renderer.Volume(1, new Uint8Array([128, 128, 128, 128]));
@@ -865,8 +872,8 @@ Elemenx.Trait('SceneLighting', {
 			var glowing = now.Strike && now.Flash > 0.05 ? [air.From[0] + Math.cos(now.Strike.Way) * reach, air.Layer[0] + (air.Layer[1] - air.Layer[0]) * (now.Strike.Ground ? 0.25 : 0.5), air.From[2] + Math.sin(now.Strike.Way) * reach, now.Flash] : [0, 0, 0, 0];
 			var vein = now.Strike ? [now.Strike.Seed % 100, (air.Layer[1] - air.Layer[0]) * 2.2, 0, 0] : [0, 1, 0, 0];
 
-			pass(state.Cloud, run.Clouds, cloudValues(air, now, {uDepth: depth, uInverse: inverse, uTurn: air.Turn, uFrom: air.From, uSunWay: air.Sun, uSunLight: air.SunLight, uSkyTone: air.SkyTone, uUnder: air.Under, uBelow: air.Below || [0, 0, 0], uBelowWay: air.BelowWay || [0, 0, 0], uBolt: strike, uFlashAt: glowing, uVein: vein, uHaze: air.Haze || [0, 0, 0, 0], uSteps: set.Clouds, uStep: state.CloudStep % 64, uBehind: air.Over ? 0 : 1}));
-			pass(state.CloudNext, run.CloudFrames, {uNew: state.Cloud.Textures[0], uOld: state.CloudPast.Textures[0], uInverse: math.Invert(plain), uMatrix: state.CloudMatrix || plain, uMix: state.CloudMatrix ? now.Flash > 0.1 ? 0.25 : 0.9 : 0, uPixel: [1 / state.Cloud.Width, 1 / state.Cloud.Height]});
+			pass(state.Cloud, run.Clouds, cloudValues(air, now, {uDepth: depth, uInverse: inverse, uTurn: air.Turn, uFrom: air.From, uSunWay: air.Sun, uSunLight: air.SunLight, uSkyTone: air.SkyTone, uUnder: air.Under, uBelow: air.Below || [0, 0, 0], uBelowWay: air.BelowWay || [0, 0, 0], uBolt: strike, uFlashAt: glowing, uVein: vein, uHaze: air.Haze || [0, 0, 0, 0], uSteps: set.Clouds, uStep: state.CloudStep % 64, uBehind: air.Over ? 0 : 1, uShell: air.Shell || [0, 0, 0, 0], uShellUnit: air.ShellUnit || 1, uWeather: air.Weather || noCube()}));
+			pass(state.CloudNext, run.CloudFrames, {uNew: state.Cloud.Textures[0], uOld: state.CloudPast.Textures[0], uInverse: math.Invert(plain), uMatrix: state.CloudMatrix || plain, uMix: state.CloudMatrix ? now.Flash > 0.1 ? 0.25 : 0.9 * (1 - 0.85 * (air.Moving || 0)) : 0, uPixel: [1 / state.Cloud.Width, 1 / state.Cloud.Height]});
 
 			keep = state.CloudPast;
 			state.CloudPast = state.CloudNext;
@@ -1046,7 +1053,8 @@ Elemenx.Trait('SceneLighting', {
 				frame.Air = air;
 
 				if (air) {
-					if (!air.Over)
+					/* The shadows of a layer of its own; a shell of a weather has none of that map (yet). */
+					if (!air.Over && !air.Shell)
 						cloudMap(air, frame.Run, now);
 
 					cloudFrames(air, frame.Run, inputs.Depth, frame.Inverse, frame.Plain, now, frame.Set);
@@ -1899,8 +1907,94 @@ Elemenx.Trait('SceneLighting', {
 				'uniform float uStep;',
 				'uniform float uBehind;',
 				'uniform int uSteps;',
+				'uniform vec4 uShell;',
+				/* Kilometres a unit of the scene is: 1 over a surface, 0.001 in a location (metres). */
+				'uniform float uShellUnit;',
+				'uniform samplerCube uWeather;',
 				'out vec4 outColor;',
 				cloudShape,
+				graphics.Chunks.Noise,
+				/*
+				 * The clouds of the weather of a planet over its surface (uShell: its radius, the ground under the eye, km; on): a
+				 * shell round it from 0.4 to 13 km over its sea. Of the weather of each place (uWeather, as Scene bakes it: cover,
+				 * kind, cirrus): sheets low and flat, heaps to 3 km with round tops, towers of a storm to 12, cirrus at 9 to 11;
+				 * their billows of a noise of the body (kilometres of it), so they stay where they are as the eye goes.
+				 */
+				'float shellThick(vec3 q, float foot, float detail) {',
+				'	float R = uShell.x;',
+				'	float r = length(q);',
+				'	float h = r - R;',
+				'	mat3 back = transpose(uTurn);',
+				'	vec4 w = texture(uWeather, back * (q / r));',
+				'	vec3 k = back * q;',
+				'	float kind = w.g;',
+				'	float heap = smoothstep(0.3, 0.6, kind);',
+				'	float base = mix(0.6, 1.0, heap);',
+				'	float top = kind < 0.5 ? mix(1.5, 3.2, kind * 2.0) : mix(3.2, 12.0, (kind - 0.5) * 2.0);',
+				/* Tops of heaps each of its own height (cauliflowers of a few km), of a sheet a little uneven. */
+				'	top = base + (top - base) * mix(0.8 + 0.2 * mix(noise3(k / 8.0 + 4.0), 0.5, smoothstep(1.5, 4.0, foot)), 0.45 + 0.55 * mix(noise3(k / 2.6 + 2.0), 0.5, smoothstep(0.5, 1.5, foot)), heap);',
+				'	float hn = (h - base) / (top - base);',
+				'	float d = 0.0;',
+				'	if (hn > 0.0 && hn < 1.0 && w.r > 0.02) {',
+				/*
+				 * Where there is cloud: the very cover its globe and their shadows show (CLOUDS SEEN of Scene), of billows of 80,
+				 * 30, 11, 4 and 1.5 km, as many of them as are asked (the far fewer).
+				 */
+				/* Each only while a pixel there (foot, km) sees it, as on the globe: what is finer its mean, no grain from high. */
+				'		float n = 0.0;',
+				'		float total = 0.0;',
+				'		float seen = 0.0;',
+				'		float size = 80.0;',
+				/* Each turned against the last, as the clouds of the globe are (no squares along the grid of the noise). */
+				'		mat3 askew = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
+				'		vec3 turned = k;',
+				'		for (int i = 0; i < 5; i++) {',
+				'			float a = i < 2 ? mix(0.6, 0.3, heap) : mix(0.22, 0.6, heap);',
+				'			float sharp = 1.0 - smoothstep(size * 0.12, size * 0.45, foot);',
+				'			turned = askew * turned;',
+				'			if (sharp > 0.0) n += ((noise3(turned / size + float(i) * 7.1) + noise3(askew * (turned / size) + float(i) * 3.7 + 11.0)) * 0.5 - 0.5) * 1.4 * a * sharp;',
+				'			total += a;',
+				'			seen += a * sharp;',
+				'			size /= 2.7;',
+				'		}',
+				'		float spread = mix(0.12, 0.06, heap) + clamp(foot / 40.0, 0.0, 0.2);',
+				/* Cut where the share the cover says is over (as the globe and the shadows do). */
+				'		float level = 0.5 + 0.13 * log((1.0 - clamp(w.r, 0.01, 0.99)) / clamp(w.r, 0.01, 0.99));',
+				/* Unseen billows: the cover of the weather as it is (as on the globe), narrower up high. */
+				'		float cover = mix(clamp(w.r - hn * mix(0.12, 0.35, heap), 0.0, 1.0), smoothstep(level - spread, level + spread, 0.5 + n * 1.6 / max(seen / total, 0.05) - hn * mix(0.12, 0.35, heap)), seen / total);',
+				/* A sheet flat with a soft top; a heap round, wide below, narrow over. */
+				'		float sheet = smoothstep(0.0, 0.25, hn) * (1.0 - smoothstep(0.55, 1.0, hn));',
+				'		float round1 = smoothstep(0.0, 0.07, hn) * (1.0 - smoothstep(0.2, 1.0, hn));',
+				'		float shape = mix(sheet, round1, heap);',
+				/* Cheap: where cloud may be (to find it, and the light toward the sun), with room for what billows add. */
+				'		if (detail < 0.5) return clamp((cover * shape + 0.08) * 3.0, 0.0, 1.0);',
+				/* Their edges eaten by billows of 1.2 km near (a regular block of noise showed its grid as dots). */
+				/*
+				 * Billows in three dimensions of 0.9 and 0.35 km, other at each height: heaps of cauliflowers, their sides uneven;
+				 * as far as a pixel there sees them (from high, their mean).
+				 */
+				'		float near = 1.0 - smoothstep(0.3, 1.2, foot);',
+				'		float closer = 1.0 - smoothstep(0.1, 0.45, foot);',
+				'		float closest = 1.0 - smoothstep(0.04, 0.18, foot);',
+				'		float billow = 0.5 + (noise3(askew * k / 0.9 + 9.0) - 0.5) * near * 0.75 + (noise3(askew * (askew * k) / 0.35 + 3.0) - 0.5) * closer * 0.45 + (noise3(k / 0.14 + 5.0) - 0.5) * closest * 0.3;',
+				'		d = cover * shape - 0.12 - (1.0 - billow) * mix(0.25, 0.5, heap) + 0.5 * mix(0.25, 0.5, heap);',
+				/* Their edges eaten the most where they are thin: cauliflowers, not ovals, near. */
+				'		d -= (1.0 - billow) * 0.4 * (1.0 - clamp(d * 2.0, 0.0, 1.0)) * near;',
+				/* Not all of it at once full: the billows show inside a cloud too, not at its edges only. */
+				'		d = clamp(d * 2.0, 0.0, 1.0);',
+				'	}',
+				/* Cirrus: a thin veil drawn out east and west. */
+				'	if (h > 8.5 && h < 11.0 && w.b > 0.02) {',
+				/*
+				 * Regression: a noise drawn out along the latitudes made them straight bars to the horizon. They are drawn out along
+				 * the wind in the weather itself (its cirrus, B); a noise of their own only frays them.
+				 */
+				'		mat3 turn2 = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
+				'		float fray = noise3(turn2 * k / 6.0 + 5.0) * 0.6 + noise3(k / 2.0 + 1.0) * 0.4;',
+				'		d = max(d, smoothstep(0.35, 0.85, w.b) * smoothstep(0.35, 0.65, fray) * smoothstep(8.5, 9.3, h) * (1.0 - smoothstep(10.2, 11.0, h)) * 0.08);',
+				'	}',
+				'	return d;',
+				'}',
 				'void main() {',
 				'	vec4 far = uInverse * vec4(vQuad, 1.0, 1.0);',
 				'	vec3 ray = normalize(uTurn * (far.xyz / far.w));',
@@ -1908,6 +2002,88 @@ Elemenx.Trait('SceneLighting', {
 				'	vec4 hit = uInverse * vec4(vQuad, depth * 2.0 - 1.0, 1.0);',
 				/* From the ground the sky is behind all that stands: it needs no depth, and leaves no halo round leaves. */
 				'	float stops = uBehind > 0.5 || depth >= 1.0 ? 1e12 : length(hit.xyz / hit.w);',
+				'	if (uShell.w > 0.5) {',
+				'		outColor = vec4(0.0);',
+				'		float R = uShell.x;',
+				'		vec3 o = uFrom * uShellUnit + vec3(0.0, R + uShell.y, 0.0);',
+				'		float lo = R + 0.4;',
+				'		float hi = R + 13.0;',
+				/*
+				 * Where the ray meets the spheres, by the point of it nearest the middle: thousands of kilometres up, the square of
+				 * the way less the square of the radius lost all of its float (stripes over the globe).
+				 */
+				'		float b = dot(o, ray);',
+				'		float r0 = length(o);',
+				'		float m = length(o - ray * b);',
+				/* Radians a pixel takes of the view: of each step its kilometres (foot); taken where all pixels go. */
+				'		float across = length(fwidth(ray));',
+				'		if (m >= hi || uShell.z < 0.01) return;',
+				'		float halfHi = sqrt((hi - m) * (hi + m));',
+				'		float halfLo = m < lo ? sqrt((lo - m) * (lo + m)) : -1.0;',
+				'		float enter = r0 > hi ? -b - halfHi : r0 > lo ? 0.0 : (halfLo > 0.0 ? -b + halfLo : 0.0);',
+				'		float leave = -b + halfHi;',
+				/* Down through them to the ground: no farther than its sphere of the lowest. */
+				'		if (r0 > lo && halfLo > 0.0 && -b - halfLo > 0.0) leave = -b - halfLo;',
+				'		enter = max(enter, 0.0);',
+				'		leave = min(leave, stops * uShellUnit);',
+				'		if (leave <= enter) return;',
+				'		float span = leave - enter;',
+				'		float jitter = fract(fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) + uStep * 0.618034);',
+				'		float toward = dot(ray, uSunWay);',
+				'		float phase = 0.55 * lobe(toward, 0.72) + 0.45 * lobe(toward, -0.2) + 0.32;',
+				'		vec3 sum = vec3(0.0);',
+				'		float seen = 1.0;',
+				/*
+				 * Regression: steps spread evenly along the way went over clouds 1 to 3 km thick (from 20 km down a slant, a step of
+				 * 4 km): no clouds at all over the surface, their shadows on it. Long steps in clear air, by the cheap density; where
+				 * it finds cloud, back one step and on by short ones (80 to 600 m, finer near), all its billows; out again after
+				 * 1.5 km of nothing.
+				 */
+				'		float t = enter + jitter * min(0.5, span);',
+				'		float inside = 0.0;',
+				'		float empty = 0.0;',
+				'		for (int i = 0; i < 256; i++) {',
+				'			if (i >= uSteps * 6 || seen < 0.02 || t > leave) break;',
+				'			vec3 q = o + ray * t;',
+				'			float coarse = clamp(0.5 + t * 0.012, 0.5, 6.0);',
+				'			float small = clamp(t * across * 1.5, 0.08, 0.6);',
+				'			if (inside < 0.5) {',
+				'				if (shellThick(q, max(t * across, 1.0), 0.0) > 0.0) {',
+				'					inside = 1.0;',
+				'					empty = 0.0;',
+				'					t = max(enter, t - coarse) + small * jitter;',
+				'				}',
+				'				else t += coarse;',
+				'				continue;',
+				'			}',
+				'			float foot = max(t * across, small * 0.6);',
+				'			float d = shellThick(q, foot, 1.0);',
+				'			if (d > 0.01) {',
+				'				empty = 0.0;',
+				/* Near, the first step toward the sun of its billows too: each one lit on its side to the sun, in shade on the other. */
+				'				float lit = shellThick(q + uSunWay * 0.12, foot, foot < 0.3 ? 1.0 : 0.0) * 1.2 + shellThick(q + uSunWay * 0.35, 1.0, 0.0) + shellThick(q + uSunWay * 0.9, 1.0, 0.0) + shellThick(q + uSunWay * 2.0, 2.0, 0.0) * 0.9 + shellThick(q + uSunWay * 4.0, 4.0, 0.0) * 0.8;',
+				'				float h = clamp((length(q) - R - 0.6) / 4.0, 0.0, 1.0);',
+				/* Lit by the sun through what is toward it, its side away dark; the edges dark too (light goes in, little comes out: powder). */
+				'				float through = (exp(-lit * 1.6) + 0.25 * exp(-lit * 0.4)) * (1.0 - exp(-d * 6.0)) * 1.6;',
+				'				vec3 tone = uSunLight * through * phase + uSkyTone * (0.22 + 0.5 * h) * (0.25 + 0.75 * exp(-lit * 0.4));',
+				/* Their bellies darker, as little light gets under them. */
+				'				tone *= mix(0.55, 1.0, smoothstep(0.0, 0.6, h));',
+				/* Far ones in the blue of the air between. */
+				'				tone = mix(tone, uSkyTone * 1.6 + uSunLight * 0.08, (1.0 - exp(-t / 260.0)) * 0.7);',
+				'				float take = 1.0 - exp(-d * small * 3.0);',
+				'				sum += tone * take * seen;',
+				'				seen *= 1.0 - take;',
+				'			}',
+				'			else {',
+				'				empty += small;',
+				'				if (empty > 1.5) inside = 0.0;',
+				'			}',
+				'			t += small;',
+				'		}',
+				/* From over 80 km less of it, none from 150: there the clouds are drawn on the ground as the globe draws them. */
+				'		outColor = vec4(sum, 1.0 - seen) * uShell.z;',
+				'		return;',
+				'	}',
 				'	float a = (uLayer.x - uFrom.y) / ray.y;',
 				'	float b = (uLayer.y - uFrom.y) / ray.y;',
 				'	float enter = max(min(a, b), 0.0);',
@@ -2065,13 +2241,20 @@ Elemenx.Trait('SceneLighting', {
 				'	vec4 fresh = texture(uNew, uv);',
 				'	vec4 low = fresh;',
 				'	vec4 high = fresh;',
+				/*
+				 * Regression: the dither of where each pixel steps showed as a grain of dots over the clouds while the view moved
+				 * (as it comes down, the frames before are of another place): this frame smoothed over its nine (4, 2, 1).
+				 */
+				'	vec4 smoothed = vec4(0.0);',
 				'	for (int y = -1; y <= 1; y++) {',
 				'		for (int x = -1; x <= 1; x++) {',
 				'			vec4 near = texture(uNew, uv + vec2(float(x), float(y)) * uPixel);',
 				'			low = min(low, near);',
 				'			high = max(high, near);',
+				'			smoothed += near * float((2 - abs(x)) * (2 - abs(y)));',
 				'		}',
 				'	}',
+				'	fresh = smoothed / 16.0;',
 				/* This goes by the sky alone: where a body passed before it, its shape would stay in the old frames with nothing to clear it. */
 				'	vec4 spread = (high - low) * 0.25;',
 				'	outColor = mix(fresh, clamp(texture(uOld, before), low - spread, high + spread), uMix * inside);',

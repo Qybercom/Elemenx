@@ -748,6 +748,19 @@ Elemenx.Component('TopologyIso', {
 		var byId = {};
 		var order;
 		var labels = [];
+		var box;
+
+		/*
+		 * Regression (load): made before its place had a size, it was 1 by 1, and the watch of its size had not told it yet
+		 * when the first frame came: a frame of nothing. While it is 1 wide, it reads the size of its place itself (not later:
+		 * a size read in the middle of a turn fitted the view again under it).
+		 */
+		if (context && own.Width <= 1 && own.Canvas.parentNode) {
+			box = own.Canvas.parentNode.getBoundingClientRect();
+
+			if (box.width > 1)
+				this.Resize();
+		}
 
 		if (!context || !own.Width) return;
 

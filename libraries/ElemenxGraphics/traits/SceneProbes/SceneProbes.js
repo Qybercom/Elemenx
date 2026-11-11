@@ -201,6 +201,7 @@ Elemenx.Trait('SceneProbes', {
 			var each = set.Probes || 0;
 			var subset = set.ProbeSubset || 8;
 			var stands;
+			var sown;
 			var corner;
 			var read;
 			var write;
@@ -228,13 +229,21 @@ Elemenx.Trait('SceneProbes', {
 			if (scene.Ground && scene.Ground.Nodes && !scene.Ground.Missing)
 				state.GroundKey = Object.keys(scene.Ground.Nodes).length;
 
-			stands = (self.Sown ? self.Sown().Things : 0) + ':' + scene.Order.length + ':' + (state.GroundKey || 0);
+			/*
+			 * What is sown counts once it is all sown: while it was, each square that came laid the voxels again from the start
+			 * (Regression: the voxels were laid all the time a ground was sown, hundreds of draws a frame).
+			 */
+			sown = self.Sown ? self.Sown() : null;
+			stands = (sown && !sown.Waiting ? sown.Things : state.SownThings || 0) + ':' + scene.Order.length + ':' + (state.GroundKey || 0);
+			state.SownThings = sown && !sown.Waiting ? sown.Things : state.SownThings;
 			corner = cornerOf(scene.Eye);
 
-			/* Laid again when the eye went into the next 16 metres, when what stands changed, and every ten seconds. */
-			if (!state.Laying && (!state.Laid || String(corner) !== String(state.Laid.Corner) || state.Stands !== stands || scene.Seconds - state.Laid.Time > 10)) {
+			/* Laid again when the eye went into the next 16 metres, when what stands changed, and every thirty seconds. */
+			if (!state.Laying && (!state.Laid || String(corner) !== String(state.Laid.Corner) || state.Stands !== stands || scene.Seconds - state.Laid.Time > 30)) {
 				state.Stands = stands;
 				state.Laying = {Corner: corner, Next: 0, Order: []};
+				/* The box of the grid in the world: what is sown is drawn into its slabs of what is in it (ScatterVoxels). */
+				scene.VoxelBox = [corner[0], corner[1], corner[2], corner[0] + size[0], corner[1] + size[1], corner[2] + size[2]];
 
 				[[0, size[1]], [1, size[0]], [2, size[2]]].forEach(function (axis) {
 					var i;

@@ -585,6 +585,21 @@
 	pointer-events: auto;
 }
 
+/* The numbers of Levels: in the lower left corner, small, over the world, the presses through it. */
+.elemenx-scene-levels {
+	position: absolute;
+	left: 8px;
+	bottom: 8px;
+	z-index: 4;
+	padding: 2px 8px;
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-scene-subtitle-background);
+	color: var(--elemenx-scene-title);
+	font-family: var(--elemenx-font-mono, monospace);
+	font-size: var(--elemenx-font-size-small);
+	pointer-events: none;
+}
+
 /* The HUD over the world: it lets the presses through, its own parts take them. */
 .elemenx-scene-hud {
 	position: absolute;

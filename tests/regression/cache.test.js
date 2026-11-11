@@ -457,7 +457,7 @@ describe('Contract: Elemenx.Cache', function () {
 
 		document.getElementById('mount').appendChild(component.$Element());
 
-		expect(await waitFor(function () { return document.querySelector('.cache-remote'); }, 9000)).not.toBe(false);
+		expect(await waitFor(function () { return document.querySelector('.cache-remote'); }, 25000)).not.toBe(false);
 
 		component.$Destroy();
 
@@ -469,8 +469,9 @@ describe('Contract: Elemenx.Cache', function () {
 
 		document.getElementById('mount').appendChild(component.$Element());
 
-		expect(await waitFor(function () { return styles() === 1; }, 9000)).toBe(true);
+		/* Regression (load): a style held back 2.5 s came after 9 s under a full run of the tests; it is waited for longer. */
+		expect(await waitFor(function () { return styles() === 1; }, 25000)).toBe(true);
 
 		component.$Destroy();
-	}, 25000);
+	}, 60000);
 });

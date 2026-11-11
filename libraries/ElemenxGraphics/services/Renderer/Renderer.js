@@ -24,7 +24,7 @@
  *   whether two shaders compile: their logs, or null. The attributes have fixed places: aPosition, aNormal, aUV, aColor, aInstance (and aInstance2 to
  *   aInstance5, one of each copy of an instanced mesh), aMaterials, aMaterials2 and aMaterials3 (the weights of 12
  *   materials of a ground, Materials of a geometry: 12 numbers a vertex, or 8 for the first two; 0 where it has none).
- * - Mesh(geometry, mode) returns a mesh (mode: triangles, lines, line-strip, line-loop or points; triangles by default): Update(geometry), Instance(data, count) (data {aInstance: {Size, Data}, ...}: the
+ * - Mesh(geometry, mode) returns a mesh (mode: triangles, lines, line-strip, line-loop or points; triangles by default): Update(geometry), Triangles(indices) (its triangles again, its points kept: a level of detail of clusters), Instance(data, count) (data {aInstance: {Size, Data}, ...}: the
  *   copies of the mesh drawn at once), Destroy(); Lines(points, loop) and Points(positions, extra) (extra {aColor:
  *   {Size, Data}}) make meshes of lines and of points.
  * - Texture(source, options) (a canvas, a picture, or {Width, Height, Data}; options Repeat, Nearest) returns a texture (Update(picture) puts another canvas or picture in it)
@@ -785,6 +785,8 @@ Elemenx.Service('Renderer', {
 				var count = shape.Positions.length / 3;
 				var indices;
 
+				made.Vertices = count;
+
 				gl.bindVertexArray(made.VAO);
 
 				attribute(made, 'aPosition', 3, shape.Positions);
@@ -839,6 +841,31 @@ Elemenx.Service('Renderer', {
 					made.Count = count;
 					made.Indexed = false;
 				}
+
+				gl.bindVertexArray(null);
+
+				current.VAO = null;
+
+				return made;
+			};
+
+			/*
+			 * Its triangles again (a list of indices of its points), its points as they are: what a level of detail of
+			 * clusters (SceneClusters) draws of them now, the points of all its levels kept on the card.
+			 */
+			made.Triangles = function (indices) {
+				var wide = made.Vertices > 65535;
+				var data = wide ? indices instanceof Uint32Array ? indices : new Uint32Array(indices) : new Uint16Array(indices);
+
+				gl.bindVertexArray(made.VAO);
+
+				if (made.Index)
+					gl.deleteBuffer(made.Index);
+
+				made.Index = buffer(gl.ELEMENT_ARRAY_BUFFER, data);
+				made.IndexType = wide ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
+				made.Count = data.length;
+				made.Indexed = true;
 
 				gl.bindVertexArray(null);
 

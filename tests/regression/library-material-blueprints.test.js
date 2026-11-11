@@ -69,6 +69,7 @@ describe('Contract: materials of models as material graphs of Blueprints, drawn 
 		while (owned.length) owned.pop().$Destroy();
 	});
 
+	/* Regression (load): its own waits are 20 and 30 s, it takes some 40 s alone; under the whole run 45 s cut it off. */
 	it('draws a material of a recipe by its Blueprint, its parameters uniforms that change it without making it again', async function () {
 		var address = URL.createObjectURL(new Blob([Binary()], {type: 'model/gltf-binary'})) + '#.glb';
 		var made = [];
@@ -193,7 +194,7 @@ describe('Contract: materials of models as material graphs of Blueprints, drawn 
 		finally {
 			delete models.Recipes['test-glowing'];
 		}
-	}, 45000);
+	}, 150000);
 
 	it('draws a ground by its Blueprint, the color of its parameter, and keeps the very same ground as its look changes', async function () {
 		var address = URL.createObjectURL(new Blob([Binary()], {type: 'model/gltf-binary'})) + '#.glb';

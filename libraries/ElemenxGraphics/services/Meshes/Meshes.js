@@ -16,6 +16,11 @@ Elemenx.Service('Meshes', {
 		Methods: ['Geometry()', 'Sphere(options)', 'Icosphere(options)', 'Ring(options)', 'Box(options)', 'Cylinder(options)', 'Torus(options)', 'Plane(options)', 'Lathe(options)', 'Wedge(options)', 'Transform(geometry, matrix)', 'Merge(parts)', 'Displace(geometry, amount)', 'Normals(geometry)', 'Facets(geometry)', 'Simplify(geometry, cell)']
 	},
 
+	/* The source of its members for a worker (Workers.Pool): the simpler levels of models are made off the page. */
+	Source: function (names) {
+		return this.$Service('Workers').Source(this, names);
+	},
+
 	/* Shapes: flat arrays of the vertices and of the triangles (three indices each, counterclockwise from outside). */
 	Geometry: function () {
 		return {Positions: [], Normals: [], UVs: [], Colors: [], Indices: []};

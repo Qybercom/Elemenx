@@ -55,14 +55,25 @@ Elemenx.Trait('SceneScatter', {
 		var shaders = this.Grassed(this.Winded(this.ScatterShaders(graphics)));
 		var size = 48;
 		var steps = [[62, 74], [140, 165], [270, 310]];
-		var state = {Sown: Math.random().toString(36).slice(2, 8), Generation: 0, Running: 0, Flying: 0, Kept: {}, Houses: [], Settled: '', Surfaces: {}, Facades: {}, Buildings: {}, Key: '', Squares: [], Waiting: [], Streams: {}, Meshes: {}, Baked: {}, Blocked: {}, Things: 0, Moved: true, Eye: null, Look: null, Grass: null, Field: null, Programs: null, Edits: {}};
+		var state = {Sown: Math.random().toString(36).slice(2, 8), Generation: 0, Running: 0, Flying: 0, Kept: {}, Houses: [], Settled: '', Surfaces: {}, Facades: {}, Buildings: {}, Key: '', Squares: [], Waiting: [], Streams: {}, Meshes: {}, Baked: {}, Blocked: {}, Things: 0, Moved: true, Eye: null, Look: null, Grass: null, Field: null, Programs: null, Edits: {}, Places: {}, Tiles: {}, Chosen: [], Shapes: {}, Geometries: {}, Making: 0, Heights: {}};
+
+		/*
+		 * The proxies of tiles (SceneProxies), as Voxy draws a far land: a tile is a square of 48 m times 2, 4, 8... of the
+		 * ground, all its things one simpler shape, each corner snapped to a grid of Cells cells across it. A tile is drawn
+		 * so where that grid is finer on the screen than Error pixels (each cell of it as small as that), its squares then
+		 * left out; nearer, its four tiles, down to the squares and their copies. A proxy is made in a worker the first time
+		 * it is wanted, once all its squares are sown; till then the squares stand for it.
+		 */
+		var tiles = {Cells: 48, Error: 2.5, Making: 2};
 
 		this.Sown = function () {
 			return {Things: state.Things, Squares: state.Squares.length, Waiting: state.Waiting.length + state.Flying, Draws: Object.keys(state.Streams).filter(function (key) {
 				return state.Streams[key].Count;
-			}).length, Copies: Object.keys(state.Streams).reduce(function (sum, key) {
+			}).length + state.Chosen.length, Copies: Object.keys(state.Streams).reduce(function (sum, key) {
 				return sum + state.Streams[key].Count;
-			}, 0), Blades: state.Grass ? state.Grass.Blades : 0};
+			}, 0), Blades: state.Grass ? state.Grass.Blades : 0, Tiles: state.Chosen.length, Proxies: Object.keys(state.Tiles).filter(function (key) {
+				return state.Tiles[key].Mesh;
+			}).length, Cached: state.Cached || 0};
 		};
 
 		/*
@@ -199,12 +210,12 @@ Elemenx.Trait('SceneScatter', {
 
 			if (!state.Programs) {
 				state.Programs = {
-					Many: renderer.Program(shaders.Vertex, dithered(self.Shaders(graphics).Solid)),
-					Files: renderer.Program(shaders.Vertex, dithered(self.Shaders(graphics).Pbr)),
+					Many: renderer.Program(shaders.Vertex, engine.Leveled(dithered(self.Shaders(graphics).Solid))),
+					Files: renderer.Program(shaders.Vertex, engine.Leveled(dithered(self.Shaders(graphics).Pbr))),
 					Depth: renderer.Program(shaders.Vertex, self.Shaders(graphics).Depth),
 					Bake: renderer.Program(shaders.BakeVertex, shaders.Bake),
-					Picture: renderer.Program(shaders.PictureVertex, dithered(shaders.Picture)),
-					Facade: renderer.Program(shaders.Vertex, dithered(faced(self.Shaders(graphics).Solid))),
+					Picture: renderer.Program(shaders.PictureVertex, engine.Leveled(dithered(shaders.Picture))),
+					Facade: renderer.Program(shaders.Vertex, engine.Leveled(dithered(faced(self.Shaders(graphics).Solid)))),
 					Grass: renderer.Program(shaders.GrassVertex, shaders.Grass)
 				};
 			}
@@ -666,6 +677,13 @@ Elemenx.Trait('SceneScatter', {
 			}
 		}
 
+		/* Two keys of parts (lists of texts) alike, part by part. */
+		function same (a, b) {
+			return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every(function (part, index) {
+				return part === b[index];
+			});
+		}
+
 		/* Everything sown goes when the ground or the rules changed. */
 		function prepare () {
 			var ground = scene.Ground;
@@ -681,16 +699,31 @@ Elemenx.Trait('SceneScatter', {
 				mark();
 			}
 
-			/* What a sketch sows is told by its text: its lots are many, and the key is made every frame. */
-			key = ground ? ground.Key + JSON.stringify(given.slice(0, given.length - sketched().Rules.length)) + (state.SketchText || '') + JSON.stringify(state.Edits) : '';
+			/*
+			 * What a sketch sows is told by its text: its lots are many, and the key is made every frame. Its parts are compared
+			 * one by one (same): the key of the ground is a megabyte and more, a text of all of them made each frame cost
+			 * milliseconds.
+			 */
+			key = ground ? [ground.Key, JSON.stringify(given.slice(0, given.length - sketched().Rules.length)), state.SketchText || '', JSON.stringify(state.Edits)] : [''];
 
-			if (key === state.Key) return;
+			if (same(key, state.Key)) return;
 
 			state.Key = key;
 			state.Generation = (state.Generation || 0) + 1;
 			state.Running = 0;
 			state.Flying = 0;
 			state.Squares = [];
+			state.Places = {};
+			state.Heights = {};
+			state.Chosen = [];
+			state.Making = 0;
+
+			Object.keys(state.Tiles).forEach(function (name) {
+				if (state.Tiles[name].Mesh)
+					state.Tiles[name].Mesh.Destroy();
+			});
+
+			state.Tiles = {};
 			state.Waiting = [];
 			state.Blocked = {};
 			state.Things = 0;
@@ -763,6 +796,8 @@ Elemenx.Trait('SceneScatter', {
 		function sown (result) {
 			result.Squares.forEach(function (square) {
 				state.Squares.push(square);
+
+				state.Places[square.X + ':' + square.Z] = square;
 			});
 
 			result.Blocked.forEach(function (cell) {
@@ -770,7 +805,7 @@ Elemenx.Trait('SceneScatter', {
 			});
 
 			state.Things += result.Things;
-			state.Moved = true;
+			state.Fresh = true;
 		}
 
 		/*
@@ -889,18 +924,402 @@ Elemenx.Trait('SceneScatter', {
 			var parts = key.split('~');
 
 			if (!state.Meshes[key]) {
-				var made = library.Levels(parts[0], {Variant: Number(parts[1])});
-
+				var whole = library.Whole(library.Make(parts[0], {Variant: Number(parts[1])}));
 				/* A building has a fourth, the shape of the third again: the copies of the farthest of its own. */
-				if (building(key))
-					made = made.concat([made[made.length - 1]]);
+				var made = building(key) ? [whole, whole, whole, whole] : [whole, whole, whole];
 
+				state.Geometries[key] = made;
 				state.Meshes[key] = made.map(function (geometry) {
 					return renderer.Mesh(geometry);
 				});
+
+				simplified(key, whole);
 			}
 
 			return state.Meshes[key];
+		}
+
+		/*
+		 * The two simpler levels of a model (SceneModels.Levels: cells of a fifteenth and a fifth of it) made in a worker; till
+		 * they come its whole shape stands for them, and then each mesh is given its shape in place (Update), its copies kept.
+		 * Regression: made in the page, each model new to the view held a frame up (60 ms a frame for seconds after a flight).
+		 */
+		function simplified (key, whole) {
+			var meshes = state.Meshes[key];
+			var radius = library.Bounds(whole).Radius;
+			var pool = self.$Service('Workers').Pool('SceneLevels', {Math: true, Meshes: true}, 1);
+			var done = 0;
+			var shapes = [];
+
+			[radius / 15, radius / 5].forEach(function (cell, level) {
+				pool.Run('Meshes', 'Simplify', [whole, cell], function (error, shape) {
+					if (state.Meshes[key] !== meshes || renderer.Lost) return;
+
+					shapes[level] = error || !shape ? whole : shape;
+					done++;
+
+					if (done < 2) return;
+
+					state.Geometries[key] = [whole, shapes[0], shapes[1]].concat(meshes.length > 3 ? [shapes[1]] : []);
+
+					/* In place: the copies each mesh holds stay, no stream is made again. */
+					meshes.forEach(function (mesh, at) {
+						if (at)
+							mesh.Update(state.Geometries[key][at]);
+					});
+				});
+			});
+		}
+
+		/* Whether far tiles are drawn as proxies: the Proxies of the Scene, true unless told false. */
+		function proxied () {
+			return self.Proxies !== false && self.Proxies !== 'false';
+		}
+
+		/*
+		 * The data of a model a proxy is made of (SceneProxies.Shape), of its whole shape: its simplest level is snapped to a
+		 * grid of a tenth of its size already, a tower of 300 m to cells of 30 (it was gone from a far city). Sent to each
+		 * worker once.
+		 */
+		function shaped (key, pool) {
+			var name = 'proxy:' + state.Sown + ':' + key;
+			var made;
+
+			if (state.Shapes[key])
+				return pool.Inline() ? state.Shapes[key] : name;
+
+			levels(key);
+
+			made = self.$Service('SceneProxies').Shape(state.Geometries[key][0]);
+			state.Shapes[key] = made;
+
+			if (!pool.Inline())
+				pool.Share(name, made);
+
+			return pool.Inline() ? made : name;
+		}
+
+		/* The proxy of a tile made, once all its squares are sown: in a worker, or in the page with none. */
+		function make (tile) {
+			var proxies = self.$Service('SceneProxies');
+			var pool = proxies.Work();
+			var generation = state.Generation;
+			var lists = [];
+			var shapes = {};
+			var squares = [];
+			var x;
+			var z;
+
+			for (z = tile.Z; z < tile.Z + tile.Size; z += size) {
+				for (x = tile.X; x < tile.X + tile.Size; x += size) {
+					/* Past the ground: no square there. */
+					if (x >= scene.Ground.Field.Size / 2 || z >= scene.Ground.Field.Size / 2) continue;
+
+					if (!state.Places[x + ':' + z]) return;
+
+					squares.push(state.Places[x + ':' + z]);
+				}
+			}
+
+			squares.forEach(function (square) {
+				Object.keys(square.Lists).forEach(function (key) {
+					/* What grows only round the eye is never far. */
+					var list = square.Lists[key];
+					if (list.Reach || !list.Count) return;
+
+					shapes[key] = shaped(key, pool);
+
+					lists.push({Shape: key, Places: list.Places.slice(0, list.Count * 4), Extra: list.Extra.slice(0, list.Count * 4), Count: list.Count});
+				});
+			});
+
+			tile.Stills = stilled(tile, pool, shapes, lists);
+			tile.StillOf = scene.StillLists;
+			tile.Making = true;
+			state.Making++;
+
+			var cache = self.$Service('SceneCache');
+			var key = cacheKey(tile, lists);
+
+			function made (result) {
+				tile.Mesh = renderer.Mesh(result);
+				tile.Triangles = result.Triangles;
+				tile.Used = performance.now();
+
+				tile.Mesh.Instance({aInstance: {Size: 4, Data: new Float32Array([tile.Origin[0], tile.Origin[1], tile.Origin[2], 1])}, aInstance2: {Size: 4, Data: new Float32Array([0, 1, 1, 1])}}, 1);
+
+				state.Fresh = true;
+			}
+
+			/* Made lately in this page, or kept from a visit before (SceneCache): at once; else made in a worker, and kept for the next. */
+			var hot = cache.Peek('proxies', key);
+
+			if (hot && hot.Box) {
+				state.Making--;
+				state.Cached = (state.Cached || 0) + 1;
+
+				made(self.$Service('SceneProxies').Unpack(hot));
+
+				return;
+			}
+
+			cache.Get('proxies', key, function (error, kept) {
+				if (generation !== state.Generation) return;
+
+				if (kept && kept.Positions && kept.Box) {
+					state.Making--;
+					state.Cached = (state.Cached || 0) + 1;
+
+					made(self.$Service('SceneProxies').Unpack(kept));
+
+					return;
+				}
+
+				pool.Run('SceneProxies', 'Merge', [{Shapes: shapes, Lists: lists, Origin: tile.Origin, Cell: tile.Size / tiles.Cells}], function (error, result) {
+					if (generation !== state.Generation) return;
+
+					state.Making--;
+
+					if (error || !result) return;
+
+					made(result);
+
+					if (Number(self.CacheSize) > 0 && cache.Limit !== Number(self.CacheSize))
+						cache.SetLimit(Number(self.CacheSize));
+
+					if (self.CacheSize !== 0 && self.CacheSize !== '0')
+						cache.Put('proxies', key, self.$Service('SceneProxies').Pack(result));
+				});
+			});
+		}
+
+		/* A number of a text (FNV-1a), as a word of 8 letters. */
+		function digest (text, seed) {
+			var value = seed === undefined ? 2166136261 : seed;
+			var i;
+
+			for (i = 0; i < text.length; i++)
+				value = Math.imul(value ^ text.charCodeAt(i), 16777619) >>> 0;
+
+			return value;
+		}
+
+		/*
+		 * The key a proxy of a tile is kept under (SceneCache): the ground and its rules (their key, summed once a generation),
+		 * the tile, and what it is made of: each shape by its size and a sample of its numbers, each copy of what stands still by
+		 * its box. A model changed in the library, a house moved: another key, never an old proxy.
+		 */
+		function cacheKey (tile, lists) {
+			var sum;
+
+			if (state.CacheBase === undefined || state.CacheOf !== state.Generation) {
+				state.CacheBase = digest(String(self.$Service('SceneProxies').Merge) + String(self.$Service('SceneProxies').Faces) + String(self.$Service('SceneProxies').Pack), digest((state.Key || []).join('\n')));
+				state.CacheOf = state.Generation;
+			}
+
+			sum = digest(tile.Key, state.CacheBase);
+
+			lists.forEach(function (list) {
+				var shape = state.Shapes[list.Shape];
+				var p = shape ? shape.Positions : [];
+				var i;
+				var sample = 0;
+
+				for (i = 0; i < p.length; i += 97)
+					sample += p[i];
+
+				sum = digest(list.Shape + ':' + list.Count + ':' + p.length + ':' + sample.toFixed(3) + ':' + (list.Matrices ? Array.prototype.join.call(list.Matrices.subarray(9, 12), ',') : ''), sum);
+			});
+
+			return tile.Key + ':' + sum.toString(36);
+		}
+
+		/*
+		 * The meshes of the tiles not drawn for a minute let go (the card holds them no more): back in view, a proxy comes from
+		 * the cache of the browser at once.
+		 */
+		function sweep () {
+			var now = performance.now();
+			if (now - (state.Swept || 0) < 5000) return;
+
+			state.Swept = now;
+
+			Object.keys(state.Tiles).forEach(function (name) {
+				var tile = state.Tiles[name];
+				if (!tile.Mesh || now - (tile.Used || 0) < 60000) return;
+
+				tile.Mesh.Destroy();
+				tile.Mesh = null;
+				tile.Making = false;
+			});
+		}
+
+		/*
+		 * The models of the scene that stand still (its StillLists: a house, a lamp, a statue of a gallery) wholly in a tile,
+		 * into its proxy as what is sown is: each copy as its matrix stands it, of the colors of its material (its pictures
+		 * of a file as their mean, SceneModels.Painted). Far away they are one draw with the rest of the tile, in every pass,
+		 * not one each (hundreds in a world of galleries). What moves, has a skeleton or is seen through stays as it is.
+		 * Gives the names of the lists it took.
+		 */
+		function stilled (tile, pool, shapes, lists) {
+			var still = scene.StillLists || {};
+			var taken = [];
+
+			Object.keys(still).forEach(function (name) {
+				var list = still[name];
+				var box = list.Box;
+				var key = 'still:' + name;
+				var matrices;
+				var tints;
+				var i;
+
+				if (!list.Count || !box || !list.Geometry || !list.Geometry.Positions || list.Skinned || list.MirrorKey || list.Material && (list.Material.Transmission || list.Material.Alpha === 'BLEND')) return;
+
+				if (box[0] < tile.X || box[3] > tile.X + tile.Size || box[2] < tile.Z || box[5] > tile.Z + tile.Size) return;
+
+				if (!state.Shapes[key]) {
+					state.Shapes[key] = self.$Service('SceneProxies').Shape(list.Material ? library.Painted(Object.assign({}, list.Geometry, {Colors: null}), list.Material, list.Asset || {Images: []}) : list.Geometry);
+
+					if (!pool.Inline())
+						pool.Share('proxy:' + state.Sown + ':' + key, state.Shapes[key]);
+				}
+
+				shapes[key] = pool.Inline() ? state.Shapes[key] : 'proxy:' + state.Sown + ':' + key;
+				matrices = new Float32Array(list.Count * 12);
+				tints = new Float32Array(list.Count * 3);
+
+				for (i = 0; i < list.Count; i++) {
+					matrices.set([list.X[i * 4], list.X[i * 4 + 1], list.X[i * 4 + 2], list.Y[i * 4], list.Y[i * 4 + 1], list.Y[i * 4 + 2], list.Z[i * 4], list.Z[i * 4 + 1], list.Z[i * 4 + 2], list.Places[i * 4], list.Places[i * 4 + 1], list.Places[i * 4 + 2]], i * 12);
+					tints.set([list.Tints[i * 4], list.Tints[i * 4 + 1], list.Tints[i * 4 + 2]], i * 3);
+				}
+
+				lists.push({Shape: key, Matrices: matrices, Tints: tints, Count: list.Count});
+				taken.push(name);
+			});
+
+			return taken;
+		}
+
+		/*
+		 * The still lists of the scene the chosen tiles drew: Covered, the passes of the scene draw them not (Scene, seen).
+		 * names null: none.
+		 */
+		function cover (names) {
+			var still = scene.StillLists || {};
+
+			(state.Covered || []).forEach(function (name) {
+				if (still[name])
+					still[name].Covered = false;
+			});
+
+			state.Covered = (names || []).filter(function (name) {
+				return still[name];
+			});
+
+			state.Covered.forEach(function (name) {
+				still[name].Covered = true;
+			});
+		}
+
+		/*
+		 * The tiles drawn as proxies now, from the largest down: a tile far enough (its grid under Error pixels on the
+		 * screen from its nearest point) is drawn whole when its proxy is made (else it is asked for, and its squares stand
+		 * for it); nearer, its four. Gives the keys of the squares the chosen tiles hold.
+		 */
+		function choose (eye, quality, view) {
+			var field = scene.Ground.Field;
+			var half = field.Size / 2;
+			var height = renderer.Height / Math.max(1, renderer.Ratio || 1);
+			var focal = height / (2 * Math.tan((scene.Camera.Fov || 50) * Math.PI / 360));
+			var top = Math.max(1, Math.ceil(Math.log(field.Size / size) / Math.LN2));
+			var covered = {};
+			var count = Math.ceil(field.Size / (size * Math.pow(2, top)));
+			var stills = [];
+			var ix;
+			var iz;
+
+			state.Chosen = [];
+
+			function visit (level, x0, z0) {
+				var extent = size * Math.pow(2, level);
+				var dx = Math.max(x0 - eye[0], 0, eye[0] - x0 - extent);
+				var dz = Math.max(z0 - eye[2], 0, eye[2] - z0 - extent);
+				var key = level + ':' + x0 + ':' + z0;
+				var tile;
+				var x;
+				var z;
+
+				if (x0 >= half || z0 >= half || !level) return;
+
+				/* Out of view: nothing of it is drawn, as large or as small. */
+				if (!inView(view, x0 + extent / 2, z0 + extent / 2, extent)) return;
+
+				if (Math.sqrt(dx * dx + dz * dz + eye[1] * eye[1]) * tiles.Error > extent / tiles.Cells * focal * quality) {
+					tile = state.Tiles[key] = state.Tiles[key] || {Key: key, Level: level, X: x0, Z: z0, Size: extent, Origin: [x0 + extent / 2, 0, z0 + extent / 2]};
+
+					/* What stands still changed (a model added, one gone): its proxy is made again, the squares and models stand for it till then. */
+					if (tile.Mesh && tile.StillOf !== scene.StillLists) {
+						tile.Mesh.Destroy();
+						tile.Mesh = null;
+						tile.Making = false;
+					}
+
+					if (tile.Mesh) {
+						tile.Used = performance.now();
+						stills = stills.concat(tile.Stills || []);
+
+						/* A tile of nothing (a lake, a road) holds its squares, and has no draw. */
+						if (tile.Triangles)
+							state.Chosen.push(tile);
+
+						for (z = z0; z < z0 + extent; z += size) {
+							for (x = x0; x < x0 + extent; x += size)
+								covered[x + ':' + z] = true;
+						}
+
+						return;
+					}
+
+					/*
+					 * Regression (load): proxies were made while the ground was still sown, in workers of their own beside those
+					 * of the sowing, in every scene of a page: the sowing came late and slow. They wait for it now, two at a time.
+					 */
+					if (!tile.Making && state.Making < tiles.Making && !state.Waiting.length && !state.Flying)
+						make(tile);
+				}
+
+				visit(level - 1, x0, z0);
+				visit(level - 1, x0 + extent / 2, z0);
+				visit(level - 1, x0, z0 + extent / 2);
+				visit(level - 1, x0 + extent / 2, z0 + extent / 2);
+			}
+
+			for (iz = 0; iz < count; iz++) {
+				for (ix = 0; ix < count; ix++)
+					visit(top, -half + ix * size * Math.pow(2, top), -half + iz * size * Math.pow(2, top));
+			}
+
+			cover(stills);
+
+			sweep();
+
+			return covered;
+		}
+
+		/*
+		 * Whether a tile is in what planes see (planes of a view, the points relative to the eye): round its middle at the
+		 * height of the ground there, as far as its corners and 200 m over and under them (a hill in it, a tower on it).
+		 */
+		function inView (view, x, z, extent) {
+			var eye = scene.Eye;
+			var round = extent * 0.71 + 200;
+			/* The height of the ground in the middle of a tile, found once: each frame asks it of every tile, in every slice of the shadow. */
+			var key = x + ':' + z;
+			var y = (state.Heights[key] === undefined ? state.Heights[key] = scene.Ground.Field.Height(x, z) : state.Heights[key]) - eye[1];
+
+			return view.every(function (plane) {
+				return plane[0] * (x - eye[0]) + plane[1] * y + plane[2] * (z - eye[2]) + plane[3] > -round;
+			});
 		}
 
 		/* The streams of what is in view now, and each its copies for the draws. */
@@ -912,12 +1331,22 @@ Elemenx.Trait('SceneScatter', {
 			var radius = size * 0.75 + 12;
 			var margin = reach ? size * 0.75 + 8 : 0;
 			var lod = lodScale();
+			/* In parallel rays (a map from over it) there are no far tiles: all of it is as far. */
+			var covered = reach && proxied() ? choose(eye, quality, view) : {};
 
 			Object.keys(state.Streams).forEach(function (name) {
 				state.Streams[name].Count = 0;
 			});
 
+			if (!reach || !proxied()) {
+				state.Chosen = [];
+
+				cover(null);
+			}
+
 			state.Squares.forEach(function (square) {
+				if (covered[square.X + ':' + square.Z]) return;
+
 				var x = square.Center[0] - eye[0];
 				var y = square.Center[1] - eye[1];
 				var z = square.Center[2] - eye[2];
@@ -1216,7 +1645,7 @@ Elemenx.Trait('SceneScatter', {
 			var field = ground.Field;
 			var side = 256;
 			var made = sketched();
-			var key = ground.Key + JSON.stringify(rule) + (state.SketchText || '');
+			var key = [ground.Key, JSON.stringify(rule), state.SketchText || ''];
 			var grass = state.Grass;
 			var started = performance.now();
 			var half = field.Size / 2;
@@ -1228,9 +1657,9 @@ Elemenx.Trait('SceneScatter', {
 			var row;
 			var x;
 
-			key += JSON.stringify(cut);
+			key.push(JSON.stringify(cut));
 
-			if (!grass || grass.Key !== key) {
+			if (!grass || !same(grass.Key, key)) {
 				if (grass && grass.Texture)
 					grass.Texture.Destroy();
 
@@ -1416,8 +1845,23 @@ Elemenx.Trait('SceneScatter', {
 
 			if (!state.Squares.length) return;
 
-			if (state.Moved || !state.Eye || vectors.Distance(state.Eye, eye) > 6 || Math.abs(state.Look - look) > 0.04) {
+			/* Proxies turned on or off: the streams made again at once. */
+			if (state.Proxied !== proxied()) {
+				state.Proxied = proxied();
+				state.Moved = true;
+			}
+
+			/*
+			 * Squares sown and proxies made since (Fresh) are taken in at most each 400 ms. Regression: each that came made all
+			 * the streams again at once, every frame of the seconds a ground is sown and its tiles made (a frame of 40 to 130 ms
+			 * instead of 16 for some 12 seconds after a page opened).
+			 */
+			var fresh = state.Fresh && performance.now() - (state.Gathered || 0) > 400;
+
+			if (state.Moved || fresh || !state.Eye || vectors.Distance(state.Eye, eye) > 6 || Math.abs(state.Look - look) > 0.04) {
 				state.Moved = false;
+				state.Fresh = false;
+				state.Gathered = performance.now();
 				state.Eye = eye.slice();
 				state.Look = look;
 
@@ -1462,6 +1906,15 @@ Elemenx.Trait('SceneScatter', {
 		engine.ScatterShadow = function (matrix) {
 			var origin = vectors.Subtract([0, 0, 0], scene.Eye);
 
+			var view = planes(matrix);
+
+			state.Chosen.forEach(function (tile) {
+				/* A tile the shadow of this slice does not reach casts none into it. */
+				if (!inView(view, tile.Origin[0], tile.Origin[2], tile.Size)) return;
+
+				renderer.Draw(tile.Mesh, programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: 0, uSway: 0, uFade: [-2, -1, 1e8, 2e8], uLod: 0}, self.WindValues(scene.Seconds)), {Cull: 'none'});
+			});
+
 			/*
 			 * Each stream by the shape that holds its copies (gather put them there): the near ones drawn by the simpler shape of
 			 * the next level had the copies of that level, and the trees near the eye cast no shadow where the levels do not
@@ -1474,12 +1927,80 @@ Elemenx.Trait('SceneScatter', {
 			});
 		};
 
+		/*
+		 * What is sown in the box of the grid of voxels (scene.VoxelBox of SceneProbes), made once for each box: the copies in
+		 * it, a stream of each model by its simpler shape (a mesh of its own: the streams of the view keep theirs).
+		 * Regression: each slab of a metre drew all that is sown near the eye, every model of every level, three million
+		 * triangles a frame for the 64 metres the voxels hold.
+		 */
+		function voxelStreams (box) {
+			var key = box.join(',') + ':' + state.Generation + ':' + state.Squares.length;
+			var made = {};
+
+			if (state.VoxelKey === key) return state.VoxelStreams;
+
+			state.Squares.forEach(function (square) {
+				if (square.X > box[3] || square.X + size < box[0] || square.Z > box[5] || square.Z + size < box[2]) return;
+
+				Object.keys(square.Lists).forEach(function (name) {
+					var list = square.Lists[name];
+					var i;
+					var x;
+					var z;
+					var reach;
+
+					for (i = 0; i < list.Count; i++) {
+						x = list.Places[i * 4];
+						z = list.Places[i * 4 + 2];
+						reach = list.Places[i * 4 + 3] * 2;
+
+						if (x < box[0] - reach || x > box[3] + reach || z < box[2] - reach || z > box[5] + reach) continue;
+
+						made[name] = made[name] || {Key: name, Count: 0, Capacity: 0, Places: null, Extra: null};
+
+						append(made[name], {Places: list.Places.subarray(i * 4, i * 4 + 4), Extra: list.Extra.subarray(i * 4, i * 4 + 4), Count: 1});
+					}
+				});
+			});
+
+			state.VoxelMeshes = state.VoxelMeshes || {};
+
+			Object.keys(made).forEach(function (name) {
+				var one = made[name];
+
+				levels(name);
+
+				state.VoxelMeshes[name] = state.VoxelMeshes[name] || renderer.Mesh(state.Geometries[name][1]);
+
+				state.VoxelMeshes[name].Instance({aInstance: {Size: 4, Data: one.Places.subarray(0, one.Count * 4)}, aInstance2: {Size: 4, Data: one.Extra.subarray(0, one.Count * 4)}}, one.Count);
+			});
+
+			state.VoxelKey = key;
+			state.VoxelStreams = made;
+
+			return made;
+		}
+
 		/* The same copies in their colors, for a slab of the voxels of the light of probes (SceneProbes; fragment: Voxel of the Scene). */
 		engine.ScatterVoxels = function (matrix, fragment) {
 			var origin = vectors.Subtract([0, 0, 0], scene.Eye);
+			var streams;
 
 			if (!state.Voxel)
 				state.Voxel = renderer.Program(shaders.Vertex, fragment);
+
+			/* Of the box of the grid: what is in it, by its simpler shape, at no level of the view (uLod 0, no fade). */
+			if (scene.VoxelBox) {
+				streams = voxelStreams(scene.VoxelBox);
+
+				Object.keys(streams).forEach(function (name) {
+					if (!streams[name].Count) return;
+
+					renderer.Draw(state.VoxelMeshes[name], state.Voxel, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: 0, uSway: 0, uFade: [-2, -1, 1e8, 2e8], uLod: 0}, self.WindValues(scene.Seconds)), {Cull: 'none', Depth: false, DepthWrite: false});
+				});
+
+				return;
+			}
 
 			each(function (one) {
 				/* The far levels are past the voxels (some 45 m round the eye). */
@@ -1501,9 +2022,14 @@ Elemenx.Trait('SceneScatter', {
 			if (!ground) return;
 
 			/* The uniforms of a program made once a frame, what differs set for each draw: no copy of them all for each. */
-			files = Object.assign(Object.create(uniforms), {uOrigin: origin, uWind: scene.Gust || 0, uFade: fadeOf(0), uDither: dither, uLod: lod});
+			files = Object.assign(Object.create(uniforms), {uOrigin: origin, uWind: scene.Gust || 0, uFade: fadeOf(0), uDither: dither, uLod: lod, uLevel: engine.LevelColor('near', 0)});
 			many = Object.assign(Object.create(uniforms), {uOrigin: origin, uWind: scene.Gust || 0, uShine: 8, uSpecular: 0.05, uRough: 0.5, uDither: dither, uLod: lod});
 			far = Object.assign(Object.create(uniforms), {uOrigin: origin, uFade: fadeOf(3), uDither: dither, uLod: lod, uSun: ground.Sun, uSunColor: ground.SunColor, uParallel: scene.Camera.Ortho ? vectors.Normalize(vectors.Subtract(scene.Camera.Position, scene.Camera.Target)).concat([1]) : [0, 0, 0, 0]});
+
+			/* The far tiles, each one draw of all its things (uLod 0: no level of a copy chooses it away). */
+			state.Chosen.forEach(function (tile) {
+				renderer.Draw(tile.Mesh, programs().Many, Object.assign(Object.create(uniforms), {uOrigin: origin, uWind: 0, uSway: 0, uSoft: 0, uShine: 8, uSpecular: 0.05, uRough: 0.5, uDither: dither, uLod: 0, uFade: [-2, -1, 1e8, 2e8], uLevel: engine.LevelColor('proxy', tile.Level)}), {Cull: 'back'});
+			});
 
 			each(function (one) {
 				var parts = one.Key.split('~');
@@ -1528,6 +2054,7 @@ Elemenx.Trait('SceneScatter', {
 					many.uSway = 0;
 					many.uSoft = 0;
 					many.uFade = fadeOf(one.Level);
+					many.uLevel = engine.LevelColor('near', one.Level);
 					many.uFacade = faces.Target.Textures[0];
 					many.uBoxMin = faces.Min;
 					many.uBoxMax = faces.Max;
@@ -1541,6 +2068,7 @@ Elemenx.Trait('SceneScatter', {
 					many.uSway = made.Sway;
 					many.uSoft = made.Sway ? 0.9 : 0;
 					many.uFade = fadeOf(one.Level);
+					many.uLevel = engine.LevelColor('near', one.Level);
 
 					if (engine.SeasonValues)
 						Object.assign(many, engine.SeasonValues(parts[0]));
@@ -1552,6 +2080,7 @@ Elemenx.Trait('SceneScatter', {
 
 				baked = picture(one.Key);
 
+				far.uLevel = engine.LevelColor('near', 3);
 				far.uColors = baked.Target.Textures[0];
 				far.uNormals = baked.Target.Textures[1];
 				far.uCells = baked.Cells;

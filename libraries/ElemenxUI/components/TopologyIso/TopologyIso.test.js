@@ -70,6 +70,7 @@ describe('Contract: TopologyIso, a Topology in 3D on a canvas', function () {
 		while (owned.length) owned.pop().$Destroy();
 	});
 
+	/* Regression (load): 0.2 s alone; in the whole run the page of the tests was held by the scenes of others past the default limit. */
 	it('draws its nodes on the canvas and lists them for a screen reader, a button each', async function () {
 		var host = mount('<div style="height: 100%"><TopologyIso [nodes]="Nodes" [links]="Links" /></div>', {Nodes: nodes, Links: links});
 
@@ -83,7 +84,7 @@ describe('Contract: TopologyIso, a Topology in 3D on a canvas', function () {
 		expect(painted(iso)).toBeGreaterThan(2000);
 		expect(host.$Element().querySelectorAll('.elemenx-topology-iso-list button').length).toBe(4);
 		expect(iso.Picture().indexOf('data:image/png')).toBe(0);
-	});
+	}, 90000);
 
 	it('is the view of a Topology with View isometric', async function () {
 		var host = mount('<div style="height: 100%"><Topology View="isometric" [nodes]="Nodes" [links]="Links" /></div>', {Nodes: nodes, Links: links});
@@ -123,6 +124,14 @@ describe('Contract: TopologyIso, a Topology in 3D on a canvas', function () {
 		await tick(80);
 
 		var iso = isoOf(host);
+
+		/* Regression (load): its view was fitted to its size in the middle of the turn (its first frame of a size); it is fitted first. */
+		await waitFor(function () {
+			iso.Draw(performance.now());
+
+			return iso.Own().Fitted;
+		}, 20000);
+
 		var before = iso.ToScreen('d');
 
 		iso.Rotate(90);
@@ -238,14 +247,14 @@ describe('Contract: TopologyIso, a Topology in 3D on a canvas', function () {
 			iso = isoOf(host);
 
 			return iso && painted(iso) > 0;
-		}, 8000)).toBe(true);
+		}, 20000)).toBe(true);
 
 		var lit = painted(iso);
 
 		iso.Update('x', {Active: false});
 
 		expect(lit).toBeGreaterThan(painted(iso) * 1.08);
-	});
+	}, 40000);
 
 	it('fits what it shows once it has a size, when it was hidden at first', async function () {
 		var host = mount('<div style="height: 100%"><TopologyIso [nodes]="Nodes" [links]="Links" /></div>', {Nodes: nodes, Links: links}, [0, 0]);
