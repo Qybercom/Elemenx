@@ -90,27 +90,36 @@ describe('Contract: what stands on the surface of a planet, seen from over it (S
 		/*
 		 * Regression: each texel of woods was one clump as wide as the texel (270 m on a square of 80 km), a flat pyramid. Its
 		 * trees now as large as trees, a shape of their own (a scene draws it near the eye only): on a square of texels of
-		 * 9.5 m, up to three a texel, each a dome of 18 triangles none wider nor higher than 30 m; on one of texels of 64 m
-		 * none (the Ground shader draws them from there).
+		 * 9.5 m, up to three a texel, each its own shape (Trees.Starts: its first vertex) none wider nor higher than 45 m; on
+		 * one of texels of 64 m none (the Ground shader draws them from there).
 		 */
 		var crowns = forest.Trees.Positions;
+		var starts = Array.from(forest.Trees.Starts).concat([crowns.length / 3]);
 		var widest = 0;
+		var sizes = {};
 		var k;
 
 		expect(forest.Woods).toBeLessThanOrEqual(64 * 64 * 3);
-		expect(crowns.length / 9).toBe(forest.Woods * 18);
+		expect(forest.Trees.Starts.length).toBe(forest.Woods);
 		expect(forest.Geometry.Positions.length / 9).toBe(forest.Houses * 10);
 
 		for (k = 0; k < forest.Woods; k++) {
-			var first = k * 18 * 9;
+			var first = starts[k] * 3;
 			var j;
 
-			for (j = first; j < first + 18 * 9; j += 3)
+			sizes[(starts[k + 1] - starts[k]) / 3] = true;
+
+			for (j = first; j < starts[k + 1] * 3; j += 3)
 				widest = Math.max(widest, Math.hypot(crowns[j] - crowns[first], crowns[j + 1] - crowns[first + 1], crowns[j + 2] - crowns[first + 2]));
 		}
 
 		expect(widest).toBeGreaterThan(0.004);
-		expect(widest).toBeLessThan(0.03);
+		expect(widest).toBeLessThan(0.045);
+		/*
+		 * Woods of the trees its biome sows, each of the far form of its species (SceneFlora.Far): a bare trunk and a crown of
+		 * its profile, a palm's fronds: mixed woods, trees of more than one shape (count of triangles).
+		 */
+		expect(Object.keys(sizes).length).toBeGreaterThan(1);
 		expect(coarse.Woods).toBe(0);
 		expect(coarse.Trees.Positions.length).toBe(0);
 

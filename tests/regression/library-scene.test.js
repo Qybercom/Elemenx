@@ -377,6 +377,77 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		}).sort()).toEqual(['Earth', 'First fleet', 'Gateway', 'Moon', 'Sun']);
 	});
 
+	/*
+	 * Regression: a scene made all its programs at once (a ground, a sea, a sky in a scene of space too) and a frame of its
+	 * loop waited for the card to make each: the Orbit demo waited some 30 s more and stood 29 s in one task while the
+	 * program of its globe was made (17 s under load). Each program is made the first time it is asked for, and a frame of
+	 * the loop leaves out what is not made yet (the veil waits for it); a frame asked for by hand waits, as before.
+	 */
+	it('makes only the programs it draws, and a frame of its loop never waits for one the card is still making', async function () {
+		var mounted = await mount('<Scene Paused="true" Background="false" Labels="false" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star"><SceneObject ID="rock" Kind="moon" Radius="6000" Distance="1" Atmosphere="none" Day="24" /></SceneObject>' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var renderer = scene.Engine().Renderer;
+		var gl = renderer.GL;
+		var working = gl.getExtension('KHR_parallel_shader_compile').COMPLETION_STATUS_KHR;
+		var real = gl.getProgramParameter;
+		var source = gl.shaderSource;
+		var sources = [];
+		var asked = 0;
+		var made;
+
+		/* The shaders it gives the card from now on (none made yet but what its first frame drew). */
+		gl.shaderSource = function (shader, text) {
+			sources.push(text);
+
+			return source.apply(this, arguments);
+		};
+
+		/* The card still at work on all of them: a frame of the loop asks nothing that waits for it, and waits for them. */
+		gl.getProgramParameter = function (program, name) {
+			if (name === gl.LINK_STATUS)
+				asked++;
+
+			return name === working ? false : real.apply(this, arguments);
+		};
+
+		scene.FocusOn('rock');
+
+		inner.Looping = true;
+
+		try {
+			scene.Engine().Frame(performance.now());
+
+			expect(asked).toBe(0);
+			expect(renderer.Progress().Needed).toBeGreaterThan(0);
+		}
+		finally {
+			inner.Looping = false;
+			gl.getProgramParameter = real;
+		}
+
+		/* By hand: waited for, drawn. */
+		scene.Engine().Frame(performance.now());
+
+		gl.shaderSource = source;
+		made = renderer.Progress();
+
+		expect(made.Total).toBeGreaterThan(0);
+		/* What it made ahead of a frame (its passes) the card ends in its time. */
+		expect(await waitFor(function () {
+			return renderer.Progress().Needed === 0;
+		}, 60000)).toBe(true);
+		/* A star and a moon: the programs of its planets, none of a ground of a surface, of a sea or of a sky over a ground. */
+		expect(sources.some(function (text) {
+			return text.indexOf('uniform samplerCube uGround;') !== -1;
+		})).toBe(true);
+		expect(sources.filter(function (text) {
+			return text.indexOf('uniform sampler2D uReliefMap;') !== -1 || text.indexOf('uniform sampler2D uSeenDepth;') !== -1 || text.indexOf('uniform float uMoonGlow;') !== -1;
+		})).toEqual([]);
+	});
+
 	it('draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle', async function () {
 		var mounted = await mount('<Scene Paused="true" Background="false" Labels="false" (ready)="Ready">' +
 			'<SceneObject ID="sun" Kind="star"><SceneObject ID="rock" Kind="moon" Radius="6000" Distance="1" Atmosphere="none" Day="24" /></SceneObject>' +
@@ -3313,6 +3384,9 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(realistic.Space.PlantStyle).toBe('realistic');
 		expect(simple.Space.Engine().PlantShape('pine')).toBe('pine');
 		expect(engine.PlantShape('rock')).toBe('rock');
+		/* A species of no simple model (an aspen): the simple style draws the one it stands for. */
+		expect(simple.Space.Engine().PlantShape('aspen')).toBe('birch');
+		expect(simple.Space.Engine().PlantShape('bamboo')).toBe('reed');
 
 		/* Asked once, it comes from the workers. */
 		engine.PlantShape('palm');
@@ -4071,6 +4145,44 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		delete quick.Build;
 
 		expect(coming(30, 0.1)).toBeLessThan(held(30, quick, flat, {Steer: 1}, 0.1).Steer * 0.6);
+	});
+
+	/*
+	 * Regression: where the card makes a program only when it is used or waited for (a canvas shown nowhere), a program the
+	 * card was never asked to wait for was never made, and what drew it only once made waited for it forever. Patience: so
+	 * many milliseconds not waited for, then Ready waits for it once.
+	 */
+	it('Renderer waits for a program not made after its Patience, once', async function () {
+		var graphics = Elemenx.Service('Renderer');
+		var fragment = '#version 300 es\nprecision highp float;\nout vec4 outColor;\nvoid main() { outColor = vec4(1.0); }\n// patience';
+		var patient = graphics.Create(document.createElement('canvas'), {Patient: true, Patience: 60, Antialias: false});
+		var gl = patient.GL;
+		var working = gl.getExtension('KHR_parallel_shader_compile').COMPLETION_STATUS_KHR;
+		var real = gl.getProgramParameter;
+		var program;
+
+		/* The card never tells it is done. */
+		gl.getProgramParameter = function (handle, name) {
+			return name === working ? false : real.apply(this, arguments);
+		};
+
+		try {
+			program = patient.Program(graphics.Shaders.Quad, fragment);
+
+			expect(patient.Ready(program)).toBe(false);
+
+			await new Promise(function (done) {
+				setTimeout(done, 90);
+			});
+
+			expect(patient.Ready(program)).toBe(true);
+			expect(program.Settled).toBe(true);
+		}
+		finally {
+			gl.getProgramParameter = real;
+
+			patient.Destroy();
+		}
 	});
 
 	it('Renderer makes programs behind the page for who is patient, and sets in a program only what changed', async function () {

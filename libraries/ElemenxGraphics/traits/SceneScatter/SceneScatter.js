@@ -1920,7 +1920,7 @@ Elemenx.Trait('SceneScatter', {
 						return [made[0] + (0.86 - made[0]) * snow * 0.8, made[1] + (0.9 - made[1]) * snow * 0.8, made[2] + (0.95 - made[2]) * snow * 0.8];
 					};
 
-					renderer.Draw(each[0], programs().Grass, Object.assign(Object.create(uniforms), {uOrigin: vectors.Subtract([0, 0, 0], eye), uField: grass.Texture, uFree: grass.Free, uFieldSize: [ground.Field.Size, grass.Side], uBlade: [(Number(rule.Height) || 0.7) * (1 - snow * 0.85), Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: seasoned(engine.Paint(rule.Root || '#2f5a22'), 0.5), uTip: seasoned(engine.Paint(rule.Color || '#7fae4a'), 1), uSun: ground.Sun, uSunColor: ground.SunColor, uEye: target}), {Cull: 'none'});
+					engine.DrawReady(each[0], programs().Grass, Object.assign(Object.create(uniforms), {uOrigin: vectors.Subtract([0, 0, 0], eye), uField: grass.Texture, uFree: grass.Free, uFieldSize: [ground.Field.Size, grass.Side], uBlade: [(Number(rule.Height) || 0.7) * (1 - snow * 0.85), Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: seasoned(engine.Paint(rule.Root || '#2f5a22'), 0.5), uTip: seasoned(engine.Paint(rule.Color || '#7fae4a'), 1), uSun: ground.Sun, uSunColor: ground.SunColor, uEye: target}), {Cull: 'none'});
 				}
 			});
 		}
@@ -2173,7 +2173,7 @@ Elemenx.Trait('SceneScatter', {
 
 			/* The far tiles, each one draw of all its things (uLod 0: no level of a copy chooses it away). */
 			state.Chosen.forEach(function (tile) {
-				renderer.Draw(tile.Mesh, programs().Many, Object.assign(Object.create(uniforms), {uOrigin: origin, uWind: 0, uSway: 0, uSoft: 0, uShine: 8, uSpecular: 0.05, uRough: 0.5, uDither: dither, uLod: 0, uFade: [-2, -1, 1e8, 2e8], uLevel: engine.LevelColor('proxy', tile.Level)}), {Cull: 'back'});
+				engine.DrawReady(tile.Mesh, programs().Many, Object.assign(Object.create(uniforms), {uOrigin: origin, uWind: 0, uSway: 0, uSoft: 0, uShine: 8, uSpecular: 0.05, uRough: 0.5, uDither: dither, uLod: 0, uFade: [-2, -1, 1e8, 2e8], uLevel: engine.LevelColor('proxy', tile.Level)}), {Cull: 'back'});
 			});
 
 			each(function (one) {
@@ -2192,7 +2192,7 @@ Elemenx.Trait('SceneScatter', {
 						files.uLevel = engine.LevelColor('near', one.Level);
 						files.uLod = lod * detail(one.Key);
 
-						renderer.Draw(each.Mesh, programs().Files, Object.assign(files, engine.Surface(each), engine.SeasonValues ? engine.SeasonValues(parts[0]) : null), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
+						engine.DrawReady(each.Mesh, programs().Files, Object.assign(files, engine.Surface(each), engine.SeasonValues ? engine.SeasonValues(parts[0]) : null), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
 					});
 
 					return;
@@ -2210,7 +2210,7 @@ Elemenx.Trait('SceneScatter', {
 					many.uBoxMin = faces.Min;
 					many.uBoxMax = faces.Max;
 
-					renderer.Draw(levels(one.Key)[one.Level], programs().Facade, many, {Cull: 'back'});
+					engine.DrawReady(levels(one.Key)[one.Level], programs().Facade, many, {Cull: 'back'});
 
 					return;
 				}
@@ -2224,7 +2224,7 @@ Elemenx.Trait('SceneScatter', {
 					if (engine.SeasonValues)
 						Object.assign(many, engine.SeasonValues(parts[0]));
 
-					renderer.Draw(levels(one.Key)[one.Level], programs().Many, many, {Cull: 'back'});
+					engine.DrawReady(levels(one.Key)[one.Level], programs().Many, many, {Cull: 'back'});
 
 					return;
 				}
@@ -2240,7 +2240,7 @@ Elemenx.Trait('SceneScatter', {
 				far.uRadius = baked.Radius;
 				far.uMiddle = baked.Middle;
 
-				renderer.Draw(baked.Quad, programs().Picture, far, {Cull: 'none'});
+				engine.DrawReady(baked.Quad, programs().Picture, far, {Cull: 'none'});
 			});
 
 			drawGrass(uniforms, matrix);

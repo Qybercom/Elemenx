@@ -851,7 +851,21 @@ Elemenx.Trait('SceneLighting', {
 		/* Before anything of a frame is drawn: into the texture of floats. */
 		engine.PostBegin = function () {
 			var set = sets[level()];
+			var run;
+
 			if (!set.Post) return false;
+
+			/*
+			 * In a frame of its loop, its programs not all made by the card yet: drawn without them (as a level with no Post),
+			 * not waited for; the scene waits for them behind its veil. Regression: the page stood seconds in its passes.
+			 */
+			if (scene.Looping) {
+				run = programs();
+
+				if (Object.keys(run).some(function (name) {
+					return !engine.ProgramReady(run[name]);
+				})) return false;
+			}
 
 			prepare(set);
 

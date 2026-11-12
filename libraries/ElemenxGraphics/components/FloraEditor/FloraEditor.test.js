@@ -73,7 +73,7 @@ describe('Contract: FloraEditor, a species of plant of a picture of it, grown in
 
 		expect(editor.Current().Bark.Pattern).toBe('birch');
 		expect(element.querySelectorAll('.elemenx-flora-editor-panel input[type=range]').length).toBeGreaterThan(10);
-		expect(element.querySelectorAll('.elemenx-flora-editor-panel input[type=color]').length).toBe(5);
+		expect(element.querySelectorAll('.elemenx-flora-editor-panel input[type=color]').length).toBe(8);
 
 		made = editor.Analyse(picture());
 

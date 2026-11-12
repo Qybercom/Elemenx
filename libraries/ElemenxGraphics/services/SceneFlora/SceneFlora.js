@@ -26,17 +26,25 @@
 Elemenx.Service('SceneFlora', {
 	$Meta: {
 		Description: 'Realistic plants of code: trunks and branches grown by space colonization (whorls for spruces, fronds for palms), bark and leaves drawn of code, each plant of a species another.',
-		Methods: ['Species()', 'Preset(name)', 'Tree(preset, variant)', 'Textures(preset)', 'Asset(tree, textures)', 'Define(name, preset, options)', 'FromPicture(picture, base)', 'Key(preset, variants)', 'Work()', 'Source(names)']
+		Methods: ['Species()', 'Preset(name)', 'Far(name)', 'Tree(preset, variant)', 'Textures(preset)', 'Asset(tree, textures)', 'Define(name, preset, options)', 'FromPicture(picture, base)', 'Key(preset, variants)', 'Work()', 'Source(names)']
 	},
 
 	/*
 	 * The species: Grow (colonize, whorls, palm), Height [low, high] metres; Trunk {Bare (of the height, under the
 	 * crown), Radius (of the base, of the height), Lean, Wander, Stems, Flare, Stubs, Leader (the trunk goes on through the
 	 * crown)}; Crown {Profile [[0 its foot to 1 its top, radius 0 to 1]...], Width (its widest radius, of the height),
-	 * Lean, Clumps, Hollow (how much its points keep to its outside), Points}; Growth {Step, Reach, Kill (of the height),
+	 * Lean, Clumps, Hollow (how much its points keep to its outside), Points}; Grow stalks (a clump of stalks: grasses,
+	 * reeds, cereals, a sunflower, bamboo, a fern) its Trunk.Stems stalks within Crown.Width of its foot; Growth {Step, Reach, Kill (of the height),
 	 * Up, Droop, Pipe, Cut (twigs thinner than Cut times the thinnest left to the leaves)}; Leaves {Kind (broad, needles,
-	 * frond), Size (metres), Each (cards a twig), Color, Shade, Light}; Bark {Pattern (plates, birch, ridges, rings,
-	 * smooth), Low, High (colors), Split (where the high one begins, of the height)}.
+	 * frond, compound: leaflets by pairs), Size (metres), Each (cards a twig), Hang (0 to 1: hanging down in curtains, a
+	 * weeping willow), Narrow (0 to 1: long thin leaves), Bloom, Fruit (0 to 1: how many flowers, fruits on its twigs),
+	 * BloomColor, BloomSize (small ones in clusters: a lilac), FruitColor, FruitSize (of a tile), Color, Shade, Light; of
+	 * stalks: Kind blade (grass) or single (one big leaf) or frond, Each along each stalk from From of it, Base from the
+	 * ground on a stalk of Stipe of their length, Rise [inner, outer] (the slope they start at), Wide (half their width
+	 * of their length)}; Head {Kind (ear, panicle, cob, disc, burrs; none), Size (metres), Wide, Share (of its stalks), Color}:
+	 * the heads of its stalks; Bark {Rings (of a ringed bark up the plant), Pattern (plates, birch, ridges, rings,
+	 * smooth, fibrous: a sequoia, bands: a cherry, diamonds: an aspen), Low, High (colors), Split (where the high one
+	 * begins, of the height)}; Simple: the plant of the simple style it stands for (PlantStyle of Scene).
 	 */
 	Presets: {
 		pine: {Grow: 'colonize', Height: [16, 26], Trunk: {Bare: 0.6, Radius: 0.016, Lean: 0.04, Wander: 0.25, Stems: 1, Flare: 0.35, Stubs: 0.55, Leader: true}, Crown: {Profile: [[0, 0.35], [0.25, 0.85], [0.55, 1], [0.85, 0.7], [1, 0.25]], Width: 0.2, Lean: 0.25, Clumps: 0.6, Hollow: 0.35, Points: 1600}, Growth: {Step: 0.016, Reach: 0.12, Kill: 0.024, Up: 0.25, Droop: 0.05, Pipe: 2.3, Cut: 1.6}, Leaves: {Kind: 'needles', Size: 1.2, Each: 5, Color: [0.16, 0.3, 0.16], Shade: [0.07, 0.15, 0.08], Light: [0.32, 0.45, 0.24]}, Bark: {Pattern: 'plates', Low: [0.27, 0.22, 0.19], High: [0.74, 0.45, 0.28], Split: 0.35}},
@@ -44,7 +52,30 @@ Elemenx.Service('SceneFlora', {
 		oak: {Grow: 'colonize', Height: [14, 22], Trunk: {Bare: 0.28, Radius: 0.035, Lean: 0.05, Wander: 0.35, Stems: 1, Flare: 0.6, Stubs: 0.1, Leader: false}, Crown: {Profile: [[0, 0.45], [0.2, 0.9], [0.5, 1], [0.8, 0.8], [1, 0.3]], Width: 0.48, Lean: 0.2, Clumps: 0.45, Hollow: 0.4, Points: 1600}, Growth: {Step: 0.017, Reach: 0.12, Kill: 0.024, Up: 0.08, Droop: 0.12, Pipe: 2.4, Cut: 2.4}, Leaves: {Kind: 'broad', Size: 1.6, Each: 4, Color: [0.15, 0.26, 0.09], Shade: [0.05, 0.11, 0.04], Light: [0.28, 0.4, 0.14]}, Bark: {Pattern: 'ridges', Low: [0.28, 0.25, 0.22], High: [0.36, 0.33, 0.29], Split: 0.5}},
 		birch: {Grow: 'colonize', Height: [15, 24], Trunk: {Bare: 0.35, Radius: 0.013, Lean: 0.05, Wander: 0.3, Stems: 1, Flare: 0.25, Stubs: 0.45, Leader: true}, Crown: {Profile: [[0, 0.5], [0.3, 0.95], [0.6, 0.85], [1, 0.25]], Width: 0.24, Lean: 0.25, Clumps: 0.55, Hollow: 0.45, Points: 1500}, Growth: {Step: 0.016, Reach: 0.12, Kill: 0.024, Up: 0.12, Droop: 0.3, Pipe: 2.3, Cut: 1.5}, Leaves: {Kind: 'broad', Size: 1.2, Each: 4, Color: [0.24, 0.4, 0.12], Shade: [0.09, 0.18, 0.05], Light: [0.42, 0.56, 0.2]}, Bark: {Pattern: 'birch', Low: [0.2, 0.19, 0.18], High: [0.88, 0.87, 0.83], Split: 0.08}},
 		palm: {Grow: 'palm', Height: [9, 15], Trunk: {Bare: 1, Radius: 0.02, Lean: 0.18, Wander: 0.1, Stems: 1, Flare: 0.45, Stubs: 0, Leader: true}, Crown: {Profile: [[0, 1], [1, 1]], Width: 0.3, Lean: 0, Clumps: 0, Hollow: 0, Points: 26}, Growth: {Step: 0.05, Reach: 0, Kill: 0, Up: 0, Droop: 0.45, Pipe: 2, Cut: 1}, Leaves: {Kind: 'frond', Size: 4.6, Each: 1, Color: [0.24, 0.38, 0.13], Shade: [0.1, 0.18, 0.06], Light: [0.45, 0.56, 0.22]}, Bark: {Pattern: 'rings', Low: [0.4, 0.35, 0.29], High: [0.52, 0.46, 0.37], Split: 0.5}},
-		bush: {Grow: 'colonize', Height: [1.4, 2.6], Trunk: {Bare: 0.08, Radius: 0.012, Lean: 0.3, Wander: 0.4, Stems: 5, Flare: 0, Stubs: 0, Leader: false}, Crown: {Profile: [[0, 0.55], [0.35, 1], [0.75, 0.85], [1, 0.3]], Width: 0.55, Lean: 0.2, Clumps: 0.4, Hollow: 0.4, Points: 450}, Growth: {Step: 0.035, Reach: 0.2, Kill: 0.045, Up: 0.15, Droop: 0.05, Pipe: 2.2, Cut: 1.3}, Leaves: {Kind: 'broad', Size: 0.55, Each: 4, Color: [0.17, 0.29, 0.1], Shade: [0.06, 0.13, 0.04], Light: [0.32, 0.44, 0.17]}, Bark: {Pattern: 'smooth', Low: [0.3, 0.26, 0.22], High: [0.38, 0.33, 0.27], Split: 0.5}}
+		bush: {Grow: 'colonize', Height: [1.4, 2.6], Trunk: {Bare: 0.08, Radius: 0.012, Lean: 0.3, Wander: 0.4, Stems: 5, Flare: 0, Stubs: 0, Leader: false}, Crown: {Profile: [[0, 0.55], [0.35, 1], [0.75, 0.85], [1, 0.3]], Width: 0.55, Lean: 0.2, Clumps: 0.4, Hollow: 0.4, Points: 450}, Growth: {Step: 0.035, Reach: 0.2, Kill: 0.045, Up: 0.15, Droop: 0.05, Pipe: 2.2, Cut: 1.3}, Leaves: {Kind: 'broad', Size: 0.55, Each: 4, Color: [0.17, 0.29, 0.1], Shade: [0.06, 0.13, 0.04], Light: [0.32, 0.44, 0.17]}, Bark: {Pattern: 'smooth', Low: [0.3, 0.26, 0.22], High: [0.38, 0.33, 0.27], Split: 0.5}},
+		aspen: {Grow: 'colonize', Height: [14, 22], Simple: 'birch', Trunk: {Bare: 0.5, Radius: 0.011, Lean: 0.04, Wander: 0.25, Stems: 1, Flare: 0.2, Stubs: 0.6, Leader: true}, Crown: {Profile: [[0, 0.5], [0.3, 0.9], [0.65, 0.8], [1, 0.2]], Width: 0.2, Lean: 0.25, Clumps: 0.6, Hollow: 0.45, Points: 1100}, Growth: {Step: 0.016, Reach: 0.12, Kill: 0.024, Up: 0.22, Droop: 0.1, Pipe: 2.3, Cut: 1.5}, Leaves: {Kind: 'broad', Size: 1, Each: 4, Color: [0.26, 0.4, 0.14], Shade: [0.1, 0.18, 0.06], Light: [0.48, 0.58, 0.24]}, Bark: {Pattern: 'diamonds', Low: [0.2, 0.2, 0.18], High: [0.7, 0.73, 0.64], Split: 0.1}},
+		sequoia: {Grow: 'whorls', Height: [32, 46], Simple: 'sequoia', Trunk: {Bare: 0.3, Radius: 0.028, Lean: 0.01, Wander: 0.06, Stems: 1, Flare: 0.9, Stubs: 0.6, Leader: true}, Crown: {Profile: [[0, 0.75], [0.4, 0.6], [0.8, 0.3], [1, 0.05]], Width: 0.13, Lean: 0.05, Clumps: 0.35, Hollow: 0.5, Points: 0}, Growth: {Step: 0.016, Reach: 0, Kill: 0, Up: 0.12, Droop: 0.25, Pipe: 2.4, Cut: 1.2}, Leaves: {Kind: 'needles', Size: 1.3, Each: 3, Hang: 0.35, Color: [0.16, 0.27, 0.13], Shade: [0.06, 0.12, 0.06], Light: [0.3, 0.42, 0.2]}, Bark: {Pattern: 'fibrous', Low: [0.36, 0.18, 0.11], High: [0.5, 0.27, 0.17], Split: 0.5}},
+		willow: {Grow: 'colonize', Height: [10, 16], Simple: 'oak', Trunk: {Bare: 0.3, Radius: 0.045, Lean: 0.15, Wander: 0.6, Stems: 1, Flare: 0.6, Stubs: 0.15, Leader: false}, Crown: {Profile: [[0, 0.6], [0.3, 1], [0.7, 0.95], [1, 0.45]], Width: 0.55, Lean: 0.25, Clumps: 0.45, Hollow: 0.6, Points: 1100}, Growth: {Step: 0.018, Reach: 0.13, Kill: 0.026, Up: 0.18, Droop: 0.35, Pipe: 2.4, Cut: 1.6}, Leaves: {Kind: 'broad', Size: 1.3, Each: 3, Hang: 0.9, Narrow: 0.8, Color: [0.24, 0.36, 0.13], Shade: [0.09, 0.16, 0.05], Light: [0.44, 0.54, 0.22]}, Bark: {Pattern: 'ridges', Low: [0.3, 0.26, 0.21], High: [0.38, 0.33, 0.26], Split: 0.5}},
+		poplar: {Grow: 'colonize', Height: [20, 30], Simple: 'birch', Trunk: {Bare: 0.06, Radius: 0.016, Lean: 0.01, Wander: 0.15, Stems: 1, Flare: 0.3, Stubs: 0.2, Leader: true}, Crown: {Profile: [[0, 0.5], [0.15, 0.9], [0.5, 1], [0.85, 0.6], [1, 0.1]], Width: 0.075, Lean: 0.1, Clumps: 0.35, Hollow: 0.45, Points: 1300}, Growth: {Step: 0.014, Reach: 0.08, Kill: 0.016, Up: 0.6, Droop: 0, Pipe: 2.3, Cut: 1.5}, Leaves: {Kind: 'broad', Size: 1, Each: 4, Color: [0.18, 0.32, 0.11], Shade: [0.07, 0.14, 0.05], Light: [0.36, 0.5, 0.2]}, Bark: {Pattern: 'ridges', Low: [0.3, 0.28, 0.24], High: [0.5, 0.5, 0.44], Split: 0.4}},
+		chestnut: {Grow: 'colonize', Height: [16, 24], Simple: 'oak', Trunk: {Bare: 0.2, Radius: 0.04, Lean: 0.04, Wander: 0.3, Stems: 1, Flare: 0.7, Stubs: 0.05, Leader: false}, Crown: {Profile: [[0, 0.55], [0.25, 0.95], [0.55, 1], [0.85, 0.75], [1, 0.3]], Width: 0.42, Lean: 0.15, Clumps: 0.35, Hollow: 0.35, Points: 1700}, Growth: {Step: 0.016, Reach: 0.12, Kill: 0.024, Up: 0.12, Droop: 0.18, Pipe: 2.4, Cut: 2.2}, Leaves: {Kind: 'broad', Size: 1.8, Each: 4, Color: [0.13, 0.27, 0.08], Shade: [0.04, 0.11, 0.03], Light: [0.26, 0.42, 0.13]}, Bark: {Pattern: 'plates', Low: [0.3, 0.26, 0.23], High: [0.36, 0.31, 0.27], Split: 0.9}},
+		alder: {Grow: 'colonize', Height: [12, 20], Simple: 'birch', Trunk: {Bare: 0.25, Radius: 0.016, Lean: 0.05, Wander: 0.25, Stems: 1, Flare: 0.3, Stubs: 0.4, Leader: true}, Crown: {Profile: [[0, 0.6], [0.3, 1], [0.7, 0.7], [1, 0.15]], Width: 0.22, Lean: 0.2, Clumps: 0.45, Hollow: 0.4, Points: 1300}, Growth: {Step: 0.016, Reach: 0.12, Kill: 0.024, Up: 0.15, Droop: 0.12, Pipe: 2.3, Cut: 1.6}, Leaves: {Kind: 'broad', Size: 1.1, Each: 4, Color: [0.12, 0.24, 0.08], Shade: [0.04, 0.1, 0.03], Light: [0.24, 0.38, 0.13]}, Bark: {Pattern: 'ridges', Low: [0.25, 0.24, 0.22], High: [0.4, 0.38, 0.34], Split: 0.5}},
+		linden: {Grow: 'colonize', Height: [16, 26], Simple: 'oak', Trunk: {Bare: 0.2, Radius: 0.03, Lean: 0.03, Wander: 0.25, Stems: 1, Flare: 0.55, Stubs: 0.15, Leader: true}, Crown: {Profile: [[0, 0.6], [0.25, 1], [0.6, 0.9], [1, 0.3]], Width: 0.3, Lean: 0.15, Clumps: 0.35, Hollow: 0.4, Points: 1700}, Growth: {Step: 0.016, Reach: 0.12, Kill: 0.024, Up: 0.1, Droop: 0.2, Pipe: 2.4, Cut: 2}, Leaves: {Kind: 'broad', Size: 1.4, Each: 4, Color: [0.2, 0.34, 0.11], Shade: [0.07, 0.14, 0.04], Light: [0.38, 0.5, 0.2]}, Bark: {Pattern: 'ridges', Low: [0.3, 0.28, 0.25], High: [0.4, 0.37, 0.32], Split: 0.5}},
+		acacia: {Grow: 'colonize', Height: [12, 20], Simple: 'oak', Trunk: {Bare: 0.35, Radius: 0.025, Lean: 0.1, Wander: 0.45, Stems: 1, Flare: 0.4, Stubs: 0.2, Leader: false}, Crown: {Profile: [[0, 0.5], [0.3, 0.95], [0.7, 0.9], [1, 0.4]], Width: 0.32, Lean: 0.25, Clumps: 0.6, Hollow: 0.5, Points: 1300}, Growth: {Step: 0.017, Reach: 0.12, Kill: 0.024, Up: 0.15, Droop: 0.12, Pipe: 2.3, Cut: 1.8}, Leaves: {Kind: 'compound', Size: 1.1, Each: 4, Bloom: 0.35, BloomColor: [0.95, 0.94, 0.88], Color: [0.24, 0.38, 0.14], Shade: [0.09, 0.17, 0.05], Light: [0.44, 0.56, 0.24]}, Bark: {Pattern: 'ridges', Low: [0.3, 0.25, 0.2], High: [0.38, 0.32, 0.25], Split: 0.5}},
+		apple: {Grow: 'colonize', Height: [4, 7], Simple: 'oak', Trunk: {Bare: 0.3, Radius: 0.04, Lean: 0.12, Wander: 0.5, Stems: 1, Flare: 0.3, Stubs: 0.1, Leader: false}, Crown: {Profile: [[0, 0.6], [0.3, 1], [0.7, 0.9], [1, 0.35]], Width: 0.55, Lean: 0.2, Clumps: 0.4, Hollow: 0.5, Points: 900}, Growth: {Step: 0.024, Reach: 0.16, Kill: 0.034, Up: 0.12, Droop: 0.2, Pipe: 2.3, Cut: 1.6}, Leaves: {Kind: 'broad', Size: 0.7, Each: 4, Fruit: 0.4, FruitColor: [0.72, 0.12, 0.08], FruitSize: 0.04, Color: [0.2, 0.33, 0.11], Shade: [0.07, 0.14, 0.04], Light: [0.38, 0.5, 0.2]}, Bark: {Pattern: 'ridges', Low: [0.33, 0.29, 0.25], High: [0.4, 0.35, 0.3], Split: 0.5}},
+		peach: {Grow: 'colonize', Height: [3, 5], Simple: 'oak', Trunk: {Bare: 0.25, Radius: 0.045, Lean: 0.15, Wander: 0.6, Stems: 1, Flare: 0.25, Stubs: 0.1, Leader: false}, Crown: {Profile: [[0, 0.65], [0.35, 1], [0.75, 0.85], [1, 0.35]], Width: 0.6, Lean: 0.25, Clumps: 0.4, Hollow: 0.55, Points: 800}, Growth: {Step: 0.026, Reach: 0.17, Kill: 0.036, Up: 0.2, Droop: 0.12, Pipe: 2.3, Cut: 1.6}, Leaves: {Kind: 'broad', Size: 0.6, Each: 4, Narrow: 0.6, Fruit: 0.3, FruitColor: [0.93, 0.52, 0.3], FruitSize: 0.04, Color: [0.22, 0.36, 0.12], Shade: [0.08, 0.15, 0.04], Light: [0.42, 0.54, 0.22]}, Bark: {Pattern: 'bands', Low: [0.28, 0.18, 0.15], High: [0.34, 0.22, 0.18], Split: 0.5}},
+		apricot: {Grow: 'colonize', Height: [4, 8], Simple: 'oak', Trunk: {Bare: 0.3, Radius: 0.04, Lean: 0.12, Wander: 0.5, Stems: 1, Flare: 0.3, Stubs: 0.1, Leader: false}, Crown: {Profile: [[0, 0.6], [0.3, 1], [0.7, 0.9], [1, 0.35]], Width: 0.5, Lean: 0.2, Clumps: 0.45, Hollow: 0.5, Points: 900}, Growth: {Step: 0.024, Reach: 0.16, Kill: 0.034, Up: 0.15, Droop: 0.15, Pipe: 2.3, Cut: 1.6}, Leaves: {Kind: 'broad', Size: 0.7, Each: 4, Fruit: 0.35, FruitColor: [0.95, 0.6, 0.15], FruitSize: 0.032, Color: [0.2, 0.34, 0.11], Shade: [0.07, 0.14, 0.04], Light: [0.4, 0.52, 0.2]}, Bark: {Pattern: 'ridges', Low: [0.3, 0.24, 0.2], High: [0.36, 0.29, 0.24], Split: 0.5}},
+		cherry: {Grow: 'colonize', Height: [3, 6], Simple: 'oak', Trunk: {Bare: 0.25, Radius: 0.035, Lean: 0.15, Wander: 0.45, Stems: 2, Flare: 0.2, Stubs: 0.1, Leader: false}, Crown: {Profile: [[0, 0.6], [0.35, 1], [0.75, 0.85], [1, 0.3]], Width: 0.5, Lean: 0.2, Clumps: 0.4, Hollow: 0.5, Points: 800}, Growth: {Step: 0.026, Reach: 0.17, Kill: 0.036, Up: 0.1, Droop: 0.3, Pipe: 2.3, Cut: 1.6}, Leaves: {Kind: 'broad', Size: 0.6, Each: 4, Fruit: 0.4, FruitColor: [0.55, 0.04, 0.06], FruitSize: 0.022, Color: [0.18, 0.32, 0.1], Shade: [0.06, 0.13, 0.04], Light: [0.36, 0.5, 0.2]}, Bark: {Pattern: 'bands', Low: [0.3, 0.18, 0.14], High: [0.37, 0.23, 0.18], Split: 0.5}},
+		'sweet-cherry': {Grow: 'colonize', Height: [8, 14], Simple: 'oak', Trunk: {Bare: 0.3, Radius: 0.025, Lean: 0.05, Wander: 0.3, Stems: 1, Flare: 0.35, Stubs: 0.25, Leader: true}, Crown: {Profile: [[0, 0.6], [0.3, 1], [0.65, 0.8], [1, 0.25]], Width: 0.3, Lean: 0.15, Clumps: 0.45, Hollow: 0.45, Points: 1200}, Growth: {Step: 0.018, Reach: 0.13, Kill: 0.026, Up: 0.22, Droop: 0.1, Pipe: 2.3, Cut: 1.6}, Leaves: {Kind: 'broad', Size: 0.9, Each: 4, Fruit: 0.35, FruitColor: [0.62, 0.06, 0.1], FruitSize: 0.024, Color: [0.2, 0.34, 0.11], Shade: [0.07, 0.14, 0.04], Light: [0.4, 0.52, 0.2]}, Bark: {Pattern: 'bands', Low: [0.33, 0.2, 0.16], High: [0.42, 0.28, 0.22], Split: 0.5}},
+		hazel: {Grow: 'colonize', Height: [3, 6], Simple: 'bush', Trunk: {Bare: 0.12, Radius: 0.012, Lean: 0.25, Wander: 0.3, Stems: 7, Flare: 0, Stubs: 0.1, Leader: false}, Crown: {Profile: [[0, 0.45], [0.35, 0.9], [0.7, 1], [1, 0.45]], Width: 0.42, Lean: 0.2, Clumps: 0.45, Hollow: 0.45, Points: 800}, Growth: {Step: 0.028, Reach: 0.17, Kill: 0.036, Up: 0.2, Droop: 0.15, Pipe: 2.2, Cut: 1.4}, Leaves: {Kind: 'broad', Size: 0.6, Each: 4, Color: [0.19, 0.32, 0.1], Shade: [0.07, 0.13, 0.04], Light: [0.36, 0.48, 0.18]}, Bark: {Pattern: 'smooth', Low: [0.33, 0.27, 0.22], High: [0.42, 0.36, 0.3], Split: 0.5}},
+		juniper: {Grow: 'colonize', Height: [1.5, 3.5], Simple: 'bush', Trunk: {Bare: 0.05, Radius: 0.014, Lean: 0.12, Wander: 0.35, Stems: 3, Flare: 0, Stubs: 0.2, Leader: true}, Crown: {Profile: [[0, 0.8], [0.3, 1], [0.7, 0.6], [1, 0.1]], Width: 0.24, Lean: 0.15, Clumps: 0.4, Hollow: 0.5, Points: 700}, Growth: {Step: 0.03, Reach: 0.17, Kill: 0.036, Up: 0.3, Droop: 0.05, Pipe: 2.2, Cut: 1.4}, Leaves: {Kind: 'needles', Size: 0.5, Each: 4, Color: [0.16, 0.28, 0.2], Shade: [0.05, 0.11, 0.08], Light: [0.3, 0.42, 0.32]}, Bark: {Pattern: 'fibrous', Low: [0.32, 0.22, 0.17], High: [0.4, 0.3, 0.24], Split: 0.5}},
+		lilac: {Grow: 'colonize', Height: [2.5, 4.5], Simple: 'bush', Trunk: {Bare: 0.15, Radius: 0.012, Lean: 0.2, Wander: 0.3, Stems: 6, Flare: 0, Stubs: 0.1, Leader: false}, Crown: {Profile: [[0, 0.45], [0.35, 0.95], [0.7, 1], [1, 0.5]], Width: 0.38, Lean: 0.2, Clumps: 0.5, Hollow: 0.5, Points: 750}, Growth: {Step: 0.028, Reach: 0.17, Kill: 0.036, Up: 0.25, Droop: 0.08, Pipe: 2.2, Cut: 1.4}, Leaves: {Kind: 'broad', Size: 0.6, Each: 4, Bloom: 1, BloomSize: 0.02, BloomColor: [0.72, 0.5, 0.86], Color: [0.18, 0.32, 0.1], Shade: [0.06, 0.13, 0.04], Light: [0.34, 0.48, 0.18]}, Bark: {Pattern: 'smooth', Low: [0.36, 0.33, 0.3], High: [0.44, 0.41, 0.37], Split: 0.5}},
+		fern: {Grow: 'stalks', Height: [0.8, 1.4], Simple: 'fern', Trunk: {Bare: 0, Radius: 0.008, Lean: 0, Wander: 0.1, Stems: 0, Flare: 0, Stubs: 0, Leader: true}, Crown: {Profile: [[0, 1], [1, 1]], Width: 0.12, Lean: 0, Clumps: 0, Hollow: 0, Points: 0}, Growth: {Step: 0.1, Reach: 0, Kill: 0, Up: 0, Droop: 0.4, Pipe: 2, Cut: 0.3}, Leaves: {Kind: 'frond', Size: 1.2, Each: 0, Base: 14, Rise: [3, 0.5], Stipe: 0.25, Wide: 0.24, Color: [0.2, 0.36, 0.1], Shade: [0.07, 0.15, 0.04], Light: [0.38, 0.54, 0.18]}, Bark: {Pattern: 'smooth', Low: [0.24, 0.2, 0.12], High: [0.3, 0.32, 0.15], Split: 0.5}},
+		bamboo: {Grow: 'stalks', Height: [6, 12], Simple: 'reed', Trunk: {Bare: 0, Radius: 0.0045, Lean: 0.06, Wander: 0.08, Stems: 14, Flare: 0, Stubs: 0, Leader: true}, Crown: {Profile: [[0, 1], [1, 1]], Width: 0.1, Lean: 0, Clumps: 0, Hollow: 0, Points: 0}, Growth: {Step: 0.03, Reach: 0, Kill: 0, Up: 0, Droop: 0.3, Pipe: 2, Cut: 0.3}, Leaves: {Kind: 'blade', Size: 1.2, Each: 40, From: 0.4, Rise: [0.2, 0.2], Wide: 0.14, Color: [0.3, 0.45, 0.15], Shade: [0.11, 0.2, 0.05], Light: [0.5, 0.62, 0.25]}, Bark: {Pattern: 'rings', Rings: 28, Low: [0.32, 0.44, 0.17], High: [0.48, 0.56, 0.24], Split: 0.6}},
+		reed: {Grow: 'stalks', Height: [2, 3.5], Simple: 'reed', Trunk: {Bare: 0, Radius: 0.004, Lean: 0.08, Wander: 0.1, Stems: 18, Flare: 0, Stubs: 0, Leader: true}, Crown: {Profile: [[0, 1], [1, 1]], Width: 0.16, Lean: 0, Clumps: 0, Hollow: 0, Points: 0}, Growth: {Step: 0.05, Reach: 0, Kill: 0, Up: 0, Droop: 0.2, Pipe: 2, Cut: 0.3}, Leaves: {Kind: 'blade', Size: 0.45, Each: 4, From: 0.15, Rise: [0.5, 0.5], Wide: 0.06, Color: [0.32, 0.42, 0.2], Shade: [0.12, 0.18, 0.07], Light: [0.52, 0.6, 0.32]}, Head: {Kind: 'panicle', Size: 0.35, Wide: 0.55, Share: 0.8, Color: [0.56, 0.46, 0.43]}, Bark: {Pattern: 'smooth', Low: [0.42, 0.46, 0.26], High: [0.56, 0.55, 0.34], Split: 0.5}},
+		bulrush: {Grow: 'stalks', Height: [1.5, 2.4], Simple: 'reed', Trunk: {Bare: 0, Radius: 0.005, Lean: 0.04, Wander: 0.06, Stems: 7, Flare: 0, Stubs: 0, Leader: true}, Crown: {Profile: [[0, 1], [1, 1]], Width: 0.12, Lean: 0, Clumps: 0, Hollow: 0, Points: 0}, Growth: {Step: 0.06, Reach: 0, Kill: 0, Up: 0, Droop: 0.12, Pipe: 2, Cut: 0.3}, Leaves: {Kind: 'blade', Size: 1.7, Each: 0, Base: 22, Rise: [6, 2.5], Stipe: 0.03, Wide: 0.03, Color: [0.24, 0.38, 0.14], Shade: [0.09, 0.16, 0.05], Light: [0.42, 0.55, 0.24]}, Head: {Kind: 'cob', Size: 0.32, Wide: 0.26, Share: 1, Color: [0.38, 0.23, 0.12]}, Bark: {Pattern: 'smooth', Low: [0.28, 0.38, 0.16], High: [0.34, 0.44, 0.2], Split: 0.5}},
+		wheat: {Grow: 'stalks', Height: [0.8, 1.1], Simple: 'wheat', Trunk: {Bare: 0, Radius: 0.004, Lean: 0.08, Wander: 0.1, Stems: 22, Flare: 0, Stubs: 0, Leader: true}, Crown: {Profile: [[0, 1], [1, 1]], Width: 0.12, Lean: 0, Clumps: 0, Hollow: 0, Points: 0}, Growth: {Step: 0.08, Reach: 0, Kill: 0, Up: 0, Droop: 0.25, Pipe: 2, Cut: 0.3}, Leaves: {Kind: 'blade', Size: 0.28, Each: 2, From: 0.1, Rise: [0.8, 0.8], Wide: 0.06, Color: [0.62, 0.56, 0.28], Shade: [0.38, 0.32, 0.14], Light: [0.84, 0.76, 0.44]}, Head: {Kind: 'ear', Size: 0.1, Wide: 0.32, Share: 1, Color: [0.85, 0.7, 0.36]}, Bark: {Pattern: 'smooth', Low: [0.66, 0.58, 0.3], High: [0.8, 0.7, 0.4], Split: 0.5}},
+		sunflower: {Grow: 'stalks', Height: [1.6, 2.6], Simple: 'wheat', Trunk: {Bare: 0, Radius: 0.011, Lean: 0.05, Wander: 0.15, Stems: 1, Flare: 0, Stubs: 0, Leader: true}, Crown: {Profile: [[0, 1], [1, 1]], Width: 0.02, Lean: 0, Clumps: 0, Hollow: 0, Points: 0}, Growth: {Step: 0.05, Reach: 0, Kill: 0, Up: 0, Droop: 0.3, Pipe: 2, Cut: 0.3}, Leaves: {Kind: 'single', Size: 0.46, Each: 10, From: 0.1, Rise: [0.6, 0.6], Wide: 0.42, Color: [0.22, 0.36, 0.11], Shade: [0.08, 0.15, 0.04], Light: [0.4, 0.54, 0.2]}, Head: {Kind: 'disc', Size: 0.34, Share: 1, Color: [0.96, 0.74, 0.08]}, Bark: {Pattern: 'smooth', Low: [0.24, 0.32, 0.12], High: [0.3, 0.38, 0.15], Split: 0.5}},
+		burdock: {Grow: 'stalks', Height: [1.2, 2], Simple: 'fern', Trunk: {Bare: 0, Radius: 0.011, Lean: 0.15, Wander: 0.2, Stems: 2, Flare: 0, Stubs: 0, Leader: true}, Crown: {Profile: [[0, 1], [1, 1]], Width: 0.08, Lean: 0, Clumps: 0, Hollow: 0, Points: 0}, Growth: {Step: 0.06, Reach: 0, Kill: 0, Up: 0, Droop: 0.25, Pipe: 2, Cut: 0.3}, Leaves: {Kind: 'single', Size: 0.6, Each: 4, From: 0.15, Base: 7, Rise: [0.9, 0.1], Stipe: 0.3, Wide: 0.36, Color: [0.16, 0.3, 0.09], Shade: [0.06, 0.12, 0.03], Light: [0.32, 0.46, 0.16]}, Head: {Kind: 'burrs', Size: 0.32, Wide: 1, Share: 1, Color: [0.62, 0.26, 0.56]}, Bark: {Pattern: 'smooth', Low: [0.32, 0.22, 0.16], High: [0.34, 0.4, 0.18], Split: 0.4}}
 	},
 
 	/* What a worker carries of it besides its methods: its presets. */
@@ -85,6 +116,23 @@ Elemenx.Service('SceneFlora', {
 		return made;
 	},
 
+	/*
+	 * How a plant of a species looks from far (a proxy of it: the woods of ScenePlanet): {Kind (crown, palm), Height
+	 * (metres, its mean), Bare (its trunk under its crown, of its height), Width (its widest radius, of its height),
+	 * Profile (its crown), Color (its leaves), Bark (its trunk)}; null for no species, or one of stalks (no tree).
+	 */
+	Far: function (name) {
+		var p;
+
+		if (typeof name !== 'string' || !this.Presets[name]) return null;
+
+		p = this.Preset(name);
+
+		if (p.Grow === 'stalks') return null;
+
+		return {Kind: p.Grow === 'palm' ? 'palm' : 'crown', Height: (p.Height[0] + p.Height[1]) / 2, Bare: p.Grow === 'palm' ? 1 : p.Trunk.Bare, Width: p.Crown.Width, Profile: p.Crown.Profile, Color: p.Leaves.Color, Bark: p.Bark.High};
+	},
+
 	Work: function () {
 		return this.$Service('Workers').Pool('SceneFlora', {Math: true, Noise: true, Random: true, SceneFlora: true});
 	},
@@ -103,6 +151,7 @@ Elemenx.Service('SceneFlora', {
 
 		if (p.Grow === 'palm') grown = this.Palm(p, height, random, nodes);
 		else if (p.Grow === 'whorls') grown = this.Whorls(p, height, random, nodes);
+		else if (p.Grow === 'stalks') grown = this.Stalks(p, height, random, nodes);
 		else grown = this.Colonize(p, height, random, nodes);
 
 		return this.Mesh(p, height, random, nodes, grown);
@@ -384,6 +433,75 @@ Elemenx.Service('SceneFlora', {
 	},
 
 	/*
+	 * A clump of stalks (grasses, reeds, cereals, a sunflower, bamboo): Trunk.Stems stalks from within Crown.Width of its
+	 * foot, of 70 to 100% of its height, leaning out by Trunk.Lean and bending out more toward their tops by Growth.Droop;
+	 * Leaves.Base leaves from the ground round it (a fern's fronds, a burdock's leaves, a bulrush's blades), each on a stalk
+	 * of its own (Leaves.Stipe of its length). Its nodes keep how far along their stalk they are (Along: 0 to 1).
+	 */
+	Stalks: function (p, height, random, nodes) {
+		var noise = this.$Service('Noise').Make({Type: 'simplex', Seed: p.Name + ':' + random(), Fractal: 'fbm', Octaves: 2});
+		var step = p.Growth.Step * height;
+		var spread = p.Crown.Width * height;
+		var scale = height / ((p.Height[0] + p.Height[1]) / 2);
+		var stalks = [];
+		var basal = [];
+		var s;
+
+		function chain (foot, turn, tall, lean, bend, steps) {
+			var list = [];
+			var at = foot.slice();
+			var parent = -1;
+			var k;
+
+			for (k = 0; k <= steps; k++) {
+				var along = k / steps;
+				var out = lean + bend * along * along;
+				var wx = (noise.At(at[1] * 0.7, foot[0] * 5, 1.7) - 0.5) * p.Trunk.Wander;
+				var wz = (noise.At(at[1] * 0.7, foot[2] * 5 + 5.1, 9.3) - 0.5) * p.Trunk.Wander;
+				var d = [Math.cos(turn) * out + wx, 1, Math.sin(turn) * out + wz];
+				var l = Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+
+				parent = this.Node(nodes, at.slice(), parent, {Trunk: true, Along: along});
+
+				list.push(parent);
+
+				at = [at[0] + d[0] / l * tall / steps, at[1] + d[1] / l * tall / steps, at[2] + d[2] / l * tall / steps];
+			}
+
+			return list;
+		}
+
+		for (s = 0; s < Math.max(0, Math.round(p.Trunk.Stems)); s++) {
+			var turn = random() * Math.PI * 2;
+			var far = s ? spread * Math.sqrt(random()) : spread * 0.1;
+			var tall = height * (s ? 0.7 + random() * 0.3 : 1);
+			var foot = [Math.cos(turn) * far, 0, Math.sin(turn) * far];
+
+			stalks.push({Chain: chain.call(this, foot, turn, tall, p.Trunk.Lean * (0.3 + random() * 0.7) * (0.4 + far / Math.max(1e-6, spread)), p.Growth.Droop, Math.max(2, Math.round(tall / step))), Turn: turn});
+		}
+
+		/* Its leaves from the ground: rising steep inside, lower outside, each its stalk then its blade. */
+		for (s = 0; s < Math.max(0, Math.round(p.Leaves.Base || 0)); s++) {
+			var a = s * 2.39996 + random() * 0.5;
+			var rise = p.Leaves.Rise || [1, 0.3];
+			var slope = rise[0] + (rise[1] - rise[0]) * (s / Math.max(1, p.Leaves.Base - 1)) + (random() - 0.5) * 0.3;
+			var length = p.Leaves.Size * scale * (0.75 + random() * 0.45);
+			var stipe = length * (p.Leaves.Stipe === undefined ? 0.15 : p.Leaves.Stipe);
+			var elevation = Math.atan(slope);
+			var start = [Math.cos(a) * spread * 0.3 * random(), 0, Math.sin(a) * spread * 0.3 * random()];
+			var list = [this.Node(nodes, start, -1, {Trunk: true, Along: 0})];
+
+			list.push(this.Node(nodes, [start[0] + Math.cos(a) * Math.cos(elevation) * stipe, start[1] + Math.sin(elevation) * stipe, start[2] + Math.sin(a) * Math.cos(elevation) * stipe], list[0], {Trunk: true, Along: 1}));
+
+			basal.push({Chain: list, Turn: a, Slope: slope, Length: length - stipe});
+		}
+
+		return {Tops: stalks.map(function (one) {
+			return one.Chain[one.Chain.length - 1];
+		}), Stalks: stalks, Basal: basal, Width: spread, Foot: 0, Scale: scale};
+	},
+
+	/*
 	 * Its nodes as meshes: smoothed, as thick as what they carry (Pipe), the trunk flared at its foot; each branch a tube
 	 * (its main child going on, the others branches of their own) of as many sides as its thickness needs, its bark
 	 * along it (u round it, v up the plant: the height of the plant where it starts and its length after); the twigs
@@ -439,6 +557,10 @@ Elemenx.Service('SceneFlora', {
 			if (p.Grow === 'palm')
 				node.R = base * (1 - node.P[1] / height * 0.25);
 
+			/* A stalk: thinner toward its top. */
+			if (p.Grow === 'stalks')
+				node.R = base * (1 - 0.6 * (node.Along || 0));
+
 			/* Flared at the foot. */
 			if (node.Trunk && node.P[1] < height * 0.08)
 				node.R *= 1 + p.Trunk.Flare * Math.pow(1 - node.P[1] / (height * 0.08), 2);
@@ -465,7 +587,8 @@ Elemenx.Service('SceneFlora', {
 
 		this.Tubes(nodes, bark, height, thinnest * p.Growth.Cut, p.Grow === 'palm', 9);
 
-		if (p.Leaves.Kind === 'frond') this.Fronds(p, nodes[grown.Tops[0]], grown, height, random, leaves, 10);
+		if (p.Grow === 'stalks') this.Blades(p, nodes, grown, random, leaves, 1, 5);
+		else if (p.Leaves.Kind === 'frond') this.Fronds(p, nodes[grown.Tops[0]], grown, height, random, leaves, 10);
 		else this.Cards(p, nodes, thinnest * p.Growth.Cut * 1.6, centre, random, leaves, 1, 1);
 
 		/*
@@ -479,7 +602,8 @@ Elemenx.Service('SceneFlora', {
 
 			this.Tubes(nodes, simpler, height, thinnest * p.Growth.Cut * level[0], p.Grow === 'palm', level[1], true);
 
-			if (p.Leaves.Kind === 'frond') this.Fronds(p, nodes[grown.Tops[0]], grown, height, again, cards, index ? 3 : 5);
+			if (p.Grow === 'stalks') this.Blades(p, nodes, grown, again, cards, index ? 0.15 : 0.4, index ? 1 : 3);
+			else if (p.Leaves.Kind === 'frond') this.Fronds(p, nodes[grown.Tops[0]], grown, height, again, cards, index ? 3 : 5);
 			else this.Cards(p, nodes, thinnest * p.Growth.Cut * 1.6, centre, again, cards, level[2], level[3]);
 
 			return {Bark: this.Typed(simpler), Leaves: this.Typed(cards)};
@@ -623,6 +747,9 @@ Elemenx.Service('SceneFlora', {
 	/* keep: the share of its cards made (larger by scale, as much of the crown covered). */
 	Cards: function (p, nodes, twig, centre, random, output, keep, scale) {
 		var size = p.Leaves.Size;
+		/* Hanging leaves (a weeping willow): their cards turned down, longer, curtains of twigs. */
+		var hang = Math.max(0, Math.min(1, p.Leaves.Hang || 0));
+		var stretch = 1 + hang * 1.6;
 		/* How far its crown goes from its middle: the leaves this far out are in the light. */
 		var reach = nodes.reduce(function (most, node) {
 			return node.Kids.length ? most : Math.max(most, Math.sqrt((node.P[0] - centre[0]) * (node.P[0] - centre[0]) + (node.P[1] - centre[1]) * (node.P[1] - centre[1]) * 0.49 + (node.P[2] - centre[2]) * (node.P[2] - centre[2])));
@@ -650,6 +777,13 @@ Elemenx.Service('SceneFlora', {
 				var way = [d[0] + (random() - 0.5) * 0.8, d[1] + (random() - 0.5) * 0.8 - (p.Leaves.Kind === 'needles' ? 0 : 0.25), d[2] + (random() - 0.5) * 0.8];
 				var wl = Math.sqrt(way[0] * way[0] + way[1] * way[1] + way[2] * way[2]) || 1;
 				var up = [way[0] / wl, way[1] / wl, way[2] / wl];
+
+				if (hang > 0) {
+					up = [up[0] * (1 - hang) + (random() - 0.5) * 0.15 * hang, up[1] * (1 - hang) - hang, up[2] * (1 - hang) + (random() - 0.5) * 0.15 * hang];
+					wl = Math.sqrt(up[0] * up[0] + up[1] * up[1] + up[2] * up[2]) || 1;
+					up = [up[0] / wl, up[1] / wl, up[2] / wl];
+				}
+
 				var spin = random() * Math.PI * 2;
 				var helper = Math.abs(up[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
 				var across = [up[1] * helper[2] - up[2] * helper[1], up[2] * helper[0] - up[0] * helper[2], up[0] * helper[1] - up[1] * helper[0]];
@@ -687,7 +821,7 @@ Elemenx.Service('SceneFlora', {
 
 				corners.forEach(function (corner) {
 					var x = corner[0] * s;
-					var y = (corner[1] - 0.15) * s;
+					var y = (corner[1] - 0.15) * s * stretch;
 
 					output.Positions.push(node.P[0] + face[0] * x + up[0] * y, node.P[1] + face[1] * x + up[1] * y, node.P[2] + face[2] * x + up[2] * y);
 					output.Normals.push(n[0], n[1], n[2]);
@@ -748,6 +882,304 @@ Elemenx.Service('SceneFlora', {
 				var dl = Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
 
 				d = [d[0] / dl, d[1] / dl, d[2] / dl];
+			}
+		}
+	},
+
+	/*
+	 * The leaves of a clump of stalks (Stalks): its leaves from the ground on their own stalks, Leaves.Each along each stalk
+	 * from Leaves.From of it up (alternating round it, a sunflower's by the golden angle), each a strap of the atlas (a
+	 * blade of grass, a big single leaf, a fern's frond) drooping by Growth.Droop; and on the tops of Head.Share of its
+	 * stalks their heads: two cards crossed (an ear, a plume, a cob, burrs), a sunflower's disc one facing out. keep: the
+	 * share of its leaves made (wider, as much covered), segments along each.
+	 */
+	Blades: function (p, nodes, grown, random, out, keep, segments) {
+		var self = this;
+		var kind = p.Leaves.Kind;
+		var head = p.Head && p.Head.Kind && p.Head.Kind !== 'none' ? p.Head : null;
+		/* Its leaves on the tiles of its atlas: the last of them its head's when it has one. */
+		var tiles = head ? 3 : 4;
+		var wide = p.Leaves.Wide || (kind === 'blade' ? 0.07 : kind === 'frond' ? 0.3 : 0.38);
+		var widen = Math.min(1.8, 1 / Math.sqrt(keep));
+		var droop = p.Growth.Droop;
+
+		function kept () {
+			return keep >= 1 || random() < keep;
+		}
+
+		function tile (deep) {
+			return Math.floor(random() * tiles) + (deep ? 4 : 0);
+		}
+
+		grown.Basal.forEach(function (leaf, index) {
+			if (!kept()) return;
+
+			var from = nodes[leaf.Chain[leaf.Chain.length - 1]].P;
+			var elevation = Math.atan(leaf.Slope);
+			var d = [Math.cos(leaf.Turn) * Math.cos(elevation), Math.sin(elevation), Math.sin(leaf.Turn) * Math.cos(elevation)];
+
+			/* The inner ones, steeper, in the shade of the outer. */
+			self.Strap(out, from, d, leaf.Length, leaf.Length * wide * widen, segments, droop, tile(index < grown.Basal.length * 0.3 && random() < 0.6), kind === 'frond');
+		});
+
+		grown.Stalks.forEach(function (stalk) {
+			var chain = stalk.Chain;
+			var each = Math.max(0, Math.round(p.Leaves.Each || 0));
+			var low = p.Leaves.From === undefined ? 0.1 : p.Leaves.From;
+			var rise = p.Leaves.Rise || [1, 0.3];
+			var slope = (rise[0] + rise[1]) / 2;
+			var k;
+
+			for (k = 0; k < each; k++) {
+				if (!kept()) continue;
+
+				var along = low + (0.85 - low) * (k + 0.3 + random() * 0.4) / each;
+				var at = nodes[chain[Math.min(chain.length - 1, Math.round(along * (chain.length - 1)))]].P;
+				var a = stalk.Turn + (kind === 'single' ? k * 2.39996 : k * Math.PI) + (random() - 0.5) * 0.6;
+				var elevation = Math.atan(slope + (random() - 0.5) * 0.4);
+				var length = p.Leaves.Size * grown.Scale * (1 - along * 0.45) * (0.8 + random() * 0.4);
+
+				self.Strap(out, at, [Math.cos(a) * Math.cos(elevation), Math.sin(elevation), Math.sin(a) * Math.cos(elevation)], length, length * wide * widen, segments, droop, tile(along < 0.3), kind === 'frond');
+			}
+
+			if (!head || random() > (head.Share === undefined ? 1 : head.Share)) return;
+
+			var top = nodes[chain[chain.length - 1]].P;
+			var below = nodes[chain[Math.max(0, chain.length - 2)]].P;
+			var up = [top[0] - below[0], top[1] - below[1], top[2] - below[2]];
+			var ul = Math.sqrt(up[0] * up[0] + up[1] * up[1] + up[2] * up[2]) || 1;
+			var size = (head.Size || 0.1) * grown.Scale;
+
+			up = [up[0] / ul, up[1] / ul, up[2] / ul];
+
+			if (head.Kind === 'disc') {
+				/* A sunflower: its face out to the side and a little down, as wide as it is. */
+				var face = [Math.cos(stalk.Turn) * 0.85, -0.35, Math.sin(stalk.Turn) * 0.85];
+
+				self.Head(out, [top[0] + face[0] * size * 0.1, top[1], top[2] + face[2] * size * 0.1], [0, 1, 0], face, size, 1, false);
+			}
+			else {
+				self.Head(out, top, up, null, size, head.Wide || 0.4, true);
+			}
+		});
+	},
+
+	/*
+	 * A strap of a leaf from at along d: segments of it, each drooping (droop), as wide as half each side (a frond's
+	 * narrowing at both ends, a frond folded down its rib), the tile of the atlas along it (its foot at at).
+	 */
+	Strap: function (out, at, d, length, half, segments, droop, tile, frond) {
+		var side = [-d[2], 0, d[0]];
+		var sl = Math.sqrt(side[0] * side[0] + side[2] * side[2]);
+		var start = out.Positions.length / 3;
+		var u0 = tile % 2 * 0.5;
+		var v0 = Math.floor(tile / 2) * 0.25;
+		var k;
+
+		side = sl > 1e-6 ? [side[0] / sl, 0, side[2] / sl] : [1, 0, 0];
+		d = d.slice();
+		at = at.slice();
+
+		for (k = 0; k <= segments; k++) {
+			var t = k / segments;
+			var w = frond ? half * Math.sin(Math.PI * Math.min(1, t * 1.15 + 0.08)) : half * (1 - 0.3 * t);
+			var fold = frond ? w * 0.35 : 0;
+			var n = [d[1] * side[2] - d[2] * side[1], d[2] * side[0] - d[0] * side[2], d[0] * side[1] - d[1] * side[0]];
+			var dl;
+
+			if (n[1] < 0)
+				n = [-n[0], -n[1], -n[2]];
+
+			[-1, 0, 1].forEach(function (off) {
+				out.Positions.push(at[0] + side[0] * w * off, at[1] - fold * Math.abs(off), at[2] + side[2] * w * off);
+				out.Normals.push(n[0] * 0.7 + side[0] * off * 0.3, n[1] * 0.7 + 0.3, n[2] * 0.7 + side[2] * off * 0.3);
+				out.UVs.push(u0 + (off + 1) * 0.25, v0 + t * 0.25);
+			});
+
+			if (k > 0) {
+				var a0 = start + (k - 1) * 3;
+				var b0 = start + k * 3;
+
+				out.Indices.push(a0, b0, a0 + 1, a0 + 1, b0, b0 + 1, a0 + 1, b0 + 1, a0 + 2, a0 + 2, b0 + 1, b0 + 2);
+			}
+
+			at = [at[0] + d[0] * length / segments, at[1] + d[1] * length / segments, at[2] + d[2] * length / segments];
+			/* Bending down the more the longer it goes. */
+			d = [d[0], d[1] - droop * 2.2 / segments, d[2]];
+			dl = Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) || 1;
+			d = [d[0] / dl, d[1] / dl, d[2] / dl];
+		}
+	},
+
+	/*
+	 * A head of a stalk on the last tile of its atlas: up from at along up, size tall, wide as wide of it; crossed: two
+	 * cards square to each other; else one facing face, centred on at.
+	 */
+	Head: function (out, at, up, face, size, wide, crossed) {
+		var turns = crossed ? [[1, 0, 0], [0, 0, 1]] : [null];
+
+		turns.forEach(function (turn) {
+			var across;
+			var normal;
+			var start = out.Positions.length / 3;
+			var base;
+
+			if (turn) {
+				across = [up[1] * turn[2] - up[2] * turn[1], up[2] * turn[0] - up[0] * turn[2], up[0] * turn[1] - up[1] * turn[0]];
+				normal = turn;
+				base = at;
+			}
+			else {
+				across = [-face[2], 0, face[0]];
+				normal = face;
+				/* Its middle on at: up the card from half below. */
+				base = [at[0] - up[0] * size * 0.5, at[1] - up[1] * size * 0.5, at[2] - up[2] * size * 0.5];
+			}
+
+			var al = Math.sqrt(across[0] * across[0] + across[1] * across[1] + across[2] * across[2]) || 1;
+			var lit = [normal[0] * 0.5, normal[1] * 0.5 + 0.5, normal[2] * 0.5];
+			var ll = Math.sqrt(lit[0] * lit[0] + lit[1] * lit[1] + lit[2] * lit[2]) || 1;
+
+			across = [across[0] / al * size * wide * 0.5, across[1] / al * size * wide * 0.5, across[2] / al * size * wide * 0.5];
+
+			[[-1, 0], [1, 0], [1, 1], [-1, 1]].forEach(function (corner) {
+				out.Positions.push(base[0] + across[0] * corner[0] + up[0] * size * corner[1], base[1] + across[1] * corner[0] + up[1] * size * corner[1], base[2] + across[2] * corner[0] + up[2] * size * corner[1]);
+				out.Normals.push(lit[0] / ll, lit[1] / ll, lit[2] / ll);
+				out.UVs.push(0.5 + (corner[0] + 1) * 0.25, 0.25 + corner[1] * 0.25);
+			});
+
+			out.Indices.push(start, start + 1, start + 2, start, start + 2, start + 3);
+		});
+	},
+
+	/*
+	 * The head of its stalks in a tile of its atlas (its foot at the foot of the tile, where its stalk ends): an ear of
+	 * grains in two rows with their awns, a plume of fine drooping hairs, a cob (a bulrush) with its spike, a disc of seeds
+	 * in spirals with its petals round it, burrs (balls of hooks, purple on their tops); its colour Head.Color.
+	 */
+	HeadPicture: function (p, data, size, ox, oy, tile, random) {
+		var kind = p.Head.Kind;
+		var color = p.Head.Color || [0.8, 0.7, 0.4];
+		var balls = [];
+		var lines = [];
+		var x;
+		var y;
+		var i;
+
+		function mix (a, b, k) {
+			return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
+		}
+
+		function far (px, py, line) {
+			var abx = line.B[0] - line.A[0];
+			var aby = line.B[1] - line.A[1];
+			var k = Math.max(0, Math.min(1, ((px - line.A[0]) * abx + (py - line.A[1]) * aby) / (abx * abx + aby * aby || 1)));
+			var qx = line.A[0] + abx * k - px;
+			var qy = line.A[1] + aby * k - py;
+
+			return Math.sqrt(qx * qx + qy * qy);
+		}
+
+		if (kind === 'ear') {
+			for (i = 0; i < 18; i++) {
+				var gy = 0.1 + i / 18 * 0.78;
+				var side = i % 2 ? 1 : -1;
+				var gx = 0.5 + side * 0.13 * (1 - gy * 0.35);
+
+				balls.push({X: gx, Y: gy, R: 0.11 * (1 - gy * 0.3), Tone: random()});
+				lines.push({A: [gx, gy], B: [gx + side * 0.08, Math.min(1, gy + 0.3)], Width: 0.006, Tone: random()});
+			}
+
+			lines.push({A: [0.5, 0], B: [0.5, 0.9], Width: 0.02, Tone: 0.5});
+		}
+		else if (kind === 'panicle') {
+			lines.push({A: [0.5, 0], B: [0.52, 1], Width: 0.012, Tone: 0.4});
+
+			for (i = 0; i < 110; i++) {
+				var py = 0.1 + random() * 0.88;
+				var turn = (random() < 0.5 ? -1 : 1) * (0.25 + random() * 0.9);
+				var length = (0.12 + random() * 0.3) * (1.15 - py * 0.6);
+
+				lines.push({A: [0.5 + (py - 0.1) * 0.02, py], B: [0.5 + Math.sin(turn) * length, py - Math.cos(turn) * length * 0.35 + length * 0.15], Width: 0.005 + random() * 0.004, Tone: random()});
+			}
+		}
+		else if (kind === 'burrs') {
+			for (i = 0; i < 7; i++)
+				balls.push({X: 0.22 + random() * 0.56, Y: 0.25 + random() * 0.65, R: 0.08 + random() * 0.04, Tone: random(), Burr: true});
+
+			lines.push({A: [0.5, 0], B: [0.5, 0.6], Width: 0.025, Tone: 0.3});
+		}
+
+		for (y = 0; y < tile; y++) {
+			for (x = 0; x < tile; x++) {
+				var u = (x + 0.5) / tile;
+				var v = (y + 0.5) / tile;
+				var cover = 0;
+				var paint = null;
+				var o = ((oy + y) * size + ox + x) * 4;
+
+				if (kind === 'cob') {
+					/* Its cob from 0.08 to 0.7, rounded at its ends; its spike above it. */
+					var cy = Math.max(0.16, Math.min(0.62, v));
+					var dx = (u - 0.5) / 0.36;
+					var dy = (v - cy) / 0.08;
+
+					if (dx * dx + dy * dy <= 1) {
+						cover = 1;
+						paint = mix(color, [0, 0, 0], 0.35 * (Math.abs(dx) * Math.abs(dx)) + random() * 0.12);
+					}
+					else if (v > 0.6 && v < 0.98 && Math.abs(u - 0.5) < 0.03 * (1 - (v - 0.6) * 1.5)) {
+						cover = 1;
+						paint = mix(color, [0.75, 0.65, 0.45], 0.6);
+					}
+				}
+				else if (kind === 'disc') {
+					var rx = u - 0.5;
+					var ry = v - 0.5;
+					var r = Math.sqrt(rx * rx + ry * ry);
+					var angle = Math.atan2(ry, rx);
+
+					if (r < 0.27) {
+						/* Its seeds in the spirals of the golden angle. */
+						var spiral = Math.sin(r * 140 + angle * 21) * Math.sin(r * 140 - angle * 34);
+
+						cover = 1;
+						paint = mix([0.28, 0.18, 0.08], [0.12, 0.07, 0.03], 0.5 + spiral * 0.5 - r * 1.2);
+					}
+					else if (r < 0.3 + 0.19 * Math.pow(Math.abs(Math.cos(angle * 11)), 0.6)) {
+						cover = 1;
+						paint = mix(color, [0, 0, 0], (r - 0.27) * 0.6 + (Math.abs(Math.sin(angle * 11)) * 0.12));
+					}
+				}
+
+				lines.forEach(function (line) {
+					if (far(u, v, line) < line.Width) {
+						cover = 1;
+						paint = mix(color, kind === 'panicle' ? [1, 0.95, 0.9] : [0.5, 0.45, 0.25], line.Tone * 0.35);
+					}
+				});
+
+				balls.forEach(function (ball) {
+					var bx = u - ball.X;
+					var by = v - ball.Y;
+					var d = Math.sqrt(bx * bx + by * by);
+					/* Burrs: their hooks a ring of spikes. */
+					var edge = ball.Burr ? ball.R * (1 + 0.22 * Math.pow(Math.abs(Math.sin(Math.atan2(by, bx) * 9)), 3)) : ball.R;
+					if (d > edge) return;
+
+					var lit = 0.65 + 0.35 * (1 - d / ball.R) + ball.Tone * 0.1;
+
+					cover = 1;
+					paint = ball.Burr ? (by > ball.R * 0.25 ? mix([0, 0, 0], color, lit) : mix([0, 0, 0], [0.36, 0.42, 0.2], lit)) : mix([0, 0, 0], color, Math.min(1.1, lit));
+				});
+
+				if (paint) {
+					data[o] = Math.round(Math.max(0, Math.min(1, paint[0])) * 255);
+					data[o + 1] = Math.round(Math.max(0, Math.min(1, paint[1])) * 255);
+					data[o + 2] = Math.round(Math.max(0, Math.min(1, paint[2])) * 255);
+				}
+
+				data[o + 3] = Math.round(cover * 255);
 			}
 		}
 	},
@@ -843,9 +1275,40 @@ Elemenx.Service('SceneFlora', {
 					bump = 1 - Math.pow(ridge, 0.6);
 					shade = 0.7 + bump * 0.45 + (n - 0.5) * 0.2;
 				}
+				else if (pattern === 'fibrous') {
+					/* A sequoia: soft fibres up the trunk in long strips, deep wide furrows between broad ribs. */
+					var fibre = Math.abs(fine.At(cx * 16, t * 7, cz * 16) - 0.5) * 2;
+					var rib = Math.abs(fine.At(cx * 3.5, t * 2.5, cz * 3.5) - 0.5) * 2;
+
+					bump = (1 - Math.pow(rib, 0.5)) * 0.6 + (1 - fibre) * 0.4;
+					shade = 0.6 + bump * 0.55 + (n - 0.5) * 0.15;
+				}
+				else if (pattern === 'bands') {
+					/* A cherry: smooth, shining, its lenticels in pale dashes round it, thin bands of it peeling. */
+					var lenticels = smooth(0.64, 0.72, fine.At(cx * 10, t * 520, cz * 10)) * smooth(0.3, 0.5, fine.At(cx * 3, t * 40, cz * 3));
+					var peel = smooth(0.62, 0.7, fine.At(cx * 1.5, t * 90, cz * 1.5));
+
+					color = color.map(function (part) {
+						return part + (0.58 - part) * lenticels * 0.85;
+					});
+					bump = 0.5 + (n - 0.5) * 0.2 - lenticels * 0.15 + peel * 0.2;
+					shade = 0.95 + (n - 0.5) * 0.12 - peel * 0.12;
+				}
+				else if (pattern === 'diamonds') {
+					/* An aspen, a poplar: pale and smooth, dark diamonds where twigs fell, dark and fissured at its foot. */
+					var scar = smooth(0.7, 0.76, fine.At(cx * 1.4, t * 20, cz * 1.4)) * smooth(0.3, 0.5, fine.At(cx * 4, t * 9, cz * 4));
+					var base = 1 - smooth(0.04, 0.16, t + (n - 0.5) * 0.06);
+					var fissure = 1 - smooth(0.03, 0.1, cells.At(cx * 2, t * 26, cz * 2));
+
+					color = [p.Bark.High[0], p.Bark.High[1], p.Bark.High[2]].map(function (part, index) {
+						return part + (p.Bark.Low[index] - part) * Math.max(scar * 0.85, base * (0.5 + fissure * 0.45));
+					});
+					bump = 0.5 + (n - 0.5) * 0.25 - scar * 0.25 + base * (1 - fissure) * 0.4;
+					shade = 1 + (n - 0.5) * 0.14;
+				}
 				else if (pattern === 'rings') {
 					/* The rings of the scars of old leaves. */
-					var ring = Math.pow(Math.abs(Math.sin(t * 140 * Math.PI + (n - 0.5) * 2)), 4);
+					var ring = Math.pow(Math.abs(Math.sin(t * (p.Bark.Rings || 140) * Math.PI + (n - 0.5) * 2)), 4);
 
 					bump = 1 - ring * 0.7 + (n - 0.5) * 0.3;
 					shade = 0.8 + bump * 0.25;
@@ -942,7 +1405,14 @@ Elemenx.Service('SceneFlora', {
 			 */
 			var twigs = [stem];
 
-			if (kind !== 'frond') {
+			/* The last tile the head of its stalks (an ear, a plume, a cob, a disc, burrs). */
+			if (t === 3 && p.Head && p.Head.Kind && p.Head.Kind !== 'none') {
+				this.HeadPicture(p, data, size, ox, oy, tile, random);
+
+				continue;
+			}
+
+			if (kind !== 'frond' && kind !== 'blade' && kind !== 'single') {
 				for (k = 0; k < 4; k++) {
 					var on = 0.18 + k * 0.17 + random() * 0.05;
 					var from = [stem.A[0] + (stem.B[0] - stem.A[0]) * on, stem.A[1] + (stem.B[1] - stem.A[1]) * on];
@@ -984,25 +1454,95 @@ Elemenx.Service('SceneFlora', {
 				stem = {A: [0.5, 0], B: [0.5, 1]};
 				twigs = [stem];
 			}
-			else {
+			else if (kind === 'blade' || kind === 'single') {
+				/*
+				 * One leaf the whole tile (a strap of Strap lies along it): a blade of grass, narrow, its tip curling a little;
+				 * a single big leaf, wide (a sunflower's, a burdock's), its foot on a short stalk.
+				 */
+				var bend = (random() - 0.5) * 0.12;
+
+				parts.push({Kind: 'leaf', A: [0.5, kind === 'single' ? 0.08 : 0], B: [0.5 + bend, 0.99], Width: kind === 'single' ? 0.46 : 0.42, Tone: random()});
+
+				stem = kind === 'single' ? {A: [0.5, 0], B: [0.5, 0.1]} : {A: [2, 2], B: [2, 2]};
+				twigs = [stem];
+			}
+			else if (kind === 'compound') {
+				/* Compound leaves (an acacia, an ash): small leaflets by pairs each side of each twig, one at its tip. */
 				twigs.forEach(function (twig) {
 					var dx = twig.B[0] - twig.A[0];
 					var dy = twig.B[1] - twig.A[1];
 					var dl = Math.sqrt(dx * dx + dy * dy) || 1;
-					var count = Math.max(3, Math.round(dl / 0.055));
+					var count = Math.max(3, Math.round(dl / 0.04));
 					var n;
 
 					for (n = 1; n <= count; n++) {
 						var along = n / count;
 						var sx = twig.A[0] + dx * along;
 						var sy = twig.A[1] + dy * along;
-						var a = Math.atan2(dx / dl, dy / dl) + (n === count ? 0 : (n % 2 ? 1 : -1) * (0.6 + random() * 0.45));
-						var leaf = 0.12 + random() * 0.07;
+						var way = Math.atan2(dx / dl, dy / dl);
+						var leaflet = 0.06 + random() * 0.025;
 
-						parts.push({Kind: 'leaf', A: [sx, sy], B: [sx + Math.sin(a) * leaf, sy + Math.cos(a) * leaf], Width: leaf * 0.24, Tone: random()});
+						[-1, 1].forEach(function (sign) {
+							var a = n === count ? way : way + sign * (1.05 + random() * 0.3);
+
+							parts.push({Kind: 'leaf', A: [sx, sy], B: [sx + Math.sin(a) * leaflet, sy + Math.cos(a) * leaflet], Width: leaflet * 0.3, Tone: random()});
+						});
 					}
 				});
 			}
+			else {
+				/* Narrow: long thin leaves, closer together (a willow, a peach). */
+				var narrow = Math.max(0, Math.min(1, p.Leaves.Narrow || 0));
+
+				twigs.forEach(function (twig) {
+					var dx = twig.B[0] - twig.A[0];
+					var dy = twig.B[1] - twig.A[1];
+					var dl = Math.sqrt(dx * dx + dy * dy) || 1;
+					var count = Math.max(3, Math.round(dl / (0.055 * (1 - narrow * 0.4))));
+					var n;
+
+					for (n = 1; n <= count; n++) {
+						var along = n / count;
+						var sx = twig.A[0] + dx * along;
+						var sy = twig.A[1] + dy * along;
+						var a = Math.atan2(dx / dl, dy / dl) + (n === count ? 0 : (n % 2 ? 1 : -1) * (0.6 - narrow * 0.25 + random() * 0.45));
+						var leaf = (0.12 + random() * 0.07) * (1 + narrow * 0.45);
+
+						parts.push({Kind: 'leaf', A: [sx, sy], B: [sx + Math.sin(a) * leaf, sy + Math.cos(a) * leaf], Width: leaf * 0.24 * (1 - narrow * 0.6), Tone: random()});
+					}
+				});
+			}
+
+			/* Its flowers and its fruits on its twigs, over its leaves: as many as Bloom and Fruit. */
+			var over = [];
+
+			[['bloom', p.Leaves.Bloom, 22, p.Leaves.BloomSize || 0.032], ['fruit', p.Leaves.Fruit, 10, p.Leaves.FruitSize || 0.03]].forEach(function (sort) {
+				/* Small flowers (a lilac): more of them, as much covered, in clusters (its panicles). */
+				var small = sort[0] === 'bloom' && sort[3] < 0.025;
+				var many = Math.round((sort[1] || 0) * sort[2] * (small ? Math.pow(0.032 / sort[3], 2) : 1));
+				var cluster = null;
+				var n;
+
+				for (n = 0; n < many; n++) {
+					var twig = twigs[Math.floor(random() * twigs.length)];
+					var along = 0.3 + random() * 0.7;
+					var at = [twig.A[0] + (twig.B[0] - twig.A[0]) * along + (random() - 0.5) * 0.08, twig.A[1] + (twig.B[1] - twig.A[1]) * along + (random() - 0.5) * 0.08];
+
+					if (small) {
+						if (n % 14 === 0)
+							cluster = [Math.max(0.15, Math.min(0.85, at[0])), Math.max(0.15, Math.min(0.9, at[1]))];
+
+						/* A cone of a panicle: wide at its foot, narrow up its tip. */
+						var up = random();
+
+						at = [cluster[0] + (random() - 0.5) * 0.16 * (1 - up * 0.7), cluster[1] + up * 0.16 - 0.04];
+					}
+
+					var radius = sort[3] * (0.8 + random() * 0.4);
+
+					over.push({Kind: sort[0], A: at, Width: radius, Tone: random(), Turn: random() * Math.PI * 2, Box: [at[0] - radius, at[1] - radius, at[0] + radius, at[1] + radius]});
+				}
+			});
 
 			/* Each part a box round it: a pixel tests only those near it. */
 			parts.forEach(function (part) {
@@ -1050,6 +1590,34 @@ Elemenx.Service('SceneFlora', {
 						cover = 1;
 						color = mix(p.Leaves.Color, [0.55, 0.5, 0.3], 0.4);
 					}
+
+					/* Its flowers (five petals, a yellow eye) and fruits (round, lit from above) over all. */
+					over.forEach(function (part) {
+						if (u < part.Box[0] || u > part.Box[2] || v < part.Box[1] || v > part.Box[3]) return;
+
+						var fx = u - part.A[0];
+						var fy = v - part.A[1];
+						var far = Math.sqrt(fx * fx + fy * fy);
+						var edge = part.Kind === 'bloom' ? part.Width * (0.62 + 0.38 * Math.abs(Math.cos((Math.atan2(fy, fx) + part.Turn) * 2.5))) : part.Width;
+						var inside = Math.max(0, Math.min(1, (edge - far) * tile * 0.7 + 0.5));
+						var lit;
+
+						if (inside <= 0) return;
+
+						if (part.Kind === 'bloom') {
+							lit = 0.85 + part.Tone * 0.15 - far / part.Width * 0.15;
+							color = far < part.Width * 0.22 ? [0.95, 0.8, 0.3] : mix([0, 0, 0], p.Leaves.BloomColor || [0.98, 0.96, 0.94], lit);
+						}
+						else {
+							/* Its highlight up and to the left, darker toward its rim. */
+							var shine = Math.max(0, 1 - Math.sqrt((fx + part.Width * 0.35) * (fx + part.Width * 0.35) + (fy - part.Width * 0.35) * (fy - part.Width * 0.35)) / (part.Width * 0.45));
+
+							lit = 0.55 + 0.45 * (1 - far / part.Width);
+							color = mix(mix([0, 0, 0], p.Leaves.FruitColor || [0.7, 0.1, 0.08], lit), [1, 0.95, 0.85], shine * shine * 0.6);
+						}
+
+						cover = Math.max(cover, inside);
+					});
 
 					if (color) {
 						data[o] = Math.round(color[0] * 255);

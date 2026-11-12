@@ -1458,17 +1458,58 @@ Elemenx.Component('Scene', {
 
 			checkScene();
 
-			gpu.Planet = renderer.Program(shaders.Lit, shaders.Planet);
-			gpu.Bake = renderer.Program(graphics.Shaders.Quad, shaders.Bake);
-			gpu.Star = renderer.Program(shaders.Lit, shaders.Star);
-			gpu.Air = renderer.Program(shaders.Lit, shaders.Air);
-			gpu.Ring = renderer.Program(shaders.Lit, shaders.Ring);
-			gpu.Many = renderer.Program(shaders.Instanced, engine.Leveled(shaders.Solid));
-			gpu.Glow = renderer.Program(shaders.Billboard, shaders.Glow);
-			gpu.Line = renderer.Program(shaders.Line, shaders.Flat);
-			gpu.Far = renderer.Program(shaders.Far, shaders.Dot);
-			gpu.StarsTurned = renderer.Program(shaders.FarTurned, shaders.Dot);
-			gpu.Ground = renderer.Program(shaders.GroundVertex, shaders.Ground);
+			/*
+			 * Each program made the first time it is asked for: a scene in space does not wait for the card to make the programs
+			 * of a ground, a sea or a sky it has none of. Regression: all of them were made at once, and the Orbit demo waited
+			 * some 30 s more for programs it never drew (the card makes them one after another, slowly under load).
+			 */
+			function lazy (name, make) {
+				var made = null;
+
+				Object.defineProperty(gpu, name, {configurable: true, enumerable: true, get: function () {
+					if (!made)
+						made = make();
+
+					return made;
+				}, set: function (value) {
+					made = value;
+				}});
+			}
+
+			lazy('Planet', function () {
+				return renderer.Program(shaders.Lit, shaders.Planet);
+			});
+			lazy('Bake', function () {
+				return renderer.Program(graphics.Shaders.Quad, shaders.Bake);
+			});
+			lazy('Star', function () {
+				return renderer.Program(shaders.Lit, shaders.Star);
+			});
+			lazy('Air', function () {
+				return renderer.Program(shaders.Lit, shaders.Air);
+			});
+			lazy('Ring', function () {
+				return renderer.Program(shaders.Lit, shaders.Ring);
+			});
+			lazy('Many', function () {
+				return renderer.Program(shaders.Instanced, engine.Leveled(shaders.Solid));
+			});
+			lazy('Glow', function () {
+				return renderer.Program(shaders.Billboard, shaders.Glow);
+			});
+			lazy('Line', function () {
+				return renderer.Program(shaders.Line, shaders.Flat);
+			});
+			lazy('Far', function () {
+				return renderer.Program(shaders.Far, shaders.Dot);
+			});
+			lazy('StarsTurned', function () {
+				return renderer.Program(shaders.FarTurned, shaders.Dot);
+			});
+			lazy('Ground', function () {
+				return renderer.Program(shaders.GroundVertex, shaders.Ground);
+			});
+
 			/* The land of the materials of a ground (names), with the Blueprint of the ground (own) or none: each made once. */
 			gpu.LandPrograms = {};
 			gpu.LandOf = function (own, names) {
@@ -1482,22 +1523,56 @@ Elemenx.Component('Scene', {
 
 				return kept['Land:' + key];
 			};
-			gpu.ManyDepth = renderer.Program(shaders.Instanced, shaders.Depth);
-			gpu.Pbr = renderer.Program(shaders.Instanced, engine.Leveled(shaders.Pbr));
-			gpu.PbrSkinned = renderer.Program(shaders.Skinned, engine.Leveled(shaders.Pbr));
-			gpu.GlowMany = renderer.Program(shaders.Instanced, shaders.BodyGlow);
-			gpu.Outline = renderer.Program(shaders.Instanced, shaders.Flat);
-			gpu.OutlineSkinned = renderer.Program(shaders.Skinned, shaders.Flat);
-			gpu.GlowSkinned = renderer.Program(shaders.Skinned, shaders.BodyGlow);
-			gpu.SkinDepth = renderer.Program(shaders.Skinned, shaders.Depth);
+
+			lazy('ManyDepth', function () {
+				return renderer.Program(shaders.Instanced, shaders.Depth);
+			});
+			lazy('Pbr', function () {
+				return renderer.Program(shaders.Instanced, engine.Leveled(shaders.Pbr));
+			});
+			lazy('PbrSkinned', function () {
+				return renderer.Program(shaders.Skinned, engine.Leveled(shaders.Pbr));
+			});
+			lazy('GlowMany', function () {
+				return renderer.Program(shaders.Instanced, shaders.BodyGlow);
+			});
+			lazy('Outline', function () {
+				return renderer.Program(shaders.Instanced, shaders.Flat);
+			});
+			lazy('OutlineSkinned', function () {
+				return renderer.Program(shaders.Skinned, shaders.Flat);
+			});
+			lazy('GlowSkinned', function () {
+				return renderer.Program(shaders.Skinned, shaders.BodyGlow);
+			});
+			lazy('SkinDepth', function () {
+				return renderer.Program(shaders.Skinned, shaders.Depth);
+			});
+
 			gpu.White = null;
-			gpu.LandDepth = renderer.Program(shaders.LandVertex, shaders.Depth);
-			gpu.GroundDepth = renderer.Program(shaders.GroundVertex, shaders.Depth);
-			gpu.Things = renderer.Program(shaders.ThingsVertex, shaders.Things, true);
-			gpu.ThingsDepth = renderer.Program(shaders.ThingsVertex, shaders.Depth, true);
+
+			lazy('LandDepth', function () {
+				return renderer.Program(shaders.LandVertex, shaders.Depth);
+			});
+			lazy('GroundDepth', function () {
+				return renderer.Program(shaders.GroundVertex, shaders.Depth);
+			});
+			lazy('Things', function () {
+				return renderer.Program(shaders.ThingsVertex, shaders.Things, true);
+			});
+			lazy('ThingsDepth', function () {
+				return renderer.Program(shaders.ThingsVertex, shaders.Depth, true);
+			});
+
 			gpu.ShadowMap = null;
-			gpu.Sea = renderer.Program(shaders.SeaVertex, shaders.Sea);
-			gpu.Sky = renderer.Program(graphics.Shaders.Quad, shaders.Sky);
+
+			lazy('Sea', function () {
+				return renderer.Program(shaders.SeaVertex, shaders.Sea);
+			});
+			lazy('Sky', function () {
+				return renderer.Program(graphics.Shaders.Quad, shaders.Sky);
+			});
+
 			gpu.Sphere = renderer.Mesh(meshes.Sphere({Segments: 64, Rings: 40}));
 			gpu.Quad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
 			gpu.Shapes = {};
@@ -1682,7 +1757,8 @@ Elemenx.Component('Scene', {
 
 			if (made && made.Key === key) return made;
 
-			if (scene.BakedThisFrame >= 2) return made || null;
+			/* Its program not made by the card yet: baked a frame after it is (a bake waits for it: the page would stand). */
+			if (scene.BakedThisFrame >= 2 || scene.Looping && !programReady(gpu.Bake)) return made || null;
 
 			scene.BakedThisFrame++;
 
@@ -2077,6 +2153,16 @@ Elemenx.Component('Scene', {
 
 			/* Its program made the first time a planet has a weather (a scene with none never compiles it). */
 			gpu.Weather = gpu.Weather || renderer.Program(graphics.Shaders.Quad, shaders.Weather);
+
+			/*
+			 * Baked once the card made it, not before: a bake waits for its program, and the page stood 7 s in it (under load).
+			 * Asked again the next frame.
+			 */
+			if (scene.Looping && !programReady(gpu.Weather)) {
+				made.WeatherFrame = undefined;
+
+				return;
+			}
 
 			var values = {uClimate: made.Climate, uDays: scene.Time, uSunAt: sun, uRadiusKm: radiusOf(object), uWeatherSeed: Math.abs(Math.round(Number(object.Seed) || 0)) % 997, uCloudiness: Math.max(0, Math.min(1, Number(object.Look.Clouds) || 0))};
 			var swap;
@@ -2991,7 +3077,7 @@ Elemenx.Component('Scene', {
 					if (trait(object, 'Star')) {
 						model = placed(object, size);
 
-						renderer.Draw(gpu.Sphere, gpu.Star, uniforms({uModel: model, uNormalMatrix: math.NormalMatrix(model), uColor: paint(object.Color).slice(0, 3), uSeed: object.Seed, uCells: object.Star.Radius > 8 ? 3 : object.Star.Radius > 2 ? 6 : 9}));
+						drawReady(gpu.Sphere, gpu.Star, uniforms({uModel: model, uNormalMatrix: math.NormalMatrix(model), uColor: paint(object.Color).slice(0, 3), uSeed: object.Seed, uCells: object.Star.Radius > 8 ? 3 : object.Star.Radius > 2 ? 6 : 9}));
 
 						later.push(function () {
 							/* In real sizes its disc is small, its light is not: a halo of a size on the screen, as bright as it blinds. */
@@ -3000,11 +3086,11 @@ Elemenx.Component('Scene', {
 							var close = Math.max(size * 4.2, pixels(object.World, 110 * blind));
 
 							/* The wide veil first: the disc does not end at once at black space. */
-							renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: local(object.World), uSize: wide, uRight: right, uUp: up, uColor: paint(object.Color).slice(0, 3).map(function (part) {
+							drawReady(gpu.Quad, gpu.Glow, uniforms({uCenter: local(object.World), uSize: wide, uRight: right, uUp: up, uColor: paint(object.Color).slice(0, 3).map(function (part) {
 								return part * (0.3 + blind * 0.5);
 							}), uInner: 0.09, uStyle: 0}), {Blend: 'add', DepthWrite: false, Cull: 'none'});
 
-							renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: local(object.World), uSize: close, uRight: right, uUp: up, uColor: paint(object.Color).slice(0, 3).map(function (part) {
+							drawReady(gpu.Quad, gpu.Glow, uniforms({uCenter: local(object.World), uSize: close, uRight: right, uUp: up, uColor: paint(object.Color).slice(0, 3).map(function (part) {
 								return part * (1 + blind * 2);
 							}), uInner: 0.18, uStyle: 0}), {Blend: 'add', DepthWrite: false, Cull: 'none'});
 						});
@@ -3024,19 +3110,19 @@ Elemenx.Component('Scene', {
 								var high = math.Compose(local(object.World), object.Turn, size * 1.004);
 
 								later.push(function () {
-									renderer.Draw(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: high, uNormalMatrix: math.NormalMatrix(high), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: [0, 0, 0, 0], uCloudsOnly: 1, uDrift: engine.CloudDrift(object), uLights: noLights(), uLightsOn: 0, uRelief: noLights(), uReliefOn: 0}, weatherValues(object, surface))), {Blend: 'alpha', DepthWrite: false});
+									drawReady(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: high, uNormalMatrix: math.NormalMatrix(high), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: [0, 0, 0, 0], uCloudsOnly: 1, uDrift: engine.CloudDrift(object), uLights: noLights(), uLightsOn: 0, uRelief: noLights(), uReliefOn: 0}, weatherValues(object, surface))), {Blend: 'alpha', DepthWrite: false});
 								});
 							}
 						}
 						else {
-							renderer.Draw(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: model, uNormalMatrix: math.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object), uCloudsOnly: 0, uDrift: engine.CloudDrift(object), uLights: surface.Lights || noLights(), uLightsOn: surface.Lights ? 1 : 0, uRelief: surface.Relief || noLights(), uReliefOn: surface.Relief ? 1 : 0}, weatherValues(object, surface))));
+							drawReady(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: model, uNormalMatrix: math.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object), uCloudsOnly: 0, uDrift: engine.CloudDrift(object), uLights: surface.Lights || noLights(), uLightsOn: surface.Lights ? 1 : 0, uRelief: surface.Relief || noLights(), uReliefOn: surface.Relief ? 1 : 0}, weatherValues(object, surface))));
 						}
 
 						if (object.Look.Atmosphere[3]) {
 							later.push(function () {
 								var shell = math.Compose(local(object.World), null, size * 1.07);
 
-								renderer.Draw(gpu.Sphere, gpu.Air, uniforms({uModel: shell, uNormalMatrix: math.NormalMatrix(shell), uColor: object.Look.Atmosphere.slice(0, 3), uStrength: object.Look.Atmosphere[3], uBody: local(object.World).concat([size]), uShell: size * 1.07}), {Blend: 'add', DepthWrite: false, Cull: 'front'});
+								drawReady(gpu.Sphere, gpu.Air, uniforms({uModel: shell, uNormalMatrix: math.NormalMatrix(shell), uColor: object.Look.Atmosphere.slice(0, 3), uStrength: object.Look.Atmosphere[3], uBody: local(object.World).concat([size]), uShell: size * 1.07}), {Blend: 'add', DepthWrite: false, Cull: 'front'});
 							});
 						}
 					}
@@ -3050,7 +3136,7 @@ Elemenx.Component('Scene', {
 							var matrix = math.Compose(local(parent ? parent.World : [0, 0, 0]), turn, round ? parent.Size : 1);
 							var planet = round ? local(parent.World).concat([parent.Size]).concat(new Array(12).fill(0)) : new Array(16).fill(0);
 
-							renderer.Draw(ring.Mesh, gpu.Ring, uniforms({uModel: matrix, uNormalMatrix: math.NormalMatrix(matrix), uColors: [].concat(ring.Colors[0], ring.Colors[1], ring.Colors[2], ring.Colors[3]), uSeed: object.Seed, uOccluders: planet, uOccluderCount: round ? 1 : 0}), {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
+							drawReady(ring.Mesh, gpu.Ring, uniforms({uModel: matrix, uNormalMatrix: math.NormalMatrix(matrix), uColors: [].concat(ring.Colors[0], ring.Colors[1], ring.Colors[2], ring.Colors[3]), uSeed: object.Seed, uOccluders: planet, uOccluderCount: round ? 1 : 0}), {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
 						});
 					}
 
@@ -3067,6 +3153,9 @@ Elemenx.Component('Scene', {
 				Object.keys(models).forEach(function (name) {
 					var list = models[name];
 					if (!seen(list, sees)) return;
+
+					/* Its program not made by the card yet: waited for by the veil of the scene, not by the page (not drawn this frame). */
+					if (scene.Looping && !list.MirrorKey && !programReady(list.Material ? pbrOf(list) : gpu.Many)) return;
 
 					/* The glass of a mirror of a car: the picture of its mirror in its own shape. */
 					if (list.MirrorKey && mirrored[list.MirrorKey]) {
@@ -3817,18 +3906,24 @@ Elemenx.Component('Scene', {
 		/*
 		 * The plant of a name in the style of the scene (PlantStyle): realistic, a plant of SceneFlora of that species (pine,
 		 * spruce, oak, birch, palm, bush: flora-<name>) once it has come (asked for the first time it is wanted, grown in
-		 * workers; what is sown is sown again when it comes, an object drawn by it); simple, or a name of no species, the name.
+		 * workers; what is sown is sown again when it comes, an object drawn by it); simple, or a name of no species, the name
+		 * (a species of no plant of the simple style, an aspen: the one it stands for, its Simple, a birch).
 		 */
 		engine.PlantShape = function (name) {
 			var flora;
 			var styled;
+			var plain;
 
-			if (!name || self.PlantStyle === 'simple' || typeof name !== 'string') return name;
+			if (!name || typeof name !== 'string') return name;
 
 			flora = self.$Service('SceneFlora');
 
 			/* No SceneFlora in this page (a library without it): the simple style. */
 			if (!flora || flora.ElemenxDeferred || flora.Species().indexOf(name) === -1) return name;
+
+			plain = !library.Has(name) && flora.Presets[name].Simple ? flora.Presets[name].Simple : name;
+
+			if (self.PlantStyle === 'simple') return plain;
 
 			styled = 'flora-' + name;
 
@@ -3848,7 +3943,7 @@ Elemenx.Component('Scene', {
 				});
 			}
 
-			return name;
+			return plain;
 		};
 
 		function modelOf (object, settings) {
@@ -5055,7 +5150,7 @@ Elemenx.Component('Scene', {
 			return function () {
 				var chosen = object.ID === scene.Selected || object.ID === scene.Focus;
 
-				renderer.Draw(orbitLine(object), gpu.Line, uniforms({uOffset: local(parent ? parent.World : [0, 0, 0]), uBody: local(object.World).concat([object.Size]), uColor: chosen ? scene.Colors.Selection.slice(0, 3).concat([0.75]) : scene.Colors.Orbit}), {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
+				drawReady(orbitLine(object), gpu.Line, uniforms({uOffset: local(parent ? parent.World : [0, 0, 0]), uBody: local(object.World).concat([object.Size]), uColor: chosen ? scene.Colors.Selection.slice(0, 3).concat([0.75]) : scene.Colors.Orbit}), {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
 			};
 		}
 
@@ -8678,6 +8773,28 @@ Elemenx.Component('Scene', {
 			return [0.96 + (air[0] - 0.96) * tint, 0.96 + (air[1] - 0.96) * tint, 0.96 + (air[2] - 0.96) * tint];
 		}
 
+		/*
+		 * A draw of the view (never of a picture kept: a bake, a target) that leaves out a program the card has not made yet:
+		 * the scene waits for it behind its veil (loading), the page does not; in a frame of its loop only (scene.Looping), one
+		 * asked for by hand waits for it. Regression: a draw waited for the card, and
+		 * the Orbit demo stood 29 s in one task while its globe's program was made (17 s under load).
+		 */
+		function drawReady (mesh, program, values, options) {
+			if (scene.Looping && !programReady(program)) return;
+
+			renderer.Draw(mesh, program, values, options);
+		}
+
+		/* Whether the card made a program (one not made for long is waited for then: Renderer, Patience). */
+		function programReady (program) {
+			return renderer.Ready(program);
+		}
+
+		engine.ProgramReady = programReady;
+
+		/* The same for the traits: what they draw of the view each frame (not what they bake and keep). */
+		engine.DrawReady = drawReady;
+
 		function drawGlobe (object, planes) {
 			var camera = scene.Camera;
 			var clouds;
@@ -8720,6 +8837,13 @@ Elemenx.Component('Scene', {
 			sun = vectors.Normalize(star ? math.Apply(turn, vectors.Normalize(vectors.Subtract(star.World, object.World))) : [0, 1, 0]);
 			sunColor = star ? paint(star.Color).slice(0, 3) : [1, 1, 1];
 			nodes = patches(globe);
+
+			/*
+			 * Its program not made yet: the sphere of its picture meanwhile; its squares asked for all the same (above), made
+			 * by the workers while the card makes the program.
+			 */
+			if (scene.Looping && !programReady(gpu.Ground)) return false;
+
 			laid = groundTiles(eye, globe.Altitude);
 
 			nodes.forEach(function (node) {
@@ -8913,11 +9037,17 @@ Elemenx.Component('Scene', {
 			 */
 			function build (face, u, v, size, level) {
 				var key = keyOf(face, u, v, level);
-				var picture = field.Picture ? 64 : 0;
+				/*
+				 * Its picture 64 texels a side near the eye, 32 farther than three of its sides (toward the horizon, its texels as
+				 * small on the screen): a quarter of the work. Regression: all of them 64, 0.45 s each under load, and a view from
+				 * 200 m (some 350 squares) missed 110 to 150 of them for most of a minute.
+				 */
+				var far = vectors.Distance(vectors.Scale(vectors.Normalize(terrain.Face(face, u, v)), field.Radius), surface.Eye || [0, 0, 0]) > size * Math.PI / 4 * field.Radius * 3;
+				var picture = field.Picture ? far ? 32 : 64 : 0;
 				var made;
 
 				if (level) {
-					askPiece(surface, key, 'Sphere', [face, u, v, size, surface.Resolution || 32, picture, picture && standsOn(size) ? 64 : 0], function (piece) {
+					askPiece(surface, key, 'Sphere', [face, u, v, size, surface.Resolution || 32, picture, picture && standsOn(size) ? picture : 0], function (piece) {
 						made = piece || field.Patch(face, u, v, size, surface.Resolution || 32);
 
 						surface.Nodes[key] = pictured({Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Error: errorOf(face, u, v, size), Used: surface.Frame}, made.Picture, [face, u, v, size, field.Radius]);
@@ -10386,7 +10516,21 @@ Elemenx.Component('Scene', {
 			}
 
 			if (loading()) {
-				frame(now, true, scene.Preparing && scene.Cover >= 1);
+				/*
+				 * Of space: drawn all the same, as a frame of the loop (what the card has not made yet left out, see drawReady), so
+				 * its globes ask for their squares while the card makes its programs. Regression: they waited for all of them,
+				 * a quiet frame asks for nothing, and the squares of the Orbit demo began only after 35 s (under load).
+				 */
+				if (!scene.Ground && !scene.Surface && renderer && !renderer.Lost) {
+					scene.Looping = true;
+
+					frame(now, false, scene.Preparing && scene.Cover >= 1);
+
+					scene.Looping = false;
+				}
+				else {
+					frame(now, true, scene.Preparing && scene.Cover >= 1);
+				}
 
 				prepareStep(now, false);
 
@@ -12836,11 +12980,15 @@ Elemenx.Component('Scene', {
 				'		vec3 toward = normalize(sunL - p * high + vec3(1e-6));',
 				'		vec4 w = texture(uWeather, p);',
 				'		float cloud = cloudSeen(p, w, foot);',
-				'		float ahead = cloudAt(normalize(p + toward * max(3.0, foot) / uRadiusKm), foot);',
-				'		float self = clamp((ahead - cloud) * 1.3, 0.0, 0.55) * smoothstep(-0.05, 0.2, high);',
+				/*
+				 * Their side away from the sun and their shadows of the cover of the weather (their billows once only, above).
+				 * Regression: three of them in the program, each of five octaves, and the card took seconds more to make it.
+				 */
+				'		float ahead = texture(uWeather, normalize(p + toward * max(3.0, foot) / uRadiusKm)).r;',
+				'		float self = clamp((ahead - w.r) * 1.3, 0.0, 0.55) * smoothstep(-0.05, 0.2, high);',
 				'		float lift = mix(1.5, 6.0, w.g);',
 				'		vec3 under = normalize(p + toward * lift * sqrt(max(0.0, 1.0 - high * high)) / max(0.06, high) / uRadiusKm);',
-				'		float shadow = cloudAt(under, foot) * smoothstep(0.0, 0.12, high);',
+				'		float shadow = texture(uWeather, under).r * smoothstep(0.0, 0.12, high);',
 				'		vec3 white = mix(vec3(0.97), uAtmosphere.rgb, 0.12 * uAtmosphere.a) * lighting(vWorld, n, v, 1.0, 0.0) * (1.0 - self);',
 				'		if (uCloudsOnly > 0.5) {',
 				'			outColor = vec4(white, cloud);',
@@ -13456,7 +13604,14 @@ Elemenx.Component('Scene', {
 				'		for (int k = 0; k < 4; k++) {',
 				'			float seen = (1.0 - smoothstep(uMetres[k] * 0.6, uMetres[k] * 3.0, metresPx)) * parts[k];',
 				'			if (seen > 0.01) {',
-				'				vec4 tile = k < 3 ? groundTile(float(k), uMetres[k], local.xz, topX, topY) : side ? groundTile(3.0, uMetres[3], local.zy, alongX, alongY) : groundTile(3.0, uMetres[3], local.xy, acrossX, acrossY);',
+				/*
+				 * One groundTile a turn, its plane chosen before it. Regression: three of them in a choice, each made three
+				 * times over the loop the card unrolls, and the card took 7 s more to make the program (17 s under load).
+				 */
+				'				vec2 tileAt = k < 3 ? local.xz : side ? local.zy : local.xy;',
+				'				vec2 tileX = k < 3 ? topX : side ? alongX : acrossX;',
+				'				vec2 tileY = k < 3 ? topY : side ? alongY : acrossY;',
+				'				vec4 tile = groundTile(float(k), uMetres[k], tileAt, tileX, tileY);',
 				'				laid += albedo * mix(vec3(1.0), tile.rgb, 0.85) * mix(1.0, tile.a / 0.8, 0.4) * seen;',
 				'				total += seen;',
 				'			}',
@@ -13475,7 +13630,11 @@ Elemenx.Component('Scene', {
 				'		vec4 above = texture(uWeather, up);',
 				'		vec3 under = normalize(up + toward * mix(1.5, 6.0, above.g) * sqrt(max(0.0, 1.0 - rise * rise)) / max(0.06, rise) / uRadiusKm);',
 				/* Of their thick part only: their thin edges and tops leave little shadow (it was more shadow than cloud). */
-				'		day *= 1.0 - 0.5 * smoothstep(0.3, 1.0, cloudAt(under, max(foot, 0.3))) * smoothstep(0.0, 0.12, rise);',
+				/*
+				 * Of the cover of the weather there (its billows not: a shadow is soft). Regression: three cloudAt in the program,
+				 * each its billows of five octaves, made the card take 7 s more to make it.
+				 */
+				'		day *= 1.0 - 0.5 * smoothstep(0.3, 1.0, texture(uWeather, under).r) * smoothstep(0.0, 0.12, rise);',
 				'	}',
 				'	vec3 color = albedo * (uSunColor * day + around);',
 				/* Water mirrors the sky, more at a glance; waves break the sun into a path of glints that reddens as it sets. */
@@ -13508,8 +13667,9 @@ Elemenx.Component('Scene', {
 				/* Of its weather: the cover, each puff darker on its side away from the sun. */
 				'	if (uCloudsOn > 0.0 && uWeatherOn > 0.5) {',
 				'		float cover = cloudAt(up, foot);',
-				'		float ahead = cloudAt(normalize(up + toward * max(3.0, foot) / uRadiusKm), foot);',
-				'		float self = clamp((ahead - cover) * 1.3, 0.0, 0.55) * smoothstep(-0.05, 0.2, rise);',
+				/* Their side away from the sun: of the cover of the weather here and toward the sun (one cloudAt only, as above). */
+				'		float ahead = texture(uWeather, normalize(up + toward * max(3.0, foot) / uRadiusKm)).r;',
+				'		float self = clamp((ahead - texture(uWeather, up).r) * 1.3, 0.0, 0.55) * smoothstep(-0.05, 0.2, rise);',
 				'		vec3 cloud = uCloudTint * (uSunColor * clamp(rise * 1.4 + 0.1, 0.0, 1.0) * (1.0 - self) + around);',
 				'		color = mix(color, cloud, cover * min(uCloudsOn, 1.0));',
 				'	}',

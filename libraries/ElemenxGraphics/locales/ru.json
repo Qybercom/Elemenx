@@ -92,19 +92,26 @@
 			"grows": {
 				"colonize": "Ветви к свету",
 				"whorls": "Мутовки (ель)",
-				"palm": "Пальма"
+				"palm": "Пальма",
+				"stalks": "Стебли (травы)"
 			},
 			"kinds": {
 				"broad": "Листья",
 				"needles": "Хвоя",
-				"frond": "Вайи"
+				"frond": "Вайи",
+				"compound": "Сложные листья",
+				"blade": "Ленты (злаки)",
+				"single": "Крупные листья"
 			},
 			"patterns": {
 				"plates": "Пластины (сосна)",
 				"birch": "Белая (берёза)",
 				"ridges": "Борозды (дуб)",
 				"rings": "Кольца (пальма)",
-				"smooth": "Гладкая"
+				"smooth": "Гладкая",
+				"fibrous": "Волокна (секвойя)",
+				"bands": "Полосы (вишня)",
+				"diamonds": "Ромбы (осина)"
 			},
 			"numbers": {
 				"Trunk_Bare": "Голый ствол",
@@ -122,14 +129,65 @@
 				"Growth_Droop": "Провисание",
 				"Growth_Step": "Шаг ветвей",
 				"Leaves_Size": "Пучок листвы, м",
-				"Leaves_Each": "Пучков на конце"
+				"Leaves_Each": "Пучков на конце",
+				"Leaves_Hang": "Свисание листвы",
+				"Leaves_Narrow": "Узкие листья",
+				"Leaves_Bloom": "Цветы",
+				"Leaves_Fruit": "Плоды",
+				"Leaves_FruitSize": "Размер плодов",
+				"Leaves_Base": "Листья от земли",
+				"Head_Size": "Размер соцветия, м",
+				"Head_Share": "Стеблей с соцветиями"
 			},
 			"colors": {
 				"Leaves_Shade": "Листва в тени",
 				"Leaves_Color": "Листва",
 				"Leaves_Light": "Листва на свету",
 				"Bark_Low": "Кора внизу",
-				"Bark_High": "Кора вверху"
+				"Bark_High": "Кора вверху",
+				"Leaves_BloomColor": "Цветы",
+				"Leaves_FruitColor": "Плоды",
+				"Head_Color": "Соцветия"
+			},
+			"names": {
+				"pine": "Сосна",
+				"spruce": "Ель",
+				"oak": "Дуб",
+				"birch": "Берёза",
+				"palm": "Пальма",
+				"bush": "Куст",
+				"aspen": "Осина",
+				"sequoia": "Секвойя",
+				"willow": "Ива плакучая",
+				"poplar": "Тополь",
+				"chestnut": "Каштан",
+				"alder": "Ольха",
+				"linden": "Липа",
+				"acacia": "Акация белая",
+				"apple": "Яблоня",
+				"peach": "Персик",
+				"apricot": "Абрикос",
+				"cherry": "Вишня",
+				"sweet-cherry": "Черешня",
+				"hazel": "Лещина",
+				"juniper": "Можжевельник",
+				"lilac": "Сирень",
+				"fern": "Папоротник",
+				"bamboo": "Бамбук",
+				"reed": "Тростник",
+				"bulrush": "Камыш (рогоз)",
+				"wheat": "Пшеница",
+				"sunflower": "Подсолнечник",
+				"burdock": "Лопух"
+			},
+			"head": "Соцветия стеблей",
+			"heads": {
+				"none": "Нет",
+				"ear": "Колос",
+				"panicle": "Метёлка",
+				"cob": "Початок (рогоз)",
+				"disc": "Корзинка (подсолнух)",
+				"burrs": "Репьи"
 			}
 		},
 		"modelEditor": {

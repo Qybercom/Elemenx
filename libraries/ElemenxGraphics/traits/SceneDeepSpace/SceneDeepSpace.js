@@ -197,7 +197,7 @@ Elemenx.Trait('SceneDeepSpace', {
 				if (size / Math.max(1e-9, far * Math.tan(scene.Camera.Fov * Math.PI / 360) * 2 / Math.max(1, scene.Height)) < 24) return;
 
 				later.push(function () {
-					renderer.Draw(quad, programs.Corona, {uViewProjection: matrix, uCenter: vectors.Subtract(object.World, eye), uRight: right, uUp: up, uReach: size * 4, uColor: colorOf(object.Color, [1, 0.9, 0.7]), uSeed: object.Seed || 0, uTime: scene.Seconds % 1000, uParts: [number(star.Corona, 1), number(star.Prominences, 1), number(star.Flares, 1), 0]}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
+					engine.DrawReady(quad, programs.Corona, {uViewProjection: matrix, uCenter: vectors.Subtract(object.World, eye), uRight: right, uUp: up, uReach: size * 4, uColor: colorOf(object.Color, [1, 0.9, 0.7]), uSeed: object.Seed || 0, uTime: scene.Seconds % 1000, uParts: [number(star.Corona, 1), number(star.Prominences, 1), number(star.Flares, 1), 0]}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
 				});
 			});
 
@@ -238,7 +238,7 @@ Elemenx.Trait('SceneDeepSpace', {
 						spin = scene.Time * 40;
 						other = mouth ? engine.CosmosCubeOf ? engine.CosmosCubeOf(mouth.Cosmos || 'nebula', 'mouth:' + object.ID) : null : null;
 
-						renderer.Draw(quad, programs.Lens, {uViewProjection: matrix, uCenter: center, uRight: right, uUp: up, uReach: reach, uHorizon: horizon, uKind: hole ? 0 : 1, uDisk: hole && hole.Disk !== false ? [number(hole.Inner, 3), number(hole.Outer, 14), number(hole.Brightness, 1), 1] : [0, 0, 0, 0], uTilt: tilt, uTime: scene.Seconds % 1000, uSpin: spin, uDiskColor: colorOf(hole && hole.Color, [1, 0.72, 0.42]), uSky: cube || blank(), uHasSky: cube ? 1 : 0, uOther: other || blank(), uHasOther: other ? 1 : 0, uStar: colorOf(mouth && mouth.Star, [0, 0, 0]), uSteps: engine.DeepSteps ? engine.DeepSteps() : 160}, {Blend: 'over', DepthWrite: false, Cull: 'none'});
+						engine.DrawReady(quad, programs.Lens, {uViewProjection: matrix, uCenter: center, uRight: right, uUp: up, uReach: reach, uHorizon: horizon, uKind: hole ? 0 : 1, uDisk: hole && hole.Disk !== false ? [number(hole.Inner, 3), number(hole.Outer, 14), number(hole.Brightness, 1), 1] : [0, 0, 0, 0], uTilt: tilt, uTime: scene.Seconds % 1000, uSpin: spin, uDiskColor: colorOf(hole && hole.Color, [1, 0.72, 0.42]), uSky: cube || blank(), uHasSky: cube ? 1 : 0, uOther: other || blank(), uHasOther: other ? 1 : 0, uStar: colorOf(mouth && mouth.Star, [0, 0, 0]), uSteps: engine.DeepSteps ? engine.DeepSteps() : 160}, {Blend: 'over', DepthWrite: false, Cull: 'none'});
 
 						return;
 					}
@@ -270,11 +270,11 @@ Elemenx.Trait('SceneDeepSpace', {
 
 						var mesh = renderer.Mesh(made);
 
-						renderer.Draw(mesh, programs.Tail, {uViewProjection: matrix}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
+						engine.DrawReady(mesh, programs.Tail, {uViewProjection: matrix}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
 
 						mesh.Destroy();
 
-						renderer.Draw(quad, programs.Glow, {uViewProjection: matrix, uCenter: center, uRight: right, uUp: up, uReach: Math.max(object.Size * 6, length * 0.03), uColor: [0.45, 0.6, 0.7], uJets: 0, uTime: 0, uCore: 0.4}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
+						engine.DrawReady(quad, programs.Glow, {uViewProjection: matrix, uCenter: center, uRight: right, uUp: up, uReach: Math.max(object.Size * 6, length * 0.03), uColor: [0.45, 0.6, 0.7], uJets: 0, uTime: 0, uCore: 0.4}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
 
 						return;
 					}
@@ -282,7 +282,7 @@ Elemenx.Trait('SceneDeepSpace', {
 					/* A quasar: a point of light far beyond the stars, its jets across the sky. */
 					var size = vectors.Length(center) * 0.02;
 
-					renderer.Draw(quad, programs.Glow, {uViewProjection: matrix, uCenter: center, uRight: right, uUp: up, uReach: size, uColor: vectors.Scale(colorOf(quasar.Color, [0.75, 0.84, 1]), number(quasar.Brightness, 1)), uJets: quasar.Jets === false ? 0 : 1, uTime: scene.Seconds % 1000, uCore: 1}, {Blend: 'add', DepthWrite: false, Depth: false, Cull: 'none'});
+					engine.DrawReady(quad, programs.Glow, {uViewProjection: matrix, uCenter: center, uRight: right, uUp: up, uReach: size, uColor: vectors.Scale(colorOf(quasar.Color, [0.75, 0.84, 1]), number(quasar.Brightness, 1)), uJets: quasar.Jets === false ? 0 : 1, uTime: scene.Seconds % 1000, uCore: 1}, {Blend: 'add', DepthWrite: false, Depth: false, Cull: 'none'});
 				});
 			});
 		};

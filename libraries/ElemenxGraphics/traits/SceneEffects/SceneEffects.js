@@ -534,7 +534,7 @@ Elemenx.Trait('SceneEffects', {
 
 			var from = vectors.Subtract(ball ? vectors.Subtract(one.At, vectors.Scale(aim, wide)) : one.At, scene.Eye);
 
-			renderer.Draw(box, volume, {
+			engine.DrawReady(box, volume, {
 				uViewProjection: matrix,
 				uFrom: from,
 				uSide: side,
@@ -593,7 +593,7 @@ Elemenx.Trait('SceneEffects', {
 			plate = plate || renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
 			plateProgram = plateProgram || renderer.Program(self.EffectShaders(head).PlateVertex, self.EffectShaders(head).Plate);
 
-			renderer.Draw(plate, plateProgram, Object.assign({
+			engine.DrawReady(plate, plateProgram, Object.assign({
 				uViewProjection: matrix,
 				uFrom: vectors.Subtract(vectors.Add(one.At, vectors.Scale(aim, 0.03 * one.Size)), scene.Eye),
 				uSide: vectors.Scale(side, wide),
@@ -635,7 +635,7 @@ Elemenx.Trait('SceneEffects', {
 			var spare = Math.max(Math.max(one.Mouth[0], one.Mouth[1]), near * 0.012);
 			var side = Math.max(one.Mouth[0], one.Mouth[1]) * 0.8 / near * Math.abs(matrix[0]) * 0.5;
 
-			renderer.Draw(plate, plateProgram, {
+			engine.DrawReady(plate, plateProgram, {
 				uViewProjection: matrix,
 				uTap: depth ? [clip[0] / near * 0.5 + 0.5, clip[1] / near * 0.5 + 0.5, side, side * renderer.Width / Math.max(1, renderer.Height)] : [0, 0, 0, 0],
 				uTapFar: [near - spare * 2, near - spare],
@@ -689,7 +689,7 @@ Elemenx.Trait('SceneEffects', {
 
 			boltProgram = boltProgram || renderer.Program(self.EffectShaders(head).BoltVertex, self.EffectShaders(head).Bolt);
 
-			renderer.Draw(ribbon, boltProgram, {
+			engine.DrawReady(ribbon, boltProgram, {
 				uViewProjection: matrix,
 				uFrom: vectors.Subtract(one.At, scene.Eye),
 				uAim: vectors.Scale(aim, long),
@@ -759,7 +759,7 @@ Elemenx.Trait('SceneEffects', {
 						var body = layer.Kind === 'smoke' ? tint(layer.Color) : shade(one, layer);
 						var count = Math.max(1, Math.round(layer.Count * Math.min(3, much)));
 
-						renderer.Draw(quads(count), program, {
+						engine.DrawReady(quads(count), program, {
 							uViewProjection: matrix,
 							uRight: view.Right,
 							uUp: view.Up,

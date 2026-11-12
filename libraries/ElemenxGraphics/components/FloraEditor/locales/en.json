@@ -26,19 +26,26 @@
 			"grows": {
 				"colonize": "Branches toward the light",
 				"whorls": "Whorls (spruce)",
-				"palm": "Palm"
+				"palm": "Palm",
+				"stalks": "Stalks (grasses)"
 			},
 			"kinds": {
 				"broad": "Broad",
 				"needles": "Needles",
-				"frond": "Fronds"
+				"frond": "Fronds",
+				"compound": "Compound leaves",
+				"blade": "Blades (grass)",
+				"single": "Large leaves"
 			},
 			"patterns": {
 				"plates": "Plates (pine)",
 				"birch": "White (birch)",
 				"ridges": "Ridges (oak)",
 				"rings": "Rings (palm)",
-				"smooth": "Smooth"
+				"smooth": "Smooth",
+				"fibrous": "Fibrous (sequoia)",
+				"bands": "Bands (cherry)",
+				"diamonds": "Diamonds (aspen)"
 			},
 			"numbers": {
 				"Trunk_Bare": "Bare trunk",
@@ -56,14 +63,65 @@
 				"Growth_Droop": "Droop",
 				"Growth_Step": "Branch steps",
 				"Leaves_Size": "Leaf cluster, m",
-				"Leaves_Each": "Clusters a tip"
+				"Leaves_Each": "Clusters a tip",
+				"Leaves_Hang": "Hanging leaves",
+				"Leaves_Narrow": "Narrow leaves",
+				"Leaves_Bloom": "Flowers",
+				"Leaves_Fruit": "Fruits",
+				"Leaves_FruitSize": "Fruit size",
+				"Leaves_Base": "Leaves from the ground",
+				"Head_Size": "Head size, m",
+				"Head_Share": "Stalks with heads"
 			},
 			"colors": {
 				"Leaves_Shade": "Leaves in shade",
 				"Leaves_Color": "Leaves",
 				"Leaves_Light": "Leaves in light",
 				"Bark_Low": "Bark below",
-				"Bark_High": "Bark above"
+				"Bark_High": "Bark above",
+				"Leaves_BloomColor": "Flowers",
+				"Leaves_FruitColor": "Fruits",
+				"Head_Color": "Heads"
+			},
+			"names": {
+				"pine": "Pine",
+				"spruce": "Spruce",
+				"oak": "Oak",
+				"birch": "Birch",
+				"palm": "Palm",
+				"bush": "Bush",
+				"aspen": "Aspen",
+				"sequoia": "Sequoia",
+				"willow": "Weeping willow",
+				"poplar": "Poplar",
+				"chestnut": "Chestnut",
+				"alder": "Alder",
+				"linden": "Linden",
+				"acacia": "White acacia",
+				"apple": "Apple tree",
+				"peach": "Peach tree",
+				"apricot": "Apricot tree",
+				"cherry": "Cherry",
+				"sweet-cherry": "Sweet cherry",
+				"hazel": "Hazel",
+				"juniper": "Juniper",
+				"lilac": "Lilac",
+				"fern": "Fern",
+				"bamboo": "Bamboo",
+				"reed": "Reed",
+				"bulrush": "Bulrush",
+				"wheat": "Wheat",
+				"sunflower": "Sunflower",
+				"burdock": "Burdock"
+			},
+			"head": "Heads of the stalks",
+			"heads": {
+				"none": "None",
+				"ear": "Ear",
+				"panicle": "Plume",
+				"cob": "Cob (bulrush)",
+				"disc": "Disc (sunflower)",
+				"burrs": "Burrs"
 			}
 		}
 	}

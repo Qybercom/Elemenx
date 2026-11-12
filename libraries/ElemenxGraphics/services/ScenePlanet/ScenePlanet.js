@@ -2548,7 +2548,7 @@ Elemenx.Service('ScenePlanet', {
 		 * trees as much as its Cover and its Density, none where it is steeper than they grow or higher than they may; snow
 		 * takes them. In the alpha of Normal: the Ground shader draws woods of it, the same share as a location sows.
 		 */
-		var trees = ['pine', 'oak', 'birch', 'palm', 'spruce', 'willow', 'cypress', 'fir'];
+		var trees = ['pine', 'oak', 'birch', 'palm', 'spruce', 'willow', 'cypress', 'fir', 'aspen', 'sequoia', 'poplar', 'chestnut', 'alder', 'linden', 'acacia', 'apple', 'peach', 'apricot', 'cherry', 'sweet-cherry'];
 		var lands = {};
 
 		(planet.Lands || []).forEach(function (land) {
@@ -2783,7 +2783,24 @@ Elemenx.Service('ScenePlanet', {
 			}
 		}
 
-		return {Size: n, Color: color, Normal: normal, Use: use};
+		/* The biome of each texel (Biomes: an index into Lands, 255 none): which trees its woods are of (PatchThings). */
+		var biomes = new Uint8Array(n * n);
+		var named = [];
+
+		for (i = 0; i < n * n; i++) {
+			var biome = samples[i].Biome;
+			var index = biome ? named.indexOf(biome) : -1;
+
+			if (biome && index === -1 && named.length < 255) {
+				named.push(biome);
+
+				index = named.length - 1;
+			}
+
+			biomes[i] = index === -1 ? 255 : index;
+		}
+
+		return {Size: n, Color: color, Normal: normal, Use: use, Biomes: biomes, Lands: named};
 	},
 
 	/*
@@ -2791,11 +2808,15 @@ Elemenx.Service('ScenePlanet', {
 	 * land): its woods and its houses of its picture (PatchPicture, side a side), a shape of each. Its woods only on a square
 	 * of texels of 12 m or finer (farther, the Ground shader draws them, their crowns and gaps): each texel up to three crowns
 	 * of trees as large as trees are (2.5 to 9 m round, 8 to 24 m high), as many as the share of woods of the texel holds,
-	 * each a dome of its own green, of the color of the ground there darkened as the Ground shader darkens woods. Regression:
+	 * each a tree of a species its biome sows (the trees of the Shapes of its Scatter, as many as each rule sows: woods of
+	 * mixed trees), of the far form of that species (SceneFlora.Far: its bare trunk, the profile of its crown round it, a
+	 * cone, a column, a palm's star of fronds; a dome where there is no SceneFlora), of the green of the ground there
+	 * darkened as the Ground shader darkens woods, turned to the green of its species. Regression:
 	 * a texel of 600 m was one clump of crowns 270 m wide, a flat pyramid. Each texel of houses one to three blocks of walls
 	 * and a roof, as tall as the settlement (a village low, a city high). They
 	 * stand on the ground, up as it is there. Gives {Geometry (its houses), Trees (its woods), each {Positions, Normals,
-	 * Colors} relative to Center (km, of the body), each face of its own vertices, Center, Woods, Houses}: a scene draws its
+	 * Colors} relative to Center (km, of the body), each face of its own vertices; Trees.Starts the first vertex of each
+	 * tree), Center, Woods, Houses}: a scene draws its
 	 * trees near the eye only. Its picture of side texels made already (of PatchPicture) is taken as it is.
 	 */
 	PatchThings: function (field, face, cu, cv, extent, side, made) {
@@ -2837,12 +2858,20 @@ Elemenx.Service('ScenePlanet', {
 			return ((h ^ (h >>> 13)) >>> 0) / 4294967296;
 		}
 
-		function triangle (a, b, c, color) {
+		/* rounded: [its middle, its up] (a crown): each corner's normal out from its middle and up, lit as a mass of leaves, not face by face. */
+		function triangle (a, b, c, color, rounded) {
 			var normal = unit(cross([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]));
 
 			[a, b, c].forEach(function (point) {
+				var n = normal;
+
+				if (rounded) {
+					n = unit([point[0] - rounded[0][0], point[1] - rounded[0][1], point[2] - rounded[0][2]]);
+					n = unit([n[0] * 0.6 + rounded[1][0] * 0.55, n[1] * 0.6 + rounded[1][1] * 0.55, n[2] * 0.6 + rounded[1][2] * 0.55]);
+				}
+
 				positions.push(point[0] - center[0], point[1] - center[1], point[2] - center[2]);
-				normals.push(normal[0], normal[1], normal[2]);
+				normals.push(n[0], n[1], n[2]);
 				colors.push(color[0], color[1], color[2]);
 			});
 		}
@@ -2882,10 +2911,176 @@ Elemenx.Service('ScenePlanet', {
 			}
 		}
 
+		/*
+		 * A tree of the far form of its species (SceneFlora.Far): its bare trunk, a thin prism of three sides, up to the
+		 * foot of its crown; its crown rings of six sides as wide as its profile there, closed below and on top; a palm its
+		 * trunk to its top and six fronds drooping from there, each folded down its rib. No form: a dome of six sides.
+		 */
+		function tree (place, frame, form, radius, height, turn, color, bark) {
+			var foot = form ? Math.min(0.9, form.Bare) * height : 0;
+			var rings = [];
+			var j;
+			var r;
+			var next;
+
+			function ring (z, wide) {
+				var points = [];
+				var m;
+
+				for (m = 0; m < 6; m++)
+					points.push(at(place, frame, Math.cos(turn + m * Math.PI / 3) * wide, Math.sin(turn + m * Math.PI / 3) * wide, z));
+
+				return points;
+			}
+
+			if (!form) {
+				crown(place, frame, radius, height, turn, color);
+
+				return;
+			}
+
+			if (form.Kind === 'palm' || foot > height * 0.12) {
+				var thick = Math.max(0.00025, height * 0.018);
+				var lowTrunk = [0, 1, 2].map(function (m) {
+					return at(place, frame, Math.cos(turn + m * 2.094) * thick, Math.sin(turn + m * 2.094) * thick, 0);
+				});
+				var top = form.Kind === 'palm' ? height : foot + (height - foot) * 0.15;
+				var highTrunk = [0, 1, 2].map(function (m) {
+					return at(place, frame, Math.cos(turn + m * 2.094) * thick * 0.7, Math.sin(turn + m * 2.094) * thick * 0.7, top);
+				});
+
+				for (j = 0; j < 3; j++) {
+					next = (j + 1) % 3;
+
+					triangle(lowTrunk[j], lowTrunk[next], highTrunk[next], bark);
+					triangle(lowTrunk[j], highTrunk[next], highTrunk[j], bark);
+				}
+			}
+
+			if (form.Kind === 'palm') {
+				var head = at(place, frame, 0, 0, height);
+				var palmy = [at(place, frame, 0, 0, height * 0.85), frame[2]];
+
+				for (j = 0; j < 6; j++) {
+					var a = turn + j * Math.PI / 3;
+					var tip = at(place, frame, Math.cos(a) * radius, Math.sin(a) * radius, height * 0.86);
+					var middle = at(place, frame, Math.cos(a) * radius * 0.5, Math.sin(a) * radius * 0.5, height * 1.02);
+					var left = at(place, frame, Math.cos(a) * radius * 0.5 - Math.sin(a) * radius * 0.16, Math.sin(a) * radius * 0.5 + Math.cos(a) * radius * 0.16, height * 0.97);
+					var right = at(place, frame, Math.cos(a) * radius * 0.5 + Math.sin(a) * radius * 0.16, Math.sin(a) * radius * 0.5 - Math.cos(a) * radius * 0.16, height * 0.97);
+
+					triangle(head, left, middle, color, palmy);
+					triangle(head, middle, right, color, palmy);
+					triangle(left, tip, middle, color, palmy);
+					triangle(middle, tip, right, color, palmy);
+				}
+
+				return;
+			}
+
+			/* Its crown: a ring at each point of its profile (the widest of it as wide as radius), a point on top and one under it. */
+			var widest = form.Profile.reduce(function (most, point) {
+				return Math.max(most, point[1]);
+			}, 0.01);
+
+			form.Profile.forEach(function (point) {
+				r = radius * point[1] / widest;
+
+				if (r > radius * 0.06)
+					rings.push(ring(foot + (height - foot) * point[0], r));
+			});
+
+			if (!rings.length) {
+				crown(place, frame, radius, height, turn, color);
+
+				return;
+			}
+
+			var under = at(place, frame, 0, 0, Math.max(0, foot - (height - foot) * 0.05));
+			var cap = at(place, frame, 0, 0, height);
+			var round = [at(place, frame, 0, 0, foot + (height - foot) * 0.45), frame[2]];
+
+			for (j = 0; j < 6; j++) {
+				next = (j + 1) % 6;
+
+				triangle(rings[0][next], rings[0][j], under, color, round);
+				triangle(rings[rings.length - 1][j], rings[rings.length - 1][next], cap, color, round);
+			}
+
+			for (r = 1; r < rings.length; r++) {
+				for (j = 0; j < 6; j++) {
+					next = (j + 1) % 6;
+
+					triangle(rings[r - 1][j], rings[r - 1][next], rings[r][next], color, round);
+					triangle(rings[r - 1][j], rings[r][next], rings[r][j], color, round);
+				}
+			}
+		}
+
+		/*
+		 * The trees of the biome of a texel: the Shapes of its Scatter that are species of trees, each as much as its rule
+		 * sows (its cover and density); of their far forms (null: no SceneFlora, a dome).
+		 */
+		var flora = this.$Service('SceneFlora');
+		var usable = flora && !flora.ElemenxDeferred && flora.Far;
+		var lands = {};
+		var kinds = {};
+		var forms = {};
+
+		(planet.Lands || []).forEach(function (land) {
+			lands[land.Name] = land;
+		});
+
+		function formOf (name) {
+			if (!(name in forms))
+				forms[name] = usable ? flora.Far(name) : null;
+
+			return forms[name];
+		}
+
+		function kindsOf (biome) {
+			var list = [];
+			var land = lands[biome];
+
+			if (kinds[biome])
+				return kinds[biome];
+
+			(land && land.Scatter || []).forEach(function (rule) {
+				var weight = (rule.Cover === undefined ? 0.5 : Number(rule.Cover)) * Math.max(0.2, Number(rule.Density) || 1);
+
+				(rule.Shapes || []).forEach(function (shape) {
+					if (formOf(shape))
+						list.push({Form: forms[shape], Weight: weight});
+				});
+			});
+
+			kinds[biome] = list;
+
+			return list;
+		}
+
+		function pick (list, value) {
+			var total = list.reduce(function (sum, one) {
+				return sum + one.Weight;
+			}, 0);
+			var m;
+
+			value *= total;
+
+			for (m = 0; m < list.length; m++) {
+				value -= list[m].Weight;
+
+				if (value <= 0)
+					return list[m].Form;
+			}
+
+			return list.length ? list[list.length - 1].Form : null;
+		}
+
 		/* Crowns on a texel of 12 m or finer only, at most three a texel; of their own shape. */
 		var treed = texel <= 0.012;
 		var houses = {Positions: positions, Normals: normals, Colors: colors};
 		var trees = {Positions: [], Normals: [], Colors: []};
+		var starts = [];
 
 		/* A block of walls and a roof, wide by deep by high (km), turned by its angle. */
 		function block (place, frame, wide, deep, high, turn, wall, roof) {
@@ -2943,12 +3138,30 @@ Elemenx.Service('ScenePlanet', {
 					for (j = 0; j < count; j++) {
 						var radius = Math.max(0.0025, Math.min(0.009, Math.sqrt(woods * texel * texel / count / Math.PI) * 0.62 * (0.75 + 0.5 * hash(j, k, seed + 12))));
 						var shade = 0.8 + 0.4 * hash(i, j, seed + 4);
+						var form = picture.Biomes && picture.Biomes[k * n + i] !== 255 ? pick(kindsOf(picture.Lands[picture.Biomes[k * n + i]]), hash(k, j, seed + 17)) : null;
+						var green = [ground[0] * 0.42 * shade, ground[1] * 0.56 * (0.9 + 0.2 * hash(k, j, seed + 16)), ground[2] * 0.4 * shade];
+						var tall = Math.max(0.008, Math.min(0.024, radius * (1.8 + 1.2 * hash(k, j, seed + 3))));
 
 						positions = trees.Positions;
 						normals = trees.Normals;
 						colors = trees.Colors;
 
-						crown(at(place, frame, (hash(j, i, seed + 13) - 0.5) * texel * 0.8, (hash(i, j, seed + 14) - 0.5) * texel * 0.8, 0), frame, radius, Math.max(0.008, Math.min(0.024, radius * (1.8 + 1.2 * hash(k, j, seed + 3)))), hash(j, j, seed + 15) * Math.PI, [ground[0] * 0.42 * shade, ground[1] * 0.56 * (0.9 + 0.2 * hash(k, j, seed + 16)), ground[2] * 0.4 * shade]);
+						starts.push(positions.length / 3);
+
+						if (form) {
+							/*
+							 * As tall as its species (6 to 40 m), as wide as its crown is of that, within 0.6 and 1.3 of its share
+							 * of the texel (its woods as thick as the Ground shader draws them farther); its green turned to the
+							 * green of its leaves, as bright.
+							 */
+							var mean = (form.Color[0] + form.Color[1] + form.Color[2]) / 3 || 1;
+
+							tall = Math.max(0.006, Math.min(0.04, form.Height * (0.8 + 0.4 * hash(k, j, seed + 3)) / 1000));
+							radius = Math.max(radius * 0.6, Math.min(radius * 1.3, tall * form.Width));
+							green = [green[0] * (0.5 + 0.5 * form.Color[0] / mean), green[1] * (0.5 + 0.5 * form.Color[1] / mean), green[2] * (0.5 + 0.5 * form.Color[2] / mean)];
+						}
+
+						tree(at(place, frame, (hash(j, i, seed + 13) - 0.5) * texel * 0.8, (hash(i, j, seed + 14) - 0.5) * texel * 0.8, 0), frame, form, radius, tall, hash(j, j, seed + 15) * Math.PI, green, form ? [form.Bark[0] * 0.7, form.Bark[1] * 0.7, form.Bark[2] * 0.7] : green);
 
 						counts.Woods++;
 					}
@@ -2974,12 +3187,12 @@ Elemenx.Service('ScenePlanet', {
 			}
 		}
 
-		return {Geometry: {Positions: new Float32Array(houses.Positions), Normals: new Float32Array(houses.Normals), Colors: new Float32Array(houses.Colors)}, Trees: {Positions: new Float32Array(trees.Positions), Normals: new Float32Array(trees.Normals), Colors: new Float32Array(trees.Colors)}, Center: center, Woods: counts.Woods, Houses: counts.Houses};
+		return {Geometry: {Positions: new Float32Array(houses.Positions), Normals: new Float32Array(houses.Normals), Colors: new Float32Array(houses.Colors)}, Trees: {Positions: new Float32Array(trees.Positions), Normals: new Float32Array(trees.Normals), Colors: new Float32Array(trees.Colors), Starts: new Uint32Array(starts)}, Center: center, Woods: counts.Woods, Houses: counts.Houses};
 	},
 
 	/* The workers that paint globes. */
 	Work: function () {
-		return this.$Service('Workers').Pool('ScenePlanet', {Math: true, Noise: true, Random: true, SceneTerrainGenerator: true, ScenePlanet: true});
+		return this.$Service('Workers').Pool('ScenePlanet', {Math: true, Noise: true, Random: true, SceneTerrainGenerator: true, ScenePlanet: true, SceneFlora: true});
 	},
 
 	/* What a worker of the planet carries: see Workers. */

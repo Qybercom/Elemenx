@@ -41,11 +41,12 @@ async function mount () {
 }
 
 describe('Contract: the roads of a Scene: drawn as their models, the ground made level under them, what is under a point', function () {
+	/* Under the load of the whole suite loading took longer than 30 s: a margin. */
 	beforeAll(async function () {
 		await loadElemenx();
 
 		Use(['Scene', 'SceneObject', 'service:SceneRoadGenerator']);
-	});
+	}, 90000);
 
 	beforeEach(function () {
 		resetDOM();
@@ -142,7 +143,8 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 			return made && made.Pieces.some(function (piece) {
 				return piece.Material && piece.Material.Pattern === 'asphalt' && piece.Material.Blueprint;
 			});
-		}, 10000);
+		/* Under the load of the whole suite its worker comes late (10 s were not enough): a margin. */
+		}, 60000);
 
 		patterns = made.Pieces.map(function (piece) {
 			return piece.Material && piece.Material.Pattern;
@@ -176,7 +178,7 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 		renderer.Draw = draw;
 
 		expect(told).toEqual([]);
-	});
+	}, 120000);
 
 	/*
 	 * The furniture of a street (the Along of its type): lamps on its sidewalks, benches and bins, a bus stop, sown by the

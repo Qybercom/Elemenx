@@ -2888,7 +2888,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	},
 
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: true, Noise: true, Random: true, Blueprints: true, ScenePlanet: true, SceneTerrainGenerator: true});
+		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: true, Noise: true, Random: true, Blueprints: true, ScenePlanet: true, SceneTerrainGenerator: true, SceneFlora: true});
 	},
 
 	/*

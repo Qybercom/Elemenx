@@ -263,7 +263,7 @@ Elemenx.Trait('SceneCosmos', {
 			quad = quad || renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
 			programs.Far = programs.Far || renderer.Program(graphics.Shaders.Quad, shaders.Far);
 
-			renderer.Draw(quad, programs.Far, {uInverse: math.Invert(matrix), uCube: holder.Cube, uTurn: turn, uStrength: strength}, {Depth: false, DepthWrite: false, Cull: 'none'});
+			engine.DrawReady(quad, programs.Far, {uInverse: math.Invert(matrix), uCube: holder.Cube, uTurn: turn, uStrength: strength}, {Depth: false, DepthWrite: false, Cull: 'none'});
 		}
 
 		/* The sparks and the puffs round the eye. */
@@ -314,7 +314,7 @@ Elemenx.Trait('SceneCosmos', {
 
 			var box = Math.max(1e-6, scene.Distance * 5);
 
-			renderer.Draw(motes, programs.Motes, {uViewProjection: view, uPlace: [eye[0] / box % 1, eye[1] / box % 1, eye[2] / box % 1], uBox: box, uRatio: renderer.Ratio, uTint: [colors[6], colors[7], colors[8]], uHigh: [colors[9], colors[10], colors[11]]}, {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
+			engine.DrawReady(motes, programs.Motes, {uViewProjection: view, uPlace: [eye[0] / box % 1, eye[1] / box % 1, eye[2] / box % 1], uBox: box, uRatio: renderer.Ratio, uTint: [colors[6], colors[7], colors[8]], uHigh: [colors[9], colors[10], colors[11]]}, {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
 		};
 
 		/* Before the frame is drawn into its picture: a face a frame of what is being made. */
@@ -366,11 +366,11 @@ Elemenx.Trait('SceneCosmos', {
 			uniforms = {uInverse: math.Invert(matrix), uAxis: math.Vectors.Normalize(warp.Axis), uFlow: warp.Flow, uStretch: warp.Stretch, uTunnel: warp.Tunnel, uFlash: warp.Flash, uTint: warp.Tint || [0.35, 0.6, 1], uDepth: warp.Depth === undefined ? 0.99999 : warp.Depth, uPart: 0};
 
 			/* The tunnel hides what is behind it; the stars and the flash are light added over it. Neither touches how glossy the picture is. */
-			renderer.Draw(quad, programs.Warp, uniforms, {DepthWrite: false, Blend: 'over', Cull: 'none'});
+			engine.DrawReady(quad, programs.Warp, uniforms, {DepthWrite: false, Blend: 'over', Cull: 'none'});
 
 			uniforms.uPart = 1;
 
-			renderer.Draw(quad, programs.Warp, uniforms, {DepthWrite: false, Blend: 'add', Cull: 'none'});
+			engine.DrawReady(quad, programs.Warp, uniforms, {DepthWrite: false, Blend: 'add', Cull: 'none'});
 		};
 
 		/* The cube of the sky of the system, once baked (what bent light reads, SceneDeepSpace); null before it is. */

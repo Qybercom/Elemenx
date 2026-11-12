@@ -22,7 +22,8 @@
  * giving one back waits for the card to finish all it was given.
  * - Program(vertex, fragment, behind): the shaders compiled (each one once), their uniforms found; an error of GLSL is thrown
  *   with its log. With options Patient the card does that in the background and nothing waits for it: Ready(program) tells
- *   whether it is done, Progress() is {Done, Total, Needed} of the programs (behind: one nothing waits for), and a Draw with
+ *   whether it is done (one not done after options Patience ms, 10 s, is waited for then: some cards make a program only
+ *   when it is used or waited for), Progress() is {Done, Total, Needed} of the programs (behind: one nothing waits for), and a Draw with
  *   one not done yet waits, as it must. A slow shader so holds no frame up. Check(vertex, fragment) asks the card at once
  *   whether two shaders compile: their logs, or null. The attributes have fixed places: aPosition, aNormal, aUV, aColor, aInstance (and aInstance2 to
  *   aInstance5, one of each copy of an instanced mesh), aMaterials, aMaterials2 and aMaterials3 (the weights of 12
@@ -616,6 +617,8 @@ Elemenx.Service('Renderer', {
 		/* The blank textures of the samplers a draw gives none, by the type of the sampler (see blank). */
 		var blanks = {};
 		var patient = !!settings.Patient;
+		/* How long a program not made is not waited for (ms): after that Ready waits for it once. */
+		var patience = settings.Patience === undefined ? 10000 : Number(settings.Patience);
 		var parallel = null;
 		var current = {};
 		var counts = {Draws: 0, Triangles: 0};
@@ -1167,7 +1170,7 @@ Elemenx.Service('Renderer', {
 				gl.linkProgram(handle);
 
 				/* Outputs: how many colors it writes (its last layout(location = n) out, plus one); into a target of more, the rest are left as they were. */
-				program = {Handle: handle, Uniforms: {}, Settled: false, Behind: !!behind, Outputs: outputsOf(fragment)};
+				program = {Handle: handle, Uniforms: {}, Settled: false, Behind: !!behind, Outputs: outputsOf(fragment), Made: Date.now()};
 
 				if (!patient)
 					settle(program);
@@ -1202,7 +1205,12 @@ Elemenx.Service('Renderer', {
 			Ready: function (program) {
 				if (program.Settled) return true;
 
-				if (parallel && !gl.getProgramParameter(program.Handle, parallel.COMPLETION_STATUS_KHR)) return false;
+				/*
+				 * Not made yet: not waited for, for as long as its patience (Patience, 10 s); then waited for once. Regression:
+				 * where the card makes a program only when it is used or waited for (a canvas shown nowhere), what drew it only
+				 * once it was made waited for it forever (a globe never came).
+				 */
+				if (parallel && Date.now() - program.Made < patience && !gl.getProgramParameter(program.Handle, parallel.COMPLETION_STATUS_KHR)) return false;
 
 				settle(program);
 

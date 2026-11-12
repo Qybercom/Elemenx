@@ -987,19 +987,23 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		var draw = engine.Renderer.Draw;
 		var tiled = 0;
 		var plain = 0;
+		var texels = {};
 		var i;
 
 		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'terra', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'terra', From: [0, 0, 1.3], Facing: [-1, 0, 0], Length: 30}});
 		scene.Control('me');
 
-		/* Until all of it in view has its picture, the faces of the cube too. */
+		/*
+		 * Until all of it in view has its picture, the faces of the cube too: a millisecond a frame, the ship as good as still
+		 * (frames of the loop leave out a program the card still makes: many of them may go by first).
+		 */
 		await waitFor(function () {
 			var nodes;
 
 			inner.Rest = 0;
 			inner.Looping = true;
 
-			engine.Frame(now += 100);
+			engine.Frame(now += 1);
 
 			inner.Looping = false;
 			nodes = inner.Globes.terra ? Object.keys(inner.Globes.terra.Nodes).map(function (key) {
@@ -1013,22 +1017,29 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 		engine.Renderer.Draw = function (mesh, program, uniforms) {
 			if (uniforms && uniforms.uTiled !== undefined) {
-				if (uniforms.uTiled === 1 && uniforms.uTexels === 64) tiled++;
+				if (uniforms.uTiled === 1 && (uniforms.uTexels === 64 || uniforms.uTexels === 32)) tiled++;
 				else plain++;
+
+				texels[uniforms.uTexels] = true;
 			}
 
 			return draw.apply(this, arguments);
 		};
 
+		/* Frames of the loop until its squares are drawn of their pictures (a program the card still makes is left out meanwhile). */
 		try {
-			for (i = 0; i < 2; i++) {
-				inner.Rest = 0;
-				inner.Looping = true;
+			await waitFor(function () {
+				for (i = 0; i < 2; i++) {
+					inner.Rest = 0;
+					inner.Looping = true;
 
-				engine.Frame(now += 100);
+					engine.Frame(now += 1);
 
-				inner.Looping = false;
-			}
+					inner.Looping = false;
+				}
+
+				return tiled > 6;
+			}, 60000);
 		}
 		finally {
 			engine.Renderer.Draw = draw;
@@ -1036,6 +1047,30 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 		expect(tiled).toBeGreaterThan(6);
 		expect(plain).toBe(0);
+		expect(Object.keys(texels).every(function (size) {
+			return size === '32' || size === '64';
+		})).toBe(true);
+
+		/*
+		 * Regression: each square a picture of 64 texels, 0.45 s of a worker each under load, and a view from 200 m missed
+		 * 110 to 150 squares for most of a minute. Those farther than three of their sides from the eye: 32 (a quarter).
+		 */
+		var globe = inner.Globes.terra;
+		var checked = 0;
+
+		Object.keys(globe.Nodes).forEach(function (key) {
+			var node = globe.Nodes[key];
+			var level = Number(key.split(':')[3]);
+			var side = 2 / Math.pow(2, level) * Math.PI / 4 * globe.Field.Radius;
+			var far = Math.hypot(node.Center[0] - globe.Eye[0], node.Center[1] - globe.Eye[1], node.Center[2] - globe.Eye[2]) / side;
+			if (!level || !node.Texels || Math.abs(far - 3) < 0.15) return;
+
+			expect(node.Texels).toBe(far > 3 ? 32 : 64);
+
+			checked++;
+		});
+
+		expect(checked).toBeGreaterThan(0);
 	}, 120000);
 
 	/*

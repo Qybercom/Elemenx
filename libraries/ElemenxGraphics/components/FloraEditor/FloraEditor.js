@@ -3,7 +3,7 @@
  * its bare trunk, the profile of its crown and the colors of its leaves and of its bark (FromPicture, its outline drawn
  * over it), and the plant grown of that seen at once in 3D, each of its numbers on a slider, its colors picked, its own
  * pictures of bark and leaves loaded; Define makes it a model of SceneModels under Name, as the scenes sow it.
- * Species: the preset it starts of (pine, spruce, oak, birch, palm, bush); Preset: one given instead (an object or its
+ * Species: the preset it starts of (a species of SceneFlora: pine, oak, willow, apple...); Preset: one given instead (an object or its
  * JSON); Variant: which plant of the species the view shows; Name: the model Define makes. Events: change {Preset} as it
  * changes, define {Name}. Methods: Current() (the preset as it is now), Analyse(picture) ({Width, Height, Data}: the
  * preset of a picture, null when it holds no plant), Grow() (the view again), Define(name).
@@ -21,7 +21,7 @@ Elemenx.Component('FloraEditor', {
 		},
 		Methods: ['Current()', 'Analyse(picture)', 'Grow()', 'Define(name)'],
 		Props: {
-			Species: {Options: ['pine', 'spruce', 'oak', 'birch', 'palm', 'bush'], Description: 'The preset it starts of.'},
+			Species: {Options: ['pine', 'spruce', 'oak', 'birch', 'palm', 'bush', 'aspen', 'sequoia', 'willow', 'poplar', 'chestnut', 'alder', 'linden', 'acacia', 'apple', 'peach', 'apricot', 'cherry', 'sweet-cherry', 'hazel', 'juniper', 'lilac', 'fern', 'bamboo', 'reed', 'bulrush', 'wheat', 'sunflower', 'burdock'], Description: 'The preset it starts of.'},
 			Preset: 'A preset of SceneFlora given instead (an object or its JSON).',
 			Variant: 'Which plant of the species the view shows (0 and up).',
 			Name: 'The name of the model Define makes.',
@@ -41,9 +41,10 @@ Elemenx.Component('FloraEditor', {
 	Busy: false,
 	HasPicture: false,
 	Told: '',
-	Grows: ['colonize', 'whorls', 'palm'],
-	Kinds: ['broad', 'needles', 'frond'],
-	Patterns: ['plates', 'birch', 'ridges', 'rings', 'smooth'],
+	Grows: ['colonize', 'whorls', 'palm', 'stalks'],
+	Kinds: ['broad', 'needles', 'frond', 'compound', 'blade', 'single'],
+	Heads: ['none', 'ear', 'panicle', 'cob', 'disc', 'burrs'],
+	Patterns: ['plates', 'birch', 'ridges', 'rings', 'smooth', 'fibrous', 'bands', 'diamonds'],
 
 	/* The numbers of a preset on sliders: [path, min, max, step]. */
 	Numbers: [
@@ -62,11 +63,19 @@ Elemenx.Component('FloraEditor', {
 		['Growth.Droop', 0, 0.6, 0.01],
 		['Growth.Step', 0.01, 0.04, 0.001],
 		['Leaves.Size', 0.2, 5, 0.05],
-		['Leaves.Each', 1, 8, 1]
+		['Leaves.Each', 0, 40, 1],
+		['Leaves.Base', 0, 30, 1],
+		['Leaves.Hang', 0, 1, 0.01],
+		['Leaves.Narrow', 0, 1, 0.01],
+		['Leaves.Bloom', 0, 1, 0.01],
+		['Leaves.Fruit', 0, 1, 0.01],
+		['Leaves.FruitSize', 0.01, 0.06, 0.002],
+		['Head.Size', 0.02, 1, 0.01],
+		['Head.Share', 0, 1, 0.01]
 	],
 
 	/* Its colors picked: [path]. */
-	Colors: ['Leaves.Shade', 'Leaves.Color', 'Leaves.Light', 'Bark.Low', 'Bark.High'],
+	Colors: ['Leaves.Shade', 'Leaves.Color', 'Leaves.Light', 'Leaves.BloomColor', 'Leaves.FruitColor', 'Head.Color', 'Bark.Low', 'Bark.High'],
 
 	$OnCreate: function () {
 		var own = {Preset: null, Picture: null, Found: null, Space: null, Timer: 0, Grown: 0};
@@ -169,7 +178,8 @@ Elemenx.Component('FloraEditor', {
 		var self = this;
 
 		return this.Colors.map(function (path) {
-			var color = self.Read(path) || [0, 0, 0];
+			/* A color the species has none of (its flowers): white. */
+			var color = self.Read(path) || [1, 1, 1];
 
 			return {Key: path, Title: 'graphics.floraEditor.colors.' + path.replace('.', '_'), Value: '#' + color.map(function (part) {
 				var hex = Math.round(Math.max(0, Math.min(1, part)) * 255).toString(16);

@@ -215,7 +215,7 @@ Elemenx.Trait('SceneFracture', {
 
 			state.Program = state.Program || renderer.Program(self.FractureShaders().Vertex, self.FractureShaders().Crack);
 
-			renderer.Draw(state.Mesh, state.Program, {uViewProjection: matrix, uEye: scene.Eye || [0, 0, 0], uSun: ground ? ground.Sun : [0.3, 0.8, 0.5], uSunColor: ground ? ground.SunColor : [1, 1, 1], uSky: ground ? ground.SkyLight : [0.3, 0.3, 0.32]}, {Blend: 'over', DepthWrite: false, Depth: 'lequal', Cull: 'none'});
+			engine.DrawReady(state.Mesh, state.Program, {uViewProjection: matrix, uEye: scene.Eye || [0, 0, 0], uSun: ground ? ground.Sun : [0.3, 0.8, 0.5], uSunColor: ground ? ground.SunColor : [1, 1, 1], uSky: ground ? ground.SkyLight : [0.3, 0.3, 0.32]}, {Blend: 'over', DepthWrite: false, Depth: 'lequal', Cull: 'none'});
 		};
 	},
 

@@ -19,7 +19,7 @@
 	<aside class="elemenx-flora-editor-panel">
 		<label class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.species')}}</span>
 			<select (change)="Specied">
-				<option *for="name of Names()" *key="name" [value]="name" [selected]="name === Species">{{name}}</option>
+				<option *for="name of Names()" *key="name" [value]="name" [selected]="name === Species">{{$T('graphics.floraEditor.names.' + name)}}</option>
 			</select>
 		</label>
 		<div class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.variant')}}</span>
@@ -45,6 +45,11 @@
 		<label class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.pattern')}}</span>
 			<select data-key="Bark.Pattern" (change)="Chose">
 				<option *for="one of Patterns" *key="one" [value]="one" [selected]="one === Read('Bark.Pattern', Version)">{{$T('graphics.floraEditor.patterns.' + one)}}</option>
+			</select>
+		</label>
+		<label class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.head')}}</span>
+			<select data-key="Head.Kind" (change)="Chose">
+				<option *for="one of Heads" *key="one" [value]="one" [selected]="one === (Read('Head.Kind', Version) || 'none')">{{$T('graphics.floraEditor.heads.' + one)}}</option>
 			</select>
 		</label>
 		<div class="elemenx-flora-editor-title">{{$T('graphics.floraEditor.numbersTitle')}}</div>

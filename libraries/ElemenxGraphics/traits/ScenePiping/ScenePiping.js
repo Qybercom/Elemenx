@@ -329,7 +329,7 @@ Elemenx.Trait('ScenePiping', {
 
 				state.Program = state.Program || renderer.Program(self.PipingShaders().Vertex, self.PipingShaders().Drop);
 
-				renderer.Draw(mesh, state.Program, {uViewProjection: matrix, uSize: held.Size * 2.6 * focal, uColor: held.Kind.Color, uOpacity: Math.max(0.35, held.Kind.Opacity), uLight: light}, held.Kind.Opacity < 0.95 ? {Blend: 'over', DepthWrite: false} : {});
+				engine.DrawReady(mesh, state.Program, {uViewProjection: matrix, uSize: held.Size * 2.6 * focal, uColor: held.Kind.Color, uOpacity: Math.max(0.35, held.Kind.Opacity), uLight: light}, held.Kind.Opacity < 0.95 ? {Blend: 'over', DepthWrite: false} : {});
 			});
 		};
 

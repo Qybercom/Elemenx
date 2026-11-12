@@ -383,7 +383,7 @@ Elemenx.Trait('SceneDebris', {
 
 					model = math.Multiply(math.Translation(one.At[0] - eye[0], one.At[1] - eye[1] - sink * one.Reach, one.At[2] - eye[2]), math.Multiply(one.Turn, math.Scaling(1 - sink * 0.6, 1 - sink * 0.6, 1 - sink * 0.6)));
 
-					renderer.Draw(one.Mesh, program, {uViewProjection: matrix, uModel: model, uSun: ground ? ground.Sun : [0.3, 0.8, 0.5], uSunColor: ground ? ground.SunColor : [1, 1, 1], uSky: ground ? ground.SkyLight : [0.3, 0.3, 0.32], uGlass: glass ? 1 : 0}, glass ? {Blend: 'over', DepthWrite: false, Cull: 'none'} : {Cull: 'none'});
+					engine.DrawReady(one.Mesh, program, {uViewProjection: matrix, uModel: model, uSun: ground ? ground.Sun : [0.3, 0.8, 0.5], uSunColor: ground ? ground.SunColor : [1, 1, 1], uSky: ground ? ground.SkyLight : [0.3, 0.3, 0.32], uGlass: glass ? 1 : 0}, glass ? {Blend: 'over', DepthWrite: false, Cull: 'none'} : {Cull: 'none'});
 				});
 			});
 		};

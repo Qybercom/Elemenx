@@ -308,14 +308,15 @@ describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 
 
 		worker.Start();
 
-		expect(await waitFor(function () { return worker.State() === 'Running'; }, 30000)).toBe(true);
+		/* Under the load of the whole suite its worker started later than 30 s: a margin. */
+		expect(await waitFor(function () { return worker.State() === 'Running'; }, 90000)).toBe(true);
 
 		var first = worker.Native();
 
 		worker.Stop();
 		worker.Start();
 
-		expect(await waitFor(function () { return worker.State() === 'Running'; }, 30000)).toBe(true);
+		expect(await waitFor(function () { return worker.State() === 'Running'; }, 90000)).toBe(true);
 
 		first.dispatchEvent(new MessageEvent('message', {
 			data: {ElemenxMessaging: true, ElemenxMessagingProtocol: 1, Source: 'stale', Channel: socket.ID(), Data: 'stale'}
@@ -327,7 +328,7 @@ describe('Regression: WebWorker real execution and Messaging bridge', {timeout: 
 
 		socket.Destroy();
 		worker.Destroy();
-	});
+	}, 200000);
 
 	it('owner Destroy invalidates a saved WebWorker accessor and prevents handle resurrection', function () {
 		var componentName = unique('WebWorkerOwner');

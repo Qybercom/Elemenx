@@ -1084,7 +1084,7 @@ Elemenx.Trait('SceneWeapons', {
 
 				mesh = renderer.Mesh(pass[0]);
 
-				renderer.Draw(mesh, programs.Streak, {uViewProjection: matrix, uSmoke: pass[1] === 'alpha' ? 1 : 0}, {Blend: pass[1], DepthWrite: false, Cull: 'none'});
+				engine.DrawReady(mesh, programs.Streak, {uViewProjection: matrix, uSmoke: pass[1] === 'alpha' ? 1 : 0}, {Blend: pass[1], DepthWrite: false, Cull: 'none'});
 
 				mesh.Destroy();
 			});
@@ -1145,7 +1145,7 @@ Elemenx.Trait('SceneWeapons', {
 				state.MarksBuilt = state.MarksVersion;
 			}
 
-			renderer.Draw(state.MarksMesh, programs.Mark, {uViewProjection: matrix, uEye: scene.Eye || [0, 0, 0], uSun: ground ? ground.Sun : [0.3, 0.8, 0.5], uSunColor: ground ? ground.SunColor : [1, 1, 1], uSky: ground ? ground.SkyLight : [0.3, 0.3, 0.32], uTime: state.Clock, uKeep: number(self.MarkSeconds, 60)}, {Blend: 'over', DepthWrite: false, Depth: 'lequal', Cull: 'none'});
+			engine.DrawReady(state.MarksMesh, programs.Mark, {uViewProjection: matrix, uEye: scene.Eye || [0, 0, 0], uSun: ground ? ground.Sun : [0.3, 0.8, 0.5], uSunColor: ground ? ground.SunColor : [1, 1, 1], uSky: ground ? ground.SkyLight : [0.3, 0.3, 0.32], uTime: state.Clock, uKeep: number(self.MarkSeconds, 60)}, {Blend: 'over', DepthWrite: false, Depth: 'lequal', Cull: 'none'});
 		}
 
 		engine.WeaponsState = function () {

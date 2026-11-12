@@ -26,6 +26,10 @@ describe('Contract: SceneFlora, realistic plants of code, each of a species anot
 			for (i = 1; i < tree.Bark.Positions.length; i += 3)
 				top = Math.max(top, tree.Bark.Positions[i]);
 
+			/* Its top of its leaves too (a fern: its fronds above their stalks). */
+			for (i = 1; i < tree.Leaves.Positions.length; i += 3)
+				top = Math.max(top, tree.Leaves.Positions[i]);
+
 			console.log('FLORA ' + name + ' height ' + tree.Height.toFixed(1) + ' top ' + top.toFixed(1) + ' nodes ' + tree.Nodes + ' bark ' + tree.Bark.Indices.length / 3 + ' leaves ' + tree.Leaves.Indices.length / 3 + ' lods ' + tree.Lods.map(function (lod) { return (lod.Bark.Indices.length + lod.Leaves.Indices.length) / 3; }).join('/') + ' ms ' + Math.round(performance.now() - started));
 
 			expect(tree.Height).toBeGreaterThanOrEqual(preset.Height[0]);
@@ -111,6 +115,109 @@ describe('Contract: SceneFlora, realistic plants of code, each of a species anot
 
 		expect(flora.FromPicture({Width: 10, Height: 10, Data: new Uint8Array(400).fill(255)}, 'oak')).toBe(null);
 	});
+
+	/* Hang, Narrow, Bloom, Fruit, compound leaves and the barks of the second queue of species. */
+	it('hangs the leaves of a weeping willow, draws flowers and fruits among its leaves, each bark of its own', function () {
+		function middle (tree) {
+			var sum = 0;
+			var i;
+
+			for (i = 1; i < tree.Leaves.Positions.length; i += 3)
+				sum += tree.Leaves.Positions[i];
+
+			return sum / (tree.Leaves.Positions.length / 3);
+		}
+
+		function count (picture, test) {
+			var found = 0;
+			var i;
+
+			for (i = 0; i < picture.Data.length / 2; i += 4) {
+				if (picture.Data[i + 3] > 200 && test(picture.Data[i], picture.Data[i + 1], picture.Data[i + 2]))
+					found++;
+			}
+
+			return found;
+		}
+
+		var willow = flora.Preset('willow');
+		var upright = Object.assign(flora.Preset('willow'), {Leaves: Object.assign(flora.Preset('willow').Leaves, {Hang: 0})});
+
+		/* The same twigs, its leaves hanging down from them: lower. */
+		expect(middle(flora.Tree(willow, 0))).toBeLessThan(middle(flora.Tree(upright, 0)) - 0.5);
+
+		/* Red apples, white flowers of an acacia; none of an oak. */
+		expect(count(flora.Textures('apple').Leaves, function (r, g) { return r > 120 && r > g * 2; })).toBeGreaterThan(500);
+		expect(count(flora.Textures('acacia').Leaves, function (r, g, b) { return r > 200 && g > 200 && b > 180; })).toBeGreaterThan(300);
+		expect(count(flora.Textures('oak').Leaves, function (r, g) { return r > 120 && r > g * 2; })).toBe(0);
+
+		/* A sequoia red, an aspen pale. */
+		var sequoia = flora.Textures('sequoia').Bark.Mean;
+		var aspen = flora.Textures('aspen').Bark.Mean;
+
+		expect(sequoia[0]).toBeGreaterThan(sequoia[2] * 2);
+		expect(aspen[1]).toBeGreaterThan(0.5);
+	}, 60000);
+
+	/* Far: how a species looks from far (the woods of ScenePlanet), of its preset; none of a stalk plant nor of no species. */
+	it('tells the far form of a species of tree: its height, bare trunk, crown, colors; none of grass nor of no species', function () {
+		var pine = flora.Far('pine');
+		var palm = flora.Far('palm');
+
+		expect(pine).toMatchObject({Kind: 'crown', Height: 21, Bare: 0.6, Width: 0.2});
+		expect(pine.Profile).toEqual(flora.Preset('pine').Crown.Profile);
+		expect(pine.Color).toEqual(flora.Preset('pine').Leaves.Color);
+		expect(palm.Kind).toBe('palm');
+		expect(flora.Far('wheat')).toBe(null);
+		expect(flora.Far('rock')).toBe(null);
+	});
+
+	/* Grow stalks: a clump of stalks, its leaves on them and from the ground, the heads of its stalks of the last tile. */
+	it('grows a clump of stalks, its leaves along them and from the ground, a head on each top of the last tile of its atlas', function () {
+		function heads (tree) {
+			var found = 0;
+			var i;
+
+			/* The cards of the heads: their UVs in the last tile (u from 0.5, v 0.25 to 0.5). */
+			for (i = 0; i < tree.Leaves.UVs.length; i += 2) {
+				if (tree.Leaves.UVs[i] >= 0.5 && tree.Leaves.UVs[i + 1] >= 0.25 && tree.Leaves.UVs[i + 1] <= 0.5)
+					found++;
+			}
+
+			return found;
+		}
+
+		function tile (picture, test) {
+			var found = 0;
+			var x;
+			var y;
+
+			for (y = 256; y < 512; y++) {
+				for (x = 256; x < 512; x++) {
+					var o = (y * 512 + x) * 4;
+					if (picture.Data[o + 3] > 200 && test(picture.Data[o], picture.Data[o + 1], picture.Data[o + 2]))
+						found++;
+				}
+			}
+
+			return found;
+		}
+
+		var wheat = flora.Tree('wheat', 0);
+		var bare = flora.Tree(Object.assign(flora.Preset('wheat'), {Head: {Kind: 'none'}}), 0);
+		var fern = flora.Tree('fern', 0);
+
+		/* Its 22 stalks each with its ear: two cards of four corners crossed (of two triangles each); none without heads. */
+		expect(heads(wheat)).toBeGreaterThanOrEqual(22 * 2 * 4);
+		expect((wheat.Leaves.Indices.length - bare.Leaves.Indices.length) / 3).toBe(22 * 2 * 2);
+		/* A fern: no stalk of its own, its fronds on their stalks from the ground. */
+		expect(fern.Leaves.Indices.length / 3).toBeGreaterThan(14 * 10);
+		expect(fern.Bark.Indices.length).toBeGreaterThan(0);
+
+		/* Its heads drawn: a yellow disc of a sunflower, a brown cob of a bulrush. */
+		expect(tile(flora.Textures('sunflower').Leaves, function (r, g, b) { return r > 200 && g > 140 && b < 80; })).toBeGreaterThan(3000);
+		expect(tile(flora.Textures('bulrush').Leaves, function (r, g, b) { return r > g && g > b && r < 140; })).toBeGreaterThan(3000);
+	}, 60000);
 
 	it('draws its bark (a normal map with it) and its leaves, cut where there is no leaf, or takes pictures of its own', function () {
 		var made = flora.Textures('oak');

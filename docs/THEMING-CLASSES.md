@@ -1607,6 +1607,23 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-planet-editor-toolbar`
 - `elemenx-planet-editor-view`
 
+## FloraEditor
+
+- `elemenx-flora-editor`
+- `elemenx-flora-editor-busy`
+- `elemenx-flora-editor-color`
+- `elemenx-flora-editor-define`
+- `elemenx-flora-editor-field`
+- `elemenx-flora-editor-hint`
+- `elemenx-flora-editor-load`
+- `elemenx-flora-editor-panel`
+- `elemenx-flora-editor-picture`: `shown`
+- `elemenx-flora-editor-reference`
+- `elemenx-flora-editor-title`
+- `elemenx-flora-editor-told`
+- `elemenx-flora-editor-variant`
+- `elemenx-flora-editor-view`
+
 ## TextureLab
 
 - `elemenx-texture-lab`
