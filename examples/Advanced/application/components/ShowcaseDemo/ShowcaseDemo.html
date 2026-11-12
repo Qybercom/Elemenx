@@ -1,0 +1,20 @@
+<div class="scene-demo">
+	<div class="scene-demo-row">
+		<Select Label="District" [options]="ShowDistricts" [value]="ShowDistrict" (change)="ShowFly" />
+		<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
+		<Button Label="Benchmark" Icon="play" Variant="ghost" [disabled]="ShowRunning || !ShowMade" (click)="ShowBench" />
+		<Toggle Label="Levels" [checked]="ShowLevels" (change)="ShowLevels = $event" />
+		<Toggle Label="Proxies" [checked]="ShowProxies" (change)="ShowProxies = $event" />
+		<Select Label="Cache" Size="small" [options]="ShowCacheSizes" [value]="ShowCacheSize" (change)="ShowCacheSize = $event" />
+		<Button Label="Clear cache" Icon="delete" Variant="ghost" (click)="ShowCacheClear" />
+		<span *if="ShowCacheUsed">{{ShowCacheUsed}}</span>
+		<span *if="ShowMade">{{ShowMade}}</span>
+	</div>
+	<div class="elemenx-chips" *if="ShowShows.length">
+		<span class="elemenx-chip" *for="item of ShowShows" *key="item">{{item}}</span>
+	</div>
+	<div class="scene-demo-scene">
+		<Scene Team="blue" Labels="true" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [levels]="ShowLevels" [proxies]="ShowProxies" [cachesize]="ShowCacheSize" (ready)="ShowReady"></Scene>
+	</div>
+	<Table *if="ShowResults.length" Compact="true" Label="Benchmark" RowKey="ID" [columns]="ShowColumns" [rows]="ShowResults" />
+</div>

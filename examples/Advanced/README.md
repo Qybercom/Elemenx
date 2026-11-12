@@ -93,4 +93,4 @@ See `SHOWCASE.md` before adding another demo. Phase 7 is complete: every tracked
 
 ## Standard UI library
 
-Advanced registers the built-in `libraries/ElemenxUI` graph through Application `$Use`. Open `/ui` for the executable UI Kit catalogue. Development resolves the canonical package library through the Elemenx server; production Builder bundles only reachable Library Components and copies declared public style assets.
+Advanced registers the built-in `libraries/ElemenxUI` graph through Application `$Use`. Open `/ui` for the executable UI Kit catalogue. The 3D scenes have pages of their own, one demo at a time and made for a phone too (touch gestures, a virtual gamepad, fullscreen in landscape): `/graphics` (terrain, locations, space, deep space, showcase, models, plants, textures, cinema and the scene, space and object editors) and `/gaming` (strategy, racing, orbit, combat); `?demo=Name` opens one of them. Development resolves the canonical package library through the Elemenx server; production Builder bundles only reachable Library Components and copies declared public style assets.

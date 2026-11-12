@@ -638,6 +638,16 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 			expect(air[i].Height).toBeLessThan(air[i - 1].Height + 1e-6);
 			expect(Math.abs(is - was)).toBeLessThan(Math.max(was, is) * 0.2 + 1e-6);
 		}
+
+		/*
+		 * Regression: the view was in the axes of the ship, and as the ship lifted its nose for the air (some 40 degrees
+		 * high up, none low) it went up to the sky with it. It stays as the player turned it over the horizon all the way down.
+		 */
+		var tilts = air.map(function (one) {
+			return Math.asin(math.Vectors.Dot(one.Eye, math.Vectors.Normalize(one.At)));
+		});
+
+		expect(Math.max.apply(null, tilts) - Math.min.apply(null, tilts)).toBeLessThan(0.03);
 	}, 120000);
 
 	/* Flown by hand down to the top of the air, the ship comes into it under the player's hand: the command can take it down then. */

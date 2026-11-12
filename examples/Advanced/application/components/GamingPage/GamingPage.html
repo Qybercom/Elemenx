@@ -1,0 +1,6 @@
+<DemoFrame Title="Gaming" Landscape="true" Other="/graphics" OtherLabel="Graphics" [demos]="Demos" [current]="Shown($Query)" (choose)="Choose">
+	<WorldDemo *if="Shown($Query) === 'World'" />
+	<RacingDemo *if="Shown($Query) === 'Racing'" />
+	<OrbitDemo *if="Shown($Query) === 'Orbit'" />
+	<CombatDemo *if="Shown($Query) === 'Combat'" />
+</DemoFrame>

@@ -798,3 +798,20 @@ body[data-scheme='dark'] .application-shell {
 	border-radius: 6px;
 	background: var(--elemenx-surface-raised);
 }
+
+/* The pages of demos (DemoFrame marks <html> while one is shown): the whole screen theirs, nothing scrolls past it. */
+html.demo-page,
+html.demo-page body {
+	overflow: hidden;
+}
+
+.demo-page .application-shell > .application-header,
+.demo-page .application-shell > footer {
+	display: none;
+}
+
+.demo-page .application-shell > .application-main {
+	width: 100%;
+	margin: 0;
+	padding: 0;
+}

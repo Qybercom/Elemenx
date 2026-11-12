@@ -1,0 +1,135 @@
+<div class="scene-demo">
+	<Ribbon class="ui-kit-place-ribbon" Label="Location" [tab]="PlaceTab" (tab)="PlaceTab = $event.ID">
+		<RibbonTab ID="place" Title="Place">
+			<RibbonGroup Title="Where" Icon="map-pin" Keep="true">
+				<Select Label="Location" Size="small" [options]="PlaceList" [value]="PlaceName" (change)="PlaceChosen" />
+				<Select Label="Character" Size="small" [options]="PlaceCharacters" [value]="PlaceCharacter" (change)="PlaceCharacterChosen" />
+				<Button Label="Walk here" Icon="map-pin" Variant="ghost" Size="small" (click)="PlaceLoad" />
+			</RibbonGroup>
+			<RibbonGroup Title="Camera" Icon="eye">
+				<Select Label="Camera" Size="small" [options]="PlacePersons" [value]="PlacePerson" (change)="PlacePerson = $event" />
+				<Toggle Label="Free look" [checked]="PlaceFree" (change)="PlaceFree = $event" />
+				<Button Label="Next camera (V)" Variant="ghost" Size="small" (click)="PlaceNextPerson" />
+				<label class="ui-kit-tune"><span>Bokeh</span><Slider Label="Bokeh" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SceneBokeh" (input)="SceneBokeh = $event" /></label>
+			</RibbonGroup>
+			<RibbonGroup Title="Shoulder" Icon="eye">
+				<Toggle Label="Left shoulder (B)" [checked]="PlaceShoulder === 'left'" (change)="PlaceShoulder = $event ? 'left' : 'right'" />
+				<Toggle Label="Lamps" [checked]="PlaceLamps" (change)="PlaceLampsShown" />
+				<Toggle Label="Body glow" [checked]="PlaceGlow" (change)="PlaceGlow = $event" />
+				<Toggle Label="Mana bubbles" [checked]="PlaceMana" (change)="PlaceMana = $event" />
+			</RibbonGroup>
+			<RibbonGroup Title="Axes" Icon="move">
+				<Toggle Label="Axes of the view" [checked]="PlaceAxes" (change)="PlaceAxes = $event" />
+				<Toggle Label="Axes of the world" [checked]="PlaceOrigin" (change)="PlaceOrigin = $event" />
+			</RibbonGroup>
+		</RibbonTab>
+		<RibbonTab ID="time" Title="Time">
+			<RibbonGroup Title="Day" Icon="clock">
+				<label class="ui-kit-tune"><span>Time of day</span><Slider Label="Time of day" Size="small" ShowValue="end" Min="0" [max]="PlaceSky.DayHours" Step="0.25" [format]="PlaceClock" [value]="PlaceHour" (input)="PlaceTimed" /></label>
+				<label class="ui-kit-tune"><span>Day length</span><Slider Label="Day length" Size="small" ShowValue="end" Min="6" Max="48" Step="1" Unit=" h" [value]="PlaceSky.DayHours" (input)="PlaceDayLength" /></label>
+				<label class="ui-kit-tune"><span>Day of year</span><Slider Label="Day of year" Size="small" ShowValue="end" Min="1" Max="365" [value]="PlaceSky.DayOfYear" (input)="PlaceDayChosen" /></label>
+			</RibbonGroup>
+			<RibbonGroup Title="Planet" Icon="globe">
+				<label class="ui-kit-tune"><span>Latitude</span><Slider Label="Latitude" Size="small" ShowValue="end" Min="-90" Max="90" Step="1" Unit="°" [value]="PlaceSky.Latitude" (input)="PlaceLatitudeChosen" /></label>
+				<label class="ui-kit-tune"><span>Axis tilt</span><Slider Label="Axis tilt" Size="small" ShowValue="end" Min="0" Max="60" Step="0.5" Unit="°" [value]="PlaceSky.Tilt" (input)="PlaceTiltChosen" /></label>
+			</RibbonGroup>
+			<RibbonGroup Title="Night" Icon="moon">
+				<label class="ui-kit-tune"><span>Night light</span><Slider Label="Night light" Size="small" ShowValue="end" Min="0" Max="3" Step="0.1" [value]="PlaceSky.NightLight" (input)="PlaceNightLight" /></label>
+				<label class="ui-kit-tune"><span>Town glow</span><Slider Label="Town glow" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="PlaceSky.SkyGlow" (input)="PlaceTownGlow" /></label>
+			</RibbonGroup>
+			<RibbonGroup Title="Eclipses" Icon="sun">
+				<Button Label="Of the sun" Variant="ghost" Size="small" (click)="PlaceEclipse('sun')" />
+				<Button Label="Of the moon" Variant="ghost" Size="small" (click)="PlaceEclipse('moon')" />
+			</RibbonGroup>
+		</RibbonTab>
+		<RibbonTab ID="moon" Title="Moon">
+			<RibbonGroup Title="Moon" Icon="moon">
+				<Toggle Label="Moon" [checked]="PlaceSky.Moon" (change)="PlaceMoonShown" />
+				<label class="ui-kit-tune"><span>Moon light</span><Slider Label="Moon light" Size="small" ShowValue="end" Min="0" Max="3" Step="0.1" [value]="PlaceSky.MoonLight" (input)="PlaceMoonLight" /></label>
+			</RibbonGroup>
+			<RibbonGroup Title="Disc" Icon="moon">
+				<label class="ui-kit-tune"><span>Moon phase</span><Slider Label="Moon phase" Size="small" ShowValue="end" Min="0" Max="1" Step="0.01" [value]="PlaceSky.MoonPhase" (input)="PlaceMoonPhase" /></label>
+				<label class="ui-kit-tune"><span>Moon size</span><Slider Label="Moon size" Size="small" ShowValue="end" Min="0.3" Max="3" Step="0.1" [value]="PlaceSky.MoonSize" (input)="PlaceMoonSize" /></label>
+			</RibbonGroup>
+			<RibbonGroup Title="Where it stands" Icon="compass">
+				<Toggle Label="Hold the moon" [checked]="PlaceMoonHeld" (change)="PlaceMoonHold" />
+				<label class="ui-kit-tune"><span>Moon height</span><Slider Label="Moon height" Size="small" ShowValue="end" Min="0" Max="90" Unit="°" [disabled]="!PlaceMoonHeld" [value]="PlaceMoonElevation" (input)="PlaceMoonHigh" /></label>
+				<label class="ui-kit-tune"><span>Moon azimuth</span><Slider Label="Moon azimuth" Size="small" ShowValue="end" Min="0" Max="360" Unit="°" [disabled]="!PlaceMoonHeld" [value]="PlaceMoonAzimuth" (input)="PlaceMoonRound" /></label>
+			</RibbonGroup>
+		</RibbonTab>
+		<RibbonTab ID="weather" Title="Weather">
+			<RibbonGroup Title="Air" Icon="cloud">
+				<Select Label="Weather" Size="small" [options]="SceneWeathers" [value]="SceneWeather" (change)="SceneWeatherChosen" />
+				<label class="ui-kit-tune"><span>Wind</span><Slider Label="Wind" Size="small" ShowValue="end" Min="0" Max="4" Step="0.1" [value]="SceneWind" (input)="SceneWindChosen" /></label>
+			</RibbonGroup>
+		</RibbonTab>
+		<RibbonTab ID="effects" Title="Effects">
+			<RibbonGroup Title="Burning" Icon="flame">
+				<Button Label="Campfire" Variant="ghost" Size="small" (click)="PlaceEffect('campfire')" />
+				<Button Label="Torch" Variant="ghost" Size="small" (click)="PlaceEffect('torch')" />
+				<Button Label="Jet" Variant="ghost" Size="small" (click)="PlaceEffect('exhaust')" />
+			</RibbonGroup>
+			<RibbonGroup Title="Sudden" Icon="zap">
+				<Button Label="Explosion" Variant="ghost" Size="small" (click)="PlaceEffect('explosion')" />
+				<Button Label="Sparks" Variant="ghost" Size="small" (click)="PlaceEffect('spark')" />
+				<Button Label="Smoke" Variant="ghost" Size="small" (click)="PlaceEffect('smoke')" />
+			</RibbonGroup>
+			<RibbonGroup Title="Colors" Icon="palette">
+				<ColorInput Label="Fire color" Size="small" [value]="PlaceFire.Color" (input)="PlaceFireColor" />
+				<ColorInput Label="Fire heart" Size="small" [value]="PlaceFire.Hot" (input)="PlaceFireHot" />
+			</RibbonGroup>
+			<RibbonGroup Title="Shape" Icon="sliders">
+				<label class="ui-kit-tune"><span>Volume</span><Slider Label="Volume" Size="small" ShowValue="end" Min="0.1" Max="10" Step="0.1" [value]="PlaceFire.Volume" (input)="PlaceFireVolume" /></label>
+				<label class="ui-kit-tune"><span>Intensity</span><Slider Label="Intensity" Size="small" ShowValue="end" Min="0" Max="5" Step="0.1" [value]="PlaceFire.Intensity" (input)="PlaceFireIntensity" /></label>
+				<label class="ui-kit-tune"><span>Length</span><Slider Label="Length" Size="small" ShowValue="end" Min="0.1" Max="10" Step="0.1" [value]="PlaceFire.Length" (input)="PlaceFireLength" /></label>
+				<label class="ui-kit-tune"><span>Width</span><Slider Label="Width" Size="small" ShowValue="end" Min="0.1" Max="10" Step="0.1" [value]="PlaceFire.Width" (input)="PlaceFireWidth" /></label>
+			</RibbonGroup>
+			<RibbonGroup Title="Rest" Icon="trash">
+				<label class="ui-kit-tune"><span>Smoke</span><Slider Label="Smoke" Size="small" ShowValue="end" Min="0" Max="5" Step="0.1" [value]="PlaceFire.Smoke" (input)="PlaceFireSmoke" /></label>
+				<Button Label="Clear effects" Variant="ghost" Size="small" (click)="PlaceEffectsGone" />
+			</RibbonGroup>
+		</RibbonTab>
+		<RibbonTab ID="magic" Title="Magic">
+			<RibbonGroup Title="Circles" Icon="star">
+				<Button Label="Magic circle" Variant="ghost" Size="small" (click)="PlaceEffect('circle')" />
+				<Button Label="Aura" Variant="ghost" Size="small" (click)="PlaceEffect('aura')" />
+				<Button Label="Portal" Variant="ghost" Size="small" (click)="PlaceEffect('portal')" />
+			</RibbonGroup>
+			<RibbonGroup Title="Light" Icon="sun">
+				<Button Label="Pillar of light" Variant="ghost" Size="small" (click)="PlaceEffect('pillar')" />
+				<Button Label="Beam" Variant="ghost" Size="small" (click)="PlaceEffect('beam')" />
+				<Button Label="Lightning" Variant="ghost" Size="small" (click)="PlaceEffect('lightning')" />
+			</RibbonGroup>
+			<RibbonGroup Title="Spells" Icon="zap">
+				<Button Label="Fireball" Variant="ghost" Size="small" (click)="PlaceEffect('fireball')" />
+				<Button Label="Teleport" Variant="ghost" Size="small" (click)="PlaceEffect('teleport')" />
+				<Button Label="Shield" Variant="ghost" Size="small" (click)="PlaceEffect('shield')" />
+			</RibbonGroup>
+			<RibbonGroup Title="Nature" Icon="heart">
+				<Button Label="Healing" Variant="ghost" Size="small" (click)="PlaceEffect('healing')" />
+				<Button Label="Frost" Variant="ghost" Size="small" (click)="PlaceEffect('frost')" />
+				<Button Label="Poison" Variant="ghost" Size="small" (click)="PlaceEffect('poison')" />
+			</RibbonGroup>
+			<RibbonGroup Title="Look" Icon="palette">
+				<Toggle Label="Colors of my own" [checked]="PlaceSpellOwn" (change)="PlaceSpellOwn = $event" />
+				<ColorInput Label="Spell color" Size="small" [value]="PlaceSpell.Color" (input)="PlaceSpellColor" />
+				<ColorInput Label="Spell heart" Size="small" [value]="PlaceSpell.Hot" (input)="PlaceSpellHot" />
+			</RibbonGroup>
+			<RibbonGroup Title="Rings" Icon="sliders">
+				<label class="ui-kit-tune"><span>Spin</span><Slider Label="Spin" Size="small" ShowValue="end" Min="-5" Max="5" Step="0.1" [value]="PlaceFire.Spin" (input)="PlaceFireSpin" /></label>
+			</RibbonGroup>
+			<RibbonGroup Title="Over time" Icon="clock">
+				<Select Label="Pulse" Size="small" [options]="PlacePulseList" [value]="PlacePulse" (change)="PlacePulseChosen" />
+			</RibbonGroup>
+		</RibbonTab>
+		<RibbonTab ID="view" Title="View">
+			<RibbonGroup Title="Picture" Icon="image">
+				<Select Label="Quality" Size="small" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
+				<label class="ui-kit-tune"><span>Lens flare</span><Slider Label="Lens flare" Size="small" ShowValue="end" Min="0" Max="2" Step="0.1" [value]="SceneFlare" (input)="SceneFlareChosen" /></label>
+			</RibbonGroup>
+		</RibbonTab>
+	</Ribbon>
+	<div class="scene-demo-scene">
+		<Scene Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" [freelook]="PlaceFree" [person]="PlacePerson" [shoulder]="PlaceShoulder" [axes]="PlaceAxes ? 'top-right' : ''" [origin]="PlaceOrigin" [bokeh]="SceneBokeh" (person)="PlacePerson = $event" (shoulder)="PlaceShoulder = $event" (ready)="PlaceReady"><VirtualGamepad slot="hud" Right="true" Buttons="a,rb,lb" Label="Walk" /><SceneObject *if="PlaceGlow" ID="hero-glow" Kind="effect" Type="glow" Follow="hero" Color="#7fd0ff" Intensity="1" Where="both" /><SceneObject *if="PlaceMana" ID="hero-mana" Kind="effect" Type="mana" Follow="hero" /></Scene>
+	</div>
+</div>

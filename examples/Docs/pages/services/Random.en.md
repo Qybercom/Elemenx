@@ -5,11 +5,15 @@ Random numbers of a seed: always the same numbers for the same seed (a map made 
 
 - Create(seed) returns a generator: Next() (0 to 1), Int(min, max) (both in), Float(min, max), Chance(probability), Pick(list), Weighted(list, weight) (weight: a function of an item, or the name of its field; Weight by default), Shuffle(list) (a new list), Fork(name) (a generator of its own for a part: the same for the same seed and name), Seed.
 - Hash(text): a number of 32 bits of a text.
+- Sequence(text): the numbers 0 to 1 of a text one after the other, next() (a linear generator of the text hashed by 31): the old generator the towns of planets and the plans of settlements are laid by, kept so that they stay where they were. Regression: it was written out again in each of them.
+- Source(names): the source of its members for a worker of the Workers Service.
 - Noise(seed, size) returns a smooth noise of a plane, noise(x, y) 0 to 1 (size: the cells of one wave, 16 by default): the ground of a map, clouds.
 
 ## Methods
 
 - `Hash(text)`
+- `Sequence(text)`
+- `Source(names)`
 - `Create(seed)`
 - `Noise(seed, size)`
 
@@ -51,8 +55,10 @@ Random numbers of a seed: always the same numbers for the same seed (a map made 
 ## Tests
 
 - [Random: the same numbers for the same seed, its helpers in their bounds, a fork of its own, a smooth noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L28) — `tests/regression/game-services.test.js`
-- [SpatialIndex: the things in a rectangle, within a radius the nearest first, the nearest one, as they move and go](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L68) — `tests/regression/game-services.test.js`
-- [Pathfinding: a way round the walls, no corner cut, around costly cells, to the nearest reachable cell, on a graph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L105) — `tests/regression/game-services.test.js`
-- [Visibility: a line, the sight past a wall, the field of view and its shadows, the fog of war](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L182) — `tests/regression/game-services.test.js`
-- [Loop: steps of the same time whatever the frames, a part of a step to draw between, its speed, pause and catch-up limit](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L229) — `tests/regression/game-services.test.js`
+- [Random: Sequence gives the numbers of the old linear generator of a text, that towns and settlements are laid by](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L69) — `tests/regression/game-services.test.js`
+- [SpatialIndex: the things in a rectangle, within a radius the nearest first, the nearest one, as they move and go](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L86) — `tests/regression/game-services.test.js`
+- [Pathfinding: a way round the walls, no corner cut, around costly cells, to the nearest reachable cell, on a graph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L123) — `tests/regression/game-services.test.js`
+- [Visibility: a line, the sight past a wall, the field of view and its shadows, the fog of war](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L200) — `tests/regression/game-services.test.js`
+- [Loop: steps of the same time whatever the frames, a part of a step to draw between, its speed, pause and catch-up limit](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L247) — `tests/regression/game-services.test.js`
+- [runs a graph that calls itself through a list of its own, as a function, by the IR in JavaScript as it runs](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L71) — `tests/regression/blueprints-ir.test.js`
 - [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L129) — `tests/regression/headless.test.js`

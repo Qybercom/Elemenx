@@ -1,0 +1,21 @@
+<Workspace class="demo-frame">
+	<WorkspaceToolbar slot="header" [label]="Title">
+		<a class="demo-frame-home" href="/">Elemenx</a>
+		<strong class="demo-frame-title">{{Title}}</strong>
+		<span class="demo-frame-note">{{NoteOf(Current)}}</span>
+		<Button Icon="maximize" Label="Fullscreen" Variant="ghost" (click)="Full" />
+		<a class="demo-frame-other" [href]="Other">{{OtherLabel}}</a>
+	</WorkspaceToolbar>
+	<WorkspaceToolWindow slot="tools" ID="demos" Title="Demos" Icon="list" Area="left" [open]="!Phone" Padded="true">
+		<nav class="demo-frame-list" aria-label="Demos">
+			<button *for="demo of Demos" type="button" class="demo-frame-item" [class.active]="demo.Name === Current" (click)="Chosen(demo.Name)">{{demo.Label}}</button>
+		</nav>
+	</WorkspaceToolWindow>
+	<div slot="left-stripe" class="demo-frame-corner">
+		<button type="button" aria-label="Controls" [attribute.aria-pressed]="String(Tools)" (click)="Tools = !Tools"><Icon Name="sliders" /></button>
+		<button type="button" aria-label="Fullscreen" (click)="Full"><Icon Name="maximize" /></button>
+	</div>
+	<div slot="main" class="demo-frame-main" [class.tools]="Tools" #Main>
+		<slot></slot>
+	</div>
+</Workspace>

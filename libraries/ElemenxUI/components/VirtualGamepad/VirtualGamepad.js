@@ -43,10 +43,13 @@ Elemenx.Component('VirtualGamepad', {
 
 		this.Touches = {};
 
-		/* The buttons shown, by their group: the face ones, the shoulders, the middle ones. */
+		/*
+		 * The buttons shown, by their group: the face ones, the shoulders of the left and of the right (and both), the middle
+		 * ones. Regression: the first two shoulders went left whatever they were, a lone rb on the left over what was there.
+		 */
 		this.Listed = function (buttons, group) {
 			var list = typeof buttons === 'string' ? buttons.split(',') : buttons || [];
-			var groups = {face: ['y', 'x', 'b', 'a'], shoulder: ['lb', 'lt', 'rb', 'rt'], middle: ['select', 'start']};
+			var groups = {face: ['y', 'x', 'b', 'a'], shoulder: ['lb', 'lt', 'rb', 'rt'], left: ['lb', 'lt'], right: ['rb', 'rt'], middle: ['select', 'start']};
 
 			return groups[group].filter(function (name) {
 				return list.map(function (each) {

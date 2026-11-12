@@ -1,9 +1,9 @@
 <div class="elemenx-virtual-pad" role="group" [attribute.aria-label]="Label || $T('ui.virtualGamepad.label')" [hidden]="!Shown(Show)" [class.with-right]="Right && Right !== 'false'">
 	<div class="elemenx-virtual-pad-shoulders left">
-		<button type="button" tabindex="-1" class="elemenx-virtual-pad-button shoulder" *for="button of Listed(Buttons, 'shoulder').slice(0, 2)" *key="button" [attribute.data-button]="button" [class.down]="!!Down[button]" [attribute.aria-label]="LabelOf(button)" (pointerdown)="ButtonDown" (pointerup)="ButtonUp" (pointercancel)="ButtonUp" (lostpointercapture)="ButtonUp">{{LabelOf(button)}}</button>
+		<button type="button" tabindex="-1" class="elemenx-virtual-pad-button shoulder" *for="button of Listed(Buttons, 'left')" *key="button" [attribute.data-button]="button" [class.down]="!!Down[button]" [attribute.aria-label]="LabelOf(button)" (pointerdown)="ButtonDown" (pointerup)="ButtonUp" (pointercancel)="ButtonUp" (lostpointercapture)="ButtonUp">{{LabelOf(button)}}</button>
 	</div>
 	<div class="elemenx-virtual-pad-shoulders right">
-		<button type="button" tabindex="-1" class="elemenx-virtual-pad-button shoulder" *for="button of Listed(Buttons, 'shoulder').slice(2)" *key="button" [attribute.data-button]="button" [class.down]="!!Down[button]" [attribute.aria-label]="LabelOf(button)" (pointerdown)="ButtonDown" (pointerup)="ButtonUp" (pointercancel)="ButtonUp" (lostpointercapture)="ButtonUp">{{LabelOf(button)}}</button>
+		<button type="button" tabindex="-1" class="elemenx-virtual-pad-button shoulder" *for="button of Listed(Buttons, 'right')" *key="button" [attribute.data-button]="button" [class.down]="!!Down[button]" [attribute.aria-label]="LabelOf(button)" (pointerdown)="ButtonDown" (pointerup)="ButtonUp" (pointercancel)="ButtonUp" (lostpointercapture)="ButtonUp">{{LabelOf(button)}}</button>
 	</div>
 	<div class="elemenx-virtual-pad-stick left" data-stick="left" role="slider" [style.width]="Size + 'px'" [style.height]="Size + 'px'" [attribute.aria-label]="$T('ui.virtualGamepad.stick')" (pointerdown)="StickDown" (pointermove)="StickMove" (pointerup)="StickUp" (pointercancel)="StickUp">
 		<span class="elemenx-virtual-pad-knob" [style.transform]="'translate(' + (Knobs.left[0] * 64) + '%, ' + (Knobs.left[1] * 64) + '%)'"></span>

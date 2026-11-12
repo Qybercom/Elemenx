@@ -1,0 +1,50 @@
+<div class="scene-demo">
+	<Ribbon class="ui-kit-place-ribbon" Label="Racing" [tab]="RaceTab" (tab)="RaceTab = $event.ID">
+		<RibbonTab ID="drive" Title="Drive">
+			<RibbonGroup Title="Car" Icon="map-pin" Keep="true">
+				<Select Label="Car" Size="small" [options]="RaceCars" [value]="RaceCar" (change)="RaceCarChosen" />
+				<Select Label="Camera" Size="small" [options]="PlacePersons" [value]="RacePerson" (change)="RacePerson = $event" />
+				<Select Label="Track" Size="small" [options]="RaceTracks" [value]="RaceKind" (change)="RaceKindChosen" />
+				<Button Label="New track" Icon="map-pin" Variant="ghost" Size="small" (click)="RaceNewTrack" />
+				<Toggle Label="Doors" [checked]="RaceDoors" (change)="RaceDoorsOpened" />
+				<span>{{RaceSpeed}} km/h{{RaceGear ? ' · ' + RaceGear : ''}}{{RaceLapText ? ' · ' + RaceLapText : ''}}{{RaceWrong ? ' · wrong way' : ''}}</span>
+			</RibbonGroup>
+			<RibbonGroup Title="Weather" Icon="sliders">
+				<Select Label="Weather" Size="small" [options]="SceneWeathers" [value]="SceneWeather" (change)="SceneWeatherChosen" />
+				<label class="ui-kit-tune"><span>Time of day</span><Slider Label="Time of day" Size="small" ShowValue="end" Min="0" Max="24" Step="0.25" [format]="PlaceClock" [value]="RaceHour" (input)="RaceTimed" /></label>
+				<Toggle Label="Just washed" [checked]="RaceWashed" (change)="RaceWet('Washed', $event)" />
+				<label class="ui-kit-tune"><span>Drops</span><Slider Label="Drops" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="RaceDrops" (input)="RaceWet('Drops', $event)" /></label>
+			</RibbonGroup>
+		</RibbonTab>
+		<RibbonTab ID="setup" Title="Setup">
+			<RibbonGroup Title="Stopping" Icon="sliders">
+				<label class="ui-kit-tune"><span>Brake</span><Slider Label="Brake" Size="small" ShowValue="end" Min="6" Max="60" Step="1" [value]="RaceTune.Brake" (input)="RaceTuned('Brake', $event)" /></label>
+				<label class="ui-kit-tune"><span>Coast</span><Slider Label="Coast" Size="small" ShowValue="end" Min="0" Max="8" Step="0.1" [value]="RaceTune.Coast" (input)="RaceTuned('Coast', $event)" /></label>
+				<label class="ui-kit-tune"><span>Grip</span><Slider Label="Grip" Size="small" ShowValue="end" Min="0.6" Max="2.4" Step="0.05" [value]="RaceTune.Grip" (input)="RaceTuned('Grip', $event)" /></label>
+				<label class="ui-kit-tune"><span>Downforce</span><Slider Label="Downforce" Size="small" ShowValue="end" Min="0" Max="2" Step="0.1" [value]="RaceTune.Downforce" (input)="RaceTuned('Downforce', $event)" /></label>
+			</RibbonGroup>
+			<RibbonGroup Title="Going" Icon="sliders">
+				<label class="ui-kit-tune"><span>Power</span><Slider Label="Power" Size="small" ShowValue="end" Min="200000" Max="1400000" Step="10000" [value]="RaceTune.Power" (input)="RaceTuned('Power', $event)" /></label>
+				<label class="ui-kit-tune"><span>Steering</span><Slider Label="Steering" Size="small" ShowValue="end" Min="4" Max="40" Step="1" [value]="RaceTune.Answer" (input)="RaceTuned('Answer', $event)" /></label>
+				<label class="ui-kit-tune"><span>Agility</span><Slider Label="Agility" Size="small" ShowValue="end" Min="1" Max="5" Step="0.1" [value]="RaceTune.Agility" (input)="RaceTuned('Agility', $event)" /></label>
+				<label class="ui-kit-tune"><span>Assist</span><Slider Label="Assist" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="RaceTune.Assist" (input)="RaceTuned('Assist', $event)" /></label>
+				<label class="ui-kit-tune"><span>Drift grip</span><Slider Label="Drift grip" Size="small" ShowValue="end" Min="0.15" Max="1" Step="0.01" [value]="RaceTune.Slide" (input)="RaceTuned('Slide', $event)" /></label>
+				<label class="ui-kit-tune"><span>Softness</span><Slider Label="Softness" Size="small" ShowValue="end" Min="0.4" Max="2" Step="0.1" [value]="RaceTune.Ride" (input)="RaceTuned('Ride', $event)" /></label>
+			</RibbonGroup>
+			<RibbonGroup Title="Turning" Icon="sliders">
+				<label class="ui-kit-tune"><span>50 km/h</span><Slider Label="Turn at 50 km/h" Size="small" ShowValue="end" Min="20" Max="120" Step="1" [value]="RaceTurnOf(0)" (input)="RaceTurned(0, $event)" /></label>
+				<label class="ui-kit-tune"><span>100 km/h</span><Slider Label="Turn at 100 km/h" Size="small" ShowValue="end" Min="20" Max="120" Step="1" [value]="RaceTurnOf(1)" (input)="RaceTurned(1, $event)" /></label>
+				<label class="ui-kit-tune"><span>200 km/h</span><Slider Label="Turn at 200 km/h" Size="small" ShowValue="end" Min="20" Max="120" Step="1" [value]="RaceTurnOf(2)" (input)="RaceTurned(2, $event)" /></label>
+				<label class="ui-kit-tune"><span>300 km/h</span><Slider Label="Turn at 300 km/h" Size="small" ShowValue="end" Min="20" Max="120" Step="1" [value]="RaceTurnOf(3)" (input)="RaceTurned(3, $event)" /></label>
+				<label class="ui-kit-tune"><span>Wheel, slow</span><Slider Label="Steering time at a walk" Size="small" ShowValue="end" Min="0.05" Max="1" Step="0.05" [value]="RaceBuildOf(0)" (input)="RaceBuilt(0, $event)" /></label>
+				<label class="ui-kit-tune"><span>Wheel, fast</span><Slider Label="Steering time at top speed" Size="small" ShowValue="end" Min="0.05" Max="1" Step="0.05" [value]="RaceBuildOf(1)" (input)="RaceBuilt(1, $event)" /></label>
+			</RibbonGroup>
+			<RibbonGroup Title="Body" Icon="sliders">
+				<label class="ui-kit-tune"><span>Windows</span><Slider Label="Windows" Size="small" ShowValue="end" Min="-0.4" Max="1" Step="0.05" [value]="RaceWindows" (input)="RaceWindowsMoved" /></label>
+			</RibbonGroup>
+		</RibbonTab>
+	</Ribbon>
+	<div class="scene-demo-scene">
+		<Scene Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [person]="RacePerson" [weather]="SceneWeather" Labels="false" (person)="RacePerson = $event" (ready)="RaceReady"><div slot="screens" data-screen="dash" class="ui-kit-dash"><span class="ui-kit-dash-turn" [class.on]="RaceSignals.Left">&#9664;</span><span class="ui-kit-dash-speed">{{RaceSpeed}}</span><span class="ui-kit-dash-unit">km/h</span><span class="ui-kit-dash-gear">{{RaceGearOnly}}</span><span class="ui-kit-dash-rpm"><span [style.width]="RaceRpmPart + '%'"></span></span><span class="ui-kit-dash-lights" [class.on]="RaceSignals.Lights">&#9679;</span><span class="ui-kit-dash-turn" [class.on]="RaceSignals.Right">&#9654;</span></div><VirtualGamepad slot="hud" Tilt="true" Buttons="a,b,lt,rt,rb" Label="Drive" /><GameRace Road="track" Laps="3" Countdown="0" (lap)="RaceLapped" (wrong)="RaceWrong = $event.Wrong" /></Scene>
+	</div>
+</div>

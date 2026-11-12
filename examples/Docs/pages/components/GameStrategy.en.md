@@ -1,9 +1,9 @@
 <!-- generated -->
 # GameStrategy
 
-A strategy game on the ground of a Scene, declared inside it: <Scene> ... <GameStrategy Team="blue" Fog="true" /> </Scene> (the trait SceneBehaviour). The units of the player are the walkers of its Team: a press selects one (Shift adds or takes it away), a frame drawn with the left button selects all in it, a double press all of its kind on the screen, Ctrl+A all of them, Escape none. A right press orders them: on the ground they go there and spread round it (Spread metres apart), on a unit of another team they attack it; S stops them. A unit with Damage (per second, 10) attacks what is within its Range (3 metres), going to it first, and by itself what comes within half its Sight; a unit with no Health left is gone. A unit with a Weapon (of the weapons of the Scene: rifle, rocket, mortar...) shoots it from its Range (25 metres) with a Spread of its own (degrees, 2), its shots hitting what is in their way; the damage is of the health of the scene (Vitals). Fog hides what the units of the Team do not see (Sight of a unit, 30 metres) and darkens what they have not seen yet or see no more; the units of other teams are hidden there. The right button turns the view, the wheel brings it near. Selected: the units selected from the start, as they come into the scene.
+A strategy game on the ground of a Scene, declared inside it: <Scene> ... <GameStrategy Team="blue" Fog="true" /> </Scene> (the trait SceneBehaviour). The units of the player are the walkers of its Team: a press selects one (Shift adds or takes it away), a frame drawn with the left button selects all in it, a double press all of its kind on the screen, Ctrl+A all of them, Escape none. A right press orders them: on the ground they go there and spread round it (Spread metres apart), on a unit of another team they attack it; S stops them. A unit with Damage (per second, 10) attacks what is within its Range (3 metres), going to it first, and by itself what comes within half its Sight; a unit with no Health left is gone. A unit with a Weapon (of the weapons of the Scene: rifle, rocket, mortar...) shoots it from its Range (25 metres) with a Spread of its own (degrees, 2), its shots hitting what is in their way; the damage is of the health of the scene (Vitals). Fog hides what the units of the Team do not see (Sight of a unit, 30 metres) and darkens what they have not seen yet or see no more; the units of other teams are hidden there. The right button with Ctrl turns the view (without it it only orders), the wheel brings it near. By fingers (Gestures): a tap selects, a double tap all of that kind on the screen, a press orders, one finger carries the map (with Framing on it draws a frame that selects), two bring it near, turn and tilt it. Selected: the units selected from the start, as they come into the scene.
 
-Methods: Selection(), Select(ids), Order(ids, target, kind) (target [x, z], {X, Z} or the ID of a unit; kind move or attack), Stop(ids), Seen(x, z) and Explored(x, z) (of the fog). Events: select ({IDs}), order ({Kind, IDs, X, Z, Target}), death ({ID, By}).
+Methods: Selection(), Select(ids), Order(ids, target, kind) (target [x, z], {X, Z} or the ID of a unit; kind move or attack), Stop(ids), Seen(x, z) and Explored(x, z) (of the fog), Framing(on) (one finger draws a frame; no on: whether it does). Events: select ({IDs}), order ({Kind, IDs, X, Z, Target}), death ({ID, By}).
 
 ## Properties
 
@@ -25,6 +25,7 @@ Methods: Selection(), Select(ids), Order(ids, target, kind) (target [x, z], {X, 
 
 - `Selection()`
 - `Select(ids)`
+- `Framing(on)`
 - `Order(ids, target, kind)`
 - `Stop(ids)`
 - `Seen(x, z)`
@@ -33,8 +34,9 @@ Methods: Selection(), Select(ids), Order(ids, target, kind) (target [x, z], {X, 
 ## Tests
 
 - [selects the units of its team only, by code, by Ctrl+A and by a frame drawn over them, and none by Escape](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L75) — `tests/regression/library-game-strategy.test.js`
-- [sends units to a place, each to its own spot, stops them, and has them attack a foe until it is gone](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L109) — `tests/regression/library-game-strategy.test.js`
-- [hides in its fog the units of other teams that its units do not see, and tells what was seen and explored](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L153) — `tests/regression/library-game-strategy.test.js`
-- [sees no farther than the weather and the light let it: a fog takes the range of sight of its units](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L181) — `tests/regression/library-game-strategy.test.js`
-- [sets no timer of no function while the scene and its game are made](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L202) — `tests/regression/library-game-strategy.test.js`
+- [orders by the right button and turns the view only with Ctrl; by fingers selects, orders, carries the map and frames](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L114) — `tests/regression/library-game-strategy.test.js`
+- [sends units to a place, each to its own spot, stops them, and has them attack a foe until it is gone](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L204) — `tests/regression/library-game-strategy.test.js`
+- [hides in its fog the units of other teams that its units do not see, and tells what was seen and explored](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L248) — `tests/regression/library-game-strategy.test.js`
+- [sees no farther than the weather and the light let it: a fog takes the range of sight of its units](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L276) — `tests/regression/library-game-strategy.test.js`
+- [sets no timer of no function while the scene and its game are made](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L297) — `tests/regression/library-game-strategy.test.js`
 - [has the armed units of a strategy shoot their foe from afar until it is gone](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/components/GameCombat/GameCombat.test.js#L182) — `libraries/ElemenxGaming/components/GameCombat/GameCombat.test.js`

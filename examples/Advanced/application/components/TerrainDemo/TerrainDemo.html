@@ -1,0 +1,54 @@
+<div class="scene-demo">
+	<div class="scene-demo-row">
+		<Select Label="Biome" [options]="TerrainBiomes" [value]="TerrainBiome" (change)="TerrainBiomed" />
+		<Select Label="Weather" [options]="SceneWeathers" [value]="SceneWeather" (change)="SceneWeatherChosen" />
+		<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
+		<Field Label="Wind"><Slider Label="Wind" Min="0" Max="4" Step="0.1" ShowValue="always" [value]="SceneWind" (input)="SceneWindChosen" /></Field>
+		<Field Label="Time of day"><Slider Label="Time of day" Min="0" Max="24" Step="0.25" ShowValue="always" [format]="PlaceClock" [value]="TerrainHour" (input)="TerrainTimed" /></Field>
+		<Field Label="Lens flare"><Slider Label="Lens flare" Min="0" Max="2" Step="0.1" ShowValue="always" [value]="SceneFlare" (input)="SceneFlareChosen" /></Field>
+		<Field Label="Bokeh"><Slider Label="Bokeh" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="SceneBokeh" (input)="SceneBokeh = $event" /></Field>
+		<Field Label="Grass in clumps"><Slider Label="Grass in clumps" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="TerrainClumps" (input)="TerrainClumps = $event" /></Field>
+		<Field Label="Grass height spread"><Slider Label="Grass height spread" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="TerrainSpread" (input)="TerrainSpread = $event" /></Field>
+		<Toggle Label="Mirror" [checked]="TerrainMirror" (change)="TerrainMirror = $event" />
+		<Field Label="Mirror blur"><Slider Label="Mirror blur" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="TerrainMirrorBlur" (input)="TerrainMirrorBlur = $event" /></Field>
+		<Toggle Label="Glass" [checked]="TerrainGlass" (change)="TerrainGlass = $event" />
+		<Field Label="Glass frost"><Slider Label="Glass frost" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="TerrainFrost" (input)="TerrainFrost = $event" /></Field>
+		<Select Label="Relief" [options]="TerrainReliefs" [value]="TerrainRelief" (change)="TerrainRelief = $event" />
+		<Field Label="Swell"><Slider Label="Swell" Min="0" Max="1.5" Step="0.05" ShowValue="always" [value]="TerrainSwell" (input)="TerrainSwell = $event" /></Field>
+		<Button Label="To the lake" Icon="map-pin" Variant="ghost" (click)="TerrainLake" />
+		<Button Label="Boat" Icon="sailing" Variant="ghost" (click)="TerrainBoat" />
+		<Button Label="All to the village" Icon="home" Variant="ghost" (click)="TerrainVillage" />
+		<Button Label="Save" Icon="save" Variant="ghost" (click)="TerrainSave" />
+		<Button Label="Load" Icon="refresh" Variant="ghost" [disabled]="!TerrainSaved" (click)="TerrainLoad" />
+	</div>
+	<div class="scene-demo-row">
+		<span class="elemenx-caption">Lights of the sky:</span>
+		<Button Label="Rainbow" Icon="sun" Variant="ghost" [title]="'A rain that ends, the sun low behind the view: the bow of 42 degrees and the second of 51'" (click)="TerrainRainbow" />
+		<Select Label="Northern lights" [options]="TerrainAuroras" [value]="TerrainAurora" (change)="TerrainAuroraChosen" />
+		<Button Label="Lightning" Icon="zap" Variant="ghost" [title]="'A storm: a flash inside the clouds, its veins crawling, then a bolt to the land'" (click)="TerrainLightning" />
+		<Button Label="Polar night" Icon="moon" Variant="ghost" [title]="'Latitude 68, a winter night: the northern lights come by themselves'" (click)="TerrainPolarNight" />
+		<Button Label="Back to summer" Icon="refresh" Variant="ghost" (click)="TerrainSummer" />
+		<span class="elemenx-caption" aria-live="polite">{{TerrainSeeing}}</span>
+	</div>
+	<div class="scene-demo-row">
+		<span class="elemenx-caption">The year:</span>
+		<Select Label="Season" [options]="TerrainSeasons" [value]="TerrainSeason" (change)="TerrainSeasonChosen" />
+		<Field Label="Day of the year"><Slider Label="Day of the year" Min="1" Max="365" Step="1" ShowValue="always" [value]="TerrainDay" (input)="TerrainDay = $event" /></Field>
+		<Field Label="Latitude"><Slider Label="Latitude" Min="-70" Max="70" Step="1" ShowValue="always" [value]="TerrainLatitude" (input)="TerrainLatitude = $event" /></Field>
+		<span class="elemenx-caption" aria-live="polite">{{TerrainYear}}</span>
+		<span class="scene-demo-status">{{TerrainNote}}</span>
+	</div>
+	<div class="scene-demo-scene">
+		<Scene Setting="terrain" Team="blue" Labels="true" Orders="true" [selectCheck]="TerrainSelectable" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [season]="TerrainSeason" [aurora]="TerrainAuroraOf(TerrainAurora)" [auroracolors]="TerrainAurora === 'fantasy' ? ['#ff4fd8', '#3fb4ff'] : null" [flare]="SceneFlare" [bokeh]="SceneBokeh" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
+			<SceneObject ID="valley" Kind="ground" [world]="TerrainWorld(TerrainBiome, TerrainRelief)" [swell]="TerrainSwell" />
+			<SceneObject ID="sun" Kind="sun" [latitude]="TerrainLatitude" [dayofyear]="TerrainDay" Noon="150" [time]="TerrainHour" />
+			<SceneObject ID="hamlet" Kind="village" X="-70" Y="20" Houses="10" />
+			<SceneObject *for="unit of TerrainUnits" *key="unit.ID" Kind="unit" [id]="unit.ID" [name]="unit.Name" [x]="unit.X" [y]="unit.Y" Team="blue" />
+			<SceneObject *for="house of TerrainHouses" *key="house.ID" Kind="house" [id]="house.ID" [name]="house.Name" [x]="house.X" [y]="house.Y" />
+			<SceneObject ID="boulder" Kind="rock" X="30" Y="-20" />
+			<SceneObject ID="meadow" *if="TerrainGrass(TerrainBiome)" Kind="grass" [height]="TerrainGrass(TerrainBiome).Height" [density]="TerrainGrass(TerrainBiome).Density" [color]="TerrainGrass(TerrainBiome).Color" [root]="TerrainGrass(TerrainBiome).Root" [clumps]="TerrainClumps" [spread]="TerrainSpread" />
+			<SceneObject ID="looking-glass" *if="TerrainMirror" Kind="mirror" X="-10" Y="-6" Width="7" Height="4.5" Lift="2.4" Yaw="33" [blur]="TerrainMirrorBlur" />
+			<SceneObject ID="window" *if="TerrainGlass" Kind="glass" X="-1" Y="-11" Width="4" Height="3" Lift="2" Yaw="25" [frost]="TerrainFrost" />
+		</Scene>
+	</div>
+</div>

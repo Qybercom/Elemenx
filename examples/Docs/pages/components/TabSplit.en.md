@@ -78,4 +78,4 @@ default
 - [takes the layout of Layout, closes a tab for its owner, and moves a divider by its keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L188) — `tests/regression/library-tab-split.test.js`
 - [a Split of the menu copies the tab into a new group, its content made again, and Split and move takes the tab there](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L243) — `tests/regression/library-tab-split.test.js`
 - [a layout given that pins a tab declared Pinned keeps it once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L325) — `tests/regression/library-tab-split.test.js`
-- [puts the panels into the groups once the groups are there](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/TabSplit/TabSplit.test.js#L32) — `libraries/ElemenxUI/components/TabSplit/TabSplit.test.js`
+- [puts the panels into the groups once the groups are there](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/TabSplit/TabSplit.test.js#L35) — `libraries/ElemenxUI/components/TabSplit/TabSplit.test.js`

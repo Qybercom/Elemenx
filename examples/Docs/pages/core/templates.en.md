@@ -83,6 +83,8 @@ Each binding becomes an **effect**: a small function that evaluates its expressi
 
 `(click)="Clear"` adds a listener to the button. It looks up `Clear` when the click happens, not when the template is compiled, so a method set later (in `$OnCreate`, say) is found too. On a component tag, `(remove)` listens to what the child emits (`this.$Emit('remove', data)`); on an element, to a DOM event, including custom ones a directive dispatches.
 
+Some events no element gives by itself: a pinch, a long press, the turn of the device. A library registers a source for them with `Elemenx.EventSource(names, {Attach(element) → stop})`, and then `(pinch)="Zoom"` works in any template like `(click)`: the first listener of an element starts the source there (once for all its names), the last one gone stops it. ElemenxCommon registers the gestures of the `Gestures` service (`(tap)`, `(doubletap)`, `(press)`, `(pressup)`, `(pan)`, `(swipe)`, `(pinch)`, `(rotate)`, `(tilt)`) and the `(orientation)` of the `Screen` service; the data is in `event.detail`.
+
 ## 6. Structural directives own their element
 
 `*if`, `*for` and `*lazy` take their element out of the tree and leave a marker (an empty comment) in its place. The element becomes a template of its own: the directive builds a copy at the marker when it should exist (`*if` true, each item of `*for`) and destroys it when it should not, with the components and effects inside. `*for` with `*key` keeps the copy of each item by its key, so when the list changes, the existing rows move instead of being rebuilt.

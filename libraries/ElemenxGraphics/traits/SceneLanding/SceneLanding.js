@@ -346,7 +346,7 @@ Elemenx.Trait('SceneLanding', {
 
 			show(hero, surface, at, motion, landing.Manual ? 0 : 0.7 * smooth(25, 55, over) * (going ? 0 : 1), air.Bank, elapsed);
 
-			chase(surface, landing, hero, at, heat, elapsed);
+			chase(surface, landing, hero, at, heat);
 
 			hero.Thrust = 0.3 + air.Throttle * 0.7 + (going ? 0.6 : 0);
 
@@ -369,17 +369,19 @@ Elemenx.Trait('SceneLanding', {
 		}
 
 		/*
-		 * The view after the ship over the surface, as round a ship in space (SceneVehicles: ShipView), in its axes eased the
-		 * way the ship turns: the mouse turns it (Yaw and Pitch of the scene), the wheel brings it near or far (Wanted against
-		 * what it was in space); it shakes in the heat and never goes under the ground.
+		 * The view after the ship over the surface: round it where the player turned it (Yaw and Pitch of the scene), in the
+		 * frame of the horizon under it (its up the up there, its ahead the one it had, carried along as the ship goes round
+		 * the body): the ship turns, lifts its nose and banks in it, the view does none of that. The wheel brings it near or
+		 * far (Wanted against what it was in space); it shakes in the heat and never goes under the ground. Coming from
+		 * space it looks the very way it looked (its turn and tilt in the axes of the ship made of this frame).
+		 * Regression: the view was in the axes of the ship, eased: as the ship lifted its nose for the air the view went up
+		 * to the sky, and it turned and banked with it, whatever the player had turned it to.
 		 */
-		function chase (surface, landing, hero, at, heat, elapsed) {
+		function chase (surface, landing, hero, at, heat) {
 			var field = surface.Field;
 			var size = lengthOf(hero) / 1000;
 			var follow = hero.Values.Vehicle.Follow || [3.2, 0.85];
-			var step = Math.min(1, elapsed * 3);
-			var target = surface.ShipAxes;
-			var view = landing.View = landing.View ? {Right: vectors.Normalize(vectors.Lerp(landing.View.Right, target.Right, step)), Up: vectors.Normalize(vectors.Lerp(landing.View.Up, target.Up, step)), Ahead: vectors.Normalize(vectors.Lerp(landing.View.Ahead, target.Ahead, step))} : target;
+			var view = landing.View = horizon(landing.View || surface.ShipAxes, at, !landing.View);
 			var round = [-Math.sin(scene.Yaw) * Math.cos(scene.Pitch), Math.sin(scene.Pitch), -Math.cos(scene.Yaw) * Math.cos(scene.Pitch)];
 			var way = vectors.Add(vectors.Add(vectors.Scale(view.Right, round[0]), vectors.Scale(view.Up, round[1])), vectors.Scale(view.Ahead, round[2]));
 			var far = size * Math.hypot(follow[0], follow[1]) * scene.Wanted / Math.max(1e-12, landing.ShipFar || scene.Wanted);
@@ -406,6 +408,32 @@ Elemenx.Trait('SceneLanding', {
 				landing.Fov = scene.Camera.Fov;
 
 			scene.Camera.Fov = landing.Fov * (1 + heat * 0.12);
+		}
+
+		/*
+		 * The frame of the horizon at a point of the body (at, km): its up the up there, its ahead that of from (a frame) laid
+		 * level there (from looking straight up or down: its up laid level). first: from is the axes of the ship, the view
+		 * coming from space round it: its Yaw and Pitch made of this frame, so it looks the very way it did.
+		 */
+		function horizon (from, at, first) {
+			var up = vectors.Normalize(at);
+			var ahead = vectors.Subtract(from.Ahead, vectors.Scale(up, vectors.Dot(from.Ahead, up)));
+			var frame;
+			var way;
+
+			if (vectors.Length(ahead) < 1e-6)
+				ahead = vectors.Subtract(from.Up, vectors.Scale(up, vectors.Dot(from.Up, up)));
+
+			ahead = vectors.Normalize(ahead);
+			frame = {Right: vectors.Normalize(vectors.Cross(up, ahead)), Up: up, Ahead: ahead};
+
+			if (first) {
+				way = vectors.Add(vectors.Add(vectors.Scale(from.Right, -Math.sin(scene.Yaw) * Math.cos(scene.Pitch)), vectors.Scale(from.Up, Math.sin(scene.Pitch))), vectors.Scale(from.Ahead, -Math.cos(scene.Yaw) * Math.cos(scene.Pitch)));
+				scene.Pitch = Math.asin(clamp(vectors.Dot(way, up), -1, 1));
+				scene.Yaw = Math.atan2(-vectors.Dot(way, frame.Right), -vectors.Dot(way, frame.Ahead));
+			}
+
+			return frame;
 		}
 
 		/* The ship drawn where it is over the surface, turned the way it flies (eased), its nose up as it goes through the air high up. */
@@ -589,12 +617,15 @@ Elemenx.Trait('SceneLanding', {
 
 			hero.Flying = {At: [at[0], null, at[1]], Over: LOW * 1000, Way: [way[0] / level * speed * Math.cos(gamma), speed * Math.sin(gamma), way[1] / level * speed * Math.cos(gamma)], Speed: speed, Heading: Math.atan2(-way[0], -way[1]), Landed: false, Throttle: Math.min(1, speed / flightOf(hero).Airspeed), Pitch: 0, Roll: 0, Plan: landing.Manual ? null : {Kind: 'land', To: to}};
 
-			/* The view of the ground goes on from where it stood over the surface. */
+			/*
+			 * The view of the ground goes on from where it stood over the surface: the same way, of the frame of the location.
+			 * Regression: its tilt was kept within 0 and 0.6, the view the player had turned under or over it taken from him.
+			 */
 			if (landing.Cam) {
 				var seen = frame.Way(landing.Cam);
 
 				scene.Yaw = Math.atan2(seen[0], seen[1]);
-				scene.Pitch = clamp(Math.asin(clamp(vectors.Dot(landing.Cam, frame.Middle), -1, 1)), 0, 0.6);
+				scene.Pitch = clamp(Math.asin(clamp(vectors.Dot(landing.Cam, frame.Middle), -1, 1)), -1.5, 1.5);
 			}
 			else {
 				scene.Yaw = hero.Flying.Heading;
@@ -1227,13 +1258,10 @@ Elemenx.Trait('SceneLanding', {
 
 			hero.Thrust = air.Landed ? 0 : 0.35 + Math.min(1.6, vectors.Length(vectors.Subtract(wanted, air.Way)) / 10 + flat / top);
 
-			/* The view goes round behind it as it goes, and on its plan comes down to a little over it. */
-			if (!scene.Drag && flat > 3)
-				scene.Yaw += wrap(heading - scene.Yaw) * Math.min(1, elapsed * 1.5);
-
-			if (!scene.Drag && air.Plan)
-				scene.Pitch += (0.3 - scene.Pitch) * Math.min(1, elapsed * 0.6);
-
+			/*
+			 * The view stays turned where the player turned it, nearer or farther as the ship goes faster. Regression: it went
+			 * round behind the ship as it turned, and down to a little over it on its plan, whatever the player had turned it to.
+			 */
 			scene.Wanted = length * (2.8 + flat / settings.Airspeed * 1.5);
 
 			crossStep(hero);

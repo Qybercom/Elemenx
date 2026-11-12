@@ -1,11 +1,13 @@
 <!-- generated -->
 # Random
 
-Случайные числа от зерна: для одного зерна всегда одни и те же (карта, созданная заново, повтор), без зерна — от времени. Create(seed) возвращает генератор: Next() (от 0 до 1), Int(min, max) (оба включительно), Float(min, max), Chance(вероятность), Pick(список), Weighted(список, вес) (функция элемента или имя его поля; по умолчанию Weight), Shuffle(список) (новый список), Fork(имя) (свой генератор для части: тот же для того же зерна и имени). Hash(текст) — число в 32 бита; Noise(seed, size) — плавный шум плоскости, noise(x, y) от 0 до 1 (size — клеток на волну, 16). На нём рисует Suprematist.
+Случайные числа от зерна: для одного зерна всегда одни и те же (карта, созданная заново, повтор), без зерна — от времени. Create(seed) возвращает генератор: Next() (от 0 до 1), Int(min, max) (оба включительно), Float(min, max), Chance(вероятность), Pick(список), Weighted(список, вес) (функция элемента или имя его поля; по умолчанию Weight), Shuffle(список) (новый список), Fork(имя) (свой генератор для части: тот же для того же зерна и имени). Hash(текст) — число в 32 бита; Sequence(текст) — функция next(), числа от 0 до 1 одно за другим (линейный генератор от текста, хэшированного по 31): по нему раскладываются города планет и планы поселений; Noise(seed, size) — плавный шум плоскости, noise(x, y) от 0 до 1 (size — клеток на волну, 16). На нём рисует Suprematist.
 
 ## Методы
 
 - `Hash(text)`
+- `Sequence(text)`
+- `Source(names)`
 - `Create(seed)`
 - `Noise(seed, size)`
 
@@ -47,8 +49,10 @@
 ## Тесты
 
 - [Random: the same numbers for the same seed, its helpers in their bounds, a fork of its own, a smooth noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L28) — `tests/regression/game-services.test.js`
-- [SpatialIndex: the things in a rectangle, within a radius the nearest first, the nearest one, as they move and go](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L68) — `tests/regression/game-services.test.js`
-- [Pathfinding: a way round the walls, no corner cut, around costly cells, to the nearest reachable cell, on a graph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L105) — `tests/regression/game-services.test.js`
-- [Visibility: a line, the sight past a wall, the field of view and its shadows, the fog of war](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L182) — `tests/regression/game-services.test.js`
-- [Loop: steps of the same time whatever the frames, a part of a step to draw between, its speed, pause and catch-up limit](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L229) — `tests/regression/game-services.test.js`
+- [Random: Sequence gives the numbers of the old linear generator of a text, that towns and settlements are laid by](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L69) — `tests/regression/game-services.test.js`
+- [SpatialIndex: the things in a rectangle, within a radius the nearest first, the nearest one, as they move and go](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L86) — `tests/regression/game-services.test.js`
+- [Pathfinding: a way round the walls, no corner cut, around costly cells, to the nearest reachable cell, on a graph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L123) — `tests/regression/game-services.test.js`
+- [Visibility: a line, the sight past a wall, the field of view and its shadows, the fog of war](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L200) — `tests/regression/game-services.test.js`
+- [Loop: steps of the same time whatever the frames, a part of a step to draw between, its speed, pause and catch-up limit](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L247) — `tests/regression/game-services.test.js`
+- [runs a graph that calls itself through a list of its own, as a function, by the IR in JavaScript as it runs](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L71) — `tests/regression/blueprints-ir.test.js`
 - [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L129) — `tests/regression/headless.test.js`

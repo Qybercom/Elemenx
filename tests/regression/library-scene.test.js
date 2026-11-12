@@ -7,7 +7,8 @@ import modelsSource from '../../libraries/ElemenxGraphics/services/SceneModels/S
 import lightingSource from '../../libraries/ElemenxGraphics/traits/SceneLighting/SceneLighting.js?raw';
 import graphicsSource from '../../libraries/ElemenxGraphics/services/Renderer/Renderer.js?raw';
 import cosmosSource from '../../libraries/ElemenxGraphics/traits/SceneCosmos/SceneCosmos.js?raw';
-import pageSource from '../../examples/Advanced/application/components/UIKitPage/UIKitPage.js?raw';
+import modelsDemoSource from '../../examples/Advanced/application/components/ModelsDemo/ModelsDemo.js?raw';
+import placeSource from '../../examples/Advanced/application/components/LocationsDemo/LocationsDemo.js?raw';
 import effectsSource from '../../libraries/ElemenxGraphics/traits/SceneEffects/SceneEffects.js?raw';
 
 var owned = [];
@@ -386,26 +387,32 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 	it('makes only the programs it draws, and a frame of its loop never waits for one the card is still making', async function () {
 		var started = Date.now();
 		var clock = Date.now;
-		var mounted = await mount('<Scene Paused="true" Background="false" Labels="false" (ready)="Ready">' +
+		var given = WebGL2RenderingContext.prototype.shaderSource;
+		var all = [];
+		var mounted;
+
+		/*
+		 * Every shader of the page from before the scene: under load the frames of its mount may make the program of its
+		 * planet already, and the shaders given from the frame of the test on alone missed it (Regression: under load).
+		 */
+		WebGL2RenderingContext.prototype.shaderSource = function (shader, text) {
+			all.push({GL: this, Text: text});
+
+			return given.apply(this, arguments);
+		};
+
+		mounted = await mount('<Scene Paused="true" Background="false" Labels="false" (ready)="Ready">' +
 			'<SceneObject ID="sun" Kind="star"><SceneObject ID="rock" Kind="moon" Radius="6000" Distance="1" Atmosphere="none" Day="24" /></SceneObject>' +
 		'</Scene>');
+
 		var scene = mounted.Space;
 		var inner = scene.Scene();
 		var renderer = scene.Engine().Renderer;
 		var gl = renderer.GL;
 		var working = gl.getExtension('KHR_parallel_shader_compile').COMPLETION_STATUS_KHR;
 		var real = gl.getProgramParameter;
-		var source = gl.shaderSource;
-		var sources = [];
 		var asked = 0;
 		var made;
-
-		/* The shaders it gives the card from now on (none made yet but what its first frame drew). */
-		gl.shaderSource = function (shader, text) {
-			sources.push(text);
-
-			return source.apply(this, arguments);
-		};
 
 		/* The card still at work on all of them: a frame of the loop asks nothing that waits for it, and waits for them. */
 		gl.getProgramParameter = function (program, name) {
@@ -442,7 +449,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		/* By hand: waited for, drawn. */
 		scene.Engine().Frame(performance.now());
 
-		gl.shaderSource = source;
+		WebGL2RenderingContext.prototype.shaderSource = given;
 		made = renderer.Progress();
 
 		expect(made.Total).toBeGreaterThan(0);
@@ -453,11 +460,18 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(await waitFor(function () {
 			return renderer.Progress().Needed === 0;
 		}, 120000)).toBe(true);
+
 		/* A star and a moon: the programs of its planets, none of a ground of a surface, of a sea or of a sky over a ground. */
-		expect(sources.some(function (text) {
+		all = all.filter(function (one) {
+			return one.GL === gl;
+		}).map(function (one) {
+			return one.Text;
+		});
+
+		expect(all.some(function (text) {
 			return text.indexOf('uniform samplerCube uGround;') !== -1;
 		})).toBe(true);
-		expect(sources.filter(function (text) {
+		expect(all.filter(function (text) {
 			return text.indexOf('uniform sampler2D uReliefMap;') !== -1 || text.indexOf('uniform sampler2D uSeenDepth;') !== -1 || text.indexOf('uniform float uMoonGlow;') !== -1;
 		})).toEqual([]);
 	}, 240000);
@@ -1401,6 +1415,8 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(inner.Surface.Altitude).toBeCloseTo(6371 * (distance / inner.Objects.earth.Size - 1), -2);
 		expect(inner.Surface.Pitch).toBeLessThan(-1.4);
 
+		var pitch = inner.Surface.Pitch;
+
 		last = inner.Surface.Altitude;
 
 		frames(40);
@@ -1411,7 +1427,11 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		expect(inner.Surface.Way).toBe(null);
 		expect(inner.Surface.Altitude).toBeLessThan(1);
-		expect(inner.Surface.Pitch).toBeGreaterThan(-0.3);
+		/*
+		 * Regression: the view was tilted up to the horizon on the way down, whatever the player had turned it to; it looks
+		 * where it looked all the way.
+		 */
+		expect(inner.Surface.Pitch).toBe(pitch);
 
 		scene.TakeOff();
 
@@ -3435,7 +3455,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		Use(['service:SceneModels', 'service:SceneBuildingGenerator']);
 
-		new Function('Elemenx', pageSource)({Component: function (name, definition) {
+		new Function('Elemenx', modelsDemoSource)({Component: function (name, definition) {
 			page = definition;
 		}});
 
@@ -3447,9 +3467,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		var state = {ModelsList: [], $Service: function (name) {
 			return Elemenx.Service(name);
-		}, SceneBack: function () {
-			return true;
-		}};
+		}, ModelsFromFiles: function () {}};
 
 		page.ModelsReady.call(state, {Scene: function () {
 			return {};
@@ -3546,7 +3564,60 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 	});
 
 	it('puts a new character where the last one stands, not where it started', function () {
-		expect(pageSource).toContain('Z: hero.Air === undefined ? hero.Values.Z : hero.Air');
+		expect(placeSource).toContain('Z: hero.Air === undefined ? hero.Values.Z : hero.Air');
+	});
+
+	/*
+	 * Fingers (Gestures): one turns the view, a pinch brings it near, two turn it round the up and tilt it, and each gesture
+	 * is told (gesture); a finger begins none of the drags of a mouse.
+	 */
+	it('turns, brings near, turns round and tilts its view by the gestures of fingers, and tells them', async function () {
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var told = [];
+		var yaw;
+		var pitch;
+		var wanted;
+
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
+		scene.$On('gesture', function (event) {
+			told.push(event.Gesture.Type);
+		});
+
+		yaw = inner.Yaw;
+		pitch = inner.Pitch;
+
+		scene.Gesture({Type: 'pan', Phase: 'start', X: 120, Y: 100, DX: 20, DY: 0, MoveX: 20, MoveY: 0, Pointers: 1});
+		scene.Gesture({Type: 'pan', Phase: 'move', X: 200, Y: 100, DX: 100, DY: 0, MoveX: 80, MoveY: 0, Pointers: 1});
+
+		expect(inner.Yaw).toBeCloseTo(yaw - 0.6, 6);
+
+		wanted = inner.Wanted;
+
+		scene.Gesture({Type: 'pinch', Phase: 'start', X: 100, Y: 100, Scale: 1.1, Step: 1.1, Pointers: 2});
+		scene.Gesture({Type: 'pinch', Phase: 'move', X: 100, Y: 100, Scale: 2, Step: 1.8, Pointers: 2});
+
+		expect(inner.Wanted).toBeLessThan(wanted);
+
+		yaw = inner.Yaw;
+
+		scene.Gesture({Type: 'rotate', Phase: 'move', X: 100, Y: 100, Angle: 0.3, Step: 0.3, Pointers: 2});
+
+		expect(inner.Yaw).toBeCloseTo(yaw + 0.3, 6);
+
+		pitch = inner.Pitch;
+
+		scene.Gesture({Type: 'tilt', Phase: 'move', X: 100, Y: 100, DY: 20, MoveY: 20, Pointers: 2});
+
+		expect(inner.Pitch).toBeCloseTo(Math.min(1.5, pitch + 0.12), 6);
+		expect(told).toEqual(['pan', 'pan', 'pinch', 'pinch', 'rotate', 'tilt']);
+
+		/* A finger on the canvas: none of the drag of a mouse. */
+		scene.PointerDown({button: 0, clientX: 50, clientY: 50, pointerId: 3, pointerType: 'touch', target: scene.$Element(), preventDefault: function () {}});
+
+		expect(inner.Drag).toBeFalsy();
+		expect(inner.Pointers[3]).toBeUndefined();
 	});
 
 	it('ends every press when the pointer goes, and takes back the leap that came just before', async function () {

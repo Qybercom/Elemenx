@@ -1,0 +1,28 @@
+<div class="elemenx-card" style="height: 220px; display: flex; align-items: center; justify-content: center; user-select: none;" data-gestures-mouse (tap)="Seen" (doubletap)="Seen" (press)="Seen" (pan)="Seen" (swipe)="Seen" (pinch)="Seen" (rotate)="Seen" (tilt)="Seen">
+	<div [style.transform]="'rotate(' + Turn + 'rad) scale(' + Size + ')'" style="width: 80px; height: 80px; border-radius: 12px; background: var(--elemenx-accent);"></div>
+</div>
+<p class="elemenx-text small muted">Tap, press, pan, swipe (a mouse too); with two fingers pinch, turn and tilt. Last: <strong>{{Last}}</strong></p>
+<script>
+({
+	Last: '—',
+	Size: 1,
+	Turn: 0,
+
+	Seen: function (event) {
+		var gesture = event.detail;
+
+		this.Last = gesture.Type + (gesture.Phase ? ' ' + gesture.Phase : '') + (gesture.Direction ? ' ' + gesture.Direction : '');
+
+		if (gesture.Type === 'pinch')
+			this.Size = Math.max(0.3, Math.min(3, this.Size * gesture.Step));
+
+		if (gesture.Type === 'rotate')
+			this.Turn += gesture.Step;
+
+		if (gesture.Type === 'doubletap') {
+			this.Size = 1;
+			this.Turn = 0;
+		}
+	}
+})
+</script>

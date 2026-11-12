@@ -1,0 +1,19 @@
+<div class="scene-demo">
+	<div class="scene-demo-row">
+		<Select Label="Fly to" [options]="DeepPlaces" [value]="DeepPlace" (change)="DeepFly" />
+		<Button Label="Land on the planetoid" Icon="arrow-down" Variant="ghost" (click)="DeepLand" />
+		<Button Label="Take off" Icon="arrow-up" Variant="ghost" (click)="DeepTakeOff" />
+	</div>
+	<p class="elemenx-caption" aria-live="polite">{{DeepNote}}</p>
+	<div class="scene-demo-scene">
+		<Scene Team="blue" [hoverMark]="SpaceMark" Speed="0.02" DaySeconds="30" Cosmos="nebula" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="DeepReady" (hover)="DeepHovered" (select)="DeepSelected">
+			<SceneObject ID="vega" Kind="star" Name="Vega" Temperature="9600" Mass="2.1" />
+			<SceneObject ID="terra" Kind="planet" Name="Terra" Distance="1.4" Type="terran" />
+			<SceneObject ID="pebble" Kind="planetoid" Name="Pebble" Distance="2.6" Radius="140" />
+			<SceneObject ID="gargantua" Kind="blackhole" Name="Gargantua" Distance="14" Mass="40" />
+			<SceneObject ID="gate" Kind="wormhole" Name="Gate" Distance="7" Leads="Kepler-442" Cosmos="pillars" Star="#ffcf80" />
+			<SceneObject ID="halley" Kind="comet" Name="Halley" Distance="5" Eccentricity="0.88" Anomaly="3" />
+			<SceneObject ID="beacon" Kind="quasar" Name="3C 273" Azimuth="70" Elevation="18" />
+		</Scene>
+	</div>
+</div>

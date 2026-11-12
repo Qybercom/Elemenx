@@ -383,4 +383,23 @@ describe('Contract: pads of the page, the motion of a device (InputDevices), the
 
 		expect(never.$Element().querySelector('.elemenx-virtual-pad').hidden).toBe(true);
 	});
+
+	/* Regression: the first two shoulders went to the left whatever they were: a lone rb on the left, over what was there. */
+	it('VirtualGamepad: puts the shoulders of the left on the left and those of the right on the right', async function () {
+		var host = mount('<div style="position: relative; width: 600px; height: 400px"><VirtualGamepad Show="always" Buttons="a,rb,rt" /></div>');
+		var both = mount('<div style="position: relative; width: 600px; height: 400px"><VirtualGamepad Show="always" Buttons="lb,rt" /></div>');
+
+		function side (component, name) {
+			return Array.prototype.map.call(component.$Element().querySelectorAll('.elemenx-virtual-pad-shoulders.' + name + ' [data-button]'), function (button) {
+				return button.getAttribute('data-button');
+			});
+		}
+
+		await frame();
+
+		expect(side(host, 'left')).toEqual([]);
+		expect(side(host, 'right')).toEqual(['rb', 'rt']);
+		expect(side(both, 'left')).toEqual(['lb']);
+		expect(side(both, 'right')).toEqual(['rt']);
+	});
 });

@@ -2,5 +2,6 @@
 	'components',
 	'directives',
 	'guards',
-	'services'
+	'services',
+	'traits'
 ];

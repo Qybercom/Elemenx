@@ -1,0 +1,16 @@
+.ui-kit-world-hud {
+	position: absolute;
+	top: 10px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.ui-kit-world-resources {
+	display: inline-flex;
+	gap: 16px;
+	padding: 6px 14px;
+	background: var(--elemenx-overlay);
+	border-radius: var(--elemenx-radius-pill);
+	color: var(--elemenx-overlay-text);
+	font-size: var(--elemenx-font-size-small);
+}

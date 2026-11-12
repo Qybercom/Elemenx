@@ -121,6 +121,7 @@ Elemenx.Component('Scene', {
 		Slots: ['hud', 'loading', 'screens'],
 		Events: {
 			ready: 'The scene is ready: the component itself, to call its methods.',
+			gesture: 'A gesture of fingers on it (Gestures: tap, doubletap, press, pan, swipe, pinch, rotate, tilt), after the scene did its part: {Gesture, ID (what is under it; tap, doubletap and press), Point {X, Y} (in the scene)}.',
 			select: 'The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).',
 			focus: 'The view moved to an object: {ID}.',
 			person: 'V took the view of a walker to another place: third, first or shoulder.',
@@ -441,6 +442,11 @@ Elemenx.Component('Scene', {
 	$OnReady: function () {
 		var self = this;
 		var element = this.$Element();
+
+		/* The fingers on it: their gestures (Gestures), what a finger does where a mouse has its buttons (Gesture). */
+		this.GesturesStop = this.$Service('Gestures').Listen(element.querySelector('.elemenx-scene-canvas'), function (gesture) {
+			self.Gesture(gesture);
+		});
 
 		/*
 		 * What was put in the slot stands beside the bar of the scene, which then gives way. Regression: the bar not made yet
@@ -8486,26 +8492,17 @@ Elemenx.Component('Scene', {
 			var axes = ground(surface.Up);
 			var heading = vectors.Add(vectors.Scale(axes.North, Math.cos(surface.Yaw)), vectors.Scale(axes.East, Math.sin(surface.Yaw)));
 			var air = scene.Objects[surface.ID] ? scene.Objects[surface.ID].Look.Atmosphere[3] : 0;
-			var turned;
 
 			surface.Altitude = Math.exp(Math.log(way.From) + (Math.log(Math.max(0.0005, surface.Wanted)) - Math.log(way.From)) * eased);
 			surface.Up = vectors.Normalize(vectors.Add(surface.Up, vectors.Scale(heading, (eased - way.Done) * way.Sweep)));
 			way.Done = eased;
 
-			if (surface.Rising) {
-				turned = Math.max(0, Math.min(1, (t - 0.4) / 0.55));
-				surface.Heat = 0;
-
-				if (!scene.Drag)
-					surface.Pitch = t < 0.3 ? way.Pitch + (0.15 - way.Pitch) * (t / 0.3) : 0.15 + (-1.52 - 0.15) * turned * turned * (3 - 2 * turned);
-			}
-			else {
-				turned = Math.max(0, Math.min(1, (t - 0.35) / 0.5));
-				surface.Heat = air * 0.2 * Math.pow(Math.max(0, 1 - Math.abs(Math.log(surface.Altitude / 80)) / 1.4), 2);
-
-				if (!scene.Drag)
-					surface.Pitch = way.Pitch + (-0.15 - way.Pitch) * turned * turned * (3 - 2 * turned);
-			}
+			/*
+			 * The view stays tilted where the player tilted it, all the way. Regression: it was tilted down to the ground going
+			 * up and up to the horizon coming down, whatever the player had turned it to.
+			 */
+			if (surface.Rising) surface.Heat = 0;
+			else surface.Heat = air * 0.2 * Math.pow(Math.max(0, 1 - Math.abs(Math.log(surface.Altitude / 80)) / 1.4), 2);
 
 			if (t >= 1) {
 				surface.Way = null;
@@ -11012,6 +11009,9 @@ Elemenx.Component('Scene', {
 	$OnDestroy: function () {
 		document.removeEventListener('pointerlockchange', this.LockChanged);
 
+		if (this.GesturesStop)
+			this.GesturesStop();
+
 		var scene = this.Scene ? this.Scene() : null;
 		var renderer = this.Engine ? this.Engine().Renderer : null;
 
@@ -11102,7 +11102,13 @@ Elemenx.Component('Scene', {
 		return taken;
 	},
 
+	/* A finger: its gestures (Gesture), none of what a mouse does. */
+	Fingered: function (event) {
+		return event.pointerType === 'touch' && !!this.GesturesStop;
+	},
+
 	PointerDown: function (event) {
+		if (this.Fingered(event)) return;
 		if (this.RunBehaviours('Pointer', ['down', event])) return;
 		if (this.ScreenPointer && this.ScreenPointer('down', event)) return;
 		if (this.WeaponsPointer && this.WeaponsPointer('down', event)) return;
@@ -11145,6 +11151,7 @@ Elemenx.Component('Scene', {
 	},
 
 	PointerMove: function (event) {
+		if (this.Fingered(event)) return;
 		if (this.RunBehaviours('Pointer', ['move', event])) return;
 		if (this.ScreenPointer && this.ScreenPointer('move', event)) return;
 
@@ -11276,8 +11283,17 @@ Elemenx.Component('Scene', {
 	},
 
 	PointerUp: function (event) {
-		if (this.RunBehaviours('Pointer', ['up', event])) return;
-		if (this.ScreenPointer && this.ScreenPointer('up', event)) return;
+		if (this.Fingered(event)) return;
+
+		/*
+		 * Taken by a behaviour (an order of GameStrategy) or by a screen: what the press began ends all the same.
+		 * Regression: the drag a right press began stayed, and every move of the mouse after an order turned the view.
+		 */
+		if (this.RunBehaviours('Pointer', ['up', event]) || this.ScreenPointer && this.ScreenPointer('up', event)) {
+			this.PointerCancel(event);
+
+			return;
+		}
 
 		if (this.WeaponsPointer)
 			this.WeaponsPointer('up', event);
@@ -11321,11 +11337,72 @@ Elemenx.Component('Scene', {
 	},
 
 	PointerCancel: function (event) {
+		if (this.Fingered(event)) return;
+
 		delete this.Scene().Pointers[event.pointerId];
 
 		this.Scene().Drag = null;
 		this.Scene().Pinch = null;
+		this.Scene().LookHeld = false;
 		this.Dragging = false;
+	},
+
+	/*
+	 * What fingers do to the scene (Gestures), a behaviour first (its Gesture(gesture, scene) taking it with true): a tap
+	 * selects (or picks the point of a landing); a press sends the selected walker there (Orders); one finger turns the
+	 * view (over a surface it looks round); two carry it (pan), bring it nearer (pinch), turn it round the up (rotate) or
+	 * tilt it (tilt). A walker or a vehicle under the keys is not turned by fingers: its pads (VirtualGamepad) do it.
+	 * Then gesture tells it, with what is under it.
+	 */
+	Gesture: function (gesture) {
+		var scene = this.Scene ? this.Scene() : null;
+		var engine = scene ? this.Engine() : null;
+		var point;
+		var looking;
+		var id = '';
+		var hold;
+
+		if (!scene || scene.Gone) return;
+
+		point = engine.Local({clientX: gesture.X, clientY: gesture.Y});
+
+		if (gesture.Type === 'tap' || gesture.Type === 'doubletap' || gesture.Type === 'press')
+			id = this.Allowed(engine.Pick(point.X, point.Y));
+
+		if (!this.RunBehaviours('Gesture', [gesture, this])) {
+			looking = scene.Surface && !scene.Surface.Ship;
+			hold = scene.Touch = gesture.Phase === 'start' ? {Yaw: looking ? scene.Surface.Yaw : scene.Yaw, Pitch: looking ? scene.Surface.Pitch : scene.Pitch, Wanted: scene.Wanted} : scene.Touch || {Yaw: scene.Yaw, Pitch: scene.Pitch, Wanted: scene.Wanted};
+
+			if (gesture.Type === 'tap' && scene.Picking) engine.LandingPick(point.X, point.Y);
+			else if (gesture.Type === 'tap' && !scene.Hero && !scene.Surface) engine.Select(id);
+			else if (gesture.Type === 'press' && !scene.Hero && !scene.Surface && scene.Ground) this.OrderAt(point);
+			else if (gesture.Type === 'pan' && gesture.Pointers === 1 && !scene.Hero) this.TouchTurn(hold, gesture.DX, gesture.DY, looking);
+			else if (gesture.Type === 'pan' && gesture.Pointers === 2 && !scene.Hero && !looking) engine.PanView(gesture.MoveX, gesture.MoveY);
+			else if (gesture.Type === 'pinch' && !looking) this.ZoomTo(hold.Wanted / gesture.Scale, true);
+			else if (gesture.Type === 'rotate' || gesture.Type === 'tilt') this.TouchTurn({Yaw: looking ? scene.Surface.Yaw : scene.Yaw, Pitch: looking ? scene.Surface.Pitch : scene.Pitch}, gesture.Type === 'rotate' ? -gesture.Step / 0.006 : 0, gesture.Type === 'tilt' ? gesture.MoveY : 0, looking);
+		}
+
+		this.$Emit('gesture', {Gesture: gesture, ID: id, Point: point});
+	},
+
+	/*
+	 * The view turned by fingers from where it was (from): dx and dy px, as a drag of the mouse turns it (a turn of two
+	 * fingers as many px as turns it as much: the view goes round with them).
+	 */
+	TouchTurn: function (from, dx, dy, looking) {
+		var scene = this.Scene();
+		var yaw = from.Yaw;
+
+		if (looking) {
+			scene.Surface.Yaw = yaw + dx * 0.004;
+			scene.Surface.Pitch = Math.max(-1.55, Math.min(1.4, from.Pitch - dy * 0.004));
+
+			return;
+		}
+
+		scene.Looked = performance.now();
+		scene.Yaw = yaw - dx * 0.006;
+		scene.Pitch = Math.max(-1.5, Math.min(1.5, from.Pitch + dy * 0.006));
 	},
 
 	Menu: function (event) {

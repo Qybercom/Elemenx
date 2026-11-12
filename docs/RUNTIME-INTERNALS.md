@@ -20,7 +20,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Application, Bundle, Cache, Compilers, Directive registry, Discovery, Locale, Messaging, Meta, Network, Reactive, Resources, Router, SSR, Service and Guard, Storage, Structural, Template and Component, Widgets |
+| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Application, Bundle, Cache, Compilers, Directive registry, Discovery, Event sources, Locale, Messaging, Meta, Network, Reactive, Resources, Router, SSR, Service and Guard, Storage, Structural, Template and Component, Widgets |
 | `BaseURL` | the base of the relative URLs of the document: its address, or for one that is no base (a page of a `blob:` or `about:` URL) its base URI, the root of its origin or `file:///` | Application, Bundle, Discovery |
 | `AbsoluteURL` | resolves a URL against the document; in a worker the value is kept as it is | Application, Library, Locale, Resource, ServiceWorker, WebWorker |
 | `CurrentScriptURL` | the URL of the executing script without query and hash, or `null`: the base of the relative paths of its definitions | Application, Bundle, Library, Template and Component |
@@ -125,6 +125,13 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `Directive` | directive registry and composition policy, including the built-in `if`, `for`, `key`, `outlet`, `pending`, `error` | Defined, Meta, Structural, Template and Component |
+
+## Event sources
+
+| Field | Purpose | Used by |
+|---|---|---|
+| `EventSources` | the sources of template events by name (`Elemenx.EventSource`): `{Attach(element) → stop}` | |
+| `AttachEventSource` | starts the source of an event on an element once for all its names (counted on `element.__ElemenxEventSources`); returns the release of one listener, `null` for an event of no source | Template and Component |
 
 ## Template and Component
 

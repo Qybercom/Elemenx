@@ -1,0 +1,81 @@
+<div class="scene-demo">
+	<Ribbon class="ui-kit-place-ribbon" Label="Space" [tab]="SpaceTab" (tab)="SpaceTab = $event.ID">
+		<RibbonTab ID="system" Title="System">
+			<RibbonGroup Title="System" Icon="globe" Keep="true">
+				<RadioGroup Variant="segmented" Label="System" [options]="SpaceSystems" [value]="SpaceSystem" (change)="SpaceChosen" />
+				<Button Label="Another seed" Icon="refresh" Variant="ghost" Size="small" *if="SpaceSystem === 'seed'" (click)="SpaceReseeded" />
+			</RibbonGroup>
+			<RibbonGroup Title="View" Icon="eye">
+				<Toggle Label="Orbits" [checked]="SpaceOrbits" (change)="SpaceOrbited" />
+				<Toggle Label="Real scale" [checked]="SpaceReal" (change)="SpaceScaled" />
+				<Select Label="Quality" Size="small" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
+			</RibbonGroup>
+			<RibbonGroup Title="Time" Icon="clock">
+				<Button Icon="pause" Variant="ghost" Size="small" [label]="SpacePaused ? 'Go on' : 'Hold the time'" [pressed]="SpacePaused" (click)="SpacePausedToggled" />
+				<Button Label="Fleet to Mars" Icon="send" Variant="ghost" Size="small" *if="SpaceSystem === 'sol'" (click)="SpaceSent" />
+			</RibbonGroup>
+		</RibbonTab>
+		<RibbonTab ID="sky" Title="Sky">
+			<RibbonGroup Title="Backdrop" Icon="star" Keep="true">
+				<Select Label="Starts from" Size="small" [options]="SpaceBackdrops" [value]="SpaceBackdrop" (change)="SpaceBackdropChosen" />
+				<Button Label="Another sky" Icon="refresh" Variant="ghost" Size="small" (click)="SpaceSky" />
+			</RibbonGroup>
+			<RibbonGroup Title="Clouds" Icon="cloud">
+				<label class="ui-kit-tune"><span>Gas</span><Slider Label="Gas" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Gas" (change)="SpaceAmount('Gas', $event)" /></label>
+				<label class="ui-kit-tune"><span>Dust</span><Slider Label="Dust" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Dust" (change)="SpaceAmount('Dust', $event)" /></label>
+				<label class="ui-kit-tune"><span>Pillars</span><Slider Label="Pillars" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Pillars" (change)="SpaceAmount('Pillars', $event)" /></label>
+			</RibbonGroup>
+			<RibbonGroup Title="Stars" Icon="star">
+				<label class="ui-kit-tune"><span>Stars</span><Slider Label="Stars" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Stars" (change)="SpaceAmount('Stars', $event)" /></label>
+				<label class="ui-kit-tune"><span>Young</span><Slider Label="Young stars" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Beacon" (change)="SpaceAmount('Beacon', $event)" /></label>
+				<label class="ui-kit-tune"><span>Bursts</span><Slider Label="Bursts of rays" Size="small" ShowValue="end" Min="0" Max="8" Step="1" [value]="SpaceAmounts.Bursts" (change)="SpaceAmount('Bursts', $event)" /></label>
+				<label class="ui-kit-tune"><span>Clusters</span><Slider Label="Clusters" Size="small" ShowValue="end" Min="0" Max="12" Step="1" [value]="SpaceAmounts.Clusters" (change)="SpaceAmount('Clusters', $event)" /></label>
+			</RibbonGroup>
+			<RibbonGroup Title="Galaxies" Icon="globe">
+				<label class="ui-kit-tune"><span>Band</span><Slider Label="Band of ours" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Band" (change)="SpaceAmount('Band', $event)" /></label>
+				<label class="ui-kit-tune"><span>Far</span><Slider Label="Far galaxies" Size="small" ShowValue="end" Min="0" Max="16" Step="1" [value]="SpaceAmounts.Galaxies" (change)="SpaceAmount('Galaxies', $event)" /></label>
+			</RibbonGroup>
+		</RibbonTab>
+	</Ribbon>
+	<div class="scene-demo-row">
+		<span class="scene-demo-status">{{SpaceNote}}</span>
+	</div>
+	<div class="scene-demo-scene">
+		<Scene *if="SpaceSystem === 'sol'" Team="blue" [hoverMark]="SpaceMark" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="SpaceCosmos" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused" (arrive)="SpaceArrived">
+			<SceneObject ID="sun" Kind="star" Name="Sun" Mass="1">
+				<SceneObject ID="mercury" Name="Mercury" Kind="planet" Surface-Type="rocky" Radius="2440" Mass="0.055" Distance="0.387" Eccentricity="0.206" Inclination="7" Node="48" Periapsis="29" Anomaly="174" Day="1408" />
+				<SceneObject ID="venus" Name="Venus" Kind="planet" Surface-Type="desert" Radius="6052" Mass="0.815" Distance="0.723" Eccentricity="0.007" Inclination="3.4" Node="77" Periapsis="55" Anomaly="50" Day="-5832" Tilt="177" Clouds="1" Atmosphere="#f0d9a0" Colors="#8a6a3a, #c49a5a, #e3c48a, #f4e2b8" />
+				<SceneObject ID="earth" Name="Earth" Kind="planet" Surface-Type="terran" Radius="6371" Mass="1" Distance="1" Eccentricity="0.017" Periapsis="114" Anomaly="358" Day="23.93" Tilt="23.4">
+					<SceneObject ID="moon" Name="Moon" Kind="moon" Surface-Type="moon" Radius="1737" Mass="0.0123" Distance="384400 km" Eccentricity="0.055" Inclination="5.1" Day="0" />
+				</SceneObject>
+				<SceneObject ID="mars" Name="Mars" Kind="planet" Surface-Type="desert" Radius="3390" Mass="0.107" Distance="1.524" Eccentricity="0.093" Inclination="1.85" Node="49" Periapsis="286" Anomaly="19" Day="24.6" Tilt="25.2" Ice="0.08" Colors="#5a2a18, #9a4a28, #c26a3a, #e0a070">
+					<SceneObject ID="phobos" Name="Phobos" Kind="moon" Surface-Type="moon" Radius="11" Distance="9376 km" Day="0" />
+					<SceneObject ID="deimos" Name="Deimos" Kind="moon" Surface-Type="moon" Radius="6" Distance="23460 km" Day="0" />
+				</SceneObject>
+				<SceneObject ID="main-belt" Kind="belt" Name="Main belt" Inner="2.2" Outer="3.2" Count="320" Inclination="2" />
+				<SceneObject ID="jupiter" Name="Jupiter" Kind="planet" Surface-Type="gas" Radius="69911" Mass="317.8" Distance="5.203" Eccentricity="0.048" Inclination="1.3" Node="100" Periapsis="274" Anomaly="20" Day="9.93" Tilt="3.1">
+					<SceneObject ID="io" Name="Io" Kind="moon" Surface-Type="lava" Radius="1822" Distance="421700 km" Day="0" />
+					<SceneObject ID="europa" Name="Europa" Kind="moon" Surface-Type="ice" Radius="1561" Distance="671000 km" Day="0" />
+					<SceneObject ID="ganymede" Name="Ganymede" Kind="moon" Surface-Type="moon" Radius="2634" Distance="1070400 km" Day="0" />
+					<SceneObject ID="callisto" Name="Callisto" Kind="moon" Surface-Type="moon" Radius="2410" Distance="1882700 km" Day="0" />
+				</SceneObject>
+				<SceneObject ID="saturn" Name="Saturn" Kind="planet" Surface-Type="gas" Radius="58232" Mass="95.2" Distance="9.537" Eccentricity="0.054" Inclination="2.5" Node="113" Periapsis="339" Anomaly="317" Day="10.7" Tilt="26.7" Colors="#b89a6a, #d8c08e, #ecdcb4, #c8a46a">
+					<SceneObject ID="saturn-rings" Kind="ring" Name="Rings of Saturn" Inner="1.24" Outer="2.27" />
+					<SceneObject ID="titan" Name="Titan" Kind="moon" Surface-Type="desert" Radius="2575" Distance="1221870 km" Day="0" Clouds="1" Atmosphere="#e0a050" />
+				</SceneObject>
+				<SceneObject ID="uranus" Name="Uranus" Kind="planet" Surface-Type="ice-giant" Radius="25362" Mass="14.5" Distance="19.19" Eccentricity="0.047" Inclination="0.8" Node="74" Periapsis="97" Anomaly="142" Day="-17.2" Tilt="97.8" Colors="#7fc4d8, #9ad8e4, #bfe8ee, #6aaec4" />
+				<SceneObject ID="neptune" Name="Neptune" Kind="planet" Surface-Type="ice-giant" Radius="24622" Mass="17.1" Distance="30.07" Eccentricity="0.009" Inclination="1.8" Node="132" Periapsis="273" Anomaly="256" Day="16.1" Tilt="28.3">
+					<SceneObject ID="triton" Name="Triton" Kind="moon" Surface-Type="ice" Radius="1353" Distance="354759 km" Inclination="157" Day="0" />
+				</SceneObject>
+			</SceneObject>
+			<SceneObject ID="gateway" Kind="station" Name="Gateway" Parent="earth" Team="blue" />
+			<SceneObject ID="ares" Kind="outpost" Name="Ares outpost" Parent="mars" Team="red" Distance="2.2" />
+			<SceneObject ID="first" Kind="fleet" Name="First fleet" Parent="earth" Team="blue" Count="5" />
+			<SceneObject ID="haulers" Kind="fleet" Name="Haulers" Ship="freighter" Parent="jupiter" Team="yellow" Count="3" />
+			<div slot="hud" class="ui-kit-space-hud"><span>Day {{SpaceDay}}</span></div>
+		</Scene>
+		<Scene *if="SpaceSystem === 'seed'" Team="blue" [hoverMark]="SpaceMark" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [seed]="SpaceSeed" [cosmos]="SpaceCosmos" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused">
+			<div slot="hud" class="ui-kit-space-hud"><span>Seed {{SpaceSeed}}</span></div>
+		</Scene>
+	</div>
+</div>

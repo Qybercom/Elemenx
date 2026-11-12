@@ -25,6 +25,8 @@
 	'services/QR/QR.js',
 	'services/Barcodes/Barcodes.js',
 	'services/InputDevices/InputDevices.js',
+	'services/Gestures/Gestures.js',
+	'services/Screen/Screen.js',
 	'services/Achievements/Achievements.js',
 	'directives/Swipe/Swipe.js',
 	'directives/Draggable/Draggable.js',

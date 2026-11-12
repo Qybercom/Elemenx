@@ -106,6 +106,101 @@ describe('Contract: GameStrategy, selection, orders, attacks and the fog of war 
 		expect(game.Selection().sort()).toEqual(['a', 'b']);
 	}, 60000);
 
+	/*
+	 * Regression: a right press that ordered left the drag of the scene it began, and every move of the mouse after it
+	 * turned the view. The right button orders and never turns it; with Ctrl it turns it and never orders. Fingers select
+	 * by a tap, order by a press, carry the map by one finger, draw a frame with Framing.
+	 */
+	it('orders by the right button and turns the view only with Ctrl; by fingers selects, orders, carries the map and frames', async function () {
+		var made = await mount();
+		var scene = made.Scene;
+		var game = made.Game;
+		var space = scene.Scene();
+		var box = scene.$Element().querySelector('.elemenx-scene-canvas').getBoundingClientRect();
+		var middle = {X: box.left + box.width / 2, Y: box.top + box.height / 2};
+		var noop = function () {};
+		var yaw;
+		var target;
+
+		function pointer (kind, x, y, button, extra) {
+			scene['Pointer' + kind](Object.assign({button: button, buttons: kind === 'Up' ? 0 : 1 << (button === 2 ? 1 : 0), clientX: x, clientY: y, pointerId: 1, pointerType: 'mouse', target: scene.$Element(), preventDefault: noop}, extra || {}));
+		}
+
+		function orders () {
+			return made.Told.filter(function (one) {
+				return one[0] === 'order';
+			}).length;
+		}
+
+		scene.Add('unit', {ID: 'a', X: -5, Y: 0, Team: 'blue'});
+		scene.Add('unit', {ID: 'b', X: 5, Y: 0, Team: 'blue'});
+
+		made.Frames(3);
+
+		game.Select(['a']);
+
+		yaw = space.Yaw;
+
+		pointer('Down', middle.X, middle.Y, 2);
+		pointer('Move', middle.X + 2, middle.Y + 1, 2);
+		pointer('Up', middle.X + 2, middle.Y + 1, 2);
+
+		expect(orders()).toBe(1);
+
+		/* No button down: the mouse moves, the view stays. */
+		pointer('Move', middle.X + 150, middle.Y + 60, 0, {buttons: 0});
+
+		expect(space.Drag).toBe(null);
+		expect(space.Yaw).toBe(yaw);
+
+		/* A right drag without Ctrl: neither a turn nor an order. */
+		pointer('Down', middle.X, middle.Y, 2);
+		pointer('Move', middle.X + 120, middle.Y, 2);
+		pointer('Up', middle.X + 120, middle.Y, 2);
+
+		expect(space.Yaw).toBe(yaw);
+		expect(orders()).toBe(1);
+
+		/* With Ctrl: the view turns, no order. */
+		pointer('Down', middle.X, middle.Y, 2, {ctrlKey: true});
+		pointer('Move', middle.X + 120, middle.Y, 2, {ctrlKey: true});
+		pointer('Up', middle.X + 120, middle.Y, 2, {ctrlKey: true});
+
+		expect(space.Yaw).not.toBe(yaw);
+		expect(orders()).toBe(1);
+		expect(space.Drag).toBe(null);
+
+		/* Fingers: a tap on nothing of the team selects none; a press orders the selected; one finger carries the map. */
+		scene.Gesture({Type: 'tap', X: box.left + 3, Y: box.top + 3, Pointers: 1});
+
+		expect(game.Selection()).toEqual([]);
+
+		game.Select(['a', 'b']);
+
+		scene.Gesture({Type: 'press', X: middle.X, Y: middle.Y, Pointers: 1});
+
+		expect(orders()).toBe(2);
+
+		target = space.Ground.Target.slice();
+
+		scene.Gesture({Type: 'pan', Phase: 'start', X: middle.X + 20, Y: middle.Y, DX: 20, DY: 0, MoveX: 20, MoveY: 0, Pointers: 1});
+		scene.Gesture({Type: 'pan', Phase: 'move', X: middle.X + 60, Y: middle.Y, DX: 60, DY: 0, MoveX: 40, MoveY: 0, Pointers: 1});
+
+		expect(space.Ground.Target).not.toEqual(target);
+		expect(space.Yaw).not.toBe(yaw - 1);
+
+		/* With Framing one finger draws a frame: over the whole canvas, both. */
+		game.Select([]);
+
+		expect(game.Framing(true).Framing()).toBe(true);
+
+		scene.Gesture({Type: 'pan', Phase: 'start', X: box.left + 12, Y: box.top + 12, DX: 11, DY: 11, MoveX: 11, MoveY: 11, Pointers: 1});
+		scene.Gesture({Type: 'pan', Phase: 'move', X: box.right - 1, Y: box.bottom - 1, DX: box.width - 2, DY: box.height - 2, MoveX: 1, MoveY: 1, Pointers: 1});
+		scene.Gesture({Type: 'pan', Phase: 'end', X: box.right - 1, Y: box.bottom - 1, DX: box.width - 2, DY: box.height - 2, MoveX: 0, MoveY: 0, Pointers: 1});
+
+		expect(game.Selection().sort()).toEqual(['a', 'b']);
+	}, 60000);
+
 	it('sends units to a place, each to its own spot, stops them, and has them attack a foe until it is gone', async function () {
 		var made = await mount();
 		var scene = made.Scene;

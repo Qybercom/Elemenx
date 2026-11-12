@@ -29,5 +29,5 @@ Shape(name, {Draw (context)}) объявляет фигуру. context: Canvas (
 
 ## Тесты
 
-- [knows the kinds and shapes built in; an unknown kind is drawn as a server](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js#L625) — `libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js`
-- [draws a kind defined with a shape of its own, and its load by a function](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js#L640) — `libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js`
+- [knows the kinds and shapes built in; an unknown kind is drawn as a server](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js#L643) — `libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js`
+- [draws a kind defined with a shape of its own, and its load by a function](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js#L658) — `libraries/ElemenxUI/components/TopologyIso/TopologyIso.test.js`

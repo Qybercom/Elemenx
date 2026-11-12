@@ -1,0 +1,65 @@
+/* A demo of a scene: its row of controls over its scene, the scene as tall as the rest of the main area. */
+.scene-demo {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	height: 100%;
+	min-height: 0;
+	padding: 8px;
+	box-sizing: border-box;
+}
+
+.scene-demo-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+/* What the demo tells of what happens in it. */
+.scene-demo-status {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+/* A choice in the row as wide as its words, not the whole row. */
+.scene-demo-row .elemenx-select {
+	flex: 0 1 220px;
+	width: 220px;
+}
+
+.scene-demo-scene {
+	position: relative;
+	flex: 1 1 auto;
+	min-height: 240px;
+	overflow: hidden;
+	border-radius: var(--elemenx-radius-large);
+}
+
+/* A phone on its side: the scene has all of the height (its controls shown above it when asked, DemoFrame). */
+.elemenx-narrow.elemenx-landscape .scene-demo {
+	padding: 0;
+	gap: 0;
+}
+
+.elemenx-narrow.elemenx-landscape .scene-demo-row {
+	padding: 4px 96px 4px 4px;
+}
+
+.elemenx-narrow.elemenx-landscape .scene-demo-scene {
+	border-radius: 0;
+}
+
+/* A slider of a ribbon of a demo with its name before it; the ribbon over its scene. */
+.ui-kit-tune {
+	display: grid;
+	grid-template-columns: 76px 150px;
+	align-items: center;
+	gap: 4px;
+	font-size: var(--elemenx-font-size-small);
+	color: var(--elemenx-text-muted);
+}
+
+.ui-kit-place-ribbon {
+	margin-block-end: 4px;
+}

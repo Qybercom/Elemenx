@@ -1342,6 +1342,14 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "FloraEditor",
+					"Title": {
+						"en": "FloraEditor"
+					},
+					"Group": "other",
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "Form",
 					"Title": {
 						"en": "Form"
@@ -2782,6 +2790,13 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "Gestures",
+					"Title": {
+						"en": "Gestures"
+					},
+					"Library": "ElemenxCommon"
+				},
+				{
 					"ID": "Gltf",
 					"Title": {
 						"en": "Gltf"
@@ -2848,6 +2863,13 @@
 					"ID": "Meshes",
 					"Title": {
 						"en": "Meshes"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "ModelBlueprints",
+					"Title": {
+						"en": "ModelBlueprints"
 					},
 					"Library": "ElemenxGraphics"
 				},
@@ -2999,6 +3021,27 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "SceneCache",
+					"Title": {
+						"en": "SceneCache"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneClusters",
+					"Title": {
+						"en": "SceneClusters"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneFlora",
+					"Title": {
+						"en": "SceneFlora"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneKinds",
 					"Title": {
 						"en": "SceneKinds"
@@ -3044,6 +3087,13 @@
 					"ID": "ScenePlanet",
 					"Title": {
 						"en": "ScenePlanet"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneProxies",
+					"Title": {
+						"en": "SceneProxies"
 					},
 					"Library": "ElemenxGraphics"
 				},
@@ -3109,6 +3159,13 @@
 						"en": "SceneWorld"
 					},
 					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "Screen",
+					"Title": {
+						"en": "Screen"
+					},
+					"Library": "ElemenxCommon"
 				},
 				{
 					"ID": "Seeded",

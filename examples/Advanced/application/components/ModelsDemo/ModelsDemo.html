@@ -1,0 +1,22 @@
+<div class="scene-demo">
+	<div class="scene-demo-row">
+		<Button Label="Attack" Icon="zap" Variant="ghost" (click)="ModelsPlay('attack')" />
+		<Button Label="Cast" Icon="star" Variant="ghost" (click)="ModelsPlay('cast')" />
+		<Button Label="Work" Icon="settings" Variant="ghost" (click)="ModelsPlay('work')" />
+		<Button Label="Fall" Icon="arrow-down" Variant="ghost" (click)="ModelsPlay('die')" />
+		<Button Label="Stand" Icon="arrow-up" Variant="ghost" (click)="ModelsPlay('idle')" />
+		<Button Label="March" Icon="map-pin" Variant="ghost" (click)="ModelsMarch" />
+		<Toggle Label="Shadows" [checked]="ModelsShadows" (change)="ModelsShadowed" />
+		<Button Label="To the files" Icon="box" Variant="ghost" *if="ModelsFiles.length" (click)="ModelsToFiles" />
+		<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
+		<span class="scene-demo-status">{{ModelsNote}}</span>
+	</div>
+	<div class="scene-demo-scene">
+		<Scene Setting="terrain" Team="red" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [shadows]="ModelsShadows" (ready)="ModelsReady">
+			<SceneObject ID="meadow" Kind="ground" [world]="WorldOf('meadow')" />
+			<SceneObject ID="noon" Kind="sun" Elevation="36" Azimuth="130" />
+			<SceneObject *for="model of ModelsList" *key="model.ID" [kind]="model.Kind" [id]="model.ID" [name]="model.Kind" [x]="model.X" [y]="model.Y" [team]="model.Team" />
+			<SceneObject ID="from-file" Kind="unit" Name="column.glb" Model="/data/models/column.glb" Size="4" X="-92" Y="-40" Clip="Bend" />
+		</Scene>
+	</div>
+</div>

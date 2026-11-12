@@ -27,11 +27,16 @@ RoadWay(field, from, to, options) — путь дороги по полю от [
 Вырез tunnel принимает Crust — сколько метров земли над ним никогда не вырезается: мелкий тоннель сохраняет потолок, а склон над ним остаётся целым. Без Crust тоннель открывается там, где доходит до поверхности. С Width вырез tunnel — не круглая труба, а короб вокруг своей оси: шириной Width и высотой Height (по умолчанию два радиуса), ровные пол и свод, углы скруглены на Corner (1,5 м). Так вырезают землю тоннели дорог (SceneRoads.Carves): один короб во всю ширину облицовки, без корки.
 
 
-Квадрат грани глобуса (SpherePatch) несёт в Materials (8 чисел на точку) положение точки на квадрате от 0 до 1 — для его картинки — и юбку под краями: каждую точку края ещё раз, ниже на десятую клетки (не меньше 50 м), видимую с обеих сторон, чтобы квадраты разных размеров не оставляли щелей. Piece(«Sphere», options, roads, [face, u, v, size, resolution, picture]) с размером picture и полем, которое красит себя само (ScenePlanet), даёт и Picture; Piece(«SpherePicture», …, [face, u, v, size, picture]) — одну картинку.
+Квадрат грани глобуса (SpherePatch) несёт в Materials (8 чисел на точку) положение точки на квадрате от 0 до 1 — для его картинки — и юбку под краями: каждую точку края ещё раз, ниже на десятую клетки (не меньше 50 м), видимую с обеих сторон, чтобы квадраты разных размеров не оставляли щелей. Piece(«Sphere», options, roads, [face, u, v, size, resolution, picture, things]) с размером picture и полем, которое красит себя само (ScenePlanet), даёт и Picture, а с размером things — и Things, то, что стоит на квадрате, из той же картинки (ScenePlanet.PatchThings), одним заданием; Piece(«SpherePicture», …, [face, u, v, size, picture]) — одну картинку. Piece(«SphereThings», …, [face, u, v, size, side]) — то, что стоит на квадрате: его леса и дома одной формой (ScenePlanet.PatchThings).
+
+FlatOf(options) — числа плоской карты, заданные или по умолчанию: {Seed, Size, Height, Water, Scale, Ridges} (1000, 60, 0.35, 180, 0.4); от них начинают Flat, её климат, LibraryRelief и блоки SceneWorld. TunnelRadius — радиус тоннеля или прохода без заданного, 2.5 м.
+
+LibraryRelief(options) берёт граф ресурса `ElemenxGraphics/relief` (blueprints/relief.json) и заполняет его параметры (Scale, Ridges, Water, Height, Lapse, Spread, Warmth, Stretch) и зерно `{Seed}` через Blueprints.Fill.
 
 ## Методы
 
 - `Relief(settings)`
+- `FlatOf(options)`
 - `Climate(settings)`
 - `LibraryRelief(options)`
 - `Flat(options)`
@@ -43,7 +48,7 @@ RoadWay(field, from, to, options) — путь дороги по полю от [
 - `SketchChanged(before, after)`
 - `FromGrid(options, heights, side)`
 - `Heights(field, side)`
-- `Field(shape, options)`
+- `Field(shape, options, name)`
 - `Piece(shape, options, roads, args)`
 - `Free(size, side, lines, areas, edge)`
 - `Floor(options, side)`
@@ -74,17 +79,17 @@ RoadWay(field, from, to, options) — путь дороги по полю от [
 
 ## Тесты
 
-- [gives its ground to land on as the Sphere of SceneTerrainGenerator does: its heights, squares with its colors, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L176) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
-- [makes the buildings of a town of their own shapes, each as tall as its Size, its wings within its width and depth](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/buildings.test.js#L118) — `tests/regression/buildings.test.js`
-- [asks first for the squares of a cave under a mountain the eye is in, before the low ground round the mountain](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-lod.test.js#L138) — `tests/regression/ground-lod.test.js`
-- [asks for as many squares a frame as the workers take, however long the walk over them took](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-lod.test.js#L187) — `tests/regression/ground-lod.test.js`
-- [draws a material of a recipe by its Blueprint, its parameters uniforms that change it without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L72) — `tests/regression/library-material-blueprints.test.js`
-- [draws a ground by its Blueprint, the color of its parameter, and keeps the very same ground as its look changes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L198) — `tests/regression/library-material-blueprints.test.js`
-- [keeps no grass where a tunnel cut the ground away under the sky](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L366) — `tests/regression/library-scene-roads.test.js`
-- [takes a ground from a model: floors one over the other, walls that stop a walker, and a plane at its foot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1518) — `tests/regression/library-scene.test.js`
-- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1821) — `tests/regression/library-scene.test.js`
-- [makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2131) — `tests/regression/library-scene.test.js`
-- [Workers runs the methods of Services in workers made of their source, and in the page when it cannot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4171) — `tests/regression/library-scene.test.js`
-- [makes the squares of a ground of noise in workers, lets go of what came for roads that changed, and grows grass with no noise in a frame](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4275) — `tests/regression/library-scene.test.js`
+- [gives its ground to land on as the Sphere of SceneTerrainGenerator does: its heights, squares with its colors, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L245) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [makes the buildings of a town of their own shapes, each as tall as its Size, its wings within its width and depth](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/buildings.test.js#L120) — `tests/regression/buildings.test.js`
+- [asks first for the squares of a cave under a mountain the eye is in, before the low ground round the mountain](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-lod.test.js#L142) — `tests/regression/ground-lod.test.js`
+- [asks for as many squares a frame as the workers take, however long the walk over them took](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-lod.test.js#L191) — `tests/regression/ground-lod.test.js`
+- [draws a material of a recipe by its Blueprint, its parameters uniforms that change it without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L73) — `tests/regression/library-material-blueprints.test.js`
+- [draws a ground by its Blueprint, the color of its parameter, and keeps the very same ground as its look changes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L199) — `tests/regression/library-material-blueprints.test.js`
+- [asks a coarse part near the eye before the small squares far in the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L1360) — `tests/regression/library-scene-landing.test.js`
+- [keeps no grass where a tunnel cut the ground away under the sky](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L368) — `tests/regression/library-scene-roads.test.js`
+- [takes a ground from a model: floors one over the other, walls that stop a walker, and a plane at its foot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1631) — `tests/regression/library-scene.test.js`
+- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1934) — `tests/regression/library-scene.test.js`
+- [makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2252) — `tests/regression/library-scene.test.js`
+- [Workers runs the methods of Services in workers made of their source, and in the page when it cannot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4531) — `tests/regression/library-scene.test.js`
 
-+40 ещё в тех же файлах
++44 ещё в тех же файлах

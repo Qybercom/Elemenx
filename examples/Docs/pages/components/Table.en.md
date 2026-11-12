@@ -95,7 +95,9 @@ A data table. Columns: [{Key, Title, Width, MinWidth, Align (left, center, right
 
 ## Tests
 
+- [runs a graph that calls itself through a list of its own, as a function, by the IR in JavaScript as it runs](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L71) — `tests/regression/blueprints-ir.test.js`
 - [puts what one route alone uses into its part, and keeps the first screen, the shared and what the rest uses](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/split.test.js#L17) — `tests/regression/split.test.js`
-- [table sorts, selects and opens rows](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4653) — `tests/examples/ui-kit.spec.js`
-- [tables fit their container without a horizontal scroll](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5635) — `tests/examples/ui-kit.spec.js`
+- [table sorts, selects and opens rows](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4311) — `tests/examples/ui-kit.spec.js`
+- [tables fit their container without a horizontal scroll](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5293) — `tests/examples/ui-kit.spec.js`
+- [carries a Service told whole: every method of it and the data of its list Carried, not the caches it fills](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Workers/Workers.test.js#L99) — `libraries/ElemenxCommon/services/Workers/Workers.test.js`
 - [writes a <template id> as a script of text, its tags as they were written](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/server.test.js#L399) — `tests/regression/server.test.js`

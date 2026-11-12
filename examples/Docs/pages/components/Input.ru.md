@@ -68,6 +68,7 @@
 
 ## Тесты
 
+- [maps a list and takes one result of each, the values of lists of numbers each by each](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L107) — `tests/regression/blueprints-ir.test.js`
 - [runs a generator of numbers with the very noise of the shaders, its parameters and inputs given](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L438) — `tests/regression/blueprints.test.js`
 - [reads a noise of the Noise Service by the spec of its block, in a generator and in a pass, the same numbers](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L665) — `tests/regression/blueprints.test.js`
 - [makes a generator JavaScript that gives the very values of its Run, many times faster; a graph with a block of no code gives null](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L697) — `tests/regression/blueprints.test.js`

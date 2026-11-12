@@ -21,6 +21,7 @@
  *   Service and Guard        Elemenx.Service, Elemenx.Guard and Application-owned service instances
  *   Router ownership         which Router a component belongs to
  *   Directive registry       directive metadata and the built-in if, for, key, outlet, pending, error
+ *   Event sources            Elemenx.EventSource: the givers of the events of the templates no element gives by itself
  *   Template and Component   Elemenx.Template, Elemenx.Directive, Elemenx.Component, Elemenx.Instance: compiler, bindings, factory
  *   Meta                     Elemenx.Meta: what Components, Services and Directives declare of themselves ($Meta)
  *   Defined                  Elemenx.Defined: what a name is defined as, and waiting for a definition to come
@@ -3703,6 +3704,86 @@
 		Runtime.Directive.Register('outlet', {Alias: 'Outlet', Kind: 'behavior', Role: 'outlet'}, true);
 		Runtime.Directive.Register('pending', {Alias: 'Pending', Kind: 'status', Role: 'pending'}, true);
 		Runtime.Directive.Register('error', {Alias: 'Error', Kind: 'status', Role: 'error'}, true);
+	})();
+
+	/* Event sources */
+	(function () {
+		'use strict';
+
+		/*
+		 * The sources of the events of the templates that no element gives by itself (a pinch, a long press, the turn of the
+		 * device): a library registers one by the names of its events, and an (event) of any template on an element starts
+		 * it there, once for all the names it gives. Attach(element) starts it and returns its stop; it dispatches its
+		 * events on the element, a CustomEvent of each name, its data in detail. The last listener of the element gone, it
+		 * stops.
+		 */
+		Runtime.EventSources = {};
+
+		/* Starts the source of an event on an element (none for an event of no source): the release of this listener. */
+		Runtime.AttachEventSource = function (node, name) {
+			var source = Runtime.Own(Runtime.EventSources, name) ? Runtime.EventSources[name] : null;
+			var held;
+			var entry = null;
+			var i = 0;
+
+			if (!source || !node || node.nodeType !== 1) return null;
+
+			held = node.__ElemenxEventSources || (node.__ElemenxEventSources = []);
+
+			while (i < held.length && !entry) {
+				if (held[i].Source === source)
+					entry = held[i];
+
+				i++;
+			}
+
+			if (!entry) {
+				entry = {Source: source, Count: 0, Stop: null};
+
+				held.push(entry);
+
+				entry.Stop = source.Attach(node);
+			}
+
+			entry.Count++;
+
+			return function () {
+				var at;
+
+				entry.Count--;
+
+				if (entry.Count > 0) return;
+
+				at = held.indexOf(entry);
+
+				if (at !== -1)
+					held.splice(at, 1);
+
+				if (typeof entry.Stop === 'function')
+					entry.Stop();
+			};
+		};
+
+		/*
+		 * Elemenx.EventSource(names, source): registers source ({Attach(element) → stop}) as the giver of the events of names
+		 * (a name or a list of them); Elemenx.EventSource(name): the source of that event, or null. A name of a source
+		 * registered again is taken by the new one.
+		 */
+		Elemenx.EventSource = function (names, source) {
+			var list = typeof names === 'string' ? [names] : names;
+
+			if (source === undefined)
+				return typeof names === 'string' && Runtime.Own(Runtime.EventSources, names) ? Runtime.EventSources[names] : null;
+
+			if (!list || !list.length || !source || typeof source.Attach !== 'function')
+				throw new Error('Elemenx.EventSource needs names and a source with Attach(element).');
+
+			list.forEach(function (name) {
+				Runtime.EventSources[String(name)] = source;
+			});
+
+			return source;
+		};
 	})();
 
 	/* Template and Component */
@@ -7677,10 +7758,11 @@
 					return referredAll(found, instance);
 				}
 
+				/* An event of a source (Event sources) starts it on the element; released with the listener. */
 				function listen (node, name, callback) {
 					node.addEventListener(name, callback);
 
-					listeners.push({node: node, name: name, callback: callback});
+					listeners.push({node: node, name: name, callback: callback, release: Runtime.AttachEventSource(node, name)});
 				}
 
 				function updateRouteContext (packet) {
@@ -7824,6 +7906,9 @@
 
 					while (i >= 0) {
 						listeners[i].node.removeEventListener(listeners[i].name, listeners[i].callback);
+
+						if (listeners[i].release)
+							listeners[i].release();
 
 						i--;
 					}

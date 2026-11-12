@@ -21,19 +21,6 @@
 }
 
 /* A named slider in a row of a Ribbon. */
-.ui-kit-tune {
-	display: grid;
-	grid-template-columns: 76px 150px;
-	align-items: center;
-	gap: 4px;
-	font-size: var(--elemenx-font-size-small);
-	color: var(--elemenx-text-muted);
-}
-
-.ui-kit-place-ribbon {
-	margin-block-end: 12px;
-}
-
 .ui-kit-row {
 	display: flex;
 	flex-wrap: wrap;
@@ -891,51 +878,9 @@
 }
 
 /* The world of the game demo: a window on its map, the resources of the player over it. */
-.ui-kit-world {
-	height: 480px;
-	overflow: hidden;
-	border-radius: var(--elemenx-radius-large);
-}
-
 /* The space of the game demo: a window on its system, the day of it in a corner. */
-.ui-kit-space {
-	height: 520px;
-	overflow: hidden;
-	border-radius: var(--elemenx-radius-large);
-}
-
 /* The editor of plants: its picture, its view and its panel side by side, tall enough for its sliders. */
-.ui-kit-flora {
-	height: 560px;
-}
-
-.ui-kit-space-hud {
-	position: absolute;
-	left: 12px;
-	bottom: 10px;
-	font-size: 12px;
-	font-variant-numeric: tabular-nums;
-	color: var(--elemenx-scene-label);
-}
-
 /* The bar of the HUD takes the presses over it only: the world round it takes the others. */
-.ui-kit-world-hud {
-	position: absolute;
-	top: 10px;
-	left: 50%;
-	transform: translateX(-50%);
-}
-
-.ui-kit-world-resources {
-	display: inline-flex;
-	gap: 16px;
-	padding: 6px 14px;
-	background: var(--elemenx-overlay);
-	border-radius: var(--elemenx-radius-pill);
-	color: var(--elemenx-overlay-text);
-	font-size: var(--elemenx-font-size-small);
-}
-
 .ui-kit-calculators {
 	display: grid;
 	grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
@@ -950,59 +895,6 @@
 }
 
 /* The screen behind the wheel of a car: drawn by the scene from this element, out of sight. */
-.ui-kit-dash {
-	display: flex;
-	align-items: center;
-	gap: 18px;
-	box-sizing: border-box;
-	width: 512px;
-	height: 116px;
-	padding: 0 22px;
-	background: #05080c;
-	color: #8fd8ff;
-	font: 600 20px system-ui, sans-serif;
-}
-
-.ui-kit-dash-speed {
-	min-width: 96px;
-	font-size: 64px;
-	font-weight: 700;
-	text-align: right;
-	color: #ffffff;
-}
-
-.ui-kit-dash-gear {
-	font-size: 52px;
-	color: #ffb347;
-}
-
-.ui-kit-dash-rpm {
-	flex: 1;
-	height: 14px;
-	border-radius: 7px;
-	background: #1c2a36;
-	overflow: hidden;
-}
-
-.ui-kit-dash-rpm > span {
-	display: block;
-	height: 100%;
-	background: linear-gradient(90deg, #39d0ff, #ffd24a 70%, #ff4a3a);
-}
-
-.ui-kit-dash-turn,
-.ui-kit-dash-lights {
-	color: #23313d;
-}
-
-.ui-kit-dash-turn.on {
-	color: #4cff7a;
-}
-
-.ui-kit-dash-lights.on {
-	color: #4aa8ff;
-}
-
 .ui-kit-blueprint {
 	align-self: stretch;
 	display: grid;
@@ -1045,11 +937,6 @@
 	}
 }
 
-.ui-kit-scene-editor {
-	align-self: stretch;
-	height: 640px;
-}
-
 /* ?fps=1: how smoothly the page draws, over every demo. */
 .ui-kit-fps {
 	position: fixed;
@@ -1058,39 +945,3 @@
 	z-index: 50;
 }
 /* The screens of the cinema demo: a live panel of the page and a HUD of no background, laid out out of sight. */
-.ui-kit-cinema-panel {
-	box-sizing: border-box;
-	width: 480px;
-	height: 270px;
-	padding: 16px 20px;
-	border-radius: 8px;
-	background: var(--elemenx-surface);
-	color: var(--elemenx-text);
-}
-
-.ui-kit-cinema-panel h3 {
-	margin: 0 0 6px;
-}
-
-.ui-kit-cinema-hud {
-	box-sizing: border-box;
-	width: 400px;
-	height: 120px;
-	padding: 16px;
-	color: #ff4d4d;
-	font: 700 34px system-ui, sans-serif;
-	text-shadow: 0 2px 6px #000000;
-}
-
-.ui-kit-cinema-hud-bar {
-	height: 12px;
-	margin-top: 12px;
-	border: 2px solid #ff4d4d;
-	border-radius: 8px;
-}
-
-.ui-kit-cinema-hud-bar > span {
-	display: block;
-	height: 100%;
-	background: #ff4d4d;
-}

@@ -219,6 +219,7 @@ Status values:
 | --- | --- | --- |
 | `Elemenx.Library` / `$Use` | YES | `app.js` uses ElemenxUI; the `/ui` catalogue renders every component of it. |
 | `Elemenx.Locale` / `$T` | YES | The `/ui` catalogue switches the language of ElemenxUI (`Elemenx.Locale.Language`). |
+| `Elemenx.EventSource` (gestures as template events) | YES | The scenes of `/graphics` and `/gaming` answer the gestures of fingers of the Gestures service (tap, press, pan, pinch, rotate); a page of them follows the Screen service (orientation, fullscreen in landscape). |
 | Application `$Locales` | ELSEWHERE | `examples/Docs` and `examples/Designer` have dictionaries of their own. |
 | `Elemenx.Cache`, `*keep`, `*lazy`, `$KeepAlive` | YES | `app.js` sets the cache policy; the Keep-alive section of `/ui` sleeps a panel with `*keep`, and its sections render lazily (`*lazy`). |
 | `Elemenx.Meta` / `$Meta` | ELSEWHERE | `examples/Designer` builds its palette from it; `examples/Docs` its reference. |

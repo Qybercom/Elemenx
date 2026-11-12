@@ -12,6 +12,8 @@ Scatter отправляет ближайшие квадраты пачками 
 
 Biome правила — биом земли по климату, где оно растёт; на стыке биомов вещи перемешиваются по весам (Land).
 
+LibraryScatter(rule) берёт граф ресурса `ElemenxGraphics/scatter` (blueprints/scatter.json) и заполняет его параметры (MinHeight, MaxHeight, MaxSlope, Cover, Patch, Clumps) и зерно `{Seed}` через Blueprints.Fill; приложение может подложить свой граф под тем же именем.
+
 ## Методы
 
 - `Work()`
@@ -27,4 +29,5 @@ Biome правила — биом земли по климату, где оно 
 - [sows a rule of a graph: its library graph the very same things as the rule, a graph of its own its sizes, turns and shapes, in a worker too](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L172) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
 - [keeps the whole of a large thing off a road, not only its place](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L242) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
 - [places the things of a line every step of it, whatever its pieces, the same from its start in every square](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L267) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
+- [reads the graphs of the library from its resources, one of the same name of an Application in their place](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L853) — `tests/regression/blueprints.test.js`
 - [makes what is past its outline: a cliff falls, a passage keeps its way open with a road to the middle, a wall stands with a gate, a side with a location beside and no passage stays open](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneLocations/SceneLocations.test.js#L87) — `libraries/ElemenxGraphics/services/SceneLocations/SceneLocations.test.js`

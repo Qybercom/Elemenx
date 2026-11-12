@@ -17,4 +17,4 @@ The same functions run in Node: they read no page.
 
 - [keeps texts in UTF-8 and bytes as they are, each with its CRC-32, and a directory of them at its end](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Archive/Archive.test.js#L37) — `libraries/ElemenxCommon/services/Archive/Archive.test.js`
 - [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L129) — `tests/regression/headless.test.js`
-- [tabs declared with their content show the panel of the current one, and make the component of a tab when it first opens](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4285) — `tests/examples/ui-kit.spec.js`
+- [tabs declared with their content show the panel of the current one, and make the component of a tab when it first opens](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3943) — `tests/examples/ui-kit.spec.js`

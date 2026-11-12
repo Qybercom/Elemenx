@@ -72,6 +72,7 @@ describe('Regression: public API surface', function () {
 			'Elemenx.Component:function',
 			'Elemenx.Defined:function',
 			'Elemenx.Directive:function',
+			'Elemenx.EventSource:function',
 			'Elemenx.Events:function',
 			'Elemenx.Expressions:function',
 			'Elemenx.Guard:function',

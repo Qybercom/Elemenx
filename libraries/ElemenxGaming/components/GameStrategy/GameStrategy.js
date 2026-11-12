@@ -8,11 +8,14 @@
  * A unit with a Weapon (of the weapons of the Scene: rifle, rocket, mortar...) shoots it from its Range (25 metres) with a
  * Spread of its own (degrees, 2), its shots hitting what is in their way; the damage is of the health of the scene (Vitals).
  * Fog hides what the units of the Team do not see (Sight of a unit, 30 metres) and darkens what they have not seen yet or
- * see no more; the units of other teams are hidden there. The right button turns the view, the wheel brings it near.
- * Selected: the units selected from the start, as they come into the scene.
+ * see no more; the units of other teams are hidden there. The right button with Ctrl turns the view (without it it only
+ * orders), the wheel brings it near. By fingers (Gestures): a tap selects, a double tap all of that kind on the screen, a
+ * press orders, one finger carries the map (with Framing on it draws a frame that selects), two bring it near, turn and
+ * tilt it. Selected: the units selected from the start, as they come into the scene.
  *
  * Methods: Selection(), Select(ids), Order(ids, target, kind) (target [x, z], {X, Z} or the ID of a unit; kind move or
- * attack), Stop(ids), Seen(x, z) and Explored(x, z) (of the fog). Events: select ({IDs}), order ({Kind, IDs, X, Z, Target}),
+ * attack), Stop(ids), Seen(x, z) and Explored(x, z) (of the fog), Framing(on) (one finger draws a frame; no on: whether it
+ * does). Events: select ({IDs}), order ({Kind, IDs, X, Z, Target}),
  * death ({ID, By}).
  */
 Elemenx.Component('GameStrategy', {
@@ -148,29 +151,25 @@ Elemenx.Component('GameStrategy', {
 			return true;
 		}
 
+		/*
+		 * The right button orders, with Ctrl it turns the view (the scene's drag): never both. Regression: a right press began
+		 * the drag of the scene too, and an order turned the view.
+		 */
 		if (kind === 'down' && event.button === 2) {
-			this.Right = at;
+			this.Right = event.ctrlKey ? null : at;
 
-			return false;
+			return !event.ctrlKey;
 		}
 
-		if (kind === 'up' && event.button === 2 && this.Right && Math.hypot(at[0] - this.Right[0], at[1] - this.Right[1]) < 6) {
+		if (kind === 'move' && this.Right) return true;
+
+		if (kind === 'up' && event.button === 2 && this.Right) {
+			var right = this.Right;
+
 			this.Right = null;
 
-			if (!this.Chosen.length) return false;
-
-			picked = scene.Pick(event.clientX, event.clientY);
-			object = picked ? this.Space().Objects[picked] : null;
-
-			if (this.Foe(object)) {
-				this.Order(this.Chosen, picked, 'attack');
-
-				return true;
-			}
-
-			var ground = scene.GroundAt(event.clientX, event.clientY);
-			if (ground)
-				this.Order(this.Chosen, [ground[0], ground[2], ground[1]], 'move');
+			if (Math.hypot(at[0] - right[0], at[1] - right[1]) < 6)
+				this.OrderAt(event.clientX, event.clientY);
 
 			return true;
 		}
@@ -225,6 +224,92 @@ Elemenx.Component('GameStrategy', {
 			}).map(function (unit) {
 				return unit.ID;
 			}));
+
+			return true;
+		}
+
+		return false;
+	},
+
+	/* The selected units sent to a point of the page: attacking a foe there, else going to the ground there. */
+	OrderAt: function (clientX, clientY) {
+		var scene = this.ParentScene();
+		var picked;
+		var object;
+		var ground;
+
+		if (!this.Chosen.length) return false;
+
+		picked = scene.Pick(clientX, clientY);
+		object = picked ? this.Space().Objects[picked] : null;
+
+		if (this.Foe(object)) {
+			this.Order(this.Chosen, picked, 'attack');
+
+			return true;
+		}
+
+		ground = scene.GroundAt(clientX, clientY);
+
+		if (ground)
+			this.Order(this.Chosen, [ground[0], ground[2], ground[1]], 'move');
+
+		return true;
+	},
+
+	/* One finger draws a frame that selects (on true), or carries the map (false); no on: whether it draws one. */
+	Framing: function (on) {
+		if (on === undefined)
+			return !!this.Framed;
+
+		this.Framed = !!on;
+
+		return this;
+	},
+
+	/*
+	 * The fingers: a tap selects (the unit under it, else none), a double tap all of its kind on the screen, a press orders,
+	 * one finger carries the map or draws a frame (Framing); two are the scene's (near, turned, tilted).
+	 */
+	SceneGesture: function (gesture) {
+		var scene = this.ParentScene();
+		var event = {clientX: gesture.X, clientY: gesture.Y};
+		var at;
+		var picked;
+
+		if (!this.Space() || !this.Space().Ground) return false;
+
+		at = this.Local(event);
+
+		if (gesture.Type === 'tap') {
+			picked = scene.Pick(gesture.X, gesture.Y);
+
+			this.Select(picked && this.Mine(this.Space().Objects[picked]) ? [picked] : []);
+
+			return true;
+		}
+
+		if (gesture.Type === 'doubletap')
+			return this.ScenePointer('double', event);
+
+		if (gesture.Type === 'press')
+			return this.OrderAt(gesture.X, gesture.Y);
+
+		if (gesture.Type === 'pan' && gesture.Pointers === 1 && this.Framed) {
+			if (gesture.Phase === 'start')
+				this.Box = {From: [at[0] - gesture.DX, at[1] - gesture.DY], To: at, Add: false};
+
+			if (this.Box)
+				this.Box.To = at;
+
+			if (gesture.Phase === 'end' && this.Box)
+				this.ScenePointer('up', event);
+
+			return true;
+		}
+
+		if (gesture.Type === 'pan' && gesture.Pointers === 1) {
+			scene.Engine().PanView(gesture.MoveX, gesture.MoveY);
 
 			return true;
 		}

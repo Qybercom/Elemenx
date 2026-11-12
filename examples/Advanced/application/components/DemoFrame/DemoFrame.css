@@ -1,0 +1,119 @@
+.demo-frame {
+	height: 100vh;
+	height: 100dvh;
+}
+
+.demo-frame-home {
+	color: inherit;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.demo-frame-title {
+	margin-left: 4px;
+}
+
+.demo-frame-note {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--elemenx-text-muted);
+	font-size: 0.85em;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.demo-frame-other {
+	color: var(--elemenx-accent);
+	white-space: nowrap;
+}
+
+.demo-frame-list {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.demo-frame-item {
+	padding: 8px 10px;
+	border: 0;
+	border-radius: var(--elemenx-radius-small);
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.demo-frame-item:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.demo-frame-item.active {
+	background: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+}
+
+/* The demo takes the whole main area, and the whole screen when it is over it. */
+.demo-frame-main {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+	overflow: auto;
+	background: var(--elemenx-background);
+}
+
+.demo-frame-main:fullscreen {
+	width: 100vw;
+	height: 100vh;
+}
+
+/* A phone: its header holds the title and the buttons, the note of the demo goes. */
+.elemenx-narrow .demo-frame-note {
+	display: none;
+}
+
+/* The buttons of the controls of the demo and of the whole screen, on the stripe: a phone on its side has no header. */
+.demo-frame-corner {
+	order: 3;
+	display: none;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	margin-top: auto;
+	padding-bottom: 8px;
+}
+
+.demo-frame-corner button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border: 0;
+	border-radius: var(--elemenx-radius);
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+}
+
+.demo-frame-corner button[aria-pressed='true'] {
+	background: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+}
+
+/* A phone on its side: the demo has all of the height, its header goes (the stripe keeps the list of the demos). */
+.elemenx-narrow.elemenx-landscape .demo-frame .elemenx-workspace-header {
+	display: none;
+}
+
+/* A phone, held either way: its controls only when asked (the scene alone, else above it), by the buttons on the stripe. */
+.elemenx-narrow .demo-frame-corner {
+	display: flex;
+}
+
+.elemenx-narrow .demo-frame-main:not(.tools) .scene-demo > :not(.scene-demo-scene) {
+	display: none;
+}
