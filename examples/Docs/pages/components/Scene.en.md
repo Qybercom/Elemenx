@@ -66,7 +66,7 @@ What a scene waits for, its programs and models, comes behind the page and holds
 - `prepared`: All the view needs is made and the veil goes: {First (the start of the scene, not a location that came)}.
 - `ready`: The scene is ready: the component itself, to call its methods.
 - `hover`: The pointer came over a selectable object, or left it: {ID (empty: none), Object, Info}.
-- `gesture`
+- `gesture`: A gesture of fingers on it (Gestures: tap, doubletap, press, pan, swipe, pinch, rotate, tilt), after the scene did its part: {Gesture, ID (what is under it; tap, doubletap and press), Point {X, Y} (in the scene)}.
 - `person`: V took the view of a walker to another place: third, first or shoulder.
 - `shoulder`: B took the view over another shoulder: right or left.
 - `dig`: A hole was dug in the ground (Dig): {At, Radius}.
@@ -165,7 +165,7 @@ What a scene waits for, its programs and models, comes behind the page and holds
 
 - [reads a graph of an effect and the blocks of the passes with no Scene: Blueprints makes what declares them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-effect-blueprints.test.js#L77) — `tests/regression/library-effect-blueprints.test.js`
 - [counts down, counts the laps of each racer through its checkpoints, their times and best, finishes and ends](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-race.test.js#L100) — `tests/regression/library-game-race.test.js`
-- [counts no lap of a racer that goes back over the line, and tells the wrong way and the right way again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-race.test.js#L157) — `tests/regression/library-game-race.test.js`
+- [counts no lap of a racer that goes back over the line, and tells the wrong way and the right way again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-race.test.js#L160) — `tests/regression/library-game-race.test.js`
 - [selects the units of its team only, by code, by Ctrl+A and by a frame drawn over them, and none by Escape](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L75) — `tests/regression/library-game-strategy.test.js`
 - [orders by the right button and turns the view only with Ctrl; by fingers selects, orders, carries the map and frames](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L114) — `tests/regression/library-game-strategy.test.js`
 - [sends units to a place, each to its own spot, stops them, and has them attack a foe until it is gone](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L204) — `tests/regression/library-game-strategy.test.js`
@@ -176,4 +176,4 @@ What a scene waits for, its programs and models, comes behind the page and holds
 - [leaves out a pass switched off, takes the properties of its blocks, and adds a pass of a graph of its own after the picture](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L140) — `tests/regression/library-render-pipeline.test.js`
 - [draws the picture of the library when the Pipeline cannot be made, and tells it once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L202) — `tests/regression/library-render-pipeline.test.js`
 
-+257 more in the same files
++259 more in the same files

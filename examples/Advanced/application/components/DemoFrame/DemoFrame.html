@@ -3,10 +3,13 @@
 		<a class="demo-frame-home" href="/">Elemenx</a>
 		<strong class="demo-frame-title">{{Title}}</strong>
 		<span class="demo-frame-note">{{NoteOf(Current)}}</span>
+		<Select Label="Quality" Size="small" class="demo-frame-quality" [options]="Qualities" [value]="Quality" (change)="QualityChosen" />
 		<Button Icon="maximize" Label="Fullscreen" Variant="ghost" (click)="Full" />
+		<Button Icon="chart" Label="FPS" Variant="ghost" [attribute.aria-pressed]="String(FPS)" (click)="Timed" />
 		<a class="demo-frame-other" [href]="Other">{{OtherLabel}}</a>
 	</WorkspaceToolbar>
 	<WorkspaceToolWindow slot="tools" ID="demos" Title="Demos" Icon="list" Area="left" [open]="!Phone" Padded="true">
+		<Select Label="Quality" Size="small" [options]="Qualities" [value]="Quality" (change)="QualityChosen" />
 		<nav class="demo-frame-list" aria-label="Demos">
 			<button *for="demo of Demos" type="button" class="demo-frame-item" [class.active]="demo.Name === Current" (click)="Chosen(demo.Name)">{{demo.Label}}</button>
 		</nav>
@@ -14,8 +17,13 @@
 	<div slot="left-stripe" class="demo-frame-corner">
 		<button type="button" aria-label="Controls" [attribute.aria-pressed]="String(Tools)" (click)="Tools = !Tools"><Icon Name="sliders" /></button>
 		<button type="button" aria-label="Fullscreen" (click)="Full"><Icon Name="maximize" /></button>
+		<button type="button" aria-label="FPS" [attribute.aria-pressed]="String(FPS)" (click)="Timed"><Icon Name="chart" /></button>
 	</div>
 	<div slot="main" class="demo-frame-main" [class.tools]="Tools" #Main>
 		<slot></slot>
+		<div class="demo-frame-fps" *if="FPS">
+			<FPSMeter />
+			<div class="demo-frame-device" *if="DeviceLine">{{DeviceLine}}</div>
+		</div>
 	</div>
 </Workspace>

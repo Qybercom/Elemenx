@@ -2,7 +2,6 @@
 	<div class="scene-demo-row">
 		<Select Label="Biome" [options]="TerrainBiomes" [value]="TerrainBiome" (change)="TerrainBiomed" />
 		<Select Label="Weather" [options]="SceneWeathers" [value]="SceneWeather" (change)="SceneWeatherChosen" />
-		<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
 		<Field Label="Wind"><Slider Label="Wind" Min="0" Max="4" Step="0.1" ShowValue="always" [value]="SceneWind" (input)="SceneWindChosen" /></Field>
 		<Field Label="Time of day"><Slider Label="Time of day" Min="0" Max="24" Step="0.25" ShowValue="always" [format]="PlaceClock" [value]="TerrainHour" (input)="TerrainTimed" /></Field>
 		<Field Label="Lens flare"><Slider Label="Lens flare" Min="0" Max="2" Step="0.1" ShowValue="always" [value]="SceneFlare" (input)="SceneFlareChosen" /></Field>

@@ -8,7 +8,7 @@
 	</div>
 	<div class="scene-demo-scene">
 		<Scene Scale="real" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="OrbitCosmos" (ready)="OrbitReady" (travel)="OrbitTravelled" (landing)="OrbitLanding">
-			<VirtualGamepad slot="hud" Right="true" Buttons="a,b,x,y,rb" Label="Fly" (button)="OrbitPad" />
+			<VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,b,x,y,rb,dpad" Label="Fly" (button)="OrbitPad" />
 			<SceneObject ID="sol" Kind="star" Name="Star" Mass="1">
 				<SceneObject ID="terra" Kind="planet" Name="Terra" Surface-Type="terran" Surface-Planet='{"Seed": "terra", "Ocean": 0.62, "Markers": [{"ID": "peaks", "Name": "High Peaks", "Latitude": 45.756, "Longitude": 5.376}, {"ID": "river", "Name": "Great River", "Latitude": -31.5946, "Longitude": 160.7077}, {"ID": "hills", "Name": "Green Hills", "Latitude": 48.6706, "Longitude": -88.7}, {"ID": "base", "Name": "Sea Base", "Latitude": 18, "Longitude": 32}]}' Radius="6371" Mass="1" Distance="1" Day="23.93" Tilt="23.4">
 					<SceneObject ID="luna" Kind="moon" Name="Luna" Surface-Type="moon" Radius="1737" Distance="384400 km" Day="0" />

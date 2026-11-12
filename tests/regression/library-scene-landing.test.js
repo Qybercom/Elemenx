@@ -1477,4 +1477,94 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 		engine.Frame(now += 100, true);
 	}, 60000);
+
+	/*
+	 * Regression: the left stick of a pad up put the nose of a ship down, its right stick rolled and lifted the ship, and up
+	 * it raised the eye (the view looked down). The left stick flies it as it leans (up the nose up, right to the right), the
+	 * cross rolls and lifts, the right stick turns the view as the mouse does (up looks up).
+	 */
+	it('flies a ship by a pad as it leans and turns the view by its right stick, up looking up', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var vectors = Elemenx.Service('Math').Vectors;
+		var pad = Elemenx.Service('InputDevices').Virtual('test-flight');
+		var now = performance.now() + 1000;
+		var hero;
+
+		function run (frames) {
+			var i;
+
+			for (i = 0; i < frames; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33, true);
+			}
+		}
+
+		/* The axes of the view: where it looks, its right and its up. */
+		function view () {
+			var forward = vectors.Normalize(vectors.Subtract(inner.Camera.Target, inner.Camera.Position));
+			var right = vectors.Normalize(vectors.Cross(forward, inner.Camera.Up));
+
+			return {Forward: forward, Right: right, Up: vectors.Cross(right, forward)};
+		}
+
+		/* What the stick does in so many frames, in the axes of the view before them. */
+		function lean (side, x, y, frames) {
+			var axes = view();
+			var ahead = hero.Seen.Ahead.slice();
+			var up = hero.Seen.Up.slice();
+
+			if (side === 'cross') {
+				if (x)
+					pad.Press(x > 0 ? 'right' : 'left');
+
+				if (y)
+					pad.Press(y > 0 ? 'up' : 'down');
+			}
+			else {
+				pad.Stick(side, x, y);
+			}
+
+			run(frames);
+
+			pad.Stick('left', 0, 0);
+			pad.Stick('right', 0, 0);
+			['up', 'down', 'left', 'right'].forEach(pad.Release);
+
+			return {Up: vectors.Dot(vectors.Subtract(hero.Seen.Ahead, ahead), axes.Up), Right: vectors.Dot(vectors.Subtract(hero.Seen.Ahead, ahead), axes.Right), Roll: vectors.Dot(vectors.Subtract(hero.Seen.Up, up), axes.Right), Look: vectors.Dot(view().Forward, axes.Up) - vectors.Dot(axes.Forward, axes.Up)};
+		}
+
+		try {
+			engine.Frame(now += 100, true);
+
+			scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'terra', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'terra', From: [0, 0, 3], Facing: [0, 0, 1], Length: 30}});
+			scene.Control('me');
+
+			run(10);
+
+			hero = inner.Objects.me;
+
+			expect(hero.Seen).toBeTruthy();
+
+			/* The left stick up (the Gamepad API: y -1): the nose up in the view; right: to the right. */
+			expect(lean('left', 0, -1, 20).Up).toBeGreaterThan(0.01);
+			expect(lean('left', 1, 0, 20).Right).toBeGreaterThan(0.01);
+
+			/* The cross right rolls it to the right. */
+			expect(lean('cross', 1, 0, 20).Roll).toBeGreaterThan(0.01);
+
+			/* The right stick up looks up, the ship as it was (once its roll has stopped). */
+			run(60);
+
+			var looked = lean('right', 0, -1, 20);
+
+			expect(looked.Look).toBeGreaterThan(0.01);
+			expect(Math.abs(looked.Up)).toBeLessThan(0.01);
+		}
+		finally {
+			pad.Destroy();
+		}
+	}, 60000);
 });

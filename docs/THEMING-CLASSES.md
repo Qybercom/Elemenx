@@ -1935,12 +1935,14 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 ## VirtualGamepad
 
 - `elemenx-virtual-pad`: `with-right`
-- `elemenx-virtual-pad-button`: `down`, `face-a`, `face-b`, `face-x`, `face-y`, `shoulder`, `small`
+- `elemenx-virtual-pad-button`: `down`, `dpad`, `dpad-down`, `dpad-left`, `dpad-right`, `dpad-up`, `face-a`, `face-b`, `face-x`, `face-y`, `shoulder`, `small`
+- `elemenx-virtual-pad-dpad`
 - `elemenx-virtual-pad-face`
 - `elemenx-virtual-pad-knob`
 - `elemenx-virtual-pad-middle`
 - `elemenx-virtual-pad-shoulders`: `left`, `right`
 - `elemenx-virtual-pad-stick`: `left`, `right`
+- `elemenx-virtual-pad-zone`: `left`, `right`
 
 ## VirtualList
 

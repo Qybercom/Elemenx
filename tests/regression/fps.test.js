@@ -178,6 +178,9 @@ describe('Contract: FPS, how smoothly a page draws, and FPSMeter, which shows it
 			expect(scene.Cpu.Mean).toBeGreaterThan(0);
 			expect(scene.Quiet.Last).toBe(0);
 			expect(scene.Skipped.Last).toBe(0);
+			/* What its frames chose: the pixels to a point of the page and the level of its light (low: 0). */
+			expect(scene.Ratio.Last).toBeGreaterThan(0);
+			expect(scene.Level.Last).toBe(0);
 
 			/* Gone, the scene is no more in the numbers. */
 			var names = Object.keys(fps.Stats().Sources).filter(function (name) {

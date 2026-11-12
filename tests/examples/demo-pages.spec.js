@@ -290,18 +290,21 @@ for (const origin of origins) {
 			expect(errors).toEqual([]);
 		});
 
-		test('the quality and the biome of a scene are chosen in their menus, and the choice stays', async function ({ page }) {
+		test('the quality of the scenes is chosen in the frame of the page, the biome in the demo, and the choice stays', async function ({ page }) {
 			var errors = captureErrors(page);
 			var menus;
+			var quality;
 
 			await demo(page, origin, 'graphics', 'Terrain');
 
 			menus = page.locator('.scene-demo').locator('.elemenx-select-trigger');
+			quality = page.locator('.demo-frame-quality .elemenx-select-trigger');
 
-			await menus.nth(2).click();
+			/* One quality for all the demos, in the header of the page: told to the demo shown. */
+			await quality.click();
 			await page.getByRole('option', {name: 'Medium'}).click();
 
-			await expect(menus.nth(2)).toContainText('Medium');
+			await expect(quality).toContainText('Medium');
 			await expect.poll(function () {
 				return page.locator('.scene-demo').locator('.elemenx-scene').evaluate(function (node) {
 					return Elemenx.Instance(node).Graphics().Level;
@@ -317,7 +320,16 @@ for (const origin of origins) {
 
 			await ready(page);
 
-			await expect(page.locator('.scene-demo').locator('.elemenx-select-trigger').nth(2)).toContainText('Medium');
+			await expect(page.locator('.demo-frame-quality .elemenx-select-trigger')).toContainText('Medium');
+
+			/* Another demo keeps it. */
+			await demo(page, origin, 'gaming', 'Combat');
+
+			await expect.poll(function () {
+				return page.locator('.scene-demo').locator('.elemenx-scene').evaluate(function (node) {
+					return Elemenx.Instance(node).Graphics().Level;
+				});
+			}).toBe('medium');
 
 			expect(errors).toEqual([]);
 		});

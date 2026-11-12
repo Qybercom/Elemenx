@@ -16,7 +16,8 @@ FloraEditor: a species of plant of a picture of it (SceneFlora): a photograph of
 
 ## Events
 
-`change`, `define`
+- `change`: The preset changed: {Preset}.
+- `define`: Define made it a model of SceneModels: {Name}.
 
 ## Methods
 

@@ -315,7 +315,7 @@ describe('Contract: pads of the page, the motion of a device (InputDevices), the
 
 	it('VirtualGamepad: its stick leans the pad as far as the finger, its buttons hold, and it goes with its pad', async function () {
 		var told = [];
-		var host = mount('<div style="position: relative; width: 600px; height: 400px"><VirtualGamepad Show="always" Buttons="a,b,lt,start" Size="100" (button)="Told" /></div>', {
+		var host = mount('<div style="position: relative; width: 600px; height: 400px"><VirtualGamepad Show="always" Buttons="a,b,lt,start" Size="100" DeadZone="0" (button)="Told" /></div>', {
 			Told: function (detail) {
 				told.push(detail.Button + (detail.Down ? '+' : '-'));
 			}
@@ -401,5 +401,122 @@ describe('Contract: pads of the page, the motion of a device (InputDevices), the
 		expect(side(host, 'right')).toEqual(['rb', 'rt']);
 		expect(side(both, 'left')).toEqual(['lb']);
 		expect(side(both, 'right')).toEqual(['rt']);
+	});
+
+	it('VirtualGamepad: shows a cross of up, down, left and right (dpad for all four) whose buttons hold the pad', async function () {
+		var all = mount('<div style="position: relative; width: 600px; height: 400px"><VirtualGamepad Show="always" Buttons="a,dpad" /></div>');
+		var two = mount('<div style="position: relative; width: 600px; height: 400px"><VirtualGamepad Show="always" Buttons="up,down" /></div>');
+		var none = mount('<div style="position: relative; width: 600px; height: 400px"><VirtualGamepad Show="always" Buttons="a" /></div>');
+		var input = Elemenx.Service('InputDevices');
+		var up;
+
+		function cross (component) {
+			return Array.prototype.map.call(component.$Element().querySelectorAll('.elemenx-virtual-pad-dpad [data-button]'), function (button) {
+				return button.getAttribute('data-button');
+			});
+		}
+
+		await frame();
+
+		expect(cross(all)).toEqual(['up', 'left', 'right', 'down']);
+		expect(cross(two)).toEqual(['up', 'down']);
+		expect(none.$Element().querySelector('.elemenx-virtual-pad-dpad')).toBe(null);
+
+		up = all.$Element().querySelector('.elemenx-virtual-pad-dpad [data-button="up"]');
+
+		pointer(up, 'pointerdown', 10, 10);
+
+		await waitFor(function () {
+			return input.Held('up');
+		}, 2000);
+
+		expect(input.Held('up')).toBe(true);
+
+		pointer(up, 'pointerup', 10, 10);
+
+		await waitFor(function () {
+			return !input.Held('up');
+		}, 2000);
+
+		expect(input.Held('up')).toBe(false);
+	});
+
+	/*
+	 * Regression: the right stick of a pad on the screen went on turning the view: a finger taken from it (its capture lost)
+	 * left it leaning, and the least lean turned it.
+	 */
+	it('VirtualGamepad: gives nothing within its dead zone, the right stick by its curve, lets go of a finger taken away, and floats', async function () {
+		var host = mount('<div style="position: relative; width: 600px; height: 400px"><VirtualGamepad Show="always" Right="true" Size="100" Buttons="a" /></div>');
+		var floating = mount('<div style="position: relative; width: 600px; height: 400px"><VirtualGamepad Show="always" Right="true" Size="100" Buttons="a" Floating="true" /></div>');
+		var root;
+		var left;
+		var right;
+		var box;
+
+		await frame();
+
+		root = host.$Element().querySelector('.elemenx-virtual-pad');
+		left = root.querySelector('.elemenx-virtual-pad-stick.left');
+		right = root.querySelector('.elemenx-virtual-pad-stick.right');
+		box = left.getBoundingClientRect();
+
+		/* A tenth of the way: within the dead zone (0.12), nothing. */
+		pointer(left, 'pointerdown', box.left + 55, box.top + 50, 3);
+
+		expect(input.Axes().LeftX).toBe(0);
+
+		/* Half the way: the rest of the way past the dead zone, even on the left stick. */
+		pointer(left, 'pointermove', box.left + 75, box.top + 50, 3);
+
+		expect(input.Axes().LeftX).toBeCloseTo((0.5 - 0.12) / 0.88, 3);
+
+		/* Its capture lost (a finger the page took): the stick lets go. */
+		left.dispatchEvent(new PointerEvent('lostpointercapture', {bubbles: true, pointerId: 3, pointerType: 'touch'}));
+
+		expect(input.Axes().LeftX).toBe(0);
+
+		/* The right stick half the way: the square of it, fine to aim; all the way: all of it. */
+		box = right.getBoundingClientRect();
+
+		pointer(right, 'pointerdown', box.left + 50, box.top + 25, 4);
+
+		expect(input.Axes().RightY).toBeCloseTo(-Math.pow((0.5 - 0.12) / 0.88, 2), 3);
+
+		pointer(right, 'pointermove', box.left + 50, box.top - 100, 4);
+
+		expect(input.Axes().RightY).toBeCloseTo(-1, 3);
+
+		pointer(right, 'pointerup', box.left + 50, box.top - 100, 4);
+
+		expect(input.Axes().RightY).toBe(0);
+
+		/* Floating: a finger on the lower left of the screen, the stick under it; a lean from there; back as it lifts. */
+		root = floating.$Element().querySelector('.elemenx-virtual-pad');
+		left = root.querySelector('.elemenx-virtual-pad-stick.left');
+
+		var zone = root.querySelector('.elemenx-virtual-pad-zone.left');
+		var area = root.getBoundingClientRect();
+		var at = [area.left + 200, area.top + 250];
+
+		pointer(zone, 'pointerdown', at[0], at[1], 5);
+
+		await frame();
+
+		box = left.getBoundingClientRect();
+
+		expect(box.left + box.width / 2).toBeCloseTo(at[0], 0);
+		expect(box.top + box.height / 2).toBeCloseTo(at[1], 0);
+		expect(input.Axes().LeftX).toBe(0);
+
+		pointer(zone, 'pointermove', at[0] + 50, at[1], 5);
+
+		expect(input.Axes().LeftX).toBeCloseTo(1, 3);
+
+		pointer(zone, 'pointerup', at[0] + 50, at[1], 5);
+
+		await frame();
+
+		expect(input.Axes().LeftX).toBe(0);
+		expect(left.getBoundingClientRect().left).toBeLessThan(at[0] - 50);
 	});
 });

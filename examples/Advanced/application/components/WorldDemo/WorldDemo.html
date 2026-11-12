@@ -2,7 +2,7 @@
 	<div class="scene-demo-row">
 		<Toggle Label="Fog of war" [checked]="WorldFog" (change)="WorldFogged" />
 		<Button Label="To the barracks" Icon="home" Variant="ghost" (click)="WorldCentered" />
-		<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
+		<Button Label="My units" Icon="users" Variant="ghost" (click)="WorldToUnits" />
 		<Button Label="Recruit" Icon="add" Variant="ghost" (click)="WorldRecruited" />
 		<Toggle Label="Frame by a finger" [checked]="WorldFraming" (change)="WorldFramed" />
 		<span class="scene-demo-status">{{WorldNote}}</span>
@@ -10,7 +10,7 @@
 	<div class="scene-demo-scene">
 		<Scene Setting="terrain" Team="blue" Labels="false" [hoverMark]="WorldMark" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="WorldReady">
 			<SceneObject ID="day" Kind="sun" Time="14:00" />
-			<SceneObject ID="land" Kind="ground" [world]="WorldOf('world')" />
+			<SceneObject ID="land" Kind="ground" [world]="WorldOf('world', WorldGround)" />
 			<SceneObject ID="woods" Kind="forest" Density="0.5" Cover="0.35" />
 			<SceneObject ID="meadow" Kind="grass" Density="0.5" Height="0.5" />
 			<SceneObject Kind="house" ID="barracks" Name="Barracks" X="-80" Y="-40" Team="blue" Model="barracks" />
@@ -18,7 +18,8 @@
 			<SceneObject Kind="unit" *for="unit of WorldUnits" *key="unit.ID" [id]="unit.ID" [name]="unit.Name" [x]="unit.X" [y]="unit.Y" [team]="unit.Team" [model]="unit.Model" [health]="unit.Health" [damage]="unit.Damage" [range]="unit.Range" />
 			<GameStrategy Team="blue" [fog]="WorldFog" (select)="WorldSelected" (order)="WorldOrdered" (death)="WorldDied" />
 			<div slot="hud" class="ui-kit-world-hud">
-				<span class="ui-kit-world-resources"><span>Gold 1 250</span><span>Wood 840</span><span>Food 410</span></span>
+				<span class="ui-kit-world-resources"><span>Gold 1&#160;250</span><span>Wood 840</span><span>Food 410</span></span>
+				<Button Label="My units" Icon="users" Size="small" (click)="WorldToUnits" />
 			</div>
 		</Scene>
 	</div>

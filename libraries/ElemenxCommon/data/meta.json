@@ -74,6 +74,7 @@
 			"Methods": [
 				"Create(seed)",
 				"Hash(text)",
+				"Sequence(text)",
 				"Noise(seed, size)"
 			],
 			"Sample": {}
@@ -137,7 +138,8 @@
 			"EventDescriptions": {},
 			"Methods": [
 				"Pool(name, services, size)",
-				"Source(owner, names)"
+				"Source(owner, names)",
+				"Members(owner)"
 			],
 			"Sample": {}
 		},
@@ -454,13 +456,17 @@
 				"Pin(block, key, out)",
 				"Read(json)",
 				"Write(graph)",
+				"Fill(graph, values)",
 				"Check(graph)",
 				"Order(graph)",
 				"Compile(graph, options)",
 				"Code(graph)",
 				"Source(names)",
 				"Bake(graph)",
-				"Start(graph, context)"
+				"Start(graph, context)",
+				"IR(graph, options)",
+				"Invoke(name, inputs)",
+				"Hash2(a, b)"
 			],
 			"Sample": {}
 		},
@@ -548,6 +554,53 @@
 				"Actions()",
 				"On(name, callback)",
 				"Off(callback)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Gestures",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "What fingers do on an element: tap, double tap, press, pan, swipe, and of two fingers pinch, rotate and tilt; the events of templates (tap), (pinch)...",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Recognizer(options)",
+				"Listen(element, callback, options)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Screen",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "How the screen of the page is held and how large it is: orientation, narrow, touched, fullscreen locked to landscape; the classes of <html> and the event (orientation).",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Orientation()",
+				"Angle()",
+				"Narrow()",
+				"Coarse()",
+				"Phone()",
+				"State()",
+				"On(name, callback)",
+				"Off(callback)",
+				"Fullscreen(element, options, callback)",
+				"Exit(callback)",
+				"Full()"
 			],
 			"Sample": {}
 		},

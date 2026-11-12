@@ -143,8 +143,11 @@ describe('Contract: GameRace, laps, checkpoints, times and positions of a race o
 		expect(standings.map(function (one) {
 			return one.ID;
 		})).toEqual(['a', 'b']);
-		expect(standings[0]).toMatchObject({Position: 1, Lap: 2, Finished: true});
+		expect(standings[0]).toMatchObject({Position: 1, Lap: 2, Finished: true, LapTime: 0});
 		expect(standings[1].Finished).toBe(false);
+		/* The seconds of the lap under way: of the race, less those of the laps done. */
+		expect(standings[1].LapTime).toBeGreaterThan(0);
+		expect(standings[1].LapTime).toBeLessThan(standings[1].Time);
 
 		/* b goes on to its end: the race ends. */
 		for (at = length * 1.25; at <= length * 2 + 20; at += 8)

@@ -7,14 +7,17 @@ Elemenx.Component('RacingDemo', {
 	$TemplateURL: 'RacingDemo.html',
 	$StyleURL: 'RacingDemo.css',
 	$Traits: ['SceneDemo'],
+	/* Seconds as a clock of a race: 1:05.2. */
+	RaceClockOf: function (seconds) {
+		return Math.floor(seconds / 60) + ':' + ('0' + (seconds % 60).toFixed(1)).slice(-4);
+	},
 	/* A lap of the GameRace of the scene: its number, its time and the best one. */
 	RaceLapped: function (event) {
-		function clock (seconds) {
-			return Math.floor(seconds / 60) + ':' + ('0' + (seconds % 60).toFixed(1)).slice(-4);
-		}
-
-		this.RaceLapText = 'lap ' + event.Lap + ' ' + clock(event.Time) + ' · best ' + clock(event.Best);
+		this.RaceLapText = 'lap ' + event.Lap + ' ' + this.RaceClockOf(event.Time) + ' · best ' + this.RaceClockOf(event.Best);
 	},
+	/* The board over the scene: the lap under way of all of them, its time and the best lap. */
+	RaceBoard: {Lap: '–', Time: '0:00.0', Best: '–'},
+	RaceLaps: 3,
 	RaceLapText: '',
 	RaceRpmPart: 0,
 	RaceGearOnly: 'N',
@@ -73,10 +76,24 @@ Elemenx.Component('RacingDemo', {
 			self.RaceRpmPart = hero && hero.Car && hero.Car.Rpm ? Math.round(Math.min(1, hero.Car.Rpm / 7500) * 100) : 0;
 			self.RaceSignals = {Left: !!(hero && hero.Signals && (hero.Signals.Indicate === -1 || hero.Signals.Hazard) && Math.floor((hero.Blink || 0) / 0.36) % 2 === 0), Right: !!(hero && hero.Signals && (hero.Signals.Indicate === 1 || hero.Signals.Hazard) && Math.floor((hero.Blink || 0) / 0.36) % 2 === 0), Lights: !!(hero && hero.Signals && hero.Signals.Lights)};
 			self.RaceGear = hero && hero.Car && hero.Car.Gear !== undefined ? (hero.Car.Gear < 0 ? 'R' : hero.Car.Gear === 0 ? 'N' : String(hero.Car.Gear)) + ' · ' + Math.round(hero.Car.Rpm / 100) * 100 + ' rpm' : '';
+
+			self.RaceBoardRead();
 		}, 200);
 	},
 	RaceGear: '',
 	RaceSpeed: 0,
+	/* The board of the race read from its standings (GameRace.Standings): the car under the keys. */
+	RaceBoardRead: function () {
+		var scene = this.RaceScene ? this.RaceScene() : null;
+		var element = scene ? scene.$Element().querySelector('.elemenx-game-race') : null;
+		var race = element ? Elemenx.Instance(element) : null;
+		var mine = race ? race.Standings().filter(function (one) {
+			return one.ID === 'car';
+		})[0] : null;
+		if (!mine) return;
+
+		this.RaceBoard = {Lap: mine.Finished ? 'Finished' : Math.min(this.RaceLaps, mine.Lap + 1) + '/' + this.RaceLaps, Time: this.RaceClockOf(mine.Finished ? mine.Last : mine.LapTime), Best: mine.Best ? this.RaceClockOf(mine.Best) : '–'};
+	},
 	RaceWait: function (tries) {
 		var self = this;
 		var scene = this.RaceScene();

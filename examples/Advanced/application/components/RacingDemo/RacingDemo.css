@@ -51,3 +51,97 @@
 .ui-kit-dash-lights.on {
 	color: #4aa8ff;
 }
+
+/* The board of the race over the scene: the lap, its time and the best one at the top; the speed and the revolutions at the bottom, between the sticks of the pad. */
+.race-hud {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	color: #ffffff;
+}
+
+.race-hud-board {
+	position: absolute;
+	top: 12px;
+	left: 50%;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 6px 14px;
+	border-radius: var(--elemenx-radius-large);
+	background: rgb(5 8 12 / 62%);
+	transform: translateX(-50%);
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+
+.race-hud-board > span {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	line-height: 1.1;
+}
+
+.race-hud-board small,
+.race-hud-speed small {
+	font-size: 0.7rem;
+	opacity: 0.75;
+}
+
+.race-hud-speed {
+	position: absolute;
+	bottom: 10px;
+	left: 50%;
+	display: grid;
+	grid-template-columns: 84px auto;
+	align-items: center;
+	gap: 2px 10px;
+	padding: 4px 12px 6px;
+	border-radius: var(--elemenx-radius-large);
+	background: rgb(5 8 12 / 62%);
+	transform: translateX(-50%);
+	font-variant-numeric: tabular-nums;
+}
+
+/* The names of the meters are for screen readers here: the board shows what they are by their look. */
+.race-hud .elemenx-meter-label {
+	display: none;
+}
+
+.race-hud-speed .elemenx-meter.dial {
+	grid-row: span 2;
+	width: 84px;
+}
+
+.race-hud-speed .elemenx-meter-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	line-height: 1;
+}
+
+.race-hud-speed .elemenx-meter-content strong {
+	font-size: 1.25rem;
+}
+
+.race-hud-gear {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	line-height: 1;
+}
+
+.race-hud-gear strong {
+	font-size: 1.75rem;
+	color: #ffb347;
+}
+
+.race-hud-speed .elemenx-meter.horizontal {
+	width: 44px;
+}
+
+.race-hud-wrong {
+	padding: 2px 8px;
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-danger, #d8453c);
+}

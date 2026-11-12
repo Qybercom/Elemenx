@@ -52,6 +52,7 @@ describe('Regression: the screens of a car hold no frame up', function () {
 		var read = 0;
 		var now = performance.now() + 100;
 		var speed = scene.$Element().querySelector('[data-screen="dash"] .speed');
+		var vectors = Elemenx.Service('Math').Vectors.Distance;
 
 		function frames (count) {
 			for (var i = 0; i < count; i++) {
@@ -89,6 +90,10 @@ describe('Regression: the screens of a car hold no frame up', function () {
 			scene.Add('unit', {ID: 'car', Name: '', Size: 1, X: 0, Y: 0, Vehicle: {Kind: 'car', Wheels: 'none',
 				Screens: [{Source: 'dash', At: [0, 1.2, 0], Normal: [0, 0, -1], Width: 0.6, Height: 0.3, Pixels: [64, 32], Every: 0}]
 			}});
+
+			/* The eye in the car: its screens are seen. */
+			scene.Person = 'first';
+
 			scene.Control('car');
 
 			await waitFor(function () {
@@ -128,6 +133,23 @@ describe('Regression: the screens of a car hold no frame up', function () {
 
 			expect(drawn).toBe(3);
 			expect(read).toBe(0);
+
+			/*
+			 * The eye behind the car, far from its screens: they are not drawn again, whatever changes. Regression: the dash was
+			 * drawn again five times a second behind the car, the eye 8 m away.
+			 */
+			scene.Person = 'third';
+			inner.Wanted = inner.Distance = 8;
+
+			await settle();
+
+			drawn = 0;
+			speed.textContent = '130';
+
+			await settle();
+
+			expect(vectors(inner.Eye, inner.Objects.car.World)).toBeGreaterThan(2);
+			expect(drawn).toBe(0);
 		}
 		finally {
 			engine.Rasterize = rasterize;

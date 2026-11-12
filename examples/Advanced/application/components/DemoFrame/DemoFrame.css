@@ -29,6 +29,7 @@
 }
 
 .demo-frame-list {
+	margin-top: 10px;
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
@@ -116,4 +117,34 @@
 
 .elemenx-narrow .demo-frame-main:not(.tools) .scene-demo > :not(.scene-demo-scene) {
 	display: none;
+}
+
+/* The quality of the scenes in the header; a phone has it in the list of the demos. */
+.demo-frame-quality {
+	width: 130px;
+}
+
+.elemenx-narrow .demo-frame-quality {
+	display: none;
+}
+
+/* The meter of the frames and what the scene is drawn on, over the top left of the demo. */
+.demo-frame-fps {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+	z-index: 20;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	max-width: calc(100% - 16px);
+	pointer-events: none;
+}
+
+.demo-frame-device {
+	padding: 4px 8px;
+	border-radius: var(--elemenx-radius-small);
+	background: rgb(0 0 0 / 70%);
+	color: #ffffff;
+	font-size: 0.75rem;
 }

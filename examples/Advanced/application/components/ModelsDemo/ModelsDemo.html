@@ -8,7 +8,6 @@
 		<Button Label="March" Icon="map-pin" Variant="ghost" (click)="ModelsMarch" />
 		<Toggle Label="Shadows" [checked]="ModelsShadows" (change)="ModelsShadowed" />
 		<Button Label="To the files" Icon="box" Variant="ghost" *if="ModelsFiles.length" (click)="ModelsToFiles" />
-		<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
 		<span class="scene-demo-status">{{ModelsNote}}</span>
 	</div>
 	<div class="scene-demo-scene">

@@ -102,6 +102,56 @@
 	grid-area: 3 / 2;
 }
 
+/* The halves of the screen of floating sticks: their lower part takes a finger, the stick comes under it. */
+.elemenx-virtual-pad-zone {
+	position: absolute;
+	bottom: 0;
+	width: 45%;
+	height: 60%;
+	pointer-events: auto;
+	touch-action: none;
+}
+
+.elemenx-virtual-pad-zone.left {
+	left: 0;
+}
+
+.elemenx-virtual-pad-zone.right {
+	right: 0;
+}
+
+/* The cross above the left stick: its four buttons round an empty middle. */
+.elemenx-virtual-pad-dpad {
+	position: absolute;
+	left: 32px;
+	bottom: 160px;
+	display: grid;
+	grid-template: repeat(3, 44px) / repeat(3, 44px);
+}
+
+.elemenx-virtual-pad-button.dpad {
+	width: 44px;
+	height: 44px;
+	border-radius: var(--elemenx-radius-large);
+	font-size: 1.125rem;
+}
+
+.elemenx-virtual-pad-button.dpad-up {
+	grid-area: 1 / 2;
+}
+
+.elemenx-virtual-pad-button.dpad-left {
+	grid-area: 2 / 1;
+}
+
+.elemenx-virtual-pad-button.dpad-right {
+	grid-area: 2 / 3;
+}
+
+.elemenx-virtual-pad-button.dpad-down {
+	grid-area: 3 / 2;
+}
+
 /* The shoulders and the triggers at the top corners; start and select between the sticks. */
 .elemenx-virtual-pad-shoulders {
 	position: absolute;

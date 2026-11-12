@@ -9,7 +9,8 @@
  * Events: countdown ({Seconds}), start, checkpoint ({ID, Lap, Index}), lap ({ID, Lap, Time, Best}: the lap done and its
  * seconds), position ({ID, Position}: a racer passed another), wrong ({ID, Wrong}: it goes the wrong way, or again the right
  * way), finish ({ID, Position, Time, Best}), end (all of them finished). Standings() gives the racers in their order:
- * [{ID, Position, Lap, Progress (metres from the start of the race), Time, Last, Best, Finished, Wrong}].
+ * [{ID, Position, Lap, Progress (metres from the start of the race), Time, LapTime (the seconds of the lap under way, 0 when
+ * finished), Last, Best, Finished, Wrong}].
  */
 Elemenx.Component('GameRace', {
 	$Template: '<span class="elemenx-game-race" hidden></span>',
@@ -272,7 +273,7 @@ Elemenx.Component('GameRace', {
 		return state.Order.map(function (id) {
 			var racer = state.Racers[id];
 
-			return {ID: id, Position: racer.Rank || 0, Lap: racer.Lap, Progress: racer.Progress, Time: racer.Finished ? racer.Time : state.Clock, Last: racer.Last, Best: racer.Best, Finished: racer.Finished, Wrong: racer.Wrong};
+			return {ID: id, Position: racer.Rank || 0, Lap: racer.Lap, Progress: racer.Progress, Time: racer.Finished ? racer.Time : state.Clock, LapTime: racer.Finished ? 0 : Math.max(0, state.Clock - racer.LapStart), Last: racer.Last, Best: racer.Best, Finished: racer.Finished, Wrong: racer.Wrong};
 		}).sort(function (a, b) {
 			return a.Position - b.Position;
 		});

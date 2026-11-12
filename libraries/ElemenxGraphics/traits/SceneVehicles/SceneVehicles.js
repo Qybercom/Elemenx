@@ -1317,9 +1317,13 @@ Elemenx.Trait('SceneVehicles', {
 				return;
 			}
 
-			/* A pad: the left stick turns and tilts, the right one rolls and lifts, the triggers the throttle. */
+			/*
+			 * A pad: the left stick turns and tilts the ship as it leans (up the nose up, right to the right), the cross rolls (right
+			 * and left) and lifts (up and down), the triggers set the throttle; the right stick turns the view (Scene). Regression:
+			 * the left stick up put the nose down, and the right one rolled and lifted the ship.
+			 */
 			var pad = keys.Pad || {X: 0, Y: 0, LookX: 0, LookY: 0, Gas: 0, Brake: 0};
-			var input = {Yaw: Math.max(-1, Math.min(1, (keys.KeyA || keys.ArrowLeft ? 1 : 0) - (keys.KeyD || keys.ArrowRight ? 1 : 0) - pad.X)), Pitch: Math.max(-1, Math.min(1, (keys.KeyR || keys.ArrowDown ? 1 : 0) - (keys.KeyF || keys.ArrowUp ? 1 : 0) - pad.Y)), Roll: Math.max(-1, Math.min(1, (keys.KeyE ? 1 : 0) - (keys.KeyQ ? 1 : 0) + pad.LookX)), Throttle: Math.max(-1, Math.min(1, (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0) + pad.Gas - pad.Brake)), Lift: Math.max(-1, Math.min(1, (keys.KeyC ? 1 : 0) - (keys.KeyX ? 1 : 0) + pad.LookY)), Boost: keys.ShiftLeft || keys.ShiftRight, Stop: keys.Space};
+			var input = {Yaw: Math.max(-1, Math.min(1, (keys.KeyA || keys.ArrowLeft ? 1 : 0) - (keys.KeyD || keys.ArrowRight ? 1 : 0) - pad.X)), Pitch: Math.max(-1, Math.min(1, (keys.KeyR || keys.ArrowDown ? 1 : 0) - (keys.KeyF || keys.ArrowUp ? 1 : 0) + pad.Y)), Roll: Math.max(-1, Math.min(1, (keys.KeyE ? 1 : 0) - (keys.KeyQ ? 1 : 0) + (pad.DX || 0))), Throttle: Math.max(-1, Math.min(1, (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0) + pad.Gas - pad.Brake)), Lift: Math.max(-1, Math.min(1, (keys.KeyC ? 1 : 0) - (keys.KeyX ? 1 : 0) + (pad.DY || 0))), Boost: keys.ShiftLeft || keys.ShiftRight, Stop: keys.Space};
 			var last = hero.Last || state;
 
 			var part = physics.Steps(hero.Clock, elapsed, 1 / 120, function (step) {

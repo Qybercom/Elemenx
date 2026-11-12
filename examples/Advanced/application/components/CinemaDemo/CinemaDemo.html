@@ -4,7 +4,6 @@
 		<Select Label="Rig" [options]="CinemaRigs" [value]="CinemaRig" (change)="CinemaRigChosen" />
 		<Button Label="Cutscene" Icon="play" (click)="CinemaPlay" />
 		<Button Label="Record the cutscene" Icon="video" Variant="ghost" [disabled]="CinemaRecording" (click)="CinemaRecord" />
-		<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
 	</div>
 	<p class="elemenx-caption">{{CinemaNote}}</p>
 	<div class="scene-demo-scene">

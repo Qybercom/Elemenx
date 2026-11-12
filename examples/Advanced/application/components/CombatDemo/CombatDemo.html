@@ -21,7 +21,15 @@
 	<p class="elemenx-caption" aria-live="polite">{{CombatNote}}</p>
 	<div class="scene-demo-scene">
 		<Scene Setting="terrain" Labels="false" Person="shoulder" [crosshair]="CombatCrosshair" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="CombatReady" (hit)="CombatHit" (lock)="CombatLocked" (crack)="CombatCracked" (break)="CombatBroke">
-			<VirtualGamepad slot="hud" Right="true" Buttons="a,rt" Label="Fight" (button)="CombatPad" />
+			<VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,rt" Label="Fight" (button)="CombatPad" />
+			<div slot="hud" class="combat-slots">
+				<div class="elemenx-game-hotbar" role="group" aria-label="Weapons">
+					<GameSlot *for="weapon of CombatWeapons" *key="weapon.Value" Size="small" Draggable="false" [accept]="[]" [icon]="weapon.Icon" [label]="weapon.Label" [key]="weapon.Key" [active]="weapon.Value === CombatWeapon" (use)="CombatWeaponChosen(weapon.Value)" />
+				</div>
+				<div class="elemenx-game-hotbar" role="group" aria-label="Magic">
+					<GameSlot *for="spell of CombatSpells" *key="spell.Value" Size="small" Draggable="false" [accept]="[]" [icon]="spell.Icon" [label]="spell.Label" [color]="spell.Color" (use)="CombatSpell(spell.Value)" />
+				</div>
+			</div>
 			<SceneObject ID="range" Kind="ground" [world]="WorldOf('meadow')" />
 			<SceneObject ID="noon" Kind="sun" Time="14" Latitude="45" />
 			<GameCombat Bars="hurt" (death)="CombatDied" />

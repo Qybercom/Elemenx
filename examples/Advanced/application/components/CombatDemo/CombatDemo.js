@@ -1,10 +1,12 @@
 /*
  * CombatDemo (Gaming): weapons, hits by material, marks, locks, health, what breaks, a transporter beam and circles of
  * magic on any surface (SceneWeapons, SceneDebris, SceneFracture, SceneEffects; GameCombat, GameStrategy); on a touch
- * screen its gamepad walks, looks, jumps (A) and fires (RT).
+ * screen its gamepad walks, looks, jumps (A) and fires where the crosshair is (RT); the weapons (keys 1 to 0) and the
+ * magic are slots of a game (GameSlot) over the scene.
  */
 Elemenx.Component('CombatDemo', {
 	$TemplateURL: 'CombatDemo.html',
+	$StyleURL: 'CombatDemo.css',
 	$Traits: ['SceneDemo'],
 	CombatDied: function (event) {
 		if (event.ID === 'plate')
@@ -360,21 +362,56 @@ Elemenx.Component('CombatDemo', {
 	},
 	/* Combat and magic: the weapons of the hero, what it aims at, the crosshair, what was hit. */
 	CombatWeapons: [
-		{Value: 'rifle', Label: 'Rifle'},
-		{Value: 'pistol', Label: 'Pistol'},
-		{Value: 'shotgun', Label: 'Shotgun'},
-		{Value: 'sniper', Label: 'Sniper rifle'},
-		{Value: 'laser', Label: 'Laser'},
-		{Value: 'railgun', Label: 'Railgun'},
-		{Value: 'plasma', Label: 'Plasma'},
-		{Value: 'rocket', Label: 'Rocket (locks)'},
-		{Value: 'mortar', Label: 'Mortar'},
-		{Value: 'bow', Label: 'Bow'}
+		{Value: 'rifle', Label: 'Rifle', Icon: 'games:crosshair', Key: '1'},
+		{Value: 'pistol', Label: 'Pistol', Icon: 'games:joystick', Key: '2'},
+		{Value: 'shotgun', Label: 'Shotgun', Icon: 'games:star-power', Key: '3'},
+		{Value: 'sniper', Label: 'Sniper rifle', Icon: 'science:telescope', Key: '4'},
+		{Value: 'laser', Label: 'Laser', Icon: 'science:prism', Key: '5'},
+		{Value: 'railgun', Label: 'Railgun', Icon: 'science:magnet', Key: '6'},
+		{Value: 'plasma', Label: 'Plasma', Icon: 'science:atom', Key: '7'},
+		{Value: 'rocket', Label: 'Rocket (locks)', Icon: 'science:rocket', Key: '8'},
+		{Value: 'mortar', Label: 'Mortar', Icon: 'games:bomb', Key: '9'},
+		{Value: 'bow', Label: 'Bow', Icon: 'games:bow', Key: '0'}
 	],
+	/* The magic of the slots over the scene: each one a button of the rows above. */
+	CombatSpells: [
+		{Value: 'CombatBeam', Label: 'Beam the hero', Icon: 'games:wand', Color: '#ffd27a'},
+		{Value: 'CombatCircle', Label: 'Circle on the wall', Icon: 'circle', Color: '#8fb8ff'},
+		{Value: 'CombatGroundCircle', Label: 'Circle on the ground', Icon: 'science:galaxy', Color: '#8fb8ff'},
+		{Value: 'CombatDispel', Label: 'Dispel', Icon: 'close', Color: '#c9a0ff'},
+		{Value: 'CombatBreak', Label: 'Break the crate', Icon: 'games:chest', Color: '#e0a060'},
+		{Value: 'CombatCrack', Label: 'Crack the wall', Icon: 'games:pickaxe', Color: '#e0a060'}
+	],
+	CombatSpell: function (name) {
+		if (typeof this[name] === 'function')
+			this[name]();
+	},
 
-	/* The trigger of the gamepad on the screen fires the weapon, as a press of the mouse does. */
+	/*
+	 * The trigger of the gamepad on the screen fires where the crosshair is, as a press of the mouse does, the view staying
+	 * where it was turned; a laser burns while it is held. Regression: it fired as the Fire button does, the view turned to
+	 * the target of the list each time.
+	 */
 	CombatPad: function (event) {
-		if (event.Down && event.Button === 'rt')
-			this.CombatFire();
+		var scene = this.CombatScene ? this.CombatScene() : null;
+
+		if (event.Button !== 'rt') return;
+
+		window.clearInterval(this.CombatHeld);
+
+		if (!event.Down || !scene) return;
+
+		scene.Fire('hero');
+
+		if (this.CombatWeapon === 'laser') {
+			this.CombatHeld = window.setInterval(function () {
+				if (scene.$Element().isConnected)
+					scene.Fire('hero');
+			}, 50);
+		}
+	},
+
+	$OnDestroy: function () {
+		window.clearInterval(this.CombatHeld);
 	}
 });

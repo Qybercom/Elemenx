@@ -34,4 +34,4 @@ ToOrbit(ship) уводит корабль у тела на орбиту ожид
 - [has in the sky of a location the very moon of its body](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L790) — `tests/regression/library-scene-landing.test.js`
 - [goes to the parking orbit of a body by the command and round it, and a key of flight lets it go](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L835) — `tests/regression/library-scene-landing.test.js`
 
-+7 ещё в тех же файлах
++8 ещё в тех же файлах

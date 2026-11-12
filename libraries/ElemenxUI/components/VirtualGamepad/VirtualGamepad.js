@@ -2,10 +2,14 @@
  * A gamepad on the screen for the fingers: a stick, buttons and the triggers of a game over what is under it (a
  * Scene, in its slot hud). It is a pad of the InputDevices Service (Virtual): a Scene and every listener of pads take
  * it as a real one (its stick walks and steers as far as it leans, A jumps...). Buttons: the ones it shows (a, b, x, y,
- * lb, rb, lt, rt, start, select: a list or a text with commas); Right: a second stick, to look round; Show: auto (where
+ * lb, rb, lt, rt, start, select, and up, down, left, right of its cross, dpad for all four: a list or a text with commas); Right: a second stick, to look round; Show: auto (where
  * the screen is touched, a phone), always or never; Tilt: the left stick across follows the lean of the device as a
  * wheel (InputDevices.Tilt), asked for at the first touch; Navigate: its buttons also move the focus of the page and press its
- * controls, as a real pad does (false: a game only). Size of its stick in pixels. Event button ({Button, Down}).
+ * controls, as a real pad does (false: a game only). Size of its stick in pixels. DeadZone: the part of a lean round the
+ * middle that gives nothing (0.12), the rest from 0 to 1; LookCurve: the power of the lean of the right stick (2: fine
+ * near the middle to aim, fast at the rim). Floating: a stick comes where a finger touches its half of the screen (its
+ * lower part), and goes back as the finger lifts. A finger the page takes away (the capture lost) lets its stick go.
+ * Event button ({Button, Down}).
  */
 Elemenx.Component('VirtualGamepad', {
 	$TemplateURL: 'VirtualGamepad.html',
@@ -18,12 +22,15 @@ Elemenx.Component('VirtualGamepad', {
 			button: 'A button went down or up: {Button, Down}.'
 		},
 		Props: {
-			Buttons: 'The buttons it shows: a, b, x, y, lb, rb, lt, rt, start, select (a list, or a text with commas).',
+			Buttons: 'The buttons it shows: a, b, x, y, lb, rb, lt, rt, start, select; up, down, left, right of its cross (dpad: all four), above the left stick (a list, or a text with commas).',
 			Right: 'A second stick, at the right, to look round.',
 			Show: {Options: ['auto', 'always', 'never'], Description: 'auto: where the screen is touched; always; never.'},
 			Tilt: 'The left stick across follows the lean of the device as a wheel.',
 			Navigate: 'Its buttons also move the focus and press the controls of the page, as a real pad does.',
 			Size: 'The size of a stick, in pixels.',
+			DeadZone: 'The part of a lean round the middle that gives nothing (0 to 1).',
+			LookCurve: 'The power of the lean of the right stick: 1 even, 2 fine near the middle.',
+			Floating: 'A stick comes where a finger touches its half of the screen.',
 			Label: 'The name of the pad for screen readers.'
 		},
 		Sample: {Show: 'always', Buttons: 'a,b,x,y'}
@@ -34,8 +41,13 @@ Elemenx.Component('VirtualGamepad', {
 	Tilt: false,
 	Navigate: false,
 	Size: 120,
+	DeadZone: 0.12,
+	LookCurve: 2,
+	Floating: false,
 	Label: '',
 	Knobs: {left: [0, 0], right: [0, 0]},
+	/* Where a floating stick stands, moved from its place (px). */
+	Moved: {left: [0, 0], right: [0, 0]},
 	Down: {},
 
 	$OnCreate: function () {
@@ -49,12 +61,18 @@ Elemenx.Component('VirtualGamepad', {
 		 */
 		this.Listed = function (buttons, group) {
 			var list = typeof buttons === 'string' ? buttons.split(',') : buttons || [];
-			var groups = {face: ['y', 'x', 'b', 'a'], shoulder: ['lb', 'lt', 'rb', 'rt'], left: ['lb', 'lt'], right: ['rb', 'rt'], middle: ['select', 'start']};
+			var groups = {face: ['y', 'x', 'b', 'a'], shoulder: ['lb', 'lt', 'rb', 'rt'], left: ['lb', 'lt'], right: ['rb', 'rt'], middle: ['select', 'start'], dpad: ['up', 'left', 'right', 'down']};
+			var names = [];
+
+			/* dpad: the four of the cross. */
+			list.forEach(function (each) {
+				var name = String(each).trim().toLowerCase();
+
+				names = names.concat(name === 'dpad' ? groups.dpad : [name]);
+			});
 
 			return groups[group].filter(function (name) {
-				return list.map(function (each) {
-					return String(each).trim().toLowerCase();
-				}).indexOf(name) !== -1;
+				return names.indexOf(name) !== -1;
 			});
 		};
 
@@ -119,6 +137,38 @@ Elemenx.Component('VirtualGamepad', {
 		});
 	},
 
+	/* The lean a stick gives: nothing within the dead zone, the rest from 0 to 1; the right stick by its curve. */
+	Lean: function (side, x, y) {
+		var length = Math.sqrt(x * x + y * y);
+		var dead = Math.max(0, Math.min(0.9, Number(this.DeadZone) || 0));
+		var power = side === 'right' ? Math.max(1, Number(this.LookCurve) || 1) : 1;
+		var part;
+
+		if (length <= dead) return [0, 0];
+
+		part = Math.pow((Math.min(1, length) - dead) / (1 - dead), power);
+
+		return [x / length * part, y / length * part];
+	},
+
+	/* A finger on the half of a floating stick: the stick comes under it. */
+	ZoneDown: function (event, node) {
+		var side = node.getAttribute('data-stick');
+		var stick = this.$Element().querySelector('.elemenx-virtual-pad-stick.' + side);
+		var box;
+		var moved = {left: this.Moved.left, right: this.Moved.right};
+
+		if (!stick || this.Touches[side] !== undefined) return;
+
+		box = stick.getBoundingClientRect();
+		moved[side] = [moved[side][0] + event.clientX - (box.left + box.width / 2), moved[side][1] + event.clientY - (box.top + box.height / 2)];
+		this.Moved = moved;
+		this.Middles = this.Middles || {};
+		this.Middles[side] = [event.clientX, event.clientY, box.width / 2];
+
+		this.StickDown(event, node);
+	},
+
 	/* A stick follows its finger within its ring: x and y -1 to 1, down +, as the Gamepad API has them. */
 	StickDown: function (event, node) {
 		var side = node.getAttribute('data-stick');
@@ -141,16 +191,18 @@ Elemenx.Component('VirtualGamepad', {
 	StickMove: function (event, node) {
 		var side = node.getAttribute('data-stick');
 		var box = node.getBoundingClientRect();
-		var radius = box.width / 2;
+		var middle = this.Middles && this.Middles[side] ? this.Middles[side] : [box.left + box.width / 2, box.top + box.height / 2, box.width / 2];
+		var radius = middle[2];
 		var x;
 		var y;
 		var length;
 		var knobs;
+		var lean;
 
 		if (this.Touches[side] !== event.pointerId) return;
 
-		x = (event.clientX - box.left - radius) / radius;
-		y = (event.clientY - box.top - radius) / radius;
+		x = (event.clientX - middle[0]) / radius;
+		y = (event.clientY - middle[1]) / radius;
 		length = Math.sqrt(x * x + y * y);
 
 		if (length > 1) {
@@ -158,7 +210,9 @@ Elemenx.Component('VirtualGamepad', {
 			y /= length;
 		}
 
-		this.Pad.Stick(side, x, y);
+		lean = this.Lean(side, x, y);
+
+		this.Pad.Stick(side, lean[0], lean[1]);
 
 		knobs = {left: this.Knobs.left, right: this.Knobs.right};
 		knobs[side] = [x, y];
@@ -169,14 +223,23 @@ Elemenx.Component('VirtualGamepad', {
 		var side = node.getAttribute('data-stick');
 		var knobs = {left: this.Knobs.left, right: this.Knobs.right};
 
+		var moved = {left: this.Moved.left, right: this.Moved.right};
+
 		if (this.Touches[side] !== event.pointerId) return;
 
 		delete this.Touches[side];
+
+		if (this.Middles)
+			delete this.Middles[side];
 
 		this.Pad.Stick(side, 0, 0);
 
 		knobs[side] = [0, 0];
 		this.Knobs = knobs;
+
+		/* A floating stick goes back to its place. */
+		moved[side] = [0, 0];
+		this.Moved = moved;
 	},
 
 	ButtonDown: function (event, node) {

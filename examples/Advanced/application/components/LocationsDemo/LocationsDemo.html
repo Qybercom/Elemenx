@@ -124,12 +124,11 @@
 		</RibbonTab>
 		<RibbonTab ID="view" Title="View">
 			<RibbonGroup Title="Picture" Icon="image">
-				<Select Label="Quality" Size="small" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
 				<label class="ui-kit-tune"><span>Lens flare</span><Slider Label="Lens flare" Size="small" ShowValue="end" Min="0" Max="2" Step="0.1" [value]="SceneFlare" (input)="SceneFlareChosen" /></label>
 			</RibbonGroup>
 		</RibbonTab>
 	</Ribbon>
 	<div class="scene-demo-scene">
-		<Scene Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" [freelook]="PlaceFree" [person]="PlacePerson" [shoulder]="PlaceShoulder" [axes]="PlaceAxes ? 'top-right' : ''" [origin]="PlaceOrigin" [bokeh]="SceneBokeh" (person)="PlacePerson = $event" (shoulder)="PlaceShoulder = $event" (ready)="PlaceReady"><VirtualGamepad slot="hud" Right="true" Buttons="a,rb,lb" Label="Walk" /><SceneObject *if="PlaceGlow" ID="hero-glow" Kind="effect" Type="glow" Follow="hero" Color="#7fd0ff" Intensity="1" Where="both" /><SceneObject *if="PlaceMana" ID="hero-mana" Kind="effect" Type="mana" Follow="hero" /></Scene>
+		<Scene Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" [freelook]="PlaceFree" [person]="PlacePerson" [shoulder]="PlaceShoulder" [axes]="PlaceAxes ? 'top-right' : ''" [origin]="PlaceOrigin" [bokeh]="SceneBokeh" (person)="PlacePerson = $event" (shoulder)="PlaceShoulder = $event" (ready)="PlaceReady"><VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,rb,lb" Label="Walk" /><SceneObject *if="PlaceGlow" ID="hero-glow" Kind="effect" Type="glow" Follow="hero" Color="#7fd0ff" Intensity="1" Where="both" /><SceneObject *if="PlaceMana" ID="hero-mana" Kind="effect" Type="mana" Follow="hero" /></Scene>
 	</div>
 </div>

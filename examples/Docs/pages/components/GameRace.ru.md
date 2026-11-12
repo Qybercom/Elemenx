@@ -3,7 +3,7 @@
 
 Гонка по замкнутой дороге Scene, объявленная внутри неё: <Scene> ... <GameRace Road="track" Laps="3" /> </Scene> (трейт SceneBehaviour). Гонщики (Racers — ID машин списком или текстом через запятую; пусто — та, что под клавишами) едут по замкнутой дороге (Road — её ID; пусто — первая замкнутая), круг засчитывается, когда гонщик пересекает линию старта (отметка start дороги, иначе её первая точка), пройдя её контрольные точки (Checkpoints — сколько, равномерно по кругу, 3), поэтому короткий проезд назад через линию ничего не засчитывает. Countdown (секунды, 3) — обратный отсчёт перед стартом; Start() начинает гонку заново с отсчёта, Stop() заканчивает её.
 
-События: countdown ({Seconds}), start, checkpoint ({ID, Lap, Index}), lap ({ID, Lap, Time, Best}: пройденный круг и его секунды), position ({ID, Position}: гонщик обогнал другого), wrong ({ID, Wrong}: едет не в ту сторону или снова в нужную), finish ({ID, Position, Time, Best}), end (финишировали все). Standings() — гонщики по порядку: [{ID, Position, Lap, Progress (метры от начала гонки), Time, Last, Best, Finished, Wrong}].
+События: countdown ({Seconds}), start, checkpoint ({ID, Lap, Index}), lap ({ID, Lap, Time, Best}: пройденный круг и его секунды), position ({ID, Position}: гонщик обогнал другого), wrong ({ID, Wrong}: едет не в ту сторону или снова в нужную), finish ({ID, Position, Time, Best}), end (финишировали все). Standings() — гонщики по порядку: [{ID, Position, Lap, Progress (метры от начала гонки), Time, LapTime (секунды идущего круга, 0 после финиша), Last, Best, Finished, Wrong}].
 
 ## Свойства
 
@@ -35,4 +35,4 @@
 ## Тесты
 
 - [counts down, counts the laps of each racer through its checkpoints, their times and best, finishes and ends](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-race.test.js#L100) — `tests/regression/library-game-race.test.js`
-- [counts no lap of a racer that goes back over the line, and tells the wrong way and the right way again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-race.test.js#L157) — `tests/regression/library-game-race.test.js`
+- [counts no lap of a racer that goes back over the line, and tells the wrong way and the right way again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-race.test.js#L160) — `tests/regression/library-game-race.test.js`

@@ -23,4 +23,4 @@ Land(ship, {Body, Latitude, Longitude} or {Marker}) takes it down: from space al
 - [has in the sky of a location the very moon of its body](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L790) — `tests/regression/library-scene-landing.test.js`
 - [goes to the parking orbit of a body by the command and round it, and a key of flight lets it go](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L835) — `tests/regression/library-scene-landing.test.js`
 
-+7 more in the same files
++8 more in the same files

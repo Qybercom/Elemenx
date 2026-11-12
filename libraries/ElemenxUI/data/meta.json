@@ -23244,7 +23244,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The buttons it shows: a, b, x, y, lb, rb, lt, rt, start, select (a list, or a text with commas)."
+					"Description": "The buttons it shows: a, b, x, y, lb, rb, lt, rt, start, select; up, down, left, right of its cross (dpad: all four), above the left stick (a list, or a text with commas)."
 				},
 				{
 					"Name": "Right",
@@ -23294,6 +23294,33 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "The size of a stick, in pixels."
+				},
+				{
+					"Name": "DeadZone",
+					"Type": "number",
+					"Default": 0.12,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The part of a lean round the middle that gives nothing (0 to 1)."
+				},
+				{
+					"Name": "LookCurve",
+					"Type": "number",
+					"Default": 2,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The power of the lean of the right stick: 1 even, 2 fine near the middle."
+				},
+				{
+					"Name": "Floating",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A stick comes where a finger touches its half of the screen."
 				},
 				{
 					"Name": "Label",
@@ -27165,6 +27192,11 @@
 		],
 		"elemenx-virtual-pad-button": [
 			"down",
+			"dpad",
+			"dpad-down",
+			"dpad-left",
+			"dpad-right",
+			"dpad-up",
 			"face-a",
 			"face-b",
 			"face-x",
@@ -27174,6 +27206,11 @@
 		],
 		"elemenx-virtual-pad-knob": [],
 		"elemenx-virtual-pad-face": [],
+		"elemenx-virtual-pad-zone": [
+			"left",
+			"right"
+		],
+		"elemenx-virtual-pad-dpad": [],
 		"elemenx-virtual-pad-shoulders": [
 			"left",
 			"right"

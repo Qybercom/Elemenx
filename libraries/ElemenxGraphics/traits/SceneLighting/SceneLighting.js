@@ -46,6 +46,16 @@ Elemenx.Trait('SceneLighting', {
 		};
 	},
 
+	/*
+	 * A phone or a tablet: a finger its only pointer (no mouse, no touchpad). Regression: a tablet of 10 inches (its screen over
+	 * 600 px on its short side) was taken for a computer, at medium and twice the pixels, its frames late.
+	 */
+	Phone: function () {
+		var view = typeof window === 'undefined' ? null : window;
+
+		return !!(view && typeof view.matchMedia === 'function' && view.matchMedia('(pointer: coarse)').matches && !view.matchMedia('(any-pointer: fine)').matches);
+	},
+
 	/* The level of the graphics and what it draws, before LightingStart gives its own (a scene with no WebGL: low). */
 	Graphics: function () {
 		return Object.assign({Level: 'low'}, this.LightingSets().low);
@@ -70,12 +80,18 @@ Elemenx.Trait('SceneLighting', {
 
 		state.Floats = !!renderer.GL.getExtension('EXT_color_buffer_float');
 
-		/* A guess by the name of the graphics card: the frames correct it. */
+		/* A phone or a tablet: a finger its only pointer (its card draws a large picture on a little battery). */
+		var phone = self.Phone();
+
+		/*
+		 * A guess by the name of the graphics card: the frames correct it. A phone starts low. Regression: a phone of a Mali
+		 * guessed medium and stayed there, its frames late (its pictures of floats, its grass).
+		 */
 		function guess () {
 			var gl = renderer.GL;
 			var info = gl.getExtension('WEBGL_debug_renderer_info');
 			var name = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
-			if (/SwiftShader|llvmpipe|Software|Microsoft Basic/i.test(name)) return 'low';
+			if (phone || /SwiftShader|llvmpipe|Software|Microsoft Basic/i.test(name)) return 'low';
 			if (/Adreno|Mali|PowerVR|Apple A|Intel|UHD/i.test(name)) return 'medium';
 
 			return 'high';
@@ -99,8 +115,12 @@ Elemenx.Trait('SceneLighting', {
 			return Object.assign({Level: level()}, sets[level()]);
 		};
 
+		/*
+		 * How far the finer levels of what is sown reach; a phone or a tablet half as far (its simpler levels and pictures
+		 * nearer). Regression: the woods of a race track drew 1.9 million triangles a frame at low, its card at 7 frames a second.
+		 */
 		this.ScatterReach = function () {
-			return sets[level()].Reach;
+			return sets[level()].Reach * (phone ? 0.5 : 1);
 		};
 
 		engine.PostWarm = function () {
@@ -1434,7 +1454,7 @@ Elemenx.Trait('SceneLighting', {
 
 			state.Late = elapsed > 0.03 ? state.Late + 1 : Math.max(0, state.Late - 1);
 
-			/* The guess of low is for a machine with no graphics card: a card that hurries stays where its grass is. */
+			/* The guess of low is for a machine with no graphics card or a phone: a card that hurries stays where its grass is. */
 			if (state.Late > 90 && levels.indexOf(level()) > 1) {
 				state.Level = levels[levels.indexOf(level()) - 1];
 				state.Late = 0;

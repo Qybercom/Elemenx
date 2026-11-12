@@ -1119,6 +1119,96 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(scene.Graphics().Level).toBe('ultra');
 	});
 
+	/*
+	 * Regression: a phone (a Mali) guessed medium and never went lower, its frames late, and drew 2.6 pixels of its screen to
+	 * a point of the page. A phone starts low and draws at most 1.5 pixels to a point.
+	 */
+	it('starts a phone or a tablet low, at most 1.5 pixels of its screen to a point of the page', async function () {
+		var media = window.matchMedia;
+		var screen = Object.getOwnPropertyDescriptor(window, 'screen');
+		var ratio = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
+		var mounted;
+		var scene;
+
+		window.matchMedia = function (query) {
+			return {matches: query === '(pointer: coarse)', media: query, addEventListener: function () {}, removeEventListener: function () {}, addListener: function () {}, removeListener: function () {}};
+		};
+
+		/* A tablet of 10 inches: a phone too (a finger its only pointer), whatever its screen. */
+		Object.defineProperty(window, 'screen', {configurable: true, value: {width: 1200, height: 1920}});
+		Object.defineProperty(window, 'devicePixelRatio', {configurable: true, value: 2.75});
+
+		try {
+			mounted = await mount('<Scene Paused="true" (ready)="Ready">' +
+				'<SceneObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
+			'</Scene>');
+			scene = mounted.Space;
+
+			expect(scene.Phone()).toBe(true);
+			expect(scene.Graphics().Level).toBe('low');
+			/* What it is drawn on, for a page to tell (a phone whose frames are late: its card, its compiling of programs). */
+			expect(scene.Device()).toMatchObject({Phone: true, Level: 'low', Ratio: 1.5, Pixels: 2.75});
+			expect(typeof scene.Device().GPU).toBe('string');
+			expect(typeof scene.Device().Parallel).toBe('boolean');
+			expect(scene.Device().MaxTexture).toBeGreaterThan(1000);
+			expect(scene.Scene().Most).toBe(1.5);
+			expect(scene.Scene().Ratio).toBe(1.5);
+
+		}
+		finally {
+			window.matchMedia = media;
+
+			if (screen) Object.defineProperty(window, 'screen', screen);
+			else delete window.screen;
+
+			if (ratio) Object.defineProperty(window, 'devicePixelRatio', ratio);
+			else delete window.devicePixelRatio;
+		}
+
+		expect(scene.Phone()).toBe(false);
+	});
+
+	/*
+	 * Regression: a viewpoint set as the scene was ready, its ground not made yet, went to the middle of the ground when it
+	 * came (the Strategy demo looked into a tree far from its units).
+	 */
+	it('keeps a viewpoint set before its ground came', async function () {
+		var scene = null;
+		var host = Elemenx.Component(unique('ViewHost'), {$Template: '<div style="width: 640px; height: 400px"><Scene Paused="true" (ready)="Viewed">' +
+			'<SceneObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
+		'</Scene></div>', Viewed: function (space) {
+			space.SetViewpoint({Target: [-60, 4, -20], Yaw: 2.4, Pitch: 0.8, Distance: 50});
+
+			scene = space;
+		}})();
+
+		owned.push(host);
+
+		document.getElementById('mount').appendChild(host.$Element());
+
+		await waitFor(function () {
+			return scene;
+		}, 4000);
+
+		var inner = scene.Scene();
+		var now = performance.now() + 100;
+
+		await waitFor(function () {
+			inner.Rest = 0;
+
+			scene.Engine().Frame(now += 33);
+
+			return inner.Ground && inner.Ground.Target;
+		}, 20000);
+
+		scene.Engine().Frame(now += 33);
+
+		expect(inner.Ground.Target[0]).toBeCloseTo(-60, 0);
+		expect(inner.Ground.Target[2]).toBeCloseTo(-20, 0);
+		expect(inner.Target[0]).toBeCloseTo(-60, 0);
+		expect(inner.Distance).toBeCloseTo(50, 0);
+	});
+
 	it('never leaves a hole in the ground: a square gives way only when its parts are made', async function () {
 		var mounted = await mount('<Scene Paused="true" (ready)="Ready">' +
 			'<SceneObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
@@ -1894,6 +1984,15 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			frames(walker, 10);
 
 			expect(inner.Yaw).toBeLessThan(yaw - 0.3);
+
+			/* Up looks up, as the mouse moved up does (the eye goes down). Regression: up raised the eye, the view looked down. */
+			var pitch = inner.Pitch;
+
+			pad.Stick('right', 0, -1);
+
+			frames(walker, 10);
+
+			expect(inner.Pitch).toBeLessThan(pitch - 0.2);
 
 			pad.Stick('right', 0, 0);
 			pad.Press('a');
@@ -6131,7 +6230,9 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			})).toBe(true);
 			expect(mirrors).toContain(1);
 
-			/* The screen: once its picture is made, the element it names, red. */
+			/* The screen, to an eye in the car (no further one sees it): once its picture is made, the element it names, red. */
+			scene.Person = 'first';
+
 			await waitFor(function () {
 				frames(1);
 

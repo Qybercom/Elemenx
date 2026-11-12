@@ -1,7 +1,6 @@
 <div class="scene-demo">
 	<div class="scene-demo-row">
 		<Select Label="District" [options]="ShowDistricts" [value]="ShowDistrict" (change)="ShowFly" />
-		<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
 		<Button Label="Benchmark" Icon="play" Variant="ghost" [disabled]="ShowRunning || !ShowMade" (click)="ShowBench" />
 		<Toggle Label="Levels" [checked]="ShowLevels" (change)="ShowLevels = $event" />
 		<Toggle Label="Proxies" [checked]="ShowProxies" (change)="ShowProxies = $event" />

@@ -64,7 +64,11 @@ Elemenx.Trait('SceneScatter', {
 		 * left out; nearer, its four tiles, down to the squares and their copies. A proxy is made in a worker the first time
 		 * it is wanted, once all its squares are sown; till then the squares stand for it.
 		 */
-		var tiles = {Cells: 48, Error: 2.5, Making: 2};
+		/*
+		 * The proxies of tiles: a grid of Cells a side. A phone or a tablet a coarser one. Regression: a proxy of a tile of
+		 * thick woods was of 260 000 triangles, a race track of 3 million a frame, its card at 7 frames a second.
+		 */
+		var tiles = {Cells: self.Phone && self.Phone() ? 20 : 48, Error: 2.5, Making: 2};
 
 		this.Sown = function () {
 			return {Things: state.Things, Squares: state.Squares.length, Waiting: state.Waiting.length + state.Flying, Draws: Object.keys(state.Streams).filter(function (key) {
@@ -1159,7 +1163,8 @@ Elemenx.Trait('SceneScatter', {
 				state.CacheOf = state.Generation;
 			}
 
-			sum = digest(tile.Key, state.CacheBase);
+			/* Its grid too: a proxy of a coarser one (a phone) is another. */
+			sum = digest(tile.Key + '/' + tiles.Cells, state.CacheBase);
 
 			lists.forEach(function (list) {
 				var shape = state.Shapes[list.Shape];

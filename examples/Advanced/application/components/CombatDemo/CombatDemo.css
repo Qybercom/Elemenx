@@ -1,0 +1,20 @@
+/* The weapons and the magic over the scene, at its top under the shoulders of the pad; a row too long scrolls across. */
+.combat-slots {
+	position: absolute;
+	top: 64px;
+	left: 50%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	max-width: calc(100% - 32px);
+	transform: translateX(-50%);
+	pointer-events: none;
+}
+
+.combat-slots .elemenx-game-hotbar {
+	max-width: 100%;
+	overflow-x: auto;
+	pointer-events: auto;
+	scrollbar-width: none;
+}

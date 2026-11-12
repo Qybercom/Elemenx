@@ -257,7 +257,8 @@ Elemenx.Trait('SceneLanding', {
 			var air = landing.Air;
 			var pad = keys.Pad || {X: 0, Y: 0, Gas: 0, Brake: 0};
 			var throttle = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0) + pad.Gas - pad.Brake;
-			var nose = (keys.KeyF || keys.ArrowUp ? 1 : 0) - (keys.KeyR || keys.ArrowDown ? 1 : 0) - pad.Y;
+			/* The left stick of a pad up puts the nose up. Regression: it put it down. */
+			var nose = (keys.KeyF || keys.ArrowUp ? 1 : 0) - (keys.KeyR || keys.ArrowDown ? 1 : 0) + pad.Y;
 			var turn = (keys.KeyA || keys.ArrowLeft ? 1 : 0) - (keys.KeyD || keys.ArrowRight ? 1 : 0) - pad.X;
 			var ground = Math.max(0, field.Elevation(air.Point));
 			var over = air.Height - ground;
@@ -1096,7 +1097,8 @@ Elemenx.Trait('SceneLanding', {
 			var pad = keys.Pad || {X: 0, Y: 0, LookY: 0, Gas: 0, Brake: 0};
 			var forward = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0) + pad.Gas - pad.Brake;
 			var turn = (keys.KeyA || keys.ArrowLeft ? 1 : 0) - (keys.KeyD || keys.ArrowRight ? 1 : 0) - pad.X;
-			var lift = (keys.KeyC ? 1 : 0) - (keys.KeyX ? 1 : 0) + pad.LookY;
+			/* The cross of a pad lifts (the right stick turns the view). */
+			var lift = (keys.KeyC ? 1 : 0) - (keys.KeyX ? 1 : 0) + (pad.DY || 0);
 			var boost = keys.ShiftLeft || keys.ShiftRight;
 			var air = hero.Flying;
 			var top = settings.Airspeed * (boost ? 1.6 : 1);

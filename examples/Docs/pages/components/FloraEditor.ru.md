@@ -25,7 +25,8 @@ FloraEditor: вид растения по его фотографии (SceneFlor
 
 ## События
 
-`change`, `define`
+- `change`
+- `define`
 
 ## Методы
 

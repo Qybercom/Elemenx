@@ -8,7 +8,6 @@
 			<RibbonGroup Title="View" Icon="eye">
 				<Toggle Label="Orbits" [checked]="SpaceOrbits" (change)="SpaceOrbited" />
 				<Toggle Label="Real scale" [checked]="SpaceReal" (change)="SpaceScaled" />
-				<Select Label="Quality" Size="small" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
 			</RibbonGroup>
 			<RibbonGroup Title="Time" Icon="clock">
 				<Button Icon="pause" Variant="ghost" Size="small" [label]="SpacePaused ? 'Go on' : 'Hold the time'" [pressed]="SpacePaused" (click)="SpacePausedToggled" />

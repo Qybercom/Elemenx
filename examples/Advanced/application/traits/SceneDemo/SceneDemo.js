@@ -39,9 +39,20 @@ Elemenx.Trait('SceneDemo', {
 		catch (error) {
 			this.SceneQuality = 'auto';
 		}
+
+		/* The quality chosen in the frame of the page (DemoFrame), one for all the demos. */
+		this.QualityHeard = function (event) {
+			self.SceneQuality = event.detail;
+		};
+
+		window.addEventListener('scene-demo-quality', this.QualityHeard);
 	},
 
-	/* The quality of all the scenes: kept while the page is reopened, whatever the frames do. */
+	$OnDestroy: function () {
+		window.removeEventListener('scene-demo-quality', this.QualityHeard);
+	},
+
+	/* The quality of all the scenes: kept while the page is reopened, whatever the frames do; told to the page. */
 	SceneQualityChosen: function (value) {
 		this.SceneQuality = value;
 
@@ -49,8 +60,10 @@ Elemenx.Trait('SceneDemo', {
 			window.localStorage.setItem('ui-kit-quality', value);
 		}
 		catch (error) {
-			return;
+			value = String(value);
 		}
+
+		window.dispatchEvent(new CustomEvent('scene-demo-quality', {detail: value}));
 	},
 
 	SceneWeatherChosen: function (value) {

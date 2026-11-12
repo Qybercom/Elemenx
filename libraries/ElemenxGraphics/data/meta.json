@@ -349,6 +349,42 @@
 					"Description": "Draws the wire of the scene over it: each edge of the ground and of the models (--elemenx-scene-wire)."
 				},
 				{
+					"Name": "Levels",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Colors each thing by the level of detail it is drawn at (near green to red, the proxies of far tiles cyan to pink, the squares of the ground by their depth), with the draws and triangles of a frame in a corner: to see where the detail goes. Ctrl+Shift+L turns it on and off."
+				},
+				{
+					"Name": "Proxies",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Far tiles of what is sown drawn each as one simpler shape (SceneProxies), as Voxy draws a far land; false: each thing by its own levels."
+				},
+				{
+					"Name": "Clusters",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Large models that stand alone (3000 faces or more) drawn by their clusters (SceneClusters, as Nanite): each part as fine as the screen needs; false: each at its finest."
+				},
+				{
+					"Name": "CacheSize",
+					"Type": "number",
+					"Default": 200,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Megabytes the browser keeps of what the scene made (SceneCache: the proxies of far tiles), the oldest gone over it; 0 keeps nothing."
+				},
+				{
 					"Name": "Edges",
 					"Type": "bool",
 					"Default": false,
@@ -437,6 +473,15 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "The days a second on the surface of a body (1/120: a day of two minutes)."
+				},
+				{
+					"Name": "PlantStyle",
+					"Type": "text",
+					"Default": "realistic",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How its plants look: realistic (SceneFlora: grown trees, their bark and leaves drawn, the default) or simple (the models of code of few faces)."
 				},
 				{
 					"Name": "Shadows",
@@ -831,6 +876,7 @@
 			"Current": "",
 			"Events": [
 				"ready",
+				"gesture",
 				"select",
 				"focus",
 				"person",
@@ -863,6 +909,7 @@
 			],
 			"EventDescriptions": {
 				"ready": "The scene is ready: the component itself, to call its methods.",
+				"gesture": "A gesture of fingers on it (Gestures: tap, doubletap, press, pan, swipe, pinch, rotate, tilt), after the scene did its part: {Gesture, ID (what is under it; tap, doubletap and press), Point {X, Y} (in the scene)}.",
 				"select": "The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).",
 				"focus": "The view moved to an object: {ID}.",
 				"person": "V took the view of a walker to another place: third, first or shoulder.",
@@ -900,6 +947,7 @@
 				"SurfaceAt(x, z)",
 				"Roads()",
 				"Junctions()",
+				"Interchanges()",
 				"Push(id, impulse, at)",
 				"CastRay(from, direction, max)",
 				"Colliders()",
@@ -968,11 +1016,14 @@
 				"Move(id, target)",
 				"Play(id, clip, callback)",
 				"Now()",
+				"Drawn()",
 				"SetTime(days)",
 				"ToScreen(id)",
 				"Pick(clientX, clientY, all)",
 				"Viewpoint()",
 				"SetViewpoint(view)",
+				"Phone()",
+				"Device()",
 				"Project(point)",
 				"Ray(clientX, clientY)",
 				"GroundAt(clientX, clientY)",
@@ -1723,6 +1774,109 @@
 			"Sample": {}
 		},
 		{
+			"Name": "FloraEditor",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "tree",
+			"Description": "A species of plant of a photograph of it: its trunk, crown and colors read from the picture, grown at once in 3D, each number on a slider, defined as a model.",
+			"Props": [
+				{
+					"Name": "Species",
+					"Type": "select",
+					"Default": "oak",
+					"Options": [
+						"pine",
+						"spruce",
+						"oak",
+						"birch",
+						"palm",
+						"bush",
+						"aspen",
+						"sequoia",
+						"willow",
+						"poplar",
+						"chestnut",
+						"alder",
+						"linden",
+						"acacia",
+						"apple",
+						"peach",
+						"apricot",
+						"cherry",
+						"sweet-cherry",
+						"hazel",
+						"juniper",
+						"lilac",
+						"fern",
+						"bamboo",
+						"reed",
+						"bulrush",
+						"wheat",
+						"sunflower",
+						"burdock"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The preset it starts of."
+				},
+				{
+					"Name": "Preset",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A preset of SceneFlora given instead (an object or its JSON)."
+				},
+				{
+					"Name": "Variant",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Which plant of the species the view shows (0 and up)."
+				},
+				{
+					"Name": "Name",
+					"Type": "text",
+					"Default": "flora-custom",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the model Define makes."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"define"
+			],
+			"EventDescriptions": {
+				"change": "The preset changed: {Preset}.",
+				"define": "Define made it a model of SceneModels: {Name}."
+			},
+			"Methods": [
+				"Current()",
+				"Analyse(picture)",
+				"Grow()",
+				"Define(name)"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "TextureLab",
 			"Kind": "Component",
 			"Group": "game",
@@ -2044,8 +2198,11 @@
 			"Events": [],
 			"EventDescriptions": {},
 			"Methods": [
+				"FlatOf(options)",
 				"Flat(options)",
 				"Border(options)",
+				"Passages(carve, height)",
+				"PassageRoute(graph, from, to)",
 				"Relief(settings)",
 				"Climate(settings)",
 				"ClimateOf(settings)",
@@ -2211,6 +2368,11 @@
 				"Types()",
 				"Line(points, options)",
 				"Road(spec)",
+				"Grade(type)",
+				"Class(type)",
+				"Meeting(a, b)",
+				"Clearance(type)",
+				"InterchangeForm(a, b, ending)",
 				"Network(specs, junctions, options)",
 				"JunctionAt(junctions, x, z)",
 				"Near(road, x, z, hint)",
@@ -2218,7 +2380,8 @@
 				"BarrierHit(roads, x, z, fromX, fromZ, hints, size)",
 				"FreeBarrier(spec, options)",
 				"Sketch(roads, junctions)",
-				"Carves(roads)",
+				"Carves(roads, junctions)",
+				"TunnelGraph(roads, junctions)",
 				"TunnelLamps(road)",
 				"Asset(roads, options)",
 				"AssetOf(roads, options)",
@@ -2241,6 +2404,25 @@
 			"EventDescriptions": {},
 			"Methods": [
 				"Track(seed, options)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "ModelBlueprints",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Models made of graphs of Blueprints: parts, their places, mirrors and pieces, as a recipe of data of SceneModels.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Recipe(graph, parameters, inputs)",
+				"Compiled(graph)"
 			],
 			"Sample": {}
 		},
@@ -2358,7 +2540,8 @@
 			"Methods": [
 				"Classes()",
 				"Options(options)",
-				"Pieces(tools, options, random)",
+				"Pieces(tools, options, random, variant)",
+				"Parameters(options)",
 				"Define(name, options)",
 				"Random(options, seed)"
 			],
@@ -2444,6 +2627,100 @@
 				"Compile(rules)",
 				"LibraryScatter(rule)",
 				"Work()"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneProxies",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "What stands far away as one simpler shape: the copies of a tile merged and snapped to a grid, small things as small bodies.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Shape(geometry)",
+				"Merge(job)",
+				"Pack(made)",
+				"Unpack(packed)",
+				"Work()"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneCache",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "What a scene made once kept in the browser (IndexedDB): the proxies of far tiles, the squares of a planet, the oldest gone over a limit.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Get(store, key, callback)",
+				"Put(store, key, value, callback)",
+				"Peek(store, key)",
+				"Knows(store, key)",
+				"Usage(callback)",
+				"SetLimit(megabytes, callback)",
+				"Clear(store, callback)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneClusters",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "A level of detail of clusters, as Nanite makes one: groups of clusters made simpler level by level, their borders kept, each part drawn as fine as the screen needs.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Build(geometry)",
+				"Select(built, matrix, eye, focal, pixels)",
+				"Work()"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneFlora",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Realistic plants of code: trunks and branches grown by space colonization (whorls for spruces, fronds for palms), bark and leaves drawn of code, each plant of a species another.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Species()",
+				"Preset(name)",
+				"Far(name)",
+				"Tree(preset, variant)",
+				"Textures(preset)",
+				"Asset(tree, textures)",
+				"Define(name, preset, options)",
+				"FromPicture(picture, base)",
+				"Key(preset, variants)",
+				"Work()",
+				"Source(names)"
 			],
 			"Sample": {}
 		},
@@ -2603,6 +2880,7 @@
 		"elemenx-scene-fallback": [],
 		"elemenx-scene-loading": [],
 		"elemenx-scene-hud": [],
+		"elemenx-scene-levels": [],
 		"elemenx-scene-screens": [],
 		"elemenx-drawing": [
 			"readonly"
@@ -2784,6 +3062,22 @@
 		"elemenx-model-editor-role-part": [],
 		"elemenx-model-editor-role-axis": [],
 		"elemenx-model-editor-role-pivot": [],
+		"elemenx-flora-editor": [],
+		"elemenx-flora-editor-reference": [],
+		"elemenx-flora-editor-picture": [
+			"shown"
+		],
+		"elemenx-flora-editor-hint": [],
+		"elemenx-flora-editor-told": [],
+		"elemenx-flora-editor-load": [],
+		"elemenx-flora-editor-view": [],
+		"elemenx-flora-editor-busy": [],
+		"elemenx-flora-editor-panel": [],
+		"elemenx-flora-editor-title": [],
+		"elemenx-flora-editor-field": [],
+		"elemenx-flora-editor-color": [],
+		"elemenx-flora-editor-variant": [],
+		"elemenx-flora-editor-define": [],
 		"elemenx-texture-lab": [],
 		"elemenx-texture-lab-view": [],
 		"elemenx-texture-lab-canvas": [],

@@ -152,7 +152,7 @@ Elemenx.Component('Scene', {
 			shader: 'A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}).'
 		},
-		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
+		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Phone()', 'Device()', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
 		Props: {
 			Setting: {Options: ['space', 'terrain'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers).'},
 			System: 'The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}.',
@@ -561,8 +561,9 @@ Elemenx.Component('Scene', {
 			Height: 0,
 			Patience: 90,
 			Steady: 1000,
-			Ratio: Math.min(2, view.devicePixelRatio || 1),
-			Most: Math.min(2, view.devicePixelRatio || 1),
+			/* A phone draws at most 1.5 pixels of its screen to a point of the page (its 2.6 cost its card three times as much). */
+			Ratio: Math.min(this.Phone() ? 1.5 : 2, view.devicePixelRatio || 1),
+			Most: Math.min(this.Phone() ? 1.5 : 2, view.devicePixelRatio || 1),
 			Slow: 0,
 			Fast: 0,
 			Last: 0,
@@ -2604,8 +2605,13 @@ Elemenx.Component('Scene', {
 			var eased;
 
 			var flown2 = scene.Objects[scene.Hero];
+			var padded = flown2 && flown2.Values.Vehicle ? engine.PadKeys(scene.Keys) : null;
+			/* A ship flown: the right stick turns the view round it (the left one flies it). */
+			var stepped = !!padded && engine.VehicleStep(flown2, padded, elapsed);
+			if (stepped && flown2.Seen)
+				engine.PadLook(padded.Pad, elapsed);
 
-			if (flown2 && flown2.Values.Vehicle && engine.VehicleStep(flown2, engine.PadKeys(scene.Keys), elapsed) && engine.ShipView(flown2, elapsed)) {
+			if (stepped && engine.ShipView(flown2, elapsed)) {
 				scene.Eye = camera.Position.slice();
 				camera.Near = Math.max(1e-12, flown2.Size * 0.05);
 				camera.Far = Math.max(scene.Distance * 40, extent() * 6);
@@ -2685,7 +2691,8 @@ Elemenx.Component('Scene', {
 		/*
 		 * The keys of a frame with the pads in them (InputDevices: a pad on the screen, a phone that leans, a real one): A is Space,
 		 * B KeyC, RB or the press of the left stick Shift (run, drift, boost), LB Alt; the sticks and the triggers as they
-		 * lean, in Pad: {X (right), Y (ahead), LookX, LookY (up), Gas, Brake}, for what moves by how far (a walk, a wheel).
+		 * lean, in Pad: {X (right), Y (ahead), LookX, LookY (up), Gas, Brake, DX, DY (the cross: right, up)}, for what moves
+		 * by how far (a walk, a wheel).
 		 */
 		engine.PadKeys = function (keys) {
 			var input = self.$Service('InputDevices');
@@ -2698,9 +2705,20 @@ Elemenx.Component('Scene', {
 					made[buttons[button]] = true;
 			});
 
-			made.Pad = {X: axes.LeftX, Y: -axes.LeftY, LookX: axes.RightX, LookY: -axes.RightY, Gas: axes.RightTrigger, Brake: axes.LeftTrigger};
+			made.Pad = {X: axes.LeftX, Y: -axes.LeftY, LookX: axes.RightX, LookY: -axes.RightY, Gas: axes.RightTrigger, Brake: axes.LeftTrigger, DX: (input.Held('right') ? 1 : 0) - (input.Held('left') ? 1 : 0), DY: (input.Held('up') ? 1 : 0) - (input.Held('down') ? 1 : 0)};
 
 			return made;
+		};
+
+		/*
+		 * The right stick of a pad turns the view round what it follows as the mouse does: up looks up (the eye goes down), right
+		 * looks right. Regression: up raised the eye, and the view looked down.
+		 */
+		engine.PadLook = function (pad, elapsed, least) {
+			if (!pad || !pad.LookX && !pad.LookY) return;
+
+			scene.Yaw -= pad.LookX * elapsed * 2;
+			scene.Pitch = Math.max(least === undefined ? -1.5 : least, Math.min(1.5, scene.Pitch - pad.LookY * elapsed * 1.5));
 		};
 
 		/* How far ahead and aside: the keys, and the left stick of a pad as far as it leans. */
@@ -2715,12 +2733,8 @@ Elemenx.Component('Scene', {
 		/* Q and E turn the view, R and F tilt it; the right stick of a pad as far as it leans. */
 		function turnKeys (keys, elapsed) {
 			var least = scene.Ground ? -1.3 : -1.5;
-			var pad = keys.Pad;
 
-			if (pad && (pad.LookX || pad.LookY)) {
-				scene.Yaw -= pad.LookX * elapsed * 2;
-				scene.Pitch = Math.max(least, Math.min(1.5, scene.Pitch + pad.LookY * elapsed * 1.5));
-			}
+			engine.PadLook(keys.Pad, elapsed, least);
 
 			if (keys.KeyQ)
 				scene.Yaw += elapsed * 1.3;
@@ -6361,8 +6375,19 @@ Elemenx.Component('Scene', {
 					ground.Target = vectors.Add(ground.Target, vectors.Add(vectors.Scale(forward, speed * keys.Pad.Y), vectors.Scale(right, speed * keys.Pad.X)));
 			}
 
+			/*
+			 * Its point: the one a viewpoint set before the ground came held, else its middle. Regression: a viewpoint set as
+			 * the scene was ready (its ground not made yet) went to the middle of the ground when it came.
+			 */
+			if (!ground.Target && scene.ViewHeld) {
+				ground.Target = scene.Target.slice();
+				ground.Held = true;
+			}
+
 			if (!ground.Target)
 				ground.Target = [0, Math.max(0, field.Height(0, 0)), 0];
+
+			scene.ViewHeld = false;
 
 			/* With a hero the keys walk it, and the view goes after it. */
 			if (scene.Hero && scene.Objects[scene.Hero]) {
@@ -7697,6 +7722,12 @@ Elemenx.Component('Scene', {
 				renderer.Draw(gpu.Pane, gpu.Mirror, uniforms({uModel: pane.Model, uMirror: mirrored[key] ? mirrored[key].Textures[0] : white, uOn: mirrored[key] ? 1 : 0, uScreen: [renderer.Width, renderer.Height], uRect: rectOf(mirrored[key]), uAsCamera: mirrored[key] && !mirrored[key].Rect ? 1 : 0, uSize: [pane.Width, pane.Height], uSkyLight: ground.SkyLight, uTint: paint(mirror.Tint || '#ffffff').slice(0, 3), uBlur: Math.max(0, Math.min(1, number(mirror.Blur, 0))), uStrength: Math.max(0, Math.min(1, number(mirror.Strength, 0.85)))}), {Cull: 'none'});
 			});
 
+			/*
+			 * Its screens only to an eye in it or by it (one that sees them): a picture of an element of the page is costly.
+			 * Regression: the dash of a car was drawn again five times a second behind it, the eye 8 m away (its frames late).
+			 */
+			if (!car.World || !scene.Eye || vectors.Distance(scene.Eye, car.World) > Math.max(2, (car.Size || 4) * 0.75)) return;
+
 			(car.Values.Vehicle.Screens || []).forEach(function (screen, index) {
 				var picture = screenOf(car, screen, index);
 				var pane = carPane(car, screen);
@@ -8527,6 +8558,7 @@ Elemenx.Component('Scene', {
 
 			/* A ship flies over it: it says where the eye stands (SceneLanding). */
 			if (surface.Ship) {
+				engine.PadLook(keys.Pad, elapsed);
 				engine.LandingSurfaceStep(surface, keys, elapsed);
 
 				return;
@@ -10143,10 +10175,13 @@ Elemenx.Component('Scene', {
 			scene.Target = target.slice();
 			scene.Moving = 1;
 
-			/* On a ground the view holds the height it is given, as long as it follows nothing. */
+			/* On a ground the view holds the height it is given, as long as it follows nothing; a ground to come takes it. */
 			if (scene.Ground) {
 				scene.Ground.Target = target.slice();
 				scene.Ground.Held = true;
+			}
+			else {
+				scene.ViewHeld = true;
 			}
 
 			if (view.Yaw !== undefined)
@@ -10953,10 +10988,14 @@ Elemenx.Component('Scene', {
 			if (watched) {
 				gpuEnd();
 
-				/* What the frame drew: its draws and triangles (the copies of an instanced mesh counted), shown by an FPSMeter. */
+				/*
+				 * What the frame drew: its draws and triangles (the copies of an instanced mesh counted), shown by an FPSMeter; and
+				 * what the frames chose: the pixels of the screen to a point of the page (Ratio) and the level of the light (Level:
+				 * 0 low to 3 ultra), so a picture that changes as it goes is seen.
+				 */
 				var after = before ? renderer.Counts() : null;
 
-				fps.Report(source, {Cpu: ended - started, Quiet: 0, Skipped: 0, Draws: after ? after.Draws - before.Draws : 0, Triangles: after ? after.Triangles - before.Triangles : 0});
+				fps.Report(source, {Cpu: ended - started, Quiet: 0, Skipped: 0, Draws: after ? after.Draws - before.Draws : 0, Triangles: after ? after.Triangles - before.Triangles : 0, Ratio: scene.Ratio, Level: ['low', 'medium', 'high', 'ultra'].indexOf(self.Graphics().Level)});
 			}
 
 		}});
@@ -11907,6 +11946,25 @@ Elemenx.Component('Scene', {
 
 	SetViewpoint: function (view) {
 		this.Engine().SetViewpoint(view || {});
+	},
+
+	/*
+	 * What the scene is drawn on: {GPU (the name of the graphics card, '' when the browser hides it), Parallel (the card
+	 * makes programs while frames go on: KHR_parallel_shader_compile; without it a program not made yet holds a frame up),
+	 * Floats (pictures of floats: the light of medium and up), MaxTexture (px), Pixels (of the screen to a point of the page),
+	 * Phone, Level, Ratio}; null with no WebGL.
+	 */
+	Device: function () {
+		var engine = this.Engine ? this.Engine() : null;
+		var gl = engine && engine.Renderer ? engine.Renderer.GL : null;
+		var info;
+
+		if (!gl)
+			return null;
+
+		info = gl.getExtension('WEBGL_debug_renderer_info');
+
+		return {GPU: info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '', Parallel: !!gl.getExtension('KHR_parallel_shader_compile'), Floats: !!gl.getExtension('EXT_color_buffer_float'), MaxTexture: gl.getParameter(gl.MAX_TEXTURE_SIZE), Pixels: window.devicePixelRatio || 1, Phone: this.Phone(), Level: this.Graphics().Level, Ratio: this.Scene().Ratio};
 	},
 
 	/* Where a point [x, y, z] of the world is on the page: {X, Y (of the page), Depth, Visible}. */
