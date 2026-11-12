@@ -201,6 +201,15 @@ Elemenx.Trait('SceneScatter', {
 			programs();
 		};
 
+		/*
+		 * How much the leaves of a plant flutter: its Sway, more as the wind blows (Blow, at most twice). Regression: the
+		 * shader took the gust of the scene (Gust, how far the wind went, which only grows) for its strength, and the leaves
+		 * shook ever quicker and wider, a mess some seconds after the scene came.
+		 */
+		function flutter (sway) {
+			return (sway || 0) * (0.5 + Math.min(2, Math.max(0, scene.Blow || 0)));
+		}
+
 		function programs () {
 			/* A GrassGraph of its own that does not compile is told (the event shader) and gives way to the one of the library. */
 			if (!state.Programs && self.GrassGraph && self.GrassMade && !engine.Checked('grass', 'GrassGraph', self.GrassMade, shaders.GrassVertex, shaders.Grass)) {
@@ -903,7 +912,7 @@ Elemenx.Trait('SceneScatter', {
 		 * nearer the lodScale times their Detail). Regression: the copies of a whole square went into each level they might
 		 * be in (48 m and the half of it more), a plant of 20 000 triangles run for each, 17 million triangles a frame.
 		 */
-		function appendNear (target, list, eye, nearer, from, to) {
+		function appendNear (target, list, eye, nearer, from, to, beyond) {
 			var i;
 
 			/* Room for all of them; then written straight in, no list made each frame. */
@@ -913,8 +922,9 @@ Elemenx.Trait('SceneScatter', {
 				var x = list.Places[i * 4] - eye[0];
 				var y = list.Places[i * 4 + 1] - eye[1];
 				var z = list.Places[i * 4 + 2] - eye[2];
-				var far = Math.sqrt(x * x + y * y + z * z) * nearer / Math.max(list.Places[i * 4 + 3], 1.5);
-				if (far <= from || far >= to) continue;
+				var distance = Math.sqrt(x * x + y * y + z * z);
+				var far = distance * nearer / Math.max(list.Places[i * 4 + 3], 1.5);
+				if (far <= from || far >= to || beyond && distance > beyond) continue;
 
 				target.Places.set(list.Places.subarray(i * 4, i * 4 + 4), target.Count * 4);
 				target.Extra.set(list.Extra.subarray(i * 4, i * 4 + 4), target.Count * 4);
@@ -1430,8 +1440,18 @@ Elemenx.Trait('SceneScatter', {
 				});
 			});
 
-			Object.keys(state.Streams).forEach(function (name) {
-				var each = state.Streams[name];
+			instanced(state.Streams);
+
+			state.Owner = 'ground';
+		}
+
+		/*
+		 * Each stream's copies given to the meshes it is drawn by. The meshes are shared by the ground and the plants of a
+		 * planet: which of them gave theirs last, state.Owner.
+		 */
+		function instanced (streams) {
+			Object.keys(streams).forEach(function (name) {
+				var each = streams[name];
 				var data;
 
 				/* A stream asked for none of its copies kept (appendNear) has no arrays yet. */
@@ -1567,6 +1587,15 @@ Elemenx.Trait('SceneScatter', {
 			if (narrow) {
 				from = level ? [from[1] - (from[1] - from[0]) * 0.4, from[1]] : from;
 				to = level < 3 ? [to[1] - (to[1] - to[0]) * 0.4, to[1]] : to;
+			}
+
+			/*
+			 * With no frames mixed (low and medium: the dither of a band is not smoothed over frames) a level gives way to the
+			 * next at once, at the far end of the band. Regression: the trees in a band were hatched by a still pattern of holes.
+			 */
+			if (!(self.Graphics && self.Graphics().Frames)) {
+				from = level ? [from[1] - 0.01, from[1]] : from;
+				to = level < 3 ? [to[1] - 0.01, to[1]] : to;
 			}
 
 			return scene.Camera.Ortho ? [-2, -1, 1e8, 2e8] : [from[0] * quality, from[1] * quality, to[0] * quality, to[1] * quality];
@@ -2014,6 +2043,27 @@ Elemenx.Trait('SceneScatter', {
 			gather(view);
 		};
 
+		/* The shadow a stream casts (reach: as far as its copies are drawn, [0, 0] all; the plants of a planet). */
+		function shadowStream (one, matrix, origin, reach) {
+			/*
+			 * Of its pictures (a plant of SceneFlora): its surfaces cast it, its leaves by their alpha. Regression: the near
+			 * level of a model of a file cast no shadow, a plant of cards a shadow of plates or none.
+			 */
+			if (one.Level < 3 && textured(one.Key)) {
+				surfaces(one.Key, one.Level).forEach(function (each) {
+					var cut = engine.Surface(each).uCutoff > 0;
+
+					renderer.Draw(each.Mesh, cut ? programs().DepthCut : programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: library.Make(one.Key.split('~')[0], {Variant: Number(one.Key.split('~')[1])}).Sway, uFade: fadeOf(one.Level, true), uLod: scene.Camera.Ortho ? 0 : lodScale() * detail(one.Key), uFlutter: cut ? flutter(library.Make(one.Key.split('~')[0], {Variant: Number(one.Key.split('~')[1])}).Sway) : 0, uFlutterTime: scene.Seconds % 1000, uReach: reach}, cut ? engine.Surface(each) : null, self.WindValues(scene.Seconds)), {Cull: 'none'});
+				});
+
+				return;
+			}
+
+			if (one.Level === 3 && !building(one.Key) || one.Level === 0 && surfaces(one.Key)) return;
+
+			renderer.Draw(levels(one.Key)[one.Level], programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: 0, uFade: fadeOf(one.Level), uLod: scene.Camera.Ortho ? 0 : lodScale(), uReach: reach}, self.WindValues(scene.Seconds)), {Cull: 'none'});
+		}
+
 		engine.ScatterShadow = function (matrix) {
 			var origin = vectors.Subtract([0, 0, 0], scene.Eye);
 
@@ -2023,7 +2073,7 @@ Elemenx.Trait('SceneScatter', {
 				/* A tile the shadow of this slice does not reach casts none into it. */
 				if (!inView(view, tile.Origin[0], tile.Origin[2], tile.Size)) return;
 
-				renderer.Draw(tile.Mesh, programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: 0, uSway: 0, uFade: [-2, -1, 1e8, 2e8], uLod: 0}, self.WindValues(scene.Seconds)), {Cull: 'none'});
+				renderer.Draw(tile.Mesh, programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: 0, uSway: 0, uFade: [-2, -1, 1e8, 2e8], uLod: 0, uReach: [0, 0]}, self.WindValues(scene.Seconds)), {Cull: 'none'});
 			});
 
 			/*
@@ -2032,23 +2082,7 @@ Elemenx.Trait('SceneScatter', {
 			 * overlap (at ultra: farther apart).
 			 */
 			each(function (one) {
-				/*
-				 * Of its pictures (a plant of SceneFlora): its surfaces cast it, its leaves by their alpha. Regression: the near
-				 * level of a model of a file cast no shadow, a plant of cards a shadow of plates or none.
-				 */
-				if (one.Level < 3 && textured(one.Key)) {
-					surfaces(one.Key, one.Level).forEach(function (each) {
-						var cut = engine.Surface(each).uCutoff > 0;
-
-						renderer.Draw(each.Mesh, cut ? programs().DepthCut : programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: library.Make(one.Key.split('~')[0], {Variant: Number(one.Key.split('~')[1])}).Sway, uFade: fadeOf(one.Level, true), uLod: scene.Camera.Ortho ? 0 : lodScale() * detail(one.Key), uFlutter: cut ? library.Make(one.Key.split('~')[0], {Variant: Number(one.Key.split('~')[1])}).Sway || 0 : 0, uFlutterTime: scene.Seconds % 1000}, cut ? engine.Surface(each) : null, self.WindValues(scene.Seconds)), {Cull: 'none'});
-					});
-
-					return;
-				}
-
-				if (one.Level === 3 && !building(one.Key) || one.Level === 0 && surfaces(one.Key)) return;
-
-				renderer.Draw(levels(one.Key)[one.Level], programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: 0, uFade: fadeOf(one.Level), uLod: scene.Camera.Ortho ? 0 : lodScale()}, self.WindValues(scene.Seconds)), {Cull: 'none'});
+				shadowStream(one, matrix, origin, [0, 0]);
 			});
 		};
 
@@ -2155,6 +2189,74 @@ Elemenx.Trait('SceneScatter', {
 			});
 		};
 
+		/* A stream drawn: by its pictures near (a plant of SceneFlora), a building of its facades, else its shape; far its picture. */
+		function drawStream (one, files, many, far, lod) {
+			var parts = one.Key.split('~');
+			var made = library.Make(parts[0], {Variant: Number(parts[1])});
+			var baked;
+
+			if (one.Level < 3 && surfaces(one.Key, one.Level)) {
+				surfaces(one.Key, one.Level).forEach(function (each) {
+					files.uSway = made.Sway;
+					files.uSoftness = each.Soft;
+					files.uFade = fadeOf(one.Level, textured(one.Key));
+					/* Its leaves flutter (a plant of its pictures); set at each draw, the program keeps what it was last given. */
+					files.uFlutter = textured(one.Key) && each.Material.Alpha === 'MASK' ? flutter(made.Sway) : 0;
+					files.uFlutterTime = scene.Seconds % 1000;
+					files.uLevel = engine.LevelColor('near', one.Level);
+					files.uLod = lod * detail(one.Key);
+
+					engine.DrawReady(each.Mesh, programs().Files, Object.assign(files, engine.Surface(each), engine.SeasonValues ? engine.SeasonValues(parts[0]) : null), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
+				});
+
+				return;
+			}
+
+			/* A building past its nearest: its simpler shape with its facades. */
+			if (one.Level > 0 && building(one.Key)) {
+				var faces = facade(one.Key);
+
+				many.uSway = 0;
+				many.uSoft = 0;
+				many.uFade = fadeOf(one.Level);
+				many.uLevel = engine.LevelColor('near', one.Level);
+				many.uFacade = faces.Target.Textures[0];
+				many.uBoxMin = faces.Min;
+				many.uBoxMax = faces.Max;
+
+				engine.DrawReady(levels(one.Key)[one.Level], programs().Facade, many, {Cull: 'back'});
+
+				return;
+			}
+
+			if (one.Level < 3) {
+				many.uSway = made.Sway;
+				many.uSoft = made.Sway ? 0.9 : 0;
+				many.uFade = fadeOf(one.Level);
+				many.uLevel = engine.LevelColor('near', one.Level);
+
+				if (engine.SeasonValues)
+					Object.assign(many, engine.SeasonValues(parts[0]));
+
+				engine.DrawReady(levels(one.Key)[one.Level], programs().Many, many, {Cull: 'back'});
+
+				return;
+			}
+
+			baked = picture(one.Key);
+
+			far.uLevel = engine.LevelColor('near', 3);
+			far.uFade = fadeOf(3, textured(one.Key));
+			far.uLod = lod * detail(one.Key);
+			far.uColors = baked.Target.Textures[0];
+			far.uNormals = baked.Target.Textures[1];
+			far.uCells = baked.Cells;
+			far.uRadius = baked.Radius;
+			far.uMiddle = baked.Middle;
+
+			engine.DrawReady(baked.Quad, programs().Picture, far, {Cull: 'none'});
+		}
+
 		engine.ScatterDraw = function (uniforms, matrix) {
 			var origin = vectors.Subtract([0, 0, 0], scene.Eye);
 			var ground = scene.Ground;
@@ -2167,83 +2269,127 @@ Elemenx.Trait('SceneScatter', {
 			if (!ground) return;
 
 			/* The uniforms of a program made once a frame, what differs set for each draw: no copy of them all for each. */
-			files = Object.assign(Object.create(uniforms), {uOrigin: origin, uWind: scene.Gust || 0, uFade: fadeOf(0), uDither: dither, uLod: lod, uLevel: engine.LevelColor('near', 0)});
-			many = Object.assign(Object.create(uniforms), {uOrigin: origin, uWind: scene.Gust || 0, uShine: 8, uSpecular: 0.05, uRough: 0.5, uDither: dither, uLod: lod});
-			far = Object.assign(Object.create(uniforms), {uOrigin: origin, uFade: fadeOf(3), uDither: dither, uLod: lod, uSun: ground.Sun, uSunColor: ground.SunColor, uParallel: scene.Camera.Ortho ? vectors.Normalize(vectors.Subtract(scene.Camera.Position, scene.Camera.Target)).concat([1]) : [0, 0, 0, 0]});
+			files = Object.assign(Object.create(uniforms), {uOrigin: origin, uWind: scene.Gust || 0, uFade: fadeOf(0), uDither: dither, uLod: lod, uReach: [0, 0], uLevel: engine.LevelColor('near', 0)});
+			many = Object.assign(Object.create(uniforms), {uOrigin: origin, uWind: scene.Gust || 0, uShine: 8, uSpecular: 0.05, uRough: 0.5, uDither: dither, uLod: lod, uReach: [0, 0]});
+			far = Object.assign(Object.create(uniforms), {uOrigin: origin, uFade: fadeOf(3), uDither: dither, uLod: lod, uReach: [0, 0], uSun: ground.Sun, uSunColor: ground.SunColor, uParallel: scene.Camera.Ortho ? vectors.Normalize(vectors.Subtract(scene.Camera.Position, scene.Camera.Target)).concat([1]) : [0, 0, 0, 0]});
 
 			/* The far tiles, each one draw of all its things (uLod 0: no level of a copy chooses it away). */
 			state.Chosen.forEach(function (tile) {
-				engine.DrawReady(tile.Mesh, programs().Many, Object.assign(Object.create(uniforms), {uOrigin: origin, uWind: 0, uSway: 0, uSoft: 0, uShine: 8, uSpecular: 0.05, uRough: 0.5, uDither: dither, uLod: 0, uFade: [-2, -1, 1e8, 2e8], uLevel: engine.LevelColor('proxy', tile.Level)}), {Cull: 'back'});
+				engine.DrawReady(tile.Mesh, programs().Many, Object.assign(Object.create(uniforms), {uOrigin: origin, uWind: 0, uSway: 0, uSoft: 0, uShine: 8, uSpecular: 0.05, uRough: 0.5, uDither: dither, uLod: 0, uReach: [0, 0], uFade: [-2, -1, 1e8, 2e8], uLevel: engine.LevelColor('proxy', tile.Level)}), {Cull: 'back'});
 			});
 
 			each(function (one) {
-				var parts = one.Key.split('~');
-				var made = library.Make(parts[0], {Variant: Number(parts[1])});
-				var baked;
-
-				if (one.Level < 3 && surfaces(one.Key, one.Level)) {
-					surfaces(one.Key, one.Level).forEach(function (each) {
-						files.uSway = made.Sway;
-						files.uSoftness = each.Soft;
-						files.uFade = fadeOf(one.Level, textured(one.Key));
-						/* Its leaves flutter (a plant of its pictures); set at each draw, the program keeps what it was last given. */
-						files.uFlutter = textured(one.Key) && each.Material.Alpha === 'MASK' ? made.Sway || 0 : 0;
-						files.uFlutterTime = scene.Seconds % 1000;
-						files.uLevel = engine.LevelColor('near', one.Level);
-						files.uLod = lod * detail(one.Key);
-
-						engine.DrawReady(each.Mesh, programs().Files, Object.assign(files, engine.Surface(each), engine.SeasonValues ? engine.SeasonValues(parts[0]) : null), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
-					});
-
-					return;
-				}
-
-				/* A building past its nearest: its simpler shape with its facades. */
-				if (one.Level > 0 && building(one.Key)) {
-					var faces = facade(one.Key);
-
-					many.uSway = 0;
-					many.uSoft = 0;
-					many.uFade = fadeOf(one.Level);
-					many.uLevel = engine.LevelColor('near', one.Level);
-					many.uFacade = faces.Target.Textures[0];
-					many.uBoxMin = faces.Min;
-					many.uBoxMax = faces.Max;
-
-					engine.DrawReady(levels(one.Key)[one.Level], programs().Facade, many, {Cull: 'back'});
-
-					return;
-				}
-
-				if (one.Level < 3) {
-					many.uSway = made.Sway;
-					many.uSoft = made.Sway ? 0.9 : 0;
-					many.uFade = fadeOf(one.Level);
-					many.uLevel = engine.LevelColor('near', one.Level);
-
-					if (engine.SeasonValues)
-						Object.assign(many, engine.SeasonValues(parts[0]));
-
-					engine.DrawReady(levels(one.Key)[one.Level], programs().Many, many, {Cull: 'back'});
-
-					return;
-				}
-
-				baked = picture(one.Key);
-
-				far.uLevel = engine.LevelColor('near', 3);
-				far.uFade = fadeOf(3, textured(one.Key));
-				far.uLod = lod * detail(one.Key);
-				far.uColors = baked.Target.Textures[0];
-				far.uNormals = baked.Target.Textures[1];
-				far.uCells = baked.Cells;
-				far.uRadius = baked.Radius;
-				far.uMiddle = baked.Middle;
-
-				engine.DrawReady(baked.Quad, programs().Picture, far, {Cull: 'none'});
+				drawStream(one, files, many, far, lod);
 			});
 
 			drawGrass(uniforms, matrix);
+		};
+
+		/*
+		 * The plants of a planet near the eye (Scene: the trees of its squares, PatchThings), drawn as what is sown is drawn: by
+		 * their pictures near, their simpler levels farther, a picture of each far, with their shadows; past their reach the
+		 * far trees of the squares stand for them. Their squares are of a frame of their own (metres, up its y: a kilometre or
+		 * two of the ground of a planet round the eye bends by less than a degree), each {Center, Radius, Lists (each model
+		 * key: {Places [x, y, z, size], Extra [turn, tint], Count})}; the eye in that frame and the matrix of the view from it
+		 * come with each frame. The meshes of the models are the ground's too: which gave its copies last, state.Owner.
+		 */
+		var planet = {Squares: [], Streams: {}, Eye: null, Look: 0, Moved: true};
+
+		function planetStream (key, level) {
+			var name = key + '@' + level;
+			if (!planet.Streams[name])
+				planet.Streams[name] = {Key: key, Level: level, Count: 0, Capacity: 0, Places: null, Extra: null};
+
+			return planet.Streams[name];
+		}
+
+		/* The squares of plants of a planet (none: [] or null): taken in at the next frame. */
+		engine.ScatterPlanet = function (squares) {
+			planet.Squares = squares || [];
+			planet.Moved = true;
+		};
+
+		/* The copies of each level in view and within reach (metres): matrix sees from the eye (eye, of the frame of the squares). */
+		function planetGather (matrix, eye, reach) {
+			var view = planes(matrix);
+			var lod = lodScale();
+			var quality = self.ScatterReach ? self.ScatterReach() : 1;
+
+			Object.keys(planet.Streams).forEach(function (name) {
+				planet.Streams[name].Count = 0;
+			});
+
+			planet.Squares.forEach(function (square) {
+				var x = square.Center[0] - eye[0];
+				var y = square.Center[1] - eye[1];
+				var z = square.Center[2] - eye[2];
+				var inside = view.every(function (plane) {
+					return plane[0] * x + plane[1] * y + plane[2] * z + plane[3] > -square.Radius;
+				});
+				if (!inside || Math.sqrt(x * x + y * y + z * z) - square.Radius > reach[1]) return;
+
+				Object.keys(square.Lists).forEach(function (key) {
+					var nearer = lod * detail(key);
+
+					[0, 1, 2, 3].forEach(function (one) {
+						appendNear(planetStream(key, one), square.Lists[key], eye, nearer, one ? steps[one - 1][0] * quality : -Infinity, one < 3 ? steps[one][1] * quality : Infinity, reach[1]);
+					});
+				});
+			});
+		}
+
+		/*
+		 * The plants of a planet drawn: uniforms of the frame (the lights of it in the frame of the squares), matrix the view
+		 * from the eye, eye where it is in that frame, reach where they fade ([from, to] metres), sun and sunColor the light
+		 * of their pictures far.
+		 */
+		engine.ScatterPlanetDraw = function (uniforms, matrix, eye, reach, sun, sunColor) {
+			var origin = [-eye[0], -eye[1], -eye[2]];
+			var look = matrix[2] + matrix[6] * 3 + matrix[10] * 7;
+			var dither = engine.PostStep ? engine.PostStep() : 0;
+			var lod = lodScale();
+			var files;
+			var many;
+			var far;
+
+			if (!planet.Squares.length) return;
+
+			if (planet.Moved || !planet.Eye || vectors.Distance(planet.Eye, eye) > 4 || Math.abs(planet.Look - look) > 0.04) {
+				planet.Moved = false;
+				planet.Eye = eye.slice();
+				planet.Look = look;
+
+				planetGather(matrix, eye, reach);
+
+				state.Owner = '';
+			}
+
+			/* Their copies to the meshes (the ground's own taken again when it draws next). */
+			if (state.Owner !== 'planet') {
+				instanced(planet.Streams);
+
+				state.Owner = 'planet';
+				state.Moved = true;
+			}
+
+			files = Object.assign(Object.create(uniforms), {uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uFade: fadeOf(0), uDither: dither, uLod: lod, uReach: reach, uLevel: engine.LevelColor('near', 0)});
+			many = Object.assign(Object.create(uniforms), {uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uShine: 8, uSpecular: 0.05, uRough: 0.5, uDither: dither, uLod: lod, uReach: reach});
+			far = Object.assign(Object.create(uniforms), {uViewProjection: matrix, uOrigin: origin, uFade: fadeOf(3), uDither: dither, uLod: lod, uReach: reach, uSun: sun, uSunColor: sunColor, uParallel: [0, 0, 0, 0]});
+
+			Object.keys(planet.Streams).forEach(function (name) {
+				if (planet.Streams[name].Count)
+					drawStream(planet.Streams[name], files, many, far, lod);
+			});
+		};
+
+		/* The shadows of the plants of a planet (matrix: of the light, from the eye; as ScatterPlanetDraw drew them last). */
+		engine.ScatterPlanetShadow = function (matrix, eye, reach) {
+			if (!planet.Squares.length || state.Owner !== 'planet') return;
+
+			Object.keys(planet.Streams).forEach(function (name) {
+				if (planet.Streams[name].Count)
+					shadowStream(planet.Streams[name], matrix, [-eye[0], -eye[1], -eye[2]], reach);
+			});
 		};
 
 		engine.ScatterBlocked = function (x, z) {
@@ -2402,6 +2548,7 @@ Elemenx.Trait('SceneScatter', {
 				'uniform float uSway;',
 				'uniform vec4 uFade;',
 				'uniform float uLod;',
+				'uniform vec2 uReach;',
 				/* How much its leaves flutter (a plant of SceneFlora: its Sway; 0 none) and the seconds of the scene for it. */
 				'uniform float uFlutter;',
 				'uniform float uFlutterTime;',
@@ -2432,14 +2579,15 @@ Elemenx.Trait('SceneScatter', {
 				'	vec3 bent = vec3(c * aNormal.x + s * aNormal.z, aNormal.y, c * aNormal.z - s * aNormal.x);',
 				'	blueprintWind(aPosition, aNormal, aUV, uSway, phase, aInstance.w, world, bent);',
 				/*
-				 * Its leaves flutter: quick, small (some centimetres at the top of a tree of 20 m, none at its foot), each part of its
-				 * crown of its own beat, more in a gust; the bend of the whole of it is the wind's above.
+				 * Its leaves flutter: calm, small (a centimetre or two at the top of a tree of 20 m, none at its foot), each part of
+				 * its crown of its own beat at a steady pace (about 0.4 a second); how much, uFlutter (more as the wind blows); the
+				 * bend of the whole of it is the wind's above.
 				 */
 				'	if (uFlutter > 0.0) {',
 				'		vec3 cell = floor(aPosition * 12.0);',
 				'		float seed = fract(sin(dot(cell + aInstance.xyz, vec3(12.9898, 78.233, 37.719))) * 43758.5453) * 6.2832;',
-				'		float beat = uFlutterTime * (5.0 + uWind * 4.0);',
-				'		world += vec3(sin(beat + seed), 0.6 * sin(beat * 1.3 + seed * 2.0), cos(beat * 0.9 + seed)) * uFlutter * aInstance.w * 0.004 * clamp(aPosition.y, 0.0, 1.0) * (0.5 + uWind);',
+				'		float beat = uFlutterTime * 2.6;',
+				'		world += vec3(sin(beat + seed), 0.6 * sin(beat * 1.3 + seed * 2.0), cos(beat * 0.9 + seed)) * uFlutter * aInstance.w * 0.0025 * clamp(aPosition.y, 0.0, 1.0);',
 				'	}',
 				'	vWorld = world;',
 				'	vNormal = bent;',
@@ -2449,6 +2597,8 @@ Elemenx.Trait('SceneScatter', {
 				'	vTint = aInstance2.yzw;',
 				'	float far = length(aInstance.xyz + uOrigin) * (uLod > 0.0 ? uLod / max(aInstance.w, 1.5) : 1.0);',
 				'	vFade = vec2(smoothstep(uFade.x, uFade.y, far), 1.0 - smoothstep(uFade.z, uFade.w, far));',
+				/* Past its reach (uReach, metres from the eye: the plants of a planet, where its far trees stand for them) it fades. */
+				'	if (uReach.y > 0.0) vFade.y *= 1.0 - smoothstep(uReach.x, uReach.y, length(aInstance.xyz + uOrigin));',
 				'	gl_Position = vFade.x > 0.0 && vFade.y > 0.0 ? uViewProjection * vec4(world, 1.0) : vec4(0.0, 0.0, 2.0, 1.0);',
 				'}'
 			].join('\n'),
@@ -2474,7 +2624,10 @@ Elemenx.Trait('SceneScatter', {
 				'uniform vec4 uBaseColor;',
 				'uniform float uCutoff;',
 				'void main() {',
-				'	if ((uBaseColor * texture(uColorMap, vUV)).a < uCutoff) discard;',
+				/* Its alpha kept far as the picture keeps it (Scene, Pbr): the shadow of a far crown as thick as it is drawn. */
+				'	vec2 texel = vUV * vec2(textureSize(uColorMap, 0));',
+				'	float mip = max(0.0, 0.5 * log2(max(dot(dFdx(texel), dFdx(texel)), dot(dFdy(texel), dFdy(texel)))));',
+				'	if ((uBaseColor * texture(uColorMap, vUV)).a * (1.0 + mip * 0.25) < uCutoff) discard;',
 				'}'
 			].join('\n'),
 
@@ -2504,7 +2657,11 @@ Elemenx.Trait('SceneScatter', {
 				'void main() {',
 				'	vec4 base = uBaseColor * texture(uColorMap, vUV);',
 				'	if (base.a < max(uCutoff, 0.01)) discard;',
-				'	outColor = vec4(min(base.rgb, vec3(1.0)), 1.0);',
+				/*
+				 * Its picture is read in sRGB (made linear by the card): kept as the picture of the far copy reads it, sRGB again.
+				 * Regression: kept linear and made linear once more, the far plants three times as dark as the same plants nearer.
+				 */
+				'	outColor = vec4(pow(min(base.rgb, vec3(1.0)), vec3(1.0 / 2.2)), 1.0);',
 				'	outNormal = vec4(normalize(vNormal) * 0.5 + 0.5, 1.0);',
 				'}'
 			].join('\n'),
@@ -2532,6 +2689,7 @@ Elemenx.Trait('SceneScatter', {
 				'uniform vec4 uParallel;',
 				'uniform vec4 uFade;',
 				'uniform float uLod;',
+				'uniform vec2 uReach;',
 				'out vec2 vUV;',
 				'out vec3 vTint;',
 				'out vec3 vWorld;',
@@ -2555,6 +2713,8 @@ Elemenx.Trait('SceneScatter', {
 				'	vTurn = vec2(c, s);',
 				'	float far = length(aInstance.xyz + uOrigin) * (uLod > 0.0 ? uLod / max(aInstance.w, 1.5) : 1.0);',
 				'	vFade = vec2(smoothstep(uFade.x, uFade.y, far), 1.0 - smoothstep(uFade.z, uFade.w, far));',
+				/* Past its reach (uReach, metres from the eye: the plants of a planet, where its far trees stand for them) it fades. */
+				'	if (uReach.y > 0.0) vFade.y *= 1.0 - smoothstep(uReach.x, uReach.y, length(aInstance.xyz + uOrigin));',
 				'	gl_Position = vFade.x > 0.0 && vFade.y > 0.0 ? uViewProjection * vec4(world, 1.0) : vec4(0.0, 0.0, 2.0, 1.0);',
 				'}'
 			].join('\n'),

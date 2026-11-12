@@ -120,6 +120,39 @@ describe('Contract: what stands on the surface of a planet, seen from over it (S
 		 * its profile, a palm's fronds: mixed woods, trees of more than one shape (count of triangles).
 		 */
 		expect(Object.keys(sizes).length).toBeGreaterThan(1);
+
+		/*
+		 * Regression: near the eye its trees were these far forms, no plant of their species. Each of a species of SceneFlora
+		 * is given as that plant too (Plants: six numbers each), for a scene to draw it so near: where it stands, by its far
+		 * form (no farther than its crown is wide), as tall (6 to 40 m), of a species of its woods, a variant of its own.
+		 */
+		var plants = forest.Plants;
+		var kinds = {};
+
+		expect(plants.Places).toBeInstanceOf(Float32Array);
+		expect(plants.Places.length % 6).toBe(0);
+		expect(plants.Places.length / 6).toBeGreaterThan(forest.Woods / 2);
+		expect(plants.Places.length / 6).toBeLessThanOrEqual(forest.Woods);
+		expect(plants.Species.every(function (name) {
+			return Elemenx.Service('SceneFlora').Species().indexOf(name) !== -1;
+		})).toBe(true);
+
+		for (k = 0; k < plants.Places.length; k += 6) {
+			var nearest = Infinity;
+			var m;
+
+			for (m = 0; m < crowns.length; m += 3)
+				nearest = Math.min(nearest, Math.hypot(crowns[m] - plants.Places[k], crowns[m + 1] - plants.Places[k + 1], crowns[m + 2] - plants.Places[k + 2]));
+
+			expect(nearest).toBeLessThan(0.01);
+			expect(plants.Places[k + 3]).toBeGreaterThanOrEqual(0.006);
+			expect(plants.Places[k + 3]).toBeLessThanOrEqual(0.04);
+			expect(Math.floor(plants.Places[k + 5])).toBeLessThan(plants.Species.length);
+
+			kinds[Math.floor(plants.Places[k + 5])] = true;
+		}
+
+		expect(Object.keys(kinds).length).toBeGreaterThan(1);
 		expect(coarse.Woods).toBe(0);
 		expect(coarse.Trees.Positions.length).toBe(0);
 

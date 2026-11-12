@@ -384,6 +384,8 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 	 * the loop leaves out what is not made yet (the veil waits for it); a frame asked for by hand waits, as before.
 	 */
 	it('makes only the programs it draws, and a frame of its loop never waits for one the card is still making', async function () {
+		var started = Date.now();
+		var clock = Date.now;
 		var mounted = await mount('<Scene Paused="true" Background="false" Labels="false" (ready)="Ready">' +
 			'<SceneObject ID="sun" Kind="star"><SceneObject ID="rock" Kind="moon" Radius="6000" Distance="1" Atmosphere="none" Day="24" /></SceneObject>' +
 		'</Scene>');
@@ -417,6 +419,14 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		inner.Looping = true;
 
+		/*
+		 * The clock of when it began: a program not made is waited for after its patience (Renderer, 10 s), and a page that
+		 * took longer than that to mount would rightly wait once in this frame.
+		 */
+		Date.now = function () {
+			return started;
+		};
+
 		try {
 			scene.Engine().Frame(performance.now());
 
@@ -426,6 +436,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		finally {
 			inner.Looping = false;
 			gl.getProgramParameter = real;
+			Date.now = clock;
 		}
 
 		/* By hand: waited for, drawn. */
@@ -435,10 +446,13 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		made = renderer.Progress();
 
 		expect(made.Total).toBeGreaterThan(0);
-		/* What it made ahead of a frame (its passes) the card ends in its time. */
+		/*
+		 * What it made ahead of a frame (its passes) the card ends in its time. Regression (under load): the frame by hand
+		 * waited for all its programs, and with this wait the test ran past the 90 s of its group.
+		 */
 		expect(await waitFor(function () {
 			return renderer.Progress().Needed === 0;
-		}, 60000)).toBe(true);
+		}, 120000)).toBe(true);
 		/* A star and a moon: the programs of its planets, none of a ground of a surface, of a sea or of a sky over a ground. */
 		expect(sources.some(function (text) {
 			return text.indexOf('uniform samplerCube uGround;') !== -1;
@@ -446,7 +460,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(sources.filter(function (text) {
 			return text.indexOf('uniform sampler2D uReliefMap;') !== -1 || text.indexOf('uniform sampler2D uSeenDepth;') !== -1 || text.indexOf('uniform float uMoonGlow;') !== -1;
 		})).toEqual([]);
-	});
+	}, 240000);
 
 	it('draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle', async function () {
 		var mounted = await mount('<Scene Paused="true" Background="false" Labels="false" (ready)="Ready">' +
@@ -1447,6 +1461,14 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(lights.Mirror).toContain('vec3 bent = reflect(v, h);');
 
 		/*
+		 * Regression: the far picture of a plant was baked linear and made linear once more (three times as dark as the plant
+		 * nearer); what is cut by its alpha thinned out far (the alpha of its mipmap under the cut), its crowns pale.
+		 */
+		expect(sown.BakeCut).toContain('outColor = vec4(pow(min(base.rgb, vec3(1.0)), vec3(1.0 / 2.2)), 1.0);');
+		expect(space.Shaders(graphics).Pbr).toContain('base.a = min(1.0, base.a * (1.0 + mip * 0.25));');
+		expect(sown.DepthCut).toContain('.a * (1.0 + mip * 0.25) < uCutoff) discard;');
+
+		/*
 		 * Regression: the sea of a globe took its waves of a place that was always nought (a noise of rounding: streaks that
 		 * flickered), and a grain of kilometres where a pixel covers more. Its waves are of the very place, past two pixels none.
 		 */
@@ -2127,6 +2149,13 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(now.DriftX).toBe(still[0]);
 		expect(now.PathX).toBe(still[1]);
 		expect(inner.Gust - still[2]).toBeCloseTo(2, 3);
+		/*
+		 * Regression: the leaves of a plant fluttered by the gust (how far the wind went, which only grows): ever quicker and
+		 * wider, a mess seconds after the scene came. They flutter by how strong it blows, at a steady calm pace.
+		 */
+		expect(inner.Blow).toBe(0);
+		expect(scene.ScatterShaders(Elemenx.Service('Renderer')).Vertex).toContain('float beat = uFlutterTime * 2.6;');
+		expect(scene.ScatterShaders(Elemenx.Service('Renderer')).Vertex.split('if (uFlutter > 0.0) {')[1].split('}')[0]).not.toMatch(/uWind/);
 
 		scene.Wind = 3;
 		scene.WindWay = 90;
@@ -2135,6 +2164,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		step(1);
 
+		expect(inner.Blow).toBe(3);
 		expect(now.Way[0]).toBeCloseTo(1, 5);
 		expect(now.PathX - from).toBeCloseTo(7.2, 3);
 
@@ -3439,6 +3469,80 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 	/* Regression: the woods of a planet read where its texel is, its colors aside of it: steps of texels along their edges from far. */
 	it('reads the woods of a planet aside, as its colors, no steps along their edges', function () {
 		expect(gameSceneSource).toContain("'	float cover = uTiled * uWoods > 0.5 ? texture(uReliefMap, vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels + aside * 1.1 / uTexels).a : 0.0;',");
+	});
+
+	/*
+	 * The plants of a planet near the eye are drawn as what is sown is, in a frame of their own: each draw by the matrix of the
+	 * view from that frame and their reach. Regression: the matrix was left to what the program was given last, and not one
+	 * plant was seen, only their shadows.
+	 */
+	it('draws the plants of a planet in their own frame, by the matrix of the view from it and their reach', async function () {
+		var mounted = await mount('<Scene (ready)="Ready"></Scene>');
+		var engine = mounted.Space.Engine();
+		var renderer = engine.Renderer;
+		var library = Elemenx.Service('SceneModels');
+		var math = Elemenx.Service('Math');
+		var matrix = math.Multiply(math.Perspective(50, 1, 0.5, 2000), math.LookAt([0, 2, 0], [0, 2, -10], [0, 1, 0]));
+		var draws = [];
+		var draw = renderer.Draw;
+
+		library.Define('planet-test-bush', {Type: 'plant', Group: 'nature', Size: 2, Build: function (tools) {
+			return [tools.Piece('crown', [tools.Cylinder(0.5, 0.5, 1, [0, 0, 0], [0.2, 0.5, 0.2])])];
+		}});
+
+		var key = library.Make('planet-test-bush', {Variant: 0}).Key;
+		var lists = {};
+
+		lists[key] = {Places: new Float32Array([0, 0, -20, 2, 3, 0, -400, 2]), Extra: new Float32Array([0, 1, 1, 1, 1, 1, 1, 1]), Count: 2};
+
+		engine.ScatterPlanet([{Center: [0, 0, -200], Radius: 300, Lists: lists}]);
+
+		renderer.Draw = function (mesh, program, values) {
+			draws.push(values);
+
+			return draw.apply(this, arguments);
+		};
+
+		engine.ScatterPlanetDraw({}, matrix, [0, 0, 0], [700, 900], [0, 1, 0], [1, 1, 1]);
+
+		renderer.Draw = draw;
+
+		/* Those of the plants (the picture of a plant far is made once by a matrix of its own). */
+		draws = draws.filter(function (values) {
+			return values.uReach;
+		});
+
+		expect(draws.length).toBeGreaterThan(1);
+
+		draws.forEach(function (values) {
+			expect(Array.from(values.uViewProjection)).toEqual(Array.from(matrix));
+			expect(values.uReach).toEqual([700, 900]);
+			expect(values.uOrigin).toEqual([-0, -0, -0]);
+
+			/*
+			 * Regression: with no frames mixed (low, medium) the dither of the band where a level gives way to the next stayed
+			 * still, the trees in it hatched. There it gives way at once; with them, over a band.
+			 */
+			if (values.uFade[2] < 1e7)
+				expect(values.uFade[3] - values.uFade[2] < 0.011).toBe(!mounted.Space.Graphics().Frames);
+		});
+
+		/* None given: nothing drawn. */
+		draws = [];
+
+		engine.ScatterPlanet(null);
+
+		renderer.Draw = function (mesh, program, values) {
+			draws.push(values);
+
+			return draw.apply(this, arguments);
+		};
+
+		engine.ScatterPlanetDraw({}, matrix, [0, 0, 0], [700, 900], [0, 1, 0], [1, 1, 1]);
+
+		renderer.Draw = draw;
+
+		expect(draws.length).toBe(0);
 	});
 
 	it('puts a new character where the last one stands, not where it started', function () {

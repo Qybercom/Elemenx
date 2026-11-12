@@ -67,15 +67,16 @@ describe('Regression: what is sown casts its shadow', function () {
 
 		/*
 		 * Regression: the sowing of its squares and their simpler levels in workers took about the 20 s it was given (the
-		 * test some 22 s long), and one run in three found nothing near sown yet: 60 s.
+		 * test some 22 s long), and one run in three found nothing near sown yet: 60 s. Under the load of all the tests it
+		 * took longer still: 120 s, and it is told if nothing came.
 		 */
-		await waitFor(function () {
+		expect(await waitFor(function () {
 			inner.Rest = 0;
 
 			engine.Frame(now += 33);
 
 			return scene.Sown().Things > 20 && !scene.Sown().Waiting;
-		}, 60000);
+		}, 120000)).toBe(true);
 
 		engine.ScatterShadow = function () {
 			where = 'shadow';
@@ -116,7 +117,7 @@ describe('Regression: what is sown casts its shadow', function () {
 			engine.ScatterShadow = shadow;
 			engine.ScatterDraw = sown;
 		}
-	}, 90000);
+	}, 180000);
 
 
 	/*

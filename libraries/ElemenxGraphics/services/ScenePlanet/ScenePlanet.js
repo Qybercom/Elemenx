@@ -2816,7 +2816,9 @@ Elemenx.Service('ScenePlanet', {
 	 * and a roof, as tall as the settlement (a village low, a city high). They
 	 * stand on the ground, up as it is there. Gives {Geometry (its houses), Trees (its woods), each {Positions, Normals,
 	 * Colors} relative to Center (km, of the body), each face of its own vertices; Trees.Starts the first vertex of each
-	 * tree), Center, Woods, Houses}: a scene draws its
+	 * tree), Plants (its trees of a species of SceneFlora, as a scene draws them near: {Species (their names), Places (six
+	 * numbers each: where it stands, relative to Center, km; how tall, km; its turn; the index of its species in Species
+	 * plus its variant, 0 to 0.99)}), Center, Woods, Houses}: a scene draws its
 	 * trees near the eye only. Its picture of side texels made already (of PatchPicture) is taken as it is.
 	 */
 	PatchThings: function (field, face, cu, cv, extent, side, made) {
@@ -2830,6 +2832,9 @@ Elemenx.Service('ScenePlanet', {
 		var normals = [];
 		var colors = [];
 		var counts = {Woods: 0, Houses: 0};
+		/* The trees of a species of SceneFlora, as a scene draws them near: their names, and six numbers each. */
+		var species = [];
+		var plants = [];
 		var center;
 		var i;
 		var k;
@@ -3031,8 +3036,12 @@ Elemenx.Service('ScenePlanet', {
 		});
 
 		function formOf (name) {
-			if (!(name in forms))
+			if (!(name in forms)) {
 				forms[name] = usable ? flora.Far(name) : null;
+
+				if (forms[name])
+					forms[name].Name = name;
+			}
 
 			return forms[name];
 		}
@@ -3161,7 +3170,18 @@ Elemenx.Service('ScenePlanet', {
 							green = [green[0] * (0.5 + 0.5 * form.Color[0] / mean), green[1] * (0.5 + 0.5 * form.Color[1] / mean), green[2] * (0.5 + 0.5 * form.Color[2] / mean)];
 						}
 
-						tree(at(place, frame, (hash(j, i, seed + 13) - 0.5) * texel * 0.8, (hash(i, j, seed + 14) - 0.5) * texel * 0.8, 0), frame, form, radius, tall, hash(j, j, seed + 15) * Math.PI, green, form ? [form.Bark[0] * 0.7, form.Bark[1] * 0.7, form.Bark[2] * 0.7] : green);
+						var foot = at(place, frame, (hash(j, i, seed + 13) - 0.5) * texel * 0.8, (hash(i, j, seed + 14) - 0.5) * texel * 0.8, 0);
+						var turn = hash(j, j, seed + 15) * Math.PI;
+
+						tree(foot, frame, form, radius, tall, turn, green, form ? [form.Bark[0] * 0.7, form.Bark[1] * 0.7, form.Bark[2] * 0.7] : green);
+
+						/* The same tree as a plant of its species: where it stands, as tall, turned so, a variant of its own. */
+						if (form) {
+							if (species.indexOf(form.Name) === -1)
+								species.push(form.Name);
+
+							plants.push(foot[0] - center[0], foot[1] - center[1], foot[2] - center[2], tall, turn, species.indexOf(form.Name) + hash(k, i, seed + 18) * 0.99);
+						}
 
 						counts.Woods++;
 					}
@@ -3187,7 +3207,7 @@ Elemenx.Service('ScenePlanet', {
 			}
 		}
 
-		return {Geometry: {Positions: new Float32Array(houses.Positions), Normals: new Float32Array(houses.Normals), Colors: new Float32Array(houses.Colors)}, Trees: {Positions: new Float32Array(trees.Positions), Normals: new Float32Array(trees.Normals), Colors: new Float32Array(trees.Colors), Starts: new Uint32Array(starts)}, Center: center, Woods: counts.Woods, Houses: counts.Houses};
+		return {Geometry: {Positions: new Float32Array(houses.Positions), Normals: new Float32Array(houses.Normals), Colors: new Float32Array(houses.Colors)}, Trees: {Positions: new Float32Array(trees.Positions), Normals: new Float32Array(trees.Normals), Colors: new Float32Array(trees.Colors), Starts: new Uint32Array(starts)}, Plants: {Species: species, Places: new Float32Array(plants)}, Center: center, Woods: counts.Woods, Houses: counts.Houses};
 	},
 
 	/* The workers that paint globes. */

@@ -472,6 +472,8 @@ Elemenx.Trait('SceneLighting', {
 			now.PathX = (now.PathX || 0) + now.Way[0] * wind * elapsed * 2.4;
 			now.PathY = (now.PathY || 0) + now.Way[1] * wind * elapsed * 2.4;
 			scene.Gust = (scene.Gust || 0) + elapsed * (0.5 + wind * 0.75);
+			/* How strong the wind blows now (Gust is how far it went: it only grows). */
+			scene.Blow = wind;
 
 			/*
 			 * A storm flashes: now and then a bolt down to the land, more often a flash inside the clouds that lights them from

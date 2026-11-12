@@ -44,6 +44,40 @@ describe('Contract: SceneFlora, realistic plants of code, each of a species anot
 		});
 	}, 120000);
 
+	/*
+	 * Regression: its simpler levels held 81 and 72 hundredths of its leaves (cards larger by 1.9 and 3.2), and the crowns of
+	 * the trees past the nearest were thin and pale over the sunlit ground. They cover as much as it does, within a tenth.
+	 */
+	it('covers as much with the leaves of its simpler levels as near', function () {
+		function area (geometry) {
+			var p = geometry.Positions;
+			var sum = 0;
+			var t;
+
+			for (t = 0; t < geometry.Indices.length; t += 3) {
+				var a = geometry.Indices[t] * 3;
+				var b = geometry.Indices[t + 1] * 3;
+				var c = geometry.Indices[t + 2] * 3;
+				var u = [p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]];
+				var v = [p[c] - p[a], p[c + 1] - p[a + 1], p[c + 2] - p[a + 2]];
+
+				sum += Math.hypot(u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]) / 2;
+			}
+
+			return sum;
+		}
+
+		['oak', 'birch', 'pine'].forEach(function (name) {
+			var tree = flora.Tree(name, 0);
+			var near = area(tree.Leaves);
+
+			tree.Lods.forEach(function (lod) {
+				expect(area(lod.Leaves) / near).toBeGreaterThan(0.9);
+				expect(area(lod.Leaves) / near).toBeLessThan(1.1);
+			});
+		});
+	}, 60000);
+
 	/* A reference made of its picture: its bare trunk, the profile of its crown, the colors of its leaves and of its bark. */
 	it('makes a species of a picture of a plant: the largest of a row, its bare trunk, its crown, its colors; no plant, null', function () {
 		var width = 300;

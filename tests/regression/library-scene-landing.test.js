@@ -954,14 +954,15 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 			return draw.apply(this, arguments);
 		};
 
+		/*
+		 * Frames by hand: they wait for a program the card still makes. Regression (under load): frames of the loop left the
+		 * globe out while its program was made, and none of six drew its clouds.
+		 */
 		try {
 			for (i = 0; i < 6; i++) {
 				inner.Rest = 0;
-				inner.Looping = true;
 
 				engine.Frame(now += 100);
-
-				inner.Looping = false;
 			}
 		}
 		finally {
@@ -1163,11 +1164,46 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 				expect(one.Square[2]).toBeGreaterThan(0);
 				expect(Number.isInteger(one.Cell[0]) && Number.isInteger(one.Cell[1])).toBe(true);
 			});
+
+			/*
+			 * Regression: near, the ground of a planet was the colors of its picture and four tiles by its green, whatever its
+			 * biome. From 40 km down it is the ground of a location of the biome of each texel (its program made meanwhile):
+			 * its low and high ground, its rock, its sand; its woods past their trees the crowns of the green of its trees.
+			 */
+			var near = [];
+
+			engine.Renderer.Draw = function (mesh, program, uniforms) {
+				if (uniforms && uniforms.uLandSlots)
+					near.push(uniforms);
+
+				return draw.apply(this, arguments);
+			};
+
+			await waitFor(function () {
+				frames(1);
+
+				return near.length > 0;
+			}, 90000);
+
+			var made = inner.Surface.Field.NearGround;
+			var desert = made.Lands.indexOf('desert');
+			var steppe = made.Lands.indexOf('steppe');
+			var temperate = made.Lands.indexOf('temperate');
+
+			expect(made.Names[made.Slots[desert * 4]]).toBe('sand');
+			expect(made.Names[made.Slots[steppe * 4 + 1]]).toBe('grassy');
+			expect(made.Names[made.Slots[temperate * 4 + 2]]).toBe('rock');
+			expect(made.Canopy[temperate * 3 + 1]).toBeGreaterThan(made.Canopy[temperate * 3]);
+			expect(near[0].uTextured).toBe(1);
+			expect(near[0].uCanopy).toEqual([engine.TreesReach - 0.3, engine.TreesReach]);
+			expect(near.some(function (one) {
+				return one.uLandsMap && one.uTiled === 1;
+			})).toBe(true);
 		}
 		finally {
 			engine.Renderer.Draw = draw;
 		}
-	}, 120000);
+	}, 240000);
 
 	/*
 	 * The weather of a planet: its climate baked by the workers (ScenePlanet.ClimateFace), its weather a cube baked of it a

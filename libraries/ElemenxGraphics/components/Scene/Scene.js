@@ -8645,7 +8645,7 @@ Elemenx.Component('Scene', {
 		 * size, radius], where it is on its face: its corner in kilometres of the face, as the rest of 48 km and the number of
 		 * those (the Ground shader lays the parcels of its fields and its houses by them, exact in its floats).
 		 */
-		function pictured (node, picture, square) {
+		function pictured (node, picture, square, lands) {
 			var km;
 			var x;
 			var y;
@@ -8655,6 +8655,7 @@ Elemenx.Component('Scene', {
 			unpictured(node);
 
 			node.Colors = renderer.Texture({Width: picture.Size, Height: picture.Size, Data: picture.Color}, {Mipmaps: true});
+			node.Lands = picture.Biomes && lands ? renderer.Texture({Width: picture.Size, Height: picture.Size, Data: landsOf(picture, lands)}, {Single: true, Nearest: true}) : null;
 			node.Relief = renderer.Texture({Width: picture.Size, Height: picture.Size, Data: picture.Normal}, {Mipmaps: true});
 			node.Uses = picture.Use ? renderer.Texture({Width: picture.Size, Height: picture.Size, Data: picture.Use}, {Mipmaps: true}) : null;
 			node.Texels = picture.Size;
@@ -8702,6 +8703,194 @@ Elemenx.Component('Scene', {
 			})};
 		}
 
+		/*
+		 * The biomes of the texels of a picture of a square (PatchPicture: indices into its own Lands) as indices into the
+		 * lands of the planet (lands: their names), 255 none.
+		 */
+		function landsOf (picture, lands) {
+			var data = new Uint8Array(picture.Biomes.length);
+			var map = picture.Lands.map(function (name) {
+				var index = lands.indexOf(name);
+
+				return index === -1 || index > 254 ? 255 : index;
+			});
+			var i;
+
+			for (i = 0; i < data.length; i++)
+				data[i] = picture.Biomes[i] === 255 ? 255 : map[picture.Biomes[i]];
+
+			return data;
+		}
+
+		/*
+		 * The materials of the near ground of a planet, as the ground of a location of each of its biomes is made: what each
+		 * biome's ground is of (its Low, High, Rock and Sand, else those of every ground, SceneTerrainGenerator), all of them
+		 * the slots of one program (12 at most); Slots, four of them for each of its first 15 lands (the 16th: the ground of
+		 * none); Lands, their names. Made once for a field.
+		 */
+		function nearMaterials (field) {
+			var defaults = self.$Service('SceneTerrainGenerator').GroundMaterials || {};
+			var names = [];
+			var slots = new Array(64).fill(0);
+			var canopy = new Array(48).fill(0);
+			var lands = field.Planet.Lands || [];
+			var flora = self.$Service('SceneFlora');
+
+			function slot (name) {
+				var at = names.indexOf(name);
+
+				if (at === -1 && name && names.length < 12) {
+					names.push(name);
+
+					at = names.length - 1;
+				}
+
+				return Math.max(0, at);
+			}
+
+			function row (index, own) {
+				['Low', 'High', 'Rock', 'Sand'].forEach(function (part, k) {
+					slots[index * 4 + k] = slot(own[part] || defaults[part]);
+				});
+			}
+
+			/*
+			 * The green of the crowns of its woods: of the leaves of the trees it sows (SceneFlora.Far of the Shapes of its
+			 * Scatter, by the weight of each rule), as the plants near are; none ([0, 0, 0]): its ground's.
+			 */
+			function canopyOf (land, index) {
+				var sum = [0, 0, 0, 0];
+
+				(land.Scatter || []).forEach(function (rule) {
+					var weight = (rule.Cover === undefined ? 0.5 : Number(rule.Cover)) * Math.max(0.2, Number(rule.Density) || 1);
+
+					(rule.Shapes || []).forEach(function (shape) {
+						var far = flora && !flora.ElemenxDeferred && flora.Far ? flora.Far(shape) : null;
+						if (!far) return;
+
+						sum = [sum[0] + far.Color[0] * weight, sum[1] + far.Color[1] * weight, sum[2] + far.Color[2] * weight, sum[3] + weight];
+					});
+				});
+
+				if (sum[3] > 0)
+					canopy.splice(index * 3, 3, sum[0] / sum[3], sum[1] / sum[3], sum[2] / sum[3]);
+			}
+
+			if (field.NearGround)
+				return field.NearGround;
+
+			row(15, {});
+
+			lands.slice(0, 15).forEach(function (land, index) {
+				row(index, land.Ground && land.Ground.Materials || {});
+
+				canopyOf(land, index);
+			});
+
+			field.NearGround = {Names: names, Slots: slots, Canopy: canopy, Lands: lands.map(function (land) {
+				return land.Name;
+			}), Key: names.join(',')};
+
+			return field.NearGround;
+		}
+
+		/*
+		 * The ground of a planet near (40 km and lower): the materials of the ground of a location, by the biome of each texel
+		 * of its picture (nearMaterials), its program of its own made once the eye is that low (the ground of the globe
+		 * meanwhile, its four tiles): {Program, Values}. Higher, or before its tiles and its program have come: the Ground and
+		 * its tiles (groundTiles).
+		 */
+		function groundNear (field, eye, altitude) {
+			var textures = self.$Service('SceneTextures');
+			var materials = self.$Service('SceneMaterials');
+			var near;
+			var program;
+			var array;
+			var laid;
+
+			if (!field.Planet || altitude > 40)
+				return {Program: gpu.Ground, Values: groundTiles(eye, altitude)};
+
+			near = nearMaterials(field);
+			gpu.NearGrounds = gpu.NearGrounds || {};
+			program = gpu.NearGrounds[near.Key] = gpu.NearGrounds[near.Key] || renderer.Program(shaders.GroundVertex, nearGroundSource(near.Names));
+			array = textures.Array(renderer, materials.Textured(near.Names));
+			laid = groundTiles(eye, altitude);
+
+			if (!array || !programReady(program))
+				return {Program: gpu.Ground, Values: laid};
+
+			return {Program: program, Values: Object.assign(laid, {uTextured: 1, uLandColor: array.Color, uLandSurface: array.Surface, uLandSlots: near.Slots, uLandCanopy: near.Canopy, uCanopy: [engine.TreesReach - 0.3, engine.TreesReach]})};
+		}
+
+		/*
+		 * The Ground shader for a ground near: the materials of a location (SceneMaterials.Land of names, its helpers before it)
+		 * where the four tiles were, each texel's of its biome (uLandsMap, uLandSlots: Low, High, Rock and Sand of each land):
+		 * the low ground of the one, the high of the other by its height, rock where it is steep, sand by the sea; their
+		 * weights of a corner (vMaterials) worked out in the pixel. Its own slope is told (landSlope), in the plane at the
+		 * anchor. They fade into the colors of its picture where a pixel is 30 to 120 m: from high the picture as it was.
+		 */
+		function nearGroundSource (names) {
+			var materials = self.$Service('SceneMaterials');
+			var land = materials.Land(names).replace('precision highp sampler2DArray;\n' + self.$Service('SceneTextures').Chunk(true) + '\n', '').replace('\tlandSlope = landSteeper(place);\n', '');
+			var source = shaders.Ground.replace(materials.LandSlope + '\n' + materials.LandTexture, [materials.Helpers, 'vec4 vMaterials;', 'vec4 vMaterials2;', 'vec4 vMaterials3;', 'uniform sampler2D uLandsMap;', 'uniform vec4 uLandSlots[16];', 'uniform vec2 uCanopy;', 'uniform vec3 uLandCanopy[16];', land].join('\n'));
+			var from = source.indexOf('\tif (uTextured > 0.5) {\n\t\tlandSlope = normalize(');
+			var end = '\t\talbedo = mix(albedo, laid / max(total, 1e-4), clamp(total, 0.0, 1.0));\n\t}\n';
+			var to = source.indexOf(end, from) + end.length;
+
+			return source.slice(0, from) + [
+				'\tif (uTextured > 0.5) {',
+				'\t\tlandSlope = normalize(vec3(dot(smoothed, uEast), dot(smoothed, uUp), dot(smoothed, uNorth)));',
+				'\t\tfloat metres = vLand.x * 1000.0;',
+				'\t\tint biome = uTiled > 0.5 ? int(texture(uLandsMap, vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels + aside * 1.1 / uTexels).r * 255.0 + 0.5) : 255;',
+				'\t\tvec4 slots = uLandSlots[min(biome, 15)];',
+				'\t\tfloat w[12];',
+				'\t\tfor (int k = 0; k < 12; k++) w[k] = 0.0;',
+				/* Under its woods the ground of a wood: its high ground's (soil), no lawn under the trees. */
+				'\t\tfloat part = max(smoothstep(150.0, 1800.0, metres), wooded);',
+				'\t\tfloat steep = 1.0 - smoothstep(0.91, 0.98, landSlope.y);',
+				'\t\tfloat sandy = 1.0 - smoothstep(0.6, 2.5, metres);',
+				'\t\tfloat lush = (1.0 - steep) * (1.0 - sandy);',
+				'\t\tw[int(slots.x)] += (1.0 - part) * lush;',
+				'\t\tw[int(slots.y)] += part * lush;',
+				'\t\tw[int(slots.z)] += steep * (1.0 - sandy);',
+				'\t\tw[int(slots.w)] += sandy;',
+				'\t\tfloat dry = 1.0 - water;',
+				'\t\tvMaterials = vec4(w[0], w[1], w[2], w[3]) * dry;',
+				'\t\tvMaterials2 = vec4(w[4], w[5], w[6], w[7]) * dry;',
+				'\t\tvMaterials3 = vec4(w[8], w[9], w[10], w[11]) * dry;',
+				'\t\tvec3 made = albedo;',
+				'\t\tfloat height = 0.0;',
+				'\t\tlandMaterials(local, length(fwidth(local.xz)), made, height);',
+				'\t\talbedo = mix(albedo, made, 1.0 - smoothstep(30.0, 120.0, foot * 1000.0));',
+				/*
+				 * Its woods past where their trees are drawn (uCanopy: km, from and to, they come in): their crowns from over them,
+				 * as thick as the trees nearer stand (each a cell of a few metres, there by its chance as its share of woods
+				 * tells, a dome lit to its middle, its own green; between them the ground in their shade); as long as a pixel is
+				 * under 1.5 to 4.5 m (a crown over two pixels), farther their mean. Regression: past 1.2 km woods were blotches
+				 * of a darker green (stands of a noise much thinner than the trees nearer), the trees nearer ending in a line.
+				 */
+				'\t\tfloat canopy = step(0.01, cover) * (1.0 - water) * smoothstep(uCanopy.x, uCanopy.y, length(vWorld));',
+				'\t\tif (canopy > 0.01) {',
+				/*
+				 * The green of the leaves of its trees (uLandCanopy of its biome), as the plants nearer come out (lit as models
+				 * are: less green than this shader lights a green; matched to them on the screen), else of its ground.
+				 */
+				'\t\t\tvec3 leafy = uLandCanopy[min(biome, 15)];',
+				'\t\t\tvec3 base = leafy.g > 0.0 ? leafy * vec3(2.2, 1.45, 2.1) : albedo;',
+				'\t\t\tfloat thick = min(1.0, cover * 1.6);',
+				'\t\t\tvec4 crown = enx_mc(local.xz / 7.5, 0.85);',
+				'\t\t\tfloat seenCrowns = 1.0 - smoothstep(1.5, 4.5, foot * 1000.0);',
+				'\t\t\tfloat there = step(crown.z, thick) * (1.0 - smoothstep(0.55, 0.8, crown.x));',
+				'\t\t\tvec3 leaves = base * (0.85 + 0.3 * crown.w) * (1.15 - crown.x * 0.6);',
+				'\t\t\tvec3 crowned = mix(albedo * mix(1.0, 0.55, thick), leaves, there);',
+				'\t\t\talbedo = mix(albedo, mix(mix(albedo, base * 0.9, thick), crowned, seenCrowns), canopy);',
+				'\t\t}',
+				'\t}',
+				''
+			].join('\n') + source.slice(to);
+		}
+
 		/* The uniforms of the picture of a square for the Ground shader: its textures, or none yet (its colors of its points). */
 		function tiled (node) {
 			var dwelt = node.Uses && node.Square && !(scene.Tuned && scene.Tuned.Fields === false);
@@ -8710,11 +8899,14 @@ Elemenx.Component('Scene', {
 			if (!gpu.NoUse)
 				idle();
 
-			return {uTiled: node.Colors ? 1 : 0, uColorMap: node.Colors || gpu.NoBounce, uReliefMap: node.Relief || gpu.NoBounce, uTexels: node.Texels || 2, uWoods: scene.Tuned && scene.Tuned.Woods === false ? 0 : 1, uDwelt: dwelt ? 1 : 0, uUseMap: node.Uses || gpu.NoUse, uSquare: dwelt ? node.Square : [0, 0, 1, 0], uSquareCell: dwelt ? node.Cell : [0, 0]};
+			if (!gpu.NoLands)
+				gpu.NoLands = renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([255])}, {Single: true, Nearest: true});
+
+			return {uLandsMap: node.Lands || gpu.NoLands, uTiled: node.Colors ? 1 : 0, uColorMap: node.Colors || gpu.NoBounce, uReliefMap: node.Relief || gpu.NoBounce, uTexels: node.Texels || 2, uWoods: scene.Tuned && scene.Tuned.Woods === false ? 0 : 1, uDwelt: dwelt ? 1 : 0, uUseMap: node.Uses || gpu.NoUse, uSquare: dwelt ? node.Square : [0, 0, 1, 0], uSquareCell: dwelt ? node.Cell : [0, 0]};
 		}
 
 		function unpictured (node) {
-			['Colors', 'Relief', 'Uses'].forEach(function (name) {
+			['Colors', 'Relief', 'Uses', 'Lands'].forEach(function (name) {
 				if (node[name])
 					node[name].Destroy();
 
@@ -8745,8 +8937,179 @@ Elemenx.Component('Scene', {
 			return list;
 		}
 
-		/* How near the trees of the squares of a planet are drawn, km. */
+		/* How near the trees of the squares of a planet are drawn, km (they fade out over the last 300 m of it). */
 		engine.TreesReach = 1.2;
+
+		/* How near the plants of SceneFlora stand for the trees of the squares of a planet: they fade out between these, km. */
+		engine.PlantsReach = [0.7, 0.9];
+
+		scene.ThingsMade = 0;
+
+		/*
+		 * The frame of the plants of a planet: metres, from a place on it near the eye (Anchor, km of the body), x east, y up
+		 * there, z across them; Matrix from it to the body (km, round the eye). A new one when the eye is 3 km from it, its
+		 * squares made again in it (ID).
+		 */
+		function plantFrame (surface) {
+			var frame = surface.PlantFrame;
+			var up;
+			var east;
+			var across;
+
+			if (frame && vectors.Distance(frame.Anchor, surface.Eye) < 3) return frame;
+
+			up = vectors.Normalize(surface.Eye);
+			east = vectors.Normalize(vectors.Cross(Math.abs(up[1]) > 0.99 ? [1, 0, 0] : [0, 1, 0], up));
+			across = vectors.Cross(east, up);
+
+			surface.PlantFrame = {Anchor: surface.Eye.slice(), X: east, Y: up, Z: across, ID: (frame ? frame.ID : 0) + 1, Matrix: [east[0] * 0.001, east[1] * 0.001, east[2] * 0.001, 0, up[0] * 0.001, up[1] * 0.001, up[2] * 0.001, 0, across[0] * 0.001, across[1] * 0.001, across[2] * 0.001, 0, 0, 0, 0, 1]};
+
+			return surface.PlantFrame;
+		}
+
+		/* A point of the body (km) in the frame of the plants (metres); a way (free: not moved, not scaled to metres). */
+		function inFrame (frame, point, free) {
+			var d = free ? point : vectors.Subtract(point, frame.Anchor);
+			var scale = free ? 1 : 1000;
+
+			return [vectors.Dot(d, frame.X) * scale, vectors.Dot(d, frame.Y) * scale, vectors.Dot(d, frame.Z) * scale];
+		}
+
+		/*
+		 * The plants of the trees of a square in the frame (made once for each frame): a list of copies for each model
+		 * (flora-<species>~<variant>), as SceneScatter sows them: where (m), how tall (m), its turn, its tint.
+		 */
+		function plantSquare (node, frame) {
+			var things = node.Things;
+			var plants = things.Plants;
+			var keys = {};
+			var lists = {};
+			var i;
+
+			if (things.Square && things.Square.Frame === frame.ID) return things.Square;
+
+			for (i = 0; i < plants.Places.length; i += 6) {
+				var kind = Math.floor(plants.Places[i + 5]);
+				var share = plants.Places[i + 5] - kind;
+				var variant = Math.floor(share * 8);
+				var key = keys[kind + ':' + variant] = keys[kind + ':' + variant] || library.Make(engine.PlantShape(plants.Species[kind]), {Variant: variant}).Key;
+				var at = inFrame(frame, [things.Center[0] + plants.Places[i], things.Center[1] + plants.Places[i + 1], things.Center[2] + plants.Places[i + 2]]);
+				var list = lists[key] = lists[key] || {Places: [], Extra: []};
+				var tone = 0.88 + share * 0.2;
+
+				list.Places.push(at[0], at[1], at[2], plants.Places[i + 3] * 1000);
+				list.Extra.push(plants.Places[i + 4], tone, tone * (0.96 + share * 0.06), tone * 0.95);
+			}
+
+			Object.keys(lists).forEach(function (name) {
+				lists[name] = {Places: new Float32Array(lists[name].Places), Extra: new Float32Array(lists[name].Extra), Count: lists[name].Places.length / 4};
+			});
+
+			things.Square = {Frame: frame.ID, Center: inFrame(frame, things.Center), Radius: things.Size * 1000 * 0.75 + 40, Lists: lists};
+
+			return things.Square;
+		}
+
+		/*
+		 * The plants of a planet round the eye (PlantStyle realistic, SceneScatter there): the squares within reach of it
+		 * given to SceneScatter in the frame of the plants once all their species have come (asked for from three times as
+		 * far, so they have come when they are near); till then the far trees of the squares stand for them. Gives {Frame,
+		 * Eye (in it)} while they are drawn, else null.
+		 */
+		function planted (nodes) {
+			var surface = scene.Surface;
+			var reach = engine.PlantsReach;
+			var ready = true;
+			var near;
+			var frame;
+			var key;
+
+			if (!engine.ScatterPlanet || !surface || !surface.Eye || self.PlantStyle === 'simple') return null;
+
+			near = nodes.filter(function (node) {
+				var plants = node.Things && node.Things.Plants;
+				var distance = plants ? vectors.Distance(node.Things.Center, surface.Eye) - node.Things.Size * 0.71 : Infinity;
+				if (distance < reach[1] * 3)
+					plants.Species.forEach(function (name) {
+						if (engine.PlantShape(name).indexOf('flora-') !== 0)
+							ready = ready && distance >= reach[1];
+					});
+
+				return distance < reach[1];
+			});
+
+			if (!near.length || !ready) {
+				if (surface.PlantsKey) {
+					surface.PlantsKey = '';
+
+					engine.ScatterPlanet(null);
+				}
+
+				return null;
+			}
+
+			frame = plantFrame(surface);
+			key = frame.ID + ':' + near.map(function (node) {
+				return node.Things.ID;
+			}).join(',');
+
+			if (surface.PlantsKey !== key) {
+				surface.PlantsKey = key;
+
+				engine.ScatterPlanet(near.map(function (node) {
+					return plantSquare(node, frame);
+				}));
+			}
+
+			return {Frame: frame, Eye: inFrame(frame, surface.Eye)};
+		}
+
+		/*
+		 * The light on the plants of a planet as a location has it (its sun through the air, the light of its sky), of how
+		 * high the sun stands over the eye: {Sun, Sky, Floor}. Regression: the color of the star itself and a sky of its own,
+		 * and the trees near the eye were pale and grey where those of a location are green.
+		 */
+		function plantLight (sun, color) {
+			var high = vectors.Dot(sun, scene.Surface.Axes.Up);
+			var through = 1 / (Math.max(0, high) + 0.045);
+			var day = Math.min(1, Math.max(0, (high + 0.2) / 0.45));
+			var fill = day * (0.55 + 0.45 * Math.min(1, Math.max(0, (high - 0.06) / 0.34)));
+			var dusk = 1 - Math.min(1, Math.abs(high) / 0.35);
+			var dark = 0.42;
+
+			return {Sun: color.map(function (value, index) {
+				return value * Math.exp(-[0.018, 0.05, 0.12][index] * through) * Math.min(1, Math.max(0, (high + 0.03) / 0.08));
+			}), Sky: [0.3 * fill + 0.05 * dark + 0.04 * dusk, 0.36 * fill + 0.06 * dark + 0.03 * dusk, 0.46 * fill + 0.1 * dark + 0.05 * dusk], Floor: [0.1 * fill + 0.016 * dark, 0.1 * fill + 0.019 * dark, 0.09 * fill + 0.03 * dark]};
+		}
+
+		/* The uniforms of the plants of a planet: the light of plantLight, its shadow (shade), all in the frame of the plants. */
+		function plantValues (plants, sun, sunColor, shade) {
+			var local = inFrame(plants.Frame, sun, true);
+			var light = plantLight(sun, sunColor);
+			var values = Object.assign({uCamera: [0, 0, 0], uLightPositions: [local[0] * 1e6, local[1] * 1e6, local[2] * 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightColors: [light.Sun[0] * 1.15, light.Sun[1] * 1.15, light.Sun[2] * 1.15, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightCount: 1, uSkyLight: light.Sky, uFloorLight: light.Floor, uAmbient: [0.17, 0.19, 0.23], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWet: 0, uSnowed: 0, uRainDrops: 0, uEyeAt: [0, 0, 0], uTime2: scene.Seconds % 1000, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0], uSeasonOn: 0, uDissolve: [0, 0, 1, 0], uSoft: 0}, shade, self.WindValues(scene.Seconds));
+
+			if (shade.uShadowOn) {
+				values.uShadowMatrix = math.Multiply(shade.uShadowMatrix, plants.Frame.Matrix);
+				values.uShadowBias = shade.uShadowBias * 1000;
+			}
+
+			/*
+			 * How much of the sky a leaf sees in a wood: half of it (a location has a map of it, its field light; a planet none).
+			 * Regression: each leaf saw all of the sky, and the trees near the eye were pale, grey, as no tree of a location is.
+			 */
+			gpu.PlantSky = gpu.PlantSky || renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([0, 0, 0, 128])}, {Nearest: true});
+			values.uGlowOn = 1;
+			values.uGlow = gpu.PlantSky;
+			values.uGlowPlace = [0, 0, 1];
+			values.uSkyFloor = 0;
+			/*
+			 * What a leaf mirrors of the sky left out, as with the reflections of the screen on (a location: they show what a
+			 * leaf as rough mirrors, little). Regression: the sky on each card of leaves seen aslant, the crowns grey.
+			 */
+			values.uScreenMirror = 1;
+
+			return values;
+		}
 
 		function destroyNodes (nodes) {
 			Object.keys(nodes).forEach(function (key) {
@@ -9050,7 +9413,7 @@ Elemenx.Component('Scene', {
 					askPiece(surface, key, 'Sphere', [face, u, v, size, surface.Resolution || 32, picture, picture && standsOn(size) ? picture : 0], function (piece) {
 						made = piece || field.Patch(face, u, v, size, surface.Resolution || 32);
 
-						surface.Nodes[key] = pictured({Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Error: errorOf(face, u, v, size), Used: surface.Frame}, made.Picture, [face, u, v, size, field.Radius]);
+						surface.Nodes[key] = pictured({Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Error: errorOf(face, u, v, size), Used: surface.Frame}, made.Picture, [face, u, v, size, field.Radius], field.Planet ? nearMaterials(field).Lands : null);
 
 						if (made.Things)
 							things(surface.Nodes[key], made.Things, size);
@@ -9066,7 +9429,7 @@ Elemenx.Component('Scene', {
 				if (picture)
 					askPiece(surface, key + ':picture', 'SpherePicture', [face, u, v, size, picture], function (piece) {
 						if (surface.Nodes[key] && piece)
-							pictured(surface.Nodes[key], piece.Picture, [face, u, v, size, field.Radius]);
+							pictured(surface.Nodes[key], piece.Picture, [face, u, v, size, field.Radius], field.Planet ? nearMaterials(field).Lands : null);
 					});
 			}
 
@@ -9083,7 +9446,7 @@ Elemenx.Component('Scene', {
 			function things (node, piece, size) {
 				if (!piece.Geometry.Positions.length && !(piece.Trees && piece.Trees.Positions.length)) return;
 
-				node.Things = {Mesh: piece.Geometry.Positions.length ? renderer.Mesh(piece.Geometry) : null, Trees: piece.Trees && piece.Trees.Positions.length ? renderer.Mesh(piece.Trees) : null, Center: piece.Center, Size: size * Math.PI / 4 * field.Radius, Woods: piece.Woods, Houses: piece.Houses};
+				node.Things = {Mesh: piece.Geometry.Positions.length ? renderer.Mesh(piece.Geometry) : null, Trees: piece.Trees && piece.Trees.Positions.length ? renderer.Mesh(piece.Trees) : null, Center: piece.Center, Size: size * Math.PI / 4 * field.Radius, Woods: piece.Woods, Houses: piece.Houses, Plants: piece.Plants && piece.Plants.Places.length ? piece.Plants : null, ID: ++scene.ThingsMade};
 			}
 
 			/*
@@ -9319,11 +9682,14 @@ Elemenx.Component('Scene', {
 			var sunColor = star ? paint(star.Color).slice(0, 3) : [1, 1, 1];
 			var air = object.Look.Atmosphere;
 			var nodes = patches();
+			var plants = planted(nodes);
+			var reach = [engine.PlantsReach[0] * 1000, engine.PlantsReach[1] * 1000];
 			var thickness = 100;
 			var shade = idle();
 			var extent;
 			var posted;
 			var laid;
+			var landed;
 
 			sun = vectors.Normalize(sun);
 
@@ -9335,11 +9701,16 @@ Elemenx.Component('Scene', {
 					nodes.forEach(function (node) {
 						renderer.Draw(node.Mesh, gpu.GroundDepth, {uViewProjection: light, uOffset: vectors.Subtract(node.Center, surface.Eye)}, {Cull: 'back'});
 
-						/* Its woods and houses cast their shadows too. */
+						/* Its woods and houses cast their shadows too; not its trees where all of them are plants. */
 						standing(node).forEach(function (mesh) {
+							if (plants && mesh === node.Things.Trees && vectors.Distance(node.Things.Center, surface.Eye) + node.Things.Size * 0.71 < engine.PlantsReach[0]) return;
+
 							renderer.Draw(mesh, gpu.ThingsDepth, {uViewProjection: light, uOffset: vectors.Subtract(node.Things.Center, surface.Eye), uCenter: node.Things.Center}, {Cull: 'none'});
 						});
 					});
+
+					if (plants)
+						engine.ScatterPlanetShadow(math.Multiply(light, plants.Frame.Matrix), plants.Eye, reach);
 				});
 			}
 
@@ -9358,10 +9729,11 @@ Elemenx.Component('Scene', {
 
 			renderer.Draw(gpu.Quad, gpu.Sky, Object.assign({uInverse: math.Invert(matrix), uSun: sun, uSunColor: sunColor, uAir: air, uUp: surface.Axes.Up, uHigh: Math.min(1, surface.Altitude / thickness), uSunRadius: discOf(star, object), uNoWisps: weatherValues(object, scene.Baked[object.ID]).uWeatherOn}, self.SkyValues(scene.Seconds)), {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
 
-			laid = groundTiles(surface.Eye, surface.Altitude);
+			landed = groundNear(field, surface.Eye, surface.Altitude);
+			laid = landed.Values;
 
 			nodes.forEach(function (node) {
-				renderer.Draw(node.Mesh, gpu.Ground, Object.assign({
+				renderer.Draw(node.Mesh, landed.Program, Object.assign({
 					uViewProjection: matrix,
 					uOffset: vectors.Subtract(node.Center, surface.Eye),
 					uCenter: node.Center,
@@ -9385,12 +9757,26 @@ Elemenx.Component('Scene', {
 				}, shade, tiled(node), laid, weatherValues(object, scene.Baked[object.ID])), {Cull: 'back'});
 			});
 
-			/* What stands on the squares near (ScenePlanet.PatchThings), lit and hazy as the ground under it; Levels shows it as a proxy. */
+			/*
+			 * What stands on the squares near (ScenePlanet.PatchThings), lit and hazy as the ground under it; Levels shows it as a
+			 * proxy. Its trees fade out over the last 300 m of their reach (into the woods the ground draws), and where the plants
+			 * stand for them they give way to them, each pixel the one the plants leave (the same dither). Regression: the trees
+			 * ended in a line 1.2 km from the eye, and near it they were cones and domes, no plant of their species.
+			 */
 			nodes.forEach(function (node) {
 				standing(node).forEach(function (mesh) {
-					renderer.Draw(mesh, gpu.Things, Object.assign({uViewProjection: matrix, uOffset: vectors.Subtract(node.Things.Center, surface.Eye), uCenter: node.Things.Center, uSun: sun, uSunColor: sunColor, uAir: air, uFog: Math.max(field.Radius * 0.02, far * 0.6), uHigh: Math.min(1, surface.Altitude / thickness), uLevel: engine.LevelColor('proxy', 1)}, shade), {Cull: 'back'});
+					/* Its trees not drawn at all where all of them are plants (not only their pixels: their corners cost too). */
+					if (plants && mesh === node.Things.Trees && vectors.Distance(node.Things.Center, surface.Eye) + node.Things.Size * 0.71 < engine.PlantsReach[0]) return;
+
+					var band = mesh !== node.Things.Trees ? [0, 0, 0, 0] : [plants ? engine.PlantsReach[0] : 0, plants ? engine.PlantsReach[1] : 0, engine.TreesReach - 0.3, engine.TreesReach];
+
+					renderer.Draw(mesh, gpu.Things, Object.assign({uViewProjection: matrix, uOffset: vectors.Subtract(node.Things.Center, surface.Eye), uCenter: node.Things.Center, uSun: sun, uSunColor: sunColor, uAir: air, uFog: Math.max(field.Radius * 0.02, far * 0.6), uHigh: Math.min(1, surface.Altitude / thickness), uLevel: engine.LevelColor('proxy', 1), uBand: band, uDither: engine.PostStep ? engine.PostStep() : 0}, shade), {Cull: 'back'});
 				});
 			});
+
+			/* The plants of SceneFlora near the eye, in their frame (SceneScatter). */
+			if (plants)
+				engine.ScatterPlanetDraw(plantValues(plants, sun, sunColor, shade), math.Multiply(matrix, plants.Frame.Matrix), plants.Eye, reach, inFrame(plants.Frame, sun, true), plantLight(sun, sunColor).Sun);
 
 			if (surface.Ship)
 				drawSurfaceShip(matrix, sun, sunColor);
@@ -12646,6 +13032,16 @@ Elemenx.Component('Scene', {
 				'void main() {',
 				'	if (uCut.w > 0.0 && distance(vWorld, uCut.xyz) < uCut.w) discard;',
 				'	vec4 base = uBaseColor * texture(uColorMap, vUV);',
+				/*
+				 * What is cut by its alpha keeps as much of it far as near: the alpha of each step of its mipmap, the mean of the one
+				 * before, is under the cut the more the farther, and the leaves of a far tree thinned to a few (the sunlit ground
+				 * through its crown, pale). Raised by a quarter a step (Golus).
+				 */
+				'	if (uCutoff > 0.0) {',
+				'		vec2 texel = vUV * vec2(textureSize(uColorMap, 0));',
+				'		float mip = max(0.0, 0.5 * log2(max(dot(dFdx(texel), dFdx(texel)), dot(dFdy(texel), dFdy(texel)))));',
+				'		base.a = min(1.0, base.a * (1.0 + mip * 0.25));',
+				'	}',
 				'	if (base.a < uCutoff) discard;',
 				'	vec3 albedo = base.rgb * vTint;',
 				'	if (uUnlit > 0.5) {',
@@ -13262,9 +13658,21 @@ Elemenx.Component('Scene', {
 				'uniform float uFog;',
 				'uniform float uHigh;',
 				'uniform vec4 uLevel;',
+				/*
+				 * Its trees: where plants stand for them, fading out between uBand.x and y (km; 0: none), each pixel the one the
+				 * plants leave (the dither of the frame, uDither); faded out between uBand.z and w, the end of their reach.
+				 */
+				'uniform vec4 uBand;',
+				'uniform float uDither;',
 				'out vec4 outColor;',
 				graphics.Chunks.Shadow,
 				'void main() {',
+				'	if (uBand.w > 0.0) {',
+				'		float far = length(vWorld);',
+				'		float hole = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uDither * 0.618034);',
+				'		if (uBand.y > 0.0 && hole < 1.0 - smoothstep(uBand.x, uBand.y, far)) discard;',
+				'		if (hole >= 1.0 - smoothstep(uBand.z, uBand.w, far)) discard;',
+				'	}',
 				'	vec3 n = normalize(vNormal);',
 				'	float rise = dot(vUp, uSun);',
 				'	float light = clamp(rise * 3.0 + 0.3, 0.0, 1.0);',
@@ -13568,7 +13976,11 @@ Elemenx.Component('Scene', {
 				'		dunes = (ridge * ridge * (3.0 - 2.0 * ridge) * 0.75 + star * star * 0.25) * sand * seenDunes;',
 				'		albedo *= 1.0 + (dunes - 0.35 * sand * seenDunes) * 0.18;',
 				'	}',
-				'	float bumps = ((noise3(near * 11.0 + 5.0) - 0.5) * 0.04 * near1 + (noise3(near * 52.0 + 2.0) - 0.5) * 0.008 * near2 + (crowns - 0.5) * 0.006 * green * near2 + wooded * 0.006 * near1 + standing + dunes * 0.07) * (1.0 - water);',
+				/*
+				 * Regression: hills of 90 m by 20 m and of 20 m by 4 m in the light of the normal, sides of 25 degrees: from low
+				 * the ground was pits and blotches, their sides away from the sun nearly black. Now a third of that.
+				 */
+				'	float bumps = ((noise3(near * 11.0 + 5.0) - 0.5) * 0.015 * near1 + (noise3(near * 52.0 + 2.0) - 0.5) * 0.003 * near2 + (crowns - 0.5) * 0.006 * green * near2 + wooded * 0.006 * near1 + standing + dunes * 0.07) * (1.0 - water);',
 				/* The normal before them: what picks the ways the tiles are laid, the same over a few pixels (their derivatives are taken in branches by it). */
 				'	vec3 smoothed = n;',
 				'	vec3 px = dFdx(vWorld);',
@@ -13621,8 +14033,11 @@ Elemenx.Component('Scene', {
 				'	float rise = dot(up, uSun);',
 				'	float light = clamp(rise * 3.0 + 0.3, 0.0, 1.0);',
 				'	float dusk = 1.0 - smoothstep(0.0, 0.35, abs(rise));',
-				/* The sky lights what the sun does not reach: at sunset the land is dim and red, not black. */
-				'	vec3 around = vec3(0.05, 0.06, 0.08) + uAir.rgb * uAir.a * 0.3 * smoothstep(-0.25, 0.3, rise) + vec3(0.5, 0.25, 0.15) * dusk * uAir.a * 0.35;',
+				/*
+				 * The sky lights what the sun does not reach: at sunset the land is dim and red, not black. By day as much of it as
+				 * a location has (Regression: what looked away from the sun was nearly black, a hole in the ground).
+				 */
+				'	vec3 around = vec3(0.05, 0.06, 0.08) + uAir.rgb * uAir.a * 0.42 * smoothstep(-0.25, 0.3, rise) + vec3(0.5, 0.25, 0.15) * dusk * uAir.a * 0.35;',
 				'	float day = max(dot(n, uSun), 0.0) * sunShadow(vWorld, n);',
 				/* The shadows of the clouds of its weather (CLOUDS SEEN), as far from them as their height and the sun tell. */
 				'	vec3 toward = normalize(uSun - up * rise + vec3(1e-6));',

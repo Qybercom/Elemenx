@@ -593,9 +593,11 @@ Elemenx.Service('SceneFlora', {
 
 		/*
 		 * Its simpler levels, of the same branches (for what is far, SceneScatter): its branches thicker than four and ten
-		 * times the cut, of 4 and 3 sides; its leaves fewer and larger cards on the same twigs (as much of them seen).
+		 * times the cut, of 4 and 3 sides; its leaves fewer and larger cards on the same twigs (as much of them seen: a fifth
+		 * and a fourteenth of them, larger by the root of that, as much of the crown covered). Regression: larger by 1.9 and
+		 * 3.2, 81 and 72 hundredths of its leaves, the crowns of the trees farther thin and pale over the sunlit ground.
 		 */
-		var lods = [[4, 4, 0.22, 1.9], [10, 3, 0.07, 3.2]].map(function (level, index) {
+		var lods = [[4, 4, 0.22, 2.13], [10, 3, 0.07, 3.78]].map(function (level, index) {
 			var simpler = {Positions: [], Normals: [], UVs: [], Indices: []};
 			var cards = {Positions: [], Normals: [], UVs: [], Indices: []};
 			var again = this.$Service('Random').Sequence(p.Name + ':level:' + index);
