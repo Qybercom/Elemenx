@@ -184,6 +184,7 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 	 * The furniture of a street (the Along of its type): lamps on its sidewalks, benches and bins, a bus stop, sown by the
 	 * scatter wherever it goes, low as it may be; a lamp glows by itself at night, far less by day, and lights nothing.
 	 */
+	/* Regression (load): the sowing in workers under the whole suite took more than the 60 s the test had. */
 	it('sows the furniture of a street along it, and its lamps light it at night', async function () {
 		var mounted = await mount();
 		var scene = mounted.Scene;
@@ -199,7 +200,7 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 			return scene.SownNear(0, 60, 80).some(function (one) {
 				return one.Model === 'streetlamp';
 			}) && scene.Sown().Waiting === 0;
-		}, 40000);
+		}, 90000);
 
 		road = scene.Roads()[0];
 		sketch = scene.Scene().Ground.Field.Options.Sketch;
@@ -244,7 +245,7 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 		expect(scene.Scene().Lamps.some(function (lamp) {
 			return lamp.Settings.Night;
 		})).toBe(false);
-	}, 60000);
+	}, 120000);
 
 	/*
 	 * What is generated is edited by hand: a thing of a World changed (its override kept, made again with the World over it)

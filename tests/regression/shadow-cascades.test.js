@@ -177,8 +177,8 @@ describe('Contract: the shadows of the sun in four cascades on high and ultra', 
 		expect(scene.Graphics()).toMatchObject({Cascades: 4, ShadowFar: 300});
 		expect(shade.uCascadeSplits[3]).toBeCloseTo(300, 6);
 
-		/* The frame the last slice is drawn in: each eighth. */
-		while (scene.Scene().Cascaded.Frame % 8 !== 3)
+		/* The frame the last slice is drawn in: each fourth. */
+		while (scene.Scene().Cascaded.Frame % 4 !== 1)
 			shade = frame(scene);
 
 		eye = scene.Scene().Eye.slice();
@@ -189,13 +189,112 @@ describe('Contract: the shadows of the sun in four cascades on high and ultra', 
 
 		shade = frame(scene);
 
-		expect(scene.Scene().Cascaded.Frame % 8).toBe(4);
+		expect(scene.Scene().Cascaded.Frame % 4).toBe(2);
 		expect(Math.hypot(scene.Scene().Eye[0] - eye[0], scene.Scene().Eye[2] - eye[2])).toBeGreaterThan(0.01);
 
 		after = placed(shade.uCascades, 3, [point[0] - scene.Scene().Eye[0], point[1] - scene.Scene().Eye[1], point[2] - scene.Scene().Eye[2]]);
 
 		expect(after[0]).toBeCloseTo(before[0], 4);
 		expect(after[1]).toBeCloseTo(before[1], 4);
+	}, 120000);
+
+	/*
+	 * Regression: the far slices were kept at the size of their ball, the second each second frame: the edge of what they
+	 * held lagged behind a turn of the eye, and the shadows came on the things there a few frames late; the shadow of a car
+	 * that drove past the nearest slice was where the car had been.
+	 */
+	it('draws a far slice again at once when the eye turned out of it, and the two nearest each frame', async function () {
+		var scene = await mount('high');
+		var shade = frame(scene);
+		var slices;
+
+		while (scene.Scene().Cascaded.Frame % 4 !== 1)
+			shade = frame(scene);
+
+		slices = scene.Scene().Cascaded.Slices.slice();
+
+		/* A frame not the last slice's own: the two nearest drawn again round the eye, the last kept. */
+		scene.SetViewpoint({Target: [3, 0, 2], Yaw: 0.45, Pitch: 0.3, Distance: 20});
+
+		shade = frame(scene);
+
+		expect(scene.Scene().Cascaded.Slices[0]).not.toBe(slices[0]);
+		expect(scene.Scene().Cascaded.Slices[1]).not.toBe(slices[1]);
+		expect(scene.Scene().Cascaded.Slices[3]).toBe(slices[3]);
+
+		/* Turned round, in a frame not its own: the last slice holds what is ahead now. */
+		scene.SetViewpoint({Target: [3, 0, 2], Yaw: 0.45 + Math.PI, Pitch: 0.3, Distance: 20});
+
+		shade = frame(scene);
+
+		expect(scene.Scene().Cascaded.Frame % 4).toBe(3);
+		expect(scene.Scene().Cascaded.Slices[3]).not.toBe(slices[3]);
+
+		var camera = scene.Scene().Camera;
+		var ahead = [camera.Target[0] - camera.Position[0], camera.Target[1] - camera.Position[1], camera.Target[2] - camera.Position[2]];
+		var length = Math.hypot(ahead[0], ahead[1], ahead[2]);
+
+		[2, 3].forEach(function (i) {
+			var at = placed(shade.uCascades, i, ahead.map(function (value) {
+				return value / length * shade.uCascadeSplits[i] * 0.98;
+			}));
+
+			expect(Math.max(Math.abs(at[0]), Math.abs(at[1]))).toBeLessThan(1);
+		});
+	}, 120000);
+
+	/* The second draw of a car into the map of its shadow was as many triangles as the car (some 440 thousand). */
+	it('casts the shadow of a large model that moves by a simpler shape of it', async function () {
+		var scene = await mount('high');
+		var models = Elemenx.Service('SceneModels');
+		var meshes = Elemenx.Service('Meshes');
+		var made = meshes.Sphere({Radius: 1, Segments: 128, Rings: 64});
+		var ball = {Positions: new Float32Array(made.Positions), Normals: new Float32Array(made.Normals), UVs: new Float32Array(made.UVs), Colors: null, Joints: null, Weights: null, Indices: Array.from(made.Indices)};
+		var name = unique('dense');
+		var renderer = scene.Engine().Renderer;
+		var mesh = renderer.Mesh;
+		var draw = renderer.Draw;
+		var drawn = [];
+		var i;
+
+		models.Define(name, {URL: name, Fit: false, Asset: {Nodes: [{Name: 'ball', Parent: -1, Children: [], Translation: [0, 0, 0], Rotation: [0, 0, 0, 1], Scale: [1, 1, 1], Mesh: 0, Skin: -1}], Meshes: [[{Geometry: ball, Material: 0}]], Lights: [], Materials: [{Name: 'paint', BaseColor: [0.8, 0.3, 0.1, 1], Metallic: 0, Roughness: 0.5, Emissive: [0, 0, 0], Transmission: 0, ColorMap: null, MetalMap: null, NormalMap: null, OcclusionMap: null, EmissiveMap: null, Alpha: 'OPAQUE', Cutoff: 0.5, DoubleSided: false, Unlit: false}], Images: [], Skins: [], Animations: [], Scene: [0]}});
+
+		await new Promise(function (done) {
+			models.Load(name, done);
+		});
+
+		renderer.Mesh = function (geometry) {
+			var one = mesh.apply(this, arguments);
+
+			one.Triangles = geometry && geometry.Indices ? geometry.Indices.length / 3 : 0;
+
+			return one;
+		};
+		renderer.Draw = function (shape) {
+			if (shape && shape.Triangles)
+				drawn.push(shape.Triangles);
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			scene.Add({ID: 'dense', Kind: 'unit', Model: name, Size: 2, X: 1, Y: 1});
+
+			for (i = 0; i < 6; i++)
+				frame(scene);
+		}
+		finally {
+			renderer.Mesh = mesh;
+			renderer.Draw = draw;
+
+			scene.Remove('dense');
+		}
+
+		/* The whole ball in the view, a shape of under half of it in the maps of the shadows. */
+		expect(drawn).toContain(ball.Indices.length / 3);
+		expect(drawn.some(function (count) {
+			return count > 100 && count < ball.Indices.length / 3 * 0.6;
+		})).toBe(true);
 	}, 120000);
 
 	it('gives the hero a map of its own, a square of a few metres round it, over the cascades', async function () {

@@ -6230,6 +6230,36 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			})).toBe(true);
 			expect(mirrors).toContain(1);
 
+			/*
+			 * On a phone (a finger the only pointer) the mirror behind the car keeps the picture it has: each new one was all the
+			 * world drawn once more, two million triangles, for a few dots of the screen. Regression.
+			 */
+			var media = window.matchMedia;
+
+			window.matchMedia = function (query) {
+				return {matches: query === '(pointer: coarse)', media: query, addEventListener: function () {}, removeEventListener: function () {}, addListener: function () {}, removeListener: function () {}};
+			};
+
+			try {
+				turned = 0;
+
+				frames(6);
+
+				expect(turned).toBe(0);
+				expect(mirrors).toContain(1);
+			}
+			finally {
+				window.matchMedia = media;
+			}
+
+			/* Out of the car elsewhere: made again, but four times less often than its Every (2), once in eight frames. */
+			turned = 0;
+
+			frames(16);
+
+			expect(turned).toBeGreaterThan(0);
+			expect(turned).toBeLessThan(4);
+
 			/* The screen, to an eye in the car (no further one sees it): once its picture is made, the element it names, red. */
 			scene.Person = 'first';
 
@@ -6903,6 +6933,20 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		expect(moving[0]).toBeLessThan(0.4);
 		expect(moving[3]).toBe(1);
+
+		/*
+		 * A shadow that moved on with its car is let go on a grained road at once. Regression: held to the darkest grain round
+		 * it, the history of the shadow stayed, a second, paler shadow behind the car.
+		 */
+		var grain = picture(function (x, y) {
+			return (x + y) % 2 ? [0.45, 0.45, 0.45, 1] : [0.55, 0.55, 0.55, 1];
+		});
+		var shadowed = picture(function () {
+			return [0.25, 0.25, 0.25, 0];
+		});
+		var road = middle(shaders.Frames, Object.assign({uColor: grain, uPast: shadowed}, uniforms));
+
+		expect(road[0]).toBeGreaterThan(0.53);
 
 		/* The shape a body cut out of clouds goes at once with no new frame showing it. */
 		var clouds = middle(shaders.CloudFrames, {uNew: picture(function () {

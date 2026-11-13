@@ -1583,6 +1583,7 @@ Elemenx.Component('Scene', {
 			gpu.Sphere = renderer.Mesh(meshes.Sphere({Segments: 64, Rings: 40}));
 			gpu.Quad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
 			gpu.Shapes = {};
+			gpu.ShadowShapes = {};
 			gpu.Stars = stars();
 			scene.Lines = {};
 			scene.Rings = {};
@@ -1596,6 +1597,107 @@ Elemenx.Component('Scene', {
 				gpu.Shapes[name] = renderer.Mesh(geometry || shapeGeometry(name));
 
 			return gpu.Shapes[name];
+		}
+
+		/*
+		 * The shape a list casts its shadow by. Of a large model of a file that moves (a car), a simpler one, made once: its
+		 * corners within a cell of a hundredth of its size or more become one (shadowGeometry). A map of the shadow sees only the outline, and
+		 * the whole car drawn into it again was as many triangles as the car itself. One is made a frame; till then, the whole.
+		 */
+		function shadowShape (name, list) {
+			var geometry = list.Geometry;
+			var simple;
+			var box;
+
+			if (gpu.ShadowShapes[name] !== undefined)
+				return gpu.ShadowShapes[name] || shape(name);
+
+			if (list.Still || !list.Uploaded || !geometry || !geometry.Indices || geometry.Indices.length < 18000 || gpu.ShadowBudget < 1) return shape(name);
+
+			gpu.Simpler = gpu.Simpler || new WeakMap();
+			simple = gpu.Simpler.get(geometry);
+
+			if (simple === undefined) {
+				gpu.ShadowBudget--;
+				box = extentsOf(geometry);
+				/* A hundredth of its size, or twice the room between its corners where they are fewer: some four times fewer. */
+				simple = shadowGeometry(geometry, Math.max(box[3] - box[0], box[4] - box[1], box[5] - box[2]) * Math.max(0.01, 4 / Math.sqrt(geometry.Indices.length / 6)));
+				simple = simple.Indices.length < geometry.Indices.length * 0.6 ? simple : null;
+
+				gpu.Simpler.set(geometry, simple);
+			}
+
+			gpu.ShadowShapes[name] = simple ? renderer.Mesh(simple).Instance(list.Uploaded, list.Count) : null;
+
+			return gpu.ShadowShapes[name] || shape(name);
+		}
+
+		/*
+		 * A simpler shape for a map of a shadow: the corners within one cell of a grid become one, at the middle of them, with
+		 * the joints and weights of the first (the body of a car of a file has a skeleton); a face that lost a corner goes. Its
+		 * normals and colors are not there: the depth alone is drawn of it.
+		 */
+		function shadowGeometry (geometry, cell) {
+			var p = geometry.Positions;
+			var joints = geometry.Joints && geometry.Joints.length ? geometry.Joints : null;
+			var weights = joints ? geometry.Weights : null;
+			var cells = {};
+			var map = new Int32Array(p.length / 3);
+			var sums = [];
+			var counts = [];
+			var firsts = [];
+			var indices = [];
+			var made;
+			var key;
+			var one;
+			var a;
+			var b;
+			var c;
+			var i;
+			var k;
+
+			for (i = 0; i < p.length / 3; i++) {
+				key = Math.round(p[i * 3] / cell) + ':' + Math.round(p[i * 3 + 1] / cell) + ':' + Math.round(p[i * 3 + 2] / cell);
+				one = cells[key];
+
+				if (one === undefined) {
+					one = cells[key] = counts.length;
+
+					counts.push(0);
+					firsts.push(i);
+					sums.push(0, 0, 0);
+				}
+
+				sums[one * 3] += p[i * 3];
+				sums[one * 3 + 1] += p[i * 3 + 1];
+				sums[one * 3 + 2] += p[i * 3 + 2];
+				counts[one]++;
+				map[i] = one;
+			}
+
+			for (i = 0; i < geometry.Indices.length; i += 3) {
+				a = map[geometry.Indices[i]];
+				b = map[geometry.Indices[i + 1]];
+				c = map[geometry.Indices[i + 2]];
+
+				if (a !== b && b !== c && a !== c)
+					indices.push(a, b, c);
+			}
+
+			made = {Positions: new Float32Array(counts.length * 3), Normals: null, UVs: null, Colors: null, Joints: joints ? new Float32Array(counts.length * 4) : null, Weights: joints ? new Float32Array(counts.length * 4) : null, Indices: indices};
+
+			for (i = 0; i < counts.length; i++) {
+				made.Positions[i * 3] = sums[i * 3] / counts[i];
+				made.Positions[i * 3 + 1] = sums[i * 3 + 1] / counts[i];
+				made.Positions[i * 3 + 2] = sums[i * 3 + 2] / counts[i];
+
+				for (k = 0; joints && k < 4; k++) {
+					made.Joints[i * 4 + k] = joints[firsts[i] * 4 + k];
+					made.Weights[i * 4 + k] = weights[firsts[i] * 4 + k];
+				}
+			}
+
+			return made;
 		}
 
 		function shapeGeometry (name) {
@@ -3712,6 +3814,10 @@ Elemenx.Component('Scene', {
 				delete gpu.Shapes[name];
 			}
 
+			if (gpu.ShadowShapes[name])
+				gpu.ShadowShapes[name].Destroy();
+
+			delete gpu.ShadowShapes[name];
 			delete lists[name];
 		}
 
@@ -3726,6 +3832,11 @@ Elemenx.Component('Scene', {
 				data.aFrames = {Size: 4, Data: list.Frames.subarray(0, size)};
 
 			shape(name, list.Geometry).Instance(data, list.Count);
+
+			list.Uploaded = data;
+
+			if (gpu.ShadowShapes[name])
+				gpu.ShadowShapes[name].Instance(data, list.Count);
 
 			/* The wire of the scene, the edges of its models: their lines copied as the shape is. */
 			if (wired() && name.indexOf('outline:') !== 0)
@@ -4429,16 +4540,30 @@ Elemenx.Component('Scene', {
 			var groups = {};
 			var order = [];
 			var materials = [];
+			var resting = !!(made.Baked || made.Baking && made.Baking.Frames.length);
+			var whole = true;
+			var pieces;
 			var kept;
 
 			if (!made.Asset || made.Moves || Object.keys(made.Clips || {}).length || made.Merge === false || object.Values.Merge === false || made.Pieces.length < 2) return made.Pieces;
 
 			made.Joined = made.Joined || {};
+			key += resting ? ':rest' : '';
 
 			if (made.Joined[key])
 				return made.Joined[key];
 
-			made.Pieces.forEach(function (piece) {
+			/* Its pieces of a skeleton that never moves where the skeleton stands: they join the others of their material. */
+			pieces = made.Pieces.map(function (piece) {
+				var still = piece.Skin !== -1 && resting ? unskinned(made, piece) : null;
+				if (piece.Skin !== -1 && !still)
+					whole = false;
+
+				/* Placed already, as a piece joined is: the pose of its node is in its corners (Regression: placed twice, it flew off). */
+				return still ? Object.assign({}, still, {Joined: true, Wheel: wheels[piece.ID] || null}) : piece;
+			});
+
+			pieces.forEach(function (piece) {
 				var wheel = wheels[piece.ID];
 				var material = materials.indexOf(piece.Material);
 				var group;
@@ -4471,9 +4596,84 @@ Elemenx.Component('Scene', {
 				return Object.assign({}, first, {ID: 'joined-' + index, Joined: true, Wheel: group.Wheel, Node: undefined, Rest: math.Identity(), Placed: null, Geometry: joinedGeometry(group.Pieces)});
 			});
 
-			made.Joined[key] = kept;
+			/* Not kept while the skeleton is not there yet: its pieces join when it is. */
+			if (whole)
+				made.Joined[key] = kept;
 
 			return kept;
+		}
+
+		/*
+		 * A piece of a skeleton that never moves (a model of no clips: the body of a car of a file) as a piece of its own: its
+		 * corners where the first frame of the skeleton puts them, as the graphics card would, and no colors of its corners (a
+		 * piece of a skeleton is drawn without them: the body of a car came out black). Regression: the body of a car was
+		 * some eighty pieces of a skeleton, never joined, each drawn apart in each pass (450 draws a frame at high).
+		 */
+		function unskinned (made, piece) {
+			var frame = made.Baked ? made.Baked.Data : made.Baking.Frames[0];
+			var geometry = piece.Geometry;
+			var p = geometry.Positions;
+			var q = geometry.Normals || [];
+			var joints = geometry.Joints;
+			var weights = geometry.Weights;
+			var positions;
+			var normals;
+			var i;
+			var k;
+			var w;
+			var at;
+			var x;
+			var y;
+			var z;
+			var length;
+
+			gpu.Unskinned = gpu.Unskinned || new WeakMap();
+
+			if (gpu.Unskinned.has(piece))
+				return gpu.Unskinned.get(piece);
+
+			if (!frame || !joints || !weights || !joints.length) return null;
+
+			positions = new Float32Array(p.length);
+			normals = new Float32Array(p.length);
+
+			for (i = 0; i < p.length / 3; i++) {
+				for (k = 0; k < 4; k++) {
+					w = weights[i * 4 + k];
+
+					if (!w)
+						continue;
+
+					at = (joints[i * 4 + k] + (piece.JointOffset || 0)) * 12;
+					x = p[i * 3];
+					y = p[i * 3 + 1];
+					z = p[i * 3 + 2];
+
+					positions[i * 3] += w * (frame[at] * x + frame[at + 1] * y + frame[at + 2] * z + frame[at + 3]);
+					positions[i * 3 + 1] += w * (frame[at + 4] * x + frame[at + 5] * y + frame[at + 6] * z + frame[at + 7]);
+					positions[i * 3 + 2] += w * (frame[at + 8] * x + frame[at + 9] * y + frame[at + 10] * z + frame[at + 11]);
+
+					if (q.length) {
+						x = q[i * 3];
+						y = q[i * 3 + 1];
+						z = q[i * 3 + 2];
+
+						normals[i * 3] += w * (frame[at] * x + frame[at + 1] * y + frame[at + 2] * z);
+						normals[i * 3 + 1] += w * (frame[at + 4] * x + frame[at + 5] * y + frame[at + 6] * z);
+						normals[i * 3 + 2] += w * (frame[at + 8] * x + frame[at + 9] * y + frame[at + 10] * z);
+					}
+				}
+
+				length = Math.sqrt(normals[i * 3] * normals[i * 3] + normals[i * 3 + 1] * normals[i * 3 + 1] + normals[i * 3 + 2] * normals[i * 3 + 2]) || 1;
+
+				normals[i * 3] /= length;
+				normals[i * 3 + 1] /= length;
+				normals[i * 3 + 2] /= length;
+			}
+
+			gpu.Unskinned.set(piece, Object.assign({}, piece, {Skin: -1, JointOffset: 0, Rest: math.Identity(), Geometry: Object.assign({}, geometry, {Positions: positions, Normals: q.length ? normals : geometry.Normals, Colors: null, Joints: null, Weights: null})}));
+
+			return gpu.Unskinned.get(piece);
 		}
 
 		/* The geometry of pieces as one, each in the place of its rest: only the corners their triangles use. */
@@ -4818,9 +5018,9 @@ Elemenx.Component('Scene', {
 		/*
 		 * Four shadows of the sun, each of a slice of the view out to far, farther ones wider, in the quarters of one map.
 		 * A slice is held in a ball whose size keeps as the eye turns, its middle kept to whole texels of the world: no edge
-		 * crawls. The nearest is drawn each frame, the second each second, the third each fourth, the last each eighth;
-		 * between, what they hold is kept where it was in the world, and only the eye it is seen from moves (what moves far
-		 * away casts its shadow a few frames late).
+		 * crawls. The two nearest are drawn each frame, the third each second, the last each fourth, and at once when the
+		 * eye left what they hold; between, what they hold is kept where it was in the world, and only the eye it is seen
+		 * from moves (what moves far away casts its shadow a frame or three late).
 		 */
 		function cascades (direction, depth, far, casters) {
 			var camera = scene.Camera;
@@ -4871,6 +5071,8 @@ Elemenx.Component('Scene', {
 				var along;
 				var across;
 				var slice = store.Slices[index];
+				var shift;
+				var wide;
 				var target;
 				var matrix;
 
@@ -4884,14 +5086,34 @@ Elemenx.Component('Scene', {
 
 				/* Whole quarter metres: a little zoom does not change the size of a texel. */
 				radius = Math.ceil(radius * 4) / 4;
-				texel = radius * 2 / side;
+				center = vectors.Add(scene.Eye, vectors.Scale(forward, middle));
 
-				if (all || !slice || slice.Radius !== radius || index === 0 || index === 1 && store.Frame % 2 === 0 || index === 2 && store.Frame % 4 === 1 || index === 3 && store.Frame % 8 === 3) {
-					center = vectors.Add(scene.Eye, vectors.Scale(forward, middle));
+				/*
+				 * A slice kept from an earlier frame still holds all of the ball of this one: drawn a little wider than its
+				 * ball (a seventh), it is kept while the eye moves or turns within that. Regression: kept at the size of its ball,
+				 * the edge of a slice lagged behind a car or a turn, and the shadows came on the things there a few frames late.
+				 */
+				if (slice && !all && slice.Need === radius && index > 1 && !(index === 2 && store.Frame % 2 === 0 || index === 3 && store.Frame % 4 === 1)) {
+					shift = vectors.Subtract(center, slice.Center);
+
+					if (Math.abs(vectors.Dot(shift, x)) + radius > slice.Radius || Math.abs(vectors.Dot(shift, y)) + radius > slice.Radius)
+						slice = null;
+				}
+				else {
+					slice = null;
+				}
+
+				/* The two nearest each frame: what moves near (the car driven, its shadow far behind it) is never late there. */
+				if (!slice) {
+					wide = index > 1 ? Math.ceil(radius * 4 * 8 / 7) / 4 : radius;
+					texel = wide * 2 / side;
 					along = vectors.Dot(center, x);
 					across = vectors.Dot(center, y);
-					slice = store.Slices[index] = {Radius: radius, Center: vectors.Add(vectors.Add(center, vectors.Scale(x, Math.round(along / texel) * texel - along)), vectors.Scale(y, Math.round(across / texel) * texel - across)), Draw: true};
+					slice = store.Slices[index] = {Need: radius, Radius: wide, Center: vectors.Add(vectors.Add(center, vectors.Scale(x, Math.round(along / texel) * texel - along)), vectors.Scale(y, Math.round(across / texel) * texel - across)), Draw: true};
 				}
+
+				radius = slice.Radius;
+				texel = radius * 2 / side;
 
 				target = vectors.Subtract(slice.Center, scene.Eye);
 				matrix = math.Multiply(math.Orthographic(-radius, radius, -radius, radius, 0, Math.max(depth, radius) * 2), math.LookAt(vectors.Add(target, vectors.Scale(direction, Math.max(depth, radius))), target, up));
@@ -5045,6 +5267,9 @@ Elemenx.Component('Scene', {
 			var made;
 			var aimed;
 
+			/* One simpler shape of a shadow made a frame (shadowShape). */
+			gpu.ShadowBudget = 1;
+
 			/*
 			 * A map of its own for the hero (the one Control gives the keys, on foot or in what it drives), else the model in the
 			 * focus, while near the eye: its square round it, a few metres, a texel of millimetres: the folds of its clothes, its
@@ -5071,7 +5296,7 @@ Elemenx.Component('Scene', {
 					/* Light goes through glass. */
 					if (list.Material && list.Material.Transmission && seeThrough(list.Material) || !seen(list, sees)) return;
 
-					renderer.Draw(shape(name), moved(list, list.Skinned ? gpu.SkinDepth : gpu.ManyDepth, 'Depth'), Object.assign({uViewProjection: matrix, uWind: scene.Gust || 0, uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : undefined, uJointOffset: list.Offset}, movedValues(list)), {Cull: 'none'});
+					renderer.Draw(shadowShape(name, list), moved(list, list.Skinned ? gpu.SkinDepth : gpu.ManyDepth, 'Depth'), Object.assign({uViewProjection: matrix, uWind: scene.Gust || 0, uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : undefined, uJointOffset: list.Offset}, movedValues(list)), {Cull: 'none'});
 				});
 
 				(nodes || []).forEach(function (node) {
@@ -7356,6 +7581,11 @@ Elemenx.Component('Scene', {
 			return {Center: center, Normal: normal, Right: right, Up: up, Width: width, Height: height, Model: math.Multiply(math.Translation(at[0], at[1], at[2]), math.Multiply([right[0], right[1], right[2], 0, up[0], up[1], up[2], 0, normal[0], normal[1], normal[2], 0, 0, 0, 0, 1], math.Multiply(math.Rotation([1, 0, 0], Math.PI / 2), math.Scaling(width, 1, height))))};
 		}
 
+		/* An eye in the car or by it: one that sees its screens and its mirrors at a size worth their pictures. */
+		function inCar (car) {
+			return !!car && !!car.World && !!scene.Eye && vectors.Distance(scene.Eye, car.World) <= Math.max(2, (car.Size || 4) * 0.75);
+		}
+
 		/* The vehicle the keys drive, if it carries mirrors or screens: only its own are drawn, the others' are too small to see. */
 		function drivenCar () {
 			var hero = scene.Objects[scene.Hero];
@@ -7417,6 +7647,7 @@ Elemenx.Component('Scene', {
 			var tick = scene.MirrorTick = (scene.MirrorTick || 0) + 1;
 			var all = reflectorsOf();
 			var keys = {};
+			var phone = self.Phone && self.Phone();
 
 			all.map(function (one) {
 				var at = vectors.Subtract(one.Pane.Center, scene.Eye);
@@ -7448,8 +7679,13 @@ Elemenx.Component('Scene', {
 					return inverse[row * 4] * plane[0] + inverse[row * 4 + 1] * plane[1] + inverse[row * 4 + 2] * plane[2] + inverse[row * 4 + 3] * plane[3];
 				});
 
-				/* Each in a frame of its own: all of them on the same frames made every other frame a heavy one, and the view went by in jerks. */
-				var waits = (tick + index) % Math.max(1, Math.round(number(settings.Every, 1))) !== 0;
+				/*
+				 * Each in a frame of its own: all of them on the same frames made every other frame a heavy one, and the view went by
+				 * in jerks. A mirror of the car seen from out of it is a few dots of the screen, and each picture of it is all the
+				 * world drawn once more (Regression: two million triangles): made again four times less often, and on a phone not at all.
+				 */
+				var outside = !!one.Small && !inCar(drivenCar());
+				var waits = (tick + index) % (Math.max(1, Math.round(number(settings.Every, 1))) * (outside ? 4 : 1)) !== 0 || outside && phone;
 
 				/*
 				 * Made again only when it is too small, or twice too big, and on its own frame: a mirror that moves on the screen
@@ -7726,7 +7962,7 @@ Elemenx.Component('Scene', {
 			 * Its screens only to an eye in it or by it (one that sees them): a picture of an element of the page is costly.
 			 * Regression: the dash of a car was drawn again five times a second behind it, the eye 8 m away (its frames late).
 			 */
-			if (!car.World || !scene.Eye || vectors.Distance(scene.Eye, car.World) > Math.max(2, (car.Size || 4) * 0.75)) return;
+			if (!inCar(car)) return;
 
 			(car.Values.Vehicle.Screens || []).forEach(function (screen, index) {
 				var picture = screenOf(car, screen, index);

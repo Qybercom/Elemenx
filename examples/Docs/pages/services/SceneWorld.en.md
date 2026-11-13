@@ -40,6 +40,6 @@ The same functions run in Node: they read no page.
 - [passes on what comes to a block turned off by the name and the type of each output](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L899) — `tests/regression/blueprints.test.js`
 - [stops what comes to a collider of its own outline, of a model or of the sketch, and never moves it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-rigid.test.js#L175) — `tests/regression/library-rigid.test.js`
 - [makes the objects of the World of a ground in the scene, marked in the tree, not saved: they come again of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L734) — `tests/regression/library-scene-editor.test.js`
-- [preloads the globe of a planet into the store of the browser, and a scene of it takes it from there at once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L158) — `tests/regression/library-scene-landing.test.js`
+- [preloads the globe of a planet into the store of the browser, and a scene of it takes it from there at once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L161) — `tests/regression/library-scene-landing.test.js`
 
 +35 more in the same files

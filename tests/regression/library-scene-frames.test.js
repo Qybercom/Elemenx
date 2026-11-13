@@ -40,6 +40,103 @@ describe('Regression: what made the frames of a scene uneven or heavy', function
 		while (owned.length) owned.pop().$Destroy();
 	});
 
+	/*
+	 * A model of a file with a skeleton and no clips (the body of a car): its pieces of the skeleton never move, and were
+	 * never joined, each drawn apart in each pass (the body of a car some eighty draws a pass). They join the others of
+	 * their material, where the skeleton puts them.
+	 */
+	it('joins the pieces of a skeleton that never moves, of one material, into one draw, in their places', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var renderer = engine.Renderer;
+		var models = Elemenx.Service('SceneModels');
+		var meshes = Elemenx.Service('Meshes');
+		var name = unique('skinned');
+		var draw = renderer.Draw;
+		var now = performance.now() + 100;
+		var drawn = [];
+		var joined;
+		var i;
+
+		function box (x) {
+			var made = meshes.Box({Width: 0.4, Height: 0.4, Depth: 0.4});
+			var count = made.Positions.length / 3;
+
+			return {Positions: new Float32Array(Array.from(made.Positions).map(function (value, index) {
+				return index % 3 === 0 ? value + x : value;
+			})), Normals: new Float32Array(made.Normals), UVs: new Float32Array(made.UVs), Colors: new Float32Array(count * 3), Joints: new Float32Array(count * 4), Weights: new Float32Array(Array.from({length: count * 4}, function (value, index) {
+				return index % 4 === 0 ? 1 : 0;
+			})), Indices: Array.from(made.Indices)};
+		}
+
+		function frames (count) {
+			for (i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		models.Define(name, {URL: name, Fit: false, Asset: {
+			Nodes: [
+				{Name: 'root', Parent: -1, Children: [], Translation: [0, 1, 0], Rotation: [0, 0, 0, 1], Scale: [1, 1, 1], Mesh: -1, Skin: -1},
+				{Name: 'left', Parent: -1, Children: [], Translation: [0, 0, 0], Rotation: [0, 0, 0, 1], Scale: [1, 1, 1], Mesh: 0, Skin: 0},
+				{Name: 'right', Parent: -1, Children: [], Translation: [0, 0, 0], Rotation: [0, 0, 0, 1], Scale: [1, 1, 1], Mesh: 1, Skin: 0}
+			],
+			Meshes: [[{Geometry: box(-1), Material: 0}], [{Geometry: box(1), Material: 0}]],
+			Lights: [],
+			Materials: [{Name: 'paint', BaseColor: [1, 0.5, 0, 1], Metallic: 0, Roughness: 0.5, Emissive: [0, 0, 0], Transmission: 0, ColorMap: null, MetalMap: null, NormalMap: null, OcclusionMap: null, EmissiveMap: null, Alpha: 'OPAQUE', Cutoff: 0.5, DoubleSided: false, Unlit: false}],
+			Images: [],
+			Skins: [{Joints: [0]}],
+			Animations: [],
+			Scene: [0, 1, 2]
+		}});
+
+		await new Promise(function (done) {
+			models.Load(name, done);
+		});
+
+		renderer.Draw = function (mesh, program, uniforms) {
+			if (uniforms && uniforms.uShadowOn !== undefined && mesh && (mesh.Vertices === 24 || mesh.Vertices === 48))
+				drawn.push(mesh.Vertices);
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			scene.Add({ID: 'body', Kind: 'unit', Model: name, Size: 1, X: 0, Y: 0});
+
+			frames(6);
+
+			drawn = [];
+
+			frames(1);
+
+			joined = drawn;
+
+			inner.Objects.body.Values.Merge = false;
+
+			frames(2);
+
+			drawn = [];
+
+			frames(1);
+
+			/* Joined: one draw of the view of both boxes; apart, a draw of each (the scene draws boxes of its own too, now and then). */
+			expect(joined.filter(function (count) {
+				return count === 48;
+			}).length).toBe(1);
+			expect(drawn).not.toContain(48);
+			expect(drawn.filter(function (count) {
+				return count === 24;
+			}).length).toBeGreaterThan(1);
+		}
+		finally {
+			renderer.Draw = draw;
+		}
+	});
+
 	/* Both mirrors of a car were drawn on the same frames: every other frame was a heavy one, and the view went by in jerks. */
 	it('draws the mirrors of a car each in a frame of its own', async function () {
 		var scene = await mount();
@@ -67,6 +164,26 @@ describe('Regression: what made the frames of a scene uneven or heavy', function
 
 			inner.Yaw = Math.PI;
 
+			for (i = 0; i < 20; i++) {
+				turned.push(0);
+
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+
+			/* From behind the car, never both in one frame, and each four times less often than from in it. */
+			expect(turned.slice(4).every(function (count) {
+				return count <= 1;
+			})).toBe(true);
+			expect(turned.slice(4).reduce(function (sum, count) {
+				return sum + count;
+			}, 0)).toBeGreaterThan(1);
+
+			/* From in the car, after the first pictures, one mirror a frame. */
+			scene.Person = 'first';
+			turned = [];
+
 			for (i = 0; i < 12; i++) {
 				turned.push(0);
 
@@ -75,8 +192,7 @@ describe('Regression: what made the frames of a scene uneven or heavy', function
 				engine.Frame(now += 33);
 			}
 
-			/* After the first pictures, one mirror a frame. */
-			expect(turned.slice(4).every(function (count) {
+			expect(turned.slice(6).every(function (count) {
 				return count === 1;
 			})).toBe(true);
 		}

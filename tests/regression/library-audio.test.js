@@ -367,14 +367,18 @@ describe('Contract: the Audio Service, Spectrum and Waveform', function () {
 		canvas = host.$Element().querySelector('.mode-curve canvas');
 		context = canvas.getContext('2d');
 
+		/*
+		 * The curve at the size it is laid out at. Regression (load): any ink was waited for, and a first picture drawn before the
+		 * canvas had its width was read as the curve.
+		 */
 		await waitFor(function () {
-			return inked(canvas) > 0;
-		});
+			ratio = canvas.width / 300;
+			line = context.getImageData(Math.round(150 * ratio), 0, 1, canvas.height).data;
 
-		ratio = canvas.width / 300;
+			return canvas.clientWidth === 300 && line[Math.round(12 * ratio) * 4 + 3] > 0 && line[Math.round(60 * ratio) * 4 + 3] > 0;
+		}, 10000);
 
 		/* The middle of the width is the top of the curve (0.9), the area under it filled, the air over it clear but for the grid. */
-		line = context.getImageData(Math.round(150 * ratio), 0, 1, canvas.height).data;
 
 		expect(line[Math.round(12 * ratio) * 4 + 3]).toBeGreaterThan(0);
 		expect(line[Math.round(60 * ratio) * 4 + 3]).toBeGreaterThan(0);

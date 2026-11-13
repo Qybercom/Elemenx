@@ -1802,13 +1802,19 @@ Elemenx.Trait('SceneLighting', {
 				'	vec3 color = seen.rgb;',
 				'	vec3 low = color;',
 				'	vec3 high = color;',
+				'	vec3 sum = vec3(0.0);',
+				'	vec3 squares = vec3(0.0);',
 				'	for (int y = -1; y <= 1; y++) {',
 				'		for (int x = -1; x <= 1; x++) {',
 				'			vec3 near = texture(uColor, uv + vec2(float(x), float(y)) * uPixel).rgb;',
 				'			low = min(low, near);',
 				'			high = max(high, near);',
+				'			sum += near;',
+				'			squares += near * near;',
 				'		}',
 				'	}',
+				'	vec3 mean = sum / 9.0;',
+				'	vec3 spread = sqrt(max(squares / 9.0 - mean * mean, vec3(0.0)));',
 				'	vec4 p = uInverse * vec4(vQuad, texture(uDepth, uv).r * 2.0 - 1.0, 1.0);',
 				'	vec4 q = uMatrix * vec4(p.xyz / p.w + uMoved, 1.0);',
 				'	vec2 before = q.xy / q.w * 0.5 + 0.5;',
@@ -1820,8 +1826,16 @@ Elemenx.Trait('SceneLighting', {
 				 */
 				'	float moving = 1.0 - step(0.5, seen.a);',
 				'	float was = max(texture(uPast, before).a, max(max(texture(uPast, before + vec2(uPixel.x, 0.0)).a, texture(uPast, before - vec2(uPixel.x, 0.0)).a), max(texture(uPast, before + vec2(0.0, uPixel.y)).a, texture(uPast, before - vec2(0.0, uPixel.y)).a)));',
-				'	vec3 past = clamp(sharp(moving > 0.5 ? uv : before), low, high);',
-				'	float keep = moving > 0.5 ? 0.3 : 1.0 - step(0.25, was);',
+				/*
+				 * What the last frame had there, held to what is round it now. Where it is far from all of that, the light there has
+				 * changed (a shadow that moves with a car over the road): it is let go at once. Regression: held to the darkest of
+				 * the grain of the road, the shadow of a moving car left a second, paler one behind it.
+				 */
+				'	vec3 seenBefore = sharp(moving > 0.5 ? uv : before);',
+				'	vec3 past = clamp(seenBefore, max(low, mean - spread * 1.25), min(high, mean + spread * 1.25));',
+				'	vec3 grey = vec3(0.299, 0.587, 0.114);',
+				'	float apart = abs(dot(seenBefore - mean, grey)) / (dot(spread, grey) + 0.004);',
+				'	float keep = (moving > 0.5 ? 0.3 : 1.0 - step(0.25, was)) * (1.0 - smoothstep(1.5, 3.0, apart));',
 				'	outColor = vec4(mix(color, past, uMix * inside * keep), moving);',
 				'}'
 			].join('\n'),

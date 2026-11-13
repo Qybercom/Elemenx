@@ -102,6 +102,11 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		expect(corner[3]).toBe(0);
 		expect(at.Latitude).toBeCloseTo(under[0], 6);
 		expect(at.Sample.Elevation).toBe(editor.Planet().Elevation(planets.Unproject(view, view.Width / 2, view.Height / 2)));
+
+		/* Drawn again at the same size, it keeps the globe till the new picture comes (Regression: it was cleared at once). */
+		editor.Render();
+
+		expect(canvas.getContext('2d').getImageData(Math.round(canvas.width / 2), Math.round(canvas.height / 2), 1, 1).data[3]).toBe(255);
 	}, 90000);
 
 	it('draws a continent by its points on the globe, sets its fields and takes it away, each change emitted', async function () {

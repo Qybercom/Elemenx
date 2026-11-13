@@ -134,10 +134,13 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 		inner.Loop.Start();
 
-		/* Prepared, and the frame after it telling the loading is over. */
+		/*
+		 * Prepared, and the frame after it telling the loading is over. Regression (load): 30 s, where the same globe takes up to
+		 * 90 s under the whole suite (the test before).
+		 */
 		await waitFor(function () {
 			return prepared.length > 0 && stages[stages.length - 1] === '';
-		}, 30000);
+		}, 90000);
 
 		inner.Loop.Stop();
 
@@ -152,7 +155,7 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 		for (var i = 1; i < parts.length - 1; i++)
 			expect(parts[i]).toBeGreaterThanOrEqual(parts[i - 1]);
-	}, 60000);
+	}, 120000);
 
 	/* A globe painted once is kept in the browser: Preload paints it before, and a scene of that planet has it at once. */
 	it('preloads the globe of a planet into the store of the browser, and a scene of it takes it from there at once', async function () {

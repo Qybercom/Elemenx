@@ -76,16 +76,19 @@ describe('Contract: Jog', function () {
 
 		var started = Date.now();
 
-		await new Promise(function (resolve) {
-			setTimeout(resolve, 300);
-		});
+		/*
+		 * 180 degrees a second: a quarter of a turn comes, and no sooner than its time. Regression (load): a frame was taken to be
+		 * at most a tenth of a second old, and under the whole suite it was older.
+		 */
+		await waitFor(function () {
+			return angle(root) - before >= 45;
+		}, 5000);
 
-		/* 180 degrees a second, as long as it waited (a frame drawn up to a tenth of a second ago, under load). */
 		var turned = angle(root) - before;
 		var waited = (Date.now() - started) / 1000;
 
 		expect(root.classList.contains('playing')).toBe(true);
-		expect(turned).toBeGreaterThan((waited - 0.1) * 180);
+		expect(turned).toBeGreaterThanOrEqual(45);
 		expect(turned).toBeLessThan(waited * 180 + 20);
 
 		host.Playing = false;

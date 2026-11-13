@@ -95,8 +95,12 @@ Elemenx.Component('PlanetEditor', {
 		own.Canvas = this.$Ref('Canvas');
 		own.Marks = this.$Ref('Marks');
 
+		/* Drawn again when the size of its view changed: the observer tells once at the start too, of the size it has. */
 		if (typeof ResizeObserver !== 'undefined') {
 			own.Sizes = new ResizeObserver(function () {
+				var view = self.View();
+				if (own.Canvas && own.Canvas.width === Math.round(view.Width * Math.min(2, window.devicePixelRatio || 1)) && own.Canvas.height === Math.round(view.Height * Math.min(2, window.devicePixelRatio || 1))) return;
+
 				self.Render();
 			});
 
@@ -208,9 +212,17 @@ Elemenx.Component('PlanetEditor', {
 
 		if (!canvas) return;
 
+		/*
+		 * The canvas made again only when its size changed: that clears it, and the globe was gone till the first pass came.
+		 * Regression (load): the observer drew it again at the same size after it was drawn, and it was empty.
+		 */
 		ratio = Math.min(2, window.devicePixelRatio || 1);
-		canvas.width = Math.round(view.Width * ratio);
-		canvas.height = Math.round(view.Height * ratio);
+
+		if (canvas.width !== Math.round(view.Width * ratio) || canvas.height !== Math.round(view.Height * ratio)) {
+			canvas.width = Math.round(view.Width * ratio);
+			canvas.height = Math.round(view.Height * ratio);
+		}
+
 		context = canvas.getContext('2d');
 
 		context.setTransform(ratio, 0, 0, ratio, 0, 0);
