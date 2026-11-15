@@ -7,6 +7,8 @@
  */
 Elemenx.Component('NumberInput', {
 	$TemplateURL: 'NumberInput.html',
+	/* [(Value)] on its tag follows what it tells as it is typed or moved. */
+	$Model: {Value: 'input'},
 	$StyleURL: 'NumberInput.css',
 	$Meta: {
 		Group: 'inputs',

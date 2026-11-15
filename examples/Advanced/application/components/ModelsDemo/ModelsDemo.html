@@ -8,7 +8,7 @@
 		<Button Label="March" Icon="map-pin" Variant="ghost" (click)="ModelsMarch" />
 		<Toggle Label="Shadows" [checked]="ModelsShadows" (change)="ModelsShadowed" />
 		<Button Label="To the files" Icon="box" Variant="ghost" *if="ModelsFiles.length" (click)="ModelsToFiles" />
-		<span class="scene-demo-status">{{ModelsNote}}</span>
+		<span class="elemenx-caption" role="status">{{ModelsNote}}</span>
 	</div>
 	<div class="scene-demo-scene">
 		<Scene Setting="terrain" Team="red" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [shadows]="ModelsShadows" (ready)="ModelsReady">

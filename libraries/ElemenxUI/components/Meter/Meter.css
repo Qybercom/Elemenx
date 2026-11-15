@@ -309,3 +309,10 @@
 	font-size: var(--elemenx-font-size-small);
 	text-align: center;
 }
+
+/* A value fed on and on (a speed each frame): shown at once, no transition started again each time (Live). */
+.elemenx-meter.live .elemenx-meter-fill,
+.elemenx-meter.live .elemenx-meter-arc,
+.elemenx-meter.live .elemenx-meter-needle {
+	transition: none;
+}

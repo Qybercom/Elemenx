@@ -342,6 +342,17 @@
 	bottom: 0;
 }
 
+/* A finger is wider than a pointer: the edges it drags are wider under it. */
+@media (pointer: coarse) {
+	.elemenx-timeline-range-edge {
+		width: 14px;
+	}
+
+	.elemenx-timeline.vertical .elemenx-timeline-range-edge {
+		height: 14px;
+	}
+}
+
 /* The marks: a point on the axis, a leader to its label in its row. */
 .elemenx-timeline-point {
 	--elemenx-focus-offset: 1px;

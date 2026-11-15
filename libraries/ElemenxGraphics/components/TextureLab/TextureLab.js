@@ -10,7 +10,7 @@ Elemenx.Component('TextureLab', {
 	$StyleURL: 'TextureLab.css',
 	$Meta: {
 		Group: 'game',
-		Icon: 'palette',
+		Icon: 'art:palette',
 		Description: 'A bench for the textures of SceneTextures: a tile and a ground under the sun, sharp near and far, its params on sliders.',
 		Events: {
 			change: 'A texture or a param changed: {Texture, Params}.'
@@ -121,8 +121,32 @@ Elemenx.Component('TextureLab', {
 		return this.$Service('SceneTextures').Names();
 	},
 
-	Picked: function (event) {
-		this.Texture = event.target.value;
+	/* The choices of its lists (Select): its textures, its views, its modes. */
+	NameOptions: function () {
+		return this.Names().map(function (name) {
+			return {Value: name, Label: name};
+		});
+	},
+
+	ViewOptions: function () {
+		return this.Views.map(function (view) {
+			return {Value: view.ID, Label: Elemenx.Locale.Text(view.Key)};
+		});
+	},
+
+	ModeOptions: function () {
+		return this.Modes.map(function (mode) {
+			return {Value: mode.ID, Label: Elemenx.Locale.Text(mode.Key)};
+		});
+	},
+
+	/* A value told by a Component, or the event of a field of the page. */
+	Told: function (value) {
+		return value && value.target ? value.target.value : value;
+	},
+
+	Picked: function (value) {
+		this.Texture = this.Told(value);
 		this.Params = null;
 		this.Version++;
 
@@ -131,22 +155,22 @@ Elemenx.Component('TextureLab', {
 		this.Draw();
 	},
 
-	Viewed: function (event) {
-		this.View = event.target.value;
+	Viewed: function (value) {
+		this.View = this.Told(value);
 
 		this.Draw();
 	},
 
-	Moded: function (event) {
-		this.Mode = event.target.value;
+	Moded: function (value) {
+		this.Mode = this.Told(value);
 
 		this.Draw();
 	},
 
-	Slid: function (event) {
+	Slid: function (key, value) {
 		var params = Object.assign({}, this.Params || {});
 
-		params[event.target.getAttribute('data-key')] = Number(event.target.value);
+		params[key] = Number(value);
 
 		this.Params = params;
 
@@ -155,8 +179,8 @@ Elemenx.Component('TextureLab', {
 		this.Draw();
 	},
 
-	Sunned: function (event) {
-		this[event.target.getAttribute('data-key')] = Number(event.target.value);
+	Sunned: function (key, value) {
+		this[key] = Number(value);
 
 		this.Draw();
 	},

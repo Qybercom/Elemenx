@@ -5,6 +5,8 @@
  */
 Elemenx.Component('TextArea', {
 	$TemplateURL: 'TextArea.html',
+	/* [(Value)] on its tag follows what it tells as it is typed or moved. */
+	$Model: {Value: 'input'},
 	$StyleURL: 'TextArea.css',
 	$Meta: {
 		Group: 'inputs',

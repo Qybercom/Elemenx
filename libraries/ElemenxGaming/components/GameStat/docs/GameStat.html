@@ -1,0 +1,11 @@
+<div class="elemenx-game-panel docs-stack" style="max-width: 360px; padding: 12px;">
+	<GameStat Label="Lap" Value="2/3" />
+	<GameStat Label="Gold" [value]="Gold" Icon="games:coin" Layout="inline" Tone="accent" />
+	<GameStat Label="Speed" [value]="Gold % 300" Unit=" km/h" Size="large" />
+</div>
+<Button Label="Earn 25" (click)="Gold = Gold + 25" />
+<script>
+({
+	Gold: 1250
+})
+</script>

@@ -403,6 +403,18 @@
 					"Description": "The label beside the control, not above it."
 				},
 				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"medium",
+						"small"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "small: a compact row (a narrow label of small type beside a small control), as in a ribbon or a panel of settings."
+				},
+				{
 					"Name": "Disabled",
 					"Type": "bool",
 					"Default": false,
@@ -6976,7 +6988,7 @@
 			"Name": "Diagram",
 			"Kind": "Component",
 			"Group": "codes",
-			"Icon": "share-2",
+			"Icon": "share",
 			"Description": "A diagram written as text (a subset of Mermaid): a flowchart, a sequence, states, ER, Gantt, classes or a mind map.",
 			"Props": [
 				{
@@ -7960,6 +7972,15 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "Vertical: the text of the tabs on its side (true), or level (false)."
+				},
+				{
+					"Name": "Numbered",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Each tab its number before its label: 01, 02..."
 				},
 				{
 					"Name": "Label",
@@ -14200,7 +14221,7 @@
 			"Name": "Blueprint",
 			"Kind": "Component",
 			"Group": "codes",
-			"Icon": "share-2",
+			"Icon": "share",
 			"Description": "The editor of a blueprint in the JSON of Flowprint: blocks, pins and links on a canvas, the types to add and the parameters of the graph.",
 			"Props": [
 				{
@@ -21871,6 +21892,24 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "Other types of drags (*draggable) the rows take as their own items, with their Type in the move event."
+				},
+				{
+					"Name": "Multiple",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Lets many items be chosen: Ctrl (Cmd) and a press adds or takes one away, Shift and a press all from the last one (the selection event)."
+				},
+				{
+					"Name": "Values",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The IDs of the chosen items (Multiple)."
 				}
 			],
 			"Slots": [],
@@ -21882,14 +21921,16 @@
 				"expand",
 				"check",
 				"load",
-				"move"
+				"move",
+				"selection"
 			],
 			"EventDescriptions": {
 				"select": "An item was selected: the item.",
 				"expand": "An item opened or closed: the IDs of the open items.",
 				"check": "The check boxes changed: the IDs of the checked items.",
 				"load": "A Lazy item was opened: the item, which asks for its Items.",
-				"move": "An item was dragged onto another (Movable): {ID, Target, Position (before, after or inside), Type}."
+				"move": "An item was dragged onto another (Movable): {ID, Target, Position (before, after or inside), Type}.",
+				"selection": "The chosen items changed (Multiple): the IDs of the chosen items."
 			},
 			"Methods": [],
 			"Sample": {
@@ -23229,7 +23270,7 @@
 			"Name": "VirtualGamepad",
 			"Kind": "Component",
 			"Group": "game",
-			"Icon": "gamepad",
+			"Icon": "games:gamepad",
 			"Description": "A gamepad on the screen for the fingers: a stick, buttons and triggers; a pad of the Gamepad Service as a real one.",
 			"Props": [
 				{
@@ -23366,7 +23407,9 @@
 			"Methods": [
 				"BodyText(node)",
 				"FirstDay(setting, locale)",
-				"Listeners()"
+				"Listeners()",
+				"Rove(event, elements, options)",
+				"Live(quiet)"
 			],
 			"Sample": {}
 		},
@@ -24919,7 +24962,8 @@
 		"elemenx-field": [
 			"disabled",
 			"horizontal",
-			"invalid"
+			"invalid",
+			"small"
 		],
 		"elemenx-field-label": [],
 		"elemenx-field-body": [],
@@ -25499,6 +25543,8 @@
 			"active",
 			"disabled"
 		],
+		"elemenx-tab-label": [],
+		"elemenx-tab-number": [],
 		"elemenx-tab-panel": [],
 		"elemenx-tab-group": [
 			"declared"
@@ -25934,6 +25980,7 @@
 			"danger",
 			"indeterminate",
 			"large",
+			"live",
 			"ring",
 			"small",
 			"success",
@@ -25950,6 +25997,7 @@
 			"danger",
 			"dial",
 			"large",
+			"live",
 			"small",
 			"value-below",
 			"value-corner",
@@ -26198,7 +26246,10 @@
 		"elemenx-blueprint-inputs": [],
 		"elemenx-blueprint-outputs": [],
 		"elemenx-blueprint-port": [],
-		"elemenx-blueprint-pin": [],
+		"elemenx-blueprint-pin": [
+			"bad",
+			"target"
+		],
 		"elemenx-blueprint-pin-name": [],
 		"elemenx-blueprint-properties": [],
 		"elemenx-blueprint-property": [
@@ -26214,6 +26265,8 @@
 		"elemenx-blueprint-comment-mark": [],
 		"elemenx-blueprint-link-comment": [],
 		"elemenx-blueprint-comment-editor": [],
+		"elemenx-blueprint-menu": [],
+		"elemenx-blueprint-ghost": [],
 		"elemenx-blueprint-lasso": [],
 		"elemenx-topology-view": [],
 		"elemenx-topology": [],

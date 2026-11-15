@@ -487,8 +487,8 @@ Elemenx.Component('DocsPage', {
 			this.OnScroll();
 	},
 
-	Jumped: function (event, node) {
-		var target = document.getElementById(node.getAttribute('data-id'));
+	Jumped: function (id) {
+		var target = document.getElementById(id);
 		if (target)
 			target.scrollIntoView({behavior: 'smooth', block: 'start'});
 	},

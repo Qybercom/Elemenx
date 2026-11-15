@@ -59,13 +59,13 @@ describe('Contract: GameStrategy, selection, orders, attacks and the fog of war 
 			Scene: ready,
 			Game: game,
 			Told: told,
-			Frames: function (count, step) {
+			Frames: function (count, step, quiet) {
 				var i;
 
 				for (i = 0; i < (count || 1); i++) {
 					ready.Scene().Rest = 0;
 
-					ready.Engine().Frame(now += step || 100);
+					ready.Engine().Frame(now += step || 100, !!quiet);
 				}
 			}
 		};
@@ -228,11 +228,15 @@ describe('Contract: GameStrategy, selection, orders, attacks and the fog of war 
 
 		game.Order(['a', 'b'], 'foe', 'attack');
 
-		/* Regression (load): waited for by the clock, a busy machine drew too few frames for the fight to end; now by the frames, a minute of the scene at most. */
+		/*
+		 * Regression (load): waited for by the clock, a busy machine drew too few frames for the fight to end; now by the
+		 * frames, a minute of the scene at most, and not drawn (the fight is the game's, not the picture's: 600 drawn
+		 * frames took more than the minute of the test under a whole run).
+		 */
 		for (var i = 0; i < 120 && !made.Told.some(function (one) {
 			return one[0] === 'death';
 		}); i++) {
-			made.Frames(5, 100);
+			made.Frames(5, 100, true);
 
 			await new Promise(function (done) {
 				setTimeout(done, 5);

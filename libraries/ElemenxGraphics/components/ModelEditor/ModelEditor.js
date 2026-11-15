@@ -31,6 +31,7 @@
 Elemenx.Component('ModelEditor', {
 	$TemplateURL: 'ModelEditor.html',
 	$StyleURL: 'ModelEditor.css',
+	$Traits: ['EditorPanes'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'shapes',
@@ -55,6 +56,7 @@ Elemenx.Component('ModelEditor', {
 			RoleModel: 'In the tab Roles, a model of a file of SceneModels whose roles are edited (ModelRoles keeps them); empty: the one of the document (its recipe keeps them, Roles).'
 		}
 	},
+	PanesKey: 'model-editor',
 	Value: null,
 	Variant: 0,
 	Generator: null,
@@ -84,7 +86,13 @@ Elemenx.Component('ModelEditor', {
 	/* What the template renders. */
 	Tool: 'move',
 	Snap: true,
+	/* One finger moves the camera too (ViewActions), not only two. */
+	Hand: false,
 	Selected: '',
+	/* The fields of the inspector (Fields); in roles, a hint with none chosen or the slider that tries the role. */
+	FieldList: [],
+	RoleHint: false,
+	RoleTesting: false,
 	Version: 0,
 	Past: 0,
 	Future: 0,
@@ -359,12 +367,27 @@ Elemenx.Component('ModelEditor', {
 		this.Version++;
 	},
 
+	/* A value told by a Component of ElemenxUI, or the event of a field of the page: its value, whether it is checked, its first file. */
+	Told: function (value) {
+		return value && value.target ? value.target.value : value;
+	},
+
+	Ticked: function (value) {
+		return !!(value && value.target ? value.target.checked : value);
+	},
+
+	FirstFile: function (value) {
+		var files = value && value.target ? value.target.files : value;
+
+		return files && files[0];
+	},
+
 	PartsNamed: function (event) {
-		this.PartsName = event.target.value;
+		this.PartsName = this.Told(event);
 	},
 
 	PartsWithPicked: function (event) {
-		this.PartsWith = event.target.value;
+		this.PartsWith = this.Told(event) || '';
 	},
 
 	/* An edit of the model edited: in the recipe of the document, or kept for the model of a file. */
@@ -575,7 +598,7 @@ Elemenx.Component('ModelEditor', {
 
 	Imported: function (event) {
 		var self = this;
-		var file = event.target.files && event.target.files[0];
+		var file = this.FirstFile(event);
 		var reader;
 
 		if (!file) return;
@@ -587,7 +610,8 @@ Elemenx.Component('ModelEditor', {
 
 		reader.readAsText(file);
 
-		event.target.value = '';
+		if (event && event.target)
+			event.target.value = '';
 	},
 
 	/* Gives the recipe to the Models Service under a name: a model of a game, its variants by their seed. */
@@ -623,7 +647,7 @@ Elemenx.Component('ModelEditor', {
 	},
 
 	FormatPicked: function (event) {
-		this.Format = event.target.value;
+		this.Format = this.Told(event);
 	},
 
 	DownloadPressed: function () {
@@ -631,7 +655,7 @@ Elemenx.Component('ModelEditor', {
 	},
 
 	VariantPicked: function (event) {
-		this.Variant = Math.max(0, Math.floor(Number(event.target.value) || 0));
+		this.Variant = Math.max(0, Math.floor(Number(this.Told(event)) || 0));
 		this.Own().Dirty = true;
 	},
 
@@ -670,7 +694,7 @@ Elemenx.Component('ModelEditor', {
 	},
 
 	Described: function (event) {
-		this.Description = event.target.value;
+		this.Description = this.Told(event);
 	},
 
 	GeneratePressed: function () {
@@ -822,13 +846,12 @@ Elemenx.Component('ModelEditor', {
 	},
 
 	Snapped: function (event) {
-		this.Snap = !!event.target.checked;
+		this.Snap = this.Ticked(event);
 	},
 
 	/* The fields of the selected part, else of the model; and of the piece of the part. */
 	Fields: function () {
 		var self = this;
-		var holder = this.$Ref('Fields');
 		var part = this.Part(this.Selected);
 		var recipe = this.Own().Document.Recipe;
 		var vary;
@@ -836,12 +859,11 @@ Elemenx.Component('ModelEditor', {
 		var fields;
 		var roled = null;
 
-		if (!holder) return;
-
-		holder.textContent = '';
+		this.RoleHint = false;
+		this.RoleTesting = false;
 
 		if (this.Mode === 'roles') {
-			roled = this.RoleFields(holder);
+			roled = this.RoleFields();
 			fields = roled.Fields || [];
 		}
 		else if (part) {
@@ -871,54 +893,20 @@ Elemenx.Component('ModelEditor', {
 			fields = [['Name', this.Own().Document.Name, 'text'], ['Group', recipe.Group || '', 'text'], ['Type', recipe.Type || '', 'text'], ['Size', recipe.Size, 'number'], ['Speed', recipe.Speed || 0, 'number'], ['Variants', recipe.Variants, 'number'], ['Rig', recipe.Rig || '', self.Rigs], ['Smooth', !!recipe.Smooth, 'check'], ['Matte', recipe.Matte !== false, 'check']];
 		}
 
-		fields.forEach(function (field) {
-			var label = document.createElement('label');
-			var name = document.createElement('span');
-			var input = document.createElement(Array.isArray(field[2]) ? 'select' : 'input');
+		/* The fields the inspector shows (FieldList), each an Input, a Select, a Checkbox or a ColorInput of ElemenxUI. */
+		this.FieldList = fields.map(function (field) {
+			var kind = Array.isArray(field[2]) ? 'select' : field[2];
 
-			label.className = 'elemenx-model-editor-field';
-			name.textContent = field[0];
-
-			if (Array.isArray(field[2])) {
-				field[2].forEach(function (option) {
-					var made = document.createElement('option');
-
-					made.value = option;
-					made.textContent = option || '—';
-					made.selected = option === field[1];
-
-					input.appendChild(made);
-				});
-			}
-			else if (field[2] === 'check') {
-				input.type = 'checkbox';
-				input.checked = !!field[1];
-			}
-			else if (field[2] === 'color') {
-				input.type = 'color';
-				input.value = field[1];
-			}
-			else if (field[2] === 'readonly') {
-				input.readOnly = true;
-				input.value = field[1];
-			}
-			else {
-				input.value = field[2] === 'vector' ? (field[1] || []).join(', ') : field[1] === undefined || field[1] === null ? '' : String(field[1]);
-			}
-
-			input.setAttribute('data-field', field[0]);
-
-			input.addEventListener('change', function () {
-				self.Edited(field, input);
-			});
-
-			label.appendChild(name);
-			label.appendChild(input);
-			holder.appendChild(label);
+			return {ID: field[0], Key: field[0], Kind: kind, Field: field, Value: field[1], Options: Array.isArray(field[2]) ? field[2].map(function (option) {
+				return {Value: option, Label: option || '—'};
+			}) : null, Shown: kind === 'vector' ? (field[1] || []).join(', ') : field[1] === undefined || field[1] === null ? '' : String(field[1])};
 		});
+		this.RoleTesting = !!(roled && roled.After);
+	},
 
-		if (roled && roled.After)
-			holder.appendChild(roled.After);
+	/* A field of the inspector told its value (FieldList). */
+	FieldChanged: function (entry, value) {
+		this.Edited(entry.Field, entry.Kind === 'check' ? {checked: !!value, value: ''} : {value: value === undefined || value === null ? '' : String(value)});
 	},
 
 	/* A field changed: a number, a list of three, a list of words, JSON or a text; of the part, its piece or the model. */
@@ -1010,6 +998,38 @@ Elemenx.Component('ModelEditor', {
 	 */
 
 	/* The tab shown: shape (the parts of the recipe) or roles. */
+	/* The choices of its lists (Select): the formats of a model, its models of files, the kinds of roles, the models to combine with. */
+	FormatOptions: function () {
+		return this.Formats.map(function (format) {
+			return {Value: format, Label: format};
+		});
+	},
+
+	ModelOptions: function () {
+		return [{Value: '', Label: Elemenx.Locale.Text('graphics.modelEditor.thisModel')}].concat(this.FileModels().map(function (name) {
+			return {Value: name, Label: name};
+		}));
+	},
+
+	RoleKindOptions: function () {
+		return this.RoleKinds().map(function (kind) {
+			return {Value: kind.ID, Label: kind.Label};
+		});
+	},
+
+	WithOptions: function () {
+		return [{Value: '', Label: Elemenx.Locale.Text('graphics.modelEditor.partsWith')}].concat(this.PartsModels().map(function (name) {
+			return {Value: name, Label: name};
+		}));
+	},
+
+	/* Its modes as tabs (Tabs). */
+	ModeTabs: function () {
+		return this.Modes.map(function (mode) {
+			return {ID: mode.ID, Label: Elemenx.Locale.Text(mode.Key)};
+		});
+	},
+
 	Moded: function (mode) {
 		var own = this.Own();
 
@@ -1103,7 +1123,7 @@ Elemenx.Component('ModelEditor', {
 
 	RoleModelPicked: function (event) {
 		var own = this.Own();
-		var name = event.target.value;
+		var name = this.Told(event) || '';
 
 		this.RoleModel = name;
 		this.RoleSelected = '';
@@ -1115,7 +1135,7 @@ Elemenx.Component('ModelEditor', {
 	},
 
 	RoleKindPicked: function (event) {
-		this.RoleKind = event.target.value;
+		this.RoleKind = this.Told(event);
 	},
 
 	RolePicked: function (id) {
@@ -1169,7 +1189,7 @@ Elemenx.Component('ModelEditor', {
 	},
 
 	BrushSized: function (event) {
-		this.Brush = Math.max(0.002, Number(event.target.value) || 0.03);
+		this.Brush = Math.max(0.002, Number(this.Told(event)) || 0.03);
 	},
 
 	/* The model in the view, its object, and the matrix from its own space to the world. */
@@ -1432,7 +1452,7 @@ Elemenx.Component('ModelEditor', {
 
 	RolesImported: function (event) {
 		var self = this;
-		var file = event.target.files && event.target.files[0];
+		var file = this.FirstFile(event);
 		var reader;
 
 		if (!file) return;
@@ -1536,24 +1556,17 @@ Elemenx.Component('ModelEditor', {
 	},
 
 	/* The fields of the selected role, or what to do with none. */
-	RoleFields: function (holder) {
-		var self = this;
+	RoleFields: function () {
 		var role = this.Role(this.RoleSelected);
 		var motion;
 		var light;
 		var fields;
-		var test;
-		var name;
-		var label;
 		var parts;
 		var vertices = 0;
 
+		/* None: what to do is told instead (RoleHint). */
 		if (!role) {
-			label = document.createElement('p');
-			label.className = 'elemenx-model-editor-hint';
-			label.textContent = Elemenx.Locale.Text('graphics.modelEditor.roleHint');
-
-			holder.appendChild(label);
+			this.RoleHint = true;
 
 			return [];
 		}
@@ -1611,29 +1624,8 @@ Elemenx.Component('ModelEditor', {
 			return id !== role.ID;
 		}))], ['Role.Both', !!role.Both, 'check'], ['Role.Pace', role.Pace === undefined ? '' : role.Pace, 'number'], ['Role.Open', role.Open || 0, 'number']);
 
-		/* Test: the role moved in the view as a scene moves it. */
-		label = document.createElement('label');
-		name = document.createElement('span');
-		test = document.createElement('input');
-
-		label.className = 'elemenx-model-editor-field';
-		name.textContent = Elemenx.Locale.Text('graphics.modelEditor.test');
-		test.type = 'range';
-		test.min = '0';
-		test.max = '1';
-		test.step = '0.01';
-		test.value = String(this.RoleTest || 0);
-
-		test.setAttribute('data-field', 'Test');
-
-		test.addEventListener('input', function () {
-			self.RoleTried(test.value);
-		});
-
-		label.appendChild(name);
-		label.appendChild(test);
-
-		return {Fields: fields, After: label};
+		/* Test: the role moved in the view as a scene moves it (a Slider under its fields). */
+		return {Fields: fields, After: true};
 	},
 
 	/* A field of the selected role changed. */
@@ -1709,7 +1701,7 @@ Elemenx.Component('ModelEditor', {
 		event.preventDefault();
 
 		if (event.button === 2 || event.button === 0 && event.altKey) {
-			own.Drag = {Kind: 'orbit', X: event.clientX, Y: event.clientY, View: scene.Viewpoint()};
+			own.Drag = {Kind: 'orbit', X: event.clientX, Y: event.clientY, View: scene.Viewpoint(), Button: event.button};
 
 			return;
 		}
@@ -1797,10 +1789,21 @@ Elemenx.Component('ModelEditor', {
 	Up: function (event) {
 		var own = this.Own();
 		var drag = own.Drag;
+		var menu;
 
 		own.Drag = null;
 
 		if (!drag || !own.Scene) return;
+
+		/* The right button that did not turn the view: the context menu at it. */
+		if (drag.Kind === 'orbit' && drag.Button === 2 && Math.abs(event.clientX - drag.X) + Math.abs(event.clientY - drag.Y) < 4) {
+			menu = this.$Ref('Context', true);
+
+			if (menu)
+				menu.Show(event.target, event.clientX, event.clientY);
+
+			return;
+		}
 
 		/* A stroke of the brush is one change to undo; a press of Pick or Pivot changes the role where it is. */
 		if (drag.Kind === 'brush') {
@@ -1828,8 +1831,125 @@ Elemenx.Component('ModelEditor', {
 			this.Changed(drag.Before);
 	},
 
+	/* The menu of the system is never the view's: the right button that did not turn it opens its context menu (Up). */
 	Menu: function (event) {
 		event.preventDefault();
+		event.stopPropagation();
+	},
+
+	/* The fingers on the view (ViewTouch): one edits, two move the camera; Hand gives one finger to the camera too. */
+	Fingers: function () {
+		var own = this.Own();
+		var self = this;
+
+		if (!own.Touch) {
+			own.Touch = this.$Service('ViewTouch').Make({
+				Edit: {Down: function (event) {
+					self.Down(event);
+				}, Move: function (event) {
+					self.Move(event);
+				}, Up: function (event) {
+					self.Up(event);
+				}},
+				Camera: function (gesture) {
+					if (own.Scene)
+						self.$Service('ViewTouch').Orbit(own.Scene, gesture);
+				},
+				Abort: function () {
+					self.Abort();
+				},
+				OneFinger: function () {
+					return !!self.Hand;
+				}
+			});
+		}
+
+		return own.Touch;
+	},
+
+	TouchDown: function (event) {
+		this.Fingers().Down(event);
+	},
+
+	TouchMove: function (event) {
+		this.Fingers().Move(event);
+	},
+
+	TouchUp: function (event) {
+		this.Fingers().Up(event);
+	},
+
+	/* What a press began, let go as it was (a second finger came to it): a move of the gizmo or a stroke of the brush undone. */
+	Abort: function () {
+		var own = this.Own();
+		var drag = own.Drag;
+
+		own.Drag = null;
+
+		if (!drag || !own.Scene) return;
+
+		if (drag.Before && (drag.Moved || drag.Painted) && drag.Before !== this.Kept()) {
+			this.Back(drag.Before);
+			this.Changed(null);
+		}
+	},
+
+	Handed: function (event) {
+		this.Hand = !!event.Hand;
+	},
+
+	/* The actions of the view: in the bar over it (ViewActions) and in its context menu; the part selected of the recipe. */
+	Actions: function () {
+		var part = this.Mode === 'shape' ? this.Part(this.Selected) : null;
+
+		return [
+			{ID: 'frame', Icon: 'maximize', Label: Elemenx.Locale.Text('graphics.viewActions.frame'), Disabled: !part},
+			{ID: 'duplicate', Icon: 'copy', Label: Elemenx.Locale.Text('graphics.viewActions.duplicate'), Disabled: !part},
+			{ID: 'delete', Icon: 'delete', Label: Elemenx.Locale.Text('graphics.viewActions.delete'), Disabled: !part, Danger: true}
+		];
+	},
+
+	Acted: function (event) {
+		var id = event.ID || event;
+		var part = this.Part(this.Selected);
+		if (!part) return;
+
+		if (id === 'frame') this.Frame();
+		else if (id === 'duplicate') this.Duplicate();
+		else if (id === 'delete') this.Remove(part.ID);
+	},
+
+	/* A context menu opens on what is under it: that part is selected first (in the tab of the recipe). */
+	MenuOpened: function (event) {
+		if (this.Mode === 'shape' && this.Own().Scene && event.Target && event.Target.getAttribute && !event.Target.getAttribute('data-handle'))
+			this.Select(this.PartAt(event.X, event.Y));
+	},
+
+	MenuPicked: function (event) {
+		this.Acted({ID: event.Item.ID});
+	},
+
+	/* The view looks at the selected part. */
+	Frame: function () {
+		var scene = this.Own().Scene;
+		var part = this.Part(this.Selected);
+		if (!scene || !part) return;
+
+		scene.SetViewpoint({Target: this.World(part.At), Yaw: scene.Viewpoint().Yaw, Pitch: scene.Viewpoint().Pitch, Distance: Math.max(1, Math.max.apply(null, part.Size || [1]) * this.Shown * 4)});
+	},
+
+	/* A copy of the selected part beside it. */
+	Duplicate: function () {
+		var part = this.Part(this.Selected);
+		var copy;
+
+		if (!part) return;
+
+		copy = JSON.parse(JSON.stringify(part));
+		copy.ID = undefined;
+		copy.At = [copy.At[0] + 0.1, copy.At[1], copy.At[2]];
+
+		this.Add(part.Shape, copy);
 	},
 
 	Wheeled: function (event) {
@@ -1848,7 +1968,6 @@ Elemenx.Component('ModelEditor', {
 	Key: function (event) {
 		var part = this.Part(this.Selected);
 		var tools = {KeyQ: 'select', KeyW: 'move', KeyE: 'turn', KeyR: 'scale'};
-		var copy;
 
 		if ((event.ctrlKey || event.metaKey) && event.code === 'KeyZ') {
 			event.preventDefault();
@@ -1870,11 +1989,7 @@ Elemenx.Component('ModelEditor', {
 		if ((event.ctrlKey || event.metaKey) && event.code === 'KeyD' && part) {
 			event.preventDefault();
 
-			copy = JSON.parse(JSON.stringify(part));
-			copy.ID = undefined;
-			copy.At = [copy.At[0] + 0.1, copy.At[1], copy.At[2]];
-
-			this.Add(part.Shape, copy);
+			this.Duplicate();
 
 			return;
 		}
@@ -1892,7 +2007,7 @@ Elemenx.Component('ModelEditor', {
 		}
 
 		if (event.code === 'KeyF' && part)
-			this.Own().Scene.SetViewpoint({Target: this.World(part.At), Yaw: this.Own().Scene.Viewpoint().Yaw, Pitch: this.Own().Scene.Viewpoint().Pitch, Distance: Math.max(1, Math.max.apply(null, part.Size || [1]) * this.Shown * 4)});
+			this.Frame();
 	},
 
 	/* A point of the model in the world: the model stands at the middle of the floor, Shown metres tall. */

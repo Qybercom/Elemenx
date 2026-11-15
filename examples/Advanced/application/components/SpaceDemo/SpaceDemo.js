@@ -4,7 +4,6 @@
  */
 Elemenx.Component('SpaceDemo', {
 	$TemplateURL: 'SpaceDemo.html',
-	$StyleURL: 'SpaceDemo.css',
 	$Traits: ['SceneDemo'],
 	SpaceSeed: 'kepler-186',
 	SpaceDay: 0,
@@ -100,7 +99,9 @@ Elemenx.Component('SpaceDemo', {
 		this.SpaceSystem = value;
 		this.SpaceNote = '';
 	},
-	SpaceSystems: [{Value: 'sol', Label: 'The Sun'}, {Value: 'seed', Label: 'Of a seed'}],
+	SpaceSystems: [{Value: 'sol', Label: 'The Sun'}, {Value: 'seed', Label: 'Of a seed'}, {Value: 'file', Label: 'Of a file'}],
+	/* A system of the system format (SystemData): two suns round their barycentre, Terra of its own planet file, a black hole with a shard. */
+	SpaceFile: {Data: '/data/systems/binary.system'},
 	RibbonTab: 'home',
 	SpaceTab: 'system',
 

@@ -88,7 +88,7 @@ body[data-scheme='dark'] .application-shell {
 	color: var(--elemenx-text);
 }
 
-.theme-switch, .button {
+.button {
 	appearance: none;
 	border: 1px solid var(--elemenx-border);
 	border-radius: 9px;
@@ -103,7 +103,7 @@ body[data-scheme='dark'] .application-shell {
 	justify-self: end;
 }
 
-.theme-switch:hover, .button:hover {
+.button:hover {
 	background: var(--elemenx-surface-raised);
 }
 

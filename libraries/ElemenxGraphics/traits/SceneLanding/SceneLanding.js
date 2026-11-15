@@ -1542,6 +1542,24 @@ Elemenx.Trait('SceneLanding', {
 		};
 	},
 
+	/* The list of the command Landing (MenuList): each marker, day or night there now, then picking a point. */
+	LandingItems: function (markers) {
+		return (markers || []).map(function (marker) {
+			var day = Elemenx.Locale.Text('graphics.scene.day');
+			var night = Elemenx.Locale.Text('graphics.scene.night');
+
+			return {ID: 'marker:' + marker.ID, Label: marker.Name, Shortcut: marker.Day === undefined ? '' : marker.Day ? day : night};
+		}).concat([{ID: 'pick', Label: Elemenx.Locale.Text('graphics.scene.pickPoint')}]);
+	},
+
+	/* An item of the list of Landing picked. */
+	LandingChosen: function (item) {
+		var id = item && item.ID || '';
+
+		if (id === 'pick') this.PointPicking();
+		else if (id.indexOf('marker:') === 0) this.MarkerPicked(id.slice(7));
+	},
+
 	/* The command Landing: the list of the markers of the body, and picking a point of it. */
 	LandingOpened: function () {
 		var scene = this.Scene();

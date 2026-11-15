@@ -272,7 +272,6 @@ Elemenx.Component('SettingsMenu', {
 
 	Key: function (event) {
 		var rows = Array.prototype.slice.call(this.$Element().querySelectorAll('.elemenx-settings-menu-row:not([disabled])'));
-		var at = rows.indexOf(event.target);
 		var key = Elemenx.Locale.Key(event);
 		var row;
 
@@ -291,17 +290,11 @@ Elemenx.Component('SettingsMenu', {
 			return;
 		}
 
-		if (key === 'ArrowDown' || key === 'ArrowUp') {
+		/* Up, down, Home and End among its rows (ElemenxHelpers.Rove). */
+		if (key === 'ArrowDown' || key === 'ArrowUp' || key === 'Home' || key === 'End') {
 			event.preventDefault();
 
-			if (rows.length)
-				rows[(at + (key === 'ArrowDown' ? 1 : -1) + rows.length) % rows.length].focus();
-		}
-		else if (key === 'Home' || key === 'End') {
-			event.preventDefault();
-
-			if (rows.length)
-				rows[key === 'Home' ? 0 : rows.length - 1].focus();
+			this.$Service('ElemenxHelpers').Rove(event, rows);
 		}
 		else if (key === 'ArrowRight') {
 			row = this.Row(event.target.getAttribute('data-key'));

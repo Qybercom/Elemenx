@@ -91,11 +91,12 @@ test.describe('Elemenx documentation', function () {
 		/* The keys: the arrows go through the pages found, Enter opens one, Escape closes the list. */
 		await search.locator('input').fill('dialog');
 
-		await expect(search.locator('.docs-search-result').first()).toHaveClass(/active/);
+		/* A Button of ElemenxUI: the one chosen by the keys is pressed. */
+		await expect(search.locator('.docs-search-result').first()).toHaveClass(/pressed/);
 
 		await search.locator('input').press('ArrowDown');
 
-		await expect(search.locator('.docs-search-result').nth(1)).toHaveClass(/active/);
+		await expect(search.locator('.docs-search-result').nth(1)).toHaveClass(/pressed/);
 
 		await search.locator('input').press('Escape');
 

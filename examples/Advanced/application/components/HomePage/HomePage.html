@@ -29,8 +29,8 @@
 			Each guard has its own fallback component while the protected URL stays unchanged.
 		</p>
 
-		<button class="button primary" #Login>Enable session</button>
-		<button class="button" #GrantProjectAccess>Grant project access</button>
+		<Button Variant="primary" [Label]="LoginLabel" [Disabled]="LoginDone" (click)="Login()" />
+		<Button Variant="secondary" [Label]="GrantLabel" [Disabled]="GrantDone" (click)="Grant()" />
 	</div>
 	<div class="card two-way-showcase">
 		<h2 class="card-title">Two-way bindings</h2>
@@ -73,7 +73,7 @@
 		<div class="directive-grid">
 			<div class="directive-example">
 				<code>*tooltip="DirectiveTooltip"</code>
-				<button class="button" *tooltip="DirectiveTooltip">Hover or focus me</button>
+				<Button Variant="secondary" Label="Hover or focus me" *tooltip="DirectiveTooltip" />
 				<small>{{DirectiveTooltip}}</small>
 			</div>
 
@@ -82,14 +82,14 @@
 				<div class="directive-highlight-target" *highlight="DirectiveHighlighted">
 					Reactive custom directive
 				</div>
-				<button class="button" (click)="ToggleDirectiveHighlight">Toggle highlight</button>
+				<Button Variant="secondary" Label="Toggle highlight" (click)="ToggleDirectiveHighlight" />
 			</div>
 
 			<div class="directive-example directive-structural-example">
 				<code>*unless="DirectiveBlocked"</code>
 				<DirectiveStructuralProbe *unless="DirectiveBlocked"></DirectiveStructuralProbe>
 				<small>The custom structural directive owns the child: unmount destroys it, mount creates a fresh instance.</small>
-				<button class="button" (click)="ToggleDirectiveStructural">{{DirectiveStructuralAction}}</button>
+				<Button Variant="secondary" [Label]="DirectiveStructuralAction" (click)="ToggleDirectiveStructural" />
 			</div>
 		</div>
 	</div>

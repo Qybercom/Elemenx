@@ -1,70 +1,80 @@
 <div class="elemenx-scene-editor" [class.playing]="Playing">
 	<div class="elemenx-scene-editor-toolbar" role="toolbar" [attribute.aria-label]="$T('graphics.sceneEditor.tools')">
 		<div class="elemenx-scene-editor-group">
-			<button type="button" class="elemenx-scene-editor-tool" *for="tool of ToolsOf(Version)" *key="tool.ID" [class.active]="Tool === tool.ID" [attribute.data-tool]="tool.ID" [attribute.title]="$T(tool.Key) + ' (' + tool.Hotkey + ')'" [attribute.aria-pressed]="Tool === tool.ID ? 'true' : 'false'" [disabled]="Playing" (click)="Pick(tool.ID)"><Icon [name]="tool.Icon" Size="16" /></button>
-			<select class="elemenx-scene-editor-sketch-type" *if="Tool === 'sketch'" [attribute.aria-label]="$T('graphics.sceneEditor.sketchType')" (change)="SketchPicked">
-				<optgroup *for="group of SketchGroups" *key="group.Kind" [attribute.label]="$T(group.Key)">
-					<option *for="type of group.Types" *key="type" [value]="type" [selected]="type === SketchType">{{type}}</option>
-				</optgroup>
-			</select>
-			<select class="elemenx-scene-editor-sketch-type" *if="Tool === 'road'" [attribute.aria-label]="$T('graphics.sceneEditor.roadType')" (change)="RoadTyped">
-				<option *for="type of RoadTypesOf(Version)" *key="type" [value]="type" [selected]="type === RoadType">{{type}}</option>
-			</select>
-			<select class="elemenx-scene-editor-sketch-type" *if="Tool === 'road'" [attribute.aria-label]="$T('graphics.sceneEditor.roadPart')" (change)="RoadParted">
-				<option *for="part of RoadParts" *key="part.ID" [value]="part.ID" [selected]="part.ID === RoadPart">{{$T(part.Key)}}</option>
-			</select>
-			<label class="elemenx-scene-editor-snap" *if="Tool === 'road'" [attribute.title]="$T('graphics.sceneEditor.roadRadius')">{{$T('graphics.sceneEditor.roadRadius')}}<input type="number" min="0" step="1" [value]="RoadRadius" (change)="RoadRadiused" /></label>
-			<label class="elemenx-scene-editor-snap" [attribute.title]="$T('graphics.sceneEditor.snap')"><input type="checkbox" [checked]="Snap" [disabled]="Playing" (change)="Snapped" />{{$T('graphics.sceneEditor.snap')}}</label>
-			<label class="elemenx-scene-editor-time" *if="Space(Version)" [attribute.title]="$T('graphics.sceneEditor.day')">{{$T('graphics.sceneEditor.day')}}<input type="number" step="1" [value]="Day(Version)" [disabled]="Playing" (change)="Timed" /></label>
+			<Button class="elemenx-scene-editor-tool" *for="tool of ToolsOf(Version)" *key="tool.ID" Size="small" [Variant]="Tool === tool.ID ? 'secondary' : 'ghost'" [Pressed]="Tool === tool.ID" [Icon]="tool.Icon" [Title]="$T(tool.Key) + ' (' + tool.Hotkey + ')'" [Disabled]="Playing" (click)="Pick(tool.ID)" />
+			<Select class="elemenx-scene-editor-sketch-type" *if="Tool === 'sketch'" Size="small" [Label]="$T('graphics.sceneEditor.sketchType')" [Options]="SketchOptions(Version)" [Value]="SketchType" (change)="SketchPicked($event)" />
+			<Select class="elemenx-scene-editor-sketch-type" *if="Tool === 'road'" Size="small" [Label]="$T('graphics.sceneEditor.roadType')" [Options]="RoadTypeOptions(Version)" [Value]="RoadType" (change)="RoadTyped($event)" />
+			<Select class="elemenx-scene-editor-sketch-type" *if="Tool === 'road'" Size="small" [Label]="$T('graphics.sceneEditor.roadPart')" [Options]="RoadPartOptions(Version)" [Value]="RoadPart" (change)="RoadParted($event)" />
+			<div class="elemenx-scene-editor-snap" *if="Tool === 'road'" [attribute.title]="$T('graphics.sceneEditor.roadRadius')"><span>{{$T('graphics.sceneEditor.roadRadius')}}</span><NumberInput Size="small" [Min]="0" [Step]="1" [Value]="RoadRadius" (change)="RoadRadiused($event)" /></div>
+			<Checkbox class="elemenx-scene-editor-snap" Size="small" [Label]="$T('graphics.sceneEditor.snap')" [Checked]="Snap" [Disabled]="Playing" (change)="Snapped($event)" />
+			<div class="elemenx-scene-editor-time elemenx-scene-editor-scale" *if="Space(Version)" [attribute.title]="$T('graphics.sceneEditor.scaleNote')"><span>{{$T('graphics.sceneEditor.scale')}}</span><Slider Size="small" [Label]="$T('graphics.sceneEditor.scale')" Min="0" Max="1" Step="0.01" [Value]="Scale" (input)="Scaled($event)" /></div>
+			<div class="elemenx-scene-editor-time" *if="Space(Version)" [attribute.title]="$T('graphics.sceneEditor.day')"><span>{{$T('graphics.sceneEditor.day')}}</span><NumberInput Size="small" [Step]="1" [Value]="Day(Version)" [Disabled]="Playing" (change)="Timed($event)" /></div>
 		</div>
 		<div class="elemenx-scene-editor-group">
-			<Button Size="small" Variant="ghost" Icon="undo" [title]="$T('graphics.sceneEditor.undo')" [disabled]="Playing || !Past" (click)="Undo" />
-			<Button Size="small" Variant="ghost" Icon="redo" [title]="$T('graphics.sceneEditor.redo')" [disabled]="Playing || !Future" (click)="Redo" />
+			<Button Size="small" Variant="ghost" Icon="undo" [Title]="$T('graphics.sceneEditor.undo')" [Disabled]="Playing || !Past" (click)="Undo" />
+			<Button Size="small" Variant="ghost" Icon="redo" [Title]="$T('graphics.sceneEditor.redo')" [Disabled]="Playing || !Future" (click)="Redo" />
 		</div>
 		<div class="elemenx-scene-editor-group">
-			<Button Size="small" [variant]="Playing ? 'danger' : 'primary'" [icon]="Playing ? 'stop' : 'play'" [label]="Playing ? $T('graphics.sceneEditor.stop') : $T('graphics.sceneEditor.play')" (click)="Toggled" />
+			<Button Size="small" [Variant]="Playing ? 'danger' : 'primary'" [Icon]="Playing ? 'stop' : 'play'" [label]="Playing ? $T('graphics.sceneEditor.stop') : $T('graphics.sceneEditor.play')" (click)="Toggled" />
 		</div>
 		<div class="elemenx-scene-editor-group">
-			<Button Size="small" Variant="ghost" Icon="video" [label]="$T('graphics.sceneEditor.cutscenes')" [attribute.aria-pressed]="CutscenesOpen ? 'true' : 'false'" [disabled]="Playing" (click)="CutscenesToggled" />
+			<Button Size="small" Variant="ghost" Icon="video" [Label]="$T('graphics.sceneEditor.cutscenes')" [Pressed]="CutscenesOpen" [Disabled]="Playing" (click)="CutscenesToggled" />
 		</div>
 		<div class="elemenx-scene-editor-group end">
-			<Button Size="small" Variant="ghost" Icon="save" [title]="$T('graphics.sceneEditor.save')" [disabled]="Playing" (click)="Store" />
-			<Button Size="small" Variant="ghost" Icon="download" [title]="$T('graphics.sceneEditor.export')" [disabled]="Playing" (click)="Exported" />
-			<label class="elemenx-scene-editor-import" [attribute.title]="$T('graphics.sceneEditor.import')"><Icon name="upload" Size="16" /><input type="file" accept="application/json,.json" [disabled]="Playing" (change)="Imported" /></label>
+			<Button Size="small" Variant="ghost" Icon="save" [Title]="$T('graphics.sceneEditor.save')" [Disabled]="Playing" (click)="Store" />
+			<Button Size="small" Variant="ghost" Icon="download" [Title]="$T('graphics.sceneEditor.export')" [Disabled]="Playing" (click)="Exported" />
+			<FileUpload class="elemenx-scene-editor-import" Variant="inline" Accept="application/json,.json" [Label]="$T('graphics.sceneEditor.import')" [Disabled]="Playing" (change)="Imported($event)" />
+			<Button *if="Space(Version)" Size="small" Variant="ghost" Icon="globe" [Label]="$T('graphics.sceneEditor.exportSystem')" [Title]="$T('graphics.sceneEditor.exportSystemNote')" [Disabled]="Playing" (click)="ExportedSystem" />
+			<FileUpload *if="Space(Version)" class="elemenx-scene-editor-import" Variant="inline" Accept=".system,.zip" [Label]="$T('graphics.sceneEditor.importSystem')" [Disabled]="Playing" (change)="ImportedSystem($event)" />
 		</div>
 	</div>
-	<aside class="elemenx-scene-editor-side" *if="!Playing">
+	<aside class="elemenx-scene-editor-side" *if="!Playing" *resizable="{Edges: 'right', MinWidth: 150, MaxWidth: 560}" [style.width]="PaneWidth('side', 220)" (resizeend)="PaneResized('side', $event)">
 		<div class="elemenx-scene-editor-title">{{$T('graphics.sceneEditor.objects')}}</div>
-		<Tree [items]="Items(Version)" [value]="Selected" [label]="$T('graphics.sceneEditor.objects')" (select)="Chosen" />
+		<ContextMenu class="elemenx-scene-editor-tree" Sheet="auto" [Title]="$T('graphics.sceneEditor.objects')" [Items]="TreeItems" (open)="TreeOpened" (select)="TreePicked">
+			<Tree Multiple="true" Movable="true" [items]="Items(Version)" [expanded]="Opened(Version)" [value]="Selected" [values]="Picks" [Label]="$T('graphics.sceneEditor.objects')" (select)="Chosen" (selection)="ManyChosen" (move)="TreeMoved" />
+		</ContextMenu>
 		<div class="elemenx-scene-editor-layers" *if="Tool === 'sketch'">
-			<div class="elemenx-scene-editor-title">{{$T('graphics.sceneEditor.layers')}}<Button Size="small" Variant="ghost" Icon="plus" [title]="$T('graphics.sceneEditor.addLayer')" (click)="AddLayer" /></div>
+			<div class="elemenx-scene-editor-title">{{$T('graphics.sceneEditor.layers')}}<Button Size="small" Variant="ghost" Icon="add" [Title]="$T('graphics.sceneEditor.addLayer')" (click)="AddLayer" /></div>
 			<div class="elemenx-scene-editor-layer" *for="layer of Layers(Version)" *key="layer.ID" [class.current]="layer.ID === SketchLayer">
-				<button type="button" class="elemenx-scene-editor-layer-name" (click)="LayerPicked(layer.ID)">{{layer.Name || layer.ID}}</button>
-				<button type="button" class="elemenx-scene-editor-layer-eye" [attribute.title]="$T('graphics.sceneEditor.visible')" (click)="LayerShown(layer.ID)"><Icon [name]="layer.Visible === false ? 'eye-off' : 'eye'" Size="14" /></button>
+				<Button class="elemenx-scene-editor-layer-name" Size="small" Variant="ghost" [Label]="layer.Name || layer.ID" (click)="LayerPicked(layer.ID)" />
+				<Button class="elemenx-scene-editor-layer-eye" Size="small" Variant="ghost" [Title]="$T('graphics.sceneEditor.visible')" [Icon]="layer.Visible === false ? 'eye-off' : 'eye'" (click)="LayerShown(layer.ID)" />
 			</div>
 		</div>
 		<div class="elemenx-scene-editor-title">{{$T('graphics.sceneEditor.add')}}</div>
 		<div class="elemenx-scene-editor-palette">
-			<button type="button" class="elemenx-scene-editor-kind" *for="kind of Palette(Version)" *key="kind" [attribute.data-kind]="kind" (click)="Placed(kind)">{{kind}}</button>
-			<button type="button" class="elemenx-scene-editor-kind model" *for="name of Placeable(Version)" *key="name" [attribute.data-model]="name" (click)="PlacedModel(name)">{{name}}</button>
+			<Button class="elemenx-scene-editor-kind" *for="kind of Palette(Version)" *key="kind" Size="small" Shape="round" [Label]="kind" (click)="Placed(kind)" />
+			<Button class="elemenx-scene-editor-kind model" *for="name of Placeable(Version)" *key="name" Size="small" Shape="round" [Label]="name" (click)="PlacedModel(name)" />
 		</div>
 	</aside>
 	<div class="elemenx-scene-editor-view" #View>
-		<Scene #Scene Setting="ground" Paused="true" Labels="false" Details="false" Quality="medium" [loader]="true" (ready)="SceneReady" (shader)="ShaderTold" />
-		<div class="elemenx-scene-editor-overlay" #Overlay tabindex="0" *if="!Playing" [attribute.aria-label]="Label || $T('graphics.sceneEditor.label')" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Up" (wheel)="Wheeled" (contextmenu)="Menu" (keydown)="Key" (keyup)="KeyUp" (blur)="Blurred">
-			<svg class="elemenx-scene-editor-gizmo" #Gizmo></svg>
-		</div>
+		<Scene #Scene Setting="ground" Paused="true" Labels="false" Details="false" Quality="medium" [loader]="true" [scale]="Space(Version) ? Scale : 'compressed'" (ready)="SceneReady" (shader)="ShaderTold" />
+		<ContextMenu #Context *if="!Playing" Sheet="auto" [Title]="Selected || $T('graphics.viewActions.menu')" [Items]="Actions(Version, Selected, Tool)" (open)="MenuOpened" (select)="MenuPicked">
+			<div class="elemenx-scene-editor-overlay" #Overlay tabindex="0" [attribute.aria-label]="Label || $T('graphics.sceneEditor.label')" (pointerdown)="TouchDown" (pointermove)="TouchMove" (pointerup)="TouchUp" (pointercancel)="TouchUp" (wheel)="Wheeled" (contextmenu)="Menu" (keydown)="Key" (keyup)="KeyUp" (blur)="Blurred">
+				<svg class="elemenx-scene-editor-gizmo" #Gizmo></svg>
+			</div>
+		</ContextMenu>
+		<ViewActions *if="!Playing" [Items]="Actions(Version, Selected, Tool)" [Hand]="Hand" (act)="Acted" (hand)="Handed" />
 	</div>
-	<aside class="elemenx-scene-editor-inspector" *if="!Playing">
+	<aside class="elemenx-scene-editor-inspector" *if="!Playing" *resizable="{Edges: 'left', MinWidth: 180, MaxWidth: 640}" [style.width]="PaneWidth('inspector', 260)" (resizeend)="PaneResized('inspector', $event)">
 		<div class="elemenx-scene-editor-title">{{Selected || $T('graphics.sceneEditor.nothing')}}</div>
-		<div class="elemenx-scene-editor-fields" #Fields></div>
+		<div class="elemenx-scene-editor-fields">
+			<div class="elemenx-scene-editor-field" *for="field of FieldList" *key="field.ID" [attribute.data-field]="field.Key"><span>{{field.Title}}</span>
+				<Checkbox *if="field.Bool" Size="small" [Label]="field.Title" [Checked]="field.Value" (change)="FieldChanged(field, $event)" />
+				<Input *if="!field.Bool" Size="small" [Label]="field.Title" [Value]="field.Shown" (change)="FieldChanged(field, $event)" />
+			</div>
+		</div>
 		<div class="elemenx-scene-editor-title" *if="Tool === 'sketch'">{{$T('graphics.sceneEditor.sketch')}}</div>
-		<div class="elemenx-scene-editor-fields" #Items></div>
+		<div class="elemenx-scene-editor-fields">
+			<div class="elemenx-scene-editor-item" *for="item of ItemList" *key="item.ID" [attribute.data-item]="item.ID">
+				<div class="elemenx-scene-editor-item-head">{{item.ID}}<Button Size="small" Variant="ghost" Icon="close" [Title]="$T('graphics.sceneEditor.removeItem')" (click)="ItemRemoved(item.Index)" /></div>
+				<div class="elemenx-scene-editor-field" *for="field of item.Fields" *key="field.Key" [attribute.data-field]="field.Key"><span>{{field.Key}}</span><Input Size="small" [Label]="field.Key" [Value]="field.Shown" (change)="ItemChanged(item.Index, field.Key, $event)" /></div>
+			</div>
+		</div>
 		<div class="elemenx-scene-editor-title" *if="Lands(Version).length">{{$T('graphics.sceneEditor.lands')}}</div>
 		<div class="elemenx-scene-editor-land" *for="problem of Lands(Version)" *key="problem.Key" [attribute.data-type]="problem.Type">{{$T(problem.Phrase, problem.Words)}}</div>
 		<div class="elemenx-scene-editor-title" *if="Exposed(Version).length">{{$T('graphics.sceneEditor.parameters')}}</div>
 		<div class="elemenx-scene-editor-parameter" *for="parameter of Exposed(Version)" *key="parameter.key">
-			<label>{{parameter.key}}<input type="text" [value]="parameter.Shown" [attribute.data-parameter]="parameter.key" (change)="Tuned" /></label>
+			<div class="elemenx-scene-editor-field" [attribute.data-parameter]="parameter.key"><span>{{parameter.key}}</span><Input Size="small" [Label]="parameter.key" [Value]="parameter.Shown" (change)="Tuned(parameter.key, $event)" /></div>
 		</div>
 	</aside>
 	<div class="elemenx-scene-editor-cutscenes" *if="!Playing && CutscenesOpen">
@@ -72,9 +82,9 @@
 	</div>
 	<div class="elemenx-scene-editor-blueprint" *if="!Playing && !CutscenesOpen && GraphKinds(Version, GraphStep).length">
 		<div class="elemenx-scene-editor-graphs" role="tablist">
-			<button type="button" role="tab" class="elemenx-scene-editor-graph-kind" *for="kind of GraphKinds(Version, GraphStep)" *key="kind.ID" [class.active]="kind.ID === GraphKindOf(Version, GraphKind, GraphStep)" [attribute.aria-selected]="kind.ID === GraphKindOf(Version, GraphKind, GraphStep) ? 'true' : 'false'" [attribute.data-graph]="kind.ID" (click)="GraphPicked(kind.ID)">{{$T(kind.Key)}}</button>
-			<Button Size="small" Variant="ghost" Icon="plus" *if="!Graph(Version, GraphKind, GraphStep) && GraphKindOf(Version, GraphKind, GraphStep) !== 'Blueprint'" [label]="$T('graphics.sceneEditor.graphs.library')" (click)="GraphMade" />
-			<Button Size="small" Variant="ghost" Icon="delete" *if="Graph(Version, GraphKind, GraphStep) && GraphKindOf(Version, GraphKind, GraphStep) !== 'Blueprint' && GraphKindOf(Version, GraphKind, GraphStep) !== 'World'" [title]="$T('graphics.sceneEditor.graphs.remove')" (click)="GraphCleared" />
+			<Tabs class="elemenx-scene-editor-graph-kinds" Size="small" [Tabs]="GraphTabs(Version, GraphStep)" [Value]="GraphKindOf(Version, GraphKind, GraphStep)" (change)="GraphPicked($event)" />
+			<Button Size="small" Variant="ghost" Icon="add" *if="!Graph(Version, GraphKind, GraphStep) && GraphKindOf(Version, GraphKind, GraphStep) !== 'Blueprint'" [Label]="$T('graphics.sceneEditor.graphs.library')" (click)="GraphMade" />
+			<Button Size="small" Variant="ghost" Icon="delete" *if="Graph(Version, GraphKind, GraphStep) && GraphKindOf(Version, GraphKind, GraphStep) !== 'Blueprint' && GraphKindOf(Version, GraphKind, GraphStep) !== 'World'" [Title]="$T('graphics.sceneEditor.graphs.remove')" (click)="GraphCleared" />
 		</div>
 		<Blueprint *if="Graph(Version, GraphKind, GraphStep)" [value]="Graph(Version, GraphKind, GraphStep)" [errors]="GraphErrors(Version, Told)" (change)="Drawn" (select)="StepPicked" />
 	</div>

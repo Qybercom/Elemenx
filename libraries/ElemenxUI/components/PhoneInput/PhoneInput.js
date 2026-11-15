@@ -10,6 +10,8 @@
  */
 Elemenx.Component('PhoneInput', {
 	$TemplateURL: 'PhoneInput.html',
+	/* [(Value)] on its tag follows what it tells as it is typed or moved. */
+	$Model: {Value: 'input'},
 	$StyleURL: 'PhoneInput.css',
 	$Meta: {
 		Group: 'inputs',

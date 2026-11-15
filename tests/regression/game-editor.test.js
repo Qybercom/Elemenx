@@ -158,7 +158,6 @@ describe('Contract: the Game editor packs a game to run alone: its models, its s
 	it('starts a new game in the place of the one there and tells what it could not keep, its texts of the language of the page', function () {
 		var definition = null;
 		var confirm = window.confirm;
-		var storage = Object.getOwnPropertyDescriptor(window, 'localStorage');
 		var layout;
 
 		new Function('Elemenx', layoutSource)({Locale: Elemenx.Locale, Component: function (name, value) {
@@ -181,9 +180,13 @@ describe('Contract: the Game editor packs a game to run alone: its models, its s
 			expect(layout.Game.Scene.Setting).toBe('ground');
 			expect(layout.View).toBe('scene');
 
-			Object.defineProperty(window, 'localStorage', {configurable: true, get: function () {
-				throw new Error('No storage');
-			}});
+			/* A store of its parts that keeps nothing. */
+			layout.Store = function () {
+				return {Write: function (part, bytes, callback) {
+					callback(new Error('No storage'));
+				}};
+			};
+			layout.Game.Name = 'Not kept';
 
 			layout.Keep();
 
@@ -191,8 +194,57 @@ describe('Contract: the Game editor packs a game to run alone: its models, its s
 		}
 		finally {
 			window.confirm = confirm;
-
-			Object.defineProperty(window, 'localStorage', storage);
 		}
+	});
+
+	/*
+	 * Regression: opening a location of the planet put a new scene in the place of the one there, and its objects were lost;
+	 * a game read back lost its planet. The game is kept by its parts: what changed alone written.
+	 */
+	it('keeps the scene of each location of its planet, its planet read back, and writes only the parts that changed', function () {
+		var definition = null;
+		var written = [];
+		var layout;
+		var harbour = {Version: 1, Name: 'harbour', Setting: 'ground', Scene: {Added: [{ID: 'crane'}]}};
+
+		new Function('Elemenx', layoutSource)({Locale: Elemenx.Locale, Component: function (name, value) {
+			definition = value;
+		}});
+
+		layout = Object.assign({}, definition, {Game: definition.Normalize({Version: 1, Name: 'World', Scene: {Version: 1, Setting: 'ground'}, Planet: {Seed: 'kept'}, Models: []}), Version: 0, Status: '', View: 'planet', Current: '', Written: {}});
+		layout.$Service = function (name) {
+			return Elemenx.Service(name);
+		};
+		layout.Store = function () {
+			return {Write: function (part, bytes, callback) {
+				written.push(Elemenx.Service('PlanetData').Key(part));
+
+				callback(null);
+			}, Remove: function (part, callback) {
+				written.push('-' + Elemenx.Service('PlanetData').Key(part));
+
+				callback(null);
+			}};
+		};
+
+		expect(layout.Game.Planet).toEqual({Seed: 'kept'});
+
+		layout.LocationOpened({ID: 'a', Location: {Place: {Latitude: 10}, World: {}}});
+		layout.SceneChanged(harbour);
+		layout.LocationOpened({ID: 'b', Location: {Place: {Latitude: 20}, World: {}}});
+
+		expect(layout.Game.Scene.Name).toBe('b');
+
+		layout.LocationOpened({ID: 'a', Location: {Place: {Latitude: 10}, World: {}}});
+
+		expect(layout.Game.Scene).toEqual(harbour);
+		expect(layout.Game.Locations.b.Name).toBe('b');
+
+		written.length = 0;
+		layout.Game.Name = 'World 2';
+
+		layout.Keep();
+
+		expect(written).toEqual(['game']);
 	});
 });

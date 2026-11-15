@@ -893,7 +893,7 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 
 ## Field
 
-- `elemenx-field`: `disabled`, `horizontal`, `invalid`
+- `elemenx-field`: `disabled`, `horizontal`, `invalid`, `small`
 - `elemenx-field-body`
 - `elemenx-field-error`
 - `elemenx-field-label`
@@ -1083,14 +1083,15 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-scene-cinema-titles`
 - `elemenx-scene-crosshair`: `hit`, `is-chevron`, `is-circle`, `is-dot`, `kill`
 - `elemenx-scene-fallback`
+- `elemenx-scene-galaxy-mark`: `body`, `star`
+- `elemenx-scene-galaxy-mark-dot`
+- `elemenx-scene-galaxy-mark-label`
+- `elemenx-scene-galaxy-marks`
 - `elemenx-scene-hud`
 - `elemenx-scene-label`
 - `elemenx-scene-labels`: `hidden`
 - `elemenx-scene-landing`
 - `elemenx-scene-landing-hint`
-- `elemenx-scene-landing-item`: `pick`
-- `elemenx-scene-landing-list`
-- `elemenx-scene-landing-time`
 - `elemenx-scene-levels`
 - `elemenx-scene-loading`
 - `elemenx-scene-lock`: `locked`, `off`
@@ -1110,11 +1111,19 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-game-slot-sweep`
 - `elemenx-game-slot-timer`
 
+## GameStat
+
+- `elemenx-game-stat`: `accent`, `danger`, `large`, `muted`, `small`, `stacked`, `success`, `warning`
+- `elemenx-game-stat-label`
+- `elemenx-game-stat-unit`
+- `elemenx-game-stat-value`
+
+## GameStats
+
+- `elemenx-game-stat-group`: `vertical`
+
 ## GameTabs
 
-- `elemenx-game-tab`: `active`
-- `elemenx-game-tab-label`
-- `elemenx-game-tab-number`
 - `elemenx-game-tabs`: `horizontal`, `vertical`
 
 
@@ -1189,7 +1198,7 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 
 ## Meter
 
-- `elemenx-meter`: `danger`, `dial`, `large`, `small`, `value-below`, `value-corner`, `vertical`, `warning`
+- `elemenx-meter`: `danger`, `dial`, `large`, `live`, `small`, `value-below`, `value-corner`, `vertical`, `warning`
 - `elemenx-meter-arc`
 - `elemenx-meter-center`
 - `elemenx-meter-content`
@@ -1426,7 +1435,7 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 
 ## Progress
 
-- `elemenx-progress`: `danger`, `indeterminate`, `large`, `ring`, `small`, `success`, `warning`
+- `elemenx-progress`: `danger`, `indeterminate`, `large`, `live`, `ring`, `small`, `success`, `warning`
 - `elemenx-progress-fill`
 - `elemenx-progress-label`
 - `elemenx-progress-ring`
@@ -1526,36 +1535,31 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-scene-editor-field`
 - `elemenx-scene-editor-fields`
 - `elemenx-scene-editor-gizmo`
-- `elemenx-scene-editor-graph-kind`: `active`
 - `elemenx-scene-editor-graphs`
 - `elemenx-scene-editor-group`: `end`
-- `elemenx-scene-editor-import`
 - `elemenx-scene-editor-inspector`
 - `elemenx-scene-editor-item`
 - `elemenx-scene-editor-item-head`
-- `elemenx-scene-editor-kind`: `model`
 - `elemenx-scene-editor-land`
 - `elemenx-scene-editor-layer`: `current`
-- `elemenx-scene-editor-layer-eye`
 - `elemenx-scene-editor-layer-name`
 - `elemenx-scene-editor-layers`
 - `elemenx-scene-editor-orbit`
 - `elemenx-scene-editor-overlay`
 - `elemenx-scene-editor-palette`
-- `elemenx-scene-editor-parameter`
 - `elemenx-scene-editor-plane`
 - `elemenx-scene-editor-ring`
 - `elemenx-scene-editor-road-mid`: `arc`
 - `elemenx-scene-editor-road-point`: `chosen`, `draft`
+- `elemenx-scene-editor-scale`
 - `elemenx-scene-editor-side`
 - `elemenx-scene-editor-sketch-shape`: `area`, `current`, `draft`
-- `elemenx-scene-editor-sketch-type`
 - `elemenx-scene-editor-snap`
 - `elemenx-scene-editor-time`
 - `elemenx-scene-editor-tip`: `axis-x`, `axis-y`, `axis-z`
 - `elemenx-scene-editor-title`
-- `elemenx-scene-editor-tool`: `active`
 - `elemenx-scene-editor-toolbar`
+- `elemenx-scene-editor-tree`
 - `elemenx-scene-editor-view`
 
 ## Topology
@@ -1594,18 +1598,39 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-planet-editor-arrow`
 - `elemenx-planet-editor-arrow-tip`
 - `elemenx-planet-editor-canvas`
+- `elemenx-planet-editor-compass`
 - `elemenx-planet-editor-field`
+- `elemenx-planet-editor-globe`
+- `elemenx-planet-editor-graph`
+- `elemenx-planet-editor-hint`
 - `elemenx-planet-editor-info`
 - `elemenx-planet-editor-marks`
 - `elemenx-planet-editor-overlay`
 - `elemenx-planet-editor-panel`
 - `elemenx-planet-editor-passage`
 - `elemenx-planet-editor-place`
-- `elemenx-planet-editor-stroke`: `location`, `mountains`, `rift`, `river`
+- `elemenx-planet-editor-rule`
+- `elemenx-planet-editor-stroke`: `location`, `mountains`, `rift`, `river`, `rule`
 - `elemenx-planet-editor-title`
-- `elemenx-planet-editor-tool`: `active`
 - `elemenx-planet-editor-toolbar`
 - `elemenx-planet-editor-view`
+
+## WorldEditor
+
+- `elemenx-world-editor`
+- `elemenx-world-editor-actions`
+- `elemenx-world-editor-bar`
+- `elemenx-world-editor-body`
+- `elemenx-world-editor-group`
+- `elemenx-world-editor-item`
+- `elemenx-world-editor-main`
+- `elemenx-world-editor-note`
+- `elemenx-world-editor-panel`
+- `elemenx-world-editor-path`
+- `elemenx-world-editor-row`
+- `elemenx-world-editor-section`
+- `elemenx-world-editor-subtitle`
+- `elemenx-world-editor-title`
 
 ## FloraEditor
 
@@ -1621,7 +1646,6 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-flora-editor-reference`
 - `elemenx-flora-editor-title`
 - `elemenx-flora-editor-told`
-- `elemenx-flora-editor-variant`
 - `elemenx-flora-editor-view`
 
 ## TextureLab
@@ -1644,15 +1668,12 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-model-editor-gizmo`
 - `elemenx-model-editor-group`: `end`
 - `elemenx-model-editor-hint`
-- `elemenx-model-editor-import`
 - `elemenx-model-editor-inspector`
 - `elemenx-model-editor-marks`
-- `elemenx-model-editor-mode`: `active`
-- `elemenx-model-editor-modes`
 - `elemenx-model-editor-overlay`
 - `elemenx-model-editor-palette`
 - `elemenx-model-editor-ring`
-- `elemenx-model-editor-role`: `active`
+- `elemenx-model-editor-role`
 - `elemenx-model-editor-role-actions`
 - `elemenx-model-editor-role-axis`
 - `elemenx-model-editor-role-kind`
@@ -1660,15 +1681,18 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-model-editor-role-part`
 - `elemenx-model-editor-role-pivot`
 - `elemenx-model-editor-roles`
-- `elemenx-model-editor-shape`
 - `elemenx-model-editor-side`
 - `elemenx-model-editor-snap`
 - `elemenx-model-editor-tip`: `axis-x`, `axis-y`, `axis-z`
 - `elemenx-model-editor-title`
-- `elemenx-model-editor-tool`: `active`
 - `elemenx-model-editor-toolbar`
 - `elemenx-model-editor-variant`
 - `elemenx-model-editor-view`
+
+## ViewActions
+
+- `elemenx-view-actions`
+- `elemenx-view-actions-hand`
 
 ## Section
 
@@ -1800,6 +1824,8 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 
 - `elemenx-tab`: `active`, `disabled`
 - `elemenx-tab-close`
+- `elemenx-tab-label`
+- `elemenx-tab-number`
 - `elemenx-tabs`: `editor`, `large`, `left`, `line`, `pill`, `right`, `rotated`, `small`, `vertical`
 - `elemenx-tabs-extra`
 - `elemenx-tabs-list`
@@ -2020,6 +2046,7 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-blueprint-frame-head`
 - `elemenx-blueprint-frame-rename`
 - `elemenx-blueprint-frame-title`
+- `elemenx-blueprint-ghost`
 - `elemenx-blueprint-group-name`
 - `elemenx-blueprint-head`
 - `elemenx-blueprint-inputs`
@@ -2027,12 +2054,13 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-blueprint-link`: `draft`, `off`, `selected`
 - `elemenx-blueprint-link-comment`
 - `elemenx-blueprint-links`
+- `elemenx-blueprint-menu`
 - `elemenx-blueprint-outputs`
 - `elemenx-blueprint-palette`
 - `elemenx-blueprint-parameter`
 - `elemenx-blueprint-parameters`
 - `elemenx-blueprint-parameters-head`
-- `elemenx-blueprint-pin`
+- `elemenx-blueprint-pin`: `bad`, `target`
 - `elemenx-blueprint-pin-name`
 - `elemenx-blueprint-port`
 - `elemenx-blueprint-properties`
@@ -2195,7 +2223,6 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 
 - `elemenx-drawing`: `readonly`
 - `elemenx-drawing-brush`
-- `elemenx-drawing-color`
 - `elemenx-drawing-editor`
 - `elemenx-drawing-group`
 - `elemenx-drawing-handle`
@@ -2203,7 +2230,6 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-drawing-selection`
 - `elemenx-drawing-stage`
 - `elemenx-drawing-svg`
-- `elemenx-drawing-tool`: `active`
 - `elemenx-drawing-toolbar`
 - `elemenx-drawing-width`
 
@@ -2415,7 +2441,6 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 ## CutsceneEditor
 
 - `elemenx-cutscene-editor`
-- `elemenx-cutscene-editor-add`
 - `elemenx-cutscene-editor-bar`
 - `elemenx-cutscene-editor-body`
 - `elemenx-cutscene-editor-empty`

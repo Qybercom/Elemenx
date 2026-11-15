@@ -72,8 +72,10 @@ describe('Contract: FloraEditor, a species of plant of a picture of it, grown in
 		var made;
 
 		expect(editor.Current().Bark.Pattern).toBe('birch');
-		expect(element.querySelectorAll('.elemenx-flora-editor-panel input[type=range]').length).toBeGreaterThan(10);
-		expect(element.querySelectorAll('.elemenx-flora-editor-panel input[type=color]').length).toBe(8);
+		/* Its fields are the Components of ElemenxUI (Slider, ColorInput, Select...), not bare fields of the page. */
+		expect(element.querySelectorAll('.elemenx-flora-editor-panel .elemenx-slider').length).toBeGreaterThan(10);
+		expect(element.querySelectorAll('.elemenx-flora-editor-panel .elemenx-color-input').length).toBe(8);
+		expect(element.querySelectorAll('.elemenx-flora-editor-field > select, .elemenx-flora-editor-field > input, .elemenx-flora-editor-panel > button:not(.elemenx-button)').length).toBe(0);
 
 		made = editor.Analyse(picture());
 
@@ -99,12 +101,14 @@ describe('Contract: FloraEditor, a species of plant of a picture of it, grown in
 	it('turns a number of its preset on a slider, emits change, and defines the model under Name', async function () {
 		var mounted = await mount('oak');
 		var editor = mounted.Editor;
-		var slider = editor.$Element().querySelector('input[data-key="Crown.Width"]');
+		var at = editor.Sliders().map(function (one) {
+			return one.Key;
+		}).indexOf('Crown.Width');
+		/* The sliders of its numbers come after the one of its height. */
+		var slider = Elemenx.Instance(editor.$Element().querySelectorAll('.elemenx-flora-editor-panel .elemenx-slider')[at + 1]);
 		var models = editor.$Service('SceneModels');
 
-		slider.value = '0.6';
-
-		slider.dispatchEvent(new Event('change', {bubbles: true}));
+		slider.Set(0, 0.6, true);
 
 		expect(editor.Current().Crown.Width).toBe(0.6);
 		expect(mounted.Host.Changes[mounted.Host.Changes.length - 1].Preset.Crown.Width).toBe(0.6);

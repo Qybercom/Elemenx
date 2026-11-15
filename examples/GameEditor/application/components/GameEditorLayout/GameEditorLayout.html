@@ -1,15 +1,15 @@
 <div class="game-editor">
 	<header class="game-editor-bar">
-		<input class="game-editor-name" type="text" [value]="Game.Name" [attribute.aria-label]="$T('gameEditor.name')" (change)="Renamed" />
-		<div class="game-editor-views" role="tablist">
-			<button type="button" class="game-editor-view" role="tab" *for="view of Views" *key="view.ID" [class.active]="View === view.ID" [attribute.aria-selected]="View === view.ID ? 'true' : 'false'" [attribute.data-view]="view.ID" (click)="Show(view.ID)">{{$T(view.Key)}}</button>
-		</div>
+		<Input class="game-editor-name" Size="small" [Label]="$T('gameEditor.name')" [Value]="Game.Name" (change)="Renamed($event)" />
+		<Tabs class="game-editor-views" Variant="pill" Size="small" [Tabs]="ViewTabs(Version)" [Value]="View" (change)="Show($event)" />
 		<div class="game-editor-actions">
 			<Button Size="small" Variant="ghost" [label]="$T('gameEditor.newGround')" (click)="NewGround" />
 			<Button Size="small" Variant="ghost" [label]="$T('gameEditor.newSpace')" (click)="NewSpace" />
 			<Button Size="small" Variant="ghost" Icon="globe" [label]="$T('gameEditor.showcase')" [title]="$T('gameEditor.showcaseNote')" (click)="NewShowcase" />
 			<Button Size="small" Variant="ghost" Icon="download" [label]="$T('gameEditor.export')" (click)="Exported" />
-			<label class="game-editor-import"><Icon name="upload" Size="16" />{{$T('gameEditor.import')}}<input type="file" accept="application/json,.json" (change)="Imported" /></label>
+			<FileUpload class="game-editor-import" Variant="inline" Accept="application/json,.json" [Label]="$T('gameEditor.import')" (change)="Imported($event)" />
+			<Button Size="small" Variant="ghost" Icon="globe" [label]="$T('gameEditor.world')" [title]="$T('gameEditor.worldNote')" [Disabled]="Packing" (click)="DownloadWorld" />
+			<FileUpload class="game-editor-import" Variant="inline" Accept=".planet,.zip" [Label]="$T('gameEditor.openWorld')" (change)="OpenedWorld($event)" />
 			<Button Size="small" Icon="file-code" [label]="$T('gameEditor.page')" (click)="DownloadPage" />
 			<Button Size="small" Icon="archive" [label]="$T('gameEditor.project')" (click)="DownloadProject" />
 		</div>
@@ -26,8 +26,8 @@
 			<aside class="game-editor-list">
 				<div class="game-editor-title">{{$T('gameEditor.models')}}<Button Size="small" Variant="ghost" Icon="add" [title]="$T('gameEditor.addModel')" (click)="AddModel" /></div>
 				<div class="game-editor-item" *for="model of Game.Models" *key="model.ID" [class.current]="model.ID === Current">
-					<button type="button" class="game-editor-item-name" [attribute.data-model]="model.ID" (click)="PickModel(model.ID)">{{Label(model)}}</button>
-					<button type="button" class="game-editor-item-remove" [attribute.title]="$T('gameEditor.removeModel')" (click)="RemoveModel(model.ID)"><Icon name="delete" Size="14" /></button>
+					<Button class="game-editor-item-name" Variant="ghost" Size="small" [Label]="Label(model)" (click)="PickModel(model.ID)" />
+					<Button class="game-editor-item-remove" Variant="ghost" Size="small" Icon="delete" [Title]="$T('gameEditor.removeModel')" (click)="RemoveModel(model.ID)" />
 				</div>
 			</aside>
 			<div class="game-editor-object">

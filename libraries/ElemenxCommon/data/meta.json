@@ -148,7 +148,7 @@
 			"Kind": "Service",
 			"Group": "",
 			"Icon": "",
-			"Description": "Archives made in the page: a zip of texts and bytes by their paths, to download a project or a game in one file.",
+			"Description": "Archives made in the page: a zip of texts and bytes by their paths, stored or deflated, to download a project or a game in one file, and the files of a zip read back, its directory alone too.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -158,6 +158,13 @@
 			"EventDescriptions": {},
 			"Methods": [
 				"Zip(files)",
+				"Unzip(bytes)",
+				"Compress(files, callback)",
+				"Expand(bytes, callback)",
+				"Entries(bytes, base)",
+				"Data(bytes, entry)",
+				"Deflate(bytes, callback)",
+				"Inflate(bytes, callback)",
 				"Crc(bytes)"
 			],
 			"Sample": {}

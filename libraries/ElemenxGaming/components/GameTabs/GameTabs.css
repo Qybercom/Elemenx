@@ -1,3 +1,4 @@
+/* The Tabs of ElemenxUI in the look of the game: their strip a column (or a row) of cells of the theme. */
 .elemenx-game-tabs {
 	display: flex;
 	gap: 4px;
@@ -9,11 +10,27 @@
 	flex-direction: column;
 }
 
-.elemenx-game-tab {
+.elemenx-game-tabs .elemenx-tabs.pill {
+	display: block;
+}
+
+.elemenx-game-tabs .elemenx-tabs .elemenx-tabs-list {
+	display: flex;
+	gap: 4px;
+	overflow: visible;
+}
+
+.elemenx-game-tabs.vertical .elemenx-tabs .elemenx-tabs-list {
+	flex-direction: column;
+	overflow: visible;
+}
+
+.elemenx-game-tabs .elemenx-tabs .elemenx-tabs-list .elemenx-tab {
 	position: relative;
 	display: flex;
 	align-items: center;
 	gap: 8px;
+	height: auto;
 	min-height: 40px;
 	padding: 6px 10px;
 	background: var(--elemenx-game-tab);
@@ -21,56 +38,65 @@
 	border-radius: var(--elemenx-game-cell-radius);
 	color: var(--elemenx-game-muted);
 	font: inherit;
+	font-weight: inherit;
+	line-height: inherit;
 	text-align: start;
+	white-space: normal;
 	cursor: pointer;
 }
 
-.elemenx-game-tab:hover {
+.elemenx-game-tabs .elemenx-tabs .elemenx-tabs-list .elemenx-tab:hover {
+	background: var(--elemenx-game-tab);
 	color: var(--elemenx-game-text);
 }
 
-.elemenx-game-tab:focus-visible {
+.elemenx-game-tabs .elemenx-tabs .elemenx-tabs-list .elemenx-tab:focus-visible {
 	outline: none;
 	box-shadow: var(--elemenx-game-glow);
 }
 
-.elemenx-game-tab.active {
+.elemenx-game-tabs .elemenx-tabs .elemenx-tabs-list .elemenx-tab.active {
 	background: var(--elemenx-game-tab-active);
 	color: var(--elemenx-game-title);
+	font-weight: inherit;
 }
 
 /* The marker of the open tab: a bar of the accent on its outer edge. */
-.elemenx-game-tab.active::before {
+.elemenx-game-tabs .elemenx-tabs .elemenx-tabs-list .elemenx-tab.active::before {
 	position: absolute;
 	background: var(--elemenx-game-tab-marker);
 	box-shadow: 0 0 8px var(--elemenx-game-tab-marker);
 	content: '';
 }
 
-.elemenx-game-tabs.vertical .elemenx-game-tab.active::before {
+.elemenx-game-tabs.vertical .elemenx-tabs .elemenx-tabs-list .elemenx-tab.active::before {
 	inset-block: 4px;
 	inset-inline-start: -1px;
 	width: 3px;
 }
 
-.elemenx-game-tabs.horizontal .elemenx-game-tab.active::before {
+.elemenx-game-tabs.horizontal .elemenx-tabs .elemenx-tabs-list .elemenx-tab.active::before {
 	inset-inline: 4px;
 	bottom: -1px;
 	height: 3px;
 }
 
-.elemenx-game-tab:disabled {
+.elemenx-game-tabs .elemenx-tabs .elemenx-tabs-list .elemenx-tab.disabled {
 	opacity: 0.4;
 	cursor: default;
 }
 
-.elemenx-game-tab-number {
+.elemenx-game-tabs .elemenx-tabs .elemenx-tabs-list .elemenx-tab-number {
+	color: inherit;
 	font-family: var(--elemenx-font-mono), monospace;
 	font-size: var(--elemenx-font-size-small);
 	letter-spacing: 0.08em;
 }
 
-.elemenx-game-tab-label {
+.elemenx-game-tabs .elemenx-tabs .elemenx-tabs-list .elemenx-tab-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 	font-size: var(--elemenx-font-size-small);
 	letter-spacing: var(--elemenx-game-letter-spacing);
 	text-transform: var(--elemenx-game-text-transform);

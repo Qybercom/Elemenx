@@ -82,10 +82,13 @@ describe('Contract: SceneEditor of a star system: bodies added round the one tha
 		expect(editor.Space()).toBe(true);
 		expect(planet.Parent).toBe('star');
 		expect(angle(planet, scene.Get('star'))).toBeCloseTo(30, 6);
+		/* The kinds are Buttons of ElemenxUI, each by its name. */
 		expect(Array.prototype.map.call(editor.$Element().querySelectorAll('.elemenx-scene-editor-kind'), function (button) {
-			return button.getAttribute('data-kind');
+			return button.textContent.trim();
 		})).toEqual(editor.SpaceKinds);
-		expect(editor.$Element().querySelector('[data-tool="sketch"]')).toBe(null);
+		expect(editor.ToolsOf().map(function (tool) {
+			return tool.ID;
+		})).not.toContain('sketch');
 		expect(editor.Document().Setting).toBe('space');
 
 		/* Its fields are those of its traits: no place on a ground; a field by the name of its trait. */
@@ -100,11 +103,13 @@ describe('Contract: SceneEditor of a star system: bodies added round the one tha
 		expect(fields).toContain('Distance');
 		expect(fields).not.toContain('Lift');
 
-		var radius = editor.$Element().querySelectorAll('.elemenx-scene-editor-fields [data-field="Radius"]')[0];
+		/* A field is an Input of ElemenxUI: its own field of the page told. */
+		var radius = editor.$Element().querySelectorAll('.elemenx-scene-editor-fields [data-field="Radius"] input')[0];
 
 		radius.value = '3000';
 
-		radius.dispatchEvent(new Event('change'));
+		radius.dispatchEvent(new Event('input', {bubbles: true}));
+		radius.dispatchEvent(new Event('change', {bubbles: true}));
 
 		expect(scene.Get('planet').Traits.Body.Radius).toBe(3000);
 	});
@@ -212,7 +217,8 @@ describe('Contract: SceneEditor of a star system: bodies added round the one tha
 
 		input.value = '100';
 
-		input.dispatchEvent(new Event('change'));
+		input.dispatchEvent(new Event('input', {bubbles: true}));
+		input.dispatchEvent(new Event('change', {bubbles: true}));
 
 		frame(editor);
 
@@ -266,5 +272,284 @@ describe('Contract: SceneEditor of a star system: bodies added round the one tha
 		editor.Redo();
 
 		expect(Object.keys(editor.Scene().Cutscenes)).toEqual(['intro']);
+	});
+
+	/* The editor on a touch screen: a bar of actions for a mouse and fingers alike, its context menu, two fingers for the camera. */
+	it('has its actions in a bar over the view and in a context menu, and two fingers move the camera without editing', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var scene = editor.Scene();
+		var bar = editor.$Element().querySelector('.elemenx-view-actions');
+		var before = Object.keys(scene.Objects()).length;
+		var titles;
+		var distance;
+		var target = overlay(editor);
+		var box = target.getBoundingClientRect();
+		var finger = function (type, id, x, y) {
+			target.dispatchEvent(new PointerEvent(type, {bubbles: true, cancelable: true, clientX: box.left + x, clientY: box.top + y, pointerId: id, pointerType: 'touch', isPrimary: id === 11}));
+		};
+		var button = function (title) {
+			return Array.prototype.find.call(bar.querySelectorAll('button'), function (node) {
+				return node.getAttribute('title') === title || node.getAttribute('aria-label') === title;
+			});
+		};
+
+		expect(bar).not.toBe(null);
+		expect(bar.querySelector('.elemenx-view-actions-hand')).not.toBe(null);
+
+		titles = editor.Actions().map(function (action) {
+			return action.ID + (action.Disabled ? '-' : '+');
+		});
+
+		expect(titles).toEqual(['frame-', 'duplicate-', 'delete-']);
+
+		editor.Select('planet');
+
+		await tick(20);
+
+		button('Duplicate').click();
+
+		await tick(20);
+
+		expect(Object.keys(scene.Objects()).length).toBe(before + 1);
+
+		button('Delete').click();
+
+		await tick(20);
+
+		expect(Object.keys(scene.Objects()).length).toBe(before);
+
+		/* Two fingers apart: nearer, and nothing selected or moved. */
+		editor.Select('');
+
+		distance = scene.Viewpoint().Distance;
+
+		finger('pointerdown', 11, 300, 280);
+		finger('pointerdown', 12, 400, 280);
+		finger('pointermove', 11, 250, 280);
+		finger('pointermove', 12, 450, 280);
+		finger('pointerup', 11, 250, 280);
+		finger('pointerup', 12, 450, 280);
+
+		await tick(200);
+
+		expect(scene.Viewpoint().Distance).toBeLessThan(distance * 0.75);
+		expect(editor.Selected).toBe('');
+
+		/* The toggle gives one finger to the camera: it turns the view and selects nothing. */
+		bar.querySelector('.elemenx-view-actions-hand').click();
+
+		await tick(20);
+
+		expect(editor.Hand).toBe(true);
+
+		var yaw = scene.Viewpoint().Yaw;
+
+		finger('pointerdown', 11, 300, 280);
+		finger('pointermove', 11, 330, 280);
+		finger('pointermove', 11, 380, 280);
+		finger('pointerup', 11, 380, 280);
+
+		expect(scene.Viewpoint().Yaw).not.toBeCloseTo(yaw, 3);
+
+		/* The right button that did not look round opens the context menu, with the actions. */
+		target.dispatchEvent(new PointerEvent('pointerdown', {bubbles: true, cancelable: true, clientX: box.left + 20, clientY: box.top + 20, pointerId: 1, pointerType: 'mouse', button: 2}));
+		target.dispatchEvent(new PointerEvent('pointerup', {bubbles: true, cancelable: true, clientX: box.left + 20, clientY: box.top + 20, pointerId: 1, pointerType: 'mouse', button: 2}));
+
+		await tick(40);
+
+		expect(editor.$Ref('Context', true).Open).toBe(true);
+		/* The menu of the view (its list of objects has a context menu of its own too). */
+		expect(Array.prototype.map.call(document.querySelectorAll('.elemenx-context-point .elemenx-menu'), function (menu) {
+			return menu.textContent;
+		}).join(' ')).toContain('Duplicate');
+	});
+
+	/* Its system as data (SystemData): saved as a file of the system format and opened again, its planets with it. */
+	it('saves its star system as a system of the system format and opens one, its bodies with their planets', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var systems = Elemenx.Service('SystemData');
+		var data;
+		var bytes;
+		var opened;
+		var moon;
+		var ids;
+
+		moon = editor.Add('moon');
+
+		editor.Change('planet', {Name: 'Home'});
+
+		data = editor.System();
+
+		expect(data.Manifest.Format).toBe('elemenx-system');
+		expect(data.Manifest.Origin.Kind).toBe('authored');
+
+		ids = systems.Objects(data, 'x').map(function (spec) {
+			return spec.ID;
+		});
+
+		expect(ids).toEqual(expect.arrayContaining(['star', 'planet', moon]));
+
+		/* A system with the planet of a body of its file (its URL), as a file, opened in the editor. */
+		data.Manifest.Bodies = {planet: {URL: '/data/planets/home.planet'}};
+		bytes = systems.Save(data);
+
+		opened = await new Promise(function (resolve, reject) {
+			editor.OpenSystem(bytes, function (error, made) {
+				if (error) reject(error);
+				else resolve(made);
+			});
+		});
+
+		expect(editor.Document().Setting).toBe('space');
+		expect(editor.Scene().Get(moon).Parent).toBe('planet');
+		expect(editor.Scene().Get('planet').Traits.Surface.Planet.Data).toBe('/data/planets/home.planet');
+		/* Saved again: the planets of its bodies as they came. */
+		expect(editor.System().Manifest.Bodies).toEqual({planet: {URL: '/data/planets/home.planet'}});
+		expect(editor.System().Manifest.ID).toBe(opened.Manifest.ID);
+
+		/* Back to what it was: one step to undo. */
+		editor.Undo();
+
+		expect(editor.Scene().Get(moon)).toBeTruthy();
+		expect((editor.Scene().Get('planet').Traits.Surface.Planet || {}).Data).toBeUndefined();
+	});
+
+	/* The tree of orbits made in the editor: a barycentre of two stars, a black hole as a planet, a station round it. */
+	it('adds a barycentre and stars round it opposite one another, a black hole round a star, a station round the black hole', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var scene = editor.Scene();
+		var centre = editor.Add('barycentre');
+		var first;
+		var second;
+		var hole;
+		var dock;
+
+		expect(scene.Get(centre).Parent || '').toBe('');
+
+		editor.Select(centre);
+
+		first = editor.Add('star');
+
+		editor.Select(centre);
+
+		second = editor.Add('star');
+
+		expect(scene.Get(first).Parent).toBe(centre);
+		expect(scene.Get(second).Parent).toBe(centre);
+		expect(Math.abs(scene.Get(second).Traits.Orbit.Anomaly - scene.Get(first).Traits.Orbit.Anomaly)).toBe(180);
+
+		editor.Select(first);
+
+		hole = editor.Add('blackhole');
+
+		editor.Select(hole);
+
+		dock = editor.Add('station');
+
+		expect(scene.Get(hole).Parent).toBe(first);
+		expect(scene.Get(dock).Parent).toBe(hole);
+
+		/* Its list of objects a tree of the same. */
+		await tick(20);
+
+		expect(editor.Items().filter(function (item) {
+			return item.ID === centre;
+		})[0].Items.map(function (item) {
+			return item.ID;
+		})).toEqual([first, second]);
+		expect(editor.Opened()).toEqual(expect.arrayContaining([centre, first, hole]));
+	});
+
+	/*
+	 * Regression: every object of its list had a square that looked as a check box and did nothing, the list had no context
+	 * menu, chose one object only and could not move one under another; what it chose (a fleet far off) showed no mark.
+	 */
+	it('lists its objects with the icons of their kinds, chooses many of them, moves one under another by a drag, and has a context menu', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var scene = editor.Scene();
+		var moon = editor.Add('moon');
+		var station;
+		var tree;
+		var items;
+		var row;
+
+		editor.Select('star');
+
+		station = editor.Add('station');
+
+		await tick(20);
+
+		items = {};
+		(function walk (list) {
+			list.forEach(function (item) {
+				items[item.ID] = item;
+
+				walk(item.Items || []);
+			});
+		})(editor.Items());
+
+		expect(items.star.Icon).toBe('sun');
+		expect(items.planet.Icon).toBe('planet');
+		expect(items[moon].Icon).toBe('moon');
+		expect(items[station].Icon).toBe('station');
+
+		/* Many chosen in its list: all marked in the scene, the first one the selected. */
+		editor.ManyChosen([moon, station]);
+
+		expect(editor.Selected).toBe(moon);
+		expect(scene.Selection()).toEqual([moon, station]);
+
+		/* Delete of its menu takes all of them away. */
+		editor.TreePicked({Item: {ID: 'delete'}});
+
+		expect(scene.Get(moon)).toBe(null);
+		expect(scene.Get(station)).toBe(null);
+
+		/* A drag of the planet into the star... and of an object beside another: the same parent. */
+		moon = editor.Add('moon');
+
+		editor.TreeMoved({ID: moon, Target: 'star', Position: 'inside'});
+
+		expect(scene.Get(moon).Parent).toBe('star');
+
+		editor.TreeMoved({ID: moon, Target: 'planet', Position: 'after'});
+
+		expect(scene.Get(moon).Parent).toBe(scene.Get('planet').Parent || '');
+
+		/* Its context menu on a row: of that object, chosen first; on the list: kinds to add. */
+		await tick(20);
+
+		tree = editor.$Element().querySelector('.elemenx-scene-editor-tree');
+		row = tree.querySelector('.elemenx-tree-row[data-id="planet"]');
+
+		/* A real right click opens it (Regression: it had no items before it opened, and never opened). */
+		row.dispatchEvent(new MouseEvent('contextmenu', {bubbles: true, cancelable: true, clientX: 40, clientY: 40}));
+
+		await tick(30);
+
+		expect(Elemenx.Instance(tree).Open).toBe(true);
+
+		editor.TreeOpened({Target: row});
+
+		expect(editor.Selected).toBe('planet');
+		expect(editor.TreeItems.map(function (item) {
+			return item.ID;
+		})).toEqual(expect.arrayContaining(['focus', 'rename', 'duplicate', 'child', 'delete']));
+
+		editor.TreeOpened({Target: tree});
+
+		expect(editor.TreeItems[0].Items.map(function (item) {
+			return item.ID;
+		})).toContain('add:planet');
+
+		editor.TreePicked({Item: {ID: 'add:planetoid'}});
+
+		expect(scene.Objects(function (object) {
+			return object.Kind === 'planetoid';
+		}).length).toBe(1);
 	});
 });

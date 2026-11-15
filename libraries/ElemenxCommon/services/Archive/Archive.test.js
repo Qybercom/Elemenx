@@ -51,4 +51,90 @@ describe('Contract: Archive, a zip of texts and bytes made in the page', functio
 		expect(found.$End).toMatchObject({Signature: 0x06054b50, Count: 3});
 		expect(new DataView(zip.buffer).getUint32(found.$End.Central, true)).toBe(0x02014b50);
 	});
+
+	it('reads the files of a zip back by their paths, and tells what is no zip or is compressed', function () {
+		var bytes = new Uint8Array([0, 1, 2, 250, 255]);
+		var zip = archive.Zip({'index.html': '<p>Привет</p>', 'models/a.glb': bytes, 'empty.txt': ''});
+		var files = archive.Unzip(zip.buffer);
+		var squeezed = zip.slice();
+		var view = new DataView(squeezed.buffer);
+
+		expect(Object.keys(files)).toEqual(['index.html', 'models/a.glb', 'empty.txt']);
+		expect(new TextDecoder().decode(files['index.html'])).toBe('<p>Привет</p>');
+		expect(Array.from(files['models/a.glb'])).toEqual([0, 1, 2, 250, 255]);
+		expect(files['empty.txt'].length).toBe(0);
+		expect(function () {
+			archive.Unzip(new Uint8Array([1, 2, 3]));
+		}).toThrow('Archive: not a zip');
+
+		/* Its first file said to be deflated (method 8, in the directory at its end). */
+		view.setUint16(view.getUint32(squeezed.length - 22 + 16, true) + 10, 8, true);
+
+		expect(function () {
+			archive.Unzip(squeezed);
+		}).toThrow('Archive: index.html is compressed');
+	});
+
+	it('deflates the files of a zip where that makes them smaller, and expands any zip back', async function () {
+		var text = 'mountains '.repeat(400);
+		var noise = new Uint8Array(64).map(function (value, index) {
+			return (index * 97 + 13) & 255;
+		});
+		var zip = await new Promise(function (resolve, reject) {
+			archive.Compress({'a.txt': text, 'b.bin': noise}, function (error, bytes) {
+				if (error) reject(error);
+				else resolve(bytes);
+			});
+		});
+		var list = archive.Entries(zip);
+		var files = await new Promise(function (resolve, reject) {
+			archive.Expand(zip, function (error, made) {
+				if (error) reject(error);
+				else resolve(made);
+			});
+		});
+
+		expect(list.map(function (entry) {
+			return entry.Name + ':' + entry.Method;
+		})).toEqual(['a.txt:8', 'b.bin:0']);
+		expect(list[0].Compressed).toBeLessThan(list[0].Size / 10);
+		expect(new TextDecoder().decode(files['a.txt'])).toBe(text);
+		expect(Array.from(files['b.bin'])).toEqual(Array.from(noise));
+		expect(function () {
+			archive.Unzip(zip);
+		}).toThrow('Archive: a.txt is compressed');
+	});
+
+	/* What a reader of the network has of a zip: its end (a range of bytes), then each entry by its place. */
+	it('reads the directory of a zip from its end alone, and an entry from its own bytes', function () {
+		var zip = archive.Zip({'planet.json': '{}', 'tiles/a.bin': new Uint8Array([7, 8, 9])});
+		var tail = zip.subarray(zip.length - 150);
+		var list = archive.Entries(tail, zip.length - 150);
+		var entry = list[1];
+
+		expect(list.map(function (one) {
+			return one.Name;
+		})).toEqual(['planet.json', 'tiles/a.bin']);
+		expect(Array.from(archive.Data(zip.subarray(entry.Offset, entry.Offset + 30 + 11 + entry.Compressed), entry))).toEqual([7, 8, 9]);
+	});
+
+	it('writes and reads a ZIP64 of more than 65535 files', function () {
+		var files = {};
+		var zip;
+		var list;
+		var view;
+		var i;
+
+		for (i = 0; i < 70000; i++)
+			files['t/' + i] = new Uint8Array([i & 255]);
+
+		zip = archive.Zip(files);
+		view = new DataView(zip.buffer, zip.byteOffset, zip.byteLength);
+		list = archive.Entries(zip);
+
+		expect(view.getUint16(zip.length - 22 + 10, true)).toBe(0xffff);
+		expect(view.getUint32(zip.length - 42, true)).toBe(0x07064b50);
+		expect(list.length).toBe(70000);
+		expect(Array.from(archive.Unzip(zip)['t/69999'])).toEqual([69999 & 255]);
+	});
 });

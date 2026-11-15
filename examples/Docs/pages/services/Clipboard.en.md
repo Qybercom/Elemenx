@@ -11,7 +11,7 @@ The clipboard. Copy(text, callback, options) writes text (with the old way of a 
 ## Example
 
 ```example
-<span class="elemenx-input"><input class="elemenx-input-control" [(value)]="Text" /></span>
+<Input [Value]="Text" Label="A text" (input)="Text = $event" />
 <Button Label="Copy" Icon="copy" Variant="primary" (click)="Copy" />
 <Button Label="Read the clipboard" (click)="Read" />
 <p class="elemenx-text small muted">{{Note}}</p>

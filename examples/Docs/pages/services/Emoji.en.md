@@ -19,7 +19,7 @@ The emoji of Unicode, drawn by the fonts of the system: their groups, names and 
 ## Example
 
 ```example
-<span class="elemenx-input"><input class="elemenx-input-control" [(value)]="Query" placeholder="Search emoji" /></span>
+<Input [Value]="Query" Placeholder="Search emoji" Label="Search emoji" (input)="Query = $event" />
 <Button Label="Search" Variant="primary" (click)="Search" />
 <p class="elemenx-title">{{Found}}</p>
 <p class="elemenx-text small muted">{{Note}}</p>

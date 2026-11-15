@@ -204,38 +204,72 @@ Elemenx.Component('FloraEditor', {
 		this.Grow();
 	},
 
-	Slid: function (event) {
-		this.Write(event.target.getAttribute('data-key'), Number(event.target.value));
+	/* The lists of how it grows, its leaves, its bark and the heads of its stalks: their key, title, and the choice of none. */
+	Lists: [
+		{Key: 'Grow', Names: 'Grows', Words: 'graphics.floraEditor.grows.'},
+		{Key: 'Leaves.Kind', Names: 'Kinds', Words: 'graphics.floraEditor.kinds.'},
+		{Key: 'Bark.Pattern', Names: 'Patterns', Words: 'graphics.floraEditor.patterns.'},
+		{Key: 'Head.Kind', Names: 'Heads', Words: 'graphics.floraEditor.heads.', None: 'none'}
+	],
+
+	/* The title of a list of Lists, in the language. */
+	ListTitle: function (key) {
+		if (key === 'Grow')
+			return Elemenx.Locale.Text('graphics.floraEditor.grow');
+
+		if (key === 'Leaves.Kind')
+			return Elemenx.Locale.Text('graphics.floraEditor.kind');
+
+		if (key === 'Bark.Pattern')
+			return Elemenx.Locale.Text('graphics.floraEditor.pattern');
+
+		return Elemenx.Locale.Text('graphics.floraEditor.head');
+	},
+
+	/* The choices of a list (Select): of its species (Species), or of a list of Lists by its key. */
+	Choices: function (key) {
+		var list = key === 'Species' ? {Names: null, Words: 'graphics.floraEditor.names.'} : this.Lists.filter(function (one) {
+			return one.Key === key;
+		})[0];
+		var names = list.Names ? this[list.Names] : this.Names();
+
+		return names.map(function (name) {
+			return {Value: name, Label: Elemenx.Locale.Text(list.Words + name)};
+		});
+	},
+
+	Slid: function (key, value) {
+		this.Write(key, Number(value));
 
 		this.Changed();
 	},
 
-	Heighted: function (event) {
-		var tall = Number(event.target.value);
+	Heighted: function (value) {
+		var tall = Number(value);
 
 		this.Write('Height', [Math.round(tall * 0.85 * 10) / 10, Math.round(tall * 1.15 * 10) / 10]);
 
 		this.Changed();
 	},
 
-	Picked: function (event) {
-		var hex = event.target.value;
+	Picked: function (key, value) {
+		var hex = String(value);
 
-		this.Write(event.target.getAttribute('data-key'), [1, 3, 5].map(function (at) {
+		this.Write(key, [1, 3, 5].map(function (at) {
 			return Math.round(parseInt(hex.slice(at, at + 2), 16) / 255 * 1000) / 1000;
 		}));
 
 		this.Changed();
 	},
 
-	Chose: function (event) {
-		this.Write(event.target.getAttribute('data-key'), event.target.value);
+	Chose: function (key, value) {
+		this.Write(key, value);
 
 		this.Changed();
 	},
 
-	Specied: function (event) {
-		this.Species = event.target.value;
+	Specied: function (value) {
+		this.Species = value;
 		this.Own().Preset = null;
 		this.Own().Found = null;
 
@@ -244,15 +278,15 @@ Elemenx.Component('FloraEditor', {
 		this.$Emit('change', {Preset: this.Current()});
 	},
 
-	Varied: function (event) {
-		this.Variant = Math.max(0, (Number(this.Variant) || 0) + Number(event.currentTarget.getAttribute('data-step')));
+	Varied: function (value) {
+		this.Variant = Math.max(0, Math.round(Number(value) || 0));
 		this.Version++;
 
 		this.Grow();
 	},
 
-	Named: function (event) {
-		this.Name = event.target.value;
+	Named: function (value) {
+		this.Name = value;
 	},
 
 	/* A picture of a file: its pixels ({Width, Height, Data}, at most 400 a side for the reading), callback(picture). */
@@ -283,9 +317,9 @@ Elemenx.Component('FloraEditor', {
 	},
 
 	/* The reference: read, its outline drawn over it, the preset of it. */
-	Loaded: function (event) {
+	Loaded: function (files) {
 		var self = this;
-		var file = event.target.files && event.target.files[0];
+		var file = files && files[0];
 		if (!file) return;
 
 		this.Pixels(file, 400, function (picture, image) {
@@ -299,11 +333,9 @@ Elemenx.Component('FloraEditor', {
 	},
 
 	/* Its own picture of bark or of leaves (an atlas as SceneFlora draws it: four clusters above, the same in shade below). */
-	Textured: function (event) {
+	Textured: function (part, files) {
 		var self = this;
-		var file = event.target.files && event.target.files[0];
-		var part = event.target.getAttribute('data-key');
-
+		var file = files && files[0];
 		if (!file) return;
 
 		this.Pixels(file, 1024, function (picture) {

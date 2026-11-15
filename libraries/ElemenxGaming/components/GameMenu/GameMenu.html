@@ -2,11 +2,10 @@
 	<h2 class="elemenx-game-menu-title" *if="Title">{{Title}}</h2>
 	<p class="elemenx-game-menu-subtitle" *if="Subtitle">{{Subtitle}}</p>
 	<div class="elemenx-game-menu-items">
-		<button class="elemenx-game-menu-item" type="button" *for="item of Items" *key="item.ID" [attribute.data-index]="$index" [disabled]="!!item.Disabled" (click)="Chosen">
-			<Icon *if="item.Icon" [name]="item.Icon" />
+		<Button class="elemenx-game-menu-item" *for="item of Items" *key="item.ID" Variant="ghost" Block="true" [Icon]="item.Icon || ''" [Disabled]="!!item.Disabled" (click)="Chosen(item)">
 			<span class="elemenx-game-menu-label">{{item.Label}}</span>
 			<span class="elemenx-game-menu-hint" *if="item.Hint">{{item.Hint}}</span>
-		</button>
+		</Button>
 	</div>
 	<slot></slot>
 </nav>

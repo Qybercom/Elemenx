@@ -38,7 +38,7 @@
 	color: var(--elemenx-text-muted);
 }
 
-.elemenx-flora-editor-load input {
+.elemenx-flora-editor-load {
 	max-width: 100%;
 }
 
@@ -81,10 +81,8 @@
 	margin-bottom: 6px;
 }
 
-.elemenx-flora-editor-field input[type="range"],
-.elemenx-flora-editor-field select,
-.elemenx-flora-editor-field input[type="text"] {
-	width: 100%;
+.elemenx-flora-editor-field > :last-child {
+	min-width: 0;
 }
 
 .elemenx-flora-editor-color {
@@ -92,13 +90,34 @@
 	align-items: center;
 }
 
-.elemenx-flora-editor-variant {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
 .elemenx-flora-editor-define {
 	width: 100%;
 	margin-top: 4px;
+}
+
+/* Narrow (a phone): one column, the plant first, its picture and its numbers under it. */
+@media (max-width: 760px) {
+	.elemenx-flora-editor {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: minmax(300px, 46vh) auto auto;
+		height: auto;
+		overflow: visible;
+	}
+
+	.elemenx-flora-editor-view {
+		grid-row: 1;
+	}
+
+	.elemenx-flora-editor-reference {
+		grid-row: 2;
+		border-top: 1px solid var(--elemenx-border);
+		border-right: 0;
+	}
+
+	.elemenx-flora-editor-panel {
+		grid-row: 3;
+		overflow: visible;
+		border-top: 1px solid var(--elemenx-border);
+		border-left: 0;
+	}
 }

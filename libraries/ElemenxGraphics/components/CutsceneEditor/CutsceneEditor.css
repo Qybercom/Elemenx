@@ -20,14 +20,8 @@
 	width: 8px;
 }
 
-.elemenx-cutscene-editor-names,
-.elemenx-cutscene-editor-add {
-	height: var(--elemenx-control-small);
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius-small);
-	background: var(--elemenx-surface);
-	color: inherit;
-	font: inherit;
+.elemenx-cutscene-editor-names {
+	min-width: 140px;
 }
 
 .elemenx-cutscene-editor-time {
@@ -75,12 +69,20 @@
 	margin: 2px 0;
 }
 
-.elemenx-cutscene-editor-field input {
+.elemenx-cutscene-editor-field > :last-child {
 	min-width: 0;
-	height: var(--elemenx-control-small);
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius-small);
-	background: var(--elemenx-surface);
-	color: inherit;
-	font: inherit;
+}
+
+/* On a narrow screen the fields of the piece go under its line. */
+@media (max-width: 640px) {
+	.elemenx-cutscene-editor-body {
+		flex-direction: column;
+	}
+
+	.elemenx-cutscene-editor-fields {
+		width: auto;
+		max-height: 40%;
+		border-top: 1px solid var(--elemenx-border);
+		border-left: 0;
+	}
 }

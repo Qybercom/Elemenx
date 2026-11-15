@@ -143,6 +143,203 @@
 			}
 		},
 		{
+			"Name": "GameStat",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "trophy",
+			"Description": "A value of a game with its name: a lap, a time, gold, a speed; stacked or inline.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The value."
+				},
+				{
+					"Name": "Unit",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The unit after the value."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name."
+				},
+				{
+					"Name": "Icon",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "An icon before it."
+				},
+				{
+					"Name": "Layout",
+					"Type": "select",
+					"Default": "stacked",
+					"Options": [
+						"stacked",
+						"inline"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "stacked (the name over the value) or inline (the icon, the value, the name)."
+				},
+				{
+					"Name": "Tone",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"accent",
+						"success",
+						"warning",
+						"danger",
+						"muted"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Its color: accent, success, warning, danger, or muted (a lamp that is off)."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "small, medium or large."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"Label": "Gold",
+				"Value": 1250,
+				"Icon": "games:coin",
+				"Layout": "inline"
+			}
+		},
+		{
+			"Name": "GameStats",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "trophy",
+			"Description": "The values of a game in a row or a column on a panel of the theme: the board of a race, the resources of a strategy.",
+			"Props": [
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"Label": "text",
+						"Value": "text",
+						"Unit": "text",
+						"Icon": "icon",
+						"Tone": "text"
+					},
+					"Body": false,
+					"Description": "The values: [{ID, Label, Value, Unit, Icon, Tone}]."
+				},
+				{
+					"Name": "Layout",
+					"Type": "select",
+					"Default": "stacked",
+					"Options": [
+						"stacked",
+						"inline"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "stacked (each name over its value) or inline (icon, value, name)."
+				},
+				{
+					"Name": "Orientation",
+					"Type": "select",
+					"Default": "horizontal",
+					"Options": [
+						"horizontal",
+						"vertical"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "horizontal (a row) or vertical (a column)."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "small, medium or large."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the group for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"Items": [
+					{
+						"ID": "lap",
+						"Label": "Lap",
+						"Value": "2/3"
+					},
+					{
+						"ID": "time",
+						"Label": "Time",
+						"Value": "1:02.4"
+					},
+					{
+						"ID": "best",
+						"Label": "Best",
+						"Value": "0:58.1"
+					}
+				],
+				"Label": "Race"
+			}
+		},
+		{
 			"Name": "GameItemCard",
 			"Kind": "Component",
 			"Group": "game",
@@ -1383,6 +1580,7 @@
 			"top",
 			"top-end"
 		],
+		"elemenx-scene-hud": [],
 		"elemenx-game-bar": [
 			"large",
 			"low",
@@ -1396,6 +1594,22 @@
 		"elemenx-game-bar-fill": [],
 		"elemenx-game-bar-trail": [],
 		"elemenx-game-bar-value": [],
+		"elemenx-game-stat": [
+			"accent",
+			"danger",
+			"large",
+			"muted",
+			"small",
+			"stacked",
+			"success",
+			"warning"
+		],
+		"elemenx-game-stat-label": [],
+		"elemenx-game-stat-value": [],
+		"elemenx-game-stat-unit": [],
+		"elemenx-game-stat-group": [
+			"vertical"
+		],
 		"elemenx-game-slot": [
 			"active",
 			"drop-over",
@@ -1475,11 +1689,16 @@
 			"horizontal",
 			"vertical"
 		],
-		"elemenx-game-tab": [
-			"active"
+		"elemenx-tabs": [
+			"pill"
 		],
-		"elemenx-game-tab-number": [],
-		"elemenx-game-tab-label": [],
+		"elemenx-tabs-list": [],
+		"elemenx-tab": [
+			"active",
+			"disabled"
+		],
+		"elemenx-tab-number": [],
+		"elemenx-tab-label": [],
 		"elemenx-game-quests": [
 			"log"
 		],

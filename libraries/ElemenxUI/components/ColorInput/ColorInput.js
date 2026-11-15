@@ -5,6 +5,8 @@
  */
 Elemenx.Component('ColorInput', {
 	$TemplateURL: 'ColorInput.html',
+	/* [(Value)] on its tag follows what it tells as it is typed or moved. */
+	$Model: {Value: 'input'},
 	$StyleURL: 'ColorInput.css',
 	$Meta: {
 		Group: 'inputs',

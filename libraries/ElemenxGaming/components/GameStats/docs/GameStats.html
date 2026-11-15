@@ -1,0 +1,8 @@
+<GameStats Label="Race" [items]="[{ID: 'lap', Label: 'Lap', Value: Lap + '/3'}, {ID: 'time', Label: 'Time', Value: '1:02.4'}, {ID: 'best', Label: 'Best', Value: '0:58.1', Tone: 'success'}]" />
+<GameStats Label="Resources" Layout="inline" [items]="[{ID: 'gold', Label: 'gold', Value: 1250, Icon: 'games:coin'}, {ID: 'gems', Label: 'gems', Value: 12, Icon: 'games:gem'}]" />
+<Button Label="Next lap" (click)="Lap = Lap % 3 + 1" />
+<script>
+({
+	Lap: 2
+})
+</script>

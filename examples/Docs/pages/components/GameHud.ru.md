@@ -1,7 +1,7 @@
 <!-- generated -->
 # GameHud
 
-Рамка игрового экрана: сцена (слот по умолчанию: canvas, картинка) и интерфейс поверх неё в девяти областях-слотах: top-start, top, top-end, start, center, end, bottom-start, bottom, bottom-end. Области пропускают указатель к сцене, их содержимое — забирает. Padding — отступ областей от краёв. Высота — как у контейнера.
+Рамка игрового экрана: сцена (слот по умолчанию: canvas, картинка) и интерфейс поверх неё в девяти областях-слотах: top-start, top, top-end, start, center, end, bottom-start, bottom, bottom-end. Области пропускают указатель к сцене, их содержимое — забирает. Padding — отступ областей от краёв. Высота — как у контейнера. Внутри сцены (слот hud у Scene) у GameHud нет своей сцены: то, что не лежит в областях, пропускает указатель к сцене, а изменения внутри не сдвигают страницу.
 
 ## Свойства
 
@@ -30,3 +30,10 @@
 	</GameHud>
 </div>
 ```
+
+## Тесты
+
+- [GameStat shows its value, unit and name, stacked by default, inline with the name after the value, of its tone and size](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-stats.test.js#L40) — `tests/regression/library-game-stats.test.js`
+- [GameStats draws a GameStat for each item on a panel, follows a change of a value, and keeps what is put in its slot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-stats.test.js#L57) — `tests/regression/library-game-stats.test.js`
+- [Field Size small sets its label narrow, of small type, in line with its control](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-stats.test.js#L76) — `tests/regression/library-game-stats.test.js`
+- [a GameHud in the hud of a scene lets the pointer through to the scene, but its contents take it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-stats.test.js#L88) — `tests/regression/library-game-stats.test.js`

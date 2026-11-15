@@ -1,0 +1,4 @@
+/* The time of the galaxy: wide enough to choose a million years. */
+.galaxy-demo-time {
+	min-width: 260px;
+}

@@ -1,0 +1,290 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "glacial",
+	"parameters": [
+		{
+			"key": "Amount",
+			"type": "float",
+			"value": 900
+		},
+		{
+			"key": "Size",
+			"type": "float",
+			"value": 14
+		}
+	],
+	"blocks": [
+		{
+			"id": "parameter1",
+			"type": "Parameter",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Amount"
+				},
+				{
+					"key": "Type",
+					"value": "any"
+				}
+			]
+		},
+		{
+			"id": "parameter2",
+			"type": "Parameter",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Size"
+				},
+				{
+					"key": "Type",
+					"value": "any"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Y"
+				}
+			]
+		},
+		{
+			"id": "input5",
+			"type": "Input",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "input6",
+			"type": "Input",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "combine7",
+			"type": "Combine",
+			"x": 1580,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "formula8",
+			"type": "Formula",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 / max(0.1, Size)"
+				}
+			]
+		},
+		{
+			"id": "noisespec9",
+			"type": "NoiseSpec",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": "{Seed}"
+				},
+				{
+					"key": "Fractal",
+					"value": "ridged"
+				},
+				{
+					"key": "Octaves",
+					"value": 5
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0.3
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "formula10",
+			"type": "Formula",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 - v"
+				}
+			]
+		},
+		{
+			"id": "formula11",
+			"type": "Formula",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "pow(saturate((u - 0.45) / 0.45), 0.6)"
+				}
+			]
+		},
+		{
+			"id": "formula12",
+			"type": "Formula",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(0.35 * pow(v, 4) - trough * 0.65) * Amount * saturate((Height - 400) / 1500)"
+				}
+			]
+		},
+		{
+			"id": "result13",
+			"type": "Result",
+			"x": 700,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input3-out-Value",
+			"p2": "combine7-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input4-out-Value",
+			"p2": "combine7-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input5-out-Value",
+			"p2": "combine7-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "parameter2-out-Value",
+			"p2": "formula8-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "combine7-out-XYZ",
+			"p2": "noisespec9-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "formula8-out-Value",
+			"p2": "noisespec9-in-Scale",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "noisespec9-out-Value",
+			"p2": "formula10-in-v",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "formula10-out-Value",
+			"p2": "formula11-in-u",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "noisespec9-out-Value",
+			"p2": "formula12-in-v",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "formula11-out-Value",
+			"p2": "formula12-in-trough",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "parameter1-out-Value",
+			"p2": "formula12-in-Amount",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "input6-out-Value",
+			"p2": "formula12-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "formula12-out-Value",
+			"p2": "result13-in-Value",
+			"kind": "value"
+		}
+	]
+}

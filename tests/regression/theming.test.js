@@ -257,4 +257,21 @@ describe('ElemenxUI theming', function () {
 			});
 		});
 	});
+
+	/*
+	 * Regression: a badge declared custom properties of its own (its tone): an element that declares one costs twice as
+	 * much each time its style is reckoned again (it takes a copy of every token of the theme). Labels of badges over a
+	 * scene, moved each frame, cost 7.6 ms a thousand instead of 3.5.
+	 */
+	it('declares no custom property in a rule of a badge', function () {
+		var source = read(path.join(library, 'index.css'));
+		var found = [];
+
+		Array.from(source.matchAll(/([^{}]+)\{([^{}]*)\}/g)).forEach(function (match) {
+			if (/\.elemenx-badge(?![\w-])/.test(match[1]) && /(^|[\s;])--[\w-]+\s*:/.test(match[2]))
+				found.push(match[1].trim());
+		});
+
+		expect(found).toEqual([]);
+	});
 });

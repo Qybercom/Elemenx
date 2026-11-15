@@ -1,4 +1,4 @@
-<div class="elemenx-progress" role="progressbar" aria-valuemin="0" [attribute.aria-valuemax]="Max" [attribute.aria-valuenow]="Percent(Value, Max) === null ? null : Value" [attribute.aria-label]="Label || null" [class]="[Variant || 'bar', Tone || 'accent', Size || 'medium', Percent(Value, Max) === null ? 'indeterminate' : '']">
+<div class="elemenx-progress" role="progressbar" aria-valuemin="0" [attribute.aria-valuemax]="Max" [attribute.aria-valuenow]="Percent(Value, Max) === null ? null : Value" [attribute.aria-label]="Label || null" [class]="[Variant || 'bar', Tone || 'accent', Size || 'medium', Percent(Value, Max) === null ? 'indeterminate' : '', Live(Value) ? 'live' : '']">
 	<span class="elemenx-progress-label" *if="Label && Variant !== 'ring'">{{Label}}</span>
 	<span class="elemenx-progress-track" *if="Variant !== 'ring'"><span class="elemenx-progress-fill" [style.width]="Percent(Value, Max) === null ? null : Percent(Value, Max) + '%'"></span></span>
 	<svg class="elemenx-progress-ring" viewBox="0 0 36 36" *if="Variant === 'ring'" aria-hidden="true">

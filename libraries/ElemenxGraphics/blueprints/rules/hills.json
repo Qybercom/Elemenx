@@ -1,0 +1,248 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "hills",
+	"parameters": [
+		{
+			"key": "Amount",
+			"type": "float",
+			"value": 220
+		},
+		{
+			"key": "Size",
+			"type": "float",
+			"value": 6
+		}
+	],
+	"blocks": [
+		{
+			"id": "parameter1",
+			"type": "Parameter",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Amount"
+				},
+				{
+					"key": "Type",
+					"value": "any"
+				}
+			]
+		},
+		{
+			"id": "parameter2",
+			"type": "Parameter",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Size"
+				},
+				{
+					"key": "Type",
+					"value": "any"
+				}
+			]
+		},
+		{
+			"id": "input3",
+			"type": "Input",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Y"
+				}
+			]
+		},
+		{
+			"id": "input5",
+			"type": "Input",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "input6",
+			"type": "Input",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "combine7",
+			"type": "Combine",
+			"x": 1580,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "formula8",
+			"type": "Formula",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 / max(0.1, Size)"
+				}
+			]
+		},
+		{
+			"id": "noisespec9",
+			"type": "NoiseSpec",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": "{Seed}"
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 6
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "formula10",
+			"type": "Formula",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(n - 0.5) * 2 * Amount * saturate(Height / 200)"
+				}
+			]
+		},
+		{
+			"id": "result11",
+			"type": "Result",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input3-out-Value",
+			"p2": "combine7-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input4-out-Value",
+			"p2": "combine7-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input5-out-Value",
+			"p2": "combine7-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "parameter2-out-Value",
+			"p2": "formula8-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "combine7-out-XYZ",
+			"p2": "noisespec9-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "formula8-out-Value",
+			"p2": "noisespec9-in-Scale",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "noisespec9-out-Value",
+			"p2": "formula10-in-n",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "parameter1-out-Value",
+			"p2": "formula10-in-Amount",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "input6-out-Value",
+			"p2": "formula10-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "formula10-out-Value",
+			"p2": "result11-in-Value",
+			"kind": "value"
+		}
+	]
+}

@@ -1,25 +1,41 @@
 <div class="elemenx-planet-editor">
 	<div class="elemenx-planet-editor-toolbar" role="toolbar" [attribute.aria-label]="$T('graphics.planetEditor.tools.label')">
-		<button type="button" class="elemenx-planet-editor-tool" *for="tool of Tools" *key="tool.ID" [class.active]="Tool === tool.ID" [attribute.data-tool]="tool.ID" [attribute.aria-pressed]="Tool === tool.ID ? 'true' : 'false'" (click)="Picked(tool.ID)">{{$T(tool.Key)}}</button>
-		<label class="elemenx-planet-editor-overlay">{{$T('graphics.planetEditor.overlay')}}
-			<select (change)="Overlaid">
-				<option *for="overlay of Overlays" *key="overlay.ID" [value]="overlay.ID" [selected]="overlay.ID === Overlay">{{$T(overlay.Key)}}</option>
-			</select>
-		</label>
+		<Button class="elemenx-planet-editor-tool" *for="tool of Tools" *key="tool.ID" Size="small" [Variant]="Tool === tool.ID ? 'secondary' : 'ghost'" [Pressed]="Tool === tool.ID" [Label]="$T(tool.Key)" (click)="Picked(tool.ID)" />
+		<div class="elemenx-planet-editor-overlay"><span>{{$T('graphics.planetEditor.overlay')}}</span>
+			<Select Size="small" [Label]="$T('graphics.planetEditor.overlay')" [Options]="OverlayOptions(Version)" [Value]="Overlay" (change)="Overlaid($event)" />
+		</div>
 	</div>
-	<div class="elemenx-planet-editor-view" #View tabindex="0" [attribute.aria-label]="Label || $T('graphics.planetEditor.label')" [attribute.data-tool]="Tool" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (wheel)="Wheeled" (dblclick)="Finish" (keydown)="Key">
-		<canvas class="elemenx-planet-editor-canvas" #Canvas></canvas>
-		<svg class="elemenx-planet-editor-marks" #Marks></svg>
-		<div class="elemenx-planet-editor-info" *if="Info">{{Info}}</div>
+	<ContextMenu #Context Sheet="auto" [Title]="$T('graphics.viewActions.menu')" [Items]="Actions(Version, Selected, Tool)" (open)="MenuOpened" (select)="MenuPicked">
+		<div class="elemenx-planet-editor-view" #View tabindex="0" [attribute.aria-label]="Label || $T('graphics.planetEditor.label')" [attribute.data-tool]="Tool" (pointerdown)="TouchDown" (pointermove)="TouchMove" (pointerup)="TouchUp" (pointercancel)="TouchUp" (wheel)="Wheeled" (dblclick)="Finish" (keydown)="Key" (contextmenu)="Menued">
+			<canvas class="elemenx-planet-editor-globe" #Globe></canvas>
+			<canvas class="elemenx-planet-editor-canvas" #Canvas></canvas>
+			<svg class="elemenx-planet-editor-marks" #Marks></svg>
+			<div class="elemenx-planet-editor-info" *if="Info">{{Info}}</div>
+			<div class="elemenx-planet-editor-compass" [style.--elemenx-planet-editor-north]="North + 'deg'"><Button Size="small" Variant="secondary" Icon="compass" [Title]="$T('graphics.planetEditor.north')" (click)="NorthUp" /></div>
+			<div class="elemenx-planet-editor-hint">{{$T('graphics.planetEditor.hint')}}</div>
+			<ViewActions [Items]="Actions(Version, Selected, Tool)" (act)="Acted" />
+		</div>
+	</ContextMenu>
+	<div class="elemenx-planet-editor-graph" *if="RuleGraph(Version, RuleOpen)">
+		<div class="elemenx-planet-editor-title">{{$T('graphics.planetEditor.rules.graph')}}: {{RuleOpen}}<Button Size="small" Variant="ghost" Icon="close" [Title]="$T('graphics.planetEditor.rules.close')" (click)="RuleOpened(RuleOpen)" /></div>
+		<Blueprint [value]="RuleGraph(Version, RuleOpen)" (change)="RuleDrawn" />
 	</div>
-	<aside class="elemenx-planet-editor-panel">
+	<aside class="elemenx-planet-editor-panel" *resizable="{Edges: 'left', MinWidth: 180, MaxWidth: 640}" [style.width]="PaneWidth('panel', 240)" (resizeend)="PaneResized('panel', $event)">
 		<div class="elemenx-planet-editor-title">{{$T('graphics.planetEditor.planet')}}</div>
-		<label class="elemenx-planet-editor-field" *for="field of Fields(Version)" *key="field.Key"><span>{{field.Key}}</span><input type="text" [value]="field.Value" [attribute.data-key]="field.Key" (change)="SettingChanged" /></label>
-		<div class="elemenx-planet-editor-title" *if="Selected >= 0">{{$T('graphics.planetEditor.stroke')}}<Button Size="small" Variant="ghost" Icon="delete" [title]="$T('graphics.planetEditor.remove')" (click)="Remove(Selected)" /></div>
-		<label class="elemenx-planet-editor-field" *for="field of StrokeOf(Version, Selected)" *key="field.Key"><span>{{field.Key}}</span><input type="text" [value]="field.Value" [attribute.data-key]="field.Key" (change)="StrokeChanged" /></label>
-		<div class="elemenx-planet-editor-title" *if="Place">{{$T('graphics.planetEditor.location')}}<Button Size="small" Variant="primary" [label]="$T('graphics.planetEditor.open')" (click)="Opened" /></div>
+		<div class="elemenx-planet-editor-field" *for="field of Fields(Version)" *key="field.Key" [attribute.data-key]="field.Key"><span>{{field.Key}}</span><Input Size="small" [Label]="field.Key" [Value]="field.Value" (change)="SettingChanged(field.Key, $event)" /></div>
+		<div class="elemenx-planet-editor-title" *if="Selected >= 0">{{$T('graphics.planetEditor.stroke')}}<Button Size="small" Variant="ghost" Icon="delete" [Title]="$T('graphics.planetEditor.remove')" (click)="Remove(Selected)" /></div>
+		<div class="elemenx-planet-editor-field" *for="field of StrokeOf(Version, Selected)" *key="field.Key" [attribute.data-key]="field.Key"><span>{{field.Key}}</span><Input Size="small" [Label]="field.Key" [Value]="field.Value" (change)="StrokeChanged(field.Key, $event)" /></div>
+		<div class="elemenx-planet-editor-title" *if="BrushFields(Version, Tool, Brush).length">{{$T('graphics.planetEditor.brush')}}</div>
+		<div class="elemenx-planet-editor-field" *for="field of BrushFields(Version, Tool, Brush)" *key="field.Key" [attribute.data-key]="field.Key"><span>{{field.Key}}</span><NumberInput Size="small" [Label]="field.Key" [Value]="field.Value" (change)="BrushChanged(field.Key, $event)" /></div>
+		<div class="elemenx-planet-editor-title">{{$T('graphics.planetEditor.rules.title')}}</div>
+		<div class="elemenx-planet-editor-field" data-key="Scale"><span>{{$T('graphics.planetEditor.rules.scale')}}</span><NumberInput Size="small" [Label]="$T('graphics.planetEditor.rules.scale')" [Min]="0.05" [Value]="(Value && Value.Rules && Value.Rules.Scale) || 20" (change)="Scaled($event)" /></div>
+		<div class="elemenx-planet-editor-field" *if="Tool === 'rule'" data-key="Rule"><span>{{$T('graphics.planetEditor.rules.region')}}</span><Select Size="small" [Label]="$T('graphics.planetEditor.rules.region')" [Options]="RuleOptions(Version)" [Value]="RuleName" (change)="RuleName = $event" /></div>
+		<div class="elemenx-planet-editor-rule" *for="entry of BiomeRules(Version)" *key="entry.Biome" [attribute.data-biome]="entry.Biome"><span>{{entry.Biome}}</span><Select Size="small" [Label]="entry.Biome" [Options]="RuleOptions(Version)" [Value]="entry.Rule" (change)="BiomeRuled(entry.Biome, $event)" /><Button Size="small" Variant="ghost" Icon="branch" [Title]="$T('graphics.planetEditor.rules.graph')" [Pressed]="RuleOpen === entry.Rule" [Disabled]="entry.Rule === 'generated'" (click)="RuleOpened(entry.Rule)" /></div>
+		<div class="elemenx-planet-editor-title" *if="Regions(Version).length">{{$T('graphics.planetEditor.rules.regions')}}</div>
+		<div class="elemenx-planet-editor-rule" *for="region of Regions(Version)" *key="region.Index" [attribute.data-region]="region.Index"><Select Size="small" [Label]="$T('graphics.planetEditor.rules.region')" [Options]="RuleOptions(Version)" [Value]="region.Rule" (change)="RegionChanged(region.Index, 'Rule', $event)" /><NumberInput Size="small" [Label]="$T('graphics.planetEditor.rules.edge')" [Min]="1" [Value]="region.Edge" (change)="RegionChanged(region.Index, 'Edge', $event)" /><Button Size="small" Variant="ghost" Icon="branch" [Title]="$T('graphics.planetEditor.rules.graph')" [Pressed]="RuleOpen === region.Rule" [Disabled]="region.Rule === 'generated'" (click)="RuleOpened(region.Rule)" /><Button Size="small" Variant="ghost" Icon="delete" [Title]="$T('graphics.planetEditor.remove')" (click)="RegionRemoved(region.Index)" /></div>
+		<div class="elemenx-planet-editor-title" *if="Place">{{$T('graphics.planetEditor.location')}}<Button Size="small" Variant="primary" [Label]="$T('graphics.planetEditor.open')" (click)="Opened()" /></div>
 		<div class="elemenx-planet-editor-place" *if="Place">{{Place}}</div>
-		<label class="elemenx-planet-editor-field" *for="field of LocationFields(Version, Place)" *key="field.Key"><span>{{field.Key}}</span><select *if="field.Options" [attribute.data-key]="field.Key" (change)="LocationChanged"><option *for="option of field.Options" *key="option" [value]="option" [selected]="option === field.Value">{{option}}</option></select><input *if="!field.Options" type="text" [value]="field.Value" [attribute.data-key]="field.Key" (change)="LocationChanged" /></label>
-		<div class="elemenx-planet-editor-passage" *if="Place"><select data-key="Side" [attribute.aria-label]="$T('graphics.planetEditor.side')"><option *for="side of SidesOf(Version, Place)" *key="side.Value" [value]="side.Value">{{side.Label}}</option></select><select data-key="Kind" [attribute.aria-label]="$T('graphics.planetEditor.passage')"><option *for="kind of PassageKinds" *key="kind" [value]="kind">{{kind}}</option></select><Button Size="small" Variant="ghost" Icon="add" [label]="$T('graphics.planetEditor.passage')" (click)="PassageAdded" /></div>
+		<div class="elemenx-planet-editor-field" *for="field of LocationFields(Version, Place)" *key="field.Key" [attribute.data-key]="field.Key"><span>{{field.Key}}</span><Select *if="field.Options" Size="small" [Label]="field.Key" [Options]="Listed(field.Options)" [Value]="field.Value" (change)="LocationChanged(field.Key, $event)" /><Input *if="!field.Options" Size="small" [Label]="field.Key" [Value]="field.Value" (change)="LocationChanged(field.Key, $event)" /></div>
+		<div class="elemenx-planet-editor-passage" *if="Place"><Select Size="small" [Label]="$T('graphics.planetEditor.side')" [Options]="SidesOf(Version, Place)" [Value]="PassageSide" (change)="PassageSide = $event" /><Select Size="small" [Label]="$T('graphics.planetEditor.passage')" [Options]="Listed(PassageKinds)" [Value]="PassageKind" (change)="PassageKind = $event" /><Button Size="small" Variant="ghost" Icon="add" [Label]="$T('graphics.planetEditor.passage')" (click)="PassageAdded()" /></div>
 	</aside>
 </div>

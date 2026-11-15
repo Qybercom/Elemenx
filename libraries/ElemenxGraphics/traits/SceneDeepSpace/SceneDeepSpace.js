@@ -306,7 +306,11 @@ Elemenx.Trait('SceneDeepSpace', {
 		if (hole) {
 			/* The horizon of a mass: 2GM/c², 2.95 km a Sun. */
 			horizon = 2.953 * number(hole.Mass, 10);
-			object.Size = real ? horizon * kilometre * number(hole.Outer, 14) : 0.9 * Math.pow(number(hole.Mass, 10) / 10, 0.3) * 2.2;
+			/*
+			 * Regression: a supermassive one (millions of Suns, the middle of a galaxy) was a hundred units wide compressed, wider
+			 * than the orbits of the stars round it, the view inside its disc: past a thousand Suns it grows by how many times.
+			 */
+			object.Size = real ? horizon * kilometre * number(hole.Outer, 14) : 0.9 * Math.pow(Math.min(number(hole.Mass, 10), 1000) / 10, 0.3) * 2.2 * (1 + Math.max(0, Math.log(number(hole.Mass, 10) / 1000) / Math.LN10) * 0.3);
 			object.Info = {Kind: 'blackhole', Mass: number(hole.Mass, 10), Horizon: horizon, Innermost: horizon * 3, Rows: [['mass', number(hole.Mass, 10), 'M☉'], ['horizon', horizon, 'km'], ['innermost', horizon * 3, 'km']]};
 
 			return true;

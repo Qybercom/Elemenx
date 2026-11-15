@@ -626,8 +626,8 @@ Elemenx.Component('DesignerLayout', {
 	},
 
 	/* A new project of the kind of the card pressed, edited at once. */
-	Made: function (event, node) {
-		this.$Service('Designer').Create(node.getAttribute('data-mode'), this.NewName);
+	Made: function (mode) {
+		this.$Service('Designer').Create(mode, this.NewName);
 
 		this.NewName = '';
 		this.Settings = false;
@@ -637,8 +637,8 @@ Elemenx.Component('DesignerLayout', {
 	},
 
 	/* A project kept, edited again. */
-	Picked: function (event, node) {
-		this.$Service('Designer').Switch(node.getAttribute('data-project'));
+	Picked: function (id) {
+		this.$Service('Designer').Switch(id);
 
 		this.Settings = false;
 		this.Mapped = false;
@@ -647,9 +647,8 @@ Elemenx.Component('DesignerLayout', {
 	},
 
 	/* A project taken away for good, once the dialog agreed. */
-	Unmade: function (event, node) {
+	Unmade: function (id) {
 		var designer = this.$Service('Designer');
-		var id = node.getAttribute('data-project');
 		var entry = designer.Projects().filter(function (item) {
 			return item.ID === id;
 		})[0];
@@ -662,9 +661,10 @@ Elemenx.Component('DesignerLayout', {
 	},
 
 	/* A project read from a file chosen, edited at once; a file that is not one says so. */
-	Filed: function (event, node) {
+	/* The files a FileUpload told: the first is read. */
+	Filed: function (files) {
 		var self = this;
-		var file = node.files && node.files[0];
+		var file = files && files[0];
 		var reader;
 
 		if (!file) return;
@@ -674,7 +674,6 @@ Elemenx.Component('DesignerLayout', {
 		reader.onload = function () {
 			var id = self.$Service('Designer').ImportProject(reader.result);
 
-			node.value = '';
 			self.FileFailed = !id;
 
 			if (!id) return;

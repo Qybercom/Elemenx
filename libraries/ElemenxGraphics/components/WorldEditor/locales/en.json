@@ -1,0 +1,42 @@
+{
+	"graphics": {
+		"worldEditor": {
+			"label": "Editor of the world",
+			"path": "Levels of the world",
+			"tabs": "The world and what it uses",
+			"world": "World",
+			"save": "Save the world",
+			"open": "Open a world",
+			"galaxy": "Galaxy",
+			"system": "Star system",
+			"star": "Picked",
+			"name": "Name",
+			"kind": "Kind",
+			"seed": "Seed",
+			"time": "Time",
+			"velocity": "Velocity",
+			"addStar": "Star here",
+			"addBody": "Body here",
+			"remove": "Remove",
+			"enterSystem": "Enter the system",
+			"enterPlanet": "Open the planet",
+			"starNote": "A star of class {kind}, {mass} Suns, {temperature} K",
+			"bodyNote": "A body of no system: {kind}",
+			"bodyPicked": "Picked: {name}. Open the planet to edit its surface.",
+			"pickBody": "Pick a planet or a moon to open it.",
+			"resources": "Resources",
+			"models": "Models",
+			"plants": "Plants",
+			"cutscenes": "Cutscenes",
+			"materials": "Materials",
+			"model": "Model",
+			"plant": "Plant",
+			"cutscene": "Cutscene",
+			"material": "Material",
+			"addModel": "Add a model",
+			"addPlant": "Add a plant",
+			"addCutscene": "Add a cutscene",
+			"addMaterial": "Add a material"
+		}
+	}
+}

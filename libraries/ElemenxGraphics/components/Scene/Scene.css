@@ -509,46 +509,6 @@
 	font-size: var(--elemenx-font-size-small);
 }
 
-.elemenx-scene-landing-list {
-	display: flex;
-	flex-direction: column;
-	min-width: 180px;
-	max-height: 260px;
-	overflow: auto;
-	padding: 4px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius);
-	background: var(--elemenx-surface);
-	box-shadow: var(--elemenx-shadow);
-}
-
-.elemenx-scene-landing-item {
-	display: flex;
-	justify-content: space-between;
-	gap: 12px;
-	padding: 6px 10px;
-	border: 0;
-	border-radius: var(--elemenx-radius-small);
-	background: transparent;
-	color: var(--elemenx-text);
-	font: inherit;
-	text-align: left;
-	cursor: pointer;
-}
-
-.elemenx-scene-landing-item:hover,
-.elemenx-scene-landing-item:focus-visible {
-	background: var(--elemenx-surface-hover);
-}
-
-.elemenx-scene-landing-time {
-	color: var(--elemenx-text-muted);
-}
-
-.elemenx-scene-landing-item.pick {
-	color: var(--elemenx-text-muted);
-}
-
 /* Without WebGL2: what is missing, in the middle. */
 .elemenx-scene-fallback {
 	position: absolute;
@@ -618,4 +578,50 @@
 	top: 0;
 	left: -10000px;
 	pointer-events: none;
+}
+
+/* The marks over a galaxy (SceneGalaxy): the star picked with its name, its ID and where it is; near a star, the bodies of its system (a press picks one, two go into its system). */
+.elemenx-scene-galaxy-marks {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.elemenx-scene-galaxy-mark {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin: -4px 0 0 -4px;
+	color: var(--elemenx-scene-label);
+	font-size: 11px;
+	line-height: 16px;
+	white-space: nowrap;
+	pointer-events: none;
+}
+
+.elemenx-scene-galaxy-mark.body {
+	cursor: pointer;
+	pointer-events: auto;
+}
+
+.elemenx-scene-galaxy-mark-dot {
+	width: 8px;
+	height: 8px;
+	box-sizing: border-box;
+	border: 1.5px solid currentColor;
+	border-radius: var(--elemenx-radius-pill);
+}
+
+.elemenx-scene-galaxy-mark.star .elemenx-scene-galaxy-mark-dot {
+	visibility: hidden;
+}
+
+.elemenx-scene-galaxy-mark-label {
+	padding: 0 4px;
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-scene-shadow);
 }

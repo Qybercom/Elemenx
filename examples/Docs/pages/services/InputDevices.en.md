@@ -91,7 +91,7 @@ The same functions run where there is no page (Node, a worker): nothing is held,
 
 ## Tests
 
-- [InputDevices: names the buttons of each kind of pad, and lists no pad while none is pressed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L265) — `tests/regression/library-services.test.js`
+- [InputDevices: names the buttons of each kind of pad, and lists no pad while none is pressed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L283) — `tests/regression/library-services.test.js`
 - [InputDevices: a pad of the page is a pad as any other: its events, its sticks and triggers, its buttons held; quiet by choice](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/virtual-gamepad.test.js#L70) — `tests/regression/virtual-gamepad.test.js`
 - [InputDevices: the keys held, the pointer and how far it went, the fingers; a window left lets every key go](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/virtual-gamepad.test.js#L139) — `tests/regression/virtual-gamepad.test.js`
 - [InputDevices: actions bound to keys, buttons, halves of the sticks and the mouse; their contexts](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/virtual-gamepad.test.js#L175) — `tests/regression/virtual-gamepad.test.js`
@@ -101,5 +101,5 @@ The same functions run where there is no page (Node, a worker): nothing is held,
 - [VirtualGamepad: shows a cross of up, down, left and right (dpad for all four) whose buttons hold the pad](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/virtual-gamepad.test.js#L406) — `tests/regression/virtual-gamepad.test.js`
 - [VirtualGamepad: gives nothing within its dead zone, the right stick by its curve, lets go of a finger taken away, and floats](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/virtual-gamepad.test.js#L448) — `tests/regression/virtual-gamepad.test.js`
 - [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L129) — `tests/regression/headless.test.js`
-- [flies a ship by a pad as it leans and turns the view by its right stick, up looking up](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L1489) — `tests/regression/library-scene-landing.test.js`
+- [flies a ship by a pad as it leans and turns the view by its right stick, up looking up](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L1491) — `tests/regression/library-scene-landing.test.js`
 - [walks, drives and looks by a pad as far as it leans: half a trigger is half the gas, the stick steers, A jumps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1913) — `tests/regression/library-scene.test.js`

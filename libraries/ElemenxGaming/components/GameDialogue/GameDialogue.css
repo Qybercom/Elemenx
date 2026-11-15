@@ -64,10 +64,14 @@
 	gap: 4px;
 }
 
-.elemenx-game-dialogue-choice {
+/* A choice is a Button of ElemenxUI (ghost) in the look of the dialogue of the theme. */
+.elemenx-game-dialogue .elemenx-game-dialogue-choices .elemenx-game-dialogue-choice.elemenx-button {
 	display: flex;
+	flex: 0 1 auto;
 	align-items: center;
+	justify-content: normal;
 	gap: 8px;
+	height: auto;
 	padding: var(--elemenx-game-dialogue-choice-padding);
 	background: var(--elemenx-game-dialogue-choice);
 	border: var(--elemenx-game-dialogue-choice-frame);
@@ -75,26 +79,32 @@
 	border-radius: var(--elemenx-game-cell-radius);
 	color: var(--elemenx-game-text);
 	font: inherit;
+	line-height: inherit;
+	white-space: normal;
 	text-align: start;
 	cursor: pointer;
+	transition: none;
 }
 
-.elemenx-game-dialogue-choice:hover:not(:disabled),
-.elemenx-game-dialogue-choice:focus-visible {
+.elemenx-game-dialogue .elemenx-game-dialogue-choices .elemenx-game-dialogue-choice.elemenx-button:hover:not(:disabled),
+.elemenx-game-dialogue .elemenx-game-dialogue-choices .elemenx-game-dialogue-choice.elemenx-button:active,
+.elemenx-game-dialogue .elemenx-game-dialogue-choices .elemenx-game-dialogue-choice.elemenx-button:focus-visible {
 	outline: none;
 	background: var(--elemenx-game-dialogue-choice-hover);
 	color: var(--elemenx-game-dialogue-choice-hover-text);
 	filter: brightness(1.15);
 }
 
-.elemenx-game-dialogue-choice:focus-visible {
+.elemenx-game-dialogue .elemenx-game-dialogue-choices .elemenx-game-dialogue-choice.elemenx-button:focus-visible {
 	box-shadow: var(--elemenx-game-glow);
 }
 
-/* The next button takes the look of an item of GameMenu: a button of the first rank. */
-.elemenx-game-dialogue-next {
+/* The next button (a Button of ElemenxUI, ghost) takes the look of an item of GameMenu: a button of the first rank. */
+.elemenx-game-dialogue .elemenx-game-dialogue-body .elemenx-game-dialogue-next.elemenx-button {
 	position: relative;
 	display: flex;
+	justify-content: normal;
+	height: auto;
 	align-self: var(--elemenx-game-dialogue-next-align);
 	align-items: center;
 	gap: 8px;
@@ -107,10 +117,13 @@
 	box-shadow: var(--elemenx-game-menu-item-shadow);
 	color: var(--elemenx-game-text);
 	font: inherit;
+	line-height: inherit;
+	white-space: normal;
 	cursor: pointer;
+	transition: none;
 }
 
-.elemenx-game-dialogue-next::after {
+.elemenx-game-dialogue .elemenx-game-dialogue-body .elemenx-game-dialogue-next.elemenx-button::after {
 	position: absolute;
 	inset: var(--elemenx-game-menu-item-ornament-inset);
 	background: var(--elemenx-game-menu-item-ornament);
@@ -118,15 +131,16 @@
 	pointer-events: none;
 }
 
-.elemenx-game-dialogue-next:hover,
-.elemenx-game-dialogue-next:focus-visible {
+.elemenx-game-dialogue .elemenx-game-dialogue-body .elemenx-game-dialogue-next.elemenx-button:hover,
+.elemenx-game-dialogue .elemenx-game-dialogue-body .elemenx-game-dialogue-next.elemenx-button:active,
+.elemenx-game-dialogue .elemenx-game-dialogue-body .elemenx-game-dialogue-next.elemenx-button:focus-visible {
 	outline: none;
 	background: var(--elemenx-game-menu-item-hover);
 	box-shadow: var(--elemenx-game-menu-item-shadow), var(--elemenx-game-glow);
 	color: var(--elemenx-game-menu-item-hover-text);
 }
 
-.elemenx-game-dialogue-choice:disabled {
+.elemenx-game-dialogue .elemenx-game-dialogue-choices .elemenx-game-dialogue-choice.elemenx-button:disabled {
 	opacity: 0.48;
 	cursor: default;
 }

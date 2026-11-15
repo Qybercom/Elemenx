@@ -111,7 +111,7 @@
 Elemenx.Component('Scene', {
 	$TemplateURL: 'Scene.html',
 	$StyleURL: 'Scene.css',
-	$Traits: ['SceneScatter', 'SceneLighting', 'SceneProbes', 'SceneEffects', 'SceneCosmos', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneDebris', 'SceneFracture', 'ScenePiping', 'SceneDeepSpace'],
+	$Traits: ['SceneScatter', 'SceneLighting', 'SceneProbes', 'SceneEffects', 'SceneCosmos', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneDebris', 'SceneFracture', 'ScenePiping', 'SceneDeepSpace', 'SceneGalaxy'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'star',
@@ -143,6 +143,10 @@ Elemenx.Component('Scene', {
 			break: 'A thing broke into pieces (Break, SceneDebris): {ID, Pieces, Point}.',
 			teleport: 'A thing is beamed away or comes (Teleport): {ID, Phase (out or in), From, To}.',
 			through: 'A ship flew into the mouth of a wormhole (SceneDeepSpace): {ID, Wormhole, Leads, To (the mouth it comes out of, empty: none)}.',
+			galaxy: 'A star of the galaxy was picked (Setting galaxy, SceneGalaxy): {ID (empty: none or the black hole), Centre (the black hole), Star}.',
+			galaxyready: 'The galaxy of Galaxy came: {ID, Data}.',
+			enter: 'The view went into the system of a star of the galaxy (EnterSystem): {ID, Star, Key (of SystemData.Use)}.',
+			leave: 'The view went out of a system to its galaxy (LeaveSystem): {ID}.',
 			hover: 'The pointer came over a selectable object, or left it: {ID (empty: none), Object, Info}.',
 			cutscene: 'A cutscene started, ended or was stopped (SceneCinema): {Name, State: start, end or stop}.',
 			cue: 'A cue of a cutscene came: {Cutscene, Name, Data, At}.',
@@ -152,10 +156,12 @@ Elemenx.Component('Scene', {
 			shader: 'A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}).'
 		},
-		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Phone()', 'Device()', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
+		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'GalaxyData()', 'GalaxyView()', 'SetGalaxyView(view)', 'GalaxyStars()', 'GalaxyPicked()', 'GalaxyFocus(id)', 'EnterSystem(id, callback)', 'LeaveSystem(callback)', 'GalaxyEntered()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Phone()', 'Device()', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
 		Props: {
-			Setting: {Options: ['space', 'terrain'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers).'},
-			System: 'The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}.',
+			Setting: {Options: ['space', 'terrain', 'galaxy'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers; galaxy: a galaxy of Galaxy, SceneGalaxy).'},
+			Galaxy: 'The galaxy of Setting galaxy (SceneGalaxy, GalaxyData): a key of GalaxyData.Use, the URL of its file, its data, or options of GalaxyData.Make ({Seed, Kind, Radius, Arms}).',
+			GalaxyTime: 'The time of the galaxy in millions of years: it turns as a galaxy turns, the inner stars sooner than the outer ones.',
+			System: 'The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}, or a system of data (SystemData): {Data: the URL of its file, or a key of SystemData.Use}.',
 			Seed: 'A whole star system made of a seed (always the same for the same seed).',
 			Systems: 'Systems of the application for traits of its own: {Trait: {Update(object, scene), Draw(object, scene)}}.',
 			Time: 'The day of the scene.',
@@ -217,7 +223,7 @@ Elemenx.Component('Scene', {
 			Details: 'Shows a card of the selected object.',
 			Background: 'Draws the stars far away.',
 			Cosmos: 'What lies far behind a system, made of a seed: nebula, pillars, galaxy, galaxies, cluster, void, or {Kind, Seed, Colors, Gas, Dust, Stars, Pillars, Band, Galaxies, Clusters, Beacon}: a kind is a set of these amounts, and what is told comes on top of it.',
-			Scale: {Options: ['compressed', 'real'], Description: 'Large bodies and short distances (compressed), or their real sizes.'},
+			Scale: {Options: ['compressed', 'real'], Description: 'Large bodies and short distances (compressed), or their real sizes, or a number between them: 0 compressed to 1 real (a slider, as their ratio goes).'},
 			Team: 'The team of the player.',
 			Label: 'The name of the scene for screen readers.'
 		},
@@ -402,6 +408,8 @@ Elemenx.Component('Scene', {
 			'star': {Traits: {Star: {Mass: 1, Radius: null, Temperature: null, Luminosity: null, Color: '', Veil: 3, Corona: 1, Prominences: 1, Flares: 1}, Selectable: {}}},
 			'planet': {Traits: {Orbit: orbit, Body: {Radius: 6371, Mass: null, Day: 24, Tilt: 0, Albedo: null}, Surface: {Type: 'rocky', Colors: '', Water: '', Ocean: null, Ice: null, Clouds: null, Planet: null, Atmosphere: '', Seed: ''}, Selectable: {}}},
 			'moon': {Extends: 'planet', Traits: {Body: {Radius: 1737, Day: 0}, Surface: {Type: 'moon'}}},
+			/* The common centre of stars and black holes going round one another (a binary, a triple): nothing is drawn of it. */
+			'barycentre': {Traits: {Barycentre: {Mass: null, Members: null}}},
 			'blackhole': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 40}), BlackHole: {Mass: 10, Disk: true, Inner: 3, Outer: 14, Tilt: 12, Color: '', Brightness: 1}, Selectable: {}}},
 			'wormhole': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 12}), Wormhole: {Radius: 1, Cosmos: 'nebula', Star: '#ffd9a0', Leads: '', To: '', Tilt: 0}, Selectable: {}}},
 			'comet': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 6, Eccentricity: 0.85, Inclination: 18}), Comet: {Radius: 5, Tail: 1, Color: '', Ion: ''}, Selectable: {}}},
@@ -534,6 +542,7 @@ Elemenx.Component('Scene', {
 			Rivers: {},
 			Towns: {},
 			Highways: {},
+			PlanetData: {},
 			Globes: {},
 			Labels: {},
 			Time: Number(this.Time) || 0,
@@ -787,24 +796,79 @@ Elemenx.Component('Scene', {
 				compose();
 		}
 
-		/* The specs of a system of a seed: its bodies as objects of the kinds of space. */
+		/* The specs of a system of a seed: its bodies as objects of the kinds of space (SystemData.Seeded). */
 		function seeded (seed) {
-			return astronomy.Generate(seed).Bodies.map(function (body) {
-				if (body.Type === 'star')
-					return {ID: body.ID, Kind: 'star', Parent: '', Values: {Name: body.Name}, Traits: {Star: {Mass: body.Mass, Radius: body.Radius, Temperature: body.Temperature}}};
-
-				if (body.Type === 'belt' && body.Kind === 'ring')
-					return {ID: body.ID, Kind: 'ring', Parent: body.Parent, Values: {Name: body.Name}, Traits: {Ring: {Inner: body.Inner, Outer: body.Outer}}};
-
-				if (body.Type === 'belt')
-					return {ID: body.ID, Kind: 'belt', Parent: body.Parent, Values: {Name: body.Name}, Traits: {Belt: {Inner: body.Inner, Outer: body.Outer, Count: body.Count}}};
-
-				return {ID: body.ID, Kind: body.Parent === 'star' ? 'planet' : 'moon', Parent: body.Parent, Values: {Name: body.Name}, Traits: {Orbit: body.Orbit, Body: {Radius: body.Radius, Day: body.Day, Tilt: body.Tilt || 0}, Surface: {Type: body.Kind}}};
-			});
+			return self.$Service('SystemData').Seeded(seed);
 		}
 
-		/* The specs of the System prop: a body may hold its own in Children. */
+		/*
+		 * A system of data (System: {Data: the URL of its file, or a key of SystemData.Use}): opened once, the planets kept in
+		 * it given to ScenePlanet, then its objects (SystemData.Objects); none while it comes.
+		 */
+		function systemData (key) {
+			var systems = self.$Service('SystemData');
+			var held = scene.SystemData;
+			var data = systems.DataOf(key);
+			var at = true;
+
+			if (held && held.Key === key)
+				return held.Ready ? systems.Objects(systems.DataOf(key), key) : [];
+
+			held = scene.SystemData = {Key: key, Ready: false};
+
+			/* Its planets given to ScenePlanet: at once (its objects now), or later (the scene made again then). */
+			function bodies (made) {
+				systems.UseBodies(key, made, function (failed) {
+					if (scene.Gone || scene.SystemData !== held) return;
+
+					if (failed)
+						self.$Emit('error', failed);
+
+					held.Ready = true;
+
+					if (at)
+						return;
+
+					compose();
+
+					/* Seen whole as it comes, unless the view was sent to an object of it. */
+					place(scene.Time);
+
+					if (!scene.Focus)
+						scene.Wanted = scene.Distance = extent() * 1.6;
+
+					scene.Version++;
+				});
+			}
+
+			if (data) {
+				bodies(data);
+			}
+			else {
+				systems.Open(key, function (error, made) {
+					if (scene.Gone || scene.SystemData !== held) return;
+
+					if (error) {
+						self.$Emit('error', error);
+
+						return;
+					}
+
+					systems.Use(key, made);
+
+					bodies(made);
+				});
+			}
+
+			at = false;
+
+			return held.Ready ? systems.Objects(data, key) : [];
+		}
+
+		/* The specs of the System prop: a body may hold its own in Children; or a system of data. */
 		function given (system) {
+			if (system && typeof system.Data === 'string' && system.Data) return systemData(system.Data);
+
 			var list = [];
 
 			function put (spec, parent) {
@@ -957,7 +1021,7 @@ Elemenx.Component('Scene', {
 					object.Parent = null;
 
 				if (object.Parent === null || object.Parent === undefined || object.Parent === object.ID)
-					object.Parent = trait(object, 'Star') || !first ? '' : first.ID;
+					object.Parent = trait(object, 'Star') || trait(object, 'Barycentre') || !first ? '' : first.ID;
 			});
 
 			function visit (object, seen) {
@@ -1023,11 +1087,27 @@ Elemenx.Component('Scene', {
 			var body = trait(object, 'Body');
 			var model = trait(object, 'Model');
 			var surface = trait(object, 'Surface');
-			var real = self.Scale === 'real';
+			var how = realness();
+			var real = how >= 0.999;
 			var distance = orbit && orbit.Unit !== 'radii' ? astronomy.Length(orbit.Distance) : 0;
+			var far;
+			var near;
 			var kind;
 
 			while (star && !trait(star, 'Star')) {
+				/* Round a barycentre: the light of the most massive star of its group. */
+				if (trait(star, 'Barycentre')) {
+					star = Object.keys(objects).map(function (id) {
+						return objects[id];
+					}).filter(function (each) {
+						return each.Parent === star.ID && trait(each, 'Star');
+					}).sort(function (a, b) {
+						return number(trait(b, 'Star').Mass, 1) - number(trait(a, 'Star').Mass, 1);
+					})[0] || null;
+
+					break;
+				}
+
 				distance = trait(star, 'Orbit') ? astronomy.Length(trait(star, 'Orbit').Distance) : distance;
 				star = star.Owner || (star.Parent ? objects[star.Parent] : null);
 			}
@@ -1040,28 +1120,37 @@ Elemenx.Component('Scene', {
 			if (trait(object, 'Star')) {
 				object.Star = astronomy.Star(trait(object, 'Star'));
 				object.Color = trait(object, 'Star').Color || object.Star.Color;
-				object.Size = real ? object.Star.Radius * astronomy.SunRadius * KM * UNIT : 2 * Math.pow(object.Star.Radius, 0.35);
+				object.Size = between(2 * Math.pow(object.Star.Radius, 0.35), object.Star.Radius * astronomy.SunRadius * KM * UNIT, how);
 			}
 			else if (body) {
 				kind = astronomy.Kinds[surface ? surface.Type : 'rocky'] || astronomy.Kinds.rocky;
 				object.Info = astronomy.Describe({Kind: surface ? surface.Type : 'rocky', Radius: body.Radius, Mass: body.Mass, Albedo: body.Albedo, Day: body.Day, Orbit: orbit && orbit.Unit !== 'radii' ? orbit : null}, {Star: star ? star.Star : astronomy.Star({}), Distance: distance, Mass: object.Around});
 				object.Radius = object.Info.Radius;
 				object.Look = look(surface || {Type: 'rocky'}, kind);
-				object.Size = real ? object.Radius * KM * UNIT : 0.5 * Math.pow(object.Radius / astronomy.EarthRadius, 0.45);
+				object.Size = between(0.5 * Math.pow(object.Radius / astronomy.EarthRadius, 0.45), object.Radius * KM * UNIT, how);
 			}
 			else if (model) {
-				object.Size = object.Owner ? object.Owner.Size * number(model.Size, 1) : number(model.Size, 0.1) * (model.Relative && parent ? parent.Size : 1) * (real && !model.Relative ? 0.02 : 1);
+				object.Size = object.Owner ? object.Owner.Size * number(model.Size, 1) : number(model.Size, 0.1) * (model.Relative && parent ? parent.Size : 1) * (model.Relative ? 1 : between(1, 0.02, how));
 
 				/* In real sizes a craft is as long as it is: Length (metres) of it or of its Vehicle. */
 				if (real && !object.Owner && lengthOf(object))
 					object.Size = lengthOf(object) * METRE;
 			}
-			else if (!self.DeepSize || !self.DeepSize(object, real, KM * UNIT)) {
+			else if (!self.DeepSize || !self.DeepSize(object, false, KM * UNIT)) {
 				object.Size = 0;
+			}
+			else if (how > 0) {
+				/* Between the sizes of the view and the real ones: of both, by how real the scale is. */
+				near = object.Size;
+
+				self.DeepSize(object, true, KM * UNIT);
+
+				far = object.Size;
+				object.Size = between(near, far, how);
 			}
 
 			if (trait(object, 'Formation'))
-				object.Size = 0.07 * (real ? 0.02 : 1);
+				object.Size = 0.07 * between(1, 0.02, how);
 
 			/* A ship down in a location is as long as it is, in metres (SceneLanding). */
 			if (object.Located)
@@ -1107,7 +1196,7 @@ Elemenx.Component('Scene', {
 
 		/* A metre in the units of the view, in real sizes; null when compressed. */
 		engine.Metre = function () {
-			return self.Scale === 'real' ? METRE : null;
+			return realness() >= 0.999 ? METRE : null;
 		};
 
 		/* A formation has its ships as parts: as many as Count, of its Ship kind, the ones its object has not. */
@@ -1162,6 +1251,24 @@ Elemenx.Component('Scene', {
 			if (parent && trait(parent, 'Star'))
 				return number(trait(parent, 'Star').Mass, 1);
 
+			if (parent && trait(parent, 'BlackHole'))
+				return number(trait(parent, 'BlackHole').Mass, 10);
+
+			/*
+			 * A barycentre: its Mass, or of its group going round it: its Members (stars and black holes: a star and a black
+			 * hole in a pair), else the stars round it (a black hole round it further out goes round it as a planet does).
+			 */
+			if (parent && trait(parent, 'Barycentre'))
+				return number(trait(parent, 'Barycentre').Mass, 0) || Object.keys(objects).reduce(function (sum, id) {
+					var each = objects[id];
+					var members = trait(parent, 'Barycentre').Members;
+
+					if (each.Parent !== parent.ID) return sum;
+					if (members && members.length ? members.indexOf(each.ID) === -1 : !trait(each, 'Star')) return sum;
+
+					return sum + (trait(each, 'Star') ? number(trait(each, 'Star').Mass, 1) : trait(each, 'BlackHole') ? number(trait(each, 'BlackHole').Mass, 10) : 0);
+				}, 0) || 1;
+
 			if (parent && parent.Info)
 				return number(parent.Info.Mass, 1) * astronomy.EarthMass;
 
@@ -1185,21 +1292,72 @@ Elemenx.Component('Scene', {
 			return [point[0], point[2], -point[1]];
 		}
 
-		/* A place round a parent in the units of the view: compressed, the far shortened and the near round a body spread out. */
+		/*
+		 * How real the sizes and the distances are: 0 compressed (Scale compressed, large bodies, short distances, nothing
+		 * crowded), 1 real (Scale real), and any number between (a slider from the one to the other).
+		 */
+		function realness () {
+			var given = self.Scale;
+			if (given === 'real') return 1;
+
+			if (given === '' || given === null || given === undefined || given === 'compressed' || isNaN(Number(given))) return 0;
+
+			return Math.max(0, Math.min(1, Number(given)));
+		}
+
+		/* Of a size or a distance of the view (a) and a real one (b): how far from the one to the other (t), as their ratio goes (a log step). */
+		function between (a, b, t) {
+			if (t <= 0) return a;
+
+			if (t >= 1) return b;
+
+			if (a > 0 && b > 0)
+				return Math.exp(Math.log(a) + (Math.log(b) - Math.log(a)) * t);
+
+			return a + (b - a) * t;
+		}
+
+		/* The length in the view of a distance a (km) round a parent, as compressed: the far shortened, the near round a body spread out. */
+		function compressed (a, parent) {
+			return parent && parent.Radius ? parent.Size * (1 + 0.6 * Math.sqrt(a / (parent.Radius * KM))) : 12 * Math.sqrt(a);
+		}
+
+		/* A place round a parent in the units of the view, between compressed and real (realness). */
 		function spread (relative, parent) {
 			var a = vectors.Length(relative);
-			var d;
+			var how = realness();
 
 			if (!a)
 				return [0, 0, 0];
 
-			if (self.Scale === 'real')
+			if (how >= 1)
 				return vectors.Scale(relative, UNIT);
 
-			if (parent && parent.Radius) d = parent.Size * (1 + 0.6 * Math.sqrt(a / (parent.Radius * KM)));
-			else d = 12 * Math.sqrt(a);
+			return vectors.Scale(relative, between(compressed(a, parent), a * UNIT, how) / a);
+		}
 
-			return vectors.Scale(relative, d / a);
+		/* The distance (km) round a parent that spread lays out at a length of the view: of the two ways, or found between them. */
+		function unspread (length, parent) {
+			var how = realness();
+			var low = 1e-9;
+			var high = 1e12;
+			var middle;
+			var i;
+
+			if (how >= 1)
+				return length / UNIT;
+
+			if (how <= 0)
+				return parent && parent.Radius ? Math.pow(Math.max(0, (length / parent.Size - 1) / 0.6), 2) * parent.Radius * KM : Math.pow(length / 12, 2);
+
+			for (i = 0; i < 80; i++) {
+				middle = Math.sqrt(low * high);
+
+				if (between(compressed(middle, parent), middle * UNIT, how) < length) low = middle;
+				else high = middle;
+			}
+
+			return Math.sqrt(low * high);
 		}
 
 		/* A turn in degrees about X, then Y, then Z, as a matrix. */
@@ -1633,6 +1791,62 @@ Elemenx.Component('Scene', {
 		}
 
 		/*
+		 * The shape the still pieces of a model cast their shadow by, as one (shadowJoined): drawn with its first list, as
+		 * many copies as it has, and its box round all of theirs. False for the other pieces, then: they are in it. Null while
+		 * one of them is not drawn this frame, or not as many times (a door taken away, two cars of one model not alike): each
+		 * casts its own. Simpler when it is large (shadowGeometry), one made a frame, as shadowShape.
+		 */
+		function mergedShadow (models, merged, name) {
+			var leader = models[merged.Leader];
+			var key = 'merged:' + merged.Leader;
+			var box = merged.Box = merged.Box || [0, 0, 0, 0, 0, 0];
+			var shadow = merged.Shadow;
+			var geometry;
+			var extents;
+			var simple;
+			var i;
+			var k;
+			var one;
+
+			if (!leader || !leader.Uploaded || !leader.Count) return null;
+
+			for (i = 0; i < merged.Members.length; i++) {
+				one = models[merged.Members[i]];
+
+				if (!one || one.Count !== leader.Count || !one.Box) return null;
+			}
+
+			if (!gpu.ShadowShapes[key]) {
+				if (!shadow.Simple) {
+					if (gpu.ShadowBudget < 1) return null;
+
+					gpu.ShadowBudget--;
+					geometry = joinedGeometry(shadow.Pieces);
+					extents = extentsOf(geometry);
+					simple = geometry.Indices.length >= 18000 ? shadowGeometry(geometry, Math.max(extents[3] - extents[0], extents[4] - extents[1], extents[5] - extents[2]) * Math.max(0.01, 4 / Math.sqrt(geometry.Indices.length / 6))) : null;
+					shadow.Simple = simple && simple.Indices.length < geometry.Indices.length * 0.6 ? simple : {Positions: geometry.Positions, Normals: null, UVs: null, Colors: null, Joints: null, Weights: null, Indices: geometry.Indices};
+				}
+
+				gpu.ShadowShapes[key] = renderer.Mesh(shadow.Simple).Instance(leader.Uploaded, leader.Count);
+			}
+
+			if (name !== merged.Leader) return false;
+
+			for (i = 0; i < merged.Members.length; i++) {
+				one = models[merged.Members[i]].Box;
+
+				for (k = 0; k < 3; k++) {
+					box[k] = i ? Math.min(box[k], one[k]) : one[k];
+					box[k + 3] = i ? Math.max(box[k + 3], one[k + 3]) : one[k + 3];
+				}
+			}
+
+			merged.Mesh = gpu.ShadowShapes[key];
+
+			return merged;
+		}
+
+		/*
 		 * A simpler shape for a map of a shadow: the corners within one cell of a grid become one, at the middle of them, with
 		 * the joints and weights of the first (the body of a car of a file has a skeleton); a face that lost a corner goes. Its
 		 * normals and colors are not there: the depth alone is drawn of it.
@@ -1840,7 +2054,7 @@ Elemenx.Component('Scene', {
 			for (i = 0; i < count; i++) {
 				rocks.push({
 					Orbit: {Distance: round ? generator.Float(inner, outer) * parent.Radius * KM : generator.Float(inner, outer), Eccentricity: generator.Float(0, 0.12), Inclination: tilt + generator.Float(-6, 6), Node: generator.Float(0, 360), Periapsis: generator.Float(0, 360), Anomaly: generator.Float(0, 360)},
-					Size: generator.Float(0.03, 0.11) * (self.Scale === 'real' ? 0.02 : 1) * (round ? parent.Size : 1) * number(settings.Rocks, 1),
+					Size: generator.Float(0.03, 0.11) * between(1, 0.02, realness()) * (round ? parent.Size : 1) * number(settings.Rocks, 1),
 					Axis: vectors.Normalize([generator.Float(-1, 1), generator.Float(-1, 1), generator.Float(-1, 1)]),
 					Spin: generator.Float(0.5, 3),
 					Color: generator.Pick(colors)
@@ -1854,6 +2068,10 @@ Elemenx.Component('Scene', {
 
 		/* The surface of a body baked once into two cubes: its ground (color and gloss), its clouds and the glow of its lava. */
 		function baked (object) {
+			var base = planetBase(object);
+			/* A planet of data is not drawn as another till its data comes. */
+			if (base && !planetData(object, base)) return null;
+
 			var planet = planetOf(object);
 			/* A planet is painted with its rivers: none before they are made. */
 			var flowing = planet ? scene.Rivers[object.ID] : null;
@@ -1900,25 +2118,33 @@ Elemenx.Component('Scene', {
 		 * The options of the planet of a body (Surface: Planet, ScenePlanet) at its radius, its rivers, then its settlements,
 		 * then its highways named once made; null for none.
 		 */
+		/*
+		 * The options of the planet of an object, with what is laid on it once its land is made: its rivers, its settlements
+		 * by them and its highways between those, each made in a worker, or those of its data (its vectors) when it has them.
+		 */
 		function planetOf (object) {
 			var base = planetBase(object);
-			var made = base ? riversOf(object, base) : null;
+			var made;
 			var towns;
 			var roads;
 
-			if (!base)
-				return null;
+			if (!base || !planetData(object, base)) return null;
 
-			if (!made || !made.Key || !made.Ready) return base;
+			base = planets.Vectored(base);
+			made = riversOf(object, base);
 
-			base.Rivers = made.Key;
+			if (made && !made.Ready) return base;
 
-			/* Its settlements, of its land with its rivers; its highways between them. */
+			if (made) base.Rivers = made.Key;
+			else if (typeof base.Rivers !== 'string') return base;
+
 			towns = laid(object, 'Towns', base, 'Settlements');
 
-			if (!towns || !towns.Ready) return base;
+			if (towns && !towns.Ready) return base;
 
-			base.Settlements = towns.Key;
+			if (towns) base.Settlements = towns.Key;
+			else if (typeof base.Settlements !== 'string') return base;
+
 			roads = laid(object, 'Highways', base, 'Highways');
 
 			if (roads && roads.Ready)
@@ -1986,13 +2212,65 @@ Elemenx.Component('Scene', {
 			});
 		}
 
+		/*
+		 * The data of a planet (Planet: {Data: the URL of its file or of its folder, or a key given to ScenePlanet.UseData;
+		 * Levels: its tiles to that level read at once, the finer ones round the eye as it comes near, needData}): opened
+		 * once (PlanetData.Open) and given to ScenePlanet under that key. False while it comes (the planet is not drawn till
+		 * then: no other planet in its place), true once it is there or for a planet of options alone.
+		 */
+		function planetData (object, base) {
+			var key = base.Data;
+			var held = scene.PlanetData[object.ID];
+
+			if (typeof key !== 'string' || !key || planets.DataSets[key]) return true;
+
+			if (held && held.Key === key) return false;
+
+			held = scene.PlanetData[object.ID] = {Key: key};
+
+			self.$Service('PlanetData').Open(key, function (error, data) {
+				if (scene.Gone || scene.PlanetData[object.ID] !== held) return;
+
+				if (error) {
+					self.$Emit('error', error);
+
+					return;
+				}
+
+				planets.UseData(key, data);
+
+				scene.Version++;
+			}, {Levels: base.Levels});
+
+			return false;
+		}
+
+		/*
+		 * The tiles of the data of a planet read in part (Levels) round the eye as it comes near: those over three times its
+		 * height round it, as fine as a twentieth of it, asked for once a second at most; given to the workers as they come.
+		 */
+		function needData (object, globe) {
+			var base = planetBase(object);
+			var data = base && typeof base.Data === 'string' ? planets.DataSets[base.Data] : null;
+			var now = performance.now();
+			if (!data || !data.Source || !globe.Eye || now - (globe.Needed || 0) < 1000) return;
+
+			globe.Needed = now;
+
+			self.$Service('PlanetData').Need(data, vectors.Normalize(globe.Eye), Math.max(200, globe.Altitude * 3), Math.max(1, globe.Altitude / 20), function (error, names) {
+				if (!error && names.length && !scene.Gone)
+					planets.AddTiles(base.Data, names);
+			});
+		}
+
 		function planetBase (object) {
 			var surface = trait(object, 'Surface');
 			var planet = surface && surface.Planet;
 			if (!planet)
 				return null;
 
-			return Object.assign({}, typeof planet === 'string' ? JSON.parse(planet) : planet, {Radius: object.Radius});
+			/* Its rules of detail made code here, for the workers that make its ground (ScenePlanet.Ruled). */
+			return planets.Ruled(Object.assign({}, typeof planet === 'string' ? JSON.parse(planet) : planet, {Radius: object.Radius}));
 		}
 
 		engine.PlanetOptions = planetOf;
@@ -2902,7 +3180,8 @@ Elemenx.Component('Scene', {
 
 			scene.Roots.forEach(function (object) {
 				var parent = parentOf(object);
-				var middle = !parent || trait(parent, 'Star');
+				/* Round the middle of a system: its root, a star, or a barycentre of stars. */
+				var middle = !parent || trait(parent, 'Star') || trait(parent, 'Barycentre');
 				if (object.Relative && middle)
 					far = Math.max(far, vectors.Length(object.Relative) * (1 + number(trait(object, 'Orbit') && trait(object, 'Orbit').Eccentricity, 0)));
 
@@ -3203,7 +3482,7 @@ Elemenx.Component('Scene', {
 
 						later.push(function () {
 							/* In real sizes its disc is small, its light is not: a halo of a size on the screen, as bright as it blinds. */
-							var blind = self.Scale === 'real' ? starLight(object, vectors.Distance(object.World, scene.Eye)) : 0;
+							var blind = realness() >= 0.999 ? starLight(object, vectors.Distance(object.World, scene.Eye)) : 0;
 							var wide = Math.max(size * 11, pixels(object.World, 520 * blind));
 							var close = Math.max(size * 4.2, pixels(object.World, 110 * blind));
 
@@ -3412,10 +3691,21 @@ Elemenx.Component('Scene', {
 			if (hovering && hovering.World && hovering !== selected && pointed.Look === 'ring')
 				renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: before(hovering), uSize: Math.max(hovering.Size * 1.35, pixels(hovering.World, 16)), uRight: right, uUp: up, uColor: pointed.Color.slice(0, 3), uInner: 0, uStyle: 1}), {Blend: 'add', DepthWrite: false, Cull: 'none'});
 
-			/* The mark of the selected object: a ring with SelectMark ring; with an outline, a ring while it is small on the screen (near, its outline shows it). */
-			if (selected && selected.World && (chosen.Look === 'ring' || chosen.Look === 'outline' && Math.max(selected.Size, 0.001) < pixels(selected.World, 40))) {
-				renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: chosen.Look === 'ring' ? before(selected) : local(selected.World), uSize: Math.max(selected.Size * 1.5, pixels(selected.World, 14)), uRight: right, uUp: up, uColor: chosen.Look === 'ring' ? chosen.Color.slice(0, 3) : scene.Colors.Selection.slice(0, 3), uInner: 0, uStyle: 1}), {Blend: 'add', DepthWrite: false, Depth: chosen.Look === 'ring', Cull: 'none'});
-			}
+			/*
+			 * The marks of the selected objects (the one selected and the others chosen with it): a ring with SelectMark ring;
+			 * with an outline, a ring while it is small on the screen (near, its outline shows it). Regression: what was too
+			 * small to be seen (a fleet far off) and had no place of its own showed nothing: the middle of its parts then.
+			 */
+			[selected].concat((scene.Chosen || []).filter(function (id) {
+				return id !== scene.Selected;
+			}).map(function (id) {
+				return scene.Objects[id];
+			})).forEach(function (one) {
+				var at = one ? markPlace(one) : null;
+				if (!at || chosen.Look === 'none' || !(chosen.Look === 'ring' || chosen.Look === 'outline' && Math.max(one.Size || 0, 0.001) < pixels(at, 40))) return;
+
+				renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: local(at), uSize: Math.max((one.Size || 0) * 1.5, pixels(at, 16)), uRight: right, uUp: up, uColor: chosen.Look === 'ring' ? chosen.Color.slice(0, 3) : scene.Colors.Selection.slice(0, 3), uInner: 0, uStyle: 1}), {Blend: 'add', DepthWrite: false, Depth: false, Cull: 'none'});
+			});
 
 			if (split) {
 				renderer.GL.depthRange(0, 1);
@@ -3425,6 +3715,26 @@ Elemenx.Component('Scene', {
 
 			if (posted)
 				engine.PostEnd(scene.Ground ? {Matrix: matrix, Plain: plain, Eye: scene.Eye, Shade: shade, Under: scene.Ground.Under ? 1 : 0, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Night: scene.Ground.Night, Shimmer: engine.EffectHeat(matrix, width / Math.max(1, height)), Exposure: self.Exposure, Air: scene.Ground.AirTint, Veil: scene.Ground.Air.Fog * (scene.Ground.Air.Rain > 0.05 ? 1 : 0.6), Clouds: scene.Camera.Ortho ? null : groundClouds(), Glare: scene.Ground.Glare, AirLight: scene.Ground.AirLight, AirGlow: scene.Ground.Glow, AirGlowWay: scene.Ground.GlowWay, Fog: scene.Camera.Ortho ? 0 : (scene.Horizon ? 0.4 / 40000 : (scene.Ground.Field.Whole ? 0.12 : 0.4) / Math.max(scene.Ground.Field.Size, 300)) + scene.Ground.Air.Fog * 0.011, FogLow: scene.Camera.Ortho ? [0, 0, 0] : [Math.max(0, scene.Eye[1] - Math.max(0, scene.Ground.Field.Height(scene.Eye[0], scene.Eye[2]))), 1 / Math.max(6, scene.Ground.Field.Top * 0.2), scene.Ground.Air.Fog * 0.03], Sky: true, Reach: Math.max(1, scene.Distance * 0.05), Bokeh: lens().Bokeh, Focus: lens().Focus, Lens: lens().Lens} : Object.assign({Matrix: matrix, Plain: sky}, spaceSun(plain, camera), lens()));
+		}
+
+		/* Where the mark of an object goes: its place, or (a fleet, a group with none of its own) the middle of its parts that have one. */
+		function markPlace (object) {
+			var parts;
+			var sum;
+
+			if (object.World && !object.Hidden) return object.World;
+
+			parts = scene.Order.filter(function (one) {
+				return one.World && !one.Hidden && (one.Root === object || one.Owner === object || String(one.ID).indexOf(object.ID + '/') === 0);
+			});
+
+			if (!parts.length) return null;
+
+			sum = parts.reduce(function (total, one) {
+				return [total[0] + one.World[0], total[1] + one.World[1], total[2] + one.World[2]];
+			}, [0, 0, 0]);
+
+			return [sum[0] / parts.length, sum[1] / parts.length, sum[2] / parts.length];
 		}
 
 		/* Where space is split for its depth (Scene: draw): half the way to the surface of the nearest body or star, 0 when one view of depth is enough. */
@@ -3473,12 +3783,12 @@ Elemenx.Component('Scene', {
 			var clip = [matrix[2] * front[0] + matrix[6] * front[1] + matrix[10] * front[2] + matrix[14], matrix[3] * front[0] + matrix[7] * front[1] + matrix[11] * front[2] + matrix[15]];
 
 			/* In real sizes a star blinds by the light it sends (its luminosity over the square of the way, in AU), not by how large its disc is. */
-			return {Sun: way, SunColor: paint(star.Color).slice(0, 3), Star: true, Ring: Math.abs(matrix[5]) * 0.5 * Math.max(star.Size / far, self.Scale === 'real' ? 0.006 : 0), Clear: Math.min(0.9999, (clip[0] / Math.max(clip[1], 1e-6)) * 0.5 + 0.5 - 1e-6), Glare: self.Scale === 'real' ? starLight(star, far) : Math.min(1, Math.pow(star.Size / far * 7, 1.3))};
+			return {Sun: way, SunColor: paint(star.Color).slice(0, 3), Star: true, Ring: Math.abs(matrix[5]) * 0.5 * Math.max(star.Size / far, realness() >= 0.999 ? 0.006 : 0), Clear: Math.min(0.9999, (clip[0] / Math.max(clip[1], 1e-6)) * 0.5 + 0.5 - 1e-6), Glare: realness() >= 0.999 ? starLight(star, far) : Math.min(1, Math.pow(star.Size / far * 7, 1.3))};
 		}
 
 		/* How large a star is seen from a body (the angle of its radius): as it is in real sizes, else as the Sun from the Earth. */
 		function discOf (star, body) {
-			return self.Scale === 'real' && star && body && body.World ? Math.atan(star.Size / Math.max(1e-12, vectors.Distance(star.World, body.World))) : 0.00465;
+			return realness() >= 0.999 && star && body && body.World ? Math.atan(star.Size / Math.max(1e-12, vectors.Distance(star.World, body.World))) : 0.00465;
 		}
 
 		engine.StarDisc = discOf;
@@ -3817,7 +4127,11 @@ Elemenx.Component('Scene', {
 			if (gpu.ShadowShapes[name])
 				gpu.ShadowShapes[name].Destroy();
 
+			if (gpu.ShadowShapes['merged:' + name])
+				gpu.ShadowShapes['merged:' + name].Destroy();
+
 			delete gpu.ShadowShapes[name];
+			delete gpu.ShadowShapes['merged:' + name];
 			delete lists[name];
 		}
 
@@ -3837,6 +4151,9 @@ Elemenx.Component('Scene', {
 
 			if (gpu.ShadowShapes[name])
 				gpu.ShadowShapes[name].Instance(data, list.Count);
+
+			if (gpu.ShadowShapes['merged:' + name])
+				gpu.ShadowShapes['merged:' + name].Instance(data, list.Count);
 
 			/* The wire of the scene, the edges of its models: their lines copied as the shape is. */
 			if (wired() && name.indexOf('outline:') !== 0)
@@ -4504,7 +4821,10 @@ Elemenx.Component('Scene', {
 			if (object.Values.Vehicle && object.Values.Vehicle.Mounts)
 				gatherMounts(models, object, base);
 
-			joinedOf(object, made).forEach(function (piece) {
+			var pieces = joinedOf(object, made);
+			var shadow = pieces.Shadow ? shadowNames(pieces.Shadow, (still ? 'still:' : '') + dissolving + made.Key + '/') : null;
+
+			pieces.forEach(function (piece) {
 				if (made.Asset) {
 					var rest = pose && !piece.Joined ? pose[piece.ID] : piece.Rest;
 					var wheel = piece.Joined ? piece.Wheel : object.Wheels ? object.Wheels[piece.ID] : null;
@@ -4515,7 +4835,7 @@ Elemenx.Component('Scene', {
 					/* The glass of a mirror of the car that is driven shows its picture (MirrorKey): its own list, of that car alone. */
 					var reflecting = piece.Mirror !== undefined && object.ID === scene.Hero ? 'car:' + object.ID + ':' + piece.Mirror : '';
 
-					batch(models, (still ? 'still:' : '') + dissolving + made.Key + '/' + piece.ID + (reflecting ? '@' + object.ID : ''), object.World, piece.Skin !== -1 ? whole : math.Multiply(whole, wheel ? math.Multiply(engine.WheelTurn(object, wheel), rest) : rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Soft: softOf(object, made, piece), Glow: object.Glow && object.Glow.Body ? object.Glow.Color : lit, Lit: !!lit && !(object.Glow && object.Glow.Body), Wet: object.Values.Wet, Drops: object.Values.Drops, MirrorKey: reflecting, Dissolve: dissolve});
+					batch(models, (still ? 'still:' : '') + dissolving + made.Key + '/' + piece.ID + (reflecting ? '@' + object.ID : ''), object.World, piece.Skin !== -1 ? whole : math.Multiply(whole, wheel ? math.Multiply(engine.WheelTurn(object, wheel), rest) : rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Soft: softOf(object, made, piece), Glow: object.Glow && object.Glow.Body ? object.Glow.Color : lit, Lit: !!lit && !(object.Glow && object.Glow.Body), Wet: object.Values.Wet, Drops: object.Values.Drops, MirrorKey: reflecting, Dissolve: dissolve, Merged: shadow && !reflecting && shadow.Shadow.IDs.indexOf(piece.ID) >= 0 ? shadow : null});
 
 					return;
 				}
@@ -4596,11 +4916,43 @@ Elemenx.Component('Scene', {
 				return Object.assign({}, first, {ID: 'joined-' + index, Joined: true, Wheel: group.Wheel, Node: undefined, Rest: math.Identity(), Placed: null, Geometry: joinedGeometry(group.Pieces)});
 			});
 
+			kept.Shadow = shadowJoined(kept);
+
 			/* Not kept while the skeleton is not there yet: its pieces join when it is. */
 			if (whole)
 				made.Joined[key] = kept;
 
 			return kept;
+		}
+
+		/*
+		 * The pieces of a model joined that stand still on it (not a wheel, a side of an opening, a mirror, a piece of a
+		 * skeleton), of a material that casts a shadow as it stands (not glass, nothing its Vertex moves), as one shape for the
+		 * maps of the shadow: a map draws only the depth, the material is nothing to it. Regression: the still body of a car of
+		 * a file was some twenty draws of its materials in each slice of the shadow, more than a hundred a frame.
+		 */
+		function shadowJoined (pieces) {
+			var casting = pieces.filter(function (piece) {
+				var material = piece.Material;
+
+				return piece.Joined && piece.Skin === -1 && !piece.Wheel && !piece.Opening && piece.Mirror === undefined && !(material && (material.Vertex || material.Transmission && seeThrough(material)));
+			});
+			if (casting.length < 2) return null;
+
+			return {IDs: casting.map(function (piece) {
+				return piece.ID;
+			}), Pieces: casting, Names: {}};
+		}
+
+		/* The names of the lists of a model of shapes joined for its shadow, with its prefix (still:, dissolve:): the first leads. */
+		function shadowNames (shadow, prefix) {
+			if (!shadow.Names[prefix]) {
+				shadow.Names[prefix] = {Leader: prefix + shadow.IDs[0], Members: shadow.IDs.map(function (id) {
+					return prefix + id;
+				}), Shadow: shadow};
+			}
+
+			return shadow.Names[prefix];
 		}
 
 		/*
@@ -4929,6 +5281,9 @@ Elemenx.Component('Scene', {
 
 			/* A body that is beamed away or comes (Teleport): drawn apart, dissolving. */
 			list.Dissolve = settings.Dissolve || null;
+
+			/* Its shadow drawn by the shape of all the still pieces of its model, joined (shadowJoined). */
+			list.Merged = settings.Merged || null;
 
 			i = list.Count * 4;
 
@@ -5293,10 +5648,14 @@ Elemenx.Component('Scene', {
 
 				Object.keys(models).forEach(function (name) {
 					var list = models[name];
-					/* Light goes through glass. */
-					if (list.Material && list.Material.Transmission && seeThrough(list.Material) || !seen(list, sees)) return;
+					var merged = list.Merged && mergedShadow(models, list.Merged, name);
+					/* The still pieces of a model as one: drawn with the first of them, the others not. */
+					if (merged === false || merged && !seen(merged, sees)) return;
 
-					renderer.Draw(shadowShape(name, list), moved(list, list.Skinned ? gpu.SkinDepth : gpu.ManyDepth, 'Depth'), Object.assign({uViewProjection: matrix, uWind: scene.Gust || 0, uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : undefined, uJointOffset: list.Offset}, movedValues(list)), {Cull: 'none'});
+					/* Light goes through glass. */
+					if (list.Material && list.Material.Transmission && seeThrough(list.Material) || !merged && !seen(list, sees)) return;
+
+					renderer.Draw(merged ? merged.Mesh : shadowShape(name, list), moved(list, list.Skinned ? gpu.SkinDepth : gpu.ManyDepth, 'Depth'), Object.assign({uViewProjection: matrix, uWind: scene.Gust || 0, uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : undefined, uJointOffset: list.Offset}, movedValues(list)), {Cull: 'none'});
 				});
 
 				(nodes || []).forEach(function (node) {
@@ -8033,7 +8392,7 @@ Elemenx.Component('Scene', {
 							if (!state.Styles) return;
 
 							if (Array.prototype.some.call(change.addedNodes || [], elementOf) || Array.prototype.some.call(change.removedNodes || [], elementOf)) state.Styles.List = null;
-							else if (change.type === 'attributes') state.Styles.Dirty.push(change.target);
+							else if (change.type === 'attributes' && styledAttribute(change.target, change.attributeName)) state.Styles.Dirty.push(change.target);
 						});
 					});
 
@@ -8081,6 +8440,55 @@ Elemenx.Component('Scene', {
 
 			return state.Texture || null;
 		};
+
+		/*
+		 * Whether an attribute changed may change the styles of its element: any of an element of SVG (its presentation),
+		 * any but aria-*, data-*, role, title, alt and tabindex, and those too when a selector of the page names them
+		 * ([aria-pressed]). Regression: a Meter on a screen told its value by aria-valuenow at each change, and all it held
+		 * was read again for the picture (8000 properties, 7 ms a picture).
+		 */
+		function styledAttribute (element, name) {
+			var sheets = element.ownerDocument.styleSheets;
+			var known = engine.StyledNames;
+			var names;
+
+			if (element.namespaceURI === 'http://www.w3.org/2000/svg' || !/^(aria-|data-|role$|title$|alt$|tabindex$)/.test(name)) return true;
+
+			if (!known || known.Count !== sheets.length) {
+				names = {};
+
+				Array.prototype.forEach.call(sheets, function (sheet) {
+					var rules;
+
+					try {
+						rules = sheet.cssRules;
+					}
+					catch (error) {
+						/* A stylesheet of another origin may name any of them. */
+						names['*'] = true;
+
+						return;
+					}
+
+					(function walk (list) {
+						Array.prototype.forEach.call(list || [], function (rule) {
+							var found = /\[\s*([\w-]+)/g;
+							var match;
+
+							if (rule.cssRules && !rule.selectorText)
+								walk(rule.cssRules);
+
+							while (rule.selectorText && (match = found.exec(rule.selectorText)))
+								names[match[1].toLowerCase()] = true;
+						});
+					})(rules);
+				});
+
+				known = engine.StyledNames = {Count: sheets.length, Names: names};
+			}
+
+			return !!(known.Names['*'] || known.Names[String(name).toLowerCase()]);
+		}
 
 		/* The element a screen shows: itself, a data-screen of the slot screens, or one the selector finds in the page. */
 		engine.ScreenElement = function (source) {
@@ -9454,6 +9862,8 @@ Elemenx.Component('Scene', {
 			globe.Eye = eye;
 			globe.Altitude = Math.max(0.002, vectors.Length(eye) - field.Radius - field.Elevation(vectors.Normalize(eye)));
 
+			needData(object, globe);
+
 			/* From over 60 kilometres its clouds are drawn on its ground (no shell of them: see Ground); nearer, as a shell. */
 			clouds = !!object.Look.Clouds && !!scene.Baked[object.ID] && globe.Altitude > 60;
 			globe.CloudsOver = clouds;
@@ -10074,6 +10484,19 @@ Elemenx.Component('Scene', {
 
 			self.RunBehaviours('Step', [elapsed, now]);
 
+			/* A galaxy (SceneGalaxy): what it draws is all of the frame; the system waits behind it. */
+			if (self.Setting === 'galaxy' && engine.GalaxyFrame) {
+				if (!quiet && renderer && !renderer.Lost && scene.Width && scene.Height) {
+					engine.GalaxyFrame(elapsed);
+
+					scene.Painted++;
+
+					drawnCounted(before, started);
+				}
+
+				return;
+			}
+
 			if (self.Axes && Math.abs(scene.Yaw - self.ViewYaw) + Math.abs(scene.Pitch - self.ViewPitch) > 0.004) {
 				self.ViewYaw = scene.Yaw;
 				self.ViewPitch = scene.Pitch;
@@ -10296,6 +10719,7 @@ Elemenx.Component('Scene', {
 		function select (id, quiet) {
 			var object = id ? scene.Objects[id] : null;
 
+			scene.Chosen = [];
 			scene.Selected = object ? object.ID : '';
 			scene.Given.Selected = scene.Selected;
 			self.Selected = scene.Selected;
@@ -10527,9 +10951,7 @@ Elemenx.Component('Scene', {
 
 			/* The length of the view back into AU, as spread lays it out. */
 			if (orbit.Unit === 'radii') distance = length / (parent.Size || 1);
-			else if (self.Scale === 'real') distance = length / UNIT;
-			else if (parent.Radius) distance = Math.pow(Math.max(0, (length / parent.Size - 1) / 0.6), 2) * parent.Radius * KM;
-			else distance = Math.pow(length / 12, 2);
+			else distance = unspread(length, parent);
 
 			return {Distance: distance, Anomaly: ((anomaly + turned) % 360 + 360) % 360};
 		};
@@ -11071,6 +11493,10 @@ Elemenx.Component('Scene', {
 		function waiting () {
 			var left = 0;
 
+			/* A galaxy waits for its programs alone: the globes of a system behind it are not drawn. */
+			if (self.Setting === 'galaxy')
+				return renderer ? renderer.Progress().Needed : 0;
+
 			/*
 			 * Regression: on the ground of a location the globes are drawn no more, neither the near one of its body nor the
 			 * paint of the others (a moon): what they still missed was never made, and the veil over the location never went.
@@ -11262,6 +11688,7 @@ Elemenx.Component('Scene', {
 			this.DebrisStart();
 			this.DeepSpaceStart();
 			this.CosmosStart();
+			this.GalaxyStart();
 			this.VehiclesStart();
 			this.LandingStart();
 			this.ScreensStart();
@@ -12108,12 +12535,22 @@ Elemenx.Component('Scene', {
 	},
 
 	/* An object, or several on a map. */
+	/* One object selected, or many (a list: the first is the one the card and the gizmo are of, each of them marked). */
 	Select: function (id) {
-		this.Engine().Select(Array.isArray(id) ? id[0] || '' : id || '');
+		var scene = this.Scene();
+		var list = (Array.isArray(id) ? id : id ? [id] : []).filter(function (one) {
+			return !!scene.Objects[one];
+		});
+
+		this.Engine().Select(list[0] || '');
+
+		scene.Chosen = list.length > 1 ? list.slice() : [];
 	},
 
 	Selection: function () {
-		var selected = this.Scene().Selected;
+		var scene = this.Scene();
+		var selected = scene.Selected;
+		if (scene.Chosen && scene.Chosen.length > 1 && scene.Chosen[0] === selected) return scene.Chosen.slice();
 
 		return selected ? [selected] : [];
 	},
@@ -13816,9 +14253,13 @@ Elemenx.Component('Scene', {
 				'	float spots = smoothstep(0.66, 0.74, field) * belt;',
 				'	float faculae = (smoothstep(0.58, 0.66, field) - spots) * belt;',
 				'	float limb = pow(max(dot(n, v), 0.0), 0.45);',
-				'	vec3 color = uColor * (0.7 + 0.6 * cells) * (0.5 + 0.6 * limb) * (1.0 - spots * 0.55) * (1.0 + faculae * 0.35 * (1.0 - limb));',
-				/* A sun is far brighter than white: what shows of it to the eye is only that it burns. */
-				'	outColor = vec4(mix(color, vec3(1.0), 0.28 * limb) * 2.4, 1.0);',
+				'	vec3 color = pow(uColor, vec3(2.2)) * (0.7 + 0.6 * cells) * (0.5 + 0.6 * limb) * (1.0 - spots * 0.55) * (1.0 + faculae * 0.35 * (1.0 - limb));',
+				/*
+				 * A sun is far brighter than white: what shows of it to the eye is only that it burns. Regression: a cool star
+				 * (a red dwarf) was so too, white over its orange and burned out: the cooler it is, the less of that.
+				 */
+				'	float warm = 1.0 - clamp(uColor.b / max(uColor.r, 1e-3), 0.0, 1.0);',
+				'	outColor = vec4(mix(color, vec3(1.0), 0.28 * limb * (1.0 - warm)) * mix(2.4, 1.6, warm), 1.0);',
 				'}'
 			].join('\n'),
 

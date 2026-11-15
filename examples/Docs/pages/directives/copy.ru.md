@@ -9,7 +9,7 @@
 <code class="elemenx-code">{{Token}}</code>
 <Button Label="Copy" Icon="copy" *copy="Token" />
 <Button Label="Copy with a toast" Icon="copy" Variant="ghost" *copy="{Text: Token, Toast: 'The token is copied'}" />
-<button type="button" class="elemenx-link" *copy="'https://example.com/invite/42'" (copied)="Copied">copy the invitation link</button>
+<Button Variant="link" Label="copy the invitation link" *copy="'https://example.com/invite/42'" (copied)="Copied" />
 <p class="elemenx-text small muted">{{Note}}</p>
 <script>
 ({
@@ -26,3 +26,4 @@
 ## Тесты
 
 - [takes the Library Services, Directives and Guards the Application names, and the ones they name](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/builder-multi-application.test.js#L303) — `tests/regression/builder-multi-application.test.js`
+- [tells a prop the Component has not and an expression nothing can be given to](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/component-two-way.test.js#L89) — `tests/regression/component-two-way.test.js`

@@ -181,7 +181,10 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		other = await mount(planet);
 		inner = other.Scene();
 
-		/* No strip of it painted by a worker: the whole of it came from the store. */
+		/*
+		 * No strip of it painted by a worker: the whole of it came from the store. Regression (load): under a whole run
+		 * its 256 strips were not drawn in 10 s; waited for as long as half the test.
+		 */
 		await waitFor(function () {
 			inner.Rest = 0;
 			inner.Looping = true;
@@ -191,7 +194,7 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 			inner.Looping = false;
 
 			return inner.Baked.terra && inner.Baked.terra.Painted === 256;
-		}, 10000);
+		}, 30000);
 
 		expect(inner.Baked.terra.Strips).toBe(24);
 	}, 60000);
@@ -267,10 +270,12 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		await tick(20);
 
 		/* Each marker says whether it is day there now. */
-		var item = scene.$Element().querySelector('.elemenx-scene-landing-item[data-marker="base"]');
+		/* The list is a MenuList of ElemenxUI: a marker by its name, day or night there by its hint. */
+		var item = Array.from(scene.$Element().querySelectorAll('.elemenx-scene-landing-list [role="menuitem"]')).filter(function (one) {
+			return one.textContent.indexOf('Base Alpha') !== -1;
+		})[0];
 
-		expect(item.firstChild.textContent).toBe('Base Alpha');
-		expect(item.querySelector('.elemenx-scene-landing-time').textContent).toMatch(/^(day|night|день|ночь)$/);
+		expect(item.querySelector('.elemenx-option-hint').textContent).toMatch(/^(day|night|день|ночь)$/);
 		expect(scene.Land('me', {Marker: 'nowhere'})).toBe(false);
 		expect(scene.Land('me', {Marker: 'base'})).toBe(true);
 		expect(scene.LandingOpen).toBe(false);

@@ -46,24 +46,16 @@ Elemenx.Component('GameMenu', {
 		return root ? Array.prototype.slice.call(root.querySelectorAll('.elemenx-game-menu-item:not([disabled])')) : [];
 	},
 
-	Chosen: function (event, node) {
-		var item = (this.Items || [])[Number(node.getAttribute('data-index'))];
+	/* An item pressed (its Button): told unless it is off. */
+	Chosen: function (item) {
 		if (item && !item.Disabled)
 			this.$Emit('select', {ID: item.ID, Item: item});
 	},
 
+	/* Up and down (round), Home and End among its items: ElemenxHelpers.Rove. */
 	Key: function (event) {
-		var buttons = this.Buttons();
-		var index = buttons.indexOf(event.target);
-
-		if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-			if (!buttons.length) return;
-
-			event.preventDefault();
-
-			index = index === -1 ? 0 : (index + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
-
-			buttons[index].focus();
+		if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Home' || event.key === 'End') {
+			this.$Service('ElemenxHelpers').Rove(event, this.Buttons());
 
 			return;
 		}

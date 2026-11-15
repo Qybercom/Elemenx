@@ -25,33 +25,6 @@ body {
 
 .game-editor-name {
 	width: 180px;
-	padding: 2px 6px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius);
-	background: var(--elemenx-surface);
-	color: inherit;
-	font: inherit;
-	font-weight: var(--elemenx-font-weight-strong);
-}
-
-.game-editor-views {
-	display: flex;
-	gap: 2px;
-}
-
-.game-editor-view {
-	padding: 4px 12px;
-	border: 1px solid transparent;
-	border-radius: var(--elemenx-radius);
-	background: none;
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
-}
-
-.game-editor-view.active {
-	border-color: var(--elemenx-accent);
-	background: var(--elemenx-surface-hover);
 }
 
 .game-editor-actions {
@@ -62,27 +35,17 @@ body {
 	margin-left: auto;
 }
 
-.game-editor-import {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 0 8px;
-	cursor: pointer;
-}
-
-.game-editor-import input {
-	display: none;
-}
-
 .game-editor-status {
 	color: var(--elemenx-text-muted);
 }
 
 /* Both editors stay as they are while the other is shown: their scenes keep their size. */
+/* What a hidden one holds keeps its room but does not widen the page (on a phone the page grew past the screen). */
 .game-editor-main {
 	position: relative;
 	flex: 1 1 auto;
 	min-height: 0;
+	overflow: hidden;
 }
 
 .game-editor-pane {
@@ -131,19 +94,9 @@ body {
 	background: var(--elemenx-surface-hover);
 }
 
-.game-editor-item-name,
-.game-editor-item-remove {
-	border: 0;
-	background: none;
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
-}
-
 .game-editor-item-name {
 	flex: 1 1 auto;
-	padding: 4px;
-	text-align: left;
+	justify-content: flex-start;
 }
 
 .game-editor-object {
@@ -153,4 +106,16 @@ body {
 
 .game-editor-object > .elemenx-model-editor {
 	height: 100%;
+}
+
+/* On a phone the models go over the model edited. */
+@media (max-width: 640px) {
+	.game-editor-models {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: auto minmax(0, 1fr);
+	}
+
+	.game-editor-list {
+		max-height: 30vh;
+	}
 }

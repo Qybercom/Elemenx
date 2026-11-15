@@ -1,0 +1,20 @@
+{
+	"ID": "binary",
+	"Name": "Twin Suns",
+	"Bodies": {"terra": {"URL": "/data/planets/terra.planet", "Levels": 2}},
+	"Objects": [
+		{"ID": "centre", "Kind": "barycentre", "Values": {"Name": "Twin Suns"}, "Children": [
+			{"ID": "alpha", "Kind": "star", "Values": {"Name": "Alpha"}, "Traits": {"Star": {"Mass": 1.1, "Temperature": 6100}, "Orbit": {"Distance": 0.35, "Anomaly": 0, "Unit": "AU"}}},
+			{"ID": "beta", "Kind": "star", "Values": {"Name": "Beta"}, "Traits": {"Star": {"Mass": 0.8, "Temperature": 4300}, "Orbit": {"Distance": 0.48, "Anomaly": 180, "Unit": "AU"}}},
+			{"ID": "terra", "Kind": "planet", "Values": {"Name": "Terra"}, "Traits": {"Orbit": {"Distance": 2.4, "Eccentricity": 0.02, "Anomaly": 40, "Unit": "AU"}, "Body": {"Radius": 6371, "Day": 23.93, "Tilt": 23.4}, "Surface": {"Type": "terran"}}, "Children": [
+				{"ID": "luna", "Kind": "moon", "Values": {"Name": "Luna"}, "Traits": {"Orbit": {"Distance": "384400 km", "Unit": "AU"}, "Body": {"Radius": 1737, "Day": 0}, "Surface": {"Type": "moon"}}, "Children": [
+					{"ID": "dock", "Kind": "station", "Values": {"Name": "Lunar dock"}}
+				]}
+			]},
+			{"ID": "cinder", "Kind": "planet", "Values": {"Name": "Cinder"}, "Traits": {"Orbit": {"Distance": 1.4, "Anomaly": 200, "Unit": "AU"}, "Body": {"Radius": 3100, "Day": 60}, "Surface": {"Type": "lava"}}},
+			{"ID": "maw", "Kind": "blackhole", "Values": {"Name": "Maw"}, "Traits": {"Orbit": {"Distance": 5.5, "Anomaly": 120, "Unit": "AU"}, "BlackHole": {"Mass": 4}}, "Children": [
+				{"ID": "shard", "Kind": "planetoid", "Values": {"Name": "Shard"}, "Traits": {"Orbit": {"Distance": "900000 km", "Unit": "AU"}}}
+			]}
+		]}
+	]
+}

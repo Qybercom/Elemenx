@@ -24,11 +24,16 @@
  * round the star, a moon round a planet, a station round a body), on an orbit of its own farther out. Moving a body moves it on
  * its orbit: the middle square carries it in the plane of its parent (its Distance and Anomaly, Scene.OrbitAt), the green
  * axis tilts its orbit (Inclination); the ring turns its axis (Tilt), scaling changes its Radius. Time sets the day the system
- * is drawn at.
+ * is drawn at. A system is a tree of orbits to any depth: stars round a barycentre (a star added with one selected), planets,
+ * planetoids, belts, black holes and wormholes round a star, a barycentre or a black hole, moons and rings round a body, what
+ * is made round anything natural; its list of objects is that tree. Its system is saved as a file of the system format
+ * (System(): SystemData of its scene; the button System downloads it) and one is opened (OpenSystem(source, callback), the
+ * field Open a system), the planets of its bodies kept with it.
  */
 Elemenx.Component('SceneEditor', {
 	$TemplateURL: 'SceneEditor.html',
 	$StyleURL: 'SceneEditor.css',
+	$Traits: ['EditorPanes'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'layers',
@@ -38,10 +43,11 @@ Elemenx.Component('SceneEditor', {
 			select: 'The selection changed: {ID}.',
 			play: 'Play or Stop: {Playing}.'
 		},
-		Methods: ['Document()', 'Load(document)', 'Save()', 'Restore()', 'Export()', 'Import(text)', 'Select(id)', 'Add(kind, props)', 'Remove(id)', 'Undo()', 'Redo()', 'Play()', 'Stop()', 'Scene()'],
+		Methods: ['Document()', 'Load(document)', 'Save()', 'Restore()', 'Export()', 'Import(text)', 'System()', 'OpenSystem(source, callback)', 'Select(id)', 'Add(kind, props)', 'Remove(id)', 'Undo()', 'Redo()', 'Play()', 'Stop()', 'Scene()'],
 		Props: {
 			Value: 'The document: {Version, Name, Setting, Scene (the recipe of Scene.Save)}.',
 			Setting: {Options: ['ground', 'space'], Description: 'What a new document is: a ground under a sun, or a star system.'},
+			Scale: 'How real the sizes and distances of a star system are: 0 readable (large bodies, nothing crowded) to 1 real, a slider over the view.',
 			Kinds: 'The kinds of objects to add on a ground.',
 			SpaceKinds: 'The kinds of objects to add in a star system.',
 			Models: 'Models of the Models Service to place on a ground (an ModelEditor\'s), each as the kind its Type fits: a unit, a house, a tree, a rock or a thing.',
@@ -52,11 +58,12 @@ Elemenx.Component('SceneEditor', {
 			Label: 'What it shows, for screen readers.'
 		}
 	},
+	PanesKey: 'scene-editor',
 	Value: null,
 	Setting: 'ground',
 	Kinds: ['unit', 'effect', 'glass', 'mirror', 'camera', 'screen', 'tree', 'rock', 'house'],
 	CutscenesOpen: false,
-	SpaceKinds: ['star', 'planet', 'moon', 'belt', 'ring', 'station', 'outpost', 'craft', 'fleet'],
+	SpaceKinds: ['star', 'barycentre', 'planet', 'planetoid', 'moon', 'belt', 'ring', 'blackhole', 'wormhole', 'station', 'outpost', 'craft', 'fleet'],
 	Models: [],
 	Storage: 'elemenx-scene-editor',
 	SnapMove: 0.5,
@@ -76,7 +83,15 @@ Elemenx.Component('SceneEditor', {
 	/* The phrase of each type of what SceneBiomes.Check finds amiss with lands by climate. */
 	LandPhrases: [{Type: 'range', Key: 'graphics.sceneEditor.land.range'}, {Type: 'gap', Key: 'graphics.sceneEditor.land.gap'}, {Type: 'unreachable', Key: 'graphics.sceneEditor.land.unreachable'}, {Type: 'unused', Key: 'graphics.sceneEditor.land.unused'}, {Type: 'uncovered', Key: 'graphics.sceneEditor.land.uncovered'}],
 	Snap: true,
+	/* One finger moves the camera too (ViewActions), not only two. */
+	Hand: false,
+	Scale: 0,
 	Selected: '',
+	Picks: [],
+	TreeItems: [],
+	/* The fields of the inspector (Fields) and the items of the sketch in hand with theirs (SketchItems). */
+	FieldList: [],
+	ItemList: [],
 	Playing: false,
 	Version: 0,
 	Past: 0,
@@ -119,6 +134,9 @@ Elemenx.Component('SceneEditor', {
 
 	$OnCreate: function () {
 		var own = {Scene: null, Document: null, Past: [], Future: [], Drag: null, Keys: {}, Played: null, Frame: 0, Copies: 0};
+
+		/* A context menu opens only with items: the ones of its list are made again as it opens (TreeOpened). Regression: it had none at first, and never opened. */
+		this.TreeItems = [{ID: 'add', Label: Elemenx.Locale.Text('graphics.sceneEditor.addKind'), Icon: 'add'}];
 
 		this.Own = function () {
 			return own;
@@ -207,11 +225,11 @@ Elemenx.Component('SceneEditor', {
 	},
 
 	/* The day the system is drawn at, kept for Undo. */
-	Timed: function (event) {
+	Timed: function (value) {
 		var own = this.Own();
 		var before = own.Scene.Save();
 
-		own.Scene.SetTime(Number(event.target.value) || 0);
+		own.Scene.SetTime(Number(value && value.target ? value.target.value : value) || 0);
 
 		this.Changed(before);
 	},
@@ -243,6 +261,8 @@ Elemenx.Component('SceneEditor', {
 		var own = this.Own();
 
 		own.Document = this.Normalize(document);
+		/* A document of no system: the planets of the one opened before are not its own (OpenSystem sets them after). */
+		own.System = null;
 
 		/* Regression: a new document (no Scene) left the scene of the one before. */
 		if (own.Scene && own.Document.Scene) this.Recall(own.Document.Scene);
@@ -396,9 +416,11 @@ Elemenx.Component('SceneEditor', {
 		}, 1000);
 	},
 
-	Imported: function (event) {
+	/* A file of a scene picked (the files a FileUpload told, or the event of a field of the page). */
+	Imported: function (files) {
 		var self = this;
-		var file = event.target.files && event.target.files[0];
+		var list = files && files.target ? files.target.files : files;
+		var file = list && list[0];
 		var reader;
 
 		if (!file) return;
@@ -410,27 +432,284 @@ Elemenx.Component('SceneEditor', {
 
 		reader.readAsText(file);
 
-		event.target.value = '';
+		if (files && files.target)
+			files.target.value = '';
+	},
+
+	/*
+	 * Its star system as data (SystemData, docs/SPACE-FORMAT.md): of its scene (its seed, what was added, taken away and
+	 * changed), the planets of the bodies of the system it was opened of kept with it.
+	 */
+	System: function () {
+		var own = this.Own();
+		var systems = this.$Service('SystemData');
+		var name = own.Document.Name || 'system';
+		var data = systems.FromRecipe(own.Scene.Save(), {ID: own.System ? own.System.Manifest.ID : String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'system', Name: name});
+
+		/* Its planets as they came: their URLs, or their parts (their data, read from the system it was opened of). */
+		if (own.System) {
+			data.Manifest.Bodies = JSON.parse(JSON.stringify(own.System.Manifest.Bodies || {}));
+			data.Bodies = own.System.Bodies || {};
+			data.Source = own.System.Source;
+		}
+
+		return data;
+	},
+
+	/* The file of its system (a zip of the system format: .system), downloaded; its planets kept in it read first. */
+	ExportedSystem: function () {
+		var self = this;
+		var systems = this.$Service('SystemData');
+		var data = this.System();
+		var ids = Object.keys(data.Manifest.Bodies).filter(function (id) {
+			return data.Manifest.Bodies[id].Part;
+		});
+		var left = ids.length;
+
+		function packed () {
+			systems.Pack(data, function (error, bytes) {
+				var link;
+
+				if (error) {
+					self.$Emit('error', error);
+
+					return;
+				}
+
+				link = document.createElement('a');
+				link.href = URL.createObjectURL(new Blob([bytes], {type: 'application/zip'}));
+				link.download = (self.Own().Document.Name || 'system') + '.system';
+
+				link.click();
+
+				window.setTimeout(function () {
+					URL.revokeObjectURL(link.href);
+				}, 1000);
+			});
+		}
+
+		if (!left) {
+			packed();
+
+			return;
+		}
+
+		ids.forEach(function (id) {
+			systems.Body(data, id, function () {
+				if (!--left)
+					packed();
+			});
+		});
+	},
+
+	/*
+	 * A file of a system opened (SystemData): its scene of it (its seed, its edits, its cosmos, time and cutscenes), the
+	 * planets of its bodies given to the scene first; one step to undo.
+	 */
+	OpenSystem: function (source, callback) {
+		var self = this;
+		var systems = this.$Service('SystemData');
+		var done = typeof callback === 'function' ? callback : function () {};
+
+		systems.Open(source, function (error, data) {
+			var key;
+
+			if (error) {
+				self.$Emit('error', error);
+
+				done(error);
+
+				return;
+			}
+
+			key = 'editor:' + data.Manifest.ID;
+
+			systems.Use(key, data);
+			systems.UseBodies(key, data, function () {
+				var before = self.Own().Scene ? self.Own().Scene.Save() : null;
+
+				self.Load({Version: 1, Name: data.Manifest.Name, Setting: 'space', Scene: systems.Recipe(data, key)});
+
+				self.Own().System = data;
+
+				self.Changed(before);
+
+				done(null, data);
+			});
+		});
+	},
+
+	ImportedSystem: function (files) {
+		var list = files && files.target ? files.target.files : files;
+		var file = list && list[0];
+		if (file)
+			this.OpenSystem(file);
+
+		if (files && files.target)
+			files.target.value = '';
 	},
 
 	/* The objects */
 
+	/* Its objects as a tree: each under what it goes round or stands on (its Parent), to any depth (a station of a moon of a planet). */
 	Items: function () {
+		var self = this;
 		var scene = this.Own().Scene;
+		var objects;
+		var items = {};
+		var roots = [];
+
 		if (!scene) return [];
 
-		return scene.Objects().filter(function (object) {
+		objects = scene.Objects().filter(function (object) {
 			return !object.Owner;
-		}).map(function (object) {
-			return {ID: object.ID, Label: (object.Values.Name || object.ID) + (object.Kind ? ' · ' + object.Kind : '') + (object.Values.Generated ? ' · ' + Elemenx.Locale.Text('graphics.sceneEditor.generated') : ''), Icon: object.Kind === 'effect' ? 'star' : object.Values.Generated ? 'layers' : 'square'};
 		});
+
+		objects.forEach(function (object) {
+			items[object.ID] = {ID: object.ID, Label: (object.Values.Name || object.ID) + (object.Kind ? ' · ' + object.Kind : '') + (object.Values.Generated ? ' · ' + Elemenx.Locale.Text('graphics.sceneEditor.generated') : ''), Icon: object.Values.Generated ? 'layers' : self.KindIcon(object.Kind)};
+		});
+
+		objects.forEach(function (object) {
+			var parent = object.Parent && items[object.Parent];
+
+			if (parent) (parent.Items = parent.Items || []).push(items[object.ID]);
+			else roots.push(items[object.ID]);
+		});
+
+		return roots;
+	},
+
+	/* The items of its tree that hold others, open. */
+	Opened: function () {
+		var open = [];
+
+		function walk (list) {
+			list.forEach(function (item) {
+				if (!item.Items) return;
+
+				open.push(item.ID);
+
+				walk(item.Items);
+			});
+		}
+
+		walk(this.Items());
+
+		return open;
+	},
+
+	/*
+	 * The icon of a kind in its list of objects. Regression: every object had a square there, which looked as a check box
+	 * that did nothing.
+	 */
+	KindIcon: function (kind) {
+		return {star: 'sun', sun: 'sun', barycentre: 'barycentre', planet: 'planet', planetoid: 'asteroid', moon: 'moon', belt: 'asteroid', ring: 'ring', blackhole: 'black-hole', wormhole: 'wormhole', station: 'station', outpost: 'outpost', craft: 'science:rocket', fleet: 'fleet', comet: 'science:comet', quasar: 'quasar', unit: 'user', effect: 'sparkles', glass: 'window-maximize', mirror: 'mirror', camera: 'camera', screen: 'monitor', tree: 'pine', rock: 'rock', house: 'home', building: 'home', ground: 'map', road: 'road', trigger: 'zap', zone: 'zone', marker: 'map-pin', lamp: 'lightbulb', light: 'lightbulb', water: 'water', vehicle: 'racing:sports-car', car: 'racing:sports-car'}[kind] || 'circle';
+	},
+
+	/* How real the sizes and distances of a star system are shown: 0 readable (nothing crowded) to 1 real (Scene Scale). */
+	Scaled: function (value) {
+		this.Scale = Math.max(0, Math.min(1, Number(value && value.detail !== undefined ? value.detail : value) || 0));
 	},
 
 	Chosen: function (item) {
 		this.Select(item && item.ID || '');
 	},
 
+	/* Many objects chosen in its list (Ctrl, Shift): the first is the selected one (its fields, its gizmo), all are marked. */
+	ManyChosen: function (ids) {
+		var list = (ids || []).slice();
+
+		this.Select(list[0] || '');
+
+		this.Picks = list;
+
+		if (this.Own().Scene)
+			this.Own().Scene.Select(list);
+	},
+
+	/* An object dragged in its list onto another: into it (it goes round it, stands on it), or beside it (the same parent). */
+	TreeMoved: function (event) {
+		var moved = this.Found(event.ID);
+		var target = this.Found(event.Target);
+		var parent;
+
+		if (!moved || !target || this.Playing) return;
+
+		parent = event.Position === 'inside' ? target.ID : target.Parent || '';
+
+		if (parent === moved.ID || (moved.Parent || '') === parent) return;
+
+		this.Change(moved.ID, {Parent: parent});
+
+		this.Version++;
+	},
+
+	/* The context menu of its list: of the object under it (chosen first if it was not), or of the list itself. */
+	TreeOpened: function (event) {
+		var row = event.Target && event.Target.closest ? event.Target.closest('[data-id]') : null;
+		var id = row ? row.getAttribute('data-id') : '';
+		var self = this;
+		var kinds = this.Space() ? this.SpaceKinds : this.Kinds;
+		var many;
+
+		if (id && this.Picks.indexOf(id) === -1)
+			this.Select(id);
+
+		many = this.Picks.length > 1;
+
+		this.TreeItems = !id ? [{ID: 'add', Label: Elemenx.Locale.Text('graphics.sceneEditor.addKind'), Icon: 'add', Items: kinds.map(function (kind) {
+			return {ID: 'add:' + kind, Label: kind, Icon: self.KindIcon(kind)};
+		})}] : [
+			{ID: 'focus', Label: Elemenx.Locale.Text('graphics.sceneEditor.flyTo'), Icon: 'target', Disabled: many},
+			{ID: 'rename', Label: Elemenx.Locale.Text('graphics.sceneEditor.rename'), Icon: 'edit', Disabled: many},
+			{ID: 'duplicate', Label: Elemenx.Locale.Text('graphics.viewActions.duplicate'), Icon: 'copy', Disabled: many},
+			{ID: 'child', Label: Elemenx.Locale.Text('graphics.sceneEditor.addChild'), Icon: 'add', Disabled: many, Items: kinds.map(function (kind) {
+				return {ID: 'child:' + kind, Label: kind, Icon: self.KindIcon(kind)};
+			})},
+			{Separator: true},
+			{ID: 'delete', Label: Elemenx.Locale.Text('graphics.viewActions.delete'), Icon: 'delete', Danger: true}
+		];
+	},
+
+	TreePicked: function (event) {
+		var id = String(event && event.Item ? event.Item.ID : '');
+		var self = this;
+		var field;
+
+		if (id.indexOf('add:') === 0) {
+			this.Select('');
+			this.Add(id.slice(4));
+		}
+		else if (id.indexOf('child:') === 0) {
+			this.Add(id.slice(6));
+		}
+		else if (id === 'focus' && this.Selected) {
+			this.Own().Scene.FocusOn(this.Selected);
+		}
+		else if (id === 'rename') {
+			field = this.$Element().querySelector('.elemenx-scene-editor-panel [data-key="Name"] input');
+
+			if (field) {
+				field.focus();
+				field.select();
+			}
+		}
+		else if (id === 'duplicate') {
+			this.Duplicate();
+		}
+		else if (id === 'delete') {
+			this.Picks.slice().forEach(function (one) {
+				self.Remove(one);
+			});
+		}
+	},
+
 	Select: function (id) {
+		this.Picks = id ? [id] : [];
+
+		if (this.Own().Scene && this.Own().Scene.Select)
+			this.Own().Scene.Select(id || '');
+
 		this.Selected = id || '';
 		this.GraphStep = '';
 		this.Own().RoadPoint = null;
@@ -514,13 +793,24 @@ Elemenx.Component('SceneEditor', {
 		var bodies = objects.filter(function (object) {
 			return object.Traits.Body && !object.Owner;
 		});
-		var round = {planet: 'star', belt: 'star', moon: 'body', ring: 'body', station: 'body', outpost: 'body', craft: 'body', fleet: 'body'}[kind];
+		var groups = objects.filter(function (object) {
+			return object.Traits.Barycentre;
+		});
+		/*
+		 * What each goes round: a middle of a system (a star, a barycentre, a black hole: planets, belts, black holes and
+		 * wormholes), a group (a star round a barycentre), a body (moons, rings), anything natural (what is made).
+		 */
+		var round = {planet: 'middle', belt: 'middle', blackhole: 'middle', wormhole: 'middle', planetoid: 'middle', star: 'group', moon: 'body', ring: 'body', station: 'natural', outpost: 'natural', craft: 'natural', fleet: 'natural'}[kind];
+		var middle = selected && (selected.Traits.Star || selected.Traits.Barycentre || selected.Traits.BlackHole);
+		var natural = selected && (selected.Traits.Body || selected.Traits.Star || selected.Traits.BlackHole);
 		var parent = null;
 		var count;
 
 		if (!round) return {};
 
-		if (round === 'star') parent = selected && selected.Traits.Star ? selected : stars[0];
+		if (round === 'middle') parent = middle ? selected : groups[0] || stars[0];
+		else if (round === 'group') parent = selected && selected.Traits.Barycentre ? selected : null;
+		else if (round === 'natural') parent = natural ? selected : bodies[0] || stars[0];
 		else parent = selected && selected.Traits.Body ? selected : bodies[0] || stars[0];
 
 		if (!parent) return {};
@@ -529,8 +819,15 @@ Elemenx.Component('SceneEditor', {
 			return object.Parent === parent.ID && object.Kind === kind;
 		}).length;
 
-		if (kind === 'planet')
-			return {Parent: parent.ID, Name: 'Planet ' + (count + 1), Distance: Math.round(0.4 * Math.pow(1.7, count) * 100) / 100, Anomaly: count * 137 % 360};
+		if (kind === 'planet' || kind === 'planetoid')
+			return {Parent: parent.ID, Name: (kind === 'planet' ? 'Planet ' : 'Planetoid ') + (count + 1), Distance: Math.round(0.4 * Math.pow(1.7, count) * 100) / 100, Anomaly: count * 137 % 360};
+
+		/* A star of a group: round its barycentre, opposite the one before (a star has no orbit of its kind: told it). */
+		if (kind === 'star')
+			return {Parent: parent.ID, Name: 'Star ' + (count + 1), Traits: {Orbit: {Distance: Math.round(0.3 * (1 + count * 0.4) * 100) / 100, Anomaly: count * 180 % 360, Unit: 'AU'}}};
+
+		if (kind === 'blackhole' || kind === 'wormhole')
+			return {Parent: parent.ID, Distance: Math.round(3 * Math.pow(1.5, count) * 100) / 100, Anomaly: (count * 137 + 60) % 360};
 
 		if (kind === 'moon')
 			return {Parent: parent.ID, Name: 'Moon ' + (count + 1), Distance: Math.round(0.0026 * (1 + count * 1.5) * 100000) / 100000, Anomaly: count * 137 % 360};
@@ -569,18 +866,20 @@ Elemenx.Component('SceneEditor', {
 		return this.Snap && step > 0 ? Math.round(value / step) * step : Math.round(value * 1000) / 1000;
 	},
 
-	/* The fields of the selected object: where it stands, its turn, its size, then the fields of its kind. */
+	/*
+	 * The fields of the selected object: where it stands, its turn, its size, then the fields of its kind, and the radius
+	 * of the corner of its road chosen: the list the inspector shows (FieldList), each an Input or a Checkbox of ElemenxUI.
+	 */
 	Fields: function () {
-		var self = this;
-		var holder = this.$Ref('Fields');
 		var object = this.Found(this.Selected);
 		var fields;
+		var list = [];
 
-		if (!holder) return;
+		if (!object) {
+			this.FieldList = [];
 
-		holder.textContent = '';
-
-		if (!object) return;
+			return;
+		}
 
 		/* In space a body is where its orbit takes it: its fields are those of its traits. */
 		fields = this.Space() ? [['Name', object.Values.Name || '']] : [['Name', object.Values.Name || ''], ['X', object.Values.X || 0], ['Y', object.Values.Y || 0], ['Lift', object.Values.Lift || 0], ['Facing', object.Values.Facing || 0], ['Size', object.Size || 1]];
@@ -600,41 +899,38 @@ Elemenx.Component('SceneEditor', {
 		});
 
 		fields.forEach(function (field) {
-			var label = document.createElement('label');
-			var name = document.createElement('span');
-			var input = document.createElement('input');
-
-			label.className = 'elemenx-scene-editor-field';
-			name.textContent = field[2] ? field[2] + ' · ' + field[0] : field[0];
-			input.value = field[1] == null ? '' : Array.isArray(field[1]) ? field[1].join(', ') : String(field[1]);
-
-			input.setAttribute('data-field', field[0]);
-
-			if (typeof field[1] === 'boolean') {
-				input.type = 'checkbox';
-				input.checked = field[1];
-			}
-
-			input.addEventListener('change', function () {
-				var changes = {};
-				var value = input.type === 'checkbox' ? input.checked : input.value;
-
-				if (typeof field[1] === 'number' || /^(X|Y|Lift|Facing|Size)$/.test(field[0])) value = value === '' ? undefined : Number(value) || 0;
-				else if (Array.isArray(field[1])) value = String(value).split(',').map(Number);
-
-				/* A field of a trait by the trait's name with it: Radius of a Body is not the Radius of a Ring. */
-				changes[field[2] ? field[2] + field[0] : field[0]] = value;
-
-				self.Change(self.Selected, changes);
-			});
-
-			label.appendChild(name);
-			label.appendChild(input);
-			holder.appendChild(label);
+			list.push({ID: (field[2] || '') + ':' + field[0], Key: field[0], Trait: field[2] || '', Title: field[2] ? field[2] + ' · ' + field[0] : field[0], Value: field[1], Shown: field[1] == null ? '' : Array.isArray(field[1]) ? field[1].join(', ') : String(field[1]), Bool: typeof field[1] === 'boolean'});
 		});
 
-		this.RoadFields(holder, object);
+		this.FieldList = list.concat(this.RoadFields(object));
+	},
 
+	/* A field of the inspector changed (FieldList): its value as its kind is, by the trait's name with it. */
+	FieldChanged: function (field, given) {
+		var changes = {};
+		var road;
+		var value = given;
+
+		if (field.Key === 'PointRadius') {
+			road = this.RoadOf();
+
+			if (!road) return;
+
+			road.Radii[field.Index] = Math.max(0, Number(given) || 0);
+
+			this.Change(this.Selected, {Radii: road.Radii});
+
+			return;
+		}
+
+		if (field.Bool) value = !!given;
+		else if (typeof field.Value === 'number' || /^(X|Y|Lift|Facing|Size)$/.test(field.Key)) value = given === '' || given === null || given === undefined ? undefined : Number(given) || 0;
+		else if (Array.isArray(field.Value)) value = String(given).split(',').map(Number);
+
+		/* A field of a trait by the trait's name with it: Radius of a Body is not the Radius of a Ring. */
+		changes[field.Trait ? field.Trait + field.Key : field.Key] = value;
+
+		this.Change(this.Selected, changes);
 	},
 
 	/* Roads */
@@ -644,16 +940,41 @@ Elemenx.Component('SceneEditor', {
 		return this.$Service('SceneRoads').Types();
 	},
 
-	RoadTyped: function (event) {
-		this.RoadType = event.target.value;
+	RoadTyped: function (value) {
+		this.RoadType = (value && value.target ? value.target.value : value);
 	},
 
-	RoadParted: function (event) {
-		this.RoadPart = event.target.value;
+	RoadParted: function (value) {
+		this.RoadPart = (value && value.target ? value.target.value : value);
 	},
 
-	RoadRadiused: function (event) {
-		this.RoadRadius = Math.max(0, Number(event.target.value) || 0);
+	RoadRadiused: function (value) {
+		this.RoadRadius = Math.max(0, Number((value && value.target ? value.target.value : value)) || 0);
+	},
+
+	/* The choices of its lists (Select): the types of the sketch by their groups, the types and parts of roads. */
+	SketchOptions: function () {
+		var options = [];
+
+		this.SketchGroups.forEach(function (group) {
+			group.Types.forEach(function (type) {
+				options.push({Value: type, Label: type, Group: Elemenx.Locale.Text(group.Key)});
+			});
+		});
+
+		return options;
+	},
+
+	RoadTypeOptions: function () {
+		return this.RoadTypesOf().map(function (type) {
+			return {Value: type, Label: type};
+		});
+	},
+
+	RoadPartOptions: function () {
+		return this.RoadParts.map(function (part) {
+			return {Value: part.ID, Label: Elemenx.Locale.Text(part.Key)};
+		});
 	},
 
 	/* The road selected: its object, and its points, parts and radii as its spec has them (parts and radii as many as it needs). */
@@ -898,34 +1219,13 @@ Elemenx.Component('SceneEditor', {
 		return false;
 	},
 
-	/* The radius of the corner at the point chosen of the road selected: an arc between its two straight parts. */
-	RoadFields: function (holder, object) {
-		var self = this;
+	/* The radius of the corner at the point chosen of the road selected: an arc between its two straight parts (a field of FieldList). */
+	RoadFields: function (object) {
 		var index = this.Own().RoadPoint;
 		var road = object && object.Traits && object.Traits.Road ? this.RoadOf() : null;
-		var label = document.createElement('label');
-		var name = document.createElement('span');
-		var input = document.createElement('input');
+		if (!road || index === null || index === undefined || index >= road.Points.length) return [];
 
-		if (!road || index === null || index === undefined || index >= road.Points.length) return;
-
-		label.className = 'elemenx-scene-editor-field';
-		name.textContent = Elemenx.Locale.Text('graphics.sceneEditor.pointRadius', {point: index + 1});
-		input.type = 'number';
-		input.min = '0';
-		input.value = String(road.Radii[index] || 0);
-
-		input.setAttribute('data-field', 'PointRadius');
-
-		input.addEventListener('change', function () {
-			road.Radii[index] = Math.max(0, Number(input.value) || 0);
-
-			self.Change(self.Selected, {Radii: road.Radii});
-		});
-
-		label.appendChild(name);
-		label.appendChild(input);
-		holder.appendChild(label);
+		return [{ID: 'road:' + index, Key: 'PointRadius', Index: index, Trait: '', Title: Elemenx.Locale.Text('graphics.sceneEditor.pointRadius', {point: index + 1}), Value: road.Radii[index] || 0, Shown: String(road.Radii[index] || 0), Bool: false, Number: true}];
 	},
 
 	/* The road selected over the view, its points and the middles of its parts to drag; and the road being drawn. */
@@ -1003,6 +1303,13 @@ Elemenx.Component('SceneEditor', {
 	 * The graphs the selected object has to edit under the view: the look of its Blueprint, the World of a ground and the graph
 	 * of its step picked in it (the relief of Relief, the rule of Scatter), the rule of a Scatter of its own.
 	 */
+	/* The kinds of graphs as tabs (Tabs). */
+	GraphTabs: function () {
+		return this.GraphKinds().map(function (kind) {
+			return {ID: kind.ID, Label: Elemenx.Locale.Text(kind.Key)};
+		});
+	},
+
 	GraphKinds: function () {
 		var object = this.Found(this.Selected);
 		var step = this.WorldStep();
@@ -1211,10 +1518,9 @@ Elemenx.Component('SceneEditor', {
 		});
 	},
 
-	Tuned: function (event) {
+	Tuned: function (key, value) {
 		var owner = this.Owner();
-		var key = event.target.getAttribute('data-parameter');
-		var text = event.target.value;
+		var text = String(value === undefined || value === null ? '' : value);
 		var parameters = Object.assign({}, owner && owner.Parameters || {});
 
 		parameters[key] = /^#/.test(text) ? text : text.indexOf(',') !== -1 ? text.split(',').map(Number) : text === 'true' || text === 'false' ? text === 'true' : isNaN(Number(text)) ? text : Number(text);
@@ -1277,8 +1583,8 @@ Elemenx.Component('SceneEditor', {
 		this.SketchItems();
 	},
 
-	Snapped: function (event) {
-		this.Snap = !!event.target.checked;
+	Snapped: function (checked) {
+		this.Snap = !!(checked && checked.target ? checked.target.checked : checked);
 	},
 
 	/* Play */
@@ -1457,10 +1763,21 @@ Elemenx.Component('SceneEditor', {
 		var own = this.Own();
 		var drag = own.Drag;
 		var scene = own.Scene;
+		var menu;
 
 		own.Drag = null;
 
 		if (!drag || !scene) return;
+
+		/* The right button that did not look round: the context menu at it. */
+		if (drag.Kind === 'look' && Math.abs(event.clientX - drag.X) + Math.abs(event.clientY - drag.Y) < 4) {
+			menu = this.$Ref('Context', true);
+
+			if (menu)
+				menu.Show(event.target, event.clientX, event.clientY);
+
+			return;
+		}
 
 		if (drag.Kind === 'sketch') {
 			this.SketchUp(event);
@@ -1485,8 +1802,152 @@ Elemenx.Component('SceneEditor', {
 			this.Changed(drag.Before);
 	},
 
+	/*
+	 * The right button opens the context menu as Unreal does: when it did not look round (the menu of the system is never
+	 * the scene's; a long press of a finger opens it by ContextMenu).
+	 */
 	Menu: function (event) {
 		event.preventDefault();
+		event.stopPropagation();
+	},
+
+	/* The fingers on the view (ViewTouch): one edits, two move the camera; Hand gives one finger to the camera too. */
+	Fingers: function () {
+		var own = this.Own();
+		var self = this;
+
+		if (!own.Touch) {
+			own.Touch = this.$Service('ViewTouch').Make({
+				Edit: {Down: function (event) {
+					self.Down(event);
+				}, Move: function (event) {
+					self.Move(event);
+				}, Up: function (event) {
+					self.Up(event);
+				}},
+				Camera: function (gesture) {
+					if (own.Scene)
+						self.$Service('ViewTouch').Orbit(own.Scene, gesture);
+				},
+				Abort: function () {
+					self.Abort();
+				},
+				OneFinger: function () {
+					return !!self.Hand;
+				}
+			});
+		}
+
+		return own.Touch;
+	},
+
+	TouchDown: function (event) {
+		this.Fingers().Down(event);
+	},
+
+	TouchMove: function (event) {
+		this.Fingers().Move(event);
+	},
+
+	TouchUp: function (event) {
+		this.Fingers().Up(event);
+	},
+
+	/* What a press began, let go as it was (a second finger came to it): a move of the gizmo undone, a sketch just begun dropped. */
+	Abort: function () {
+		var own = this.Own();
+		var drag = own.Drag;
+		var draft = own.Draft;
+		var kind = draft ? this.SketchKind(draft.Type) : '';
+
+		own.Drag = null;
+
+		if (!drag || !own.Scene) return;
+
+		if (drag.Kind === 'sketch' && kind === 'stroke') own.Draft = null;
+		else if (drag.Kind === 'sketch' && kind === 'circle') own.Draft = draft.Source ? {Type: draft.Type, Source: draft.Source, Radius: draft.Radius} : null;
+
+		if (drag.Before && drag.Moved)
+			this.Recall(drag.Before);
+
+		this.Fields();
+		this.Gizmo();
+	},
+
+	Handed: function (event) {
+		this.Hand = !!event.Hand;
+	},
+
+	/* The actions of the view: in the bar over it (ViewActions) and in its context menu. */
+	Actions: function () {
+		var object = this.Found(this.Selected);
+		var list = [];
+
+		if (this.Tool === 'sketch' || this.Tool === 'road') {
+			list.push({ID: 'done', Icon: 'check', Label: Elemenx.Locale.Text('graphics.viewActions.done')});
+			list.push({ID: 'cancel', Icon: 'close', Label: Elemenx.Locale.Text('graphics.viewActions.cancel')});
+		}
+
+		list.push({ID: 'frame', Icon: 'maximize', Label: Elemenx.Locale.Text('graphics.viewActions.frame'), Disabled: !object || !object.World});
+
+		if (!this.Space())
+			list.push({ID: 'drop', Icon: 'arrow-down', Label: Elemenx.Locale.Text('graphics.viewActions.drop'), Disabled: !object});
+
+		list.push({ID: 'duplicate', Icon: 'copy', Label: Elemenx.Locale.Text('graphics.viewActions.duplicate'), Disabled: !object});
+		list.push({ID: 'delete', Icon: 'delete', Label: Elemenx.Locale.Text('graphics.viewActions.delete'), Disabled: !object, Danger: true});
+
+		return list;
+	},
+
+	Acted: function (event) {
+		var own = this.Own();
+		var id = event.ID || event;
+
+		if (id === 'done' && this.Tool === 'road') this.RoadKey({code: 'Enter'});
+		else if (id === 'cancel' && this.Tool === 'road') this.RoadKey({code: 'Escape'});
+		else if (id === 'done') this.SketchEnd();
+		else if (id === 'cancel') own.Draft = null;
+		else if (id === 'frame') this.Frame();
+		else if (id === 'drop') this.Drop();
+		else if (id === 'duplicate') this.Duplicate();
+		else if (id === 'delete' && this.Selected) this.TreePicked({Item: {ID: 'delete'}});
+
+		this.Gizmo();
+	},
+
+	/* A context menu opens on what is under it: that is selected first. */
+	MenuOpened: function (event) {
+		var scene = this.Own().Scene;
+		if (scene && event.Target && event.Target.getAttribute && !event.Target.getAttribute('data-handle'))
+			this.Select(scene.Pick(event.X, event.Y, true));
+	},
+
+	MenuPicked: function (event) {
+		this.Acted({ID: event.Item.ID});
+	},
+
+	/* The view looks at the selected object. */
+	Frame: function () {
+		var scene = this.Own().Scene;
+		var object = this.Found(this.Selected);
+		if (!scene || !object || !object.World) return;
+
+		scene.SetViewpoint({Target: object.World.slice(), Yaw: scene.Viewpoint().Yaw, Pitch: Math.max(0.2, scene.Viewpoint().Pitch), Distance: Math.max(3, (object.Size || 1) * 6)});
+	},
+
+	/* The selected object down on the ground. */
+	Drop: function () {
+		if (this.Found(this.Selected) && !this.Space())
+			this.Change(this.Selected, {Lift: 0});
+	},
+
+	/* A copy of the selected object beside it; in space round the same body, a little farther on its orbit. */
+	Duplicate: function () {
+		var object = this.Found(this.Selected);
+		if (!object) return;
+
+		if (this.Space()) this.Add(object.Kind, {Parent: object.Parent, Name: object.Values.Name, Traits: this.Copied(object.Traits)});
+		else this.Add(object.Kind, Object.assign({}, object.Values, {ID: undefined, X: (Number(object.Values.X) || 0) + 1}));
 	},
 
 	/* The axes of the view over the ground: ahead, to the right, from its yaw (the eye looks along -Z at yaw 0). */
@@ -1612,9 +2073,7 @@ Elemenx.Component('SceneEditor', {
 		if ((event.ctrlKey || event.metaKey) && event.code === 'KeyD' && object) {
 			event.preventDefault();
 
-			/* In space the copy goes round the same body, a little farther on its orbit. */
-			if (this.Space()) this.Add(object.Kind, {Parent: object.Parent, Name: object.Values.Name, Traits: this.Copied(object.Traits)});
-			else this.Add(object.Kind, Object.assign({}, object.Values, {ID: undefined, X: (Number(object.Values.X) || 0) + 1}));
+			this.Duplicate();
 
 			return;
 		}
@@ -1632,13 +2091,13 @@ Elemenx.Component('SceneEditor', {
 		}
 
 		if (event.code === 'KeyF' && object && object.World) {
-			own.Scene.SetViewpoint({Target: object.World.slice(), Yaw: own.Scene.Viewpoint().Yaw, Pitch: Math.max(0.2, own.Scene.Viewpoint().Pitch), Distance: Math.max(3, (object.Size || 1) * 6)});
+			this.Frame();
 
 			return;
 		}
 
-		if (event.code === 'End' && object && !this.Space())
-			this.Change(this.Selected, {Lift: 0});
+		if (event.code === 'End' && object)
+			this.Drop();
 	},
 
 	Copied: function (traits) {
@@ -1784,8 +2243,8 @@ Elemenx.Component('SceneEditor', {
 		this.SaveSketch(sketch);
 	},
 
-	SketchPicked: function (event) {
-		this.SketchType = event.target.value;
+	SketchPicked: function (value) {
+		this.SketchType = (value && value.target ? value.target.value : value);
 		this.Own().Draft = null;
 	},
 
@@ -1987,82 +2446,52 @@ Elemenx.Component('SceneEditor', {
 		this.AddItem({Type: draft.Type, Points: draft.Points});
 	},
 
-	/* The items of the layer in hand, each with its fields and a button that takes it away. */
+	/* The items of the layer in hand, each with its fields and a button that takes it away: the list the inspector shows (ItemList). */
 	SketchItems: function () {
 		var self = this;
-		var holder = this.$Ref('Items');
-		var sketch;
 		var layer;
 
-		if (!holder) return;
+		if (this.Tool !== 'sketch' || !this.Ground()) {
+			this.ItemList = [];
 
-		holder.textContent = '';
+			return;
+		}
 
-		if (this.Tool !== 'sketch' || !this.Ground()) return;
+		layer = this.Layer(this.SketchOf());
 
-		sketch = this.SketchOf();
-		layer = this.Layer(sketch);
-
-		layer.Items.forEach(function (item, index) {
-			var box = document.createElement('div');
-			var head = document.createElement('div');
-			var remove = document.createElement('button');
-
-			box.className = 'elemenx-scene-editor-item';
-
-			box.setAttribute('data-item', item.ID);
-
-			head.className = 'elemenx-scene-editor-item-head';
-			head.textContent = item.ID;
-			remove.type = 'button';
-			remove.textContent = '×';
-
-			remove.setAttribute('data-remove', item.ID);
-
-			remove.addEventListener('click', function () {
-				var copy = self.SketchOf();
-
-				self.Layer(copy).Items.splice(index, 1);
-				self.SaveSketch(copy);
-			});
-
-			head.appendChild(remove);
-			box.appendChild(head);
-
-			Object.keys(Object.assign({Strength: 1}, self.SketchFields[item.Type] || {})).forEach(function (key) {
-				var label = document.createElement('label');
-				var name = document.createElement('span');
-				var input = document.createElement('input');
-
-				label.className = 'elemenx-scene-editor-field';
-				name.textContent = key;
-				input.value = item[key] === undefined ? key === 'Strength' ? 1 : '' : String(item[key]);
-
-				input.setAttribute('data-field', key);
-
-				input.addEventListener('change', function () {
-					var copy = self.SketchOf();
-					var target = self.Layer(copy).Items[index];
-
-					/* Texts stay texts (a biome, a role, a team, names of shapes by commas), the rest are numbers. */
-					if (key === 'Shapes') target[key] = input.value.split(',').map(function (name) {
-						return name.trim();
-					}).filter(Boolean);
-					else target[key] = typeof (self.SketchFields[item.Type] || {})[key] === 'string' ? input.value : Number(input.value) || 0;
-
-					if (key === 'Biome' && self.$Service('SceneBiomes').Has(input.value))
-						target.Palette = self.$Service('SceneBiomes').Get(input.value).Ground;
-
-					self.SaveSketch(copy);
-				});
-
-				label.appendChild(name);
-				label.appendChild(input);
-				box.appendChild(label);
-			});
-
-			holder.appendChild(box);
+		this.ItemList = layer.Items.map(function (item, index) {
+			return {ID: item.ID, Index: index, Fields: Object.keys(Object.assign({Strength: 1}, self.SketchFields[item.Type] || {})).map(function (key) {
+				return {Key: key, Shown: item[key] === undefined ? key === 'Strength' ? '1' : '' : String(item[key])};
+			})};
 		});
+	},
+
+	/* An item of the sketch taken away. */
+	ItemRemoved: function (index) {
+		var copy = this.SketchOf();
+
+		this.Layer(copy).Items.splice(index, 1);
+		this.SaveSketch(copy);
+	},
+
+	/* A field of an item of the sketch changed: texts stay texts (a biome, a role, a team, names of shapes by commas), the rest are numbers. */
+	ItemChanged: function (index, key, given) {
+		var copy = this.SketchOf();
+		var target = this.Layer(copy).Items[index];
+		var item = this.Layer(this.SketchOf()).Items[index];
+		var text = String(given === undefined || given === null ? '' : given);
+
+		if (!target) return;
+
+		if (key === 'Shapes') target[key] = text.split(',').map(function (name) {
+			return name.trim();
+		}).filter(Boolean);
+		else target[key] = typeof (this.SketchFields[item.Type] || {})[key] === 'string' ? text : Number(text) || 0;
+
+		if (key === 'Biome' && this.$Service('SceneBiomes').Has(text))
+			target.Palette = this.$Service('SceneBiomes').Get(text).Ground;
+
+		this.SaveSketch(copy);
 	},
 
 	/* The sketch drawn over the view, on the ground: lines and strokes, areas closed, circles, and what is being drawn. */

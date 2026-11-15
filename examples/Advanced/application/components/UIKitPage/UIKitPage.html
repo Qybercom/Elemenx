@@ -219,7 +219,7 @@
 					</div>
 					<div class="elemenx-container ui-kit-theme-actions">
 						<Button Label="Show Mine" Icon="color" Variant="primary" (click)="UseMine" />
-						<button class="elemenx-button secondary medium" type="button" *copy="{Text: MineCSS(MineAccent, MineBackground, MineRadius, MineControl), Toast: 'Theme copied'}"><Icon Name="copy" /><span>Copy CSS</span></button>
+						<Button Variant="secondary" Icon="copy" Label="Copy CSS" *copy="{Text: MineCSS(MineAccent, MineBackground, MineRadius, MineControl), Toast: 'Theme copied'}" />
 					</div>
 					<pre class="elemenx-code ui-kit-theme-css">{{MineCSS(MineAccent, MineBackground, MineRadius, MineControl)}}</pre>
 				</div>
@@ -409,7 +409,7 @@
 						<Field Label="City" Name="City"><Select [options]="ProfileCities" [value]="Profile.Get('City').Value" /></Field>
 						<div class="ui-kit-phone" *for="phone of Profile.Get('Phones').Controls" *key="phone.ID">
 							<Field Label="Phone" [control]="phone"><Input /></Field>
-							<button class="elemenx-button ghost small icon-only" type="button" title="Remove the phone" [attribute.data-index]="$index" (click)="RemovePhone"><Icon Name="delete" /></button>
+							<Button Variant="ghost" Size="small" Icon="delete" Title="Remove the phone" (click)="RemovePhone($index)" />
 						</div>
 						<div class="ui-kit-row"><Button Label="Add a phone" Icon="add" (click)="AddPhone" /><Button Type="submit" Variant="primary" Label="Save" /></div>
 						<code class="ui-kit-profile-value">{{ProfileState}}</code>
@@ -594,7 +594,7 @@
 			<div class="ui-kit-row" id="ui-kit-commands">
 				<Button Label="Command palette" Icon="search" (click)="OpenPalette" />
 				<kbd class="elemenx-kbd" id="ui-kit-palette-keys">{{PaletteKeys}}</kbd>
-				<button class="elemenx-button secondary medium" type="button" *hotkey="{Keys: 'Alt+N', Description: 'Show a toast', Group: 'Demo'}" (click)="HotkeyToast">New toast</button>
+				<Button Variant="secondary" Label="New toast" *hotkey="{Keys: 'Alt+N', Description: 'Show a toast', Group: 'Demo'}" (click)="HotkeyToast" />
 				<Button Label="Open drawer" Icon="panel-right" (click)="OpenDrawer" />
 				<Button Icon="menu" Title="Menu" Variant="ghost" (click)="OpenMenu" />
 				<RadioGroup Variant="segmented" [options]="MenuSides" [value]="MenuSide" (change)="MenuSideChanged" />
@@ -616,7 +616,7 @@
 					<h5>Copy</h5>
 					<div class="elemenx-container ui-kit-copy" id="ui-kit-copy">
 						<Input [value]="ApiToken" ReadOnly="true" />
-						<button class="elemenx-button secondary medium" type="button" aria-label="Copy the token" *copy="{Text: ApiToken, Toast: 'Token copied'}"><Icon Name="copy" /></button>
+						<Button Variant="secondary" Icon="copy" AriaLabel="Copy the token" *copy="{Text: ApiToken, Toast: 'Token copied'}" />
 					</div>
 					<h5>Shortcuts</h5>
 					<ul class="elemenx-list ui-kit-shortcuts">
@@ -749,7 +749,7 @@
 						<li *for="permission of PermissionList" *key="permission.Name">
 							<span>{{permission.Name}}</span>
 							<span [class]="['elemenx-badge', permission.State === 'granted' ? 'success' : permission.State === 'denied' ? 'danger' : '']">{{permission.State}}</span>
-							<button class="elemenx-button ghost small" type="button" [attribute.data-name]="permission.Name" (click)="AskPermission">Ask</button>
+							<Button Variant="ghost" Size="small" Label="Ask" (click)="AskPermission(permission.Name)" />
 						</li>
 					</ul>
 				</div>
@@ -760,7 +760,7 @@
 						<li *for="device of Devices" *key="device.Name">
 							<span>{{device.Name}}</span>
 							<span [class]="['elemenx-badge', device.Supported ? 'success' : '']">{{device.Supported ? 'supported' : 'not here'}}</span>
-							<button class="elemenx-button ghost small" type="button" [attribute.data-name]="device.Name" (click)="UseDevice">{{device.Action}}</button>
+							<Button Variant="ghost" Size="small" [Label]="device.Action" (click)="UseDevice(device.Name)" />
 						</li>
 					</ul>
 				</div>
@@ -1521,7 +1521,7 @@
 				</div>
 				<div class="ui-kit-row">
 					<Input Icon="search" Placeholder="Find a node" Clearable="true" [value]="TopologySearch" (input)="TopologyFound" />
-					<Button Label="Show it" Icon="focus" Variant="ghost" [disabled]="!TopologySearch" (click)="TopologyShowFound" />
+					<Button Label="Show it" Icon="target" Variant="ghost" [disabled]="!TopologySearch" (click)="TopologyShowFound" />
 					<Toggle Label="Legend" [checked]="TopologyLegend" (change)="TopologySwitch('TopologyLegend', $event)" />
 					<Toggle Label="Minimap" [checked]="TopologyMinimap" (change)="TopologySwitch('TopologyMinimap', $event)" />
 					<Toggle Label="Read only" [checked]="TopologyReadOnly" (change)="TopologySwitch('TopologyReadOnly', $event)" />
@@ -1695,10 +1695,10 @@
 							</Window>
 							<Window *if="GameLoginOpen" class="game plain" Title="Sign in" X="300" Y="230" Width="320" Resizable="false" Minimizable="false" Maximizable="false" (close)="GameLoginClosed">
 								<div class="ui-kit-game-login">
-									<label class="ui-kit-game-label" for="ui-kit-game-id">ID</label>
-									<input id="ui-kit-game-id" class="elemenx-input elemenx-input-control ui-kit-game-field" type="text" autocomplete="username" />
-									<label class="ui-kit-game-label" for="ui-kit-game-password">Password</label>
-									<input id="ui-kit-game-password" class="elemenx-input elemenx-input-control ui-kit-game-field" type="password" autocomplete="current-password" />
+									<span class="ui-kit-game-label">ID</span>
+									<Input class="ui-kit-game-field" Label="ID" Autocomplete="username" />
+									<span class="ui-kit-game-label">Password</span>
+									<Input class="ui-kit-game-field" Type="password" Label="Password" Autocomplete="current-password" />
 								</div>
 								<div class="ui-kit-game-actions">
 									<Button Label="Log in" (click)="GameLoginClosed" />

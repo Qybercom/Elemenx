@@ -33,4 +33,4 @@ Value is the cutscenes by name ({Name: {Tracks, Restore, Skip, Loop}}, as Cutsce
 ## Tests
 
 - [creates a cutscene, adds what a film has at the playhead as ranges of its lanes, moves them, edits their fields, takes them away](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/CutsceneEditor/CutsceneEditor.test.js#L53) — `libraries/ElemenxGraphics/components/CutsceneEditor/CutsceneEditor.test.js`
-- [shows the Scene at the moment the playhead is at, keys the move of its target where the view is, asks for a camera there](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/CutsceneEditor/CutsceneEditor.test.js#L111) — `libraries/ElemenxGraphics/components/CutsceneEditor/CutsceneEditor.test.js`
+- [shows the Scene at the moment the playhead is at, keys the move of its target where the view is, asks for a camera there](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/CutsceneEditor/CutsceneEditor.test.js#L116) — `libraries/ElemenxGraphics/components/CutsceneEditor/CutsceneEditor.test.js`

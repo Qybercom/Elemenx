@@ -1,9 +1,9 @@
 <div class="elemenx-drawing-layers" [class.readonly]="!Editable()">
 	<div class="elemenx-drawing-layers-list" role="listbox" [attribute.aria-label]="$T('graphics.drawing.layers')">
 		<div class="elemenx-drawing-layer elemenx-focus-ring" role="option" tabindex="0" *for="layer of Rows()" *key="layer.ID" [class.current]="layer.ID === Current()" [class.hidden]="layer.Visible === false" [attribute.aria-selected]="layer.ID === Current() ? 'true' : 'false'" [attribute.data-layer]="layer.ID" (click)="Picked" (dblclick)="Rename" (keydown)="Key">
-			<button type="button" class="elemenx-drawing-layer-toggle elemenx-bare" [disabled]="!Editable()" [attribute.aria-pressed]="layer.Visible === false ? 'false' : 'true'" [attribute.title]="$T('graphics.drawing.visible')" [attribute.aria-label]="$T('graphics.drawing.visible')" (click)="Shown"><Icon [name]="layer.Visible === false ? 'eye-off' : 'eye'" Size="16" /></button>
-			<button type="button" class="elemenx-drawing-layer-toggle elemenx-bare" [disabled]="!Editable()" [attribute.aria-pressed]="layer.Locked ? 'true' : 'false'" [attribute.title]="$T('graphics.drawing.locked')" [attribute.aria-label]="$T('graphics.drawing.locked')" (click)="Locked"><Icon [name]="layer.Locked ? 'lock' : 'unlock'" Size="16" /></button>
-			<input class="elemenx-drawing-layer-field" *if="Renaming === layer.ID" [value]="layer.Name" [attribute.aria-label]="$T('graphics.drawing.rename')" (blur)="Named" (keydown)="Typed" />
+			<Button class="elemenx-drawing-layer-toggle" Variant="ghost" Size="small" [Disabled]="!Editable()" [Pressed]="layer.Visible !== false" [Title]="$T('graphics.drawing.visible')" [Icon]="layer.Visible === false ? 'eye-off' : 'eye'" (click)="Shown($event)" />
+			<Button class="elemenx-drawing-layer-toggle" Variant="ghost" Size="small" [Disabled]="!Editable()" [Pressed]="!!layer.Locked" [Title]="$T('graphics.drawing.locked')" [Icon]="layer.Locked ? 'lock' : 'unlock'" (click)="Locked($event)" />
+			<span class="elemenx-drawing-layer-field" *if="Renaming === layer.ID" (keydown)="Typed"><Input Size="small" [Label]="$T('graphics.drawing.rename')" [Value]="layer.Name" (change)="Named($event)" /></span>
 			<span class="elemenx-drawing-layer-name elemenx-ellipsis" *if="Renaming !== layer.ID">{{layer.Name}}</span>
 			<span class="elemenx-drawing-layer-count">{{Count(layer.Items)}}</span>
 		</div>

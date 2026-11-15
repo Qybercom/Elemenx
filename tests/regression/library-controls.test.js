@@ -23,7 +23,7 @@ describe('Contract: the controls and cards of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['Slider', 'Knob', 'DialPad', 'Ruler', 'NavList', 'Mixer', 'ThemeSwitch', 'PlanPicker', 'PostCard', 'ProfileCard', 'CommentCard', 'ProductCard', 'EmptyState', 'Chronicle', 'Toggle', 'service:Theme']);
+		Use(['Slider', 'Knob', 'DialPad', 'Ruler', 'NavList', 'Tree', 'Mixer', 'ThemeSwitch', 'PlanPicker', 'PostCard', 'ProfileCard', 'CommentCard', 'ProductCard', 'EmptyState', 'Chronicle', 'Toggle', 'service:Theme']);
 	});
 
 	beforeEach(function () {
@@ -547,5 +547,40 @@ describe('Contract: the controls and cards of ElemenxUI', function () {
 
 		expect(events).toEqual(['like {"Liked":true,"Likes":4}', 'follow {"Following":true}', 'mention {"Handle":"grace"}', 'tag {"Tag":"elemenx"}', 'add {"Color":"","Size":""}']);
 		expect(root.textContent).toContain('Add the first item.');
+	});
+
+	it('Tree chooses many items with Multiple: Ctrl and a press adds or takes one away, Shift and a press all from the last one', async function () {
+		var told = [];
+		var host = mount('<div><Tree Multiple="true" [items]="Items" (selection)="Chosen" /></div>', {
+			Items: [{ID: 'a', Label: 'A'}, {ID: 'b', Label: 'B'}, {ID: 'c', Label: 'C', Disabled: true}, {ID: 'd', Label: 'D'}],
+			Chosen: function (ids) {
+				told.push(ids);
+			}
+		});
+		var row;
+
+		await tick(20);
+
+		row = function (id) {
+			return host.$Element().querySelector('.elemenx-tree-row[data-id="' + id + '"]');
+		};
+
+		row('a').click();
+		row('b').dispatchEvent(new MouseEvent('click', {bubbles: true, ctrlKey: true}));
+
+		await tick(20);
+
+		expect(told[told.length - 1]).toEqual(['a', 'b']);
+		expect(host.$Element().querySelectorAll('.elemenx-tree-row.active')).toHaveLength(2);
+		expect(host.$Element().querySelector('.elemenx-tree-rows').getAttribute('aria-multiselectable')).toBe('true');
+
+		row('b').dispatchEvent(new MouseEvent('click', {bubbles: true, ctrlKey: true}));
+
+		expect(told[told.length - 1]).toEqual(['a']);
+
+		/* From the last one pressed (b) to this one, the disabled one passed by. */
+		row('d').dispatchEvent(new MouseEvent('click', {bubbles: true, shiftKey: true}));
+
+		expect(told[told.length - 1]).toEqual(['b', 'd']);
 	});
 });

@@ -34,7 +34,7 @@ Elemenx.Component('Blueprint', {
 	$StyleURL: 'Blueprint.css',
 	$Meta: {
 		Group: 'codes',
-		Icon: 'share-2',
+		Icon: 'share',
 		Description: 'The editor of a blueprint in the JSON of Flowprint: blocks, pins and links on a canvas, the types to add and the parameters of the graph.',
 		Events: {
 			change: 'The graph changed: the graph.',
@@ -58,6 +58,7 @@ Elemenx.Component('Blueprint', {
 	Value: null,
 	Type: 'flow',
 	Palette: true,
+	MenuItems: [],
 	ReadOnly: false,
 	EditCheck: null,
 	Errors: null,
@@ -72,6 +73,9 @@ Elemenx.Component('Blueprint', {
 
 	$OnCreate: function () {
 		var own = {Graph: null, Emitted: '', Selected: null, Link: null, Group: null, Chosen: [], Drag: null, Svg: null, Draft: null, Canvas: null, Problems: [], History: [], Future: [], Last: '', Clip: null};
+
+		/* A context menu opens only with items: the ones of what is pressed are made again as it opens (MenuOpened). Regression: it had none at first, and never opened. */
+		this.MenuItems = [{ID: 'fit', Label: Elemenx.Locale.Text('ui.blueprint.fit'), Icon: 'maximize'}];
 
 		this.Own = function () {
 			return own;
@@ -120,6 +124,22 @@ Elemenx.Component('Blueprint', {
 		canvas.addEventListener('pointerdown', function (event) {
 			self.Down(event);
 		});
+
+		/*
+		 * Regression: the canvas is a point the board moves; a press on an empty place of the board reached only the board,
+		 * so a frame could not be drawn there, nor a block being placed put there. The board hands it on.
+		 */
+		this.BoardDown = function (event) {
+			if (canvas.contains(event.target)) return;
+
+			self.Down(event);
+		};
+
+		window.setTimeout(function () {
+			var board = self.$Ref('Board', true);
+			if (board && board.Viewport)
+				board.Viewport().addEventListener('pointerdown', self.BoardDown);
+		}, 0);
 
 		canvas.addEventListener('pointermove', function (event) {
 			self.Move(event);
@@ -185,6 +205,11 @@ Elemenx.Component('Blueprint', {
 
 		if (own.Waiting)
 			own.Waiting.disconnect();
+
+		this.Unplace();
+
+		if (this.BoardDown && this.$Ref('Board', true))
+			this.$Ref('Board', true).Viewport().removeEventListener('pointerdown', this.BoardDown);
 	},
 
 	Blueprints: function () {
@@ -264,19 +289,89 @@ Elemenx.Component('Blueprint', {
 		return Array.isArray(value) ? value.join(', ') : value == null ? '' : String(value);
 	},
 
-	Filtered: function (event) {
-		this.Filter = event && event.target ? event.target.value : '';
+	Filtered: function (value) {
+		this.Filter = value && value.target ? value.target.value : value == null ? '' : String(value);
+	},
+
+	/* The types of a parameter, as options of its Select. */
+	TypeOptions: function () {
+		return this.ParameterTypes.map(function (type) {
+			return {Value: type, Label: type};
+		});
 	},
 
 	/* A type of the palette: a block of it in the middle of the view. */
+	/*
+	 * A type of the palette pressed: its block follows the pointer over the board as it would be (a preview), till a press
+	 * puts it there; Escape or the right button lets it go. It starts in the middle of the view.
+	 */
 	Picked: function (type) {
+		var self = this;
+		var own = this.Own();
 		var board = this.$Ref('Board', true);
 		var box = board ? board.Viewport().getBoundingClientRect() : null;
-		var middle = box ? board.ToWorld(box.left + box.width / 2, box.top + box.height / 2) : {X: 40, Y: 40};
+		var ghost;
 
-		if (!this.Can('add', {Type: type})) return;
+		if (!this.Can('add', {Type: type}) || !own.Canvas) return;
 
-		this.Select(this.Add(type, Math.round(middle.X - 80), Math.round(middle.Y - 30)).id);
+		this.Unplace();
+
+		ghost = document.createElement('div');
+		ghost.className = 'elemenx-blueprint-ghost';
+
+		ghost.setAttribute('data-type', type);
+
+		ghost.textContent = type;
+
+		own.Canvas.appendChild(ghost);
+
+		own.Placing = {Type: type, Element: ghost, Follow: function (event) {
+			self.Placed(event, false);
+		}};
+
+		document.addEventListener('pointermove', own.Placing.Follow);
+
+		this.Placed(box ? {clientX: box.left + box.width / 2, clientY: box.top + box.height / 2} : {clientX: 0, clientY: 0}, false);
+	},
+
+	/* The preview of the block being placed at the pointer; put = true: the block put there. */
+	Placed: function (event, put) {
+		var own = this.Own();
+		var placing = own.Placing;
+		var world;
+
+		if (!placing) return;
+
+		world = this.Local(event);
+		placing.Element.style.left = Math.round(world.X - 80) + 'px';
+		placing.Element.style.top = Math.round(world.Y - 14) + 'px';
+
+		if (!put) return;
+
+		this.Unplace();
+		this.Select(this.Add(placing.Type, Math.round(world.X - 80), Math.round(world.Y - 14)).id);
+	},
+
+	/* A point of the page in the frame of the canvas, where the blocks stand (the board moved and zoomed). */
+	Local: function (event) {
+		var own = this.Own();
+		var board = this.$Ref('Board', true);
+		var zoom = board ? Number(board.Zoom) || 1 : 1;
+		var box = own.Canvas ? own.Canvas.getBoundingClientRect() : {left: 0, top: 0};
+
+		return {X: (event.clientX - box.left) / zoom, Y: (event.clientY - box.top) / zoom};
+	},
+
+	/* No block being placed any more. */
+	Unplace: function () {
+		var own = this.Own();
+		if (!own.Placing) return;
+
+		document.removeEventListener('pointermove', own.Placing.Follow);
+
+		own.Placing.Element.remove();
+
+		own.Placing = null;
 	},
 
 	/* The graph */
@@ -826,7 +921,7 @@ Elemenx.Component('Blueprint', {
 	/* A field of a parameter: its value read by its type (numbers by commas for a vector). */
 	SetParameter: function (index, field, event) {
 		var parameter = this.Own().Graph.parameters[index];
-		var text = event && event.target ? event.target.value : '';
+		var text = event && event.target ? event.target.value : event == null ? '' : String(event);
 		var size;
 
 		if (!parameter) return;
@@ -835,6 +930,10 @@ Elemenx.Component('Blueprint', {
 		if (!this.Can('parameter', {Change: 'set', Index: index, Field: field})) {
 			if (event && event.target)
 				event.target.value = field === 'value' ? this.ValueText(parameter.value) : parameter[field];
+
+			this.Parameters = [];
+
+			this.Refresh();
 
 			return;
 		}
@@ -1323,6 +1422,150 @@ Elemenx.Component('Blueprint', {
 		});
 	},
 
+	/* The context menu */
+
+	/*
+	 * Its items for what the right button pressed (ContextMenu open): an empty place (blocks to add there, paste, choose
+	 * all, arrange, fit), a block (copy, duplicate, unlink, delete, group what is chosen), a link (delete), a frame of a
+	 * group (ungroup, delete with what is in it), a pin (unlink).
+	 */
+	MenuOpened: function (event) {
+		var own = this.Own();
+		var target = event.Target;
+		var pin = target && target.closest ? target.closest('.elemenx-blueprint-pin') : null;
+		var element = target && target.closest ? target.closest('.elemenx-blueprint-block') : null;
+		var frame = target && target.closest && !element ? target.closest('.elemenx-blueprint-frame') : null;
+		var link = target && target.getAttribute ? target.getAttribute('data-link') : null;
+		var locked = this.Locked();
+		var chosen;
+		var id;
+
+		this.Unplace();
+
+		own.Menu = {World: this.Local({clientX: event.X, clientY: event.Y}), Pin: pin ? pin.getAttribute('data-pin') : '', Link: link || '', Group: frame ? frame.getAttribute('data-group') : ''};
+
+		if (pin) {
+			this.MenuItems = [{ID: 'unlink-pin', Label: Elemenx.Locale.Text('ui.blueprint.unlink'), Icon: 'close', Disabled: locked}];
+
+			return;
+		}
+
+		if (element) {
+			id = element.getAttribute('data-id');
+
+			if (own.Chosen.indexOf(id) === -1 && own.Selected !== id)
+				this.Select(id);
+
+			chosen = own.Chosen.length ? own.Chosen.length : 1;
+
+			this.MenuItems = [
+				{ID: 'copy', Label: Elemenx.Locale.Text('ui.blueprint.copy'), Icon: 'copy', Shortcut: 'Ctrl+C'},
+				{ID: 'duplicate', Label: Elemenx.Locale.Text('ui.blueprint.duplicate'), Icon: 'copy', Disabled: locked},
+				{ID: 'unlink', Label: Elemenx.Locale.Text('ui.blueprint.unlinkAll'), Icon: 'close', Disabled: locked},
+				{ID: 'group', Label: Elemenx.Locale.Text('ui.blueprint.groupChosen'), Icon: 'layers', Disabled: locked || chosen < 2},
+				{Separator: true},
+				{ID: 'delete', Label: Elemenx.Locale.Text('ui.blueprint.delete'), Icon: 'delete', Shortcut: 'Delete', Danger: true, Disabled: locked}
+			];
+
+			return;
+		}
+
+		if (link) {
+			this.Select(link);
+
+			this.MenuItems = [{ID: 'delete', Label: Elemenx.Locale.Text('ui.blueprint.deleteLink'), Icon: 'delete', Danger: true, Disabled: locked}];
+
+			return;
+		}
+
+		if (frame) {
+			this.Select(own.Menu.Group);
+
+			this.MenuItems = [
+				{ID: 'ungroup', Label: Elemenx.Locale.Text('ui.blueprint.ungroup'), Icon: 'layers', Disabled: locked},
+				{ID: 'delete-group', Label: Elemenx.Locale.Text('ui.blueprint.deleteGroup'), Icon: 'delete', Danger: true, Disabled: locked}
+			];
+
+			return;
+		}
+
+		this.MenuItems = [
+			{ID: 'add', Label: Elemenx.Locale.Text('ui.blueprint.add'), Icon: 'add', Disabled: locked, Items: this.Groups(this.Kind, '').map(function (group) {
+				return {ID: 'group:' + group.Name, Label: group.Name, Items: group.Types.map(function (type) {
+					return {ID: 'add:' + type, Label: type};
+				})};
+			})},
+			{ID: 'paste', Label: Elemenx.Locale.Text('ui.blueprint.paste'), Icon: 'copy', Shortcut: 'Ctrl+V', Disabled: locked || !(this.Blueprints().Clip || own.Clip)},
+			{ID: 'all', Label: Elemenx.Locale.Text('ui.blueprint.all'), Shortcut: 'Ctrl+A'},
+			{Separator: true},
+			{ID: 'arrange', Label: Elemenx.Locale.Text('ui.blueprint.arrange'), Icon: 'layout', Disabled: locked},
+			{ID: 'fit', Label: Elemenx.Locale.Text('ui.blueprint.fit'), Icon: 'maximize'}
+		];
+	},
+
+	MenuPicked: function (event) {
+		var own = this.Own();
+		var item = event && event.Item ? event.Item : event;
+		var id = String(item && item.ID || '');
+		var menu = own.Menu || {World: {X: 40, Y: 40}};
+		var graph = own.Graph;
+		var ids = own.Chosen.length ? own.Chosen.slice() : own.Selected ? [own.Selected] : [];
+		var self = this;
+
+		if (id.indexOf('add:') === 0) {
+			if (this.Can('add', {Type: id.slice(4)}))
+				this.Select(this.Add(id.slice(4), Math.round(menu.World.X - 80), Math.round(menu.World.Y - 14)).id);
+		}
+		else if (id === 'paste') {
+			this.Paste();
+		}
+		else if (id === 'all') {
+			this.SelectMany(graph.blocks.map(function (block) {
+				return block.id;
+			}));
+		}
+		else if (id === 'arrange') {
+			this.Arrange();
+		}
+		else if (id === 'fit') {
+			this.Fit();
+		}
+		else if (id === 'copy') {
+			this.Copy();
+		}
+		else if (id === 'duplicate') {
+			this.Copy();
+			this.Paste();
+		}
+		else if (id === 'group') {
+			this.Group(ids);
+		}
+		else if (id === 'ungroup') {
+			this.Ungroup(menu.Group);
+		}
+		else if (id === 'delete-group') {
+			this.RemoveGroup(menu.Group, true);
+		}
+		else if (id === 'delete') {
+			(menu.Link ? [menu.Link] : ids).forEach(function (one) {
+				self.Remove(one);
+			});
+		}
+		else if (id === 'unlink' || id === 'unlink-pin') {
+			graph.links.filter(function (link) {
+				var pins = [link.p1, link.p2];
+
+				return id === 'unlink-pin' ? pins.indexOf(menu.Pin) !== -1 : ids.some(function (block) {
+					return String(link.p1).indexOf(block + '-') === 0 || String(link.p2).indexOf(block + '-') === 0;
+				});
+			}).map(function (link) {
+				return link.id;
+			}).forEach(function (link) {
+				self.Remove(link);
+			});
+		}
+	},
+
 	/* Pointers */
 
 	Down: function (event) {
@@ -1337,6 +1580,17 @@ Elemenx.Component('Blueprint', {
 		var typing = /^(INPUT|SELECT|TEXTAREA|OPTION)$/.test(event.target.tagName);
 		var frameHead = event.target.closest && !element ? event.target.closest('.elemenx-blueprint-frame-head') : null;
 		var found;
+
+		/* A block being placed: put where pressed (the right button lets it go). */
+		if (own.Placing) {
+			event.preventDefault();
+			event.stopPropagation();
+
+			if (event.button === 0) this.Placed(event, true);
+			else this.Unplace();
+
+			return;
+		}
 
 		if (event.button !== 0) return;
 
@@ -1378,22 +1632,24 @@ Elemenx.Component('Blueprint', {
 		}
 
 		if (!block) {
-			/* Shift and a drag on an empty place: a frame that chooses what it takes in. */
-			if (event.shiftKey) {
-				event.preventDefault();
-				event.stopPropagation();
+			/*
+			 * A drag on an empty place: a frame that chooses what it takes in (Shift or Ctrl add to what is chosen); a press
+			 * that does not move chooses nothing. The middle button, Space or the wheel move the board.
+			 */
+			event.preventDefault();
+			event.stopPropagation();
 
-				own.Lasso = {Start: board ? board.ToWorld(event.clientX, event.clientY) : {X: event.offsetX, Y: event.offsetY}, Element: document.createElement('div')};
-				own.Lasso.Element.className = 'elemenx-blueprint-lasso';
+			own.Lasso = {Start: board ? board.ToWorld(event.clientX, event.clientY) : {X: event.offsetX, Y: event.offsetY}, Element: document.createElement('div'), Add: event.shiftKey || event.ctrlKey || event.metaKey};
+			own.Lasso.Element.className = 'elemenx-blueprint-lasso';
 
-				own.Canvas.appendChild(own.Lasso.Element);
+			own.Canvas.appendChild(own.Lasso.Element);
+
+			try {
 				own.Canvas.setPointerCapture(event.pointerId);
-
-				return;
 			}
-
-			if (own.Selected || own.Link || own.Group || own.Chosen.length)
-				this.Select(null);
+			catch (error) {
+				/* A synthetic event has no pointer to take. */
+			}
 
 			return;
 		}
@@ -1477,10 +1733,30 @@ Elemenx.Component('Blueprint', {
 
 		if (!own.Draft || !own.Draft.Path) return;
 
+		this.Aimed(event);
+
 		world = board ? board.ToWorld(event.clientX, event.clientY) : {X: event.offsetX, Y: event.offsetY};
 
 		if (own.Draft.Pin.direction && own.Draft.Pin.direction.out) own.Draft.Path.setAttribute('d', this.Curve(own.Draft.Point, world));
 		else own.Draft.Path.setAttribute('d', this.Curve(world, own.Draft.Point));
+	},
+
+	/* The pin under a wire being drawn: lit (target), and told whether it takes it (bad when it does not). */
+	Aimed: function (event) {
+		var own = this.Own();
+		var under = document.elementFromPoint ? document.elementFromPoint(event.clientX, event.clientY) : null;
+		var pin = under && under.closest ? under.closest('.elemenx-blueprint-pin') : null;
+		var other = pin ? this.Blueprints().PinById(own.Graph, pin.getAttribute('data-pin')) : null;
+
+		if (own.Aim && own.Aim !== pin)
+			own.Aim.classList.remove('target', 'bad');
+
+		own.Aim = pin;
+
+		if (!pin) return;
+
+		pin.classList.add('target');
+		pin.classList.toggle('bad', !other || other.Block === own.Draft.Block || !!other.Pin.direction === !!own.Draft.Pin.direction && !!(other.Pin.direction && other.Pin.direction.out) === !!(own.Draft.Pin.direction && own.Draft.Pin.direction.out));
 	},
 
 	Up: function (event) {
@@ -1497,6 +1773,12 @@ Elemenx.Component('Blueprint', {
 		own.Draft = null;
 		own.Lasso = null;
 
+		if (own.Aim) {
+			own.Aim.classList.remove('target', 'bad');
+
+			own.Aim = null;
+		}
+
 		if (drag) {
 			if (drag.Moved)
 				this.Changed();
@@ -1508,14 +1790,19 @@ Elemenx.Component('Blueprint', {
 		if (lasso) {
 			lasso.Element.remove();
 
-			if (lasso.End) {
-				this.SelectMany(own.Graph.blocks.filter(function (block) {
+			if (lasso.End && Math.abs(lasso.End.X - lasso.Start.X) + Math.abs(lasso.End.Y - lasso.Start.Y) > 3) {
+				this.SelectMany((lasso.Add ? own.Chosen.slice() : []).concat(own.Graph.blocks.filter(function (block) {
 					var box = self.BoxOf(block.id);
 
 					return box && box.Left >= Math.min(lasso.Start.X, lasso.End.X) && box.Right <= Math.max(lasso.Start.X, lasso.End.X) && box.Top >= Math.min(lasso.Start.Y, lasso.End.Y) && box.Bottom <= Math.max(lasso.Start.Y, lasso.End.Y);
 				}).map(function (block) {
 					return block.id;
-				}));
+				}).filter(function (id) {
+					return !lasso.Add || own.Chosen.indexOf(id) === -1;
+				})));
+			}
+			else if (!lasso.Add && (own.Selected || own.Link || own.Group || own.Chosen.length)) {
+				this.Select(null);
 			}
 
 			return;
@@ -1649,6 +1936,12 @@ Elemenx.Component('Blueprint', {
 		var chosen;
 
 		if (typing) return;
+
+		if (own.Placing && key === 'escape') {
+			this.Unplace();
+
+			return;
+		}
 
 		/* What only reads: all chosen, and copied. */
 		if (mod && key === 'a') {

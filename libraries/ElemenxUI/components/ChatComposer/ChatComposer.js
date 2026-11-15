@@ -10,6 +10,8 @@
  */
 Elemenx.Component('ChatComposer', {
 	$TemplateURL: 'ChatComposer.html',
+	/* [(Value)] on its tag follows what it tells as it is typed or moved. */
+	$Model: {Value: 'input'},
 	$StyleURL: 'ChatComposer.css',
 	$Meta: {
 		Group: 'social',

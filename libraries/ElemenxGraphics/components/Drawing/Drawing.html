@@ -1,15 +1,16 @@
 <div class="elemenx-drawing" [class.readonly]="!Editable()" [attribute.data-tool]="Tool">
 	<div class="elemenx-drawing-toolbar" role="toolbar" [attribute.aria-label]="$T('graphics.drawing.tools')" *if="Toolbar && Toolbar !== 'false' && Editable()">
 		<div class="elemenx-drawing-group">
-			<button type="button" class="elemenx-drawing-tool" *for="tool of Tools" *key="tool.ID" [class.active]="Tool === tool.ID" [attribute.data-tool]="tool.ID" [attribute.aria-pressed]="Tool === tool.ID ? 'true' : 'false'" [attribute.title]="$T(tool.Key)" [attribute.aria-label]="$T(tool.Key)" (click)="Pick"><Icon [name]="tool.Icon" Size="18" /></button>
+			<Button class="elemenx-drawing-tool" *for="tool of Tools" *key="tool.ID" Size="small" [Variant]="Tool === tool.ID ? 'secondary' : 'ghost'" [Pressed]="Tool === tool.ID" [Title]="$T(tool.Key)" [Icon]="tool.Icon" (click)="Picked(tool.ID)" />
 		</div>
 		<div class="elemenx-drawing-group elemenx-drawing-brush" *if="Tool === 'path'">
 			<Select Size="small" [label]="$T('graphics.drawing.brush')" [value]="Brush" [options]="BrushOptions()" (change)="Brushed" />
 		</div>
 		<div class="elemenx-drawing-group">
-			<label class="elemenx-drawing-color" [attribute.title]="$T('graphics.drawing.stroke')"><input type="color" class="elemenx-drawing-stroke" [value]="Stroke" [attribute.aria-label]="$T('graphics.drawing.stroke')" (change)="Stroked" /></label>
-			<label class="elemenx-drawing-color" [attribute.title]="$T('graphics.drawing.fill')"><input type="checkbox" class="elemenx-drawing-filled" [checked]="Fill && Fill !== 'none'" [attribute.aria-label]="$T('graphics.drawing.filled')" (change)="Unfilled" /><input type="color" class="elemenx-drawing-fill" [value]="Fill && Fill !== 'none' ? Fill : '#dbe7f5'" [attribute.aria-label]="$T('graphics.drawing.fill')" (change)="Filled" /></label>
-			<input type="number" class="elemenx-drawing-width" min="0.5" max="100" step="0.5" [value]="StrokeWidth" [attribute.title]="$T('graphics.drawing.width')" [attribute.aria-label]="$T('graphics.drawing.width')" (change)="Widened" />
+			<span class="elemenx-drawing-color" [attribute.title]="$T('graphics.drawing.stroke')"><ColorInput class="elemenx-drawing-stroke" Size="small" [Value]="Stroke" (change)="Stroked($event)" /></span>
+			<Checkbox class="elemenx-drawing-filled" Size="small" [Label]="$T('graphics.drawing.filled')" [Checked]="Fill && Fill !== 'none'" (change)="Unfilled($event)" />
+			<span class="elemenx-drawing-color" [attribute.title]="$T('graphics.drawing.fill')"><ColorInput class="elemenx-drawing-fill" Size="small" [Value]="Fill && Fill !== 'none' ? Fill : FillKept" (change)="Filled($event)" /></span>
+			<span class="elemenx-drawing-width" [attribute.title]="$T('graphics.drawing.width')"><NumberInput Size="small" [Min]="0.5" [Max]="100" [Step]="0.5" [Value]="StrokeWidth" (change)="Widened($event)" /></span>
 		</div>
 		<div class="elemenx-drawing-group">
 			<Button Variant="ghost" Size="small" Icon="undo" [title]="$T('graphics.drawing.undo')" [disabled]="!Past" (click)="Undo" />

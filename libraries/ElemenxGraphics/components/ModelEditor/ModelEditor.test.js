@@ -92,7 +92,7 @@ describe('Contract: ModelEditor, its tab Roles: what the parts of a model are', 
 		expect(editor.Roles().length).toBe(1);
 		expect(editor.RoleSelected).toBe(editor.Roles()[0].ID);
 		expect(editor.$Element().querySelectorAll('.elemenx-model-editor-role').length).toBe(1);
-		expect(editor.$Element().querySelector('.elemenx-model-editor-fields [data-field="Motion.Angle"]').value).toBe('70');
+		expect(editor.$Element().querySelector('.elemenx-model-editor-fields [data-field="Motion.Angle"] input').value).toBe('70');
 
 		frame(editor);
 
@@ -265,14 +265,88 @@ describe('Contract: ModelEditor, its tab Roles: what the parts of a model are', 
 
 		await tick(30);
 
-		expect(mounted.Host.$Element().querySelector('[data-mode="parts"]').getAttribute('aria-selected')).toBe('true');
+		/* Its modes are the tabs of a Tabs of ElemenxUI: Parts is the one chosen. */
+		expect(mounted.Host.$Element().querySelector('.elemenx-model-editor-modes .elemenx-tab.active').textContent).toContain(Elemenx.Locale.Text('graphics.modelEditor.partsMode'));
 		/* Gone from the model it was of: the list shows what is left. */
 		expect(editor.PartsList().some(function (piece) {
 			return piece.ID === picked;
 		})).toBe(false);
-		expect(mounted.Host.$Element().querySelectorAll('[data-piece]').length).toBe(editor.PartsList().length);
+		expect(mounted.Host.$Element().querySelectorAll('.elemenx-model-editor-roles .elemenx-model-editor-role').length).toBe(editor.PartsList().length);
 
 		models.SetEdits(editor.RoleTarget(), []);
 		delete models.Recipes['test-parts-out'];
+	});
+
+	/* On a touch screen: the actions of the part selected in a bar over the view, two fingers for the camera. */
+	it('copies, frames and removes the part selected by its bar of actions, and two fingers turn the view without editing', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var bar;
+		var parts;
+		var id;
+		var target = overlay(editor);
+		var box = target.getBoundingClientRect();
+		var yaw;
+		var button = function (title) {
+			return Array.prototype.find.call(bar.querySelectorAll('button'), function (node) {
+				return node.getAttribute('title') === title || node.getAttribute('aria-label') === title;
+			});
+		};
+		var finger = function (type, id, x, y) {
+			target.dispatchEvent(new PointerEvent(type, {bubbles: true, cancelable: true, clientX: box.left + x, clientY: box.top + y, pointerId: id, pointerType: 'touch'}));
+		};
+
+		editor.Moded('shape');
+
+		await tick(20);
+
+		bar = editor.$Element().querySelector('.elemenx-view-actions');
+
+		expect(button('Duplicate').disabled).toBe(true);
+
+		id = editor.Add('box');
+
+		editor.Select(id);
+
+		await tick(20);
+
+		parts = editor.Document().Recipe.Parts.length;
+
+		button('Duplicate').click();
+
+		await tick(20);
+
+		expect(editor.Document().Recipe.Parts.length).toBe(parts + 1);
+
+		editor.Select(id);
+
+		await tick(20);
+
+		button('Frame').click();
+
+		expect(editor.Scene().Viewpoint().Target).toEqual(editor.World(editor.Part(id).At));
+
+		button('Delete').click();
+
+		await tick(20);
+
+		expect(editor.Part(id)).toBe(null);
+
+		/* Two fingers turning: the view goes round, nothing is selected. */
+		editor.Select('');
+
+		yaw = editor.Scene().Viewpoint().Yaw;
+
+		finger('pointerdown', 11, 300, 280);
+		finger('pointerdown', 12, 500, 280);
+		finger('pointermove', 11, 300, 180);
+		finger('pointermove', 12, 500, 380);
+		finger('pointerup', 11, 300, 180);
+		finger('pointerup', 12, 500, 380);
+
+		await tick(200);
+
+		expect(editor.Scene().Viewpoint().Yaw).not.toBeCloseTo(yaw, 3);
+		expect(editor.Selected).toBe('');
 	});
 });

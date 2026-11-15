@@ -10,7 +10,9 @@ ScenePlanet: планета как одна непрерывная функци�
 - Face(options, face, size, row, rows) — грань глобуса как текселы куба (face от 0 до 5, как в cubeDirection; size текселей на сторону, строки с row, rows штук): RGBA цвета рельефной карты, в альфе — блеск (море); Relief — RGBA наклона земли: касательная часть нормали в системе тела (0,5 + 2,5 раза), по высотам на тексель в стороны, — по ней сцена освещает хребты глобуса с орбиты. Из неё рисуется планета в космосе: те же земли, что и её поверхность. Вблизи у высоты есть мелкие слои: холмы на равнинах и скалы в горах, поэтому поверхность и локация не плоские.
 - Cells(radius, size, kind), CellAt(radius, size, direction, kind), CellOf(id), CellCenter, CellCorners, CellNeighbours, CellPlace — клетки локаций планеты двух сеток: cube (обычная; квадраты граней куба, разбитые равными углами, у клетки 4 соседа) и hex (шестиугольники вокруг точек икосаэдра, разбитого на треугольники тоже равными углами, у клетки 6 соседей, а у 12 пятиугольников в вершинах икосаэдра — 5). Клетка находится по любой своей точке и по ID; соседи обходятся против часовой стрелки, сторона s шестиугольника лежит между углами s − 1 и s. CellPlace — место клетки как локации: широта, долгота, поворот (ось X вдоль стороны +I квадрата или к первому соседу шестиугольника), размер, контур Points в метрах и стороны Sides ([x0, z0, x1, z1]), все в одном направлении обхода, так что общая сторона двух соседей у каждого из них идёт навстречу.
 
-Работает в воркерах и в Node.
+Планета как данные (PlanetData). UseData(key, data) хранит данные планеты под ключом, в странице и в воркерах, как UseRivers хранит реки; Make({Data: key}) — планета этих данных: её опции — те, из которых она сделана (Origin), её радиус и зерно, под тем, что дано. Не мельче её тайлов её высота и биом — из тайлов; мельче у планеты, сделанной из опций, — рельеф и земли этих опций, а поверх рельефа — тайлы Edit (метры плюс или минус), где они есть. DataOf(key) — {Manifest, Tile(name)}, null без данных. TileName(layer, face, level, x, y), TileDirection(face, s, t) и TilePlace(direction) — тайлы на гранях куба по равным углам (s и t от 0 до 1 поперёк грани); TileValues(options, layer, face, level, x, y, size, table) — отсчёты тайла слоя Height или Biome (то, что PlanetData.Bake делает в воркерах).
+
+Работает в воркерах и в Node. Воркеры планет (Work) один раз получают земли страницы (SceneBiomes), поэтому глобус, который они красят, — тех же земель, что страница и поверхность.
 
 Рельеф суши устроен как на Земле. Поднятие целых областей даёт нагорья, плато и щиты. Где суша поднята и где сходятся плиты, идут цепи хребтов — гребневой мультифрактал на изогнутых сдвигом координатах. Мельче — холмы от десятков километров до километра и зерно рельефа до десятков метров. Их сила растёт с высотой и изрезанностью (гетерогенный рельеф: долины гладкие, вершины рваные), а отдельное поле «холмистости» делает часть низменностей холмистыми, часть — ровными равнинами. Гребни хребтов острые, над ними — отдельные пики в десятки километров; там, где сходятся плиты, вершины достигают 8–9 км. На глобусе издали высокая суша — серо-бурая скала, снег ложится постепенно с похолоданием и не сплошь: склоны проглядывают. Распределение высот близко к земному: половина суши ниже ~400–700 м, десятая часть выше 1,5–3 км. Elevation(direction, finest) и Sample(direction, finest) принимают finest (км): мельче этого рельеф не считается — глобусу из сотен текселей холмы не нужны.
 
@@ -38,6 +40,8 @@ ScenePlanet: планета как одна непрерывная функци�
 - `Project(view, direction)`
 - `Unproject(view, px, py)`
 - `Picture(options, view, rect, step, overlay)`
+- `UseData(key, data)`
+- `DataOf(key)`
 - `Sphere(options)`
 - `Work()`
 
@@ -56,4 +60,4 @@ ScenePlanet: планета как одна непрерывная функци�
 - [gives its ground to land on as the Sphere of SceneTerrainGenerator does: its heights, squares with its colors, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L245) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 - [lays its surface out in cells of locations: each found of its points, its neighbours over the edges of the faces too, its place and outline a location takes](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L267) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 
-+21 ещё в тех же файлах
++23 ещё в тех же файлах

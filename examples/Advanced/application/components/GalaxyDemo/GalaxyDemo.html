@@ -1,0 +1,14 @@
+<div class="scene-demo">
+	<div class="scene-demo-row">
+		<Select Label="Kind" Size="small" [options]="GalaxyKinds" [value]="GalaxyKind" (change)="GalaxyKindChosen" />
+		<Select Label="Seed" Size="small" [options]="GalaxySeeds" [value]="GalaxySeed" (change)="GalaxySeedChosen" />
+		<div class="galaxy-demo-time"><Field Label="Time" Horizontal="true" Size="small"><Slider Label="Time" Size="small" ShowValue="end" Min="0" Max="500" Step="1" Unit=" Myr" [value]="GalaxyTime" (input)="GalaxyTime = $event" /></Field></div>
+		<Button Size="small" Label="Centre" Icon="position-center" Variant="ghost" [Disabled]="!!GalaxyEntered" (click)="GalaxyCentre" />
+		<Button Size="small" Label="Enter the system" Icon="arrow-right" [Disabled]="!GalaxyStar || !!GalaxyEntered" (click)="GalaxyEnter" />
+		<Button Size="small" Label="Back to the galaxy" Icon="arrow-left" Variant="ghost" [Disabled]="!GalaxyEntered" (click)="GalaxyLeave" />
+	</div>
+	<p class="elemenx-caption" aria-live="polite">{{GalaxyNote}}</p>
+	<div class="scene-demo-scene">
+		<Scene Setting="galaxy" Speed="0.02" DaySeconds="30" Labels="false" [galaxy]="GalaxyOptions" [galaxyTime]="GalaxyTime" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="GalaxyReady" (galaxy)="GalaxyPicked" (enter)="GalaxyIn" (leave)="GalaxyOut" />
+	</div>
+</div>

@@ -1,0 +1,425 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "dunes",
+	"parameters": [
+		{
+			"key": "Amount",
+			"type": "float",
+			"value": 45
+		},
+		{
+			"key": "Spacing",
+			"type": "float",
+			"value": 1.2
+		},
+		{
+			"key": "Bend",
+			"type": "float",
+			"value": 2
+		}
+	],
+	"blocks": [
+		{
+			"id": "parameter1",
+			"type": "Parameter",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Amount"
+				},
+				{
+					"key": "Type",
+					"value": "any"
+				}
+			]
+		},
+		{
+			"id": "parameter2",
+			"type": "Parameter",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spacing"
+				},
+				{
+					"key": "Type",
+					"value": "any"
+				}
+			]
+		},
+		{
+			"id": "parameter3",
+			"type": "Parameter",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Bend"
+				},
+				{
+					"key": "Type",
+					"value": "any"
+				}
+			]
+		},
+		{
+			"id": "input4",
+			"type": "Input",
+			"x": 920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "input5",
+			"type": "Input",
+			"x": 1140,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Y"
+				}
+			]
+		},
+		{
+			"id": "input6",
+			"type": "Input",
+			"x": 1360,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "input7",
+			"type": "Input",
+			"x": 1580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "East"
+				}
+			]
+		},
+		{
+			"id": "input8",
+			"type": "Input",
+			"x": 1800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "North"
+				}
+			]
+		},
+		{
+			"id": "input9",
+			"type": "Input",
+			"x": 2020,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "WindEast"
+				}
+			]
+		},
+		{
+			"id": "input10",
+			"type": "Input",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "WindNorth"
+				}
+			]
+		},
+		{
+			"id": "input11",
+			"type": "Input",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Moisture"
+				}
+			]
+		},
+		{
+			"id": "input12",
+			"type": "Input",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "combine13",
+			"type": "Combine",
+			"x": 700,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "formula14",
+			"type": "Formula",
+			"x": 920,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 / max(0.1, Spacing * 6)"
+				}
+			]
+		},
+		{
+			"id": "noisespec15",
+			"type": "NoiseSpec",
+			"x": 1140,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": "{Seed}"
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 3
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "formula16",
+			"type": "Formula",
+			"x": 1360,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "atan2(WindNorth, WindEast)"
+				}
+			]
+		},
+		{
+			"id": "formula17",
+			"type": "Formula",
+			"x": 1580,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "fract((East * cos(a) + North * sin(a)) / max(0.05, Spacing) + (w - 0.5) * Bend)"
+				}
+			]
+		},
+		{
+			"id": "formula18",
+			"type": "Formula",
+			"x": 1800,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(f / 0.75, (1 - f) / 0.25)"
+				}
+			]
+		},
+		{
+			"id": "formula19",
+			"type": "Formula",
+			"x": 2020,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(pow(crest, 1.5) - 0.4) * Amount * saturate((0.45 - Moisture) * 4) * saturate(Height / 50)"
+				}
+			]
+		},
+		{
+			"id": "result20",
+			"type": "Result",
+			"x": 40,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "input4-out-Value",
+			"p2": "combine13-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "input5-out-Value",
+			"p2": "combine13-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "input6-out-Value",
+			"p2": "combine13-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "parameter2-out-Value",
+			"p2": "formula14-in-Spacing",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "combine13-out-XYZ",
+			"p2": "noisespec15-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "formula14-out-Value",
+			"p2": "noisespec15-in-Scale",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "input10-out-Value",
+			"p2": "formula16-in-WindNorth",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "input9-out-Value",
+			"p2": "formula16-in-WindEast",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "input7-out-Value",
+			"p2": "formula17-in-East",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "formula16-out-Value",
+			"p2": "formula17-in-a",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "input8-out-Value",
+			"p2": "formula17-in-North",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "parameter2-out-Value",
+			"p2": "formula17-in-Spacing",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "noisespec15-out-Value",
+			"p2": "formula17-in-w",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "parameter3-out-Value",
+			"p2": "formula17-in-Bend",
+			"kind": "value"
+		},
+		{
+			"id": "l15",
+			"p1": "formula17-out-Value",
+			"p2": "formula18-in-f",
+			"kind": "value"
+		},
+		{
+			"id": "l16",
+			"p1": "formula18-out-Value",
+			"p2": "formula19-in-crest",
+			"kind": "value"
+		},
+		{
+			"id": "l17",
+			"p1": "parameter1-out-Value",
+			"p2": "formula19-in-Amount",
+			"kind": "value"
+		},
+		{
+			"id": "l18",
+			"p1": "input11-out-Value",
+			"p2": "formula19-in-Moisture",
+			"kind": "value"
+		},
+		{
+			"id": "l19",
+			"p1": "input12-out-Value",
+			"p2": "formula19-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "l20",
+			"p1": "formula19-out-Value",
+			"p2": "result20-in-Value",
+			"kind": "value"
+		}
+	]
+}

@@ -10,7 +10,7 @@
 				<Select Label="Camera" Size="small" [options]="PlacePersons" [value]="PlacePerson" (change)="PlacePerson = $event" />
 				<Toggle Label="Free look" [checked]="PlaceFree" (change)="PlaceFree = $event" />
 				<Button Label="Next camera (V)" Variant="ghost" Size="small" (click)="PlaceNextPerson" />
-				<label class="ui-kit-tune"><span>Bokeh</span><Slider Label="Bokeh" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SceneBokeh" (input)="SceneBokeh = $event" /></label>
+				<Field Label="Bokeh" Horizontal="true" Size="small"><Slider Label="Bokeh" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SceneBokeh" (input)="SceneBokeh = $event" /></Field>
 			</RibbonGroup>
 			<RibbonGroup Title="Shoulder" Icon="eye">
 				<Toggle Label="Left shoulder (B)" [checked]="PlaceShoulder === 'left'" (change)="PlaceShoulder = $event ? 'left' : 'right'" />
@@ -25,17 +25,17 @@
 		</RibbonTab>
 		<RibbonTab ID="time" Title="Time">
 			<RibbonGroup Title="Day" Icon="clock">
-				<label class="ui-kit-tune"><span>Time of day</span><Slider Label="Time of day" Size="small" ShowValue="end" Min="0" [max]="PlaceSky.DayHours" Step="0.25" [format]="PlaceClock" [value]="PlaceHour" (input)="PlaceTimed" /></label>
-				<label class="ui-kit-tune"><span>Day length</span><Slider Label="Day length" Size="small" ShowValue="end" Min="6" Max="48" Step="1" Unit=" h" [value]="PlaceSky.DayHours" (input)="PlaceDayLength" /></label>
-				<label class="ui-kit-tune"><span>Day of year</span><Slider Label="Day of year" Size="small" ShowValue="end" Min="1" Max="365" [value]="PlaceSky.DayOfYear" (input)="PlaceDayChosen" /></label>
+				<Field Label="Time of day" Horizontal="true" Size="small"><Slider Label="Time of day" Size="small" ShowValue="end" Min="0" [max]="PlaceSky.DayHours" Step="0.25" [format]="PlaceClock" [value]="PlaceHour" (input)="PlaceTimed" /></Field>
+				<Field Label="Day length" Horizontal="true" Size="small"><Slider Label="Day length" Size="small" ShowValue="end" Min="6" Max="48" Step="1" Unit=" h" [value]="PlaceSky.DayHours" (input)="PlaceDayLength" /></Field>
+				<Field Label="Day of year" Horizontal="true" Size="small"><Slider Label="Day of year" Size="small" ShowValue="end" Min="1" Max="365" [value]="PlaceSky.DayOfYear" (input)="PlaceDayChosen" /></Field>
 			</RibbonGroup>
 			<RibbonGroup Title="Planet" Icon="globe">
-				<label class="ui-kit-tune"><span>Latitude</span><Slider Label="Latitude" Size="small" ShowValue="end" Min="-90" Max="90" Step="1" Unit="°" [value]="PlaceSky.Latitude" (input)="PlaceLatitudeChosen" /></label>
-				<label class="ui-kit-tune"><span>Axis tilt</span><Slider Label="Axis tilt" Size="small" ShowValue="end" Min="0" Max="60" Step="0.5" Unit="°" [value]="PlaceSky.Tilt" (input)="PlaceTiltChosen" /></label>
+				<Field Label="Latitude" Horizontal="true" Size="small"><Slider Label="Latitude" Size="small" ShowValue="end" Min="-90" Max="90" Step="1" Unit="°" [value]="PlaceSky.Latitude" (input)="PlaceLatitudeChosen" /></Field>
+				<Field Label="Axis tilt" Horizontal="true" Size="small"><Slider Label="Axis tilt" Size="small" ShowValue="end" Min="0" Max="60" Step="0.5" Unit="°" [value]="PlaceSky.Tilt" (input)="PlaceTiltChosen" /></Field>
 			</RibbonGroup>
 			<RibbonGroup Title="Night" Icon="moon">
-				<label class="ui-kit-tune"><span>Night light</span><Slider Label="Night light" Size="small" ShowValue="end" Min="0" Max="3" Step="0.1" [value]="PlaceSky.NightLight" (input)="PlaceNightLight" /></label>
-				<label class="ui-kit-tune"><span>Town glow</span><Slider Label="Town glow" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="PlaceSky.SkyGlow" (input)="PlaceTownGlow" /></label>
+				<Field Label="Night light" Horizontal="true" Size="small"><Slider Label="Night light" Size="small" ShowValue="end" Min="0" Max="3" Step="0.1" [value]="PlaceSky.NightLight" (input)="PlaceNightLight" /></Field>
+				<Field Label="Town glow" Horizontal="true" Size="small"><Slider Label="Town glow" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="PlaceSky.SkyGlow" (input)="PlaceTownGlow" /></Field>
 			</RibbonGroup>
 			<RibbonGroup Title="Eclipses" Icon="sun">
 				<Button Label="Of the sun" Variant="ghost" Size="small" (click)="PlaceEclipse('sun')" />
@@ -45,22 +45,22 @@
 		<RibbonTab ID="moon" Title="Moon">
 			<RibbonGroup Title="Moon" Icon="moon">
 				<Toggle Label="Moon" [checked]="PlaceSky.Moon" (change)="PlaceMoonShown" />
-				<label class="ui-kit-tune"><span>Moon light</span><Slider Label="Moon light" Size="small" ShowValue="end" Min="0" Max="3" Step="0.1" [value]="PlaceSky.MoonLight" (input)="PlaceMoonLight" /></label>
+				<Field Label="Moon light" Horizontal="true" Size="small"><Slider Label="Moon light" Size="small" ShowValue="end" Min="0" Max="3" Step="0.1" [value]="PlaceSky.MoonLight" (input)="PlaceMoonLight" /></Field>
 			</RibbonGroup>
 			<RibbonGroup Title="Disc" Icon="moon">
-				<label class="ui-kit-tune"><span>Moon phase</span><Slider Label="Moon phase" Size="small" ShowValue="end" Min="0" Max="1" Step="0.01" [value]="PlaceSky.MoonPhase" (input)="PlaceMoonPhase" /></label>
-				<label class="ui-kit-tune"><span>Moon size</span><Slider Label="Moon size" Size="small" ShowValue="end" Min="0.3" Max="3" Step="0.1" [value]="PlaceSky.MoonSize" (input)="PlaceMoonSize" /></label>
+				<Field Label="Moon phase" Horizontal="true" Size="small"><Slider Label="Moon phase" Size="small" ShowValue="end" Min="0" Max="1" Step="0.01" [value]="PlaceSky.MoonPhase" (input)="PlaceMoonPhase" /></Field>
+				<Field Label="Moon size" Horizontal="true" Size="small"><Slider Label="Moon size" Size="small" ShowValue="end" Min="0.3" Max="3" Step="0.1" [value]="PlaceSky.MoonSize" (input)="PlaceMoonSize" /></Field>
 			</RibbonGroup>
 			<RibbonGroup Title="Where it stands" Icon="compass">
 				<Toggle Label="Hold the moon" [checked]="PlaceMoonHeld" (change)="PlaceMoonHold" />
-				<label class="ui-kit-tune"><span>Moon height</span><Slider Label="Moon height" Size="small" ShowValue="end" Min="0" Max="90" Unit="°" [disabled]="!PlaceMoonHeld" [value]="PlaceMoonElevation" (input)="PlaceMoonHigh" /></label>
-				<label class="ui-kit-tune"><span>Moon azimuth</span><Slider Label="Moon azimuth" Size="small" ShowValue="end" Min="0" Max="360" Unit="°" [disabled]="!PlaceMoonHeld" [value]="PlaceMoonAzimuth" (input)="PlaceMoonRound" /></label>
+				<Field Label="Moon height" Horizontal="true" Size="small"><Slider Label="Moon height" Size="small" ShowValue="end" Min="0" Max="90" Unit="°" [disabled]="!PlaceMoonHeld" [value]="PlaceMoonElevation" (input)="PlaceMoonHigh" /></Field>
+				<Field Label="Moon azimuth" Horizontal="true" Size="small"><Slider Label="Moon azimuth" Size="small" ShowValue="end" Min="0" Max="360" Unit="°" [disabled]="!PlaceMoonHeld" [value]="PlaceMoonAzimuth" (input)="PlaceMoonRound" /></Field>
 			</RibbonGroup>
 		</RibbonTab>
 		<RibbonTab ID="weather" Title="Weather">
 			<RibbonGroup Title="Air" Icon="cloud">
 				<Select Label="Weather" Size="small" [options]="SceneWeathers" [value]="SceneWeather" (change)="SceneWeatherChosen" />
-				<label class="ui-kit-tune"><span>Wind</span><Slider Label="Wind" Size="small" ShowValue="end" Min="0" Max="4" Step="0.1" [value]="SceneWind" (input)="SceneWindChosen" /></label>
+				<Field Label="Wind" Horizontal="true" Size="small"><Slider Label="Wind" Size="small" ShowValue="end" Min="0" Max="4" Step="0.1" [value]="SceneWind" (input)="SceneWindChosen" /></Field>
 			</RibbonGroup>
 		</RibbonTab>
 		<RibbonTab ID="effects" Title="Effects">
@@ -74,18 +74,18 @@
 				<Button Label="Sparks" Variant="ghost" Size="small" (click)="PlaceEffect('spark')" />
 				<Button Label="Smoke" Variant="ghost" Size="small" (click)="PlaceEffect('smoke')" />
 			</RibbonGroup>
-			<RibbonGroup Title="Colors" Icon="palette">
+			<RibbonGroup Title="Colors" Icon="art:palette">
 				<ColorInput Label="Fire color" Size="small" [value]="PlaceFire.Color" (input)="PlaceFireColor" />
 				<ColorInput Label="Fire heart" Size="small" [value]="PlaceFire.Hot" (input)="PlaceFireHot" />
 			</RibbonGroup>
 			<RibbonGroup Title="Shape" Icon="sliders">
-				<label class="ui-kit-tune"><span>Volume</span><Slider Label="Volume" Size="small" ShowValue="end" Min="0.1" Max="10" Step="0.1" [value]="PlaceFire.Volume" (input)="PlaceFireVolume" /></label>
-				<label class="ui-kit-tune"><span>Intensity</span><Slider Label="Intensity" Size="small" ShowValue="end" Min="0" Max="5" Step="0.1" [value]="PlaceFire.Intensity" (input)="PlaceFireIntensity" /></label>
-				<label class="ui-kit-tune"><span>Length</span><Slider Label="Length" Size="small" ShowValue="end" Min="0.1" Max="10" Step="0.1" [value]="PlaceFire.Length" (input)="PlaceFireLength" /></label>
-				<label class="ui-kit-tune"><span>Width</span><Slider Label="Width" Size="small" ShowValue="end" Min="0.1" Max="10" Step="0.1" [value]="PlaceFire.Width" (input)="PlaceFireWidth" /></label>
+				<Field Label="Volume" Horizontal="true" Size="small"><Slider Label="Volume" Size="small" ShowValue="end" Min="0.1" Max="10" Step="0.1" [value]="PlaceFire.Volume" (input)="PlaceFireVolume" /></Field>
+				<Field Label="Intensity" Horizontal="true" Size="small"><Slider Label="Intensity" Size="small" ShowValue="end" Min="0" Max="5" Step="0.1" [value]="PlaceFire.Intensity" (input)="PlaceFireIntensity" /></Field>
+				<Field Label="Length" Horizontal="true" Size="small"><Slider Label="Length" Size="small" ShowValue="end" Min="0.1" Max="10" Step="0.1" [value]="PlaceFire.Length" (input)="PlaceFireLength" /></Field>
+				<Field Label="Width" Horizontal="true" Size="small"><Slider Label="Width" Size="small" ShowValue="end" Min="0.1" Max="10" Step="0.1" [value]="PlaceFire.Width" (input)="PlaceFireWidth" /></Field>
 			</RibbonGroup>
-			<RibbonGroup Title="Rest" Icon="trash">
-				<label class="ui-kit-tune"><span>Smoke</span><Slider Label="Smoke" Size="small" ShowValue="end" Min="0" Max="5" Step="0.1" [value]="PlaceFire.Smoke" (input)="PlaceFireSmoke" /></label>
+			<RibbonGroup Title="Rest" Icon="delete">
+				<Field Label="Smoke" Horizontal="true" Size="small"><Slider Label="Smoke" Size="small" ShowValue="end" Min="0" Max="5" Step="0.1" [value]="PlaceFire.Smoke" (input)="PlaceFireSmoke" /></Field>
 				<Button Label="Clear effects" Variant="ghost" Size="small" (click)="PlaceEffectsGone" />
 			</RibbonGroup>
 		</RibbonTab>
@@ -110,13 +110,13 @@
 				<Button Label="Frost" Variant="ghost" Size="small" (click)="PlaceEffect('frost')" />
 				<Button Label="Poison" Variant="ghost" Size="small" (click)="PlaceEffect('poison')" />
 			</RibbonGroup>
-			<RibbonGroup Title="Look" Icon="palette">
+			<RibbonGroup Title="Look" Icon="art:palette">
 				<Toggle Label="Colors of my own" [checked]="PlaceSpellOwn" (change)="PlaceSpellOwn = $event" />
 				<ColorInput Label="Spell color" Size="small" [value]="PlaceSpell.Color" (input)="PlaceSpellColor" />
 				<ColorInput Label="Spell heart" Size="small" [value]="PlaceSpell.Hot" (input)="PlaceSpellHot" />
 			</RibbonGroup>
 			<RibbonGroup Title="Rings" Icon="sliders">
-				<label class="ui-kit-tune"><span>Spin</span><Slider Label="Spin" Size="small" ShowValue="end" Min="-5" Max="5" Step="0.1" [value]="PlaceFire.Spin" (input)="PlaceFireSpin" /></label>
+				<Field Label="Spin" Horizontal="true" Size="small"><Slider Label="Spin" Size="small" ShowValue="end" Min="-5" Max="5" Step="0.1" [value]="PlaceFire.Spin" (input)="PlaceFireSpin" /></Field>
 			</RibbonGroup>
 			<RibbonGroup Title="Over time" Icon="clock">
 				<Select Label="Pulse" Size="small" [options]="PlacePulseList" [value]="PlacePulse" (change)="PlacePulseChosen" />
@@ -124,7 +124,7 @@
 		</RibbonTab>
 		<RibbonTab ID="view" Title="View">
 			<RibbonGroup Title="Picture" Icon="image">
-				<label class="ui-kit-tune"><span>Lens flare</span><Slider Label="Lens flare" Size="small" ShowValue="end" Min="0" Max="2" Step="0.1" [value]="SceneFlare" (input)="SceneFlareChosen" /></label>
+				<Field Label="Lens flare" Horizontal="true" Size="small"><Slider Label="Lens flare" Size="small" ShowValue="end" Min="0" Max="2" Step="0.1" [value]="SceneFlare" (input)="SceneFlareChosen" /></Field>
 			</RibbonGroup>
 		</RibbonTab>
 	</Ribbon>

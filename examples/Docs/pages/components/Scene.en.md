@@ -57,8 +57,8 @@ What a scene waits for, its programs and models, comes behind the page and holds
 
 - `arrive`: An object reached where it was sent: {ID, At}.
 - `shader`: A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.
-- `focus`: The view moved to an object: {ID}.
 - `error`: There is no WebGL2 ({Reason: webgl2}).
+- `focus`: The view moved to an object: {ID}.
 - `land`: The view went down to the surface of a body: {ID}.
 - `takeoff`: The view went back up to space: {ID}.
 - `select`: The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).
@@ -176,4 +176,4 @@ What a scene waits for, its programs and models, comes behind the page and holds
 - [leaves out a pass switched off, takes the properties of its blocks, and adds a pass of a graph of its own after the picture](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L140) — `tests/regression/library-render-pipeline.test.js`
 - [draws the picture of the library when the Pipeline cannot be made, and tells it once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L202) — `tests/regression/library-render-pipeline.test.js`
 
-+259 more in the same files
++261 more in the same files

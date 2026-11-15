@@ -29,7 +29,8 @@ Meshes: the shapes of three dimensions made of triangles, the same in a page, a 
 - [merges the geometries of a model as large as a building of glass without running out of the stack](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Meshes/Meshes.node.test.js#L25) — `libraries/ElemenxGraphics/services/Meshes/Meshes.node.test.js`
 - [puts planets on their orbits and makes shapes of three dimensions with the Services of the system Libraries](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`
 - [joins the pieces of a skeleton that never moves, of one material, into one draw, in their places](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-frames.test.js#L48) — `tests/regression/library-scene-frames.test.js`
-- [draws what moves together of a model of a file as one for each material: all that stands still, each wheel, each opening](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-frames.test.js#L291) — `tests/regression/library-scene-frames.test.js`
+- [casts the shadow of the still pieces of a model of a file, of all their materials, by one draw](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-frames.test.js#L145) — `tests/regression/library-scene-frames.test.js`
+- [draws what moves together of a model of a file as one for each material: all that stands still, each wheel, each opening](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-frames.test.js#L375) — `tests/regression/library-scene-frames.test.js`
 - [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L185) — `tests/regression/library-scene.test.js`
 - [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L479) — `tests/regression/library-scene.test.js`
 - [keeps from the shaders what would blur, flicker or show as noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1549) — `tests/regression/library-scene.test.js`
@@ -37,6 +38,5 @@ Meshes: the shapes of three dimensions made of triangles, the same in a page, a 
 - [burns where it is told: effects with their lamps, those of a body, bursts that end, types of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2839) — `tests/regression/library-scene.test.js`
 - [Renderer makes programs behind the page for who is patient, and sets in a program only what changed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4462) — `tests/regression/library-scene.test.js`
 - [A mirrored node keeps its mirror, and what a file keeps as one piece stands apart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4864) — `tests/regression/library-scene.test.js`
-- [Physics flies a ship: its speed comes after its throttle, its axes stay square](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5170) — `tests/regression/library-scene.test.js`
 
-+13 more in the same files
++14 more in the same files

@@ -12,7 +12,7 @@ Finds text in the DOM: what the find bar of a RichEditor or a Terminal looks thr
 ## Example
 
 ```example
-<span class="elemenx-input"><input class="elemenx-input-control" [(value)]="Query" placeholder="Find" /></span>
+<Input [Value]="Query" Placeholder="Find" Label="Find" (input)="Query = $event" />
 <Button Label="Find" Variant="primary" (click)="Search" />
 <Button Label="Next" (click)="Next" />
 <Button Label="Clear" Variant="ghost" (click)="Clear" />

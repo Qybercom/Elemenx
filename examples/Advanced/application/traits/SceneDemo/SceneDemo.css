@@ -16,12 +16,6 @@
 	gap: 8px;
 }
 
-/* What the demo tells of what happens in it. */
-.scene-demo-status {
-	color: var(--elemenx-text-muted);
-	font-size: var(--elemenx-font-size-small);
-}
-
 /* A choice in the row as wide as its words, not the whole row. */
 .scene-demo-row .elemenx-select {
 	flex: 0 1 220px;
@@ -48,16 +42,6 @@
 
 .elemenx-narrow.elemenx-landscape .scene-demo-scene {
 	border-radius: 0;
-}
-
-/* A slider of a ribbon of a demo with its name before it; the ribbon over its scene. */
-.ui-kit-tune {
-	display: grid;
-	grid-template-columns: 76px 150px;
-	align-items: center;
-	gap: 4px;
-	font-size: var(--elemenx-font-size-small);
-	color: var(--elemenx-text-muted);
 }
 
 .ui-kit-place-ribbon {

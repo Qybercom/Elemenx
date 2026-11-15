@@ -169,10 +169,10 @@ describe('Contract: SceneTextures, textures of materials baked once into tiles w
 		})).toEqual(['Cover', 'Weeds', 'Pebbles']);
 		expect(lab.Picture()).toMatch(/^data:image\/png;base64,/);
 
-		slider = lab.$Element().querySelector('input[data-key="Cover"]');
-		slider.value = '0.2';
+		/* Its sliders are Sliders of ElemenxUI: the first of its params is Cover. */
+		slider = Elemenx.Instance(lab.$Element().querySelector('.elemenx-texture-lab-panel .elemenx-slider'));
 
-		slider.dispatchEvent(new Event('input', {bubbles: true}));
+		slider.Set(0, 0.2, true);
 
 		expect(told[told.length - 1]).toEqual({Texture: 'grassy-soil', Params: {Cover: 0.2, Weeds: 0.5, Pebbles: 0.4}});
 

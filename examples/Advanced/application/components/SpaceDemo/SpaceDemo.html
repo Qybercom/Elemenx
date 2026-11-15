@@ -20,24 +20,24 @@
 				<Button Label="Another sky" Icon="refresh" Variant="ghost" Size="small" (click)="SpaceSky" />
 			</RibbonGroup>
 			<RibbonGroup Title="Clouds" Icon="cloud">
-				<label class="ui-kit-tune"><span>Gas</span><Slider Label="Gas" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Gas" (change)="SpaceAmount('Gas', $event)" /></label>
-				<label class="ui-kit-tune"><span>Dust</span><Slider Label="Dust" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Dust" (change)="SpaceAmount('Dust', $event)" /></label>
-				<label class="ui-kit-tune"><span>Pillars</span><Slider Label="Pillars" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Pillars" (change)="SpaceAmount('Pillars', $event)" /></label>
+				<Field Label="Gas" Horizontal="true" Size="small"><Slider Label="Gas" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Gas" (change)="SpaceAmount('Gas', $event)" /></Field>
+				<Field Label="Dust" Horizontal="true" Size="small"><Slider Label="Dust" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Dust" (change)="SpaceAmount('Dust', $event)" /></Field>
+				<Field Label="Pillars" Horizontal="true" Size="small"><Slider Label="Pillars" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Pillars" (change)="SpaceAmount('Pillars', $event)" /></Field>
 			</RibbonGroup>
 			<RibbonGroup Title="Stars" Icon="star">
-				<label class="ui-kit-tune"><span>Stars</span><Slider Label="Stars" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Stars" (change)="SpaceAmount('Stars', $event)" /></label>
-				<label class="ui-kit-tune"><span>Young</span><Slider Label="Young stars" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Beacon" (change)="SpaceAmount('Beacon', $event)" /></label>
-				<label class="ui-kit-tune"><span>Bursts</span><Slider Label="Bursts of rays" Size="small" ShowValue="end" Min="0" Max="8" Step="1" [value]="SpaceAmounts.Bursts" (change)="SpaceAmount('Bursts', $event)" /></label>
-				<label class="ui-kit-tune"><span>Clusters</span><Slider Label="Clusters" Size="small" ShowValue="end" Min="0" Max="12" Step="1" [value]="SpaceAmounts.Clusters" (change)="SpaceAmount('Clusters', $event)" /></label>
+				<Field Label="Stars" Horizontal="true" Size="small"><Slider Label="Stars" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Stars" (change)="SpaceAmount('Stars', $event)" /></Field>
+				<Field Label="Young" Horizontal="true" Size="small"><Slider Label="Young stars" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Beacon" (change)="SpaceAmount('Beacon', $event)" /></Field>
+				<Field Label="Bursts" Horizontal="true" Size="small"><Slider Label="Bursts of rays" Size="small" ShowValue="end" Min="0" Max="8" Step="1" [value]="SpaceAmounts.Bursts" (change)="SpaceAmount('Bursts', $event)" /></Field>
+				<Field Label="Clusters" Horizontal="true" Size="small"><Slider Label="Clusters" Size="small" ShowValue="end" Min="0" Max="12" Step="1" [value]="SpaceAmounts.Clusters" (change)="SpaceAmount('Clusters', $event)" /></Field>
 			</RibbonGroup>
 			<RibbonGroup Title="Galaxies" Icon="globe">
-				<label class="ui-kit-tune"><span>Band</span><Slider Label="Band of ours" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Band" (change)="SpaceAmount('Band', $event)" /></label>
-				<label class="ui-kit-tune"><span>Far</span><Slider Label="Far galaxies" Size="small" ShowValue="end" Min="0" Max="16" Step="1" [value]="SpaceAmounts.Galaxies" (change)="SpaceAmount('Galaxies', $event)" /></label>
+				<Field Label="Band" Horizontal="true" Size="small"><Slider Label="Band of ours" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Band" (change)="SpaceAmount('Band', $event)" /></Field>
+				<Field Label="Far" Horizontal="true" Size="small"><Slider Label="Far galaxies" Size="small" ShowValue="end" Min="0" Max="16" Step="1" [value]="SpaceAmounts.Galaxies" (change)="SpaceAmount('Galaxies', $event)" /></Field>
 			</RibbonGroup>
 		</RibbonTab>
 	</Ribbon>
 	<div class="scene-demo-row">
-		<span class="scene-demo-status">{{SpaceNote}}</span>
+		<span class="elemenx-caption" role="status">{{SpaceNote}}</span>
 	</div>
 	<div class="scene-demo-scene">
 		<Scene *if="SpaceSystem === 'sol'" Team="blue" [hoverMark]="SpaceMark" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="SpaceCosmos" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused" (arrive)="SpaceArrived">
@@ -71,10 +71,13 @@
 			<SceneObject ID="ares" Kind="outpost" Name="Ares outpost" Parent="mars" Team="red" Distance="2.2" />
 			<SceneObject ID="first" Kind="fleet" Name="First fleet" Parent="earth" Team="blue" Count="5" />
 			<SceneObject ID="haulers" Kind="fleet" Name="Haulers" Ship="freighter" Parent="jupiter" Team="yellow" Count="3" />
-			<div slot="hud" class="ui-kit-space-hud"><span>Day {{SpaceDay}}</span></div>
+			<GameHud slot="hud" Label="System"><GameStat slot="bottom-start" Label="Day" Layout="inline" Size="small" [Value]="SpaceDay" /></GameHud>
 		</Scene>
 		<Scene *if="SpaceSystem === 'seed'" Team="blue" [hoverMark]="SpaceMark" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [seed]="SpaceSeed" [cosmos]="SpaceCosmos" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused">
-			<div slot="hud" class="ui-kit-space-hud"><span>Seed {{SpaceSeed}}</span></div>
+			<GameHud slot="hud" Label="System"><GameStat slot="bottom-start" Label="seed" Layout="inline" Size="small" [Value]="SpaceSeed" /></GameHud>
+		</Scene>
+		<Scene *if="SpaceSystem === 'file'" Team="blue" [hoverMark]="SpaceMark" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [system]="SpaceFile" [cosmos]="SpaceCosmos" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused">
+			<GameHud slot="hud" Label="System"><GameStat slot="bottom-start" Label="file" Layout="inline" Size="small" Value="binary.system" /></GameHud>
 		</Scene>
 	</div>
 </div>

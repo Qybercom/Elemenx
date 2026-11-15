@@ -10513,11 +10513,32 @@
 
 			if (plan && plan.Definition === definition && plan.Count === attrs.length) return plan;
 
-			plan = {Definition: definition, Count: attrs.length, Plain: [], Bound: []};
+			plan = {Definition: definition, Count: attrs.length, Plain: [], Bound: [], Models: []};
 
 			while (i < attrs.length) {
 				name = attrs[i].name;
 				target = Runtime.Directive.Binding(name);
+
+				/*
+				 * [(Prop)]="Name": the prop bound as [Prop] is, and Name given what the Component tells when it changes it
+				 * (the event its $Model names for the prop, change by default). Any prop of the Component, in any case.
+				 */
+				if (target === null && Runtime.Directive.TwoWay(name) !== null) {
+					target = canonicalBindingPath(Runtime.Directive.TwoWay(name), definition);
+
+					if (target.length !== 1 || typeof target[0] !== 'string' || !definition || !own(definition, target[0]))
+						throw new Error('Elemenx invalid two-way binding target: ' + name);
+
+					if (!/^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.test(String(attrs[i].value).trim()))
+						throw new Error('Elemenx invalid two-way binding expression: ' + name + '="' + attrs[i].value + '"');
+
+					plan.Bound.push({Path: target, Expression: attrs[i].value});
+					plan.Models.push({Prop: target[0], Event: modelEvent(definition, target[0]), Expression: String(attrs[i].value).trim()});
+
+					i++;
+
+					continue;
+				}
 
 				if (target === null && !Runtime.Directive.Reserved(name)) {
 					name = canonicalPropKey(definition, name.replace(/-([a-z])/g, function (all, letter) {
@@ -10546,6 +10567,13 @@
 			propsPlans.set(node, plan);
 
 			return plan;
+		}
+
+		/* The event a Component tells a new value of a prop by: what its $Model names for it ({Value: 'input'}), else change. */
+		function modelEvent (definition, prop) {
+			var model = definition && definition.$Model;
+
+			return model && typeof model === 'object' && own(model, prop) && typeof model[prop] === 'string' ? model[prop] : 'change';
 		}
 
 		function props (node, data, definition) {
@@ -11044,7 +11072,56 @@
 			}
 
 			/* The listeners of the (events) of a declaration: they call the methods of the component of the template. */
-			function listenersFor (eventMap) {
+			/* The listeners of the two-way bindings of the tag of a Component: Name = what it told, at the event of the prop. */
+			function modelListeners (blueprint, definition) {
+				return propsPlan(blueprint, definition).Models.map(function (model) {
+					return {Name: model.Event, Callback: function (data, source) {
+						Runtime.CallHandler(component, model.Expression + ' = $event', [data, source]);
+					}};
+				});
+			}
+
+			/*
+			 * An (event) of the tag of a Component hears an event of the page sent to the root of its instance too, not one
+			 * from inside it: a directive on the tag (*copy) tells its copied there. Only an event made by a script (a
+			 * CustomEvent): a press on the root of a Button is the click the Button tells itself. Heard once it is sent, and
+			 * not when the Component told an event of that name meanwhile: a Component that tells again what a directive of
+			 * its own root sends (InfiniteList, *infinite, more) is heard once, by what it tells.
+			 */
+			function rootListeners (child, eventMap, heard) {
+				var root = child.$Element();
+				var later = typeof global.queueMicrotask === 'function' ? global.queueMicrotask.bind(global) : function (callback) {
+					global.setTimeout(callback, 0);
+				};
+				var eventName;
+
+				if (!root || root.nodeType !== 1 || typeof root.addEventListener !== 'function') return;
+
+				for (eventName in eventMap) {
+					if (own(eventMap, eventName)) {
+						(function (name, method) {
+							root.addEventListener(name, function (event) {
+								var waiting;
+
+								if (event.target !== root || typeof global.CustomEvent !== 'function' || !(event instanceof global.CustomEvent)) return;
+
+								waiting = heard[name] = {Told: false};
+
+								later(function () {
+									if (heard[name] === waiting)
+										heard[name] = null;
+
+									if (!waiting.Told)
+										Runtime.CallHandler(component, method, [event, root]);
+								});
+							}, true);
+						})(eventName, eventMap[eventName]);
+					}
+				}
+			}
+
+			/* The listeners of the (events) of the tag of a Component; heard marks what it told while an event of its root is sent. */
+			function listenersFor (eventMap, heard) {
 				var result = [];
 				var eventName;
 
@@ -11052,6 +11129,9 @@
 					if (own(eventMap, eventName)) {
 						(function (name, method) {
 							result.push({Name: name, Callback: function (data, source) {
+								if (heard && heard[name])
+									heard[name].Told = true;
+
 								Runtime.CallHandler(component, method, [data, source]);
 							}});
 						})(eventName, eventMap[eventName]);
@@ -11398,15 +11478,19 @@
 
 				function createChild (data) {
 					var childProps = props(blueprint, data, factory.Definition);
+					/* The events of the root of the instance in their way, by name (rootListeners). */
+					var heard = {};
 
 					startProjection(data);
 
 					/* The factory registers the listeners and the parent before the hooks of the child run. */
 					child = Runtime.Untracked(function () {
-						return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName, {Listeners: listenersFor(eventMap), Parent: component, Copy: copy}));
+						return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName, {Listeners: listenersFor(eventMap, heard).concat(modelListeners(blueprint, factory.Definition)), Parent: component, Copy: copy}));
 					});
 
 					child.$Parent(component);
+
+					rootListeners(child, eventMap, heard);
 
 					end.parentNode.insertBefore(child.$Element(), end);
 

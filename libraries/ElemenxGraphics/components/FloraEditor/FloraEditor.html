@@ -2,10 +2,7 @@
 	<div class="elemenx-flora-editor-reference">
 		<canvas class="elemenx-flora-editor-picture" #Reference [class.shown]="HasPicture"></canvas>
 		<div class="elemenx-flora-editor-hint" *if="!HasPicture">{{$T('graphics.floraEditor.hint')}}</div>
-		<label class="elemenx-flora-editor-load">
-			<input type="file" accept="image/*" (change)="Loaded" />
-			<span>{{$T('graphics.floraEditor.picture')}}</span>
-		</label>
+		<FileUpload class="elemenx-flora-editor-load" Variant="inline" Accept="image/*" [Label]="$T('graphics.floraEditor.picture')" (change)="Loaded($event)" />
 		<div class="elemenx-flora-editor-told" *if="Told">{{$T(Told)}}</div>
 	</div>
 	<div class="elemenx-flora-editor-view">
@@ -17,60 +14,37 @@
 		<div class="elemenx-flora-editor-busy" *if="Busy">{{$T('graphics.floraEditor.growing')}}</div>
 	</div>
 	<aside class="elemenx-flora-editor-panel">
-		<label class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.species')}}</span>
-			<select (change)="Specied">
-				<option *for="name of Names()" *key="name" [value]="name" [selected]="name === Species">{{$T('graphics.floraEditor.names.' + name)}}</option>
-			</select>
-		</label>
-		<div class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.variant')}}</span>
-			<div class="elemenx-flora-editor-variant">
-				<button type="button" data-step="-1" (click)="Varied" [attribute.aria-label]="$T('graphics.floraEditor.previous')">‹</button>
-				<output>{{Variant}}</output>
-				<button type="button" data-step="1" (click)="Varied" [attribute.aria-label]="$T('graphics.floraEditor.next')">›</button>
-			</div>
+		<div class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.species')}}</span>
+			<Select [Label]="$T('graphics.floraEditor.species')" [Options]="Choices('Species', Version)" [Value]="Species" (change)="Specied($event)" />
 		</div>
-		<label class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.tall')}}</span>
-			<input type="range" min="0.5" max="60" step="0.5" [value]="Tall(Version)" (input)="Heighted" />
-		</label>
-		<label class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.grow')}}</span>
-			<select data-key="Grow" (change)="Chose">
-				<option *for="one of Grows" *key="one" [value]="one" [selected]="one === Read('Grow', Version)">{{$T('graphics.floraEditor.grows.' + one)}}</option>
-			</select>
-		</label>
-		<label class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.kind')}}</span>
-			<select data-key="Leaves.Kind" (change)="Chose">
-				<option *for="one of Kinds" *key="one" [value]="one" [selected]="one === Read('Leaves.Kind', Version)">{{$T('graphics.floraEditor.kinds.' + one)}}</option>
-			</select>
-		</label>
-		<label class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.pattern')}}</span>
-			<select data-key="Bark.Pattern" (change)="Chose">
-				<option *for="one of Patterns" *key="one" [value]="one" [selected]="one === Read('Bark.Pattern', Version)">{{$T('graphics.floraEditor.patterns.' + one)}}</option>
-			</select>
-		</label>
-		<label class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.head')}}</span>
-			<select data-key="Head.Kind" (change)="Chose">
-				<option *for="one of Heads" *key="one" [value]="one" [selected]="one === (Read('Head.Kind', Version) || 'none')">{{$T('graphics.floraEditor.heads.' + one)}}</option>
-			</select>
-		</label>
+		<div class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.variant')}}</span>
+			<NumberInput class="elemenx-flora-editor-variant" [Value]="Variant" [Min]="0" [Step]="1" Controls="true" (change)="Varied($event)" />
+		</div>
+		<div class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.tall')}}</span>
+			<Slider [Label]="$T('graphics.floraEditor.tall')" [Min]="0.5" [Max]="60" [Step]="0.5" [Value]="Tall(Version)" (input)="Heighted($event)" />
+		</div>
+		<div class="elemenx-flora-editor-field" *for="list of Lists" *key="list.Key"><span>{{ListTitle(list.Key, Version)}}</span>
+			<Select [Label]="ListTitle(list.Key, Version)" [Options]="Choices(list.Key, Version)" [Value]="Read(list.Key, Version) || list.None" (change)="Chose(list.Key, $event)" />
+		</div>
 		<div class="elemenx-flora-editor-title">{{$T('graphics.floraEditor.numbersTitle')}}</div>
-		<label class="elemenx-flora-editor-field" *for="slider of Sliders(Version)" *key="slider.Key"><span>{{$T(slider.Title)}}</span>
-			<input type="range" [attribute.min]="slider.Min" [attribute.max]="slider.Max" [attribute.step]="slider.Step" [value]="slider.Value" [attribute.data-key]="slider.Key" (change)="Slid" />
-		</label>
+		<div class="elemenx-flora-editor-field" *for="slider of Sliders(Version)" *key="slider.Key"><span>{{$T(slider.Title)}}</span>
+			<Slider [Label]="$T(slider.Title)" [Min]="slider.Min" [Max]="slider.Max" [Step]="slider.Step" [Value]="slider.Value" (change)="Slid(slider.Key, $event)" />
+		</div>
 		<div class="elemenx-flora-editor-title">{{$T('graphics.floraEditor.colorsTitle')}}</div>
-		<label class="elemenx-flora-editor-field elemenx-flora-editor-color" *for="swatch of Swatches(Version)" *key="swatch.Key"><span>{{$T(swatch.Title)}}</span>
-			<input type="color" [value]="swatch.Value" [attribute.data-key]="swatch.Key" (change)="Picked" />
-		</label>
+		<div class="elemenx-flora-editor-field elemenx-flora-editor-color" *for="swatch of Swatches(Version)" *key="swatch.Key"><span>{{$T(swatch.Title)}}</span>
+			<ColorInput [Value]="swatch.Value" (change)="Picked(swatch.Key, $event)" />
+		</div>
 		<div class="elemenx-flora-editor-title">{{$T('graphics.floraEditor.own')}}</div>
-		<label class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.bark')}}</span>
-			<input type="file" accept="image/*" data-key="Bark" (change)="Textured" />
-		</label>
-		<label class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.leaves')}}</span>
-			<input type="file" accept="image/*" data-key="Leaves" (change)="Textured" />
-		</label>
+		<div class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.bark')}}</span>
+			<FileUpload Variant="inline" Accept="image/*" [Label]="$T('graphics.floraEditor.bark')" (change)="Textured('Bark', $event)" />
+		</div>
+		<div class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.leaves')}}</span>
+			<FileUpload Variant="inline" Accept="image/*" [Label]="$T('graphics.floraEditor.leaves')" (change)="Textured('Leaves', $event)" />
+		</div>
 		<div class="elemenx-flora-editor-title">{{$T('graphics.floraEditor.model')}}</div>
-		<label class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.name')}}</span>
-			<input type="text" [value]="Name" (change)="Named" />
-		</label>
-		<button type="button" class="elemenx-flora-editor-define" (click)="Defined">{{$T('graphics.floraEditor.define')}}</button>
+		<div class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.name')}}</span>
+			<Input [Label]="$T('graphics.floraEditor.name')" [Value]="Name" (change)="Named($event)" />
+		</div>
+		<Button class="elemenx-flora-editor-define" Variant="primary" Icon="add" [Label]="$T('graphics.floraEditor.define')" (click)="Defined()" />
 	</aside>
 </div>

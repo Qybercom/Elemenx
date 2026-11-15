@@ -10,6 +10,8 @@
  */
 Elemenx.Component('DialPad', {
 	$TemplateURL: 'DialPad.html',
+	/* [(Value)] on its tag follows what it tells as it is typed or moved. */
+	$Model: {Value: 'input'},
 	$StyleURL: 'DialPad.css',
 	$Meta: {
 		Group: 'social',

@@ -8,6 +8,7 @@ ScenePlanet: a planet as one continuous function of a direction from its centre,
 - Project(view, direction) and Unproject(view, x, y): a globe in a view {Yaw, Pitch, Zoom, Width, Height}; Picture(options, view, rect, step, overlay) a piece of its picture (RGBA), each pixel reckoned of the planet, so it is sharp however near: overlay relief, plates, wind, temperature, moisture or biomes (Color); Work() the workers that paint it.
 - Sphere(options): its ground as SceneTerrainGenerator.Sphere gives one (Land, Elevation, Point, Altitude, Patch with the colors of the globe): what a Scene lands on and draws near, square by square, as fine as the eye needs.
 - Cells, CellAt, CellOf, CellCenter, CellCorners, CellNeighbours, CellPlace: the locations of a planet as cells, squares of the faces of a cube or hexagons of an icosahedron (12 of them pentagons), each a place for the step Planet of a World (its latitude, longitude, turn, size, outline and sides).
+- Data (a key of UseData): a planet of data (PlanetData): as coarse as its tiles, its heights and biomes of them; finer, the relief and the lands of the options it was made of, its Edit over the relief; UseData(key, data), DataOf(key), TileName, TileDirection, TilePlace (the tiles on the faces of the cube, by equal angles) and TileValues (the samples of a tile, what PlanetData.Bake makes).
 
 The same functions run in workers and in Node: they read no page.
 
@@ -19,6 +20,8 @@ The same functions run in workers and in Node: they read no page.
 - `Project(view, direction)`
 - `Unproject(view, px, py)`
 - `Picture(options, view, rect, step, overlay)`
+- `UseData(key, data)`
+- `DataOf(key)`
 - `Sphere(options)`
 - `Work()`
 
@@ -37,4 +40,4 @@ The same functions run in workers and in Node: they read no page.
 - [gives its ground to land on as the Sphere of SceneTerrainGenerator does: its heights, squares with its colors, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L245) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 - [lays its surface out in cells of locations: each found of its points, its neighbours over the edges of the faces too, its place and outline a location takes](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L267) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 
-+21 more in the same files
++23 more in the same files

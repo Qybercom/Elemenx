@@ -20,64 +20,12 @@
 	gap: 2px;
 }
 
-.elemenx-drawing-tool {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 32px;
-	height: 32px;
-	padding: 0;
-	border: 1px solid transparent;
-	border-radius: var(--elemenx-radius);
-	background: transparent;
-	color: var(--elemenx-text);
-	cursor: pointer;
-}
-
-.elemenx-drawing-tool:hover {
-	background: var(--elemenx-surface-hover);
-}
-
-.elemenx-drawing-tool.active {
-	border-color: var(--elemenx-accent);
-	background: rgba(var(--elemenx-accent-rgb), 0.12);
-	color: var(--elemenx-accent);
-}
-
-.elemenx-drawing-tool:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 2px;
-}
-
 .elemenx-drawing-brush {
 	min-width: 140px;
 }
 
-.elemenx-drawing-color {
-	display: inline-flex;
-	align-items: center;
-	gap: 2px;
-}
-
-.elemenx-drawing-color input[type="color"] {
-	width: 30px;
-	height: 30px;
-	padding: 2px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius);
-	background: var(--elemenx-surface);
-	cursor: pointer;
-}
-
 .elemenx-drawing-width {
-	width: 64px;
-	height: 30px;
-	padding: 0 6px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius);
-	background: var(--elemenx-surface);
-	color: var(--elemenx-text);
-	font: inherit;
+	width: 96px;
 }
 
 .elemenx-drawing-stage {

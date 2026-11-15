@@ -16,7 +16,7 @@ Elemenx.Component('VirtualGamepad', {
 	$StyleURL: 'VirtualGamepad.css',
 	$Meta: {
 		Group: 'game',
-		Icon: 'gamepad',
+		Icon: 'games:gamepad',
 		Description: 'A gamepad on the screen for the fingers: a stick, buttons and triggers; a pad of the Gamepad Service as a real one.',
 		Events: {
 			button: 'A button went down or up: {Button, Down}.'

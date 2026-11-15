@@ -24,6 +24,22 @@ function request (port, method, headers) {
 	});
 }
 
+/* A part of a file of the server, as a planet asks for one tile of its file: {Status, Headers, Bytes}. */
+function part (port, file, range) {
+	return new Promise(function (resolve, reject) {
+		http.get({host: '127.0.0.1', port: port, path: file, headers: range ? {Range: range} : {}}, function (response) {
+			var chunks = [];
+
+			response.on('data', function (chunk) {
+				chunks.push(chunk);
+			});
+			response.on('end', function () {
+				resolve({Status: response.statusCode, Headers: response.headers, Bytes: Buffer.concat(chunks)});
+			});
+		}).on('error', reject);
+	});
+}
+
 function withServer (options, callback) {
 	return new Promise(function (resolve, reject) {
 		var server = Server.Create(options);
@@ -445,5 +461,52 @@ describe('Templates of a page', function () {
 		finally {
 			fs.rmSync(root, {recursive: true, force: true});
 		}
+	});
+
+	/* A planet read tile by tile from its one file: a range of its bytes. */
+	it('answers a range of bytes with 206 and its place, a range past the file with 416, and the whole file with Accept-Ranges', async function () {
+		var folder = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-range-'));
+		var bytes = Buffer.from(Array.from({length: 300}, function (value, index) {
+			return index & 255;
+		}));
+		var server;
+		var port;
+		var piece;
+		var tail;
+		var whole;
+		var past;
+
+		fs.writeFileSync(path.join(folder, 'terra.planet'), bytes);
+
+		server = Server.Create({Root: folder});
+
+		await new Promise(function (resolve) {
+			server.Listen(0, '127.0.0.1', resolve);
+		});
+
+		port = server.Server.address().port;
+
+		try {
+			piece = await part(port, '/terra.planet', 'bytes=10-19');
+			tail = await part(port, '/terra.planet', 'bytes=-5');
+			whole = await part(port, '/terra.planet');
+			past = await part(port, '/terra.planet', 'bytes=400-500');
+		}
+		finally {
+			server.Close();
+
+			fs.rmSync(folder, {recursive: true, force: true});
+		}
+
+		expect(piece.Status).toBe(206);
+		expect(piece.Headers['content-range']).toBe('bytes 10-19/300');
+		expect(Array.from(piece.Bytes)).toEqual([10, 11, 12, 13, 14, 15, 16, 17, 18, 19]);
+		expect(tail.Status).toBe(206);
+		expect(Array.from(tail.Bytes)).toEqual([295 & 255, 296 & 255, 297 & 255, 298 & 255, 299 & 255]);
+		expect(whole.Status).toBe(200);
+		expect(whole.Headers['accept-ranges']).toBe('bytes');
+		expect(whole.Bytes.length).toBe(300);
+		expect(past.Status).toBe(416);
+		expect(past.Headers['content-range']).toBe('bytes */300');
 	});
 });

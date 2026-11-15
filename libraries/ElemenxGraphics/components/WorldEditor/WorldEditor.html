@@ -1,0 +1,54 @@
+<div class="elemenx-world-editor">
+	<div class="elemenx-world-editor-bar" role="toolbar" [attribute.aria-label]="Label || $T('graphics.worldEditor.label')">
+		<Breadcrumbs class="elemenx-world-editor-path" Size="small" [Label]="$T('graphics.worldEditor.path')" [Items]="PathItems(Version)" (select)="Went($event)" />
+		<div class="elemenx-world-editor-actions">
+			<Button *if="CanEnter(Version)" Size="small" Variant="primary" Icon="arrow-right" [Label]="EnterLabel(Version)" (click)="EnterPicked" />
+			<Button Size="small" Variant="ghost" Icon="download" [Label]="$T('graphics.worldEditor.save')" [Disabled]="Packing" (click)="Downloaded" />
+			<FileUpload class="elemenx-world-editor-open" Variant="inline" Accept=".world,.zip" [Label]="$T('graphics.worldEditor.open')" (change)="Uploaded($event)" />
+		</div>
+	</div>
+	<Tabs class="elemenx-world-editor-tabs" Variant="editor" Size="small" [Label]="$T('graphics.worldEditor.tabs')" [Tabs]="TabItems(Version)" [Value]="Tab" (change)="TabChosen($event)" (close)="TabClosed($event)" />
+	<div class="elemenx-world-editor-body">
+		<aside class="elemenx-world-editor-panel" *resizable="{Edges: 'right', MinWidth: 150, MaxWidth: 560}" [style.width]="PaneWidth('panel', 240)" (resizeend)="PaneResized('panel', $event)">
+			<div class="elemenx-world-editor-section" *if="Tab === 'world' && Level(Version) === 'galaxy'">
+				<div class="elemenx-world-editor-title">{{$T('graphics.worldEditor.galaxy')}}</div>
+				<Input Size="small" [Label]="$T('graphics.worldEditor.name')" [Value]="GalaxyName(Version)" (change)="GalaxyRenamed($event)" />
+				<Select Size="small" [Label]="$T('graphics.worldEditor.kind')" [Options]="KindOptions()" [Value]="GalaxyKind(Version)" (change)="GalaxyRemade('Kind', $event)" />
+				<Input Size="small" [Label]="$T('graphics.worldEditor.seed')" [Value]="GalaxySeed(Version)" (change)="GalaxyRemade('Seed', $event)" />
+				<Slider Size="small" [Label]="$T('graphics.worldEditor.time')" ShowValue="end" Min="0" Max="500" Step="1" Unit=" Myr" [Value]="Time" (input)="Timed($event)" />
+				<div class="elemenx-world-editor-row">
+					<Button Size="small" Variant="ghost" Icon="add" [Label]="$T('graphics.worldEditor.addStar')" (click)="AddedHere('star')" />
+					<Button Size="small" Variant="ghost" Icon="add" [Label]="$T('graphics.worldEditor.addBody')" (click)="AddedHere('station')" />
+				</div>
+				<div class="elemenx-world-editor-title" *if="Picked">{{$T('graphics.worldEditor.star')}}</div>
+				<Input *if="Picked" Size="small" [Label]="$T('graphics.worldEditor.name')" [Value]="PickedName(Version)" (change)="PickedRenamed($event)" />
+				<div class="elemenx-world-editor-note" *if="Picked">{{PickedNote(Version)}}</div>
+				<div class="elemenx-world-editor-row" *if="PickedBody(Version)">
+					<NumberInput *for="axis of [0, 1, 2]" *key="axis" Size="small" [Label]="$T('graphics.worldEditor.velocity') + ' ' + 'XYZ'.charAt(axis)" [Value]="PickedBody(Version).Velocity[axis]" (change)="Moved(axis, $event)" />
+				</div>
+				<Button *if="Picked" Size="small" Variant="ghost" Icon="delete" [Label]="$T('graphics.worldEditor.remove')" (click)="PickedRemoved" />
+			</div>
+			<div class="elemenx-world-editor-section" *if="Tab === 'world' && Level(Version) === 'system'">
+				<div class="elemenx-world-editor-title">{{$T('graphics.worldEditor.system')}}</div>
+				<div class="elemenx-world-editor-note">{{SystemNote(Version)}}</div>
+			</div>
+			<div class="elemenx-world-editor-section">
+				<div class="elemenx-world-editor-title">{{$T('graphics.worldEditor.resources')}}</div>
+				<div class="elemenx-world-editor-group" *for="group of Groups(Version)" *key="group.Kind" [attribute.data-kind]="group.Kind">
+					<div class="elemenx-world-editor-subtitle">{{group.Label}}<Button Size="small" Variant="ghost" Icon="add" [Title]="group.Add" (click)="AddResource(group.Kind)" /></div>
+					<Button class="elemenx-world-editor-item" *for="item of group.Items" *key="item.ID" Size="small" Variant="ghost" [Pressed]="Tab === item.Tab" [Label]="item.Label" (click)="OpenResource(group.Kind, item.ID)" />
+				</div>
+			</div>
+		</aside>
+		<div class="elemenx-world-editor-main">
+			<Scene *if="Tab === 'world' && Level(Version) === 'galaxy'" class="elemenx-world-editor-galaxy" Setting="galaxy" Labels="false" [galaxy]="GalaxyKey" [galaxyTime]="Time" (ready)="GalaxyReady" (galaxy)="StarPicked" (enter)="Entered" />
+			<SceneEditor *if="Tab === 'world' && Level(Version) === 'system'" #System Setting="space" [models]="ModelNames(Version)" (change)="SystemChanged" (select)="BodyPicked" />
+			<PlanetEditor *if="Tab === 'world' && Level(Version) === 'planet'" [value]="PlanetValue(Version)" (change)="PlanetChanged" (location)="LocationOpened" />
+			<SceneEditor *if="Tab === 'world' && Level(Version) === 'location'" #Location [value]="LocationValue(Version)" [models]="ModelNames(Version)" (change)="LocationChanged" />
+			<ModelEditor *if="ResourceKind(Tab) === 'model'" [value]="ResourceValue(Version, Tab)" [generator]="Generator" (change)="ResourceChanged(Tab, $event)" />
+			<FloraEditor *if="ResourceKind(Tab) === 'plant'" [preset]="ResourceValue(Version, Tab)" (change)="ResourceChanged(Tab, $event.Preset)" />
+			<CutsceneEditor *if="ResourceKind(Tab) === 'cutscene'" [value]="ResourceValue(Version, Tab)" (change)="ResourceChanged(Tab, $event)" />
+			<Blueprint *if="ResourceKind(Tab) === 'material'" Type="material" [value]="ResourceValue(Version, Tab)" (change)="ResourceChanged(Tab, $event)" />
+		</div>
+	</div>
+</div>

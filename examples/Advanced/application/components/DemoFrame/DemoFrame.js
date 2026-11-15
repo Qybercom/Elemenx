@@ -124,6 +124,18 @@ Elemenx.Component('DemoFrame', {
 		this.$Emit('choose', {Name: name});
 	},
 
+	/* The demos as items of the list (NavList). Regression: the list asked for them of a method that was not there, and showed none. */
+	DemoItems: function (demos) {
+		return (demos || []).map(function (demo) {
+			return {ID: demo.Name, Label: demo.Label};
+		});
+	},
+
+	Picked: function (item) {
+		if (item && item.ID)
+			this.Chosen(item.ID);
+	},
+
 	/* The demo over the whole screen (the browser asks for it within a press); a game kept in landscape on a phone. */
 	Full: function () {
 		var screen = this.$Service('Screen');

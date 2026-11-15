@@ -17,6 +17,11 @@
 		"replace": "Start a new game in the place of this one?",
 		"packing": "Packing the game…",
 		"notKept": "The browser did not keep the game",
-		"notGame": "That is not a game of the Game editor"
+		"notGame": "That is not a game of the Game editor",
+		"world": "Download the world",
+		"worldNote": "The planet baked whole, its edits and its locations in one file",
+		"openWorld": "Open a world",
+		"baking": "Baking the world… {done}%",
+		"notWorld": "That is not a world of the Game editor"
 	}
 }

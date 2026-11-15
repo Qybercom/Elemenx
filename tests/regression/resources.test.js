@@ -63,9 +63,10 @@ describe('Contract: Elemenx.Resources and $Resources', function () {
 			}
 		}));
 
+		/* Regression: under the load of a whole run (scenes beside it) the files of the folder came after 4 s; they are waited for as other loads of a Library are. */
 		expect(await waitFor(function () {
 			return ready && document.querySelector('.resource-root');
-		}, 4000)).toBeTruthy();
+		}, 20000)).toBeTruthy();
 
 		/* Its Service saw them as it was defined. */
 		expect(Elemenx.Service('ResourceReader').Seen).toEqual(expect.arrayContaining([library + '/deep/sea', library + '/water']));
@@ -91,7 +92,7 @@ describe('Contract: Elemenx.Resources and $Resources', function () {
 
 		expect(await waitFor(function () {
 			return ready;
-		}, 4000)).toBe(true);
+		}, 20000)).toBe(true);
 		expect(Elemenx.Resources('Blueprints', library + '/water')).toEqual({name: 'Mine', blocks: []});
 	});
 

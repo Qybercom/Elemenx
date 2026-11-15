@@ -1076,17 +1076,20 @@ span.elemenx-rich-plugin {
 	--elemenx-callout-rgb: var(--elemenx-text-muted-rgb);
 }
 
+/*
+ * A badge declares no custom property of its own: an element that declares one costs twice as much each time its
+ * style is reckoned again (it takes a copy of every token of the theme), and a badge is what a label over a scene is
+ * made of, moved each frame. Each tone sets its colors itself.
+ */
 .elemenx-badge {
-	--elemenx-badge-color: var(--elemenx-text-muted);
-	--elemenx-badge-rgb: var(--elemenx-text-muted-rgb);
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
 	height: 20px;
 	padding: 0 8px;
-	background: rgba(var(--elemenx-badge-rgb), 0.14);
+	background: rgba(var(--elemenx-text-muted-rgb), 0.14);
 	border-radius: var(--elemenx-radius-pill);
-	color: var(--elemenx-badge-color);
+	color: var(--elemenx-text-muted);
 	font-size: var(--elemenx-font-size-small);
 	line-height: var(--elemenx-line-height-small);
 	font-weight: var(--elemenx-font-weight-strong);
@@ -1094,28 +1097,28 @@ span.elemenx-rich-plugin {
 }
 
 .elemenx-badge.accent {
-	--elemenx-badge-color: var(--elemenx-accent);
-	--elemenx-badge-rgb: var(--elemenx-accent-rgb);
+	background: rgba(var(--elemenx-accent-rgb), 0.14);
+	color: var(--elemenx-accent);
 }
 
 .elemenx-badge.info {
-	--elemenx-badge-color: var(--elemenx-info);
-	--elemenx-badge-rgb: var(--elemenx-info-rgb);
+	background: rgba(var(--elemenx-info-rgb), 0.14);
+	color: var(--elemenx-info);
 }
 
 .elemenx-badge.success {
-	--elemenx-badge-color: var(--elemenx-success);
-	--elemenx-badge-rgb: var(--elemenx-success-rgb);
+	background: rgba(var(--elemenx-success-rgb), 0.14);
+	color: var(--elemenx-success);
 }
 
 .elemenx-badge.warning {
-	--elemenx-badge-color: var(--elemenx-warning);
-	--elemenx-badge-rgb: var(--elemenx-warning-rgb);
+	background: rgba(var(--elemenx-warning-rgb), 0.14);
+	color: var(--elemenx-warning);
 }
 
 .elemenx-badge.danger {
-	--elemenx-badge-color: var(--elemenx-danger);
-	--elemenx-badge-rgb: var(--elemenx-danger-rgb);
+	background: rgba(var(--elemenx-danger-rgb), 0.14);
+	color: var(--elemenx-danger);
 }
 
 /*
@@ -1140,12 +1143,32 @@ span.elemenx-rich-plugin {
 	min-width: 16px;
 	height: 16px;
 	padding: 0 4px;
-	background: var(--elemenx-badge-color);
+	background: var(--elemenx-text-muted);
 	color: var(--elemenx-badge-text);
 	font-size: 10px;
 	line-height: 16px;
 	box-shadow: 0 0 0 2px var(--elemenx-surface);
 	pointer-events: none;
+}
+
+.elemenx-badge.overlay.accent {
+	background: var(--elemenx-accent);
+}
+
+.elemenx-badge.overlay.info {
+	background: var(--elemenx-info);
+}
+
+.elemenx-badge.overlay.success {
+	background: var(--elemenx-success);
+}
+
+.elemenx-badge.overlay.warning {
+	background: var(--elemenx-warning);
+}
+
+.elemenx-badge.overlay.danger {
+	background: var(--elemenx-danger);
 }
 
 .elemenx-badge.overlay[hidden] {
@@ -1169,9 +1192,34 @@ span.elemenx-rich-plugin {
 	height: 12px;
 	padding: 0;
 	background: var(--elemenx-surface);
-	border: 2px solid rgba(var(--elemenx-badge-rgb), 0.24);
-	border-top-color: var(--elemenx-badge-color);
+	border: 2px solid rgba(var(--elemenx-text-muted-rgb), 0.24);
+	border-top-color: var(--elemenx-text-muted);
 	animation: elemenx-spin 800ms linear infinite;
+}
+
+.elemenx-badge.overlay.busy.accent {
+	border-color: rgba(var(--elemenx-accent-rgb), 0.24);
+	border-top-color: var(--elemenx-accent);
+}
+
+.elemenx-badge.overlay.busy.info {
+	border-color: rgba(var(--elemenx-info-rgb), 0.24);
+	border-top-color: var(--elemenx-info);
+}
+
+.elemenx-badge.overlay.busy.success {
+	border-color: rgba(var(--elemenx-success-rgb), 0.24);
+	border-top-color: var(--elemenx-success);
+}
+
+.elemenx-badge.overlay.busy.warning {
+	border-color: rgba(var(--elemenx-warning-rgb), 0.24);
+	border-top-color: var(--elemenx-warning);
+}
+
+.elemenx-badge.overlay.busy.danger {
+	border-color: rgba(var(--elemenx-danger-rgb), 0.24);
+	border-top-color: var(--elemenx-danger);
 }
 
 @media (prefers-reduced-motion: reduce) {

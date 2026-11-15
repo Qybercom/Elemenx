@@ -50,6 +50,8 @@ Elemenx.Component('Drawing', {
 	Stroke: '#1f2328',
 	Fill: 'none',
 	StrokeWidth: 3,
+	/* The color of the fill kept while shapes are left empty, for the checkbox to fill them again. */
+	FillKept: '#dbe7f5',
 	Layer: '',
 	Toolbar: true,
 	ReadOnly: false,
@@ -880,6 +882,13 @@ Elemenx.Component('Drawing', {
 		this.Finish();
 	},
 
+	/* A tool of its toolbar picked. */
+	Picked: function (tool) {
+		this.Tool = tool;
+
+		this.Finish();
+	},
+
 	BrushOptions: function () {
 		var self = this;
 
@@ -917,27 +926,33 @@ Elemenx.Component('Drawing', {
 		this.Commit(before);
 	},
 
-	Stroked: function (event) {
-		this.Stroke = event.target.value;
+	/* A value told by a Component of its toolbar, or the event of a field of the page. */
+	Told: function (value) {
+		return value && value.target ? value.target.value : value;
+	},
+
+	Stroked: function (value) {
+		this.Stroke = this.Told(value);
 
 		this.Paint('Stroke', this.Stroke);
 	},
 
-	Filled: function (event) {
-		this.Fill = event.target.value;
+	Filled: function (value) {
+		this.Fill = this.Told(value);
+		this.FillKept = this.Fill;
 
 		this.Paint('Fill', this.Fill);
 	},
 
 	/* The checkbox of the fill: off leaves the shapes empty, on fills them with the color chosen. */
-	Unfilled: function (event) {
-		this.Fill = event.target.checked ? this.$Element().querySelector('.elemenx-drawing-fill').value : 'none';
+	Unfilled: function (checked) {
+		this.Fill = (checked && checked.target ? checked.target.checked : checked) ? this.FillKept : 'none';
 
 		this.Paint('Fill', this.Fill);
 	},
 
-	Widened: function (event) {
-		this.StrokeWidth = Math.max(0.5, Number(event.target.value) || 1);
+	Widened: function (value) {
+		this.StrokeWidth = Math.max(0.5, Number(this.Told(value)) || 1);
 
 		this.Paint('Width', this.StrokeWidth);
 	},

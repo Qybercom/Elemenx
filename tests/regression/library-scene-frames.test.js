@@ -137,6 +137,90 @@ describe('Regression: what made the frames of a scene uneven or heavy', function
 		}
 	});
 
+	/*
+	 * The still body of a car of a file was some twenty draws of its materials in each slice of the shadow, more than a
+	 * hundred a frame. A map of the shadow draws only the depth: the still pieces of its model, of all their materials, are
+	 * one shape there; glass is not in it (light goes through it).
+	 */
+	it('casts the shadow of the still pieces of a model of a file, of all their materials, by one draw', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var renderer = engine.Renderer;
+		var models = Elemenx.Service('SceneModels');
+		var meshes = Elemenx.Service('Meshes');
+		var name = unique('materials');
+		var draw = renderer.Draw;
+		var now = performance.now() + 100;
+		var shadow = [];
+		var view = [];
+		var i;
+
+		function box (x, z) {
+			var made = meshes.Box({Width: 0.4, Height: 0.4, Depth: 0.4});
+
+			return {Positions: new Float32Array(Array.from(made.Positions).map(function (value, index) {
+				return index % 3 === 0 ? value + x : index % 3 === 2 ? value + z : value;
+			})), Normals: new Float32Array(made.Normals), UVs: new Float32Array(made.UVs), Indices: Array.from(made.Indices)};
+		}
+
+		function material (title, color, glass) {
+			return {Name: title, BaseColor: color, Metallic: 0, Roughness: 0.5, Emissive: [0, 0, 0], Transmission: glass ? 1 : 0, ColorMap: null, MetalMap: null, NormalMap: null, OcclusionMap: null, EmissiveMap: null, Alpha: glass ? 'BLEND' : 'OPAQUE', Cutoff: 0.5, DoubleSided: false, Unlit: false};
+		}
+
+		function node (title, mesh) {
+			return {Name: title, Parent: -1, Children: [], Translation: [0, 0.3, 0], Rotation: [0, 0, 0, 1], Scale: [1, 1, 1], Mesh: mesh, Skin: -1};
+		}
+
+		models.Define(name, {URL: name, Fit: false, Asset: {
+			Nodes: [node('a', 0), node('b', 1), node('c', 2), node('d', 3), node('e', 4), node('f', 5)],
+			Meshes: [[{Geometry: box(-1.5, 0), Material: 0}], [{Geometry: box(-0.5, 0), Material: 0}], [{Geometry: box(0.5, 0), Material: 1}], [{Geometry: box(1.5, 0), Material: 1}], [{Geometry: box(-0.5, 1), Material: 2}], [{Geometry: box(0.5, 1), Material: 2}]],
+			Lights: [],
+			Materials: [material('paint', [1, 0.5, 0, 1]), material('chrome', [0.8, 0.8, 0.8, 1]), material('glass', [0.6, 0.7, 0.8, 0.3], true)],
+			Images: [],
+			Skins: [],
+			Animations: [],
+			Scene: [0, 1, 2, 3, 4, 5]
+		}});
+
+		await new Promise(function (done) {
+			models.Load(name, done);
+		});
+
+		renderer.Draw = function (mesh, program, uniforms, options) {
+			if (mesh && uniforms && (mesh.Vertices === 48 || mesh.Vertices === 96)) {
+				if (uniforms.uShadowOn !== undefined) view.push(mesh.Vertices);
+				else if ('uJointOffset' in uniforms && options && options.Cull === 'none' && options.Depth === undefined) shadow.push(mesh.Vertices);
+			}
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			scene.Add({ID: 'body', Kind: 'unit', Model: name, Size: 1, X: 0, Y: 0});
+
+			for (i = 0; i < 8; i++) {
+				shadow = [];
+				view = [];
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+
+			/* Seen: a draw for each material. Cast: one shape of the four boxes that are not glass, in each map, and no other. */
+			expect(view.filter(function (count) {
+				return count === 48;
+			}).length).toBe(3);
+			expect(shadow.length).toBeGreaterThan(0);
+			expect(shadow.every(function (count) {
+				return count === 96;
+			})).toBe(true);
+		}
+		finally {
+			renderer.Draw = draw;
+		}
+	});
+
 	/* Both mirrors of a car were drawn on the same frames: every other frame was a heavy one, and the view went by in jerks. */
 	it('draws the mirrors of a car each in a frame of its own', async function () {
 		var scene = await mount();

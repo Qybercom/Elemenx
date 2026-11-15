@@ -27,7 +27,7 @@ A ruler, as the rulers of an editor of pages or pictures: Orientation horizontal
 	<div style="height: 20px;" (pointermove)="Moved">
 		<Ruler [start]="Start" [marker]="Marker" [range]="{From: 40, To: 200}" [guides]="Guides" (pull)="Pulled" />
 	</div>
-	<label class="elemenx-text small">Start <input class="elemenx-input" type="range" min="0" max="400" step="10" [value]="Start" (input)="Scrolled"></label>
+	<Slider Label="Start" [Min]="0" [Max]="400" [Step]="10" [Value]="Start" (input)="Scrolled($event)" />
 	<p class="elemenx-text small muted">Guides: {{Guides.join(', ') || 'none'}} (press the ruler to add one)</p>
 </div>
 <script>
@@ -40,8 +40,8 @@ A ruler, as the rulers of an editor of pages or pictures: Orientation horizontal
 		this.Marker = Math.round(this.Start + event.clientX - node.getBoundingClientRect().left);
 	},
 
-	Scrolled: function (event) {
-		this.Start = Number(event.target.value);
+	Scrolled: function (value) {
+		this.Start = Number(value);
 	},
 
 	Pulled: function (event) {

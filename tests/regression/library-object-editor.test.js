@@ -71,6 +71,17 @@ function field (editor, name) {
 	return editor.$Element().querySelector('.elemenx-model-editor-fields [data-field="' + name + '"]');
 }
 
+/* A field of the inspector told a value by its Component of ElemenxUI (an Input, a Checkbox, a ColorInput, a Select). */
+function tell (editor, name, value) {
+	var entry = editor.FieldList.filter(function (one) {
+		return one.Key === name;
+	})[0];
+
+	expect(field(editor, name).querySelector('.elemenx-input, .elemenx-check, .elemenx-color, .elemenx-select')).not.toBe(null);
+
+	editor.FieldChanged(entry, value);
+}
+
 describe('Contract: ModelEditor, a model of shapes edited part by part, its recipe of Models and its files', function () {
 	beforeAll(async function () {
 		await loadElemenx();
@@ -170,26 +181,22 @@ describe('Contract: ModelEditor, a model of shapes edited part by part, its reci
 		expect(editor.Recipe().Parts[0].Size[1]).toBeGreaterThan(0.5);
 
 		/* Its fields: a color, a mirror, a piece of a rig, its vary. */
-		field(editor, 'Color').value = '#ff0000';
+		await tick(30);
 
-		field(editor, 'Color').dispatchEvent(new Event('change'));
+		tell(editor, 'Color', '#ff0000');
+		tell(editor, 'Mirror', true);
 
-		mirror = field(editor, 'Mirror');
-		mirror.checked = true;
+		await tick(30);
 
-		mirror.dispatchEvent(new Event('change'));
+		tell(editor, 'Piece', 'arm-l');
 
-		field(editor, 'Piece').value = 'arm-l';
+		await tick(30);
 
-		field(editor, 'Piece').dispatchEvent(new Event('change'));
+		tell(editor, 'Vary.Size', '0.1, 0, 0.1');
 
-		field(editor, 'Vary.Size').value = '0.1, 0, 0.1';
+		await tick(30);
 
-		field(editor, 'Vary.Size').dispatchEvent(new Event('change'));
-
-		field(editor, 'Piece.Pivot').value = '0, 0.5, 0';
-
-		field(editor, 'Piece.Pivot').dispatchEvent(new Event('change'));
+		tell(editor, 'Piece.Pivot', '0, 0.5, 0');
 
 		expect(editor.Recipe().Parts[0]).toMatchObject({Color: '#ff0000', Mirror: true, Piece: 'arm-l', Vary: {Size: [0.1, 0, 0.1]}});
 		expect(editor.Recipe().Pieces).toEqual([{ID: 'arm-l', Pivot: [0, 0.5, 0]}]);

@@ -7,13 +7,13 @@
 
 ```example
 <div class="elemenx-container wrappable" style="gap: 8px;">
-	<button class="elemenx-button" *tip="'Save the page'">Plain</button>
-	<button class="elemenx-button" *tip="{Title: 'Number input', Text: 'A number typed or stepped by its arrows, within Min and Max.'}">Rich</button>
-	<button class="elemenx-button" *tip="{Title: 'Above', Text: 'Placement top, shown at once.', Placement: 'top', Delay: 0}">Top</button>
-	<button class="elemenx-button" *tip="{Element: Card(), Placement: 'right', Delay: 0, Touch: true, Bare: true}">Card, a tap too</button>
+	<Button Label="Plain" *tip="'Save the page'" />
+	<Button Label="Rich" *tip="{Title: 'Number input', Text: 'A number typed or stepped by its arrows, within Min and Max.'}" />
+	<Button Label="Top" *tip="{Title: 'Above', Text: 'Placement top, shown at once.', Placement: 'top', Delay: 0}" />
+	<Button Label="Card, a tap too" *tip="{Element: Card(), Placement: 'right', Delay: 0, Touch: true, Bare: true}" />
 </div>
 <div data-theme="darcula" data-scheme="dark" style="margin-top: 8px; padding: 8px; display: inline-block;">
-	<button class="elemenx-button" *tip="{Title: 'In its own theme', Text: 'The tip takes the theme of this part of the page.'}">Darcula part</button>
+	<Button Label="Darcula part" *tip="{Title: 'In its own theme', Text: 'The tip takes the theme of this part of the page.'}" />
 </div>
 <script>
 ({

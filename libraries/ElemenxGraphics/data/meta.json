@@ -70,6 +70,77 @@
 			}
 		},
 		{
+			"Name": "ViewActions",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "camera",
+			"Description": "The actions of the view of an editor in a bar over its bottom; a toggle gives one finger to the camera.",
+			"Props": [
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"Icon": "icon",
+						"Label": "text",
+						"Disabled": "bool",
+						"Danger": "bool"
+					},
+					"Body": false,
+					"Description": "The actions: [{ID, Icon, Label, Disabled, Danger}]."
+				},
+				{
+					"Name": "Hand",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "One finger moves the camera (true or false); null leaves the toggle out."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the bar for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"act",
+				"hand"
+			],
+			"EventDescriptions": {
+				"act": "An action was pressed: {ID}.",
+				"hand": "The toggle of one finger for the camera: {Hand}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Items": [
+					{
+						"ID": "frame",
+						"Icon": "maximize",
+						"Label": "Frame"
+					},
+					{
+						"ID": "delete",
+						"Icon": "delete",
+						"Label": "Delete",
+						"Danger": true
+					}
+				],
+				"Hand": false
+			}
+		},
+		{
 			"Name": "SceneObject",
 			"Kind": "Component",
 			"Group": "game",
@@ -230,11 +301,30 @@
 					"Default": "space",
 					"Options": [
 						"space",
-						"terrain"
+						"terrain",
+						"galaxy"
 					],
 					"Schema": null,
 					"Body": false,
-					"Description": "The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers)."
+					"Description": "The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers; galaxy: a galaxy of Galaxy, SceneGalaxy)."
+				},
+				{
+					"Name": "Galaxy",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The galaxy of Setting galaxy (SceneGalaxy, GalaxyData): a key of GalaxyData.Use, the URL of its file, its data, or options of GalaxyData.Make ({Seed, Kind, Radius, Arms})."
+				},
+				{
+					"Name": "GalaxyTime",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The time of the galaxy in millions of years: it turns as a galaxy turns, the inner stars sooner than the outer ones."
 				},
 				{
 					"Name": "System",
@@ -243,7 +333,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}."
+					"Description": "The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}, or a system of data (SystemData): {Data: the URL of its file, or a key of SystemData.Use}."
 				},
 				{
 					"Name": "Seed",
@@ -843,7 +933,7 @@
 					],
 					"Schema": null,
 					"Body": false,
-					"Description": "Large bodies and short distances (compressed), or their real sizes."
+					"Description": "Large bodies and short distances (compressed), or their real sizes, or a number between them: 0 compressed to 1 real (a slider, as their ratio goes)."
 				},
 				{
 					"Name": "Team",
@@ -898,6 +988,8 @@
 				"break",
 				"teleport",
 				"through",
+				"galaxy",
+				"galaxyready",
 				"hover",
 				"cutscene",
 				"cue",
@@ -920,8 +1012,8 @@
 				"land": "The view went down to the surface of a body: {ID}.",
 				"takeoff": "The view went back up to space: {ID}.",
 				"travel": "A ship on its way far at once (Travel, H or J) came to a phase: {ID, Kind (warp or jump), Phase (enter, inside, exit, done)}.",
-				"enter": "A walker, a vehicle or the hero came into a trigger: {Trigger (the trigger itself: ID, Inside(), Action(name, data), Enable(on)), ID, Object}.",
-				"leave": "One went out of a trigger, or was removed: {Trigger, ID, Object}.",
+				"enter": "The view went into the system of a star of the galaxy (EnterSystem): {ID, Star, Key (of SystemData.Use)}.",
+				"leave": "The view went out of a system to its galaxy (LeaveSystem): {ID}.",
 				"action": "A trigger was sent an action (Action of the trigger): {Trigger, Name, Data}.",
 				"dig": "A hole was dug in the ground (Dig): {At, Radius}.",
 				"fire": "An object shot its weapon (SceneWeapons): {ID, Weapon, From, Way}.",
@@ -931,6 +1023,8 @@
 				"break": "A thing broke into pieces (Break, SceneDebris): {ID, Pieces, Point}.",
 				"teleport": "A thing is beamed away or comes (Teleport): {ID, Phase (out or in), From, To}.",
 				"through": "A ship flew into the mouth of a wormhole (SceneDeepSpace): {ID, Wormhole, Leads, To (the mouth it comes out of, empty: none)}.",
+				"galaxy": "A star of the galaxy was picked (Setting galaxy, SceneGalaxy): {ID (empty: none or the black hole), Centre (the black hole), Star}.",
+				"galaxyready": "The galaxy of Galaxy came: {ID, Data}.",
 				"hover": "The pointer came over a selectable object, or left it: {ID (empty: none), Object, Info}.",
 				"cutscene": "A cutscene started, ended or was stopped (SceneCinema): {Name, State: start, end or stop}.",
 				"cue": "A cue of a cutscene came: {Cutscene, Name, Data, At}.",
@@ -968,6 +1062,15 @@
 				"Parts(id)",
 				"Part(id, role)",
 				"CosmosKinds()",
+				"GalaxyData()",
+				"GalaxyView()",
+				"SetGalaxyView(view)",
+				"GalaxyStars()",
+				"GalaxyPicked()",
+				"GalaxyFocus(id)",
+				"EnterSystem(id, callback)",
+				"LeaveSystem(callback)",
+				"GalaxyEntered()",
 				"Add(kind, props)",
 				"Change(id, changes)",
 				"UseCamera(id, options)",
@@ -1404,6 +1507,15 @@
 					"Description": "What a new document is: a ground under a sun, or a star system."
 				},
 				{
+					"Name": "Scale",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How real the sizes and distances of a star system are: 0 readable (large bodies, nothing crowded) to 1 real, a slider over the view."
+				},
+				{
 					"Name": "Kinds",
 					"Type": "json",
 					"Default": [
@@ -1427,10 +1539,14 @@
 					"Type": "json",
 					"Default": [
 						"star",
+						"barycentre",
 						"planet",
+						"planetoid",
 						"moon",
 						"belt",
 						"ring",
+						"blackhole",
+						"wormhole",
 						"station",
 						"outpost",
 						"craft",
@@ -1517,6 +1633,8 @@
 				"Restore()",
 				"Export()",
 				"Import(text)",
+				"System()",
+				"OpenSystem(source, callback)",
 				"Select(id)",
 				"Add(kind, props)",
 				"Remove(id)",
@@ -1557,11 +1675,16 @@
 						"river",
 						"climate",
 						"biome",
+						"raise",
+						"lower",
+						"flatten",
+						"smooth",
+						"rule",
 						"location"
 					],
 					"Schema": null,
 					"Body": false,
-					"Description": "The tool in hand."
+					"Description": "The tool in hand: a stroke of its Paint, a brush of its Edits (raise, lower, flatten, smooth: a drag paints along its path), a region of a rule of detail (rule), or a location."
 				},
 				{
 					"Name": "Overlay",
@@ -1613,7 +1736,72 @@
 				"Finish()",
 				"Cancel()",
 				"Remove(index)",
+				"Undo()",
+				"Redo()",
 				"Render()"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "WorldEditor",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "globe",
+			"Description": "An editor of a whole world, level in level: a galaxy, the system of a star, a planet, a location; its models, plants, cutscenes and materials each in a tab beside it.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The world: {Name, Galaxy (options of GalaxyData.Make or its data), Planets, Locations, Resources}."
+				},
+				{
+					"Name": "Generator",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A generator of models for its models (ModelEditor): function (description, callback (error, recipe))."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"level",
+				"error"
+			],
+			"EventDescriptions": {
+				"change": "The world changed: {Name, Galaxy, Planets, Locations, Resources}.",
+				"level": "The level shown changed: {Path: [{Level, ID}]}.",
+				"error": "A file of a world was not read: the error."
+			},
+			"Methods": [
+				"World()",
+				"Load(world)",
+				"Galaxy()",
+				"Path()",
+				"Enter(level, id, callback)",
+				"Up(index)",
+				"AddResource(kind)",
+				"OpenResource(kind, id)",
+				"Pack(callback)",
+				"Open(source, callback)"
 			],
 			"Sample": {}
 		},
@@ -1880,7 +2068,7 @@
 			"Name": "TextureLab",
 			"Kind": "Component",
 			"Group": "game",
-			"Icon": "palette",
+			"Icon": "art:palette",
 			"Description": "A bench for the textures of SceneTextures: a tile and a ground under the sun, sharp near and far, its params on sliders.",
 			"Props": [
 				{
@@ -2763,6 +2951,8 @@
 				"Kinds()",
 				"Project(view, direction)",
 				"Unproject(view, x, y)",
+				"ViewTurn(yaw, pitch, roll)",
+				"Map(options, rows, width, height, overlay)",
 				"Planet(options)",
 				"Color(planet, sample, overlay, light)",
 				"Picture(options, view, rect, step, overlay)",
@@ -2770,6 +2960,17 @@
 				"Heights(options, face, size, row, rows)",
 				"Drainage(heights, size, least)",
 				"UseRivers(key, rivers)",
+				"UseData(key, data)",
+				"AddTiles(key, names)",
+				"DataOf(key)",
+				"Ruled(options)",
+				"DataVectors(key)",
+				"Vectored(options)",
+				"TownsFor(options)",
+				"TileName(layer, face, level, x, y)",
+				"TileDirection(face, s, t)",
+				"TilePlace(direction)",
+				"TileValues(options, layer, face, level, x, y, size, table)",
 				"Settlements(options, count)",
 				"UseSettlements(key, towns)",
 				"Highways(options, step)",
@@ -2786,6 +2987,117 @@
 				"CellPlace(radius, cell)",
 				"Work()",
 				"Source(names)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "PlanetData",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "A planet as data: its passport, its layers (heights, biomes, climate, plates) as tiles over a cube and its vectors (rivers, settlements, highways), baked, saved to a file, opened from one or from the network, kept in the browser.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Objects(data, id, callback)",
+				"SetObjects(data, id, document)",
+				"Write(data, store, callback, whole)",
+				"Browser(name)",
+				"Remote(settings)",
+				"Key(part)",
+				"Path(part)",
+				"Retile(data, edits, callback)",
+				"Bake(options, settings, callback)",
+				"Open(source, callback, settings)",
+				"Need(data, direction, reach, finest, callback)",
+				"Save(data)",
+				"Pack(data, callback)",
+				"Prune(data, tolerance)",
+				"Store(data, callback)",
+				"Stored(id, callback)",
+				"List(callback)",
+				"Remove(id, callback)",
+				"Tile(bytes)",
+				"Bytes(layer, face, level, x, y, values, type)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SystemData",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "A star system as data: its passport, its tree of orbits to any depth, what was changed of it and the planets of its bodies, read and written by parts.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Seeded(seed, options)",
+				"Make(source, settings)",
+				"FromRecipe(recipe, settings)",
+				"Recipe(data, key)",
+				"Objects(data, key)",
+				"Edit(data, id, changes)",
+				"Add(data, object)",
+				"Remove(data, id)",
+				"SetBody(data, id, planet)",
+				"Body(data, id, callback)",
+				"BodyKey(key, id)",
+				"UseBodies(key, data, callback)",
+				"Use(key, data)",
+				"DataOf(key)",
+				"Open(source, callback)",
+				"Write(data, store, callback, whole)",
+				"Save(data)",
+				"Pack(data, callback)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "GalaxyData",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "A galaxy as data: its supermassive black hole, its stars made sector by sector of its seed as many as a galaxy holds, its systems, what was changed of it.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Kinds()",
+				"Make(options)",
+				"Density(data, place)",
+				"Sector(data, x, y, z, limit)",
+				"Star(data, id)",
+				"Hole(data)",
+				"HoleSystem(data)",
+				"Position(data, place, time)",
+				"Added(data, time)",
+				"Glow(data, count)",
+				"System(data, id)",
+				"Cosmos(data, id)",
+				"Rename(data, id, name)",
+				"Remove(data, id)",
+				"AddBody(data, body)",
+				"SetSystem(data, id, system)",
+				"Use(key, data)",
+				"DataOf(key)",
+				"Open(source, callback)",
+				"Write(data, store, callback, whole)",
+				"Save(data)",
+				"Pack(data, callback)"
 			],
 			"Sample": {}
 		},
@@ -2815,6 +3127,25 @@
 				"Beyonds()"
 			],
 			"Sample": {}
+		},
+		{
+			"Name": "ViewTouch",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The fingers on the view of an editor: one finger edits, two move the camera (pan, pinch, rotate, tilt); a toggle gives one finger to the camera.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Make(options)",
+				"Orbit(scene, gesture, options)"
+			],
+			"Sample": {}
 		}
 	],
 	"Directives": [],
@@ -2826,6 +3157,8 @@
 		"elemenx-scene-axes-end": [
 			"other"
 		],
+		"elemenx-view-actions": [],
+		"elemenx-view-actions-hand": [],
 		"elemenx-scene": [
 			"dragging"
 		],
@@ -2872,26 +3205,24 @@
 		"elemenx-scene-veil": [],
 		"elemenx-scene-landing": [],
 		"elemenx-scene-landing-hint": [],
-		"elemenx-scene-landing-list": [],
-		"elemenx-scene-landing-item": [
-			"pick"
-		],
-		"elemenx-scene-landing-time": [],
 		"elemenx-scene-fallback": [],
 		"elemenx-scene-loading": [],
 		"elemenx-scene-hud": [],
 		"elemenx-scene-levels": [],
 		"elemenx-scene-screens": [],
+		"elemenx-scene-galaxy-marks": [],
+		"elemenx-scene-galaxy-mark": [
+			"body",
+			"star"
+		],
+		"elemenx-scene-galaxy-mark-dot": [],
+		"elemenx-scene-galaxy-mark-label": [],
 		"elemenx-drawing": [
 			"readonly"
 		],
 		"elemenx-drawing-toolbar": [],
 		"elemenx-drawing-group": [],
-		"elemenx-drawing-tool": [
-			"active"
-		],
 		"elemenx-drawing-brush": [],
-		"elemenx-drawing-color": [],
 		"elemenx-drawing-width": [],
 		"elemenx-drawing-stage": [],
 		"elemenx-drawing-svg": [],
@@ -2914,7 +3245,6 @@
 		"elemenx-cutscene-editor-bar": [],
 		"elemenx-cutscene-editor-gap": [],
 		"elemenx-cutscene-editor-names": [],
-		"elemenx-cutscene-editor-add": [],
 		"elemenx-cutscene-editor-time": [],
 		"elemenx-cutscene-editor-body": [],
 		"elemenx-cutscene-editor-line": [],
@@ -2929,19 +3259,13 @@
 		"elemenx-scene-editor-group": [
 			"end"
 		],
-		"elemenx-scene-editor-tool": [
-			"active"
-		],
 		"elemenx-scene-editor-snap": [],
-		"elemenx-scene-editor-import": [],
 		"elemenx-scene-editor-time": [],
+		"elemenx-scene-editor-scale": [],
 		"elemenx-scene-editor-side": [],
 		"elemenx-scene-editor-inspector": [],
 		"elemenx-scene-editor-title": [],
 		"elemenx-scene-editor-palette": [],
-		"elemenx-scene-editor-kind": [
-			"model"
-		],
 		"elemenx-scene-editor-view": [],
 		"elemenx-scene-editor-overlay": [],
 		"elemenx-scene-editor-gizmo": [],
@@ -2960,21 +3284,16 @@
 		"elemenx-scene-editor-ring": [],
 		"elemenx-scene-editor-fields": [],
 		"elemenx-scene-editor-field": [],
-		"elemenx-scene-editor-parameter": [],
 		"elemenx-scene-editor-cutscenes": [],
 		"elemenx-scene-editor-blueprint": [],
 		"elemenx-scene-editor-graphs": [],
-		"elemenx-scene-editor-graph-kind": [
-			"active"
-		],
 		"elemenx-scene-editor-land": [],
-		"elemenx-scene-editor-sketch-type": [],
+		"elemenx-scene-editor-tree": [],
 		"elemenx-scene-editor-layers": [],
 		"elemenx-scene-editor-layer": [
 			"current"
 		],
 		"elemenx-scene-editor-layer-name": [],
-		"elemenx-scene-editor-layer-eye": [],
 		"elemenx-scene-editor-item": [],
 		"elemenx-scene-editor-item-head": [],
 		"elemenx-scene-editor-sketch-shape": [
@@ -2991,18 +3310,17 @@
 		],
 		"elemenx-planet-editor": [],
 		"elemenx-planet-editor-toolbar": [],
-		"elemenx-planet-editor-tool": [
-			"active"
-		],
 		"elemenx-planet-editor-overlay": [],
 		"elemenx-planet-editor-view": [],
+		"elemenx-planet-editor-globe": [],
 		"elemenx-planet-editor-canvas": [],
 		"elemenx-planet-editor-marks": [],
 		"elemenx-planet-editor-stroke": [
 			"location",
 			"mountains",
 			"rift",
-			"river"
+			"river",
+			"rule"
 		],
 		"elemenx-planet-editor-place": [],
 		"elemenx-planet-editor-passage": [],
@@ -3010,25 +3328,41 @@
 		"elemenx-planet-editor-arrow": [],
 		"elemenx-planet-editor-arrow-tip": [],
 		"elemenx-planet-editor-info": [],
+		"elemenx-planet-editor-compass": [],
+		"elemenx-icon": [],
+		"elemenx-planet-editor-hint": [],
 		"elemenx-planet-editor-panel": [],
 		"elemenx-planet-editor-title": [],
+		"elemenx-planet-editor-graph": [],
+		"elemenx-planet-editor-rule": [],
+		"elemenx-select": [],
+		"elemenx-number-input": [],
+		"elemenx-world-editor": [],
+		"elemenx-world-editor-bar": [],
+		"elemenx-world-editor-path": [],
+		"elemenx-world-editor-actions": [],
+		"elemenx-world-editor-body": [],
+		"elemenx-world-editor-panel": [],
+		"elemenx-world-editor-section": [],
+		"elemenx-world-editor-title": [],
+		"elemenx-world-editor-subtitle": [],
+		"elemenx-world-editor-note": [],
+		"elemenx-world-editor-row": [],
+		"elemenx-world-editor-group": [],
+		"elemenx-world-editor-item": [],
+		"elemenx-world-editor-main": [],
 		"elemenx-model-editor": [],
 		"elemenx-model-editor-toolbar": [],
 		"elemenx-model-editor-group": [
 			"end"
 		],
-		"elemenx-model-editor-tool": [
-			"active"
-		],
 		"elemenx-model-editor-snap": [],
 		"elemenx-model-editor-variant": [],
-		"elemenx-model-editor-import": [],
 		"elemenx-model-editor-format": [],
 		"elemenx-model-editor-side": [],
 		"elemenx-model-editor-inspector": [],
 		"elemenx-model-editor-title": [],
 		"elemenx-model-editor-palette": [],
-		"elemenx-model-editor-shape": [],
 		"elemenx-model-editor-generator": [],
 		"elemenx-model-editor-view": [],
 		"elemenx-model-editor-overlay": [],
@@ -3047,14 +3381,8 @@
 		"elemenx-model-editor-ring": [],
 		"elemenx-model-editor-fields": [],
 		"elemenx-model-editor-field": [],
-		"elemenx-model-editor-modes": [],
-		"elemenx-model-editor-mode": [
-			"active"
-		],
 		"elemenx-model-editor-roles": [],
-		"elemenx-model-editor-role": [
-			"active"
-		],
+		"elemenx-model-editor-role": [],
 		"elemenx-model-editor-role-model": [],
 		"elemenx-model-editor-role-kind": [],
 		"elemenx-model-editor-role-actions": [],
@@ -3076,7 +3404,6 @@
 		"elemenx-flora-editor-title": [],
 		"elemenx-flora-editor-field": [],
 		"elemenx-flora-editor-color": [],
-		"elemenx-flora-editor-variant": [],
 		"elemenx-flora-editor-define": [],
 		"elemenx-texture-lab": [],
 		"elemenx-texture-lab-view": [],

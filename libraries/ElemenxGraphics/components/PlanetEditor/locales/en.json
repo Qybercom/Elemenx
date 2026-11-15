@@ -16,6 +16,11 @@
 				"river": "River",
 				"climate": "Climate",
 				"biome": "Biome",
+				"raise": "Raise",
+				"lower": "Lower",
+				"flatten": "Flatten",
+				"smooth": "Smooth",
+				"rule": "Rule",
 				"location": "Location"
 			},
 			"overlays": {
@@ -29,7 +34,20 @@
 			"location": "Location",
 			"open": "Open",
 			"side": "Side",
-			"passage": "Passage"
+			"passage": "Passage",
+			"brush": "Brush",
+			"rules": {
+				"title": "Rules of detail",
+				"scale": "Finer than, km",
+				"region": "Rule of the region",
+				"regions": "Regions of rules",
+				"edge": "Edge, km",
+				"graph": "Graph of the rule",
+				"close": "Close the graph",
+				"generated": "Its own relief"
+			},
+			"north": "North up",
+			"hint": "Drag: turn · right drag or Alt: turn round · wheel: nearer"
 		}
 	}
 }

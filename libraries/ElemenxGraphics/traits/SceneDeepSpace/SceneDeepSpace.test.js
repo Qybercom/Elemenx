@@ -78,6 +78,14 @@ describe('Contract: the deep space of a Scene: black holes, wormholes, comets, q
 		expect(hole.Innermost).toBeCloseTo(hole.Horizon * 3, 5);
 		expect(scene.Scene().Objects.hole.Size).toBeGreaterThan(0);
 
+		/* Regression: one of millions of Suns (the middle of a galaxy) was a hundred units wide compressed, over the orbits round it. */
+		scene.Add('blackhole', {ID: 'giant', Traits: {BlackHole: {Mass: 4.8e6}, Orbit: {Distance: 40, Unit: 'AU'}}});
+
+		frames(scene, 2);
+
+		expect(scene.Scene().Objects.giant.Size).toBeLessThan(20);
+		expect(scene.Scene().Objects.giant.Size).toBeGreaterThan(scene.Scene().Objects.hole.Size);
+
 		expect(scene.Describe('gate')).toMatchObject({Kind: 'wormhole', Leads: 'Kepler-442'});
 		expect(scene.Describe('halley').Kind).toBe('comet');
 		expect(scene.Describe('pebble').Radius).toBeCloseTo(140, 0);

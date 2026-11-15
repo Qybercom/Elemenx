@@ -116,10 +116,21 @@ Elemenx.Component('Meter', {
 			return self.Span(placement) === 225 ? 'M24.64 95.36A50 50 0 1 1 110 60' : 'M24.64 95.36A50 50 0 1 1 95.36 95.36';
 		};
 
-		/* The custom properties of the meter: the share of the range and the angle of the ring of a dial. */
-		this.Style = function (value, placement) {
-			return '--elemenx-meter-share: ' + self.Percent(value) / 100 + '; --elemenx-meter-span: ' + self.Span(placement) + 'deg;';
+		/* The angle of the ring of a dial, on the meter. */
+		this.Style = function (placement) {
+			return '--elemenx-meter-span: ' + self.Span(placement) + 'deg;';
 		};
+
+		/*
+		 * The share of the range, on the parts that draw it (the fill of a bar, the arc and the needle of a dial), not on
+		 * the meter: there every part under it took it again (0.2 ms each update, 17 parts of a dial).
+		 */
+		this.Share = function (value) {
+			return '--elemenx-meter-share: ' + self.Percent(value) / 100 + ';';
+		};
+
+		/* Fed on and on (each frame), the value shows at once: no transition started again (ElemenxHelpers.Live). */
+		this.Live = this.$Service('ElemenxHelpers').Live();
 
 		/* A line across the ring of the dial at a share of the range, from the radius inner to the radius outer. */
 		this.Radial = function (share, inner, outer, span) {

@@ -60,3 +60,7 @@ The line of a character in a dialogue: Speaker, Portrait (an image URL) and Text
 })
 </script>
 ```
+
+## Tests
+
+- [GameDialogue: its choices and its next are Buttons that tell choose and next](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-controls.test.js#L111) — `tests/regression/library-game-controls.test.js`

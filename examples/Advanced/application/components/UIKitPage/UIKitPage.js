@@ -1761,9 +1761,8 @@ Elemenx.Component('UIKitPage', {
 		});
 	},
 
-	AskPermission: function (event, node) {
+	AskPermission: function (name) {
 		var self = this;
-		var name = node.getAttribute('data-name');
 
 		this.$Service('Permissions').Request(name, function () {
 			self.QueryPermission(name);
@@ -2619,9 +2618,8 @@ Elemenx.Component('UIKitPage', {
 	},
 
 	/* The devices of the browser: a press tries one; the browser asks the user first (a picker, a permission). */
-	UseDevice: function (event, node) {
+	UseDevice: function (name) {
 		var self = this;
-		var name = node.getAttribute('data-name');
 		var done = function (error, result) {
 			self.DeviceState = name + ': ' + (error ? error.name + ' · ' + error.message : result && result.Info ? 'picked ' + JSON.stringify(result.Info) : 'done');
 		};
@@ -3514,8 +3512,8 @@ Elemenx.Component('UIKitPage', {
 		this.Profile.Get('Phones').Push(forms.Control('', [forms.Validators.Required, forms.Validators.Pattern('[+0-9 ]+')]));
 	},
 
-	RemovePhone: function (event, node) {
-		this.Profile.Get('Phones').RemoveAt(Number(node.getAttribute('data-index')));
+	RemovePhone: function (index) {
+		this.Profile.Get('Phones').RemoveAt(Number(index));
 	},
 
 	ProfileSaved: function (result) {

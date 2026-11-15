@@ -1,0 +1,20 @@
+/* The values of a game on a panel of the theme, in a row or a column; what changes does not move the page (contain). */
+.elemenx-game-stat-group {
+	display: inline-flex;
+	align-items: center;
+	gap: 14px;
+	padding: 6px 14px;
+	contain: layout style;
+}
+
+.elemenx-game-stat-group.vertical {
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 6px;
+}
+
+/* What it holds keeps its own size (a dial of a Meter does not shrink under the next value), what its slot holds too (the slot is a box of display: contents). */
+.elemenx-game-stat-group > *,
+.elemenx-game-stat-group > * > * {
+	flex: none;
+}

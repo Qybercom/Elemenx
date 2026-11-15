@@ -1,7 +1,7 @@
 <!-- generated -->
 # GameMenu
 
-Игровое меню: главное, пауза, список сохранений. Title и Subtitle над пунктами Items ([{ID, Label, Hint, Icon, Disabled}]). Стрелки вверх и вниз (и геймпад) двигают по пунктам по кругу; Enter или нажатие отправляют select ({ID, Item}); Escape отправляет back. AutoFocus (true) ставит фокус на первый пункт при показе.
+Игровое меню: главное, пауза, список сохранений. Title и Subtitle над пунктами Items ([{ID, Label, Hint, Icon, Disabled}]). Стрелки вверх и вниз (и геймпад) двигают по пунктам по кругу; Enter или нажатие отправляют select ({ID, Item}); Escape отправляет back. AutoFocus (true) ставит фокус на первый пункт при показе. Пункты — кнопки Button из ElemenxUI в виде меню игры.
 
 ## Свойства
 
@@ -44,3 +44,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [GameMenu: its items are Buttons, the arrows go round them, a press tells select and Escape back](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-controls.test.js#L77) — `tests/regression/library-game-controls.test.js`

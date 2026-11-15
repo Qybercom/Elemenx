@@ -2,9 +2,10 @@
 	display: grid;
 	grid-template-areas:
 		'toolbar toolbar'
-		'view panel';
-	grid-template-columns: minmax(0, 1fr) 240px;
-	grid-template-rows: auto minmax(0, 1fr);
+		'view panel'
+		'graph graph';
+	grid-template-columns: minmax(0, 1fr) auto;
+	grid-template-rows: auto minmax(0, 1fr) auto;
 	height: 100%;
 	min-height: 360px;
 	border: 1px solid var(--elemenx-border);
@@ -22,21 +23,6 @@
 	gap: 4px;
 	padding: 6px 8px;
 	border-bottom: 1px solid var(--elemenx-border);
-}
-
-.elemenx-planet-editor-tool {
-	padding: 4px 10px;
-	border: 1px solid transparent;
-	border-radius: var(--elemenx-radius-small);
-	background: transparent;
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
-}
-
-.elemenx-planet-editor-tool.active {
-	border-color: var(--elemenx-accent);
-	background: var(--elemenx-surface-hover);
 }
 
 .elemenx-planet-editor-overlay {
@@ -59,6 +45,7 @@
 	cursor: crosshair;
 }
 
+.elemenx-planet-editor-globe,
 .elemenx-planet-editor-canvas,
 .elemenx-planet-editor-marks {
 	position: absolute;
@@ -103,14 +90,8 @@
 	margin-top: 6px;
 }
 
-.elemenx-planet-editor-field select {
+.elemenx-planet-editor-field > :last-child {
 	min-width: 0;
-	padding: 2px 6px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius-small);
-	background: var(--elemenx-surface);
-	color: inherit;
-	font: inherit;
 }
 
 .elemenx-planet-editor-stroke.river {
@@ -148,6 +129,28 @@
 	pointer-events: none;
 }
 
+/* The compass: its arrow to the north of the planet; a press puts the north up. */
+.elemenx-planet-editor-compass {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+}
+
+.elemenx-planet-editor-compass .elemenx-icon {
+	transform: rotate(var(--elemenx-planet-editor-north, 0deg));
+}
+
+.elemenx-planet-editor-hint {
+	position: absolute;
+	bottom: 8px;
+	right: 8px;
+	padding: 2px 8px;
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-overlay);
+	color: var(--elemenx-overlay-text);
+	pointer-events: none;
+}
+
 .elemenx-planet-editor-panel {
 	grid-area: panel;
 	overflow: auto;
@@ -172,14 +175,46 @@
 	margin-bottom: 4px;
 }
 
-.elemenx-planet-editor-field input {
+/* The graph of a rule of detail open (Blueprint), under the view and its panel. */
+.elemenx-planet-editor-graph {
+	display: flex;
+	grid-area: graph;
+	flex-direction: column;
+	height: 320px;
+	border-top: 1px solid var(--elemenx-border);
+}
+
+.elemenx-planet-editor-graph > :last-child {
+	flex: 1;
+	min-height: 0;
+}
+
+/* A rule of a biome or of a region: its name, its rule and what is done with it, in a row. */
+.elemenx-planet-editor-rule {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-bottom: 4px;
+}
+
+.elemenx-planet-editor-rule > span {
+	flex: 0 0 72px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.elemenx-planet-editor-rule > .elemenx-select {
+	flex: 1;
 	min-width: 0;
-	padding: 2px 6px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius-small);
-	background: var(--elemenx-surface);
-	color: inherit;
-	font: inherit;
+}
+
+.elemenx-planet-editor-rule > .elemenx-number-input {
+	width: 64px;
+}
+
+.elemenx-planet-editor-stroke.rule {
+	stroke: var(--elemenx-planet-editor-rule);
+	stroke-dasharray: 6 4;
 }
 
 @media (max-width: 760px) {
@@ -187,12 +222,14 @@
 		grid-template-areas:
 			'toolbar'
 			'view'
-			'panel';
+			'panel'
+			'graph';
 		grid-template-columns: minmax(0, 1fr);
-		grid-template-rows: auto 360px auto;
+		grid-template-rows: auto 360px auto auto;
 	}
 
 	.elemenx-planet-editor-panel {
+		min-width: 100%;
 		border-top: 1px solid var(--elemenx-border);
 		border-left: 0;
 	}

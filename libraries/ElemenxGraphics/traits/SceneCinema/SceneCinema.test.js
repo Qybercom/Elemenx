@@ -250,23 +250,38 @@ describe('Contract: the cinema of a Scene: its layer of fades, bars, titles and 
 		await live(scene, 300);
 
 		var waited = performance.now();
+		var middle;
 
-		/* An encoder gives its first piece after some frames: a recording of a few has nothing yet. */
-		while (handle.Frames < 24 && performance.now() - waited < 12000)
+		/* The picture recorded at its middle, near its top. */
+		function sampled () {
+			middle = handle.Canvas.getContext('2d').getImageData(Math.floor(handle.Canvas.width / 2), 2, 1, 1).data;
+
+			return middle;
+		}
+
+		/*
+		 * An encoder gives its first piece after some frames: a recording of a few has nothing yet. Regression (load): the
+		 * layer is laid in once it is made a picture (Rasterize, behind the page); under a whole run that came after the
+		 * frames counted, and the frame looked at had no red yet. It waits for both.
+		 */
+		while ((handle.Frames < 24 || !(sampled()[0] > middle[2])) && performance.now() - waited < 20000)
 			await live(scene, 100);
 
 		/* The picture recorded has the red of the fade of the layer over the scene. */
-		var middle = handle.Canvas.getContext('2d').getImageData(Math.floor(handle.Canvas.width / 2), 2, 1, 1).data;
+		sampled();
 
 		expect(middle[0]).toBeGreaterThan(middle[2]);
 		expect(handle.Recording()).toBe(true);
 
 		handle.Stop();
 
-		/* A slow encoder is asked for its piece first (up to three seconds). */
+		/*
+		 * A slow encoder is asked for its piece first (up to three seconds). Regression (load): under a whole run its last
+		 * piece came after the six seconds this waited; as long as the other waits of it now.
+		 */
 		await waitFor(function () {
 			return video;
-		}, 6000);
+		}, 20000);
 
 		expect(video.Error).toBe(null);
 		expect(video.Blob.size).toBeGreaterThan(0);
@@ -288,5 +303,5 @@ describe('Contract: the cinema of a Scene: its layer of fades, bars, titles and 
 
 		expect(result.Name).toBe('shot');
 		expect(result.Video.size).toBeGreaterThan(0);
-	}, 40000);
+	}, 60000);
 });

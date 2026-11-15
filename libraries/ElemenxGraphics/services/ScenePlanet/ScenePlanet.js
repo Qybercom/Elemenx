@@ -21,6 +21,16 @@
  *   continents and oceans where they are drawn), mountains (a line: Width km, Height metres), rift (a line: Width, Depth),
  *   river (a line: Width km), climate (an area: Temperature in °C more or less, Moisture more or less, Edge) and biome (an
  *   area: Biome, Edge).
+ * - Rules (of detail): {Biomes: {biome: rule, '*': any land}, Graphs: {name: a generator graph of its own}, Parameters:
+ *   {rule: values}, Scale (km, 20)} and Regions [{Rule, Points, Edge}] (areas painted, over the rule of their land): what
+ *   is finer than Scale is the detail of the rule of the place (a generator of Blueprints: inputs X, Y, Z, East, North
+ *   (km), Height (its coarse height), Scale, Finest, Latitude, Celsius, Temperature, Moisture, WindEast, WindNorth, River;
+ *   result Height, metres) in the place of its own; generated (no rule) is its own. The rules of the library are
+ *   resources <Library>/rules/<name> (ScenePlanet.Rules: hills, mountains, dunes, mesas, badlands, plains, volcanoes,
+ *   craters, glacial, karst); Ruled(options) makes their code in the page for the workers.
+ * - Edits: what was changed of its relief after it was made, brushes along a path, in their order: [{Type (raise, lower,
+ *   flatten, smooth), Points [[latitude, longitude]...], Radius (km), Amount (metres; of smooth 0 to 1), Height (metres,
+ *   of flatten)}]; the nearer the path the more, none past Radius. Paint makes the planet, Edits change what it made.
  * - Project(view, direction) and Unproject(view, x, y): a globe in a view {Yaw, Pitch, Zoom, Width, Height}; Picture(options,
  *   view, rect, step, overlay) a piece of its picture (RGBA), each pixel reckoned of the planet, so it is sharp however near:
  *   overlay relief, plates, wind, temperature, moisture or biomes (Color); Work() the workers that paint it.
@@ -29,12 +39,18 @@
  * - Cells, CellAt, CellOf, CellCenter, CellCorners, CellNeighbours, CellPlace: the locations of a planet as cells, squares of
  *   the faces of a cube or hexagons of an icosahedron (12 of them pentagons), each a place for the step Planet of a World
  *   (its latitude, longitude, turn, size, outline and sides).
+ * - Data (a key of UseData): a planet of data (PlanetData): as coarse as its tiles, its heights and biomes of them; finer,
+ *   the relief and the lands of the options it was made of, its Edit over the relief; its climate and plates of its tiles
+ *   (Climate, Plate) as coarse as they are; its rivers, settlements and highways of its vectors unless they are given
+ *   (DataVectors(key): their keys; Vectored(options): options with them; TownsFor(options): its settlements). UseData(key,
+ *   data), DataOf(key), TileName, TileDirection, TilePlace (the tiles on the faces of the cube, by equal angles) and
+ *   TileValues (the samples of a tile, what PlanetData.Bake makes).
  * The same functions run in workers and in Node: they read no page.
  */
 Elemenx.Service('ScenePlanet', {
 	$Meta: {
 		Description: 'A planet as one continuous function of a direction: painted continents, tectonic plates, winds, climate and biomes, as fine as it is asked.',
-		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'Settlements(options, count)', 'UseSettlements(key, towns)', 'Highways(options, step)', 'UseHighways(key, roads)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)']
+		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'ViewTurn(yaw, pitch, roll)', 'Map(options, rows, width, height, overlay)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'UseData(key, data)', 'AddTiles(key, names)', 'DataOf(key)', 'Ruled(options)', 'DataVectors(key)', 'Vectored(options)', 'TownsFor(options)', 'TileName(layer, face, level, x, y)', 'TileDirection(face, s, t)', 'TilePlace(direction)', 'TileValues(options, layer, face, level, x, y, size, table)', 'Settlements(options, count)', 'UseSettlements(key, towns)', 'Highways(options, step)', 'UseHighways(key, roads)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)']
 	},
 
 	/* The kinds of strokes of a paint. */
@@ -58,7 +74,11 @@ Elemenx.Service('ScenePlanet', {
 
 	Make: function (options) {
 		var self = this;
-		var given = options || {};
+		/* A planet of data (Data: a key of UseData): its options as it was made, its radius and its seed, under what is given. */
+		var data = options && options.Data !== undefined && options.Data !== null && options.Data !== '' ? this.DataOf(options.Data) : null;
+		var origin = data && data.Manifest.Origin && data.Manifest.Origin.Kind === 'generated' ? data.Manifest.Origin.Options || {} : null;
+		/* Its rivers, settlements and highways are those of its data (vectors), unless they are given. */
+		var given = data ? Object.assign({}, origin, {Radius: data.Manifest.Radius, Seed: data.Manifest.Seed}, this.DataVectors(options.Data), data.Edits ? {Edits: data.Edits.Edits || [], Baked: data.Edits.Baked || {}, Regions: data.Edits.Regions || []} : {}, options) : options || {};
 		var noise = this.$Service('Noise');
 		var radius = Number(given.Radius) || 6371;
 		var seed = given.Seed === undefined ? 'planet' : String(given.Seed);
@@ -99,6 +119,60 @@ Elemenx.Service('ScenePlanet', {
 				return self.Direction(Number(point[0]), Number(point[1]));
 			})});
 		});
+		/*
+		 * Its edits (Edits): what was changed of its relief after it was made, by brushes along a path: [{Type (raise, lower,
+		 * flatten, smooth), Points [[latitude, longitude]...], Radius (km), Amount (metres; of smooth, how much, 0 to 1),
+		 * Height (metres, of flatten)}], in their order. Each with the cap of the globe it reaches, to skip it at once.
+		 */
+		var edits = (given.Edits || []).map(function (edit) {
+			var points = (edit.Points || []).map(function (point) {
+				return self.Direction(Number(point[0]), Number(point[1]));
+			});
+			var middle = normalize(points.reduce(function (sum, point) {
+				return [sum[0] + point[0], sum[1] + point[1], sum[2] + point[2]];
+			}, [0, 0, 0]));
+			var reach = Math.max(1, Number(edit.Radius) || 100) / radius;
+			var cap = 0;
+
+			points.forEach(function (point) {
+				cap = Math.max(cap, Math.acos(Math.max(-1, Math.min(1, dot(point, middle)))));
+			});
+
+			return {Type: edit.Type, Points: points, Reach: reach, Amount: Number(edit.Amount) || 0, Height: Number(edit.Height) || 0, Middle: middle, Cap: Math.cos(Math.min(Math.PI, cap + reach))};
+		}).filter(function (edit) {
+			return edit.Points.length > 0;
+		});
+		var smoothing = false;
+		/*
+		 * Its rules of detail (Rules {Biomes: {biome: rule; '*' for any land}, Graphs: {name: a generator graph of its own},
+		 * Parameters: {rule: values}, Scale: km, 20}, and its Regions [{Rule, Points, Edge km}] painted over it): what is finer
+		 * than Scale is made by the rule of the place, in the place of the relief it was made with; the rule generated is that
+		 * relief. A region painted wins over the land it is on, the later over the earlier, softly over its Edge.
+		 */
+		var rules = given.Rules || {};
+		var mapping = rules.Biomes || {};
+		var scale = Math.max(0.05, Number(rules.Scale) || 20);
+		var regions = (given.Regions || []).map(function (region) {
+			var points = (region.Points || []).map(function (point) {
+				return self.Direction(Number(point[0]), Number(point[1]));
+			});
+			var middle = normalize(points.reduce(function (sum, point) {
+				return [sum[0] + point[0], sum[1] + point[1], sum[2] + point[2]];
+			}, [0, 0, 0]));
+			var cap = 0;
+
+			points.forEach(function (point) {
+				cap = Math.max(cap, Math.acos(Math.max(-1, Math.min(1, dot(point, middle)))));
+			});
+
+			return {Rule: String(region.Rule || 'generated'), Edge: region.Edge, Directions: points, Middle: middle, Cap: Math.cos(Math.min(Math.PI, cap + Math.max(1, Number(region.Edge) || 200) / radius))};
+		}).filter(function (region) {
+			return region.Directions.length > 2;
+		});
+		var ruled = Object.keys(mapping).length > 0 || regions.length > 0;
+		var ruling = false;
+		var bare = false;
+		var runs = {};
 		/*
 		 * The locations baked into it (Baked {ID: {Latitude, Longitude, Turn, Size, Side, Heights}}): the heights of their
 		 * grounds as they were made and edited, a square of Size metres on the plane touching the planet at their middle,
@@ -402,7 +476,175 @@ Elemenx.Service('ScenePlanet', {
 		 * point a few hundred metres away (Slope): its plate and its land taken as they are (the same there to a hair; its
 		 * land anew near a coast), the rest made again. Not its erosion: of ridges of a kilometre, it is other 300 m away.
 		 */
+		/*
+		 * A point of a planet of data. As coarse as its finest tile there or coarser: its height of the tile, read between
+		 * its samples (cheaper than the relief). Finer, of a planet made of options (Origin generated): the relief of those
+		 * options, and what was changed of it, Edit (metres more or less, of its tiles where there are any), over it: the
+		 * relief is not smooth within a texel (ranges, peaks), and samples read between them lost kilometres of it. Of a
+		 * planet of data alone: its tile, its rivers and its baked locations over it.
+		 */
 		function raise (p, finest, near) {
+			var kept = data ? stored('Height', p) : null;
+			var mix;
+			var tectonic;
+			var height;
+			var made;
+			var edit;
+
+			if (!kept)
+				return detailed(p, finest, near);
+
+			if (origin && !(finest >= kept.Texel)) {
+				made = detailed(p, finest, near);
+				edit = stored('Edit', p);
+
+				if (edit)
+					made = {Height: made.Height + edit.Value, Tectonic: made.Tectonic, Land: made.Land};
+
+				return made;
+			}
+
+			tectonic = near ? near.Tectonic : !origin ? tectonicOf(p) : plate(p);
+			height = kept.Value;
+
+			/* Of data alone: its tile as coarse as it is, finer the detail of the rules of the place (generated: none). */
+			mix = !origin && ruled && !ruling ? rulesAt(p) : null;
+
+			if (mix)
+				height += details(p, finest, height, mix, function () {
+					return 0;
+				});
+
+			if (!origin && height > 0)
+				height = Math.max(1, carved(p, height));
+
+			if (!origin)
+				height = baked(p, height);
+
+			return {Height: height, Tectonic: tectonic, Land: height > 0 ? 1 : -1};
+		}
+
+		/*
+		 * What a layer of the data of the planet keeps at a point, of its finest tile there: {Value (read between its four
+		 * samples, or of the nearest of them: nearest), Level, Texel (km)}; null with no tile.
+		 */
+		function stored (layer, p, nearest) {
+			var info = data.Manifest.Layers[layer];
+			var size = data.Manifest.Size;
+			var place = self.TilePlace(p);
+			var level;
+			var count;
+			var u;
+			var v;
+			var x;
+			var y;
+			var i;
+			var j;
+			var fx;
+			var fy;
+			var values;
+
+			if (!info)
+				return null;
+
+			for (level = info.Depth; level >= 0; level--) {
+				count = 1 << level;
+				u = place[1] * count;
+				v = place[2] * count;
+				x = Math.min(count - 1, Math.floor(u));
+				y = Math.min(count - 1, Math.floor(v));
+				values = data.Tile(self.TileName(layer, place[0], level, x, y));
+
+				if (!values) continue;
+
+				u = (u - x) * (size - 1);
+				v = (v - y) * (size - 1);
+
+				if (nearest)
+					return {Value: values[Math.round(v) * size + Math.round(u)], Level: level, Texel: Math.PI / 2 * radius / (count * (size - 1))};
+
+				i = Math.min(size - 2, Math.floor(u));
+				j = Math.min(size - 2, Math.floor(v));
+				fx = u - i;
+				fy = v - j;
+
+				return {Value: (values[j * size + i] * (1 - fx) + values[j * size + i + 1] * fx) * (1 - fy) + (values[(j + 1) * size + i] * (1 - fx) + values[(j + 1) * size + i + 1] * fx) * fy, Level: level, Texel: Math.PI / 2 * radius / (count * (size - 1))};
+			}
+
+			return null;
+		}
+
+		/*
+		 * What a layer of four channels (Climate, Plate: rgba8) keeps at a point, of its finest tile there: {Values (each read
+		 * between its four samples, or of the nearest: nearest), Texel (km)}; null with no tile.
+		 */
+		function stored4 (layer, p, nearest) {
+			var info = data.Manifest.Layers[layer];
+			var size = data.Manifest.Size;
+			var place = self.TilePlace(p);
+			var level;
+			var count;
+			var u;
+			var v;
+			var x;
+			var y;
+			var i;
+			var j;
+			var fx;
+			var fy;
+			var c;
+			var out;
+			var values;
+
+			if (!info)
+				return null;
+
+			for (level = info.Depth; level >= 0; level--) {
+				count = 1 << level;
+				u = place[1] * count;
+				v = place[2] * count;
+				x = Math.min(count - 1, Math.floor(u));
+				y = Math.min(count - 1, Math.floor(v));
+				values = data.Tile(self.TileName(layer, place[0], level, x, y));
+
+				if (!values) continue;
+
+				u = (u - x) * (size - 1);
+				v = (v - y) * (size - 1);
+				out = [0, 0, 0, 0];
+
+				if (nearest) {
+					i = (Math.round(v) * size + Math.round(u)) * 4;
+
+					for (c = 0; c < 4; c++)
+						out[c] = values[i + c];
+				}
+				else {
+					i = Math.min(size - 2, Math.floor(u));
+					j = Math.min(size - 2, Math.floor(v));
+					fx = u - i;
+					fy = v - j;
+
+					for (c = 0; c < 4; c++)
+						out[c] = (values[(j * size + i) * 4 + c] * (1 - fx) + values[(j * size + i + 1) * 4 + c] * fx) * (1 - fy) + (values[((j + 1) * size + i) * 4 + c] * (1 - fx) + values[((j + 1) * size + i + 1) * 4 + c] * fx) * fy;
+				}
+
+				return {Values: out, Texel: Math.PI / 2 * radius / (count * (size - 1))};
+			}
+
+			return null;
+		}
+
+		/* The plate of a point of a planet of data alone: of its tiles of Plate (the nearest sample), else of its plates. */
+		function tectonicOf (p) {
+			var kept = data && !origin && data.Manifest.Layers.Plate ? stored4('Plate', p, true) : null;
+			if (!kept)
+				return plate(p);
+
+			return {ID: kept.Values[0], Oceanic: kept.Values[1] > 127, Boundary: kept.Values[2] * 10, Push: (kept.Values[3] / 255 - 0.5) * 4};
+		}
+
+		function raised (p, finest, near) {
 			var tectonic = near ? near.Tectonic : plate(p);
 			/* Near a coast its land anew: the sea a few hundred metres off is not land there. */
 			var land = near && near.Land > 0.2 ? near.Land : continent(p, tectonic);
@@ -557,7 +799,209 @@ Elemenx.Service('ScenePlanet', {
 				height = Math.min(-1, height);
 			}
 
-			return {Height: baked(p, height), Tectonic: tectonic, Land: land};
+			return {Height: bare ? edited(p, height, finest) : baked(p, edited(p, height, finest)), Tectonic: tectonic, Land: land};
+		}
+
+		/*
+		 * The relief of a point by its rules: as coarse as Scale its own (its edits on it), finer the detail of the rules of
+		 * the place (generated: its own detail); the grounds of its locations over all of it, as they were made.
+		 */
+		function detailed (p, finest, near) {
+			var mix = ruled && !ruling ? rulesAt(p) : null;
+			var coarse;
+			var height;
+
+			if (!mix)
+				return raised(p, finest, near);
+
+			bare = true;
+
+			try {
+				coarse = raised(p, Math.max(finest || 0, scale), near);
+				height = coarse.Height + details(p, finest, coarse.Height, mix, function () {
+					return raised(p, finest, near).Height - coarse.Height;
+				});
+			}
+			finally {
+				bare = false;
+			}
+
+			return {Height: baked(p, height), Tectonic: coarse.Tectonic, Land: coarse.Land};
+		}
+
+		/* The rules of a point and how much of each: its land's (Biomes), then each region over it; null: its own relief alone. */
+		function rulesAt (p) {
+			var list = [{Rule: landRule(p), Weight: 1}];
+
+			regions.forEach(function (region) {
+				var weight;
+
+				if (dot(p, region.Middle) < region.Cap) return;
+
+				weight = within(p, region);
+
+				if (weight <= 0) return;
+
+				list.forEach(function (one) {
+					one.Weight *= 1 - weight;
+				});
+				list.push({Rule: region.Rule, Weight: weight});
+			});
+
+			return list.length === 1 && list[0].Rule === 'generated' ? null : list;
+		}
+
+		/* The rule of the land of a point: of its biome (of its data, or of its climate as coarse as Scale); the sea has none. */
+		function landRule (p) {
+			var kept;
+			var biome;
+
+			if (!Object.keys(mapping).length) return 'generated';
+
+			kept = data && data.Manifest.Layers.Biome ? stored('Biome', p, true) : null;
+
+			if (kept) {
+				biome = data.Manifest.Layers.Biome.Table[kept.Value] || '';
+			}
+			else {
+				ruling = true;
+
+				try {
+					biome = sample(p, scale).Biome;
+				}
+				finally {
+					ruling = false;
+				}
+			}
+
+			if (!biome)
+				return 'generated';
+
+			return mapping[biome] || mapping['*'] || 'generated';
+		}
+
+		/* The code of a rule (a graph of its own, or of the library: ScenePlanet.Rules) of its seed and values, made once; null with none. */
+		function ruleRun (name) {
+			var graph;
+			var blueprints;
+			var made;
+
+			if (Object.prototype.hasOwnProperty.call(runs, name)) return runs[name];
+
+			/* Made in the page (Ruled): its code as it is, in a worker too, where no graph is made into code. */
+			if (rules.Sources && rules.Sources[name]) {
+				runs[name] = {Run: new Function('B', 'M', 'N', rules.Sources[name])(self.$Service('Blueprints'), self.$Service('Math'), self.$Service('Noise')), Reads: rules.Reads && rules.Reads[name] || []};
+
+				return runs[name];
+			}
+
+			graph = rules.Graphs && rules.Graphs[name] || self.Rules[name] || null;
+			blueprints = graph ? self.$Service('Blueprints') : null;
+			/* A worker has no kinds of graphs: a rule not made in the page (Ruled) has no detail there. */
+			made = blueprints && blueprints.Makers ? self.RuleCode(graph, name, seed, rules.Parameters && rules.Parameters[name]) : null;
+			runs[name] = made ? {Run: made.Run, Reads: made.Reads} : null;
+
+			return runs[name];
+		}
+
+		/*
+		 * The detail of the rules of a point over its coarse height, each by its weight; a rule's fades out as the point asked
+		 * for grows as coarse as Scale (a globe seen from far has none of it, and no noise of it).
+		 */
+		function details (p, finest, height, mix, generated) {
+			var fade = finest === undefined ? 1 : Math.max(0, Math.min(1, scale / Math.max(1e-6, finest) - 1));
+			var own = null;
+			var climate = null;
+			var river;
+			var total = 0;
+
+			mix.forEach(function (one) {
+				var run;
+				var made;
+
+				if (one.Weight <= 0) return;
+
+				run = one.Rule === 'generated' ? null : ruleRun(one.Rule);
+
+				if (!run) {
+					own = own === null ? generated() : own;
+					total += one.Weight * own;
+
+					return;
+				}
+
+				if (!fade) return;
+
+				if (!climate && run.Reads.some(function (name) {
+					return ['Celsius', 'Temperature', 'Moisture', 'WindEast', 'WindNorth'].indexOf(name) !== -1;
+				})) {
+					ruling = true;
+
+					try {
+						climate = sample(p, scale);
+					}
+					finally {
+						ruling = false;
+					}
+				}
+
+				if (river === undefined && run.Reads.indexOf('River') !== -1)
+					river = nearestRiver(p);
+
+				made = run.Run(Object.assign({Seed: seed + ':' + one.Rule}, rules.Parameters && rules.Parameters[one.Rule] || {}), {X: p[0] * radius, Y: p[1] * radius, Z: p[2] * radius, East: Math.atan2(-p[2], p[0]) * Math.sqrt(Math.max(0, 1 - p[1] * p[1])) * radius, North: Math.asin(Math.max(-1, Math.min(1, p[1]))) * radius, Height: height, Scale: scale, Finest: finest || 0, Latitude: Math.asin(Math.max(-1, Math.min(1, p[1]))) * 180 / Math.PI, Celsius: climate ? climate.Celsius : 0, Temperature: climate ? climate.Temperature : 0, Moisture: climate ? climate.Moisture : 0, WindEast: climate ? climate.Wind[0] : 0, WindNorth: climate ? climate.Wind[1] : 0, River: river ? river.Far : 1e6});
+
+				total += one.Weight * (Number(made && made.Height) || 0) * fade;
+			});
+
+			return total;
+		}
+
+		/*
+		 * A height as its edits leave it: each brush the nearer its path the more (none past its Radius): raise and lower
+		 * by Amount, flatten toward Height, smooth toward its relief no finer than half its radius.
+		 */
+		function edited (p, height, finest) {
+			var made = height;
+
+			if (!edits.length || smoothing) return made;
+
+			edits.forEach(function (edit) {
+				var t;
+				var weight;
+				var soft;
+
+				if (dot(p, edit.Middle) < edit.Cap) return;
+
+				t = (edit.Points.length > 1 ? toLine(p, edit.Points) : Math.acos(Math.max(-1, Math.min(1, dot(p, edit.Points[0]))))) / edit.Reach;
+
+				if (t >= 1) return;
+
+				weight = (1 - t * t) * (1 - t * t);
+
+				if (edit.Type === 'raise') {
+					made += edit.Amount * weight;
+				}
+				else if (edit.Type === 'lower') {
+					made -= edit.Amount * weight;
+				}
+				else if (edit.Type === 'flatten') {
+					made += (edit.Height - made) * weight;
+				}
+				else if (edit.Type === 'smooth') {
+					smoothing = true;
+
+					try {
+						soft = raised(p, Math.max(finest || 0, edit.Reach * radius / 2)).Height;
+					}
+					finally {
+						smoothing = false;
+					}
+
+					made += (soft - made) * weight * Math.max(0, Math.min(1, edit.Amount || 1));
+				}
+			});
+
+			return made;
 		}
 
 		/*
@@ -709,43 +1153,67 @@ Elemenx.Service('ScenePlanet', {
 			var biome = '';
 			var k;
 
-			/* The winds: easterly trades to 30 degrees, westerlies to 60, polar easterlies; toward the low of the equator and 60. */
-			east = band < 30 ? -1 : band < 60 ? 1 : -0.6;
-			north = (band < 30 ? -0.35 : band < 60 ? 0.3 : -0.2) * (latitude >= 0 ? 1 : -1);
-			east += (weather.At(p[0] * 4, p[1] * 4, p[2] * 4) - 0.5) * 0.8;
-			north += (weather.At(p[0] * 4 + 9, p[1] * 4, p[2] * 4) - 0.5) * 0.8;
-			wind = [east * 8, north * 8];
+			/*
+			 * Its climate of its data (Climate, read between its samples): as coarse as its tile or coarser; finer, a planet
+			 * made of options has the climate of those options, as it has its own relief.
+			 */
+			var climate = data && data.Manifest.Layers.Climate ? stored4('Climate', p) : null;
+			if (climate && origin && !(finest >= climate.Texel))
+				climate = null;
 
-			/* Warm at the equator, cold at the poles and up high; the sea keeps it milder. */
-			celsius = 29 - 52 * Math.pow(Math.abs(Math.sin(latitude)), 1.25) - Math.max(0, height) * 0.0065 + (weather.At(p[0] * 2 + 3, p[1] * 2, p[2] * 2) - 0.5) * 6;
-			celsius += painted(p, 'climate', function (stroke) {
-				return within(p, stroke) * (Number(stroke.Temperature) || 0);
-			});
+			if (climate) {
+				celsius = climate.Values[0] / 255 * 90 - 40;
+				moisture = climate.Values[1] / 255;
+				wind = [(climate.Values[2] / 255 - 0.5) * 32, (climate.Values[3] / 255 - 0.5) * 32];
+			}
+			/* Of its options: its winds, its warmth and how wet it is. */
+			else {
+				/* The winds: easterly trades to 30 degrees, westerlies to 60, polar easterlies; toward the low of the equator and 60. */
+				east = band < 30 ? -1 : band < 60 ? 1 : -0.6;
+				north = (band < 30 ? -0.35 : band < 60 ? 0.3 : -0.2) * (latitude >= 0 ? 1 : -1);
+				east += (weather.At(p[0] * 4, p[1] * 4, p[2] * 4) - 0.5) * 0.8;
+				north += (weather.At(p[0] * 4 + 9, p[1] * 4, p[2] * 4) - 0.5) * 0.8;
+				wind = [east * 8, north * 8];
 
-			/* Wet at the equator and at 50-60 degrees, dry at 25 and at the poles; more where the wind comes from a sea, less behind mountains. */
-			moisture = 0.52 + 0.3 * Math.cos(band / 28 * Math.PI) * (band < 70 ? 1 : 0.5) - (band > 70 ? 0.2 : 0);
-			upwind = 0;
+				/* Warm at the equator, cold at the poles and up high; the sea keeps it milder. */
+				celsius = 29 - 52 * Math.pow(Math.abs(Math.sin(latitude)), 1.25) - Math.max(0, height) * 0.0065 + (weather.At(p[0] * 2 + 3, p[1] * 2, p[2] * 2) - 0.5) * 6;
+				celsius += painted(p, 'climate', function (stroke) {
+					return within(p, stroke) * (Number(stroke.Temperature) || 0);
+				});
 
-			for (k = 1; k <= 6; k++) {
-				var reach = k * 220 / radius;
-				var back = normalize([p[0] - (axes.East[0] * wind[0] + axes.North[0] * wind[1]) / 8 * reach, p[1] - (axes.East[1] * wind[0] + axes.North[1] * wind[1]) / 8 * reach, p[2] - (axes.East[2] * wind[0] + axes.North[2] * wind[1]) / 8 * reach]);
-				var there = roughly(back);
+				/* Wet at the equator and at 50-60 degrees, dry at 25 and at the poles; more where the wind comes from a sea, less behind mountains. */
+				moisture = 0.52 + 0.3 * Math.cos(band / 28 * Math.PI) * (band < 70 ? 1 : 0.5) - (band > 70 ? 0.2 : 0);
+				upwind = 0;
 
-				upwind += there > 0 ? -0.05 : 0.06;
+				for (k = 1; k <= 6; k++) {
+					var reach = k * 220 / radius;
+					var back = normalize([p[0] - (axes.East[0] * wind[0] + axes.North[0] * wind[1]) / 8 * reach, p[1] - (axes.East[1] * wind[0] + axes.North[1] * wind[1]) / 8 * reach, p[2] - (axes.East[2] * wind[0] + axes.North[2] * wind[1]) / 8 * reach]);
+					var there = roughly(back);
 
-				/* A range between: the rain falls on its far side. */
-				if (there > 0.5 && land > 0)
-					upwind -= 0.06;
+					upwind += there > 0 ? -0.05 : 0.06;
+
+					/* A range between: the rain falls on its far side. */
+					if (there > 0.5 && land > 0)
+						upwind -= 0.06;
+				}
+
+				moisture += upwind + (weather.At(p[0] * 6 - 5, p[1] * 6, p[2] * 6) - 0.5) * 0.25;
+				moisture += painted(p, 'climate', function (stroke) {
+					return within(p, stroke) * (Number(stroke.Moisture) || 0);
+				});
+				moisture = Math.max(0, Math.min(1, moisture));
 			}
 
-			moisture += upwind + (weather.At(p[0] * 6 - 5, p[1] * 6, p[2] * 6) - 0.5) * 0.25;
-			moisture += painted(p, 'climate', function (stroke) {
-				return within(p, stroke) * (Number(stroke.Moisture) || 0);
-			});
-			moisture = Math.max(0, Math.min(1, moisture));
-
-			/* Its land of its climate, unless one was drawn. */
+			/*
+			 * Its land of its climate, unless one was drawn, or its data has one (Biome, of the nearest sample): as coarse as
+			 * its tile or coarser; finer, a planet made of options has the land of its climate, as it has its own relief (a
+			 * sample of tens of kilometres made the borders of its lands squares on its ground).
+			 */
 			if (height > 0) {
+				var kept = data ? stored('Biome', p, true) : null;
+				if (kept && (!origin || finest >= kept.Texel))
+					biome = data.Manifest.Layers.Biome.Table[kept.Value] || '';
+
 				strokes.forEach(function (stroke) {
 					if (stroke.Type === 'biome' && stroke.Biome && within(p, stroke) > 0.5)
 						biome = stroke.Biome;
@@ -795,14 +1263,14 @@ Elemenx.Service('ScenePlanet', {
 			},
 
 			Land: function (direction) {
-				if (bakes.length)
+				if (bakes.length || edits.length)
 					return raise(normalize(direction)).Height > 0;
 
 				return continent(normalize(direction), plate(normalize(direction))) > 0;
 			},
 
 			Plate: function (direction) {
-				return plate(normalize(direction));
+				return tectonicOf(normalize(direction));
 			},
 
 			Wind: function (direction) {
@@ -862,41 +1330,78 @@ Elemenx.Service('ScenePlanet', {
 	 * (pixels)}. Project gives where a direction is seen: [x, y (pixels), facing (over 0 on the side seen)]; Unproject the
 	 * direction under a pixel, null off the globe.
 	 */
+	/*
+	 * The turn of a view of a globe: the three axes of the screen (right, up, toward the eye) in the frame of the planet,
+	 * one after the other (nine numbers), of its Yaw, Pitch and Roll (radians). Turn of a view, when it has one, is used in
+	 * place of them: a view turned any way, over the poles too.
+	 */
+	ViewTurn: function (yaw, pitch, roll) {
+		var cy = Math.cos(yaw || 0);
+		var sy = Math.sin(yaw || 0);
+		var cp = Math.cos(pitch || 0);
+		var sp = Math.sin(pitch || 0);
+		var cr = Math.cos(roll || 0);
+		var sr = Math.sin(roll || 0);
+		var right = [cy, 0, -sy];
+		var up = [-sp * sy, cp, -sp * cy];
+
+		return [cr * right[0] + sr * up[0], cr * right[1] + sr * up[1], cr * right[2] + sr * up[2], -sr * right[0] + cr * up[0], -sr * right[1] + cr * up[1], -sr * right[2] + cr * up[2], cp * sy, sp, cp * cy];
+	},
+
 	Project: function (view, direction) {
-		var cy = Math.cos(view.Yaw || 0);
-		var sy = Math.sin(view.Yaw || 0);
-		var cp = Math.cos(view.Pitch || 0);
-		var sp = Math.sin(view.Pitch || 0);
-		var x = direction[0] * cy - direction[2] * sy;
-		var z = direction[0] * sy + direction[2] * cy;
-		var y = direction[1] * cp - z * sp;
+		var turn = view.Turn || this.ViewTurn(view.Yaw, view.Pitch, view.Roll);
 		var scale = Math.min(view.Width, view.Height) / 2 * (view.Zoom || 1);
 
-		z = direction[1] * sp + z * cp;
-
-		return [view.Width / 2 + x * scale, view.Height / 2 - y * scale, z];
+		return [view.Width / 2 + (turn[0] * direction[0] + turn[1] * direction[1] + turn[2] * direction[2]) * scale, view.Height / 2 - (turn[3] * direction[0] + turn[4] * direction[1] + turn[5] * direction[2]) * scale, turn[6] * direction[0] + turn[7] * direction[1] + turn[8] * direction[2]];
 	},
 
 	Unproject: function (view, px, py) {
+		var turn = view.Turn || this.ViewTurn(view.Yaw, view.Pitch, view.Roll);
 		var scale = Math.min(view.Width, view.Height) / 2 * (view.Zoom || 1);
 		var x = (px - view.Width / 2) / scale;
 		var y = (view.Height / 2 - py) / scale;
 		var z = 1 - x * x - y * y;
-		var cy = Math.cos(view.Yaw || 0);
-		var sy = Math.sin(view.Yaw || 0);
-		var cp = Math.cos(view.Pitch || 0);
-		var sp = Math.sin(view.Pitch || 0);
-		var wy;
-		var wz;
-
 		if (z < 0)
 			return null;
 
 		z = Math.sqrt(z);
-		wy = y * cp + z * sp;
-		wz = -y * sp + z * cp;
 
-		return [x * cy + wz * sy, wy, -x * sy + wz * cy];
+		return [x * turn[0] + y * turn[3] + z * turn[6], x * turn[1] + y * turn[4] + z * turn[7], x * turn[2] + y * turn[5] + z * turn[8]];
+	},
+
+	/*
+	 * Rows of a map of all of a planet (equirectangular: longitude -180 to 180 across, latitude 90 to -90 down), Width by
+	 * Height, rows [from, to): RGBA bytes of what Picture shows of each point, its relief lit as a globe of the view far.
+	 * The globe of PlanetEditor turns at once on it, its picture of the view coming over it.
+	 */
+	Map: function (options, rows, width, height, overlay) {
+		var planet = this.Planet(options);
+		var from = Math.max(0, rows[0]);
+		var to = Math.min(height, rows[1]);
+		var data = new Uint8ClampedArray(width * (to - from) * 4);
+		var light = [-0.5, 0.7, 0.5];
+		var apart = Math.PI / height * planet.Radius * 1000;
+		var shift = Math.PI / height;
+		var x;
+		var y;
+
+		for (y = from; y < to; y++) {
+			for (x = 0; x < width; x++) {
+				var direction = this.Direction(90 - (y + 0.5) / height * 180, (x + 0.5) / width * 360 - 180);
+				var at = ((y - from) * width + x) * 4;
+				var sample = planet.Sample(direction);
+				var near = planet.Elevation([direction[0] + light[0] * shift, direction[1] + light[1] * shift, direction[2] + light[2] * shift]);
+				var bright = sample.Land ? Math.max(0, Math.min(1, 0.55 + (near - sample.Elevation) / apart * 1.6 * Math.max(1, Math.sqrt(apart / 500)))) : 1;
+				var color = this.Color(planet, sample, overlay, bright);
+
+				data[at] = color[0] * 255;
+				data[at + 1] = color[1] * 255;
+				data[at + 2] = color[2] * 255;
+				data[at + 3] = 255;
+			}
+		}
+
+		return {Data: data, Width: width, Height: to - from, From: from};
 	},
 
 	/* The planet of options, made once for them (a worker keeps it between its pieces). */
@@ -1452,12 +1957,105 @@ Elemenx.Service('ScenePlanet', {
 	TownSets: {},
 
 	/*
+	 * The rules of detail of planets by their names: the generator graphs of the resources named <Library>/rules/<name> (an
+	 * Application's in the place of one of a Library of the same name), carried to the workers.
+	 */
+	Rules: {},
+
+	Carried: ['Rules'],
+
+	/* What a rule reads of the place: the names of its inputs (the climate and the rivers are reckoned only for one that reads them). */
+	RuleReads: function (graph) {
+		return (graph.blocks || []).filter(function (block) {
+			return block.type === 'Input';
+		}).map(function (block) {
+			return ((block.properties || []).filter(function (property) {
+				return property.key === 'Name';
+			})[0] || {}).value;
+		});
+	},
+
+	/* The code of a rule of a planet: of its seed and the values given to it, in a copy of it ({Seed} and its parameters). {Source, Run, Reads}; null with none. */
+	RuleCode: function (graph, name, seed, values) {
+		var blueprints = this.$Service('Blueprints');
+		var made = blueprints.Code(blueprints.Fill(JSON.parse(JSON.stringify(blueprints.Read(graph))), Object.assign({Seed: seed + ':' + name}, values || {})));
+
+		return made ? {Source: made.Source, Run: made.Run, Reads: this.RuleReads(graph)} : null;
+	},
+
+	/*
+	 * Options of a planet with the code of the rules it uses made here (Rules.Sources, Rules.Reads): a worker runs it as it
+	 * is (a worker makes no graph into code). The rules of its Biomes and of its regions, its own and those of its data.
+	 */
+	Ruled: function (options) {
+		var self = this;
+		var out = Object.assign({}, options || {});
+		var rules = out.Rules || {};
+		var data = out.Data !== undefined && out.Data !== null && out.Data !== '' ? this.DataOf(out.Data) : null;
+		var regions = (out.Regions || []).concat(data && data.Edits && data.Edits.Regions || []);
+		var seed = String(out.Seed !== undefined ? out.Seed : data ? data.Manifest.Seed : 'planet');
+		var names = {};
+		var key;
+		var sources = {};
+		var reads = {};
+
+		Object.keys(rules.Biomes || {}).forEach(function (biome) {
+			names[rules.Biomes[biome]] = true;
+		});
+		regions.forEach(function (region) {
+			names[region.Rule] = true;
+		});
+		delete names.generated;
+
+		if (!Object.keys(names).length) return out;
+
+		key = JSON.stringify([seed, Object.keys(names).sort(), rules.Graphs || null, rules.Parameters || null]);
+		this.RuledCache = this.RuledCache || {};
+
+		if (!this.RuledCache[key]) {
+			Object.keys(names).forEach(function (name) {
+				var graph = rules.Graphs && rules.Graphs[name] || self.Rules[name];
+				var made = graph ? self.RuleCode(graph, name, seed, rules.Parameters && rules.Parameters[name]) : null;
+				if (!made) return;
+
+				sources[name] = made.Source;
+				reads[name] = made.Reads;
+			});
+
+			this.RuledCache = {};
+			this.RuledCache[key] = {Sources: sources, Reads: reads};
+		}
+
+		out.Rules = Object.assign({}, rules, this.RuledCache[key]);
+
+		return out;
+	},
+
+	$OnCreate: function () {
+		var self = this;
+		var found = typeof Elemenx !== 'undefined' && Elemenx.Resources ? Elemenx.Resources('Blueprints') || [] : [];
+
+		found.forEach(function (name) {
+			var match = /(^|\/)rules\/([^/]+)$/.exec(name);
+			if (match)
+				self.Rules[match[2]] = Elemenx.Resources('Blueprints', name);
+		});
+	},
+
+	/* The settlements of a planet of options: given (a list or a key), else those of its data (DataVectors); [] with none. */
+	TownsFor: function (options) {
+		var given = this.Vectored(options);
+
+		return Array.isArray(given.Settlements) ? given.Settlements : given.Settlements ? this.TownsOf(given.Settlements) : [];
+	},
+
+	/*
 	 * The lights of its settlements at night on a face of its globe (texels as Face lays them): how much light each texel
 	 * gives, 0 to 255, each settlement a soft spot as wide as it is large (a city 40 km, a village 6). {Data, Face, Row, Rows}.
 	 */
 	Lights: function (options, face, size, row, rows) {
 		var self = this;
-		var towns = Array.isArray(options.Settlements) ? options.Settlements : options.Settlements ? this.TownsOf(options.Settlements) : [];
+		var towns = this.TownsFor(options);
 		var radius = Number(options.Radius) || 6371;
 		var first = row || 0;
 		var count = Math.min(size - first, rows || size);
@@ -1508,7 +2106,7 @@ Elemenx.Service('ScenePlanet', {
 		var planet = this.Planet(options);
 		var radius = planet.Radius;
 		var size = Number(step) || 20;
-		var towns = (Array.isArray(options.Settlements) ? options.Settlements : options.Settlements ? this.TownsOf(options.Settlements) : []).map(function (town, index) {
+		var towns = this.TownsFor(options).map(function (town, index) {
 			return Object.assign({Index: index}, town);
 		}).filter(function (town) {
 			return town.Kind === 'city' || town.Kind === 'town';
@@ -1731,6 +2329,203 @@ Elemenx.Service('ScenePlanet', {
 
 	/* The rivers kept, one store for every use of the service (an object of its own, never made again). */
 	RiverSets: {},
+
+	/*
+	 * The data of planets kept under a key (UseData), as UseRivers keeps rivers: the passport of each and its tiles, in the
+	 * page and in the workers that make grounds of planets (its manifest and each tile shared to them once).
+	 */
+	DataSets: {},
+
+	UseData: function (key, data) {
+		var self = this;
+
+		this.DataSets[key] = data;
+		/* A planet made of the data that was under the key before is made again. */
+		this.Planets = {};
+
+		['ScenePlanet', 'SceneTerrainGenerator', 'SceneSower', 'SceneRoads'].forEach(function (name) {
+			var service = name === 'ScenePlanet' ? self : self.$Service(name);
+			if (!service || !service.Work) return;
+
+			service.Work().Share('planet-data:' + key, data.Manifest);
+			service.Work().Share('planet-edits:' + key, data.Edits || null);
+
+			Object.keys(data.Tiles).forEach(function (tile) {
+				service.Work().Share('planet-tile:' + key + ':' + tile, data.Tiles[tile]);
+			});
+		});
+
+		/* Its vectors under keys of their own (DataVectors), as rivers, settlements and highways made in the page are kept. */
+		Object.keys(data.Vectors || {}).forEach(function (name) {
+			var use = {Rivers: 'UseRivers', Settlements: 'UseSettlements', Highways: 'UseHighways'}[name];
+			if (use)
+				self[use]('planet:' + key + ':' + name, data.Vectors[name]);
+		});
+	},
+
+	/*
+	 * The keys of the vectors of the planet of data under a key (UseData keeps its rivers, settlements and highways under
+	 * them): {Rivers, Settlements, Highways} of those it has.
+	 */
+	DataVectors: function (key) {
+		var data = key === undefined || key === null || key === '' ? null : this.DataOf(key);
+		var out = {};
+
+		Object.keys(data && data.Manifest.Vectors || {}).forEach(function (name) {
+			out[name] = 'planet:' + key + ':' + name;
+		});
+
+		return out;
+	},
+
+	/* Options of a planet with the vectors of its data (DataVectors) where they name none. */
+	Vectored: function (options) {
+		var out = Object.assign({}, options || {});
+		var vectors = this.DataVectors(out.Data);
+
+		Object.keys(vectors).forEach(function (name) {
+			if (out[name] === undefined)
+				out[name] = vectors[name];
+		});
+
+		return out;
+	},
+
+	/* Tiles that came to the data under a key (PlanetData.Need): given to the workers too; the page reads them at once. */
+	AddTiles: function (key, names) {
+		var self = this;
+		var data = this.DataSets[key];
+		if (!data) return;
+
+		['ScenePlanet', 'SceneTerrainGenerator', 'SceneSower', 'SceneRoads'].forEach(function (name) {
+			var service = name === 'ScenePlanet' ? self : self.$Service(name);
+			if (!service || !service.Work) return;
+
+			(names || []).forEach(function (tile) {
+				if (data.Tiles[tile])
+					service.Work().Share('planet-tile:' + key + ':' + tile, data.Tiles[tile]);
+			});
+		});
+	},
+
+	/* The data kept under a key: {Manifest, Edits (its brushes and baked grounds, of edits.json), Tile(name)}; null with none. */
+	DataOf: function (key) {
+		var self = this;
+		var kept = this.DataSets ? this.DataSets[key] : null;
+		var manifest = kept ? kept.Manifest : this.$Shared ? this.$Shared('planet-data:' + key) : null;
+		if (!manifest) return null;
+
+		return {Manifest: manifest, Edits: kept ? kept.Edits || null : this.$Shared('planet-edits:' + key) || null, Tile: function (name) {
+			return kept ? kept.Tiles[name] : self.$Shared('planet-tile:' + key + ':' + name);
+		}};
+	},
+
+	/* The name of a tile of the data of a planet (PlanetData): its layer, face, level and place. */
+	TileName: function (layer, face, level, x, y) {
+		return layer + '/' + face + '/' + level + '/' + x + '-' + y;
+	},
+
+	/* The direction of a point of a face of the cube (0 to 5, as cubeDirection has them), s and t 0 to 1 across it, placed by equal angles. */
+	TileDirection: function (face, s, t) {
+		var x = Math.tan((s * 2 - 1) * Math.PI / 4);
+		var y = Math.tan((t * 2 - 1) * Math.PI / 4);
+		var d = face === 0 ? [1, -y, -x] : face === 1 ? [-1, -y, x] : face === 2 ? [x, 1, y] : face === 3 ? [x, -1, -y] : face === 4 ? [x, -y, 1] : [-x, -y, -1];
+		var length = Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+
+		return [d[0] / length, d[1] / length, d[2] / length];
+	},
+
+	/* Where a direction is on the cube: [face, s, t], as TileDirection places them. */
+	TilePlace: function (direction) {
+		var ax = Math.abs(direction[0]);
+		var ay = Math.abs(direction[1]);
+		var az = Math.abs(direction[2]);
+		var face;
+		var x;
+		var y;
+
+		if (ax >= ay && ax >= az) {
+			face = direction[0] > 0 ? 0 : 1;
+			x = (face === 0 ? -direction[2] : direction[2]) / ax;
+			y = -direction[1] / ax;
+		}
+		else if (ay >= az) {
+			face = direction[1] > 0 ? 2 : 3;
+			x = direction[0] / ay;
+			y = (face === 2 ? direction[2] : -direction[2]) / ay;
+		}
+		else {
+			face = direction[2] > 0 ? 4 : 5;
+			x = (face === 4 ? direction[0] : -direction[0]) / az;
+			y = -direction[1] / az;
+		}
+
+		return [face, (Math.atan(x) * 4 / Math.PI + 1) / 2, (Math.atan(y) * 4 / Math.PI + 1) / 2];
+	},
+
+	/*
+	 * The samples of a tile of a layer of the planet of options (PlanetData.Bake, in a worker): size by size, its first and
+	 * last on its edges. Height: metres (Int16Array) of its relief no finer than a texel; Biome: the place of its biome in
+	 * table (Uint8Array), 0 under the sea; Climate (rgba8: Uint8Array of four a sample): its warmth (-40 to 50 °C), how
+	 * wet it is, and its wind east and north (-16 to 16 m/s); Plate (rgba8): its plate, 255 for one under an ocean, km to
+	 * the next plate by tens, and how they meet (Push, -2 to 2).
+	 */
+	TileValues: function (options, layer, face, level, x, y, size, table) {
+		var bare = Object.assign({}, options);
+		var planet;
+		var count = 1 << level;
+		var four = layer === 'Climate' || layer === 'Plate';
+		var values = layer === 'Height' ? new Int16Array(size * size) : new Uint8Array(size * size * (four ? 4 : 1));
+		var made;
+		var k;
+		var finest;
+		var direction;
+		var at;
+		var i;
+		var j;
+
+		delete bare.Data;
+
+		planet = this.Planet(bare);
+		finest = Math.PI / 2 * planet.Radius / (count * (size - 1));
+
+		for (j = 0; j < size; j++) {
+			for (i = 0; i < size; i++) {
+				direction = this.TileDirection(face, (x + i / (size - 1)) / count, (y + j / (size - 1)) / count);
+
+				if (layer === 'Height') {
+					values[j * size + i] = Math.max(-32768, Math.min(32767, Math.round(planet.Elevation(direction, finest))));
+
+					continue;
+				}
+
+				if (four) {
+					k = (j * size + i) * 4;
+					made = layer === 'Climate' ? planet.Sample(direction, finest) : planet.Plate(direction);
+
+					if (layer === 'Climate') {
+						values[k] = Math.round(Math.max(0, Math.min(1, (made.Celsius + 40) / 90)) * 255);
+						values[k + 1] = Math.round(Math.max(0, Math.min(1, made.Moisture)) * 255);
+						values[k + 2] = Math.round(Math.max(0, Math.min(1, made.Wind[0] / 32 + 0.5)) * 255);
+						values[k + 3] = Math.round(Math.max(0, Math.min(1, made.Wind[1] / 32 + 0.5)) * 255);
+					}
+					else {
+						values[k] = Math.min(255, made.ID);
+						values[k + 1] = made.Oceanic ? 255 : 0;
+						values[k + 2] = Math.round(Math.max(0, Math.min(255, Math.abs(made.Boundary) / 10)));
+						values[k + 3] = Math.round(Math.max(0, Math.min(1, made.Push / 4 + 0.5)) * 255);
+					}
+
+					continue;
+				}
+
+				at = table.indexOf(planet.Sample(direction, finest).Biome);
+				values[j * size + i] = Math.max(0, at);
+			}
+		}
+
+		return values;
+	},
 
 	UseRivers: function (key, rivers) {
 		var self = this;
@@ -3211,8 +4006,27 @@ Elemenx.Service('ScenePlanet', {
 	},
 
 	/* The workers that paint globes. */
+	/*
+	 * The workers of planets, given the lands of the page once (Share biomes): a globe they paint has the lands of its
+	 * climate as the page and the ground have them. Regression: with none, a worker gave each land the same climate,
+	 * and the globe showed other lands than its ground.
+	 */
 	Work: function () {
-		return this.$Service('Workers').Pool('ScenePlanet', {Math: true, Noise: true, Random: true, SceneTerrainGenerator: true, ScenePlanet: true, SceneFlora: true});
+		var pool = this.$Service('Workers').Pool('ScenePlanet', {Math: true, Noise: true, Random: true, Blueprints: true, SceneTerrainGenerator: true, ScenePlanet: true, SceneFlora: true});
+		var registry = this.$Service('SceneBiomes');
+
+		if (!pool.Lands && registry && registry.Registry) {
+			pool.Lands = true;
+
+			/* As data (a land an application defined may hold a function: no worker takes one). */
+			pool.Share('biomes', JSON.parse(JSON.stringify(registry.Names().reduce(function (all, name) {
+				all[name] = registry.Get(name);
+
+				return all;
+			}, {}))));
+		}
+
+		return pool;
 	},
 
 	/* What a worker of the planet carries: see Workers. */

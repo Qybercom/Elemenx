@@ -1,0 +1,4 @@
+<div class="elemenx-view-actions" role="toolbar" (pointerdown)="Kept" (dblclick)="Kept" (keydown)="Kept" [attribute.aria-label]="Label || $T('graphics.viewActions.label')">
+	<Button class="elemenx-view-actions-hand" *if="Hand !== null && Hand !== undefined" Icon="camera" [Variant]="Hand ? 'secondary' : 'ghost'" [Pressed]="!!Hand" [Title]="$T('graphics.viewActions.hand')" (click)="Handed" />
+	<Button class="elemenx-view-actions-item" *for="item of Items" *key="item.ID" Variant="ghost" [Icon]="item.Icon" [Title]="item.Label" [Disabled]="!!item.Disabled" (click)="Acted(item)" />
+</div>

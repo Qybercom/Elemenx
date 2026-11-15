@@ -1,0 +1,64 @@
+/* A value of a game with its name: its figures of one width, its tone a color of the game theme. */
+.elemenx-game-stat {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--elemenx-game-text);
+	font-family: var(--elemenx-game-font);
+	font-variant-numeric: tabular-nums;
+	line-height: 1.1;
+	white-space: nowrap;
+}
+
+.elemenx-game-stat.stacked {
+	flex-direction: column;
+	gap: 0;
+}
+
+.elemenx-game-stat-label {
+	color: var(--elemenx-game-muted);
+	font-size: var(--elemenx-font-size-small);
+	letter-spacing: var(--elemenx-game-letter-spacing);
+	text-transform: var(--elemenx-game-text-transform);
+}
+
+.elemenx-game-stat-value {
+	font-size: var(--elemenx-font-size);
+	font-weight: var(--elemenx-font-weight-bold);
+}
+
+.elemenx-game-stat-unit {
+	margin-inline-start: 2px;
+	color: var(--elemenx-game-muted);
+	font-size: var(--elemenx-font-size-small);
+	font-weight: normal;
+}
+
+.elemenx-game-stat.small .elemenx-game-stat-value {
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-game-stat.large .elemenx-game-stat-value {
+	font-size: var(--elemenx-font-size-large);
+}
+
+.elemenx-game-stat.accent .elemenx-game-stat-value {
+	color: var(--elemenx-game-accent);
+}
+
+.elemenx-game-stat.success .elemenx-game-stat-value {
+	color: var(--elemenx-success);
+}
+
+.elemenx-game-stat.warning .elemenx-game-stat-value {
+	color: var(--elemenx-warning);
+}
+
+.elemenx-game-stat.danger .elemenx-game-stat-value {
+	color: var(--elemenx-danger);
+}
+
+.elemenx-game-stat.muted .elemenx-game-stat-value {
+	color: var(--elemenx-game-muted);
+	opacity: 0.5;
+}

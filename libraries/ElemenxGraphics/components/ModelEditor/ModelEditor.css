@@ -3,7 +3,7 @@
 	grid-template-areas:
 		'toolbar toolbar toolbar'
 		'side view inspector';
-	grid-template-columns: 200px minmax(0, 1fr) 260px;
+	grid-template-columns: auto minmax(0, 1fr) auto;
 	grid-template-rows: auto minmax(0, 1fr);
 	min-height: 440px;
 	height: 100%;
@@ -36,48 +36,19 @@
 	margin-left: auto;
 }
 
-.elemenx-model-editor-tool {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 28px;
-	border: 1px solid transparent;
-	border-radius: var(--elemenx-radius);
-	background: none;
-	color: inherit;
-	cursor: pointer;
-}
-
-.elemenx-model-editor-tool.active {
-	border-color: var(--elemenx-accent);
-	background: var(--elemenx-surface-hover);
-}
-
 .elemenx-model-editor-snap,
-.elemenx-model-editor-variant,
-.elemenx-model-editor-import {
+.elemenx-model-editor-variant {
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
-	cursor: pointer;
 }
 
-.elemenx-model-editor-variant input {
-	width: 56px;
-}
-
-.elemenx-model-editor-import input {
-	display: none;
+.elemenx-model-editor-variant > :last-child {
+	width: 96px;
 }
 
 .elemenx-model-editor-format {
-	padding: 2px 4px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius);
-	background: var(--elemenx-surface);
-	color: inherit;
-	font: inherit;
+	min-width: 80px;
 }
 
 .elemenx-model-editor-side,
@@ -114,36 +85,10 @@
 	gap: 4px;
 }
 
-.elemenx-model-editor-shape {
-	padding: 2px 8px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius-pill);
-	background: var(--elemenx-surface);
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
-}
-
-.elemenx-model-editor-shape:hover {
-	background: var(--elemenx-surface-hover);
-}
-
 .elemenx-model-editor-generator {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
-}
-
-.elemenx-model-editor-generator textarea {
-	box-sizing: border-box;
-	width: 100%;
-	padding: 4px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius-small);
-	background: var(--elemenx-surface);
-	color: inherit;
-	font: inherit;
-	resize: vertical;
 }
 
 .elemenx-model-editor-view {
@@ -238,49 +183,9 @@
 	gap: 6px;
 }
 
-.elemenx-model-editor-field input,
-.elemenx-model-editor-field select {
-	box-sizing: border-box;
+.elemenx-model-editor-field > :last-child {
 	width: 120px;
-	padding: 1px 4px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius-small);
-	background: var(--elemenx-surface);
-	color: inherit;
-	font: inherit;
-}
-
-.elemenx-model-editor-field input[type='checkbox'] {
-	width: auto;
-}
-
-.elemenx-model-editor-field input[type='color'] {
-	height: 22px;
-	padding: 0;
-}
-
-/* The tabs: the shape of the model, the roles of its parts. */
-.elemenx-model-editor-modes {
-	display: inline-flex;
-	gap: 2px;
-	padding: 2px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius);
-}
-
-.elemenx-model-editor-mode {
-	padding: 3px 10px;
-	border: 0;
-	border-radius: var(--elemenx-radius);
-	background: none;
-	color: var(--elemenx-text-muted);
-	font: inherit;
-	cursor: pointer;
-}
-
-.elemenx-model-editor-mode.active {
-	background: var(--elemenx-surface-hover);
-	color: var(--elemenx-text);
+	min-width: 0;
 }
 
 /* The roles: a list of them, the kind of a new one, the model they are of. */
@@ -291,29 +196,12 @@
 }
 
 .elemenx-model-editor-role {
-	padding: 4px 8px;
-	border: 1px solid transparent;
-	border-radius: var(--elemenx-radius);
-	background: none;
-	color: inherit;
-	font: inherit;
-	text-align: start;
-	cursor: pointer;
-}
-
-.elemenx-model-editor-role:hover {
-	background: var(--elemenx-surface-hover);
-}
-
-.elemenx-model-editor-role.active {
-	border-color: var(--elemenx-accent);
-	background: var(--elemenx-surface-hover);
+	justify-content: flex-start;
 }
 
 .elemenx-model-editor-role-model,
 .elemenx-model-editor-role-kind {
 	width: 100%;
-	font: inherit;
 }
 
 .elemenx-model-editor-role-actions {
@@ -364,7 +252,22 @@
 
 	.elemenx-model-editor-side,
 	.elemenx-model-editor-inspector {
+		min-width: 100%;
 		border: 0;
 		border-top: 1px solid var(--elemenx-border);
+	}
+}
+
+/* A finger is wider than a pointer: the handles of the gizmo grow under it, where they were. */
+@media (pointer: coarse) {
+	.elemenx-model-editor-axis,
+	.elemenx-model-editor-ring {
+		stroke-width: 9;
+	}
+
+	.elemenx-model-editor-tip {
+		transform: scale(1.8);
+		transform-box: fill-box;
+		transform-origin: center;
 	}
 }

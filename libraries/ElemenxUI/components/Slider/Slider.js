@@ -8,6 +8,8 @@
  */
 Elemenx.Component('Slider', {
 	$TemplateURL: 'Slider.html',
+	/* [(Value)] on its tag follows what it tells as it is typed or moved. */
+	$Model: {Value: 'input'},
 	$StyleURL: 'Slider.css',
 	$Meta: {
 		Group: 'inputs',

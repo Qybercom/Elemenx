@@ -54,7 +54,7 @@ for (const origin of origins) {
 
 			game = page.locator('.scene-demo');
 			world = game.locator('.elemenx-scene');
-			header = game.locator('.scene-demo-status');
+			header = game.locator('.elemenx-caption[role="status"]');
 
 			await world.scrollIntoViewIfNeeded();
 
@@ -177,11 +177,11 @@ for (const origin of origins) {
 
 			await expect(space.locator('.elemenx-scene-card')).toContainText('Earth-like planet');
 			await expect(space.locator('.elemenx-scene-card')).toContainText('Habitable zone');
-			await expect(bodies.locator('.scene-demo-status')).toContainText('Selected: Earth');
+			await expect(bodies.locator('.elemenx-caption[role="status"]')).toContainText('Selected: Earth');
 
 			await space.getByRole('button', {name: 'Fly to it'}).click();
 
-			await expect(bodies.locator('.scene-demo-status')).toContainText('Flying to Earth');
+			await expect(bodies.locator('.elemenx-caption[role="status"]')).toContainText('Flying to Earth');
 
 			/* Down to its surface and back: its sky over its ground, then space again. */
 			await space.getByRole('button', {name: 'Land'}).click();
@@ -203,15 +203,15 @@ for (const origin of origins) {
 			/* The first fleet to Mars: it arrives a few days of the system later. */
 			await bodies.getByRole('button', {name: 'Fleet to Mars'}).click();
 
-			await expect(bodies.locator('.scene-demo-status')).toContainText('First fleet: to Mars');
-			await expect(bodies.locator('.scene-demo-status')).toContainText('Arrived: First fleet at Mars', {timeout: 15000});
+			await expect(bodies.locator('.elemenx-caption[role="status"]')).toContainText('First fleet: to Mars');
+			await expect(bodies.locator('.elemenx-caption[role="status"]')).toContainText('Arrived: First fleet at Mars', {timeout: 15000});
 
 			/* A system of a seed: a star of its own, its planets and their moons. */
 			await bodies.locator('.elemenx-check-label', {hasText: 'Of a seed'}).click();
 
 			await expect(space.locator('.elemenx-scene-label[data-kind="star"]')).toHaveCount(1);
 			await expect(space.locator('.elemenx-scene-label[data-id="planet-b"]')).toHaveCount(1);
-			await expect(bodies.locator('.ui-kit-space-hud')).toContainText('Seed kepler-186');
+			await expect(bodies.locator('.elemenx-game-hud .elemenx-game-stat')).toContainText('kepler-186');
 
 			/* At its real size, the star is still drawn: a few pixels at least. */
 			await bodies.locator('.elemenx-toggle', {hasText: 'Real scale'}).click();
@@ -235,7 +235,7 @@ for (const origin of origins) {
 
 			models = page.locator('.scene-demo');
 			scene = models.locator('.elemenx-scene');
-			note = models.locator('.scene-demo-status');
+			note = models.locator('.elemenx-caption[role="status"]');
 
 			await scene.scrollIntoViewIfNeeded();
 
@@ -286,6 +286,23 @@ for (const origin of origins) {
 					return Elemenx.Instance(node).Shadows;
 				});
 			}).toBe(false);
+
+			expect(errors).toEqual([]);
+		});
+
+		/* Regression: the list of the demos asked for its items of a method that was not there, and showed only the quality. */
+		test('lists the demos of the page beside it, and a press on one opens it', async function ({ page }) {
+			var errors = captureErrors(page);
+			var list = page.locator('.demo-frame-list');
+
+			await demo(page, origin, 'graphics', 'Galaxy');
+
+			await expect(list.getByText('Deep space', {exact: true})).toBeVisible();
+			await expect(list.getByText('Galaxy', {exact: true})).toBeVisible();
+
+			await list.getByText('Deep space', {exact: true}).click();
+
+			await expect(page).toHaveURL(/demo=DeepSpace/);
 
 			expect(errors).toEqual([]);
 		});
@@ -371,8 +388,8 @@ for (const origin of origins) {
 
 			await terrain.getByRole('button', {name: 'All to the village'}).click();
 
-			await expect(terrain.locator('.scene-demo-status')).toContainText('3 going to the village');
-			await expect(terrain.locator('.scene-demo-status')).toContainText('arrived at', {timeout: 45000});
+			await expect(terrain.locator('.elemenx-caption[role="status"]')).toContainText('3 going to the village');
+			await expect(terrain.locator('.elemenx-caption[role="status"]')).toContainText('arrived at', {timeout: 45000});
 
 			/* All three have arrived: the note of one that comes later would take the place of the one of the save. */
 			await expect.poll(async function () {
@@ -383,11 +400,11 @@ for (const origin of origins) {
 
 			await terrain.getByRole('button', {name: 'Save'}).click();
 
-			await expect(terrain.locator('.scene-demo-status')).toContainText('Saved:');
+			await expect(terrain.locator('.elemenx-caption[role="status"]')).toContainText('Saved:');
 
 			await terrain.getByRole('button', {name: 'Load'}).click();
 
-			await expect(terrain.locator('.scene-demo-status')).toContainText('Loaded');
+			await expect(terrain.locator('.elemenx-caption[role="status"]')).toContainText('Loaded');
 
 			await expect.poll(async function () {
 				return scene.locator('.elemenx-scene-label').count();

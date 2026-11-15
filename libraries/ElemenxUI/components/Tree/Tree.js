@@ -10,8 +10,10 @@
  * or into it (the middle), never into itself or one of its own items. The tree does not change Items itself: the move
  * event ({ID, Target, Position: 'before', 'after' or 'inside'}) asks the owner to. Accept names other types of drags
  * (*draggable) the rows take the same way, a kind of a palette dropped in a structure: their move carries the Type and
- * the Data of the drag as ID.
- * Events: select (the item), expand (the open IDs), check (the checked IDs), load (the item), move.
+ * the Data of the drag as ID. Multiple lets many items be chosen: Ctrl (Cmd) and a press adds or takes one away, Shift
+ * and a press all from the last one pressed; Values holds the chosen IDs, the selection event tells them.
+ * Events: select (the item), expand (the open IDs), check (the checked IDs), load (the item), move, selection (the
+ * chosen IDs).
  */
 Elemenx.Component('Tree', {
 	$TemplateURL: 'Tree.html',
@@ -25,7 +27,8 @@ Elemenx.Component('Tree', {
 			expand: 'An item opened or closed: the IDs of the open items.',
 			check: 'The check boxes changed: the IDs of the checked items.',
 			load: 'A Lazy item was opened: the item, which asks for its Items.',
-			move: 'An item was dragged onto another (Movable): {ID, Target, Position (before, after or inside), Type}.'
+			move: 'An item was dragged onto another (Movable): {ID, Target, Position (before, after or inside), Type}.',
+			selection: 'The chosen items changed (Multiple): the IDs of the chosen items.'
 		},
 		Props: {
 			Items: 'The items: [{ID, Label, Icon, Badge, Items, Disabled, Lazy}].',
@@ -39,7 +42,9 @@ Elemenx.Component('Tree', {
 			Label: 'The name of the tree for screen readers.',
 			Empty: 'The text without items.',
 			Movable: 'Lets the pointer drag an item before, after or into another (the move event).',
-			Accept: 'Other types of drags (*draggable) the rows take as their own items, with their Type in the move event.'
+			Accept: 'Other types of drags (*draggable) the rows take as their own items, with their Type in the move event.',
+			Multiple: 'Lets many items be chosen: Ctrl (Cmd) and a press adds or takes one away, Shift and a press all from the last one (the selection event).',
+			Values: 'The IDs of the chosen items (Multiple).'
 		},
 		Sample: {Checkable: true, Searchable: true}
 	},
@@ -55,6 +60,9 @@ Elemenx.Component('Tree', {
 	Empty: '',
 	Movable: false,
 	Accept: [],
+	Multiple: false,
+	Values: [],
+	Anchor: null,
 	Focused: null,
 	DropOn: null,
 	DropAt: '',
@@ -246,6 +254,7 @@ Elemenx.Component('Tree', {
 
 		this.Value = item.ID;
 		this.Focused = item.ID;
+		this.Anchor = item.ID;
 
 		this.$Emit('select', item);
 	},
@@ -255,7 +264,68 @@ Elemenx.Component('Tree', {
 
 		this.Focused = item ? item.ID : null;
 
+		if (this.Multiple && item && !item.Disabled && (event.ctrlKey || event.metaKey || event.shiftKey)) {
+			this.Choose(item, event.shiftKey);
+
+			return;
+		}
+
 		this.Select(item);
+
+		if (this.Multiple && item && !item.Disabled)
+			this.Chose([item.ID]);
+	},
+
+	/* An item added to or taken from the chosen ones (Ctrl), or all from the last one to it (range: Shift). */
+	Choose: function (item, range) {
+		var self = this;
+		var values = (this.Values || []).map(String);
+		var rows = this.Rows(this.Items, this.Expanded, this.Filter, this.Checked);
+		var ids = rows.map(function (row) {
+			return String(row.Item.ID);
+		});
+		var from = ids.indexOf(String(this.Anchor != null ? this.Anchor : this.Value));
+		var to = ids.indexOf(String(item.ID));
+
+		if (range && from !== -1 && to !== -1) {
+			values = ids.slice(Math.min(from, to), Math.max(from, to) + 1).filter(function (id) {
+				var found = self.Find(id);
+
+				return found && !found.Disabled;
+			});
+		}
+		else if (values.indexOf(String(item.ID)) === -1) {
+			values.push(String(item.ID));
+		}
+		else {
+			values = values.filter(function (id) {
+				return id !== String(item.ID);
+			});
+		}
+
+		/* The last one pressed with Ctrl is where a range of Shift starts. */
+		if (!range)
+			this.Anchor = item.ID;
+
+		this.Chose(values);
+	},
+
+	/* The chosen ones told (selection): by the IDs the items have. */
+	Chose: function (values) {
+		var self = this;
+
+		this.Values = values.map(function (id) {
+			var found = self.Find(id);
+
+			return found ? found.ID : id;
+		});
+
+		this.$Emit('selection', this.Values.slice());
+	},
+
+	/* Whether an item is shown chosen: the selected one, or one of the chosen (Multiple). */
+	Lit: function (id, value, values, multiple) {
+		return String(id) === String(value) || !!multiple && (values || []).map(String).indexOf(String(id)) !== -1;
 	},
 
 	Twist: function (event, node) {

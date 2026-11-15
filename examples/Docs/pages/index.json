@@ -1478,6 +1478,22 @@
 					"Library": "ElemenxGaming"
 				},
 				{
+					"ID": "GameStat",
+					"Title": {
+						"en": "GameStat"
+					},
+					"Group": "game",
+					"Library": "ElemenxGaming"
+				},
+				{
+					"ID": "GameStats",
+					"Title": {
+						"en": "GameStats"
+					},
+					"Group": "game",
+					"Library": "ElemenxGaming"
+				},
+				{
 					"ID": "GameStrategy",
 					"Title": {
 						"en": "GameStrategy"
@@ -2494,6 +2510,14 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "ViewActions",
+					"Title": {
+						"en": "ViewActions"
+					},
+					"Group": "game",
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "VirtualGamepad",
 					"Title": {
 						"en": "VirtualGamepad"
@@ -2944,6 +2968,13 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "PlanetData",
+					"Title": {
+						"en": "PlanetData"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "Platform",
 					"Title": {
 						"en": "Platform"
@@ -3250,6 +3281,13 @@
 						"en": "USB"
 					},
 					"Library": "ElemenxUI"
+				},
+				{
+					"ID": "ViewTouch",
+					"Title": {
+						"en": "ViewTouch"
+					},
+					"Library": "ElemenxGraphics"
 				},
 				{
 					"ID": "Visibility",

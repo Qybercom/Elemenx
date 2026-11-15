@@ -15,11 +15,11 @@
 		</div>
 		<p>Changing only Params, Query or Hash reuses this route Component instead of creating lifecycle churn.</p>
 		<div class="button-row">
-			<button class="button primary" (click)="GoNext">Go next ID</button>
-			<button class="button" (click)="ReplaceCurrent">Replace with +10</button>
-			<button class="button" (click)="Back">Back</button>
-			<button class="button" (click)="Forward">Forward</button>
-			<button class="button" (click)="Home">Home</button>
+			<Button Variant="primary" Label="Go next ID" (click)="GoNext" />
+			<Button Variant="secondary" Label="Replace with +10" (click)="ReplaceCurrent" />
+			<Button Variant="secondary" Label="Back" (click)="Back" />
+			<Button Variant="secondary" Label="Forward" (click)="Forward" />
+			<Button Variant="secondary" Label="Home" (click)="Home" />
 		</div>
 	</div>
 </section>

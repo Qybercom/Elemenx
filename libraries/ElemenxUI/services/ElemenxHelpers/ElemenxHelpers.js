@@ -1,12 +1,13 @@
 /*
  * The helpers the Components and the Services of ElemenxUI share, so each is written once: the text of a body without
- * the indentation of its template (BodyText), the first day of a week (FirstDay), and a list of listeners that tells
- * each of them apart (Listeners). An Application may use them too; its own Services keep their names.
+ * the indentation of its template (BodyText), the first day of a week (FirstDay), a list of listeners that tells
+ * each of them apart (Listeners), the focus moved among elements by the arrow keys (Rove), and whether a value changes
+ * on and on (Live). An Application may use them too; its own Services keep their names.
  */
 Elemenx.Service('ElemenxHelpers', {
 	$Meta: {
 		Description: 'The helpers the Components and the Services of ElemenxUI share: the text of a body, the first day of a week, a list of listeners.',
-		Methods: ['BodyText(node)', 'FirstDay(setting, locale)', 'Listeners()']
+		Methods: ['BodyText(node)', 'FirstDay(setting, locale)', 'Listeners()', 'Rove(event, elements, options)', 'Live(quiet)']
 	},
 
 	/*
@@ -117,6 +118,69 @@ Elemenx.Service('ElemenxHelpers', {
 			Clear: function () {
 				list.length = 0;
 			}
+		};
+	},
+
+	/*
+	 * The focus moved among elements by the keys of a list: the arrow down (right in a row: Orientation 'horizontal';
+	 * left in a page from right to left) to the next, up to the one before, round from the last to the first unless
+	 * Wrap is false, Home to the first, End to the last. Gives the element it went to (the key taken), or null for
+	 * another key. The element the event came from, or holds it, is where it starts; from none, the first or the last.
+	 */
+	Rove: function (event, elements, options) {
+		var given = options || {};
+		var list = Array.prototype.slice.call(elements || []);
+		var key = Elemenx.Locale && typeof Elemenx.Locale.Key === 'function' ? Elemenx.Locale.Key(event) : event.key;
+		var row = given.Orientation === 'horizontal';
+		var wrap = given.Wrap !== false;
+		var index = -1;
+		var target = null;
+		var i;
+
+		for (i = 0; i < list.length && index === -1; i++) {
+			if (list[i] === event.target || list[i].contains(event.target))
+				index = i;
+		}
+
+		if (!list.length) return null;
+
+		if (key === (row ? 'ArrowRight' : 'ArrowDown')) target = index === -1 ? list[0] : index + 1 < list.length ? list[index + 1] : wrap ? list[0] : null;
+		else if (key === (row ? 'ArrowLeft' : 'ArrowUp')) target = index === -1 ? list[list.length - 1] : index > 0 ? list[index - 1] : wrap ? list[list.length - 1] : null;
+		else if (key === 'Home') target = list[0];
+		else if (key === 'End') target = list[list.length - 1];
+		else return null;
+
+		event.preventDefault();
+
+		if (target)
+			target.focus();
+
+		return target;
+	},
+
+	/*
+	 * Whether a value changes on and on: a function of the value that tells true while it changed less than quiet
+	 * milliseconds (200) after the change before. A gauge fed each frame (a speed, the revolutions of a car) then shows
+	 * its value at once: a transition started again every frame cost more than the frame of the page could spare
+	 * (0.4 ms each update of a Meter), and lagged behind the value. A value that changes now and then still glides.
+	 */
+	Live: function (quiet) {
+		var wait = quiet === undefined || quiet === null ? 200 : Number(quiet);
+		var last = null;
+		var at = -Infinity;
+		var live = false;
+
+		return function (value) {
+			var now;
+
+			if (value === last) return live;
+
+			now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+			live = now - at < wait;
+			at = now;
+			last = value;
+
+			return live;
 		};
 	}
 });

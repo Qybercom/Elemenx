@@ -53,3 +53,4 @@ A slider. Value is a number, or [low, high] with Range. Min, Max and Step bound 
 - [Slider writes its value by Format, on the thumb and to a screen reader, and its Unit after it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L37) — `tests/regression/library-controls.test.js`
 - [Slider without a Format shows the value as it is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L54) — `tests/regression/library-controls.test.js`
 - [Slider keeps room for a value that always shows, and writes one after the track](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L62) — `tests/regression/library-controls.test.js`
+- [takes back into a path of the state, and keeps an (event) of the same tag as it was](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/component-two-way.test.js#L76) — `tests/regression/component-two-way.test.js`

@@ -1,0 +1,2152 @@
+/*
+ * SceneGalaxy: a galaxy as a setting of a scene (Setting galaxy; GalaxyData, docs/SPACE-FORMAT.md). Galaxy is what it shows:
+ * a key of GalaxyData.Use, the URL of its file, its data, or options of GalaxyData.Make ({Seed, Kind, Radius, Arms...}).
+ *
+ * Its light and its dust are drawn along the ray of each pixel through its shape (GalaxyShapeShader, GalaxyVolumeShader: its
+ * thin and thick discs, its arms with clouds of young stars and pink knots on their ridges, beginning at the edge of its
+ * bulge or the ends of its bar, its halo; its dust in lanes and threads dimming what lies behind it; each octave of its
+ * noise only as fine as a pixel makes out there), with points of its stars and its knots of young ones over it; round the
+ * eye its stars one by one (GalaxyFieldShader: cubes of points laid round the eye, as bright as its light there) where its
+ * light would be a mist; from inside it, the band of it across the sky. The eye takes its light as bright as it is (read
+ * back from the card a frame later; state Exposure fixes it). It is drawn coarse while the view moves, fine in a few rounds
+ * when it stops, then not at all till the view changes (the card rests). As the
+ * view comes near the stars of the sectors round it come one by one, each as bright as it is to the eye there: these are
+ * its real stars, made of its seed, each with its own system; a press picks the one seen under the pointer. The star picked
+ * is marked with its name, its ID and where it is; kept to a star (GalaxyFocus) the view comes as near as its system: the
+ * star itself, the bodies of its system marked where they are (a press picks one, two go into its system), and nearer the
+ * scene goes into its system by itself. Its black hole too ('centre', GalaxyFocus('')): the view keeps to it, the young stars
+ * that go round it close are marked, and its system (GalaxyData.System 'centre') comes as of a star.
+ * GalaxyTime (millions of years) turns it as a galaxy turns: the inner stars round sooner than the outer ones (a flat curve).
+ *
+ * A drag turns the view round where it looks, a right drag (or with Shift) moves it along the plane of the galaxy, the
+ * wheel brings it near or far, a press on a star picks it (event galaxy: {ID, Star}; empty ID: the black hole or none),
+ * a double press flies to it; fingers as ever (tap, double tap, pan, pinch). Enter goes into the system of the star picked.
+ *
+ * - GalaxyData(): the data shown (null till it came). GalaxyView(): {Target (ly, where it looks), Yaw, Pitch, Distance
+ *   (ly)}; SetGalaxyView(view) puts it there. GalaxyFocus(id): the view flies to a star (or the centre: '').
+ * - GalaxyStars(): the stars near the view as they are drawn now (each {ID, Name, Place (where it is at GalaxyTime), Mass,
+ *   Class, Color...}). GalaxyPicked(): the ID of the star picked.
+ * - EnterSystem(id, callback): the view flies into the star and the scene shows its system (Setting space: its System of
+ *   GalaxyData.System, its Cosmos of where it is in the galaxy); event enter {ID, Star, Key}. LeaveSystem(callback): out to
+ *   the galaxy again, the view drawing back from the star; event leave {ID}. GalaxyEntered(): the ID of the star whose
+ *   system is shown ('' in none).
+ */
+Elemenx.Trait('SceneGalaxy', {
+	Galaxy: '',
+	GalaxyTime: 0,
+
+	GalaxyStart: function () {
+		var self = this;
+		var engine = this.Engine();
+		var scene = this.Scene();
+		var renderer = engine.Renderer;
+		var math = this.$Service('Math');
+		var galaxies = this.$Service('GalaxyData');
+		var shaders = this.GalaxyShaders('#version 300 es\nprecision highp float;\n');
+		var state = {Key: null, Data: null, Loading: '', Glow: null, GlowCount: 0, Near: null, NearKey: '', Stars: [], Marks: null, Picked: '', Entered: '', Target: [0, 0, 0], Yaw: 0.6, Pitch: 0.75, Distance: 120000, Flight: null, Press: null, Touch: null, Programs: null};
+
+		engine.Galaxy = state;
+
+		function number (value, fallback) {
+			return value === null || value === undefined || value === '' || isNaN(Number(value)) ? fallback : Number(value);
+		}
+
+		/* The galaxy the prop tells: a key, a URL (read once), data, or options of Make. */
+		function wanted () {
+			var given = self.Galaxy;
+			var key = typeof given === 'string' ? given : given ? JSON.stringify(given.Manifest ? given.Manifest.ID : given) : '';
+			var parsed;
+
+			if (key === state.Key) return;
+
+			state.Key = key;
+			state.Data = null;
+			state.NearKey = '';
+			state.Picked = '';
+
+			if (!given) return;
+
+			if (typeof given === 'string' && galaxies.DataOf(given)) {
+				shown(galaxies.DataOf(given));
+
+				return;
+			}
+
+			if (typeof given === 'string' && /^\s*\{/.test(given)) {
+				try {
+					parsed = JSON.parse(given);
+				}
+				catch (error) {
+					parsed = {Seed: given};
+				}
+
+				shown(parsed.Manifest ? parsed : galaxies.Make(parsed));
+
+				return;
+			}
+
+			if (typeof given === 'string' && /[\/.]/.test(given)) {
+				state.Loading = given;
+
+				galaxies.Open(given, function (error, data) {
+					if (state.Loading !== given || state.Key !== key) return;
+
+					state.Loading = '';
+
+					if (error) self.$Emit('error', {Reason: 'galaxy', Error: error});
+					else shown(data);
+				});
+
+				return;
+			}
+
+			shown(given.Manifest ? given : galaxies.Make(typeof given === 'string' ? {Seed: given} : given));
+		}
+
+		/* A galaxy that came: the view of all of it from above at a slant. */
+		function shown (data) {
+			state.Data = data;
+
+			if (state.Glow) {
+				state.Glow.Destroy();
+				state.Glow = null;
+			}
+
+			if (!state.Flight && !state.Entered) {
+				state.Target = [0, 0, 0];
+				state.Distance = data.Manifest.Radius * 2.6;
+			}
+
+			self.$Emit('galaxyready', {ID: data.Manifest.ID, Data: data});
+		}
+
+		/* How many points of glow its quality draws. */
+		function glowCount () {
+			var level = self.Graphics ? self.Graphics().Level : 'medium';
+
+			return {low: 70000, medium: 130000, high: 190000, ultra: 260000}[level] || 130000;
+		}
+
+		/* Points in thousands of light-years: what a float holds well across all of it. */
+		function pointsOf (list) {
+			return list.Positions.length ? renderer.Points(list.Positions.map(function (value) {
+				return value / 1000;
+			}), {aColor: {Size: 4, Data: list.Colors}}) : null;
+		}
+
+		/* The light of it from far: its glow, its knots, its dust and its middle, made again when the quality changes. */
+		function glowMesh () {
+			var count = glowCount();
+			var glow;
+
+			if (state.Glow && state.GlowCount === count) return state.Glow;
+
+			['Glow', 'Knots'].forEach(function (name) {
+				if (state[name])
+					state[name].Destroy();
+			});
+
+			glow = galaxies.Glow(state.Data, count);
+
+			state.Glow = pointsOf(glow);
+			state.Knots = pointsOf(glow.Knots);
+			state.Bulge = glow.Bulge;
+			state.GlowCount = count;
+
+			return state.Glow;
+		}
+
+		/* The points of what was put in by hand, where each is now. */
+		function added () {
+			var list = galaxies.Added(state.Data, number(self.GalaxyTime, 0));
+
+			if (state.AddedMesh)
+				state.AddedMesh.Destroy();
+
+			state.AddedMesh = list.length ? renderer.Points([].concat.apply([], list.map(function (body) {
+				return [body.Place[0] / 1000, body.Place[1] / 1000, body.Place[2] / 1000];
+			})), {aColor: {Size: 4, Data: [].concat.apply([], list.map(function (body) {
+				return body.Star ? [1, 0.92, 0.8, 1] : [0.45, 0.95, 1, 1];
+			}))}}) : null;
+		}
+
+		/* The uniforms of the shape of the galaxy (GalaxyShapeShader), in thousands of light-years. */
+		function shapeOf () {
+			var m = state.Data.Manifest;
+			var shape = galaxies.Shape(m);
+			var kinds = {elliptical: 1, dwarf: 2, irregular: 3, ring: 4};
+			var bulge = state.Bulge || {Radius: shape.Bulge, Flat: 0.6, Bright: 1};
+			var seed = 0;
+			var i;
+
+			for (i = 0; i < m.Seed.length; i++)
+				seed = (seed * 31 + m.Seed.charCodeAt(i)) % 997;
+
+			return {
+				uKind: kinds[m.Kind] || 0,
+				uRadius: m.Radius / 1000,
+				uScale: shape.Disc / 1000,
+				uHeight: shape.Height / 1000 * 0.35,
+				uBulge: Math.max(bulge.Radius, 1) / 1000,
+				uFlat: bulge.Flat,
+				uBulgeBright: bulge.Bright,
+				uArms: m.Kind === 'lenticular' ? 0 : m.Arms,
+				uPitch: m.Pitch * Math.PI / 180,
+				uPhase: m.Phase * Math.PI / 180,
+				uBar: m.Kind === 'barred' ? shape.Bar / 1000 : 0,
+				uRing: shape.Ring / 1000,
+				uWidth: shape.Width / 1000,
+				uShape: [m.Shape[0], m.Shape[2], m.Shape[1]],
+				uSeed: seed / 10
+			};
+		}
+
+		/*
+		 * The picture of its plane (GalaxyPlaneShader): what of it lies in its plane, made once for its shape and the quality,
+		 * a few rows at each frame (the card never busy long), read by its rays. Regression: computed again at each step of
+		 * each ray, a round of its fine light took the card for 400 ms and more, and the computer stuck while it stopped.
+		 * True when it is whole.
+		 */
+		function plane () {
+			var level = self.Graphics ? self.Graphics().Level : 'medium';
+			var size = {low: 1024, medium: 1536, high: 2048, ultra: 2048}[level] || 1536;
+			var shape = shapeOf();
+			var key = JSON.stringify(shape) + '|' + size;
+			var low = Math.log(0.02 / Math.max(shape.uScale, 1e-3));
+			var high = Math.log(shape.uRadius * 1.4 / Math.max(shape.uScale, 1e-3));
+			var rows = Math.max(8, Math.round(262144 / size));
+			var gl = renderer.GL;
+
+			if (state.PlaneKey !== key) {
+				['PlaneA', 'PlaneB'].forEach(function (name) {
+					if (state[name])
+						state[name].Destroy();
+
+					state[name] = renderer.Target(size, size, {Float: true, Mipmaps: true});
+
+					/* Round its angle without a seam. */
+					gl.bindTexture(gl.TEXTURE_2D, state[name].Textures[0].Handle);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+				});
+
+				state.PlaneKey = key;
+				state.PlaneRow = 0;
+				state.PlaneSize = size;
+				state.PlaneMap = [low, 1 / (high - low), size];
+			}
+
+			if (state.PlaneRow >= size) return true;
+
+			rows = Math.min(rows, size - state.PlaneRow);
+
+			[state.PlaneA, state.PlaneB].forEach(function (target, part) {
+				target.Begin();
+
+				renderer.Viewport(0, state.PlaneRow, size, rows);
+
+				engine.DrawReady(state.Quad, programs().Plane, Object.assign(shapeOf(), {uPlaneMap: state.PlaneMap, uSize: [size, size], uPart: part}), {Depth: false, DepthWrite: false, Blend: 'none', Cull: 'none'});
+
+				target.End();
+			});
+
+			state.PlaneRow += rows;
+
+			return state.PlaneRow >= size;
+		}
+
+		/* How bright its light is drawn (of its size: a small galaxy as bright to the eye as a big one at its scale). */
+		function brightOf () {
+			return number(state.VolumeLight, 1.2) / (state.Data.Manifest.Radius / 50000);
+		}
+
+		/*
+		 * The cubes of the stars round the eye (kly): as wide as the view is near, of powers of two so that they do not swim
+		 * as the view comes near (the next one fades in); Near, how far from the eye the light of the galaxy begins.
+		 */
+		function cells () {
+			var level = Math.min(3, Math.log(Math.max(state.Distance / 1000 * 0.8, 0.02)) / Math.LN2);
+			var low = Math.pow(2, Math.floor(level));
+			var fade = level - Math.floor(level);
+
+			return {Low: low, High: low * 2, Fade: fade, Near: (low + (low * 2 - low) * fade) * 0.5, Inside: Math.max(0, Math.min(1, (2.5 - level) / 1.5))};
+		}
+
+		/* A target of a size, made again when the size changed. */
+		function sized (name, width, height) {
+			if (!state[name] || state[name].Width !== width || state[name].Height !== height) {
+				if (state[name])
+					state[name].Destroy();
+
+				state[name] = renderer.Target(width, height, {Float: true});
+			}
+
+			return state[name];
+		}
+
+		/*
+		 * The light of the galaxy along the rays: coarse while the view moves (a part of the screen, fewer steps); when it
+		 * stops, fine (all of the screen at high and ultra), a few times over, each with its steps begun elsewhere, added up
+		 * (no grain); kept till the view changes. Volume: what is shown.
+		 *
+		 * A fine round is drawn a band of rows at a frame, as many as the card does in a few milliseconds, and added up when
+		 * whole. Regression: a whole fine round at a frame, 6 rounds, the card busy for a second and more at each stop of the
+		 * view, and the computer stuck meanwhile.
+		 */
+		function volume (view, fine) {
+			var level = self.Graphics ? self.Graphics().Level : 'medium';
+			var part = (fine ? {low: 0.5, medium: 0.75, high: 1, ultra: 1} : {low: 0.3, medium: 0.35, high: 0.4, ultra: 0.5})[level] || 0.5;
+			var steps = (fine ? {low: 32, medium: 40, high: 52, ultra: 64} : {low: 20, medium: 24, high: 28, ultra: 32})[level] || 40;
+			var width = Math.max(1, Math.round(renderer.Width * part));
+			var height = Math.max(1, Math.round(renderer.Height * part));
+			var rows = fine ? Math.max(8, Math.round(number(state.StepBudget, 3e6) / (width * steps))) : height;
+
+			var count = fine ? state.Fine || 0 : 0;
+			var fresh = sized(fine ? 'Fresh' : 'Coarse', width, height);
+			var old;
+			var made;
+
+			if (!fine || !state.Band || state.Band >= height)
+				state.Band = 0;
+
+			rows = Math.min(rows, height - state.Band);
+
+			fresh.Begin();
+
+			if (!fine)
+				renderer.Clear([0, 0, 0, 1]);
+
+			renderer.Viewport(0, state.Band, width, rows);
+
+			engine.DrawReady(state.Quad, programs().Volume, Object.assign(shapeOf(), {
+				uInverse: math.Invert(view.Matrix),
+				uEye: view.Eye,
+				uBright: brightOf(),
+				uDust: number(state.DustDepth, 1),
+				uSteps: steps,
+				uTime: number(self.GalaxyTime, 0),
+				uNear: cells().Near,
+				uOuter: Math.max(cells().Near, cells().High * 8 * cells().Inside),
+				uKeep: 1 - 0.65 * cells().Inside,
+				uPixel: 2 * Math.tan(25 * Math.PI / 180) / height,
+				uRound: count * 0.618034,
+				uView: [width, height],
+				uPlaneA: state.PlaneA.Textures[0],
+				uPlaneB: state.PlaneB.Textures[0],
+				uPlaneMap: state.PlaneMap,
+				uBaked: 1
+			}), {Depth: false, DepthWrite: false, Blend: 'none', Cull: 'none'});
+
+			fresh.End();
+
+			state.VolumeSteps = steps;
+
+			if (!fine) {
+				state.Volume = fresh;
+				state.Fine = 0;
+
+				return;
+			}
+
+			/* The rest of the round at the next frames. */
+			state.Band += rows;
+
+			if (state.Band < height) return;
+
+			state.Band = 0;
+
+			/* The rounds of the fine light added up: the mean of all so far. */
+			old = count ? state.Volume : fresh;
+			made = sized(state.Volume === state.AddA ? 'AddB' : 'AddA', width, height);
+
+			made.Begin();
+
+			engine.DrawReady(state.Quad, programs().Mean, {uOld: old.Textures[0], uNew: fresh.Textures[0], uWeight: 1 / (count + 1)}, {Depth: false, DepthWrite: false, Blend: 'none', Cull: 'none'});
+
+			made.End();
+
+			state.Volume = made;
+			state.Fine = count + 1;
+		}
+
+		/* The points of the cube of the stars round the eye, made again when the quality changes: where each is in it, a tint and a seed. */
+		function fieldMesh () {
+			var level = self.Graphics ? self.Graphics().Level : 'medium';
+			var count = {low: 40000, medium: 80000, high: 120000, ultra: 160000}[level] || 80000;
+			var random;
+			var positions = [];
+			var colors = [];
+			var i;
+			var warm;
+
+			if (state.Field && state.FieldCount === count) return state.Field;
+
+			if (state.Field)
+				state.Field.Destroy();
+
+			random = self.$Service('Random').Sequence('galaxy-field');
+
+			for (i = 0; i < count; i++) {
+				warm = random();
+
+				positions.push(random(), random(), random());
+				colors.push(warm < 0.6 ? 1 : 0.75 + warm * 0.2, warm < 0.6 ? 0.8 + warm * 0.25 : 0.88, warm < 0.6 ? 0.55 + warm * 0.4 : 1, random());
+			}
+
+			state.Field = renderer.Points(positions, {aColor: {Size: 4, Data: colors}});
+			state.FieldCount = count;
+
+			return state.Field;
+		}
+
+		/* The stars round the eye: the two cubes of its nearness, each as much as it stands for (its share of the light of the galaxy). */
+		function field (view) {
+			var cell = cells();
+			var mesh = fieldMesh();
+			var pixel = 2 * Math.tan(25 * Math.PI / 180) / Math.max(1, renderer.Height);
+
+			/*
+			 * The two cubes round the eye that its light leaves out, then two wider ones whose brightest stars stand over its
+			 * light (the middle of a galaxy seen from inside is not a mist: its stars by the thousand over its glow).
+			 */
+			[[cell.Low, 1 - cell.Fade, 0, 1], [cell.High, cell.Fade, 0, 1], [cell.High * 4, cell.Inside, cell.High * 0.5, 0.65], [cell.High * 16, cell.Inside, cell.High * 2, 0.65]].forEach(function (pair) {
+				if (pair[1] < 0.01) return;
+
+				engine.DrawReady(mesh, programs().Field, Object.assign(shapeOf(), {
+					uViewProjection: view.Matrix,
+					uEye: view.Eye,
+					uTime: number(self.GalaxyTime, 0),
+					uRatio: renderer.Ratio,
+					uCell: pair[0],
+					uLight: brightOf() * pair[0] * pair[0] * pair[0] / state.FieldCount / (pixel * pixel) * number(state.FieldLight, 1) * pair[3],
+					uWeight: pair[1],
+					uInner: pair[2],
+					uShift: [(Math.log(pair[0]) * 0.6180339) % 1 + 1, (Math.log(pair[0]) * 0.7548776) % 1 + 1, (Math.log(pair[0]) * 0.5698403) % 1 + 1]
+				}), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
+			});
+		}
+
+		/*
+		 * How bright the eye takes the picture (as an eye or a camera does): of the light of a few pixels over the screen, read
+		 * back a frame later (no wait), the bright part of the picture brought to the top of what the screen shows. State
+		 * Exposure fixes it.
+		 */
+		function exposure (elapsed) {
+			var gl = renderer.GL;
+			var data;
+			var values;
+			var bright;
+			var wanted;
+			var i;
+
+			if (state.Exposure !== undefined && state.Exposure !== null && state.Exposure !== '') return number(state.Exposure, 0.6);
+
+			state.Taken = state.Taken || 0.6;
+
+			if (!gl || !gl.fenceSync) return state.Taken;
+
+			if (state.MeterFence && gl.clientWaitSync(state.MeterFence, 0, 0) !== gl.TIMEOUT_EXPIRED) {
+				data = new Float32Array(16 * 16 * 4);
+
+				gl.bindBuffer(gl.PIXEL_PACK_BUFFER, state.MeterBuffer);
+				gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, data);
+				gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+				gl.deleteSync(state.MeterFence);
+
+				state.MeterFence = null;
+				values = [];
+
+				for (i = 0; i < 256; i++) {
+					if (data[i * 4] > 1e-5)
+						values.push(data[i * 4]);
+				}
+
+				values.sort(function (a, b) {
+					return a - b;
+				});
+
+				/* The bright part of what is lit (the 90th part of a hundred of it), shown a little under white. */
+				bright = values.length > 6 ? values[Math.floor(values.length * 0.9)] : 0;
+				state.Aim = bright > 0 ? Math.max(0.01, Math.min(60, number(state.ExposureKey, 0.6) / bright)) : state.Aim || 0.6;
+			}
+
+			/* Measured again only when the picture changed: a still view asks the card for nothing. */
+			if (!state.MeterFence && state.MeterOf !== state.Drawn + ':' + state.Fine) {
+				state.MeterOf = state.Drawn + ':' + state.Fine;
+				state.Meter = state.Meter || renderer.Target(16, 16, {Float: true});
+				state.MeterBuffer = state.MeterBuffer || gl.createBuffer();
+
+				state.Meter.Begin();
+
+				engine.DrawReady(state.Quad, programs().Meter, {uPicture: state.Light.Textures[0], uVolume: state.Volume.Textures[0]}, {Depth: false, DepthWrite: false, Blend: 'none', Cull: 'none'});
+
+				gl.bindBuffer(gl.PIXEL_PACK_BUFFER, state.MeterBuffer);
+				gl.bufferData(gl.PIXEL_PACK_BUFFER, 16 * 16 * 16, gl.STREAM_READ);
+				gl.readPixels(0, 0, 16, 16, gl.RGBA, gl.FLOAT, 0);
+				gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+
+				state.Meter.End();
+
+				state.MeterFence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+			}
+
+			wanted = state.Aim || state.Taken;
+
+			/* As an eye takes to the dark: in a second or so, by how many times, not by how much. */
+			state.Taken = Math.exp(Math.log(state.Taken) + (Math.log(wanted) - Math.log(state.Taken)) * Math.min(1, (elapsed || 0.016) * 3));
+
+			return state.Taken;
+		}
+
+		/* A light-year of an astronomical unit, and of the radius of the Sun. */
+		var AU = 1.5813e-5;
+		var SUN = 7.354e-8;
+
+		/*
+		 * The bodies of the system of a star round it (light-years from it), for the marks near it: those round its star or
+		 * its barycentre, where their orbits put them at the start; Extent, the farthest of them.
+		 */
+		function bodiesOf (star) {
+			var cache = state.Bodies || (state.Bodies = {});
+			var objects;
+			var roots = {};
+			var list = [];
+			var extent = 0;
+
+			if (cache[star.ID])
+				return cache[star.ID];
+
+			objects = self.$Service('SystemData').Objects(galaxies.System(state.Data, star.ID), 'galaxy-marks');
+
+			objects.forEach(function (spec) {
+				if (!spec.Parent && (spec.Kind === 'star' || spec.Kind === 'barycentre' || spec.Kind === 'blackhole'))
+					roots[spec.ID] = true;
+			});
+
+			objects.forEach(function (spec) {
+				var orbit = spec.Traits && spec.Traits.Orbit;
+				var far;
+				var angle;
+
+				if (!orbit || !roots[spec.Parent] || orbit.Unit === 'radii' || !(Number(orbit.Distance) > 0)) return;
+
+				far = Number(orbit.Distance) * AU;
+				angle = (orbit.Anomaly === undefined || orbit.Anomaly === null || orbit.Anomaly === '' ? (spec.ID.length * 47) % 360 : Number(orbit.Anomaly)) * Math.PI / 180;
+				extent = Math.max(extent, far);
+
+				list.push({ID: spec.ID, Name: spec.Values && spec.Values.Name || spec.ID, Kind: spec.Kind, Offset: [Math.cos(angle) * far, 0, -Math.sin(angle) * far]});
+			});
+
+			cache[star.ID] = {List: list, Extent: extent};
+
+			return cache[star.ID];
+		}
+
+		/* The marks over the galaxy (DOM: as sharp as text is, and of numbers of double precision however near): the star picked, its name, its ID and where it is; near a star, the bodies of its system. */
+		function labels (view) {
+			var root = self.$Element();
+			var box = state.Labels;
+			var wanted = [];
+			var star = state.Picked && state.Picked !== 'centre' ? starOf(state.Picked) : null;
+			var near = state.Follow ? starOf(state.Follow) : null;
+			var seen = {};
+			var place;
+			var centre = near ? screenOf(view.Matrix, now(near.Place)) : null;
+
+			if (!box && root) {
+				box = state.Labels = document.createElement('div');
+				box.className = 'elemenx-scene-galaxy-marks';
+
+				root.appendChild(box);
+			}
+
+			if (!box) return;
+
+			box.hidden = self.Setting !== 'galaxy';
+
+			if (box.hidden) return;
+
+			if (star) {
+				place = now(star.Place);
+
+				wanted.push({Key: 'star:' + star.ID, Place: place, Kind: 'star', Text: (star.Name.indexOf(star.ID) === -1 ? star.Name + ' · ' + star.ID : star.Name) + ' · ' + Math.round(place[0]) + ', ' + Math.round(place[1]) + ', ' + Math.round(place[2]) + ' ly'});
+			}
+			else if (state.Picked === 'centre') {
+				wanted.push({Key: 'centre', Place: [0, 0, 0], Kind: 'star', Text: (state.Data.Manifest.Centre.Name || 'Centre') + ' · ' + Math.round(state.Data.Manifest.Centre.Mass / 1e5) / 10 + 'M Suns'});
+			}
+
+			/* Near a star, once its system opens on the screen: its planets, its black holes, its wormholes where they are. */
+			if (near && state.Distance < Math.max(1e-3, bodiesOf(near).Extent * 25)) {
+				bodiesOf(near).List.forEach(function (body) {
+					var centre = now(near.Place);
+
+					wanted.push({Key: 'body:' + body.ID, ID: body.ID, Star: near.ID, Place: [centre[0] + body.Offset[0], centre[1] + body.Offset[1], centre[2] + body.Offset[2]], Kind: 'body', Text: body.Name});
+				});
+			}
+
+			wanted.forEach(function (mark) {
+				var at = screenOf(view.Matrix, mark.Place);
+				var element = box.querySelector('[data-key="' + mark.Key.replace(/"/g, '') + '"]');
+
+				seen[mark.Key] = true;
+
+				if (!element) {
+					element = document.createElement('div');
+					element.className = 'elemenx-scene-galaxy-mark ' + mark.Kind;
+
+					element.setAttribute('data-key', mark.Key);
+
+					element.innerHTML = '<span class="elemenx-scene-galaxy-mark-dot"></span><span class="elemenx-scene-galaxy-mark-label"></span>';
+
+					if (mark.Kind === 'body') {
+						element.addEventListener('click', function () {
+							self.$Emit('galaxy', {ID: mark.Star, Centre: false, Star: starOf(mark.Star), Body: mark.ID});
+						});
+						/* Regression: the wheel over the marks of a system did not reach the scene, and the view could come no nearer. */
+						element.addEventListener('wheel', function (event) {
+							self.Wheel(event);
+						});
+						element.addEventListener('dblclick', function () {
+							self.EnterSystem(mark.Star, function (error) {
+								if (!error && self.FocusOn)
+									self.FocusOn(mark.ID);
+							});
+						});
+					}
+
+					box.appendChild(element);
+				}
+
+				element.lastChild.textContent = mark.Text;
+				element.hidden = !at;
+
+				/* A body too near its star on the screen: its dot alone, so their names do not lie over each other. */
+				if (at && mark.Kind === 'body')
+					element.lastChild.hidden = Math.abs(at[0] - (centre ? centre[0] : at[0])) + Math.abs(at[1] - (centre ? centre[1] : at[1])) < 28;
+
+				if (at)
+					element.style.transform = 'translate(' + Math.round(at[0]) + 'px, ' + Math.round(at[1]) + 'px)';
+			});
+
+			Array.prototype.slice.call(box.children).forEach(function (element) {
+				if (!seen[element.getAttribute('data-key')])
+					element.remove();
+			});
+		}
+
+		/* The star the view is near: itself, as large as it is or a few pixels, its corona round it (of numbers about the eye: sharp however near). */
+		function nearStar (view, common) {
+			var star = state.Follow ? starOf(state.Follow) : null;
+			var place;
+			var eye;
+			var way;
+			var far;
+			var size;
+			var hex;
+
+			if (!star || state.Distance > (star.Kind === 'blackhole' ? 5 : 0.3)) return;
+
+			place = now(star.Place);
+			eye = [view.Eye[0] * 1000, view.Eye[1] * 1000, view.Eye[2] * 1000];
+			way = [place[0] - eye[0], place[1] - eye[1], place[2] - eye[2]];
+			far = Math.max(Math.sqrt(way[0] * way[0] + way[1] * way[1] + way[2] * way[2]), 1e-9);
+			/* A black hole: as wide as its disc (eighteen times its horizon, 2.95 km a Sun), else the star as wide as it is. */
+			size = 2 * (star.Kind === 'blackhole' ? 18 * 2.95 * star.Mass / 9.461e12 : Math.pow(star.Mass, 0.8) * SUN) / far * (1 / Math.tan(25 * Math.PI / 180)) * renderer.Height * 0.5;
+
+			state.NearStar = state.NearStar || renderer.Points([0, 0, 0], {aColor: {Size: 4, Data: [1, 1, 1, 1]}});
+
+			hex = String(star.Color || '#ffffff').replace('#', '');
+
+			engine.DrawReady(state.NearStar, programs().Sun, Object.assign({}, common, {uTurn: view.Turn, uWay: [way[0] / far, way[1] / far, way[2] / far], uSize: Math.min(1024, Math.max(18 * renderer.Ratio, size * 3)), uDisc: Math.min(1, size / Math.max(18 * renderer.Ratio, size * 3)), uColor: [parseInt(hex.slice(0, 2), 16) / 255, parseInt(hex.slice(2, 4), 16) / 255, parseInt(hex.slice(4, 6), 16) / 255], uHole: star.Kind === 'blackhole' ? 1 : 0, uFade: star.Kind === 'blackhole' ? 1 - Math.min(1, Math.max(0, (state.Distance - 2) / 3)) : 1 - Math.min(1, Math.max(0, (state.Distance - 0.1) / 0.2))}), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
+		}
+
+		/* The view near enough to a star it keeps to: its system comes (the scene goes into it), as a ship coming near a star would see it. */
+		function handoff () {
+			var star = state.Follow ? starOf(state.Follow) : null;
+			if (!star || state.Flight || state.Entering || self.Setting !== 'galaxy') return;
+
+			if (state.Distance < Math.max(2e-4, bodiesOf(star).Extent * 3)) {
+				state.Entering = true;
+
+				self.EnterSystem(star.ID, function () {
+					state.Entering = false;
+				});
+			}
+		}
+
+		/* The stars far behind it, all round: the sky it is seen against. */
+		function skyMesh () {
+			var random = self.$Service('Random').Sequence('galaxy-sky');
+			var positions = [];
+			var colors = [];
+			var i;
+			var u;
+			var a;
+			var w;
+			var warm;
+
+			if (state.Sky)
+				return state.Sky;
+
+			for (i = 0; i < 6000; i++) {
+				u = random() * 2 - 1;
+				a = random() * Math.PI * 2;
+				w = Math.sqrt(1 - u * u);
+				warm = random();
+
+				positions.push(w * Math.cos(a), u, w * Math.sin(a));
+				colors.push(warm < 0.3 ? 1 : 0.8 + warm * 0.2, warm < 0.3 ? 0.82 : 0.88, warm < 0.3 ? 0.6 : 1, Math.pow(random(), 7) * 2.5 + 0.03);
+			}
+
+			state.Sky = renderer.Points(positions, {aColor: {Size: 4, Data: colors}});
+
+			return state.Sky;
+		}
+
+		/* Where a place at time 0 is now (ly). */
+		function now (place) {
+			return galaxies.Position(state.Data, place, number(self.GalaxyTime, 0));
+		}
+
+		/* Where a place now was at time 0 (ly): the turn taken back. */
+		function then (place) {
+			return galaxies.Position(state.Data, place, -number(self.GalaxyTime, 0));
+		}
+
+		/*
+		 * The stars of the sectors round where the view looks (when it is near): an even draw of each sector, as many as a
+		 * frame may hold; the mesh made again only when the view went into another sector.
+		 */
+		/*
+		 * The stars of the sectors round where the view looks: worked out in the step of the scene, drawn or not
+		 * (regression: a scene that drew no frame, with no WebGL left under load, had none, nor its galaxy, nor its flights).
+		 */
+		function nearList () {
+			var m = state.Data.Manifest;
+			var size = m.Sector;
+			var at = then(state.Target);
+			var cx = Math.floor(at[0] / size);
+			var cy = Math.floor(at[1] / size);
+			var cz = Math.floor(at[2] / size);
+			var key = cx + '.' + cy + '.' + cz;
+			var reach = 2;
+			var each = {low: 120, medium: 240, high: 360, ultra: 480}[self.Graphics ? self.Graphics().Level : 'medium'] || 300;
+			var stars = [];
+			var x;
+			var y;
+			var z;
+
+			if (state.NearKey === key) return;
+
+			for (x = cx - reach; x <= cx + reach; x++) {
+				for (y = cy - reach; y <= cy + reach; y++) {
+					for (z = cz - reach; z <= cz + reach; z++) {
+						galaxies.Sector(state.Data, x, y, z, each).Stars.forEach(function (star) {
+							stars.push(star);
+						});
+					}
+				}
+			}
+
+			state.NearKey = key;
+			state.Stars = stars;
+			/* Regression: the stars of the sectors round the view stood as a box (their cube seen from out of it): a ball of them now, fading to its edge. */
+			state.NearCentre = [(cx + 0.5) * size / 1000, (cy + 0.5) * size / 1000, (cz + 0.5) * size / 1000];
+			state.NearReach = (reach + 0.5) * size / 1000;
+		}
+
+		/* Their points for the card, made again when the stars round the view changed. */
+		function nearStars () {
+			var positions = [];
+			var colors = [];
+
+			nearList();
+
+			if (state.NearMade === state.NearKey && state.Near) return;
+
+			state.Stars.forEach(function (star) {
+				var hex = String(star.Color || '#ffffff').replace('#', '');
+
+				positions.push(star.Place[0] / 1000, star.Place[1] / 1000, star.Place[2] / 1000);
+				colors.push(parseInt(hex.slice(0, 2), 16) / 255, parseInt(hex.slice(2, 4), 16) / 255, parseInt(hex.slice(4, 6), 16) / 255, star.Luminosity);
+			});
+
+			if (state.Near)
+				state.Near.Destroy();
+
+			state.Near = positions.length ? renderer.Points(positions, {aColor: {Size: 4, Data: colors}}) : null;
+			state.NearMade = state.NearKey;
+		}
+
+		function programs () {
+			if (state.Programs)
+				return state.Programs;
+
+			state.Programs = {
+				Glow: renderer.Program(shaders.GlowVertex, shaders.Glow),
+				Near: renderer.Program(shaders.NearVertex, shaders.Star),
+				Mark: renderer.Program(shaders.MarkVertex, shaders.Mark),
+				Picture: renderer.Program(self.$Service('Renderer').Shaders.Quad, shaders.Picture),
+				Sky: renderer.Program(shaders.SkyVertex, shaders.Star),
+				Knot: renderer.Program(shaders.KnotVertex, shaders.Star),
+				Sun: renderer.Program(shaders.SunVertex, shaders.Sun),
+				Meter: renderer.Program(self.$Service('Renderer').Shaders.Quad, shaders.Meter),
+				Mean: renderer.Program(self.$Service('Renderer').Shaders.Quad, shaders.Mean),
+				Field: renderer.Program(self.GalaxyFieldShader('#version 300 es\nprecision highp float;\n', self.$Service('Renderer').Chunks.Noise), shaders.Star),
+				Volume: renderer.Program(self.$Service('Renderer').Shaders.Quad, self.GalaxyVolumeShader('#version 300 es\nprecision highp float;\n', self.$Service('Renderer').Chunks.Noise)),
+				Plane: renderer.Program(self.$Service('Renderer').Shaders.Quad, self.GalaxyPlaneShader('#version 300 es\nprecision highp float;\n', self.$Service('Renderer').Chunks.Noise))
+			};
+
+			return state.Programs;
+		}
+
+		/* The eye (kly) of the view: round where it looks, at its distance. */
+		function eye () {
+			var d = state.Distance / 1000;
+			var t = state.Target;
+
+			return [t[0] / 1000 + d * Math.cos(state.Pitch) * Math.sin(state.Yaw), t[1] / 1000 + d * Math.sin(state.Pitch), t[2] / 1000 + d * Math.cos(state.Pitch) * Math.cos(state.Yaw)];
+		}
+
+		function matrices () {
+			var d = state.Distance / 1000;
+			var from = eye();
+			var to = [state.Target[0] / 1000, state.Target[1] / 1000, state.Target[2] / 1000];
+			var aspect = renderer.Width / Math.max(1, renderer.Height);
+			var projection = math.Perspective(50, aspect, Math.max(1e-6, d * 0.01), d * 4 + state.Data.Manifest.Radius / 250);
+			var look = math.LookAt(from, to, [0, 1, 0]);
+
+			return {Eye: from, Matrix: math.Multiply(projection, look), Turn: math.Multiply(math.Perspective(50, aspect, 0.1, 10), math.LookAt([0, 0, 0], [to[0] - from[0], to[1] - from[1], to[2] - from[2]], [0, 1, 0])), Right: [look[0], look[4], look[8]], Up: [look[1], look[5], look[9]]};
+		}
+
+		/* The screen (css px) of a place (ly), or null behind the eye. */
+		function screenOf (matrix, place) {
+			var p = [place[0] / 1000, place[1] / 1000, place[2] / 1000];
+			var x = matrix[0] * p[0] + matrix[4] * p[1] + matrix[8] * p[2] + matrix[12];
+			var y = matrix[1] * p[0] + matrix[5] * p[1] + matrix[9] * p[2] + matrix[13];
+			var w = matrix[3] * p[0] + matrix[7] * p[1] + matrix[11] * p[2] + matrix[15];
+			if (w <= 0)
+				return null;
+
+			return [(x / w * 0.5 + 0.5) * scene.Width, (0.5 - y / w * 0.5) * scene.Height];
+		}
+
+		/* How near the view is for the stars one by one (1: all of them, 0: the glow alone). */
+		function nearness () {
+			return 1 - Math.min(1, Math.max(0, (state.Distance - 100) / 300));
+		}
+
+		/* What is under a point of the screen: a star near, the black hole ('centre'), or ''. */
+		/* How bright a star is drawn from the eye (as its points are: its light over the square of how far it is, the edge of the ball of the near ones), 0 to 1. */
+		function brightness (star, place, eye) {
+			var dx = place[0] / 1000 - eye[0];
+			var dy = place[1] / 1000 - eye[1];
+			var dz = place[2] / 1000 - eye[2];
+			var far = Math.max(Math.sqrt(dx * dx + dy * dy + dz * dz) * 1000, 0.01);
+			var seen = Math.log(Math.max(star.Luminosity / (far * far), 1e-12)) / Math.LN10;
+			var centre = state.NearCentre || [0, 0, 0];
+			var edge = state.NearReach ? Math.sqrt(Math.pow(star.Place[0] / 1000 - centre[0], 2) + Math.pow(star.Place[1] / 1000 - centre[1], 2) + Math.pow(star.Place[2] / 1000 - centre[2], 2)) / state.NearReach : 0;
+
+			return Math.max(0, Math.min(1, (seen + 6.5) / 5.5)) * (1 - Math.max(0, Math.min(1, (edge - 0.55) / 0.43))) * nearness();
+		}
+
+		function pick (x, y) {
+			var view;
+			var best = '';
+			var least = 14 * 14;
+			var score = Infinity;
+			var hole;
+
+			if (!state.Data) return '';
+
+			view = matrices();
+
+			/*
+			 * Regression: the nearest of all the stars of the sectors round was picked, the faint ones not drawn too, and a press
+			 * on a star took another. Now only what is seen, by how bright it is drawn there: the brighter the farther it reaches.
+			 */
+			if (nearness() > 0.05) {
+				state.Stars.forEach(function (star) {
+					var place = now(star.Place);
+					var at = screenOf(view.Matrix, place);
+					var seen = brightness(star, place, view.Eye);
+					var reach;
+					var far;
+
+					if (!at || seen < 0.08) return;
+
+					reach = 4 + seen * 10;
+					far = ((at[0] - x) * (at[0] - x) + (at[1] - y) * (at[1] - y)) / (reach * reach);
+
+					if (far < 1 && far < score) {
+						score = far;
+						best = star.ID;
+					}
+				});
+			}
+
+			/* What was put in by hand (a star, a body of no system) is picked before the stars round it. */
+			galaxies.Added(state.Data, number(self.GalaxyTime, 0)).forEach(function (body) {
+				var at = screenOf(view.Matrix, body.Place);
+				var far;
+
+				if (!at) return;
+
+				far = (at[0] - x) * (at[0] - x) + (at[1] - y) * (at[1] - y);
+
+				if (far < 12 * 12 && far < least) {
+					least = far;
+					best = body.ID;
+				}
+			});
+
+			hole = screenOf(view.Matrix, [0, 0, 0]);
+
+			if (!best && hole && (hole[0] - x) * (hole[0] - x) + (hole[1] - y) * (hole[1] - y) < 10 * 10)
+				best = 'centre';
+
+			/* Regression: from far no star could be picked (none is drawn one by one there): the brightest of the sector under the pointer. */
+			return best || farStar(view.Matrix, x, y);
+		}
+
+		/* The brightest star of the sector where the pointer meets the plane of the galaxy (or comes nearest its middle), or ''. */
+		function farStar (matrix, x, y) {
+			var m = state.Data.Manifest;
+			var inverse = math.Invert(matrix);
+			var nx = x / Math.max(1, scene.Width) * 2 - 1;
+			var ny = 1 - y / Math.max(1, scene.Height) * 2;
+			var from;
+			var to;
+			var way;
+			var t;
+			var at;
+			var back;
+			var found;
+
+			if (!inverse) return '';
+
+			from = unproject(inverse, nx, ny, -1);
+			to = unproject(inverse, nx, ny, 1);
+			way = [to[0] - from[0], to[1] - from[1], to[2] - from[2]];
+			t = Math.abs(way[1]) > 1e-9 ? -from[1] / way[1] : -1;
+
+			if (t < 0 || t > 1)
+				t = Math.max(0, -(from[0] * way[0] + from[1] * way[1] + from[2] * way[2]) / Math.max(1e-12, way[0] * way[0] + way[1] * way[1] + way[2] * way[2]));
+
+			at = [(from[0] + way[0] * t) * 1000, (from[1] + way[1] * t) * 1000, (from[2] + way[2] * t) * 1000];
+
+			if (Math.sqrt(at[0] * at[0] + at[2] * at[2]) > m.Radius * 1.2) return '';
+
+			back = then(at);
+			found = galaxies.Sector(state.Data, Math.floor(back[0] / m.Sector), Math.floor(back[1] / m.Sector), Math.floor(back[2] / m.Sector), 400).Stars.reduce(function (most, star) {
+				return !most || star.Luminosity > most.Luminosity ? star : most;
+			}, null);
+
+			return found ? found.ID : '';
+		}
+
+		/* A point of the screen (-1 to 1) at a depth (-1 near, 1 far) back in the world (kly). */
+		function unproject (inverse, x, y, z) {
+			var w = inverse[3] * x + inverse[7] * y + inverse[11] * z + inverse[15];
+
+			return [(inverse[0] * x + inverse[4] * y + inverse[8] * z + inverse[12]) / w, (inverse[1] * x + inverse[5] * y + inverse[9] * z + inverse[13]) / w, (inverse[2] * x + inverse[6] * y + inverse[10] * z + inverse[14]) / w];
+		}
+
+		function starOf (id) {
+			var found = state.Stars.filter(function (star) {
+				return star.ID === id;
+			})[0];
+
+			return found || (id && state.Data ? galaxies.Star(state.Data, id) : null);
+		}
+
+		function picked (id) {
+			state.Picked = id === 'centre' ? 'centre' : id || '';
+
+			self.$Emit('galaxy', {ID: state.Picked === 'centre' ? '' : state.Picked, Centre: state.Picked === 'centre', Star: state.Picked && state.Picked !== 'centre' ? starOf(state.Picked) : null});
+		}
+
+		/* The view flies (seconds) to where it looks and its distance; done when it is there. */
+		function fly (target, distance, seconds, done) {
+			state.Flight = {From: state.Target.slice(), To: target, Near: state.Distance, Far: distance, Seconds: seconds, Spent: 0, Done: done || null};
+		}
+
+		function flightStep (elapsed) {
+			var flight = state.Flight;
+			var k;
+			var e;
+			var done;
+
+			if (!flight) return;
+
+			flight.Spent += elapsed;
+			k = Math.min(1, flight.Spent / Math.max(1e-3, flight.Seconds));
+			e = k * k * (3 - 2 * k);
+
+			state.Target = [flight.From[0] + (flight.To[0] - flight.From[0]) * e, flight.From[1] + (flight.To[1] - flight.From[1]) * e, flight.From[2] + (flight.To[2] - flight.From[2]) * e];
+			state.Distance = Math.exp(Math.log(flight.Near) + (Math.log(flight.Far) - Math.log(flight.Near)) * e);
+
+			if (k < 1) return;
+
+			done = flight.Done;
+			state.Flight = null;
+
+			if (done)
+				done();
+		}
+
+		/* A star the view keeps to as the galaxy turns. */
+		function follow () {
+			var star = state.Picked && state.Picked !== 'centre' && !state.Flight ? starOf(state.Picked) : null;
+			if (star && state.Follow === star.ID)
+				state.Target = now(star.Place);
+		}
+
+		/*
+		 * What the picture is of: the view, the time, the size, the quality, the galaxy and its edits, what is picked. The same
+		 * as at the frame before: the view stood still.
+		 */
+		function signature (view) {
+			var edits = state.Data.Edits || {};
+
+			return [view.Matrix.join(','), number(self.GalaxyTime, 0), renderer.Width, renderer.Height, renderer.Ratio, self.Graphics ? self.Graphics().Level : '', state.Key, (edits.Added || []).length, (edits.Removed || []).length, Object.keys(edits.Overrides || {}).length, state.Picked, state.Follow, state.NearKey].join('|');
+		}
+
+		engine.GalaxyFrame = function (elapsed) {
+			var view;
+			var programsOf;
+			var near;
+			var time = number(self.GalaxyTime, 0);
+			var hole;
+			var star;
+			var common;
+			var drawn;
+			var still;
+			var seen;
+
+			if (!state.Data) {
+				renderer.Clear([0, 0, 0, 1]);
+
+				state.Drawn = '';
+
+				return;
+			}
+
+			state.Quad = state.Quad || renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
+
+			/*
+			 * The picture of its plane first, a few rows a frame (what was on the screen stays till it is whole); its bulge
+			 * known before (regression: known after, its shape changed and its plane was made twice).
+			 */
+			glowMesh();
+
+			if (!plane()) {
+				state.Drawn = '';
+
+				return;
+			}
+
+			view = matrices();
+			programsOf = programs();
+			near = nearness();
+			drawn = signature(view);
+			still = drawn === state.Drawn;
+
+			/*
+			 * Regression: all of it was drawn again at every frame, its rays too, and the card was busy all the time however
+			 * still the view stood. Now nothing is drawn while nothing changes (the picture on the screen stays): once fine
+			 * when the view stops, then only while the eye takes to its light.
+			 */
+			if (still && state.Fine >= number(state.Rounds, 6) && !renderer.Lost && Math.abs(Math.log(exposure(elapsed) / (state.Shown || 1))) < 0.004) {
+				labels(view);
+
+				return;
+			}
+
+			state.Drawn = drawn;
+
+			/* Its light added up in floats (the core is many times brighter than the arms), then brought to the screen as an eye sees it. */
+			if (!state.Light || state.Light.Width !== renderer.Width || state.Light.Height !== renderer.Height) {
+				if (state.Light)
+					state.Light.Destroy();
+
+				state.Light = renderer.Target(renderer.Width, renderer.Height, {Float: true});
+				still = false;
+			}
+
+			state.Quad = state.Quad || renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
+
+			common = {uViewProjection: view.Matrix, uEye: view.Eye, uTime: time, uRatio: renderer.Ratio, uHeight: renderer.Height, uFocal: 1 / Math.tan(25 * Math.PI / 180)};
+
+			/* The points (its sparkle, its knots, the stars round the eye, its stars near) and its rays: again only when the view changed. */
+			if (!still) {
+				state.Light.Begin();
+
+				renderer.Clear([0, 0, 0, 0]);
+
+				/* The stars far behind it, turning with the view alone. */
+				engine.DrawReady(skyMesh(), programsOf.Sky, Object.assign({uTurn: view.Turn}, common), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
+
+				glowMesh();
+
+				/* The sparkle of its stars over its light (the light itself is of the volume, below), fainter as the stars one by one come. */
+				engine.DrawReady(state.Glow, programsOf.Glow, Object.assign({uSize: state.Data.Manifest.Radius / 1000 / 40, uGain: 0.42 * 90000 / state.GlowCount * number(state.Sparkle, 0.25), uFade: 1 - near * 0.85}, common), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
+
+				/* The stars round the eye, one by one where its light would be a mist. */
+				field(view);
+
+				/* What was put in by hand, seen at any distance: a star warm white, a body of no system cyan. */
+				added();
+
+				if (state.AddedMesh)
+					engine.DrawReady(state.AddedMesh, programsOf.Knot, Object.assign({uFade: 4, uClose: 0}, common), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
+
+				/* Its knots of young stars: sharp points, never wider than a few pixels. */
+				if (state.Knots)
+					engine.DrawReady(state.Knots, programsOf.Knot, Object.assign({uFade: (1 - near * 0.85) * number(state.KnotLight, 0.35), uClose: 1}, common), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
+
+				nearStar(view, common);
+
+				if (near > 0.01) {
+					nearStars();
+
+					if (state.Near)
+						engine.DrawReady(state.Near, programsOf.Near, Object.assign({uFade: near, uCentre: state.NearCentre, uReach: state.NearReach}, common), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
+				}
+
+				state.Light.End();
+			}
+
+			/*
+			 * Its light and its dust along the ray of each pixel (GalaxyVolumeShader): coarse while the view moves, fine when it
+			 * stops. Regression: it was of soft spots of points, blurred near and too thin edgewise, its dust a black disc.
+			 */
+			if (!still || state.Fine < number(state.Rounds, 6))
+				volume(view, still);
+
+			seen = exposure(elapsed);
+			state.Shown = seen;
+
+			renderer.Clear([0, 0, 0, 1]);
+
+			engine.DrawReady(state.Quad, programsOf.Picture, {uPicture: state.Light.Textures[0], uVolume: state.Volume.Textures[0], uExposure: seen}, {Depth: false, DepthWrite: false, Blend: 'none', Cull: 'none'});
+
+			/* The star picked (or its black hole): a ring. */
+			hole = [];
+			star = state.Picked ? starOf(state.Picked) : null;
+
+			if (star)
+				hole.push({At: now(star.Place), Color: [0.5, 0.85, 1, 1], Size: 22, Dark: 0});
+
+			if (state.Marks)
+				state.Marks.Destroy();
+
+			state.Marks = null;
+
+			labels(view);
+
+			if (!hole.length) return;
+
+			state.Marks = renderer.Points([].concat.apply([], hole.map(function (mark) {
+				return [mark.At[0] / 1000, mark.At[1] / 1000, mark.At[2] / 1000];
+			})), {aColor: {Size: 4, Data: [].concat.apply([], hole.map(function (mark) {
+				return [mark.Color[0], mark.Color[1], mark.Color[2], mark.Size + mark.Dark * 1000];
+			}))}});
+
+			engine.DrawReady(state.Marks, programsOf.Mark, common, {Depth: false, DepthWrite: false, Blend: 'alpha', Mode: 'points'});
+		};
+
+		/* The pointer, the wheel and the fingers while the galaxy is shown. */
+		this.AddBehaviour({
+			Step: function (elapsed) {
+				var into = state.Into;
+
+				/* What the galaxy does, drawn or not: the galaxy it shows, the flight of the view, the stars round it. */
+				if (self.Setting === 'galaxy') {
+					wanted();
+
+					flightStep(elapsed);
+
+					if (state.Data) {
+						follow();
+
+						if (nearness() > 0.01)
+							nearList();
+
+						handoff();
+					}
+				}
+				else if (state.Labels) {
+					state.Labels.hidden = true;
+				}
+
+				/* Into a system: its view comes from far as the scene shows it. */
+				if (into && self.Setting !== 'galaxy') {
+					into.Frames++;
+
+					if (into.Frames === 2 && scene.Wanted) {
+						scene.Distance = scene.Wanted * 40;
+						state.Into = null;
+					}
+				}
+			},
+
+			Pointer: function (kind, event) {
+				var point;
+				var press = state.Press;
+				var dx;
+				var dy;
+				var id;
+
+				if (self.Setting !== 'galaxy') return false;
+
+				point = engine.Local(event);
+
+				if (kind === 'down') {
+					state.Press = {X: point.X, Y: point.Y, Yaw: state.Yaw, Pitch: state.Pitch, Target: state.Target.slice(), Pan: event.button === 2 || event.shiftKey, Moved: false};
+
+					if (event.preventDefault)
+						event.preventDefault();
+
+					return true;
+				}
+
+				if (kind === 'move' && press) {
+					dx = point.X - press.X;
+					dy = point.Y - press.Y;
+					press.Moved = press.Moved || Math.abs(dx) + Math.abs(dy) > 4;
+
+					if (press.Pan) pan(press, dx, dy);
+					else turn(press, dx, dy);
+
+					return true;
+				}
+
+				if (kind === 'move') return true;
+
+				if (kind === 'up') {
+					state.Press = null;
+
+					if (press && !press.Moved) {
+						id = pick(point.X, point.Y);
+
+						picked(id);
+					}
+
+					return true;
+				}
+
+				if (kind === 'wheel') {
+					if (event.preventDefault)
+						event.preventDefault();
+
+					zoom(state.Distance * Math.exp((event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY) * 0.0012));
+
+					return true;
+				}
+
+				if (kind === 'double') {
+					id = pick(point.X, point.Y);
+
+					if (id)
+						self.GalaxyFocus(id === 'centre' ? '' : id);
+
+					return true;
+				}
+
+				return false;
+			},
+
+			Gesture: function (gesture) {
+				var point;
+				var id;
+
+				if (self.Setting !== 'galaxy') return false;
+
+				point = engine.Local({clientX: gesture.X, clientY: gesture.Y});
+
+				if (gesture.Phase === 'start' || !state.Touch)
+					state.Touch = {Yaw: state.Yaw, Pitch: state.Pitch, Target: state.Target.slice(), Distance: state.Distance};
+
+				id = gesture.Type === 'tap' || gesture.Type === 'doubletap' ? pick(point.X, point.Y) : '';
+
+				if (gesture.Type === 'tap') picked(id);
+				else if (gesture.Type === 'doubletap' && id) self.GalaxyFocus(id === 'centre' ? '' : id);
+				else if (gesture.Type === 'pan' && gesture.Pointers === 1) turn(state.Touch, gesture.DX, gesture.DY);
+				else if (gesture.Type === 'pan' && gesture.Pointers === 2) pan(state.Touch, gesture.DX, gesture.DY);
+				else if (gesture.Type === 'pinch') zoom(state.Touch.Distance / Math.max(0.05, gesture.Scale));
+
+				return true;
+			},
+
+			Key: function (event) {
+				if (self.Setting !== 'galaxy' || event.key !== 'Enter' || !state.Picked) return false;
+
+				self.EnterSystem(state.Picked);
+
+				return true;
+			}
+		});
+
+		function turn (from, dx, dy) {
+			state.Yaw = from.Yaw - dx * 0.006;
+			state.Pitch = Math.max(-1.45, Math.min(1.45, from.Pitch + dy * 0.006));
+		}
+
+		/* Along the plane of the galaxy, as far as the view is from where it looks. */
+		function pan (from, dx, dy) {
+			var scale = state.Distance * 1.6 / Math.max(1, scene.Height);
+			var right = [Math.cos(state.Yaw), 0, -Math.sin(state.Yaw)];
+			var ahead = [-Math.sin(state.Yaw), 0, -Math.cos(state.Yaw)];
+
+			state.Follow = '';
+			state.Flight = null;
+			state.Target = [from.Target[0] - (right[0] * dx - ahead[0] * dy) * scale, from.Target[1], from.Target[2] - (right[2] * dx - ahead[2] * dy) * scale];
+		}
+
+		function zoom (distance) {
+			var most = state.Data ? state.Data.Manifest.Radius * 5 : 300000;
+
+			state.Flight = null;
+			/* Kept to a star, the view comes as near as its system (it goes into it there); else no nearer than half a light-year. */
+			state.Distance = Math.max(state.Follow ? 5e-5 : 0.5, Math.min(most, distance));
+		}
+
+		state.Fly = fly;
+		state.Wanted = wanted;
+		state.NearList = nearList;
+		state.Nearness = nearness;
+		state.Brightness = brightness;
+		state.ScreenOf = screenOf;
+		state.Matrices = matrices;
+		state.StarOf = starOf;
+		state.Now = now;
+		state.Pick = pick;
+	},
+
+	/*
+	 * The shape of a galaxy for its shaders (in thousands of light-years): its old stars of its discs (a thin one, a thick
+	 * one), the young ones on the ridges of its arms in clouds and the pink knots where they are born, its bulge (its arms
+	 * begin at its edge, or at the ends of its bar), its halo; its dust in thin lanes on the inner side of its arms, torn in
+	 * threads. sampleAt(p, light, dust): the light (rgb) and the dust at a place as it was at time 0.
+	 */
+	GalaxyShapeShader: function (noise) {
+		return [
+			'uniform float uKind;',
+			'uniform float uRadius;',
+			'uniform float uScale;',
+			'uniform float uHeight;',
+			'uniform float uBulge;',
+			'uniform float uFlat;',
+			'uniform float uBulgeBright;',
+			'uniform float uArms;',
+			'uniform float uPitch;',
+			'uniform float uPhase;',
+			'uniform float uBar;',
+			'uniform float uRing;',
+			'uniform float uWidth;',
+			'uniform vec3 uShape;',
+			'uniform float uSeed;',
+			noise,
+			'const vec3 lightOld = vec3(1.0, 0.86, 0.66);',
+			'const vec3 lightYoung = vec3(0.5, 0.66, 1.0);',
+			'const vec3 lightBulge = vec3(1.0, 0.8, 0.55);',
+			/* The arms at a place: the wave of the log spiral (bent by a noise), 0 to 1, shifted inward for the dust. */
+			'float waveAt(vec3 p, float bend, float shift) {',
+			'	float r = max(length(p.xz), 0.05);',
+			'	float a = atan(p.z, p.x) - log(r) / tan(uPitch) - uPhase - shift + bend;',
+			'	return 0.5 + 0.5 * cos(uArms * a);',
+			'}',
+			/*
+			 * An octave of its noise as fine as the eye there makes out: its mean (0.5) where it would be finer than a pixel
+			 * (foot: how wide a pixel is there, kly), so that far it is smooth and near it is as sharp as near.
+			 */
+			/*
+			 * Regression: its noise was of values on a grid, and its clouds stood in squares (blocks seen from far): a noise of
+			 * gradients now, turned off the axes of the grid.
+			 */
+			'vec3 slope3(vec3 i) {',
+			'	uvec3 h = pcg3(uvec3(ivec3(i) + ivec3(65536)));',
+			'	return normalize(vec3(h & uvec3(1023u)) / 511.5 - 1.0 + 1e-4);',
+			'}',
+			'float slopeNoise(vec3 p) {',
+			'	p = mat3(0.788, 0.346, -0.509, -0.369, 0.928, 0.051, 0.49, 0.137, 0.861) * p;',
+			'	vec3 i = floor(p);',
+			'	vec3 f = fract(p);',
+			'	vec3 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);',
+			'	float a = dot(slope3(i), f);',
+			'	float b = dot(slope3(i + vec3(1.0, 0.0, 0.0)), f - vec3(1.0, 0.0, 0.0));',
+			'	float c = dot(slope3(i + vec3(0.0, 1.0, 0.0)), f - vec3(0.0, 1.0, 0.0));',
+			'	float d = dot(slope3(i + vec3(1.0, 1.0, 0.0)), f - vec3(1.0, 1.0, 0.0));',
+			'	float e = dot(slope3(i + vec3(0.0, 0.0, 1.0)), f - vec3(0.0, 0.0, 1.0));',
+			'	float g = dot(slope3(i + vec3(1.0, 0.0, 1.0)), f - vec3(1.0, 0.0, 1.0));',
+			'	float h = dot(slope3(i + vec3(0.0, 1.0, 1.0)), f - vec3(0.0, 1.0, 1.0));',
+			'	float k = dot(slope3(i + vec3(1.0)), f - vec3(1.0));',
+			'	return clamp(0.5 + 0.75 * mix(mix(mix(a, b, u.x), mix(c, d, u.x), u.y), mix(mix(e, g, u.x), mix(h, k, u.x), u.y), u.z), 0.0, 1.0);',
+			'}',
+			'float octave(vec3 p, float size, float foot, float seed) {',
+			'	float seen = smoothstep(foot * 0.7, foot * 2.0, size);',
+			'	if (seen <= 0.0) return 0.5;',
+			'	return mix(0.5, slopeNoise(p / size + seed), seen);',
+			'}',
+			/*
+			 * Noise along its spiral: of its phase round it (periodic: a circle of `across` cells a turn) and of the log of its
+			 * radius (`along` cells a step of e): a cell is r / across round and r / (along sin(pitch)) along its arm, threads
+			 * that follow its arms, as its dust and its arms are drawn.
+			 */
+			/* The way of the ray (the stars of a cell and its knots are where the ray crosses its plane: not smeared through its thickness). */
+			'vec3 gRay = vec3(0.0, 1.0, 0.0);',
+			'vec2 onPlane(vec3 p) {',
+			'	return abs(gRay.y) > 0.5 ? p.xz - gRay.xz * (p.y / gRay.y) : p.xz;',
+			'}',
+			'float spiralNoise(float phase, float lr, float across, float along, float seed) {',
+			'	return slopeNoise(vec3(cos(phase) * across, sin(phase) * across, lr * along) + seed);',
+			'}',
+			/* A star of each cell of the plane as wide as a pixel there: 1 on the mean, most dark, a few bright (the grain of its stars). */
+			'float speckle(vec2 at, float y, float foot) {',
+			'	float size = exp2(floor(log2(max(foot * 0.9, 1e-5))));',
+			/* Seen low over its plane: cells of space (a cell of the plane would stand as a column, streaks). */
+			/* Cells of space, as tall as a part of its disc is thick but at most 3 times as tall as wide (regression: needles, streaks down the picture seen from near). */
+			'	float tall = min(max(size, uHeight * 0.5), size * 3.0);',
+			'	float h = hash3(vec3(floor(at / size), floor(y / tall) + 7.0 + uSeed));',
+			'	return pow(h, 16.0) * 17.0;',
+			'}',
+			/*
+			 * Its knots where stars are born: clumps on a cellular grid of the plane (cell kly), each lit where its arm is (ridge),
+			 * a few pink blobs round a blue core; 0 where none.
+			 */
+			'vec4 knots(vec2 at, float cell, float ridge, float seed) {',
+			'	vec2 base = floor(at / cell);',
+			'	vec4 sum = vec4(0.0);',
+			'	for (int i = -1; i <= 1; i++) {',
+			'		for (int j = -1; j <= 1; j++) {',
+			'			vec2 c = base + vec2(float(i), float(j));',
+			'			float a = hash3(vec3(c, seed));',
+			'			float b = hash3(vec3(c, seed + 1.0));',
+			'			float e = hash3(vec3(c, seed + 2.0));',
+			'			vec2 site = (c + vec2(a, b)) * cell;',
+			'			float d = length(at - site);',
+			'			float size = cell * (0.08 + 0.2 * e);',
+			'			float lit = step(e, ridge) * step(hash3(vec3(c, seed + 3.0)), 0.35);',
+			'			float blob = exp(-d * d / (size * size));',
+			'			float lobes = exp(-pow(length(at - site - vec2(a - 0.5, b - 0.5) * size * 1.6), 2.0) / (size * size * 0.3));',
+			'			sum += vec4(vec3(1.0, 0.36, 0.45) * (blob * 0.8 + lobes * 0.9) + vec3(0.55, 0.7, 1.0) * exp(-d * d / (size * size * 0.06)) * 1.5, blob) * lit;',
+			'		}',
+			'	}',
+			'	return sum;',
+			'}',
+			/*
+			 * What of it lies in its plane, at a place of its plane (foot: how wide what is made out there is, kly): a its arms (the
+			 * light of its old stars), its ridges (its young ones), its lanes of dust and its threads of dust; b its knots (rgb) and
+			 * the height of the middle of its layer of dust. Its volume reads them from a picture of its plane made once (planeAt
+			 * is the most of its cost: computed again at each step of each ray, its card was busy for seconds).
+			 */
+			'void planeAt(vec3 p, float foot, out vec4 a, out vec4 b) {',
+			'	float r = length(p.xz);',
+			'	float start = uBar > 0.0 ? uBar * 1.05 : uBulge * 0.6;',
+			'	float on = smoothstep(start, start * (uBar > 0.0 ? 1.3 : 2.5), r);',
+			'	float arms = 1.0;',
+			'	float ridge = 0.0;',
+			'	float lane = 0.0;',
+			'	float lr = log(max(r, 0.02) / max(uScale, 1e-3));',
+			'	float phase = atan(p.z, p.x) - lr / tan(uPitch) - uPhase;',
+			'	if (uArms > 0.5) {',
+			/* Its arms: the wave of its spiral, torn in pieces along it and with more arms between (flocculent), not two smooth bands. */
+			'		float bend = (slopeNoise(vec3(p.x, 1.5, p.z) / (uRadius / 6.0) + uSeed) - 0.5) * 0.5;',
+			'		float w = 0.5 + 0.5 * cos(uArms * (phase + bend));',
+			'		float pieces = spiralNoise(phase + bend, lr, 3.0, 0.8, uSeed);',
+			'		float more = spiralNoise(phase + bend, lr, 7.0, 1.5, uSeed * 1.3);',
+			'		float wave = pow(w, 2.0) * (0.45 + 1.1 * pieces) + pow(max(more - 0.45, 0.0) / 0.55, 1.5) * 0.9;',
+			'		ridge = clamp(wave, 0.0, 1.6) * on;',
+			'		arms = mix(1.0, 0.35 + 1.2 * wave, on);',
+			/* Its dust on the inner side of its arms and all over its inner disc. */
+			'		lane = (0.35 + 0.9 * pow(0.5 + 0.5 * cos(uArms * (phase + bend) + 0.9), 3.0)) * smoothstep(uBulge * 0.06, uBulge * 0.45, r);',
+			'	}',
+			'	if (uKind > 3.5) {',
+			'		float ring = exp(-pow((r - uRing) / uWidth, 2.0));',
+			'		arms = 0.25 + ring * 3.0;',
+			'		ridge = ring;',
+			'		lane = ring * 0.6 + 0.2;',
+			'	}',
+			'	if (uKind > 2.5 && uKind < 3.5) {',
+			'		arms = pow(slopeNoise(p / (uRadius / 4.0) + uSeed), 2.0) * 3.5;',
+			'		ridge = arms * 0.3;',
+			'		lane = arms * 0.2 + 0.2;',
+			'	}',
+			'	if (uKind < 0.5 && uArms < 0.5) lane = 0.25;',
+			/*
+			 * Its threads of dust as in the pictures (a flocculent spiral): thin, many, bent by a noise a thread apart and more,
+			 * so that they wander, cross and branch; a noise sets how thick a thread is along it: it thins to nothing and breaks
+			 * with sharp ends. Regression: smooth whole bands round it (a swirl); then blots cut out of a noise; then its threads
+			 * cut in pieces by a noise (short blots, spots).
+			 */
+			/* How far apart its threads stand across them: a turn of its phase is 2 pi r tan(pitch) of radius (regression: taken as 2 pi r, its threads seen when finer than a pixel, a grainy mush, and as tall as wide many times: a fence, drips seen low). */
+			'	float apart = max(r, 0.05) * 6.283 * tan(uPitch);',
+			'	float seen1 = smoothstep(foot * 0.7, foot * 2.0, apart / 22.0 * 0.25);',
+			'	float seen2 = smoothstep(foot * 0.7, foot * 2.0, apart / 55.0 * 0.25);',
+			'	float seen3 = smoothstep(foot * 0.7, foot * 2.0, apart / 120.0 * 0.25);',
+			/* Its threads bent a little, slowly along them (regression: bent fast, they zigzagged out from its middle: streaks seen from inside). */
+			'	float wig = phase + (spiralNoise(phase, lr, 6.0, 1.5, uSeed * 1.9) - 0.5) * 0.35;',
+			'	vec3 level = vec3(p.x, 0.0, p.z);',
+			'	float bent = wig + (octave(level, uRadius / 40.0, foot, uSeed * 2.9) - 0.5) * 0.5 + (octave(level, uRadius / 110.0, foot, uSeed * 3.3) - 0.5) * 0.25;',
+			'	float fray = (octave(level, uRadius / 600.0, foot, uSeed * 8.3) - 0.5) * 0.3;',
+			'	float t1 = 1.0 - abs(2.0 * spiralNoise(bent, lr, 22.0, 7.0, uSeed * 2.1) - 1.0) + fray;',
+			'	float t2 = 1.0 - abs(2.0 * spiralNoise(bent, lr, 55.0, 14.0, uSeed * 3.7) - 1.0) + fray;',
+			'	float t3 = 1.0 - abs(2.0 * spiralNoise(bent, lr, 120.0, 26.0, uSeed * 4.1) - 1.0) + fray;',
+			'	float w1 = 0.5 * smoothstep(0.4, 0.72, octave(level, uRadius / 90.0, foot, uSeed * 6.3) + (octave(level, uRadius / 240.0, foot, uSeed * 7.7) - 0.5) * 0.6);',
+			'	float w2 = 0.4 * smoothstep(0.4, 0.72, octave(level, uRadius / 160.0, foot, uSeed * 5.3) + (octave(level, uRadius / 420.0, foot, uSeed * 4.9) - 0.5) * 0.6);',
+			'	float th1 = clamp((t1 - 1.0 + w1) / max(w1 * 0.5, 0.01), 0.0, 1.0);',
+			'	float th2 = clamp((t2 - 1.0 + w2) / max(w2 * 0.5, 0.01), 0.0, 1.0);',
+			'	float th3 = clamp((t3 - 1.0 + w2 * 0.8) / max(w2 * 0.4, 0.01), 0.0, 1.0);',
+			'	float broken = smoothstep(0.3, 0.6, spiralNoise(phase, lr, 11.0, 6.0, uSeed * 0.7));',
+			/* Where its threads are finer than what is made out, their mean as torn as they are (regression: an even mean, smooth dark rings round it). */
+			'	float threads = mix(0.12, th1 * (0.4 + broken) * 1.3, seen1) + mix(0.2 * w2 * (0.3 + broken), th2 * (0.3 + broken) * 0.9, seen2) + mix(0.1 * w2, th3 * 0.6, seen3);',
+			/* Its knots where stars are born: pink clumps with blue cores along its arms. */
+			'	vec4 k = vec4(0.0);',
+			'	if (ridge > 0.05 && uKind < 2.5)',
+			'		k = knots(p.xz, uRadius / 30.0, ridge * 0.6, uSeed) + knots(p.xz, uRadius / 90.0, ridge * 0.45, uSeed + 9.0) * 0.5;',
+			/* The middle of its layer of dust up and down a little, so that its threads stand at their own heights. */
+			'	float middle = (octave(level, uRadius / 70.0, foot, uSeed * 1.7) + octave(level, uRadius / 200.0, foot, uSeed * 2.3) - 1.0) * uHeight * 0.6;',
+			'	a = vec4(arms, ridge, lane, threads);',
+			'	b = vec4(k.rgb, middle);',
+			'}',
+			/*
+			 * The picture of its plane (made once, planeAt): u its angle round, v the log of its radius (its threads, along its
+			 * spiral, run nearly along u; across them it is fine everywhere, finer in its middle). uPlaneMap: the log of the
+			 * radius at v 0, 1 / the span of v in it, texels of v. uBaked 0: planeAt computed at each place (few places).
+			 */
+			'uniform sampler2D uPlaneA;',
+			'uniform sampler2D uPlaneB;',
+			'uniform vec3 uPlaneMap;',
+			'uniform float uBaked;',
+			'void sampleAt(vec3 p, float foot, out vec3 light, out float dust) {',
+			'	float r = length(p.xz);',
+			'	float z = abs(p.y);',
+			'	float edge = 1.0 - smoothstep(uRadius * 0.95, uRadius * 1.35, r);',
+			'	light = vec3(0.0);',
+			'	dust = 0.0;',
+			'	if (uKind > 0.5 && uKind < 1.5) {',
+			'		float q = length(p / uShape) / (uRadius * 0.22);',
+			'		light = lightBulge * exp(-7.67 * (pow(max(q, 1e-3), 0.25) - 1.0)) * 0.02;',
+			'		return;',
+			'	}',
+			'	if (uKind > 1.5 && uKind < 2.5) {',
+			'		float q = length(p) / (uRadius * 0.25);',
+			'		light = vec3(1.0, 0.86, 0.7) * pow(1.0 + q * q, -2.5) * 0.6;',
+			'		return;',
+			'	}',
+			/* Its disc: old stars warm in its middle, bluer outward; its thick disc and its halo faint. */
+			'	float thin = exp(-r / uScale - z / uHeight) * edge;',
+			'	float thick = exp(-r / (uScale * 1.25) - z / (uHeight * 3.0)) * edge * 0.03;',
+			'	float halo = exp(-length(p) / (uRadius * 0.25)) * 0.0012;',
+			'	vec3 old = mix(lightOld, vec3(0.78, 0.84, 1.0), smoothstep(uRadius * 0.12, uRadius * 0.6, r));',
+			/* Its bulge small and warm, its nucleus a bright point in it. */
+			'	float rb = length(vec3(p.x, p.y / max(uFlat, 0.05), p.z)) / max(uBulge * 0.7, 1e-4);',
+			'	float bulge = exp(-pow(rb + 0.02, 0.55) * 3.2) * uBulgeBright * 5.0 + exp(-length(p) / max(uBulge * 0.04, 1e-4)) * 6.0;',
+			'	if (uBar > 0.0) {',
+			'		float along = p.x * cos(uPhase) + p.z * sin(uPhase);',
+			'		float across = -p.x * sin(uPhase) + p.z * cos(uPhase);',
+			'		bulge += exp(-pow(along / uBar, 2.0) - pow(across / (uBar * 0.2), 2.0) - pow(p.y / (uBar * 0.12), 2.0)) * 1.4;',
+			'	}',
+			/*
+			 * Its threads jostled across by a noise of space as fine as they are wide: ragged tubes, not sheets through its layer.
+			 * Regression: a pattern of its plane through its whole layer, each edge a wall, and seen low near the walls stood
+			 * down the picture as drips.
+			 */
+			'	float apart = max(r, 0.05) * 6.283 * tan(uPitch);',
+			'	float shift = exp((octave(p, apart / 55.0 * 0.6, foot, uSeed * 6.7) - 0.5) * 0.7 * 6.283 * tan(uPitch) / 55.0);',
+			'	vec3 q = vec3(p.x * shift, 0.0, p.z * shift);',
+			'	vec4 a;',
+			'	vec4 b;',
+			'	if (uBaked > 0.5) {',
+			'		float lr = log(max(r * shift, 0.02) / max(uScale, 1e-3));',
+			'		vec2 uv = vec2(atan(q.z, q.x) / 6.28319 + 0.5, (lr - uPlaneMap.x) * uPlaneMap.y);',
+			'		float lod = log2(max(foot * uPlaneMap.y * uPlaneMap.z / max(r, 0.02), 1.0));',
+			'		a = textureLod(uPlaneA, uv, lod);',
+			'		b = textureLod(uPlaneB, uv, lod);',
+			'	} else planeAt(q, foot, a, b);',
+			/* Its threads round in cut, each at its own height, and frayed by a noise of space (no walls). */
+			'	float dy = p.y - b.w;',
+			'	float tube = clamp(apart / 40.0 * 0.25, 1e-4, uHeight * 0.35);',
+			'	float threads = a.w * exp(-dy * dy / (tube * tube)) * (0.4 + 1.2 * smoothstep(0.3, 0.7, octave(p, uRadius / 700.0, foot, uSeed * 9.1)));',
+			/* The grain of its stars: a star of each pixel-wide cell, brighter where its arms are. */
+			'	bool plane = z < uHeight * 8.0;',
+			'	float grain = plane ? speckle(p.xz, p.y, foot) : 1.0;',
+			'	float young = exp(-r / uScale - z / (uHeight * 0.45)) * edge * a.y;',
+			'	light = old * (thin * (0.25 + 0.45 * a.x) * (0.75 + 0.25 * grain) + thick) + lightYoung * young * 2.6 * (0.6 + 0.4 * grain) + lightBulge * bulge + vec3(0.9, 0.85, 0.8) * halo;',
+			/* Its knots of young stars near its plane. */
+			'	light += b.rgb * exp(-z / (uHeight * 0.3) - r / uScale) * edge * 4.0;',
+			/*
+			 * Its dust in a thin layer whose edge falls fast (regression: falling as exp(-z), its tail so dense that each patch,
+			 * seen low, stood as a column hanging under it).
+			 */
+			'	dust = exp(-r / (uScale * 1.4) - pow(z / (uHeight * 0.45), 2.0)) * edge * a.z * threads * 6.5;',
+			'}',
+			/* A place now back to where it was at time 0 (Myr): the inner stars round sooner (a flat curve). */
+			'vec3 backAt(vec3 p, float time) {',
+			'	float spin = time * 0.734 / max(length(p.xz), 0.5);',
+			'	return vec3(p.x * cos(spin) - p.z * sin(spin), p.y, p.x * sin(spin) + p.z * cos(spin));',
+			'}'
+		].join('\n');
+	},
+
+	/*
+	 * The light of a galaxy and its dust along the ray of each pixel: its light (rgb) and how much of what lies behind passes
+	 * (a). A ray takes more steps where it goes through the plane of the galaxy; what is nearer the eye than uNear is not of
+	 * it (the stars round the eye are drawn one by one there, GalaxyFieldShader).
+	 */
+	GalaxyVolumeShader: function (head, noise) {
+		return head + [
+			'uniform vec2 uView;',
+			'uniform mat4 uInverse;',
+			'uniform vec3 uEye;',
+			'uniform float uBright;',
+			'uniform float uDust;',
+			'uniform float uSteps;',
+			'uniform float uTime;',
+			'uniform float uNear;',
+			'uniform float uOuter;',
+			'uniform float uKeep;',
+			'uniform float uPixel;',
+			'uniform float uRound;',
+			'out vec4 outColor;',
+			this.GalaxyShapeShader(noise),
+			'void main() {',
+			/* Of where the pixel is on the screen, not of the quad (a band of rows is drawn at a time). */
+			'	vec2 screen = gl_FragCoord.xy / uView * 2.0 - 1.0;',
+			'	vec4 near = uInverse * vec4(screen, -1.0, 1.0);',
+			'	vec4 far = uInverse * vec4(screen, 1.0, 1.0);',
+			'	vec3 d = normalize(far.xyz / far.w - near.xyz / near.w);',
+			'	vec3 o = uEye;',
+			'	float bound = uRadius * 1.45;',
+			'	float b = dot(o, d);',
+			'	float c = dot(o, o) - bound * bound;',
+			'	float h = b * b - c;',
+			'	if (h < 0.0) { outColor = vec4(0.0, 0.0, 0.0, 1.0); return; }',
+			'	h = sqrt(h);',
+			/* Its dust from the eye on (its light near the eye is of the stars drawn one by one): no edge where they begin. */
+			'	float t0 = max(-b - h, 0.0);',
+			'	float t1 = -b + h;',
+			'	if (t1 <= t0) { outColor = vec4(0.0, 0.0, 0.0, 1.0); return; }',
+			/* The stretch round where the ray goes through the plane takes most of the steps. */
+			/* Regression: the stretch was as thick as three of its bulge, the steps through its disc too long for its grain. */
+			'	float slab = max(uHeight * 7.0, uBulge * uFlat * 2.0);',
+			'	float a = t0;',
+			'	float z = t1;',
+			/*
+			 * And the thin layer of its dust and young stars (a few of its heights) round its plane takes most of those.
+			 * Regression: seen low from near, a step was as long as a patch of its dust, and its patches ran down the picture as drips.
+			 */
+			'	float ca = a;',
+			'	float cb = a;',
+			'	if (abs(d.y) > 1e-4) {',
+			'		float t = -o.y / d.y;',
+			'		float wide = slab / abs(d.y);',
+			'		a = clamp(t - wide, t0, t1);',
+			'		z = clamp(t + wide, t0, t1);',
+			'		float core = uHeight * 1.2 / abs(d.y);',
+			'		ca = clamp(t - core, a, z);',
+			'		cb = clamp(t + core, a, z);',
+			'	}',
+			'	vec3 sum = vec3(0.0);',
+			'	float pass = 1.0;',
+			'	vec3 tint = vec3(1.0);',
+			'	float spare = max(4.0, uSteps * 0.2);',
+			'	float jitter = fract(fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) + uRound);',
+			'	float count = min(160.0, uSteps * (abs(o.y) < slab ? 2.0 : 1.0));',
+			'	float share = cb > ca ? 0.6 : 0.0;',
+			'	float rest = max(z - a - (cb - ca), 1e-6);',
+			/* Its five stretches, front to back, and the steps of each (none where it is empty). */
+			'	float n0 = a > t0 ? spare : 0.0;',
+			'	float n1 = ca > a ? ceil(count * (1.0 - share) * (ca - a) / rest) : 0.0;',
+			'	float n2 = cb > ca ? count * share : 0.0;',
+			'	float n3 = z > cb ? ceil(count * (1.0 - share) * (z - cb) / rest) : 0.0;',
+			'	float n4 = t1 > z ? spare : 0.0;',
+			'	float e1 = n0 + n1;',
+			'	float e2 = e1 + n2;',
+			'	float e3 = e2 + n3;',
+			'	float total = e3 + n4;',
+			/*
+			 * One loop over all its steps, its stretch picked by the number of the step: its light added as what is before it
+			 * lets it through. Regression: a loop a stretch, and its shape inlined in each, took a minute to compile.
+			 */
+			'	for (int i = 0; i < 260; i++) {',
+			'		float g = float(i);',
+			'		if (g >= total || pass < 0.003) break;',
+			'		float lo = t0;',
+			'		float hi = a;',
+			'		float n = n0;',
+			'		float base = 0.0;',
+			'		if (g >= e3) { lo = z; hi = t1; n = n4; base = e3; }',
+			'		else if (g >= e2) { lo = cb; hi = z; n = n3; base = e2; }',
+			'		else if (g >= e1) { lo = ca; hi = cb; n = n2; base = e1; }',
+			'		else if (g >= n0) { lo = a; hi = ca; n = n1; base = n0; }',
+			'		float ds = (hi - lo) / n;',
+			'		float t = lo + (g - base + jitter) * ds;',
+			'		vec3 light;',
+			'		float dust;',
+			'		gRay = d;',
+			'		sampleAt(backAt(o + d * t, uTime), t * uPixel, light, dust);',
+			/* Its dust reddens what lies behind it: brown threads, as in the pictures (regression: grey). */
+			'		vec3 through = exp(-dust * uDust * ds * vec3(0.62, 0.8, 1.0) * 40.0);',
+			/* Nearer than uNear its stars are all drawn one by one; out to uOuter its brightest ones (uKeep of its light left as glow). */
+			'		float own = smoothstep(uNear * 0.7, uNear, t) * mix(uKeep, 1.0, smoothstep(uOuter * 0.7, uOuter, t));',
+			'		sum += light * tint * ds * uBright * own;',
+			'		tint *= through;',
+			'		pass = dot(tint, vec3(0.3333));',
+			'	}',
+			'	outColor = vec4(sum, pass);',
+			'}'
+		].join('\n');
+	},
+
+	/*
+	 * The picture of the plane of a galaxy (planeAt at each texel, made once, read by GalaxyVolumeShader): u its angle round,
+	 * v the log of its radius; uPart 0 its arms, ridges, lanes and threads, 1 its knots and the middle of its dust.
+	 */
+	GalaxyPlaneShader: function (head, noise) {
+		return head + [
+			'uniform vec2 uSize;',
+			'uniform float uPart;',
+			'out vec4 outColor;',
+			this.GalaxyShapeShader(noise),
+			'void main() {',
+			'	vec2 uv = gl_FragCoord.xy / uSize;',
+			'	float r = max(uScale, 1e-3) * exp(uPlaneMap.x + uv.y / uPlaneMap.y);',
+			'	float angle = (uv.x - 0.5) * 6.28319;',
+			'	vec4 a;',
+			'	vec4 b;',
+			/* As fine as a texel across its threads (its mipmaps take it on far). */
+			'	planeAt(vec3(r * cos(angle), 0.0, r * sin(angle)), r / (uPlaneMap.y * uPlaneMap.z), a, b);',
+			'	outColor = uPart > 0.5 ? b : a;',
+			'}'
+		].join('\n');
+	},
+
+	/*
+	 * The stars round the eye one by one, where the light of the galaxy would be a mist (GalaxyVolumeShader leaves them out):
+	 * points of a cube of uCell (kly) laid over and over round the eye, each where it is in the galaxy however the eye moves,
+	 * as bright as the light of the galaxy there (its old stars, its young ones, its bulge) over the square of how far it is.
+	 */
+	GalaxyFieldShader: function (head, noise) {
+		return head + [
+			'in vec3 aPosition;',
+			'in vec4 aColor;',
+			'uniform mat4 uViewProjection;',
+			'uniform vec3 uEye;',
+			'uniform float uTime;',
+			'uniform float uRatio;',
+			'uniform float uCell;',
+			'uniform float uLight;',
+			'uniform float uWeight;',
+			'uniform float uInner;',
+			'uniform vec3 uShift;',
+			'out vec4 vColor;',
+			this.GalaxyShapeShader(noise),
+			'void main() {',
+			/* Each cube of its own draw of the points (the same points scaled lay on rays from where they began: streaks). */
+			'	vec3 own = fract(aPosition + uShift);',
+			'	vec3 off = own * uCell - uEye;',
+			'	off -= uCell * floor(off / uCell + 0.5);',
+			'	vec3 at = uEye + off;',
+			'	float far = length(off);',
+			'	float edge = (1.0 - smoothstep(0.35, 0.5, far / uCell)) * smoothstep(uInner * 0.7, uInner, far);',
+			'	vec3 tile = floor((own * uCell - off - uEye) / uCell + 0.5);',
+			'	float h = fract(sin(dot(tile, vec3(12.9898, 78.233, 37.719)) + aColor.w * 437.1) * 43758.5453);',
+			'	vec3 light;',
+			'	float dust;',
+			'	sampleAt(backAt(at, uTime), uCell * 0.5, light, dust);',
+			'	float lum = pow(1.0 - h * 0.99, -0.8) / 3.04;',
+			'	float flux = dot(light, vec3(0.3333)) * lum * uLight * edge * uWeight / max(far * far, 1e-10);',
+			'	if (flux < 0.0005 || edge <= 0.0) {',
+			'		gl_Position = vec4(2.0, 2.0, 2.0, 1.0);',
+			'		gl_PointSize = 0.0;',
+			'		vColor = vec4(0.0);',
+			'		return;',
+			'	}',
+			'	float size = clamp(1.4 + log2(1.0 + flux) * 0.55, 1.4, 4.0);',
+			'	vec3 tint = mix(light / max(max(light.r, max(light.g, light.b)), 1e-6), aColor.rgb, 0.45);',
+			'	gl_Position = uViewProjection * vec4(at, 1.0);',
+			'	gl_PointSize = size * uRatio;',
+			'	vColor = vec4(tint, flux / (0.245 * size * size * uRatio * uRatio));',
+			'}'
+		].join('\n');
+	},
+
+	/* The shaders of a galaxy. */
+	GalaxyShaders: function (head) {
+		return {
+			/* A point of glow: as big as the stars it stands for are wide, never less than a pixel (fainter then). */
+			GlowVertex: head + [
+				'in vec3 aPosition;',
+				'in vec4 aColor;',
+				'uniform mat4 uViewProjection;',
+				'uniform vec3 uEye;',
+				'uniform float uTime;',
+				'uniform float uHeight;',
+				'uniform float uFocal;',
+				'uniform float uSize;',
+				'uniform float uGain;',
+				'uniform float uFade;',
+				'out vec4 vColor;',
+				'vec3 turned(vec3 p) {',
+				'	float a = -uTime * 0.734 / max(length(p.xz), 0.5);',
+				'	float c = cos(a);',
+				'	float s = sin(a);',
+				'	return vec3(p.x * c - p.z * s, p.y, p.x * s + p.z * c);',
+				'}',
+				'void main() {',
+				'	vec3 at = turned(aPosition);',
+				'	float far = max(length(at - uEye), 1e-5);',
+				/* Regression: its points were soft spots up to a hundred pixels wide, a mist over its arms: sharp now, a pixel or two. */
+				'	float size = uSize / far * uFocal * uHeight * 0.5 * 0.05;',
+				'	gl_Position = uViewProjection * vec4(at, 1.0);',
+				'	gl_PointSize = clamp(size, 1.2, 2.5);',
+				'	float spread = min(1.0, size * size / (gl_PointSize * gl_PointSize) + 0.25);',
+				'	float close = smoothstep(0.8, 2.5, far);',
+				'	vColor = vec4(aColor.rgb, aColor.a * uGain * uFade * spread * close);',
+				'}'
+			].join('\n'),
+
+			/* A star one by one: as bright as it is to the eye there (its light over the square of how far it is). */
+			NearVertex: head + [
+				'in vec3 aPosition;',
+				'in vec4 aColor;',
+				'uniform mat4 uViewProjection;',
+				'uniform vec3 uEye;',
+				'uniform float uTime;',
+				'uniform float uRatio;',
+				'uniform float uFade;',
+				'uniform vec3 uCentre;',
+				'uniform float uReach;',
+				'out vec4 vColor;',
+				'vec3 turned(vec3 p) {',
+				'	float a = -uTime * 0.734 / max(length(p.xz), 0.5);',
+				'	float c = cos(a);',
+				'	float s = sin(a);',
+				'	return vec3(p.x * c - p.z * s, p.y, p.x * s + p.z * c);',
+				'}',
+				'void main() {',
+				'	vec3 at = turned(aPosition);',
+				'	float far = max(length(at - uEye) * 1000.0, 0.01);',
+				'	float edge = 1.0 - smoothstep(0.55, 0.98, length(aPosition - uCentre) / uReach);',
+				'	float seen = log(max(aColor.a / (far * far), 1e-12)) / 2.302585;',
+				'	float bright = clamp((seen + 6.5) / 5.5, 0.0, 1.0);',
+				'	gl_Position = uViewProjection * vec4(at, 1.0);',
+				'	gl_PointSize = (2.0 + bright * 7.0) * uRatio;',
+				'	vColor = vec4(mix(vec3(1.0), aColor.rgb, 0.8), (0.12 + bright * 0.88) * uFade * edge);',
+				'}'
+			].join('\n'),
+
+			Glow: head + [
+				'in vec4 vColor;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	vec2 d = gl_PointCoord - vec2(0.5);',
+				'	float r = dot(d, d) * 4.0;',
+				'	outColor = vec4(vColor.rgb * vColor.a * exp(-r * 5.0) * step(r, 1.0), 1.0);',
+				'}'
+			].join('\n'),
+
+			/* A star seen one by one: a sharp point in a soft halo. */
+			Star: head + [
+				'in vec4 vColor;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	vec2 d = gl_PointCoord - vec2(0.5);',
+				'	float r = dot(d, d) * 4.0;',
+				'	outColor = vec4(vColor.rgb * vColor.a * (exp(-r * 14.0) * 3.0 + exp(-r * 4.0) * 0.4) * step(r, 1.0), 1.0);',
+				'}'
+			].join('\n'),
+
+			/* The stars far behind it: on a sphere round the eye, turned with the view alone. */
+			SkyVertex: head + [
+				'in vec3 aPosition;',
+				'in vec4 aColor;',
+				'uniform mat4 uTurn;',
+				'uniform float uRatio;',
+				'out vec4 vColor;',
+				'void main() {',
+				'	gl_Position = uTurn * vec4(aPosition * 5.0, 1.0);',
+				'	gl_PointSize = (1.5 + min(aColor.a, 1.0) * 3.0) * uRatio;',
+				'	vColor = vec4(aColor.rgb, aColor.a * 0.5);',
+				'}'
+			].join('\n'),
+
+			/* A knot of young stars: a sharp point as bright as it is, a few pixels wide however near. */
+			KnotVertex: head + [
+				'in vec3 aPosition;',
+				'in vec4 aColor;',
+				'uniform mat4 uViewProjection;',
+				'uniform vec3 uEye;',
+				'uniform float uTime;',
+				'uniform float uRatio;',
+				'uniform float uFade;',
+				'uniform float uClose;',
+				'out vec4 vColor;',
+				'vec3 turned(vec3 p) {',
+				'	float a = -uTime * 0.734 / max(length(p.xz), 0.5);',
+				'	float c = cos(a);',
+				'	float s = sin(a);',
+				'	return vec3(p.x * c - p.z * s, p.y, p.x * s + p.z * c);',
+				'}',
+				'void main() {',
+				'	vec3 at = turned(aPosition);',
+				'	float far = max(length(at - uEye), 1e-4);',
+				'	gl_Position = uViewProjection * vec4(at, 1.0);',
+				'	gl_PointSize = clamp(2.0 + 60.0 / far, 2.0, 7.0) * uRatio;',
+				'	vColor = vec4(aColor.rgb, aColor.a * uFade * mix(1.0, smoothstep(0.8, 2.5, far), uClose) * 1.2);',
+				'}'
+			].join('\n'),
+
+			/* The star the view is near: in the direction of it from the eye, as large as it is (a few pixels at least). */
+			SunVertex: head + [
+				'in vec3 aPosition;',
+				'uniform mat4 uTurn;',
+				'uniform vec3 uWay;',
+				'uniform float uSize;',
+				'void main() {',
+				'	gl_Position = uTurn * vec4(uWay * 5.0, 1.0);',
+				'	gl_PointSize = uSize;',
+				'}'
+			].join('\n'),
+
+			Sun: head + [
+				'uniform vec3 uColor;',
+				'uniform float uDisc;',
+				'uniform float uFade;',
+				'uniform float uHole;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	float r = length(gl_PointCoord - vec2(0.5)) * 2.0;',
+				'	float disc = smoothstep(uDisc * 0.5 + 0.02, uDisc * 0.5 - 0.02, r);',
+				'	float corona = exp(-r * 4.0) * (1.0 - uDisc * 0.6) + exp(-r * 14.0) * 2.0 * (1.0 - uHole);',
+				/* A black hole: dark in the middle, the bright ring of the light bent round it, the glow of its disc. */
+				'	float ring = exp(-pow((r - max(uDisc, 0.08) * 0.5) / max(uDisc * 0.08, 0.025), 2.0));',
+				'	vec3 lit = mix(uColor, vec3(1.0), 0.45) * (disc * 6.0 * (1.0 - uHole) + ring * uHole * 5.0 + corona * 2.5);',
+				'	outColor = vec4(lit * (1.0 - disc * uHole) * uFade, 1.0);',
+				'}'
+			].join('\n'),
+
+			/* The light added up, as an eye sees it: soft at its brightest, its faint arms kept. */
+			Picture: head + [
+				'in vec2 vQuad;',
+				'uniform sampler2D uPicture;',
+				'uniform sampler2D uVolume;',
+				'uniform float uExposure;',
+				'out vec4 outColor;',
+				'void main() {',
+				/* Its rays a little smoothed (the steps of each pixel begin at a different place: a fine grain, not lines). */
+				'	vec2 texel = 1.0 / vec2(textureSize(uVolume, 0));',
+				'	vec2 uv = vQuad * 0.5 + 0.5;',
+				'	vec4 lit = texture(uVolume, uv) * 0.36 + (texture(uVolume, uv + vec2(texel.x, 0.0)) + texture(uVolume, uv - vec2(texel.x, 0.0)) + texture(uVolume, uv + vec2(0.0, texel.y)) + texture(uVolume, uv - vec2(0.0, texel.y))) * 0.16;',
+				'	vec3 light = (texture(uPicture, uv).rgb * lit.a + lit.rgb) * uExposure;',
+				'	float bright = max(max(light.r, light.g), light.b);',
+				'	vec3 seen = light / max(bright, 1e-6) * (1.0 - exp(-bright));',
+				'	seen = mix(seen, vec3(1.0 - exp(-bright)), smoothstep(1.5, 8.0, bright) * 0.6);',
+				'	outColor = vec4(pow(seen, vec3(0.85)), 1.0);',
+				'}'
+			].join('\n'),
+
+			/* The mean of the rounds of its fine light so far. */
+			Mean: head + [
+				'in vec2 vQuad;',
+				'uniform sampler2D uOld;',
+				'uniform sampler2D uNew;',
+				'uniform float uWeight;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	outColor = mix(texture(uOld, vQuad * 0.5 + 0.5), texture(uNew, vQuad * 0.5 + 0.5), uWeight);',
+				'}'
+			].join('\n'),
+
+			/* The light of a few pixels of the picture, for how bright the eye takes it. */
+			Meter: head + [
+				'in vec2 vQuad;',
+				'uniform sampler2D uPicture;',
+				'uniform sampler2D uVolume;',
+				'out vec4 outColor;',
+				'void main() {',
+				/* The light of a sixteenth of the screen: a grid of its pixels over it, the stars over the glow as they are. */
+				'	vec3 sum = vec3(0.0);',
+				'	for (int i = 0; i < 6; i++) {',
+				'		for (int j = 0; j < 6; j++) {',
+				'			vec2 at = vQuad * 0.5 + 0.5 + (vec2(float(i), float(j)) - 2.5) / (16.0 * 6.0);',
+				'			vec4 lit = texture(uVolume, at);',
+				'			sum += texture(uPicture, at).rgb * lit.a + lit.rgb;',
+				'		}',
+				'	}',
+				'	outColor = vec4(dot(sum / 36.0, vec3(0.2126, 0.7152, 0.0722)), 0.0, 0.0, 1.0);',
+				'}'
+			].join('\n'),
+
+			/* A ring of a mark: its size in its alpha (a dark middle over a thousand: the black hole). */
+			MarkVertex: head + [
+				'in vec3 aPosition;',
+				'in vec4 aColor;',
+				'uniform mat4 uViewProjection;',
+				'uniform float uRatio;',
+				'out vec4 vColor;',
+				'out float vDark;',
+				'void main() {',
+				'	gl_Position = uViewProjection * vec4(aPosition, 1.0);',
+				'	vDark = step(999.0, aColor.a);',
+				'	gl_PointSize = mod(aColor.a, 1000.0) * uRatio;',
+				'	vColor = vec4(aColor.rgb, 1.0);',
+				'}'
+			].join('\n'),
+
+			Mark: head + [
+				'in vec4 vColor;',
+				'in float vDark;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	float r = length(gl_PointCoord - vec2(0.5)) * 2.0;',
+				'	float ring = smoothstep(0.62, 0.74, r) * smoothstep(1.0, 0.86, r);',
+				'	float core = vDark * smoothstep(0.66, 0.5, r);',
+				'	if (ring + core < 0.01) discard;',
+				'	outColor = vec4(vColor.rgb * ring, max(ring, core * 0.92));',
+				'}'
+			].join('\n')
+		};
+	},
+
+	GalaxyData: function () {
+		return this.Engine && this.Engine().Galaxy ? this.Engine().Galaxy.Data : null;
+	},
+
+	GalaxyView: function () {
+		var state = this.Engine().Galaxy;
+
+		return {Target: state.Target.slice(), Yaw: state.Yaw, Pitch: state.Pitch, Distance: state.Distance};
+	},
+
+	SetGalaxyView: function (view) {
+		var state = this.Engine().Galaxy;
+		var given = view || {};
+
+		/* Regression (load): a galaxy that came after the view was set put the view back over all of it; it comes first now. */
+		state.Wanted();
+
+		state.Flight = null;
+		state.Follow = '';
+
+		if (given.Target)
+			state.Target = given.Target.slice();
+
+		if (given.Yaw !== undefined)
+			state.Yaw = Number(given.Yaw);
+
+		if (given.Pitch !== undefined)
+			state.Pitch = Number(given.Pitch);
+
+		if (given.Distance !== undefined)
+			state.Distance = Math.max(5e-5, Number(given.Distance));
+	},
+
+	GalaxyStars: function () {
+		var state = this.Engine().Galaxy;
+
+		state.Wanted();
+
+		if (state.Data && state.Nearness() > 0.01)
+			state.NearList();
+
+		return state.Stars.map(function (star) {
+			return Object.assign({}, star, {Place: state.Now(star.Place)});
+		});
+	},
+
+	GalaxyPicked: function () {
+		var picked = this.Engine().Galaxy.Picked;
+
+		return picked === 'centre' ? '' : picked;
+	},
+
+	GalaxyEntered: function () {
+		return this.Engine().Galaxy.Entered;
+	},
+
+	GalaxyFocus: function (id) {
+		var state = this.Engine().Galaxy;
+		var star = id && id !== 'centre' ? state.StarOf(id) : null;
+
+		if (!state.Data) return;
+
+		/* Its black hole (no ID, or 'centre'): the view flies to it and keeps to it as to a star (its system near it). */
+		if (!star) {
+			state.Picked = 'centre';
+
+			state.Fly([0, 0, 0], Math.min(state.Distance, 60), 1.4, function () {
+				state.Follow = 'centre';
+			});
+
+			return;
+		}
+
+		state.Picked = star.ID;
+
+		state.Fly(state.Now(star.Place), Math.min(state.Distance, 60), 1.4, function () {
+			state.Follow = star.ID;
+		});
+	},
+
+	EnterSystem: function (id, callback) {
+		var self = this;
+		var state = this.Engine().Galaxy;
+		var galaxies = this.$Service('GalaxyData');
+		var done = typeof callback === 'function' ? callback : function () {};
+		var star = id ? state.StarOf(id) : null;
+
+		if (!state.Data || !star) {
+			done(new Error('SceneGalaxy: no star ' + id));
+
+			return;
+		}
+
+		state.Picked = star.ID;
+
+		/* Near it already (the view came to it): into its system at once, no flight back out. */
+		state.Fly(state.Now(star.Place), Math.min(state.Distance, 0.8), state.Follow === star.ID && state.Distance <= 0.8 ? 0 : 1.6, function () {
+			var key = 'galaxy:' + state.Data.Manifest.ID + ':' + star.ID;
+
+			self.$Service('SystemData').Use(key, galaxies.System(state.Data, star.ID));
+
+			state.Entered = star.ID;
+			state.Follow = star.ID;
+			state.Into = {Frames: 0};
+
+			self.Cosmos = galaxies.Cosmos(state.Data, star.ID);
+			self.System = {Data: key};
+			self.Setting = 'space';
+
+			/* The scene made of its new System now, not at the next drawing of its template. */
+			if (self.Engine().Props)
+				self.Engine().Props();
+
+			self.$Emit('enter', {ID: star.ID, Star: star, Key: key});
+
+			done(null, key);
+		});
+	},
+
+	LeaveSystem: function (callback) {
+		var state = this.Engine().Galaxy;
+		var done = typeof callback === 'function' ? callback : function () {};
+		var id = state.Entered;
+		var star = id ? state.StarOf(id) : null;
+
+		this.Setting = 'galaxy';
+		state.Entered = '';
+
+		if (star) {
+			state.Target = state.Now(star.Place);
+			state.Distance = 0.8;
+
+			state.Fly(state.Target, 40, 1.6);
+		}
+
+		this.$Emit('leave', {ID: id});
+
+		done(null);
+	}
+});

@@ -1,0 +1,22 @@
+/* A bar over the bottom of the view of an editor: what it holds takes the pointer, the rest of the view keeps it. */
+.elemenx-view-actions {
+	position: absolute;
+	inset-inline: 0;
+	bottom: 8px;
+	z-index: 3;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 2px;
+	width: fit-content;
+	max-width: calc(100% - 16px);
+	margin-inline: auto;
+	padding: 4px;
+	background: var(--elemenx-surface-raised);
+	border-radius: var(--elemenx-radius-large);
+	box-shadow: var(--elemenx-shadow-small);
+}
+
+.elemenx-view-actions .elemenx-view-actions-hand {
+	margin-inline-end: 4px;
+}

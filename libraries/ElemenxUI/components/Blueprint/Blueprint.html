@@ -1,28 +1,28 @@
 <div class="elemenx-blueprint" [class.read-only]="Locked()" tabindex="-1" (keydown)="Key">
 	<aside class="elemenx-blueprint-side" *if="!Locked() && Palette !== false && Palette !== 'false'">
-		<input type="search" class="elemenx-blueprint-filter" [value]="Filter" [attribute.placeholder]="$T('ui.blueprint.find')" [attribute.aria-label]="$T('ui.blueprint.find')" (input)="Filtered" />
+		<Input class="elemenx-blueprint-filter" Size="small" Type="search" [Placeholder]="$T('ui.blueprint.find')" [Label]="$T('ui.blueprint.find')" [Value]="Filter" (input)="Filtered($event)" />
 		<div class="elemenx-blueprint-palette" role="list" [attribute.aria-label]="$T('ui.blueprint.palette')">
 			<div class="elemenx-blueprint-group" *for="group of Groups(Kind, Filter)" *key="group.Name">
 				<div class="elemenx-blueprint-group-name">{{group.Name}}</div>
-				<button type="button" class="elemenx-blueprint-type" role="listitem" *for="type of group.Types" *key="type" [attribute.data-type]="type" [attribute.title]="$T('ui.blueprint.add') + ': ' + type" (click)="Picked(type)">{{type}}</button>
+				<div class="elemenx-blueprint-type" role="listitem" *for="type of group.Types" *key="type" [attribute.data-type]="type" (click)="Picked(type)"><Button Size="small" Variant="ghost" [Title]="$T('ui.blueprint.add') + ': ' + type" [Label]="type" /></div>
 			</div>
 		</div>
 		<section class="elemenx-blueprint-parameters" [attribute.aria-label]="$T('ui.blueprint.parameters')">
 			<div class="elemenx-blueprint-parameters-head">
 				<span>{{$T('ui.blueprint.parameters')}}</span>
-				<Button Variant="ghost" Size="small" Icon="plus" [title]="$T('ui.blueprint.addParameter')" (click)="AddParameter" />
+				<Button Variant="ghost" Size="small" Icon="add" [title]="$T('ui.blueprint.addParameter')" (click)="AddParameter" />
 			</div>
 			<div class="elemenx-blueprint-parameter" *for="parameter of Parameters" *key="parameter.Index + ':' + parameter.key">
-				<input type="text" class="elemenx-blueprint-parameter-key" [value]="parameter.key" [attribute.aria-label]="$T('ui.blueprint.key')" (change)="SetParameter(parameter.Index, 'key', $event)" />
-				<select class="elemenx-blueprint-parameter-type" [attribute.aria-label]="$T('ui.blueprint.type')" (change)="SetParameter(parameter.Index, 'type', $event)">
-					<option *for="type of ParameterTypes" *key="type" [value]="type" [selected]="type === (parameter.type || 'float')">{{type}}</option>
-				</select>
-				<input type="text" class="elemenx-blueprint-parameter-value" [value]="ValueText(parameter.value)" [attribute.aria-label]="$T('ui.blueprint.value')" (change)="SetParameter(parameter.Index, 'value', $event)" />
+				<Input class="elemenx-blueprint-parameter-key" Size="small" [Label]="$T('ui.blueprint.key')" [Value]="parameter.key" (change)="SetParameter(parameter.Index, 'key', $event)" />
+				<Select class="elemenx-blueprint-parameter-type" Size="small" [Label]="$T('ui.blueprint.type')" [Options]="TypeOptions()" [Value]="parameter.type || 'float'" (change)="SetParameter(parameter.Index, 'type', $event)" />
+				<Input class="elemenx-blueprint-parameter-value" Size="small" [Label]="$T('ui.blueprint.value')" [Value]="ValueText(parameter.value)" (change)="SetParameter(parameter.Index, 'value', $event)" />
 				<Button Variant="ghost" Size="small" Icon="close" [title]="$T('ui.blueprint.removeParameter')" (click)="RemoveParameter(parameter.Index)" />
 			</div>
 		</section>
 	</aside>
-	<Board #Board class="elemenx-blueprint-board" Grid="lines" GridSize="16" [Controls]="true">
-		<div class="elemenx-blueprint-canvas" #Canvas role="application" [attribute.aria-label]="Label || $T('ui.blueprint.label')"></div>
-	</Board>
+	<ContextMenu class="elemenx-blueprint-menu" Sheet="auto" [Title]="Label || $T('ui.blueprint.label')" [Items]="MenuItems" (open)="MenuOpened" (select)="MenuPicked">
+		<Board #Board class="elemenx-blueprint-board" Grid="lines" GridSize="16" Drag="false" [Controls]="true">
+			<div class="elemenx-blueprint-canvas" #Canvas role="application" [attribute.aria-label]="Label || $T('ui.blueprint.label')"></div>
+		</Board>
+	</ContextMenu>
 </div>

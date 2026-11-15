@@ -92,4 +92,4 @@
 ## Тесты
 
 - [sleeps on another document (its page, no selection) and edits it when pressed, telling its owner (wake)](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/DesignerCanvas/DesignerCanvas.test.js#L37) — `libraries/ElemenxUI/components/DesignerCanvas/DesignerCanvas.test.js`
-- [shows the code of an example in listings of its own and the source files of the component of the page](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/docs.spec.js#L136) — `tests/examples/docs.spec.js`
+- [shows the code of an example in listings of its own and the source files of the component of the page](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/docs.spec.js#L137) — `tests/examples/docs.spec.js`

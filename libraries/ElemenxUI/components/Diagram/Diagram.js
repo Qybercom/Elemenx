@@ -11,7 +11,7 @@ Elemenx.Component('Diagram', {
 	$StyleURL: 'Diagram.css',
 	$Meta: {
 		Group: 'codes',
-		Icon: 'share-2',
+		Icon: 'share',
 		Description: 'A diagram written as text (a subset of Mermaid): a flowchart, a sequence, states, ER, Gantt, classes or a mind map.',
 		Events: {
 			error: 'The text cannot be read: the error, its Line the number of the line.',

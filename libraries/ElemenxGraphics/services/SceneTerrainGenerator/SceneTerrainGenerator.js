@@ -235,6 +235,8 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 */
 	Biomes: function (settings) {
 		var registry = this.$Service('SceneBiomes');
+		/* In a worker, the lands its pool was given (ScenePlanet.Work: Share biomes): a worker has no registry of them. */
+		var shared = !registry && this.$Shared ? this.$Shared('biomes') : null;
 		var list;
 
 		if (settings.BiomeList)
@@ -244,7 +246,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 		list = settings.Biomes.map(function (entry) {
 			var name = typeof entry === 'string' ? entry : entry.Biome || entry.Name;
-			var known = registry && name ? registry.Get(name) : null;
+			var known = registry && name ? registry.Get(name) : shared && name ? shared[name] || null : null;
 			var climate = typeof entry === 'object' && entry.Climate || known && known.Climate || {};
 
 			return {

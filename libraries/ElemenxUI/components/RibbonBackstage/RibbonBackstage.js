@@ -130,15 +130,11 @@ Elemenx.Component('RibbonBackstage', {
 			return;
 		}
 
-		if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-
 		items = Array.prototype.slice.call(this.$Element().querySelectorAll('.elemenx-ribbon-backstage-back, .elemenx-ribbon-backstage-item'));
 		index = items.indexOf(this.$Element().getRootNode().activeElement);
 
-		if (index === -1) return;
-
-		event.preventDefault();
-
-		items[(index + (event.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus();
+		/* Up, down, Home and End among its commands, from one of them (a field of its page keeps its keys): ElemenxHelpers.Rove. */
+		if (index !== -1)
+			this.$Service('ElemenxHelpers').Rove(event, items);
 	}
 });

@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { loadElemenx, resetDOM, unique, waitFor } from '../../../../tests/setup.js';
+import { loadElemenx, resetDOM, tick, unique, waitFor } from '../../../../tests/setup.js';
 import { Use } from '../../../../tests/library.js';
 
 var owned = [];
@@ -101,11 +101,16 @@ describe('Regression: what is sown casts its shadow', function () {
 		};
 
 		try {
-			for (i = 0; i < 3; i++) {
-				inner.Rest = 0;
+			/* Regression (load): three frames drew no shadow while its programs were still being made: frames till one is drawn. */
+			await waitFor(function () {
+				for (i = 0; i < 3; i++) {
+					inner.Rest = 0;
 
-				engine.Frame(now += 33);
-			}
+					engine.Frame(now += 33);
+				}
+
+				return cast.length > 0 && drawn.length > 0;
+			}, 60000);
 
 			expect(cast.length).toBeGreaterThan(0);
 			expect(cast.every(function (mesh) {
@@ -181,11 +186,18 @@ describe('Regression: what is sown casts its shadow', function () {
 			return draw.apply(this, arguments);
 		};
 
+		/*
+		 * Regression (load): under a whole run the card had not made the programs of the shadow in three frames (the scene
+		 * draws no shadow till it has them): frames are drawn till both were, as long as that takes.
+		 */
 		try {
-			for (i = 0; i < 3; i++) {
+			for (i = 0; i < 3 || (!cut || !pictured) && i < 600; i++) {
 				inner.Rest = 0;
 
 				engine.Frame(now += 33);
+
+				if (i >= 3)
+					await tick(30);
 			}
 
 			expect(cut).toBeGreaterThan(0);

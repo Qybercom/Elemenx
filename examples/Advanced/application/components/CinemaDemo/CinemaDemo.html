@@ -10,8 +10,8 @@
 		<Scene Setting="terrain" Labels="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="CinemaReady" (arrive)="CinemaArrived" (cue)="CinemaCued">
 			<SceneObject ID="meadow" Kind="ground" [world]="WorldOf('meadow')" />
 			<SceneObject ID="evening" Kind="sun" Time="17.5" Latitude="45" />
-			<div slot="screens" data-screen="cinema-panel" class="ui-kit-cinema-panel">
-				<h3>Control panel</h3>
+			<div slot="screens" data-screen="cinema-panel" class="cinema-screen elemenx-card">
+				<h3 class="elemenx-title">Control panel</h3>
 				<p>A live part of the page on a screen in the world: press it there.</p>
 				<div class="scene-demo-row">
 					<Button Label="Press me" Icon="star" (click)="CinemaPressed" />
@@ -22,9 +22,9 @@
 					<Input Size="small" Placeholder="Type here" />
 				</div>
 			</div>
-			<div slot="screens" data-screen="cinema-hud" class="ui-kit-cinema-hud">
-				<div class="ui-kit-cinema-hud-title">&#9679; REC</div>
-				<div class="ui-kit-cinema-hud-bar"><span [style.width]="CinemaPresses * 10 % 100 + 10 + '%'"></span></div>
+			<div slot="screens" data-screen="cinema-hud" class="cinema-screen small">
+				<GameStat Value="&#9679; REC" Tone="danger" Size="large" />
+				<Progress Tone="danger" Label="Recorded" [value]="CinemaPresses * 10 % 100 + 10" />
 			</div>
 		</Scene>
 	</div>

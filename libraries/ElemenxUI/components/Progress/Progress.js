@@ -30,6 +30,9 @@ Elemenx.Component('Progress', {
 	ShowValue: false,
 
 	$OnCreate: function () {
+		/* Fed on and on (each frame), the value shows at once: no transition started again (ElemenxHelpers.Live). */
+		this.Live = this.$Service('ElemenxHelpers').Live();
+
 		this.Percent = function (value, max) {
 			if (value === null || value === '' || isNaN(value)) return null;
 

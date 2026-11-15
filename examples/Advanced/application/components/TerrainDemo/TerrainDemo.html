@@ -15,7 +15,7 @@
 		<Select Label="Relief" [options]="TerrainReliefs" [value]="TerrainRelief" (change)="TerrainRelief = $event" />
 		<Field Label="Swell"><Slider Label="Swell" Min="0" Max="1.5" Step="0.05" ShowValue="always" [value]="TerrainSwell" (input)="TerrainSwell = $event" /></Field>
 		<Button Label="To the lake" Icon="map-pin" Variant="ghost" (click)="TerrainLake" />
-		<Button Label="Boat" Icon="sailing" Variant="ghost" (click)="TerrainBoat" />
+		<Button Label="Boat" Icon="sport:sailing" Variant="ghost" (click)="TerrainBoat" />
 		<Button Label="All to the village" Icon="home" Variant="ghost" (click)="TerrainVillage" />
 		<Button Label="Save" Icon="save" Variant="ghost" (click)="TerrainSave" />
 		<Button Label="Load" Icon="refresh" Variant="ghost" [disabled]="!TerrainSaved" (click)="TerrainLoad" />
@@ -35,7 +35,7 @@
 		<Field Label="Day of the year"><Slider Label="Day of the year" Min="1" Max="365" Step="1" ShowValue="always" [value]="TerrainDay" (input)="TerrainDay = $event" /></Field>
 		<Field Label="Latitude"><Slider Label="Latitude" Min="-70" Max="70" Step="1" ShowValue="always" [value]="TerrainLatitude" (input)="TerrainLatitude = $event" /></Field>
 		<span class="elemenx-caption" aria-live="polite">{{TerrainYear}}</span>
-		<span class="scene-demo-status">{{TerrainNote}}</span>
+		<span class="elemenx-caption" role="status">{{TerrainNote}}</span>
 	</div>
 	<div class="scene-demo-scene">
 		<Scene Setting="terrain" Team="blue" Labels="true" Orders="true" [selectCheck]="TerrainSelectable" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [season]="TerrainSeason" [aurora]="TerrainAuroraOf(TerrainAurora)" [auroracolors]="TerrainAurora === 'fantasy' ? ['#ff4fd8', '#3fb4ff'] : null" [flare]="SceneFlare" [bokeh]="SceneBokeh" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">

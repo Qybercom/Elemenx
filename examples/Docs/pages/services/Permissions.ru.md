@@ -15,7 +15,7 @@
 ```example
 <table class="elemenx-table compact">
 	<tr><th>Permission</th><th>State</th><th></th></tr>
-	<tr *for="permission of List" *key="permission.Name"><td>{{permission.Name}}</td><td>{{permission.State}}</td><td><button type="button" class="elemenx-link" [attribute.data-name]="permission.Name" (click)="Ask">ask</button></td></tr>
+	<tr *for="permission of List" *key="permission.Name"><td>{{permission.Name}}</td><td>{{permission.State}}</td><td><Button Variant="link" Size="small" Label="ask" (click)="Ask(permission.Name)" /></td></tr>
 </table>
 <script>
 ({
@@ -43,9 +43,8 @@
 		});
 	},
 
-	Ask: function (event, button) {
+	Ask: function (name) {
 		var self = this;
-		var name = button.getAttribute('data-name');
 
 		this.$Service('Permissions').Request(name, function (error, state) {
 			self.Set(name, error ? error.name : state);
@@ -57,4 +56,4 @@
 
 ## Тесты
 
-- [Permissions: a name the browser does not know is unsupported](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L223) — `tests/regression/library-services.test.js`
+- [Permissions: a name the browser does not know is unsupported](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L241) — `tests/regression/library-services.test.js`

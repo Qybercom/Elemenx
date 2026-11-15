@@ -87,17 +87,22 @@ describe('Contract: CutsceneEditor, the cutscenes of a Scene on a line of time',
 
 		await tick();
 
-		var text = editor.$Element().querySelector('[data-field="Text"]');
+		/* Its fields are Inputs of ElemenxUI: their own fields of the page told. */
+		var text = editor.$Element().querySelector('[data-field="Text"] .elemenx-input input');
 
 		text.value = 'Chapter one';
 
+		text.dispatchEvent(new Event('input', {bubbles: true}));
 		text.dispatchEvent(new Event('change', {bubbles: true}));
 
-		var typing = editor.$Element().querySelector('[data-field="Typing"]');
+		var typing = editor.$Element().querySelector('[data-field="Typing"] .elemenx-input input');
 
 		typing.value = '12';
 
+		typing.dispatchEvent(new Event('input', {bubbles: true}));
 		typing.dispatchEvent(new Event('change', {bubbles: true}));
+
+		expect(editor.$Element().querySelectorAll('.elemenx-cutscene-editor select, .elemenx-cutscene-editor-field > input').length).toBe(0);
 
 		expect(host.Value['cutscene-1'].Tracks[0].Items[0]).toMatchObject({Text: 'Chapter one', Typing: 12});
 

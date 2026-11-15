@@ -63,33 +63,18 @@
 }
 
 .docs-toc-item {
-	padding: 4px 12px;
-	color: var(--elemenx-text-muted);
-	font: inherit;
-	font-size: var(--elemenx-font-size-small);
-	text-align: start;
-	cursor: pointer;
-	background: none;
-	border: 0;
+	justify-content: flex-start;
 	border-inline-start: 2px solid var(--elemenx-border);
+	border-radius: 0;
 }
 
-.docs-toc-item.sub {
+.docs-toc-entry.sub .docs-toc-item {
 	padding-inline-start: 24px;
 }
 
-.docs-toc-item:hover {
-	color: var(--elemenx-text);
-}
-
-.docs-toc-item.active {
+.docs-toc-item.pressed {
 	color: var(--elemenx-accent);
 	border-inline-start-color: var(--elemenx-accent);
-}
-
-.docs-toc-item:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: -2px;
 }
 
 /* The headings a press on the contents goes to stand under the header of the Docs. */

@@ -372,7 +372,20 @@
 			"type": "Type",
 			"value": "Value",
 			"group": "Group {n}",
-			"comment": "Comment"
+			"comment": "Comment",
+			"unlink": "Unlink",
+			"copy": "Copy",
+			"duplicate": "Duplicate",
+			"unlinkAll": "Unlink all",
+			"groupChosen": "Group the chosen",
+			"delete": "Delete",
+			"deleteLink": "Delete the link",
+			"ungroup": "Ungroup",
+			"deleteGroup": "Delete with what is in it",
+			"paste": "Paste",
+			"all": "Choose all",
+			"arrange": "Arrange",
+			"fit": "Fit to the view"
 		},
 		"board": {
 			"label": "Canvas",

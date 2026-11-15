@@ -35,6 +35,7 @@ Elemenx.Component('Tabs', {
 			Orientation: {Options: ['horizontal', 'vertical'], Description: 'horizontal, or vertical: the strip on a side of the content.'},
 			Placement: {Options: ['left', 'right'], Description: 'Vertical: the side of the strip.'},
 			Rotate: 'Vertical: the text of the tabs on its side (true), or level (false).',
+			Numbered: 'Each tab its number before its label: 01, 02...',
 			Label: 'The name of the strip for screen readers.'
 		}
 	},
@@ -46,6 +47,7 @@ Elemenx.Component('Tabs', {
 	Orientation: 'horizontal',
 	Placement: 'left',
 	Rotate: true,
+	Numbered: false,
 	Label: '',
 	Declared: [],
 
@@ -117,6 +119,11 @@ Elemenx.Component('Tabs', {
 	},
 
 	/* Reads the declared tabs from their panels. */
+	/* The number of a tab of its place (Numbered): 01, 02... 10. */
+	TabNumber: function (index) {
+		return (index < 9 ? '0' : '') + (index + 1);
+	},
+
 	Read: function () {
 		var panels = this.$Service('Panels');
 		var declared = panels.Read(this.$Element(), '.elemenx-tab-panel', '.elemenx-tabs').map(function (panel) {

@@ -18,7 +18,7 @@
 </div>
 <p class="elemenx-text small muted">Here Place="position: static;" keeps the cards in the flow of the page. In a game the card shows beside what holds the item, by *tip: point at these, focus them or tap them.</p>
 <div class="elemenx-container wrappable" style="gap: 8px;">
-	<button type="button" class="elemenx-button" *for="item of Items" *key="item.Name" *tip="ItemTip(item)">{{item.Name}}</button>
+	<Button *for="item of Items" *key="item.Name" [Label]="item.Name" *tip="ItemTip(item)" />
 </div>
 <script>
 ({
@@ -38,4 +38,4 @@
 ## Тесты
 
 - [GameItemCard shows the name, the rarity and type, and the stats of an item, and nothing without one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L219) — `tests/regression/library-misc.test.js`
-- [GameItems: piles join up to their Stack and the rest goes back, other items swap, and an item is used up](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L141) — `tests/regression/library-services.test.js`
+- [GameItems: piles join up to their Stack and the rest goes back, other items swap, and an item is used up](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L159) — `tests/regression/library-services.test.js`

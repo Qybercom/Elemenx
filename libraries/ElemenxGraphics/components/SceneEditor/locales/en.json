@@ -43,6 +43,7 @@
 			"layers": "Layers",
 			"addLayer": "Add a layer",
 			"visible": "Shown",
+			"removeItem": "Take the item away",
 			"kinds": {
 				"stroke": "Brushes",
 				"line": "Lines",
@@ -58,7 +59,15 @@
 				"line": "Straight",
 				"arc": "Arcs",
 				"curve": "Smooth"
-			}
+			},
+			"exportSystem": "System",
+			"exportSystemNote": "The star system as a file of the system format (.system)",
+			"importSystem": "Open a system",
+			"addKind": "Add",
+			"flyTo": "Fly to it",
+			"rename": "Rename",
+			"addChild": "Add round it",
+			"scaleNote": "Readable (0) to real sizes and distances (1)"
 		}
 	}
 }

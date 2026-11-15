@@ -5,7 +5,7 @@
 		<Button Label="My units" Icon="users" Variant="ghost" (click)="WorldToUnits" />
 		<Button Label="Recruit" Icon="add" Variant="ghost" (click)="WorldRecruited" />
 		<Toggle Label="Frame by a finger" [checked]="WorldFraming" (change)="WorldFramed" />
-		<span class="scene-demo-status">{{WorldNote}}</span>
+		<span class="elemenx-caption" role="status">{{WorldNote}}</span>
 	</div>
 	<div class="scene-demo-scene">
 		<Scene Setting="terrain" Team="blue" Labels="false" [hoverMark]="WorldMark" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="WorldReady">
@@ -17,10 +17,10 @@
 			<SceneObject Kind="house" ID="hall" Name="Hall" X="90" Y="50" Team="red" Model="castle" />
 			<SceneObject Kind="unit" *for="unit of WorldUnits" *key="unit.ID" [id]="unit.ID" [name]="unit.Name" [x]="unit.X" [y]="unit.Y" [team]="unit.Team" [model]="unit.Model" [health]="unit.Health" [damage]="unit.Damage" [range]="unit.Range" />
 			<GameStrategy Team="blue" [fog]="WorldFog" (select)="WorldSelected" (order)="WorldOrdered" (death)="WorldDied" />
-			<div slot="hud" class="ui-kit-world-hud">
-				<span class="ui-kit-world-resources"><span>Gold 1&#160;250</span><span>Wood 840</span><span>Food 410</span></span>
-				<Button Label="My units" Icon="users" Size="small" (click)="WorldToUnits" />
-			</div>
+			<GameHud slot="hud" Label="Strategy">
+				<GameStats slot="top" Label="Resources" Layout="inline" Size="small" [items]="WorldResources" />
+				<Button slot="top-end" Label="My units" Icon="users" Size="small" (click)="WorldToUnits" />
+			</GameHud>
 		</Scene>
 	</div>
 </div>

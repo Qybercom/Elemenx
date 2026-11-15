@@ -44,6 +44,29 @@
 .elemenx-field.horizontal .elemenx-field-body {
 	flex: 1;
 }
+
+/* small: a compact row of settings (a ribbon, a panel): a narrow label of small type, in line with its control. */
+.elemenx-field.small {
+	gap: 2px;
+}
+
+.elemenx-field.small .elemenx-field-label {
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+}
+
+.elemenx-field.horizontal.small {
+	align-items: center;
+	gap: 4px;
+}
+
+.elemenx-field.horizontal.small .elemenx-field-label {
+	width: 76px;
+	min-height: 0;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+}
 /* A field in error marks the frame of its control as an Input with invalid does. */
 .elemenx-field.invalid .elemenx-input {
 	border-color: var(--elemenx-danger);

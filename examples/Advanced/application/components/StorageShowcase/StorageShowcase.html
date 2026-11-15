@@ -5,13 +5,13 @@
 		<div>
 			<h3>Storage context</h3>
 			<p>Local: <b>{{LocalValue}}</b></p><p>Session: <b>{{SessionValue}}</b></p><p>Cookie: <b>{{CookieValue}}</b></p>
-			<button class="button primary" (click)="WriteStorage">Write storage values</button>
-			<button class="button" (click)="RemoveStorage">Remove values</button>
-			<button class="button" (click)="ClearStorage">Clear namespace</button>
+			<Button Variant="primary" Label="Write storage values" (click)="WriteStorage" />
+			<Button Variant="secondary" Label="Remove values" (click)="RemoveStorage" />
+			<Button Variant="secondary" Label="Clear namespace" (click)="ClearStorage" />
 		</div>
 		<div>
 			<h3>IndexedDB</h3><p>Index matches: <b>{{IndexedDBCount}}</b></p><p>Transaction result: <b>{{IndexedDBValue}}</b></p>
-			<button class="button primary" (click)="RunIndexedDB">Run IndexedDB roundtrip</button>
+			<Button Variant="primary" Label="Run IndexedDB roundtrip" (click)="RunIndexedDB" />
 		</div>
 	</div>
 </div>

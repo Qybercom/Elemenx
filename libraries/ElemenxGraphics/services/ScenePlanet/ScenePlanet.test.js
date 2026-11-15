@@ -1163,4 +1163,142 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 			return index % 4 > 1 || value === 0;
 		})).toBe(true);
 	}, 120000);
+
+	/*
+	 * Regression: a worker has no registry of lands, and gave each the same climate: the globe a Scene paints in the workers
+	 * showed other lands than the page and the ground have. The workers of planets are given the lands of the page.
+	 */
+	it('paints a face of its globe in a worker of the very lands of the page', async function () {
+		var options = {Seed: 'lands', Ocean: 0.5, Radius: 6371, Rivers: false};
+		var page = planets.Face(options, 2, 128, 40, 2).Data;
+		var worker = await new Promise(function (resolve, reject) {
+			planets.Work().Run('ScenePlanet', 'Face', [options, 2, 128, 40, 2], function (error, made) {
+				if (error) reject(error);
+				else resolve(made.Data);
+			});
+		});
+
+		expect(planets.Work().Inline()).toBe(false);
+		expect(Array.from(worker)).toEqual(Array.from(page));
+	}, 60000);
+
+	/* Edits: brushes over what the planet made (PlanetEditor), the nearer their path the more, none past their radius. */
+	it('changes its relief by the brushes of its Edits: raised, lowered, flattened and smoothed along their paths', function () {
+		var base = {Seed: 'edits', Ocean: 0.5};
+		var own = planets.Make(base);
+		var at = planets.Direction(10, 20);
+		var side = planets.Direction(10, 21);
+		var far = planets.Direction(10, 40);
+		var raised = planets.Make(Object.assign({Edits: [{Type: 'raise', Points: [[10, 20]], Radius: 300, Amount: 1000}]}, base));
+		var lowered = planets.Make(Object.assign({Edits: [{Type: 'lower', Points: [[10, 18], [10, 22]], Radius: 300, Amount: 500}]}, base));
+		var flat = planets.Make(Object.assign({Edits: [{Type: 'flatten', Points: [[10, 20]], Radius: 300, Height: 1234}]}, base));
+		var smooth = planets.Make(Object.assign({Edits: [{Type: 'smooth', Points: [[10, 20]], Radius: 400, Amount: 1}]}, base));
+		var soft = planets.Make(base).Elevation(at, 200);
+
+		/* At its middle all of it, beside it less, past its radius nothing. */
+		expect(raised.Elevation(at)).toBeCloseTo(own.Elevation(at) + 1000, 6);
+		expect(raised.Elevation(side) - own.Elevation(side)).toBeGreaterThan(0);
+		expect(raised.Elevation(side) - own.Elevation(side)).toBeLessThan(1000);
+		expect(raised.Elevation(far)).toBe(own.Elevation(far));
+		/* Along its path, as much at each point of it. */
+		expect(lowered.Elevation(at)).toBeCloseTo(own.Elevation(at) - 500, 1);
+		expect(lowered.Elevation(planets.Direction(10, 18))).toBeCloseTo(own.Elevation(planets.Direction(10, 18)) - 500, 1);
+		expect(flat.Elevation(at)).toBeCloseTo(1234, 6);
+		/* Smoothed: its relief no finer than half its radius. */
+		expect(smooth.Elevation(at)).toBeCloseTo(soft, 6);
+		/* Raised out of the sea: land there. */
+		expect(planets.Make(Object.assign({Edits: [{Type: 'raise', Points: [[10, 20]], Radius: 300, Amount: 20000}]}, base)).Land(at)).toBe(true);
+	});
+
+	/* Rules of detail: what is finer than Scale made by the rule of the place, in the place of its own relief. */
+	it('makes what is finer than the scale of its rules by the rule of the place: of its land, a painted region over it', function () {
+		var blueprints = Elemenx.Service('Blueprints');
+		/* A rule of its own: its detail a wave of the height of its input, no detail at all for flat. */
+		var wave = blueprints.Create('generator');
+		var flat = blueprints.Create('generator');
+		var x = blueprints.Add(wave, 'Input', {properties: {Name: 'X'}});
+		var formula = blueprints.Add(wave, 'Formula', {properties: {Expression: 'sin(X / 3) * 40'}});
+		var end = blueprints.Add(wave, 'Result', {properties: {Key: 'Height'}});
+		var zero = blueprints.Add(flat, 'Number', {properties: {Value: 0}});
+		var stop = blueprints.Add(flat, 'Result', {properties: {Key: 'Height'}});
+		var graphs;
+		var base = {Seed: 'rules', Ocean: 0.3};
+		var own = planets.Make(base);
+		var inside = planets.Direction(10, 20);
+		var outside = planets.Direction(-40, 120);
+		var square = [[6, 16], [6, 24], [14, 24], [14, 16]];
+		var painted;
+		var landed;
+		var waved;
+		var made;
+
+		blueprints.Link(wave, [x.id, 'Value'], [formula.id, 'X']);
+		blueprints.Link(wave, [formula.id, 'Value'], [end.id, 'Value']);
+		blueprints.Link(flat, [zero.id, 'Value'], [stop.id, 'Value']);
+
+		graphs = {wave: JSON.parse(blueprints.Write(wave)), flat: JSON.parse(blueprints.Write(flat))};
+
+		/* None: its own relief, the very same. */
+		expect(planets.Make(Object.assign({Rules: {Graphs: graphs}}, base)).Elevation(inside)).toBe(own.Elevation(inside));
+
+		/* A region of flat: its relief no finer than Scale there, its own elsewhere. */
+		painted = planets.Make(Object.assign({Rules: {Graphs: graphs, Scale: 20}, Regions: [{Rule: 'flat', Points: square, Edge: 30}]}, base));
+
+		expect(painted.Elevation(inside)).toBeCloseTo(own.Elevation(inside, 20), 6);
+		expect(painted.Elevation(outside)).toBe(own.Elevation(outside));
+
+		/* Each land by the rule of its biome ('*': any): wave over its coarse relief; the sea its own. */
+		landed = planets.Make(Object.assign({Rules: {Graphs: graphs, Biomes: {'*': 'wave'}, Scale: 20}}, base));
+
+		[[10, 20], [30, -60], [-20, 140], [50, 10]].forEach(function (at) {
+			var p = planets.Direction(at[0], at[1]);
+			var coarse = own.Elevation(p, 20);
+			var sample = own.Sample(p, 20);
+
+			made = landed.Elevation(p);
+
+			if (sample.Biome) expect(made).toBeCloseTo(coarse + Math.sin(p[0] * 6371 / 3) * 40, 6);
+			else expect(made).toBe(own.Elevation(p));
+		});
+
+		/* The region painted wins over the rule of its land. */
+		waved = planets.Make(Object.assign({Rules: {Graphs: graphs, Biomes: {'*': 'wave'}, Scale: 20}, Regions: [{Rule: 'flat', Points: square, Edge: 30}]}, base));
+
+		expect(waved.Elevation(inside)).toBeCloseTo(own.Elevation(inside, 20), 6);
+
+		/* From far (a texel as coarse as Scale) a rule gives no detail: no noise of it on a globe. */
+		expect(landed.Elevation(inside, 25)).toBeCloseTo(own.Elevation(inside, 25), 6);
+	});
+
+	/* The rules of the library: each a graph of its resources made JavaScript, its detail a few kilometres at most. */
+	it('has the rules of the library, each made JavaScript, its detail of the place and of its seed', function () {
+		var blueprints = Elemenx.Service('Blueprints');
+		var names = ['hills', 'mountains', 'dunes', 'mesas', 'badlands', 'plains', 'volcanoes', 'craters', 'glacial', 'karst'];
+		var base = {Seed: 'library', Ocean: 0.2};
+		var own = planets.Make(base);
+
+		names.forEach(function (name) {
+			var made = planets.Make(Object.assign({Rules: {Biomes: {'*': name}, Scale: 20}}, base));
+			var other = planets.Make(Object.assign({}, base, {Seed: 'library-2', Rules: {Biomes: {'*': name}, Scale: 20}}));
+			var differs = 0;
+			var i;
+
+			expect(planets.Rules[name]).toBeTruthy();
+			expect(blueprints.Code(planets.Rules[name])).not.toBe(null);
+
+			for (i = 0; i < 40; i++) {
+				var p = planets.Direction(-50 + i * 2.5, i * 9);
+				var height = made.Elevation(p);
+				var detail = height - own.Elevation(p, 20);
+
+				expect(Number.isFinite(height)).toBe(true);
+				expect(Math.abs(detail)).toBeLessThan(4000);
+
+				if (Math.abs(other.Elevation(p) - height) > 1e-6)
+					differs++;
+			}
+
+			expect(differs).toBeGreaterThan(0);
+		});
+	});
 });

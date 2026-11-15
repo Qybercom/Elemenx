@@ -29,6 +29,8 @@ Elemenx.Component('CombatDemo', {
 
 		if (event.Source !== 'hero') return;
 
+		/* The health of what was hit last, on a GameBar of the HUD. */
+		this.CombatTargetHealth = health && event.Target ? {Name: event.Target, Value: Math.max(0, health.Value), Max: health.Max} : this.CombatTargetHealth;
 		this.CombatNote = event.Weapon + ' hit ' + (event.Target || 'the ground') + ' (' + event.Material + (event.Part ? ', ' + event.Part : '') + ') for ' + Math.round(event.Amount) + (health ? ' · health ' + Math.round(health.Value) + ' of ' + health.Max : '');
 	},
 	CombatReady: function (scene) {
@@ -45,6 +47,7 @@ Elemenx.Component('CombatDemo', {
 		this.CombatAimed({detail: this.CombatTarget});
 	},
 	CombatTarget: 'crate',
+	CombatTargetHealth: null,
 	/* The hero turns to what it aims at, the view behind it. */
 	CombatAimed: function (value) {
 		var scene = this.CombatScene ? this.CombatScene() : null;

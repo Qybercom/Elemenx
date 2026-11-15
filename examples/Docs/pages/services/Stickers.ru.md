@@ -17,7 +17,7 @@
 ## Пример
 
 ```example
-<span class="elemenx-input"><input class="elemenx-input-control" [(value)]="Query" placeholder="Search stickers: word or emoji" /></span>
+<Input [Value]="Query" Placeholder="Search stickers: word or emoji" Label="Search stickers: word or emoji" (input)="Query = $event" />
 <div class="elemenx-container wrappable" style="gap: 8px;">
 	<img *for="sticker of Found(Query)" *key="sticker.ID" [attribute.src]="sticker.URL" [attribute.title]="sticker.Title" width="56" height="56" alt="" />
 </div>

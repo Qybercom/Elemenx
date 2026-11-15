@@ -1,7 +1,7 @@
 <!-- generated -->
 # GameTabs
 
-The tabs of a game window: Items [{ID, Label, Disabled}] in a column (Orientation 'vertical', the default) or a row, numbered 01, 02... (Numbered). Value is the ID of the open tab; a press or the arrows (Home, End) open another and emit change with its ID. Label names the list for screen readers.
+The tabs of a game window, Tabs of ElemenxUI in the look of the game: Items [{ID, Label, Disabled}] in a column (Orientation 'vertical', the default) or a row, numbered 01, 02... (Numbered). Value is the ID of the open tab; a press or the arrows (Home, End) open another and emit change with its ID. Label names the list for screen readers.
 
 ## Properties
 
@@ -50,3 +50,7 @@ The tabs of a game window: Items [{ID, Label, Disabled}] in a column (Orientatio
 })
 </script>
 ```
+
+## Tests
+
+- [GameTabs: Tabs of ElemenxUI, numbered, that open another by a press or the arrows and tell change](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-controls.test.js#L133) — `tests/regression/library-game-controls.test.js`

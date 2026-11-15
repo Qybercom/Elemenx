@@ -1,0 +1,4 @@
+<div class="elemenx-game-panel elemenx-game-stat-group" role="group" [class]="[Orientation === 'vertical' ? 'vertical' : 'horizontal']" [attribute.aria-label]="Label || null">
+	<GameStat *for="item of Items" *key="item.ID" [Label]="item.Label" [Value]="item.Value" [Unit]="item.Unit || ''" [Icon]="item.Icon || ''" [Tone]="item.Tone || ''" [Layout]="Layout" [Size]="Size" />
+	<slot></slot>
+</div>

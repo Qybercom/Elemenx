@@ -1109,12 +1109,9 @@ Elemenx.Component('NetworkShowcase', {
 
 
 	_UniversalFiles: function () {
-		var fileA = this.$Ref('UniversalFileA');
-		var fileB = this.$Ref('UniversalFileB');
-
-		fileA = fileA && fileA.files ? fileA.files[0] : null;
-		fileB = fileB && fileB.files ? fileB.files[0] : null;
-
+		/* The files picked of each FileUpload (their lists). */
+		var fileA = this.UniversalFileA && this.UniversalFileA[0] || null;
+		var fileB = this.UniversalFileB && this.UniversalFileB[0] || null;
 		if (!fileA || !fileB) return null;
 
 		return {FileA: fileA, FileB: fileB};

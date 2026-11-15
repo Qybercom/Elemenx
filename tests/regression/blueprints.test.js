@@ -826,6 +826,37 @@ describe('Contract: Blueprints, graphs in the JSON of Flowprint made into shader
 
 		expect(blueprints.Code(stored(other))).toBe(null);
 	});
+
+	/* A formula in a generator made JavaScript too (the rules of planets read it at each point): the values of its interpreter. */
+	it('makes a generator of formulas JavaScript, the same values as its interpreter, lists part by part', function () {
+		var graph = blueprints.Create('generator');
+		var at = blueprints.Add(graph, 'Input', {properties: {Name: 'At'}});
+		var height = blueprints.Add(graph, 'Input', {properties: {Name: 'Height'}});
+		var formula = blueprints.Add(graph, 'Formula', {properties: {Expression: 'clamp(mix(Height, At[0] * 2, 0.25) + pow(abs(At[1]), 1.5) - (At[2] > 0 ? 3 : -4) / 2, -50, 50) + round(hypot(At[0], At[1]))'}});
+		var each = blueprints.Add(graph, 'Formula', {properties: {Expression: '-At * 2 + vec3(1, 2, 3)'}});
+		var result = blueprints.Add(graph, 'Result', {properties: {Key: 'Value'}});
+		var list = blueprints.Add(graph, 'Result', {properties: {Key: 'List'}});
+		var made;
+		var code;
+		var i;
+
+		blueprints.Link(graph, [at.id, 'Value'], [formula.id, 'At']);
+		blueprints.Link(graph, [height.id, 'Value'], [formula.id, 'Height']);
+		blueprints.Link(graph, [at.id, 'Value'], [each.id, 'At']);
+		blueprints.Link(graph, [formula.id, 'Value'], [result.id, 'Value']);
+		blueprints.Link(graph, [each.id, 'Value'], [list.id, 'Value']);
+
+		made = blueprints.Compile(stored(graph));
+		code = blueprints.Code(stored(graph));
+
+		expect(code).not.toBe(null);
+
+		for (i = 0; i < 100; i++) {
+			var point = {At: [Math.sin(i) * 30, Math.cos(i * 1.3) * 7, i * 0.4 - 20], Height: i * 3 - 100};
+
+			expect(code.Run({}, point)).toEqual(made.Run({}, point));
+		}
+	});
 });
 
 describe('Contract: the graphs of the Libraries as resources, made for their options', function () {
@@ -967,4 +998,3 @@ describe('Contract: the graphs of the Libraries as resources, made for their opt
 		expect(biomes.Get('taiga').Order).toBe(undefined);
 	});
 });
-

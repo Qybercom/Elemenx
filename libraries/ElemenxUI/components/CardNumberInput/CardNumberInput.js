@@ -8,6 +8,8 @@
  */
 Elemenx.Component('CardNumberInput', {
 	$TemplateURL: 'CardNumberInput.html',
+	/* [(Value)] on its tag follows what it tells as it is typed or moved. */
+	$Model: {Value: 'input'},
 	$StyleURL: 'CardNumberInput.css',
 	$Meta: {
 		Group: 'inputs',

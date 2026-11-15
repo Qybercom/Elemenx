@@ -62,3 +62,18 @@
 .elemenx-game-hud-area.bottom-end {
 	justify-content: flex-end;
 }
+
+/*
+ * Over a Scene (its slot hud): no scene of its own under it, and what is not in an area lets the pointer through to
+ * the scene (the slot hud lets the children of what it holds take it). What changes in it does not move the page.
+ */
+.elemenx-scene-hud .elemenx-game-hud {
+	min-height: 0;
+	contain: layout style;
+	pointer-events: none;
+}
+
+.elemenx-scene-hud .elemenx-game-hud > .elemenx-game-hud-scene,
+.elemenx-scene-hud .elemenx-game-hud > .elemenx-game-hud-layer {
+	pointer-events: none;
+}

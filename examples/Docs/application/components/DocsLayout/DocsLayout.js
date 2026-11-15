@@ -194,8 +194,8 @@ Elemenx.Component('DocsLayout', {
 		event.preventDefault();
 	},
 
-	Went: function (event, node) {
-		this.Go(node.getAttribute('data-id'));
+	Went: function (id) {
+		this.Go(id);
 	},
 
 	/* The focus left the search: the list closes. */

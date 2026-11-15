@@ -44,3 +44,7 @@ default
 })
 </script>
 ```
+
+## Tests
+
+- [GameMenu: its items are Buttons, the arrows go round them, a press tells select and Escape back](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-controls.test.js#L77) — `tests/regression/library-game-controls.test.js`

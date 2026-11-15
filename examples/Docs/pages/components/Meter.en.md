@@ -32,7 +32,7 @@ default
 ## Example
 
 ```example
-<input type="range" min="0" max="100" [(value)]="Load" style="width: 100%;" />
+<Slider Label="Load" [Min]="0" [Max]="100" [Value]="Number(Load)" (input)="Load = $event" />
 <Meter [value]="Number(Load)" Label="CPU" Unit="%" Low="50" High="80" Optimum="20" ShowValue="true" Marks="true" ShowRange="true" />
 <div class="elemenx-container wrappable" style="gap: 8px;">
 	<Meter [value]="Number(Load)" Shape="dial" Needle="true" Ticks="11" Label="Speed" Unit="km/h" Max="100" Low="60" High="85" Optimum="30" ShowValue="true" />
@@ -51,3 +51,8 @@ default
 })
 </script>
 ```
+
+## Tests
+
+- [puts the share of its range on the parts that draw it, its zone and its value told as before](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-meter.test.js#L60) — `tests/regression/library-meter.test.js`
+- [shows a value fed on and on at once, with no transition, and glides again when it changes now and then](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-meter.test.js#L85) — `tests/regression/library-meter.test.js`

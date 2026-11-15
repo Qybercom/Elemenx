@@ -6,6 +6,8 @@
  */
 Elemenx.Component('DateInput', {
 	$TemplateURL: 'DateInput.html',
+	/* [(Value)] on its tag follows what it tells as it is typed or moved. */
+	$Model: {Value: 'input'},
 	$StyleURL: 'DateInput.css',
 	$Meta: {
 		Group: 'inputs',

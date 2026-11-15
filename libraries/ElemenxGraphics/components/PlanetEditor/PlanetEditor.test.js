@@ -88,7 +88,7 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 	it('paints the globe of the planet in workers, each pixel of it, and tells the point under the pointer', async function () {
 		var mounted = await mount({Seed: 'editor', Ocean: 0.6});
 		var editor = mounted.Editor;
-		var canvas = editor.$Element().querySelector('canvas');
+		var canvas = editor.$Element().querySelector('.elemenx-planet-editor-canvas');
 		var view = editor.View();
 		var middle = canvas.getContext('2d').getImageData(Math.round(canvas.width / 2), Math.round(canvas.height / 2), 1, 1).data;
 		var corner = canvas.getContext('2d').getImageData(2, 2, 1, 1).data;
@@ -142,9 +142,11 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 
 		await tick(30);
 
-		input = editor.$Element().querySelector('.elemenx-planet-editor-panel input[data-key="Edge"]');
+		/* A field of the panel is an Input of ElemenxUI: its own field of the page told. */
+		input = editor.$Element().querySelector('.elemenx-planet-editor-panel [data-key="Edge"] .elemenx-input input');
 		input.value = '50';
 
+		input.dispatchEvent(new Event('input', {bubbles: true}));
 		input.dispatchEvent(new Event('change', {bubbles: true}));
 
 		expect(host.Changes[host.Changes.length - 1].Paint[0].Edge).toBe(50);
@@ -168,11 +170,11 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		var editor = mounted.Editor;
 		var before = mounted.Drawn();
 
-		editor.Overlaid({target: {value: 'wind'}});
+		editor.Overlaid('wind');
 
 		expect(editor.$Element().querySelectorAll('.elemenx-planet-editor-arrow').length).toBeGreaterThan(50);
 
-		editor.Overlaid({target: {value: 'plates'}});
+		editor.Overlaid('plates');
 
 		expect(editor.$Element().querySelectorAll('.elemenx-planet-editor-arrow').length).toBeGreaterThan(3);
 
@@ -209,10 +211,14 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 
 		await tick(30);
 
-		select = editor.$Element().querySelector('.elemenx-planet-editor-panel select[data-key="Beyond"]');
-		select.value = 'cliff';
+		/* A list of the panel is a Select of ElemenxUI. */
+		select = editor.$Element().querySelector('.elemenx-planet-editor-panel [data-key="Beyond"] .elemenx-select');
 
-		select.dispatchEvent(new Event('change', {bubbles: true}));
+		Elemenx.Instance(select).Choose(Elemenx.Instance(select).Options.map(function (option) {
+			return option.Value;
+		}).indexOf('cliff'), select);
+
+		expect(editor.$Element().querySelectorAll('.elemenx-planet-editor select, .elemenx-planet-editor-field > input, .elemenx-planet-editor-toolbar > button:not(.elemenx-button)').length).toBe(0);
 
 		expect(host.Changes[host.Changes.length - 1].Locations[id].Beyond).toBe('cliff');
 
@@ -227,5 +233,229 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		expect(opened.Location.Beyond).toBe('cliff');
 		expect(opened.Location.World.type).toBe('world');
 		expect(Elemenx.Service('SceneWorld').Make(opened.Location.World).Ground.Planet.Latitude).toBeCloseTo(opened.Location.Place.Latitude, 9);
+	}, 60000);
+
+	/* On a touch screen: a bar of actions that ends a stroke, two fingers that turn the globe and bring it nearer. */
+	it('ends and drops a stroke by its bar of actions, a press on the bar no point of it, and two fingers bring the globe nearer', async function () {
+		var mounted = await mount({Seed: 'touch', Ocean: 0.9});
+		var editor = mounted.Editor;
+		var host = mounted.Host;
+		var view = editor.View();
+		var element = editor.$Element().querySelector('.elemenx-planet-editor-view');
+		var box = element.getBoundingClientRect();
+		var bar = editor.$Element().querySelector('.elemenx-view-actions');
+		var zoom;
+		var button = function (title) {
+			return Array.prototype.find.call(bar.querySelectorAll('button'), function (node) {
+				return node.getAttribute('title') === title || node.getAttribute('aria-label') === title;
+			});
+		};
+		var finger = function (type, id, x, y) {
+			element.dispatchEvent(new PointerEvent(type, {bubbles: true, cancelable: true, clientX: box.left + x, clientY: box.top + y, pointerId: id, pointerType: 'touch'}));
+		};
+
+		editor.Picked('land');
+
+		await tick(20);
+
+		bar = editor.$Element().querySelector('.elemenx-view-actions');
+
+		press(editor, view.Width / 2 - 40, view.Height / 2 - 40);
+		press(editor, view.Width / 2 + 40, view.Height / 2 - 40);
+		press(editor, view.Width / 2 + 40, view.Height / 2 + 40);
+
+		/* A press on the bar is no point of the stroke. */
+		['pointerdown', 'pointerup'].forEach(function (type) {
+			button('Done').dispatchEvent(new PointerEvent(type, {bubbles: true, pointerId: 1, button: 0}));
+		});
+
+		button('Done').click();
+
+		await tick(20);
+
+		expect(host.Changes[host.Changes.length - 1].Paint[0].Points.length).toBe(3);
+		expect(editor.Selected).toBe(0);
+
+		button('Delete').click();
+
+		await tick(20);
+
+		expect(host.Changes[host.Changes.length - 1].Paint).toEqual([]);
+
+		zoom = editor.Own().View.Zoom;
+
+		finger('pointerdown', 11, view.Width / 2 - 50, view.Height / 2);
+		finger('pointerdown', 12, view.Width / 2 + 50, view.Height / 2);
+		finger('pointermove', 11, view.Width / 2 - 100, view.Height / 2);
+		finger('pointermove', 12, view.Width / 2 + 100, view.Height / 2);
+
+		/* The globe is nearer at once (drawn of the map of the planet), the picture of the view coming again when it rests. */
+		expect(editor.Own().View.Zoom).toBeGreaterThan(zoom * 1.5);
+
+		finger('pointerup', 11, view.Width / 2 - 100, view.Height / 2);
+		finger('pointerup', 12, view.Width / 2 + 100, view.Height / 2);
+
+		expect(editor.$Element().querySelector('.elemenx-planet-editor-canvas').style.transform).toBe('');
+		expect(editor.Own().View.Zoom).toBeGreaterThan(zoom * 1.5);
+		expect(editor.Own().Draft).toEqual([]);
+	}, 45000);
+
+	/* The brushes of its relief: a drag paints an edit along its path, one step to undo and redo. */
+	it('paints the relief with a brush along a drag, an edit of the planet, and undoes and redoes it', async function () {
+		var mounted = await mount({Seed: 'brush', Ocean: 0.6});
+		var editor = mounted.Editor;
+		var host = mounted.Host;
+		var view = editor.View();
+		var element = editor.$Element().querySelector('.elemenx-planet-editor-view');
+		var box = element.getBoundingClientRect();
+		var under;
+		var before;
+		var edit;
+		var pointer = function (type, x, y) {
+			element.dispatchEvent(new PointerEvent(type, {bubbles: true, clientX: box.left + x, clientY: box.top + y, pointerId: 1, button: 0}));
+		};
+
+		editor.Picked('raise');
+		editor.BrushChanged('Radius', 300);
+
+		await tick(20);
+
+		expect(editor.$Element().querySelector('.elemenx-planet-editor-panel [data-key="Amount"]')).not.toBe(null);
+
+		under = editor.At(box.left + view.Width / 2, box.top + view.Height / 2);
+		before = editor.Planet().Elevation(under.Sample.Direction);
+
+		pointer('pointerdown', view.Width / 2 - 60, view.Height / 2);
+		pointer('pointermove', view.Width / 2 - 20, view.Height / 2);
+		pointer('pointermove', view.Width / 2 + 20, view.Height / 2);
+		pointer('pointerup', view.Width / 2 + 60, view.Height / 2);
+
+		edit = host.Changes[host.Changes.length - 1].Edits[0];
+
+		expect(edit.Type).toBe('raise');
+		expect(edit.Radius).toBe(300);
+		expect(edit.Amount).toBe(800);
+		expect(edit.Points.length).toBeGreaterThan(1);
+		expect(editor.Planet().Elevation(under.Sample.Direction)).toBeGreaterThan(before + 400);
+
+		editor.Undo();
+
+		expect(host.Changes[host.Changes.length - 1].Edits).toBeUndefined();
+		expect(editor.Planet().Elevation(under.Sample.Direction)).toBe(before);
+
+		editor.Key({key: 'y', ctrlKey: true, preventDefault: function () {}});
+
+		expect(host.Changes[host.Changes.length - 1].Edits.length).toBe(1);
+	}, 45000);
+
+	/* The rules of detail: a region drawn with its rule, a rule of a biome, and the graph of a rule edited, the planet's own. */
+	it('draws a region of a rule, sets the rule of a biome, and edits the graph of a rule into one of the planet', async function () {
+		var mounted = await mount({Seed: 'ruled', Ocean: 0.5});
+		var editor = mounted.Editor;
+		var host = mounted.Host;
+		var view = editor.View();
+		var last = function () {
+			return host.Changes[host.Changes.length - 1];
+		};
+		var graph;
+
+		editor.Picked('rule');
+
+		editor.RuleName = 'dunes';
+
+		await tick(20);
+
+		press(editor, view.Width / 2 - 40, view.Height / 2 - 40);
+		press(editor, view.Width / 2 + 40, view.Height / 2 - 40);
+		press(editor, view.Width / 2 + 40, view.Height / 2 + 40);
+
+		expect(editor.Finish()).toBe(true);
+		expect(last().Regions[0].Rule).toBe('dunes');
+		expect(last().Regions[0].Points.length).toBe(3);
+		expect(last().Paint).toEqual([]);
+
+		await tick(20);
+
+		expect(editor.$Element().querySelectorAll('.elemenx-planet-editor-marks .region').length).toBe(1);
+		expect(editor.$Element().querySelector('.elemenx-planet-editor-rule[data-region="0"]')).not.toBe(null);
+
+		editor.BiomeRuled('desert', 'mesas');
+
+		expect(last().Rules.Biomes).toEqual({desert: 'mesas'});
+
+		/* The graph of a rule of the library open under the view; changed, a copy of it is the planet's own. */
+		editor.RuleOpened('mesas');
+
+		await tick(40);
+
+		expect(editor.$Element().querySelector('.elemenx-planet-editor-graph .elemenx-blueprint, .elemenx-planet-editor-graph [class*="blueprint"]')).not.toBe(null);
+
+		graph = JSON.parse(JSON.stringify(editor.RuleGraph()));
+
+		graph.parameters.forEach(function (parameter) {
+			if (parameter.key === 'Step')
+				parameter.value = 90;
+		});
+
+		editor.RuleDrawn(graph);
+
+		expect(last().Rules.Graphs.mesas.parameters.filter(function (parameter) {
+			return parameter.key === 'Step';
+		})[0].value).toBe(90);
+		expect(Elemenx.Service('ScenePlanet').Rules.mesas.parameters.filter(function (parameter) {
+			return parameter.key === 'Step';
+		})[0].value).toBe(180);
+		expect(editor.RuleOptions().filter(function (option) {
+			return option.Value === 'mesas';
+		})[0].Label).toBe('mesas *');
+	}, 45000);
+
+	/*
+	 * Regression: the picture of before was moved as a flat image when the globe turned (wrong at any latitude: black
+	 * stripes, coasts that did not meet), the globe stopped at its poles and could not be turned round the view.
+	 */
+	it('turns the globe as a ball: over its poles, round the middle of the view, north up again, its marks where its points are', async function () {
+		var mounted = await mount({Seed: 'turn', Ocean: 0.6});
+		var editor = mounted.Editor;
+		var planets = Elemenx.Service('ScenePlanet');
+		var view;
+		var direction;
+		var back;
+		var i;
+
+		editor.SetView({Yaw: 0, Pitch: 1.2, Zoom: 1});
+
+		/* Over the north pole and on: the middle of the view goes down the other side. */
+		for (i = 0; i < 10; i++)
+			editor.Turn(0, -0.1, 0);
+
+		view = editor.View();
+
+		expect(view.Pitch).toBeLessThan(1.2);
+		expect(Math.abs(Math.abs(view.Yaw) - Math.PI)).toBeLessThan(0.05);
+
+		editor.Turn(0, 0, 0.5);
+
+		expect(editor.Roll()).not.toBeCloseTo(0, 2);
+
+		editor.NorthUp();
+
+		expect(editor.Roll()).toBeCloseTo(0, 5);
+
+		/* What is drawn and what is pointed at are the same point of the planet, however the view is turned. */
+		editor.Turn(0.3, 0.7, 1.1);
+
+		view = editor.View();
+		direction = planets.Unproject(view, view.Width * 0.6, view.Height * 0.4);
+		back = planets.Project(view, direction);
+
+		expect(back[0]).toBeCloseTo(view.Width * 0.6, 5);
+		expect(back[1]).toBeCloseTo(view.Height * 0.4, 5);
+		expect(editor.$Element().querySelector('.elemenx-planet-editor-canvas').style.transform).toBe('');
+
+		/* The globe under the picture: of the map of all the planet, drawn by WebGL. */
+		await waitFor(function () {
+			return editor.Own().MapTexture;
+		}, 30000);
 	}, 60000);
 });

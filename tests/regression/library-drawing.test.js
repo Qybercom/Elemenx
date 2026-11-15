@@ -398,11 +398,13 @@ describe('Contract: Drawing and DrawingLayers of ElemenxUI', function () {
 
 		await tick();
 
-		var field = root.querySelector('.elemenx-drawing-layer-field');
+		/* Its field is an Input of ElemenxUI: its own field of the page told. */
+		var field = root.querySelector('.elemenx-drawing-layer-field input');
 
 		field.value = 'Notes';
 
-		field.dispatchEvent(new FocusEvent('blur'));
+		field.dispatchEvent(new Event('input', {bubbles: true}));
+		field.dispatchEvent(new Event('change', {bubbles: true}));
 
 		await tick();
 

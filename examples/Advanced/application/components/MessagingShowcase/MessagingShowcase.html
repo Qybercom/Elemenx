@@ -6,31 +6,31 @@
 	<MessagingContextReceiver></MessagingContextReceiver>
 	<MessagingPipesReceiver></MessagingPipesReceiver>
 	<p>
-		<button class="button primary" (click)="SendIDMessage">Send to custom ID</button>
-		<button class="button" (click)="SendFooMessage">Send foo</button>
-		<button class="button" (click)="SendBarMessage">Send bar</button>
+		<Button Variant="primary" Label="Send to custom ID" (click)="SendIDMessage" />
+		<Button Variant="secondary" Label="Send foo" (click)="SendFooMessage" />
+		<Button Variant="secondary" Label="Send bar" (click)="SendBarMessage" />
 	</p>
 	<p>
-		<button class="button" (click)="RunMessageDebouncer">Message Debouncer A/A/A</button>
-		<button class="button" (click)="RunMessageFilter">Message Filter A/B/A/A/B</button>
-		<button class="button" (click)="RunMessageGate">Message Gate 300 ms</button>
+		<Button Variant="secondary" Label="Message Debouncer A/A/A" (click)="RunMessageDebouncer" />
+		<Button Variant="secondary" Label="Message Filter A/B/A/A/B" (click)="RunMessageFilter" />
+		<Button Variant="secondary" Label="Message Gate 300 ms" (click)="RunMessageGate" />
 	</p>
 	<div class="messaging-window-showcase">
 		<h3>Automatic browser contexts</h3>
 		<p>iframe / parent — zero-config discovery: <b>{{WindowMessage}}</b></p>
 		<iframe class="messaging-frame" src="/data/messaging-frame.html" title="Messaging iframe" style="width: 100%;height: 72px;border: 1px solid rgba(127,127,127,0.25);border-radius: 4px"></iframe>
-		<p><button class="button" (click)="SendWindowMessage">Send through iframe Window</button></p>
+		<p><Button Variant="secondary" Label="Send through iframe Window" (click)="SendWindowMessage" /></p>
 		<p>child window / opener — zero-config discovery: <b>{{ChildWindowMessage}}</b></p>
-		<p><button class="button" (click)="OpenChildWindow">Open child window</button> <button class="button" (click)="SendChildWindowMessage">Send to child window</button></p>
+		<p><Button Variant="secondary" Label="Open child window" (click)="OpenChildWindow" /> <Button Variant="secondary" Label="Send to child window" (click)="SendChildWindowMessage" /></p>
 		<p>independent same-origin tabs — open another copy without an opener. Runtime: <code>{{RuntimeID}}</code>; <b>{{TabMessage}}</b></p>
-		<p><button class="button" (click)="OpenIndependentTab">Open independent tab</button> <button class="button" (click)="PingTabs">Ping independent tabs</button></p>
+		<p><Button Variant="secondary" Label="Open independent tab" (click)="OpenIndependentTab" /> <Button Variant="secondary" Label="Ping independent tabs" (click)="PingTabs" /></p>
 		<p>cross-origin child window — automatic Window discovery after mutual <code>Messaging.Origins()</code> trust: <b>{{CrossOriginMessage}}</b></p>
-		<p><button class="button" (click)="OpenCrossOriginWindow">Open cross-origin child</button> <button class="button" (click)="SendCrossOriginMessage">Send cross-origin message</button></p>
+		<p><Button Variant="secondary" Label="Open cross-origin child" (click)="OpenCrossOriginWindow" /> <Button Variant="secondary" Label="Send cross-origin message" (click)="SendCrossOriginMessage" /></p>
 	</div>
 	<p>
-		<button class="button" (click)="SendContextMessage">Send context channel</button>
-		<button class="button" (click)="SendStorageMessage">Send context storage channel</button>
-		<button class="button" (click)="SendLocalMessage">Send local channel</button>
-		<button class="button" (click)="SendSharedIDMessage">Send shared ID</button>
+		<Button Variant="secondary" Label="Send context channel" (click)="SendContextMessage" />
+		<Button Variant="secondary" Label="Send context storage channel" (click)="SendStorageMessage" />
+		<Button Variant="secondary" Label="Send local channel" (click)="SendLocalMessage" />
+		<Button Variant="secondary" Label="Send shared ID" (click)="SendSharedIDMessage" />
 	</p>
 </div>

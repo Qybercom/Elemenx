@@ -92,20 +92,10 @@ body {
 	display: grid;
 	grid-template-columns: auto 1fr;
 	gap: 2px 8px;
-	width: 100%;
+	height: auto;
 	padding: 8px 10px;
-	color: inherit;
-	font: inherit;
 	text-align: start;
-	cursor: pointer;
-	background: transparent;
-	border: 0;
-	border-radius: var(--elemenx-radius);
-}
-
-.docs-search-result:hover,
-.docs-search-result.active {
-	background: var(--elemenx-surface-hover);
+	white-space: normal;
 }
 
 .docs-search-place {

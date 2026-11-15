@@ -5,7 +5,8 @@
  */
 Elemenx.Component('WorldDemo', {
 	$TemplateURL: 'WorldDemo.html',
-	$StyleURL: 'WorldDemo.css',
+	/* The resources of the side, on the HUD (GameStats). */
+	WorldResources: [{ID: 'gold', Label: 'gold', Value: 1250, Icon: 'games:coin'}, {ID: 'wood', Label: 'wood', Value: 840, Icon: 'tree'}, {ID: 'food', Label: 'food', Value: 410, Icon: 'games:potion'}],
 	$Traits: ['SceneDemo'],
 	WorldDied: function (detail) {
 		this.WorldNote = detail.ID + ' fell to ' + detail.By;

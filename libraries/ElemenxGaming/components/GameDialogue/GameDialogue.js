@@ -128,8 +128,8 @@ Elemenx.Component('GameDialogue', {
 		this.$Emit('next');
 	},
 
-	Chosen: function (event, node) {
-		var choice = (this.Choices || [])[Number(node.getAttribute('data-index'))];
+	/* A choice pressed (its Button): told unless it is off. */
+	Chosen: function (choice) {
 		if (choice && !choice.Disabled)
 			this.$Emit('choose', {ID: choice.ID, Choice: choice});
 	},

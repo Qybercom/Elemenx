@@ -23,7 +23,7 @@ A city is {ID, Name, Country, Region, Latitude, Longitude, TimeZone}: Name and R
 ## Example
 
 ```example
-<span class="elemenx-input"><input class="elemenx-input-control" [(value)]="Text" placeholder="A city" /></span>
+<Input [Value]="Text" Placeholder="A city" Label="A city" (input)="Text = $event" />
 <Button Label="Search" Variant="primary" (click)="Search" />
 <ul class="elemenx-ul"><li *for="city of Found" *key="city.ID">{{city.Label}} · {{city.Time}}</li></ul>
 <p class="elemenx-text small muted">{{Note}}</p>

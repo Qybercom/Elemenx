@@ -135,6 +135,29 @@ describe('Regression: the screens of a car hold no frame up', function () {
 			expect(read).toBe(0);
 
 			/*
+			 * Regression: a Meter on a screen tells its value by aria-valuenow at each change; all it held was read again
+			 * for the picture (8000 properties, 7 ms a picture). An attribute no style can follow: drawn again, nothing read.
+			 */
+			speed.setAttribute('aria-valuenow', '121');
+
+			await settle();
+
+			expect(drawn).toBe(4);
+			expect(read).toBe(0);
+
+			/* One a selector of the page names ([aria-pressed]): read again. */
+			Elemenx.Style('test:screens-aria', '[aria-pressed="true"] { color: rgb(0, 0, 255); }');
+
+			speed.setAttribute('aria-pressed', 'true');
+
+			await settle();
+
+			expect(drawn).toBe(5);
+			expect(read).toBeGreaterThan(0);
+
+			read = 0;
+
+			/*
 			 * The eye behind the car, far from its screens: they are not drawn again, whatever changes. Regression: the dash was
 			 * drawn again five times a second behind the car, the eye 8 m away.
 			 */

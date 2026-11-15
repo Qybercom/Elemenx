@@ -7290,7 +7290,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		engine.Renderer.Draw = draw;
 
-		expect(mounted.Space.Shaders(graphics).Star).toMatch(/limb\) \* 2\.4/);
+		expect(mounted.Space.Shaders(graphics).Star).toMatch(/mix\(2\.4, 1\.6, warm\)/);
 		expect(mounted.Space.LightingShaders(graphics).Shafts).toMatch(/step\(uClear,/);
 	});
 

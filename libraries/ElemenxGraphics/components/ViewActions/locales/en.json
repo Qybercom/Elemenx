@@ -1,0 +1,17 @@
+{
+	"graphics": {
+		"viewActions": {
+			"label": "Actions of the view",
+			"hand": "One finger moves the camera",
+			"frame": "Frame",
+			"drop": "Drop to the ground",
+			"duplicate": "Duplicate",
+			"delete": "Delete",
+			"done": "Done",
+			"cancel": "Cancel",
+			"menu": "Actions",
+			"undo": "Undo",
+			"redo": "Redo"
+		}
+	}
+}

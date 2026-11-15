@@ -1,7 +1,7 @@
 <!-- generated -->
 # GameTabs
 
-Вкладки игрового окна: Items [{ID, Label, Disabled}] в столбик (Orientation 'vertical', по умолчанию) или в ряд, пронумерованные 01, 02... (Numbered). Value — ID открытой вкладки; нажатие или стрелки (Home, End) открывают другую и отправляют change с её ID. Label называет список для экранных читалок.
+Вкладки игрового окна: Items [{ID, Label, Disabled}] в столбик (Orientation 'vertical', по умолчанию) или в ряд, пронумерованные 01, 02... (Numbered). Value — ID открытой вкладки; нажатие или стрелки (Home, End) открывают другую и отправляют change с её ID. Label называет список для экранных читалок. Это Tabs из ElemenxUI в виде игры: вертикальные или в ряд, с номерами (Tabs Numbered).
 
 ## Свойства
 
@@ -50,3 +50,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [GameTabs: Tabs of ElemenxUI, numbered, that open another by a press or the arrows and tell change](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-controls.test.js#L133) — `tests/regression/library-game-controls.test.js`

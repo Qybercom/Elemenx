@@ -1,6 +1,7 @@
 <div class="elemenx-tabs" [class]="[Variant || 'line', Size || 'medium', Vertical(Orientation) ? 'vertical ' + (Placement === 'right' ? 'right' : 'left') + (Rotate === false || Rotate === 'false' ? '' : ' rotated') : '']">
 	<div class="elemenx-tabs-list" role="tablist" [attribute.aria-label]="Label || null" [attribute.aria-orientation]="Vertical(Orientation) ? 'vertical' : null" (keydown)="Key">
 		<div class="elemenx-tab" role="tab" *for="tab of Items(Tabs, Declared)" *key="tab.ID" [class.active]="tab.ID === Current(Value, Items(Tabs, Declared))" [class.disabled]="!!tab.Disabled" [attribute.aria-selected]="String(tab.ID === Current(Value, Items(Tabs, Declared)))" [attribute.aria-disabled]="tab.Disabled ? 'true' : null" [attribute.tabindex]="tab.ID === Current(Value, Items(Tabs, Declared)) ? 0 : -1" [attribute.data-index]="$index" [attribute.title]="tab.Title || null" (click)="Pick" (auxclick)="Middle">
+			<span class="elemenx-tab-number" *if="Numbered && Numbered !== 'false'">{{TabNumber($index)}}</span>
 			<Icon *if="tab.Icon" [name]="tab.Icon" />
 			<span class="elemenx-tab-label">{{tab.Label}}</span>
 			<span class="elemenx-badge" *if="tab.Badge != null && tab.Badge !== ''">{{tab.Badge}}</span>

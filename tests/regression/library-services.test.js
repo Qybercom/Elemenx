@@ -37,6 +37,24 @@ describe('Contract: the Services of ElemenxUI', function () {
 		format.Locale = '';
 	});
 
+	/* A gauge fed each frame showed each value through a transition started again each time: 0.4 ms an update, and late. */
+	it('ElemenxHelpers: Live tells a value that changes on and on from one that changes now and then', async function () {
+		var live = service('ElemenxHelpers').Live(50);
+
+		expect(live(1)).toBe(false);
+		expect(live(2)).toBe(true);
+		expect(live(2)).toBe(true);
+		expect(live(3)).toBe(true);
+
+		await new Promise(function (done) {
+			setTimeout(done, 80);
+		});
+
+		expect(live(3)).toBe(true);
+		expect(live(4)).toBe(false);
+		expect(service('ElemenxHelpers').Live()(1)).toBe(false);
+	});
+
 	it('ElemenxHelpers: the text of a body without its indentation, the first day of a week, and listeners that throw apart', function () {
 		var helpers = service('ElemenxHelpers');
 		var node = document.createElement('pre');

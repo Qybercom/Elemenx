@@ -1192,6 +1192,8 @@ Elemenx.Service('Blueprints', {
 				context.Prelude('var n' + index + ' = N.Make(' + JSON.stringify(spec) + ');');
 
 				return {Value: '(function (p, s) { return n' + index + '.At(p[0] * s, p[1] * s, p[2] * s); })(' + inputs.Position + ', ' + inputs.Scale + ')'};
+			case 'Formula':
+				return {Value: this.FormulaCode(this.Formula(properties.Expression).Tree, inputs)};
 			case 'Compare':
 				key = {'!=': '!==', '<': '<', '<=': '<=', '>': '>', '>=': '>='}[properties.Operator] || '===';
 
@@ -1605,27 +1607,104 @@ Elemenx.Service('Blueprints', {
 		min: 'min', max: 'max', pow: 'pow', step: 'step', floor: 'floor', abs: 'abs', sqrt: 'sqrt', sin: 'sin', cos: 'cos', fract: 'fract', exp: 'exp', saturate: 'saturate'
 	},
 
+	/* The operators and the functions of numbers of a formula, part by part of lists (Each): its value and its code alike. */
+	FormulaOps: {'+': function (a, b) {
+		return a + b;
+	}, '-': function (a, b) {
+		return a - b;
+	}, '*': function (a, b) {
+		return a * b;
+	}, '/': function (a, b) {
+		return b ? a / b : 0;
+	}},
+
+	FormulaSingles: {min: Math.min, max: Math.max, pow: Math.pow, step: function (e, x) {
+		return x < e ? 0 : 1;
+	}, floor: Math.floor, abs: Math.abs, sqrt: function (x) {
+		return Math.sqrt(Math.max(0, x));
+	}, sin: Math.sin, cos: Math.cos, fract: function (x) {
+		return x - Math.floor(x);
+	}, exp: Math.exp, saturate: function (x) {
+		return Math.max(0, Math.min(1, x));
+	}},
+
+	/*
+	 * The tree of a formula as JavaScript (Code of a generator): an expression of the expressions given for its names, as
+	 * FormulaValue reckons it, with no walk of its tree at each call. Its functions are written into it: the code runs in a
+	 * worker too, where B is no more than its methods.
+	 */
+	FormulaCode: function (tree, inputs) {
+		var self = this;
+		var ops = {'+': 'function (a, b) { return a + b; }', '-': 'function (a, b) { return a - b; }', '*': 'function (a, b) { return a * b; }', '/': 'function (a, b) { return b ? a / b : 0; }'};
+		var singles = {min: 'Math.min', max: 'Math.max', pow: 'Math.pow', step: 'function (e, x) { return x < e ? 0 : 1; }', floor: 'Math.floor', abs: 'Math.abs', sqrt: 'function (x) { return Math.sqrt(Math.max(0, x)); }', sin: 'Math.sin', cos: 'Math.cos', fract: 'function (x) { return x - Math.floor(x); }', exp: 'Math.exp', saturate: 'function (x) { return Math.max(0, Math.min(1, x)); }'};
+
+		function code (node) {
+			var args;
+
+			if (node.Op === 'const')
+				return JSON.stringify(node.Value);
+
+			if (node.Op === 'var')
+				return '(' + (inputs[node.Name] === undefined ? 'undefined' : inputs[node.Name]) + ')';
+
+			if (node.Op === 'list')
+				return '[' + node.Items.map(code).join(', ') + ']';
+
+			if (node.Op === 'index')
+				return '(function (l, i) { return l == null ? undefined : l[Math.floor(Number(i) || 0)]; })(' + code(node.List) + ', ' + code(node.At) + ')';
+
+			if (node.Op === 'select')
+				return '(' + code(node.Test) + ' ? ' + code(node.A) + ' : ' + code(node.B) + ')';
+
+			if (node.Op === 'un')
+				return node.Operator === '!' ? '!(' + code(node.A) + ')' : 'E(' + code(node.A) + ', 0, function (x) { return -x; })';
+
+			if (node.Op === 'call') {
+				args = node.Args.map(code);
+
+				if (Object.prototype.hasOwnProperty.call(self.FormulaSingles, node.Name))
+					return 'E(' + args[0] + ', ' + (args[1] === undefined ? '0' : args[1]) + ', ' + singles[node.Name] + ')';
+
+				switch (node.Name) {
+					case 'clamp':
+						return 'E(' + args[1] + ', E(' + args[2] + ', ' + args[0] + ', Math.min), Math.max)';
+					case 'mix':
+						return 'E(' + args[0] + ', E(E(' + args[1] + ', ' + args[0] + ', ' + ops['-'] + '), ' + args[2] + ', ' + ops['*'] + '), ' + ops['+'] + ')';
+					case 'round':
+						return 'Math.round(Number(' + args[0] + ') || 0)';
+					case 'atan2':
+						return 'Math.atan2(Number(' + args[0] + ') || 0, Number(' + args[1] + ') || 0)';
+					case 'hypot':
+						return 'Math.sqrt(Math.pow(Number(' + args[0] + ') || 0, 2) + Math.pow(Number(' + args[1] + ') || 0, 2))';
+					case 'ceil':
+						return 'Math.ceil(Number(' + args[0] + ') || 0)';
+					case 'count':
+						return '((' + args[0] + ') && (' + args[0] + ').length || 0)';
+					case 'vec2':
+					case 'vec3':
+					case 'vec4':
+						return '[' + args.slice(0, Number(node.Name.charAt(3))).join(', ') + ']';
+					case 'text':
+						return 'String(' + args[0] + ')';
+					default:
+						throw new Error('Elemenx Blueprints: no function ' + node.Name + ' in a formula');
+				}
+			}
+
+			if (self.FormulaOps[node.Operator])
+				return 'E(' + code(node.A) + ', ' + code(node.B) + ', ' + ops[node.Operator] + ')';
+
+			return '(' + code(node.A) + ' ' + ({'==': '===', '!=': '!=='}[node.Operator] || node.Operator) + ' ' + code(node.B) + ')';
+		}
+
+		return code(tree);
+	},
+
 	/* The value of the tree of a formula with the values of its names. */
 	FormulaValue: function (tree, values) {
 		var self = this;
-		var ops = {'+': function (a, b) {
-			return a + b;
-		}, '-': function (a, b) {
-			return a - b;
-		}, '*': function (a, b) {
-			return a * b;
-		}, '/': function (a, b) {
-			return b ? a / b : 0;
-		}};
-		var singles = {min: Math.min, max: Math.max, pow: Math.pow, step: function (e, x) {
-			return x < e ? 0 : 1;
-		}, floor: Math.floor, abs: Math.abs, sqrt: function (x) {
-			return Math.sqrt(Math.max(0, x));
-		}, sin: Math.sin, cos: Math.cos, fract: function (x) {
-			return x - Math.floor(x);
-		}, exp: Math.exp, saturate: function (x) {
-			return Math.max(0, Math.min(1, x));
-		}};
+		var ops = this.FormulaOps;
+		var singles = this.FormulaSingles;
 
 		function value (node) {
 			var args;

@@ -8,14 +8,14 @@
 	<p><b>Auto:</b> <code>{{AutoMeta}}</code> — {{AutoState}}</p>
 	<p>Lifecycle: <b>{{WebLifecycle}}</b></p>
 	<p>Reply: <b>{{WebReply}}</b></p>
-	<button class="button" (click)="StartManual">Start manual</button>
-	<button class="button" (click)="StopManual">Stop manual</button>
-	<button class="button" (click)="RestartManual">Restart manual</button>
-	<button class="button" (click)="DestroyManual">Destroy manual</button>
-	<button class="button" (click)="CreateWebWorkers">Recreate all</button>
-	<button class="button primary" (click)="PingManual">Ping manual</button>
-	<button class="button" (click)="PingLazy">Ping lazy</button>
-	<button class="button" (click)="PingAuto">Ping auto</button>
+	<Button Variant="secondary" Label="Start manual" (click)="StartManual" />
+	<Button Variant="secondary" Label="Stop manual" (click)="StopManual" />
+	<Button Variant="secondary" Label="Restart manual" (click)="RestartManual" />
+	<Button Variant="secondary" Label="Destroy manual" (click)="DestroyManual" />
+	<Button Variant="secondary" Label="Recreate all" (click)="CreateWebWorkers" />
+	<Button Variant="primary" Label="Ping manual" (click)="PingManual" />
+	<Button Variant="secondary" Label="Ping lazy" (click)="PingLazy" />
+	<Button Variant="secondary" Label="Ping auto" (click)="PingAuto" />
 
 	<h3>ServiceWorker</h3>
 	<p>The demo uses the isolated <code>/elemenx-worker-showcase/</code> scope, so it does not take control of the Advanced page itself.</p>
@@ -24,9 +24,9 @@
 	<p>Lifecycle: <b>{{ServiceLifecycle}}</b></p>
 	<p>Status check: <b>{{ServiceRefresh}}</b></p>
 	<p>Reply: <b>{{ServiceReply}}</b></p>
-	<button class="button primary" (click)="RegisterServiceWorker">Register</button>
-	<button class="button" (click)="RefreshServiceWorkerStatus">Refresh status</button>
-	<button class="button" (click)="UpdateServiceWorker">Update</button>
-	<button class="button" (click)="UnregisterServiceWorker">Unregister</button>
-	<button class="button" (click)="PingServiceWorker">Ping through Messaging</button>
+	<Button Variant="primary" Label="Register" (click)="RegisterServiceWorker" />
+	<Button Variant="secondary" Label="Refresh status" (click)="RefreshServiceWorkerStatus" />
+	<Button Variant="secondary" Label="Update" (click)="UpdateServiceWorker" />
+	<Button Variant="secondary" Label="Unregister" (click)="UnregisterServiceWorker" />
+	<Button Variant="secondary" Label="Ping through Messaging" (click)="PingServiceWorker" />
 </div>

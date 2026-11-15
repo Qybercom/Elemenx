@@ -145,3 +145,9 @@
 		animation-duration: 3000ms;
 	}
 }
+
+/* A value fed on and on (each frame): shown at once, no transition started again each time (Live). */
+.elemenx-progress.live .elemenx-progress-fill,
+.elemenx-progress.live .elemenx-progress-ring-fill {
+	transition: none;
+}

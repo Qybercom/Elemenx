@@ -157,8 +157,21 @@ Elemenx.Component('CutsceneEditor', {
 		})};
 	},
 
-	Picked: function (event) {
-		var name = event && event.target ? event.target.value : '';
+	/* The choices of its lists: its cutscenes (Select), the kinds of tracks to add (Menu). */
+	NameOptions: function () {
+		return this.Names().map(function (name) {
+			return {Value: name, Label: name};
+		});
+	},
+
+	TypeItems: function () {
+		return this.Types.map(function (type) {
+			return {ID: type, Label: Elemenx.Locale.Text('graphics.cutsceneEditor.types.' + type)};
+		});
+	},
+
+	Picked: function (value) {
+		var name = value && value.target ? value.target.value : value || '';
 
 		this.Current = name;
 		this.Selected = '';
@@ -267,13 +280,11 @@ Elemenx.Component('CutsceneEditor', {
 		});
 	},
 
-	Added: function (event) {
-		var type = event && event.target ? event.target.value : '';
+	/* A kind of track picked of the menu (its item, or its ID). */
+	Added: function (item) {
+		var type = item && typeof item === 'object' ? item.ID : item;
 		if (type)
 			this.Add(type);
-
-		if (event && event.target)
-			event.target.value = '';
 	},
 
 	/* The one selected taken away; its track too when nothing is left in it. */
@@ -294,6 +305,24 @@ Elemenx.Component('CutsceneEditor', {
 
 			self.Selected = '';
 		});
+	},
+
+	/* The context menu of the line (a right click, a long press of a finger): the piece under it selected first. */
+	PieceActions: function () {
+		return [{ID: 'delete', Icon: 'delete', Label: Elemenx.Locale.Text('graphics.viewActions.delete'), Disabled: !this.Piece(), Danger: true}];
+	},
+
+	PieceMenu: function (event) {
+		var range = event.Target && event.Target.closest ? event.Target.closest('.elemenx-timeline-range[data-id]') : null;
+		if (!range) return;
+
+		this.Selected = range.getAttribute('data-id');
+		this.Version++;
+	},
+
+	PieceActed: function (event) {
+		if (event.Item.ID === 'delete')
+			this.Remove();
 	},
 
 	Chosen: function (event) {
@@ -322,9 +351,8 @@ Elemenx.Component('CutsceneEditor', {
 	},
 
 	/* A field of the one selected: a number where it reads as one, JSON where it is one, else text. */
-	Fielded: function (event) {
-		var key = event.target.getAttribute('data-field');
-		var text = event.target.value;
+	Fielded: function (key, given) {
+		var text = String(given === undefined || given === null ? '' : given);
 		var piece = this.Piece();
 		var value = text;
 		var self = this;

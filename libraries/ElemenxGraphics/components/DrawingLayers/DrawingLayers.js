@@ -195,7 +195,7 @@ Elemenx.Component('DrawingLayers', {
 
 		/* The field shows with the next render: it takes the focus then, its name selected. */
 		window.setTimeout(function () {
-			var field = self.$Element().querySelector('.elemenx-drawing-layer-field');
+			var field = self.$Element().querySelector('.elemenx-drawing-layer-field input');
 
 			if (field) {
 				field.focus();
@@ -205,9 +205,10 @@ Elemenx.Component('DrawingLayers', {
 	},
 
 	/* The field of a new name: Enter or leaving it keeps it, Escape drops it. */
-	Named: function (event) {
+	/* The name typed (the value an Input told, or the event of a field of the page). */
+	Named: function (value) {
 		var id = this.Renaming;
-		var name = String(event.target.value || '').trim();
+		var name = String((value && value.target ? value.target.value : value) || '').trim();
 
 		if (!id) return;
 

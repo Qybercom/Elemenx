@@ -51,6 +51,6 @@ A card: media at the edge (Image, or the media slot), a header, a body (Title, T
 - [goes to the sources the extension carries in a project that has only builds of dist, and reads no bundle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/language-server.test.js#L201) — `tests/regression/language-server.test.js`
 - [merges the pieces of a Library, its shared ones first, and refuses a phrase given twice](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/locales.test.js#L153) — `tests/regression/locales.test.js`
 - [puts what one route alone uses into its part, and keeps the first screen, the shared and what the rest uses](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/split.test.js#L17) — `tests/regression/split.test.js`
-- [adds components from the Insert tab of its Ribbon, edits their props and text, and undoes and redoes the changes](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L149) — `tests/examples/designer.spec.js`
+- [adds components from the Insert tab of its Ribbon, edits their props and text, and undoes and redoes the changes](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L150) — `tests/examples/designer.spec.js`
 
 +11 more in the same files

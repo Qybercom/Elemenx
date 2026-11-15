@@ -103,7 +103,8 @@ async function create (page, mode, name) {
 	await backstage(page, 'Create');
 
 	await page.locator('.elemenx-ribbon-backstage.open input').filter({visible: true}).fill(name);
-	await page.locator('.designer-kind[data-mode="' + mode + '"]').click();
+	/* The kinds are Buttons of ElemenxUI, in their order: a template, a component, an application. */
+	await page.locator('.designer-kind').nth(['template', 'component', 'application'].indexOf(mode)).click();
 
 	await expect(page.locator('.elemenx-ribbon-backstage.open')).toHaveCount(0);
 }

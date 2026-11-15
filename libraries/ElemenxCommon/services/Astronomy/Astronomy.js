@@ -24,7 +24,8 @@
  *   moon).
  * - Generate(seed, options): a whole system of a seed, always the same for the same seed: {Name, Seed, Bodies: [{ID,
  *   Type (star, planet, belt), Parent, Name, Kind, ...}]}, the planets with their moons, rings and belts. Options:
- *   Name, Planets (how many, 3 to 9 by default), Moons (false: none), Belts (false: none).
+ *   Name, Planets (how many, 3 to 9 by default), Moons (false: none), Belts (false: none), Mass (of its star, in masses
+ *   of the Sun: made of the seed by default).
  * The same functions run in Node: they read no page.
  */
 Elemenx.Service('Astronomy', {
@@ -304,7 +305,9 @@ Elemenx.Service('Astronomy', {
 		var settings = options || {};
 		var random = this.Random(seed === undefined || seed === null ? '' : seed);
 		var name = settings.Name || this.Name(random);
-		var mass = random.Pick([0.35, 0.6, 0.8, 0.95, 1, 1.05, 1.2, 1.5, 2]) * random.Float(0.92, 1.08);
+		var picked = random.Pick([0.35, 0.6, 0.8, 0.95, 1, 1.05, 1.2, 1.5, 2]) * random.Float(0.92, 1.08);
+		/* The mass of its star told (a star of a galaxy, GalaxyData): the rest of it made of the seed as ever. */
+		var mass = Number(settings.Mass) > 0 ? Number(settings.Mass) : picked;
 		var star = this.Star({Mass: mass});
 		var bodies = [];
 		var count = settings.Planets || random.Int(3, 9);

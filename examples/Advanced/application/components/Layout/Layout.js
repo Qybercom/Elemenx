@@ -33,9 +33,11 @@ Elemenx.Component('Layout', {
 
 		status();
 
-		this.$Ref('Theme').addEventListener('click', function () {
-			theme.Next();
-		});
+	},
+
+	/* The next theme (the Button of the header). */
+	ThemeNext: function () {
+		this.$Service('Theme').Next();
 	},
 
 	$OnDestroy: function () {

@@ -4,7 +4,7 @@
 		'toolbar toolbar toolbar'
 		'side view inspector'
 		'side blueprint inspector';
-	grid-template-columns: 220px minmax(0, 1fr) 260px;
+	grid-template-columns: auto minmax(0, 1fr) auto;
 	grid-template-rows: auto minmax(0, 1fr) auto;
 	min-height: 480px;
 	height: 100%;
@@ -45,34 +45,10 @@
 	margin-left: auto;
 }
 
-.elemenx-scene-editor-tool {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 28px;
-	border: 1px solid transparent;
-	border-radius: var(--elemenx-radius);
-	background: none;
-	color: inherit;
-	cursor: pointer;
-}
-
-.elemenx-scene-editor-tool.active {
-	border-color: var(--elemenx-accent);
-	background: var(--elemenx-surface-hover);
-}
-
-.elemenx-scene-editor-snap,
-.elemenx-scene-editor-import {
+.elemenx-scene-editor-snap {
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
-	cursor: pointer;
-}
-
-.elemenx-scene-editor-import input {
-	display: none;
 }
 
 .elemenx-scene-editor-time {
@@ -81,8 +57,14 @@
 	gap: 4px;
 }
 
-.elemenx-scene-editor-time input {
-	width: 72px;
+/* The slider of the scale of a star system: readable to real. */
+.elemenx-scene-editor-scale > :last-child {
+	width: 140px;
+}
+
+.elemenx-scene-editor-time > :last-child,
+.elemenx-scene-editor-snap > :last-child {
+	width: 96px;
 }
 
 .elemenx-scene-editor-side,
@@ -117,24 +99,6 @@
 	display: flex;
 	flex-wrap: wrap;
 	gap: 4px;
-}
-
-.elemenx-scene-editor-kind {
-	padding: 2px 8px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius-pill);
-	background: var(--elemenx-surface);
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
-}
-
-.elemenx-scene-editor-kind:hover {
-	background: var(--elemenx-surface-hover);
-}
-
-.elemenx-scene-editor-kind.model {
-	border-style: dashed;
 }
 
 .elemenx-scene-editor-view {
@@ -233,28 +197,16 @@
 	gap: 3px;
 }
 
-.elemenx-scene-editor-field,
-.elemenx-scene-editor-parameter label {
+.elemenx-scene-editor-field {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: 6px;
 }
 
-.elemenx-scene-editor-field input,
-.elemenx-scene-editor-parameter input {
-	box-sizing: border-box;
+.elemenx-scene-editor-field > :last-child {
 	width: 110px;
-	padding: 1px 4px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius-small);
-	background: var(--elemenx-surface);
-	color: inherit;
-	font: inherit;
-}
-
-.elemenx-scene-editor-field input[type='checkbox'] {
-	width: auto;
+	min-width: 0;
 }
 
 /* The cutscenes of the scene on a line of time, under the view, where the graphs are (CutsceneEditor). */
@@ -286,24 +238,16 @@
 	border-bottom: 1px solid var(--elemenx-border);
 }
 
-.elemenx-scene-editor-graph-kind {
-	padding: 4px 10px;
-	border: 0;
-	border-radius: var(--elemenx-radius-small);
-	background: transparent;
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
-}
-
-.elemenx-scene-editor-graph-kind.active {
-	background: var(--elemenx-surface-hover);
-}
-
 .elemenx-scene-editor-land {
 	padding: 2px 8px;
 	font-size: var(--elemenx-font-size-small);
 	color: var(--elemenx-warning);
+}
+
+/* The context menu round its list of objects: the list fills it. */
+.elemenx-scene-editor-tree {
+	display: block;
+	min-height: 0;
 }
 
 @media (max-width: 760px) {
@@ -320,18 +264,10 @@
 
 	.elemenx-scene-editor-side,
 	.elemenx-scene-editor-inspector {
+		min-width: 100%;
 		border: 0;
 		border-top: 1px solid var(--elemenx-border);
 	}
-}
-
-.elemenx-scene-editor-sketch-type {
-	padding: 2px 4px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius);
-	background: var(--elemenx-surface);
-	color: inherit;
-	font: inherit;
 }
 
 .elemenx-scene-editor-layers {
@@ -357,18 +293,9 @@
 	background: var(--elemenx-surface-hover);
 }
 
-.elemenx-scene-editor-layer-name,
-.elemenx-scene-editor-layer-eye {
-	border: 0;
-	background: none;
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
-}
-
 .elemenx-scene-editor-layer-name {
 	flex: 1 1 auto;
-	text-align: left;
+	justify-content: flex-start;
 }
 
 .elemenx-scene-editor-item {
@@ -387,12 +314,6 @@
 	font-weight: var(--elemenx-font-weight-strong);
 }
 
-.elemenx-scene-editor-item-head button {
-	border: 0;
-	background: none;
-	color: inherit;
-	cursor: pointer;
-}
 
 .elemenx-scene-editor-sketch-shape {
 	fill: none;
@@ -442,4 +363,21 @@
 .elemenx-scene-editor-sketch-shape.draft {
 	stroke: var(--elemenx-scene-editor-plane);
 	stroke-dasharray: 6 4;
+}
+
+/* A finger is wider than a pointer: the handles of the gizmo and of a road grow under it, where they were. */
+@media (pointer: coarse) {
+	.elemenx-scene-editor-axis,
+	.elemenx-scene-editor-ring {
+		stroke-width: 9;
+	}
+
+	.elemenx-scene-editor-tip,
+	.elemenx-scene-editor-plane,
+	.elemenx-scene-editor-road-point,
+	.elemenx-scene-editor-road-mid {
+		transform: scale(1.8);
+		transform-box: fill-box;
+		transform-origin: center;
+	}
 }

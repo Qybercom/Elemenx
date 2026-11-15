@@ -102,7 +102,7 @@ describe('Contract: SceneEditor, a game scene edited as Unreal edits a level', f
 		expect(editor.Selected).toBe(id);
 
 		/* The fields of what is selected. */
-		expect(editor.$Element().querySelector('[data-field="X"]').value).toBe('0');
+		expect(editor.$Element().querySelector('[data-field="X"] input').value).toBe('0');
 	});
 
 	it('offers the models it is given that Models has, and places each as the kind its Type fits, as large as it is', async function () {
@@ -122,11 +122,12 @@ describe('Contract: SceneEditor, a game scene edited as Unreal edits a level', f
 
 		await tick(20);
 
+		/* The models are Buttons of ElemenxUI, each by its name. */
 		expect(Array.prototype.map.call(editor.$Element().querySelectorAll('.elemenx-scene-editor-kind.model'), function (button) {
-			return button.getAttribute('data-model');
+			return button.textContent.trim();
 		})).toEqual(['editor-hut', 'editor-crate']);
 
-		editor.$Element().querySelector('[data-model="editor-hut"]').click();
+		editor.$Element().querySelector('.elemenx-scene-editor-kind.model').click();
 
 		hut = scene.Get(editor.Selected);
 		crate = scene.Get(editor.PlacedModel('editor-crate'));
@@ -256,12 +257,14 @@ describe('Contract: SceneEditor, a game scene edited as Unreal edits a level', f
 
 		await tick(30);
 
-		field = editor.$Element().querySelector('[data-parameter="Flame"]');
+		/* A field of the inspector is an Input of ElemenxUI: its own field of the page told. */
+		field = editor.$Element().querySelector('[data-parameter="Flame"] input');
 
 		expect(field.value).toBe('1, 0.5, 0');
 
 		field.value = '0, 1, 0';
 
+		field.dispatchEvent(new Event('input', {bubbles: true}));
 		field.dispatchEvent(new Event('change', {bubbles: true}));
 
 		expect(scene.Get(id).Traits.Effect.Parameters).toEqual({Flame: [0, 1, 0]});
@@ -398,9 +401,12 @@ describe('Contract: SceneEditor, a game scene edited as Unreal edits a level', f
 		/* A field of an item, edited in the inspector. */
 		editor.LayerPicked('base');
 
-		input = editor.$Element().querySelector('[data-item="road-2"] [data-field="Width"]');
+		await tick(30);
+
+		input = editor.$Element().querySelector('[data-item="road-2"] [data-field="Width"] input');
 		input.value = '10';
 
+		input.dispatchEvent(new Event('input', {bubbles: true}));
 		input.dispatchEvent(new Event('change', {bubbles: true}));
 
 		expect(sketched().Layers[0].Items[1].Width).toBe(10);
@@ -531,11 +537,14 @@ describe('Contract: SceneEditor, a game scene edited as Unreal edits a level', f
 		pointer(point, 'pointerdown', box.left + 7, box.top + 7);
 		pointer(point, 'pointerup', box.left + 7, box.top + 7);
 
-		var radius = editor.$Element().querySelector('[data-field="PointRadius"]');
+		await tick(30);
+
+		var radius = editor.$Element().querySelector('[data-field="PointRadius"] input');
 
 		radius.value = '6';
 
-		radius.dispatchEvent(new Event('change'));
+		radius.dispatchEvent(new Event('input', {bubbles: true}));
+		radius.dispatchEvent(new Event('change', {bubbles: true}));
 
 		expect(given().Radii[2]).toBe(6);
 
@@ -629,8 +638,11 @@ describe('Contract: SceneEditor, a game scene edited as Unreal edits a level', f
 		var world;
 
 		function tabs () {
-			return Array.from(element.querySelectorAll('.elemenx-scene-editor-graph-kind')).map(function (tab) {
-				return tab.getAttribute('data-graph');
+			/* The kinds are the tabs of a Tabs of ElemenxUI: as many shown as there are. */
+			expect(element.querySelectorAll('.elemenx-scene-editor-graphs .elemenx-tab').length).toBe(editor.GraphTabs().length);
+
+			return editor.GraphTabs().map(function (tab) {
+				return tab.ID;
 			});
 		}
 

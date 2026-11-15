@@ -398,14 +398,47 @@ function create (options) {
 
 				fs.createReadStream(file).pipe(zlib.createGzip()).pipe(response);
 			}
+			else if (ranged(request)) {
+				sendRange(request, response, file, stat, headers);
+			}
 			else {
 				headers['Content-Length'] = stat.size;
+				headers['Accept-Ranges'] = 'bytes';
 
 				response.writeHead(200, headers);
 
 				fs.createReadStream(file).pipe(response);
 			}
 		});
+	}
+
+	/* A request of a part of a file (Range: bytes=start-end, one range): a planet read tile by tile, a video sought. */
+	function ranged (request) {
+		return /^bytes=\d*-\d*$/.test(String(request.headers.range || ''));
+	}
+
+	function sendRange (request, response, file, stat, headers) {
+		var match = /^bytes=(\d*)-(\d*)$/.exec(String(request.headers.range));
+		var start = match[1] === '' ? Math.max(0, stat.size - Number(match[2])) : Number(match[1]);
+		var end = match[1] === '' || match[2] === '' ? stat.size - 1 : Math.min(stat.size - 1, Number(match[2]));
+
+		headers['Accept-Ranges'] = 'bytes';
+
+		if (match[1] === '' && match[2] === '' || start > end || start >= stat.size) {
+			headers['Content-Range'] = 'bytes */' + stat.size;
+
+			response.writeHead(416, headers);
+			response.end();
+
+			return;
+		}
+
+		headers['Content-Range'] = 'bytes ' + start + '-' + end + '/' + stat.size;
+		headers['Content-Length'] = end - start + 1;
+
+		response.writeHead(206, headers);
+
+		fs.createReadStream(file, {start: start, end: end}).pipe(response);
 	}
 
 	var server = http.createServer(function (request, response) {

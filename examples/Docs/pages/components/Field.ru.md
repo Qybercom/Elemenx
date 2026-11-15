@@ -8,6 +8,8 @@
 
 Значение берётся из поля внутри: нативного (input, textarea, select: его value или checked у флажка) или компонента ElemenxUI (его change); элемент считается затронутым, когда фокус покидает поле, а значение, заданное в коде, возвращается в нативное поле. Messages ({required: 'текст'...}) задают свои тексты ошибок, иначе используются фразы сервиса Forms.
 
+Horizontal ставит подпись рядом с полем. Size small — компактная строка (лента, панель настроек): узкая подпись мелким шрифтом, по центру строки с полем.
+
 ## Свойства
 
 | Свойство | По умолчанию |
@@ -17,6 +19,7 @@
 | `Error` | `''` |
 | `Required` | `false` |
 | `Horizontal` | `false` |
+| `Size` | `'medium'` |
 | `Disabled` | `false` |
 | `Control` | `null` |
 | `Name` | `''` |
@@ -46,6 +49,10 @@
 ## Тесты
 
 - [Field names the control inside by its Label, unless the control has a name of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L327) — `tests/regression/library-forms.test.js`
+- [GameStat shows its value, unit and name, stacked by default, inline with the name after the value, of its tone and size](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-stats.test.js#L40) — `tests/regression/library-game-stats.test.js`
+- [GameStats draws a GameStat for each item on a panel, follows a change of a value, and keeps what is put in its slot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-stats.test.js#L57) — `tests/regression/library-game-stats.test.js`
+- [Field Size small sets its label narrow, of small type, in line with its control](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-stats.test.js#L76) — `tests/regression/library-game-stats.test.js`
+- [a GameHud in the hud of a scene lets the pointer through to the scene, but its contents take it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-stats.test.js#L88) — `tests/regression/library-game-stats.test.js`
 - [runs a flow: events, branches, variables, loops, delays, actions of the context and what it tells](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L462) — `tests/regression/blueprints.test.js`
 - [makes a generator JavaScript that gives the very values of its Run, many times faster; a graph with a block of no code gives null](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L697) — `tests/regression/blueprints.test.js`
 - [tree-shakes unused Library Components and keeps transitive Component dependencies](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/builder-multi-application.test.js#L226) — `tests/regression/builder-multi-application.test.js`

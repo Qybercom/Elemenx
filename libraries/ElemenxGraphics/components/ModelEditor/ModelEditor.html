@@ -1,115 +1,112 @@
 <div class="elemenx-model-editor">
 	<div class="elemenx-model-editor-toolbar" role="toolbar" [attribute.aria-label]="$T('graphics.modelEditor.tools')">
-		<div class="elemenx-model-editor-modes" role="tablist">
-			<button type="button" role="tab" class="elemenx-model-editor-mode" *for="mode of Modes" *key="mode.ID" [class.active]="Mode === mode.ID" [attribute.aria-selected]="Mode === mode.ID ? 'true' : 'false'" [attribute.data-mode]="mode.ID" (click)="Moded(mode.ID)">{{$T(mode.Key)}}</button>
-		</div>
+		<Tabs class="elemenx-model-editor-modes" Variant="pill" Size="small" [Tabs]="ModeTabs(Version)" [Value]="Mode" (change)="Moded($event)" />
 		<div class="elemenx-model-editor-group" *if="Mode === 'roles'">
-			<button type="button" class="elemenx-model-editor-tool" *for="tool of RoleTools" *key="tool.ID" [class.active]="RoleTool === tool.ID" [attribute.data-role-tool]="tool.ID" [attribute.title]="$T(tool.Key)" [attribute.aria-pressed]="RoleTool === tool.ID ? 'true' : 'false'" (click)="PickRoleTool(tool.ID)"><Icon [name]="tool.Icon" Size="16" /></button>
-			<label class="elemenx-model-editor-variant" [attribute.title]="$T('graphics.modelEditor.brushSize')">{{$T('graphics.modelEditor.brushSize')}}<input type="number" min="0.002" max="0.5" step="0.005" [value]="Brush" (change)="BrushSized" /></label>
+			<Button class="elemenx-model-editor-tool" *for="tool of RoleTools" *key="tool.ID" Size="small" [Variant]="RoleTool === tool.ID ? 'secondary' : 'ghost'" [Pressed]="RoleTool === tool.ID" [Icon]="tool.Icon" [Title]="$T(tool.Key)" (click)="PickRoleTool(tool.ID)" />
+			<div class="elemenx-model-editor-variant" [attribute.title]="$T('graphics.modelEditor.brushSize')"><span>{{$T('graphics.modelEditor.brushSize')}}</span><NumberInput Size="small" [Min]="0.002" [Max]="0.5" [Step]="0.005" [Value]="Brush" (change)="BrushSized($event)" /></div>
 		</div>
 		<div class="elemenx-model-editor-group" *if="Mode === 'shape'">
-			<button type="button" class="elemenx-model-editor-tool" *for="tool of Tools" *key="tool.ID" [class.active]="Tool === tool.ID" [attribute.data-tool]="tool.ID" [attribute.title]="$T(tool.Key) + ' (' + tool.Hotkey + ')'" [attribute.aria-pressed]="Tool === tool.ID ? 'true' : 'false'" (click)="Pick(tool.ID)"><Icon [name]="tool.Icon" Size="16" /></button>
-			<label class="elemenx-model-editor-snap" [attribute.title]="$T('graphics.modelEditor.snap')"><input type="checkbox" [checked]="Snap" (change)="Snapped" />{{$T('graphics.modelEditor.snap')}}</label>
-			<label class="elemenx-model-editor-variant" [attribute.title]="$T('graphics.modelEditor.variant')">{{$T('graphics.modelEditor.variant')}}<input type="number" min="0" step="1" [value]="Variant" (change)="VariantPicked" /></label>
+			<Button class="elemenx-model-editor-tool" *for="tool of Tools" *key="tool.ID" Size="small" [Variant]="Tool === tool.ID ? 'secondary' : 'ghost'" [Pressed]="Tool === tool.ID" [Icon]="tool.Icon" [Title]="$T(tool.Key) + ' (' + tool.Hotkey + ')'" (click)="Pick(tool.ID)" />
+			<Checkbox class="elemenx-model-editor-snap" Size="small" [Label]="$T('graphics.modelEditor.snap')" [Checked]="Snap" (change)="Snapped($event)" />
+			<div class="elemenx-model-editor-variant" [attribute.title]="$T('graphics.modelEditor.variant')"><span>{{$T('graphics.modelEditor.variant')}}</span><NumberInput Size="small" [Min]="0" [Step]="1" [Value]="Variant" (change)="VariantPicked($event)" /></div>
 		</div>
 		<div class="elemenx-model-editor-group">
-			<Button Size="small" Variant="ghost" Icon="undo" [title]="$T('graphics.modelEditor.undo')" [disabled]="!Past" (click)="Undo" />
-			<Button Size="small" Variant="ghost" Icon="redo" [title]="$T('graphics.modelEditor.redo')" [disabled]="!Future" (click)="Redo" />
+			<Button Size="small" Variant="ghost" Icon="undo" [Title]="$T('graphics.modelEditor.undo')" [Disabled]="!Past" (click)="Undo" />
+			<Button Size="small" Variant="ghost" Icon="redo" [Title]="$T('graphics.modelEditor.redo')" [Disabled]="!Future" (click)="Redo" />
 		</div>
 		<div class="elemenx-model-editor-group">
-			<Button Size="small" Variant="ghost" Icon="grid" [title]="$T('graphics.modelEditor.wire')" [pressed]="Wire" (click)="WireToggled" />
-			<Button Size="small" Variant="ghost" Icon="shapes" [title]="$T('graphics.modelEditor.edges')" [pressed]="Edges" (click)="EdgesToggled" />
+			<Button Size="small" Variant="ghost" Icon="grid" [Title]="$T('graphics.modelEditor.wire')" [Pressed]="Wire" (click)="WireToggled" />
+			<Button Size="small" Variant="ghost" Icon="shapes" [Title]="$T('graphics.modelEditor.edges')" [Pressed]="Edges" (click)="EdgesToggled" />
 		</div>
 		<div class="elemenx-model-editor-group end" *if="Mode === 'roles'">
-			<Button Size="small" Variant="ghost" Icon="file-code" [title]="$T('graphics.modelEditor.rolesExport')" (click)="RolesExported" />
-			<label class="elemenx-model-editor-import" [attribute.title]="$T('graphics.modelEditor.rolesImport')"><Icon name="upload" Size="16" /><input type="file" accept="application/json,.json" (change)="RolesImported" /></label>
+			<Button Size="small" Variant="ghost" Icon="file-code" [Title]="$T('graphics.modelEditor.rolesExport')" (click)="RolesExported" />
+			<FileUpload class="elemenx-model-editor-import" Variant="inline" Accept="application/json,.json" [Label]="$T('graphics.modelEditor.rolesImport')" (change)="RolesImported($event)" />
 		</div>
 		<div class="elemenx-model-editor-group end" *if="Mode === 'shape'">
-			<select class="elemenx-model-editor-format" [attribute.aria-label]="$T('graphics.modelEditor.format')" (change)="FormatPicked">
-				<option *for="format of Formats" *key="format" [value]="format" [selected]="format === Format">{{format}}</option>
-			</select>
-			<Button Size="small" Variant="ghost" Icon="download" [title]="$T('graphics.modelEditor.model')" [label]="$T('graphics.modelEditor.model')" (click)="DownloadPressed" />
-			<Button Size="small" Variant="ghost" Icon="save" [title]="$T('graphics.modelEditor.save')" (click)="Store" />
-			<Button Size="small" Variant="ghost" Icon="file-code" [title]="$T('graphics.modelEditor.export')" (click)="Exported" />
-			<label class="elemenx-model-editor-import" [attribute.title]="$T('graphics.modelEditor.import')"><Icon name="upload" Size="16" /><input type="file" accept="application/json,.json" (change)="Imported" /></label>
+			<Select class="elemenx-model-editor-format" Size="small" [Label]="$T('graphics.modelEditor.format')" [Options]="FormatOptions(Version)" [Value]="Format" (change)="FormatPicked($event)" />
+			<Button Size="small" Variant="ghost" Icon="download" [Title]="$T('graphics.modelEditor.model')" [Label]="$T('graphics.modelEditor.model')" (click)="DownloadPressed" />
+			<Button Size="small" Variant="ghost" Icon="save" [Title]="$T('graphics.modelEditor.save')" (click)="Store" />
+			<Button Size="small" Variant="ghost" Icon="file-code" [Title]="$T('graphics.modelEditor.export')" (click)="Exported" />
+			<FileUpload class="elemenx-model-editor-import" Variant="inline" Accept="application/json,.json" [Label]="$T('graphics.modelEditor.import')" (change)="Imported($event)" />
 		</div>
 	</div>
-	<aside class="elemenx-model-editor-side" *if="Mode === 'roles'">
+	<aside class="elemenx-model-editor-side" *if="Mode === 'roles'" *resizable="{Edges: 'right', MinWidth: 150, MaxWidth: 560}" [style.width]="PaneWidth('side', 200)" (resizeend)="PaneResized('side', $event)">
 		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.roleModel')}}</div>
-		<select class="elemenx-model-editor-role-model" [attribute.aria-label]="$T('graphics.modelEditor.roleModel')" (change)="RoleModelPicked">
-			<option value="" [selected]="!RoleModel">{{$T('graphics.modelEditor.thisModel')}}</option>
-			<option *for="name of FileModels(Version)" *key="name" [value]="name" [selected]="name === RoleModel">{{name}}</option>
-		</select>
+		<Select class="elemenx-model-editor-role-model" Size="small" [Label]="$T('graphics.modelEditor.roleModel')" [Options]="ModelOptions(Version)" [Value]="RoleModel || ''" (change)="RoleModelPicked($event)" />
 		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.roles')}}</div>
 		<div class="elemenx-model-editor-roles" role="listbox" [attribute.aria-label]="$T('graphics.modelEditor.roles')">
-			<button type="button" role="option" class="elemenx-model-editor-role" *for="role of RoleList(Version)" *key="role.ID" [class.active]="RoleSelected === role.ID" [attribute.aria-selected]="RoleSelected === role.ID ? 'true' : 'false'" [attribute.data-role]="role.ID" (click)="RolePicked(role.ID)">{{role.Label}}</button>
+			<Button class="elemenx-model-editor-role" *for="role of RoleList(Version)" *key="role.ID" Size="small" Block="true" [Variant]="RoleSelected === role.ID ? 'secondary' : 'ghost'" [Pressed]="RoleSelected === role.ID" [Label]="role.Label" (click)="RolePicked(role.ID)" />
 		</div>
 		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.addRole')}}</div>
-		<select class="elemenx-model-editor-role-kind" [attribute.aria-label]="$T('graphics.modelEditor.addRole')" (change)="RoleKindPicked">
-			<option *for="kind of RoleKinds()" *key="kind.ID" [value]="kind.ID" [selected]="kind.ID === RoleKind">{{kind.Label}}</option>
-		</select>
+		<Select class="elemenx-model-editor-role-kind" Size="small" [Label]="$T('graphics.modelEditor.addRole')" [Options]="RoleKindOptions(Version)" [Value]="RoleKind" (change)="RoleKindPicked($event)" />
 		<div class="elemenx-model-editor-role-actions">
-			<Button Size="small" Icon="add" [label]="$T('graphics.modelEditor.addRole')" (click)="RoleAdded" />
-			<Button Size="small" Variant="ghost" Icon="delete" [title]="$T('graphics.modelEditor.removeRole')" [disabled]="!RoleSelected" (click)="RoleRemoved" />
+			<Button Size="small" Icon="add" [Label]="$T('graphics.modelEditor.addRole')" (click)="RoleAdded" />
+			<Button Size="small" Variant="ghost" Icon="delete" [Title]="$T('graphics.modelEditor.removeRole')" [Disabled]="!RoleSelected" (click)="RoleRemoved" />
 		</div>
 	</aside>
-	<aside class="elemenx-model-editor-side" *if="Mode === 'parts'">
+	<aside class="elemenx-model-editor-side" *if="Mode === 'parts'" *resizable="{Edges: 'right', MinWidth: 150, MaxWidth: 560}" [style.width]="PaneWidth('side', 200)" (resizeend)="PaneResized('side', $event)">
 		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.roleModel')}}</div>
-		<select class="elemenx-model-editor-role-model" [attribute.aria-label]="$T('graphics.modelEditor.roleModel')" (change)="RoleModelPicked">
-			<option value="" [selected]="!RoleModel">{{$T('graphics.modelEditor.thisModel')}}</option>
-			<option *for="name of FileModels(Version)" *key="name" [value]="name" [selected]="name === RoleModel">{{name}}</option>
-		</select>
+		<Select class="elemenx-model-editor-role-model" Size="small" [Label]="$T('graphics.modelEditor.roleModel')" [Options]="ModelOptions(Version)" [Value]="RoleModel || ''" (change)="RoleModelPicked($event)" />
 		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.pieces')}}</div>
 		<div class="elemenx-model-editor-roles" role="listbox" aria-multiselectable="true" [attribute.aria-label]="$T('graphics.modelEditor.pieces')">
-			<button type="button" role="option" class="elemenx-model-editor-role" *for="piece of PartsList(Version)" *key="piece.ID" [class.active]="piece.Selected" [attribute.aria-selected]="piece.Selected ? 'true' : 'false'" [attribute.data-piece]="piece.ID" (click)="PartPicked(piece.ID, $event)">{{piece.Label}}</button>
+			<Button class="elemenx-model-editor-role" *for="piece of PartsList(Version)" *key="piece.ID" Size="small" Block="true" [Variant]="piece.Selected ? 'secondary' : 'ghost'" [Pressed]="!!piece.Selected" [Label]="piece.Label" (click)="PartPicked(piece.ID, $event)" />
 		</div>
-		<input type="text" class="elemenx-model-editor-parts-name" [value]="PartsName" [attribute.aria-label]="$T('graphics.modelEditor.partsName')" [attribute.placeholder]="$T('graphics.modelEditor.partsName')" (input)="PartsNamed" />
+		<Input class="elemenx-model-editor-parts-name" Size="small" [Label]="$T('graphics.modelEditor.partsName')" [Placeholder]="$T('graphics.modelEditor.partsName')" [Value]="PartsName" (input)="PartsNamed($event)" />
 		<div class="elemenx-model-editor-role-actions">
-			<Button Size="small" Variant="ghost" Icon="cut" [title]="$T('graphics.modelEditor.partsSplit')" (click)="PartsSplit" />
-			<Button Size="small" Variant="ghost" Icon="layers" [title]="$T('graphics.modelEditor.partsGroup')" (click)="PartsGroup" />
-			<Button Size="small" Variant="ghost" Icon="minimize" [title]="$T('graphics.modelEditor.partsUngroup')" (click)="PartsUngroup" />
-			<Button Size="small" Variant="ghost" Icon="link" [title]="$T('graphics.modelEditor.partsMerge')" (click)="PartsMerge" />
-			<Button Size="small" Variant="ghost" Icon="edit" [title]="$T('graphics.modelEditor.partsRename')" (click)="PartsRename" />
-			<Button Size="small" Variant="ghost" Icon="eye-off" [title]="$T('graphics.modelEditor.partsHide')" (click)="PartsHide" />
-			<Button Size="small" Variant="ghost" Icon="copy" [title]="$T('graphics.modelEditor.partsDuplicate')" (click)="PartsDuplicate" />
-			<Button Size="small" Variant="ghost" Icon="refresh" [title]="$T('graphics.modelEditor.partsMirror')" (click)="PartsMirror" />
-			<Button Size="small" Variant="ghost" Icon="chevron-down" [title]="$T('graphics.modelEditor.partsOrigin')" (click)="PartsOrigin" />
-			<Button Size="small" Variant="ghost" Icon="delete" [title]="$T('graphics.modelEditor.partsRemove')" (click)="PartsRemove" />
+			<Button Size="small" Variant="ghost" Icon="cut" [Title]="$T('graphics.modelEditor.partsSplit')" (click)="PartsSplit" />
+			<Button Size="small" Variant="ghost" Icon="layers" [Title]="$T('graphics.modelEditor.partsGroup')" (click)="PartsGroup" />
+			<Button Size="small" Variant="ghost" Icon="minimize" [Title]="$T('graphics.modelEditor.partsUngroup')" (click)="PartsUngroup" />
+			<Button Size="small" Variant="ghost" Icon="link" [Title]="$T('graphics.modelEditor.partsMerge')" (click)="PartsMerge" />
+			<Button Size="small" Variant="ghost" Icon="edit" [Title]="$T('graphics.modelEditor.partsRename')" (click)="PartsRename" />
+			<Button Size="small" Variant="ghost" Icon="eye-off" [Title]="$T('graphics.modelEditor.partsHide')" (click)="PartsHide" />
+			<Button Size="small" Variant="ghost" Icon="copy" [Title]="$T('graphics.modelEditor.partsDuplicate')" (click)="PartsDuplicate" />
+			<Button Size="small" Variant="ghost" Icon="refresh" [Title]="$T('graphics.modelEditor.partsMirror')" (click)="PartsMirror" />
+			<Button Size="small" Variant="ghost" Icon="chevron-down" [Title]="$T('graphics.modelEditor.partsOrigin')" (click)="PartsOrigin" />
+			<Button Size="small" Variant="ghost" Icon="delete" [Title]="$T('graphics.modelEditor.partsRemove')" (click)="PartsRemove" />
 		</div>
 		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.partsModels')}}</div>
 		<div class="elemenx-model-editor-role-actions">
-			<Button Size="small" Icon="external" [label]="$T('graphics.modelEditor.partsExtract')" (click)="PartsExtract" />
+			<Button Size="small" Icon="external" [Label]="$T('graphics.modelEditor.partsExtract')" (click)="PartsExtract" />
 		</div>
-		<select class="elemenx-model-editor-role-model" [attribute.aria-label]="$T('graphics.modelEditor.partsWith')" (change)="PartsWithPicked">
-			<option value="" [selected]="!PartsWith">{{$T('graphics.modelEditor.partsWith')}}</option>
-			<option *for="name of PartsModels(Version)" *key="name" [value]="name" [selected]="name === PartsWith">{{name}}</option>
-		</select>
+		<Select class="elemenx-model-editor-role-model" Size="small" [Label]="$T('graphics.modelEditor.partsWith')" [Options]="WithOptions(Version)" [Value]="PartsWith || ''" (change)="PartsWithPicked($event)" />
 		<div class="elemenx-model-editor-role-actions">
-			<Button Size="small" Icon="add" [label]="$T('graphics.modelEditor.partsCombine')" [disabled]="!PartsWith" (click)="PartsCombine" />
+			<Button Size="small" Icon="add" [Label]="$T('graphics.modelEditor.partsCombine')" [Disabled]="!PartsWith" (click)="PartsCombine" />
 		</div>
 	</aside>
-	<aside class="elemenx-model-editor-side" *if="Mode === 'shape'">
+	<aside class="elemenx-model-editor-side" *if="Mode === 'shape'" *resizable="{Edges: 'right', MinWidth: 150, MaxWidth: 560}" [style.width]="PaneWidth('side', 200)" (resizeend)="PaneResized('side', $event)">
 		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.parts')}}</div>
-		<Tree [items]="Items(Version)" [expanded]="Opened(Version)" [value]="Selected" [label]="$T('graphics.modelEditor.parts')" (select)="Chosen" />
+		<Tree [items]="Items(Version)" [expanded]="Opened(Version)" [value]="Selected" [Label]="$T('graphics.modelEditor.parts')" (select)="Chosen" />
 		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.add')}}</div>
 		<div class="elemenx-model-editor-palette">
-			<button type="button" class="elemenx-model-editor-shape" *for="shape of Shapes" *key="shape" [attribute.data-shape]="shape" (click)="Placed(shape)">{{shape}}</button>
+			<Button class="elemenx-model-editor-shape" *for="shape of Shapes" *key="shape" Size="small" Shape="round" [Label]="shape" (click)="Placed(shape)" />
 		</div>
 		<div class="elemenx-model-editor-generator" *if="Generator">
 			<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.generate')}}</div>
-			<textarea rows="3" [value]="Description" [attribute.aria-label]="$T('graphics.modelEditor.describe')" [attribute.placeholder]="$T('graphics.modelEditor.describe')" (input)="Described"></textarea>
-			<Button Size="small" Icon="lightbulb" [label]="$T('graphics.modelEditor.generate')" [disabled]="Busy" (click)="GeneratePressed" />
+			<TextArea [Rows]="3" [Label]="$T('graphics.modelEditor.describe')" [Placeholder]="$T('graphics.modelEditor.describe')" [Value]="Description" (input)="Described($event)" />
+			<Button Size="small" Icon="lightbulb" [Label]="$T('graphics.modelEditor.generate')" [Disabled]="Busy" (click)="GeneratePressed" />
 		</div>
 	</aside>
 	<div class="elemenx-model-editor-view" #View>
 		<Scene #Scene Paused="true" Labels="false" Details="false" Quality="medium" [loader]="true" (ready)="SceneReady" />
-		<div class="elemenx-model-editor-overlay" #Overlay tabindex="0" [attribute.aria-label]="Label || $T('graphics.modelEditor.label')" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Up" (wheel)="Wheeled" (contextmenu)="Menu" (keydown)="Key">
-			<svg class="elemenx-model-editor-marks" #Marks></svg>
-			<svg class="elemenx-model-editor-gizmo" #Gizmo></svg>
-		</div>
+		<ContextMenu #Context Sheet="auto" [Title]="Selected || $T('graphics.viewActions.menu')" [Items]="Actions(Version, Selected, Mode)" (open)="MenuOpened" (select)="MenuPicked">
+			<div class="elemenx-model-editor-overlay" #Overlay tabindex="0" [attribute.aria-label]="Label || $T('graphics.modelEditor.label')" (pointerdown)="TouchDown" (pointermove)="TouchMove" (pointerup)="TouchUp" (pointercancel)="TouchUp" (wheel)="Wheeled" (contextmenu)="Menu" (keydown)="Key">
+				<svg class="elemenx-model-editor-marks" #Marks></svg>
+				<svg class="elemenx-model-editor-gizmo" #Gizmo></svg>
+			</div>
+		</ContextMenu>
+		<ViewActions [Items]="Actions(Version, Selected, Mode)" [Hand]="Hand" (act)="Acted" (hand)="Handed" />
 	</div>
-	<aside class="elemenx-model-editor-inspector">
+	<aside class="elemenx-model-editor-inspector" *resizable="{Edges: 'left', MinWidth: 180, MaxWidth: 640}" [style.width]="PaneWidth('inspector', 260)" (resizeend)="PaneResized('inspector', $event)">
 		<div class="elemenx-model-editor-title">{{Mode === 'roles' ? RoleSelected || $T('graphics.modelEditor.roles') : Selected || $T('graphics.modelEditor.whole')}}</div>
-		<div class="elemenx-model-editor-fields" #Fields></div>
+		<div class="elemenx-model-editor-fields">
+			<p class="elemenx-model-editor-hint" *if="Mode === 'roles' && RoleHint">{{$T('graphics.modelEditor.roleHint')}}</p>
+			<div class="elemenx-model-editor-field" *for="field of FieldList" *key="field.ID" [attribute.data-field]="field.Key"><span>{{field.Key}}</span>
+				<Select *if="field.Kind === 'select'" Size="small" [Label]="field.Key" [Options]="field.Options" [Value]="field.Value" (change)="FieldChanged(field, $event)" />
+				<Checkbox *if="field.Kind === 'check'" Size="small" [Label]="field.Key" [Checked]="!!field.Value" (change)="FieldChanged(field, $event)" />
+				<ColorInput *if="field.Kind === 'color'" Size="small" [Value]="field.Value" (change)="FieldChanged(field, $event)" />
+				<Input *if="field.Kind !== 'select' && field.Kind !== 'check' && field.Kind !== 'color'" Size="small" [Label]="field.Key" [Value]="field.Shown" [ReadOnly]="field.Kind === 'readonly'" (change)="FieldChanged(field, $event)" />
+			</div>
+			<div class="elemenx-model-editor-field" *if="Mode === 'roles' && RoleTesting" data-field="Test"><span>{{$T('graphics.modelEditor.test')}}</span><Slider Size="small" [Label]="$T('graphics.modelEditor.test')" [Min]="0" [Max]="1" [Step]="0.01" [Value]="RoleTest" (input)="RoleTried($event)" /></div>
+		</div>
 	</aside>
 </div>

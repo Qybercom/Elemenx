@@ -29,4 +29,4 @@ FloraEditor: a species of plant of a picture of it (SceneFlora): a photograph of
 ## Tests
 
 - [starts of its species, reads a picture into its preset, its numbers on sliders, and grows the plant in its view](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/FloraEditor/FloraEditor.test.js#L68) — `libraries/ElemenxGraphics/components/FloraEditor/FloraEditor.test.js`
-- [turns a number of its preset on a slider, emits change, and defines the model under Name](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/FloraEditor/FloraEditor.test.js#L99) — `libraries/ElemenxGraphics/components/FloraEditor/FloraEditor.test.js`
+- [turns a number of its preset on a slider, emits change, and defines the model under Name](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/FloraEditor/FloraEditor.test.js#L101) — `libraries/ElemenxGraphics/components/FloraEditor/FloraEditor.test.js`

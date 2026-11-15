@@ -36,7 +36,7 @@
 				</div>
 			</div>
 
-			<button class="theme-switch" #Theme>{{Theme}} theme</button>
+			<Button class="theme-switch" Variant="secondary" Size="small" [Label]="Theme + ' theme'" (click)="ThemeNext()" />
 		</div>
 	</header>
 

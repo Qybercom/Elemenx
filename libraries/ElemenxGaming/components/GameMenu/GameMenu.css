@@ -40,11 +40,15 @@
 	gap: 6px;
 }
 
-.elemenx-game-menu-item {
+/* An item is a Button of ElemenxUI (ghost) in the look of the menu of the theme: its own size, frame and text. */
+.elemenx-game-menu .elemenx-game-menu-items .elemenx-game-menu-item.elemenx-button {
 	position: relative;
 	display: flex;
+	flex: 0 1 auto;
 	align-items: center;
+	justify-content: normal;
 	gap: 10px;
+	height: auto;
 	padding: var(--elemenx-game-menu-item-padding);
 	background: var(--elemenx-game-menu-item);
 	border: var(--elemenx-game-menu-item-frame);
@@ -54,6 +58,8 @@
 	color: var(--elemenx-game-text);
 	font: inherit;
 	font-size: var(--elemenx-font-size-large);
+	line-height: inherit;
+	white-space: normal;
 	letter-spacing: var(--elemenx-game-letter-spacing);
 	text-align: var(--elemenx-game-menu-item-align);
 	text-transform: var(--elemenx-game-text-transform);
@@ -62,7 +68,7 @@
 }
 
 /* The ornament of the theme on the item: caps on its ends, that may stand out of it. */
-.elemenx-game-menu-item::after {
+.elemenx-game-menu .elemenx-game-menu-items .elemenx-game-menu-item.elemenx-button::after {
 	position: absolute;
 	inset: var(--elemenx-game-menu-item-ornament-inset);
 	background: var(--elemenx-game-menu-item-ornament);
@@ -70,8 +76,9 @@
 	pointer-events: none;
 }
 
-.elemenx-game-menu-item:hover,
-.elemenx-game-menu-item:focus-visible {
+.elemenx-game-menu .elemenx-game-menu-items .elemenx-game-menu-item.elemenx-button:hover,
+.elemenx-game-menu .elemenx-game-menu-items .elemenx-game-menu-item.elemenx-button:active,
+.elemenx-game-menu .elemenx-game-menu-items .elemenx-game-menu-item.elemenx-button:focus-visible {
 	outline: none;
 	background: var(--elemenx-game-menu-item-hover);
 	box-shadow: var(--elemenx-game-menu-item-shadow), var(--elemenx-game-glow);
@@ -79,7 +86,7 @@
 	transform: var(--elemenx-game-menu-item-shift);
 }
 
-.elemenx-game-menu-item:disabled {
+.elemenx-game-menu .elemenx-game-menu-items .elemenx-game-menu-item.elemenx-button:disabled {
 	opacity: 0.4;
 	cursor: default;
 	transform: none;

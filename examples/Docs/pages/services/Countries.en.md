@@ -12,7 +12,7 @@ Countries and territories with their dialling code, the mask of the national num
 ## Example
 
 ```example
-<span class="elemenx-input"><input class="elemenx-input-control" [(value)]="Digits" placeholder="An international number" /></span>
+<Input [Value]="Digits" Placeholder="An international number" Label="An international number" (input)="Digits = $event" />
 <p class="elemenx-text">The number belongs to: <strong>{{Match(Digits)}}</strong></p>
 <ul class="elemenx-ul"><li *for="country of First" *key="country.Code">{{country.Code}} · {{country.Name}} · +{{country.Dial}} · {{country.Currency}}</li></ul>
 <script>
@@ -37,4 +37,4 @@ Countries and territories with their dialling code, the mask of the national num
 
 ## Tests
 
-- [Countries: finds a country, and the country of an international number by the longest code, then the preferred one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L90) — `tests/regression/library-services.test.js`
+- [Countries: finds a country, and the country of an international number by the longest code, then the preferred one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L108) — `tests/regression/library-services.test.js`

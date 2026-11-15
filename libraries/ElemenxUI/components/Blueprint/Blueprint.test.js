@@ -52,6 +52,20 @@ function pointer (target, type, point) {
 	target.dispatchEvent(new PointerEvent(type, {bubbles: true, cancelable: true, clientX: point.X, clientY: point.Y, pointerId: 1, pointerType: 'mouse', button: 0}));
 }
 
+/* A type of the palette pressed, then the board pressed where its block goes (it follows the pointer till then). */
+function place (host, type) {
+	var element = host.$Element();
+	var board = element.querySelector('.elemenx-board');
+	var box = board.getBoundingClientRect();
+
+	element.querySelector('.elemenx-blueprint-type[data-type="' + type + '"]').click();
+
+	document.dispatchEvent(new PointerEvent('pointermove', {bubbles: true, clientX: box.left + box.width / 2, clientY: box.top + box.height / 2}));
+
+	/* Pressed on the board itself, an empty place (the canvas is only a point the board moves). */
+	pointer(board, 'pointerdown', {X: box.left + box.width / 2, Y: box.top + box.height / 2});
+}
+
 /* A drag from an element to a point: pressed on it, moved on the canvas (it holds the pointer), let go there. */
 function drag (host, from, to) {
 	var canvas = host.$Element().querySelector('.elemenx-blueprint-canvas');
@@ -252,7 +266,15 @@ describe('Contract: Blueprint, the editor of a graph of the Blueprints Service',
 		element = editor(host);
 		blueprint = host.$Ref('Editor', true);
 
+		/* Pressed in the palette, the block follows the pointer as a preview; a press on the board puts it there. */
 		element.querySelector('.elemenx-blueprint-type[data-type="Fbm"]').click();
+
+		expect(element.querySelector('.elemenx-blueprint-ghost')).not.toBe(null);
+		expect(blueprint.Graph().blocks.length).toBe(4);
+
+		place(host, 'Fbm');
+
+		expect(element.querySelector('.elemenx-blueprint-ghost')).toBe(null);
 
 		added = blueprint.Graph().blocks[4];
 
@@ -331,9 +353,11 @@ describe('Contract: Blueprint, the editor of a graph of the Blueprints Service',
 			return parameter.key;
 		})).toEqual(['Scale', 'Parameter2']);
 
-		element.querySelectorAll('.elemenx-blueprint-parameter-value')[0].value = '4';
+		element.querySelectorAll('.elemenx-blueprint-parameter-value input')[0].value = '4';
 
-		element.querySelectorAll('.elemenx-blueprint-parameter-value')[0].dispatchEvent(new Event('change', {bubbles: true}));
+		element.querySelectorAll('.elemenx-blueprint-parameter-value input')[0].dispatchEvent(new Event('input', {bubbles: true}));
+
+		element.querySelectorAll('.elemenx-blueprint-parameter-value input')[0].dispatchEvent(new Event('change', {bubbles: true}));
 
 		expect(blueprint.Graph().parameters[0].value).toBe(4);
 	});
@@ -426,10 +450,10 @@ describe('Contract: Blueprint, the editor of a graph of the Blueprints Service',
 
 		expect([blueprint.Graph().blocks[0].x, blueprint.Graph().blocks[0].y, blueprint.Graph().blocks[1].x, blueprint.Graph().blocks[1].y]).toEqual([60, 50, 60, 210]);
 
-		/* A frame drawn with Shift from an empty place round the two at the right. */
+		/* A frame drawn from an empty place round the two at the right (Regression: only with Shift, and a drag of the empty place moved the board). */
 		corner = canvas.getBoundingClientRect();
 
-		canvas.dispatchEvent(new PointerEvent('pointerdown', {bubbles: true, cancelable: true, clientX: corner.left + 280, clientY: corner.top + 60, pointerId: 1, button: 0, shiftKey: true}));
+		canvas.dispatchEvent(new PointerEvent('pointerdown', {bubbles: true, cancelable: true, clientX: corner.left + 280, clientY: corner.top + 60, pointerId: 1, button: 0}));
 
 		pointer(canvas, 'pointermove', {X: corner.left + 899, Y: corner.top + 590});
 		pointer(canvas, 'pointerup', {X: corner.left + 899, Y: corner.top + 590});
@@ -641,9 +665,10 @@ describe('Contract: Blueprint, the editor of a graph of the Blueprints Service',
 		editor(host).querySelector('.elemenx-blueprint-type[data-type="Fbm"]').click();
 
 		expect(blueprint.Graph().blocks.length).toBe(4);
+		expect(editor(host).querySelector('.elemenx-blueprint-ghost')).toBe(null);
 		expect(told[told.length - 1]).toEqual({Action: 'add', Type: 'Fbm'});
 
-		editor(host).querySelector('.elemenx-blueprint-type[data-type="Number"]').click();
+		place(host, 'Number');
 
 		expect(blueprint.Graph().blocks.length).toBe(5);
 
@@ -667,5 +692,78 @@ describe('Contract: Blueprint, the editor of a graph of the Blueprints Service',
 		blueprint.Remove('n');
 
 		expect(blueprint.Graph().blocks.length).toBe(4);
+	});
+
+	/* The context menus of the board, a block, a link and a pin; a pin lit under the pointer and under a wire being drawn. */
+	it('opens a context menu of what the right button pressed and does what is chosen in it; lights the pin a wire is over', async function () {
+		var host = mount('<div style="height: 600px"><Blueprint #Editor [Value]="Graph" /></div>', {Graph: graph()});
+		var blueprint;
+		var block;
+		var canvas;
+		var items;
+		var target;
+		var corner;
+
+		await tick(30);
+
+		blueprint = host.$Ref('Editor', true);
+		canvas = editor(host).querySelector('.elemenx-blueprint-canvas');
+		corner = canvas.getBoundingClientRect();
+
+		/* A wire drawn over a pin lights it. */
+		pointer(pin(host, 'n-out-Value'), 'pointerdown', middle(pin(host, 'n-out-Value')));
+		pointer(canvas, 'pointermove', middle(pin(host, 'm-in-B')));
+
+		expect(pin(host, 'm-in-B').classList.contains('target')).toBe(true);
+		expect(pin(host, 'm-in-B').classList.contains('bad')).toBe(false);
+
+		pointer(canvas, 'pointerup', middle(pin(host, 'm-in-B')));
+
+		expect(pin(host, 'm-in-B').classList.contains('target')).toBe(false);
+
+		/* A right click of the board itself opens it (Regression: it had no items before it opened, and never opened). */
+		editor(host).querySelector('.elemenx-board').dispatchEvent(new MouseEvent('contextmenu', {bubbles: true, cancelable: true, clientX: corner.left + 700, clientY: corner.top + 500}));
+
+		await tick(30);
+
+		expect(host.$Element().querySelector('.elemenx-blueprint-menu') && Elemenx.Instance(host.$Element().querySelector('.elemenx-blueprint-menu')).Open).toBe(true);
+
+		/* On an empty place: blocks to add there, by their groups. */
+		blueprint.MenuOpened({Target: canvas, X: corner.left + 700, Y: corner.top + 500});
+
+		items = blueprint.MenuItems.map(function (item) {
+			return item.ID;
+		});
+
+		expect(items).toEqual(expect.arrayContaining(['add', 'paste', 'all', 'arrange', 'fit']));
+
+		blueprint.MenuPicked({Item: {ID: 'add:' + blueprint.MenuItems[0].Items[0].Items[0].Label}});
+
+		expect(blueprint.Graph().blocks.length).toBe(5);
+
+		/* On a block: it is chosen, and Delete takes it away with its links. */
+		block = editor(host).querySelector('[data-id="m"] .elemenx-blueprint-title');
+
+		blueprint.MenuOpened({Target: block, X: middle(block).X, Y: middle(block).Y});
+
+		expect(blueprint.Selected().Block).toBe('m');
+		expect(blueprint.MenuItems.map(function (item) {
+			return item.ID;
+		})).toEqual(expect.arrayContaining(['copy', 'duplicate', 'unlink', 'delete']));
+
+		blueprint.MenuPicked({Item: {ID: 'duplicate'}});
+
+		expect(blueprint.Graph().blocks.length).toBe(6);
+
+		/* On a pin: its links taken away. */
+		target = pin(host, 'r-in-Value');
+
+		blueprint.MenuOpened({Target: target, X: middle(target).X, Y: middle(target).Y});
+		blueprint.MenuPicked({Item: {ID: 'unlink-pin'}});
+
+		expect(blueprint.Graph().links.filter(function (link) {
+			return link.p1 === 'r-in-Value' || link.p2 === 'r-in-Value';
+		})).toEqual([]);
+
 	});
 });

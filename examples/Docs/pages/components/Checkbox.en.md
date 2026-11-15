@@ -83,5 +83,6 @@ default
 
 ## Tests
 
-- [keeps the structure in view, runs the page at the width of a phone from its header and speaks Russian](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L639) — `tests/examples/designer.spec.js`
-- [shows the example of the page it goes to through the contents, not the one of the page before](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/docs.spec.js#L111) — `tests/examples/docs.spec.js`
+- [keeps the structure in view, runs the page at the width of a phone from its header and speaks Russian](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L640) — `tests/examples/designer.spec.js`
+- [shows the example of the page it goes to through the contents, not the one of the page before](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/docs.spec.js#L112) — `tests/examples/docs.spec.js`
+- [finds the prop in any case, as the parser of a template leaves it, and takes back at change by default](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/component-two-way.test.js#L59) — `tests/regression/component-two-way.test.js`

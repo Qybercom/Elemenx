@@ -42,6 +42,10 @@
 	color: var(--elemenx-text-muted);
 }
 
+.elemenx-drawing-layer-name {
+	color: var(--elemenx-text-muted);
+}
+
 .elemenx-drawing-layer-toggle {
 	display: inline-flex;
 	align-items: center;
@@ -69,13 +73,6 @@
 .elemenx-drawing-layer-field {
 	flex: 1;
 	min-width: 0;
-	height: 26px;
-	padding: 0 4px;
-	border: 1px solid var(--elemenx-accent);
-	border-radius: var(--elemenx-radius-small);
-	background: var(--elemenx-surface);
-	color: var(--elemenx-text);
-	font: inherit;
 }
 
 .elemenx-drawing-layer-count {

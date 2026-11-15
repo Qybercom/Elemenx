@@ -46,17 +46,7 @@
 	margin-bottom: 4px;
 }
 
-.elemenx-texture-lab-field select {
-	min-width: 0;
-	padding: 2px 6px;
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius-small);
-	background: var(--elemenx-surface);
-	color: inherit;
-	font: inherit;
-}
-
-.elemenx-texture-lab-field input {
+.elemenx-texture-lab-field > :last-child {
 	min-width: 0;
 }
 

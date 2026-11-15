@@ -5,9 +5,9 @@
 		<p class="elemenx-game-dialogue-text" aria-hidden="true" (click)="Pressed">{{Shown}}<span class="elemenx-game-dialogue-caret" *if="!Done"></span></p>
 		<p class="elemenx-visually-hidden" aria-live="polite">{{Text}}</p>
 		<div class="elemenx-game-dialogue-choices" role="group" *if="Done && Choices.length">
-			<button class="elemenx-game-dialogue-choice" type="button" *for="choice of Choices" [attribute.data-index]="$index" [disabled]="!!choice.Disabled" (click)="Chosen"><span class="elemenx-game-dialogue-number">{{$index + 1}}</span>{{choice.Text}}</button>
+			<Button class="elemenx-game-dialogue-choice" *for="choice of Choices" Variant="ghost" Block="true" [Disabled]="!!choice.Disabled" (click)="Chosen(choice)"><span class="elemenx-game-dialogue-number">{{$index + 1}}</span>{{choice.Text}}</Button>
 		</div>
-		<button class="elemenx-game-dialogue-next" type="button" *if="Done && !Choices.length" (click)="Next">{{$T('gaming.ui.continue')}}</button>
+		<Button class="elemenx-game-dialogue-next" *if="Done && !Choices.length" Variant="ghost" [Label]="$T('gaming.ui.continue')" (click)="Next()" />
 	</div>
 	<i class="elemenx-game-dialogue-sync" hidden *mount="Sync(Text)"></i>
 </section>

@@ -1,4 +1,4 @@
-<span class="elemenx-input"><input class="elemenx-input-control" [(value)]="Digits" placeholder="An international number" /></span>
+<Input [Value]="Digits" Placeholder="An international number" Label="An international number" (input)="Digits = $event" />
 <p class="elemenx-text">The number belongs to: <strong>{{Match(Digits)}}</strong></p>
 <ul class="elemenx-ul"><li *for="country of First" *key="country.Code">{{country.Code}} · {{country.Name}} · +{{country.Dial}} · {{country.Currency}}</li></ul>
 <script>

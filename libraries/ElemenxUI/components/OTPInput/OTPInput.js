@@ -13,6 +13,8 @@
  */
 Elemenx.Component('OTPInput', {
 	$TemplateURL: 'OTPInput.html',
+	/* [(Value)] on its tag follows what it tells as it is typed or moved. */
+	$Model: {Value: 'input'},
 	$StyleURL: 'OTPInput.css',
 	$Meta: {
 		Group: 'inputs',

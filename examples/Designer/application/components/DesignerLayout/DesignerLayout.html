@@ -24,11 +24,11 @@
 							<Input [value]="NewName" [placeholder]="$T('designer.newNamePlaceholder')" (input)="NewNamed" />
 						</Field>
 						<div class="designer-kinds">
-							<button type="button" class="designer-kind" *for="kind of Kinds(Language)" *key="kind.ID" [attribute.data-mode]="kind.ID" (click)="Made">
+							<Button class="designer-kind" *for="kind of Kinds(Language)" *key="kind.ID" Variant="secondary" (click)="Made(kind.ID)">
 								<Icon Size="32" [name]="kind.Icon" />
 								<strong>{{kind.Title}}</strong>
 								<span class="elemenx-text small muted">{{kind.Text}}</span>
-							</button>
+							</Button>
 						</div>
 					</div>
 				</RibbonPage>
@@ -37,18 +37,18 @@
 						<h2 class="elemenx-title">{{$T('designer.openTitle')}}</h2>
 						<div class="designer-projects">
 							<div class="designer-project" *for="entry of Projects(Version, Language)" *key="entry.ID" [class.current]="entry.Current">
-								<button type="button" class="designer-project-open" [attribute.data-project]="entry.ID" (click)="Picked">
+								<Button class="designer-project-open" Variant="ghost" (click)="Picked(entry.ID)">
 									<Icon Size="20" [name]="entry.Icon" />
 									<strong>{{entry.Name}}</strong>
 									<span class="elemenx-text small muted">{{entry.Kind}} · {{entry.When}}</span>
-								</button>
-								<button type="button" class="designer-project-remove" [attribute.title]="$T('designer.removeProject')" [attribute.aria-label]="$T('designer.removeProject')" [attribute.data-project]="entry.ID" (click)="Unmade"><Icon Name="delete" Size="16" /></button>
+								</Button>
+								<Button class="designer-project-remove" Variant="ghost" Size="small" Icon="delete" [Title]="$T('designer.removeProject')" (click)="Unmade(entry.ID)" />
 							</div>
 						</div>
 						<div class="elemenx-callout danger" *if="FileFailed">{{$T('designer.fileFailed')}}</div>
 						<div class="elemenx-container">
-							<label class="elemenx-button secondary medium designer-open-file"><Icon Name="upload" Size="16" /><span class="elemenx-button-label">{{$T('designer.openFile')}}</span><input type="file" accept=".json,application/json" hidden (change)="Filed" /></label>
-							<button type="button" class="elemenx-button secondary medium designer-save-file" (click)="Saved"><Icon Name="download" Size="16" /><span class="elemenx-button-label">{{$T('designer.saveFile')}}</span></button>
+							<FileUpload class="designer-open-file" Variant="inline" Accept=".json,application/json" [Label]="$T('designer.openFile')" (change)="Filed($event)" />
+							<Button class="designer-save-file" Variant="secondary" Icon="download" [Label]="$T('designer.saveFile')" (click)="Saved" />
 						</div>
 					</div>
 				</RibbonPage>
@@ -69,7 +69,7 @@
 						<div class="elemenx-callout danger" *if="ImportFailed">{{$T('designer.importFailed')}}</div>
 						<TextArea Rows="14" [label]="$T('designer.template')" [value]="ImportText" (input)="ImportTyped" />
 						<div class="elemenx-container">
-							<button type="button" class="elemenx-button primary medium designer-import" (click)="Imported"><Icon Name="upload" Size="16" /><span class="elemenx-button-label">{{$T('designer.import')}}</span></button>
+							<Button class="designer-import" Variant="primary" Icon="upload" [Label]="$T('designer.import')" (click)="Imported" />
 						</div>
 					</div>
 				</RibbonPage>
@@ -82,8 +82,8 @@
 						</Field>
 						<div class="elemenx-callout danger" *if="PackageFailed">{{PackageFailed}}</div>
 						<div class="elemenx-container designer-downloads">
-							<button type="button" class="elemenx-button primary medium designer-download-html" (click)="DownloadedHtml"><Icon Name="file-code" Size="16" /><span class="elemenx-button-label">{{$T('designer.appHtml')}}</span></button>
-							<button type="button" class="elemenx-button secondary medium designer-download-project" (click)="DownloadedProject"><Icon Name="archive" Size="16" /><span class="elemenx-button-label">{{$T('designer.appProject')}}</span></button>
+							<Button class="designer-download-html" Variant="primary" Icon="file-code" [Label]="$T('designer.appHtml')" (click)="DownloadedHtml" />
+							<Button class="designer-download-project" Variant="secondary" Icon="archive" [Label]="$T('designer.appProject')" (click)="DownloadedProject" />
 						</div>
 					</div>
 				</RibbonPage>

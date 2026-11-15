@@ -6,6 +6,8 @@
  */
 Elemenx.Component('CardExpiryInput', {
 	$TemplateURL: 'CardExpiryInput.html',
+	/* [(Value)] on its tag follows what it tells as it is typed or moved. */
+	$Model: {Value: 'input'},
 	$Meta: {
 		Group: 'inputs',
 		Icon: 'credit-card',

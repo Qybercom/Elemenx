@@ -35,6 +35,6 @@
 	</article>
 	<nav class="docs-toc" *if="Headings.length > 1" [attribute.aria-label]="$T('docs.onPage')">
 		<h2 class="elemenx-label docs-toc-title">{{$T('docs.onPage')}}</h2>
-		<button type="button" class="docs-toc-item" *for="heading of Headings" *key="heading.ID" [class.sub]="heading.Level > 2" [class.active]="heading.ID === Active" [attribute.data-id]="heading.ID" (click)="Jumped">{{heading.Text}}</button>
+		<div class="docs-toc-entry" *for="heading of Headings" *key="heading.ID" [class.sub]="heading.Level > 2"><Button class="docs-toc-item" Variant="ghost" Size="small" Block="true" [Pressed]="heading.ID === Active" [Label]="heading.Text" (click)="Jumped(heading.ID)" /></div>
 	</nav>
 </div>

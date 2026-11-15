@@ -1,0 +1,6 @@
+<div class="elemenx-game-stat" [class]="[Layout === 'inline' ? 'inline' : 'stacked', Size || 'medium', Tone || '']">
+	<Icon *if="Icon" [name]="Icon" />
+	<span class="elemenx-game-stat-label" *if="Label && Layout !== 'inline'">{{Label}}</span>
+	<strong class="elemenx-game-stat-value">{{Value}}<small class="elemenx-game-stat-unit" *if="Unit">{{Unit}}</small></strong>
+	<span class="elemenx-game-stat-label" *if="Label && Layout === 'inline'">{{Label}}</span>
+</div>

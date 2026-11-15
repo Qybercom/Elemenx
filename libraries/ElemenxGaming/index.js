@@ -8,6 +8,8 @@
 	'services/GameItems/GameItems.js',
 	'components/GameHud/GameHud.js',
 	'components/GameBar/GameBar.js',
+	'components/GameStat/GameStat.js',
+	'components/GameStats/GameStats.js',
 	'components/GameItemCard/GameItemCard.js',
 	'components/GameSlot/GameSlot.js',
 	'components/GameInventory/GameInventory.js',

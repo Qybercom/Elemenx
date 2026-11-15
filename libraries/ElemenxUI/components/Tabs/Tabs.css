@@ -61,6 +61,19 @@
 	box-shadow: inset 0 0 0 2px var(--elemenx-focus);
 }
 
+/* The label of a tab: it gives way first when the tab is narrow. */
+.elemenx-tab-label {
+	min-width: 0;
+}
+
+/* The number of a tab (Numbered): of figures of one width. */
+.elemenx-tab-number {
+	color: var(--elemenx-text-muted);
+	font-family: var(--elemenx-font-mono), monospace;
+	font-size: var(--elemenx-font-size-small);
+	letter-spacing: 0.08em;
+}
+
 .elemenx-tab-close {
 	display: inline-flex;
 	align-items: center;
