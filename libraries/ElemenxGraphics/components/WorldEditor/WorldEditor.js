@@ -2,7 +2,9 @@
  * An editor of a whole world, its levels one in another: a galaxy (Scene of Setting galaxy, GalaxyData), the system of a
  * star of it (SceneEditor of Setting space, SystemData), a planet of the system (PlanetEditor), a location of the planet
  * (SceneEditor of a ground). The path over it goes up to any level; Enter goes down into what is picked (a star, a
- * planet). What a world uses is edited beside it, each in a tab of its own: models (ModelEditor), plants (FloraEditor),
+ * planet). At the level of the galaxy its panel searches round where the view looks (GalaxyData.Search: a type, a class,
+ * what was edited, a mass and a temperature, a text; at most 500, the nearest first): a row chosen is picked and flown to,
+ * chosen twice gone into. What a world uses is edited beside it, each in a tab of its own: models (ModelEditor), plants (FloraEditor),
  * cutscenes (CutsceneEditor) and materials (Blueprint of type material), kept in the world by their names.
  * Value is the world: {Name, Galaxy (options of GalaxyData.Make, or its data), Planets ({'star/body': the options of a
  * planet}), Locations ({'star/body/location': a document of SceneEditor}), Resources ({Models, Plants, Cutscenes,
@@ -42,6 +44,9 @@ Elemenx.Component('WorldEditor', {
 	Body: '',
 	Packing: false,
 	GalaxyKey: '',
+	SearchFilters: null,
+	FoundList: null,
+	Chosen: null,
 
 	$OnCreate: function () {
 		var own = {World: null, Path: [{Level: 'galaxy', ID: ''}], Tabs: [], Given: null};
@@ -97,6 +102,7 @@ Elemenx.Component('WorldEditor', {
 		this.Tab = 'world';
 		this.Picked = '';
 		this.Body = '';
+		this.FoundList = null;
 
 		galaxies.Use(this.GalaxyKey, galaxy);
 	},
@@ -355,10 +361,147 @@ Elemenx.Component('WorldEditor', {
 		var star = this.PickedStar();
 		var body = this.PickedBody();
 
+		/* A nebula or a cluster (GalaxyData.Objects): its kind and its size, not a class and a mass it has none of. */
+		if (star && (star.Kind === 'nebula' || star.Kind === 'cluster'))
+			return Elemenx.Locale.Text('graphics.worldEditor.objectNote', {type: Elemenx.Locale.Text('graphics.worldEditor.type-' + star.Type) + (star.Subtype ? ' ' + star.Subtype : ''), radius: star.Radius});
+
 		if (star)
 			return Elemenx.Locale.Text('graphics.worldEditor.starNote', {kind: star.Class, mass: star.Mass, temperature: Math.round(star.Temperature)});
 
 		return body ? Elemenx.Locale.Text('graphics.worldEditor.bodyNote', {kind: body.Kind}) : '';
+	},
+
+	/* The search of the galaxy */
+
+	/*
+	 * What is searched for (GalaxyData.Search): Mass and Temperature as the logarithms the sliders go along (all of the
+	 * slider: no bound); Radius ly round where the view looks, 0 all of the galaxy.
+	 */
+	Filters: function () {
+		if (!this.SearchFilters)
+			this.SearchFilters = {Text: '', Type: '', Class: '', Edited: '', Mass: [-2, 2], Temperature: [2.5, 5.3], Radius: 100};
+
+		return this.SearchFilters;
+	},
+
+	SearchTypes: function () {
+		var types = ['', 'star', 'main', 'giant', 'supergiant', 'white-dwarf', 'brown-dwarf', 'neutron', 'pulsar', 'magnetar', 'blackhole', 'nebula', 'hii', 'planetary', 'remnant', 'dark', 'cluster', 'open', 'globular'];
+
+		return types.map(function (type) {
+			return {Value: type, Label: Elemenx.Locale.Text('graphics.worldEditor.type-' + (type || 'any'))};
+		});
+	},
+
+	EditedOptions: function () {
+		return ['', 'renamed', 'written', 'any'].map(function (edited) {
+			return {Value: edited, Label: Elemenx.Locale.Text('graphics.worldEditor.edited-' + (edited || 'all'))};
+		});
+	},
+
+	RadiusOptions: function () {
+		return [25, 100, 500, 2000, 10000, 0].map(function (radius) {
+			return {Value: String(radius), Label: radius ? Elemenx.Locale.Text('graphics.worldEditor.within', {radius: radius}) : Elemenx.Locale.Text('graphics.worldEditor.everywhere')};
+		});
+	},
+
+	RadiusValue: function () {
+		return String(this.Filters().Radius);
+	},
+
+	MassText: function (value) {
+		var mass = Math.pow(10, Number(value));
+
+		return mass < 1 ? mass.toPrecision(2) : String(Math.round(mass * 10) / 10);
+	},
+
+	TemperatureText: function (value) {
+		return String(Math.round(Math.pow(10, Number(value)) / 100) * 100);
+	},
+
+	/* A filter changed: searched again round where the view looks. */
+	Searched: function (key, value) {
+		var given = value && value.target ? value.target.value : value && value.detail !== undefined ? value.detail : value;
+
+		this.Filters()[key] = key === 'Radius' ? Number(given) || 0 : given;
+
+		this.RunSearch();
+	},
+
+	/* The search round where the view looks now (the place it looks at as it was at time 0: the stars are made so). */
+	RunSearch: function () {
+		var galaxies = this.$Service('GalaxyData');
+		var galaxy = this.Own().World.Galaxy;
+		var scene = this.GalaxyScene ? this.GalaxyScene() : null;
+		var view = scene ? scene.GalaxyView() : null;
+		var filters = this.Filters();
+		var whole = filters.Mass[0] <= -2 && filters.Mass[1] >= 2;
+		var hot = filters.Temperature[0] <= 2.5 && filters.Temperature[1] >= 5.3;
+
+		this.FoundList = galaxies.Search(galaxy, {
+			Centre: view ? galaxies.Position(galaxy, view.Target, -this.Time) : [0, 0, 0],
+			Radius: filters.Radius || galaxy.Manifest.Radius * 1.5,
+			Type: filters.Type,
+			Class: filters.Class,
+			Edited: filters.Edited,
+			Mass: whole ? null : [Math.pow(10, filters.Mass[0]), Math.pow(10, filters.Mass[1])],
+			Temperature: hot ? null : [Math.pow(10, filters.Temperature[0]), Math.pow(10, filters.Temperature[1])],
+			Text: filters.Text,
+			Limit: 500,
+			/* A few tenths of a second at most: where stars are thick (its middle) a part of the region, told so. */
+			Budget: 60000
+		});
+
+		this.Version++;
+	},
+
+	/* The rows of the list: its name, its class or its type, how far it is. */
+	FoundItems: function () {
+		var found = this.FoundList;
+
+		return found ? found.Items.map(function (item) {
+			var what = item.Class || Elemenx.Locale.Text('graphics.worldEditor.type-' + item.Type) + (item.Subtype ? ' ' + item.Subtype : '');
+
+			return {ID: item.ID, Label: item.Name + ' · ' + what + ' · ' + Elemenx.Locale.Text('graphics.worldEditor.away', {distance: item.Distance < 10 ? item.Distance.toFixed(1) : Math.round(item.Distance)})};
+		}) : [];
+	},
+
+	FoundNote: function () {
+		var found = this.FoundList;
+		var note = found ? Elemenx.Locale.Text('graphics.worldEditor.found', {count: found.Items.length}) : '';
+
+		if (found && found.More)
+			note += ' ' + Elemenx.Locale.Text('graphics.worldEditor.foundMore');
+
+		if (found && found.Partial)
+			note += ' ' + Elemenx.Locale.Text('graphics.worldEditor.foundPartial');
+
+		return note;
+	},
+
+	/* A row chosen: picked and flown to; chosen again at once (a double press): gone into. */
+	FoundChosen: function (event) {
+		var item = event && event.detail && event.detail.ID ? event.detail : event;
+		var scene = this.GalaxyScene ? this.GalaxyScene() : null;
+		var now = Date.now();
+		var found = (this.FoundList ? this.FoundList.Items : []).filter(function (one) {
+			return one.ID === item.ID;
+		})[0];
+		var again = this.Chosen && this.Chosen.ID === item.ID && now - this.Chosen.At < 450 && !!found && ['star', 'nebula', 'cluster', 'blackhole'].indexOf(found.Kind) !== -1;
+
+		this.Chosen = {ID: item.ID, At: now};
+
+		if (again) {
+			this.Enter('system', item.ID);
+
+			return;
+		}
+
+		this.Picked = item.ID;
+
+		if (scene)
+			scene.GalaxyFocus(item.ID);
+
+		this.Version++;
 	},
 
 	PickedRenamed: function (name) {

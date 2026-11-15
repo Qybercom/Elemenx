@@ -73,6 +73,16 @@
 	gap: 4px;
 }
 
+.elemenx-world-editor-search .elemenx-world-editor-row > * {
+	flex: 1 1 90px;
+	min-width: 0;
+}
+
+.elemenx-world-editor-found {
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+}
+
 .elemenx-world-editor-group {
 	display: flex;
 	flex-direction: column;

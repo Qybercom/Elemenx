@@ -193,6 +193,39 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 	});
 
 	/* A mesh of a mode of its own (lines): its pairs of points drawn as lines, no triangle of them; the weights of materials of a ground taken. */
+	/* The light and the shade of gas (a nebula): what glows added, what is behind dimmed by its alpha, the alpha behind kept. */
+	it('blends premultiplied: its color added over what is behind, that dimmed as far as its alpha says', function () {
+		var gl = renderer.GL;
+		var program = renderer.Program([
+			'#version 300 es',
+			'in vec3 aPosition;',
+			'void main() { gl_Position = vec4(aPosition.xy, 0.0, 1.0); }'
+		].join('\n'), [
+			'#version 300 es',
+			'precision highp float;',
+			'uniform vec4 uColor;',
+			'out vec4 outColor;',
+			'void main() { outColor = uColor; }'
+		].join('\n'));
+		var quad = renderer.Mesh({Positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0], Indices: [0, 1, 2]});
+		var target = renderer.Target(2, 2, {});
+		var pixel = new Uint8Array(4);
+
+		target.Begin();
+
+		renderer.Draw(quad, program, {uColor: [0, 0.8, 0, 0.6]}, {Depth: false, Cull: 'none'});
+		renderer.Draw(quad, program, {uColor: [0.2, 0, 0, 0.5]}, {Blend: 'premultiplied', Depth: false, Cull: 'none'});
+
+		gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+		target.End();
+
+		/* 0.2 + 0 · 0.5 red, 0 + 0.8 · 0.5 green, the alpha behind as it was. */
+		expect(Math.round(pixel[0] / 255 * 100) / 100).toBeCloseTo(0.2, 1);
+		expect(Math.round(pixel[1] / 255 * 100) / 100).toBeCloseTo(0.4, 1);
+		expect(Math.round(pixel[3] / 255 * 100) / 100).toBeCloseTo(0.6, 1);
+	});
+
 	it('makes a mesh of lines by its mode, and a mesh of the weights of the materials of a ground', function () {
 		var gl = renderer.GL;
 		var program = renderer.Program([

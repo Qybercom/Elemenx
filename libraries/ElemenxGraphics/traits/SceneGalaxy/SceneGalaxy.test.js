@@ -312,6 +312,155 @@ describe('Contract: the galaxy of a Scene (Setting galaxy): its glow, its stars 
 		expect(state.AddedMesh).toBeTruthy();
 	});
 
+	it('draws its nebulae and clusters from far, the dark clouds over its picture, picks one and goes into it as into a system', async function () {
+		var made = await mount({Seed: 'contract', Radius: 50000});
+		var scene = made.Scene;
+		var state = scene.Engine().Galaxy;
+		var renderer = scene.Engine().Renderer;
+		var draw = renderer.Draw;
+		var objects = [];
+		var galaxies = Elemenx.Service('GalaxyData');
+		var target;
+		var view;
+		var at;
+		var key;
+
+		baked(scene);
+
+		renderer.Draw = function (mesh, program, uniforms, settings) {
+			if (uniforms && uniforms.uDark !== undefined)
+				objects.push({Dark: uniforms.uDark, Blend: settings.Blend});
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			scene.SetGalaxyView({Target: [0, 0, 0], Distance: 120000, Pitch: 1.4, Yaw: 0});
+
+			await waitFor(function () {
+				frames(scene, 1);
+
+				return objects.some(function (one) {
+					return one.Dark === 1;
+				}) && objects.some(function (one) {
+					return one.Dark === 0;
+				});
+			}, 30000);
+		}
+		finally {
+			renderer.Draw = draw;
+		}
+
+		expect(objects.filter(function (one) {
+			return one.Dark === 1;
+		})[0].Blend).toBe('alpha');
+		expect(objects.filter(function (one) {
+			return one.Dark === 0;
+		})[0].Blend).toBe('add');
+
+		/* The view near a globular cluster: it is under the pointer where it stands. */
+		target = galaxies.Objects(scene.GalaxyData()).filter(function (one) {
+			return one.Type === 'globular';
+		})[0];
+
+		scene.SetGalaxyView({Target: target.Place.slice(), Distance: target.Radius * 8, Pitch: 0.4, Yaw: 0});
+
+		frames(scene, 2);
+
+		view = scene.Scene();
+		at = state.Pick(view.Width / 2, view.Height / 2);
+
+		expect(at).toBe(target.ID);
+
+		/* Into it: the scene of its cluster. */
+		key = await new Promise(function (resolve, reject) {
+			scene.EnterSystem(target.ID, function (error, entered) {
+				if (error) reject(error);
+				else resolve(entered);
+			});
+
+			waitFor(function () {
+				frames(scene, 1);
+
+				return scene.GalaxyEntered() === target.ID;
+			}, 20000).catch(reject);
+		});
+
+		expect(Elemenx.Service('SystemData').Objects(Elemenx.Service('SystemData').DataOf(key), key)[0].Traits.Cluster.Type).toBe('globular');
+	}, 90000);
+
+	/*
+	 * Regression: seen from inside its disc its rays crossed its thin layers in long steps, a flat cut with a hard bright
+	 * line and streaks down it. Inside, it is the band of it across the sky (a sky of SceneCosmos round its pole, its bulge
+	 * towards its middle), its rays not drawn; above its disc its rays again.
+	 */
+	it('shows the band of it across the sky from inside its disc, its bulge towards its middle, and its rays from above it', async function () {
+		var made = await mount({Seed: 'contract', Radius: 50000});
+		var scene = made.Scene;
+		var engine = scene.Engine();
+		var state = engine.Galaxy;
+		var cubeOf = engine.CosmosCubeOf;
+		var asked = [];
+		var volumes = 0;
+		var bands = 0;
+		var draw = engine.Renderer.Draw;
+
+		baked(scene);
+
+		engine.CosmosCubeOf = function (given, key, size) {
+			asked.push({Given: given, Key: key, Size: size});
+
+			return cubeOf.apply(this, arguments);
+		};
+
+		engine.Renderer.Draw = function (mesh, program, uniforms) {
+			if (uniforms && uniforms.uSteps !== undefined)
+				volumes++;
+
+			if (uniforms && uniforms.uCube !== undefined && uniforms.uStrength !== undefined)
+				bands++;
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			/* In its plane, at 20 000 ly from its middle along x. */
+			scene.SetGalaxyView({Target: [20000, 0, 0], Distance: 300, Pitch: 0.05, Yaw: 1.5});
+
+			await waitFor(function () {
+				frames(scene, 1);
+
+				return state.Inside > 0.99;
+			}, 30000);
+
+			expect(asked[0].Given).toMatchObject({Kind: 'galaxy', Pole: [0, 1, 0]});
+			expect(asked[0].Given.Middle[0]).toBeLessThan(-0.99);
+			expect(asked[0].Size).toBe(512);
+
+			volumes = 0;
+			bands = 0;
+
+			scene.SetGalaxyView({Target: [20000, 0, 0], Distance: 300, Pitch: 0.06, Yaw: 1.7});
+
+			frames(scene, 3);
+
+			expect(bands).toBeGreaterThan(0);
+			expect(volumes).toBe(0);
+
+			/* High over its plane: its rays, no band. */
+			scene.SetGalaxyView({Target: [20000, 0, 0], Distance: 60000, Pitch: 1.2, Yaw: 1.5});
+
+			frames(scene, 3);
+
+			expect(state.Inside).toBe(0);
+			expect(volumes).toBeGreaterThan(0);
+		}
+		finally {
+			engine.CosmosCubeOf = cubeOf;
+			engine.Renderer.Draw = draw;
+		}
+	}, 90000);
+
 	/* Regression (load): the galaxy came after the view was set (no frame between) and put the view back over all of it. */
 	it('keeps a view set before its galaxy came', async function () {
 		var made = await mount({Seed: 'contract-late'});
@@ -480,6 +629,181 @@ describe('Contract: the galaxy of a Scene (Setting galaxy): its glow, its stars 
 		expect(volumes.length).toBe(4);
 		expect(state.Fine).toBe(fine);
 		expect(state.Band).toBeGreaterThan(0);
+
+		engine.DrawReady = draw;
+	});
+
+	/* Regression: its rows were counted while the card was still making the program of its plane, and its plane stayed empty. */
+	it('makes the rows of its plane only once their program is made', async function () {
+		var made = await mount({Seed: 'contract'});
+		var scene = made.Scene;
+		var engine = scene.Engine();
+		var state = engine.Galaxy;
+		var draw = engine.DrawReady;
+		var making = true;
+		var drawn = 0;
+		var before;
+
+		/* As a looping scene does while the card makes the program: no draw, false. */
+		engine.DrawReady = function (mesh, program) {
+			if (program !== state.Programs.Plane) return draw.apply(this, arguments);
+
+			if (making)
+				return false;
+
+			drawn++;
+
+			return draw.apply(this, arguments);
+		};
+
+		/* What the loop of the scene drew on its own before (while mounted) stays as it was. */
+		before = state.PlaneRow || 0;
+
+		frames(scene, 4);
+
+		expect(state.PlaneRow || 0).toBe(before);
+		expect(drawn).toBe(0);
+
+		making = false;
+
+		baked(scene);
+
+		expect(state.PlaneRow).toBe(state.PlaneSize);
+		expect(drawn).toBeGreaterThan(1);
+
+		engine.DrawReady = draw;
+	});
+
+	/* Regression: its fine rounds were counted while the card still made the program of its rays, and the galaxy stayed black till the view moved. */
+	it('counts no round of its rays the card did not draw, and draws them all once it can', async function () {
+		var made = await mount({Seed: 'contract'});
+		var scene = made.Scene;
+		var engine = scene.Engine();
+		var state = engine.Galaxy;
+		var draw = engine.DrawReady;
+		var making = true;
+
+		engine.DrawReady = function (mesh, program) {
+			if (making && program === state.Programs.Volume) return false;
+
+			return draw.apply(this, arguments);
+		};
+
+		baked(scene);
+
+		/* A view of its own: what the loop of the scene drew for the one before (while mounted) counts no more. */
+		scene.SetGalaxyView({Target: [0, 0, 0], Distance: 70000, Pitch: 0.6});
+
+		frames(scene, 6);
+
+		expect(state.Fine || 0).toBe(0);
+		expect(state.Drawn).toBe('');
+
+		making = false;
+
+		frames(scene, 40);
+
+		expect(state.Fine).toBe(6);
+
+		engine.DrawReady = draw;
+	});
+
+	/* Regression: seen from inside its disc, the stars round the eye were dimmed by all the dust of the ray and none of its light near the eye was glow: a black floor. */
+	it('lays the stars round the eye over its light and dust, not dimmed by them, and leaves a part of its light near the eye as glow', async function () {
+		var made = await mount({Seed: 'contract'});
+		var scene = made.Scene;
+		var engine = scene.Engine();
+		var state = engine.Galaxy;
+		var draw = engine.DrawReady;
+		var front = false;
+		var near = 0;
+		var volume;
+		var picture;
+		var begin;
+		var end;
+
+		baked(scene);
+
+		scene.SetGalaxyView({Target: [16000, 50, 4000], Distance: 1500, Pitch: 0.1});
+
+		frames(scene, 1);
+
+		begin = state.Front.Begin;
+		end = state.Front.End;
+
+		state.Front.Begin = function () {
+			front = true;
+
+			return begin.apply(this, arguments);
+		};
+
+		state.Front.End = function () {
+			front = false;
+
+			return end.apply(this, arguments);
+		};
+
+		engine.DrawReady = function (mesh, program, values) {
+			if (program === state.Programs.Field && front)
+				near++;
+
+			if (program === state.Programs.Volume)
+				volume = values;
+
+			if (program === state.Programs.Picture)
+				picture = values;
+
+			return draw.apply(this, arguments);
+		};
+
+		scene.SetGalaxyView({Target: [16000, 50, 4000], Distance: 1500, Pitch: 0.12});
+
+		frames(scene, 1);
+
+		expect(near).toBeGreaterThan(0);
+		expect(volume.uNearKeep).toBeGreaterThan(0);
+		expect(volume.uNearKeep).toBeLessThan(1);
+		expect(picture.uFront).toBe(state.Front.Textures[0]);
+		expect(scene.GalaxyVolumeShader('', '')).toContain('mix(uNearKeep, 1.0');
+
+		/* Regression: seen from near, the edges of the texels of its plane stood across the sky as bands: read smoothly there. */
+		expect(scene.GalaxyVolumeShader('', '')).toContain('smoothRead(uPlaneA, uv)');
+
+		engine.DrawReady = draw;
+		state.Front.Begin = begin;
+		state.Front.End = end;
+	});
+
+	/* Regression: the steps of each ray began at a place of the pixel of the screen, and the grain of its stars stayed on the screen while the view went round. */
+	it('begins the steps of its rays at a place of the galaxy, the same for all while the view moves and with no grain then', async function () {
+		var made = await mount({Seed: 'contract'});
+		var scene = made.Scene;
+		var engine = scene.Engine();
+		var draw = engine.DrawReady;
+		var volumes = [];
+		var source = scene.GalaxyVolumeShader('', '');
+
+		expect(source).not.toContain('dot(gl_FragCoord');
+		expect(source).toContain('mix(0.5, jitter, uGrain)');
+
+		engine.DrawReady = function (mesh, program, values) {
+			if (program === engine.Galaxy.Programs.Volume)
+				volumes.push(values.uGrain);
+
+			return draw.apply(this, arguments);
+		};
+
+		baked(scene);
+
+		scene.SetGalaxyView({Target: [0, 0, 0], Distance: 60000, Pitch: 0.5});
+
+		frames(scene, 1);
+
+		expect(volumes[volumes.length - 1]).toBe(0);
+
+		frames(scene, 2);
+
+		expect(volumes[volumes.length - 1]).toBe(1);
 
 		engine.DrawReady = draw;
 	});

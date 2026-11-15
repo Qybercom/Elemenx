@@ -13,9 +13,11 @@
  *   ascending node), Periapsis (the argument of the periapsis), Anomaly (the mean anomaly at the time 0), Period (days:
  *   of the mass by default)}.
  * - Path(orbit, count): count points of the whole orbit (the ellipse to draw).
- * - Star(star): a star {Mass, Radius, Luminosity, Temperature} completed by what is missing (as a star of the main
+ * - Star(star): a star {Mass, Radius, Luminosity, Temperature, Type} completed by what is missing (as a star of the main
  *   sequence), with its Class (O, B, A, F, G, K, M), Color, Habitable ({Inner, Outer}: the zone of liquid water, AU) and
- *   Frost (the line beyond which ice stays).
+ *   Frost (the line beyond which ice stays). Type (Types): main (by default), giant and supergiant (their class with III
+ *   and I: K3III), white-dwarf (DA, its radius of its mass when not told), neutron, pulsar and magnetar (NS, PSR, MAG,
+ *   ten kilometres across), brown-dwarf (L, T, Y as it is warm, a tenth of the Sun across).
  * - Describe(body, context): what a planet or a moon {Kind, Radius, Mass, Albedo, Day, Orbit} is: Radius, Mass,
  *   Gravity (m/s²), Escape (km/s), Density (g/cm³), Temperature (K, of the light of the star), Period (days), Day
  *   (hours), Habitable; context {Star (of Star), Distance (from it, AU), Mass (of what it goes round, Suns)}.
@@ -25,7 +27,7 @@
  * - Generate(seed, options): a whole system of a seed, always the same for the same seed: {Name, Seed, Bodies: [{ID,
  *   Type (star, planet, belt), Parent, Name, Kind, ...}]}, the planets with their moons, rings and belts. Options:
  *   Name, Planets (how many, 3 to 9 by default), Moons (false: none), Belts (false: none), Mass (of its star, in masses
- *   of the Sun: made of the seed by default).
+ *   of the Sun: made of the seed by default), Type (of its star: Types, main by default; its star has it as Kind).
  * The same functions run in Node: they read no page.
  */
 Elemenx.Service('Astronomy', {
@@ -146,12 +148,18 @@ Elemenx.Service('Astronomy', {
 		return points;
 	},
 
+	/* The kinds of stars: of the main sequence, swollen old ones, and what is left when a star ends. */
+	Types: ['main', 'giant', 'supergiant', 'white-dwarf', 'neutron', 'pulsar', 'magnetar', 'brown-dwarf'],
+
 	Star: function (star) {
 		var given = star || {};
+		var type = this.Types.indexOf(given.Type) !== -1 ? given.Type : 'main';
 		var mass = Number(given.Mass) || 1;
-		var radius = Number(given.Radius) || (mass < 1 ? Math.pow(mass, 0.8) : Math.pow(mass, 0.57));
+		var compact = type === 'neutron' || type === 'pulsar' || type === 'magnetar';
+		var radius = Number(given.Radius) || (type === 'white-dwarf' ? 0.0126 * Math.pow(mass, -1 / 3) : compact ? 1.4e-5 : type === 'brown-dwarf' ? 0.1 : type === 'giant' ? 20 * Math.sqrt(mass) : type === 'supergiant' ? 400 * Math.sqrt(mass / 15) : mass < 1 ? Math.pow(mass, 0.8) : Math.pow(mass, 0.57));
 		var luminosity = Number(given.Luminosity);
-		var temperature = Number(given.Temperature);
+		/* A star not of the main sequence: as warm as its kind is when not told (its light of its size and warmth). */
+		var temperature = Number(given.Temperature) || (luminosity || type === 'main' ? 0 : {giant: 4500, supergiant: 3800, 'white-dwarf': 15000, neutron: 1e6, pulsar: 1e6, magnetar: 1e6, 'brown-dwarf': 1300}[type]);
 		var classes = [[30000, 'O'], [10000, 'B'], [7500, 'A'], [6000, 'F'], [5200, 'G'], [3700, 'K'], [0, 'M']];
 		var kind;
 
@@ -167,7 +175,13 @@ Elemenx.Service('Astronomy', {
 			return temperature >= each[0];
 		})[0][1];
 
+		if (type === 'giant' || type === 'supergiant') kind += type === 'giant' ? 'III' : 'I';
+		else if (type === 'white-dwarf') kind = 'DA';
+		else if (compact) kind = {neutron: 'NS', pulsar: 'PSR', magnetar: 'MAG'}[type];
+		else if (type === 'brown-dwarf') kind = temperature >= 1300 ? 'L' : temperature >= 550 ? 'T' : 'Y';
+
 		return {
+			Type: type,
 			Mass: mass,
 			Radius: radius,
 			Luminosity: luminosity,
@@ -308,7 +322,8 @@ Elemenx.Service('Astronomy', {
 		var picked = random.Pick([0.35, 0.6, 0.8, 0.95, 1, 1.05, 1.2, 1.5, 2]) * random.Float(0.92, 1.08);
 		/* The mass of its star told (a star of a galaxy, GalaxyData): the rest of it made of the seed as ever. */
 		var mass = Number(settings.Mass) > 0 ? Number(settings.Mass) : picked;
-		var star = this.Star({Mass: mass});
+		/* Its kind told too (a white dwarf, a pulsar of a galaxy): its light and its zones of that kind. */
+		var star = this.Star({Mass: mass, Type: settings.Type});
 		var bodies = [];
 		var count = settings.Planets || random.Int(3, 9);
 		var distance = random.Float(0.22, 0.45) * Math.sqrt(star.Luminosity);
@@ -320,7 +335,7 @@ Elemenx.Service('Astronomy', {
 		var range;
 		var planet;
 
-		bodies.push({ID: 'star', Type: 'star', Parent: '', Name: name, Mass: Math.round(mass * 1000) / 1000, Radius: Math.round(star.Radius * 1000) / 1000, Temperature: Math.round(star.Temperature)});
+		bodies.push({ID: 'star', Type: 'star', Kind: star.Type, Parent: '', Name: name, Mass: Math.round(mass * 1000) / 1000, Radius: star.Radius >= 0.01 ? Math.round(star.Radius * 1000) / 1000 : Number(star.Radius.toPrecision(3)), Temperature: Math.round(star.Temperature)});
 
 		/* What a planet is, of how far it is from its star: hot and rocky near, gas beyond the frost, ice and dwarfs far. */
 		function kind (at) {

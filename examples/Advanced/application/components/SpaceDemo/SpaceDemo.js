@@ -27,6 +27,8 @@ Elemenx.Component('SpaceDemo', {
 
 		this.SpaceKinds = space.CosmosKinds();
 
+		this.SpaceSuns();
+
 		window.clearInterval(this.SpaceTimer);
 
 		this.SpaceTimer = window.setInterval(function () {
@@ -38,6 +40,33 @@ Elemenx.Component('SpaceDemo', {
 
 			self.SpaceDay = Math.floor(space.Now());
 		}, 500);
+	},
+	/* The suns burn as the star of the library has it (LibraryStar): their prominences rise and fall over a round, as much as Activity. */
+	SpaceLiving: true,
+	SpaceActivity: 1,
+	SpaceLived: function (value) {
+		this.SpaceLiving = !!value;
+
+		this.SpaceSuns();
+	},
+	SpaceActive: function (value) {
+		this.SpaceActivity = Number(value);
+
+		this.SpaceSuns();
+	},
+	SpaceSuns: function () {
+		var space = this.Spaced ? this.Spaced() : null;
+		var look = space && this.SpaceLiving ? space.LibraryStar() : null;
+		var self = this;
+
+		if (!space) return;
+
+		/* Each change makes the scene again: the suns of a system, not the hundreds of a cluster. */
+		space.Objects().filter(function (object) {
+			return object.Kind === 'star';
+		}).slice(0, 12).forEach(function (star) {
+			space.Change(star.ID, {Traits: {Star: {Blueprint: look, Parameters: {Activity: self.SpaceActivity, Cycle: 40}}}});
+		});
 	},
 	SpaceCosmos: {Kind: 'nebula', Seed: 'sky-1'},
 	SpaceMark: {Look: 'ring', Pulse: 1.6, Cursor: 'pointer'},
@@ -98,8 +127,40 @@ Elemenx.Component('SpaceDemo', {
 	SpaceChosen: function (value) {
 		this.SpaceSystem = value;
 		this.SpaceNote = '';
+
+		if (value === 'cluster')
+			this.SpaceClustered(this.SpaceClusterType);
+
+		if (value === 'nebula')
+			this.SpaceNebulaChosen(this.SpaceNebulaType);
 	},
-	SpaceSystems: [{Value: 'sol', Label: 'The Sun'}, {Value: 'seed', Label: 'Of a seed'}, {Value: 'file', Label: 'Of a file'}],
+	SpaceSystems: [{Value: 'sol', Label: 'The Sun'}, {Value: 'seed', Label: 'Of a seed'}, {Value: 'file', Label: 'Of a file'}, {Value: 'cluster', Label: 'A cluster'}, {Value: 'nebula', Label: 'A nebula'}],
+	/* A star cluster of GalaxyData: its stars with the planets their room leaves them, the swarm of the others round its middle. */
+	/* A nebula of SceneNebula, seen as a volume from outside and from within, what made it at its middle. */
+	SpaceNebulaType: 'hii',
+	SpaceNebulaTypes: [{Value: 'hii', Label: 'HII region'}, {Value: 'planetary', Label: 'Planetary'}, {Value: 'remnant-Ia', Label: 'Remnant Ia'}, {Value: 'remnant-II', Label: 'Remnant II'}, {Value: 'remnant-Ib', Label: 'Remnant Ib'}, {Value: 'remnant-Ic', Label: 'Remnant Ic'}, {Value: 'dark', Label: 'Dark'}],
+	SpaceNebula: null,
+	SpaceNebulaChosen: function (value) {
+		var parts = String(value).split('-');
+		var type = parts[0];
+		var middle = {hii: [{ID: 'o1', Kind: 'star', Values: {Name: 'Theta 1 C'}, Traits: {Star: {Mass: 33, Temperature: 39000}, Orbit: {Distance: 9000, Unit: 'AU'}}}, {ID: 'o2', Kind: 'star', Values: {Name: 'Theta 1 A'}, Traits: {Star: {Mass: 16, Temperature: 30000}, Orbit: {Distance: 15000, Anomaly: 140, Unit: 'AU'}}}], planetary: [{ID: 'core', Kind: 'white-dwarf', Values: {Name: 'Its white dwarf'}}], remnant: parts[1] === 'Ia' ? [] : [{ID: 'core', Kind: 'pulsar', Values: {Name: 'Its pulsar'}}], dark: []}[type];
+
+		this.SpaceNebulaType = value;
+		this.SpaceNebula = {Objects: [{ID: 'nebula', Kind: 'nebula', Values: {Name: (this.SpaceNebulaTypes.filter(function (one) {
+			return one.Value === value;
+		})[0] || {}).Label}, Traits: {Nebula: {Type: type, Subtype: parts[1] || '', Radius: {hii: 12, planetary: 0.5, remnant: 9, dark: 6}[type], Seed: 'demo-' + value}}, Children: middle}]};
+	},
+	SpaceClusterType: 'globular',
+	SpaceClusterTypes: [{Value: 'open', Label: 'Open'}, {Value: 'globular', Label: 'Globular'}, {Value: 'nuclear', Label: 'Nuclear'}],
+	SpaceCluster: null,
+	SpaceClustered: function (type) {
+		var key = 'demo-cluster-' + type;
+
+		this.$Service('SystemData').Use(key, this.$Service('GalaxyData').Cluster({Seed: 'demo-' + type, Type: type}));
+
+		this.SpaceClusterType = type;
+		this.SpaceCluster = {Data: key};
+	},
 	/* A system of the system format (SystemData): two suns round their barycentre, Terra of its own planet file, a black hole with a shard. */
 	SpaceFile: {Data: '/data/systems/binary.system'},
 	RibbonTab: 'home',

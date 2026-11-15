@@ -206,6 +206,130 @@ describe('Contract: SceneEditor of a star system: bodies added round the one tha
 		expect(angle(scene.Get('planet'), star)).toBeCloseTo(30, 6);
 	});
 
+	/* The shape of an orbit was not editable: an inclination only, its eccentricity among the fields of a planet alone. */
+	it('edits the shape of an orbit by its nearest (q) and farthest (Q) distances in AU, in the fields and by two handles on its line', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var scene = editor.Scene();
+		var engine = scene.Engine();
+		var field = function (id) {
+			return editor.FieldList.filter(function (each) {
+				return each.ID === id;
+			})[0];
+		};
+		var ids;
+		var apses;
+		var at;
+		var goal;
+		var centre;
+		var star;
+		var before;
+		var spot;
+
+		editor.Select('planet');
+		editor.Pick('move');
+
+		frame(editor);
+
+		ids = editor.FieldList.map(function (each) {
+			return each.ID;
+		});
+
+		/* Right after the Distance, a circle of 1 AU. */
+		expect(ids.slice(ids.indexOf('Orbit:Distance'), ids.indexOf('Orbit:Distance') + 3)).toEqual(['Orbit:Distance', 'Orbit:Nearest', 'Orbit:Farthest']);
+		expect(field('Orbit:Nearest').Value).toBeCloseTo(1, 9);
+		expect(field('Orbit:Farthest').Value).toBeCloseTo(1, 9);
+
+		/* Kept as the half of the long axis and the eccentricity. */
+		editor.FieldChanged(field('Orbit:Farthest'), '3');
+
+		expect(scene.Get('planet').Traits.Orbit.Distance).toBe(2);
+		expect(scene.Get('planet').Traits.Orbit.Eccentricity).toBe(0.5);
+		expect(field('Orbit:Nearest').Shown).toBe('1');
+		expect(field('Orbit:Farthest').Shown).toBe('3');
+
+		/* The nearest never beyond the farthest: a circle at the most. */
+		editor.FieldChanged(field('Orbit:Nearest'), '5');
+
+		expect(scene.Get('planet').Traits.Orbit.Distance).toBe(3);
+		expect(scene.Get('planet').Traits.Orbit.Eccentricity).toBe(0);
+
+		editor.FieldChanged(field('Orbit:Nearest'), '1');
+
+		frame(editor);
+
+		/* The handles where the orbit is nearest and farthest, each marked. */
+		apses = engine.Apses('planet');
+
+		expect(apses.Periapsis.Distance).toBeCloseTo(1, 6);
+		expect(apses.Apoapsis.Distance).toBeCloseTo(3, 6);
+		expect(editor.$Element().querySelectorAll('.elemenx-scene-editor-apse-label').length).toBe(2);
+
+		/* Regression: what of the gizmo is off the view (a far point of an orbit) was drawn over the panels beside it. */
+		expect(getComputedStyle(editor.$Element().querySelector('.elemenx-scene-editor-gizmo')).overflow).toBe('hidden');
+
+		spot = scene.Project(apses.Apoapsis.World);
+		at = middle(editor, '[data-handle="move-far"]');
+
+		expect(at[0]).toBeCloseTo(spot.X, 0);
+		expect(at[1]).toBeCloseTo(spot.Y, 0);
+
+		/* The farthest drawn out, the nearest stays. */
+		goal = scene.Project([apses.Middle[0] + (apses.Apoapsis.World[0] - apses.Middle[0]) * 1.4, apses.Middle[1], apses.Middle[2] + (apses.Apoapsis.World[2] - apses.Middle[2]) * 1.4]);
+
+		pointer(editor.$Element().querySelector('[data-handle="move-far"]'), 'pointerdown', at[0], at[1]);
+		pointer(overlay(editor), 'pointermove', goal.X, goal.Y);
+		pointer(overlay(editor), 'pointerup', goal.X, goal.Y);
+
+		frame(editor);
+
+		apses = engine.Apses('planet');
+
+		expect(apses.Periapsis.Distance).toBeCloseTo(1, 4);
+		expect(apses.Apoapsis.Distance).toBeGreaterThan(4);
+		/* To three figures, as the snap of the editor holds it. */
+		expect(Number(apses.Apoapsis.Distance.toPrecision(3))).toBeCloseTo(apses.Apoapsis.Distance, 4);
+
+		editor.Undo();
+
+		frame(editor);
+
+		expect(engine.Apses('planet').Apoapsis.Distance).toBeCloseTo(3, 6);
+
+		/* Regression: carried by its square, a body on a long orbit took the distance under the pointer for the half of its long axis: it goes there on its ellipse. */
+		before = scene.Get('planet').Traits.Orbit.Eccentricity;
+		at = middle(editor, '[data-handle="move-orbit"]');
+		goal = scene.Project([apses.Middle[0] - 18, apses.Middle[1], apses.Middle[2] + 6]);
+
+		pointer(editor.$Element().querySelector('[data-handle="move-orbit"]'), 'pointerdown', at[0], at[1]);
+		pointer(overlay(editor), 'pointermove', goal.X, goal.Y);
+		pointer(overlay(editor), 'pointerup', goal.X, goal.Y);
+
+		frame(editor);
+
+		expect(scene.Get('planet').Traits.Orbit.Eccentricity).toBe(before);
+		expect(scene.Get('planet').World[0] - apses.Middle[0]).toBeCloseTo(-18, 0);
+		expect(scene.Get('planet').World[2] - apses.Middle[2]).toBeCloseTo(6, 0);
+
+		/* A star round a barycentre has an orbit of a Distance only: its shape among its fields all the same. */
+		centre = editor.Add('barycentre');
+
+		editor.Select(centre);
+
+		star = editor.Add('star');
+
+		editor.Select(star);
+
+		frame(editor);
+
+		expect(field('Orbit:Eccentricity').Value).toBe(0);
+
+		editor.FieldChanged(field('Orbit:Eccentricity'), '0.25');
+
+		expect(scene.Get(star).Traits.Orbit.Eccentricity).toBe(0.25);
+		expect(field('Orbit:Farthest').Value).toBeCloseTo(scene.Get(star).Traits.Orbit.Distance * 1.25, 6);
+	});
+
 	it('draws the system at the day it is told, kept for undo, and a body scaled changes its radius', async function () {
 		var mounted = await mount();
 		var editor = mounted.Editor;
@@ -461,6 +585,66 @@ describe('Contract: SceneEditor of a star system: bodies added round the one tha
 			return item.ID;
 		})).toEqual([first, second]);
 		expect(editor.Opened()).toEqual(expect.arrayContaining([centre, first, hole]));
+	});
+
+	it('gives a star the look of the library to edit as a graph: its prominences by a Curve of the Time, its parameters tuned', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var scene = editor.Scene();
+
+		editor.Select('star');
+
+		expect(editor.GraphKinds().map(function (kind) {
+			return kind.ID;
+		})).toEqual(['Star']);
+		expect(editor.Graph()).toBe(null);
+
+		editor.GraphMade();
+
+		expect(scene.Get('star').Traits.Star.Blueprint.type).toBe('star');
+		expect(editor.GraphKindOf()).toBe('Blueprint');
+		expect(editor.Graph().blocks.some(function (block) {
+			return block.type === 'Curve';
+		})).toBe(true);
+
+		/* Its parameters among what a level sets of it. */
+		expect(editor.Exposed().map(function (parameter) {
+			return parameter.key;
+		})).toEqual(['Activity', 'Cycle']);
+
+		editor.Tuned('Activity', '2.5');
+
+		expect(scene.Get('star').Traits.Star.Parameters.Activity).toBe(2.5);
+		expect(scene.Engine().StarLook('star').Parts[1]).toBeCloseTo(2.5, 6);
+	});
+
+	it('adds a star cluster with the swarm of its old stars, and stars round its middle light-years out', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var scene = editor.Scene();
+		var cluster;
+		var star;
+
+		expect(editor.SpaceKinds).toContain('cluster');
+
+		cluster = editor.Add('cluster');
+
+		expect(scene.Get(cluster).Kind).toBe('cluster');
+		expect(scene.Get(cluster).Traits.Cluster.Count).toBeGreaterThan(1000);
+
+		editor.Select(cluster);
+
+		star = editor.Add('star');
+
+		expect(scene.Get(star).Parent).toBe(cluster);
+		expect(scene.Get(star).Traits.Orbit.Distance).toBeGreaterThan(Elemenx.Service('Astronomy').Units.ly);
+
+		/* Its fields as any other: its kind, its size, how many in its swarm. */
+		editor.Select(cluster);
+
+		expect(editor.FieldList.map(function (field) {
+			return field.ID;
+		})).toEqual(expect.arrayContaining(['Cluster:Type', 'Cluster:Radius', 'Cluster:Count']));
 	});
 
 	/*

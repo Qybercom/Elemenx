@@ -53,6 +53,11 @@ Elemenx.Component('DeepSpaceDemo', {
 		{Value: 'halley', Label: 'Comet'},
 		{Value: 'pebble', Label: 'Planetoid'},
 		{Value: 'beacon', Label: 'Quasar'},
+		{Value: 'vela', Label: 'Pulsar'},
+		{Value: 'sgr', Label: 'Magnetar'},
+		{Value: 'sirius-b', Label: 'White dwarf'},
+		{Value: 'luhman', Label: 'Brown dwarf'},
+		{Value: 'arcturus', Label: 'Red giant'},
 		{Value: 'vega', Label: 'The star'}
 	]
 });

@@ -136,6 +136,26 @@ describe('Contract: more components of ElemenxUI', function () {
 		expect(host.$Element().querySelector('.elemenx-file-icon [aria-label="A PDF"], .elemenx-file-icon [title="A PDF"]')).not.toBe(null);
 	});
 
+	/* Regression: an attached group as wide as its buttons was 4 pixels short of them (its margins round it), and scrolled across. */
+	it('ButtonGroup attached in a place as wide as its buttons does not scroll across', async function () {
+		/* As the ThemeSwitch of the UI Kit: a flex box of its own, as wide as the buttons in it. */
+		var host = mount('<div><div class="place" style="display: flex"><ButtonGroup Label="Theme" Attached="true"><Button Icon="monitor" Title="System" /><Button Icon="sun" Title="Light" /><Button Icon="moon" Title="Dark" /></ButtonGroup></div></div>');
+		var group;
+		var buttons;
+
+		await tick();
+
+		group = host.$Element().querySelector('.elemenx-button-group');
+		buttons = group.querySelectorAll('button');
+
+		/* Sized by its border, as everything is in a page of ElemenxUI. */
+		group.style.boxSizing = 'border-box';
+		host.$Element().querySelector('.place').style.width = (buttons[2].getBoundingClientRect().right - buttons[0].getBoundingClientRect().left) + 'px';
+
+		expect(getComputedStyle(group).overflowX).toBe('auto');
+		expect(group.scrollWidth).toBeLessThanOrEqual(group.clientWidth);
+	});
+
 	it('CallControls asks for the opposite of the state it shows, and leaves out the buttons of Hide', async function () {
 		var asked = [];
 		var host = mount('<div><CallControls Muted="true" Camera="false" [hide]="Hide" (mute)="Asked" (camera)="Asked" (leave)="Left" /></div>', {

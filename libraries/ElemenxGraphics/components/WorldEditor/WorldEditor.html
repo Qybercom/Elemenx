@@ -28,6 +28,23 @@
 				</div>
 				<Button *if="Picked" Size="small" Variant="ghost" Icon="delete" [Label]="$T('graphics.worldEditor.remove')" (click)="PickedRemoved" />
 			</div>
+			<div class="elemenx-world-editor-section elemenx-world-editor-search" *if="Tab === 'world' && Level(Version) === 'galaxy'" role="search">
+				<div class="elemenx-world-editor-title">{{$T('graphics.worldEditor.search')}}</div>
+				<Input Size="small" Icon="search" Clearable="true" [Label]="$T('graphics.worldEditor.searchText')" [Placeholder]="$T('graphics.worldEditor.searchText')" [Value]="Filters(Version).Text" (change)="Searched('Text', $event)" />
+				<Select Size="small" [Label]="$T('graphics.worldEditor.searchType')" [Options]="SearchTypes()" [Value]="Filters(Version).Type" (change)="Searched('Type', $event)" />
+				<div class="elemenx-world-editor-row">
+					<Input Size="small" [Label]="$T('graphics.worldEditor.searchClass')" [Placeholder]="$T('graphics.worldEditor.searchClass')" [Value]="Filters(Version).Class" (change)="Searched('Class', $event)" />
+					<Select Size="small" [Label]="$T('graphics.worldEditor.searchEdited')" [Options]="EditedOptions()" [Value]="Filters(Version).Edited" (change)="Searched('Edited', $event)" />
+				</div>
+				<Slider Size="small" Range="true" Min="-2" Max="2" Step="0.05" ShowValue="end" Unit=" M☉" [Format]="MassText" [Label]="$T('graphics.worldEditor.searchMass')" [Value]="Filters(Version).Mass" (change)="Searched('Mass', $event)" />
+				<Slider Size="small" Range="true" Min="2.5" Max="5.3" Step="0.05" ShowValue="end" Unit=" K" [Format]="TemperatureText" [Label]="$T('graphics.worldEditor.searchTemperature')" [Value]="Filters(Version).Temperature" (change)="Searched('Temperature', $event)" />
+				<div class="elemenx-world-editor-row">
+					<Select Size="small" [Label]="$T('graphics.worldEditor.searchRadius')" [Options]="RadiusOptions()" [Value]="RadiusValue(Version)" (change)="Searched('Radius', $event)" />
+					<Button Size="small" Variant="ghost" Icon="search" [Label]="$T('graphics.worldEditor.searchHere')" (click)="RunSearch" />
+				</div>
+				<div class="elemenx-world-editor-note" *if="FoundList" aria-live="polite">{{FoundNote(Version)}}</div>
+				<VirtualList *if="FoundList" class="elemenx-world-editor-found" ItemHeight="28" Height="240px" ItemKey="ID" LabelKey="Label" [Label]="$T('graphics.worldEditor.foundLabel')" [Empty]="$T('graphics.worldEditor.foundNone')" [Items]="FoundItems(Version)" [Value]="Picked" (select)="FoundChosen($event)" />
+			</div>
 			<div class="elemenx-world-editor-section" *if="Tab === 'world' && Level(Version) === 'system'">
 				<div class="elemenx-world-editor-title">{{$T('graphics.worldEditor.system')}}</div>
 				<div class="elemenx-world-editor-note">{{SystemNote(Version)}}</div>

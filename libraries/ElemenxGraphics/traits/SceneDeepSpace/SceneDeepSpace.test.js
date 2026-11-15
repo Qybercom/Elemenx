@@ -256,4 +256,211 @@ describe('Contract: the deep space of a Scene: black holes, wormholes, comets, q
 		expect(engine.DeepPass(ship, exit)).toBe(null);
 		expect(passed).toHaveLength(1);
 	}, 30000);
+
+	it('has the stars that are not of the main sequence: giants, dwarfs and what is left of a star, the beams of a pulsar sweeping round, the field of a magnetar', async function () {
+		var made = await mount();
+		var scene = made.Scene;
+		var engine = scene.Engine();
+		var inner = scene.Scene();
+		var astronomy = Elemenx.Service('Astronomy');
+		var drawn = [];
+		var ready = engine.DrawReady;
+		var later = [];
+		var a;
+		var b;
+
+		/* Their classes, sizes and light. */
+		expect(astronomy.Star({}).Class).toBe('G');
+		expect(astronomy.Star({Type: 'giant', Mass: 1.2}).Class).toMatch(/^[KG]III$/);
+		expect(astronomy.Star({Type: 'supergiant', Mass: 15, Temperature: 3600}).Class).toBe('MI');
+		expect(astronomy.Star({Type: 'white-dwarf', Mass: 0.6})).toMatchObject({Class: 'DA'});
+		expect(astronomy.Star({Type: 'white-dwarf', Mass: 0.6}).Radius).toBeCloseTo(0.015, 3);
+		expect(astronomy.Star({Type: 'pulsar', Mass: 1.4}).Class).toBe('PSR');
+		expect(astronomy.Star({Type: 'pulsar', Mass: 1.4}).Radius * 696000).toBeCloseTo(9.7, 0);
+		expect(astronomy.Star({Type: 'brown-dwarf', Mass: 0.05, Temperature: 900}).Class).toBe('T');
+		expect(astronomy.Star({Type: 'brown-dwarf', Mass: 0.05}).Luminosity).toBeLessThan(1e-4);
+
+		['giant', 'supergiant', 'white-dwarf', 'brown-dwarf', 'neutron-star', 'pulsar', 'magnetar'].forEach(function (kind) {
+			scene.Add(kind, {ID: kind, Traits: {Orbit: {Distance: 3, Unit: 'AU'}}, Parent: 'vega'});
+		});
+
+		frames(scene, 2);
+
+		expect(scene.Describe('pulsar').Class).toBe('PSR');
+		expect(scene.Describe('magnetar').Class).toBe('MAG');
+		expect(inner.Objects.supergiant.Size).toBeGreaterThan(inner.Objects.giant.Size);
+		expect(inner.Objects.giant.Size).toBeGreaterThan(inner.Objects.vega.Size);
+		expect(inner.Objects.pulsar.Size).toBeLessThan(inner.Objects['white-dwarf'].Size);
+
+		/* Regression: an orange giant burned out white as the Sun does; a brown dwarf is banded, dim and maroon. */
+		expect(scene.Shaders(Elemenx.Service('Renderer')).Star).toContain('mix(2.4, 1.1, clamp(warm * 1.5, 0.0, 1.0))');
+		expect(scene.Shaders(Elemenx.Service('Renderer')).Star).toContain('uniform float uBands;');
+
+		/* The magnetic axis of a pulsar turns round with it. */
+		inner.Seconds = 0;
+		a = engine.MagneticAxis('pulsar');
+		inner.Seconds = 0.2;
+		b = engine.MagneticAxis('pulsar');
+
+		expect(Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])).toBeGreaterThan(0.2);
+
+		/* Seen from far, its disc a point: its two beams and the field of the magnetar drawn all the same. */
+		inner.Camera.Position = [inner.Objects.pulsar.World[0], inner.Objects.pulsar.World[1], inner.Objects.pulsar.World[2] + 500];
+
+		inner.Active.forEach(function (object) {
+			if (object.ID !== 'pulsar' && object.ID !== 'magnetar')
+				object.Hidden = true;
+		});
+
+		engine.DeepDraw([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], later, [1, 0, 0], [0, 1, 0], [1e-9, 1e30]);
+
+		engine.DrawReady = function (mesh, program, uniforms) {
+			drawn.push(uniforms);
+
+			return true;
+		};
+
+		try {
+			later.forEach(function (run) {
+				run();
+			});
+		}
+		finally {
+			engine.DrawReady = ready;
+		}
+
+		expect(drawn.filter(function (one) {
+			return one.uAxis && one.uLength > 0;
+		}).length).toBe(4);
+		expect(drawn.filter(function (one) {
+			return one.uAxis2;
+		}).length).toBe(1);
+	});
+
+	it('burns a star as its Blueprint says at each time: the prominences of the library rise and fall by a Curve of the Time, as much as its Activity', async function () {
+		var made = await mount();
+		var scene = made.Scene;
+		var engine = scene.Engine();
+		var inner = scene.Scene();
+		var graph = scene.LibraryStar();
+		var look = Elemenx.Service('Blueprints').Compile(graph);
+		var told = [];
+		var drawn = [];
+		var ready = engine.DrawReady;
+		var vega;
+		var at;
+		var later = [];
+
+		expect(graph.type).toBe('star');
+
+		/* Low at the start of its round, high a fifth of the way in; its Activity in its prominences and flares. */
+		expect(look.Look({Activity: 2, Cycle: 40}, 0)).toMatchObject({Height: 0.75, Prominences: 2, Flares: 2, Count: 6});
+		expect(look.Look({Activity: 2, Cycle: 40}, 8.8).Height).toBeCloseTo(1.55, 6);
+		expect(look.Look({Activity: 2, Cycle: 40}, 48.8).Height).toBeCloseTo(1.55, 6);
+
+		frames(scene, 2);
+
+		/* Without one, as its trait says. */
+		expect(engine.StarLook('vega')).toMatchObject({Parts: [1, 1, 1, 0], Shape: [5, 1, 1, 1], Tint: [1, 1, 1]});
+
+		scene.Change('vega', {Traits: {Star: {Blueprint: graph, Parameters: {Activity: 2, Cycle: 40}, Flares: 0.5}}});
+
+		frames(scene, 2);
+
+		inner.Seconds = 8.8;
+		at = engine.StarLook('vega');
+
+		expect(at.Shape[1]).toBeCloseTo(1.55, 6);
+		expect(at.Parts).toEqual([1, 2, 1, 0]);
+
+		/* Its corona drawn so. */
+		vega = inner.Objects.vega;
+		inner.Camera.Position = [vega.World[0], vega.World[1], vega.World[2] + vega.Size * 20];
+
+		inner.Active.forEach(function (object) {
+			if (object !== vega)
+				object.Hidden = true;
+		});
+
+		engine.DeepDraw([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], later, [1, 0, 0], [0, 1, 0], [1e-9, 1e30]);
+
+		engine.DrawReady = function (mesh, program, uniforms) {
+			if (uniforms && uniforms.uShape)
+				drawn.push(uniforms);
+
+			return true;
+		};
+
+		try {
+			later.forEach(function (run) {
+				run();
+			});
+		}
+		finally {
+			engine.DrawReady = ready;
+		}
+
+		expect(drawn.length).toBe(1);
+		expect(drawn[0].uShape[0]).toBe(6);
+		expect(drawn[0].uShape[1]).toBeCloseTo(1.55, 6);
+		expect(drawn[0].uParts[1]).toBeCloseTo(2 * drawn[0].uParts[0], 6);
+
+		/* A graph that cannot be made is told once; the star burns as its trait says. */
+		scene.$On('shader', function (event) {
+			told.push(event.detail || event);
+		});
+
+		scene.Change('vega', {Traits: {Star: {Blueprint: {version: 1, type: 'star', name: 'broken', parameters: [], blocks: [], links: []}}}});
+
+		frames(scene, 1);
+
+		expect(engine.StarLook('vega').Shape).toEqual([5, 1, 1, 1]);
+		expect(engine.StarLook('vega').Shape).toEqual([5, 1, 1, 1]);
+		expect(told.filter(function (one) {
+			return one.Kind === 'star';
+		}).length).toBe(1);
+	});
+
+	/* Regression: near where the two parts of the depth meet, the corona of a star was drawn in both, twice as bright, and its prominences flickered. */
+	it('draws the corona of a star in one part of the depth only, wherever the parts meet', async function () {
+		var made = await mount();
+		var scene = made.Scene;
+		var engine = scene.Engine();
+		var inner;
+		var vega;
+		var far;
+		var all;
+		var split;
+		var count = function (planes) {
+			var later = [];
+
+			engine.DeepDraw([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], later, [1, 0, 0], [0, 1, 0], planes);
+
+			return later.length;
+		};
+
+		frames(scene, 2);
+
+		inner = scene.Scene();
+		vega = inner.Objects.vega;
+		far = vega.Size * 20;
+		inner.Camera.Position = [vega.World[0], vega.World[1], vega.World[2] + far];
+
+		/* The star alone counted. */
+		inner.Active.forEach(function (object) {
+			if (object !== vega)
+				object.Hidden = true;
+		});
+
+		all = count([1e-9, 1e30]);
+
+		expect(all).toBeGreaterThan(0);
+
+		/* The parts meet a little in front of the star and behind it, as close as the scene lets them (they share a ten-thousandth). */
+		[0.99, 1.01, 0.9999, 1.0002].forEach(function (at) {
+			split = far * at;
+
+			expect(count([split, 1e30]) + count([1e-9, split * 1.0001])).toBe(all);
+		});
+	});
 });

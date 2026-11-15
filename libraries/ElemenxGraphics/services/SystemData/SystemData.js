@@ -33,6 +33,10 @@ Elemenx.Service('SystemData', {
 
 	Seeded: function (seed, options) {
 		return this.$Service('Astronomy').Generate(seed, options).Bodies.map(function (body) {
+			/* A star of a kind not of the main sequence is of the kind of a Scene of its name (white-dwarf, pulsar...). */
+			if (body.Type === 'star' && body.Kind && body.Kind !== 'main')
+				return {ID: body.ID, Kind: body.Kind === 'neutron' ? 'neutron-star' : body.Kind, Parent: '', Values: {Name: body.Name}, Traits: {Star: {Type: body.Kind, Mass: body.Mass, Radius: body.Radius, Temperature: body.Temperature}}};
+
 			if (body.Type === 'star')
 				return {ID: body.ID, Kind: 'star', Parent: '', Values: {Name: body.Name}, Traits: {Star: {Mass: body.Mass, Radius: body.Radius, Temperature: body.Temperature}}};
 

@@ -10,6 +10,10 @@
  *   it (frame.Steps).
  * - The kind water: the water of a Scene as a graph (blueprintWater in its shader of water), its blocks the parts of
  *   the water of the library (Waters).
+ * - The kind star: the look of a star at a time, run each frame (it takes the blocks of a generator too: Time, Curve,
+ *   Parameter...); Look(parameters, seconds) of what Compile gives is {Corona, Prominences, Flares, Count, Height, Speed,
+ *   Strands, Tint}. Its end, Star, takes each as an input (its property when nothing comes): a Curve of the Time makes
+ *   its prominences rise and fall as the keys say.
  */
 Elemenx.Service('SceneBlueprints', {
 	$Meta: {
@@ -18,15 +22,70 @@ Elemenx.Service('SceneBlueprints', {
 	},
 
 	$Provides: {
-		Blueprints: {Graphs: ['effect', 'water', 'sky', 'land'], Nodes: ['LandPoint', 'LandMaterial', 'LandGrain', 'LandPools', 'LandAlbedo', 'LandPaint', 'LandLight', 'LandCaustics', 'LandSheen', 'LandCompose', 'LandEnd', 'SkyRay', 'SkyDay', 'SkyAir', 'SkyDusk', 'SkyHalo', 'SkyPink', 'SkyWisps', 'SkyCover', 'SkyEclipse', 'SkyTowns', 'SkyAurora', 'SkyRainbow', 'SkyMoonHaze', 'SkyMoon', 'SkyCompose', 'SkyEnd', 'Place', 'View', 'Far', 'Flow', 'Sun', 'Waves', 'WaterNormal', 'Fresnel', 'Glints', 'Sky', 'Body', 'Foam', 'Under', 'Absorb', 'Below', 'Reflection', 'WaterFog', 'Water', 'Layer', 'Effect', 'Scene', 'Clouds', 'Occlusion', 'Air', 'Frames', 'Mirror', 'Rays', 'Exposure', 'Bokeh', 'Bloom', 'Picture', 'Shader']}
+		Blueprints: {Graphs: ['effect', 'water', 'sky', 'land', 'star'], Nodes: ['Star', 'LandPoint', 'LandMaterial', 'LandGrain', 'LandPools', 'LandAlbedo', 'LandPaint', 'LandLight', 'LandCaustics', 'LandSheen', 'LandCompose', 'LandEnd', 'SkyRay', 'SkyDay', 'SkyAir', 'SkyDusk', 'SkyHalo', 'SkyPink', 'SkyWisps', 'SkyCover', 'SkyEclipse', 'SkyTowns', 'SkyAurora', 'SkyRainbow', 'SkyMoonHaze', 'SkyMoon', 'SkyCompose', 'SkyEnd', 'Place', 'View', 'Far', 'Flow', 'Sun', 'Waves', 'WaterNormal', 'Fresnel', 'Glints', 'Sky', 'Body', 'Foam', 'Under', 'Absorb', 'Below', 'Reflection', 'WaterFog', 'Water', 'Layer', 'Effect', 'Scene', 'Clouds', 'Occlusion', 'Air', 'Frames', 'Mirror', 'Rays', 'Exposure', 'Bokeh', 'Bloom', 'Picture', 'Shader']}
 	},
 
 	$OnCreate: function () {
 		this.Effects();
+		this.Stars();
 		this.Passes();
 		this.Waters();
 		this.Skies();
 		this.Lands();
+	},
+
+	/*
+	 * The look of a star as a graph, run each frame on its time: Star, the end, each of its fields an input a Parameter or
+	 * a Curve of the Time can take, else its property. Corona, Prominences and Flares say how much of each; Count how many
+	 * prominences (1 to 8), Height how high they rise (1 as they are), Speed how fast they breathe and their strands
+	 * stream, Strands how torn they are, Tint the color they are tinted (white: their own).
+	 */
+	Stars: function () {
+		var blueprints = this.$Service('Blueprints');
+		var fields = [['Corona', 1], ['Prominences', 1], ['Flares', 1], ['Count', 5], ['Height', 1], ['Speed', 1], ['Strands', 1]];
+
+		blueprints.Graph('star', {
+			End: 'Star',
+			Uses: ['generator'],
+			Compile: function (plan) {
+				var end = plan.Order.filter(function (id) {
+					return plan.Blocks[id].type === 'Star' && plan.Blocks[id].enabled !== false;
+				})[0];
+
+				return {
+					Look: function (parameters, seconds) {
+						var run = {Outputs: {}, Parameters: parameters || {}, Inputs: {Time: Number(seconds) || 0}, Memo: true, Graph: {parameters: this && this.Parameters || plan.Graph.parameters}};
+
+						return blueprints.Pull(plan, end, 'Look', run, 0);
+					}
+				};
+			}
+		});
+
+		blueprints.Node('Star', {
+			Graphs: ['star'],
+			Group: 'star',
+			Properties: fields.map(function (field) {
+				return {Key: field[0], Type: 'number', Value: field[1]};
+			}).concat([{Key: 'Tint', Type: 'color', Value: '#ffffff'}]),
+			Inputs: fields.map(function (field) {
+				return {Key: field[0], Type: 'float'};
+			}).concat([{Key: 'Tint', Type: 'vec3'}]),
+			Outputs: [{Key: 'Look', Type: 'object'}],
+			Compute: function (inputs, properties) {
+				var look = {};
+
+				fields.forEach(function (field) {
+					var told = inputs[field[0]] !== undefined && inputs[field[0]] !== null ? inputs[field[0]] : properties[field[0]];
+
+					look[field[0]] = told === undefined || told === null || told === '' || isNaN(Number(told)) ? field[1] : Number(told);
+				});
+
+				look.Tint = Array.isArray(inputs.Tint) ? inputs.Tint.slice(0, 3) : blueprints.Numbers(properties.Tint || '#ffffff', 3);
+
+				return {Look: look};
+			}
+		});
 	},
 
 	/*

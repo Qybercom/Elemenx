@@ -7,7 +7,8 @@
  * bulge or the ends of its bar, its halo; its dust in lanes and threads dimming what lies behind it; each octave of its
  * noise only as fine as a pixel makes out there), with points of its stars and its knots of young ones over it; round the
  * eye its stars one by one (GalaxyFieldShader: cubes of points laid round the eye, as bright as its light there) where its
- * light would be a mist; from inside it, the band of it across the sky. The eye takes its light as bright as it is (read
+ * light would be a mist; from inside its disc, the band of it across the sky (a sky of SceneCosmos round its pole, its bulge
+ * towards its middle, made again as the eye goes far, in place of its rays: CosmosCubeOf). The eye takes its light as bright as it is (read
  * back from the card a frame later; state Exposure fixes it). It is drawn coarse while the view moves, fine in a few rounds
  * when it stops, then not at all till the view changes (the card rests). As the
  * view comes near the stars of the sectors round it come one by one, each as bright as it is to the eye there: these are
@@ -156,6 +157,41 @@ Elemenx.Trait('SceneGalaxy', {
 			return state.Glow;
 		}
 
+		/*
+		 * Its nebulae and clusters (GalaxyData.Objects) as points as wide as they are (a few pixels at the least): the bright
+		 * ones (the light of clouds where stars are born, of shells and remnants, of clusters) and the dark clouds apart, these
+		 * to dim the picture; made again when its edits change.
+		 */
+		function objectsMesh () {
+			var key = JSON.stringify(state.Data.Edits.Removed || []) + [state.Data.Manifest.Seed, state.Data.Manifest.Kind, state.Data.Manifest.Radius, state.Data.Manifest.Arms].join(':');
+			var colors = {hii: [1, 0.36, 0.52], planetary: [0.42, 0.9, 1], remnant: [1, 0.62, 0.5], open: [0.72, 0.84, 1], globular: [1, 0.88, 0.66], dark: [0.035, 0.025, 0.02]};
+			var made = {Bright: [[], []], Dark: [[], []]};
+
+			if (state.ObjectsKey === key) return state.Objects;
+
+			if (state.Objects) {
+				['Bright', 'Dark'].forEach(function (name) {
+					if (state.Objects[name])
+						state.Objects[name].Destroy();
+				});
+			}
+
+			state.List = galaxies.Objects(state.Data);
+
+			state.List.forEach(function (one) {
+				var into = made[one.Type === 'dark' ? 'Dark' : 'Bright'];
+				var color = colors[one.Type] || [1, 1, 1];
+
+				into[0].push(one.Place[0] / 1000, one.Place[1] / 1000, one.Place[2] / 1000);
+				into[1].push(color[0], color[1], color[2], one.Radius / 1000);
+			});
+
+			state.Objects = {Bright: made.Bright[0].length ? renderer.Points(made.Bright[0], {aColor: {Size: 4, Data: made.Bright[1]}}) : null, Dark: made.Dark[0].length ? renderer.Points(made.Dark[0], {aColor: {Size: 4, Data: made.Dark[1]}}) : null};
+			state.ObjectsKey = key;
+
+			return state.Objects;
+		}
+
 		/* The points of what was put in by hand, where each is now. */
 		function added () {
 			var list = galaxies.Added(state.Data, number(self.GalaxyTime, 0));
@@ -216,6 +252,7 @@ Elemenx.Trait('SceneGalaxy', {
 			var high = Math.log(shape.uRadius * 1.4 / Math.max(shape.uScale, 1e-3));
 			var rows = Math.max(8, Math.round(262144 / size));
 			var gl = renderer.GL;
+			var drawn;
 
 			if (state.PlaneKey !== key) {
 				['PlaneA', 'PlaneB'].forEach(function (name) {
@@ -239,15 +276,25 @@ Elemenx.Trait('SceneGalaxy', {
 
 			rows = Math.min(rows, size - state.PlaneRow);
 
-			[state.PlaneA, state.PlaneB].forEach(function (target, part) {
+			/*
+			 * Its rows counted only when drawn. Regression: DrawReady skips a draw while the card makes its program, the rows
+			 * were counted all the same, and its plane was left empty (no arms, no dust, no knots: a bare glow).
+			 */
+			drawn = [state.PlaneA, state.PlaneB].map(function (target, part) {
+				var done;
+
 				target.Begin();
 
 				renderer.Viewport(0, state.PlaneRow, size, rows);
 
-				engine.DrawReady(state.Quad, programs().Plane, Object.assign(shapeOf(), {uPlaneMap: state.PlaneMap, uSize: [size, size], uPart: part}), {Depth: false, DepthWrite: false, Blend: 'none', Cull: 'none'});
+				done = engine.DrawReady(state.Quad, programs().Plane, Object.assign(shapeOf(), {uPlaneMap: state.PlaneMap, uSize: [size, size], uPart: part}), {Depth: false, DepthWrite: false, Blend: 'none', Cull: 'none'});
 
 				target.End();
+
+				return done !== false;
 			});
+
+			if (drawn.indexOf(false) !== -1) return false;
 
 			state.PlaneRow += rows;
 
@@ -304,6 +351,7 @@ Elemenx.Trait('SceneGalaxy', {
 			var fresh = sized(fine ? 'Fresh' : 'Coarse', width, height);
 			var old;
 			var made;
+			var drew;
 
 			if (!fine || !state.Band || state.Band >= height)
 				state.Band = 0;
@@ -317,7 +365,7 @@ Elemenx.Trait('SceneGalaxy', {
 
 			renderer.Viewport(0, state.Band, width, rows);
 
-			engine.DrawReady(state.Quad, programs().Volume, Object.assign(shapeOf(), {
+			drew = engine.DrawReady(state.Quad, programs().Volume, Object.assign(shapeOf(), {
 				uInverse: math.Invert(view.Matrix),
 				uEye: view.Eye,
 				uBright: brightOf(),
@@ -325,10 +373,12 @@ Elemenx.Trait('SceneGalaxy', {
 				uSteps: steps,
 				uTime: number(self.GalaxyTime, 0),
 				uNear: cells().Near,
+				uNearKeep: number(state.NearGlow, 0.7),
 				uOuter: Math.max(cells().Near, cells().High * 8 * cells().Inside),
 				uKeep: 1 - 0.65 * cells().Inside,
 				uPixel: 2 * Math.tan(25 * Math.PI / 180) / height,
 				uRound: count * 0.618034,
+				uGrain: fine ? 1 : 0,
 				uView: [width, height],
 				uPlaneA: state.PlaneA.Textures[0],
 				uPlaneB: state.PlaneB.Textures[0],
@@ -339,6 +389,21 @@ Elemenx.Trait('SceneGalaxy', {
 			fresh.End();
 
 			state.VolumeSteps = steps;
+
+			/*
+			 * Not drawn (the card still makes its program): nothing counted, all of it again at the next frame. Regression: its
+			 * fine rounds were counted all the same, six of them done of nothing, and the galaxy stayed black till the view moved.
+			 */
+			if (drew === false) {
+				state.Volume = state.Volume || fresh;
+				state.Drawn = '';
+
+				/* The view changed: the fine rounds of the one before count no more. */
+				if (!fine)
+					state.Fine = 0;
+
+				return;
+			}
 
 			if (!fine) {
 				state.Volume = fresh;
@@ -360,9 +425,15 @@ Elemenx.Trait('SceneGalaxy', {
 
 			made.Begin();
 
-			engine.DrawReady(state.Quad, programs().Mean, {uOld: old.Textures[0], uNew: fresh.Textures[0], uWeight: 1 / (count + 1)}, {Depth: false, DepthWrite: false, Blend: 'none', Cull: 'none'});
+			drew = engine.DrawReady(state.Quad, programs().Mean, {uOld: old.Textures[0], uNew: fresh.Textures[0], uWeight: 1 / (count + 1)}, {Depth: false, DepthWrite: false, Blend: 'none', Cull: 'none'});
 
 			made.End();
+
+			if (drew === false) {
+				state.Drawn = '';
+
+				return;
+			}
 
 			state.Volume = made;
 			state.Fine = count + 1;
@@ -398,18 +469,25 @@ Elemenx.Trait('SceneGalaxy', {
 			return state.Field;
 		}
 
-		/* The stars round the eye: the two cubes of its nearness, each as much as it stands for (its share of the light of the galaxy). */
-		function field (view) {
+		/*
+		 * The stars round the eye: the two cubes of its nearness, each as much as it stands for (its share of the light of the
+		 * galaxy); near, the two cubes its light leaves out (before its dust), else the two wider ones.
+		 */
+		function field (view, near) {
 			var cell = cells();
 			var mesh = fieldMesh();
 			var pixel = 2 * Math.tan(25 * Math.PI / 180) / Math.max(1, renderer.Height);
 
 			/*
-			 * The two cubes round the eye that its light leaves out, then two wider ones whose brightest stars stand over its
-			 * light (the middle of a galaxy seen from inside is not a mist: its stars by the thousand over its glow).
+			 * The two cubes round the eye (the part of its light not left as glow there, NearGlow), then two wider ones whose
+			 * brightest stars stand over its light (the middle of a galaxy seen from inside is not a mist: its stars by the thousand
+			 * over its glow).
 			 */
-			[[cell.Low, 1 - cell.Fade, 0, 1], [cell.High, cell.Fade, 0, 1], [cell.High * 4, cell.Inside, cell.High * 0.5, 0.65], [cell.High * 16, cell.Inside, cell.High * 2, 0.65]].forEach(function (pair) {
-				if (pair[1] < 0.01) return;
+			[[cell.Low, 1 - cell.Fade, 0, 1 - number(state.NearGlow, 0.7)], [cell.High, cell.Fade, 0, 1 - number(state.NearGlow, 0.7)], [cell.High * 4, cell.Inside, cell.High * 0.5, 0.65], [cell.High * 16, cell.Inside, cell.High * 2, 0.65]].forEach(function (pair, index) {
+				/* Inside its disc the band across the sky stands for the wider ones, and those round the eye are fainter over it. */
+				var inside = state.Inside || 0;
+				var weight = pair[1] * (index < 2 ? 1 - 0.5 * inside : 1 - inside);
+				if (weight < 0.01 || near !== index < 2) return;
 
 				engine.DrawReady(mesh, programs().Field, Object.assign(shapeOf(), {
 					uViewProjection: view.Matrix,
@@ -418,7 +496,7 @@ Elemenx.Trait('SceneGalaxy', {
 					uRatio: renderer.Ratio,
 					uCell: pair[0],
 					uLight: brightOf() * pair[0] * pair[0] * pair[0] / state.FieldCount / (pixel * pixel) * number(state.FieldLight, 1) * pair[3],
-					uWeight: pair[1],
+					uWeight: weight,
 					uInner: pair[2],
 					uShift: [(Math.log(pair[0]) * 0.6180339) % 1 + 1, (Math.log(pair[0]) * 0.7548776) % 1 + 1, (Math.log(pair[0]) * 0.5698403) % 1 + 1]
 				}), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
@@ -788,8 +866,10 @@ Elemenx.Trait('SceneGalaxy', {
 				Picture: renderer.Program(self.$Service('Renderer').Shaders.Quad, shaders.Picture),
 				Sky: renderer.Program(shaders.SkyVertex, shaders.Star),
 				Knot: renderer.Program(shaders.KnotVertex, shaders.Star),
+				Object: renderer.Program(shaders.ObjectVertex, shaders.Object),
 				Sun: renderer.Program(shaders.SunVertex, shaders.Sun),
 				Meter: renderer.Program(self.$Service('Renderer').Shaders.Quad, shaders.Meter),
+				Band: renderer.Program(self.$Service('Renderer').Shaders.Quad, shaders.Band),
 				Mean: renderer.Program(self.$Service('Renderer').Shaders.Quad, shaders.Mean),
 				Field: renderer.Program(self.GalaxyFieldShader('#version 300 es\nprecision highp float;\n', self.$Service('Renderer').Chunks.Noise), shaders.Star),
 				Volume: renderer.Program(self.$Service('Renderer').Shaders.Quad, self.GalaxyVolumeShader('#version 300 es\nprecision highp float;\n', self.$Service('Renderer').Chunks.Noise)),
@@ -835,6 +915,49 @@ Elemenx.Trait('SceneGalaxy', {
 			return 1 - Math.min(1, Math.max(0, (state.Distance - 100) / 300));
 		}
 
+		/*
+		 * How far the eye is inside its disc (1 within a few of its heights of its plane, 0 above it or out past its edge; 0
+		 * for a galaxy of no disc). Inside, its light is not drawn along the rays but as the band of it across the sky
+		 * (bandSky): seen edgewise from within, its rays crossed its thin layers in long steps and drew a flat cut with
+		 * streaks down it. Regression: a hard bright line and stripes, not the Milky Way.
+		 */
+		function insideOf (view, wide) {
+			var m = state.Data.Manifest;
+			var height = galaxies.Shape(m).Height / 1000 * (wide || 1);
+			var e = view.Eye;
+			var radius = Math.sqrt(e[0] * e[0] + e[2] * e[2]);
+
+			if (m.Kind === 'elliptical' || m.Kind === 'dwarf') return 0;
+
+			return (1 - smooth(height * 1.2, height * 2.2, Math.abs(e[1]))) * (1 - smooth(m.Radius / 1000, m.Radius / 1000 * 1.2, radius));
+		}
+
+		function smooth (from, to, x) {
+			var t = Math.max(0, Math.min(1, (x - from) / (to - from)));
+
+			return t * t * (3 - 2 * t);
+		}
+
+		/*
+		 * The band of the galaxy across the sky of where the eye is (SceneCosmos, as a system sees it): round its pole, its
+		 * bulge towards its middle, lower as the eye stands higher over its plane, as bright as its stars are thick there. Made
+		 * again only when the eye went far enough to see it otherwise (a step of 2 degrees round its middle); the one before
+		 * stays till then. Null till the first is made.
+		 */
+		function bandSky (view) {
+			var m = state.Data.Manifest;
+			var e = view.Eye;
+			var place = [e[0] * 1000, e[1] * 1000, e[2] * 1000];
+			var density = galaxies.Density(state.Data, place);
+			var angle = Math.round(Math.atan2(-e[2], -e[0]) * 90 / Math.PI) * Math.PI / 90;
+			var lift = Math.round(Math.max(-0.2, Math.min(0.2, place[1] / galaxies.Shape(m).Height * 0.06)) * 50) / 50;
+			var band = Math.round(Math.max(0.2, Math.min(1, 0.35 + Math.log(Math.max(1e-6, density / galaxies.Local)) * 0.15)) * 20) / 20;
+
+			if (!engine.CosmosCubeOf) return null;
+
+			return engine.CosmosCubeOf({Kind: 'galaxy', Seed: m.Seed + ':band', Pole: [0, 1, 0], Middle: [Math.round(Math.cos(angle) * 1000) / 1000, 0, Math.round(Math.sin(angle) * 1000) / 1000], Lift: lift, Band: band, Stars: 0.12, Galaxies: 0}, 'galaxy-band', 512);
+		}
+
 		/* What is under a point of the screen: a star near, the black hole ('centre'), or ''. */
 		/* How bright a star is drawn from the eye (as its points are: its light over the square of how far it is, the edge of the ball of the near ones), 0 to 1. */
 		function brightness (star, place, eye) {
@@ -864,6 +987,36 @@ Elemenx.Trait('SceneGalaxy', {
 			 * Regression: the nearest of all the stars of the sectors round was picked, the faint ones not drawn too, and a press
 			 * on a star took another. Now only what is seen, by how bright it is drawn there: the brighter the farther it reaches.
 			 */
+			/*
+			 * A nebula or a cluster under the pointer, as wide as it is drawn: one seen wide (14 pixels and more) with the pointer
+			 * in its middle is picked before the stars in it; one seen small, when no star is nearer.
+			 */
+			var large = '';
+
+			(state.List || []).forEach(function (one) {
+				var place = now(one.Place);
+				var at = screenOf(view.Matrix, place);
+				var far;
+				var wide;
+
+				if (!at) return;
+
+				far = Math.sqrt(Math.pow(place[0] / 1000 - view.Eye[0], 2) + Math.pow(place[1] / 1000 - view.Eye[1], 2) + Math.pow(place[2] / 1000 - view.Eye[2], 2));
+				wide = Math.max(8, Math.min(80, one.Radius / 1000 / Math.max(far, 1e-4) / Math.tan(25 * Math.PI / 180) * scene.Height * 0.5));
+				far = ((at[0] - x) * (at[0] - x) + (at[1] - y) * (at[1] - y)) / (wide * wide);
+
+				if (far < 1 && far < score) {
+					score = far;
+					best = one.ID;
+					large = wide >= 14 && far < 0.36 ? one.ID : '';
+				}
+			});
+
+			if (large)
+				return large;
+
+			score = best ? 1 : Infinity;
+
 			if (nearness() > 0.05) {
 				state.Stars.forEach(function (star) {
 					var place = now(star.Place);
@@ -1022,6 +1175,8 @@ Elemenx.Trait('SceneGalaxy', {
 			var drawn;
 			var still;
 			var seen;
+			var inside;
+			var sky;
 
 			if (!state.Data) {
 				renderer.Clear([0, 0, 0, 1]);
@@ -1048,6 +1203,25 @@ Elemenx.Trait('SceneGalaxy', {
 			view = matrices();
 			programsOf = programs();
 			near = nearness();
+
+			/* Inside its disc, the band of it across the sky (once it is made: its light along the rays till then). */
+			/*
+			 * Made already while the eye is still a few times higher (its program is slow to make): ready when the eye comes
+			 * into its disc. Regression: made only then, its flat cut was seen for seconds first.
+			 */
+			sky = insideOf(view, 4) > 0.001 ? bandSky(view) : null;
+
+			if (insideOf(view, 4) > 0.001 && engine.CosmosBake)
+				engine.CosmosBake();
+
+			inside = sky ? insideOf(view) : 0;
+
+			if (sky !== state.SkyCube || inside !== state.Inside) {
+				state.SkyCube = sky;
+				state.Inside = inside;
+				state.Drawn = '';
+			}
+
 			drawn = signature(view);
 			still = drawn === state.Drawn;
 
@@ -1066,10 +1240,13 @@ Elemenx.Trait('SceneGalaxy', {
 
 			/* Its light added up in floats (the core is many times brighter than the arms), then brought to the screen as an eye sees it. */
 			if (!state.Light || state.Light.Width !== renderer.Width || state.Light.Height !== renderer.Height) {
-				if (state.Light)
-					state.Light.Destroy();
+				['Light', 'Front'].forEach(function (name) {
+					if (state[name])
+						state[name].Destroy();
 
-				state.Light = renderer.Target(renderer.Width, renderer.Height, {Float: true});
+					state[name] = renderer.Target(renderer.Width, renderer.Height, {Float: true});
+				});
+
 				still = false;
 			}
 
@@ -1089,10 +1266,10 @@ Elemenx.Trait('SceneGalaxy', {
 				glowMesh();
 
 				/* The sparkle of its stars over its light (the light itself is of the volume, below), fainter as the stars one by one come. */
-				engine.DrawReady(state.Glow, programsOf.Glow, Object.assign({uSize: state.Data.Manifest.Radius / 1000 / 40, uGain: 0.42 * 90000 / state.GlowCount * number(state.Sparkle, 0.25), uFade: 1 - near * 0.85}, common), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
+				engine.DrawReady(state.Glow, programsOf.Glow, Object.assign({uSize: state.Data.Manifest.Radius / 1000 / 40, uGain: 0.42 * 90000 / state.GlowCount * number(state.Sparkle, 0.25), uFade: (1 - near * 0.85) * (1 - inside)}, common), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
 
-				/* The stars round the eye, one by one where its light would be a mist. */
-				field(view);
+				/* The brightest stars of the wider cubes round the eye, over its glow and behind its dust as it is. */
+				field(view, false);
 
 				/* What was put in by hand, seen at any distance: a star warm white, a body of no system cyan. */
 				added();
@@ -1100,9 +1277,26 @@ Elemenx.Trait('SceneGalaxy', {
 				if (state.AddedMesh)
 					engine.DrawReady(state.AddedMesh, programsOf.Knot, Object.assign({uFade: 4, uClose: 0}, common), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
 
+				/* Its nebulae and clusters that shine, as wide as they are. */
+				if (objectsMesh().Bright)
+					engine.DrawReady(state.Objects.Bright, programsOf.Object, Object.assign({uDark: 0, uFade: 1 - 0.55 * inside}, common), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
+
 				/* Its knots of young stars: sharp points, never wider than a few pixels. */
 				if (state.Knots)
-					engine.DrawReady(state.Knots, programsOf.Knot, Object.assign({uFade: (1 - near * 0.85) * number(state.KnotLight, 0.35), uClose: 1}, common), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
+					engine.DrawReady(state.Knots, programsOf.Knot, Object.assign({uFade: (1 - near * 0.85) * number(state.KnotLight, 0.35) * (1 - inside), uClose: 1}, common), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
+
+				state.Light.End();
+
+				/*
+				 * What is nearer the eye than its light and its dust begin, in a picture of its own laid over them, not dimmed by
+				 * all the dust of the ray. Regression: dimmed so, seen from inside its disc the stars round the eye were gone
+				 * below its plane, a black floor.
+				 */
+				state.Front.Begin();
+
+				renderer.Clear([0, 0, 0, 0]);
+
+				field(view, true);
 
 				nearStar(view, common);
 
@@ -1113,22 +1307,32 @@ Elemenx.Trait('SceneGalaxy', {
 						engine.DrawReady(state.Near, programsOf.Near, Object.assign({uFade: near, uCentre: state.NearCentre, uReach: state.NearReach}, common), {Depth: false, DepthWrite: false, Blend: 'add', Mode: 'points'});
 				}
 
-				state.Light.End();
+				state.Front.End();
 			}
 
 			/*
 			 * Its light and its dust along the ray of each pixel (GalaxyVolumeShader): coarse while the view moves, fine when it
 			 * stops. Regression: it was of soft spots of points, blurred near and too thin edgewise, its dust a black disc.
 			 */
-			if (!still || state.Fine < number(state.Rounds, 6))
-				volume(view, still);
+			if ((!still || state.Fine < number(state.Rounds, 6)) && (inside < 0.999 || !state.Volume)) volume(view, still);
+			else if (inside >= 0.999) state.Fine = number(state.Rounds, 6);
 
 			seen = exposure(elapsed);
 			state.Shown = seen;
 
 			renderer.Clear([0, 0, 0, 1]);
 
-			engine.DrawReady(state.Quad, programsOf.Picture, {uPicture: state.Light.Textures[0], uVolume: state.Volume.Textures[0], uExposure: seen}, {Depth: false, DepthWrite: false, Blend: 'none', Cull: 'none'});
+			/* A picture with something left out (a program not made yet) is drawn again at the next frame, not kept as it is. */
+			if (engine.DrawReady(state.Quad, programsOf.Picture, {uPicture: state.Light.Textures[0], uFront: state.Front.Textures[0], uVolume: state.Volume.Textures[0], uExposure: seen, uInside: inside}, {Depth: false, DepthWrite: false, Blend: 'none', Cull: 'none'}) === false || renderer.Progress && renderer.Progress().Needed)
+				state.Drawn = '';
+
+			/* The band of it across the sky, seen from inside its disc. */
+			if (sky && inside > 0.001 && engine.DrawReady(state.Quad, programsOf.Band, {uInverse: math.Invert(view.Turn), uCube: sky, uStrength: inside * number(state.BandLight, 2)}, {Depth: false, DepthWrite: false, Blend: 'add', Cull: 'none'}) === false)
+				state.Drawn = '';
+
+			/* Its dark clouds over the picture: they hide the light behind them. */
+			if (state.Objects && state.Objects.Dark)
+				engine.DrawReady(state.Objects.Dark, programsOf.Object, Object.assign({uDark: 1, uFade: 1}, common), {Depth: false, DepthWrite: false, Blend: 'alpha', Mode: 'points'});
 
 			/* The star picked (or its black hole): a ring. */
 			hole = [];
@@ -1395,6 +1599,8 @@ Elemenx.Trait('SceneGalaxy', {
 			 */
 			/* The way of the ray (the stars of a cell and its knots are where the ray crosses its plane: not smeared through its thickness). */
 			'vec3 gRay = vec3(0.0, 1.0, 0.0);',
+			/* How much of the grain of its stars is drawn (0 while the view moves: the rays are fewer than the pixels). */
+			'float gGrain = 1.0;',
 			'vec2 onPlane(vec3 p) {',
 			'	return abs(gRay.y) > 0.5 ? p.xz - gRay.xz * (p.y / gRay.y) : p.xz;',
 			'}',
@@ -1518,6 +1724,26 @@ Elemenx.Trait('SceneGalaxy', {
 			'uniform sampler2D uPlaneB;',
 			'uniform vec3 uPlaneMap;',
 			'uniform float uBaked;',
+			/*
+			 * Its picture read smoothly where a texel of it is wider than a pixel (a cubic B-spline of four reads): seen from near, a
+			 * texel is tens of light-years. Regression: read as it is, the edges of its texels stood across the sky as straight bands
+			 * and along its plane as streaks.
+			 */
+			'vec4 smoothRead(sampler2D map, vec2 uv) {',
+			'	vec2 size = vec2(textureSize(map, 0));',
+			'	vec2 p = uv * size - 0.5;',
+			'	vec2 i = floor(p);',
+			'	vec2 f = p - i;',
+			'	vec2 w0 = (1.0 - f) * (1.0 - f) * (1.0 - f) / 6.0;',
+			'	vec2 w1 = (4.0 - 6.0 * f * f + 3.0 * f * f * f) / 6.0;',
+			'	vec2 w3 = f * f * f / 6.0;',
+			'	vec2 w2 = 1.0 - w0 - w1 - w3;',
+			'	vec2 g0 = w0 + w1;',
+			'	vec2 g1 = w2 + w3;',
+			'	vec2 h0 = (i - 0.5 + w1 / g0) / size;',
+			'	vec2 h1 = (i + 1.5 + w3 / g1) / size;',
+			'	return g0.y * (g0.x * textureLod(map, vec2(h0.x, h0.y), 0.0) + g1.x * textureLod(map, vec2(h1.x, h0.y), 0.0)) + g1.y * (g0.x * textureLod(map, vec2(h0.x, h1.y), 0.0) + g1.x * textureLod(map, vec2(h1.x, h1.y), 0.0));',
+			'}',
 			'void sampleAt(vec3 p, float foot, out vec3 light, out float dust) {',
 			'	float r = length(p.xz);',
 			'	float z = abs(p.y);',
@@ -1561,8 +1787,13 @@ Elemenx.Trait('SceneGalaxy', {
 			'		float lr = log(max(r * shift, 0.02) / max(uScale, 1e-3));',
 			'		vec2 uv = vec2(atan(q.z, q.x) / 6.28319 + 0.5, (lr - uPlaneMap.x) * uPlaneMap.y);',
 			'		float lod = log2(max(foot * uPlaneMap.y * uPlaneMap.z / max(r, 0.02), 1.0));',
-			'		a = textureLod(uPlaneA, uv, lod);',
-			'		b = textureLod(uPlaneB, uv, lod);',
+			'		if (lod < 1.0) {',
+			'			a = mix(smoothRead(uPlaneA, uv), textureLod(uPlaneA, uv, 1.0), lod);',
+			'			b = mix(smoothRead(uPlaneB, uv), textureLod(uPlaneB, uv, 1.0), lod);',
+			'		} else {',
+			'			a = textureLod(uPlaneA, uv, lod);',
+			'			b = textureLod(uPlaneB, uv, lod);',
+			'		}',
 			'	} else planeAt(q, foot, a, b);',
 			/* Its threads round in cut, each at its own height, and frayed by a noise of space (no walls). */
 			'	float dy = p.y - b.w;',
@@ -1570,7 +1801,7 @@ Elemenx.Trait('SceneGalaxy', {
 			'	float threads = a.w * exp(-dy * dy / (tube * tube)) * (0.4 + 1.2 * smoothstep(0.3, 0.7, octave(p, uRadius / 700.0, foot, uSeed * 9.1)));',
 			/* The grain of its stars: a star of each pixel-wide cell, brighter where its arms are. */
 			'	bool plane = z < uHeight * 8.0;',
-			'	float grain = plane ? speckle(p.xz, p.y, foot) : 1.0;',
+			'	float grain = plane && gGrain > 0.0 ? mix(1.0, speckle(p.xz, p.y, foot), gGrain) : 1.0;',
 			'	float young = exp(-r / uScale - z / (uHeight * 0.45)) * edge * a.y;',
 			'	light = old * (thin * (0.25 + 0.45 * a.x) * (0.75 + 0.25 * grain) + thick) + lightYoung * young * 2.6 * (0.6 + 0.4 * grain) + lightBulge * bulge + vec3(0.9, 0.85, 0.8) * halo;',
 			/* Its knots of young stars near its plane. */
@@ -1604,10 +1835,12 @@ Elemenx.Trait('SceneGalaxy', {
 			'uniform float uSteps;',
 			'uniform float uTime;',
 			'uniform float uNear;',
+			'uniform float uNearKeep;',
 			'uniform float uOuter;',
 			'uniform float uKeep;',
 			'uniform float uPixel;',
 			'uniform float uRound;',
+			'uniform float uGrain;',
 			'out vec4 outColor;',
 			this.GalaxyShapeShader(noise),
 			'void main() {',
@@ -1651,7 +1884,23 @@ Elemenx.Trait('SceneGalaxy', {
 			'	float pass = 1.0;',
 			'	vec3 tint = vec3(1.0);',
 			'	float spare = max(4.0, uSteps * 0.2);',
-			'	float jitter = fract(fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) + uRound);',
+			/*
+			 * Where its steps begin along the ray: of the cell of its plane the ray crosses, as wide as a pixel there (of the
+			 * way of the ray when it crosses none). Regression: of the pixel of the screen, the grain of its stars stayed on the
+			 * screen while the view went round, muddy spots over its arms.
+			 * While the view moves (uGrain 0), the same place of each step for all rays and no grain: a smooth picture of the
+			 * same mean. Regression: each ray its own, the noise of a third of the pixels stretched over the screen, soft spots.
+			 */
+			'	float meet = abs(d.y) > 1e-4 ? -o.y / d.y : -1.0;',
+			'	vec3 cell = d / max(uPixel, 1e-7);',
+			'	if (meet > 0.0) {',
+			'		vec3 at = backAt(o + d * meet, uTime);',
+			'		float size = exp2(floor(log2(max(meet * uPixel, 1e-6))));',
+			'		cell = vec3(floor(at.xz / size), log2(size));',
+			'	}',
+			'	float jitter = fract(hash3(mod(floor(cell), 4096.0) + 0.5) + uRound);',
+			'	gGrain = uGrain;',
+			'	jitter = mix(0.5, jitter, uGrain);',
 			'	float count = min(160.0, uSteps * (abs(o.y) < slab ? 2.0 : 1.0));',
 			'	float share = cb > ca ? 0.6 : 0.0;',
 			'	float rest = max(z - a - (cb - ca), 1e-6);',
@@ -1688,8 +1937,12 @@ Elemenx.Trait('SceneGalaxy', {
 			'		sampleAt(backAt(o + d * t, uTime), t * uPixel, light, dust);',
 			/* Its dust reddens what lies behind it: brown threads, as in the pictures (regression: grey). */
 			'		vec3 through = exp(-dust * uDust * ds * vec3(0.62, 0.8, 1.0) * 40.0);',
-			/* Nearer than uNear its stars are all drawn one by one; out to uOuter its brightest ones (uKeep of its light left as glow). */
-			'		float own = smoothstep(uNear * 0.7, uNear, t) * mix(uKeep, 1.0, smoothstep(uOuter * 0.7, uOuter, t));',
+			/*
+			 * Nearer than uNear a part of its light (uNearKeep) is glow and the rest its stars drawn one by one; out to uOuter its
+			 * brightest ones (uKeep of its light left as glow). Regression: nearer than uNear all of it was stars one by one, and
+			 * seen from inside its disc, its plane below the eye was black between them.
+			 */
+			'		float own = mix(uNearKeep, 1.0, smoothstep(uNear * 0.7, uNear, t)) * mix(uKeep, 1.0, smoothstep(uOuter * 0.7, uOuter, t));',
 			'		sum += light * tint * ds * uBright * own;',
 			'		tint *= through;',
 			'		pass = dot(tint, vec3(0.3333));',
@@ -1872,6 +2125,66 @@ Elemenx.Trait('SceneGalaxy', {
 				'}'
 			].join('\n'),
 
+			/*
+			 * A nebula or a cluster: a soft point as wide as it is (aColor.a, its radius in thousands of light years) where it is
+			 * now, two pixels at the least, gone when it fills the view; a dark cloud drawn to hide (uDark).
+			 */
+			ObjectVertex: head + [
+				'in vec3 aPosition;',
+				'in vec4 aColor;',
+				'uniform mat4 uViewProjection;',
+				'uniform vec3 uEye;',
+				'uniform float uTime;',
+				'uniform float uRatio;',
+				'uniform float uHeight;',
+				'uniform float uFocal;',
+				'uniform float uDark;',
+				'out vec4 vColor;',
+				'out float vSeed;',
+				'vec3 turned(vec3 p) {',
+				'	float a = -uTime * 0.734 / max(length(p.xz), 0.5);',
+				'	float c = cos(a);',
+				'	float s = sin(a);',
+				'	return vec3(p.x * c - p.z * s, p.y, p.x * s + p.z * c);',
+				'}',
+				'void main() {',
+				'	vec3 at = turned(aPosition);',
+				'	float far = max(length(at - uEye), 1e-4);',
+				'	float wide = aColor.a / far * uFocal * uHeight * 0.5;',
+				'	gl_Position = uViewProjection * vec4(at, 1.0);',
+				'	gl_PointSize = clamp(wide * 2.0, 2.0, 160.0) * uRatio;',
+				'	vColor = vec4(aColor.rgb, clamp(wide / 4.0, mix(0.35, 0.08, uDark), 1.0) * (1.0 - smoothstep(60.0, 80.0, wide)));',
+				'	vSeed = fract(sin(dot(aPosition, vec3(12.9898, 78.233, 37.719))) * 43758.5453);',
+				'}'
+			].join('\n'),
+
+			Object: head + [
+				'in vec4 vColor;',
+				'in float vSeed;',
+				'uniform float uDark;',
+				'uniform float uFade;',
+				'out vec4 outColor;',
+				'float hash2(vec2 p) {',
+				'	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);',
+				'}',
+				'float noise2(vec2 p) {',
+				'	vec2 i = floor(p);',
+				'	vec2 f = fract(p);',
+				'	f = f * f * (3.0 - 2.0 * f);',
+				'	return mix(mix(hash2(i), hash2(i + vec2(1.0, 0.0)), f.x), mix(hash2(i + vec2(0.0, 1.0)), hash2(i + vec2(1.0, 1.0)), f.x), f.y);',
+				'}',
+				'void main() {',
+				'	vec2 q = gl_PointCoord * 2.0 - 1.0;',
+				/* A cloud, not a disc: ragged lobes of its own, turned its own way. Regression: round pink spots across the sky. */
+				'	float a = vSeed * 6.28318;',
+				'	vec2 p = mat2(cos(a), -sin(a), sin(a), cos(a)) * q;',
+				'	float n = noise2(p * 2.5 + vSeed * 17.0) * 0.6 + noise2(p * 5.5 + vSeed * 31.0) * 0.4;',
+				'	float d = dot(q, q);',
+				'	float soft = exp(-d * (2.2 + 3.0 * (1.0 - n))) * (1.0 - smoothstep(0.6, 1.0, d)) * (0.35 + 0.9 * n * n);',
+				'	outColor = vec4(vColor.rgb, soft * vColor.a * mix(1.0, 0.9, uDark) * uFade);',
+				'}'
+			].join('\n'),
+
 			/* A knot of young stars: a sharp point as bright as it is, a few pixels wide however near. */
 			KnotVertex: head + [
 				'in vec3 aPosition;',
@@ -1931,19 +2244,38 @@ Elemenx.Trait('SceneGalaxy', {
 			Picture: head + [
 				'in vec2 vQuad;',
 				'uniform sampler2D uPicture;',
+				'uniform sampler2D uFront;',
 				'uniform sampler2D uVolume;',
 				'uniform float uExposure;',
+				'uniform float uInside;',
 				'out vec4 outColor;',
 				'void main() {',
 				/* Its rays a little smoothed (the steps of each pixel begin at a different place: a fine grain, not lines). */
 				'	vec2 texel = 1.0 / vec2(textureSize(uVolume, 0));',
 				'	vec2 uv = vQuad * 0.5 + 0.5;',
 				'	vec4 lit = texture(uVolume, uv) * 0.36 + (texture(uVolume, uv + vec2(texel.x, 0.0)) + texture(uVolume, uv - vec2(texel.x, 0.0)) + texture(uVolume, uv + vec2(0.0, texel.y)) + texture(uVolume, uv - vec2(0.0, texel.y))) * 0.16;',
-				'	vec3 light = (texture(uPicture, uv).rgb * lit.a + lit.rgb) * uExposure;',
+				/* Inside its disc its light is the band across the sky (Band), not of its rays. */
+				'	lit = vec4(lit.rgb * (1.0 - uInside), mix(lit.a, 1.0, uInside));',
+				'	vec3 light = (texture(uPicture, uv).rgb * lit.a + lit.rgb + texture(uFront, uv).rgb) * uExposure;',
 				'	float bright = max(max(light.r, light.g), light.b);',
 				'	vec3 seen = light / max(bright, 1e-6) * (1.0 - exp(-bright));',
 				'	seen = mix(seen, vec3(1.0 - exp(-bright)), smoothstep(1.5, 8.0, bright) * 0.6);',
 				'	outColor = vec4(pow(seen, vec3(0.85)), 1.0);',
+				'}'
+			].join('\n'),
+
+			/* The band of the galaxy across the sky from inside its disc (a cube of SceneCosmos), added over the picture. */
+			Band: head + [
+				'in vec2 vQuad;',
+				'uniform mat4 uInverse;',
+				'uniform samplerCube uCube;',
+				'uniform float uStrength;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	vec4 far = uInverse * vec4(vQuad, 1.0, 1.0);',
+				'	vec4 close = uInverse * vec4(vQuad, -1.0, 1.0);',
+				'	vec3 ray = normalize(far.xyz / far.w - close.xyz / close.w);',
+				'	outColor = vec4(texture(uCube, ray).rgb * uStrength, 1.0);',
 				'}'
 			].join('\n'),
 
@@ -1966,7 +2298,7 @@ Elemenx.Trait('SceneGalaxy', {
 				'uniform sampler2D uVolume;',
 				'out vec4 outColor;',
 				'void main() {',
-				/* The light of a sixteenth of the screen: a grid of its pixels over it, the stars over the glow as they are. */
+				/* The light of a sixteenth of the screen: a grid of its pixels over it, the stars over the glow as they are (not those round the eye: points that would darken all of it). */
 				'	vec3 sum = vec3(0.0);',
 				'	for (int i = 0; i < 6; i++) {',
 				'		for (int j = 0; j < 6; j++) {',
@@ -2085,7 +2417,8 @@ Elemenx.Trait('SceneGalaxy', {
 
 		state.Picked = star.ID;
 
-		state.Fly(state.Now(star.Place), Math.min(state.Distance, 60), 1.4, function () {
+		/* A nebula or a cluster: seen whole, from a few of its widths. */
+		state.Fly(state.Now(star.Place), star.Radius ? Math.max(star.Radius * 4, 60) : Math.min(state.Distance, 60), 1.4, function () {
 			state.Follow = star.ID;
 		});
 	},

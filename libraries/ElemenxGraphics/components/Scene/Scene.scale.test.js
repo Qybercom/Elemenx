@@ -91,4 +91,86 @@ describe('Contract: the scale of a Scene of space, from readable to real by a nu
 			expect(orbit.Distance).toBeCloseTo(1, 1);
 		});
 	});
+
+	/*
+	 * Regression: the template of the scene told it its props through names it no longer had (Map, Grid, Zoom...): the
+	 * expression failed each time, unseen, and a Seed, a System or a Scale given again by a template changed nothing.
+	 */
+	it('takes a Seed, a System and a Scale its template gives again, with nothing more called', async function () {
+		var ready = null;
+		var host = Elemenx.Component(unique('GivenHost'), {$Template: '<div style="width: 320px; height: 200px"><Scene Paused="true" Quality="low" Labels="false" [Seed]="Seed" [Scale]="Scale" [System]="System" (ready)="Ready" /></div>', Seed: 'one', Scale: 'compressed', System: null, Ready: function (space) {
+			ready = space;
+		}})();
+		var first;
+
+		owned.push(host);
+
+		document.getElementById('mount').appendChild(host.$Element());
+
+		await waitFor(function () {
+			return ready && ready.Objects().length;
+		}, 4000);
+
+		first = JSON.stringify(ready.Objects().map(function (object) {
+			return object.Name;
+		}));
+
+		host.Seed = 'two';
+
+		await waitFor(function () {
+			return JSON.stringify(ready.Objects().map(function (object) {
+				return object.Name;
+			})) !== first;
+		}, 4000);
+
+		expect(ready.Scene().Given.Seed).toBe('two');
+
+		host.Scale = 0.5;
+
+		await waitFor(function () {
+			return ready.Scene().Given.Scale === 0.5;
+		}, 4000);
+
+		host.Seed = '';
+		host.System = {Objects: [{ID: 'lone', Kind: 'star', Values: {Name: 'Lone'}}]};
+
+		await waitFor(function () {
+			return ready.Get('lone');
+		}, 4000);
+
+		expect(ready.Get('lone').Name).toBe('Lone');
+	});
+
+	/* Regression: the meshes of the orbits were kept as they were made, and with a larger Scale the bodies went out of their orbits. */
+	it('makes its orbits again when Scale changes, even with no other prop given again', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var first;
+
+		inner.Rest = 0;
+
+		scene.Engine().Frame(now += 33);
+
+		first = inner.Lines.earth;
+
+		expect(first).toBeTruthy();
+
+		/* Set as an editor's slider sets it, at each step of the drag. */
+		scene.Scale = 0.7;
+		inner.Rest = 0;
+
+		scene.Engine().Frame(now += 33);
+
+		expect(inner.Lines.earth).toBeTruthy();
+		expect(inner.Lines.earth).not.toBe(first);
+		expect(inner.SpreadOf).toBe(0.7);
+
+		first = inner.Lines.earth;
+		inner.Rest = 0;
+
+		scene.Engine().Frame(now += 33);
+
+		/* The same Scale: kept. */
+		expect(inner.Lines.earth).toBe(first);
+	});
 });

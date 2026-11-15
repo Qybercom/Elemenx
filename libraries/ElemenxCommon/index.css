@@ -11,6 +11,10 @@
 	user-select: none;
 }
 
+/*
+ * Its handles lie inside its edges. Regression: half of each stood out of it, and a panel that scrolls (overflow: auto)
+ * showed a scroll bar across for those 4 pixels.
+ */
 .elemenx-resize-handle {
 	position: absolute;
 	z-index: 2;
@@ -34,19 +38,26 @@
 }
 
 .elemenx-resize-handle.right {
-	inset-inline-end: -4px;
+	inset-inline-end: 0;
 }
 
 .elemenx-resize-handle.left {
-	inset-inline-start: -4px;
+	inset-inline-start: 0;
 }
 
 .elemenx-resize-handle.right::after,
 .elemenx-resize-handle.left::after {
 	top: 0;
 	bottom: 0;
-	inset-inline-start: 3px;
 	width: 2px;
+}
+
+.elemenx-resize-handle.right::after {
+	inset-inline-end: 0;
+}
+
+.elemenx-resize-handle.left::after {
+	inset-inline-start: 0;
 }
 
 .elemenx-resize-handle.top,
@@ -58,19 +69,26 @@
 }
 
 .elemenx-resize-handle.top {
-	top: -4px;
+	top: 0;
 }
 
 .elemenx-resize-handle.bottom {
-	bottom: -4px;
+	bottom: 0;
 }
 
 .elemenx-resize-handle.top::after,
 .elemenx-resize-handle.bottom::after {
-	top: 3px;
 	inset-inline-end: 0;
 	inset-inline-start: 0;
 	height: 2px;
+}
+
+.elemenx-resize-handle.top::after {
+	top: 0;
+}
+
+.elemenx-resize-handle.bottom::after {
+	bottom: 0;
 }
 
 .elemenx-resize-handle:hover::after,

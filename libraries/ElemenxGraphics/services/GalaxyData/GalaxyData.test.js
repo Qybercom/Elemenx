@@ -198,4 +198,271 @@ describe('Contract: GalaxyData, a galaxy as data: its black hole, its stars sect
 		/* The same of the same seed. */
 		expect(galaxies.System(galaxies.Make({Seed: 'milky', Radius: 50000}), 'centre').Objects.length).toBe(system.Objects.length);
 	});
+
+	/* The stars round a black hole had nothing of their own: what its pull leaves each at its nearest, and the old stars round them. */
+	it('gives the stars round its black hole the planets and stations their room leaves them, and the swarm of its nuclear cluster', function () {
+		var data = galaxies.Make({Seed: 'milky', Radius: 50000});
+		var objects = Elemenx.Service('SystemData').Objects(galaxies.System(data, 'centre'), 'hole-moons');
+		var byID = {};
+		var planets;
+
+		objects.forEach(function (one) {
+			byID[one.ID] = one;
+		});
+
+		planets = objects.filter(function (one) {
+			return one.Kind === 'planet';
+		});
+
+		expect(objects[0].Traits.Cluster).toMatchObject({Type: 'nuclear', Count: 6000});
+		expect(planets.length).toBeGreaterThan(0);
+
+		/* Each well inside the half of the sphere of Hill of its star at the nearest point of the star. */
+		planets.forEach(function (planet) {
+			var star = byID[planet.Parent];
+			var room = galaxies.Room(star, data.Manifest.Centre.Mass);
+
+			expect(star.Kind).toBe('star');
+			expect(planet.Traits.Orbit.Distance * (1 + planet.Traits.Orbit.Eccentricity)).toBeLessThan(room * 1.2);
+		});
+	});
+
+	it('makes star clusters of three kinds of a seed: open ones loose and young, globular ones old and packed, nuclear ones round a black hole', function () {
+		var systems = Elemenx.Service('SystemData');
+		var ly = Elemenx.Service('Astronomy').Units.ly;
+		var kinds = {};
+
+		['open', 'globular', 'nuclear'].forEach(function (type) {
+			var objects = systems.Objects(galaxies.Cluster({Seed: 'pleiades', Type: type}), 'cluster-' + type);
+			var middle = objects[0];
+			var stars = objects.filter(function (one) {
+				return one.Kind === 'star';
+			});
+			var far = stars.map(function (star) {
+				return star.Traits.Orbit.Distance / ly;
+			}).sort(function (a, b) {
+				return a - b;
+			});
+
+			kinds[type] = {Middle: middle, Stars: stars, Half: far[Math.floor(far.length / 2)], Planets: objects.filter(function (one) {
+				return one.Kind === 'planet';
+			}).length, Masses: stars.map(function (star) {
+				return star.Traits.Star.Mass;
+			})};
+
+			expect(middle.ID).toBe('cluster');
+			expect(middle.Traits.Cluster.Type).toBe(type);
+
+			stars.forEach(function (star) {
+				expect(star.Parent).toBe('cluster');
+			});
+		});
+
+		expect(kinds.open.Middle.Kind).toBe('cluster');
+		expect(kinds.globular.Middle.Kind).toBe('cluster');
+		expect(kinds.nuclear.Middle.Kind).toBe('blackhole');
+		expect(kinds.nuclear.Middle.Traits.BlackHole.Mass).toBeGreaterThan(1e6);
+
+		/* A few light-years across an open one, tens a globular one; the swarm of the old ones only. */
+		expect(kinds.open.Half).toBeLessThan(8);
+		expect(kinds.globular.Half).toBeGreaterThan(kinds.open.Half * 4);
+		expect(kinds.open.Middle.Traits.Cluster.Count).toBe(0);
+		expect(kinds.globular.Middle.Traits.Cluster.Count).toBeGreaterThan(1000);
+
+		/* Hot heavy young stars in an open one, none in a globular one, red giants there instead. */
+		expect(Math.max.apply(null, kinds.open.Masses)).toBeGreaterThan(2);
+		expect(Math.max.apply(null, kinds.globular.Masses)).toBeLessThan(0.9);
+		expect(kinds.globular.Stars.some(function (star) {
+			return star.Traits.Star.Radius > 5;
+		})).toBe(true);
+
+		/* Systems of their own round its stars. */
+		expect(kinds.open.Planets).toBeGreaterThan(10);
+
+		/* The same of the same seed, another of another. */
+		expect(JSON.stringify(galaxies.Cluster({Seed: 'pleiades', Type: 'open'}).Objects)).toBe(JSON.stringify(galaxies.Cluster({Seed: 'pleiades', Type: 'open'}).Objects));
+		expect(JSON.stringify(galaxies.Cluster({Seed: 'hyades', Type: 'open'}).Objects)).not.toBe(JSON.stringify(galaxies.Cluster({Seed: 'pleiades', Type: 'open'}).Objects));
+	});
+
+	it('gives its stars their kinds: a few white and brown dwarfs, rare giants and what heavy stars left, each of the kind of a Scene, with a system of that star', function () {
+		var data = galaxies.Make({Seed: 'milky', Radius: 50000});
+		var tally = {};
+		var stars = [];
+		var dwarf;
+		var system;
+
+		[[270, 0, 0], [271, 0, 0], [270, 0, 1], [269, 0, 0], [272, 0, 1], [268, 0, 2]].forEach(function (at) {
+			stars = stars.concat(galaxies.Sector(data, at[0], at[1], at[2]).Stars);
+		});
+
+		stars.forEach(function (star) {
+			tally[star.Type] = (tally[star.Type] || 0) + 1;
+		});
+
+		expect(tally.main / stars.length).toBeGreaterThan(0.8);
+		expect(tally['white-dwarf']).toBeGreaterThan(0);
+		expect(tally['brown-dwarf']).toBeGreaterThan(0);
+
+		dwarf = stars.filter(function (star) {
+			return star.Type === 'white-dwarf';
+		})[0];
+
+		expect(dwarf).toMatchObject({Kind: 'white-dwarf', Class: 'DA'});
+
+		/* Its system of that star. */
+		system = Elemenx.Service('SystemData').Objects(galaxies.System(data, dwarf.ID), 'dwarf-system');
+
+		expect(system[0]).toMatchObject({Kind: 'white-dwarf'});
+		expect(system[0].Traits.Star.Type).toBe('white-dwarf');
+	});
+
+	it('has its nebulae and clusters of its seed, each where it belongs, each entered as a star is: its scene a nebula with what made it, or a cluster', function () {
+		var data = galaxies.Make({Seed: 'milky', Radius: 50000, Kind: 'spiral'});
+		var objects = galaxies.Objects(data);
+		var of = function (type) {
+			return objects.filter(function (one) {
+				return one.Type === type;
+			});
+		};
+		var systems = Elemenx.Service('SystemData');
+		var arm = function (one) {
+			return galaxies.Arm(data.Manifest, one.Place[0], one.Place[2]);
+		};
+		var mean = function (list, f) {
+			return list.reduce(function (sum, one) {
+				return sum + f(one);
+			}, 0) / list.length;
+		};
+		var remnant;
+		var made;
+		var globular;
+
+		expect(of('hii').length).toBeGreaterThan(50);
+		expect(of('dark').length).toBeGreaterThan(20);
+		expect(of('planetary').length).toBeGreaterThan(10);
+		expect(of('remnant').length).toBeGreaterThan(10);
+		expect(of('open').length).toBeGreaterThan(50);
+		expect(of('globular').length).toBeGreaterThan(50);
+
+		/* Clouds where stars are born on the arms, globular clusters in a ball out of the disc. */
+		expect(mean(of('hii'), arm)).toBeGreaterThan(mean(of('planetary'), arm));
+		expect(mean(of('globular'), function (one) {
+			return Math.abs(one.Place[1]);
+		})).toBeGreaterThan(mean(of('open'), function (one) {
+			return Math.abs(one.Place[1]);
+		}) * 5);
+
+		/* The same of the same seed; renamed and taken away by its edits. */
+		expect(JSON.stringify(galaxies.Objects(galaxies.Make({Seed: 'milky', Radius: 50000, Kind: 'spiral'})))).toBe(JSON.stringify(objects));
+
+		galaxies.Rename(data, objects[0].ID, 'Orion');
+		galaxies.Remove(data, objects[1].ID);
+
+		expect(galaxies.ObjectOf(data, objects[0].ID).Name).toBe('Orion');
+		expect(galaxies.ObjectOf(data, objects[1].ID)).toBe(null);
+
+		/* Entered: a remnant of a heavy star with its pulsar or neutron star, a planetary nebula with its white dwarf, a cluster. */
+		remnant = of('remnant').filter(function (one) {
+			return one.Subtype === 'II';
+		})[0];
+		made = systems.Objects(galaxies.System(data, remnant.ID), 'remnant');
+
+		expect(galaxies.Star(data, remnant.ID).ID).toBe(remnant.ID);
+		expect(made[0]).toMatchObject({Kind: 'nebula'});
+		expect(made[0].Traits.Nebula).toMatchObject({Type: 'remnant', Subtype: 'II'});
+		expect(made[1].Kind).toBe('pulsar');
+		expect(systems.Objects(galaxies.System(data, of('planetary')[0].ID), 'planetary')[1].Kind).toBe('white-dwarf');
+
+		globular = systems.Objects(galaxies.System(data, of('globular')[0].ID), 'globular');
+
+		expect(globular[0].Traits.Cluster.Type).toBe('globular');
+	});
+
+	it('finds what lies round a place and is as asked, the nearest first: a type, a class, a mass, a text, what was edited', function () {
+		var data = galaxies.Make({Seed: 'search', Kind: 'spiral'});
+		var centre = [20000, 0, 3000];
+		var near = galaxies.Search(data, {Centre: centre, Radius: 40, Limit: 100000});
+		var all = [];
+		var x;
+		var y;
+		var z;
+		var dwarfs;
+		var some;
+		var nebula;
+
+		/* The same as its sectors hold: each star in the sphere, none outside, the nearest first. */
+		for (x = 199; x <= 200; x++)
+			for (y = -1; y <= 0; y++)
+				for (z = 29; z <= 30; z++)
+					galaxies.Sector(data, x, y, z).Stars.forEach(function (star) {
+						var d = Math.hypot(star.Place[0] - centre[0], star.Place[1] - centre[1], star.Place[2] - centre[2]);
+						if (d <= 40)
+							all.push(star.ID);
+					});
+
+		expect(near.Partial).toBe(false);
+		expect(near.Items.filter(function (item) {
+			return item.Kind === 'star';
+		}).map(function (item) {
+			return item.ID;
+		}).sort()).toEqual(all.sort());
+		expect(near.Items.every(function (item, index) {
+			return index === 0 || item.Distance >= near.Items[index - 1].Distance;
+		})).toBe(true);
+		expect(near.Items[0]).toMatchObject({Kind: 'star', Class: expect.any(String), Mass: expect.any(Number), Temperature: expect.any(Number)});
+
+		/* At most Limit, the nearest. */
+		some = galaxies.Search(data, {Centre: centre, Radius: 40, Limit: 10});
+
+		expect(some.Items.length).toBe(10);
+		expect(some.More).toBe(true);
+		expect(some.Items.map(function (item) {
+			return item.ID;
+		})).toEqual(near.Items.slice(0, 10).map(function (item) {
+			return item.ID;
+		}));
+
+		/* A type, a class, a mass. */
+		dwarfs = galaxies.Search(data, {Centre: centre, Radius: 40, Type: 'white-dwarf'});
+
+		expect(dwarfs.Items.length).toBeGreaterThan(0);
+		expect(dwarfs.Items.every(function (item) {
+			return item.Type === 'white-dwarf' && item.Class.indexOf('D') === 0;
+		})).toBe(true);
+		expect(galaxies.Search(data, {Centre: centre, Radius: 40, Class: 'M'}).Items.every(function (item) {
+			return item.Class.charAt(0) === 'M';
+		})).toBe(true);
+		expect(galaxies.Search(data, {Centre: centre, Radius: 40, Mass: [2, 100]}).Items.every(function (item) {
+			return item.Mass >= 2;
+		})).toBe(true);
+
+		/* A text: its name or its ID. */
+		galaxies.Rename(data, near.Items[3].ID, 'Polaris');
+
+		expect(galaxies.Search(data, {Centre: centre, Radius: 40, Text: 'polar'}).Items.map(function (item) {
+			return item.ID;
+		})).toEqual([near.Items[3].ID]);
+
+		/* What was edited: given a name, its system written. */
+		galaxies.SetSystem(data, near.Items[5].ID, {Version: 1, Objects: []});
+
+		expect(galaxies.Search(data, {Centre: centre, Radius: 40, Edited: 'renamed'}).Items.map(function (item) {
+			return item.ID;
+		})).toEqual([near.Items[3].ID]);
+		expect(galaxies.Search(data, {Centre: centre, Radius: 40, Edited: 'written'}).Items.map(function (item) {
+			return item.ID;
+		})).toEqual([near.Items[5].ID]);
+		expect(galaxies.Search(data, {Centre: centre, Radius: 40, Edited: 'any'}).Items.length).toBe(2);
+
+		/* Its nebulae and clusters, of their type, round where they are. */
+		nebula = galaxies.Objects(data).filter(function (one) {
+			return one.Type === 'planetary';
+		})[0];
+
+		expect(galaxies.Search(data, {Centre: nebula.Place, Radius: 10, Type: 'nebula'}).Items[0]).toMatchObject({ID: nebula.ID, Kind: 'nebula', Type: 'planetary', Distance: 0});
+		expect(galaxies.Search(data, {Centre: nebula.Place, Radius: 10, Type: 'nebula', Mass: [0, 1]}).Items.length).toBe(0);
+
+		/* A region too large for its budget: what it went through, told as partial. */
+		expect(galaxies.Search(data, {Centre: centre, Radius: 5000, Budget: 20000}).Partial).toBe(true);
+	});
 });

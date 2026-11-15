@@ -12,7 +12,8 @@
  * - Density(data, place): stars a cubic light-year at a place (about 0.004 where the Sun is in a galaxy like ours).
  * - Sector(data, x, y, z, limit): the stars of a sector (a cube of Manifest.Sector ly, 100; x, y, z its place in the grid)
  *   made of the seed, the same each time: {Count (how many there are), Stars: [{ID, Name, Place [x, y, z] ly, Mass,
- *   Temperature, Color, Luminosity, Class}] (limit of them at most, an even draw of all)}; its edits over them.
+ *   Temperature, Color, Luminosity, Class, Type (Astronomy.Types: a few white and brown dwarfs, rare giants and what heavy stars left), Kind
+ *   (of a Scene)}] (limit of them at most, an even draw of all)}; its edits over them.
  * - Star(data, id): one star of its ID ('x.y.z-index'), or its black hole ('centre': {ID, Name, Place [0, 0, 0], Mass,
  *   Kind 'blackhole', Luminosity 0}); Position(data, place, time): where a place is after time Myr of
  *   the turning of the galaxy (a flat curve: 220 km/s, 734 ly a Myr at any radius; solid inside 500 ly).
@@ -24,7 +25,16 @@
  * - System(data, id): the system of a star (SystemData): written (Systems), else made of its seed with the mass of the star;
  *   of its black hole ('centre'): the hole with its disc and the young stars that go round it close and fast (as S2 round
  *   ours: hundreds to thousands of AU, long thin orbits), made of the seed of the galaxy. Hole(data): its black hole as a
- *   body; HoleSystem(data): the system of it as made of its seed.
+ *   body; HoleSystem(data): the system of it as made of its seed, its stars with the planets their room round the hole
+ *   leaves them, the old stars of its nuclear cluster a swarm round it (Cluster).
+ * - Cluster(options): a star cluster as a system {Seed, Type (open, globular, nuclear), Name, Count, Radius (ly), Mass}:
+ *   its middle with the trait Cluster {Type, Radius, Count, Seed} (the swarm of its stars not told one by one), its
+ *   stars round it on orbits of the profile of Plummer, each with the planets and stations its sphere of Hill leaves it.
+ * - Search(data, options): what of it lies round a place and is as asked (a type, a class, a mass, a temperature, a
+ *   text, what was edited), the nearest first, at most Limit: {Items, More, Partial}.
+ * - Objects(data): its nebulae and star clusters made of its seed ({ID, Kind, Type, Subtype, Name, Place, Radius, Seed}),
+ *   ObjectOf(data, id) one of them, ObjectSystem(data, id) its scene as a system (Star and System take their IDs too: they
+ *   are entered as a star is).
  * - Cosmos(data, id): the backdrop of the sky of a system of a star (Cosmos of a Scene): the band of its galaxy across it,
  *   its pole the north of the galaxy as the system lies, as bright as the stars round it are many.
  * - Rename(data, id, name), Remove(data, id), AddBody(data, body), SetSystem(data, id, system): what is changed of it.
@@ -34,7 +44,7 @@
 Elemenx.Service('GalaxyData', {
 	$Meta: {
 		Description: 'A galaxy as data: its supermassive black hole, its stars made sector by sector of its seed as many as a galaxy holds, its systems, what was changed of it.',
-		Methods: ['Kinds()', 'Make(options)', 'Density(data, place)', 'Sector(data, x, y, z, limit)', 'Star(data, id)', 'Hole(data)', 'HoleSystem(data)', 'Position(data, place, time)', 'Added(data, time)', 'Glow(data, count)', 'System(data, id)', 'Cosmos(data, id)', 'Rename(data, id, name)', 'Remove(data, id)', 'AddBody(data, body)', 'SetSystem(data, id, system)', 'Use(key, data)', 'DataOf(key)', 'Open(source, callback)', 'Write(data, store, callback, whole)', 'Save(data)', 'Pack(data, callback)']
+		Methods: ['Kinds()', 'Make(options)', 'Density(data, place)', 'Sector(data, x, y, z, limit)', 'Search(data, options)', 'Star(data, id)', 'Hole(data)', 'HoleSystem(data)', 'Cluster(options)', 'Objects(data)', 'ObjectOf(data, id)', 'ObjectSystem(data, id)', 'Position(data, place, time)', 'Added(data, time)', 'Glow(data, count)', 'System(data, id)', 'Cosmos(data, id)', 'Rename(data, id, name)', 'Remove(data, id)', 'AddBody(data, body)', 'SetSystem(data, id, system)', 'Use(key, data)', 'DataOf(key)', 'Open(source, callback)', 'Write(data, store, callback, whole)', 'Save(data)', 'Pack(data, callback)']
 	},
 
 	Sets: {},
@@ -188,17 +198,44 @@ Elemenx.Service('GalaxyData', {
 		return x + '.' + y + '.' + z;
 	},
 
+	/* How many stars a sector holds, of its seed and how thick its stars are there (Sector, Search). */
+	SectorCount: function (data, x, y, z) {
+		var size = data.Manifest.Sector;
+		var random = this.Random(data.Manifest.Seed + ':sector:' + this.SectorKey(x, y, z));
+		var mean = this.Density(data, [(x + 0.5) * size, (y + 0.5) * size, (z + 0.5) * size]) * size * size * size;
+
+		return Math.max(0, Math.round(mean + Math.sqrt(mean) * (random() + random() + random() - 1.5) * 1.4));
+	},
+
+	/* What a star of a sector is of its own sequence, before its light is worked out: {ID, Mass, Place, Type}. */
+	SectorStar: function (data, x, y, z, i) {
+		var m = data.Manifest;
+		var size = m.Sector;
+		var id = this.SectorKey(x, y, z) + '-' + i;
+		var own = this.Random(m.Seed + ':star:' + id);
+		var mass = Math.round(this.MassOf(own()) * 1000) / 1000;
+		var place = [(x + own()) * size, (y + own()) * size, (z + own()) * size];
+		/* Drawn after its place: the stars of a sector stand where they stood before they had kinds. */
+		var type = this.TypeOf(own(), mass);
+
+		return {ID: id, Mass: type.Mass, Place: place, Type: type.Type};
+	},
+
+	/* A star of a sector in full (SectorStar): its name, its light, its class. */
+	SectorStarOf: function (data, drawn) {
+		var star = this.$Service('Astronomy').Star({Mass: drawn.Mass, Type: drawn.Type});
+		var over = data.Edits.Overrides[drawn.ID] || {};
+
+		return {ID: drawn.ID, Name: over.Name || this.Catalogue(data.Manifest, drawn.ID), Place: drawn.Place, Mass: drawn.Mass, Temperature: Math.round(star.Temperature), Color: star.Color, Luminosity: star.Luminosity, Class: star.Class, Type: drawn.Type, Kind: this.KindOf(drawn.Type)};
+	},
+
 	Sector: function (data, x, y, z, limit) {
 		var self = this;
 		var m = data.Manifest;
 		var size = m.Sector;
-		var middle = [(x + 0.5) * size, (y + 0.5) * size, (z + 0.5) * size];
 		var key = this.SectorKey(x, y, z);
-		var random = this.Random(m.Seed + ':sector:' + key);
-		var mean = this.Density(data, middle) * size * size * size;
-		var count = Math.max(0, Math.round(mean + Math.sqrt(mean) * (random() + random() + random() - 1.5) * 1.4));
+		var count = this.SectorCount(data, x, y, z);
 		var take = Math.min(count, limit === undefined ? count : Math.max(0, Math.floor(limit)));
-		var astronomy = this.$Service('Astronomy');
 		var removed = {};
 		var stars = [];
 		var i;
@@ -209,16 +246,9 @@ Elemenx.Service('GalaxyData', {
 
 		/* An even draw of all: each star of its own sequence, so the first ones of a sector are the same however many are asked for. */
 		for (i = 0; i < take; i++) {
-			var id = key + '-' + i;
-			var own = self.Random(m.Seed + ':star:' + id);
-			var mass = Math.round(self.MassOf(own()) * 1000) / 1000;
-			var star = astronomy.Star({Mass: mass});
-			var place = [(x + own()) * size, (y + own()) * size, (z + own()) * size];
-			var over = data.Edits.Overrides[id] || {};
+			if (removed[key + '-' + i]) continue;
 
-			if (removed[id]) continue;
-
-			stars.push({ID: id, Name: over.Name || self.Catalogue(m, id), Place: place, Mass: mass, Temperature: Math.round(star.Temperature), Color: star.Color, Luminosity: star.Luminosity, Class: star.Class});
+			stars.push(self.SectorStarOf(data, self.SectorStar(data, x, y, z, i)));
 		}
 
 		/* The stars put in it by hand (AddBody with Kind star) whose place is in this sector. */
@@ -232,6 +262,427 @@ Elemenx.Service('GalaxyData', {
 		return {Key: key, Count: count, Stars: stars};
 	},
 
+	/*
+	 * What of it lies round a place and is as asked, the nearest first: its stars, its nebulae and clusters, its black hole,
+	 * what was put in it by hand. options {Centre [x, y, z] (ly, as at time 0), Radius (ly, 100), Type (of a star main,
+	 * giant, supergiant, white-dwarf, brown-dwarf, neutron, pulsar, magnetar; of a nebula hii, planetary, remnant, dark; of a
+	 * cluster open, globular; blackhole; or star, nebula, cluster for all of a kind), Class (how its class begins: G, K3),
+	 * Edited (renamed, written or any: only what was given a name or has its system written, wherever it is in the
+	 * region), Mass [low, high] (Suns) and Temperature [low, high] (K) (stars only), Text (in its name or its ID), Limit
+	 * (500), Budget (how many stars may be looked at, 200 000)}.
+	 * {Items: [{ID, Name, Kind, Type, Subtype, Class, Mass, Temperature, Radius, Place, Distance, Renamed, Written}], More
+	 * (there were more than Limit), Partial (the budget ran out before all of the region was looked through)}.
+	 * Its stars are drawn of their seed sector by sector out from the place, each only as far as what is asked needs (its
+	 * light only when a class or a temperature is asked, or once it is kept).
+	 */
+	Search: function (data, options) {
+		var self = this;
+		var o = options || {};
+		var m = data.Manifest;
+		var size = m.Sector;
+		var centre = (o.Centre || [0, 0, 0]).map(Number);
+		var radius = Math.max(0, Number(o.Radius) || 100);
+		var limit = Math.max(1, Number(o.Limit) || 500);
+		var budget = Math.max(1, Number(o.Budget) || 200000);
+		var text = String(o.Text || '').toLowerCase().replace(/^\s+|\s+$/g, '');
+		var type = String(o.Type || '');
+		var starry = !!(o.Class || o.Mass || o.Temperature);
+		var stars = this.$Service('Astronomy').Types;
+		var removed = {};
+		var found = [];
+		var more = false;
+		var partial = false;
+		var seen = 0;
+		var home = centre.map(function (value) {
+			return Math.floor(value / size);
+		});
+		var ring;
+		var reach = Math.ceil(radius / size) + 1;
+		var kept;
+
+		(data.Edits.Removed || []).forEach(function (id) {
+			removed[id] = true;
+		});
+
+		function far (place) {
+			var dx = place[0] - centre[0];
+			var dy = place[1] - centre[1];
+			var dz = place[2] - centre[2];
+
+			return Math.sqrt(dx * dx + dy * dy + dz * dz);
+		}
+
+		function within (value, range) {
+			return !range || value >= Number(range[0]) && value <= Number(range[1]);
+		}
+
+		function renamed (id) {
+			return !!(data.Edits.Overrides[id] && data.Edits.Overrides[id].Name);
+		}
+
+		function written (id) {
+			return !!(m.Systems && m.Systems[id]);
+		}
+
+		/* Of the type asked: a kind (star, nebula, cluster) takes all of its types. */
+		function typed (kind, of) {
+			return !type || type === of || type === kind;
+		}
+
+		/* All that is asked but its place and its type. */
+		function fits (item) {
+			var name = String(item.Name || '').toLowerCase();
+
+			if (removed[item.ID]) return false;
+
+			if (o.Edited === 'renamed' && !item.Renamed || o.Edited === 'written' && !item.Written || o.Edited === 'any' && !item.Renamed && !item.Written) return false;
+
+			if (text && name.indexOf(text) === -1 && String(item.ID).toLowerCase().indexOf(text) === -1) return false;
+
+			if (starry && item.Kind !== 'star' && stars.indexOf(item.Type) === -1) return false;
+
+			if (o.Class && String(item.Class || '').toUpperCase().indexOf(String(o.Class).toUpperCase()) !== 0) return false;
+
+			return within(item.Mass, o.Mass) && within(item.Temperature, o.Temperature);
+		}
+
+		/* Anything known by its ID (Star): as an item of the list. */
+		function itemOf (one) {
+			var kind = one.Kind === 'nebula' || one.Kind === 'cluster' ? one.Kind : one.Kind === 'blackhole' ? 'blackhole' : 'star';
+			var of = kind === 'star' ? one.Type || 'main' : kind === 'blackhole' ? 'blackhole' : one.Type;
+
+			return {ID: one.ID, Name: one.Name, Kind: kind, Type: of, Subtype: one.Subtype || '', Class: one.Class || '', Mass: one.Mass === undefined ? null : one.Mass, Temperature: one.Temperature === undefined ? null : one.Temperature, Radius: one.Radius || 0, Place: one.Place.slice(), Distance: far(one.Place), Renamed: renamed(one.ID), Written: written(one.ID)};
+		}
+
+		function offer (one) {
+			var item;
+
+			if (!one || far(one.Place) > radius) return;
+
+			item = itemOf(one);
+
+			if (typed(item.Kind, item.Type) && fits(item))
+				found.push(item);
+		}
+
+		/* What was edited: only the few it knows of, wherever they are in the region. */
+		if (o.Edited) {
+			kept = {};
+
+			Object.keys(data.Edits.Overrides).concat(Object.keys(m.Systems || {}), (data.Edits.Added || []).map(function (body) {
+				return body.ID;
+			})).forEach(function (id) {
+				if (kept[id]) return;
+
+				kept[id] = true;
+
+				offer(self.Star(data, id));
+			});
+		}
+		else {
+			this.Objects(data).forEach(offer);
+
+			offer(this.Hole(data));
+
+			(data.Edits.Added || []).forEach(function (body) {
+				if (body.Kind === 'star') offer(self.AddedStar(body));
+				else if (!starry && (!type || type === body.Kind) && far(body.Place || [0, 0, 0]) <= radius && fits({ID: body.ID, Name: body.Name || body.ID, Kind: body.Kind})) found.push({ID: body.ID, Name: body.Name || body.ID, Kind: body.Kind, Type: body.Kind, Subtype: '', Class: '', Mass: null, Temperature: null, Radius: 0, Place: (body.Place || [0, 0, 0]).slice(), Distance: far(body.Place || [0, 0, 0]), Renamed: false, Written: false});
+			});
+
+			/*
+			 * Its stars, ring by ring of sectors out from the place: a ring nearer than the farthest of the first Limit found
+			 * may still hold nearer ones; past it, none.
+			 */
+			if (!type || type === 'star' || stars.indexOf(type) !== -1) {
+				for (ring = 0; ring <= reach; ring++) {
+					if (found.length >= limit) {
+						found.sort(function (a, b) {
+							return a.Distance - b.Distance;
+						});
+
+						if ((ring - 1) * size > found[limit - 1].Distance) {
+							more = true;
+
+							break;
+						}
+					}
+
+					if (seen > budget) {
+						partial = true;
+
+						break;
+					}
+
+					this.SearchRing(data, home, ring, function (x, y, z) {
+						var near = [Math.max(x * size, Math.min(centre[0], (x + 1) * size)), Math.max(y * size, Math.min(centre[1], (y + 1) * size)), Math.max(z * size, Math.min(centre[2], (z + 1) * size))];
+						var count;
+						var i;
+						var drawn;
+						var item;
+
+						if (far(near) > radius || seen > budget) return;
+
+						count = self.SectorCount(data, x, y, z);
+						seen++;
+
+						for (i = 0; i < count && seen <= budget; i++) {
+							drawn = self.SectorStar(data, x, y, z, i);
+							seen++;
+
+							if (removed[drawn.ID] || far(drawn.Place) > radius || type && type !== 'star' && drawn.Type !== type || !within(drawn.Mass, o.Mass)) continue;
+
+							/* Its light only when it is asked about. */
+							item = o.Class || o.Temperature || text ? itemOf(self.SectorStarOf(data, drawn)) : {ID: drawn.ID, Drawn: drawn, Kind: 'star', Type: drawn.Type, Mass: drawn.Mass, Place: drawn.Place, Distance: far(drawn.Place), Renamed: renamed(drawn.ID), Written: written(drawn.ID)};
+
+							if (fits(item))
+								found.push(item);
+						}
+
+						if (i < count)
+							partial = true;
+					});
+				}
+			}
+		}
+
+		found.sort(function (a, b) {
+			return a.Distance - b.Distance;
+		});
+
+		if (found.length > limit) {
+			more = true;
+			found.length = limit;
+		}
+
+		return {Items: found.map(function (item) {
+			return item.Drawn ? itemOf(self.SectorStarOf(data, item.Drawn)) : item;
+		}), More: more, Partial: partial};
+	},
+
+	/* Each sector of a ring round a sector (ring 0 the sector itself, ring k the shell k sectors out on any axis). */
+	SearchRing: function (data, home, ring, each) {
+		var x;
+		var y;
+		var z;
+
+		/* Its faces only (a ring far out is a shell of many sectors: its inside is not gone over). */
+		for (x = -ring; x <= ring; x++)
+			for (y = -ring; y <= ring; y++)
+				for (z = -ring; z <= ring; z += Math.abs(x) === ring || Math.abs(y) === ring || ring === 0 ? 1 : ring * 2)
+					each(home[0] + x, home[1] + y, home[2] + z);
+	},
+
+	/*
+	 * The kind of a star of a galaxy of a number of 0 to 1 (and its mass of the main sequence): a few in a hundred are
+	 * white dwarfs and brown dwarfs, one in a hundred and fifty a giant, a few in ten thousand what a heavy star left (a
+	 * neutron star, a pulsar, now and then a magnetar), fewer supergiants; {Type, Mass}.
+	 */
+	TypeOf: function (u, mass) {
+		var at = function (from, to, within) {
+			return Math.round((from + (to - from) * within) * 1000) / 1000;
+		};
+
+		if (u < 0.06)
+			return {Type: 'white-dwarf', Mass: at(0.5, 1.1, u / 0.06)};
+
+		if (u < 0.1)
+			return {Type: 'brown-dwarf', Mass: at(0.02, 0.075, (u - 0.06) / 0.04)};
+
+		if (u < 0.1067)
+			return {Type: 'giant', Mass: Math.max(0.9, mass)};
+
+		if (u < 0.1069)
+			return {Type: 'supergiant', Mass: at(10, 30, (u - 0.1067) / 0.0002)};
+
+		if (u < 0.1073)
+			return {Type: 'neutron', Mass: at(1.2, 2, (u - 0.1069) / 0.0004)};
+
+		if (u < 0.1076)
+			return {Type: 'pulsar', Mass: at(1.2, 2, (u - 0.1073) / 0.0003)};
+
+		if (u < 0.10765)
+			return {Type: 'magnetar', Mass: 1.6};
+
+		return {Type: 'main', Mass: mass};
+	},
+
+	/* The kind of a Scene of a type of a star. */
+	KindOf: function (type) {
+		return {main: 'star', neutron: 'neutron-star'}[type] || type || 'star';
+	},
+
+	/*
+	 * The nebulae and the star clusters of a galaxy, made of its seed once and the same each time (none stored): its edits
+	 * over them (a name, one taken away). Each {ID ('neb-...', 'cl-...'), Kind (nebula or cluster), Type (of a nebula hii,
+	 * planetary, remnant, dark; of a cluster open, globular), Subtype (Ia, II, Ib, Ic of a remnant), Name, Place [x, y, z]
+	 * ly, Radius ly, Seed, Luminosity 0}: clouds where stars are born on the knots of young stars of its arms, dark clouds
+	 * on the dust at their inner edge, the shells of dying stars and what supernovae threw anywhere in its disc (only of
+	 * white dwarfs, Ia, in an old elliptical one), open clusters along its arms, globular ones in a ball round it all.
+	 */
+	Objects: function (data) {
+		var m = data.Manifest;
+		var key = [m.Seed, m.Kind, m.Radius, m.Arms, m.Pitch, m.Phase].join(':');
+		var made = this.ObjectsMade && this.ObjectsMade.Key === key ? this.ObjectsMade.List : null;
+		var removed = {};
+
+		if (!made) {
+			made = this.MakeObjects(data);
+			this.ObjectsMade = {Key: key, List: made};
+		}
+
+		(data.Edits.Removed || []).forEach(function (id) {
+			removed[id] = true;
+		});
+
+		return made.filter(function (one) {
+			return !removed[one.ID];
+		}).map(function (one) {
+			var over = data.Edits.Overrides[one.ID] || {};
+
+			return over.Name ? Object.assign({}, one, {Name: over.Name}) : one;
+		});
+	},
+
+	MakeObjects: function (data) {
+		var self = this;
+		var m = data.Manifest;
+		var s = this.Shape(m);
+		var random = this.Random(m.Seed + ':objects');
+		var size = m.Radius / 50000;
+		var disc = m.Kind !== 'elliptical' && m.Kind !== 'dwarf';
+		var young = {spiral: 1, barred: 1, ring: 0.8, irregular: 0.7, lenticular: 0.08, elliptical: 0, dwarf: 0.05}[m.Kind] || 0;
+		var list = [];
+		var counts = {hii: Math.round(120 * young * size), dark: Math.round(80 * young * size), open: Math.round(220 * young * size), planetary: Math.round((disc ? 40 : 60) * size), remnant: Math.round(30 * size), globular: Math.round((m.Kind === 'elliptical' ? 400 : 150) * size * size + 4)};
+		var initials = String(m.Name).slice(0, 3).toUpperCase();
+		var i;
+		var u;
+		var r;
+		var z;
+		var a;
+
+		function laplace (scale) {
+			var v = random() - 0.5;
+
+			return -scale * (v < 0 ? -1 : 1) * Math.log(1 - 2 * Math.abs(v));
+		}
+
+		/* A place of its disc (gamma of its scale, as its light is), weighed by want till it takes one, at most a few hundred tries. */
+		function place (want, thick) {
+			var tries = 0;
+			var radius = 0;
+			var angle;
+			var x = 0;
+			var at = 0;
+
+			while (tries++ < 400) {
+				radius = disc ? -Math.log(Math.max(1e-9, random() * random())) * s.Disc : Math.pow(random(), 0.5) * m.Radius * 0.6;
+				angle = random() * Math.PI * 2;
+				x = radius * Math.cos(angle);
+				at = radius * Math.sin(angle);
+
+				if (radius < m.Radius * 1.05 && random() < want(x, at))
+					return [x, disc ? laplace(s.Height * (thick || 0.3)) : laplace(m.Radius * 0.2), at];
+			}
+
+			return [x, 0, at];
+		}
+
+		function put (kind, type, subtype, at, radius) {
+			var index = list.filter(function (one) {
+				return one.Kind === kind;
+			}).length + 1;
+			var id = (kind === 'nebula' ? 'neb-' : 'cl-') + type + '-' + index;
+
+			list.push({ID: id, Kind: kind, Type: type, Subtype: subtype, Name: initials + ' ' + (kind === 'nebula' ? 'N' : 'C') + index, Place: [Math.round(at[0]), Math.round(at[1]), Math.round(at[2])], Radius: Math.round(radius * 10) / 10, Seed: m.Seed + ':' + id, Luminosity: 0});
+		}
+
+		/* On the knots of young stars of the arms: where an arm is strong and its flocks gather. */
+		for (i = 0; i < counts.hii; i++)
+			put('nebula', 'hii', '', place(function (x, at) {
+				return Math.pow(self.Arm(m, x, at) / 2, 3) * self.Flocks(data, x, at) * 1.6;
+			}, 0.15), 30 + Math.pow(random(), 2) * 270);
+
+		/* Dark clouds on the dust of the inner edge of the arms: where the arm is a little ahead, not yet here. */
+		for (i = 0; i < counts.dark; i++)
+			put('nebula', 'dark', '', place(function (x, at) {
+				return Math.max(0, self.Arm(m, x, at, 0.35) - self.Arm(m, x, at)) / 1.7 * self.Flocks(data, x, at);
+			}, 0.1), 5 + Math.pow(random(), 2) * 45);
+
+		for (i = 0; i < counts.planetary; i++)
+			put('nebula', 'planetary', '', place(function () {
+				return 1;
+			}, 1), 0.3 + random() * 1.7);
+
+		for (i = 0; i < counts.remnant; i++) {
+			u = random();
+
+			put('nebula', 'remnant', !disc || u < 0.3 ? 'Ia' : u < 0.75 ? 'II' : u < 0.88 ? 'Ib' : 'Ic', place(function (x, at) {
+				return disc ? self.Arm(m, x, at) / 2 : 1;
+			}, 0.4), 10 + random() * 50);
+		}
+
+		for (i = 0; i < counts.open; i++)
+			put('cluster', 'open', '', place(function (x, at) {
+				return Math.pow(self.Arm(m, x, at) / 2, 2);
+			}, 0.2), 5 + random() * 25);
+
+		/* A ball round it all, packed to its middle (Plummer). */
+		for (i = 0; i < counts.globular; i++) {
+			r = Math.min(m.Radius * 1.4, m.Radius * 0.12 / Math.sqrt(Math.pow(0.02 + random() * 0.97, -2 / 3) - 1));
+			z = random() * 2 - 1;
+			a = random() * Math.PI * 2;
+
+			put('cluster', 'globular', '', [Math.cos(a) * Math.sqrt(1 - z * z) * r, z * r * (disc ? 0.8 : 1), Math.sin(a) * Math.sqrt(1 - z * z) * r], 40 + random() * 80);
+		}
+
+		return list;
+	},
+
+	/* One nebula or cluster of it by its ID, or null. */
+	ObjectOf: function (data, id) {
+		if (!/^(neb|cl)-/.test(String(id))) return null;
+
+		return this.Objects(data).filter(function (one) {
+			return one.ID === id;
+		})[0] || null;
+	},
+
+	/*
+	 * The scene of a nebula or a cluster as a system (SystemData): a nebula at its middle with what it holds or what made
+	 * it (the hot young stars of a cloud where stars are born, the white dwarf of a planetary nebula, the pulsar or the
+	 * neutron star of a supernova of a heavy star; nothing of a supernova Ia); a cluster as Cluster makes it.
+	 */
+	ObjectSystem: function (data, id) {
+		var one = this.ObjectOf(data, id);
+		var random;
+		var children = [];
+		var i;
+
+		if (!one)
+			return null;
+
+		if (one.Kind === 'cluster')
+			return this.Cluster({ID: id, Seed: one.Seed, Type: one.Type, Name: one.Name, Radius: one.Radius});
+
+		random = this.Random(one.Seed + ':middle');
+
+		random();
+		random();
+
+		if (one.Type === 'hii') {
+			for (i = 0; i < 3 + Math.floor(random() * 3); i++)
+				children.push({ID: 'o' + (i + 1), Kind: 'star', Values: {Name: one.Name + ' O' + (i + 1)}, Traits: {Star: {Mass: Math.round(15 + random() * 30), Temperature: Math.round(28000 + random() * 14000)}, Orbit: {Distance: Math.round(one.Radius * this.$Service('Astronomy').Units.ly * (0.02 + random() * 0.12)), Eccentricity: Math.round(random() * 50) / 100, Inclination: Math.round(random() * 180), Anomaly: Math.round(random() * 360), Unit: 'AU'}}});
+		}
+		else if (one.Type === 'planetary') {
+			children.push({ID: 'core', Kind: 'white-dwarf', Values: {Name: one.Name + ' core'}, Traits: {Star: {Temperature: Math.round(60000 + random() * 80000)}}});
+		}
+		else if (one.Type === 'remnant' && one.Subtype !== 'Ia') {
+			children.push({ID: 'core', Kind: one.Subtype === 'II' ? 'pulsar' : random() < 0.3 ? 'magnetar' : 'neutron-star', Values: {Name: one.Name + ' core'}});
+		}
+
+		return this.$Service('SystemData').Make({Objects: [{ID: 'nebula', Kind: 'nebula', Values: {Name: one.Name}, Traits: {Nebula: {Type: one.Type, Subtype: one.Subtype, Radius: one.Radius, Seed: one.Seed}}, Children: children}]}, {ID: id, Name: one.Name});
+	},
+
 	/* The name of a star in the catalogue of its galaxy: its initials, its sector and its number. */
 	Catalogue: function (m, id) {
 		return String(m.Name).slice(0, 3).toUpperCase() + ' ' + id;
@@ -241,6 +692,9 @@ Elemenx.Service('GalaxyData', {
 		/* Its black hole, at its centre: one of its bodies too, with a system of its own. */
 		if (id === 'centre')
 			return this.Hole(data);
+
+		/* A nebula or a cluster of it: entered as a star is. */
+		if (/^(neb|cl)-/.test(String(id))) return this.ObjectOf(data, id);
 
 		/* Its sector may be at a place below 0 ('3.-1.-2-14'): its number is after the last dash. */
 		var text = String(id);
@@ -287,7 +741,134 @@ Elemenx.Service('GalaxyData', {
 			stars.push({ID: 's' + (i + 1), Kind: 'star', Values: {Name: 'S' + (i + 1)}, Traits: {Star: {Mass: mass}, Orbit: {Distance: Math.round(150 * Math.pow(40, random())), Eccentricity: Math.round((0.15 + random() * 0.8) * 100) / 100, Inclination: Math.round(random() * 180), Node: Math.round(random() * 360), Periapsis: Math.round(random() * 360), Anomaly: Math.round(random() * 360), Unit: 'AU'}}});
 		}
 
-		return this.$Service('SystemData').Make({Objects: [{ID: 'hole', Kind: 'blackhole', Values: {Name: hole.Name}, Traits: {BlackHole: {Mass: hole.Mass, Disk: true, Inner: 3, Outer: 18}}, Children: stars}]}, {ID: 'centre', Name: hole.Name});
+		/* Each star keeps what the pull of the hole leaves it at its nearest: a few close planets, a station now and then. */
+		stars.forEach(function (star) {
+			star.Children = this.Satellites(data.Manifest.Seed + ':centre:' + star.ID, star, hole.Mass);
+		}, this);
+
+		/* Round them the old stars of its nuclear cluster, too many to tell one by one: a swarm the scene draws of its seed. */
+		return this.$Service('SystemData').Make({Objects: [{ID: 'hole', Kind: 'blackhole', Values: {Name: hole.Name}, Traits: {BlackHole: {Mass: hole.Mass, Disk: true, Inner: 3, Outer: 18}, Cluster: {Type: 'nuclear', Radius: 12, Count: 6000, Seed: data.Manifest.Seed + ':nuclear'}}, Children: stars}]}, {ID: 'centre', Name: hole.Name});
+	},
+
+	/*
+	 * Where a star on an orbit round a mass (Suns) can keep bodies of its own: within a part of its sphere of Hill at its
+	 * nearest point (AU), a(1 - e)·∛(m / 3M); beyond about half of it what goes round the star is torn away.
+	 */
+	Room: function (star, around) {
+		var orbit = star.Traits.Orbit;
+		var astronomy = this.$Service('Astronomy');
+		var near = astronomy.Length(orbit.Distance) * (1 - Math.min(0.99, Number(orbit.Eccentricity) || 0));
+
+		return 0.4 * near * Math.cbrt(Number(star.Traits.Star.Mass || 1) / (3 * Math.max(1e-9, around)));
+	},
+
+	/*
+	 * The bodies of a star of a cluster, made of a seed: none where its room (Room) is too small, else planets spaced as
+	 * a system has them inside it (at most 30 AU out), and a station round one of them now and then.
+	 */
+	Satellites: function (seed, star, around) {
+		var random = this.Random(seed);
+		var room = Math.min(30, this.Room(star, around));
+		var kinds = ['lava', 'rocky', 'desert', 'terran', 'ocean', 'gas', 'ice-giant', 'ice'];
+		var children = [];
+		var count;
+		var distance;
+		var i;
+		var kind;
+
+		/* Seeds alike (c1, c2...) begin alike in a sequence: its first steps are left. */
+		random();
+		random();
+		random();
+
+		if (room < 0.012 || random() < 0.3) return children;
+
+		count = 1 + Math.floor(random() * Math.min(6, 1 + Math.log(room / 0.012) / Math.log(1.8) / 2));
+		distance = Math.max(0.01, Math.min(room * (0.08 + random() * 0.12), 0.06 + random() * 0.4));
+
+		for (i = 0; i < count && distance < room; i++) {
+			kind = kinds[Math.min(kinds.length - 1, Math.floor(Math.log(distance / 0.01) / Math.log(30) * 3 + random() * 2))];
+
+			children.push({ID: star.ID + '-' + 'bcdefgh'.charAt(i), Kind: 'planet', Values: {Name: (star.Values.Name || star.ID) + ' ' + 'bcdefgh'.charAt(i)}, Traits: {Orbit: {Distance: Number(distance.toPrecision(3)), Eccentricity: Math.round(random() * 0.12 * 1000) / 1000, Inclination: Math.round(random() * 6 * 10) / 10, Node: Math.round(random() * 360), Periapsis: Math.round(random() * 360), Anomaly: Math.round(random() * 360), Unit: 'AU'}, Body: {Radius: Math.round(kind === 'gas' ? 50000 + random() * 25000 : kind === 'ice-giant' ? 22000 + random() * 6000 : 2400 + random() * 5000), Day: Math.round((8 + random() * 40) * 10) / 10, Tilt: Math.round(random() * 30)}, Surface: {Type: kind}}});
+
+			distance *= 1.5 + random() * 0.6;
+		}
+
+		if (random() < 0.3 && children.length)
+			children[Math.floor(random() * children.length)].Children = [{ID: star.ID + '-station', Kind: 'station', Values: {Name: (star.Values.Name || star.ID) + ' Station'}, Traits: {Orbit: {Distance: 2.2, Unit: 'radii', Anomaly: Math.round(random() * 360)}}}];
+
+		return children;
+	},
+
+	/*
+	 * A star cluster as the data of a system (SystemData), made of a seed; options {Seed, Type, Name, Count, Radius (ly),
+	 * Mass (of the black hole of a nuclear one, Suns)}:
+	 * - open: tens of young stars a few light-years across, hot blue ones among them, loosely held: each with room for a
+	 *   whole system of its own;
+	 * - globular: an old ball of a hundred thousand stars some tens of light-years across, packed to its middle (the
+	 *   brightest of them, red giants among, told one by one, the rest a swarm): little room round each;
+	 * - nuclear: the dense heart of a galaxy round its black hole, as the system of the centre is.
+	 * Its middle (ID 'cluster', a black hole for a nuclear one) has the trait Cluster {Type, Radius, Count, Seed}: the stars
+	 * of it not told one by one, drawn by a Scene as a swarm; its stars go round it (as round a barycentre, of their mass
+	 * or of Mass) on orbits of the profile of Plummer, isotropic, each with the planets and stations its room leaves it.
+	 */
+	Cluster: function (options) {
+		var given = options || {};
+		var type = ['open', 'globular', 'nuclear'].indexOf(given.Type) !== -1 ? given.Type : 'open';
+		var seed = String(given.Seed === undefined ? 'cluster' : given.Seed);
+		var random = this.Random(seed + ':' + type);
+		var astronomy = this.$Service('Astronomy');
+		var radius = Number(given.Radius) || {open: 6, globular: 60, nuclear: 12}[type] * (0.7 + random() * 0.6);
+		var told = Math.max(1, Math.round(Number(given.Count) || {open: 40 + random() * 50, globular: 140 + random() * 60, nuclear: 60 + random() * 40}[type]));
+		var hole = type === 'nuclear' ? Number(given.Mass) || Math.round(4e6 * (0.5 + random())) : 0;
+		var name = String(given.Name || {open: 'Open cluster', globular: 'Globular cluster', nuclear: 'Nuclear cluster'}[type]);
+		/* The masses: young and up to hot giants in an open one, old and small in a globular one with its red giants. */
+		var masses = {open: [0.4, 9], globular: [0.25, 0.85], nuclear: [0.3, 1.6]}[type];
+		var stars = [];
+		var total = hole;
+		var middle;
+		var i;
+		var mass;
+		var star;
+		var giant;
+		var u;
+
+		for (i = 0; i < told; i++) {
+			u = random();
+			mass = masses[0] * Math.pow(masses[1] / masses[0], Math.pow(random(), type === 'open' ? 2.2 : 1.4));
+			giant = type !== 'open' && random() < 0.12;
+			star = {ID: 'c' + (i + 1), Kind: 'star', Values: {Name: name + ' ' + (i + 1)}, Traits: {Star: giant ? {Mass: 0.85, Radius: Math.round(8 + random() * 60), Temperature: Math.round(3600 + random() * 900)} : {Mass: Math.round(mass * 100) / 100}, Orbit: {
+				/* Plummer: r = a / √(u^(-2/3) - 1), a of its scale; none in the middle few hundredths. */
+				Distance: Math.round(radius * 0.35 * astronomy.Units.ly / Math.sqrt(Math.pow(0.02 + u * 0.95, -2 / 3) - 1)),
+				Eccentricity: Math.round(random() * 0.7 * 100) / 100,
+				Inclination: Math.round(Math.acos(1 - 2 * random()) * 180 / Math.PI),
+				Node: Math.round(random() * 360),
+				Periapsis: Math.round(random() * 360),
+				Anomaly: Math.round(random() * 360),
+				Unit: 'AU'
+			}}};
+
+			stars.push(star);
+
+			total += star.Traits.Star.Mass;
+		}
+
+		/* What the swarm weighs as well: each star keeps the room the whole cluster leaves it. */
+		total += {open: 0, globular: 2e5, nuclear: 2e7}[type];
+
+		stars.forEach(function (each) {
+			each.Children = this.Satellites(seed + ':' + each.ID, each, total);
+		}, this);
+
+		middle = {ID: 'cluster', Kind: type === 'nuclear' ? 'blackhole' : 'cluster', Values: {Name: name}, Traits: {Cluster: {Type: type, Radius: Math.round(radius * 10) / 10, Count: type === 'open' ? 0 : type === 'globular' ? 12000 : 6000, Seed: seed + ':swarm'}, Barycentre: {Mass: Math.round(total)}}, Children: stars};
+
+		if (type === 'nuclear') {
+			middle.Traits.BlackHole = {Mass: hole, Disk: true, Inner: 3, Outer: 18};
+
+			delete middle.Traits.Barycentre;
+		}
+
+		return this.$Service('SystemData').Make({Objects: [middle]}, {ID: String(given.ID || 'cluster-' + seed), Name: name});
 	},
 
 	/* A star put in by hand, as the stars of its sectors are: of its mass (1 Sun when not told). */
@@ -509,7 +1090,13 @@ Elemenx.Service('GalaxyData', {
 			return data.Systems[id];
 		}
 
-		made = systems.Make({Seed: data.Manifest.Seed + ':' + id, Options: star ? {Mass: star.Mass, Name: star.Name} : {}}, {ID: id, Name: star ? star.Name : id});
+		if (/^(neb|cl)-/.test(String(id))) {
+			data.Systems[id] = this.ObjectSystem(data, id);
+
+			return data.Systems[id];
+		}
+
+		made = systems.Make({Seed: data.Manifest.Seed + ':' + id, Options: star ? {Mass: star.Mass, Name: star.Name, Type: star.Type && star.Type !== 'main' ? star.Type : undefined} : {}}, {ID: id, Name: star ? star.Name : id});
 
 		data.Systems[id] = made;
 

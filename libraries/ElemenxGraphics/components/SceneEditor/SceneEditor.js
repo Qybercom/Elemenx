@@ -23,7 +23,9 @@
  * edited as a star system. SpaceKinds are the kinds to add there, each round the selected body or the one that fits (a planet
  * round the star, a moon round a planet, a station round a body), on an orbit of its own farther out. Moving a body moves it on
  * its orbit: the middle square carries it in the plane of its parent (its Distance and Anomaly, Scene.OrbitAt), the green
- * axis tilts its orbit (Inclination); the ring turns its axis (Tilt), scaling changes its Radius. Time sets the day the system
+ * axis tilts its orbit (Inclination), the points q and Q on its line draw out its nearest and farthest distances (in AU, the
+ * fields of the same name with them; kept as Distance and Eccentricity); the ring turns its axis (Tilt), scaling changes its
+ * Radius; on a long orbit the square carries it along its ellipse. Time sets the day the system
  * is drawn at. A system is a tree of orbits to any depth: stars round a barycentre (a star added with one selected), planets,
  * planetoids, belts, black holes and wormholes round a star, a barycentre or a black hole, moons and rings round a body, what
  * is made round anything natural; its list of objects is that tree. Its system is saved as a file of the system format
@@ -63,7 +65,7 @@ Elemenx.Component('SceneEditor', {
 	Setting: 'ground',
 	Kinds: ['unit', 'effect', 'glass', 'mirror', 'camera', 'screen', 'tree', 'rock', 'house'],
 	CutscenesOpen: false,
-	SpaceKinds: ['star', 'barycentre', 'planet', 'planetoid', 'moon', 'belt', 'ring', 'blackhole', 'wormhole', 'station', 'outpost', 'craft', 'fleet'],
+	SpaceKinds: ['star', 'giant', 'supergiant', 'white-dwarf', 'brown-dwarf', 'neutron-star', 'pulsar', 'magnetar', 'barycentre', 'cluster', 'nebula', 'planet', 'planetoid', 'moon', 'belt', 'ring', 'blackhole', 'wormhole', 'station', 'outpost', 'craft', 'fleet'],
 	Models: [],
 	Storage: 'elemenx-scene-editor',
 	SnapMove: 0.5,
@@ -603,7 +605,7 @@ Elemenx.Component('SceneEditor', {
 	 * that did nothing.
 	 */
 	KindIcon: function (kind) {
-		return {star: 'sun', sun: 'sun', barycentre: 'barycentre', planet: 'planet', planetoid: 'asteroid', moon: 'moon', belt: 'asteroid', ring: 'ring', blackhole: 'black-hole', wormhole: 'wormhole', station: 'station', outpost: 'outpost', craft: 'science:rocket', fleet: 'fleet', comet: 'science:comet', quasar: 'quasar', unit: 'user', effect: 'sparkles', glass: 'window-maximize', mirror: 'mirror', camera: 'camera', screen: 'monitor', tree: 'pine', rock: 'rock', house: 'home', building: 'home', ground: 'map', road: 'road', trigger: 'zap', zone: 'zone', marker: 'map-pin', lamp: 'lightbulb', light: 'lightbulb', water: 'water', vehicle: 'racing:sports-car', car: 'racing:sports-car'}[kind] || 'circle';
+		return {star: 'sun', sun: 'sun', giant: 'sun', supergiant: 'sun', 'white-dwarf': 'circle-dot', 'brown-dwarf': 'moon', 'neutron-star': 'target', pulsar: 'orbit', magnetar: 'zap', barycentre: 'barycentre', cluster: 'sparkles', nebula: 'cloud', planet: 'planet', planetoid: 'asteroid', moon: 'moon', belt: 'asteroid', ring: 'ring', blackhole: 'black-hole', wormhole: 'wormhole', station: 'station', outpost: 'outpost', craft: 'science:rocket', fleet: 'fleet', comet: 'science:comet', quasar: 'quasar', unit: 'user', effect: 'sparkles', glass: 'window-maximize', mirror: 'mirror', camera: 'camera', screen: 'monitor', tree: 'pine', rock: 'rock', house: 'home', building: 'home', ground: 'map', road: 'road', trigger: 'zap', zone: 'zone', marker: 'map-pin', lamp: 'lightbulb', light: 'lightbulb', water: 'water', vehicle: 'racing:sports-car', car: 'racing:sports-car'}[kind] || 'circle';
 	},
 
 	/* How real the sizes and distances of a star system are shown: 0 readable (nothing crowded) to 1 real (Scene Scale). */
@@ -806,6 +808,18 @@ Elemenx.Component('SceneEditor', {
 		var parent = null;
 		var count;
 
+		/* A giant, a dwarf, what is left of a star: where a star goes, named as its kind is. */
+		if (['giant', 'supergiant', 'white-dwarf', 'brown-dwarf', 'neutron-star', 'pulsar', 'magnetar'].indexOf(kind) !== -1)
+			return Object.assign(this.Orbiting('star'), {Name: Elemenx.Locale.Text('graphics.scene.kinds.' + kind) + ' ' + (objects.filter(function (object) {
+				return object.Kind === kind;
+			}).length + 1)});
+
+		/* A cluster: an old ball of stars as a swarm round its middle, its stars added round it one by one. */
+		if (kind === 'cluster')
+			return {Name: 'Cluster ' + (objects.filter(function (object) {
+				return object.Kind === 'cluster';
+			}).length + 1), Traits: {Cluster: {Type: 'globular', Radius: 30, Count: 4000, Seed: 'cluster-' + objects.length}}};
+
 		if (!round) return {};
 
 		if (round === 'middle') parent = middle ? selected : groups[0] || stars[0];
@@ -821,6 +835,10 @@ Elemenx.Component('SceneEditor', {
 
 		if (kind === 'planet' || kind === 'planetoid')
 			return {Parent: parent.ID, Name: (kind === 'planet' ? 'Planet ' : 'Planetoid ') + (count + 1), Distance: Math.round(0.4 * Math.pow(1.7, count) * 100) / 100, Anomaly: count * 137 % 360};
+
+		/* A star of a cluster: somewhere inside it, light-years out, on a long tilted orbit of its own. */
+		if (kind === 'star' && parent.Traits.Cluster)
+			return {Parent: parent.ID, Name: 'Star ' + (count + 1), Traits: {Orbit: {Distance: Math.round((Number(parent.Traits.Cluster.Radius) || 6) * this.$Service('Astronomy').Units.ly * (0.1 + count * 0.618 % 1 * 0.4)), Eccentricity: 0.3, Inclination: count * 67 % 180, Anomaly: count * 137 % 360, Unit: 'AU'}}};
 
 		/* A star of a group: round its barycentre, opposite the one before (a star has no orbit of its kind: told it). */
 		if (kind === 'star')
@@ -902,7 +920,67 @@ Elemenx.Component('SceneEditor', {
 			list.push({ID: (field[2] || '') + ':' + field[0], Key: field[0], Trait: field[2] || '', Title: field[2] ? field[2] + ' · ' + field[0] : field[0], Value: field[1], Shown: field[1] == null ? '' : Array.isArray(field[1]) ? field[1].join(', ') : String(field[1]), Bool: typeof field[1] === 'boolean'});
 		});
 
-		this.FieldList = list.concat(this.RoadFields(object));
+		this.FieldList = this.ShapeFields(object, list).concat(this.RoadFields(object));
+	},
+
+	/*
+	 * The shape of an orbit in AU among the fields: its nearest (q, the periapsis) and farthest (Q, the apoapsis) distances
+	 * after its Distance, kept as Distance and Eccentricity; Eccentricity and the angle of the periapsis there even when not
+	 * given (a new orbit is a circle). An orbit in radii of its parent stays a circle.
+	 */
+	ShapeFields: function (object, list) {
+		var orbit = object.Traits.Orbit;
+		var at;
+		var shape;
+
+		if (!this.Space() || !orbit || orbit.Unit === 'radii') return list;
+
+		[['Eccentricity', 0], ['Periapsis', 0]].forEach(function (pair) {
+			if (orbit[pair[0]] === undefined)
+				list.push({ID: 'Orbit:' + pair[0], Key: pair[0], Trait: 'Orbit', Missing: true, Title: 'Orbit · ' + pair[0], Value: pair[1], Shown: String(pair[1]), Bool: false});
+		});
+
+		shape = this.ShapeOf(orbit);
+		at = list.map(function (field) {
+			return field.ID;
+		}).indexOf('Orbit:Distance') + 1 || list.length;
+
+		list.splice(at, 0, {ID: 'Orbit:Nearest', Key: 'Nearest', Trait: 'Orbit', Shape: true, Title: Elemenx.Locale.Text('graphics.sceneEditor.nearest'), Value: shape.Nearest, Shown: String(Number(shape.Nearest.toPrecision(4))), Bool: false}, {ID: 'Orbit:Farthest', Key: 'Farthest', Trait: 'Orbit', Shape: true, Title: Elemenx.Locale.Text('graphics.sceneEditor.farthest'), Value: shape.Farthest, Shown: String(Number(shape.Farthest.toPrecision(4))), Bool: false});
+
+		return list;
+	},
+
+	/* The nearest and the farthest distances of an orbit (AU) of its Distance (the half of its long axis) and Eccentricity. */
+	ShapeOf: function (orbit) {
+		var a = this.$Service('Astronomy').Length(orbit.Distance);
+		var e = Math.min(0.99, Math.max(0, Number(orbit.Eccentricity) || 0));
+
+		return {Nearest: a * (1 - e), Farthest: a * (1 + e)};
+	},
+
+	/*
+	 * An orbit of a new nearest (q) or farthest (Q) distance, the other kept: its Distance (q + Q) / 2 and Eccentricity
+	 * (Q - q) / (Q + q); q never beyond Q (a circle at the most), the eccentricity below 0.99 (the farthest held back).
+	 */
+	Reshaped: function (orbit, key, value) {
+		var shape = this.ShapeOf(orbit);
+		var near = shape.Nearest;
+		var far = shape.Farthest;
+		var e;
+
+		if (!(value > 0)) return null;
+
+		if (key === 'Nearest') near = Math.min(value, far);
+		else far = Math.max(value, near);
+
+		e = (far - near) / (far + near);
+
+		if (e > 0.99) {
+			e = 0.99;
+			far = near * 1.99 / 0.01;
+		}
+
+		return {Traits: {Orbit: {Distance: Number(((near + far) / 2).toPrecision(6)), Eccentricity: Math.round(e * 1e6) / 1e6}}};
 	},
 
 	/* A field of the inspector changed (FieldList): its value as its kind is, by the trait's name with it. */
@@ -923,12 +1001,30 @@ Elemenx.Component('SceneEditor', {
 			return;
 		}
 
+		if (field.Shape) {
+			changes = this.Reshaped(this.Found(this.Selected).Traits.Orbit, field.Key, Number(given));
+
+			if (changes)
+				this.Change(this.Selected, changes);
+
+			this.Fields();
+
+			return;
+		}
+
 		if (field.Bool) value = !!given;
 		else if (typeof field.Value === 'number' || /^(X|Y|Lift|Facing|Size)$/.test(field.Key)) value = given === '' || given === null || given === undefined ? undefined : Number(given) || 0;
 		else if (Array.isArray(field.Value)) value = String(given).split(',').map(Number);
 
-		/* A field of a trait by the trait's name with it: Radius of a Body is not the Radius of a Ring. */
-		changes[field.Trait ? field.Trait + field.Key : field.Key] = value;
+		/* A field of a trait by the trait's name with it: Radius of a Body is not the Radius of a Ring; one its kind has not, in the trait. */
+		if (field.Missing) {
+			changes.Traits = {};
+			changes.Traits[field.Trait] = {};
+			changes.Traits[field.Trait][field.Key] = value;
+		}
+		else {
+			changes[field.Trait ? field.Trait + field.Key : field.Key] = value;
+		}
 
 		this.Change(this.Selected, changes);
 	},
@@ -1318,8 +1414,8 @@ Elemenx.Component('SceneEditor', {
 		if (!object)
 			return kinds;
 
-		if (this.Owner())
-			kinds.push({ID: 'Blueprint', Key: 'graphics.sceneEditor.graphs.look'});
+		if (this.Owner()) kinds.push({ID: 'Blueprint', Key: 'graphics.sceneEditor.graphs.look'});
+		else if (object.Traits.Star) kinds.push({ID: 'Star', Key: 'graphics.sceneEditor.graphs.look'});
 
 		if (object.Traits.Terrain)
 			kinds.push({ID: 'World', Key: 'graphics.sceneEditor.graphs.world'});
@@ -1419,7 +1515,7 @@ Elemenx.Component('SceneEditor', {
 
 	/*
 	 * A graph of the library for what is open: a usual World; the relief of a step of Relief as its land makes it; the rule of
-	 * a Scatter as it sows with none (a step of the World its Seed set, when it has none, to its own id).
+	 * a Scatter as it sows with none (a step of the World its Seed set, when it has none, to its own id); the look of a star.
 	 */
 	GraphMade: function () {
 		var kind = this.GraphKindOf();
@@ -1429,6 +1525,13 @@ Elemenx.Component('SceneEditor', {
 		var rule;
 
 		if (!object || kind === 'Blueprint') return;
+
+		/* A star: the look of the library (its prominences rising and falling over a round), its parameters to tune. */
+		if (kind === 'Star') {
+			this.Change(this.Selected, {Traits: {Star: {Blueprint: this.Own().Scene.LibraryStar(), Parameters: {}}}});
+
+			return;
+		}
 
 		if (kind === 'World') {
 			this.Change(this.Selected, {World: this.$Service('SceneWorld').Library({})});
@@ -2649,6 +2752,7 @@ Elemenx.Component('SceneEditor', {
 			var parent = object.Parent ? this.Found(object.Parent) : null;
 			var from;
 			var up;
+			var apses;
 
 			if (!object.Traits.Orbit || !parent || !parent.World) {
 				svg.textContent = '';
@@ -2663,6 +2767,19 @@ Elemenx.Component('SceneEditor', {
 			parts.push('<line class="elemenx-scene-editor-axis axis-y" data-handle="move-tilt" x1="' + center.X.toFixed(1) + '" y1="' + center.Y.toFixed(1) + '" x2="' + up.X.toFixed(1) + '" y2="' + up.Y.toFixed(1) + '"></line>');
 			parts.push('<circle class="elemenx-scene-editor-tip axis-y" data-handle="move-tilt" cx="' + up.X.toFixed(1) + '" cy="' + up.Y.toFixed(1) + '" r="6"></circle>');
 			parts.push('<rect class="elemenx-scene-editor-plane" data-handle="move-orbit" x="' + (center.X - 7).toFixed(1) + '" y="' + (center.Y - 7).toFixed(1) + '" width="14" height="14"></rect>');
+
+			/* The nearest (q) and the farthest (Q) points of its orbit: drawn apart, the shape of the orbit changes. */
+			apses = this.Own().Scene.Engine().Apses(this.Selected);
+
+			if (apses) {
+				[['Periapsis', 'near', 'q'], ['Apoapsis', 'far', 'Q']].forEach(function (apse) {
+					var spot = at(apses[apse[0]].World);
+					if (!spot.Visible) return;
+
+					parts.push('<circle class="elemenx-scene-editor-apse ' + apse[1] + '" data-handle="move-' + apse[1] + '" cx="' + spot.X.toFixed(1) + '" cy="' + spot.Y.toFixed(1) + '" r="6"></circle>');
+					parts.push('<text class="elemenx-scene-editor-apse-label" x="' + (spot.X + 9).toFixed(1) + '" y="' + (spot.Y - 8).toFixed(1) + '">' + apse[2] + '</text>');
+				});
+			}
 
 			svg.innerHTML = parts.join('');
 
@@ -2713,6 +2830,7 @@ Elemenx.Component('SceneEditor', {
 		var ground;
 		var changes = {};
 		var center;
+		var box;
 		var a;
 		var b;
 
@@ -2727,6 +2845,17 @@ Elemenx.Component('SceneEditor', {
 			if (!ground) return;
 
 			changes = {OrbitDistance: !this.Snap ? ground.Distance : object.Traits.Orbit.Unit === 'radii' ? Math.max(0.1, this.Step(ground.Distance, 0.1)) : Number(ground.Distance.toPrecision(3)), OrbitAnomaly: this.Step(ground.Anomaly, 1)};
+		}
+		/* The nearest or the farthest point of its orbit drawn along its line from the middle: the other stays (q, Q in AU). */
+		else if (drag.Kind === 'move-near' || drag.Kind === 'move-far') {
+			box = scene.$Element().querySelector('.elemenx-scene-canvas').getBoundingClientRect();
+			ground = scene.Engine().ApseAt(this.Selected, drag.Kind === 'move-near' ? 'Periapsis' : 'Apoapsis', event.clientX - box.left, event.clientY - box.top);
+
+			if (!ground) return;
+
+			changes = this.Reshaped(object.Traits.Orbit, drag.Kind === 'move-near' ? 'Nearest' : 'Farthest', this.Snap ? Number(ground.Distance.toPrecision(3)) : ground.Distance);
+
+			if (!changes) return;
 		}
 		else if (drag.Kind === 'move-tilt') {
 			start = scene.Project(drag.World);

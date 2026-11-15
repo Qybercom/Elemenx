@@ -997,4 +997,39 @@ describe('Contract: the graphs of the Libraries as resources, made for their opt
 		expect(biomes.Get('taiga').Ground.Materials).toEqual({Low: 'soil', Sand: 'gravel'});
 		expect(biomes.Get('taiga').Order).toBe(undefined);
 	});
+
+	it('has a Curve of keys over a number: straight, smooth through them or held between them, round a loop or held at its ends', function () {
+		var blueprints = Elemenx.Service('Blueprints');
+		var keys = [[0, 0], [1, 10], [2, 0], [3, 10]];
+		var graph = blueprints.Create('generator');
+		var x;
+		var curve;
+		var result;
+
+		/* Between the keys, as each way says. */
+		expect(blueprints.CurveAt(keys, 0.5, 'linear', 0)).toBeCloseTo(5, 9);
+		expect(blueprints.CurveAt(keys, 0.5, 'step', 0)).toBe(0);
+		expect(blueprints.CurveAt(keys, 1, 'smooth', 0)).toBeCloseTo(10, 9);
+		expect(blueprints.CurveAt(keys, 1.5, 'smooth', 0)).toBeCloseTo(5, 9);
+
+		/* Held at its ends, or round its loop (the last key going on into the first). */
+		expect(blueprints.CurveAt(keys, -4, 'smooth', 0)).toBe(0);
+		expect(blueprints.CurveAt(keys, 9, 'smooth', 0)).toBe(10);
+		expect(blueprints.CurveAt(keys, 4.5, 'linear', 4)).toBeCloseTo(5, 9);
+		expect(blueprints.CurveAt(keys, 3.5, 'linear', 4)).toBeCloseTo(5, 9);
+		expect(blueprints.CurveAt(keys, -0.5, 'linear', 4)).toBeCloseTo(5, 9);
+
+		/* Its keys written as JSON, in any order. */
+		expect(blueprints.CurveAt('[[1, 10], [0, 0]]', 0.25, 'linear', 0)).toBeCloseTo(2.5, 9);
+
+		/* A block of a graph of code: X in, Value out. */
+		x = blueprints.Add(graph, 'Input', {properties: {Name: 'T'}});
+		curve = blueprints.Add(graph, 'Curve', {properties: {Keys: keys, Smooth: 'linear', Loop: 0}});
+		result = blueprints.Add(graph, 'Result', {properties: {Key: 'Value'}});
+
+		blueprints.Link(graph, [x.id, 'Value'], [curve.id, 'X']);
+		blueprints.Link(graph, [curve.id, 'Value'], [result.id, 'Value']);
+
+		expect(blueprints.Compile(JSON.parse(blueprints.Write(graph))).Run({}, {T: 2.5}).Value).toBeCloseTo(5, 9);
+	});
 });

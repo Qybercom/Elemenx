@@ -80,7 +80,9 @@
  *   way runs: the Index of a For). More than Steps (100000) at once is an error: a flow that never ends.
  * The types of this library: Number, Vector, Color, Text, Bool, Parameter, Time, Input, Add, Subtract, Multiply,
  * Divide, Min, Max, Pow, Step, Sin, Cos, Abs, Floor, Fract, Sqrt, Exp, OneMinus, Saturate, Mix, Clamp, Smoothstep,
- * Remap, Dot, Length, Normalize, Split, Combine, Noise, Fbm, NoiseSpec (a noise of the Noise Service by its spec), Result, Compare, And, Or, Not, Field, Get, Set, Event,
+ * Remap, Curve (a value of keys over a number, time most often: its Keys [[x, value]...], Smooth linear, smooth or step,
+ * Loop a length after which it begins again; CurveAt(keys, x, smooth, loop) the same in code), Dot, Length, Normalize,
+ * Split, Combine, Noise, Fbm, NoiseSpec (a noise of the Noise Service by its spec), Result, Compare, And, Or, Not, Field, Get, Set, Event,
  * Branch, Sequence, For, Delay, Action, Emit; BlueprintShaders adds UV, Pixel, Position, Normal, Texture, Output,
  * Surface and Present, and the GLSL of the numbers.
  * Errors start with 'Elemenx Blueprints:'. The same functions run in Node: they read no page.
@@ -88,7 +90,7 @@
 Elemenx.Service('Blueprints', {
 	$Meta: {
 		Description: 'Graphs of blocks in the JSON of Flowprint, made into code and flows of actions (and into shaders by BlueprintShaders).',
-		Methods: ['Node(type, definition)', 'Nodes(graph)', 'NodeOf(type)', 'Graph(type, definition)', 'Graphs()', 'Create(type, options)', 'Block(type, options)', 'Add(graph, type, options)', 'Link(graph, from, to)', 'Remove(graph, id)', 'Pin(block, key, out)', 'Read(json)', 'Write(graph)', 'Fill(graph, values)', 'Check(graph)', 'Order(graph)', 'Compile(graph, options)', 'Code(graph)', 'Source(names)', 'Bake(graph)', 'Start(graph, context)', 'IR(graph, options)', 'Invoke(name, inputs)', 'Hash2(a, b)']
+		Methods: ['Node(type, definition)', 'Nodes(graph)', 'NodeOf(type)', 'Graph(type, definition)', 'Graphs()', 'Create(type, options)', 'Block(type, options)', 'Add(graph, type, options)', 'Link(graph, from, to)', 'Remove(graph, id)', 'Pin(block, key, out)', 'Read(json)', 'Write(graph)', 'Fill(graph, values)', 'Check(graph)', 'Order(graph)', 'Compile(graph, options)', 'Code(graph)', 'Source(names)', 'Bake(graph)', 'Start(graph, context)', 'IR(graph, options)', 'Invoke(name, inputs)', 'Hash2(a, b)', 'CurveAt(keys, x, smooth, loop)']
 	},
 
 	Version: 1,
@@ -869,6 +871,65 @@ Elemenx.Service('Blueprints', {
 	},
 
 	/* Each part of a and b by f: numbers, or lists of them (a number goes with each part). */
+	/*
+	 * The value of a curve of keys ([[x, value]...], or their text as JSON) at x: between the keys round it straight
+	 * (linear), on a curve of Catmull-Rom through them (smooth, by default) or held till the next (step); with Loop above
+	 * 0, x taken round that length (the keys of 0 to Loop, the last going on into the first), else held at the ends.
+	 */
+	CurveAt: function (given, x, smooth, loop) {
+		var keys = typeof given === 'string' ? JSON.parse(given || '[]') : given || [];
+		var count;
+		var at;
+		var i;
+		var a;
+		var b;
+		var before;
+		var after;
+		var span;
+		var t;
+
+		keys = keys.filter(function (key) {
+			return Array.isArray(key) && key.length > 1;
+		}).map(function (key) {
+			return [Number(key[0]) || 0, Number(key[1]) || 0];
+		}).sort(function (one, other) {
+			return one[0] - other[0];
+		});
+		count = keys.length;
+
+		if (!count) return 0;
+
+		if (count === 1)
+			return keys[0][1];
+
+		at = loop > 0 ? (x % loop + loop) % loop : x;
+
+		if (!(loop > 0) && at <= keys[0][0]) return keys[0][1];
+
+		if (!(loop > 0) && at >= keys[count - 1][0]) return keys[count - 1][1];
+
+		/* The key before x (round the loop: the last, before the first one). */
+		i = count - 1;
+
+		while (i >= 0 && keys[i][0] > at)
+			i--;
+
+		a = i < 0 ? [keys[count - 1][0] - loop, keys[count - 1][1]] : keys[i];
+		b = i + 1 < count ? keys[i + 1] : [keys[0][0] + loop, keys[0][1]];
+		span = b[0] - a[0];
+		t = span > 0 ? (at - a[0]) / span : 0;
+
+		if (smooth === 'step') return a[1];
+
+		if (smooth === 'linear')
+			return a[1] + (b[1] - a[1]) * t;
+
+		before = i - 1 >= 0 ? keys[i - 1][1] : loop > 0 ? keys[(i - 1 + count * 2) % count][1] : a[1];
+		after = i + 2 < count ? keys[i + 2][1] : loop > 0 ? keys[(i + 2) % count][1] : b[1];
+
+		return 0.5 * (2 * a[1] + (b[1] - before) * t + (2 * before - 5 * a[1] + 4 * b[1] - after) * t * t + (3 * a[1] - before - 3 * b[1] + after) * t * t * t);
+	},
+
 	Each: function (a, b, f) {
 		var length;
 		var list = [];
@@ -2533,6 +2594,13 @@ Elemenx.Service('Blueprints', {
 				return {Out: self.Each(inputs.X, 0, function (x) {
 					return inputs.ToLow + (x - inputs.FromLow) / ((inputs.FromHigh - inputs.FromLow) || 1) * (inputs.ToHigh - inputs.ToLow);
 				})};
+			}
+		});
+
+		/* A value of keys over a number (time most often): an animation of a parameter drawn as a curve. */
+		this.Node('Curve', {Graphs: numeric, Group: 'math', Properties: [{Key: 'Keys', Type: 'object', Value: [[0, 0], [1, 1]]}, {Key: 'Smooth', Type: 'select', Options: ['linear', 'smooth', 'step'], Value: 'smooth'}, {Key: 'Loop', Type: 'number', Value: 0}], Inputs: [{Key: 'X', Type: 'float', Value: 0}], Outputs: [{Key: 'Value', Type: 'float'}],
+			Compute: function (inputs, properties) {
+				return {Value: self.CurveAt(properties.Keys, Number(inputs.X) || 0, properties.Smooth, Number(properties.Loop) || 0)};
 			}
 		});
 

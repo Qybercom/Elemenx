@@ -7,7 +7,9 @@
  * belts and rings, stations of modules, fleets of ships that hold their place by a body and travel to another.
  *
  * Kinds of space: star (Star: Mass, Radius, Temperature, Luminosity, Color, Veil: how far from the disc, in its radii,
- * engines go in its light, 0 for not at all), planet (Orbit: Distance, Eccentricity,
+ * engines go in its light, 0 for not at all; Corona, Prominences, Flares: how much of each burns round it; Blueprint: its
+ * look as a graph of the kind star run each frame, its Parameters given, LibraryStar() the one of the library),
+ * cluster (Barycentre and Cluster: Type, Radius, Count, Seed: the swarm of its stars), planet (Orbit: Distance, Eccentricity,
  * Inclination, Node, Periapsis, Anomaly, Period; Body: Radius, Mass, Day, Tilt, Albedo; Surface: Type, Colors, Water,
  * Ocean, Ice, Clouds, Atmosphere, Seed), moon (a planet, small, one face to its planet), belt (Belt: Inner, Outer, Count,
  * Inclination, Colors), ring (Ring: Inner, Outer, Inclination, Colors), station and outpost (an Orbit in radii of what
@@ -111,7 +113,7 @@
 Elemenx.Component('Scene', {
 	$TemplateURL: 'Scene.html',
 	$StyleURL: 'Scene.css',
-	$Traits: ['SceneScatter', 'SceneLighting', 'SceneProbes', 'SceneEffects', 'SceneCosmos', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneDebris', 'SceneFracture', 'ScenePiping', 'SceneDeepSpace', 'SceneGalaxy'],
+	$Traits: ['SceneScatter', 'SceneLighting', 'SceneProbes', 'SceneEffects', 'SceneCosmos', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneDebris', 'SceneFracture', 'ScenePiping', 'SceneDeepSpace', 'SceneNebula', 'SceneGalaxy'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'star',
@@ -156,7 +158,7 @@ Elemenx.Component('Scene', {
 			shader: 'A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}).'
 		},
-		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'GalaxyData()', 'GalaxyView()', 'SetGalaxyView(view)', 'GalaxyStars()', 'GalaxyPicked()', 'GalaxyFocus(id)', 'EnterSystem(id, callback)', 'LeaveSystem(callback)', 'GalaxyEntered()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Phone()', 'Device()', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
+		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryStar()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'GalaxyData()', 'GalaxyView()', 'SetGalaxyView(view)', 'GalaxyStars()', 'GalaxyPicked()', 'GalaxyFocus(id)', 'EnterSystem(id, callback)', 'LeaveSystem(callback)', 'GalaxyEntered()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Phone()', 'Device()', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
 		Props: {
 			Setting: {Options: ['space', 'terrain', 'galaxy'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers; galaxy: a galaxy of Galaxy, SceneGalaxy).'},
 			Galaxy: 'The galaxy of Setting galaxy (SceneGalaxy, GalaxyData): a key of GalaxyData.Use, the URL of its file, its data, or options of GalaxyData.Make ({Seed, Kind, Radius, Arms}).',
@@ -405,11 +407,31 @@ Elemenx.Component('Scene', {
 		var orbit = {Distance: 1, Eccentricity: 0, Inclination: 0, Node: 0, Periapsis: 0, Anomaly: 0, Period: null, Unit: 'AU'};
 
 		return {
-			'star': {Traits: {Star: {Mass: 1, Radius: null, Temperature: null, Luminosity: null, Color: '', Veil: 3, Corona: 1, Prominences: 1, Flares: 1}, Selectable: {}}},
+			'star': {Traits: {Star: {Type: 'main', Mass: 1, Radius: null, Temperature: null, Luminosity: null, Color: '', Veil: 3, Corona: 1, Prominences: 1, Flares: 1, Blueprint: null, Parameters: null}, Selectable: {}}},
+			/*
+			 * Stars not of the main sequence (Astronomy.Types): swollen old ones, and what is left when a star ends. A neutron
+			 * star turns once in Spin seconds; a pulsar sweeps its two Beams round with it, a magnetar glows along the lines
+			 * of its Field and flares; a brown dwarf is banded (Bands) as a gas giant is. Each may go round another (an Orbit of no
+			 * Distance till one is given: a star of its own at the middle).
+			 */
+			'giant': {Extends: 'star', Traits: {Orbit: Object.assign({}, orbit, {Distance: 0}), Star: {Type: 'giant', Mass: 1.3, Radius: 25, Temperature: 4300}}},
+			'supergiant': {Extends: 'star', Traits: {Orbit: Object.assign({}, orbit, {Distance: 0}), Star: {Type: 'supergiant', Mass: 18, Radius: 650, Temperature: 3600, Prominences: 0.6}}},
+			'white-dwarf': {Extends: 'star', Traits: {Orbit: Object.assign({}, orbit, {Distance: 0}), Star: {Type: 'white-dwarf', Mass: 0.6, Temperature: 22000, Veil: 1, Corona: 0.3, Prominences: 0, Flares: 0}}},
+			'neutron-star': {Extends: 'star', Traits: {Orbit: Object.assign({}, orbit, {Distance: 0}), Star: {Type: 'neutron', Mass: 1.4, Temperature: 800000, Veil: 0, Corona: 0, Prominences: 0, Flares: 0, Spin: 0.8, Beams: 0, Field: 0}}},
+			'pulsar': {Extends: 'neutron-star', Traits: {Star: {Type: 'pulsar', Beams: 1}}},
+			'magnetar': {Extends: 'neutron-star', Traits: {Star: {Type: 'magnetar', Spin: 6, Beams: 0.3, Field: 1, Flares: 1}}},
+			'brown-dwarf': {Extends: 'star', Traits: {Orbit: Object.assign({}, orbit, {Distance: 0}), Star: {Type: 'brown-dwarf', Mass: 0.05, Temperature: 1200, Veil: 0.5, Corona: 0, Prominences: 0, Flares: 0.2, Bands: 1}}},
 			'planet': {Traits: {Orbit: orbit, Body: {Radius: 6371, Mass: null, Day: 24, Tilt: 0, Albedo: null}, Surface: {Type: 'rocky', Colors: '', Water: '', Ocean: null, Ice: null, Clouds: null, Planet: null, Atmosphere: '', Seed: ''}, Selectable: {}}},
 			'moon': {Extends: 'planet', Traits: {Body: {Radius: 1737, Day: 0}, Surface: {Type: 'moon'}}},
 			/* The common centre of stars and black holes going round one another (a binary, a triple): nothing is drawn of it. */
 			'barycentre': {Traits: {Barycentre: {Mass: null, Members: null}}},
+			/*
+			 * A star cluster (open, globular, nuclear): the middle its stars go round as round a barycentre, and its stars too many
+			 * to tell one by one (Count) a swarm round it Radius light-years across, of its Seed (GalaxyData.Cluster).
+			 */
+			/* A cloud of gas and dust (SceneNebula): Type hii, planetary, remnant (Subtype Ia, II, Ib, Ic) or dark, Radius in light years. */
+			'nebula': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 0}), Nebula: {Type: 'hii', Subtype: '', Radius: 3, Seed: '', Density: 1, Glow: 1, Colors: ''}, Selectable: {}}},
+			'cluster': {Traits: {Barycentre: {Mass: null, Members: null}, Cluster: {Type: 'open', Radius: 6, Count: 0, Seed: ''}}},
 			'blackhole': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 40}), BlackHole: {Mass: 10, Disk: true, Inner: 3, Outer: 14, Tilt: 12, Color: '', Brightness: 1}, Selectable: {}}},
 			'wormhole': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 12}), Wormhole: {Radius: 1, Cosmos: 'nebula', Star: '#ffd9a0', Leads: '', To: '', Tilt: 0}, Selectable: {}}},
 			'comet': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 6, Eccentricity: 0.85, Inclination: 18}), Comet: {Radius: 5, Tail: 1, Color: '', Ion: ''}, Selectable: {}}},
@@ -538,6 +560,7 @@ Elemenx.Component('Scene', {
 			Rocks: {},
 			Lines: {},
 			Rings: {},
+			Swarms: {},
 			Baked: {},
 			Rivers: {},
 			Towns: {},
@@ -1021,7 +1044,7 @@ Elemenx.Component('Scene', {
 					object.Parent = null;
 
 				if (object.Parent === null || object.Parent === undefined || object.Parent === object.ID)
-					object.Parent = trait(object, 'Star') || trait(object, 'Barycentre') || !first ? '' : first.ID;
+					object.Parent = trait(object, 'Star') || trait(object, 'Barycentre') || trait(object, 'Nebula') || !first ? '' : first.ID;
 			});
 
 			function visit (object, seen) {
@@ -1052,6 +1075,13 @@ Elemenx.Component('Scene', {
 			});
 
 			scene.StarMass = null;
+			scene.Crowds = {};
+
+			/* How many go round each: the orbits of a crowd (the stars of a cluster) are drawn of the one chosen only. */
+			order.forEach(function (object) {
+				if (object.Parent)
+					scene.Crowds[object.Parent] = (scene.Crowds[object.Parent] || 0) + 1;
+			});
 
 			order.forEach(function (object) {
 				derive(object, objects);
@@ -1135,6 +1165,11 @@ Elemenx.Component('Scene', {
 				/* In real sizes a craft is as long as it is: Length (metres) of it or of its Vehicle. */
 				if (real && !object.Owner && lengthOf(object))
 					object.Size = lengthOf(object) * METRE;
+			}
+			else if (trait(object, 'Nebula')) {
+				/* As wide as its Radius of light years laid out as the distances of the scene are. */
+				object.Size = vectors.Length(spread([number(trait(object, 'Nebula').Radius, 3) * astronomy.Units.ly, 0, 0], null));
+				object.Info = engine.NebulaInfo ? engine.NebulaInfo(object) : null;
 			}
 			else if (!self.DeepSize || !self.DeepSize(object, false, KM * UNIT)) {
 				object.Size = 0;
@@ -1746,6 +1781,7 @@ Elemenx.Component('Scene', {
 			scene.Lines = {};
 			scene.Rings = {};
 			scene.Rocks = {};
+			scene.Swarms = {};
 			scene.Baked = {};
 		}
 
@@ -1997,13 +2033,34 @@ Elemenx.Component('Scene', {
 				scene.Rings[id].Mesh.Destroy();
 			});
 
+			Object.keys(scene.Swarms || {}).forEach(function (id) {
+				if (scene.Swarms[id])
+					scene.Swarms[id].Destroy();
+			});
+
 			scene.Lines = {};
 			scene.Rings = {};
 			scene.Rocks = {};
+			scene.Swarms = {};
+		}
+
+		/*
+		 * The meshes of the orbits, rings and belts are laid out by spread, as real as Scale is: made again when it changed.
+		 * Regression: kept as they were, the bodies went out with a larger Scale and their orbits stayed where they had been.
+		 */
+		function spreadKept () {
+			var how = realness();
+			if (scene.SpreadOf === how) return;
+
+			clear();
+
+			scene.SpreadOf = how;
 		}
 
 		function orbitLine (object) {
 			var parent = parentOf(object);
+
+			spreadKept();
 
 			if (!scene.Lines[object.ID])
 				scene.Lines[object.ID] = renderer.Lines(astronomy.Path(trait(object, 'Orbit'), 180).map(function (point) {
@@ -2013,12 +2070,63 @@ Elemenx.Component('Scene', {
 			return scene.Lines[object.ID];
 		}
 
+		/*
+		 * The stars of a cluster too many to tell one by one (Cluster Count): points round its middle of the profile of
+		 * Plummer, of its Seed, laid out as the orbits of its stars are (spread round it); young blue and white ones in an open
+		 * cluster, old yellow and red ones in a globular and a nuclear one.
+		 */
+		function swarmOf (object) {
+			var settings = trait(object, 'Cluster');
+			var count = Math.max(0, Math.min(20000, Math.round(number(settings.Count, 0))));
+			var generator;
+			var scale;
+			var positions = [];
+			var colors = [];
+			var temperatures = settings.Type === 'open' ? [4200, 5600, 6500, 8500, 12000, 20000] : [3300, 3800, 4300, 4900, 5400, 6000];
+			var place;
+			var color;
+			var u;
+			var r;
+			var z;
+			var angle;
+			var i;
+
+			spreadKept();
+
+			if (!count)
+				return null;
+
+			if (scene.Swarms[object.ID])
+				return scene.Swarms[object.ID];
+
+			generator = astronomy.Random(String(settings.Seed || object.ID));
+			scale = number(settings.Radius, 6) * 0.35 * astronomy.Units.ly;
+
+			for (i = 0; i < count; i++) {
+				u = generator.Float(0.02, 0.97);
+				r = scale / Math.sqrt(Math.pow(u, -2 / 3) - 1);
+				z = generator.Float(-1, 1);
+				angle = generator.Float(0, Math.PI * 2);
+				place = spread([Math.cos(angle) * Math.sqrt(1 - z * z) * r, z * r, Math.sin(angle) * Math.sqrt(1 - z * z) * r], object);
+				color = paint(astronomy.Color(generator.Pick(temperatures)));
+
+				positions.push(place[0], place[1], place[2]);
+				colors.push(color[0], color[1], color[2], Math.pow(generator.Next(), 3) * 0.75 + 0.08);
+			}
+
+			scene.Swarms[object.ID] = renderer.Points(positions, {aColor: {Size: 4, Data: colors}});
+
+			return scene.Swarms[object.ID];
+		}
+
 		function ringOf (object) {
 			var settings = trait(object, 'Ring');
 			var parent = parentOf(object);
 			var round = parent && parent.Radius;
 			var inner = number(settings.Inner, round ? 1.3 : 2.2);
 			var outer = number(settings.Outer, round ? 2.3 : 3.2);
+
+			spreadKept();
 
 			if (!scene.Rings[object.ID]) {
 				scene.Rings[object.ID] = {
@@ -2047,6 +2155,8 @@ Elemenx.Component('Scene', {
 			});
 			var rocks = [];
 			var i;
+
+			spreadKept();
 
 			if (scene.Rocks[object.ID])
 				return scene.Rocks[object.ID];
@@ -2863,13 +2973,23 @@ Elemenx.Component('Scene', {
 		function lights () {
 			var positions = [];
 			var colors = [];
-			var list = scene.Order.filter(function (object) {
+			var all = scene.Order.filter(function (object) {
 				return trait(object, 'Star') && object.World && !object.Hidden;
-			}).slice(0, 4);
+			});
+			/*
+			 * Among the many stars of a cluster: the four nearest the eye, each as much fainter than the nearest as it is farther
+			 * (its light falls as the square of the way). Regression: the first four lit every planet as its own star did.
+			 */
+			var crowd = all.length > 4;
+			var list = crowd ? all.sort(function (a, b) {
+				return vectors.Distance(a.World, scene.Eye) - vectors.Distance(b.World, scene.Eye);
+			}).slice(0, 4) : all.slice(0, 4);
+			var nearest = list.length ? Math.max(1e-9, vectors.Distance(list[0].World, scene.Eye)) : 1;
 
 			list.forEach(function (star) {
 				var color = paint(star.Color);
-				var strength = Math.min(1.6, 0.9 + 0.25 * Math.log(1 + star.Star.Luminosity));
+				var falls = crowd ? Math.pow(nearest / Math.max(nearest, vectors.Distance(star.World, scene.Eye)), 2) : 1;
+				var strength = Math.min(1.6, 0.9 + 0.25 * Math.log(1 + star.Star.Luminosity)) * falls;
 				var at = vectors.Subtract(star.World, scene.Eye);
 
 				positions.push(at[0], at[1], at[2]);
@@ -3180,10 +3300,14 @@ Elemenx.Component('Scene', {
 
 			scene.Roots.forEach(function (object) {
 				var parent = parentOf(object);
-				/* Round the middle of a system: its root, a star, or a barycentre of stars. */
-				var middle = !parent || trait(parent, 'Star') || trait(parent, 'Barycentre');
+				/* Round the middle of a system: its root, a star, a barycentre of stars, the middle of a cluster. */
+				var middle = !parent || trait(parent, 'Star') || trait(parent, 'Barycentre') || trait(parent, 'Cluster');
 				if (object.Relative && middle)
 					far = Math.max(far, vectors.Length(object.Relative) * (1 + number(trait(object, 'Orbit') && trait(object, 'Orbit').Eccentricity, 0)));
+
+				/* A nebula reaches as far as its edge. */
+				if (trait(object, 'Nebula'))
+					far = Math.max(far, vectors.Length(object.Relative || [0, 0, 0]) + object.Size);
 
 				if (trait(object, 'Belt') && middle)
 					far = Math.max(far, vectors.Length(spread([number(trait(object, 'Belt').Outer, 3), 0, 0], null)));
@@ -3197,6 +3321,8 @@ Elemenx.Component('Scene', {
 			var far = Math.max(object.Size, 0.02) * 4.5;
 
 			if (trait(object, 'Star') && !object.Parent) return extent() * 1.6;
+
+			if (trait(object, 'Nebula')) return object.Size * 2.6;
 
 			if (scene.Ground)
 				return Math.max(far, 45);
@@ -3478,13 +3604,15 @@ Elemenx.Component('Scene', {
 					if (trait(object, 'Star')) {
 						model = placed(object, size);
 
-						drawReady(gpu.Sphere, gpu.Star, uniforms({uModel: model, uNormalMatrix: math.NormalMatrix(model), uColor: paint(object.Color).slice(0, 3), uSeed: object.Seed, uCells: object.Star.Radius > 8 ? 3 : object.Star.Radius > 2 ? 6 : 9}));
+						drawReady(gpu.Sphere, gpu.Star, uniforms({uModel: model, uNormalMatrix: math.NormalMatrix(model), uColor: paint(object.Color).slice(0, 3), uSeed: object.Seed, uCells: object.Star.Radius > 8 ? 3 : object.Star.Radius > 2 ? 6 : 9, uBands: number(trait(object, 'Star').Bands, 0)}));
 
 						later.push(function () {
 							/* In real sizes its disc is small, its light is not: a halo of a size on the screen, as bright as it blinds. */
 							var blind = realness() >= 0.999 ? starLight(object, vectors.Distance(object.World, scene.Eye)) : 0;
-							var wide = Math.max(size * 11, pixels(object.World, 520 * blind));
-							var close = Math.max(size * 4.2, pixels(object.World, 110 * blind));
+							/* What is left of a star, ten kilometres or a few thousand across, still burns a point of light. */
+							var tiny = object.Star.Radius < 0.02 ? 1 : 0;
+							var wide = Math.max(size * 11, pixels(object.World, Math.max(520 * blind, 36 * tiny)));
+							var close = Math.max(size * 4.2, pixels(object.World, Math.max(110 * blind, 9 * tiny)));
 
 							/* The wide veil first: the disc does not end at once at black space. */
 							drawReady(gpu.Quad, gpu.Glow, uniforms({uCenter: local(object.World), uSize: wide, uRight: right, uUp: up, uColor: paint(object.Color).slice(0, 3).map(function (part) {
@@ -3541,13 +3669,25 @@ Elemenx.Component('Scene', {
 						});
 					}
 
-					if (self.Orbits && self.Orbits !== 'false' && trait(object, 'Orbit') && trait(object, 'Orbit').Unit !== 'radii' && !object.Owner && astronomy.Length(trait(object, 'Orbit').Distance))
+					if (self.Orbits && self.Orbits !== 'false' && trait(object, 'Orbit') && trait(object, 'Orbit').Unit !== 'radii' && !object.Owner && astronomy.Length(trait(object, 'Orbit').Distance) && !crowded(object, parent))
 						later.unshift(line(object, parent, uniforms));
+
+					/* The swarm of a cluster: behind the bodies, hidden by them, its light added. */
+					if (trait(object, 'Cluster') && swarmOf(object))
+						later.unshift(function () {
+							var at = local(object.World);
+
+							drawReady(swarmOf(object), gpu.Far, {uViewProjection: math.Multiply(uniforms({}).uViewProjection, math.Translation(at[0], at[1], at[2])), uRatio: renderer.Ratio}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
+						});
 				});
 
 				/* Black holes, wormholes, comets and quasars (SceneDeepSpace): light bent and gas that glows, with what is seen through. */
 				if (engine.DeepDraw)
 					engine.DeepDraw(matrix, later, right, up, planes);
+
+				/* Clouds of gas and dust (SceneNebula), through their balls. */
+				if (engine.NebulaDraw)
+					engine.NebulaDraw(matrix, later, planes);
 
 				var sees = frustum(matrix, renderer.Width);
 
@@ -5750,6 +5890,11 @@ Elemenx.Component('Scene', {
 			return castShadow(vectors.Normalize(vectors.Subtract(star.World, holder.World)), holder.World, scene.Eye, extent, extent * 3, casters);
 		}
 
+		/* One of the many stars of a cluster: its orbit is drawn when it is chosen, else the orbits hide the cluster. */
+		function crowded (object, parent) {
+			return !!parent && !!trait(parent, 'Cluster') && (scene.Crowds && scene.Crowds[parent.ID] || 0) > 24 && object.ID !== scene.Selected && object.ID !== scene.Focus;
+		}
+
 		function line (object, parent, uniforms) {
 			return function () {
 				var chosen = object.ID === scene.Selected || object.ID === scene.Focus;
@@ -5849,10 +5994,21 @@ Elemenx.Component('Scene', {
 
 		function moveLabels () {
 			var camera = scene.Camera;
+			/* Of the many stars of a cluster the names of the dozen nearest the eye (and of the one chosen): the others hid all. */
+			var named = {};
+
+			scene.Roots.filter(function (object) {
+				return object.World && crowded(object, parentOf(object));
+			}).sort(function (a, b) {
+				return vectors.Distance(camera.Position, a.World) - vectors.Distance(camera.Position, b.World);
+			}).slice(0, 12).forEach(function (object) {
+				named[object.ID] = true;
+			});
 
 			scene.Roots.forEach(function (object) {
 				var button = scene.Labels[object.ID];
 				var parent = parentOf(object);
+				var star = parent && trait(parent, 'Star') ? parentOf(parent) : null;
 				var spot;
 				var near;
 				var shown;
@@ -5864,7 +6020,11 @@ Elemenx.Component('Scene', {
 				near = vectors.Distance(camera.Position, object.World);
 				shown = spot.Visible && spot.X > -40 && spot.X < scene.Width + 40 && spot.Y > -20 && spot.Y < scene.Height + 20;
 
-				if (shown && parent && !trait(parent, 'Star') && object.ID !== scene.Selected && object.ID !== scene.Focus)
+				if (shown && parent && crowded(object, parent))
+					shown = !!named[object.ID];
+
+				/* What goes round a star of a cluster, named near it only, as a moon is. */
+				if (shown && parent && (!trait(parent, 'Star') || star && crowded(parent, star)) && object.ID !== scene.Selected && object.ID !== scene.Focus)
 					shown = near < Math.max(vectors.Length(object.Relative || [0, 0, 0]), parent.Size * 3) * 14;
 
 				if (shown)
@@ -9814,11 +9974,14 @@ Elemenx.Component('Scene', {
 		 * the scene waits for it behind its veil (loading), the page does not; in a frame of its loop only (scene.Looping), one
 		 * asked for by hand waits for it. Regression: a draw waited for the card, and
 		 * the Orbit demo stood 29 s in one task while its globe's program was made (17 s under load).
+		 * True when it drew: what keeps a draw (a bake a part at a frame) goes on only then.
 		 */
 		function drawReady (mesh, program, values, options) {
-			if (scene.Looping && !programReady(program)) return;
+			if (scene.Looping && !programReady(program)) return false;
 
 			renderer.Draw(mesh, program, values, options);
+
+			return true;
 		}
 
 		/* Whether the card made a program (one not made for long is waited for then: Renderer, Patience). */
@@ -10791,8 +10954,12 @@ Elemenx.Component('Scene', {
 
 				compose();
 
-				if (!scene.Focus)
+				/* Seen whole: where its objects are now, not where those before were (the view stood in the middle, close). */
+				if (!scene.Focus) {
+					place(scene.Time);
+
 					focusOn('', true);
+				}
 			}
 
 			if (number(self.Time, 0) !== givenProps.Time) {
@@ -10933,6 +11100,11 @@ Elemenx.Component('Scene', {
 			var turned;
 			var anomaly;
 			var distance;
+			var e;
+			var period;
+			var mean;
+			var eccentric;
+			var truly;
 
 			if (!orbit || !parent || !parent.World || !object.World || Math.abs(ray.Direction[1]) < 1e-6) return null;
 
@@ -10953,7 +11125,90 @@ Elemenx.Component('Scene', {
 			if (orbit.Unit === 'radii') distance = length / (parent.Size || 1);
 			else distance = unspread(length, parent);
 
+			e = Math.min(0.99, Math.max(0, number(orbit.Eccentricity, 0)));
+
+			/*
+			 * Regression: on a long orbit the distance from the middle was taken for the half of its long axis, and the angle
+			 * turned for the mean anomaly: the orbit lost its shape under the pointer. The body goes on its ellipse there.
+			 */
+			if (e > 0 && orbit.Unit !== 'radii') {
+				period = number(orbit.Period, 0) || astronomy.Period(astronomy.Length(orbit.Distance), object.Around);
+				mean = anomaly * Math.PI / 180 + Math.PI * 2 * scene.Time / period;
+				eccentric = astronomy.Eccentric((mean % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2), e);
+				truly = 2 * Math.atan2(Math.sqrt(1 + e) * Math.sin(eccentric / 2), Math.sqrt(1 - e) * Math.cos(eccentric / 2)) + turned * Math.PI / 180;
+				eccentric = 2 * Math.atan2(Math.sqrt(1 - e) * Math.sin(truly / 2), Math.sqrt(1 + e) * Math.cos(truly / 2));
+				turned = (eccentric - e * Math.sin(eccentric) - (mean - Math.PI * 2 * Math.floor(mean / Math.PI / 2))) * 180 / Math.PI;
+				distance /= 1 - e * Math.cos(eccentric);
+			}
+
 			return {Distance: distance, Anomaly: ((anomaly + turned) % 360 + 360) % 360};
+		};
+
+		/*
+		 * The nearest and the farthest points of an orbit round its parent (in AU, not in radii): {Periapsis, Apoapsis}, each
+		 * {Distance (AU from the middle), World (where it is in the view)}, and Middle (where the parent is); null with none.
+		 */
+		engine.Apses = function (id) {
+			var object = scene.Objects[id];
+			var orbit = trait(object, 'Orbit');
+			var parent = object ? parentOf(object) : null;
+			var a;
+			var e;
+
+			if (!orbit || orbit.Unit === 'radii' || !parent || !parent.World) return null;
+
+			a = astronomy.Length(orbit.Distance);
+			e = Math.min(0.99, Math.max(0, number(orbit.Eccentricity, 0)));
+
+			if (!a)
+				return null;
+
+			return {
+				Middle: parent.World.slice(),
+				Periapsis: {Distance: a * (1 - e), World: vectors.Add(parent.World, spread(toView(astronomy.Turn(orbit, a * (1 - e), 0)), parent))},
+				Apoapsis: {Distance: a * (1 + e), World: vectors.Add(parent.World, spread(toView(astronomy.Turn(orbit, -a * (1 + e), 0)), parent))}
+			};
+		};
+
+		/*
+		 * How far from the middle (AU) a point of the canvas puts the nearest (which periapsis) or the farthest (apoapsis)
+		 * point of an orbit, along the line from the middle through it: where the ray of the view comes nearest to that line.
+		 */
+		engine.ApseAt = function (id, which, x, y) {
+			var apses = engine.Apses(id);
+			var ray = scene.Camera.Ray(x, y, scene.Width, scene.Height);
+			var line;
+			var length;
+			var away;
+			var b;
+			var c;
+			var d;
+			var f;
+			var under;
+			var s;
+
+			if (!apses || !apses[which]) return null;
+
+			line = vectors.Subtract(apses[which].World, apses.Middle);
+			length = vectors.Length(line);
+
+			if (!length)
+				return null;
+
+			line = vectors.Scale(line, 1 / length);
+			away = vectors.Subtract(apses.Middle, ray.Origin);
+			b = vectors.Dot(line, ray.Direction);
+			c = vectors.Dot(ray.Direction, ray.Direction);
+			d = vectors.Dot(line, away);
+			f = vectors.Dot(ray.Direction, away);
+			under = c - b * b;
+
+			/* Looked at along the line: nothing to take. */
+			if (under < 1e-9 * c) return null;
+
+			s = (b * f - c * d) / under;
+
+			return {Distance: unspread(Math.max(length * 0.01, s), parentOf(scene.Objects[id]))};
 		};
 
 		engine.Local = localPoint;
@@ -11687,6 +11942,7 @@ Elemenx.Component('Scene', {
 			this.WeaponsStart();
 			this.DebrisStart();
 			this.DeepSpaceStart();
+			this.NebulaStart();
 			this.CosmosStart();
 			this.GalaxyStart();
 			this.VehiclesStart();
@@ -13029,6 +13285,15 @@ Elemenx.Component('Scene', {
 		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/sky'));
 	},
 
+	/*
+	 * The look of a star of the library as a graph (the kind star of SceneBlueprints), for the Blueprint of its trait Star:
+	 * its prominences rise and fall and stream faster and slower over a round of Cycle seconds (two Curves of the Time),
+	 * as much of them and of its flares as its Activity.
+	 */
+	LibraryStar: function () {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/star'));
+	},
+
 	/* The uniforms of the water of the scene: its parameters and the time, as the shader of water has it. */
 	WaterValues: function (seconds) {
 		return this.WaterMade ? this.WaterMade.Values({}, {Time: seconds || 0}) : null;
@@ -14240,6 +14505,8 @@ Elemenx.Component('Scene', {
 				'uniform float uTime;',
 				/* How fine its cells of rising gas are: a dwarf boils in small ones, a giant in a few huge. */
 				'uniform float uCells;',
+				/* A brown dwarf: belts of cloud round it as a gas giant has, its spots gone. */
+				'uniform float uBands;',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				'void main() {',
@@ -14250,16 +14517,19 @@ Elemenx.Component('Scene', {
 				/* Spots keep to the belts of middle latitudes, each with a bright ring of faculae round it. */
 				'	float belt = smoothstep(0.08, 0.2, abs(p.y)) * (1.0 - smoothstep(0.45, 0.62, abs(p.y)));',
 				'	float field = fbm3(p * 2.6 + vec3(uSeed, uTime * 0.01, 0.0), 3);',
-				'	float spots = smoothstep(0.66, 0.74, field) * belt;',
+				'	float spots = smoothstep(0.66, 0.74, field) * belt * (1.0 - uBands);',
+				'	float bands = 0.5 + 0.5 * sin(p.y * 15.0 + fbm3(p * vec3(1.5, 7.0, 1.5) + vec3(uSeed, 0.0, uTime * 0.02), 3) * 4.0);',
 				'	float faculae = (smoothstep(0.58, 0.66, field) - spots) * belt;',
 				'	float limb = pow(max(dot(n, v), 0.0), 0.45);',
-				'	vec3 color = pow(uColor, vec3(2.2)) * (0.7 + 0.6 * cells) * (0.5 + 0.6 * limb) * (1.0 - spots * 0.55) * (1.0 + faculae * 0.35 * (1.0 - limb));',
+				'	vec3 color = pow(uColor, vec3(2.2)) * mix(1.0, 0.55 + 0.75 * bands, uBands) * (0.7 + 0.6 * mix(cells, 0.5, uBands * 0.7)) * (0.5 + 0.6 * limb) * (1.0 - spots * 0.55) * (1.0 + faculae * 0.35 * (1.0 - limb));',
 				/*
 				 * A sun is far brighter than white: what shows of it to the eye is only that it burns. Regression: a cool star
 				 * (a red dwarf) was so too, white over its orange and burned out: the cooler it is, the less of that.
 				 */
 				'	float warm = 1.0 - clamp(uColor.b / max(uColor.r, 1e-3), 0.0, 1.0);',
-				'	outColor = vec4(mix(color, vec3(1.0), 0.28 * limb * (1.0 - warm)) * mix(2.4, 1.6, warm), 1.0);',
+				/* Regression: an orange giant burned out white as the Sun does. A brown dwarf glows dim, maroon to magenta. */
+				'	color = mix(color, color * vec3(1.0, 0.5, 0.72) * 0.5, uBands);',
+				'	outColor = vec4(mix(color, vec3(1.0), 0.28 * limb * (1.0 - warm) * (1.0 - warm)) * mix(2.4, 1.1, clamp(warm * 1.5, 0.0, 1.0)), 1.0);',
 				'}'
 			].join('\n'),
 

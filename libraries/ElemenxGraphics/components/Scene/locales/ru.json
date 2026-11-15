@@ -57,7 +57,16 @@
 				"wormhole": "Кротовая нора",
 				"comet": "Комета",
 				"quasar": "Квазар",
-				"planetoid": "Планетоид"
+				"planetoid": "Планетоид",
+				"giant": "Гигант",
+				"supergiant": "Сверхгигант",
+				"white-dwarf": "Белый карлик",
+				"neutron-star": "Нейтронная звезда",
+				"pulsar": "Пульсар",
+				"magnetar": "Магнитар",
+				"brown-dwarf": "Коричневый карлик",
+				"cluster": "Звёздное скопление",
+				"barycentre": "Барицентр"
 			},
 			"land": "Сесть",
 			"takeOff": "Взлететь",

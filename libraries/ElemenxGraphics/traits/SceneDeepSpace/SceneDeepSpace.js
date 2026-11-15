@@ -15,6 +15,10 @@
  *   along its way.
  * - quasar (Quasar: Azimuth, Elevation (degrees of its place on the sky), Color, Brightness, Jets (true)): a point far beyond
  *   all, its two jets across the sky.
+ * - round each star its corona, prominences and flares (of its Blueprint, StarLook(id)); of a pulsar (Star: Beams, Spin:
+ *   the seconds of a turn) two beams along its magnetic axis swept round (MagneticAxis(id)), brightest as one looks down
+ *   one; of a magnetar (Field) the lines of its dipole field glowing round it, a burst lighting them every while. Both seen
+ *   from far, however small their disc.
  * Their Info (Describe, the card): of a black hole its horizon and its innermost orbit, of a wormhole where it leads, of a
  * comet its distance from the star.
  */
@@ -163,6 +167,102 @@ Elemenx.Trait('SceneDeepSpace', {
 		}
 
 		/*
+		 * The look of a star now: of its Blueprint (a graph of the kind star, run on the seconds of the scene with its
+		 * Parameters: a Curve of the Time animates its prominences), each part as much as its trait says too; without one,
+		 * of its trait alone. A graph that cannot be made is told once, and the star burns as its trait says.
+		 */
+		var looks = {Graphs: typeof WeakMap === 'function' ? new WeakMap() : null, Texts: {}};
+
+		function lookOf (object, star) {
+			var graph = star.Blueprint;
+			var made = null;
+			var look = null;
+
+			if (graph && typeof graph === 'object' && looks.Graphs) made = looks.Graphs.get(graph);
+			else if (typeof graph === 'string') made = looks.Texts[graph];
+
+			if (graph && made === undefined) {
+				try {
+					made = self.$Service('Blueprints').Compile(typeof graph === 'string' ? JSON.parse(graph) : graph);
+				}
+				catch (error) {
+					made = null;
+
+					engine.Told('star', object.Name || object.ID, [{Block: null, Line: 0, Message: error.message}], error.message, 'Elemenx Scene: the Blueprint of a star cannot be made: ' + error.message);
+				}
+
+				if (typeof graph === 'string') looks.Texts[graph] = made;
+				else if (looks.Graphs) looks.Graphs.set(graph, made);
+			}
+
+			if (made && made.Look)
+				look = made.Look(star.Parameters || {}, scene.Seconds % 100000);
+
+			look = look || {Corona: 1, Prominences: 1, Flares: 1, Count: 5, Height: 1, Speed: 1, Strands: 1, Tint: [1, 1, 1]};
+
+			return {Parts: [number(star.Corona, 1) * look.Corona, number(star.Prominences, 1) * look.Prominences, number(star.Flares, 1) * look.Flares, 0], Shape: [Math.max(0, Math.min(8, look.Count)), Math.max(0, look.Height), Math.max(0, look.Speed), Math.max(0, look.Strands)], Tint: look.Tint && look.Tint.length >= 3 ? look.Tint.slice(0, 3) : [1, 1, 1]};
+		}
+
+		engine.StarLook = function (id) {
+			var object = scene.Objects[id];
+
+			return object && trait(object, 'Star') ? lookOf(object, trait(object, 'Star')) : null;
+		};
+
+		/*
+		 * The magnetic axis of a neutron star now: tilted from the axis it turns round (its seed tilts that one a little),
+		 * swept round it once in Spin seconds (a quarter of a second at the fastest: faster only flickers on a screen).
+		 */
+		function magneticAxis (object, star) {
+			var spin = [Math.sin((object.Seed || 0) * 0.7) * 0.3, 1, Math.cos((object.Seed || 0) * 1.3) * 0.3];
+			var u;
+			var v;
+			var turn = Math.PI * 2 * scene.Seconds / Math.max(0.25, number(star.Spin, 1));
+			var tilt = 0.6;
+
+			spin = vectors.Normalize(spin);
+			u = vectors.Normalize(vectors.Cross(spin, [1, 0, 0]));
+			v = vectors.Cross(spin, u);
+
+			return vectors.Normalize(vectors.Add(vectors.Scale(spin, Math.cos(tilt)), vectors.Add(vectors.Scale(u, Math.sin(tilt) * Math.cos(turn)), vectors.Scale(v, Math.sin(tilt) * Math.sin(turn)))));
+		}
+
+		engine.MagneticAxis = function (id) {
+			var object = scene.Objects[id];
+
+			return object && trait(object, 'Star') ? magneticAxis(object, trait(object, 'Star')) : null;
+		};
+
+		/*
+		 * The draws of a pulsar and a magnetar (per: the size of a pixel where it is): the two beams of a pulsar along its
+		 * magnetic axis, sweeping round (brightest as one looks down one), and the lines of the field of a magnetar glowing
+		 * round it, flaring now and then.
+		 */
+		function compactOf (object, star, per, matrix, right, up) {
+			return function () {
+				var eye = scene.Eye || [0, 0, 0];
+				var center = vectors.Subtract(object.World, eye);
+				var axis = magneticAxis(object, star);
+				var color = colorOf(object.Color, [0.75, 0.85, 1]);
+				var look = vectors.Normalize(center);
+				var length = Math.max(object.Size * 160, per * 260);
+				var reach = Math.max(object.Size * 10, per * 70);
+
+				if (number(star.Beams, 0) > 0) {
+					[axis, vectors.Scale(axis, -1)].forEach(function (way) {
+						var down = Math.max(0, -vectors.Dot(way, look));
+
+						engine.DrawReady(quad, programs.Beam, {uViewProjection: matrix, uCenter: center, uAxis: way, uLength: length, uWidth: length * 0.05, uColor: color, uStrength: number(star.Beams, 0) * (1 + 4 * Math.pow(down, 12))}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
+					});
+				}
+
+				if (number(star.Field, 0) > 0) {
+					engine.DrawReady(quad, programs.Field, {uViewProjection: matrix, uCenter: center, uRight: right, uUp: up, uReach: reach, uAxis2: [vectors.Dot(axis, right), vectors.Dot(axis, up)], uColor: [0.62, 0.55, 1], uTime: scene.Seconds % 100000, uSeed: object.Seed || 0, uStrength: number(star.Field, 0) * (0.6 + 0.4 * number(star.Flares, 0))}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
+				}
+			};
+		}
+
+		/*
 		 * What is drawn of them, after all that stands (light bent, gas that glows): in the part of the depth the view is
 		 * drawn in now (planes), each once.
 		 */
@@ -176,7 +276,7 @@ Elemenx.Trait('SceneDeepSpace', {
 			if (!renderer || !any) return;
 
 			/* The lens is made behind the scene: till it is, what bends light is not drawn. */
-			programs = programs || {Lens: null, Tail: renderer.Program(shaders.TailVertex, shaders.Tail), Glow: renderer.Program(shaders.LensVertex, shaders.Glow), Corona: renderer.Program(shaders.LensVertex, shaders.Corona)};
+			programs = programs || {Lens: null, Tail: renderer.Program(shaders.TailVertex, shaders.Tail), Glow: renderer.Program(shaders.LensVertex, shaders.Glow), Corona: renderer.Program(shaders.LensVertex, shaders.Corona), Beam: renderer.Program(shaders.BeamVertex, shaders.Beam), Field: renderer.Program(shaders.LensVertex, shaders.Field)};
 			quad = quad || renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
 
 			/* Round each star: its corona in streamers, prominences arching over its edge, now and then a flare. */
@@ -184,20 +284,35 @@ Elemenx.Trait('SceneDeepSpace', {
 				var star = trait(object, 'Star');
 				var far;
 				var size;
+				var pixels;
+				var shown;
 
 				if (!star || !object.World || object.Hidden || scene.Ground) return;
 
 				far = vectors.Distance(object.World, scene.Camera.Position);
 
-				if (planes && (far < planes[0] * 0.9 || far > planes[1] * 1.1)) return;
+				/*
+				 * In one part of the depth only (the one its middle is in). Regression: near where the two parts meet it was drawn
+				 * in both, twice as bright, and its prominences flickered as the view moved.
+				 */
+				if (planes && (far < planes[0] || far >= planes[1])) return;
 
 				size = Math.max(object.Size, far * Math.tan(scene.Camera.Fov * Math.PI / 360) * 2 * 4 / Math.max(1, scene.Height));
+				pixels = size / Math.max(1e-9, far * Math.tan(scene.Camera.Fov * Math.PI / 360) * 2 / Math.max(1, scene.Height));
 
-				/* Only while its disc is wide enough on the screen to show them. */
-				if (size / Math.max(1e-9, far * Math.tan(scene.Camera.Fov * Math.PI / 360) * 2 / Math.max(1, scene.Height)) < 24) return;
+				/* A pulsar and a magnetar: what turns with them is seen from far, however small their disc. */
+				if (number(star.Beams, 0) > 0 || number(star.Field, 0) > 0)
+					later.push(compactOf(object, star, size / pixels, matrix, right, up));
+
+				/* Only while its disc is wide enough on the screen to show them, coming in softly (regression: on and off at 24 pixels). */
+				shown = Math.max(0, Math.min(1, (pixels - 16) / 16));
+
+				if (shown <= 0) return;
 
 				later.push(function () {
-					engine.DrawReady(quad, programs.Corona, {uViewProjection: matrix, uCenter: vectors.Subtract(object.World, eye), uRight: right, uUp: up, uReach: size * 4, uColor: colorOf(object.Color, [1, 0.9, 0.7]), uSeed: object.Seed || 0, uTime: scene.Seconds % 1000, uParts: [number(star.Corona, 1), number(star.Prominences, 1), number(star.Flares, 1), 0]}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
+					var look = lookOf(object, star);
+
+					engine.DrawReady(quad, programs.Corona, {uViewProjection: matrix, uCenter: vectors.Subtract(object.World, eye), uRight: right, uUp: up, uReach: size * 4, uColor: colorOf(object.Color, [1, 0.9, 0.7]), uSeed: object.Seed || 0, uTime: scene.Seconds % 100000, uParts: [look.Parts[0] * shown, look.Parts[1] * shown, look.Parts[2] * shown, 0], uShape: look.Shape, uTint: look.Tint}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
 				});
 			});
 
@@ -354,6 +469,8 @@ Elemenx.Trait('SceneDeepSpace', {
 				'uniform float uSeed;',
 				'uniform float uTime;',
 				'uniform vec4 uParts;',
+				'uniform vec4 uShape;',
+				'uniform vec3 uTint;',
 				'out vec4 outColor;',
 				'float hash(float x) { return fract(sin(x * 91.17) * 43758.5453); }',
 				'float wave(float x) {',
@@ -369,19 +486,21 @@ Elemenx.Trait('SceneDeepSpace', {
 				'	float streamers = 0.55 + 0.45 * wave(angle * 3.0 + uSeed) * wave(angle * 7.0 - uSeed + uTime * 0.02);',
 				'	vec3 color = uColor * exp(-u * 2.6) * streamers * 0.55 * uParts.x * (1.0 - smoothstep(2.5, 4.0, r));',
 				'	vec3 red = vec3(1.0, 0.36, 0.3);',
-				'	for (int i = 0; i < 5; i++) {',
+				/* uShape: how many prominences (up to 8), how high, how fast they breathe and stream, how torn (the look of a Blueprint). */
+				'	for (int i = 0; i < 8; i++) {',
 				'		float k = float(i);',
+				'		if (k >= uShape.x) break;',
 				'		float at = hash(uSeed + k * 7.3) * 6.2832 - 3.1416;',
 				'		float wide = 0.08 + 0.1 * hash(uSeed + k * 3.1);',
-				'		float high = (0.12 + 0.3 * hash(uSeed + k * 5.7)) * (0.85 + 0.15 * sin(uTime * 0.4 + k));',
+				'		float high = min(2.4, (0.12 + 0.3 * hash(uSeed + k * 5.7)) * uShape.y * (0.85 + 0.15 * sin(uTime * 0.4 * uShape.z + k)));',
 				'		float t = (mod(angle - at + 3.1416, 6.2832) - 3.1416) / wide;',
 				'		if (abs(t) < 1.2) {',
 				'			float arch = high * sqrt(max(0.0, 1.0 - t * t));',
 				'			float d = abs(u - arch);',
-				'			float strands = 0.6 + 0.4 * wave(t * 9.0 + uTime * 0.5 + k * 13.0);',
+				'			float strands = 1.0 - 0.4 * clamp(uShape.w, 0.0, 2.5) * (1.0 - wave(t * 9.0 + uTime * 0.5 * uShape.z + k * 13.0));',
 				/* A thick arch of gas, brightest along it, its inside filled and fading, torn into strands. */
 				'			float body = exp(-d * 22.0) * 0.8 + exp(-d * 70.0) * 0.6 + step(u, arch) * smoothstep(0.0, arch, u) * 0.25;',
-				'			color += mix(red, uColor, 0.25) * body * strands * smoothstep(1.2, 0.85, abs(t)) * 1.3 * uParts.y;',
+				'			color += mix(red, uColor, 0.25) * uTint * body * max(strands, 0.0) * smoothstep(1.2, 0.85, abs(t)) * 1.3 * uParts.y;',
 				'		}',
 				'	}',
 				/* A flare: one every while, of its seed, at its own place on the edge. */
@@ -392,6 +511,75 @@ Elemenx.Trait('SceneDeepSpace', {
 				'	float burst = smoothstep(0.0, 0.6, since) * exp(-since * 0.8);',
 				'	color += vec3(1.0, 0.95, 0.85) * exp(-off * off * 120.0 - u * u * 18.0) * burst * 6.0 * uParts.z;',
 				'	outColor = vec4(color, 1.0);',
+				'}'
+			].join('\n'),
+
+			/*
+			 * A beam of a pulsar: a long cone of light along its magnetic axis (uAxis, from its middle uCenter, the eye at 0),
+			 * turned to face the eye, widening out and fading along its length.
+			 */
+			BeamVertex: head + [
+				'in vec3 aPosition;',
+				'uniform mat4 uViewProjection;',
+				'uniform vec3 uCenter;',
+				'uniform vec3 uAxis;',
+				'uniform float uLength;',
+				'uniform float uWidth;',
+				'out vec2 vBeam;',
+				'void main() {',
+				'	float t = aPosition.y * 0.5 + 0.5;',
+				'	vec3 along = uCenter + uAxis * uLength * t;',
+				'	vec3 side = cross(uAxis, normalize(along));',
+				'	side = length(side) > 1e-5 ? normalize(side) : normalize(cross(uAxis, vec3(0.0, 1.0, 0.3)));',
+				'	vBeam = vec2(aPosition.x, t);',
+				'	gl_Position = uViewProjection * vec4(along + side * aPosition.x * uWidth * (0.06 + t), 1.0);',
+				'}'
+			].join('\n'),
+
+			Beam: head + [
+				'in vec2 vBeam;',
+				'uniform vec3 uColor;',
+				'uniform float uStrength;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	float across = exp(-vBeam.x * vBeam.x * 7.0);',
+				'	float along = pow(1.0 - vBeam.y, 1.7) * smoothstep(0.0, 0.015, vBeam.y);',
+				'	outColor = vec4(mix(uColor, vec3(1.0), 0.4) * across * along * uStrength * 1.3, 1.0);',
+				'}'
+			].join('\n'),
+
+			/*
+			 * The field of a magnetar: the lines of a dipole round it (r = L sin² of the angle from its magnetic axis, uAxis2 as
+			 * it lies on the screen), glowing and streaming, the quad ten of its cores wide; a burst lights them every while.
+			 */
+			Field: head + [
+				'in vec3 vAt;',
+				'in vec2 vQuad;',
+				'uniform vec2 uAxis2;',
+				'uniform vec3 uColor;',
+				'uniform float uTime;',
+				'uniform float uSeed;',
+				'uniform float uStrength;',
+				'out vec4 outColor;',
+				'float hash(float x) { return fract(sin(x * 91.17) * 43758.5453); }',
+				'void main() {',
+				'	vec2 q = vQuad * 10.0;',
+				'	float r = length(q);',
+				'	if (r < 0.9 || r > 10.0) discard;',
+				'	vec2 axis = length(uAxis2) > 1e-4 ? normalize(uAxis2) : vec2(0.0, 1.0);',
+				'	float c = dot(q, axis) / r;',
+				'	float lines = r / max(1.0 - c * c, 1e-3);',
+				'	float glow = 0.0;',
+				'	for (int i = 0; i < 5; i++) {',
+				'		float k = 1.8 * pow(1.45, float(i));',
+				'		float d = (lines - k) / (0.07 * k);',
+				'		glow += exp(-d * d) * (1.0 - float(i) * 0.12);',
+				'	}',
+				'	float stream = 0.65 + 0.35 * sin(lines * 2.3 - uTime * 3.0 + uSeed * 7.0 + sign(dot(q, axis)) * 1.7);',
+				'	float since = mod(uTime + uSeed * 17.0, 17.0);',
+				'	float burst = smoothstep(0.0, 0.3, since) * exp(-since * 0.7) * step(0.35, hash(floor((uTime + uSeed * 17.0) / 17.0)));',
+				'	float fade = smoothstep(10.0, 5.5, r) * smoothstep(0.9, 1.3, r);',
+				'	outColor = vec4(uColor * glow * stream * fade * (0.45 + 3.0 * burst) * uStrength, 1.0);',
 				'}'
 			].join('\n'),
 

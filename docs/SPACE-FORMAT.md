@@ -23,7 +23,10 @@ A system is a tree. Each node is `{ID, Kind, Name, Parent (the ID of what it goe
 - A group is a node of kind `barycentre`: two or more stars and black holes going round their common centre (a binary, a triple, a star with a black hole). A star may also go round another star as a planet does: both are trees.
 - Black holes and wormholes are bodies like planets: they go round a star or a group, and things go round them.
 - Made things (stations, docks, satellites, crafts, fleets) go round any natural body: the tree holds them as it holds a moon.
-- The centre of a system is its root: one star, a black hole, or a barycentre.
+- A star cluster is a node of kind `cluster` (a barycentre of many stars) with the trait `Cluster {Type (open, globular, nuclear), Radius (ly), Count, Seed}`: its stars go round it one by one, each with the planets and stations its sphere of Hill at its nearest point leaves it, and the stars of it too many to tell (Count) are a swarm a Scene draws of its seed. A nuclear cluster has a black hole at its root with the same trait (the system of the centre of a galaxy). `GalaxyData.Cluster(options)` makes one of a seed.
+- A star is of a kind of `Astronomy.Types`: main, giant, supergiant, white-dwarf, neutron, pulsar, magnetar, brown-dwarf (its `Type`); the kinds of a Scene of the same names.
+- A nebula is a node of kind `nebula` with the trait `Nebula {Type (hii, planetary, remnant, dark), Subtype (Ia, II, Ib, Ic of a remnant), Radius (ly), Seed, Density, Glow, Colors}`: it may be the root of a scene of its own, the stars it holds or made going round it.
+- The centre of a system is its root: one star, a black hole, a barycentre, a cluster, or a nebula.
 
 A galaxy is the same idea one level up: its root is its supermassive black hole, its systems go round it (each an orbit, slow), and a body of no system (a rogue planet, an interstellar station, a wandering black hole) is a node of the galaxy itself, with a place and a velocity instead of an orbit.
 

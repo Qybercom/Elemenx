@@ -57,7 +57,16 @@
 				"wormhole": "Wormhole",
 				"comet": "Comet",
 				"quasar": "Quasar",
-				"planetoid": "Planetoid"
+				"planetoid": "Planetoid",
+				"giant": "Giant",
+				"supergiant": "Supergiant",
+				"white-dwarf": "White dwarf",
+				"neutron-star": "Neutron star",
+				"pulsar": "Pulsar",
+				"magnetar": "Magnetar",
+				"brown-dwarf": "Brown dwarf",
+				"cluster": "Star cluster",
+				"barycentre": "Barycentre"
 			},
 			"land": "Land",
 			"takeOff": "Take off",

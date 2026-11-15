@@ -7290,7 +7290,8 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		engine.Renderer.Draw = draw;
 
-		expect(mounted.Space.Shaders(graphics).Star).toMatch(/mix\(2\.4, 1\.6, warm\)/);
+		/* The cooler, the less it burns out white (an orange giant too, since the stars of other kinds came). */
+		expect(mounted.Space.Shaders(graphics).Star).toMatch(/mix\(2\.4, 1\.1, clamp\(warm \* 1\.5, 0\.0, 1\.0\)\)/);
 		expect(mounted.Space.LightingShaders(graphics).Shafts).toMatch(/step\(uClear,/);
 	});
 

@@ -20,6 +20,8 @@
 			"objects": "Objects",
 			"add": "Add",
 			"nothing": "Nothing selected",
+			"nearest": "Orbit · periapsis, q (AU)",
+			"farthest": "Orbit · apoapsis, Q (AU)",
 			"parameters": "Parameters of the blueprint",
 			"lands": "Lands by their climate",
 			"generated": "of the World",

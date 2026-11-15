@@ -1,0 +1,204 @@
+{
+	"version": 1,
+	"type": "star",
+	"name": "star",
+	"parameters": [
+		{
+			"key": "Activity",
+			"type": "float",
+			"value": 1,
+			"min": 0,
+			"max": 3,
+			"comment": "How much its prominences burn and how often its flares go off"
+		},
+		{
+			"key": "Cycle",
+			"type": "float",
+			"value": 40,
+			"min": 4,
+			"max": 600,
+			"comment": "The seconds of one round of the rising and falling of its prominences"
+		}
+	],
+	"blocks": [
+		{
+			"id": "time",
+			"type": "Time",
+			"x": 40,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "cycle",
+			"type": "Parameter",
+			"x": 40,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Cycle"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "phase",
+			"type": "Divide",
+			"x": 260,
+			"y": 80,
+			"properties": [],
+			"comment": "Where it is in its round: 0 to 1 a round"
+		},
+		{
+			"id": "rise",
+			"type": "Curve",
+			"x": 480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [[0, 0.75], [0.22, 1.55], [0.4, 0.95], [0.62, 1.35], [0.8, 0.6]]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			],
+			"comment": "How high its prominences stand over a round"
+		},
+		{
+			"id": "stream",
+			"type": "Curve",
+			"x": 480,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [[0, 0.8], [0.3, 1.4], [0.7, 0.9]]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			],
+			"comment": "How fast their strands stream over a round"
+		},
+		{
+			"id": "activity",
+			"type": "Parameter",
+			"x": 480,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Activity"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "star",
+			"type": "Star",
+			"x": 760,
+			"y": 120,
+			"properties": [
+				{
+					"key": "Corona",
+					"value": 1
+				},
+				{
+					"key": "Prominences",
+					"value": 1
+				},
+				{
+					"key": "Flares",
+					"value": 1
+				},
+				{
+					"key": "Count",
+					"value": 6
+				},
+				{
+					"key": "Height",
+					"value": 1
+				},
+				{
+					"key": "Speed",
+					"value": 1
+				},
+				{
+					"key": "Strands",
+					"value": 1
+				},
+				{
+					"key": "Tint",
+					"value": "#ffffff"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "link-time",
+			"p1": "time-out-Seconds",
+			"p2": "phase-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "link-cycle",
+			"p1": "cycle-out-Value",
+			"p2": "phase-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "link-rise",
+			"p1": "phase-out-Out",
+			"p2": "rise-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "link-stream",
+			"p1": "phase-out-Out",
+			"p2": "stream-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "link-height",
+			"p1": "rise-out-Value",
+			"p2": "star-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "link-speed",
+			"p1": "stream-out-Value",
+			"p2": "star-in-Speed",
+			"kind": "value"
+		},
+		{
+			"id": "link-prominences",
+			"p1": "activity-out-Value",
+			"p2": "star-in-Prominences",
+			"kind": "value"
+		},
+		{
+			"id": "link-flares",
+			"p1": "activity-out-Value",
+			"p2": "star-in-Flares",
+			"kind": "value"
+		}
+	]
+}

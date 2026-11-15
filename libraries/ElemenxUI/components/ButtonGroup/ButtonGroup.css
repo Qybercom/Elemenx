@@ -21,8 +21,9 @@
 	flex-wrap: wrap;
 }
 
+/* As wide as its place and the 2 pixels it stands out on each side (regression: 4 pixels short, it scrolled with 3 buttons). */
 .elemenx-button-group.attached:not(.vertical) {
-	max-width: 100%;
+	max-width: calc(100% + 4px);
 	margin: -2px;
 	padding: 2px;
 	overflow-x: auto;

@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadElemenx, resetDOM, tick, unique, waitFor } from '../setup.js';
 import { Use } from '../library.js';
+import common from '../../libraries/ElemenxCommon/index.css?raw';
 
 var owned = [];
 
@@ -161,6 +162,33 @@ describe('Contract: the Directives of ElemenxUI', function () {
 
 		expect(sizes[0]).toBeGreaterThan(100);
 		expect(box.offsetWidth).toBe(130);
+	});
+
+	/* Regression: half of its handle stood out of a panel that scrolls, a scroll bar across it; and scrolled down, the handle went up with what is in it. */
+	it('*resizable puts its handles inside the element: a panel that scrolls shows no scroll bar across, its handle stays at its side while it scrolls', async function () {
+		var style = document.head.appendChild(document.createElement('style'));
+		var host;
+		var panel;
+		var handle;
+
+		style.textContent = common;
+
+		host = mount('<div><div class="panel" style="width: 120px; height: 80px; overflow: auto" *resizable="\'right\'"><div style="height: 400px"></div></div></div>');
+		panel = host.$Element().querySelector('.panel');
+
+		await tick();
+
+		handle = panel.querySelector('.elemenx-resize-handle.right');
+
+		expect(panel.scrollWidth).toBe(panel.clientWidth);
+
+		panel.scrollTop = 200;
+
+		panel.dispatchEvent(new Event('scroll'));
+
+		expect(Math.round(handle.getBoundingClientRect().top - panel.getBoundingClientRect().top)).toBe(0);
+
+		style.remove();
 	});
 
 	it('*draggable and *droppable: an item dragged by the pointer onto a target that accepts its type is dropped with its data', async function () {

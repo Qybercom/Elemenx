@@ -45,7 +45,7 @@
  *   draws write only its depth, as seen from the light; Destroy().
  * - Draw(mesh, program, uniforms, settings): settings Mode (triangles, lines, line-strip, line-loop, points), Blend
  *   (alpha; add; over: its color over what is behind, the alpha of that kept; veil: the same, that alpha gone as far as it
- *   covers it; or none), Depth (test, true; lequal: what is drawn again over the same surface passes), DepthWrite (true), Cull (back, front or none), Instances (the copies).
+ *   covers it; premultiplied: its color added and what is behind dimmed by its alpha, the light and the shade of gas; or none), Depth (test, true; lequal: what is drawn again over the same surface passes), DepthWrite (true), Cull (back, front or none), Instances (the copies).
  *   The value of a uniform is a number, an array (of a vector, a matrix or a list of them), true or false, or a texture.
  * - Counts(): what it drew since it was made, {Draws, Triangles} (the copies of an instanced mesh counted): the
  *   difference of two of them is what a frame, or a second, costs.
@@ -1760,7 +1760,7 @@ Elemenx.Service('Renderer', {
 				var instances = draw.Instances === undefined ? made.Instances : draw.Instances;
 				var list;
 				var value;
-				var blend = draw.Blend === 'add' || draw.Blend === 'over' || draw.Blend === 'alpha' || draw.Blend === 'veil' ? draw.Blend : '';
+				var blend = draw.Blend === 'add' || draw.Blend === 'over' || draw.Blend === 'alpha' || draw.Blend === 'veil' || draw.Blend === 'premultiplied' ? draw.Blend : '';
 				var cull = draw.Cull === 'none' || draw.Cull === false ? '' : draw.Cull === 'front' ? 'front' : 'back';
 				var i;
 
@@ -1821,6 +1821,8 @@ Elemenx.Service('Renderer', {
 					else if (blend === 'alpha') gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 					/* veil: its color over what is behind, and the alpha of what is behind (how glossy it is) gone as far as it covers it. */
 					else if (blend === 'veil') gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
+					/* premultiplied: what glows (rgb) over what is behind, dimmed as far as it hides it (alpha), the alpha behind kept. */
+					else if (blend === 'premultiplied') gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
 				}
 
 				if (current.Cull !== cull) {

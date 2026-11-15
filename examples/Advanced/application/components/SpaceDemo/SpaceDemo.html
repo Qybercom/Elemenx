@@ -4,10 +4,16 @@
 			<RibbonGroup Title="System" Icon="globe" Keep="true">
 				<RadioGroup Variant="segmented" Label="System" [options]="SpaceSystems" [value]="SpaceSystem" (change)="SpaceChosen" />
 				<Button Label="Another seed" Icon="refresh" Variant="ghost" Size="small" *if="SpaceSystem === 'seed'" (click)="SpaceReseeded" />
+				<RadioGroup Variant="segmented" Label="Cluster" *if="SpaceSystem === 'cluster'" [options]="SpaceClusterTypes" [value]="SpaceClusterType" (change)="SpaceClustered" />
+				<Select Label="Nebula" Size="small" *if="SpaceSystem === 'nebula'" [options]="SpaceNebulaTypes" [value]="SpaceNebulaType" (change)="SpaceNebulaChosen" />
 			</RibbonGroup>
 			<RibbonGroup Title="View" Icon="eye">
 				<Toggle Label="Orbits" [checked]="SpaceOrbits" (change)="SpaceOrbited" />
 				<Toggle Label="Real scale" [checked]="SpaceReal" (change)="SpaceScaled" />
+			</RibbonGroup>
+			<RibbonGroup Title="Suns" Icon="sun">
+				<Toggle Label="Living" [checked]="SpaceLiving" (change)="SpaceLived" />
+				<Field Label="Activity" Horizontal="true" Size="small"><Slider Label="Activity of the suns" Size="small" ShowValue="end" Min="0" Max="3" Step="0.1" [value]="SpaceActivity" (change)="SpaceActive" /></Field>
 			</RibbonGroup>
 			<RibbonGroup Title="Time" Icon="clock">
 				<Button Icon="pause" Variant="ghost" Size="small" [label]="SpacePaused ? 'Go on' : 'Hold the time'" [pressed]="SpacePaused" (click)="SpacePausedToggled" />
@@ -78,6 +84,12 @@
 		</Scene>
 		<Scene *if="SpaceSystem === 'file'" Team="blue" [hoverMark]="SpaceMark" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [system]="SpaceFile" [cosmos]="SpaceCosmos" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused">
 			<GameHud slot="hud" Label="System"><GameStat slot="bottom-start" Label="file" Layout="inline" Size="small" Value="binary.system" /></GameHud>
+		</Scene>
+		<Scene *if="SpaceSystem === 'nebula' && SpaceNebula" Team="blue" [hoverMark]="SpaceMark" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [system]="SpaceNebula" [cosmos]="SpaceCosmos" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused">
+			<GameHud slot="hud" Label="Nebula"><GameStat slot="bottom-start" Label="kind" Layout="inline" Size="small" [Value]="SpaceNebulaType" /></GameHud>
+		</Scene>
+		<Scene *if="SpaceSystem === 'cluster' && SpaceCluster" Team="blue" [hoverMark]="SpaceMark" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [system]="SpaceCluster" [cosmos]="SpaceCosmos" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused">
+			<GameHud slot="hud" Label="Cluster"><GameStat slot="bottom-start" Label="kind" Layout="inline" Size="small" [Value]="SpaceClusterType" /></GameHud>
 		</Scene>
 	</div>
 </div>

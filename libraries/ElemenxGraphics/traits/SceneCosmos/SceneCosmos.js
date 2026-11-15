@@ -7,7 +7,9 @@
  * All of it is one generator. A Kind (nebula, pillars, galaxy, galaxies, cluster, void; CosmosKinds() tells what each holds) is only a
  * set of amounts, and any of them can be told on top of it, so one sky holds what it likes: Gas, Dust, Stars and Pillars (0 to 1), Band
  * (the band of the galaxy we are in), Galaxies (how many far ones, up to 16), Clusters (how many globular ones, up to 12), Beacon (the
- * young stars that light the gas), Bursts (how many places where rays of light go out through the gas, up to 8). Pillars stand in a ring of dark cloud round the whole sky, in one to three groups, each by its own stars;
+ * young stars that light the gas), Bursts (how many places where rays of light go out through the gas, up to 8). Pole is the way the
+ * band of the galaxy goes round, Middle the way to its bulge, Lift how far the band stands off the middle of the sky (seen from above
+ * the plane of the galaxy it lies lower: SceneGalaxy, from inside its disc). Pillars stand in a ring of dark cloud round the whole sky, in one to three groups, each by its own stars;
  * they are clouds of dust with light through them, or with Style 'drawn' shapes with drawn edges, for a sky that is a picture.
  *
  * Before it a few sparks and puffs of dust go round the eye, each in a box that wraps round it, so a view that flies past sees
@@ -201,7 +203,7 @@ Elemenx.Trait('SceneCosmos', {
 				bursts.push(out[0], out[1], out[2], i < rays ? wide2 : 0);
 			}
 
-			return {Kind: kind, Key: JSON.stringify([kind, seed, colors, told.Gas, told.Dust, told.Stars, told.Pillars, told.Band, far2, clusters, told.Beacon, told.Style, rays]), Uniforms: {uBursts: bursts, uDrawn: told.Style === 'drawn' ? 1 : 0, uSeed: number % 977 / 9.7, uColors: [].concat(colors[0], colors[1], colors[2], colors[3]), uGas: given(told.Gas, plain.Gas), uDust: given(told.Dust, plain.Dust), uStars: given(told.Stars, plain.Stars), uDisc: given(told.Band, plain.Band), uPole: pole, uKnots: knots, uShine: shine, uBeacon: given(told.Beacon, plain.Beacon), uPillars: given(told.Pillars, plain.Pillars), uGlobular: clusters ? 1 : 0, uColumns: shaped, uShapes: shapes, uLamps: lamps, uTilt: tilt, uLampReach: 1.5 + next() * 0.9, uWall: 0.25 + next() * 0.75, uGalaxies: galaxies, uPlanes: planes}};
+			return {Kind: kind, Key: JSON.stringify([kind, seed, colors, told.Gas, told.Dust, told.Stars, told.Pillars, told.Band, far2, clusters, told.Beacon, told.Style, rays, told.Pole, told.Middle, told.Lift]), Uniforms: {uMiddle: told.Middle ? math.Vectors.Normalize(told.Middle) : [0, 0, 0], uLift: given(told.Lift, 0), uBursts: bursts, uDrawn: told.Style === 'drawn' ? 1 : 0, uSeed: number % 977 / 9.7, uColors: [].concat(colors[0], colors[1], colors[2], colors[3]), uGas: given(told.Gas, plain.Gas), uDust: given(told.Dust, plain.Dust), uStars: given(told.Stars, plain.Stars), uDisc: given(told.Band, plain.Band), uPole: pole, uKnots: knots, uShine: shine, uBeacon: given(told.Beacon, plain.Beacon), uPillars: given(told.Pillars, plain.Pillars), uGlobular: clusters ? 1 : 0, uColumns: shaped, uShapes: shapes, uLamps: lamps, uTilt: tilt, uLampReach: 1.5 + next() * 0.9, uWall: 0.25 + next() * 0.75, uGalaxies: galaxies, uPlanes: planes}};
 		}
 
 		/* Pillars are most of what the card has to compile: a sky without them does not wait for them. */
@@ -338,7 +340,7 @@ Elemenx.Trait('SceneCosmos', {
 				/* Never waited for: its program is made behind the scene, the mouth shows its plain stars till then. */
 				if (!renderer.Ready(program(made.Uniforms.uPillars > 0))) return;
 
-				bake(holder, made, Math.min(512, size()));
+				bake(holder, made, holder.Size || Math.min(512, size()));
 			});
 		};
 
@@ -380,12 +382,15 @@ Elemenx.Trait('SceneCosmos', {
 
 		/*
 		 * The cube of another sky (the far side of a wormhole: a Kind or {Kind, Seed}), baked a face a frame while it is asked
-		 * for, under a key of its own; null till it is whole.
+		 * for, under a key of its own (size its faces, 512 at most by default); null till it is whole. While another sky is made
+		 * under the same key, the one before stays.
 		 */
 		var others = {};
 
-		engine.CosmosCubeOf = function (given, key) {
+		engine.CosmosCubeOf = function (given, key, size) {
 			var holder = others[key] = others[key] || {Key: '', Cube: null, Next: null};
+
+			holder.Size = size || 0;
 
 			holder.Wanted = typeof given === 'string' ? {Kind: given, Seed: key} : given;
 			holder.Asked = scene.Seconds;
@@ -411,6 +416,8 @@ Elemenx.Trait('SceneCosmos', {
 				'uniform float uStars;',
 				'uniform float uDisc;',
 				'uniform vec3 uPole;',
+				'uniform vec3 uMiddle;',
+				'uniform float uLift;',
 				'uniform vec4 uKnots[12];',
 				'uniform vec3 uShine;',
 				'uniform float uBeacon;',
@@ -523,8 +530,8 @@ Elemenx.Trait('SceneCosmos', {
 				'}',
 				/* The band of a galaxy from within: faint old stars by the million, a warm bulge, red clouds, and dark rifts over all. */
 				'vec3 band(vec3 d, vec3 s) {',
-				'	float high = dot(d, uPole);',
-				'	vec3 middle = normalize(cross(uPole, vec3(0.3, 1.0, 0.2)));',
+				'	float high = dot(d, uPole) + uLift;',
+				'	vec3 middle = dot(uMiddle, uMiddle) > 0.5 ? uMiddle : normalize(cross(uPole, vec3(0.3, 1.0, 0.2)));',
 				'	vec3 aside = cross(uPole, middle);',
 				'	float along = atan(dot(d, aside), dot(d, middle));',
 				'	float wide = 0.17 + 0.11 * exp(-along * along * 2.0);',
@@ -793,8 +800,8 @@ Elemenx.Trait('SceneCosmos', {
 				'		}',
 				'	}',
 				/* A galaxy seen from within: a band round its pole, its bulge towards its middle. */
-				'	float high = dot(d, uPole);',
-				'	vec3 middle = normalize(cross(uPole, vec3(0.3, 1.0, 0.2)));',
+				'	float high = dot(d, uPole) + uLift;',
+				'	vec3 middle = dot(uMiddle, uMiddle) > 0.5 ? uMiddle : normalize(cross(uPole, vec3(0.3, 1.0, 0.2)));',
 				'	float wideBand = exp(-high * high * 22.0) * (0.45 + 0.55 * pow(dot(d, middle) * 0.5 + 0.5, 2.0));',
 				'	float disc = wideBand * uDisc;',
 				'	float body = max(gas * uGas, 0.0) + knots * 0.22 * gas * uGas;',

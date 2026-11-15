@@ -113,6 +113,19 @@ Elemenx.Directive('resizable', {
 			data.Apply(edge, element.offsetWidth + dx, element.offsetHeight + dy, true);
 		};
 
+		/*
+		 * Its handles stay at its edges while what is in it scrolls (they lie in what scrolls). Regression: in a panel scrolled
+		 * down, the handle of its side went up with what is in it, and nothing was left to drag lower.
+		 */
+		data.Follow = function () {
+			var i;
+
+			for (i = 0; i < data.Handles.length; i++)
+				data.Handles[i].style.transform = element.scrollLeft || element.scrollTop ? 'translate(' + element.scrollLeft + 'px, ' + element.scrollTop + 'px)' : '';
+		};
+
+		element.addEventListener('scroll', data.Follow, {passive: true});
+
 		data.Build = function (edges) {
 			var i = 0;
 			var handle;
@@ -168,6 +181,7 @@ Elemenx.Directive('resizable', {
 	},
 
 	$OnDestroy: function (context) {
+		context.Element.removeEventListener('scroll', context.Data.Follow);
 		context.Element.classList.remove('elemenx-resizable');
 
 		context.Data.Build([]);

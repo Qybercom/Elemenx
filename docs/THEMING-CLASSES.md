@@ -1529,6 +1529,8 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 ## SceneEditor
 
 - `elemenx-scene-editor`: `playing`
+- `elemenx-scene-editor-apse`: `far`
+- `elemenx-scene-editor-apse-label`
 - `elemenx-scene-editor-axis`: `axis-x`, `axis-y`, `axis-z`
 - `elemenx-scene-editor-blueprint`
 - `elemenx-scene-editor-cutscenes`
@@ -1621,6 +1623,7 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-world-editor-actions`
 - `elemenx-world-editor-bar`
 - `elemenx-world-editor-body`
+- `elemenx-world-editor-found`
 - `elemenx-world-editor-group`
 - `elemenx-world-editor-item`
 - `elemenx-world-editor-main`
@@ -1628,6 +1631,7 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-world-editor-panel`
 - `elemenx-world-editor-path`
 - `elemenx-world-editor-row`
+- `elemenx-world-editor-search`
 - `elemenx-world-editor-section`
 - `elemenx-world-editor-subtitle`
 - `elemenx-world-editor-title`

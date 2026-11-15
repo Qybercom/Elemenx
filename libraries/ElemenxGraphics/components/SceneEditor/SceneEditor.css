@@ -126,12 +126,13 @@
 	box-shadow: inset 0 0 0 2px var(--elemenx-accent);
 }
 
+/* Regression: its handles off the view (the farthest point of an orbit, the tip of an axis) were drawn over the panels beside it. */
 .elemenx-scene-editor-gizmo {
 	position: absolute;
 	inset: 0;
 	width: 100%;
 	height: 100%;
-	overflow: visible;
+	overflow: hidden;
 	pointer-events: none;
 }
 
@@ -181,6 +182,29 @@
 	stroke: var(--elemenx-scene-editor-plane);
 	stroke-width: 1.5;
 	stroke-dasharray: 4 4;
+}
+
+.elemenx-scene-editor-apse {
+	fill: var(--elemenx-scene-editor-plane);
+	stroke: var(--elemenx-scene-editor-x);
+	stroke-width: 2;
+	pointer-events: all;
+	cursor: grab;
+}
+
+.elemenx-scene-editor-apse.far {
+	stroke: var(--elemenx-scene-editor-z);
+}
+
+/* Over the dark of space in any theme. */
+.elemenx-scene-editor-apse-label {
+	fill: var(--elemenx-scene-label);
+	font-size: var(--elemenx-font-size-small);
+	font-weight: var(--elemenx-font-weight-strong);
+	paint-order: stroke;
+	stroke: var(--elemenx-scene-shadow);
+	stroke-width: 3;
+	pointer-events: none;
 }
 
 .elemenx-scene-editor-ring {
@@ -374,6 +398,7 @@
 
 	.elemenx-scene-editor-tip,
 	.elemenx-scene-editor-plane,
+	.elemenx-scene-editor-apse,
 	.elemenx-scene-editor-road-point,
 	.elemenx-scene-editor-road-mid {
 		transform: scale(1.8);

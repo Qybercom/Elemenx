@@ -473,7 +473,8 @@
 				"Start(graph, context)",
 				"IR(graph, options)",
 				"Invoke(name, inputs)",
-				"Hash2(a, b)"
+				"Hash2(a, b)",
+				"CurveAt(keys, x, smooth, loop)"
 			],
 			"Sample": {}
 		},
