@@ -2625,8 +2625,8 @@ Elemenx.Component('UIKitPage', {
 		};
 
 		if (name === 'Push') this.$Service('Push').Notify('Elemenx', {Text: 'A notification from the page'}, done);
-		else if (name === 'Serial') this.$Service('Serial').Request({}, done);
-		else if (name === 'USB') this.$Service('USB').Request({}, done);
+		else if (name === 'Serial') this.$Hardware.Serial.Request({}, done);
+		else if (name === 'USB') this.$Hardware.USB.Request({}, done);
 		else this.$Service('NFC').Scan(done);
 	},
 
@@ -3403,8 +3403,8 @@ Elemenx.Component('UIKitPage', {
 
 		this.Devices = [
 			{Name: 'Push', Supported: this.$Service('Push').Supported(), Action: 'Notify'},
-			{Name: 'Serial', Supported: this.$Service('Serial').Supported(), Action: 'Pick a port'},
-			{Name: 'USB', Supported: this.$Service('USB').Supported(), Action: 'Pick a device'},
+			{Name: 'Serial', Supported: this.$Hardware.Serial.Supported(), Action: 'Pick a port'},
+			{Name: 'USB', Supported: this.$Hardware.USB.Supported(), Action: 'Pick a device'},
 			{Name: 'NFC', Supported: this.$Service('NFC').Supported(), Action: 'Scan a tag'}
 		];
 

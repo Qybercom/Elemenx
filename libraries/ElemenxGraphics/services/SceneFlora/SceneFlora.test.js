@@ -45,6 +45,111 @@ describe('Contract: SceneFlora, realistic plants of code, each of a species anot
 	}, 120000);
 
 	/*
+	 * Regression: the triangles of its bark went round inward (their front inside each tube); drawn of their front sides, a
+	 * trunk and its branches showed the inside of their far halves, as if seen from inside, flat as boards. Each triangle
+	 * of its bark faces out, where the normals of its corners look, at every level.
+	 */
+	it('turns the triangles of its bark out, as the normals of their corners look, at every level', function () {
+		['oak', 'pine', 'palm', 'birch'].forEach(function (name) {
+			var tree = flora.Tree(name, 0);
+
+			[tree.Bark].concat(tree.Lods.map(function (lod) {
+				return lod.Bark;
+			})).forEach(function (bark) {
+				var p = bark.Positions;
+				var n = bark.Normals;
+				var out = 0;
+				var all = 0;
+				var i;
+
+				for (i = 0; i < bark.Indices.length; i += 3) {
+					var a = bark.Indices[i] * 3;
+					var b = bark.Indices[i + 1] * 3;
+					var c = bark.Indices[i + 2] * 3;
+					var u = [p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]];
+					var v = [p[c] - p[a], p[c + 1] - p[a + 1], p[c + 2] - p[a + 2]];
+					var face = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+					var length = Math.hypot(face[0], face[1], face[2]);
+					if (length < 1e-12) continue;
+
+					all++;
+
+					if (face[0] * (n[a] + n[b] + n[c]) + face[1] * (n[a + 1] + n[b + 1] + n[c + 1]) + face[2] * (n[a + 2] + n[b + 2] + n[c + 2]) > 0)
+						out++;
+				}
+
+				expect(all).toBeGreaterThan(0);
+				expect(out / all).toBeGreaterThan(0.95);
+			});
+		});
+	}, 60000);
+
+	/*
+	 * Regression: a tree between two levels was a hatch of light points over the darker one: the cards of the first, many
+	 * and small, hide each other from the sun in its shadow, the larger ones of its simpler levels stick out of that. More of
+	 * them are of the darker half of the atlas.
+	 */
+	it('takes more cards of the darker half of its atlas at its simpler levels, as its crown is in its own shade near', function () {
+		var tree = flora.Tree('oak', 0);
+
+		function dark (leaves) {
+			var count = 0;
+			var i;
+
+			for (i = 1; i < leaves.UVs.length; i += 8) {
+				if (leaves.UVs[i] >= 0.5 || leaves.UVs[i + 2] >= 0.5)
+					count++;
+			}
+
+			return count / (leaves.UVs.length / 8);
+		}
+
+		tree.Lods.forEach(function (lod) {
+			expect(dark(lod.Leaves)).toBeGreaterThan(dark(tree.Leaves) + 0.05);
+		});
+	}, 60000);
+
+	/*
+	 * A tree stands on its roots, not stuck in like a stick: out from the foot of its trunk along the ground, into it at their
+	 * ends, at every level; none of a stalk; no leaves at their tips.
+	 */
+	it('grows roots out from the foot of a tree along the ground and into it, at every level, none of a stalk', function () {
+		var oak = flora.Tree('oak', 0);
+		var wheat = flora.Tree('wheat', 0);
+		var base = flora.Preset('oak').Trunk.Radius * oak.Height;
+
+		function spread (bark) {
+			var most = 0;
+			var lowest = 0;
+			var i;
+
+			for (i = 0; i < bark.Positions.length; i += 3) {
+				if (bark.Positions[i + 1] < base)
+					most = Math.max(most, Math.hypot(bark.Positions[i], bark.Positions[i + 2]));
+
+				lowest = Math.min(lowest, bark.Positions[i + 1]);
+			}
+
+			return {Most: most, Lowest: lowest};
+		}
+
+		[oak.Bark].concat(oak.Lods.map(function (lod) {
+			return lod.Bark;
+		})).forEach(function (bark) {
+			var told = spread(bark);
+
+			expect(told.Most).toBeGreaterThan(base * 2.5);
+			expect(told.Lowest).toBeLessThan(-base * 0.2);
+		});
+
+		expect(spread(wheat.Bark).Lowest).toBeGreaterThan(-0.001);
+
+		/* No leaves under the crown's foot by its roots. */
+		for (var i = 1; i < oak.Leaves.Positions.length; i += 3)
+			expect(oak.Leaves.Positions[i]).toBeGreaterThan(base);
+	}, 60000);
+
+	/*
 	 * Regression: its simpler levels held 81 and 72 hundredths of its leaves (cards larger by 1.9 and 3.2), and the crowns of
 	 * the trees past the nearest were thin and pale over the sunlit ground. They cover as much as it does, within a tenth.
 	 */

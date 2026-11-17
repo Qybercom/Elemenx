@@ -37,5 +37,5 @@
 
 ## Тесты
 
-- [GameItemCard shows the name, the rarity and type, and the stats of an item, and nothing without one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L219) — `tests/regression/library-misc.test.js`
+- [GameItemCard shows the name, the rarity and type, and the stats of an item, and nothing without one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L239) — `tests/regression/library-misc.test.js`
 - [GameItems: piles join up to their Stack and the rest goes back, other items swap, and an item is used up](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L159) — `tests/regression/library-services.test.js`

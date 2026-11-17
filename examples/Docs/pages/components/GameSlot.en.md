@@ -59,4 +59,4 @@ A slot of an action bar (hotbar): a button with an Icon or an Image, a Label for
 
 ## Tests
 
-- [the card of a GameSlot and of a GameInventory shows by *tip and follows its element when the page moves it without a scroll](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L242) — `tests/regression/library-misc.test.js`
+- [the card of a GameSlot and of a GameInventory shows by *tip and follows its element when the page moves it without a scroll](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L262) — `tests/regression/library-misc.test.js`

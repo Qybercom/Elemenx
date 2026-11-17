@@ -114,13 +114,14 @@ Elemenx.Component('SceneEditor', {
 	SketchLayer: '',
 	SketchGroups: [
 		{Kind: 'stroke', Key: 'graphics.sceneEditor.kinds.stroke', Types: ['raise', 'lower', 'flatten', 'smooth']},
-		{Kind: 'line', Key: 'graphics.sceneEditor.kinds.line', Types: ['ridge', 'valley', 'canyon', 'river', 'road', 'cliff', 'row', 'fence', 'hedge', 'wall', 'powerline', 'street', 'citywall', 'triggerline']},
+		{Kind: 'line', Key: 'graphics.sceneEditor.kinds.line', Types: ['ridge', 'valley', 'canyon', 'cave', 'river', 'road', 'cliff', 'row', 'fence', 'hedge', 'wall', 'powerline', 'street', 'citywall', 'triggerline']},
 		{Kind: 'area', Key: 'graphics.sceneEditor.kinds.area', Types: ['plateau', 'basin', 'lake', 'terraces', 'swamp', 'beach', 'floodplain', 'dunes', 'erosion', 'biome', 'mask', 'forest', 'meadow', 'clearing', 'bushes', 'thicket', 'jungle', 'sequoia', 'fields', 'orchard', 'settlement', 'square', 'district', 'trigger', 'zone', 'collider']},
-		{Kind: 'circle', Key: 'graphics.sceneEditor.kinds.circle', Types: ['mountain', 'crater', 'stamp', 'marker', 'landmark', 'triggerpoint']}
+		{Kind: 'circle', Key: 'graphics.sceneEditor.kinds.circle', Types: ['mountain', 'crater', 'stamp', 'hall', 'overhang', 'marker', 'landmark', 'triggerpoint']}
 	],
 
 	/* The fields of each type of item of a sketch, with their first values. */
 	SketchFields: {
+		cave: {Width: 5, Depth: 8, Rough: 0.5, Mouth: 1}, hall: {Radius: 10, Depth: 10}, overhang: {Radius: 30, Amount: 6},
 		raise: {Radius: 8, Amount: 3}, lower: {Radius: 8, Amount: 3}, flatten: {Radius: 8, Height: 2}, smooth: {Radius: 10},
 		ridge: {Width: 20, Height: 15, Sharp: 0.3}, valley: {Width: 20, Depth: 8}, canyon: {Width: 30, Depth: 25}, river: {Width: 6, Depth: 2, Bank: 6, Flow: 0}, road: {Width: 6, Shoulder: 4}, cliff: {Width: 3, Height: 8, Reach: 30},
 		plateau: {Height: 20, Edge: 10}, basin: {Depth: 6, Edge: 10}, lake: {Level: -1.5, Depth: 3, Edge: 10}, terraces: {Step: 3, Edge: 6}, swamp: {Level: 0.15, Edge: 8}, beach: {Edge: 8}, floodplain: {Level: 1, Edge: 10}, dunes: {Height: 3, Length: 25, Way: 70, Edge: 10}, erosion: {Amount: 4, Edge: 10}, biome: {Biome: 'forest', Edge: 4}, mask: {Edge: 2},
@@ -892,6 +893,7 @@ Elemenx.Component('SceneEditor', {
 		var object = this.Found(this.Selected);
 		var fields;
 		var list = [];
+		var options;
 
 		if (!object) {
 			this.FieldList = [];
@@ -916,8 +918,15 @@ Elemenx.Component('SceneEditor', {
 			});
 		});
 
+		/* A field of a few values (the Type of a nebula, of a star, of a cluster: engine.Options of the scene) is chosen of a list. */
+		options = this.Own().Scene && this.Own().Scene.Engine ? this.Own().Scene.Engine().Options || {} : {};
+
 		fields.forEach(function (field) {
-			list.push({ID: (field[2] || '') + ':' + field[0], Key: field[0], Trait: field[2] || '', Title: field[2] ? field[2] + ' · ' + field[0] : field[0], Value: field[1], Shown: field[1] == null ? '' : Array.isArray(field[1]) ? field[1].join(', ') : String(field[1]), Bool: typeof field[1] === 'boolean'});
+			var choices = options[(field[2] || '') + ':' + field[0]];
+
+			list.push({ID: (field[2] || '') + ':' + field[0], Key: field[0], Trait: field[2] || '', Title: field[2] ? field[2] + ' · ' + field[0] : field[0], Value: field[1], Shown: field[1] == null ? '' : Array.isArray(field[1]) ? field[1].join(', ') : String(field[1]), Bool: typeof field[1] === 'boolean', Options: choices ? choices.map(function (one) {
+				return {Value: one, Label: one || '—'};
+			}) : null});
 		});
 
 		this.FieldList = this.ShapeFields(object, list).concat(this.RoadFields(object));
@@ -1416,6 +1425,7 @@ Elemenx.Component('SceneEditor', {
 
 		if (this.Owner()) kinds.push({ID: 'Blueprint', Key: 'graphics.sceneEditor.graphs.look'});
 		else if (object.Traits.Star) kinds.push({ID: 'Star', Key: 'graphics.sceneEditor.graphs.look'});
+		else if (object.Traits.Nebula) kinds.push({ID: 'Nebula', Key: 'graphics.sceneEditor.graphs.look'});
 
 		if (object.Traits.Terrain)
 			kinds.push({ID: 'World', Key: 'graphics.sceneEditor.graphs.world'});
@@ -1529,6 +1539,13 @@ Elemenx.Component('SceneEditor', {
 		/* A star: the look of the library (its prominences rising and falling over a round), its parameters to tune. */
 		if (kind === 'Star') {
 			this.Change(this.Selected, {Traits: {Star: {Blueprint: this.Own().Scene.LibraryStar(), Parameters: {}}}});
+
+			return;
+		}
+
+		/* A nebula: the look of the library (it breathes and turns), its parameters to tune. */
+		if (kind === 'Nebula') {
+			this.Change(this.Selected, {Traits: {Nebula: {Blueprint: this.Own().Scene.LibraryNebula(), Parameters: {}}}});
 
 			return;
 		}

@@ -35,6 +35,15 @@ Elemenx.Trait('SceneProbes', {
 		var waited = 0;
 		var options = {Depth: false, DepthWrite: false, Cull: 'none'};
 
+		/* Asked for when the scene starts (engine.Warm), waited for with the rest: none is made in the play. */
+		(engine.Warms = engine.Warms || []).push(function (setting) {
+			if (setting !== 'ground' || !renderer) return;
+
+			['Merge', 'Lit', 'Rays', 'Reduce', 'Around', 'Volume'].forEach(function (name) {
+				renderer.Program(graphics.Shaders.Quad, shaders[name]);
+			});
+		});
+
 		function make () {
 			state = {
 				Programs: {

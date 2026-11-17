@@ -94,6 +94,78 @@ describe('Contract: SceneSower, what a Scatter sows, in workers', function () {
 		expect(result.Blocked.length).toBeGreaterThan(0);
 	});
 
+	/*
+	 * A tree stands on its roots: where the ground slopes it is a little into it, as far as its roots reach (a twentieth of
+	 * its size, 0.6 m at most), so none of them hangs over the ground below it; on level ground as it was, a fence too.
+	 */
+	it('sows a rule Under on the floor and the roof of a tunnel under a hill, none on the hill over it nor under the sky', function () {
+		var options = {Size: 400, Height: 40, Water: 0, Seed: 'hill', Scale: 90, Carves: [{Type: 'tunnel', Points: [[-60, 0, 3], [60, 0, 3]], Radius: 3, Flat: 0.5}]};
+		var field = Elemenx.Service('SceneTerrainGenerator').Field('Flat', options);
+		var models = {stalactite: {Size: 2, Keys: ['stalactite~0']}, stalagmite: {Size: 1.5, Keys: ['stalagmite~0']}};
+		var rules = [{ID: 'roof', Shapes: ['stalactite'], Under: 'ceiling', Density: 40, Blocks: false}, {ID: 'floor', Shapes: ['stalagmite'], Under: 'floor', Density: 40, Blocks: false}];
+		var result = sower.Sow({Key: 'sower-under', Field: field, Rules: rules, Models: models, Size: 48, Squares: [{X: -24, Z: -24}, {X: 120, Z: 120}]});
+		var heights = {stalactite: [], stalagmite: []};
+
+		result.Squares.forEach(function (square) {
+			Object.keys(square.Lists).forEach(function (key) {
+				var places = square.Lists[key].Places;
+				var i;
+
+				for (i = 0; i < places.length; i += 4) {
+					heights[key.split('~')[0]].push(places[i + 1]);
+
+					/* In the tunnel, across it no farther than its width. */
+					expect(Math.abs(places[i + 2])).toBeLessThan(3.2);
+				}
+			});
+		});
+
+		/*
+		 * Its floor 0.7 of 3 under its axis at 3 (up its round sides by the walls), its roof up to 3 over it: things on each,
+		 * the hill over it at more than 9.
+		 */
+		expect(heights.stalagmite.length).toBeGreaterThan(5);
+		expect(heights.stalactite.length).toBeGreaterThan(5);
+
+		heights.stalagmite.forEach(function (y) {
+			expect(y).toBeGreaterThan(0.4);
+			expect(y).toBeLessThan(3);
+		});
+		heights.stalactite.forEach(function (y) {
+			expect(y).toBeGreaterThan(3.5);
+			expect(y).toBeLessThan(6.5);
+		});
+
+		/* Out under the sky nothing of them. */
+		expect(result.Squares[1].Lists).toEqual({});
+	});
+
+	it('sets a tree a little into the ground where it slopes, as far as its roots reach; level ground and a line as they were', function () {
+		var given = world();
+		var field = Elemenx.Service('SceneTerrainGenerator').Field('Flat', given.Options);
+		var result = sower.Sow(job(given, field));
+		var checked = 0;
+
+		result.Squares.forEach(function (square) {
+			Object.keys(square.Lists).forEach(function (key) {
+				var places = square.Lists[key].Places;
+				var i;
+
+				for (i = 0; i < places.length; i += 4) {
+					var ground = field.Height(places[i], places[i + 2]) - 0.05;
+					var sunk = key.indexOf('fence') === 0 ? 0 : Math.min(0.6, field.Slope(places[i], places[i + 2]) * places[i + 3] * 0.06);
+
+					expect(places[i + 1]).toBeCloseTo(ground - sunk, 4);
+
+					if (sunk > 0.002)
+						checked++;
+				}
+			});
+		});
+
+		expect(checked).toBeGreaterThan(5);
+	});
+
 	it('sows the same things in a worker as in the page, the field made there of its options, the context shared once', async function () {
 		var given = world();
 		var here = plain(sower.Sow(job(given, Elemenx.Service('SceneTerrainGenerator').Field('Flat', given.Options))));

@@ -25,6 +25,13 @@ Elemenx.Trait('SceneDebris', {
 		var state = scene.Debris = {Pieces: [], Clock: 0, Beams: []};
 		var program = null;
 
+		/* Asked for when the scene starts (engine.Warm), waited for with the rest: none is made in the play. */
+		(engine.Warms = engine.Warms || []).push(function (setting) {
+			if (setting === 'galaxy' || !renderer) return;
+
+			program = program || renderer.Program(shaders.DebrisVertex, shaders.Debris);
+		});
+
 		function number (value, fallback) {
 			return value === null || value === undefined || value === '' || isNaN(Number(value)) ? fallback : Number(value);
 		}

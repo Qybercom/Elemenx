@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { loadElemenx } from '../../../../tests/setup.js';
+import { loadElemenx, waitFor } from '../../../../tests/setup.js';
 import { Use } from '../../../../tests/library.js';
 
 describe('Contract: the Renderer, its textures and what it drew', function () {
@@ -224,6 +224,57 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 		expect(Math.round(pixel[0] / 255 * 100) / 100).toBeCloseTo(0.2, 1);
 		expect(Math.round(pixel[1] / 255 * 100) / 100).toBeCloseTo(0.4, 1);
 		expect(Math.round(pixel[3] / 255 * 100) / 100).toBeCloseTo(0.6, 1);
+	});
+
+	/*
+	 * Regression: a scene let go while it loaded (all its programs asked for at once) deleted the programs the card was still
+	 * making, and the browser told GL_INVALID_VALUE for each when it ended. Now each is let go once it is made.
+	 */
+	it('lets a program the card is still making go once it is made, not while it is made', async function () {
+		var own = Elemenx.Service('Renderer').Create(document.createElement('canvas'), {Antialias: false});
+		var gl = own.GL;
+		var parallel = gl.getExtension('KHR_parallel_shader_compile');
+		var deleted = [];
+		var made = false;
+		var real = gl.getProgramParameter;
+		var remove = gl.deleteProgram;
+		var program;
+
+		if (!parallel) {
+			own.Destroy();
+
+			return;
+		}
+
+		program = own.Program('#version 300 es\nin vec3 aPosition;\nvoid main() { gl_Position = vec4(aPosition, 1.0); }', '#version 300 es\nprecision highp float;\nout vec4 outColor;\nvoid main() { outColor = vec4(0.25); }');
+
+		gl.getProgramParameter = function (handle, name) {
+			return name === parallel.COMPLETION_STATUS_KHR ? made : real.apply(this, arguments);
+		};
+
+		gl.deleteProgram = function (handle) {
+			deleted.push(handle);
+
+			return remove.apply(this, arguments);
+		};
+
+		try {
+			program.Settled = false;
+
+			own.Destroy();
+
+			expect(deleted).not.toContain(program.Handle);
+
+			made = true;
+
+			await waitFor(function () {
+				return deleted.indexOf(program.Handle) !== -1;
+			}, 3000);
+		}
+		finally {
+			gl.getProgramParameter = real;
+			gl.deleteProgram = remove;
+		}
 	});
 
 	it('makes a mesh of lines by its mode, and a mesh of the weights of the materials of a ground', function () {

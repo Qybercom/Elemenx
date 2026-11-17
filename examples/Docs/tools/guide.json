@@ -103,7 +103,8 @@
 				{"ID": "events", "Title": {"en": "Events and pipes", "ru": "События и конвейеры"}},
 				{"ID": "messaging", "Title": {"en": "Messaging", "ru": "Обмен сообщениями"}},
 				{"ID": "webworker", "Title": {"en": "Web workers", "ru": "Web Worker"}},
-				{"ID": "serviceworker", "Title": {"en": "Service workers", "ru": "Service Worker"}}
+				{"ID": "serviceworker", "Title": {"en": "Service workers", "ru": "Service Worker"}},
+				{"ID": "hardware", "Title": {"en": "Hardware", "ru": "Оборудование"}}
 			]
 		}
 	]

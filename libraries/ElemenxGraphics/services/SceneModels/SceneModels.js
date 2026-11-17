@@ -3436,6 +3436,58 @@ Elemenx.Service('SceneModels', {
 			return [tools.Piece('body', parts)];
 		}});
 
+		/*
+		 * What grows in a cave of the water that drips: a stalactite hangs from its roof (its top at 0, down to -1: it is sown
+		 * on a roof, Under ceiling of a rule of Scatter), a stalagmite stands on its floor under one; wet, they shine.
+		 */
+		var dripstone = [0.6, 0.55, 0.47];
+
+		self.Define('stalactite', {Group: 'nature', Type: 'rock', Size: 2.2, Variants: 4, Matte: false, Smooth: true, Build: function (tools, random) {
+			var parts = [tools.Lathe([[0, 0.04], [0.22, 0.04], [0.2, 0], [0.14, -0.25], [0.08, -0.6], [0.03, -0.9], [0, -1]], [0, 0, 0], dripstone, 10)];
+			var count = Math.floor(random(1, 4));
+			var i;
+
+			for (i = 0; i < count; i++) {
+				var long = random(0.2, 0.55);
+				var tone = random(0.9, 1.05);
+
+				parts.push(tools.Lathe([[0, 0.03], [0.08, 0.03], [0.06, 0], [0.03, -long * 0.6], [0, -long]], [random(-0.26, 0.26), 0, random(-0.26, 0.26)], [dripstone[0] * tone, dripstone[1] * tone, dripstone[2] * tone], 8));
+			}
+
+			return [tools.Piece('body', parts)];
+		}});
+
+		self.Define('stalagmite', {Group: 'nature', Type: 'rock', Size: 1.6, Variants: 4, Matte: false, Smooth: true, Build: function (tools, random) {
+			var tall = random(0.7, 1);
+			var parts = [tools.Lathe([[0.34, -0.05], [0.3, 0.06], [0.16, 0.22], [0.1, tall * 0.6], [0.05, tall * 0.92], [0, tall]], [0, 0, 0], dripstone, 10)];
+
+			if (random(0, 1) > 0.4)
+				parts.push(tools.Lathe([[0.12, -0.03], [0.08, 0.1], [0.03, 0.3], [0, 0.38]], [random(-0.3, 0.3), 0, random(-0.3, 0.3)], dripstone, 8));
+
+			return [tools.Piece('body', parts)];
+		}});
+
+		/* Crystals of a cave that glow (a light of their own, BuiltLamps: what is sown of them lights the cave round it). */
+		self.Define('cave-crystal', {Group: 'nature', Type: 'rock', Size: 1.4, Variants: 3, Matte: false, Lamps: [{Place: [0, 0.5, 0], Color: [0.5, 0.83, 1], Power: 0.5, Radius: 4}], Build: function (tools, random) {
+			var parts = [];
+			var i;
+
+			for (i = 0; i < 7; i++) {
+				var tall = random(0.35, 1);
+
+				parts.push(tools.Lathe([[0, 0], [0.08, 0.06], [0.08, tall * 0.8], [0, tall]], [random(-0.25, 0.25), 0, random(-0.25, 0.25)], [0.7, 1.5, 2.2], 6));
+
+				parts[i].Matrix = tools.Math.Multiply(parts[i].Matrix, tools.Math.Rotation([random(-1, 1), 0.01, random(-1, 1)], random(0.1, 0.6)));
+			}
+
+			return [tools.Piece('body', parts)];
+		}});
+
+		/* A torch on a post: a stick, its head wound with tow and the fire on it (the light is a light object of its own). */
+		self.Define('torch', {Group: 'props', Type: 'prop', Size: 1.7, Build: function (tools) {
+			return [tools.Piece('body', [tools.Cylinder(0.03, 0.025, 0.9, [0, 0.45, 0], [0.32, 0.22, 0.14]), tools.Cylinder(0.05, 0.06, 0.1, [0, 0.93, 0], [0.18, 0.15, 0.12]), tools.Blob(0.07, [0, 1.02, 0], [3.2, 1.6, 0.5], 0.4, [1, 1.6, 1])])];
+		}});
+
 		function building (group, name, size, recipe) {
 			self.Define(name, typeof recipe === 'function' ? {Group: group, Type: 'building', Size: size, Build: recipe} : Object.assign({Group: group, Type: 'building', Size: size}, recipe));
 		}

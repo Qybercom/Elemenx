@@ -21,8 +21,8 @@
  * barrier of a road.
  * The streets of the settlements of its sketch (their plans, SceneTerrainGenerator.SettlementPlan) are roads too, made with
  * the ground at once: a city or a town has streets, a village country roads, a hamlet gravel, a fort alleys, as wide as the
- * plan has them; each is drawn by an object of kind road of its own (street-<settlement>-<n>), none for a settlement of
- * Roads false.
+ * plan has them, a street drawn in the sketch of the type its Road tells (avenue, boulevard...); each is drawn by an
+ * object of kind road of its own (street-<settlement>-<n>), none for a settlement of Roads false.
  */
 Elemenx.Trait('SceneRoadNetwork', {
 	RoadsStart: function () {
@@ -55,7 +55,7 @@ Elemenx.Trait('SceneRoadNetwork', {
 					return terrain.SettlementSizes[name] || null;
 				}).Streets.forEach(function (street, index) {
 					if (street.Points && street.Points.length > 1)
-						made.push({ID: 'street-' + item.ID + '-' + index, Type: streetTypes[item.Kind] || 'street', Width: Number(street.Width) || 0, Points: street.Points});
+						made.push({ID: 'street-' + item.ID + '-' + index, Type: street.Road || streetTypes[item.Kind] || 'street', Width: Number(street.Width) || 0, Points: street.Points, Closed: !!street.Closed});
 				});
 			});
 
@@ -321,10 +321,13 @@ Elemenx.Trait('SceneRoadNetwork', {
 			if (under)
 				return under;
 
+			/* On its carriageway, or on a sidewalk round one of its corners (raised a kerb high, lowered at a zebra). */
 			if (junction) {
-				surface = roads.Surface(junction.Surface);
+				var on = roads.JunctionSurface(junction, x, z);
 
-				return {Road: junction.ID, Strip: 'junction', Surface: junction.Surface, Height: junction.Y + (junction.Deck || 0), Grip: surface.Grip, Drag: surface.Drag};
+				surface = roads.Surface(on.Surface);
+
+				return {Road: junction.ID, Strip: on.Strip, Surface: on.Surface, Height: junction.Y + (junction.Deck || 0) + on.Lift, Grip: surface.Grip, Drag: surface.Drag};
 			}
 
 			return {Road: '', Strip: '', Surface: 'ground', Height: field ? Math.max(0, field.Height(x, z)) : 0, Grip: 1, Drag: 0};

@@ -610,12 +610,51 @@ describe('Contract: SceneEditor of a star system: bodies added round the one tha
 		/* Its parameters among what a level sets of it. */
 		expect(editor.Exposed().map(function (parameter) {
 			return parameter.key;
-		})).toEqual(['Activity', 'Cycle']);
+		})).toEqual(['Activity', 'Cycle', 'Speed']);
 
 		editor.Tuned('Activity', '2.5');
 
 		expect(scene.Get('star').Traits.Star.Parameters.Activity).toBe(2.5);
 		expect(scene.Engine().StarLook('star').Parts[1]).toBeCloseTo(2.5, 6);
+	});
+
+	/* Regression: the Type and the Subtype of a nebula were typed as text; a nebula had no graph of its look. */
+	it('offers the Type and the Subtype of a nebula to choose, and gives it the look of the library to edit as a graph', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var scene = editor.Scene();
+		var nebula = editor.Add('nebula');
+		var field;
+
+		editor.Select(nebula);
+
+		field = function (key) {
+			return editor.FieldList.filter(function (one) {
+				return one.ID === 'Nebula:' + key;
+			})[0];
+		};
+
+		expect(field('Type').Options.map(function (one) {
+			return one.Value;
+		})).toEqual(['hii', 'planetary', 'remnant', 'dark']);
+		expect(field('Radius').Options).toBe(null);
+		expect(editor.$Element().querySelector('[data-field="Type"] .elemenx-select')).toBeTruthy();
+
+		editor.FieldChanged(field('Type'), 'remnant');
+		editor.FieldChanged(field('Subtype'), 'Ic');
+
+		expect(scene.Get(nebula).Traits.Nebula).toMatchObject({Type: 'remnant', Subtype: 'Ic'});
+
+		expect(editor.GraphKinds().map(function (kind) {
+			return kind.ID;
+		})).toEqual(['Nebula']);
+
+		editor.GraphMade();
+
+		expect(scene.Get(nebula).Traits.Nebula.Blueprint.type).toBe('nebula');
+		expect(editor.Exposed().map(function (parameter) {
+			return parameter.key;
+		})).toEqual(['Pulse', 'Cycle', 'Spin', 'Turbulence', 'Detail']);
 	});
 
 	it('adds a star cluster with the swarm of its old stars, and stars round its middle light-years out', async function () {

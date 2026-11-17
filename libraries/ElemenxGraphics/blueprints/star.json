@@ -18,6 +18,14 @@
 			"min": 4,
 			"max": 600,
 			"comment": "The seconds of one round of the rising and falling of its prominences"
+		},
+		{
+			"key": "Speed",
+			"type": "float",
+			"value": 3,
+			"min": 0,
+			"max": 12,
+			"comment": "How fast its prominences breathe and their strands stream (1: as slow as they were before)"
 		}
 	],
 	"blocks": [
@@ -93,6 +101,30 @@
 				}
 			],
 			"comment": "How fast their strands stream over a round"
+		},
+		{
+			"id": "speed",
+			"type": "Parameter",
+			"x": 480,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Speed"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "pace",
+			"type": "Multiply",
+			"x": 640,
+			"y": 260,
+			"properties": [],
+			"comment": "Their speed over a round times the Speed told"
 		},
 		{
 			"id": "activity",
@@ -185,7 +217,7 @@
 		{
 			"id": "link-speed",
 			"p1": "stream-out-Value",
-			"p2": "star-in-Speed",
+			"p2": "pace-in-A",
 			"kind": "value"
 		},
 		{
@@ -198,6 +230,18 @@
 			"id": "link-flares",
 			"p1": "activity-out-Value",
 			"p2": "star-in-Flares",
+			"kind": "value"
+		},
+		{
+			"id": "link-pace",
+			"p1": "speed-out-Value",
+			"p2": "pace-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "link-paced",
+			"p1": "pace-out-Out",
+			"p2": "star-in-Speed",
 			"kind": "value"
 		}
 	]

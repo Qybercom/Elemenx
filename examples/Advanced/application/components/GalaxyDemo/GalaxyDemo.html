@@ -9,6 +9,6 @@
 	</div>
 	<p class="elemenx-caption" aria-live="polite">{{GalaxyNote}}</p>
 	<div class="scene-demo-scene">
-		<Scene Setting="galaxy" Speed="0.02" DaySeconds="30" Labels="false" [galaxy]="GalaxyOptions" [galaxyTime]="GalaxyTime" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="GalaxyReady" (galaxy)="GalaxyPicked" (enter)="GalaxyIn" (leave)="GalaxyOut" />
+		<Scene Setting="galaxy" Speed="0.02" DaySeconds="30" Labels="false" [galaxy]="GalaxyOptions" [galaxyTime]="GalaxyTime" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="GalaxyReady" (galaxy)="GalaxyPicked" (enter)="GalaxyIn" (leave)="GalaxyOut"><DemoLoading slot="loading" Title="Galaxy" /></Scene>
 	</div>
 </div>

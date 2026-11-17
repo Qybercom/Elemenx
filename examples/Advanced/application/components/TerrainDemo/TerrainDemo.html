@@ -38,7 +38,7 @@
 		<span class="elemenx-caption" role="status">{{TerrainNote}}</span>
 	</div>
 	<div class="scene-demo-scene">
-		<Scene Setting="terrain" Team="blue" Labels="true" Orders="true" [selectCheck]="TerrainSelectable" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [season]="TerrainSeason" [aurora]="TerrainAuroraOf(TerrainAurora)" [auroracolors]="TerrainAurora === 'fantasy' ? ['#ff4fd8', '#3fb4ff'] : null" [flare]="SceneFlare" [bokeh]="SceneBokeh" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
+		<Scene Setting="terrain" Team="blue" Labels="true" Orders="true" [selectCheck]="TerrainSelectable" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [season]="TerrainSeason" [aurora]="TerrainAuroraOf(TerrainAurora)" [auroracolors]="TerrainAurora === 'fantasy' ? ['#ff4fd8', '#3fb4ff'] : null" [flare]="SceneFlare" [bokeh]="SceneBokeh" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived"><DemoLoading slot="loading" Title="Terrain" />
 			<SceneObject ID="valley" Kind="ground" [world]="TerrainWorld(TerrainBiome, TerrainRelief)" [swell]="TerrainSwell" />
 			<SceneObject ID="sun" Kind="sun" [latitude]="TerrainLatitude" [dayofyear]="TerrainDay" Noon="150" [time]="TerrainHour" />
 			<SceneObject ID="hamlet" Kind="village" X="-70" Y="20" Houses="10" />

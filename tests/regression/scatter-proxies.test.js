@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadElemenx, resetDOM, unique, waitFor } from '../setup.js';
 import { Use } from '../library.js';
+import scatterSource from '../../libraries/ElemenxGraphics/traits/SceneScatter/SceneScatter.js?raw';
 
 var owned = [];
 
@@ -334,4 +335,61 @@ describe('Contract: Scatter draws far tiles of what is sown as proxies of SceneP
 		expect(wide).toBeGreaterThan(near * 20);
 		expect(empty).toBe(0);
 	}, 120000);
+
+	/*
+	 * The grass of a planet round the eye: its field in the frame of its plants (heights, how much grass) drawn as the grass
+	 * of a ground, its blades counted; none once it is taken away. Regression: its colors given as RGBA to a vec3, the card
+	 * set none of them and all the grass of a planet was black.
+	 */
+	it('draws the grass of a planet of its field round the eye, its blades counted, its colors set; none once taken away', async function () {
+		var scene = await mount();
+		var engine = scene.Engine();
+		var gl = engine.Renderer.GL;
+		var side = 16;
+		var data = new Float32Array(side * side * 4);
+		var math = Elemenx.Service('Math');
+		var matrix = math.Multiply(math.Perspective(60, 1.5, 0.1, 2000), math.LookAt([0, 2, 0], [0, 0, -20], [0, 1, 0]));
+		var i;
+
+		for (i = 0; i < side * side; i++)
+			data[i * 4 + 1] = 1;
+
+		var draws = [];
+		var drawReady = engine.DrawReady;
+
+		engine.ScatterPlanetGrass({Key: 'test', Center: [0, -40], Size: 256, Side: side, Data: data, Grass: {Height: 0.8, Density: 1, Color: '#2f6a24', Root: '#1c3d15'}});
+
+		engine.DrawReady = function (mesh, program, values) {
+			if (values && values.uField)
+				draws.push(values);
+
+			return drawReady.apply(this, arguments);
+		};
+
+		try {
+			engine.ScatterPlanetDraw({uShadowOn: 0, uSkyLight: [0.3, 0.36, 0.46], uFloorLight: [0.1, 0.1, 0.09]}, matrix, [0, 2, 0], [700, 900], [0, 1, 0], [1, 1, 1]);
+		}
+		finally {
+			engine.DrawReady = drawReady;
+		}
+
+		expect(scene.Sown().Blades).toBeGreaterThan(1000);
+		expect(draws.length).toBeGreaterThan(0);
+		expect(draws[0].uRoot.length).toBe(3);
+		expect(draws[0].uTip.length).toBe(3);
+		expect(draws[0].uFieldCenter).toEqual([0, -40]);
+		expect(gl.isContextLost()).toBe(false);
+
+		engine.ScatterPlanetGrass(null);
+
+		expect(scene.Sown().Blades).toBe(0);
+	}, 60000);
+
+	/*
+	 * Regression: leaves that flutter are told to the frames as moving; a tree between two levels (a pattern of holes that
+	 * turns each frame) stayed a hatch, the frames taking little of what was before. While it fades it is told as standing.
+	 */
+	it('tells what fades between two levels to the frames as standing, the code of its mirror kept', function () {
+		expect(scatterSource).toContain("'\\tif ((vFade.x < 0.999 || vFade.y < 0.999) && outColor.a < 0.5) outColor.a = outColor.a <= 0.0 ? 1.0 : 1.0 - max(0.0, 0.45 - outColor.a) / 0.4 * 0.45;\\n'");
+	});
 });

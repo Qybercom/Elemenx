@@ -7,7 +7,8 @@
  *   SceneTerrainGenerator.Flat), Roads (painted on it), Kept (the cells of 4 by 4 where a house of a village stands:
  *   ['x:z']), Rules (of Scatter, of a biome, of a sketch: Shapes, Density, Size, MinHeight, MaxHeight, MaxSlope, Cover,
  *   Patch, Clumps, Seed, Passability, Blocks, Reach, Grid, Area, Line, Rows, Spacing, Gap, Way, Fit, Gates ([{X, Z, Radius}]: a line is open there), Fixed, Biome (the
- *   land of a ground of lands by their climate it grows in), Source (of a graph, below), Parameters (of its graph)), Free
+ *   land of a ground of lands by their climate it grows in), Under (floor or ceiling: on the floor or the roof of a cave under
+ *   the ground of a volume, Under(field, place, ceiling), none under the sky), Source (of a graph, below), Parameters (of its graph)), Free
  *   ({Areas, Lines}: where the sketch keeps the ground free), Models ({name: {Size, Keys (the Key of SceneModels.Make of
  *   each of 16 variants)}}), Size (of a square, 48), and in the page Field (the field itself, not made again)}. It gives
  *   {Squares: [{X, Z, Lists ({key: {Places, Extra (Float32Array, four numbers a thing), Count, Reach}}), Center}], Blocked
@@ -24,7 +25,7 @@
 Elemenx.Service('SceneSower', {
 	$Meta: {
 		Description: 'What the Scatter of a Scene sows in squares of a ground, worked out in workers: the same things for the same seed.',
-		Methods: ['Sow(job)', 'Compile(rules)', 'LibraryScatter(rule)', 'Work()']
+		Methods: ['Sow(job)', 'Under(field, place, ceiling)', 'Compile(rules)', 'LibraryScatter(rule)', 'Work()']
 	},
 
 	/* The workers of the sowing: the field of the ground made as the page makes it, the noise and the chances of Models. */
@@ -395,6 +396,10 @@ Elemenx.Service('SceneSower', {
 		/* A rule of a graph tells all the rest itself (Grown). */
 		if (rule.Source) return height;
 
+		/* Under: on the floor or the roof of a cave under the ground, none under the sky. */
+		if (rule.Under)
+			return this.Under(field, place, rule.Under === 'ceiling');
+
 		if (height < (rule.MinHeight === undefined ? 1 : Number(rule.MinHeight))) return null;
 		if (rule.MaxHeight !== undefined && height > Number(rule.MaxHeight)) return null;
 		if (field.Slope(place[0], place[1]) > (rule.MaxSlope === undefined ? 0.3 : Number(rule.MaxSlope))) return null;
@@ -405,6 +410,59 @@ Elemenx.Service('SceneSower', {
 		if (Number(rule.Clumps) > 0 && Math.abs(Math.sin(place[0] * 12.9898 + place[1] * 78.233) * 43758.5453) % 1 > 1 - Math.min(1, Number(rule.Clumps)) * (1 - terrain.Smoothstep(0.35, 0.65, noise.Fbm(place[0] / (Number(rule.Patch) || 60), 1.7, place[1] / (Number(rule.Patch) || 60), 3)))) return null;
 
 		return height;
+	},
+
+	/*
+	 * The floor (or with ceiling the roof) of the highest hollow under the rock of a ground with a volume at a place: from
+	 * the top of what its carves may change down, the first air over rock (rock over air), rock somewhere over it up to its
+	 * height; null with none. A roof a little over it: what hangs there is set a little into it.
+	 */
+	Under: function (field, place, ceiling) {
+		var volume = field.Volume;
+		var top;
+		var span;
+		var roofed;
+		var y;
+
+		if (!volume)
+			return null;
+
+		top = volume.Ground(place[0], place[1]);
+		span = volume.Span(place[0], place[1], top, 0, true);
+
+		if (!span)
+			return null;
+
+		/*
+		 * Over what the carves may change it is its height: rock up to it. Regression: begun in the air of a hall higher than
+		 * that, no roof was found over it, and nothing grew in the cave but at its mouth.
+		 */
+		roofed = top > span[1];
+		y = Math.min(span[1], top) - 0.25;
+
+		/* A roof over that, in air there: up to where the rock begins. */
+		if (ceiling && roofed && volume.Density(place[0], y, place[1]) <= 0) {
+			while (y < top && volume.Density(place[0], y, place[1]) <= 0)
+				y += 0.25;
+
+			return y < top ? y - 0.075 : null;
+		}
+
+		for (; y > span[0]; y -= 0.25) {
+			var here = volume.Density(place[0], y, place[1]) > 0;
+			var below = volume.Density(place[0], y - 0.25, place[1]) > 0;
+
+			if (here) {
+				roofed = true;
+
+				if (ceiling && !below) return y + 0.05;
+			}
+			else if (below && roofed && !ceiling) {
+				return y - 0.125;
+			}
+		}
+
+		return null;
 	},
 
 	Sow: function (job) {
@@ -423,6 +481,8 @@ Elemenx.Service('SceneSower', {
 			var lists = {};
 			var keep = self.Keeping(context.Free || {}, square, size);
 			var made = {X: square.X, Z: square.Z, Lists: {}};
+			var low = Infinity;
+			var high = -Infinity;
 
 			context.Rules.filter(function (rule) {
 				return self.Touches(rule, square, size);
@@ -524,10 +584,21 @@ Elemenx.Service('SceneSower', {
 							height = field.Height(at[0], at[1]) + 0.05;
 					}
 
+					/*
+					 * A tree (a thing over 2 m, not of a line nor a building) a little into the ground where it slopes, as far as its
+					 * roots reach (a twentieth of its size): none of them hangs over the ground below it.
+					 */
+					if (!rule.Fixed && !(fixed && rule.Line) && !rule.Under && info.Size > 2)
+						height -= Math.min(0.6, field.Slope(at[0], at[1]) * large * 0.06);
+
 					key = info.Keys[variant % info.Keys.length];
 					list = lists[key] = lists[key] || {Places: [], Extra: [], Keys: []};
 
 					list.Places.push(at[0], height - 0.05, at[1], large);
+
+					low = Math.min(low, height - 0.05);
+					high = Math.max(high, height - 0.05);
+
 					list.Extra.push(turn, tone, green, blue);
 					list.Keys.push(own);
 
@@ -559,6 +630,10 @@ Elemenx.Service('SceneSower', {
 			});
 
 			made.Center = [square.X + size / 2, field.Height(square.X + size / 2, square.Z + size / 2), square.Z + size / 2];
+
+			/* The heights of what it holds ([lowest, highest]): in a cave under a hill far under the ground in its middle. */
+			if (low <= high)
+				made.Span = [low, high];
 
 			return made;
 		});

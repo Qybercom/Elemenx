@@ -534,6 +534,14 @@
 	pointer-events: none;
 }
 
+/* An own screen of the loading (its slot loading) covers all of the scene, as it likes. */
+.elemenx-scene-loading.own {
+	inset: 0;
+	max-width: none;
+	margin: 0;
+	pointer-events: auto;
+}
+
 .elemenx-scene-hud {
 	position: absolute;
 	inset: 0;

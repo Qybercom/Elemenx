@@ -1,0 +1,90 @@
+<section class="hardware-page">
+	<div class="page-heading">
+		<p class="eyebrow">Elemenx.Hardware</p>
+
+		<h1>Boards over a serial port</h1>
+
+		<p class="lead">A board of the ESP32 family (ESP32, ESP32-S3, ESP32-C3) flashed by its ROM loader through Web Serial: the files of a build of arduino-cli or a manifest of ESP Web Tools, the map of its memory, its output after it starts. Chrome or Edge on a desktop.</p>
+	</div>
+
+	<Section Title="Port" [note]="PortText">
+		<p class="elemenx-text" *if="!Supported">This browser has no Web Serial: open the page in Chrome or Edge on a desktop, over HTTPS or localhost.</p>
+		<div class="hardware-row">
+			<Button Label="Pick a port" Variant="primary" [Disabled]="!Supported || Busy" (click)="Pick" />
+			<Button Label="Tell the chip" Variant="secondary" [Disabled]="!HasPort || Busy" (click)="Detect" />
+			<span class="elemenx-caption" role="status">{{ChipText}}</span>
+		</div>
+	</Section>
+
+	<Section Title="Firmware" note="the files of a build, at their offsets">
+		<div class="hardware-row">
+			<label class="hardware-field"><span class="elemenx-caption">Chip</span><Select Label="Chip" Size="small" [Options]="ChipOptions" [Value]="Chip" (change)="ChipChanged" /></label>
+			<FileUpload Variant="inline" Multiple="true" Accept=".bin,.json" Label="Files of a build (.bin) or a manifest (.json)" (change)="FilesPicked" />
+		</div>
+		<p class="elemenx-text" *if="!Parts.length">No files yet: pick the .bin files of arduino-cli (bootloader, partitions, boot_app0, the app) or one merged image, or a manifest.json of ESP Web Tools.</p>
+		<div class="hardware-parts" *if="Parts.length">
+			<div class="hardware-part" *for="part of Parts" *key="part.ID">
+				<span class="hardware-part-name">{{part.Name}}</span>
+				<Input Size="small" Label="Offset" [Value]="part.Offset" (change)="PartOffset(part.ID, $event)" />
+				<span class="elemenx-caption">{{part.Size}} bytes</span>
+				<Button Size="small" Variant="ghost" Icon="delete" Title="Leave it out" (click)="PartRemoved(part.ID)" />
+			</div>
+		</div>
+	</Section>
+
+	<Section Title="Memory map" [note]="MapNote">
+		<div class="hardware-row">
+			<label class="hardware-field"><span class="elemenx-caption">Table</span><Select Label="Table" Size="small" [Options]="PresetOptions" [Value]="Preset" (change)="PresetChosen" /></label>
+			<label class="hardware-field"><span class="elemenx-caption">Flash</span><Select Label="Flash" Size="small" [Options]="SizeOptions" [Value]="FlashSize" (change)="FlashSize = $event" /></label>
+			<Button Label="Read from the board" Variant="secondary" Size="small" [Disabled]="!HasPort || Busy" (click)="ReadTable" />
+			<FileUpload Variant="inline" Accept=".bin,.csv" Label="A table (.bin or .csv)" (change)="TablePicked" />
+			<Toggle Label="Write this table" [checked]="UseTable" (change)="UseTable = $event" />
+		</div>
+		<div class="hardware-map" role="img" [attribute.aria-label]="'Memory of ' + FlashSize">
+			<div class="hardware-map-piece" *for="piece of MapOf(Table, FlashSize, Version)" *key="piece.Key" [attribute.data-kind]="piece.Kind" [style.left]="piece.Left + '%'" [style.width]="piece.Width + '%'" [attribute.title]="piece.Title"><span>{{piece.Name}}</span></div>
+		</div>
+		<div class="hardware-table">
+			<div class="hardware-table-row hardware-table-head"><span>Name</span><span>Type</span><span>Subtype</span><span>Offset</span><span>Size</span><span></span></div>
+			<div class="hardware-table-row" *for="row of Table" *key="row.ID">
+				<Input Size="small" Label="Name" [Value]="row.Name" (change)="RowChanged(row.ID, 'Name', $event)" />
+				<Select Size="small" Label="Type" [Options]="TypeOptions" [Value]="row.Type" (change)="RowChanged(row.ID, 'Type', $event)" />
+				<Input Size="small" Label="Subtype" [Value]="row.SubType" (change)="RowChanged(row.ID, 'SubType', $event)" />
+				<Input Size="small" Label="Offset" [Value]="row.Offset" (change)="RowChanged(row.ID, 'Offset', $event)" />
+				<Input Size="small" Label="Size" [Value]="row.Size" (change)="RowChanged(row.ID, 'Size', $event)" />
+				<Button Size="small" Variant="ghost" Icon="delete" Title="Remove the partition" (click)="RowRemoved(row.ID)" />
+			</div>
+		</div>
+		<div class="hardware-row">
+			<Button Label="Add a partition" Variant="ghost" Size="small" Icon="add" (click)="RowAdded" />
+			<Button Label="Save as CSV" Variant="ghost" Size="small" (click)="SaveTable('csv')" />
+			<Button Label="Save as .bin" Variant="ghost" Size="small" [Disabled]="Problems.length" (click)="SaveTable('bin')" />
+		</div>
+		<ul class="hardware-problems" *if="Problems.length">
+			<li *for="problem of Problems" *key="problem">{{problem}}</li>
+		</ul>
+	</Section>
+
+	<Section Title="Flash">
+		<div class="hardware-row">
+			<label class="hardware-field"><span class="elemenx-caption">Speed</span><Select Label="Speed" Size="small" [Options]="BaudOptions" [Value]="Baud" (change)="Baud = $event" /></label>
+			<label class="hardware-field"><span class="elemenx-caption">Mode</span><Select Label="Mode" Size="small" [Options]="ModeOptions" [Value]="Mode" (change)="Mode = $event" /></label>
+			<label class="hardware-field"><span class="elemenx-caption">Frequency</span><Select Label="Frequency" Size="small" [Options]="FrequencyOptions" [Value]="Frequency" (change)="Frequency = $event" /></label>
+			<Toggle Label="Erase all of it first" [checked]="Erase" (change)="Erase = $event" />
+			<Toggle Label="Check what was written" [checked]="Verify" (change)="Verify = $event" />
+		</div>
+		<div class="hardware-row">
+			<Button Label="Flash" Variant="primary" [Disabled]="!HasPort || Busy || !Parts.length" (click)="Flash" />
+			<Button Label="Cancel" Variant="secondary" [Disabled]="!Busy" (click)="Cancel" />
+			<span class="elemenx-caption" role="status">{{Status}}</span>
+		</div>
+		<Progress *if="Busy || Total" Label="Written" ShowValue="true" [Value]="Percent(Done, Total)" [Tone]="Failed ? 'danger' : 'accent'" />
+	</Section>
+
+	<Section Title="Monitor" note="what the board says after it starts">
+		<div class="hardware-row">
+			<label class="hardware-field"><span class="elemenx-caption">Speed</span><Select Label="Speed" Size="small" [Options]="MonitorOptions" [Value]="MonitorBaud" (change)="MonitorBaud = $event" /></label>
+			<Button [Label]="Monitoring ? 'Close the port' : 'Open the port'" Variant="secondary" [Disabled]="!HasPort || Busy" (click)="Monitor" />
+		</div>
+		<Terminal Title="Serial" Prompt="&gt;" [Lines]="Lines" [Busy]="!Monitoring" (command)="Send" (clear)="Lines = []" />
+	</Section>
+</section>

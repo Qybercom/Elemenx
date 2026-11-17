@@ -21,7 +21,9 @@
 				"flatten": "Flatten",
 				"smooth": "Smooth",
 				"rule": "Rule",
-				"location": "Location"
+				"location": "Location",
+				"settlements": "Settlements",
+				"streams": "River courses"
 			},
 			"overlays": {
 				"relief": "Relief",
@@ -47,7 +49,23 @@
 				"generated": "Its own relief"
 			},
 			"north": "North up",
-			"hint": "Drag: turn · right drag or Alt: turn round · wheel: nearer"
+			"hint": "Drag: turn · right drag or Alt: turn round · wheel: nearer",
+			"places": {
+				"title": "Rivers and settlements",
+				"making": "Making its rivers and settlements…",
+				"townsHint": "Press: select · drag: move · press elsewhere: add a village",
+				"riversHint": "Press a river: select · presses elsewhere: draw one, Enter ends it",
+				"flow": "Flow",
+				"town": "Settlement",
+				"river": "River",
+				"remove": "Remove it",
+				"kind": "Kind",
+				"kinds": {
+					"village": "Village",
+					"town": "Town",
+					"city": "City"
+				}
+			}
 		}
 	}
 }

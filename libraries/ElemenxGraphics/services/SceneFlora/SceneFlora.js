@@ -6,7 +6,8 @@
  *   a point reached is used up: Runions 2007); a spruce in whorls (a leader and its tiers of branches); a palm a curved
  *   trunk and its fronds. Its branches as thick as the pipes of what they carry (da Vinci: the sum of the children's
  *   radii to the power Pipe is the parent's), tubes with their bark laid along them; its leaves cards of clusters of
- *   leaves or tufts of needles, lit as the round of its crown is; dead stubs on its bare trunk.
+ *   leaves or tufts of needles, lit as the round of its crown is; dead stubs on its bare trunk; a tree its roots out
+ *   from the foot of its trunk along the ground and into it (none of a stalk nor of a plant lower than 3 m).
  * - Its textures are drawn of code too: its bark (the height of the plant along it: a pine dark below, orange above; its
  *   relief a normal map) and its leaves (an atlas of four clusters, their alpha the cut, and below them the same in
  *   shade: the leaves deep in its crown). A preset may give its own
@@ -585,6 +586,8 @@ Elemenx.Service('SceneFlora', {
 			}
 		}
 
+		this.Roots(p, nodes, height, base, random);
+
 		this.Tubes(nodes, bark, height, thinnest * p.Growth.Cut, p.Grow === 'palm', 9);
 
 		if (p.Grow === 'stalks') this.Blades(p, nodes, grown, random, leaves, 1, 5);
@@ -620,6 +623,65 @@ Elemenx.Service('SceneFlora', {
 			Triangles: (bark.Indices.length + leaves.Indices.length) / 3,
 			Nodes: nodes.length
 		};
+	},
+
+	/*
+	 * Its roots on the ground: from the foot of each trunk of a tree (not of a stalk nor of a bush lower than 3 m), four to
+	 * seven of them (more of a flared trunk), out from its flare along the ground, each thinner as it goes and into the
+	 * ground at its end: a tree stands on them, not stuck in like a stick. A palm a ring of short ones. Each a chain of its
+	 * own (Roots of the foot), drawn at every level; dead to its leaves (none at their tips).
+	 */
+	Roots: function (p, nodes, height, base, random) {
+		var self = this;
+		var feet;
+
+		if (p.Grow === 'stalks' || height < 3) return;
+
+		feet = nodes.map(function (node, index) {
+			return index;
+		}).filter(function (index) {
+			return nodes[index].Parent < 0 && nodes[index].Kids.length;
+		});
+
+		feet.forEach(function (foot) {
+			var at = nodes[foot].P;
+			var palm = p.Grow === 'palm';
+			var flare = palm ? 0.2 : p.Trunk.Flare;
+			var count = palm ? 7 : Math.round(4 + Math.min(3, flare * 4) + random() * 0.99);
+			var thick = base * (palm ? 0.25 : 0.5 + flare * 0.3) / Math.sqrt(count / 5);
+			var k;
+
+			nodes[foot].Roots = [];
+
+			for (k = 0; k < count; k++) {
+				var a = (k + 0.15 + random() * 0.7) / count * Math.PI * 2;
+				var long = base * (palm ? 1.2 + random() * 0.5 : (1.6 + random() * 1.8) * (0.7 + flare));
+				var bend = (random() - 0.5) * 0.6;
+				var chain = [foot];
+				var parent = foot;
+				var j;
+
+				for (j = 1; j <= 5; j++) {
+					var t = j / 5;
+					var way = a + bend * t;
+					/* Low along the ground, under it by more than its own thickness at its end: no tip to be seen. */
+					var out = base * 0.35 + long * t;
+					var up = base * 0.45 * Math.pow(1 - t, 1.5) - thick * 1.3 * t;
+					var root = self.Node(nodes, [at[0] + Math.cos(way) * out, at[1] + up, at[2] + Math.sin(way) * out], parent, {Dead: true, Root: true});
+
+					/* Not a child of what carries it: its pipes, its leaves and its chains go as they did. */
+					nodes[parent].Kids.pop();
+
+					nodes[root].R = thick * (1 - t * 0.65);
+
+					chain.push(root);
+
+					parent = root;
+				}
+
+				nodes[foot].Roots.push(chain);
+			}
+		});
 	},
 
 	Typed: function (geometry) {
@@ -673,6 +735,11 @@ Elemenx.Service('SceneFlora', {
 			chains(index).forEach(function (chain) {
 				if (chain.length > 1)
 					self.Tube(nodes, chain, out, height, ringed, sides);
+			});
+
+			/* Its roots at every level (see Roots). */
+			(node.Roots || []).forEach(function (chain) {
+				self.Tube(nodes, chain, out, height, false, sides);
 			});
 		});
 	},
@@ -730,12 +797,17 @@ Elemenx.Service('SceneFlora', {
 				out.UVs.push(s / sides, v);
 			}
 
+			/*
+			 * Its triangles turned out (counterclockwise seen from outside, as the normals of its rings look). Regression: they
+			 * went round the other way; a bark drawn of its front sides showed the inside of the far half of each trunk and
+			 * branch, as if seen from inside, flat as boards.
+			 */
 			if (k > 0) {
 				for (s = 0; s < sides; s++) {
 					var a0 = start + (k - 1) * (sides + 1) + s;
 					var b0 = start + k * (sides + 1) + s;
 
-					out.Indices.push(a0, b0, a0 + 1, a0 + 1, b0, b0 + 1);
+					out.Indices.push(a0, a0 + 1, b0, a0 + 1, b0 + 1, b0);
 				}
 			}
 		}
@@ -754,7 +826,7 @@ Elemenx.Service('SceneFlora', {
 		var stretch = 1 + hang * 1.6;
 		/* How far its crown goes from its middle: the leaves this far out are in the light. */
 		var reach = nodes.reduce(function (most, node) {
-			return node.Kids.length ? most : Math.max(most, Math.sqrt((node.P[0] - centre[0]) * (node.P[0] - centre[0]) + (node.P[1] - centre[1]) * (node.P[1] - centre[1]) * 0.49 + (node.P[2] - centre[2]) * (node.P[2] - centre[2])));
+			return node.Kids.length || node.Root ? most : Math.max(most, Math.sqrt((node.P[0] - centre[0]) * (node.P[0] - centre[0]) + (node.P[1] - centre[1]) * (node.P[1] - centre[1]) * 0.49 + (node.P[2] - centre[2]) * (node.P[2] - centre[2])));
 		}, 0) * 0.8;
 
 		nodes.forEach(function (node) {
@@ -814,8 +886,13 @@ Elemenx.Service('SceneFlora', {
 				out = Math.min(1, rl / Math.max(1e-6, reach));
 				n = [round[0] / rl * 0.75 + up[0] * 0.1, round[1] / rl * 0.75 + 0.25, round[2] / rl * 0.75 + up[2] * 0.1];
 
-				/* The deeper in, the likelier of the darker half of the atlas (a normal turned down is turned back up to the eye). */
-				if (random() > out * out)
+				/*
+				 * The deeper in, the likelier of the darker half of the atlas (a normal turned down is turned back up to the eye).
+				 * Its simpler levels (fewer, larger cards: keep under 1) darker as much as their crown is in its own shade near
+				 * (the cards of the first, many and small, hide each other from the sun in its shadow; larger ones stick out of
+				 * that). Regression: a tree between two levels was a hatch of light points over the darker one.
+				 */
+				if (random() > out * out * (keep < 1 ? 0.55 : 1))
 					v0 += 0.5;
 
 				rl = Math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]) || 1;

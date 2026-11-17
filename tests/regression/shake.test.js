@@ -28,7 +28,7 @@ describe('tools/shake.js', function () {
 		var result = Shake.Shake(source, "Elemenx.Component('Foo', {$Template: '<div></div>'});");
 		var names = sections(result.Source);
 
-		expect(result.Removed).toEqual(['Router', 'Network', 'Storage', 'Events', 'Messaging', 'WebWorker', 'ServiceWorker', 'Install', 'Splash']);
+		expect(result.Removed).toEqual(['Router', 'Network', 'Storage', 'Hardware', 'Events', 'Messaging', 'WebWorker', 'ServiceWorker', 'Install', 'Splash']);
 		expect(names).not.toContain('Network');
 		expect(names).not.toContain('ServiceWorker bootstrap');
 		expect(names).toContain('Application');
@@ -42,14 +42,14 @@ describe('tools/shake.js', function () {
 	it('finds the sections in a framework whose lines end in CRLF, as Git on Windows checks it out', function () {
 		var result = Shake.Shake(source.replace(/\n/g, '\r\n'), "Elemenx.Component('Foo', {$Template: '<div></div>'});");
 
-		expect(result.Removed).toEqual(['Router', 'Network', 'Storage', 'Events', 'Messaging', 'WebWorker', 'ServiceWorker', 'Install', 'Splash']);
+		expect(result.Removed).toEqual(['Router', 'Network', 'Storage', 'Hardware', 'Events', 'Messaging', 'WebWorker', 'ServiceWorker', 'Install', 'Splash']);
 		expect(result.Source).not.toContain('Elemenx.Network =');
 	});
 
 	it('keeps the groups a kept group needs', function () {
 		var result = Shake.Shake(source, "this.$Messaging.Send('foo', {});");
 
-		expect(result.Removed).toEqual(['Router', 'Network', 'Storage', 'WebWorker', 'ServiceWorker', 'Install', 'Splash']);
+		expect(result.Removed).toEqual(['Router', 'Network', 'Storage', 'Hardware', 'WebWorker', 'ServiceWorker', 'Install', 'Splash']);
 		expect(sections(result.Source)).toContain('Events');
 	});
 

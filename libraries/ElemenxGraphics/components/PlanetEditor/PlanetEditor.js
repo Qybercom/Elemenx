@@ -8,6 +8,11 @@
  * climate and biome are areas, mountains, rift and river lines; each press on the globe puts a point of it, a double
  * press or Enter ends it, Escape leaves it. Overlay is what is shown: relief, plates (their motions as arrows), wind (as
  * arrows), temperature, moisture or biomes. The panel beside sets the planet and the stroke selected; Delete removes it.
+ * Tool settlements and streams show the settlements and the rivers the planet makes (as a Scene and a bake make them, in
+ * workers) and change them, kept in its Places (ScenePlanet.PlacedTowns, PlacedRivers) and laid again over what it makes,
+ * so a rebake keeps them: a press selects a settlement (its kind in the panel), a drag moves it, a press where none is adds
+ * a village; a press on a river selects it, presses elsewhere draw one (Enter or a double press ends it, Flow in the
+ * panel); Delete removes what is selected.
  * Tool location picks the location of a point (SceneLocations: a cell of LocationSize km of its Grid, cube or hex), its outline marked: its kind
  * (generated or a model of a file), what is past its sides, passages to the locations beside; Open emits location with it.
  * Methods: Planet() (ScenePlanet.Make of it), View() and SetView({Yaw, Pitch, Zoom}), At(clientX, clientY) ({Latitude,
@@ -30,7 +35,7 @@ Elemenx.Component('PlanetEditor', {
 		Methods: ['Planet()', 'View()', 'SetView(view)', 'At(clientX, clientY)', 'Finish()', 'Cancel()', 'Remove(index)', 'Undo()', 'Redo()', 'Render()'],
 		Props: {
 			Value: 'The planet: the options of ScenePlanet.Make.',
-			Tool: {Options: ['look', 'land', 'sea', 'mountains', 'rift', 'river', 'climate', 'biome', 'raise', 'lower', 'flatten', 'smooth', 'rule', 'location'], Description: 'The tool in hand: a stroke of its Paint, a brush of its Edits (raise, lower, flatten, smooth: a drag paints along its path), a region of a rule of detail (rule), or a location.'},
+			Tool: {Options: ['look', 'land', 'sea', 'mountains', 'rift', 'river', 'climate', 'biome', 'raise', 'lower', 'flatten', 'smooth', 'rule', 'location', 'settlements', 'streams'], Description: 'The tool in hand: a stroke of its Paint, a brush of its Edits (raise, lower, flatten, smooth: a drag paints along its path), a region of a rule of detail (rule), a location, or the settlements and the rivers it makes (settlements, streams: changed in its Places).'},
 			Overlay: {Options: ['relief', 'plates', 'wind', 'temperature', 'moisture', 'biomes'], Description: 'What is shown of the planet.'},
 			Label: 'What it shows, for screen readers.'
 		}
@@ -43,6 +48,12 @@ Elemenx.Component('PlanetEditor', {
 
 	/* What the template renders. */
 	Selected: -1,
+	/* The settlement or the river selected (Tool settlements or streams): {Kind: town or river, Index (of the list with its Places)}, or null. */
+	PlaceSelected: null,
+	/* The flow a river drawn gets at its mouth (cells drained, as of its drainage). */
+	StreamFlow: 200,
+	/* What is being made of it for those tools: rivers, towns or nothing. */
+	Making: '',
 	/* The location picked (Tool location): the ID of its cell (SceneLocations), '' none. */
 	Place: '',
 	/* The side and the kind of the passage the panel adds (PassageAdded). */
@@ -64,7 +75,9 @@ Elemenx.Component('PlanetEditor', {
 		{ID: 'flatten', Key: 'graphics.planetEditor.tools.flatten'},
 		{ID: 'smooth', Key: 'graphics.planetEditor.tools.smooth'},
 		{ID: 'rule', Key: 'graphics.planetEditor.tools.rule'},
-		{ID: 'location', Key: 'graphics.planetEditor.tools.location'}
+		{ID: 'location', Key: 'graphics.planetEditor.tools.location'},
+		{ID: 'settlements', Key: 'graphics.planetEditor.tools.settlements'},
+		{ID: 'streams', Key: 'graphics.planetEditor.tools.streams'}
 	],
 	/* The rule of detail a region drawn with the tool rule gets; the rule whose graph is open under the view ('' none). */
 	RuleName: 'hills',
@@ -133,6 +146,7 @@ Elemenx.Component('PlanetEditor', {
 			own.Emitted = JSON.stringify(this.Value || null);
 			own.Key = '';
 			this.Selected = -1;
+			this.PlaceSelected = null;
 		}
 
 		if ('Value' in changed || 'Overlay' in changed) this.Render();
@@ -688,6 +702,55 @@ Elemenx.Component('PlanetEditor', {
 			}
 		}
 
+		/*
+		 * The rivers and the settlements, with their tools: each river as wide as it drains, each settlement as large as its kind;
+		 * the smaller ones as the view comes nearer (villages from a zoom of 4, towns of 1.6, rivers of less flow), so the globe
+		 * is not covered with them. What is selected or drawn is always shown.
+		 */
+		if (this.Placing()) {
+			var laid = this.Laid();
+			var moving = own.Drag && own.Drag.Town && own.Drag.Town.To ? own.Drag.Town : null;
+			var chosen = this.PlaceSelected || {};
+
+			(laid ? laid.Rivers : []).forEach(function (river, index) {
+				var flow = Math.max.apply(null, river.Flow.concat([0]));
+				var pieces = [];
+				var current = [];
+				var wide = (1 + Math.min(3, flow / 400)).toFixed(1);
+				var look = 'elemenx-planet-editor-course' + (river.Drawn ? ' drawn' : '') + (chosen.Kind === 'river' && chosen.Index === index ? ' selected' : '');
+
+				if (!river.Drawn && !(chosen.Kind === 'river' && chosen.Index === index) && flow < 400 / view.Zoom) return;
+
+				river.Points.forEach(function (point) {
+					var at = planets.Project(view, point);
+
+					if (at[2] > 0) {
+						current.push(at[0].toFixed(1) + ',' + at[1].toFixed(1));
+					}
+					else if (current.length) {
+						pieces.push(current);
+
+						current = [];
+					}
+				});
+
+				if (current.length)
+					pieces.push(current);
+
+				pieces.forEach(function (piece) {
+					if (piece.length > 1)
+						parts.push('<polyline class="' + look + '" data-river="' + index + '" stroke-width="' + wide + '" points="' + piece.join(' ') + '"></polyline>');
+				});
+			});
+
+			(laid ? laid.Towns : []).forEach(function (town, index) {
+				var at = planets.Project(view, moving && moving.Index === index ? moving.To : town.Point);
+				if (at[2] <= 0 || !(chosen.Kind === 'town' && chosen.Index === index) && (town.Kind === 'village' && view.Zoom < 4 || town.Kind === 'town' && view.Zoom < 1.6)) return;
+
+				parts.push('<circle class="elemenx-planet-editor-town ' + town.Kind + (chosen.Kind === 'town' && chosen.Index === index ? ' selected' : '') + '" data-town="' + index + '" cx="' + at[0].toFixed(1) + '" cy="' + at[1].toFixed(1) + '" r="' + (town.Kind === 'city' ? 6 : town.Kind === 'town' ? 4 : 2.5) + '"></circle>');
+			});
+		}
+
 		/* The locations told, and the one picked. */
 		Object.keys(options.Locations || {}).concat(this.Place && !(options.Locations || {})[this.Place] ? [this.Place] : []).forEach(function (id) {
 			var cell = self.$Service('SceneLocations').Cell(id);
@@ -699,6 +762,218 @@ Elemenx.Component('PlanetEditor', {
 		});
 
 		svg.innerHTML = parts.join('');
+	},
+
+	/*
+	 * The rivers and the settlements the planet makes, as a Scene and a bake make them: its rivers of its heights in workers
+	 * (Heights, Drainage), its settlements of them (Settlements), each once for the options they come of (the rivers of its
+	 * ground as it was made; the settlements of those with the rivers changed). null till both came; Making tells what is
+	 * being made.
+	 */
+	Made: function () {
+		var self = this;
+		var own = this.Own();
+		var planets = this.$Service('ScenePlanet');
+		var options = this.Reckoned();
+		var bare = Object.assign({}, options);
+		var made = own.Made = own.Made || {RiverKey: '', TownKey: '', Rivers: null, Towns: null, Pass: 0};
+		var riverKey;
+		var townKey;
+
+		delete bare.Places;
+
+		riverKey = JSON.stringify(bare);
+		townKey = riverKey + JSON.stringify(options.Places && options.Places.Rivers || []);
+
+		function making (what) {
+			if (self.Making === what) return;
+
+			self.Making = what;
+			self.Version++;
+		}
+
+		if (made.RiverKey !== riverKey) {
+			var pass = ++made.Pass;
+			var size = 256;
+			var heights = new Float32Array(6 * size * size);
+			var left = 24;
+			var face;
+			var row;
+
+			made.RiverKey = riverKey;
+			made.TownKey = '';
+			made.Rivers = null;
+			made.Towns = null;
+
+			making('rivers');
+
+			for (face = 0; face < 6; face++) {
+				for (row = 0; row < size; row += size / 4) {
+					(function (face, row) {
+						planets.Work().Run('ScenePlanet', 'Heights', [bare, face, size, row, size / 4], function (error, piece) {
+							if (pass !== made.Pass) return;
+
+							if (!error && piece && piece.Data)
+								heights.set(piece.Data, face * size * size + row * size);
+
+							if (--left) return;
+
+							planets.Work().Run('ScenePlanet', 'Drainage', [heights, size, 40], function (wrong, drained) {
+								if (pass !== made.Pass) return;
+
+								made.Rivers = wrong || !drained ? [] : drained.Rivers;
+
+								self.Made();
+								self.Mark();
+							});
+						});
+					})(face, row);
+				}
+			}
+
+			return null;
+		}
+
+		if (made.Rivers && made.TownKey !== townKey) {
+			var round = ++made.Pass;
+
+			/* Those of before are shown till the new ones came (a river changed: the places of its settlements made again). */
+			made.TownKey = townKey;
+
+			making('towns');
+
+			planets.Work().Run('ScenePlanet', 'Settlements', [Object.assign({}, bare, {Rivers: made.Rivers, Places: {Rivers: options.Places && options.Places.Rivers || []}}), 20000], function (error, placed) {
+				if (round !== made.Pass) return;
+
+				made.Towns = error || !placed ? [] : placed.Settlements;
+
+				making('');
+
+				self.Mark();
+			});
+
+			return made.Towns ? made : null;
+		}
+
+		return made.Rivers && made.Towns ? made : null;
+	},
+
+	/* The rivers and the settlements with what a developer changed of them laid over (Places): {Rivers, Towns}, null till made. */
+	Laid: function () {
+		var planets = this.$Service('ScenePlanet');
+		var made = this.Made();
+		var options = this.Options();
+
+		if (!made)
+			return null;
+
+		return {Rivers: planets.PlacedRivers(options, made.Rivers), Towns: planets.PlacedTowns(options, made.Towns)};
+	},
+
+	/* Whether the tool in hand works on the rivers and the settlements. */
+	Placing: function () {
+		return this.Tool === 'settlements' || this.Tool === 'streams';
+	},
+
+	/* The settlement within 9 pixels of a point of the view, or the river within 6 of it: {Kind: town or river, Index}, or null. */
+	PlaceAt: function (clientX, clientY) {
+		var planets = this.$Service('ScenePlanet');
+		var laid = this.Laid();
+		var view = this.View();
+		var box = this.$Ref('View').getBoundingClientRect();
+		var x = clientX - box.left;
+		var y = clientY - box.top;
+		var found = null;
+		var nearest = 9;
+		var chosen = this.PlaceSelected || {};
+
+		if (!laid)
+			return null;
+
+		if (this.Tool === 'settlements') {
+			laid.Towns.forEach(function (town, index) {
+				var at = planets.Project(view, town.Point);
+				var far = Math.hypot(at[0] - x, at[1] - y);
+				var shown = chosen.Kind === 'town' && chosen.Index === index || !(town.Kind === 'village' && view.Zoom < 4 || town.Kind === 'town' && view.Zoom < 1.6);
+
+				if (at[2] > 0 && shown && far < nearest) {
+					nearest = far;
+					found = {Kind: 'town', Index: index};
+				}
+			});
+
+			return found;
+		}
+
+		nearest = 6;
+
+		laid.Rivers.forEach(function (river, index) {
+			var k;
+
+			/* Only one shown (Mark): drawn, selected, or of flow enough for the view. */
+			if (!river.Drawn && !(chosen.Kind === 'river' && chosen.Index === index) && Math.max.apply(null, river.Flow.concat([0])) < 400 / view.Zoom) return;
+
+			for (k = 0; k + 1 < river.Points.length; k++) {
+				var a = planets.Project(view, river.Points[k]);
+				var b = planets.Project(view, river.Points[k + 1]);
+				var dx = b[0] - a[0];
+				var dy = b[1] - a[1];
+				var t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / (dx * dx + dy * dy || 1)));
+				var far = Math.hypot(a[0] + dx * t - x, a[1] + dy * t - y);
+
+				if (a[2] > 0 && b[2] > 0 && far < nearest) {
+					nearest = far;
+					found = {Kind: 'river', Index: index};
+				}
+			}
+		});
+
+		return found;
+	},
+
+	/* A change of the rivers or the settlements (list: Towns or Rivers), after the others (Places). */
+	Placed: function (list, change) {
+		var options = this.Options();
+
+		options.Places = Object.assign({}, options.Places || {});
+		options.Places[list] = (options.Places[list] || []).concat([change]);
+
+		this.Changed(options);
+	},
+
+	/* What the panel shows of the river or the settlement selected: {Kind, Of (village, town, city), Flow}, or null. */
+	PlaceOf: function () {
+		var laid = this.PlaceSelected ? this.Laid() : null;
+		var item = laid ? (this.PlaceSelected.Kind === 'town' ? laid.Towns : laid.Rivers)[this.PlaceSelected.Index] : null;
+		if (!item)
+			return null;
+
+		return this.PlaceSelected.Kind === 'town' ? {Kind: 'town', Of: item.Kind} : {Kind: 'river', Flow: Math.round(Math.max.apply(null, item.Flow.concat([0])))};
+	},
+
+	/* The settlement selected of another kind. */
+	PlaceKind: function (kind) {
+		var laid = this.Laid();
+		var town = laid && this.PlaceSelected && this.PlaceSelected.Kind === 'town' ? laid.Towns[this.PlaceSelected.Index] : null;
+		if (!town || town.Kind === kind) return;
+
+		this.Placed('Towns', {Op: 'kind', At: town.Point, Kind: kind});
+	},
+
+	/* The settlement or the river selected removed: by a point of it as it is now. */
+	PlaceRemoved: function () {
+		var laid = this.Laid();
+		var chosen = this.PlaceSelected;
+		var item = laid && chosen ? (chosen.Kind === 'town' ? laid.Towns : laid.Rivers)[chosen.Index] : null;
+		if (!item)
+			return false;
+
+		this.PlaceSelected = null;
+
+		if (chosen.Kind === 'town') this.Placed('Towns', {Op: 'remove', At: item.Point});
+		else this.Placed('Rivers', {Op: 'remove', At: item.Points[Math.floor(item.Points.length / 2)]});
+
+		return true;
 	},
 
 	/* The planet changed: emitted, its picture again. */
@@ -727,6 +1002,13 @@ Elemenx.Component('PlanetEditor', {
 		this.Cancel();
 
 		this.Tool = tool;
+		this.PlaceSelected = null;
+
+		/* Its rivers and settlements made for their tools, shown when they came. */
+		if (this.Placing())
+			this.Made();
+
+		this.Mark();
 	},
 
 	/* The choices of its lists (Select): what is shown over its globe; a list of names as choices. */
@@ -734,6 +1016,11 @@ Elemenx.Component('PlanetEditor', {
 		return this.Overlays.map(function (overlay) {
 			return {Value: overlay.ID, Label: Elemenx.Locale.Text(overlay.Key)};
 		});
+	},
+
+	/* The kinds a settlement may be, for the panel. */
+	TownKinds: function () {
+		return [{Value: 'village', Label: Elemenx.Locale.Text('graphics.planetEditor.places.kinds.village')}, {Value: 'town', Label: Elemenx.Locale.Text('graphics.planetEditor.places.kinds.town')}, {Value: 'city', Label: Elemenx.Locale.Text('graphics.planetEditor.places.kinds.city')}];
 	},
 
 	Listed: function (names) {
@@ -814,12 +1101,12 @@ Elemenx.Component('PlanetEditor', {
 	Actions: function () {
 		var list = [];
 
-		if (this.Tool !== 'look' && this.Tool !== 'location' && this.Brushes.indexOf(this.Tool) === -1) {
+		if (this.Tool !== 'look' && this.Tool !== 'location' && this.Tool !== 'settlements' && this.Brushes.indexOf(this.Tool) === -1) {
 			list.push({ID: 'done', Icon: 'check', Label: Elemenx.Locale.Text('graphics.viewActions.done')});
 			list.push({ID: 'cancel', Icon: 'close', Label: Elemenx.Locale.Text('graphics.viewActions.cancel')});
 		}
 
-		list.push({ID: 'delete', Icon: 'delete', Label: Elemenx.Locale.Text('graphics.viewActions.delete'), Disabled: this.Selected < 0, Danger: true});
+		list.push({ID: 'delete', Icon: 'delete', Label: Elemenx.Locale.Text('graphics.viewActions.delete'), Disabled: this.Selected < 0 && !this.PlaceSelected, Danger: true});
 		list.push({ID: 'undo', Icon: 'undo', Label: Elemenx.Locale.Text('graphics.viewActions.undo'), Disabled: !this.Own().Past.length});
 		list.push({ID: 'redo', Icon: 'redo', Label: Elemenx.Locale.Text('graphics.viewActions.redo'), Disabled: !this.Own().Future.length});
 
@@ -833,6 +1120,7 @@ Elemenx.Component('PlanetEditor', {
 		else if (id === 'redo') this.Redo();
 		else if (id === 'done') this.Finish();
 		else if (id === 'cancel') this.Cancel();
+		else if (id === 'delete' && this.PlaceSelected) this.PlaceRemoved();
 		else if (id === 'delete' && this.Selected >= 0) this.Remove(this.Selected);
 	},
 
@@ -872,6 +1160,14 @@ Elemenx.Component('PlanetEditor', {
 
 		if (event.button === 2) return;
 
+		/* A settlement under the press is carried by the drag (Tool settlements). */
+		if (this.Tool === 'settlements' && !own.Drag.Roll) {
+			under = this.PlaceAt(event.clientX, event.clientY);
+
+			if (under)
+				own.Drag.Town = {Index: under.Index, To: null};
+		}
+
 		/* A brush paints along the drag (the middle button or Alt turns the globe all the same). */
 		if (this.Brushes.indexOf(this.Tool) !== -1 && !own.Drag.Roll) {
 			under = this.At(event.clientX, event.clientY);
@@ -907,6 +1203,21 @@ Elemenx.Component('PlanetEditor', {
 			return;
 		}
 
+		if (drag && drag.Town) {
+			if (Math.abs(event.clientX - drag.X) + Math.abs(event.clientY - drag.Y) > 4)
+				drag.Moved = true;
+
+			under = drag.Moved ? this.At(event.clientX, event.clientY) : null;
+
+			if (under) {
+				drag.Town.To = this.Direction(under);
+
+				this.Mark();
+			}
+
+			return;
+		}
+
 		if (drag) {
 			if (Math.abs(event.clientX - drag.X) + Math.abs(event.clientY - drag.Y) > 4)
 				drag.Moved = true;
@@ -938,6 +1249,7 @@ Elemenx.Component('PlanetEditor', {
 		var own = this.Own();
 		var drag = own.Drag;
 		var under;
+		var laid;
 
 		own.Drag = null;
 
@@ -946,6 +1258,25 @@ Elemenx.Component('PlanetEditor', {
 		if (drag.Brush) {
 			this.Brushed(drag.Brush, event);
 			this.Painted(drag.Brush);
+
+			return;
+		}
+
+		/* A settlement carried: moved where it was let go (Places); pressed only, selected. */
+		if (drag.Town) {
+			this.PlaceSelected = {Kind: 'town', Index: drag.Town.Index};
+			this.Version++;
+
+			if (drag.Moved && drag.Town.To) {
+				laid = this.Laid();
+
+				if (laid && laid.Towns[drag.Town.Index])
+					this.Placed('Towns', {Op: 'move', At: laid.Towns[drag.Town.Index].Point, To: drag.Town.To});
+
+				return;
+			}
+
+			this.Mark();
 
 			return;
 		}
@@ -976,6 +1307,33 @@ Elemenx.Component('PlanetEditor', {
 			return;
 		}
 
+		/* A press where no settlement is: a village added there, selected. */
+		if (this.Tool === 'settlements') {
+			laid = this.Laid();
+
+			if (under && laid) {
+				this.PlaceSelected = {Kind: 'town', Index: laid.Towns.length};
+
+				this.Placed('Towns', {Op: 'add', Point: this.Direction(under), Kind: 'village', Size: 0.5});
+			}
+
+			return;
+		}
+
+		/* A river pressed before one is drawn: selected. */
+		if (this.Tool === 'streams' && !own.Draft.length) {
+			var hit = this.PlaceAt(event.clientX, event.clientY);
+
+			if (hit) {
+				this.PlaceSelected = hit;
+				this.Version++;
+
+				this.Mark();
+
+				return;
+			}
+		}
+
 		if (under) {
 			own.Draft.push([Math.round(under.Latitude * 1e4) / 1e4, Math.round(under.Longitude * 1e4) / 1e4]);
 
@@ -992,6 +1350,13 @@ Elemenx.Component('PlanetEditor', {
 
 		this.Moved();
 		this.Soon();
+	},
+
+	/* A point under the pointer as Places keep it: its direction, to a ten-millionth. */
+	Direction: function (under) {
+		return this.$Service('ScenePlanet').Direction(under.Latitude, under.Longitude).map(function (value) {
+			return Math.round(value * 1e7) / 1e7;
+		});
 	},
 
 	/* A point of the globe as a stroke keeps it: [latitude, longitude], to a ten-thousandth of a degree. */
@@ -1214,6 +1579,7 @@ Elemenx.Component('PlanetEditor', {
 
 		if (event.key === 'Enter') this.Finish();
 		else if (event.key === 'Escape') this.Cancel();
+		else if ((event.key === 'Delete' || event.key === 'Backspace') && this.PlaceSelected) this.PlaceRemoved();
 		else if ((event.key === 'Delete' || event.key === 'Backspace') && this.Selected >= 0) this.Remove(this.Selected);
 	},
 
@@ -1239,6 +1605,24 @@ Elemenx.Component('PlanetEditor', {
 			own.Draft = [];
 
 			this.Changed(options);
+
+			return true;
+		}
+
+		/* A river drawn (Tool streams): its course added to those it makes (Places), from its source to its mouth as drawn. */
+		if (this.Tool === 'streams') {
+			var laid = this.Laid();
+			var planets = this.$Service('ScenePlanet');
+			var points = own.Draft.map(function (point) {
+				return planets.Direction(point[0], point[1]).map(function (value) {
+					return Math.round(value * 1e7) / 1e7;
+				});
+			});
+
+			own.Draft = [];
+			this.PlaceSelected = laid ? {Kind: 'river', Index: laid.Rivers.length} : null;
+
+			this.Placed('Rivers', {Op: 'add', Points: points, Flow: Number(this.StreamFlow) || 200});
 
 			return true;
 		}

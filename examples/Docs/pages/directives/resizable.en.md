@@ -23,4 +23,5 @@
 
 ## Tests
 
-- [*resizable adds its handles, and the arrow keys on a handle resize the element within its bounds](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L139) — `tests/regression/library-directives.test.js`
+- [*resizable adds its handles, and the arrow keys on a handle resize the element within its bounds](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L140) — `tests/regression/library-directives.test.js`
+- [*resizable puts its handles inside the element: a panel that scrolls shows no scroll bar across, its handle stays at its side while it scrolls](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L168) — `tests/regression/library-directives.test.js`

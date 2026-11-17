@@ -1093,7 +1093,7 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-scene-landing`
 - `elemenx-scene-landing-hint`
 - `elemenx-scene-levels`
-- `elemenx-scene-loading`
+- `elemenx-scene-loading`: `own`
 - `elemenx-scene-lock`: `locked`, `off`
 - `elemenx-scene-screens`
 - `elemenx-scene-takeoff`
@@ -1601,6 +1601,7 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-planet-editor-arrow-tip`
 - `elemenx-planet-editor-canvas`
 - `elemenx-planet-editor-compass`
+- `elemenx-planet-editor-course`: `drawn`, `selected`
 - `elemenx-planet-editor-field`
 - `elemenx-planet-editor-globe`
 - `elemenx-planet-editor-graph`
@@ -1615,6 +1616,7 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-planet-editor-stroke`: `location`, `mountains`, `rift`, `river`, `rule`
 - `elemenx-planet-editor-title`
 - `elemenx-planet-editor-toolbar`
+- `elemenx-planet-editor-town`: `selected`
 - `elemenx-planet-editor-view`
 
 ## WorldEditor

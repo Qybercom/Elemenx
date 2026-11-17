@@ -9,7 +9,9 @@
  * Kinds of space: star (Star: Mass, Radius, Temperature, Luminosity, Color, Veil: how far from the disc, in its radii,
  * engines go in its light, 0 for not at all; Corona, Prominences, Flares: how much of each burns round it; Blueprint: its
  * look as a graph of the kind star run each frame, its Parameters given, LibraryStar() the one of the library),
- * cluster (Barycentre and Cluster: Type, Radius, Count, Seed: the swarm of its stars), planet (Orbit: Distance, Eccentricity,
+ * cluster (Barycentre and Cluster: Type, Radius, Count, Seed: the swarm of its stars), nebula (Nebula: Type, Subtype,
+ * Radius, Seed, Density, Glow, Colors; Blueprint: its look as a graph of the kind nebula, LibraryNebula() the one of the
+ * library; SceneNebula), planet (Orbit: Distance, Eccentricity,
  * Inclination, Node, Periapsis, Anomaly, Period; Body: Radius, Mass, Day, Tilt, Albedo; Surface: Type, Colors, Water,
  * Ocean, Ice, Clouds, Atmosphere, Seed), moon (a planet, small, one face to its planet), belt (Belt: Inner, Outer, Count,
  * Inclination, Colors), ring (Ring: Inner, Outer, Inclination, Colors), station and outpost (an Orbit in radii of what
@@ -73,9 +75,9 @@
  * wild its sea, 0 to 1.5: SceneWaves; wilder in the rain), SwellWay (degrees the wind drives it): a ground of noise,
  * SceneTerrainGenerator.Flat, in chunks finer near the eye, with its sea; the objects its World makes are in the scene
  * as Generated, made again with it and never saved), sun (Sun: its light from far), unit (Walker: Speed,
- * MaxSlope, Swim; a Model), tree, rock and house (Model, Blocks: what stands in the way). An object of it stands at
- * X and Y of the ground; Move(id, [x, y]) walks a walker round what cannot be walked, a right click sends the selected
- * one; the view turns round a point of the ground and the keys move it. Every model of the Models Service is a kind of
+ * MaxSlope, Swim; a Model; Patrol: points [x, z] or [x, z, y] it goes round for good), tree, rock and house (Model,
+ * Blocks: what stands in the way). An object of it stands at X and Y of the ground; Move(id, [x, y]) walks a walker round
+ * what cannot be walked, a right click sends the selected one; the view turns round a point of the ground and the keys move it. Every model of the Models Service is a kind of
  * the same name (knight, mech, wolf, oak, tower, reactor...), of the kind that fits it.
  *
  * The models stand in the light of their sun and cast shadows on each other and on the ground (Shadows); a Model plays
@@ -103,9 +105,12 @@
  * Surface(), Supported(). Save gives the recipe of a game (Seed, Cosmos, Weather, Time and what the methods changed:
  * Added, Removed, Overrides), made again by Load; Save({Baked: true}) every object as it is.
  *
- * What a scene waits for, its programs and models, comes behind the page and holds no frame up: Loader shows how far it
- * came, stage by stage (programs, models, globes, ground, plants), never back, a slot named loading takes the place of
- * the bar, and the event loading tells {Part (up to 100), Stage}. Behind the veil of its start nothing else shows; when
+ * What a scene waits for, its programs and models, comes behind the page and holds no frame up: all the programs it may
+ * draw are asked for when it starts (and when it is made ready again: a location, models came; engine.Warms of the
+ * traits), so none is made in the play. Loader shows how far it came with its percent, stage by stage (programs, models,
+ * the sky and the galaxy baked, globes, the surface near, ground, plants), each as much of the bar as it takes, never
+ * back and never an endless bar; a slot named loading takes the place of the bar (all of the scene), and the event
+ * loading tells {Part (up to 100), Stage, Stages}. A model asked for after it was shown makes it ready again (softly). Behind the veil of its start nothing else shows; when
  * all the view needs is made the picture comes up (0.8 s) and the event prepared ({First}) tells it, at the start and
  * each time a location came. The globes of planets painted are kept in the browser (IndexedDB) for the next time.
  * Preload(list, callback) makes ready beforehand what a scene will need: names of models, Worlds of grounds, planets.
@@ -127,7 +132,7 @@ Elemenx.Component('Scene', {
 			select: 'The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).',
 			focus: 'The view moved to an object: {ID}.',
 			person: 'V took the view of a walker to another place: third, first or shoulder.',
-			loading: 'What the scene waits for came a step nearer: {Part (up to 100, never back), Stage (programs, models, globes, ground, plants, view; empty when done)}.',
+			loading: 'What the scene waits for came a step nearer: {Part (up to 100, never back), Stage (programs, models, sky, galaxy, nebulae, rivers, globes, surface, ground, plants, view; empty when done), Stages ([{Name, Label, Done, Total}] of those it has)}.',
 			prepared: 'All the view needs is made and the veil goes: {First (the start of the scene, not a location that came)}.',
 			shoulder: 'B took the view over another shoulder: right or left.',
 			arrive: 'An object reached where it was sent: {ID, At}.',
@@ -158,7 +163,7 @@ Elemenx.Component('Scene', {
 			shader: 'A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}).'
 		},
-		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryStar()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'GalaxyData()', 'GalaxyView()', 'SetGalaxyView(view)', 'GalaxyStars()', 'GalaxyPicked()', 'GalaxyFocus(id)', 'EnterSystem(id, callback)', 'LeaveSystem(callback)', 'GalaxyEntered()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Phone()', 'Device()', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
+		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryStar()', 'LibraryNebula()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'GalaxyData()', 'GalaxyView()', 'SetGalaxyView(view)', 'GalaxyStars()', 'GalaxyPicked()', 'GalaxyFocus(id)', 'EnterSystem(id, callback)', 'LeaveSystem(callback)', 'GalaxyEntered()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Phone()', 'Device()', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
 		Props: {
 			Setting: {Options: ['space', 'terrain', 'galaxy'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers; galaxy: a galaxy of Galaxy, SceneGalaxy).'},
 			Galaxy: 'The galaxy of Setting galaxy (SceneGalaxy, GalaxyData): a key of GalaxyData.Use, the URL of its file, its data, or options of GalaxyData.Make ({Seed, Kind, Radius, Arms}).',
@@ -291,7 +296,6 @@ Elemenx.Component('Scene', {
 	Status: '',
 	Loader: true,
 	Loading: null,
-	LoadingEndless: false,
 	LoadingOwn: false,
 	Unsupported: false,
 	Dragging: false,
@@ -397,6 +401,10 @@ Elemenx.Component('Scene', {
 			'grove': {Traits: {Scatter: {Shapes: ['oak', 'birch', 'bush'], Density: 0.8, Cover: 0.45, Patch: 40, MaxSlope: 0.25}}},
 			'thicket': {Traits: {Scatter: {Shapes: ['bush', 'bush', 'mushroom', 'stump'], Density: 5, Cover: 0.5, Patch: 25, MaxSlope: 0.3, Size: [0.6, 1.2]}}},
 			'rocks': {Traits: {Scatter: {Shapes: ['rock', 'rock', 'boulder'], Density: 0.5, MinHeight: 0, MaxSlope: 0.8, Size: [0.5, 1.4]}}},
+			/* What a cave holds (Under: its roof or its floor): dripstones hanging and standing, stones fallen, crystals that glow. */
+			'dripstones': {Traits: {Scatter: {Shapes: ['stalactite'], Under: 'ceiling', Density: 7, Cover: 0.7, Patch: 14, Size: [0.5, 1.5], Blocks: false}}},
+			'cave-floor': {Traits: {Scatter: {Shapes: ['stalagmite', 'stalagmite', 'rock'], Under: 'floor', Density: 3, Cover: 0.6, Patch: 12, Size: [0.4, 1.2], Blocks: false}}},
+			'cave-crystals': {Traits: {Scatter: {Shapes: ['cave-crystal'], Under: 'floor', Density: 0.5, Cover: 0.35, Patch: 16, Size: [0.6, 1.3], Blocks: false}}},
 			'grass': {Traits: {Grass: {Density: 1, Height: 0.75, Color: '#7fae4a', Root: '#2f5a22', Clumps: 0, Patch: 24, Spread: 0.45}}},
 			'village': {Traits: {Settlement: {Houses: 8, Radius: 30}}}
 		};
@@ -430,7 +438,7 @@ Elemenx.Component('Scene', {
 			 * to tell one by one (Count) a swarm round it Radius light-years across, of its Seed (GalaxyData.Cluster).
 			 */
 			/* A cloud of gas and dust (SceneNebula): Type hii, planetary, remnant (Subtype Ia, II, Ib, Ic) or dark, Radius in light years. */
-			'nebula': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 0}), Nebula: {Type: 'hii', Subtype: '', Radius: 3, Seed: '', Density: 1, Glow: 1, Colors: ''}, Selectable: {}}},
+			'nebula': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 0}), Nebula: {Type: 'hii', Subtype: '', Radius: 3, Seed: '', Density: 1, Glow: 1, Colors: '', Blueprint: null, Parameters: null}, Selectable: {}}},
 			'cluster': {Traits: {Barycentre: {Mass: null, Members: null}, Cluster: {Type: 'open', Radius: 6, Count: 0, Seed: ''}}},
 			'blackhole': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 40}), BlackHole: {Mass: 10, Disk: true, Inner: 3, Outer: 14, Tilt: 12, Color: '', Brightness: 1}, Selectable: {}}},
 			'wormhole': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 12}), Wormhole: {Radius: 1, Cosmos: 'nebula', Star: '#ffd9a0', Leads: '', To: '', Tilt: 0}, Selectable: {}}},
@@ -544,6 +552,7 @@ Elemenx.Component('Scene', {
 			Order: [],
 			Roots: [],
 			Asked: {},
+			Broken: {},
 			Active: [],
 			Still: [],
 			Declared: [],
@@ -2395,6 +2404,9 @@ Elemenx.Component('Scene', {
 
 			if (base.Rivers === false || Array.isArray(base.Rivers) || typeof base.Rivers === 'string' || !renderer) return null;
 
+			/* Of its ground as it was made: what a developer changed of its rivers (Places) is laid over them when it is made (ScenePlanet). */
+			base = Object.assign({}, base);
+			delete base.Places;
 			key = riversKey(base);
 
 			if (held && held.Key === key) return held;
@@ -3383,6 +3395,103 @@ Elemenx.Component('Scene', {
 			}).concat([Math.min(0.62, veil * 1.8)]);
 		}
 
+		/*
+		 * How deep under the rock of a ground with a volume the eye is, 0 (under the sky) to 1 (deep in a cave), followed in a
+		 * second or so: of 14 rays from it through the density, 30 m long, those that come out under the sky (over the ground
+		 * there, in air). Asked every 8th frame. The eye takes in more of what is dim by it, and the haze of the sky is not in
+		 * a cave.
+		 */
+		function eyeDeep () {
+			var ground = scene.Ground;
+			var volume = ground && ground.Field && ground.Field.Volume;
+			var eye = scene.Eye;
+			var out = 0;
+			var weight = 0;
+
+			if (!volume) return 0;
+
+			ground.DeepFrame = (ground.DeepFrame || 0) + 1;
+
+			if (ground.DeepAt === undefined || ground.DeepFrame % 8 === 0) {
+				[[0, 1, 0], [0.7, 0.7, 0], [-0.7, 0.7, 0], [0, 0.7, 0.7], [0, 0.7, -0.7], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0.7, 0, 0.7], [-0.7, 0, 0.7], [0.7, 0, -0.7], [-0.7, 0, -0.7], [0, -1, 0]].forEach(function (way) {
+					var share = 1 + Math.max(0, way[1]);
+					var step;
+
+					weight += share;
+
+					for (step = 1.5; step <= 30; step += 1.5) {
+						var x = eye[0] + way[0] * step;
+						var y = eye[1] + way[1] * step;
+						var z = eye[2] + way[2] * step;
+						if (volume.Density(x, y, z) > 0) return;
+
+						if (y > volume.Ground(x, z) + 1) {
+							out += share;
+
+							return;
+						}
+					}
+				});
+
+				ground.DeepAt = 1 - out / weight;
+			}
+
+			ground.Deep = ground.Deep === undefined ? ground.DeepAt : ground.Deep + (ground.DeepAt - ground.Deep) * 0.05;
+
+			return ground.Deep;
+		}
+
+		/*
+		 * The daylight of a cave round the eye for what is not of the ground (models, what is sown, walkers): a box of 64 by 32
+		 * by 64 m in points 2 m apart (SceneTerrainGenerator.Daylight, made in a worker as the eye goes 16 m on), in the texture
+		 * of the probes, which it has no use for at a quality without them (Graphics().Probes 0): every program has it, and
+		 * none a unit more free. aroundLight takes no more of the sky there than comes; with the probes on they do it themselves.
+		 * Regression: the stones and dripstones deep in a cave were lit grey by the sky, as on the hill over it.
+		 */
+		function caveLight () {
+			var ground = scene.Ground;
+			var field = ground && ground.Field;
+			var cell = 2;
+			var count = [33, 17, 33];
+			var corner;
+			var key;
+
+			if (!field || !field.Volume || !field.Options || scene.Camera.Ortho || self.Graphics().Probes) return {uCaveOn: 0};
+
+			corner = [Math.round(scene.Eye[0] / 16) * 16 - 32, Math.round(scene.Eye[1] / 8) * 8 - 16, Math.round(scene.Eye[2] / 16) * 16 - 32];
+			key = 'cave:' + corner.join(':') + ':' + (ground.Dug || 0);
+
+			if (!field.Volume.Touches(corner[0], corner[2], corner[0] + 64, corner[2] + 64)) return {uCaveOn: 0};
+
+			ground.Caves = ground.Caves || {};
+
+			if (!ground.Caves[key] && !ground.Caves[key + ':asked']) {
+				ground.Caves[key + ':asked'] = true;
+
+				askPiece(ground, key, 'Daylight', corner.concat(count, [cell]), function (piece) {
+					var made = piece || terrain.Piece('Daylight', field.Options, null, corner.concat(count, [cell]));
+
+					/* Only the box the eye is in, and the one before it while that comes. */
+					Object.keys(ground.Caves).forEach(function (other) {
+						if (other.indexOf(':asked') === -1 && other !== ground.CaveNow) {
+							ground.Caves[other].Texture.Destroy();
+							delete ground.Caves[other];
+						}
+					});
+
+					ground.Caves[key] = {Corner: corner, Texture: renderer.Texture({Width: made.Width, Height: made.Height, Data: made.Data}, {Single: true})};
+					delete ground.Caves[key + ':asked'];
+				});
+			}
+
+			if (ground.Caves[key])
+				ground.CaveNow = key;
+
+			if (!ground.CaveNow || !ground.Caves[ground.CaveNow]) return {uCaveOn: 0};
+
+			return {uCaveOn: 1, uProbe: ground.Caves[ground.CaveNow].Texture, uCaveBox: vectors.Subtract(ground.Caves[ground.CaveNow].Corner, scene.Eye).concat([cell]), uCaveCount: count};
+		}
+
 		/* The layer of clouds over a ground: high over its hills, its noise as large as the land allows. */
 		function groundClouds () {
 			var ground = scene.Ground;
@@ -3467,6 +3576,10 @@ Elemenx.Component('Scene', {
 			/* The light of probes (SceneProbes), worked out with the lights of the frame: what each surface gets round it. */
 			if (scene.Ground && engine.ProbeLight)
 				Object.assign(shade, engine.ProbeLight(shade));
+
+			/* With none, the daylight of a cave round the eye in their texture. */
+			if (scene.Ground && !shade.uProbeOn)
+				Object.assign(shade, caveLight());
 
 			/* What burns on a ship lights it in space as well. */
 			if (!scene.Ground)
@@ -3853,8 +3966,11 @@ Elemenx.Component('Scene', {
 				common.uViewProjection = matrix;
 			}
 
+			/* How deep in a cave the eye is: asked each frame, so it follows. */
+			var deep = scene.Ground ? eyeDeep() : 0;
+
 			if (posted)
-				engine.PostEnd(scene.Ground ? {Matrix: matrix, Plain: plain, Eye: scene.Eye, Shade: shade, Under: scene.Ground.Under ? 1 : 0, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Night: scene.Ground.Night, Shimmer: engine.EffectHeat(matrix, width / Math.max(1, height)), Exposure: self.Exposure, Air: scene.Ground.AirTint, Veil: scene.Ground.Air.Fog * (scene.Ground.Air.Rain > 0.05 ? 1 : 0.6), Clouds: scene.Camera.Ortho ? null : groundClouds(), Glare: scene.Ground.Glare, AirLight: scene.Ground.AirLight, AirGlow: scene.Ground.Glow, AirGlowWay: scene.Ground.GlowWay, Fog: scene.Camera.Ortho ? 0 : (scene.Horizon ? 0.4 / 40000 : (scene.Ground.Field.Whole ? 0.12 : 0.4) / Math.max(scene.Ground.Field.Size, 300)) + scene.Ground.Air.Fog * 0.011, FogLow: scene.Camera.Ortho ? [0, 0, 0] : [Math.max(0, scene.Eye[1] - Math.max(0, scene.Ground.Field.Height(scene.Eye[0], scene.Eye[2]))), 1 / Math.max(6, scene.Ground.Field.Top * 0.2), scene.Ground.Air.Fog * 0.03], Sky: true, Reach: Math.max(1, scene.Distance * 0.05), Bokeh: lens().Bokeh, Focus: lens().Focus, Lens: lens().Lens} : Object.assign({Matrix: matrix, Plain: sky}, spaceSun(plain, camera), lens()));
+				engine.PostEnd(scene.Ground ? {Matrix: matrix, Plain: plain, Eye: scene.Eye, Shade: shade, Under: scene.Ground.Under ? 1 : 0, Deep: deep, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Night: scene.Ground.Night, Shimmer: engine.EffectHeat(matrix, width / Math.max(1, height)), Exposure: self.Exposure, Air: scene.Ground.AirTint, Veil: scene.Ground.Air.Fog * (scene.Ground.Air.Rain > 0.05 ? 1 : 0.6) * (1 - deep), Clouds: scene.Camera.Ortho ? null : groundClouds(), Glare: scene.Ground.Glare, AirLight: scene.Ground.AirLight * (1 - deep), AirGlow: scene.Ground.Glow, AirGlowWay: scene.Ground.GlowWay, Fog: scene.Camera.Ortho ? 0 : (scene.Horizon ? 0.4 / 40000 : (scene.Ground.Field.Whole ? 0.12 : 0.4) / Math.max(scene.Ground.Field.Size, 300)) + scene.Ground.Air.Fog * 0.011, FogLow: scene.Camera.Ortho ? [0, 0, 0] : [Math.max(0, scene.Eye[1] - Math.max(0, scene.Ground.Field.Height(scene.Eye[0], scene.Eye[2]))), 1 / Math.max(6, scene.Ground.Field.Top * 0.2), scene.Ground.Air.Fog * 0.03], Sky: true, Reach: Math.max(1, scene.Distance * 0.05), Bokeh: lens().Bokeh, Focus: lens().Focus, Lens: lens().Lens} : Object.assign({Matrix: matrix, Plain: sky}, spaceSun(plain, camera), lens()));
 		}
 
 		/* Where the mark of an object goes: its place, or (a fleet, a group with none of its own) the middle of its parts that have one. */
@@ -4468,17 +4584,32 @@ Elemenx.Component('Scene', {
 			return list.Still ? vectors.Subtract([0, 0, 0], scene.Eye) : [0, 0, 0];
 		}
 
+		/*
+		 * A model asked for: waited for by the loading. One asked for after the scene was shown (a location came, a model
+		 * was put in) prepares it again (softly: a veil only if it waits a while). Regression: it came with no bar, the
+		 * scene was told ready before it, and its programs were made in the play.
+		 */
+		function asked (name) {
+			scene.Asked[name] = true;
+
+			if (scene.WasPrepared && !scene.Preparing && engine.Prepare)
+				engine.Prepare(true);
+		}
+
 		/* A name of a model, or the name of a file of one: it is fetched the first time, and the scene is made again when it came. */
 		function known (name) {
 			if (/\.(glb|gltf)(\?|$)/i.test(name || '') && !library.Has(name))
 				library.Define(name, {URL: name});
 
 			if (library.Has(name) && !library.Ready(name) && !scene.Asked[name]) {
-				scene.Asked[name] = true;
+				asked(name);
 
 				library.Load(name, function (error) {
-					if (error)
+					if (error) {
+						scene.Broken[name] = true;
+
 						self.$Emit('error', error);
+					}
 
 					scene.Version++;
 				});
@@ -4521,11 +4652,14 @@ Elemenx.Component('Scene', {
 			if (library.Ready(styled)) return styled;
 
 			if (!scene.Asked[styled]) {
-				scene.Asked[styled] = true;
+				asked(styled);
 
 				library.Load(styled, function (error) {
-					if (error)
+					if (error) {
+						scene.Broken[styled] = true;
+
 						self.$Emit('error', error);
+					}
 
 					scene.Version++;
 				});
@@ -6392,6 +6526,8 @@ Elemenx.Component('Scene', {
 				if (touched)
 					node.Stale = true;
 
+				/* Whether it touches the volume, asked of the new field again. */
+				delete node.Volumed;
 			});
 
 			/* What was asked for the sketch before is let go when it comes: asked again of this one at once. */
@@ -6433,9 +6569,12 @@ Elemenx.Component('Scene', {
 			if (library.Ready(name)) return true;
 
 			if (!scene.Asked[name]) {
-				scene.Asked[name] = true;
+				asked(name);
 
-				library.Load(name);
+				library.Load(name, function (error) {
+					if (error)
+						scene.Broken[name] = true;
+				});
 			}
 
 			return false;
@@ -6672,6 +6811,19 @@ Elemenx.Component('Scene', {
 				return;
 			}
 
+			var patrol = object.Values.Patrol;
+
+			/*
+			 * Patrol: a walker goes round its points ([x, z] or [x, z, y]: y the floor, in a cave) one after another for good,
+			 * each by its way over and under the ground; one it finds no way to is left for the next, tried again 10 s on.
+			 */
+			if (Array.isArray(patrol) && patrol.length > 1 && !scene.Ways[object.ID] && object.World && trait(object, 'Walker') && scene.Hero !== object.ID && !(scene.Seconds < (object.PatrolNext || 0))) {
+				object.PatrolAt = ((object.PatrolAt === undefined ? -1 : object.PatrolAt) + 1) % patrol.length;
+
+				if (!walk(object.ID, patrol[object.PatrolAt].map(Number)))
+					object.PatrolNext = scene.Seconds + 10;
+			}
+
 			var way = scene.Ways[object.ID];
 			var x = number(object.Values.X, 0);
 			var z = number(object.Values.Y, 0);
@@ -6768,7 +6920,12 @@ Elemenx.Component('Scene', {
 
 			if (!object || !walker || !field || !object.World) return false;
 
-			points = field.Path({X: object.World[0], Z: object.World[2], Y: object.World[1] - (object.Lifted || 0)}, target, {MaxSlope: number(walker.MaxSlope, 0.45), Step: field.Size / 160, Blocked: function (x, z) {
+			/*
+			 * Its grid as fine as the way is short, a fiftieth of it (0.75 m at least, a 160th of the ground at most). Regression:
+			 * of the ground alone, on one of 3 km a cell was 19 m, no way into a cave of 5 m was ever found, and looking for it
+			 * over all the map held the page.
+			 */
+			points = field.Path({X: object.World[0], Z: object.World[2], Y: object.World[1] - (object.Lifted || 0)}, target, {MaxSlope: number(walker.MaxSlope, 0.45), Step: Math.max(0.75, Math.min(field.Size / 160, Math.hypot(target.X - object.World[0], target.Z - object.World[2]) / 50)), Blocked: function (x, z) {
 				return blocked(x, z, object);
 			}});
 
@@ -7577,9 +7734,14 @@ Elemenx.Component('Scene', {
 				 */
 				/*
 				 * And what touches the volume of the ground (a tunnel, a cave) near the eye, till its grid is of a metre: only that
-				 * fine is it made of the volume (SceneTerrainGenerator, Chunk), its roof and floor whole.
+				 * fine is it made of the volume (SceneTerrainGenerator, Chunk), its roof and floor whole. Never finer: Regression: by
+				 * its Error a square of a cave went on to half a metre beside one of a metre, their surfaces met at other points,
+				 * and the sky was seen through the slit between them in the walls of the cave.
 				 */
-				if (level < 8 && (near < size * 0.35 && level < 6 || near < size * 4 && (node.Error || 0) / Math.max(near, 1) * focal > 1.5 || size / 32 > 1 && near < size * 6 && field.Volume && field.Volume.Touches(x - half, z - half, x + half, z + half))) {
+				if (node.Volumed === undefined)
+					node.Volumed = !!(field.Volume && field.Volume.Touches(x - half, z - half, x + half, z + half));
+
+				if (level < 8 && (!node.Volumed || size / 32 > 1) && (near < size * 0.35 && level < 6 || near < size * 4 && (node.Error || 0) / Math.max(near, 1) * focal > 1.5 || node.Volumed && near < size * 6)) {
 					absent = parts.filter(function (part) {
 						return !ground.Nodes[keyOf(part[0], part[1], level + 1)];
 					});
@@ -7934,28 +8096,74 @@ Elemenx.Component('Scene', {
 
 		/*
 		 * The shadows of the two nearest lamps: a wide view down from each, one of them made new each frame. All that casts a
-		 * shadow of the sun casts one of a lamp.
+		 * shadow of the sun casts one of a lamp. A lamp of all round (no Spot) under the rock of a ground with a volume (a cave,
+		 * a tunnel) sees all round: the six faces of a cube from it, side by side in one map (3 by 2 of a third of it each,
+		 * the faces of +x, -x, +y, -y, +z and -z), so it lights no other way through the rock beside.
 		 */
 		var lampMaps = [];
+
+		/* The faces of a cube round a lamp: the way each looks, and its up (the shader of the land takes them in this order). */
+		var cubeFaces = [[[1, 0, 0], [0, 1, 0]], [[-1, 0, 0], [0, 1, 0]], [[0, 1, 0], [0, 0, 1]], [[0, -1, 0], [0, 0, -1]], [[0, 0, 1], [0, 1, 0]], [[0, 0, -1], [0, 1, 0]]];
+
+		/* Whether a lamp is under rock: some of it over it within 12 m. */
+		function underRock (lamp) {
+			var volume = scene.Ground && scene.Ground.Field && scene.Ground.Field.Volume;
+			var up;
+
+			if (!volume || number(lamp.Settings.Spot, 0)) return false;
+
+			for (up = 2; up <= 12; up += 2) {
+				if (volume.Density(lamp.At[0], lamp.At[1] + up, lamp.At[2]) > 0) return true;
+			}
+
+			return false;
+		}
 
 		function lampShadows () {
 			var which = scene.LampTurn = ((scene.LampTurn || 0) + 1) % 2;
 			var lamp = scene.Lamps[which];
 			var lit = self.Graphics().Lamps;
-
-			/* A lamp a body carries is inside its shape, as one built into a model is: it has no shadow of its own. */
-			if (lamp && (lamp.Built || lamp.Object.Values.Follow || lamp.Settings.Follow))
+			/*
+			 * A lamp a body carries is inside its shape, as one built into a model is: it has no shadow of its own. Under rock
+			 * one carried has (Regression: a lantern carried in a cave lit the next passage through the rock); it is held over
+			 * the body that carries it (Height), so that body only casts its shadow down.
+			 */
+			var omni = !!lamp && !lamp.Built && underRock(lamp);
+			if (lamp && (lamp.Built || (lamp.Object.Values.Follow || lamp.Settings.Follow) && !omni))
 				lamp = null;
 
 			var at;
 			var way;
 			var matrix;
+			var far;
+			var side;
 
 			lampMaps = lampMaps.slice(0, Math.min(lit ? 2 : 0, scene.Lamps.length));
 
 			if (!lit || !lamp || !scene.Casters) return;
 
 			at = vectors.Subtract(lamp.At, scene.Eye);
+
+			if (omni) {
+				far = number(lamp.Settings.Radius, 14) * 1.2;
+				gpu.Omni = gpu.Omni || [renderer.Shadow(1536), renderer.Shadow(1536)];
+				side = gpu.Omni[which].Size / 3;
+
+				cubeFaces.forEach(function (face, index) {
+					var region = [index % 3 * side, Math.floor(index / 3) * side, side, side];
+
+					gpu.Omni[which].Begin(region);
+
+					scene.Casters(math.Multiply(math.Perspective(90, 1, 0.1, far), math.LookAt(at, vectors.Add(at, face[0]), face[1])));
+
+					gpu.Omni[which].End();
+				});
+
+				lampMaps[which] = {Map: gpu.Omni[which], Matrix: math.Identity(), Omni: far};
+
+				return;
+			}
+
 			way = vectors.Normalize(lamp.Settings.Aim || [0, -1, 0]);
 			matrix = math.Multiply(math.Perspective(number(lamp.Settings.Spot, 0) || 150, 1, 0.1, number(lamp.Settings.Radius, 14) * 1.2), math.LookAt(at, vectors.Add(at, way), Math.abs(way[1]) > 0.9 ? [0, 0, 1] : [0, 1, 0]));
 
@@ -8013,7 +8221,7 @@ Elemenx.Component('Scene', {
 
 				lamp.Color = color.slice(0, 3);
 
-				data.push(at[0], at[1], at[2], number(settings.Radius, 14), color[0] * power, color[1] * power, color[2] * power, index < 2 && lampMaps[index] ? 1 : 0, aim[0], aim[1], aim[2], spot ? Math.cos(spot * Math.PI / 360) : -2);
+				data.push(at[0], at[1], at[2], number(settings.Radius, 14), color[0] * power, color[1] * power, color[2] * power, index < 2 && lampMaps[index] ? lampMaps[index].Omni ? 1 + lampMaps[index].Omni : 1 : 0, aim[0], aim[1], aim[2], spot ? Math.cos(spot * Math.PI / 360) : -2);
 			});
 
 			while (data.length < 288)
@@ -9491,6 +9699,7 @@ Elemenx.Component('Scene', {
 			node.Lands = picture.Biomes && lands ? renderer.Texture({Width: picture.Size, Height: picture.Size, Data: landsOf(picture, lands)}, {Single: true, Nearest: true}) : null;
 			node.Relief = renderer.Texture({Width: picture.Size, Height: picture.Size, Data: picture.Normal}, {Mipmaps: true});
 			node.Uses = picture.Use ? renderer.Texture({Width: picture.Size, Height: picture.Size, Data: picture.Use}, {Mipmaps: true}) : null;
+			node.Snows = picture.Snow ? renderer.Texture({Width: picture.Size, Height: picture.Size, Data: picture.Snow}, {Single: true, Mipmaps: true}) : null;
 			node.Texels = picture.Size;
 
 			if (square) {
@@ -9559,12 +9768,13 @@ Elemenx.Component('Scene', {
 		 * The materials of the near ground of a planet, as the ground of a location of each of its biomes is made: what each
 		 * biome's ground is of (its Low, High, Rock and Sand, else those of every ground, SceneTerrainGenerator), all of them
 		 * the slots of one program (12 at most); Slots, four of them for each of its first 15 lands (the 16th: the ground of
-		 * none); Lands, their names. Made once for a field.
+		 * none); Snows, the slot of the snow of each; Lands, their names. Made once for a field.
 		 */
 		function nearMaterials (field) {
 			var defaults = self.$Service('SceneTerrainGenerator').GroundMaterials || {};
 			var names = [];
 			var slots = new Array(64).fill(0);
+			var snows = new Array(16).fill(0);
 			var canopy = new Array(48).fill(0);
 			var lands = field.Planet.Lands || [];
 			var flora = self.$Service('SceneFlora');
@@ -9585,6 +9795,9 @@ Elemenx.Component('Scene', {
 				['Low', 'High', 'Rock', 'Sand'].forEach(function (part, k) {
 					slots[index * 4 + k] = slot(own[part] || defaults[part]);
 				});
+
+				/* Its snow: where its picture says snow lies (Snow of PatchPicture). */
+				snows[index] = slot(own.Snow || defaults.Snow);
 			}
 
 			/*
@@ -9620,7 +9833,7 @@ Elemenx.Component('Scene', {
 				canopyOf(land, index);
 			});
 
-			field.NearGround = {Names: names, Slots: slots, Canopy: canopy, Lands: lands.map(function (land) {
+			field.NearGround = {Names: names, Slots: slots, Snows: snows, Canopy: canopy, Lands: lands.map(function (land) {
 				return land.Name;
 			}), Key: names.join(',')};
 
@@ -9653,7 +9866,7 @@ Elemenx.Component('Scene', {
 			if (!array || !programReady(program))
 				return {Program: gpu.Ground, Values: laid};
 
-			return {Program: program, Values: Object.assign(laid, {uTextured: 1, uLandColor: array.Color, uLandSurface: array.Surface, uLandSlots: near.Slots, uLandCanopy: near.Canopy, uCanopy: [engine.TreesReach - 0.3, engine.TreesReach]})};
+			return {Program: program, Values: Object.assign(laid, {uTextured: 1, uLandColor: array.Color, uLandSurface: array.Surface, uLandSlots: near.Slots, uLandSnow: near.Snows, uLandCanopy: near.Canopy, uCanopy: [engine.TreesReach - 0.3, engine.TreesReach]})};
 		}
 
 		/*
@@ -9666,7 +9879,7 @@ Elemenx.Component('Scene', {
 		function nearGroundSource (names) {
 			var materials = self.$Service('SceneMaterials');
 			var land = materials.Land(names).replace('precision highp sampler2DArray;\n' + self.$Service('SceneTextures').Chunk(true) + '\n', '').replace('\tlandSlope = landSteeper(place);\n', '');
-			var source = shaders.Ground.replace(materials.LandSlope + '\n' + materials.LandTexture, [materials.Helpers, 'vec4 vMaterials;', 'vec4 vMaterials2;', 'vec4 vMaterials3;', 'uniform sampler2D uLandsMap;', 'uniform vec4 uLandSlots[16];', 'uniform vec2 uCanopy;', 'uniform vec3 uLandCanopy[16];', land].join('\n'));
+			var source = shaders.Ground.replace(materials.LandSlope + '\n' + materials.LandTexture, [materials.Helpers, 'vec4 vMaterials;', 'vec4 vMaterials2;', 'vec4 vMaterials3;', 'uniform sampler2D uLandsMap;', 'uniform vec4 uLandSlots[16];', 'uniform float uLandSnow[16];', 'uniform vec2 uCanopy;', 'uniform vec3 uLandCanopy[16];', land].join('\n'));
 			var from = source.indexOf('\tif (uTextured > 0.5) {\n\t\tlandSlope = normalize(');
 			var end = '\t\talbedo = mix(albedo, laid / max(total, 1e-4), clamp(total, 0.0, 1.0));\n\t}\n';
 			var to = source.indexOf(end, from) + end.length;
@@ -9675,8 +9888,6 @@ Elemenx.Component('Scene', {
 				'\tif (uTextured > 0.5) {',
 				'\t\tlandSlope = normalize(vec3(dot(smoothed, uEast), dot(smoothed, uUp), dot(smoothed, uNorth)));',
 				'\t\tfloat metres = vLand.x * 1000.0;',
-				'\t\tint biome = uTiled > 0.5 ? int(texture(uLandsMap, vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels + aside * 1.1 / uTexels).r * 255.0 + 0.5) : 255;',
-				'\t\tvec4 slots = uLandSlots[min(biome, 15)];',
 				'\t\tfloat w[12];',
 				'\t\tfor (int k = 0; k < 12; k++) w[k] = 0.0;',
 				/* Under its woods the ground of a wood: its high ground's (soil), no lawn under the trees. */
@@ -9684,10 +9895,32 @@ Elemenx.Component('Scene', {
 				'\t\tfloat steep = 1.0 - smoothstep(0.91, 0.98, landSlope.y);',
 				'\t\tfloat sandy = 1.0 - smoothstep(0.6, 2.5, metres);',
 				'\t\tfloat lush = (1.0 - steep) * (1.0 - sandy);',
-				'\t\tw[int(slots.x)] += (1.0 - part) * lush;',
-				'\t\tw[int(slots.y)] += part * lush;',
-				'\t\tw[int(slots.z)] += steep * (1.0 - sandy);',
-				'\t\tw[int(slots.w)] += sandy;',
+				/* Its snow over them (of its picture), the snow of each biome; less on what is steep, its rock through it. */
+				'\t\tfloat white = snow * (1.0 - steep * 0.7) * (1.0 - sandy);',
+				'\t\tfloat bare = 1.0 - white;',
+				/*
+				 * The biomes of the four texels round it, each by its share (as its colors are read, ragged): the materials of
+				 * the one go over into those of the next. Regression: of the nearest texel only, a land whose biome changes with
+				 * its height from texel to texel (hills about a bound) was a chessboard of squares of two grounds.
+				 */
+				'\t\tvec2 lg = pictureSoft * uTexels - 0.5;',
+				'\t\tvec2 lf = fract(lg);',
+				'\t\tivec2 l0 = ivec2(floor(lg));',
+				'\t\tivec2 lmax = ivec2(max(int(uTexels + 0.5) - 1, 0));',
+				'\t\tint nearest = (lf.x > 0.5 ? 1 : 0) + (lf.y > 0.5 ? 2 : 0);',
+				'\t\tint biome = 255;',
+				'\t\tfor (int c = 0; c < 4; c++) {',
+				'\t\t\tivec2 o = ivec2(c - (c / 2) * 2, c / 2);',
+				'\t\t\tfloat cw = (o.x == 1 ? lf.x : 1.0 - lf.x) * (o.y == 1 ? lf.y : 1.0 - lf.y);',
+				'\t\t\tint b = uTiled > 0.5 ? int(texelFetch(uLandsMap, clamp(l0 + o, ivec2(0), lmax), 0).r * 255.0 + 0.5) : 255;',
+				'\t\t\tif (c == nearest) biome = b;',
+				'\t\t\tvec4 slots = uLandSlots[min(b, 15)];',
+				'\t\t\tw[int(slots.x)] += (1.0 - part) * lush * cw * bare;',
+				'\t\t\tw[int(slots.y)] += part * lush * cw * bare;',
+				'\t\t\tw[int(slots.z)] += steep * (1.0 - sandy) * cw * bare;',
+				'\t\t\tw[int(slots.w)] += sandy * cw;',
+				'\t\t\tw[int(uLandSnow[min(b, 15)])] += white * cw;',
+				'\t\t}',
 				'\t\tfloat dry = 1.0 - water;',
 				'\t\tvMaterials = vec4(w[0], w[1], w[2], w[3]) * dry;',
 				'\t\tvMaterials2 = vec4(w[4], w[5], w[6], w[7]) * dry;',
@@ -9695,7 +9928,13 @@ Elemenx.Component('Scene', {
 				'\t\tvec3 made = albedo;',
 				'\t\tfloat height = 0.0;',
 				'\t\tlandMaterials(local, length(fwidth(local.xz)), made, height);',
-				'\t\talbedo = mix(albedo, made, 1.0 - smoothstep(30.0, 120.0, foot * 1000.0));',
+				'\t\tfloat madeSeen = 1.0 - smoothstep(30.0, 120.0, foot * 1000.0);',
+				'\t\talbedo = mix(albedo, made, madeSeen);',
+				/*
+				 * Its relief as a location bends its light by it (the height of its materials: grains, clods, ripples, stones).
+				 * Regression: its height was left out, sand, clay and soil near were flat paint under any light.
+				 */
+				'\t\tn = normalize(mix(n, enx_bump(vWorld * 1000.0, n, height), madeSeen));',
 				/*
 				 * Its woods past where their trees are drawn (uCanopy: km, from and to, they come in): their crowns from over them,
 				 * as thick as the trees nearer stand (each a cell of a few metres, there by its chance as its share of woods
@@ -9713,8 +9952,13 @@ Elemenx.Component('Scene', {
 				'\t\t\tvec3 base = leafy.g > 0.0 ? leafy * vec3(2.2, 1.45, 2.1) : albedo;',
 				'\t\t\tfloat thick = min(1.0, cover * 1.6);',
 				'\t\t\tvec4 crown = enx_mc(local.xz / 7.5, 0.85);',
-				'\t\t\tfloat seenCrowns = 1.0 - smoothstep(1.5, 4.5, foot * 1000.0);',
-				'\t\t\tfloat there = step(crown.z, thick) * (1.0 - smoothstep(0.55, 0.8, crown.x));',
+				/*
+				 * Each crown and the gap round it as long as a crown is over five pixels, its edge as wide as a pixel and a half:
+				 * no crowns of three pixels with hard gaps, a grain over the woods.
+				 */
+				'\t\t\tfloat seenCrowns = 1.0 - smoothstep(0.8, 1.8, foot * 1000.0);',
+				'\t\t\tfloat crownEdge = foot * 1000.0 / 7.5 * 1.5;',
+				'\t\t\tfloat there = step(crown.z, thick) * (1.0 - smoothstep(0.55 - crownEdge, 0.8 + crownEdge, crown.x));',
 				'\t\t\tvec3 leaves = base * (0.85 + 0.3 * crown.w) * (1.15 - crown.x * 0.6);',
 				'\t\t\tvec3 crowned = mix(albedo * mix(1.0, 0.55, thick), leaves, there);',
 				'\t\t\talbedo = mix(albedo, mix(mix(albedo, base * 0.9, thick), crowned, seenCrowns), canopy);',
@@ -9735,11 +9979,11 @@ Elemenx.Component('Scene', {
 			if (!gpu.NoLands)
 				gpu.NoLands = renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([255])}, {Single: true, Nearest: true});
 
-			return {uLandsMap: node.Lands || gpu.NoLands, uTiled: node.Colors ? 1 : 0, uColorMap: node.Colors || gpu.NoBounce, uReliefMap: node.Relief || gpu.NoBounce, uTexels: node.Texels || 2, uWoods: scene.Tuned && scene.Tuned.Woods === false ? 0 : 1, uDwelt: dwelt ? 1 : 0, uUseMap: node.Uses || gpu.NoUse, uSquare: dwelt ? node.Square : [0, 0, 1, 0], uSquareCell: dwelt ? node.Cell : [0, 0]};
+			return {uLandsMap: node.Lands || gpu.NoLands, uTiled: node.Colors ? 1 : 0, uColorMap: node.Colors || gpu.NoBounce, uReliefMap: node.Relief || gpu.NoBounce, uTexels: node.Texels || 2, uWoods: scene.Tuned && scene.Tuned.Woods === false ? 0 : 1, uDwelt: dwelt ? 1 : 0, uUseMap: node.Uses || gpu.NoUse, uSnowMap: node.Snows || gpu.NoUse, uEdges: node.Edges || [0, 0, 0, 0], uSquare: dwelt ? node.Square : [0, 0, 1, 0], uSquareCell: dwelt ? node.Cell : [0, 0]};
 		}
 
 		function unpictured (node) {
-			['Colors', 'Relief', 'Uses', 'Lands'].forEach(function (name) {
+			['Colors', 'Relief', 'Uses', 'Lands', 'Snows'].forEach(function (name) {
 				if (node[name])
 					node[name].Destroy();
 
@@ -9795,7 +10039,12 @@ Elemenx.Component('Scene', {
 			east = vectors.Normalize(vectors.Cross(Math.abs(up[1]) > 0.99 ? [1, 0, 0] : [0, 1, 0], up));
 			across = vectors.Cross(east, up);
 
-			surface.PlantFrame = {Anchor: surface.Eye.slice(), X: east, Y: up, Z: across, ID: (frame ? frame.ID : 0) + 1, Matrix: [east[0] * 0.001, east[1] * 0.001, east[2] * 0.001, 0, up[0] * 0.001, up[1] * 0.001, up[2] * 0.001, 0, across[0] * 0.001, across[1] * 0.001, across[2] * 0.001, 0, 0, 0, 0, 1]};
+			/*
+			 * Its number of the scene, not of the surface. Regression: a surface made again (a landing anywhere) began its frames
+			 * at 1 again, the keys of what was made in the frame of the last were the same, and its grass stood where it was.
+			 */
+			scene.PlantFrames = (scene.PlantFrames || 0) + 1;
+			surface.PlantFrame = {Anchor: surface.Eye.slice(), X: east, Y: up, Z: across, ID: scene.PlantFrames, Matrix: [east[0] * 0.001, east[1] * 0.001, east[2] * 0.001, 0, up[0] * 0.001, up[1] * 0.001, up[2] * 0.001, 0, across[0] * 0.001, across[1] * 0.001, across[2] * 0.001, 0, 0, 0, 0, 1]};
 
 			return surface.PlantFrame;
 		}
@@ -9844,6 +10093,283 @@ Elemenx.Component('Scene', {
 		}
 
 		/*
+		 * The ground of a planet round the eye in the frame of the plants (512 m a side, 128 texels, its middle where the eye
+		 * was, made again once the eye is 100 m from it; a few rows a frame, the last made kept meanwhile): the height of the
+		 * ground (metres of the frame) and how much grass, of the lands there (their Grass, SceneBiomes) and their cold;
+		 * Grass, the rule of the grass of the land under the eye; Under, its undergrowth (the things of the rules of its
+		 * lands no higher than 4 m: bushes, ferns, stumps, stones) within 200 m, a square of SceneScatter. Null till made.
+		 */
+		function nearField (surface, frame) {
+			var field = surface.Field;
+			var planet = field.Planet;
+			var lands = planet.Lands || [];
+			var registry = self.$Service('SceneBiomes');
+			var side = 128;
+			var size = 512;
+			var coarse = 32;
+			var eye = inFrame(frame, surface.Eye);
+			var made = surface.NearField;
+			var started = window.performance.now();
+			var radius = field.Radius;
+			var i;
+
+			function landOf (name) {
+				for (var k = 0; k < lands.length; k++) {
+					if (lands[k].Name === name) return k;
+				}
+
+				return -1;
+			}
+
+			function grassOf (index) {
+				var land = lands[index];
+				var known = land ? registry.Get(land.Name) : null;
+
+				/*
+				 * The rule of its own if it has one, else its land's of SceneBiomes (a land of a planet tells only that it has
+				 * grass, true). Regression: true taken for the rule, every land had the grass of none: thick and green in a semidesert.
+				 */
+				if (!land || land.Grass === false) return null;
+
+				return land.Grass && typeof land.Grass === 'object' ? land.Grass : known && known.Grass || null;
+			}
+
+			/* The square of a face a direction is on and where on it ([face, u, v]: its inverse of SceneTerrainGenerator.Face). */
+			function faceAt (d) {
+				var ax = Math.abs(d[0]);
+				var ay = Math.abs(d[1]);
+				var az = Math.abs(d[2]);
+				if (ax >= ay && ax >= az)
+					return d[0] > 0 ? [0, -d[2] / ax, -d[1] / ax] : [1, d[2] / ax, -d[1] / ax];
+
+				if (ay >= az)
+					return d[1] > 0 ? [2, d[0] / ay, d[2] / ay] : [3, d[0] / ay, -d[2] / ay];
+
+				return d[2] > 0 ? [4, d[0] / az, -d[1] / az] : [5, -d[0] / az, -d[1] / az];
+			}
+
+			/* A corner of the grid of a square as its mesh has it (SceneTerrainGenerator.SpherePatch): a point of the body (km). */
+			function corner (face, u, v) {
+				var key = face + ':' + u.toFixed(9) + ':' + v.toFixed(9);
+				var d;
+
+				/* Each once a field (texels beside each other share them). */
+				if (made.Corners[key])
+					return made.Corners[key];
+
+				d = vectors.Normalize(terrain.Face(face, u, v));
+				made.Corners[key] = vectors.Scale(d, radius + field.Raise(d, field.Land(d)));
+
+				return made.Corners[key];
+			}
+
+			/*
+			 * The point of the ground as it is drawn there (km): on the triangle of the finest square drawn now that holds it, as
+			 * its mesh lays its two of each cell. Regression: of the very height of the planet, the grass was under the faces
+			 * of the coarser grid of the ground, a blade showing here and there.
+			 */
+			function drawnAt (d) {
+				var at = faceAt(d);
+				var cells = surface.Resolution || 32;
+				var level;
+
+				for (level = Math.min(17, (made.Level || 17) + 1); level >= 0; level--) {
+					var size = 2 / Math.pow(2, level);
+					var cu = -1 + (Math.floor((at[1] + 1) / size) + 0.5) * size;
+					var cv = -1 + (Math.floor((at[2] + 1) / size) + 0.5) * size;
+					var node = surface.Nodes[at[0] + ':' + cu.toFixed(6) + ':' + cv.toFixed(6) + ':' + level];
+					if (!node || node.Used !== surface.Frame) continue;
+
+					var cell = size / cells;
+					var s = (at[1] - (cu - size / 2)) / cell;
+					var t = (at[2] - (cv - size / 2)) / cell;
+					var i = Math.max(0, Math.min(cells - 1, Math.floor(s)));
+					var j = Math.max(0, Math.min(cells - 1, Math.floor(t)));
+					var u0 = cu - size / 2 + i * cell;
+					var v0 = cv - size / 2 + j * cell;
+
+					made.Level = level;
+					s -= i;
+					t -= j;
+
+					/* Its triangles: a, a + 1, a + side and a + 1, a + side + 1, a + side (the diagonal from the second corner to the third). */
+					if (s + t <= 1) {
+						var p00 = corner(at[0], u0, v0);
+						var p10 = corner(at[0], u0 + cell, v0);
+						var p01 = corner(at[0], u0, v0 + cell);
+
+						return [p00[0] + (p10[0] - p00[0]) * s + (p01[0] - p00[0]) * t, p00[1] + (p10[1] - p00[1]) * s + (p01[1] - p00[1]) * t, p00[2] + (p10[2] - p00[2]) * s + (p01[2] - p00[2]) * t];
+					}
+
+					var q11 = corner(at[0], u0 + cell, v0 + cell);
+					var q10 = corner(at[0], u0 + cell, v0);
+					var q01 = corner(at[0], u0, v0 + cell);
+
+					return [q11[0] + (q01[0] - q11[0]) * (1 - s) + (q10[0] - q11[0]) * (1 - t), q11[1] + (q01[1] - q11[1]) * (1 - s) + (q10[1] - q11[1]) * (1 - t), q11[2] + (q01[2] - q11[2]) * (1 - s) + (q10[2] - q11[2]) * (1 - t)];
+				}
+
+				return vectors.Scale(d, radius + Math.max(0, field.Elevation(d)));
+			}
+
+			/* A point of the frame (metres) as a direction of the body. */
+			function directionAt (x, z) {
+				return vectors.Normalize([frame.Anchor[0] + (frame.X[0] * x + frame.Z[0] * z) / 1000, frame.Anchor[1] + (frame.X[1] * x + frame.Z[1] * z) / 1000, frame.Anchor[2] + (frame.X[2] * x + frame.Z[2] * z) / 1000]);
+			}
+
+			/* Made of squares coarser than those drawn now under its middle (they came as the eye went down): made again. */
+			var stale = false;
+
+			if (made && made.Done && surface.Frame % 30 === 0) {
+				drawnAt(directionAt(made.Center[0], made.Center[1]));
+
+				stale = made.Level !== made.CenterLevel;
+			}
+
+			if (!made || stale || made.Frame !== frame.ID || made.Row >= side && Math.hypot(eye[0] - made.Center[0], eye[2] - made.Center[1]) > 100) {
+				made = surface.NearField = {Frame: frame.ID, Center: [Math.round(eye[0] / 16) * 16, Math.round(eye[2] / 16) * 16], Size: size, Side: side, Data: new Float32Array(side * side * 4), Climate: [], Corners: {}, Row: 0, Done: false};
+				made.Key = frame.ID + ':' + made.Center.join(':');
+
+				/* Its lands and their cold on a coarser grid (a land is kilometres wide): a sample of the planet is all of its climate. */
+				for (i = 0; i < coarse * coarse; i++) {
+					var sample = planet.Sample(directionAt(made.Center[0] + ((i % coarse) / (coarse - 1) - 0.5) * size, made.Center[1] + (Math.floor(i / coarse) / (coarse - 1) - 0.5) * size));
+
+					made.Climate.push(sample.Land && sample.Elevation > 0.5 ? landOf(sample.Biome) : -1, sample.Celsius);
+				}
+			}
+
+			while (made.Row < side && window.performance.now() - started < 3) {
+				var row = made.Row++;
+
+				for (i = 0; i < side; i++) {
+					var x = made.Center[0] + (i / (side - 1) - 0.5) * size;
+					var z = made.Center[1] + (row / (side - 1) - 0.5) * size;
+					var direction = directionAt(x, z);
+					/* Its point as the ground is drawn, and its metres over the sea of it (one sample of the ground a texel). */
+					var drawn = drawnAt(direction);
+					var height = (vectors.Length(drawn) - radius) * 1000;
+					var point = [drawn[0] - frame.Anchor[0], drawn[1] - frame.Anchor[1], drawn[2] - frame.Anchor[2]];
+					var cell = Math.min(coarse - 1, Math.round(row / (side - 1) * (coarse - 1))) * coarse + Math.min(coarse - 1, Math.round(i / (side - 1) * (coarse - 1)));
+					var land = made.Climate[cell * 2];
+					var cold = made.Climate[cell * 2 + 1];
+					var at = (row * side + i) * 4;
+
+					made.Data[at] = vectors.Dot(point, frame.Y) * 1000;
+					/* Grass where its land has it, none under its snow nor under water. */
+					made.Data[at + 1] = land >= 0 && height > 0.5 && grassOf(land) ? Math.max(0, Math.min(1, (cold + 4) / 4)) : 0;
+					made.Data[at + 2] = land;
+				}
+			}
+
+			if (made.Row >= side && !made.Done) {
+				made.Done = true;
+				made.Corners = {};
+
+				drawnAt(directionAt(made.Center[0], made.Center[1]));
+
+				made.CenterLevel = made.Level;
+
+				/* None on what is steep (a wall of rock): of its own heights, a texel apart. */
+				for (i = 0; i < side * side; i++) {
+					var column = i % side;
+					var line = Math.floor(i / side);
+					var right = column < side - 1 ? i + 1 : i - 1;
+					var below = line < side - 1 ? i + side : i - side;
+					var step = size / (side - 1);
+					var slope = Math.hypot(made.Data[right * 4] - made.Data[i * 4], made.Data[below * 4] - made.Data[i * 4]) / step;
+
+					made.Data[i * 4 + 1] *= 1 - Math.max(0, Math.min(1, (slope - 0.5) / 0.3));
+				}
+
+				made.Grass = grassOf(made.Climate[(coarse / 2 * coarse + coarse / 2) * 2]);
+				made.Under = undergrowth(made, lands);
+				surface.NearReady = made;
+			}
+
+			return surface.NearReady && surface.NearReady.Frame === frame.ID ? surface.NearReady : null;
+		}
+
+		/*
+		 * The undergrowth of a field near (nearField): of each rule of the lands there its things no higher than 4 m, as many
+		 * as the rule's Density tells of them (its share of its shapes), within 200 m of its middle, on what is not steep nor
+		 * snowed, each the same for the same place (a hash of the cell of 4 m). A square of SceneScatter: {Center, Radius, Lists}.
+		 */
+		function undergrowth (made, lands) {
+			var lists = {};
+			var cell = 4;
+			var reach = 200;
+			var count = Math.floor(reach / cell);
+			var keys = {};
+			var gx;
+			var gz;
+
+			function hash (a, b, salt) {
+				var h = Math.imul(a ^ Math.imul(b + 0x9e3779b9, 0x85ebca6b) ^ salt, 0xc2b2ae35);
+
+				h = Math.imul(h ^ (h >>> 15), 0x27d4eb2d);
+
+				return ((h ^ (h >>> 13)) >>> 0) / 4294967296;
+			}
+
+			function texel (x, z) {
+				var last = made.Side - 1;
+				var u = Math.max(0, Math.min(last, Math.round(((x - made.Center[0]) / made.Size + 0.5) * last)));
+				var v = Math.max(0, Math.min(last, Math.round(((z - made.Center[1]) / made.Size + 0.5) * last)));
+
+				return (v * made.Side + u) * 4;
+			}
+
+			for (gz = -count; gz <= count; gz++) {
+				for (gx = -count; gx <= count; gx++) {
+					var cx = Math.round(made.Center[0] / cell) + gx;
+					var cz = Math.round(made.Center[1] / cell) + gz;
+					var x = (cx + hash(cx, cz, 11)) * cell;
+					var z = (cz + hash(cx, cz, 13)) * cell;
+					var at = texel(x, z);
+					var land = lands[made.Data[at + 2]];
+					var rules = land && land.Scatter || [];
+					var chance = hash(cx, cz, 17);
+					var sum = 0;
+
+					if (gx * gx + gz * gz > count * count || made.Data[at + 1] < 0.3 || !rules.length) continue;
+
+					for (var r = 0; r < rules.length; r++) {
+						var shapes = [].concat(rules[r].Shapes || []).filter(function (name) {
+							var info = library.Info(engine.PlantShape(name));
+
+							return info && info.Size <= 4;
+						});
+						var share = shapes.length / Math.max(1, [].concat(rules[r].Shapes || []).length);
+						/* Density: things a hundred square metres; a cell is 16 of them. */
+						var here = (Number(rules[r].Density === undefined ? 4 : rules[r].Density) * share * cell * cell / 100) * (rules[r].Cover === undefined ? 0.5 : Number(rules[r].Cover));
+
+						if (!shapes.length) continue;
+
+						sum += here;
+
+						if (chance < sum) {
+							var name = engine.PlantShape(shapes[Math.floor(hash(cx, cz, 19) * shapes.length)]);
+							var variant = Math.floor(hash(cx, cz, 23) * 8);
+							var key = keys[name + ':' + variant] = keys[name + ':' + variant] || library.Make(name, {Variant: variant}).Key;
+							var list = lists[key] = lists[key] || {Places: [], Extra: []};
+							var tone = 0.88 + hash(cx, cz, 29) * 0.2;
+
+							list.Places.push(x, made.Data[at] - 0.05, z, library.Info(name).Size * (0.75 + hash(cx, cz, 31) * 0.5));
+							list.Extra.push(hash(cx, cz, 37) * Math.PI * 2, tone, tone * 0.98, tone * 0.95);
+
+							break;
+						}
+					}
+				}
+			}
+
+			Object.keys(lists).forEach(function (name) {
+				lists[name] = {Places: new Float32Array(lists[name].Places), Extra: new Float32Array(lists[name].Extra), Count: lists[name].Places.length / 4};
+			});
+
+			return {Center: [made.Center[0], made.Data[texel(made.Center[0], made.Center[1])], made.Center[1]], Radius: reach + 20, Lists: lists};
+		}
+
+		/*
 		 * The plants of a planet round the eye (PlantStyle realistic, SceneScatter there): the squares within reach of it
 		 * given to SceneScatter in the frame of the plants once all their species have come (asked for from three times as
 		 * far, so they have come when they are near); till then the far trees of the squares stand for them. Gives {Frame,
@@ -9855,9 +10381,13 @@ Elemenx.Component('Scene', {
 			var ready = true;
 			var near;
 			var frame;
+			var grown;
+			var field;
 			var key;
 
 			if (!engine.ScatterPlanet || !surface || !surface.Eye || self.PlantStyle === 'simple') return null;
+
+			field = surface.Field;
 
 			near = nodes.filter(function (node) {
 				var plants = node.Things && node.Things.Plants;
@@ -9871,27 +10401,34 @@ Elemenx.Component('Scene', {
 				return distance < reach[1];
 			});
 
-			if (!near.length || !ready) {
+			/* Its grass and its undergrowth round the eye, low over it (half a kilometre): of the field near it (nearField). */
+			frame = surface.Altitude < 0.5 && field.Planet && field.Elevation ? plantFrame(surface) : null;
+			grown = frame ? nearField(surface, frame) : null;
+
+			if (engine.ScatterPlanetGrass)
+				engine.ScatterPlanetGrass(grown && grown.Grass ? grown : null);
+
+			if (!ready || !near.length && !grown) {
 				if (surface.PlantsKey) {
 					surface.PlantsKey = '';
 
 					engine.ScatterPlanet(null);
 				}
 
-				return null;
+				return grown ? {Frame: frame, Eye: inFrame(frame, surface.Eye)} : null;
 			}
 
 			frame = plantFrame(surface);
 			key = frame.ID + ':' + near.map(function (node) {
 				return node.Things.ID;
-			}).join(',');
+			}).join(',') + ':' + (grown ? grown.Key : '');
 
 			if (surface.PlantsKey !== key) {
 				surface.PlantsKey = key;
 
 				engine.ScatterPlanet(near.map(function (node) {
 					return plantSquare(node, frame);
-				}));
+				}).concat(grown && grown.Under ? [grown.Under] : []));
 			}
 
 			return {Frame: frame, Eye: inFrame(frame, surface.Eye)};
@@ -10251,7 +10788,7 @@ Elemenx.Component('Scene', {
 					askPiece(surface, key, 'Sphere', [face, u, v, size, surface.Resolution || 32, picture, picture && standsOn(size) ? picture : 0], function (piece) {
 						made = piece || field.Patch(face, u, v, size, surface.Resolution || 32);
 
-						surface.Nodes[key] = pictured({Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Error: errorOf(face, u, v, size), Used: surface.Frame}, made.Picture, [face, u, v, size, field.Radius], field.Planet ? nearMaterials(field).Lands : null);
+						surface.Nodes[key] = pictured({Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Error: errorOf(face, u, v, size), Used: surface.Frame, Place: [face, u, v, size, level]}, made.Picture, [face, u, v, size, field.Radius], field.Planet ? nearMaterials(field).Lands : null);
 
 						if (made.Things)
 							things(surface.Nodes[key], made.Things, size);
@@ -10262,7 +10799,7 @@ Elemenx.Component('Scene', {
 
 				made = field.Patch(face, u, v, size, surface.Resolution || 32);
 
-				surface.Nodes[key] = {Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Error: errorOf(face, u, v, size), Used: surface.Frame};
+				surface.Nodes[key] = {Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Error: errorOf(face, u, v, size), Used: surface.Frame, Place: [face, u, v, size, level]};
 
 				if (picture)
 					askPiece(surface, key + ':picture', 'SpherePicture', [face, u, v, size, picture], function (piece) {
@@ -10401,7 +10938,53 @@ Elemenx.Component('Scene', {
 				return window.performance.now() - started > 5 || terrain.Work().Waiting() > 8;
 			});
 
+			coarserBeside(wanted);
+
 			return wanted;
+		}
+
+		/*
+		 * How many levels coarser the square drawn beside each edge of each square drawn is (Edges: its first column, its
+		 * last, its first row, its last; at most 3, none over the edge of a face): its points there go to lie on that edge
+		 * (uEdges, SpherePatch).
+		 */
+		function coarserBeside (wanted) {
+			var drawn = {};
+
+			function keyOf (face, u, v, level) {
+				return face + ':' + u.toFixed(6) + ':' + v.toFixed(6) + ':' + level;
+			}
+
+			wanted.forEach(function (node) {
+				if (node.Place)
+					drawn[keyOf(node.Place[0], node.Place[1], node.Place[2], node.Place[4])] = true;
+			});
+
+			wanted.forEach(function (node) {
+				var place = node.Place;
+
+				node.Edges = [0, 0, 0, 0];
+
+				if (!place) return;
+
+				[[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(function (way, edge) {
+					var u = place[1] + way[0] * place[3] * 0.501;
+					var v = place[2] + way[1] * place[3] * 0.501;
+					var level;
+
+					if (Math.abs(u) > 1 || Math.abs(v) > 1) return;
+
+					for (level = place[4] - 1; level >= 0; level--) {
+						var size = 2 / Math.pow(2, level);
+
+						if (drawn[keyOf(place[0], -1 + (Math.floor((u + 1) / size) + 0.5) * size, -1 + (Math.floor((v + 1) / size) + 0.5) * size, level)]) {
+							node.Edges[edge] = Math.min(3, place[4] - level);
+
+							return;
+						}
+					}
+				});
+			});
 		}
 
 		/* Squares not drawn for a while are let go. */
@@ -11566,23 +12149,39 @@ Elemenx.Component('Scene', {
 		 * a part of a hundred, null when nothing is left. True while no picture can be drawn yet.
 		 */
 		function loading () {
-			var left = renderer ? renderer.Progress() : {Done: 0, Total: 0, Needed: 0};
+			var left;
 			var models = Object.keys(scene.Asked);
-			var stages = [{Name: 'programs', Done: left.Done, Total: left.Total}, {Name: 'models', Done: models.filter(function (name) {
-				return library.Ready(name);
-			}).length, Total: models.length}].concat(scene.Preparing ? preparing() : []);
+			var stages;
 			var shares = 0;
+			var broken = scene.Broken;
 			var done = 0;
 			var stage = '';
 			var part;
 			var shown;
 
-			/* Each stage a like share of the way, whatever its count; the first not done is the one it is at. */
+			/* Models came (their own programs) or a ground: all they may draw asked for at once too. */
+			if (scene.Warmed && (Object.keys(scene.Lists || {}).length !== scene.WarmedLists || !!scene.Ground !== !!scene.WarmedGround))
+				warm();
+
+			left = renderer ? renderer.Progress() : {Done: 0, Total: 0, Needed: 0};
+			/* A model that could not be read counts as come: it holds nothing up. */
+			stages = [{Name: 'programs', Done: left.Done, Total: left.Total}, {Name: 'models', Done: models.filter(function (name) {
+				return library.Ready(name) || broken[name];
+			}).length, Total: models.length}].concat(bakes(), scene.Preparing ? preparing() : []);
+
+			/*
+			 * Each stage a share of the way as long as it takes (its weight: the programs and the ground longest); the first not
+			 * done is the one it is at.
+			 */
 			stages.forEach(function (one) {
+				var weight = loadingWeights[one.Name] || 1;
+
+				one.Label = stageText(one.Name);
+
 				if (!one.Total) return;
 
-				shares++;
-				done += Math.min(1, one.Done / one.Total);
+				shares += weight;
+				done += Math.min(1, one.Done / one.Total) * weight;
 
 				if (!stage && one.Done < one.Total)
 					stage = one.Name;
@@ -11601,23 +12200,65 @@ Elemenx.Component('Scene', {
 			 */
 			shown = part !== null && (scene.Preparing ? !scene.Soft || window.performance.now() - (scene.PrepareSince || 0) > 500 : !scene.WasPrepared || left.Needed > 0) ? part : null;
 
-			/* All that is left may be one long thing behind the page: a bar that stands still would look stuck. */
-			self.LoadingEndless = left.Needed === 0 && left.Done < left.Total;
+			/*
+			 * Always how far it is, never an endless bar. Regression: when what was left was only made behind the page, the bar
+			 * turned into one that waits and tells nothing.
+			 */
+			scene.LoadingStages = stages;
 
-			if (self.Loading !== shown || self.LoadingStage !== stage) {
+			if (self.Loading !== shown || self.LoadingStage !== stage || stagesKey(stages) !== scene.LoadingKey) {
 				self.Loading = shown;
 				self.LoadingStage = stage;
 				self.LoadingText = stageText(stage);
+				scene.LoadingKey = stagesKey(stages);
 
-				self.$Emit('loading', {Part: part === null ? 100 : part, Stage: stage});
+				self.$Emit('loading', {Part: part === null ? 100 : part, Stage: stage, Stages: stages.filter(function (one) {
+					return one.Total > 0;
+				}).map(function (one) {
+					return {Name: one.Name, Label: one.Label, Done: one.Done, Total: one.Total};
+				})});
 			}
 
 			return left.Needed > 0;
 		}
 
+		/* How long each stage takes, as a share of the bar. */
+		var loadingWeights = {programs: 5, models: 3, ground: 3, surface: 3, globes: 2, galaxy: 2, plants: 1, rivers: 1, sky: 1, nebulae: 1};
+
+		function stagesKey (stages) {
+			return stages.map(function (one) {
+				return one.Done + '/' + one.Total;
+			}).join(',');
+		}
+
+		/*
+		 * What the traits bake before the view can be shown (engine.Bakes: each a function giving {Name, Done, Total} or null):
+		 * the sky of a system (a face of its cube a frame), the plane of a galaxy, the shapes of nebulae.
+		 */
+		engine.Bakes = engine.Bakes || [];
+
+		function bakes () {
+			var made = [];
+
+			engine.Bakes.forEach(function (one) {
+				var stage = one();
+				if (stage && stage.Total)
+					made.push(stage);
+			});
+
+			return made;
+		}
+
+		function baking () {
+			return bakes().reduce(function (sum, one) {
+				return sum + Math.max(0, one.Total - one.Done);
+			}, 0);
+		}
+
 		/* What the view still waits for, stage by stage: the globes painted (strips of them), the squares of its ground, what grows round the eye. */
 		function preparing () {
 			var globes = {Name: 'globes', Done: 0, Total: 0};
+			var missing;
 			var flowing = {Name: 'rivers', Done: 0, Total: 0};
 			var ground = scene.Ground;
 			var made;
@@ -11638,8 +12279,28 @@ Elemenx.Component('Scene', {
 				globes.Done += made ? (made.Painted ? 24 : made.Strips || 0) + (made.Lit ? 24 : made.LitStrips || 0) : 0;
 			});
 
+			/*
+			 * The squares of a globe near, as fine as the eye needs: how many are missing goes up and down as they come and more
+			 * are asked for; told of the most missing yet. Regression: not a stage, the bar stood at 99 (the view) for seconds.
+			 */
+			missing = 0;
+
+			Object.keys(scene.Globes).forEach(function (id) {
+				missing += scene.Globes[id].Missing || 0;
+			});
+
+			scene.GlobeMost = Math.max(scene.GlobeMost || 0, missing);
+
+			/*
+			 * A ground or a location declared but not made yet: its stages are there from the start, so the bar does not run to
+			 * its end on the programs and stand there while the ground is made (regression: 98 for six seconds).
+			 */
+			if (!ground && scene.Order.some(function (object) {
+				return !!(trait(object, 'Terrain') || trait(object, 'Location'));
+			})) return [flowing, globes, {Name: 'ground', Done: 0, Total: 1}, {Name: 'plants', Done: 0, Total: 1}];
+
 			if (!ground)
-				return [flowing, globes];
+				return [flowing, globes, {Name: 'surface', Done: scene.GlobeMost - missing, Total: scene.GlobeMost}];
 
 			grown = engine.ScatterProgress ? engine.ScatterProgress(240) : {Done: 0, Total: 0};
 
@@ -11648,7 +12309,7 @@ Elemenx.Component('Scene', {
 
 		/* The words of a stage of the loading. */
 		function stageText (stage) {
-			var words = {programs: Elemenx.Locale.Text('graphics.scene.stagePrograms'), models: Elemenx.Locale.Text('graphics.scene.stageModels'), rivers: Elemenx.Locale.Text('graphics.scene.stageRivers'), globes: Elemenx.Locale.Text('graphics.scene.stageGlobes'), ground: Elemenx.Locale.Text('graphics.scene.stageGround'), plants: Elemenx.Locale.Text('graphics.scene.stagePlants'), view: Elemenx.Locale.Text('graphics.scene.stageView')};
+			var words = {surface: Elemenx.Locale.Text('graphics.scene.stageSurface'), sky: Elemenx.Locale.Text('graphics.scene.stageSky'), galaxy: Elemenx.Locale.Text('graphics.scene.stageGalaxy'), nebulae: Elemenx.Locale.Text('graphics.scene.stageNebulae'), programs: Elemenx.Locale.Text('graphics.scene.stagePrograms'), models: Elemenx.Locale.Text('graphics.scene.stageModels'), rivers: Elemenx.Locale.Text('graphics.scene.stageRivers'), globes: Elemenx.Locale.Text('graphics.scene.stageGlobes'), ground: Elemenx.Locale.Text('graphics.scene.stageGround'), plants: Elemenx.Locale.Text('graphics.scene.stagePlants'), view: Elemenx.Locale.Text('graphics.scene.stageView')};
 
 			return words[stage] || '';
 		}
@@ -11746,11 +12407,17 @@ Elemenx.Component('Scene', {
 		 * the eye needs, what grows round the eye not sown. 0: all is there.
 		 */
 		function waiting () {
-			var left = 0;
+			var left = baking();
 
-			/* A galaxy waits for its programs alone: the globes of a system behind it are not drawn. */
+			/* A galaxy waits for its programs and what it bakes alone: the globes of a system behind it are not drawn. */
 			if (self.Setting === 'galaxy')
-				return renderer ? renderer.Progress().Needed : 0;
+				return left + (renderer ? renderer.Progress().Needed : 0);
+
+			/* The models it asked for, each till it came. */
+			Object.keys(scene.Asked).forEach(function (name) {
+				if (!library.Ready(name) && !scene.Broken[name])
+					left++;
+			});
 
 			/*
 			 * Regression: on the ground of a location the globes are drawn no more, neither the near one of its body nor the
@@ -11758,7 +12425,7 @@ Elemenx.Component('Scene', {
 			 * There, the view waits for its ground and what grows on it alone.
 			 */
 			if (scene.Ground)
-				return (scene.Ground.Missing === undefined ? 1 : scene.Ground.Missing) + (engine.ScatterPending ? engine.ScatterPending(240) : 0) + (renderer ? renderer.Progress().Needed : 0);
+				return left + (scene.Ground.Missing === undefined ? 1 : scene.Ground.Missing) + (engine.ScatterPending ? engine.ScatterPending(240) : 0) + (renderer ? renderer.Progress().Needed : 0);
 
 			scene.Order.forEach(function (object) {
 				var made;
@@ -11812,14 +12479,82 @@ Elemenx.Component('Scene', {
 
 		/* What the view needs is made again before the game goes on (a location came): behind the veil. */
 		engine.Prepare = function (soft) {
+			warm();
+
 			scene.Preparing = true;
 			scene.PrepareSince = window.performance.now();
 			scene.LoadingLeast = 0;
+			scene.GlobeMost = 0;
 			scene.Soft = !!soft;
 			scene.Ready = 0;
 		};
 
 		engine.Waiting = waiting;
+
+		/*
+		 * All the programs the scene may draw, asked of the card at once when it starts (and again when it is prepared once more:
+		 * a location came, models came): the loading shows all that is left, none is made later in the play. What a trait
+		 * draws it asks for itself (engine.Warms: each function (setting) makes its own). Regression: each program was made
+		 * the first time it was drawn, after the scene was told ready: the ground, the sky, the models, the light of probes,
+		 * the panes, the weather came seconds later, the bar came back, the picture waited, the count of the bar grew as it
+		 * went and stood still. Of a galaxy only its own (a system it goes into is prepared then).
+		 */
+		engine.Warms = engine.Warms || [];
+
+		/* What a field of a trait may be, to choose in an inspector (SceneEditor): 'Trait:Key' to its values (the traits add theirs). */
+		engine.Options = engine.Options || {};
+		engine.Options['Star:Type'] = this.$Service('Astronomy').Types.slice();
+		engine.Options['Cluster:Type'] = ['open', 'globular', 'nuclear'];
+
+		function warm () {
+			var setting = self.Setting === 'galaxy' ? 'galaxy' : scene.Ground ? 'ground' : 'space';
+			var count = Object.keys(scene.Lists || {}).length;
+			var terrain;
+
+			scene.WarmedLists = count;
+			scene.WarmedGround = !!scene.Ground;
+
+			if (!renderer || renderer.Lost) return;
+
+			if (setting !== 'galaxy') {
+				['Many', 'ManyDepth', 'Pbr', 'PbrSkinned', 'GlowMany', 'Outline', 'OutlineSkinned', 'GlowSkinned', 'SkinDepth', 'Line', 'Far', 'StarsTurned', 'Glow', 'Planet', 'Bake', 'Star', 'Air', 'Ring', 'Ground', 'LandDepth', 'GroundDepth', 'Things', 'ThingsDepth', 'Sea', 'Sky'].forEach(function (name) {
+					return gpu[name];
+				});
+
+				gpu.LandOf(null, null);
+
+				/* The ground of a location: of its own materials and its Blueprint. */
+				if (scene.Ground && scene.Ground.Field) {
+					terrain = trait(scene.Objects[scene.Ground.ID] || {Traits: {}}, 'Terrain');
+
+					gpu.LandOf(terrain && terrain.Blueprint ? blueprinted(terrain, 'Land', scene.Ground.ID) : null, scene.Ground.Field.Materials);
+				}
+
+				[['TopLand', shaders.LandVertex, shaders.Top], ['TopMany', shaders.Instanced, shaders.Top], ['BounceLand', shaders.LandVertex, shaders.Bounced], ['BounceMany', shaders.Instanced, shaders.Bounced], ['NormalMany', shaders.Instanced, shaders.Normal], ['NormalSkin', shaders.Skinned, shaders.Normal], ['VoxelLand', shaders.LandVertex, shaders.Voxel], ['VoxelMany', shaders.Instanced, shaders.Voxel], ['MirrorGlass', shaders.Instanced, shaders.MirrorGlass], ['MirrorGlassSkinned', shaders.Skinned, shaders.MirrorGlass], ['Mirror', shaders.PaneVertex, shaders.Mirror], ['Glass', shaders.PaneVertex, shaders.Glass], ['ScreenProgram', shaders.PaneVertex, shaders.Screen], ['Weather', graphics.Shaders.Quad, shaders.Weather], ['LandWire', shaders.LandVertex, shaders.Flat]].forEach(function (one) {
+					gpu[one[0]] = gpu[one[0]] || renderer.Program(one[1], one[2]);
+				});
+
+				engine.ScatterWarm({Top: shaders.Top, Voxel: shaders.Voxel});
+
+				/* Each list of models: its own programs (its pattern, its Vertex), for each pass it is drawn in. */
+				Object.keys(scene.Lists || {}).forEach(function (name) {
+					var list = scene.Lists[name];
+					if (!list || !list.Material) return;
+
+					pbrOf(list);
+
+					['Depth', 'BodyGlow', 'Normal', 'Voxel', 'Top', 'Bounced'].forEach(function (pass) {
+						moved(list, null, pass);
+					});
+				});
+			}
+
+			engine.Warms.forEach(function (made) {
+				made(setting);
+			});
+		}
+
+		engine.Warm = warm;
 
 		scene.Preparing = !!renderer;
 		scene.Cover = scene.Preparing ? 1 : 0;
@@ -11838,6 +12573,8 @@ Elemenx.Component('Scene', {
 				engine.PostWarm();
 				engine.ScatterWarm();
 				engine.EffectsWarm();
+
+				warm();
 			}
 
 			/*
@@ -13292,6 +14029,15 @@ Elemenx.Component('Scene', {
 	 */
 	LibraryStar: function () {
 		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/star'));
+	},
+
+	/*
+	 * The look of a nebula of the library as a graph (the kind nebula of SceneBlueprints), for the Blueprint of its trait
+	 * Nebula: it breathes brighter and dimmer over a round of Cycle seconds (as much as its Pulse), turns round its axis
+	 * Spin degrees a minute, its gas as torn as its Turbulence, its fine grain as much as its Detail.
+	 */
+	LibraryNebula: function () {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/nebula'));
 	},
 
 	/* The uniforms of the water of the scene: its parameters and the time, as the shader of water has it. */
@@ -14775,21 +15521,31 @@ Elemenx.Component('Scene', {
 				'in vec2 aUV;',
 				/* The colors of a ground that tells them (ScenePlanet): its biomes, its snow, its seas by their depth. */
 				'in vec3 aColor;',
-				/* Where it is on its square, 0 to 1: for the picture of the square (PatchPicture). */
+				/*
+				 * Where it is on its square, 0 to 1: for the picture of the square (PatchPicture); then, of a point of its edge,
+				 * where it goes to lie on the edge of a square one level coarser (zw and the x of the next), two (its yzw) and
+				 * three (xyz of the last).
+				 */
 				'in vec4 aMaterials;',
+				'in vec4 aMaterials2;',
+				'in vec4 aMaterials3;',
 				'out vec2 vPatch;',
 				'out vec3 vPainted;',
 				'uniform mat4 uViewProjection;',
 				'uniform vec3 uOffset;',
 				'uniform vec3 uCenter;',
+				/* How many levels coarser the square beside each of its edges is (its first column, its last, its first row, its last). */
+				'uniform vec4 uEdges;',
 				'out vec3 vWorld;',
 				'out vec3 vNormal;',
 				'out vec3 vDirection;',
 				'out vec2 vLand;',
 				'void main() {',
-				'	vWorld = aPosition + uOffset;',
+				'	float coarser = aMaterials.x < 0.001 ? uEdges.x : aMaterials.x > 0.999 ? uEdges.y : aMaterials.y < 0.001 ? uEdges.z : aMaterials.y > 0.999 ? uEdges.w : 0.0;',
+				'	vec3 position = aPosition + (coarser > 2.5 ? aMaterials3.xyz : coarser > 1.5 ? aMaterials2.yzw : coarser > 0.5 ? vec3(aMaterials.zw, aMaterials2.x) : vec3(0.0));',
+				'	vWorld = position + uOffset;',
 				'	vNormal = aNormal;',
-				'	vDirection = normalize(aPosition + uCenter);',
+				'	vDirection = normalize(position + uCenter);',
 				'	vLand = aUV;',
 				'	vPainted = aColor;',
 				'	vPatch = aMaterials.xy;',
@@ -14814,6 +15570,8 @@ Elemenx.Component('Scene', {
 				/* Where people live (uDwelt, PatchPicture Use: fields, houses, the kind of the settlement); uSquare: its corner (km of its face, the rest of 48), its size (km), its face; uSquareCell: the number of 48 km. */
 				'uniform float uDwelt;',
 				'uniform sampler2D uUseMap;',
+				/* How much of each texel of its picture snow lies on (its ground near of the snow of its biome). */
+				'uniform sampler2D uSnowMap;',
 				'uniform vec4 uSquare;',
 				'uniform vec2 uSquareCell;',
 				/* The tiles of materials near (uTextured): metres in the plane at the anchor (uAnchor: the eye from it, km; uEast, uUp, uNorth its axes), uMetres the tile of each. */
@@ -14982,11 +15740,33 @@ Elemenx.Component('Scene', {
 				 * and never a row of steps; its relief of its own normals, finer than its points, the slopes made steeper as above.
 				 */
 				'	vec2 aside = vec2(0.0);',
+				'	vec2 pictureAt = vPatch;',
+				'	vec2 pictureSoft = vPatch;',
+				'	vec2 pictureX = vec2(0.0);',
+				'	vec2 pictureY = vec2(0.0);',
 				'	if (uTiled > 0.5) {',
 				'		vec2 tc = vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels;',
 				'		vec2 grid = tc * uTexels;',
+				'		pictureX = dFdx(tc);',
+				'		pictureY = dFdy(tc);',
+				/* Texels a pixel: a texel over two pixels wide is a square of a smear unless something finer is told in it. */
+				'		float texel = max(length(pictureX), length(pictureY)) * uTexels;',
 				'		aside = vec2(noise3(vec3(grid * 1.7, 3.1)) + noise3(vec3(grid * 4.3, 5.7)) * 0.5, noise3(vec3(grid * 1.7, 9.7)) + noise3(vec3(grid * 4.3, 1.3)) * 0.5) - 0.75;',
-				'		vec4 painted = texture(uColorMap, tc + aside * 1.1 / uTexels);',
+				/*
+				 * Far ground, its texels wide on the screen (a square of kilometres, its 32 texels a side, some tens of pixels
+				 * each): its edges ragged finer still, as long as those are over three pixels, and each texel its own color up to
+				 * a narrow seam (the texels read as patches of land, fields, woods and stone, sharp), not one color drawn into the
+				 * next over all its width. Regression: from a few kilometres up the ground was smears and stretched blotches.
+				 */
+				'		aside += vec2(noise3(vec3(grid * 11.0, 2.3)) - 0.5, noise3(vec3(grid * 11.0, 8.9)) - 0.5) * 0.36 * (1.0 - smoothstep(0.02, 0.04, texel));',
+				'		vec2 g = grid + aside * 1.1 - 0.5;',
+				'		pictureSoft = (g + 0.5) / uTexels;',
+				'		vec2 inside = fract(g);',
+				'		float seam = clamp(max(texel * 1.5, 0.22), 0.0, 0.5);',
+				'		inside = clamp((inside - 0.5) / (2.0 * seam) + 0.5, 0.0, 1.0);',
+				'		inside = inside * inside * (3.0 - 2.0 * inside);',
+				'		pictureAt = (floor(g) + inside + 0.5) / uTexels;',
+				'		vec4 painted = textureGrad(uColorMap, pictureAt, pictureX, pictureY);',
 				'		albedo = painted.rgb;',
 				'		water = painted.a;',
 				'		n = normalize(texture(uReliefMap, tc).xyz * 2.0 - 1.0);',
@@ -15020,7 +15800,7 @@ Elemenx.Component('Scene', {
 				 * from far their mean, a darker green; near, their edges, the crowns over the ground in the relief below.
 				 */
 				/* Read aside as its colors are: no steps of texels along the edges of the woods from far. */
-				'	float cover = uTiled * uWoods > 0.5 ? texture(uReliefMap, vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels + aside * 1.1 / uTexels).a : 0.0;',
+				'	float cover = uTiled * uWoods > 0.5 ? textureGrad(uReliefMap, pictureAt, pictureX, pictureY).a : 0.0;',
 				/* Each octave turned against the last, so no grid of the noise shows in the edges of the woods. */
 				'	mat3 askew = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
 				'	float stands = noise3(askew * place * 14.0 + 21.0) * 0.5 + noise3(place * 2.6 + 9.0) * 0.32 + noise3(askew * (askew * near) * 61.0 + 4.0) * 0.18 * (1.0 - smoothstep(0.004, 0.012, foot));',
@@ -15039,14 +15819,25 @@ Elemenx.Component('Scene', {
 				'	float green = clamp((albedo.g - max(albedo.r, albedo.b)) * 6.0, 0.0, 1.0) * (1.0 - water);',
 				'	float near1 = 1.0 - smoothstep(0.03, 0.09, foot);',
 				'	float near2 = 1.0 - smoothstep(0.006, 0.02, foot);',
-				'	float crowns = noise3(near * 34.0 + 11.0);',
+				/*
+				 * Each octave turned against the grid of the noise. Regression: of the grid as it is, its cells of 29 m sharpened
+				 * into squares, a chessboard of light and dark green over the near land.
+				 */
+				'	float crowns = noise3(askew * near * 34.0 + 11.0);',
 				'	albedo *= mix(1.0, 0.7 + 0.55 * smoothstep(0.3, 0.75, crowns), green * near2);',
 				/*
 				 * Its dunes (the sand of its deserts, Use.a): ridges of a kilometre or so bent by a noise of a few, a gentle side to
 				 * the wind and a steep one away, some crossing them (star dunes), tens of metres high, as long as a pixel is finer
 				 * than a quarter of them; of the very place (thousands of km, half a metre in the floats: a kilometre is exact).
 				 */
-				'	float sand = uTiled > 0.5 ? texture(uUseMap, vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels + aside * 1.1 / uTexels).a : 0.0;',
+				'	float sand = uTiled > 0.5 ? textureGrad(uUseMap, pictureAt, pictureX, pictureY).a : 0.0;',
+				/*
+				 * Its snow (of its picture): its edge torn by a noise of tens of metres where it thins, none on what is steep
+				 * near (the rock of a wall shows through), as long as that is seen.
+				 */
+				'	float snow = uTiled > 0.5 ? textureGrad(uSnowMap, pictureAt, pictureX, pictureY).r : 0.0;',
+				/* Of the stands of its woods (a noise of the place made already): each noise more is seconds more for the card to make the program. */
+				'	snow = clamp(snow + (stands - 0.5) * 1.6 * snow * (1.0 - snow), 0.0, 1.0);',
 				'	float dunes = 0.0;',
 				'	if (sand > 0.003) {',
 				'		float seenDunes = 1.0 - smoothstep(0.12, 0.45, foot);',
@@ -15062,7 +15853,23 @@ Elemenx.Component('Scene', {
 				 * Regression: hills of 90 m by 20 m and of 20 m by 4 m in the light of the normal, sides of 25 degrees: from low
 				 * the ground was pits and blotches, their sides away from the sun nearly black. Now a third of that.
 				 */
-				'	float bumps = ((noise3(near * 11.0 + 5.0) - 0.5) * 0.015 * near1 + (noise3(near * 52.0 + 2.0) - 0.5) * 0.003 * near2 + (crowns - 0.5) * 0.006 * green * near2 + wooded * 0.006 * near1 + standing + dunes * 0.07) * (1.0 - water);',
+				/*
+				 * No rise of its woods over the ground (the crowns near tell them by their colors). Regression: their crowns 6 m
+				 * over the ground at an edge a pixel and a half wide laid the normal on its side, black specks along every wood.
+				 */
+				'	float bumps = ((noise3(near * 11.0 + 5.0) - 0.5) * 0.015 * near1 + (noise3(near * 52.0 + 2.0) - 0.5) * 0.003 * near2 + (crowns - 0.5) * 0.006 * green * near2 + standing + dunes * 0.07) * (1.0 - water);',
+				/*
+				 * Its slopes cut finer than its points (a planet knows nothing under a few hundred metres): ridges and gullies of
+				 * 300 m and of 115 m, as steep as the slope is, each as long as it is over three pixels wide. Regression: from a few
+				 * kilometres up its mountains were smooth heaps, their slopes one smear of the color of their texels.
+				 */
+				'	float rugged = smoothstep(0.06, 0.35, 1.0 - dot(n, up)) * (1.0 - water);',
+				/* Round at their tops: a crease of the noise was a line across the light, terraces drawn over a slope near. */
+				'	float ridge1 = noise3(askew * near * 3.3 + 1.0) * 2.0 - 1.0;',
+				'	float ridge2 = noise3(askew * (askew * near) * 8.7 + 6.0) * 2.0 - 1.0;',
+				'	ridge1 = 1.0 - ridge1 * ridge1;',
+				'	ridge2 = 1.0 - ridge2 * ridge2;',
+				'	bumps += rugged * (ridge1 * ridge1 * 0.035 * (1.0 - smoothstep(0.05, 0.1, foot)) + ridge2 * ridge2 * 0.012 * (1.0 - smoothstep(0.02, 0.04, foot)));',
 				/* The normal before them: what picks the ways the tiles are laid, the same over a few pixels (their derivatives are taken in branches by it). */
 				'	vec3 smoothed = n;',
 				'	vec3 px = dFdx(vWorld);',
@@ -15070,7 +15877,18 @@ Elemenx.Component('Scene', {
 				'	vec3 across = cross(py, n);',
 				'	float area = dot(px, across);',
 				'	vec3 tilt = (dFdx(bumps) * across + dFdy(bumps) * cross(n, px)) / (abs(area) > 1e-12 ? area : 1e-12);',
-				'	n = normalize(n - tilt * step(1e-12, abs(area)));',
+				/*
+				 * Bent by its bumps no more than some 40 degrees: a step of them over a pixel or two (an edge of a dune, of a field)
+				 * never lays the normal on its side, a black speck.
+				 */
+				'	tilt *= step(1e-12, abs(area)) / max(1.0, length(tilt) / 0.85);',
+				/*
+				 * None where a pixel is under a metre: its bumps are kilometres of the place, and from pixel to pixel there they
+				 * differ by less than a float tells, over an area of a pixel as small: a tilt of rounding, rings and stripes of
+				 * moiré over the ground near. There the materials bend it (enx_bump, in metres).
+				 */
+				'	tilt *= smoothstep(0.0003, 0.0012, foot);',
+				'	n = normalize(n - tilt);',
 				/*
 				 * Nearer still: the tiles of the materials (uTextured), as the ground of a location draws them: grass where it is
 				 * green, grassy soil under the woods, dirt where it is dry, cliff where it is steep, each tinted by the color of
@@ -15091,7 +15909,8 @@ Elemenx.Component('Scene', {
 				/* Woods show their crowns, not the ground under them: no tile there (the second, grassy soil, for none now). */
 				'		vec4 parts = vec4(green, 0.0, 1.0 - green, 0.0) * (1.0 - wooded) * (1.0 - steep);',
 				'		parts.w = steep * (1.0 - wooded * 0.5);',
-				'		parts *= 1.0 - water;',
+				/* Under its snow none: the white of its picture. */
+				'		parts *= (1.0 - water) * (1.0 - snow * (1.0 - steep * 0.7));',
 				'		bool side = abs(landSlope.x) > abs(landSlope.z);',
 				'		vec3 laid = vec3(0.0);',
 				'		float total = 0.0;',

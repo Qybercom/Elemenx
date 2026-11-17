@@ -153,6 +153,81 @@ describe('Contract: a Scene under its ground: the floors of its tunnels and cave
 		/* A floor no walker comes to (in the rock under the tunnel): no way. */
 		expect(scene.Move('miner', [30, 30, -10])).toBe(false);
 	}, 60000);
+	/*
+	 * Regression: by its Error a square of a cave went on to half the size of the one beside, their surfaces met at other
+	 * points and the sky was seen through the slit. The squares of the volume are all of the size of a metre a cell.
+	 */
+	it('goes round its patrol into the tunnel and out, its lantern with it; the eye in it takes in the dark; its squares one size', async function () {
+		var scene = await mount(Object.assign({}, LAND, {Tunnels: [{Points: [[-70, 0], [0, 0, 4], [70, 0]], Radius: 4, Flat: 0.5}]}));
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var visited = {In: false, Out: false};
+		var i;
+
+		function frame () {
+			now += 100;
+			inner.Rest = 0;
+
+			engine.Frame(now);
+		}
+
+		await waitFor(function () {
+			frame();
+
+			return inner.Ground;
+		}, 4000);
+
+		scene.Paused = false;
+
+		scene.Add('unit', {ID: 'miner', X: -90, Y: 0, Speed: 30, Patrol: [[-90, 0], [0, 0, 2]]});
+		scene.Add('light', {ID: 'lantern', Follow: 'miner', X: 0, Y: 0, Height: 2.3, Radius: 12});
+
+		await waitFor(function () {
+			var miner = inner.Objects.miner;
+
+			frame();
+
+			if (Math.abs(miner.World[0]) < 1 && miner.World[1] < 3)
+				visited.In = true;
+
+			if (visited.In && miner.World[0] < -89)
+				visited.Out = true;
+
+			return visited.Out;
+		}, 40000);
+
+		/* The lantern went with it, and it is one of the lamps of the scene. */
+		expect(inner.Objects.lantern).toBeTruthy();
+		expect(inner.Lamps.some(function (lamp) {
+			return lamp.Object === inner.Objects.lantern;
+		})).toBe(true);
+
+		/* Deep in the tunnel the eye takes in the dark; under the sky again, no more. */
+		scene.SetViewpoint({Target: [0, 3, 0], Distance: 1.5, Pitch: 0, Yaw: 1.57});
+
+		for (i = 0; i < 120; i++)
+			frame();
+
+		expect(inner.Ground.Deep).toBeGreaterThan(0.6);
+
+		/* Its squares of the volume near the eye: none finer than a metre a cell (400 / 16 = 25 m, 32 cells). */
+		expect(Object.keys(inner.Ground.Nodes).filter(function (key) {
+			var node = inner.Ground.Nodes[key];
+
+			return node.Volumed && node.Size < 25 - 1e-6;
+		})).toEqual([]);
+		expect(Object.keys(inner.Ground.Nodes).some(function (key) {
+			return inner.Ground.Nodes[key].Volumed && Math.abs(inner.Ground.Nodes[key].Size - 25) < 1e-6;
+		})).toBe(true);
+
+		scene.SetViewpoint({Target: [-150, inner.Ground.Field.Height(-150, 0), 0], Distance: 30, Pitch: 0.4, Yaw: 0});
+
+		for (i = 0; i < 120; i++)
+			frame();
+
+		expect(inner.Ground.Deep).toBeLessThan(0.3);
+	}, 90000);
 	it('digs a hole while it runs: only the squares round it made again, what stood there down in it, kept in Save', async function () {
 		var scene = await mount({Size: 300, Height: 10, Water: 0, Seed: 'dig', Scale: 120});
 		var inner = scene.Scene();

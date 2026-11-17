@@ -123,8 +123,13 @@ Elemenx.Trait('SceneLighting', {
 			return sets[level()].Reach * (phone ? 0.5 : 1);
 		};
 
+		/* Its programs asked for when the scene starts, those of the weather too (lightning, rain and snow falling, splashes): none comes in the play. */
 		engine.PostWarm = function () {
 			programs();
+
+			renderer.Program(shaders.BoltVertex, shaders.Bolt);
+			renderer.Program(shaders.FallVertex, shaders.Fall);
+			renderer.Program(shaders.SplashVertex, shaders.Splash);
 		};
 
 		function programs () {
@@ -1300,6 +1305,7 @@ Elemenx.Trait('SceneLighting', {
 					uEyeOn: state.Eye && view.Sky && !manual ? 1 : 0,
 					uExposure: manual ? lens.Exposure * lens.Compensation : given(view.Exposure, 1),
 					uNight: view.Night || 0,
+					uDeep: view.Deep || 0,
 					uNoise: state.Noise || emptyNoise(),
 					uGrade: [1 - (view.Veil || 0) * 0.14, 1 - (view.Veil || 0) * 0.05, 1 + (view.Veil || 0) * 0.02, Math.min(0.5, (view.Veil || 0) * 0.5 + (now.Clouds * now.Clouds) * 0.16)],
 					uSunColor: view.SunColor || [1, 1, 1],
@@ -2876,6 +2882,8 @@ Elemenx.Trait('SceneLighting', {
 				'uniform sampler2D uEye;',
 				'uniform float uEyeOn;',
 				'uniform float uExposure;',
+				/* How deep in a cave the eye is (0 to 1): there it takes in far more of what is dim. */
+				'uniform float uDeep;',
 				'uniform float uNight;',
 				'uniform vec4 uGrade;',
 				'uniform highp sampler3D uNoise;',
@@ -2970,7 +2978,7 @@ Elemenx.Trait('SceneLighting', {
 				'	color += texture(uBloom, uv).rgb * uBloomGain;',
 				/* The air burning round what comes down through it, at the edges of the view. */
 				'	color += vec3(1.0, 0.36, 0.1) * uHeat * smoothstep(0.5, 1.25, length(vQuad));',
-				'	float open = uEyeOn > 0.5 && uExposure == 1.0 ? clamp(0.3 / exp(texture(uEye, vec2(0.5)).r), 0.8, 1.35) : uExposure;',
+				'	float open = uEyeOn > 0.5 && uExposure == 1.0 ? clamp(0.3 / exp(texture(uEye, vec2(0.5)).r), 0.8, mix(1.35, 5.0, uDeep)) : uExposure;',
 				/* At night an eye holds no color, but where something burns: the moon lays no red on the sand, and turning away changes nothing. */
 				'	if (uNight > 0.0) {',
 				'		float seen = dot(color, vec3(0.3, 0.6, 0.1));',

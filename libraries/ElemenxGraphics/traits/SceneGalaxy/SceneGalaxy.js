@@ -206,6 +206,33 @@ Elemenx.Trait('SceneGalaxy', {
 			}))}}) : null;
 		}
 
+		/*
+		 * The grids of its knots (GalaxyData.Knots) as textures its picture reads, made again for another galaxy: each knot it
+		 * draws is one of its nebulae.
+		 */
+		function knotsOf () {
+			var made;
+
+			if (state.KnotTextures && state.KnotTextures.Key === state.Key) return state.KnotTextures;
+
+			if (state.KnotTextures) {
+				state.KnotTextures.A.Destroy();
+				state.KnotTextures.B.Destroy();
+			}
+
+			made = galaxies.Knots(state.Data).Grids;
+
+			state.KnotTextures = {
+				Key: state.Key,
+				A: renderer.Texture({Width: made[0].Count, Height: made[0].Count, Data: made[0].Data}, {Float: true, Nearest: true}),
+				B: renderer.Texture({Width: made[1].Count, Height: made[1].Count, Data: made[1].Data}, {Float: true, Nearest: true}),
+				InfoA: [made[0].Cell, made[0].Count, made[0].Half],
+				InfoB: [made[1].Cell, made[1].Count, made[1].Half]
+			};
+
+			return state.KnotTextures;
+		}
+
 		/* The uniforms of the shape of the galaxy (GalaxyShapeShader), in thousands of light-years. */
 		function shapeOf () {
 			var m = state.Data.Manifest;
@@ -213,12 +240,19 @@ Elemenx.Trait('SceneGalaxy', {
 			var kinds = {elliptical: 1, dwarf: 2, irregular: 3, ring: 4};
 			var bulge = state.Bulge || {Radius: shape.Bulge, Flat: 0.6, Bright: 1};
 			var seed = 0;
+			var knots;
 			var i;
 
 			for (i = 0; i < m.Seed.length; i++)
 				seed = (seed * 31 + m.Seed.charCodeAt(i)) % 997;
 
+			knots = knotsOf();
+
 			return {
+				uKnotsA: knots.A,
+				uKnotsB: knots.B,
+				uKnotGridA: knots.InfoA,
+				uKnotGridB: knots.InfoB,
 				uKind: kinds[m.Kind] || 0,
 				uRadius: m.Radius / 1000,
 				uScale: shape.Disc / 1000,
@@ -1164,6 +1198,19 @@ Elemenx.Trait('SceneGalaxy', {
 			return [view.Matrix.join(','), number(self.GalaxyTime, 0), renderer.Width, renderer.Height, renderer.Ratio, self.Graphics ? self.Graphics().Level : '', state.Key, (edits.Added || []).length, (edits.Removed || []).length, Object.keys(edits.Overrides || {}).length, state.Picked, state.Follow, state.NearKey].join('|');
 		}
 
+		/* Asked for when the scene starts (engine.Warm): all its programs, waited for with the rest. */
+		(engine.Warms = engine.Warms || []).push(function (setting) {
+			if (setting === 'galaxy' && renderer)
+				programs();
+		});
+
+		/* The picture of its plane till it is whole: a stage of the loading (a few rows a frame). */
+		(engine.Bakes = engine.Bakes || []).push(function () {
+			if (self.Setting !== 'galaxy' || !state.Data) return null;
+
+			return {Name: 'galaxy', Done: state.PlaneSize ? Math.min(state.PlaneRow, state.PlaneSize) : 0, Total: state.PlaneSize || 1};
+		});
+
 		engine.GalaxyFrame = function (elapsed) {
 			var view;
 			var programsOf;
@@ -1617,25 +1664,32 @@ Elemenx.Trait('SceneGalaxy', {
 			'	return pow(h, 16.0) * 17.0;',
 			'}',
 			/*
-			 * Its knots where stars are born: clumps on a cellular grid of the plane (cell kly), each lit where its arm is (ridge),
-			 * a few pink blobs round a blue core; 0 where none.
+			 * Its knots where stars are born: clumps on a grid of the plane, each cell at most one, where it is, how large and
+			 * whether it is lit as GalaxyData.Knots worked them out (grid: x, z, size kly, weight a texel; uKnotGrid: its cell kly,
+			 * its count, its half): each knot drawn is one of its nebulae. A few pink blobs round a blue core; 0 where none.
+			 * Regression: drawn of a hash of the shader of their own, its nebulae stood elsewhere.
 			 */
-			'vec4 knots(vec2 at, float cell, float ridge, float seed) {',
-			'	vec2 base = floor(at / cell);',
+			'uniform sampler2D uKnotsA;',
+			'uniform sampler2D uKnotsB;',
+			'uniform vec3 uKnotGridA;',
+			'uniform vec3 uKnotGridB;',
+			'vec4 knots(sampler2D grid, vec3 info, vec2 at) {',
+			'	vec2 base = floor(at / info.x) + info.z;',
 			'	vec4 sum = vec4(0.0);',
 			'	for (int i = -1; i <= 1; i++) {',
 			'		for (int j = -1; j <= 1; j++) {',
 			'			vec2 c = base + vec2(float(i), float(j));',
-			'			float a = hash3(vec3(c, seed));',
-			'			float b = hash3(vec3(c, seed + 1.0));',
-			'			float e = hash3(vec3(c, seed + 2.0));',
-			'			vec2 site = (c + vec2(a, b)) * cell;',
+			'			if (c.x < 0.0 || c.y < 0.0 || c.x >= info.y || c.y >= info.y) continue;',
+			'			vec4 v = texelFetch(grid, ivec2(c), 0);',
+			'			if (v.w <= 0.0) continue;',
+			'			vec2 site = v.xy;',
+			'			float size = v.z;',
+			'			float a = hash3(vec3(c, 3.0));',
+			'			float b = hash3(vec3(c, 4.0));',
 			'			float d = length(at - site);',
-			'			float size = cell * (0.08 + 0.2 * e);',
-			'			float lit = step(e, ridge) * step(hash3(vec3(c, seed + 3.0)), 0.35);',
 			'			float blob = exp(-d * d / (size * size));',
 			'			float lobes = exp(-pow(length(at - site - vec2(a - 0.5, b - 0.5) * size * 1.6), 2.0) / (size * size * 0.3));',
-			'			sum += vec4(vec3(1.0, 0.36, 0.45) * (blob * 0.8 + lobes * 0.9) + vec3(0.55, 0.7, 1.0) * exp(-d * d / (size * size * 0.06)) * 1.5, blob) * lit;',
+			'			sum += vec4(vec3(1.0, 0.36, 0.45) * (blob * 0.8 + lobes * 0.9) + vec3(0.55, 0.7, 1.0) * exp(-d * d / (size * size * 0.06)) * 1.5, blob) * v.w;',
 			'		}',
 			'	}',
 			'	return sum;',
@@ -1708,8 +1762,8 @@ Elemenx.Trait('SceneGalaxy', {
 			'	float threads = mix(0.12, th1 * (0.4 + broken) * 1.3, seen1) + mix(0.2 * w2 * (0.3 + broken), th2 * (0.3 + broken) * 0.9, seen2) + mix(0.1 * w2, th3 * 0.6, seen3);',
 			/* Its knots where stars are born: pink clumps with blue cores along its arms. */
 			'	vec4 k = vec4(0.0);',
-			'	if (ridge > 0.05 && uKind < 2.5)',
-			'		k = knots(p.xz, uRadius / 30.0, ridge * 0.6, uSeed) + knots(p.xz, uRadius / 90.0, ridge * 0.45, uSeed + 9.0) * 0.5;',
+			'	if (uKnotGridA.y > 0.5)',
+			'		k = knots(uKnotsA, uKnotGridA, p.xz) + knots(uKnotsB, uKnotGridB, p.xz);',
 			/* The middle of its layer of dust up and down a little, so that its threads stand at their own heights. */
 			'	float middle = (octave(level, uRadius / 70.0, foot, uSeed * 1.7) + octave(level, uRadius / 200.0, foot, uSeed * 2.3) - 1.0) * uHeight * 0.6;',
 			'	a = vec4(arms, ridge, lane, threads);',

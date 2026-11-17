@@ -11,7 +11,7 @@
 		<span class="elemenx-caption" role="status">{{ModelsNote}}</span>
 	</div>
 	<div class="scene-demo-scene">
-		<Scene Setting="terrain" Team="red" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [shadows]="ModelsShadows" (ready)="ModelsReady">
+		<Scene Setting="terrain" Team="red" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [shadows]="ModelsShadows" (ready)="ModelsReady"><DemoLoading slot="loading" Title="Models" />
 			<SceneObject ID="meadow" Kind="ground" [world]="WorldOf('meadow')" />
 			<SceneObject ID="noon" Kind="sun" Elevation="36" Azimuth="130" />
 			<SceneObject *for="model of ModelsList" *key="model.ID" [kind]="model.Kind" [id]="model.ID" [name]="model.Kind" [x]="model.X" [y]="model.Y" [team]="model.Team" />

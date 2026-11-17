@@ -568,6 +568,37 @@ describe('Contract: the galaxy of a Scene (Setting galaxy): its glow, its stars 
 	 * Regression: what of it lies in its plane was computed again at each step of each ray, and a fine round was drawn whole
 	 * at a frame: the card busy for a second and more at each stop of the view, the computer stuck meanwhile.
 	 */
+	/* Regression: its picture drew its knots of a hash of its own, its regions where stars are born stood elsewhere. */
+	it('draws its knots in the picture of its plane of the grids of GalaxyData.Knots, where its regions where stars are born are', async function () {
+		var made = await mount({Seed: 'contract', Radius: 50000});
+		var scene = made.Scene;
+		var renderer = scene.Engine().Renderer;
+		var draw = renderer.Draw;
+		var planes = [];
+		var grids;
+
+		renderer.Draw = function (mesh, program, uniforms) {
+			if (uniforms && uniforms.uPart !== undefined && uniforms.uKnotsA)
+				planes.push(uniforms);
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			baked(scene);
+		}
+		finally {
+			renderer.Draw = draw;
+		}
+
+		grids = Elemenx.Service('GalaxyData').Knots(scene.GalaxyData()).Grids;
+
+		expect(planes.length).toBeGreaterThan(0);
+		expect(planes[0].uKnotGridA).toEqual([grids[0].Cell, grids[0].Count, grids[0].Half]);
+		expect(planes[0].uKnotGridB[1]).toBe(grids[1].Count);
+		expect(planes[0].uKnotsB).toBeTruthy();
+	}, 60000);
+
 	it('makes the picture of its plane once a few rows at a frame, its rays read it, and draws a fine round a band of rows at a frame', async function () {
 		var made = await mount({Seed: 'contract'});
 		var scene = made.Scene;
@@ -878,16 +909,27 @@ describe('Contract: the galaxy of a Scene (Setting galaxy): its glow, its stars 
 			return draw.apply(this, arguments);
 		};
 
-		/* What the card measured is read back a frame or so later, when it is done: the frames come with time between them. */
-		async function settle () {
+		/*
+		 * What the card measured is read back a frame or so later, when it is done: the frames come with time between them,
+		 * till what the eye takes holds still (or, done, says it went where it should). Regression: forty turns of 15 ms, and
+		 * under load the card read nothing back in them, the eye still where it was (5.1685 against 5.1681).
+		 */
+		async function settle (done) {
+			var last = state.Taken;
+			var still = 0;
 			var i;
 
-			for (i = 0; i < 40; i++) {
+			for (i = 0; i < 600; i++) {
 				frames(scene, 2);
 
 				await new Promise(function (resolve) {
 					setTimeout(resolve, 15);
 				});
+
+				still = Math.abs(state.Taken - last) <= Math.abs(last) * 0.001 ? still + 1 : 0;
+				last = state.Taken;
+
+				if (i >= 40 && (done ? done() : still >= 20)) return;
 			}
 		}
 
@@ -901,7 +943,9 @@ describe('Contract: the galaxy of a Scene (Setting galaxy): its glow, its stars 
 
 		scene.SetGalaxyView({Target: [0, 0, 0], Distance: 200, Pitch: 0.3});
 
-		await settle();
+		await settle(function () {
+			return state.Taken < far * 0.95;
+		});
 
 		engine.DrawReady = draw;
 

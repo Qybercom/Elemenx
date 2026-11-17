@@ -160,4 +160,84 @@ describe('Contract: the nebulae of a Scene: clouds of gas and dust drawn as volu
 			renderer.Draw = draw;
 		}
 	}, 60000);
+
+	/*
+	 * Regression: its shape was a block of 64³ made at once, blurred near; it had no graph of its look. Now 128³ (64³ at low),
+	 * a band of rows a frame (a stage of the loading), a fine grain near; its graph makes it breathe, turn and spread, and the
+	 * shape of its graph (how torn, how thick) makes its block again.
+	 */
+	it('bakes a finer block a band at a time, and looks as its graph says: it breathes, turns, and its shape of its graph', async function () {
+		var scene = await mount();
+		var engine = scene.Engine();
+		var inner = scene.Scene();
+		var graph = scene.LibraryNebula();
+		var renderer = engine.Renderer;
+		var draw = renderer.Draw;
+		var bakes = [];
+		var look;
+		var later = [];
+		var key;
+
+		expect(graph.type).toBe('nebula');
+
+		scene.Quality = 'high';
+
+		inner.Active.forEach(function (object) {
+			if (object.ID !== 'orion')
+				object.Hidden = true;
+		});
+
+		renderer.Draw = function (mesh, program, uniforms) {
+			if (uniforms && uniforms.uSide !== undefined && uniforms.uShape)
+				bakes.push(uniforms.uSide);
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			engine.NebulaDraw([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], later, null);
+
+			await waitFor(function () {
+				engine.NebulaDraw([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], later, null);
+
+				return engine.NebulaLook('orion').Baked;
+			}, 30000);
+		}
+		finally {
+			renderer.Draw = draw;
+		}
+
+		/* 128³ in bands: many draws, each of a part of its rows. */
+		expect(engine.NebulaLook('orion').Side).toBe(128);
+		expect(bakes.length).toBeGreaterThan(3);
+		expect(bakes[0]).toBe(128);
+
+		/* Its graph: brighter and dimmer over its round, turned as the time goes. */
+		scene.Change('orion', {Traits: {Nebula: {Blueprint: graph, Parameters: {Pulse: 0.5, Cycle: 40, Spin: 6, Turbulence: 1}}}});
+
+		inner.Seconds = 10;
+		look = engine.NebulaLook('orion');
+
+		expect(look.Glow).toBeCloseTo(1.5, 3);
+		expect(look.Turn).toBeCloseTo(1 * Math.PI / 180, 4);
+
+		inner.Seconds = 30;
+
+		expect(engine.NebulaLook('orion').Glow).toBeCloseTo(0.5, 3);
+
+		/* The shape of its graph is of its block: made again when it changes, not as the time goes. */
+		key = engine.NebulaLook('orion').Baked;
+		inner.Seconds = 31;
+
+		expect(engine.NebulaLook('orion').Baked).toBe(key);
+
+		scene.Change('orion', {Traits: {Nebula: {Parameters: {Pulse: 0.5, Cycle: 40, Spin: 6, Turbulence: 2}}}});
+
+		expect(engine.NebulaLook('orion').Shape[0]).toBe(2);
+		expect(engine.NebulaLook('orion').Baked).toBe(false);
+
+		/* Its Type and Subtype to choose in an inspector. */
+		expect(engine.Options['Nebula:Type']).toEqual(['hii', 'planetary', 'remnant', 'dark']);
+		expect(engine.Options['Nebula:Subtype']).toContain('Ib');
+	}, 60000);
 });

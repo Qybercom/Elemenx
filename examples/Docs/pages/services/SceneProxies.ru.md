@@ -22,11 +22,13 @@ Scatter сцены рисует им дальние плитки посева (�
 
 ## Тесты
 
-- [draws the far tiles as proxies, each one shape of their things, and none with Proxies false](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scatter-proxies.test.js#L53) — `tests/regression/scatter-proxies.test.js`
-- [takes the proxies of the same world from the cache of the browser the next time](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scatter-proxies.test.js#L98) — `tests/regression/scatter-proxies.test.js`
-- [makes its streams again at most each 400 ms while a ground is sown, not in every frame](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scatter-proxies.test.js#L163) — `tests/regression/scatter-proxies.test.js`
-- [shows the numbers of a frame in a corner while Levels is on, turned on and off by Ctrl+Shift+L](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scatter-proxies.test.js#L250) — `tests/regression/scatter-proxies.test.js`
-- [draws into the voxels only what is sown in the box of their grid](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scatter-proxies.test.js#L294) — `tests/regression/scatter-proxies.test.js`
+- [draws the far tiles as proxies, each one shape of their things, and none with Proxies false](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scatter-proxies.test.js#L54) — `tests/regression/scatter-proxies.test.js`
+- [takes the proxies of the same world from the cache of the browser the next time](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scatter-proxies.test.js#L99) — `tests/regression/scatter-proxies.test.js`
+- [makes its streams again at most each 400 ms while a ground is sown, not in every frame](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scatter-proxies.test.js#L164) — `tests/regression/scatter-proxies.test.js`
+- [shows the numbers of a frame in a corner while Levels is on, turned on and off by Ctrl+Shift+L](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scatter-proxies.test.js#L251) — `tests/regression/scatter-proxies.test.js`
+- [draws into the voxels only what is sown in the box of their grid](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scatter-proxies.test.js#L295) — `tests/regression/scatter-proxies.test.js`
+- [draws the grass of a planet of its field round the eye, its blades counted, its colors set; none once taken away](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scatter-proxies.test.js#L344) — `tests/regression/scatter-proxies.test.js`
+- [tells what fades between two levels to the frames as standing, the code of its mirror kept](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/scatter-proxies.test.js#L392) — `tests/regression/scatter-proxies.test.js`
 - [makes the data of a shape: its box, how far it reaches, the color of its upper part](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneProxies/SceneProxies.test.js#L32) — `libraries/ElemenxGraphics/services/SceneProxies/SceneProxies.test.js`
 - [merges the copies of a tile into one shape of fewer faces, the small ones as small bodies](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneProxies/SceneProxies.test.js#L47) — `libraries/ElemenxGraphics/services/SceneProxies/SceneProxies.test.js`
 - [packs a proxy small to be kept and unpacks it as it was](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneProxies/SceneProxies.test.js#L75) — `libraries/ElemenxGraphics/services/SceneProxies/SceneProxies.test.js`

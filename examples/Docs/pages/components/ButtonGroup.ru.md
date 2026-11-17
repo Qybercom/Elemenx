@@ -55,3 +55,4 @@
 ## Тесты
 
 - [ButtonGroup groups its buttons for screen readers, attached or in a column, and FileIcon names the icon of a file by its name](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L123) — `tests/regression/library-misc.test.js`
+- [ButtonGroup attached in a place as wide as its buttons does not scroll across](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L140) — `tests/regression/library-misc.test.js`

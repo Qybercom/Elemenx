@@ -74,9 +74,10 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		try {
 			document.getElementById('mount').appendChild(component.$Element());
 
+			/* Regression (under load): its workers, busy with the other tests, took more than 20 s (as mount waits 50 s). */
 			expect(await waitFor(function () {
 				return drawn > 0;
-			}, 20000)).toBe(true);
+			}, 50000)).toBe(true);
 
 			expect(errors).toEqual([]);
 		}
@@ -458,4 +459,142 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 			return editor.Own().MapTexture;
 		}, 30000);
 	}, 60000);
+
+	/*
+	 * Its settlements and rivers as a Scene and a bake make them, changed in its Places: a village added where a press was,
+	 * of another kind, moved by a drag, removed by Delete; a river drawn by presses and removed; undone.
+	 */
+	it('shows the settlements and rivers its planet makes and changes them in its Places, laid over them again', async function () {
+		var made = await mount({Seed: 'places', Ocean: 0.4});
+		var editor = made.Editor;
+		var host = made.Host;
+		var planets = Elemenx.Service('ScenePlanet');
+		var view = editor.$Element().querySelector('.elemenx-planet-editor-view');
+		var marks = editor.$Element().querySelector('.elemenx-planet-editor-marks');
+		var first;
+		var spot = null;
+		var x;
+		var y;
+
+		function last () {
+			return host.Changes[host.Changes.length - 1];
+		}
+
+		function pointer (type, at) {
+			var box = view.getBoundingClientRect();
+
+			view.dispatchEvent(new PointerEvent(type, {bubbles: true, clientX: box.left + at[0], clientY: box.top + at[1], pointerId: 1, button: 0}));
+		}
+
+		/* A pixel of the globe away from any settlement and river: a place to add one. */
+		function free () {
+			var box = view.getBoundingClientRect();
+			var tool = editor.Tool;
+			var found = null;
+
+			for (y = 60; y < 320 && !found; y += 17) {
+				for (x = 140; x < 360 && !found; x += 17) {
+					editor.Tool = 'settlements';
+
+					var town = editor.PlaceAt(box.left + x, box.top + y);
+
+					editor.Tool = 'streams';
+
+					if (!town && !editor.PlaceAt(box.left + x, box.top + y) && editor.At(box.left + x, box.top + y))
+						found = [x, y];
+				}
+			}
+
+			editor.Tool = tool;
+
+			return found;
+		}
+
+		editor.Picked('settlements');
+
+		/* Made in workers: its rivers of its heights, its settlements of them, shown when they came. */
+		expect(await waitFor(function () {
+			return editor.Laid();
+		}, 100000)).toBeTruthy();
+
+		first = editor.Laid();
+
+		expect(first.Towns.length).toBeGreaterThan(5);
+		expect(first.Rivers.length).toBeGreaterThan(5);
+		expect(editor.Making).toBe('');
+		expect(marks.querySelectorAll('circle.elemenx-planet-editor-town').length).toBeGreaterThan(0);
+		expect(marks.querySelectorAll('polyline.elemenx-planet-editor-course').length).toBeGreaterThan(0);
+
+		/* A press where none is: a village added there, selected. */
+		spot = free();
+
+		expect(spot).not.toBeNull();
+
+		pointer('pointerdown', spot);
+		pointer('pointerup', spot);
+
+		expect(last().Places.Towns).toEqual([{Op: 'add', Point: expect.any(Array), Kind: 'village', Size: 0.5}]);
+		expect(editor.Laid().Towns.length).toBe(first.Towns.length + 1);
+		expect(editor.PlaceSelected).toEqual({Kind: 'town', Index: first.Towns.length});
+		expect(editor.PlaceOf()).toEqual({Kind: 'town', Of: 'village'});
+
+		/* Of another kind, from the panel. */
+		editor.PlaceKind('city');
+
+		expect(last().Places.Towns[1]).toEqual({Op: 'kind', At: expect.any(Array), Kind: 'city'});
+
+		last().Places.Towns[1].At.forEach(function (value, axis) {
+			expect(value).toBeCloseTo(last().Places.Towns[0].Point[axis], 6);
+		});
+
+		expect(editor.Laid().Towns[first.Towns.length].Kind).toBe('city');
+
+		/* Carried by a drag 30 pixels aside: moved there. */
+		var at = planets.Project(editor.View(), editor.Laid().Towns[first.Towns.length].Point);
+
+		pointer('pointerdown', [at[0], at[1]]);
+		pointer('pointermove', [at[0] + 15, at[1]]);
+		pointer('pointermove', [at[0] + 30, at[1]]);
+		pointer('pointerup', [at[0] + 30, at[1]]);
+
+		expect(last().Places.Towns[2].Op).toBe('move');
+
+		var moved = planets.Project(editor.View(), editor.Laid().Towns[first.Towns.length].Point);
+
+		expect(Math.hypot(moved[0] - at[0] - 30, moved[1] - at[1])).toBeLessThan(2);
+
+		/* Removed by Delete. */
+		view.dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, key: 'Delete'}));
+
+		expect(last().Places.Towns[3]).toEqual({Op: 'remove', At: expect.any(Array)});
+		expect(editor.Laid().Towns.length).toBe(first.Towns.length);
+		expect(editor.PlaceSelected).toBeNull();
+
+		/* A river drawn by presses where no river is, ended by Enter: its course added, as long as it was drawn. */
+		editor.Picked('streams');
+
+		spot = free();
+
+		pointer('pointerdown', spot);
+		pointer('pointerup', spot);
+		pointer('pointerdown', [spot[0] + 25, spot[1] + 10]);
+		pointer('pointerup', [spot[0] + 25, spot[1] + 10]);
+
+		view.dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, key: 'Enter'}));
+
+		expect(last().Places.Rivers).toEqual([{Op: 'add', Points: [expect.any(Array), expect.any(Array)], Flow: 200}]);
+		expect(editor.Laid().Rivers.length).toBe(first.Rivers.length + 1);
+		expect(editor.PlaceOf()).toEqual({Kind: 'river', Flow: 200});
+		expect(marks.querySelectorAll('polyline.elemenx-planet-editor-course.drawn').length).toBeGreaterThan(0);
+
+		/* Removed, and undone. */
+		editor.PlaceRemoved();
+
+		expect(last().Places.Rivers[1]).toEqual({Op: 'remove', At: expect.any(Array)});
+		expect(editor.Laid().Rivers.length).toBe(first.Rivers.length);
+
+		editor.Undo();
+
+		expect(editor.Laid().Rivers.length).toBe(first.Rivers.length + 1);
+	}, 160000);
 });

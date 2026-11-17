@@ -65,7 +65,12 @@
 - [multiplies, inverts and projects matrices, and makes shapes of triangles](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L154) — `tests/regression/library-scene.test.js`
 - [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L185) — `tests/regression/library-scene.test.js`
 - [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L226) — `tests/regression/library-scene.test.js`
+- [Astronomy.Generate takes the mass of its star (a star of a galaxy), the rest of the system still of its seed](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L113) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 - [puts planets on their orbits and makes shapes of three dimensions with the Services of the system Libraries](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`
-- [adds, changes, attaches, detaches and removes objects and parts, saves the game and loads it the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L609) — `tests/regression/library-scene.test.js`
+- [adds, changes, attaches, detaches and removes objects and parts, saves the game and loads it the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L616) — `tests/regression/library-scene.test.js`
 - [saves a recipe of the kinds of the library and makes the very same thing of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/seeded.test.js#L23) — `tests/regression/seeded.test.js`
 - [bakes what it made, its lists of numbers packed as text, and reads it back without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/seeded.test.js#L59) — `tests/regression/seeded.test.js`
+- [adds a star cluster with the swarm of its old stars, and stars round its middle light-years out](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js#L660) — `libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js`
+- [makes star clusters of three kinds of a seed: open ones loose and young, globular ones old and packed, nuclear ones round a black hole](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L230) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
+
++1 ещё в тех же файлах

@@ -1,0 +1,118 @@
+.hardware-page {
+	display: grid;
+	gap: 16px;
+	max-width: 1100px;
+	margin: 0 auto;
+	padding: 16px;
+}
+
+.hardware-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 8px 0;
+}
+
+.hardware-parts {
+	display: grid;
+	gap: 6px;
+}
+
+.hardware-part {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 140px 120px auto;
+	align-items: center;
+	gap: 8px;
+}
+
+.hardware-part-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.hardware-map {
+	position: relative;
+	height: 44px;
+	margin: 8px 0;
+	overflow: hidden;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface);
+}
+
+.hardware-map-piece {
+	display: flex;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	border-right: 1px solid var(--elemenx-background);
+	background: var(--elemenx-info);
+	color: var(--elemenx-accent-text);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.hardware-map-piece[data-kind='app'] {
+	background: var(--elemenx-accent);
+}
+
+.hardware-map-piece[data-kind='boot'],
+.hardware-map-piece[data-kind='table'] {
+	background: var(--elemenx-text-muted);
+}
+
+.hardware-map-piece > span {
+	overflow: hidden;
+	padding: 0 4px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.hardware-table {
+	display: grid;
+	gap: 4px;
+	overflow-x: auto;
+}
+
+.hardware-table-row {
+	display: grid;
+	grid-template-columns: 140px 100px 120px 120px 120px auto;
+	align-items: center;
+	gap: 6px;
+	min-width: 640px;
+}
+
+.hardware-table-head {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.hardware-problems {
+	margin: 4px 0;
+	padding-left: 20px;
+	color: var(--elemenx-danger);
+}
+
+@media (max-width: 640px) {
+	.hardware-part {
+		grid-template-columns: minmax(0, 1fr) 110px auto;
+	}
+
+	.hardware-part > .elemenx-caption {
+		display: none;
+	}
+}
+
+.hardware-field {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.hardware-field > .elemenx-select {
+	width: 170px;
+}

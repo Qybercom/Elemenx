@@ -19,7 +19,7 @@ Types of values: float, vec2, vec3, vec4, int, bool (numbers, and lists of them 
 - Bake(graph) gives a pass or a material made, as JSON ({version, type, hash, parameters, baked}): Compile reads it back with no node at all. Graphs of code (render, generator, flow) are not baked: their blocks run as code.
 - Start(graph, context) runs a flow: {Emit(name, payload, callback) (the events of that name start, the callback has (error) when all they started is done), On(name, handler) (what an Emit block tells; it returns what stops listening), Variables, Stop()}. context: Actions ({Name: function (value, done (error, result))}), Timer (function (seconds, run), setTimeout by default) and anything the blocks read. A block's Run(context) gets {Inputs, Properties, Block, Instance, Payload, Set(key, value) (its output), Later() (a function to go on with later: (key)) } and gives the key of the flow it goes on by, a list of them, or {Key, Values} (its outputs while that way runs: the Index of a For). More than Steps (100000) at once is an error: a flow that never ends.
 
-The types of this library: Number, Vector, Color, Text, Bool, Parameter, Time, Input, Add, Subtract, Multiply, Divide, Min, Max, Pow, Step, Sin, Cos, Abs, Floor, Fract, Sqrt, Exp, OneMinus, Saturate, Mix, Clamp, Smoothstep, Remap, Dot, Length, Normalize, Split, Combine, Noise, Fbm, NoiseSpec (a noise of the Noise Service by its spec), Result, Compare, And, Or, Not, Field, Get, Set, Event, Branch, Sequence, For, Delay, Action, Emit; BlueprintShaders adds UV, Pixel, Position, Normal, Texture, Output, Surface and Present, and the GLSL of the numbers. Errors start with 'Elemenx Blueprints:'. The same functions run in Node: they read no page.
+The types of this library: Number, Vector, Color, Text, Bool, Parameter, Time, Input, Add, Subtract, Multiply, Divide, Min, Max, Pow, Step, Sin, Cos, Abs, Floor, Fract, Sqrt, Exp, OneMinus, Saturate, Mix, Clamp, Smoothstep, Remap, Curve (a value of keys over a number, time most often: its Keys [[x, value]...], Smooth linear, smooth or step, Loop a length after which it begins again; CurveAt(keys, x, smooth, loop) the same in code), Dot, Length, Normalize, Split, Combine, Noise, Fbm, NoiseSpec (a noise of the Noise Service by its spec), Result, Compare, And, Or, Not, Field, Get, Set, Event, Branch, Sequence, For, Delay, Action, Emit; BlueprintShaders adds UV, Pixel, Position, Normal, Texture, Output, Surface and Present, and the GLSL of the numbers. Errors start with 'Elemenx Blueprints:'. The same functions run in Node: they read no page.
 
 ## Methods
 
@@ -44,6 +44,7 @@ The types of this library: Number, Vector, Color, Text, Bool, Parameter, Time, I
 - `Compile(graph, options)`
 - `Bake(graph)`
 - `Unbake(record)`
+- `CurveAt(given, x, smooth, loop)`
 - `Code(graph)`
 - `Start(graph, context)`
 - `Invoke(name, inputs)`
@@ -64,4 +65,4 @@ The types of this library: Number, Vector, Color, Text, Bool, Parameter, Time, I
 - [bakes a pass and a material into JSON made again with no block at all; a graph of code is not baked](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L397) — `tests/regression/blueprints.test.js`
 - [runs a generator of numbers with the very noise of the shaders, its parameters and inputs given](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L438) — `tests/regression/blueprints.test.js`
 
-+64 more in the same files
++71 more in the same files

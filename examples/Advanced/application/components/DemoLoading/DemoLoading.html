@@ -1,0 +1,8 @@
+<div class="demo-loading" role="status" aria-live="polite">
+	<Card class="demo-loading-card" Variant="elevated" [Title]="Title || 'Loading the scene'" [Text]="StageText(Version)">
+		<div class="demo-loading-body">
+			<Progress Variant="ring" Size="large" ShowValue="true" [Value]="Part" [Label]="Title || 'Loading the scene'" />
+			<Steps Direction="vertical" Size="small" [Items]="StepItems(Version)" [Active]="ActiveSteps(Version)" [Done]="DoneSteps(Version)" />
+		</div>
+	</Card>
+</div>

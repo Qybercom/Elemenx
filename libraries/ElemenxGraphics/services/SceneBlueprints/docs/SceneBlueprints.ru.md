@@ -5,3 +5,7 @@
 ## Звезда
 
 Вид графа `star` — облик звезды в момент времени, считается каждый кадр. Конечный блок `Star`: Corona, Prominences, Flares (сколько короны, протуберанцев и вспышек), Count (сколько протуберанцев, до 8), Height (высота), Speed (как быстро дышат и текут волокна), Strands (насколько рваные), Tint (оттенок). Каждый вход берёт значение от `Parameter` или `Curve` от `Time`, иначе свойство блока. `Look(parameters, seconds)` того, что даёт `Compile`, возвращает облик. Звезда с `Blueprint` в трейте `Star` горит так; `LibraryStar()` сцены — граф библиотеки: протуберанцы поднимаются и опадают за круг в `Cycle` секунд, их и вспышек столько, сколько `Activity`.
+
+## Вид графа nebula
+
+Облик туманности, считается каждый кадр, как граф звезды (берёт блоки генератора: Time, Sin, Curve, Parameter…). Конец — блок Nebula: Glow, Density, Turn (градусы), Grow, Detail, Turbulence, Thickness, Hollow (числа, 1 / 0 по умолчанию) и Outer, Inner (оттенки). Look(parameters, seconds) у скомпилированного графа даёт эти поля; Turbulence, Thickness и Hollow относятся к форме и берутся на время 0. Граф библиотеки — blueprints/nebula.json (Scene.LibraryNebula()).

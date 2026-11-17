@@ -129,6 +129,6 @@
 		</RibbonTab>
 	</Ribbon>
 	<div class="scene-demo-scene">
-		<Scene Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" [freelook]="PlaceFree" [person]="PlacePerson" [shoulder]="PlaceShoulder" [axes]="PlaceAxes ? 'top-right' : ''" [origin]="PlaceOrigin" [bokeh]="SceneBokeh" (person)="PlacePerson = $event" (shoulder)="PlaceShoulder = $event" (ready)="PlaceReady"><VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,rb,lb" Label="Walk" /><SceneObject *if="PlaceGlow" ID="hero-glow" Kind="effect" Type="glow" Follow="hero" Color="#7fd0ff" Intensity="1" Where="both" /><SceneObject *if="PlaceMana" ID="hero-mana" Kind="effect" Type="mana" Follow="hero" /></Scene>
+		<Scene Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" [freelook]="PlaceFree" [person]="PlacePerson" [shoulder]="PlaceShoulder" [axes]="PlaceAxes ? 'top-right' : ''" [origin]="PlaceOrigin" [bokeh]="SceneBokeh" (person)="PlacePerson = $event" (shoulder)="PlaceShoulder = $event" (ready)="PlaceReady"><DemoLoading slot="loading" Title="Locations" /><VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,rb,lb" Label="Walk" /><SceneObject *if="PlaceGlow" ID="hero-glow" Kind="effect" Type="glow" Follow="hero" Color="#7fd0ff" Intensity="1" Where="both" /><SceneObject *if="PlaceMana" ID="hero-mana" Kind="effect" Type="mana" Follow="hero" /></Scene>
 	</div>
 </div>

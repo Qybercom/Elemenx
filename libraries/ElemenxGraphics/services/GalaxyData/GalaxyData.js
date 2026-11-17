@@ -32,6 +32,8 @@
  *   stars round it on orbits of the profile of Plummer, each with the planets and stations its sphere of Hill leaves it.
  * - Search(data, options): what of it lies round a place and is as asked (a type, a class, a mass, a temperature, a
  *   text, what was edited), the nearest first, at most Limit: {Items, More, Partial}.
+ * - Knots(data): the knots where its stars are born, as its picture draws them ({Grids: [{Cell, Count, Half, Data}]}): each
+ *   one of its nebulae, a region where stars are born.
  * - Objects(data): its nebulae and star clusters made of its seed ({ID, Kind, Type, Subtype, Name, Place, Radius, Seed}),
  *   ObjectOf(data, id) one of them, ObjectSystem(data, id) its scene as a system (Star and System take their IDs too: they
  *   are entered as a star is).
@@ -44,7 +46,7 @@
 Elemenx.Service('GalaxyData', {
 	$Meta: {
 		Description: 'A galaxy as data: its supermassive black hole, its stars made sector by sector of its seed as many as a galaxy holds, its systems, what was changed of it.',
-		Methods: ['Kinds()', 'Make(options)', 'Density(data, place)', 'Sector(data, x, y, z, limit)', 'Search(data, options)', 'Star(data, id)', 'Hole(data)', 'HoleSystem(data)', 'Cluster(options)', 'Objects(data)', 'ObjectOf(data, id)', 'ObjectSystem(data, id)', 'Position(data, place, time)', 'Added(data, time)', 'Glow(data, count)', 'System(data, id)', 'Cosmos(data, id)', 'Rename(data, id, name)', 'Remove(data, id)', 'AddBody(data, body)', 'SetSystem(data, id, system)', 'Use(key, data)', 'DataOf(key)', 'Open(source, callback)', 'Write(data, store, callback, whole)', 'Save(data)', 'Pack(data, callback)']
+		Methods: ['Kinds()', 'Make(options)', 'Density(data, place)', 'Sector(data, x, y, z, limit)', 'Search(data, options)', 'Star(data, id)', 'Hole(data)', 'HoleSystem(data)', 'Cluster(options)', 'Objects(data)', 'Knots(data)', 'ObjectOf(data, id)', 'ObjectSystem(data, id)', 'Position(data, place, time)', 'Added(data, time)', 'Glow(data, count)', 'System(data, id)', 'Cosmos(data, id)', 'Rename(data, id, name)', 'Remove(data, id)', 'AddBody(data, body)', 'SetSystem(data, id, system)', 'Use(key, data)', 'DataOf(key)', 'Open(source, callback)', 'Write(data, store, callback, whole)', 'Save(data)', 'Pack(data, callback)']
 	},
 
 	Sets: {},
@@ -543,6 +545,79 @@ Elemenx.Service('GalaxyData', {
 		});
 	},
 
+	/*
+	 * The knots where its stars are born (the pink clumps of its picture, SceneGalaxy): two grids of its plane (cells of a
+	 * thirtieth and a ninetieth of its radius), in each cell at most one, at a place, as large and lit or not as its seed
+	 * and its arms there say. Worked out here once and given to its picture as they are (Grids: {Cell, Count, Half, Data:
+	 * x, z, size (kly) and its weight a cell}), so each knot it shows is one of its nebulae (Objects: the regions where stars
+	 * are born). None in a galaxy of no arms.
+	 */
+	Knots: function (data) {
+		var self = this;
+		var m = data.Manifest;
+		var key = [m.Seed, m.Kind, m.Radius, m.Arms, m.Pitch, m.Phase].join(':');
+		var s = this.Shape(m);
+		var spiral = (m.Kind === 'spiral' || m.Kind === 'barred') && m.Arms > 0;
+		var start = s.Bar > 0 ? s.Bar * 1.05 : s.Bulge * 0.6;
+
+		if (this.KnotsMade && this.KnotsMade.Key === key) return this.KnotsMade.Made;
+
+		this.KnotsMade = {Key: key, Made: {Grids: [{Scale: 30, Lit: 0.6, Weight: 1}, {Scale: 90, Lit: 0.45, Weight: 0.5}].map(function (grid, index) {
+			var cell = m.Radius / grid.Scale;
+			var count = Math.ceil(m.Radius * 2.2 / cell);
+			var half = Math.floor(count / 2);
+			var cells = new Float32Array(count * count * 4);
+			var list = [];
+			var cx;
+			var cz;
+			var random;
+			var x;
+			var z;
+			var r;
+			var a;
+			var b;
+			var e;
+			var h;
+			var on;
+			var ridge;
+			var at;
+
+			for (cz = 0; cz < count; cz++) {
+				for (cx = 0; cx < count; cx++) {
+					random = self.Random(m.Seed + ':knot:' + index + ':' + cx + ':' + cz);
+					a = random();
+					b = random();
+					e = random();
+					h = random();
+					x = (cx - half + a) * cell;
+					z = (cz - half + b) * cell;
+					r = Math.sqrt(x * x + z * z);
+					at = (cz * count + cx) * 4;
+
+					cells[at] = x / 1000;
+					cells[at + 1] = z / 1000;
+					cells[at + 2] = cell * (0.08 + 0.2 * e) / 1000;
+
+					if (!spiral || r > m.Radius * 0.95 || h > 0.35) continue;
+
+					/* Lit where its arm is strong, past the edge of its bulge (or the ends of its bar), in its flocks of young stars. */
+					on = Math.max(0, Math.min(1, (r - start) / (start * (s.Bar > 0 ? 0.3 : 1.5))));
+					ridge = (self.Arm(m, x, z) - 0.3) / 1.7 * 1.3 * on * (0.4 + 0.9 * self.Flocks(data, x, z));
+
+					if (e >= ridge * grid.Lit) continue;
+
+					cells[at + 3] = grid.Weight;
+
+					list.push({X: x, Z: z, Size: cell * (0.08 + 0.2 * e), Weight: grid.Weight});
+				}
+			}
+
+			return {Cell: cell / 1000, Count: count, Half: half, Data: cells, List: list};
+		})}};
+
+		return this.KnotsMade.Made;
+	},
+
 	MakeObjects: function (data) {
 		var self = this;
 		var m = data.Manifest;
@@ -552,7 +627,8 @@ Elemenx.Service('GalaxyData', {
 		var disc = m.Kind !== 'elliptical' && m.Kind !== 'dwarf';
 		var young = {spiral: 1, barred: 1, ring: 0.8, irregular: 0.7, lenticular: 0.08, elliptical: 0, dwarf: 0.05}[m.Kind] || 0;
 		var list = [];
-		var counts = {hii: Math.round(120 * young * size), dark: Math.round(80 * young * size), open: Math.round(220 * young * size), planetary: Math.round((disc ? 40 : 60) * size), remnant: Math.round(30 * size), globular: Math.round((m.Kind === 'elliptical' ? 400 : 150) * size * size + 4)};
+		var numbers = {};
+		var counts = {dark: Math.round(80 * young * size), open: Math.round(220 * young * size), planetary: Math.round((disc ? 40 : 60) * size), remnant: Math.round(30 * size), globular: Math.round((m.Kind === 'elliptical' ? 400 : 150) * size * size + 4)};
 		var initials = String(m.Name).slice(0, 3).toUpperCase();
 		var i;
 		var u;
@@ -588,19 +664,21 @@ Elemenx.Service('GalaxyData', {
 		}
 
 		function put (kind, type, subtype, at, radius) {
-			var index = list.filter(function (one) {
-				return one.Kind === kind;
-			}).length + 1;
+			var index = numbers[kind] = (numbers[kind] || 0) + 1;
 			var id = (kind === 'nebula' ? 'neb-' : 'cl-') + type + '-' + index;
 
 			list.push({ID: id, Kind: kind, Type: type, Subtype: subtype, Name: initials + ' ' + (kind === 'nebula' ? 'N' : 'C') + index, Place: [Math.round(at[0]), Math.round(at[1]), Math.round(at[2])], Radius: Math.round(radius * 10) / 10, Seed: m.Seed + ':' + id, Luminosity: 0});
 		}
 
-		/* On the knots of young stars of the arms: where an arm is strong and its flocks gather. */
-		for (i = 0; i < counts.hii; i++)
-			put('nebula', 'hii', '', place(function (x, at) {
-				return Math.pow(self.Arm(m, x, at) / 2, 3) * self.Flocks(data, x, at) * 1.6;
-			}, 0.15), 30 + Math.pow(random(), 2) * 270);
+		/*
+		 * On the knots of young stars of its arms, each one a knot its picture shows (Knots), as large: the large ones first.
+		 * Regression: put where its arms were strong by their own draw, not where its picture had its knots.
+		 */
+		this.Knots(data).Grids.forEach(function (grid) {
+			grid.List.forEach(function (knot) {
+				put('nebula', 'hii', '', [knot.X, laplace(s.Height * 0.15), knot.Z], knot.Size);
+			});
+		});
 
 		/* Dark clouds on the dust of the inner edge of the arms: where the arm is a little ahead, not yet here. */
 		for (i = 0; i < counts.dark; i++)

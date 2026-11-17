@@ -198,7 +198,7 @@ Elemenx.Trait('SceneDeepSpace', {
 			if (made && made.Look)
 				look = made.Look(star.Parameters || {}, scene.Seconds % 100000);
 
-			look = look || {Corona: 1, Prominences: 1, Flares: 1, Count: 5, Height: 1, Speed: 1, Strands: 1, Tint: [1, 1, 1]};
+			look = look || {Corona: 1, Prominences: 1, Flares: 1, Count: 5, Height: 1, Speed: 3, Strands: 1, Tint: [1, 1, 1]};
 
 			return {Parts: [number(star.Corona, 1) * look.Corona, number(star.Prominences, 1) * look.Prominences, number(star.Flares, 1) * look.Flares, 0], Shape: [Math.max(0, Math.min(8, look.Count)), Math.max(0, look.Height), Math.max(0, look.Speed), Math.max(0, look.Strands)], Tint: look.Tint && look.Tint.length >= 3 ? look.Tint.slice(0, 3) : [1, 1, 1]};
 		}
@@ -266,6 +266,25 @@ Elemenx.Trait('SceneDeepSpace', {
 		 * What is drawn of them, after all that stands (light bent, gas that glows): in the part of the depth the view is
 		 * drawn in now (planes), each once.
 		 */
+		function made () {
+			programs = programs || {Lens: null, Tail: renderer.Program(shaders.TailVertex, shaders.Tail), Glow: renderer.Program(shaders.LensVertex, shaders.Glow), Corona: renderer.Program(shaders.LensVertex, shaders.Corona), Beam: renderer.Program(shaders.BeamVertex, shaders.Beam), Field: renderer.Program(shaders.LensVertex, shaders.Field)};
+		}
+
+		/*
+		 * Asked for when the scene starts (engine.Warm): what its kinds draw, the lens too where something bends light, waited
+		 * for as the rest (the loading shows it; behind the page it came seconds after the scene was shown).
+		 */
+		(engine.Warms = engine.Warms || []).push(function (setting) {
+			if (setting === 'galaxy' || !renderer) return;
+
+			made();
+
+			if (scene.Active.some(function (object) {
+				return !!(trait(object, 'BlackHole') || trait(object, 'Wormhole'));
+			}))
+				programs.Lens = programs.Lens || renderer.Program(shaders.LensVertex, shaders.Lens);
+		});
+
 		engine.DeepDraw = function (matrix, later, right, up, planes) {
 			var eye = scene.Eye || [0, 0, 0];
 			var cube = engine.CosmosCube ? engine.CosmosCube() : null;
@@ -276,7 +295,8 @@ Elemenx.Trait('SceneDeepSpace', {
 			if (!renderer || !any) return;
 
 			/* The lens is made behind the scene: till it is, what bends light is not drawn. */
-			programs = programs || {Lens: null, Tail: renderer.Program(shaders.TailVertex, shaders.Tail), Glow: renderer.Program(shaders.LensVertex, shaders.Glow), Corona: renderer.Program(shaders.LensVertex, shaders.Corona), Beam: renderer.Program(shaders.BeamVertex, shaders.Beam), Field: renderer.Program(shaders.LensVertex, shaders.Field)};
+			made();
+
 			quad = quad || renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
 
 			/* Round each star: its corona in streamers, prominences arching over its edge, now and then a flare. */
@@ -312,7 +332,17 @@ Elemenx.Trait('SceneDeepSpace', {
 				later.push(function () {
 					var look = lookOf(object, star);
 
-					engine.DrawReady(quad, programs.Corona, {uViewProjection: matrix, uCenter: vectors.Subtract(object.World, eye), uRight: right, uUp: up, uReach: size * 4, uColor: colorOf(object.Color, [1, 0.9, 0.7]), uSeed: object.Seed || 0, uTime: scene.Seconds % 100000, uParts: [look.Parts[0] * shown, look.Parts[1] * shown, look.Parts[2] * shown, 0], uShape: look.Shape, uTint: look.Tint}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
+					/*
+					 * How far its prominences have gone: their speed added up a step at a time, the same however the speed
+					 * changes. Regression: the time by the speed, and a speed of a Blueprint that changes (its curves) threw them
+					 * whole rounds at once, the longer the scene ran the more: they flickered.
+					 */
+					if (object.CoronaAt !== scene.Seconds) {
+						object.CoronaPhase = ((object.CoronaPhase || 0) + Math.max(0, Math.min(0.25, scene.Seconds - (object.CoronaAt === undefined ? scene.Seconds : object.CoronaAt))) * look.Shape[2]) % 10000;
+						object.CoronaAt = scene.Seconds;
+					}
+
+					engine.DrawReady(quad, programs.Corona, {uPhase: object.CoronaPhase || 0, uViewProjection: matrix, uCenter: vectors.Subtract(object.World, eye), uRight: right, uUp: up, uReach: size * 4, uColor: colorOf(object.Color, [1, 0.9, 0.7]), uSeed: object.Seed || 0, uTime: scene.Seconds % 100000, uParts: [look.Parts[0] * shown, look.Parts[1] * shown, look.Parts[2] * shown, 0], uShape: look.Shape, uTint: look.Tint}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
 				});
 			});
 
@@ -471,6 +501,7 @@ Elemenx.Trait('SceneDeepSpace', {
 				'uniform vec4 uParts;',
 				'uniform vec4 uShape;',
 				'uniform vec3 uTint;',
+				'uniform float uPhase;',
 				'out vec4 outColor;',
 				'float hash(float x) { return fract(sin(x * 91.17) * 43758.5453); }',
 				'float wave(float x) {',
@@ -486,21 +517,26 @@ Elemenx.Trait('SceneDeepSpace', {
 				'	float streamers = 0.55 + 0.45 * wave(angle * 3.0 + uSeed) * wave(angle * 7.0 - uSeed + uTime * 0.02);',
 				'	vec3 color = uColor * exp(-u * 2.6) * streamers * 0.55 * uParts.x * (1.0 - smoothstep(2.5, 4.0, r));',
 				'	vec3 red = vec3(1.0, 0.36, 0.3);',
-				/* uShape: how many prominences (up to 8), how high, how fast they breathe and stream, how torn (the look of a Blueprint). */
+				/*
+				 * uShape: how many prominences (up to 8), how high, how fast they breathe and stream, how torn (the look of a
+				 * Blueprint); uPhase how far they went (their speed added up). The last one comes and goes softly as their
+				 * count changes (regression: on and off at once).
+				 */
 				'	for (int i = 0; i < 8; i++) {',
 				'		float k = float(i);',
-				'		if (k >= uShape.x) break;',
+				'		if (k >= ceil(uShape.x)) break;',
+				'		float whole = clamp(uShape.x - k, 0.0, 1.0);',
 				'		float at = hash(uSeed + k * 7.3) * 6.2832 - 3.1416;',
 				'		float wide = 0.08 + 0.1 * hash(uSeed + k * 3.1);',
-				'		float high = min(2.4, (0.12 + 0.3 * hash(uSeed + k * 5.7)) * uShape.y * (0.85 + 0.15 * sin(uTime * 0.4 * uShape.z + k)));',
+				'		float high = min(2.4, (0.12 + 0.3 * hash(uSeed + k * 5.7)) * uShape.y * (0.85 + 0.15 * sin(uPhase * 0.4 + k)));',
 				'		float t = (mod(angle - at + 3.1416, 6.2832) - 3.1416) / wide;',
 				'		if (abs(t) < 1.2) {',
 				'			float arch = high * sqrt(max(0.0, 1.0 - t * t));',
 				'			float d = abs(u - arch);',
-				'			float strands = 1.0 - 0.4 * clamp(uShape.w, 0.0, 2.5) * (1.0 - wave(t * 9.0 + uTime * 0.5 * uShape.z + k * 13.0));',
+				'			float strands = 1.0 - 0.4 * clamp(uShape.w, 0.0, 2.5) * (1.0 - wave(t * 9.0 + uPhase * 0.5 + k * 13.0));',
 				/* A thick arch of gas, brightest along it, its inside filled and fading, torn into strands. */
 				'			float body = exp(-d * 22.0) * 0.8 + exp(-d * 70.0) * 0.6 + step(u, arch) * smoothstep(0.0, arch, u) * 0.25;',
-				'			color += mix(red, uColor, 0.25) * uTint * body * max(strands, 0.0) * smoothstep(1.2, 0.85, abs(t)) * 1.3 * uParts.y;',
+				'			color += mix(red, uColor, 0.25) * uTint * body * max(strands, 0.0) * smoothstep(1.2, 0.85, abs(t)) * 1.3 * uParts.y * whole;',
 				'		}',
 				'	}',
 				/* A flare: one every while, of its seed, at its own place on the edge. */

@@ -7,7 +7,7 @@
 	</div>
 	<p class="elemenx-caption">{{CinemaNote}}</p>
 	<div class="scene-demo-scene">
-		<Scene Setting="terrain" Labels="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="CinemaReady" (arrive)="CinemaArrived" (cue)="CinemaCued">
+		<Scene Setting="terrain" Labels="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="CinemaReady" (arrive)="CinemaArrived" (cue)="CinemaCued"><DemoLoading slot="loading" Title="Camera and cinema" />
 			<SceneObject ID="meadow" Kind="ground" [world]="WorldOf('meadow')" />
 			<SceneObject ID="evening" Kind="sun" Time="17.5" Latitude="45" />
 			<div slot="screens" data-screen="cinema-panel" class="cinema-screen elemenx-card">

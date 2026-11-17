@@ -250,7 +250,7 @@ Elemenx.Component('CombatDemo', {
 				count++;
 		}, 700);
 
-		this.CombatNote = 'Mortar shells fly high and blast where they land: what has health near takes less the farther it stands, the ground is scorched.';
+		this.CombatNote = 'Mortar shells fly high and blast where they land: what has health near takes less the farther it stands, the ground is scorched and a crater dug in it (Crater of the weapon: Scene.Dig).';
 	},
 	/* Two squads far apart, sent at each other: blue riflemen and a rocket man, red robots with plasma. */
 	CombatSquads: function () {

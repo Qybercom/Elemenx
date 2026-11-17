@@ -20,7 +20,7 @@ Site({Options, Latitude, Longitude, Turn}) — место планеты ScenePl
 
 Материалы земли (SceneMaterials). Поле получает Materials — до 12 материалов своих палитр и эскиза (слоты шейдера земли) — и MaterialSlot (имя → слот). Каждая часть палитры (Sand, Low, High, Rock, Snow, Deep, Road) берёт материал из Materials палитры, иначе из GroundMaterials; элемент эскиза берёт свой Material, иначе материал по типу (LookMaterials). Paint(field, x, z, y, slope, into) при into (12 чисел) прибавляет вес каждого материала в точке так же, как смешиваются цвета. Каждый биом списка Biomes несёт и Scatter — правила рассадки из SceneBiomes, чтобы глобус планеты рисовал по ним леса. Куски земли (Chunk, Piece) несут Materials — 12 весов на вершину, юбка тоже. Трава, скала и снег переходят друг в друга полосой по высоте (линия снега волнистая) и по крутизне, так что соседние вершины склона не делят его на зубцы.
 
-RoadWay(field, from, to, options) — путь дороги по полю от [x, z] до [x, z]: A* по точкам шагом Step (1/64 поля). Подъём тем дороже, чем круче, а уклон больше MaxGrade (0.12) — намного дороже; над водой в Bridge раз (6). Затем лишние точки убираются: остаются только те, где путь отходит от прямой больше чем на полшага. Результат — [[x, z]...] или null. План поселения (SettlementPlan) не ставит участки на чужие дороги, улицы, реки, железные дороги и каньоны эскиза: середина, углы и середины сторон участка должны быть дальше половины ширины пути плюс обочины.
+RoadWay(field, from, to, options) — путь дороги по полю от [x, z] до [x, z]: A* по точкам шагом Step (1/64 поля). Подъём тем дороже, чем круче, а уклон больше MaxGrade (0.12) — намного дороже; над водой в Bridge раз (6). Затем лишние точки убираются: остаются только те, где путь отходит от прямой больше чем на полшага. Результат — [[x, z]...] или null. План поселения (SettlementPlan) строится по раскладке Layout поселения или его вида: grid (сетка вдоль длинной стороны), main (главная улица и переулки), road (деревня вдоль дороги: дорога эскиза через неё, а без неё своя изогнутая главная улица, переулки по очереди в обе стороны; на склоне — улицы-террасы вдоль горизонтали по обе стороны главной и короткие проезды между ними), radial (старый центр: рыночная площадь с улицей вокруг, шесть улиц из неё, кольцо вокруг старого города и кривое кольцо внутри, за кольцом сетка, улицы которой кончаются на кольце), districts (большой город: площадь, шесть прямых улиц из центра, через одну авеню, бульвар вокруг ядра и авеню вокруг середины, сетка в ядре и в каждом районе между лучами своя, повёрнутая по-своему). Деревня по умолчанию road, посёлок radial, город districts; districts нужен охват от 450 м (иначе radial), radial — от 180 м (иначе grid). На склоне (Slope больше 3%) улицы идут вдоль Contour. Участки ставятся вдоль кривых и колец по их направлению у каждого участка. Улица плана может нести Road (тип дороги: avenue, boulevard) и Closed (кольцо). План поселения (SettlementPlan) не ставит участки на чужие дороги, улицы, реки, железные дороги и каньоны эскиза: середина, углы и середины сторон участка должны быть дальше половины ширины пути плюс обочины.
 
 Здания поселений. В деревне иногда встречаются амбар, гараж и церковь; в посёлке — школа, церковь, заправка и гаражи; в городе — школа, многоэтажная парковка, заправка и церковь. Новые кварталы: civic (школа, церковь, вокзал), service (заправка, гаражи, парковка), farm (амбары, водонапорная башня, коттедж). В industry добавлены ангары и водонапорные башни. SettlementSizes знает размеры всех классов SceneBuildingGenerator.
 
@@ -33,6 +33,10 @@ FlatOf(options) — числа плоской карты, заданные ил�
 
 LibraryRelief(options) берёт граф ресурса `ElemenxGraphics/relief` (blueprints/relief.json) и заполняет его параметры (Scale, Ridges, Water, Height, Lapse, Spread, Warmth, Stretch) и зерно `{Seed}` через Blueprints.Fill.
 
+Дневной свет под землёй. Daylight(field, x0, z0, x1, z1, low, options) — сколько света неба доходит до точки под скалой вокруг квадрата: сетка мира (Cell, 2 м) с запасом Reach (24 м); клетка, над которой до неба только воздух, получает весь свет, дальше он идёт по воздуху, теряя Fade (0.78) за клетку, — во вход пещеры и немного внутрь, глубоко под скалой его нет. Сквозь скалу между клетками (тонкий свод) свет не проходит. Та же точка получает тот же свет в любом квадрате; At(x, y, z, normal) — его значение. Квадраты объёма кладут его в вершины, и шейдер земли по нему гасит солнце и небо и рисует камень пещеры.
+
+Пещеры наброском. SketchCarves(sketch, height, seed) — вырезы объёма из предметов наброска: линия cave — ходы под землёй (Width, Depth под землёй, 8; Rough, 0.5; Mouth 1 — концы выходят к поверхности; точка [x, z, y] — пол на этой высоте), круги hall — круглый зал (Radius, Depth середины под землёй, 10) и overhang — нависающая скала на крутом вокруг точки (Radius, Amount). Высот они не меняют.
+
 ## Методы
 
 - `Relief(settings)`
@@ -42,6 +46,7 @@ LibraryRelief(options) берёт граф ресурса `ElemenxGraphics/relie
 - `Flat(options)`
 - `Border(options)`
 - `OnRoad(field, x, z, width)`
+- `Daylight(field, x0, z0, x1, z1, low, options)`
 - `Sphere(options)`
 - `Work()`
 - `Sketched(sketch, base, seed)`
@@ -85,11 +90,11 @@ LibraryRelief(options) берёт граф ресурса `ElemenxGraphics/relie
 - [asks for as many squares a frame as the workers take, however long the walk over them took](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-lod.test.js#L191) — `tests/regression/ground-lod.test.js`
 - [draws a material of a recipe by its Blueprint, its parameters uniforms that change it without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L73) — `tests/regression/library-material-blueprints.test.js`
 - [draws a ground by its Blueprint, the color of its parameter, and keeps the very same ground as its look changes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L199) — `tests/regression/library-material-blueprints.test.js`
-- [asks a coarse part near the eye before the small squares far in the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L1365) — `tests/regression/library-scene-landing.test.js`
+- [asks a coarse part near the eye before the small squares far in the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L1368) — `tests/regression/library-scene-landing.test.js`
 - [keeps no grass where a tunnel cut the ground away under the sky](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L369) — `tests/regression/library-scene-roads.test.js`
-- [takes a ground from a model: floors one over the other, walls that stop a walker, and a plane at its foot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1721) — `tests/regression/library-scene.test.js`
-- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2033) — `tests/regression/library-scene.test.js`
-- [makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2351) — `tests/regression/library-scene.test.js`
-- [Workers runs the methods of Services in workers made of their source, and in the page when it cannot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4630) — `tests/regression/library-scene.test.js`
+- [takes a ground from a model: floors one over the other, walls that stop a walker, and a plane at its foot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1791) — `tests/regression/library-scene.test.js`
+- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2103) — `tests/regression/library-scene.test.js`
+- [makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2421) — `tests/regression/library-scene.test.js`
+- [Workers runs the methods of Services in workers made of their source, and in the page when it cannot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4700) — `tests/regression/library-scene.test.js`
 
-+44 ещё в тех же файлах
++52 ещё в тех же файлах

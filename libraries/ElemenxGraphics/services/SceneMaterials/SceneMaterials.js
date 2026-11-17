@@ -9,8 +9,9 @@
  *   Land (true: the ground may be made of it), Code (the body of a function of GLSL over q (vec2, metres along the surface),
  *   px (float, metres a pixel covers), c (inout vec3: its color), r (inout float: its roughness), m (inout float: its metal)
  *   and h (inout float: its height, metres); helpers enx_mh (a hash of a vec2), enx_mh2, enx_mn (value noise), enx_mf (its
- *   octaves), enx_mc (cells: f1, f2 and two hashes of the nearest) and enx_ms (px, size: 1 where features of size are seen,
- *   0 where they are too small))}. Built in: lawn, soil (moss, leaves, pebbles), gravel (sandy, colored grains), clay
+ *   octaves), enx_mnf and enx_mff (the same with wide, how much of p a pixel covers: what is finer than two pixels is their
+ *   mean, 0.5), enx_mc (cells: f1, f2 and two hashes of the nearest) and enx_ms (px, size: 1 where features of size are
+ *   seen, 0 where they are too small))}. Built in: lawn, soil (moss, leaves, pebbles), gravel (sandy, colored grains), clay
  *   (clods, pits), sand, rock, snow, dirt; asphalt (fresh, grainy), terrazzo (speckled grey), concrete, paving, cobbles,
  *   ballast; brick, stone, plaster, wood, metal, glass, fabric. They are resources, material graphs of a block GLSL each
  *   (blueprints/materials, ElemenxGraphics/materials/<name>): an Application gives one of that name in its place.
@@ -99,6 +100,27 @@ Elemenx.Service('SceneMaterials', {
 		'	}',
 		'	return sum / whole;',
 		'}',
+		/*
+		 * The same as long as they are seen: wide, how much of p a pixel covers; what is finer than two pixels is its mean
+		 * (0.5), so a pattern seen from far is its color, not grains changing from pixel to pixel.
+		 */
+		'float enx_mnf(vec2 p, float wide) {',
+		'	return mix(0.5, enx_mn(p), 1.0 - smoothstep(0.25, 0.5, wide));',
+		'}',
+		'float enx_mff(vec2 p, int octaves, float wide) {',
+		'	float sum = 0.0;',
+		'	float amount = 0.5;',
+		'	float whole = 0.0;',
+		'	for (int i = 0; i < 6; i++) {',
+		'		if (i >= octaves) break;',
+		'		sum += amount * mix(0.5, enx_mn(p), 1.0 - smoothstep(0.25, 0.5, wide));',
+		'		whole += amount;',
+		'		p = p * 2.03 + vec2(17.1, 5.3);',
+		'		wide *= 2.03;',
+		'		amount *= 0.5;',
+		'	}',
+		'	return sum / whole;',
+		'}',
 		'vec4 enx_mc(vec2 p, float jitter) {',
 		'	vec2 i = floor(p);',
 		'	vec2 f = fract(p);',
@@ -127,6 +149,11 @@ Elemenx.Service('SceneMaterials', {
 		'	float det = dot(dx, r1);',
 		'	if (abs(det) < 1e-12) return normal;',
 		'	vec3 grad = sign(det) * (dFdx(h) * r1 + dFdy(h) * r2);',
+		/*
+		 * Bent some 50 degrees at most. Regression: the blades of a lawn (centimetres high) over a pixel of a centimetre laid
+		 * the normal on its side, black points over the ground near.
+		 */
+		'	grad /= max(1.0, length(grad) / (abs(det) * 1.2));',
 		'	return normalize(abs(det) * normal - grad);',
 		'}'
 	].join('\n'),
@@ -193,6 +220,10 @@ Elemenx.Service('SceneMaterials', {
 		 */
 		lines.push('\tfloat edge = 0.0;', '\tfloat metre = max(length(fwidth(place.xz)), 1e-4);');
 
+		/* The slopes of the place on the screen for its tiles, taken here where all pixels go (SceneTextures tex_px, tex_grad). */
+		if (textured.length)
+			lines.push('\tlandDX = dFdx(place);', '\tlandDY = dFdy(place);', '\ttex_px_layer = length(fwidth(place));');
+
 		for (i = 0; i < count; i++)
 			lines.push('\tfloat o' + i + ' = ' + ['vMaterials', 'vMaterials2', 'vMaterials3'][Math.floor(i / 4)] + '.' + 'xyzw'.charAt(i % 4) + ';', '\tfloat e' + i + ' = o' + i + ';', '\tcover += o' + i + ';', '\tedge = max(edge, length(vec2(dFdx(o' + i + '), dFdy(o' + i + '))) / metre);');
 
@@ -209,7 +240,7 @@ Elemenx.Service('SceneMaterials', {
 			lines.push('\tw = mix(o' + index + ', max(e' + index + ' - top + 0.18, 0.0), edge);');
 
 			if (layer >= 0) {
-				lines.push('\tif (w > 0.02) { vec3 c; float h; float lit; landTexture(' + layer + '.0, ' + Number(textures.Get(material.Texture).Metres).toFixed(4) + ', ' + (textures.Get(material.Texture).Rows ? '-1.0' : '1.0') + ', place, c, h, lit); c *= landTint(color) * mix(1.0, lit, 0.6); sum += c * w; high += h * 0.03 * w; total += w; }');
+				lines.push('\tif (w > 0.02) { vec3 c; float h; float lit; landTexture(' + layer + '.0, ' + Number(textures.Get(material.Texture).Metres).toFixed(4) + ', ' + (textures.Get(material.Texture).Rows ? '-1.0' : '1.0') + ', place, c, h, lit); c = landColored(' + layer + '.0, c, color) * mix(1.0, lit, 0.6); sum += c * w; high += h * 0.03 * w; total += w; }');
 
 				return;
 			}
@@ -222,6 +253,10 @@ Elemenx.Service('SceneMaterials', {
 		/* What is steep: the face of a cliff, its beds of the height in the world; under it, at a gentler slope, scree. */
 		if (textured.indexOf('cliff') !== -1)
 			lines.push('\tlandCliff(' + textured.indexOf('cliff') + '.0, ' + Number(this.$Service('SceneTextures').Get('cliff').Metres).toFixed(4) + ', ' + textured.indexOf('dirt') + '.0, ' + Number(this.$Service('SceneTextures').Get('dirt').Metres).toFixed(4) + ', place, color, height);');
+
+		/* Under rock (a cave, a tunnel): its rock, from all three sides. */
+		if (textured.indexOf('cave-rock') !== -1)
+			lines.push('\tlandCave(' + textured.indexOf('cave-rock') + '.0, ' + Number(this.$Service('SceneTextures').Get('cave-rock').Metres).toFixed(4) + ', place, color, height);');
 
 		lines.push('}');
 
@@ -242,8 +277,11 @@ Elemenx.Service('SceneMaterials', {
 				found.push(material.Texture);
 		});
 
-		/* Earth for what is fairly steep (scree, the bank of a cut), then the face of a cliff for what is steep, on any ground: the last layers. */
-		['dirt', 'cliff'].forEach(function (name) {
+		/*
+		 * Earth for what is fairly steep (scree, the bank of a cut), the face of a cliff for what is steep, then the rock of a
+		 * cave for what is under rock (landUnder), on any ground: the last layers.
+		 */
+		['dirt', 'cliff', 'cave-rock'].forEach(function (name) {
 			if ((names || []).length && self.$Service('SceneTextures').Has(name) && found.indexOf(name) === -1)
 				found.push(name);
 		});
@@ -263,6 +301,10 @@ Elemenx.Service('SceneMaterials', {
 	 */
 	LandSlope: [
 		'vec3 landSlope = vec3(0.0, 1.0, 0.0);',
+		/* How much of the point is under rock (a cave: 1 less the daylight that comes to it), set by the shader of the land. */
+		'float landUnder = 0.0;',
+		/* How much what is lit there glints (the wet rock of a cave), set by landCave: the lamps put their glints on it. */
+		'float landGloss = 0.0;',
 		'vec3 landSteeper(vec3 place) {',
 		'	vec3 soft = normalize(vNormal);',
 		/* A skirt under the edge of a square (its normals half as long): the ground over it, never a wall. */
@@ -299,9 +341,21 @@ Elemenx.Service('SceneMaterials', {
 	LandTexture: [
 		'uniform sampler2DArray uLandColor;',
 		'uniform sampler2DArray uLandSurface;',
+		/* The slopes of the place on the screen (landMaterials sets them where all pixels go): each way of a tile its own two. */
+		'vec3 landDX = vec3(0.0);',
+		'vec3 landDY = vec3(0.0);',
 		'vec3 landTint(vec3 color) {',
 		'	vec3 tint = color / max(max(color.r, max(color.g, color.b)), 0.01);',
 		'	return mix(vec3(1.0), tint, 0.35) * 1.08;',
+		'}',
+		/*
+		 * A tile in the color of its ground (color: of its land, its palette): its own grain kept (the tile over its mean, the
+		 * smallest of its mipmaps), most of its hue of the land. Regression: tinted by a third only, every land of lawn was the
+		 * same green, a savanna as a meadow, and other near than the same ground far.
+		 */
+		'vec3 landColored(float layer, vec3 c, vec3 color) {',
+		'	vec3 mean = max(pow(textureLod(uLandColor, vec3(0.5, 0.5, layer), 16.0).rgb, vec3(2.2)), vec3(0.02));',
+		'	return mix(c * landTint(color), color * c / mean, 0.8);',
 		'}',
 		'void landTexture(float layer, float metres, float spin, vec3 place, out vec3 c, out float h, out float lit) {',
 		'	vec3 n = abs(landSlope);',
@@ -317,9 +371,9 @@ Elemenx.Service('SceneMaterials', {
 		'	c = vec3(0.0);',
 		'	h = 0.0;',
 		'	lit = 0.0;',
-		'	if (k.y > 0.03) { tex_sample_layer(uLandColor, uLandSurface, layer, place.xz, metres, spin, a, r, bent, hh, l); c += a * k.y; h += hh * k.y; lit += l * k.y; used += k.y; }',
-		'	if (k.x > 0.03) { tex_sample_layer(uLandColor, uLandSurface, layer, place.zy, metres, spin, a, r, bent, hh, l); c += a * k.x; h += hh * k.x; lit += l * k.x; used += k.x; }',
-		'	if (k.z > 0.03) { tex_sample_layer(uLandColor, uLandSurface, layer, place.xy, metres, spin, a, r, bent, hh, l); c += a * k.z; h += hh * k.z; lit += l * k.z; used += k.z; }',
+		'	if (k.y > 0.03) { tex_grad_layer = vec4(landDX.xz, landDY.xz); tex_sample_layer(uLandColor, uLandSurface, layer, place.xz, metres, spin, a, r, bent, hh, l); c += a * k.y; h += hh * k.y; lit += l * k.y; used += k.y; }',
+		'	if (k.x > 0.03) { tex_grad_layer = vec4(landDX.zy, landDY.zy); tex_sample_layer(uLandColor, uLandSurface, layer, place.zy, metres, spin, a, r, bent, hh, l); c += a * k.x; h += hh * k.x; lit += l * k.x; used += k.x; }',
+		'	if (k.z > 0.03) { tex_grad_layer = vec4(landDX.xy, landDY.xy); tex_sample_layer(uLandColor, uLandSurface, layer, place.xy, metres, spin, a, r, bent, hh, l); c += a * k.z; h += hh * k.z; lit += l * k.z; used += k.z; }',
 		'	c /= max(used, 1e-4);',
 		'	h /= max(used, 1e-4);',
 		'	lit /= max(used, 1e-4);',
@@ -356,6 +410,10 @@ Elemenx.Service('SceneMaterials', {
 		'}',
 		'void landCliff(float layer, float metres, float earth, float earthMetres, vec3 place, inout vec3 color, inout float height) {',
 		'	vec3 n = landSlope;',
+		/* Metres a pixel covers, taken where all pixels go: what is finer than three of them is drawn as its mean. */
+		'	float px = length(fwidth(place));',
+		'	vec2 sp = n.y > 0.75 ? place.xz : abs(n.x) > abs(n.z) ? place.zy : place.xy;',
+		'	float spx = length(fwidth(sp));',
 		'	float steep = 1.0 - smoothstep(0.42, 0.62, n.y);',
 		'	float scree = (1.0 - smoothstep(0.62, 0.9, n.y)) * (1.0 - steep);',
 		'	if (steep < 0.01 && scree < 0.01) return;',
@@ -369,8 +427,8 @@ Elemenx.Service('SceneMaterials', {
 		'	float lit = 0.0;',
 		'	vec2 k = pow(abs(n.xz), vec2(4.0));',
 		'	k /= max(k.x + k.y, 1e-4);',
-		'	if (k.x > 0.03) { tex_sample_layer(uLandColor, uLandSurface, layer, vec2(place.z, place.y), metres, 0.0, a, r, bent, hh, l); c += a * k.x; h += hh * k.x; lit += l * k.x; }',
-		'	if (k.y > 0.03) { tex_sample_layer(uLandColor, uLandSurface, layer, vec2(place.x, place.y), metres, 0.0, a, r, bent, hh, l); c += a * k.y; h += hh * k.y; lit += l * k.y; }',
+		'	if (k.x > 0.03) { tex_grad_layer = vec4(landDX.zy, landDY.zy); tex_sample_layer(uLandColor, uLandSurface, layer, vec2(place.z, place.y), metres, 0.0, a, r, bent, hh, l); c += a * k.x; h += hh * k.x; lit += l * k.x; }',
+		'	if (k.y > 0.03) { tex_grad_layer = vec4(landDX.xy, landDY.xy); tex_sample_layer(uLandColor, uLandSurface, layer, vec2(place.x, place.y), metres, 0.0, a, r, bent, hh, l); c += a * k.y; h += hh * k.y; lit += l * k.y; }',
 		'	float used = max(step(0.03, k.x) * k.x + step(0.03, k.y) * k.y, 1e-4);',
 		'	c /= used;',
 		'	h /= used;',
@@ -378,12 +436,17 @@ Elemenx.Service('SceneMaterials', {
 		'	float region = cliffNoise(place.xz / 260.0);',
 		'	float warp = (cliffNoise(place.xz / 40.0) - 0.5) * 4.0 + (cliffNoise(place.xz / 9.0) - 0.5) * 0.8;',
 		'	float thick = 1.6 + 2.2 * cliffNoise(vec2(floor((place.y + warp) / 6.0), region * 9.0));',
-		'	vec3 bed = cliffBed((place.y + warp) / thick, region);',
+		/*
+		 * Its beds a few metres each: from far (a bed under a pixel and a half) their mean, the color of the rock there.
+		 * Regression: from a few kilometres each pixel was another bed, grains of salt and pepper over the mountains.
+		 */
+		'	float many = smoothstep(0.18, 0.4, px / thick);',
+		'	vec3 mean = mix(mix(vec3(0.74, 0.66, 0.54), vec3(0.7, 0.56, 0.42), smoothstep(0.3, 0.6, region)), vec3(0.6, 0.58, 0.55), smoothstep(0.6, 0.9, region)) * 0.99;',
+		'	vec3 bed = mix(cliffBed((place.y + warp) / thick, region), mean, many);',
 		'	vec3 face = c * bed * 1.25 * mix(1.0, lit, 0.7);',
-		/* The grit of the scree: stones of a few sizes, the finest as near as the eye comes. */
-		'	vec2 sp = n.y > 0.75 ? place.xz : abs(n.x) > abs(n.z) ? place.zy : place.xy;',
-		'	float bits = cliffNoise(sp * 6.0) * 0.4 + cliffNoise(sp * 23.0) * 0.3 + cliffNoise(sp * 71.0) * 0.3 * (1.0 - smoothstep(0.01, 0.04, length(fwidth(sp))));',
-		'	vec3 loose = cliffBed((place.y + warp + 1.7) / thick, region) * (0.45 + 0.6 * bits) * vec3(0.92, 0.9, 0.86);',
+		/* The grit of the scree: stones of a few sizes, each as long as it is over three pixels (farther its mean). */
+		'	float bits = mix(0.5, cliffNoise(sp * 6.0), 1.0 - smoothstep(0.05, 0.08, spx)) * 0.4 + mix(0.5, cliffNoise(sp * 23.0), 1.0 - smoothstep(0.013, 0.022, spx)) * 0.3 + mix(0.5, cliffNoise(sp * 71.0), 1.0 - smoothstep(0.004, 0.007, spx)) * 0.3;',
+		'	vec3 loose = mix(cliffBed((place.y + warp + 1.7) / thick, region), mean, many) * (0.45 + 0.6 * bits) * vec3(0.92, 0.9, 0.86);',
 		/* The earth of the scree and of a bank: the tile of dirt as the slope faces, tinted by the beds over it. */
 		'	if (scree > 0.01) {',
 		'		vec3 dc;',
@@ -395,6 +458,49 @@ Elemenx.Service('SceneMaterials', {
 		'	color = mix(color, face, steep);',
 		'	color = mix(color, loose, scree * 0.75);',
 		'	height = mix(height, h * 0.08, steep);',
+		'}',
+		/*
+		 * Under rock (landUnder: a cave, a tunnel) its walls, roof and floor alike are the rock of a cave: the tile cave-rock
+		 * from the three sides of the place (nothing in it runs one way), each tile turned its own way, tinted by a slow
+		 * change of the rock and darker in hollows. Regression: the face of a cliff drawn there, its beds and the flutes the
+		 * rain cuts down it, made the walls of a cave look as planks.
+		 */
+		'void landCave(float layer, float metres, vec3 place, inout vec3 color, inout float height) {',
+		'	float under = smoothstep(0.0, 0.6, landUnder);',
+		'	if (under < 0.01) return;',
+		'	vec3 k = pow(abs(landSlope), vec3(4.0));',
+		'	k /= k.x + k.y + k.z;',
+		'	vec3 a;',
+		'	float r;',
+		'	vec3 bent;',
+		'	float hh;',
+		'	float l;',
+		'	vec3 c = vec3(0.0);',
+		'	float h = 0.0;',
+		'	float lit = 0.0;',
+		'	float used = 0.0;',
+		'	if (k.y > 0.03) { tex_grad_layer = vec4(landDX.xz, landDY.xz); tex_sample_layer(uLandColor, uLandSurface, layer, place.xz, metres, 1.0, a, r, bent, hh, l); c += a * k.y; h += hh * k.y; lit += l * k.y; used += k.y; }',
+		'	if (k.x > 0.03) { tex_grad_layer = vec4(landDX.zy, landDY.zy); tex_sample_layer(uLandColor, uLandSurface, layer, place.zy, metres, 1.0, a, r, bent, hh, l); c += a * k.x; h += hh * k.x; lit += l * k.x; used += k.x; }',
+		'	if (k.z > 0.03) { tex_grad_layer = vec4(landDX.xy, landDY.xy); tex_sample_layer(uLandColor, uLandSurface, layer, place.xy, metres, 1.0, a, r, bent, hh, l); c += a * k.z; h += hh * k.z; lit += l * k.z; used += k.z; }',
+		'	used = max(used, 1e-4);',
+		'	float region = cliffNoise(place.xz / 90.0) * 0.6 + cliffNoise(place.xz / 23.0 + place.y / 17.0) * 0.4;',
+		'	vec3 tint = mix(vec3(0.66, 0.62, 0.56), vec3(0.58, 0.49, 0.41), smoothstep(0.3, 0.7, region));',
+		'	vec3 rock = c / used * tint * 1.55 * mix(1.0, lit / used, 0.7);',
+		/* Its floor: silt and grit the water left, darker and smoother than the rock round it, little of its cracks seen. */
+		'	float bottom = smoothstep(0.55, 0.85, normalize(vNormal).y);',
+		'	vec3 mean = max(pow(textureLod(uLandColor, vec3(0.5, 0.5, layer), 16.0).rgb, vec3(2.2)), vec3(0.02));',
+		'	rock = mix(rock, mix(rock, mean * tint * 1.55, 0.65) * vec3(0.72, 0.66, 0.58), bottom);',
+		/* The water that runs down it: wet in patches and streaks, darker, and it glints in the lamps. */
+		'	float wet = smoothstep(0.45, 0.75, cliffNoise(place.xz / 3.0 + place.y / 5.0) * 0.6 + cliffNoise(vec2(place.x + place.z, place.y * 0.3) / 1.3) * 0.4);',
+		'	rock *= 1.0 - wet * 0.25 * (1.0 - bottom);',
+		'	landGloss = under * mix(0.08, 0.7, wet);',
+		/* Strata of the rock, faint, by their height: the beds it was laid in. */
+		'	rock *= 0.92 + 0.16 * cliffNoise(vec2((place.y + region * 3.0) / 1.3, region * 11.0));',
+		/* Moss and green near the mouth, where the daylight still comes, most on what faces up. */
+		'	float moss = smoothstep(0.15, 0.4, landUnder) * (1.0 - smoothstep(0.55, 0.8, landUnder)) * smoothstep(0.4, 0.62, cliffNoise(place.xz / 1.7 + place.y));',
+		'	rock = mix(rock, vec3(0.16, 0.24, 0.08) * (0.7 + 0.6 * cliffNoise(place.xz * 3.0)), moss * (0.75 + 0.25 * normalize(vNormal).y));',
+		'	color = mix(color, rock, under);',
+		'	height = mix(height, h / used * 0.08, under);',
 		'}'
 	].join('\n'),
 

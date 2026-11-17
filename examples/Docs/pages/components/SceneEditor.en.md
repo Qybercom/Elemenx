@@ -3,7 +3,7 @@
 
 An editor of the scene of a game (a Scene) as Unreal edits a level: the objects of the scene in a tree, the kinds to add, the view with a gizmo, the fields of the selected object, the parameters of its Blueprint (an effect graph or a material graph of the Blueprints Service: the values a level gives one graph) and the graph itself under the view. Under the view too, as tabs: the relief of a ground (Relief, a generator graph; From the library starts it as the ground is) and the rule of a Scatter (Graph); the inspector tells what the lands by climate of a ground (Biomes) leave bare (SceneBiomes.Check). Value is its document {Version, Scene (the recipe of Scene.Save), Name}; change emits it after each action, select {ID}, play {Playing}. A document with no Scene starts as a ground under a sun. Kinds lists the kinds to add (by default those of objects that stand on a ground). The view (as Unreal): the right button held looks round, with W A S D going and Q E going down and up (Shift faster); Alt with the left button turns round what it looks at; the middle button moves it aside; the wheel comes nearer. A press selects (any object, not only units); W, E and R are the gizmo to move, turn and scale, Q selects; F looks at the selected object, End sets it on the ground, Delete removes it, Ctrl+D copies it, Ctrl+Z and Ctrl+Y undo and redo. The gizmo moves along an axis (the red X and the blue Z over the ground, the green one up: its Lift) or over the ground (its middle square), turns round the up axis (its Facing) and scales (its Size); Snap keeps to steps of SnapMove metres, SnapTurn degrees and SnapScale. Play runs the scene as it is (its time, its hero, if one object has Hero); Stop brings back what it was before. Save() keeps the document in localStorage under Storage (Restore() reads it back), Export() gives its JSON text and Import(text) reads one; Load(document), Document(), Select(id), Selected, Add(kind, props), Remove(id), Undo(), Redo(), Play(), Stop() and Scene() (the Scene) are its methods.
 
-Space: a document of Setting space (the prop, for a new one) starts as a star with a planet, and a scene with no ground is edited as a star system. SpaceKinds are the kinds to add there, each round the selected body or the one that fits (a planet round the star, a moon round a planet, a station round a body), on an orbit of its own farther out. Moving a body moves it on its orbit: the middle square carries it in the plane of its parent (its Distance and Anomaly, Scene.OrbitAt), the green axis tilts its orbit (Inclination); the ring turns its axis (Tilt), scaling changes its Radius. Time sets the day the system is drawn at.
+Space: a document of Setting space (the prop, for a new one) starts as a star with a planet, and a scene with no ground is edited as a star system. SpaceKinds are the kinds to add there, each round the selected body or the one that fits (a planet round the star, a moon round a planet, a station round a body), on an orbit of its own farther out. Moving a body moves it on its orbit: the middle square carries it in the plane of its parent (its Distance and Anomaly, Scene.OrbitAt), the green axis tilts its orbit (Inclination), the points q and Q on its line draw out its nearest and farthest distances (in AU, the fields of the same name with them; kept as Distance and Eccentricity); the ring turns its axis (Tilt), scaling changes its Radius; on a long orbit the square carries it along its ellipse. Time sets the day the system is drawn at. A system is a tree of orbits to any depth: stars round a barycentre (a star added with one selected), planets, planetoids, belts, black holes and wormholes round a star, a barycentre or a black hole, moons and rings round a body, what is made round anything natural; its list of objects is that tree. Its system is saved as a file of the system format (System(): SystemData of its scene; the button System downloads it) and one is opened (OpenSystem(source, callback), the field Open a system), the planets of its bodies kept with it.
 
 ## Properties
 
@@ -12,7 +12,7 @@ Space: a document of Setting space (the prop, for a new one) starts as a star wi
 | `Value` | `null` |
 | `Setting` | `'ground'` |
 | `Kinds` | `['unit', 'effect', 'glass', 'mirror', 'camera', 'screen', 'tree', 'rock', 'house']` |
-| `SpaceKinds` | `['star', 'planet', 'moon', 'belt', 'ring', 'station', 'outpost', 'craft', 'fleet']` |
+| `SpaceKinds` | `['star', 'giant', 'supergiant', 'white-dwarf', 'brown-dwarf', 'neutron-star', 'pulsar', 'magnetar', 'barycentre', 'cluster', 'nebula', 'planet', 'planetoid', 'moon', 'belt', 'ring', 'blackhole', 'wormhole', 'station', 'outpost', 'craft', 'fleet']` |
 | `Storage` | `'elemenx-scene-editor'` |
 | `SnapMove` | `0.5` |
 | `SnapTurn` | `15` |
@@ -26,6 +26,7 @@ Space: a document of Setting space (the prop, for a new one) starts as a star wi
 ## Events
 
 - `change`: The document changed: {Version, Name, Scene}.
+- `error`
 - `select`: The selection changed: {ID}.
 - `play`: Play or Stop: {Playing}.
 
@@ -40,6 +41,8 @@ Space: a document of Setting space (the prop, for a new one) starts as a star wi
 - `Restore()`
 - `Export()`
 - `Import(text)`
+- `System()`
+- `OpenSystem(source, callback)`
 - `Select(id)`
 - `Add(kind, props)`
 - `Remove(id)`
@@ -61,4 +64,4 @@ Space: a document of Setting space (the prop, for a new one) starts as a star wi
 - [makes a new document anew in the scene: a star system in place of the ground, a ground in place of the system](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L787) — `tests/regression/library-scene-editor.test.js`
 - [starts as a star and a planet, offers the kinds of space and no sketch, and keeps its setting in the document](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js#L76) — `libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js`
 
-+5 more in the same files
++12 more in the same files

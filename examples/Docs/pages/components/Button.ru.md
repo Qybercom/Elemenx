@@ -95,4 +95,4 @@
 - [declares the tabs of a Tabs as its children: adds them, shows the one selected on the canvas and exports them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L478) — `tests/examples/designer.spec.js`
 - [sets the layout of an element above its props: its box, its sizes and the alignment of a flex container by icons](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L514) — `tests/examples/designer.spec.js`
 
-+8 ещё в тех же файлах
++9 ещё в тех же файлах

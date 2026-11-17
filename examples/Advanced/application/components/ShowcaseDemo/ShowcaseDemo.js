@@ -7,6 +7,19 @@ Elemenx.Component('ShowcaseDemo', {
 	$Traits: ['SceneDemo'],
 	ShowColumns: [{Key: 'District', Title: 'District'}, {Key: 'Arrival', Title: 'Arrival', Align: 'end'}, {Key: 'Fps', Title: 'Frames a second', Align: 'end'}, {Key: 'Slowest', Title: 'Slowest frame, ms', Align: 'end'}, {Key: 'Cpu', Title: 'CPU a frame, ms', Align: 'end'}, {Key: 'Draws', Title: 'Draws a frame', Align: 'end'}, {Key: 'Triangles', Title: 'Triangles a frame', Align: 'end'}],
 	ShowResults: [],
+	ShowDigging: false,
+	/* Dig on: a press on the ground digs a hole of 3 m there (Scene.Dig), on a hill or in the cave under it. */
+	ShowDig: function (event) {
+		var scene = this.ShowScene ? this.ShowScene() : null;
+		var at;
+
+		if (!this.ShowDigging || !scene) return;
+
+		at = scene.GroundAt(event.clientX, event.clientY);
+
+		if (at)
+			scene.Dig(at, 3);
+	},
 	/*
 	 * The showcase world (SceneShowcase): every primitive of the generation, district by district. It is made once the scene
 	 * is ready, and timed until the ground is sown; a district picked flies there; the benchmark goes to each one in turn,

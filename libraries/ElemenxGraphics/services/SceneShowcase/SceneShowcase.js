@@ -101,7 +101,10 @@ Elemenx.Service('SceneShowcase', {
 			objects.push(spec);
 		}
 
-		/* The relief of the mountains: peaks, a ridge between them, a cliff, a canyon and a crater. */
+		/*
+		 * The relief of the mountains: peaks, a ridge between them, a cliff, a canyon and a crater; and drawn under them a cave
+		 * into the middle peak with a hall at its end, and rock jutting out over the cliff (SketchCarves).
+		 */
 		if (on.mountains) {
 			layer('mountains', [
 				{Type: 'mountain', At: at(-450, -1100), Radius: 260 * scale, Height: 260, Ridged: true},
@@ -110,7 +113,10 @@ Elemenx.Service('SceneShowcase', {
 				{Type: 'ridge', Points: points([[-450, -1100], [-80, -1220], [300, -1150]]), Width: 90 * scale, Height: 120, Sharp: 0.6},
 				{Type: 'cliff', Points: points([[-650, -800], [-450, -760], [-250, -790]]), Height: 35, Reach: 40 * scale},
 				{Type: 'canyon', Points: points([[60, -1450], [120, -1250], [100, -1080]]), Width: 40 * scale, Depth: 45},
-				{Type: 'crater', At: at(620, -1000), Radius: 110 * scale, Depth: 40, Rim: 18}
+				{Type: 'crater', At: at(620, -1000), Radius: 110 * scale, Depth: 40, Rim: 18},
+				{Type: 'cave', Points: points([[-80, -1010], [-60, -1070], [-80, -1130]]), Width: 6, Depth: 12, Rough: 0.6, Mouth: 1},
+				{Type: 'hall', At: at(-80, -1140), Radius: 11, Depth: 26},
+				{Type: 'overhang', At: at(-450, -780), Radius: 120 * scale, Amount: 6}
 			]);
 		}
 
@@ -145,6 +151,8 @@ Elemenx.Service('SceneShowcase', {
 				{Type: 'district', Points: ring(260, 330, 120, 8), Kind: 'residential'},
 				{Type: 'square', Points: ring(150, 250, 28, 8)},
 				{Type: 'street', Points: points([[-60, 250], [360, 250]]), Width: 10},
+				/* An avenue across the main street: its median ends at the zebras in a refuge, the sidewalks go round the corners. */
+				{Type: 'street', Road: 'avenue', Points: points([[215, 60], [215, 440]]), Width: 26},
 				{Type: 'landmark', At: at(150, 276), Radius: 14, Model: 'temple', Name: 'Temple'}
 			]);
 		}
@@ -355,8 +363,26 @@ Elemenx.Service('SceneShowcase', {
 		 * A cave in the big mountain, a graph of passages: a mouth at its foot, a way level into its slope to a fork, a hall at
 		 * the end of one branch, and down the other to a lower hall; its walls rough.
 		 */
-		if (on.mountains)
+		if (on.mountains) {
 			add({ID: 'cave-mouth', Kind: 'marker', Name: 'Cave', X: -540 * scale, Y: -905 * scale});
+
+			/*
+			 * Its light: no day comes far in, so torches burn at the fork and in the halls (Z: the floor they stand on, under the
+			 * hill), and a miner goes round it with a lantern over his head: a light that moves, its shadows all round.
+			 */
+			[[-542.5, -992, 48, 'fork'], [-496, -1034, 47, 'hall'], [-484, -1046, 47, 'hall-far'], [-586, -1048, 34, 'deep']].forEach(function (torch) {
+				add({ID: 'cave-torch-' + torch[3], Kind: 'light', Name: 'Torch', X: torch[0] * scale, Y: torch[1] * scale, Z: torch[2], Height: 1.75, Color: '#ff9a48', Power: 1.1, Radius: 13, Flicker: 0.22});
+				add({ID: 'cave-torch-post-' + torch[3], Kind: 'thing', Name: '', Model: 'torch', X: torch[0] * scale, Y: torch[1] * scale, Z: torch[2], Size: 1.7});
+			});
+
+			/* What it holds, sown under its rock alone: dripstones on its roof and floor, fallen stones, crystals that glow. */
+			add({ID: 'cave-dripstones', Kind: 'dripstones'});
+			add({ID: 'cave-floor', Kind: 'cave-floor'});
+			add({ID: 'cave-crystals', Kind: 'cave-crystals'});
+
+			add({ID: 'miner', Kind: 'unit', Name: 'Miner', Team: 'blue', X: -540 * scale, Y: -900 * scale, Speed: 2.2, Patrol: [at(-540, -900, 49), at(-540, -990, 48), at(-492, -1038, 47), at(-540, -990, 48), at(-588, -1048, 34), at(-540, -990, 48)]});
+			add({ID: 'miner-lantern', Kind: 'light', Name: 'Lantern', Follow: 'miner', X: 0, Y: 0, Height: 2.3, Color: '#ffd9a0', Power: 1, Radius: 12, Flicker: 0.05});
+		}
 
 		var passages = on.mountains ? [{Rough: 0.6, Seed: 'showcase-cave', Radius: 2.6, Crust: 1.5, Nodes: [{ID: 'mouth', At: at(-540, -895, 49)}, {ID: 'fork', At: at(-540, -990, 48)}, {ID: 'hall', At: at(-490, -1040, 47), Radius: 12}, {ID: 'deep', At: at(-590, -1050, 34), Radius: 7}], Ways: [{From: 'mouth', To: 'fork'}, {From: 'fork', To: 'hall', Radius: 3}, {From: 'fork', To: 'deep', Points: [at(-580, -1010)]}]}] : [];
 

@@ -34,6 +34,7 @@
  *   Messaging                Elemenx.Messaging: channels, Window bridges, BroadcastChannel discovery
  *   WebWorker                Elemenx.WebWorker
  *   ServiceWorker            Elemenx.ServiceWorker
+ *   Hardware                 Elemenx.Hardware: Serial (Web Serial), USB (WebUSB), Firmware; $Hardware of an owner
  *   Owner resources          wiring and release of the facades owned by Services, Components and Applications
  *   Install                  Elemenx.Install: the page as an application of the system (PWA), its prompt and worker
  *   Widgets                  Elemenx.Widgets: Components of an Application mounted on a page of another site
@@ -19982,6 +19983,1817 @@
 
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Hardware */
+	(function (global) {
+		'use strict';
+
+		/*
+		 * Elemenx.Hardware: devices joined to the computer, through the browser. Every method takes callback(error, result);
+		 * error.name is the name of the browser error ('NotFoundError' when the user picks none, 'NotSupportedError' when
+		 * the browser has no way to them). $Hardware of a Service, a Component or an Application is the same, its own: the
+		 * ports and the devices it opened are closed and its listeners forgotten when it is destroyed.
+		 * - Serial: serial ports (COM ports, UART: boards, GPS, scales, printers...) through Web Serial (Chrome and Edge on the
+		 *   desktop, HTTPS or localhost). Supported(); Request({Filters: [{VendorID, ProductID}]}, callback): the user picks a
+		 *   port (from a press: the browser asks for a gesture); Ports(callback): those the user already allowed; On and Off
+		 *   ('connect' or 'disconnect', callback): a port joins or leaves ({Port}). A port: Info {VendorID, ProductID};
+		 *   Open({BaudRate (9600), DataBits, StopBits, Parity, FlowControl, Text}, callback) opens it and starts reading: the
+		 *   data event carries what comes (a text with Text: true, the default, or a Uint8Array), the line event each line of
+		 *   text; Write(data, callback) sends a text or bytes; Signals({DTR, RTS, Break}, callback); Close(callback); On(name,
+		 *   callback) and Off for data, line, error and close; Opened(); Native, the port of the browser.
+		 * - USB: devices with a driver of their own through WebUSB (not those the system keeps: keyboards, disks). Supported();
+		 *   Request({Filters: [{VendorID, ProductID, ClassCode}]}, callback); Devices(callback); On and Off ('connect' or
+		 *   'disconnect', callback) ({Device}). A device: Info {VendorID, ProductID, Name, Manufacturer, Serial};
+		 *   Open({Configuration (1), Interface (0)}, callback) opens it and claims the interface; TransferIn(endpoint,
+		 *   length, callback) reads (a Uint8Array); TransferOut(endpoint, data, callback) writes a text or bytes (the count
+		 *   written); Control({Type, Recipient, Request, Value, Index}, data or length, callback): a control transfer, in with
+		 *   a length, out with data; Close(callback); Opened(); Native.
+		 * - Firmware: programs written on the flash of a board, by protocols (Define(name, {Flash, Detect, Read}), Names();
+		 *   esp, the ROM loader of the ESP32 family: ESP32, ESP32-S3, ESP32-C3, Chips()). Flash(port, parts [{Offset, Bytes}],
+		 *   {Protocol (esp), Baud (460800), Erase (true: the whole flash first), Verify (false: no MD5 checked), Reset (false:
+		 *   the board left in its loader), Flash {Size (4MB...), Mode (qio, qout, dio, dout), Frequency (80m, 40m...): the
+		 *   header of the bootloader set so}, Partitions (the table the parts are checked by, else theirs at 0x8000), Progress
+		 *   ({Stage: connect, erase, write, verify, done; Done, Total bytes})}, callback(error, {Chip, Written, Parts [{Offset,
+		 *   Size, MD5}]})) gives {Cancel()} (an AbortError); parts over each other, past the flash or an app longer than its
+		 *   partition are a DataError before the board is touched. Detect(port, options, callback) tells the chip ({Chip,
+		 *   Family, Bootloader}); Read(port, offset, length, options, callback) reads its flash (a Uint8Array). Parts(files
+		 *   [{Name, Bytes}], chip): a build of arduino-cli at its offsets (a merged image at 0); Manifest(manifest, chip,
+		 *   read(path, callback), callback): the parts of a manifest of ESP Web Tools; Patch(image, {Chip, Mode, Frequency,
+		 *   Size}): an image of a bootloader set for a flash (its SHA-256 made again); Digest(bytes, md5 or sha256).
+		 *   Partitions: the table of an ESP32 (ESP-IDF) at 0x8000 (Offset): Parse(bytes or CSV text) gives [{Name, Type,
+		 *   SubType, Offset, Size, Flags}], Make(list) its bytes (with its MD5), CSV(list) its text, Check(list, flash bytes)
+		 *   what is wrong with it ([{Partition, Text}]), Preset(name) and Presets(): the tables of Arduino (default, huge_app,
+		 *   min_spiffs, no_ota).
+		 * One handle for each port and each device of the browser, whoever asks for it: its state and its listeners stay.
+		 */
+		var owned = Runtime.OwnerRegistry();
+		var handles = {serial: [], usb: []};
+		/* The listeners of connect and disconnect: [{Owner, Callback}] by kind and name, and the browser object they hear. */
+		var heard = {serial: {connect: [], disconnect: [], Target: null}, usb: {connect: [], disconnect: [], Target: null}};
+
+		function fail (name, message) {
+			var error = new Error(message);
+
+			error.name = name;
+
+			return error;
+		}
+
+		function api (kind) {
+			return global.navigator && global.navigator[kind] ? global.navigator[kind] : null;
+		}
+
+		function noop () {}
+
+		/* The connect and disconnect events of the browser heard once, of the object it has now (a test may give another). */
+		function hear (kind) {
+			var target = api(kind);
+			var state = heard[kind];
+			if (!target || state.Target === target) return;
+
+			if (state.Target) {
+				state.Target.removeEventListener('connect', state.Changed);
+				state.Target.removeEventListener('disconnect', state.Changed);
+			}
+
+			state.Target = target;
+			state.Changed = function (event) {
+				var native = kind === 'serial' ? event.target && event.target !== target ? event.target : event.port : event.device;
+				var made = kind === 'serial' ? {Port: serialPort(native)} : {Device: usbDevice(native)};
+
+				state[event.type].slice().forEach(function (entry) {
+					Runtime.Notify(entry.Callback, null, [made]);
+				});
+			};
+
+			target.addEventListener('connect', state.Changed);
+			target.addEventListener('disconnect', state.Changed);
+		}
+
+		function on (kind, owner, name, callback) {
+			var list = heard[kind][name];
+			var entry;
+
+			if (!list || typeof callback !== 'function') return;
+
+			hear(kind);
+
+			entry = {Owner: owner, Callback: callback};
+			entry.Destroy = function () {
+				var index = list.indexOf(entry);
+				if (index !== -1)
+					list.splice(index, 1);
+
+				owned.Remove(owner, entry);
+			};
+
+			list.push(entry);
+
+			owned.Add(owner, entry);
+		}
+
+		function off (kind, owner, name, callback) {
+			(heard[kind][name] || []).filter(function (entry) {
+				return entry.Owner === owner && entry.Callback === callback;
+			}).forEach(function (entry) {
+				entry.Destroy();
+			});
+		}
+
+		/* What a handle opened for an owner: closed with it. */
+		function hold (owner, handle) {
+			var entry = {Handle: handle};
+
+			if (!owner) return;
+
+			entry.Destroy = function () {
+				owned.Remove(owner, entry);
+
+				if (handle.Opened())
+					handle.Close(noop);
+			};
+
+			handle.Holders.push({Owner: owner, Entry: entry});
+
+			owned.Add(owner, entry);
+		}
+
+		function release (handle) {
+			handle.Holders.splice(0).forEach(function (holder) {
+				owned.Remove(holder.Owner, holder.Entry);
+			});
+		}
+
+		function known (kind, native) {
+			var found = handles[kind].filter(function (entry) {
+				return entry.Native === native;
+			})[0];
+
+			return found ? found.Handle : null;
+		}
+
+		function bytesOf (data) {
+			return typeof data === 'string' ? new TextEncoder().encode(data) : data;
+		}
+
+		/* Hardware: Serial */
+		function serialPort (port) {
+			var made = known('serial', port);
+			var info = port.getInfo ? port.getInfo() : {};
+			var listeners = {data: [], line: [], error: [], close: []};
+			var state = {Open: false, Reader: null, Text: true, Rest: ''};
+			var decoder = typeof TextDecoder === 'function' ? new TextDecoder() : null;
+			var handle;
+
+			if (made)
+				return made;
+
+			function emit (name, value) {
+				listeners[name].slice().forEach(function (callback) {
+					Runtime.Notify(callback, null, [value]);
+				});
+			}
+
+			function read () {
+				var reader = port.readable && port.readable.getReader();
+				if (!reader) return;
+
+				state.Reader = reader;
+
+				(function next () {
+					reader.read().then(function (result) {
+						var text;
+						var lines;
+
+						if (result.done) {
+							reader.releaseLock();
+
+							state.Reader = null;
+
+							return;
+						}
+
+						if (state.Text && decoder) {
+							text = decoder.decode(result.value, {stream: true});
+							lines = (state.Rest + text).split(/\r?\n/);
+
+							state.Rest = lines.pop();
+
+							emit('data', text);
+
+							lines.forEach(function (line) {
+								emit('line', line);
+							});
+						}
+						else {
+							emit('data', result.value);
+						}
+
+						next();
+					}, function (error) {
+						state.Reader = null;
+
+						emit('error', error);
+					});
+				})();
+			}
+
+			handle = {
+				Info: {VendorID: info.usbVendorId == null ? null : info.usbVendorId, ProductID: info.usbProductId == null ? null : info.usbProductId},
+				Native: port,
+				Holders: [],
+				Opened: function () {
+					return state.Open;
+				},
+				Open: function (options, callback) {
+					var given = options || {};
+					var done = callback || noop;
+
+					state.Text = given.Text !== false;
+					state.Rest = '';
+
+					port.open({baudRate: Number(given.BaudRate) || 9600, dataBits: given.DataBits || 8, stopBits: given.StopBits || 1, parity: given.Parity || 'none', flowControl: given.FlowControl || 'none'}).then(function () {
+						state.Open = true;
+
+						hold(handle.Owner, handle);
+
+						read();
+
+						done(null, handle);
+					}, done);
+				},
+				Write: function (data, callback) {
+					var done = callback || noop;
+					var bytes = bytesOf(data);
+					var writer;
+
+					if (!state.Open || !port.writable) {
+						done(new Error('Elemenx Serial: the port is not open'));
+
+						return;
+					}
+
+					writer = port.writable.getWriter();
+
+					writer.write(bytes).then(function () {
+						writer.releaseLock();
+
+						done(null, bytes.length);
+					}, function (error) {
+						writer.releaseLock();
+
+						done(error);
+					});
+				},
+				Signals: function (signals, callback) {
+					var given = signals || {};
+					var done = callback || noop;
+					var value = {};
+
+					if (given.DTR != null)
+						value.dataTerminalReady = !!given.DTR;
+
+					if (given.RTS != null)
+						value.requestToSend = !!given.RTS;
+
+					if (given.Break != null)
+						value.break = !!given.Break;
+
+					port.setSignals(value).then(function () {
+						done(null, true);
+					}, done);
+				},
+				Close: function (callback) {
+					var done = callback || noop;
+					var reader = state.Reader;
+
+					/* Its reading stopped first: a port that is read is not let close. */
+					function shut () {
+						port.close().then(function () {
+							state.Open = false;
+
+							release(handle);
+
+							emit('close', handle);
+
+							done(null, true);
+						}, done);
+					}
+
+					if (reader) reader.cancel().then(shut, shut);
+					else shut();
+				},
+				On: function (name, callback) {
+					if (listeners[name])
+						listeners[name].push(callback);
+				},
+				Off: function (name, callback) {
+					if (listeners[name]) {
+						listeners[name] = listeners[name].filter(function (item) {
+							return item !== callback;
+						});
+					}
+				}
+			};
+
+			handles.serial.push({Native: port, Handle: handle});
+
+			return handle;
+		}
+
+		/* Hardware: USB */
+		function usbDevice (device) {
+			var made = known('usb', device);
+			var claimed = null;
+			var handle;
+
+			if (made)
+				return made;
+
+			function setup (options) {
+				return {requestType: options.Type || 'vendor', recipient: options.Recipient || 'device', request: Number(options.Request) || 0, value: Number(options.Value) || 0, index: Number(options.Index) || 0};
+			}
+
+			handle = {
+				Info: {VendorID: device.vendorId, ProductID: device.productId, Name: device.productName || '', Manufacturer: device.manufacturerName || '', Serial: device.serialNumber || ''},
+				Native: device,
+				Holders: [],
+				Opened: function () {
+					return !!device.opened;
+				},
+				Open: function (options, callback) {
+					var given = options || {};
+					var done = callback || noop;
+
+					device.open().then(function () {
+						if (device.configuration === null)
+							return device.selectConfiguration(given.Configuration == null ? 1 : Number(given.Configuration));
+					}).then(function () {
+						claimed = given.Interface == null ? 0 : Number(given.Interface);
+
+						return device.claimInterface(claimed);
+					}).then(function () {
+						hold(handle.Owner, handle);
+
+						done(null, handle);
+					}, done);
+				},
+				TransferIn: function (endpoint, length, callback) {
+					device.transferIn(Number(endpoint), Number(length) || 64).then(function (result) {
+						callback(null, result.data ? new Uint8Array(result.data.buffer, result.data.byteOffset, result.data.byteLength) : new Uint8Array(0));
+					}, callback);
+				},
+				TransferOut: function (endpoint, data, callback) {
+					var done = callback || noop;
+
+					device.transferOut(Number(endpoint), bytesOf(data)).then(function (result) {
+						done(null, result.bytesWritten);
+					}, done);
+				},
+				Control: function (options, data, callback) {
+					var done = callback || noop;
+					var call = typeof data === 'number' ? device.controlTransferIn(setup(options || {}), data) : device.controlTransferOut(setup(options || {}), data == null ? undefined : bytesOf(data));
+
+					call.then(function (result) {
+						done(null, result.data ? new Uint8Array(result.data.buffer, result.data.byteOffset, result.data.byteLength) : result.bytesWritten);
+					}, done);
+				},
+				Close: function (callback) {
+					var done = callback || noop;
+
+					/* Its interface let go first (a failure to is no matter: closing lets it go too). */
+					function shut () {
+						device.close().then(function () {
+							claimed = null;
+
+							release(handle);
+
+							done(null, true);
+						}, done);
+					}
+
+					if (claimed === null) shut();
+					else device.releaseInterface(claimed).then(shut, shut);
+				}
+			};
+
+			handles.usb.push({Native: device, Handle: handle});
+
+			return handle;
+		}
+
+		/* Hardware: Digests */
+
+		/* MD5 of bytes (RFC 1321): 16 bytes. What a loader tells of what it wrote, and the sum of a partition table. */
+		function md5 (bytes) {
+			var shifts = [7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21];
+			var table = [];
+			var length = bytes.length;
+			var padded = new Uint8Array(((length + 8) >> 6) + 1 << 6);
+			var words = new Uint32Array(padded.length >> 2);
+			var state = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476];
+			var out = new Uint8Array(16);
+			var i;
+			var j;
+
+			for (i = 0; i < 64; i++)
+				table[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296) >>> 0;
+
+			padded.set(bytes);
+
+			padded[length] = 0x80;
+
+			for (i = 0; i < words.length; i++)
+				words[i] = padded[i * 4] | padded[i * 4 + 1] << 8 | padded[i * 4 + 2] << 16 | padded[i * 4 + 3] << 24;
+
+			words[words.length - 2] = length << 3 >>> 0;
+			words[words.length - 1] = Math.floor(length / 536870912);
+
+			for (i = 0; i < words.length; i += 16) {
+				var a = state[0];
+				var b = state[1];
+				var c = state[2];
+				var d = state[3];
+
+				for (j = 0; j < 64; j++) {
+					var f;
+					var g;
+					var turn;
+
+					if (j < 16) {
+						f = b & c | ~b & d;
+						g = j;
+					}
+					else if (j < 32) {
+						f = d & b | ~d & c;
+						g = (5 * j + 1) % 16;
+					}
+					else if (j < 48) {
+						f = b ^ c ^ d;
+						g = (3 * j + 5) % 16;
+					}
+					else {
+						f = c ^ (b | ~d);
+						g = 7 * j % 16;
+					}
+
+					turn = a + f + table[j] + words[i + g] >>> 0;
+					a = d;
+					d = c;
+					c = b;
+					b = b + (turn << shifts[j] | turn >>> 32 - shifts[j]) >>> 0;
+				}
+
+				state[0] = state[0] + a >>> 0;
+				state[1] = state[1] + b >>> 0;
+				state[2] = state[2] + c >>> 0;
+				state[3] = state[3] + d >>> 0;
+			}
+
+			for (i = 0; i < 16; i++)
+				out[i] = state[i >> 2] >>> (i % 4) * 8 & 255;
+
+			return out;
+		}
+
+		/* SHA-256 of bytes (FIPS 180-4): 32 bytes. What an image of an ESP32 carries at its end, made again when its header changes. */
+		function sha256 (bytes) {
+			var k = [];
+			var h = [];
+			var length = bytes.length;
+			var padded = new Uint8Array(((length + 8) >> 6) + 1 << 6);
+			var w = new Uint32Array(64);
+			var out = new Uint8Array(32);
+			var primes = [];
+			var n = 2;
+			var i;
+			var j;
+
+			while (primes.length < 64) {
+				var prime = true;
+
+				for (j = 0; j < primes.length && primes[j] * primes[j] <= n; j++) {
+					if (n % primes[j] === 0) {
+						prime = false;
+
+						break;
+					}
+				}
+
+				if (prime)
+					primes.push(n);
+
+				n++;
+			}
+
+			for (i = 0; i < 64; i++) {
+				k[i] = (Math.pow(primes[i], 1 / 3) % 1) * 4294967296 >>> 0;
+
+				if (i < 8)
+					h[i] = (Math.pow(primes[i], 1 / 2) % 1) * 4294967296 >>> 0;
+			}
+
+			padded.set(bytes);
+
+			padded[length] = 0x80;
+			padded[padded.length - 4] = length >>> 21 & 255;
+			padded[padded.length - 3] = length >>> 13 & 255;
+			padded[padded.length - 2] = length >>> 5 & 255;
+			padded[padded.length - 1] = length << 3 & 255;
+			padded[padded.length - 5] = Math.floor(length / 536870912) & 255;
+
+			function rotate (x, by) {
+				return x >>> by | x << 32 - by;
+			}
+
+			for (i = 0; i < padded.length; i += 64) {
+				var v = h.slice();
+
+				for (j = 0; j < 64; j++) {
+					if (j < 16) {
+						w[j] = (padded[i + j * 4] << 24 | padded[i + j * 4 + 1] << 16 | padded[i + j * 4 + 2] << 8 | padded[i + j * 4 + 3]) >>> 0;
+					}
+					else {
+						w[j] = (rotate(w[j - 2], 17) ^ rotate(w[j - 2], 19) ^ w[j - 2] >>> 10) + w[j - 7] + (rotate(w[j - 15], 7) ^ rotate(w[j - 15], 18) ^ w[j - 15] >>> 3) + w[j - 16] >>> 0;
+					}
+
+					var t1 = v[7] + (rotate(v[4], 6) ^ rotate(v[4], 11) ^ rotate(v[4], 25)) + (v[4] & v[5] ^ ~v[4] & v[6]) + k[j] + w[j] >>> 0;
+					var t2 = (rotate(v[0], 2) ^ rotate(v[0], 13) ^ rotate(v[0], 22)) + (v[0] & v[1] ^ v[0] & v[2] ^ v[1] & v[2]) >>> 0;
+
+					v[7] = v[6];
+					v[6] = v[5];
+					v[5] = v[4];
+					v[4] = v[3] + t1 >>> 0;
+					v[3] = v[2];
+					v[2] = v[1];
+					v[1] = v[0];
+					v[0] = t1 + t2 >>> 0;
+				}
+
+				for (j = 0; j < 8; j++)
+					h[j] = h[j] + v[j] >>> 0;
+			}
+
+			for (i = 0; i < 32; i++)
+				out[i] = h[i >> 2] >>> 24 - (i % 4) * 8 & 255;
+
+			return out;
+		}
+
+		function hex (bytes) {
+			var text = '';
+			var i;
+
+			for (i = 0; i < bytes.length; i++)
+				text += (bytes[i] < 16 ? '0' : '') + bytes[i].toString(16);
+
+			return text;
+		}
+
+		/* Hardware: Partitions */
+
+		/*
+		 * The partition table of an ESP32 (ESP-IDF): 32 bytes an entry (magic AA 50, type, subtype, offset, size, a label of
+		 * 16 bytes, flags), then an entry of its MD5 (EB EB, 14 bytes FF, the MD5 of the entries), FF to 0xC00; at 0x8000 of
+		 * the flash. A partition: {Name, Type (app, data or a number), SubType (factory, ota_0..ota_15, test; ota, phy, nvs,
+		 * coredump, nvs_keys, efuse, undefined, fat, spiffs, littlefs; or a number), Offset, Size, Flags (encrypted,
+		 * readonly)}.
+		 */
+		var TableOffset = 0x8000;
+		var TableSize = 0xC00;
+		var PartitionTypes = {app: 0x00, data: 0x01};
+		var AppTypes = {factory: 0x00, test: 0x20};
+		var DataTypes = {ota: 0x00, phy: 0x01, nvs: 0x02, coredump: 0x03, nvs_keys: 0x04, efuse: 0x05, undefined: 0x06, esphttpd: 0x80, fat: 0x81, spiffs: 0x82, littlefs: 0x83};
+		var ota;
+
+		for (ota = 0; ota < 16; ota++)
+			AppTypes['ota_' + ota] = 0x10 + ota;
+
+		/* The tables of the boards of Arduino of 4 MB: what arduino-cli lays by its partition scheme. */
+		var PartitionPresets = {
+			'default': [['nvs', 'data', 'nvs', 0x9000, 0x5000], ['otadata', 'data', 'ota', 0xe000, 0x2000], ['app0', 'app', 'ota_0', 0x10000, 0x140000], ['app1', 'app', 'ota_1', 0x150000, 0x140000], ['spiffs', 'data', 'spiffs', 0x290000, 0x160000], ['coredump', 'data', 'coredump', 0x3F0000, 0x10000]],
+			'huge_app': [['nvs', 'data', 'nvs', 0x9000, 0x5000], ['otadata', 'data', 'ota', 0xe000, 0x2000], ['app0', 'app', 'ota_0', 0x10000, 0x300000], ['spiffs', 'data', 'spiffs', 0x310000, 0xE0000], ['coredump', 'data', 'coredump', 0x3F0000, 0x10000]],
+			'min_spiffs': [['nvs', 'data', 'nvs', 0x9000, 0x5000], ['otadata', 'data', 'ota', 0xe000, 0x2000], ['app0', 'app', 'ota_0', 0x10000, 0x1E0000], ['app1', 'app', 'ota_1', 0x1F0000, 0x1E0000], ['spiffs', 'data', 'spiffs', 0x3D0000, 0x20000], ['coredump', 'data', 'coredump', 0x3F0000, 0x10000]],
+			'no_ota': [['nvs', 'data', 'nvs', 0x9000, 0x5000], ['otadata', 'data', 'ota', 0xe000, 0x2000], ['app0', 'app', 'ota_0', 0x10000, 0x200000], ['spiffs', 'data', 'spiffs', 0x210000, 0x1E0000], ['coredump', 'data', 'coredump', 0x3F0000, 0x10000]]
+		};
+
+		function nameOf (table, code) {
+			var found = Object.keys(table).filter(function (key) {
+				return table[key] === code;
+			})[0];
+
+			return found === undefined ? code : found;
+		}
+
+		function codeOf (table, value) {
+			if (typeof value === 'number') return value;
+			if (table[String(value).trim()] !== undefined) return table[String(value).trim()];
+
+			return parseNumber(value);
+		}
+
+		/* A number of a table of partitions: decimal, 0x hex, with K or M. */
+		function parseNumber (value) {
+			var text = String(value === undefined || value === null ? '' : value).trim();
+			var scale = 1;
+			var made;
+
+			if (!text)
+				return Number.NaN;
+
+			if (/[kK]$/.test(text)) {
+				scale = 1024;
+				text = text.slice(0, -1);
+			}
+			else if (/[mM]$/.test(text)) {
+				scale = 1024 * 1024;
+				text = text.slice(0, -1);
+			}
+
+			made = /^0x/i.test(text) ? parseInt(text, 16) : Number(text);
+
+			return made * scale;
+		}
+
+		function partition (name, type, subtype, offset, size, flags) {
+			var kind = typeof type === 'number' ? nameOf(PartitionTypes, type) : String(type).trim();
+			var sub = typeof subtype === 'number' ? nameOf(kind === 'app' ? AppTypes : DataTypes, subtype) : String(subtype).trim();
+
+			return {Name: String(name).trim(), Type: kind, SubType: sub, Offset: offset, Size: size, Flags: flags || []};
+		}
+
+		/* A table from its bytes (a partitions.bin, or a whole flash from 0x8000 on) or from its text (a CSV of ESP-IDF). */
+		function parsePartitions (source) {
+			if (typeof source === 'string') return parseCSV(source);
+
+			var bytes = source instanceof Uint8Array ? source : new Uint8Array(source);
+			var list = [];
+			var at;
+
+			for (at = 0; at + 32 <= bytes.length; at += 32) {
+				var view = new DataView(bytes.buffer, bytes.byteOffset + at, 32);
+				var label = '';
+				var c;
+
+				if (bytes[at] !== 0xAA || bytes[at + 1] !== 0x50) break;
+
+				for (c = 12; c < 28 && bytes[at + c]; c++)
+					label += String.fromCharCode(bytes[at + c]);
+
+				var flags = view.getUint32(28, true);
+
+				list.push(partition(label, bytes[at + 2], bytes[at + 3], view.getUint32(4, true), view.getUint32(8, true), (flags & 1 ? ['encrypted'] : []).concat(flags & 2 ? ['readonly'] : [])));
+			}
+
+			return list;
+		}
+
+		/* A CSV of ESP-IDF: Name, Type, SubType, Offset, Size, Flags; an offset left out comes after the one before (apps on 64 KB). */
+		function parseCSV (text) {
+			var list = [];
+			var next = TableOffset + 0x1000;
+
+			text.split(/\r?\n/).forEach(function (line) {
+				var cells = line.replace(/#.*$/, '').split(',').map(function (cell) {
+					return cell.trim();
+				});
+				var kind;
+				var offset;
+				var size;
+
+				if (cells.length < 5 || !cells[0]) return;
+
+				kind = cells[1];
+				offset = cells[3] ? parseNumber(cells[3]) : kind === 'app' ? Math.ceil(next / 0x10000) * 0x10000 : Math.ceil(next / 0x1000) * 0x1000;
+				size = parseNumber(cells[4]);
+
+				list.push(partition(cells[0], kind, /^\d|^0x/i.test(cells[2]) ? parseNumber(cells[2]) : cells[2], offset, size, cells[5] ? cells[5].split(/[:\s]+/).filter(function (flag) {
+					return !!flag;
+				}) : []));
+
+				next = offset + size;
+			});
+
+			return list;
+		}
+
+		function toCSV (list) {
+			return ['# Name, Type, SubType, Offset, Size, Flags'].concat(list.map(function (one) {
+				return [one.Name, one.Type, one.SubType, '0x' + one.Offset.toString(16), '0x' + one.Size.toString(16), (one.Flags || []).join(':')].join(', ');
+			})).join('\n') + '\n';
+		}
+
+		/* The bytes of a table: its entries, the entry of their MD5, FF to its end (0xC00). */
+		function makePartitions (list) {
+			var bytes = new Uint8Array(TableSize);
+			var view = new DataView(bytes.buffer);
+			var at = 0;
+
+			bytes.fill(0xFF);
+
+			list.forEach(function (one) {
+				var kind = codeOf(PartitionTypes, one.Type);
+				var c;
+
+				bytes[at] = 0xAA;
+				bytes[at + 1] = 0x50;
+				bytes[at + 2] = kind;
+				bytes[at + 3] = codeOf(kind === 0 ? AppTypes : DataTypes, one.SubType);
+
+				view.setUint32(at + 4, one.Offset, true);
+				view.setUint32(at + 8, one.Size, true);
+
+				for (c = 0; c < 16; c++)
+					bytes[at + 12 + c] = c < one.Name.length ? one.Name.charCodeAt(c) & 255 : 0;
+
+				view.setUint32(at + 28, ((one.Flags || []).indexOf('encrypted') !== -1 ? 1 : 0) | ((one.Flags || []).indexOf('readonly') !== -1 ? 2 : 0), true);
+
+				at += 32;
+			});
+
+			bytes[at] = 0xEB;
+			bytes[at + 1] = 0xEB;
+
+			bytes.set(md5(bytes.subarray(0, at)), at + 16);
+
+			return bytes;
+		}
+
+		/*
+		 * What is wrong with a table on a flash of so many bytes: [{Partition (its index, -1 the table), Text}], [] when
+		 * nothing. Its partitions inside the flash, past the table, not over each other, apps on 64 KB and the rest on 4 KB,
+		 * names of 15 characters at most and each its own, an app at least, the slots of updates with their otadata.
+		 */
+		function checkPartitions (list, flash) {
+			var found = [];
+			var size = Number(flash) || 0;
+			var names = {};
+			var apps = 0;
+			var slots = 0;
+			var otadata = false;
+
+			if (list.length > 95)
+				found.push({Partition: -1, Text: 'more than 95 partitions'});
+
+			list.forEach(function (one, index) {
+				var kind = codeOf(PartitionTypes, one.Type);
+				var sub = codeOf(kind === 0 ? AppTypes : DataTypes, one.SubType);
+
+				if (!one.Name || one.Name.length > 15)
+					found.push({Partition: index, Text: 'its name is empty or longer than 15 characters'});
+
+				if (names[one.Name])
+					found.push({Partition: index, Text: 'its name is that of another'});
+
+				if (!(kind >= 0 && kind <= 254))
+					found.push({Partition: index, Text: 'its type is none of app, data or a number'});
+
+				if (!(sub >= 0 && sub <= 254))
+					found.push({Partition: index, Text: 'its subtype is not known'});
+
+				if (!(one.Size > 0))
+					found.push({Partition: index, Text: 'it has no size'});
+
+				if (one.Offset < TableOffset + 0x1000)
+					found.push({Partition: index, Text: 'it begins before the end of the table (0x9000)'});
+
+				if (kind === 0 && one.Offset % 0x10000)
+					found.push({Partition: index, Text: 'an app begins on 64 KB'});
+
+				if (kind !== 0 && one.Offset % 0x1000)
+					found.push({Partition: index, Text: 'it begins on 4 KB'});
+
+				if (size && one.Offset + one.Size > size)
+					found.push({Partition: index, Text: 'it goes past the end of the flash'});
+
+				names[one.Name] = true;
+
+				if (kind === 0)
+					apps++;
+
+				if (kind === 0 && sub >= 0x10 && sub < 0x20)
+					slots++;
+
+				if (kind === 1 && sub === 0)
+					otadata = true;
+
+				list.forEach(function (other, at) {
+					if (at > index && one.Offset < other.Offset + other.Size && other.Offset < one.Offset + one.Size)
+						found.push({Partition: index, Text: 'it lies over ' + other.Name});
+				});
+			});
+
+			if (!apps)
+				found.push({Partition: -1, Text: 'it has no app'});
+
+			if (slots && !otadata)
+				found.push({Partition: -1, Text: 'its slots of updates have no otadata'});
+
+			return found;
+		}
+
+		var Partitions = {
+			Parse: parsePartitions,
+			Make: makePartitions,
+			Check: checkPartitions,
+			CSV: toCSV,
+			Preset: function (name) {
+				var preset = PartitionPresets[name];
+
+				return preset ? preset.map(function (row) {
+					return partition(row[0], row[1], row[2], row[3], row[4]);
+				}) : null;
+			},
+			Presets: function () {
+				return Object.keys(PartitionPresets);
+			},
+			Offset: TableOffset
+		};
+
+		/* Hardware: Firmware */
+
+		/*
+		 * The chips a protocol knows, as data: {Name, Family (of a manifest of ESP Web Tools), Magic (the values of the register
+		 * a loader tells it by), ID (of GET_SECURITY_INFO), Bootloader (its offset), Encrypted (its FLASH_BEGIN takes the flag),
+		 * Sizes and Frequencies (the codes of the header of an image)}.
+		 */
+		var Sizes = {'1MB': 0x00, '2MB': 0x10, '4MB': 0x20, '8MB': 0x30, '16MB': 0x40, '32MB': 0x50, '64MB': 0x60, '128MB': 0x70};
+		var Chips = [
+			{Name: 'ESP32', Family: 'ESP32', Magic: [0x00f01d83], ID: 0, Bootloader: 0x1000, Encrypted: false, Frequencies: {'40m': 0x0, '26m': 0x1, '20m': 0x2, '80m': 0xf}},
+			{Name: 'ESP32-S3', Family: 'ESP32-S3', Magic: [0x9], ID: 9, Bootloader: 0x0, Encrypted: true, Frequencies: {'80m': 0xf, '40m': 0x0, '26m': 0x1, '20m': 0x2}},
+			{Name: 'ESP32-C3', Family: 'ESP32-C3', Magic: [0x6921506f, 0x1b31506f, 0x4881606f, 0x4361606f], ID: 5, Bootloader: 0x0, Encrypted: true, Frequencies: {'80m': 0xf, '40m': 0x0, '26m': 0x1, '20m': 0x2}}
+		];
+		var Modes = {qio: 0, qout: 1, dio: 2, dout: 3};
+		var protocols = {};
+
+		function chipOf (name) {
+			return Chips.filter(function (chip) {
+				return chip.Name === name || chip.Family === name;
+			})[0] || null;
+		}
+
+		function bytesOfSize (text) {
+			var match = /^(\d+)MB$/.exec(String(text || ''));
+
+			return match ? Number(match[1]) * 1024 * 1024 : 0;
+		}
+
+		/*
+		 * The header of an image of a bootloader set for a flash ({Chip, Mode, Frequency, Size}, each 'keep' or left out: as it
+		 * is): a copy; the SHA-256 at its end made again when it has one (byte 23).
+		 */
+		function patchImage (image, flash) {
+			var given = flash || {};
+			var chip = chipOf(given.Chip) || Chips[0];
+			var bytes = new Uint8Array(image);
+			var mode = Modes[given.Mode];
+			var size = Sizes[given.Size];
+			var frequency = chip.Frequencies[given.Frequency];
+			var at;
+			var count;
+			var s;
+
+			if (bytes.length < 24 || bytes[0] !== 0xE9) return bytes;
+
+			if (mode !== undefined)
+				bytes[2] = mode;
+
+			if (size !== undefined)
+				bytes[3] = bytes[3] & 0x0F | size;
+
+			if (frequency !== undefined)
+				bytes[3] = bytes[3] & 0xF0 | frequency;
+
+			if (bytes[23] !== 1) return bytes;
+
+			/* Its end: its segments, then to 16 bytes with its checksum last; its SHA-256 after. */
+			count = bytes[1];
+			at = 24;
+
+			for (s = 0; s < count && at + 8 <= bytes.length; s++)
+				at += 8 + (bytes[at + 4] | bytes[at + 5] << 8 | bytes[at + 6] << 16 | bytes[at + 7] << 24);
+
+			at += 16 - at % 16;
+
+			if (at + 32 <= bytes.length)
+				bytes.set(sha256(bytes.subarray(0, at)), at);
+
+			return bytes;
+		}
+
+		/*
+		 * The parts of a build of arduino-cli ([{Name, Bytes}]: its files) at their offsets for a chip: a merged image at 0, the
+		 * bootloader at that of the chip, the partitions at 0x8000, boot_app0 at 0xe000, the app at 0x10000.
+		 */
+		function partsOf (files, chipName) {
+			var chip = chipOf(chipName) || Chips[0];
+			var merged = (files || []).filter(function (file) {
+				return /merged\.bin$/i.test(file.Name);
+			})[0];
+			var parts = [];
+
+			if (merged)
+				return [{Offset: 0, Bytes: merged.Bytes, Name: merged.Name}];
+
+			(files || []).forEach(function (file) {
+				var name = String(file.Name);
+				var offset = /bootloader\.bin$/i.test(name) ? chip.Bootloader : /partitions\.bin$/i.test(name) ? TableOffset : /boot_app0\.bin$/i.test(name) ? 0xe000 : /\.bin$/i.test(name) ? 0x10000 : -1;
+				if (offset >= 0)
+					parts.push({Offset: offset, Bytes: file.Bytes, Name: name});
+			});
+
+			return parts.sort(function (a, b) {
+				return a.Offset - b.Offset;
+			});
+		}
+
+		/*
+		 * A manifest of ESP Web Tools ({builds: [{chipFamily, parts: [{path, offset}]}]}): the parts of its build for a chip,
+		 * each read by read(path, callback(error, bytes)).
+		 */
+		function manifestParts (manifest, chipName, read, callback) {
+			var chip = chipOf(chipName);
+			var build = ((manifest || {}).builds || []).filter(function (one) {
+				return chip && one.chipFamily === chip.Family;
+			})[0];
+			var parts = [];
+			var left;
+
+			if (!build) {
+				callback(fail('NotFoundError', 'Elemenx Firmware: the manifest has no build for ' + chipName));
+
+				return;
+			}
+
+			left = build.parts.length;
+
+			if (!left) {
+				callback(null, []);
+
+				return;
+			}
+
+			build.parts.forEach(function (part, index) {
+				read(part.path, function (error, bytes) {
+					if (left <= 0) return;
+
+					if (error) {
+						left = 0;
+
+						callback(error);
+
+						return;
+					}
+
+					parts[index] = {Offset: Number(part.offset), Bytes: bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), Name: part.path};
+
+					if (--left === 0)
+						callback(null, parts);
+				});
+			});
+		}
+
+		/*
+		 * What is wrong with parts before they are written on a flash of so many bytes, with a table (theirs at 0x8000, or
+		 * given): over each other, past the flash, an app longer than its partition. A DataError with them all, or null.
+		 */
+		function checkParts (parts, size, table) {
+			var problems = [];
+			var list = table || null;
+
+			parts.forEach(function (part, index) {
+				if (part.Offset === TableOffset && !list)
+					list = parsePartitions(part.Bytes);
+
+				if (size && part.Offset + part.Bytes.length > size)
+					problems.push('the part at 0x' + part.Offset.toString(16) + ' goes past the end of the flash');
+
+				parts.forEach(function (other, at) {
+					if (at > index && part.Offset < other.Offset + other.Bytes.length && other.Offset < part.Offset + part.Bytes.length)
+						problems.push('the parts at 0x' + part.Offset.toString(16) + ' and 0x' + other.Offset.toString(16) + ' lie over each other');
+				});
+			});
+
+			(list || []).forEach(function (one) {
+				parts.forEach(function (part) {
+					if (codeOf(PartitionTypes, one.Type) === 0 && part.Offset === one.Offset && part.Bytes.length > one.Size)
+						problems.push('the app (' + part.Bytes.length + ' bytes) is longer than its partition ' + one.Name + ' (' + one.Size + ' bytes)');
+				});
+			});
+
+			return problems.length ? fail('DataError', 'Elemenx Firmware: ' + problems.join('; ')) : null;
+		}
+
+		/* The facade of Firmware of an owner: what it flashes is let go (cancelled) when it is destroyed. */
+		function createFirmware (owner) {
+			function run (kind, port, args, options, callback) {
+				var given = options || {};
+				var name = given.Protocol || 'esp';
+				var protocol = protocols[name];
+				var entry = {};
+				var job;
+
+				if (!protocol || typeof protocol[kind] !== 'function') {
+					callback(fail('NotSupportedError', 'Elemenx Firmware: no protocol ' + name + ' that can ' + kind));
+
+					return {Cancel: noop};
+				}
+
+				entry.Destroy = function () {
+					owned.Remove(owner, entry);
+
+					if (job)
+						job.Cancel();
+				};
+
+				if (owner)
+					owned.Add(owner, entry);
+
+				job = protocol[kind].apply(null, [port].concat(args, [given, function (error, result) {
+					if (owner)
+						owned.Remove(owner, entry);
+
+					callback(error || null, result);
+				}])) || {Cancel: noop};
+
+				return job;
+			}
+
+			return {
+				Define: function (name, protocol) {
+					protocols[String(name)] = protocol;
+
+					return protocol;
+				},
+				Names: function () {
+					return Object.keys(protocols);
+				},
+				/* Parts [{Offset, Bytes}] written on the flash of the board of a port; {Cancel()} stops it (an AbortError). */
+				Flash: function (port, parts, options, callback) {
+					var given = options || {};
+					var list = (parts || []).map(function (part) {
+						return {Offset: Number(part.Offset) || 0, Bytes: part.Bytes instanceof Uint8Array ? part.Bytes : new Uint8Array(part.Bytes), Name: part.Name || ''};
+					}).sort(function (a, b) {
+						return a.Offset - b.Offset;
+					});
+					var wrong = checkParts(list, bytesOfSize(given.Flash && given.Flash.Size), given.Partitions || null);
+
+					if (wrong) {
+						callback(wrong);
+
+						return {Cancel: noop};
+					}
+
+					return run('Flash', port, [list], given, callback);
+				},
+				Detect: function (port, options, callback) {
+					return run('Detect', port, [], options, callback);
+				},
+				Read: function (port, offset, length, options, callback) {
+					return run('Read', port, [offset, length], options, callback);
+				},
+				Parts: partsOf,
+				Manifest: manifestParts,
+				Patch: patchImage,
+				Partitions: Partitions,
+				Chips: function () {
+					return JSON.parse(JSON.stringify(Chips));
+				},
+				Digest: function (bytes, kind) {
+					var data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+
+					return kind === 'sha256' ? sha256(data) : md5(data);
+				}
+			};
+		}
+
+		/* Hardware: Firmware esp */
+
+		/*
+		 * The ROM loader of the ESP32 family over a serial port: no program of its own sent first (the stub of esptool), so no
+		 * compression. Reset into it by DTR and RTS (the classic circuit of a board, or the USB-JTAG-Serial of S3 and C3),
+		 * SLIP frames, sync, the chip told, a faster speed, SPI attached and its size set, the flash erased (all of it with
+		 * Erase), each part written in blocks of 1 KB and its MD5 checked, the board reset to run it.
+		 */
+		var Esp = {
+			Sync: 0x08, ReadReg: 0x0a, Begin: 0x02, Data: 0x03, End: 0x04, Attach: 0x0d, Params: 0x0b, Baud: 0x0f, Md5: 0x13, ReadFlash: 0x0e, Security: 0x14,
+			Block: 0x400, Magic: 0x40001000
+		};
+
+		function u32 (list, value) {
+			list.push(value & 255, value >>> 8 & 255, value >>> 16 & 255, value >>> 24 & 255);
+
+			return list;
+		}
+
+		function slip (bytes) {
+			var out = [0xC0];
+			var i;
+
+			for (i = 0; i < bytes.length; i++) {
+				if (bytes[i] === 0xC0) out.push(0xDB, 0xDC);
+				else if (bytes[i] === 0xDB) out.push(0xDB, 0xDD);
+				else out.push(bytes[i]);
+			}
+
+			out.push(0xC0);
+
+			return new Uint8Array(out);
+		}
+
+		/* A link to the loader on a port: frames it heard (SLIP undone), one waiter at a time. */
+		function espLink (port) {
+			var link = {Port: port, Frames: [], Waiter: null, Frame: null, Escape: false, Cancelled: false, Baud: 115200};
+
+			link.Heard = function (chunk) {
+				var i;
+
+				for (i = 0; i < chunk.length; i++) {
+					var byte = chunk[i];
+
+					if (byte === 0xC0) {
+						if (link.Frame && link.Frame.length)
+							link.Frames.push(new Uint8Array(link.Frame));
+
+						link.Frame = [];
+					}
+					else if (link.Frame) {
+						if (link.Escape) {
+							link.Frame.push(byte === 0xDC ? 0xC0 : byte === 0xDD ? 0xDB : byte);
+
+							link.Escape = false;
+						}
+						else if (byte === 0xDB) {
+							link.Escape = true;
+						}
+						else {
+							link.Frame.push(byte);
+						}
+					}
+				}
+
+				if (link.Waiter)
+					link.Waiter();
+			};
+
+			return link;
+		}
+
+		function later (link, ms, next) {
+			setTimeout(next, ms);
+		}
+
+		/* A command and its answer: callback(error, {Value, Data}); the answers of other commands are left aside. */
+		function espCommand (link, op, data, checksum, timeout, callback) {
+			var packet = [0x00, op, data.length & 255, data.length >> 8 & 255];
+			var timer;
+			var done = false;
+
+			u32(packet, checksum || 0);
+
+			packet = packet.concat(Array.prototype.slice.call(data));
+
+			function finish (error, result) {
+				if (done) return;
+
+				done = true;
+				link.Waiter = null;
+
+				clearTimeout(timer);
+
+				callback(error, result);
+			}
+
+			link.Waiter = function () {
+				while (link.Frames.length) {
+					var frame = link.Frames.shift();
+					var size;
+					var body;
+					var status;
+
+					if (frame.length < 8 || frame[0] !== 0x01 || frame[1] !== op) continue;
+
+					size = frame[2] | frame[3] << 8;
+					body = frame.subarray(8, 8 + size);
+
+					/* The loader of the ROM ends what it tells with 4 bytes: its status, then its error. */
+					status = body.length >= 4 ? body[body.length - 4] : body.length >= 2 ? body[body.length - 2] : 0;
+
+					if (status) {
+						finish(fail('NetworkError', 'Elemenx Firmware esp: the loader refused the command 0x' + op.toString(16) + ' (error 0x' + (body[body.length - 3] || 0).toString(16) + ')'));
+
+						return;
+					}
+
+					finish(null, {Value: (frame[4] | frame[5] << 8 | frame[6] << 16 | frame[7] << 24) >>> 0, Data: body.subarray(0, Math.max(0, body.length - 4))});
+
+					return;
+				}
+			};
+
+			timer = setTimeout(function () {
+				finish(fail('TimeoutError', 'Elemenx Firmware esp: no answer to the command 0x' + op.toString(16)));
+			}, timeout);
+
+			link.Port.Write(slip(packet), function (error) {
+				/* The answer may have come before the write told it was done: then nothing is waited for. */
+				if (error) finish(error);
+				else if (link.Waiter) link.Waiter();
+			});
+		}
+
+		/* Into the loader by DTR and RTS (DTR holds IO0 down, RTS holds EN): the classic circuit, or the USB-JTAG-Serial. */
+		function espReset (link, kind, callback) {
+			var port = link.Port;
+			var steps = kind === 'usb' ? [[{DTR: false, RTS: false}, 100], [{DTR: true, RTS: false}, 100], [{DTR: false, RTS: true}, 100], [{DTR: false, RTS: false}, 0]] : [[{DTR: false, RTS: true}, 100], [{DTR: true, RTS: false}, 50], [{DTR: false}, 0]];
+			var index = 0;
+
+			(function next () {
+				var step = steps[index++];
+
+				if (!step) {
+					callback(null);
+
+					return;
+				}
+
+				port.Signals(step[0], function (error) {
+					if (error) {
+						callback(error);
+
+						return;
+					}
+
+					later(link, step[1], next);
+				});
+			})();
+		}
+
+		/* Sync with the loader: up to 7 tries of each reset (the classic one first, the USB one first of an Espressif USB). */
+		function espSync (link, callback) {
+			var usb = link.Port.Info && link.Port.Info.VendorID === 0x303a;
+			var resets = usb ? ['usb', 'classic'] : ['classic', 'usb'];
+			var sync = [0x07, 0x07, 0x12, 0x20];
+			var r = 0;
+			var i;
+
+			for (i = 0; i < 32; i++)
+				sync.push(0x55);
+
+			(function reset () {
+				var tries = 0;
+
+				if (r >= resets.length) {
+					callback(fail('TimeoutError', 'Elemenx Firmware esp: the loader does not answer (hold BOOT and press RESET, then try again)'));
+
+					return;
+				}
+
+				espReset(link, resets[r++], function (error) {
+					if (error) {
+						callback(error);
+
+						return;
+					}
+
+					(function attempt () {
+						if (link.Cancelled) {
+							callback(fail('AbortError', 'Elemenx Firmware: cancelled'));
+
+							return;
+						}
+
+						link.Frames = [];
+
+						espCommand(link, Esp.Sync, sync, 0, 300, function (failed) {
+							if (!failed) {
+								/* It answers each sync many times: those left are let go. */
+								later(link, 50, function () {
+									link.Frames = [];
+
+									callback(null);
+								});
+
+								return;
+							}
+
+							if (++tries < 7) attempt();
+							else reset();
+						});
+					})();
+				});
+			})();
+		}
+
+		/* The chip: by its magic register, else by GET_SECURITY_INFO (newer revisions). */
+		function espDetect (link, callback) {
+			espCommand(link, Esp.ReadReg, u32([], Esp.Magic), 0, 1000, function (error, made) {
+				var chip = error ? null : Chips.filter(function (one) {
+					return one.Magic.indexOf(made.Value) !== -1;
+				})[0];
+
+				if (chip) {
+					callback(null, chip);
+
+					return;
+				}
+
+				espCommand(link, Esp.Security, [], 0, 1000, function (failed, info) {
+					var id = !failed && info.Data.length >= 15 ? info.Data[11] | info.Data[12] << 8 | info.Data[13] << 16 | info.Data[14] << 24 : -1;
+					var found = Chips.filter(function (one) {
+						return one.ID && one.ID === id;
+					})[0];
+
+					if (found) callback(null, found);
+					else callback(fail('NotSupportedError', 'Elemenx Firmware esp: a chip this protocol does not know (0x' + (made ? made.Value.toString(16) : '?') + ')'));
+				});
+			});
+		}
+
+		/* The port opened for the loader (closed first if it was open), the link on it, synced and its chip told. */
+		function espOpen (port, options, callback) {
+			var link = espLink(port);
+
+			function open () {
+				port.Open({BaudRate: 115200, Text: false}, function (error) {
+					if (error) {
+						callback(error);
+
+						return;
+					}
+
+					port.On('data', link.Heard);
+
+					espSync(link, function (failed) {
+						if (failed) {
+							espClose(link, false, function () {
+								callback(failed);
+							});
+
+							return;
+						}
+
+						espDetect(link, function (wrong, chip) {
+							if (wrong) {
+								espClose(link, false, function () {
+									callback(wrong);
+								});
+
+								return;
+							}
+
+							link.Chip = chip;
+
+							callback(null, link);
+						});
+					});
+				});
+			}
+
+			if (port.Opened()) port.Close(open);
+			else open();
+
+			return link;
+		}
+
+		/* The port let go; with reset, the board reset to run what it has (RTS holds EN down a moment). */
+		function espClose (link, reset, callback) {
+			var port = link.Port;
+
+			function close () {
+				port.Off('data', link.Heard);
+				port.Close(function () {
+					callback();
+				});
+			}
+
+			if (!reset) {
+				close();
+
+				return;
+			}
+
+			port.Signals({DTR: false, RTS: true}, function () {
+				later(link, 100, function () {
+					port.Signals({RTS: false}, close);
+				});
+			});
+		}
+
+		/* A faster speed: the loader told, the port opened again at it. */
+		function espBaud (link, baud, callback) {
+			if (!baud || baud === link.Baud) {
+				callback(null);
+
+				return;
+			}
+
+			espCommand(link, Esp.Baud, u32(u32([], baud), 0), 0, 1000, function (error) {
+				if (error) {
+					callback(error);
+
+					return;
+				}
+
+				link.Port.Off('data', link.Heard);
+				link.Port.Close(function () {
+					link.Port.Open({BaudRate: baud, Text: false}, function (failed) {
+						if (failed) {
+							callback(failed);
+
+							return;
+						}
+
+						link.Baud = baud;
+
+						link.Port.On('data', link.Heard);
+
+						later(link, 50, function () {
+							link.Frames = [];
+
+							callback(null);
+						});
+					});
+				});
+			});
+		}
+
+		function espFlash (port, parts, options, callback) {
+			var flashBytes = bytesOfSize(options.Flash && options.Flash.Size) || 4 * 1024 * 1024;
+			var progress = typeof options.Progress === 'function' ? options.Progress : noop;
+			var total = parts.reduce(function (sum, part) {
+				return sum + part.Bytes.length;
+			}, 0);
+			var written = 0;
+			var report = [];
+			var link;
+			var finished = false;
+
+			function finish (error, result) {
+				if (finished) return;
+
+				finished = true;
+
+				if (!link || !link.Port.Opened()) {
+					callback(error, result);
+
+					return;
+				}
+
+				espClose(link, !error && options.Reset !== false, function () {
+					callback(error, result);
+				});
+			}
+
+			function step (stage, done) {
+				Runtime.Notify(progress, null, [{Stage: stage, Done: written, Total: total}]);
+
+				if (link && link.Cancelled) finish(fail('AbortError', 'Elemenx Firmware: cancelled'));
+				else done();
+			}
+
+			function command (op, data, checksum, timeout, next) {
+				espCommand(link, op, data, checksum, timeout, function (error, made) {
+					if (error) finish(error);
+					else if (link.Cancelled) finish(fail('AbortError', 'Elemenx Firmware: cancelled'));
+					else next(made);
+				});
+			}
+
+			/* Begin over a region: erase size, blocks, block size, offset (and not encrypted, of the newer chips). */
+			function begin (offset, size, blocks, next) {
+				var data = u32(u32(u32(u32([], size), blocks), Esp.Block), offset);
+
+				if (link.Chip.Encrypted)
+					u32(data, 0);
+
+				/* Erasing takes its time: 30 s a megabyte at most. */
+				command(Esp.Begin, data, 0, Math.max(3000, size / 1048576 * 30000), next);
+			}
+
+			function part (index) {
+				var one = parts[index];
+				var bytes;
+				var blocks;
+				var seq = 0;
+
+				if (!one) {
+					step('done', function () {
+						command(Esp.End, u32([], 1), 0, 3000, function () {
+							finish(null, {Chip: link.Chip.Name, Written: written, Parts: report});
+						});
+					});
+
+					return;
+				}
+
+				bytes = one.Offset === link.Chip.Bootloader && options.Flash ? patchImage(one.Bytes, Object.assign({Chip: link.Chip.Name}, options.Flash)) : one.Bytes;
+				blocks = Math.ceil(bytes.length / Esp.Block);
+
+				step('erase', function () {
+					begin(one.Offset, bytes.length, blocks, function () {
+						(function block () {
+							var chunk;
+							var data;
+							var sum = 0xEF;
+							var k;
+
+							if (seq >= blocks) {
+								verify();
+
+								return;
+							}
+
+							chunk = new Uint8Array(Esp.Block);
+
+							chunk.fill(0xFF);
+							chunk.set(bytes.subarray(seq * Esp.Block, Math.min(bytes.length, (seq + 1) * Esp.Block)));
+
+							for (k = 0; k < chunk.length; k++)
+								sum ^= chunk[k];
+
+							data = u32(u32(u32(u32([], chunk.length), seq), 0), 0).concat(Array.prototype.slice.call(chunk));
+
+							command(Esp.Data, data, sum, 3000, function () {
+								written += Math.min(Esp.Block, bytes.length - seq * Esp.Block);
+								seq++;
+
+								step('write', block);
+							});
+						})();
+					});
+				});
+
+				/* What the flash has now, by its MD5, the same as what was written. */
+				function verify () {
+					var want = hex(md5(bytes));
+
+					if (options.Verify === false) {
+						report.push({Offset: one.Offset, Size: bytes.length, MD5: want});
+
+						part(index + 1);
+
+						return;
+					}
+
+					step('verify', function () {
+						command(Esp.Md5, u32(u32(u32(u32([], one.Offset), bytes.length), 0), 0), 0, Math.max(3000, bytes.length / 1048576 * 8000), function (made) {
+							var got = made.Data.length >= 32 ? String.fromCharCode.apply(null, Array.prototype.slice.call(made.Data, 0, 32)).toLowerCase() : hex(made.Data.subarray(0, 16));
+
+							if (got !== want) {
+								finish(fail('DataError', 'Elemenx Firmware esp: the flash at 0x' + one.Offset.toString(16) + ' does not hold what was written (MD5 ' + got + ', not ' + want + ')'));
+
+								return;
+							}
+
+							report.push({Offset: one.Offset, Size: bytes.length, MD5: want});
+
+							part(index + 1);
+						});
+					});
+				}
+			}
+
+			link = espOpen(port, options, function (error, opened) {
+				if (error) {
+					finish(error);
+
+					return;
+				}
+
+				link = opened;
+
+				step('connect', function () {
+					espBaud(link, Number(options.Baud) || 460800, function (failed) {
+						if (failed) {
+							finish(failed);
+
+							return;
+						}
+
+						command(Esp.Attach, [0, 0, 0, 0, 0, 0, 0, 0], 0, 3000, function () {
+							command(Esp.Params, u32(u32(u32(u32(u32(u32([], 0), flashBytes), 0x10000), 0x1000), 0x100), 0xffff), 0, 3000, function () {
+								if (!options.Erase) {
+									part(0);
+
+									return;
+								}
+
+								/* The whole flash erased: a begin over all of it, its blocks none. */
+								step('erase', function () {
+									begin(0, flashBytes, 0, function () {
+										part(0);
+									});
+								});
+							});
+						});
+					});
+				});
+			});
+
+			return {
+				Cancel: function () {
+					link.Cancelled = true;
+				}
+			};
+		}
+
+		function espDetectPort (port, options, callback) {
+			var link = espOpen(port, options, function (error, opened) {
+				if (error) {
+					callback(error);
+
+					return;
+				}
+
+				espClose(opened, options.Reset !== false, function () {
+					callback(null, {Chip: opened.Chip.Name, Family: opened.Chip.Family, Bootloader: opened.Chip.Bootloader});
+				});
+			});
+
+			return {
+				Cancel: function () {
+					link.Cancelled = true;
+				}
+			};
+		}
+
+		/* Bytes of the flash read by the loader, 64 at a time (READ_FLASH_SLOW: slow, for a table of partitions and the like). */
+		function espRead (port, offset, length, options, callback) {
+			var link = espOpen(port, options, function (error, opened) {
+				var out = new Uint8Array(length);
+				var at = 0;
+
+				if (error) {
+					callback(error);
+
+					return;
+				}
+
+				(function next () {
+					var size = Math.min(64, length - at);
+
+					if (at >= length) {
+						espClose(opened, options.Reset !== false, function () {
+							callback(null, out);
+						});
+
+						return;
+					}
+
+					if (opened.Cancelled) {
+						espClose(opened, false, function () {
+							callback(fail('AbortError', 'Elemenx Firmware: cancelled'));
+						});
+
+						return;
+					}
+
+					espCommand(opened, Esp.ReadFlash, u32(u32([], offset + at), size), 0, 3000, function (failed, made) {
+						if (failed) {
+							espClose(opened, false, function () {
+								callback(failed.name === 'NetworkError' ? fail('NotSupportedError', 'Elemenx Firmware esp: the loader of this chip reads no flash') : failed);
+							});
+
+							return;
+						}
+
+						out.set(made.Data.subarray(0, size), at);
+
+						at += size;
+
+						next();
+					});
+				})();
+			});
+
+			return {
+				Cancel: function () {
+					link.Cancelled = true;
+				}
+			};
+		}
+
+		protocols.esp = {Flash: espFlash, Detect: espDetectPort, Read: espRead};
+
+		/* A handle given to an owner: what it opens is held for it (its Owner, the last that asked for it). */
+		function given (handle, owner) {
+			handle.Owner = owner;
+
+			return handle;
+		}
+
+		/* The facade of an owner (null: Elemenx.Hardware, of nobody). */
+		function createHardware (owner) {
+			var serial = {
+				Supported: function () {
+					return !!api('serial');
+				},
+				Request: function (options, callback) {
+					var done = typeof options === 'function' ? options : callback;
+					var filters = (typeof options === 'function' ? {} : options || {}).Filters || [];
+
+					if (!api('serial')) {
+						done(fail('NotSupportedError', 'Elemenx Serial: this browser has no Web Serial'));
+
+						return;
+					}
+
+					api('serial').requestPort({filters: filters.map(function (filter) {
+						var result = {};
+
+						if (filter.VendorID != null)
+							result.usbVendorId = Number(filter.VendorID);
+
+						if (filter.ProductID != null)
+							result.usbProductId = Number(filter.ProductID);
+
+						return result;
+					})}).then(function (port) {
+						done(null, given(serialPort(port), owner));
+					}, done);
+				},
+				Ports: function (callback) {
+					if (!api('serial')) {
+						callback(null, []);
+
+						return;
+					}
+
+					api('serial').getPorts().then(function (ports) {
+						callback(null, ports.map(function (port) {
+							return given(serialPort(port), owner);
+						}));
+					}, callback);
+				},
+				On: function (name, callback) {
+					on('serial', owner, name, callback);
+				},
+				Off: function (name, callback) {
+					off('serial', owner, name, callback);
+				}
+			};
+			var usb = {
+				Supported: function () {
+					return !!api('usb');
+				},
+				Request: function (options, callback) {
+					var done = typeof options === 'function' ? options : callback;
+					var filters = (typeof options === 'function' ? {} : options || {}).Filters || [];
+
+					if (!api('usb')) {
+						done(fail('NotSupportedError', 'Elemenx USB: this browser has no WebUSB'));
+
+						return;
+					}
+
+					api('usb').requestDevice({filters: filters.map(function (filter) {
+						var result = {};
+
+						if (filter.VendorID != null)
+							result.vendorId = Number(filter.VendorID);
+
+						if (filter.ProductID != null)
+							result.productId = Number(filter.ProductID);
+
+						if (filter.ClassCode != null)
+							result.classCode = Number(filter.ClassCode);
+
+						return result;
+					})}).then(function (device) {
+						done(null, given(usbDevice(device), owner));
+					}, done);
+				},
+				Devices: function (callback) {
+					if (!api('usb')) {
+						callback(null, []);
+
+						return;
+					}
+
+					api('usb').getDevices().then(function (devices) {
+						callback(null, devices.map(function (device) {
+							return given(usbDevice(device), owner);
+						}));
+					}, callback);
+				},
+				On: function (name, callback) {
+					on('usb', owner, name, callback);
+				},
+				Off: function (name, callback) {
+					off('usb', owner, name, callback);
+				}
+			};
+
+			return {Serial: serial, USB: usb, Firmware: createFirmware(owner)};
+		}
+
+		Elemenx.Hardware = createHardware(null);
+		Runtime.HardwareFor = createHardware;
+		Runtime.DestroyHardwareOwner = function (owner) {
+			owned.Destroy(owner);
+		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
 	/* Owner resources */
 	(function (global) {
 		'use strict';
@@ -20013,6 +21825,9 @@
 
 			if (Runtime.EventsFor)
 				owner.$Events = Runtime.EventsFor(owner);
+
+			if (Runtime.HardwareFor)
+				owner.$Hardware = Runtime.HardwareFor(owner);
 		};
 
 		Runtime.InitializeOwnerSubscriptions = function (owner, definition) {
@@ -20038,6 +21853,9 @@
 
 			if (Runtime.DestroyServiceWorkerOwner)
 				Runtime.DestroyServiceWorkerOwner(owner);
+
+			if (Runtime.DestroyHardwareOwner)
+				Runtime.DestroyHardwareOwner(owner);
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
@@ -22435,6 +24253,10 @@
 
 			if (Runtime.EventsFor)
 				api.$Events = Runtime.EventsFor(api);
+
+			/* Its ports and devices, closed when it is destroyed (DestroyOwnerResources). */
+			if (Runtime.HardwareFor)
+				api.$Hardware = Runtime.HardwareFor(api);
 
 			api.$Messaging = function (context, value) {
 				if (arguments.length === 2) {

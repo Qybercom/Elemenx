@@ -1,0 +1,377 @@
+{
+	"version": 1,
+	"type": "nebula",
+	"name": "nebula",
+	"parameters": [
+		{
+			"key": "Pulse",
+			"type": "float",
+			"value": 0.12,
+			"min": 0,
+			"max": 1,
+			"comment": "How much brighter and dimmer it breathes over a round"
+		},
+		{
+			"key": "Cycle",
+			"type": "float",
+			"value": 40,
+			"min": 4,
+			"max": 600,
+			"comment": "The seconds of one round of its breathing"
+		},
+		{
+			"key": "Spin",
+			"type": "float",
+			"value": 1.5,
+			"min": -30,
+			"max": 30,
+			"comment": "How many degrees it turns round its axis a minute"
+		},
+		{
+			"key": "Turbulence",
+			"type": "float",
+			"value": 1,
+			"min": 0,
+			"max": 2.5,
+			"comment": "How torn its gas is (of its shape: made once)"
+		},
+		{
+			"key": "Detail",
+			"type": "float",
+			"value": 1,
+			"min": 0,
+			"max": 2,
+			"comment": "How much fine grain it shows seen near"
+		}
+	],
+	"blocks": [
+		{
+			"id": "time",
+			"type": "Time",
+			"x": 40,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "cycle",
+			"type": "Parameter",
+			"x": 40,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Cycle"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "phase",
+			"type": "Divide",
+			"x": 260,
+			"y": 80,
+			"properties": [],
+			"comment": "Where it is in its round of breathing: 0 to 1 a round"
+		},
+		{
+			"id": "round",
+			"type": "Number",
+			"x": 260,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 6.283185
+				}
+			]
+		},
+		{
+			"id": "angle",
+			"type": "Multiply",
+			"x": 460,
+			"y": 80,
+			"properties": []
+		},
+		{
+			"id": "wave",
+			"type": "Sin",
+			"x": 640,
+			"y": 80,
+			"properties": []
+		},
+		{
+			"id": "pulse",
+			"type": "Parameter",
+			"x": 640,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pulse"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "swell",
+			"type": "Multiply",
+			"x": 820,
+			"y": 80,
+			"properties": [],
+			"comment": "How much brighter and dimmer it breathes"
+		},
+		{
+			"id": "one",
+			"type": "Number",
+			"x": 820,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "glow",
+			"type": "Add",
+			"x": 1000,
+			"y": 80,
+			"properties": []
+		},
+		{
+			"id": "spin",
+			"type": "Parameter",
+			"x": 40,
+			"y": 320,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spin"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "minute",
+			"type": "Number",
+			"x": 40,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 60
+				}
+			]
+		},
+		{
+			"id": "rate",
+			"type": "Divide",
+			"x": 260,
+			"y": 360,
+			"properties": [],
+			"comment": "Degrees a second of its Spin a minute"
+		},
+		{
+			"id": "turn",
+			"type": "Multiply",
+			"x": 460,
+			"y": 360,
+			"properties": [],
+			"comment": "How far it has turned round its axis"
+		},
+		{
+			"id": "torn",
+			"type": "Parameter",
+			"x": 760,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Turbulence"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "detail",
+			"type": "Parameter",
+			"x": 760,
+			"y": 460,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Detail"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "nebula",
+			"type": "Nebula",
+			"x": 1200,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Glow",
+					"value": 1
+				},
+				{
+					"key": "Density",
+					"value": 1
+				},
+				{
+					"key": "Turn",
+					"value": 0
+				},
+				{
+					"key": "Grow",
+					"value": 1
+				},
+				{
+					"key": "Detail",
+					"value": 1
+				},
+				{
+					"key": "Turbulence",
+					"value": 1
+				},
+				{
+					"key": "Thickness",
+					"value": 1
+				},
+				{
+					"key": "Hollow",
+					"value": 1
+				},
+				{
+					"key": "Outer",
+					"value": "#ffffff"
+				},
+				{
+					"key": "Inner",
+					"value": "#ffffff"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "l1",
+			"p1": "time-out-Seconds",
+			"p2": "phase-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "l2",
+			"p1": "cycle-out-Value",
+			"p2": "phase-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "l3",
+			"p1": "phase-out-Out",
+			"p2": "angle-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "l4",
+			"p1": "round-out-Value",
+			"p2": "angle-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "l5",
+			"p1": "angle-out-Out",
+			"p2": "wave-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "l6",
+			"p1": "wave-out-Out",
+			"p2": "swell-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "l7",
+			"p1": "pulse-out-Value",
+			"p2": "swell-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "l8",
+			"p1": "swell-out-Out",
+			"p2": "glow-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "l9",
+			"p1": "one-out-Value",
+			"p2": "glow-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "l10",
+			"p1": "glow-out-Out",
+			"p2": "nebula-in-Glow",
+			"kind": "value"
+		},
+		{
+			"id": "l11",
+			"p1": "spin-out-Value",
+			"p2": "rate-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "l12",
+			"p1": "minute-out-Value",
+			"p2": "rate-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "l13",
+			"p1": "time-out-Seconds",
+			"p2": "turn-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "l14",
+			"p1": "rate-out-Out",
+			"p2": "turn-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "l15",
+			"p1": "turn-out-Out",
+			"p2": "nebula-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "l16",
+			"p1": "torn-out-Value",
+			"p2": "nebula-in-Turbulence",
+			"kind": "value"
+		},
+		{
+			"id": "l17",
+			"p1": "detail-out-Value",
+			"p2": "nebula-in-Detail",
+			"kind": "value"
+		}
+	]
+}

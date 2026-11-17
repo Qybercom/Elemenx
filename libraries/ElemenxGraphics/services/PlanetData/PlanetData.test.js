@@ -368,6 +368,43 @@ describe('Contract: PlanetData, a planet as data: tiles of its layers over a cub
 		expect(planets.Vectored({Data: 'format-vectors', Rivers: false}).Rivers).toBe(false);
 	}, 60000);
 
+	/*
+	 * What a developer changed of its settlements and rivers (Places, PlanetEditor) survives a bake: its settlements baked
+	 * with them, its rivers baked as its ground makes them and the changes kept in the options it was made of, laid over them
+	 * again by a planet of the data.
+	 */
+	it('bakes its settlements with what was changed of them, and keeps the changes of its rivers to lay them again', async function () {
+		var added = planets.Direction(12, 34);
+		var places = {Towns: [{Op: 'add', Point: added, Kind: 'city', Size: 0.9}], Rivers: [{Op: 'add', Points: [planets.Direction(20, 0), planets.Direction(20, 1)], Flow: 150}]};
+		var made = await new Promise(function (resolve, reject) {
+			data.Bake(Object.assign({}, options, {Places: places}), {ID: 'format-places', Depth: 0, Biomes: 0, Size: 5, Vectors: true, VectorSize: 32, Towns: 600}, function (error, baked) {
+				if (error) reject(error);
+				else resolve(baked);
+			});
+		});
+		var town = made.Vectors.Settlements[made.Vectors.Settlements.length - 1];
+		var planet;
+
+		expect(made.Manifest.Origin.Options.Places).toEqual(places);
+		expect(town.Kind).toBe('city');
+
+		town.Point.forEach(function (value, axis) {
+			expect(value).toBeCloseTo(added[axis], 6);
+		});
+
+		/* Its rivers as its ground made them: none of them drawn; laid again by the planet of the data, with the one drawn. */
+		expect(made.Vectors.Rivers.some(function (river) {
+			return river.Drawn;
+		})).toBe(false);
+
+		planets.UseData('format-places', made);
+
+		planet = planets.Make({Data: 'format-places'});
+
+		expect(planet.Courses().length).toBeGreaterThanOrEqual(made.Vectors.Rivers.length + 1);
+		expect(planet.River(planets.Direction(20, 0.5)).Far).toBeLessThan(1);
+	}, 60000);
+
 	/* Step 3 of the format: its file deflated, its samples kept as differences, the tiles that say nothing more left out. */
 	it('packs a planet smaller, its tiles as differences, opens either file, and leaves out the tiles its coarser ones tell', async function () {
 		var stored = data.Save(baked);

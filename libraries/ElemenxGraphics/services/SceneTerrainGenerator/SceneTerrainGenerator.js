@@ -29,7 +29,8 @@
  *   sequoia (Density, Passability, Shapes), clearing (nothing grows), fields and orchard (in rows: Spacing, Gap, Way); lines of
  *   things a step apart row, fence, hedge, wall, powerline (Shapes, Spacing); the circle marker (Role, Team, Name); the triggers
  *   of a game, trigger an area, triggerpoint a circle, triggerline a line (Height, Team, Kinds, Once, Blueprint), and the
- *   area zone (Tags, Team), objects of the scene of a Scene (the trait Triggers). Sketched(sketch, base,
+ *   area zone (Tags, Team), objects of the scene of a Scene (the trait Triggers); and what cuts its volume (SketchCarves): the
+ *   line cave (Width, Depth, Rough, Mouth), the circles hall (Radius, Depth) and overhang (Radius, Amount). Sketched(sketch, base,
  *   seed) makes one ({Height(x, z, h), Look(x, z), Waters(), Items}: Waters the rivers, a strip at their levels, and the
  *   lakes); SketchChanged(before, after) gives the bounds [x0, z0, x1, z1] where two differ, for a ground made again only there.
  * - Sphere(options) returns the ground of a planet, the very one its baked surface shows (the noise of Math, as
@@ -47,7 +48,8 @@
  * - Carves of the options cut its volume and grow it (Volume: tunnels, holes dug, natural caves of ways and halls,
  *   overhangs of rock on steep slopes): the field has Density(x, y, z) (solid over 0) and Volume; the squares they touch are
  *   made of the density (Volumetric, surface nets), and it is walked as a place of floors (Underground: Height(x, z, y),
- *   Blocked, CanStep, Stands), as a location is.
+ *   Blocked, CanStep, Stands), as a location is. Daylight(field, x0, z0, x1, z1, low, options): how much of the light of
+ *   the sky comes to each point under it round a square (At(x, y, z, normal), 0 to 1), the same in every square.
  * - Work(): the workers of the ground (Workers.Pool), that run Piece and Grid off the main thread.
  * - Piece(shape, options, roads, args): a square of a ground of a shape (Flat or Sphere) of its options, as a worker
  *   makes it: of Flat, args [x, z, size, resolution] and the geometry of Chunk; of Sphere, args [face, u, v, size,
@@ -69,7 +71,7 @@
 Elemenx.Service('SceneTerrainGenerator', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['FlatOf(options)', 'Flat(options)', 'Border(options)', 'Passages(carve, height)', 'PassageRoute(graph, from, to)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)']
+		Methods: ['FlatOf(options)', 'Flat(options)', 'Border(options)', 'Passages(carve, height)', 'Daylight(field, x0, z0, x1, z1, low, options)', 'SketchCarves(sketch, height, seed)', 'PassageRoute(graph, from, to)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['terrain']}},
@@ -578,7 +580,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 			field.MaterialSlot[name] = index;
 		});
 
-		/* What is cut out of it and juts out of it (Carves): its volume over its heights. */
+		/* What is cut out of it and juts out of it (Carves, and the caves, halls and overhangs of its sketch): its volume over its heights. */
+		if (settings.Sketch && this.SketchCarves(settings.Sketch, field.Height, settings.Seed).length)
+			settings = Object.assign({}, settings, {Carves: (settings.Carves || []).concat(this.SketchCarves(settings.Sketch, field.Height, settings.Seed))});
+
 		field.Volume = this.Volume(settings, field);
 
 		field.Density = function (x, y, z) {
@@ -1675,46 +1680,90 @@ Elemenx.Service('SceneTerrainGenerator', {
 			return value;
 		}
 
+		/* Whether a carve may change the density in a square [x0, z0, x1, z1]: near its ways and halls, an overhang where it is steep. */
+		function touches (one, x0, z0, x1, z1) {
+			var b = one.Bounds;
+			if (b[3] < x0 || b[0] > x1 || b[5] < z0 || b[2] > z1) return false;
+
+			/* Overhangs only where it is steep somewhere in the square (of a few metres its corners). */
+			if (one.Type === 'overhangs') {
+				var marks = x1 - x0 < 4 && z1 - z0 < 4 ? [0, 1] : [0, 0.25, 0.5, 0.75, 1];
+
+				return marks.some(function (u) {
+					return marks.some(function (v) {
+						return steep(x0 + (x1 - x0) * u, z0 + (z1 - z0) * v) > one.Slope - 0.1;
+					});
+				});
+			}
+
+			/*
+			 * Regression: a tunnel by the box of all of it made each square in that box of the volume, though it was far
+			 * from most, and a square of the volume beside one of heights showed a step: by how far it is from its axis.
+			 */
+			if (one.Type === 'tunnel')
+				return one.Points.some(function (point, index) {
+					return squareNear(x0, z0, x1, z1, point, one.Points[index + 1] || point) <= (one.Width > 0 ? Math.hypot(one.Width, one.Height) / 2 : one.Radius) + 0.5;
+				});
+
+			/* Passages: by how far it is from the axis of each way and the middle of each hall. */
+			if (one.Type === 'passages')
+				return one.Tunnels.some(function (way) {
+					return way.Points.some(function (point, index) {
+						return squareNear(x0, z0, x1, z1, point, way.Points[index + 1] || point) <= way.Reach + one.Amount + one.Blend + 0.5;
+					});
+				}) || one.Halls.some(function (hall) {
+					return squareNear(x0, z0, x1, z1, hall.At, hall.At) <= hall.Radius + one.Amount + one.Blend + 0.5;
+				});
+
+			return true;
+		}
+
 		return {
 			Carves: made,
 			Density: density,
 			Steep: steep,
+			/* Its heights before anything is cut out of them. */
+			Ground: ground,
 
 			Touches: function (x0, z0, x1, z1) {
 				return made.some(function (one) {
-					var b = one.Bounds;
-					if (b[3] < x0 || b[0] > x1 || b[5] < z0 || b[2] > z1) return false;
+					return touches(one, x0, z0, x1, z1);
+				});
+			},
 
-					/* Overhangs only where it is steep somewhere in the square. */
+			/*
+			 * The heights the carves may change the density of a column within ([low, high]), null with none: out of them it
+			 * is its height (Ground) less y, as Density gives it, and need not be asked. Of the carves whose ways and halls
+			 * are within margin of the column (Touches); top: its height; enclosed: only those that hollow it (no overhangs).
+			 */
+			Span: function (x, z, top, margin, enclosed) {
+				var near = margin || 0;
+				var span = null;
+
+				made.forEach(function (one) {
+					var b = one.Bounds;
+					var low;
+					var high;
+
+					if (enclosed && one.Type === 'overhangs' || !touches(one, x - near, z - near, x + near, z + near)) return;
+
+					/* An overhang takes the height of the ground up to Amount aside: on a slope of g, as much as Amount g higher or lower. */
 					if (one.Type === 'overhangs') {
-						return [0, 0.25, 0.5, 0.75, 1].some(function (u) {
-							return [0, 0.25, 0.5, 0.75, 1].some(function (v) {
-								return steep(x0 + (x1 - x0) * u, z0 + (z1 - z0) * v) > one.Slope - 0.1;
-							});
-						});
+						var g = Math.sqrt(Math.max(0, 1 / Math.pow(Math.max(1e-3, 1 - steep(x, z)), 2) - 1));
+
+						low = top - one.Amount * (g + 1) - 4;
+						high = top + one.Amount * (g + 1) + 4;
+					}
+					else {
+						/* Natural caves: in their band under the ground (Top to Bottom deep). */
+						low = isFinite(b[1]) ? b[1] : top - (one.Type === 'caves' ? one.Bottom + 2 : 4);
+						high = isFinite(b[4]) ? b[4] : top - (one.Type === 'caves' ? one.Top - 2 : -4);
 					}
 
-					/*
-					 * Regression: a tunnel by the box of all of it made each square in that box of the volume, though it was far
-					 * from most, and a square of the volume beside one of heights showed a step: by how far it is from its axis.
-					 */
-					if (one.Type === 'tunnel')
-						return one.Points.some(function (point, index) {
-							return squareNear(x0, z0, x1, z1, point, one.Points[index + 1] || point) <= (one.Width > 0 ? Math.hypot(one.Width, one.Height) / 2 : one.Radius) + 0.5;
-						});
-
-					/* Passages: by how far it is from the axis of each way and the middle of each hall. */
-					if (one.Type === 'passages')
-						return one.Tunnels.some(function (way) {
-							return way.Points.some(function (point, index) {
-								return squareNear(x0, z0, x1, z1, point, way.Points[index + 1] || point) <= way.Reach + one.Amount + one.Blend + 0.5;
-							});
-						}) || one.Halls.some(function (hall) {
-							return squareNear(x0, z0, x1, z1, hall.At, hall.At) <= hall.Radius + one.Amount + one.Blend + 0.5;
-						});
-
-					return true;
+					span = span ? [Math.min(span[0], low), Math.max(span[1], high)] : [low, high];
 				});
+
+				return span;
 			},
 
 			Range: function (x0, z0, x1, z1, low, high) {
@@ -1899,7 +1948,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	/*
 	 * A field with a volume walked as a place of floors, as the ground of a location is: Height(x, z) the ground under the sky, what was cut out of it too, and Height(x, z, y) the floor a walker
 	 * at y stands on, steps up to (Climb, 0.6 m) or falls to, where the carves are (else its heights as ever: y says nothing
-	 * there); Blocked(x, z, y) rock where its body is; CanStep(x, z, y) a floor for it with no rock in its way; Stands(x, z,
+	 * there); Blocked(x, z, y) rock where its body is; CanStep(x, z, y) a floor for it with no rock in its way (Step: that floor, or null); Stands(x, z,
 	 * y) a floor for it, Up(x, y, z) how much a floor faces up (1 level), Path(from, to, rules) a way over and under it
 	 * (WayUnder), not steeper than Steep (the least it faces up, 0.5) when it goes up. Climb and Steep of the options.
 	 */
@@ -1933,7 +1982,8 @@ Elemenx.Service('SceneTerrainGenerator', {
 		}
 
 		/* The floor under y + Climb: going down, the first air over rock; null with none within 60 m. */
-		function floor (x, z, y) {
+		/* deep: no farther down than so many metres (a walker falls no farther than that): none past them. */
+		function floor (x, z, y, deep) {
 			var made = column(x, z);
 			var height = top(x, z);
 			var at;
@@ -1949,7 +1999,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 			at = y === undefined ? height + made.Over + climb : Math.min(y + climb, height + made.Over + climb);
 			air = volume.Density(x, at, z) <= 0;
 
-			for (i = 0; i < 240; i++) {
+			for (i = 0; i < (deep ? Math.ceil(deep / step) : 240); i++) {
 				var below = at - step;
 				var solid = volume.Density(x, below, z) > 0;
 
@@ -1986,7 +2036,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		};
 
 		field.Stands = function (x, z, y) {
-			var found = floor(x, z, y);
+			var found = floor(x, z, y, climb + 8);
 
 			return found !== null && found <= y + climb;
 		};
@@ -2009,13 +2059,216 @@ Elemenx.Service('SceneTerrainGenerator', {
 		};
 
 		/* Up only what is not too steep (Steep: the least a floor faces up, 0.5); down anything. */
-		field.CanStep = function (x, z, y) {
-			var found = floor(x, z, y);
+		/*
+		 * The floor a walker at y steps on at x, z (up Climb at most, down 8 m at most), null where it cannot. Regression: the
+		 * floor looked for 60 m down through the rock by each wall a way was looked for along, and the page held for seconds.
+		 */
+		field.Step = function (x, z, y) {
+			var found = floor(x, z, y, climb + 8);
 
-			return found !== null && found <= y + climb && !field.Blocked(x, z, found) && (found <= y + 0.05 || up(x, found, z) >= steep);
+			return found !== null && found <= y + climb && !field.Blocked(x, z, found) && (found <= y + 0.05 || up(x, found, z) >= steep) ? found : null;
+		};
+
+		field.CanStep = function (x, z, y) {
+			return field.Step(x, z, y) !== null;
 		};
 
 		return field;
+	},
+
+	/*
+	 * The daylight under the ground of a volume round a square (x0, z0 to x1, z1, from low up): how much of the light of the
+	 * sky comes to a point, 0 to 1. A grid of the world (Cell, 2 m), past the square by Reach (24 m): each free cell under
+	 * nothing but air up to the sky has all of it; from there it goes on through the free cells, Fade (0.78) of it a cell,
+	 * Reach at most: into the mouth of a cave and a little way in, none deep under the rock. Of the grid of the world and
+	 * reckoned so far past the square, the same point has the same light in every square. At(x, y, z, normal): of the free
+	 * corners round the point a little out of its surface, by their nearness; Grid, Cell, Origin and Size the grid.
+	 */
+	Daylight: function (field, x0, z0, x1, z1, low, options) {
+		var given = options || {};
+		var volume = field.Volume;
+		var cell = given.Cell || 2;
+		var reach = given.Reach === undefined ? 24 : given.Reach;
+		var fade = given.Fade === undefined ? 0.78 : given.Fade;
+		var far = Math.ceil(reach / cell);
+		var ox = Math.floor((x0 - reach) / cell) * cell;
+		var oz = Math.floor((z0 - reach) / cell) * cell;
+		var sx = Math.ceil((x1 + reach - ox) / cell) + 1;
+		var sz = Math.ceil((z1 + reach - oz) / cell) + 1;
+		var tops = new Float32Array(sx * sz);
+		var carved = new Uint8Array(sx * sz);
+		var spans = new Float32Array(sx * sz * 2);
+		var high = -Infinity;
+		var oy;
+		var sy;
+		var free;
+		var light;
+		var queue;
+		var head = 0;
+		var i;
+		var j;
+		var k;
+
+		for (k = 0; k < sz; k++) {
+			for (i = 0; i < sx; i++) {
+				var x = ox + i * cell;
+				var z = oz + k * cell;
+				var top = volume.Ground(x, z);
+				/*
+				 * The heights a carve may change the density of it within: out of them, rock under its height and air over it.
+				 * Overhangs left out: they hollow nothing, the shadow of the sun darkens under them (Regression: on a ground
+				 * with them every steep column was tens of metres of the density, a second a square).
+				 */
+				var made = volume.Span(x, z, top, cell, true);
+
+
+				carved[k * sx + i] = made ? 1 : 0;
+				tops[k * sx + i] = top;
+				spans[(k * sx + i) * 2] = made ? made[0] - cell : 0;
+				spans[(k * sx + i) * 2 + 1] = made ? made[1] + cell : 0;
+				high = Math.max(high, made ? Math.max(top, made[1]) + cell : top);
+			}
+		}
+
+		oy = Math.floor((low - cell * 2) / cell) * cell;
+		sy = Math.max(2, Math.min(300, Math.ceil((high + cell * 2 - oy) / cell) + 1));
+		free = new Uint8Array(sx * sy * sz);
+		light = new Float32Array(sx * sy * sz);
+		queue = new Int32Array(sx * sy * sz);
+
+		function index (ii, jj, kk) {
+			return (jj * sz + kk) * sx + ii;
+		}
+
+		/* Whether a point is rock: of the density where a carve may change it, else of the height of its column. */
+		function solid (x, y, z, column) {
+			return carved[column] && y >= spans[column * 2] && y <= spans[column * 2 + 1] ? volume.Density(x, y, z) > 0 : y <= tops[column];
+		}
+
+		/*
+		 * Whether rock lies between two free cells, at a quarter, a half and three quarters of the way: Regression: of the
+		 * cells alone, the roof of a tunnel a metre thick fell between them, and the sky was seen through it deep under the hill.
+		 */
+		function between (a, b) {
+			var ai = a % sx;
+			var ak = Math.floor(a / sx) % sz;
+			var aj = Math.floor(a / (sx * sz));
+			var bi = b % sx;
+			var bk = Math.floor(b / sx) % sz;
+			var bj = Math.floor(b / (sx * sz));
+			var t;
+
+			if (!carved[ak * sx + ai] && !carved[bk * sx + bi]) return false;
+
+			for (t = 0.25; t < 1; t += 0.25) {
+				var ci = ai + (bi - ai) * t;
+				var ck = ak + (bk - ak) * t;
+				var column = Math.round(ck) * sx + Math.round(ci);
+				if (solid(ox + ci * cell, oy + (aj + (bj - aj) * t) * cell, oz + ck * cell, carved[column] ? column : ak * sx + ai)) return true;
+			}
+
+			return false;
+		}
+
+		/* Which cells are air, and those that see the sky straight up: lit, and where the light starts from. */
+		for (k = 0; k < sz; k++) {
+			for (i = 0; i < sx; i++) {
+				var column = k * sx + i;
+				var sky = true;
+
+				for (j = sy - 1; j >= 0; j--) {
+					var y = oy + j * cell;
+					var air = !solid(ox + i * cell, y, oz + k * cell, column);
+					var at = index(i, j, k);
+
+					if (!air) {
+						sky = false;
+
+						continue;
+					}
+
+					free[at] = 1;
+
+					/* Up to the cell over it, through rock between: no more under the sky. */
+					if (sky && j < sy - 1 && between(at, index(i, j + 1, k)))
+						sky = false;
+
+					if (sky) {
+						light[at] = 1;
+						queue[head++] = at;
+					}
+				}
+			}
+		}
+
+		/* On through the air: each cell takes Fade of its brightest neighbour, Reach cells from the sky at most. */
+		var done = 0;
+		var steps = new Uint8Array(sx * sy * sz);
+		var ways = [1, 0, 0, -1, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 1, 0, 0, -1];
+		var w;
+
+		while (done < head) {
+			var from = queue[done++];
+			var fi = from % sx;
+			var fk = Math.floor(from / sx) % sz;
+			var fj = Math.floor(from / (sx * sz));
+			var next = light[from] * fade;
+
+			if (steps[from] >= far) continue;
+
+			for (w = 0; w < 18; w += 3) {
+				var ni = fi + ways[w];
+				var nj = fj + ways[w + 1];
+				var nk = fk + ways[w + 2];
+				var to;
+
+				if (ni < 0 || nj < 0 || nk < 0 || ni >= sx || nj >= sy || nk >= sz) continue;
+
+				to = index(ni, nj, nk);
+
+				if (!free[to] || light[to] >= next || between(from, to)) continue;
+
+				light[to] = next;
+				steps[to] = steps[from] + 1;
+				queue[head++] = to;
+			}
+		}
+
+		return {
+			Grid: light,
+			Cell: cell,
+			Origin: [ox, oy, oz],
+			Size: [sx, sy, sz],
+
+			At: function (x, y, z, normal) {
+				var px = (x + (normal ? normal[0] : 0) * cell * 0.6 - ox) / cell;
+				var py = (y + (normal ? normal[1] : 0) * cell * 0.6 - oy) / cell;
+				var pz = (z + (normal ? normal[2] : 0) * cell * 0.6 - oz) / cell;
+				var bi = Math.floor(px);
+				var bj = Math.floor(py);
+				var bk = Math.floor(pz);
+				var sum = 0;
+				var weight = 0;
+				var c;
+
+				if (bj >= sy - 1) return 1;
+
+				for (c = 0; c < 8; c++) {
+					var ci = Math.max(0, Math.min(sx - 1, bi + (c & 1)));
+					var cj = Math.max(0, Math.min(sy - 1, bj + (c >> 2 & 1)));
+					var ck = Math.max(0, Math.min(sz - 1, bk + (c >> 1 & 1)));
+					var at = index(ci, cj, ck);
+					var w = (c & 1 ? px - bi : 1 - px + bi) * (c >> 2 & 1 ? py - bj : 1 - py + bj) * (c >> 1 & 1 ? pz - bk : 1 - pz + bk);
+
+					if (!free[at]) continue;
+
+					sum += light[at] * w;
+					weight += w;
+				}
+
+				return weight > 1e-6 ? sum / weight : 0;
+			}
+		};
 	},
 
 	/*
@@ -2049,9 +2302,14 @@ Elemenx.Service('SceneTerrainGenerator', {
 		/* The heights and slopes of the columns, one more round the square. */
 		for (k = -1; k <= n + 1; k++) {
 			for (i = -1; i <= n + 1; i++) {
-				var h = field.Height(x0 + i * step, z0 + k * step);
+				/*
+				 * Of its heights before anything is cut (Volume.Ground), as the density is. Regression: of the heights of the
+				 * place of floors (Underground), a column of a cut open to the sky had the floor of the cut for its top, the
+				 * density there sank, and flaps of rock stood out round the mouth of a cave.
+				 */
+				var h = volume.Ground(x0 + i * step, z0 + k * step);
 
-				columns.push([h, field.Slope(x0 + i * step, z0 + k * step)]);
+				columns.push([h, volume.Steep(x0 + i * step, z0 + k * step)]);
 
 				low = Math.min(low, h);
 				high = Math.max(high, h);
@@ -2067,39 +2325,42 @@ Elemenx.Service('SceneTerrainGenerator', {
 			return (jj * side + (kk + 1)) * side + (ii + 1);
 		}
 
-		for (j = 0; j <= layers; j++) {
-			for (k = -1; k <= n + 1; k++) {
-				for (i = -1; i <= n + 1; i++)
-					values[at(i, j, k)] = volume.Density(x0 + i * step, y0 + j * step, z0 + k * step, columns[(k + 1) * side + (i + 1)]);
+		/*
+		 * The density at each corner of its cells: asked only within the heights a carve may change of each column
+		 * (Volume.Span), its height less y elsewhere, as the density is there. Regression: asked at every corner, a square
+		 * under a mountain was hundreds of thousands of them, seconds of a worker.
+		 */
+		for (k = -1; k <= n + 1; k++) {
+			for (i = -1; i <= n + 1; i++) {
+				var column = columns[(k + 1) * side + (i + 1)];
+				var span = volume.Span(x0 + i * step, z0 + k * step, column[0], step);
+
+				for (j = 0; j <= layers; j++) {
+					var y = y0 + j * step;
+
+					values[at(i, j, k)] = span && y >= span[0] - step && y <= span[1] + step ? volume.Density(x0 + i * step, y, z0 + k * step, column) : column[0] - y;
+				}
 			}
 		}
 
 		cells = new Int32Array(side * side * layers).fill(-1);
 
 		/*
-		 * How much of the sky a cell sees, 0 to 1: of five rays up through the density, one straight up and four leaning a
-		 * cell aside each cell up, those that meet no rock (out of the square: seen); a little always (0.03), so a cave is dark
-		 * and its lamps light it.
+		 * How much of the light of the sky comes to each point of it: none deep in a cave, so its lamps alone light it. Of a
+		 * coarse square (cells over 3 m: no cave is seen in it) whether its column up is air (Regression: of the grid of the
+		 * world, the whole ground of three kilometres was hundreds of millions of cells, and the page hung).
 		 */
-		function open (ii, jj, kk) {
-			var seen = 0;
+		var daylight = step <= 3 ? self.Daylight(field, x0, z0, x0 + extent, z0 + extent, y0) : {At: function (x, y, z, normal) {
+			var ci = Math.max(-1, Math.min(n + 1, Math.round((x + normal[0] * step - x0) / step)));
+			var ck = Math.max(-1, Math.min(n + 1, Math.round((z + normal[2] * step - z0) / step)));
+			var up;
 
-			[[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (lean) {
-				var up;
+			for (up = Math.max(0, Math.ceil((y + normal[1] * step - y0) / step)); up <= layers; up++) {
+				if (values[at(ci, up, ck)] > 0) return 0;
+			}
 
-				for (up = 2; jj + up <= layers; up++) {
-					var ci = ii + lean[0] * up;
-					var ck = kk + lean[1] * up;
-					if (ci < -1 || ci > n + 1 || ck < -1 || ck > n + 1) break;
-
-					if (values[at(ci, jj + up, ck)] > 0) return;
-				}
-
-				seen++;
-			});
-
-			return Math.max(0.03, seen / 5);
-		}
+			return 1;
+		}};
 
 		/* A point in each cell the surface crosses: the mean of where it crosses the edges of the cell. */
 		for (j = 0; j < layers; j++) {
@@ -2156,7 +2417,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 						return Math.abs(value - (columns[(k + (corner >> 1 & 1) + 1) * side + (i + (corner & 1) + 1)][0] - y0 - (j + (corner >> 2 & 1)) * step)) < 1e-6;
 					});
 					if (plain)
-						py = field.Height(px, pz);
+						py = volume.Ground(px, pz);
 
 					/* The way the density grows, of the corners of the cell: no more of it reckoned. */
 					var gx = corners[1] - corners[0] + corners[3] - corners[2] + corners[5] - corners[4] + corners[7] - corners[6];
@@ -2164,12 +2425,16 @@ Elemenx.Service('SceneTerrainGenerator', {
 					var gz = corners[2] - corners[0] + corners[3] - corners[1] + corners[6] - corners[4] + corners[7] - corners[5];
 					var length = Math.sqrt(gx * gx + gy * gy + gz * gz) || 1;
 					var normal = [-gx / length, -gy / length, -gz / length];
-					var top = field.Height(px, pz);
+					var top = volume.Ground(px, pz);
 					var stuff = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+					var sky = daylight.At(px, py, pz, normal);
 					var color;
 
-					/* The ground under the sky has its colors; what is under it or juts out, rock, darker the deeper. */
-					if (normal[1] > 0.3 && Math.abs(py - top) < step * 1.5) {
+					/*
+					 * The ground under the sky has its colors; what is under it or juts out, rock, darker the deeper. Regression: the
+					 * floor of a way in, as high as the ground there, had its grass a few metres into the rock: under a roof it is rock.
+					 */
+					if (normal[1] > 0.3 && Math.abs(py - top) < step * 1.5 && sky > 0.5) {
 						color = self.Paint(field, px, pz, py, 1 - normal[1], stuff);
 					}
 					else {
@@ -2183,7 +2448,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 					geometry.Positions.push(px - cx, py, pz - cz);
 					geometry.Normals.push(normal[0], normal[1], normal[2]);
-					geometry.UVs.push(py, open(i, j, k));
+					geometry.UVs.push(py, sky);
 					geometry.Colors.push(color[0], color[1], color[2]);
 					geometry.Materials.push.apply(geometry.Materials, stuff);
 				}
@@ -2542,7 +2807,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var limit = Number(rules.Limit) || 40000;
 		var start = {X: Math.round(from.X / step), Z: Math.round(from.Z / step)};
 		var goal = {X: Math.round(to.X / step), Z: Math.round(to.Z / step)};
-		var open = [];
+		var open = this.Queue();
 		var came = {};
 		var cost = {};
 		var closed = {};
@@ -2569,14 +2834,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 		cost[key(start)] = 0;
 
-		open.push({X: start.X, Z: start.Z, F: guess(start)});
+		open.Push({X: start.X, Z: start.Z, F: guess(start)});
 
-		while (open.length && visited < limit) {
-			open.sort(function (a, b) {
-				return a.F - b.F;
-			});
-
-			current = open.shift();
+		while (open.Size() && visited < limit) {
+			current = open.Pop();
 
 			if (closed[key(current)]) continue;
 
@@ -2607,7 +2868,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 				cost[id] = price;
 				came[id] = current;
 
-				open.push({X: next.X, Z: next.Z, F: price + guess(next)});
+				open.Push({X: next.X, Z: next.Z, F: price + guess(next)});
 			});
 		}
 
@@ -2662,12 +2923,64 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * where Blocked of the rules says; then made straight wherever a walker can go straight. from and to {X, Z, Y}: Y the
 	 * height it is at, or none for the top of the ground. Gives [{X, Y, Z}] or null.
 	 */
+	/*
+	 * The cheapest first of what is pushed ({F}: a binary heap): Push(item), Pop() (the one of the least F), Size().
+	 * Regression: a way found by sorting all that was open at each step took minutes where there was none, the page held.
+	 */
+	Queue: function () {
+		var items = [];
+
+		return {
+			Size: function () {
+				return items.length;
+			},
+
+			Push: function (item) {
+				var at = items.length;
+
+				items.push(item);
+
+				while (at > 0) {
+					var up = (at - 1) >> 1;
+					if (items[up].F <= item.F) break;
+
+					items[at] = items[up];
+					at = up;
+				}
+
+				items[at] = item;
+			},
+
+			Pop: function () {
+				var first = items[0];
+				var last = items.pop();
+				var at = 0;
+
+				if (!items.length) return first;
+
+				while (true) {
+					var left = at * 2 + 1;
+					var right = left + 1;
+					var least = right < items.length && items[right].F < items[left].F ? right : left;
+					if (left >= items.length || items[least].F >= last.F) break;
+
+					items[at] = items[least];
+					at = least;
+				}
+
+				items[at] = last;
+
+				return first;
+			}
+		};
+	},
+
 	WayUnder: function (field, from, to, rules) {
 		var step = Number(rules.Step) || field.Size / 96;
 		var limit = Number(rules.Limit) || 40000;
 		var steepest = rules.MaxSlope === undefined || rules.MaxSlope === null ? null : Number(rules.MaxSlope);
 		var half = field.Size / 2;
-		var open = [];
+		var open = this.Queue();
 		var came = {};
 		var cost = {};
 		var closed = {};
@@ -2682,15 +2995,31 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var far;
 		var i;
 
-		/* The floor a walker at y comes to at x, z, or null where it cannot. */
+		/*
+		 * The floor a walker at y comes to at x, z, or null where it cannot; kept for the search by the place and y to a
+		 * quarter of a metre (Regression: the corners of each diagonal asked again, a way was seconds of the page).
+		 */
+		var known = {};
+
 		function can (x, z, y) {
+			var id = x + ':' + z + ':' + Math.round(y * 4);
+			if (!(id in known))
+				known[id] = reach(x, z, y);
+
+			return known[id];
+		}
+
+		function reach (x, z, y) {
 			var floor;
 			var top;
 
-			if (Math.abs(x) > half || Math.abs(z) > half || !field.CanStep(x, z, y)) return null;
+			if (Math.abs(x) > half || Math.abs(z) > half) return null;
 
-			floor = field.Height(x, z, y);
-			top = field.Height(x, z);
+			floor = field.Step ? field.Step(x, z, y) : field.CanStep(x, z, y) ? field.Height(x, z, y) : null;
+
+			if (floor === null) return null;
+
+			top = field.Volume ? field.Volume.Ground(x, z) : field.Height(x, z);
 
 			if (!rules.Swim && top < 0 && floor > top - 0.5) return null;
 			if (rules.Blocked && rules.Blocked(x, z)) return null;
@@ -2714,14 +3043,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 		cost[key(start)] = 0;
 
-		open.push({X: start.X, Z: start.Z, Y: start.Y, F: guess(start)});
+		open.Push({X: start.X, Z: start.Z, Y: start.Y, F: guess(start)});
 
-		while (open.length && visited < limit) {
-			open.sort(function (a, b) {
-				return a.F - b.F;
-			});
-
-			current = open.shift();
+		while (open.Size() && visited < limit) {
+			current = open.Pop();
 
 			if (closed[key(current)]) continue;
 
@@ -2757,7 +3082,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 				cost[id] = price;
 				came[id] = current;
 
-				open.push({X: next.X, Z: next.Z, Y: y, F: price + guess(next)});
+				open.Push({X: next.X, Z: next.Z, Y: y, F: price + guess(next)});
 			});
 		}
 
@@ -3360,6 +3685,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 	/* The kind of each type of item of a sketch. */
 	SketchTypes: {
+		cave: 'line', hall: 'circle', overhang: 'circle',
 		raise: 'stroke', lower: 'stroke', flatten: 'stroke', smooth: 'stroke',
 		ridge: 'line', valley: 'line', canyon: 'line', river: 'line', road: 'line', cliff: 'line',
 		plateau: 'area', basin: 'area', lake: 'area', swamp: 'area', beach: 'area', floodplain: 'area', erosion: 'area', dunes: 'area', terraces: 'area', biome: 'area', mask: 'area',
@@ -3389,7 +3715,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * street and lanes off it), its lots along them (each a building of a class of its district or its kind, turned to its street,
 	 * none on a square, a street, another lot or out of it), its walls (a fort: round it) with their gates where streets cross
 	 * them and towers at their corners. item {Points, Kind, Density, Seed}; others: the other items of the sketch.
-	 * Gives {Streets: [{Points, Width}], Lots: [{X, Z, Turn, Width, Depth, Class, District}], Walls: [[[x, z]...]], Gates: [{X, Z,
+	 * Gives {Streets: [{Points, Width, Road (of a street drawn of a type of road)}], Lots: [{X, Z, Turn, Width, Depth, Class, District}], Walls: [[[x, z]...]], Gates: [{X, Z,
 	 * Turn}], Towers: [{X, Z}]}.
 	 */
 	SettlementPlan: function (item, others, sizes) {
@@ -3502,6 +3828,208 @@ Elemenx.Service('SceneTerrainGenerator', {
 		/* The step of its streets: of its kind, but a small one has a few blocks all the same. */
 		block = Math.max(15, Number(item.Block) || Math.min(kind.Block, reach * 0.45));
 
+		/*
+		 * Its layout (Layout of it, else of its kind): grid, main (a main street and lanes off it), road (a village along its road),
+		 * radial (an old centre, a grid round it) or districts (avenues out and round, districts of their own grids). On a hillside
+		 * (Slope over 3%) its streets go along the level of it (Contour, radians) where they can. Too small for its layout:
+		 * districts of a city need some 450 m round its middle, an old centre with its ring 180 m.
+		 */
+		var layout = String(item.Layout || kind.Layout || (kind.Grid ? 'grid' : 'main'));
+		if (layout === 'districts' && reach < 450)
+			layout = 'radial';
+
+		if (layout === 'radial' && reach < 180)
+			layout = 'grid';
+
+		var sloped = Number(item.Slope) > 0.03 && isFinite(Number(item.Contour)) && item.Contour !== null && item.Contour !== '';
+		/* The squares of its own (left free of lots) and the roads of the sketch its houses line (its streets not). */
+		var plazas = [];
+		var fronts = [];
+
+		function lengthOf (line) {
+			var total = 0;
+			var a;
+
+			for (a = 1; a < line.length; a++)
+				total += Math.hypot(line[a][0] - line[a - 1][0], line[a][1] - line[a - 1][1]);
+
+			return total;
+		}
+
+		/* The point of a line so many metres along it, and its way there: {At [x, z], Way [x, z]}. */
+		function pointAt (line, metres) {
+			var left = metres;
+			var a;
+
+			for (a = 0; a + 1 < line.length; a++) {
+				var dx = line[a + 1][0] - line[a][0];
+				var dz = line[a + 1][1] - line[a][1];
+				var length = Math.hypot(dx, dz);
+
+				if (length > 1e-9 && (left <= length || a + 2 === line.length)) {
+					var t = Math.min(1, left / length);
+
+					return {At: [line[a][0] + dx * t, line[a][1] + dz * t], Way: [dx / length, dz / length]};
+				}
+
+				left -= length;
+			}
+
+			return {At: line[line.length - 1], Way: [1, 0]};
+		}
+
+		/* A curve through the points of a line (Catmull-Rom), a point every step metres. */
+		function smooth (line, step) {
+			var made = [line[0]];
+			var a;
+
+			for (a = 0; a + 1 < line.length; a++) {
+				var p0 = line[Math.max(0, a - 1)];
+				var p1 = line[a];
+				var p2 = line[a + 1];
+				var p3 = line[Math.min(line.length - 1, a + 2)];
+				var count = Math.max(1, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / step));
+				var c;
+
+				for (c = 1; c <= count; c++) {
+					var t = c / count;
+					var t2 = t * t;
+					var t3 = t2 * t;
+
+					made.push([0, 1].map(function (axis) {
+						return 0.5 * (2 * p1[axis] + (p2[axis] - p0[axis]) * t + (2 * p0[axis] - 5 * p1[axis] + 4 * p2[axis] - p3[axis]) * t2 + (3 * p1[axis] - p0[axis] - 3 * p2[axis] + p3[axis]) * t3);
+					}));
+				}
+			}
+
+			return made;
+		}
+
+		/* A line from one point to another wandering aside by up to amount metres, a point every 8 m; fixed: at its start still; turns: how often (1). */
+		function wander (from, to, amount, phase, fixed, turns) {
+			var length = Math.hypot(to[0] - from[0], to[1] - from[1]) || 1;
+			var count = Math.max(2, Math.ceil(length / 8));
+			var aside = [-(to[1] - from[1]) / length, (to[0] - from[0]) / length];
+			var made = [];
+			var c;
+
+			for (c = 0; c <= count; c++) {
+				var t = c / count;
+				var w = t * (turns || 1);
+				var off = amount * (0.65 * Math.sin(phase + 2.6 * w) + 0.35 * Math.sin(phase * 1.7 + 6.1 * w)) * (fixed ? Math.min(1, t * 3) : 1);
+
+				made.push([from[0] + (to[0] - from[0]) * t + aside[0] * off, from[1] + (to[1] - from[1]) * t + aside[1] * off]);
+			}
+
+			return made;
+		}
+
+		/*
+		 * A line cut to the settlement (and to where keep(x, z) tells), every 2 m: the runs of it inside, longer than 8 m and
+		 * not along its very edge; a straight line as its two ends, any other a point every 8 m. Closed: a ring, whole (Closed
+		 * of its run) if all of it is in.
+		 */
+		function runs (line, keep, closed) {
+			var path = closed ? line.concat([line[0]]) : line;
+			var found = [];
+			var run = null;
+			var every = [];
+			var a;
+
+			for (a = 0; a + 1 < path.length; a++) {
+				var steps = Math.max(1, Math.ceil(Math.hypot(path[a + 1][0] - path[a][0], path[a + 1][1] - path[a][1]) / 2));
+				var s;
+
+				for (s = a ? 1 : 0; s <= steps; s++)
+					every.push([path[a][0] + (path[a + 1][0] - path[a][0]) * s / steps, path[a][1] + (path[a + 1][1] - path[a][1]) * s / steps]);
+			}
+
+			every.forEach(function (p) {
+				if (inside(points, p[0], p[1]) && (!keep || keep(p[0], p[1]))) {
+					run = run || [];
+
+					run.push(p);
+				}
+				else if (run) {
+					found.push(run);
+					run = null;
+				}
+			});
+
+			if (run)
+				found.push(run);
+
+			if (closed && found.length === 1 && found[0].length === every.length) {
+				var whole = found[0].filter(function (p, index) {
+					return index % 4 === 0 && index < every.length - 1;
+				});
+
+				whole.Closed = true;
+
+				return [whole];
+			}
+
+			return found.filter(function (one) {
+				var middle = one[Math.floor(one.length / 2)];
+
+				return lengthOf(one) > 8 && edge(middle[0], middle[1]) > width;
+			}).map(function (one) {
+				if (line.length === 2 && !closed)
+					return [one[0], one[one.length - 1]];
+
+				return one.filter(function (p, index) {
+					return index % 4 === 0 || index === one.length - 1;
+				});
+			});
+		}
+
+		/* A ring round its middle of so many points, its radius wobbling by a part of it. */
+		function circle (radius, count, wobble, phase) {
+			var made = [];
+			var c;
+
+			for (c = 0; c < count; c++) {
+				var turn = c / count * Math.PI * 2;
+				var far = radius * (1 + wobble * Math.sin(phase + turn * 3) * Math.cos(phase * 0.7 + turn * 2));
+
+				made.push([center[0] + Math.cos(turn) * far, center[1] + Math.sin(turn) * far]);
+			}
+
+			return made;
+		}
+
+		/* A street of it: Road, the type of road it is (an avenue...), Closed, a ring. */
+		function street (line, wide, road, closed) {
+			var made = {Points: line, Width: wide};
+
+			if (road)
+				made.Road = road;
+
+			if (closed)
+				made.Closed = true;
+
+			plan.Streets.push(made);
+		}
+
+		/* A grid of streets turned so, a step apart, where keep(x, z) tells: each line only as long as the circle it lies in. */
+		function grid (turn, step, wide, keep) {
+			var u = [Math.cos(turn), Math.sin(turn)];
+			var v = [-u[1], u[0]];
+			var k;
+
+			for (k = -Math.floor(reach / step); k <= Math.floor(reach / step); k++) {
+				var half = Math.sqrt(Math.max(0, reach * reach - k * step * k * step)) + 2;
+
+				[[u, v], [v, u]].forEach(function (axes) {
+					var o = [center[0] + axes[1][0] * k * step, center[1] + axes[1][1] * k * step];
+
+					runs([[o[0] - axes[0][0] * half, o[1] - axes[0][1] * half], [o[0] + axes[0][0] * half, o[1] + axes[0][1] * half]], keep).forEach(function (run) {
+						street(run, wide);
+					});
+				});
+			}
+		}
+
 		/* The streets drawn in it, else its own. */
 		var drawn = others.filter(function (other) {
 			return other.Type === 'street' && other.Points && other.Points.some(function (point) {
@@ -3510,11 +4038,17 @@ Elemenx.Service('SceneTerrainGenerator', {
 		});
 
 		if (drawn.length) {
+			/* Road: the type of road it is drawn as (SceneRoads; else of the kind of the settlement). */
 			plan.Streets = drawn.map(function (other) {
-				return {Points: other.Points, Width: Number(other.Width) || width};
+				var street = {Points: other.Points, Width: Number(other.Width) || width};
+
+				if (other.Road)
+					street.Road = other.Road;
+
+				return street;
 			});
 		}
-		else if (kind.Grid) {
+		else if (layout === 'grid') {
 			var k;
 
 			for (k = -Math.ceil(reach / block); k <= Math.ceil(reach / block); k++) {
@@ -3527,7 +4061,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 				});
 			}
 		}
-		else {
+		else if (layout === 'main') {
 			clip([center[0] - along[0] * reach, center[1] - along[1] * reach], [center[0] + along[0] * reach, center[1] + along[1] * reach]).forEach(function (run) {
 				plan.Streets.push({Points: run, Width: width});
 			});
@@ -3546,10 +4080,192 @@ Elemenx.Service('SceneTerrainGenerator', {
 				});
 			}
 		}
+		else if (layout === 'road') {
+			/*
+			 * A village along its road: a road of the sketch through it, its houses on both sides of it (else a main street of
+			 * its own, bent as a way across the country is, along the level of a hillside); lanes off it to one side and the
+			 * other by turns, out and along the level on a hillside.
+			 */
+			var level = sloped ? Number(item.Contour) : angle;
+			var spine = [Math.cos(level), Math.sin(level)];
+			var spines = [];
+
+			others.forEach(function (other) {
+				if (other.Type !== 'road' || !other.Points || other.Points.length < 2 || String(other.Road || '').indexOf('street-' + item.ID + '-') === 0) return;
+
+				runs(other.Points.map(function (point) {
+					return [point[0], point[1]];
+				})).forEach(function (run) {
+					fronts.push({Points: run, Width: Number(other.Width) || 6});
+					spines.push(run);
+				});
+			});
+
+			if (!spines.length) {
+				runs(wander([center[0] - spine[0] * reach * 1.3, center[1] - spine[1] * reach * 1.3], [center[0] + spine[0] * reach * 1.3, center[1] + spine[1] * reach * 1.3], reach * 0.16, random() * 6, false, 2.2)).forEach(function (run) {
+					street(run, width);
+
+					spines.push(run);
+				});
+			}
+
+			/*
+			 * On a hillside, terraces: a street along the level each side of the main one, a block apart (its line moved aside),
+			 * joined to it by short ways now and then; elsewhere lanes off it to one side and the other by turns, a little bent.
+			 */
+			var turnLane = 0;
+
+			spines.forEach(function (line) {
+				var total = lengthOf(line);
+				var at;
+
+				if (sloped) {
+					[1, -1].forEach(function (out) {
+						var moved = line.map(function (point, index) {
+							var way = pointAt(line, lengthOf(line.slice(0, index + 1))).Way;
+
+							return [point[0] - way[1] * out * block * 0.55, point[1] + way[0] * out * block * 0.55];
+						});
+
+						runs(smooth(moved, 8)).forEach(function (run) {
+							street(run, width * 0.75);
+						});
+					});
+
+					for (at = block * 0.6; at < total - block * 0.3; at += block * 1.3) {
+						var joint = pointAt(line, at);
+						var to = turnLane % 2 ? 1 : -1;
+
+						turnLane++;
+
+						runs([joint.At, [joint.At[0] - joint.Way[1] * to * block * 0.6, joint.At[1] + joint.Way[0] * to * block * 0.6]]).slice(0, 1).forEach(function (run) {
+							street(run, width * 0.6);
+						});
+					}
+
+					return;
+				}
+
+				for (at = block * 0.5; at < total - block * 0.3; at += block * 0.55) {
+					var place = pointAt(line, at);
+					var out = turnLane % 2 ? 1 : -1;
+					var normal = [-place.Way[1] * out, place.Way[0] * out];
+					var lean = (random() - 0.5) * 0.5;
+					var way = [normal[0] * Math.cos(lean) - normal[1] * Math.sin(lean), normal[0] * Math.sin(lean) + normal[1] * Math.cos(lean)];
+
+					turnLane++;
+
+					runs(wander(place.At, [place.At[0] + way[0] * block * 1.1, place.At[1] + way[1] * block * 1.1], 5, random() * 6, true)).slice(0, 1).forEach(function (run) {
+						street(run, width * 0.75);
+					});
+				}
+			});
+		}
+		else if (layout === 'radial') {
+			/*
+			 * A town of an old centre: a market square in its middle, streets out of it every way, a ring round the old town
+			 * and a crooked one inside it; past the ring a grid (along the level of a hillside), its streets ending on the ring.
+			 */
+			var market = Math.max(12, reach * 0.08);
+			var old = reach * 0.4;
+			var rays = 6;
+			var grain = sloped ? Number(item.Contour) : angle;
+			var ray;
+
+			/* The market and the street round it, the streets out of it starting on that. */
+			plazas.push(circle(market, 12, 0, 0));
+
+			runs(circle(market, 16, 0, 0), null, true).forEach(function (run) {
+				street(run, width * 0.8, '', run.Closed);
+			});
+
+			runs(circle(old, 32, 0, 0), null, true).forEach(function (run) {
+				street(run, width, '', run.Closed);
+			});
+			runs(circle(old * 0.58, 14, 0.12, random() * 6), null, true).forEach(function (run) {
+				street(run, width * 0.75, '', run.Closed);
+			});
+
+			for (ray = 0; ray < rays; ray++) {
+				var heading = angle + ray * Math.PI * 2 / rays + (random() - 0.5) * 0.3;
+				var out2 = [Math.cos(heading), Math.sin(heading)];
+
+				runs(wander([center[0] + out2[0] * market, center[1] + out2[1] * market], [center[0] + out2[0] * reach * 1.3, center[1] + out2[1] * reach * 1.3], reach * 0.035, random() * 6, true)).forEach(function (run) {
+					street(run, width);
+				});
+			}
+
+			grid(grain, block, width, function (x, z) {
+				return Math.hypot(x - center[0], z - center[1]) > old - 1;
+			});
+		}
+		else if (layout === 'districts') {
+			/*
+			 * A city of districts: a square in its middle, avenues out of it (straight, every other one an avenue of a median), a
+			 * boulevard round its core and an avenue round its middle; a grid in the core, and in each district between two
+			 * avenues out a grid of its own, turned its own way, its streets ending on the avenues round them.
+			 */
+			var plaza = Math.max(16, reach * 0.06);
+			var core = reach * 0.3;
+			var middle = reach * 0.62;
+			var sectors = 6;
+			var avenue = 26;
+			var s;
+
+			plazas.push(circle(plaza, 12, 0, 0));
+
+			runs(circle(plaza, 16, 0, 0), null, true).forEach(function (run) {
+				street(run, width, '', run.Closed);
+			});
+
+			runs(circle(core, 32, 0, 0), null, true).forEach(function (run) {
+				street(run, 20, 'boulevard', run.Closed);
+			});
+			runs(circle(middle, 40, 0, 0), null, true).forEach(function (run) {
+				street(run, avenue, 'avenue', run.Closed);
+			});
+
+			var headings = [];
+
+			for (s = 0; s < sectors; s++) {
+				headings.push(angle + s * Math.PI * 2 / sectors);
+
+				runs([[center[0] + Math.cos(headings[s]) * plaza, center[1] + Math.sin(headings[s]) * plaza], [center[0] + Math.cos(headings[s]) * reach * 1.3, center[1] + Math.sin(headings[s]) * reach * 1.3]]).forEach(function (run) {
+					street(run, s % 2 ? avenue : width * 1.3, s % 2 ? 'avenue' : '');
+				});
+			}
+
+			grid(angle, block * 0.7, width, function (x, z) {
+				var far = Math.hypot(x - center[0], z - center[1]);
+
+				return far > plaza + 1 && far < core + 1;
+			});
+
+			headings.forEach(function (heading, index) {
+				var next = headings[(index + 1) % sectors];
+				var a = [Math.cos(heading), Math.sin(heading)];
+				var b = [Math.cos(next), Math.sin(next)];
+
+				[[core, middle], [middle, Infinity]].forEach(function (band) {
+					grid(heading + Math.PI / sectors + (random() - 0.5) * 0.7, block, width, function (x, z) {
+						var dx = x - center[0];
+						var dz = z - center[1];
+						var far = Math.hypot(dx, dz);
+
+						/* Between the two avenues out (a metre over them, so its streets end on them) and the two round. */
+						return a[0] * dz - a[1] * dx >= -1 && b[0] * dz - b[1] * dx <= 1 && far >= band[0] - 1 && far <= band[1] + 1 && (a[0] + b[0]) * dx + (a[1] + b[1]) * dz > 0;
+					});
+				});
+			});
+		}
 
 		var squares = others.filter(function (other) {
 			return other.Type === 'square' && other.Points && other.Points.length > 2;
 		});
+
+		squares = squares.concat(plazas.map(function (one) {
+			return {Points: one};
+		}));
 
 		/*
 		 * The other ways of the sketch through it (roads, streets not its own, rivers, railways): no lot stands on them. Its own
@@ -3601,77 +4317,89 @@ Elemenx.Service('SceneTerrainGenerator', {
 			return names[names.length - 1];
 		}
 
-		/* Lots along both sides of each street: a building of its place, its front to the street, a little set back. */
-		plan.Streets.forEach(function (street) {
-			var line = street.Points;
-			var a;
+		/* The lines of its streets (a ring closed) and their bounds, for the lots to be kept off them quickly. */
+		var lines = plan.Streets.map(function (one) {
+			return one.Closed ? one.Points.concat([one.Points[0]]) : one.Points;
+		});
+		var boxes = lines.map(function (line) {
+			return line.reduce(function (box, point) {
+				return [Math.min(box[0], point[0]), Math.min(box[1], point[1]), Math.max(box[2], point[0]), Math.max(box[3], point[1])];
+			}, [Infinity, Infinity, -Infinity, -Infinity]);
+		});
 
-			for (a = 0; a + 1 < line.length; a++) {
-				var dx = line[a + 1][0] - line[a][0];
-				var dz = line[a + 1][1] - line[a][1];
-				var length = Math.hypot(dx, dz);
-				var unit = [dx / length, dz / length];
+		/*
+		 * Lots along both sides of each street and of each road its houses line: a building of its place, its front to the
+		 * street, a little set back; along a curve or a ring by its way at each lot.
+		 */
+		plan.Streets.concat(fronts).forEach(function (street) {
+			var line = street.Closed ? street.Points.concat([street.Points[0]]) : street.Points;
+			var length = lengthOf(line);
 
-				[1, -1].forEach(function (side) {
-					var walked = 4;
+			[1, -1].forEach(function (side) {
+				var walked = 4;
 
-					while (walked < length - 4) {
-						var at = [line[a][0] + unit[0] * walked, line[a][1] + unit[1] * walked];
-						var probe = classes(at[0], at[1]);
-						var name = pick(probe.Weights);
-						var size = name ? sizes(name) : null;
-						var normal = [-unit[1] * side, unit[0] * side];
-						var x;
-						var z;
-						var free;
+				while (walked < length - 4) {
+					var place = pointAt(line, walked);
+					var unit = place.Way;
+					var at = place.At;
+					var probe = classes(at[0], at[1]);
+					var name = pick(probe.Weights);
+					var size = name ? sizes(name) : null;
+					var normal = [-unit[1] * side, unit[0] * side];
+					var x;
+					var z;
+					var free;
 
-						if (!size) {
-							walked += 12;
+					if (!size) {
+						walked += 12;
 
-							continue;
-						}
-
-						/* A lot left empty, as the density tells. */
-						if (random() >= density) {
-							walked += size[0] + 3;
-
-							continue;
-						}
-
-						x = at[0] + unit[0] * size[0] / 2 + normal[0] * (street.Width / 2 + 2 + size[1] / 2);
-						z = at[1] + unit[1] * size[0] / 2 + normal[1] * (street.Width / 2 + 2 + size[1] / 2);
-
-						/* All of it inside the settlement, off its squares, its streets and the other lots. */
-						free = [[-1, -1], [1, -1], [1, 1], [-1, 1]].every(function (corner) {
-							return inside(points, x + unit[0] * corner[0] * size[0] / 2 + normal[0] * corner[1] * size[1] / 2, z + unit[1] * corner[0] * size[0] / 2 + normal[1] * corner[1] * size[1] / 2);
-						}) && !squares.some(function (other) {
-							return inside(other.Points, x, z);
-						}) && plan.Streets.every(function (other) {
-							return distance(other.Points, x, z) > other.Width / 2 + Math.min(size[0], size[1]) / 2;
-						}) && plan.Lots.every(function (lot) {
-							return Math.hypot(lot.X - x, lot.Z - z) > (Math.max(lot.Width, lot.Depth) + Math.max(size[0], size[1])) * 0.42;
-						}) && ways.every(function (other) {
-							var room = (Number(other.Width) || 6) / 2 + (Number(other.Shoulder) || 1.5);
-
-							/* Its middle, its corners and the middles of its sides all off the way. */
-							return [[0, 0], [-1, -1], [1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [-1, 0], [1, 0]].every(function (corner) {
-								return distance(other.Points, x + unit[0] * corner[0] * size[0] / 2 + normal[0] * corner[1] * size[1] / 2, z + unit[1] * corner[0] * size[0] / 2 + normal[1] * corner[1] * size[1] / 2) > room;
-							});
-						});
-
-						/* No room for it: a few metres on, maybe a smaller one fits there. */
-						if (!free) {
-							walked += 4;
-
-							continue;
-						}
-
-						plan.Lots.push({X: x, Z: z, Turn: Math.atan2(-normal[0], -normal[1]), Width: size[0], Depth: size[1], Class: name, District: probe.District});
-
-						walked += size[0] + 3;
+						continue;
 					}
-				});
-			}
+
+					/* A lot left empty, as the density tells. */
+					if (random() >= density) {
+						walked += size[0] + 3;
+
+						continue;
+					}
+
+					x = at[0] + unit[0] * size[0] / 2 + normal[0] * (street.Width / 2 + 2 + size[1] / 2);
+					z = at[1] + unit[1] * size[0] / 2 + normal[1] * (street.Width / 2 + 2 + size[1] / 2);
+
+					/* All of it inside the settlement, off its squares, its streets and the other lots. */
+					free = [[-1, -1], [1, -1], [1, 1], [-1, 1]].every(function (corner) {
+						return inside(points, x + unit[0] * corner[0] * size[0] / 2 + normal[0] * corner[1] * size[1] / 2, z + unit[1] * corner[0] * size[0] / 2 + normal[1] * corner[1] * size[1] / 2);
+					}) && !squares.some(function (other) {
+						return inside(other.Points, x, z);
+					}) && plan.Streets.every(function (other, index) {
+						var room = other.Width / 2 + Math.min(size[0], size[1]) / 2;
+						var box = boxes[index];
+						if (x < box[0] - room || x > box[2] + room || z < box[1] - room || z > box[3] + room) return true;
+
+						return distance(lines[index], x, z) > room;
+					}) && plan.Lots.every(function (lot) {
+						return Math.hypot(lot.X - x, lot.Z - z) > (Math.max(lot.Width, lot.Depth) + Math.max(size[0], size[1])) * 0.42;
+					}) && ways.every(function (other) {
+						var room = (Number(other.Width) || 6) / 2 + (Number(other.Shoulder) || 1.5);
+
+						/* Its middle, its corners and the middles of its sides all off the way. */
+						return [[0, 0], [-1, -1], [1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [-1, 0], [1, 0]].every(function (corner) {
+							return distance(other.Points, x + unit[0] * corner[0] * size[0] / 2 + normal[0] * corner[1] * size[1] / 2, z + unit[1] * corner[0] * size[0] / 2 + normal[1] * corner[1] * size[1] / 2) > room;
+						});
+					});
+
+					/* No room for it: a few metres on, maybe a smaller one fits there. */
+					if (!free) {
+						walked += 4;
+
+						continue;
+					}
+
+					plan.Lots.push({X: x, Z: z, Turn: Math.atan2(-normal[0], -normal[1]), Width: size[0], Depth: size[1], Class: name, District: probe.District});
+
+					walked += size[0] + 3;
+				}
+			});
 		});
 
 		/*
@@ -3706,7 +4434,61 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * The items of a sketch that place things (the Scatter of a Scene sows them) and change no height: a trigger and a zone
 	 * of the game are objects of the scene.
 	 */
-	SketchPlaced: {forest: true, meadow: true, clearing: true, bushes: true, thicket: true, jungle: true, sequoia: true, fields: true, orchard: true, row: true, fence: true, hedge: true, wall: true, powerline: true, marker: true, district: true, citywall: true, landmark: true, trigger: true, triggerpoint: true, triggerline: true, zone: true, collider: true},
+	SketchPlaced: {cave: true, hall: true, overhang: true, forest: true, meadow: true, clearing: true, bushes: true, thicket: true, jungle: true, sequoia: true, fields: true, orchard: true, row: true, fence: true, hedge: true, wall: true, powerline: true, marker: true, district: true, citywall: true, landmark: true, trigger: true, triggerpoint: true, triggerline: true, zone: true, collider: true},
+
+	/*
+	 * The carves of the volume a sketch draws (SketchTypes cave, hall and overhang), in the order of its layers and items:
+	 * a cave a line of passages under the ground (Width, Depth under it, 8; Rough, 0.5; Mouth 1: its ends come up to the
+	 * ground, 0: closed; a point [x, z, y] at that height), a hall a round hollow (At, Radius, Depth of its middle under the ground, 10), an overhang rock
+	 * jutting out of what is steep round a point (At, Radius, Amount, 6). height(x, z): the ground.
+	 */
+	SketchCarves: function (sketch, height, seed) {
+		var carves = [];
+
+		function number (value, fallback) {
+			return value === undefined || value === null || value === '' || isNaN(Number(value)) ? fallback : Number(value);
+		}
+
+		(sketch && sketch.Layers || []).forEach(function (layer) {
+			if (layer.Visible === false) return;
+
+			(layer.Items || []).forEach(function (item, index) {
+				var id = String(item.ID === undefined ? index : item.ID);
+				var at = item.At || [0, 0];
+				var radius;
+				var depth;
+
+				if (item.Visible === false) return;
+
+				if (item.Type === 'cave' && (item.Points || []).length > 1) {
+					radius = number(item.Width, 5) / 2;
+					depth = number(item.Depth, 8);
+
+					carves.push({Type: 'passages', Seed: String(seed === undefined ? 'ground' : seed) + '-cave-' + id, Radius: radius, Rough: number(item.Rough, 0.5), Flat: 0.5, Nodes: item.Points.map(function (point, n) {
+						var mouth = number(item.Mouth, 1) && (n === 0 || n === item.Points.length - 1);
+
+						/* A point [x, z, y]: its floor that high, whatever the ground over it. */
+						if (point.length > 2 && point[2] !== null && point[2] !== undefined && point[2] !== '')
+							return {ID: String(n), At: [Number(point[0]) || 0, Number(point[1]) || 0, Number(point[2])]};
+
+						return {ID: String(n), At: [Number(point[0]) || 0, Number(point[1]) || 0], Depth: mouth ? radius * 0.4 : depth};
+					}), Ways: item.Points.slice(1).map(function (point, n) {
+						return {From: String(n), To: String(n + 1)};
+					})});
+				}
+				else if (item.Type === 'hall') {
+					radius = number(item.Radius, 10);
+
+					carves.push({Type: 'sphere', At: [Number(at[0]) || 0, height(Number(at[0]) || 0, Number(at[1]) || 0) - number(item.Depth, 10), Number(at[1]) || 0], Radius: radius});
+				}
+				else if (item.Type === 'overhang') {
+					carves.push({Type: 'overhangs', Seed: String(seed === undefined ? 'ground' : seed) + '-overhang-' + id, Center: [Number(at[0]) || 0, Number(at[1]) || 0], Radius: number(item.Radius, 30), Amount: number(item.Amount, 6), Slope: 0.35});
+				}
+			});
+		});
+
+		return carves;
+	},
 
 	/*
 	 * Where two sketches differ, for a ground to make again only there: the bounds [x0, z0, x1, z1] of each item one has and
@@ -3828,7 +4610,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		if (typeof roads === 'string')
 			roads = this.$Shared(roads);
 
-		field = this.Field(shape === 'SpherePicture' || shape === 'SphereThings' ? 'Sphere' : shape, options, named);
+		field = this.Field(shape === 'SpherePicture' || shape === 'SphereThings' ? 'Sphere' : shape === 'Daylight' ? 'Flat' : shape, options, named);
 
 		var made;
 
@@ -3851,6 +4633,27 @@ Elemenx.Service('SceneTerrainGenerator', {
 		/* What stands on a square of a globe that paints itself (ScenePlanet.PatchThings): its woods and houses, one shape. */
 		if (shape === 'SphereThings')
 			return field.Planet ? this.$Service('ScenePlanet').PatchThings(field, args[0], args[1], args[2], args[3], args[4]) : null;
+
+		/*
+		 * The daylight in a box of a ground with a volume (Daylight), args [x, y, z of its first corner, nx, ny, nz, cell]: a
+		 * byte a point (0 to 255), the layers of y side by side along x, z down ({Data, Width, Height}).
+		 */
+		if (shape === 'Daylight') {
+			var light = this.Daylight(field, args[0], args[2], args[0] + (args[3] - 1) * args[6], args[2] + (args[5] - 1) * args[6], args[1]);
+			var data = new Uint8Array(args[3] * args[4] * args[5]);
+			var i;
+			var j;
+			var k;
+
+			for (k = 0; k < args[5]; k++) {
+				for (j = 0; j < args[4]; j++) {
+					for (i = 0; i < args[3]; i++)
+						data[k * args[3] * args[4] + j * args[3] + i] = Math.round(255 * light.At(args[0] + i * args[6], args[1] + j * args[6], args[2] + k * args[6]));
+				}
+			}
+
+			return {Data: data, Width: args[3] * args[4], Height: args[5]};
+		}
 
 		/* The picture of a square of a globe alone (a face made at once, its picture after). */
 		if (shape === 'SpherePicture')
@@ -4026,8 +4829,9 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 	/*
 	 * A square of a face of a globe: its points relative to its middle, their normals, UVs [height, 1 on the sea], colors
-	 * (a ground that paints itself), and in Materials (8 a point) where each is on the square, 0 to 1, for its picture
-	 * (PatchPicture). A skirt under its edges hides what a finer square beside leaves between them.
+	 * (a ground that paints itself), and in Materials (12 a point) where each is on the square, 0 to 1, for its picture
+	 * (PatchPicture), then, of a point of its edges, where it goes to lie on the edge of a square one, two and three levels
+	 * coarser beside. A skirt under its edges hides what a finer square beside leaves between them.
 	 */
 	SpherePatch: function (field, face, cu, cv, extent, resolution) {
 		var math = this.$Service('Math');
@@ -4055,7 +4859,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 				points.push(point);
 				geometry.Positions.push(point[0] - center[0], point[1] - center[1], point[2] - center[2]);
 				geometry.UVs.push(value, field.Ocean > 0 && value < 0 ? 1 : 0);
-				geometry.Materials.push(column / resolution, row / resolution, 0, 0, 0, 0, 0, 0);
+				geometry.Materials.push(column / resolution, row / resolution, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 				/* A ground that tells its colors (ScenePlanet) has them on each point. */
 				if (field.Color)
@@ -4093,6 +4897,35 @@ Elemenx.Service('SceneTerrainGenerator', {
 		}
 
 		/*
+		 * Each point of its edges, where it goes to lie on the edge of a coarser square beside (Materials 2-4: of one level
+		 * coarser, its cells twice as long, on the line between its points two cells apart; 5-7: of two, four apart; 8-10:
+		 * of three, eight apart), as the Ground shader moves it by the levels of the squares beside (uEdges). Regression: a
+		 * square beside a coarser one met it in a step of metres (its own heights between the points of the other), a wall
+		 * of its skirt across the land.
+		 */
+		/* Its edges: its first row and its last, its first column and its last ([first point, step to the next]). */
+		[[0, 1], [resolution * side, 1], [0, side], [resolution, side]].forEach(function (edge) {
+			var start = edge[0];
+			var stride = edge[1];
+			var t;
+
+			for (t = 1; t < resolution; t++) {
+				var at = start + t * stride;
+				var p = points[at];
+
+				[2, 4, 8].forEach(function (apart, level) {
+					var off = t % apart;
+					var a = points[start + (t - off) * stride];
+					var b = points[start + Math.min(resolution, t - off + apart) * stride];
+					var k;
+
+					for (k = 0; k < 3; k++)
+						geometry.Materials[at * 12 + 2 + level * 3 + k] = off ? a[k] + (b[k] - a[k]) * off / apart - p[k] : 0;
+				});
+			}
+		});
+
+		/*
 		 * Regression: squares of other sizes side by side left cracks between them, a dark dotted line from high over the
 		 * ground. A skirt of each edge point again, a tenth of a cell lower (at least 50 m), seen from both of its sides.
 		 */
@@ -4119,7 +4952,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 			geometry.Positions.push(points[index][0] * lower - center[0], points[index][1] * lower - center[1], points[index][2] * lower - center[2]);
 			geometry.Normals.push(geometry.Normals[index * 3], geometry.Normals[index * 3 + 1], geometry.Normals[index * 3 + 2]);
 			geometry.UVs.push(geometry.UVs[index * 2], geometry.UVs[index * 2 + 1]);
-			geometry.Materials.push.apply(geometry.Materials, geometry.Materials.slice(index * 8, index * 8 + 8));
+			geometry.Materials.push.apply(geometry.Materials, geometry.Materials.slice(index * 12, index * 12 + 12));
 
 			if (field.Color)
 				geometry.Colors.push(geometry.Colors[index * 3], geometry.Colors[index * 3 + 1], geometry.Colors[index * 3 + 2]);

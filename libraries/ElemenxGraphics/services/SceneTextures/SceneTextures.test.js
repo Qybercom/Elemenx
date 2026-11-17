@@ -146,6 +146,60 @@ describe('Contract: SceneTextures, textures of materials baked once into tiles w
 		}
 	}, 60000);
 
+	/*
+	 * Regression: from a few kilometres the ground of a planet was grains of salt: where a pixel covers many tiles, each
+	 * pixel read the tile its own way (a hexagon turned its own way) and patches of a few metres changed from pixel to pixel.
+	 * Now the tile as it is there, and what is finer than a pixel its mean: the same color from pixel to pixel; the noises
+	 * of the materials (enx_mnf, enx_mff) their mean, 0.5, where they are finer than two pixels.
+	 */
+	it('reads a tile the same from pixel to pixel where a pixel covers many tiles, and noises finer than a pixel as their mean', function () {
+		var canvas = document.createElement('canvas');
+		var renderer = Elemenx.Service('Renderer').Create(canvas, {Antialias: false});
+		var gl = renderer.GL;
+		var head = '#version 300 es\nprecision highp float;\n';
+		var quad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
+		var made = textures.Bake(renderer, 'lawn', {Size: 256});
+		var data = new Uint8Array(64 * 64 * 4);
+		var program;
+		var step = 0;
+		var worst = 0;
+		var i;
+
+		function far (metres) {
+			program = renderer.Program(Elemenx.Service('Renderer').Shaders.Quad, head + textures.Chunk() + '\nuniform sampler2D uColor;\nuniform sampler2D uSurface;\nin vec2 vQuad;\nout vec4 outColor;\nvoid main() {\n\tvec3 a;\n\tfloat r;\n\tvec3 n;\n\tfloat h;\n\tfloat l;\n\ttex_sample(uColor, uSurface, vQuad * ' + metres.toFixed(1) + ', ' + made.Metres.toFixed(4) + ', 1.0, a, r, n, h, l);\n\toutColor = vec4(pow(a, vec3(1.0 / 2.2)), 1.0);\n}');
+
+			renderer.Resize(64, 64, 1);
+			renderer.Draw(quad, program, {uColor: made.Color, uSurface: made.Surface}, {Depth: false, Cull: 'none'});
+
+			gl.readPixels(0, 0, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+			step = 0;
+
+			for (i = 4; i < data.length; i += 4)
+				step += (i / 4) % 64 ? Math.abs(data[i] - data[i - 4]) + Math.abs(data[i + 1] - data[i - 3]) + Math.abs(data[i + 2] - data[i - 2]) : 0;
+
+			return step / (63 * 64);
+		}
+
+		/* A pixel of 16 m (twenty tiles of lawn): the same from pixel to pixel; a pixel of 2 cm, the tile itself, other. */
+		expect(far(500)).toBeLessThan(1.5);
+		expect(far(0.6)).toBeGreaterThan(far(500) + 1);
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+
+		program = renderer.Program(Elemenx.Service('Renderer').Shaders.Quad, head + Elemenx.Service('SceneMaterials').Helpers + '\nin vec2 vQuad;\nout vec4 outColor;\nvoid main() {\n\toutColor = vec4(enx_mff(vQuad * 50.0, 5, 10.0), enx_mnf(vQuad * 50.0, 10.0), abs(enx_mff(vQuad * 3.0, 4, 0.0) - enx_mf(vQuad * 3.0, 4)) * 10.0, 1.0);\n}');
+
+		renderer.Draw(quad, program, {}, {Depth: false, Cull: 'none'});
+
+		gl.readPixels(0, 0, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+		for (i = 0; i < data.length; i += 4)
+			worst = Math.max(worst, Math.abs(data[i] - 128), Math.abs(data[i + 1] - 128), data[i + 2]);
+
+		expect(worst).toBeLessThanOrEqual(2);
+
+		renderer.Destroy();
+	}, 60000);
+
 	it('shows a texture in TextureLab as a tile or a ground, a slider for each param, and tells change', async function () {
 		var told = [];
 		var component = Elemenx.Component(unique('LabHost'), {$Template: '<div style="width: 640px; height: 360px"><TextureLab #Lab Texture="grassy-soil" View="tile" (change)="Changed" /></div>', Changed: function (event) {
@@ -202,7 +256,7 @@ describe('Contract: SceneTextures, textures of materials baked once into tiles w
 		expect(materials.Get('lawn').Texture).toBe('lawn');
 		expect(materials.Get('asphalt').Texture).toBe('asphalt');
 		/* Earth and the face of a cliff are the last layers of any ground: what is fairly steep and what is steep have them. */
-		expect(materials.Textured(['soil', 'lawn', 'asphalt', 'lawn'])).toEqual(['lawn', 'asphalt', 'dirt', 'cliff']);
+		expect(materials.Textured(['soil', 'lawn', 'asphalt', 'lawn'])).toEqual(['lawn', 'asphalt', 'dirt', 'cliff', 'cave-rock']);
 		expect(materials.Land(['soil', 'lawn'])).toContain('landCliff(2.0, 3.0000, 1.0, 2.0000, place, color, height);');
 		expect(materials.Land(['soil', 'lawn'])).toContain('landTexture(0.0, 0.8000, 1.0, place, c, h, lit);');
 		/* Paving, laid in rows, is sampled as it is. */

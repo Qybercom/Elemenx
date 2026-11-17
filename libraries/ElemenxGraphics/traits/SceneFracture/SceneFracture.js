@@ -26,6 +26,13 @@ Elemenx.Trait('SceneFracture', {
 		var state = scene.Fracture = {Things: {}, Version: 0, Built: -1, Mesh: null, Program: null, Clock: 0};
 		var kinds = {radial: 0, web: 1, splinter: 2, dent: 3, tear: 4};
 
+		/* Asked for when the scene starts (engine.Warm), waited for with the rest: none is made in the play. */
+		(engine.Warms = engine.Warms || []).push(function (setting) {
+			if (setting === 'galaxy' || !renderer) return;
+
+			state.Program = state.Program || renderer.Program(self.FractureShaders().Vertex, self.FractureShaders().Crack);
+		});
+
 		function number (value, fallback) {
 			return value === null || value === undefined || value === '' || isNaN(Number(value)) ? fallback : Number(value);
 		}

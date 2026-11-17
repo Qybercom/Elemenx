@@ -108,7 +108,8 @@ describe('Regression: Application public facade and ownership', function () {
 				$Use: [library]
 			});
 
-			expect(await waitFor(function () { return reported !== null; }, 2000)).toBe(true);
+			/* The missing library answers when the server can: under the load of the whole suite more than 2 s (it failed then). */
+			expect(await waitFor(function () { return reported !== null; }, 15000)).toBe(true);
 		}
 		finally {
 			console.error = error;
@@ -141,9 +142,10 @@ describe('Regression: Application public facade and ownership', function () {
 			}
 		});
 
+		/* The missing root answers when the server can: under the load of the whole suite more than 2 s (it failed then). */
 		expect(await waitFor(function () {
 			return calls.length === 2;
-		}, 2000)).toBe(true);
+		}, 15000)).toBe(true);
 
 		var mountElement = document.getElementById('mount');
 
@@ -183,9 +185,10 @@ describe('Regression: Application public facade and ownership', function () {
 				}
 			});
 
+			/* The missing library answers when the server can: under the load of the whole suite more than 2 s (it failed then). */
 			expect(await waitFor(function () {
 				return failed;
-			}, 2000)).toBe(true);
+			}, 15000)).toBe(true);
 			expect(document.querySelector('#mount .' + cases[i][1])).not.toBeNull();
 
 			i++;

@@ -32,7 +32,7 @@
 
 ## Тесты
 
-- [the card of a GameSlot and of a GameInventory shows by *tip and follows its element when the page moves it without a scroll](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L242) — `tests/regression/library-misc.test.js`
+- [the card of a GameSlot and of a GameInventory shows by *tip and follows its element when the page moves it without a scroll](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L262) — `tests/regression/library-misc.test.js`
 - [shows a *tip in the document of its element, not in the page](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/other-document.test.js#L62) — `tests/regression/other-document.test.js`
 - [shows a bold title over its text after the delay, beside the element, and hides when the pointer leaves](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/tip.test.js#L33) — `tests/regression/tip.test.js`
 - [takes a plain text, renders content of its own, and shows nothing when Disabled](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/tip.test.js#L66) — `tests/regression/tip.test.js`

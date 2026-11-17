@@ -7,6 +7,7 @@
  * flies: Speed, Gravity, Homing, Size, Glow, Trail; plasma, rocket, shell, arrow); Damage (each hit; a beam a second), Type
  * (kinetic, energy, explosive, fire... for the resistances), Rate (shots a second), Range (metres), Spread (degrees),
  * Pellets (rays a shot), Radius (a blast where it ends: damage less with distance, things pushed, Then the effect of it),
+ * Crater (metres: the hole its blast digs where it strikes the ground, Scene.Dig; rocket, artillery and mortar dig),
  * Color and Width (of its light), Muzzle (the effect at the muzzle), Recoil (how much the view of the hero kicks), Magazine
  * and Reload (seconds), Lock {Time (seconds on the aim to lock), Cone (degrees), Count (targets at once)}, Crosshair (dot,
  * cross, circle, chevron). Built in: pistol, rifle, shotgun, sniper, laser, railgun, plasma, rocket, artillery, mortar, bow.
@@ -48,6 +49,13 @@ Elemenx.Trait('SceneWeapons', {
 
 		var fire = [[1, 0.96, 0.7], [1, 0.62, 0.18], [0.5, 0.16, 0.04]];
 
+		/* Asked for when the scene starts (engine.Warm), waited for with the rest: none is made in the play. */
+		(engine.Warms = engine.Warms || []).push(function (setting) {
+			if (setting === 'galaxy' || !renderer) return;
+
+			programs = programs || {Streak: renderer.Program(shaders.StreakVertex, shaders.Streak), Mark: renderer.Program(shaders.MarkVertex, shaders.Mark)};
+		});
+
 		scene.WeaponTypes = {
 			pistol: {Kind: 'bullet', Damage: 18, Type: 'kinetic', Rate: 4, Range: 120, Spread: 0.9, Color: '#ffd890', Width: 0.02, Muzzle: 'muzzle', Recoil: 0.6, Magazine: 12, Reload: 1.2, Crosshair: 'dot'},
 			rifle: {Kind: 'bullet', Damage: 12, Type: 'kinetic', Rate: 10, Range: 300, Spread: 0.7, Color: '#ffd890', Width: 0.025, Muzzle: 'muzzle', Recoil: 0.35, Magazine: 30, Reload: 2, Crosshair: 'cross'},
@@ -56,9 +64,9 @@ Elemenx.Trait('SceneWeapons', {
 			laser: {Kind: 'beam', Damage: 45, Type: 'energy', Range: 400, Color: '#ff3030', Width: 0.05, Muzzle: '', Recoil: 0, Crosshair: 'dot', Heat: 1},
 			railgun: {Kind: 'rail', Damage: 110, Type: 'kinetic', Rate: 0.6, Range: 1200, Color: '#7fd8ff', Width: 0.06, Muzzle: 'railflash', Recoil: 2.8, Magazine: 4, Reload: 3, Crosshair: 'chevron', Push: 400},
 			plasma: {Kind: 'projectile', Damage: 30, Type: 'energy', Rate: 3, Range: 200, Speed: 45, Gravity: 0, Size: 0.22, Color: '#62ffb0', Spread: 0.6, Muzzle: '', Recoil: 0.5, Magazine: 20, Reload: 2, Crosshair: 'circle', Then: 'plasmaburst'},
-			rocket: {Kind: 'projectile', Damage: 90, Type: 'explosive', Rate: 0.8, Range: 500, Speed: 32, Gravity: 0, Size: 0.12, Color: '#ffb060', Trail: 'smoke', Homing: 2.2, Radius: 6, Then: 'blast', Muzzle: 'backblast', Recoil: 1.2, Magazine: 1, Reload: 2.6, Crosshair: 'chevron', Lock: {Time: 0.9, Cone: 7, Count: 1}, Push: 900},
-			artillery: {Kind: 'projectile', Damage: 160, Type: 'explosive', Rate: 0.25, Range: 2000, Speed: 140, Gravity: 9.81, Arc: 'high', Size: 0.1, Color: '#ffcf90', Trail: 'thin', Radius: 10, Then: 'blast', Muzzle: 'cannon', Recoil: 3, Crosshair: 'chevron', Push: 1600},
-			mortar: {Kind: 'projectile', Damage: 100, Type: 'explosive', Rate: 0.5, Range: 600, Speed: 38, Gravity: 9.81, Arc: 'high', Size: 0.08, Color: '#ffcf90', Trail: 'thin', Radius: 7, Then: 'blast', Muzzle: 'cannon', Recoil: 2, Crosshair: 'chevron', Push: 1200},
+			rocket: {Kind: 'projectile', Damage: 90, Type: 'explosive', Rate: 0.8, Range: 500, Speed: 32, Gravity: 0, Size: 0.12, Color: '#ffb060', Trail: 'smoke', Homing: 2.2, Radius: 6, Then: 'blast', Muzzle: 'backblast', Recoil: 1.2, Magazine: 1, Reload: 2.6, Crosshair: 'chevron', Lock: {Time: 0.9, Cone: 7, Count: 1}, Push: 900, Crater: 1.4},
+			artillery: {Kind: 'projectile', Damage: 160, Type: 'explosive', Rate: 0.25, Range: 2000, Speed: 140, Gravity: 9.81, Arc: 'high', Size: 0.1, Color: '#ffcf90', Trail: 'thin', Radius: 10, Then: 'blast', Muzzle: 'cannon', Recoil: 3, Crosshair: 'chevron', Push: 1600, Crater: 2.6},
+			mortar: {Kind: 'projectile', Damage: 100, Type: 'explosive', Rate: 0.5, Range: 600, Speed: 38, Gravity: 9.81, Arc: 'high', Size: 0.08, Color: '#ffcf90', Trail: 'thin', Radius: 7, Then: 'blast', Muzzle: 'cannon', Recoil: 2, Crosshair: 'chevron', Push: 1200, Crater: 1.8},
 			bow: {Kind: 'projectile', Damage: 35, Type: 'kinetic', Rate: 1, Range: 150, Speed: 55, Gravity: 9.81, Size: 0.03, Color: '#d8c8a0', Trail: 'thin', Muzzle: '', Recoil: 0.3, Crosshair: 'dot', Stick: true}
 		};
 
@@ -420,6 +428,10 @@ Elemenx.Trait('SceneWeapons', {
 
 			if (type.Then && self.Burst)
 				self.Burst(type.Then, vectors.Add(point, vectors.Scale(normal, 0.1)), {Size: Math.max(0.4, radius / 6), Aim: normal});
+
+			/* Struck in the ground (rock a little behind the point): a hole dug there. */
+			if (number(type.Crater, 0) > 0 && scene.Ground && scene.Ground.Field && !scene.Ground.Field.Whole && scene.Ground.Field.Density(point[0] - normal[0] * 0.3, point[1] - normal[1] * 0.3, point[2] - normal[2] * 0.3) > 0)
+				self.Dig(point, number(type.Crater, 0));
 
 			if (!radius) return;
 

@@ -205,6 +205,77 @@ describe('Contract: SceneLocations, the locations of a planet: cells of its surf
 	});
 
 	/*
+	 * Caves where the ground of a location rises steep and high: a way into the rock from a mouth on the slope, a hall at its
+	 * end under rock enough; what grows in caves sown in its World; its ground hollow there. None on the gentle land.
+	 */
+	it('digs caves into the mountains of a location, a hall at the end of each, and sows what grows in them; none on gentle land', function () {
+		var planet = {Seed: 'towns', Radius: 6371, LocationSize: 4, Ocean: 0.3};
+		var location = locations.Location(planet, locations.At(planet, 30, 40));
+		var gentle = locations.Location(planet, locations.At(planet, -43, 106));
+		var caves = locations.Caverns(planet, location.Place);
+		var site = Elemenx.Service('SceneTerrainGenerator').Site({Options: planet, Latitude: location.Place.Latitude, Longitude: location.Place.Longitude, Turn: location.Place.Turn});
+		var made = Elemenx.Service('SceneWorld').Make(location.World);
+		var field = Elemenx.Service('SceneTerrainGenerator').Flat(made.Ground);
+		var cave;
+		var mouth;
+		var inner;
+
+		expect(caves).toBeTruthy();
+		expect(locations.Caverns(planet, gentle.Place)).toBeUndefined();
+		expect(locations.Caverns(Object.assign({}, planet, {Caves: false}), location.Place)).toBeUndefined();
+
+		cave = caves.Layers[0].Items.filter(function (item) {
+			return item.Type === 'cave';
+		})[0];
+		mouth = cave.Points[0];
+		inner = cave.Points[cave.Points.length - 1];
+
+		/* Its mouth just under the slope, its end deep in the rock, the way into the hill. */
+		expect(Math.abs(site.Elevation(mouth[0], mouth[1]) - mouth[2])).toBeLessThan(3);
+		expect(site.Elevation(inner[0], inner[1]) - inner[2]).toBeGreaterThan(10);
+
+		/* Its World: the caves cut in its ground, hollow along the way, and what grows in them sown there. */
+		expect(field.Volume).toBeTruthy();
+		expect(field.Density(inner[0], inner[2], inner[1])).toBeLessThan(0);
+		expect(made.Things.map(function (thing) {
+			return thing.Kind;
+		})).toEqual(expect.arrayContaining(['dripstones', 'cave-floor', 'cave-crystals']));
+	});
+
+	/* Its outline by its ground: farther along a road through it; the rise of its ground and the way along the level of it. */
+	it('stretches a settlement along a road through it, and tells the slope of its ground and the way along its level', function () {
+		/* A place of gentle land (on the mountains of 30, 40 the ground is too steep for it to grow any way). */
+		var planet = {Seed: 'towns', Radius: 6371, LocationSize: 4, Ocean: 0.3};
+		var id = locations.At(planet, -43, 106);
+		var place = locations.Location(planet, id).Place;
+		var middle = planets.Direction(place.Latitude, place.Longitude);
+		var given = Object.assign({}, planet, {Settlements: [{Point: middle, Size: 0.5, Kind: 'village'}]});
+		var site = Elemenx.Service('SceneTerrainGenerator').Site({Options: given, Latitude: place.Latitude, Longitude: place.Longitude, Turn: place.Turn});
+		var at = site.Local(middle);
+		var trunks = {Layers: [{Items: [{Type: 'road', Points: [[at[0] - 2000, at[1]], [at[0] + 2000, at[1]]]}]}]};
+		var free = locations.Towns(given, place).Layers[0].Items[0];
+		var along = locations.Towns(given, place, trunks).Layers[0].Items[0];
+
+		function reach (item, way) {
+			return Math.max.apply(null, item.Points.map(function (point) {
+				return Math.abs(way ? point[0] - at[0] : point[1] - at[1]);
+			}));
+		}
+
+		expect(reach(along, true)).toBeGreaterThan(reach(free, true) * 1.3);
+		expect(reach(along, false)).toBeLessThan(reach(free, false) * 1.15);
+		expect(free.Slope).toBeGreaterThanOrEqual(0);
+		expect(Number.isFinite(free.Contour)).toBe(true);
+
+		/* Along the level: the ground of the same height a little either way of its middle along Contour, rising across it. */
+		var d = 60;
+		var level = Math.abs(site.Elevation(at[0] + Math.cos(free.Contour) * d, at[1] + Math.sin(free.Contour) * d) - site.Elevation(at[0] - Math.cos(free.Contour) * d, at[1] - Math.sin(free.Contour) * d));
+		var across = Math.abs(site.Elevation(at[0] - Math.sin(free.Contour) * d, at[1] + Math.cos(free.Contour) * d) - site.Elevation(at[0] + Math.sin(free.Contour) * d, at[1] - Math.cos(free.Contour) * d));
+
+		expect(level).toBeLessThanOrEqual(across + 1e-6);
+	});
+
+	/*
 	 * A highway of the planet through a location: a road of its sketch from where it comes in to where it leaves, at the very
 	 * point of the planet where the location beside takes it on; its road (Roads) along the ground between them.
 	 */

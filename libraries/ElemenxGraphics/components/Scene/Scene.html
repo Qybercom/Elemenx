@@ -27,7 +27,7 @@
 		<span class="elemenx-scene-landing-hint" *if="ShipHint === 'orbit'">{{$T('graphics.scene.orbitHint')}}</span>
 		<MenuList class="elemenx-scene-landing-list" *if="LandingOpen" [Open]="true" [Items]="LandingItems(LandingMarkers)" (select)="LandingChosen($event)" (dismiss)="LandingOpen = false" />
 	</div>
-	<div class="elemenx-scene-loading" [hidden]="Loading === null || !Loader || Loader === 'false'"><slot name="loading"></slot><Progress *if="!LoadingOwn" Size="small" [value]="LoadingEndless ? null : Loading" [label]="$T('graphics.scene.loading') + (LoadingText ? ' · ' + LoadingText : '')" /></div>
+	<div class="elemenx-scene-loading" [class.own]="LoadingOwn" [hidden]="Loading === null || !Loader || Loader === 'false'"><slot name="loading"></slot><Progress *if="!LoadingOwn" Size="small" ShowValue="true" [value]="Loading" [label]="$T('graphics.scene.loading') + (LoadingText ? ' · ' + LoadingText : '')" /></div>
 	<div class="elemenx-scene-hud"><slot name="hud"></slot></div>
 	<div class="elemenx-scene-levels" *if="Levels && Levels !== 'false'" aria-hidden="true">{{LevelsText}}</div>
 	<div class="elemenx-scene-sources" hidden><slot></slot></div>

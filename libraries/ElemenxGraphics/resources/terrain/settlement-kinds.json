@@ -10,6 +10,7 @@
 		}
 	},
 	"village": {
+		"Layout": "road",
 		"Block": 45,
 		"Street": 6,
 		"Grid": false,
@@ -24,6 +25,7 @@
 		}
 	},
 	"town": {
+		"Layout": "radial",
 		"Block": 60,
 		"Street": 8,
 		"Grid": true,
@@ -39,6 +41,7 @@
 		}
 	},
 	"city": {
+		"Layout": "districts",
 		"Block": 80,
 		"Street": 12,
 		"Grid": true,

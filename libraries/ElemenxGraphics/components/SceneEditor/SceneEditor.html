@@ -60,7 +60,8 @@
 		<div class="elemenx-scene-editor-fields">
 			<div class="elemenx-scene-editor-field" *for="field of FieldList" *key="field.ID" [attribute.data-field]="field.Key"><span>{{field.Title}}</span>
 				<Checkbox *if="field.Bool" Size="small" [Label]="field.Title" [Checked]="field.Value" (change)="FieldChanged(field, $event)" />
-				<Input *if="!field.Bool" Size="small" [Label]="field.Title" [Value]="field.Shown" (change)="FieldChanged(field, $event)" />
+				<Select *if="field.Options" Size="small" [Label]="field.Title" [Options]="field.Options" [Value]="field.Shown" (change)="FieldChanged(field, $event)" />
+				<Input *if="!field.Bool && !field.Options" Size="small" [Label]="field.Title" [Value]="field.Shown" (change)="FieldChanged(field, $event)" />
 			</div>
 		</div>
 		<div class="elemenx-scene-editor-title" *if="Tool === 'sketch'">{{$T('graphics.sceneEditor.sketch')}}</div>

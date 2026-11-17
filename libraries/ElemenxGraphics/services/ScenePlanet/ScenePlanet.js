@@ -50,7 +50,7 @@
 Elemenx.Service('ScenePlanet', {
 	$Meta: {
 		Description: 'A planet as one continuous function of a direction: painted continents, tectonic plates, winds, climate and biomes, as fine as it is asked.',
-		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'ViewTurn(yaw, pitch, roll)', 'Map(options, rows, width, height, overlay)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'UseData(key, data)', 'AddTiles(key, names)', 'DataOf(key)', 'Ruled(options)', 'DataVectors(key)', 'Vectored(options)', 'TownsFor(options)', 'TileName(layer, face, level, x, y)', 'TileDirection(face, s, t)', 'TilePlace(direction)', 'TileValues(options, layer, face, level, x, y, size, table)', 'Settlements(options, count)', 'UseSettlements(key, towns)', 'Highways(options, step)', 'UseHighways(key, roads)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)']
+		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'ViewTurn(yaw, pitch, roll)', 'Map(options, rows, width, height, overlay)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'UseData(key, data)', 'AddTiles(key, names)', 'DataOf(key)', 'Ruled(options)', 'DataVectors(key)', 'Vectored(options)', 'TownsFor(options)', 'TileName(layer, face, level, x, y)', 'TileDirection(face, s, t)', 'TilePlace(direction)', 'TileValues(options, layer, face, level, x, y, size, table)', 'Settlements(options, count)', 'PlacedTowns(options, towns)', 'PlacedRivers(options, rivers)', 'UseSettlements(key, towns)', 'Highways(options, step)', 'UseHighways(key, roads)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)']
 	},
 
 	/* The kinds of strokes of a paint. */
@@ -196,30 +196,250 @@ Elemenx.Service('ScenePlanet', {
 		 */
 		var streams = [];
 		var buckets = {};
+		/*
+		 * The courses of its rivers: their points (a tributary's last on the river it joins), and along each point the
+		 * kilometres from its source (Along) and the phase of its bends (Phase, of their length there, as wide as it is);
+		 * Joins, the kilometres of it where tributaries come in, Into, that it ends in another (see bendOf).
+		 */
+		var courses = [];
+		var riversMade = false;
+		var riversMaking = false;
 
-		(Array.isArray(given.Rivers) ? given.Rivers : given.Rivers ? self.RiversOf(given.Rivers) : []).forEach(function (river, index) {
-			var points = river.Points || [];
-			var k;
+		/*
+		 * Its rivers made the first time one is asked for, once all of the planet is (the arms of its deltas end where its
+		 * sea is: of its relief, which its rivers do not change into sea); while they are made, it has none.
+		 */
+		function rivers () {
+			if (riversMade || riversMaking) return;
 
-			for (k = 0; k + 1 < points.length; k++) {
-				var segment = {A: points[k], B: points[k + 1], FlowA: river.Flow[k], FlowB: river.Flow[k + 1], LevelA: river.Level[k], LevelB: river.Level[k + 1], River: index};
-				var keys = {};
+			riversMaking = true;
 
-				streams.push(segment);
+			/* What a developer changed of them laid over them (Places): a river drawn has the levels of the ground under it. */
+			courses = self.PlacedRivers(given, Array.isArray(given.Rivers) ? given.Rivers : given.Rivers ? self.RiversOf(given.Rivers) : []).map(function (river, index) {
+				return {Points: (river.Points || []).slice(), Flow: river.Flow || [], Level: river.Level && river.Level.length ? river.Level : (river.Points || []).map(function (point) {
+					return Math.max(0, raise(point).Height);
+				}), Along: [], Phase: [], Joins: [], Into: false, From: null, Seed: index, Segments: []};
+			});
 
-				[points[k], points[k + 1]].forEach(function (end) {
-					var cell = self.CellAt(1, Math.PI / 2 / 48, end);
+			courses = courses.concat(deltasOf(courses));
 
-					[cell].concat(self.CellNeighbours(1, Math.PI / 2 / 48, cell)).forEach(function (near) {
-						keys[near.ID] = true;
-					});
+			/*
+		 * The deltas of its great rivers (at least 300 cells drained, to the sea, its bed under 100 m some way up): three to
+		 * five arms out of its way some 20 to 60 km before its mouth, fanned out to the sea on either side of it, each a
+		 * river of its own (From: the river and the point of it they leave), the same for the same river.
+		 */
+			function deltasOf (rivers) {
+				var made = [];
+
+				rivers.forEach(function (river, index) {
+					var points = river.Points;
+					var last = points.length - 1;
+					var flow = river.Flow[last] || 0;
+					var lengths = [0];
+					var total;
+					var back;
+					var k;
+
+					if (last < 2 || river.Level[last] > 0 || flow < 300) return;
+
+					for (k = 1; k <= last; k++)
+						lengths.push(lengths[k - 1] + Math.sqrt(dot([points[k][0] - points[k - 1][0], points[k][1] - points[k - 1][1], points[k][2] - points[k - 1][2]], [points[k][0] - points[k - 1][0], points[k][1] - points[k - 1][1], points[k][2] - points[k - 1][2]])) * radius);
+
+					total = lengths[last];
+					back = Math.min(60, Math.max(20, total * 0.15));
+
+					/* Where its arms leave it: back km up from its mouth, in the segment that holds it. */
+					k = last;
+
+					while (k > 1 && total - lengths[k - 1] < back)
+						k--;
+
+					var share = (total - back - lengths[k - 1]) / Math.max(1e-9, lengths[k] - lengths[k - 1]);
+					var from = normalize([points[k - 1][0] + (points[k][0] - points[k - 1][0]) * share, points[k - 1][1] + (points[k][1] - points[k - 1][1]) * share, points[k - 1][2] + (points[k][2] - points[k - 1][2]) * share]);
+					var level = river.Level[k - 1] + (river.Level[k] - river.Level[k - 1]) * share;
+					var mouth = points[last];
+					var way = normalize([mouth[0] - from[0], mouth[1] - from[1], mouth[2] - from[2]]);
+					var across = normalize(cross(mouth, way));
+					var arms = flow > 1000 ? 5 : flow > 600 ? 4 : 3;
+					var random = self.$Service('Random').Sequence('delta:' + index);
+					var a;
+
+					if (level > 100) return;
+
+					for (a = 0; a < arms; a++) {
+					/* Fanned out: from one side of the mouth to the other, back km wide, a little toward the sea past it. */
+						var aside = (a / (arms - 1) - 0.5) * back * 1.1 * (0.8 + random() * 0.4) / radius;
+						var ahead = back * (0.15 + random() * 0.2) / radius;
+						var to = normalize([mouth[0] + across[0] * aside + way[0] * ahead, mouth[1] + across[1] * aside + way[1] * ahead, mouth[2] + across[2] * aside + way[2] * ahead]);
+						var bend = (random() - 0.5) * back * 0.25 / radius;
+						var middle = normalize([(from[0] + to[0]) / 2 + across[0] * bend, (from[1] + to[1]) / 2 + across[1] * bend, (from[2] + to[2]) / 2 + across[2] * bend]);
+						var arm = self.Smoothed([from, middle, to], [flow * 0.35, flow * 0.35, flow * 0.35], [level, level * 0.4, 0]);
+						var end = arm.Points.length;
+						var j;
+
+						/* Ended where it comes to the sea; one that never does (the coast turned away) none. */
+						for (j = 1; j < arm.Points.length; j++) {
+							if (raise(arm.Points[j]).Height <= 0) {
+								end = j + 1;
+
+								break;
+							}
+						}
+
+						if (end === arm.Points.length && raise(arm.Points[end - 1]).Height > 0) continue;
+
+						arm = {Points: arm.Points.slice(0, end), Flow: arm.Flow.slice(0, end), Level: arm.Points.slice(0, end).map(function (point, index) {
+							return Math.round(level * (1 - index / Math.max(1, end - 1)));
+						})};
+
+						made.push({Points: arm.Points, Flow: arm.Flow, Level: arm.Level, Along: [], Phase: [], Joins: [], Into: false, From: {River: index, Along: total - back}, Seed: rivers.length + made.length, Segments: []});
+					}
 				});
 
-				Object.keys(keys).forEach(function (key) {
-					(buckets[key] = buckets[key] || []).push(segment);
-				});
+				return made;
 			}
-		});
+
+			courses.forEach(function (course, index) {
+				var points = course.Points;
+				var k;
+
+				for (k = 0; k + 1 < points.length; k++) {
+					var segment = {A: points[k], B: points[k + 1], FlowA: course.Flow[k], FlowB: course.Flow[k + 1], LevelA: course.Level[k], LevelB: course.Level[k + 1], River: index, K: k};
+					var keys = {};
+
+					streams.push(segment);
+					course.Segments.push(segment);
+
+					[points[k], points[k + 1]].forEach(function (end) {
+						var cell = self.CellAt(1, Math.PI / 2 / 48, end);
+
+						[cell].concat(self.CellNeighbours(1, Math.PI / 2 / 48, cell)).forEach(function (near) {
+							keys[near.ID] = true;
+						});
+					});
+
+					Object.keys(keys).forEach(function (key) {
+						(buckets[key] = buckets[key] || []).push(segment);
+					});
+				}
+			});
+
+			/*
+		 * A tributary ends where its river took its way (the middle of a cell of the grid it was traced on), off the way of
+		 * that river smoothed: its end moved onto the nearest point of the other within 60 km (a cell of the grid of its tracing and its corners cut), joined there.
+		 */
+			var joined = courses.map(function (course, index) {
+				var end = course.Points[course.Points.length - 1];
+				var best = null;
+
+				if (course.Points.length < 2 || course.Level[course.Level.length - 1] <= 0) return null;
+
+				(buckets[self.CellAt(1, Math.PI / 2 / 48, end).ID] || []).forEach(function (segment) {
+					if (segment.River === index) return;
+
+					var a = segment.A;
+					var ab = [segment.B[0] - a[0], segment.B[1] - a[1], segment.B[2] - a[2]];
+					var t = Math.max(0, Math.min(1, ((end[0] - a[0]) * ab[0] + (end[1] - a[1]) * ab[1] + (end[2] - a[2]) * ab[2]) / Math.max(1e-18, dot(ab, ab))));
+					var at = [a[0] + ab[0] * t, a[1] + ab[1] * t, a[2] + ab[2] * t];
+					var far = Math.sqrt((at[0] - end[0]) * (at[0] - end[0]) + (at[1] - end[1]) * (at[1] - end[1]) + (at[2] - end[2]) * (at[2] - end[2])) * radius;
+					if (far < 60 && (!best || far < best.Far))
+						best = {Far: far, Segment: segment, T: t, At: normalize(at)};
+				});
+
+				if (!best)
+					return null;
+
+				course.Points[course.Points.length - 1] = best.At;
+				course.Segments[course.Segments.length - 1].B = best.At;
+				course.Into = true;
+
+				return best;
+			});
+
+			/* Kilometres along each and the phase of its bends: a bend of some eleven times its width (15 m by the root of its flow). */
+			courses.forEach(function (course) {
+				var along = 0;
+				var phase = 0;
+				var k;
+
+				for (k = 0; k < course.Points.length; k++) {
+					if (k > 0) {
+						var a = course.Points[k - 1];
+						var b = course.Points[k];
+						var step = Math.sqrt((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]) + (b[2] - a[2]) * (b[2] - a[2])) * radius;
+
+						along += step;
+						phase += step * Math.PI * 2 / bendLength((course.Flow[k - 1] + course.Flow[k]) / 2);
+					}
+
+					course.Along.push(along);
+					course.Phase.push(phase);
+				}
+
+				course.Segments.forEach(function (segment) {
+					segment.AlongA = course.Along[segment.K];
+					segment.AlongB = course.Along[segment.K + 1];
+					segment.PhaseA = course.Phase[segment.K];
+					segment.PhaseB = course.Phase[segment.K + 1];
+				});
+			});
+
+			joined.forEach(function (join) {
+				if (join)
+					courses[join.Segment.River].Joins.push(join.Segment.AlongA + (join.Segment.AlongB - join.Segment.AlongA) * join.T);
+			});
+
+			/* Where the arms of a delta leave their river: its bends none there either. */
+			courses.forEach(function (course) {
+				if (course.From)
+					courses[course.From.River].Joins.push(course.From.Along);
+			});
+
+			riversMaking = false;
+			riversMade = true;
+		}
+
+		/* The length of a bend of a river of a flow (km): eleven times its width, a quarter of a kilometre at least. */
+		function bendLength (flow) {
+			return Math.max(0.25, 11 * 0.015 * Math.sqrt(Math.max(1, flow)));
+		}
+
+		/*
+		 * How far aside of its way a river is at a point of a segment (km, to the side of cross(A, B)): bends of some eleven
+		 * times its width, twice its width aside, a third of that in the mountains (over 1200 m); none where tributaries
+		 * come in, nor at the end of one in another (they meet on its way). Every view of it (its globe, its ground, the
+		 * locations) bends it so: of its kilometres from its source, not of where it is seen from.
+		 */
+		function bendOf (segment, t) {
+			var course = courses[segment.River];
+			var flow = segment.FlowA + (segment.FlowB - segment.FlowA) * t;
+			var level = segment.LevelA + (segment.LevelB - segment.LevelA) * t;
+			var along = segment.AlongA + (segment.AlongB - segment.AlongA) * t;
+			var phase = segment.PhaseA + (segment.PhaseB - segment.PhaseA) * t;
+			var length = bendLength(flow);
+			var amount = 2 * 0.015 * Math.sqrt(Math.max(1, flow)) * (0.3 + 0.7 * (1 - smoothstep(300, 1200, level)));
+
+			course.Joins.forEach(function (join) {
+				amount *= smoothstep(0, length * 1.5, Math.abs(along - join));
+			});
+
+			if (course.Into)
+				amount *= smoothstep(0, length * 1.5, course.Along[course.Along.length - 1] - along);
+
+			/* An arm of a delta out of its river's way: straight where it leaves it. */
+			if (course.From)
+				amount *= smoothstep(0, length * 1.5, along);
+
+			return amount * (0.7 * Math.sin(phase + course.Seed * 1.7) + 0.3 * Math.sin(phase * 2.8 + course.Seed * 3.1));
+		}
+
+		/* The side of a segment (unit, along the ground, to the side of cross(A, B)). */
+		function sideOf (segment) {
+			if (!segment.Side)
+				segment.Side = normalize(cross(segment.A, segment.B));
+
+			return segment.Side;
+		}
 		/* Its settlements (Settlements: [{Point, Size, Kind}]): kept in squares of the same grid round their points. */
 		var dwellings = {};
 
@@ -1010,8 +1230,14 @@ Elemenx.Service('ScenePlanet', {
 		 */
 		/* The nearest river to a point: {Far (km), Flow, Level}; null with none near. */
 		function nearestRiver (p) {
-			var found = buckets[self.CellAt(1, Math.PI / 2 / 48, p).ID];
+			var found;
 			var best = null;
+
+			rivers();
+
+			if (riversMaking) return null;
+
+			found = buckets[self.CellAt(1, Math.PI / 2 / 48, p).ID];
 
 			if (!found)
 				return null;
@@ -1021,8 +1247,13 @@ Elemenx.Service('ScenePlanet', {
 				var b = segment.B;
 				var ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
 				var t = Math.max(0, Math.min(1, ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / Math.max(1e-18, dot(ab, ab))));
-				var q = [a[0] + ab[0] * t - p[0], a[1] + ab[1] * t - p[1], a[2] + ab[2] * t - p[2]];
-				var far = Math.sqrt(dot(q, q)) * radius;
+				/* From its chord brought out onto the sphere: a chord of tens of kilometres sags tens of metres under it. */
+				var on = normalize([a[0] + ab[0] * t, a[1] + ab[1] * t, a[2] + ab[2] * t]);
+				var q = [p[0] - on[0], p[1] - on[1], p[2] - on[2]];
+				/* Of its way as it bends (bendOf): how far aside of its chord, less how far the way is aside there. */
+				var aside = dot(q, sideOf(segment)) * radius;
+				var along = Math.sqrt(Math.max(0, dot(q, q) * radius * radius - aside * aside));
+				var far = Math.sqrt(along * along + Math.pow(aside - bendOf(segment, t), 2));
 				if (!best || far < best.Far)
 					best = {Far: far, Flow: segment.FlowA + (segment.FlowB - segment.FlowA) * t, Level: segment.LevelA + (segment.LevelB - segment.LevelA) * t};
 			});
@@ -1151,6 +1382,7 @@ Elemenx.Service('ScenePlanet', {
 			var north;
 			var upwind;
 			var biome = '';
+			var mixed = null;
 			var k;
 
 			/*
@@ -1219,11 +1451,14 @@ Elemenx.Service('ScenePlanet', {
 						biome = stroke.Biome;
 				});
 
-				if (!biome && biomes)
-					biome = self.$Service('SceneTerrainGenerator').BiomeOf(biomes, height / relief, moisture, Math.max(0, Math.min(1, (celsius + 25) / 60))).List[0].Name;
+				/* Of its climate: the lands that hold there, each by how well (Mixed: the picture of a square blends their colors). */
+				if (!biome && biomes) {
+					mixed = self.$Service('SceneTerrainGenerator').BiomeOf(biomes, height / relief, moisture, Math.max(0, Math.min(1, (celsius + 25) / 60))).List;
+					biome = mixed[0].Name;
+				}
 			}
 
-			return {Direction: p, Elevation: height, Land: height > 0, Plate: {ID: tectonic.ID, Oceanic: tectonic.Oceanic, Boundary: tectonic.Boundary, Push: tectonic.Push}, Wind: wind, Celsius: celsius, Temperature: Math.max(0, Math.min(1, (celsius + 25) / 60)), Moisture: moisture, Biome: biome};
+			return {Direction: p, Elevation: height, Land: height > 0, Plate: {ID: tectonic.ID, Oceanic: tectonic.Oceanic, Boundary: tectonic.Boundary, Push: tectonic.Push}, Wind: wind, Celsius: celsius, Temperature: Math.max(0, Math.min(1, (celsius + 25) / 60)), Moisture: moisture, Biome: biome, Mixed: mixed};
 		}
 
 		/* The last point sampled whole, for its slope after (Slope). */
@@ -1305,6 +1540,38 @@ Elemenx.Service('ScenePlanet', {
 			/* The nearest of its rivers to a direction: {Far (km), Flow, Level}, null with none near. */
 			River: function (direction) {
 				return nearestRiver(normalize(direction));
+			},
+
+			/* The ways of its rivers (Rivers): [{Points (directions, a tributary's last on the river it joins), Along (km from its source)}]. */
+			Courses: function () {
+				rivers();
+
+				return courses.map(function (course) {
+					return {Points: course.Points, Along: course.Along, Flow: course.Flow, Level: course.Level};
+				});
+			},
+
+			/*
+			 * A point of the way of a river as it bends (index of Courses, k its segment, t along it, 0 to 1): {Direction,
+			 * Flow, Level, Along (km)}; every view of the river bends it so (its globe, its ground, the locations it crosses).
+			 */
+			RiverAt: function (index, k, t) {
+				var segment;
+				var a;
+				var b;
+				var on;
+
+				rivers();
+
+				segment = courses[index] && courses[index].Segments[k];
+
+				if (!segment) return null;
+
+				a = segment.A;
+				b = segment.B;
+				on = normalize([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]);
+
+				return {Direction: normalize([on[0] + sideOf(segment)[0] * bendOf(segment, t) / radius, on[1] + sideOf(segment)[1] * bendOf(segment, t) / radius, on[2] + sideOf(segment)[2] * bendOf(segment, t) / radius]), Flow: segment.FlowA + (segment.FlowB - segment.FlowA) * t, Level: segment.LevelA + (segment.LevelB - segment.LevelA) * t, Along: segment.AlongA + (segment.AlongB - segment.AlongA) * t};
 			},
 
 			/* The nearest of its highways to a direction: {Far (km), Class}, null with none near. */
@@ -1477,13 +1744,34 @@ Elemenx.Service('ScenePlanet', {
 		var color;
 		var hue;
 
-		function biome () {
+		function low (name) {
 			var found = lands.filter(function (land) {
-				return land.Name === sample.Biome;
+				return land.Name === name;
 			})[0];
 			var ground = found && found.Ground || {};
 
 			return ground.Low || [0.3, 0.5, 0.22];
+		}
+
+		/*
+		 * Of the picture of a square (Pictured): the colors of the lands that hold there, each by how well (Mixed of its
+		 * sample). Regression: of its first land only, a land whose land changes with its height (hills about a bound of
+		 * two) was a chessboard of the colors of both, a texel each.
+		 */
+		function biome () {
+			var sum = [0, 0, 0];
+
+			if (!sample.Pictured || !sample.Mixed || sample.Mixed.length < 2 || sample.Mixed[0].Name !== sample.Biome) return low(sample.Biome);
+
+			sample.Mixed.forEach(function (one) {
+				var color = low(one.Name);
+
+				sum[0] += color[0] * one.Weight;
+				sum[1] += color[1] * one.Weight;
+				sum[2] += color[2] * one.Weight;
+			});
+
+			return sum;
 		}
 
 		function ramp (stops, value) {
@@ -1930,9 +2218,10 @@ Elemenx.Service('ScenePlanet', {
 			}), Size: Math.round(Math.min(1, place.Score) * 100) / 100, Kind: kind, Apart: apart});
 		});
 
-		return {Settlements: kept.map(function (town) {
+		/* What a developer changed of them laid over them (Places). */
+		return {Settlements: this.PlacedTowns(options, kept.map(function (town) {
 			return {Point: town.Point, Size: town.Size, Kind: town.Kind};
-		})};
+		}))};
 	},
 
 	/* The settlements kept under a key, as UseRivers keeps rivers. */
@@ -2525,6 +2814,133 @@ Elemenx.Service('ScenePlanet', {
 		}
 
 		return values;
+	},
+
+	/*
+	 * Places: what a developer changed of the settlements and the rivers a planet made (PlanetEditor), in their order, kept
+	 * in its options and laid again over what it makes each time (a rebake keeps them): {Towns: [{Op: move (At, To), kind
+	 * (At, Kind), remove (At) or add (Point, Kind, Size)}], Rivers: [{Op: remove (At) or add (Points, Flow)}]}. At is a
+	 * direction of the settlement (the one nearest it, within 30 km) or of a point of the river (the one passing nearest,
+	 * within 25 km) as it was when the change was made; a change of nothing there is left out.
+	 */
+	PlacedTowns: function (options, towns) {
+		var self = this;
+		var radius = Number(options && options.Radius) || 6371;
+		var list = (towns || []).map(function (town) {
+			return {Point: town.Point.slice(), Size: town.Size, Kind: town.Kind};
+		});
+
+		(options && options.Places && options.Places.Towns || []).forEach(function (change) {
+			var best = -1;
+			var nearest = 30 / radius;
+
+			if (change.Op === 'add') {
+				if (change.Point && change.Point.length === 3)
+					list.push({Point: self.Unit(change.Point), Size: change.Size === undefined ? 0.5 : Number(change.Size), Kind: change.Kind || 'village'});
+
+				return;
+			}
+
+			if (!change.At || change.At.length !== 3) return;
+
+			list.forEach(function (town, index) {
+				var far = Math.acos(Math.max(-1, Math.min(1, self.Dot(town.Point, self.Unit(change.At)))));
+
+				if (far < nearest) {
+					nearest = far;
+					best = index;
+				}
+			});
+
+			if (best < 0) return;
+
+			if (change.Op === 'remove') list.splice(best, 1);
+			else if (change.Op === 'move' && change.To && change.To.length === 3) list[best].Point = self.Unit(change.To);
+			else if (change.Op === 'kind' && change.Kind) list[best].Kind = change.Kind;
+		});
+
+		return list;
+	},
+
+	/* The rivers of a planet with its Places laid over them (PlacedTowns): one drawn (add) as long as its points, its flow growing to its Flow (200) down it. */
+	PlacedRivers: function (options, rivers) {
+		var self = this;
+		var radius = Number(options && options.Radius) || 6371;
+		var list = (rivers || []).slice();
+
+		/* How far a direction is from a river (radians): from the nearest of its segments. */
+		function far (river, at) {
+			var best = Infinity;
+			var k;
+
+			for (k = 0; k < river.Points.length; k++) {
+				var a = river.Points[k];
+				var b = river.Points[Math.min(k + 1, river.Points.length - 1)];
+				var ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+				var length = self.Dot(ab, ab);
+				var t = length > 0 ? Math.max(0, Math.min(1, self.Dot([at[0] - a[0], at[1] - a[1], at[2] - a[2]], ab) / length)) : 0;
+				var p = self.Unit([a[0] + ab[0] * t, a[1] + ab[1] * t, a[2] + ab[2] * t]);
+
+				best = Math.min(best, Math.acos(Math.max(-1, Math.min(1, self.Dot(p, at)))));
+			}
+
+			return best;
+		}
+
+		(options && options.Places && options.Places.Rivers || []).forEach(function (change) {
+			var best = -1;
+			var nearest = 25 / radius;
+
+			if (change.Op === 'add') {
+				var points = (change.Points || []).filter(function (point) {
+					return point && point.length === 3;
+				}).map(function (point) {
+					return self.Unit(point);
+				});
+				var made = [];
+				var flow = Number(change.Flow) > 0 ? Number(change.Flow) : 200;
+
+				if (points.length < 2) return;
+
+				/* A point every 10 km at most along it, as the rivers of its drainage are. */
+				points.forEach(function (point, index) {
+					var next = points[index + 1];
+					var steps;
+					var s;
+
+					made.push(point);
+
+					if (!next) return;
+
+					steps = Math.ceil(Math.acos(Math.max(-1, Math.min(1, self.Dot(point, next)))) * radius / 10);
+
+					for (s = 1; s < steps; s++)
+						made.push(self.Slerp(point, next, s / steps));
+				});
+
+				list.push({Points: made, Flow: made.map(function (point, index) {
+					return Math.round(flow * (0.2 + 0.8 * index / Math.max(1, made.length - 1)));
+				}), Level: [], Drawn: true});
+
+				return;
+			}
+
+			if (change.Op !== 'remove' || !change.At || change.At.length !== 3) return;
+
+			list.forEach(function (river, index) {
+				var distance = far(river, self.Unit(change.At));
+
+				if (distance < nearest) {
+					nearest = distance;
+					best = index;
+				}
+			});
+
+			if (best >= 0)
+				list.splice(best, 1);
+		});
+
+		return list;
 	},
 
 	UseRivers: function (key, rivers) {
@@ -3281,7 +3697,8 @@ Elemenx.Service('ScenePlanet', {
 	 * the last on its edges, so the squares beside have the same there): Color (RGBA bytes: its color, and in alpha how
 	 * much of it is water, soft along the coast within a texel) and Normal (RGB bytes: the normal of its ground in the frame
 	 * of the body, of its heights a texel apart). Its snow comes and goes with the cold, its rock with the slope, its rivers
-	 * and highways as much of a texel as they cover: from far a thin line is faint, not a row of steps.
+	 * and highways as much of a texel as they cover: from far a thin line is faint, not a row of steps. Snow (a byte a texel):
+	 * how much of it snow lies on, for its ground near (the snow of its biome there).
 	 */
 	PatchPicture: function (field, face, cu, cv, extent, size) {
 		var self = this;
@@ -3300,6 +3717,8 @@ Elemenx.Service('ScenePlanet', {
 		var normal = new Uint8Array(n * n * 4);
 		/* Where people live (Use, RGBA bytes): how much of it is fields, how much houses, and of what settlement (a city 255, a town 170, a village 85). */
 		var use = new Uint8Array(n * n * 4);
+		/* How much of each texel snow lies on (Snow, a byte each). */
+		var snow = new Uint8Array(n * n);
 		var i;
 		var k;
 
@@ -3506,6 +3925,7 @@ Elemenx.Service('ScenePlanet', {
 				var fx = (cu - extent / 2 + i * step) * km;
 				var fy = (cv - extent / 2 + k * step) * km;
 				var used;
+				var white;
 				var o = (k * n + i) * 4;
 
 				if (made[0] * up[0] + made[1] * up[1] + made[2] * up[2] < 0)
@@ -3529,7 +3949,8 @@ Elemenx.Service('ScenePlanet', {
 				 */
 				land = self.Desert(land, arid, basin, damp);
 				water = Math.max(water, basin * damp * 0.55);
-				land = mix(land, [0.92, 0.94, 0.97], smooth(-3, -9, sample.Celsius) * (1 - smooth(0.45, 0.9, slope)));
+				white = smooth(-3, -9, sample.Celsius) * (1 - smooth(0.45, 0.9, slope));
+				land = mix(land, [0.92, 0.94, 0.97], white);
 
 				/* Its fields and houses: their mean here, each parcel and house drawn by the shader (of Use). */
 				used = dwelt(up, fx, fy, sample, slope, height);
@@ -3575,6 +3996,8 @@ Elemenx.Service('ScenePlanet', {
 				use[o + 2] = used.Kind === 'city' ? 255 : used.Kind === 'town' ? 170 : 85;
 				/* Its sand of dunes (the Ground shader draws them of it). */
 				use[o + 3] = Math.round(arid.Dry * arid.Erg * (1 - water) * (1 - used.Built) * 255);
+				/* How much of it snow lies on (its ground near is of the snow of its biome there). */
+				snow[k * n + i] = Math.round(white * (1 - water) * 255);
 			}
 		}
 
@@ -3595,7 +4018,7 @@ Elemenx.Service('ScenePlanet', {
 			biomes[i] = index === -1 ? 255 : index;
 		}
 
-		return {Size: n, Color: color, Normal: normal, Use: use, Biomes: biomes, Lands: named};
+		return {Size: n, Color: color, Normal: normal, Use: use, Snow: snow, Biomes: biomes, Lands: named};
 	},
 
 	/*

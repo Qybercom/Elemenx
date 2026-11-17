@@ -75,7 +75,7 @@ Elemenx.Trait('SceneScatter', {
 				return state.Streams[key].Count;
 			}).length + state.Chosen.length, Copies: Object.keys(state.Streams).reduce(function (sum, key) {
 				return sum + state.Streams[key].Count;
-			}, 0), Blades: state.Grass ? state.Grass.Blades : 0, Tiles: state.Chosen.length, Proxies: Object.keys(state.Tiles).filter(function (key) {
+			}, 0), Blades: (state.Grass ? state.Grass.Blades : 0) + (planet.Grass ? planet.Grass.Blades : 0), Tiles: state.Chosen.length, Proxies: Object.keys(state.Tiles).filter(function (key) {
 				return state.Tiles[key].Mesh;
 			}).length, Cached: state.Cached || 0};
 		};
@@ -86,8 +86,15 @@ Elemenx.Trait('SceneScatter', {
 		 */
 		function dithered (fragment) {
 			var at = fragment.lastIndexOf('void main() {');
+			var end = fragment.lastIndexOf('}');
+			var body = fragment.slice(at + 13, end);
 
-			return fragment.slice(0, at) + 'in vec2 vFade;\nuniform float uDither;\nvoid main() {\n\tfloat hole = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uDither * 0.618034);\n\tif (hole >= vFade.y || hole < 1.0 - vFade.x) discard;' + fragment.slice(at + 13);
+			/*
+			 * While it fades it is told to the frames as standing (its alpha above a half, the code of its mirror kept): the
+			 * pattern turns each frame and they add it up. Regression: leaves that flutter are told as moving, the frames took
+			 * little of what was before, and a tree in between two levels stayed a hatch of holes.
+			 */
+			return fragment.slice(0, at) + 'in vec2 vFade;\nuniform float uDither;\nvoid main() {\n\tfloat hole = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uDither * 0.618034);\n\tif (hole >= vFade.y || hole < 1.0 - vFade.x) discard;' + body + '\tif ((vFade.x < 0.999 || vFade.y < 0.999) && outColor.a < 0.5) outColor.a = outColor.a <= 0.0 ? 1.0 : 1.0 - max(0.0, 0.45 - outColor.a) / 0.4 * 0.45;\n' + fragment.slice(end);
 		}
 
 		/*
@@ -201,8 +208,14 @@ Elemenx.Trait('SceneScatter', {
 			return state.Facades[key];
 		}
 
-		engine.ScatterWarm = function () {
+		/* Its programs, asked for when the scene starts; with the fragments of the Scene (more: {Top, Voxel}) those it draws all it sows by. */
+		engine.ScatterWarm = function (more) {
 			programs();
+
+			if (more) {
+				state.Top = state.Top || renderer.Program(shaders.Vertex, more.Top);
+				state.Voxel = state.Voxel || renderer.Program(shaders.Vertex, more.Voxel);
+			}
 		};
 
 		/*
@@ -1395,7 +1408,11 @@ Elemenx.Trait('SceneScatter', {
 				if (covered[square.X + ':' + square.Z]) return;
 
 				var x = square.Center[0] - eye[0];
-				var y = square.Center[1] - eye[1];
+				/*
+				 * At the height of what it holds nearest the eye (Span). Regression: at the height of the ground in its middle, a
+				 * square of a cave under a mountain was 60 m over the eye in it, out of the view, and nothing in the cave was drawn.
+				 */
+				var y = (square.Span ? Math.max(square.Span[0], Math.min(square.Span[1], eye[1])) : square.Center[1]) - eye[1];
 				var z = square.Center[2] - eye[2];
 				/* As far round its middle as its tallest thing reaches: a tower whose top is in view is drawn, its square's middle out of it. */
 				var round = radius + tallest(square);
@@ -1954,7 +1971,7 @@ Elemenx.Trait('SceneScatter', {
 						return [made[0] + (0.86 - made[0]) * snow * 0.8, made[1] + (0.9 - made[1]) * snow * 0.8, made[2] + (0.95 - made[2]) * snow * 0.8];
 					};
 
-					engine.DrawReady(each[0], programs().Grass, Object.assign(Object.create(uniforms), {uOrigin: vectors.Subtract([0, 0, 0], eye), uField: grass.Texture, uFree: grass.Free, uFieldSize: [ground.Field.Size, grass.Side], uBlade: [(Number(rule.Height) || 0.7) * (1 - snow * 0.85), Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: seasoned(engine.Paint(rule.Root || '#2f5a22'), 0.5), uTip: seasoned(engine.Paint(rule.Color || '#7fae4a'), 1), uSun: ground.Sun, uSunColor: ground.SunColor, uEye: target}), {Cull: 'none'});
+					engine.DrawReady(each[0], programs().Grass, Object.assign(Object.create(uniforms), {uOrigin: vectors.Subtract([0, 0, 0], eye), uField: grass.Texture, uFree: grass.Free, uFieldSize: [ground.Field.Size, grass.Side], uFieldCenter: [0, 0], uBlade: [(Number(rule.Height) || 0.7) * (1 - snow * 0.85), Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: seasoned(engine.Paint(rule.Root || '#2f5a22'), 0.5), uTip: seasoned(engine.Paint(rule.Color || '#7fae4a'), 1), uSun: ground.Sun, uSunColor: ground.SunColor, uEye: target}), {Cull: 'none'});
 				}
 			});
 		}
@@ -2314,6 +2331,95 @@ Elemenx.Trait('SceneScatter', {
 			planet.Moved = true;
 		};
 
+		/*
+		 * The grass of a planet round the eye (none: null): its field in the frame of the squares, {Key, Center [x, z], Size
+		 * (metres a side), Side (texels a side), Data (Float32, four a texel: the height of the ground, how much grass), Rule
+		 * (as the trait Grass: Height, Density, Color, Root, Clumps, Patch, Spread)}; drawn as a ground's (drawGrass).
+		 */
+		engine.ScatterPlanetGrass = function (field) {
+			var grass = planet.Grass;
+			if (grass && field && grass.Key === field.Key) return;
+
+			if (grass && grass.Texture)
+				grass.Texture.Destroy();
+
+			planet.Grass = field ? Object.assign({}, field, {Rule: field.Rule || field.Grass, Texture: renderer.Texture({Width: field.Side, Height: field.Side, Data: field.Data}, {Float: true, Nearest: true}), Near: grass ? grass.Near : bladesMesh(1300, 7), Far: grass ? grass.Far : bladesMesh(330, 7), Blades: 0}) : null;
+
+			if (!field && grass) {
+				grass.Near.Destroy();
+				grass.Far.Destroy();
+			}
+		};
+
+		/* The height of the ground of a field of the grass of a planet at a point of the frame (metres). */
+		function planetHeight (grass, x, z) {
+			var last = grass.Side - 1;
+			var u = Math.max(0, Math.min(last - 0.001, ((x - grass.Center[0]) / grass.Size + 0.5) * last));
+			var v = Math.max(0, Math.min(last - 0.001, ((z - grass.Center[1]) / grass.Size + 0.5) * last));
+			var column = Math.floor(u);
+			var row = Math.floor(v);
+			var at = (row * grass.Side + column) * 4;
+			var up = at + grass.Side * 4;
+			var below = grass.Data[at] + (grass.Data[at + 4] - grass.Data[at]) * (u - column);
+			var above = grass.Data[up] + (grass.Data[up + 4] - grass.Data[up]) * (u - column);
+
+			return below + (above - below) * (v - row);
+		}
+
+		/* The grass of a planet drawn as a ground's: patches of blades round the eye (of the frame), in view, near ones thicker. */
+		function planetGrassDraw (uniforms, matrix, eye, sun, sunColor) {
+			var grass = planet.Grass;
+			var rule = grass && grass.Rule;
+			var view;
+			var extent = 7;
+			var patches = 22;
+			var near = [];
+			var far = [];
+			var middleX;
+			var middleZ;
+			var x;
+			var z;
+
+			if (!grass || !rule || self.Graphics().Grass === false) return;
+
+			if (!state.WhiteFree)
+				state.WhiteFree = renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([255])}, {Single: true});
+
+			view = planes(matrix);
+			middleX = Math.round(eye[0] / extent) * extent;
+			middleZ = Math.round(eye[2] / extent) * extent;
+
+			for (z = -patches; z <= patches; z++) {
+				for (x = -patches; x <= patches; x++) {
+					var px = middleX + x * extent;
+					var pz = middleZ + z * extent;
+					var dx = px + extent / 2 - eye[0];
+					var dy = planetHeight(grass, px, pz) - eye[1];
+					var dz = pz + extent / 2 - eye[2];
+					var distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+					var reach = patches * extent;
+					if (x * x + z * z > patches * patches || distance > reach * 2) continue;
+
+					if (!view.every(function (plane) {
+						return plane[0] * dx + plane[1] * dy + plane[2] * dz + plane[3] > -extent * 2;
+					})) continue;
+
+					(distance < reach * 0.42 ? near : far).push(px, pz, 0, 0);
+				}
+			}
+
+			grass.Near.Instance({aInstance: {Size: 4, Data: new Float32Array(near)}}, near.length / 4);
+			grass.Far.Instance({aInstance: {Size: 4, Data: new Float32Array(far)}}, far.length / 4);
+
+			grass.Blades = near.length / 4 * 1300 + far.length / 4 * 330;
+
+			[[grass.Near, near], [grass.Far, far]].forEach(function (each) {
+				if (!each[1].length) return;
+
+				engine.DrawReady(each[0], programs().Grass, Object.assign(Object.create(uniforms), {uViewProjection: matrix, uOrigin: [-eye[0], -eye[1], -eye[2]], uField: grass.Texture, uFree: state.WhiteFree, uFieldSize: [grass.Size, grass.Side], uFieldCenter: grass.Center, uBlade: [Number(rule.Height) || 0.7, Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: engine.Paint(rule.Root || '#2f5a22').slice(0, 3), uTip: engine.Paint(rule.Color || '#7fae4a').slice(0, 3), uSun: sun, uSunColor: sunColor, uEye: eye, uGlowOn: 0}), {Cull: 'none'});
+			});
+		}
+
 		/* The copies of each level in view and within reach (metres): matrix sees from the eye (eye, of the frame of the squares). */
 		function planetGather (matrix, eye, reach) {
 			var view = planes(matrix);
@@ -2356,6 +2462,8 @@ Elemenx.Trait('SceneScatter', {
 			var files;
 			var many;
 			var far;
+
+			planetGrassDraw(uniforms, matrix, eye, sun, sunColor);
 
 			if (!planet.Squares.length) return;
 
@@ -2759,6 +2867,8 @@ Elemenx.Trait('SceneScatter', {
 				'uniform sampler2D uField;',
 				'uniform sampler2D uFree;',
 				'uniform vec2 uFieldSize;',
+				/* The middle of its field (a planet's round the eye; a ground's in its middle, 0). */
+				'uniform vec2 uFieldCenter;',
 				'uniform vec4 uBlade;',
 				'uniform vec3 uClump;',
 				'out vec3 vWorld;',
@@ -2775,7 +2885,7 @@ Elemenx.Trait('SceneScatter', {
 				'	return mix(mix(fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5), fract(sin(dot(i + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5), f.x), mix(fract(sin(dot(i + vec2(0.0, 1.0), vec2(127.1, 311.7))) * 43758.5), fract(sin(dot(i + vec2(1.0, 1.0), vec2(127.1, 311.7))) * 43758.5), f.x), f.y);',
 				'}',
 				'vec2 ground(vec2 place) {',
-				'	vec2 at = (place / uFieldSize.x + 0.5) * (uFieldSize.y - 1.0);',
+				'	vec2 at = ((place - uFieldCenter) / uFieldSize.x + 0.5) * (uFieldSize.y - 1.0);',
 				'	ivec2 cell = ivec2(floor(at));',
 				'	vec2 t = at - vec2(cell);',
 				'	vec2 a = mix(texelFetch(uField, cell, 0).xy, texelFetch(uField, cell + ivec2(1, 0), 0).xy, t.x);',
@@ -2802,7 +2912,7 @@ Elemenx.Trait('SceneScatter', {
 				'	float shape = 0.55 + 0.9 * tuft;',
 				/* Where the ground is kept bare (a road, a river, a clearing), a metre a texel: its texels are at its edges. */
 				'	vec2 freeSide = vec2(textureSize(uFree, 0));',
-				'	float free = texture(uFree, ((place / uFieldSize.x + 0.5) * (freeSide - 1.0) + 0.5) / freeSide).r;',
+				'	float free = texture(uFree, (((place - uFieldCenter) / uFieldSize.x + 0.5) * (freeSide - 1.0) + 0.5) / freeSide).r;',
 				'	float tall = uBlade.x * shape * (1.0 + (own - 0.5) * 2.0 * uClump.z) * mix(1.0, 0.6 + 0.6 * thick, uClump.x) * smoothstep(0.35, 0.8, land.y) * smoothstep(0.1, 0.9, free) * fade * step(seed, uBlade.y * thick);',
 				'	vec2 side = vec2(cos(aNormal.y), sin(aNormal.y));',
 				'	vec3 world = vec3(place.x, land.x, place.y) + uOrigin;',

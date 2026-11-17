@@ -29,6 +29,13 @@ Elemenx.Trait('ScenePiping', {
 		var lives = {water: 12, sewage: 20, fuel: 15, oil: 60, mud: 60};
 		var budget = 400;
 
+		/* Asked for when the scene starts (engine.Warm), waited for with the rest: none is made in the play. */
+		(engine.Warms = engine.Warms || []).push(function (setting) {
+			if (setting !== 'ground' || !renderer) return;
+
+			state.Program = state.Program || renderer.Program(self.PipingShaders().Vertex, self.PipingShaders().Drop);
+		});
+
 		function ground () {
 			var field = scene.Ground && scene.Ground.Field;
 

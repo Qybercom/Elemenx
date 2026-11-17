@@ -6,7 +6,7 @@
 	</div>
 	<p class="elemenx-caption" aria-live="polite">{{DeepNote}}</p>
 	<div class="scene-demo-scene">
-		<Scene Team="blue" [hoverMark]="SpaceMark" Speed="0.02" DaySeconds="30" Cosmos="nebula" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="DeepReady" (hover)="DeepHovered" (select)="DeepSelected">
+		<Scene Team="blue" [hoverMark]="SpaceMark" Speed="0.02" DaySeconds="30" Cosmos="nebula" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="DeepReady" (hover)="DeepHovered" (select)="DeepSelected"><DemoLoading slot="loading" Title="Deep space" />
 			<SceneObject ID="vega" Kind="star" Name="Vega" Temperature="9600" Mass="2.1" />
 			<SceneObject ID="terra" Kind="planet" Name="Terra" Distance="1.4" Type="terran" />
 			<SceneObject ID="pebble" Kind="planetoid" Name="Pebble" Distance="2.6" Radius="140" />

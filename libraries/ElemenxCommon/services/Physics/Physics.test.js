@@ -42,6 +42,39 @@ describe('Contract: Physics World, solid bodies that fall, strike and rest', fun
 	});
 
 	/*
+	 * A ground with a volume (Solid): a room in the rock under a hill, 4 m high (floor 0, roof 4) and 10 m wide. Its floor holds
+	 * a ball, its wall stops one thrown at it, its roof one thrown up; the hill over it is no floor; a ray meets its roof.
+	 */
+	it('holds what is in a cave of a Solid ground by its floor, its walls and its roof, and lets a ray meet them', function () {
+		function solid (x, y, z) {
+			/* Out of the room (over 0) and under the top of the hill: rock. */
+			var room = Math.max(-y, y - 4, Math.abs(x) - 5, Math.abs(z) - 5);
+
+			return Math.min(20 - y, room);
+		}
+
+		var world = physics.World({Solid: solid});
+		var resting = world.Add({Shape: 'sphere', Radius: 0.5, At: [0, 2, 0]});
+		var thrown = world.Add({Shape: 'sphere', Radius: 0.5, At: [-2, 0.5, 3], Way: [12, 0, 0], Bounce: 0.5});
+		var up = world.Add({Shape: 'box', Size: [0.6, 0.6, 0.6], At: [2, 1, -3], Way: [0, 14, 0]});
+		var hit;
+
+		run(world, 3);
+
+		/* On its floor, not on the top of the hill at 20; held in by its wall and under its roof. */
+		expect(resting.At[1]).toBeCloseTo(0.5, 1);
+		expect(thrown.At[0]).toBeLessThan(5 - 0.5 + 0.05);
+		expect(up.At[1]).toBeLessThan(4);
+		expect(up.At[1]).toBeGreaterThan(0.2);
+
+		hit = world.Ray([0, 1, 0], [0, 1, 0], 10);
+
+		expect(hit.Body).toBeNull();
+		expect(hit.Distance).toBeCloseTo(3, 1);
+		expect(hit.Normal[1]).toBeLessThan(-0.9);
+	});
+
+	/*
 	 * A tower of twelve boxes stands: it settles and sleeps, its top where it was. The solver was made of numbers (no arrays
 	 * made for each push) and must hold it as it did; a start of each contact from what it pressed before made it fall.
 	 */

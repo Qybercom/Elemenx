@@ -27,8 +27,17 @@ Elemenx.Trait('ScenePhysics', {
 
 		function world () {
 			if (!state.World) {
+				/*
+				 * Its ground: of a ground with a volume, its density (Solid): the floor, the walls and the roof of a cave hold
+				 * what falls there. Regression: of its heights alone, a box let fall in a cave fell through its floor to the top
+				 * of the hill over it, and went through its walls.
+				 */
 				state.World = physics.World({Ground: function (x, z) {
 					return scene.Ground && scene.Ground.Field ? scene.Ground.Field.Height(x, z) : 0;
+				}, Solid: function (x, y, z) {
+					var field = scene.Ground && scene.Ground.Field;
+
+					return field ? field.Volume ? field.Density(x, y, z) : field.Height(x, z) - y : -y;
 				}, Touch: function (a, b, contact) {
 					self.$Emit('touch', {ID: a.ID, With: b ? b.ID : null, At: contact.At, Normal: contact.Normal, Impulse: contact.Impulse});
 				}});
@@ -59,7 +68,8 @@ Elemenx.Trait('ScenePhysics', {
 
 			take(body, settings);
 
-			body.At = [x, scene.Ground.Field.Height(x, z) + number(object.Values.Lift, 0) + rise(body), z];
+			/* Z: the floor it is set on, where one is over another (a cave under a hill). */
+			body.At = [x, scene.Ground.Field.Height(x, z, object.Values.Z === undefined ? undefined : number(object.Values.Z, 0)) + number(object.Values.Lift, 0) + rise(body), z];
 
 			return world().Add(body);
 		}

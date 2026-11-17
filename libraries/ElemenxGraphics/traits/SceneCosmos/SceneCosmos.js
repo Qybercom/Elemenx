@@ -207,10 +207,10 @@ Elemenx.Trait('SceneCosmos', {
 		}
 
 		/* Pillars are most of what the card has to compile: a sky without them does not wait for them. */
-		function program (pillars) {
+		function program (pillars, waited) {
 			var name = pillars ? 'Program' : 'Plain';
 
-			space[name] = space[name] || renderer.Program(graphics.Shaders.Quad, pillars ? shaders.Bake : shaders.Bake.replace('vec4 standing(vec3 d, vec3 s) {', 'vec4 standing(vec3 d, vec3 s) {\n\treturn vec4(0.0);'), true);
+			space[name] = space[name] || renderer.Program(graphics.Shaders.Quad, pillars ? shaders.Bake : shaders.Bake.replace('vec4 standing(vec3 d, vec3 s) {', 'vec4 standing(vec3 d, vec3 s) {\n\treturn vec4(0.0);'), !waited);
 
 			return space[name];
 		}
@@ -397,6 +397,37 @@ Elemenx.Trait('SceneCosmos', {
 
 			return holder.Cube;
 		};
+
+		/*
+		 * Asked for when the scene starts (engine.Warm), waited for with the rest: the program of its sky (of pillars or not), of
+		 * the sky round the eye and what flies past it, of a warp; of a galaxy the one of its band from inside it.
+		 */
+		(engine.Warms = engine.Warms || []).push(function (setting) {
+			if (!renderer) return;
+
+			if (setting === 'galaxy') {
+				program(false, true);
+
+				return;
+			}
+
+			if (self.Cosmos)
+				program(settings(self.Cosmos).Uniforms.uPillars > 0, true);
+
+			if (setting === 'ground')
+				program(false, true);
+
+			programs.Far = programs.Far || renderer.Program(graphics.Shaders.Quad, shaders.Far);
+			programs.Motes = programs.Motes || renderer.Program(shaders.MoteVertex, shaders.Mote);
+			programs.Warp = programs.Warp || renderer.Program(shaders.WarpVertex, shaders.Warp);
+		});
+
+		/* The sky of the system till it is baked whole: a stage of the loading (a face of its cube a frame). */
+		(engine.Bakes = engine.Bakes || []).push(function () {
+			if (!self.Cosmos || self.Setting === 'galaxy' || !renderer) return null;
+
+			return {Name: 'sky', Done: space.Key === settings(self.Cosmos).Key + size() ? 6 : space.Next ? space.Next.Face : 0, Total: 6};
+		});
 
 		engine.CosmosReady = function () {
 			return !!self.Cosmos && space.Key === settings(self.Cosmos).Key + size();

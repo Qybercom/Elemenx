@@ -361,7 +361,7 @@ describe('Contract: the deep space of a Scene: black holes, wormholes, comets, q
 		frames(scene, 2);
 
 		/* Without one, as its trait says. */
-		expect(engine.StarLook('vega')).toMatchObject({Parts: [1, 1, 1, 0], Shape: [5, 1, 1, 1], Tint: [1, 1, 1]});
+		expect(engine.StarLook('vega')).toMatchObject({Parts: [1, 1, 1, 0], Shape: [5, 1, 3, 1], Tint: [1, 1, 1]});
 
 		scene.Change('vega', {Traits: {Star: {Blueprint: graph, Parameters: {Activity: 2, Cycle: 40}, Flares: 0.5}}});
 
@@ -414,11 +414,80 @@ describe('Contract: the deep space of a Scene: black holes, wormholes, comets, q
 
 		frames(scene, 1);
 
-		expect(engine.StarLook('vega').Shape).toEqual([5, 1, 1, 1]);
-		expect(engine.StarLook('vega').Shape).toEqual([5, 1, 1, 1]);
+		expect(engine.StarLook('vega').Shape).toEqual([5, 1, 3, 1]);
+		expect(engine.StarLook('vega').Shape).toEqual([5, 1, 3, 1]);
 		expect(told.filter(function (one) {
 			return one.Kind === 'star';
 		}).length).toBe(1);
+	});
+
+	/*
+	 * Regression: its prominences went by the time times their speed; a speed of a Blueprint that changes threw them whole
+	 * rounds at once, the longer the scene ran the more, and they flickered. Now their speed is added up a step at a time; the
+	 * last of them comes and goes softly. Speed is a parameter of the star of the library (faster than before).
+	 */
+	it('moves its prominences on by their speed a step at a time, however the speed changes, faster as the Speed of its Blueprint says', async function () {
+		var made = await mount();
+		var scene = made.Scene;
+		var engine = scene.Engine();
+		var inner = scene.Scene();
+		var graph = scene.LibraryStar();
+		var look = Elemenx.Service('Blueprints').Compile(graph);
+		var ready = engine.DrawReady;
+		var phases = [];
+		var vega;
+
+		expect(graph.parameters.filter(function (one) {
+			return one.key === 'Speed';
+		})[0].value).toBeGreaterThan(1);
+		expect(look.Look({Activity: 1, Cycle: 40, Speed: 6}, 0).Speed).toBeCloseTo(2 * look.Look({Activity: 1, Cycle: 40, Speed: 3}, 0).Speed, 6);
+
+		scene.Change('vega', {Traits: {Star: {Blueprint: graph}}});
+
+		frames(scene, 2);
+
+		vega = inner.Objects.vega;
+		inner.Camera.Position = [vega.World[0], vega.World[1], vega.World[2] + vega.Size * 20];
+
+		inner.Active.forEach(function (object) {
+			if (object !== vega)
+				object.Hidden = true;
+		});
+
+		function drawAt (seconds, speed) {
+			var later = [];
+
+			vega.Traits.Star.Parameters = {Activity: 1, Cycle: 40, Speed: speed};
+			inner.Seconds = seconds;
+
+			engine.DeepDraw([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], later, [1, 0, 0], [0, 1, 0], [1e-9, 1e30]);
+
+			engine.DrawReady = function (mesh, program, uniforms) {
+				if (uniforms && uniforms.uShape)
+					phases.push(uniforms.uPhase);
+
+				return true;
+			};
+
+			try {
+				later.forEach(function (run) {
+					run();
+				});
+			}
+			finally {
+				engine.DrawReady = ready;
+			}
+		}
+
+		drawAt(5000, 3);
+		drawAt(5000.1, 3);
+		drawAt(5000.2, 9);
+
+		/* A tenth of a second at its speed, then a tenth at three times it: a little on each time, never a jump. */
+		expect(phases.length).toBe(3);
+		expect(phases[1] - phases[0]).toBeGreaterThan(0);
+		expect(phases[1] - phases[0]).toBeLessThan(1);
+		expect(phases[2] - phases[1]).toBeCloseTo((phases[1] - phases[0]) * 3, 1);
 	});
 
 	/* Regression: near where the two parts of the depth meet, the corona of a star was drawn in both, twice as bright, and its prominences flickered. */

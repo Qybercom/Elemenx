@@ -14,20 +14,25 @@ Biome правила — биом земли по климату, где оно 
 
 LibraryScatter(rule) берёт граф ресурса `ElemenxGraphics/scatter` (blueprints/scatter.json) и заполняет его параметры (MinHeight, MaxHeight, MaxSlope, Cover, Patch, Clumps) и зерно `{Seed}` через Blueprints.Fill; приложение может подложить свой граф под тем же именем.
 
+Under правила (floor или ceiling) сеет вещи на пол или свод пещеры под скалой земли с объёмом, под открытым небом — ничего; Under(field, place, ceiling) — высота этого пола или свода в точке, null, если его нет.
+
 ## Методы
 
 - `Work()`
 - `Compile(rules)`
 - `LibraryScatter(rule)`
+- `Under(field, place, ceiling)`
 - `Sow(job)`
 
 ## Тесты
 
 - [sows by the rules: the things of each model in their squares, none where the sketch keeps the ground free, the way stopped where they stand](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L60) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
-- [sows the same things in a worker as in the page, the field made there of its options, the context shared once](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L97) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
-- [sows the rules of a land by its climate only in that land, mingled where lands meet, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L118) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
-- [sows a rule of a graph: its library graph the very same things as the rule, a graph of its own its sizes, turns and shapes, in a worker too](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L172) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
-- [keeps the whole of a large thing off a road, not only its place](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L242) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
-- [places the things of a line every step of it, whatever its pieces, the same from its start in every square](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L267) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
-- [reads the graphs of the library from its resources, one of the same name of an Application in their place](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L853) — `tests/regression/blueprints.test.js`
+- [sows a rule Under on the floor and the roof of a tunnel under a hill, none on the hill over it nor under the sky](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L101) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
+- [sets a tree a little into the ground where it slopes, as far as its roots reach; level ground and a line as they were](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L143) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
+- [sows the same things in a worker as in the page, the field made there of its options, the context shared once](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L169) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
+- [sows the rules of a land by its climate only in that land, mingled where lands meet, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L190) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
+- [sows a rule of a graph: its library graph the very same things as the rule, a graph of its own its sizes, turns and shapes, in a worker too](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L244) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
+- [keeps the whole of a large thing off a road, not only its place](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L314) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
+- [places the things of a line every step of it, whatever its pieces, the same from its start in every square](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L339) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
+- [reads the graphs of the library from its resources, one of the same name of an Application in their place](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L884) — `tests/regression/blueprints.test.js`
 - [makes what is past its outline: a cliff falls, a passage keeps its way open with a road to the middle, a wall stands with a gate, a side with a location beside and no passage stays open](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneLocations/SceneLocations.test.js#L87) — `libraries/ElemenxGraphics/services/SceneLocations/SceneLocations.test.js`

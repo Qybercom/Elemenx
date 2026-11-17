@@ -499,6 +499,150 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 	}, 60000);
 
 	/*
+	 * Regression: its rivers ran in straight lines between their points on the planet (a valley cut straight, a long wall
+	 * across the land), bent only in a location by where its run began (two locations beside each other bent it otherwise),
+	 * a tributary ending beside its river. Now each bends by the kilometres from its source, the same in every view of it;
+	 * a tributary ends on the way of the river it joins, their bends none there.
+	 */
+	it('bends its rivers by the kilometres from their sources, the same everywhere, a tributary ending on its river', function () {
+		var options = {Seed: 'terra', Ocean: 0.62, Radius: 6371};
+		var size = 64;
+		var heights = new Float32Array(6 * size * size);
+		var face;
+		var planet;
+		var courses;
+		var most = 0;
+		var on = 0;
+		var tributaries = 0;
+		var index;
+
+		for (face = 0; face < 6; face++)
+			heights.set(planets.Heights(options, face, size, 0, size).Data, face * size * size);
+
+		planets.UseRivers('bent-rivers', planets.Drainage(heights, size, 4).Rivers);
+
+		planet = planets.Make(Object.assign({}, options, {Rivers: 'bent-rivers'}));
+		courses = planet.Courses();
+
+		courses.forEach(function (course, number) {
+			var k;
+			var t;
+
+			for (k = 0; k + 1 < course.Points.length; k += 3) {
+				for (t = 0.1; t < 1; t += 0.2) {
+					var a = course.Points[k];
+					var b = course.Points[k + 1];
+					var chord = planets.Unit([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]);
+					var bent = planet.RiverAt(number, k, t);
+
+					/* Aside of its chord, as far as twice its width at most. */
+					most = Math.max(most, Math.acos(Math.min(1, planets.Dot(chord, bent.Direction))) * 6371);
+
+					expect(Math.acos(Math.min(1, planets.Dot(chord, bent.Direction))) * 6371).toBeLessThan(2 * 0.015 * Math.sqrt(bent.Flow) + 1e-6);
+
+					/* Its nearest river there is itself, on its way. */
+					if (planet.River(bent.Direction).Far < 0.005)
+						on++;
+				}
+			}
+		});
+
+		expect(most).toBeGreaterThan(0.05);
+		expect(on).toBeGreaterThan(50);
+
+		/* A tributary: its last point on the way of another river (its bends none there). */
+		for (index = 0; index < courses.length; index++) {
+			var last = courses[index].Points[courses[index].Points.length - 1];
+
+			if (courses[index].Level[courses[index].Level.length - 1] > 0) {
+				tributaries++;
+
+				expect(planet.River(last).Far).toBeLessThan(0.01);
+			}
+		}
+
+		expect(tributaries).toBeGreaterThan(3);
+
+		/* Two locations beside each other on its biggest river: their rivers on its very way, as its globe has it. */
+		var locations = Elemenx.Service('SceneLocations');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var biggest = courses.map(function (course, number) {
+			return number;
+		}).sort(function (a, b) {
+			return courses[b].Flow[courses[b].Flow.length - 1] - courses[a].Flow[courses[a].Flow.length - 1];
+		})[0];
+		var middle = Math.floor(courses[biggest].Points.length / 2);
+		var checked = 0;
+
+		[0.3, 0.7].forEach(function (t) {
+			var place = planets.LatLon(planet.RiverAt(biggest, middle, t).Direction);
+			var given = Object.assign({}, options, {Rivers: 'bent-rivers'});
+			var grid = locations.Grid(Object.assign({}, options, {LocationSize: 3}));
+			var at = planets.CellPlace(grid.Radius, locations.Cell(locations.At(Object.assign({}, options, {LocationSize: 3}), place[0], place[1])));
+			var sketch = locations.Streams(given, at);
+			var site = terrain.Site({Options: given, Latitude: at.Latitude, Longitude: at.Longitude, Turn: at.Turn});
+
+			sketch.Layers[0].Items.forEach(function (item) {
+				item.Points.forEach(function (point) {
+					checked++;
+
+					expect(planet.River(site.Direction(point[0], point[1])).Far).toBeLessThan(0.02);
+				});
+			});
+		});
+
+		expect(checked).toBeGreaterThan(20);
+	}, 60000);
+
+	/*
+	 * A great river to the sea over low land ends in a delta: its arms out of its way some tens of kilometres before its
+	 * mouth, fanned out to the sea on either side of it, each a river of its own; a small one none.
+	 */
+	it('ends a great river over low land in a delta of arms fanned out to the sea, a small one in none', function () {
+		var line = [];
+		var bare = planets.Make({Seed: 'delta', Radius: 6371});
+		var coast = null;
+		var k;
+
+		/* A coast on its equator: land, then the sea a degree on. */
+		for (k = 0; k < 3600 && coast === null; k++) {
+			if (bare.Elevation(planets.Direction(0, k * 0.1)) > 20 && bare.Elevation(planets.Direction(0, k * 0.1 + 1)) < -50)
+				coast = k * 0.1;
+		}
+
+		expect(coast).not.toBe(null);
+
+		for (k = 0; k <= 20; k++)
+			line.push(planets.Direction(0, coast + k * 0.05));
+
+		planets.UseRivers('delta-rivers', [{Points: line, Flow: line.map(function () { return 800; }), Level: line.map(function (point, index) { return Math.round(50 * (1 - index / 20)); })}]);
+		planets.UseRivers('small-rivers', [{Points: line, Flow: line.map(function () { return 100; }), Level: line.map(function (point, index) { return Math.round(50 * (1 - index / 20)); })}]);
+
+		var planet = planets.Make({Seed: 'delta', Radius: 6371, Rivers: 'delta-rivers'});
+		var courses = planet.Courses();
+		var arms = courses.slice(1);
+		var ends = arms.map(function (arm) {
+			return arm.Points[arm.Points.length - 1];
+		});
+
+		expect(arms.length).toBe(4);
+		expect(planets.Make({Seed: 'delta', Radius: 6371, Rivers: 'small-rivers'}).Courses().length).toBe(1);
+
+		arms.forEach(function (arm) {
+			/* Out of the way of its river, tens of kilometres before its mouth; to the sea. */
+			var start = arm.Points[0];
+			var mouth = line[line.length - 1];
+
+			expect(planet.River(start).Far).toBeLessThan(0.05);
+			expect(Math.acos(Math.min(1, planets.Dot(start, mouth))) * 6371).toBeGreaterThan(15);
+			expect(arm.Level[arm.Level.length - 1]).toBe(0);
+		});
+
+		/* Fanned out: its outer arms apart by over ten kilometres where they come to the sea. */
+		expect(Math.acos(Math.min(1, planets.Dot(ends[0], ends[ends.length - 1]))) * 6371).toBeGreaterThan(10);
+	});
+
+	/*
 	 * Its settlements: where people would live on its land, a few cities, more towns, many villages, each apart from the
 	 * others by its size; their lights at night a spot round each on the faces of its globe, none far from them.
 	 */
@@ -1009,11 +1153,11 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 		expect(coast).not.toBe(null);
 		expect(soft).toBeGreaterThan(0);
 
-		/* Where each point is on its square, and a skirt under each edge point, lower. */
+		/* Where each point is on its square (12 a point: then where a point of its edge goes beside coarser squares), and a skirt under each edge point, lower. */
 		expect(patch.Geometry.Positions.length / 3).toBe(side * side + 4 * 8);
-		expect(patch.Geometry.Materials.length).toBe(patch.Geometry.Positions.length / 3 * 8);
+		expect(patch.Geometry.Materials.length).toBe(patch.Geometry.Positions.length / 3 * 12);
 		expect(patch.Geometry.Materials.slice(0, 2)).toEqual([0, 0]);
-		expect(patch.Geometry.Materials.slice((side * side - 1) * 8, (side * side - 1) * 8 + 2)).toEqual([1, 1]);
+		expect(patch.Geometry.Materials.slice((side * side - 1) * 12, (side * side - 1) * 12 + 2)).toEqual([1, 1]);
 
 		[0, 4, 8].forEach(function (column) {
 			var top = [patch.Geometry.Positions[column * 3] + patch.Center[0], patch.Geometry.Positions[column * 3 + 1] + patch.Center[1], patch.Geometry.Positions[column * 3 + 2] + patch.Center[2]];
@@ -1095,6 +1239,83 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 		expect(same).toBe(found);
 		expect(wooded).toBeGreaterThan(0);
 	}, 120000);
+
+	/*
+	 * Its snow for its ground near: how much of each texel snow lies on (Snow), where it is cold and not steep; none where it
+	 * is warm nor on the sea. The ground near draws the snow of its biome there, not its grass under a white picture.
+	 */
+	it('tells in its picture how much of each texel snow lies on: where it is cold, none where it is warm', function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var field = terrain.Sphere({Planet: {Seed: 'snowy', Ocean: 0.4, BiomeList: terrain.Biomes({Biomes: ['temperate', 'taiga', 'tundra', 'desert']})}});
+		var planet = field.Planet;
+		var cold = null;
+		var warm = null;
+		var face;
+		var u;
+		var v;
+
+		for (face = 0; face < 6; face++) {
+			for (u = -0.8; u <= 0.81; u += 0.1) {
+				for (v = -0.8; v <= 0.81; v += 0.1) {
+					var sample = planet.Sample(terrain.Face(face, u, v));
+					if (!sample.Land || sample.Elevation < 50) continue;
+
+					if (!cold && sample.Celsius < -12 && planet.Slope(sample.Direction, 0.3) < 0.2)
+						cold = [face, u, v];
+
+					if (!warm && sample.Celsius > 15)
+						warm = [face, u, v];
+				}
+			}
+		}
+
+		expect(cold).not.toBe(null);
+		expect(warm).not.toBe(null);
+
+		var white = field.Picture(cold[0], cold[1], cold[2], 0.002, 9);
+		var green = field.Picture(warm[0], warm[1], warm[2], 0.002, 9);
+
+		expect(white.Snow.length).toBe(81);
+		expect(Math.max.apply(null, Array.prototype.slice.call(white.Snow))).toBeGreaterThan(200);
+		expect(Math.max.apply(null, Array.prototype.slice.call(green.Snow))).toBe(0);
+	}, 60000);
+
+	/*
+	 * Regression: a texel of a square took the color of the first land of its climate only; hills about a bound of two lands
+	 * (the land changes with the height) were a chessboard of both colors, a texel each, on the ground of a planet near.
+	 */
+	it('paints a texel of a square in the colors of the lands that hold there, each by how well; a sample tells them', function () {
+		var planets = Elemenx.Service('ScenePlanet');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var planet = {Lands: [{Name: 'meadow', Ground: {Low: [0.8, 0.6, 0.2]}}, {Name: 'wood', Ground: {Low: [0.1, 0.3, 0.1]}}]};
+		var base = {Land: true, Elevation: 300, Celsius: 20, Moisture: 0.5, Temperature: 0.7};
+		var both = [{Name: 'meadow', Weight: 0.6}, {Name: 'wood', Weight: 0.4}];
+		var meadow = planets.Color(planet, Object.assign({Biome: 'meadow', Pictured: true}, base), 'relief', 1);
+		var wood = planets.Color(planet, Object.assign({Biome: 'wood', Pictured: true}, base), 'relief', 1);
+		var mixed = planets.Color(planet, Object.assign({Biome: 'meadow', Mixed: both, Pictured: true}, base), 'relief', 1);
+		var field = terrain.Sphere({Planet: {Seed: 'mixed', Ocean: 0.3, BiomeList: terrain.Biomes({Biomes: ['temperate', 'taiga', 'desert', 'tundra']})}});
+		var sample = null;
+		var k;
+
+		for (k = 0; k < 3; k++)
+			expect(mixed[k]).toBeCloseTo(meadow[k] * 0.6 + wood[k] * 0.4, 5);
+
+		/* Not of a square (its globe): its first land, as it was. */
+		expect(planets.Color(planet, Object.assign({Biome: 'meadow', Mixed: both}, base), 'relief', 1)).toEqual(planets.Color(planet, Object.assign({Biome: 'meadow'}, base), 'relief', 1));
+
+		for (k = 0; k < 200 && !sample; k++) {
+			var one = field.Planet.Sample(planets.Direction(k * 0.7 - 70, k * 13.1));
+			if (one.Land && one.Mixed)
+				sample = one;
+		}
+
+		expect(sample).not.toBe(null);
+		expect(sample.Mixed[0].Name).toBe(sample.Biome);
+		expect(sample.Mixed.length).toBeGreaterThan(0);
+		expect(sample.Mixed.reduce(function (sum, one) {
+			return sum + one.Weight;
+		}, 0)).toBeCloseTo(1, 5);
+	});
 
 	/*
 	 * Where people live: a settlement is its houses in its middle (roofs and streets, no woods), its fields round it (parcels
@@ -1300,5 +1521,63 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 
 			expect(differs).toBeGreaterThan(0);
 		});
+	});
+
+	/* Places: what a developer changed of the settlements and the rivers a planet makes, laid over them each time in their order. */
+	it('lays what a developer changed of its settlements and rivers over those it makes, in their order, a change of nothing there left out', function () {
+		var planets = Elemenx.Service('ScenePlanet');
+		var base = {Seed: 'places', Ocean: 0.4};
+		var made = planets.Settlements(base, 3000).Settlements;
+		var a = made[0];
+		var b = made[1];
+		var to = planets.Direction(10, 20);
+		var added = planets.Direction(-5, 5);
+		var places = {Towns: [{Op: 'move', At: planets.Unit([a.Point[0] + 0.001, a.Point[1], a.Point[2]]), To: to}, {Op: 'kind', At: to, Kind: 'city'}, {Op: 'remove', At: b.Point}, {Op: 'add', Point: added, Kind: 'town', Size: 0.7}, {Op: 'kind', At: planets.Direction(-89, 0), Kind: 'city'}]};
+		var laid = planets.PlacedTowns(Object.assign({Places: places}, base), made);
+
+		expect(made.length).toBeGreaterThan(3);
+		expect(laid.length).toBe(made.length);
+		expect(laid[0].Kind).toBe('city');
+
+		laid[0].Point.forEach(function (value, axis) {
+			expect(value).toBeCloseTo(to[axis], 9);
+		});
+
+		expect(laid.some(function (town) {
+			return town.Point.join() === b.Point.join();
+		})).toBe(false);
+		expect(laid[laid.length - 1]).toEqual({Point: planets.Unit(added), Kind: 'town', Size: 0.7});
+		expect(made[0].Point).toEqual(a.Point);
+
+		/* Its settlements made with them: the same. */
+		expect(planets.Settlements(Object.assign({Places: places}, base), 3000).Settlements).toEqual(laid);
+
+		/* Its rivers: one removed by a point near it, one drawn, a point of no river left out. */
+		var rivers = [{Points: [planets.Direction(0, 0), planets.Direction(0, 1), planets.Direction(0, 2)], Flow: [50, 80, 120], Level: [200, 100, 10]}, {Points: [planets.Direction(10, 0), planets.Direction(10, 1)], Flow: [40, 60], Level: [50, 0]}];
+		var drawn = {Rivers: [{Op: 'remove', At: planets.Direction(0.05, 1)}, {Op: 'add', Points: [planets.Direction(20, 0), planets.Direction(20, 1)], Flow: 250}, {Op: 'remove', At: planets.Direction(-40, -40)}]};
+		var courses = planets.PlacedRivers({Places: drawn}, rivers);
+
+		expect(courses.length).toBe(2);
+		expect(courses[0]).toBe(rivers[1]);
+		expect(courses[1].Drawn).toBe(true);
+		expect(courses[1].Points.length).toBeGreaterThan(10);
+		expect(courses[1].Flow[0]).toBe(50);
+		expect(courses[1].Flow[courses[1].Flow.length - 1]).toBe(250);
+		expect(rivers.length).toBe(2);
+
+		/* A planet of them: the drawn one a river of it, the levels of its ground under it, the one removed none. */
+		var planet = planets.Make(Object.assign({Rivers: rivers, Places: drawn}, base));
+		var made2 = planet.Courses();
+
+		expect(made2.length).toBe(2);
+		expect(made2[1].Points.length).toBe(courses[1].Points.length);
+
+		made2[1].Level.forEach(function (level) {
+			expect(level).toBeGreaterThanOrEqual(0);
+			expect(Number.isFinite(level)).toBe(true);
+		});
+
+		expect(planet.River(planets.Direction(0, 1))).toBeNull();
+		expect(planet.River(planets.Direction(20, 0.5)).Far).toBeLessThan(1);
 	});
 });

@@ -1,0 +1,41 @@
+{
+	"version": 1,
+	"type": "texture",
+	"name": "cave-rock",
+	"texture": {
+		"Order": 6,
+		"Title": "cave rock",
+		"Group": "ground",
+		"Metres": 2.5,
+		"Size": 1024
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "pattern",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "\tvec2 w = uv + (vec2(tex_fbm(uv, 4.0, 3, seed + 1.0), tex_fbm(uv + vec2(0.37, 0.71), 4.0, 3, seed + 2.0)) - 0.5) * 0.08;\n\t// Blocks of the rock, a few cracks between them here and there, each block its own tone.\n\tvec4 bl = tex_cells(w, 2.0, seed + 3.0);\n\tfloat open = smoothstep(0.45, 0.7, tex_noise(uv * 6.0, 6.0, seed + 11.0));\n\tfloat crack = (1.0 - smoothstep(0.0, 0.025 + 0.025 * tex_noise(uv * 40.0, 40.0, seed + 4.0), bl.y - bl.x)) * open;\n\tvec4 fine = tex_cells(w + vec2(0.13, 0.29), 7.0, seed + 5.0);\n\tfloat seam = (1.0 - smoothstep(0.0, 0.02, fine.y - fine.x)) * step(0.7, fine.z) * (1.0 - open * 0.5);\n\t// Mottles of the limestone and its flecks, as large as a hand and as a grain.\n\tfloat mottle = tex_fbm(w, 5.0, 5, seed + 6.0);\n\tfloat broad = tex_fbm(uv, 2.0, 2, seed + 12.0);\n\tfloat grain = tex_noise(uv * 260.0, 260.0, seed + 7.0) * 0.6 + tex_noise(uv * 80.0, 80.0, seed + 8.0) * 0.4;\n\t// Hollows the water ate (scallops): shallow cups side by side.\n\tvec4 sc = tex_cells(w + vec2(0.5), 10.0, seed + 9.0);\n\tfloat cup = smoothstep(0.0, 0.7, sc.x) * (1.0 - smoothstep(0.7, 1.0, sc.x)) * smoothstep(0.4, 0.7, broad);\n\t// What the water left as it ran: a smooth crust of calcite, lighter, in patches.\n\tfloat flow = smoothstep(0.58, 0.78, tex_fbm(w + vec2(0.21, 0.43), 3.0, 3, seed + 10.0));\n\tvec3 tone = mix(vec3(0.42, 0.39, 0.35), vec3(0.64, 0.6, 0.53), smoothstep(0.2, 0.8, mottle * 0.6 + broad * 0.4)) * (0.92 + 0.16 * bl.z);\n\ttone = mix(tone, vec3(0.8, 0.74, 0.62), flow * 0.55);\n\tc = tone * (0.86 + 0.22 * grain);\n\tc *= 1.0 - crack * 0.4 - seam * 0.15 - cup * 0.1;\n\th = 0.5 + (mottle - 0.5) * 0.25 + (broad - 0.5) * 0.2 - crack * 0.4 - seam * 0.1 - cup * 0.2 + flow * 0.12 + grain * 0.05;\n\tr = mix(0.9, 0.45, flow);\n\tao = 1.0 - crack * 0.35 - seam * 0.1 - cup * 0.15;"
+				},
+				{
+					"key": "Inputs",
+					"value": "uv: vec2, px: float, seed: float"
+				},
+				{
+					"key": "Outputs",
+					"value": "c: vec3, r: float, h: float, ao: float"
+				},
+				{
+					"key": "Needs",
+					"value": ""
+				}
+			],
+			"comment": "The rock of a cave, seen from any side alike (its wall, its roof, its floor): blocks of limestone parted by cracks, its mottles and flecks, the hollows the water ate in it and the smooth crust of calcite it left in patches. Nothing in it runs one way, so it is drawn from all three sides of the place. Its colors are neutral: a ground tints it by the rock there."
+		}
+	],
+	"links": []
+}

@@ -33,7 +33,8 @@
  * the binder, worn patches, sealed cracks and stains), paving (concrete blocks in rows across the way, bevelled,
  * sand and moss in the joints, tones, wear), dirt (earth trodden hard: grains, stones, dry cracks, damp hollows, dust),
  * cliff (the face of a cliff of soft rock or earth seen from its side: beds and their ledges, flutes the rain cut down
- * it, cracks, stones; neutral, a ground tints its beds by their height). They are resources, texture graphs of a block
+ * it, cracks, stones; neutral, a ground tints its beds by their height), cave-rock (the rock of a cave from any side:
+ * blocks of limestone and their cracks, mottles, hollows the water ate, crusts of calcite; neutral). They are resources, texture graphs of a block
  * GLSL each and its Params as parameters (blueprints/textures, ElemenxGraphics/textures/<name>): an Application gives one
  * of that name in its place.
  */
@@ -436,6 +437,12 @@ Elemenx.Service('SceneTextures', {
 	 */
 	Chunk: function (layered) {
 		var lines = [
+			/*
+			 * The slopes of the place on the screen (metres: along x, then along y), set by the caller where all pixels go, with
+			 * tex_px over 0; else tex_sample takes its own derivatives.
+			 */
+			'float tex_px = -1.0;',
+			'vec4 tex_grad = vec4(0.0);',
 			'float tex_blend(vec2 place) {',
 			'	vec2 i = floor(place);',
 			'	vec2 f = fract(place);',
@@ -485,11 +492,42 @@ Elemenx.Service('SceneTextures', {
 			'	vec2 dy = dFdy(uv);',
 			'	vec4 c;',
 			'	vec4 s;',
+			/*
+			 * Regression: of its own derivatives, in a branch (a material that weighs, a side of a cliff), one row of each four
+			 * pixels read nothing: rows of light and dark over a cliff, a pixel each.
+			 */
+			'	if (tex_px > 0.0) {',
+			'		dx = tex_grad.xy / metres;',
+			'		dy = tex_grad.zw / metres;',
+			'	}',
+			/*
+			 * Tiles a pixel: where it covers more than half a tile, the hexagons (each its own turn, about a tile wide) change
+			 * from pixel to pixel and each reads the tile its own way; the tile as it is there, the same in every pixel, its
+			 * mean of its mipmaps. Regression: from a few kilometres the ground of a planet was grains of salt on its rock.
+			 */
+			/*
+			 * Its mean (as wide as a tile and more: no pattern of it left) where a tile is under three pixels: the tile as it is
+			 * there repeats, a grid of its features a few pixels apart. Regression: from 0.1 of a tile a pixel, the lawn of the
+			 * ground near was a lattice of dark points and stripes (moiré), the hexagons that hide its repeats given up too soon.
+			 */
+			'	float spread = max(length(dx), length(dy));',
+			'	float plain = smoothstep(0.3, 0.6, spread);',
+			/*
+			 * Its mean there the same way across: a footprint drawn out (a wall seen aslant) read along its length by the card
+			 * left the beds of a cliff in rows of light and dark a pixel each.
+			 */
+			'	vec2 wideX = vec2(max(spread * 4.0, 1.0), 0.0);',
+			'	vec2 wideY = vec2(0.0, max(spread * 4.0, 1.0));',
 			/* Below 0: the tile as it is, for what is laid in rows (paving), which a hexagon shifted would break. */
 			'	if (spin < 0.0) {',
 			'		vec2 at = uv;',
 			'		c = textureGrad(color, at, dx, dy);',
 			'		s = textureGrad(surface, at, dx, dy);',
+			'	}',
+			'	else if (plain > 0.999) {',
+			'		vec2 at = uv;',
+			'		c = textureGrad(color, at, wideX, wideY);',
+			'		s = textureGrad(surface, at, wideX, wideY);',
 			'	}',
 			'	else {',
 			'		vec3 w;',
@@ -503,17 +541,25 @@ Elemenx.Service('SceneTextures', {
 			'		vec4 s1;',
 			'		vec4 s2;',
 			'		vec4 s3;',
-			'		tex_piece(color, surface, uv, dx, dy, v1, spin, c1, s1);',
-			'		tex_piece(color, surface, uv, dx, dy, v2, spin, c2, s2);',
-			'		tex_piece(color, surface, uv, dx, dy, v3, spin, c3, s3);',
+			/* Toward where it is read as its mean, a little more of it in a pixel: its beds no rows of light and dark. */
+			'		float lean = mix(1.0, 1.7, smoothstep(0.04, 0.1, spread));',
+			'		tex_piece(color, surface, uv, dx * lean, dy * lean, v1, spin, c1, s1);',
+			'		tex_piece(color, surface, uv, dx * lean, dy * lean, v2, spin, c2, s2);',
+			'		tex_piece(color, surface, uv, dx * lean, dy * lean, v3, spin, c3, s3);',
 			'		vec3 k = pow(max(w, 0.0), vec3(8.0)) * exp(vec3(s1.b, s2.b, s3.b) * 5.0);',
 			'		k /= k.x + k.y + k.z;',
 			'		c = c1 * k.x + c2 * k.y + c3 * k.z;',
 			'		s = s1 * k.x + s2 * k.y + s3 * k.z;',
+			'		if (plain > 0.0) {',
+			'			vec2 at = uv;',
+			'			c = mix(c, textureGrad(color, at, wideX, wideY), plain);',
+			'			s = mix(s, textureGrad(surface, at, wideX, wideY), plain);',
+			'		}',
 			'	}',
 			'	vec2 n = s.xy * 2.0 - 1.0;',
-			/* Patches of the place: a few metres and tens of metres, lighter and darker, a little warmer where lighter. */
-			'	float m = tex_blend(place / 4.3) * 0.5 + tex_blend(place / 13.7 + 3.1) * 0.35 + tex_blend(place / 37.0 + 7.7) * 0.15;',
+			/* Patches of the place: a few metres and tens of metres, lighter and darker, a little warmer where lighter; each its mean where it is under three pixels. */
+			'	float pixel = spread * metres;',
+			'	float m = mix(0.5, tex_blend(place / 4.3), 1.0 - smoothstep(0.9, 1.5, pixel)) * 0.5 + mix(0.5, tex_blend(place / 13.7 + 3.1), 1.0 - smoothstep(2.8, 4.6, pixel)) * 0.35 + mix(0.5, tex_blend(place / 37.0 + 7.7), 1.0 - smoothstep(7.5, 12.5, pixel)) * 0.15;',
 			'	albedo = pow(c.rgb, vec3(2.2)) * (0.86 + 0.28 * m) * mix(vec3(0.97, 1.0, 1.04), vec3(1.04, 1.0, 0.94), m);',
 			'	rough = c.a;',
 			'	normal = normalize(vec3(n, sqrt(max(0.0, 1.0 - dot(n, n)))));',
@@ -525,7 +571,7 @@ Elemenx.Service('SceneTextures', {
 
 		/* The same, of the layers of a texture of Array: sampler2DArray, and the layer beside each place. */
 		if (layered)
-			text = text.replace(/void tex_piece\(sampler2D color, sampler2D surface,/, 'void tex_piece_layer(sampler2DArray color, sampler2DArray surface, float layer,').replace(/textureGrad\((color|surface), at,/g, 'textureGrad($1, vec3(at, layer),').replace(/void tex_sample\(sampler2D color, sampler2D surface,/, 'void tex_sample_layer(sampler2DArray color, sampler2DArray surface, float layer,').replace(/tex_piece\(color, surface,/g, 'tex_piece_layer(color, surface, layer,').replace(/(float tex_blend|void tex_hexes|vec2 tex_spot)\(/g, '$1_layer(').replace(/(tex_blend|tex_hexes|tex_spot)\(/g, '$1_layer(').replace(/_layer_layer\(/g, '_layer(');
+			text = text.replace(/void tex_piece\(sampler2D color, sampler2D surface,/, 'void tex_piece_layer(sampler2DArray color, sampler2DArray surface, float layer,').replace(/textureGrad\((color|surface), at,/g, 'textureGrad($1, vec3(at, layer),').replace(/void tex_sample\(sampler2D color, sampler2D surface,/, 'void tex_sample_layer(sampler2DArray color, sampler2DArray surface, float layer,').replace(/tex_piece\(color, surface,/g, 'tex_piece_layer(color, surface, layer,').replace(/(float tex_blend|void tex_hexes|vec2 tex_spot)\(/g, '$1_layer(').replace(/(tex_blend|tex_hexes|tex_spot)\(/g, '$1_layer(').replace(/_layer_layer\(/g, '_layer(').replace(/\btex_(px|grad)\b/g, 'tex_$1_layer');
 
 		return text;
 	},

@@ -18,7 +18,7 @@
 			"properties": [
 				{
 					"key": "Code",
-					"value": "\tfloat f = enx_mf(q * 0.7, 3);\n\tc *= 1.0 + (f - 0.5) * 0.08;\n\th += f * 0.05;\n\tr = 0.6;"
+					"value": "\tfloat f = enx_mff(q * 0.7, 3, px * 0.7);\n\tc *= 1.0 + (f - 0.5) * 0.08;\n\th += f * 0.05;\n\tr = 0.6;"
 				},
 				{
 					"key": "Inputs",

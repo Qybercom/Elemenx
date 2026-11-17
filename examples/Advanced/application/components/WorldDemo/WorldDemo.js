@@ -44,12 +44,14 @@ Elemenx.Component('WorldDemo', {
 		this.WorldToUnits();
 	},
 	/*
-	 * The land of the game: a clearing round each base, nothing grows there (a sketch of the world). Regression: the view
-	 * started in the crown of a tree over the units, and none of them was seen.
+	 * The land of the game: a clearing round each base, nothing grows there (a sketch of the world); a river between them;
+	 * the road from one to the other over it on a bridge of stone arches. Regression: the view started in the crown of a
+	 * tree over the units, and none of them was seen.
 	 */
 	WorldGround: {Size: 320, Height: 18, Water: 0.12, Scale: 260, Ridges: 0.15, Seed: 'world', Sketch: {Layers: [{ID: 'bases', Name: 'bases', Visible: true, Strength: 1, Items: [
 		{ID: 'blue', Type: 'clearing', Strength: 1, Points: [[-100, -60], [-36, -60], [-36, 2], [-100, 2]]},
-		{ID: 'red', Type: 'clearing', Strength: 1, Points: [[40, 16], [110, 16], [110, 72], [40, 72]]}
+		{ID: 'red', Type: 'clearing', Strength: 1, Points: [[40, 16], [110, 16], [110, 72], [40, 72]]},
+		{ID: 'river', Type: 'river', Strength: 1, Points: [[-20, -160, 1], [6, -90, 0.9], [-6, -20, 0.8], [10, 50, 0.7], [-4, 160, 0.6]], Width: 12, Depth: 1.8, Bank: 10}
 	]}]}},
 	/*
 	 * The view on the units of the team, all of them in it: farther on a screen standing upright (a phone), whose view is
@@ -92,6 +94,8 @@ Elemenx.Component('WorldDemo', {
 		scene.SetViewpoint({Target: middle, Yaw: 2.4, Pitch: 0.8, Distance: size * (narrow ? 3.2 : 2.2) + 14});
 	},
 	/* What the pointer marks is for the game to say (HoverMark): units outlined in gold, bodies of space by a beating ring. */
+	/* The road from base to base (an object of kind road): over the river it finds its bridge by itself (Structures). */
+	WorldWay: [[-36, -30], [-10, -18], [22, 10], [40, 30]],
 	WorldMark: {Look: 'outline', Color: '#ffd27a', Width: 2, Cursor: 'pointer'},
 	WorldFraming: false,
 	/* One finger draws a frame that selects, or carries the map (GameStrategy.Framing). */

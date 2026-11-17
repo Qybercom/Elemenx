@@ -694,6 +694,58 @@ describe('Regression: SceneRoads on viaducts and over water', function () {
 		expect(steepest(road)).toBeLessThanOrEqual(roads.Grade(road.Type) + 1e-6);
 	});
 
+	/*
+	 * Regression: a road over a river in its valley went down the dry banks of the valley to the water and onto a bridge
+	 * over the water alone: it sagged into the valley. Its bridge goes from the rim of one bank to that of the other, straight
+	 * and a little up in its middle, never under the straight between the rims.
+	 */
+	it('bridges a valley from rim to rim, straight and a little up in its middle, never sagging into it', function () {
+		var roads = made();
+		var valley = function (x) {
+			var off = Math.abs(x - 300);
+
+			return off < 8 ? -2 : off < 60 ? -1 + 11 * (off - 8) / 52 : 10;
+		};
+		var road = roads.Network([{ID: 'r', Type: 'road', Points: [[0, 0], [600, 0]]}], [], {Height: valley}).Roads[0];
+		var x;
+
+		for (x = 245; x <= 355; x += 5)
+			expect(roads.Near(road, x, 0).Y).toBeGreaterThanOrEqual(10 - 1e-6);
+
+		expect(roads.Near(road, 300, 0).Y).toBeGreaterThan(10.3);
+		expect(roads.Near(road, 300, 0).Y).toBeLessThanOrEqual(11.5 + 1e-6);
+		expect(road.Spans.some(function (span) {
+			return span.From <= 260 && span.To >= 340;
+		})).toBe(true);
+
+		/* A short one, low over the water: of stone arches, their vault under its deck and over the water in their middle. */
+		var stone = roads.Structures(road, valley).filter(function (piece) {
+			return piece.Surface === 'stone';
+		});
+		var lowest = Infinity;
+		var k;
+
+		expect(stone.length).toBe(1);
+
+		for (k = 1; k < stone[0].Positions.length; k += 3)
+			lowest = Math.min(lowest, stone[0].Positions[k]);
+
+		expect(lowest).toBeLessThan(0);
+
+		/* A long one (water 200 m wide): of girders, no stone. */
+		var wide = function (x) {
+			var off = Math.abs(x - 300);
+
+			return off < 100 ? -2 : off < 150 ? -1 + 11 * (off - 100) / 50 : 10;
+		};
+		var long = roads.Network([{ID: 'l', Type: 'road', Points: [[0, 0], [600, 0]]}], [], {Height: wide}).Roads[0];
+
+
+		expect(roads.Structures(long, wide).filter(function (piece) {
+			return piece.Surface === 'stone';
+		}).length).toBe(0);
+	});
+
 	/* The piers of a viaduct: a cap under the deck on two columns of a wide road, one of a narrow one. */
 	it('stands a viaduct on piers of a cap on columns, two of a road wider than 12 m, one of a narrower one', function () {
 		var roads = made();
@@ -973,5 +1025,127 @@ describe('Regression: SceneRoads grades and classes told once', function () {
 
 		expect(steepest({Points: line})).toBeLessThanOrEqual(roads.Grade({}) + 1e-6);
 		expect(steepest({Points: line})).toBeGreaterThan(0.08 + 1e-3);
+	});
+});
+
+describe('Contract: SceneRoads walks round junctions, and the paint of their lines', function () {
+	function made () {
+		var roads = create();
+
+		roads.$OnCreate();
+		roads.Library();
+
+		return roads;
+	}
+
+	function crossing (roads, type, other) {
+		return roads.Network([{ID: 'a', Type: type, Points: [[-100, 0, 0], [100, 0, 0]]}, {ID: 'b', Type: other || 'street', Points: [[0, -100, 0], [0, 100, 0]]}], []);
+	}
+
+	/* The offsets of the strips took the place of their paint: the dashed line in the middle was never drawn, the others all solid. */
+	it('paints the lines of a road as its type tells: solid at the edges of its lanes, dashed in the middle', function () {
+		var roads = made();
+		var road = roads.Road({ID: 'r', Type: 'road', Points: [[0, 0, 0], [200, 0, 0]]});
+		var lines = roads.Markings(road);
+
+		expect(road.Strips[1].LeftLine).toBe('solid');
+		expect(road.Strips[1].RightLine).toBe('dashed');
+		expect(road.Strips[1].Left).toBeCloseTo(-3.5, 6);
+
+		/* Three: the edges of the lanes, and the middle, painted in dashes (fewer quads than a solid line of the same length). */
+		expect(lines.length).toBe(3);
+
+		var middle = lines.filter(function (line) {
+			return Math.abs(line.Positions[2] + line.Positions[5]) < 0.01;
+		})[0];
+
+		expect(middle).toBeTruthy();
+		expect(middle.Indices.length).toBeLessThan(lines[0].Indices.length * 0.6);
+	});
+
+	it('goes round the corners of a junction of streets on sidewalks, lowered at a zebra across the mouth of each arm', function () {
+		var roads = made();
+		var junction = crossing(roads, 'street').Junctions[0];
+		var walks = roads.JunctionWalks(junction);
+
+		expect(junction.Kind).toBe('X');
+		expect(junction.Arms[0].Kerbs[1]).toBeCloseTo(5.4, 6);
+		expect(junction.Arms[0].Walks[0]).toBeCloseTo(2.7, 6);
+		expect(walks.Corners.length).toBe(4);
+		expect(walks.Zebras).toEqual([0, 1, 2, 3]);
+		expect(walks.Islands).toEqual([]);
+
+		walks.Corners.forEach(function (corner) {
+			var low = corner.Lift.filter(function (lift) {
+				return lift < 0.021;
+			}).length;
+
+			/* Up a kerb in the middle of the corner, down to 2 cm at both ends, where the zebras are. */
+			expect(corner.Lift[0]).toBeCloseTo(0.15, 6);
+			expect(Math.max.apply(null, corner.Lift)).toBeCloseTo(0.15, 6);
+			expect(corner.Lift[Math.round(corner.Lift.length * 3 / corner.Length)]).toBeLessThan(0.021);
+			expect(corner.Lift[corner.Lift.length - 1 - Math.round(corner.Lift.length * 3 / corner.Length)]).toBeLessThan(0.021);
+			expect(low).toBeGreaterThan(10);
+		});
+
+		/* On the carriageway of the junction, and on the sidewalk round a corner, a kerb over it. */
+		expect(roads.JunctionSurface(junction, 1, 1)).toEqual({Strip: 'junction', Surface: 'asphalt', Lift: 0});
+		expect(roads.JunctionSurface(junction, 7.5, 7.5)).toEqual(expect.objectContaining({Strip: 'sidewalk', Surface: 'paving', Lift: 0.15}));
+		expect(roads.JunctionSurface(junction, junction.Radius - 3, 6.5).Lift).toBeLessThan(0.021);
+
+		/* The square of asphalt goes to the kerbs, none of it under the sidewalks. */
+		roads.Outline(junction, true).forEach(function (point) {
+			expect(roads.JunctionSurface(junction, point.At[0] * 0.97, point.At[1] * 0.97).Strip).toBe('junction');
+			expect(Math.min(Math.abs(point.At[0]), Math.abs(point.At[1]))).toBeLessThan(junction.Radius * 0.6);
+		});
+
+		var pieces = roads.JunctionWalkPieces(junction, []);
+
+		expect(pieces.Walk.length).toBe(4);
+		expect(pieces.Kerb.length).toBe(12);
+		expect(pieces.Zebra.length).toBe(40);
+	});
+
+	it('leaves a refuge of the median of an avenue where its zebras cross it, and narrows the sidewalks to the edge of a road with none', function () {
+		var roads = made();
+		var net = crossing(roads, 'avenue');
+		var junction = net.Junctions[0];
+		var walks = roads.JunctionWalks(junction);
+		var pieces = roads.JunctionWalkPieces(junction, net.Roads);
+
+		expect(walks.Islands.map(function (island) {
+			return junction.Arms[island.Arm].Road;
+		})).toEqual(['a', 'a']);
+		expect(pieces.Island.length).toBe(4);
+		expect(pieces.Median).toBe('grass');
+
+		/* No bar of a zebra on the refuge. */
+		pieces.Zebra.forEach(function (bar) {
+			var z = bar.Positions.filter(function (value, index) {
+				return index % 3 === 2;
+			});
+
+			expect(Math.abs((Math.min.apply(null, z) + Math.max.apply(null, z)) / 2)).toBeGreaterThan(2.5);
+		});
+
+		/* A street across a country road: no zebra over the road, the sidewalks narrowing to nothing at its edge. */
+		var mixed = crossing(roads, 'country').Junctions[0];
+		var round = roads.JunctionWalks(mixed);
+
+		expect(round.Corners.length).toBe(4);
+		expect(round.Zebras.map(function (index) {
+			return mixed.Arms[index].Road;
+		})).toEqual(['b', 'b']);
+
+		round.Corners.forEach(function (corner) {
+			var first = Math.hypot(corner.Outer[0][0] - corner.Inner[0][0], corner.Outer[0][1] - corner.Inner[0][1]);
+			var last = Math.hypot(corner.Outer[64][0] - corner.Inner[64][0], corner.Outer[64][1] - corner.Inner[64][1]);
+
+			expect(Math.min(first, last)).toBeLessThan(0.01);
+			expect(Math.max(first, last)).toBeCloseTo(2.7, 6);
+		});
+
+		/* A level crossing, a roundabout: no walks round them. */
+		expect(roads.JunctionWalks({Kind: 'ring', Radius: 14, Arms: junction.Arms}).Corners).toEqual([]);
 	});
 });

@@ -12,6 +12,7 @@ var Groups = [
 	{Name: 'Router', Sections: ['Router'], Uses: [/\$Router\b/, /\bElemenx\.Router\b/]},
 	{Name: 'Network', Sections: ['Network'], Uses: [/\$Network\b/, /\bElemenx\.Network\b/]},
 	{Name: 'Storage', Sections: ['Storage'], Uses: [/\$Storage\b/, /\bElemenx\.Storage\b/]},
+	{Name: 'Hardware', Sections: ['Hardware'], Uses: [/\$Hardware\b/, /\bElemenx\.Hardware\b/]},
 	{Name: 'Events', Sections: ['Events'], Uses: [/\$Events\b/, /\$OnEvent\b/, /\bElemenx\.(Events|Pipe)\b/]},
 	{Name: 'Messaging', Sections: ['Messaging'], Uses: [/\$Messaging\b/, /\$OnMessage\b/, /\bElemenx\.Messaging\b/], Needs: ['Events']},
 	{Name: 'WebWorker', Sections: ['WebWorker'], Uses: [/\$WebWorker\b/, /\bElemenx\.WebWorker\b/], Needs: ['Messaging'], All: true},

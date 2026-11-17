@@ -384,7 +384,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 	 * program of its globe was made (17 s under load). Each program is made the first time it is asked for, and a frame of
 	 * the loop leaves out what is not made yet (the veil waits for it); a frame asked for by hand waits, as before.
 	 */
-	it('makes only the programs it draws, and a frame of its loop never waits for one the card is still making', async function () {
+	it('asks for all the programs it may draw at once, and a frame of its loop never waits for one the card is still making', async function () {
 		var started = Date.now();
 		var clock = Date.now;
 		var given = WebGL2RenderingContext.prototype.shaderSource;
@@ -437,8 +437,11 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		try {
 			scene.Engine().Frame(performance.now());
 
+			/*
+			 * It asked nothing that waits for the card. (All its programs are asked for when it starts: under load the card may
+			 * have made all of them already while it mounted, so how many are left is not told here.)
+			 */
 			expect(asked).toBe(0);
-			expect(renderer.Progress().Needed).toBeGreaterThan(0);
 		}
 		finally {
 			inner.Looping = false;
@@ -461,7 +464,11 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			return renderer.Progress().Needed === 0;
 		}, 120000)).toBe(true);
 
-		/* A star and a moon: the programs of its planets, none of a ground of a surface, of a sea or of a sky over a ground. */
+		/*
+		 * A star and a moon: the programs of its planets, and those of the ground of its surface, its sea and its sky too, all
+		 * asked for at the start (the loading shows them): the view may go down onto it, and nothing is made in the play.
+		 * Regression: made the first time they were drawn, after the scene was told ready, the play stopped for them.
+		 */
 		all = all.filter(function (one) {
 			return one.GL === gl;
 		}).map(function (one) {
@@ -471,9 +478,9 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(all.some(function (text) {
 			return text.indexOf('uniform samplerCube uGround;') !== -1;
 		})).toBe(true);
-		expect(all.filter(function (text) {
+		expect(all.some(function (text) {
 			return text.indexOf('uniform sampler2D uReliefMap;') !== -1 || text.indexOf('uniform sampler2D uSeenDepth;') !== -1 || text.indexOf('uniform float uMoonGlow;') !== -1;
-		})).toEqual([]);
+		})).toBe(true);
 	}, 240000);
 
 	it('draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle', async function () {
@@ -1585,6 +1592,69 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(space.Shaders(graphics).Ground).not.toContain('dot(place, side)');
 		expect(space.Shaders(graphics).Ground).toContain('float foot = length(fwidth(place));');
 		expect(space.Shaders(graphics).Ground).toContain('uCloudsOn');
+
+		/*
+		 * Regression: from a few kilometres up the ground of a planet was smears and stretched blotches (a texel of its picture
+		 * tens of pixels wide, drawn into the next over all its width), its mountains smooth heaps, and near it a chessboard
+		 * of light and dark green (a noise of 29 m sharpened along its grid); its rock grains of salt (beds and noises of the
+		 * materials finer than a pixel). Each texel its own color up to a narrow seam, ragged finer while that is seen;
+		 * ridges finer than its points on its slopes; the noise turned against its grid; what is finer than a pixel its mean.
+		 */
+		expect(space.Shaders(graphics).Ground).toContain('float seam = clamp(max(texel * 1.5, 0.22), 0.0, 0.5);');
+		expect(space.Shaders(graphics).Ground).toContain('vec4 painted = textureGrad(uColorMap, pictureAt, pictureX, pictureY);');
+		expect(space.Shaders(graphics).Ground).toContain('float rugged = smoothstep(0.06, 0.35, 1.0 - dot(n, up)) * (1.0 - water);');
+		expect(space.Shaders(graphics).Ground).not.toContain('noise3(near * 34.0');
+		expect(Elemenx.Service('SceneMaterials').LandCliff).toContain('vec3 bed = mix(cliffBed((place.y + warp) / thick, region), mean, many);');
+		expect(Elemenx.Service('SceneMaterials').Get('rock').Code).toContain('enx_mff(q * 1.2, 5, px * 1.2)');
+
+		/*
+		 * Regression: rows of light and dark a pixel each over a cliff near: its tiles took the derivatives of the place in a
+		 * branch (a material that weighs, a side of a cliff), and read the tile at the very edge of what a pixel can show.
+		 * Now its slopes are taken where all pixels go and given to each way of a tile; its mean read a little wider.
+		 */
+		expect(Elemenx.Service('SceneMaterials').Land(['soil', 'lawn'])).toContain('landDX = dFdx(place);');
+		expect(Elemenx.Service('SceneMaterials').LandTexture).toContain('tex_grad_layer = vec4(landDX.zy, landDY.zy);');
+		expect(Elemenx.Service('SceneTextures').Chunk(true)).toContain('dx = tex_grad_layer.xy / metres;');
+
+		/*
+		 * The grass and the undergrowth of a planet round the eye stand on its ground as it is drawn. Regression: of the very
+		 * height of the planet (in kilometres taken for metres, a kilometre under the eye; then under the faces of its coarser
+		 * grid), hardly a blade showed.
+		 */
+		expect(gameSceneSource).toContain('var drawn = drawnAt(direction);');
+		expect(gameSceneSource).toContain('var height = (vectors.Length(drawn) - radius) * 1000;');
+		expect(gameSceneSource).toContain('return vectors.Scale(d, radius + Math.max(0, field.Elevation(d)));');
+		/*
+		 * Regression: a land of a planet tells only that it has grass (true), taken for its rule: thick green grass in a
+		 * semidesert. The rule is its land's of SceneBiomes. Its tiles in the color of the land, their own grain kept (a
+		 * savanna was as green as a meadow); its materials bend its light near (flat paint before).
+		 */
+		expect(gameSceneSource).toContain("return land.Grass && typeof land.Grass === 'object' ? land.Grass : known && known.Grass || null;");
+		expect(Elemenx.Service('SceneMaterials').Land(['lawn', 'soil'])).toContain('c = landColored(0.0, c, color) * mix(1.0, lit, 0.6);');
+		expect(gameSceneSource).toContain("'\\t\\tn = normalize(mix(n, enx_bump(vWorld * 1000.0, n, height), madeSeen));',");
+
+		/* A surface made again (a landing anywhere) goes on with the numbers of the frames of its plants: its grass made again. */
+		expect(gameSceneSource).toContain('scene.PlantFrames = (scene.PlantFrames || 0) + 1;');
+		expect(gameSceneSource).toContain('engine.ScatterPlanetGrass(grown && grown.Grass ? grown : null);');
+
+		/*
+		 * Regression: rings and stripes of moiré over the ground of a planet near (a tilt of its bumps of kilometres, of
+		 * rounding where a pixel is under a metre); a square beside a coarser one met it in a step, its skirt a wall. Its
+		 * points of an edge go onto the edge of the square beside, as many levels coarser as it is (uEdges, SpherePatch).
+		 */
+		expect(space.Shaders(graphics).Ground).toContain('tilt *= smoothstep(0.0003, 0.0012, foot);');
+		expect(space.Shaders(graphics).GroundVertex).toContain('uniform vec4 uEdges;');
+		expect(space.Shaders(graphics).GroundVertex).toContain('vec3 position = aPosition + (coarser > 2.5 ? aMaterials3.xyz');
+		expect(gameSceneSource).toContain('node.Edges[edge] = Math.min(3, place[4] - level);');
+
+		/* Regression: black specks along every wood near (its crowns 6 m over the ground at an edge of a pixel and a half). */
+		expect(space.Shaders(graphics).Ground).not.toMatch(/wooded \* [0-9.]+ \* near1/);
+		expect(space.Shaders(graphics).Ground).toContain('tilt *= step(1e-12, abs(area)) / max(1.0, length(tilt) / 0.85);');
+
+		/* Its snow near (Snow of the picture of a square): the snow of each biome over its ground, where its picture says. */
+		expect(space.Shaders(graphics).Ground).toContain('uniform sampler2D uSnowMap;');
+		expect(space.Shaders(graphics).Ground).toContain('parts *= (1.0 - water) * (1.0 - snow * (1.0 - steep * 0.7));');
+		expect(gameSceneSource).toContain("'\\t\\t\\tw[int(uLandSnow[min(b, 15)])] += white * cw;',");
 
 		/* What moves keeps few frames: its shadow has a pattern that stands, not a grain they would take away. */
 		expect(graphics.Chunks.Shadow).toMatch(/uSteady > 0\.5 \? 0\.0 :/);
@@ -3585,7 +3655,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 	/* Regression: the woods of a planet read where its texel is, its colors aside of it: steps of texels along their edges from far. */
 	it('reads the woods of a planet aside, as its colors, no steps along their edges', function () {
-		expect(gameSceneSource).toContain("'	float cover = uTiled * uWoods > 0.5 ? texture(uReliefMap, vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels + aside * 1.1 / uTexels).a : 0.0;',");
+		expect(gameSceneSource).toContain("'	float cover = uTiled * uWoods > 0.5 ? textureGrad(uReliefMap, pictureAt, pictureX, pictureY).a : 0.0;',");
 	});
 
 	/*
@@ -8637,7 +8707,8 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		engine.Renderer.Draw = draw;
 	});
 
-	it('shows a bar of its own while it loads, that moves when only what is behind the page is left', async function () {
+	/* Regression: when only what is behind the page was left, the bar turned into an endless one that told nothing. */
+	it('shows a bar of its own while it loads with its percent, and how far it is even when only what is behind the page is left', async function () {
 		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="0" /></Scene>');
 		var scene = mounted.Space;
 		var inner = scene.Scene();
@@ -8674,8 +8745,8 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		await tick(20);
 
-		expect(scene.LoadingEndless).toBe(true);
-		expect(holder.querySelector('[role="progressbar"]').getAttribute('aria-valuenow')).toBe(null);
+		expect(holder.querySelector('[role="progressbar"]').getAttribute('aria-valuenow')).toBe('50');
+		expect(holder.textContent).toContain('50%');
 
 		engine.Renderer.Progress = progress;
 	});

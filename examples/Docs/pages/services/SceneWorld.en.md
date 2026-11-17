@@ -29,17 +29,17 @@ The same functions run in Node: they read no page.
 
 ## Tests
 
-- [starts Flat, LibraryRelief and the blocks of SceneWorld from FlatOf and TunnelRadius](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTerrainGenerator/SceneTerrainGenerator.test.js#L845) — `libraries/ElemenxGraphics/services/SceneTerrainGenerator/SceneTerrainGenerator.test.js`
+- [starts Flat, LibraryRelief and the blocks of SceneWorld from FlatOf and TunnelRadius](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTerrainGenerator/SceneTerrainGenerator.test.js#L1122) — `libraries/ElemenxGraphics/services/SceneTerrainGenerator/SceneTerrainGenerator.test.js`
 - [makes the land of its steps: the very ground of the same numbers, the things made on it in their order](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js#L20) — `libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js`
 - [lets what comes to a step turned off through, takes numbers from blocks of a generator, and tells what keeps it from running](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js#L39) — `libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js`
 - [takes steps of its own of any Service: a land in, a land out, typed so a land never goes where things are taken](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js#L71) — `libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js`
 - [cuts its land with steps of its volume: tunnels, caves, overhangs, each one more carve of it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js#L97) — `libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js`
 - [makes the land of a place of a planet exactly as its globe: its heights and coasts, its lands, its neighbour meeting it at their border, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js#L107) — `libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js`
 - [joins its settlements and passages by roads along the ground, the class of each by what it joins](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js#L170) — `libraries/ElemenxGraphics/services/SceneWorld/SceneWorld.test.js`
-- [makes the world of options of the template of its resource, a step for each item of a list, the others turned off](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L878) — `tests/regression/blueprints.test.js`
-- [passes on what comes to a block turned off by the name and the type of each output](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L899) — `tests/regression/blueprints.test.js`
+- [makes the world of options of the template of its resource, a step for each item of a list, the others turned off](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L909) — `tests/regression/blueprints.test.js`
+- [passes on what comes to a block turned off by the name and the type of each output](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L930) — `tests/regression/blueprints.test.js`
 - [stops what comes to a collider of its own outline, of a model or of the sketch, and never moves it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-rigid.test.js#L175) — `tests/regression/library-rigid.test.js`
 - [makes the objects of the World of a ground in the scene, marked in the tree, not saved: they come again of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L746) — `tests/regression/library-scene-editor.test.js`
 - [preloads the globe of a planet into the store of the browser, and a scene of it takes it from there at once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L161) — `tests/regression/library-scene-landing.test.js`
 
-+35 more in the same files
++36 more in the same files

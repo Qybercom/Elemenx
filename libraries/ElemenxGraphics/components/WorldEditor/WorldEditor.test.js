@@ -182,6 +182,7 @@ describe('Contract: WorldEditor, a world level in level (galaxy, system, planet,
 			return item.Type === 'white-dwarf';
 		})).toBe(true);
 
+		editor.Searched('Radius', '100');
 		editor.Searched('Type', 'star');
 		editor.Searched('Mass', [0, 2]);
 

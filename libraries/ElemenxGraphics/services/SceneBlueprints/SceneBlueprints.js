@@ -14,6 +14,11 @@
  *   Parameter...); Look(parameters, seconds) of what Compile gives is {Corona, Prominences, Flares, Count, Height, Speed,
  *   Strands, Tint}. Its end, Star, takes each as an input (its property when nothing comes): a Curve of the Time makes
  *   its prominences rise and fall as the keys say.
+ * - The kind nebula: the look of a nebula at a time, run each frame as the one of a star; Look(parameters, seconds) is
+ *   {Glow, Density, Turn, Grow, Detail, Outer, Inner, Turbulence, Thickness, Hollow}: how bright, how thick its dust, how
+ *   far it is turned round its axis (degrees), how much larger than its Radius (a shell that spreads), how much fine
+ *   grain it shows near, the tints of its outer and inner colors; Turbulence, Thickness and Hollow are of its shape (how
+ *   torn, how thick its shell, how wide the hollow in its heart), taken at its time 0 (its shape is made once of them).
  */
 Elemenx.Service('SceneBlueprints', {
 	$Meta: {
@@ -22,12 +27,13 @@ Elemenx.Service('SceneBlueprints', {
 	},
 
 	$Provides: {
-		Blueprints: {Graphs: ['effect', 'water', 'sky', 'land', 'star'], Nodes: ['Star', 'LandPoint', 'LandMaterial', 'LandGrain', 'LandPools', 'LandAlbedo', 'LandPaint', 'LandLight', 'LandCaustics', 'LandSheen', 'LandCompose', 'LandEnd', 'SkyRay', 'SkyDay', 'SkyAir', 'SkyDusk', 'SkyHalo', 'SkyPink', 'SkyWisps', 'SkyCover', 'SkyEclipse', 'SkyTowns', 'SkyAurora', 'SkyRainbow', 'SkyMoonHaze', 'SkyMoon', 'SkyCompose', 'SkyEnd', 'Place', 'View', 'Far', 'Flow', 'Sun', 'Waves', 'WaterNormal', 'Fresnel', 'Glints', 'Sky', 'Body', 'Foam', 'Under', 'Absorb', 'Below', 'Reflection', 'WaterFog', 'Water', 'Layer', 'Effect', 'Scene', 'Clouds', 'Occlusion', 'Air', 'Frames', 'Mirror', 'Rays', 'Exposure', 'Bokeh', 'Bloom', 'Picture', 'Shader']}
+		Blueprints: {Graphs: ['effect', 'water', 'sky', 'land', 'star', 'nebula'], Nodes: ['Star', 'Nebula', 'LandPoint', 'LandMaterial', 'LandGrain', 'LandPools', 'LandAlbedo', 'LandPaint', 'LandLight', 'LandCaustics', 'LandSheen', 'LandCompose', 'LandEnd', 'SkyRay', 'SkyDay', 'SkyAir', 'SkyDusk', 'SkyHalo', 'SkyPink', 'SkyWisps', 'SkyCover', 'SkyEclipse', 'SkyTowns', 'SkyAurora', 'SkyRainbow', 'SkyMoonHaze', 'SkyMoon', 'SkyCompose', 'SkyEnd', 'Place', 'View', 'Far', 'Flow', 'Sun', 'Waves', 'WaterNormal', 'Fresnel', 'Glints', 'Sky', 'Body', 'Foam', 'Under', 'Absorb', 'Below', 'Reflection', 'WaterFog', 'Water', 'Layer', 'Effect', 'Scene', 'Clouds', 'Occlusion', 'Air', 'Frames', 'Mirror', 'Rays', 'Exposure', 'Bokeh', 'Bloom', 'Picture', 'Shader']}
 	},
 
 	$OnCreate: function () {
 		this.Effects();
 		this.Stars();
+		this.Nebulae();
 		this.Passes();
 		this.Waters();
 		this.Skies();
@@ -82,6 +88,59 @@ Elemenx.Service('SceneBlueprints', {
 				});
 
 				look.Tint = Array.isArray(inputs.Tint) ? inputs.Tint.slice(0, 3) : blueprints.Numbers(properties.Tint || '#ffffff', 3);
+
+				return {Look: look};
+			}
+		});
+	},
+
+	/*
+	 * The look of a nebula as a graph, run each frame on its time: Nebula, the end, each of its fields an input a Parameter
+	 * or a block of a generator (Time, Sin, Curve...) can take, else its property.
+	 */
+	Nebulae: function () {
+		var blueprints = this.$Service('Blueprints');
+		var fields = [['Glow', 1], ['Density', 1], ['Turn', 0], ['Grow', 1], ['Detail', 1], ['Turbulence', 1], ['Thickness', 1], ['Hollow', 1]];
+
+		blueprints.Graph('nebula', {
+			End: 'Nebula',
+			Uses: ['generator'],
+			Compile: function (plan) {
+				var end = plan.Order.filter(function (id) {
+					return plan.Blocks[id].type === 'Nebula' && plan.Blocks[id].enabled !== false;
+				})[0];
+
+				return {
+					Look: function (parameters, seconds) {
+						var run = {Outputs: {}, Parameters: parameters || {}, Inputs: {Time: Number(seconds) || 0}, Memo: true, Graph: {parameters: this && this.Parameters || plan.Graph.parameters}};
+
+						return blueprints.Pull(plan, end, 'Look', run, 0);
+					}
+				};
+			}
+		});
+
+		blueprints.Node('Nebula', {
+			Graphs: ['nebula'],
+			Group: 'nebula',
+			Properties: fields.map(function (field) {
+				return {Key: field[0], Type: 'number', Value: field[1]};
+			}).concat([{Key: 'Outer', Type: 'color', Value: '#ffffff'}, {Key: 'Inner', Type: 'color', Value: '#ffffff'}]),
+			Inputs: fields.map(function (field) {
+				return {Key: field[0], Type: 'float'};
+			}).concat([{Key: 'Outer', Type: 'vec3'}, {Key: 'Inner', Type: 'vec3'}]),
+			Outputs: [{Key: 'Look', Type: 'object'}],
+			Compute: function (inputs, properties) {
+				var look = {};
+
+				fields.forEach(function (field) {
+					var told = inputs[field[0]] !== undefined && inputs[field[0]] !== null ? inputs[field[0]] : properties[field[0]];
+
+					look[field[0]] = told === undefined || told === null || told === '' || isNaN(Number(told)) ? field[1] : Number(told);
+				});
+
+				look.Outer = Array.isArray(inputs.Outer) ? inputs.Outer.slice(0, 3) : blueprints.Numbers(properties.Outer || '#ffffff', 3);
+				look.Inner = Array.isArray(inputs.Inner) ? inputs.Inner.slice(0, 3) : blueprints.Numbers(properties.Inner || '#ffffff', 3);
 
 				return {Look: look};
 			}
@@ -787,10 +846,12 @@ Elemenx.Service('SceneBlueprints', {
 		 * What the ground is made of there (SceneMaterials, by the weights of its materials): its color and its normal bent by
 		 * their patterns, as near as the eye sees them.
 		 */
-		node('LandMaterial', [vec3('Place', 'vPlace'), vec3('Color', 'vColor'), vec3('Normal', 'normalize(vNormal)')], [{Key: 'Color', Type: 'vec3'}, {Key: 'Normal', Type: 'vec3'}], function (context) {
+		/* Open: how much of the daylight comes there (vOpen); under rock the rock of a cave (landUnder, SceneMaterials). */
+		node('LandMaterial', [vec3('Place', 'vPlace'), vec3('Color', 'vColor'), vec3('Normal', 'normalize(vNormal)'), float('Open', 'vOpen')], [{Key: 'Color', Type: 'vec3'}, {Key: 'Normal', Type: 'vec3'}], function (context) {
 			var name = 'l' + context.Index;
 			var inputs = context.Inputs;
 
+			context.Lines.push('landUnder = 1.0 - clamp(' + inputs.Open + ', 0.0, 1.0);');
 			context.Lines.push('vec3 ' + name + '_color = ' + inputs.Color + ';');
 			context.Lines.push('float ' + name + '_height = 0.0;');
 			context.Lines.push('landMaterials(' + inputs.Place + ', length(fwidth(' + inputs.Place + '.xz)), ' + name + '_color, ' + name + '_height);');
@@ -845,8 +906,11 @@ Elemenx.Service('SceneBlueprints', {
 			var inputs = context.Inputs;
 
 			context.Lines.push('float ' + name + '_sunlit = sunLit(' + inputs.World + ', ' + inputs.Normal + ') * smoothstep(0.0, 0.6, ' + inputs.Open + ');');
+			/* The lamps, and their glints on what is wet of the rock of a cave (landGloss, SceneMaterials). */
+			context.Lines.push('vec3 ' + name + '_gloss;');
+			context.Lines.push('vec3 ' + name + '_lamps = localLit(' + inputs.World + ', ' + inputs.Normal + ', landGloss, ' + name + '_gloss);');
 
-			return {Light: '((uSunColor * 1.35 * max(dot(' + inputs.Normal + ', uSun), 0.0) * ' + name + '_sunlit + aroundLight(' + inputs.World + ', ' + inputs.Normal + ', mix(uFloorLight, uSkyLight, ' + inputs.Normal + '.y * 0.5 + 0.5)) * ' + inputs.Open + ') + localLight(' + inputs.World + ', ' + inputs.Normal + '))', Sunlit: name + '_sunlit'};
+			return {Light: '((uSunColor * 1.35 * max(dot(' + inputs.Normal + ', uSun), 0.0) * ' + name + '_sunlit + aroundOpen(' + inputs.World + ', ' + inputs.Normal + ', mix(uFloorLight, uSkyLight, ' + inputs.Normal + '.y * 0.5 + 0.5)) * ' + inputs.Open + ') + ' + name + '_lamps + ' + name + '_gloss)', Sunlit: name + '_sunlit'};
 		});
 
 		/*

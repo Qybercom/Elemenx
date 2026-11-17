@@ -8,9 +8,10 @@
 		<span class="elemenx-caption" role="status">{{WorldNote}}</span>
 	</div>
 	<div class="scene-demo-scene">
-		<Scene Setting="terrain" Team="blue" Labels="false" [hoverMark]="WorldMark" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="WorldReady">
+		<Scene Setting="terrain" Team="blue" Labels="false" [hoverMark]="WorldMark" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="WorldReady"><DemoLoading slot="loading" Title="Strategy" />
 			<SceneObject ID="day" Kind="sun" Time="14:00" />
 			<SceneObject ID="land" Kind="ground" [world]="WorldOf('world', WorldGround)" />
+			<SceneObject ID="way" Kind="road" Type="road" Width="6" Structures="true" [points]="WorldWay" />
 			<SceneObject ID="woods" Kind="forest" Density="0.5" Cover="0.35" />
 			<SceneObject ID="meadow" Kind="grass" Density="0.5" Height="0.5" />
 			<SceneObject Kind="house" ID="barracks" Name="Barracks" X="-80" Y="-40" Team="blue" Model="barracks" />

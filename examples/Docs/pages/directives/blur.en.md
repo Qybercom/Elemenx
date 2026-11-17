@@ -30,4 +30,4 @@
 
 ## Tests
 
-- [*blur makes an element frosted glass: the tokens of the theme alone, its radius as a number, each part of an object](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L54) — `tests/regression/library-directives.test.js`
+- [*blur makes an element frosted glass: the tokens of the theme alone, its radius as a number, each part of an object](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L55) — `tests/regression/library-directives.test.js`

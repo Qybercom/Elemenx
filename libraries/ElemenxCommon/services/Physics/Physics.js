@@ -34,7 +34,8 @@
  *   lies, 0.35), Plane (how far its bow rises at speed, radians, 0.09), Lean (how far it leans into a turn, 0.12). State: {X, Z,
  *   Heading, Forward, Aside, Rate, Y, Rise, Pitch, PitchSpeed, Roll, RollSpeed, Aground}.
  * - World(settings): a world of solid bodies. Settings: Gravity (m/s² down, or a list [x, y, z]), Ground (a height, a function (x, z)
- *   of the height, or null for none; 0 by default), Friction, Bounce and Rolling of the ground, Step (1/120 s), Iterations (10), Sleep (false:
+ *   of the height, or null for none; 0 by default), Solid (a function (x, y, z) of a ground with a volume: over 0 in its rock,
+ *   about the metres into it; its floors, walls and roofs held as the ground is: a cave, a tunnel), Friction, Bounce and Rolling of the ground, Step (1/120 s), Iterations (10), Sleep (false:
  *   none sleep), Touch(a, b, {At, Normal, Impulse}) (when two begin to touch; b is null for the ground). It has:
  *   - Add(body): body {ID, Shape ('sphere', 'box', 'capsule' standing along its y, 'prism': a convex outline Points [[x, z]...]
  *     round its middle standing Height high, that never moves; 'tube': a pipe that never moves, its axis Points [[x, y, z]...]
@@ -595,7 +596,8 @@ Elemenx.Service('Physics', {
 		var groundBounce = number(options.Bounce, 0.1);
 		var groundRolling = number(options.Rolling, 0.05);
 		var ground = options.Ground === undefined ? 0 : options.Ground;
-		var hasGround = ground !== null && ground !== false;
+		var solid = typeof options.Solid === 'function' ? options.Solid : null;
+		var hasGround = ground !== null && ground !== false || !!solid;
 		var sleeps = options.Sleep !== false;
 		var water = options.Water ? {Level: options.Water.Level, Density: number(options.Water.Density, 1000), Drag: number(options.Water.Drag, 1)} : null;
 		var api;
@@ -1366,9 +1368,23 @@ Elemenx.Service('Physics', {
 			}
 		}
 
+		/*
+		 * A ground with a volume (Solid): how far a point is out of its rock (below 0: in it) and the way out of it, of the
+		 * density and the way it grows; so a floor, a wall or a roof of a cave holds a body alike.
+		 */
+		function outOf (c) {
+			var e = 0.05;
+			var f = solid(c[0], c[1], c[2]);
+			var g = [solid(c[0] + e, c[1], c[2]) - solid(c[0] - e, c[1], c[2]), solid(c[0], c[1] + e, c[2]) - solid(c[0], c[1] - e, c[2]), solid(c[0], c[1], c[2] + e) - solid(c[0], c[1], c[2] - e)];
+			var length = size(g) / (2 * e);
+
+			return {Distance: -f / Math.max(length, 1e-6), Normal: unit(scale(g, -1))};
+		}
+
 		function landing (record, c, r) {
-			var n = slope(c[0], c[2]);
-			var d = (c[1] - height(c[0], c[2])) * n[1];
+			var out = solid ? outOf(c) : null;
+			var n = out ? out.Normal : slope(c[0], c[2]);
+			var d = out ? out.Distance : (c[1] - height(c[0], c[2])) * n[1];
 			if (d >= r) return;
 
 			contact(record, null, sub(c, scale(n, r)), n, r - d);
@@ -1871,7 +1887,7 @@ Elemenx.Service('Physics', {
 			function above (at) {
 				var point = add(from, scale(direction, at));
 
-				return point[1] - height(point[0], point[2]);
+				return solid ? -solid(point[0], point[1], point[2]) : point[1] - height(point[0], point[2]);
 			}
 
 			if (above(0) <= 0) return 0;
@@ -2008,7 +2024,7 @@ Elemenx.Service('Physics', {
 					t = castGround(from, way, best ? best.Distance : limit);
 
 					if (t >= 0 && (!best || t < best.Distance))
-						best = {Body: null, At: add(from, scale(way, t)), Normal: slope(from[0] + way[0] * t, from[2] + way[2] * t), Distance: t};
+						best = {Body: null, At: add(from, scale(way, t)), Normal: solid ? outOf(add(from, scale(way, t))).Normal : slope(from[0] + way[0] * t, from[2] + way[2] * t), Distance: t};
 				}
 
 				return best;

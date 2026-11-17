@@ -23,3 +23,5 @@ A formula written as in LaTeX (the part the Formulas Service reads: fractions, r
 ## Tests
 
 - [reads a formula: its names its inputs, the same of the graph run and of its code, vectors part by part](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L170) — `tests/regression/blueprints-ir.test.js`
+- [makes a generator of formulas JavaScript, the same values as its interpreter, lists part by part](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L831) — `tests/regression/blueprints.test.js`
+- [makes what is finer than the scale of its rules by the rule of the place: of its land, a painted region over it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L1435) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`

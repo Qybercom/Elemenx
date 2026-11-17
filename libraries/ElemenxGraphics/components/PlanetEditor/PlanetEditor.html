@@ -5,7 +5,7 @@
 			<Select Size="small" [Label]="$T('graphics.planetEditor.overlay')" [Options]="OverlayOptions(Version)" [Value]="Overlay" (change)="Overlaid($event)" />
 		</div>
 	</div>
-	<ContextMenu #Context Sheet="auto" [Title]="$T('graphics.viewActions.menu')" [Items]="Actions(Version, Selected, Tool)" (open)="MenuOpened" (select)="MenuPicked">
+	<ContextMenu #Context Sheet="auto" [Title]="$T('graphics.viewActions.menu')" [Items]="Actions(Version, Selected, Tool, PlaceSelected)" (open)="MenuOpened" (select)="MenuPicked">
 		<div class="elemenx-planet-editor-view" #View tabindex="0" [attribute.aria-label]="Label || $T('graphics.planetEditor.label')" [attribute.data-tool]="Tool" (pointerdown)="TouchDown" (pointermove)="TouchMove" (pointerup)="TouchUp" (pointercancel)="TouchUp" (wheel)="Wheeled" (dblclick)="Finish" (keydown)="Key" (contextmenu)="Menued">
 			<canvas class="elemenx-planet-editor-globe" #Globe></canvas>
 			<canvas class="elemenx-planet-editor-canvas" #Canvas></canvas>
@@ -13,7 +13,7 @@
 			<div class="elemenx-planet-editor-info" *if="Info">{{Info}}</div>
 			<div class="elemenx-planet-editor-compass" [style.--elemenx-planet-editor-north]="North + 'deg'"><Button Size="small" Variant="secondary" Icon="compass" [Title]="$T('graphics.planetEditor.north')" (click)="NorthUp" /></div>
 			<div class="elemenx-planet-editor-hint">{{$T('graphics.planetEditor.hint')}}</div>
-			<ViewActions [Items]="Actions(Version, Selected, Tool)" (act)="Acted" />
+			<ViewActions [Items]="Actions(Version, Selected, Tool, PlaceSelected)" (act)="Acted" />
 		</div>
 	</ContextMenu>
 	<div class="elemenx-planet-editor-graph" *if="RuleGraph(Version, RuleOpen)">
@@ -33,6 +33,13 @@
 		<div class="elemenx-planet-editor-rule" *for="entry of BiomeRules(Version)" *key="entry.Biome" [attribute.data-biome]="entry.Biome"><span>{{entry.Biome}}</span><Select Size="small" [Label]="entry.Biome" [Options]="RuleOptions(Version)" [Value]="entry.Rule" (change)="BiomeRuled(entry.Biome, $event)" /><Button Size="small" Variant="ghost" Icon="branch" [Title]="$T('graphics.planetEditor.rules.graph')" [Pressed]="RuleOpen === entry.Rule" [Disabled]="entry.Rule === 'generated'" (click)="RuleOpened(entry.Rule)" /></div>
 		<div class="elemenx-planet-editor-title" *if="Regions(Version).length">{{$T('graphics.planetEditor.rules.regions')}}</div>
 		<div class="elemenx-planet-editor-rule" *for="region of Regions(Version)" *key="region.Index" [attribute.data-region]="region.Index"><Select Size="small" [Label]="$T('graphics.planetEditor.rules.region')" [Options]="RuleOptions(Version)" [Value]="region.Rule" (change)="RegionChanged(region.Index, 'Rule', $event)" /><NumberInput Size="small" [Label]="$T('graphics.planetEditor.rules.edge')" [Min]="1" [Value]="region.Edge" (change)="RegionChanged(region.Index, 'Edge', $event)" /><Button Size="small" Variant="ghost" Icon="branch" [Title]="$T('graphics.planetEditor.rules.graph')" [Pressed]="RuleOpen === region.Rule" [Disabled]="region.Rule === 'generated'" (click)="RuleOpened(region.Rule)" /><Button Size="small" Variant="ghost" Icon="delete" [Title]="$T('graphics.planetEditor.remove')" (click)="RegionRemoved(region.Index)" /></div>
+		<div class="elemenx-planet-editor-title" *if="Placing(Tool)">{{$T('graphics.planetEditor.places.title')}}</div>
+		<div class="elemenx-planet-editor-place" *if="Placing(Tool) && Making" role="status">{{$T('graphics.planetEditor.places.making')}}</div>
+		<div class="elemenx-planet-editor-place" *if="Placing(Tool) && !Making">{{Tool === 'settlements' ? $T('graphics.planetEditor.places.townsHint') : $T('graphics.planetEditor.places.riversHint')}}</div>
+		<div class="elemenx-planet-editor-field" *if="Tool === 'streams'" data-key="Flow"><span>{{$T('graphics.planetEditor.places.flow')}}</span><NumberInput Size="small" [Label]="$T('graphics.planetEditor.places.flow')" [Min]="10" [Value]="StreamFlow" (change)="StreamFlow = $event" /></div>
+		<div class="elemenx-planet-editor-title" *if="PlaceOf(Version, PlaceSelected)">{{PlaceOf(Version, PlaceSelected).Kind === 'town' ? $T('graphics.planetEditor.places.town') : $T('graphics.planetEditor.places.river')}}<Button Size="small" Variant="ghost" Icon="delete" [Title]="$T('graphics.planetEditor.places.remove')" (click)="PlaceRemoved()" /></div>
+		<div class="elemenx-planet-editor-field" *if="PlaceOf(Version, PlaceSelected) && PlaceOf(Version, PlaceSelected).Kind === 'town'" data-key="Kind"><span>{{$T('graphics.planetEditor.places.kind')}}</span><Select Size="small" [Label]="$T('graphics.planetEditor.places.kind')" [Options]="TownKinds(Version)" [Value]="PlaceOf(Version, PlaceSelected).Of" (change)="PlaceKind($event)" /></div>
+		<div class="elemenx-planet-editor-place" *if="PlaceOf(Version, PlaceSelected) && PlaceOf(Version, PlaceSelected).Kind === 'river'">{{$T('graphics.planetEditor.places.flow')}}: {{PlaceOf(Version, PlaceSelected).Flow}}</div>
 		<div class="elemenx-planet-editor-title" *if="Place">{{$T('graphics.planetEditor.location')}}<Button Size="small" Variant="primary" [Label]="$T('graphics.planetEditor.open')" (click)="Opened()" /></div>
 		<div class="elemenx-planet-editor-place" *if="Place">{{Place}}</div>
 		<div class="elemenx-planet-editor-field" *for="field of LocationFields(Version, Place)" *key="field.Key" [attribute.data-key]="field.Key"><span>{{field.Key}}</span><Select *if="field.Options" Size="small" [Label]="field.Key" [Options]="Listed(field.Options)" [Value]="field.Value" (change)="LocationChanged(field.Key, $event)" /><Input *if="!field.Options" Size="small" [Label]="field.Key" [Value]="field.Value" (change)="LocationChanged(field.Key, $event)" /></div>

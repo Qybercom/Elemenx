@@ -44,6 +44,7 @@ Elemenx.Application('ApplicationExample', {
 			{Path: '/ui', Component: 'UIKitPage'},
 			{Path: '/graphics', Component: 'GraphicsPage'},
 			{Path: '/gaming', Component: 'GamingPage'},
+			{Path: '/hardware', Component: 'HardwarePage'},
 			{Path: '/authorized', Component: 'AuthorizedPage', Guard: 'Authorized', GuardFailed: 'LoginRequired'},
 			{Path: '/redirect-protected', Component: 'RedirectProtectedPage', Guard: 'AuthorizedRedirect'},
 			{Path: '/router/:id', Component: 'RouterLabPage'},

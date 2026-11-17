@@ -25,14 +25,14 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `AbsoluteURL` | resolves a URL against the document; in a worker the value is kept as it is | Application, Library, Locale, Resource, ServiceWorker, WebWorker |
 | `CurrentScriptURL` | the URL of the executing script without query and hash, or `null`: the base of the relative paths of its definitions | Application, Bundle, Library, Template and Component |
 | `DefinitionURL` | resolves a relative path of a definition against its `$DefinitionURL`; absolute and root paths are kept | Library, Template and Component, Application |
-| `OwnerRegistry` | registry of the resources an owner created: `Add`, `Remove`, `Destroyed`, `Destroy` (destroys the rest with the owner) | Events, Messaging, WebWorker, ServiceWorker |
+| `OwnerRegistry` | registry of the resources an owner created: `Add`, `Remove`, `Destroyed`, `Destroy` (destroys the rest with the owner) | Events, Hardware, Messaging, WebWorker, ServiceWorker |
 | `EventList` | listeners of the named events of one object: `Add`, `Remove`, `Emit` (each listener isolated, one shared event), `Clear` | Storage, WebWorker, ServiceWorker |
 | `Countdown` | waits for N asynchronous steps: the callback gets the first error, or `null` once all succeeded | Discovery, Install, Locale, Resources |
 | `MessageListeners` | listeners of the global `message` event added through a wrapper, removable by their own callback | Messaging, WebWorker |
 | `CaseName` | the own key of an object that is a key in another case (a lower-case attribute of a template for a prop), or `null` when none or several are (of a value and a method of the same letters, the value); its names are kept by their lower case for each object (read again when its count of keys changes) | Template and Component, Structural |
 | `Assign` | copies the own enumerable properties of a source into a target and returns the target | Template and Component, Router, SSR, Structural, Storage, WebWorker, ServiceWorker |
 | `Report` | reports an exception as an uncaught error at once, like the DOM does for event listeners (`reportError`; without it, rethrown from a timer) | Application, Install, Locale, Router, SSR, Widgets |
-| `Notify` | calls one event listener in isolation: its exception is reported and the dispatch continues | Template and Component, Router, Network, Events, Messaging, Identity |
+| `Notify` | calls one event listener in isolation: its exception is reported and the dispatch continues | Template and Component, Router, Network, Events, Messaging, Identity, Hardware |
 | `Invoke` | calls a callback `(error, value)` from a promise handler; an exception thrown by the callback is reported instead of being swallowed | Network, ServiceWorker |
 
 ## Outlet
@@ -208,6 +208,13 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `StorageFor` | owner-aware `$Storage` accessor | Owner resources |
+
+## Hardware
+
+| Field | Purpose | Used by |
+|---|---|---|
+| `HardwareFor` | owner-aware `$Hardware` facade (Serial, USB, Firmware) | Owner resources, Application |
+| `DestroyHardwareOwner` | closes the ports and devices an owner opened and forgets its listeners | Owner resources |
 
 ## Events
 

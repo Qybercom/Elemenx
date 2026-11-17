@@ -23782,49 +23782,6 @@
 			"Sample": {}
 		},
 		{
-			"Name": "Serial",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "Serial ports (COM ports, UART: Arduino, GPS, scales, printers...) through Web Serial: Chrome and Edge on the desktop, HTTPS or localhost.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Supported()",
-				"Request(options, callback)",
-				"Ports(callback)",
-				"On(name, callback)",
-				"Off(name, callback)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "USB",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "USB devices through WebUSB (Chrome and Edge; HTTPS or localhost): devices with a driver of their own, not the ones the system keeps (keyboards, disks).",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Supported()",
-				"Request(options, callback)",
-				"Devices(callback)",
-				"On(name, callback)"
-			],
-			"Sample": {}
-		},
-		{
 			"Name": "NFC",
 			"Kind": "Service",
 			"Group": "",

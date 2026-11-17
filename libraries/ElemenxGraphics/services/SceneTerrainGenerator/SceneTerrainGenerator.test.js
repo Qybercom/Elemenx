@@ -64,9 +64,9 @@ describe('Contract: the plan of a settlement of a sketch: its streets, its lots 
 		});
 	}
 
-	it('lays a city on a grid along its longest side, none of its streets on its edge, its lots wholly inside, off the streets and each other, facing their street', function () {
+	it('lays a city of the grid layout on a grid along its longest side, none of its streets on its edge, its lots wholly inside, off the streets and each other, facing their street', function () {
 		var outline = square(0, -120, 160, 30);
-		var city = plan({Kind: 'city', Points: outline});
+		var city = plan({Kind: 'city', Layout: 'grid', Points: outline});
 		var lines = city.Streets.map(function (street) {
 			return street.Points;
 		});
@@ -119,7 +119,7 @@ describe('Contract: the plan of a settlement of a sketch: its streets, its lots 
 			return terrain.SettlementKinds.city.Classes[lot.Class];
 		})).toBe(true);
 		/* A step of 39 metres would lay streets 2 metres off its edges: none of those. */
-		expect(plan({Kind: 'city', Points: outline, Block: 39}).Streets.every(function (street) {
+		expect(plan({Kind: 'city', Layout: 'grid', Points: outline, Block: 39}).Streets.every(function (street) {
 			return street.Points.every(function (point) {
 				return point[0] > 10 && point[0] < 150 || Math.abs(street.Points[0][0] - street.Points[1][0]) > 1e-6;
 			});
@@ -130,7 +130,7 @@ describe('Contract: the plan of a settlement of a sketch: its streets, its lots 
 
 	it('gives a village a main street with lanes off it, takes the streets drawn in it instead, builds none on a square and those of a district in it', function () {
 		var outline = square(-120, -100, -30, -20);
-		var village = plan({Kind: 'village', Points: outline});
+		var village = plan({Kind: 'village', Layout: 'main', Points: outline});
 		var main = village.Streets[0];
 
 		expect(main.Points[0][1]).toBeCloseTo(main.Points[1][1], 6);
@@ -144,8 +144,8 @@ describe('Contract: the plan of a settlement of a sketch: its streets, its lots 
 		})).toBe(true);
 
 		/* The same seed the same plan; another another. */
-		expect(plan({Kind: 'village', Points: outline})).toEqual(village);
-		expect(plan({Kind: 'village', Points: outline, Seed: 'other'}).Lots).not.toEqual(village.Lots);
+		expect(plan({Kind: 'village', Layout: 'main', Points: outline})).toEqual(village);
+		expect(plan({Kind: 'village', Layout: 'main', Points: outline, Seed: 'other'}).Lots).not.toEqual(village.Lots);
 
 		/* Its own streets, a square and a district of villas. */
 		var drawn = [
@@ -154,7 +154,7 @@ describe('Contract: the plan of a settlement of a sketch: its streets, its lots 
 			{ID: 'q', Type: 'square', Points: square(-70, -55, -40, -25)},
 			{ID: 'd', Type: 'district', Kind: 'noble', Points: square(-120, -100, -30, -62)}
 		];
-		var made = plan({Kind: 'village', Points: outline}, drawn);
+		var made = plan({Kind: 'village', Layout: 'main', Points: outline}, drawn);
 
 		expect(made.Streets).toEqual([{Points: drawn[0].Points, Width: 8}, {Points: drawn[1].Points, Width: terrain.SettlementKinds.village.Street}]);
 		expect(made.Lots.some(function (lot) {
@@ -177,7 +177,7 @@ describe('Contract: the plan of a settlement of a sketch: its streets, its lots 
 		expect(others.every(function (lot) {
 			return lot.District === '' && terrain.SettlementKinds.village.Classes[lot.Class];
 		})).toBe(true);
-		expect(plan({Kind: 'village', Points: outline, Density: 0}).Lots).toEqual([]);
+		expect(plan({Kind: 'village', Layout: 'main', Points: outline, Density: 0}).Lots).toEqual([]);
 	});
 
 	/* Regression: houses of a settlement stood on a road of the sketch through it (and on a river): lots keep off all its ways. */
@@ -230,6 +230,195 @@ describe('Contract: the plan of a settlement of a sketch: its streets, its lots 
 
 		expect(plan({Kind: 'village', Points: outline, Walls: true}).Walls).toEqual([ring]);
 		expect(plan({Kind: 'city', Points: [[0, 0], [10, 0]]}).Streets).toEqual([]);
+	});
+
+	function round (radius) {
+		var made = [];
+		var i;
+
+		for (i = 0; i < 12; i++)
+			made.push([Math.cos(i / 12 * Math.PI * 2) * radius * (1 + 0.1 * Math.sin(i * 2.3)), Math.sin(i / 12 * Math.PI * 2) * radius * (1 + 0.1 * Math.cos(i * 1.7))]);
+
+		return made;
+	}
+
+	function straying (line) {
+		var a = line[0];
+		var b = line[line.length - 1];
+
+		return Math.max.apply(null, line.map(function (point) {
+			return distance([a, b], point[0], point[1]);
+		}));
+	}
+
+	function wellPlaced (made, outline) {
+		made.Lots.forEach(function (lot) {
+			corners(lot).forEach(function (point) {
+				expect(inside(outline, point[0], point[1])).toBe(true);
+			});
+			made.Streets.forEach(function (street) {
+				var line = street.Closed ? street.Points.concat([street.Points[0]]) : street.Points;
+
+				expect(distance(line, lot.X, lot.Z)).toBeGreaterThan(street.Width / 2 + Math.min(lot.Width, lot.Depth) / 2 - 0.01);
+			});
+		});
+	}
+
+	it('lays a village along a bent street of its own or along a road through it, on a hillside in terraces along the level', function () {
+		var outline = round(180);
+		var village = plan({Kind: 'village', Points: outline, Seed: 'v'});
+		var main = village.Streets[0];
+
+		/* Its kind's layout: a main street bent as a way across the country, lanes off it ending on it, houses along them. */
+		expect(terrain.SettlementKinds.village.Layout).toBe('road');
+		expect(straying(main.Points)).toBeGreaterThan(5);
+		expect(village.Streets.length).toBeGreaterThan(4);
+
+		village.Streets.slice(1).forEach(function (lane) {
+			expect(distance(main.Points, lane.Points[0][0], lane.Points[0][1])).toBeLessThan(1);
+			expect(lane.Width).toBeLessThan(main.Width);
+		});
+
+		expect(village.Lots.length).toBeGreaterThan(30);
+
+		wellPlaced(village, outline);
+
+		expect(plan({Kind: 'village', Points: outline, Seed: 'v'})).toEqual(village);
+
+		/* A road of the sketch through it: no main street of its own, its houses on both sides of the road, its lanes off it. */
+		var road = {Type: 'road', Points: [[-400, -80], [0, 20], [400, -30]], Width: 9};
+		var along = plan({Kind: 'village', Points: outline, Seed: 'v'}, [road]);
+		var lining = along.Lots.filter(function (lot) {
+			return distance(road.Points, lot.X, lot.Z) < 20;
+		});
+
+		expect(along.Streets.every(function (lane) {
+			return distance(road.Points, lane.Points[0][0], lane.Points[0][1]) < 1;
+		})).toBe(true);
+		expect(lining.filter(function (lot) {
+			return lot.Z > 0;
+		}).length).toBeGreaterThan(5);
+		expect(lining.length).toBeGreaterThan(12);
+
+		/* A hillside: streets along the level each side of the main one, short ways up and down between them. */
+		var hill = plan({Kind: 'village', Points: outline, Seed: 'v', Slope: 0.1, Contour: 0.5});
+		var level = hill.Streets.filter(function (street) {
+			var a = street.Points[0];
+			var b = street.Points[street.Points.length - 1];
+
+			return Math.hypot(b[0] - a[0], b[1] - a[1]) > 100 && Math.abs(Math.sin(Math.atan2(b[1] - a[1], b[0] - a[0]) - 0.5)) < 0.35;
+		});
+
+		expect(level.length).toBe(3);
+		expect(hill.Streets.length).toBeGreaterThan(5);
+
+		wellPlaced(hill, outline);
+	});
+
+	it('lays a town about its old centre: a market square, streets out of it, a ring round the old town, a grid past it ending on the ring', function () {
+		var outline = round(450);
+		var town = plan({Kind: 'town', Points: outline, Seed: 't'});
+		/* Its middle: the mean of its outline. */
+		var mid = [0, 1].map(function (axis) {
+			return outline.reduce(function (sum, point) {
+				return sum + point[axis] / outline.length;
+			}, 0);
+		});
+		var reach = Math.max.apply(null, outline.map(function (point) {
+			return Math.hypot(point[0] - mid[0], point[1] - mid[1]);
+		}));
+		var old = reach * 0.4;
+		var market = Math.max(12, reach * 0.08);
+		var rings = town.Streets.filter(function (street) {
+			return street.Closed;
+		});
+		var rays = town.Streets.filter(function (street) {
+			return !street.Closed && Math.hypot(street.Points[0][0] - mid[0], street.Points[0][1] - mid[1]) < market + 1;
+		});
+		var grid = town.Streets.filter(function (street) {
+			return street.Points.length === 2;
+		});
+
+		expect(terrain.SettlementKinds.town.Layout).toBe('radial');
+
+		/* Round the market, round the old town, a crooked one inside it. */
+		var ring = rings.filter(function (one) {
+			return Math.abs(Math.hypot(one.Points[0][0] - mid[0], one.Points[0][1] - mid[1]) - old) < 2;
+		})[0];
+
+		expect(rings.length).toBe(3);
+		expect(rings.filter(function (one) {
+			return Math.abs(Math.hypot(one.Points[0][0] - mid[0], one.Points[0][1] - mid[1]) - market) < 0.5;
+		}).length).toBe(1);
+
+		ring.Points.forEach(function (point) {
+			/* On its circle of 32 sides. */
+			expect(Math.hypot(point[0] - mid[0], point[1] - mid[1])).toBeLessThan(old + 0.01);
+			expect(Math.hypot(point[0] - mid[0], point[1] - mid[1])).toBeGreaterThan(old * Math.cos(Math.PI / 32) - 0.01);
+		});
+
+		expect(rays.length).toBe(6);
+		expect(grid.length).toBeGreaterThan(20);
+
+		/* Its grid past the ring, its streets that come to it ending on it. */
+		grid.forEach(function (street) {
+			street.Points.forEach(function (point) {
+				var far = Math.hypot(point[0] - mid[0], point[1] - mid[1]);
+
+				expect(far).toBeGreaterThan(old - 1.01);
+
+				if (far < old + 2.5)
+					expect(distance(ring.Points.concat([ring.Points[0]]), point[0], point[1])).toBeLessThan(2.5);
+			});
+		});
+
+		/* No house on its market square. */
+		expect(town.Lots.some(function (lot) {
+			return Math.hypot(lot.X - mid[0], lot.Z - mid[1]) < market;
+		})).toBe(false);
+		expect(town.Lots.length).toBeGreaterThan(300);
+
+		wellPlaced(town, outline);
+	});
+
+	it('lays a city in districts: avenues out of its middle and round it, a grid in its core, in each district a grid turned its own way', function () {
+		var outline = round(900);
+		var city = plan({Kind: 'city', Points: outline, Seed: 'c'});
+		var avenues = city.Streets.filter(function (street) {
+			return street.Road === 'avenue';
+		});
+		var turns = {};
+
+		expect(terrain.SettlementKinds.city.Layout).toBe('districts');
+		expect(avenues.filter(function (street) {
+			return street.Closed;
+		}).length).toBe(1);
+		expect(avenues.filter(function (street) {
+			return !street.Closed;
+		}).length).toBe(3);
+		expect(city.Streets.filter(function (street) {
+			return street.Road === 'boulevard' && street.Closed;
+		}).length).toBe(1);
+
+		avenues.forEach(function (street) {
+			expect(street.Width).toBe(26);
+		});
+
+		/* The ways its grids are turned (a quarter turn the same): the core and its districts, most of them their own way. */
+		city.Streets.forEach(function (street) {
+			if (street.Road || street.Points.length !== 2) return;
+
+			var a = street.Points[0];
+			var b = street.Points[1];
+			var turn = (Math.atan2(b[1] - a[1], b[0] - a[0]) % (Math.PI / 2) + Math.PI / 2) % (Math.PI / 2);
+
+			turns[Math.round(turn * 20)] = true;
+		});
+
+		expect(Object.keys(turns).length).toBeGreaterThan(5);
+		expect(city.Lots.length).toBeGreaterThan(800);
+
+		wellPlaced(city, outline);
 	});
 });
 
@@ -619,6 +808,91 @@ describe('Contract: the volume of a ground: tunnels, caves and overhangs cut out
 	});
 
 	/*
+	 * Regression: the light of the sky a point of a tunnel saw was of five rays up within its square: deep in the rock by the
+	 * edge of a square it was all of it, the next square dark, and the floor of its mouth had the grass of the hill. The
+	 * daylight goes in from where the sky is over it, less a cell after another, the same in every square.
+	 */
+	it('lets the daylight into a tunnel from its mouths alone, the same in every square, and its floor under the rock is rock', function () {
+		var options = {Size: 400, Height: 40, Water: 0, Seed: 'hill', Scale: 90};
+		var field = terrain.Flat(Object.assign({}, options, {Carves: [{Type: 'tunnel', Points: [[-60, 0, 3], [60, 0, 3]], Radius: 3, Flat: 0.5}]}));
+		var holed = terrain.Flat(Object.assign({}, options, {Carves: [{Type: 'tunnel', Points: [[-60, 0, 6], [60, 0, 6]], Radius: 4, Flat: 0.5}]}));
+		var a = terrain.Daylight(field, -16, -16, 0, 0, 0);
+		var b = terrain.Daylight(field, 0, -16, 16, 0, 0);
+		var outside = terrain.Daylight(field, 100, 100, 116, 116, 0);
+		var piece = field.Chunk(0, 0, 32, 32);
+		/* The grass of low and of high ground. */
+		var grass = [field.Materials.indexOf(terrain.GroundMaterials.Low), field.Materials.indexOf(terrain.GroundMaterials.High)].filter(function (slot) {
+			return slot >= 0;
+		});
+		var deep = [];
+		var floors = 0;
+		var y;
+
+		/* Deep in it under the hill: none; out under the sky: all; the same point the same of either square. */
+		expect(a.At(0, 2.5, 0)).toBeLessThan(0.05);
+		expect(outside.At(108, field.Height(108, 108) + 1, 108)).toBe(1);
+
+		for (y = 1.5; y < 6; y += 1.5)
+			expect(Math.abs(a.At(-0.5, y, -1) - b.At(-0.5, y, -1))).toBeLessThan(1e-6);
+
+		/* A tunnel near under the hill, its roof broken through at x -13: the sky seen there, less and less along it. */
+		expect(terrain.Daylight(holed, -16, -16, 0, 0, 0).At(-13, 7, 0)).toBeGreaterThan(0.5);
+		expect(terrain.Daylight(holed, -16, -16, 0, 0, 0).At(0, 4.5, 0)).toBeLessThan(0.5);
+
+		/* Its vertices deep in it see no sky, its floor there has no grass. */
+		piece.UVs.forEach(function (value, index) {
+			if (index % 2 === 1 && piece.Positions[(index - 1) / 2 * 3 + 1] < 4)
+				deep.push(value);
+		});
+
+		expect(deep.length).toBeGreaterThan(10);
+		expect(Math.max.apply(null, deep)).toBeLessThan(0.05);
+		expect(grass.length).toBeGreaterThan(0);
+
+		piece.Positions.forEach(function (value, index) {
+			if (index % 3 !== 1 || value > 2.5 || value < 0.5) return;
+
+			floors++;
+
+			grass.forEach(function (slot) {
+				expect(piece.Materials[Math.floor(index / 3) * 12 + slot] || 0).toBe(0);
+			});
+		});
+
+		expect(floors).toBeGreaterThan(10);
+	});
+
+	it('cuts the caves, halls and overhangs a sketch draws in its volume, and changes no height by them', function () {
+		var options = {Size: 400, Height: 40, Water: 0, Seed: 'hill', Scale: 90};
+		var plain = terrain.Flat(options);
+		var sketch = {Layers: [{ID: 'under', Items: [
+			{ID: 'way', Type: 'cave', Points: [[-40, 0], [0, 0], [30, 20]], Width: 6, Depth: 7, Mouth: 0},
+			{ID: 'room', Type: 'hall', At: [60, -40], Radius: 6, Depth: 12},
+			{ID: 'jut', Type: 'overhang', At: [-100, 100], Radius: 40, Amount: 5}
+		]}]};
+		var carves = terrain.SketchCarves(sketch, plain.Height, 'hill');
+		var field = terrain.Flat(Object.assign({}, options, {Sketch: sketch}));
+
+		expect(carves.map(function (carve) {
+			return carve.Type;
+		})).toEqual(['passages', 'sphere', 'overhangs']);
+		expect(carves[0].Nodes.length).toBe(3);
+		expect(carves[0].Ways.length).toBe(2);
+		expect(carves[1].At[1]).toBeCloseTo(plain.Height(60, -40) - 12, 6);
+
+		/* Hollow 7 m under the ground along the way and in the middle of the hall; the ground over them as it was. */
+		expect(field.Density(0, plain.Height(0, 0) - 7, 0)).toBeLessThan(0);
+		expect(field.Density(60, plain.Height(60, -40) - 12, -40)).toBeLessThan(0);
+		expect(field.Density(150, plain.Height(150, 150) - 3, 150)).toBeGreaterThan(0);
+		expect(field.Volume.Ground(0, 0)).toBeCloseTo(plain.Height(0, 0), 6);
+
+		/* One hidden: not cut. */
+		sketch.Layers[0].Items[1].Visible = false;
+
+		expect(terrain.SketchCarves(sketch, plain.Height, 'hill').length).toBe(2);
+	});
+
+	/*
 	 * Regression: the tunnel of a wide road was round bores side by side, and the ground between them stood inside the box of
 	 * its lining. A tunnel of a Width is a box round its axis: as wide and as high as told, its floor and vault level, its
 	 * corners round, nothing left across it.
@@ -749,9 +1023,12 @@ describe('Contract: the volume of a ground: tunnels, caves and overhangs cut out
 		expect(field.Volume.Touches(-10, 4.2, 10, 20)).toBe(true);
 		expect(piece.Volume).toBe(true);
 
-		/* Its skirt, two cells under its edges, left out. */
+		/*
+		 * Its skirt, two cells under its edges, left out. On its heights before anything is cut: those the place of floors
+		 * gives near a cut are found by steps.
+		 */
 		for (i = 0; i < piece.Positions.length; i += 3) {
-			var off = Math.abs(piece.Positions[i + 1] - field.Height(piece.Positions[i], piece.Positions[i + 2] + 20));
+			var off = Math.abs(piece.Positions[i + 1] - field.Volume.Ground(piece.Positions[i], piece.Positions[i + 2] + 20));
 			if (piece.Positions[i + 2] + 20 > 12 && piece.Normals[i + 1] > 0.5 && off < 1)
 				worst = Math.max(worst, off);
 		}
@@ -874,5 +1151,82 @@ describe('Regression: the numbers of a flat map told once', function () {
 		expect(defaults('Relief')).toMatchObject({Scale: flat.Scale, Ridges: flat.Ridges});
 		expect(defaults('Tunnel').Radius).toBe(terrain.TunnelRadius);
 		expect(terrain.TunnelRadius).toBe(2.5);
+	});
+
+	/*
+	 * Regression: a square of a globe beside a coarser one met it in a step (its own heights between the points of the
+	 * other), a wall of its skirt across the land. Each point of its edges tells where it goes to lie on the edge of a square
+	 * one level coarser (Materials 2-4) and two (5-7): moved so, its points are on the very edge of the other.
+	 */
+	it('tells where each point of the edge of a square of a globe goes to lie on the edge of a coarser square beside', function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var field = terrain.Sphere({Planet: {Seed: 'stitch', Ocean: 0.2}});
+		var cells = 32;
+		var side = cells + 1;
+		var coarse = terrain.SpherePatch(field, 0, 0, 0, 1, cells);
+		var fine = terrain.SpherePatch(field, 0, 0.75, 0.25, 0.5, cells);
+		var finer = terrain.SpherePatch(field, 0, 0.625, 0.125, 0.25, cells);
+		var apart = 0;
+		var t;
+
+		function point (made, index, morph) {
+			var p = made.Geometry.Positions;
+			var m = made.Geometry.Materials;
+
+			return [0, 1, 2].map(function (k) {
+				return made.Center[k] + p[index * 3 + k] + (morph ? m[index * 12 + morph + k] : 0);
+			});
+		}
+
+		function distance (a, b) {
+			return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+		}
+
+		/* Its first column (u = 0.5) on the last of the coarse one (u = 0.5): its point t is the coarse row 16 + t / 2. */
+		for (t = 1; t < cells; t++) {
+			var row = 16 + t / 2;
+			var a = point(coarse, Math.floor(row) * side + cells);
+			var b = point(coarse, Math.ceil(row) * side + cells);
+			var on = [0, 1, 2].map(function (k) {
+				return (a[k] + b[k]) / 2;
+			});
+
+			apart = Math.max(apart, distance(point(fine, t * side), on));
+
+			expect(distance(point(fine, t * side, 2), on)).toBeLessThan(1e-7);
+		}
+
+		/* Unmoved, its points between those of the coarse one are off its edge: a step. */
+		expect(apart).toBeGreaterThan(1e-6);
+
+		/* Two levels finer (u = 0.5 too, v from 0 to 0.25): its point t is the coarse row 16 + t / 4. */
+		for (t = 1; t < cells; t++) {
+			var at = 16 + t / 4;
+			var c = point(coarse, Math.floor(at) * side + cells);
+			var d = point(coarse, Math.ceil(at) * side + cells);
+			var share = at - Math.floor(at);
+			var along = [0, 1, 2].map(function (k) {
+				return c[k] + (d[k] - c[k]) * share;
+			});
+
+			expect(distance(point(finer, t * side, 5), along)).toBeLessThan(1e-7);
+		}
+
+		/* Three levels finer (v from 0 to 0.125): its point t is the coarse row 16 + t / 8. */
+		var finest = terrain.SpherePatch(field, 0, 0.5625, 0.0625, 0.125, cells);
+
+		for (t = 1; t < cells; t++) {
+			var row8 = 16 + t / 8;
+			var e = point(coarse, Math.floor(row8) * side + cells);
+			var f = point(coarse, Math.ceil(row8) * side + cells);
+			var part = row8 - Math.floor(row8);
+
+			expect(distance(point(finest, t * side, 8), [0, 1, 2].map(function (k) {
+				return e[k] + (f[k] - e[k]) * part;
+			}))).toBeLessThan(1e-7);
+		}
+
+		/* Its points inside move nowhere. */
+		expect(Array.from(fine.Geometry.Materials.slice((5 * side + 5) * 12 + 2, (5 * side + 5) * 12 + 11))).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0]);
 	});
 });

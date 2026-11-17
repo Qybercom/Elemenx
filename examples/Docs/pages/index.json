@@ -574,6 +574,13 @@
 						"en": "Service workers",
 						"ru": "Service Worker"
 					}
+				},
+				{
+					"ID": "hardware",
+					"Title": {
+						"en": "Hardware",
+						"ru": "Оборудование"
+					}
 				}
 			]
 		},
@@ -2572,6 +2579,14 @@
 					},
 					"Group": "overlays",
 					"Library": "ElemenxUI"
+				},
+				{
+					"ID": "WorldEditor",
+					"Title": {
+						"en": "WorldEditor"
+					},
+					"Group": "game",
+					"Library": "ElemenxGraphics"
 				}
 			]
 		},
@@ -2798,6 +2813,13 @@
 						"en": "Formulas"
 					},
 					"Library": "ElemenxCommon"
+				},
+				{
+					"ID": "GalaxyData",
+					"Title": {
+						"en": "GalaxyData"
+					},
+					"Library": "ElemenxGraphics"
 				},
 				{
 					"ID": "GameItems",
@@ -3206,13 +3228,6 @@
 					"Library": "ElemenxCommon"
 				},
 				{
-					"ID": "Serial",
-					"Title": {
-						"en": "Serial"
-					},
-					"Library": "ElemenxUI"
-				},
-				{
 					"ID": "Sigils",
 					"Title": {
 						"en": "Sigils"
@@ -3255,6 +3270,13 @@
 					"Library": "ElemenxCommon"
 				},
 				{
+					"ID": "SystemData",
+					"Title": {
+						"en": "SystemData"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "Theme",
 					"Title": {
 						"en": "Theme"
@@ -3272,13 +3294,6 @@
 					"ID": "TopologyKinds",
 					"Title": {
 						"en": "TopologyKinds"
-					},
-					"Library": "ElemenxUI"
-				},
-				{
-					"ID": "USB",
-					"Title": {
-						"en": "USB"
 					},
 					"Library": "ElemenxUI"
 				},
@@ -3455,6 +3470,13 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "EditorPanes",
+					"Title": {
+						"en": "EditorPanes"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneBehaviour",
 					"Title": {
 						"en": "SceneBehaviour"
@@ -3518,6 +3540,13 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "SceneGalaxy",
+					"Title": {
+						"en": "SceneGalaxy"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneLanding",
 					"Title": {
 						"en": "SceneLanding"
@@ -3528,6 +3557,13 @@
 					"ID": "SceneLighting",
 					"Title": {
 						"en": "SceneLighting"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneNebula",
+					"Title": {
+						"en": "SceneNebula"
 					},
 					"Library": "ElemenxGraphics"
 				},

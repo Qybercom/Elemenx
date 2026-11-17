@@ -148,7 +148,7 @@ Elemenx.Component('SpaceDemo', {
 		this.SpaceNebulaType = value;
 		this.SpaceNebula = {Objects: [{ID: 'nebula', Kind: 'nebula', Values: {Name: (this.SpaceNebulaTypes.filter(function (one) {
 			return one.Value === value;
-		})[0] || {}).Label}, Traits: {Nebula: {Type: type, Subtype: parts[1] || '', Radius: {hii: 12, planetary: 0.5, remnant: 9, dark: 6}[type], Seed: 'demo-' + value}}, Children: middle}]};
+		})[0] || {}).Label}, Traits: {Nebula: {Type: type, Subtype: parts[1] || '', Radius: {hii: 12, planetary: 0.5, remnant: 9, dark: 6}[type], Seed: 'demo-' + value, Blueprint: this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/nebula')), Parameters: {Pulse: 0.15, Cycle: 30, Spin: 3}}}, Children: middle}]};
 	},
 	SpaceClusterType: 'globular',
 	SpaceClusterTypes: [{Value: 'open', Label: 'Open'}, {Value: 'globular', Label: 'Globular'}, {Value: 'nuclear', Label: 'Nuclear'}],

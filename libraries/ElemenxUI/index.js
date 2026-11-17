@@ -47,8 +47,6 @@
 	'services/Audio/Audio.js',
 	'services/AchievementQueue/AchievementQueue.js',
 	'services/Push/Push.js',
-	'services/Serial/Serial.js',
-	'services/USB/USB.js',
 	'services/NFC/NFC.js',
 	'services/Countries/Countries.js',
 	'services/Currencies/Currencies.js',

@@ -10,3 +10,5 @@ Scatter отправляет ближайшие квадраты пачками 
 Biome правила — биом земли по климату, где оно растёт; на стыке биомов вещи перемешиваются по весам (Land).
 
 LibraryScatter(rule) берёт граф ресурса `ElemenxGraphics/scatter` (blueprints/scatter.json) и заполняет его параметры (MinHeight, MaxHeight, MaxSlope, Cover, Patch, Clumps) и зерно `{Seed}` через Blueprints.Fill; приложение может подложить свой граф под тем же именем.
+
+Under правила (floor или ceiling) сеет вещи на пол или свод пещеры под скалой земли с объёмом, под открытым небом — ничего; Under(field, place, ceiling) — высота этого пола или свода в точке, null, если его нет.

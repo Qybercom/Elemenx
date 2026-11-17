@@ -182,11 +182,15 @@ Elemenx.Service('PlanetData', {
 			});
 		}
 
+		/* Its rivers of its ground as it was made: what a developer changed of them (Places) is laid over them where they are read. */
 		function vectors () {
+			var drained = Object.assign({}, working);
 			var side = Math.max(16, Math.round((Number(given.VectorSize) || 256) / 4) * 4);
 			var heights = new Float32Array(6 * side * side);
 			var waiting = strips;
 			var row;
+
+			delete drained.Places;
 
 			function came (face, first) {
 				return function (piece) {
@@ -213,7 +217,7 @@ Elemenx.Service('PlanetData', {
 
 			for (face = 0; face < 6; face++) {
 				for (row = 0; row < side; row += side / 4)
-					run('Heights', [working, face, side, row, side / 4], came(face, row));
+					run('Heights', [drained, face, side, row, side / 4], came(face, row));
 			}
 		}
 

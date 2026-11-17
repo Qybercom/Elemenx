@@ -502,6 +502,9 @@ Elemenx.Component('WorldEditor', {
 			scene.GalaxyFocus(item.ID);
 
 		this.Version++;
+
+		/* The second press counted from when the first was done with (the flight begun takes a moment on a slow page). */
+		this.Chosen.At = Date.now();
 	},
 
 	PickedRenamed: function (name) {

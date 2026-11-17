@@ -501,8 +501,42 @@ Elemenx.Service('Renderer', {
 			'	}',
 			'	return sum * 0.25;',
 			'}',
-			'vec3 localLight(vec3 position, vec3 normal) {',
+			/*
+			 * A lamp under rock sees all round (Scene, lampShadows): the six faces of a cube from it (+x, -x, +y, -y, +z, -z),
+			 * 3 by 2 in its map, each of 90 degrees to far; the face the way to the point goes most along.
+			 */
+			'float lampAround(int index, vec3 position, vec3 lamp, float far) {',
+			'	vec3 d = position - lamp;',
+			'	vec3 a = abs(d);',
+			'	float m;',
+			'	vec2 face;',
+			'	float tile;',
+			'	if (a.x >= a.y && a.x >= a.z) { m = a.x; tile = d.x > 0.0 ? 0.0 : 1.0; face = d.x > 0.0 ? vec2(d.z, d.y) : vec2(-d.z, d.y); }',
+			'	else if (a.y >= a.z) { m = a.y; tile = d.y > 0.0 ? 2.0 : 3.0; face = d.y > 0.0 ? vec2(d.x, d.z) : vec2(d.x, -d.z); }',
+			'	else { m = a.z; tile = d.z > 0.0 ? 4.0 : 5.0; face = d.z > 0.0 ? vec2(-d.x, d.y) : vec2(d.x, d.y); }',
+			'	if (m >= far) return 1.0;',
+			'	float near = 0.1;',
+			'	float depth = ((far + near) / (far - near) - 2.0 * far * near / ((far - near) * m)) * 0.5 + 0.5;',
+			'	float texel = 1.0 / 512.0;',
+			'	vec2 uv = clamp(face / m * 0.5 + 0.5, vec2(texel * 2.0), vec2(1.0 - texel * 2.0));',
+			'	vec2 cell = vec2(mod(tile, 3.0), floor(tile / 3.0));',
+			'	float sum = 0.0;',
+			'	for (int x = -1; x <= 1; x += 2) {',
+			'		for (int y = -1; y <= 1; y += 2) {',
+			'			vec3 at = vec3((cell + uv + vec2(float(x), float(y)) * texel * 0.5) / 3.0, depth - 0.0006);',
+			'			sum += index == 0 ? texture(uLampShadow0, at) : texture(uLampShadow1, at);',
+			'		}',
+			'	}',
+			'	return sum * 0.25;',
+			'}',
+			/*
+			 * The light of the lamps on a point, and with shine over 0 the glint of each in it too (gloss: what is wet, as the
+			 * rock of a cave): the same light, cone and shadow.
+			 */
+			'vec3 localLit(vec3 position, vec3 normal, float shine, out vec3 gloss) {',
 			'	vec3 total = vec3(0.0);',
+			'	vec3 v = normalize(-position);',
+			'	gloss = vec3(0.0);',
 			'	for (int i = 0; i < uLocalCount; i++) {',
 			'		vec4 place = uLocal[i * 3];',
 			'		vec4 aim = uLocal[i * 3 + 2];',
@@ -513,10 +547,17 @@ Elemenx.Service('Renderer', {
 			'		float fall = 1.0 - far * far / (place.w * place.w);',
 			'		float cone = aim.w > -1.5 ? smoothstep(aim.w, aim.w + 0.08, dot(-way, aim.xyz)) : 1.0;',
 			/* The two nearest lamps look down at the world and know what stands in their light. */
-			'		if (i < 2 && uLocal[i * 3 + 1].a > 0.5) cone *= lampSeen(i, position + normal * 0.06);',
-			'		total += uLocal[i * 3 + 1].rgb * max(dot(normal, way) * 0.85 + 0.15, 0.0) * fall * fall / (1.0 + far * far * 0.25 * min(1.0, 400.0 / (place.w * place.w))) * cone;',
+			'		if (i < 2 && uLocal[i * 3 + 1].a > 1.5) cone *= lampAround(i, position + normal * 0.08, place.xyz, uLocal[i * 3 + 1].a - 1.0);',
+			'		else if (i < 2 && uLocal[i * 3 + 1].a > 0.5) cone *= lampSeen(i, position + normal * 0.06);',
+			'		vec3 lit = uLocal[i * 3 + 1].rgb * fall * fall / (1.0 + far * far * 0.25 * min(1.0, 400.0 / (place.w * place.w))) * cone;',
+			'		total += lit * max(dot(normal, way) * 0.85 + 0.15, 0.0);',
+			'		if (shine > 0.0) gloss += lit * pow(max(dot(normal, normalize(way + v)), 0.0), 48.0) * shine * step(0.0, dot(normal, way));',
 			'	}',
 			'	return total;',
+			'}',
+			'vec3 localLight(vec3 position, vec3 normal) {',
+			'	vec3 gloss;',
+			'	return localLit(position, normal, 0.0, gloss);',
 			'}',
 			/* How much of the sky a place sees, of the light of its field. */
 			'float skySeen(vec3 position) {',
@@ -559,8 +600,33 @@ Elemenx.Service('Renderer', {
 			'	return max(seen, vec3(0.0)) / 3.14159265;',
 			'}',
 			/* What a surface gets round it: of the probes where they are, else the sky it sees (sky: of its side) and the bounce of the sun. */
-			'vec3 aroundLight(vec3 position, vec3 normal, vec3 sky) {',
+			/*
+			 * The daylight of a cave round the eye (uCaveOn, Scene caveLight), in the texture of the probes when they are off:
+			 * uCaveCount points along x, y and z, uCaveBox.w metres apart, the first at uCaveBox.xyz from the eye, the layers
+			 * of y side by side along x; 1 out of it.
+			 */
+			'uniform float uCaveOn;',
+			'uniform vec4 uCaveBox;',
+			'uniform vec3 uCaveCount;',
+			'float caveDaylight(vec3 position) {',
+			'	if (uCaveOn < 0.5) return 1.0;',
+			'	vec3 c = (position - uCaveBox.xyz) / uCaveBox.w;',
+			'	if (any(lessThan(c, vec3(0.0))) || any(greaterThan(c, uCaveCount - 1.0))) return 1.0;',
+			'	float j = min(floor(c.y), uCaveCount.y - 2.0);',
+			'	float wide = uCaveCount.x * uCaveCount.y;',
+			'	vec2 a = vec2((j * uCaveCount.x + c.x + 0.5) / wide, (c.z + 0.5) / uCaveCount.z);',
+			'	return mix(texture(uProbe, a).r, texture(uProbe, a + vec2(uCaveCount.x / wide, 0.0)).r, clamp(c.y - j, 0.0, 1.0));',
+			'}',
+			/* What comes round a surface of the ground of a volume, which knows its own daylight (its vertices): no cave of the eye over it. */
+			'vec3 aroundOpen(vec3 position, vec3 normal, vec3 sky) {',
 			'	vec3 open = sky * skySeen(position) + sunBounce(position);',
+			'	if (uProbeOn < 0.5) return open;',
+			'	float weight;',
+			'	vec3 probed = probeLight(position, normal, weight);',
+			'	return mix(open, probed, weight);',
+			'}',
+			'vec3 aroundLight(vec3 position, vec3 normal, vec3 sky) {',
+			'	vec3 open = (sky * skySeen(position) + sunBounce(position)) * caveDaylight(position + normal * 0.5);',
 			'	if (uProbeOn < 0.5) return open;',
 			'	float weight;',
 			'	vec3 probed = probeLight(position, normal, weight);',
@@ -1854,6 +1920,8 @@ Elemenx.Service('Renderer', {
 			},
 
 			Destroy: function () {
+				var pending = [];
+
 				meshes.slice().forEach(function (each) {
 					each.Destroy();
 				});
@@ -1862,9 +1930,19 @@ Elemenx.Service('Renderer', {
 					each.Destroy();
 				});
 
+				/*
+				 * A program the card is still making is let go once it is made. Regression: deleted while being made (a scene left
+				 * while it loaded, all its programs asked for at once), the browser told GL_INVALID_VALUE for each when it ended.
+				 */
 				Object.keys(programs).forEach(function (key) {
-					gl.deleteProgram(programs[key].Handle);
+					var handle = programs[key].Handle;
+
+					if (parallel && !programs[key].Settled && !gl.isContextLost() && !gl.getProgramParameter(handle, parallel.COMPLETION_STATUS_KHR)) pending.push(handle);
+					else gl.deleteProgram(handle);
 				});
+
+				if (pending.length)
+					letGo(pending, 0);
 
 				Object.keys(shaders).forEach(function (key) {
 					gl.deleteShader(shaders[key]);
@@ -1893,6 +1971,22 @@ Elemenx.Service('Renderer', {
 				self.Release(0);
 			}
 		};
+
+		/* The programs still being made when it was let go: deleted as each is made (a minute at most), a few times a second. */
+		function letGo (handles, tries) {
+			window.setTimeout(function () {
+				var left = handles.filter(function (handle) {
+					if (!gl.isContextLost() && tries < 240 && !gl.getProgramParameter(handle, parallel.COMPLETION_STATUS_KHR)) return true;
+
+					if (!gl.isContextLost())
+						gl.deleteProgram(handle);
+
+					return false;
+				});
+				if (left.length)
+					letGo(left, tries + 1);
+			}, 250);
+		}
 
 		function lost (event) {
 			event.preventDefault();

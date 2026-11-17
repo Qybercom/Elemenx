@@ -234,3 +234,33 @@
 		border-left: 0;
 	}
 }
+
+.elemenx-planet-editor-course {
+	fill: none;
+	stroke: var(--elemenx-planet-editor-river);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	opacity: 0.85;
+}
+
+.elemenx-planet-editor-course.drawn {
+	stroke-dasharray: 6 3;
+	opacity: 1;
+}
+
+.elemenx-planet-editor-course.selected {
+	stroke: var(--elemenx-accent);
+	opacity: 1;
+}
+
+.elemenx-planet-editor-town {
+	fill: var(--elemenx-planet-editor-town);
+	stroke: var(--elemenx-planet-editor-space);
+	stroke-width: 1;
+}
+
+.elemenx-planet-editor-town.selected {
+	fill: var(--elemenx-accent);
+	stroke: var(--elemenx-planet-editor-stroke);
+	stroke-width: 2;
+}

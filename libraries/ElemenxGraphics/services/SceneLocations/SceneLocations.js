@@ -14,6 +14,8 @@
  *   Sides), Kind, Model, World (its own, or SceneWorld.Library of the planet there: a square ground round its outline
  *   (Extent), its step Border what is past the outline, its passages roads, rivers and gates out of it), Passages, Beyond,
  *   Sides ([{Side, To (the ID of the cell beside), Told (whether a location is told there), Passages}])}.
+ *   Where its ground rises steep and high its sketch has caves (Caverns: up to two, a way into the rock and a hall) and its
+ *   World sows what grows in them (dripstones, cave-floor, cave-crystals); a planet of Caves false has none.
  * - At(planet, latitude, longitude): the ID of the location of a point.
  * - Open(planet, id): the sides where a location may be added beside it (no location told there): [{Side, To}].
  * - Tell(planet, id, changes): the planet with a location told or changed (a copy); Forget(planet, id) with it gone.
@@ -55,38 +57,46 @@ Elemenx.Service('SceneLocations', {
 		var middle = planets.Direction(place.Latitude, place.Longitude);
 		var reach = (half * 3 + 30000) / ((Number(planet.Radius) || 6371) * 1000);
 		var items = [];
-		var self = this;
-
-		function meander (run, width, seed) {
-			return self.Meander(run, width, seed);
-		}
+		var courses;
+		/* The cosine of how far from its middle a point of a river is kept: the location, half of it again and 2 km. */
+		var near = Math.cos((half * 1.5 + 2000) / ((Number(planet.Radius) || 6371) * 1000));
 
 		if (!rivers.length) return undefined;
 
 		site = this.$Service('SceneTerrainGenerator').Site({Options: planet, Latitude: place.Latitude, Longitude: place.Longitude, Turn: place.Turn});
+		courses = site.Planet.Courses();
 
-		rivers.forEach(function (river, number) {
+		courses.forEach(function (river, number) {
 			var run = [];
 			var widths = [];
 
-			/* Its way bends as a river's does: a point every 400 m, aside by waves of a kilometre and of a few hundred metres. */
 			function close () {
-				var width;
-
-				if (run.length > 1) {
-					width = Math.max.apply(null, widths);
-
-					items.push({ID: 'river-' + number + '-' + items.length, Type: 'river', Points: meander(run, width, number), Width: width, Depth: 1.5, Bank: 8});
-				}
+				if (run.length > 1)
+					items.push({ID: 'river-' + number + '-' + items.length, Type: 'river', Points: run, Width: Math.max.apply(null, widths), Depth: 1.5, Bank: 8});
 
 				run = [];
 				widths = [];
 			}
 
-			/* The segments that pass near: both their ends, one run while they go on near. */
-			var taken = river.Points.map(function () {
-				return false;
-			});
+			/* A point of its way as the planet bends it (RiverAt): the same in every location it crosses and on its globe. */
+			function add (k, t) {
+				var made = site.Planet.RiverAt(number, k, t);
+				var at;
+
+				/* Only as far as the location and some past it (its points are many: a run there and ended). */
+				if (planets.Dot(made.Direction, middle) < near) {
+					close();
+
+					return;
+				}
+
+				at = site.Local(made.Direction);
+
+				run.push([Math.round(at[0] * 10) / 10, Math.round(at[1] * 10) / 10, made.Level]);
+				widths.push(Math.round(15 * Math.sqrt(made.Flow)));
+			}
+
+			/* The segments that pass near, each a point a tenth of a bend apart (a bend: eleven times its width); one run while they go on near. */
 			var k;
 
 			for (k = 0; k + 1 < river.Points.length; k++) {
@@ -95,24 +105,22 @@ Elemenx.Service('SceneLocations', {
 				var ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
 				var t = Math.max(0, Math.min(1, ((middle[0] - a[0]) * ab[0] + (middle[1] - a[1]) * ab[1] + (middle[2] - a[2]) * ab[2]) / Math.max(1e-18, planets.Dot(ab, ab))));
 				var q = [a[0] + ab[0] * t - middle[0], a[1] + ab[1] * t - middle[1], a[2] + ab[2] * t - middle[2]];
-				if (Math.sqrt(planets.Dot(q, q)) < reach)
-					taken[k] = taken[k + 1] = true;
-			}
+				var step;
+				var count;
+				var s;
 
-			river.Points.forEach(function (point, index) {
-				var at;
-
-				if (!taken[index]) {
+				if (Math.sqrt(planets.Dot(q, q)) >= reach) {
 					close();
 
-					return;
+					continue;
 				}
 
-				at = site.Local(point);
+				step = Math.max(0.03, 11 * 0.015 * Math.sqrt(Math.max(1, Math.min(river.Flow[k], river.Flow[k + 1]))) / 10);
+				count = Math.max(1, Math.ceil((river.Along[k + 1] - river.Along[k]) / step));
 
-				run.push([Math.round(at[0] * 10) / 10, Math.round(at[1] * 10) / 10, river.Level[index]]);
-				widths.push(Math.round(15 * Math.sqrt(river.Flow[index])));
-			});
+				for (s = run.length ? 1 : 0; s <= count; s++)
+					add(k, s / count);
+			}
 
 			close();
 		});
@@ -123,21 +131,48 @@ Elemenx.Service('SceneLocations', {
 	/*
 	 * The settlements of the planet (Settlements of ScenePlanet) in a location as a sketch of its ground: each an area of the
 	 * type settlement round its point (metres of the location), as large as its kind (a city 900 m across its middle, a town
-	 * 450, a village 180), within the location; undefined with none.
+	 * 450, a village 180), within the location; undefined with none. Its outline by its ground: out of its middle every way
+	 * as far as the land is not under the sea, nor far over or under its middle (30 m and 6% of the way), nor steeper than
+	 * 25% (on a coast, in a valley), and farther along a road through it (trunks: the sketch of Trunks), as a village along
+	 * its road is; Slope (the rise of its ground over a metre) and Contour (radians: the way along the level of it) for its
+	 * streets to go along a hillside.
 	 */
-	Towns: function (planet, place) {
+	Towns: function (planet, place, trunks) {
 		var planets = this.$Service('ScenePlanet');
 		var towns = Array.isArray(planet.Settlements) ? planet.Settlements : planet.Settlements ? planets.TownsOf(planet.Settlements) : [];
 		var half = this.Extent(place) / 2;
 		var middle = planets.Direction(place.Latitude, place.Longitude);
 		var reach = half * 2 / ((Number(planet.Radius) || 6371) * 1000);
+		var roads = trunks && trunks.Layers ? trunks.Layers[0].Items : [];
 		var items = [];
 		var site;
 
+		/* The ways of the roads near a point (radians), of each segment of them within so many metres of it. */
+		function ways (at, within) {
+			var found = [];
+
+			roads.forEach(function (road) {
+				var line = road.Points || [];
+				var k;
+
+				for (k = 0; k + 1 < line.length; k++) {
+					var dx = line[k + 1][0] - line[k][0];
+					var dz = line[k + 1][1] - line[k][1];
+					var t = Math.max(0, Math.min(1, ((at[0] - line[k][0]) * dx + (at[1] - line[k][1]) * dz) / (dx * dx + dz * dz || 1)));
+					if (Math.hypot(line[k][0] + dx * t - at[0], line[k][1] + dz * t - at[1]) < within)
+						found.push(Math.atan2(dz, dx));
+				}
+			});
+
+			return found;
+		}
+
 		towns.forEach(function (town, number) {
 			var radius = town.Kind === 'city' ? 900 : town.Kind === 'town' ? 450 : 180;
+			var count = 24;
 			var at;
 			var points = [];
+			var far = [];
 			var i;
 
 			if (Math.acos(Math.max(-1, Math.min(1, planets.Dot(town.Point, middle)))) > reach) return;
@@ -146,14 +181,64 @@ Elemenx.Service('SceneLocations', {
 			at = site.Local(town.Point);
 
 			/* Within the location: a large one taken in, not cut by its edge. */
-			radius = Math.min(radius, half - 60 - Math.max(Math.abs(at[0]), Math.abs(at[1])));
+			var room = half - 60 - Math.max(Math.abs(at[0]), Math.abs(at[1]));
+
+			radius = Math.min(radius, room);
 
 			if (radius < 60) return;
 
-			for (i = 0; i < 12; i++)
-				points.push([Math.round((at[0] + Math.cos(i / 12 * Math.PI * 2) * radius * (1 + 0.12 * Math.sin(i * 2.3 + number))) * 10) / 10, Math.round((at[1] + Math.sin(i / 12 * Math.PI * 2) * radius * (1 + 0.12 * Math.cos(i * 1.7 + number))) * 10) / 10]);
+			var height = function (x, z) {
+				return site.Elevation(at[0] + x, at[1] + z);
+			};
+			var reachOf = radius * 0.5;
+			var gx = (height(reachOf, 0) - height(-reachOf, 0)) / (2 * reachOf);
+			var gz = (height(0, reachOf) - height(0, -reachOf)) / (2 * reachOf);
+			var roadWays = ways(at, radius);
+			var step = radius / 10;
+			var ground = height(0, 0);
 
-			items.push({ID: 'settlement-' + number, Type: 'settlement', Points: points, Kind: town.Kind, Density: 0.6 + town.Size * 0.3, Seed: 'town-' + number});
+			for (i = 0; i < count; i++) {
+				var turn = i / count * Math.PI * 2;
+				var way = [Math.cos(turn), Math.sin(turn)];
+				/* Along a road, half as far again: the houses go on along it. */
+				var stretch = 1 + 0.6 * roadWays.reduce(function (most, one) {
+					return Math.max(most, Math.pow(Math.abs(Math.cos(turn - one)), 8));
+				}, 0);
+				var limit = Math.min(room, radius * (1 + 0.12 * Math.sin(i * 2.3 + number)) * stretch);
+				var stop = limit;
+				var passed = [ground, ground];
+				var r;
+
+				for (r = step; r <= limit; r += step) {
+					var here = height(way[0] * r, way[1] * r);
+
+					if (here <= 0.5) {
+						stop = r - step * 0.5;
+
+						break;
+					}
+
+					/* Up a hillside or down into a valley: far over or under its middle, or steep over two steps. */
+					if (Math.abs(here - ground) > 30 + r * 0.06 || Math.abs(here - passed[0]) / (2 * step) > 0.25) {
+						stop = r - step;
+
+						break;
+					}
+
+					passed = [passed[1], here];
+				}
+
+				far.push(Math.max(radius * 0.3, stop));
+			}
+
+			for (i = 0; i < count; i++) {
+				var smoothed = far[(i + count - 1) % count] * 0.25 + far[i] * 0.5 + far[(i + 1) % count] * 0.25;
+				var angle = i / count * Math.PI * 2;
+
+				points.push([Math.round((at[0] + Math.cos(angle) * smoothed) * 10) / 10, Math.round((at[1] + Math.sin(angle) * smoothed) * 10) / 10]);
+			}
+
+			items.push({ID: 'settlement-' + number, Type: 'settlement', Points: points, Kind: town.Kind, Density: 0.6 + town.Size * 0.3, Seed: 'town-' + number, Slope: Math.round(Math.hypot(gx, gz) * 1000) / 1000, Contour: Math.round((Math.atan2(gz, gx) + Math.PI / 2) * 1000) / 1000});
 		}, this);
 
 		return items.length ? {Layers: [{ID: 'settlements', Name: 'Settlements', Items: items}]} : undefined;
@@ -273,9 +358,82 @@ Elemenx.Service('SceneLocations', {
 		return items.length ? {Layers: [{ID: 'trunks', Name: 'Highways', Items: items}]} : undefined;
 	},
 
-	/* The sketch of the ground of a location of a planet: its rivers (Streams), its settlements (Towns) and its highways (Trunks); undefined with none. */
+	/*
+	 * The caves of a location where its ground rises steep and high (hills, mountains), the same for the same place: up to two,
+	 * each a mouth on a slope over 0.3 with 40 m of rise over it, a way of 120 to 260 m into the rock, level and a little down,
+	 * bent, and a hall at its end (sketch items cave and hall); undefined with none. Planet Caves false: none.
+	 */
+	Caverns: function (planet, place) {
+		var half = this.Extent(place) / 2;
+		var site = this.$Service('SceneTerrainGenerator').Site({Options: planet, Latitude: place.Latitude, Longitude: place.Longitude, Turn: place.Turn});
+		var seed = Math.abs(Math.sin(place.Latitude * 12.9898 + place.Longitude * 78.233) * 43758.5453) % 1;
+		var found = [];
+		var items = [];
+		var step = half * 1.4 / 8;
+		var i;
+		var k;
+
+		if (planet.Caves === false) return undefined;
+
+		function random (n) {
+			return Math.abs(Math.sin((seed + n) * 91.345) * 47453.5453) % 1;
+		}
+
+		for (i = 0; i <= 8; i++) {
+			for (k = 0; k <= 8; k++) {
+				var x = -half * 0.7 + i * step + (random(i * 9 + k) - 0.5) * step * 0.6;
+				var z = -half * 0.7 + k * step + (random(k * 9 + i + 100) - 0.5) * step * 0.6;
+				var ground = site.Elevation(x, z);
+				var gx = (site.Elevation(x + 30, z) - site.Elevation(x - 30, z)) / 60;
+				var gz = (site.Elevation(x, z + 30) - site.Elevation(x, z - 30)) / 60;
+				var slope = Math.hypot(gx, gz);
+				var rise = slope > 0 ? site.Elevation(x + gx / slope * 120, z + gz / slope * 120) - ground : 0;
+				if (ground > 2 && slope > 0.3 && rise > 40)
+					found.push({X: x, Z: z, Y: ground, Way: [gx / slope, gz / slope], Score: rise * (0.6 + random(i * 31 + k * 7))});
+			}
+		}
+
+		found.sort(function (a, b) {
+			return b.Score - a.Score;
+		});
+
+		found.filter(function (one, index) {
+			return !found.slice(0, index).some(function (other) {
+				return Math.hypot(other.X - one.X, other.Z - one.Z) < 400;
+			});
+		}).slice(0, 2).forEach(function (one, number) {
+			var length = 120 + random(number * 13 + 5) * 140;
+			var bend = (random(number * 17 + 3) - 0.5) * 0.9;
+			var floor = one.Y - 1.5;
+			var side = [-one.Way[1], one.Way[0]];
+			var points = [[one.X, one.Z, floor]];
+			var n;
+
+			for (n = 1; n <= 4; n++) {
+				var t = n / 4;
+				var aside = Math.sin(t * Math.PI) * bend * length * 0.35;
+
+				points.push([one.X + one.Way[0] * length * t + side[0] * aside, one.Z + one.Way[1] * length * t + side[1] * aside, floor - t * length * 0.04]);
+			}
+
+			var end = points[points.length - 1];
+			var radius = 9 + random(number + 50) * 6;
+			var depth = site.Elevation(end[0], end[1]) - end[2] - 3;
+
+			items.push({ID: 'cave-' + number, Type: 'cave', Points: points, Width: 5 + random(number + 40) * 2, Rough: 0.6, Mouth: 0});
+
+			/* Its hall only where the rock over it is thick enough to hold it. */
+			if (depth > radius + 4)
+				items.push({ID: 'cave-hall-' + number, Type: 'hall', At: [end[0], end[1]], Radius: radius, Depth: depth});
+		});
+
+		return items.length ? {Layers: [{ID: 'caves', Name: 'Caves', Items: items}]} : undefined;
+	},
+
+	/* The sketch of the ground of a location of a planet: its rivers (Streams), its settlements (Towns), its highways (Trunks) and its caves (Caverns); undefined with none. */
 	Sketch: function (planet, place) {
-		var layers = [this.Streams(planet, place), this.Towns(planet, place), this.Trunks(planet, place)].filter(Boolean).map(function (sketch) {
+		var trunks = this.Trunks(planet, place);
+		var layers = [this.Streams(planet, place), this.Towns(planet, place, trunks), trunks, this.Caverns(planet, place)].filter(Boolean).map(function (sketch) {
 			return sketch.Layers[0];
 		});
 
@@ -362,6 +520,12 @@ Elemenx.Service('SceneLocations', {
 		delete options.Locations;
 		delete options.Baked;
 
+		/* Its sketch (of a World not told), and with caves in it what grows in them. */
+		var sketch = told && told.World ? null : this.Sketch(options, place);
+		var caved = !!sketch && sketch.Layers.some(function (layer) {
+			return layer.ID === 'caves';
+		});
+
 		return {
 			ID: cell.ID,
 			Cell: cell,
@@ -369,7 +533,7 @@ Elemenx.Service('SceneLocations', {
 			Kind: told && told.Kind || 'generated',
 			Model: told && told.Model || '',
 			Told: !!told,
-			World: told && told.World || this.$Service('SceneWorld').Library({Size: this.Extent(place), Planet: {Options: options, Latitude: place.Latitude, Longitude: place.Longitude, Turn: place.Turn}, Sketch: this.Sketch(options, place), Border: {Points: place.Points, Sides: place.Sides, Beyond: told && told.Beyond || 'far', Passages: passages, Open: open}, Roads: options.LocationRoads === false ? undefined : true}),
+			World: told && told.World || this.$Service('SceneWorld').Library({Size: this.Extent(place), Planet: {Options: options, Latitude: place.Latitude, Longitude: place.Longitude, Turn: place.Turn}, Sketch: sketch, Scatters: caved ? [{Kind: 'dripstones'}, {Kind: 'cave-floor'}, {Kind: 'cave-crystals'}] : undefined, Border: {Points: place.Points, Sides: place.Sides, Beyond: told && told.Beyond || 'far', Passages: passages, Open: open}, Roads: options.LocationRoads === false ? undefined : true}),
 			Passages: passages,
 			Beyond: told && told.Beyond || 'far',
 			Sides: neighbours.map(function (other, side) {

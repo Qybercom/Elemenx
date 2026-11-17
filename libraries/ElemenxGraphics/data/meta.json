@@ -1005,7 +1005,7 @@
 				"select": "The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).",
 				"focus": "The view moved to an object: {ID}.",
 				"person": "V took the view of a walker to another place: third, first or shoulder.",
-				"loading": "What the scene waits for came a step nearer: {Part (up to 100, never back), Stage (programs, models, globes, ground, plants, view; empty when done)}.",
+				"loading": "What the scene waits for came a step nearer: {Part (up to 100, never back), Stage (programs, models, sky, galaxy, nebulae, rivers, globes, surface, ground, plants, view; empty when done), Stages ([{Name, Label, Done, Total}] of those it has)}.",
 				"prepared": "All the view needs is made and the veil goes: {First (the start of the scene, not a location that came)}.",
 				"shoulder": "B took the view over another shoulder: right or left.",
 				"arrive": "An object reached where it was sent: {ID, At}.",
@@ -1053,6 +1053,7 @@
 				"LibraryGrass()",
 				"LibrarySky()",
 				"LibraryStar()",
+				"LibraryNebula()",
 				"LibraryLand()",
 				"LibraryWater()",
 				"EffectGraph(name)",
@@ -1690,11 +1691,13 @@
 						"flatten",
 						"smooth",
 						"rule",
-						"location"
+						"location",
+						"settlements",
+						"streams"
 					],
 					"Schema": null,
 					"Body": false,
-					"Description": "The tool in hand: a stroke of its Paint, a brush of its Edits (raise, lower, flatten, smooth: a drag paints along its path), a region of a rule of detail (rule), or a location."
+					"Description": "The tool in hand: a stroke of its Paint, a brush of its Edits (raise, lower, flatten, smooth: a drag paints along its path), a region of a rule of detail (rule), a location, or the settlements and the rivers it makes (settlements, streams: changed in its Places)."
 				},
 				{
 					"Name": "Overlay",
@@ -2400,6 +2403,8 @@
 				"Flat(options)",
 				"Border(options)",
 				"Passages(carve, height)",
+				"Daylight(field, x0, z0, x1, z1, low, options)",
+				"SketchCarves(sketch, height, seed)",
 				"PassageRoute(graph, from, to)",
 				"Relief(settings)",
 				"Climate(settings)",
@@ -2573,6 +2578,8 @@
 				"InterchangeForm(a, b, ending)",
 				"Network(specs, junctions, options)",
 				"JunctionAt(junctions, x, z)",
+				"JunctionSurface(junction, x, z)",
+				"JunctionWalks(junction)",
 				"Near(road, x, z, hint)",
 				"Under(roads, x, z, hints)",
 				"BarrierHit(roads, x, z, fromX, fromZ, hints, size)",
@@ -2822,6 +2829,7 @@
 			"EventDescriptions": {},
 			"Methods": [
 				"Sow(job)",
+				"Under(field, place, ceiling)",
 				"Compile(rules)",
 				"LibraryScatter(rule)",
 				"Work()"
@@ -2982,6 +2990,8 @@
 				"TilePlace(direction)",
 				"TileValues(options, layer, face, level, x, y, size, table)",
 				"Settlements(options, count)",
+				"PlacedTowns(options, towns)",
+				"PlacedRivers(options, rivers)",
 				"UseSettlements(key, towns)",
 				"Highways(options, step)",
 				"UseHighways(key, roads)",
@@ -3096,6 +3106,7 @@
 				"HoleSystem(data)",
 				"Cluster(options)",
 				"Objects(data)",
+				"Knots(data)",
 				"ObjectOf(data, id)",
 				"ObjectSystem(data, id)",
 				"Position(data, place, time)",
@@ -3221,7 +3232,9 @@
 		"elemenx-scene-landing": [],
 		"elemenx-scene-landing-hint": [],
 		"elemenx-scene-fallback": [],
-		"elemenx-scene-loading": [],
+		"elemenx-scene-loading": [
+			"own"
+		],
 		"elemenx-scene-hud": [],
 		"elemenx-scene-levels": [],
 		"elemenx-scene-screens": [],
@@ -3356,6 +3369,13 @@
 		"elemenx-planet-editor-rule": [],
 		"elemenx-select": [],
 		"elemenx-number-input": [],
+		"elemenx-planet-editor-course": [
+			"drawn",
+			"selected"
+		],
+		"elemenx-planet-editor-town": [
+			"selected"
+		],
 		"elemenx-world-editor": [],
 		"elemenx-world-editor-bar": [],
 		"elemenx-world-editor-path": [],

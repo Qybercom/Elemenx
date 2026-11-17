@@ -465,4 +465,36 @@ describe('Contract: GalaxyData, a galaxy as data: its black hole, its stars sect
 		/* A region too large for its budget: what it went through, told as partial. */
 		expect(galaxies.Search(data, {Centre: centre, Radius: 5000, Budget: 20000}).Partial).toBe(true);
 	});
+
+	/* Regression: its regions where stars are born were put where its arms were strong by their own draw, and its picture drew its pink knots elsewhere. */
+	it('has a region where stars are born at each knot its picture draws, as large, and none of its own elsewhere', function () {
+		var data = galaxies.Make({Seed: 'knots', Kind: 'spiral'});
+		var knots = galaxies.Knots(data);
+		var lit = [];
+		var regions = galaxies.Objects(data).filter(function (one) {
+			return one.Type === 'hii';
+		});
+
+		knots.Grids.forEach(function (grid) {
+			var i;
+
+			expect(grid.Data.length).toBe(grid.Count * grid.Count * 4);
+
+			for (i = 0; i < grid.Count * grid.Count; i++)
+				if (grid.Data[i * 4 + 3] > 0)
+					lit.push([grid.Data[i * 4] * 1000, grid.Data[i * 4 + 1] * 1000, grid.Data[i * 4 + 2] * 1000]);
+		});
+
+		expect(lit.length).toBeGreaterThan(50);
+		expect(regions.length).toBe(lit.length);
+
+		lit.forEach(function (knot, index) {
+			expect(Math.abs(regions[index].Place[0] - knot[0])).toBeLessThan(1);
+			expect(Math.abs(regions[index].Place[2] - knot[1])).toBeLessThan(1);
+			expect(Math.abs(regions[index].Radius - knot[2])).toBeLessThan(0.1);
+		});
+
+		/* A galaxy of no arms: none. */
+		expect(galaxies.Knots(galaxies.Make({Seed: 'round', Kind: 'elliptical'})).Grids[0].List.length).toBe(0);
+	});
 });
