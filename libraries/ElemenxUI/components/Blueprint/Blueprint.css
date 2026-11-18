@@ -49,6 +49,18 @@
 	justify-content: flex-start;
 }
 
+.elemenx-blueprint-target {
+	flex: 0 0 auto;
+	padding: 6px 2px;
+	border-top: 1px solid var(--elemenx-border);
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-blueprint-target[data-kind="wasm"] {
+	color: var(--elemenx-success);
+}
+
 .elemenx-blueprint-parameters {
 	flex: 0 0 auto;
 	max-height: 40%;

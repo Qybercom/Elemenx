@@ -1,0 +1,269 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "swamp",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "sketch-swamp-area-0",
+			"type": "Area",
+			"x": 260,
+			"y": 110,
+			"properties": []
+		},
+		{
+			"id": "sketch-swamp-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Points"
+				}
+			]
+		},
+		{
+			"id": "sketch-swamp-input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "sketch-swamp-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "sketch-swamp-formula-4",
+			"type": "Formula",
+			"x": 520,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Inside > 0.5 ? 1 : (E < Edge ? (0.5 + 0.5 * cos(min(1, max(0, (E) / max(0.000001, Edge))) * 3.141592653589793)) : 0)) * S"
+				}
+			]
+		},
+		{
+			"id": "sketch-swamp-input-5",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Edge"
+				}
+			]
+		},
+		{
+			"id": "sketch-swamp-input-6",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "S"
+				}
+			]
+		},
+		{
+			"id": "sketch-swamp-formula-7",
+			"type": "Formula",
+			"x": 260,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(X * 0.08 + O, 1.7 + O, Z * 0.08 + O)"
+				}
+			]
+		},
+		{
+			"id": "sketch-swamp-input-8",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "O"
+				}
+			]
+		},
+		{
+			"id": "sketch-swamp-fbm-9",
+			"type": "Fbm",
+			"x": 520,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Octaves",
+					"value": 3
+				}
+			]
+		},
+		{
+			"id": "sketch-swamp-formula-10",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "H + (Level + N * 0.8 - 0.4 - H) * W"
+				}
+			]
+		},
+		{
+			"id": "sketch-swamp-input-11",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "H"
+				}
+			]
+		},
+		{
+			"id": "sketch-swamp-input-12",
+			"type": "Input",
+			"x": 0,
+			"y": 880,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Level"
+				}
+			]
+		},
+		{
+			"id": "sketch-swamp-result-13",
+			"type": "Result",
+			"x": 1040,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "sketch-swamp-link-0",
+			"p1": "sketch-swamp-input-1-out-Value",
+			"p2": "sketch-swamp-area-0-in-Points",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-1",
+			"p1": "sketch-swamp-input-2-out-Value",
+			"p2": "sketch-swamp-area-0-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-2",
+			"p1": "sketch-swamp-input-3-out-Value",
+			"p2": "sketch-swamp-area-0-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-3",
+			"p1": "sketch-swamp-area-0-out-Inside",
+			"p2": "sketch-swamp-formula-4-in-Inside",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-4",
+			"p1": "sketch-swamp-area-0-out-Distance",
+			"p2": "sketch-swamp-formula-4-in-E",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-5",
+			"p1": "sketch-swamp-input-5-out-Value",
+			"p2": "sketch-swamp-formula-4-in-Edge",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-6",
+			"p1": "sketch-swamp-input-6-out-Value",
+			"p2": "sketch-swamp-formula-4-in-S",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-7",
+			"p1": "sketch-swamp-input-2-out-Value",
+			"p2": "sketch-swamp-formula-7-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-8",
+			"p1": "sketch-swamp-input-8-out-Value",
+			"p2": "sketch-swamp-formula-7-in-O",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-9",
+			"p1": "sketch-swamp-input-3-out-Value",
+			"p2": "sketch-swamp-formula-7-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-10",
+			"p1": "sketch-swamp-formula-7-out-Value",
+			"p2": "sketch-swamp-fbm-9-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-11",
+			"p1": "sketch-swamp-input-11-out-Value",
+			"p2": "sketch-swamp-formula-10-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-12",
+			"p1": "sketch-swamp-input-12-out-Value",
+			"p2": "sketch-swamp-formula-10-in-Level",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-13",
+			"p1": "sketch-swamp-fbm-9-out-Value",
+			"p2": "sketch-swamp-formula-10-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-14",
+			"p1": "sketch-swamp-formula-4-out-Value",
+			"p2": "sketch-swamp-formula-10-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-swamp-link-15",
+			"p1": "sketch-swamp-formula-10-out-Value",
+			"p2": "sketch-swamp-result-13-in-Value",
+			"kind": "value"
+		}
+	]
+}

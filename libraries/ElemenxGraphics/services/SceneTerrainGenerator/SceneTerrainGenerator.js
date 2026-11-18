@@ -9,7 +9,11 @@
  *   metres, in place of those of Scale and Ridges), Relief (a graph of blocks, a generator of Blueprints: its hills of
  *   it, below); it has Size, Top (its Height), Rock, Snow (those heights) and Water. Its methods: Height(x, z) (the height of the ground; below 0 under the sea),
  *   Normal(x, z), Slope(x, z) (0 flat, 1 a wall), Walkable(x, z, options) (MaxSlope 0.45; Swim: the sea too; Blocked(x,
- *   z): true where a thing stands in the way), Chunk(x,
+ *   z): true where a thing stands in the way; Over(x, z): the floor of a bridge there, or null), Prefetch(x, z, step,
+ *   side) (the heights of a square of points made at once by wasm, read by Height and Climate; null: none; Compute of the
+ *   options js: never, auto or wasm: where it is made, the very same numbers; ReliefWasm makes it, WasmShare gives it to
+ *   the workers of a pool with the options of the ground, WasmRun runs it in the
+ *   page or in a worker), Chunk(x,
  *   z, size, resolution) (a geometry of a square of it, its positions relative to its middle, with Colors of its
  *   heights and slopes and a skirt under its edges so chunks of other sizes leave no gap) and Path(from, to, options)
  *   (a way of points {X, Y, Z} round what cannot be walked, made straight where it can be; null when there is none;
@@ -65,13 +69,27 @@
  * - Heights(field, side): the heights of a flat field in a grid of side by side points over all its size (a
  *   Float32Array, row by row along Z); FromGrid(options, heights, side) a field of Flat whose heights are such a grid (a
  *   field baked or painted; out of the grid, of its noise): it has Grid and Side, and no Options.
+ * - SketchTable (resources/terrain/sketch-types.json): the types of a sketch, {type: {Kind, Placed, Defaults, Look {Color,
+ *   Material}}}, '*' the values of every type; SketchDefaults(type) the values an item of it takes where it tells none
+ *   (an editor starts an item with them). SketchTypes, SketchPlaced and LookMaterials are of it. What each type does to
+ *   the ground is its graph (blueprints/sketch/<type>: inputs X, Z, H the height so far, S its strength there, O the
+ *   shift of the noise of the sketch, Points, Levels, Data, CX, CZ, Around the ground round the point, Target, the
+ *   values of the item, <value>Told; its result Height): SketchRun(type) its function {Main, Inputs, Parameters}, made
+ *   once in the page and given to workers by ShareGround; SketchMake(type, graph) makes a type of another graph. The
+ *   shape of each carve of a volume is its graph too (blueprints/carve/<type>: tunnel, sphere, caves, passages, overhangs;
+ *   inputs X, Y, Z, G the ground over the point, Steep, Points, Packed and the values of the carve; result Density, of
+ *   overhangs Share, WX, WZ): CarveRun(type), CarveMake(type, graph).
+ * - PlainRelief(settings): the library relief of a ground of no graph, no planet and no noise of its own, by its code made
+ *   in the page: {Height, Climate(x, z)}. ShareGround(pool, options, made): what its options take with them to the
+ *   workers of a pool (the code and the wasm of its relief), once; made: make its code first if it was not yet.
+ *   WasmExports(made): the functions of the wasm of a relief, on the memory it shares.
  * - Source(names): the source of its members, for a worker.
  * The same functions run in Node: they read no page.
  */
 Elemenx.Service('SceneTerrainGenerator', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['FlatOf(options)', 'Flat(options)', 'Border(options)', 'Passages(carve, height)', 'Daylight(field, x0, z0, x1, z1, low, options)', 'SketchCarves(sketch, height, seed)', 'PassageRoute(graph, from, to)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)']
+		Methods: ['FlatOf(options)', 'Flat(options)', 'Border(options)', 'Passages(carve, height)', 'Daylight(field, x0, z0, x1, z1, low, options)', 'SketchCarves(sketch, height, seed)', 'PassageRoute(graph, from, to)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)', 'ReliefWasm(settings, plain)', 'WasmRun(made, input, count)', 'WasmExports(made)', 'PlainRelief(settings)', 'ShareGround(pool, options, made)', 'SketchDefaults(type)', 'SketchRun(type)', 'SketchMake(type, graph)', 'CarveRun(type)', 'CarveMake(type, graph)', 'WasmShare(pool, key)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['terrain']}},
@@ -85,7 +103,28 @@ Elemenx.Service('SceneTerrainGenerator', {
 		 * the buildings of a settlement those of the classes of buildings (resources/buildings: Width, Depth).
 		 */
 		Object.assign(this.GroundMaterials, Elemenx.Resources('Data', 'ElemenxGraphics/terrain/ground-materials') || {});
-		Object.assign(this.LookMaterials, Elemenx.Resources('Data', 'ElemenxGraphics/terrain/look-materials') || {});
+
+		this.DefaultBiomes = (Elemenx.Resources('Data', 'ElemenxGraphics/terrain/planet-biomes') || []).slice();
+		this.Zones = Object.assign({}, this.Zones, Elemenx.Resources('Data', 'ElemenxGraphics/terrain/zones') || {});
+		this.Carves = Object.assign({}, this.Carves, Elemenx.Resources('Data', 'ElemenxGraphics/terrain/carves') || {});
+		this.TunnelRadius = this.Carves.Tunnel.Radius;
+
+		/* The types of a sketch (resources/terrain/sketch-types): the kind of each, whether it places things, its first values, its look. */
+		this.SketchTable = Elemenx.Resources('Data', 'ElemenxGraphics/terrain/sketch-types') || {};
+
+		Object.keys(this.SketchTable).forEach(function (type) {
+			var one = self.SketchTable[type];
+
+			if (type === '*') return;
+
+			self.SketchTypes[type] = one.Kind;
+
+			if (one.Placed)
+				self.SketchPlaced[type] = true;
+
+			if (one.Look && one.Look.Material)
+				self.LookMaterials[type] = one.Look.Material;
+		});
 		Object.assign(this.SettlementKinds, Elemenx.Resources('Data', 'ElemenxGraphics/terrain/settlement-kinds') || {});
 		Object.assign(this.SettlementDistricts, Elemenx.Resources('Data', 'ElemenxGraphics/terrain/settlement-districts') || {});
 
@@ -130,8 +169,18 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var made;
 		var run;
 
+		/* What the options tell of its parameters; the graph's own values for the rest. */
+		['Scale', 'Ridges', 'Water', 'Height'].forEach(function (key) {
+			if (settings[key] !== undefined && settings[key] !== null && settings[key] !== '')
+				parameters[key] = Number(settings[key]);
+		});
+
+		/*
+		 * Of numbers, a typed function of its parameters (Blueprints.NumericCode, the noise of the Kernel), else its Code.
+		 * Regression: its noise made a text of its spec at each point: 12 to 30 microseconds a height.
+		 */
 		if (!source && settings.Relief && blueprints && blueprints.Code) {
-			made = blueprints.Code(typeof settings.Relief === 'string' ? JSON.parse(settings.Relief) : settings.Relief);
+			made = blueprints.NumericCode && blueprints.NumericCode(typeof settings.Relief === 'string' ? JSON.parse(settings.Relief) : settings.Relief, parameters) || blueprints.Code(typeof settings.Relief === 'string' ? JSON.parse(settings.Relief) : settings.Relief);
 
 			if (made)
 				source = settings.ReliefSource = made.Source;
@@ -139,12 +188,6 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 		if (!source)
 			return null;
-
-		/* What the options tell of its parameters; the graph's own values for the rest. */
-		['Scale', 'Ridges', 'Water', 'Height'].forEach(function (key) {
-			if (settings[key] !== undefined && settings[key] !== null && settings[key] !== '')
-				parameters[key] = Number(settings[key]);
-		});
 
 		this.Reliefs = this.Reliefs || {};
 		run = this.Reliefs[source] = this.Reliefs[source] || new Function('B', 'M', 'N', source)(blueprints, this.$Service('Math'), this.$Service('Noise'));
@@ -175,6 +218,12 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 */
 	/* The radius of a tunnel or a passage carved with none told, in metres. */
 	TunnelRadius: 2.5,
+
+	/*
+	 * What is cut out of a ground and juts out of it unless told (resources/terrain/carves): Tunnel {Radius, Flat}, Caves,
+	 * Overhangs, Passages, and those of the items of a sketch (Sketch {cave, hall, overhang}). TunnelRadius is its Tunnel Radius.
+	 */
+	Carves: {Tunnel: {Radius: 2.5, Flat: 0.5}, Caves: {Radius: 100, Top: 3, Bottom: 40, Scale: 24, Width: 0.35, Halls: 0.5}, Overhangs: {Amount: 6, Scale: 24, Slope: 0.45}, Passages: {Scale: 6, Rough: 0}, Sketch: {cave: {Width: 5, Depth: 8, Rough: 0.5, Mouth: 1}, hall: {Radius: 10, Depth: 10}, overhang: {Radius: 30, Amount: 6, Slope: 0.35}}},
 
 	FlatOf: function (options) {
 		var given = options || {};
@@ -375,7 +424,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var turn = (Number(given.Turn) || 0) * Math.PI / 180;
 
 		if (!options.BiomeList)
-			options.BiomeList = this.Biomes({Biomes: options.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe']});
+			options.BiomeList = this.Biomes({Biomes: options.Biomes || this.DefaultBiomes});
 
 		planet = planets.Planet(options);
 		radius = planet.Radius * 1000;
@@ -428,12 +477,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var settings = options || {};
 		var math = this.$Service('Math');
 		var flat = this.FlatOf(settings);
-		var noise = math.Noise(flat.Seed);
 		var size = flat.Size;
 		var height = flat.Height;
 		var water = flat.Water;
 		var scale = flat.Scale;
-		var ridges = flat.Ridges;
 		/* Its hills of a noise of its own (a spec of the Noise Service), in metres; else those of Scale and Ridges. */
 		var own = settings.Noise ? this.$Service('Noise').Make(settings.Noise) : null;
 		/* Of a graph (Relief): its heights, its moisture and its warmth at each point; else the climate of the hills of noise. */
@@ -452,9 +499,47 @@ Elemenx.Service('SceneTerrainGenerator', {
 			return top * (value === undefined || value === '' || value === null ? fallback : Number(value));
 		}
 
+		/*
+		 * Its heights for a square of points at once (Prefetch, of Mesh): by wasm, a batch of its relief (of a graph its
+		 * moisture and warmth too; of none the library relief, the very same hills), the grid of the square and the four of
+		 * its normals (d to each side); a height asked of a point of them is read of it, any other made as before. Compute of
+		 * the options js: none of it. Regression: of js alone, a square of 64 cells made its noise five times a vertex.
+		 */
+		var store = null;
+		var shifts = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
+		/* Of no graph, no planet and no noise of its own: the library relief, its code made in the page (PlainRelief). */
+		var library = relief || site || own ? null : this.PlainRelief(settings);
+		var wasm = settings.Compute === 'js' ? null : this.ReliefWasm(settings, library ? flat : null);
+		/*
+		 * A height (and of a graph its moisture and warmth) by its wasm itself, one point a call: of the plain relief, or of a
+		 * graph of inputs X and Z and of results Height, Moisture and Temperature; its js where there is none.
+		 */
+		var single = wasm && (library || wasm.Names === 'X,Z' && wasm.Keys === 'Height,Moisture,Temperature') ? this.WasmExports(wasm).g_main : null;
+
+		function stored (x, z) {
+			var d = Math.max(0.5, scale / 200);
+			var i;
+
+			for (i = 0; i < shifts.length; i++) {
+				var column = Math.round((x - shifts[i][0] * d - store.X) / store.Step);
+				var row = Math.round((z - shifts[i][1] * d - store.Z) / store.Step);
+				if (column >= 0 && row >= 0 && column < store.Side && row < store.Side && store.X + column * store.Step + shifts[i][0] * d === x && store.Z + row * store.Step + shifts[i][1] * d === z) return (i * store.Side * store.Side + row * store.Side + column) * store.Outs;
+			}
+
+			return -1;
+		}
+
+		function graphClimate (made) {
+			return {Moisture: made[1], Temperature: made[2]};
+		}
+
 		function raw (x, z) {
+			var at = store ? stored(x, z) : -1;
+			if (at >= 0)
+				return store.Values[at];
+
 			if (relief)
-				return Number(relief(x, z).Height) || 0;
+				return single ? single(x, z)[0] : Number(relief(x, z).Height) || 0;
 
 			/* The elevation of the planet there, metres, as a part of Height: its sea level is 0, its sea under it (Water, any share). */
 			if (site)
@@ -463,11 +548,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 			if (own)
 				return own.At(x, 0, z);
 
-			var soft = noise.Fbm(x / scale, 0.37, z / scale, 6);
-			var folded = noise.Ridge(x / scale * 0.7 + 11, 1.3, z / scale * 0.7 - 5, 5);
-			var mountains = self.Smoothstep(0.45, 0.75, noise.Fbm(x / scale * 0.25 + 3, 2.1, z / scale * 0.25, 3)) * ridges;
-
-			return soft * (1 - mountains) + folded * mountains;
+			return single ? single(x, z) : library.Height.Main(x, z);
 		}
 
 		field = {
@@ -475,8 +556,8 @@ Elemenx.Service('SceneTerrainGenerator', {
 			Size: size,
 			Top: height,
 			/* Where the rock and the snow begin, in its units (Rock and Snow of the options, parts of its Height; false: none). */
-			Rock: zone(settings.Rock, 0.45, height),
-			Snow: zone(settings.Snow, 0.75, height),
+			Rock: zone(settings.Rock, self.Zones.Rock, height),
+			Snow: zone(settings.Snow, self.Zones.Snow, height),
 			Water: water,
 			Palette: settings.Palette || null,
 			Biomes: biomes,
@@ -500,7 +581,8 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 			/* How wet and how warm it is at a point, 0 to 1: of its Relief graph, else of the height and a noise of moisture. */
 			Climate: function (x, z) {
-				var made = relief ? relief(x, z) : site ? site.Sample(x, z) : null;
+				var at = store && store.Outs === 3 ? stored(x, z) : -1;
+				var made = at >= 0 ? {Moisture: store.Values[at + 1], Temperature: store.Values[at + 2]} : relief ? single ? graphClimate(single(x, z)) : relief(x, z) : site ? site.Sample(x, z) : library ? library.Climate(x, z) : null;
 				var given = made && made.Moisture !== undefined && made.Temperature !== undefined;
 
 				return given ? {Moisture: Math.max(0, Math.min(1, Number(made.Moisture) || 0)), Temperature: Math.max(0, Math.min(1, Number(made.Temperature) || 0))} : climate(x, z, raw(x, z));
@@ -532,11 +614,49 @@ Elemenx.Service('SceneTerrainGenerator', {
 			Walkable: function (x, z, rules) {
 				var given = rules || {};
 
-				if (Math.abs(x) > size / 2 || Math.abs(z) > size / 2) return false;
-				if (!given.Swim && field.Height(x, z) < 0) return false;
-				if (given.Blocked && given.Blocked(x, z)) return false;
+				var ground;
 
-				return field.Slope(x, z) <= (given.MaxSlope === undefined ? 0.45 : given.MaxSlope);
+				if (Math.abs(x) > size / 2 || Math.abs(z) > size / 2) return false;
+
+				ground = (given.Swim || field.Height(x, z) >= 0) && field.Slope(x, z) <= (given.MaxSlope === undefined ? 0.45 : given.MaxSlope);
+
+				/*
+				 * Over(x, z): the floor of what is built over the ground there (the deck of a bridge), or null: walked over the water
+				 * and the banks too. Regression: a walker knew no bridge, a way over a river was looked for over all the map and the
+				 * page held.
+				 */
+				if (!ground && !(given.Over && given.Over(x, z) !== null)) return false;
+
+				return !(given.Blocked && given.Blocked(x, z));
+			},
+
+			/* The heights of a square of side by side points from x, z, step apart, made at once (by wasm); null: none kept. */
+			Prefetch: function (x, z, step, side) {
+				var d = Math.max(0.5, scale / 200);
+				var input;
+				var column;
+				var row;
+				var i;
+				var at = 0;
+
+				store = null;
+
+				if (x === null || !wasm) return field;
+
+				input = new Float64Array(shifts.length * side * side * 2);
+
+				for (i = 0; i < shifts.length; i++) {
+					for (row = 0; row < side; row++) {
+						for (column = 0; column < side; column++) {
+							input[at++] = x + column * step + shifts[i][0] * d;
+							input[at++] = z + row * step + shifts[i][1] * d;
+						}
+					}
+				}
+
+				store = {X: x, Z: z, Step: step, Side: side, Outs: wasm.Outs, Values: self.WasmRun(wasm, input, shifts.length * side * side)};
+
+				return field;
 			},
 
 			Chunk: function (x, z, extent, resolution) {
@@ -1159,8 +1279,8 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var top = Math.max(1, field.Top);
 		var own = palette.Materials || {};
 		var made = [];
-		var rock = field.Rock === undefined ? top * 0.45 : field.Rock;
-		var snow = field.Snow === undefined ? top * 0.75 : field.Snow;
+		var rock = field.Rock === undefined ? top * this.Zones.Rock : field.Rock;
+		var snow = field.Snow === undefined ? top * this.Zones.Snow : field.Snow;
 		var part = Math.min(1, y / (isFinite(rock) ? rock : top));
 		var low = palette.Low || [0.3, 0.5, 0.22];
 		var upper = palette.High || [0.39, 0.43, 0.25];
@@ -1237,6 +1357,12 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 	/* What each part of a palette is made of, unless its Materials say otherwise (SceneMaterials). */
 	GroundMaterials: {},
+
+	/* The lands of a ground or a planet that names none (resources/terrain/planet-biomes): the one list of all of them. */
+	DefaultBiomes: [],
+
+	/* Where rock and snow begin, parts of the Top of a ground that tells none (resources/terrain/zones). */
+	Zones: {Rock: 0.45, Snow: 0.75},
 
 	/* What each item of a sketch lays on the ground, unless its Material says otherwise. */
 	LookMaterials: {},
@@ -1334,7 +1460,6 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 */
 	Volume: function (settings, field) {
 		var self = this;
-		var noise = this.$Service('Noise');
 		/* Its heights as the noise and the sketch make them, never of what the volume makes of them (Underground). */
 		var ground = field.Height;
 		var carves = (settings.Carves || []).filter(function (carve) {
@@ -1350,7 +1475,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 		made = carves.map(function (carve, index) {
 			var seed = String(carve.Seed === undefined ? (settings.Seed === undefined ? 'ground' : settings.Seed) + '-carve-' + index : carve.Seed);
-			var one = {Type: carve.Type, Carve: carve};
+			var one = {Type: carve.Type, Carve: carve, Seed: seed};
 			var points;
 
 			if (carve.Type === 'tunnel') {
@@ -1359,7 +1484,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 				});
 				one.Points = points;
 				one.Radius = number(carve.Radius, self.TunnelRadius);
-				one.Flat = Math.max(0, Math.min(1, number(carve.Flat, 0.5)));
+				one.Flat = Math.max(0, Math.min(1, number(carve.Flat, self.Carves.Tunnel.Flat)));
 				one.Crust = carve.Crust === undefined || carve.Crust === null || carve.Crust === '' ? -1 : number(carve.Crust, -1);
 				/* Of a Width: a box round its axis (Height, its corners round by Corner), not a round bore. */
 				one.Width = number(carve.Width, 0);
@@ -1381,7 +1506,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 				one.Graph = graph;
 				one.Crust = crust;
-				one.Rough = Math.max(0, number(carve.Rough, 0));
+				one.Rough = Math.max(0, number(carve.Rough, self.Carves.Passages.Rough));
 				one.Tunnels = graph.Ways.map(function (way) {
 					var made = {Points: way.Points, Radius: way.Radius, Flat: way.Flat, Crust: crust, Width: way.Width, Height: way.Height};
 
@@ -1399,8 +1524,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 				});
 				one.Blend = Math.min(1.5, widest * 0.6);
 				one.Amount = one.Rough * widest * 0.5;
-				one.Noise = noise.Make({Type: 'simplex', Seed: seed + '-rough', Fractal: 'fbm', Octaves: 2});
-				one.Scale = number(carve.Scale, 6);
+				one.Scale = number(carve.Scale, self.Carves.Passages.Scale);
 
 				var box = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity];
 
@@ -1427,23 +1551,20 @@ Elemenx.Service('SceneTerrainGenerator', {
 			}
 			else if (carve.Type === 'caves') {
 				one.Center = (carve.Center || [0, 0]).map(Number);
-				one.Radius = number(carve.Radius, 100);
-				one.Top = number(carve.Top, 3);
-				one.Bottom = number(carve.Bottom, 40);
-				one.Scale = number(carve.Scale, 24);
-				one.Width = number(carve.Width, 0.35);
-				one.Halls = number(carve.Halls, 0.5);
-				one.Ways = [noise.Make({Type: 'simplex', Seed: seed + '-a'}), noise.Make({Type: 'simplex', Seed: seed + '-b'})];
-				one.Hall = noise.Make({Type: 'simplex', Seed: seed + '-h', Fractal: 'fbm', Octaves: 3});
+				one.Radius = number(carve.Radius, self.Carves.Caves.Radius);
+				one.Top = number(carve.Top, self.Carves.Caves.Top);
+				one.Bottom = number(carve.Bottom, self.Carves.Caves.Bottom);
+				one.Scale = number(carve.Scale, self.Carves.Caves.Scale);
+				one.Width = number(carve.Width, self.Carves.Caves.Width);
+				one.Halls = number(carve.Halls, self.Carves.Caves.Halls);
 				one.Bounds = [one.Center[0] - one.Radius, -Infinity, one.Center[1] - one.Radius, one.Center[0] + one.Radius, Infinity, one.Center[1] + one.Radius];
 			}
 			else if (carve.Type === 'overhangs') {
 				one.Center = carve.Center ? carve.Center.map(Number) : null;
 				one.Radius = number(carve.Radius, Infinity);
-				one.Amount = number(carve.Amount, 6);
-				one.Scale = number(carve.Scale, 24);
-				one.Slope = number(carve.Slope, 0.45);
-				one.Warp = [noise.Make({Type: 'simplex', Seed: seed + '-x', Fractal: 'fbm', Octaves: 2}), noise.Make({Type: 'simplex', Seed: seed + '-z', Fractal: 'fbm', Octaves: 2})];
+				one.Amount = number(carve.Amount, self.Carves.Overhangs.Amount);
+				one.Scale = number(carve.Scale, self.Carves.Overhangs.Scale);
+				one.Slope = number(carve.Slope, self.Carves.Overhangs.Slope);
 				one.Bounds = one.Center && isFinite(one.Radius) ? [one.Center[0] - one.Radius - one.Amount, -Infinity, one.Center[1] - one.Radius - one.Amount, one.Center[0] + one.Radius + one.Amount, Infinity, one.Center[1] + one.Radius + one.Amount] : [-Infinity, -Infinity, -Infinity, Infinity, Infinity, Infinity];
 			}
 			else {
@@ -1453,86 +1574,94 @@ Elemenx.Service('SceneTerrainGenerator', {
 			return one;
 		}).filter(Boolean);
 
+		made.forEach(function (one) {
+			carved(one);
+		});
+
 		/*
-		 * The distance of a point to a tunnel of a Width: across its axis (level, square to it) and up from it, to a box of its
-		 * Width and Height with round corners. Regression: a wide road was cut as round bores side by side, and the ground left
-		 * between them came into the box of its lining.
+		 * The graph of the type of a carve made ready for it (blueprints/carve/<type>, CarveRun): its function (Main), its
+		 * inputs (Args: of the carve once; X, Y, Z, G the ground over the point and Steep its slope, At their places), its
+		 * results (Keys). Regression: the shape of each carve was written out in code here.
 		 */
-		function boxed (one, x, y, z) {
-			var best = Infinity;
-			var i;
+		function carved (one) {
+			var run = self.CarveRun(one.Type);
+			var center = one.Center || one.At || [0, 0, 0];
+			var shifts = {SA: '-a', SB: '-b', SH: '-h', SR: '-rough', SX: '-x', SZ: '-z'};
 
-			for (i = 0; i + 1 < one.Points.length; i++) {
-				var a = one.Points[i];
-				var b = one.Points[i + 1];
-				var dx = b[0] - a[0];
-				var dy = b[1] - a[1];
-				var dz = b[2] - a[2];
-				var level = Math.sqrt(dx * dx + dz * dz) || 1;
-				var t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[2]) * dz) / (level * level)));
-				var across = Math.abs(((x - a[0] - dx * t) * -dz + (z - a[2] - dz * t) * dx) / level) - (one.Width / 2 - one.Corner);
-				var up = Math.abs(y - (a[1] + dy * t)) - (one.Height / 2 - one.Corner);
-				var d = Math.sqrt(Math.max(across, 0) * Math.max(across, 0) + Math.max(up, 0) * Math.max(up, 0)) + Math.min(Math.max(across, up), 0) - one.Corner;
-				if (d < best)
-					best = d;
-			}
+			if (!run)
+				throw new Error('Elemenx SceneTerrainGenerator: no graph of the carve ' + one.Type);
 
-			return best;
-		}
+			one.Main = run.Main;
+			one.Keys = run.Keys;
+			one.Slots = {X: run.Inputs.indexOf('X'), Y: run.Inputs.indexOf('Y'), Z: run.Inputs.indexOf('Z'), G: run.Inputs.indexOf('G'), Steep: run.Inputs.indexOf('Steep')};
+			one.Args = run.Inputs.map(function (name) {
+				var flat = [];
 
-		/* The distance of a point to a tunnel, and the height of its axis at the nearest point of it. */
-		function tunnel (one, x, y, z) {
-			var best = Infinity;
-			var axis = y;
-			var i;
+				if (['X', 'Y', 'Z', 'G', 'Steep'].indexOf(name) !== -1) return 0;
 
-			for (i = 0; i + 1 < one.Points.length; i++) {
-				var a = one.Points[i];
-				var b = one.Points[i + 1];
-				var dx = b[0] - a[0];
-				var dy = b[1] - a[1];
-				var dz = b[2] - a[2];
-				var t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy + (z - a[2]) * dz) / (dx * dx + dy * dy + dz * dz || 1)));
-				var px = a[0] + dx * t - x;
-				var py = a[1] + dy * t - y;
-				var pz = a[2] + dz * t - z;
-				var d = Math.sqrt(px * px + py * py + pz * pz);
+				if (name === 'Points') {
+					one.Points.forEach(function (point) {
+						flat.push(point[0], point[1], point[2]);
+					});
 
-				if (d < best) {
-					best = d;
-					axis = a[1] + dy * t;
+					return flat;
 				}
-			}
 
-			if (one.Points.length === 1) {
-				best = Math.sqrt((x - one.Points[0][0]) * (x - one.Points[0][0]) + (y - one.Points[0][1]) * (y - one.Points[0][1]) + (z - one.Points[0][2]) * (z - one.Points[0][2]));
-				axis = one.Points[0][1];
-			}
+				if (name === 'Packed') return packed(one);
 
-			/* The height of its axis by the point, for what joins it (Passages: the floor of the nearest way). */
-			one.Axis = axis;
+				if (name === 'HasCenter')
+					return one.Center ? 1 : 0;
 
-			/* Of a Width: a box of its Width and Height round its axis, its corners round by Corner (the bore of a wide road). */
-			if (one.Width > 0) best = boxed(one, x, y, z);
+				if (name === 'CX') return center[0];
 
-			/* Its floor cut level: nothing of it under the axis by more than (1 - Flat) of its radius. */
-			else best = Math.max(best - one.Radius, axis - one.Radius * (1 - one.Flat * 0.6) - y);
+				if (name === 'CY')
+					return one.Type === 'sphere' ? center[1] : 0;
 
-			/* Crust: nothing cut within so many metres of the ground over it (a shallow tunnel keeps a roof of earth). */
-			return one.Crust >= 0 && best < 0 ? Math.max(best, y - (ground(x, z) - one.Crust)) : best;
+				if (name === 'CZ')
+					return one.Type === 'sphere' ? center[2] : center[1];
+
+				if (shifts[name])
+					return self.$Service('Math').SeedOffset(one.Seed + shifts[name]);
+
+				return Number(one[name]) === one[name] ? one[name] : 0;
+			});
 		}
 
-		/* Natural caves: ways where two noises are both near their middle, halls where a third is high; only in their band. */
-		function caves (one, x, y, z, top) {
-			var depth = top - y;
-			var across = Math.sqrt((x - one.Center[0]) * (x - one.Center[0]) + (z - one.Center[1]) * (z - one.Center[1]));
-			var s = one.Scale;
-			var a = one.Ways[0].At(x / s, y / (s * 0.6), z / s) - 0.5;
-			var b = one.Ways[1].At(x / s + 17.3, y / (s * 0.6), z / s - 9.1) - 0.5;
-			var way = (Math.max(Math.abs(a), Math.abs(b)) - one.Width * 0.18) * s;
-			var hall = (0.72 - one.Halls * 0.16 - one.Hall.At(x / (s * 1.8), y / (s * 0.9), z / (s * 1.8))) * s * 1.5;
+		/* The ways and halls of a graph of passages as numbers, as Geometry.Passages takes them. */
+		function packed (one) {
+			var list = [one.Tunnels.length, one.Halls.length];
 
-			return Math.max(Math.min(way, hall), one.Top - depth, depth - one.Bottom, across - one.Radius);
+			one.Tunnels.forEach(function (way) {
+				list.push(way.Points.length, way.Radius, way.Flat, way.Width || 0, way.Height || 0, way.Corner, way.Low);
+
+				way.Points.forEach(function (point) {
+					list.push(point[0], point[1], point[2]);
+				});
+			});
+
+			one.Halls.forEach(function (hall) {
+				list.push(hall.At[0], hall.At[1], hall.At[2], hall.Radius, hall.Floor);
+			});
+
+			return list;
+		}
+
+		/* What the graph of a carve gives at a point: its density, or of overhangs [Share, WX, WZ] (by its Keys). */
+		function ran (one, x, y, z, top, slope) {
+			var args = one.Args;
+			var at = one.Slots;
+
+			args[at.X] = x;
+			args[at.Y] = y;
+			args[at.Z] = z;
+
+			if (at.G >= 0)
+				args[at.G] = top;
+
+			if (at.Steep >= 0)
+				args[at.Steep] = slope;
+
+			return one.Main.apply(null, args);
 		}
 
 		/* How steep the ground is at a point, 0 flat to 1 a wall, for overhangs: of its own heights, never of the volume. */
@@ -1582,64 +1711,6 @@ Elemenx.Service('SceneTerrainGenerator', {
 		}
 
 		/*
-		 * The distance of a point to the ways and halls of a graph of passages: each way a tunnel, each hall a ball with its
-		 * floor cut level, all joined smoothly (Blend), so a fork opens into a hall with no edge where they meet. Rough walls:
-		 * a noise as deep as Rough of the widest half, none by the floor (a way stays walkable). Crust as of a tunnel.
-		 */
-		function passage (one, x, y, z) {
-			var best = Infinity;
-			var nearest = Infinity;
-			var floor = y - 100;
-			var lowest = Infinity;
-			var k = one.Blend;
-
-			function join (a, b) {
-				var h = Math.max(k - Math.abs(a - b), 0) / k;
-
-				return Math.min(a, b) - h * h * k / 4;
-			}
-
-			one.Tunnels.forEach(function (way) {
-				var d = tunnel(way, x, y, z);
-
-				if (d < nearest) {
-					nearest = d;
-					floor = way.Axis - way.Low;
-				}
-
-				if (d < k)
-					lowest = Math.min(lowest, way.Axis - way.Low);
-
-				best = k > 0 ? join(best, d) : Math.min(best, d);
-			});
-
-			one.Halls.forEach(function (hall) {
-				var d = Math.max(Math.sqrt((x - hall.At[0]) * (x - hall.At[0]) + (y - hall.At[1]) * (y - hall.At[1]) + (z - hall.At[2]) * (z - hall.At[2])) - hall.Radius, hall.Floor - y);
-
-				if (d < nearest) {
-					nearest = d;
-					floor = hall.Floor;
-				}
-
-				if (d < k)
-					lowest = Math.min(lowest, hall.Floor);
-
-				best = k > 0 ? join(best, d) : Math.min(best, d);
-			});
-
-			/* The join digs nothing under the floors of what it joins (Regression: a hollow under the floor where ways met). */
-			if (lowest < Infinity)
-				best = Math.max(best, lowest - y);
-
-			if (one.Amount > 0 && best < one.Amount * 2) {
-				/* None by the floor: it stays level to walk on, the walls and the vault rough. */
-				best += (one.Noise.At(x / one.Scale, y / one.Scale, z / one.Scale) - 0.5) * 2 * one.Amount * self.Smoothstep(0.3, 1.5, y - floor);
-			}
-
-			return one.Crust >= 0 && best < 0 ? Math.max(best, y - (ground(x, z) - one.Crust)) : best;
-		}
-
-		/*
 		 * The density of a point: the ground (its height over the point), pushed aside on steep slopes by overhangs, then each
 		 * carve cut out of it. column: [height, slope] of the point's x and z, when they are known already.
 		 */
@@ -1651,19 +1722,11 @@ Elemenx.Service('SceneTerrainGenerator', {
 			for (i = 0; i < made.length; i++) {
 				var one = made[i];
 
+				/* Overhangs: the ground read pushed aside, by its graph (Share, WX, WZ). */
 				if (one.Type === 'overhangs' && inside(one, x, y, z)) {
-					var slope = column ? column[1] : steep(x, z);
-					var share = self.Smoothstep(one.Slope - 0.1, one.Slope + 0.2, slope);
-					var far = one.Center ? Math.sqrt((x - one.Center[0]) * (x - one.Center[0]) + (z - one.Center[1]) * (z - one.Center[1])) : 0;
-
-					share *= one.Center ? 1 - self.Smoothstep(one.Radius * 0.8, one.Radius, far) : 1;
-
-					if (share > 0) {
-						var wx = (one.Warp[0].At(x / one.Scale, y / one.Scale, z / one.Scale) - 0.5) * 2 * one.Amount * share;
-						var wz = (one.Warp[1].At(x / one.Scale, y / one.Scale, z / one.Scale) - 0.5) * 2 * one.Amount * share;
-
-						value = ground(x + wx, z + wz) - y;
-					}
+					var pushed = ran(one, x, y, z, top, column ? column[1] : steep(x, z));
+					if (pushed[one.Keys.indexOf('Share')] > 0)
+						value = ground(x + pushed[one.Keys.indexOf('WX')], z + pushed[one.Keys.indexOf('WZ')]) - y;
 				}
 			}
 
@@ -1671,10 +1734,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 				var carve = made[i];
 				if (carve.Type === 'overhangs' || !inside(carve, x, y, z)) continue;
 
-				if (carve.Type === 'tunnel') value = Math.min(value, tunnel(carve, x, y, z));
-				else if (carve.Type === 'sphere') value = Math.min(value, Math.sqrt((x - carve.At[0]) * (x - carve.At[0]) + (y - carve.At[1]) * (y - carve.At[1]) + (z - carve.At[2]) * (z - carve.At[2])) - carve.Radius);
-				else if (carve.Type === 'caves') value = Math.min(value, caves(carve, x, y, z, top));
-				else if (carve.Type === 'passages') value = Math.min(value, passage(carve, x, y, z));
+				value = Math.min(value, ran(carve, x, y, z, top, 0));
 			}
 
 			return value;
@@ -2555,6 +2615,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var base;
 		var edges;
 
+		/* Its heights and those of its normals made at once (by wasm, Prefetch of the ground), each as Height would make it. */
+		if (field.Prefetch)
+			field.Prefetch(cx - extent / 2, cz - extent / 2, step, side);
+
 		for (row = 0; row <= resolution; row++) {
 			for (column = 0; column <= resolution; column++) {
 				x = cx - extent / 2 + column * step;
@@ -2572,6 +2636,9 @@ Elemenx.Service('SceneTerrainGenerator', {
 				geometry.Materials.push.apply(geometry.Materials, stuff);
 			}
 		}
+
+		if (field.Prefetch)
+			field.Prefetch(null);
 
 		for (row = 0; row < resolution; row++) {
 			for (column = 0; column < resolution; column++) {
@@ -2637,7 +2704,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var reach = Math.floor(half / step);
 		var start = [Math.round(from[0] / step), Math.round(from[1] / step)];
 		var goal = [Math.round(to[0] / step), Math.round(to[1] / step)];
-		var heap = [];
+		var heap = this.Queue();
 		var cost = {};
 		var came = {};
 		var closed = {};
@@ -2662,49 +2729,11 @@ Elemenx.Service('SceneTerrainGenerator', {
 		}
 
 		function push (node) {
-			var at = heap.push(node) - 1;
-
-			while (at > 0) {
-				var up = (at - 1) >> 1;
-				if (heap[up].F <= heap[at].F) break;
-
-				var swap = heap[up];
-
-				heap[up] = heap[at];
-				heap[at] = swap;
-				at = up;
-			}
+			heap.Push(node);
 		}
 
 		function pop () {
-			var top = heap[0];
-			var last = heap.pop();
-			var at = 0;
-
-			if (heap.length) {
-				heap[0] = last;
-
-				for (;;) {
-					var left = at * 2 + 1;
-					var right = left + 1;
-					var least = at;
-					if (left < heap.length && heap[left].F < heap[least].F)
-						least = left;
-
-					if (right < heap.length && heap[right].F < heap[least].F)
-						least = right;
-
-					if (least === at) break;
-
-					var swap = heap[least];
-
-					heap[least] = heap[at];
-					heap[at] = swap;
-					at = least;
-				}
-			}
-
-			return top;
+			return heap.Pop();
 		}
 
 		function guess (x, z) {
@@ -2717,7 +2746,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 		push({X: start[0], Z: start[1], F: guess(start[0], start[1])});
 
-		while (heap.length && visited < 60000) {
+		while (heap.Size() && visited < 60000) {
 			current = pop();
 
 			if (closed[key(current.X, current.Z)]) continue;
@@ -2817,6 +2846,25 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var walk = function (x, z) {
 			return field.Walkable(x, z, rules);
 		};
+		/*
+		 * What each point of the grid is, found once in a search (whether it is walked, how steep, its floor): a point was asked
+		 * up to three times (as a neighbour, as the corner of two diagonals) and the noise of the ground made each time.
+		 */
+		var known = {};
+		var floors = {};
+		/*
+		 * With decks over the ground (Over), how much higher or lower the floor of the next point may be, a metre of the way:
+		 * onto a bridge from its end only. Regression: a walker went down the bank and up onto the deck from the water.
+		 */
+		var rise = Math.max(1, step * 0.75) / step;
+		var cell = function (x, z) {
+			var id = x + ':' + z;
+			if (known[id] === undefined)
+				/* No steeper than it can walk: the deck of a bridge over a steep bank costs as a walkable slope. */
+				known[id] = walk(x * step, z * step) ? Math.min(field.Slope(x * step, z * step), rules.MaxSlope === undefined ? 0.45 : Number(rules.MaxSlope)) : -1;
+
+			return known[id];
+		};
 		var current;
 		var path = [];
 		var visited = 0;
@@ -2827,6 +2875,21 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var i;
 
 		if (!walk(to.X, to.Z) || !walk(from.X, from.Z)) return null;
+
+		/* The floor at a point: the deck over it (Over of the rules), or the ground. */
+		function level (x, z) {
+			var over = rules.Over ? rules.Over(x, z) : null;
+
+			return over === null || over === undefined ? Math.max(0, field.Height(x, z)) : over;
+		}
+
+		function floorOf (x, z) {
+			var id = x + ':' + z;
+			if (floors[id] === undefined)
+				floors[id] = level(x * step, z * step);
+
+			return floors[id];
+		}
 
 		function guess (point) {
 			return Math.sqrt((point.X - goal.X) * (point.X - goal.X) + (point.Z - goal.Z) * (point.Z - goal.Z));
@@ -2856,12 +2919,14 @@ Elemenx.Service('SceneTerrainGenerator', {
 				var length = offset[0] && offset[1] ? Math.SQRT2 : 1;
 				var price;
 
-				if (closed[id] || !walk(next.X * step, next.Z * step)) return;
+				if (closed[id] || cell(next.X, next.Z) < 0) return;
 
 				/* A diagonal does not cut the corner of what cannot be walked. */
-				if (offset[0] && offset[1] && (!walk((current.X + offset[0]) * step, current.Z * step) || !walk(current.X * step, (current.Z + offset[1]) * step))) return;
+				if (offset[0] && offset[1] && (cell(current.X + offset[0], current.Z) < 0 || cell(current.X, current.Z + offset[1]) < 0)) return;
 
-				price = cost[key(current)] + length * (1 + field.Slope(next.X * step, next.Z * step) * 4);
+				if (rules.Over && Math.abs(floorOf(next.X, next.Z) - floorOf(current.X, current.Z)) > rise * step * length) return;
+
+				price = cost[key(current)] + length * (1 + cell(next.X, next.Z) * 4);
 
 				if (cost[id] !== undefined && cost[id] <= price) return;
 
@@ -2888,10 +2953,23 @@ Elemenx.Service('SceneTerrainGenerator', {
 		function clear (a, b) {
 			var length = Math.sqrt((b.X - a.X) * (b.X - a.X) + (b.Z - a.Z) * (b.Z - a.Z));
 			var count = Math.max(1, Math.ceil(length / (step / 2)));
+			var before = rules.Over ? level(a.X, a.Z) : 0;
 			var at;
 
 			for (at = 1; at < count; at++) {
-				if (!walk(a.X + (b.X - a.X) * at / count, a.Z + (b.Z - a.Z) * at / count)) return false;
+				var x = a.X + (b.X - a.X) * at / count;
+				var z = a.Z + (b.Z - a.Z) * at / count;
+				var here;
+
+				if (!walk(x, z)) return false;
+
+				if (rules.Over) {
+					here = level(x, z);
+
+					if (Math.abs(here - before) > rise * length / count) return false;
+
+					before = here;
+				}
 			}
 
 			return true;
@@ -2912,7 +2990,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		}
 
 		return straight.map(function (point) {
-			return {X: point.X, Y: Math.max(0, field.Height(point.X, point.Z)), Z: point.Z};
+			return {X: point.X, Y: level(point.X, point.Z), Z: point.Z};
 		});
 	},
 
@@ -2923,56 +3001,9 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * where Blocked of the rules says; then made straight wherever a walker can go straight. from and to {X, Z, Y}: Y the
 	 * height it is at, or none for the top of the ground. Gives [{X, Y, Z}] or null.
 	 */
-	/*
-	 * The cheapest first of what is pushed ({F}: a binary heap): Push(item), Pop() (the one of the least F), Size().
-	 * Regression: a way found by sorting all that was open at each step took minutes where there was none, the page held.
-	 */
+	/* The cheapest first of what is pushed ({F}): the Queue of Math. */
 	Queue: function () {
-		var items = [];
-
-		return {
-			Size: function () {
-				return items.length;
-			},
-
-			Push: function (item) {
-				var at = items.length;
-
-				items.push(item);
-
-				while (at > 0) {
-					var up = (at - 1) >> 1;
-					if (items[up].F <= item.F) break;
-
-					items[at] = items[up];
-					at = up;
-				}
-
-				items[at] = item;
-			},
-
-			Pop: function () {
-				var first = items[0];
-				var last = items.pop();
-				var at = 0;
-
-				if (!items.length) return first;
-
-				while (true) {
-					var left = at * 2 + 1;
-					var right = left + 1;
-					var least = right < items.length && items[right].F < items[left].F ? right : left;
-					if (left >= items.length || items[least].F >= last.F) break;
-
-					items[at] = items[least];
-					at = least;
-				}
-
-				items[at] = last;
-
-				return first;
-			}
-		};
+		return this.$Service('Math').Queue();
 	},
 
 	WayUnder: function (field, from, to, rules) {
@@ -3214,8 +3245,248 @@ Elemenx.Service('SceneTerrainGenerator', {
 		return field;
 	},
 
+	/*
+	 * The wasm of the relief of a ground ({Bytes, Exports, Ins, Outs}), made once: of its graph (Relief, its three results:
+	 * Height, Moisture, Temperature), or, of none (plain: the numbers of its noise, FlatOf), of the library relief, its
+	 * height only (the very same hills). Kept by a key in its options (ReliefWasm) and given to the workers of its pool by
+	 * it (Share): a worker makes no wasm. Null where none is made (no WebAssembly, a ground of a planet or of a noise of its
+	 * own, a graph not of numbers).
+	 */
+	ReliefWasm: function (settings, plain) {
+		var blueprints = this.$Service('Blueprints');
+		var key = settings.ReliefWasm;
+		var graph;
+		var made;
+		var bytes;
+		var parameters = {};
+
+		this.WasmKept = this.WasmKept || {};
+
+		if (typeof key === 'string')
+			return this.WasmKept[key] || (typeof this.$Shared === 'function' ? this.$Shared(key) || null : null);
+
+		if (key === null || typeof WebAssembly === 'undefined' || typeof Elemenx === 'undefined' || !Elemenx.Compilers || !blueprints || !blueprints.NumericCode) return null;
+
+		if (settings.Relief) {
+			graph = typeof settings.Relief === 'string' ? JSON.parse(settings.Relief) : settings.Relief;
+
+			['Scale', 'Ridges', 'Water', 'Height'].forEach(function (name) {
+				if (settings[name] !== undefined && settings[name] !== null && settings[name] !== '')
+					parameters[name] = Number(settings[name]);
+			});
+
+			made = blueprints.NumericCode(graph, parameters);
+		}
+		else if (plain) {
+			made = blueprints.NumericCode(this.LibraryRelief(settings), {}, null, ['Height']);
+		}
+
+		bytes = made ? blueprints.Wasm(made.Numeric) : null;
+
+		if (!bytes) {
+			settings.ReliefWasm = null;
+
+			return null;
+		}
+
+		key = 'relief-wasm:' + blueprints.Hash(blueprints.Read(graph || this.LibraryRelief(settings))) + JSON.stringify(settings.Relief ? parameters : plain);
+		this.WasmKept[key] = {Bytes: bytes.Bytes, Exports: bytes.Exports, Ins: made.Numeric.Inputs.length, Outs: made.Keys.length, Names: made.Numeric.Inputs.map(function (one) {
+			return one.Name;
+		}).join(','), Keys: made.Keys.join(',')};
+		settings.ReliefWasm = key;
+
+		return this.WasmKept[key];
+	},
+
+	/*
+	 * A batch of a wasm of numbers ({Bytes, Exports, Ins, Outs}, its function g_main) over count runs of input, one after
+	 * another: a Float64Array of their results. By Elemenx.Compilers.Instance in the page; by itself in a worker, which has
+	 * no Elemenx (the same memory: the input, then the results).
+	 */
+	/* The functions of a wasm of numbers ({Bytes}) as they are, made once, of the one memory of this Service (env.memory). */
+	WasmExports: function (made) {
+		if (!made.Raw) {
+			this.WasmMemory = this.WasmMemory || new WebAssembly.Memory({initial: 1});
+			made.Raw = new WebAssembly.Instance(new WebAssembly.Module(made.Bytes), {env: {memory: this.WasmMemory}}).exports;
+		}
+
+		return made.Raw;
+	},
+
+	WasmRun: function (made, input, count) {
+		var exports;
+		var bytes;
+		var have;
+		var output;
+
+		if (typeof Elemenx !== 'undefined' && Elemenx.Compilers && Elemenx.Compilers.Instance && made.Exports) {
+			made.Live = made.Live || Elemenx.Compilers.Instance(made);
+
+			return made.Live.Batch('g_main', input, count);
+		}
+
+		/* One memory for all of them (env.memory: of the worker, as Elemenx.Compilers has one of the page). */
+		exports = this.WasmExports(made);
+		bytes = (made.Ins + made.Outs) * count * 8;
+		have = exports.memory.buffer.byteLength;
+
+		if (bytes > have)
+			exports.memory.grow(Math.ceil((bytes - have) / 65536));
+
+		new Float64Array(exports.memory.buffer, 0, made.Ins * count).set(input);
+
+		exports['batch:g_main'](count, 0, made.Ins * count * 8, 0);
+
+		output = new Float64Array(made.Outs * count);
+
+		output.set(new Float64Array(exports.memory.buffer, made.Ins * count * 8, made.Outs * count));
+
+		return output;
+	},
+
+	/*
+	 * The workers of grounds. What goes to them, by Run or by Share, takes the code and the wasm of the relief of the options
+	 * of a ground in it first (ShareGround): a worker makes no code, and whoever sends options need not know it.
+	 */
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: true, Noise: true, Random: true, Blueprints: true, ScenePlanet: true, SceneTerrainGenerator: true, SceneFlora: true});
+		var self = this;
+		var pool = this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: true, Noise: true, Random: true, Blueprints: true, ScenePlanet: true, SceneTerrainGenerator: true, SceneFlora: true});
+		var run;
+		var share;
+
+		if (pool.GroundsShared) return pool;
+
+		pool.GroundsShared = true;
+		run = pool.Run;
+		share = pool.Share;
+
+		pool.Run = function (service, method, args) {
+			(args || []).forEach(function (arg) {
+				self.ShareGround(pool, arg);
+			});
+
+			return run.apply(pool, arguments);
+		};
+
+		pool.Share = function (key, data) {
+			self.ShareGround(pool, data);
+
+			return share.apply(pool, arguments);
+		};
+
+		return pool;
+	},
+
+	/*
+	 * The wasm of a relief (ReliefWasm: its key in the options of a ground) to the workers of a pool, once: what sends
+	 * the options of a ground to them sends it too (Scene). Regression: all the wasm made (of every ground of a page) went
+	 * to each new pool, and the squares waited behind it.
+	 */
+	WasmShare: function (pool, key) {
+		var kept = (this.WasmKept || {})[key];
+		var sent = {};
+
+		pool.WasmShared = pool.WasmShared || {};
+
+		if (!kept || pool.WasmShared[key]) return;
+
+		pool.WasmShared[key] = true;
+
+		Object.keys(kept).forEach(function (name) {
+			if (['Live', 'Raw', 'Exports'].indexOf(name) === -1)
+				sent[name] = kept[name];
+		});
+
+		pool.Share(key, sent);
+	},
+
+	/*
+	 * What the options of a ground take with them to the workers of a pool, once each: the code of its plain relief (ReliefKey)
+	 * and its wasm (ReliefWasm). Whatever sends the options of a ground to a worker calls it first (Scene, its scatter, its
+	 * roads): a worker makes no code. Made: these are the options of a ground for sure, its code made now if it was not yet
+	 * (a ground of them not made in the page).
+	 */
+	ShareGround: function (pool, options, made) {
+		var self = this;
+
+		if (!options || typeof options !== 'object' || pool.Inline()) return;
+
+		if (made && typeof options.ReliefKey !== 'string' && !options.Noise && !options.Planet && !this.Relief(options))
+			this.PlainRelief(options);
+
+		/*
+		 * The code of the graphs of every type of a sketch (SketchCode), once a pool, with the first ground it is given: a
+		 * worker lays sketches of its own too (the towns of a planet).
+		 */
+		pool.WasmShared = pool.WasmShared || {};
+
+		if (!pool.WasmShared['sketch-code']) {
+			pool.WasmShared['sketch-code'] = true;
+
+			Object.keys(this.SketchTable).forEach(function (type) {
+				if (type !== '*' && self.SketchRun(type))
+					pool.Share('sketch-code:' + type, self.SketchCode[type]);
+			});
+
+			['tunnel', 'sphere', 'caves', 'passages', 'overhangs'].forEach(function (type) {
+				if (self.CarveRun(type))
+					pool.Share('carve-code:' + type, self.CarveCode[type]);
+			});
+		}
+
+		['ReliefKey', 'ReliefWasm'].forEach(function (name) {
+			if (typeof options[name] === 'string')
+				self.WasmShare(pool, options[name]);
+		});
+	},
+
+	/*
+	 * The relief of a ground of no graph, no planet and no noise of its own: the library relief (LibraryRelief), the very hills
+	 * and climate, by its code made in the page (NumericCode: one of its height, one of its moisture and warmth), kept by a
+	 * key in its options (ReliefKey) and given to the workers with them (ShareGround). {Height(parameters, inputs),
+	 * Climate(x, z) ({Moisture, Temperature})}; Height.Main(x, z) the height itself. Regression: its hills and its climate were written out again in code
+	 * beside the graph, two sources of the same numbers.
+	 */
+	PlainRelief: function (settings) {
+		var key = settings.ReliefKey;
+		var blueprints;
+		var graph;
+		var kept;
+		var climate;
+
+		this.WasmKept = this.WasmKept || {};
+		this.PlainMade = this.PlainMade || {};
+
+		if (typeof key !== 'string') {
+			blueprints = this.$Service('Blueprints');
+			key = 'plain-relief:' + JSON.stringify(this.FlatOf(settings)) + JSON.stringify(this.ClimateOf(settings));
+
+			if (!this.WasmKept[key]) {
+				if (typeof Elemenx === 'undefined' || !Elemenx.Compilers || !blueprints)
+					throw new Error('Elemenx SceneTerrainGenerator: the relief of a ground is made in the page, and its options were not');
+
+				graph = this.LibraryRelief(settings);
+				this.WasmKept[key] = {Height: blueprints.NumericCode(graph, {}, null, ['Height']).Source, Climate: blueprints.NumericCode(graph, {}, null, ['Moisture', 'Temperature']).Source};
+			}
+
+			settings.ReliefKey = key;
+		}
+
+		kept = this.WasmKept[key] || (typeof this.$Shared === 'function' ? this.$Shared(key) : null);
+
+		if (!kept)
+			throw new Error('Elemenx SceneTerrainGenerator: no relief ' + key + ' in a worker: its options came with no ShareGround');
+
+		if (!this.PlainMade[key]) {
+			climate = new Function('B', 'M', 'N', kept.Climate)().Main;
+			this.PlainMade[key] = {Height: new Function('B', 'M', 'N', kept.Height)(), Climate: function (x, z) {
+				var made = climate(x, z);
+
+				return {Moisture: made[0], Temperature: made[1]};
+			}};
+		}
+
+		return this.PlainMade[key];
 	},
 
 	/*
@@ -3226,12 +3497,77 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 */
 	Sketched: function (sketch, base, seed) {
 		var self = this;
-		var noise = this.$Service('Math').Noise('sketch-' + (seed || ''));
+		/* The shift of the noise of the sketch of its seed, as Math.Noise takes it: what its graphs add to their points (O). */
+		var offset = this.$Service('Math').SeedOffset('sketch-' + (seed || ''));
 		var items = [];
-		var looks = {road: [0.5, 0.42, 0.32], street: [0.46, 0.44, 0.42], square: [0.58, 0.55, 0.5], river: [0.36, 0.32, 0.26], beach: [0.8, 0.74, 0.56], swamp: [0.24, 0.27, 0.18], floodplain: [0.42, 0.45, 0.28], canyon: [0.6, 0.43, 0.3], cliff: [0.45, 0.42, 0.36], crater: [0.4, 0.37, 0.33], dunes: [0.82, 0.72, 0.5]};
+		/* The colours of the looks of its types (SketchTable). */
+		var looks = {};
+
+		Object.keys(this.SketchTable).forEach(function (type) {
+			if (self.SketchTable[type].Look && self.SketchTable[type].Look.Color)
+				looks[type] = self.SketchTable[type].Look.Color;
+		});
 
 		function number (value, fallback) {
 			return value === undefined || value === null || value === '' || isNaN(Number(value)) ? fallback : Number(value);
+		}
+
+		/*
+		 * The graph of the type of an item made ready for it: its function (Main), its inputs in their order (Args: of the item
+		 * once; X, Z, H, S and Around of each point, At their places), how far round the point the ground is read for Around
+		 * (its parameters Around, in metres, and AroundOfRadius, of its radius). A stamp of no data has none.
+		 */
+		function graphed (made, item, d) {
+			var run = item.Type === 'stamp' && !item.Data ? null : self.SketchRun(item.Type);
+			var flat = [];
+
+			if (!run) return;
+
+			(made.Points.length > 1 ? made.Points : [made.Points[0], made.Points[0]]).forEach(function (point) {
+				flat.push(point[0], point[1]);
+			});
+
+			made.Main = run.Main;
+			made.At = {X: run.Inputs.indexOf('X'), Z: run.Inputs.indexOf('Z'), H: run.Inputs.indexOf('H'), S: run.Inputs.indexOf('S'), Around: run.Inputs.indexOf('Around')};
+			made.AroundStep = (Number(run.Parameters.Around) || 0) + (Number(run.Parameters.AroundOfRadius) || 0) * made.Radius;
+			made.Args = run.Inputs.map(function (name) {
+				var told = /Told$/.test(name) ? item[name.slice(0, -4)] : undefined;
+
+				if (['X', 'Z', 'H', 'S', 'Around'].indexOf(name) !== -1) return 0;
+				if (name === 'Points') return flat;
+
+				if (name === 'Levels')
+					return made.Levels || [];
+
+				if (name === 'Data')
+					return item.Data ? item.Data.Heights : [];
+
+				if (name === 'Side')
+					return item.Data ? item.Data.Side : 2;
+
+				if (name === 'CX' || name === 'CZ')
+					return made.Points[0][name === 'CX' ? 0 : 1];
+
+				if (name === 'Width' || name === 'Radius' || name === 'Edge') return made[name];
+
+				if (name === 'Bank')
+					return number(item.Bank, number(item.Shoulder, reachOf(d)));
+
+				if (name === 'Target')
+					return number(item.Height, base(made.Points[0][0], made.Points[0][1]));
+
+				if (name === 'O') return offset;
+
+				if (/Told$/.test(name))
+					return told === undefined || told === null || told === '' || isNaN(Number(told)) ? 0 : 1;
+
+				return number(item[name], d[name] === undefined ? 0 : d[name]);
+			});
+		}
+
+		/* How far past its width a line of a type reaches (Bank of a river, Shoulder of a road, Reach of a cliff or of every type). */
+		function reachOf (d) {
+			return d.Bank !== undefined ? d.Bank : d.Shoulder !== undefined ? d.Shoulder : d.Reach;
 		}
 
 		/* 1 at the middle, 0 at the edge and past it, smoothly. */
@@ -3324,14 +3660,6 @@ Elemenx.Service('SceneTerrainGenerator', {
 			return even;
 		}
 
-		function levelAt (made, seen) {
-			var i = seen.Segment;
-			var span = made.Lengths[i + 1] - made.Lengths[i] || 1;
-			var t = Math.max(0, Math.min(1, (seen.T * made.Lengths[made.Lengths.length - 1] - made.Lengths[i]) / span));
-
-			return made.Levels[i] + (made.Levels[i + 1] - made.Levels[i]) * t;
-		}
-
 		/* A grid of heights over bounds (a stamp, a frozen mask): bilinear inside, none outside. */
 		function sample (grid, x, z) {
 			var bounds = grid.Bounds;
@@ -3362,9 +3690,12 @@ Elemenx.Service('SceneTerrainGenerator', {
 			})};
 			var reach = 0;
 			var lengths = [0];
+			var d = self.SketchDefaults(item.Type);
 			var i;
 
 			if (item.Visible === false || !self.SketchTypes[item.Type]) return null;
+
+			made.Defaults = d;
 
 			made.Kind = self.SketchTypes[item.Type];
 
@@ -3377,20 +3708,23 @@ Elemenx.Service('SceneTerrainGenerator', {
 			if (made.Kind === 'circle')
 				made.Points = [[Number(item.At && item.At[0]) || 0, Number(item.At && item.At[1]) || 0]];
 
-			made.Radius = number(item.Radius, item.Type === 'mountain' ? 60 : item.Type === 'crater' ? 25 : item.Type === 'stamp' ? number(item.Size, 50) / 2 : 8);
-			made.Width = number(item.Width, {ridge: 20, valley: 20, canyon: 30, river: 6, road: 6, cliff: 3}[item.Type] || 10);
-			made.Edge = number(item.Edge, 10);
+			/* Of a stamp its Size, when it tells no radius. */
+			made.Radius = number(item.Radius, item.Type === 'stamp' ? number(item.Size, d.Radius * 2) / 2 : d.Radius);
+			made.Width = number(item.Width, d.Width);
+			made.Edge = number(item.Edge, d.Edge);
 
 			if (made.Kind === 'line' && made.Points.length < 2) return null;
 			if (made.Kind === 'area' && made.Points.length < 3) return null;
 
 			if (made.Kind === 'stroke') reach = made.Radius;
-			else if (made.Kind === 'line') reach = made.Width / 2 + number(item.Bank, number(item.Shoulder, number(item.Reach, item.Type === 'cliff' ? 30 : 6)));
+			else if (made.Kind === 'line') reach = made.Width / 2 + number(item.Bank, number(item.Shoulder, number(item.Reach, reachOf(d))));
 			else if (made.Kind === 'area') reach = made.Edge;
 			else reach = made.Radius * (item.Type === 'crater' ? 1.4 : 1);
 
 			if (item.Type === 'river' || item.Type === 'road' || item.Type === 'street')
 				made.Levels = levels(made.Points, lengths, item.Type === 'river');
+
+			graphed(made, item, d);
 
 			made.Bounds = [Infinity, Infinity, -Infinity, -Infinity];
 
@@ -3432,141 +3766,27 @@ Elemenx.Service('SceneTerrainGenerator', {
 		});
 
 		/* What one item makes of the height h a point has: the height again; guard (0 to 1) holds it back under a mask. */
+		/*
+		 * What an item does to the height h at x, z: the graph of its type (blueprints/sketch/<type>, SketchRun), its inputs
+		 * those of the item (Args) and of the point (X, Z, H, S its strength there, Around the ground round the point). Regression:
+		 * the height of each type was written out in code here, beside nothing that could change it.
+		 */
 		function apply (made, x, z, h, guard) {
-			var item = made.Item;
-			var s = made.Strength * (1 - guard);
-			var seen;
-			var w;
-			var target;
+			var args = made.Args;
+			var at = made.At;
+			var step = made.AroundStep;
 
-			if (made.Kind === 'stroke') {
-				seen = along(made.Points.length > 1 ? made.Points : [made.Points[0], made.Points[0]], made.Points.length > 1 ? made.Lengths : [0, 0], x, z);
-				w = fall(seen.Distance, made.Radius) * s;
+			if (!made.Main) return h;
 
-				if (item.Type === 'raise')
-					return h + number(item.Amount, 3) * w;
+			args[at.X] = x;
+			args[at.Z] = z;
+			args[at.H] = h;
+			args[at.S] = made.Strength * (1 - guard);
 
-				if (item.Type === 'lower')
-					return h - number(item.Amount, 3) * w;
+			if (at.Around >= 0)
+				args[at.Around] = (base(x + step, z) + base(x - step, z) + base(x, z + step) + base(x, z - step) + base(x, z)) / 5;
 
-				if (item.Type === 'flatten')
-					return h + (number(item.Height, base(made.Points[0][0], made.Points[0][1])) - h) * w;
-
-				target = (base(x + made.Radius * 0.5, z) + base(x - made.Radius * 0.5, z) + base(x, z + made.Radius * 0.5) + base(x, z - made.Radius * 0.5) + base(x, z)) / 5;
-
-				return h + (target - h) * w;
-			}
-
-			if (made.Kind === 'line') {
-				seen = along(made.Points, made.Lengths, x, z);
-
-				if (item.Type === 'ridge') {
-					w = fall(seen.Distance, made.Width / 2);
-					w = Math.pow(w, 1 - number(item.Sharp, 0.3) * 0.7);
-
-					return h + number(item.Height, 15) * w * s * (0.85 + 0.3 * noise.Fbm(x * 0.02, 0.5, z * 0.02, 3));
-				}
-
-				if (item.Type === 'valley')
-					return h - number(item.Depth, 8) * fall(seen.Distance, made.Width / 2) * s;
-
-				if (item.Type === 'canyon')
-					return h - number(item.Depth, 25) * Math.pow(fall(seen.Distance, made.Width / 2), 0.25) * s;
-
-				if (item.Type === 'cliff') {
-					w = self.Smoothstep(-made.Width / 2, made.Width / 2, seen.Side * seen.Distance);
-
-					return h + number(item.Height, 8) * w * fall(Math.max(0, seen.Distance - made.Width / 2) * (seen.Side > 0 ? 1 : 0), number(item.Reach, 30)) * s;
-				}
-
-				/* A river: its bed under the level of its way, flat across its width, its banks coming down to it. A road: level across. */
-				target = levelAt(made, seen) - (item.Type === 'river' ? number(item.Depth, 2) : 0);
-				w = seen.Distance <= made.Width / 2 ? 1 : fall(seen.Distance - made.Width / 2, number(item.Bank, number(item.Shoulder, 6)));
-
-				return item.Type === 'river' ? h + (Math.min(h, target) - h) * w * s : h + (target - h) * w * s;
-			}
-
-			if (made.Kind === 'area') {
-				w = areaWeight(made, x, z) * s;
-
-				if (!w)
-					return h;
-
-				if (item.Type === 'plateau')
-					return h + (number(item.Height, 20) - h) * w;
-
-				/* A settlement on gentler ground, a square level. */
-				if (item.Type === 'settlement' || item.Type === 'square') {
-					target = (base(x + 20, z) + base(x - 20, z) + base(x, z + 20) + base(x, z - 20) + base(x, z)) / 5;
-
-					return h + (target - h) * w * (item.Type === 'square' ? 1 : 0.7);
-				}
-
-				if (item.Type === 'basin')
-					return h - number(item.Depth, 6) * w;
-
-				if (item.Type === 'lake')
-					return h + (Math.min(h, number(item.Level, -1.5) - number(item.Depth, 3) * w) - h) * w;
-
-				if (item.Type === 'swamp')
-					return h + (number(item.Level, 0.15) + noise.Fbm(x * 0.08, 1.7, z * 0.08, 3) * 0.8 - 0.4 - h) * w;
-
-				if (item.Type === 'beach')
-					return h + (Math.max(-2, Math.min(1.4, h)) * 0.5 - h) * w;
-
-				if (item.Type === 'floodplain')
-					return h + (number(item.Level, Math.min(h, 1.5)) + noise.Fbm(x * 0.03, 2.3, z * 0.03, 2) * 0.5 - 0.25 - h) * w;
-
-				if (item.Type === 'erosion')
-					return h - number(item.Amount, 4) * w * (1 - noise.Ridge(x * 0.04, 3.1, z * 0.04, 4));
-
-				if (item.Type === 'dunes') {
-					var way = number(item.Way, 70) * Math.PI / 180;
-					var u = (x * Math.sin(way) + z * Math.cos(way)) / number(item.Length, 25);
-
-					return h + number(item.Height, 3) * w * (0.5 + 0.5 * Math.sin(u * Math.PI * 2 + noise.Fbm(x * 0.01, 4.2, z * 0.01, 3) * 6)) * (0.6 + 0.4 * noise.Fbm(x * 0.03, 0.9, z * 0.03, 2));
-				}
-
-				if (item.Type === 'terraces') {
-					var step = Math.max(0.2, number(item.Step, 3));
-					var level = Math.floor(h / step);
-					var part = h / step - level;
-
-					return h + ((level + self.Smoothstep(0.75, 1, part)) * step - h) * w;
-				}
-
-				return h;
-			}
-
-			/* A circle: a mountain, a crater or a stamp. */
-			seen = Math.hypot(x - made.Points[0][0], z - made.Points[0][1]);
-
-			if (item.Type === 'mountain') {
-				w = fall(seen, made.Radius);
-
-				return h + number(item.Height, 60) * Math.pow(w, 1.2) * s * (1 - number(item.Ridged, 0.5) * 0.5 + number(item.Ridged, 0.5) * 0.5 * noise.Ridge(x * 0.012, 5.3, z * 0.012, 5));
-			}
-
-			if (item.Type === 'crater') {
-				var r = seen / made.Radius;
-				if (r > 1.4) return h;
-
-				return h + s * (r < 1 ? -number(item.Depth, 8) * (1 - r * r) + number(item.Rim, 3) * self.Smoothstep(0.7, 1, r) : number(item.Rim, 3) * fall(r - 1, 0.4));
-			}
-
-			if (item.Type === 'stamp' && item.Data) {
-				var turn = -number(item.Turn, 0) * Math.PI / 180;
-				var lx = (x - made.Points[0][0]) * Math.cos(turn) - (z - made.Points[0][1]) * Math.sin(turn);
-				var lz = (x - made.Points[0][0]) * Math.sin(turn) + (z - made.Points[0][1]) * Math.cos(turn);
-				var got = sample({Bounds: [-made.Radius, -made.Radius, made.Radius, made.Radius], Side: item.Data.Side, Data: item.Data.Heights}, lx, lz);
-				if (got === null) return h;
-
-				w = fall(Math.max(Math.abs(lx), Math.abs(lz)) - made.Radius * 0.8, made.Radius * 0.2) * s;
-
-				return h + (got * number(item.Height, 20) - h) * w;
-			}
-
-			return h;
+			return made.Main.apply(null, args);
 		}
 
 		return {
@@ -3683,18 +3903,120 @@ Elemenx.Service('SceneTerrainGenerator', {
 		};
 	},
 
-	/* The kind of each type of item of a sketch. */
-	SketchTypes: {
-		cave: 'line', hall: 'circle', overhang: 'circle',
-		raise: 'stroke', lower: 'stroke', flatten: 'stroke', smooth: 'stroke',
-		ridge: 'line', valley: 'line', canyon: 'line', river: 'line', road: 'line', cliff: 'line',
-		plateau: 'area', basin: 'area', lake: 'area', swamp: 'area', beach: 'area', floodplain: 'area', erosion: 'area', dunes: 'area', terraces: 'area', biome: 'area', mask: 'area',
-		mountain: 'circle', crater: 'circle', stamp: 'circle',
-		forest: 'area', meadow: 'area', clearing: 'area', bushes: 'area', thicket: 'area', jungle: 'area', sequoia: 'area', fields: 'area', orchard: 'area',
-		row: 'line', fence: 'line', hedge: 'line', wall: 'line', powerline: 'line',
-		marker: 'circle',
-		settlement: 'area', street: 'line', square: 'area', district: 'area', citywall: 'line', landmark: 'circle',
-		trigger: 'area', triggerpoint: 'circle', triggerline: 'line', zone: 'area', collider: 'area'
+	/* The kind of each type of item of a sketch (of SketchTable, as the Service is made). */
+	SketchTypes: {},
+
+	/*
+	 * The types of a sketch, of resources/terrain/sketch-types.json: {type: {Kind (stroke, line, area, circle), Placed (it places
+	 * things, it shapes no ground), Defaults (its values where an item tells none: the first ones of an editor too), Look
+	 * {Color, Material}}}; '*' the values of every type.
+	 */
+	SketchTable: {},
+
+	/*
+	 * The graphs of the types of a sketch made code (blueprints/sketch/<type>, the inputs of their points lists: Points,
+	 * Levels, Data): {type: {Source, Inputs (in their order), Parameters}}, each made in the page as a sketch first has it
+	 * (SketchRun), given to the workers with the options of a ground (ShareGround: a worker makes no code).
+	 */
+	SketchCode: {},
+
+	/*
+	 * The graph of a type of a sketch as a function: {Main (of its inputs in their order), Inputs, Parameters}; null with none.
+	 * Made in the page the first time; in a worker of what ShareGround gave it.
+	 */
+	SketchRun: function (type) {
+		var kept = (this.SketchCode || {})[type] || (typeof this.$Shared === 'function' ? this.$Shared('sketch-code:' + type) : null);
+		var graph;
+
+		this.SketchMade = this.SketchMade || {};
+
+		if (!kept && typeof Elemenx !== 'undefined' && Elemenx.Compilers && typeof Elemenx.Resources === 'function') {
+			graph = Elemenx.Resources('Blueprints', 'ElemenxGraphics/sketch/' + type);
+			kept = graph ? this.SketchMake(type, graph) : null;
+		}
+
+		if (!kept)
+			return null;
+
+		if (!this.SketchMade[type])
+			this.SketchMade[type] = {Main: new Function('B', 'M', 'N', kept.Source)().Main, Inputs: kept.Inputs, Parameters: kept.Parameters};
+
+		return this.SketchMade[type];
+	},
+
+	/*
+	 * The graphs of the carves of a volume made code (blueprints/carve/<type>: tunnel, sphere, caves, passages, overhangs;
+	 * their lists Points and Packed): {type: {Source, Inputs, Keys}}, each made in the page as a volume first has it
+	 * (CarveRun), given to the workers with the options of a ground (ShareGround).
+	 */
+	CarveCode: {},
+
+	/* The graph of a carve as a function: {Main (of its inputs in their order), Inputs, Keys (of its results)}; null with none. */
+	CarveRun: function (type) {
+		var kept = (this.CarveCode || {})[type] || (typeof this.$Shared === 'function' ? this.$Shared('carve-code:' + type) : null);
+		var graph;
+
+		this.CarveMade = this.CarveMade || {};
+
+		if (!kept && typeof Elemenx !== 'undefined' && Elemenx.Compilers && typeof Elemenx.Resources === 'function') {
+			graph = Elemenx.Resources('Blueprints', 'ElemenxGraphics/carve/' + type);
+			kept = graph ? this.CarveMake(type, graph) : null;
+		}
+
+		if (!kept)
+			return null;
+
+		if (!this.CarveMade[type])
+			this.CarveMade[type] = {Main: new Function('B', 'M', 'N', kept.Source)().Main, Inputs: kept.Inputs, Keys: kept.Keys};
+
+		return this.CarveMade[type];
+	},
+
+	/* The code of the graph of a carve (CarveCode), made of its graph in the page: a carve of another graph. */
+	CarveMake: function (type, graph) {
+		var made = this.$Service('Blueprints').NumericCode(graph, {}, {Points: 'floats', Packed: 'floats'});
+		if (!made)
+			throw new Error('Elemenx SceneTerrainGenerator: the graph of the carve ' + type + ' is not of numbers');
+
+		this.CarveCode = this.CarveCode || {};
+		this.CarveCode[type] = {Source: made.Source, Inputs: made.Numeric.Inputs.map(function (one) {
+			return one.Name;
+		}), Keys: made.Keys};
+
+		if (this.CarveMade)
+			delete this.CarveMade[type];
+
+		return this.CarveCode[type];
+	},
+
+	/* The code of the graph of a type of a sketch (SketchCode), made of its graph in the page. */
+	SketchMake: function (type, graph) {
+		var blueprints = this.$Service('Blueprints');
+		var read = blueprints.Read(graph);
+		var made = blueprints.NumericCode(read, {}, {Points: 'floats', Levels: 'floats', Data: 'floats'}, ['Height']);
+		var parameters = {};
+
+		if (!made)
+			throw new Error('Elemenx SceneTerrainGenerator: the graph of the sketch type ' + type + ' is not of numbers');
+
+		(read.parameters || []).forEach(function (parameter) {
+			parameters[parameter.key] = parameter.value;
+		});
+
+		this.SketchCode = this.SketchCode || {};
+		this.SketchCode[type] = {Source: made.Source, Inputs: made.Numeric.Inputs.map(function (one) {
+			return one.Name;
+		}), Parameters: parameters};
+
+		if (this.SketchMade)
+			delete this.SketchMade[type];
+
+		return this.SketchCode[type];
+	},
+
+	/* The values of a type of a sketch where an item tells none: those of every type, then its own. */
+	SketchDefaults: function (type) {
+		return Object.assign({}, (this.SketchTable['*'] || {}).Defaults, (this.SketchTable[type] || {}).Defaults);
 	},
 
 	/*
@@ -4434,7 +4756,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * The items of a sketch that place things (the Scatter of a Scene sows them) and change no height: a trigger and a zone
 	 * of the game are objects of the scene.
 	 */
-	SketchPlaced: {cave: true, hall: true, overhang: true, forest: true, meadow: true, clearing: true, bushes: true, thicket: true, jungle: true, sequoia: true, fields: true, orchard: true, row: true, fence: true, hedge: true, wall: true, powerline: true, marker: true, district: true, citywall: true, landmark: true, trigger: true, triggerpoint: true, triggerline: true, zone: true, collider: true},
+	SketchPlaced: {},
 
 	/*
 	 * The carves of the volume a sketch draws (SketchTypes cave, hall and overhang), in the order of its layers and items:
@@ -4443,6 +4765,8 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * jutting out of what is steep round a point (At, Radius, Amount, 6). height(x, z): the ground.
 	 */
 	SketchCarves: function (sketch, height, seed) {
+		var self = this;
+		var sketched = this.Carves.Sketch;
 		var carves = [];
 
 		function number (value, fallback) {
@@ -4461,11 +4785,11 @@ Elemenx.Service('SceneTerrainGenerator', {
 				if (item.Visible === false) return;
 
 				if (item.Type === 'cave' && (item.Points || []).length > 1) {
-					radius = number(item.Width, 5) / 2;
-					depth = number(item.Depth, 8);
+					radius = number(item.Width, sketched.cave.Width) / 2;
+					depth = number(item.Depth, sketched.cave.Depth);
 
-					carves.push({Type: 'passages', Seed: String(seed === undefined ? 'ground' : seed) + '-cave-' + id, Radius: radius, Rough: number(item.Rough, 0.5), Flat: 0.5, Nodes: item.Points.map(function (point, n) {
-						var mouth = number(item.Mouth, 1) && (n === 0 || n === item.Points.length - 1);
+					carves.push({Type: 'passages', Seed: String(seed === undefined ? 'ground' : seed) + '-cave-' + id, Radius: radius, Rough: number(item.Rough, sketched.cave.Rough), Flat: self.Carves.Tunnel.Flat, Nodes: item.Points.map(function (point, n) {
+						var mouth = number(item.Mouth, sketched.cave.Mouth) && (n === 0 || n === item.Points.length - 1);
 
 						/* A point [x, z, y]: its floor that high, whatever the ground over it. */
 						if (point.length > 2 && point[2] !== null && point[2] !== undefined && point[2] !== '')
@@ -4477,12 +4801,12 @@ Elemenx.Service('SceneTerrainGenerator', {
 					})});
 				}
 				else if (item.Type === 'hall') {
-					radius = number(item.Radius, 10);
+					radius = number(item.Radius, sketched.hall.Radius);
 
-					carves.push({Type: 'sphere', At: [Number(at[0]) || 0, height(Number(at[0]) || 0, Number(at[1]) || 0) - number(item.Depth, 10), Number(at[1]) || 0], Radius: radius});
+					carves.push({Type: 'sphere', At: [Number(at[0]) || 0, height(Number(at[0]) || 0, Number(at[1]) || 0) - number(item.Depth, sketched.hall.Depth), Number(at[1]) || 0], Radius: radius});
 				}
 				else if (item.Type === 'overhang') {
-					carves.push({Type: 'overhangs', Seed: String(seed === undefined ? 'ground' : seed) + '-overhang-' + id, Center: [Number(at[0]) || 0, Number(at[1]) || 0], Radius: number(item.Radius, 30), Amount: number(item.Amount, 6), Slope: 0.35});
+					carves.push({Type: 'overhangs', Seed: String(seed === undefined ? 'ground' : seed) + '-overhang-' + id, Center: [Number(at[0]) || 0, Number(at[1]) || 0], Radius: number(item.Radius, sketched.overhang.Radius), Amount: number(item.Amount, sketched.overhang.Amount), Slope: number(item.Slope, sketched.overhang.Slope)});
 				}
 			});
 		});
@@ -4801,7 +5125,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 	/* What a worker of the ground carries: see Workers. */
 	/* What a worker carries of this Service besides its methods: its tables. */
-	Carried: ['TunnelRadius', 'GroundMaterials', 'LookMaterials', 'SketchTypes', 'SketchPlaced', 'SettlementSizes', 'SettlementKinds', 'SettlementDistricts'],
+	Carried: ['TunnelRadius', 'DefaultBiomes', 'Zones', 'Carves', 'GroundMaterials', 'LookMaterials', 'SketchTypes', 'SketchTable', 'SketchPlaced', 'SettlementSizes', 'SettlementKinds', 'SettlementDistricts'],
 
 	Source: function (names) {
 		return this.$Service('Workers').Source(this, names);

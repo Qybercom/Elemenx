@@ -56,37 +56,11 @@ Elemenx.Trait('SceneWeapons', {
 			programs = programs || {Streak: renderer.Program(shaders.StreakVertex, shaders.Streak), Mark: renderer.Program(shaders.MarkVertex, shaders.Mark)};
 		});
 
-		scene.WeaponTypes = {
-			pistol: {Kind: 'bullet', Damage: 18, Type: 'kinetic', Rate: 4, Range: 120, Spread: 0.9, Color: '#ffd890', Width: 0.02, Muzzle: 'muzzle', Recoil: 0.6, Magazine: 12, Reload: 1.2, Crosshair: 'dot'},
-			rifle: {Kind: 'bullet', Damage: 12, Type: 'kinetic', Rate: 10, Range: 300, Spread: 0.7, Color: '#ffd890', Width: 0.025, Muzzle: 'muzzle', Recoil: 0.35, Magazine: 30, Reload: 2, Crosshair: 'cross'},
-			shotgun: {Kind: 'bullet', Damage: 9, Type: 'kinetic', Rate: 1.2, Range: 40, Spread: 5, Pellets: 9, Color: '#ffd890', Width: 0.018, Muzzle: 'muzzle', Recoil: 1.6, Magazine: 6, Reload: 2.4, Crosshair: 'circle'},
-			sniper: {Kind: 'bullet', Damage: 90, Type: 'kinetic', Rate: 0.7, Range: 900, Spread: 0.05, Color: '#ffe6b0', Width: 0.03, Muzzle: 'muzzle', Recoil: 2.4, Magazine: 5, Reload: 2.6, Crosshair: 'dot'},
-			laser: {Kind: 'beam', Damage: 45, Type: 'energy', Range: 400, Color: '#ff3030', Width: 0.05, Muzzle: '', Recoil: 0, Crosshair: 'dot', Heat: 1},
-			railgun: {Kind: 'rail', Damage: 110, Type: 'kinetic', Rate: 0.6, Range: 1200, Color: '#7fd8ff', Width: 0.06, Muzzle: 'railflash', Recoil: 2.8, Magazine: 4, Reload: 3, Crosshair: 'chevron', Push: 400},
-			plasma: {Kind: 'projectile', Damage: 30, Type: 'energy', Rate: 3, Range: 200, Speed: 45, Gravity: 0, Size: 0.22, Color: '#62ffb0', Spread: 0.6, Muzzle: '', Recoil: 0.5, Magazine: 20, Reload: 2, Crosshair: 'circle', Then: 'plasmaburst'},
-			rocket: {Kind: 'projectile', Damage: 90, Type: 'explosive', Rate: 0.8, Range: 500, Speed: 32, Gravity: 0, Size: 0.12, Color: '#ffb060', Trail: 'smoke', Homing: 2.2, Radius: 6, Then: 'blast', Muzzle: 'backblast', Recoil: 1.2, Magazine: 1, Reload: 2.6, Crosshair: 'chevron', Lock: {Time: 0.9, Cone: 7, Count: 1}, Push: 900, Crater: 1.4},
-			artillery: {Kind: 'projectile', Damage: 160, Type: 'explosive', Rate: 0.25, Range: 2000, Speed: 140, Gravity: 9.81, Arc: 'high', Size: 0.1, Color: '#ffcf90', Trail: 'thin', Radius: 10, Then: 'blast', Muzzle: 'cannon', Recoil: 3, Crosshair: 'chevron', Push: 1600, Crater: 2.6},
-			mortar: {Kind: 'projectile', Damage: 100, Type: 'explosive', Rate: 0.5, Range: 600, Speed: 38, Gravity: 9.81, Arc: 'high', Size: 0.08, Color: '#ffcf90', Trail: 'thin', Radius: 7, Then: 'blast', Muzzle: 'cannon', Recoil: 2, Crosshair: 'chevron', Push: 1200, Crater: 1.8},
-			bow: {Kind: 'projectile', Damage: 35, Type: 'kinetic', Rate: 1, Range: 150, Speed: 55, Gravity: 9.81, Size: 0.03, Color: '#d8c8a0', Trail: 'thin', Muzzle: '', Recoil: 0.3, Crosshair: 'dot', Stick: true}
-		};
+		/* Its weapon types (resources/weapons/types.json), a copy of its own: Weapons changes it. */
+		scene.WeaponTypes = Elemenx.Resources('Data', 'ElemenxGraphics/weapons/types') || {};
 
 		/* What a hit does, by the material it hits: its effect, its mark, the factor of its damage. */
-		scene.HitRules = {
-			metal: {Effect: 'hit-metal', Decal: 'dent', Factor: 0.6},
-			stone: {Effect: 'hit-stone', Decal: 'hole', Factor: 0.8},
-			wood: {Effect: 'hit-wood', Decal: 'chip', Factor: 1},
-			soil: {Effect: 'hit-soil', Decal: 'pit', Factor: 1},
-			snow: {Effect: 'hit-snow', Decal: 'pit', Factor: 1},
-			water: {Effect: 'hit-water', Decal: '', Factor: 1},
-			flesh: {Effect: 'hit-flesh', Decal: '', Factor: 1},
-			glass: {Effect: 'hit-glass', Decal: 'crack', Factor: 1.5},
-			fabric: {Effect: 'hit-dust', Decal: 'hole', Factor: 1},
-			energy: {Effect: 'hit-energy', Decal: 'scorch'},
-			explosive: {Effect: '', Decal: 'scorch'},
-			'energy/water': {Effect: 'hit-steam', Decal: ''},
-			'energy/flesh': {Effect: 'hit-energy', Decal: ''},
-			'explosive/water': {Effect: 'hit-water', Decal: ''}
-		};
+		scene.HitRules = Elemenx.Resources('Data', 'ElemenxGraphics/weapons/hit-rules') || {};
 
 		self.Effects({
 			muzzle: {Lamp: {Color: '#ffb060', Power: 0.6, Radius: 7, Flicker: 0}, Once: true, Lasts: 0.08, Layers: [

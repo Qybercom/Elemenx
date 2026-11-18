@@ -13,6 +13,8 @@
 		<Toggle Label="Glass" [checked]="TerrainGlass" (change)="TerrainGlass = $event" />
 		<Field Label="Glass frost"><Slider Label="Glass frost" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="TerrainFrost" (input)="TerrainFrost = $event" /></Field>
 		<Select Label="Relief" [options]="TerrainReliefs" [value]="TerrainRelief" (change)="TerrainRelief = $event" />
+		<Select Label="Compute" [options]="TerrainComputes" [value]="TerrainCompute" (change)="TerrainCompute = $event" />
+		<Button Label="Measure" Icon="gauge" Variant="ghost" [title]="'Squares of this ground made by JavaScript and by WebAssembly: the time of one'" (click)="TerrainMeasure" />
 		<Field Label="Swell"><Slider Label="Swell" Min="0" Max="1.5" Step="0.05" ShowValue="always" [value]="TerrainSwell" (input)="TerrainSwell = $event" /></Field>
 		<Button Label="To the lake" Icon="map-pin" Variant="ghost" (click)="TerrainLake" />
 		<Button Label="Boat" Icon="sport:sailing" Variant="ghost" (click)="TerrainBoat" />
@@ -36,9 +38,10 @@
 		<Field Label="Latitude"><Slider Label="Latitude" Min="-70" Max="70" Step="1" ShowValue="always" [value]="TerrainLatitude" (input)="TerrainLatitude = $event" /></Field>
 		<span class="elemenx-caption" aria-live="polite">{{TerrainYear}}</span>
 		<span class="elemenx-caption" role="status">{{TerrainNote}}</span>
+		<span class="elemenx-caption" aria-live="polite">{{TerrainMeasured}}</span>
 	</div>
 	<div class="scene-demo-scene">
-		<Scene Setting="terrain" Team="blue" Labels="true" Orders="true" [selectCheck]="TerrainSelectable" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [season]="TerrainSeason" [aurora]="TerrainAuroraOf(TerrainAurora)" [auroracolors]="TerrainAurora === 'fantasy' ? ['#ff4fd8', '#3fb4ff'] : null" [flare]="SceneFlare" [bokeh]="SceneBokeh" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived"><DemoLoading slot="loading" Title="Terrain" />
+		<Scene Setting="terrain" Team="blue" Labels="true" Orders="true" [selectCheck]="TerrainSelectable" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [season]="TerrainSeason" [aurora]="TerrainAuroraOf(TerrainAurora)" [auroracolors]="TerrainAurora === 'fantasy' ? ['#ff4fd8', '#3fb4ff'] : null" [flare]="SceneFlare" [bokeh]="SceneBokeh" [compute]="TerrainCompute" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived"><DemoLoading slot="loading" Title="Terrain" />
 			<SceneObject ID="valley" Kind="ground" [world]="TerrainWorld(TerrainBiome, TerrainRelief)" [swell]="TerrainSwell" />
 			<SceneObject ID="sun" Kind="sun" [latitude]="TerrainLatitude" [dayofyear]="TerrainDay" Noon="150" [time]="TerrainHour" />
 			<SceneObject ID="hamlet" Kind="village" X="-70" Y="20" Houses="10" />

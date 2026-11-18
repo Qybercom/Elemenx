@@ -1,7 +1,7 @@
 <!-- generated -->
 # Blueprint
 
-Редактор блупринта (граф сервиса Blueprints в JSON Flowprint) на холсте Board: блоки с пинами, связи между ними, палитра типов блоков и параметры графа. Value — граф (объект или текст файла); без него — пустой граф типа Type. Событие change отдаёт граф после каждого действия, select — выбранное, problems — то, что находит Check. ReadOnly показывает граф без правки. Методы: Graph(), Write(), Add(type, x, y), Remove(id), Select(id), SelectMany(ids), Selected(), Chosen(), Undo(), Redo(), Copy(), Paste(), Group(ids, title), Ungroup(id), RemoveGroup(id, content), Comment(id, text), Check(), Compile(options), Arrange(), Fit().
+Редактор блупринта (граф сервиса Blueprints в JSON Flowprint) на холсте Board: блоки с пинами, связи между ними, палитра типов блоков и параметры графа. Value — граф (объект или текст файла); без него — пустой граф типа Type. Событие change отдаёт граф после каждого действия, select — выбранное, problems — то, что находит Check. ReadOnly показывает граф без правки. Методы: Graph(), Write(), Add(type, x, y), Remove(id), Select(id), SelectMany(ids), Selected(), Chosen(), Undo(), Redo(), Copy(), Paste(), Group(ids, title), Ungroup(id), RemoveGroup(id, content), Comment(id, text), Check(), Compile(options), Arrange(), Fit(), Target(). Под параметрами генератора видно, как он выполняется: в WebAssembly (граф из чисел, Blueprints.Numeric, с размером модуля; числа те же, что в JavaScript), в JavaScript или блок за блоком — с названием блока, который не из чисел.
 
 Выбор нескольких блоков: Shift или Ctrl с нажатием добавляет блок или убирает его, Shift с перетаскиванием по пустому месту рисует рамку выбора, Ctrl+A выбирает все. Перетаскивание заголовка одного блока двигает все выбранные, Delete удаляет их.
 
@@ -49,6 +49,7 @@ EditCheck (action, target) решает, что можно читателю; fal
 
 ## Методы
 
+- `Target()`
 - `Graph()`
 - `Write()`
 - `Add(type, x, y)`
@@ -85,4 +86,4 @@ EditCheck (action, target) решает, что можно читателю; fal
 - [shows the blocks where they stand with their pins, the links between the pins, and the file it keeps](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/Blueprint/Blueprint.test.js#L93) — `libraries/ElemenxUI/components/Blueprint/Blueprint.test.js`
 - [draws a link by a drag from a pin to another, takes the place of the one there, and takes one away let go on nothing](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/Blueprint/Blueprint.test.js#L129) — `libraries/ElemenxUI/components/Blueprint/Blueprint.test.js`
 
-+14 ещё в тех же файлах
++15 ещё в тех же файлах

@@ -14343,7 +14343,8 @@
 				"Check()",
 				"Compile(options)",
 				"Arrange()",
-				"Fit()"
+				"Fit()",
+				"Target()"
 			],
 			"Sample": {
 				"Type": "generator",
@@ -26178,6 +26179,7 @@
 		"elemenx-blueprint-palette": [],
 		"elemenx-blueprint-group-name": [],
 		"elemenx-blueprint-type": [],
+		"elemenx-blueprint-target": [],
 		"elemenx-blueprint-parameters": [],
 		"elemenx-blueprint-parameters-head": [],
 		"elemenx-blueprint-parameter": [],

@@ -97,6 +97,39 @@ describe('Contract: SceneShowcase, one world of every primitive of the generatio
 		})).toBe(true);
 	});
 
+	/* Regression: the whole world was written out in code: its plan is data now, the same world of it. */
+	it('makes its world of its plan: what grows with the ground grown, the words of its seed of the seed, what tells no district always', function () {
+		var plan = showcase.Plan();
+		var world = showcase.World({Size: 1500, Seed: 'other'});
+		var land = Elemenx.Service('SceneWorld').Make(world.Objects[0].World).Ground;
+		var boat = plan.Objects.filter(function (entry) {
+			return entry.ID === 'boat';
+		})[0];
+		var town = plan.Layers.filter(function (layer) {
+			return layer.ID === 'town';
+		})[0].Items[0];
+		var made = land.Sketch.Layers.filter(function (layer) {
+			return layer.ID === 'town';
+		})[0].Items[0];
+
+		expect(showcase.Districts()).toEqual(plan.Districts);
+		expect(boat.Scaled).toEqual(['X', 'Y']);
+		expect(world.Objects.filter(function (object) {
+			return object.ID === 'boat';
+		})[0].X).toBe(boat.X * 0.5);
+		expect(made.Points[1]).toEqual([town.Points[1][0] * 0.5, town.Points[1][1] * 0.5]);
+		expect(made.Seed).toBe('other' + town.Seed);
+		expect(made.Scaled).toBeUndefined();
+		expect(showcase.Scaled({X: 10, Y: 4, Points: [[1, 2, 3]], Ways: [{To: 'a'}, {Points: [[4, 6]]}], Seed: '-a', Scaled: ['X', 'Points', 'Ways[].Points'], Seeded: ['Seed']}, 2, 's')).toEqual({X: 20, Y: 4, Points: [[2, 4, 3]], Ways: [{To: 'a'}, {Points: [[8, 12]]}], Seed: 's-a'});
+		expect(showcase.World({Districts: []}).Objects.map(function (object) {
+			return object.ID;
+		})).toEqual(['land'].concat(plan.Objects.filter(function (entry) {
+			return !entry.When;
+		}).map(function (entry) {
+			return entry.ID;
+		})));
+	});
+
 	it('goes into a Scene as one list: its ground with the sketch, its objects', async function () {
 		var ready = null;
 		var world = showcase.World({Size: 600, Districts: ['game', 'race']});

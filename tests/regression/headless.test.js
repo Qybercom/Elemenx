@@ -51,7 +51,8 @@ describe('Elemenx without a DOM', function () {
 		var meshes;
 		var quarter;
 
-		require('../../libraries/ElemenxCommon/services/Astronomy/Astronomy.js');
+		/* Through the entry of the Library for Node: its resources come with it (the kinds of planets). */
+		require('../../libraries/ElemenxCommon/node.js');
 		require('../../libraries/ElemenxCommon/services/Math/Math.js');
 		require('../../libraries/ElemenxGraphics/services/Renderer/Renderer.js');
 		require('../../libraries/ElemenxGraphics/services/Meshes/Meshes.js');

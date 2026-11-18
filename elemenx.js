@@ -22816,12 +22816,17 @@
 		 * {Op: 'bin', Operator (+ - * / % < <= > >= == != && ||), A, B}, {Op: 'un', Operator (- !), A}, {Op: 'list', Items,
 		 * Type}, {Op: 'index', List, At}, {Op: 'length', List}, {Op: 'field', Object, Key}, {Op: 'record', Fields: {key:
 		 * expression}}, {Op: 'select', Test, A, B}. Types: float, int, bool, text, vec2, vec3, vec4, list (of anything),
-		 * record, any. Arithmetic on vectors is each of their numbers (a number with a vector: the number for each).
+		 * record, any, floats (a list of numbers: index and length of it in every language, of numbers too: wasm keeps it in
+		 * its memory, glsl as rt_floats). Arithmetic on vectors is each of their numbers (a number with a vector: the number for
+		 * each).
 		 */
-		var Types = ['float', 'int', 'bool', 'text', 'vec2', 'vec3', 'vec4', 'list', 'record', 'any', 'void'];
+		/* floats: a list of numbers, of what a back end of numbers holds too (wasm: in its memory; glsl: rt_floats of RT_CAP). */
+		var Types = ['float', 'int', 'bool', 'text', 'vec2', 'vec3', 'vec4', 'list', 'record', 'any', 'void', 'floats'];
 		var Statements = ['let', 'set', 'if', 'loop', 'each', 'push', 'return', 'expr'];
 		var Expressions = ['const', 'var', 'call', 'bin', 'un', 'list', 'index', 'length', 'field', 'record', 'select'];
-		var Binary = ['+', '-', '*', '/', '%', '<', '<=', '>', '>=', '==', '!=', '&&', '||'];
+		var Binary = ['+', '-', '*', '/', '%', '<', '<=', '>', '>=', '==', '!=', '&&', '||', '&', '|', '^', '<<', '>>', '>>>'];
+		/* Of int: its 32 bits (>>> fills with nought from the left). */
+		var Bits = ['&', '|', '^', '<<', '>>', '>>>'];
 		/* The functions every language has, by the types of what they give. */
 		var Builtins = {
 			sin: 'float', cos: 'float', tan: 'float', asin: 'float', acos: 'float', atan: 'float', atan2: 'float', sqrt: 'float',
@@ -22832,7 +22837,9 @@
 			/* Of the values of a graph: each(op, a, b) by each number (a number goes with each part), cast(value, type), get(record, key, default). */
 			each: 'any', cast: 'any', get: 'any',
 			/* Of what has no type told: isList(value), has(record, key), ends(text, end), cut(text, count): the text without its last count characters. */
-			isList: 'bool', has: 'bool', ends: 'bool', cut: 'text'
+			isList: 'bool', has: 'bool', ends: 'bool', cut: 'text',
+			/* Of numbers of 32 bits: toInt(x) (its whole part, as many times 2^32 off as it takes, as JavaScript's x | 0), toFloat(i), trunc(x), ldexp(x, k) (x times 2^k), ilogb(x) (the k of 2^k under x). */
+			toInt: 'int', toFloat: 'float', trunc: 'float', ldexp: 'float', ilogb: 'int'
 		};
 
 		function vector (type) {
@@ -22900,6 +22907,8 @@
 
 				if (['<', '<=', '>', '>=', '==', '!=', '&&', '||'].indexOf(item.Operator) !== -1) return 'bool';
 
+				if (Bits.indexOf(item.Operator) !== -1) return 'int';
+
 				if (vector(a)) return a;
 
 				if (vector(b)) return b;
@@ -22921,7 +22930,9 @@
 			if (item.Op === 'index') {
 				typeOf(item.At, scope, module, diagnostics);
 
-				return vector(typeOf(item.List, scope, module, diagnostics)) ? 'float' : item.Type || 'any';
+				a = typeOf(item.List, scope, module, diagnostics);
+
+				return vector(a) || a === 'floats' ? 'float' : item.Type || 'any';
 			}
 
 			if (item.Op === 'length') {
@@ -23088,6 +23099,9 @@
 			return found;
 		}
 
+		/* The operators of a language for int with int, where they wrap round. */
+		var IntOperators = {'+': 'IntAdd', '-': 'IntSubtract', '*': 'IntMultiply', '%': 'IntModulo'};
+
 		/* A template of a language filled: {name} by what is given. */
 		function fill (template, values) {
 			return String(template).replace(/\{(\w+)\}/g, function (whole, key) {
@@ -23102,11 +23116,22 @@
 		 */
 		function emit (module, language, options) {
 			var lines = [];
+			/* The lists of numbers of the module, each a constant of it once (Statements.Constant): not made again at each call. */
+			var constants = [];
+			var constantNames = {};
 			var settings = options || {};
 			var deep = recursive(module);
 			var diagnostics = [];
 
 			function literal (value, type) {
+				if (type === 'floats') {
+					return language.Literals.Floats ? language.Literals.Floats(value.map(function (one) {
+						return literal(Number(one), 'float');
+					}), settings) : fill(language.Expressions.List, {items: value.map(function (one) {
+						return literal(Number(one), 'float');
+					}).join(', ')});
+				}
+
 				if (type === 'bool' || typeof value === 'boolean')
 					return value ? language.Literals.True : language.Literals.False;
 
@@ -23121,7 +23146,11 @@
 				if (type === 'int')
 					return String(Math.round(Number(value) || 0));
 
-				return fill(language.Literals.Float, {value: Number(value) === Math.round(Number(value)) ? String(Number(value)) + language.Literals.Whole : String(Number(value))});
+				if (typeof value === 'number' && !isFinite(value))
+					return value !== value ? language.Literals.NaN || '(0 / 0)' : (value < 0 ? '(-' : '(') + (language.Literals.Infinity || 'Infinity') + ')';
+
+				/* A whole number written with its exponent (1e+21) takes no .0 after it. */
+				return fill(language.Literals.Float, {value: Number(value) === Math.round(Number(value)) && !/e/i.test(String(Number(value))) ? String(Number(value)) + language.Literals.Whole : String(Number(value))});
 			}
 
 			function expression (item, scope) {
@@ -23130,6 +23159,18 @@
 				var ta;
 				var tb;
 				var template;
+
+				if (item.Op === 'const' && item.Type === 'floats' && language.Statements.Constant) {
+					var text = literal(item.Value || [], 'floats');
+
+					if (!own(constantNames, text)) {
+						constantNames[text] = 'rt_c' + constants.length;
+
+						constants.push(fill(language.Statements.Constant, {name: constantNames[text], value: text}));
+					}
+
+					return constantNames[text];
+				}
 
 				if (item.Op === 'const')
 					return literal(item.Value, item.Type);
@@ -23174,6 +23215,10 @@
 					if (item.Operator === '/' && ta === 'int' && tb === 'int' && language.Operators.IntDivide)
 						template = language.Operators.IntDivide;
 
+					/* Whole numbers of 32 bits wrap round, as in C and in wasm: a hash of them is the same in each. */
+					if (ta === 'int' && tb === 'int' && own(IntOperators, item.Operator) && language.Operators[IntOperators[item.Operator]])
+						template = language.Operators[IntOperators[item.Operator]];
+
 					return fill(template, {a: a, b: b});
 				}
 
@@ -23187,10 +23232,10 @@
 				}
 
 				if (item.Op === 'index')
-					return fill(language.Expressions.Index, {list: expression(item.List, scope), at: expression(item.At, scope)});
+					return fill(typeOf(item.List, scope, module, diagnostics) === 'floats' && language.Expressions.IndexFloats || language.Expressions.Index, {list: expression(item.List, scope), at: expression(item.At, scope)});
 
 				if (item.Op === 'length')
-					return fill(language.Expressions.Length, {list: expression(item.List, scope)});
+					return fill(typeOf(item.List, scope, module, diagnostics) === 'floats' && language.Expressions.LengthFloats || language.Expressions.Length, {list: expression(item.List, scope)});
 
 				if (item.Op === 'field')
 					return fill(language.Expressions.Field, {object: expression(item.Object, scope), key: item.Key, quoted: JSON.stringify(String(item.Key))});
@@ -23304,7 +23349,7 @@
 				line(0, language.Statements.End);
 			});
 
-			return {Text: fill(language.Module, {runtime: language.Runtime || '', functions: lines.join('\n'), entry: language.Name(module.Entry || (module.Functions[0] && module.Functions[0].Name) || ''), names: module.Functions.map(function (fn) {
+			return {Text: fill(language.Module, {runtime: typeof language.Runtime === 'function' ? language.Runtime(settings) : language.Runtime || '', functions: constants.concat(lines).join('\n'), entry: language.Name(module.Entry || (module.Functions[0] && module.Functions[0].Name) || ''), names: module.Functions.map(function (fn) {
 				return fill(language.Export || '{name}', {name: language.Name(fn.Name), key: JSON.stringify(fn.Name)});
 			}).join(', ')}), Diagnostics: diagnostics};
 		}
@@ -23317,9 +23362,9 @@
 			Name: function (name) {
 				return 'f_' + String(name).replace(/[^A-Za-z0-9_]/g, '_');
 			},
-			Types: {float: 'var', int: 'var', bool: 'var', text: 'var', vec2: 'var', vec3: 'var', vec4: 'var', list: 'var', record: 'var', any: 'var', void: ''},
+			Types: {float: 'var', int: 'var', bool: 'var', text: 'var', vec2: 'var', vec3: 'var', vec4: 'var', list: 'var', record: 'var', any: 'var', void: '', floats: 'var'},
 			Literals: {True: 'true', False: 'false', Float: '{value}', Whole: ''},
-			Operators: {'+': '({a} + {b})', '-': '({a} - {b})', '*': '({a} * {b})', '/': '({a} / {b})', '%': '({a} % {b})', IntDivide: '(({a} / {b}) | 0)', '<': '({a} < {b})', '<=': '({a} <= {b})', '>': '({a} > {b})', '>=': '({a} >= {b})', '==': '({a} === {b})', '!=': '({a} !== {b})', '&&': '({a} && {b})', '||': '({a} || {b})', Not: '(!{a})', Negate: '(-{a})'},
+			Operators: {'+': '({a} + {b})', '-': '({a} - {b})', '*': '({a} * {b})', '/': '({a} / {b})', '%': '({a} % {b})', IntDivide: '(({a} / {b}) | 0)', IntAdd: '(({a} + {b}) | 0)', IntSubtract: '(({a} - {b}) | 0)', IntMultiply: 'Math.imul({a}, {b})', '&': '({a} & {b})', '|': '({a} | {b})', '^': '({a} ^ {b})', '<<': '({a} << {b})', '>>': '({a} >> {b})', '>>>': '(({a} >>> {b}) | 0)', '<': '({a} < {b})', '<=': '({a} <= {b})', '>': '({a} > {b})', '>=': '({a} >= {b})', '==': '({a} === {b})', '!=': '({a} !== {b})', '&&': '({a} && {b})', '||': '({a} || {b})', Not: '(!{a})', Negate: '(-{a})'},
 			Vectors: {vec2: '[{x}, {y}]', vec3: '[{x}, {y}, {z}]', vec4: '[{x}, {y}, {z}, {w}]', Operators: {'+': 'rt_op({a}, {b}, 0)', '-': 'rt_op({a}, {b}, 1)', '*': 'rt_op({a}, {b}, 2)', '/': 'rt_op({a}, {b}, 3)'}},
 			Builtins: {
 				sin: 'rt_each(Math.sin, {0})', cos: 'rt_each(Math.cos, {0})', tan: 'Math.tan({0})', asin: 'Math.asin({0})', acos: 'Math.acos({0})', atan: 'Math.atan({0})', atan2: 'Math.atan2({0}, {1})',
@@ -23330,10 +23375,15 @@
 				normalize: 'rt_op({0}, Math.sqrt(rt_dot({0}, {0})) || 1, 3)', distance: 'Math.sqrt(rt_dot(rt_op({0}, {1}, 1), rt_op({0}, {1}, 1)))', x: '{0}[0]', y: '{0}[1]', z: '{0}[2]', w: '{0}[3]',
 				random: 'rt_random({0})', hash: 'rt_hash(rt_key({0}), rt_key({1}))', text: 'String({0})',
 				each: 'rt_e({0}, {1}, {2})', cast: 'rt_cast({0}, {1})', get: 'rt_get({args})',
-				isList: 'Array.isArray({0})', has: '(!!{0} && typeof {0} === "object" && Object.prototype.hasOwnProperty.call({0}, {1}))', ends: '(String({0}).slice(-String({1}).length) === String({1}))', cut: 'String({0}).slice(0, -({1}))'
+				isList: 'Array.isArray({0})', has: '(!!{0} && typeof {0} === "object" && Object.prototype.hasOwnProperty.call({0}, {1}))', ends: '(String({0}).slice(-String({1}).length) === String({1}))', cut: 'String({0}).slice(0, -({1}))',
+				toInt: '({0} | 0)', toFloat: '(+{0})', trunc: 'rt_each(rt_trunc, {0})', ldexp: 'rt_ldexp({0}, {1})', ilogb: 'rt_ilogb({0})',
+				/* Of a number (the type of the first argument after the colon): no test of a vector at each call. */
+				'abs:float': 'Math.abs({0})', 'floor:float': 'Math.floor({0})', 'ceil:float': 'Math.ceil({0})', 'sqrt:float': 'Math.sqrt({0})', 'trunc:float': 'rt_trunc({0})', 'fract:float': 'rt_fract({0})', 'sign:float': 'rt_sign({0})', 'mix:float': 'rt_mixf({0}, {1}, {2})', 'abs:int': 'Math.abs({0})', 'floor:int': 'Math.floor({0})', 'ceil:int': 'Math.ceil({0})', 'sqrt:int': 'Math.sqrt({0})', 'trunc:int': 'rt_trunc({0})', 'fract:int': 'rt_fract({0})', 'sign:int': 'rt_sign({0})', 'mix:int': 'rt_mixf({0}, {1}, {2})'
 			},
+			/* sin, cos, tan, asin, acos, atan, atan2, exp, log, pow and round are the own ones of the runtime (OwnMath): the numbers of wasm. */
+			OwnMath: true,
 			Expressions: {Call: '{name}({args})', List: '[{items}]', Index: '{list}[{at}]', Length: '{list}.length', Field: '{object}[{quoted}]', Record: '{{fields}}', RecordField: '{quoted}: {value}', Select: '({test} ? {a} : {b})'},
-			Statements: {Let: 'var {name} = {value};', Set: '{name} = {value};', If: 'if ({test}) {', Else: '} else {', End: '}', Loop: 'for (var {var} = {from}, {end} = {to}; {var} < {end}; {var}++) {', Each: 'for (var {index} = 0, {of} = {list}, {var}; {index} < {of}.length; {index}++) { {var} = {of}[{index}];', Push: '{list}.push({value});', Return: 'return {value};', ReturnNothing: 'return;', Expr: '{value};'},
+			Statements: {Constant: 'var {name} = {value};', Let: 'var {name} = {value};', Set: '{name} = {value};', If: 'if ({test}) {', Else: '} else {', End: '}', Loop: 'for (var {var} = {from}, {end} = {to}; {var} < {end}; {var}++) {', Each: 'for (var {index} = 0, {of} = {list}, {var}; {index} < {of}.length; {index}++) { {var} = {of}[{index}];', Push: '{list}.push({value});', Return: 'return {value};', ReturnNothing: 'return;', Expr: '{value};'},
 			Param: '{name}',
 			Function: 'function {name}({params}) {',
 			Guard: {Enter: 'if (++rt_depth > {max}) { rt_depth = 0; throw new Error("Elemenx IR: " + {name} + " goes deeper than {max}"); } try {', Leave: '} finally { rt_depth--; }'},
@@ -23349,13 +23399,18 @@
 				'function rt_smooth(e0, e1, x) { var t = Math.min(Math.max((x - e0) / (e1 - e0), 0), 1); return t * t * (3 - 2 * t); }',
 				'function rt_hash(a, b) { var h = Math.imul((a | 0) ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul((b | 0) + 0x632be5ab, 0xc2b2ae35); h ^= h >>> 15; h = Math.imul(h, 0x2c1b3c6d); h ^= h >>> 12; return (h >>> 0) / 4294967296; }',
 				'function rt_key(v) { var h = 0, i; if (typeof v === "number") return Math.round(v * 1000) | 0; v = String(v); for (i = 0; i < v.length; i++) h = (Math.imul(h, 31) + v.charCodeAt(i)) | 0; return h; }',
-				'var rt_ops = {add: function (a, b) { return a + b; }, sub: function (a, b) { return a - b; }, mul: function (a, b) { return a * b; }, div: function (a, b) { return b ? a / b : 0; }, min: Math.min, max: Math.max, pow: Math.pow, step: function (e, x) { return x < e ? 0 : 1; }, sin: Math.sin, cos: Math.cos, abs: Math.abs, floor: Math.floor, exp: Math.exp, fract: function (x) { return x - Math.floor(x); }, sqrt: function (x) { return Math.sqrt(Math.max(0, x)); }, saturate: function (x) { return Math.max(0, Math.min(1, x)); }};',
+				'var rt_ops = {add: function (a, b) { return a + b; }, sub: function (a, b) { return a - b; }, mul: function (a, b) { return a * b; }, div: function (a, b) { return b ? a / b : 0; }, min: Math.min, max: Math.max, pow: function (a, b) { return f_m_pow(a, b); }, step: function (e, x) { return x < e ? 0 : 1; }, sin: function (x) { return f_m_sin(x); }, cos: function (x) { return f_m_cos(x); }, abs: Math.abs, floor: Math.floor, exp: function (x) { return f_m_exp(x); }, fract: function (x) { return x - Math.floor(x); }, sqrt: function (x) { return Math.sqrt(Math.max(0, x)); }, saturate: function (x) { return Math.max(0, Math.min(1, x)); }};',
 				'function rt_e(op, a, b) { var f = rt_ops[op], n, r = [], i; if (!Array.isArray(a) && !Array.isArray(b)) return f(Number(a) || 0, Number(b) || 0); n = Math.max(Array.isArray(a) ? a.length : 0, Array.isArray(b) ? b.length : 0); for (i = 0; i < n; i++) r.push(f(Number(Array.isArray(a) ? a[i] : a) || 0, Number(Array.isArray(b) ? b[i] : b) || 0)); return r; }',
 				'var rt_sizes = {float: 1, vec2: 2, vec3: 3, vec4: 4, int: 1, bool: 1};',
 				'function rt_numbers(v, n) { var l, i; if (typeof v === "string" && /^#[0-9a-f]{6,8}$/i.test(v)) { l = []; for (i = 1; i < v.length; i += 2) l.push(parseInt(v.slice(i, i + 2), 16) / 255); } else if (Array.isArray(v)) { l = v.map(Number); } else { l = [Number(v) || 0]; while (l.length < n) l.push(l[0]); } while (l.length < n) l.push(n === 4 && l.length === 3 ? 1 : 0); return l.slice(0, n); }',
 				'function rt_cast(v, to) { var n = rt_sizes[to], l; if (to === "text") return v == null ? "" : String(v); if (to === "bool") return Array.isArray(v) ? !!v[0] : !!v; if (!n) return v; if (typeof v === "string" && !/^#/.test(v)) return n === 1 ? Number(v) || 0 : rt_numbers(Number(v) || 0, n); l = rt_numbers(typeof v === "boolean" ? (v ? 1 : 0) : v, n); return n === 1 ? l[0] : l; }',
 				'function rt_get(r, k, d) { return r && Object.prototype.hasOwnProperty.call(r, k) ? r[k] : d; }',
-				'function rt_random(state) { state[0] = (state[0] + 0x6D2B79F5) >>> 0; var v = Math.imul(state[0] ^ (state[0] >>> 15), state[0] | 1); v ^= v + Math.imul(v ^ (v >>> 7), v | 61); return ((v ^ (v >>> 14)) >>> 0) / 4294967296; }'
+				'function rt_random(state) { state[0] = (state[0] + 0x6D2B79F5) >>> 0; var v = Math.imul(state[0] ^ (state[0] >>> 15), state[0] | 1); v ^= v + Math.imul(v ^ (v >>> 7), v | 61); return ((v ^ (v >>> 14)) >>> 0) / 4294967296; }',
+				'function rt_trunc(v) { return v < 0 ? Math.ceil(v) : Math.floor(v); }',
+				'function rt_mixf(a, b, t) { return a + (b - a) * t; }',
+				'function rt_ldexp(x, k) { if (k > 1023) { x *= 8.98846567431158e307; k -= 1023; if (k > 1023) { x *= 8.98846567431158e307; k -= 1023; if (k > 1023) k = 1023; } } else if (k < -1022) { x *= 2.004168360008973e-292; k += 969; if (k < -1022) { x *= 2.004168360008973e-292; k += 969; if (k < -1022) k = -1022; } } return x * Math.pow(2, k); }',
+				'var rt_bits = new DataView(new ArrayBuffer(8));',
+				'function rt_ilogb(x) { var e; rt_bits.setFloat64(0, x); e = (rt_bits.getUint32(0) >>> 20) & 2047; if (e === 0) { rt_bits.setFloat64(0, x * 18014398509481984); return ((rt_bits.getUint32(0) >>> 20) & 2047) - 1077; } return e - 1023; }'
 			].join('\n'),
 			Export: '{key}: {name}',
 			Module: '{runtime}\n{functions}\nreturn {{names}};'
@@ -23369,9 +23424,9 @@
 			Name: function (name) {
 				return 'f_' + String(name).replace(/[^A-Za-z0-9_]/g, '_');
 			},
-			Types: {float: 'double', int: 'int', bool: 'bool', text: 'std::string', vec2: 'vec2', vec3: 'vec3', vec4: 'vec4', list: 'std::vector<double>', record: 'std::map<std::string, double>', any: 'auto', void: 'void'},
-			Literals: {True: 'true', False: 'false', Float: '{value}', Whole: '.0'},
-			Operators: {'+': '({a} + {b})', '-': '({a} - {b})', '*': '({a} * {b})', '/': '({a} / {b})', '%': 'std::fmod({a}, {b})', '<': '({a} < {b})', '<=': '({a} <= {b})', '>': '({a} > {b})', '>=': '({a} >= {b})', '==': '({a} == {b})', '!=': '({a} != {b})', '&&': '({a} && {b})', '||': '({a} || {b})', Not: '(!{a})', Negate: '(-{a})'},
+			Types: {float: 'double', int: 'int', bool: 'bool', text: 'std::string', vec2: 'vec2', vec3: 'vec3', vec4: 'vec4', list: 'std::vector<double>', record: 'std::map<std::string, double>', any: 'auto', void: 'void', floats: 'std::vector<double>'},
+			Literals: {True: 'true', False: 'false', Float: '{value}', Whole: '.0', Infinity: 'INFINITY'},
+			Operators: {'+': '({a} + {b})', '-': '({a} - {b})', '*': '({a} * {b})', '/': '({a} / {b})', '%': 'std::fmod({a}, {b})', IntAdd: '(int)((uint32_t){a} + (uint32_t){b})', IntSubtract: '(int)((uint32_t){a} - (uint32_t){b})', IntMultiply: '(int)((uint32_t){a} * (uint32_t){b})', '&': '({a} & {b})', '|': '({a} | {b})', '^': '({a} ^ {b})', '<<': '(int)((uint32_t){a} << {b})', '>>': '({a} >> {b})', '>>>': '(int)((uint32_t){a} >> {b})', '<': '({a} < {b})', '<=': '({a} <= {b})', '>': '({a} > {b})', '>=': '({a} >= {b})', '==': '({a} == {b})', '!=': '({a} != {b})', '&&': '({a} && {b})', '||': '({a} || {b})', Not: '(!{a})', Negate: '(-{a})'},
 			Vectors: {vec2: 'vec2{{x}, {y}}', vec3: 'vec3{{x}, {y}, {z}}', vec4: 'vec4{{x}, {y}, {z}, {w}}', Operators: {'+': '({a} + {b})', '-': '({a} - {b})', '*': '({a} * {b})', '/': '({a} / {b})'}},
 			Builtins: {
 				sin: 'std::sin({0})', cos: 'std::cos({0})', tan: 'std::tan({0})', asin: 'std::asin({0})', acos: 'std::acos({0})', atan: 'std::atan({0})', atan2: 'std::atan2({0}, {1})',
@@ -23382,6 +23437,7 @@
 				normalize: '({0} / std::sqrt(dot({0}, {0})))', distance: 'std::sqrt(dot({0} - {1}, {0} - {1}))', x: '{0}.x', y: '{0}.y', z: '{0}.z', w: '{0}.w',
 				random: 'rt_random({0})', hash: 'rt_hash({0}, {1})', text: 'std::to_string({0})',
 				each: 'rt_e({0}, {1}, {2})', cast: '({0})', get: '{0}[{1}]',
+				toInt: '(int)({0})', toFloat: '(double)({0})', trunc: 'std::trunc({0})', ldexp: 'std::ldexp({0}, {1})', ilogb: 'std::ilogb({0})',
 				isList: 'true', has: '({0}.count({1}) > 0)', ends: '({0}.size() >= {1}.size() && {0}.compare({0}.size() - {1}.size(), {1}.size(), {1}) == 0)', cut: '{0}.substr(0, {0}.size() - {1})'
 			},
 			Expressions: {Call: '{name}({args})', List: 'std::vector<double>{{items}}', Index: '{list}[{at}]', Length: '(int){list}.size()', Field: '{object}["{key}"]', Record: 'std::map<std::string, double>{{fields}}', RecordField: '{"{key}", {value}}', Select: '({test} ? {a} : {b})'},
@@ -23423,6 +23479,2580 @@
 			].join('\n'),
 			Module: '{runtime}\n{functions}\n'
 		};
+
+		/*
+		 * GLSL ES 3.00 (WebGL2): functions of numbers for a shader, the text of them to put in its source (no main; their
+		 * names as Name gives them, f_ before). What the GPU computes in floats of 32 bits: the same formulas as js and wasm,
+		 * not their numbers to the bit. Of numbers only (float, int, bool, vec2..vec4): a text, a list, a record, a call of
+		 * itself (a shader has no stack) are told (Prepare: Elemenx glsl: <what> in <function> is not of numbers...), and int
+		 * and float are made one or the other where they meet (GLSL mixes none of them by itself).
+		 */
+		var GlslTypes = {float: 'float', int: 'int', bool: 'bool', vec2: 'vec2', vec3: 'vec3', vec4: 'vec4', void: 'void', floats: 'rt_floats'};
+		var GlslBuiltins = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2', 'pow', 'exp', 'log', 'round', 'hash'].concat(['abs', 'floor', 'ceil', 'sqrt', 'trunc', 'fract', 'sign', 'min', 'max', 'clamp', 'mix', 'step', 'smoothstep', 'vec2', 'vec3', 'vec4', 'dot', 'cross', 'length', 'normalize', 'distance', 'x', 'y', 'z', 'w', 'toInt', 'toFloat', 'ldexp', 'ilogb']);
+		/* The functions of numbers that take floats: an int given to one is made a float. */
+		var GlslFloats = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2', 'pow', 'exp', 'log', 'round', 'abs', 'floor', 'ceil', 'sqrt', 'trunc', 'fract', 'sign', 'min', 'max', 'clamp', 'mix', 'step', 'smoothstep', 'vec2', 'vec3', 'vec4', 'dot', 'cross', 'length', 'normalize', 'distance', 'ilogb', 'hash'];
+
+		var glsl = {
+			Name: function (name) {
+				/* Two underscores are kept for GLSL itself. */
+				return 'f_' + String(name).replace(/[^A-Za-z0-9_]/g, '_').replace(/__/g, '_u_');
+			},
+			Types: {float: 'float', int: 'int', bool: 'bool', text: 'float', vec2: 'vec2', vec3: 'vec3', vec4: 'vec4', list: 'float', record: 'float', any: 'float', void: 'void', floats: 'rt_floats'},
+			Literals: {True: 'true', False: 'false', Float: '{value}', Whole: '.0', Infinity: 'uintBitsToFloat(0x7F800000u)', NaN: 'uintBitsToFloat(0x7FC00000u)', Floats: function (items, options) {
+				var cap = glslCap(options);
+				var all = items.slice(0, cap);
+
+				while (all.length < cap)
+					all.push('0.0');
+
+				return 'rt_floats(float[RT_CAP](' + all.join(', ') + '), ' + Math.min(cap, items.length) + ')';
+			}},
+			Operators: {'+': '({a} + {b})', '-': '({a} - {b})', '*': '({a} * {b})', '/': '({a} / {b})', '%': 'rt_fmod({a}, {b})', IntDivide: '({a} / {b})', IntModulo: 'rt_imod({a}, {b})', IntAdd: '({a} + {b})', IntSubtract: '({a} - {b})', IntMultiply: '({a} * {b})', '&': '({a} & {b})', '|': '({a} | {b})', '^': '({a} ^ {b})', '<<': '({a} << ({b} & 31))', '>>': '({a} >> ({b} & 31))', '>>>': 'rt_ushr({a}, {b})', '<': '({a} < {b})', '<=': '({a} <= {b})', '>': '({a} > {b})', '>=': '({a} >= {b})', '==': '({a} == {b})', '!=': '({a} != {b})', '&&': '({a} && {b})', '||': '({a} || {b})', Not: '(!{a})', Negate: '(-{a})'},
+			Vectors: {vec2: 'vec2({x}, {y})', vec3: 'vec3({x}, {y}, {z})', vec4: 'vec4({x}, {y}, {z}, {w})', Operators: {'+': '({a} + {b})', '-': '({a} - {b})', '*': '({a} * {b})', '/': '({a} / {b})'}},
+			Builtins: {
+				sin: 'sin({0})', cos: 'cos({0})', tan: 'tan({0})', asin: 'asin({0})', acos: 'acos({0})', atan: 'atan({0})', atan2: 'atan({0}, {1})',
+				sqrt: 'sqrt({0})', pow: 'pow({0}, {1})', exp: 'exp({0})', log: 'log({0})', abs: 'abs({0})', floor: 'floor({0})', ceil: 'ceil({0})',
+				round: 'floor({0} + 0.5)', fract: 'fract({0})', min: 'min({0}, {1})', max: 'max({0}, {1})', clamp: 'clamp({0}, {1}, {2})',
+				mix: 'mix({0}, {1}, {2})', step: 'step({0}, {1})', smoothstep: 'rt_smooth({0}, {1}, {2})', sign: 'sign({0})',
+				vec2: 'vec2({args})', vec3: 'vec3({args})', vec4: 'vec4({args})', dot: 'dot({0}, {1})', cross: 'cross({0}, {1})', length: 'length({0})',
+				normalize: 'rt_normalize({0})', distance: 'distance({0}, {1})', x: '{0}.x', y: '{0}.y', z: '{0}.z', w: '{0}.w',
+				hash: 'rt_hash({0}, {1})', toInt: 'int({0})', toFloat: 'float({0})', trunc: 'trunc({0})', ldexp: 'rt_ldexp({0}, {1})', ilogb: 'rt_ilogb({0})',
+				'abs:int': 'abs({0})', 'min:int': 'min({0}, {1})', 'max:int': 'max({0}, {1})', 'clamp:int': 'clamp({0}, {1}, {2})', 'sign:int': 'sign({0})'
+			},
+			Expressions: {Call: '{name}({args})', List: 'float[]({items})', Index: '{list}[{at}]', IndexFloats: '{list}.v[{at}]', Length: '{list}.length()', LengthFloats: '{list}.n', Field: '{object}', Record: '0.0', RecordField: '{value}', Select: '({test} ? {a} : {b})'},
+			Statements: {Constant: 'const rt_floats {name} = {value};', Let: '{type} {name} = {value};', Set: '{name} = {value};', If: 'if ({test}) {', Else: '} else {', End: '}', Loop: 'for (int {var} = {from}, {end} = {to}; {var} < {end}; {var}++) {', Each: '{', Push: '', Return: 'return {value};', ReturnNothing: 'return;', Expr: '{value};'},
+			Param: '{type} {name}',
+			Function: '{returns} {name}({params}) {',
+			Prototype: '{returns} {name}({params});',
+			/* Its lists of numbers of RT_CAP at most (Options.ListSize, 256): their numbers and how many. */
+			Runtime: function (options) {
+				return '#define RT_CAP ' + glslCap(options) + '\nstruct rt_floats { float v[RT_CAP]; int n; };\n' + glslRuntime;
+			},
+			Module: '{runtime}\n{functions}\n',
+			Prepare: function (module, options) {
+				return glslReady(module, options);
+			}
+		};
+
+		/* The most numbers a list of numbers of glsl holds (Options.ListSize). */
+		function glslCap (options) {
+			return Math.max(1, Math.round(Number(options && options.ListSize) || 256));
+		}
+
+		var glslRuntime = [
+			'float rt_fmod(float a, float b) { return a - b * trunc(a / b); }',
+			'int rt_imod(int a, int b) { return a - b * (a / b); }',
+			'int rt_ushr(int a, int b) { return int(uint(a) >> uint(b & 31)); }',
+			'float rt_smooth(float e0, float e1, float x) { float t = clamp((x - e0) / (e1 - e0), 0.0, 1.0); return t * t * (3.0 - 2.0 * t); }',
+			'vec2 rt_smooth(float e0, float e1, vec2 x) { vec2 t = clamp((x - e0) / (e1 - e0), 0.0, 1.0); return t * t * (3.0 - 2.0 * t); }',
+			'vec3 rt_smooth(float e0, float e1, vec3 x) { vec3 t = clamp((x - e0) / (e1 - e0), 0.0, 1.0); return t * t * (3.0 - 2.0 * t); }',
+			'vec4 rt_smooth(float e0, float e1, vec4 x) { vec4 t = clamp((x - e0) / (e1 - e0), 0.0, 1.0); return t * t * (3.0 - 2.0 * t); }',
+			'vec2 rt_normalize(vec2 v) { float l = length(v); return v / (l > 0.0 ? l : 1.0); }',
+			'vec3 rt_normalize(vec3 v) { float l = length(v); return v / (l > 0.0 ? l : 1.0); }',
+			'vec4 rt_normalize(vec4 v) { float l = length(v); return v / (l > 0.0 ? l : 1.0); }',
+			'int rt_key(float v) { return int(floor(v * 1000.0 + 0.5)); }',
+			'float rt_hash(float x, float y) { uint a = uint(rt_key(x)); uint b = uint(rt_key(y)); uint h = (a ^ 0x9e3779b9u) * 0x85ebca6bu ^ (b + 0x632be5abu) * 0xc2b2ae35u; h ^= h >> 15u; h *= 0x2c1b3c6du; h ^= h >> 12u; return float(h) / 4294967296.0; }',
+			'float rt_ldexp(float x, int k) { int h = k / 2; return x * exp2(float(h)) * exp2(float(k - h)); }',
+			'int rt_ilogb(float x) { return x == 0.0 ? -2147483647 : ((floatBitsToInt(abs(x)) >> 23) & 255) - 127; }'
+		].join('\n');
+
+		/*
+		 * The kernel language: functions of numbers as C writes them, what the IR of a library is written in (its noise, the
+		 * functions of Math of the runtime) and what an application may write its own in. Types float, int (32 bits: its
+		 * arithmetic wraps, as in C), bool, vec2, vec3, vec4, void; a constant of the module: `float NAME = 1.5;`;
+		 * statements: a declaration (`float a = 1.0, b;`), `a = ...` (and += -= *= /= %= &= |= ^= <<= >>=, ++, --),
+		 * `if (...) ... else ...`, `for (int i = A; i < B; i++)` (or <=), `return`, a block `{...}`; expressions of C
+		 * (?:, || && | ^ & == != < <= > >= << >> >>> + - * / %, unary - ! ~), calls (of the module, the builtins of the IR,
+		 * int(x) and float(x) to change a type), .x .y .z .w of a vector, true, false, inf; the comments of C, of a line and of a block.
+		 * Gives {Module, Diagnostics}: Line and Column of what is wrong.
+		 */
+		var KernelTypes = ['float', 'int', 'bool', 'vec2', 'vec3', 'vec4', 'void'];
+
+		function kernel (text) {
+			var source = String(text || '');
+			var tokens = [];
+			var diagnostics = [];
+			var constants = {};
+			var functions = [];
+			var line = 1;
+			var column = 1;
+			var index = 0;
+			var pattern = /\s+|\/\/[^\n]*|\/\*[\s\S]*?\*\/|(\d+\.\d*(?:[eE][+-]?\d+)?|\.\d+(?:[eE][+-]?\d+)?|\d+[eE][+-]?\d+)|(0[xX][0-9a-fA-F]+|\d+)|([A-Za-z_]\w*)|(>>>=|>>>|<<=|>>=|\+\+|--|\+=|-=|\*=|\/=|%=|&=|\|=|\^=|&&|\|\||==|!=|<=|>=|<<|>>|[-+*\/%<>=!&|^~?:;,.(){}[\]])|([\s\S])/g;
+			var match;
+
+			/* The text cut into tokens {Kind: float, int, name, sign, end; Text; Line; Column}. */
+			while ((match = pattern.exec(source))) {
+				var kind = match[1] ? 'float' : match[2] ? 'int' : match[3] ? 'name' : match[4] ? 'sign' : match[5] ? 'wrong' : '';
+
+				if (kind === 'wrong') diagnostics.push({File: '', Line: line, Column: column, Severity: 'error', Text: 'Elemenx kernel: unexpected ' + match[5]});
+				else if (kind) tokens.push({Kind: kind, Text: match[0], Line: line, Column: column});
+
+				match[0].split('').forEach(function (character) {
+					if (character === '\n') {
+						line++;
+						column = 1;
+					}
+					else {
+						column++;
+					}
+				});
+			}
+
+			tokens.push({Kind: 'end', Text: '', Line: line, Column: column});
+
+			function peek (offset) {
+				return tokens[Math.min(tokens.length - 1, index + (offset || 0))];
+			}
+
+			function is (text, offset) {
+				var token = peek(offset);
+
+				return (token.Kind === 'sign' || token.Kind === 'name') && token.Text === text;
+			}
+
+			function wrong (text, token) {
+				var place = token || peek();
+
+				throw {Kernel: true, Line: place.Line, Column: place.Column, Text: 'Elemenx kernel: ' + text};
+			}
+
+			function take (text) {
+				if (!is(text))
+					wrong('expected ' + text + ', not ' + (peek().Text || 'the end'));
+
+				return tokens[index++];
+			}
+
+			function name () {
+				if (peek().Kind !== 'name')
+					wrong('expected a name, not ' + (peek().Text || 'the end'));
+
+				return tokens[index++].Text;
+			}
+
+			function type () {
+				var token = peek();
+				if (token.Kind !== 'name' || KernelTypes.indexOf(token.Text) === -1)
+					wrong('expected a type, not ' + (token.Text || 'the end'));
+
+				index++;
+
+				/* float[]: a list of numbers. */
+				if (token.Text === 'float' && is('[') && is(']', 1)) {
+					index += 2;
+
+					return 'floats';
+				}
+
+				return token.Text;
+			}
+
+			function typed () {
+				return peek().Kind === 'name' && KernelTypes.indexOf(peek().Text) !== -1;
+			}
+
+			function c (value, kind) {
+				return {Op: 'const', Value: value, Type: kind};
+			}
+
+			function bin (operator, a, b) {
+				return {Op: 'bin', Operator: operator, A: a, B: b};
+			}
+
+			/* Expressions, by the order of C: the ternary, then the binary ones from the loosest, then unary, then postfix. */
+			var levels = [['||'], ['&&'], ['|'], ['^'], ['&'], ['==', '!='], ['<', '<=', '>', '>='], ['<<', '>>', '>>>'], ['+', '-'], ['*', '/', '%']];
+
+			function expression () {
+				var test = binary(0);
+				var a;
+
+				if (!is('?')) return test;
+
+				index++;
+				a = expression();
+
+				take(':');
+
+				return {Op: 'select', Test: test, A: a, B: expression()};
+			}
+
+			function binary (level) {
+				var left;
+				var operator;
+
+				if (level >= levels.length) return unary();
+
+				left = binary(level + 1);
+
+				while (peek().Kind === 'sign' && levels[level].indexOf(peek().Text) !== -1) {
+					operator = tokens[index++].Text;
+					left = bin(operator, left, binary(level + 1));
+				}
+
+				return left;
+			}
+
+			function unary () {
+				if (is('-')) {
+					index++;
+
+					return {Op: 'un', Operator: '-', A: unary()};
+				}
+
+				if (is('!')) {
+					index++;
+
+					return {Op: 'un', Operator: '!', A: unary()};
+				}
+
+				if (is('~')) {
+					index++;
+
+					return bin('^', unary(), c(-1, 'int'));
+				}
+
+				if (is('+')) {
+					index++;
+
+					return unary();
+				}
+
+				return postfix(primary());
+			}
+
+			function postfix (value) {
+				var made = value;
+				var field;
+
+				while (is('.') || is('[')) {
+					/* A number of a list or a vector: a[i]. */
+					if (is('[')) {
+						index++;
+						made = {Op: 'index', List: made, At: expression()};
+
+						take(']');
+
+						continue;
+					}
+
+					index++;
+					field = name();
+
+					if (field === 'length') {
+						made = {Op: 'length', List: made};
+
+						continue;
+					}
+
+					if (['x', 'y', 'z', 'w'].indexOf(field) === -1)
+						wrong('a vector has x, y, z and w, not ' + field);
+
+					made = {Op: 'call', Name: field, Args: [made]};
+				}
+
+				return made;
+			}
+
+			function primary () {
+				var token = peek();
+				var called;
+				var args;
+				var made;
+
+				if (token.Kind === 'float') {
+					index++;
+
+					return c(Number(token.Text), 'float');
+				}
+
+				if (token.Kind === 'int') {
+					index++;
+
+					/* A whole number past 32 bits is a number of float, as JavaScript would keep it. */
+					return Number(token.Text) > 2147483647 && !/^0[xX]/.test(token.Text) ? c(Number(token.Text), 'float') : c(Number(token.Text) | 0, 'int');
+				}
+
+				if (is('(')) {
+					index++;
+					made = expression();
+
+					take(')');
+
+					return made;
+				}
+
+				if (token.Kind !== 'name')
+					wrong('unexpected ' + (token.Text || 'the end'));
+
+				index++;
+
+				if (token.Text === 'true' || token.Text === 'false') return c(token.Text === 'true', 'bool');
+
+				if (token.Text === 'inf')
+					return c(Infinity, 'float');
+
+				if (is('(')) {
+					index++;
+					args = [];
+
+					while (!is(')')) {
+						args.push(expression());
+
+						if (!is(')'))
+							take(',');
+					}
+
+					index++;
+					called = token.Text === 'int' ? 'toInt' : token.Text === 'float' ? 'toFloat' : token.Text;
+
+					return {Op: 'call', Name: called, Args: args};
+				}
+
+				if (own(constants, token.Text)) return constants[token.Text];
+
+				return {Op: 'var', Name: token.Text};
+			}
+
+			/* The statements of a body, up to its }. */
+			function block (list) {
+				take('{');
+
+				while (!is('}')) {
+					if (peek().Kind === 'end')
+						wrong('a block is not closed');
+
+					statement(list);
+				}
+
+				index++;
+			}
+
+			function single (list) {
+				if (is('{')) block(list);
+				else statement(list);
+			}
+
+			function assignment (list) {
+				var target = name();
+				var operator;
+
+				if (is('++') || is('--')) {
+					operator = tokens[index++].Text;
+
+					list.push({Op: 'set', Name: target, Value: bin(operator === '++' ? '+' : '-', {Op: 'var', Name: target}, c(1, 'int'))});
+
+					return;
+				}
+
+				operator = peek().Text;
+
+				if (['=', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '<<=', '>>=', '>>>='].indexOf(operator) === -1)
+					wrong('expected = after ' + target);
+
+				index++;
+
+				list.push({Op: 'set', Name: target, Value: operator === '=' ? expression() : bin(operator.slice(0, -1), {Op: 'var', Name: target}, expression())});
+			}
+
+			function statement (list) {
+				var kind;
+				var test;
+				var then;
+				var otherwise;
+				var variable;
+				var from;
+				var to;
+				var body;
+
+				if (is('{')) {
+					block(list);
+
+					return;
+				}
+
+				if (is('if')) {
+					index++;
+
+					take('(');
+
+					test = expression();
+
+					take(')');
+
+					then = [];
+
+					single(then);
+
+					otherwise = [];
+
+					if (is('else')) {
+						index++;
+
+						single(otherwise);
+					}
+
+					list.push({Op: 'if', Test: test, Then: then, Else: otherwise});
+
+					return;
+				}
+
+				if (is('for')) {
+					index++;
+
+					take('(');
+					take('int');
+
+					variable = name();
+
+					take('=');
+
+					from = expression();
+
+					take(';');
+
+					if (name() !== variable)
+						wrong('a for counts its own variable up');
+
+					if (is('<')) {
+						index++;
+						to = expression();
+					}
+					else {
+						take('<=');
+
+						to = bin('+', expression(), c(1, 'int'));
+					}
+
+					take(';');
+
+					if (name() !== variable || !is('++'))
+						wrong('a for goes up by ++ of its variable');
+
+					index++;
+
+					take(')');
+
+					body = [];
+
+					single(body);
+
+					list.push({Op: 'loop', Var: variable, From: from, To: to, Body: body});
+
+					return;
+				}
+
+				if (is('return')) {
+					index++;
+
+					list.push(is(';') ? {Op: 'return'} : {Op: 'return', Value: expression()});
+
+					take(';');
+
+					return;
+				}
+
+				if (typed()) {
+					kind = type();
+
+					do {
+						variable = name();
+
+						if (is('=')) {
+							index++;
+
+							list.push({Op: 'let', Name: variable, Type: kind, Value: expression()});
+						}
+						else {
+							list.push({Op: 'let', Name: variable, Type: kind, Value: kind === 'float' ? c(0, 'float') : kind === 'int' ? c(0, 'int') : kind === 'bool' ? c(false, 'bool') : c([0, 0, 0, 0].slice(0, Number(kind.charAt(3))), kind)});
+						}
+					} while (is(',') && ++index);
+
+					take(';');
+
+					return;
+				}
+
+				if (peek().Kind === 'name' && (is('=', 1) || is('++', 1) || is('--', 1) || peek(1).Kind === 'sign' && /^(?:[-+*\/%&|^]|<<|>>|>>>)=$/.test(peek(1).Text))) {
+					assignment(list);
+
+					take(';');
+
+					return;
+				}
+
+				list.push({Op: 'expr', Value: expression()});
+
+				take(';');
+			}
+
+			/* A function, or a constant of the module: type name ( ... ) { ... } or type name = value; */
+			function top () {
+				var returns = type();
+				var named = name();
+				var params = [];
+				var body = [];
+
+				if (is('=')) {
+					index++;
+
+					constants[named] = expression();
+
+					take(';');
+
+					return;
+				}
+
+				take('(');
+
+				while (!is(')')) {
+					params.push({Type: type(), Name: name()});
+
+					if (!is(')'))
+						take(',');
+				}
+
+				index++;
+
+				block(body);
+
+				functions.push({Name: named, Params: params, Returns: returns, Body: body});
+			}
+
+			try {
+				while (peek().Kind !== 'end')
+					top();
+			}
+			catch (error) {
+				if (!error || !error.Kernel)
+					throw error;
+
+				diagnostics.push({File: '', Line: error.Line, Column: error.Column, Severity: 'error', Text: error.Text});
+			}
+
+			return {Module: {Functions: functions, Entry: functions.length ? functions[functions.length - 1].Name : ''}, Diagnostics: diagnostics.length ? diagnostics : check({Functions: functions})};
+		}
+
+		/*
+		 * The functions of Math of the runtime of js and wasm, of the kernel language: the very same numbers in both, in any
+		 * browser and in Node (the Math of a browser may differ from another's in the last digit). After fdlibm: sines and
+		 * cosines reduced by three parts of pi / 2 (exact as far as 2^20 pi / 2, rough past it), exp and log by 2^k (ldexp,
+		 * ilogb), atan by its four ranges; pow of a whole exponent (to 64) by squares, else exp(y log x).
+		 */
+		var OwnMath = [
+			'float PIO2_1 = 1.57079632673412561417e+00; float PIO2_1T = 6.07710050650619224932e-11;',
+			'float PIO2_2 = 6.07710050630396597660e-11; float PIO2_2T = 2.02226624879595063154e-21;',
+			'float INVPIO2 = 6.36619772367581382433e-01;',
+			'float m_ksin(float x, float y) {',
+			'	float z = x * x; float v = z * x;',
+			'	float r = 8.33333333332248946124e-03 + z * (-1.98412698298579493134e-04 + z * (2.75573137070700676789e-06 + z * (-2.50507602534068634195e-08 + z * 1.58969099521155010221e-10)));',
+			'	return x - ((z * (0.5 * y - v * r) - y) - v * -1.66666666666666324348e-01);',
+			'}',
+			'float m_kcos(float x, float y) {',
+			'	float z = x * x;',
+			'	float r = z * (4.16666666666666019037e-02 + z * (-1.38888888888741095749e-03 + z * (2.48015872894767294178e-05 + z * (-2.75573143513906633035e-07 + z * (2.08757232129817482790e-09 + z * -1.13596475577881948265e-11)))));',
+			'	float hz = 0.5 * z; float w = 1.0 - hz;',
+			'	return w + (((1.0 - w) - hz) + (z * r - x * y));',
+			'}',
+			/* The quarter of x (0 to 3), its rest from it (high and low part): one function, two results by a vector. */
+			'vec3 m_reduce(float x) {',
+			'	float n = floor(x * INVPIO2 + 0.5);',
+			'	float r = x - n * PIO2_1; float w = n * PIO2_1T;',
+			'	float t = r; w = n * PIO2_2; r = t - w; w = n * PIO2_2T - ((t - r) - w);',
+			'	float y0 = r - w; float y1 = (r - y0) - w;',
+			'	return vec3(float(int(n - 4.0 * floor(n * 0.25))), y0, y1);',
+			'}',
+			'float m_sin(float x) {',
+			'	if (abs(x) < 0.7853981633974483) return m_ksin(x, 0.0);',
+			'	vec3 q = m_reduce(x); int n = int(q.x);',
+			'	if (n == 0) return m_ksin(q.y, q.z);',
+			'	if (n == 1) return m_kcos(q.y, q.z);',
+			'	if (n == 2) return -m_ksin(q.y, q.z);',
+			'	return -m_kcos(q.y, q.z);',
+			'}',
+			'float m_cos(float x) {',
+			'	if (abs(x) < 0.7853981633974483) return m_kcos(x, 0.0);',
+			'	vec3 q = m_reduce(x); int n = int(q.x);',
+			'	if (n == 0) return m_kcos(q.y, q.z);',
+			'	if (n == 1) return -m_ksin(q.y, q.z);',
+			'	if (n == 2) return -m_kcos(q.y, q.z);',
+			'	return m_ksin(q.y, q.z);',
+			'}',
+			'float m_tan(float x) { return m_sin(x) / m_cos(x); }',
+			'float m_exp(float x) {',
+			'	if (x != x) return x;',
+			'	if (x > 7.09782712893383973096e+02) return inf;',
+			'	if (x < -7.45133219101941108420e+02) return 0.0;',
+			'	float k = floor(x * 1.44269504088896338700e+00 + 0.5);',
+			'	float hi = x - k * 6.93147180369123816490e-01; float lo = k * 1.90821492927058770002e-10; float r = hi - lo;',
+			'	float t = r * r;',
+			'	float c = r - t * (1.66666666666666019037e-01 + t * (-2.77777777770155933842e-03 + t * (6.61375632143793436117e-05 + t * (-1.65339022054652515390e-06 + t * 4.13813679705723846039e-08))));',
+			'	return ldexp(1.0 - ((lo - (r * c) / (2.0 - c)) - hi), int(k));',
+			'}',
+			'float m_log(float x) {',
+			'	if (x != x || x < 0.0) return (x - x) / 0.0;',
+			'	if (x == 0.0) return -inf;',
+			'	if (x == inf) return x;',
+			'	int k = ilogb(x); float m = ldexp(x, -k);',
+			'	if (m > 1.4142135623730951) { m = m * 0.5; k = k + 1; }',
+			'	float f = m - 1.0; float hfsq = 0.5 * f * f; float s = f / (2.0 + f); float z = s * s; float w = z * z;',
+			'	float t1 = w * (3.999999999940941908e-01 + w * (2.222219843214978396e-01 + w * 1.531383769920937332e-01));',
+			'	float t2 = z * (6.666666666666735130e-01 + w * (2.857142874366239149e-01 + w * (1.818357216161805012e-01 + w * 1.479819860511658591e-01)));',
+			'	float dk = float(k);',
+			'	return dk * 6.93147180369123816490e-01 - ((hfsq - (s * (hfsq + t2 + t1) + dk * 1.90821492927058770002e-10)) - f);',
+			'}',
+			'float m_atan(float x) {',
+			'	if (x != x) return x;',
+			'	float ax = abs(x);',
+			'	if (ax >= 7.378697629483821e19) return x > 0.0 ? 1.5707963267948966 : -1.5707963267948966;',
+			'	if (ax < 3.725290298461914e-9) return x;',
+			'	int id = -1; float t = x;',
+			'	if (ax >= 0.4375) {',
+			'		if (ax < 1.1875) { if (ax < 0.6875) { id = 0; t = (2.0 * ax - 1.0) / (2.0 + ax); } else { id = 1; t = (ax - 1.0) / (ax + 1.0); } }',
+			'		else { if (ax < 2.4375) { id = 2; t = (ax - 1.5) / (1.0 + 1.5 * ax); } else { id = 3; t = -1.0 / ax; } }',
+			'	}',
+			'	float z = t * t; float w = z * z;',
+			'	float s1 = z * (3.33333333333329318027e-01 + w * (1.42857142725034663711e-01 + w * (9.09088713343650656196e-02 + w * (6.66107313738753120669e-02 + w * (4.97687799461593236017e-02 + w * 1.62858201153657823623e-02)))));',
+			'	float s2 = w * (-1.99999999998764832476e-01 + w * (-1.11111104054623557880e-01 + w * (-7.69187620504482999495e-02 + w * (-5.83357013379057348645e-02 + w * -3.65315727442169155270e-02))));',
+			'	if (id < 0) return x - x * (s1 + s2);',
+			'	float hi = id == 0 ? 4.63647609000806093515e-01 : id == 1 ? 7.85398163397448278999e-01 : id == 2 ? 9.82793723247329054082e-01 : 1.57079632679489655800e+00;',
+			'	float lo = id == 0 ? 2.26987774529616870924e-17 : id == 1 ? 3.06161699786838301793e-17 : id == 2 ? 1.39033110312309984516e-17 : 6.12323399573676603587e-17;',
+			'	float made = hi - ((t * (s1 + s2) - lo) - t);',
+			'	return x < 0.0 ? -made : made;',
+			'}',
+			'float m_atan2(float y, float x) {',
+			'	if (x != x || y != y) return x + y;',
+			'	bool up = y > 0.0 || y == 0.0 && 1.0 / y > 0.0;',
+			'	if (x == 0.0) { if (y == 0.0) return 1.0 / x > 0.0 ? y : up ? 3.1415926535897931160 : -3.1415926535897931160; return up ? 1.5707963267948966 : -1.5707963267948966; }',
+			'	if (abs(x) == inf && abs(y) == inf) { float q = x > 0.0 ? 0.7853981633974483 : 2.356194490192345; return up ? q : -q; }',
+			'	float z = m_atan(abs(y / x));',
+			'	if (x > 0.0) return up ? z : -z;',
+			'	return up ? 3.1415926535897931160 - (z - 1.2246467991473531772e-16) : (z - 1.2246467991473531772e-16) - 3.1415926535897931160;',
+			'}',
+			'float m_asin(float x) { return m_atan2(x, sqrt((1.0 - x) * (1.0 + x))); }',
+			'float m_acos(float x) { return m_atan2(sqrt((1.0 - x) * (1.0 + x)), x); }',
+			'float m_round(float x) { float r = floor(x); return x - r >= 0.5 ? r + 1.0 : r; }',
+			/* The rest of a / b, exact as js's %: b times the greatest power of 2 under it taken off, as many times as their exponents are apart. */
+			'float m_fmod(float a, float b) {',
+			'	if (a != a || b != b || abs(a) == inf || b == 0.0) return (a - a) / 0.0;',
+			'	float x = abs(a); float y = abs(b);',
+			'	if (x < y) return a;',
+			'	int ey = ilogb(y); int n = ilogb(x) - ey + 1;',
+			'	for (int i = 0; i < n; i++) { if (x >= y) { float t = ldexp(y, ilogb(x) - ey); if (t > x) t = t * 0.5; x = x - t; } }',
+			'	return a < 0.0 ? -x : x;',
+			'}',
+			'float m_pow(float x, float y) {',
+			'	if (y != y) return y;',
+			'	if (y == 0.0) return 1.0;',
+			'	if (x != x) return x;',
+			'	bool whole = floor(y) == y && abs(y) < 9007199254740992.0;',
+			'	bool odd = whole && abs(y - 2.0 * floor(y * 0.5)) == 1.0;',
+			'	if (abs(y) == inf) { if (abs(x) == 1.0) return (x - x) / 0.0; return (abs(x) > 1.0) == (y > 0.0) ? inf : 0.0; }',
+			'	if (x == 0.0) { bool negative = 1.0 / x < 0.0; if (y > 0.0) return odd && negative ? -0.0 : 0.0; return odd && negative ? -inf : inf; }',
+			'	if (abs(x) == inf) { if (y > 0.0) return x < 0.0 && odd ? -inf : inf; return x < 0.0 && odd ? -0.0 : 0.0; }',
+			'	if (x < 0.0 && !whole) return (x - x) / 0.0;',
+			'	float made = 1.0;',
+			'	if (whole && abs(y) <= 64.0) {',
+			'		float base = abs(x); int e = int(abs(y));',
+			'		for (int i = 0; i < 7; i++) { if ((e & 1) == 1) made = made * base; e = e >> 1; base = base * base; }',
+			'		if (y < 0.0) made = 1.0 / made;',
+			'	}',
+			'	else if (y == 0.5) { made = sqrt(abs(x)); }',
+			'	else { made = m_exp(y * m_log(abs(x))); }',
+			'	return x < 0.0 && odd ? -made : made;',
+			'}'
+		].join('\n');
+
+		var mathModule = null;
+		var mathMade = null;
+
+		/*
+		 * The own Math as functions of js, made once: {sin, cos, tan, asin, acos, atan, atan2, exp, log, pow, round, fmod}, the
+		 * numbers of every module of js and wasm, for code written by hand that has to give the same (an interpreter of graphs).
+		 */
+		function ownFunctions () {
+			var made;
+
+			if (mathMade)
+				return mathMade;
+
+			if (!mathModule)
+				mathModule = kernel(OwnMath).Module;
+
+			made = (new Function(emit(mathModule, languages.js, {}).Text))();
+			mathMade = {};
+
+			['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2', 'exp', 'log', 'pow', 'round', 'fmod'].forEach(function (name) {
+				mathMade[name] = made['m_' + name];
+			});
+
+			return mathMade;
+		}
+
+		/*
+		 * A module whose calls of sin, cos, tan, asin, acos, atan, atan2, exp, log, pow and round (of numbers, or of each
+		 * part of a vector) go to the functions of OwnMath, those added to it (with what they call): what js and wasm run.
+		 */
+		function ownMath (module, remainder) {
+			var names = {sin: 'm_sin', cos: 'm_cos', tan: 'm_tan', asin: 'm_asin', acos: 'm_acos', atan: 'm_atan', atan2: 'm_atan2', exp: 'm_exp', log: 'm_log', pow: 'm_pow', round: 'm_round'};
+			var defined = {};
+			var needed = {};
+			var made;
+
+			if (!mathModule)
+				mathModule = kernel(OwnMath).Module;
+
+			module.Functions.forEach(function (fn) {
+				defined[fn.Name] = true;
+			});
+
+			function scopeOf (fn) {
+				var scope = {};
+
+				(fn.Params || []).forEach(function (param) {
+					scope[param.Name] = param.Type || 'any';
+				});
+
+				return scope;
+			}
+
+			/* An expression with its calls of Math to the own ones; scope: the types of the variables, to know a vector. */
+			function swap (value, scope) {
+				var type;
+				var copy;
+
+				if (!value || typeof value !== 'object') return value;
+
+				if (Array.isArray(value)) {
+					return value.map(function (one) {
+						return swap(one, scope);
+					});
+				}
+
+				copy = {};
+
+				Object.keys(value).forEach(function (key) {
+					copy[key] = key === 'Body' || key === 'Then' || key === 'Else' ? value[key] : swap(value[key], scope);
+				});
+
+				/* remainder (wasm): % of numbers not both whole by m_fmod, exact as js's (wasm has no rest of floats). */
+				if (remainder && copy.Op === 'bin' && copy.Operator === '%' && !vector(typeOf(value.A, scope, module, [])) && !vector(typeOf(value.B, scope, module, [])) && !(typeOf(value.A, scope, module, []) === 'int' && typeOf(value.B, scope, module, []) === 'int')) {
+					needed.m_fmod = true;
+
+					return {Op: 'call', Name: 'm_fmod', Args: [copy.A, copy.B]};
+				}
+
+				/*
+				 * each of pow, sin, cos or exp (of what may be a vector): the runtime of js turns them by the own ones too
+				 * (rt_ops), so these come with the module. Regression: they went to the Math of the browser, a graph a last bit
+				 * off its run.
+				 */
+				if (copy.Op === 'call' && copy.Name === 'each' && copy.Args && copy.Args[0] && copy.Args[0].Op === 'const' && ['pow', 'sin', 'cos', 'exp'].indexOf(copy.Args[0].Value) !== -1)
+					needed[names[copy.Args[0].Value]] = true;
+
+				if (copy.Op === 'call' && own(names, copy.Name) && !own(defined, copy.Name)) {
+					needed[names[copy.Name]] = true;
+					type = copy.Args && copy.Args.length ? typeOf(value.Args[0], scope, module, []) : 'float';
+
+					/* Of a vector: of each of its parts (vec3(sin(x(v)), ...)). */
+					if (vector(type)) {
+						return {Op: 'call', Name: type, Args: ['x', 'y', 'z', 'w'].slice(0, Number(type.charAt(3))).map(function (part) {
+							return {Op: 'call', Name: names[copy.Name], Args: copy.Args.map(function (arg) {
+								return vector(typeOf(arg, scope, module, [])) ? {Op: 'call', Name: part, Args: [arg]} : arg;
+							})};
+						})};
+					}
+
+					copy.Name = names[copy.Name];
+				}
+
+				return copy;
+			}
+
+			function body (list, scope) {
+				return (list || []).map(function (statement) {
+					var made = swap(statement, scope);
+					var inner;
+
+					if (statement.Op === 'let')
+						scope[statement.Name] = statement.Type || typeOf(statement.Value, scope, module, []);
+
+					if (statement.Op === 'if') {
+						made.Then = body(statement.Then, Object.create(scope));
+						made.Else = body(statement.Else, Object.create(scope));
+					}
+					else if (statement.Op === 'loop' || statement.Op === 'each') {
+						inner = Object.create(scope);
+						inner[statement.Var] = statement.Op === 'loop' ? 'int' : statement.Type || 'any';
+						made.Body = body(statement.Body, inner);
+					}
+
+					return made;
+				});
+			}
+
+			made = {Functions: module.Functions.map(function (fn) {
+				return Object.assign({}, fn, {Body: body(fn.Body, scopeOf(fn))});
+			}), Entry: module.Entry};
+
+			/* What the own functions call in turn, then each of them once. */
+			function add (name) {
+				var fn = mathModule.Functions.filter(function (one) {
+					return one.Name === name;
+				})[0];
+				if (!fn || own(defined, name)) return;
+
+				defined[name] = true;
+
+				JSON.stringify(fn.Body, function (key, value) {
+					if (value && value.Op === 'call' && /^m_/.test(value.Name))
+						add(value.Name);
+
+					return value;
+				});
+
+				made.Functions.push(fn);
+			}
+
+			Object.keys(needed).forEach(add);
+
+			return made;
+		}
+
+		/*
+		 * WebAssembly of the IR: the binary of a module of numbers (float, int, bool, vec2..vec4; a vector is as many
+		 * numbers), its functions exported by their names. Its Math is the own one (OwnMath), its whole numbers wrap as in
+		 * js: each function gives the very numbers of js. A module of texts, lists or records is not of wasm: Diagnostics
+		 * say what of it (the js of the same module runs it). options: MaxDepth (as js), Batch (true, or the names of
+		 * functions: each also as batch:<name>(count, input, output), count runs on numbers of 8 bytes in the memory, its
+		 * parameters one after another from input, its results from output). {Bytes, Exports: [{Name, Params, Returns}],
+		 * Diagnostics}.
+		 */
+		var WasmTypes = {float: 1, int: 1, bool: 1, vec2: 2, vec3: 3, vec4: 4, void: 0, floats: 1};
+		var WasmBuiltins = ['abs', 'floor', 'ceil', 'sqrt', 'trunc', 'fract', 'sign', 'min', 'max', 'clamp', 'mix', 'step', 'smoothstep', 'vec2', 'vec3', 'vec4', 'dot', 'cross', 'length', 'normalize', 'distance', 'x', 'y', 'z', 'w', 'toInt', 'toFloat', 'ldexp', 'ilogb'];
+
+		/* The bytes of a number of LEB128: unsigned, or signed (a value of 64 bits by two halves is not needed here). */
+		function leb (value, signed) {
+			var made = [];
+			var more = true;
+			var n = value;
+
+			while (more) {
+				var byte = signed ? n & 127 : n % 128;
+
+				n = signed ? n >> 7 : Math.floor(n / 128);
+				more = signed ? !(n === 0 && (byte & 64) === 0 || n === -1 && (byte & 64) !== 0) : n > 0;
+
+				made.push(more ? byte | 128 : byte);
+			}
+
+			return made;
+		}
+
+		function f64Bytes (value) {
+			var view = new DataView(new ArrayBuffer(8));
+
+			view.setFloat64(0, value, true);
+
+			return [0, 1, 2, 3, 4, 5, 6, 7].map(function (at) {
+				return view.getUint8(at);
+			});
+		}
+
+		function textBytes (text) {
+			var made = [];
+			var i;
+
+			for (i = 0; i < text.length; i++) {
+				var code = text.charCodeAt(i);
+
+				if (code < 128) made.push(code);
+				else if (code < 2048) made.push(192 | code >> 6, 128 | code & 63);
+				else made.push(224 | code >> 12, 128 | code >> 6 & 63, 128 | code & 63);
+			}
+
+			return leb(made.length).concat(made);
+		}
+
+		function section (id, items) {
+			var content = leb(items.length);
+
+			items.forEach(function (item) {
+				content = content.concat(item);
+			});
+
+			return [id].concat(leb(content.length), content);
+		}
+
+		/* What of a module wasm cannot hold: [{Severity: 'error', Text}]. */
+		/* What of a module is not of numbers, for a back end of numbers (tag: wasm or glsl; its builtins, its types, the expressions it has besides). */
+		function unsupported (module, tag, builtins, types, more, cap) {
+			var found = [];
+			var names = {};
+			var kinds = types || WasmTypes;
+			var calls = builtins || WasmBuiltins;
+
+			module.Functions.forEach(function (fn) {
+				names[fn.Name] = true;
+			});
+
+			function say (text, fn) {
+				if (found.length < 20)
+					told(found, 'Elemenx ' + (tag || 'wasm') + ': ' + text + ' in ' + fn.Name + ' is not of numbers (its js runs it)');
+			}
+
+			function walk (value, fn) {
+				if (!value || typeof value !== 'object') return;
+
+				if (Array.isArray(value)) {
+					value.forEach(function (one) {
+						walk(one, fn);
+					});
+
+					return;
+				}
+
+				if (value.Op && ['const', 'var', 'call', 'bin', 'un', 'select', 'let', 'set', 'if', 'loop', 'return', 'expr'].concat(more || []).indexOf(value.Op) === -1)
+					say(value.Op, fn);
+
+				/* A list of numbers of the module: glsl holds it (as many as cap), wasm none (its numbers go in its code: unrolled). */
+				if (value.Op === 'const' && value.Type === 'floats') {
+					if ((more || []).indexOf('floats') === -1) say('a constant list of numbers', fn);
+					else if (cap && (value.Value || []).length > cap) say('a list of ' + value.Value.length + ' numbers (of ' + cap + ' at most: Options.ListSize)', fn);
+				}
+				else if (value.Op === 'const' && typeof value.Value !== 'number' && typeof value.Value !== 'boolean' && !(Array.isArray(value.Value) && value.Value.length >= 2 && value.Value.length <= 4)) {
+					say('a constant ' + JSON.stringify(value.Value), fn);
+				}
+
+				if (value.Op === 'let' && value.Type && !own(kinds, value.Type))
+					say('a ' + value.Type + ' ' + value.Name, fn);
+
+				if (value.Op === 'call' && !own(names, value.Name) && calls.indexOf(value.Name) === -1)
+					say(value.Name + '()', fn);
+
+				Object.keys(value).forEach(function (key) {
+					walk(value[key], fn);
+				});
+			}
+
+			module.Functions.forEach(function (fn) {
+				if (!own(kinds, fn.Returns || 'void'))
+					say('a result of ' + fn.Returns, fn);
+
+				(fn.Params || []).forEach(function (param) {
+					if (!own(kinds, param.Type || 'any') || param.Type === 'void')
+						say('a parameter of ' + (param.Type || 'any'), fn);
+				});
+
+				walk(fn.Body, fn);
+			});
+
+			return found;
+		}
+
+		/*
+		 * A module made ready for GLSL: what is not of numbers told (as for wasm; sin and the like are GLSL's own), a function
+		 * that calls itself told (a shader has no stack), and int, float and bool made one another where they meet, as js
+		 * takes them: GLSL turns none of them into another by itself. {Module, Diagnostics}.
+		 */
+		function glslReady (module, options) {
+			var diagnostics = unsupported(module, 'glsl', GlslBuiltins, GlslTypes, ['index', 'length', 'floats'], glslCap(options));
+			var deep = recursive(module);
+			var functions = {};
+
+			Object.keys(deep).forEach(function (name) {
+				if (deep[name])
+					told(diagnostics, 'Elemenx glsl: ' + name + ' calls itself, and a shader has no stack (its js runs it)');
+			});
+
+			if (diagnostics.length)
+				return {Module: module, Diagnostics: diagnostics};
+
+			module.Functions.forEach(function (fn) {
+				functions[fn.Name] = fn;
+			});
+
+			function type (value, scope) {
+				return typeOf(value, scope, module, []);
+			}
+
+			function constant (value, kind) {
+				return {Op: 'const', Value: value, Type: kind};
+			}
+
+			/* A value of a type as another: a number of a bool 1 or 0, a bool of a number not 0, a vector of a number in each part. */
+			function to (value, from, kind) {
+				if (from === kind || !own(GlslTypes, from) || !own(GlslTypes, kind) || from === 'void' || kind === 'void' || from === 'floats' || kind === 'floats') return value;
+
+				if (vector(kind) && !vector(from))
+					return {Op: 'call', Name: kind, Args: [to(value, from, 'float')]};
+
+				if (vector(from)) return value;
+
+				if (kind === 'bool')
+					return {Op: 'bin', Operator: '!=', A: value, B: constant(0, from)};
+
+				if (from === 'bool')
+					return {Op: 'select', Test: value, A: constant(1, kind), B: constant(0, kind)};
+
+				return {Op: 'call', Name: kind === 'int' ? 'toInt' : 'toFloat', Args: [value]};
+			}
+
+			function fix (value, scope) {
+				var made;
+				var a;
+				var b;
+
+				if (!value || typeof value !== 'object' || value.Op === 'const' || value.Op === 'var') return value;
+
+				if (value.Op === 'call') {
+					made = Object.assign({}, value, {Args: (value.Args || []).map(function (arg, index) {
+						var fixed = fix(arg, scope);
+						var from = type(fixed, scope);
+						var fn = functions[value.Name];
+						if (fn)
+							return to(fixed, from, ((fn.Params || [])[index] || {}).Type || from);
+
+						if (value.Name === 'ldexp')
+							return to(fixed, from, index ? 'int' : 'float');
+
+						return GlslFloats.indexOf(value.Name) !== -1 && (from === 'int' || from === 'bool') ? to(fixed, from, 'float') : fixed;
+					})});
+
+					/* min, max and clamp of whole numbers stay whole; of a whole and a float, floats. */
+					if (['min', 'max', 'clamp'].indexOf(value.Name) !== -1 && value.Args.every(function (arg) {
+						return type(arg, scope) === 'int';
+					})) {
+						made.Args = value.Args.map(function (arg) {
+							return fix(arg, scope);
+						});
+					}
+
+					return made;
+				}
+
+				if (value.Op === 'bin') {
+					a = fix(value.A, scope);
+					b = fix(value.B, scope);
+
+					if (value.Operator === '&&' || value.Operator === '||')
+						return Object.assign({}, value, {A: to(a, type(a, scope), 'bool'), B: to(b, type(b, scope), 'bool')});
+
+					if (Bits.indexOf(value.Operator) !== -1)
+						return Object.assign({}, value, {A: to(a, type(a, scope), 'int'), B: to(b, type(b, scope), 'int')});
+
+					/* Of an int and anything else of numbers (a float, a vector): floats; a bool in arithmetic, 1 or 0. */
+					if (type(a, scope) === 'bool' && ['==', '!='].indexOf(value.Operator) === -1)
+						a = to(a, 'bool', 'float');
+
+					if (type(b, scope) === 'bool' && ['==', '!='].indexOf(value.Operator) === -1)
+						b = to(b, 'bool', 'float');
+
+					if (type(a, scope) === 'int' && type(b, scope) !== 'int')
+						a = to(a, 'int', 'float');
+
+					if (type(b, scope) === 'int' && type(a, scope) !== 'int')
+						b = to(b, 'int', 'float');
+
+					return Object.assign({}, value, {A: a, B: b});
+				}
+
+				if (value.Op === 'un') {
+					a = fix(value.A, scope);
+
+					return Object.assign({}, value, {A: value.Operator === '!' ? to(a, type(a, scope), 'bool') : a});
+				}
+
+				if (value.Op === 'index') {
+					a = fix(value.At, scope);
+
+					return Object.assign({}, value, {List: fix(value.List, scope), At: to(a, type(a, scope), 'int')});
+				}
+
+				if (value.Op === 'select') {
+					made = fix(value.Test, scope);
+					a = fix(value.A, scope);
+					b = fix(value.B, scope);
+
+					if (type(a, scope) !== type(b, scope)) {
+						a = to(a, type(a, scope), vector(type(b, scope)) ? type(b, scope) : 'float');
+						b = to(b, type(b, scope), type(a, scope));
+					}
+
+					return Object.assign({}, value, {Test: to(made, type(made, scope), 'bool'), A: a, B: b});
+				}
+
+				return value;
+			}
+
+			function body (list, scope, fn) {
+				return (list || []).map(function (statement) {
+					var made = Object.assign({}, statement);
+					var inner;
+
+					if (statement.Op === 'let') {
+						made.Value = fix(statement.Value, scope);
+
+						if (statement.Type)
+							made.Value = to(made.Value, type(made.Value, scope), statement.Type);
+
+						scope[statement.Name] = statement.Type || type(made.Value, scope);
+					}
+					else if (statement.Op === 'set') {
+						made.Value = fix(statement.Value, scope);
+						made.Value = to(made.Value, type(made.Value, scope), scope[statement.Name]);
+					}
+					else if (statement.Op === 'if') {
+						made.Test = fix(statement.Test, scope);
+						made.Test = to(made.Test, type(made.Test, scope), 'bool');
+						made.Then = body(statement.Then, Object.create(scope), fn);
+						made.Else = body(statement.Else, Object.create(scope), fn);
+					}
+					else if (statement.Op === 'loop') {
+						inner = Object.create(scope);
+						inner[statement.Var] = 'int';
+						made.From = to(fix(statement.From, scope), type(fix(statement.From, scope), scope), 'int');
+						made.To = to(fix(statement.To, scope), type(fix(statement.To, scope), scope), 'int');
+						made.Body = body(statement.Body, inner, fn);
+					}
+					else if (statement.Op === 'return' && statement.Value) {
+						made.Value = fix(statement.Value, scope);
+						made.Value = to(made.Value, type(made.Value, scope), fn.Returns || 'void');
+					}
+					else if (statement.Value) {
+						made.Value = fix(statement.Value, scope);
+					}
+
+					return made;
+				});
+			}
+
+			return {Module: {Functions: module.Functions.map(function (fn) {
+				var scope = {};
+
+				(fn.Params || []).forEach(function (param) {
+					scope[param.Name] = param.Type || 'float';
+				});
+
+				return Object.assign({}, fn, {Body: body(fn.Body, scope, fn)});
+			}), Entry: module.Entry}, Diagnostics: []};
+		}
+
+		function wasm (given, options) {
+			var settings = options || {};
+			var diagnostics = check(given);
+			var module;
+			var deep;
+			var types = [];
+			var typeKeys = {};
+			var indices = {};
+			var bodies = [];
+			var exports = [];
+			var described = [];
+			var max = Number(settings.MaxDepth) || 256;
+			var helpers = {};
+			var count = 0;
+			var batch = settings.Batch === true ? null : settings.Batch || [];
+
+			if (diagnostics.length)
+				return {Diagnostics: diagnostics};
+
+			module = ownMath(given, true);
+			diagnostics = unsupported(module, 'wasm', WasmBuiltins, WasmTypes, ['index', 'length']);
+
+			if (diagnostics.length)
+				return {Diagnostics: diagnostics};
+
+			deep = recursive(module);
+
+			/* How many of the first parameters of a function its batch is given once (Fixed of {Name, Fixed}), -1 for no batch. */
+			function batchOf (name) {
+				var found;
+
+				if (batch === null) return 0;
+
+				found = batch.filter(function (one) {
+					return (typeof one === 'string' ? one : one && one.Name) === name;
+				})[0];
+
+				return found === undefined ? -1 : typeof found === 'string' ? 0 : Number(found.Fixed) || 0;
+			}
+
+			/* The value types of a type of the IR: a vector as its numbers. */
+			function values (type) {
+				if (type === 'int' || type === 'bool' || type === 'floats') return [0x7F];
+				if (type === 'void') return [];
+
+				return new Array(WasmTypes[type] || 1).join(',').split(',').map(function () {
+					return 0x7C;
+				});
+			}
+
+			function typeIndex (params, results) {
+				var key = params.join(',') + '>' + results.join(',');
+
+				if (!own(typeKeys, key)) {
+					typeKeys[key] = types.length;
+
+					types.push([0x60].concat(leb(params.length), params, leb(results.length), results));
+				}
+
+				return typeKeys[key];
+			}
+
+			/* The functions in order: those of the module, the helpers of the runtime, the guards of the deep ones, the batches. */
+			module.Functions.forEach(function (fn) {
+				indices[fn.Name] = count++;
+			});
+
+			function helper (name) {
+				if (!own(helpers, name))
+					helpers[name] = count++;
+
+				return helpers[name];
+			}
+
+			helper('ldexp');
+			helper('ilogb');
+			helper('toInt');
+
+			module.Functions.forEach(function (fn) {
+				if (deep[fn.Name])
+					indices['guard:' + fn.Name] = count++;
+			});
+
+			module.Functions.forEach(function (fn) {
+				if (batchOf(fn.Name) >= 0)
+					indices['batch:' + fn.Name] = count++;
+			});
+
+			/* The code of a function: its locals (after the parameters), its bytes. */
+			function compile (fn) {
+				var code = [];
+				var locals = [];
+				var next = 0;
+				var scope = {};
+				var returns = fn.Returns || 'void';
+
+				function local (type) {
+					var made = next++;
+					if (made >= paramsCount)
+						locals.push(type);
+
+					return made;
+				}
+
+				function slots (type) {
+					return values(type).map(function (kind) {
+						return local(kind);
+					});
+				}
+
+				var paramsCount = 0;
+
+				(fn.Params || []).forEach(function (param) {
+					paramsCount += values(param.Type).length;
+				});
+
+				(fn.Params || []).forEach(function (param) {
+					scope[param.Name] = {Type: param.Type, Slots: values(param.Type).map(function () {
+						return next++;
+					})};
+				});
+
+				function op () {
+					Array.prototype.forEach.call(arguments, function (one) {
+						if (Array.isArray(one)) code.push.apply(code, one);
+						else code.push(one);
+					});
+				}
+
+				function f64 (value) {
+					op(0x44, f64Bytes(value));
+				}
+
+				function i32 (value) {
+					op(0x41, leb(value | 0, true));
+				}
+
+				function get (index) {
+					op(0x20, leb(index));
+				}
+
+				function set (index) {
+					op(0x21, leb(index));
+				}
+
+				/* What is on the stack (of a type) made a float, or an int (as toInt). */
+				function toFloat (type) {
+					if (type === 'int' || type === 'bool')
+						op(0xB7);
+				}
+
+				/*
+				 * As js's x | 0, in its place, of no branch: its whole part by 64 bits, its low 32 (as many times 2^32 off as it
+				 * takes); nought of NaN and of what is 2^63 or more (Infinity). Regression: by a test and a branch it was twice the
+				 * time of js's, three times a point of the lattice of a noise.
+				 */
+				var converted = null;
+
+				function toInt (type) {
+					if (type === 'int' || type === 'bool') return;
+
+					if (converted === null)
+						converted = local(0x7C);
+
+					op(0x22, leb(converted), 0xFC, 0x06, 0xA7, 0x41, 0, 0x20, leb(converted), 0x44, f64Bytes(9223372036854775808), 0x63, 0x1B);
+				}
+
+				function to (from, wanted) {
+					if (wanted === 'int' || wanted === 'bool') toInt(from);
+					else if (!vector(wanted)) toFloat(from);
+				}
+
+				/* An expression evaluated into new locals: their indices, its type. */
+				function stored (item, local_scope) {
+					var type = expression(item, local_scope);
+					var made = slots(type);
+
+					made.slice().reverse().forEach(set);
+
+					return {Type: type, Slots: made};
+				}
+
+				function parts (stash, size) {
+					return vector(stash.Type) ? stash.Slots : new Array(size).join(',').split(',').map(function () {
+						return stash.Slots[0];
+					});
+				}
+
+				/* A builtin of each number: its arguments stored, each part done by work(the locals of its arguments). */
+				function each (args, local_scope, work, wanted) {
+					var stashes = args.map(function (arg) {
+						var stash = stored(arg, local_scope);
+
+						if (!vector(stash.Type) && stash.Type !== 'float') {
+							get(stash.Slots[0]);
+
+							toFloat(stash.Type);
+
+							stash.Slots = [local(0x7C)];
+
+							set(stash.Slots[0]);
+
+							stash.Type = 'float';
+						}
+
+						return stash;
+					});
+					var size = wanted || stashes.reduce(function (most, stash) {
+						return Math.max(most, vector(stash.Type) ? WasmTypes[stash.Type] : 1);
+					}, 1);
+					var at;
+
+					for (at = 0; at < size; at++) {
+						work(stashes.map(function (stash) {
+							return parts(stash, size)[at];
+						}));
+					}
+
+					return size === 1 ? 'float' : 'vec' + size;
+				}
+
+				function call (item, local_scope) {
+					var name = item.Name;
+					var args = item.Args || [];
+					var fn = module.Functions.filter(function (one) {
+						return one.Name === name;
+					})[0];
+					var stash;
+					var a;
+
+					if (fn) {
+						(fn.Params || []).forEach(function (param, index) {
+							to(args[index] ? expression(args[index], local_scope) : (op(0x44, f64Bytes(0)), 'float'), param.Type);
+						});
+
+						op(0x10, leb(indices[deep[name] ? 'guard:' + name : name]));
+
+						return fn.Returns || 'void';
+					}
+
+					/* Of numbers, each used once in its order: straight on the stack. */
+					if (['abs', 'floor', 'ceil', 'sqrt', 'trunc', 'min', 'max', 'clamp'].indexOf(name) !== -1 && args.every(function (arg) {
+						return !vector(typeOf(arg, typesOf(local_scope), module, []));
+					})) {
+						args.forEach(function (arg, index) {
+							toFloat(expression(arg, local_scope));
+
+							if (name === 'clamp' && index > 0)
+								op(index === 1 ? 0xA5 : 0xA4);
+						});
+
+						if (name !== 'clamp')
+							op({abs: 0x99, floor: 0x9C, ceil: 0x9B, sqrt: 0x9F, trunc: 0x9D, min: 0xA4, max: 0xA5}[name]);
+
+						return 'float';
+					}
+
+					if (['abs', 'floor', 'ceil', 'sqrt', 'trunc'].indexOf(name) !== -1) {
+						return each(args, local_scope, function (got) {
+							get(got[0]);
+
+							op({abs: 0x99, floor: 0x9C, ceil: 0x9B, sqrt: 0x9F, trunc: 0x9D}[name]);
+						});
+					}
+
+					if (name === 'fract') {
+						return each(args, local_scope, function (got) {
+							get(got[0]);
+							get(got[0]);
+
+							op(0x9C, 0xA1);
+						});
+					}
+
+					if (name === 'sign') {
+						return each(args, local_scope, function (got) {
+							/* x > 0 ? 1 : x < 0 ? -1 : 0 */
+							f64(1);
+							f64(-1);
+							f64(0);
+
+							get(got[0]);
+
+							f64(0);
+
+							op(0x63, 0x1B);
+
+							get(got[0]);
+
+							f64(0);
+
+							op(0x64, 0x1B);
+						});
+					}
+
+					if (name === 'min' || name === 'max') {
+						return each(args, local_scope, function (got) {
+							get(got[0]);
+							get(got[1]);
+
+							op(name === 'min' ? 0xA4 : 0xA5);
+						});
+					}
+
+					if (name === 'clamp') {
+						return each(args, local_scope, function (got) {
+							get(got[0]);
+							get(got[1]);
+
+							op(0xA5);
+
+							get(got[2]);
+
+							op(0xA4);
+						});
+					}
+
+					if (name === 'mix') {
+						return each(args, local_scope, function (got) {
+							get(got[0]);
+							get(got[1]);
+							get(got[0]);
+
+							op(0xA1);
+
+							get(got[2]);
+
+							op(0xA2, 0xA0);
+						});
+					}
+
+					if (name === 'step') {
+						return each(args, local_scope, function (got) {
+							f64(0);
+							f64(1);
+
+							get(got[1]);
+							get(got[0]);
+
+							op(0x63, 0x1B);
+						});
+					}
+
+					if (name === 'smoothstep') {
+						return each(args, local_scope, function (got) {
+							var t = local(0x7C);
+
+							get(got[2]);
+							get(got[0]);
+
+							op(0xA1);
+
+							get(got[1]);
+							get(got[0]);
+
+							op(0xA1, 0xA3);
+
+							f64(0);
+
+							op(0xA5);
+
+							f64(1);
+
+							op(0xA4);
+
+							set(t);
+
+							get(t);
+							get(t);
+
+							op(0xA2);
+
+							f64(3);
+							f64(2);
+
+							get(t);
+
+							op(0xA2, 0xA1, 0xA2);
+						});
+					}
+
+					if (name === 'vec2' || name === 'vec3' || name === 'vec4') {
+						args.slice(0, WasmTypes[name]).forEach(function (arg) {
+							toFloat(expression(arg, local_scope));
+						});
+
+						for (a = args.length; a < WasmTypes[name]; a++)
+							f64(0);
+
+						return name;
+					}
+
+					if (['x', 'y', 'z', 'w'].indexOf(name) !== -1) {
+						/* Of a variable: its local, as it is. */
+						if (args[0].Op === 'var' && local_scope[args[0].Name] && vector(local_scope[args[0].Name].Type)) {
+							get(local_scope[args[0].Name].Slots[Math.min(local_scope[args[0].Name].Slots.length - 1, ['x', 'y', 'z', 'w'].indexOf(name))]);
+
+							return 'float';
+						}
+
+						stash = stored(args[0], local_scope);
+
+						get(stash.Slots[Math.min(stash.Slots.length - 1, ['x', 'y', 'z', 'w'].indexOf(name))]);
+
+						return 'float';
+					}
+
+					if (name === 'dot' || name === 'length' || name === 'distance' || name === 'normalize') {
+						var first = stored(args[0], local_scope);
+						var second = name === 'dot' || name === 'distance' ? stored(args[1], local_scope) : first;
+						var size = first.Slots.length;
+						var sum = local(0x7C);
+						var length;
+
+						f64(0);
+
+						set(sum);
+
+						for (a = 0; a < size; a++) {
+							if (name === 'distance') {
+								get(first.Slots[a]);
+								get(second.Slots[a]);
+
+								op(0xA1);
+
+								stash = local(0x7C);
+
+								set(stash);
+
+								get(stash);
+								get(stash);
+							}
+							else {
+								get(first.Slots[a]);
+								get(second.Slots[a]);
+							}
+
+							op(0xA2);
+
+							get(sum);
+
+							op(0xA0);
+
+							set(sum);
+						}
+
+						get(sum);
+
+						if (name === 'dot') return 'float';
+
+						op(0x9F);
+
+						if (name !== 'normalize') return 'float';
+
+						/* v / (length || 1) */
+						length = local(0x7C);
+
+						set(length);
+
+						get(length);
+
+						f64(1);
+
+						get(length);
+
+						f64(0);
+
+						op(0x62, 0x1B);
+
+						set(length);
+
+						for (a = 0; a < size; a++) {
+							get(first.Slots[a]);
+							get(length);
+
+							op(0xA3);
+						}
+
+						return first.Type;
+					}
+
+					if (name === 'cross') {
+						var u = stored(args[0], local_scope).Slots;
+						var v = stored(args[1], local_scope).Slots;
+
+						[[1, 2], [2, 0], [0, 1]].forEach(function (pair) {
+							get(u[pair[0]]);
+							get(v[pair[1]]);
+
+							op(0xA2);
+
+							get(u[pair[1]]);
+							get(v[pair[0]]);
+
+							op(0xA2, 0xA1);
+						});
+
+						return 'vec3';
+					}
+
+					if (name === 'toInt') {
+						toInt(expression(args[0], local_scope));
+
+						return 'int';
+					}
+
+					if (name === 'toFloat') {
+						toFloat(expression(args[0], local_scope));
+
+						return 'float';
+					}
+
+					if (name === 'ldexp') {
+						toFloat(expression(args[0], local_scope));
+
+						toInt(expression(args[1], local_scope));
+
+						op(0x10, leb(helpers.ldexp));
+
+						return 'float';
+					}
+
+					toFloat(expression(args[0], local_scope));
+
+					op(0x10, leb(helpers.ilogb));
+
+					return 'int';
+				}
+
+				/* Both sides of an operator: as floats (vectors part by part), or as ints when both are. */
+				function binary (item, local_scope) {
+					var operator = item.Operator;
+					var a;
+					var b;
+					var whole;
+					var stashA;
+					var stashB;
+					var size;
+					var at;
+
+					if (operator === '&&' || operator === '||') {
+						to(expression(item.A, local_scope), 'bool');
+
+						op(0x04, 0x7F);
+
+						if (operator === '&&') {
+							to(expression(item.B, local_scope), 'bool');
+
+							op(0x05);
+
+							i32(0);
+						}
+						else {
+							i32(1);
+
+							op(0x05);
+
+							to(expression(item.B, local_scope), 'bool');
+						}
+
+						op(0x0B);
+
+						return 'bool';
+					}
+
+					if (Bits.indexOf(operator) !== -1) {
+						toInt(expression(item.A, local_scope));
+						toInt(expression(item.B, local_scope));
+
+						op({'&': 0x71, '|': 0x72, '^': 0x73, '<<': 0x74, '>>': 0x75, '>>>': 0x76}[operator]);
+
+						return 'int';
+					}
+
+					/* Of numbers, not of vectors: both straight on the stack, as ints when both are (no locals between). */
+					a = typeOf(item.A, typesOf(local_scope), module, []);
+					b = typeOf(item.B, typesOf(local_scope), module, []);
+					whole = (a === 'int' || a === 'bool') && (b === 'int' || b === 'bool');
+
+					if (!vector(a) && !vector(b) && operator !== '%' && !(whole && operator === '/')) {
+						if (whole) {
+							toInt(expression(item.A, local_scope));
+							toInt(expression(item.B, local_scope));
+						}
+						else {
+							toFloat(expression(item.A, local_scope));
+							toFloat(expression(item.B, local_scope));
+						}
+
+						if (own({'<': 1, '<=': 1, '>': 1, '>=': 1, '==': 1, '!=': 1}, operator)) {
+							op(whole ? {'<': 0x48, '<=': 0x4C, '>': 0x4A, '>=': 0x4E, '==': 0x46, '!=': 0x47}[operator] : {'<': 0x63, '<=': 0x65, '>': 0x64, '>=': 0x66, '==': 0x61, '!=': 0x62}[operator]);
+
+							return 'bool';
+						}
+
+						op(whole ? {'+': 0x6A, '-': 0x6B, '*': 0x6C}[operator] : {'+': 0xA0, '-': 0xA1, '*': 0xA2, '/': 0xA3}[operator]);
+
+						return whole ? 'int' : 'float';
+					}
+
+					stashA = stored(item.A, local_scope);
+					stashB = stored(item.B, local_scope);
+					a = stashA.Type;
+					b = stashB.Type;
+					whole = (a === 'int' || a === 'bool') && (b === 'int' || b === 'bool');
+
+					if (vector(a) || vector(b)) {
+						size = Math.max(vector(a) ? WasmTypes[a] : 1, vector(b) ? WasmTypes[b] : 1);
+
+						for (at = 0; at < size; at++) {
+							get(parts(stashA, size)[at]);
+
+							toFloat(vector(a) ? 'float' : a);
+
+							get(parts(stashB, size)[at]);
+
+							toFloat(vector(b) ? 'float' : b);
+
+							if (operator === '%') {
+								/* a - b * trunc(a / b) */
+								var x = local(0x7C);
+								var y = local(0x7C);
+
+								set(y);
+								set(x);
+
+								get(x);
+								get(x);
+								get(y);
+
+								op(0xA3, 0x9D);
+
+								get(y);
+
+								op(0xA2, 0xA1);
+							}
+							else {
+								op({'+': 0xA0, '-': 0xA1, '*': 0xA2, '/': 0xA3}[operator] || 0xA0);
+							}
+						}
+
+						return 'vec' + size;
+					}
+
+					get(stashA.Slots[0]);
+
+					if (!whole)
+						toFloat(a);
+
+					get(stashB.Slots[0]);
+
+					if (!whole)
+						toFloat(b);
+
+					if (whole) {
+						if (own({'<': 1, '<=': 1, '>': 1, '>=': 1, '==': 1, '!=': 1}, operator)) {
+							op({'<': 0x48, '<=': 0x4C, '>': 0x4A, '>=': 0x4E, '==': 0x46, '!=': 0x47}[operator]);
+
+							return 'bool';
+						}
+
+						if (operator === '+' || operator === '-' || operator === '*') {
+							op({'+': 0x6A, '-': 0x6B, '*': 0x6C}[operator]);
+
+							return 'int';
+						}
+
+						if (operator === '%') {
+							/* b == 0 ? 0 : a rem b (js gives NaN, which an int keeps as nought): no trap of wasm. */
+							set(stashB.Slots[0]);
+							set(stashA.Slots[0]);
+
+							get(stashB.Slots[0]);
+
+							op(0x45, 0x04, 0x7F);
+
+							i32(0);
+
+							op(0x05);
+
+							get(stashA.Slots[0]);
+							get(stashB.Slots[0]);
+
+							op(0x6F, 0x0B);
+
+							return 'int';
+						}
+
+						/* As js: (a / b) | 0. */
+						set(stashB.Slots[0]);
+						set(stashA.Slots[0]);
+
+						get(stashA.Slots[0]);
+
+						op(0xB7);
+
+						get(stashB.Slots[0]);
+
+						op(0xB7, 0xA3);
+
+						toInt('float');
+
+						return 'int';
+					}
+
+					if (own({'<': 1, '<=': 1, '>': 1, '>=': 1, '==': 1, '!=': 1}, operator)) {
+						op({'<': 0x63, '<=': 0x65, '>': 0x64, '>=': 0x66, '==': 0x61, '!=': 0x62}[operator]);
+
+						return 'bool';
+					}
+
+					if (operator === '%') {
+						var p = local(0x7C);
+						var q = local(0x7C);
+
+						set(q);
+						set(p);
+
+						get(p);
+						get(p);
+						get(q);
+
+						op(0xA3, 0x9D);
+
+						get(q);
+
+						op(0xA2, 0xA1);
+
+						return 'float';
+					}
+
+					op({'+': 0xA0, '-': 0xA1, '*': 0xA2, '/': 0xA3}[operator]);
+
+					return 'float';
+				}
+
+				function expression (item, local_scope) {
+					var type;
+					var named;
+					var wanted;
+					var a;
+					var b;
+
+					if (item.Op === 'const') {
+						if (typeof item.Value === 'boolean') {
+							i32(item.Value ? 1 : 0);
+
+							return 'bool';
+						}
+
+						if (Array.isArray(item.Value)) {
+							item.Value.forEach(function (one) {
+								f64(Number(one));
+							});
+
+							return 'vec' + item.Value.length;
+						}
+
+						if (item.Type === 'int') {
+							i32(Math.round(item.Value));
+
+							return 'int';
+						}
+
+						f64(Number(item.Value));
+
+						return 'float';
+					}
+
+					if (item.Op === 'var') {
+						named = local_scope[item.Name];
+
+						if (!named)
+							throw {Wasm: true, Text: 'Elemenx wasm: no variable ' + item.Name + ' in ' + fn.Name};
+
+						named.Slots.forEach(get);
+
+						return named.Type;
+					}
+
+					if (item.Op === 'call')
+						return call(item, local_scope);
+
+					if (item.Op === 'bin')
+						return binary(item, local_scope);
+
+					if (item.Op === 'un') {
+						if (item.Operator === '!') {
+							to(expression(item.A, local_scope), 'bool');
+
+							op(0x45);
+
+							return 'bool';
+						}
+
+						type = expression(item.A, local_scope);
+
+						if (type === 'int' || type === 'bool') {
+							a = local(0x7F);
+
+							set(a);
+
+							i32(0);
+
+							get(a);
+
+							op(0x6B);
+
+							return 'int';
+						}
+
+						if (vector(type)) {
+							var negated = slots(type);
+
+							negated.slice().reverse().forEach(set);
+							negated.forEach(function (slot) {
+								get(slot);
+
+								op(0x9A);
+							});
+
+							return type;
+						}
+
+						op(0x9A);
+
+						return 'float';
+					}
+
+					/* A number of a list (its address, 8 bytes on: after its length) or of a vector (its part of that index). */
+					if (item.Op === 'index') {
+						type = expression(item.List, local_scope);
+
+						if (type === 'floats') {
+							to(expression(item.At, local_scope), 'int');
+
+							i32(3);
+
+							op(0x74, 0x6A, 0x2B, 3, 8);
+
+							return 'float';
+						}
+
+						var parted = slots(type);
+						var picked = local(0x7C);
+						var place = local(0x7F);
+
+						parted.slice().reverse().forEach(set);
+
+						to(expression(item.At, local_scope), 'int');
+
+						set(place);
+
+						get(parted[0]);
+
+						set(picked);
+
+						parted.slice(1).forEach(function (slot, k) {
+							get(slot);
+							get(picked);
+							get(place);
+
+							i32(k + 1);
+
+							op(0x46, 0x1B);
+
+							set(picked);
+						});
+
+						get(picked);
+
+						return 'float';
+					}
+
+					if (item.Op === 'length') {
+						type = expression(item.List, local_scope);
+
+						if (type === 'floats') {
+							op(0x2B, 3, 0, 0xAA);
+
+							return 'int';
+						}
+
+						values(type).forEach(function () {
+							op(0x1A);
+						});
+
+						i32(WasmTypes[type] || 1);
+
+						return 'int';
+					}
+
+					/* select: lazy, as js's ?: — of the type of its first branch, a float if the other is one. */
+					var test = expression(item.Test, local_scope);
+
+					to(test, 'bool');
+
+					a = typeOf(item.A, typesOf(local_scope), module, []);
+					b = typeOf(item.B, typesOf(local_scope), module, []);
+					wanted = vector(a) ? a : vector(b) ? b : a === 'float' || b === 'float' || a === 'any' || b === 'any' ? 'float' : a;
+
+					op(0x04, vector(wanted) ? leb(typeIndex([], values(wanted)), true) : values(wanted)[0]);
+
+					to(expression(item.A, local_scope), wanted);
+
+					op(0x05);
+
+					to(expression(item.B, local_scope), wanted);
+
+					op(0x0B);
+
+					return wanted;
+				}
+
+				function typesOf (local_scope) {
+					var made = {};
+					var key;
+
+
+					for (key in local_scope)
+						made[key] = local_scope[key].Type;
+
+					return made;
+				}
+
+				function statements (list, local_scope) {
+					(list || []).forEach(function (statement) {
+						var type;
+						var target;
+						var inner;
+						var end;
+
+						if (statement.Op === 'let') {
+							type = statement.Type || typeOf(statement.Value, typesOf(local_scope), module, []);
+							target = {Type: type === 'bool' ? 'bool' : type, Slots: slots(type)};
+
+							to(expression(statement.Value, local_scope), type);
+
+							target.Slots.slice().reverse().forEach(set);
+
+							local_scope[statement.Name] = target;
+						}
+						else if (statement.Op === 'set') {
+							target = local_scope[statement.Name];
+
+							if (!target)
+								throw {Wasm: true, Text: 'Elemenx wasm: no variable ' + statement.Name + ' in ' + fn.Name};
+
+							to(expression(statement.Value, local_scope), target.Type);
+
+							target.Slots.slice().reverse().forEach(set);
+						}
+						else if (statement.Op === 'if') {
+							to(expression(statement.Test, local_scope), 'bool');
+
+							op(0x04, 0x40);
+
+							statements(statement.Then, Object.create(local_scope));
+
+							if (statement.Else && statement.Else.length) {
+								op(0x05);
+
+								statements(statement.Else, Object.create(local_scope));
+							}
+
+							op(0x0B);
+						}
+						else if (statement.Op === 'loop') {
+							inner = Object.create(local_scope);
+							inner[statement.Var] = {Type: 'int', Slots: [local(0x7F)]};
+							end = local(0x7F);
+
+							to(expression(statement.From, local_scope), 'int');
+
+							set(inner[statement.Var].Slots[0]);
+
+							/* As js's i < to: to a whole number up (ceil) when it is not one. */
+							type = expression(statement.To, local_scope);
+
+							if (type !== 'int' && type !== 'bool') {
+								op(0x9B);
+
+								toInt('float');
+							}
+
+							set(end);
+
+							op(0x02, 0x40, 0x03, 0x40);
+
+							get(inner[statement.Var].Slots[0]);
+							get(end);
+
+							op(0x4E, 0x0D, 1);
+
+							statements(statement.Body, inner);
+
+							get(inner[statement.Var].Slots[0]);
+
+							i32(1);
+
+							op(0x6A);
+
+							set(inner[statement.Var].Slots[0]);
+
+							op(0x0C, 0, 0x0B, 0x0B);
+						}
+						else if (statement.Op === 'return') {
+							if (statement.Value) to(expression(statement.Value, local_scope), returns);
+							else values(returns).forEach(function (kind) {
+								if (kind === 0x7F) i32(0);
+								else f64(0);
+							});
+
+							op(0x0F);
+						}
+						else {
+							type = expression(statement.Value, local_scope);
+
+							values(type).forEach(function () {
+								op(0x1A);
+							});
+						}
+					});
+				}
+
+				statements(fn.Body, scope);
+
+				/* Off its end: noughts (js gives undefined). */
+				values(returns).forEach(function (kind) {
+					if (kind === 0x7F) i32(0);
+					else f64(0);
+				});
+
+				op(0x0B);
+
+				return {Locals: locals, Code: code};
+			}
+
+			/* A body of bytes: its locals by runs of one type, its code. */
+			function body (locals, code) {
+				var runs = [];
+
+				locals.forEach(function (kind) {
+					if (runs.length && runs[runs.length - 1][1] === kind) runs[runs.length - 1][0]++;
+					else runs.push([1, kind]);
+				});
+
+				var made = leb(runs.length);
+
+				runs.forEach(function (run) {
+					made = made.concat(leb(run[0]), [run[1]]);
+				});
+
+				made = made.concat(code);
+
+				return leb(made.length).concat(made);
+			}
+
+			var functionTypes = [];
+
+			try {
+				module.Functions.forEach(function (fn) {
+					var params = [];
+					var made = compile(fn);
+
+					(fn.Params || []).forEach(function (param) {
+						params = params.concat(values(param.Type));
+					});
+
+					functionTypes[indices[fn.Name]] = typeIndex(params, values(fn.Returns || 'void'));
+					bodies[indices[fn.Name]] = body(made.Locals, made.Code);
+
+					described.push({Name: fn.Name, Params: (fn.Params || []).map(function (param) {
+						return param.Type;
+					}), Returns: fn.Returns || 'void'});
+				});
+			}
+			catch (error) {
+				if (!error || !error.Wasm)
+					throw error;
+
+				told(diagnostics, error.Text);
+
+				return {Diagnostics: diagnostics};
+			}
+
+			/* ldexp(x, k): x times 2^k, by as many steps as js's rt_ldexp takes. */
+			functionTypes[helpers.ldexp] = typeIndex([0x7C, 0x7F], [0x7C]);
+			bodies[helpers.ldexp] = body([], [].concat(
+				[0x20, 1, 0x41], leb(1023, true), [0x4A, 0x04, 0x40],
+				[0x20, 0, 0x44], f64Bytes(8.98846567431158e307), [0xA2, 0x21, 0, 0x20, 1, 0x41], leb(1023, true), [0x6B, 0x21, 1],
+				[0x20, 1, 0x41], leb(1023, true), [0x4A, 0x04, 0x40],
+				[0x20, 0, 0x44], f64Bytes(8.98846567431158e307), [0xA2, 0x21, 0, 0x20, 1, 0x41], leb(1023, true), [0x6B, 0x21, 1],
+				[0x20, 1, 0x41], leb(1023, true), [0x4A, 0x04, 0x40, 0x41], leb(1023, true), [0x21, 1, 0x0B],
+				[0x0B],
+				[0x05],
+				[0x20, 1, 0x41], leb(-1022, true), [0x48, 0x04, 0x40],
+				[0x20, 0, 0x44], f64Bytes(2.004168360008973e-292), [0xA2, 0x21, 0, 0x20, 1, 0x41], leb(969, true), [0x6A, 0x21, 1],
+				[0x20, 1, 0x41], leb(-1022, true), [0x48, 0x04, 0x40],
+				[0x20, 0, 0x44], f64Bytes(2.004168360008973e-292), [0xA2, 0x21, 0, 0x20, 1, 0x41], leb(969, true), [0x6A, 0x21, 1],
+				[0x20, 1, 0x41], leb(-1022, true), [0x48, 0x04, 0x40, 0x41], leb(-1022, true), [0x21, 1, 0x0B],
+				[0x0B],
+				[0x0B],
+				[0x0B],
+				/* x * reinterpret((k + 1023) << 52) */
+				[0x20, 0, 0x20, 1, 0x41], leb(1023, true), [0x6A, 0xAC, 0x42, 52, 0x86, 0xBF, 0xA2, 0x0B]
+			));
+
+			/* ilogb(x): its exponent, a number under 2^-1022 lifted by 2^54 first. */
+			functionTypes[helpers.ilogb] = typeIndex([0x7C], [0x7F]);
+			bodies[helpers.ilogb] = body([0x7F], [].concat(
+				[0x20, 0, 0xBD, 0x42, 52, 0x88, 0xA7, 0x41], leb(2047, true), [0x71, 0x21, 1],
+				[0x20, 1, 0x45, 0x04, 0x7F],
+				[0x20, 0, 0x44], f64Bytes(18014398509481984), [0xA2, 0xBD, 0x42, 52, 0x88, 0xA7, 0x41], leb(2047, true), [0x71, 0x41], leb(1077, true), [0x6B],
+				[0x05, 0x20, 1, 0x41], leb(1023, true), [0x6B, 0x0B, 0x0B]
+			));
+
+			/* toInt(x): the same as in its place (toInt of compile), for the parameters of a batch. */
+			functionTypes[helpers.toInt] = typeIndex([0x7C], [0x7F]);
+			bodies[helpers.toInt] = body([], [].concat([0x20, 0, 0xFC, 0x06, 0xA7, 0x41, 0, 0x20, 0, 0x44], f64Bytes(9223372036854775808), [0x63, 0x1B, 0x0B]));
+
+			/* A deep one by its guard: as deep as MaxDepth, then the trap of unreachable, told by the global Deep. */
+			module.Functions.forEach(function (fn) {
+				var params = [];
+				var code = [0x23, 0, 0x41, 1, 0x6A, 0x24, 0, 0x23, 0, 0x41].concat(leb(max, true), [0x4A, 0x04, 0x40, 0x41, 1, 0x24, 1, 0x00, 0x0B]);
+				var at = 0;
+
+				if (!deep[fn.Name]) return;
+
+				(fn.Params || []).forEach(function (param) {
+					params = params.concat(values(param.Type));
+				});
+
+				params.forEach(function () {
+					code = code.concat([0x20], leb(at++));
+				});
+
+				code = code.concat([0x10], leb(indices[fn.Name]), [0x23, 0, 0x41, 1, 0x6B, 0x24, 0, 0x0B]);
+				functionTypes[indices['guard:' + fn.Name]] = typeIndex(params, values(fn.Returns || 'void'));
+				bodies[indices['guard:' + fn.Name]] = body([], code);
+			});
+
+			/*
+			 * batch:<name>(count, input, output, fixed): count runs, the numbers of each from input (its first Fixed parameters
+			 * from fixed, the same for each), its results to output.
+			 */
+			module.Functions.forEach(function (fn) {
+				var ins = [];
+				var outs = values(fn.Returns || 'void');
+				var code = [];
+				var locals = [];
+				var at = 0;
+				var kept = [];
+				var target = indices[deep[fn.Name] ? 'guard:' + fn.Name : fn.Name];
+				var fixed = 0;
+
+				if (!own(indices, 'batch:' + fn.Name)) return;
+
+				(fn.Params || []).forEach(function (param, index) {
+					ins = ins.concat(values(param.Type));
+
+					if (index < batchOf(fn.Name))
+						fixed = ins.length;
+				});
+
+				described.filter(function (one) {
+					return one.Name === fn.Name;
+				})[0].Fixed = fixed;
+
+				/* locals: 4 i (index), then one of each result */
+				locals.push(0x7F);
+
+				outs.forEach(function (kind) {
+					locals.push(kind);
+				});
+
+				code = code.concat([0x02, 0x40, 0x03, 0x40, 0x20, 4, 0x20, 0, 0x4E, 0x0D, 1]);
+
+				ins.forEach(function (kind) {
+					code = code.concat(at < fixed ? [0x20, 3, 0x2B, 3] : [0x20, 1, 0x2B, 3], leb((at < fixed ? at : at - fixed) * 8));
+
+					if (kind === 0x7F)
+						code = code.concat([0x10], leb(helpers.toInt));
+
+					at++;
+				});
+
+				code = code.concat([0x10], leb(target));
+
+				outs.forEach(function (kind, index) {
+					kept.unshift(5 + index);
+				});
+
+				kept.forEach(function (slot) {
+					code = code.concat([0x21], leb(slot));
+				});
+
+				outs.forEach(function (kind, index) {
+					code = code.concat([0x20, 2, 0x20], leb(5 + index), kind === 0x7F ? [0xB7] : [], [0x39, 3], leb(index * 8));
+				});
+
+				code = code.concat(
+					[0x20, 1, 0x41], leb((ins.length - fixed) * 8, true), [0x6A, 0x21, 1],
+					[0x20, 2, 0x41], leb(outs.length * 8, true), [0x6A, 0x21, 2],
+					[0x20, 4, 0x41, 1, 0x6A, 0x21, 4, 0x0C, 0, 0x0B, 0x0B, 0x0B]
+				);
+
+				functionTypes[indices['batch:' + fn.Name]] = typeIndex([0x7F, 0x7F, 0x7F, 0x7F], []);
+				bodies[indices['batch:' + fn.Name]] = body(locals, code);
+
+				exports.push(textBytes('batch:' + fn.Name).concat([0x00], leb(indices['batch:' + fn.Name])));
+			});
+
+			module.Functions.forEach(function (fn) {
+				exports.push(textBytes(fn.Name).concat([0x00], leb(indices[deep[fn.Name] ? 'guard:' + fn.Name : fn.Name])));
+			});
+
+			exports.push(textBytes('memory').concat([0x02, 0]));
+			exports.push(textBytes('depth').concat([0x03, 0]));
+			exports.push(textBytes('deep').concat([0x03, 1]));
+
+			return {Bytes: new Uint8Array([0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00].concat(
+				section(1, types),
+				/*
+				 * Its memory is not its own: env.memory, given (one for all the modules of a page, of a worker). Regression: each
+				 * module of each ground had its own, the browser keeps a great space for each, and past a few hundred it had no more:
+				 * Out of memory: Cannot allocate Wasm memory.
+				 */
+				section(2, [textBytes('env').concat(textBytes('memory'), [0x02, 0x00, 1])]),
+				section(3, functionTypes.map(function (index) {
+					return leb(index);
+				})),
+				section(6, [[0x7F, 1, 0x41, 0, 0x0B], [0x7F, 1, 0x41, 0, 0x0B]]),
+				section(7, exports),
+				section(10, bodies)
+			)), Exports: described, MaxDepth: max, Diagnostics: []};
+		}
+
+		/*
+		 * A module of wasm made (Bytes of ir-wasm, or the Value of its result): {Functions: {name: function} (a vector as an
+		 * array, a bool as a bool, as js gives them), Batch(name, input (numbers: the parameters of each run one after
+		 * another), count) (a Float64Array of the results of each run one after another), Memory}. callback(error, made):
+		 * compiled off the thread; without one it is made at once (a worker, a small module).
+		 */
+		var sharedMemory = null;
+
+		/* The memory of all the modules of wasm of the page (env.memory of each): its batches run one at a time. */
+		function memory () {
+			if (!sharedMemory)
+				sharedMemory = new WebAssembly.Memory({initial: 1});
+
+			return sharedMemory;
+		}
+
+		function instance (given, callback) {
+			var value = given && given.Bytes ? given : {Bytes: given, Exports: null};
+
+			function made (compiled) {
+				var live = new WebAssembly.Instance(compiled, {env: {memory: memory()}});
+				var raw = live.exports;
+
+				/*
+				 * The lists of numbers of a call (its parameters of floats) written to the memory from a place on: each its length,
+				 * then its numbers; their addresses by the index of their parameters.
+				 */
+				function lists (params, given, from) {
+					var places = {};
+					var at = from;
+					var need = from;
+					var i;
+
+					for (i = 0; i < params.length; i++) {
+						if (params[i] === 'floats')
+							need += ((given[i] || []).length + 1) * 8;
+					}
+
+					if (need === from) return places;
+
+					if (need > raw.memory.buffer.byteLength)
+						raw.memory.grow(Math.ceil((need - raw.memory.buffer.byteLength) / 65536));
+
+					for (i = 0; i < params.length; i++) {
+						if (params[i] !== 'floats') continue;
+
+						var list = given[i] || [];
+						var into = new Float64Array(raw.memory.buffer, at, list.length + 1);
+
+						into[0] = list.length;
+
+						into.set(list, 1);
+
+						places[i] = at;
+						at += (list.length + 1) * 8;
+					}
+
+					return places;
+				}
+				var functions = {};
+				var described = value.Exports || [];
+
+				described.forEach(function (fn) {
+					var run = raw[fn.Name];
+					if (typeof run !== 'function') return;
+
+					functions[fn.Name] = function () {
+						var args = [];
+						var result;
+						var i;
+						var places = lists(fn.Params, arguments, 0);
+
+						for (i = 0; i < fn.Params.length; i++) {
+							if (fn.Params[i] === 'floats') args.push(places[i]);
+							else if (vector(fn.Params[i])) args.push.apply(args, Array.prototype.slice.call(arguments[i] || [], 0, WasmTypes[fn.Params[i]]));
+							else args.push(fn.Params[i] === 'bool' ? (arguments[i] ? 1 : 0) : arguments[i]);
+						}
+
+						raw.depth.value = 0;
+
+						try {
+							result = run.apply(null, args);
+						}
+						catch (error) {
+							if (raw.deep.value) {
+								raw.deep.value = 0;
+
+								throw new Error('Elemenx IR: ' + fn.Name + ' goes deeper than ' + (value.MaxDepth || 256));
+							}
+
+							throw error;
+						}
+
+						return fn.Returns === 'bool' ? !!result : result;
+					};
+				});
+
+				return {
+					Functions: functions,
+					Memory: raw.memory,
+					Batch: function (name, input, count, fixed) {
+						var fn = described.filter(function (one) {
+							return one.Name === name;
+						})[0];
+						var run = raw['batch:' + name];
+						var all = 0;
+						var given;
+						var ins;
+						var outs;
+						var bytes;
+						var have;
+						var output;
+
+						if (!fn || !run)
+							throw new Error('Elemenx Compilers: no batch of ' + name);
+
+						fn.Params.forEach(function (type) {
+							all += WasmTypes[type];
+						});
+
+						given = fn.Fixed || 0;
+						ins = all - given;
+						outs = WasmTypes[fn.Returns] || 0;
+						/* The memory: what is fixed, the input, the output. */
+						bytes = (given + (ins + outs) * count) * 8;
+						have = raw.memory.buffer.byteLength;
+
+						if (bytes > have)
+							raw.memory.grow(Math.ceil((bytes - have) / 65536));
+
+						/* Its lists of numbers (fixed: one for all its runs) after its output, their addresses in their places of fixed. */
+						var values = Array.prototype.slice.call(fixed || [], 0, given);
+						var placed = lists(fn.Params, fixed || [], bytes);
+
+						Object.keys(placed).forEach(function (index) {
+							values[index] = placed[index];
+						});
+
+						if (given)
+							new Float64Array(raw.memory.buffer, 0, given).set(values);
+
+						new Float64Array(raw.memory.buffer, given * 8, ins * count).set(input.length > ins * count ? Array.prototype.slice.call(input, 0, ins * count) : input);
+
+						raw.depth.value = 0;
+
+						run(count, given * 8, (given + ins * count) * 8, 0);
+
+						output = new Float64Array(outs * count);
+
+						output.set(new Float64Array(raw.memory.buffer, (given + ins * count) * 8, outs * count));
+
+						return output;
+					}
+				};
+			}
+
+			if (typeof callback !== 'function')
+				return made(new WebAssembly.Module(value.Bytes));
+
+			WebAssembly.compile(value.Bytes).then(function (compiled) {
+				var result;
+
+				try {
+					result = made(compiled);
+				}
+				catch (error) {
+					callback(error);
+
+					return;
+				}
+
+				callback(null, result);
+			}, function (error) {
+				callback(error);
+			});
+
+			return undefined;
+		}
 
 		function define (name, definition) {
 			var given = definition || {};
@@ -23533,7 +26163,18 @@
 			return function (job, done) {
 				var module = job.Value || JSON.parse(job.Files[0].Text);
 				var diagnostics = check(module);
+				var ready;
 				var made;
+
+				if (!diagnostics.length && languages[name].OwnMath)
+					module = ownMath(module);
+
+				/* What a language asks of a module first (Prepare: {Module, Diagnostics}): glsl, its types made to meet. */
+				if (!diagnostics.length && typeof languages[name].Prepare === 'function') {
+					ready = languages[name].Prepare(module, job.Options);
+					module = ready.Module;
+					diagnostics = ready.Diagnostics || [];
+				}
 
 				if (diagnostics.length) {
 					done(null, {Diagnostics: diagnostics});
@@ -23567,7 +26208,8 @@
 		 *   Run(job, callback(error, result)): a job goes from its From to its To by as many transitions as it takes.
 		 * - Check(module): what is wrong in a module of the IR ([{File, Line, Column, Severity, Text}]).
 		 * - Language(name, definition): a text language described as data, with its transition ir-<name>; Language(name)
-		 *   gives it. Built in: js (ES5) and cpp (C++17).
+		 *   gives it (Prepare(module): what it asks of a module first, {Module, Diagnostics}). Built in: js (ES5), cpp
+		 *   (C++17) and glsl (ES 3.00, of numbers only).
 		 * - Load(text): the functions of a module of js made ({name: function}).
 		 */
 		Elemenx.Compilers = {
@@ -23583,11 +26225,26 @@
 			Language: language,
 			Load: function (text) {
 				return (new Function(String(text)))();
-			}
+			},
+			Instance: instance,
+			Math: ownFunctions
 		};
+
+		define('kernel-ir', {From: 'kernel', To: 'ir', Compile: function (job, done) {
+			var made = kernel(job.Value !== undefined ? job.Value : (job.Files[0] || {}).Text);
+
+			done(null, {Diagnostics: made.Diagnostics, Value: made.Module, Files: [{Name: (job.Entry || made.Module.Entry || 'module') + '.ir.json', Text: JSON.stringify(made.Module)}]});
+		}});
+
+		define('ir-wasm', {From: 'ir', To: 'wasm', Compile: function (job, done) {
+			var made = wasm(job.Value || JSON.parse(job.Files[0].Text), job.Options);
+
+			done(null, made.Bytes ? {Diagnostics: made.Diagnostics, Value: {Bytes: made.Bytes, Exports: made.Exports, MaxDepth: made.MaxDepth}, Files: [{Name: (job.Entry || 'module') + '.wasm', Bytes: made.Bytes}]} : {Diagnostics: made.Diagnostics});
+		}});
 
 		language('js', Object.assign({Extension: 'js'}, javascript));
 		language('cpp', Object.assign({Extension: 'cpp'}, cpp));
+		language('glsl', Object.assign({Extension: 'glsl'}, glsl));
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
 	/* SSR */

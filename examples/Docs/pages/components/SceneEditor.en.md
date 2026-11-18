@@ -62,6 +62,6 @@ Space: a document of Setting space (the prop, for a new one) starts as a star wi
 - [edits the World of a ground under the view: its steps, the relief of its step Relief from the library, and what its lands by climate leave bare](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L630) — `tests/regression/library-scene-editor.test.js`
 - [makes the objects of the World of a ground in the scene, marked in the tree, not saved: they come again of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L746) — `tests/regression/library-scene-editor.test.js`
 - [makes a new document anew in the scene: a star system in place of the ground, a ground in place of the system](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L787) — `tests/regression/library-scene-editor.test.js`
-- [starts as a star and a planet, offers the kinds of space and no sketch, and keeps its setting in the document](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js#L76) — `libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js`
+- [starts each item of a sketch with the very values the ground takes for it, of one table of the types of a sketch](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js#L77) — `libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js`
 
-+12 more in the same files
++13 more in the same files

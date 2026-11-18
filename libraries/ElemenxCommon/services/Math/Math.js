@@ -13,12 +13,16 @@
  *   finer and fainter) and Ridge (the folds of mountains). Without a seed it is the very noise of the shaders of
  *   Renderer (Chunks.Noise: noise3, fbm3, ridge3), to the float: a heightmap of the CPU matches a surface the GPU
  *   baked. SeedOffset(seed): the shift of the coordinates of a seed.
+ * - PlaceRandom(x, z, other): a number of 0 to 1 of a place, the same for the same place (other: a second one of it): what
+ *   sows things, lays caves and picks the land of a place. Spiral(index, count, turn): the point index of count spread
+ *   evenly over a sphere along a spiral of the golden angle, turned by turn radians. Queue(): a heap that gives back the
+ *   least F first (Push(item), Pop(), Size()): the ways and the rivers.
  * - Source(names) gives the source of members (Noise, SeedOffset, Vectors) to a worker of the Workers Service.
  */
 Elemenx.Service('Math', {
 	$Meta: {
 		Description: 'The numbers of space: matrices, vectors, rays and a smooth noise, the same in a page, a worker and Node.',
-		Methods: ['Identity()', 'Multiply(a, b)', 'Invert(m)', 'Translation(x, y, z)', 'Rotation(axis, angle)', 'Scaling(x, y, z)', 'Compose(position, rotation, scale)', 'Perspective(fov, aspect, near, far)', 'Orthographic(left, right, bottom, top, near, far)', 'LookAt(eye, target, up)', 'NormalMatrix(m)', 'Apply(m, point)', 'Hit(ray, center, radius)', 'Noise(seed)', 'SeedOffset(seed)', 'Source(names)']
+		Methods: ['Identity()', 'Multiply(a, b)', 'Invert(m)', 'Translation(x, y, z)', 'Rotation(axis, angle)', 'Scaling(x, y, z)', 'Compose(position, rotation, scale)', 'Perspective(fov, aspect, near, far)', 'Orthographic(left, right, bottom, top, near, far)', 'LookAt(eye, target, up)', 'NormalMatrix(m)', 'Apply(m, point)', 'Hit(ray, center, radius)', 'Noise(seed)', 'SeedOffset(seed)', 'Source(names)', 'PlaceRandom(x, z, other)', 'Spiral(index, count, turn)', 'Queue()']
 	},
 
 	Vectors: {
@@ -246,70 +250,16 @@ Elemenx.Service('Math', {
 	 */
 	Noise: function (seed) {
 		var offset = seed === undefined || seed === null || seed === '' ? 0 : this.SeedOffset(seed);
+		/* The value noise of the Kernel of the Noise Service (one source of its numbers), its octaves of 2.03 and 0.5. */
+		var code = this.$Service('Noise').Code();
 
-		function hash (x, y, z) {
-			var a = Math.imul(x + 65536, 1664525) + 1013904223 >>> 0;
-			var b = Math.imul(y + 65536, 1664525) + 1013904223 >>> 0;
-			var c = Math.imul(z + 65536, 1664525) + 1013904223 >>> 0;
-
-			a = a + Math.imul(b, c) >>> 0;
-			b = b + Math.imul(c, a) >>> 0;
-			c = c + Math.imul(a, b) >>> 0;
-			a = (a ^ a >>> 16) >>> 0;
-			b = (b ^ b >>> 16) >>> 0;
-			c = (c ^ c >>> 16) >>> 0;
-			a = a + Math.imul(b, c) >>> 0;
-
-			return (a & 16777215) / 16777215;
-		}
-
-		function smooth (t) {
-			return t * t * t * (t * (t * 6 - 15) + 10);
-		}
-
-		function mix (a, b, t) {
-			return a + (b - a) * t;
-		}
-
-		function value (x, y, z) {
-			var ix = Math.floor(x);
-			var iy = Math.floor(y);
-			var iz = Math.floor(z);
-			var fx = smooth(x - ix);
-			var fy = smooth(y - iy);
-			var fz = smooth(z - iz);
-
-			return mix(
-				mix(mix(hash(ix, iy, iz), hash(ix + 1, iy, iz), fx), mix(hash(ix, iy + 1, iz), hash(ix + 1, iy + 1, iz), fx), fy),
-				mix(mix(hash(ix, iy, iz + 1), hash(ix + 1, iy, iz + 1), fx), mix(hash(ix, iy + 1, iz + 1), hash(ix + 1, iy + 1, iz + 1), fx), fy),
-				fz
-			);
-		}
-
-		/* Octaves of noise, each finer and fainter; ridged: the folds of mountains. */
 		function octaves (x, y, z, count, ridged) {
-			var total = 0;
-			var amplitude = 0.5;
-			var weight = 0;
-			var octave;
-			var n;
-
-			for (octave = 0; octave < (count || 4); octave++) {
-				n = value(x, y, z);
-				total += (ridged ? 1 - Math.abs(n * 2 - 1) : n) * amplitude;
-				weight += amplitude;
-				x = x * 2.03 + 1.7;
-				y = y * 2.03 + 9.2;
-				z = z * 2.03 + 3.1;
-				amplitude *= 0.5;
-			}
-
-			return total / weight;
+			return code.n_octaves(0, x, y, z, count || 4, ridged ? 2 : 1, 2.03, 0.5, 1.7, 9.2, 3.1, false, 0, 0, 0, 1, 0, 0);
 		}
 
 		return {
 			Value: function (x, y, z) {
-				return value(x + offset, y + offset, z + offset);
+				return code.n_value(x + offset, y + offset, z + offset, false, 0, 0, 0);
 			},
 
 			Fbm: function (x, y, z, count) {
@@ -331,6 +281,81 @@ Elemenx.Service('Math', {
 	},
 
 	/* The shift of the coordinates of a seed: a number of hundreds, the same for the same seed. */
+	/*
+	 * A number of 0 to 1 of a place (x, z): the sine hash of 12.9898 and 78.233 (other: of 39.3468 and 11.135, apart from the
+	 * first), the same for the same place; what sows things, lays caves and picks the land of a place. Regression: it was
+	 * written out again in each of them.
+	 */
+	/*
+	 * The index-th of count points spread evenly over a sphere of radius 1, along a spiral of the golden angle (2.39996),
+	 * turned by turn more: [x, y, z], from the top (y 1) down. The plates, the sea and the towns of a planet are laid by it.
+	 */
+	/*
+	 * The cheapest first of what is pushed ({F}: a binary heap): Push(item), Pop() (the one of the least F), Size().
+	 * The one heap of the ways of a ground, the highways and the rivers of a planet: the same order for the same pushes.
+	 * Regression: a way found by sorting all that was open at each step took minutes where there was none, the page held;
+	 * then it was written out again in each of them.
+	 */
+	Queue: function () {
+		var items = [];
+
+		return {
+			Size: function () {
+				return items.length;
+			},
+
+			Push: function (item) {
+				var at = items.length;
+
+				items.push(item);
+
+				while (at > 0) {
+					var up = (at - 1) >> 1;
+					if (items[up].F <= item.F) break;
+
+					items[at] = items[up];
+					at = up;
+				}
+
+				items[at] = item;
+			},
+
+			Pop: function () {
+				var first = items[0];
+				var last = items.pop();
+				var at = 0;
+
+				if (!items.length) return first;
+
+				while (true) {
+					var left = at * 2 + 1;
+					var right = left + 1;
+					var least = right < items.length && items[right].F < items[left].F ? right : left;
+					if (left >= items.length || items[least].F >= last.F) break;
+
+					items[at] = items[least];
+					at = least;
+				}
+
+				items[at] = last;
+
+				return first;
+			}
+		};
+	},
+
+	Spiral: function (index, count, turn) {
+		var y = 1 - (index + 0.5) / count * 2;
+		var around = Math.sqrt(Math.max(0, 1 - y * y));
+		var angle = turn ? index * 2.39996 + turn : index * 2.39996;
+
+		return [Math.cos(angle) * around, y, Math.sin(angle) * around];
+	},
+
+	PlaceRandom: function (x, z, other) {
+		return other ? Math.abs(Math.sin(x * 39.3468 + z * 11.135) * 24634.6345) % 1 : Math.abs(Math.sin(x * 12.9898 + z * 78.233) * 43758.5453) % 1;
+	},
+
 	SeedOffset: function (seed) {
 		var text = String(seed);
 		var state = 2166136261;

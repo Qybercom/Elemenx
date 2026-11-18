@@ -11,6 +11,7 @@ ScenePlanet: a planet as one continuous function of a direction from its centre,
 - Sphere(options): its ground as SceneTerrainGenerator.Sphere gives one (Land, Elevation, Point, Altitude, Patch with the colors of the globe): what a Scene lands on and draws near, square by square, as fine as the eye needs.
 - Cells, CellAt, CellOf, CellCenter, CellCorners, CellNeighbours, CellPlace: the locations of a planet as cells, squares of the faces of a cube or hexagons of an icosahedron (12 of them pentagons), each a place for the step Planet of a World (its latitude, longitude, turn, size, outline and sides).
 - Data (a key of UseData): a planet of data (PlanetData): as coarse as its tiles, its heights and biomes of them; finer, the relief and the lands of the options it was made of, its Edit over the relief; its climate and plates of its tiles (Climate, Plate) as coarse as they are; its rivers, settlements and highways of its vectors unless they are given (DataVectors(key): their keys; Vectored(options): options with them; TownsFor(options): its settlements). UseData(key, data), DataOf(key), TileName, TileDirection, TilePlace (the tiles on the faces of the cube, by equal angles) and TileValues (the samples of a tile, what PlanetData.Bake makes).
+- Defaults and Rivers: the settings of a planet made of none and the numbers of its rivers (resources/planet). Kind(kind): the numbers of a kind of settlement on a planet (Share, Apart, Core, Fields, Lights, Glow, Use); KindByShare(share): the kind of a place by its share of all of them, the best first; Warmth(celsius): the warmth of a temperature, 0 at -25 degrees to 1 at 35, what its lands are chosen by.
 
 The same functions run in workers and in Node: they read no page.
 
@@ -22,6 +23,9 @@ The same functions run in workers and in Node: they read no page.
 - `Project(view, direction)`
 - `Unproject(view, px, py)`
 - `Picture(options, view, rect, step, overlay)`
+- `Kind(kind)`
+- `KindByShare(share)`
+- `Warmth(celsius)`
 - `Ruled(options)`
 - `TownsFor(options)`
 - `UseData(key, data)`
@@ -35,15 +39,15 @@ The same functions run in workers and in Node: they read no page.
 
 - [draws a planet of ScenePlanet from space of the lands of its globe](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L34) — `tests/regression/library-scene-landing.test.js`
 - [stands houses where a settlement is, woods where trees grow, and nothing on the sea](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/planet-things.test.js#L45) — `tests/regression/planet-things.test.js`
-- [turns a latitude and a longitude into a direction and back](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L31) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
-- [keeps as much of it under the sea as Ocean says, warm at the equator and cold at the poles, its winds by their belts](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L42) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
-- [raises what was painted: a continent where it is drawn, a sea, a range of mountains, a climate and a biome of its own](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L64) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
-- [tells its coasts at any scale alike: what is finer than Detail never turns the land into the sea](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L80) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
-- [has tectonic plates whose borders close into mountains and part into rifts, each plate its own](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L104) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
-- [paints a face of the globe as texels of a cube, each of its direction, strips of it alike, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L127) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
-- [gives how the ground of a face leans: level over the sea, down its slopes on land, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L158) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
-- [paints a piece of a globe in a worker byte for byte as in the page, and turns a pixel into a direction and back](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L223) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
-- [gives its ground to land on as the Sphere of SceneTerrainGenerator does: its heights, squares with its colors, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L245) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
-- [lays its surface out in cells of locations: each found of its points, its neighbours over the edges of the faces too, its place and outline a location takes](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L267) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [gives the numbers of a kind of settlement, the kind of a place by its share, and the warmth of a temperature](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L32) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [turns a latitude and a longitude into a direction and back](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L46) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [keeps as much of it under the sea as Ocean says, warm at the equator and cold at the poles, its winds by their belts](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L57) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [raises what was painted: a continent where it is drawn, a sea, a range of mountains, a climate and a biome of its own](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L79) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [tells its coasts at any scale alike: what is finer than Detail never turns the land into the sea](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L95) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [has tectonic plates whose borders close into mountains and part into rifts, each plate its own](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L119) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [paints a face of the globe as texels of a cube, each of its direction, strips of it alike, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L142) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [gives how the ground of a face leans: level over the sea, down its slopes on land, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L173) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [paints a piece of a globe in a worker byte for byte as in the page, and turns a pixel into a direction and back](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L238) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [gives its ground to land on as the Sphere of SceneTerrainGenerator does: its heights, squares with its colors, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L260) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 
-+35 more in the same files
++36 more in the same files

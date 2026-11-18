@@ -620,11 +620,8 @@ Elemenx.Trait('SceneVehicles', {
 			return math.Multiply(math.Translation(hinge[0], hinge[1], hinge[2]), math.Multiply(turn, math.Translation(-hinge[0], -hinge[1], -hinge[2])));
 		}
 
-		/* Where a gear lever stands in each gear: [ahead, aside], 1 as far as it goes. An automatic has R, N and D; a manual an H. */
-		var Gates = {
-			auto: {R: [-1, 0], N: [0, 0], D: [1, 0]},
-			manual: {R: [-1, 1.4], N: [0, 0], 1: [1, -1], 2: [-1, -1], 3: [1, 0], 4: [-1, 0], 5: [1, 1], 6: [-1, 1], 7: [1, 1.4]}
-		};
+		/* Where a gear lever stands in each gear: [ahead, aside], 1 as far as it goes. An automatic has R, N and D; a manual an H (resources/vehicles/gates.json). */
+		var Gates = Elemenx.Resources('Data', 'ElemenxGraphics/vehicles/gates') || {};
 
 		/*
 		 * What drives a moving part of a car, if anything: steer (the wheel, -1 to 1), gas, brake and hand (0 to 1), gear ([ahead,
@@ -1598,7 +1595,8 @@ Elemenx.Trait('SceneVehicles', {
 
 			if (!settings || settings.Kind !== 'ship' || !hero.Ship || hero.Travel || (kind !== 'warp' && kind !== 'jump')) return false;
 
-			made = Object.assign({}, kind === 'warp' ? {Enter: 2.4, Inside: 4, Exit: 1.8, Length: 600, Tint: '#5a9cff'} : {Enter: 0.7, Inside: 1.1, Exit: 1, Length: 30, Tint: '#ffb070'}, settings[kind === 'warp' ? 'Warp' : 'Jump'] || {}, options || {});
+			/* Its phases, its length and its tint (resources/vehicles/travel.json), under those of its Vehicle and those given. */
+			made = Object.assign((Elemenx.Resources('Data', 'ElemenxGraphics/vehicles/travel') || {})[kind] || {}, settings[kind === 'warp' ? 'Warp' : 'Jump'] || {}, options || {});
 
 			hero.Travel = {Kind: kind, Phase: 'enter', Time: 0, Flow: 0, To: made.To || '', Length: given(made.Length, 0), Lengths: {enter: given(made.Enter, 1), inside: given(made.Inside, 1), exit: given(made.Exit, 1)}, Tint: engine.Paint(made.Tint).slice(0, 3), Callback: callback || null};
 
@@ -1658,16 +1656,9 @@ Elemenx.Trait('SceneVehicles', {
 		/*
 		 * The lamps of a car: head (on with its lights), rear (dim with its lights, bright as it brakes), brake, reverse, indicator
 		 * (blinking on the side it shows, both sides for the hazard lights). Each a colour, how bright its glass glows, and the light
-		 * it throws: {Color, Glow, Power, Radius, Spot, Aim}.
+		 * it throws: {Color, Glow, Power, Radius, Spot, Aim} (resources/vehicles/lamps.json).
 		 */
-		var Lamps = {
-			head: {Color: '#e6eeff', Glow: 6, Power: 5, Radius: 45, Spot: 60, Aim: [0, -0.06, 1]},
-			rear: {Color: '#ff1a10', Glow: 4, Power: 0.8, Radius: 6, Spot: 0, Aim: [0, 0, -1]},
-			brake: {Color: '#ff1a10', Glow: 4, Power: 0.8, Radius: 6, Spot: 0, Aim: [0, 0, -1]},
-			reverse: {Color: '#ffffff', Glow: 3, Power: 1, Radius: 10, Spot: 100, Aim: [0, -0.2, -1]},
-			indicator: {Color: '#ffa020', Glow: 5, Power: 0.7, Radius: 5, Spot: 0, Aim: [0, 0, 1]},
-			glow: {Color: '#ffd9a0', Glow: 3, Power: 1, Radius: 8, Spot: 0, Aim: [0, -1, 0]}
-		};
+		var Lamps = Elemenx.Resources('Data', 'ElemenxGraphics/vehicles/lamps') || {};
 
 		/* How far a lamp of a car is lit now, 0 to 1, on its side (1 the left, as x goes, -1 the right). */
 		function lampOn (object, lamp, side) {

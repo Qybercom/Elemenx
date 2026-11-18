@@ -1,0 +1,8 @@
+{
+	"head": {"Color": "#e6eeff", "Glow": 6, "Power": 5, "Radius": 45, "Spot": 60, "Aim": [0, -0.06, 1]},
+	"rear": {"Color": "#ff1a10", "Glow": 4, "Power": 0.8, "Radius": 6, "Spot": 0, "Aim": [0, 0, -1]},
+	"brake": {"Color": "#ff1a10", "Glow": 4, "Power": 0.8, "Radius": 6, "Spot": 0, "Aim": [0, 0, -1]},
+	"reverse": {"Color": "#ffffff", "Glow": 3, "Power": 1, "Radius": 10, "Spot": 100, "Aim": [0, -0.2, -1]},
+	"indicator": {"Color": "#ffa020", "Glow": 5, "Power": 0.7, "Radius": 5, "Spot": 0, "Aim": [0, 0, 1]},
+	"glow": {"Color": "#ffd9a0", "Glow": 3, "Power": 1, "Radius": 8, "Spot": 0, "Aim": [0, -1, 0]}
+}

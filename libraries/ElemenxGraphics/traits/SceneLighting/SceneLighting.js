@@ -440,17 +440,11 @@ Elemenx.Trait('SceneLighting', {
 		 * The weather of a scene: what each kind brings, and the way the sky goes from one to the next. Weather is one of the
 		 * names of the table; Renderer has no idea of it: all of it is a few numbers that the shaders read.
 		 */
-		var calm = {Clouds: 0.3, Kind: 0.5, High: 0.5, Wind: 0.6, Fog: 0, Rain: 0, Snow: 0, Wet: 0, Storm: 0, Flash: 0, Cover: 0, Rainbow: 0, Rained: 0};
-		var kinds = {
-			clear: calm,
-			cloudy: {Clouds: 0.62, Kind: 0.6, High: 0.4, Wind: 1, Fog: 0, Rain: 0, Snow: 0, Wet: 0, Storm: 0},
-			overcast: {Clouds: 0.9, Kind: 0.15, High: 0, Wind: 1.2, Fog: 0.15, Rain: 0, Snow: 0, Wet: 0, Storm: 0},
-			rain: {Clouds: 0.8, Kind: 0.35, High: 0, Wind: 1.6, Fog: 0.35, Rain: 0.8, Snow: 0, Wet: 1, Storm: 0},
-			storm: {Clouds: 0.82, Kind: 1, High: 0, Wind: 3.2, Fog: 0.5, Rain: 1.3, Snow: 0, Wet: 1, Storm: 1},
-			snow: {Clouds: 0.85, Kind: 0.2, High: 0, Wind: 1, Fog: 0.3, Rain: 0, Snow: 1, Wet: 0, Storm: 0},
-			fog: {Clouds: 0.4, Kind: 0.1, High: 0, Wind: 0.2, Fog: 1, Rain: 0, Snow: 0, Wet: 0.2, Storm: 0}
-		};
-		var turns = ['clear', 'cloudy', 'overcast', 'rain', 'storm', 'rain', 'cloudy'];
+		/* Its kinds and the turns of a changing weather: resources/weather/kinds.json. Clear is calm, of all its numbers. */
+		var table = Elemenx.Resources('Data', 'ElemenxGraphics/weather/kinds') || {};
+		var kinds = table.Kinds || {};
+		var calm = kinds.clear || {};
+		var turns = table.Turns || ['clear'];
 
 		function given (value, fallback) {
 			return value === null || value === undefined || value === '' || isNaN(Number(value)) ? fallback : Number(value);

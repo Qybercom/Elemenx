@@ -767,3 +767,46 @@ describe('Contract: Blueprint, the editor of a graph of the Blueprints Service',
 
 	});
 });
+
+describe('Contract: Blueprint tells what a generator graph runs as', function () {
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['Blueprint', 'service:Noise']);
+	});
+
+	beforeEach(function () {
+		resetDOM();
+	});
+
+	afterEach(function () {
+		while (owned.length) owned.pop().$Destroy();
+	});
+
+	/* A graph of numbers runs as WebAssembly (Blueprints.Numeric), one with a text block by block, the block named. */
+	it('says a graph of numbers runs as WebAssembly, and names what keeps another to its blocks', async function () {
+		var host = mount('<div style="height: 100%"><Blueprint #Editor [Value]="Graph" /></div>', {Graph: graph()});
+		var blueprint;
+		var line;
+
+		await tick(30);
+
+		blueprint = host.$Ref('Editor', true);
+		line = editor(host).querySelector('.elemenx-blueprint-target');
+
+		expect(blueprint.Target().Kind).toBe('wasm');
+		expect(line.getAttribute('data-kind')).toBe('wasm');
+		expect(line.textContent).toMatch(/^Runs as WebAssembly: \d+ bytes, the very numbers of its JavaScript$/);
+
+		blueprint.Add('Text', 40, 320);
+
+		host.Graph = Object.assign(graph(), {blocks: graph().blocks.map(function (block) {
+			return block.id === 'n' ? {id: 'n', type: 'Text', x: 40, y: 40, properties: [{key: 'Value', value: 'a'}]} : block;
+		})});
+
+		await tick(30);
+
+		expect(blueprint.Target().Kind).toBe('blocks');
+		expect(editor(host).querySelector('.elemenx-blueprint-target').textContent).toBe('Runs block by block: a block Text is not of numbers');
+	});
+});

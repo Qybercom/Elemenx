@@ -309,6 +309,24 @@ describe('Contract: SceneSower, what a Scatter sows, in workers', function () {
 		expect(plain(there)).toEqual(plain(sown));
 	});
 
+	/* Regression: the height, the slope, the cover and the clumps of a rule of no graph were written out again in Chance beside its library graph. */
+	it('sows a rule of no graph by its library graph only: Compile gives it its code, Chance has no tests of its own', function () {
+		var given = world();
+		var field = Elemenx.Service('SceneTerrainGenerator').Field('Flat', given.Options);
+		var rule = {ID: 'groves', Shapes: ['oak'], Density: 0.8, Cover: 0.45, Patch: 40, MaxSlope: 0.25};
+		var made = sower.Compile([rule, {ID: 'cave', Shapes: ['rock'], Under: 'floor'}]);
+		var ground = sower.Ground(Object.assign({}, job(given, field), {Rules: [rule]}));
+		var keep = {Areas: [], Lines: []};
+
+		expect(made[0].Source).toBeTruthy();
+		expect(made[0].Graph).toBeUndefined();
+		expect(made[1].Source).toBeUndefined();
+		expect(sower.Chance(made[0], [-140, -100], ground, null, keep)).toBe(field.Height(-140, -100));
+		expect(function () {
+			sower.Chance(rule, [-140, -100], ground, null, keep);
+		}).toThrow('a rule is sown as Compile made it in the page');
+	});
+
 	/* Regression: a line of short pieces (the way of a road, a point every 2 m) had nothing on it when its step was longer than a piece. */
 	/* Regression: a large rock stood by a street, its center off it and half of it over the sidewalk. */
 	it('keeps the whole of a large thing off a road, not only its place', function () {

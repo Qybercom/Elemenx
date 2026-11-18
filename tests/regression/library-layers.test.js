@@ -148,4 +148,29 @@ describe('Regression: the system Libraries know nothing of the ones above them',
 
 		expect(Array.from(new Set(found))).toEqual([]);
 	});
+
+	/*
+	 * Regression: zones, carves, the planet defaults and rivers, the kinds of models and the weapons were in resources/ and
+	 * not in index.js: the tests read every file of the folder, an application only those index.js names, and had none.
+	 */
+	it('name every resource and graph of their folders in their index.js', function () {
+		var missing = [];
+
+		layers.forEach(function (one) {
+			var index = path.join(one.Root, 'index.js');
+			var listed = fs.existsSync(index) ? fs.readFileSync(index, 'utf8') : '';
+
+			['resources', 'blueprints'].forEach(function (folder) {
+				if (!fs.existsSync(path.join(one.Root, folder))) return;
+
+				fs.readdirSync(path.join(one.Root, folder), {recursive: true}).forEach(function (file) {
+					var name = folder + '/' + String(file).split(path.sep).join('/');
+					if (/\.json$/.test(name) && listed.indexOf('\'' + name + '\'') === -1)
+						missing.push(one.Name + ': ' + name);
+				});
+			});
+		});
+
+		expect(missing).toEqual([]);
+	});
 });

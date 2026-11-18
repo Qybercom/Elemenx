@@ -28,6 +28,8 @@ Elemenx.Trait('SceneNebula', {
 		var head = '#version 300 es\nprecision highp float;\n';
 		var types = ['hii', 'planetary', 'remnant', 'dark'];
 		var subtypes = ['Ia', 'II', 'Ib', 'Ic'];
+		/* The outer and the inner colour of each kind and how its dust dims ([outer, inner, dust]; of a remnant, of its subtype): resources/nebula/palettes.json. */
+		var palettes = Elemenx.Resources('Data', 'ElemenxGraphics/nebula/palettes') || {};
 		var programs = null;
 		var quad = null;
 		var blocks = {};
@@ -98,12 +100,7 @@ Elemenx.Trait('SceneNebula', {
 			var nebula = trait(object, 'Nebula');
 			var type = types.indexOf(nebula.Type) !== -1 ? nebula.Type : 'hii';
 			var subtype = subtypes.indexOf(nebula.Subtype) !== -1 ? nebula.Subtype : type === 'remnant' ? 'II' : '';
-			var palette = {
-				hii: [[1, 0.24, 0.34], [0.32, 0.86, 0.82], 2.2],
-				planetary: [[0.95, 0.3, 0.38], [0.36, 0.8, 1], 0.6],
-				remnant: {Ia: [[1, 0.38, 0.32], [0.86, 0.9, 1], 0.4], II: [[1, 0.3, 0.26], [0.36, 1, 0.6], 0.8], Ib: [[0.62, 0.42, 1], [0.32, 0.92, 0.86], 0.7], Ic: [[0.7, 0.36, 1], [0.4, 0.75, 1], 0.7]}[subtype],
-				dark: [[0.16, 0.09, 0.06], [0.3, 0.18, 0.1], 9]
-			}[type];
+			var palette = type === 'remnant' ? palettes.remnant[subtype] : palettes[type];
 			var colors = String(nebula.Colors || '').split(',');
 			var made = graphOf(object, nebula);
 			var plain = {Glow: 1, Density: 1, Turn: 0, Grow: 1, Detail: 1, Outer: [1, 1, 1], Inner: [1, 1, 1], Turbulence: 1, Thickness: 1, Hollow: 1};

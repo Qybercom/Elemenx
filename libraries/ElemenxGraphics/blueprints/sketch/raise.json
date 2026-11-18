@@ -1,0 +1,179 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "raise",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "sketch-raise-line-0",
+			"type": "Line",
+			"x": 260,
+			"y": 110,
+			"properties": []
+		},
+		{
+			"id": "sketch-raise-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Points"
+				}
+			]
+		},
+		{
+			"id": "sketch-raise-input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "sketch-raise-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "sketch-raise-formula-4",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "H + Amount * (0.5 + 0.5 * cos(min(1, max(0, (D) / max(0.000001, Radius))) * 3.141592653589793)) * S"
+				}
+			]
+		},
+		{
+			"id": "sketch-raise-input-5",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "H"
+				}
+			]
+		},
+		{
+			"id": "sketch-raise-input-6",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Amount"
+				}
+			]
+		},
+		{
+			"id": "sketch-raise-input-7",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Radius"
+				}
+			]
+		},
+		{
+			"id": "sketch-raise-input-8",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "S"
+				}
+			]
+		},
+		{
+			"id": "sketch-raise-result-9",
+			"type": "Result",
+			"x": 1040,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "sketch-raise-link-0",
+			"p1": "sketch-raise-input-1-out-Value",
+			"p2": "sketch-raise-line-0-in-Points",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-raise-link-1",
+			"p1": "sketch-raise-input-2-out-Value",
+			"p2": "sketch-raise-line-0-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-raise-link-2",
+			"p1": "sketch-raise-input-3-out-Value",
+			"p2": "sketch-raise-line-0-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-raise-link-3",
+			"p1": "sketch-raise-input-5-out-Value",
+			"p2": "sketch-raise-formula-4-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-raise-link-4",
+			"p1": "sketch-raise-input-6-out-Value",
+			"p2": "sketch-raise-formula-4-in-Amount",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-raise-link-5",
+			"p1": "sketch-raise-line-0-out-Distance",
+			"p2": "sketch-raise-formula-4-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-raise-link-6",
+			"p1": "sketch-raise-input-7-out-Value",
+			"p2": "sketch-raise-formula-4-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-raise-link-7",
+			"p1": "sketch-raise-input-8-out-Value",
+			"p2": "sketch-raise-formula-4-in-S",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-raise-link-8",
+			"p1": "sketch-raise-formula-4-out-Value",
+			"p2": "sketch-raise-result-9-in-Value",
+			"kind": "value"
+		}
+	]
+}

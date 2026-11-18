@@ -1,0 +1,180 @@
+{
+	"Districts": [
+		{"ID": "mountains", "Name": "Mountains", "X": -100, "Y": -1050, "Radius": 520, "Shows": ["mountain", "ridge", "cliff", "canyon", "crater", "rock", "snow", "tunnel", "rocks", "cave"]},
+		{"ID": "river", "Name": "River and lake", "X": -350, "Y": -350, "Radius": 380, "Shows": ["river", "valley", "floodplain", "lake", "swamp", "bridge"]},
+		{"ID": "sea", "Name": "Sea", "X": 1150, "Y": 150, "Radius": 420, "Shows": ["basin", "beach", "dunes", "waves", "boat"]},
+		{"ID": "town", "Name": "Town", "X": 150, "Y": 250, "Radius": 260, "Shows": ["settlement", "district", "square", "street", "landmark", "junction"]},
+		{"ID": "city", "Name": "City", "X": -750, "Y": 450, "Radius": 300, "Shows": ["settlement city", "business district", "runway"]},
+		{"ID": "villages", "Name": "Villages and a fort", "X": 600, "Y": -500, "Radius": 380, "Shows": ["village", "hamlet", "fort", "citywall", "village kind"]},
+		{"ID": "farms", "Name": "Farms", "X": 450, "Y": 900, "Radius": 330, "Shows": ["fields", "orchard", "row", "fence", "hedge", "wall", "powerline", "meadow", "terraces"]},
+		{"ID": "woods", "Name": "Woods", "X": -1150, "Y": -250, "Radius": 330, "Shows": ["forest", "sequoia", "jungle", "bushes", "thicket", "clearing", "biome"]},
+		{"ID": "workshop", "Name": "Editor strokes", "X": 1000, "Y": -1050, "Radius": 300, "Shows": ["raise", "lower", "flatten", "smooth", "stamp", "erosion", "mask", "plateau"]},
+		{"ID": "galleries", "Name": "Galleries", "X": -700, "Y": 1120, "Radius": 330, "Near": 0.9, "Shows": ["models", "buildings", "road types", "effects", "lights", "mirror", "glass"]},
+		{"ID": "race", "Name": "Race track", "X": 1050, "Y": 1000, "Radius": 300, "Shows": ["track", "barriers", "car"]},
+		{"ID": "game", "Name": "Game", "X": -150, "Y": 700, "Radius": 220, "Shows": ["trigger", "triggerpoint", "triggerline", "zone", "collider", "marker", "units", "location"]}
+	],
+	"Ground": {"Height": 60, "Water": 0.12, "Scale": 380, "Ridges": 0.2, "Rock": 0.8, "Snow": 0.95},
+	"Passages": {"When": ["mountains"], "Items": [{"Rough": 0.6, "Seed": "showcase-cave", "Radius": 2.6, "Crust": 1.5, "Nodes": [{"ID": "mouth", "At": [-540, -895, 49]}, {"ID": "fork", "At": [-540, -990, 48]}, {"ID": "hall", "At": [-490, -1040, 47], "Radius": 12}, {"ID": "deep", "At": [-590, -1050, 34], "Radius": 7}], "Ways": [{"From": "mouth", "To": "fork"}, {"From": "fork", "To": "hall", "Radius": 3}, {"From": "fork", "To": "deep", "Points": [[-580, -1010]]}], "Scaled": ["Nodes[].At", "Ways[].Points"]}]},
+	"Layers": [
+		{"When": ["mountains"], "ID": "mountains", "Items": [
+			{"ID": "mountains-0", "Strength": 1, "Type": "mountain", "At": [-450, -1100], "Radius": 260, "Height": 260, "Ridged": true, "Scaled": ["At", "Radius"]},
+			{"ID": "mountains-1", "Strength": 1, "Type": "mountain", "At": [-80, -1220], "Radius": 220, "Height": 220, "Ridged": true, "Scaled": ["At", "Radius"]},
+			{"ID": "mountains-2", "Strength": 1, "Type": "mountain", "At": [300, -1150], "Radius": 240, "Height": 300, "Ridged": false, "Scaled": ["At", "Radius"]},
+			{"ID": "mountains-3", "Strength": 1, "Type": "ridge", "Points": [[-450, -1100], [-80, -1220], [300, -1150]], "Width": 90, "Height": 120, "Sharp": 0.6, "Scaled": ["Points", "Width"]},
+			{"ID": "mountains-4", "Strength": 1, "Type": "cliff", "Points": [[-650, -800], [-450, -760], [-250, -790]], "Height": 35, "Reach": 40, "Scaled": ["Points", "Reach"]},
+			{"ID": "mountains-5", "Strength": 1, "Type": "canyon", "Points": [[60, -1450], [120, -1250], [100, -1080]], "Width": 40, "Depth": 45, "Scaled": ["Points", "Width"]},
+			{"ID": "mountains-6", "Strength": 1, "Type": "crater", "At": [620, -1000], "Radius": 110, "Depth": 40, "Rim": 18, "Scaled": ["At", "Radius"]},
+			{"ID": "mountains-7", "Strength": 1, "Type": "cave", "Points": [[-80, -1010], [-60, -1070], [-80, -1130]], "Width": 6, "Depth": 12, "Rough": 0.6, "Mouth": 1, "Scaled": ["Points"]},
+			{"ID": "mountains-8", "Strength": 1, "Type": "hall", "At": [-80, -1140], "Radius": 11, "Depth": 26, "Scaled": ["At"]},
+			{"ID": "mountains-9", "Strength": 1, "Type": "overhang", "At": [-450, -780], "Radius": 120, "Amount": 6, "Scaled": ["At", "Radius"]}
+		]},
+		{"When": ["river"], "ID": "river", "Items": [
+			{"ID": "river-0", "Strength": 1, "Type": "valley", "Points": [[-300, -700], [-150, -350], [150, -100]], "Width": 160, "Depth": 18, "Scaled": ["Points", "Width"]},
+			{"ID": "river-1", "Strength": 1, "Type": "river", "Points": [[-300, -720, 20], [-150, -350], [150, -100], [450, 80], [750, 160], [1000, 160]], "Width": 18, "Depth": 4, "Bank": 10, "Flow": 1, "Scaled": ["Points", "Width", "Bank"]},
+			{"ID": "river-2", "Strength": 1, "Type": "floodplain", "Points": [[290, -100], [275.9314311908364, -19.30045544435957], [186.81396365960765, 13.83883814042494], [102.9839187217253, 40.69695438097747], [32.95086449148803, -6.978665191691718], [28.384495668456992, -99.99999999999999], [20.704838271442554, -173.47340417485248], [109.21701856797768, -248.8474551069524], [190.44232780227455, -243.3677600264946], [279.5917458670445, -170.95946563853659]], "Level": 2, "Scaled": ["Points"]},
+			{"ID": "river-3", "Strength": 1, "Type": "lake", "Points": [[-470, -320], [-470.62590641355587, -256.67497842584186], [-547.917983047235, -229.185764180797], [-600, -180.1725786894625], [-667.8975688833032, -187.84076937965895], [-692.8710430919357, -262.82615473490273], [-754.5360874055467, -320], [-703.980330105104, -395.21891384983354], [-659.3506469130654, -444.10516756571803], [-600, -426.13379970922836], [-546.0008652542772, -426.387543027464], [-483.6681237886052, -397.854885455024]], "Level": 6, "Depth": 9, "Scaled": ["Points"]},
+			{"ID": "river-4", "Strength": 1, "Type": "swamp", "Points": [[-340, -180], [-343.6144862437435, -128.80331739936221], [-409.0974871700601, -115.09320725582533], [-461.83335313565465, -86.31665414094763], [-506.8687683823374, -115.60139927150382], [-500.30232606951034, -180], [-519.9895107609575, -223.4543893355078], [-455.15503187181275, -282.4160252083112], [-405.20995416005985, -276.5449233363921], [-339.69272051923485, -220.76088376088364]], "Level": 5, "Scaled": ["Points"]}
+		]},
+		{"When": ["sea"], "ID": "sea", "Items": [
+			{"ID": "sea-0", "Strength": 1, "Type": "basin", "Points": [[880, -400], [1500, -500], [1500, 650], [900, 600], [820, 200]], "Edge": 140, "Depth": 60, "Scaled": ["Points", "Edge"]},
+			{"ID": "sea-1", "Strength": 1, "Type": "beach", "Points": [[780, -380], [880, -400], [820, 200], [900, 600], [800, 620], [730, 200]], "Edge": 40, "Scaled": ["Points", "Edge"]},
+			{"ID": "sea-2", "Strength": 1, "Type": "dunes", "Points": [[820, 640], [1250, 640], [1250, 760], [820, 760]], "Edge": 40, "Height": 6, "Length": 30, "Way": 30, "Scaled": ["Points", "Edge"]},
+			{"ID": "sea-3", "Strength": 1, "Type": "biome", "Points": [[820, 640], [1250, 640], [1250, 760], [820, 760]], "Edge": 40, "Palette": "desert", "Scaled": ["Points", "Edge"]}
+		]},
+		{"When": ["town"], "ID": "town", "Items": [
+			{"ID": "town-0", "Strength": 1, "Type": "settlement", "Points": [[380, 250], [372.67555477604367, 348.5074787851963], [279.1528616673313, 412.43615589215517], [204.14025881196238, 482.7089439875698], [97.67943873738201, 493.7282170446455], [19.151562139956866, 418.99578822583896], [-76.77836925325622, 342.6653702050679], [-71.21235740476786, 250.00000000000003], [-48.21764739696559, 145.10027904692168], [-7.185839627892335, 86.68510423800305], [103.15112554745647, 31.936661827719945], [202.03185638501145, 3.5935423001753577], [302.3563882857642, 69.81280764208901], [336.53174205773894, 160.12700367038937]], "Kind": "town", "Density": 0.85, "Seed": "-town", "Scaled": ["Points"], "Seeded": ["Seed"]},
+			{"ID": "town-1", "Strength": 1, "Type": "district", "Points": [[190, 170], [157.78174593052023, 247.78174593052023], [80, 280], [2.2182540694797837, 247.78174593052023], [-30, 170], [2.2182540694797552, 92.21825406947978], [79.99999999999999, 60], [157.7817459305202, 92.21825406947976]], "Kind": "market", "Scaled": ["Points"]},
+			{"ID": "town-2", "Strength": 1, "Type": "district", "Points": [[380, 330], [344.8528137423857, 414.8528137423857], [260, 450], [175.1471862576143, 414.8528137423857], [140, 330], [175.1471862576143, 245.1471862576143], [260, 210], [344.8528137423857, 245.1471862576143]], "Kind": "residential", "Scaled": ["Points"]},
+			{"ID": "town-3", "Strength": 1, "Type": "square", "Points": [[178, 250], [169.79898987322332, 269.7989898732233], [150, 278], [130.20101012677668, 269.7989898732233], [122, 250], [130.20101012677668, 230.20101012677668], [150, 222], [169.79898987322332, 230.20101012677668]], "Scaled": ["Points"]},
+			{"ID": "town-4", "Strength": 1, "Type": "street", "Points": [[-60, 250], [360, 250]], "Width": 10, "Scaled": ["Points"]},
+			{"ID": "town-5", "Strength": 1, "Type": "street", "Road": "avenue", "Points": [[215, 60], [215, 440]], "Width": 26, "Scaled": ["Points"]},
+			{"ID": "town-6", "Strength": 1, "Type": "landmark", "At": [150, 276], "Radius": 14, "Model": "temple", "Name": "Temple", "Scaled": ["At"]}
+		]},
+		{"When": ["city"], "ID": "city", "Items": [
+			{"ID": "city-0", "Strength": 1, "Type": "plateau", "Points": [[-430, 450], [-456.3393995575043, 608.3507904730172], [-602.7192448465083, 705.6939712562889], [-750, 779.6762302134523], [-912.8529909004831, 746.4028892143326], [-1007.7191353402104, 602.2942476456342], [-1094.158609137769, 450.00000000000006], [-1018.6575102454838, 279.9383002093947], [-904.4375600374799, 161.52726517791154], [-750.0000000000001, 153.4990279786059], [-600.8316211734422, 178.97231087711555], [-469.18096743447603, 277.3428820135148]], "Edge": 80, "Height": 14, "Scaled": ["Points", "Edge"]},
+			{"ID": "city-1", "Strength": 1, "Type": "settlement", "Points": [[-510, 380], [-520.8678138319866, 483.0587495939806], [-612.2579267276172, 553.1267891206123], [-694.1236486835892, 621.0579191134815], [-804.357299449132, 630.2566166219967], [-889.157510789777, 558.6026561122093], [-982.5571443402953, 478.18185895317777], [-982.6642287900671, 380.00000000000006], [-958.71515044287, 271.60511781370053], [-911.1435157438076, 206.13965411847624], [-799.7896304598524, 151.16797791493434], [-695.8837063617395, 127.50763465715801], [-592.8880262461429, 192.05495435145235], [-551.0400401011801, 284.14916619503003]], "Kind": "city", "Density": 0.8, "Seed": "-city", "Scaled": ["Points"], "Seeded": ["Seed"]},
+			{"ID": "city-2", "Strength": 1, "Type": "district", "Points": [[-650, 380], [-679.2893218813452, 450.71067811865476], [-750, 480], [-820.7106781186548, 450.71067811865476], [-850, 380], [-820.7106781186548, 309.28932188134524], [-750, 280], [-679.2893218813452, 309.28932188134524]], "Kind": "business", "Scaled": ["Points"]},
+			{"ID": "city-3", "Strength": 1, "Type": "district", "Points": [[-810, 300], [-836.3603896932107, 363.6396103067893], [-900, 390], [-963.6396103067892, 363.6396103067893], [-990, 300], [-963.6396103067893, 236.36038969321072], [-900, 210], [-836.3603896932108, 236.36038969321072]], "Kind": "industry", "Scaled": ["Points"]}
+		]},
+		{"When": ["villages"], "ID": "villages", "Items": [
+			{"ID": "villages-0", "Strength": 1, "Type": "settlement", "Points": [[570, -450], [557.9412267350027, -380.8289618094511], [481.5548259939494, -352.4238530224929], [409.70050176147885, -329.4026105305907], [349.6721695641326, -370.2674273071643], [345.7581391443917, -450], [339.1755756612365, -512.9772035784449], [415.0431587725523, -577.5835329488164], [484.6648524019496, -572.8866514512811], [561.0786393146095, -510.82239911874564]], "Kind": "village", "Seed": "-village", "Scaled": ["Points"], "Seeded": ["Seed"]},
+			{"ID": "villages-1", "Strength": 1, "Type": "settlement", "Points": [[850, -650], [835.0340534121696, -601.4591468811083], [780, -590.1513810220844], [726.2078291779198, -597.6961837543374], [707.6596559019474, -650], [737.002426094872, -695.0277643462521], [780, -712.5002106537144], [826.6607391381805, -705.3337488704101]], "Kind": "hamlet", "Seed": "-hamlet", "Scaled": ["Points"], "Seeded": ["Seed"]},
+			{"ID": "villages-2", "Strength": 1, "Type": "settlement", "Points": [[510, -200], [477.78174593052023, -122.21825406947978], [400, -90], [322.21825406947977, -122.21825406947977], [290, -200], [322.21825406947977, -277.78174593052023], [400, -310], [477.7817459305202, -277.78174593052023]], "Kind": "fort", "Seed": "-fort", "Scaled": ["Points"], "Seeded": ["Seed"]},
+			{"ID": "villages-3", "Strength": 1, "Type": "citywall", "Points": [[518, -200], [483.4386001800126, -116.5613998199874], [400, -82], [316.5613998199874, -116.56139981998739], [282, -199.99999999999997], [316.5613998199874, -283.4386001800126], [400, -318], [483.4386001800126, -283.4386001800126], [518, -200]], "Scaled": ["Points"]}
+		]},
+		{"When": ["farms"], "ID": "farms", "Items": [
+			{"ID": "farms-0", "Strength": 1, "Type": "fields", "Points": [[250, 750], [550, 750], [550, 950], [250, 950]], "Spacing": 3, "Gap": 6, "Way": 0, "Scaled": ["Points"]},
+			{"ID": "farms-1", "Strength": 1, "Type": "orchard", "Points": [[570, 750], [720, 750], [720, 950], [570, 950]], "Spacing": 7, "Gap": 7, "Way": 90, "Scaled": ["Points"]},
+			{"ID": "farms-2", "Strength": 1, "Type": "meadow", "Points": [[250, 970], [720, 970], [720, 1100], [250, 1100]], "Density": 1, "Scaled": ["Points"]},
+			{"ID": "farms-3", "Strength": 1, "Type": "terraces", "Points": [[260, 1050], [245.62803946513856, 1113.8233159227261], [180.6141279011616, 1144.5019398615211], [114.04190572715567, 1158.5704769399058], [59.02459160655518, 1120.277587007457], [49.62997392157273, 1050], [52.61000644367422, 989.9618052291152], [117.30686278947833, 937.1602131560121], [182.5146995949395, 940.0305296267281], [247.54534715267616, 991.2786301767092]], "Edge": 30, "Step": 4, "Scaled": ["Points", "Edge"]},
+			{"ID": "farms-4", "Strength": 1, "Type": "hedge", "Points": [[240, 740], [730, 740]], "Spacing": 1.5, "Scaled": ["Points"]},
+			{"ID": "farms-5", "Strength": 1, "Type": "fence", "Points": [[240, 960], [730, 960]], "Spacing": 2.5, "Scaled": ["Points"]},
+			{"ID": "farms-6", "Strength": 1, "Type": "wall", "Points": [[240, 740], [240, 1110]], "Spacing": 2, "Scaled": ["Points"]},
+			{"ID": "farms-7", "Strength": 1, "Type": "row", "Points": [[730, 740], [730, 1110]], "Shapes": ["birch"], "Spacing": 9, "Scaled": ["Points"]},
+			{"ID": "farms-8", "Strength": 1, "Type": "powerline", "Points": [[150, 400], [450, 700], [700, 1150]], "Spacing": 60, "Scaled": ["Points"]},
+			{"ID": "farms-9", "Strength": 1, "Type": "road", "Points": [[250, 1120, 12], [480, 1130], [720, 1120]], "Width": 6, "Shoulder": 2, "Scaled": ["Points"]}
+		]},
+		{"When": ["woods"], "ID": "woods", "Items": [
+			{"ID": "woods-0", "Strength": 1, "Type": "forest", "Points": [[-1400, -500], [-1050, -500], [-1050, -200], [-1400, -200]], "Density": 1, "Passability": 0.5, "Scaled": ["Points"]},
+			{"ID": "woods-1", "Strength": 1, "Type": "sequoia", "Points": [[-1400, -180], [-1150, -180], [-1150, 100], [-1400, 100]], "Density": 1, "Scaled": ["Points"]},
+			{"ID": "woods-2", "Strength": 1, "Type": "jungle", "Points": [[-1130, -180], [-900, -180], [-900, 100], [-1130, 100]], "Density": 1, "Scaled": ["Points"]},
+			{"ID": "woods-3", "Strength": 1, "Type": "bushes", "Points": [[-1030, -500], [-900, -500], [-900, -200], [-1030, -200]], "Density": 1, "Scaled": ["Points"]},
+			{"ID": "woods-4", "Strength": 1, "Type": "thicket", "Points": [[-1200, 200], [-1214.9947661083352, 255.11083344476512], [-1280, 264.53122891872863], [-1343.1128413734334, 260.8448724950827], [-1363.566238625604, 200], [-1326.6639317856966, 150.24244468497147], [-1280, 131.42825043243522], [-1227.75410214489, 134.53808731482582]], "Density": 1, "Scaled": ["Points"]},
+			{"ID": "woods-5", "Strength": 1, "Type": "clearing", "Points": [[-1170, -350], [-1179.3717288177095, -315.5557290970218], [-1220, -309.6679819257946], [-1259.4455258583957, -311.9719546905733], [-1272.2288991410026, -350], [-1249.1649573660604, -381.09847207189284], [-1220, -392.857343479728], [-1187.3463138405564, -390.91369542823384]], "Scaled": ["Points"]},
+			{"ID": "woods-6", "Strength": 1, "Type": "biome", "Points": [[-1420, -520], [-880, -520], [-880, 120], [-1420, 120]], "Edge": 60, "Palette": "taiga", "Scaled": ["Points", "Edge"]}
+		]},
+		{"When": ["workshop"], "ID": "workshop", "Items": [
+			{"ID": "workshop-0", "Strength": 1, "Type": "plateau", "Points": [[1260, -1050], [1233.5620005311876, -920.8374892129209], [1123.5410084763826, -835.717928352433], [1000, -785.0862893447313], [868.5512155583484, -815.0454309518639], [784.6895247160666, -923.9130773674514], [727.7319562972266, -1050], [779.1348812094825, -1185.1094569249167], [872.8246765434673, -1280.9275375208244], [1000, -1298.0668998546141], [1124.4995673728615, -1272.0687252516975], [1227.0408918436628, -1186.427442727512]], "Edge": 60, "Height": 30, "Scaled": ["Points", "Edge"]},
+			{"ID": "workshop-1", "Strength": 1, "Type": "raise", "Points": [[850, -1150], [950, -1180], [1050, -1150]], "Radius": 30, "Amount": 12, "Scaled": ["Points", "Radius"]},
+			{"ID": "workshop-2", "Strength": 1, "Type": "lower", "Points": [[850, -950], [950, -920], [1050, -950]], "Radius": 30, "Amount": 10, "Scaled": ["Points", "Radius"]},
+			{"ID": "workshop-3", "Strength": 1, "Type": "flatten", "Points": [[1150, -1150], [1150, -950]], "Radius": 25, "Height": 40, "Scaled": ["Points", "Radius"]},
+			{"ID": "workshop-4", "Strength": 1, "Type": "smooth", "Points": [[900, -1050], [1100, -1050]], "Radius": 40, "Scaled": ["Points", "Radius"]},
+			{"ID": "workshop-5", "Strength": 1, "Type": "stamp", "At": [1180, -1200], "Radius": 60, "Height": 25, "Turn": 30, "Data": {"Side": 16, "Heights": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.12, 0.22, 0.22, 0.12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.22, 0.51, 0.69, 0.77, 0.77, 0.69, 0.51, 0.22, 0, 0, 0, 0, 0, 0, 0, 0.32, 0.69, 0.91, 0.99, 1, 1, 0.99, 0.91, 0.69, 0.32, 0, 0, 0, 0, 0, 0.22, 0.69, 0.95, 0.99, 0.89, 0.8, 0.8, 0.89, 0.99, 0.95, 0.69, 0.22, 0, 0, 0, 0, 0.51, 0.91, 0.99, 0.8, 0.49, 0.26, 0.26, 0.49, 0.8, 0.99, 0.91, 0.51, 0, 0, 0, 0.12, 0.69, 0.99, 0.89, 0.49, 0, 0, 0, 0, 0.49, 0.89, 0.99, 0.69, 0.12, 0, 0, 0.22, 0.77, 1, 0.8, 0.26, 0, 0, 0, 0, 0.26, 0.8, 1, 0.77, 0.22, 0, 0, 0.22, 0.77, 1, 0.8, 0.26, 0, 0, 0, 0, 0.26, 0.8, 1, 0.77, 0.22, 0, 0, 0.12, 0.69, 0.99, 0.89, 0.49, 0, 0, 0, 0, 0.49, 0.89, 0.99, 0.69, 0.12, 0, 0, 0, 0.51, 0.91, 0.99, 0.8, 0.49, 0.26, 0.26, 0.49, 0.8, 0.99, 0.91, 0.51, 0, 0, 0, 0, 0.22, 0.69, 0.95, 0.99, 0.89, 0.8, 0.8, 0.89, 0.99, 0.95, 0.69, 0.22, 0, 0, 0, 0, 0, 0.32, 0.69, 0.91, 0.99, 1, 1, 0.99, 0.91, 0.69, 0.32, 0, 0, 0, 0, 0, 0, 0, 0.22, 0.51, 0.69, 0.77, 0.77, 0.69, 0.51, 0.22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.12, 0.22, 0.22, 0.12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Scaled": ["At", "Radius"]},
+			{"ID": "workshop-6", "Strength": 1, "Type": "erosion", "Points": [[890, -1180], [872.4264068711929, -1137.5735931288073], [830, -1120], [787.5735931288071, -1137.5735931288073], [770, -1180], [787.5735931288071, -1222.4264068711927], [830, -1240], [872.4264068711929, -1222.426406871193]], "Edge": 20, "Amount": 0.8, "Scaled": ["Points", "Edge"]},
+			{"ID": "workshop-7", "Strength": 1, "Type": "mask", "Points": [[1230, -900], [1215.3553390593274, -864.6446609406727], [1180, -850], [1144.6446609406726, -864.6446609406726], [1130, -900], [1144.6446609406726, -935.3553390593273], [1180, -950], [1215.3553390593274, -935.3553390593274]], "Edge": 10, "Scaled": ["Points", "Edge"]}
+		]},
+		{"When": ["game"], "ID": "game", "Items": [
+			{"ID": "game-0", "Strength": 1, "Type": "trigger", "Points": [[-110, 700], [-130, 734.6410161513776], [-170, 734.6410161513776], [-190, 700], [-170.00000000000003, 665.3589838486224], [-130, 665.3589838486224]], "Team": "", "Once": false, "Scaled": ["Points"]},
+			{"ID": "game-1", "Strength": 1, "Type": "triggerpoint", "At": [-60, 640], "Radius": 12, "Scaled": ["At"]},
+			{"ID": "game-2", "Strength": 1, "Type": "triggerline", "Points": [[-260, 620], [-260, 780]], "Width": 6, "Scaled": ["Points"]},
+			{"ID": "game-3", "Strength": 1, "Type": "zone", "Points": [[-30, 700], [-65.1471862576143, 784.8528137423857], [-150, 820], [-234.8528137423857, 784.8528137423857], [-270, 700], [-234.8528137423857, 615.1471862576143], [-150.00000000000003, 580], [-65.14718625761432, 615.1471862576143]], "Tags": ["safe"], "Team": "blue", "Scaled": ["Points"]},
+			{"ID": "game-4", "Strength": 1, "Type": "collider", "Points": [[-230, 760], [-210, 760], [-210, 790], [-230, 790]], "Height": 4, "Scaled": ["Points"]},
+			{"ID": "game-5", "Strength": 1, "Type": "marker", "At": [-200, 760], "Radius": 4, "Role": "spawn", "Team": "blue", "Name": "Blue base", "Scaled": ["At"]},
+			{"ID": "game-6", "Strength": 1, "Type": "marker", "At": [-80, 760], "Radius": 4, "Role": "spawn", "Team": "red", "Name": "Red base", "Scaled": ["At"]}
+		]},
+		{"When": ["galleries"], "ID": "galleries", "Items": [
+			{"ID": "galleries-0", "Strength": 1, "Type": "plateau", "Points": [[-1100, 820], [-300, 820], [-300, 1480], [-1100, 1480]], "Edge": 60, "Height": 10, "Scaled": ["Points", "Edge"]},
+			{"ID": "galleries-1", "Strength": 1, "Type": "clearing", "Points": [[-1100, 820], [-300, 820], [-300, 1480], [-1100, 1480]], "Scaled": ["Points"]}
+		]},
+		{"When": ["race"], "ID": "race", "Items": [
+			{"ID": "race-0", "Strength": 1, "Type": "plateau", "Points": [[1330, 1000], [1311.6772835439306, 1120.704797519621], [1215.9033576229463, 1208.330589392923], [1114.107870900296, 1278.1388301326717], [986.9997710862616, 1284.8462137326308], [883.0645525206206, 1212.3234090742958], [785.8253511221142, 1117.148731427369], [775.3489998405761, 1000], [803.2101383389866, 875.4042724651464], [867.0330905749732, 791.1345254689124], [990.3303630576112, 730.7758864505481], [1112.8244955099779, 713.5235528250862], [1230.0272433906878, 780.8644318887908], [1289.6767018893102, 884.5509744098658]], "Edge": 70, "Height": 8, "Scaled": ["Points", "Edge"]}
+		]}
+	],
+	"Objects": [
+		{"When": ["sea"], "ID": "boat", "Kind": "unit", "Name": "Boat", "Model": "boat", "Size": 5.5, "X": 1150, "Y": 100, "Vehicle": {"Kind": "boat", "Heading": 1.5707963267948966}, "Scaled": ["X", "Y"]},
+		{"When": ["city"], "ID": "runway", "Kind": "road", "Name": "Runway", "Type": "runway", "Points": [[-1000, 640], [-500, 640]], "Scaled": ["Points"]},
+		{"When": ["city"], "ID": "taxiway", "Kind": "road", "Type": "taxiway", "Points": [[-900, 640], [-900, 700], [-650, 700], [-650, 640]], "Scaled": ["Points"]},
+		{"When": ["villages"], "ID": "hamlet", "Kind": "village", "Name": "Village", "X": 700, "Y": -380, "Houses": 9, "Scaled": ["X", "Y"]},
+		{"When": ["game"], "ID": "scout", "Kind": "unit", "Name": "Scout", "Team": "blue", "X": -180, "Y": 720, "Scaled": ["X", "Y"]},
+		{"When": ["game"], "ID": "builder", "Kind": "unit", "Name": "Builder", "Team": "blue", "X": -168, "Y": 720, "Scaled": ["X", "Y"]},
+		{"When": ["game"], "ID": "ranger", "Kind": "unit", "Name": "Ranger", "Team": "blue", "X": -156, "Y": 720, "Scaled": ["X", "Y"]},
+		{"When": ["game"], "ID": "gate", "Kind": "trigger", "Name": "Gate", "X": -150, "Y": 640, "Radius": 6, "Scaled": ["X", "Y"]},
+		{"When": ["game"], "ID": "camp", "Kind": "zone", "Name": "Camp", "X": -40, "Y": 780, "Radius": 30, "Tags": ["camp"], "Scaled": ["X", "Y"]},
+		{"When": ["game"], "ID": "spawn", "Kind": "marker", "Name": "Spawn", "X": -120, "Y": 780, "Scaled": ["X", "Y"]},
+		{"When": ["game"], "ID": "cave", "Kind": "location", "Name": "Location", "X": -230, "Y": 660, "Size": 3, "Scaled": ["X", "Y"]},
+		{"When": ["galleries"], "Code": "galleries"},
+		{"When": ["race"], "ID": "track", "Kind": "road", "Name": "Race track", "Type": "track", "Closed": true, "Points": [[1250, 1000], [1238.7042725363958, 1098.4538660684536], [1138.0757079563984, 1153.110557674327], [1050, 1209.0714658251115], [947.3253210307971, 1191.275168259993], [894.9908509969965, 1092.775857167782], [827.3513039333416, 1000], [884.7361245233028, 890.5671564463075], [955.2147874648626, 816.1593514827359], [1050, 822.030338729943], [1139.845355149898, 832.5140818257396], [1226.665302651735, 888.1339518876702]], "Scaled": ["Points"]},
+		{"When": ["race"], "ID": "tyres", "Kind": "barrier", "Road": "track", "Type": "tyres", "Side": "right"},
+		{"When": ["race"], "ID": "rails", "Kind": "barrier", "Road": "track", "Type": "guardrail", "Side": "left"},
+		{"When": ["race"], "ID": "pit", "Kind": "barrier", "Type": "jersey", "Points": [[1000, 880], [1100, 880]], "Scaled": ["Points"]},
+		{"When": ["race"], "ID": "bend", "Kind": "road", "Name": "Paved bend", "Type": "street", "Points": [[1116.8254893141275, 1005.950712519534], [1124.3583646030359, 1030.210535583496], [1123.3610700550355, 1055.593376811332], [1113.9480123265569, 1079.1873923536962], [1097.1990293287379, 1098.285947109273], [1075.0355144425328, 1110.6981118319134], [1050, 1115], [1024.9644855574672, 1110.6981118319134], [1002.8009706712622, 1098.285947109273], [986.0519876734431, 1079.1873923536962], [976.6389299449646, 1055.593376811332], [975.6416353969643, 1030.210535583496], [983.1745106858724, 1005.9507125195339]], "Scaled": ["Points"]},
+		{"When": ["race"], "Code": "car"},
+		{"When": ["mountains", "river", "town"], "ID": "motorway", "Kind": "road", "Name": "Motorway", "Type": "motorway", "Structures": true, "Points": [[-1480, 0], [-700, 0], [-200, -40], [150, -60], [560, -30], [820, -200], [500, -900], [300, -1400]], "Barriers": ["guardrail"], "Scaled": ["Points"]},
+		{"When": ["mountains", "river", "town"], "ID": "town-road", "Kind": "road", "Name": "To the town", "Type": "road", "Points": [[-110, -46], [-90, 120], [-60, 250]], "Scaled": ["Points"]},
+		{"When": ["mountains", "river", "town"], "ID": "railway", "Kind": "road", "Name": "Railway", "Type": "rail-double", "Structures": true, "Points": [[-1400, -650], [-500, -600], [0, -500], [500, -650], [1400, -700]], "Scaled": ["Points"]},
+		{"When": ["mountains", "river", "town"], "ID": "country", "Kind": "road", "Name": "Country road", "Type": "country", "Points": [[360, 250], [420, 600], [450, 760]], "Elevated": [[170, 330, 8]], "Scaled": ["Points"]},
+		{"When": ["mountains", "river", "town"], "ID": "pass-road", "Kind": "road", "Name": "Road under the mountain", "Type": "road", "Structures": true, "Points": [[-900, -1100], [-180, -1100]], "Scaled": ["Points"]},
+		{"When": ["mountains", "river", "town"], "ID": "pass-branch", "Kind": "road", "Name": "Branch in the mountain", "Type": "country", "Structures": true, "Points": [[-520, -1460], [-520, -1100]], "Scaled": ["Points"]},
+		{"When": ["mountains", "river", "town"], "ID": "track-to-woods", "Kind": "road", "Type": "gravel", "Points": [[-900, -90], [-1000, -160], [-1100, -350]], "Scaled": ["Points"]},
+		{"When": ["mountains", "river", "town"], "ID": "city-link", "Kind": "road", "Name": "Road to the city", "Type": "road", "Points": [[-510, 210], [-510, 0]], "Scaled": ["Points"]},
+		{"When": ["mountains", "river", "town"], "ID": "cross", "Kind": "junction", "X": 360, "Y": 250, "Radius": 14, "Form": "ring", "Scaled": ["X", "Y"]},
+		{"When": ["mountains", "river", "town"], "Code": "level"},
+		{"When": ["mountains", "river", "town"], "ID": "overpass-lane", "Kind": "road", "Name": "Lane over the motorway", "Type": "country", "Points": [[-860, 220], [-860, -130]], "Scaled": ["Points"]},
+		{"When": ["mountains", "river", "town"], "ID": "motorway-west", "Kind": "road", "Name": "West motorway", "Type": "motorway", "Structures": true, "Points": [[-1260, -1450], [-1260, 1450]], "Scaled": ["Points"]},
+		{"When": ["mountains", "river", "town"], "ID": "motorway-south", "Kind": "road", "Name": "South motorway", "Type": "motorway", "Structures": true, "Points": [[-1480, -1000], [-700, -1000]], "Scaled": ["Points"]},
+		{"When": ["mountains", "river", "town"], "ID": "diamond-road", "Kind": "road", "Name": "Road to the west", "Type": "road", "Points": [[-1480, 600], [-1060, 600]], "Scaled": ["Points"]},
+		{"When": ["mountains", "river", "town"], "ID": "ring-road", "Kind": "road", "Name": "Road of two rings", "Type": "road", "Points": [[-1480, 1150], [-1100, 1150]], "Scaled": ["Points"]},
+		{"When": ["mountains", "river", "town"], "ID": "clover", "Kind": "junction", "X": -1260, "Y": 0, "Form": "cloverleaf", "Scaled": ["X"]},
+		{"When": ["mountains", "river", "town"], "ID": "rings", "Kind": "junction", "X": -1260, "Y": 1150, "Form": "roundabout", "Scaled": ["X", "Y"]},
+		{"When": ["river"], "ID": "water-main", "Kind": "pipe", "Name": "Water main", "Points": [[-600, -180], [-500, -180], [-460, -220], [-420, -220]], "Radius": 0.5, "Laid": "above", "Lift": 2, "Fluid": {"Type": "water", "Fill": 0.5, "Flow": 1.5, "Pressure": 2}, "Leaks": [{"Along": 115, "Angle": -115, "Size": 0.05}], "Scaled": ["Points"]},
+		{"When": ["river"], "ID": "sewer", "Kind": "pipe", "Name": "Sewer", "Points": [[-600, -300], [-450, -300], [-260, -351], [-196, -370, 11.5]], "Radius": 1.1, "Laid": "buried", "Depth": 1.5, "Color": [0.5, 0.49, 0.46], "Metal": 0, "Fluid": {"Type": "sewage", "Fill": 0.25, "Flow": 0.8}, "Scaled": ["Points"]},
+		{"When": ["river"], "ID": "culvert", "Kind": "pipe", "Name": "Culvert", "Points": [[-600, -140], [-540, -140]], "Radius": 1.6, "Wall": 0.18, "Laid": "ground", "Color": [0.6, 0.59, 0.56], "Metal": 0, "Flanges": 4, "Scaled": ["Points"]},
+		{"When": ["river"], "ID": "ball-in", "Kind": "thing", "Name": "Ball in the culvert", "Model": "showcase-ball", "Size": 0.8, "X": -570, "Y": -140, "Lift": 0.8, "Traits": {"Rigid": {"Shape": "sphere", "Radius": 0.4, "Mass": 20}}, "Scaled": ["X", "Y"]},
+		{"When": ["river"], "ID": "crate-on", "Kind": "thing", "Name": "Crate on the culvert", "Model": "showcase-crate", "Size": 0.8, "X": -560, "Y": -140, "Lift": 4.5, "Traits": {"Rigid": {"Shape": "box", "Size": [0.8, 0.8, 0.8], "Mass": 20}}, "Scaled": ["X", "Y"]},
+		{"When": ["river"], "ID": "steam-line", "Kind": "pipe", "Name": "Steam line", "Points": [[-600, -115], [-520, -115]], "Radius": 0.15, "Laid": "above", "Lift": 1.2, "Color": [0.75, 0.73, 0.7], "Ends": "closed", "Fluid": {"Type": "steam", "Fill": 1, "Pressure": 6}, "Leaks": [{"Along": 40, "Angle": 0, "Size": 0.02}], "Scaled": ["Points"]},
+		{"When": ["river"], "ID": "gas-line", "Kind": "pipe", "Name": "Gas line", "Points": [[-600, -250], [-480, -250], [-470, -262]], "Radius": 0.08, "Laid": "ground", "Ends": "closed", "Color": [0.85, 0.7, 0.1], "Fluid": {"Type": "gas", "Pressure": 4}, "Scaled": ["Points"]},
+		{"ID": "sun", "Kind": "sun", "Latitude": 45, "DayOfYear": 172, "Noon": 180, "Time": 10.5},
+		{"ID": "meadows", "Kind": "grass", "Density": 0.8, "Height": 0.6},
+		{"ID": "groves", "Kind": "grove", "Density": 0.5, "Cover": 0.3},
+		{"ID": "thickets", "Kind": "thicket", "Density": 2, "Cover": 0.2},
+		{"ID": "stones", "Kind": "rocks", "Density": 0.3},
+		{"When": ["mountains"], "ID": "cave-mouth", "Kind": "marker", "Name": "Cave", "X": -540, "Y": -905, "Scaled": ["X", "Y"]},
+		{"When": ["mountains"], "ID": "cave-torch-fork", "Kind": "light", "Name": "Torch", "X": -542.5, "Y": -992, "Z": 48, "Height": 1.75, "Color": "#ff9a48", "Power": 1.1, "Radius": 13, "Flicker": 0.22, "Scaled": ["X", "Y"]},
+		{"When": ["mountains"], "ID": "cave-torch-post-fork", "Kind": "thing", "Name": "", "Model": "torch", "X": -542.5, "Y": -992, "Z": 48, "Size": 1.7, "Scaled": ["X", "Y"]},
+		{"When": ["mountains"], "ID": "cave-torch-hall", "Kind": "light", "Name": "Torch", "X": -496, "Y": -1034, "Z": 47, "Height": 1.75, "Color": "#ff9a48", "Power": 1.1, "Radius": 13, "Flicker": 0.22, "Scaled": ["X", "Y"]},
+		{"When": ["mountains"], "ID": "cave-torch-post-hall", "Kind": "thing", "Name": "", "Model": "torch", "X": -496, "Y": -1034, "Z": 47, "Size": 1.7, "Scaled": ["X", "Y"]},
+		{"When": ["mountains"], "ID": "cave-torch-hall-far", "Kind": "light", "Name": "Torch", "X": -484, "Y": -1046, "Z": 47, "Height": 1.75, "Color": "#ff9a48", "Power": 1.1, "Radius": 13, "Flicker": 0.22, "Scaled": ["X", "Y"]},
+		{"When": ["mountains"], "ID": "cave-torch-post-hall-far", "Kind": "thing", "Name": "", "Model": "torch", "X": -484, "Y": -1046, "Z": 47, "Size": 1.7, "Scaled": ["X", "Y"]},
+		{"When": ["mountains"], "ID": "cave-torch-deep", "Kind": "light", "Name": "Torch", "X": -586, "Y": -1048, "Z": 34, "Height": 1.75, "Color": "#ff9a48", "Power": 1.1, "Radius": 13, "Flicker": 0.22, "Scaled": ["X", "Y"]},
+		{"When": ["mountains"], "ID": "cave-torch-post-deep", "Kind": "thing", "Name": "", "Model": "torch", "X": -586, "Y": -1048, "Z": 34, "Size": 1.7, "Scaled": ["X", "Y"]},
+		{"When": ["mountains"], "ID": "cave-dripstones", "Kind": "dripstones"},
+		{"When": ["mountains"], "ID": "cave-floor", "Kind": "cave-floor"},
+		{"When": ["mountains"], "ID": "cave-crystals", "Kind": "cave-crystals"},
+		{"When": ["mountains"], "ID": "miner", "Kind": "unit", "Name": "Miner", "Team": "blue", "X": -540, "Y": -900, "Speed": 2.2, "Patrol": [[-540, -900, 49], [-540, -990, 48], [-492, -1038, 47], [-540, -990, 48], [-588, -1048, 34], [-540, -990, 48]], "Scaled": ["X", "Y", "Patrol"]},
+		{"When": ["mountains"], "ID": "miner-lantern", "Kind": "light", "Name": "Lantern", "Follow": "miner", "X": 0, "Y": 0, "Height": 2.3, "Color": "#ffd9a0", "Power": 1, "Radius": 12, "Flicker": 0.05}
+	],
+	"Models": {
+		"showcase-ball": {"Group": "props", "Type": "thing", "Size": 1, "Parts": [{"ID": "ball", "Shape": "ball", "Size": [1, 1, 1], "At": [0, 0.5, 0], "Color": "#c8402e"}]},
+		"showcase-crate": {"Group": "props", "Type": "thing", "Size": 1, "Parts": [{"ID": "crate", "Shape": "box", "Size": [1, 1, 1], "At": [0, 0.5, 0], "Color": "#9a6a3a"}]}
+	}
+}

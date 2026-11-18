@@ -1,0 +1,257 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "tunnel",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "carve-tunnel-tunnelwall-0",
+			"type": "TunnelWall",
+			"x": 260,
+			"y": 110,
+			"properties": []
+		},
+		{
+			"id": "carve-tunnel-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Points"
+				}
+			]
+		},
+		{
+			"id": "carve-tunnel-input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "carve-tunnel-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Y"
+				}
+			]
+		},
+		{
+			"id": "carve-tunnel-input-4",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "carve-tunnel-input-5",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Radius"
+				}
+			]
+		},
+		{
+			"id": "carve-tunnel-input-6",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Flat"
+				}
+			]
+		},
+		{
+			"id": "carve-tunnel-input-7",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "carve-tunnel-input-8",
+			"type": "Input",
+			"x": 0,
+			"y": 880,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "carve-tunnel-input-9",
+			"type": "Input",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Corner"
+				}
+			]
+		},
+		{
+			"id": "carve-tunnel-formula-10",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Crust >= 0 && D < 0 ? max(D, Y - (G - Crust)) : D"
+				}
+			]
+		},
+		{
+			"id": "carve-tunnel-input-11",
+			"type": "Input",
+			"x": 0,
+			"y": 1100,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Crust"
+				}
+			]
+		},
+		{
+			"id": "carve-tunnel-input-12",
+			"type": "Input",
+			"x": 0,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "G"
+				}
+			]
+		},
+		{
+			"id": "carve-tunnel-result-13",
+			"type": "Result",
+			"x": 1300,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Density"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "carve-tunnel-link-0",
+			"p1": "carve-tunnel-input-1-out-Value",
+			"p2": "carve-tunnel-tunnelwall-0-in-Points",
+			"kind": "value"
+		},
+		{
+			"id": "carve-tunnel-link-1",
+			"p1": "carve-tunnel-input-2-out-Value",
+			"p2": "carve-tunnel-tunnelwall-0-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "carve-tunnel-link-2",
+			"p1": "carve-tunnel-input-3-out-Value",
+			"p2": "carve-tunnel-tunnelwall-0-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "carve-tunnel-link-3",
+			"p1": "carve-tunnel-input-4-out-Value",
+			"p2": "carve-tunnel-tunnelwall-0-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "carve-tunnel-link-4",
+			"p1": "carve-tunnel-input-5-out-Value",
+			"p2": "carve-tunnel-tunnelwall-0-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "carve-tunnel-link-5",
+			"p1": "carve-tunnel-input-6-out-Value",
+			"p2": "carve-tunnel-tunnelwall-0-in-Flat",
+			"kind": "value"
+		},
+		{
+			"id": "carve-tunnel-link-6",
+			"p1": "carve-tunnel-input-7-out-Value",
+			"p2": "carve-tunnel-tunnelwall-0-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "carve-tunnel-link-7",
+			"p1": "carve-tunnel-input-8-out-Value",
+			"p2": "carve-tunnel-tunnelwall-0-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "carve-tunnel-link-8",
+			"p1": "carve-tunnel-input-9-out-Value",
+			"p2": "carve-tunnel-tunnelwall-0-in-Corner",
+			"kind": "value"
+		},
+		{
+			"id": "carve-tunnel-link-9",
+			"p1": "carve-tunnel-input-11-out-Value",
+			"p2": "carve-tunnel-formula-10-in-Crust",
+			"kind": "value"
+		},
+		{
+			"id": "carve-tunnel-link-10",
+			"p1": "carve-tunnel-tunnelwall-0-out-Distance",
+			"p2": "carve-tunnel-formula-10-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "carve-tunnel-link-11",
+			"p1": "carve-tunnel-input-3-out-Value",
+			"p2": "carve-tunnel-formula-10-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "carve-tunnel-link-12",
+			"p1": "carve-tunnel-input-12-out-Value",
+			"p2": "carve-tunnel-formula-10-in-G",
+			"kind": "value"
+		},
+		{
+			"id": "carve-tunnel-link-13",
+			"p1": "carve-tunnel-formula-10-out-Value",
+			"p2": "carve-tunnel-result-13-in-Value",
+			"kind": "value"
+		}
+	]
+}

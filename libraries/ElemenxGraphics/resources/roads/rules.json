@@ -1,0 +1,8 @@
+{
+	"Motorway": 110,
+	"Grade": {"rail": 0.025, "air": 0.015, "race": 0.06, "street": 0.1, "path": 0.15, "motorway": 0.05, "fast": 0.07, "slow": 0.09, "Fast": 80},
+	"Clearance": {"Catenary": 7, "Other": 5.5},
+	"Meeting": {"local+local": "junction", "air+air": "junction", "local+rail": "crossing", "motorway+motorway": "interchange", "Other": "over"},
+	"Interchange": {"Stack": 130, "Diamond": 80, "Trumpet": 70},
+	"Markings": {"dashed": [3, 6], "dotted": [1, 1.5]}
+}

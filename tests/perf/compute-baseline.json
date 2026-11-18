@@ -1,0 +1,13 @@
+{
+	"noise:value-fbm6": 1477,
+	"noise:perlin-fbm4": 2003.7,
+	"noise:simplex-fbm4": 968.3,
+	"noise:worley-f1": 1528.5,
+	"noise:value-warp": 2526.3,
+	"height:noise": 364.3,
+	"height:relief-graph": 6134.9,
+	"height:sketch-river": 493.8,
+	"chunk:64": 60.4,
+	"way:bridge": 95.4,
+	"way:none": 340.9
+}

@@ -196,5 +196,108 @@ describe('Contract: graphs of blocks as functions, lists and loops, made into th
 			blueprints.Formula('(1 + 2');
 		}).toThrow('Elemenx Blueprints: the formula (1 + 2 expects ) at its end');
 	});
+
+	/* Regression: the run of a graph turned by the Math of the browser, its code by the own one: a building stood a last bit apart. */
+	it('turns by the own Math in the run of a graph, in its Code and in its IR, to the bit', async function () {
+		var own = Elemenx.Compilers.Math();
+		var main = graph('turns', [], {
+			x: ['Number', {Value: 0.7071}], sin: ['Sin', {}], pow: ['Pow', {}], two: ['Number', {Value: 1.37}],
+			angle: ['Formula', {Expression: 'atan2(X, 0.3) * 57.29577951308232 + exp(X) + cos(X * 3.1) + pow(X, 2.5)'}],
+			a: ['Result', {Key: 'Sin'}], b: ['Result', {Key: 'Pow'}], c: ['Result', {Key: 'Angle'}]
+		}, [
+			['x', 'Value', 'sin', 'X'], ['sin', 'Out', 'a', 'Value'], ['x', 'Value', 'pow', 'A'], ['two', 'Value', 'pow', 'B'], ['pow', 'Out', 'b', 'Value'],
+			['x', 'Value', 'angle', 'X'], ['angle', 'Value', 'c', 'Value']
+		]);
+		var run = blueprints.Compile(main).Run({});
+		var functions = Elemenx.Compilers.Load((await compile({From: 'blueprint', To: 'js', Value: main, Options: {Name: 'turns'}})).Value);
+		var code = blueprints.Code(main);
+
+		expect(run.Sin).toBe(own.sin(0.7071));
+		expect(run.Pow).toBe(own.pow(0.7071, 1.37));
+		expect(run.Angle).toBe(own.atan2(0.7071, 0.3) * 57.29577951308232 + own.exp(0.7071) + own.cos(0.7071 * 3.1) + own.pow(0.7071, 2.5));
+		expect(functions.g_turns({}, {})).toEqual(run);
+		expect(code ? code.Run({}, {}) : run).toEqual(run);
+	});
 });
 
+
+describe('Contract: a generator of numbers as a typed function of the IR, for js and wasm (Numeric, NumericCode, Wasm)', function () {
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:Blueprints', 'service:Noise', 'service:SceneTerrainGenerator']);
+
+		blueprints = Elemenx.Service('Blueprints');
+	});
+
+	/* The graph of relief of a ground: noise by its spec, sums, smoothsteps, three results. */
+	it('makes the very results of its Code, its parameters fixed, in js and in wasm', function () {
+		var relief = Elemenx.Service('SceneTerrainGenerator').LibraryRelief({Size: 2000, Height: 60, Seed: 'contract'});
+		var code = blueprints.Code(relief);
+		var made = blueprints.NumericCode(relief, {Ridges: 0.6});
+		var wasm = Elemenx.Compilers.Instance(blueprints.Wasm(made.Numeric));
+		var input = [];
+		var output;
+		var i;
+
+		expect(made.Keys).toEqual(['Height', 'Moisture', 'Temperature']);
+		expect(made.Numeric.Inputs).toEqual([{Name: 'X', Type: 'float'}, {Name: 'Z', Type: 'float'}]);
+		expect(made.Numeric.Returns).toBe('vec3');
+		/* Made once for the same graph and values. */
+		expect(blueprints.NumericCode(relief, {Ridges: 0.6})).toBe(made);
+
+		for (i = 0; i < 200; i++)
+			input.push(i * 37.3 - 3000, i * -21.7 + 900);
+
+		output = wasm.Batch('g_main', input, 200);
+
+		for (i = 0; i < 200; i++) {
+			var told = code.Run({Ridges: 0.6}, {X: input[i * 2], Z: input[i * 2 + 1]});
+
+			expect(made.Run({}, {X: input[i * 2], Z: input[i * 2 + 1]})).toEqual(told);
+			expect([output[i * 3], output[i * 3 + 1], output[i * 3 + 2]]).toEqual([told.Height, told.Moisture, told.Temperature]);
+		}
+
+		/* A worker makes it of the text. */
+		expect(new Function('B', 'M', 'N', made.Source)()({}, {X: 5, Z: 7})).toEqual(made.Run({}, {X: 5, Z: 7}));
+	});
+
+	it('takes vectors and choices, and says what of a graph is not of numbers', function () {
+		var made = blueprints.NumericCode(graph('bent', [], {
+			x: ['Input', {Name: 'X'}], v: ['Vector', {X: 1, Y: 2, Z: 3}], scaled: ['Multiply'], sin: ['Sin'], split: ['Split'], bigger: ['Compare', {Operator: '>'}], pick: ['Select'], out: ['Result', {Key: 'Value'}]
+		}, [
+			['v', 'Value', 'scaled', 'A'], ['x', 'Value', 'scaled', 'B'], ['scaled', 'Out', 'sin', 'X'], ['sin', 'Out', 'split', 'Vector'],
+			['split', 'X', 'bigger', 'A'], ['split', 'Y', 'bigger', 'B'], ['bigger', 'Out', 'pick', 'Test'], ['split', 'X', 'pick', 'A'], ['split', 'Z', 'pick', 'B'], ['pick', 'Out', 'out', 'Value']
+		]), {});
+		var told = blueprints.Numeric(graph('named', [], {t: ['Text', {Value: 'a'}], out: ['Result', {Key: 'Value'}]}, [['t', 'Value', 'out', 'Value']]), {});
+		var math = Elemenx.Compilers.Math();
+		[0.3, 1.7, -2].forEach(function (x) {
+			var s = [math.sin(x), math.sin(2 * x), math.sin(3 * x)];
+
+			expect(made.Run({}, {X: x}).Value).toBe(s[0] > s[1] ? s[0] : s[2]);
+		});
+
+		expect(told.Diagnostics[0].Text).toBe('Elemenx Blueprints: a block Text is not of numbers');
+	});
+});
+
+describe('Regression: a generator of numbers made once for its graph and the values of its parameters', function () {
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:Blueprints', 'service:Noise', 'service:SceneTerrainGenerator']);
+
+		blueprints = Elemenx.Service('Blueprints');
+	});
+
+	/* Hash leaves the values of the parameters out: two grounds of one seed and other scales had the function of the first. */
+	it('makes another function of the same blocks with other values of its parameters', function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var near = blueprints.NumericCode(terrain.LibraryRelief({Size: 300, Height: 40, Water: 0, Scale: 60, Seed: 'test'}), {}, null, ['Height']);
+		var far = blueprints.NumericCode(terrain.LibraryRelief({Size: 300, Height: 40, Water: 0, Scale: 260, Seed: 'test'}), {}, null, ['Height']);
+
+		expect(far).not.toBe(near);
+		expect(far.Run({}, {X: 37, Z: -12}).Height).not.toBe(near.Run({}, {X: 37, Z: -12}).Height);
+		expect(near.Run({}, {X: 37, Z: -12}).Height).toBe(terrain.Flat({Size: 300, Height: 40, Water: 0, Scale: 60, Seed: 'test', Compute: 'js'}).Height(37, -12) / 40);
+	});
+});

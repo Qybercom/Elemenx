@@ -45,12 +45,16 @@
  *   (DataVectors(key): their keys; Vectored(options): options with them; TownsFor(options): its settlements). UseData(key,
  *   data), DataOf(key), TileName, TileDirection, TilePlace (the tiles on the faces of the cube, by equal angles) and
  *   TileValues (the samples of a tile, what PlanetData.Bake makes).
+ * - Defaults and Rivers: the settings of a planet made of none and the numbers of its rivers (resources/planet).
+ *   Kind(kind): the numbers of a kind of settlement on a planet (Share, Apart, Core, Fields, Lights, Glow, Use);
+ *   KindByShare(share): the kind of a place by its share of all of them, the best first; Warmth(celsius): the warmth
+ *   of a temperature, 0 at -25 degrees to 1 at 35, what its lands are chosen by.
  * The same functions run in workers and in Node: they read no page.
  */
 Elemenx.Service('ScenePlanet', {
 	$Meta: {
 		Description: 'A planet as one continuous function of a direction: painted continents, tectonic plates, winds, climate and biomes, as fine as it is asked.',
-		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'ViewTurn(yaw, pitch, roll)', 'Map(options, rows, width, height, overlay)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'UseData(key, data)', 'AddTiles(key, names)', 'DataOf(key)', 'Ruled(options)', 'DataVectors(key)', 'Vectored(options)', 'TownsFor(options)', 'TileName(layer, face, level, x, y)', 'TileDirection(face, s, t)', 'TilePlace(direction)', 'TileValues(options, layer, face, level, x, y, size, table)', 'Settlements(options, count)', 'PlacedTowns(options, towns)', 'PlacedRivers(options, rivers)', 'UseSettlements(key, towns)', 'Highways(options, step)', 'UseHighways(key, roads)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)']
+		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'ViewTurn(yaw, pitch, roll)', 'Map(options, rows, width, height, overlay)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'UseData(key, data)', 'AddTiles(key, names)', 'DataOf(key)', 'Ruled(options)', 'DataVectors(key)', 'Vectored(options)', 'TownsFor(options)', 'TileName(layer, face, level, x, y)', 'TileDirection(face, s, t)', 'TilePlace(direction)', 'TileValues(options, layer, face, level, x, y, size, table)', 'Settlements(options, count)', 'PlacedTowns(options, towns)', 'PlacedRivers(options, rivers)', 'UseSettlements(key, towns)', 'Highways(options, step)', 'UseHighways(key, roads)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)', 'Kind(kind)', 'KindByShare(share)', 'Warmth(celsius)']
 	},
 
 	/* The kinds of strokes of a paint. */
@@ -80,15 +84,16 @@ Elemenx.Service('ScenePlanet', {
 		/* Its rivers, settlements and highways are those of its data (vectors), unless they are given. */
 		var given = data ? Object.assign({}, origin, {Radius: data.Manifest.Radius, Seed: data.Manifest.Seed}, this.DataVectors(options.Data), data.Edits ? {Edits: data.Edits.Edits || [], Baked: data.Edits.Baked || {}, Regions: data.Edits.Regions || []} : {}, options) : options || {};
 		var noise = this.$Service('Noise');
-		var radius = Number(given.Radius) || 6371;
-		var seed = given.Seed === undefined ? 'planet' : String(given.Seed);
-		var ocean = given.Ocean === undefined ? 0.65 : Number(given.Ocean);
-		var relief = Number(given.Relief) || 8000;
+		var defaults = this.Defaults;
+		var radius = Number(given.Radius) || defaults.Radius;
+		var seed = given.Seed === undefined ? defaults.Seed : String(given.Seed);
+		var ocean = given.Ocean === undefined ? defaults.Ocean : Number(given.Ocean);
+		var relief = Number(given.Relief) || defaults.Relief;
 		/* How mountainous (0 flat, 0.5 as the Earth, 1 ranges everywhere): how much of the land its chains take, how high and sharp. */
-		var mountains = given.Mountains === undefined || given.Mountains === null || given.Mountains === '' ? 0.5 : Math.max(0, Math.min(1, Number(given.Mountains) || 0));
-		var depth = Number(given.Depth) || 6000;
-		var detail = Number(given.Detail) || 2;
-		var count = Math.max(2, Math.round(Number(given.Plates) || 14));
+		var mountains = given.Mountains === undefined || given.Mountains === null || given.Mountains === '' ? defaults.Mountains : Math.max(0, Math.min(1, Number(given.Mountains) || 0));
+		var depth = Number(given.Depth) || defaults.Depth;
+		var detail = Number(given.Detail) || defaults.Detail;
+		var count = Math.max(2, Math.round(Number(given.Plates) || defaults.Plates));
 		/* Octaves of the coasts: from a feature of a quarter of the planet down to Detail. */
 		var octaves = Math.max(3, Math.min(16, Math.ceil(Math.log(radius * 1.5 / detail) / Math.LN2)));
 		var shape = noise.Make({Type: 'simplex', Seed: seed + '-shape', Fractal: 'fbm', Octaves: octaves, Gain: 0.52});
@@ -113,7 +118,7 @@ Elemenx.Service('ScenePlanet', {
 		var grain = noise.Make({Type: 'simplex', Seed: seed + '-grain', Fractal: 'fbm', Octaves: 6, Gain: 0.48});
 		var weather = noise.Make({Type: 'simplex', Seed: seed + '-weather', Fractal: 'fbm', Octaves: 3});
 		/* Its lands: BiomeList when given (a worker has no registry of them), else of their names. */
-		var biomes = this.$Service('SceneTerrainGenerator').Biomes(given.BiomeList ? {BiomeList: given.BiomeList} : {Biomes: given.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe']});
+		var biomes = this.$Service('SceneTerrainGenerator').Biomes(given.BiomeList ? {BiomeList: given.BiomeList} : {Biomes: given.Biomes || this.$Service('SceneTerrainGenerator').DefaultBiomes});
 		var strokes = (given.Paint || []).map(function (stroke) {
 			return Object.assign({}, stroke, {Directions: (stroke.Points || []).map(function (point) {
 				return self.Direction(Number(point[0]), Number(point[1]));
@@ -401,7 +406,7 @@ Elemenx.Service('ScenePlanet', {
 
 		/* The length of a bend of a river of a flow (km): eleven times its width, a quarter of a kilometre at least. */
 		function bendLength (flow) {
-			return Math.max(0.25, 11 * 0.015 * Math.sqrt(Math.max(1, flow)));
+			return Math.max(0.25, self.Rivers.Bend * self.RiverWidth(flow));
 		}
 
 		/*
@@ -417,7 +422,7 @@ Elemenx.Service('ScenePlanet', {
 			var along = segment.AlongA + (segment.AlongB - segment.AlongA) * t;
 			var phase = segment.PhaseA + (segment.PhaseB - segment.PhaseA) * t;
 			var length = bendLength(flow);
-			var amount = 2 * 0.015 * Math.sqrt(Math.max(1, flow)) * (0.3 + 0.7 * (1 - smoothstep(300, 1200, level)));
+			var amount = 2 * self.RiverWidth(flow) * (0.3 + 0.7 * (1 - smoothstep(300, 1200, level)));
 
 			course.Joins.forEach(function (join) {
 				amount *= smoothstep(0, length * 1.5, Math.abs(along - join));
@@ -603,10 +608,8 @@ Elemenx.Service('ScenePlanet', {
 
 		/* The tectonic plates: their middles over the globe as a spiral spreads them, moved by the seed; each its way. */
 		for (i = 0; i < count; i++) {
-			var y = 1 - (i + 0.5) / count * 2;
-			var around = Math.sqrt(Math.max(0, 1 - y * y));
-			var turn = i * 2.39996 + random() * 1.2;
-			var middle = normalize([Math.cos(turn) * around + (random() - 0.5) * 0.4, y + (random() - 0.5) * 0.4, Math.sin(turn) * around + (random() - 0.5) * 0.4]);
+			var spiral = self.$Service('Math').Spiral(i, count, random() * 1.2);
+			var middle = normalize([spiral[0] + (random() - 0.5) * 0.4, spiral[1] + (random() - 0.5) * 0.4, spiral[2] + (random() - 0.5) * 0.4]);
 			var axes = frame(middle);
 			var way = random() * Math.PI * 2;
 			var speed = 0.3 + random() * 0.7;
@@ -677,9 +680,7 @@ Elemenx.Service('ScenePlanet', {
 			var k;
 
 			for (k = 0; k < 600; k++) {
-				var y = 1 - (k + 0.5) / 600 * 2;
-				var around = Math.sqrt(Math.max(0, 1 - y * y));
-				var p = [Math.cos(k * 2.39996) * around, y, Math.sin(k * 2.39996) * around];
+				var p = self.$Service('Math').Spiral(k, 600);
 
 				values.push((shape.At(p[0] * 1.6, p[1] * 1.6, p[2] * 1.6) - 0.5) * 2.2 + (plate(p).Oceanic ? -0.25 : 0.25));
 			}
@@ -1287,7 +1288,7 @@ Elemenx.Service('ScenePlanet', {
 			if (!best)
 				return height;
 
-			var valley = 0.6 * Math.pow(best.Flow, 0.4);
+			var valley = self.RiverValley(best.Flow);
 			var bed = Math.max(2, Math.min(best.Level, height));
 
 			if (best.Far >= valley) return height;
@@ -1394,9 +1395,9 @@ Elemenx.Service('ScenePlanet', {
 				climate = null;
 
 			if (climate) {
-				celsius = climate.Values[0] / 255 * 90 - 40;
+				celsius = climate.Values[0] / 255 * (self.ClimateCode.High - self.ClimateCode.Low) + self.ClimateCode.Low;
 				moisture = climate.Values[1] / 255;
-				wind = [(climate.Values[2] / 255 - 0.5) * 32, (climate.Values[3] / 255 - 0.5) * 32];
+				wind = [(climate.Values[2] / 255 - 0.5) * self.ClimateCode.Wind * 2, (climate.Values[3] / 255 - 0.5) * self.ClimateCode.Wind * 2];
 			}
 			/* Of its options: its winds, its warmth and how wet it is. */
 			else {
@@ -1453,12 +1454,12 @@ Elemenx.Service('ScenePlanet', {
 
 				/* Of its climate: the lands that hold there, each by how well (Mixed: the picture of a square blends their colors). */
 				if (!biome && biomes) {
-					mixed = self.$Service('SceneTerrainGenerator').BiomeOf(biomes, height / relief, moisture, Math.max(0, Math.min(1, (celsius + 25) / 60))).List;
+					mixed = self.$Service('SceneTerrainGenerator').BiomeOf(biomes, height / relief, moisture, self.Warmth(celsius)).List;
 					biome = mixed[0].Name;
 				}
 			}
 
-			return {Direction: p, Elevation: height, Land: height > 0, Plate: {ID: tectonic.ID, Oceanic: tectonic.Oceanic, Boundary: tectonic.Boundary, Push: tectonic.Push}, Wind: wind, Celsius: celsius, Temperature: Math.max(0, Math.min(1, (celsius + 25) / 60)), Moisture: moisture, Biome: biome, Mixed: mixed};
+			return {Direction: p, Elevation: height, Land: height > 0, Plate: {ID: tectonic.ID, Oceanic: tectonic.Oceanic, Boundary: tectonic.Boundary, Push: tectonic.Push}, Wind: wind, Celsius: celsius, Temperature: self.Warmth(celsius), Moisture: moisture, Biome: biome, Mixed: mixed};
 		}
 
 		/* The last point sampled whole, for its slope after (Slope). */
@@ -1951,9 +1952,10 @@ Elemenx.Service('ScenePlanet', {
 		var gathered = new Float32Array(total);
 		var order = new Int32Array(total);
 		var done = new Uint8Array(total);
-		var heap = [];
+		var heap = self.$Service('Math').Queue();
 		var count = 0;
-		var limit = least || 24;
+		/* A river: what drains 40 cells and more (the one number of all its callers). */
+		var limit = least || 40;
 		var rivers = [];
 		var i;
 		var k;
@@ -1985,52 +1987,15 @@ Elemenx.Service('ScenePlanet', {
 			return list;
 		}
 
+		/* The least first ([value, cell]): the Queue of Math. */
 		function push (at, value) {
-			var place = heap.length;
-
-			heap.push([value, at]);
-
-			while (place > 0) {
-				var up = (place - 1) >> 1;
-				if (heap[up][0] <= heap[place][0]) break;
-
-				var kept = heap[up];
-
-				heap[up] = heap[place];
-				heap[place] = kept;
-				place = up;
-			}
+			heap.Push({F: value, At: at});
 		}
 
 		function pop () {
-			var top = heap[0];
-			var last = heap.pop();
-			var place = 0;
+			var top = heap.Pop();
 
-			if (heap.length) {
-				heap[0] = last;
-
-				for (;;) {
-					var left = place * 2 + 1;
-					var right = left + 1;
-					var least2 = place;
-					if (left < heap.length && heap[left][0] < heap[least2][0])
-						least2 = left;
-
-					if (right < heap.length && heap[right][0] < heap[least2][0])
-						least2 = right;
-
-					if (least2 === place) break;
-
-					var kept = heap[least2];
-
-					heap[least2] = heap[place];
-					heap[place] = kept;
-					place = least2;
-				}
-			}
-
-			return top;
+			return [top.F, top.At];
 		}
 
 		/* The sea first: each cell of it a mouth. */
@@ -2045,7 +2010,7 @@ Elemenx.Service('ScenePlanet', {
 			}
 		}
 
-		while (heap.length) {
+		while (heap.Size()) {
 			var top = pop();
 			var at = top[1];
 
@@ -2164,6 +2129,7 @@ Elemenx.Service('ScenePlanet', {
 	 * of a planet (a key of UseSettlements, or the list).
 	 */
 	Settlements: function (options, count) {
+		var self = this;
 		var planet = this.Planet(options);
 		var tries = count || 20000;
 		var radius = planet.Radius;
@@ -2173,11 +2139,10 @@ Elemenx.Service('ScenePlanet', {
 		var i;
 
 		for (i = 0; i < tries; i++) {
-			var y = 1 - (i + 0.5) / tries * 2;
-			var around = Math.sqrt(Math.max(0, 1 - y * y));
+			var spiral = this.$Service('Math').Spiral(i, tries);
 			/* Off the even spiral by up to its step, at random: towns never stand in rows. */
 			var step = Math.sqrt(4 * Math.PI / tries);
-			var p = this.Unit([Math.cos(i * 2.39996) * around + (random() - 0.5) * step * 1.4, y + (random() - 0.5) * step * 1.4, Math.sin(i * 2.39996) * around + (random() - 0.5) * step * 1.4]);
+			var p = this.Unit([spiral[0] + (random() - 0.5) * step * 1.4, spiral[1] + (random() - 0.5) * step * 1.4, spiral[2] + (random() - 0.5) * step * 1.4]);
 			var sample = planet.Sample(p, 20);
 			var score;
 			var river;
@@ -2204,8 +2169,8 @@ Elemenx.Service('ScenePlanet', {
 		/* The best first, each apart from those kept: a city by 400 km, a town by 120, a village by 40. */
 		places.forEach(function (place, index) {
 			var share = index / Math.max(1, places.length);
-			var kind = share < 0.015 ? 'city' : share < 0.12 ? 'town' : 'village';
-			var apart = (kind === 'city' ? 400 : kind === 'town' ? 120 : 40) / radius;
+			var kind = self.KindByShare(share);
+			var apart = self.Kind(kind).Apart / radius;
 			var near = kept.some(function (other) {
 				var d = place.Point[0] * other.Point[0] + place.Point[1] * other.Point[1] + place.Point[2] * other.Point[2];
 
@@ -2251,7 +2216,64 @@ Elemenx.Service('ScenePlanet', {
 	 */
 	Rules: {},
 
-	Carried: ['Rules'],
+	/*
+	 * Its rivers (resources/planet/rivers): Width (km a root of the flow), Bend (a bend is that many widths long), Valley and
+	 * ValleyPower (km, of the flow), Channel (km a root of the flow), Color, Highway (the colour of a highway by them).
+	 */
+	Rivers: {Width: 0.015, Bend: 11, Valley: 0.6, ValleyPower: 0.4, Channel: 0.04, Color: [0.16, 0.34, 0.58], Highway: [0.42, 0.4, 0.38]},
+
+	/*
+	 * The numbers of a kind of settlement on a planet (Planet of resources/terrain/settlement-kinds, of SceneTerrainGenerator):
+	 * Share (of the places, the best first), Apart (km from another), Core and Fields (km), Lights (km its light reaches),
+	 * Glow (how bright), Use (its number in the picture of what the ground is used for); a kind of none, those of a village.
+	 */
+	Kind: function (kind) {
+		var kinds = this.$Service('SceneTerrainGenerator').SettlementKinds;
+
+		return kinds[kind] && kinds[kind].Planet || kinds.village.Planet;
+	},
+
+	/* The kind of a place by its share of all of them, the best first: city, town, then village (their Shares one after another). */
+	KindByShare: function (share) {
+		var kinds = this.$Service('SceneTerrainGenerator').SettlementKinds;
+		var sum = 0;
+		var found = 'village';
+
+		['city', 'town', 'village'].some(function (kind) {
+			sum += kinds[kind].Planet.Share;
+			found = kind;
+
+			return share < sum;
+		});
+
+		return found;
+	},
+
+	/* How a tile of its climate keeps it in bytes: degrees Celsius from Low to High, winds of -Wind to Wind m/s. */
+	ClimateCode: {Low: -40, High: 50, Wind: 16},
+
+	/* The warmth of a temperature, 0 at -25 degrees Celsius to 1 at 35: what the lands of a planet are chosen by (BiomeOf). */
+	Warmth: function (celsius) {
+		return Math.max(0, Math.min(1, (celsius + 25) / 60));
+	},
+
+	/* The width of a river of a flow, km; its valley; the channel of its water as a globe paints it. */
+	RiverWidth: function (flow) {
+		return this.Rivers.Width * Math.sqrt(Math.max(1, flow));
+	},
+
+	RiverValley: function (flow) {
+		return this.Rivers.Valley * Math.pow(flow, this.Rivers.ValleyPower);
+	},
+
+	RiverChannel: function (flow) {
+		return this.Rivers.Channel * Math.sqrt(flow);
+	},
+
+	/* The numbers of a planet that tells none (resources/planet/defaults): Seed, Radius, Ocean, Relief, Mountains, Depth, Plates, Detail. */
+	Defaults: {},
+
+	Carried: ['Rules', 'Defaults', 'Rivers', 'ClimateCode'],
 
 	/* What a rule reads of the place: the names of its inputs (the climate and the rivers are reckoned only for one that reads them). */
 	RuleReads: function (graph) {
@@ -2267,7 +2289,9 @@ Elemenx.Service('ScenePlanet', {
 	/* The code of a rule of a planet: of its seed and the values given to it, in a copy of it ({Seed} and its parameters). {Source, Run, Reads}; null with none. */
 	RuleCode: function (graph, name, seed, values) {
 		var blueprints = this.$Service('Blueprints');
-		var made = blueprints.Code(blueprints.Fill(JSON.parse(JSON.stringify(blueprints.Read(graph))), Object.assign({Seed: seed + ':' + name}, values || {})));
+		var filled = blueprints.Fill(JSON.parse(JSON.stringify(blueprints.Read(graph))), Object.assign({Seed: seed + ':' + name}, values || {}));
+		/* Of numbers: typed (Blueprints.NumericCode, its values filled in); else its Code. */
+		var made = blueprints.NumericCode && blueprints.NumericCode(filled, {}) || blueprints.Code(filled);
 
 		return made ? {Source: made.Source, Run: made.Run, Reads: this.RuleReads(graph)} : null;
 	},
@@ -2324,6 +2348,9 @@ Elemenx.Service('ScenePlanet', {
 		var self = this;
 		var found = typeof Elemenx !== 'undefined' && Elemenx.Resources ? Elemenx.Resources('Blueprints') || [] : [];
 
+		this.Defaults = Object.assign({}, typeof Elemenx !== 'undefined' && Elemenx.Resources ? Elemenx.Resources('Data', 'ElemenxGraphics/planet/defaults') || {} : {});
+		this.Rivers = Object.assign({}, this.Rivers, typeof Elemenx !== 'undefined' && Elemenx.Resources ? Elemenx.Resources('Data', 'ElemenxGraphics/planet/rivers') || {} : {});
+
 		found.forEach(function (name) {
 			var match = /(^|\/)rules\/([^/]+)$/.exec(name);
 			if (match)
@@ -2371,10 +2398,10 @@ Elemenx.Service('ScenePlanet', {
 
 				found.forEach(function (town) {
 					/* Never less than a texel: from far a village is a speck of light, not nothing. */
-					var reach = Math.max((town.Kind === 'city' ? 40 : town.Kind === 'town' ? 14 : 6) * (0.6 + town.Size * 0.6) / radius, Math.PI / 2 / size * 1.3);
+					var reach = Math.max(self.Kind(town.Kind).Lights * (0.6 + town.Size * 0.6) / radius, Math.PI / 2 / size * 1.3);
 					var d = Math.acos(Math.max(-1, Math.min(1, way[0] * town.Point[0] + way[1] * town.Point[1] + way[2] * town.Point[2])));
 					if (d < reach)
-						light += Math.pow(1 - d / reach, 1.5) * (town.Kind === 'city' ? 1 : town.Kind === 'town' ? 0.7 : 0.45);
+						light += Math.pow(1 - d / reach, 1.5) * self.Kind(town.Kind).Glow;
 				});
 
 				data[y * size + x] = Math.min(255, Math.round(light * 255));
@@ -2420,7 +2447,7 @@ Elemenx.Service('ScenePlanet', {
 			var start = self.CellAt(radius, size, from);
 			var goal = self.CellAt(radius, size, to);
 			var goalPoint = self.CellCenter(goal);
-			var heap = [];
+			var heap = self.$Service('Math').Queue();
 			var cost = {};
 			var came = {};
 			var closed = {};
@@ -2430,46 +2457,11 @@ Elemenx.Service('ScenePlanet', {
 			var path = [];
 
 			function push (node) {
-				var at = heap.push(node) - 1;
-
-				while (at > 0 && heap[(at - 1) >> 1].F > heap[at].F) {
-					var up = (at - 1) >> 1;
-					var swap = heap[up];
-
-					heap[up] = heap[at];
-					heap[at] = swap;
-					at = up;
-				}
+				heap.Push(node);
 			}
 
 			function pop () {
-				var top = heap[0];
-				var last = heap.pop();
-				var at = 0;
-
-				if (heap.length) {
-					heap[0] = last;
-
-					for (;;) {
-						var left = at * 2 + 1;
-						var least = at;
-						if (left < heap.length && heap[left].F < heap[least].F)
-							least = left;
-
-						if (left + 1 < heap.length && heap[left + 1].F < heap[least].F)
-							least = left + 1;
-
-						if (least === at) break;
-
-						var swap = heap[least];
-
-						heap[least] = heap[at];
-						heap[at] = swap;
-						at = least;
-					}
-				}
-
-				return top;
+				return heap.Pop();
 			}
 
 			cells[start.ID] = start;
@@ -2477,7 +2469,7 @@ Elemenx.Service('ScenePlanet', {
 
 			push({ID: start.ID, F: arc(self.CellCenter(start), goalPoint)});
 
-			while (heap.length && visited < 30000) {
+			while (heap.Size() && visited < 30000) {
 				current = pop();
 
 				if (closed[current.ID]) continue;
@@ -2760,6 +2752,7 @@ Elemenx.Service('ScenePlanet', {
 	 * the next plate by tens, and how they meet (Push, -2 to 2).
 	 */
 	TileValues: function (options, layer, face, level, x, y, size, table) {
+		var self = this;
 		var bare = Object.assign({}, options);
 		var planet;
 		var count = 1 << level;
@@ -2793,10 +2786,10 @@ Elemenx.Service('ScenePlanet', {
 					made = layer === 'Climate' ? planet.Sample(direction, finest) : planet.Plate(direction);
 
 					if (layer === 'Climate') {
-						values[k] = Math.round(Math.max(0, Math.min(1, (made.Celsius + 40) / 90)) * 255);
+						values[k] = Math.round(Math.max(0, Math.min(1, (made.Celsius - self.ClimateCode.Low) / (self.ClimateCode.High - self.ClimateCode.Low))) * 255);
 						values[k + 1] = Math.round(Math.max(0, Math.min(1, made.Moisture)) * 255);
-						values[k + 2] = Math.round(Math.max(0, Math.min(1, made.Wind[0] / 32 + 0.5)) * 255);
-						values[k + 3] = Math.round(Math.max(0, Math.min(1, made.Wind[1] / 32 + 0.5)) * 255);
+						values[k + 2] = Math.round(Math.max(0, Math.min(1, made.Wind[0] / (self.ClimateCode.Wind * 2) + 0.5)) * 255);
+						values[k + 3] = Math.round(Math.max(0, Math.min(1, made.Wind[1] / (self.ClimateCode.Wind * 2) + 0.5)) * 255);
 					}
 					else {
 						values[k] = Math.min(255, made.ID);
@@ -2999,12 +2992,12 @@ Elemenx.Service('ScenePlanet', {
 				/* A big river shows on the globe: a line of its water where it passes the texel. */
 				var river = sample.Land ? planet.River([way[0] / length, way[1] / length, way[2] / length]) : null;
 				if (river && river.Flow > 60 && river.Far < Math.PI / 2 * planet.Radius / size * 0.55)
-					color = [0.16, 0.36, 0.62];
+					color = this.Rivers.Color;
 
 				/* A highway too: a grey line. */
 				var road = sample.Land ? planet.Highway([way[0] / length, way[1] / length, way[2] / length]) : null;
 				if (road && road.Far < Math.PI / 2 * planet.Radius / size * 0.35)
-					color = [0.42, 0.4, 0.38];
+					color = this.Rivers.Highway;
 
 				data[at] = color[0] * 255;
 				data[at + 1] = color[1] * 255;
@@ -3607,7 +3600,7 @@ Elemenx.Service('ScenePlanet', {
 		var field;
 
 		if (!given.BiomeList)
-			given.BiomeList = terrain.Biomes({Biomes: given.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe']});
+			given.BiomeList = terrain.Biomes({Biomes: given.Biomes || this.$Service('SceneTerrainGenerator').DefaultBiomes});
 
 		planet = this.Planet(given);
 
@@ -3620,7 +3613,7 @@ Elemenx.Service('ScenePlanet', {
 		field = {
 			Options: {Planet: given},
 			Radius: planet.Radius,
-			Height: (Number(given.Relief) || 8000) / 1000,
+			Height: (Number(given.Relief) || this.Defaults.Relief) / 1000,
 			Ocean: 1,
 			Type: 'terran',
 			Painted: true,
@@ -3663,15 +3656,15 @@ Elemenx.Service('ScenePlanet', {
 				var plain;
 
 				/* A highway: a grey line of its width or of the step, the finer the nearer. */
-				if (road && road.Far < Math.max(0.012, (step || 0) * 0.35)) return [0.42, 0.4, 0.38];
+				if (road && road.Far < Math.max(0.012, (step || 0) * 0.35)) return self.Rivers.Highway;
 
 				if (!river)
 					return color;
 
-				channel = Math.max(0.04 * Math.sqrt(river.Flow), (step || 0) * 0.55);
-				plain = 0.6 * Math.pow(river.Flow, 0.4);
+				channel = Math.max(self.RiverChannel(river.Flow), (step || 0) * 0.55);
+				plain = self.RiverValley(river.Flow);
 
-				if (river.Far < channel && river.Flow > Math.min(60, (step || 0) * 1.5)) return [0.16, 0.34, 0.58];
+				if (river.Far < channel && river.Flow > Math.min(60, (step || 0) * 1.5)) return self.Rivers.Color;
 
 				if (river.Far < plain)
 					return [color[0] * 0.85 + 0.03, color[1] * 0.9 + 0.08, color[2] * 0.85];
@@ -3854,8 +3847,8 @@ Elemenx.Service('ScenePlanet', {
 			for (j = 0; j < towns.length; j++) {
 				var town = towns[j];
 				var far = Math.acos(Math.max(-1, Math.min(1, up[0] * town.Point[0] + up[1] * town.Point[1] + up[2] * town.Point[2]))) * field.Radius;
-				var core = (town.Kind === 'city' ? 0.9 : town.Kind === 'town' ? 0.45 : 0.18) * (0.8 + town.Size * 0.4);
-				var fields = (town.Kind === 'city' ? 30 : town.Kind === 'town' ? 14 : 5) * (0.7 + town.Size * 0.6);
+				var core = self.Kind(town.Kind).Core * (0.8 + town.Size * 0.4);
+				var fields = self.Kind(town.Kind).Fields * (0.7 + town.Size * 0.6);
 				var rag = (wave(x / 2.3, y / 2.3, 71) - 0.5) * 0.5 + (wave(x / 0.7, y / 0.7, 72) - 0.5) * 0.2;
 				var houses;
 
@@ -3967,19 +3960,19 @@ Elemenx.Service('ScenePlanet', {
 					road = planet.Highway(up);
 
 					if (river) {
-						var channel = 0.04 * Math.sqrt(river.Flow);
-						var plain = 0.6 * Math.pow(river.Flow, 0.4);
+						var channel = self.RiverChannel(river.Flow);
+						var plain = self.RiverValley(river.Flow);
 						var wet = river.Flow > 25 ? covered(channel, river.Far, texel) : 0;
 
 						if (river.Far < plain)
 							paint = mix(paint, [paint[0] * 0.85 + 0.03, paint[1] * 0.9 + 0.08, paint[2] * 0.85], smooth(plain, plain * 0.5, river.Far));
 
-						paint = mix(paint, [0.16, 0.34, 0.58], wet);
+						paint = mix(paint, self.Rivers.Color, wet);
 						water = Math.max(water, wet);
 					}
 
 					if (road)
-						paint = mix(paint, [0.42, 0.4, 0.38], covered(0.015, road.Far, texel) * 0.8);
+						paint = mix(paint, self.Rivers.Highway, covered(0.015, road.Far, texel) * 0.8);
 				}
 
 				color[o] = Math.round(Math.max(0, Math.min(1, paint[0])) * 255);
@@ -3993,7 +3986,7 @@ Elemenx.Service('ScenePlanet', {
 				normal[o + 3] = Math.round(woods(sample, height, slope) * (1 - water) * (1 - used.Farm * 0.9) * (1 - used.Built) * 255);
 				use[o] = Math.round(used.Farm * (1 - water) * 255);
 				use[o + 1] = Math.round(used.Built * (1 - water) * 255);
-				use[o + 2] = used.Kind === 'city' ? 255 : used.Kind === 'town' ? 170 : 85;
+				use[o + 2] = self.Kind(used.Kind).Use;
 				/* Its sand of dunes (the Ground shader draws them of it). */
 				use[o + 3] = Math.round(arid.Dry * arid.Erg * (1 - water) * (1 - used.Built) * 255);
 				/* How much of it snow lies on (its ground near is of the snow of its biome there). */

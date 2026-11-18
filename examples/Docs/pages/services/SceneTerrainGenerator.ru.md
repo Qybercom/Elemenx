@@ -1,7 +1,7 @@
 <!-- generated -->
 # SceneTerrainGenerator
 
-Земля игры, непрерывная: высоты из шума в любой точке (без клеток), её сетки кусками и пути по ней. Flat(options) — земля плоской карты: Size (1000), Height (высота самых высоких холмов, 60), Water (уровень моря от 0 до 1, 0.35), Scale (размер холмов, 180), Ridges (доля гор, 0.4), Seed; её методы Height(x, z) (ниже 0 — под морем), Normal(x, z), Slope(x, z) (0 — ровно, 1 — стена), Walkable(x, z, options) (MaxSlope, Swim, Blocked(x, z)), Chunk(x, z, size, resolution) — геометрия квадрата с цветами высот и склонов и юбкой под краями, Path({X, Z}, {X, Z}, options) — путь из точек {X, Y, Z} в обход непроходимого, спрямлённый где можно, или null. Sphere(options) — земля планеты, та самая, что на её запечённой поверхности (шум Renderer, как его запекает шейдер Scene): Radius, Height, Seed, Ocean, Type; её методы Land(direction), Elevation(direction), Point(direction), Altitude(point), Patch(face, u, v, size, resolution). Cells({Width, Height, Depth, Color(x, y)}) — плоская земля карты клеток, одним куском. Работает и в Node.
+Земля игры, непрерывная: высоты из шума в любой точке (без клеток), её сетки кусками и пути по ней. Flat(options) — земля плоской карты: Size (1000), Height (высота самых высоких холмов, 60), Water (уровень моря от 0 до 1, 0.35), Scale (размер холмов, 180), Ridges (доля гор, 0.4), Seed; её методы Height(x, z) (ниже 0 — под морем), Normal(x, z), Slope(x, z) (0 — ровно, 1 — стена), Walkable(x, z, options) (MaxSlope, Swim, Blocked(x, z), Over(x, z) — пол настила моста над землёй в этой точке или null: по нему идут и над водой; путь Path заходит на настил только с его концов), Chunk(x, z, size, resolution) — геометрия квадрата с цветами высот и склонов и юбкой под краями, Path({X, Z}, {X, Z}, options) — путь из точек {X, Y, Z} в обход непроходимого, спрямлённый где можно, или null. Sphere(options) — земля планеты, та самая, что на её запечённой поверхности (шум Renderer, как его запекает шейдер Scene): Radius, Height, Seed, Ocean, Type; её методы Land(direction), Elevation(direction), Point(direction), Altitude(point), Patch(face, u, v, size, resolution). Cells({Width, Height, Depth, Color(x, y)}) — плоская земля карты клеток, одним куском. Работает и в Node.
 
 Рельеф как граф. Параметр Relief земли — граф-генератор Blueprints: входы X и Z, результаты Height (от 0 до 1, как холмы из шума), Moisture и Temperature (от 0 до 1). Его параметры Scale, Ridges, Water и Height берутся из параметров земли, если они заданы, иначе — свои значения графа. LibraryRelief(options) строит граф обычного рельефа этих параметров: те же высоты до бита и тот же климат, с него начинает редактор. Relief(settings) один раз компилирует граф в JavaScript (Blueprints.Code) и кладёт исходник в параметры (ReliefSource), поэтому воркер собирает ту же функцию без графа.
 
@@ -35,7 +35,7 @@ LibraryRelief(options) берёт граф ресурса `ElemenxGraphics/relie
 
 Дневной свет под землёй. Daylight(field, x0, z0, x1, z1, low, options) — сколько света неба доходит до точки под скалой вокруг квадрата: сетка мира (Cell, 2 м) с запасом Reach (24 м); клетка, над которой до неба только воздух, получает весь свет, дальше он идёт по воздуху, теряя Fade (0.78) за клетку, — во вход пещеры и немного внутрь, глубоко под скалой его нет. Сквозь скалу между клетками (тонкий свод) свет не проходит. Та же точка получает тот же свет в любом квадрате; At(x, y, z, normal) — его значение. Квадраты объёма кладут его в вершины, и шейдер земли по нему гасит солнце и небо и рисует камень пещеры.
 
-Пещеры наброском. SketchCarves(sketch, height, seed) — вырезы объёма из предметов наброска: линия cave — ходы под землёй (Width, Depth под землёй, 8; Rough, 0.5; Mouth 1 — концы выходят к поверхности; точка [x, z, y] — пол на этой высоте), круги hall — круглый зал (Radius, Depth середины под землёй, 10) и overhang — нависающая скала на крутом вокруг точки (Radius, Amount). Высот они не меняют.
+Пещеры наброском. SketchCarves(sketch, height, seed) — вырезы объёма из предметов наброска: линия cave — ходы под землёй (Width, Depth под землёй, 8; Rough, 0.5; Mouth 1 — концы выходят к поверхности; точка [x, z, y] — пол на этой высоте), круги hall — круглый зал (Radius, Depth середины под землёй, 10) и overhang — нависающая скала на крутом вокруг точки (Radius, Amount). Высот они не меняют. PlainRelief(settings) — рельеф библиотеки для земли без графа, планеты и своего шума, по коду, собранному на странице: {Height, Climate(x, z)}. ShareGround(pool, options, made) — то, что опции земли берут с собой в воркеры пула (код и wasm её рельефа), один раз; made — сначала собрать код, если его ещё нет. WasmExports(made) — функции wasm рельефа на общей памяти. SketchTable (resources/terrain/sketch-types.json) — типы наброска: вид (Kind), ставит ли он вещи (Placed), значения по умолчанию (Defaults) и раскраска (Look: Color, Material); строка «*» — общие значения всех типов. SketchDefaults(type) — значения, которые элемент берёт, если не задал своих; с них же редактор начинает новый элемент. SketchTypes, SketchPlaced и LookMaterials собраны из неё. Что каждый тип делает с землёй — его граф (blueprints/sketch/<тип>): входы X, Z, H (высота до него), S (его сила в точке), O (сдвиг шума наброска), Points, Levels, Data, CX, CZ, Around (земля вокруг точки), Target, значения элемента и <значение>Told; результат Height. SketchRun(type) — его функция {Main, Inputs, Parameters}: собирается на странице один раз и отдаётся воркерам через ShareGround; SketchMake(type, graph) ставит типу другой граф. Форма каждого выреза объёма — тоже его граф (blueprints/carve/<вид>: tunnel, sphere, caves, passages, overhangs; входы X, Y, Z, G — земля над точкой, Steep, Points, Packed и значения выреза; результат Density, у нависаний — Share, WX, WZ): CarveRun(type), CarveMake(type, graph).
 
 ## Методы
 
@@ -48,8 +48,16 @@ LibraryRelief(options) берёт граф ресурса `ElemenxGraphics/relie
 - `OnRoad(field, x, z, width)`
 - `Daylight(field, x0, z0, x1, z1, low, options)`
 - `Sphere(options)`
+- `WasmExports(made)`
 - `Work()`
+- `ShareGround(pool, options, made)`
+- `PlainRelief(settings)`
 - `Sketched(sketch, base, seed)`
+- `SketchRun(type)`
+- `CarveRun(type)`
+- `CarveMake(type, graph)`
+- `SketchMake(type, graph)`
+- `SketchDefaults(type)`
 - `SketchChanged(before, after)`
 - `FromGrid(options, heights, side)`
 - `Heights(field, side)`
@@ -84,8 +92,11 @@ LibraryRelief(options) берёт граф ресурса `ElemenxGraphics/relie
 
 ## Тесты
 
-- [gives its ground to land on as the Sphere of SceneTerrainGenerator does: its heights, squares with its colors, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L245) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [gives its ground to land on as the Sphere of SceneTerrainGenerator does: its heights, squares with its colors, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L260) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [makes the very results of its Code, its parameters fixed, in js and in wasm](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L234) — `tests/regression/blueprints-ir.test.js`
+- [makes another function of the same blocks with other values of its parameters](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L294) — `tests/regression/blueprints-ir.test.js`
 - [makes the buildings of a town of their own shapes, each as tall as its Size, its wings within its width and depth](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/buildings.test.js#L120) — `tests/regression/buildings.test.js`
+- [makes a graph of numbers of Blueprints a function of a shader: the relief of a ground as near as floats hold it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-glsl.test.js#L191) — `tests/regression/compilers-glsl.test.js`
 - [asks first for the squares of a cave under a mountain the eye is in, before the low ground round the mountain](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-lod.test.js#L142) — `tests/regression/ground-lod.test.js`
 - [asks for as many squares a frame as the workers take, however long the walk over them took](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-lod.test.js#L191) — `tests/regression/ground-lod.test.js`
 - [draws a material of a recipe by its Blueprint, its parameters uniforms that change it without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L73) — `tests/regression/library-material-blueprints.test.js`
@@ -93,8 +104,5 @@ LibraryRelief(options) берёт граф ресурса `ElemenxGraphics/relie
 - [asks a coarse part near the eye before the small squares far in the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L1368) — `tests/regression/library-scene-landing.test.js`
 - [keeps no grass where a tunnel cut the ground away under the sky](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L369) — `tests/regression/library-scene-roads.test.js`
 - [takes a ground from a model: floors one over the other, walls that stop a walker, and a plane at its foot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1791) — `tests/regression/library-scene.test.js`
-- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2103) — `tests/regression/library-scene.test.js`
-- [makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2421) — `tests/regression/library-scene.test.js`
-- [Workers runs the methods of Services in workers made of their source, and in the page when it cannot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4700) — `tests/regression/library-scene.test.js`
 
-+52 ещё в тех же файлах
++60 ещё в тех же файлах

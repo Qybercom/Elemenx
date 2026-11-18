@@ -1230,3 +1230,233 @@ describe('Regression: the numbers of a flat map told once', function () {
 		expect(Array.from(fine.Geometry.Materials.slice((5 * side + 5) * 12 + 2, (5 * side + 5) * 12 + 11))).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0]);
 	});
 });
+
+describe('Regression: a way over a river, on its bridge', function () {
+	var terrain;
+
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:SceneTerrainGenerator', 'service:Noise', 'service:Workers']);
+
+		terrain = Elemenx.Service('SceneTerrainGenerator');
+	});
+
+	/* The ground of the strategy demo: a river across all of it. */
+	function river () {
+		return terrain.Flat({Size: 320, Height: 18, Water: 0.12, Scale: 260, Ridges: 0.15, Seed: 'world', Sketch: {Layers: [{ID: 'bases', Name: 'bases', Visible: true, Strength: 1, Items: [
+			{ID: 'river', Type: 'river', Strength: 1, Points: [[-20, -160, 1], [6, -90, 0.9], [-6, -20, 0.8], [10, 50, 0.7], [-4, 160, 0.6]], Width: 12, Depth: 1.8, Bank: 10}
+		]}]}});
+	}
+
+	/* A deck over the water at z -14, from x -30 to 20: 2 m up, at its ends on the banks as high as they are. */
+	var ground = null;
+
+	function bridge (x, z) {
+		return Math.abs(z + 14) < 2.5 && Math.abs(x + 5) < 25 ? Math.max(2, ground(x, z)) : null;
+	}
+
+	it('walks the deck of a bridge over the water, and only there', function () {
+		var field = river();
+
+		ground = field.Height;
+
+		expect(field.Height(-6, -14)).toBeLessThan(0);
+		expect(field.Walkable(-6, -14, {})).toBe(false);
+		expect(field.Walkable(-6, -14, {Over: bridge})).toBe(true);
+		expect(field.Walkable(-6, -40, {Over: bridge})).toBe(false);
+		expect(field.Walkable(-6, -14, {Over: bridge, Blocked: function () {
+			return true;
+		}})).toBe(false);
+	});
+
+	/*
+	 * Regression: a walker knew no bridge; sent over the river it looked for a way over all the map, each point of it made
+	 * three times over, and the page held.
+	 */
+	it('finds the way over the bridge, and gives up on none soon', function () {
+		var field = river();
+		var height = ground = field.Height;
+		var calls = 0;
+		var way;
+		var crossed;
+
+		field.Height = function (x, z, y) {
+			calls++;
+
+			return height(x, z, y);
+		};
+
+		expect(field.Path({X: -60, Z: -26}, {X: 70, Z: 40}, {Step: 2})).toBe(null);
+		/* Each point of the grid once: it was 670 000 of the ground made. */
+		expect(calls).toBeLessThan(200000);
+
+		calls = 0;
+		way = field.Path({X: -60, Z: -26}, {X: 70, Z: 40}, {Step: 2, Over: bridge});
+
+		expect(way).not.toBe(null);
+		expect(calls).toBeLessThan(60000);
+
+		/*
+		 * Over the water between its points only on the deck, and onto it from its ends: never a step up from the bank under
+		 * it (Regression: down the bank, and up 5 m onto the deck from the water).
+		 */
+		crossed = way.some(function (point, index) {
+			var next = way[index + 1];
+			var count;
+			var before;
+			var at;
+
+			if (!next)
+				return false;
+
+			count = Math.ceil(Math.hypot(next.X - point.X, next.Z - point.Z));
+
+			for (at = 0; at <= count; at++) {
+				var x = point.X + (next.X - point.X) * at / count;
+				var z = point.Z + (next.Z - point.Z) * at / count;
+				var floor = bridge(x, z) === null ? Math.max(0, height(x, z)) : bridge(x, z);
+
+				if (height(x, z) < 0 && bridge(x, z) === null) return true;
+				if (before !== undefined && Math.abs(floor - before) > 1.2) return true;
+
+				before = floor;
+			}
+
+			return false;
+		});
+
+		expect(crossed).toBe(false);
+	});
+});
+
+describe('Contract: the heights of a ground by wasm (Compute), the very ones of js', function () {
+	var terrain;
+
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:SceneTerrainGenerator', 'service:Noise', 'service:Workers', 'service:Blueprints']);
+
+		terrain = Elemenx.Service('SceneTerrainGenerator');
+	});
+
+	/*
+	 * A square of a ground (Chunk, by Mesh) has its heights, those of its normals and, of a graph of relief, its moisture
+	 * and warmth made at once by wasm (Prefetch): the same numbers to the bit as js alone (Compute: js), of the noise of the
+	 * ground (the library relief, its height) and of a graph of its own.
+	 */
+	it('makes a square of the very same numbers by wasm as by js, of its noise and of a graph of relief', function () {
+		[{Size: 2000, Height: 60, Seed: 'compute'}, {Size: 2000, Height: 60, Seed: 'compute', Relief: terrain.LibraryRelief({Size: 2000, Height: 60, Seed: 'compute'})}].forEach(function (options) {
+			var js = terrain.Flat(Object.assign({Compute: 'js'}, options));
+			var wasm = terrain.Flat(Object.assign({}, options));
+			var a = js.Chunk(150, -80, 200, 32);
+			var b = wasm.Chunk(150, -80, 200, 32);
+
+			expect(js.Options.ReliefWasm).toBeUndefined();
+			expect(typeof wasm.Options.ReliefWasm).toBe('string');
+
+			['Positions', 'Normals', 'Colors', 'Materials'].forEach(function (key) {
+				expect(Array.from(b[key])).toEqual(Array.from(a[key]));
+			});
+		});
+	});
+
+	/* One point a call by the wasm of its relief too (no Prefetch): the very height and climate of js, of its noise and of a graph. */
+	it('gives a height and a climate of a point by its wasm, the very ones of js', function () {
+		[{Size: 2000, Height: 60, Seed: 'single'}, {Size: 2000, Height: 60, Seed: 'single', Relief: terrain.LibraryRelief({Size: 2000, Height: 60, Seed: 'single'})}].forEach(function (options) {
+			var js = terrain.Flat(Object.assign({Compute: 'js'}, options));
+			var wasm = terrain.Flat(Object.assign({}, options));
+			var i;
+
+			for (i = 0; i < 300; i++) {
+				var x = Math.sin(i * 1.3) * 900;
+				var z = Math.cos(i * 0.7) * 900;
+
+				expect(wasm.Height(x, z)).toBe(js.Height(x, z));
+				expect(wasm.Climate(x, z)).toEqual(js.Climate(x, z));
+			}
+		});
+	});
+
+	/* Regression: the height of each type of a sketch was written out in code; it is the graph of its type now (blueprints/sketch). */
+	it('raises the ground of a sketch by the graph of the type of each item, and by another graph of that type made for it', function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var blueprints = Elemenx.Service('Blueprints');
+		var options = {Size: 300, Height: 20, Water: 0, Scale: 120, Seed: 'graphs', Compute: 'js', Sketch: {Layers: [{ID: 'l', Visible: true, Strength: 1, Items: [{ID: 'm', Type: 'mountain', At: [0, 0], Radius: 60, Height: 40, Ridged: 0}]}]}};
+		var plain = terrain.Flat(Object.assign({}, options, {Sketch: null}));
+		var raised = terrain.Flat(JSON.parse(JSON.stringify(options)));
+		var library = Elemenx.Resources('Blueprints', 'ElemenxGraphics/sketch/mountain');
+		var own = JSON.parse(JSON.stringify(library));
+		var told;
+
+		expect(terrain.SketchRun('mountain').Inputs).toEqual(expect.arrayContaining(['X', 'Z', 'H', 'S', 'O', 'CX', 'CZ', 'Radius', 'Height', 'Ridged']));
+		expect(raised.Height(0, 0) - plain.Height(0, 0)).toBeCloseTo(40, 6);
+		expect(raised.Height(30, 0) - plain.Height(30, 0)).toBeCloseTo(40 * Math.pow(0.5, 1.2), 6);
+
+		/* The same type, of a graph of its own: the middle twice as high. */
+		own.blocks.filter(function (one) {
+			return one.type === 'Formula' && /Height \* pow/.test(one.properties[0].value);
+		})[0].properties[0].value = 'H + 2 * Height * S';
+
+		terrain.SketchMake('mountain', own);
+
+		told = terrain.Flat(JSON.parse(JSON.stringify(options)));
+
+		try {
+			expect(told.Height(10, 0) - plain.Height(10, 0)).toBeCloseTo(80, 6);
+		}
+		finally {
+			terrain.SketchMake('mountain', library);
+		}
+
+		expect(terrain.Flat(JSON.parse(JSON.stringify(options))).Height(0, 0)).toBe(raised.Height(0, 0));
+	});
+
+	/* Regression: the shape of each carve of a volume was written out in code; it is the graph of its type now (blueprints/carve). */
+	it('cuts a volume by the graph of each carve, and by another graph of a carve made for it', function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var library = Elemenx.Resources('Blueprints', 'ElemenxGraphics/carve/sphere');
+		var own = JSON.parse(JSON.stringify(library));
+		var options = {Size: 200, Height: 20, Water: 0, Scale: 100, Seed: 'carves', Compute: 'js', Carves: [{Type: 'sphere', At: [0, 2, 0], Radius: 6}]};
+		var made = terrain.Flat(JSON.parse(JSON.stringify(options)));
+		var bigger;
+
+		expect(terrain.CarveRun('sphere').Keys).toEqual(['Density']);
+		expect(made.Density(0, 2, 0)).toBe(-6);
+		expect(made.Density(3, 2, 0)).toBe(-3);
+
+		/* A ball of its own: twice as wide. */
+		own.blocks.filter(function (one) {
+			return one.type === 'Formula';
+		})[0].properties[0].value = 'sqrt((X - CX) * (X - CX) + (Y - CY) * (Y - CY) + (Z - CZ) * (Z - CZ)) - Radius * 2';
+
+		terrain.CarveMake('sphere', own);
+
+		try {
+			bigger = terrain.Flat(JSON.parse(JSON.stringify(options)));
+
+			expect(bigger.Density(5, 2, 0)).toBe(-7);
+		}
+		finally {
+			terrain.CarveMake('sphere', library);
+		}
+
+		expect(terrain.Flat(JSON.parse(JSON.stringify(options))).Density(3, 2, 0)).toBe(-3);
+	});
+
+	it('reads the heights it made at once and makes any other as before', function () {
+		var field = terrain.Flat({Size: 2000, Height: 60, Seed: 'compute'});
+		var plain = terrain.Flat({Size: 2000, Height: 60, Seed: 'compute', Compute: 'js'});
+
+		field.Prefetch(10, 20, 5, 4);
+
+		expect(field.Height(10 + 3 * 5, 20 + 2 * 5)).toBe(plain.Height(25, 30));
+		expect(field.Height(11.5, 20.25)).toBe(plain.Height(11.5, 20.25));
+		expect(field.Normal(15, 25)).toEqual(plain.Normal(15, 25));
+
+		field.Prefetch(null);
+
+		expect(field.Height(25, 30)).toBe(plain.Height(25, 30));
+	});
+});

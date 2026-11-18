@@ -73,6 +73,30 @@ describe('Contract: SceneEditor of a star system: bodies added round the one tha
 		while (owned.length) owned.pop().$Destroy();
 	});
 
+	/* Regression: the first values of the editor were others than those the ground takes where an item tells none (a road's Shoulder 4, its ground 6). */
+	it('starts each item of a sketch with the very values the ground takes for it, of one table of the types of a sketch', async function () {
+		var mounted = await mount();
+		var editor = mounted.Editor;
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+
+		expect(editor.SketchFields.road.Shoulder).toBe(6);
+		expect(editor.SketchFields.smooth.Radius).toBe(8);
+		expect(editor.SketchFields.flatten.Height).toBeUndefined();
+		expect(terrain.SketchTypes.road).toBe('line');
+		expect(terrain.SketchPlaced.forest).toBe(true);
+		expect(terrain.LookMaterials.beach).toBe('sand');
+
+		Object.keys(terrain.SketchTable).forEach(function (type) {
+			var given = terrain.SketchDefaults(type);
+
+			if (type === '*' || ['cave', 'hall', 'overhang'].indexOf(type) !== -1) return;
+
+			Object.keys(editor.SketchFields[type]).forEach(function (key) {
+				expect([type, key, editor.SketchFields[type][key]]).toEqual([type, key, given[key]]);
+			});
+		});
+	});
+
 	it('starts as a star and a planet, offers the kinds of space and no sketch, and keeps its setting in the document', async function () {
 		var mounted = await mount();
 		var editor = mounted.Editor;

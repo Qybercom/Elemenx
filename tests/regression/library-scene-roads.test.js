@@ -5,10 +5,10 @@ import { Use } from '../library.js';
 var owned = [];
 
 /* A scene of a hilly ground, its frames made by hand. */
-async function mount () {
+async function mount (land, compute) {
 	var ready = null;
 	var component = Elemenx.Component(unique('RoadHost'), {
-		$Template: '<div style="width: 320px; height: 200px"><Scene Quality="low" Labels="false" (ready)="Ready"></Scene></div>',
+		$Template: '<div style="width: 320px; height: 200px"><Scene Quality="low" Labels="false"' + (compute ? ' Compute="' + compute + '"' : '') + ' (ready)="Ready"></Scene></div>',
 		Ready: function (space) {
 			ready = space;
 		}
@@ -24,7 +24,7 @@ async function mount () {
 	}, 4000);
 
 	ready.Scene().Loop.Stop();
-	ready.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 400, Height: 30, Water: 0, Scale: 90, Ridges: 0.3, Seed: 'roads'})});
+	ready.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library(land || {Size: 400, Height: 30, Water: 0, Scale: 90, Ridges: 0.3, Seed: 'roads'})});
 
 	return {
 		Scene: ready,
@@ -650,4 +650,112 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 		expect(scene.Roads()[0].Barriers).toEqual([]);
 		expect(scene.Engine().BarrierHit(45, 61, 45, 55)).toBeNull();
 	});
+
+	/*
+	 * Regression: a walker knew no bridge. Sent over a river (the ground of the strategy demo) it found no way, looked for it
+	 * over all the map, each unit of a group and each attacking one every second again, and the page held. Now it walks
+	 * the deck of the bridge, standing on it, not on the bed of the river; where no way is, it is not looked for again soon.
+	 */
+	it('walks a unit over the bridge of its road, on its deck, and looks again for no way it found none to', async function () {
+		var mounted = await mount({Size: 320, Height: 18, Water: 0.12, Scale: 260, Ridges: 0.15, Seed: 'world', Sketch: {Layers: [{ID: 'bases', Name: 'bases', Visible: true, Strength: 1, Items: [
+			{ID: 'river', Type: 'river', Strength: 1, Points: [[-20, -160, 1], [6, -90, 0.9], [-6, -20, 0.8], [10, 50, 0.7], [-4, 160, 0.6]], Width: 12, Depth: 1.8, Bank: 10}
+		]}]}});
+		var scene = mounted.Scene;
+		var inner = scene.Scene();
+		var arrived = null;
+		var over = 0;
+		var field;
+		var height;
+		var calls = 0;
+		var unit;
+		var deck;
+		var before = null;
+		var jump = 0;
+		var i;
+
+		mounted.Frames(2);
+
+		field = inner.Ground.Field;
+		height = field.Height;
+		field.Height = function (x, z, y) {
+			calls++;
+
+			return height.call(field, x, z, y);
+		};
+
+		scene.Add('unit', {ID: 'scout', X: -50, Y: -26});
+		scene.Add('unit', {ID: 'second', X: -48, Y: -29});
+
+		mounted.Frames(1);
+
+		/* No bridge yet: no way, and once more at once none looked for. */
+		expect(scene.Move('scout', [60, 30])).toBe(false);
+
+		calls = 0;
+
+		expect(scene.Move('scout', [61, 31])).toBe(false);
+		expect(calls).toBe(0);
+
+		scene.Add('road', {ID: 'way', Type: 'road', Width: 6, Structures: true, Points: [[-36, -30], [-10, -18], [22, 10], [40, 30]]});
+
+		mounted.Frames(2);
+
+		expect(scene.Roads().length).toBe(1);
+
+		expect(scene.Move('scout', [60, 30], function (error, made) {
+			arrived = made;
+		})).toBe(true);
+
+		/* One of the same group goes by the same way: not looked for again over the map. */
+		calls = 0;
+
+		expect(scene.Move('second', [62, 33])).toBe(true);
+		expect(calls).toBeLessThan(2000);
+		expect(inner.Ways.second.Points.slice(1, -1)).toEqual(inner.Ways.scout.Points.slice(1, -1));
+
+		scene.Paused = false;
+
+		for (i = 0; i < 400 && !arrived; i++) {
+			mounted.Frames(1);
+
+			unit = inner.Objects.scout;
+
+			/* Onto the deck at its end, not up from the bank under it: no step higher than a walker takes. */
+			if (before !== null)
+				jump = Math.max(jump, Math.abs(unit.World[1] - before));
+
+			before = unit.World[1];
+
+			if (height.call(field, unit.World[0], unit.World[2]) < 0) {
+				over++;
+				deck = scene.SurfaceAt(unit.World[0], unit.World[2]);
+
+				expect(deck.Road).toBe('way');
+				expect(unit.World[1]).toBeGreaterThan(deck.Height - 0.1);
+			}
+		}
+
+		await waitFor(function () {
+			return arrived;
+		}, 4000);
+
+		expect(over).toBeGreaterThan(0);
+		expect(jump).toBeLessThan(1.5);
+		expect(Math.hypot(Number(inner.Objects.scout.Values.X) - 60, Number(inner.Objects.scout.Values.Y) - 30)).toBeLessThan(1);
+	}, 60000);
+
+	/* Compute of the scene goes to its ground: auto makes the wasm of its heights (ReliefWasm), js none. */
+	it('gives its ground how to compute its heights (Compute)', async function () {
+		var auto = await mount();
+		var plain = await mount(null, 'js');
+
+		auto.Frames(1);
+		plain.Frames(1);
+
+		expect(auto.Scene.Scene().Ground.Field.Options.Compute).toBe('auto');
+		expect(typeof auto.Scene.Scene().Ground.Field.Options.ReliefWasm).toBe('string');
+		expect(plain.Scene.Scene().Ground.Field.Options.Compute).toBe('js');
+		expect(plain.Scene.Scene().Ground.Field.Options.ReliefWasm).toBeUndefined();
+		expect(auto.Scene.Scene().Ground.Field.Height(12.5, -40)).toBe(plain.Scene.Scene().Ground.Field.Height(12.5, -40));
+	}, 60000);
 });

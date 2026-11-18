@@ -1,0 +1,9 @@
+{
+	"Width": 0.015,
+	"Bend": 11,
+	"Valley": 0.6,
+	"ValleyPower": 0.4,
+	"Channel": 0.04,
+	"Color": [0.16, 0.34, 0.58],
+	"Highway": [0.42, 0.4, 0.38]
+}

@@ -36,6 +36,7 @@ Elemenx.Service('Vitals', {
 
 	$OnCreate: function () {
 		this.Scenes = typeof WeakMap === 'function' ? new WeakMap() : null;
+		this.Kinds = Object.assign(Elemenx.Resources('Data', 'ElemenxGaming/vitals/kinds') || {}, this.Kinds);
 	},
 
 	Make: function (options) {
@@ -368,7 +369,8 @@ Elemenx.Service('Vitals', {
 	 * The health a game gives the kinds of a Scene (the scene itself knows none): a unit, a house, a station and its modules,
 	 * the ships. A kind of its own takes the one of what it extends; the trait Health of an object or of its kind is over it.
 	 */
-	Kinds: {unit: {Max: 100}, house: {Max: 800}, module: {Max: 200}, station: {Max: 1000}, craft: {Max: 1000}, ship: {Max: 100}, cruiser: {Max: 600}, freighter: {Max: 300}},
+	/* Of resources/vitals/kinds.json ($OnCreate), and what a game sets. */
+	Kinds: {},
 
 	/*
 	 * The health settings of an object of a Scene: its trait Health over the health of its kind (Kinds, through what the kind

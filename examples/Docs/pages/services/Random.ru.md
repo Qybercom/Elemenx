@@ -1,11 +1,12 @@
 <!-- generated -->
 # Random
 
-Случайные числа от зерна: для одного зерна всегда одни и те же (карта, созданная заново, повтор), без зерна — от времени. Create(seed) возвращает генератор: Next() (от 0 до 1), Int(min, max) (оба включительно), Float(min, max), Chance(вероятность), Pick(список), Weighted(список, вес) (функция элемента или имя его поля; по умолчанию Weight), Shuffle(список) (новый список), Fork(имя) (свой генератор для части: тот же для того же зерна и имени). Hash(текст) — число в 32 бита; Sequence(текст) — функция next(), числа от 0 до 1 одно за другим (линейный генератор от текста, хэшированного по 31): по нему раскладываются города планет и планы поселений; Noise(seed, size) — плавный шум плоскости, noise(x, y) от 0 до 1 (size — клеток на волну, 16). На нём рисует Suprematist.
+Случайные числа от зерна: для одного зерна всегда одни и те же (карта, созданная заново, повтор), без зерна — от времени. Create(seed) возвращает генератор: Next() (от 0 до 1), Int(min, max) (оба включительно), Float(min, max), Chance(вероятность), Pick(список), Weighted(список, вес) (функция элемента или имя его поля; по умолчанию Weight), Shuffle(список) (новый список), Fork(имя) (свой генератор для части: тот же для того же зерна и имени). Hash(текст) — число в 32 бита; Sequence(текст) — функция next(), числа от 0 до 1 одно за другим (линейный генератор от текста, хэшированного по 31): по нему раскладываются города планет и планы поселений; Noise(seed, size) — плавный шум плоскости, noise(x, y) от 0 до 1 (size — клеток на волну, 16). На нём рисует Suprematist. Seeded(text) — генератор чисел от 0 до 1 текста (сид модели, дерева, клетки рассева): одни и те же числа для одного текста на странице и в воркере.
 
 ## Методы
 
 - `Hash(text)`
+- `Seeded(text)`
 - `Sequence(text)`
 - `Source(names)`
 - `Create(seed)`
@@ -54,5 +55,6 @@
 - [Pathfinding: a way round the walls, no corner cut, around costly cells, to the nearest reachable cell, on a graph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L123) — `tests/regression/game-services.test.js`
 - [Visibility: a line, the sight past a wall, the field of view and its shadows, the fog of war](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L200) — `tests/regression/game-services.test.js`
 - [Loop: steps of the same time whatever the frames, a part of a step to draw between, its speed, pause and catch-up limit](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L247) — `tests/regression/game-services.test.js`
+- [gives the very numbers it gave, in a range too, the same in each Service that had its own](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Random/Random.test.js#L27) — `libraries/ElemenxCommon/services/Random/Random.test.js`
 - [runs a graph that calls itself through a list of its own, as a function, by the IR in JavaScript as it runs](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L71) — `tests/regression/blueprints-ir.test.js`
-- [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L129) — `tests/regression/headless.test.js`
+- [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L130) — `tests/regression/headless.test.js`

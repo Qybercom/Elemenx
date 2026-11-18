@@ -1,0 +1,434 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "passages",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "carve-passages-passagewalls-0",
+			"type": "PassageWalls",
+			"x": 260,
+			"y": 110,
+			"properties": []
+		},
+		{
+			"id": "carve-passages-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Packed"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Y"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-input-4",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-input-5",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Blend"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-input-6",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Crust"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-input-7",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "G"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-formula-8",
+			"type": "Formula",
+			"x": 260,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(X / Scale + SR, Y / Scale + SR, Z / Scale + SR)"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-input-9",
+			"type": "Input",
+			"x": 0,
+			"y": 880,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Scale"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-input-10",
+			"type": "Input",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SR"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-noisespec-11",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 2
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "carve-passages-formula-12",
+			"type": "Formula",
+			"x": 260,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Y - F"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-formula-13",
+			"type": "Formula",
+			"x": 260,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.3"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-formula-14",
+			"type": "Formula",
+			"x": 260,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1.5"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-smoothstep-15",
+			"type": "Smoothstep",
+			"x": 520,
+			"y": 220,
+			"properties": []
+		},
+		{
+			"id": "carve-passages-formula-16",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Amount > 0 && D < Amount * 2 ? D + (R - 0.5) * 2 * Amount * U : D"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-input-17",
+			"type": "Input",
+			"x": 0,
+			"y": 1100,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Amount"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-formula-18",
+			"type": "Formula",
+			"x": 1040,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Crust >= 0 && E < 0 ? max(E, Y - (G - Crust)) : E"
+				}
+			]
+		},
+		{
+			"id": "carve-passages-result-19",
+			"type": "Result",
+			"x": 1300,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Density"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "carve-passages-link-0",
+			"p1": "carve-passages-input-1-out-Value",
+			"p2": "carve-passages-passagewalls-0-in-Packed",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-1",
+			"p1": "carve-passages-input-2-out-Value",
+			"p2": "carve-passages-passagewalls-0-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-2",
+			"p1": "carve-passages-input-3-out-Value",
+			"p2": "carve-passages-passagewalls-0-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-3",
+			"p1": "carve-passages-input-4-out-Value",
+			"p2": "carve-passages-passagewalls-0-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-4",
+			"p1": "carve-passages-input-5-out-Value",
+			"p2": "carve-passages-passagewalls-0-in-Blend",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-5",
+			"p1": "carve-passages-input-6-out-Value",
+			"p2": "carve-passages-passagewalls-0-in-Crust",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-6",
+			"p1": "carve-passages-input-7-out-Value",
+			"p2": "carve-passages-passagewalls-0-in-Ground",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-7",
+			"p1": "carve-passages-input-2-out-Value",
+			"p2": "carve-passages-formula-8-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-8",
+			"p1": "carve-passages-input-9-out-Value",
+			"p2": "carve-passages-formula-8-in-Scale",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-9",
+			"p1": "carve-passages-input-10-out-Value",
+			"p2": "carve-passages-formula-8-in-SR",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-10",
+			"p1": "carve-passages-input-3-out-Value",
+			"p2": "carve-passages-formula-8-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-11",
+			"p1": "carve-passages-input-4-out-Value",
+			"p2": "carve-passages-formula-8-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-12",
+			"p1": "carve-passages-formula-8-out-Value",
+			"p2": "carve-passages-noisespec-11-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-13",
+			"p1": "carve-passages-input-3-out-Value",
+			"p2": "carve-passages-formula-12-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-14",
+			"p1": "carve-passages-passagewalls-0-out-Floor",
+			"p2": "carve-passages-formula-12-in-F",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-15",
+			"p1": "carve-passages-formula-12-out-Value",
+			"p2": "carve-passages-smoothstep-15-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-16",
+			"p1": "carve-passages-formula-13-out-Value",
+			"p2": "carve-passages-smoothstep-15-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-17",
+			"p1": "carve-passages-formula-14-out-Value",
+			"p2": "carve-passages-smoothstep-15-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-18",
+			"p1": "carve-passages-input-17-out-Value",
+			"p2": "carve-passages-formula-16-in-Amount",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-19",
+			"p1": "carve-passages-passagewalls-0-out-Distance",
+			"p2": "carve-passages-formula-16-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-20",
+			"p1": "carve-passages-noisespec-11-out-Value",
+			"p2": "carve-passages-formula-16-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-21",
+			"p1": "carve-passages-smoothstep-15-out-Out",
+			"p2": "carve-passages-formula-16-in-U",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-22",
+			"p1": "carve-passages-input-6-out-Value",
+			"p2": "carve-passages-formula-18-in-Crust",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-23",
+			"p1": "carve-passages-formula-16-out-Value",
+			"p2": "carve-passages-formula-18-in-E",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-24",
+			"p1": "carve-passages-input-3-out-Value",
+			"p2": "carve-passages-formula-18-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-25",
+			"p1": "carve-passages-input-7-out-Value",
+			"p2": "carve-passages-formula-18-in-G",
+			"kind": "value"
+		},
+		{
+			"id": "carve-passages-link-26",
+			"p1": "carve-passages-formula-18-out-Value",
+			"p2": "carve-passages-result-19-in-Value",
+			"kind": "value"
+		}
+	]
+}

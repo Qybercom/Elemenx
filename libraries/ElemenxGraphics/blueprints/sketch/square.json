@@ -1,0 +1,209 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "square",
+	"parameters": [
+		{
+			"key": "Around",
+			"type": "float",
+			"value": 20
+		}
+	],
+	"blocks": [
+		{
+			"id": "sketch-square-area-0",
+			"type": "Area",
+			"x": 260,
+			"y": 110,
+			"properties": []
+		},
+		{
+			"id": "sketch-square-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Points"
+				}
+			]
+		},
+		{
+			"id": "sketch-square-input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "sketch-square-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "sketch-square-formula-4",
+			"type": "Formula",
+			"x": 520,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Inside > 0.5 ? 1 : (E < Edge ? (0.5 + 0.5 * cos(min(1, max(0, (E) / max(0.000001, Edge))) * 3.141592653589793)) : 0)) * S"
+				}
+			]
+		},
+		{
+			"id": "sketch-square-input-5",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Edge"
+				}
+			]
+		},
+		{
+			"id": "sketch-square-input-6",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "S"
+				}
+			]
+		},
+		{
+			"id": "sketch-square-formula-7",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "H + (Around - H) * W"
+				}
+			]
+		},
+		{
+			"id": "sketch-square-input-8",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "H"
+				}
+			]
+		},
+		{
+			"id": "sketch-square-input-9",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Around"
+				}
+			]
+		},
+		{
+			"id": "sketch-square-result-10",
+			"type": "Result",
+			"x": 1040,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "sketch-square-link-0",
+			"p1": "sketch-square-input-1-out-Value",
+			"p2": "sketch-square-area-0-in-Points",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-square-link-1",
+			"p1": "sketch-square-input-2-out-Value",
+			"p2": "sketch-square-area-0-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-square-link-2",
+			"p1": "sketch-square-input-3-out-Value",
+			"p2": "sketch-square-area-0-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-square-link-3",
+			"p1": "sketch-square-area-0-out-Inside",
+			"p2": "sketch-square-formula-4-in-Inside",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-square-link-4",
+			"p1": "sketch-square-area-0-out-Distance",
+			"p2": "sketch-square-formula-4-in-E",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-square-link-5",
+			"p1": "sketch-square-input-5-out-Value",
+			"p2": "sketch-square-formula-4-in-Edge",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-square-link-6",
+			"p1": "sketch-square-input-6-out-Value",
+			"p2": "sketch-square-formula-4-in-S",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-square-link-7",
+			"p1": "sketch-square-input-8-out-Value",
+			"p2": "sketch-square-formula-7-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-square-link-8",
+			"p1": "sketch-square-input-9-out-Value",
+			"p2": "sketch-square-formula-7-in-Around",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-square-link-9",
+			"p1": "sketch-square-formula-4-out-Value",
+			"p2": "sketch-square-formula-7-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-square-link-10",
+			"p1": "sketch-square-formula-7-out-Value",
+			"p2": "sketch-square-result-10-in-Value",
+			"kind": "value"
+		}
+	]
+}

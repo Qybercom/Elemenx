@@ -2902,7 +2902,8 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		expect(gl.getError()).toBe(gl.NO_ERROR);
 		expect(graphicsSource).toContain('float softIn(highp sampler2DShadow map, sampler2D raw');
-		expect(lightingSource).toContain('clamp(0.3 / exp(texture(uEye, vec2(0.5)).r), 0.8, 1.35)');
+		/* Deep under rock (uDeep) the eye opens farther: a cave lit by a lamp only is seen. */
+		expect(lightingSource).toContain('clamp(0.3 / exp(texture(uEye, vec2(0.5)).r), 0.8, mix(1.35, 5.0, uDeep))');
 		expect(lightingSource).toContain('float gap = length(at) - length(place(suv));');
 	});
 
@@ -10271,8 +10272,8 @@ describe('Contract: Gltf, the models other programs make', function () {
 		expect(modelsSource).toContain('pairs[\'Hand\' + side].Still = true;');
 		expect(modelsSource).toContain('fore.Ease = round(unit(turned(back(fore.Rest), hinge)), -0.24);');
 
-		/* A lamp a body carries is inside its shape: no shadow of it. */
-		expect(gameSceneSource).toContain('if (lamp && (lamp.Built || lamp.Object.Values.Follow || lamp.Settings.Follow))');
+		/* A lamp a body carries is inside its shape: no shadow of it, but under rock (a lantern in a cave). */
+		expect(gameSceneSource).toContain('if (lamp && (lamp.Built || (lamp.Object.Values.Follow || lamp.Settings.Follow) && !omni))');
 
 		/* The bones of other tools are known by their words and their side. */
 		expect(models.BoneWord('ThighL').test('L_Hip_89')).toBe(true);

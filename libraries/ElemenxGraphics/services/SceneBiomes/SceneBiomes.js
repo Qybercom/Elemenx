@@ -208,18 +208,7 @@ Elemenx.Service('SceneBiomes', {
 
 	/* The numbers of a seed, always the same. */
 	Random: function (seed) {
-		var value = 2166136261;
-		var text = String(seed);
-		var i;
-
-		for (i = 0; i < text.length; i++)
-			value = Math.imul(value ^ text.charCodeAt(i), 16777619);
-
-		return function () {
-			value = Math.imul(value ^ value >>> 15, 2246822519) + 1 | 0;
-
-			return (value >>> 0) / 4294967296;
-		};
+		return this.$Service('Random').Seeded(String(seed));
 	},
 
 	/* Whether a point can take a building: dry and level, round it too. */

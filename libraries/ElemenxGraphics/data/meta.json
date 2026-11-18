@@ -583,6 +583,19 @@
 					"Description": "The shadows of a sun on a ground, a surface and a model near the view (true)."
 				},
 				{
+					"Name": "Compute",
+					"Type": "select",
+					"Default": "auto",
+					"Options": [
+						"auto",
+						"wasm",
+						"js"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "How its grounds compute their heights: auto and wasm by WebAssembly where it is made (the very same numbers, faster), js by JavaScript alone."
+				},
+				{
 					"Name": "Quality",
 					"Type": "select",
 					"Default": "",
@@ -2423,7 +2436,18 @@
 				"Sketched(sketch, base, seed)",
 				"RoadWay(field, from, to, options)",
 				"SketchChanged(before, after)",
-				"Source(names)"
+				"Source(names)",
+				"ReliefWasm(settings, plain)",
+				"WasmRun(made, input, count)",
+				"WasmExports(made)",
+				"PlainRelief(settings)",
+				"ShareGround(pool, options, made)",
+				"SketchDefaults(type)",
+				"SketchRun(type)",
+				"SketchMake(type, graph)",
+				"CarveRun(type)",
+				"CarveMake(type, graph)",
+				"WasmShare(pool, key)"
 			],
 			"Sample": {}
 		},
@@ -2667,7 +2691,8 @@
 				"Bounds(geometry)",
 				"Levels(name, options)",
 				"Pose(model, clip, time, options)",
-				"Length(model, clip)"
+				"Length(model, clip)",
+				"KindOf(type)"
 			],
 			"Sample": {}
 		},
@@ -2810,7 +2835,9 @@
 			"EventDescriptions": {},
 			"Methods": [
 				"World(options)",
-				"Districts()"
+				"Districts()",
+				"Plan()",
+				"Scaled(entry, scale, seed)"
 			],
 			"Sample": {}
 		},
@@ -3006,7 +3033,10 @@
 				"CellNeighbours(radius, size, cell)",
 				"CellPlace(radius, cell)",
 				"Work()",
-				"Source(names)"
+				"Source(names)",
+				"Kind(kind)",
+				"KindByShare(share)",
+				"Warmth(celsius)"
 			],
 			"Sample": {}
 		},

@@ -1,0 +1,8 @@
+{
+	"unit": "unit",
+	"animal": "unit",
+	"vehicle": "unit",
+	"plant": "tree",
+	"rock": "rock",
+	"building": "house"
+}

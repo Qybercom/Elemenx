@@ -1,0 +1,640 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "overhangs",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "carve-overhangs-formula-0",
+			"type": "Formula",
+			"x": 260,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Slope - 0.1"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Slope"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-formula-2",
+			"type": "Formula",
+			"x": 260,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Slope + 0.2"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-smoothstep-3",
+			"type": "Smoothstep",
+			"x": 520,
+			"y": 110,
+			"properties": []
+		},
+		{
+			"id": "carve-overhangs-input-4",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Steep"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-formula-5",
+			"type": "Formula",
+			"x": 260,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HasCenter > 0.5 ? sqrt((X - CX) * (X - CX) + (Z - CZ) * (Z - CZ)) : 0"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-input-6",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HasCenter"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-input-7",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-input-8",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CX"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-input-9",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-input-10",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CZ"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-formula-11",
+			"type": "Formula",
+			"x": 260,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Radius * 0.8"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-input-12",
+			"type": "Input",
+			"x": 0,
+			"y": 880,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Radius"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-smoothstep-13",
+			"type": "Smoothstep",
+			"x": 520,
+			"y": 220,
+			"properties": []
+		},
+		{
+			"id": "carve-overhangs-formula-14",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "P * (HasCenter > 0.5 ? 1 - Q : 1)"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-formula-15",
+			"type": "Formula",
+			"x": 260,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(X / Scale + SX, Y / Scale + SX, Z / Scale + SX)"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-input-16",
+			"type": "Input",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Scale"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-input-17",
+			"type": "Input",
+			"x": 0,
+			"y": 1100,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SX"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-input-18",
+			"type": "Input",
+			"x": 0,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Y"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-noisespec-19",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 2
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-formula-20",
+			"type": "Formula",
+			"x": 260,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(X / Scale + SZ, Y / Scale + SZ, Z / Scale + SZ)"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-input-21",
+			"type": "Input",
+			"x": 0,
+			"y": 1320,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SZ"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-noisespec-22",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 2
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-result-23",
+			"type": "Result",
+			"x": 1300,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Share"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-formula-24",
+			"type": "Formula",
+			"x": 1040,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "W > 0 ? (N - 0.5) * 2 * Amount * W : 0"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-input-25",
+			"type": "Input",
+			"x": 0,
+			"y": 1430,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Amount"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-result-26",
+			"type": "Result",
+			"x": 1300,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "WX"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-formula-27",
+			"type": "Formula",
+			"x": 1040,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "W > 0 ? (N - 0.5) * 2 * Amount * W : 0"
+				}
+			]
+		},
+		{
+			"id": "carve-overhangs-result-28",
+			"type": "Result",
+			"x": 1300,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "WZ"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "carve-overhangs-link-0",
+			"p1": "carve-overhangs-input-1-out-Value",
+			"p2": "carve-overhangs-formula-0-in-Slope",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-1",
+			"p1": "carve-overhangs-input-1-out-Value",
+			"p2": "carve-overhangs-formula-2-in-Slope",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-2",
+			"p1": "carve-overhangs-input-4-out-Value",
+			"p2": "carve-overhangs-smoothstep-3-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-3",
+			"p1": "carve-overhangs-formula-0-out-Value",
+			"p2": "carve-overhangs-smoothstep-3-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-4",
+			"p1": "carve-overhangs-formula-2-out-Value",
+			"p2": "carve-overhangs-smoothstep-3-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-5",
+			"p1": "carve-overhangs-input-6-out-Value",
+			"p2": "carve-overhangs-formula-5-in-HasCenter",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-6",
+			"p1": "carve-overhangs-input-7-out-Value",
+			"p2": "carve-overhangs-formula-5-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-7",
+			"p1": "carve-overhangs-input-8-out-Value",
+			"p2": "carve-overhangs-formula-5-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-8",
+			"p1": "carve-overhangs-input-9-out-Value",
+			"p2": "carve-overhangs-formula-5-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-9",
+			"p1": "carve-overhangs-input-10-out-Value",
+			"p2": "carve-overhangs-formula-5-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-10",
+			"p1": "carve-overhangs-input-12-out-Value",
+			"p2": "carve-overhangs-formula-11-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-11",
+			"p1": "carve-overhangs-formula-5-out-Value",
+			"p2": "carve-overhangs-smoothstep-13-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-12",
+			"p1": "carve-overhangs-formula-11-out-Value",
+			"p2": "carve-overhangs-smoothstep-13-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-13",
+			"p1": "carve-overhangs-input-12-out-Value",
+			"p2": "carve-overhangs-smoothstep-13-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-14",
+			"p1": "carve-overhangs-smoothstep-3-out-Out",
+			"p2": "carve-overhangs-formula-14-in-P",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-15",
+			"p1": "carve-overhangs-input-6-out-Value",
+			"p2": "carve-overhangs-formula-14-in-HasCenter",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-16",
+			"p1": "carve-overhangs-smoothstep-13-out-Out",
+			"p2": "carve-overhangs-formula-14-in-Q",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-17",
+			"p1": "carve-overhangs-input-7-out-Value",
+			"p2": "carve-overhangs-formula-15-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-18",
+			"p1": "carve-overhangs-input-16-out-Value",
+			"p2": "carve-overhangs-formula-15-in-Scale",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-19",
+			"p1": "carve-overhangs-input-17-out-Value",
+			"p2": "carve-overhangs-formula-15-in-SX",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-20",
+			"p1": "carve-overhangs-input-18-out-Value",
+			"p2": "carve-overhangs-formula-15-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-21",
+			"p1": "carve-overhangs-input-9-out-Value",
+			"p2": "carve-overhangs-formula-15-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-22",
+			"p1": "carve-overhangs-formula-15-out-Value",
+			"p2": "carve-overhangs-noisespec-19-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-23",
+			"p1": "carve-overhangs-input-7-out-Value",
+			"p2": "carve-overhangs-formula-20-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-24",
+			"p1": "carve-overhangs-input-16-out-Value",
+			"p2": "carve-overhangs-formula-20-in-Scale",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-25",
+			"p1": "carve-overhangs-input-21-out-Value",
+			"p2": "carve-overhangs-formula-20-in-SZ",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-26",
+			"p1": "carve-overhangs-input-18-out-Value",
+			"p2": "carve-overhangs-formula-20-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-27",
+			"p1": "carve-overhangs-input-9-out-Value",
+			"p2": "carve-overhangs-formula-20-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-28",
+			"p1": "carve-overhangs-formula-20-out-Value",
+			"p2": "carve-overhangs-noisespec-22-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-29",
+			"p1": "carve-overhangs-formula-14-out-Value",
+			"p2": "carve-overhangs-result-23-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-30",
+			"p1": "carve-overhangs-formula-14-out-Value",
+			"p2": "carve-overhangs-formula-24-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-31",
+			"p1": "carve-overhangs-noisespec-19-out-Value",
+			"p2": "carve-overhangs-formula-24-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-32",
+			"p1": "carve-overhangs-input-25-out-Value",
+			"p2": "carve-overhangs-formula-24-in-Amount",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-33",
+			"p1": "carve-overhangs-formula-24-out-Value",
+			"p2": "carve-overhangs-result-26-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-34",
+			"p1": "carve-overhangs-formula-14-out-Value",
+			"p2": "carve-overhangs-formula-27-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-35",
+			"p1": "carve-overhangs-noisespec-22-out-Value",
+			"p2": "carve-overhangs-formula-27-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-36",
+			"p1": "carve-overhangs-input-25-out-Value",
+			"p2": "carve-overhangs-formula-27-in-Amount",
+			"kind": "value"
+		},
+		{
+			"id": "carve-overhangs-link-37",
+			"p1": "carve-overhangs-formula-27-out-Value",
+			"p2": "carve-overhangs-result-28-in-Value",
+			"kind": "value"
+		}
+	]
+}

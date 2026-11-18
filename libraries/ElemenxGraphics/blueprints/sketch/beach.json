@@ -1,0 +1,185 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "beach",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "sketch-beach-area-0",
+			"type": "Area",
+			"x": 260,
+			"y": 110,
+			"properties": []
+		},
+		{
+			"id": "sketch-beach-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Points"
+				}
+			]
+		},
+		{
+			"id": "sketch-beach-input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "sketch-beach-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "sketch-beach-formula-4",
+			"type": "Formula",
+			"x": 520,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Inside > 0.5 ? 1 : (E < Edge ? (0.5 + 0.5 * cos(min(1, max(0, (E) / max(0.000001, Edge))) * 3.141592653589793)) : 0)) * S"
+				}
+			]
+		},
+		{
+			"id": "sketch-beach-input-5",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Edge"
+				}
+			]
+		},
+		{
+			"id": "sketch-beach-input-6",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "S"
+				}
+			]
+		},
+		{
+			"id": "sketch-beach-formula-7",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "H + (max(-2, min(1.4, H)) * 0.5 - H) * W"
+				}
+			]
+		},
+		{
+			"id": "sketch-beach-input-8",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "H"
+				}
+			]
+		},
+		{
+			"id": "sketch-beach-result-9",
+			"type": "Result",
+			"x": 1040,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "sketch-beach-link-0",
+			"p1": "sketch-beach-input-1-out-Value",
+			"p2": "sketch-beach-area-0-in-Points",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-beach-link-1",
+			"p1": "sketch-beach-input-2-out-Value",
+			"p2": "sketch-beach-area-0-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-beach-link-2",
+			"p1": "sketch-beach-input-3-out-Value",
+			"p2": "sketch-beach-area-0-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-beach-link-3",
+			"p1": "sketch-beach-area-0-out-Inside",
+			"p2": "sketch-beach-formula-4-in-Inside",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-beach-link-4",
+			"p1": "sketch-beach-area-0-out-Distance",
+			"p2": "sketch-beach-formula-4-in-E",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-beach-link-5",
+			"p1": "sketch-beach-input-5-out-Value",
+			"p2": "sketch-beach-formula-4-in-Edge",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-beach-link-6",
+			"p1": "sketch-beach-input-6-out-Value",
+			"p2": "sketch-beach-formula-4-in-S",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-beach-link-7",
+			"p1": "sketch-beach-input-8-out-Value",
+			"p2": "sketch-beach-formula-7-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-beach-link-8",
+			"p1": "sketch-beach-formula-4-out-Value",
+			"p2": "sketch-beach-formula-7-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-beach-link-9",
+			"p1": "sketch-beach-formula-7-out-Value",
+			"p2": "sketch-beach-result-9-in-Value",
+			"kind": "value"
+		}
+	]
+}

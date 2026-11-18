@@ -29,23 +29,49 @@ Elemenx.Service('SceneSower', {
 	},
 
 	/* The workers of the sowing: the field of the ground made as the page makes it, the noise and the chances of Models. */
+	/*
+	 * The workers that sow. What goes to them is made ready in the page first, whoever sends it: the rules of a job or of a
+	 * context made by Compile, the code of its ground shared (ShareGround); a worker makes no code.
+	 */
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneSower', {Math: true, Noise: true, Random: true, Blueprints: true, ScenePlanet: true, SceneTerrainGenerator: true, SceneSower: true});
+		var self = this;
+		var pool = this.$Service('Workers').Pool('SceneSower', {Math: true, Noise: true, Random: true, Blueprints: true, ScenePlanet: true, SceneTerrainGenerator: true, SceneSower: true});
+		var run;
+		var share;
+
+		function ready (data) {
+			if (!data || typeof data !== 'object') return;
+
+			if (data.Rules)
+				data.Rules = self.Compile(data.Rules);
+
+			self.$Service('SceneTerrainGenerator').ShareGround(pool, data.Options, true);
+		}
+
+		if (pool.SowReady || pool.Inline()) return pool;
+
+		pool.SowReady = true;
+		run = pool.Run;
+		share = pool.Share;
+
+		pool.Run = function (service, method, args) {
+			(args || []).forEach(ready);
+
+			return run.apply(pool, arguments);
+		};
+
+		pool.Share = function (key, data) {
+			ready(data);
+
+			return share.apply(pool, arguments);
+		};
+
+		return pool;
 	},
 
 	/* The numbers of a seed, as SceneModels.Random gives them: the same things for the same seed in a worker and in the page. */
 	Random: function (text) {
-		var value = 2166136261;
-		var i;
-
-		for (i = 0; i < text.length; i++)
-			value = Math.imul(value ^ text.charCodeAt(i), 16777619);
-
-		return function (low, high) {
-			value = Math.imul(value ^ value >>> 15, 2246822519) + 1 | 0;
-
-			return (low || 0) + ((value >>> 0) / 4294967296) * ((high === undefined ? 1 : high) - (low || 0));
-		};
+		return this.$Service('Random').Seeded(text);
 	},
 
 	Source: function (names) {
@@ -290,7 +316,7 @@ Elemenx.Service('SceneSower', {
 		if (ground.Lands[key] !== undefined) return ground.Lands[key];
 
 		lands = ground.Field.Biome(place[0], place[1]).List;
-		pick = Math.abs(Math.sin(place[0] * 39.3468 + place[1] * 11.135) * 24634.6345) % 1;
+		pick = this.$Service('Math').PlaceRandom(place[0], place[1], true);
 
 		for (i = 0; i < lands.length - 1 && pick >= lands[i].Weight; i++)
 			pick -= lands[i].Weight;
@@ -305,15 +331,21 @@ Elemenx.Service('SceneSower', {
 	 * JavaScript (Source), its graph left out, so a worker runs it with no Blueprints of its own. Rules without one as they are.
 	 */
 	Compile: function (rules) {
+		var self = this;
 		var blueprints = this.$Service('Blueprints');
 
 		return (rules || []).map(function (rule) {
 			var made;
 			var copy;
 
-			if (!rule.Graph || rule.Source) return rule;
+			if (rule.Source || rule.Under || rule.Fixed) return rule;
 
-			made = blueprints.Code(typeof rule.Graph === 'string' ? JSON.parse(rule.Graph) : rule.Graph);
+			/* A rule of no graph sows by the library graph (LibraryScatter): its own numbers, the one source of them. */
+			if (!rule.Graph)
+				rule = Object.assign({}, rule, {Graph: self.LibraryScatter(rule)});
+
+			/* Of numbers: typed, its parameters those it runs with (Blueprints.NumericCode); else its Code. */
+			made = blueprints.NumericCode && blueprints.NumericCode(typeof rule.Graph === 'string' ? JSON.parse(rule.Graph) : rule.Graph, rule.Parameters || {}) || blueprints.Code(typeof rule.Graph === 'string' ? JSON.parse(rule.Graph) : rule.Graph);
 			copy = Object.assign({}, rule, {Source: made ? made.Source : null});
 
 			delete copy.Graph;
@@ -333,7 +365,7 @@ Elemenx.Service('SceneSower', {
 		var z = place[1];
 		var growers = this.Growers = this.Growers || {};
 		var run = growers[rule.Source] = growers[rule.Source] || new Function('B', 'M', 'N', rule.Source)(this.$Service('Blueprints'), this.$Service('Math'), this.$Service('Noise'));
-		var inputs = {X: x, Z: z, Height: height, Random: Math.abs(Math.sin(x * 12.9898 + z * 78.233) * 43758.5453) % 1, Other: Math.abs(Math.sin(x * 39.3468 + z * 11.135) * 24634.6345) % 1};
+		var inputs = {X: x, Z: z, Height: height, Random: this.$Service('Math').PlaceRandom(x, z), Other: this.$Service('Math').PlaceRandom(x, z, true)};
 		var weather = null;
 		var made;
 
@@ -384,7 +416,6 @@ Elemenx.Service('SceneSower', {
 	Chance: function (rule, place, ground, noise, keep) {
 		var terrain = this.$Service('SceneTerrainGenerator');
 		var field = ground.Field;
-		var cover = rule.Cover === undefined ? 1 : Number(rule.Cover);
 		var height = field.Height(place[0], place[1]);
 
 		if (ground.Kept[Math.floor(place[0] / 4) + ':' + Math.floor(place[1] / 4)]) return null;
@@ -393,23 +424,17 @@ Elemenx.Service('SceneSower', {
 		if (field.Roads && terrain.OnRoad(field, place[0], place[1], 3)) return null;
 		if (rule.Biome && field.Biomes && this.Land(ground, place) !== rule.Biome) return null;
 
-		/* A rule of a graph tells all the rest itself (Grown). */
-		if (rule.Source) return height;
-
 		/* Under: on the floor or the roof of a cave under the ground, none under the sky. */
 		if (rule.Under)
 			return this.Under(field, place, rule.Under === 'ceiling');
 
-		if (height < (rule.MinHeight === undefined ? 1 : Number(rule.MinHeight))) return null;
-		if (rule.MaxHeight !== undefined && height > Number(rule.MaxHeight)) return null;
-		if (field.Slope(place[0], place[1]) > (rule.MaxSlope === undefined ? 0.3 : Number(rule.MaxSlope))) return null;
+		/*
+		 * The rest its graph tells (Grown): its own, or the library graph of its numbers (Compile). Regression: the height, the
+		 * slope, the cover and the clumps of a rule of no graph were written out again here beside that graph.
+		 */
+		if (rule.Source) return height;
 
-		if (cover < 1 && noise.Fbm(place[0] / (Number(rule.Patch) || 60), 0.5, place[1] / (Number(rule.Patch) || 60), 3) * 1.6 - 0.3 > cover) return null;
-
-		/* Clumps: thick in groves and thin between them, where Cover would leave none; the same place, the same choice. */
-		if (Number(rule.Clumps) > 0 && Math.abs(Math.sin(place[0] * 12.9898 + place[1] * 78.233) * 43758.5453) % 1 > 1 - Math.min(1, Number(rule.Clumps)) * (1 - terrain.Smoothstep(0.35, 0.65, noise.Fbm(place[0] / (Number(rule.Patch) || 60), 1.7, place[1] / (Number(rule.Patch) || 60), 3)))) return null;
-
-		return height;
+		throw new Error('Elemenx SceneSower: a rule is sown as Compile made it in the page, and this one was not: ' + (rule.Kind || rule.ID || ''));
 	},
 
 	/*
@@ -476,6 +501,12 @@ Elemenx.Service('SceneSower', {
 		var blocked = {};
 		var things = 0;
 		var noises = {};
+
+		/* Rules not made by Compile (a direct call): made here, once; the code of a graph is kept by its key (NumericCode). */
+		if (context.Rules.some(function (rule) {
+			return !rule.Source && !rule.Under && !rule.Fixed;
+		}))
+			context.Rules = this.Compile(context.Rules);
 
 		var squares = job.Squares.map(function (square) {
 			var lists = {};

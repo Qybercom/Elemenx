@@ -7,7 +7,8 @@
 			"shack": 2,
 			"cabin": 3,
 			"cottage": 2
-		}
+		},
+		"Rank": 1
 	},
 	"village": {
 		"Layout": "road",
@@ -22,6 +23,16 @@
 			"barn": 0.6,
 			"garage": 0.4,
 			"church": 0.1
+		},
+		"Rank": 1,
+		"Planet": {
+			"Share": 1,
+			"Apart": 40,
+			"Core": 0.18,
+			"Fields": 5,
+			"Lights": 6,
+			"Glow": 0.45,
+			"Use": 85
 		}
 	},
 	"town": {
@@ -38,6 +49,16 @@
 			"church": 0.15,
 			"fuel": 0.2,
 			"garage": 0.3
+		},
+		"Rank": 2,
+		"Planet": {
+			"Share": 0.105,
+			"Apart": 120,
+			"Core": 0.45,
+			"Fields": 14,
+			"Lights": 14,
+			"Glow": 0.7,
+			"Use": 170
 		}
 	},
 	"city": {
@@ -59,6 +80,16 @@
 			"tower": 2,
 			"skyscraper": 1,
 			"business": 1
+		},
+		"Rank": 3,
+		"Planet": {
+			"Share": 0.015,
+			"Apart": 400,
+			"Core": 0.9,
+			"Fields": 30,
+			"Lights": 40,
+			"Glow": 1,
+			"Use": 255
 		}
 	},
 	"fort": {
@@ -70,6 +101,7 @@
 			"house": 3,
 			"townhouse": 2,
 			"shop": 1
-		}
+		},
+		"Rank": 2
 	}
 }

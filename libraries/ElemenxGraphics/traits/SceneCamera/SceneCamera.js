@@ -42,13 +42,9 @@ Elemenx.Trait('SceneCamera', {
 		}
 
 		/* The color of a light of a temperature (K), near enough to a body that glows (Tanner Helland's fit). */
+		/* The light of a body as hot as k (Astronomy.Blackbody), linear. */
 		function kelvin (k) {
-			var t = Math.max(1000, Math.min(40000, k)) / 100;
-			var r = t <= 66 ? 255 : 329.698727446 * Math.pow(t - 60, -0.1332047592);
-			var g = t <= 66 ? 99.4708025861 * Math.log(t) - 161.1195681661 : 288.1221695283 * Math.pow(t - 60, -0.0755148492);
-			var b = t >= 66 ? 255 : t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307;
-
-			return [r, g, b].map(function (value) {
+			return self.$Service('Astronomy').Blackbody(k).map(function (value) {
 				return Math.pow(Math.max(1, Math.min(255, value)) / 255, 2.2);
 			});
 		}

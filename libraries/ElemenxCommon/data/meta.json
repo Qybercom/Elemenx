@@ -30,7 +30,10 @@
 				"Hit(ray, center, radius)",
 				"Noise(seed)",
 				"SeedOffset(seed)",
-				"Source(names)"
+				"Source(names)",
+				"PlaceRandom(x, z, other)",
+				"Spiral(index, count, turn)",
+				"Queue()"
 			],
 			"Sample": {}
 		},
@@ -54,6 +57,39 @@
 				"GLSLChunk()",
 				"GLSL(spec, name)",
 				"GLSLLines(spec, prefix, point)",
+				"Source(names)",
+				"Code()",
+				"IR()",
+				"Wasm()",
+				"Numbers(whole)",
+				"Whole(spec)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Geometry",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The nearest point of a line, whether a point is in an area, the level of a line, the nearest of points: of one source, the same in js, wasm and a shader.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Line(points, x, z)",
+				"Area(points, x, z)",
+				"Level(points, levels, x, z)",
+				"Grid(data, side, radius, x, z)",
+				"Tunnel(points, x, y, z, radius, flat, width, height, corner)",
+				"Passages(packed, x, y, z, blend, crust, ground)",
+				"Fall(distance, radius)",
+				"Nearest(points, x, y, z)",
+				"Code()",
+				"IR()",
 				"Source(names)"
 			],
 			"Sample": {}
@@ -75,6 +111,7 @@
 				"Create(seed)",
 				"Hash(text)",
 				"Sequence(text)",
+				"Seeded(text)",
 				"Noise(seed, size)"
 			],
 			"Sample": {}
@@ -190,7 +227,8 @@
 				"Star(star)",
 				"Describe(body, context)",
 				"Color(temperature)",
-				"Generate(seed, options)"
+				"Generate(seed, options)",
+				"Blackbody(temperature)"
 			],
 			"Sample": {}
 		},
@@ -474,7 +512,10 @@
 				"IR(graph, options)",
 				"Invoke(name, inputs)",
 				"Hash2(a, b)",
-				"CurveAt(keys, x, smooth, loop)"
+				"CurveAt(keys, x, smooth, loop)",
+				"Numeric(graph, values, types, keys)",
+				"NumericCode(graph, values, types, keys)",
+				"Wasm(numeric)"
 			],
 			"Sample": {}
 		},

@@ -2072,6 +2072,7 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-blueprint-properties`
 - `elemenx-blueprint-property`: `code`
 - `elemenx-blueprint-side`
+- `elemenx-blueprint-target`
 - `elemenx-blueprint-title`
 - `elemenx-blueprint-type`
 

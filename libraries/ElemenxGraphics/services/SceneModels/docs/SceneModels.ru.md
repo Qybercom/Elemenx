@@ -12,4 +12,4 @@
 - duplicate — дублировать со сдвигом Move; mirror — отразить по оси (Axis);
 - transform — Move, Turn (в градусах), Scale вокруг Pivot; origin — начало координат внизу посередине (To bottom) или в центре.
 
-PieceList(name) перечисляет части для редактора: {ID, Name, Parent, Group, Hidden, Triangles, Material, Skinned}. Extract(name, ids, newName) выносит части в отдельную модель из того же исходника, а из исходной убирает. Combine(newName, parts, options) собирает модель из нескольких ([{Model, At, Turn, Scale}], в единицах каждой); у такого рецепта поле Of.
+PieceList(name) перечисляет части для редактора: {ID, Name, Parent, Group, Hidden, Triangles, Material, Skinned}. Extract(name, ids, newName) выносит части в отдельную модель из того же исходника, а из исходной убирает. Combine(newName, parts, options) собирает модель из нескольких ([{Model, At, Turn, Scale}], в единицах каждой); у такого рецепта поле Of. Kinds и KindOf(type) — каким видом Scene встаёт модель такого типа (resources/models/kinds.json: растение — деревом, здание — домом...), null для неназванного. Rigs() — клипы ригов из resources/models/rigs.json.

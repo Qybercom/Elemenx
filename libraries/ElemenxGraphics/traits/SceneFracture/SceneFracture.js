@@ -230,18 +230,7 @@ Elemenx.Trait('SceneFracture', {
 	Fractures: function (materials) {
 		var scene = this.Scene();
 
-		scene.Fractures = scene.Fractures || {
-			glass: {Toughness: 0.12, Pattern: 'radial', Inner: [0.82, 0.9, 0.95], Light: true},
-			ice: {Toughness: 0.3, Pattern: 'radial', Inner: [0.86, 0.93, 1], Light: true},
-			ceramic: {Toughness: 0.25, Pattern: 'web', Inner: [0.94, 0.93, 0.9]},
-			wood: {Toughness: 0.5, Pattern: 'splinter', Inner: [0.78, 0.62, 0.42]},
-			plastic: {Toughness: 0.4, Pattern: 'web', Inner: [0.85, 0.85, 0.85]},
-			brick: {Toughness: 0.9, Pattern: 'web', Inner: [0.62, 0.36, 0.26]},
-			concrete: {Toughness: 1.1, Pattern: 'web', Inner: [0.66, 0.65, 0.61]},
-			stone: {Toughness: 1.3, Pattern: 'web', Inner: [0.6, 0.58, 0.55]},
-			metal: {Toughness: 3, Pattern: 'dent', Inner: [0.55, 0.55, 0.57]},
-			fabric: {Toughness: 0.3, Pattern: 'tear', Inner: [0.5, 0.48, 0.45]}
-		};
+		scene.Fractures = scene.Fractures || Elemenx.Resources('Data', 'ElemenxGraphics/fracture/materials') || {};
 
 		Object.keys(materials || {}).forEach(function (name) {
 			scene.Fractures[name] = Object.assign({}, scene.Fractures[name] || {Toughness: 1, Pattern: 'web'}, materials[name]);

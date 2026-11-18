@@ -52,6 +52,7 @@ Elemenx.Service('PlanetData', {
 		var self = this;
 		var given = settings || {};
 		var planets = this.$Service('ScenePlanet');
+		var code = planets.ClimateCode;
 		var bare = Object.assign({}, options || {});
 		var size = Math.max(3, Math.round(Number(given.Size) || 129));
 		var depth = Math.max(0, Math.min(10, Math.round(given.Depth === undefined ? 3 : Number(given.Depth))));
@@ -59,7 +60,7 @@ Elemenx.Service('PlanetData', {
 		var climates = Math.max(0, Math.min(depth, Math.round(given.Climate === undefined ? lands : Number(given.Climate))));
 		var plated = Math.max(0, Math.min(depth, Math.round(given.Plates === undefined ? lands : Number(given.Plates))));
 		var vectored = given.Vectors === true;
-		var kinds = bare.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe'];
+		var kinds = bare.Biomes || this.$Service('SceneTerrainGenerator').DefaultBiomes;
 		/* The names of its lands, by their place in its tiles of Biome: 0, the sea. */
 		var table = [''].concat(kinds.map(function (entry) {
 			return typeof entry === 'string' ? entry : entry.Biome || entry.Name || '';
@@ -106,7 +107,7 @@ Elemenx.Service('PlanetData', {
 				Edit: {Type: 'int16', Unit: 'm', Depth: depth},
 				Biome: {Type: 'uint8', Depth: lands, Table: table},
 				/* Its warmth, how wet it is and its winds; its plates and how they meet (TileValues). */
-				Climate: {Type: 'rgba8', Depth: climates, Channels: ['Celsius -40..50', 'Moisture 0..1', 'Wind east -16..16 m/s', 'Wind north -16..16 m/s']},
+				Climate: {Type: 'rgba8', Depth: climates, Channels: ['Celsius ' + code.Low + '..' + code.High, 'Moisture 0..1', 'Wind east -' + code.Wind + '..' + code.Wind + ' m/s', 'Wind north -' + code.Wind + '..' + code.Wind + ' m/s']},
 				Plate: {Type: 'rgba8', Depth: plated, Channels: ['ID', 'Oceanic 255', 'Boundary km / 10', 'Push -2..2']}
 			},
 			Vectors: {},
@@ -198,7 +199,7 @@ Elemenx.Service('PlanetData', {
 
 					if (--waiting) return;
 
-					run('Drainage', [heights, side, 40], function (drained) {
+					run('Drainage', [heights, side], function (drained) {
 						var rivers = drained.Rivers;
 
 						run('Settlements', [Object.assign({}, working, {Rivers: rivers}), Number(given.Towns) || 20000], function (placed) {
@@ -259,7 +260,7 @@ Elemenx.Service('PlanetData', {
 			return;
 		}
 
-		working = planets.Ruled(Object.assign({}, origin, {Edits: data.Edits.Edits, Baked: data.Edits.Baked, Regions: data.Edits.Regions || [], BiomeList: this.$Service('SceneTerrainGenerator').Biomes({Biomes: origin.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe']})}));
+		working = planets.Ruled(Object.assign({}, origin, {Edits: data.Edits.Edits, Baked: data.Edits.Baked, Regions: data.Edits.Regions || [], BiomeList: this.$Service('SceneTerrainGenerator').Biomes({Biomes: origin.Biomes || this.$Service('SceneTerrainGenerator').DefaultBiomes})}));
 
 		/* The tiles of its layers that heights change (Height, Biome, Climate) over the caps the edits that changed reach. */
 		Object.keys(data.Tiles).forEach(function (name) {

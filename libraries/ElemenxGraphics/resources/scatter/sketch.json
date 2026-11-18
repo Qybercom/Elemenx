@@ -1,0 +1,15 @@
+{
+	"forest": {"Shapes": ["pine", "pine", "oak", "birch", "bush", "stump"], "Density": 2.5, "Clumps": 0.3, "Passability": 0.6},
+	"meadow": {"Shapes": ["fern", "bush", "mushroom"], "Density": 0.25, "Size": [0.6, 1.2], "Passability": 1},
+	"bushes": {"Shapes": ["bush", "bush", "fern"], "Density": 4, "Size": [0.7, 1.3], "Passability": 0.7},
+	"thicket": {"Shapes": ["bush", "fern", "bush", "oak"], "Density": 10, "Size": [0.8, 1.4], "Passability": 0.1},
+	"jungle": {"Shapes": ["jungle", "jungle", "palm", "fern", "bush"], "Density": 5, "Passability": 0.3},
+	"sequoia": {"Shapes": ["sequoia", "sequoia", "fern", "pine"], "Density": 0.35, "Passability": 0.8},
+	"fields": {"Shapes": ["wheat"], "Spacing": 1, "Gap": 1.4, "Size": [0.9, 1.1], "Passability": 1},
+	"orchard": {"Shapes": ["oak"], "Spacing": 6, "Gap": 6, "Size": [0.45, 0.6], "Passability": 0.9},
+	"row": {"Shapes": ["fence"], "Spacing": 4, "Passability": 0},
+	"fence": {"Shapes": ["fence"], "Spacing": 2, "Passability": 0, "Fit": true},
+	"hedge": {"Shapes": ["hedge"], "Spacing": 1.8, "Passability": 0, "Fit": true},
+	"wall": {"Shapes": ["stone-wall"], "Spacing": 1.9, "Passability": 0, "Fit": true},
+	"powerline": {"Shapes": ["pole"], "Spacing": 40, "Passability": 1}
+}

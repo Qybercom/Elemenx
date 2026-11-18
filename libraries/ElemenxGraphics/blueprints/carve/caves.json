@@ -1,0 +1,586 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "caves",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "carve-caves-formula-0",
+			"type": "Formula",
+			"x": 260,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(X / Scale + SA, Y / (Scale * 0.6) + SA, Z / Scale + SA)"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Scale"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SA"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-4",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Y"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-5",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-noisespec-6",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "none"
+				},
+				{
+					"key": "Octaves",
+					"value": 4
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "carve-caves-formula-7",
+			"type": "Formula",
+			"x": 260,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(X / Scale + 17.3 + SB, Y / (Scale * 0.6) + SB, Z / Scale - 9.1 + SB)"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-8",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SB"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-noisespec-9",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "none"
+				},
+				{
+					"key": "Octaves",
+					"value": 4
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "carve-caves-formula-10",
+			"type": "Formula",
+			"x": 260,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(X / (Scale * 1.8) + SH, Y / (Scale * 0.9) + SH, Z / (Scale * 1.8) + SH)"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-11",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SH"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-noisespec-12",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 3
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "carve-caves-formula-13",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(max(max(min((max(abs(A - 0.5), abs(B - 0.5)) - Width * 0.18) * Scale, (0.72 - Halls * 0.16 - N) * Scale * 1.5), Top - (G - Y)), G - Y - Bottom), sqrt((X - CX) * (X - CX) + (Z - CZ) * (Z - CZ)) - Radius)"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-14",
+			"type": "Input",
+			"x": 0,
+			"y": 880,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-15",
+			"type": "Input",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Halls"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-16",
+			"type": "Input",
+			"x": 0,
+			"y": 1100,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Top"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-17",
+			"type": "Input",
+			"x": 0,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "G"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-18",
+			"type": "Input",
+			"x": 0,
+			"y": 1320,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Bottom"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-19",
+			"type": "Input",
+			"x": 0,
+			"y": 1430,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CX"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-20",
+			"type": "Input",
+			"x": 0,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CZ"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-input-21",
+			"type": "Input",
+			"x": 0,
+			"y": 1650,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Radius"
+				}
+			]
+		},
+		{
+			"id": "carve-caves-result-22",
+			"type": "Result",
+			"x": 1300,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Density"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "carve-caves-link-0",
+			"p1": "carve-caves-input-1-out-Value",
+			"p2": "carve-caves-formula-0-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-1",
+			"p1": "carve-caves-input-2-out-Value",
+			"p2": "carve-caves-formula-0-in-Scale",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-2",
+			"p1": "carve-caves-input-3-out-Value",
+			"p2": "carve-caves-formula-0-in-SA",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-3",
+			"p1": "carve-caves-input-4-out-Value",
+			"p2": "carve-caves-formula-0-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-4",
+			"p1": "carve-caves-input-5-out-Value",
+			"p2": "carve-caves-formula-0-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-5",
+			"p1": "carve-caves-formula-0-out-Value",
+			"p2": "carve-caves-noisespec-6-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-6",
+			"p1": "carve-caves-input-1-out-Value",
+			"p2": "carve-caves-formula-7-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-7",
+			"p1": "carve-caves-input-2-out-Value",
+			"p2": "carve-caves-formula-7-in-Scale",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-8",
+			"p1": "carve-caves-input-8-out-Value",
+			"p2": "carve-caves-formula-7-in-SB",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-9",
+			"p1": "carve-caves-input-4-out-Value",
+			"p2": "carve-caves-formula-7-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-10",
+			"p1": "carve-caves-input-5-out-Value",
+			"p2": "carve-caves-formula-7-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-11",
+			"p1": "carve-caves-formula-7-out-Value",
+			"p2": "carve-caves-noisespec-9-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-12",
+			"p1": "carve-caves-input-1-out-Value",
+			"p2": "carve-caves-formula-10-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-13",
+			"p1": "carve-caves-input-2-out-Value",
+			"p2": "carve-caves-formula-10-in-Scale",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-14",
+			"p1": "carve-caves-input-11-out-Value",
+			"p2": "carve-caves-formula-10-in-SH",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-15",
+			"p1": "carve-caves-input-4-out-Value",
+			"p2": "carve-caves-formula-10-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-16",
+			"p1": "carve-caves-input-5-out-Value",
+			"p2": "carve-caves-formula-10-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-17",
+			"p1": "carve-caves-formula-10-out-Value",
+			"p2": "carve-caves-noisespec-12-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-18",
+			"p1": "carve-caves-noisespec-6-out-Value",
+			"p2": "carve-caves-formula-13-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-19",
+			"p1": "carve-caves-noisespec-9-out-Value",
+			"p2": "carve-caves-formula-13-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-20",
+			"p1": "carve-caves-input-14-out-Value",
+			"p2": "carve-caves-formula-13-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-21",
+			"p1": "carve-caves-input-2-out-Value",
+			"p2": "carve-caves-formula-13-in-Scale",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-22",
+			"p1": "carve-caves-input-15-out-Value",
+			"p2": "carve-caves-formula-13-in-Halls",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-23",
+			"p1": "carve-caves-noisespec-12-out-Value",
+			"p2": "carve-caves-formula-13-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-24",
+			"p1": "carve-caves-input-16-out-Value",
+			"p2": "carve-caves-formula-13-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-25",
+			"p1": "carve-caves-input-17-out-Value",
+			"p2": "carve-caves-formula-13-in-G",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-26",
+			"p1": "carve-caves-input-4-out-Value",
+			"p2": "carve-caves-formula-13-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-27",
+			"p1": "carve-caves-input-18-out-Value",
+			"p2": "carve-caves-formula-13-in-Bottom",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-28",
+			"p1": "carve-caves-input-1-out-Value",
+			"p2": "carve-caves-formula-13-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-29",
+			"p1": "carve-caves-input-19-out-Value",
+			"p2": "carve-caves-formula-13-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-30",
+			"p1": "carve-caves-input-5-out-Value",
+			"p2": "carve-caves-formula-13-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-31",
+			"p1": "carve-caves-input-20-out-Value",
+			"p2": "carve-caves-formula-13-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-32",
+			"p1": "carve-caves-input-21-out-Value",
+			"p2": "carve-caves-formula-13-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "carve-caves-link-33",
+			"p1": "carve-caves-formula-13-out-Value",
+			"p2": "carve-caves-result-22-in-Value",
+			"kind": "value"
+		}
+	]
+}

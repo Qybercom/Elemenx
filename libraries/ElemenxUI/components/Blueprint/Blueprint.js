@@ -14,7 +14,8 @@
  * comment {Target}, paste {}, parameter {Change, Index, Field}; a refusal is told in denied {Action, ...its target}.
  * Methods: Graph(), Write() (the text of its file), Add(type, x, y), Remove(id), Select(id), Selected(), Check(),
  * Compile(options), Arrange() (the blocks in columns, each after what it reads; a graph whose blocks all stand at 0, 0
- * is arranged when shown) and Fit().
+ * is arranged when shown), Fit() and Target() (what a generator graph runs as: WebAssembly, JavaScript or block by block,
+ * told under its parameters).
  *
  * Many blocks are chosen at once: Shift or Ctrl and a press adds one or takes it away, Shift and a drag on an empty place
  * frames them, Ctrl+A chooses all (SelectMany(ids), Chosen()); a drag of the head of one moves all that are chosen,
@@ -42,7 +43,7 @@ Elemenx.Component('Blueprint', {
 			problems: 'What is wrong with the graph: [{Block, Pin, Link, Message}].',
 			denied: 'EditCheck refused what the reader did: {Action, ...its target}.'
 		},
-		Methods: ['Graph()', 'Write()', 'Add(type, x, y)', 'Remove(id)', 'Select(id)', 'SelectMany(ids)', 'Selected()', 'Chosen()', 'Undo()', 'Redo()', 'Copy()', 'Paste()', 'Group(ids, title)', 'Ungroup(id)', 'RemoveGroup(id, content)', 'Comment(id, text)', 'Check()', 'Compile(options)', 'Arrange()', 'Fit()'],
+		Methods: ['Graph()', 'Write()', 'Add(type, x, y)', 'Remove(id)', 'Select(id)', 'SelectMany(ids)', 'Selected()', 'Chosen()', 'Undo()', 'Redo()', 'Copy()', 'Paste()', 'Group(ids, title)', 'Ungroup(id)', 'RemoveGroup(id, content)', 'Comment(id, text)', 'Check()', 'Compile(options)', 'Arrange()', 'Fit()', 'Target()'],
 		Props: {
 			Value: 'The graph: an object or the text of its file.',
 			Type: {Options: ['flow', 'pass', 'material', 'render', 'generator'], Description: 'The type of the graph made when there is no Value.'},
@@ -69,6 +70,7 @@ Elemenx.Component('Blueprint', {
 	Filter: '',
 	Kind: 'flow',
 	Parameters: [],
+	Running: null,
 	ParameterTypes: ['float', 'vec2', 'vec3', 'vec4', 'int', 'bool', 'text', 'any'],
 
 	$OnCreate: function () {
@@ -212,6 +214,34 @@ Elemenx.Component('Blueprint', {
 			this.$Ref('Board', true).Viewport().removeEventListener('pointerdown', this.BoardDown);
 	},
 
+	/*
+	 * What a generator graph runs as ({Kind: wasm, js or blocks, Text}): of numbers, WebAssembly (Blueprints.Numeric, the
+	 * size of its module; its JavaScript gives the very numbers); else its blocks one by one, the first block of no numbers
+	 * named. Null for a graph of another kind. Made again only when the graph changed.
+	 */
+	Target: function () {
+		var own = this.Own();
+		var blueprints = this.Blueprints();
+		var key;
+		var numeric;
+		var made;
+		var wasm;
+
+		if (!own.Graph || own.Graph.type !== 'generator' || !blueprints || !blueprints.Numeric) return null;
+
+		key = JSON.stringify(own.Graph);
+
+		if (own.TargetKey === key) return own.Target;
+
+		numeric = blueprints.Numeric(own.Graph, {});
+		made = numeric.Diagnostics.length ? null : blueprints.NumericCode(own.Graph, {});
+		wasm = made ? blueprints.Wasm(made.Numeric) : null;
+		own.TargetKey = key;
+		own.Target = wasm ? {Kind: 'wasm', Text: Elemenx.Locale.Text('ui.blueprint.wasm', {bytes: wasm.Bytes.length})} : made ? {Kind: 'js', Text: Elemenx.Locale.Text('ui.blueprint.js')} : {Kind: 'blocks', Text: Elemenx.Locale.Text('ui.blueprint.blocks', {reason: numeric.Diagnostics.length ? numeric.Diagnostics[0].Text.replace(/^Elemenx Blueprints: /, '') : ''})};
+
+		return own.Target;
+	},
+
 	Blueprints: function () {
 		return this.$Service('Blueprints');
 	},
@@ -265,6 +295,9 @@ Elemenx.Component('Blueprint', {
 		this.Parameters = own.Graph.parameters.map(function (parameter, index) {
 			return Object.assign({Index: index}, parameter);
 		});
+
+		/* What it runs as, told under its parameters (Target). */
+		this.Running = this.Target();
 	},
 
 	Groups: function (kind, filter) {

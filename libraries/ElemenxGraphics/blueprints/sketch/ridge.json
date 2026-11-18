@@ -1,0 +1,263 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "ridge",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "sketch-ridge-line-0",
+			"type": "Line",
+			"x": 260,
+			"y": 110,
+			"properties": []
+		},
+		{
+			"id": "sketch-ridge-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Points"
+				}
+			]
+		},
+		{
+			"id": "sketch-ridge-input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "sketch-ridge-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "sketch-ridge-formula-4",
+			"type": "Formula",
+			"x": 260,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(X * 0.02 + O, 0.5 + O, Z * 0.02 + O)"
+				}
+			]
+		},
+		{
+			"id": "sketch-ridge-input-5",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "O"
+				}
+			]
+		},
+		{
+			"id": "sketch-ridge-fbm-6",
+			"type": "Fbm",
+			"x": 520,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Octaves",
+					"value": 3
+				}
+			]
+		},
+		{
+			"id": "sketch-ridge-formula-7",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "H + Height * pow((0.5 + 0.5 * cos(min(1, max(0, (D) / max(0.000001, Width / 2))) * 3.141592653589793)), 1 - Sharp * 0.7) * S * (0.85 + 0.3 * N)"
+				}
+			]
+		},
+		{
+			"id": "sketch-ridge-input-8",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "H"
+				}
+			]
+		},
+		{
+			"id": "sketch-ridge-input-9",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "sketch-ridge-input-10",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "sketch-ridge-input-11",
+			"type": "Input",
+			"x": 0,
+			"y": 880,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Sharp"
+				}
+			]
+		},
+		{
+			"id": "sketch-ridge-input-12",
+			"type": "Input",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "S"
+				}
+			]
+		},
+		{
+			"id": "sketch-ridge-result-13",
+			"type": "Result",
+			"x": 1040,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "sketch-ridge-link-0",
+			"p1": "sketch-ridge-input-1-out-Value",
+			"p2": "sketch-ridge-line-0-in-Points",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-ridge-link-1",
+			"p1": "sketch-ridge-input-2-out-Value",
+			"p2": "sketch-ridge-line-0-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-ridge-link-2",
+			"p1": "sketch-ridge-input-3-out-Value",
+			"p2": "sketch-ridge-line-0-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-ridge-link-3",
+			"p1": "sketch-ridge-input-2-out-Value",
+			"p2": "sketch-ridge-formula-4-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-ridge-link-4",
+			"p1": "sketch-ridge-input-5-out-Value",
+			"p2": "sketch-ridge-formula-4-in-O",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-ridge-link-5",
+			"p1": "sketch-ridge-input-3-out-Value",
+			"p2": "sketch-ridge-formula-4-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-ridge-link-6",
+			"p1": "sketch-ridge-formula-4-out-Value",
+			"p2": "sketch-ridge-fbm-6-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-ridge-link-7",
+			"p1": "sketch-ridge-input-8-out-Value",
+			"p2": "sketch-ridge-formula-7-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-ridge-link-8",
+			"p1": "sketch-ridge-input-9-out-Value",
+			"p2": "sketch-ridge-formula-7-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-ridge-link-9",
+			"p1": "sketch-ridge-line-0-out-Distance",
+			"p2": "sketch-ridge-formula-7-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-ridge-link-10",
+			"p1": "sketch-ridge-input-10-out-Value",
+			"p2": "sketch-ridge-formula-7-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-ridge-link-11",
+			"p1": "sketch-ridge-input-11-out-Value",
+			"p2": "sketch-ridge-formula-7-in-Sharp",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-ridge-link-12",
+			"p1": "sketch-ridge-input-12-out-Value",
+			"p2": "sketch-ridge-formula-7-in-S",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-ridge-link-13",
+			"p1": "sketch-ridge-fbm-6-out-Value",
+			"p2": "sketch-ridge-formula-7-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-ridge-link-14",
+			"p1": "sketch-ridge-formula-7-out-Value",
+			"p2": "sketch-ridge-result-13-in-Value",
+			"kind": "value"
+		}
+	]
+}

@@ -284,6 +284,44 @@ Elemenx.Component('TerrainDemo', {
 
 		this.TerrainNote = best && scene.Move('scout', best) ? 'Scout: to the lake at ' + best.join(', ') : 'No way to the lake';
 	},
+	/* How the ground computes its heights (Compute of the Scene): by WebAssembly, or by JavaScript alone. */
+	TerrainCompute: 'auto',
+	TerrainComputes: [{Value: 'auto', Label: 'WebAssembly'}, {Value: 'js', Label: 'JavaScript'}],
+	TerrainMeasured: '',
+	/*
+	 * Squares of the ground of the view made both ways, eight each (SceneTerrainGenerator.Chunk, 64 cells): the time of one,
+	 * and whether their numbers are the same.
+	 */
+	TerrainMeasure: function () {
+		var scene = this.Terrained ? this.Terrained() : null;
+		var ground = scene && scene.Scene().Ground;
+		var terrain = this.$Service('SceneTerrainGenerator');
+		var times = {};
+		var made = {};
+
+		if (!ground || !ground.Field.Options) {
+			this.TerrainMeasured = 'No ground yet';
+
+			return;
+		}
+
+		['js', 'auto'].forEach(function (compute) {
+			var options = Object.assign({}, ground.Field.Options, {Compute: compute, ReliefWasm: undefined, ReliefSource: undefined});
+			var field = terrain.Flat(options);
+			var start;
+			var i;
+
+			made[compute] = field.Chunk(40, 40, 160, 64);
+			start = performance.now();
+
+			for (i = 0; i < 8; i++)
+				field.Chunk(40 + i * 160, 40, 160, 64);
+
+			times[compute] = (performance.now() - start) / 8;
+		});
+
+		this.TerrainMeasured = 'A square of 64 cells: JavaScript ' + times.js.toFixed(1) + ' ms, WebAssembly ' + times.auto.toFixed(1) + ' ms (' + (times.js / times.auto).toFixed(2) + ' times), ' + (JSON.stringify(made.js) === JSON.stringify(made.auto) ? 'the same numbers' : 'other numbers');
+	},
 	/* How wild the sea of the Terrain demo is (Swell of its ground). */
 	TerrainSwell: 0.35,
 	TerrainRelief: 'classic',

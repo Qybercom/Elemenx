@@ -65,6 +65,8 @@ Elemenx.Service('SceneRoads', {
 	$OnCreate: function () {
 		this.Surfaces = {};
 		this.Defined = {};
+		/* How roads climb, pass over one another, meet and are painted (resources/roads/rules.json). */
+		this.Rules = Elemenx.Resources('Data', 'ElemenxGraphics/roads/rules') || {};
 
 		this.Library();
 	},
@@ -501,14 +503,12 @@ Elemenx.Service('SceneRoads', {
 	 */
 	Grade: function (type) {
 		var given = type || {};
-		if (Number(given.Grade) > 0) return Number(given.Grade);
-		if (given.Group === 'rail') return 0.025;
-		if (given.Group === 'air') return 0.015;
-		if (given.Group === 'race') return 0.06;
-		if (given.Group === 'street') return 0.1;
-		if (given.Group === 'path') return 0.15;
+		var grades = this.Rules.Grade;
 
-		return this.Class(given) === 'motorway' ? 0.05 : (given.Speed || 50) >= 80 ? 0.07 : 0.09;
+		if (Number(given.Grade) > 0) return Number(given.Grade);
+		if (given.Group !== 'road' && grades[given.Group]) return grades[given.Group];
+
+		return this.Class(given) === 'motorway' ? grades.motorway : (given.Speed || 50) >= grades.Fast ? grades.fast : grades.slow;
 	},
 
 	/*
@@ -519,7 +519,7 @@ Elemenx.Service('SceneRoads', {
 		var given = type || {};
 		if (given.Group === 'air' || given.Group === 'rail') return given.Group;
 
-		return given.Group === 'road' && (given.Speed || 50) >= 110 ? 'motorway' : 'local';
+		return given.Group === 'road' && (given.Speed || 50) >= this.Rules.Motorway ? 'motorway' : 'local';
 	},
 
 	Road: function (spec, options) {
@@ -782,6 +782,7 @@ Elemenx.Service('SceneRoads', {
 	 */
 	InterchangeForm: function (a, b, ending) {
 		var self = this;
+		var speeds = this.Rules.Interchange;
 
 		function motorway (type) {
 			return self.Class(type) === 'motorway';
@@ -792,12 +793,12 @@ Elemenx.Service('SceneRoads', {
 		}
 
 		if (ending)
-			return motorway(b) && road(a, 70) && !motorway(a) ? 'trumpet' : '';
+			return motorway(b) && road(a, speeds.Trumpet) && !motorway(a) ? 'trumpet' : '';
 
 		if (motorway(a) && motorway(b))
-			return (a.Speed || 50) >= 130 && (b.Speed || 50) >= 130 ? 'stack' : 'cloverleaf';
+			return (a.Speed || 50) >= speeds.Stack && (b.Speed || 50) >= speeds.Stack ? 'stack' : 'cloverleaf';
 
-		if (motorway(a) && road(b, 80) || motorway(b) && road(a, 80)) return 'diamond';
+		if (motorway(a) && road(b, speeds.Diamond) || motorway(b) && road(a, speeds.Diamond)) return 'diamond';
 
 		return '';
 	},
@@ -1474,11 +1475,8 @@ Elemenx.Service('SceneRoads', {
 	 */
 	Meeting: function (a, b) {
 		var pair = [this.Class(a), this.Class(b)].sort().join('+');
-		if (pair === 'local+local' || pair === 'air+air') return 'junction';
-		if (pair === 'local+rail') return 'crossing';
-		if (pair === 'motorway+motorway') return 'interchange';
 
-		return 'over';
+		return this.Rules.Meeting[pair] || this.Rules.Meeting.Other;
 	},
 
 	/* The junctions where two roads on the ground cross, or one ends on another, added to the list when none is there yet. */
@@ -1605,7 +1603,7 @@ Elemenx.Service('SceneRoads', {
 		var given = type || {};
 		if (Number(given.Clearance) > 0) return Number(given.Clearance);
 
-		return given.Group === 'rail' && given.Catenary ? 7 : 5.5;
+		return given.Group === 'rail' && given.Catenary ? this.Rules.Clearance.Catenary : this.Rules.Clearance.Other;
 	},
 
 	/*
@@ -2902,7 +2900,8 @@ Elemenx.Service('SceneRoads', {
 					};
 				}
 
-				var pattern = kind === 'dashed' ? dashes(3, 6) : kind === 'dotted' ? dashes(1, 1.5) : null;
+				var dash = self.Rules.Markings[kind];
+				var pattern = dash ? dashes(dash[0], dash[1]) : null;
 				/* No paint over a junction: its own way across is free. */
 				var keep = function (point, index) {
 					return !point.Cut && !road.Points[(index + 1) % road.Points.length].Cut && (!pattern || pattern(point));
@@ -3645,7 +3644,7 @@ Elemenx.Service('SceneRoads', {
 	},
 
 	/* What a worker carries of this Service besides its methods: the surfaces and the types the library defined. */
-	Carried: ['Surfaces', 'Defined'],
+	Carried: ['Surfaces', 'Defined', 'Rules'],
 
 	Source: function (names) {
 		return this.$Service('Workers').Source(this, names);

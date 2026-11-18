@@ -490,11 +490,9 @@ Elemenx.Component('GameStrategy', {
 			if (far > range) {
 				order.Next -= elapsed;
 
-				if (order.Next <= 0) {
-					order.Next = 1;
-
-					scene.Move(unit.ID, [target.World[0], target.World[2]]);
-				}
+				/* Again each second as the foe moves; with no way to it (over a river with no bridge), in 5 s. */
+				if (order.Next <= 0)
+					order.Next = scene.Move(unit.ID, [target.World[0], target.World[2]]) === false ? 5 : 1;
 
 				return;
 			}

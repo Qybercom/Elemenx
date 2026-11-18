@@ -93,7 +93,7 @@ Elemenx.Service('SceneLocations', {
 				at = site.Local(made.Direction);
 
 				run.push([Math.round(at[0] * 10) / 10, Math.round(at[1] * 10) / 10, made.Level]);
-				widths.push(Math.round(15 * Math.sqrt(made.Flow)));
+				widths.push(Math.round(planets.RiverWidth(made.Flow) * 1000));
 			}
 
 			/* The segments that pass near, each a point a tenth of a bend apart (a bend: eleven times its width); one run while they go on near. */
@@ -115,7 +115,7 @@ Elemenx.Service('SceneLocations', {
 					continue;
 				}
 
-				step = Math.max(0.03, 11 * 0.015 * Math.sqrt(Math.max(1, Math.min(river.Flow[k], river.Flow[k + 1]))) / 10);
+				step = Math.max(0.03, planets.Rivers.Bend * planets.RiverWidth(Math.min(river.Flow[k], river.Flow[k + 1])) / 10);
 				count = Math.max(1, Math.ceil((river.Along[k + 1] - river.Along[k]) / step));
 
 				for (s = run.length ? 1 : 0; s <= count; s++)
@@ -168,7 +168,7 @@ Elemenx.Service('SceneLocations', {
 		}
 
 		towns.forEach(function (town, number) {
-			var radius = town.Kind === 'city' ? 900 : town.Kind === 'town' ? 450 : 180;
+			var radius = planets.Kind(town.Kind).Core * 1000;
 			var count = 24;
 			var at;
 			var points = [];
@@ -366,7 +366,7 @@ Elemenx.Service('SceneLocations', {
 	Caverns: function (planet, place) {
 		var half = this.Extent(place) / 2;
 		var site = this.$Service('SceneTerrainGenerator').Site({Options: planet, Latitude: place.Latitude, Longitude: place.Longitude, Turn: place.Turn});
-		var seed = Math.abs(Math.sin(place.Latitude * 12.9898 + place.Longitude * 78.233) * 43758.5453) % 1;
+		var seed = this.$Service('Math').PlaceRandom(place.Latitude, place.Longitude);
 		var found = [];
 		var items = [];
 		var step = half * 1.4 / 8;
@@ -438,37 +438,6 @@ Elemenx.Service('SceneLocations', {
 		});
 
 		return layers.length ? {Layers: layers} : undefined;
-	},
-
-	/* The way of a river bent: a point every 400 m along it, aside by its width and more, the same for the same river. */
-	Meander: function (run, width, seed) {
-		var made = [];
-		var along = 0;
-		var k;
-		var step;
-
-		for (k = 0; k + 1 < run.length; k++) {
-			var a = run[k];
-			var b = run[k + 1];
-			var dx = b[0] - a[0];
-			var dz = b[1] - a[1];
-			var length = Math.hypot(dx, dz) || 1;
-			var count = Math.max(1, Math.ceil(length / 400));
-
-			for (step = 0; step < count; step++) {
-				var t = step / count;
-				var d = along + length * t;
-				var aside = width * 2.5 * (Math.sin(d / 1100 + seed * 1.7) * 0.65 + Math.sin(d / 380 + seed * 3.1) * 0.35);
-
-				made.push([Math.round((a[0] + dx * t - dz / length * aside) * 10) / 10, Math.round((a[1] + dz * t + dx / length * aside) * 10) / 10, a[2] + (b[2] - a[2]) * t]);
-			}
-
-			along += length;
-		}
-
-		made.push(run[run.length - 1]);
-
-		return made;
 	},
 
 	/* The side of the square ground of a location: its outline and a margin round it to see what is past it, metres. */

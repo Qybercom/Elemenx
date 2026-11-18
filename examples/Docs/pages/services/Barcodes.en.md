@@ -58,4 +58,4 @@ Barcodes: the codes of the shelves, the parcels and the tickets, drawn in SVG; Q
 
 - [Barcodes writes each format as the reference decoder read it, checks the digits, and tells what a format cannot write](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-codes.test.js#L100) — `tests/regression/library-codes.test.js`
 - [Barcodes takes a format of its own, and draws the guards of EAN longer, the text under the bars and the frame of ITF-14](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-codes.test.js#L138) — `tests/regression/library-codes.test.js`
-- [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L129) — `tests/regression/headless.test.js`
+- [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L130) — `tests/regression/headless.test.js`

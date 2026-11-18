@@ -304,23 +304,9 @@ Elemenx.Trait('SceneScatter', {
 		 * What the sketch of the ground places: a rule of each area of growth (the shapes of its kind in its area, as thick as its
 		 * Density, as easy to go through as its Passability, from 0 none to 1 all), of each field or orchard (in rows), of each line
 		 * of things (a piece every Spacing, along its way), the places nothing grows (clearings, masks, roads, rivers, lakes) and
-		 * its markers. Made again only when the sketch changes.
+		 * its markers. Made again only when the sketch changes. Its rules by kind of the sketch: resources/scatter/sketch.json.
 		 */
-		var presets = {
-			forest: {Shapes: ['pine', 'pine', 'oak', 'birch', 'bush', 'stump'], Density: 2.5, Clumps: 0.3, Passability: 0.6},
-			meadow: {Shapes: ['fern', 'bush', 'mushroom'], Density: 0.25, Size: [0.6, 1.2], Passability: 1},
-			bushes: {Shapes: ['bush', 'bush', 'fern'], Density: 4, Size: [0.7, 1.3], Passability: 0.7},
-			thicket: {Shapes: ['bush', 'fern', 'bush', 'oak'], Density: 10, Size: [0.8, 1.4], Passability: 0.1},
-			jungle: {Shapes: ['jungle', 'jungle', 'palm', 'fern', 'bush'], Density: 5, Passability: 0.3},
-			sequoia: {Shapes: ['sequoia', 'sequoia', 'fern', 'pine'], Density: 0.35, Passability: 0.8},
-			fields: {Shapes: ['wheat'], Spacing: 1, Gap: 1.4, Size: [0.9, 1.1], Passability: 1},
-			orchard: {Shapes: ['oak'], Spacing: 6, Gap: 6, Size: [0.45, 0.6], Passability: 0.9},
-			row: {Shapes: ['fence'], Spacing: 4, Passability: 0},
-			fence: {Shapes: ['fence'], Spacing: 2, Passability: 0, Fit: true},
-			hedge: {Shapes: ['hedge'], Spacing: 1.8, Passability: 0, Fit: true},
-			wall: {Shapes: ['stone-wall'], Spacing: 1.9, Passability: 0, Fit: true},
-			powerline: {Shapes: ['pole'], Spacing: 40, Passability: 1}
-		};
+		var presets = Elemenx.Resources('Data', 'ElemenxGraphics/scatter/sketch') || {};
 
 		function sketched () {
 			var field = scene.Ground && scene.Ground.Field;
@@ -896,6 +882,8 @@ Elemenx.Trait('SceneScatter', {
 			context(ground, false);
 
 			if (!state.Context.Shared) {
+				self.$Service('SceneTerrainGenerator').ShareGround(pool, state.Context.Data.Options);
+
 				pool.Share('sow:' + state.Sown, state.Context.Data);
 
 				state.Context.Shared = true;
@@ -1812,7 +1800,7 @@ Elemenx.Trait('SceneScatter', {
 			var started = performance.now();
 			var half = field.Size / 2;
 			var step = field.Size / (side - 1);
-			var top = rule.MaxHeight === undefined || rule.MaxHeight === '' ? Math.min(field.Rock === undefined ? field.Top * 0.45 : field.Rock, field.Snow === undefined ? Infinity : field.Snow) : Number(rule.MaxHeight);
+			var top = rule.MaxHeight === undefined || rule.MaxHeight === '' ? Math.min(field.Rock === undefined ? field.Top * self.$Service('SceneTerrainGenerator').Zones.Rock : field.Rock, field.Snow === undefined ? Infinity : field.Snow) : Number(rule.MaxHeight);
 			var steep = rule.MaxSlope === undefined ? 0.28 : Number(rule.MaxSlope);
 			var fine = Math.max(2, Math.min(2048, Math.ceil(field.Size) + 1));
 			var cut = tunnelled(field);
@@ -1848,6 +1836,8 @@ Elemenx.Trait('SceneScatter', {
 				if (field.Options) {
 					grass.Row = side;
 					grass.Waiting = true;
+
+					self.$Service('SceneTerrainGenerator').ShareGround(self.$Service('SceneTerrainGenerator').Work(), field.Options);
 
 					self.$Service('SceneTerrainGenerator').Work().Run('SceneTerrainGenerator', 'Grid', [field.Options, side, top, steep], function (error, data) {
 						if (state.Grass !== grass) return;

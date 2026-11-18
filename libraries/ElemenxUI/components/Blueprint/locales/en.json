@@ -25,7 +25,10 @@
 			"paste": "Paste",
 			"all": "Choose all",
 			"arrange": "Arrange",
-			"fit": "Fit to the view"
+			"fit": "Fit to the view",
+			"wasm": "Runs as WebAssembly: {bytes} bytes, the very numbers of its JavaScript",
+			"js": "Runs as JavaScript",
+			"blocks": "Runs block by block: {reason}"
 		}
 	}
 }

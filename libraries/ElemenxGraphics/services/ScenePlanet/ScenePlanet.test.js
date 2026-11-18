@@ -28,6 +28,21 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 		planets = Elemenx.Service('ScenePlanet');
 	});
 
+	/* What its settlements and its lands are of: the numbers of resources/terrain/settlement-kinds, the warmth of a temperature. */
+	it('gives the numbers of a kind of settlement, the kind of a place by its share, and the warmth of a temperature', function () {
+		var kinds = Elemenx.Service('SceneTerrainGenerator').SettlementKinds;
+		var city = kinds.city.Planet.Share;
+
+		expect(planets.Kind('town')).toEqual(kinds.town.Planet);
+		expect(planets.Kind('none')).toEqual(kinds.village.Planet);
+		expect(planets.KindByShare(city / 2)).toBe('city');
+		expect(planets.KindByShare(city + kinds.town.Planet.Share / 2)).toBe('town');
+		expect(planets.KindByShare(0.999)).toBe('village');
+		expect(planets.Warmth(-25)).toBe(0);
+		expect(planets.Warmth(5)).toBeCloseTo(0.5, 12);
+		expect(planets.Warmth(60)).toBe(1);
+	});
+
 	it('turns a latitude and a longitude into a direction and back', function () {
 		[[0, 0], [33, -120], [-60, 170], [89, 10]].forEach(function (place) {
 			var back = planets.LatLon(planets.Direction(place[0], place[1]));

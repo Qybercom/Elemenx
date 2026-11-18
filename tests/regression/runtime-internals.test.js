@@ -13,10 +13,10 @@ import * as eslintScope from 'eslint-scope';
  */
 
 var KnownGlobals = [
-	'Array', 'ArrayBuffer', 'Blob', 'DataView', 'Date', 'Error', 'Function', 'JSON', 'Map', 'Math',
+	'Array', 'ArrayBuffer', 'Blob', 'DataView', 'Date', 'Error', 'Float64Array', 'Function', 'Infinity', 'JSON', 'Map', 'Math',
 	'MutationObserver', 'NodeFilter', 'Number', 'Object', 'Proxy', 'Reflect', 'RegExp', 'Set', 'String', 'Symbol',
-	'TextDecoder', 'TextEncoder', 'TypeError', 'URL', 'Uint32Array', 'Uint8Array', 'WeakMap', 'WeakSet', 'XMLHttpRequest',
-	'clearTimeout', 'console', 'decodeURIComponent', 'document', 'encodeURIComponent', 'globalThis', 'parseInt', 'self',
+	'TextDecoder', 'TextEncoder', 'TypeError', 'URL', 'Uint32Array', 'Uint8Array', 'WeakMap', 'WeakSet', 'WebAssembly', 'XMLHttpRequest',
+	'clearTimeout', 'console', 'decodeURIComponent', 'document', 'encodeURIComponent', 'globalThis', 'isFinite', 'parseInt', 'self',
 	'setTimeout', 'undefined',
 	/* The box of an isolated build (elemenx build --widget) gets the copy of the framework. */
 	'ElemenxIsolated',

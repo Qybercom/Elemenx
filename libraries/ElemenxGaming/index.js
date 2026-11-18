@@ -4,6 +4,7 @@
 	'themes/scifi.css',
 	'locales/en.json',
 	'locales/ru.json',
+	'resources/vitals/kinds.json',
 	'services/Vitals/Vitals.js',
 	'services/GameItems/GameItems.js',
 	'components/GameHud/GameHud.js',

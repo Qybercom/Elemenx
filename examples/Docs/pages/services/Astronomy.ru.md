@@ -1,7 +1,7 @@
 <!-- generated -->
 # Astronomy
 
-Числа звёздной системы, как они нужны игре: где тело на орбите в данный момент (законы Кеплера), из чего состоят звезда и планета и насколько они тёплые, и целые системы из seed. Ничего не рисует. Единицы: расстояния в а. е., время в сутках, массы звёзд в массах Солнца, планет и лун — в массах Земли, радиусы звёзд в радиусах Солнца, планет — в км, углы в градусах; пространство эклиптики (X и Y в её плоскости, Z на север). Length(value) — длина в а. е. из числа или текста с единицей ('384400 km', '2.5 Mkm', '5.2 AU', '4.2 ly', '1.3 pc'); Period(distance, mass) — сутки оборота; Position(orbit, time, mass) — [x, y, z] в а. е. от того, вокруг чего тело обращается (orbit — {Distance, Eccentricity, Inclination, Node, Periapsis, Anomaly, Period}); Path(orbit, count) — точки всей орбиты; Star(star) — звезда, дополненная тем, чего не хватает, с Class, Color, Habitable ({Inner, Outer}) и Frost; Describe(body, context) — Radius, Mass, Gravity (м/с²), Escape (км/с), Density, Temperature (K), Period, Day, Habitable; Color(temperature) — цвет звезды; Kinds — виды планет и их цвета; Generate(seed, options) — целая система (всегда одна и та же для одного seed) с лунами, кольцами и поясами: options Name, Planets, Moons, Belts. Работает и в Node.
+Числа звёздной системы, как они нужны игре: где тело на орбите в данный момент (законы Кеплера), из чего состоят звезда и планета и насколько они тёплые, и целые системы из seed. Ничего не рисует. Единицы: расстояния в а. е., время в сутках, массы звёзд в массах Солнца, планет и лун — в массах Земли, радиусы звёзд в радиусах Солнца, планет — в км, углы в градусах; пространство эклиптики (X и Y в её плоскости, Z на север). Length(value) — длина в а. е. из числа или текста с единицей ('384400 km', '2.5 Mkm', '5.2 AU', '4.2 ly', '1.3 pc'); Period(distance, mass) — сутки оборота; Position(orbit, time, mass) — [x, y, z] в а. е. от того, вокруг чего тело обращается (orbit — {Distance, Eccentricity, Inclination, Node, Periapsis, Anomaly, Period}); Path(orbit, count) — точки всей орбиты; Star(star) — звезда, дополненная тем, чего не хватает, с Class, Color, Habitable ({Inner, Outer}) и Frost; Describe(body, context) — Radius, Mass, Gravity (м/с²), Escape (км/с), Density, Temperature (K), Period, Day, Habitable; Color(temperature) — цвет звезды; Kinds — виды планет и их цвета; Generate(seed, options) — целая система (всегда одна и та же для одного seed) с лунами, кольцами и поясами: options Name, Planets, Moons, Belts. Работает и в Node. Blackbody(temperature) — цвет тела такой температуры (кельвины, от 1000 до 40000), [r, g, b] примерно от 0 до 255 без обрезки: цвет звезды, лампы. Виды планет (Kinds) лежат в resources/astronomy/kinds.json; приложение может добавить свои.
 
 ## Методы
 
@@ -11,6 +11,7 @@
 - `Path(orbit, count)`
 - `Star(star)`
 - `Describe(body, context)`
+- `Blackbody(temperature)`
 - `Color(temperature)`
 - `Generate(seed, options)`
 
@@ -65,12 +66,12 @@
 - [multiplies, inverts and projects matrices, and makes shapes of triangles](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L154) — `tests/regression/library-scene.test.js`
 - [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L185) — `tests/regression/library-scene.test.js`
 - [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L226) — `tests/regression/library-scene.test.js`
+- [gives the colour of a body as hot as it is told, and the same as text](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Astronomy/Astronomy.test.js#L17) — `libraries/ElemenxCommon/services/Astronomy/Astronomy.test.js`
 - [Astronomy.Generate takes the mass of its star (a star of a galaxy), the rest of the system still of its seed](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L113) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 - [puts planets on their orbits and makes shapes of three dimensions with the Services of the system Libraries](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`
 - [adds, changes, attaches, detaches and removes objects and parts, saves the game and loads it the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L616) — `tests/regression/library-scene.test.js`
 - [saves a recipe of the kinds of the library and makes the very same thing of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/seeded.test.js#L23) — `tests/regression/seeded.test.js`
 - [bakes what it made, its lists of numbers packed as text, and reads it back without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/seeded.test.js#L59) — `tests/regression/seeded.test.js`
-- [adds a star cluster with the swarm of its old stars, and stars round its middle light-years out](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js#L660) — `libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js`
-- [makes star clusters of three kinds of a seed: open ones loose and young, globular ones old and packed, nuclear ones round a black hole](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L230) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
+- [adds a star cluster with the swarm of its old stars, and stars round its middle light-years out](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js#L684) — `libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js`
 
-+1 ещё в тех же файлах
++2 ещё в тех же файлах

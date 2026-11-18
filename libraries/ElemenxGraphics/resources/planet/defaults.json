@@ -1,0 +1,10 @@
+{
+	"Seed": "planet",
+	"Radius": 6371,
+	"Ocean": 0.65,
+	"Relief": 8000,
+	"Mountains": 0.5,
+	"Depth": 6000,
+	"Plates": 14,
+	"Detail": 2
+}

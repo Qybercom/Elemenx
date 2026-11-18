@@ -2836,6 +2836,13 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "Geometry",
+					"Title": {
+						"en": "Geometry"
+					},
+					"Library": "ElemenxCommon"
+				},
+				{
 					"ID": "Gestures",
 					"Title": {
 						"en": "Gestures"

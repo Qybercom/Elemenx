@@ -14,6 +14,8 @@ Units: distances in astronomical units (AU), times in days, the masses of stars 
 - Color(temperature): the color of a star of a temperature (K), as '#rrggbb'.
 - Kinds: the kinds of planets and their colors (rocky, desert, terran, ocean, ice, lava, gas, ice-giant, dwarf, moon).
 - Generate(seed, options): a whole system of a seed, always the same for the same seed: {Name, Seed, Bodies: [{ID, Type (star, planet, belt), Parent, Name, Kind, ...}]}, the planets with their moons, rings and belts. Options: Name, Planets (how many, 3 to 9 by default), Moons (false: none), Belts (false: none), Mass (of its star, in masses of the Sun: made of the seed by default), Type (of its star: Types, main by default; its star has it as Kind).
+- Blackbody(temperature): the colour of a body as hot (kelvins, 1000 to 40000), [r, g, b] of about 0 to 255, not clamped: of a star, of a lamp.
+- Kinds: the kinds of planets of resources/astronomy/kinds.json, and those an application adds.
 
 The same functions run in Node: they read no page.
 
@@ -25,6 +27,7 @@ The same functions run in Node: they read no page.
 - `Path(orbit, count)`
 - `Star(star)`
 - `Describe(body, context)`
+- `Blackbody(temperature)`
 - `Color(temperature)`
 - `Generate(seed, options)`
 
@@ -79,12 +82,12 @@ The same functions run in Node: they read no page.
 - [multiplies, inverts and projects matrices, and makes shapes of triangles](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L154) — `tests/regression/library-scene.test.js`
 - [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L185) — `tests/regression/library-scene.test.js`
 - [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L226) — `tests/regression/library-scene.test.js`
+- [gives the colour of a body as hot as it is told, and the same as text](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Astronomy/Astronomy.test.js#L17) — `libraries/ElemenxCommon/services/Astronomy/Astronomy.test.js`
 - [Astronomy.Generate takes the mass of its star (a star of a galaxy), the rest of the system still of its seed](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L113) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 - [puts planets on their orbits and makes shapes of three dimensions with the Services of the system Libraries](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`
 - [adds, changes, attaches, detaches and removes objects and parts, saves the game and loads it the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L616) — `tests/regression/library-scene.test.js`
 - [saves a recipe of the kinds of the library and makes the very same thing of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/seeded.test.js#L23) — `tests/regression/seeded.test.js`
 - [bakes what it made, its lists of numbers packed as text, and reads it back without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/seeded.test.js#L59) — `tests/regression/seeded.test.js`
-- [adds a star cluster with the swarm of its old stars, and stars round its middle light-years out](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js#L660) — `libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js`
-- [makes star clusters of three kinds of a seed: open ones loose and young, globular ones old and packed, nuclear ones round a black hole](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L230) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
+- [adds a star cluster with the swarm of its old stars, and stars round its middle light-years out](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js#L684) — `libraries/ElemenxGraphics/components/SceneEditor/SceneEditor.test.js`
 
-+1 more in the same files
++2 more in the same files

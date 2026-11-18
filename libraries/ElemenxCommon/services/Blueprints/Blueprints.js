@@ -53,6 +53,11 @@
  *   is told), each graph a function (P, I) of a record of its results; the kind blueprint goes to ir by it (blueprint-ir),
  *   and on to js or cpp. A block of a Service tells its own: IR(inputs, properties, context) of its definition (context
  *   Helper(name, define): a function of the IR the module gets once), and the end of a kind other than Result its IREnd.
+ * - Numeric(graph, values, types, keys) gives a generator of numbers as one typed function of the IR (g_main), its parameters
+ *   fixed (values, the graph's own else), its inputs its parameters (float, or of types {name: type}), its results its
+ *   result (one, or two to four numbers as a vector; keys: only those), its noise of the Kernel of Noise: {Module, Inputs, Keys, Returns,
+ *   Diagnostics}, a block of no numbers told. NumericCode(graph, values, types) makes it js as Code does ({Source, Run,
+ *   Keys, Numeric}, made once; null when it is not of numbers), Wasm(numeric) wasm of it (batch:g_main).
  * - Check(graph) lists what is wrong ([{Block, Pin, Link, Message}]): a type not known or not for this graph, a link
  *   of pins not there or of kinds that do not go together, two links to one input, a circle of values, a graph with
  *   no end. Order(graph) gives the blocks so each one comes after what it reads.
@@ -82,7 +87,8 @@
  * Divide, Min, Max, Pow, Step, Sin, Cos, Abs, Floor, Fract, Sqrt, Exp, OneMinus, Saturate, Mix, Clamp, Smoothstep,
  * Remap, Curve (a value of keys over a number, time most often: its Keys [[x, value]...], Smooth linear, smooth or step,
  * Loop a length after which it begins again; CurveAt(keys, x, smooth, loop) the same in code), Dot, Length, Normalize,
- * Split, Combine, Noise, Fbm, NoiseSpec (a noise of the Noise Service by its spec), Result, Compare, And, Or, Not, Field, Get, Set, Event,
+ * Split, Combine, Noise, Fbm, Ridge, NoiseSpec (a noise of the Noise Service by its spec), Line, Area, Level, Grid, TunnelWall, PassageWalls, Fall and Nearest (of
+ * the Geometry Service: of a line, an area or points given as a list of numbers, floats), Result, Compare, And, Or, Not, Field, Get, Set, Event,
  * Branch, Sequence, For, Delay, Action, Emit; BlueprintShaders adds UV, Pixel, Position, Normal, Texture, Output,
  * Surface and Present, and the GLSL of the numbers.
  * Errors start with 'Elemenx Blueprints:'. The same functions run in Node: they read no page.
@@ -90,7 +96,7 @@
 Elemenx.Service('Blueprints', {
 	$Meta: {
 		Description: 'Graphs of blocks in the JSON of Flowprint, made into code and flows of actions (and into shaders by BlueprintShaders).',
-		Methods: ['Node(type, definition)', 'Nodes(graph)', 'NodeOf(type)', 'Graph(type, definition)', 'Graphs()', 'Create(type, options)', 'Block(type, options)', 'Add(graph, type, options)', 'Link(graph, from, to)', 'Remove(graph, id)', 'Pin(block, key, out)', 'Read(json)', 'Write(graph)', 'Fill(graph, values)', 'Check(graph)', 'Order(graph)', 'Compile(graph, options)', 'Code(graph)', 'Source(names)', 'Bake(graph)', 'Start(graph, context)', 'IR(graph, options)', 'Invoke(name, inputs)', 'Hash2(a, b)', 'CurveAt(keys, x, smooth, loop)']
+		Methods: ['Node(type, definition)', 'Nodes(graph)', 'NodeOf(type)', 'Graph(type, definition)', 'Graphs()', 'Create(type, options)', 'Block(type, options)', 'Add(graph, type, options)', 'Link(graph, from, to)', 'Remove(graph, id)', 'Pin(block, key, out)', 'Read(json)', 'Write(graph)', 'Fill(graph, values)', 'Check(graph)', 'Order(graph)', 'Compile(graph, options)', 'Code(graph)', 'Source(names)', 'Bake(graph)', 'Start(graph, context)', 'IR(graph, options)', 'Invoke(name, inputs)', 'Hash2(a, b)', 'CurveAt(keys, x, smooth, loop)', 'Numeric(graph, values, types, keys)', 'NumericCode(graph, values, types, keys)', 'Wasm(numeric)']
 	},
 
 	Version: 1,
@@ -1193,8 +1199,8 @@ Elemenx.Service('Blueprints', {
 		var inputs = context.Inputs;
 		var properties = context.Properties;
 		var index = context.Index;
-		var binary = {Add: 'function (a, b) { return a + b; }', Subtract: 'function (a, b) { return a - b; }', Multiply: 'function (a, b) { return a * b; }', Divide: 'function (a, b) { return b ? a / b : 0; }', Min: 'Math.min', Max: 'Math.max', Pow: 'Math.pow', Step: 'function (edge, x) { return x < edge ? 0 : 1; }'};
-		var unary = {Sin: 'Math.sin', Cos: 'Math.cos', Abs: 'Math.abs', Floor: 'Math.floor', Exp: 'Math.exp', Fract: 'function (x) { return x - Math.floor(x); }', Sqrt: 'function (x) { return Math.sqrt(Math.max(0, x)); }', OneMinus: 'function (x) { return 1 - x; }', Saturate: 'function (x) { return Math.max(0, Math.min(1, x)); }'};
+		var binary = {Add: 'function (a, b) { return a + b; }', Subtract: 'function (a, b) { return a - b; }', Multiply: 'function (a, b) { return a * b; }', Divide: 'function (a, b) { return b ? a / b : 0; }', Min: 'Math.min', Max: 'Math.max', Pow: 'B.Math().pow', Step: 'function (edge, x) { return x < edge ? 0 : 1; }'};
+		var unary = {Sin: 'B.Math().sin', Cos: 'B.Math().cos', Abs: 'Math.abs', Floor: 'Math.floor', Exp: 'B.Math().exp', Fract: 'function (x) { return x - Math.floor(x); }', Sqrt: 'function (x) { return Math.sqrt(Math.max(0, x)); }', OneMinus: 'function (x) { return 1 - x; }', Saturate: 'function (x) { return Math.max(0, Math.min(1, x)); }'};
 		var key;
 		var spec;
 
@@ -1679,6 +1685,16 @@ Elemenx.Service('Blueprints', {
 		return b ? a / b : 0;
 	}},
 
+	/*
+	 * The functions of Math its blocks and formulas turn by (sin, cos, exp, pow, atan2, round...): the own ones of the compiled
+	 * code (Elemenx.Compilers.Math), so a graph run block by block, its Code and its IR give the very same numbers; the
+	 * browser's where there is none (a worker). Regression: the interpreter of a graph turned by the browser's, its code by
+	 * the own ones, and a building of the graph and of its code stood a last bit apart.
+	 */
+	Math: function () {
+		return typeof Elemenx !== 'undefined' && Elemenx.Compilers && Elemenx.Compilers.Math ? Elemenx.Compilers.Math() : Math;
+	},
+
 	FormulaSingles: {min: Math.min, max: Math.max, pow: Math.pow, step: function (e, x) {
 		return x < e ? 0 : 1;
 	}, floor: Math.floor, abs: Math.abs, sqrt: function (x) {
@@ -1697,7 +1713,7 @@ Elemenx.Service('Blueprints', {
 	FormulaCode: function (tree, inputs) {
 		var self = this;
 		var ops = {'+': 'function (a, b) { return a + b; }', '-': 'function (a, b) { return a - b; }', '*': 'function (a, b) { return a * b; }', '/': 'function (a, b) { return b ? a / b : 0; }'};
-		var singles = {min: 'Math.min', max: 'Math.max', pow: 'Math.pow', step: 'function (e, x) { return x < e ? 0 : 1; }', floor: 'Math.floor', abs: 'Math.abs', sqrt: 'function (x) { return Math.sqrt(Math.max(0, x)); }', sin: 'Math.sin', cos: 'Math.cos', fract: 'function (x) { return x - Math.floor(x); }', exp: 'Math.exp', saturate: 'function (x) { return Math.max(0, Math.min(1, x)); }'};
+		var singles = {min: 'Math.min', max: 'Math.max', pow: 'B.Math().pow', step: 'function (e, x) { return x < e ? 0 : 1; }', floor: 'Math.floor', abs: 'Math.abs', sqrt: 'function (x) { return Math.sqrt(Math.max(0, x)); }', sin: 'B.Math().sin', cos: 'B.Math().cos', fract: 'function (x) { return x - Math.floor(x); }', exp: 'B.Math().exp', saturate: 'function (x) { return Math.max(0, Math.min(1, x)); }'};
 
 		function code (node) {
 			var args;
@@ -1732,11 +1748,11 @@ Elemenx.Service('Blueprints', {
 					case 'mix':
 						return 'E(' + args[0] + ', E(E(' + args[1] + ', ' + args[0] + ', ' + ops['-'] + '), ' + args[2] + ', ' + ops['*'] + '), ' + ops['+'] + ')';
 					case 'round':
-						return 'Math.round(Number(' + args[0] + ') || 0)';
+						return 'B.Math().round(Number(' + args[0] + ') || 0)';
 					case 'atan2':
-						return 'Math.atan2(Number(' + args[0] + ') || 0, Number(' + args[1] + ') || 0)';
+						return 'B.Math().atan2(Number(' + args[0] + ') || 0, Number(' + args[1] + ') || 0)';
 					case 'hypot':
-						return 'Math.sqrt(Math.pow(Number(' + args[0] + ') || 0, 2) + Math.pow(Number(' + args[1] + ') || 0, 2))';
+						return 'Math.sqrt(B.Math().pow(Number(' + args[0] + ') || 0, 2) + B.Math().pow(Number(' + args[1] + ') || 0, 2))';
 					case 'ceil':
 						return 'Math.ceil(Number(' + args[0] + ') || 0)';
 					case 'count':
@@ -1765,7 +1781,9 @@ Elemenx.Service('Blueprints', {
 	FormulaValue: function (tree, values) {
 		var self = this;
 		var ops = this.FormulaOps;
-		var singles = this.FormulaSingles;
+		var own = this.Math();
+		/* Of the own Math, as the code of a graph computes them (Math). */
+		var singles = Object.assign({}, this.FormulaSingles, {sin: own.sin, cos: own.cos, exp: own.exp, pow: own.pow});
 
 		function value (node) {
 			var args;
@@ -1806,11 +1824,11 @@ Elemenx.Service('Blueprints', {
 					case 'mix':
 						return self.Each(args[0], self.Each(self.Each(args[1], args[0], ops['-']), args[2], ops['*']), ops['+']);
 					case 'round':
-						return Math.round(Number(args[0]) || 0);
+						return own.round(Number(args[0]) || 0);
 					case 'atan2':
-						return Math.atan2(Number(args[0]) || 0, Number(args[1]) || 0);
+						return own.atan2(Number(args[0]) || 0, Number(args[1]) || 0);
 					case 'hypot':
-						return Math.sqrt(Math.pow(Number(args[0]) || 0, 2) + Math.pow(Number(args[1]) || 0, 2));
+						return Math.sqrt(own.pow(Number(args[0]) || 0, 2) + own.pow(Number(args[1]) || 0, 2));
 					case 'ceil':
 						return Math.ceil(Number(args[0]) || 0);
 					case 'count':
@@ -2377,6 +2395,723 @@ Elemenx.Service('Blueprints', {
 		return {Module: {Functions: functions, Entry: 'g_' + entry}, Diagnostics: diagnostics};
 	},
 
+	/*
+	 * A generator of numbers as a function of numbers of the IR, typed, for js and wasm alike: its parameters fixed to values
+	 * (the graph's own for the rest), its inputs (Input blocks) the parameters of the function, float (or the Types given:
+	 * {name: type}), its results (Result blocks, in their order) its result: one as it is, two to four numbers as a vector.
+	 * Its noise is the Kernel of the Noise Service (NoiseSpec, and Noise and Fbm, those of Math.Noise). {Module (its function
+	 * g_main and those of the noise), Inputs: [{Name, Type}], Keys (of its results), Returns, Diagnostics}: a block of no
+	 * numbers (a text, a list, a graph called, an action) is told there; such a graph runs by Code, IR or Compile.
+	 */
+	Numeric: function (graph, values, types, keys) {
+		var self = this;
+		var read = this.Read(graph);
+		var plan;
+		var given = values || {};
+		var kinds = types || {};
+		var defaults = {};
+		var needed = {};
+		var named = {};
+		var body = [];
+		var inputs = [];
+		var results = [];
+		var diagnostics = [];
+		var helpers = {};
+		var functions = [];
+		var serial = 0;
+		var noise = this.$Service('Noise');
+		var vectors = {vec2: 2, vec3: 3, vec4: 4};
+
+		function c (value, type) {
+			return {Op: 'const', Value: value, Type: type};
+		}
+
+		function call (name) {
+			return {Op: 'call', Name: name, Args: Array.prototype.slice.call(arguments, 1)};
+		}
+
+		function bin (operator, a, b) {
+			return {Op: 'bin', Operator: operator, A: a, B: b};
+		}
+
+		/* A value of the graph as typed: {E (its expression), T (float, bool, vec2, vec3, vec4, floats: a list of numbers)}. */
+		function constant (value, type) {
+			if (type === 'floats' || Array.isArray(value) && (value.length < 2 || value.length > 4))
+				return Array.isArray(value) && value.every(function (one) {
+					return typeof one === 'number';
+				}) ? {E: c(value.map(Number), 'floats'), T: 'floats'} : null;
+
+			if (typeof value === 'boolean')
+				return {E: c(value, 'bool'), T: 'bool'};
+
+			if (Array.isArray(value) && value.length >= 2 && value.length <= 4 && value.every(function (one) {
+				return typeof one === 'number';
+			})) return {E: c(value.map(Number), 'vec' + value.length), T: 'vec' + value.length};
+
+			if (typeof value === 'number' || value === undefined || value === null) return {E: c(Number(value) || 0, 'float'), T: 'float'};
+
+			return null;
+		}
+
+		/* Kept in a variable of its type: an expression read more than once is made once. */
+		function kept (value) {
+			var name;
+
+			if (value.E.Op === 'var' || value.E.Op === 'const') return value;
+
+			serial++;
+			name = 'k' + serial;
+
+			body.push({Op: 'let', Name: name, Type: value.T, Value: value.E});
+
+			return {E: {Op: 'var', Name: name}, T: value.T};
+		}
+
+		function size (type) {
+			return vectors[type] || 1;
+		}
+
+		/* A value made of the size of another (a number for each part; the parts a vector has not, nought), as Each does. */
+		function sized (value, count) {
+			var parts = [];
+			var at;
+
+			if (size(value.T) === count && (count > 1 || value.T === 'float')) return value;
+
+			if (count === 1)
+				return {E: vectors[value.T] ? call('x', value.E) : value.T === 'bool' ? {Op: 'select', Test: value.E, A: c(1, 'float'), B: c(0, 'float')} : value.E, T: 'float'};
+
+			value = kept(value.T === 'bool' ? sized(value, 1) : value);
+
+			for (at = 0; at < count; at++)
+				parts.push(vectors[value.T] ? at < size(value.T) ? call(['x', 'y', 'z', 'w'][at], value.E) : c(0, 'float') : value.E);
+
+			return {E: call.apply(null, ['vec' + count].concat(parts)), T: 'vec' + count};
+		}
+
+		/* An operation of two by each number (Each of Add, Divide...): both of the size of the larger. */
+		function each (a, b, work) {
+			var count = Math.max(size(a.T), size(b.T));
+			var x = sized(a, count);
+			var y = sized(b, count);
+			var parts = [];
+			var at;
+
+			if (count === 1)
+				return {E: work(x.E, y.E), T: 'float'};
+
+			x = kept(x);
+			y = kept(y);
+
+			for (at = 0; at < count; at++) {
+				var part = ['x', 'y', 'z', 'w'][at];
+
+				parts.push(work(call(part, x.E), call(part, y.E)));
+			}
+
+			return {E: call.apply(null, ['vec' + count].concat(parts)), T: 'vec' + count};
+		}
+
+		/* As each, of one. */
+		function single (a, work) {
+			return each(a, {E: c(0, 'float'), T: 'float'}, function (x) {
+				return work(x);
+			});
+		}
+
+		function divide (x, y) {
+			/* b ? a / b : 0, as Each of Divide: the divisor once. */
+			serial++;
+
+			body.push({Op: 'let', Name: 'd' + serial, Type: 'float', Value: y});
+
+			return {Op: 'select', Test: bin('!=', {Op: 'var', Name: 'd' + serial}, c(0, 'float')), A: bin('/', x, {Op: 'var', Name: 'd' + serial}), B: c(0, 'float')};
+		}
+
+		/* The functions of the Kernel of the Noise Service, once, as the noise of a block asks for them. */
+		function noiseCall (numbers, point, scale) {
+			var p = kept(sized(point, 3));
+			var s = kept(sized(scale, 1));
+
+			if (!helpers.noise) {
+				helpers.noise = true;
+				functions = functions.concat(noise.IR().Functions);
+			}
+
+			return {E: call.apply(null, ['n_read'].concat(numbers.map(function (one) {
+				return c(typeof one === 'boolean' ? one : Number(one), typeof one === 'boolean' ? 'bool' : 'float');
+			}), [bin('*', call('x', p.E), s.E), bin('*', call('y', p.E), s.E), bin('*', call('z', p.E), s.E)])), T: 'float'};
+		}
+
+		/* The functions of the Kernel of the Geometry Service, once, as a block of geometry asks for them. */
+		function geometry (name, args) {
+			if (!helpers.geometry) {
+				helpers.geometry = true;
+				functions = functions.concat(self.$Service('Geometry').IR().Functions);
+			}
+
+			return call.apply(null, [name].concat(args));
+		}
+
+		/* A value as a bool of the IR: a number not 0 is true, as js takes it. */
+		function truth (value) {
+			return value.T === 'bool' ? value.E : bin('!=', sized(value, 1).E, c(0, 'float'));
+		}
+
+		/*
+		 * A formula of the inputs of its block (Formula), of numbers: as FormulaValue computes it, part by part of a vector, b ? a / b
+		 * : 0 of a division; null when a part of it is not of numbers (a text, a name it is not given).
+		 */
+		function formula (tree, input) {
+			var calls = {min: 'min', max: 'max', pow: 'pow'};
+			var singles = {floor: 'floor', abs: 'abs', sin: 'sin', cos: 'cos', fract: 'fract', exp: 'exp', round: 'round', ceil: 'ceil'};
+
+			function value (node) {
+				var args;
+				var a;
+				var b;
+				var t;
+				var n;
+
+				if (!node)
+					return null;
+
+				if (node.Op === 'const')
+					return typeof node.Value === 'number' || typeof node.Value === 'boolean' ? constant(node.Value) : null;
+
+				if (node.Op === 'var')
+					return input[node.Name] || null;
+
+				if (node.Op === 'list') {
+					args = node.Items.map(value);
+
+					if (args.length < 2 || args.length > 4 || args.some(function (one) {
+						return !one || vectors[one.T] || one.T === 'floats';
+					})) return null;
+
+					return {E: call.apply(null, ['vec' + args.length].concat(args.map(function (one) {
+						return sized(one, 1).E;
+					}))), T: 'vec' + args.length};
+				}
+
+				if (node.Op === 'index') {
+					a = value(node.List);
+					b = value(node.At);
+
+					if (!a || !b) return null;
+
+					if (a.T === 'floats')
+						return {E: {Op: 'index', List: a.E, At: call('toInt', call('floor', sized(b, 1).E))}, T: 'float'};
+
+					return vectors[a.T] && node.At.Op === 'const' ? {E: call(['x', 'y', 'z', 'w'][Math.floor(Number(node.At.Value)) || 0], a.E), T: 'float'} : null;
+				}
+
+				if (node.Op === 'select') {
+					t = value(node.Test);
+					a = value(node.A);
+					b = value(node.B);
+
+					if (!t || !a || !b) return null;
+
+					n = Math.max(size(a.T), size(b.T));
+
+					return {E: {Op: 'select', Test: truth(t), A: sized(a, n).E, B: sized(b, n).E}, T: n === 1 ? 'float' : 'vec' + n};
+				}
+
+				if (node.Op === 'un') {
+					a = value(node.A);
+
+					if (!a)
+						return null;
+
+					return node.Operator === '!' ? {E: {Op: 'un', Operator: '!', A: truth(a)}, T: 'bool'} : single(a, function (x) {
+						return {Op: 'un', Operator: '-', A: x};
+					});
+				}
+
+				if (node.Op === 'bin') {
+					a = value(node.A);
+					b = value(node.B);
+
+					if (!a || !b) return null;
+
+					if (['+', '-', '*'].indexOf(node.Operator) !== -1) {
+						return each(a, b, function (x, y) {
+							return bin(node.Operator, x, y);
+						});
+					}
+
+					if (node.Operator === '/')
+						return each(a, b, divide);
+
+					if (['<', '<=', '>', '>=', '==', '!='].indexOf(node.Operator) !== -1)
+						return {E: bin(node.Operator, sized(a, 1).E, sized(b, 1).E), T: 'bool'};
+
+					return node.Operator === '&&' || node.Operator === '||' ? {E: bin(node.Operator, truth(a), truth(b)), T: 'bool'} : null;
+				}
+
+				if (node.Op !== 'call') return null;
+
+				args = (node.Args || []).map(value);
+
+				if (args.some(function (one) {
+					return !one;
+				})) return null;
+
+				if (calls[node.Name]) {
+					return each(args[0], args[1], function (x, y) {
+						return call(calls[node.Name], x, y);
+					});
+				}
+
+				if (singles[node.Name]) {
+					return single(args[0], function (x) {
+						return call(singles[node.Name], x);
+					});
+				}
+
+				switch (node.Name) {
+					case 'step':
+						return each(args[0], args[1], function (e, x) {
+							return {Op: 'select', Test: bin('<', x, e), A: c(0, 'float'), B: c(1, 'float')};
+						});
+					case 'sqrt':
+						return single(args[0], function (x) {
+							return call('sqrt', call('max', c(0, 'float'), x));
+						});
+					case 'saturate':
+						return single(args[0], function (x) {
+							return call('max', c(0, 'float'), call('min', c(1, 'float'), x));
+						});
+					case 'clamp':
+						return each(args[1], each(args[2], args[0], function (h, x) {
+							return call('min', h, x);
+						}), function (l, m) {
+							return call('max', l, m);
+						});
+					case 'mix':
+						t = kept(args[0]);
+
+						return each(t, each(each(args[1], t, function (y, x) {
+							return bin('-', y, x);
+						}), args[2], function (d, k) {
+							return bin('*', d, k);
+						}), function (x, m) {
+							return bin('+', x, m);
+						});
+					case 'atan2':
+						return {E: call('atan2', sized(args[0], 1).E, sized(args[1], 1).E), T: 'float'};
+					case 'hypot':
+						return {E: call('sqrt', bin('+', call('pow', sized(args[0], 1).E, c(2, 'float')), call('pow', sized(args[1], 1).E, c(2, 'float')))), T: 'float'};
+					case 'count':
+						return args[0].T === 'floats' ? {E: call('toFloat', {Op: 'length', List: args[0].E}), T: 'float'} : {E: c(size(args[0].T), 'float'), T: 'float'};
+					case 'vec2':
+					case 'vec3':
+					case 'vec4':
+						return {E: call.apply(null, [node.Name].concat(args.slice(0, Number(node.Name.charAt(3))).map(function (one) {
+							return sized(one, 1).E;
+						}))), T: node.Name};
+					default:
+						return null;
+				}
+			}
+
+			return value(tree);
+		}
+
+		/* The parts of a vector a block of geometry gives, by their names. */
+		function parts (value, names) {
+			var made = {};
+			var t = kept(value);
+
+			names.forEach(function (name, index) {
+				made[name] = {E: call(['x', 'y', 'z', 'w'][index], t.E), T: 'float'};
+			});
+
+			return made;
+		}
+
+		function block (type, input, properties) {
+			var mathEach = {Add: '+', Subtract: '-', Multiply: '*'};
+			var binary = {Min: 'min', Max: 'max', Pow: 'pow'};
+			var singles = {Sin: 'sin', Cos: 'cos', Abs: 'abs', Floor: 'floor', Exp: 'exp'};
+			var whole;
+			var t;
+
+			if (mathEach[type]) {
+				return {Out: each(input.A, input.B, function (x, y) {
+					return bin(mathEach[type], x, y);
+				})};
+			}
+
+			if (type === 'Divide')
+				return {Out: each(input.A, input.B, divide)};
+
+			if (binary[type]) {
+				return {Out: each(input.A, input.B, function (x, y) {
+					return call(binary[type], x, y);
+				})};
+			}
+
+			if (type === 'Step') {
+				return {Out: each(input.A, input.B, function (x, y) {
+					return {Op: 'select', Test: bin('<', y, x), A: c(0, 'float'), B: c(1, 'float')};
+				})};
+			}
+
+			if (singles[type]) {
+				return {Out: single(input.X, function (x) {
+					return call(singles[type], x);
+				})};
+			}
+
+			switch (type) {
+				case 'Fract':
+					return {Out: single(input.X, function (x) {
+						return call('fract', x);
+					})};
+				case 'Sqrt':
+					return {Out: single(input.X, function (x) {
+						return call('sqrt', call('max', c(0, 'float'), x));
+					})};
+				case 'OneMinus':
+					return {Out: single(input.X, function (x) {
+						return bin('-', c(1, 'float'), x);
+					})};
+				case 'Saturate':
+					return {Out: single(input.X, function (x) {
+						return call('max', c(0, 'float'), call('min', c(1, 'float'), x));
+					})};
+				case 'Mix':
+					/* A + (B - A) * T, each by each, as its Each: T a number or a vector. */
+					t = kept(input.A);
+
+					return {Out: each(t, each(each(input.B, t, function (b, a) {
+						return bin('-', b, a);
+					}), input.T, function (d, k) {
+						return bin('*', d, k);
+					}), function (a, m) {
+						return bin('+', a, m);
+					})};
+				case 'Clamp':
+					return {Out: each(input.Low, each(input.High, input.X, function (h, x) {
+						return call('min', h, x);
+					}), function (l, m) {
+						return call('max', l, m);
+					})};
+				case 'Smoothstep':
+					t = kept(each(each(input.X, input.Low, function (x, l) {
+						return bin('-', x, l);
+					}), each(input.High, input.Low, function (h, l) {
+						return bin('-', h, l);
+					}), function (a, d) {
+						serial++;
+
+						body.push({Op: 'let', Name: 'd' + serial, Type: 'float', Value: d});
+
+						return call('max', c(0, 'float'), call('min', c(1, 'float'), bin('/', a, {Op: 'select', Test: bin('==', {Op: 'var', Name: 'd' + serial}, c(0, 'float')), A: c(1, 'float'), B: {Op: 'var', Name: 'd' + serial}})));
+					}));
+
+					return {Out: each(t, t, function (a) {
+						return bin('*', bin('*', a, a), bin('-', c(3, 'float'), bin('*', c(2, 'float'), a)));
+					})};
+				case 'Combine':
+					return {
+						XYZW: {E: call('vec4', sized(input.X, 1).E, sized(input.Y, 1).E, sized(input.Z, 1).E, sized(input.W, 1).E), T: 'vec4'},
+						XYZ: {E: call('vec3', sized(input.X, 1).E, sized(input.Y, 1).E, sized(input.Z, 1).E), T: 'vec3'},
+						XY: {E: call('vec2', sized(input.X, 1).E, sized(input.Y, 1).E), T: 'vec2'}
+					};
+				case 'Split':
+					t = kept(input.Vector);
+
+					return {X: sized(t, 1), Y: {E: vectors[t.T] ? call('y', t.E) : c(0, 'float'), T: 'float'}, Z: {E: size(t.T) > 2 ? call('z', t.E) : c(0, 'float'), T: 'float'}, W: {E: size(t.T) > 3 ? call('w', t.E) : c(0, 'float'), T: 'float'}};
+				case 'Compare':
+					return {Out: {E: bin({'==': '==', '!=': '!=', '<': '<', '<=': '<=', '>': '>', '>=': '>='}[properties.Operator || '=='] || '==', sized(input.A, 1).E, sized(input.B, 1).E), T: 'bool'}};
+				case 'And':
+				case 'Or':
+					return {Out: {E: bin(type === 'And' ? '&&' : '||', input.A.E, input.B.E), T: 'bool'}};
+				case 'Not':
+					return {Out: {E: {Op: 'un', Operator: '!', A: input.X.E}, T: 'bool'}};
+				case 'Select':
+					t = Math.max(size(input.A.T), size(input.B.T));
+
+					return {Out: {E: {Op: 'select', Test: input.Test.E, A: sized(input.A, t).E, B: sized(input.B, t).E}, T: t === 1 ? 'float' : 'vec' + t}};
+				case 'Line':
+					return input.Points.T === 'floats' ? parts({E: geometry('geo_line', [input.Points.E, sized(input.X, 1).E, sized(input.Z, 1).E]), T: 'vec4'}, ['Distance', 'T', 'Side', 'Segment']) : null;
+				case 'Area':
+					return input.Points.T === 'floats' ? parts({E: geometry('geo_area', [input.Points.E, sized(input.X, 1).E, sized(input.Z, 1).E]), T: 'vec2'}, ['Inside', 'Distance']) : null;
+				case 'Level':
+					return input.Points.T === 'floats' && input.Levels.T === 'floats' ? {Level: {E: geometry('geo_level', [input.Points.E, input.Levels.E, sized(input.X, 1).E, sized(input.Z, 1).E]), T: 'float'}} : null;
+				case 'Formula':
+					try {
+						t = formula(self.Formula(properties.Expression).Tree, input);
+					}
+					catch (error) {
+						t = null;
+					}
+
+					return t ? {Value: t} : null;
+				case 'Grid':
+					return input.Data.T === 'floats' ? parts({E: geometry('geo_grid', [input.Data.E, sized(input.Side, 1).E, sized(input.Radius, 1).E, sized(input.X, 1).E, sized(input.Z, 1).E]), T: 'vec2'}, ['Value', 'Inside']) : null;
+				case 'TunnelWall':
+					return input.Points.T === 'floats' ? parts({E: geometry('geo_tunnel', [input.Points.E].concat(['X', 'Y', 'Z', 'Radius', 'Flat', 'Width', 'Height', 'Corner'].map(function (key) {
+						return sized(input[key], 1).E;
+					}))), T: 'vec2'}, ['Distance', 'Axis']) : null;
+				case 'PassageWalls':
+					return input.Packed.T === 'floats' ? parts({E: geometry('geo_passages', [input.Packed.E].concat(['X', 'Y', 'Z', 'Blend', 'Crust', 'Ground'].map(function (key) {
+						return sized(input[key], 1).E;
+					}))), T: 'vec2'}, ['Distance', 'Floor']) : null;
+				case 'Fall':
+					return {Out: {E: geometry('geo_fall', [sized(input.Distance, 1).E, sized(input.Radius, 1).E]), T: 'float'}};
+				case 'Nearest':
+					return input.Points.T === 'floats' ? parts({E: geometry('geo_nearest', [input.Points.E, sized(input.X, 1).E, sized(input.Y, 1).E, sized(input.Z, 1).E]), T: 'vec3'}, ['Index', 'Near', 'Next']) : null;
+				case 'NoiseSpec':
+					return {Value: noiseCall(noise.Numbers(noise.Whole(self.NoiseOf(properties))), input.Position, input.Scale)};
+				case 'Noise':
+				case 'Fbm':
+				case 'Ridge':
+					/* Math.Noise: the value noise of the Noise Service of no seed, its fbm (or ridged) of 2.03 and 0.5 (Value: of one octave). */
+					whole = noise.Whole({Type: 'value', Fractal: type === 'Noise' ? 'none' : type === 'Ridge' ? 'ridged' : 'fbm', Octaves: type === 'Noise' ? 1 : Math.max(1, Math.round(Number(properties.Octaves) || 4)), Lacunarity: 2.03, Gain: 0.5});
+
+					return {Value: noiseCall(noise.Numbers(whole), input.Position, input.Scale)};
+				default:
+					return null;
+			}
+		}
+
+		if (read.type !== 'generator')
+			return {Diagnostics: [{File: '', Line: 0, Column: 0, Severity: 'error', Text: 'Elemenx Blueprints: Numeric makes a generator, not a ' + read.type + ' graph'}]};
+
+		plan = this.Plan(read);
+
+		(read.parameters || []).forEach(function (parameter) {
+			defaults[parameter.key] = parameter.value;
+		});
+
+		/* Whether an output of a block goes to one formula alone, read there once (its expression may stand in its place). */
+		function once (id, key) {
+			var readers = [];
+			var count = 0;
+
+			Object.keys(plan.From).forEach(function (reader) {
+				Object.keys(plan.From[reader] || {}).forEach(function (input) {
+					var from = plan.From[reader][input];
+					if (needed[reader] && from.Block === id && from.Key === key)
+						readers.push({Block: reader, Input: input});
+				});
+			});
+
+			if (readers.length !== 1 || plan.Blocks[readers[0].Block].type !== 'Formula') return false;
+
+			try {
+				JSON.stringify(self.Formula(self.Properties(plan.Blocks[readers[0].Block]).Expression).Tree, function (name, value) {
+					if (value && value.Op === 'var' && value.Name === readers[0].Input)
+						count++;
+
+					return value;
+				});
+			}
+			catch (error) {
+				return false;
+			}
+
+			return count === 1;
+		}
+
+		function need (id) {
+			if (needed[id]) return;
+
+			needed[id] = true;
+
+			Object.keys(plan.From[id] || {}).forEach(function (key) {
+				need(plan.From[id][key].Block);
+			});
+		}
+
+		plan.Order.forEach(function (id) {
+			if (plan.Blocks[id].type === 'Result' && plan.Blocks[id].enabled !== false && (!keys || keys.indexOf(self.Properties(plan.Blocks[id]).Key || 'Value') !== -1))
+				need(id);
+		});
+
+		plan.Order.forEach(function (id) {
+			var node = plan.Nodes[id];
+			var piece = plan.Blocks[id];
+			var properties = this.Properties(piece);
+			var input = {};
+			var made;
+			var failed = false;
+
+			if (!needed[id] || !node || diagnostics.length) return;
+
+			named[id] = {};
+
+			(this.Inputs(node, piece) || []).forEach(function (one) {
+				var from = plan.From[id][one.Key];
+
+				if (from && named[from.Block] && named[from.Block][from.Key]) input[one.Key] = named[from.Block][from.Key];
+				else input[one.Key] = constant(one.Value === undefined ? one.Type === 'floats' ? [] : 0 : self.Cast(one.Value, null, one.Type), one.Type) || (failed = true, null);
+			});
+
+			if (failed) {
+				diagnostics.push({File: '', Line: 0, Column: 0, Severity: 'error', Text: 'Elemenx Blueprints: a value of ' + piece.type + ' is not of numbers', Block: id});
+
+				return;
+			}
+
+			if (piece.type === 'Result') {
+				results.push({Key: properties.Key || 'Value', Value: input.Value});
+
+				return;
+			}
+
+			if (piece.type === 'Parameter') {
+				made = {Value: constant(Object.prototype.hasOwnProperty.call(given, properties.Key) ? given[properties.Key] : defaults[properties.Key], kinds[properties.Key])};
+			}
+			else if (piece.type === 'Input') {
+				if (!inputs.some(function (one) {
+					return one.Name === properties.Name;
+				}))
+					inputs.push({Name: String(properties.Name), Type: kinds[properties.Name] || 'float'});
+
+				made = {Value: {E: {Op: 'var', Name: 'i_' + String(properties.Name).replace(/[^A-Za-z0-9_]/g, '_')}, T: kinds[properties.Name] || 'float'}};
+			}
+			else if (piece.enabled === false) {
+				made = {};
+
+				(this.Outputs(node, piece) || []).forEach(function (output) {
+					var passed = self.Passed(plan, id)[output.Key];
+
+					made[output.Key] = passed ? input[passed] : constant(0);
+				});
+			}
+			else if (!(this.Inputs(node, piece) || []).length && ['Time', 'Random'].indexOf(piece.type) === -1 && typeof node.Compute === 'function') {
+				made = {};
+
+				var computed = node.Compute.call(this, {}, properties, {Graph: read, Parameters: {}, Inputs: {}}) || {};
+
+				(this.Outputs(node, piece) || []).forEach(function (output) {
+					made[output.Key] = constant(computed[output.Key]);
+				});
+			}
+			else {
+				made = block(piece.type, input, properties);
+			}
+
+			if (!made || Object.keys(made).some(function (key) {
+				return !made[key];
+			})) {
+				diagnostics.push({File: '', Line: 0, Column: 0, Severity: 'error', Text: 'Elemenx Blueprints: a block ' + piece.type + ' is not of numbers', Block: id});
+
+				return;
+			}
+
+			/*
+			 * Each output a variable of its type; one a formula reads once, and nothing else, its expression in its place: in a
+			 * branch of ?: it is computed only when that branch is (a noise by the walls of a cave alone). Regression: the noises
+			 * of a cave were computed at every point, the graph slower than the code it was made of.
+			 */
+			Object.keys(made).forEach(function (key) {
+				named[id][key] = once(id, key) ? made[key] : kept(made[key]);
+			});
+		}, this);
+
+		if (!diagnostics.length && (!results.length || results.length > 4 || results.length > 1 && results.some(function (one) {
+			return one.Value.T !== 'float';
+		})))
+			diagnostics.push({File: '', Line: 0, Column: 0, Severity: 'error', Text: 'Elemenx Blueprints: a generator of numbers gives one to four numbers, or one vector'});
+
+		if (diagnostics.length)
+			return {Diagnostics: diagnostics};
+
+		body.push({Op: 'return', Value: results.length === 1 ? results[0].Value.E : call.apply(null, ['vec' + results.length].concat(results.map(function (one) {
+			return one.Value.E;
+		})))});
+
+		return {
+			Module: {Functions: [{Name: 'g_main', Params: inputs.map(function (one) {
+				return {Name: 'i_' + one.Name.replace(/[^A-Za-z0-9_]/g, '_'), Type: one.Type};
+			}), Returns: results.length === 1 ? results[0].Value.T : 'vec' + results.length, Body: body}].concat(functions), Entry: 'g_main'},
+			Inputs: inputs,
+			Keys: results.map(function (one) {
+				return one.Key;
+			}),
+			Returns: results.length === 1 ? results[0].Value.T : 'vec' + results.length,
+			Diagnostics: []
+		};
+	},
+
+	/*
+	 * A generator of numbers (Numeric) made js, its parameters fixed to values: {Source (the body of a function of (B, M, N),
+	 * as Code gives it, so a worker makes it of the text: a function (parameters, inputs) of its results, its Main the
+	 * function of the graph itself of its inputs in their order, of one result or a vector of them; the parameters are
+	 * those it was made of), Run (that function), Keys, Numeric (what Numeric gave, for wasm: Wasm(made))}; null when it is
+	 * not of numbers. Made once for the same graph and values. Regression: a ground of a graph of relief read its noise by
+	 * its spec made a text at each point, 30 microseconds a height.
+	 */
+	NumericCode: function (graph, values, types, keys) {
+		var read = this.Read(graph);
+		/*
+		 * Of the values of its parameters too (Hash leaves them out). Regression: two grounds of one seed and other scales had
+		 * the function of the first, their heights wrong.
+		 */
+		var key = this.Hash(read) + JSON.stringify((read.parameters || []).map(function (parameter) {
+			return [parameter.key, parameter.value];
+		})) + JSON.stringify(values || {}) + JSON.stringify(types || {}) + JSON.stringify(keys || null);
+		var made;
+		var text = null;
+		var source;
+		var fields;
+
+		this.NumericMade = this.NumericMade || {};
+
+		if (this.NumericMade[key] !== undefined) return this.NumericMade[key];
+
+		made = this.Numeric(graph, values, types, keys);
+		this.NumericMade[key] = null;
+
+		if (made.Diagnostics.length || typeof Elemenx === 'undefined' || !Elemenx.Compilers) return null;
+
+		Elemenx.Compilers.Run({From: 'ir', To: 'js', Value: made.Module, Entry: 'generator'}, function (error, result) {
+			if (!error)
+				text = result.Value;
+		});
+
+		if (text === null) return null;
+
+		fields = made.Keys.map(function (key, index) {
+			return JSON.stringify(key) + ': ' + (made.Keys.length === 1 ? 'r' : 'r[' + index + ']');
+		}).join(', ');
+
+		source = 'var m = (function () {\n' + text + '\n})();\nvar run = function (P, I) {\n\tvar r = m.g_main(' + made.Inputs.map(function (one) {
+			return 'I[' + JSON.stringify(one.Name) + ']';
+		}).join(', ') + ');\n\n\treturn {' + fields + '};\n};\n\nrun.Main = m.g_main;\n\nreturn run;';
+
+		this.NumericMade[key] = {Source: source, Run: new Function('B', 'M', 'N', source)(), Keys: made.Keys, Numeric: made};
+
+		return this.NumericMade[key];
+	},
+
+	/*
+	 * A generator of numbers as wasm (Numeric of NumericCode): {Bytes, Exports} for Elemenx.Compilers.Instance, its g_main
+	 * in batches too (batch:g_main: its inputs, one run after another); null where wasm cannot be made.
+	 */
+	Wasm: function (made) {
+		var bytes = null;
+
+		if (!made || !made.Module || typeof Elemenx === 'undefined' || !Elemenx.Compilers || typeof WebAssembly === 'undefined') return null;
+
+		if (made.Wasm !== undefined) return made.Wasm;
+
+		Elemenx.Compilers.Run({From: 'ir', To: 'wasm', Value: made.Module, Entry: 'generator', Options: {Batch: ['g_main']}}, function (error, result) {
+			if (!error)
+				bytes = result.Value;
+		});
+
+		made.Wasm = bytes;
+
+		return bytes;
+	},
+
 	/* A number 0 to 1 of two values (of text or numbers), the very one rt_hash(rt_key(a), rt_key(b)) of the IR in JavaScript gives. */
 	Hash2: function (a, b) {
 		function key (value) {
@@ -2537,7 +3272,9 @@ Elemenx.Service('Blueprints', {
 			});
 		});
 
-		[['Min', Math.min], ['Max', Math.max], ['Pow', Math.pow], ['Step', function (edge, x) {
+		[['Min', Math.min], ['Max', Math.max], ['Pow', function (a, b) {
+			return self.Math().pow(a, b);
+		}], ['Step', function (edge, x) {
 			return x < edge ? 0 : 1;
 		}]].forEach(function (one) {
 			self.Node(one[0], {Graphs: numeric, Group: 'math', Inputs: [{Key: 'A', Type: 'same', Value: 0}, {Key: 'B', Type: 'same', Value: one[0] === 'Pow' ? 1 : 0}], Outputs: [{Key: 'Out', Type: 'same'}],
@@ -2547,11 +3284,17 @@ Elemenx.Service('Blueprints', {
 			});
 		});
 
-		[['Sin', 'sin', Math.sin], ['Cos', 'cos', Math.cos], ['Abs', 'abs', Math.abs], ['Floor', 'floor', Math.floor], ['Fract', 'fract', function (x) {
+		[['Sin', 'sin', function (x) {
+			return self.Math().sin(x);
+		}], ['Cos', 'cos', function (x) {
+			return self.Math().cos(x);
+		}], ['Abs', 'abs', Math.abs], ['Floor', 'floor', Math.floor], ['Fract', 'fract', function (x) {
 			return x - Math.floor(x);
 		}], ['Sqrt', 'sqrt', function (x) {
 			return Math.sqrt(Math.max(0, x));
-		}], ['Exp', 'exp', Math.exp], ['OneMinus', '1.0 - ', function (x) {
+		}], ['Exp', 'exp', function (x) {
+			return self.Math().exp(x);
+		}], ['OneMinus', '1.0 - ', function (x) {
 			return 1 - x;
 		}], ['Saturate', 'saturate', function (x) {
 			return Math.max(0, Math.min(1, x));
@@ -2670,6 +3413,15 @@ Elemenx.Service('Blueprints', {
 			}
 		});
 
+		/* Ridges of the value noise (Math.Noise Ridge): the folds of mountains. */
+		this.Node('Ridge', {Graphs: numeric, Group: 'noise', Properties: [{Key: 'Octaves', Type: 'number', Value: 4, Min: 1, Max: 8}], Inputs: [{Key: 'Position', Type: 'vec3', Value: 0}, {Key: 'Scale', Type: 'float', Value: 1}], Outputs: [{Key: 'Value', Type: 'float'}],
+			Compute: function (inputs, properties) {
+				var p = inputs.Position;
+
+				return {Value: noiseOf().Ridge(p[0] * inputs.Scale, p[1] * inputs.Scale, p[2] * inputs.Scale, Math.max(1, Math.round(Number(properties.Octaves) || 4)))};
+			}
+		});
+
 		/* A noise of any algorithm of the Noise Service, by its spec: the same as a ground, a texture or a shader made of it. */
 		this.Node('NoiseSpec', {Graphs: numeric, Group: 'noise', Properties: self.NoiseProperties(), Inputs: [{Key: 'Position', Type: 'vec3', Value: 0}, {Key: 'Scale', Type: 'float', Value: 1}], Outputs: [{Key: 'Value', Type: 'float'}],
 			Compute: function (inputs, properties) {
@@ -2681,6 +3433,64 @@ Elemenx.Service('Blueprints', {
 				samplers[key] = samplers[key] || self.$Service('Noise').Make(spec);
 
 				return {Value: samplers[key].At(p[0] * inputs.Scale, p[1] * inputs.Scale, p[2] * inputs.Scale)};
+			}
+		});
+
+		/*
+		 * Geometry: of a line, an area or points as lists of numbers (floats: x, z by twos; points of space by threes), the
+		 * functions of the Geometry Service (its Kernel: the same in js, wasm and a shader).
+		 */
+		this.Node('Line', {Graphs: numeric, Group: 'geometry', Inputs: [{Key: 'Points', Type: 'floats', Value: []}, {Key: 'X', Type: 'float', Value: 0}, {Key: 'Z', Type: 'float', Value: 0}], Outputs: [{Key: 'Distance', Type: 'float'}, {Key: 'T', Type: 'float'}, {Key: 'Side', Type: 'float'}, {Key: 'Segment', Type: 'float'}],
+			Compute: function (inputs) {
+				return self.$Service('Geometry').Line(inputs.Points || [], Number(inputs.X) || 0, Number(inputs.Z) || 0);
+			}
+		});
+
+		this.Node('Area', {Graphs: numeric, Group: 'geometry', Inputs: [{Key: 'Points', Type: 'floats', Value: []}, {Key: 'X', Type: 'float', Value: 0}, {Key: 'Z', Type: 'float', Value: 0}], Outputs: [{Key: 'Inside', Type: 'float'}, {Key: 'Distance', Type: 'float'}],
+			Compute: function (inputs) {
+				var made = self.$Service('Geometry').Area(inputs.Points || [], Number(inputs.X) || 0, Number(inputs.Z) || 0);
+
+				return {Inside: made.Inside ? 1 : 0, Distance: made.Distance};
+			}
+		});
+
+		this.Node('Level', {Graphs: numeric, Group: 'geometry', Inputs: [{Key: 'Points', Type: 'floats', Value: []}, {Key: 'Levels', Type: 'floats', Value: []}, {Key: 'X', Type: 'float', Value: 0}, {Key: 'Z', Type: 'float', Value: 0}], Outputs: [{Key: 'Level', Type: 'float'}],
+			Compute: function (inputs) {
+				return {Level: self.$Service('Geometry').Level(inputs.Points || [], inputs.Levels || [], Number(inputs.X) || 0, Number(inputs.Z) || 0)};
+			}
+		});
+
+		this.Node('Grid', {Graphs: numeric, Group: 'geometry', Inputs: [{Key: 'Data', Type: 'floats', Value: []}, {Key: 'Side', Type: 'float', Value: 2}, {Key: 'Radius', Type: 'float', Value: 1}, {Key: 'X', Type: 'float', Value: 0}, {Key: 'Z', Type: 'float', Value: 0}], Outputs: [{Key: 'Value', Type: 'float'}, {Key: 'Inside', Type: 'float'}],
+			Compute: function (inputs) {
+				var made = self.$Service('Geometry').Grid(inputs.Data || [], Number(inputs.Side) || 2, Number(inputs.Radius) || 0, Number(inputs.X) || 0, Number(inputs.Z) || 0);
+
+				return {Value: made.Value, Inside: made.Inside ? 1 : 0};
+			}
+		});
+
+		/* A tunnel round points of space (x, y, z by threes): how far from its wall (under 0 inside), the height of its axis there. */
+		this.Node('TunnelWall', {Graphs: numeric, Group: 'geometry', Inputs: [{Key: 'Points', Type: 'floats', Value: []}, {Key: 'X', Type: 'float', Value: 0}, {Key: 'Y', Type: 'float', Value: 0}, {Key: 'Z', Type: 'float', Value: 0}, {Key: 'Radius', Type: 'float', Value: 2}, {Key: 'Flat', Type: 'float', Value: 0}, {Key: 'Width', Type: 'float', Value: 0}, {Key: 'Height', Type: 'float', Value: 4}, {Key: 'Corner', Type: 'float', Value: 1}], Outputs: [{Key: 'Distance', Type: 'float'}, {Key: 'Axis', Type: 'float'}],
+			Compute: function (inputs) {
+				return self.$Service('Geometry').Tunnel(inputs.Points || [], Number(inputs.X) || 0, Number(inputs.Y) || 0, Number(inputs.Z) || 0, Number(inputs.Radius) || 0, Number(inputs.Flat) || 0, Number(inputs.Width) || 0, Number(inputs.Height) || 0, Number(inputs.Corner) || 0);
+			}
+		});
+
+		/* A graph of passages packed as numbers (Geometry.Passages): how far from its walls, the floor of the nearest of its ways and halls. */
+		this.Node('PassageWalls', {Graphs: numeric, Group: 'geometry', Inputs: [{Key: 'Packed', Type: 'floats', Value: []}, {Key: 'X', Type: 'float', Value: 0}, {Key: 'Y', Type: 'float', Value: 0}, {Key: 'Z', Type: 'float', Value: 0}, {Key: 'Blend', Type: 'float', Value: 1}, {Key: 'Crust', Type: 'float', Value: -1}, {Key: 'Ground', Type: 'float', Value: 0}], Outputs: [{Key: 'Distance', Type: 'float'}, {Key: 'Floor', Type: 'float'}],
+			Compute: function (inputs) {
+				return self.$Service('Geometry').Passages(inputs.Packed || [], Number(inputs.X) || 0, Number(inputs.Y) || 0, Number(inputs.Z) || 0, Number(inputs.Blend) || 0, Number(inputs.Crust), Number(inputs.Ground) || 0);
+			}
+		});
+
+		this.Node('Fall', {Graphs: numeric, Group: 'geometry', Inputs: [{Key: 'Distance', Type: 'float', Value: 0}, {Key: 'Radius', Type: 'float', Value: 1}], Outputs: [{Key: 'Out', Type: 'float'}],
+			Compute: function (inputs) {
+				return {Out: self.$Service('Geometry').Fall(Number(inputs.Distance) || 0, Number(inputs.Radius) || 0)};
+			}
+		});
+
+		this.Node('Nearest', {Graphs: numeric, Group: 'geometry', Inputs: [{Key: 'Points', Type: 'floats', Value: []}, {Key: 'X', Type: 'float', Value: 0}, {Key: 'Y', Type: 'float', Value: 0}, {Key: 'Z', Type: 'float', Value: 0}], Outputs: [{Key: 'Index', Type: 'float'}, {Key: 'Near', Type: 'float'}, {Key: 'Next', Type: 'float'}],
+			Compute: function (inputs) {
+				return self.$Service('Geometry').Nearest(inputs.Points || [], Number(inputs.X) || 0, Number(inputs.Y) || 0, Number(inputs.Z) || 0);
 			}
 		});
 

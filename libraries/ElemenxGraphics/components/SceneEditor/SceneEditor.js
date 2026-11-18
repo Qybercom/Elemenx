@@ -119,24 +119,24 @@ Elemenx.Component('SceneEditor', {
 		{Kind: 'circle', Key: 'graphics.sceneEditor.kinds.circle', Types: ['mountain', 'crater', 'stamp', 'hall', 'overhang', 'marker', 'landmark', 'triggerpoint']}
 	],
 
-	/* The fields of each type of item of a sketch, with their first values. */
-	SketchFields: {
-		cave: {Width: 5, Depth: 8, Rough: 0.5, Mouth: 1}, hall: {Radius: 10, Depth: 10}, overhang: {Radius: 30, Amount: 6},
-		raise: {Radius: 8, Amount: 3}, lower: {Radius: 8, Amount: 3}, flatten: {Radius: 8, Height: 2}, smooth: {Radius: 10},
-		ridge: {Width: 20, Height: 15, Sharp: 0.3}, valley: {Width: 20, Depth: 8}, canyon: {Width: 30, Depth: 25}, river: {Width: 6, Depth: 2, Bank: 6, Flow: 0}, road: {Width: 6, Shoulder: 4}, cliff: {Width: 3, Height: 8, Reach: 30},
-		plateau: {Height: 20, Edge: 10}, basin: {Depth: 6, Edge: 10}, lake: {Level: -1.5, Depth: 3, Edge: 10}, terraces: {Step: 3, Edge: 6}, swamp: {Level: 0.15, Edge: 8}, beach: {Edge: 8}, floodplain: {Level: 1, Edge: 10}, dunes: {Height: 3, Length: 25, Way: 70, Edge: 10}, erosion: {Amount: 4, Edge: 10}, biome: {Biome: 'forest', Edge: 4}, mask: {Edge: 2},
-		mountain: {Radius: 60, Height: 60, Ridged: 0.5}, crater: {Radius: 25, Depth: 8, Rim: 3}, stamp: {Radius: 25, Height: 20, Turn: 0},
-		forest: {Density: 2.5, Passability: 0.6}, meadow: {Density: 0.25}, clearing: {}, bushes: {Density: 4, Passability: 0.7}, thicket: {Density: 10, Passability: 0.1}, jungle: {Density: 5, Passability: 0.3}, sequoia: {Density: 0.35, Passability: 0.8}, fields: {Spacing: 1, Gap: 1.4, Way: 0, Shapes: 'wheat'}, orchard: {Spacing: 6, Gap: 6, Way: 0, Shapes: 'oak'},
-		row: {Shapes: 'fence', Spacing: 4}, fence: {Spacing: 2}, hedge: {Spacing: 1.8}, wall: {Spacing: 1.9}, powerline: {Spacing: 40},
-		marker: {Radius: 2, Role: 'spawn', Team: '', Name: ''},
-		settlement: {Kind: 'village', Density: 0.85, Lit: 0, Edge: 15}, street: {Width: 8}, square: {Edge: 4}, district: {Kind: 'residential'}, citywall: {}, landmark: {Radius: 2, Model: 'temple', Name: ''},
-		trigger: {Height: 0, Team: '', Kinds: '', Once: 'false', Achievement: '', Name: ''}, triggerpoint: {Radius: 4, Height: 0, Team: '', Kinds: '', Once: 'false', Achievement: '', Name: ''}, triggerline: {Width: 4, Height: 0, Team: '', Kinds: '', Once: 'false', Achievement: '', Name: ''},
-		zone: {Tags: 'safe', Team: '', Name: ''},
-		collider: {Height: 3, Lift: 0}
-	},
+	/*
+	 * The fields of each type of item of a sketch, with their first values: the Defaults of its type of the ground
+	 * (SketchTable of SceneTerrainGenerator); of cave, hall and overhang those of its carves (Carves.Sketch). Set as it is made.
+	 */
+	SketchFields: {},
 
 	$OnCreate: function () {
 		var own = {Scene: null, Document: null, Past: [], Future: [], Drag: null, Keys: {}, Played: null, Frame: 0, Copies: 0};
+		var terrain = this.$Service('SceneTerrainGenerator');
+		var carved = terrain.Carves.Sketch;
+		var fields = {};
+
+		Object.keys(terrain.SketchTable).forEach(function (type) {
+			if (type !== '*')
+				fields[type] = Object.assign({}, terrain.SketchTable[type].Defaults);
+		});
+
+		this.SketchFields = Object.assign(fields, {cave: Object.assign({}, carved.cave), hall: Object.assign({}, carved.hall), overhang: Object.assign({}, carved.overhang)});
 
 		/* A context menu opens only with items: the ones of its list are made again as it opens (TreeOpened). Regression: it had none at first, and never opened. */
 		this.TreeItems = [{ID: 'add', Label: Elemenx.Locale.Text('graphics.sceneEditor.addKind'), Icon: 'add'}];
@@ -776,7 +776,7 @@ Elemenx.Component('SceneEditor', {
 	/* A model placed as the kind its Type fits, as large as it is in a game. */
 	PlacedModel: function (name) {
 		var info = this.$Service('SceneModels').Info(name);
-		var kind = {unit: 'unit', animal: 'unit', vehicle: 'unit', building: 'house', plant: 'tree', rock: 'rock'}[info.Type] || 'thing';
+		var kind = this.$Service('SceneModels').KindOf(info.Type) || 'thing';
 
 		return this.Add(kind, {Model: name, Size: info.Size, Name: name});
 	},

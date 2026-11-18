@@ -195,6 +195,7 @@ Elemenx.Component('Scene', {
 			SurfaceSpeed: 'The days a second on the surface of a body (1/120: a day of two minutes).',
 			PlantStyle: 'How its plants look: realistic (SceneFlora: grown trees, their bark and leaves drawn, the default) or simple (the models of code of few faces).',
 			Shadows: 'The shadows of a sun on a ground, a surface and a model near the view (true).',
+			Compute: {Options: ['auto', 'wasm', 'js'], Description: 'How its grounds compute their heights: auto and wasm by WebAssembly where it is made (the very same numbers, faster), js by JavaScript alone.'},
 			Quality: {Options: ['', 'low', 'medium', 'high', 'ultra'], Description: 'What the light costs: empty chooses by the graphics card and steps down while frames are late.'},
 			Pipeline: 'The render graph of the Blueprints Service that makes the picture of a frame (high, ultra and medium): its passes (Scene, Clouds, Occlusion, Air, Frames, Mirror, Rays, Exposure, Bokeh, Bloom, Picture, Shader: a pass graph of its own) up to Present; empty: PipelineGraph(), the passes of the library.',
 			PipelineParameters: 'The values of the parameters of the Pipeline, by key.',
@@ -248,6 +249,7 @@ Elemenx.Component('Scene', {
 	SurfaceSpeed: 1 / 120,
 	PlantStyle: 'realistic',
 	Shadows: true,
+	Compute: 'auto',
 	View: '',
 	Paused: false,
 	Focus: '',
@@ -349,7 +351,7 @@ Elemenx.Component('Scene', {
 	/* A kind of each model of the Models Service: a soldier walks like a unit, an oak stands like a tree, a tower like a house. */
 	Catalogue: function () {
 		var library = this.$Service('SceneModels');
-		var bases = {unit: 'unit', animal: 'unit', vehicle: 'unit', plant: 'tree', rock: 'rock', building: 'house'};
+		var bases = library.Kinds;
 		var list = {};
 
 		library.Names().forEach(function (name) {
@@ -1989,47 +1991,37 @@ Elemenx.Component('Scene', {
 		}
 
 		/* The stars far away: points on a ball round the view, of the colors of their temperatures. */
-		function stars () {
-			var generator = astronomy.Random('sky');
-			var positions = [];
-			var colors = [];
-			var i;
-			var z;
-			var angle;
-			var radius;
-			var color;
-
-			for (i = 0; i < 2600; i++) {
-				z = generator.Float(-1, 1);
-				angle = generator.Float(0, Math.PI * 2);
-				radius = Math.sqrt(1 - z * z);
-				color = paint(astronomy.Color(generator.Pick([3200, 4500, 5600, 6500, 8000, 12000])));
-
-				positions.push(Math.cos(angle) * radius * 50, z * 50, Math.sin(angle) * radius * 50);
-				colors.push(color[0], color[1], color[2], Math.pow(generator.Next(), 3) * 0.9 + 0.1);
-			}
-
-			return renderer.Points(positions, {aColor: {Size: 4, Data: colors}});
-		}
-
-		/* The stars of a night sky from the ground: the sky of a planet, faint ones by the thousand and a few bright. */
-		function nightStars () {
-			var generator = astronomy.Random('night');
+		/*
+		 * Points of stars on a sphere of 50 round the eye, of a seed: count of them, their colours of the temperatures of stars,
+		 * their brightness a random number to power, times scale and over low: the one way of the sky of space and the night
+		 * of a ground.
+		 */
+		function starPoints (seed, count, power, scale, low) {
+			var generator = astronomy.Random(seed);
 			var positions = [];
 			var colors = [];
 			var i;
 
-			for (i = 0; i < 9000; i++) {
+			for (i = 0; i < count; i++) {
 				var z = generator.Float(-1, 1);
 				var angle = generator.Float(0, Math.PI * 2);
 				var radius = Math.sqrt(1 - z * z);
 				var color = paint(astronomy.Color(generator.Pick([3200, 4500, 5600, 6500, 8000, 12000])));
 
 				positions.push(Math.cos(angle) * radius * 50, z * 50, Math.sin(angle) * radius * 50);
-				colors.push(color[0], color[1], color[2], Math.pow(generator.Next(), 6));
+				colors.push(color[0], color[1], color[2], Math.pow(generator.Next(), power) * scale + low);
 			}
 
 			return renderer.Points(positions, {aColor: {Size: 4, Data: colors}});
+		}
+
+		function stars () {
+			return starPoints('sky', 2600, 3, 0.9, 0.1);
+		}
+
+		/* The stars of a night sky from the ground: the sky of a planet, faint ones by the thousand and a few bright. */
+		function nightStars () {
+			return starPoints('night', 9000, 6, 1, 0);
 		}
 
 		/* The meshes of the orbits, rings and belts, made again with the objects; the baked surfaces kept by their look. */
@@ -2462,7 +2454,7 @@ Elemenx.Component('Scene', {
 
 						if (--left) return;
 
-						planets.Work().Run('ScenePlanet', 'Drainage', [heights, size, 40], function (wrong, made) {
+						planets.Work().Run('ScenePlanet', 'Drainage', [heights, size], function (wrong, made) {
 							var rivers = wrong || !made ? [] : made.Rivers;
 
 							if (scene.Gone) return;
@@ -6213,14 +6205,11 @@ Elemenx.Component('Scene', {
 			var azimuth;
 			var elevation;
 			var hour;
-			var through;
+			var lit;
 			var day;
-			var fill;
-			var dusk;
 			var night;
 			var moon;
 			var glow;
-			var dark;
 			var air;
 			var shut;
 			var carvesOf;
@@ -6296,7 +6285,7 @@ Elemenx.Component('Scene', {
 					dropGround();
 
 				/* Made before it came (PrefetchGround): its field and the squares the eye needs first. */
-				var options = site ? null : sketch ? Object.assign({}, settings, {Sketch: sketch}) : settings;
+				var options = site ? null : Object.assign({}, settings, sketch ? {Sketch: sketch} : {}, {Compute: self.Compute || 'auto'});
 				var ahead = options && scene.Prefetch && scene.Prefetch.Text === JSON.stringify(options) ? scene.Prefetch : null;
 
 				scene.Prefetch = null;
@@ -6344,10 +6333,7 @@ Elemenx.Component('Scene', {
 			scene.Ground.SunRadius = number(sun ? trait(sun, 'Sun').Disc : 0, 0.533) / 2 * Math.PI / 180;
 
 			/* Through more air the lower it is: the blue goes first, and the land turns gold; under the horizon it is gone. */
-			through = 1 / (Math.max(0, Math.sin(elevation)) + 0.045);
-			scene.Ground.SunColor = paint(sun ? trait(sun, 'Sun').Color : '#fff4e0').slice(0, 3).map(function (value, index) {
-				return value * Math.exp(-[0.018, 0.05, 0.12][index] * through) * Math.min(1, Math.max(0, (Math.sin(elevation) + 0.03) / 0.08));
-			});
+			scene.Ground.SunColor = sunThrough(paint(sun ? trait(sun, 'Sun').Color : '#fff4e0').slice(0, 3), Math.sin(elevation));
 
 			/* The moon: how much of it is lit and over the horizon; under the horizon of the sun it lights the land instead. */
 			moon = sun ? moonOf(trait(sun, 'Sun'), hour) : null;
@@ -6378,14 +6364,12 @@ Elemenx.Component('Scene', {
 			 * The light of the sky goes with the day and on through the twilight, to where the sun is 12 degrees under. A low
 			 * sun is seen against an air that gives less and is cooler: the side it does not reach goes deep.
 			 */
-			day = Math.min(1, Math.max(0, (Math.sin(elevation) + 0.2) / 0.45)) * (1 - solar * 0.93);
-			fill = day * (0.55 + 0.45 * Math.min(1, Math.max(0, (Math.sin(elevation) - 0.06) / 0.34)));
-			dusk = 1 - Math.min(1, Math.abs(Math.sin(elevation)) / 0.35);
-			dark = (sun ? number(trait(sun, 'Sun').NightLight, 1) : 1) * 0.42 + glow * 0.5;
-			scene.Ground.SkyLight = [0.3 * fill + 0.05 * dark + 0.04 * dusk, 0.36 * fill + 0.06 * dark + 0.03 * dusk, 0.46 * fill + 0.1 * dark + 0.05 * dusk].map(function (value, index) {
+			lit = skyOf(Math.sin(elevation), solar, (sun ? number(trait(sun, 'Sun').NightLight, 1) : 1) * 0.42 + glow * 0.5);
+			day = lit.Day;
+			scene.Ground.SkyLight = lit.Sky.map(function (value, index) {
 				return value * paint(sun ? trait(sun, 'Sun').Shade || '#ffffff' : '#ffffff')[index];
 			});
-			scene.Ground.FloorLight = [0.1 * fill + 0.016 * dark, 0.1 * fill + 0.019 * dark, 0.09 * fill + 0.03 * dark];
+			scene.Ground.FloorLight = lit.Floor;
 			scene.Ground.Day = day;
 			scene.Ground.Night = night;
 			scene.Ground.Glare = (1 - night) * (1 - solar);
@@ -6509,7 +6493,7 @@ Elemenx.Component('Scene', {
 
 			ground.Recarved = null;
 
-			ground.Field = terrain.Flat(sketch ? Object.assign({}, settings, {Sketch: sketch}) : settings);
+			ground.Field = terrain.Flat(Object.assign({}, settings, sketch ? {Sketch: sketch} : {}, {Compute: self.Compute || 'auto'}));
 			ground.Sketched = sketched;
 			/* What was dug is of its key too: what stands and grows there is set again. */
 			ground.Key = ground.Shape + sketched + (scene.Digs.length ? '#dug' + scene.Digs.length : '');
@@ -6866,7 +6850,20 @@ Elemenx.Component('Scene', {
 				object.StoodLift = object.Values.Lift;
 
 				/* Z: the floor it is told, where one stands over another. */
+				var deck;
+
 				object.World = [x, Math.max(0, field.Height(x, z, object.World ? object.World[1] - (object.Lifted || 0) : object.Values.Z === undefined ? undefined : number(object.Values.Z, 0))), z];
+
+				/*
+				 * A walker on a bridge stands on its deck, not on the bed of the river under it: where a deck is over the ground it
+				 * is the floor, as its ways go (they come onto it at its ends only).
+				 */
+				if (engine.SurfaceAt && trait(object, 'Walker')) {
+					deck = deckAt(field, x, z);
+
+					if (deck !== null && deck > object.World[1])
+						object.World[1] = deck;
+				}
 
 				/* In a pipe, or on one: its floor (ScenePiping). */
 				if (engine.PipeFloor && object.World)
@@ -6907,6 +6904,89 @@ Elemenx.Component('Scene', {
 			}, 0);
 		}
 
+		/*
+		 * The deck of a road over the ground at x, z (a bridge: SurfaceAt of SceneRoadNetwork), or null: none, or one under the
+		 * ground (a tunnel). Asked of each point a way is looked for over: off the boxes round the roads at once.
+		 */
+		function deckAt (field, x, z) {
+			var roads = engine.Roads ? engine.Roads() : null;
+			var boxes;
+			var on;
+
+			if (!roads || !roads.length || !engine.SurfaceAt) return null;
+
+			if (!scene.DeckBoxes || scene.DeckBoxes.Roads !== roads) {
+				scene.DeckBoxes = {Roads: roads, Boxes: roads.map(function (road) {
+					var half = (road.Width || 0) / 2 + 1;
+
+					return (road.Points || []).reduce(function (box, point) {
+						return [Math.min(box[0], point.X - half), Math.min(box[1], point.Z - half), Math.max(box[2], point.X + half), Math.max(box[3], point.Z + half)];
+					}, [Infinity, Infinity, -Infinity, -Infinity]);
+				})};
+			}
+
+			boxes = scene.DeckBoxes.Boxes;
+
+			if (!boxes.some(function (box) {
+				return x >= box[0] && x <= box[2] && z >= box[1] && z <= box[3];
+			})) return null;
+
+			on = engine.SurfaceAt(x, z);
+
+			if (!on || !on.Road || on.Height < field.Height(x, z) - 0.3) return null;
+
+			return on.Height;
+		}
+
+		/*
+		 * The way found last, for a walker of the same group: one setting off within 8 m of where it set off, to within 8 m of
+		 * where it went, a moment after, goes by its points between, if the lines to the first of them and from the last can be
+		 * walked; null else. Not under the ground (floors over each other). Regression: each unit of a group sent over a river
+		 * looked for the same way, a tenth of a second each.
+		 */
+		function sharedWay (field, from, to, rules, roads) {
+			var last = scene.WayShared;
+			var middle;
+			var made;
+
+			if (!last || field.Volume || to.Y !== undefined || last.Ground !== scene.Ground || last.Roads !== roads || Math.abs(scene.Seconds - last.Seconds) > 1) return null;
+			if (Math.hypot(from.X - last.From.X, from.Z - last.From.Z) > 8 || Math.hypot(to.X - last.To.X, to.Z - last.To.Z) > 8) return null;
+
+			middle = last.Points.slice(1, -1);
+			made = [{X: from.X, Z: from.Z}].concat(middle, [{X: to.X, Z: to.Z}]);
+
+			/* Over the ground, or a deck, as Way of the Terrain goes: no steeper step than a metre a metre and a half. */
+			function clear (a, b) {
+				var count = Math.max(1, Math.ceil(Math.hypot(b.X - a.X, b.Z - a.Z) / 0.5));
+				var floor = function (x, z) {
+					var deck = rules.Over(x, z);
+
+					return deck === null ? Math.max(0, field.Height(x, z)) : deck;
+				};
+				var before = floor(a.X, a.Z);
+				var at;
+
+				for (at = 1; at <= count; at++) {
+					var x = a.X + (b.X - a.X) * at / count;
+					var z = a.Z + (b.Z - a.Z) * at / count;
+					var here = floor(x, z);
+					if (!field.Walkable(x, z, rules) || Math.abs(here - before) > 0.75) return false;
+
+					before = here;
+				}
+
+				return true;
+			}
+
+			if (!clear(made[0], made[1]) || made.length > 2 && !clear(made[made.length - 2], made[made.length - 1])) return null;
+
+			return made.map(function (point) {
+				var deck = rules.Over(point.X, point.Z);
+
+				return {X: point.X, Y: point.Y !== undefined ? point.Y : deck === null ? Math.max(0, field.Height(point.X, point.Z)) : deck, Z: point.Z};
+			});
+		}
+
 		/* Sends a walker to a point of the ground: a way of the Terrain round what it cannot walk; false without one. */
 		function walk (id, point, callback) {
 			var object = scene.Objects[id];
@@ -6916,21 +6996,48 @@ Elemenx.Component('Scene', {
 			var target = Array.isArray(point) ? {X: point[0], Z: point[1], Y: point[2]} : {X: number(point.X, 0), Z: number(point.Z !== undefined ? point.Z : point.Y, 0), Y: point.Height};
 			var points;
 			var lengths = [0];
+			var failed;
+			var roads;
+			var rules;
+			var from;
 			var i;
 
 			if (!object || !walker || !field || !object.World) return false;
+
+			/*
+			 * Where no way was found a moment ago (from near here to near there, 5 s), none is looked for again. Regression: each
+			 * unit of a group sent over a river, and each attacking one every second, looked for it over all the map. Of the same
+			 * ground and the same roads only: a bridge made since is walked at once.
+			 */
+			failed = 'way:' + Math.round(object.World[0] / 16) + ':' + Math.round(object.World[2] / 16) + ':' + Math.round(target.X / 8) + ':' + Math.round(target.Z / 8) + ':' + (target.Y === undefined ? '' : Math.round(target.Y / 4));
+			roads = engine.Roads ? engine.Roads() : null;
+
+			if (!scene.WayFails || scene.WayFails.Ground !== scene.Ground || scene.WayFails.Roads !== roads)
+				scene.WayFails = {Ground: scene.Ground, Roads: roads};
+
+			if (scene.WayFails[failed] !== undefined && scene.Seconds - scene.WayFails[failed] < 5) return false;
 
 			/*
 			 * Its grid as fine as the way is short, a fiftieth of it (0.75 m at least, a 160th of the ground at most). Regression:
 			 * of the ground alone, on one of 3 km a cell was 19 m, no way into a cave of 5 m was ever found, and looking for it
 			 * over all the map held the page.
 			 */
-			points = field.Path({X: object.World[0], Z: object.World[2], Y: object.World[1] - (object.Lifted || 0)}, target, {MaxSlope: number(walker.MaxSlope, 0.45), Step: Math.max(0.75, Math.min(field.Size / 160, Math.hypot(target.X - object.World[0], target.Z - object.World[2]) / 50)), Blocked: function (x, z) {
+			from = {X: object.World[0], Z: object.World[2], Y: object.World[1] - (object.Lifted || 0)};
+			rules = {MaxSlope: number(walker.MaxSlope, 0.45), Step: Math.max(0.75, Math.min(field.Size / 160, Math.hypot(target.X - object.World[0], target.Z - object.World[2]) / 50)), Blocked: function (x, z) {
 				return blocked(x, z, object);
-			}});
+			}, Over: function (x, z) {
+				return deckAt(field, x, z);
+			}};
+			points = sharedWay(field, from, target, rules, roads) || field.Path(from, target, rules);
 
-			if (!points)
+			if (!points) {
+				scene.WayFails[failed] = scene.Seconds;
+
 				return false;
+			}
+
+			if (!field.Volume)
+				scene.WayShared = {Ground: scene.Ground, Roads: roads, Seconds: scene.Seconds, From: from, To: target, Points: points};
 
 			for (i = 1; i < points.length; i++)
 				lengths.push(lengths[i - 1] + Math.sqrt(Math.pow(points[i].X - points[i - 1].X, 2) + Math.pow(points[i].Z - points[i - 1].Z, 2)));
@@ -7541,6 +7648,9 @@ Elemenx.Component('Scene', {
 
 			if (pool.Inline() || !data || typeof data !== 'object') return data;
 
+			/* The code and the wasm of the heights of a ground (ReliefKey, ReliefWasm of its options) go with them, once. */
+			self.$Service('SceneTerrainGenerator').ShareGround(pool, data);
+
 			gpu.SharedNames = gpu.SharedNames || new WeakMap();
 			name = gpu.SharedNames.get(data);
 
@@ -7819,7 +7929,7 @@ Elemenx.Component('Scene', {
 			if (settings.Footings && engine.FootingsSketch)
 				sketch = engine.FootingsSketch(settings, sketch);
 
-			options = sketch ? Object.assign({}, settings, {Sketch: sketch}) : settings;
+			options = Object.assign({}, settings, sketch ? {Sketch: sketch} : {}, {Compute: self.Compute || 'auto'});
 			text = JSON.stringify(options);
 			ahead = scene.Prefetch;
 
@@ -7943,6 +8053,8 @@ Elemenx.Component('Scene', {
 			ground.Floor = null;
 
 			if (!field.Options) return null;
+
+			terrain.ShareGround(terrain.Work(), field.Options);
 
 			terrain.Work().Run('SceneTerrainGenerator', 'Floor', [field.Options, 256], function (error, data) {
 				if (error || scene.Ground !== ground || ground.FloorKey !== ground.Key) return;
@@ -10441,15 +10553,33 @@ Elemenx.Component('Scene', {
 		 */
 		function plantLight (sun, color) {
 			var high = vectors.Dot(sun, scene.Surface.Axes.Up);
+			var lit = skyOf(high, 0, 0.42);
+
+			return {Sun: sunThrough(color, high), Sky: lit.Sky, Floor: lit.Floor};
+		}
+
+		/*
+		 * The colour of a sun through the air (high: the sine of how high it stands): the more air the lower, the blue going
+		 * first and the land turning gold; under the horizon none. One for a ground and for the plants of a planet.
+		 */
+		function sunThrough (color, high) {
 			var through = 1 / (Math.max(0, high) + 0.045);
-			var day = Math.min(1, Math.max(0, (high + 0.2) / 0.45));
+
+			return color.map(function (value, index) {
+				return value * Math.exp(-[0.018, 0.05, 0.12][index] * through) * Math.min(1, Math.max(0, (high + 0.03) / 0.08));
+			});
+		}
+
+		/*
+		 * The light of a sky by a sun as high (sine) as it stands: Day, the light of the sky (Sky) and what the ground round gives
+		 * back (Floor), on through the twilight; eclipse (0 to 1) the part of the sun a moon hides, dark the light of the night.
+		 */
+		function skyOf (high, eclipse, dark) {
+			var day = Math.min(1, Math.max(0, (high + 0.2) / 0.45)) * (1 - eclipse * 0.93);
 			var fill = day * (0.55 + 0.45 * Math.min(1, Math.max(0, (high - 0.06) / 0.34)));
 			var dusk = 1 - Math.min(1, Math.abs(high) / 0.35);
-			var dark = 0.42;
 
-			return {Sun: color.map(function (value, index) {
-				return value * Math.exp(-[0.018, 0.05, 0.12][index] * through) * Math.min(1, Math.max(0, (high + 0.03) / 0.08));
-			}), Sky: [0.3 * fill + 0.05 * dark + 0.04 * dusk, 0.36 * fill + 0.06 * dark + 0.03 * dusk, 0.46 * fill + 0.1 * dark + 0.05 * dusk], Floor: [0.1 * fill + 0.016 * dark, 0.1 * fill + 0.019 * dark, 0.09 * fill + 0.03 * dark]};
+			return {Day: day, Sky: [0.3 * fill + 0.05 * dark + 0.04 * dusk, 0.36 * fill + 0.06 * dark + 0.03 * dusk, 0.46 * fill + 0.1 * dark + 0.05 * dusk], Floor: [0.1 * fill + 0.016 * dark, 0.1 * fill + 0.019 * dark, 0.09 * fill + 0.03 * dark]};
 		}
 
 		/* The uniforms of the plants of a planet: the light of plantLight, its shadow (shade), all in the frame of the plants. */

@@ -38,17 +38,9 @@ Elemenx.Service('ScenePipes', {
 		Methods: ['Fluids()', 'Lay(spec, height)', 'Asset(pipes, options)', 'Carves(pipes)', 'At(pipe, metres)', 'Near(pipe, point)', 'Floor(pipes, x, z, y, climb)', 'Blocks(pipes, x, z, y, round, heights)', 'Mouth(pipe)', 'Hole(pipe, along, angle)', 'Spurt(pipe, size)']
 	},
 
+	/* Of resources/pipes/fluids.json, a copy at each call. */
 	Fluids: function () {
-		return {
-			water: {Kind: 'liquid', Density: 1000, Viscosity: 1, Color: [0.32, 0.5, 0.62], Opacity: 0.55},
-			sewage: {Kind: 'liquid', Density: 1020, Viscosity: 3, Color: [0.33, 0.29, 0.18], Opacity: 0.92},
-			mud: {Kind: 'liquid', Density: 1600, Viscosity: 60, Color: [0.36, 0.27, 0.17], Opacity: 1},
-			oil: {Kind: 'liquid', Density: 870, Viscosity: 30, Color: [0.06, 0.05, 0.03], Opacity: 0.98, Burns: true},
-			fuel: {Kind: 'liquid', Density: 750, Viscosity: 0.6, Color: [0.72, 0.58, 0.24], Opacity: 0.5, Burns: true},
-			gas: {Kind: 'gas', Density: 0.8, Viscosity: 0, Color: [0.85, 0.9, 1], Opacity: 0.05, Burns: true},
-			steam: {Kind: 'gas', Density: 0.6, Viscosity: 0, Color: [0.95, 0.96, 0.97], Opacity: 0.6, Hot: true},
-			air: {Kind: 'gas', Density: 1.2, Viscosity: 0, Color: [1, 1, 1], Opacity: 0}
-		};
+		return Elemenx.Resources('Data', 'ElemenxGraphics/pipes/fluids') || {};
 	},
 
 	Number: function (value, fallback) {

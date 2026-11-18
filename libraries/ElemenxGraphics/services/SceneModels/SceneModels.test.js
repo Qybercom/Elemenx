@@ -315,3 +315,53 @@ describe('Contract: Models, a recipe of data: parts of shapes in pieces, mirrors
 		});
 	});
 });
+
+describe('Regression: the colors of the models of code are their own', function () {
+	var models;
+
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:SceneModels']);
+
+		models = Elemenx.Service('SceneModels');
+	});
+
+	/* The colors a piece has, each once, rounded. */
+	function colors (model) {
+		var found = {};
+
+		model.Pieces.forEach(function (one) {
+			var list = one.Geometry.Colors;
+			var i;
+
+			for (i = 0; i < list.length; i += 3)
+				found[[list[i], list[i + 1], list[i + 2]].map(function (value) {
+					return Math.round(value * 100) / 100;
+				}).join(',')] = true;
+		});
+
+		return Object.keys(found);
+	}
+
+	/*
+	 * Regression: the metals of the furniture of streets were declared again in the middle of the recipes, as steel and dark:
+	 * the recipes run after all of them were declared, so a knight was of the dark metal of a street lamp, a robot of its
+	 * near black.
+	 */
+	it('makes a knight of steel and a street lamp of its own dark metal', function () {
+		expect(colors(models.Make('knight'))).toContain('0.72,0.75,0.8');
+		expect(colors(models.Make('knight'))).not.toContain('0.3,0.31,0.33');
+		expect(colors(models.Make('robot'))).toContain('0.27,0.29,0.34');
+		expect(colors(models.Make('robot'))).not.toContain('0.12,0.12,0.13');
+		expect(colors(models.Make('streetlamp'))).toContain('0.3,0.31,0.33');
+	});
+
+	/* The one table of the kinds of scene the types of models are (Scene and its editor both read it). */
+	it('tells the kind of a scene a type of model is', function () {
+		expect(models.KindOf('animal')).toBe('unit');
+		expect(models.KindOf('plant')).toBe('tree');
+		expect(models.KindOf('building')).toBe('house');
+		expect(models.KindOf('nothing')).toBe(null);
+	});
+});

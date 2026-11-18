@@ -115,6 +115,13 @@ Elemenx.Component('PlanetEditor', {
 		};
 
 		own.Emitted = JSON.stringify(this.Value || null);
+
+		/* The first values of the fields of a planet: those of a planet that tells none (ScenePlanet.Defaults). */
+		var defaults = this.$Service('ScenePlanet').Defaults;
+
+		this.Settings = this.Settings.map(function (setting) {
+			return Object.prototype.hasOwnProperty.call(defaults, setting.Key) ? {Key: setting.Key, Value: defaults[setting.Key]} : setting;
+		});
 	},
 
 	$OnReady: function () {
@@ -178,7 +185,7 @@ Elemenx.Component('PlanetEditor', {
 		var options = this.Options();
 		var terrain = this.$Service('SceneTerrainGenerator');
 
-		options.BiomeList = terrain.Biomes({Biomes: options.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe']});
+		options.BiomeList = terrain.Biomes({Biomes: options.Biomes || this.$Service('SceneTerrainGenerator').DefaultBiomes});
 
 		/* Its rules of detail made code here, for the workers too. */
 		return this.$Service('ScenePlanet').Ruled(options);
@@ -818,7 +825,7 @@ Elemenx.Component('PlanetEditor', {
 
 							if (--left) return;
 
-							planets.Work().Run('ScenePlanet', 'Drainage', [heights, size, 40], function (wrong, drained) {
+							planets.Work().Run('ScenePlanet', 'Drainage', [heights, size], function (wrong, drained) {
 								if (pass !== made.Pass) return;
 
 								made.Rivers = wrong || !drained ? [] : drained.Rivers;
@@ -1440,7 +1447,7 @@ Elemenx.Component('PlanetEditor', {
 		var options = this.Value || {};
 		var mapping = options.Rules && options.Rules.Biomes || {};
 
-		return (options.Biomes || ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe']).map(function (entry) {
+		return (options.Biomes || this.$Service('SceneTerrainGenerator').DefaultBiomes).map(function (entry) {
 			var name = typeof entry === 'string' ? entry : entry.Biome || entry.Name || '';
 
 			return {Biome: name, Rule: mapping[name] || 'generated'};

@@ -9,6 +9,9 @@
  * - Sequence(text): the numbers 0 to 1 of a text one after the other, next() (a linear generator of the text hashed by
  *   31): the old generator the towns of planets and the plans of settlements are laid by, kept so that they stay where
  *   they were. Regression: it was written out again in each of them.
+ * - Seeded(text): the numbers of a text, next(low, high) (low 0 and high 1 by default): its text hashed by FNV-1a, then a
+ *   multiply and xor-shift of 32 bits; the generator the models of code, the sowing of things and the villages of lands are
+ *   made by, the same in a worker and in the page. Regression: it was written out again in each of them.
  * - Source(names): the source of its members for a worker of the Workers Service.
  * - Noise(seed, size) returns a smooth noise of a plane, noise(x, y) 0 to 1 (size: the cells of one wave, 16 by
  *   default): the ground of a map, clouds.
@@ -16,7 +19,7 @@
 Elemenx.Service('Random', {
 	$Meta: {
 		Description: 'Random numbers of a seed: always the same numbers for the same seed.',
-		Methods: ['Create(seed)', 'Hash(text)', 'Sequence(text)', 'Noise(seed, size)']
+		Methods: ['Create(seed)', 'Hash(text)', 'Sequence(text)', 'Seeded(text)', 'Noise(seed, size)']
 	},
 
 	Hash: function (text) {
@@ -33,6 +36,21 @@ Elemenx.Service('Random', {
 		hash = Math.imul(hash ^ (hash >>> 13), 3266489909);
 
 		return (hash ^ (hash >>> 16)) >>> 0;
+	},
+
+	Seeded: function (text) {
+		var value = 2166136261;
+		var source = String(text === undefined || text === null ? '' : text);
+		var i;
+
+		for (i = 0; i < source.length; i++)
+			value = Math.imul(value ^ source.charCodeAt(i), 16777619);
+
+		return function (low, high) {
+			value = Math.imul(value ^ value >>> 15, 2246822519) + 1 | 0;
+
+			return (low || 0) + ((value >>> 0) / 4294967296) * ((high === undefined ? 1 : high) - (low || 0));
+		};
 	},
 
 	Sequence: function (text) {

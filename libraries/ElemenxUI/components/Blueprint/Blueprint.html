@@ -7,6 +7,7 @@
 				<div class="elemenx-blueprint-type" role="listitem" *for="type of group.Types" *key="type" [attribute.data-type]="type" (click)="Picked(type)"><Button Size="small" Variant="ghost" [Title]="$T('ui.blueprint.add') + ': ' + type" [Label]="type" /></div>
 			</div>
 		</div>
+		<div class="elemenx-blueprint-target" *if="Running" role="status" [attribute.data-kind]="Running.Kind">{{Running.Text}}</div>
 		<section class="elemenx-blueprint-parameters" [attribute.aria-label]="$T('ui.blueprint.parameters')">
 			<div class="elemenx-blueprint-parameters-head">
 				<span>{{$T('ui.blueprint.parameters')}}</span>

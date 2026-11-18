@@ -1,7 +1,7 @@
 <!-- generated -->
 # Math
 
-Числа пространства — для того, что рисует, и того, что считает; одни и те же на странице, в воркере и в Node. Матрицы 4×4 — массивы из 16 чисел по столбцам: Identity(), Multiply(a, b), Invert(m), Translation(x, y, z), Rotation(axis, angle) (радианы), Scaling(x, y, z), Compose(position, rotation, scale), Perspective(fov, aspect, near, far) (fov в градусах), Orthographic(left, right, bottom, top, near, far), LookAt(eye, target, up), NormalMatrix(m), Apply(m, point). Векторы [x, y, z]: Vectors.Add, Subtract, Scale, Dot, Cross, Length, Normalize, Lerp, Distance. Hit(ray, center, radius) — где луч встречает шар (-1 — не встречает). Noise(seed) — гладкий шум пространства (Value, Fbm, Ridge); без зерна это ровно шум шейдеров Renderer (Chunks.Noise). SeedOffset(seed) — сдвиг координат зерна; Source(names) отдаёт исходник членов воркеру.
+Числа пространства — для того, что рисует, и того, что считает; одни и те же на странице, в воркере и в Node. Матрицы 4×4 — массивы из 16 чисел по столбцам: Identity(), Multiply(a, b), Invert(m), Translation(x, y, z), Rotation(axis, angle) (радианы), Scaling(x, y, z), Compose(position, rotation, scale), Perspective(fov, aspect, near, far) (fov в градусах), Orthographic(left, right, bottom, top, near, far), LookAt(eye, target, up), NormalMatrix(m), Apply(m, point). Векторы [x, y, z]: Vectors.Add, Subtract, Scale, Dot, Cross, Length, Normalize, Lerp, Distance. Hit(ray, center, radius) — где луч встречает шар (-1 — не встречает). Noise(seed) — гладкий шум пространства (Value, Fbm, Ridge); без зерна это ровно шум шейдеров Renderer (Chunks.Noise). SeedOffset(seed) — сдвиг координат зерна; Source(names) отдаёт исходник членов воркеру. PlaceRandom(x, z, other) — число от 0 до 1 места, одно и то же для одного места (other — второе такое число): по нему сеются вещи, ложатся пещеры и выбирается земля. Spiral(index, count, turn) — точка номер index из count, ровно разложенных по сфере спиралью золотого угла и повёрнутых на turn радиан. Queue() — куча, отдающая сначала наименьшее F (Push(item), Pop(), Size()): на ней ищутся пути и стекают реки.
 
 ## Методы
 
@@ -20,21 +20,24 @@
 - `Hit(ray, center, radius)`
 - `Noise(seed)`
 - `Source(names)`
+- `Queue()`
+- `Spiral(index, count, turn)`
+- `PlaceRandom(x, z, other)`
 - `SeedOffset(seed)`
 
 ## Тесты
 
-- [is Math.Noise to the bit as value noise with fbm or ridged octaves, the same seed giving the same numbers](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Noise/Noise.test.js#L27) — `libraries/ElemenxCommon/services/Noise/Noise.test.js`
-- [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L129) — `tests/regression/headless.test.js`
-- [comes down in one smooth way: no stop, no step, the ship and the view going on where it comes into the air](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L576) — `tests/regression/library-scene-landing.test.js`
-- [has in the sky of a location the very moon of its body](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L798) — `tests/regression/library-scene-landing.test.js`
-- [flies a ship by a pad as it leans and turns the view by its right stick, up looking up](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L1494) — `tests/regression/library-scene-landing.test.js`
-- [draws a screen again only when it changed, and reads its styles again only when a class or an attribute changed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-screens.test.js#L45) — `tests/regression/library-scene-screens.test.js`
-- [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L185) — `tests/regression/library-scene.test.js`
-- [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L486) — `tests/regression/library-scene.test.js`
-- [draws the Sun from a ship near a planet in real sizes, bright](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L847) — `tests/regression/library-scene.test.js`
-- [keeps from the shaders what would blur, flicker or show as noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1556) — `tests/regression/library-scene.test.js`
-- [makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2421) — `tests/regression/library-scene.test.js`
-- [burns where it is told: effects with their lamps, those of a body, bursts that end, types of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2909) — `tests/regression/library-scene.test.js`
+- [turns by the own Math in the run of a graph, in its Code and in its IR, to the bit](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L201) — `tests/regression/blueprints-ir.test.js`
+- [reads the kernel language into the IR: constants, declarations, for, ?:, the operators of bits; what is wrong by its line and column](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L71) — `tests/regression/compilers-wasm.test.js`
+- [wraps whole numbers round as the hash of the Noise Service does](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L94) — `tests/regression/compilers-wasm.test.js`
+- [has its own Math, as near as a unit of the last place to the browser's, its edges as js has them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L123) — `tests/regression/compilers-wasm.test.js`
+- [makes wasm of the IR that gives the very numbers of its js](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L159) — `tests/regression/compilers-wasm.test.js`
+- [runs a function over many points in one call (Batch): the numbers of each run one after another](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L181) — `tests/regression/compilers-wasm.test.js`
+- [keeps a function that calls itself from going deeper than MaxDepth, as its js does](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L221) — `tests/regression/compilers-wasm.test.js`
+- [says what of a module is not of numbers: its js runs it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L230) — `tests/regression/compilers-wasm.test.js`
+- [makes its module off the thread when given a callback](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L246) — `tests/regression/compilers-wasm.test.js`
+- [makes as many modules as it is asked, all of one memory](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L262) — `tests/regression/compilers-wasm.test.js`
+- [takes lists of numbers (float\[\]): in js arrays, in wasm the memory, the same numbers; a vector by an index](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L273) — `tests/regression/compilers-wasm.test.js`
+- [says a list of numbers of a module is not for wasm, and keeps it once in js](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L322) — `tests/regression/compilers-wasm.test.js`
 
-+23 ещё в тех же файлах
++38 ещё в тех же файлах

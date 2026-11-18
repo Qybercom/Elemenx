@@ -13,6 +13,10 @@ function create () {
 		Elemenx: {
 			Service: function (name, value) {
 				definition = value;
+			},
+			/* Its resources as the Library gives them: ElemenxGraphics/pipes/fluids of resources/pipes/fluids.json. */
+			Resources: function (group, name) {
+				return JSON.parse(fs.readFileSync(path.join(import.meta.dirname, '..', '..', 'resources', name.replace(/^ElemenxGraphics\//, '') + '.json'), 'utf8'));
 			}
 		}
 	});

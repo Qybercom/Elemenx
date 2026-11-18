@@ -7,6 +7,7 @@ Noise: шум пространства любым алгоритмом и всё
 - Make(spec) — сэмплер: At(x, y, z), Gradient(x, y, z), Curl(x, y, z) (поток без источников и стоков: дым, пыль, вода), Grid({Width, Height, X, Y, Step, Plane, Z}) — Float32Array.
 - Types(), Fractals() — допустимые имена.
 - GLSLChunk() — функции, нужные шейдеру один раз; GLSL(spec, name) — функция float name(vec3 p); GLSLLines(spec, prefix, point) — то же строками тела шейдера ({Lines, Value}). Числа совпадают с At до точности float.
+- Kernel — единый источник чисел шума: текст на языке ядра (kernel) Elemenx.Compilers. Code() — его функции на js (делаются на странице; воркер собирает их из переданного текста Compiled), IR() — модуль IR (для графов шума Blueprints.Numeric), Wasm() — тот же модуль в WebAssembly ({Bytes, Exports}; пачками: Elemenx.Compilers.Instance(noise.Wasm()).Batch('n_read', точки, число, noise.Numbers(noise.Whole(spec)))). Числа js и wasm совпадают до бита, в любом браузере.
 
 Где применяется: земля SceneTerrainGenerator.Flat принимает Noise (спецификацию: её холмы из этого шума, в метрах; без неё — прежние холмы Scale и Ridges), блок NoiseSpec есть и в генераторных, и в шейдерных графах Blueprints. Демо Terrain на странице /graphics примера Advanced переключает рельеф: классические холмы, дюны Ворли, хребты Перлина, холмы симплекса, террасы с искажением.
 
@@ -15,8 +16,13 @@ Noise: шум пространства любым алгоритмом и всё
 - `Types()`
 - `Fractals()`
 - `Source(names)`
-- `Make(spec)`
+- `Whole(spec)`
+- `Code()`
+- `IR()`
+- `Wasm()`
+- `Numbers(whole)`
 - `Gradient(hash, x, y, z)`
+- `Make(spec)`
 - `GLSLChunk()`
 - `GLSL(spec, name)`
 - `GLSLLines(spec, prefix, point)`
@@ -24,6 +30,8 @@ Noise: шум пространства любым алгоритмом и всё
 ## Тесты
 
 - [reads a noise of the Noise Service by the spec of its block, in a generator and in a pass, the same numbers](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L665) — `tests/regression/blueprints.test.js`
+- [makes the kernel of the Noise Service a library of a shader: its value noise of the page as near as floats hold it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-glsl.test.js#L268) — `tests/regression/compilers-glsl.test.js`
+- [wraps whole numbers round as the hash of the Noise Service does](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L94) — `tests/regression/compilers-wasm.test.js`
 - [is Math.Noise to the bit as value noise with fbm or ridged octaves, the same seed giving the same numbers](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Noise/Noise.test.js#L27) — `libraries/ElemenxCommon/services/Noise/Noise.test.js`
 - [gives the very numbers of simplex noise it gave before it made no arrays, warped and ridged as well](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Noise/Noise.test.js#L42) — `libraries/ElemenxCommon/services/Noise/Noise.test.js`
 - [gives each type within 0 and 1, of its seed, smooth where it should be](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Noise/Noise.test.js#L114) — `libraries/ElemenxCommon/services/Noise/Noise.test.js`
@@ -31,7 +39,7 @@ Noise: шум пространства любым алгоритмом и всё
 - [reads the cells of worley noise: the nearest point, the next, the edge between them, a number for each cell](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Noise/Noise.test.js#L150) — `libraries/ElemenxCommon/services/Noise/Noise.test.js`
 - [does what follows: terraces, a power, the other way round, a range; blends of noises, a grid, a gradient and a curl](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Noise/Noise.test.js#L172) — `libraries/ElemenxCommon/services/Noise/Noise.test.js`
 - [writes a spec as a function of a shader that gives the same numbers as the page](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Noise/Noise.test.js#L203) — `libraries/ElemenxCommon/services/Noise/Noise.test.js`
+- [gives the very numbers of its js in wasm, a batch of points of a spec given once](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Noise/Noise.test.js#L272) — `libraries/ElemenxCommon/services/Noise/Noise.test.js`
 - [tells a block of no IR and a graph that is not there, and stops the chain on it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L151) — `tests/regression/blueprints-ir.test.js`
-- [makes a vertex graph a function that moves a corner and its normal, of blocks or of GLSL written by hand](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L319) — `tests/regression/blueprints.test.js`
-- [makes a material and a pass written by hand of their GLSL, and draws the pass](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L354) — `tests/regression/blueprints.test.js`
-- [raises its hills of the noise its options give, the same in a worker, and the same as ever without one](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTerrainGenerator/SceneTerrainGenerator.test.js#L565) — `libraries/ElemenxGraphics/services/SceneTerrainGenerator/SceneTerrainGenerator.test.js`
+
++4 ещё в тех же файлах

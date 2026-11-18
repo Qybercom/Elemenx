@@ -1,0 +1,11 @@
+{
+	"Tunnel": {"Radius": 2.5, "Flat": 0.5},
+	"Caves": {"Radius": 100, "Top": 3, "Bottom": 40, "Scale": 24, "Width": 0.35, "Halls": 0.5},
+	"Overhangs": {"Amount": 6, "Scale": 24, "Slope": 0.45},
+	"Passages": {"Scale": 6, "Rough": 0},
+	"Sketch": {
+		"cave": {"Width": 5, "Depth": 8, "Rough": 0.5, "Mouth": 1},
+		"hall": {"Radius": 10, "Depth": 10},
+		"overhang": {"Radius": 30, "Amount": 6, "Slope": 0.35}
+	}
+}

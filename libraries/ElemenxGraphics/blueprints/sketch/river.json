@@ -1,0 +1,246 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "river",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "sketch-river-line-0",
+			"type": "Line",
+			"x": 260,
+			"y": 110,
+			"properties": []
+		},
+		{
+			"id": "sketch-river-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Points"
+				}
+			]
+		},
+		{
+			"id": "sketch-river-input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "sketch-river-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "sketch-river-level-4",
+			"type": "Level",
+			"x": 260,
+			"y": 220,
+			"properties": []
+		},
+		{
+			"id": "sketch-river-input-5",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Levels"
+				}
+			]
+		},
+		{
+			"id": "sketch-river-formula-6",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "H + (min(H, L - Depth) - H) * (D <= Width / 2 ? 1 : (0.5 + 0.5 * cos(min(1, max(0, (D - Width / 2) / max(0.000001, Bank))) * 3.141592653589793))) * S"
+				}
+			]
+		},
+		{
+			"id": "sketch-river-input-7",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "H"
+				}
+			]
+		},
+		{
+			"id": "sketch-river-input-8",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Depth"
+				}
+			]
+		},
+		{
+			"id": "sketch-river-input-9",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "sketch-river-input-10",
+			"type": "Input",
+			"x": 0,
+			"y": 880,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Bank"
+				}
+			]
+		},
+		{
+			"id": "sketch-river-input-11",
+			"type": "Input",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "S"
+				}
+			]
+		},
+		{
+			"id": "sketch-river-result-12",
+			"type": "Result",
+			"x": 1040,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "sketch-river-link-0",
+			"p1": "sketch-river-input-1-out-Value",
+			"p2": "sketch-river-line-0-in-Points",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-river-link-1",
+			"p1": "sketch-river-input-2-out-Value",
+			"p2": "sketch-river-line-0-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-river-link-2",
+			"p1": "sketch-river-input-3-out-Value",
+			"p2": "sketch-river-line-0-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-river-link-3",
+			"p1": "sketch-river-input-1-out-Value",
+			"p2": "sketch-river-level-4-in-Points",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-river-link-4",
+			"p1": "sketch-river-input-5-out-Value",
+			"p2": "sketch-river-level-4-in-Levels",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-river-link-5",
+			"p1": "sketch-river-input-2-out-Value",
+			"p2": "sketch-river-level-4-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-river-link-6",
+			"p1": "sketch-river-input-3-out-Value",
+			"p2": "sketch-river-level-4-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-river-link-7",
+			"p1": "sketch-river-input-7-out-Value",
+			"p2": "sketch-river-formula-6-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-river-link-8",
+			"p1": "sketch-river-level-4-out-Level",
+			"p2": "sketch-river-formula-6-in-L",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-river-link-9",
+			"p1": "sketch-river-input-8-out-Value",
+			"p2": "sketch-river-formula-6-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-river-link-10",
+			"p1": "sketch-river-line-0-out-Distance",
+			"p2": "sketch-river-formula-6-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-river-link-11",
+			"p1": "sketch-river-input-9-out-Value",
+			"p2": "sketch-river-formula-6-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-river-link-12",
+			"p1": "sketch-river-input-10-out-Value",
+			"p2": "sketch-river-formula-6-in-Bank",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-river-link-13",
+			"p1": "sketch-river-input-11-out-Value",
+			"p2": "sketch-river-formula-6-in-S",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-river-link-14",
+			"p1": "sketch-river-formula-6-out-Value",
+			"p2": "sketch-river-result-12-in-Value",
+			"kind": "value"
+		}
+	]
+}

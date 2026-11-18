@@ -4,5 +4,6 @@ Noise: шум пространства любым алгоритмом и всё
 - Make(spec) — сэмплер: At(x, y, z), Gradient(x, y, z), Curl(x, y, z) (поток без источников и стоков: дым, пыль, вода), Grid({Width, Height, X, Y, Step, Plane, Z}) — Float32Array.
 - Types(), Fractals() — допустимые имена.
 - GLSLChunk() — функции, нужные шейдеру один раз; GLSL(spec, name) — функция float name(vec3 p); GLSLLines(spec, prefix, point) — то же строками тела шейдера ({Lines, Value}). Числа совпадают с At до точности float.
+- Kernel — единый источник чисел шума: текст на языке ядра (kernel) Elemenx.Compilers. Code() — его функции на js (делаются на странице; воркер собирает их из переданного текста Compiled), IR() — модуль IR (для графов шума Blueprints.Numeric), Wasm() — тот же модуль в WebAssembly ({Bytes, Exports}; пачками: Elemenx.Compilers.Instance(noise.Wasm()).Batch('n_read', точки, число, noise.Numbers(noise.Whole(spec)))). Числа js и wasm совпадают до бита, в любом браузере.
 
 Где применяется: земля SceneTerrainGenerator.Flat принимает Noise (спецификацию: её холмы из этого шума, в метрах; без неё — прежние холмы Scale и Ridges), блок NoiseSpec есть и в генераторных, и в шейдерных графах Blueprints. Демо Terrain на странице /graphics примера Advanced переключает рельеф: классические холмы, дюны Ворли, хребты Перлина, холмы симплекса, террасы с искажением.

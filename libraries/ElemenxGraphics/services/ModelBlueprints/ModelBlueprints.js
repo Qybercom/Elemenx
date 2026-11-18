@@ -38,6 +38,14 @@ Elemenx.Service('ModelBlueprints', {
 	},
 
 	/* A part made of its fields, each list a copy. */
+	/*
+	 * The functions of Math its blocks turn by: the own ones of the compiled code (Elemenx.Compilers.Math), so a graph run
+	 * block by block gives the very parts of its code; the browser's where there is none.
+	 */
+	Math: function () {
+		return typeof Elemenx !== 'undefined' && Elemenx.Compilers && Elemenx.Compilers.Math ? Elemenx.Compilers.Math() : Math;
+	},
+
 	Part: function (fields) {
 		return JSON.parse(JSON.stringify(fields));
 	},
@@ -420,7 +428,7 @@ Elemenx.Service('ModelBlueprints', {
 					to = radius(walked);
 
 					/* Its axis, y of a cylinder, turned to the way: round x by how far from up, then round y to its side. */
-					parts.push(self.Part({Shape: 'cylinder', At: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2], Size: [from * 2, length, from * 2], Top: from ? to / from : 1, Turn: [Math.acos(Math.max(-1, Math.min(1, d[1] / length))) / degrees, Math.atan2(d[0], d[2]) / degrees, 0], Color: inputs.Color, Material: inputs.Material, Segments: Number(properties.Segments) || 8}));
+					parts.push(self.Part({Shape: 'cylinder', At: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2], Size: [from * 2, length, from * 2], Top: from ? to / from : 1, Turn: [self.Math().acos(Math.max(-1, Math.min(1, d[1] / length))) / degrees, self.Math().atan2(d[0], d[2]) / degrees, 0], Color: inputs.Color, Material: inputs.Material, Segments: Number(properties.Segments) || 8}));
 
 					if (i < points.length - 1)
 						parts.push(self.Part({Shape: 'ball', At: b, Size: [to * 2, to * 2, to * 2], Turn: [0, 0, 0], Color: inputs.Color, Material: inputs.Material}));
@@ -469,8 +477,8 @@ Elemenx.Service('ModelBlueprints', {
 		blueprints.Node('Spin', {Graphs: kinds, Group: 'shape', Inputs: [{Key: 'Parts', Type: 'any'}, {Key: 'Degrees', Type: 'float', Value: 0}, {Key: 'Around', Type: 'vec3', Value: 0}], Outputs: [{Key: 'Parts', Type: 'any'}],
 			Compute: function (inputs) {
 				var angle = inputs.Degrees * degrees;
-				var c = Math.cos(angle);
-				var s = Math.sin(angle);
+				var c = self.Math().cos(angle);
+				var s = self.Math().sin(angle);
 
 				return each(inputs.Parts, function (part) {
 					var at = part.At || [0, 0, 0];

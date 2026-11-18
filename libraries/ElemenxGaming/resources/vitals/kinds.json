@@ -1,0 +1,10 @@
+{
+	"unit": {"Max": 100},
+	"house": {"Max": 800},
+	"module": {"Max": 200},
+	"station": {"Max": 1000},
+	"craft": {"Max": 1000},
+	"ship": {"Max": 100},
+	"cruiser": {"Max": 600},
+	"freighter": {"Max": 300}
+}

@@ -41,17 +41,29 @@
  * A clip is {Length, Loop, Hold, Stride, Tracks: {piece: [[time 0 to 1, rx, ry, rz, mx, my, mz]...]}, Spins: {piece:
  * [x, y, z] degrees a second}}; Hold keeps the last pose when it ends, Stride is how far a walk goes in one cycle, in
  * sizes of the model.
+ * - Kinds, KindOf(type): the kind of a Scene a model of a type stands as (resources/models/kinds.json: a plant a tree, a
+ *   building a house...), null for one not told. Rigs(): the clips of the rigs (resources/models/rigs.json).
  * The same functions run in Node: they read no page.
  */
 Elemenx.Service('SceneModels', {
 	$Meta: {
 		Description: 'The models of a game made of code: units, animals, plants, buildings and ships of pieces that move, fantasy and sci-fi, and their clips.',
-		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Remake(name)', 'Edits(name)', 'SetEdits(name, edits)', 'Edit(name, edit)', 'PieceList(name)', 'Extract(name, ids, newName)', 'Combine(newName, parts, options)', 'Assemble(recipe, tools, random, variant)', 'Tagged(name, tag)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Make(name, options)', 'Surfaces(model)', 'Whole(model)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)']
+		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Remake(name)', 'Edits(name)', 'SetEdits(name, edits)', 'Edit(name, edit)', 'PieceList(name)', 'Extract(name, ids, newName)', 'Combine(newName, parts, options)', 'Assemble(recipe, tools, random, variant)', 'Tagged(name, tag)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Make(name, options)', 'Surfaces(model)', 'Whole(model)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)', 'KindOf(type)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['model']}},
 
+	/* The kind of a scene a model of a Type is (resources/models/kinds: unit, animal and vehicle a unit, plant a tree...). */
+	Kinds: {unit: 'unit', animal: 'unit', vehicle: 'unit', plant: 'tree', rock: 'rock', building: 'house'},
+
+	/* The kind of a model of a Type: of Kinds, null for a type of none. */
+	KindOf: function (type) {
+		return Object.prototype.hasOwnProperty.call(this.Kinds, type) ? this.Kinds[type] : null;
+	},
+
 	$OnCreate: function () {
+		this.Kinds = Object.assign({}, this.Kinds, typeof Elemenx !== 'undefined' && Elemenx.Resources ? Elemenx.Resources('Data', 'ElemenxGraphics/models/kinds') || {} : {});
+
 		var self = this;
 
 		this.Recipes = {};
@@ -104,8 +116,8 @@ Elemenx.Service('SceneModels', {
 				return self.Assemble(given, tools, given.Seed !== undefined && given.Seed !== '' ? self.Random(String(given.Seed) + ':' + variant) : random, variant);
 			}});
 
-			if (!recipe.Clips && recipe.Rig && this.Rigs()[recipe.Rig])
-				recipe.Clips = this.Rigs()[recipe.Rig];
+			if (!recipe.Clips && recipe.Rig)
+				recipe.Clips = this.Rigs()[recipe.Rig] || recipe.Clips;
 		}
 
 		/* A model made again under its name has a Key of its own: what drew the one before (a scene keeps it) does not draw this one. */
@@ -2580,17 +2592,7 @@ Elemenx.Service('SceneModels', {
 
 	/* The numbers of a shape: always the same for the same text. */
 	Random: function (text) {
-		var value = 2166136261;
-		var i;
-
-		for (i = 0; i < text.length; i++)
-			value = Math.imul(value ^ text.charCodeAt(i), 16777619);
-
-		return function (low, high) {
-			value = Math.imul(value ^ value >>> 15, 2246822519) + 1 | 0;
-
-			return (low || 0) + ((value >>> 0) / 4294967296) * ((high === undefined ? 1 : high) - (low || 0));
-		};
+		return this.$Service('Random').Seeded(text);
 	},
 
 	/*
@@ -2784,84 +2786,9 @@ Elemenx.Service('SceneModels', {
 		};
 	},
 
-	/* The clips of the bodies that share their joints: of two legs, of four, of tracks. */
+	/* The clips of the bodies that share their joints: of two legs, of four, of tracks (resources/models/rigs.json, a copy at each call). */
 	Rigs: function () {
-		return {
-			Biped: {
-				idle: {Length: 2.6, Loop: true, Tracks: {
-					'body': [[0, 0, 0, 0, 0, 0, 0], [0.5, 1, 0, 0, 0, -0.006, 0], [1, 0, 0, 0, 0, 0, 0]],
-					'arm-l': [[0, 0, 0, 3], [0.5, 2, 0, 5], [1, 0, 0, 3]],
-					'arm-r': [[0, 0, 0, -3], [0.5, 2, 0, -5], [1, 0, 0, -3]],
-					'head': [[0, 0, -6, 0], [0.5, 0, 6, 0], [1, 0, -6, 0]]
-				}},
-				walk: {Length: 0.8, Loop: true, Stride: 1, Tracks: {
-					'leg-l': [[0, -32], [0.5, 32], [1, -32]],
-					'leg-r': [[0, 32], [0.5, -32], [1, 32]],
-					'arm-l': [[0, 26], [0.5, -26], [1, 26]],
-					'arm-r': [[0, -26], [0.5, 26], [1, -26]],
-					'body': [[0, -4, 0, 0, 0, 0, 0], [0.25, -4, 0, 0, 0, 0.018, 0], [0.5, -4, 0, 0, 0, 0, 0], [0.75, -4, 0, 0, 0, 0.018, 0], [1, -4, 0, 0, 0, 0, 0]]
-				}},
-				attack: {Length: 0.7, Tracks: {
-					'arm-r': [[0, 0], [0.35, -135], [0.6, -25], [1, 0]],
-					'body': [[0, 0], [0.35, 4, -22], [0.6, -10, 24], [1, 0]]
-				}},
-				cast: {Length: 1.1, Tracks: {
-					'arm-l': [[0, 0], [0.4, -150, 0, 15], [0.75, -150, 0, 15], [1, 0]],
-					'arm-r': [[0, 0], [0.4, -150, 0, -15], [0.75, -150, 0, -15], [1, 0]],
-					'body': [[0, 0], [0.4, 8], [0.75, -6], [1, 0]]
-				}},
-				work: {Length: 1, Loop: true, Tracks: {
-					'arm-r': [[0, -30], [0.45, -130], [0.65, -20], [1, -30]],
-					'arm-l': [[0, -30], [0.45, -60], [0.65, -30], [1, -30]],
-					'body': [[0, -8], [0.45, 6], [0.65, -16], [1, -8]]
-				}},
-				die: {Length: 1, Hold: true, Tracks: {
-					'body': [[0, 0], [0.3, 12, 0, 0, 0, -0.04, 0], [1, -86, 0, 0, 0, -0.46, 0]],
-					'arm-l': [[0, 0], [1, -40, 0, 30]],
-					'arm-r': [[0, 0], [1, -40, 0, -30]],
-					'leg-l': [[0, 0], [0.6, 25], [1, 8]],
-					'leg-r': [[0, 0], [0.6, 10], [1, -6]]
-				}}
-			},
-
-			Quadruped: {
-				idle: {Length: 3, Loop: true, Tracks: {
-					'head': [[0, 0, -8, 0], [0.5, 8, 8, 0], [1, 0, -8, 0]],
-					'tail': [[0, 0, -12, 0], [0.5, 0, 12, 0], [1, 0, -12, 0]]
-				}},
-				walk: {Length: 0.6, Loop: true, Stride: 1.5, Tracks: {
-					'leg-fl': [[0, -28], [0.5, 28], [1, -28]],
-					'leg-fr': [[0, 28], [0.5, -28], [1, 28]],
-					'leg-bl': [[0, 28], [0.5, -28], [1, 28]],
-					'leg-br': [[0, -28], [0.5, 28], [1, -28]],
-					'tail': [[0, 0, -18, 0], [0.5, 0, 18, 0], [1, 0, -18, 0]],
-					'body': [[0, 0, 0, 0, 0, 0, 0], [0.25, 0, 0, 0, 0, 0.02, 0], [0.5, 0, 0, 0, 0, 0, 0], [0.75, 0, 0, 0, 0, 0.02, 0], [1, 0, 0, 0, 0, 0, 0]]
-				}},
-				attack: {Length: 0.6, Tracks: {
-					'head': [[0, 0], [0.4, -30], [0.6, 25], [1, 0]],
-					'body': [[0, 0], [0.4, -10, 0, 0, 0, 0.04, -0.1], [0.6, 6, 0, 0, 0, 0, 0.12], [1, 0]]
-				}},
-				die: {Length: 0.9, Hold: true, Tracks: {
-					'body': [[0, 0], [1, 0, 0, 84, 0, -0.26, 0]]
-				}}
-			},
-
-			Tracked: {
-				idle: {Length: 8, Loop: true, Tracks: {
-					'turret': [[0, 0, -14, 0], [0.5, 0, 14, 0], [1, 0, -14, 0]]
-				}},
-				walk: {Length: 0.5, Loop: true, Stride: 1.5, Tracks: {
-					'body': [[0, 0.6], [0.5, -0.6], [1, 0.6]]
-				}},
-				attack: {Length: 0.5, Tracks: {
-					'turret': [[0, 0, 0, 0, 0, 0, 0], [0.12, 0, 0, 0, 0, 0, -0.1], [1, 0, 0, 0, 0, 0, 0]],
-					'body': [[0, 0], [0.12, 3], [1, 0]]
-				}},
-				die: {Length: 0.8, Hold: true, Tracks: {
-					'turret': [[0, 0, 0, 0, 0, 0, 0], [0.4, 40, 60, 20, 0.1, 0.5, 0.2], [1, 70, 120, 40, 0.3, -0.05, 0.4]]
-				}}
-			}
-		};
+		return Elemenx.Resources('Data', 'ElemenxGraphics/models/rigs') || {};
 	},
 
 	Builtin: function () {
@@ -3269,44 +3196,44 @@ Elemenx.Service('SceneModels', {
 		 * The furniture of streets, each its real height as its Size, its parts in parts of it. What glows (a color over 1: a
 		 * lamp, the light of a signal) glows by itself at night, lights nothing and casts no shadow; bloom spreads it.
 		 */
-		var steel = [0.3, 0.31, 0.33];
-		var dark = [0.12, 0.12, 0.13];
+		var metal = [0.3, 0.31, 0.33];
+		var black = [0.12, 0.12, 0.13];
 
 		/* A street lamp: a post and a lantern on top, the same seen from any side. */
 		piece('streetlamp', 4.5, function (tools) {
-			return [tools.Piece('body', [tools.Cylinder(0.018, 0.012, 0.86, [0, 0.43, 0], steel, null, 10), tools.Cylinder(0.035, 0.03, 0.05, [0, 0.025, 0], steel, null, 10), tools.Cylinder(0.03, 0.045, 0.03, [0, 0.875, 0], dark, null, 8), tools.Cylinder(0.045, 0.032, 0.08, [0, 0.93, 0], [2.6, 2.2, 1.5], null, 8), tools.Cylinder(0.055, 0.005, 0.04, [0, 0.99, 0], dark, null, 8)])];
+			return [tools.Piece('body', [tools.Cylinder(0.018, 0.012, 0.86, [0, 0.43, 0], metal, null, 10), tools.Cylinder(0.035, 0.03, 0.05, [0, 0.025, 0], metal, null, 10), tools.Cylinder(0.03, 0.045, 0.03, [0, 0.875, 0], black, null, 8), tools.Cylinder(0.045, 0.032, 0.08, [0, 0.93, 0], [2.6, 2.2, 1.5], null, 8), tools.Cylinder(0.055, 0.005, 0.04, [0, 0.99, 0], black, null, 8)])];
 		}, [{Place: [0, 0.92, 0], Color: [1, 0.78, 0.52], Power: 1.4, Radius: 4.2, Night: true}]);
 
 		/* A tall lamp of a road: a mast and a head over the way on both sides. */
 		piece('roadlamp', 9, function (tools) {
-			return [tools.Piece('body', [tools.Cylinder(0.014, 0.008, 0.98, [0, 0.49, 0], steel, null, 8), tools.Box(0.006, 0.006, 0.36, [0, 0.97, 0], steel), tools.Box(0.035, 0.012, 0.07, [0, 0.965, 0.18], steel), tools.Box(0.035, 0.012, 0.07, [0, 0.965, -0.18], steel), tools.Box(0.03, 0.004, 0.06, [0, 0.957, 0.18], [2.6, 2.3, 1.7]), tools.Box(0.03, 0.004, 0.06, [0, 0.957, -0.18], [2.6, 2.3, 1.7])])];
+			return [tools.Piece('body', [tools.Cylinder(0.014, 0.008, 0.98, [0, 0.49, 0], metal, null, 8), tools.Box(0.006, 0.006, 0.36, [0, 0.97, 0], metal), tools.Box(0.035, 0.012, 0.07, [0, 0.965, 0.18], metal), tools.Box(0.035, 0.012, 0.07, [0, 0.965, -0.18], metal), tools.Box(0.03, 0.004, 0.06, [0, 0.957, 0.18], [2.6, 2.3, 1.7]), tools.Box(0.03, 0.004, 0.06, [0, 0.957, -0.18], [2.6, 2.3, 1.7])])];
 		}, [{Place: [0, 0.95, 0.18], Color: [1, 0.86, 0.66], Power: 1.6, Radius: 3.2, Spot: 140, Aim: [0, -1, 0], Night: true}, {Place: [0, 0.95, -0.18], Color: [1, 0.86, 0.66], Power: 1.6, Radius: 3.2, Spot: 140, Aim: [0, -1, 0], Night: true}]);
 
 		/* A bench: a seat and a back of planks on iron legs. */
 		piece('bench', 0.85, function (tools) {
 			var wood = [0.48, 0.32, 0.2];
 
-			return [tools.Piece('body', [tools.Box(2.1, 0.05, 0.5, [0, 0.52, 0], wood), tools.Box(2.1, 0.3, 0.05, [0, 0.82, -0.24], wood, [-12, 0, 0]), tools.Box(0.06, 0.52, 0.5, [-0.9, 0.26, 0], dark), tools.Box(0.06, 0.52, 0.5, [0.9, 0.26, 0], dark), tools.Box(0.06, 0.4, 0.06, [-0.9, 0.75, -0.22], dark), tools.Box(0.06, 0.4, 0.06, [0.9, 0.75, -0.22], dark)])];
+			return [tools.Piece('body', [tools.Box(2.1, 0.05, 0.5, [0, 0.52, 0], wood), tools.Box(2.1, 0.3, 0.05, [0, 0.82, -0.24], wood, [-12, 0, 0]), tools.Box(0.06, 0.52, 0.5, [-0.9, 0.26, 0], black), tools.Box(0.06, 0.52, 0.5, [0.9, 0.26, 0], black), tools.Box(0.06, 0.4, 0.06, [-0.9, 0.75, -0.22], black), tools.Box(0.06, 0.4, 0.06, [0.9, 0.75, -0.22], black)])];
 		});
 
 		/* A bin. */
 		piece('bin', 0.9, function (tools) {
-			return [tools.Piece('body', [tools.Cylinder(0.28, 0.25, 0.92, [0, 0.46, 0], [0.22, 0.3, 0.24], null, 12), tools.Cylinder(0.3, 0.29, 0.06, [0, 0.95, 0], dark, null, 12)])];
+			return [tools.Piece('body', [tools.Cylinder(0.28, 0.25, 0.92, [0, 0.46, 0], [0.22, 0.3, 0.24], null, 12), tools.Cylinder(0.3, 0.29, 0.06, [0, 0.95, 0], black, null, 12)])];
 		});
 
 		/* A bus stop: a roof, a pane of glass behind, a bench, its sign. */
 		piece('bus-stop', 2.6, function (tools) {
-			return [tools.Piece('body', [tools.Box(1.4, 0.03, 0.6, [0, 0.95, 0], steel), tools.Box(1.36, 0.8, 0.012, [0, 0.52, -0.27], [0.62, 0.76, 0.82]), tools.Box(0.03, 0.95, 0.03, [-0.68, 0.475, -0.27], steel), tools.Box(0.03, 0.95, 0.03, [0.68, 0.475, -0.27], steel), tools.Box(0.03, 0.95, 0.03, [-0.68, 0.475, 0.27], steel), tools.Box(0.03, 0.95, 0.03, [0.68, 0.475, 0.27], steel), tools.Box(1, 0.03, 0.18, [0, 0.18, -0.16], [0.48, 0.32, 0.2]), tools.Cylinder(0.01, 0.01, 1, [0.82, 0.5, 0.25], steel, null, 6), tools.Box(0.16, 0.12, 0.01, [0.82, 0.92, 0.25], [0.15, 0.4, 0.75]), tools.Box(1.2, 0.012, 0.5, [0, 0.93, 0], [2.2, 2.1, 1.9])])];
+			return [tools.Piece('body', [tools.Box(1.4, 0.03, 0.6, [0, 0.95, 0], metal), tools.Box(1.36, 0.8, 0.012, [0, 0.52, -0.27], [0.62, 0.76, 0.82]), tools.Box(0.03, 0.95, 0.03, [-0.68, 0.475, -0.27], metal), tools.Box(0.03, 0.95, 0.03, [0.68, 0.475, -0.27], metal), tools.Box(0.03, 0.95, 0.03, [-0.68, 0.475, 0.27], metal), tools.Box(0.03, 0.95, 0.03, [0.68, 0.475, 0.27], metal), tools.Box(1, 0.03, 0.18, [0, 0.18, -0.16], [0.48, 0.32, 0.2]), tools.Cylinder(0.01, 0.01, 1, [0.82, 0.5, 0.25], metal, null, 6), tools.Box(0.16, 0.12, 0.01, [0.82, 0.92, 0.25], [0.15, 0.4, 0.75]), tools.Box(1.2, 0.012, 0.5, [0, 0.93, 0], [2.2, 2.1, 1.9])])];
 		});
 
 		/* A sign of a road: a post and a round plate, red rim. */
 		piece('roadsign', 2.6, function (tools) {
-			return [tools.Piece('body', [tools.Cylinder(0.012, 0.012, 0.86, [0, 0.43, 0], steel, null, 6), tools.Cylinder(0.12, 0.12, 0.01, [0, 0.86, 0.012], [0.82, 0.1, 0.08], [90, 0, 0], 16), tools.Cylinder(0.09, 0.09, 0.012, [0, 0.86, 0.014], [0.92, 0.92, 0.9], [90, 0, 0], 16)])];
+			return [tools.Piece('body', [tools.Cylinder(0.012, 0.012, 0.86, [0, 0.43, 0], metal, null, 6), tools.Cylinder(0.12, 0.12, 0.01, [0, 0.86, 0.012], [0.82, 0.1, 0.08], [90, 0, 0], 16), tools.Cylinder(0.09, 0.09, 0.012, [0, 0.86, 0.014], [0.92, 0.92, 0.9], [90, 0, 0], 16)])];
 		});
 
 		/* A traffic light: a post, its box and three lamps, the red one lit. */
 		piece('traffic-light', 3.6, function (tools) {
-			return [tools.Piece('body', [tools.Cylinder(0.014, 0.012, 0.74, [0, 0.37, 0], steel, null, 8), tools.Box(0.08, 0.26, 0.07, [0, 0.86, 0], dark), tools.Cylinder(0.024, 0.024, 0.01, [0, 0.94, 0.036], [2.8, 0.35, 0.2], [90, 0, 0], 10), tools.Cylinder(0.024, 0.024, 0.01, [0, 0.86, 0.036], [0.35, 0.28, 0.08], [90, 0, 0], 10), tools.Cylinder(0.024, 0.024, 0.01, [0, 0.78, 0.036], [0.08, 0.3, 0.14], [90, 0, 0], 10)])];
+			return [tools.Piece('body', [tools.Cylinder(0.014, 0.012, 0.74, [0, 0.37, 0], metal, null, 8), tools.Box(0.08, 0.26, 0.07, [0, 0.86, 0], black), tools.Cylinder(0.024, 0.024, 0.01, [0, 0.94, 0.036], [2.8, 0.35, 0.2], [90, 0, 0], 10), tools.Cylinder(0.024, 0.024, 0.01, [0, 0.86, 0.036], [0.35, 0.28, 0.08], [90, 0, 0], 10), tools.Cylinder(0.024, 0.024, 0.01, [0, 0.78, 0.036], [0.08, 0.3, 0.14], [90, 0, 0], 10)])];
 		});
 
 		/* A hydrant. */
@@ -3318,7 +3245,7 @@ Elemenx.Service('SceneModels', {
 
 		/* A bollard. */
 		piece('bollard', 0.9, function (tools) {
-			return [tools.Piece('body', [tools.Cylinder(0.08, 0.07, 0.95, [0, 0.475, 0], steel, null, 10), tools.Cylinder(0.075, 0.05, 0.05, [0, 0.97, 0], steel, null, 10), tools.Box(0.16, 0.04, 0.16, [0, 0.8, 0], [0.9, 0.9, 0.86])])];
+			return [tools.Piece('body', [tools.Cylinder(0.08, 0.07, 0.95, [0, 0.475, 0], metal, null, 10), tools.Cylinder(0.075, 0.05, 0.05, [0, 0.97, 0], metal, null, 10), tools.Box(0.16, 0.04, 0.16, [0, 0.8, 0], [0.9, 0.9, 0.86])])];
 		});
 
 		/* A planter of flowers. */
@@ -3330,7 +3257,7 @@ Elemenx.Service('SceneModels', {
 
 		/* A kiosk: a booth, its window lit at night, its awning. */
 		piece('kiosk', 2.8, function (tools) {
-			return [tools.Piece('body', [tools.Box(0.9, 0.85, 0.7, [0, 0.425, 0], [0.42, 0.5, 0.36]), tools.Box(0.6, 0.3, 0.01, [0, 0.55, 0.351], [1.8, 1.6, 1.2]), tools.Wedge(1.0, 0.1, 0.36, [0, 0.83, 0.5], [0.75, 0.2, 0.18], [0, 90, 0]), tools.Box(0.96, 0.05, 0.76, [0, 0.875, 0], dark)])];
+			return [tools.Piece('body', [tools.Box(0.9, 0.85, 0.7, [0, 0.425, 0], [0.42, 0.5, 0.36]), tools.Box(0.6, 0.3, 0.01, [0, 0.55, 0.351], [1.8, 1.6, 1.2]), tools.Wedge(1.0, 0.1, 0.36, [0, 0.83, 0.5], [0.75, 0.2, 0.18], [0, 90, 0]), tools.Box(0.96, 0.05, 0.76, [0, 0.875, 0], black)])];
 		}, [{Place: [0, 0.55, 0.6], Color: [1, 0.9, 0.7], Power: 0.5, Radius: 2.5, Night: true}]);
 
 		piece('fence', 2, function (tools) {

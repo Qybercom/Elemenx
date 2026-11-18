@@ -1,0 +1,4 @@
+{
+	"warp": {"Enter": 2.4, "Inside": 4, "Exit": 1.8, "Length": 600, "Tint": "#5a9cff"},
+	"jump": {"Enter": 0.7, "Inside": 1.1, "Exit": 1, "Length": 30, "Tint": "#ffb070"}
+}

@@ -192,8 +192,11 @@ Elemenx.Trait('SceneRoadNetwork', {
 			 * A junction is drawn with the first road it holds. The model of each road is made in a worker (SceneRoads.AssetOf, the
 			 * ground shared once): an empty one stands for it until it comes, and what stands still is gathered again then.
 			 */
-			if (!pool.Inline())
+			if (!pool.Inline()) {
+				terrain.ShareGround(pool, options);
+
 				pool.Share('roads-ground', options);
+			}
 
 			state.Made.forEach(function (road) {
 				var name = 'road:' + road.ID + ':' + hash;

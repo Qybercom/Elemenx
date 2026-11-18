@@ -28,12 +28,15 @@
  *   Type (star, planet, belt), Parent, Name, Kind, ...}]}, the planets with their moons, rings and belts. Options:
  *   Name, Planets (how many, 3 to 9 by default), Moons (false: none), Belts (false: none), Mass (of its star, in masses
  *   of the Sun: made of the seed by default), Type (of its star: Types, main by default; its star has it as Kind).
+ * - Blackbody(temperature): the colour of a body as hot (kelvins, 1000 to 40000), [r, g, b] of about 0 to 255, not
+ *   clamped: of a star, of a lamp.
+ * - Kinds: the kinds of planets of resources/astronomy/kinds.json, and those an application adds.
  * The same functions run in Node: they read no page.
  */
 Elemenx.Service('Astronomy', {
 	$Meta: {
 		Description: 'The numbers of a star system: Kepler orbits, stars and planets, their warmth, and whole systems of a seed.',
-		Methods: ['Length(value)', 'Period(distance, mass)', 'Position(orbit, time, mass)', 'Path(orbit, count)', 'Star(star)', 'Describe(body, context)', 'Color(temperature)', 'Generate(seed, options)']
+		Methods: ['Length(value)', 'Period(distance, mass)', 'Position(orbit, time, mass)', 'Path(orbit, count)', 'Star(star)', 'Describe(body, context)', 'Color(temperature)', 'Generate(seed, options)', 'Blackbody(temperature)']
 	},
 
 	Units: {km: 1 / 149597870.7, mkm: 1e6 / 149597870.7, au: 1, ly: 63241.077, pc: 206264.806},
@@ -41,17 +44,11 @@ Elemenx.Service('Astronomy', {
 	EarthMass: 1 / 332946,
 	SunRadius: 695700,
 
-	Kinds: {
-		'rocky': {Colors: ['#4a4440', '#7b716a', '#a89e94', '#d8d0c6'], Density: 4.5, Albedo: 0.12, Radius: [2000, 7000]},
-		'desert': {Colors: ['#7a4a26', '#b9783f', '#dba66a', '#f1d3a1'], Density: 4.8, Albedo: 0.3, Radius: [3000, 7000], Atmosphere: '#e8b878', Clouds: 0.08, Ice: 0.06},
-		'terran': {Colors: ['#2f5d2a', '#5f8a3a', '#9c8f5c', '#e8e4dc'], Water: '#1d4f8f', Density: 5.5, Albedo: 0.3, Radius: [5500, 8000], Atmosphere: '#7fb2ff', Clouds: 0.5, Ocean: 0.55, Ice: 0.14},
-		'ocean': {Colors: ['#4f8a4a', '#7a9a5a', '#b9b08a', '#e8eef2'], Water: '#1f5aa0', Density: 3.5, Albedo: 0.32, Radius: [6000, 10000], Atmosphere: '#8cc4ff', Clouds: 0.6, Ocean: 0.82, Ice: 0.1},
-		'ice': {Colors: ['#8fa9bf', '#c3d6e4', '#e6f0f7', '#ffffff'], Density: 2, Albedo: 0.6, Radius: [1500, 5000], Ice: 1},
-		'lava': {Colors: ['#1a0d08', '#3b1d12', '#ff5a1f', '#ffd27a'], Density: 5, Albedo: 0.1, Radius: [2000, 7000], Atmosphere: '#ff7040'},
-		'gas': {Colors: ['#a57a52', '#d6b48a', '#efe0c4', '#b5532e'], Density: 1.3, Albedo: 0.5, Radius: [45000, 80000], Atmosphere: '#e8d2b0'},
-		'ice-giant': {Colors: ['#3d7fae', '#5fa8cf', '#9fd6ea', '#2a5f8a'], Density: 1.6, Albedo: 0.3, Radius: [22000, 30000], Atmosphere: '#a8e4ff'},
-		'dwarf': {Colors: ['#5c5550', '#8d847d', '#bfb6ad', '#e0d9d0'], Density: 2, Albedo: 0.5, Radius: [500, 1500]},
-		'moon': {Colors: ['#4e4e50', '#78787a', '#a2a2a4', '#d4d4d6'], Density: 3.3, Albedo: 0.12, Radius: [200, 2600]}
+	/* Of resources/astronomy/kinds.json ($OnCreate), and what an application sets. */
+	Kinds: {},
+
+	$OnCreate: function () {
+		this.Kinds = Object.assign(Elemenx.Resources('Data', 'ElemenxCommon/astronomy/kinds') || {}, this.Kinds);
 	},
 
 	Length: function (value) {
@@ -222,11 +219,20 @@ Elemenx.Service('Astronomy', {
 	},
 
 	/* The color of a black body of a temperature, near enough for a star (after the curves of Tanner Helland). */
-	Color: function (temperature) {
+	/*
+	 * The colour of a body as hot as temperature (kelvin, 1000 to 40000; the Sun 5772 of none): [r, g, b], 0 to 255 not
+	 * rounded (a fit of Tanner Helland). Color gives it as #rrggbb, the white balance of a camera as light.
+	 */
+	Blackbody: function (temperature) {
 		var t = Math.max(1000, Math.min(40000, Number(temperature) || 5772)) / 100;
-		var r;
-		var g;
-		var b;
+		if (t <= 66)
+			return [255, 99.4708025861 * Math.log(t) - 161.1195681661, t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307];
+
+		return [329.698727446 * Math.pow(t - 60, -0.1332047592), 288.1221695283 * Math.pow(t - 60, -0.0755148492), 255];
+	},
+
+	Color: function (temperature) {
+		var made = this.Blackbody(temperature);
 
 		function hex (value) {
 			var clamped = Math.max(0, Math.min(255, Math.round(value)));
@@ -234,18 +240,7 @@ Elemenx.Service('Astronomy', {
 			return (clamped < 16 ? '0' : '') + clamped.toString(16);
 		}
 
-		if (t <= 66) {
-			r = 255;
-			g = 99.4708025861 * Math.log(t) - 161.1195681661;
-			b = t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307;
-		}
-		else {
-			r = 329.698727446 * Math.pow(t - 60, -0.1332047592);
-			g = 288.1221695283 * Math.pow(t - 60, -0.0755148492);
-			b = 255;
-		}
-
-		return '#' + hex(r) + hex(g) + hex(b);
+		return '#' + hex(made[0]) + hex(made[1]) + hex(made[2]);
 	},
 
 	/* Numbers of a seed (Mulberry32): the same system for the same seed. */

@@ -11,10 +11,15 @@ The models of a game, made of code: no files, the same shape for the same seed. 
 - Whole(model) is a model as one geometry, Bounds(geometry) its {Radius, Middle} and Levels(name, {Variant}) its geometries from the finest down: for what is sown in masses and seen from afar.
 - Pose(model, clip, time, {From, FromTime, Fade}) returns the matrix of each piece at a second of a clip, in the space of the model; Fade (0 to 1) mixes it from the pose of the clip From. Length(model, clip) is the seconds of a clip.
 
-A clip is {Length, Loop, Hold, Stride, Tracks: {piece: [[time 0 to 1, rx, ry, rz, mx, my, mz]...]}, Spins: {piece: [x, y, z] degrees a second}}; Hold keeps the last pose when it ends, Stride is how far a walk goes in one cycle, in sizes of the model. The same functions run in Node: they read no page.
+A clip is {Length, Loop, Hold, Stride, Tracks: {piece: [[time 0 to 1, rx, ry, rz, mx, my, mz]...]}, Spins: {piece: [x, y, z] degrees a second}}; Hold keeps the last pose when it ends, Stride is how far a walk goes in one cycle, in sizes of the model.
+
+- Kinds, KindOf(type): the kind of a Scene a model of a type stands as (resources/models/kinds.json: a plant a tree, a building a house...), null for one not told. Rigs(): the clips of the rigs (resources/models/rigs.json).
+
+The same functions run in Node: they read no page.
 
 ## Methods
 
+- `KindOf(type)`
 - `Define(name, recipe)`
 - `Remake(name)`
 - `Has(name)`
@@ -33,6 +38,7 @@ A clip is {Length, Loop, Hold, Stride, Tracks: {piece: [[time 0 to 1, rx, ry, rz
 - `Length(model, clip)`
 - `Pose(model, clip, time, options)`
 - `Tagged(name, tag)`
+- `Rigs()`
 
 ## Example
 
@@ -77,4 +83,4 @@ A clip is {Length, Loop, Hold, Stride, Tracks: {piece: [[time 0 to 1, rx, ry, rz
 - [offers the models it is given that Models has, and places each as the kind its Type fits, as large as it is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L108) — `tests/regression/library-scene-editor.test.js`
 - [joins the pieces of a skeleton that never moves, of one material, into one draw, in their places](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-frames.test.js#L48) — `tests/regression/library-scene-frames.test.js`
 
-+34 more in the same files
++35 more in the same files

@@ -1,0 +1,179 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "flatten",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "sketch-flatten-line-0",
+			"type": "Line",
+			"x": 260,
+			"y": 110,
+			"properties": []
+		},
+		{
+			"id": "sketch-flatten-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Points"
+				}
+			]
+		},
+		{
+			"id": "sketch-flatten-input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "sketch-flatten-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "sketch-flatten-formula-4",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "H + (Target - H) * (0.5 + 0.5 * cos(min(1, max(0, (D) / max(0.000001, Radius))) * 3.141592653589793)) * S"
+				}
+			]
+		},
+		{
+			"id": "sketch-flatten-input-5",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "H"
+				}
+			]
+		},
+		{
+			"id": "sketch-flatten-input-6",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Target"
+				}
+			]
+		},
+		{
+			"id": "sketch-flatten-input-7",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Radius"
+				}
+			]
+		},
+		{
+			"id": "sketch-flatten-input-8",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "S"
+				}
+			]
+		},
+		{
+			"id": "sketch-flatten-result-9",
+			"type": "Result",
+			"x": 1040,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "sketch-flatten-link-0",
+			"p1": "sketch-flatten-input-1-out-Value",
+			"p2": "sketch-flatten-line-0-in-Points",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-flatten-link-1",
+			"p1": "sketch-flatten-input-2-out-Value",
+			"p2": "sketch-flatten-line-0-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-flatten-link-2",
+			"p1": "sketch-flatten-input-3-out-Value",
+			"p2": "sketch-flatten-line-0-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-flatten-link-3",
+			"p1": "sketch-flatten-input-5-out-Value",
+			"p2": "sketch-flatten-formula-4-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-flatten-link-4",
+			"p1": "sketch-flatten-input-6-out-Value",
+			"p2": "sketch-flatten-formula-4-in-Target",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-flatten-link-5",
+			"p1": "sketch-flatten-line-0-out-Distance",
+			"p2": "sketch-flatten-formula-4-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-flatten-link-6",
+			"p1": "sketch-flatten-input-7-out-Value",
+			"p2": "sketch-flatten-formula-4-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-flatten-link-7",
+			"p1": "sketch-flatten-input-8-out-Value",
+			"p2": "sketch-flatten-formula-4-in-S",
+			"kind": "value"
+		},
+		{
+			"id": "sketch-flatten-link-8",
+			"p1": "sketch-flatten-formula-4-out-Value",
+			"p2": "sketch-flatten-result-9-in-Value",
+			"kind": "value"
+		}
+	]
+}

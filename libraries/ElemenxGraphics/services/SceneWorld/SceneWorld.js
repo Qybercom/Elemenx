@@ -60,6 +60,10 @@ Elemenx.Service('SceneWorld', {
 		/* The numbers of a flat map by default, those of the ground itself. */
 		var flat = this.$Service('SceneTerrainGenerator').FlatOf({});
 		var tunnel = this.$Service('SceneTerrainGenerator').TunnelRadius;
+		/* What is cut and juts out unless told: the numbers of the ground itself (Carves). */
+		var carves = this.$Service('SceneTerrainGenerator').Carves;
+		var climateOf = this.$Service('SceneTerrainGenerator').ClimateOf({});
+		var planetOf = this.$Service('ScenePlanet').Defaults;
 
 		/* What comes to an input, else the property; none is left out. */
 		function value (inputs, properties, key) {
@@ -152,7 +156,7 @@ Elemenx.Service('SceneWorld', {
 			Compute: function (inputs, properties) {
 				var planet = properties.Planet || {};
 
-				return land(inputs, {Planet: {Options: planet, Latitude: Number(value(inputs, properties, 'Latitude')) || 0, Longitude: Number(value(inputs, properties, 'Longitude')) || 0, Turn: Number(properties.Turn) || 0}, Height: Number(planet.Relief) || 8000, Water: (Number(planet.Depth) || 6000) / ((Number(planet.Depth) || 6000) + (Number(planet.Relief) || 8000)), Seed: planet.Seed === undefined ? 'planet' : planet.Seed});
+				return land(inputs, {Planet: {Options: planet, Latitude: Number(value(inputs, properties, 'Latitude')) || 0, Longitude: Number(value(inputs, properties, 'Longitude')) || 0, Turn: Number(properties.Turn) || 0}, Height: Number(planet.Relief) || planetOf.Relief, Water: (Number(planet.Depth) || planetOf.Depth) / ((Number(planet.Depth) || planetOf.Depth) + (Number(planet.Relief) || planetOf.Relief)), Seed: planet.Seed === undefined ? planetOf.Seed : planet.Seed});
 			}
 		});
 
@@ -170,7 +174,10 @@ Elemenx.Service('SceneWorld', {
 		blueprints.Node('Climate', {
 			Graphs: ['world'],
 			Group: 'world',
-			Properties: [{Key: 'Warmth', Type: 'number', Value: 0.72}, {Key: 'Lapse', Type: 'number', Value: 0.7}, {Key: 'Spread', Type: 'number', Value: 0.7}, {Key: 'Stretch', Type: 'number', Value: 2.2}],
+			/* Its numbers those of a ground of no climate told (ClimateOf): one place for them. */
+			Properties: ['Warmth', 'Lapse', 'Spread', 'Stretch'].map(function (key) {
+				return {Key: key, Type: 'number', Value: climateOf[key]};
+			}),
 			Inputs: [{Key: 'Land', Type: 'land'}, {Key: 'Warmth', Type: 'float'}, {Key: 'Lapse', Type: 'float'}, {Key: 'Spread', Type: 'float'}, {Key: 'Stretch', Type: 'float'}],
 			Outputs: [{Key: 'Land', Type: 'land'}],
 			Compute: function (inputs, properties) {
@@ -189,7 +196,7 @@ Elemenx.Service('SceneWorld', {
 		blueprints.Node('Biomes', {
 			Graphs: ['world'],
 			Group: 'world',
-			Properties: [{Key: 'List', Type: 'object', Value: ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'rainforest', 'semidesert', 'steppe']}],
+			Properties: [{Key: 'List', Type: 'object', Value: this.$Service('SceneTerrainGenerator').DefaultBiomes.slice()}],
 			Inputs: [{Key: 'Land', Type: 'land'}],
 			Outputs: [{Key: 'Land', Type: 'land'}],
 			Compute: function (inputs, properties) {
@@ -298,7 +305,7 @@ Elemenx.Service('SceneWorld', {
 		blueprints.Node('Tunnel', {
 			Graphs: ['world'],
 			Group: 'world',
-			Properties: [{Key: 'Points', Type: 'object', Value: []}, {Key: 'Radius', Type: 'number', Value: tunnel}, {Key: 'Flat', Type: 'number', Value: 0.5}, {Key: 'Depth', Type: 'number', Value: 0}],
+			Properties: [{Key: 'Points', Type: 'object', Value: []}, {Key: 'Radius', Type: 'number', Value: tunnel}, {Key: 'Flat', Type: 'number', Value: carves.Tunnel.Flat}, {Key: 'Depth', Type: 'number', Value: 0}],
 			Inputs: [{Key: 'Land', Type: 'land'}, {Key: 'Radius', Type: 'float'}],
 			Outputs: [{Key: 'Land', Type: 'land'}],
 			Compute: function (inputs, properties) {
@@ -309,7 +316,7 @@ Elemenx.Service('SceneWorld', {
 		blueprints.Node('Caves', {
 			Graphs: ['world'],
 			Group: 'world',
-			Properties: [{Key: 'X', Type: 'number', Value: 0}, {Key: 'Z', Type: 'number', Value: 0}, {Key: 'Radius', Type: 'number', Value: 100}, {Key: 'Top', Type: 'number', Value: 3}, {Key: 'Bottom', Type: 'number', Value: 40}, {Key: 'Scale', Type: 'number', Value: 24}, {Key: 'Width', Type: 'number', Value: 0.35}, {Key: 'Halls', Type: 'number', Value: 0.5}, {Key: 'Seed', Type: 'text', Value: ''}],
+			Properties: [{Key: 'X', Type: 'number', Value: 0}, {Key: 'Z', Type: 'number', Value: 0}, {Key: 'Radius', Type: 'number', Value: carves.Caves.Radius}, {Key: 'Top', Type: 'number', Value: carves.Caves.Top}, {Key: 'Bottom', Type: 'number', Value: carves.Caves.Bottom}, {Key: 'Scale', Type: 'number', Value: carves.Caves.Scale}, {Key: 'Width', Type: 'number', Value: carves.Caves.Width}, {Key: 'Halls', Type: 'number', Value: carves.Caves.Halls}, {Key: 'Seed', Type: 'text', Value: ''}],
 			Inputs: [{Key: 'Land', Type: 'land'}, {Key: 'Halls', Type: 'float'}, {Key: 'Width', Type: 'float'}],
 			Outputs: [{Key: 'Land', Type: 'land'}],
 			Compute: function (inputs, properties) {
@@ -321,7 +328,7 @@ Elemenx.Service('SceneWorld', {
 		blueprints.Node('Passages', {
 			Graphs: ['world'],
 			Group: 'world',
-			Properties: [{Key: 'Nodes', Type: 'object', Value: []}, {Key: 'Ways', Type: 'object', Value: []}, {Key: 'Radius', Type: 'number', Value: tunnel}, {Key: 'Flat', Type: 'number', Value: 0.5}, {Key: 'Depth', Type: 'number', Value: 6}, {Key: 'Rough', Type: 'number', Value: 0}, {Key: 'Seed', Type: 'text', Value: ''}],
+			Properties: [{Key: 'Nodes', Type: 'object', Value: []}, {Key: 'Ways', Type: 'object', Value: []}, {Key: 'Radius', Type: 'number', Value: tunnel}, {Key: 'Flat', Type: 'number', Value: carves.Tunnel.Flat}, {Key: 'Depth', Type: 'number', Value: 6}, {Key: 'Rough', Type: 'number', Value: carves.Passages.Rough}, {Key: 'Seed', Type: 'text', Value: ''}],
 			Inputs: [{Key: 'Land', Type: 'land'}, {Key: 'Rough', Type: 'float'}],
 			Outputs: [{Key: 'Land', Type: 'land'}],
 			Compute: function (inputs, properties) {
@@ -332,7 +339,7 @@ Elemenx.Service('SceneWorld', {
 		blueprints.Node('Overhangs', {
 			Graphs: ['world'],
 			Group: 'world',
-			Properties: [{Key: 'Amount', Type: 'number', Value: 6}, {Key: 'Scale', Type: 'number', Value: 24}, {Key: 'Slope', Type: 'number', Value: 0.45}, {Key: 'X', Type: 'text', Value: ''}, {Key: 'Z', Type: 'text', Value: ''}, {Key: 'Radius', Type: 'text', Value: ''}, {Key: 'Seed', Type: 'text', Value: ''}],
+			Properties: [{Key: 'Amount', Type: 'number', Value: carves.Overhangs.Amount}, {Key: 'Scale', Type: 'number', Value: carves.Overhangs.Scale}, {Key: 'Slope', Type: 'number', Value: carves.Overhangs.Slope}, {Key: 'X', Type: 'text', Value: ''}, {Key: 'Z', Type: 'text', Value: ''}, {Key: 'Radius', Type: 'text', Value: ''}, {Key: 'Seed', Type: 'text', Value: ''}],
 			Inputs: [{Key: 'Land', Type: 'land'}, {Key: 'Amount', Type: 'float'}],
 			Outputs: [{Key: 'Land', Type: 'land'}],
 			Compute: function (inputs, properties) {
@@ -405,7 +412,13 @@ Elemenx.Service('SceneWorld', {
 	/* The step Roads: {Land (the passages of its Border made roads of it), Things (and its roads)}. */
 	Roads: function (land, under, properties) {
 		var terrain = this.$Service('SceneTerrainGenerator');
-		var rank = {city: 3, town: 2, village: 1, hamlet: 1, fort: 2};
+		/* The rank of each kind of settlement (Rank of resources/terrain/settlement-kinds): who joins whom first. */
+		var rank = {};
+
+		Object.keys(terrain.SettlementKinds).forEach(function (kind) {
+			rank[kind] = terrain.SettlementKinds[kind].Rank || 1;
+		});
+
 		var hubs = [];
 		var ways = [];
 		var trunks = [];

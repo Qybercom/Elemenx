@@ -1,0 +1,166 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "sphere",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "carve-sphere-formula-0",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "sqrt((X - CX) * (X - CX) + (Y - CY) * (Y - CY) + (Z - CZ) * (Z - CZ)) - Radius"
+				}
+			]
+		},
+		{
+			"id": "carve-sphere-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "carve-sphere-input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CX"
+				}
+			]
+		},
+		{
+			"id": "carve-sphere-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Y"
+				}
+			]
+		},
+		{
+			"id": "carve-sphere-input-4",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CY"
+				}
+			]
+		},
+		{
+			"id": "carve-sphere-input-5",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "carve-sphere-input-6",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CZ"
+				}
+			]
+		},
+		{
+			"id": "carve-sphere-input-7",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Radius"
+				}
+			]
+		},
+		{
+			"id": "carve-sphere-result-8",
+			"type": "Result",
+			"x": 1300,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Density"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "carve-sphere-link-0",
+			"p1": "carve-sphere-input-1-out-Value",
+			"p2": "carve-sphere-formula-0-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "carve-sphere-link-1",
+			"p1": "carve-sphere-input-2-out-Value",
+			"p2": "carve-sphere-formula-0-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "carve-sphere-link-2",
+			"p1": "carve-sphere-input-3-out-Value",
+			"p2": "carve-sphere-formula-0-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "carve-sphere-link-3",
+			"p1": "carve-sphere-input-4-out-Value",
+			"p2": "carve-sphere-formula-0-in-CY",
+			"kind": "value"
+		},
+		{
+			"id": "carve-sphere-link-4",
+			"p1": "carve-sphere-input-5-out-Value",
+			"p2": "carve-sphere-formula-0-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "carve-sphere-link-5",
+			"p1": "carve-sphere-input-6-out-Value",
+			"p2": "carve-sphere-formula-0-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "carve-sphere-link-6",
+			"p1": "carve-sphere-input-7-out-Value",
+			"p2": "carve-sphere-formula-0-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "carve-sphere-link-7",
+			"p1": "carve-sphere-formula-0-out-Value",
+			"p2": "carve-sphere-result-8-in-Value",
+			"kind": "value"
+		}
+	]
+}

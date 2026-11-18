@@ -255,3 +255,52 @@ describe('Contract: Noise, the noise of space by any algorithm, the same in a sh
 		});
 	}, 90000);
 });
+
+describe('Contract: Noise made of its Kernel, one source for js and wasm', function () {
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:Noise', 'service:Math']);
+
+		noise = Elemenx.Service('Noise');
+	});
+
+	/*
+	 * Its numbers are of the kernel language (Kernel), made js in the page and carried to a worker as text (Compiled), made
+	 * wasm too (Wasm): each type, fractal, warp, tile and what is done after gives the very same numbers in both.
+	 */
+	it('gives the very numbers of its js in wasm, a batch of points of a spec given once', function () {
+		var made = Elemenx.Compilers.Instance(noise.Wasm());
+		var specs = [];
+
+		expect(typeof noise.Compiled).toBe('string');
+		expect(noise.IR().Functions.map(function (fn) {
+			return fn.Name;
+		})).toContain('n_read');
+		expect(noise.Carried).toEqual(['Compiled']);
+
+		['value', 'perlin', 'simplex', 'worley', 'white'].forEach(function (type) {
+			['none', 'fbm', 'ridged', 'billow'].forEach(function (fractal) {
+				specs.push({Type: type, Fractal: fractal, Octaves: 4, Seed: 'k' + type});
+				specs.push({Type: type, Fractal: fractal, Octaves: 3, Seed: 3, Scale: 2.5, Offset: [1, 2, 3], Warp: {Amount: 0.5, Octaves: 2}, Tile: type === 'simplex' ? undefined : [4, 0, 6], Cell: {Distance: ['euclid', 'manhattan', 'chebyshev'][fractal.length % 3], Return: ['f1', 'f2', 'edge', 'cell'][fractal.length % 4], Jitter: 0.6}, Terrace: {Steps: 4, Sharp: 0.3}, Power: 1.3, Range: [-1, 2]});
+			});
+		});
+
+		specs.forEach(function (spec) {
+			var sampler = noise.Make(spec);
+			var list = points(64, 30);
+			var input = [];
+			var output;
+
+			list.forEach(function (point) {
+				input.push(point[0], point[1], point[2]);
+			});
+
+			output = made.Batch('n_read', input, list.length, noise.Numbers(noise.Whole(spec)).map(Number));
+
+			list.forEach(function (point, index) {
+				expect(Object.is(output[index], sampler.At(point[0], point[1], point[2]))).toBe(true);
+			});
+		});
+	});
+});
