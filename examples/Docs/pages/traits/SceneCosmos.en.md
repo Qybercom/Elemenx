@@ -9,6 +9,8 @@ Before it a few sparks and puffs of dust go round the eye, each in a box that wr
 
 On a ground the same cube is the band of the galaxy over a night: it turns with the stars, and what hides them hides it.
 
+The band of a galaxy is drawn as it is (unless Style is 'drawn'): a ray from where the system lies through the galaxy (Galaxy: its manifest or options of GalaxyData.Make, of the seed when none; Place, ly: where the system lies, 54% of its radius out by default), its glow of the stars the eye cannot part, its dust in clumps, the stars near points; the same galaxy as its map (its arms of the GalaxyGraph of the scene), baked into a cube of its own first. The sky is a graph (CosmosGraph, the kind cosmos of SceneBlueprints: its parts as blocks), else the one of the library (LibraryCosmos()).
+
 ## Methods
 
 - `CosmosKinds()`

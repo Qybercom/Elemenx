@@ -1626,6 +1626,9 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-world-editor-bar`
 - `elemenx-world-editor-body`
 - `elemenx-world-editor-found`
+- `elemenx-world-editor-graph`
+- `elemenx-world-editor-graph-bar`
+- `elemenx-world-editor-graph-blueprint`
 - `elemenx-world-editor-group`
 - `elemenx-world-editor-item`
 - `elemenx-world-editor-main`
@@ -1667,10 +1670,12 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 
 - `elemenx-model-editor`
 - `elemenx-model-editor-axis`: `axis-x`, `axis-y`, `axis-z`
+- `elemenx-model-editor-blueprint`
 - `elemenx-model-editor-field`
 - `elemenx-model-editor-fields`
 - `elemenx-model-editor-format`
 - `elemenx-model-editor-generator`
+- `elemenx-model-editor-graph`
 - `elemenx-model-editor-gizmo`
 - `elemenx-model-editor-group`: `end`
 - `elemenx-model-editor-hint`

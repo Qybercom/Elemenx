@@ -87,7 +87,9 @@
  * Divide, Min, Max, Pow, Step, Sin, Cos, Abs, Floor, Fract, Sqrt, Exp, OneMinus, Saturate, Mix, Clamp, Smoothstep,
  * Remap, Curve (a value of keys over a number, time most often: its Keys [[x, value]...], Smooth linear, smooth or step,
  * Loop a length after which it begins again; CurveAt(keys, x, smooth, loop) the same in code), Dot, Length, Normalize,
- * Split, Combine, Noise, Fbm, Ridge, NoiseSpec (a noise of the Noise Service by its spec), Line, Area, Level, Grid, TunnelWall, PassageWalls, Fall and Nearest (of
+ * Split, Combine, Noise, Fbm, Ridge, NoiseSpec (a noise of the Noise Service by its spec: Warp, WarpScale, WarpOctaves;
+ *   its input Octaves, when linked, instead of its property), When (its Value when Test holds, else Else: what only its
+ *   Value needs is made only then), Line, Area, Level, Grid, TunnelWall, PassageWalls, Fall and Nearest (of
  * the Geometry Service: of a line, an area or points given as a list of numbers, floats), Result, Compare, And, Or, Not, Field, Get, Set, Event,
  * Branch, Sequence, For, Delay, Action, Emit; BlueprintShaders adds UV, Pixel, Position, Normal, Texture, Output,
  * Surface and Present, and the GLSL of the numbers.
@@ -451,12 +453,23 @@ Elemenx.Service('Blueprints', {
 		return null;
 	},
 
+	/*
+	 * The properties of a block: those it has, the others of its type as they are by default. Regression: a block of a file
+	 * that named none of them read each as nothing, its numbers 0 in a shader (a planet burned white).
+	 */
 	Properties: function (block) {
 		var properties = {};
+		var node = this.Types[block.type];
 
 		(block.properties || []).forEach(function (property) {
 			properties[property.key] = property.value;
 		});
+
+		if (node && Array.isArray(node.Properties))
+			node.Properties.forEach(function (property) {
+				if (property && property.Key && !Object.prototype.hasOwnProperty.call(properties, property.Key) && property.Value !== undefined)
+					properties[property.Key] = property.Value;
+			});
 
 		return properties;
 	},
@@ -1256,9 +1269,10 @@ Elemenx.Service('Blueprints', {
 			case 'NoiseSpec':
 				spec = this.NoiseOf(properties);
 
-				context.Prelude('var n' + index + ' = N.Make(' + JSON.stringify(spec) + ');');
+				context.Prelude('var s' + index + ' = ' + JSON.stringify(spec) + ', n' + index + ' = {};');
 
-				return {Value: '(function (p, s) { return n' + index + '.At(p[0] * s, p[1] * s, p[2] * s); })(' + inputs.Position + ', ' + inputs.Scale + ')'};
+				/* Of its octaves (Octaves) when they are given, a noise made once for each number of them. */
+				return {Value: '(function (p, s, o) { var k = Math.round(Number(o)) || 0; return (n' + index + '[k] || (n' + index + '[k] = N.Make(k ? Object.assign({}, s' + index + ', {Octaves: k}) : s' + index + '))).At(p[0] * s, p[1] * s, p[2] * s); })(' + inputs.Position + ', ' + inputs.Scale + ', ' + (inputs.Octaves || 0) + ')'};
 			case 'Formula':
 				return {Value: this.FormulaCode(this.Formula(properties.Expression).Tree, inputs)};
 			case 'Compare':
@@ -1479,11 +1493,13 @@ Elemenx.Service('Blueprints', {
 			{Key: 'Type', Type: 'select', Options: ['value', 'perlin', 'simplex', 'worley', 'white'], Value: 'perlin'},
 			{Key: 'Seed', Type: 'text', Value: ''},
 			{Key: 'Fractal', Type: 'select', Options: ['none', 'fbm', 'ridged', 'billow'], Value: 'fbm'},
-			{Key: 'Octaves', Type: 'number', Value: 4, Min: 1, Max: 8},
+			{Key: 'Octaves', Type: 'number', Value: 4, Min: 1, Max: 10},
 			{Key: 'Gain', Type: 'number', Value: 0.5, Min: 0, Max: 1},
 			{Key: 'Cell', Type: 'select', Options: ['f1', 'f2', 'edge', 'cell'], Value: 'f1'},
 			{Key: 'Distance', Type: 'select', Options: ['euclid', 'manhattan', 'chebyshev'], Value: 'euclid'},
 			{Key: 'Warp', Type: 'number', Value: 0, Min: 0, Max: 4},
+			{Key: 'WarpScale', Type: 'number', Value: 1, Min: 0.05, Max: 8},
+			{Key: 'WarpOctaves', Type: 'number', Value: 2, Min: 1, Max: 6},
 			{Key: 'Tile', Type: 'number', Value: 0, Min: 0, Max: 64}
 		];
 	},
@@ -1492,7 +1508,7 @@ Elemenx.Service('Blueprints', {
 		var given = properties || {};
 		var tile = Number(given.Tile) || 0;
 
-		return {Type: given.Type || 'perlin', Seed: given.Seed || '', Fractal: given.Fractal || 'fbm', Octaves: Number(given.Octaves) || 4, Gain: given.Gain === undefined ? 0.5 : Number(given.Gain), Cell: {Return: given.Cell || 'f1', Distance: given.Distance || 'euclid'}, Warp: Number(given.Warp) ? {Amount: Number(given.Warp)} : null, Tile: tile ? [tile, tile, tile] : null};
+		return {Type: given.Type || 'perlin', Seed: given.Seed || '', Fractal: given.Fractal || 'fbm', Octaves: Number(given.Octaves) || 4, Gain: given.Gain === undefined ? 0.5 : Number(given.Gain), Cell: {Return: given.Cell || 'f1', Distance: given.Distance || 'euclid'}, Warp: Number(given.Warp) ? {Amount: Number(given.Warp), Scale: Number(given.WarpScale) || 1, Octaves: Number(given.WarpOctaves) || 2} : null, Tile: tile ? [tile, tile, tile] : null};
 	},
 
 	/* Blueprints: functions and the IR */
@@ -2412,6 +2428,7 @@ Elemenx.Service('Blueprints', {
 		var defaults = {};
 		var needed = {};
 		var named = {};
+		var owner = {};
 		var body = [];
 		var inputs = [];
 		var results = [];
@@ -2529,7 +2546,7 @@ Elemenx.Service('Blueprints', {
 		}
 
 		/* The functions of the Kernel of the Noise Service, once, as the noise of a block asks for them. */
-		function noiseCall (numbers, point, scale) {
+		function noiseCall (numbers, point, scale, octaves) {
 			var p = kept(sized(point, 3));
 			var s = kept(sized(scale, 1));
 
@@ -2538,7 +2555,9 @@ Elemenx.Service('Blueprints', {
 				functions = functions.concat(noise.IR().Functions);
 			}
 
-			return {E: call.apply(null, ['n_read'].concat(numbers.map(function (one) {
+			return {E: call.apply(null, ['n_read'].concat(numbers.map(function (one, index) {
+				if (index === 2 && octaves) return octaves;
+
 				return c(typeof one === 'boolean' ? one : Number(one), typeof one === 'boolean' ? 'bool' : 'float');
 			}), [bin('*', call('x', p.E), s.E), bin('*', call('y', p.E), s.E), bin('*', call('z', p.E), s.E)])), T: 'float'};
 		}
@@ -2866,7 +2885,18 @@ Elemenx.Service('Blueprints', {
 				case 'Nearest':
 					return input.Points.T === 'floats' ? parts({E: geometry('geo_nearest', [input.Points.E, sized(input.X, 1).E, sized(input.Y, 1).E, sized(input.Z, 1).E]), T: 'vec3'}, ['Index', 'Near', 'Next']) : null;
 				case 'NoiseSpec':
-					return {Value: noiseCall(noise.Numbers(noise.Whole(self.NoiseOf(properties))), input.Position, input.Scale)};
+					whole = noise.Numbers(noise.Whole(self.NoiseOf(properties)));
+
+					/* Its octaves linked (not the nought of none): of their number, as Noise takes it (1 to 10, rounded); under a half, its property's. */
+					if (input.Octaves && !(input.Octaves.E.Op === 'const' && !input.Octaves.E.Value)) {
+						t = kept(sized(input.Octaves, 1));
+						t = call('toInt', {Op: 'select', Test: bin('>=', t.E, c(0.5, 'float')), A: call('max', c(1, 'float'), call('min', c(10, 'float'), call('floor', bin('+', t.E, c(0.5, 'float'))))), B: c(Number(whole[2]), 'float')});
+					}
+					else {
+						t = null;
+					}
+
+					return {Value: noiseCall(whole, input.Position, input.Scale, t)};
 				case 'Noise':
 				case 'Fbm':
 				case 'Ridge':
@@ -2933,15 +2963,97 @@ Elemenx.Service('Blueprints', {
 				need(id);
 		});
 
-		plan.Order.forEach(function (id) {
+		/*
+		 * The block of When each block is made in: the innermost one whose Value alone needs it (none: the function itself).
+		 * Neither an Input nor a Parameter: they are no statements, and the inputs keep their order.
+		 */
+		(function () {
+			var readers = {};
+			var sizes = {};
+
+			Object.keys(plan.From).forEach(function (reader) {
+				Object.keys(plan.From[reader] || {}).forEach(function (input) {
+					var from = plan.From[reader][input];
+
+					if (!needed[reader]) return;
+
+					(readers[from.Block] = readers[from.Block] || []).push({Block: reader, Input: input});
+				});
+			});
+
+			plan.Order.forEach(function (id) {
+				var cone = {};
+				var changed = true;
+				var count = 0;
+
+				if (!needed[id] || plan.Blocks[id].type !== 'When' || plan.Blocks[id].enabled === false || !(plan.From[id] || {}).Value) return;
+
+				(function mark (block) {
+					if (cone[block] !== undefined || ['Input', 'Parameter'].indexOf(plan.Blocks[block].type) !== -1) return;
+
+					cone[block] = true;
+
+					Object.keys(plan.From[block] || {}).forEach(function (key) {
+						mark(plan.From[block][key].Block);
+					});
+				})(plan.From[id].Value.Block);
+
+				while (changed) {
+					changed = false;
+
+					Object.keys(cone).forEach(function (block) {
+						if (!cone[block]) return;
+
+						if ((readers[block] || []).every(function (one) {
+							return one.Block === id ? one.Input === 'Value' : cone[one.Block] === true;
+						})) return;
+
+						cone[block] = false;
+						changed = true;
+					});
+				}
+
+				Object.keys(cone).forEach(function (block) {
+					if (cone[block])
+						count++;
+				});
+
+				sizes[id] = count;
+
+				Object.keys(cone).forEach(function (block) {
+					if (cone[block] && (!owner[block] || sizes[owner[block]] > count))
+						owner[block] = id;
+				});
+			});
+		})();
+
+		function make (id) {
 			var node = plan.Nodes[id];
 			var piece = plan.Blocks[id];
 			var properties = this.Properties(piece);
 			var input = {};
 			var made;
 			var failed = false;
+			var outer = body;
+			var inner = [];
+			var n;
+			var t;
+			var name;
+			var value;
 
 			if (!needed[id] || !node || diagnostics.length) return;
+
+			/* Of When: first what its Value alone needs, in a body of its own (its if). */
+			if (piece.type === 'When' && piece.enabled !== false) {
+				body = inner;
+
+				plan.Order.forEach(function (one) {
+					if (owner[one] === id)
+						make.call(this, one);
+				}, this);
+
+				body = outer;
+			}
 
 			named[id] = {};
 
@@ -2984,6 +3096,46 @@ Elemenx.Service('Blueprints', {
 					made[output.Key] = passed ? input[passed] : constant(0);
 				});
 			}
+			else if (piece.type === 'When') {
+				n = Math.max(size(input.Value.T), size(input.Else.T));
+				t = n === 1 ? 'float' : 'vec' + n;
+				serial++;
+				name = 'w' + serial;
+
+				body.push({Op: 'let', Name: name, Type: t, Value: sized(input.Else, n).E});
+
+				body = inner;
+				value = sized(input.Value, n).E;
+				body = outer;
+
+				body.push({Op: 'if', Test: truth(input.Test), Then: inner.concat([{Op: 'set', Name: name, Value: value}])});
+
+				made = {Out: {E: {Op: 'var', Name: name}, T: t}};
+			}
+			/*
+			 * A block of another Library of numbers (Numeric of its definition): its outputs of its inputs as expressions of the
+			 * IR ({E, T}), the functions of a module of its own (Kernel of the kit: a Kernel of the kernel language) in the
+			 * module once.
+			 */
+			else if (typeof node.Numeric === 'function') {
+				made = node.Numeric.call(this, input, properties, {
+					Call: call,
+					Const: c,
+					Binary: bin,
+					Sized: sized,
+					Parts: parts,
+					Kernel: function (key, module) {
+						if (!helpers['kernel:' + key]) {
+							helpers['kernel:' + key] = true;
+							functions = functions.concat(module.Functions.filter(function (one) {
+								return !functions.some(function (had) {
+									return had.Name === one.Name;
+								});
+							}));
+						}
+					}
+				});
+			}
 			else if (!(this.Inputs(node, piece) || []).length && ['Time', 'Random'].indexOf(piece.type) === -1 && typeof node.Compute === 'function') {
 				made = {};
 
@@ -3013,6 +3165,11 @@ Elemenx.Service('Blueprints', {
 			Object.keys(made).forEach(function (key) {
 				named[id][key] = once(id, key) ? made[key] : kept(made[key]);
 			});
+		}
+
+		plan.Order.forEach(function (id) {
+			if (!owner[id])
+				make.call(this, id);
 		}, this);
 
 		if (!diagnostics.length && (!results.length || results.length > 4 || results.length > 1 && results.some(function (one) {
@@ -3027,10 +3184,51 @@ Elemenx.Service('Blueprints', {
 			return one.Value.E;
 		})))});
 
+		/* Each function once: the Kernels of blocks of other Libraries may hold those of the noise too. */
+		var named = {};
+
+		functions.forEach(function (one) {
+			if (!named[one.Name])
+				named[one.Name] = one;
+		});
+
+		/*
+		 * Only what it calls, and what that calls. Regression: a block of a Kernel brought the whole noise it is written on
+		 * (its worley, simplex, fractals...) into a shader that read one function of it: the shaders of a galaxy took a
+		 * minute to make.
+		 */
+		var called = {};
+
+		function walk (node) {
+			if (!node || typeof node !== 'object') return;
+
+			if (Array.isArray(node)) {
+				node.forEach(walk);
+
+				return;
+			}
+
+			if (node.Op === 'call' && named[node.Name] && !called[node.Name]) {
+				called[node.Name] = true;
+
+				walk(named[node.Name].Body);
+			}
+
+			Object.keys(node).forEach(function (key) {
+				walk(node[key]);
+			});
+		}
+
+		walk(body);
+
 		return {
 			Module: {Functions: [{Name: 'g_main', Params: inputs.map(function (one) {
 				return {Name: 'i_' + one.Name.replace(/[^A-Za-z0-9_]/g, '_'), Type: one.Type};
-			}), Returns: results.length === 1 ? results[0].Value.T : 'vec' + results.length, Body: body}].concat(functions), Entry: 'g_main'},
+			}), Returns: results.length === 1 ? results[0].Value.T : 'vec' + results.length, Body: body}].concat(Object.keys(named).filter(function (name) {
+				return called[name];
+			}).map(function (name) {
+				return named[name];
+			})), Entry: 'g_main'},
 			Inputs: inputs,
 			Keys: results.map(function (one) {
 				return one.Key;
@@ -3322,6 +3520,16 @@ Elemenx.Service('Blueprints', {
 			}
 		});
 
+		/*
+		 * Its Value when Test holds (a number not 0), else Else: what only its Value needs is computed only then (Numeric: inside
+		 * an if), a detail finer than is asked skipped as the code skipped it.
+		 */
+		this.Node('When', {Graphs: numeric, Group: 'logic', Inputs: [{Key: 'Test', Type: 'float', Value: 0}, {Key: 'Value', Type: 'same', Value: 0}, {Key: 'Else', Type: 'same', Value: 0}], Outputs: [{Key: 'Out', Type: 'same'}],
+			Compute: function (inputs) {
+				return {Out: inputs.Test ? inputs.Value : inputs.Else};
+			}
+		});
+
 		this.Node('Smoothstep', {Graphs: numeric, Group: 'math', Inputs: [{Key: 'Low', Type: 'float', Value: 0}, {Key: 'High', Type: 'float', Value: 1}, {Key: 'X', Type: 'same', Value: 0}], Outputs: [{Key: 'Out', Type: 'same'}],
 			Compute: function (inputs) {
 				return {Out: self.Each(inputs.X, 0, function (x) {
@@ -3423,10 +3631,11 @@ Elemenx.Service('Blueprints', {
 		});
 
 		/* A noise of any algorithm of the Noise Service, by its spec: the same as a ground, a texture or a shader made of it. */
-		this.Node('NoiseSpec', {Graphs: numeric, Group: 'noise', Properties: self.NoiseProperties(), Inputs: [{Key: 'Position', Type: 'vec3', Value: 0}, {Key: 'Scale', Type: 'float', Value: 1}], Outputs: [{Key: 'Value', Type: 'float'}],
+		/* Octaves: linked, its number of octaves instead of its property's (one code for planets of other detail); 0, its property. */
+		this.Node('NoiseSpec', {Graphs: numeric, Group: 'noise', Properties: self.NoiseProperties(), Inputs: [{Key: 'Position', Type: 'vec3', Value: 0}, {Key: 'Scale', Type: 'float', Value: 1}, {Key: 'Octaves', Type: 'float', Value: 0}], Outputs: [{Key: 'Value', Type: 'float'}],
 			Compute: function (inputs, properties) {
 				var p = inputs.Position;
-				var spec = self.NoiseOf(properties);
+				var spec = Number(inputs.Octaves) ? Object.assign(self.NoiseOf(properties), {Octaves: Number(inputs.Octaves)}) : self.NoiseOf(properties);
 				var key = JSON.stringify(spec);
 				var samplers = self.Samplers = self.Samplers || {};
 

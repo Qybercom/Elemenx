@@ -365,3 +365,88 @@ describe('Regression: the colors of the models of code are their own', function 
 		expect(models.KindOf('nothing')).toBe(null);
 	});
 });
+
+/* Regression: the 72 models of the library were written out in SceneModels.Builtin in code, 750 lines; they are graphs now. */
+describe('Contract: the models of the library are graphs of the kind model, told in resources/models/builtin', function () {
+	var models;
+
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:SceneModels', 'service:ModelBlueprints']);
+
+		models = Elemenx.Service('SceneModels');
+	});
+
+	function piece (model, id) {
+		return model.Pieces.filter(function (one) {
+			return one.ID === id;
+		})[0];
+	}
+
+	function vertices (model) {
+		return model.Pieces.reduce(function (sum, one) {
+			return sum + one.Geometry.Positions.length / 3;
+		}, 0);
+	}
+
+	it('makes each model of its table of its graph, with what the table tells of it, and its clips of its rig', function () {
+		var table = Elemenx.Resources('Data', 'ElemenxGraphics/models/builtin');
+		var rigs = models.Rigs();
+
+		expect(Object.keys(table).length).toBe(72);
+
+		Object.keys(table).forEach(function (name) {
+			var info = models.Info(name);
+
+			expect(models.Recipes[name].Graph).toBe('ElemenxGraphics/models/' + name);
+			expect(Elemenx.Resources('Blueprints', 'ElemenxGraphics/models/' + name).type).toBe('model');
+			expect(info.Size).toBe(table[name].Size);
+			expect(info.Type).toBe(table[name].Type);
+			expect(models.Make(name).Pieces.length).toBeGreaterThan(0);
+		});
+
+		expect(models.Info('knight').Clips).toEqual(Object.keys(rigs.Biped));
+		expect(models.Recipes.mech.Clips.walk.Length).toBe(1.2);
+		expect(models.Recipes.mech.Clips.idle).toEqual(rigs.Biped.idle);
+		expect(models.Recipes.rover.Clips.walk.Spins['wheels-f']).toEqual([360, 0, 0]);
+		expect(models.Recipes['cave-crystal'].Lamps[0].Radius).toBe(4);
+	});
+
+	it('makes the bodies of two legs and of four of the graphs biped and quadruped: their pieces, pivots and team', function () {
+		var knight = models.Make('knight');
+		var orc = models.Make('orc');
+		var deer = models.Make('deer');
+
+		expect(knight.Pieces.map(function (one) {
+			return one.ID;
+		})).toEqual(['body', 'head', 'arm-l', 'arm-r', 'leg-l', 'leg-r', 'cloth']);
+		expect(piece(knight, 'arm-l').Pivot).toEqual([-0.175, 0.78, 0]);
+		expect(piece(knight, 'arm-l').Parent).toBe('body');
+		expect(piece(knight, 'cloth').Team).toBe(true);
+		/* Its body 1.3 wide: its arms farther apart. */
+		expect(piece(orc, 'arm-r').Pivot).toEqual([0.175 * 1.3, 0.78, 0]);
+		expect(deer.Pieces.map(function (one) {
+			return one.ID;
+		})).toEqual(['body', 'head', 'tail', 'leg-fl', 'leg-fr', 'leg-bl', 'leg-br']);
+		expect(piece(deer, 'leg-br').Pivot).toEqual([0.09, 0.36, -0.32]);
+	});
+
+	it('draws the variants of a model of random numbers of its seed: each another, the same each time, its loops run (Repeat)', function () {
+		var pine = [0, 1, 2, 3].map(function (variant) {
+			return models.Make('pine', {Variant: variant});
+		});
+
+		expect(pine[0].Pieces[0].Geometry.Positions.length).toBe(pine[1].Pieces[0].Geometry.Positions.length);
+		expect(Array.from(pine[0].Pieces[0].Geometry.Positions)).not.toEqual(Array.from(pine[1].Pieces[0].Geometry.Positions));
+		expect(Array.from(models.Make('pine', {Variant: 1}).Pieces[0].Geometry.Positions)).toEqual(Array.from(pine[1].Pieces[0].Geometry.Positions));
+
+		/* Regression: the count of the drips of a stalactite was named as the function count of formulas: none were made. */
+		[0, 1, 2, 3].forEach(function (variant) {
+			expect(vertices(models.Make('stalactite', {Variant: variant}))).toBeGreaterThan(77);
+		});
+
+		/* Twelve stalks of wheat, two parts each, of its loop. */
+		expect(vertices(models.Make('wheat'))).toBe(vertices(models.Make('wheat', {Variant: 1})));
+	});
+});

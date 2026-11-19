@@ -1,0 +1,151 @@
+{
+	"version": 1,
+	"type": "clouds",
+	"name": "clouds",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "clouds-end",
+			"type": "CloudsEnd",
+			"x": 300,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "clouds-cover",
+			"type": "CloudCover",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Size",
+					"value": 80
+				},
+				{
+					"key": "Shrink",
+					"value": 2.7
+				},
+				{
+					"key": "Octaves",
+					"value": 5
+				}
+			]
+		},
+		{
+			"id": "clouds-globe",
+			"type": "CloudGlobe",
+			"x": 0,
+			"y": 120,
+			"properties": [
+				{
+					"key": "Cirrus",
+					"value": 0.18
+				}
+			]
+		},
+		{
+			"id": "clouds-shade",
+			"type": "CloudShade",
+			"x": 0,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Ahead",
+					"value": 3
+				},
+				{
+					"key": "Gain",
+					"value": 1.3
+				},
+				{
+					"key": "Most",
+					"value": 0.55
+				},
+				{
+					"key": "Low",
+					"value": 1.5
+				},
+				{
+					"key": "High",
+					"value": 6
+				}
+			]
+		},
+		{
+			"id": "clouds-shell",
+			"type": "CloudShell",
+			"x": 0,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Heaps",
+					"value": 3.2
+				},
+				{
+					"key": "Towers",
+					"value": 12
+				},
+				{
+					"key": "CirrusLow",
+					"value": 8.5
+				},
+				{
+					"key": "CirrusHigh",
+					"value": 11
+				}
+			]
+		},
+		{
+			"id": "clouds-layer",
+			"type": "CloudLayer",
+			"x": 0,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Clear",
+					"value": 0.86
+				},
+				{
+					"key": "Full",
+					"value": 0.2
+				},
+				{
+					"key": "Dense",
+					"value": 4.2
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "clouds-link-0",
+			"p1": "clouds-cover-out-Done",
+			"p2": "clouds-end-in-Cover",
+			"kind": "value"
+		},
+		{
+			"id": "clouds-link-1",
+			"p1": "clouds-globe-out-Done",
+			"p2": "clouds-end-in-Globe",
+			"kind": "value"
+		},
+		{
+			"id": "clouds-link-4",
+			"p1": "clouds-shade-out-Done",
+			"p2": "clouds-end-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "clouds-link-2",
+			"p1": "clouds-shell-out-Done",
+			"p2": "clouds-end-in-Shell",
+			"kind": "value"
+		},
+		{
+			"id": "clouds-link-3",
+			"p1": "clouds-layer-out-Done",
+			"p2": "clouds-end-in-Layer",
+			"kind": "value"
+		}
+	]
+}

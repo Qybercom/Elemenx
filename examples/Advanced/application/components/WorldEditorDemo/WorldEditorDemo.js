@@ -1,12 +1,33 @@
 /*
  * WorldEditorDemo (Graphics): WorldEditor · a world level in level: its galaxy (pick a star, put a star or a body of no
  * system where the view looks), the system of a star, a planet of it, a location of the planet; its models, plants,
- * cutscenes and materials each in a tab beside it; the whole world saved as one file and opened again.
+ * cutscenes and materials each in a tab beside it; the whole world saved as one file and opened again. Its relief is a
+ * graph of its own (Graphs, planet/relief: ranges twice as high as of the library), changed in a tab as any graph of the
+ * library its planets and grounds are made of.
  */
 Elemenx.Component('WorldEditorDemo', {
 	$TemplateURL: 'WorldEditorDemo.html',
 	$Traits: ['SceneDemo'],
-	World: {Name: 'Aurelia', Galaxy: {Seed: 'aurelia', Kind: 'spiral', Name: 'Aurelia'}},
+	World: null,
+
+	$OnCreate: function () {
+		this.World = {Name: 'Aurelia', Galaxy: {Seed: 'aurelia', Kind: 'spiral', Name: 'Aurelia'}, Graphs: {'planet/relief': this.HighRanges()}};
+	},
+
+	/* The relief of the library with its ranges twice as high: the term of the ranges of its plains doubled. */
+	HighRanges: function () {
+		var graph = JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/relief')));
+
+		graph.blocks.forEach(function (block) {
+			(block.properties || []).forEach(function (property) {
+				if (block.type === 'Formula' && property.key === 'Expression')
+					property.value = String(property.value).replace('H * Relief * (0.3 + 0.5 * Mountains) * C', 'H * Relief * (0.6 + 1 * Mountains) * C');
+			});
+		});
+
+		return graph;
+	},
+
 	/*
 	 * A generator of models for the object editor, of rules and no network: a word of the description chooses what it builds
 	 * (a tower, a table, a robot, else a tree), a number in it how many of its parts there are.

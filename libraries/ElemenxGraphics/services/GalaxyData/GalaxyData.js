@@ -37,8 +37,13 @@
  * - Objects(data): its nebulae and star clusters made of its seed ({ID, Kind, Type, Subtype, Name, Place, Radius, Seed}),
  *   ObjectOf(data, id) one of them, ObjectSystem(data, id) its scene as a system (Star and System take their IDs too: they
  *   are entered as a star is).
- * - Cosmos(data, id): the backdrop of the sky of a system of a star (Cosmos of a Scene): the band of its galaxy across it,
- *   its pole the north of the galaxy as the system lies, as bright as the stars round it are many.
+ * - Cosmos(data, id): the backdrop of the sky of a system of a star (Cosmos of a Scene): the band of this very galaxy
+ *   across it, as seen from where the star lies (Galaxy: its manifest, Place), its pole the north of the galaxy as the
+ *   system lies, its stars as many as round it.
+ * - Code(), IR(): the arms of a galaxy of one source (Kernel, the kernel language: gx_turn, gx_bend, gx_wave, gx_arm on
+ *   the noise of gradients of Noise) as js and as the IR of a graph of Blueprints; Spiral(data): the arms of a galaxy of
+ *   its graph (data.Graph, a Scene gives it its own; SceneBlueprints.Galaxy), what its stars, its knots and its picture
+ *   alike lie on; SeedNumber(manifest): the number of its seed for its noise.
  * - Rename(data, id, name), Remove(data, id), AddBody(data, body), SetSystem(data, id, system): what is changed of it.
  * - Use(key, data), DataOf(key); Open(source, callback), Write(data, store, callback, whole), Save(data), Pack(data,
  *   callback): as SystemData (parts {Kind: 'galaxy'}, {Kind: 'edits'}, those of a system written with System: id).
@@ -46,7 +51,7 @@
 Elemenx.Service('GalaxyData', {
 	$Meta: {
 		Description: 'A galaxy as data: its supermassive black hole, its stars made sector by sector of its seed as many as a galaxy holds, its systems, what was changed of it.',
-		Methods: ['Kinds()', 'Make(options)', 'Density(data, place)', 'Sector(data, x, y, z, limit)', 'Search(data, options)', 'Star(data, id)', 'Hole(data)', 'HoleSystem(data)', 'Cluster(options)', 'Objects(data)', 'Knots(data)', 'ObjectOf(data, id)', 'ObjectSystem(data, id)', 'Position(data, place, time)', 'Added(data, time)', 'Glow(data, count)', 'System(data, id)', 'Cosmos(data, id)', 'Rename(data, id, name)', 'Remove(data, id)', 'AddBody(data, body)', 'SetSystem(data, id, system)', 'Use(key, data)', 'DataOf(key)', 'Open(source, callback)', 'Write(data, store, callback, whole)', 'Save(data)', 'Pack(data, callback)']
+		Methods: ['Kinds()', 'Make(options)', 'Density(data, place)', 'Sector(data, x, y, z, limit)', 'Search(data, options)', 'Star(data, id)', 'Hole(data)', 'HoleSystem(data)', 'Cluster(options)', 'Objects(data)', 'Knots(data)', 'ObjectOf(data, id)', 'ObjectSystem(data, id)', 'Position(data, place, time)', 'Added(data, time)', 'Glow(data, count)', 'System(data, id)', 'Cosmos(data, id)', 'Code()', 'IR()', 'Spiral(data)', 'SeedNumber(manifest)', 'Rename(data, id, name)', 'Remove(data, id)', 'AddBody(data, body)', 'SetSystem(data, id, system)', 'Use(key, data)', 'DataOf(key)', 'Open(source, callback)', 'Write(data, store, callback, whole)', 'Save(data)', 'Pack(data, callback)']
 	},
 
 	Sets: {},
@@ -105,24 +110,107 @@ Elemenx.Service('GalaxyData', {
 	},
 
 	/*
-	 * How much of its disc is in its arms at a place (1 for no arms): the arms of a logarithmic spiral, softly, bent here
-	 * and there and branching as the arms of real galaxies do (a noise of its seed a sixth of it wide).
+	 * The arms of a galaxy in the kernel language of Elemenx.Compilers (on the noise of gradients of the Kernel of the Noise
+	 * Service): one source for the page (its stars, its knots, its nebulae) and for a shader (its picture, the band of it
+	 * across the sky of a system, the galaxies far off), so that all of them lie on the very same arms. Kilo-light-years,
+	 * radians; a graph of numbers of Blueprints is made of its blocks (blueprints/shader/galaxy, Spiral).
 	 */
-	Arm: function (manifest, x, z, shift) {
-		var radius = Math.sqrt(x * x + z * z);
-		var noise = this.BendNoise || (this.BendNoise = {});
-		var size = manifest.Radius / 6;
-		var angle;
-		var wave;
+	Kernel: [
+		'/* Where a place of its plane stands round its spiral: its angle less the turns of a log spiral out to it. */',
+		'float gx_turn(float x, float z, float scale, float pitch, float phase) {',
+		'	float r = sqrt(x * x + z * z);',
+		'	return atan2(z, x) - log(max(r, 0.02) / max(scale, 0.001)) / tan(pitch) - phase;',
+		'}',
+		'/* Its arms bent here and there and branching: a noise of gradients a sixth of it wide (bend: how much, radians). */',
+		'float gx_bend(float x, float z, float radius, float seed, float bend) {',
+		'	float size = radius / 6.0;',
+		'	return (n_slopes(x / size + seed, 1.5 / size + seed, z / size + seed) - 0.5) * bend;',
+		'}',
+		'/* The wave of its arms, 0 to 1, shifted inward (radians) for its dust. */',
+		'float gx_wave(float turn, float bend, float arms, float shift) {',
+		'	return 0.5 + 0.5 * cos(arms * (turn + bend - shift));',
+		'}',
+		'/* How much of its disc is in its arms there: low between them, low + high on their ridges. */',
+		'float gx_arm(float wave, float low, float high, float power) {',
+		'	return low + high * pow(max(wave, 0.0), power);',
+		'}'
+	].join('\n'),
 
-		if (!manifest.Arms || radius < 1) return 1;
+	/* The functions of its Kernel as js (with the noise they call), made once. */
+	Code: function () {
+		var self = this;
 
-		noise[manifest.Seed] = noise[manifest.Seed] || this.$Service('Noise').Make({Type: 'simplex', Seed: manifest.Seed + ':bends', Fractal: 'fbm', Octaves: 3});
+		if (!this.Made) {
+			Elemenx.Compilers.Run({From: 'kernel', To: 'js', Value: this.$Service('Noise').Kernel + '\n' + this.Kernel, Entry: 'galaxy'}, function (error, result) {
+				if (error)
+					throw error;
 
-		angle = Math.atan2(z, x) - Math.log(radius / 1000) / Math.tan(manifest.Pitch * Math.PI / 180) - manifest.Phase * Math.PI / 180 - (shift || 0) + (noise[manifest.Seed].At(x / size, 1.5, z / size) - 0.5) * 1.6;
-		wave = 0.5 + 0.5 * Math.cos(manifest.Arms * angle);
+				self.Made = new Function(result.Value)();
+			});
+		}
 
-		return 0.3 + 1.7 * Math.pow(wave, 2.2);
+		return this.Made;
+	},
+
+	/* Its Kernel in the IR of Elemenx.Compilers, with the noise it calls (for Blueprints.Numeric), made once. */
+	IR: function () {
+		var self = this;
+
+		if (!this.IRMade) {
+			Elemenx.Compilers.Run({From: 'kernel', To: 'ir', Value: this.$Service('Noise').Kernel + '\n' + this.Kernel}, function (error, result) {
+				if (error)
+					throw error;
+
+				self.IRMade = result.Value;
+			});
+		}
+
+		return this.IRMade;
+	},
+
+	/* The number of its seed for its noise (a shift of its coordinates), the same in the page and in its shaders. */
+	SeedNumber: function (manifest) {
+		var seed = 0;
+		var text = String(manifest.Seed);
+		var i;
+
+		for (i = 0; i < text.length; i++)
+			seed = (seed * 31 + text.charCodeAt(i)) % 997;
+
+		return seed / 10;
+	},
+
+	/*
+	 * The arms of a galaxy of a graph (data.Graph, the one a Scene gives it of its own; else the library one): what the page
+	 * and the shaders read of them (SceneBlueprints.Galaxy), made once a graph.
+	 */
+	/* Kept by the galaxy for the graph it has (regression: made again of its graph at each place, a minute its glow). */
+	Spiral: function (data) {
+		var graph = data && data.Graph || null;
+		var kept = data ? data.Spiral : this.LibrarySpiral;
+		if (kept && kept.Graph === graph) return kept.Made;
+
+		kept = {Graph: graph, Made: this.$Service('SceneBlueprints').Galaxy(graph)};
+
+		if (data) {
+			Object.defineProperty(data, 'Spiral', {value: kept, writable: true, configurable: true, enumerable: false});
+		}
+		else {
+			this.LibrarySpiral = kept;
+		}
+
+		return kept.Made;
+	},
+
+	/*
+	 * How much of its disc is in its arms at a place (1 for no arms): the arms of a logarithmic spiral, softly, bent here
+	 * and there and branching as the arms of real galaxies do (a noise of its seed a sixth of it wide), shifted inward by
+	 * shift (radians). Of the graph of its arms (Spiral): the very arms its picture draws.
+	 */
+	Arm: function (manifest, x, z, shift, data) {
+		if (!manifest.Arms || Math.sqrt(x * x + z * z) < 1) return 1;
+
+		return this.Spiral(data).Arm(manifest, x / 1000, z / 1000, shift || 0, this.SeedNumber(manifest));
 	},
 
 	Density: function (data, place) {
@@ -159,13 +247,13 @@ Elemenx.Service('GalaxyData', {
 		if (m.Kind === 'barred') {
 			bar = Math.exp(-Math.pow(this.Along(m, x, z) / s.Bar, 2) - Math.pow(this.Across(m, x, z) / (s.Bar * 0.18), 2) - Math.pow(y / (s.Bar * 0.15), 2));
 
-			return disc * (radius > s.Bar ? this.Arm(m, x, z) : 1) + bulge + bar * 1.5;
+			return disc * (radius > s.Bar ? this.Arm(m, x, z, 0, data) : 1) + bulge + bar * 1.5;
 		}
 
 		if (m.Kind === 'lenticular')
 			return disc * 1.2 + bulge * 1.4;
 
-		return disc * this.Arm(m, x, z) + bulge;
+		return disc * this.Arm(m, x, z, 0, data) + bulge;
 	},
 
 	/* Along and across the bar of a barred galaxy, ly. */
@@ -602,7 +690,7 @@ Elemenx.Service('GalaxyData', {
 
 					/* Lit where its arm is strong, past the edge of its bulge (or the ends of its bar), in its flocks of young stars. */
 					on = Math.max(0, Math.min(1, (r - start) / (start * (s.Bar > 0 ? 0.3 : 1.5))));
-					ridge = (self.Arm(m, x, z) - 0.3) / 1.7 * 1.3 * on * (0.4 + 0.9 * self.Flocks(data, x, z));
+					ridge = (self.Arm(m, x, z, 0, data) - 0.3) / 1.7 * 1.3 * on * (0.4 + 0.9 * self.Flocks(data, x, z));
 
 					if (e >= ridge * grid.Lit) continue;
 
@@ -683,7 +771,7 @@ Elemenx.Service('GalaxyData', {
 		/* Dark clouds on the dust of the inner edge of the arms: where the arm is a little ahead, not yet here. */
 		for (i = 0; i < counts.dark; i++)
 			put('nebula', 'dark', '', place(function (x, at) {
-				return Math.max(0, self.Arm(m, x, at, 0.35) - self.Arm(m, x, at)) / 1.7 * self.Flocks(data, x, at);
+				return Math.max(0, self.Arm(m, x, at, 0.35, data) - self.Arm(m, x, at, 0, data)) / 1.7 * self.Flocks(data, x, at);
 			}, 0.1), 5 + Math.pow(random(), 2) * 45);
 
 		for (i = 0; i < counts.planetary; i++)
@@ -695,13 +783,13 @@ Elemenx.Service('GalaxyData', {
 			u = random();
 
 			put('nebula', 'remnant', !disc || u < 0.3 ? 'Ia' : u < 0.75 ? 'II' : u < 0.88 ? 'Ib' : 'Ic', place(function (x, at) {
-				return disc ? self.Arm(m, x, at) / 2 : 1;
+				return disc ? self.Arm(m, x, at, 0, data) / 2 : 1;
 			}, 0.4), 10 + random() * 50);
 		}
 
 		for (i = 0; i < counts.open; i++)
 			put('cluster', 'open', '', place(function (x, at) {
-				return Math.pow(self.Arm(m, x, at) / 2, 2);
+				return Math.pow(self.Arm(m, x, at, 0, data) / 2, 2);
 			}, 0.2), 5 + random() * 25);
 
 		/* A ball round it all, packed to its middle (Plummer). */
@@ -1045,7 +1133,7 @@ Elemenx.Service('GalaxyData', {
 			var a = random() * Math.PI * 2;
 			var x = radius * Math.cos(a);
 			var z = radius * Math.sin(a);
-			var arm = self.Arm(m, x, z);
+			var arm = self.Arm(m, x, z, 0, data);
 			var flock = self.Flocks(data, x, z);
 			var young;
 
@@ -1193,8 +1281,9 @@ Elemenx.Service('GalaxyData', {
 	Cosmos: function (data, id) {
 		var star = this.Star(data, id);
 		var density = star ? this.Density(data, star.Place) : this.Local;
+		var m = data.Manifest;
 
-		return {Kind: 'galaxy', Seed: data.Manifest.Seed + ':' + id, Pole: this.Pole(data, id), Band: Math.max(0.2, Math.min(1, 0.35 + Math.log(Math.max(1e-6, density / this.Local)) * 0.15)), Stars: Math.max(0.3, Math.min(1, 0.5 + Math.log(Math.max(1e-6, density / this.Local)) * 0.1))};
+		return {Kind: 'galaxy', Seed: m.Seed + ':' + id, Pole: this.Pole(data, id), Galaxy: {Seed: m.Seed, Kind: m.Kind, Radius: m.Radius, Arms: m.Arms, Pitch: m.Pitch, Phase: m.Phase, Shape: m.Shape}, Place: star ? star.Place.slice(0, 3) : [m.Radius * 0.54, 0, 0], Band: 1, Stars: Math.max(0.3, Math.min(1, 0.5 + Math.log(Math.max(1e-6, density / this.Local)) * 0.1))};
 	},
 
 	Rename: function (data, id, name) {

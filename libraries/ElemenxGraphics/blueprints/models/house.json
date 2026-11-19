@@ -1,0 +1,540 @@
+{
+	"version": 1,
+	"type": "model",
+	"name": "house",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "box-0",
+			"type": "Box",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "formula-1",
+			"type": "Formula",
+			"x": 0,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.96, 0.5, 0.74]"
+				}
+			]
+		},
+		{
+			"id": "formula-2",
+			"type": "Formula",
+			"x": 0,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.25, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-3",
+			"type": "Formula",
+			"x": 0,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.9, 0.86, 0.78]"
+				}
+			]
+		},
+		{
+			"id": "wedge-4",
+			"type": "Wedge",
+			"x": 0,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "formula-5",
+			"type": "Formula",
+			"x": 0,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[1.1, 0.36, 0.84]"
+				}
+			]
+		},
+		{
+			"id": "formula-6",
+			"type": "Formula",
+			"x": 0,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.68, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-7",
+			"type": "Formula",
+			"x": 0,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.62, 0.28, 0.22]"
+				}
+			]
+		},
+		{
+			"id": "formula-8",
+			"type": "Formula",
+			"x": 0,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 90, 0]"
+				}
+			]
+		},
+		{
+			"id": "box-9",
+			"type": "Box",
+			"x": 0,
+			"y": 810,
+			"properties": []
+		},
+		{
+			"id": "formula-10",
+			"type": "Formula",
+			"x": 0,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.18, 0.3, 0.02]"
+				}
+			]
+		},
+		{
+			"id": "formula-11",
+			"type": "Formula",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.15, 0.38]"
+				}
+			]
+		},
+		{
+			"id": "formula-12",
+			"type": "Formula",
+			"x": 0,
+			"y": 1080,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.5, 0.36, 0.23]"
+				}
+			]
+		},
+		{
+			"id": "box-13",
+			"type": "Box",
+			"x": 0,
+			"y": 1170,
+			"properties": []
+		},
+		{
+			"id": "formula-14",
+			"type": "Formula",
+			"x": 0,
+			"y": 1260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.16, 0.14, 0.02]"
+				}
+			]
+		},
+		{
+			"id": "formula-15",
+			"type": "Formula",
+			"x": 240,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.3, 0.3, 0.38]"
+				}
+			]
+		},
+		{
+			"id": "formula-16",
+			"type": "Formula",
+			"x": 240,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.3, 0.42, 0.56]"
+				}
+			]
+		},
+		{
+			"id": "box-17",
+			"type": "Box",
+			"x": 240,
+			"y": 180,
+			"properties": []
+		},
+		{
+			"id": "formula-18",
+			"type": "Formula",
+			"x": 240,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.16, 0.14, 0.02]"
+				}
+			]
+		},
+		{
+			"id": "formula-19",
+			"type": "Formula",
+			"x": 240,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[-0.3, 0.3, 0.38]"
+				}
+			]
+		},
+		{
+			"id": "formula-20",
+			"type": "Formula",
+			"x": 240,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.3, 0.42, 0.56]"
+				}
+			]
+		},
+		{
+			"id": "box-21",
+			"type": "Box",
+			"x": 240,
+			"y": 540,
+			"properties": []
+		},
+		{
+			"id": "formula-22",
+			"type": "Formula",
+			"x": 240,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.1, 0.34, 0.1]"
+				}
+			]
+		},
+		{
+			"id": "formula-23",
+			"type": "Formula",
+			"x": 240,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.28, 0.82, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-24",
+			"type": "Formula",
+			"x": 240,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.62, 0.6, 0.57]"
+				}
+			]
+		},
+		{
+			"id": "box-25",
+			"type": "Box",
+			"x": 240,
+			"y": 900,
+			"properties": []
+		},
+		{
+			"id": "formula-26",
+			"type": "Formula",
+			"x": 240,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.98, 0.04, 0.76]"
+				}
+			]
+		},
+		{
+			"id": "formula-27",
+			"type": "Formula",
+			"x": 240,
+			"y": 1080,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.03, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-28",
+			"type": "Formula",
+			"x": 240,
+			"y": 1170,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.62, 0.6, 0.57]"
+				}
+			]
+		},
+		{
+			"id": "join-29",
+			"type": "Join",
+			"x": 240,
+			"y": 1260,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 7
+				}
+			]
+		},
+		{
+			"id": "piece-30",
+			"type": "Piece",
+			"x": 480,
+			"y": 0,
+			"properties": [
+				{
+					"key": "ID",
+					"value": "body"
+				}
+			]
+		},
+		{
+			"id": "model-31",
+			"type": "Model",
+			"x": 480,
+			"y": 90,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "link-0",
+			"p1": "formula-1-out-Value",
+			"p2": "box-0-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-1",
+			"p1": "formula-2-out-Value",
+			"p2": "box-0-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-2",
+			"p1": "formula-3-out-Value",
+			"p2": "box-0-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-3",
+			"p1": "formula-5-out-Value",
+			"p2": "wedge-4-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-4",
+			"p1": "formula-6-out-Value",
+			"p2": "wedge-4-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-5",
+			"p1": "formula-7-out-Value",
+			"p2": "wedge-4-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-6",
+			"p1": "formula-8-out-Value",
+			"p2": "wedge-4-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "link-7",
+			"p1": "formula-10-out-Value",
+			"p2": "box-9-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-8",
+			"p1": "formula-11-out-Value",
+			"p2": "box-9-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-9",
+			"p1": "formula-12-out-Value",
+			"p2": "box-9-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-10",
+			"p1": "formula-14-out-Value",
+			"p2": "box-13-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-11",
+			"p1": "formula-15-out-Value",
+			"p2": "box-13-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-12",
+			"p1": "formula-16-out-Value",
+			"p2": "box-13-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-13",
+			"p1": "formula-18-out-Value",
+			"p2": "box-17-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-14",
+			"p1": "formula-19-out-Value",
+			"p2": "box-17-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-15",
+			"p1": "formula-20-out-Value",
+			"p2": "box-17-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-16",
+			"p1": "formula-22-out-Value",
+			"p2": "box-21-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-17",
+			"p1": "formula-23-out-Value",
+			"p2": "box-21-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-18",
+			"p1": "formula-24-out-Value",
+			"p2": "box-21-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-19",
+			"p1": "formula-26-out-Value",
+			"p2": "box-25-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-20",
+			"p1": "formula-27-out-Value",
+			"p2": "box-25-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-21",
+			"p1": "formula-28-out-Value",
+			"p2": "box-25-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-22",
+			"p1": "box-0-out-Parts",
+			"p2": "join-29-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "link-23",
+			"p1": "wedge-4-out-Parts",
+			"p2": "join-29-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "link-24",
+			"p1": "box-9-out-Parts",
+			"p2": "join-29-in-Parts3",
+			"kind": "value"
+		},
+		{
+			"id": "link-25",
+			"p1": "box-13-out-Parts",
+			"p2": "join-29-in-Parts4",
+			"kind": "value"
+		},
+		{
+			"id": "link-26",
+			"p1": "box-17-out-Parts",
+			"p2": "join-29-in-Parts5",
+			"kind": "value"
+		},
+		{
+			"id": "link-27",
+			"p1": "box-21-out-Parts",
+			"p2": "join-29-in-Parts6",
+			"kind": "value"
+		},
+		{
+			"id": "link-28",
+			"p1": "box-25-out-Parts",
+			"p2": "join-29-in-Parts7",
+			"kind": "value"
+		},
+		{
+			"id": "link-29",
+			"p1": "join-29-out-Parts",
+			"p2": "piece-30-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "link-30",
+			"p1": "piece-30-out-Parts",
+			"p2": "model-31-in-Parts",
+			"kind": "value"
+		}
+	]
+}

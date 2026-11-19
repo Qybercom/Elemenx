@@ -5,6 +5,7 @@ import { Binary, Picture } from '../glb.mjs';
 import gameSceneSource from '../../libraries/ElemenxGraphics/components/Scene/Scene.js?raw';
 import modelsSource from '../../libraries/ElemenxGraphics/services/SceneModels/SceneModels.js?raw';
 import lightingSource from '../../libraries/ElemenxGraphics/traits/SceneLighting/SceneLighting.js?raw';
+import blueprintsSource from '../../libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.js?raw';
 import graphicsSource from '../../libraries/ElemenxGraphics/services/Renderer/Renderer.js?raw';
 import cosmosSource from '../../libraries/ElemenxGraphics/traits/SceneCosmos/SceneCosmos.js?raw';
 import modelsDemoSource from '../../examples/Advanced/application/components/ModelsDemo/ModelsDemo.js?raw';
@@ -892,6 +893,14 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(spot.Visible).toBe(true);
 		expect(inner.Camera.Near / engine.Metre()).toBeLessThan(10);
 
+		/*
+		 * A frame of the loop draws no program the card has not made yet (the Sun among them). Regression: its shaders made
+		 * again (a noise of them changed), not in the cache of the browser, the Sun was not drawn yet in the third frame.
+		 */
+		expect(await waitFor(function () {
+			return renderer.Progress().Needed === 0;
+		}, 60000)).toBe(true);
+
 		frame();
 
 		gl.readPixels(Math.round(spot.X * renderer.Ratio), Math.round(renderer.Height - spot.Y * renderer.Ratio), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data);
@@ -1258,7 +1267,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(shaders.Sea).toContain('void blueprintWater(inout vec3 color, inout float alpha) {\n');
 
 		[shaders.Land, shaders.Sea, shaders.Ground].forEach(function (source) {
-			expect(source).not.toMatch(/noise3\(vWorld/);
+			expect(source).not.toMatch(/(noise3|enx_fvalue3)\(vWorld/);
 			expect(source).not.toMatch(/wavesAt\(vWorld\./);
 		});
 	});
@@ -2871,7 +2880,9 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		/* The bellies of the clouds and what stands far off go to one tone. */
 		expect(gameSceneSource).toContain('Haze: hazeOf(ground)');
 		expect(lightingSource).toContain('tone = mix(tone, uHaze.rgb');
-		expect(lightingSource).toContain('min(0.96, uVeil * 2.4) * exp(-max(ray.y, 0.0) * 5.0)');
+		/* Of the air of the scene (AirGraph, its block AirFog): the veil far off, at most VeilMost. */
+		expect(lightingSource).toContain('color = mix(color, air_hazed(), air_veil(ray));');
+		expect(blueprintsSource).toContain("uVeil * ' + literal(context, 'Veil') + ') * exp(-max(ray.y, 0.0) * ");
 
 		/* Rain makes rings on what stands, where water stands. */
 		expect(gameSceneSource).toContain('float rings(vec2 p, float t)');
@@ -3057,7 +3068,17 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		expect(engine.CosmosReady()).toBe(false);
 
-		frames(7);
+		/* A galaxy: the band of its rays first (twelve faces in all, strips of them a frame), then its sky. */
+		var stage = engine.Bakes.map(function (one) {
+			return one();
+		}).filter(function (one) {
+			return one && one.Name === 'sky';
+		})[0];
+
+		expect(stage.Total).toBe(12);
+
+		for (var tries = 0; tries < 60 && !engine.CosmosReady(); tries++)
+			frames(1);
 
 		expect(engine.CosmosReady()).toBe(true);
 		expect(inner.CosmosShade[0]).toBeCloseTo(16 / 255 * 0.03, 5);
@@ -3071,6 +3092,86 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		/* Baking one face leaves the others, and the mips wait for the last. */
 		expect(graphicsSource).toContain('if (only === undefined || only === 5 && (!strip || strip[0] === strip[1] - 1))');
+	});
+
+	/*
+	 * The band of a galaxy in the sky of a system is drawn as it is: a ray from where the system lies through the very
+	 * galaxy of the map (its arms of the graph of the scene), bright toward its middle, dark toward its pole; Style 'drawn'
+	 * is the picture of it as it was, with no band of rays.
+	 */
+	it('draws the band of a galaxy as seen from where the system lies in it, of rays through the galaxy of its map', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var gl = engine.Renderer.GL;
+		var galaxies = Elemenx.Service('GalaxyData');
+		var data = galaxies.Make({Seed: 'band', Kind: 'spiral'});
+		var told = galaxies.Cosmos(data, 'centre');
+		var now = performance.now() + 100;
+		var draw = engine.Renderer.Draw;
+		var banded = [];
+		var cube;
+		var i;
+
+		expect(told.Galaxy.Phase).toBe(data.Manifest.Phase);
+		expect(told.Place).toEqual([0, 0, 0]);
+
+		engine.Renderer.Draw = function (mesh, program, uniforms) {
+			if (uniforms && uniforms.uEye && uniforms.uRaySteps)
+				banded.push(uniforms);
+
+			return draw.apply(this, arguments);
+		};
+
+		/* Frames till it is whole (its programs are made behind the scene: as long as the card takes, under load too). */
+		async function bake (given, key) {
+			banded = [];
+			cube = null;
+
+			expect(await waitFor(function () {
+				inner.Rest = 0;
+				cube = engine.CosmosCubeOf(given, key, 32);
+
+				engine.Frame(now += 100);
+
+				return !!cube;
+			}, 60000)).toBe(true);
+
+			return cube;
+		}
+
+		/* The light of the middle of a face (0 +X: its middle, 2 +Y: its pole). */
+		function face (index) {
+			var target = gl.createFramebuffer();
+			var pixels = new Uint8Array(32 * 32 * 4);
+			var sum = 0;
+			var k;
+
+			gl.bindFramebuffer(gl.FRAMEBUFFER, target);
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + index, cube.Handle, 0);
+			gl.readPixels(0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+			gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+			gl.deleteFramebuffer(target);
+
+			for (k = 0; k < pixels.length; k += 4)
+				sum += pixels[k] + pixels[k + 1] + pixels[k + 2];
+
+			return sum / (32 * 32);
+		}
+
+		expect(await bake({Kind: 'galaxy', Seed: 'band', Pole: [0, 1, 0], Middle: [1, 0, 0], Galaxy: told.Galaxy, Place: [data.Manifest.Radius * 0.54, 0, 0], Stars: 0, Galaxies: 0}, 'honest')).toBeTruthy();
+		expect(banded.length).toBeGreaterThan(5);
+		expect(banded[0].uEye[0]).toBeCloseTo(data.Manifest.Radius * 0.54 / 1000, 6);
+		expect(face(0)).toBeGreaterThan(face(2) * 3);
+
+		/* Drawn: the picture of a band, no rays. */
+		expect(await bake({Kind: 'galaxy', Seed: 'band', Style: 'drawn', Stars: 0, Galaxies: 0}, 'drawn')).toBeTruthy();
+		expect(banded.length).toBe(0);
+
+		engine.Renderer.Draw = draw;
+
+		expect(gl.getError()).toBe(gl.NO_ERROR);
 	});
 
 	it('hides the sun behind the clouds of a wet day, its glare and its rays too', async function () {
@@ -7853,7 +7954,8 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		function sky (kind, seed) {
 			scene.Cosmos = {Kind: kind, Seed: seed};
 
-			for (var i = 0; i < 110; i++) {
+			/* Till it is whole: a band of rays first, if it has one. */
+			for (var i = 0; i < 240 && (i < 2 || !engine.CosmosReady()); i++) {
 				inner.Rest = 0;
 
 				engine.Frame(now += 100);
@@ -7912,7 +8014,8 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		function mixed (told) {
 			scene.Cosmos = Object.assign({Kind: 'nebula', Seed: 'mix'}, told);
 
-			for (var i = 0; i < 110; i++) {
+			/* Till it is whole: a band of rays first, if it has one. */
+			for (var i = 0; i < 240 && (i < 2 || !engine.CosmosReady()); i++) {
 				inner.Rest = 0;
 
 				engine.Frame(now += 100);
@@ -8141,7 +8244,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		/* Clouds and the air of the picture take these numbers, not the height of whatever lights the land. */
 		expect(gameSceneSource).toContain('var tone = (0.5 + 0.7 * day) * Math.min(1, day * 1.6 + ground.MoonLit * 0.6);');
-		expect(lightingSource).toContain('* uAirLight + pow(uAirGlow, vec3(2.2)) * 0.3;');
+		expect(blueprintsSource).toContain('* uAirLight + pow(uAirGlow, vec3(2.2)) * 0.3;');
 		expect(lightingSource).not.toContain('clamp(uSun.y * 2.5');
 	});
 
@@ -8565,7 +8668,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		inner.Loop.Stop();
 
 		engine.Renderer.Program = function (vertex, fragment, behind) {
-			if (behind)
+			if (behind && fragment.indexOf('vec4 standing(') !== -1)
 				made.push(fragment.indexOf('vec4 standing(vec3 d, vec3 s) {\n\treturn vec4(0.0);') === -1 ? 'pillars' : 'plain');
 
 			return program.apply(this, arguments);

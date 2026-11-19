@@ -67,6 +67,7 @@ Socket(id, name) — где находится точка крепления м�
 | `BokehFocus` | `''` |
 | `Orbits` | `true` |
 | `Labels` | `true` |
+| `Graphs` | `null` |
 | `Clusters` | `true` |
 | `Details` | `true` |
 | `Background` | `true` |
@@ -201,4 +202,4 @@ Socket(id, name) — где находится точка крепления м�
 - [leaves out a pass switched off, takes the properties of its blocks, and adds a pass of a graph of its own after the picture](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L140) — `tests/regression/library-render-pipeline.test.js`
 - [draws the picture of the library when the Pipeline cannot be made, and tells it once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L202) — `tests/regression/library-render-pipeline.test.js`
 
-+303 ещё в тех же файлах
++318 ещё в тех же файлах

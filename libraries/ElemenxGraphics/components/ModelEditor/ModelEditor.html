@@ -18,6 +18,13 @@
 			<Button Size="small" Variant="ghost" Icon="grid" [Title]="$T('graphics.modelEditor.wire')" [Pressed]="Wire" (click)="WireToggled" />
 			<Button Size="small" Variant="ghost" Icon="shapes" [Title]="$T('graphics.modelEditor.edges')" [Pressed]="Edges" (click)="EdgesToggled" />
 		</div>
+		<div class="elemenx-model-editor-group" *if="Mode === 'graph'">
+			<div class="elemenx-model-editor-variant" [attribute.title]="$T('graphics.modelEditor.variant')"><span>{{$T('graphics.modelEditor.variant')}}</span><NumberInput Size="small" [Min]="0" [Step]="1" [Value]="Variant" (change)="VariantPicked($event)" /></div>
+		</div>
+		<div class="elemenx-model-editor-group end" *if="Mode === 'graph'">
+			<Button Size="small" Icon="check" [Label]="$T('graphics.modelEditor.applyGraph')" [Disabled]="!GraphModel" (click)="ApplyGraph" />
+			<Button Size="small" Variant="ghost" Icon="undo" [Label]="$T('graphics.modelEditor.resetGraph')" [Disabled]="!GraphModel" (click)="ResetGraph" />
+		</div>
 		<div class="elemenx-model-editor-group end" *if="Mode === 'roles'">
 			<Button Size="small" Variant="ghost" Icon="file-code" [Title]="$T('graphics.modelEditor.rolesExport')" (click)="RolesExported" />
 			<FileUpload class="elemenx-model-editor-import" Variant="inline" Accept="application/json,.json" [Label]="$T('graphics.modelEditor.rolesImport')" (change)="RolesImported($event)" />
@@ -73,6 +80,11 @@
 			<Button Size="small" Icon="add" [Label]="$T('graphics.modelEditor.partsCombine')" [Disabled]="!PartsWith" (click)="PartsCombine" />
 		</div>
 	</aside>
+	<aside class="elemenx-model-editor-side" *if="Mode === 'graph'" *resizable="{Edges: 'right', MinWidth: 150, MaxWidth: 560}" [style.width]="PaneWidth('side', 200)" (resizeend)="PaneResized('side', $event)">
+		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.graphModel')}}</div>
+		<Select class="elemenx-model-editor-graph-model" Size="small" [Label]="$T('graphics.modelEditor.graphModel')" [Options]="GraphOptions(Version)" [Value]="GraphModel" (change)="GraphPicked($event)" />
+		<p class="elemenx-model-editor-hint">{{$T('graphics.modelEditor.graphHint')}}</p>
+	</aside>
 	<aside class="elemenx-model-editor-side" *if="Mode === 'shape'" *resizable="{Edges: 'right', MinWidth: 150, MaxWidth: 560}" [style.width]="PaneWidth('side', 200)" (resizeend)="PaneResized('side', $event)">
 		<div class="elemenx-model-editor-title">{{$T('graphics.modelEditor.parts')}}</div>
 		<Tree [items]="Items(Version)" [expanded]="Opened(Version)" [value]="Selected" [Label]="$T('graphics.modelEditor.parts')" (select)="Chosen" />
@@ -96,7 +108,10 @@
 		</ContextMenu>
 		<ViewActions [Items]="Actions(Version, Selected, Mode)" [Hand]="Hand" (act)="Acted" (hand)="Handed" />
 	</div>
-	<aside class="elemenx-model-editor-inspector" *resizable="{Edges: 'left', MinWidth: 180, MaxWidth: 640}" [style.width]="PaneWidth('inspector', 260)" (resizeend)="PaneResized('inspector', $event)">
+	<aside class="elemenx-model-editor-graph" *if="Mode === 'graph'" *resizable="{Edges: 'left', MinWidth: 280, MaxWidth: 1400}" [style.width]="PaneWidth('graph', 560)" (resizeend)="PaneResized('graph', $event)">
+		<Blueprint *if="GraphValue(Version)" class="elemenx-model-editor-blueprint" Type="model" [value]="GraphValue(Version)" (change)="GraphChanged($event)" />
+	</aside>
+	<aside class="elemenx-model-editor-inspector" *if="Mode !== 'graph'" *resizable="{Edges: 'left', MinWidth: 180, MaxWidth: 640}" [style.width]="PaneWidth('inspector', 260)" (resizeend)="PaneResized('inspector', $event)">
 		<div class="elemenx-model-editor-title">{{Mode === 'roles' ? RoleSelected || $T('graphics.modelEditor.roles') : Selected || $T('graphics.modelEditor.whole')}}</div>
 		<div class="elemenx-model-editor-fields">
 			<p class="elemenx-model-editor-hint" *if="Mode === 'roles' && RoleHint">{{$T('graphics.modelEditor.roleHint')}}</p>

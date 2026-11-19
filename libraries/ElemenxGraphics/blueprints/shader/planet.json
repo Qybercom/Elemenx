@@ -1,0 +1,393 @@
+{
+	"version": 1,
+	"type": "planet",
+	"name": "Planet",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "place",
+			"type": "PlanetPlace",
+			"x": 40,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "surface",
+			"type": "PlanetSurface",
+			"x": 280,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "relief",
+			"type": "PlanetRelief",
+			"x": 280,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Lean",
+					"value": 2.5
+				},
+				{
+					"key": "Steep",
+					"value": 8
+				}
+			]
+		},
+		{
+			"id": "light",
+			"type": "PlanetLight",
+			"x": 520,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Shine",
+					"value": 12
+				},
+				{
+					"key": "Gloss",
+					"value": 70
+				}
+			]
+		},
+		{
+			"id": "heat",
+			"type": "PlanetHeat",
+			"x": 760,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Glow",
+					"value": 1.6
+				}
+			]
+		},
+		{
+			"id": "clouds",
+			"type": "PlanetClouds",
+			"x": 520,
+			"y": 380,
+			"properties": [
+				{
+					"key": "Tint",
+					"value": 0.12
+				},
+				{
+					"key": "Shadow",
+					"value": 0.7
+				},
+				{
+					"key": "Veil",
+					"value": 0.8
+				},
+				{
+					"key": "Haze",
+					"value": 0.55
+				},
+				{
+					"key": "DrawnVeil",
+					"value": 0.7
+				}
+			]
+		},
+		{
+			"id": "ring",
+			"type": "RingShadow",
+			"x": 520,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Strength",
+					"value": 0.9
+				}
+			]
+		},
+		{
+			"id": "shade",
+			"type": "PlanetShade",
+			"x": 1000,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "lights",
+			"type": "GlobeLights",
+			"x": 1240,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Red",
+					"value": 1
+				},
+				{
+					"key": "Green",
+					"value": 0.72
+				},
+				{
+					"key": "Blue",
+					"value": 0.38
+				},
+				{
+					"key": "Strength",
+					"value": 1.6
+				}
+			]
+		},
+		{
+			"id": "mix",
+			"type": "PlanetMix",
+			"x": 1480,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "rim",
+			"type": "PlanetRim",
+			"x": 1720,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Power",
+					"value": 3
+				}
+			]
+		},
+		{
+			"id": "highlight",
+			"type": "PlanetHighlight",
+			"x": 1960,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Power",
+					"value": 6
+				}
+			]
+		},
+		{
+			"id": "end",
+			"type": "PlanetEnd",
+			"x": 2200,
+			"y": 40,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "planet-link-0",
+			"p1": "place-out-Point",
+			"p2": "surface-in-Point",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-1",
+			"p1": "place-out-Normal",
+			"p2": "relief-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-2",
+			"p1": "place-out-Point",
+			"p2": "relief-in-Point",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-3",
+			"p1": "surface-out-Albedo",
+			"p2": "light-in-Albedo",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-4",
+			"p1": "surface-out-Gloss",
+			"p2": "light-in-Gloss",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-5",
+			"p1": "relief-out-Lit",
+			"p2": "light-in-Lit",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-6",
+			"p1": "place-out-View",
+			"p2": "light-in-View",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-7",
+			"p1": "place-out-World",
+			"p2": "light-in-World",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-8",
+			"p1": "light-out-Color",
+			"p2": "heat-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-9",
+			"p1": "place-out-Point",
+			"p2": "heat-in-Point",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-10",
+			"p1": "place-out-Normal",
+			"p2": "clouds-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-11",
+			"p1": "place-out-View",
+			"p2": "clouds-in-View",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-12",
+			"p1": "place-out-Point",
+			"p2": "clouds-in-Point",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-13",
+			"p1": "place-out-World",
+			"p2": "clouds-in-World",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-14",
+			"p1": "place-out-World",
+			"p2": "ring-in-World",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-15",
+			"p1": "heat-out-Color",
+			"p2": "shade-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-16",
+			"p1": "clouds-out-Shade",
+			"p2": "shade-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-17",
+			"p1": "ring-out-Shade",
+			"p2": "shade-in-Ring",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-18",
+			"p1": "shade-out-Color",
+			"p2": "lights-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-19",
+			"p1": "place-out-Point",
+			"p2": "lights-in-Point",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-20",
+			"p1": "place-out-Day",
+			"p2": "lights-in-Day",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-21",
+			"p1": "clouds-out-Veil",
+			"p2": "lights-in-Veil",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-22",
+			"p1": "lights-out-Color",
+			"p2": "mix-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-23",
+			"p1": "clouds-out-Color",
+			"p2": "mix-in-Clouds",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-24",
+			"p1": "clouds-out-Cover",
+			"p2": "mix-in-Cover",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-25",
+			"p1": "ring-out-Shade",
+			"p2": "mix-in-Ring",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-26",
+			"p1": "mix-out-Color",
+			"p2": "rim-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-27",
+			"p1": "place-out-Normal",
+			"p2": "rim-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-28",
+			"p1": "place-out-View",
+			"p2": "rim-in-View",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-29",
+			"p1": "place-out-Day",
+			"p2": "rim-in-Day",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-30",
+			"p1": "rim-out-Color",
+			"p2": "highlight-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-31",
+			"p1": "place-out-Normal",
+			"p2": "highlight-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-32",
+			"p1": "place-out-View",
+			"p2": "highlight-in-View",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-33",
+			"p1": "highlight-out-Color",
+			"p2": "end-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-34",
+			"p1": "clouds-out-Color",
+			"p2": "end-in-Clouds",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-35",
+			"p1": "clouds-out-Cover",
+			"p2": "end-in-Cover",
+			"kind": "value"
+		}
+	]
+}

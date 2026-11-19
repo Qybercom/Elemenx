@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { loadElemenx, resetDOM, tick, unique } from '../../../../tests/setup.js';
+import { loadElemenx, resetDOM, tick, unique, waitFor } from '../../../../tests/setup.js';
 import { Use } from '../../../../tests/library.js';
 
 var owned = [];
@@ -103,6 +103,17 @@ describe('Contract: Blueprint, the editor of a graph of the Blueprints Service',
 
 		element = editor(host);
 		blueprint = host.$Ref('Editor', true);
+
+		/*
+		 * The links drawn again once the blocks have their sizes (a ResizeObserver: at the next frame the page draws).
+		 * Regression (under load): read 30 ms after, before that frame, a link ended 190 pixels from its pin.
+		 */
+		await waitFor(function () {
+			var first = element.querySelector('path[data-link]');
+
+			return first && Math.abs(Number(first.getAttribute('d').split(' ')[1]) - (middle(pin(host, 'n-out-Value')).X - element.querySelector('.elemenx-blueprint-canvas').getBoundingClientRect().left)) < 1.5;
+		}, 10000);
+
 		paths = element.querySelectorAll('path[data-link]');
 
 		expect(element.querySelectorAll('.elemenx-blueprint-block').length).toBe(4);

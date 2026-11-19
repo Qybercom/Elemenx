@@ -1,0 +1,320 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "galaxy",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "in-x",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "in-z",
+			"type": "Input",
+			"x": 0,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "in-scale",
+			"type": "Input",
+			"x": 0,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Scale"
+				}
+			]
+		},
+		{
+			"id": "in-radius",
+			"type": "Input",
+			"x": 0,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Radius"
+				}
+			]
+		},
+		{
+			"id": "in-pitch",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Pitch"
+				}
+			]
+		},
+		{
+			"id": "in-phase",
+			"type": "Input",
+			"x": 0,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Phase"
+				}
+			]
+		},
+		{
+			"id": "in-arms",
+			"type": "Input",
+			"x": 0,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Arms"
+				}
+			]
+		},
+		{
+			"id": "in-seed",
+			"type": "Input",
+			"x": 0,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "in-shift",
+			"type": "Input",
+			"x": 0,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Shift"
+				}
+			]
+		},
+		{
+			"id": "turn",
+			"type": "GalaxyTurn",
+			"x": 300,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "bend",
+			"type": "GalaxyBend",
+			"x": 300,
+			"y": 320,
+			"properties": [
+				{
+					"key": "Bend",
+					"value": 0.5
+				}
+			]
+		},
+		{
+			"id": "wave",
+			"type": "GalaxyWave",
+			"x": 560,
+			"y": 180,
+			"properties": []
+		},
+		{
+			"id": "arm",
+			"type": "GalaxyArm",
+			"x": 800,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Low",
+					"value": 0.3
+				},
+				{
+					"key": "High",
+					"value": 1.7
+				},
+				{
+					"key": "Power",
+					"value": 2.2
+				}
+			]
+		},
+		{
+			"id": "result-turn",
+			"type": "Result",
+			"x": 1060,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Turn"
+				}
+			]
+		},
+		{
+			"id": "result-bend",
+			"type": "Result",
+			"x": 1060,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Bend"
+				}
+			]
+		},
+		{
+			"id": "result-wave",
+			"type": "Result",
+			"x": 1060,
+			"y": 320,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Wave"
+				}
+			]
+		},
+		{
+			"id": "result-arm",
+			"type": "Result",
+			"x": 1060,
+			"y": 460,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Arm"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "galaxy-link-0",
+			"p1": "in-x-out-Value",
+			"p2": "turn-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-1",
+			"p1": "in-z-out-Value",
+			"p2": "turn-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-2",
+			"p1": "in-scale-out-Value",
+			"p2": "turn-in-Scale",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-3",
+			"p1": "in-pitch-out-Value",
+			"p2": "turn-in-Pitch",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-4",
+			"p1": "in-phase-out-Value",
+			"p2": "turn-in-Phase",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-5",
+			"p1": "in-x-out-Value",
+			"p2": "bend-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-6",
+			"p1": "in-z-out-Value",
+			"p2": "bend-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-7",
+			"p1": "in-radius-out-Value",
+			"p2": "bend-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-8",
+			"p1": "in-seed-out-Value",
+			"p2": "bend-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-9",
+			"p1": "turn-out-Value",
+			"p2": "wave-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-10",
+			"p1": "bend-out-Value",
+			"p2": "wave-in-Bend",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-11",
+			"p1": "in-arms-out-Value",
+			"p2": "wave-in-Arms",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-12",
+			"p1": "in-shift-out-Value",
+			"p2": "wave-in-Shift",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-13",
+			"p1": "wave-out-Value",
+			"p2": "arm-in-Wave",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-14",
+			"p1": "turn-out-Value",
+			"p2": "result-turn-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-15",
+			"p1": "bend-out-Value",
+			"p2": "result-bend-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-16",
+			"p1": "wave-out-Value",
+			"p2": "result-wave-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-link-17",
+			"p1": "arm-out-Value",
+			"p2": "result-arm-in-Value",
+			"kind": "value"
+		}
+	]
+}

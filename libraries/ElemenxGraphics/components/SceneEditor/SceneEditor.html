@@ -47,7 +47,7 @@
 		</div>
 	</aside>
 	<div class="elemenx-scene-editor-view" #View>
-		<Scene #Scene Setting="ground" Paused="true" Labels="false" Details="false" Quality="medium" [loader]="true" [scale]="Space(Version) ? Scale : 'compressed'" (ready)="SceneReady" (shader)="ShaderTold" />
+		<Scene #Scene [graphs]="Graphs" Setting="ground" Paused="true" Labels="false" Details="false" Quality="medium" [loader]="true" [scale]="Space(Version) ? Scale : 'compressed'" (ready)="SceneReady" (shader)="ShaderTold" />
 		<ContextMenu #Context *if="!Playing" Sheet="auto" [Title]="Selected || $T('graphics.viewActions.menu')" [Items]="Actions(Version, Selected, Tool)" (open)="MenuOpened" (select)="MenuPicked">
 			<div class="elemenx-scene-editor-overlay" #Overlay tabindex="0" [attribute.aria-label]="Label || $T('graphics.sceneEditor.label')" (pointerdown)="TouchDown" (pointermove)="TouchMove" (pointerup)="TouchUp" (pointercancel)="TouchUp" (wheel)="Wheeled" (contextmenu)="Menu" (keydown)="Key" (keyup)="KeyUp" (blur)="Blurred">
 				<svg class="elemenx-scene-editor-gizmo" #Gizmo></svg>

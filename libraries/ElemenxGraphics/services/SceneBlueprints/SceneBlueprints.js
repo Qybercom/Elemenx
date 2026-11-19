@@ -19,15 +19,59 @@
  *   far it is turned round its axis (degrees), how much larger than its Radius (a shell that spreads), how much fine
  *   grain it shows near, the tints of its outer and inner colors; Turbulence, Thickness and Hollow are of its shape (how
  *   torn, how thick its shell, how wide the hollow in its heart), taken at its time 0 (its shape is made once of them).
+ * - The kind bake: the surface of a body of noise (not of ScenePlanet) baked into its two cubes, blueprintBake(p, inout
+ *   surface, inout sky) of the shader Bake of a Scene (BakeGraph): surface its ground (rgb) and gloss (a), sky its clouds
+ *   (r), glow (g) and sparks (b). Its inputs are Input blocks (PX, PY, PZ: the direction; Seed, Ocean, Cratered, Kind, Ice,
+ *   Clouds), its numbers the blocks of a generator, so what comes to BakeLand (Land, H) is read in the page too: BakeLandGraph(graph)
+ *   that part of it as a generator (its result Land), the ground of the body (SceneTerrainGenerator.Sphere) the very land its
+ *   picture shows. Its other blocks: BakeRocky, BakeIcy, BakeLava, BakeGas (the surface of each kind: rgb and gloss), BakeKind
+ *   (the one of the kind of the body), BakeIce (its caps), BakeClouds and BakeEnd.
+ * - The kind weather: what the weather and the year do to the surface of a thing, the functions its shaders (Pbr, Solid)
+ *   call (WeatherGraph of a Scene): WeatherSeason (weather_season(inout color, tree, at, turn): the leaves turn, fall,
+ *   blossom), WeatherSnow (weather_snow_<For>(up, at): how much snow lies, For things, solid or plants), WeatherDissolve
+ *   (weather_dissolve(world, inout color): a body beamed away), WeatherPuddles (weather_puddles(wet, level, at): water
+ *   standing), WeatherEnd (they all come to it). Their numbers (thresholds, scales of their noise) are their properties.
+ * - The kind air: the air between the eye and what it sees, functions of the shaders (AirGraph of a Scene), each block
+ *   of them for those that ask (#define ENX_AIR_<FOR> before the place of the graph): AirHaze (air_haze_<For>(world), how
+ *   much of it, air_horizon_<For>(light), its color; For globe: the things and the ground of a globe, ground: the land
+ *   and the water of a scene), AirFog (the pass Air: air_fog(place, far, way) of a fog that lies low and of the sheets of
+ *   rain, air_light(whiten), air_far(way), air_veil(ray)), AirUnder (air_under(color, place, depth): the eye under the
+ *   sea), AirEnd. Their numbers are their properties. Chunk(context, name, lines, guard): the function of a block a part
+ *   of the shaders of Renderer (its name of its text), asked by the block; guard: the name it stands under (#ifdef), or
+ *   names, any of them (#if defined).
+ * - The kind clouds: the clouds of the shaders (CloudsGraph of a Scene), each block of them for those that ask (#define
+ *   ENX_CLOUDS_<FOR>): CloudCover (clouds_cover: the cover of the weather of a planet at a place, its billows), CloudGlobe
+ *   (cloudSeen, cloudAt: the globe and the shadows of its clouds), CloudShell (shellThick: round the eye over a surface),
+ *   CloudLayer (lobe, thick: the layer of a scene, of a cheap 3D noise), CloudsEnd.
+ * - The weather of a planet as blocks of numbers of a generator (SceneForecast, its Kernel: the same in the page and in a
+ *   shader): ForecastStorms, ForecastFronts, ForecastHeaps, ForecastCirrus, ForecastRain, ForecastShroud; LibraryForecast()
+ *   the graph of them of the library (blueprints/shader/forecast), the WEATHER of a Scene (ForecastGraph).
+ * - The arms of a galaxy as blocks of numbers of a generator (GalaxyData.Kernel: the page and a shader alike): GalaxyTurn,
+ *   GalaxyBend, GalaxyWave, GalaxyArm; LibraryGalaxy() the graph of them of the library (blueprints/shader/galaxy),
+ *   Galaxy(graph) {Of, Arm, GLSL (vec4 galaxy_spiral(...))}: its stars, its picture, the band of it from a system alike.
+ * - The kind cosmos: the sky far behind a system (CosmosGraph of a Scene), its blocks the parts of that sky: see Cosmoses;
+ *   LibraryCosmos() the graph of the library (blueprints/shader/cosmos).
+ * - The kind ring: a ring round a body (RingGraph of a Scene), its bands, its gaps, its colors and its light as blocks:
+ *   see Rings; LibraryRing() the graph of the library (blueprints/shader/ring).
+ * - The kind planet: a globe from far (PlanetGraph of a Scene): its picture lit, its clouds and their shadows, the shadow
+ *   of its ring, its towns at night, its air at its edge as blocks: see Planets; LibraryPlanet() the graph of the library
+ *   (blueprints/shader/planet). Painted(kind, end, head): such a kind of a function of a body in a shader.
+ * - The shape of a lightning, one for the bolt of a storm (SceneLighting) and the one of an effect (SceneEffects, kind
+ *   bolt): a generator of the jag of each of its steps (Step, Seed: X and Z, -0.5 to 0.5), its parameters Steps (of its
+ *   way), Wide (a jag to its length), Fork (the step a branch leaves at), ForkSteps, ForkDown and ForkWide (the branch:
+ *   its steps, how far down and how wide each, to the bolt). LibraryBolt() the one of the library (blueprints/shader/bolt);
+ *   Bolt(graph) {Jag(step, seed) ([X, Z]), Steps.. ForkWide, GLSL (the text of vec2 bolt_jag(float step, float seed),
+ *   the shape in a shader: of a hash of a sine, its floats part from the numbers of the page where the sine is large,
+ *   the way the same)}, made once a graph.
  */
 Elemenx.Service('SceneBlueprints', {
 	$Meta: {
 		Description: 'What a Scene adds to Blueprints: the graphs of effects and the blocks of the passes of its picture.',
-		Methods: []
+		Methods: ['BakeLandGraph(graph)', 'LibraryBolt()', 'Bolt(graph)', 'Chunk(context, name, lines, guard)', 'LibraryForecast()', 'LibraryGalaxy()', 'Galaxy(graph)', 'LibraryCosmos()', 'LibraryRing()', 'Painted(kind, end, head)', 'LibraryPlanet()']
 	},
 
 	$Provides: {
-		Blueprints: {Graphs: ['effect', 'water', 'sky', 'land', 'star', 'nebula'], Nodes: ['Star', 'Nebula', 'LandPoint', 'LandMaterial', 'LandGrain', 'LandPools', 'LandAlbedo', 'LandPaint', 'LandLight', 'LandCaustics', 'LandSheen', 'LandCompose', 'LandEnd', 'SkyRay', 'SkyDay', 'SkyAir', 'SkyDusk', 'SkyHalo', 'SkyPink', 'SkyWisps', 'SkyCover', 'SkyEclipse', 'SkyTowns', 'SkyAurora', 'SkyRainbow', 'SkyMoonHaze', 'SkyMoon', 'SkyCompose', 'SkyEnd', 'Place', 'View', 'Far', 'Flow', 'Sun', 'Waves', 'WaterNormal', 'Fresnel', 'Glints', 'Sky', 'Body', 'Foam', 'Under', 'Absorb', 'Below', 'Reflection', 'WaterFog', 'Water', 'Layer', 'Effect', 'Scene', 'Clouds', 'Occlusion', 'Air', 'Frames', 'Mirror', 'Rays', 'Exposure', 'Bokeh', 'Bloom', 'Picture', 'Shader']}
+		Blueprints: {Graphs: ['effect', 'water', 'sky', 'land', 'star', 'nebula', 'bake', 'weather', 'air', 'clouds', 'cosmos', 'ring', 'planet'], Nodes: ['PlanetPlace', 'PlanetSurface', 'PlanetRelief', 'PlanetLight', 'PlanetHeat', 'PlanetClouds', 'RingShadow', 'PlanetShade', 'GlobeLights', 'PlanetMix', 'PlanetRim', 'PlanetHighlight', 'PlanetEnd', 'CloudShade', 'RingPlace', 'RingBands', 'RingGap', 'RingColor', 'RingLight', 'RingEnd', 'CosmosRay', 'CosmosGas', 'CosmosPlane', 'CosmosGlow', 'CosmosDust', 'CosmosBand', 'CosmosBursts', 'CosmosGalaxies', 'CosmosPillars', 'CosmosStars', 'CosmosBeacon', 'CosmosClusters', 'CosmosEnd', 'GalaxyTurn', 'GalaxyBend', 'GalaxyWave', 'GalaxyArm', 'ForecastStorms', 'ForecastFronts', 'ForecastHeaps', 'ForecastCirrus', 'ForecastRain', 'ForecastShroud', 'CloudCover', 'CloudGlobe', 'CloudShell', 'CloudLayer', 'CloudsEnd', 'AirHaze', 'AirFog', 'AirUnder', 'AirEnd', 'WeatherSeason', 'WeatherSnow', 'WeatherDissolve', 'WeatherPuddles', 'WeatherEnd', 'BakeLand', 'BakeRocky', 'BakeIcy', 'BakeLava', 'BakeGas', 'BakeKind', 'BakeIce', 'BakeClouds', 'BakeEnd', 'Star', 'Nebula', 'LandPoint', 'LandMaterial', 'LandGrain', 'LandPools', 'LandAlbedo', 'LandPaint', 'LandLight', 'LandCaustics', 'LandSheen', 'LandCompose', 'LandEnd', 'SkyRay', 'SkyDay', 'SkyAir', 'SkyDusk', 'SkyHalo', 'SkyPink', 'SkyWisps', 'SkyCover', 'SkyEclipse', 'SkyTowns', 'SkyAurora', 'SkyRainbow', 'SkyMoonHaze', 'SkyMoon', 'SkyCompose', 'SkyEnd', 'Place', 'View', 'Far', 'Flow', 'Sun', 'Waves', 'WaterNormal', 'Fresnel', 'Glints', 'Sky', 'Body', 'Foam', 'Under', 'Absorb', 'Below', 'Reflection', 'WaterFog', 'Water', 'Layer', 'Effect', 'Scene', 'Clouds', 'Occlusion', 'Air', 'Frames', 'Mirror', 'Rays', 'Exposure', 'Bokeh', 'Bloom', 'Picture', 'Shader']}
 	},
 
 	$OnCreate: function () {
@@ -38,6 +82,15 @@ Elemenx.Service('SceneBlueprints', {
 		this.Waters();
 		this.Skies();
 		this.Lands();
+		this.Bakes();
+		this.Weathers();
+		this.Airs();
+		this.Clouds();
+		this.Forecasts();
+		this.Galaxies();
+		this.Cosmoses();
+		this.Rings();
+		this.Planets();
 	},
 
 	/*
@@ -489,7 +542,7 @@ Elemenx.Service('SceneBlueprints', {
 			return {Color: name + '_color'};
 		});
 
-		node('WaterFog', [{Key: 'Color', Type: 'vec3', Value: 0}], [{Key: 'Color', Type: 'vec3'}], 'mix({Color}, mix(uAir.rgb, vec3(1.0), 0.45) * clamp(uSun.y * 3.0 + 0.3, 0.0, 1.0), 1.0 - exp(-length(vWorld) / uFog))');
+		node('WaterFog', [{Key: 'Color', Type: 'vec3', Value: 0}], [{Key: 'Color', Type: 'vec3'}], 'mix({Color}, air_horizon_ground(clamp(uSun.y * 3.0 + 0.3, 0.0, 1.0)), air_haze_ground(vWorld))');
 
 		/* The end: the color of the water and how much of it covers what is under it. */
 		blueprints.Node('Water', {Graphs: water, Group: 'output', Inputs: [{Key: 'Color', Type: 'vec3', Default: 'color'}, {Key: 'Alpha', Type: 'float', Default: 'alpha'}], Outputs: [],
@@ -689,7 +742,7 @@ Elemenx.Service('SceneBlueprints', {
 			context.Lines.push('if (uAurora.x > 0.0 && ' + inputs.Height + ' > 0.0) {');
 			context.Lines.push('\tfloat ' + name + '_t = uAurora.y * 0.05;');
 			/* Each pixel steps from a height of its own: no bands of the ten steps, a fine grain instead. */
-			context.Lines.push('\tfloat ' + name + '_jit = fract(sin(dot(' + ray + '.xz * 813.0 + ' + ray + '.y * 97.0 + fract(uAurora.y * 7.31), vec2(12.9898, 78.233))) * 43758.5453);');
+			context.Lines.push('\tfloat ' + name + '_jit = enx_white2(' + ray + '.xz * 813.0 + ' + ray + '.y * 97.0 + fract(uAurora.y * 7.31));');
 			context.Lines.push('\tfor (int j = 0; j < 16; j++) {');
 			context.Lines.push('\t\tfloat up = (float(j) + ' + name + '_jit) / 16.0;');
 			context.Lines.push('\t\tvec2 q = ' + ray + '.xz / max(' + ray + '.y, 0.03) * (1.0 + up * 1.4) * 0.3;');
@@ -769,6 +822,1403 @@ Elemenx.Service('SceneBlueprints', {
 				return {Result: '\tcolor = ' + context.Inputs.Color + ';\n\talpha = ' + context.Inputs.Alpha + ';'};
 			}
 		});
+	},
+
+	/*
+	 * The sky far behind a system as a graph (the kind cosmos: CosmosGraph of a Scene, SceneCosmos): a function of GLSL in
+	 * the shader that bakes it into a cube (blueprintCosmos(d, s, inout color): d the way, s the seed), its blocks the parts
+	 * of that sky, each its very GLSL, in their order: CosmosRay (the way and the seed), CosmosGas (how thick its gas is, how
+	 * lit, the great star, its knots), CosmosPlane (the band of a galaxy drawn: how high a way stands, how much band),
+	 * CosmosGlow (the deep of the sky, the gas glowing), CosmosDust (its lanes), CosmosBand (the band of the galaxy the system
+	 * lies in: of rays through it as it is, or drawn; what of the far sky it lets through), CosmosBursts (rays out of the
+	 * gas), CosmosGalaxies (those far off, seen through what is near), CosmosPillars, CosmosStars, CosmosBeacon (the young
+	 * stars that light the gas), CosmosClusters (globular ones); CosmosEnd is its end. LibraryCosmos() the graph of them.
+	 */
+	Cosmoses: function () {
+		var blueprints = this.$Service('Blueprints');
+		var shaders = this.$Service('BlueprintShaders');
+		var cosmos = ['cosmos'];
+
+		function pin (key, type, fallback) {
+			return {Key: key, Type: type, Default: fallback};
+		}
+
+		function out (key, type) {
+			return {Key: key, Type: type || 'float'};
+		}
+
+		var ray = pin('Ray', 'vec3', 'd');
+		var seed = pin('Seed', 'vec3', 's');
+		var color = pin('Color', 'vec3', 'vec3(0.0)');
+
+		/*
+		 * A block of one of the parts (a function of the shader): its inputs in, its outputs of the variables it writes; one of
+		 * a color the function gives it back.
+		 */
+		function node (type, inputs, outputs, name, gives) {
+			blueprints.Node(type, {Graphs: cosmos, Group: inputs.length ? 'cosmos' : 'input', Inputs: inputs, Outputs: outputs, GLSL: function (context) {
+				var prefix = 'c' + context.Index + '_';
+				var args = inputs.map(function (input) {
+					return context.Inputs[input.Key];
+				});
+				var made = {};
+
+				outputs.forEach(function (output) {
+					if (output.Key !== gives)
+						context.Lines.push(output.Type + ' ' + prefix + output.Key + ';');
+
+					made[output.Key] = prefix + output.Key;
+				});
+
+				args = args.concat(outputs.filter(function (output) {
+					return output.Key !== gives;
+				}).map(function (output) {
+					return prefix + output.Key;
+				}));
+
+				context.Lines.push((gives ? 'vec3 ' + prefix + gives + ' = ' : '') + name + '(' + args.join(', ') + ');');
+
+				return made;
+			}});
+		}
+
+		blueprints.Graph('cosmos', {
+			End: 'CosmosEnd',
+			Text: function (glsl) {
+				var written = shaders.Written(glsl);
+				var made;
+
+				if (!/\bvoid\s+blueprintCosmos\s*\(/.test(glsl))
+					throw new Error('Elemenx Blueprints: a sky far off written by hand has no blueprintCosmos');
+
+				made = {Function: written.Body, Needs: written.Needs, Uniforms: written.Uniforms, Textures: [], Parameters: written.Parameters};
+				made.Values = shaders.Values(made);
+
+				return made;
+			},
+			Compile: function (plan) {
+				var shader = shaders.Shader(plan, 'cosmos');
+				var made = {
+					Function: ['void blueprintCosmos(vec3 d, vec3 s, inout vec3 color) {']
+						.concat(shader.Lines.map(function (line) {
+							return '\t' + line;
+						}))
+						.concat([shader.Result.CosmosEnd || '', '}'])
+						.filter(function (line) {
+							return line !== '';
+						})
+						.join('\n'),
+					Needs: shader.Needs,
+					Uniforms: shader.Uniforms,
+					Textures: [],
+					Sources: shader.Sources
+				};
+
+				made.Values = shaders.Values(made);
+
+				return made;
+			}
+		});
+
+		/* The way of a texel of the cube and the seed of the sky. */
+		blueprints.Node('CosmosRay', {Graphs: cosmos, Group: 'input', Inputs: [], Outputs: [out('Ray', 'vec3'), out('Seed', 'vec3')], GLSL: function () {
+			return {Ray: 'd', Seed: 's'};
+		}});
+
+		node('CosmosGas', [ray, seed], [out('Gas'), out('Lit'), out('Near'), out('Core'), out('Reach'), out('Knots')], 'cosmosGas');
+		node('CosmosPlane', [ray], [out('High'), out('Disc')], 'cosmosPlane');
+		node('CosmosGlow', [ray, seed, pin('Gas', 'float', '0.0'), pin('Lit', 'float', '0.0'), pin('Core', 'float', '0.0'), pin('Reach', 'float', '0.0'), pin('Knots', 'float', '0.0')], [out('Color', 'vec3')], 'cosmosGlow', 'Color');
+		node('CosmosDust', [ray, seed, color, pin('Gas', 'float', '0.0'), pin('High', 'float', '1.0')], [out('Color', 'vec3'), out('Dust')], 'cosmosDust', 'Color');
+		node('CosmosBand', [ray, seed, color, pin('Disc', 'float', '0.0'), pin('High', 'float', '1.0')], [out('Color', 'vec3'), out('Through')], 'cosmosBand', 'Color');
+		node('CosmosBursts', [ray, seed, color, pin('Dust', 'float', '0.0')], [out('Color', 'vec3')], 'cosmosBursts', 'Color');
+		node('CosmosGalaxies', [ray, color, pin('Gas', 'float', '0.0'), pin('Dust', 'float', '0.0'), pin('Through', 'float', '1.0')], [out('Color', 'vec3')], 'cosmosGalaxies', 'Color');
+		node('CosmosPillars', [ray, seed, color], [out('Color', 'vec3')], 'cosmosPillars', 'Color');
+		node('CosmosStars', [ray, color, pin('Knots', 'float', '0.0'), pin('Disc', 'float', '0.0'), pin('Dust', 'float', '0.0')], [out('Color', 'vec3')], 'cosmosStars', 'Color');
+		node('CosmosBeacon', [ray, color, pin('Near', 'float', '0.0')], [out('Color', 'vec3')], 'cosmosBeacon', 'Color');
+		node('CosmosClusters', [ray, color], [out('Color', 'vec3')], 'cosmosClusters', 'Color');
+
+		/* The end: the color of the sky that way. */
+		blueprints.Node('CosmosEnd', {Graphs: cosmos, Group: 'output', Inputs: [pin('Color', 'vec3', 'color')], Outputs: [],
+			GLSL: function (context) {
+				return {Result: '\tcolor = ' + context.Inputs.Color + ';'};
+			}
+		});
+	},
+
+	/* The sky far behind a system of the library (blueprints/shader/cosmos): see the header. */
+	LibraryCosmos: function () {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/cosmos'));
+	},
+
+	/*
+	 * A ring round a body as a graph (the kind ring: RingGraph of a Scene): a function of GLSL in the shader of rings
+	 * (blueprintRing(r, world, normal, inout color, inout alpha): r how far across the ring, 0 at its inner edge and 1 at its
+	 * outer), which reads what that shader has (uColors its four colors, uSeed, the lights and their shadows). Its blocks in
+	 * their order: RingPlace (R, World, Normal, Seed), RingBands (its bands, wide and fine, of WideScale and FineScale across
+	 * it: how thick it is, Base and as much as Wide and Fine of them, thinned at its edges, Inner and Outer), RingGap (a gap:
+	 * At, Width, Depth; as many as there are, each after the last), RingColor (its colors by its bands, Mix of the fine),
+	 * RingLight (lit from both sides as its dust scatters it: Back of the light whichever way, Side more as it faces it);
+	 * RingEnd its end. LibraryRing() the one of the library (blueprints/shader/ring).
+	 */
+	Rings: function () {
+		var blueprints = this.$Service('Blueprints');
+		var shaders = this.$Service('BlueprintShaders');
+		var ring = ['ring'];
+
+		function pin (key, type, fallback) {
+			return {Key: key, Type: type, Default: fallback};
+		}
+
+		function out (key, type) {
+			return {Key: key, Type: type || 'float'};
+		}
+
+		function number (key, value) {
+			return {Key: key, Type: 'number', Value: value};
+		}
+
+		function literal (context, key) {
+			return shaders.Literal(Number(context.Properties[key]), 'float');
+		}
+
+		blueprints.Graph('ring', {
+			End: 'RingEnd',
+			Text: function (glsl) {
+				var written = shaders.Written(glsl);
+				var made;
+
+				if (!/\bvoid\s+blueprintRing\s*\(/.test(glsl))
+					throw new Error('Elemenx Blueprints: a ring written by hand has no blueprintRing');
+
+				made = {Function: written.Body, Needs: written.Needs, Uniforms: written.Uniforms, Textures: [], Parameters: written.Parameters};
+				made.Values = shaders.Values(made);
+
+				return made;
+			},
+			Compile: function (plan) {
+				var shader = shaders.Shader(plan, 'ring');
+				var made = {
+					Function: ['void blueprintRing(float r, vec3 world, vec3 normal, inout vec3 color, inout float alpha) {']
+						.concat(shader.Lines.map(function (line) {
+							return '\t' + line;
+						}))
+						.concat([shader.Result.RingEnd || '', '}'])
+						.filter(function (line) {
+							return line !== '';
+						})
+						.join('\n'),
+					Needs: shader.Needs,
+					Uniforms: shader.Uniforms,
+					Textures: [],
+					Sources: shader.Sources
+				};
+
+				made.Values = shaders.Values(made);
+
+				return made;
+			}
+		});
+
+		/* Where on the ring: how far across it, the point, its normal, the seed of the ring. */
+		blueprints.Node('RingPlace', {Graphs: ring, Group: 'input', Inputs: [], Outputs: [out('R'), out('World', 'vec3'), out('Normal', 'vec3'), out('Seed')], GLSL: function () {
+			return {R: 'r', World: 'world', Normal: 'normal', Seed: 'uSeed'};
+		}});
+
+		blueprints.Node('RingBands', {Graphs: ring, Group: 'ring', Properties: [number('WideScale', 22), number('FineScale', 140), number('Base', 0.2), number('Wide', 0.55), number('Fine', 0.25), number('Inner', 0.05), number('Outer', 0.92)], Inputs: [pin('R', 'float', 'r'), pin('Seed', 'float', 'uSeed')], Outputs: [out('Wide'), out('Fine'), out('Density')], GLSL: function (context) {
+			var name = 'r' + context.Index;
+			var inputs = context.Inputs;
+
+			context.Need('Noise');
+			context.Lines.push('float ' + name + '_wide = noise3(vec3(' + inputs.R + ' * ' + literal(context, 'WideScale') + ', ' + inputs.Seed + ', 0.5));');
+			context.Lines.push('float ' + name + '_fine = noise3(vec3(' + inputs.R + ' * ' + literal(context, 'FineScale') + ', ' + inputs.Seed + ', 3.5));');
+			context.Lines.push('float ' + name + '_density = (' + literal(context, 'Base') + ' + ' + literal(context, 'Wide') + ' * ' + name + '_wide + ' + literal(context, 'Fine') + ' * ' + name + '_fine) * smoothstep(0.0, ' + literal(context, 'Inner') + ', ' + inputs.R + ') * (1.0 - smoothstep(' + literal(context, 'Outer') + ', 1.0, ' + inputs.R + '));');
+
+			return {Wide: name + '_wide', Fine: name + '_fine', Density: name + '_density'};
+		}});
+
+		blueprints.Node('RingGap', {Graphs: ring, Group: 'ring', Properties: [number('At', 0.62), number('Width', 0.015), number('Depth', 0.9)], Inputs: [pin('R', 'float', 'r'), pin('Density', 'float', '1.0')], Outputs: [out('Density')], GLSL: function (context) {
+			var name = 'r' + context.Index;
+			var width = literal(context, 'Width');
+
+			/*
+			 * Never narrower than a pixel and a half across the ring, as dark on the whole (its depth less as it is wider).
+			 * Regression: a gap of 0.005 far off was a line of dashes, broken where it was finer than a pixel.
+			 */
+			context.Lines.push('float ' + name + '_wide = max(' + width + ', fwidth(' + context.Inputs.R + ') * 1.5);');
+			context.Lines.push('float ' + name + '_density = ' + context.Inputs.Density + ' * (1.0 - (1.0 - smoothstep(0.0, ' + name + '_wide, abs(' + context.Inputs.R + ' - ' + literal(context, 'At') + '))) * ' + literal(context, 'Depth') + ' * ' + width + ' / ' + name + '_wide);');
+
+			return {Density: name + '_density'};
+		}});
+
+		blueprints.Node('RingColor', {Graphs: ring, Group: 'ring', Properties: [number('Mix', 0.6)], Inputs: [pin('Wide', 'float', '0.5'), pin('Fine', 'float', '0.5')], Outputs: [out('Color', 'vec3')], GLSL: function (context) {
+			var inputs = context.Inputs;
+
+			return {Color: 'mix(mix(uColors[0], uColors[1], ' + inputs.Wide + '), mix(uColors[2], uColors[3], ' + inputs.Fine + '), ' + inputs.Fine + ' * ' + literal(context, 'Mix') + ')'};
+		}});
+
+		blueprints.Node('RingLight', {Graphs: ring, Group: 'ring', Properties: [number('Back', 0.35), number('Side', 0.65)], Inputs: [pin('Color', 'vec3', 'vec3(1.0)'), pin('World', 'vec3', 'world'), pin('Normal', 'vec3', 'normal')], Outputs: [out('Color', 'vec3')], GLSL: function (context) {
+			var name = 'r' + context.Index;
+			var inputs = context.Inputs;
+
+			context.Lines.push('vec3 ' + name + '_total = uAmbient;');
+			context.Lines.push('for (int i = 0; i < 4; i++) {');
+			context.Lines.push('\tif (i >= uLightCount) break;');
+			context.Lines.push('\t' + name + '_total += uLightColors[i] * (' + literal(context, 'Back') + ' + ' + literal(context, 'Side') + ' * abs(dot(' + inputs.Normal + ', normalize(uLightPositions[i] - ' + inputs.World + ')))) * shadow(' + inputs.World + ', uLightPositions[i]);');
+			context.Lines.push('}');
+
+			return {Color: '(' + inputs.Color + ' * ' + name + '_total)'};
+		}});
+
+		/* The end: the color of the ring there and how much of it hides what lies behind. */
+		blueprints.Node('RingEnd', {Graphs: ring, Group: 'output', Inputs: [pin('Color', 'vec3', 'color'), pin('Alpha', 'float', 'alpha')], Outputs: [],
+			GLSL: function (context) {
+				return {Result: '\tcolor = ' + context.Inputs.Color + ';\n\talpha = ' + context.Inputs.Alpha + ';'};
+			}
+		});
+	},
+
+	/* A ring of the library (blueprints/shader/ring): see Rings. */
+	LibraryRing: function () {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/ring'));
+	},
+
+	/*
+	 * A kind of graph of a function of a body painted in a shader (planet...): its hook, End its end, its function made of
+	 * the lines of its blocks (or written by hand with that function).
+	 */
+	Painted: function (kind, end, head) {
+		var blueprints = this.$Service('Blueprints');
+		var shaders = this.$Service('BlueprintShaders');
+		var name = /void\s+(\w+)\s*\(/.exec(head)[1];
+
+		blueprints.Graph(kind, {
+			End: end,
+			Text: function (glsl) {
+				var written = shaders.Written(glsl);
+				var made;
+
+				if (glsl.indexOf(name + '(') === -1)
+					throw new Error('Elemenx Blueprints: a ' + kind + ' written by hand has no ' + name);
+
+				made = {Function: written.Body, Needs: written.Needs, Uniforms: written.Uniforms, Textures: [], Parameters: written.Parameters};
+				made.Values = shaders.Values(made);
+
+				return made;
+			},
+			Compile: function (plan) {
+				var shader = shaders.Shader(plan, kind);
+				var made = {
+					Function: [head + ' {']
+						.concat(shader.Lines.map(function (line) {
+							return '\t' + line;
+						}))
+						.concat([shader.Result[end] || '', '}'])
+						.filter(function (line) {
+							return line !== '';
+						})
+						.join('\n'),
+					Needs: shader.Needs,
+					Uniforms: shader.Uniforms,
+					Textures: [],
+					Sources: shader.Sources
+				};
+
+				made.Values = shaders.Values(made);
+
+				return made;
+			}
+		});
+	},
+
+	/*
+	 * A globe from far as a graph (the kind planet: PlanetGraph of a Scene): blueprintPlanet(n, v, p, inout color, inout
+	 * alpha) in the Planet shader (n its normal, v the way to the eye, p the place on its body), which reads what that shader
+	 * has (uGround its picture baked, uSky its clouds and heat baked, uWeather, uLights, uRelief, uAtmosphere, uHighlight).
+	 * Its blocks: PlanetPlace (Normal, View, Point, World, Day: how much of a sun lights it there), PlanetSurface (its
+	 * picture: Albedo, Gloss), PlanetRelief (its ranges for the light: Lean the slopes of its picture, Steep how much steeper),
+	 * PlanetLight (Shine and Gloss its highlight), PlanetHeat (the glow of lava, Glow), PlanetClouds (of its weather or drawn:
+	 * Cover, Color, Shade under them, Veil over its lights; Tint, Haze, Shadow, Veil, DrawnVeil), RingShadow (of its ring,
+	 * the one of the ring graph, its gaps alike: Strength), PlanetShade, GlobeLights (its towns at night, a block of the
+	 * ground of a globe too: Red, Green, Blue, Strength), PlanetMix (its clouds over it), PlanetRim (its air at its edge,
+	 * Power), PlanetHighlight (Power), PlanetEnd (the clouds alone where the shader draws only them: uCloudsOnly).
+	 * LibraryPlanet() the one of the library (blueprints/shader/planet).
+	 */
+	Planets: function () {
+		var blueprints = this.$Service('Blueprints');
+		var shaders = this.$Service('BlueprintShaders');
+		var planet = ['planet'];
+
+		function pin (key, type, fallback) {
+			return {Key: key, Type: type, Default: fallback};
+		}
+
+		function out (key, type) {
+			return {Key: key, Type: type || 'float'};
+		}
+
+		function number (key, value) {
+			return {Key: key, Type: 'number', Value: value};
+		}
+
+		function literal (context, key) {
+			return shaders.Literal(Number(context.Properties[key]), 'float');
+		}
+
+		/* A block of lines: its name of the index of the block, its inputs and literal of its properties at hand. */
+		function node (type, graphs, properties, inputs, outputs, lines) {
+			blueprints.Node(type, {Graphs: graphs, Group: inputs.length ? graphs[0] : 'input', Properties: properties, Inputs: inputs, Outputs: outputs, GLSL: function (context) {
+				return lines(context, 'g' + context.Index + '_', context.Inputs, function (key) {
+					return literal(context, key);
+				});
+			}});
+		}
+
+		var normal = pin('Normal', 'vec3', 'n');
+		var view = pin('View', 'vec3', 'v');
+		var point = pin('Point', 'vec3', 'p');
+		var world = pin('World', 'vec3', 'vWorld');
+		var color = pin('Color', 'vec3', 'color');
+
+		this.Painted('planet', 'PlanetEnd', 'void blueprintPlanet(vec3 n, vec3 v, vec3 p, inout vec3 color, inout float alpha)');
+
+		node('PlanetPlace', planet, [], [], [out('Normal', 'vec3'), out('View', 'vec3'), out('Point', 'vec3'), out('World', 'vec3'), out('Day')], function () {
+			return {Normal: 'n', View: 'v', Point: 'p', World: 'vWorld', Day: 'daylight(vWorld, n)'};
+		});
+
+		node('PlanetSurface', planet, [], [point], [out('Albedo', 'vec3'), out('Gloss')], function (context, name, inputs) {
+			context.Lines.push('vec4 ' + name + 'surface = texture(uGround, ' + inputs.Point + ');');
+
+			return {Albedo: name + 'surface.rgb', Gloss: name + 'surface.a'};
+		});
+
+		/* Its ranges lit from orbit: the slopes made Steep times steeper, as the eye reads mountains by their light from space. */
+		node('PlanetRelief', planet, [number('Lean', 2.5), number('Steep', 8)], [normal, point], [out('Lit', 'vec3')], function (context, name, inputs, value) {
+			context.Lines.push('vec3 ' + name + 'lit = ' + inputs.Normal + ';');
+			context.Lines.push('if (uReliefOn > 0.5) {');
+			context.Lines.push('\tvec3 ' + name + 'lean = (texture(uRelief, ' + inputs.Point + ').xyz - 0.5) / ' + value('Lean') + ';');
+			context.Lines.push('\t' + name + 'lit = normalize(mat3(uModel) * normalize(' + inputs.Point + ' + ' + name + 'lean * ' + value('Steep') + '));');
+			context.Lines.push('}');
+
+			return {Lit: name + 'lit'};
+		});
+
+		node('PlanetLight', planet, [number('Shine', 12), number('Gloss', 70)], [pin('Albedo', 'vec3', 'vec3(0.5)'), pin('Gloss', 'float', '0.0'), pin('Lit', 'vec3', 'n'), view, world], [out('Color', 'vec3')], function (context, name, inputs, value) {
+			context.Lines.push('vec3 ' + name + 'light = lighting(' + inputs.World + ', ' + inputs.Lit + ', ' + inputs.View + ', ' + value('Shine') + ' + ' + inputs.Gloss + ' * ' + value('Gloss') + ', ' + inputs.Gloss + ');');
+
+			return {Color: '(' + inputs.Albedo + ' * ' + name + 'light)'};
+		});
+
+		/* The glow of lava (a body of the kind 3): its heat baked (uSky: g how much, b how hot). */
+		node('PlanetHeat', planet, [number('Glow', 1.6)], [color, point], [out('Color', 'vec3')], function (context, name, inputs, value) {
+			context.Lines.push('vec4 ' + name + 'heat = texture(uSky, ' + inputs.Point + ');');
+			context.Lines.push('vec3 ' + name + 'color = ' + inputs.Color + ';');
+			context.Lines.push('if (uKind == 3) ' + name + 'color += mix(uColors[2], uColors[3], ' + name + 'heat.b) * ' + name + 'heat.g * ' + value('Glow') + ';');
+
+			return {Color: name + 'color'};
+		});
+
+		/*
+		 * Its clouds: of its weather, when it has one (cloudSeen, cloudSide, cloudUnder of the clouds graph), each darker on
+		 * its side away from the sun (white, tinted by its air by Tint), their shadows on the ground (Shadow); else of its
+		 * clouds baked (uSky, turned by the wind: uDrift), hazy of its air when it is all clouds (Haze). Veil, DrawnVeil: how
+		 * much of its lights at night they hide.
+		 */
+		node('PlanetClouds', planet, [number('Tint', 0.12), number('Shadow', 0.7), number('Veil', 0.8), number('Haze', 0.55), number('DrawnVeil', 0.7)], [normal, view, point, world], [out('Cover'), out('Color', 'vec3'), out('Shade'), out('Veil')], function (context, name, inputs, value) {
+			var p = inputs.Point;
+
+			context.Lines.push('vec3 ' + name + 'lit = lighting(' + inputs.World + ', ' + inputs.Normal + ', ' + inputs.View + ', 1.0, 0.0);');
+			context.Lines.push('float ' + name + 'cover;');
+			context.Lines.push('vec3 ' + name + 'color;');
+			context.Lines.push('float ' + name + 'shade = 1.0;');
+			context.Lines.push('float ' + name + 'veil;');
+			context.Lines.push('if (uWeatherOn > 0.5) {');
+			context.Lines.push('\tfloat ' + name + 'foot = max(length(fwidth(' + p + ')) * uRadiusKm, 0.05);');
+			context.Lines.push('\tvec3 ' + name + 'sun = normalize(transpose(mat3(uModel)) * (uLightPositions[0] - ' + inputs.World + '));');
+			context.Lines.push('\tfloat ' + name + 'high = dot(' + name + 'sun, ' + p + ');');
+			context.Lines.push('\tvec3 ' + name + 'toward = normalize(' + name + 'sun - ' + p + ' * ' + name + 'high + vec3(1e-6));');
+			context.Lines.push('\tvec4 ' + name + 'w = texture(uWeather, ' + p + ');');
+			context.Lines.push('\t' + name + 'cover = cloudSeen(' + p + ', ' + name + 'w, ' + name + 'foot);');
+			context.Lines.push('\tfloat ' + name + 'side = cloudSide(' + p + ', ' + name + 'w.r, ' + name + 'toward, ' + name + 'high, ' + name + 'foot);');
+			context.Lines.push('\t' + name + 'shade = 1.0 - ' + value('Shadow') + ' * (cloudUnder(' + p + ', ' + name + 'w.g, ' + name + 'toward, ' + name + 'high) * smoothstep(0.0, 0.12, ' + name + 'high));');
+			context.Lines.push('\t' + name + 'color = mix(vec3(0.97), uAtmosphere.rgb, ' + value('Tint') + ' * uAtmosphere.a) * ' + name + 'lit * (1.0 - ' + name + 'side);');
+			context.Lines.push('\t' + name + 'veil = ' + name + 'cover * ' + value('Veil') + ';');
+			context.Lines.push('}');
+			context.Lines.push('else {');
+			context.Lines.push('\tvec3 ' + name + 'drifted = vec3(' + p + '.x * cos(uDrift) - ' + p + '.z * sin(uDrift), ' + p + '.y, ' + p + '.x * sin(uDrift) + ' + p + '.z * cos(uDrift));');
+			context.Lines.push('\tfloat ' + name + 'sky = texture(uSky, ' + name + 'drifted).r;');
+			context.Lines.push('\t' + name + 'cover = uClouds > 0.0 ? ' + name + 'sky : 0.0;');
+			context.Lines.push('\t' + name + 'color = mix(vec3(0.96), uAtmosphere.rgb, uClouds >= 1.0 ? ' + value('Haze') + ' * uAtmosphere.a : 0.0) * ' + name + 'lit;');
+			context.Lines.push('\t' + name + 'veil = uClouds > 0.0 ? ' + name + 'sky * ' + value('DrawnVeil') + ' : 0.0;');
+			context.Lines.push('}');
+
+			return {Cover: name + 'cover', Color: name + 'color', Shade: name + 'shade', Veil: name + 'veil'};
+		});
+
+		/*
+		 * The shadow of its ring on it (uRingOn: it has one; uRingAxis, uRingSpan: its inner and outer edge; uRingSeed): where
+		 * the way to the sun crosses the ring, as much as the ring is there (planetRing: the ring graph, its gaps alike), by
+		 * Strength. Of no branch (its gaps are as wide as a pixel of the shadow).
+		 */
+		node('RingShadow', planet, [number('Strength', 0.9)], [world], [out('Shade')], function (context, name, inputs, value) {
+			var w = inputs.World;
+
+			context.Lines.push('vec3 ' + name + 'sun = normalize(uLightPositions[0] - ' + w + ');');
+			context.Lines.push('vec3 ' + name + 'centre = uModel[3].xyz;');
+			context.Lines.push('float ' + name + 'facing = dot(' + name + 'sun, uRingAxis);');
+			context.Lines.push('float ' + name + 'far = dot(' + name + 'centre - ' + w + ', uRingAxis) / (abs(' + name + 'facing) > 1e-4 ? ' + name + 'facing : 1e-4);');
+			context.Lines.push('vec3 ' + name + 'hit = ' + w + ' + ' + name + 'sun * ' + name + 'far;');
+			context.Lines.push('float ' + name + 'r = (length(' + name + 'hit - ' + name + 'centre) - uRingSpan.x) / (uRingSpan.y - uRingSpan.x);');
+			context.Lines.push('vec3 ' + name + 'seen = vec3(0.0);');
+			context.Lines.push('float ' + name + 'ring = 0.0;');
+			context.Lines.push('planetRing(clamp(' + name + 'r, 0.0, 1.0), ' + name + 'hit, uRingAxis, ' + name + 'seen, ' + name + 'ring);');
+
+			return {Shade: '(1.0 - ' + name + 'ring * ' + value('Strength') + ' * step(0.0, ' + name + 'far) * step(0.0, ' + name + 'r) * step(' + name + 'r, 1.0) * uRingOn)'};
+		});
+
+		node('PlanetShade', planet, [], [color, pin('Shade', 'float', '1.0'), pin('Ring', 'float', '1.0')], [out('Color', 'vec3')], function (context, name, inputs) {
+			context.Lines.push('vec3 ' + name + 'color = ' + inputs.Color + ' * ' + inputs.Shade + ' * ' + inputs.Ring + ';');
+
+			return {Color: name + 'color'};
+		});
+
+		/* Its towns at night: their light (uLights) where its sun is down (Day), as much as no cloud hides them (Veil). */
+		node('GlobeLights', ['planet', 'ground'], [number('Red', 1), number('Green', 0.72), number('Blue', 0.38), number('Strength', 1.6)], [color, point, pin('Day', 'float', '0.0'), pin('Veil', 'float', '0.0')], [out('Color', 'vec3')], function (context, name, inputs, value) {
+			context.Lines.push('vec3 ' + name + 'color = ' + inputs.Color + ';');
+			context.Lines.push('if (uLightsOn > 0.5) ' + name + 'color += vec3(' + value('Red') + ', ' + value('Green') + ', ' + value('Blue') + ') * texture(uLights, ' + inputs.Point + ').r * ' + value('Strength') + ' * (1.0 - ' + inputs.Day + ') * (1.0 - ' + inputs.Veil + ');');
+
+			return {Color: name + 'color'};
+		});
+
+		node('PlanetMix', planet, [], [color, pin('Clouds', 'vec3', 'vec3(1.0)'), pin('Cover', 'float', '0.0'), pin('Ring', 'float', '1.0')], [out('Color', 'vec3')], function (context, name, inputs) {
+			context.Lines.push('vec3 ' + name + 'color = mix(' + inputs.Color + ', ' + inputs.Clouds + ' * ' + inputs.Ring + ', ' + inputs.Cover + ');');
+
+			return {Color: name + 'color'};
+		});
+
+		node('PlanetRim', planet, [number('Power', 3)], [color, normal, view, pin('Day', 'float', '1.0')], [out('Color', 'vec3')], function (context, name, inputs, value) {
+			context.Lines.push('vec3 ' + name + 'color = ' + inputs.Color + ' + uAtmosphere.rgb * pow(1.0 - max(dot(' + inputs.Normal + ', ' + inputs.View + '), 0.0), ' + value('Power') + ') * uAtmosphere.a * ' + inputs.Day + ';');
+
+			return {Color: name + 'color'};
+		});
+
+		node('PlanetHighlight', planet, [number('Power', 6)], [color, normal, view], [out('Color', 'vec3')], function (context, name, inputs, value) {
+			context.Lines.push('vec3 ' + name + 'color = ' + inputs.Color + ' + uHighlight.rgb * pow(1.0 - max(dot(' + inputs.Normal + ', ' + inputs.View + '), 0.0), ' + value('Power') + ') * uHighlight.a;');
+
+			return {Color: name + 'color'};
+		});
+
+		/* The end: its color, whole; or (uCloudsOnly: a shell of its clouds over its ground near) its clouds alone, as much as they cover. */
+		blueprints.Node('PlanetEnd', {Graphs: planet, Group: 'output', Inputs: [color, pin('Clouds', 'vec3', 'vec3(1.0)'), pin('Cover', 'float', '0.0')], Outputs: [],
+			GLSL: function (context) {
+				var inputs = context.Inputs;
+
+				return {Result: '\tif (uCloudsOnly > 0.5) {\n\t\tcolor = ' + inputs.Clouds + ';\n\t\talpha = ' + inputs.Cover + ';\n\t}\n\telse {\n\t\tcolor = ' + inputs.Color + ';\n\t\talpha = 1.0;\n\t}'};
+			}
+		});
+	},
+
+	/* A globe of the library (blueprints/shader/planet): see Planets. */
+	LibraryPlanet: function () {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/planet'));
+	},
+
+	/* The surface of a body of noise as a graph (the kind bake): see the header. */
+	Bakes: function () {
+		var blueprints = this.$Service('Blueprints');
+		var shaders = this.$Service('BlueprintShaders');
+		var bake = ['bake'];
+
+		function node (type, inputs, outputs, glsl) {
+			blueprints.Node(type, {Graphs: bake, Group: 'bake', Inputs: inputs, Outputs: outputs, GLSL: glsl});
+		}
+
+		function input (key, type, fallback) {
+			return {Key: key, Type: type, Default: fallback};
+		}
+
+		/* What its Input blocks are in the shader of the bake. */
+		shaders.GraphInputs.bake = {
+			PX: {Code: 'p.x'}, PY: {Code: 'p.y'}, PZ: {Code: 'p.z'},
+			Seed: {Code: 'uSeed'}, Ocean: {Code: 'uOcean'}, Ice: {Code: 'uIce'}, Clouds: {Code: 'uClouds'},
+			Kind: {Code: 'float(uKind)'},
+			/* Craters on a rocky body (its kind 0: rocky, desert, dwarf, moon), none under a sea (as the ground of it). */
+			Cratered: {Code: '(uKind == 0 ? 1.0 : 0.0)'}
+		};
+
+		blueprints.Graph('bake', {
+			End: 'BakeEnd',
+			Compile: function (plan) {
+				var shader = shaders.Shader(plan, 'bake');
+				var made = {
+					Function: ['void blueprintBake(vec3 p, inout vec4 surface, inout vec4 sky) {']
+						.concat(shader.Lines.map(function (line) {
+							return '\t' + line;
+						}))
+						.concat([shader.Result.BakeEnd || '', '}'])
+						.filter(function (line) {
+							return line !== '';
+						})
+						.join('\n'),
+					Needs: shader.Needs,
+					Uniforms: shader.Uniforms,
+					Textures: [],
+					Sources: shader.Sources
+				};
+
+				made.Values = shaders.Values(made);
+
+				return made;
+			}
+		});
+
+		/* Its land and its height of noise (h): what the page reads of it too (BakeLandGraph), as it is in the shader. */
+		node('BakeLand', [input('Land', 'float', '0.5'), input('H', 'float', '0.5')], [{Key: 'Land', Type: 'float'}, {Key: 'H', Type: 'float'}], function (context) {
+			return {Land: context.Inputs.Land, H: context.Inputs.H};
+		});
+
+		/* A rocky or a terran body: its colors by the height of its land, its seas of their color, deeper the farther from the coast. */
+		node('BakeRocky', [input('Land', 'float', '0.5')], [{Key: 'Surface', Type: 'vec4'}], function (context) {
+			var name = 'k' + context.Index;
+
+			context.Lines.push('vec4 ' + name + ' = vec4(bake_ground(clamp(' + context.Inputs.Land + ', 0.0, 1.0)), 0.04);');
+			context.Lines.push('if (uOcean > 0.0 && ' + context.Inputs.Land + ' < 0.0) ' + name + ' = vec4(mix(uWater * 1.25, uWater * 0.55, clamp(-' + context.Inputs.Land + ' * 4.0, 0.0, 1.0)), 0.7);');
+
+			return {Surface: name};
+		});
+
+		/* An icy body: its colors by its height, the first one along its ridges, a sheen. */
+		node('BakeIcy', [input('H', 'float', '0.5'), input('Q', 'vec3', 'p')], [{Key: 'Surface', Type: 'vec4'}], function (context) {
+			context.Need('Noise');
+
+			return {Surface: 'vec4(mix(bake_ground(' + context.Inputs.H + '), uColors[0], smoothstep(0.7, 0.9, ridge3(' + context.Inputs.Q + ' * 1.4, 5)) * 0.6), 0.25)'};
+		});
+
+		/* A body of lava: its two colors by its height (where it glows: BakeClouds). */
+		node('BakeLava', [input('H', 'float', '0.5')], [{Key: 'Surface', Type: 'vec4'}], function (context) {
+			return {Surface: 'vec4(mix(uColors[0], uColors[1], smoothstep(0.3, 0.7, ' + context.Inputs.H + ')), 0.04)'};
+		});
+
+		/* A giant of gas: bands of its latitude warped, finer streaks, a storm. */
+		node('BakeGas', [input('P', 'vec3', 'p')], [{Key: 'Surface', Type: 'vec4'}], function (context) {
+			var name = 'k' + context.Index;
+			var p = context.Inputs.P;
+
+			context.Need('Noise');
+			context.Lines.push('float ' + name + '_warp = fbm3(vec3(' + p + '.x * 3.0, ' + p + '.y * 9.0, ' + p + '.z * 3.0) + uSeed, 4);');
+			context.Lines.push('float ' + name + '_band = sin((' + p + '.y * 6.5 + ' + name + '_warp * 2.4 + uSeed) * 3.14159);');
+			context.Lines.push('float ' + name + '_fine = fbm3(vec3(' + p + '.x * 2.0, ' + p + '.y * 38.0, ' + p + '.z * 2.0) + uSeed, 3);');
+			context.Lines.push('vec3 ' + name + ' = mix(uColors[0], uColors[1], ' + name + '_band * 0.5 + 0.5);');
+			context.Lines.push(name + ' = mix(' + name + ', uColors[2], smoothstep(0.5, 0.78, ' + name + '_fine) * 0.7);');
+			context.Lines.push('float ' + name + '_storm = 1.0 - smoothstep(0.0, 0.16, length(vec2((atan(' + p + '.z, ' + p + '.x) - uSeed) * 0.5, (' + p + '.y + 0.3) * 1.6)) + (' + name + '_warp - 0.5) * 0.08);');
+			context.Lines.push(name + ' = mix(' + name + ', uColors[3], ' + name + '_storm * 0.85);');
+
+			return {Surface: 'vec4(' + name + ', 0.08)'};
+		});
+
+		/* The surface of the kind of the body: 2 icy, 3 lava, 4 gas, else rocky (and terran). */
+		node('BakeKind', [input('Rocky', 'vec4', 'vec4(0.5)'), input('Icy', 'vec4', 'vec4(0.5)'), input('Lava', 'vec4', 'vec4(0.5)'), input('Gas', 'vec4', 'vec4(0.5)')], [{Key: 'Surface', Type: 'vec4'}], function (context) {
+			var inputs = context.Inputs;
+
+			return {Surface: '(uKind == 4 ? ' + inputs.Gas + ' : uKind == 3 ? ' + inputs.Lava + ' : uKind == 2 ? ' + inputs.Icy + ' : ' + inputs.Rocky + ')'};
+		});
+
+		/* Caps of ice at its poles, ragged (Ice: how far they reach; all of it at 1); faint on an icy body, none on a giant of gas. */
+		node('BakeIce', [input('Surface', 'vec4', 'vec4(0.5)'), input('P', 'vec3', 'p'), input('Q', 'vec3', 'p')], [{Key: 'Surface', Type: 'vec4'}], function (context) {
+			var name = 'k' + context.Index;
+			var inputs = context.Inputs;
+
+			context.Need('Noise');
+			context.Lines.push('vec4 ' + name + ' = ' + inputs.Surface + ';');
+			context.Lines.push('if (uIce > 0.0 && uKind != 4) {');
+			context.Lines.push('\tfloat ' + name + '_pole = abs(' + inputs.P + '.y) + (fbm3(' + inputs.Q + ' * 3.0, 3) - 0.5) * 0.3;');
+			context.Lines.push('\tfloat ' + name + '_cap = uIce >= 1.0 ? 1.0 : smoothstep(1.0 - uIce, 1.0 - uIce + 0.04, ' + name + '_pole);');
+			context.Lines.push('\t' + name + '.rgb = mix(' + name + '.rgb, vec3(0.93, 0.95, 0.98), ' + name + '_cap * (uKind == 2 ? 0.35 : 1.0));');
+			context.Lines.push('}');
+
+			return {Surface: name};
+		});
+
+		/* Its clouds (Clouds: how much of the sky), the glow of the cracks of lava, its sparks. */
+		node('BakeClouds', [input('P', 'vec3', 'p'), input('Q', 'vec3', 'p')], [{Key: 'Sky', Type: 'vec4'}], function (context) {
+			var name = 'k' + context.Index;
+			var inputs = context.Inputs;
+
+			context.Need('Noise');
+			context.Lines.push('float ' + name + '_cloud = fbm3(' + inputs.P + ' * 3.2 + vec3(0.0, uSeed * 2.0, 0.0), 5);');
+			context.Lines.push('float ' + name + '_edge = 0.5 + (0.5 - uClouds) * 0.4;');
+			context.Lines.push('float ' + name + '_cover = uClouds > 0.0 ? smoothstep(' + name + '_edge, ' + name + '_edge + 0.12, ' + name + '_cloud) * (uClouds >= 1.0 ? 1.0 : 0.85) : 0.0;');
+			context.Lines.push('float ' + name + '_ridge = ridge3(' + inputs.Q + ' * 1.6 + 4.0, 5);');
+
+			return {Sky: 'vec4(' + name + '_cover, uKind == 3 ? smoothstep(0.8, 0.93, ' + name + '_ridge) : 0.0, smoothstep(0.88, 0.97, ' + name + '_ridge), 1.0)'};
+		});
+
+		blueprints.Node('BakeEnd', {Graphs: bake, Group: 'output', Inputs: [input('Surface', 'vec4', 'surface'), input('Sky', 'vec4', 'sky')], Outputs: [],
+			GLSL: function (context) {
+				return {Result: '\tsurface = ' + context.Inputs.Surface + ';\n\tsky = ' + context.Inputs.Sky + ';'};
+			}
+		});
+	},
+
+	/* What the weather and the year do to a surface (the kind weather): see the header. */
+	Weathers: function () {
+		var self = this;
+		var blueprints = this.$Service('Blueprints');
+		var shaders = this.$Service('BlueprintShaders');
+		var weather = ['weather'];
+		var done = [{Key: 'Done', Type: 'float'}];
+
+		function number (key, value) {
+			return {Key: key, Type: 'number', Value: value};
+		}
+
+		function define (context, name, lines) {
+			context.Need('Noise');
+
+			return self.Chunk(context, 'Weather_' + name, lines);
+		}
+
+		function literal (context, key) {
+			return shaders.Literal(Number(context.Properties[key]), 'float');
+		}
+
+		blueprints.Graph('weather', {
+			End: 'WeatherEnd',
+			Compile: function (plan) {
+				var shader = shaders.Shader(plan, 'weather');
+				var made = {Function: '', Needs: shader.Needs, Uniforms: shader.Uniforms, Textures: [], Sources: shader.Sources};
+
+				made.Values = shaders.Values(made);
+
+				return made;
+			}
+		});
+
+		/*
+		 * The leaves of a plant are what is green of it (Leaf: how green): in autumn they turn, each tree (tree, 0 to 1) to a
+		 * color of its own; they thin out to bare branches as the year goes cold (Bare), come back in spring with the flowers of
+		 * some trees (Blossom: how many); at: the grain of them; turn: they do (else only the warm of summer).
+		 */
+		blueprints.Node('WeatherSeason', {Graphs: weather, Group: 'weather', Properties: [number('Leaf', 0.05), number('Bare', 1.08), number('Blossom', 0.45)], Inputs: [], Outputs: done, GLSL: function (context) {
+			return define(context, 'season', [
+				'void weather_season(inout vec3 color, float tree, vec3 at, bool turn) {',
+				'\tfloat leaf = smoothstep(0.01, ' + literal(context, 'Leaf') + ', color.g - max(color.r, color.b) * 0.9);',
+				'\tif (turn && leaf > 0.0) {',
+				'\t\tvec3 fall = tree < 0.3 ? vec3(0.62, 0.42, 0.04) : tree < 0.55 ? vec3(0.55, 0.16, 0.02) : tree < 0.8 ? vec3(0.42, 0.05, 0.02) : vec3(0.25, 0.14, 0.05);',
+				'\t\tcolor = mix(color, fall * (0.7 + 0.6 * dot(color, vec3(0.33))), uSeason.y * leaf);',
+				'\t\tif (uSeason.x > 0.0 && noise3(at * 9.0 + tree * 7.0) * 0.5 + 0.5 < uSeason.x * leaf * ' + literal(context, 'Bare') + ') discard;',
+				'\t\tif (uSeason.z > 0.0 && tree < ' + literal(context, 'Blossom') + ' && noise3(at * 26.0) > 0.35) color = mix(color, tree < 0.2 ? vec3(0.95, 0.62, 0.72) : vec3(0.95, 0.94, 0.9), uSeason.z * leaf);',
+				'\t}',
+				'\tcolor = mix(color, color * vec3(1.15, 1.0, 0.55), uSeason.w * leaf * 0.5);',
+				'}'
+			]);
+		}});
+
+		/*
+		 * How much snow lies on what looks up (up: the normal of it up, at: where), thicker where its noise piles it: between Low
+		 * and High of up shifted by its noise (Scale, Weight; a second one of Scale2, Weight2 where Weight2 is not 0; Shift),
+		 * by Amount. For: of what (things: of their materials; solid: of their colors; plants: their slopes hold it too).
+		 */
+		blueprints.Node('WeatherSnow', {Graphs: weather, Group: 'weather', Properties: [{Key: 'For', Type: 'select', Options: ['things', 'solid', 'plants'], Value: 'things'}, number('Low', 0.3), number('High', 0.75), number('Scale', 0.23), number('Weight', 1), number('Scale2', 0.9), number('Weight2', 0.5), number('Shift', -0.75), number('Amount', 0.3)], Inputs: [], Outputs: done, GLSL: function (context) {
+			var kind = ['things', 'solid', 'plants'].indexOf(context.Properties.For) === -1 ? 'things' : context.Properties.For;
+			var second = Number(context.Properties.Weight2) ? ' + noise3(at * ' + literal(context, 'Scale2') + ') * ' + literal(context, 'Weight2') : '';
+			var first = Number(context.Properties.Weight) === 1 ? 'noise3(at * ' + literal(context, 'Scale') + ')' : 'noise3(at * ' + literal(context, 'Scale') + ') * ' + literal(context, 'Weight');
+
+			return define(context, 'snow_' + kind, [
+				'float weather_snow_' + kind + '(float up, vec3 at) {',
+				'\treturn smoothstep(' + literal(context, 'Low') + ', ' + literal(context, 'High') + ', up + (' + first + second + ' + ' + literal(context, 'Shift') + ') * ' + literal(context, 'Amount') + ');',
+				'}'
+			]);
+		}});
+
+		/*
+		 * A body beamed away or coming (Teleport): it breaks up into sparkling grains in streaks up and down, from the top,
+		 * glowing in the color of the beam where it goes; uDissolve [how far, foot, height, phase]. Gives how much it glows.
+		 */
+		blueprints.Node('WeatherDissolve', {Graphs: weather, Group: 'weather', Properties: [number('Grain', 30), number('Streak', 6)], Inputs: [], Outputs: done, GLSL: function (context) {
+			return define(context, 'dissolve', [
+				'float weather_dissolve(vec3 world, inout vec3 color) {',
+				'\tif (uDissolve.x <= 0.0) return 0.0;',
+				'\tfloat h = clamp((world.y - uDissolve.y) / max(uDissolve.z, 0.01), 0.0, 1.0);',
+				'\tfloat grain = noise3((world + uEyeAt) * vec3(' + literal(context, 'Grain') + ', ' + literal(context, 'Streak') + ', ' + literal(context, 'Grain') + ') + vec3(0.0, uDissolve.w, 0.0)) * 0.5 + 0.5;',
+				'\tfloat d = grain * 0.8 + (1.0 - h) * 0.2;',
+				'\tfloat gone = uDissolve.x * 1.3 - 0.15;',
+				'\tif (d < gone) discard;',
+				'\tcolor = mix(color, uDissolveColor, min(1.0, uDissolve.x * 1.6));',
+				'\treturn max(1.0 - smoothstep(0.0, 0.1, d - gone), uDissolve.x * 0.6) * (0.6 + 0.4 * sin(uDissolve.w * 9.0 + grain * 20.0));',
+				'}'
+			]);
+		}});
+
+		/*
+		 * Water stands where a surface lies flat (level, 0 to 1) and it is wet (wet): pools between Low and High of its noise
+		 * (Scale; a finer one of Scale2 by Weight2), that grow as it rains (Grow) and shrink as it dries.
+		 */
+		blueprints.Node('WeatherPuddles', {Graphs: weather, Group: 'weather', Properties: [number('Low', 0.66), number('High', 0.8), number('Grow', 0.18), number('Scale', 0.13), number('Scale2', 0.6), number('Weight2', 0.08)], Inputs: [], Outputs: done, GLSL: function (context) {
+			var grow = literal(context, 'Grow');
+
+			return define(context, 'puddles', [
+				'float weather_puddles(float wet, float level, vec3 at) {',
+				'\treturn wet * level * smoothstep(' + literal(context, 'Low') + ' - ' + grow + ' * wet, ' + literal(context, 'High') + ' - ' + grow + ' * wet, noise3(at * vec3(' + literal(context, 'Scale') + ', 0.0, ' + literal(context, 'Scale') + ')) + noise3(at * vec3(' + literal(context, 'Scale2') + ', 0.0, ' + literal(context, 'Scale2') + ')) * ' + literal(context, 'Weight2') + ');',
+				'}'
+			]);
+		}});
+
+		blueprints.Node('WeatherEnd', {Graphs: weather, Group: 'output', Inputs: ['Season', 'Things', 'Solid', 'Plants', 'Dissolve', 'Puddles'].map(function (key) {
+			return {Key: key, Type: 'float', Default: '0.0'};
+		}), Outputs: [], GLSL: function () {
+			return {Result: ''};
+		}});
+	},
+
+	/* The function of a block a part of the shaders of Renderer, asked by it: see the header. {Done: '1.0'}, what the block gives. */
+	Chunk: function (context, name, lines, guard) {
+		var text = (guard ? [Array.isArray(guard) ? '#if ' + guard.map(function (name) {
+			return 'defined(' + name + ')';
+		}).join(' || ') : '#ifdef ' + guard] : []).concat(lines, guard ? ['#endif'] : []).join('\n');
+		var hash = 2166136261;
+		var i;
+		var need;
+
+		for (i = 0; i < text.length; i++)
+			hash = Math.imul(hash ^ text.charCodeAt(i), 16777619) >>> 0;
+
+		need = name + '_' + hash.toString(36);
+		this.$Service('Renderer').Chunks[need] = text;
+
+		context.Need(need);
+
+		return {Done: '1.0'};
+	},
+
+	/* A kind of graphs of functions of the shaders (weather, air, clouds): made of their blocks alone, an end of them all. */
+	Functions: function (kind, end, inputs) {
+		var blueprints = this.$Service('Blueprints');
+		var shaders = this.$Service('BlueprintShaders');
+
+		blueprints.Graph(kind, {
+			End: end,
+			Compile: function (plan) {
+				var shader = shaders.Shader(plan, kind);
+				var made = {Function: '', Needs: shader.Needs, Uniforms: shader.Uniforms, Textures: [], Sources: shader.Sources};
+
+				made.Values = shaders.Values(made);
+
+				return made;
+			}
+		});
+
+		blueprints.Node(end, {Graphs: [kind], Group: 'output', Inputs: inputs.map(function (key) {
+			return {Key: key, Type: 'float', Default: '0.0'};
+		}), Outputs: [], GLSL: function () {
+			return {Result: ''};
+		}});
+	},
+
+	/* The air between the eye and what it sees (the kind air): see the header. */
+	Airs: function () {
+		var self = this;
+		var blueprints = this.$Service('Blueprints');
+		var shaders = this.$Service('BlueprintShaders');
+		var air = ['air'];
+		var done = [{Key: 'Done', Type: 'float'}];
+
+		function number (key, value) {
+			return {Key: key, Type: 'number', Value: value};
+		}
+
+		function literal (context, key) {
+			return shaders.Literal(Number(context.Properties[key]), 'float');
+		}
+
+		this.Functions('air', 'AirEnd', ['Globe', 'Ground', 'Fog', 'Under']);
+
+		/*
+		 * The haze of the air over a distance (Fog of the scene: uFog its length): how much, as thin as its air is (Thin: by
+		 * uAir.a), less up high (High: by uHigh, the eye over a globe); its color the air whitened (White, Whiten) in the light given.
+		 */
+		blueprints.Node('AirHaze', {Graphs: air, Group: 'air', Properties: [{Key: 'For', Type: 'select', Options: ['globe', 'ground'], Value: 'ground'}, {Key: 'Thin', Type: 'bool', Value: false}, number('High', 0), number('White', 1), number('Whiten', 0.45)], Inputs: [], Outputs: done, GLSL: function (context) {
+			var kind = context.Properties.For === 'globe' ? 'globe' : 'ground';
+			var amount = '(1.0 - exp(-length(world) / uFog))';
+
+			if (context.Properties.Thin === true || context.Properties.Thin === 'true')
+				amount += ' * uAir.a';
+
+			if (Number(context.Properties.High))
+				amount += ' * (1.0 - uHigh * ' + literal(context, 'High') + ')';
+
+			return self.Chunk(context, 'Air_haze_' + kind, [
+				'float air_haze_' + kind + '(vec3 world) {',
+				'\treturn ' + amount.replace(/^\((.*)\)$/, function (all, inner) {
+					return amount.indexOf(' * ') === -1 ? inner : all;
+				}) + ';',
+				'}',
+				'vec3 air_horizon_' + kind + '(float light) {',
+				'\treturn mix(uAir.rgb, vec3(' + literal(context, 'White') + '), ' + literal(context, 'Whiten') + ') * light;',
+				'}'
+			], 'ENX_AIR_' + kind.toUpperCase());
+		}});
+
+		/*
+		 * The fog of the pass Air: of the scene (uFog: how thick a unit), the low one of a weather that falls with the height a
+		 * ray climbs to (uFogLow), the sheets of rain that go past with the wind (uVeil: Sheets, Swing); its color the air
+		 * whitened (Whiten, the sky's SkyWhiten) with the sun in it (Shine, ShinePower); far off, what stands melts into a sky
+		 * of the same air (Veil, VeilMost, VeilFall).
+		 */
+		blueprints.Node('AirFog', {Graphs: air, Group: 'air', Properties: [number('Whiten', 0.4), number('SkyWhiten', 0.55), number('Shine', 0.6), number('ShinePower', 8), number('Sheets', 0.72), number('Swing', 0.56), number('Veil', 2.4), number('VeilMost', 0.96), number('VeilFall', 5)], Inputs: [], Outputs: done, GLSL: function (context) {
+			return self.Chunk(context, 'Air_fog', [
+				'vec3 air_light(float whiten) {',
+				'\treturn pow(mix(uAir.rgb, vec3(1.0), whiten), vec3(2.2)) * uAirLight + pow(uAirGlow, vec3(2.2)) * 0.3;',
+				'}',
+				'vec3 air_sky() {',
+				'\treturn air_light(' + literal(context, 'SkyWhiten') + ');',
+				'}',
+				'float air_fog(vec3 place, float far, vec3 way) {',
+				'\tfloat climb = place.y * uFogLow.y;',
+				'\tfloat low = uFogLow.z > 0.0 ? uFogLow.z * exp(-uFogLow.x * uFogLow.y) * (abs(climb) < 0.01 ? 1.0 : (1.0 - exp(-climb)) / climb) : 0.0;',
+				'\tfloat sheets = uVeil > 0.01 ? ' + literal(context, 'Sheets') + ' + ' + literal(context, 'Swing') + ' * texture(uNoise, vec3(way.x * 1.6 + uVeilMove.x, way.y * 0.8, way.z * 1.6 + uVeilMove.y) + vec3(0.0, uVeilMove.z, 0.0)).b : 1.0;',
+				'\treturn 1.0 - exp(-far * (uFog * sheets + low));',
+				'}',
+				'vec3 air_hazed() {',
+				'\treturn air_light(' + literal(context, 'Whiten') + ');',
+				'}',
+				'vec3 air_far(vec3 way) {',
+				'\tvec3 sky = air_hazed();',
+				'\tsky += uSunColor * pow(max(dot(way, uSun), 0.0), ' + literal(context, 'ShinePower') + ') * ' + literal(context, 'Shine') + ';',
+				'\treturn sky;',
+				'}',
+				'float air_veil(vec3 ray) {',
+				'\treturn min(' + literal(context, 'VeilMost') + ', uVeil * ' + literal(context, 'Veil') + ') * exp(-max(ray.y, 0.0) * ' + literal(context, 'VeilFall') + ');',
+				'}'
+			], 'ENX_AIR_FOG');
+		}});
+
+		/*
+		 * The eye under the sea: the water between takes the light (red first: Absorb), deep blue-green far off (Deep, Clear),
+		 * lighter where it looks up toward the surface (Upward).
+		 */
+		blueprints.Node('AirUnder', {Graphs: air, Group: 'air', Properties: [{Key: 'Deep', Type: 'object', Value: [0.06, 0.32, 0.36]}, {Key: 'Absorb', Type: 'object', Value: [0.16, 0.045, 0.035]}, number('Clear', 0.045), number('Upward', 2.5), number('Far', 80)], Inputs: [], Outputs: done, GLSL: function (context) {
+			var deep = shaders.Literal(context.Properties.Deep || [0.06, 0.32, 0.36], 'vec3');
+			var absorb = shaders.Literal(context.Properties.Absorb || [0.16, 0.045, 0.035], 'vec3');
+
+			return self.Chunk(context, 'Air_under', [
+				'vec3 air_under(vec3 color, vec3 place, float depth) {',
+				'\tfloat through = depth < 1.0 ? length(place) : ' + literal(context, 'Far') + ';',
+				'\tvec3 deep = pow(' + deep + ', vec3(2.2)) * uAirLight * (0.25 + 0.75 * clamp(uSun.y * 3.0, 0.0, 1.0));',
+				'\tvec3 ray = normalize(place);',
+				'\tdeep *= 1.0 + ' + literal(context, 'Upward') + ' * smoothstep(0.2, 1.0, ray.y);',
+				'\treturn mix(color * exp(-through * ' + absorb + '), deep, 1.0 - exp(-through * ' + literal(context, 'Clear') + '));',
+				'}'
+			], 'ENX_AIR_UNDER');
+		}});
+	},
+
+	/* The clouds (the kind clouds): see the header. */
+	Clouds: function () {
+		var self = this;
+		var blueprints = this.$Service('Blueprints');
+		var shaders = this.$Service('BlueprintShaders');
+		var clouds = ['clouds'];
+		var done = [{Key: 'Done', Type: 'float'}];
+
+		function number (key, value) {
+			return {Key: key, Type: 'number', Value: value};
+		}
+
+		function literal (context, key) {
+			return shaders.Literal(Number(context.Properties[key]), 'float');
+		}
+
+		this.Functions('clouds', 'CloudsEnd', ['Cover', 'Globe', 'Shade', 'Shell', 'Layer']);
+
+		/*
+		 * The cover of the clouds of the weather of a planet (cover, 0 to 1) at a place of its body (k, km): its billows of Size
+		 * km and smaller by Shrink, Octaves of them (heaps most of the small, sheets of the large: heap), each only while a pixel
+		 * there (foot, km) sees it, turned against the last (no squares along the grid of the noise); cut where the share the
+		 * cover says is over (a logit for its quantile), softer the larger a pixel; what is not seen of them the cover as it is.
+		 * narrow: how much less up high. One for the globe, the shadows and the clouds round the eye.
+		 */
+		blueprints.Node('CloudCover', {Graphs: clouds, Group: 'clouds', Properties: [number('Size', 80), number('Shrink', 2.7), number('Octaves', 5)], Inputs: [], Outputs: done, GLSL: function (context) {
+			context.Need('Noise');
+
+			return self.Chunk(context, 'Clouds_cover', [
+				'float clouds_cover(vec3 k, float cover, float heap, float foot, float narrow) {',
+				'\tfloat n = 0.0;',
+				'\tfloat total = 0.0;',
+				'\tfloat seen = 0.0;',
+				'\tfloat size = ' + literal(context, 'Size') + ';',
+				'\tmat3 askew = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
+				'\tvec3 turned = k;',
+				'\tfor (int i = 0; i < ' + Math.max(1, Math.min(8, Math.round(Number(context.Properties.Octaves) || 5))) + '; i++) {',
+				'\t\tfloat a = i < 2 ? mix(0.6, 0.3, heap) : mix(0.22, 0.6, heap);',
+				'\t\tfloat sharp = 1.0 - smoothstep(size * 0.12, size * 0.45, foot);',
+				'\t\tturned = askew * turned;',
+				'\t\tif (sharp > 0.0) n += ((noise3(turned / size + float(i) * 7.1) + noise3(askew * (turned / size) + float(i) * 3.7 + 11.0)) * 0.5 - 0.5) * 1.4 * a * sharp;',
+				'\t\ttotal += a;',
+				'\t\tseen += a * sharp;',
+				'\t\tsize /= ' + literal(context, 'Shrink') + ';',
+				'\t}',
+				'\tfloat spread = mix(0.12, 0.06, heap) + clamp(foot / 40.0, 0.0, 0.2);',
+				'\tfloat level = 0.5 + 0.13 * log((1.0 - clamp(cover, 0.01, 0.99)) / clamp(cover, 0.01, 0.99));',
+				'\treturn mix(clamp(cover - narrow, 0.0, 1.0), smoothstep(level - spread, level + spread, 0.5 + n * 1.6 / max(seen / total, 0.05) - narrow), seen / total);',
+				'}'
+			], ['ENX_CLOUDS_GLOBE', 'ENX_CLOUDS_SHELL']);
+		}});
+
+		/*
+		 * The clouds of a planet as they are seen from over it (uWeather, its weather baked; uRadiusKm): its cover (CloudCover),
+		 * cirrus thin over all drawn out east and west (Cirrus: how much). cloudSeen(p, w, foot), cloudAt(p, foot): the globe,
+		 * the shadows of its clouds on its ground.
+		 */
+		blueprints.Node('CloudGlobe', {Graphs: clouds, Group: 'clouds', Properties: [number('Cirrus', 0.18)], Inputs: [], Outputs: done, GLSL: function (context) {
+			context.Need('Noise');
+
+			return self.Chunk(context, 'Clouds_globe', [
+				'float cloudSeen(vec3 p, vec4 w, float foot) {',
+				'\tvec3 k = p * uRadiusKm;',
+				'\tfloat heap = smoothstep(0.3, 0.6, w.g);',
+				'\tfloat cloud = clouds_cover(k, w.r, heap, foot, 0.0) * step(0.01, w.r);',
+				'\tfloat streak = noise3(vec3(k.x / 90.0, k.y / 9.0, k.z / 90.0) + 5.0) * 0.7 + noise3(vec3(k.x / 30.0, k.y / 3.0, k.z / 30.0)) * 0.3;',
+				'\tfloat thin = w.b * smoothstep(0.45, 0.75, streak) * ' + literal(context, 'Cirrus') + ';',
+				'\treturn clamp(cloud + thin * (1.0 - cloud), 0.0, 1.0);',
+				'}',
+				'float cloudAt(vec3 p, float foot) {',
+				'\treturn cloudSeen(p, texture(uWeather, p), foot);',
+				'}'
+			], 'ENX_CLOUDS_GLOBE');
+		}});
+
+		/*
+		 * The light and shade of the clouds of a planet seen from over it (uWeather, uRadiusKm; p: a place of its body, toward:
+		 * the way to its sun along the ground, high: how high the sun stands there): cloudSide(p, cover, toward, high, foot) how
+		 * much darker a cloud is on its side away from the sun (its cover Ahead km toward the sun, at least, more than here, by
+		 * Gain, Most at most); cloudUnder(p, kind, toward, high) the cover of the clouds whose shadow falls there (as high as
+		 * their kind: Low to High km). The globe and its ground alike.
+		 */
+		blueprints.Node('CloudShade', {Graphs: clouds, Group: 'clouds', Properties: [number('Ahead', 3), number('Gain', 1.3), number('Most', 0.55), number('Low', 1.5), number('High', 6)], Inputs: [], Outputs: done, GLSL: function (context) {
+			return self.Chunk(context, 'Clouds_shade', [
+				'float cloudSide(vec3 p, float cover, vec3 toward, float high, float foot) {',
+				'\tfloat ahead = texture(uWeather, normalize(p + toward * max(' + literal(context, 'Ahead') + ', foot) / uRadiusKm)).r;',
+				'\treturn clamp((ahead - cover) * ' + literal(context, 'Gain') + ', 0.0, ' + literal(context, 'Most') + ') * smoothstep(-0.05, 0.2, high);',
+				'}',
+				'float cloudUnder(vec3 p, float kind, vec3 toward, float high) {',
+				'\treturn texture(uWeather, normalize(p + toward * mix(' + literal(context, 'Low') + ', ' + literal(context, 'High') + ', kind) * sqrt(max(0.0, 1.0 - high * high)) / max(0.06, high) / uRadiusKm)).r;',
+				'}'
+			], 'ENX_CLOUDS_GLOBE');
+		}});
+
+		/*
+		 * The clouds of the weather of a planet round the eye over its surface (uShell: its radius, the ground under the eye, km):
+		 * a shell from 0.4 to 13 km over its sea. Of the weather of each place (cover, kind, cirrus): sheets low and flat, heaps
+		 * to Heaps km with round tops, towers of a storm to Towers, their cover of CloudCover; their edges eaten by billows in three
+		 * dimensions near; cirrus at CirrusLow to CirrusHigh km. shellThick(q, foot, detail): how thick at q (detail under 0.5:
+		 * the cheap one, to find cloud and for the light toward the sun).
+		 */
+		blueprints.Node('CloudShell', {Graphs: clouds, Group: 'clouds', Properties: [number('Heaps', 3.2), number('Towers', 12), number('CirrusLow', 8.5), number('CirrusHigh', 11)], Inputs: [], Outputs: done, GLSL: function (context) {
+			var low = literal(context, 'CirrusLow');
+			var high = literal(context, 'CirrusHigh');
+			var heaps = literal(context, 'Heaps');
+
+			context.Need('Noise');
+
+			return self.Chunk(context, 'Clouds_shell', [
+				'float shellThick(vec3 q, float foot, float detail) {',
+				'\tfloat R = uShell.x;',
+				'\tfloat r = length(q);',
+				'\tfloat h = r - R;',
+				'\tmat3 back = transpose(uTurn);',
+				'\tvec4 w = texture(uWeather, back * (q / r));',
+				'\tvec3 k = back * q;',
+				'\tfloat kind = w.g;',
+				'\tfloat heap = smoothstep(0.3, 0.6, kind);',
+				'\tfloat base = mix(0.6, 1.0, heap);',
+				'\tfloat top = kind < 0.5 ? mix(1.5, ' + heaps + ', kind * 2.0) : mix(' + heaps + ', ' + literal(context, 'Towers') + ', (kind - 0.5) * 2.0);',
+				'\ttop = base + (top - base) * mix(0.8 + 0.2 * mix(noise3(k / 8.0 + 4.0), 0.5, smoothstep(1.5, 4.0, foot)), 0.45 + 0.55 * mix(noise3(k / 2.6 + 2.0), 0.5, smoothstep(0.5, 1.5, foot)), heap);',
+				'\tfloat hn = (h - base) / (top - base);',
+				'\tfloat d = 0.0;',
+				'\tif (hn > 0.0 && hn < 1.0 && w.r > 0.02) {',
+				'\t\tif (detail < 0.5) return clamp(w.r * mix(smoothstep(0.0, 0.25, hn) * (1.0 - smoothstep(0.55, 1.0, hn)), (1.0 - smoothstep(0.2, 1.0, hn)), heap) * 3.0 + 0.05, 0.0, 1.0);',
+				'\t\tmat3 askew = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
+				'\t\tfloat narrow = max(hn - 0.3, 0.0) * mix(0.15, 0.5, heap);',
+				'\t\tfloat cover = clouds_cover(k, w.r, heap, foot, narrow);',
+				'\t\tfloat sheet = smoothstep(0.0, 0.25, hn) * (1.0 - smoothstep(0.55, 1.0, hn));',
+				'\t\tfloat round1 = smoothstep(0.0, 0.07, hn) * (1.0 - smoothstep(0.45, 1.0, hn));',
+				'\t\tfloat shape = mix(sheet, round1, heap);',
+				'\t\tfloat near = 1.0 - smoothstep(0.3, 1.2, foot);',
+				'\t\tfloat closer = 1.0 - smoothstep(0.1, 0.45, foot);',
+				'\t\tfloat closest = 1.0 - smoothstep(0.04, 0.18, foot);',
+				'\t\tfloat billow = 0.5 + (noise3(askew * k / 0.9 + 9.0) - 0.5) * near * 0.75 + (noise3(askew * (askew * k) / 0.35 + 3.0) - 0.5) * closer * 0.45 + (noise3(k / 0.14 + 5.0) - 0.5) * closest * 0.3;',
+				'\t\td = cover * shape - 0.04 - (1.0 - billow) * mix(0.25, 0.5, heap) + 0.5 * mix(0.25, 0.5, heap);',
+				'\t\td -= (1.0 - billow) * 0.3 * (1.0 - clamp(d * 2.0, 0.0, 1.0)) * near;',
+				'\t\td = clamp(d * 2.5, 0.0, 1.0);',
+				'\t}',
+				'\tif (h > ' + low + ' && h < ' + high + ' && w.b > 0.02 && (detail < 0.2 || detail > 0.5)) {',
+				'\t\tmat3 turn2 = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
+				'\t\tfloat fray = noise3(turn2 * k / 6.0 + 5.0) * 0.6 + noise3(k / 2.0 + 1.0) * 0.4;',
+				'\t\td = max(d, smoothstep(0.35, 0.85, w.b) * smoothstep(0.35, 0.65, fray) * smoothstep(' + low + ', ' + shaders.Literal(Number(context.Properties.CirrusLow) + 0.8, 'float') + ', h) * (1.0 - smoothstep(' + shaders.Literal(Number(context.Properties.CirrusHigh) - 0.8, 'float') + ', ' + high + ', h)) * 0.08);',
+				'\t}',
+				'\treturn d;',
+				'}'
+			], 'ENX_CLOUDS_SHELL');
+		}});
+
+		/*
+		 * The clouds of the layer of a scene (uLayer: its foot, its top, its scale; uCover; uShape: kind, high, storm; uDrift):
+		 * a map of its 3D noise (uNoise, cheap: many steps a ray) where there is cloud, cut by the cover (Clear: the cut of no
+		 * cover, Full: of all of it), heaps that rise to their top, their edges eaten near (fine); Dense: how thick it gets.
+		 * lobe(toward, g): how light goes through it. thick(p, fine).
+		 */
+		blueprints.Node('CloudLayer', {Graphs: clouds, Group: 'clouds', Properties: [number('Clear', 0.86), number('Full', 0.2), number('Dense', 4.2)], Inputs: [], Outputs: done, GLSL: function (context) {
+			return self.Chunk(context, 'Clouds_layer', [
+				'float lobe(float toward, float g) {',
+				'\treturn (1.0 - g * g) / (12.57 * pow(1.0 + g * g - 2.0 * g * toward, 1.5)) * 6.0;',
+				'}',
+				'float thick(vec3 p, float fine) {',
+				'\tfloat h = clamp((p.y - uLayer.x) / (uLayer.y - uLayer.x), 0.0, 1.0);',
+				'\tvec2 flat2 = p.xz * uLayer.z + uDrift;',
+				'\tvec4 big = texture(uNoise, vec3(flat2 * 0.05, 0.31));',
+				'\tvec4 mid = texture(uNoise, vec3(flat2 * 0.17 + 3.1, 0.62));',
+				'\tfloat map = big.b * 0.7 + mid.g * 0.3;',
+				'\tfloat amount = clamp((map - mix(' + literal(context, 'Clear') + ', ' + literal(context, 'Full') + ', uCover)) / 0.2, 0.0, 1.0);',
+				'\tif (amount <= 0.0) return 0.0;',
+				'\tfloat kind = clamp(uShape.x + (mid.b - 0.5) * 0.7, 0.0, 1.0);',
+				'\tfloat top = kind < 0.5 ? mix(0.24, 0.62, kind * 2.0) : mix(0.62, 1.0, kind * 2.0 - 1.0);',
+				'\tfloat rise = smoothstep(0.0, 0.08, h) * (1.0 - smoothstep(top * 0.55, top * (0.72 + amount * 0.28), h));',
+				'\tvec4 shape = texture(uNoise, vec3(p.x, p.y * 1.4, p.z) * uLayer.z * 0.42 + vec3(uDrift.x * 2.0, 0.0, uDrift.y * 2.0));',
+				'\tfloat body = (shape.r * rise - (1.0 - amount) * 0.9) / max(0.12, amount);',
+				'\tif (body <= 0.0) return 0.0;',
+				'\tif (fine > 0.5) {',
+				'\t\tvec4 edge = texture(uNoise, vec3(p.x, p.y * 1.2, p.z) * uLayer.z * 2.6 + vec3(uDrift.x, -uDrift.x, uDrift.y) * 6.0);',
+				'\t\tvec4 finer = texture(uNoise, vec3(p.z, p.x, p.y * 1.3) * uLayer.z * 7.3 + vec3(uDrift, 0.0) * 9.0);',
+				'\t\tbody -= (1.0 - edge.g * 0.7 - edge.a * 0.3) * 0.34 * (0.6 + uShape.z) * (1.0 - clamp(body * 1.6, 0.0, 1.0)) + (1.0 - finer.g) * 0.05;',
+				'\t}',
+				'\treturn clamp(body * ' + literal(context, 'Dense') + ', 0.0, 1.0);',
+				'}'
+			], 'ENX_CLOUDS_LAYER');
+		}});
+	},
+
+	/*
+	 * The weather of a planet as blocks of numbers (generator; SceneForecast, its Kernel): ForecastStorms (its winds, storms,
+	 * fronts and streams), ForecastFronts (sheets, how humid), ForecastHeaps (heaps, the kind of the clouds), ForecastCirrus,
+	 * ForecastRain, ForecastShroud (cover, kind, cirrus, rain). The same in the page (Compute) and in a shader (Numeric).
+	 */
+	Forecasts: function () {
+		var blueprints = this.$Service('Blueprints');
+		var numeric = ['generator'];
+
+		function forecast () {
+			return blueprints.$Service('SceneForecast');
+		}
+
+		function number (key, value) {
+			return {Key: key, Type: 'number', Value: value};
+		}
+
+		function inputs (keys) {
+			return keys.map(function (key) {
+				return {Key: key, Type: 'float', Value: 0};
+			});
+		}
+
+		function outputs (keys) {
+			return keys.map(function (key) {
+				return {Key: key, Type: 'float'};
+			});
+		}
+
+		function value (given, key) {
+			return Number(given[key]) || 0;
+		}
+
+		/* A block of a function of the Kernel: its arguments of its inputs and properties, its results by their names. */
+		function block (type, keys, properties, results, name, args) {
+			blueprints.Node(type, {Graphs: numeric, Group: 'forecast', Properties: properties, Inputs: inputs(keys), Outputs: outputs(results),
+				Compute: function (given, props) {
+					var made = forecast().Code()[name].apply(null, args(function (key) {
+						return value(given, key);
+					}, function (key) {
+						return Number(props[key]);
+					}, function (x, y, z) {
+						return [value(given, x), value(given, y), value(given, z)];
+					}));
+					var out = {};
+
+					results.forEach(function (key, index) {
+						out[key] = typeof made === 'number' ? made : made[index];
+					});
+
+					return out;
+				},
+				Numeric: function (given, props, kit) {
+					var made;
+
+					kit.Kernel('forecast', forecast().IR());
+
+					made = {E: kit.Call.apply(null, [name].concat(args(function (key) {
+						return kit.Sized(given[key], 1).E;
+					}, function (key) {
+						return kit.Const(Number(props[key]), 'float');
+					}, function (x, y, z) {
+						return kit.Call('vec3', kit.Sized(given[x], 1).E, kit.Sized(given[y], 1).E, kit.Sized(given[z], 1).E);
+					}))), T: results.length === 1 ? 'float' : 'vec' + results.length};
+
+					if (results.length === 1) {
+						made = {Out: made};
+						made[results[0]] = made.Out;
+						delete made.Out;
+
+						return made;
+					}
+
+					return kit.Parts(made, results);
+				}
+			});
+		}
+
+		/* The winds of the planet, its storms, where the air came from: fronts and streams drawn out along the wind (StreamScale, StreamFine), Eddies. */
+		block('ForecastStorms', ['PX', 'PY', 'PZ', 'Days', 'Seed', 'RadiusKm'], [number('StreamScale', 2.6), number('StreamFine', 14), number('Eddies', 0.06)], ['Fronts', 'Streams', 'Mid', 'Storm'], 'wx_air', function (input, prop, vector) {
+			return [vector('PX', 'PY', 'PZ'), input('Days'), input('Seed'), input('RadiusKm'), prop('StreamScale'), prop('StreamFine'), prop('Eddies')];
+		});
+
+		/* The sheets of a front where the air is humid enough (Cut less humid by CutBy, Soft), and how humid it is. */
+		block('ForecastFronts', ['Fronts', 'Mid', 'Moist', 'Ground', 'Climb', 'PY', 'Storm', 'Cloudiness'], [number('Cut', 1.15), number('CutBy', 0.8), number('Soft', 0.08)], ['Sheet', 'Humid'], 'wx_fronts', function (input, prop) {
+			return [input('Fronts'), input('Mid'), input('Moist'), input('Ground'), input('Climb'), input('PY'), input('Storm'), input('Cloudiness'), prop('Cut'), prop('CutBy'), prop('Soft')];
+		});
+
+		/* Heaps of the heat of the day, fair weather ones (FairSea, FairLand), the kind of the clouds. */
+		block('ForecastHeaps', ['PX', 'PY', 'PZ', 'SunX', 'SunY', 'SunZ', 'Warm', 'Moist', 'Ground', 'Climb', 'Streams', 'Mid', 'Humid', 'Storm', 'Sheet', 'Cloudiness'], [number('FairSea', 0.22), number('FairLand', 0.38)], ['Heaps', 'Kind'], 'wx_heaps', function (input, prop, vector) {
+			return [vector('PX', 'PY', 'PZ'), vector('SunX', 'SunY', 'SunZ'), input('Warm'), input('Moist'), input('Ground'), input('Climb'), input('Streams'), input('Mid'), input('Humid'), input('Storm'), input('Sheet'), input('Cloudiness'), prop('FairSea'), prop('FairLand')];
+		});
+
+		/* Cirrus on the streams (Low to High of them). */
+		block('ForecastCirrus', ['Streams', 'PY', 'Sheet'], [number('Low', 0.55), number('High', 0.82)], ['Cirrus'], 'wx_cirrus', function (input, prop) {
+			return [input('Streams'), input('PY'), input('Sheet'), prop('Low'), prop('High')];
+		});
+
+		/* Rain of a front as humid as From to To, and of the towers of a storm. */
+		block('ForecastRain', ['Sheet', 'Humid', 'Storm', 'Heaps', 'Kind'], [number('From', 0.62), number('To', 0.95)], ['Rain'], 'wx_rain', function (input, prop) {
+			return [input('Sheet'), input('Humid'), input('Storm'), input('Heaps'), input('Kind'), prop('From'), prop('To')];
+		});
+
+		/* Cover, kind, cirrus and rain of the weather: a shroud on a world of clouds, none on one with none. */
+		block('ForecastShroud', ['Sheet', 'Heaps', 'Kind', 'Cirrus', 'Rain', 'Cloudiness'], [], ['Cover', 'Kind', 'Cirrus', 'Rain'], 'wx_shroud', function (input) {
+			return [input('Sheet'), input('Heaps'), input('Kind'), input('Cirrus'), input('Rain'), input('Cloudiness')];
+		});
+	},
+
+	/*
+	 * The weather of a planet of the library, a graph of numbers (blueprints/shader/forecast): of a direction of its body
+	 * (PX, PY, PZ), its days, seed, radius (km), the way to its sun (SunX..), how cloudy it is, and its climate there (Moist,
+	 * Warm, Ground, Climb): Cover, Kind, Cirrus, Rain.
+	 */
+	LibraryForecast: function () {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/forecast'));
+	},
+
+	/* The shape of a lightning of the library (blueprints/shader/bolt): see the header. */
+	LibraryBolt: function () {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/bolt'));
+	},
+
+	/* The shape of a lightning of a graph (none: the library one) for the page and for a shader: see the header. */
+	Bolt: function (graph) {
+		var blueprints = this.$Service('Blueprints');
+		var read = blueprints.Read(graph || this.LibraryBolt());
+		var key = JSON.stringify([read.blocks, read.links, read.parameters]);
+		var code;
+		var shader;
+		var values = {};
+		var made;
+
+		this.Bolts = this.Bolts || {};
+
+		if (this.Bolts[key])
+			return this.Bolts[key];
+
+		code = blueprints.NumericCode(read, {}, {});
+
+		if (!code || code.Keys.join() !== 'X,Z')
+			throw new Error('Elemenx SceneBlueprints: the shape of a bolt is a generator of numbers of its results X and Z');
+
+		shader = this.$Service('BlueprintShaders').NumericGLSL(read, {});
+
+		(read.parameters || []).forEach(function (parameter) {
+			values[parameter.key] = Number(parameter.value);
+		});
+
+		function value (name, fallback) {
+			return isFinite(values[name]) ? values[name] : fallback;
+		}
+
+		made = {
+			Jag: function (step, seed) {
+				var given = {Step: step, Seed: seed};
+
+				return code.Run.Main.apply(null, code.Numeric.Inputs.map(function (one) {
+					return given[one.Name] || 0;
+				}));
+			},
+			Steps: Math.max(1, Math.min(64, Math.round(value('Steps', 14)))),
+			Wide: value('Wide', 0.09),
+			Fork: Math.round(value('Fork', 5)),
+			ForkSteps: Math.max(0, Math.round(value('ForkSteps', 6))),
+			ForkDown: value('ForkDown', 0.8),
+			ForkWide: value('ForkWide', 1.2),
+			GLSL: this.$Service('Renderer').Chunks[shader.Need] + '\nvec2 bolt_jag(float step, float seed) {\n\treturn ' + shader.Name + '(' + shader.Inputs.map(function (one) {
+				return one.Name === 'Step' ? 'step' : one.Name === 'Seed' ? 'seed' : '0.0';
+			}).join(', ') + ');\n}'
+		};
+
+		this.Bolts[key] = made;
+
+		return made;
+	},
+
+	/*
+	 * The arms of a galaxy as blocks of numbers of a generator (GalaxyData.Kernel: the same in the page and in a shader):
+	 * GalaxyTurn (where a place stands round its spiral), GalaxyBend (its arms bent by a noise; Bend: how much), GalaxyWave
+	 * (the wave of its arms, shifted inward for its dust), GalaxyArm (how much of its disc is in its arms: Low, High, Power).
+	 */
+	Galaxies: function () {
+		var blueprints = this.$Service('Blueprints');
+		var numeric = ['generator'];
+
+		function galaxy () {
+			return blueprints.$Service('GalaxyData');
+		}
+
+		function block (type, keys, properties, name) {
+			blueprints.Node(type, {Graphs: numeric, Group: 'galaxy', Properties: properties.map(function (one) {
+				return {Key: one[0], Type: 'number', Value: one[1]};
+			}), Inputs: keys.map(function (key) {
+				return {Key: key, Type: 'float', Value: 0};
+			}), Outputs: [{Key: 'Value', Type: 'float'}],
+			Compute: function (given, props) {
+				return {Value: galaxy().Code()[name].apply(null, keys.map(function (key) {
+					return Number(given[key]) || 0;
+				}).concat(properties.map(function (one) {
+					return Number(props[one[0]]);
+				})))};
+			},
+			Numeric: function (given, props, kit) {
+				kit.Kernel('galaxy', galaxy().IR());
+
+				return {Value: {E: kit.Call.apply(null, [name].concat(keys.map(function (key) {
+					return kit.Sized(given[key], 1).E;
+				}), properties.map(function (one) {
+					return kit.Const(Number(props[one[0]]), 'float');
+				}))), T: 'float'}};
+			}
+			});
+		}
+
+		block('GalaxyTurn', ['X', 'Z', 'Scale', 'Pitch', 'Phase'], [], 'gx_turn');
+		block('GalaxyBend', ['X', 'Z', 'Radius', 'Seed'], [['Bend', 0.5]], 'gx_bend');
+		block('GalaxyWave', ['Turn', 'Bend', 'Arms', 'Shift'], [], 'gx_wave');
+		block('GalaxyArm', ['Wave'], [['Low', 0.3], ['High', 1.7], ['Power', 2.2]], 'gx_arm');
+	},
+
+	/* The arms of a galaxy of the library (blueprints/shader/galaxy): see the header. */
+	LibraryGalaxy: function () {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/galaxy'));
+	},
+
+	/*
+	 * The arms of a galaxy of a graph (none: the library one), made once a graph: a generator of its inputs X, Z (kly), Scale
+	 * (of its disc, kly), Radius (kly), Pitch, Phase (radians), Arms, Seed (GalaxyData.SeedNumber), Shift (radians) of its
+	 * results Turn, Bend, Wave and Arm. {Of(manifest, x, z, shift, seed): [Turn, Bend, Wave, Arm] in the page (kly),
+	 * Arm(manifest, x, z, shift, seed): its Arm alone, GLSL: the text of vec4 galaxy_spiral(vec2 p, float scale, float radius,
+	 * float pitch, float phase, float arms, float seed, float shift) for a shader}.
+	 */
+	Galaxy: function (graph) {
+		var blueprints = this.$Service('Blueprints');
+		var read = blueprints.Read(graph || this.LibraryGalaxy());
+		var key = JSON.stringify([read.blocks, read.links, read.parameters]);
+		var code;
+		var shader;
+		var made;
+		var names = {X: 'p.x', Z: 'p.y', Scale: 'scale', Radius: 'radius', Pitch: 'pitch', Phase: 'phase', Arms: 'arms', Seed: 'seed', Shift: 'shift'};
+
+		this.Spirals = this.Spirals || {};
+
+		if (this.Spirals[key])
+			return this.Spirals[key];
+
+		code = blueprints.NumericCode(read, {}, {});
+
+		if (!code || code.Keys.join() !== 'Turn,Bend,Wave,Arm')
+			throw new Error('Elemenx SceneBlueprints: the arms of a galaxy are a generator of numbers of its results Turn, Bend, Wave and Arm');
+
+		shader = this.$Service('BlueprintShaders').NumericGLSL(read, {});
+
+		function of (manifest, x, z, shift, seed) {
+			var given = {X: x, Z: z, Scale: manifest.Radius / 4500, Radius: manifest.Radius / 1000, Pitch: manifest.Pitch * Math.PI / 180, Phase: manifest.Phase * Math.PI / 180, Arms: manifest.Arms, Seed: seed, Shift: shift || 0};
+
+			return code.Run.Main.apply(null, code.Numeric.Inputs.map(function (one) {
+				return given[one.Name] || 0;
+			}));
+		}
+
+		made = {
+			Of: of,
+			Arm: function (manifest, x, z, shift, seed) {
+				return of(manifest, x, z, shift, seed)[3];
+			},
+			GLSL: this.$Service('Renderer').Chunks[shader.Need] + '\nvec4 galaxy_spiral(vec2 p, float scale, float radius, float pitch, float phase, float arms, float seed, float shift) {\n\treturn ' + shader.Name + '(' + shader.Inputs.map(function (one) {
+				return names[one.Name] || '0.0';
+			}).join(', ') + ');\n}'
+		};
+
+		this.Spirals[key] = made;
+
+		return made;
+	},
+
+	/*
+	 * What comes to the block BakeLand of a graph of a bake (its Land) as a generator of numbers: its blocks of that, their
+	 * Input blocks, a Result Land. What the page reads of the surface of a body (SceneTerrainGenerator.Sphere), null with none.
+	 */
+	BakeLandGraph: function (graph) {
+		var read = this.$Service('Blueprints').Read(graph);
+		var land = (read.blocks || []).filter(function (block) {
+			return block.type === 'BakeLand' && block.enabled !== false;
+		})[0];
+		var keep = {};
+		var links = read.links || [];
+		var into;
+
+		function owner (pin) {
+			return String(pin).split(/-(?:in|out)-/)[0];
+		}
+
+		function visit (id) {
+			if (keep[id]) return;
+
+			keep[id] = true;
+
+			links.forEach(function (link) {
+				if (owner(link.p2) === id)
+					visit(owner(link.p1));
+			});
+		}
+
+		if (!land)
+			return null;
+
+		into = links.filter(function (link) {
+			return link.p2 === land.id + '-in-Land';
+		})[0];
+
+		if (!into)
+			return null;
+
+		visit(owner(into.p1));
+
+		return {version: read.version, type: 'generator', name: (read.name || 'bake') + '-land', parameters: read.parameters || [], blocks: read.blocks.filter(function (block) {
+			return keep[block.id];
+		}).concat([{id: 'bake-land-result', type: 'Result', x: 0, y: 0, properties: [{key: 'Key', value: 'Land'}]}]), links: links.filter(function (link) {
+			return keep[owner(link.p1)] && keep[owner(link.p2)];
+		}).concat([{id: 'bake-land-link', p1: into.p1, p2: 'bake-land-result-in-Value', kind: 'value'}])};
 	},
 
 	/*
@@ -953,7 +2403,7 @@ Elemenx.Service('SceneBlueprints', {
 			var inputs = context.Inputs;
 
 			context.Lines.push('vec3 ' + name + '_v = normalize(-' + inputs.World + ');');
-			context.Lines.push('vec3 ' + name + '_horizon = mix(uAir.rgb, vec3(1.0), 0.45) * clamp(uSun.y * 3.0 + 0.3, 0.0, 1.0);');
+			context.Lines.push('vec3 ' + name + '_horizon = air_horizon_ground(clamp(uSun.y * 3.0 + 0.3, 0.0, 1.0));');
 			context.Lines.push('vec3 ' + name + '_lit = pow(' + inputs.Albedo + ' * ' + inputs.Light + ' + uSunColor * ' + inputs.Sheen + ' * ' + inputs.Sunlit + ' + ' + inputs.Glow + ', vec3(1.0 / 2.2));');
 			context.Lines.push('float ' + name + '_mirror = ' + inputs.Pool + ' * (0.25 + 0.65 * pow(1.0 - max(' + name + '_v.y, 0.0), 3.0));');
 			context.Lines.push(name + '_lit = mix(' + name + '_lit, mix(uAir.rgb, vec3(1.0), 0.5) * clamp(uSkyLight.b * 2.4, 0.03, 1.0), ' + name + '_mirror);');
@@ -961,7 +2411,7 @@ Elemenx.Service('SceneBlueprints', {
 			context.Lines.push('float ' + name + '_strength = clamp(' + name + '_mirror + uWet * 0.27 * (1.0 - ' + inputs.Pool + '), 0.0, 1.0);');
 			context.Lines.push('float ' + name + '_code = ' + name + '_strength > 0.002 ? 1.0 - 0.45 * (0.7 + ' + name + '_strength * 0.3) : 1.0;');
 
-			return {Color: 'mix(' + name + '_lit, ' + name + '_horizon, 1.0 - exp(-length(' + inputs.World + ') / uFog))', Alpha: name + '_code'};
+			return {Color: 'mix(' + name + '_lit, ' + name + '_horizon, air_haze_ground(' + inputs.World + '))', Alpha: name + '_code'};
 		});
 
 		/* The end: the color of the land at the point, and how much of it covers what is under it. */

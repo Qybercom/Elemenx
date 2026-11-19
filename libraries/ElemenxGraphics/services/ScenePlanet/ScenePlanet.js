@@ -28,6 +28,19 @@
  *   result Height, metres) in the place of its own; generated (no rule) is its own. The rules of the library are
  *   resources <Library>/rules/<name> (ScenePlanet.Rules: hills, mountains, dunes, mesas, badlands, plains, volcanoes,
  *   craters, glacial, karst); Ruled(options) makes their code in the page for the workers.
+ * - Its land and its relief are graphs of Blueprints, blueprints/planet/land (inputs PX, PY, PZ, Oceanic, Level, WLand,
+ *   WSea, Octaves, SShape; result Land) and blueprints/planet/relief (inputs the point, its east and north EX.. NX.., Land,
+ *   Boundary, Push, Oceanic, Small (km, the finest asked: what is finer is skipped by When), Relief, Mountains, Depth,
+ *   Radius, Octaves, PaintRaise, PaintRift, PaintRiver and the shifts of its noises SFolds.. SGrain; result Height,
+ *   metres, before its rivers, edits and locations). Its climate (of options; its data keeps its own) is of three more:
+ *   blueprints/planet/wind (inputs the point, Band, degrees of latitude, Latitude, radians, SWeather; results East and
+ *   North, m/s), blueprints/planet/rough (its land roughly where the wind comes from, of fewer octaves: the point,
+ *   Oceanic, Level, WLand, WSea, SShape; result Rough) and blueprints/planet/climate (the point, Latitude, Band, Height,
+ *   Upwind, of the lands and seas six samples up the wind, PaintTemperature, PaintMoisture, SWeather; results Celsius and
+ *   Moisture). LandGraph, ReliefGraph, RoughGraph, WindGraph and ClimateGraph: graphs of its own; ReliefRun(name) the
+ *   library's as a function {Main, Inputs, Keys}, ReliefMake(graph) the code of one {Source, Inputs, Keys},
+ *   ReliefOf(name, graph, code) its function; GraphSources(options) the code of its own (ReliefSources) for the workers, as
+ *   Ruled(options) and SceneTerrainGenerator.Site give it them.
  * - Edits: what was changed of its relief after it was made, brushes along a path, in their order: [{Type (raise, lower,
  *   flatten, smooth), Points [[latitude, longitude]...], Radius (km), Amount (metres; of smooth 0 to 1), Height (metres,
  *   of flatten)}]; the nearer the path the more, none past Radius. Paint makes the planet, Edits change what it made.
@@ -54,7 +67,7 @@
 Elemenx.Service('ScenePlanet', {
 	$Meta: {
 		Description: 'A planet as one continuous function of a direction: painted continents, tectonic plates, winds, climate and biomes, as fine as it is asked.',
-		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'ViewTurn(yaw, pitch, roll)', 'Map(options, rows, width, height, overlay)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'UseData(key, data)', 'AddTiles(key, names)', 'DataOf(key)', 'Ruled(options)', 'DataVectors(key)', 'Vectored(options)', 'TownsFor(options)', 'TileName(layer, face, level, x, y)', 'TileDirection(face, s, t)', 'TilePlace(direction)', 'TileValues(options, layer, face, level, x, y, size, table)', 'Settlements(options, count)', 'PlacedTowns(options, towns)', 'PlacedRivers(options, rivers)', 'UseSettlements(key, towns)', 'Highways(options, step)', 'UseHighways(key, roads)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)', 'Kind(kind)', 'KindByShare(share)', 'Warmth(celsius)']
+		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'ViewTurn(yaw, pitch, roll)', 'Map(options, rows, width, height, overlay)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'UseData(key, data)', 'AddTiles(key, names)', 'DataOf(key)', 'Ruled(options)', 'DataVectors(key)', 'Vectored(options)', 'TownsFor(options)', 'TileName(layer, face, level, x, y)', 'TileDirection(face, s, t)', 'TilePlace(direction)', 'TileValues(options, layer, face, level, x, y, size, table)', 'Settlements(options, count)', 'PlacedTowns(options, towns)', 'PlacedRivers(options, rivers)', 'UseSettlements(key, towns)', 'Highways(options, step)', 'UseHighways(key, roads)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)', 'ReliefRun(name)', 'ReliefMake(graph)', 'ReliefOf(name, graph, code)', 'GraphSources(options)', 'Kind(kind)', 'KindByShare(share)', 'Warmth(celsius)']
 	},
 
 	/* The kinds of strokes of a paint. */
@@ -96,27 +109,22 @@ Elemenx.Service('ScenePlanet', {
 		var count = Math.max(2, Math.round(Number(given.Plates) || defaults.Plates));
 		/* Octaves of the coasts: from a feature of a quarter of the planet down to Detail. */
 		var octaves = Math.max(3, Math.min(16, Math.ceil(Math.log(radius * 1.5 / detail) / Math.LN2)));
-		var shape = noise.Make({Type: 'simplex', Seed: seed + '-shape', Fractal: 'fbm', Octaves: octaves, Gain: 0.52});
-		var coarse = noise.Make({Type: 'simplex', Seed: seed + '-shape', Fractal: 'fbm', Octaves: 5, Gain: 0.52});
 		var warp = noise.Make({Type: 'simplex', Seed: seed + '-warp', Fractal: 'fbm', Octaves: 3});
-		var folds = noise.Make({Type: 'simplex', Seed: seed + '-folds', Fractal: 'ridged', Octaves: Math.min(12, octaves), Gain: 0.5});
-		var crags = noise.Make({Type: 'simplex', Seed: seed + '-crags', Fractal: 'ridged', Octaves: 6, Gain: 0.5});
-		/* The peaks over the crests of the ranges, of tens of kilometres. */
-		var peaks = noise.Make({Type: 'simplex', Seed: seed + '-peaks', Fractal: 'ridged', Octaves: 4, Gain: 0.5});
-		/* The ridges and valleys of a range itself, of 20 km down to a few hundred metres (what the ranges of hundreds of km had not). */
-		var sierra = noise.Make({Type: 'simplex', Seed: seed + '-sierra', Fractal: 'ridged', Octaves: 5, Gain: 0.5, Warp: {Amount: 0.35, Scale: 0.5, Octaves: 2}});
-		/* Horns on the crests (a Matterhorn), pyramids of some 20 km (not needles). */
-		var horns = noise.Make({Type: 'simplex', Seed: seed + '-horns', Fractal: 'ridged', Octaves: 3, Gain: 0.5});
 		/*
-		 * The relief over the land, as it is made on the Earth: an uplift of whole regions (highlands, plateaus, shields), chains
-		 * of ranges of a ridged multifractal on bent ways where it rises, and hills and detail down to tens of metres, rougher
-		 * the higher and steeper the land (a heterogeneous terrain: valleys smooth, peaks rugged).
+		 * Its land and its relief, the graphs blueprints/planet/land and relief, and its climate, rough, wind and climate
+		 * (LandGraph.. ClimateGraph: its own; ReliefSources: their code made in the page, Ruled): an uplift of whole regions,
+		 * chains of ranges where it rises, hills and detail down to tens of metres, rougher the higher and steeper the land.
+		 * Each called with the very same list, only what changes set.
 		 */
-		var uplift = noise.Make({Type: 'simplex', Seed: seed + '-uplift', Fractal: 'fbm', Octaves: 3, Gain: 0.5});
-		var ranges = noise.Make({Type: 'simplex', Seed: seed + '-ranges', Fractal: 'ridged', Octaves: 7, Gain: 0.5, Warp: {Amount: 0.5, Scale: 0.4, Octaves: 2}});
-		var hills = noise.Make({Type: 'simplex', Seed: seed + '-hills', Fractal: 'fbm', Octaves: 6, Gain: 0.5});
-		var grain = noise.Make({Type: 'simplex', Seed: seed + '-grain', Fractal: 'fbm', Octaves: 6, Gain: 0.48});
-		var weather = noise.Make({Type: 'simplex', Seed: seed + '-weather', Fractal: 'fbm', Octaves: 3});
+		var reliefs = {};
+		var slots = {};
+		var outs = {};
+		var args = {};
+
+		this.ReliefNames.forEach(function (name) {
+			reliefs[name] = self.ReliefOf(name.toLowerCase(), given[name + 'Graph'], given.ReliefSources && given.ReliefSources[name]);
+		});
+
 		/* Its lands: BiomeList when given (a worker has no registry of them), else of their names. */
 		var biomes = this.$Service('SceneTerrainGenerator').Biomes(given.BiomeList ? {BiomeList: given.BiomeList} : {Biomes: given.Biomes || this.$Service('SceneTerrainGenerator').DefaultBiomes});
 		var strokes = (given.Paint || []).map(function (stroke) {
@@ -513,19 +521,6 @@ Elemenx.Service('ScenePlanet', {
 			return [a[0] / length, a[1] / length, a[2] / length];
 		}
 
-		/*
-		 * The ridges of a range at a point, 0 to 1: sharp aretes (a ridged noise to its power 2.2), the floors of the valleys
-		 * between them flat (no lower than 0.1, met smoothly): U-shaped glacial valleys, steep walls over a flat floor.
-		 */
-		function aretes (q) {
-			var r = Math.pow(sierra.At(q[0] * 320, q[1] * 320, q[2] * 320), 2.2);
-			var floor = 0.1;
-			var k = 0.06;
-			var h = Math.max(0, Math.min(1, 0.5 + 0.5 * (r - floor) / k));
-
-			return r * h + floor * (1 - h) + k * h * (1 - h);
-		}
-
 		function smoothstep (from, to, value) {
 			var t = Math.max(0, Math.min(1, (value - from) / (to - from)));
 
@@ -606,6 +601,42 @@ Elemenx.Service('ScenePlanet', {
 			return t * 0.5;
 		}
 
+		/* Of each graph: where each input of it is in its list (one past it: an input it has not), its numbers of the planet set once. */
+		Object.keys(reliefs).forEach(function (name) {
+			var inputs = reliefs[name].Inputs;
+			var fixed = {Octaves: octaves, Relief: relief, Mountains: mountains, Depth: depth, Radius: radius, Level: 0};
+			var at = {};
+
+			['Shape', 'Folds', 'Uplift', 'Ranges', 'Peaks', 'Sierra', 'Horns', 'Hills', 'Crags', 'Grain', 'Weather'].forEach(function (one) {
+				fixed['S' + one] = self.$Service('Math').SeedOffset(seed + '-' + one.toLowerCase());
+			});
+
+			['PX', 'PY', 'PZ', 'EX', 'EY', 'EZ', 'NX', 'NY', 'NZ', 'Land', 'Boundary', 'Push', 'Oceanic', 'Small', 'Level', 'WLand', 'WSea', 'PaintRaise', 'PaintRift', 'PaintRiver', 'Latitude', 'Band', 'Height', 'Upwind', 'PaintTemperature', 'PaintMoisture'].concat(Object.keys(fixed)).forEach(function (key) {
+				var index = inputs.indexOf(key);
+
+				at[key] = index === -1 ? inputs.length : index;
+			});
+
+			args[name] = inputs.map(function () {
+				return 0;
+			}).concat([0]);
+
+			Object.keys(fixed).forEach(function (key) {
+				args[name][at[key]] = fixed[key];
+			});
+
+			slots[name] = at;
+			outs[name] = {};
+			(reliefs[name].Keys || []).forEach(function (key, index) {
+				outs[name][key] = index;
+			});
+		});
+
+		/* A result of a graph by its name: one alone is a number, more a vector of them. */
+		function result (name, made, key) {
+			return typeof made === 'number' ? made : made[outs[name][key]];
+		}
+
 		/* The tectonic plates: their middles over the globe as a spiral spreads them, moved by the seed; each its way. */
 		for (i = 0; i < count; i++) {
 			var spiral = self.$Service('Math').Spiral(i, count, random() * 1.2);
@@ -662,16 +693,27 @@ Elemenx.Service('ScenePlanet', {
 		 * on their own), what was drawn (land and sea), all told before any detail, so its 0 is the coast at any scale.
 		 */
 		function continent (p, tectonic) {
-			var value = (shape.At(p[0] * 1.6, p[1] * 1.6, p[2] * 1.6) - 0.5) * 2.2 + (tectonic.Oceanic ? -0.25 : 0.25) - level;
+			return landOf(p, tectonic.Oceanic, level, painted(p, 'land', function (stroke) {
+				return within(p, stroke);
+			}), painted(p, 'sea', function (stroke) {
+				return within(p, stroke);
+			}));
+		}
 
-			value += painted(p, 'land', function (stroke) {
-				return within(p, stroke) * Math.max(0, 1.2 - value);
-			});
-			value -= painted(p, 'sea', function (stroke) {
-				return within(p, stroke) * Math.max(0, value + 1.2);
-			});
+		/* The graph of the land (blueprints/planet/land) at a point. */
+		function landOf (p, oceanic, sea, painted, drowned) {
+			var list = args.Land;
+			var at = slots.Land;
 
-			return value;
+			list[at.PX] = p[0];
+			list[at.PY] = p[1];
+			list[at.PZ] = p[2];
+			list[at.Oceanic] = oceanic ? 1 : 0;
+			list[at.Level] = sea;
+			list[at.WLand] = painted;
+			list[at.WSea] = drowned;
+
+			return reliefs.Land.Main.apply(null, list);
 		}
 
 		/* The level of its sea: what leaves Ocean of a spread of its points under it, before anything is drawn. */
@@ -682,7 +724,7 @@ Elemenx.Service('ScenePlanet', {
 			for (k = 0; k < 600; k++) {
 				var p = self.$Service('Math').Spiral(k, 600);
 
-				values.push((shape.At(p[0] * 1.6, p[1] * 1.6, p[2] * 1.6) - 0.5) * 2.2 + (plate(p).Oceanic ? -0.25 : 0.25));
+				values.push(landOf(p, plate(p).Oceanic, 0, 0, 0));
 			}
 
 			values.sort(function (a, b) {
@@ -865,160 +907,64 @@ Elemenx.Service('ScenePlanet', {
 			return {ID: kept.Values[0], Oceanic: kept.Values[1] > 127, Boundary: kept.Values[2] * 10, Push: (kept.Values[3] / 255 - 0.5) * 4};
 		}
 
+		/*
+		 * Of the graph of the relief (blueprints/planet/relief): its land and its plate, how fine it is asked (none finer than
+		 * finest, km: a globe needs none), its east and north (the slope of its ranges), the sums of what was painted there.
+		 */
 		function raised (p, finest, near) {
 			var tectonic = near ? near.Tectonic : plate(p);
 			/* Near a coast its land anew: the sea a few hundred metres off is not land there. */
 			var land = near && near.Land > 0.2 ? near.Land : continent(p, tectonic);
-			var meet = Math.exp(-Math.abs(tectonic.Boundary) / 180);
-			var ridged = folds.At(p[0] * 9, p[1] * 9, p[2] * 9);
+			var list = args.Relief;
+			var at = slots.Relief;
 			var height;
 
-			/* Over the sea: the land rises with its number, mountains where plates close, rifts where they part. */
+			list[at.PX] = p[0];
+			list[at.PY] = p[1];
+			list[at.PZ] = p[2];
+			list[at.Land] = land;
+			list[at.Boundary] = tectonic.Boundary;
+			list[at.Push] = tectonic.Push;
+			list[at.Oceanic] = tectonic.Oceanic ? 1 : 0;
+			list[at.Small] = finest === undefined ? 0 : finest;
+
+			/* Over the sea: the mountains, rifts and rivers painted, and the east and the north of the point. */
 			if (land > 0) {
-				var coast = smoothstep(0, 0.12, land);
-				var lift = uplift.At(p[0] * 2.2, p[1] * 2.2, p[2] * 2.2);
-				var chains = smoothstep(0.5 + (0.5 - mountains) * 0.4, 0.8 + (0.5 - mountains) * 0.4, lift) + meet * Math.max(0, tectonic.Push) * 1.2;
-				var risen;
-				var rough;
-				var small = finest === undefined ? 0 : finest;
+				var east = normalize(Math.abs(p[1]) > 0.999 ? [1, 0, 0] : [p[2], 0, -p[0]]);
+				var north = cross(p, east);
 
-				chains = Math.min(1, chains) * coast;
-
-				/* The plain rising inland, the highlands and the plateaus where the land is lifted. */
-				height = 15 + Math.pow(Math.min(1.5, land), 1.1) * 780 + smoothstep(0.42, 0.8, lift) * 900 * coast;
-
-				/* The ranges: sharp crests and their spurs, where the land is lifted and where plates close. */
-				/*
-				 * Regression: crests of a ridged noise to its power 2.6 times 0.55 of the relief were broad swells under 5 km,
-				 * no peak: sharper and higher now, and peaks of their own over the crests (8 to 9 km where plates close).
-				 */
-				risen = ranges.At(p[0] * 14, p[1] * 14, p[2] * 14);
-				height += Math.pow(risen, 2.2) * relief * (0.3 + 0.5 * mountains) * chains;
-				height += Math.pow(peaks.At(p[0] * 48, p[1] * 48, p[2] * 48), 3) * relief * 0.3 * (0.5 + mountains) * chains * smoothstep(0.3, 0.7, risen);
-
-				/*
-				 * Regression: between ranges of 450 km and bumps of a kilometre nothing: no ridge nor valley of a range, a plateau
-				 * of an egg crate. Ridges of 40 km down to a few, sharp, kilometres high in the chains.
-				 */
-				var ridge = 0;
-
-				if (small < 40) {
-					ridge = aretes(p);
-					height += (ridge - 0.3) * relief * 0.45 * (0.5 + mountains) * Math.min(1, chains * 1.5);
-
-					/* Horns where the crests are high: pyramids of rock over the aretes. */
-					if (ridge > 0.35)
-						height += Math.pow(horns.At(p[0] * 300, p[1] * 300, p[2] * 300), 2.5) * relief * 0.1 * (0.5 + mountains) * Math.min(1, chains * 1.5) * smoothstep(0.35, 0.75, ridge);
-				}
-
-				height += Math.max(0, tectonic.Push) * meet * relief * 0.35 * (0.4 + ridged * 0.6);
-				height -= Math.max(0, -tectonic.Push) * meet * 900;
-				height += painted(p, 'mountains', function (stroke) {
+				list[at.EX] = east[0];
+				list[at.EY] = east[1];
+				list[at.EZ] = east[2];
+				list[at.NX] = north[0];
+				list[at.NY] = north[1];
+				list[at.NZ] = north[2];
+				/* A range: its height along its line (the graph lifts its crests and spurs by the folds of the ground). */
+				list[at.PaintRaise] = painted(p, 'mountains', function (stroke) {
 					var width = Math.max(1, Number(stroke.Width) || 150) / radius;
 					var near = toLine(p, stroke.Directions);
 
-					return near < width ? Math.pow(1 - near / width, 1.5) * (Number(stroke.Height) || 4000) * (0.55 + ridged * 0.45) : 0;
+					return near < width ? Math.pow(1 - near / width, 1.5) * (Number(stroke.Height) || 4000) : 0;
 				});
-				height -= painted(p, 'rift', function (stroke) {
+				list[at.PaintRift] = painted(p, 'rift', function (stroke) {
 					var width = Math.max(1, Number(stroke.Width) || 60) / radius;
 					var near = toLine(p, stroke.Directions);
 
 					return near < width ? (1 - near / width) * (Number(stroke.Depth) || 1200) : 0;
 				});
-
 				/* A river: its valley down to near the sea where it goes. */
-				height *= 1 - painted(p, 'river', function (stroke) {
+				list[at.PaintRiver] = painted(p, 'river', function (stroke) {
 					var width = Math.max(0.1, Number(stroke.Width) || 6) / radius;
 					var near = toLine(p, stroke.Directions);
 
 					return near < width * 4 ? (1 - Math.min(1, near / (width * 4))) * 0.85 : 0;
 				});
+			}
 
-				/*
-				 * Finer than the ranges: hills of tens of kilometres down to one, and the grain of the ground down to tens of
-				 * metres, as rough as the land is high and in its chains; none finer than is asked (finest, km: a globe needs none).
-				 */
-				/* Some lowlands hilly (old worn ranges), some plains flat, by a field of their own of hundreds of kilometres. */
-				var hilly = smoothstep(0.38, 0.72, uplift.At(p[0] * 7 + 31, p[1] * 7, p[2] * 7));
+			height = reliefs.Relief.Main.apply(null, list);
 
-				rough = Math.max(0.06 + hilly * 0.5, Math.min(1, height / 3200 + chains * 0.5));
-
-				/*
-				 * Erosion, as water carves a range: the slope of its ranges here (of two more samples of them, 3 km east and north),
-				 * the hills and the grain worn away where it is steep, and gullies drawn out down the slope, spurs between them
-				 * (a ridged noise stretched along the way down). Regression: hills and crags the same every way, an egg crate of
-				 * bumps of a kilometre or two over the ranges, no ridge, no valley.
-				 */
-				var steep = 0;
-				var down = null;
-
-				if (chains > 0.02 && small < 20) {
-					var step = 3 / radius;
-					var east = normalize(Math.abs(p[1]) > 0.999 ? [1, 0, 0] : [p[2], 0, -p[0]]);
-					var north = cross(p, east);
-					var lift2 = relief * (0.3 + 0.5 * mountains) * chains;
-					var here = Math.pow(risen, 2.2);
-					var sharp = relief * 0.45 * (0.5 + mountains) * Math.min(1, chains * 1.5);
-					var pe = [p[0] + east[0] * step, p[1] + east[1] * step, p[2] + east[2] * step];
-					var pn = [p[0] + north[0] * step, p[1] + north[1] * step, p[2] + north[2] * step];
-					/* The slope of the ranges and of their ridges. */
-					var ge = ((Math.pow(ranges.At(pe[0] * 14, pe[1] * 14, pe[2] * 14), 2.2) - here) * lift2 + (aretes(pe) - ridge) * sharp) / 3000;
-					var gn = ((Math.pow(ranges.At(pn[0] * 14, pn[1] * 14, pn[2] * 14), 2.2) - here) * lift2 + (aretes(pn) - ridge) * sharp) / 3000;
-
-					steep = Math.sqrt(ge * ge + gn * gn);
-
-					if (steep > 1e-6)
-						down = [-(east[0] * ge + north[0] * gn) / steep, -(east[1] * ge + north[1] * gn) / steep, -(east[2] * ge + north[2] * gn) / steep];
-				}
-
-				var worn = 1 / (1 + steep * steep * 8);
-
-				if (small < 20) {
-					var wide = radius / 40;
-
-					height += (hills.At(p[0] * wide, p[1] * wide, p[2] * wide) - 0.5) * 2 * (40 + 700 * rough) * coast * worn;
-				}
-
-				/* Gullies and spurs down the slope, of a few kilometres. */
-				if (down && small < 3) {
-					var gully = radius / 3;
-					var x = [p[0] * gully, p[1] * gully, p[2] * gully];
-					var along = (x[0] * down[0] + x[1] * down[1] + x[2] * down[2]) * 0.75;
-
-					height += (crags.At(x[0] - down[0] * along + 17, x[1] - down[1] * along, x[2] - down[2] * along) - 0.55) * Math.min(1, steep * 3) * (300 + Math.max(0, height) * 0.08) * Math.min(1, chains * 2);
-				}
-
-				if (small < 1) {
-					var close = radius / 1.2;
-					var rugged = Math.max(0, Math.min(1, (height - 600) / 2400));
-
-					/* In the ranges the grain is little (the gullies are their detail): bumps of a kilometre all over buried their ridges. */
-					height += (grain.At(p[0] * close, p[1] * close, p[2] * close) - 0.5) * 2 * (6 + 220 * rough) * coast * (0.4 + 0.6 * worn) * (1 - 0.7 * Math.min(1, chains * 2));
-					/* Crags in the ranges; a high plateau smoother (an egg crate of bumps of most of a kilometre all over it was). */
-					height += (crags.At(p[0] * close * 0.6, p[1] * close * 0.6, p[2] * close * 0.6) - 0.45) * rugged * (180 + height * 0.12) * (0.4 + 0.6 * worn) * Math.min(1, 0.15 + chains * 2);
-				}
-
-				/*
-				 * Strata of the rock (the Dolomites): in the high ranges the slopes in benches and walls of some 250 m, sheer cliffs
-				 * between flat ledges, as much as the ranges hold there.
-				 */
-				if (small < 3 && chains > 0.05 && height > 1500) {
-					var layer = 250;
-					var k2 = height / layer;
-					var f2 = k2 - Math.floor(k2);
-					var stepped = (Math.floor(k2) + f2 * f2 * f2 * (f2 * (f2 * 6 - 15) + 10)) * layer;
-
-					height += (stepped - height) * 0.55 * Math.min(1, chains * 2) * Math.min(1, (height - 1500) / 1000);
-				}
-
+			if (land > 0)
 				height = Math.max(1, carved(p, height));
-			}
-			else {
-				height = -(120 + Math.pow(Math.min(1.5, -land), 0.7) * depth * 0.8);
-				height += Math.max(0, -tectonic.Push) * meet * 2200 * (tectonic.Oceanic ? 1 : 0.4);
-				height -= Math.max(0, tectonic.Push) * meet * depth * 0.4 * (tectonic.Oceanic ? 1 : 0.3);
-				height = Math.min(-1, height);
-			}
 
 			return {Height: bare ? edited(p, height, finest) : baked(p, edited(p, height, finest)), Tectonic: tectonic, Land: land};
 		}
@@ -1356,11 +1302,22 @@ Elemenx.Service('ScenePlanet', {
 					best = one;
 			});
 
-			return (coarse.At(p[0] * 1.6, p[1] * 1.6, p[2] * 1.6) - 0.5) * 2.2 + (best.Oceanic ? -0.25 : 0.25) - level + painted(p, 'land', function (stroke) {
-				return within(p, stroke);
-			}) - painted(p, 'sea', function (stroke) {
+			var list = args.Rough;
+			var at = slots.Rough;
+
+			list[at.PX] = p[0];
+			list[at.PY] = p[1];
+			list[at.PZ] = p[2];
+			list[at.Oceanic] = best.Oceanic ? 1 : 0;
+			list[at.Level] = level;
+			list[at.WLand] = painted(p, 'land', function (stroke) {
 				return within(p, stroke);
 			});
+			list[at.WSea] = painted(p, 'sea', function (stroke) {
+				return within(p, stroke);
+			});
+
+			return result('Rough', reliefs.Rough.Main.apply(null, list), 'Rough');
 		}
 
 		function sample (direction, finest) {
@@ -1379,9 +1336,10 @@ Elemenx.Service('ScenePlanet', {
 			var wind;
 			var axes = frame(p);
 			var band = Math.abs(latitude) * 180 / Math.PI;
-			var east;
-			var north;
 			var upwind;
+			var list;
+			var at;
+			var made;
 			var biome = '';
 			var mixed = null;
 			var k;
@@ -1401,21 +1359,18 @@ Elemenx.Service('ScenePlanet', {
 			}
 			/* Of its options: its winds, its warmth and how wet it is. */
 			else {
-				/* The winds: easterly trades to 30 degrees, westerlies to 60, polar easterlies; toward the low of the equator and 60. */
-				east = band < 30 ? -1 : band < 60 ? 1 : -0.6;
-				north = (band < 30 ? -0.35 : band < 60 ? 0.3 : -0.2) * (latitude >= 0 ? 1 : -1);
-				east += (weather.At(p[0] * 4, p[1] * 4, p[2] * 4) - 0.5) * 0.8;
-				north += (weather.At(p[0] * 4 + 9, p[1] * 4, p[2] * 4) - 0.5) * 0.8;
-				wind = [east * 8, north * 8];
+				/* The winds (blueprints/planet/wind): easterly trades to 30 degrees, westerlies to 60, polar easterlies. */
+				list = args.Wind;
+				at = slots.Wind;
+				list[at.PX] = p[0];
+				list[at.PY] = p[1];
+				list[at.PZ] = p[2];
+				list[at.Latitude] = latitude;
+				list[at.Band] = band;
+				made = reliefs.Wind.Main.apply(null, list);
+				wind = [result('Wind', made, 'East'), result('Wind', made, 'North')];
 
-				/* Warm at the equator, cold at the poles and up high; the sea keeps it milder. */
-				celsius = 29 - 52 * Math.pow(Math.abs(Math.sin(latitude)), 1.25) - Math.max(0, height) * 0.0065 + (weather.At(p[0] * 2 + 3, p[1] * 2, p[2] * 2) - 0.5) * 6;
-				celsius += painted(p, 'climate', function (stroke) {
-					return within(p, stroke) * (Number(stroke.Temperature) || 0);
-				});
-
-				/* Wet at the equator and at 50-60 degrees, dry at 25 and at the poles; more where the wind comes from a sea, less behind mountains. */
-				moisture = 0.52 + 0.3 * Math.cos(band / 28 * Math.PI) * (band < 70 ? 1 : 0.5) - (band > 70 ? 0.2 : 0);
+				/* Where the wind comes from: more rain from a sea, less behind mountains (a range between: it falls on its far side). */
 				upwind = 0;
 
 				for (k = 1; k <= 6; k++) {
@@ -1425,16 +1380,29 @@ Elemenx.Service('ScenePlanet', {
 
 					upwind += there > 0 ? -0.05 : 0.06;
 
-					/* A range between: the rain falls on its far side. */
 					if (there > 0.5 && land > 0)
 						upwind -= 0.06;
 				}
 
-				moisture += upwind + (weather.At(p[0] * 6 - 5, p[1] * 6, p[2] * 6) - 0.5) * 0.25;
-				moisture += painted(p, 'climate', function (stroke) {
+				/* Its climate (blueprints/planet/climate): warm at the equator, cold at the poles and up high; wet at the equator and at 50-60 degrees. */
+				list = args.Climate;
+				at = slots.Climate;
+				list[at.PX] = p[0];
+				list[at.PY] = p[1];
+				list[at.PZ] = p[2];
+				list[at.Latitude] = latitude;
+				list[at.Band] = band;
+				list[at.Height] = height;
+				list[at.Upwind] = upwind;
+				list[at.PaintTemperature] = painted(p, 'climate', function (stroke) {
+					return within(p, stroke) * (Number(stroke.Temperature) || 0);
+				});
+				list[at.PaintMoisture] = painted(p, 'climate', function (stroke) {
 					return within(p, stroke) * (Number(stroke.Moisture) || 0);
 				});
-				moisture = Math.max(0, Math.min(1, moisture));
+				made = reliefs.Climate.Main.apply(null, list);
+				celsius = result('Climate', made, 'Celsius');
+				moisture = result('Climate', made, 'Moisture');
 			}
 
 			/*
@@ -2273,7 +2241,84 @@ Elemenx.Service('ScenePlanet', {
 	/* The numbers of a planet that tells none (resources/planet/defaults): Seed, Radius, Ocean, Relief, Mountains, Depth, Plates, Detail. */
 	Defaults: {},
 
-	Carried: ['Rules', 'Defaults', 'Rivers', 'ClimateCode'],
+	Carried: ['Rules', 'Defaults', 'Rivers', 'ClimateCode', 'ReliefCode', 'ReliefNames'],
+
+	/*
+	 * The graphs of the land and of the relief of a planet made code (blueprints/planet/land and relief): {land, relief:
+	 * {Source, Inputs (in their order)}}, made in the page as a planet first has them (ReliefRun), carried to its workers
+	 * (Source: a worker makes no code).
+	 */
+	ReliefCode: {},
+
+	/* Its graphs, each of blueprints/planet/<name> and of an option <Name>Graph. */
+	ReliefNames: ['Land', 'Relief', 'Rough', 'Wind', 'Climate'],
+
+	/* The graph of the library of the land or of the relief of a planet (land, relief) as a function: {Main, Inputs}. */
+	ReliefRun: function (name) {
+		var kept = (this.ReliefCode || {})[name];
+		var graph;
+
+		if (!kept && typeof Elemenx !== 'undefined' && Elemenx.Compilers && typeof Elemenx.Resources === 'function') {
+			graph = Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/' + name);
+
+			if (graph) {
+				this.ReliefCode = this.ReliefCode || {};
+				this.ReliefCode[name] = this.ReliefMake(graph);
+				kept = this.ReliefCode[name];
+			}
+		}
+
+		if (!kept)
+			throw new Error('Elemenx ScenePlanet: there is no graph of the ' + name + ' of a planet');
+
+		return this.ReliefOf(name, null, kept);
+	},
+
+	/*
+	 * The code of a graph of the land or of the relief of a planet ({Source, Inputs}), made of it in the page: a planet of a
+	 * graph of its own (LandGraph, ReliefGraph: a graph or the name of one in the resources).
+	 */
+	ReliefMake: function (graph) {
+		var made = this.$Service('Blueprints').NumericCode(typeof graph === 'string' ? Elemenx.Resources('Blueprints', graph) : graph, {});
+		if (!made)
+			throw new Error('Elemenx ScenePlanet: a graph of the relief of a planet is not of numbers');
+
+		return {Source: made.Source, Keys: made.Keys, Inputs: made.Numeric.Inputs.map(function (one) {
+			return one.Name;
+		})};
+	},
+
+	/*
+	 * The code of the graphs of its own of the options of a planet (LandGraph.. ClimateGraph), made in the page:
+	 * {Land.. Climate: {Source, Inputs, Keys}} of those it has; undefined with none (what ReliefSources is to a worker).
+	 */
+	GraphSources: function (options) {
+		var self = this;
+		var made;
+
+		this.ReliefNames.forEach(function (name) {
+			if (!options || !options[name + 'Graph']) return;
+
+			made = made || {};
+			made[name] = self.ReliefMake(options[name + 'Graph']);
+		});
+
+		return made;
+	},
+
+	/* The function of a graph of a planet: of its code (made in the page), else of its graph, else the library's (name). */
+	ReliefOf: function (name, graph, code) {
+		var made = code || (graph ? this.ReliefMake(graph) : null);
+		if (!made)
+			return this.ReliefRun(name);
+
+		this.ReliefMade = this.ReliefMade || {};
+
+		if (!this.ReliefMade[made.Source])
+			this.ReliefMade[made.Source] = {Main: new Function('B', 'M', 'N', made.Source)().Main, Inputs: made.Inputs, Keys: made.Keys};
+
+		return this.ReliefMade[made.Source];
+	},
 
 	/* What a rule reads of the place: the names of its inputs (the climate and the rivers are reckoned only for one that reads them). */
 	RuleReads: function (graph) {
@@ -2311,6 +2356,10 @@ Elemenx.Service('ScenePlanet', {
 		var key;
 		var sources = {};
 		var reads = {};
+
+		/* Its own graphs of its land, relief and climate (LandGraph.. ClimateGraph) made code here, as ReliefSources. */
+		if (this.GraphSources(out))
+			out.ReliefSources = Object.assign({}, out.ReliefSources, this.GraphSources(out));
 
 		Object.keys(rules.Biomes || {}).forEach(function (biome) {
 			names[rules.Biomes[biome]] = true;
@@ -4445,8 +4494,12 @@ Elemenx.Service('ScenePlanet', {
 		return pool;
 	},
 
-	/* What a worker of the planet carries: see Workers. */
+	/* What a worker of the planet carries: see Workers; the code of its graphs of relief made first (ReliefCode). */
 	Source: function (names) {
+		this.ReliefNames.forEach(function (name) {
+			this.ReliefRun(name.toLowerCase());
+		}, this);
+
 		return this.$Service('Workers').Source(this, names);
 	}
 });

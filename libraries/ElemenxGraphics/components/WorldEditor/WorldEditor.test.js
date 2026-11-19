@@ -4,8 +4,9 @@ import { Use } from '../../../../tests/library.js';
 
 var owned = [];
 
+/* As a page of demos has it: in a box of the height left to it (Regression: a Blueprint of many blocks made the editor taller). */
 async function mount () {
-	var component = Elemenx.Component(unique('WorldEditorHost'), {$Template: '<div style="width: 1000px; height: 640px"><WorldEditor #Editor [value]="World" (change)="Changed" (level)="Leveled" /></div>', World: {Name: 'Aurelia', Galaxy: {Seed: 'world-test', Kind: 'spiral'}}, Changes: 0, Levels: [], Changed: function () {
+	var component = Elemenx.Component(unique('WorldEditorHost'), {$Template: '<div style="display: flex; width: 1000px; height: 640px; overflow: auto"><div style="display: flex; flex-direction: column; width: 100%; height: 100%"><div style="position: relative; flex: 1 1 auto; min-height: 240px; overflow: hidden"><WorldEditor #Editor [value]="World" (change)="Changed" (level)="Leveled" /></div></div></div>', World: {Name: 'Aurelia', Galaxy: {Seed: 'world-test', Kind: 'spiral'}}, Changes: 0, Levels: [], Changed: function () {
 		this.Changes++;
 	}, Leveled: function (event) {
 		this.Levels.push(event.Path);
@@ -237,6 +238,142 @@ describe('Contract: WorldEditor, a world level in level (galaxy, system, planet,
 
 		expect(editor.Tab).toBe('world');
 		expect(editor.World().Resources.Models[model].Name).toBeTruthy();
+	});
+
+	it('changes a graph of the library for the world alone in a tab, gives it to its planets and the grounds of its locations, and gives the library\'s back', async function () {
+		var made = await mount();
+		var editor = made.Editor;
+		var ground = {ID: 'ground', Kind: 'ground', Values: {}, Traits: {Terrain: {World: null}}, Parts: []};
+		var bytes;
+		var shown;
+
+		expect(editor.GraphNames()).toEqual(expect.arrayContaining(['planet/relief', 'planet/climate', 'sketch/river', 'carve/caves']));
+		expect(editor.World().Graphs).toEqual({});
+
+		/* A palette of many blocks, as a page of all the libraries has it. */
+		Array.from({length: 80}).forEach(function (none, index) {
+			Elemenx.Service('Blueprints').Node('WorldEditorTest' + index, {Graphs: ['generator'], Group: 'world-editor-test', Outputs: [{Key: 'Out', Type: 'float'}]});
+		});
+
+		/* Changed for the first time: a copy of the library's, in a tab of its Blueprint. */
+		editor.OpenGraph('planet/relief');
+
+		await waitFor(function () {
+			return editor.$Element().querySelector('.elemenx-world-editor-graph .elemenx-blueprint');
+		}, 6000);
+
+		expect(editor.Tab).toBe('graph:planet/relief');
+
+		/*
+		 * Regression: in a box of no height of its own a Blueprint of many blocks (as a material of the world too) made the
+		 * editor as tall as its palette: what its main part shows fills it and never makes it bigger.
+		 */
+		editor.$Element().style.height = 'auto';
+
+		await tick(100);
+
+		expect(editor.$Element().getBoundingClientRect().height).toBeLessThan(700);
+
+		editor.$Element().style.height = '';
+
+		expect(editor.World().Graphs['planet/relief']).toEqual(Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/relief'));
+		expect(editor.World().Graphs['planet/relief']).not.toBe(Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/relief'));
+		expect(editor.GraphOptions().map(function (option) {
+			return option.Value;
+		})).not.toContain('planet/relief');
+		expect(editor.$Element().querySelector('[data-kind="graph"]').textContent).toContain('planet/relief');
+
+		/* Its planets: ReliefGraph; kept without it. */
+		editor.Own().Path = [{Level: 'galaxy', ID: ''}, {Level: 'system', ID: 'a'}, {Level: 'planet', ID: 'b'}];
+
+		expect(editor.PlanetValue().ReliefGraph).toBe(editor.World().Graphs['planet/relief']);
+		expect(editor.PlanetValue()).toBe(editor.PlanetValue());
+
+		editor.PlanetChanged(Object.assign({}, editor.PlanetValue(), {Radius: 3000, ReliefSources: {Relief: {}}}));
+
+		expect(editor.World().Planets['a/b']).toEqual({Seed: 'a/b', Radius: 3000});
+
+		/* The grounds of its locations: Graphs of their Terrain, of sketch/ and carve/ alone; kept without them. */
+		editor.Own().World.Locations['a/b/c'] = {Version: 1, Name: 'c', Setting: 'ground', Scene: {Added: [ground]}};
+
+		editor.Own().Path.push({Level: 'location', ID: 'c'});
+
+		expect(editor.LocationValue().Scene.Added[0].Traits.Terrain.Graphs).toBe(undefined);
+
+		editor.OpenGraph('sketch/river');
+		editor.GraphChanged('graph:sketch/river', Object.assign({}, editor.World().Graphs['sketch/river'], {name: 'mine'}));
+
+		shown = editor.LocationValue();
+
+		expect(Object.keys(shown.Scene.Added[0].Traits.Terrain.Graphs)).toEqual(['sketch/river']);
+		expect(shown.Scene.Added[0].Traits.Terrain.Graphs['sketch/river'].name).toBe('mine');
+
+		editor.LocationChanged(shown);
+
+		expect(editor.World().Locations['a/b/c'].Scene.Added[0].Traits.Terrain.Graphs).toBe(undefined);
+
+		/* Kept in its file. */
+		bytes = await new Promise(function (resolve, reject) {
+			editor.Pack(function (error, packed) {
+				if (error) reject(error);
+				else resolve(packed);
+			});
+		});
+
+		/* The library's back: dropped, its tab closed. */
+		editor.ResetGraph('sketch/river');
+
+		expect(Object.keys(editor.World().Graphs)).toEqual(['planet/relief']);
+		expect(editor.TabItems().map(function (tab) {
+			return tab.ID;
+		})).toEqual(['world', 'graph:planet/relief']);
+		expect(editor.LocationValue().Scene.Added[0].Traits.Terrain.Graphs).toBe(undefined);
+
+		await new Promise(function (resolve, reject) {
+			editor.Open(bytes, function (error) {
+				if (error) reject(error);
+				else resolve();
+			});
+		});
+
+		expect(Object.keys(editor.World().Graphs).sort()).toEqual(['planet/relief', 'sketch/river']);
+		expect(editor.World().Graphs['sketch/river'].name).toBe('mine');
+	});
+
+	/*
+	 * The shader graphs of the library (shader/: the bake of a body of noise, the weather of the surfaces of things, the shape
+	 * of a lightning) a world changes too: the scenes of its systems and its locations are drawn with them (Graphs of Scene),
+	 * made again as one of them changes.
+	 */
+	it('changes a shader graph for the world alone: the scenes of its systems and locations drawn with it, made again', async function () {
+		var made = await mount();
+		var editor = made.Editor;
+		var graphs;
+
+		expect(editor.GraphNames()).toEqual(expect.arrayContaining(['shader/bake', 'shader/weather', 'shader/bolt']));
+		expect(editor.ShaderGraphs()).toBe(null);
+
+		editor.OpenGraph('planet/relief');
+		editor.OpenGraph('shader/weather');
+
+		expect(editor.Fresh).toBe(false);
+
+		await tick(20);
+
+		expect(editor.Fresh).toBe(true);
+
+		graphs = editor.ShaderGraphs();
+
+		expect(Object.keys(graphs)).toEqual(['shader/weather']);
+		expect(editor.ShaderGraphs()).toBe(graphs);
+
+		editor.GraphChanged('graph:shader/weather', Object.assign({}, graphs['shader/weather'], {name: 'mine'}));
+
+		expect(editor.ShaderGraphs()['shader/weather'].name).toBe('mine');
+
+		editor.ResetGraph('shader/weather');
+
+		expect(editor.ShaderGraphs()).toBe(null);
 	});
 
 	it('keeps all of the world in one file: its galaxy and its edits, its planets, its locations and its resources', async function () {

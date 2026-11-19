@@ -1,0 +1,260 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "rough",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "planet-rough-formula-0",
+			"type": "Formula",
+			"x": 260,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * 1.6 + SShape, PY * 1.6 + SShape, PZ * 1.6 + SShape)"
+				}
+			]
+		},
+		{
+			"id": "planet-rough-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PX"
+				}
+			]
+		},
+		{
+			"id": "planet-rough-input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SShape"
+				}
+			]
+		},
+		{
+			"id": "planet-rough-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PY"
+				}
+			]
+		},
+		{
+			"id": "planet-rough-input-4",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PZ"
+				}
+			]
+		},
+		{
+			"id": "planet-rough-shape",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 5
+				},
+				{
+					"key": "Gain",
+					"value": 0.52
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "WarpScale",
+					"value": 1
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-rough-formula-5",
+			"type": "Formula",
+			"x": 1040,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(N - 0.5) * 2.2 + (Oceanic > 0.5 ? -0.25 : 0.25) - Level + WLand - WSea"
+				}
+			]
+		},
+		{
+			"id": "planet-rough-input-6",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Oceanic"
+				}
+			]
+		},
+		{
+			"id": "planet-rough-input-7",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Level"
+				}
+			]
+		},
+		{
+			"id": "planet-rough-input-8",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "WLand"
+				}
+			]
+		},
+		{
+			"id": "planet-rough-input-9",
+			"type": "Input",
+			"x": 0,
+			"y": 880,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "WSea"
+				}
+			]
+		},
+		{
+			"id": "planet-rough-result-10",
+			"type": "Result",
+			"x": 1560,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Rough"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "planet-rough-link-0",
+			"p1": "planet-rough-input-1-out-Value",
+			"p2": "planet-rough-formula-0-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-rough-link-1",
+			"p1": "planet-rough-input-2-out-Value",
+			"p2": "planet-rough-formula-0-in-SShape",
+			"kind": "value"
+		},
+		{
+			"id": "planet-rough-link-2",
+			"p1": "planet-rough-input-3-out-Value",
+			"p2": "planet-rough-formula-0-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-rough-link-3",
+			"p1": "planet-rough-input-4-out-Value",
+			"p2": "planet-rough-formula-0-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-rough-link-4",
+			"p1": "planet-rough-formula-0-out-Value",
+			"p2": "planet-rough-shape-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-rough-link-5",
+			"p1": "planet-rough-shape-out-Value",
+			"p2": "planet-rough-formula-5-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "planet-rough-link-6",
+			"p1": "planet-rough-input-6-out-Value",
+			"p2": "planet-rough-formula-5-in-Oceanic",
+			"kind": "value"
+		},
+		{
+			"id": "planet-rough-link-7",
+			"p1": "planet-rough-input-7-out-Value",
+			"p2": "planet-rough-formula-5-in-Level",
+			"kind": "value"
+		},
+		{
+			"id": "planet-rough-link-8",
+			"p1": "planet-rough-input-8-out-Value",
+			"p2": "planet-rough-formula-5-in-WLand",
+			"kind": "value"
+		},
+		{
+			"id": "planet-rough-link-9",
+			"p1": "planet-rough-input-9-out-Value",
+			"p2": "planet-rough-formula-5-in-WSea",
+			"kind": "value"
+		},
+		{
+			"id": "planet-rough-link-10",
+			"p1": "planet-rough-formula-5-out-Value",
+			"p2": "planet-rough-result-10-in-Value",
+			"kind": "value"
+		}
+	]
+}

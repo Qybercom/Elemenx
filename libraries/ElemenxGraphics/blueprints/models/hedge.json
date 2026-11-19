@@ -1,0 +1,357 @@
+{
+	"version": 1,
+	"type": "model",
+	"name": "hedge",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "formula-0",
+			"type": "Formula",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Variant * 1000000 + 0"
+				}
+			]
+		},
+		{
+			"id": "random-1",
+			"type": "Random",
+			"x": 0,
+			"y": 90,
+			"properties": []
+		},
+		{
+			"id": "input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Variant"
+				}
+			]
+		},
+		{
+			"id": "input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "formula-4",
+			"type": "Formula",
+			"x": 0,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Variant * 1000000 + 100"
+				}
+			]
+		},
+		{
+			"id": "random-5",
+			"type": "Random",
+			"x": 0,
+			"y": 450,
+			"properties": []
+		},
+		{
+			"id": "formula-6",
+			"type": "Formula",
+			"x": 0,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.18 + (0 + 0.06 * r0), 0.36 + (0 + 0.08 * r1), 0.16]"
+				}
+			]
+		},
+		{
+			"id": "blob-7",
+			"type": "Blob",
+			"x": 0,
+			"y": 630,
+			"properties": []
+		},
+		{
+			"id": "formula-8",
+			"type": "Formula",
+			"x": 0,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(2 * (0.32) * [1.6, 1.1, 0.8][0], 2 * (0.32) * [1.6, 1.1, 0.8][1], 2 * (0.32) * [1.6, 1.1, 0.8][2])"
+				}
+			]
+		},
+		{
+			"id": "formula-9",
+			"type": "Formula",
+			"x": 0,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"id": "formula-10",
+			"type": "Formula",
+			"x": 0,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[-0.25, 0.32, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-11",
+			"type": "Formula",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "green"
+				}
+			]
+		},
+		{
+			"id": "blob-12",
+			"type": "Blob",
+			"x": 0,
+			"y": 1080,
+			"properties": []
+		},
+		{
+			"id": "formula-13",
+			"type": "Formula",
+			"x": 0,
+			"y": 1170,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(2 * (0.32) * [1.6, 1.1, 0.8][0], 2 * (0.32) * [1.6, 1.1, 0.8][1], 2 * (0.32) * [1.6, 1.1, 0.8][2])"
+				}
+			]
+		},
+		{
+			"id": "formula-14",
+			"type": "Formula",
+			"x": 0,
+			"y": 1260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"id": "formula-15",
+			"type": "Formula",
+			"x": 240,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.25, 0.34, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-16",
+			"type": "Formula",
+			"x": 240,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "green"
+				}
+			]
+		},
+		{
+			"id": "join-17",
+			"type": "Join",
+			"x": 240,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "piece-18",
+			"type": "Piece",
+			"x": 240,
+			"y": 270,
+			"properties": [
+				{
+					"key": "ID",
+					"value": "body"
+				}
+			]
+		},
+		{
+			"id": "model-19",
+			"type": "Model",
+			"x": 240,
+			"y": 360,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "link-0",
+			"p1": "input-2-out-Value",
+			"p2": "formula-0-in-Variant",
+			"kind": "value"
+		},
+		{
+			"id": "link-1",
+			"p1": "input-3-out-Value",
+			"p2": "random-1-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "link-2",
+			"p1": "formula-0-out-Value",
+			"p2": "random-1-in-Key",
+			"kind": "value"
+		},
+		{
+			"id": "link-3",
+			"p1": "input-2-out-Value",
+			"p2": "formula-4-in-Variant",
+			"kind": "value"
+		},
+		{
+			"id": "link-4",
+			"p1": "input-3-out-Value",
+			"p2": "random-5-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "link-5",
+			"p1": "formula-4-out-Value",
+			"p2": "random-5-in-Key",
+			"kind": "value"
+		},
+		{
+			"id": "link-6",
+			"p1": "random-1-out-Value",
+			"p2": "formula-6-in-r0",
+			"kind": "value"
+		},
+		{
+			"id": "link-7",
+			"p1": "random-5-out-Value",
+			"p2": "formula-6-in-r1",
+			"kind": "value"
+		},
+		{
+			"id": "link-8",
+			"p1": "formula-8-out-Value",
+			"p2": "blob-7-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-9",
+			"p1": "formula-9-out-Value",
+			"p2": "blob-7-in-Rough",
+			"kind": "value"
+		},
+		{
+			"id": "link-10",
+			"p1": "formula-10-out-Value",
+			"p2": "blob-7-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-11",
+			"p1": "formula-6-out-Value",
+			"p2": "formula-11-in-green",
+			"kind": "value"
+		},
+		{
+			"id": "link-12",
+			"p1": "formula-11-out-Value",
+			"p2": "blob-7-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-13",
+			"p1": "formula-13-out-Value",
+			"p2": "blob-12-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-14",
+			"p1": "formula-14-out-Value",
+			"p2": "blob-12-in-Rough",
+			"kind": "value"
+		},
+		{
+			"id": "link-15",
+			"p1": "formula-15-out-Value",
+			"p2": "blob-12-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-16",
+			"p1": "formula-6-out-Value",
+			"p2": "formula-16-in-green",
+			"kind": "value"
+		},
+		{
+			"id": "link-17",
+			"p1": "formula-16-out-Value",
+			"p2": "blob-12-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-18",
+			"p1": "blob-7-out-Parts",
+			"p2": "join-17-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "link-19",
+			"p1": "blob-12-out-Parts",
+			"p2": "join-17-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "link-20",
+			"p1": "join-17-out-Parts",
+			"p2": "piece-18-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "link-21",
+			"p1": "piece-18-out-Parts",
+			"p2": "model-19-in-Parts",
+			"kind": "value"
+		}
+	]
+}

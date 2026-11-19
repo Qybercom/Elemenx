@@ -102,17 +102,17 @@ Destroy рендерера освобождает всё, что он сдела
 
 ## Тесты
 
-- [puts a body on its orbit of Kepler at a time, and describes stars and planets](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L73) — `tests/regression/library-scene.test.js`
-- [makes the same system of the same seed: a star, planets by their distance, moons, rings and belts](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L119) — `tests/regression/library-scene.test.js`
-- [multiplies, inverts and projects matrices, and makes shapes of triangles](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L154) — `tests/regression/library-scene.test.js`
-- [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L185) — `tests/regression/library-scene.test.js`
-- [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L226) — `tests/regression/library-scene.test.js`
-- [Renderer waits for a program not made after its Patience, once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4500) — `tests/regression/library-scene.test.js`
-- [Renderer makes programs behind the page for who is patient, and sets in a program only what changed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4533) — `tests/regression/library-scene.test.js`
-- [Renderer sets the state of the context only where it changes, and only the uniforms a program has](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4644) — `tests/regression/library-scene.test.js`
+- [puts a body on its orbit of Kepler at a time, and describes stars and planets](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L74) — `tests/regression/library-scene.test.js`
+- [makes the same system of the same seed: a star, planets by their distance, moons, rings and belts](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L120) — `tests/regression/library-scene.test.js`
+- [multiplies, inverts and projects matrices, and makes shapes of triangles](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L155) — `tests/regression/library-scene.test.js`
+- [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L186) — `tests/regression/library-scene.test.js`
+- [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L227) — `tests/regression/library-scene.test.js`
+- [Renderer waits for a program not made after its Patience, once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4601) — `tests/regression/library-scene.test.js`
+- [Renderer makes programs behind the page for who is patient, and sets in a program only what changed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4634) — `tests/regression/library-scene.test.js`
+- [Renderer sets the state of the context only where it changes, and only the uniforms a program has](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4745) — `tests/regression/library-scene.test.js`
 - [lets go of all its meshes with it, one let go twice taking no other off its list](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L21) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 - [gives the contexts of renderers let go back only past MostContexts of the page, the oldest first](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L54) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 - [makes a texture of one byte a texel with Single, its rows as long as they are](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L100) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 - [counts its draws and the triangles of them, each copy of an instanced mesh, and no triangle of a line](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L134) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 
-+46 ещё в тех же файлах
++57 ещё в тех же файлах

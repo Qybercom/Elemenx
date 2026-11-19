@@ -1,11 +1,33 @@
 /*
  * ModelsDemo (Graphics): Scene · the Models Service: units, animals, plants, buildings of fantasy and sci-fi made of
- * code, with their clips, the shadows of the sun and the wind
+ * graphs, with their clips, the shadows of the sun and the wind. Each is a graph of the library (blueprints/models): Open graph
+ * shows the one of the model picked in a ModelEditor (its tab Graph), each change of it seen on the model at once.
  */
 Elemenx.Component('ModelsDemo', {
 	$TemplateURL: 'ModelsDemo.html',
 	$Traits: ['SceneDemo'],
 	ModelsList: [],
+	/* The model whose graph is to be opened, and the one open ('': none). */
+	GraphPicked: 'knight',
+	GraphShown: '',
+	GraphOptions: function () {
+		var library = this.$Service('SceneModels');
+
+		return library.Names().filter(function (name) {
+			return !!library.Recipes[name].Graph && name.indexOf('object-editor-') !== 0;
+		}).map(function (name) {
+			return {Value: name, Label: name};
+		});
+	},
+	GraphChosen: function (value) {
+		this.GraphPicked = String(value && value.target ? value.target.value : value && value.detail !== undefined ? value.detail : value || '');
+	},
+	GraphOpened: function () {
+		this.GraphShown = this.GraphPicked;
+	},
+	GraphClosed: function () {
+		this.GraphShown = '';
+	},
 	/* The ground of the game: its scene kept for the buttons; trees where the ground is dry and gentle. */
 	ModelsReady: function (scene) {
 		var library = this.$Service('SceneModels');

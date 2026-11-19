@@ -198,6 +198,12 @@
 			"snap": "Snap",
 			"variant": "Variant",
 			"partsMode": "Parts",
+			"graphMode": "Graph",
+			"graphModel": "A model of the library",
+			"pickGraph": "Pick a model...",
+			"graphHint": "Its graph is a copy: what you change shows on the model at once; Apply gives it to the games.",
+			"applyGraph": "Apply to the model",
+			"resetGraph": "As it was",
 			"pieces": "Pieces",
 			"partsName": "Name",
 			"partsSplit": "Split as it hangs together",
@@ -585,7 +591,13 @@
 			"addModel": "Add a model",
 			"addPlant": "Add a plant",
 			"addCutscene": "Add a cutscene",
-			"addMaterial": "Add a material"
+			"addMaterial": "Add a material",
+			"graphs": "Graphs",
+			"graph": "A graph of the library",
+			"pickGraph": "Change a graph...",
+			"changeGraph": "Change it for this world",
+			"resetGraph": "Back to the library",
+			"graphNote": "The graph {name} of this world: its planets and locations are made by it, not by the library's."
 		}
 	}
 }

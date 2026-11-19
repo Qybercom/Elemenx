@@ -16,6 +16,12 @@
  * them pass: that is what shows it moves against a sky that stays. What the backdrop is lends its color to the shade of bodies.
  *
  * On a ground the same cube is the band of the galaxy over a night: it turns with the stars, and what hides them hides it.
+ *
+ * The band of a galaxy is drawn as it is (unless Style is 'drawn'): a ray from where the system lies through the galaxy
+ * (Galaxy: its manifest or options of GalaxyData.Make, of the seed when none; Place, ly: where the system lies, 54% of its
+ * radius out by default), its glow of the stars the eye cannot part, its dust in clumps, the stars near points; the same
+ * galaxy as its map (its arms of the GalaxyGraph of the scene), baked into a cube of its own first. The sky is a graph
+ * (CosmosGraph, the kind cosmos of SceneBlueprints: its parts as blocks), else the one of the library (LibraryCosmos()).
  */
 Elemenx.Trait('SceneCosmos', {
 	Cosmos: '',
@@ -46,7 +52,10 @@ Elemenx.Trait('SceneCosmos', {
 		var renderer = engine.Renderer;
 		var graphics = this.$Service('Renderer');
 		var math = this.$Service('Math');
-		var shaders = this.CosmosShaders(graphics);
+		var galaxies = this.$Service('GalaxyData');
+		var spiral = this.$Service('SceneBlueprints').Galaxy(this.GalaxySpiral ? this.GalaxySpiral() : null).GLSL;
+		var library = this.LibraryCosmos.bind(this);
+		var shaders = this.Install(this.CosmosShaders(graphics, spiral), 'void blueprintCosmos(vec3 d, vec3 s, inout vec3 color) {}', this.Made(this.GraphOf('CosmosGraph', 'shader/cosmos'), 'cosmos', 'CosmosGraph', library) || this.Made(null, 'cosmos', 'CosmosGraph', library));
 		var space = {Key: '', Cube: null, Next: null, Program: null};
 		var night = {Key: '', Cube: null, Next: null};
 		var programs = {};
@@ -189,7 +198,131 @@ Elemenx.Trait('SceneCosmos', {
 				bursts.push(out[0], out[1], out[2], i < rays ? wide2 : 0);
 			}
 
-			return {Kind: kind, Key: JSON.stringify([kind, seed, colors, told.Gas, told.Dust, told.Stars, told.Pillars, told.Band, far2, clusters, told.Beacon, told.Style, rays, told.Pole, told.Middle, told.Lift]), Uniforms: {uMiddle: told.Middle ? math.Vectors.Normalize(told.Middle) : [0, 0, 0], uLift: given(told.Lift, 0), uBursts: bursts, uDrawn: told.Style === 'drawn' ? 1 : 0, uSeed: number % 977 / 9.7, uColors: [].concat(colors[0], colors[1], colors[2], colors[3]), uGas: given(told.Gas, plain.Gas), uDust: given(told.Dust, plain.Dust), uStars: given(told.Stars, plain.Stars), uDisc: given(told.Band, plain.Band), uPole: pole, uKnots: knots, uShine: shine, uBeacon: given(told.Beacon, plain.Beacon), uPillars: given(told.Pillars, plain.Pillars), uGlobular: clusters ? 1 : 0, uColumns: shaped, uShapes: shapes, uLamps: lamps, uTilt: tilt, uLampReach: 1.5 + next() * 0.9, uWall: 0.25 + next() * 0.75, uGalaxies: galaxies, uPlanes: planes}};
+			var honest = given(told.Band, plain.Band) > 0 && told.Style !== 'drawn' ? bandOf(told, seed, pole, given(told.Dust, plain.Dust)) : null;
+
+			return {Kind: kind, Band: honest, Key: JSON.stringify([kind, seed, colors, told.Gas, told.Dust, told.Stars, told.Pillars, told.Band, far2, clusters, told.Beacon, told.Style, rays, told.Pole, told.Middle, told.Lift, honest ? honest.Key : '']), Uniforms: {uHonest: honest ? 1 : 0, uBandTurn: honest ? honest.Uniforms.uTurn : [1, 0, 0, 0, 1, 0, 0, 0, 1], uBandEye: honest ? honest.Uniforms.uEye : [0, 0, 0], uBandShape: honest ? [honest.Uniforms.uLd, honest.Uniforms.uHd, honest.Uniforms.uRb] : [1, 1, 1], uMiddle: honest ? honest.Middle : told.Middle ? math.Vectors.Normalize(told.Middle) : [0, 0, 0], uLift: given(told.Lift, 0), uBursts: bursts, uDrawn: told.Style === 'drawn' ? 1 : 0, uSeed: number % 977 / 9.7, uColors: [].concat(colors[0], colors[1], colors[2], colors[3]), uGas: given(told.Gas, plain.Gas), uDust: given(told.Dust, plain.Dust), uStars: given(told.Stars, plain.Stars), uDisc: given(told.Band, plain.Band), uPole: pole, uKnots: knots, uShine: shine, uBeacon: given(told.Beacon, plain.Beacon), uPillars: given(told.Pillars, plain.Pillars), uGlobular: clusters ? 1 : 0, uColumns: shaped, uShapes: shapes, uLamps: lamps, uTilt: tilt, uLampReach: 1.5 + next() * 0.9, uWall: 0.25 + next() * 0.75, uGalaxies: galaxies, uPlanes: planes}};
+		}
+
+		/*
+		 * The band of the galaxy a system lies in, as it is (Style 'drawn': a picture of it, band of CosmosShaders): a ray
+		 * from the system through the galaxy (Galaxy: its manifest, or options of GalaxyData.Make; none: one of the seed of
+		 * the sky) from where it lies in it (Place, ly; none: as the Sun lies, 54% of its radius out, in its plane), the
+		 * north of the galaxy the Pole of the sky, the way to its middle Middle (none: of the pole). What the eye cannot part
+		 * of its far stars is its glow, its dust dims what is behind; the stars near are points (CosmosShaders). The same
+		 * galaxy as its map: its arms of the graph of the scene (GalaxyData.Spiral).
+		 */
+		function bandOf (told, seed, pole, dust) {
+			var galaxy = told.Galaxy && typeof told.Galaxy === 'object' ? told.Galaxy : {};
+			var m = galaxy.Manifest || (galaxy.Radius && galaxy.Phase !== undefined ? galaxy : galaxies.Make(Object.assign({Seed: seed + ':galaxy', Kind: 'spiral'}, galaxy)).Manifest);
+			var shape = galaxies.Shape(m);
+			var sown = hash(seed + 'place');
+			var angle = sown % 6283 / 1000;
+			var place = told.Place ? told.Place.map(Number) : [Math.cos(angle) * m.Radius * 0.54, (sown % 61 - 30), Math.sin(angle) * m.Radius * 0.54];
+			var eye = [place[0] / 1000, place[1] / 1000, place[2] / 1000];
+			var middle = told.Middle ? math.Vectors.Normalize(told.Middle) : math.Vectors.Normalize(math.Vectors.Cross(pole, [0.3, 1, 0.2]));
+			var out = Math.max(Math.sqrt(eye[0] * eye[0] + eye[2] * eye[2]), 1e-6);
+			var centre = [-eye[0] / out, 0, -eye[2] / out];
+			var side;
+			var aside;
+			var turn = [];
+			var i;
+			var j;
+
+			/* The way to its middle stands across its pole. */
+			middle = math.Vectors.Normalize(math.Vectors.Subtract(middle, math.Vectors.Scale(pole, math.Vectors.Dot(middle, pole))));
+			side = math.Vectors.Cross([0, 1, 0], centre);
+			aside = math.Vectors.Cross(pole, middle);
+
+			/* The sky into the galaxy: its middle the way to the centre, its pole its north (by columns, d of the galaxy = turn d of the sky). */
+			for (j = 0; j < 3; j++) {
+				for (i = 0; i < 3; i++)
+					turn.push(centre[i] * middle[j] + [0, 1, 0][i] * pole[j] + side[i] * aside[j]);
+			}
+
+			var uniforms = {uTurn: turn, uEye: eye, uLd: shape.Disc / 1000, uHd: shape.Height / 1000 * 0.35, uRb: shape.Bulge / 1000, uBar: shape.Bar / 1000, uRadius: m.Radius / 1000, uArms: m.Kind === 'lenticular' ? 0 : m.Arms || 0, uPitch: m.Pitch * Math.PI / 180, uPhase: m.Phase * Math.PI / 180, uSeed: galaxies.SeedNumber(m), uRound: m.Kind === 'elliptical' || m.Kind === 'dwarf' ? 1 : 0, uDust: 1.5 * dust};
+
+			uniforms.uExpose = 1.8 / bandLight(uniforms);
+
+			return {Key: JSON.stringify([m.Seed, m.Kind, m.Radius, m.Arms, m.Pitch, m.Phase, eye.map(function (value) {
+				return Math.round(value * 20) / 20;
+			}), pole, middle, dust]), Middle: middle, Uniforms: uniforms};
+		}
+
+		/*
+		 * How bright the band is away from the middle of the galaxy, of its far stars (as the shader takes them): what its
+		 * light is made as bright as (the eye does so too), so that the band of any galaxy and any place shows.
+		 */
+		function bandLight (u) {
+			var out = Math.max(Math.sqrt(u.uEye[0] * u.uEye[0] + u.uEye[2] * u.uEye[2]), 1e-6);
+			var way = [u.uEye[0] / out, 0, u.uEye[2] / out];
+			var sum = 0;
+			var k = Math.log(160 / 0.003) / 200;
+			var i;
+
+			for (i = 0; i < 200; i++) {
+				var a = 0.003 * Math.exp(i * k);
+				var dt = 0.003 * Math.exp((i + 1) * k) - a;
+				var x = u.uEye[0] + way[0] * (a + dt / 2);
+				var z = u.uEye[2] + way[2] * (a + dt / 2);
+				var r = Math.sqrt(x * x + z * z);
+				var far = Math.max(0, Math.min(1, (a - 0.5) / 2.5));
+
+				sum += (Math.exp(-r / u.uLd - Math.abs(u.uEye[1]) / u.uHd) + 0.08 * Math.exp(-r / u.uLd)) * far * far * (3 - 2 * far) * dt;
+			}
+
+			return Math.max(sum, 1e-4);
+		}
+
+		/* The cube of the band: as fine as the picture, a ray of 200 steps at the least. */
+		function bandSize () {
+			var level = self.Graphics().Level;
+
+			return {low: 128, medium: 256, high: 384, ultra: 512}[level] || 256;
+		}
+
+		/*
+		 * The band of a holder made, a strip of a face a frame (its rays are long: no frame waits for many of them); true
+		 * when it is whole. The one made before stays till then.
+		 */
+		function banded (holder, band) {
+			var size = bandSize();
+			var key = band.Key + size;
+			var steps = self.Graphics().Level === 'low' ? 200 : 400;
+			var rows = Math.max(1, Math.ceil(size * size * steps / 1500000));
+			var next = holder.BandNext;
+
+			if (holder.BandKey === key) return true;
+
+			programs.Band = programs.Band || renderer.Program(graphics.Shaders.Quad, shaders.Band, true);
+
+			if (scene.Looping && !renderer.Ready(programs.Band)) return false;
+
+			if (!next || next.Key !== key) {
+				if (next)
+					next.Cube.Destroy();
+
+				next = holder.BandNext = {Key: key, Cube: renderer.Cube(size), Face: 0, Row: 0};
+			}
+
+			renderer.Bake(next.Cube, programs.Band, Object.assign({uRaySteps: steps}, band.Uniforms), next.Face, [next.Row, rows]);
+
+			next.Row++;
+
+			if (next.Row === rows) {
+				next.Row = 0;
+				next.Face++;
+			}
+
+			if (next.Face < 6) return false;
+
+			if (holder.Band)
+				holder.Band.Destroy();
+
+			holder.Band = next.Cube;
+			holder.BandKey = key;
+			holder.BandNext = null;
+
+			return true;
 		}
 
 		/* Pillars are most of what the card has to compile: a sky without them does not wait for them. */
@@ -212,6 +345,11 @@ Elemenx.Trait('SceneCosmos', {
 
 			if (holder.Key === key) return;
 
+			/* Its program is made behind the scene while its band is: neither waits for the other. */
+			program(made.Uniforms.uPillars > 0);
+
+			if (made.Band && !banded(holder, made.Band)) return;
+
 			/* This shader is the slowest of all: the card makes it behind the scene, and the sky comes when it is done. */
 			if (scene.Looping && !renderer.Ready(program(made.Uniforms.uPillars > 0))) return;
 
@@ -222,7 +360,7 @@ Elemenx.Trait('SceneCosmos', {
 				next = holder.Next = {Key: key, Cube: renderer.Cube(size), Face: 0, Row: 0};
 			}
 
-			renderer.Bake(next.Cube, program(made.Uniforms.uPillars > 0), Object.assign({uTexel: 2 / size}, made.Uniforms), next.Face, [next.Row, rows]);
+			renderer.Bake(next.Cube, program(made.Uniforms.uPillars > 0), Object.assign({uTexel: 2 / size, uBand: holder.Band || blank()}, made.Uniforms), next.Face, [next.Row, rows]);
 
 			next.Row++;
 
@@ -239,6 +377,13 @@ Elemenx.Trait('SceneCosmos', {
 			holder.Key = key;
 			holder.Cube = next.Cube;
 			holder.Next = null;
+		}
+
+		/* A cube of nothing, for a sky of no band of its own. */
+		function blank () {
+			programs.Blank = programs.Blank || renderer.Cube(1);
+
+			return programs.Blank;
 		}
 
 		function size () {
@@ -400,6 +545,9 @@ Elemenx.Trait('SceneCosmos', {
 			if (self.Cosmos)
 				program(settings(self.Cosmos).Uniforms.uPillars > 0, true);
 
+			if (self.Cosmos && settings(self.Cosmos).Band || setting === 'ground' || setting === 'galaxy')
+				programs.Band = programs.Band || renderer.Program(graphics.Shaders.Quad, shaders.Band, true);
+
 			if (setting === 'ground')
 				program(false, true);
 
@@ -412,7 +560,11 @@ Elemenx.Trait('SceneCosmos', {
 		(engine.Bakes = engine.Bakes || []).push(function () {
 			if (!self.Cosmos || self.Setting === 'galaxy' || !renderer) return null;
 
-			return {Name: 'sky', Done: space.Key === settings(self.Cosmos).Key + size() ? 6 : space.Next ? space.Next.Face : 0, Total: 6};
+			var made = settings(self.Cosmos);
+			var whole = space.Key === made.Key + size();
+			var band = !made.Band ? 0 : whole || space.BandKey === made.Band.Key + bandSize() ? 6 : space.BandNext ? space.BandNext.Face : 0;
+
+			return {Name: 'sky', Done: (whole ? 6 : space.Next ? space.Next.Face : 0) + band, Total: made.Band ? 12 : 6};
 		});
 
 		engine.CosmosReady = function () {
@@ -420,10 +572,98 @@ Elemenx.Trait('SceneCosmos', {
 		};
 	},
 
-	CosmosShaders: function (graphics) {
+	/*
+	 * The band of a galaxy from inside it, as it is: from the eye (uEye, kly, of the frame of the galaxy) along the ray of each
+	 * texel of a cube (of the sky: uTurn into the galaxy) through its thin and thick discs, its arms (galaxy_spiral: of the
+	 * graph of its arms), its bulge and its bar, 0.003 to 160 kly in uRaySteps steps each longer. What the eye cannot part of its
+	 * far stars (beyond 3 to 9 kly) glows; what is nearer it parts one by one (the stars of the sky). Its dust in clumps of
+	 * a noise of 6 octaves, a layer half as thick as its stars, redder light let through; where young stars are born the gas
+	 * glows pink. rgb its glow rolled off (c / (1 + c)), a what of the far sky its dust lets through.
+	 */
+	CosmosBandShader: function (head, arms, graphics) {
+		return head + [
+			'in vec2 vQuad;',
+			'uniform mat3 uTurn;',
+			'uniform vec3 uEye;',
+			'uniform float uLd;',
+			'uniform float uHd;',
+			'uniform float uRb;',
+			'uniform float uBar;',
+			'uniform float uRadius;',
+			'uniform float uArms;',
+			'uniform float uPitch;',
+			'uniform float uPhase;',
+			'uniform float uSeed;',
+			'uniform float uRound;',
+			'uniform float uDust;',
+			'uniform float uExpose;',
+			'uniform float uRaySteps;',
+			'out vec4 outColor;',
+			arms,
+			graphics.Chunks.Cube,
+			/* How much of the disc is in its arms there, shifted inward for the dust (1 for no arms). */
+			'float armAt(vec3 p, float shift) {',
+			'	return uArms > 0.5 ? galaxy_spiral(p.xz, uLd, uRadius, uPitch, uPhase, uArms, uSeed, shift).w : 1.0;',
+			'}',
+			'void main() {',
+			'	vec3 d = uTurn * cubeDirection(uFace, vQuad);',
+			'	vec3 s = vec3(uSeed, uSeed * 0.7, uSeed * 1.3);',
+			'	vec3 light = vec3(0.0);',
+			'	vec3 tau = vec3(0.0);',
+			'	float k = log(160.0 / 0.003) / uRaySteps;',
+			'	for (int i = 0; i < 400; i++) {',
+			'		if (float(i) >= uRaySteps) break;',
+			'		float ta = 0.003 * exp(float(i) * k);',
+			'		float dt = 0.003 * exp(float(i + 1) * k) - ta;',
+			'		vec3 p = uEye + d * (ta + dt * 0.5);',
+			'		float r = length(p.xz);',
+			'		float z = abs(p.y);',
+			'		if (r > uRadius * 1.3 && z > uHd * 6.0) continue;',
+			'		vec3 through = exp(-tau);',
+			'		float far = smoothstep(0.5, 3.0, ta);',
+			'		float bulge = 3.0 * exp(-sqrt(r * r + p.y * p.y * 2.5) / (uRb * 0.7));',
+			/* A sphere of old stars (an elliptical, a dwarf): its glow alone, no dust. */
+			'		if (uRound > 0.5) {',
+			'			light += vec3(1.0, 0.88, 0.72) * exp(-pow(max(length(p) / (uRadius * 0.22), 1e-3), 0.25) * 7.67 + 7.67) * 0.02 * dt * far;',
+			'			continue;',
+			'		}',
+			'		float arm = armAt(p, 0.0);',
+			'		float disc = exp(-r / uLd - z / uHd);',
+			'		float thick = 0.08 * exp(-r / uLd - z / (uHd * 3.0));',
+			'		if (uBar > 0.0) {',
+			'			float along = p.x * cos(uPhase) + p.z * sin(uPhase);',
+			'			float across = -p.x * sin(uPhase) + p.z * cos(uPhase);',
+			'			bulge += 1.5 * exp(-pow(along / uBar, 2.0) - pow(across / (uBar * 0.18), 2.0) - pow(p.y / (uBar * 0.15), 2.0));',
+			'		}',
+			/* Its stars in clouds along its arms; old and warm in its bulge. */
+			'		float clouds = 0.6 + 0.8 * fbm3(p / 0.9 + s, 3);',
+			'		vec3 stars = vec3(0.95, 0.97, 1.0) * (disc * arm * clouds + thick) + vec3(1.0, 0.92, 0.82) * bulge * 0.65;',
+			'		light += stars * through * dt * far;',
+			/* Where young stars are born, on the ridges of its arms near its plane: the gas glows pink. */
+			'		if (z < uHd * 1.5 && arm > 1.0) {',
+			'			float born = exp(-r / uLd - z / (uHd * 0.3)) * pow((arm - 0.3) / 1.7, 3.0) * smoothstep(0.55, 0.8, fbm3(p / 0.25 + s + 7.0, 3));',
+			'			light += vec3(0.9, 0.3, 0.45) * born * through.g * dt * 0.5 * max(far, 0.25);',
+			'		}',
+			/* Its dust: a thinner layer, in clumps; what lets the light through reddens it. */
+			'		float layer = exp(-r / (uLd * 1.3) - z / (uHd * 0.9));',
+			'		if (layer > 0.002) {',
+			'			float dust = layer * (0.4 + 0.6 * armAt(p, 0.35)) * smoothstep(0.5, 0.75, fbm3(p / 0.35 + s + 3.0, 6) + (fbm3(p / 0.08 + s + 5.0, 4) - 0.5) * 0.35) * 3.5;',
+			'			tau += dust * uDust * dt * vec3(0.9, 1.0, 1.1);',
+			'		}',
+			'	}',
+			'	vec3 c = light * uExpose;',
+			'	outColor = vec4(c / (1.0 + c), exp(-tau.g));',
+			'}'
+		].join('\n');
+	},
+
+	CosmosShaders: function (graphics, spiral) {
 		var head = '#version 300 es\nprecision highp float;\nprecision highp int;\n';
+		var arms = [graphics.Chunks.Noise, this.$Service('Noise').GLSLChunk(['enx_gradient3']), spiral || this.$Service('SceneBlueprints').Galaxy().GLSL].join('\n');
 
 		return {
+			Band: this.CosmosBandShader(head, arms, graphics),
+
 			Bake: head + [
 				'in vec2 vQuad;',
 				'uniform float uSeed;',
@@ -451,11 +691,16 @@ Elemenx.Trait('SceneCosmos', {
 				'uniform vec4 uGalaxies[16];',
 				'uniform vec4 uPlanes[16];',
 				'uniform vec4 uBursts[8];',
+				'uniform float uHonest;',
+				'uniform samplerCube uBand;',
+				'uniform mat3 uBandTurn;',
+				'uniform vec3 uBandEye;',
+				'uniform vec3 uBandShape;',
 				'out vec4 outColor;',
-				graphics.Chunks.Noise,
+				arms,
 				graphics.Chunks.Cube,
 				'float hash(vec3 p) {',
-				'	return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);',
+				'	return enx_white3(p);',
 				'}',
 				/*
 				 * Stars as points, of a size in texels of the cube, so many thousand a steradian. They are sown over the flat face: cells
@@ -524,10 +769,12 @@ Elemenx.Trait('SceneCosmos', {
 				'		return (vec3(0.6, 0.72, 1.0) * bits * 0.55 + vec3(1.0, 0.36, 0.5) * bits * bright * 0.8 + old * 0.1) * round2 + vec3(0.6, 0.66, 0.8) * round2 * 0.1;',
 				'	}',
 				'	float arms = floor(2.0 + pow(fract(plane.w * 11.7), 2.0) * 4.99);',
-				'	float bent = (fbm3(vec3(p * 2.6, plane.w * 3.0), 3) - 0.5) * 2.1;',
-				'	float phase = arms * atan(p.y, p.x) - 2.0 * (1.6 + fract(plane.w * 3.1) * 3.4) * log(r + 0.05) * max(arms * 0.5, 1.0) + bent + plane.w * 9.0;',
-				'	float ridge = pow(0.5 + 0.5 * cos(phase), 5.0);',
-				'	float wide = pow(0.5 + 0.5 * cos(phase), 1.5);',
+				/* Its arms of the arms of the galaxies of the scene (galaxy_spiral), wound as tight as its seed says. */
+				'	float wound = 2.0 * (1.6 + fract(plane.w * 3.1) * 3.4) * max(arms * 0.5, 1.0);',
+				'	vec4 spun = galaxy_spiral(p, 1.0, 1.0, atan(arms / wound), -plane.w * 9.0 / arms, arms, plane.w * 3.0, 0.0);',
+				'	float phase = arms * (spun.x + spun.y);',
+				'	float ridge = pow(spun.z, 5.0);',
+				'	float wide = pow(spun.z, 1.5);',
 				'	float lane = pow(0.5 + 0.5 * cos(phase + 0.85), 10.0);',
 				'	float reach = smoothstep(0.05, 0.22, r) * exp(-r * 2.1) * smoothstep(1.4, 0.8, r);',
 				'	float clumps = fbm3(vec3(p * 16.0, plane.w * 3.0), 4);',
@@ -567,6 +814,31 @@ Elemenx.Trait('SceneCosmos', {
 				'	float rift = smoothstep(0.38, 0.62, ridge3(bent * 3.6 + s + 17.0, 5)) * exp(-y * y * 3.2) * (0.5 + 0.5 * exp(-y * y * 14.0));',
 				'	color *= 1.0 - clamp(rift, 0.0, 1.0) * 0.92 * uDust;',
 				'	return color + vec3(0.06, 0.065, 0.085) * (1.0 - abs(high)) * 0.35;',
+				'}',
+				/*
+				 * The band as it is (uHonest, the cube of its rays uBand, CosmosBandShader): its glow (stored rolled off, c / (1 + c)),
+				 * the grain of its far stars over it; a its dust lets through. bandNear: how many stars stand near the eye that way, of
+				 * the disc between the eye and 3 kly (those the eye parts one by one).
+				 */
+				'vec4 honestBand(vec3 d, vec3 s) {',
+				'	vec4 b = texture(uBand, d);',
+				'	vec3 light = b.rgb / max(vec3(1.0) - b.rgb, vec3(0.004));',
+				'	light *= (0.85 + 0.3 * hash(floor(d * 1800.0))) * (0.85 + 0.3 * fbm3(d * 70.0 + s, 3));',
+				/* As a photograph of the sky takes it: the faint lifted, the bright held under white (an arcsine of the hyperbola, of its light). */
+				'	float lum = max(dot(light, vec3(0.3, 0.59, 0.11)), 1e-5);',
+				'	light *= log(lum * 3.0 + sqrt(lum * lum * 9.0 + 1.0)) / (lum * 3.0) * 0.55;',
+				'	return vec4(light, b.a);',
+				'}',
+				'float bandNear(vec3 d) {',
+				'	vec3 g = uBandTurn * d;',
+				'	float sum = 0.0;',
+				'	for (int i = 0; i < 16; i++) {',
+				'		float a = 0.003 * exp(float(i) * 0.5);',
+				'		float dt = 0.003 * exp(float(i + 1) * 0.5) - a;',
+				'		vec3 p = uBandEye + g * (a + dt * 0.5);',
+				'		sum += exp(-length(p.xz) / uBandShape.x - abs(p.y) / uBandShape.y) * dt;',
+				'	}',
+				'	return sum / max(exp(-length(uBandEye.xz) / uBandShape.x - abs(uBandEye.y) / uBandShape.y) * 3.0, 1e-4);',
 				'}',
 				/*
 				 * Pillars of dust in lit gas. Each has a place, a size, a lean, a bend and a foot of its own; fingers and small globules
@@ -795,67 +1067,95 @@ Elemenx.Trait('SceneCosmos', {
 				'	float torn = ridge3(bent * 3.4 + s + 7.0, 5);',
 				'	return clamp(big * 1.5 + torn * 0.32 - 0.36, 0.0, 1.0);',
 				'}',
-				'void main() {',
-				'	vec3 d = cubeDirection(uFace, vQuad);',
-				'	vec3 s = vec3(uSeed, uSeed * 0.7, uSeed * 1.3);',
 				/*
+				 * The parts of the sky, each a block of its graph (CosmosGraph of a Scene, SceneBlueprints.Cosmoses), in its order.
 				 * The light of the sky: one great star behind the gas. The gas is lit by how much of it lies towards that star, so
 				 * it has sides that shine and sides in shade, and it glows through where it is thin and near.
 				 */
-				'	float gas = thick(d, s);',
+				'void cosmosGas(vec3 d, vec3 s, out float gas, out float lit, out float near, out float core, out float reach, out float knots) {',
+				'	gas = thick(d, s);',
 				'	float towards = thick(normalize(d + uShine * 0.12), s);',
 				'	float towards2 = thick(normalize(d + uShine * 0.3), s);',
-				'	float lit = exp(-max(towards * 1.6 + towards2 * 1.1 - gas * 1.5, 0.0) * 1.9);',
-				'	float near = max(dot(d, uShine), 0.0);',
-				'	float core = pow(near, 6.0) * 0.45 + pow(near, 30.0) * 0.5;',
-				'	float reach = 0.2 + pow(near * 0.5 + 0.5, 4.0) * 1.1;',
-				'	float knots = 0.0;',
+				'	lit = exp(-max(towards * 1.6 + towards2 * 1.1 - gas * 1.5, 0.0) * 1.9);',
+				'	near = max(dot(d, uShine), 0.0);',
+				'	core = pow(near, 6.0) * 0.45 + pow(near, 30.0) * 0.5;',
+				'	reach = 0.2 + pow(near * 0.5 + 0.5, 4.0) * 1.1;',
+				'	knots = 0.0;',
 				'	for (int i = 0; i < 12; i++) {',
 				'		if (uKnots[i].w > 0.0) {',
 				'			float off = acos(clamp(dot(d, uKnots[i].xyz), -1.0, 1.0)) / uKnots[i].w;',
 				'			knots += exp(-off * off * 1.4);',
 				'		}',
 				'	}',
-				/* A galaxy seen from within: a band round its pole, its bulge towards its middle. */
-				'	float high = dot(d, uPole) + uLift;',
+				'}',
+				/* A galaxy seen from within: a band round its pole, its bulge towards its middle (how high a way stands, how much band is there). */
+				'void cosmosPlane(vec3 d, out float high, out float disc) {',
+				'	high = dot(d, uPole) + uLift;',
 				'	vec3 middle = dot(uMiddle, uMiddle) > 0.5 ? uMiddle : normalize(cross(uPole, vec3(0.3, 1.0, 0.2)));',
-				'	float wideBand = exp(-high * high * 22.0) * (0.45 + 0.55 * pow(dot(d, middle) * 0.5 + 0.5, 2.0));',
-				'	float disc = wideBand * uDisc;',
+				'	disc = exp(-high * high * 22.0) * (0.45 + 0.55 * pow(dot(d, middle) * 0.5 + 0.5, 2.0)) * uDisc;',
+				'}',
+				/* The sky is never quite black: the far gas goes on behind all of it, in its deep color; the gas glows over it. */
+				'vec3 cosmosGlow(vec3 d, vec3 s, float gas, float lit, float core, float reach, float knots) {',
 				'	float body = max(gas * uGas, 0.0) + knots * 0.22 * gas * uGas;',
-				/* The sky is never quite black: the far gas goes on behind all of it, in its deep color. */
-				'	vec3 color = uColors[0] * (0.3 + 0.9 * fbm3(d * 0.9 + s + 31.0, 4)) * (0.35 + uGas * 0.9);',
+				'	vec3 color = uColors[0] * (0.3 + 0.9 * fbm3(d * 0.9 + s + 31.0, 4)) * (0.35 + uGas * 0.9) * (uHonest > 0.5 ? 0.35 : 1.0);',
 				'	float glow = (body * body * 1.3 + body * 0.35) * (0.3 + lit * reach * 2.4) + core * (0.4 + gas * 0.9) * uGas;',
 				'	float tone = clamp(glow * 0.62, 0.0, 1.0);',
 				'	vec3 gasColor = mix(uColors[1], uColors[2], smoothstep(0.12, 0.55, tone));',
 				'	gasColor = mix(gasColor, uColors[3], smoothstep(0.7, 1.0, tone) * 0.55);',
 				/* Gas holds its color: its light rolls off, it does not run into white. */
-				'	color += gasColor * (1.0 - exp(-glow * 1.15)) * 0.8;',
-				/* Dust stands before the gas: thick dark lanes that eat its light, torn at their edges; in a galaxy along its middle. */
+				'	return color + gasColor * (1.0 - exp(-glow * 1.15)) * 0.8;',
+				'}',
+				/* Dust stands before the gas: thick dark lanes that eat its light, torn at their edges; in a galaxy drawn along its middle. */
+				'vec3 cosmosDust(vec3 d, vec3 s, vec3 color, float gas, float high, out float dust) {',
 				'	float lanes = smoothstep(0.5, 0.72, fbm3(d * 3.1 + s + 13.0, 6) + (gas - 0.5) * 0.2);',
-				'	float dust = max(lanes, uDisc * exp(-high * high * 90.0) * smoothstep(0.3, 0.6, gas + 0.1)) * uDust;',
-				'	color *= 1.0 - clamp(dust * 0.82, 0.0, 0.9);',
-				'	if (uDisc > 0.0) color += band(d, s) * uDisc;',
+				'	dust = max(lanes, uHonest > 0.5 ? 0.0 : uDisc * exp(-high * high * 90.0) * smoothstep(0.3, 0.6, gas + 0.1)) * uDust;',
+				'	return color * (1.0 - clamp(dust * 0.82, 0.0, 0.9));',
+				'}',
+				/* The band of the galaxy the system is in: as it is (of rays, its dust letting through) or drawn; through, what of the far sky it lets through. */
+				'vec3 cosmosBand(vec3 d, vec3 s, vec3 color, float disc, float high, out float through) {',
+				'	if (uHonest > 0.5) {',
+				'		vec4 honest = honestBand(d, s);',
+				'		through = honest.a;',
+				'		return color * honest.a + honest.rgb * uDisc;',
+				'	}',
+				'	through = exp(-disc * 5.0 - uDisc * exp(-high * high * 7.0) * 3.0);',
+				'	return uDisc > 0.0 ? color + band(d, s) * uDisc : color;',
+				'}',
+				'vec3 cosmosBursts(vec3 d, vec3 s, vec3 color, float dust) {',
 				'	for (int i = 0; i < 8; i++) {',
 				'		if (uBursts[i].w > 0.0) color += burst(d, uBursts[i], s, float(i) * 7.1, color) * (1.0 - clamp(dust, 0.0, 0.9) * 0.6);',
 				'	}',
+				'	return color;',
+				'}',
 				/* What lies beyond shows through what is near only as far as that lets it: the band of the galaxy we are in, gas, dust. */
-				'	float veil = exp(-disc * 5.0 - uDisc * exp(-high * high * 7.0) * 3.0 - clamp(gas * uGas, 0.0, 1.0) * 2.2 - dust * 2.5);',
+				'vec3 cosmosGalaxies(vec3 d, vec3 color, float gas, float dust, float through) {',
+				'	float veil = through * exp(-clamp(gas * uGas, 0.0, 1.0) * 2.2 - dust * 2.5);',
 				'	for (int i = 0; i < 16; i++) {',
 				'		if (uGalaxies[i].w > 0.0) color += galaxy(d, uGalaxies[i], uPlanes[i]) * veil;',
 				'	}',
+				'	return color;',
+				'}',
+				'vec3 cosmosPillars(vec3 d, vec3 s, vec3 color) {',
 				'	if (uPillars > 0.0) {',
 				'		vec4 stood = standing(d, s);',
 				'		color += standingGlow * uPillars;',
 				'		color = mix(color, stood.rgb, stood.a * uPillars);',
 				'	}',
-				/* The stars: many and faint, more where gas gathers, a few bright, and the great one with its glare. */
-				'	float many = (1.6 + knots * 9.0 + disc * 26.0) * uStars * (1.0 - clamp(dust, 0.0, 0.9) * 0.7);',
-				'	color += stars(1.1, many, 1.0) * 0.9 + stars(0.8, many * 3.0, 2.0) * 0.6;',
-				'	color += flares(d, 0.006 * uStars);',
+				'	return color;',
+				'}',
+				/* The stars: many and faint, more where gas gathers and the galaxy is near, a few bright, and the great ones with their glare. */
+				'vec3 cosmosStars(vec3 d, vec3 color, float knots, float disc, float dust) {',
+				'	float many = (1.6 + knots * 9.0 + (uHonest > 0.5 ? smoothstep(0.08, 0.9, bandNear(d)) * 12.0 * uDisc : disc * 26.0)) * uStars * (1.0 - clamp(dust, 0.0, 0.9) * 0.7);',
+				'	return color + stars(1.1, many, 1.0) * 0.9 + stars(0.8, many * 3.0, 2.0) * 0.6 + flares(d, 0.006 * uStars);',
+				'}',
 				/* What lights the gas is no sun of its own: a cloud of young stars, each a point. */
+				'vec3 cosmosBeacon(vec3 d, vec3 color, float near) {',
 				'	float young = pow(near, 900.0) * uBeacon;',
 				'	if (young > 0.001) color += stars(1.2, young * 240.0, 3.0) * 1.3 + flares(d, young * 0.5);',
+				'	return color;',
+				'}',
 				/* A globular cluster: stars by the ten thousand, thick to the middle, where they run together. */
+				'vec3 cosmosClusters(vec3 d, vec3 color) {',
 				'	if (uGlobular > 0.0) {',
 				'		float swarm = 0.0;',
 				'		for (int i = 0; i < 12; i++) {',
@@ -867,6 +1167,15 @@ Elemenx.Trait('SceneCosmos', {
 				'		color += (stars(1.05, swarm * 240.0, 4.0) * 1.5 + stars(0.8, swarm * 520.0, 5.0) + stars(0.7, swarm * 700.0, 6.0) * 0.8) * uGlobular * 1.1;',
 				'		color += vec3(0.76, 0.8, 0.8) * pow(swarm, 1.7) * 0.34 * uGlobular;',
 				'	}',
+				'	return color;',
+				'}',
+				/* The sky of its graph (blueprintCosmos: the hook a graph takes the place of: CosmosGraph of a Scene, else LibraryCosmos()). */
+				'void blueprintCosmos(vec3 d, vec3 s, inout vec3 color) {}',
+				'void main() {',
+				'	vec3 d = cubeDirection(uFace, vQuad);',
+				'	vec3 s = vec3(uSeed, uSeed * 0.7, uSeed * 1.3);',
+				'	vec3 color = vec3(0.0);',
+				'	blueprintCosmos(d, s, color);',
 				'	outColor = vec4(color + (hash(d * 311.0) - 0.5) / 255.0, 1.0);',
 				'}'
 			].join('\n'),
@@ -901,7 +1210,7 @@ Elemenx.Trait('SceneCosmos', {
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				'float cellHash(vec3 p) {',
-				'	return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);',
+				'	return enx_white3(p);',
 				'}',
 				'vec3 streaks(float turn, float off, float far, float sectors, float cell, float pace, float seed, float density) {',
 				'	float a = turn * sectors;',

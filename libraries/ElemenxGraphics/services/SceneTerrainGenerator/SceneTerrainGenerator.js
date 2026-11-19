@@ -37,9 +37,11 @@
  *   line cave (Width, Depth, Rough, Mouth), the circles hall (Radius, Depth) and overhang (Radius, Amount). Sketched(sketch, base,
  *   seed) makes one ({Height(x, z, h), Look(x, z), Waters(), Items}: Waters the rivers, a strip at their levels, and the
  *   lakes); SketchChanged(before, after) gives the bounds [x0, z0, x1, z1] where two differ, for a ground made again only there.
- * - Sphere(options) returns the ground of a planet, the very one its baked surface shows (the noise of Math, as
- *   the shader of a Scene bakes it): options Radius (units), Height (its relief), Seed (the number of its pattern),
- *   Ocean (0 to 1), Type (rocky, desert, terran, ocean, ice, lava, dwarf, moon). Its methods: Land(direction) (the
+ * - Sphere(options) returns the ground of a planet, the very one its baked surface shows: its land the land of the
+ *   graph the shader of a Scene bakes it of (blueprints/shader/bake, what comes to its block BakeLand) made code in
+ *   the page (BakeRun, BakeMake(graph), BakeCodeOf(graph); given to the workers by ShareGround): options Radius (units),
+ *   Height (its relief), Seed (the number of its pattern), Ocean (0 to 1), Type (rocky, desert, terran, ocean, ice,
+ *   lava, dwarf, moon), BakeSource (the code of a graph of its own, BakeCodeOf). Its methods: Land(direction) (the
  *   ground of the noise: below 0 the sea), Elevation(direction) (above the radius), Point(direction) (on the ground),
  *   Altitude(point) (above the ground under it), Patch(face, u, v, size, resolution) (a geometry of a square of a face
  *   of its cube, from u and v of -1 to 1, its positions relative to its Center, the land in UV.x, the sea in UV.y).
@@ -78,7 +80,10 @@
  *   once in the page and given to workers by ShareGround; SketchMake(type, graph) makes a type of another graph. The
  *   shape of each carve of a volume is its graph too (blueprints/carve/<type>: tunnel, sphere, caves, passages, overhangs;
  *   inputs X, Y, Z, G the ground over the point, Steep, Points, Packed and the values of the carve; result Density, of
- *   overhangs Share, WX, WZ): CarveRun(type), CarveMake(type, graph).
+ *   overhangs Share, WX, WZ): CarveRun(type), CarveMake(type, graph). A ground of graphs of its own (Graphs: {'sketch/<type>'
+ *   or 'carve/<type>': a graph}, as a world gives them) has their code made in the page (GraphCode, GraphCodeOf(graphs):
+ *   {name: its code}; ShareGround makes it before a worker has the options); SketchRun(type, own) and CarveRun(type, own)
+ *   are of that code when it has one of the type.
  * - PlainRelief(settings): the library relief of a ground of no graph, no planet and no noise of its own, by its code made
  *   in the page: {Height, Climate(x, z)}. ShareGround(pool, options, made): what its options take with them to the
  *   workers of a pool (the code and the wasm of its relief), once; made: make its code first if it was not yet.
@@ -89,7 +94,7 @@
 Elemenx.Service('SceneTerrainGenerator', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['FlatOf(options)', 'Flat(options)', 'Border(options)', 'Passages(carve, height)', 'Daylight(field, x0, z0, x1, z1, low, options)', 'SketchCarves(sketch, height, seed)', 'PassageRoute(graph, from, to)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)', 'ReliefWasm(settings, plain)', 'WasmRun(made, input, count)', 'WasmExports(made)', 'PlainRelief(settings)', 'ShareGround(pool, options, made)', 'SketchDefaults(type)', 'SketchRun(type)', 'SketchMake(type, graph)', 'CarveRun(type)', 'CarveMake(type, graph)', 'WasmShare(pool, key)']
+		Methods: ['FlatOf(options)', 'Flat(options)', 'Border(options)', 'Passages(carve, height)', 'Daylight(field, x0, z0, x1, z1, low, options)', 'SketchCarves(sketch, height, seed)', 'PassageRoute(graph, from, to)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)', 'ReliefWasm(settings, plain)', 'WasmRun(made, input, count)', 'WasmExports(made)', 'PlainRelief(settings)', 'ShareGround(pool, options, made)', 'SketchDefaults(type)', 'SketchRun(type, own)', 'SketchMake(type, graph)', 'CarveRun(type, own)', 'CarveMake(type, graph)', 'GraphCodeOf(graphs)', 'SketchCodeOf(type, graph)', 'CarveCodeOf(type, graph)', 'BakeRun(own)', 'BakeMake(graph)', 'BakeCodeOf(graph)', 'OwnRun(code)', 'WasmShare(pool, key)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['terrain']}},
@@ -426,6 +431,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 		if (!options.BiomeList)
 			options.BiomeList = this.Biomes({Biomes: options.Biomes || this.DefaultBiomes});
 
+		/* Graphs of its own (LandGraph.. ClimateGraph): their code made in the page, so a worker has it. */
+		if (!options.ReliefSources)
+			options.ReliefSources = planets.GraphSources(options);
+
 		planet = planets.Planet(options);
 		radius = planet.Radius * 1000;
 		middle = planets.Direction(Number(given.Latitude) || 0, Number(given.Longitude) || 0);
@@ -491,6 +500,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 		/* Its lands by its climate (Biomes): each where its height, its moisture and its warmth are those of a biome; of a planet, its own. */
 		var biomes = this.Biomes(site && !settings.Biomes && !settings.BiomeList ? Object.assign(settings, {BiomeList: site.Planet.Lands}) : settings);
 		var field;
+
+		/* Its graphs of its own (Graphs): their code made here (GraphCode), unless it came with the options (a worker). */
+		if (settings.Graphs && !settings.GraphCode)
+			settings.GraphCode = this.GraphCodeOf(settings.Graphs);
 
 		/* A height of a zone: a part of the highest hills, Infinity for none (false), the part by default. */
 		function zone (value, fallback, top) {
@@ -684,7 +697,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		/* A sketch over it (Sketch): its heights after it, and its colors. */
 		if (settings.Sketch) {
 			var plain = field.Height;
-			var sketched = this.Sketched(settings.Sketch, plain, settings.Seed);
+			var sketched = this.Sketched(settings.Sketch, plain, settings.Seed, settings.GraphCode);
 
 			field.Sketch = sketched;
 			field.Height = function (x, z) {
@@ -1584,7 +1597,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		 * results (Keys). Regression: the shape of each carve was written out in code here.
 		 */
 		function carved (one) {
-			var run = self.CarveRun(one.Type);
+			var run = self.CarveRun(one.Type, settings.GraphCode);
 			var center = one.Center || one.At || [0, 0, 0];
 			var shifts = {SA: '-a', SB: '-b', SH: '-h', SR: '-rough', SX: '-x', SZ: '-z'};
 
@@ -3179,19 +3192,34 @@ Elemenx.Service('SceneTerrainGenerator', {
 		var ocean = Number(settings.Ocean) || 0;
 		var type = settings.Type || 'rocky';
 		var cratered = type === 'rocky' || type === 'desert' || type === 'dwarf' || type === 'moon';
+		var run = this.BakeRun(settings.BakeSource);
+		var slots = {};
+		var args;
 		var field;
 
-		/* The land of a direction: the very formula of the shader that bakes the surface (Bake of Scene). */
+		if (!run)
+			throw new Error('Elemenx SceneTerrainGenerator: the land of a body has no code of its graph (blueprints/shader/bake)');
+
+		args = run.Inputs.map(function (name, index) {
+			slots[name] = index;
+
+			return name === 'Seed' ? seed : name === 'Ocean' ? ocean : name === 'Cratered' ? cratered ? 1 : 0 : 0;
+		});
+
+		/* The land of a direction: what its graph that bakes the surface (Bake of Scene) comes to in its block BakeLand. */
 		function land (direction) {
 			var p = math.Vectors.Normalize(direction);
-			var q = [p[0] * 2.2 + seed, p[1] * 2.2 + seed * 0.7, p[2] * 2.2 + seed * 1.3];
-			var h = noise.Fbm(q[0], q[1], q[2], 6);
-			var value = ocean > 0 ? (h - ocean * 0.55 - 0.2) / Math.max(0.05, 0.8 - ocean * 0.55) : h;
 
-			if (cratered && !(ocean > 0))
-				value += (self.Smoothstep(0.86, 0.96, noise.Ridge(q[0] * 2.6 + 9, q[1] * 2.6 + 9, q[2] * 2.6 + 9, 3)) - 0.4) * 0.18;
+			if (slots.PX !== undefined)
+				args[slots.PX] = p[0];
 
-			return value;
+			if (slots.PY !== undefined)
+				args[slots.PY] = p[1];
+
+			if (slots.PZ !== undefined)
+				args[slots.PZ] = p[2];
+
+			return run.Main.apply(null, args);
 		}
 
 		/*
@@ -3411,6 +3439,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 		if (!options || typeof options !== 'object' || pool.Inline()) return;
 
+		/* Its graphs of its own made code here (a worker makes none). */
+		if (options.Graphs && !options.GraphCode)
+			options.GraphCode = this.GraphCodeOf(options.Graphs);
+
 		if (made && typeof options.ReliefKey !== 'string' && !options.Noise && !options.Planet && !this.Relief(options))
 			this.PlainRelief(options);
 
@@ -3432,6 +3464,9 @@ Elemenx.Service('SceneTerrainGenerator', {
 				if (self.CarveRun(type))
 					pool.Share('carve-code:' + type, self.CarveCode[type]);
 			});
+
+			if (self.BakeRun())
+				pool.Share('bake-code', self.BakeCode);
 		}
 
 		['ReliefKey', 'ReliefWasm'].forEach(function (name) {
@@ -3492,10 +3527,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 	/*
 	 * A sketch over a ground: what it changes of its heights and of its colors, made once. sketch {Layers: [{ID, Visible, Strength,
 	 * Items}]}; each item {ID, Type, Strength} changes the height a point has after the items before it. base(x, z): the height of
-	 * the ground under it. Gives {Height(x, z, h), Look(x, z) ({Palette, Weight, Color, Tint}: the colors of what it paints),
+	 * the ground under it; own: the code of graphs of its own (GraphCode). Gives {Height(x, z, h), Look(x, z) ({Palette, Weight, Color, Tint}: the colors of what it paints),
 	 * Items: [{Item, Bounds: [x0, z0, x1, z1]}]}.
 	 */
-	Sketched: function (sketch, base, seed) {
+	Sketched: function (sketch, base, seed, own) {
 		var self = this;
 		/* The shift of the noise of the sketch of its seed, as Math.Noise takes it: what its graphs add to their points (O). */
 		var offset = this.$Service('Math').SeedOffset('sketch-' + (seed || ''));
@@ -3518,7 +3553,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		 * (its parameters Around, in metres, and AroundOfRadius, of its radius). A stamp of no data has none.
 		 */
 		function graphed (made, item, d) {
-			var run = item.Type === 'stamp' && !item.Data ? null : self.SketchRun(item.Type);
+			var run = item.Type === 'stamp' && !item.Data ? null : self.SketchRun(item.Type, own);
 			var flat = [];
 
 			if (!run) return;
@@ -3921,11 +3956,17 @@ Elemenx.Service('SceneTerrainGenerator', {
 	SketchCode: {},
 
 	/*
-	 * The graph of a type of a sketch as a function: {Main (of its inputs in their order), Inputs, Parameters}; null with none.
+	 * The graph of a type of a sketch as a function: {Main (of its inputs in their order), Inputs, Parameters}; null with none;
+	 * own: the code of graphs of a ground of its own (GraphCode), of which one of the type is taken first.
 	 * Made in the page the first time; in a worker of what ShareGround gave it.
 	 */
-	SketchRun: function (type) {
-		var kept = (this.SketchCode || {})[type] || (typeof this.$Shared === 'function' ? this.$Shared('sketch-code:' + type) : null);
+	SketchRun: function (type, own) {
+		var kept = own && own['sketch/' + type] ? this.OwnRun(own['sketch/' + type]) : null;
+		if (kept)
+			return kept;
+
+		kept = (this.SketchCode || {})[type] || (typeof this.$Shared === 'function' ? this.$Shared('sketch-code:' + type) : null);
+
 		var graph;
 
 		this.SketchMade = this.SketchMade || {};
@@ -3951,9 +3992,14 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 */
 	CarveCode: {},
 
-	/* The graph of a carve as a function: {Main (of its inputs in their order), Inputs, Keys (of its results)}; null with none. */
-	CarveRun: function (type) {
-		var kept = (this.CarveCode || {})[type] || (typeof this.$Shared === 'function' ? this.$Shared('carve-code:' + type) : null);
+	/* The graph of a carve as a function: {Main (of its inputs in their order), Inputs, Keys (of its results)}; null with none; own as of SketchRun. */
+	CarveRun: function (type, own) {
+		var kept = own && own['carve/' + type] ? this.OwnRun(own['carve/' + type]) : null;
+		if (kept)
+			return kept;
+
+		kept = (this.CarveCode || {})[type] || (typeof this.$Shared === 'function' ? this.$Shared('carve-code:' + type) : null);
+
 		var graph;
 
 		this.CarveMade = this.CarveMade || {};
@@ -3974,14 +4020,8 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 	/* The code of the graph of a carve (CarveCode), made of its graph in the page: a carve of another graph. */
 	CarveMake: function (type, graph) {
-		var made = this.$Service('Blueprints').NumericCode(graph, {}, {Points: 'floats', Packed: 'floats'});
-		if (!made)
-			throw new Error('Elemenx SceneTerrainGenerator: the graph of the carve ' + type + ' is not of numbers');
-
 		this.CarveCode = this.CarveCode || {};
-		this.CarveCode[type] = {Source: made.Source, Inputs: made.Numeric.Inputs.map(function (one) {
-			return one.Name;
-		}), Keys: made.Keys};
+		this.CarveCode[type] = this.CarveCodeOf(type, graph);
 
 		if (this.CarveMade)
 			delete this.CarveMade[type];
@@ -3989,8 +4029,88 @@ Elemenx.Service('SceneTerrainGenerator', {
 		return this.CarveCode[type];
 	},
 
+	/* The code of the graph of a carve, made of it in the page: {Source, Inputs, Keys}. */
+	CarveCodeOf: function (type, graph) {
+		var made = this.$Service('Blueprints').NumericCode(graph, {}, {Points: 'floats', Packed: 'floats'});
+		if (!made)
+			throw new Error('Elemenx SceneTerrainGenerator: the graph of the carve ' + type + ' is not of numbers');
+
+		return {Source: made.Source, Inputs: made.Numeric.Inputs.map(function (one) {
+			return one.Name;
+		}), Keys: made.Keys};
+	},
+
+	/*
+	 * The land of the graph of the library that bakes the surface of a body of noise (blueprints/shader/bake, the land of
+	 * its block BakeLand) made code: {Source, Inputs, Keys}, made in the page as a body first has it (BakeRun), given to the
+	 * workers (ShareGround).
+	 */
+	BakeCode: null,
+
+	/*
+	 * The land of the graph that bakes a body as a function: {Main (of its inputs in their order: PX, PY, PZ, Seed, Ocean,
+	 * Cratered), Inputs, Keys}; null with none; own: the code of a graph of its own (BakeSource of the options of a body:
+	 * BakeCodeOf), taken first. Made in the page the first time; in a worker of what ShareGround gave it.
+	 */
+	BakeRun: function (own) {
+		var kept = own ? this.OwnRun(own) : null;
+		if (kept)
+			return kept;
+
+		kept = this.BakeCode || (typeof this.$Shared === 'function' ? this.$Shared('bake-code') : null);
+
+		if (!kept && typeof Elemenx !== 'undefined' && Elemenx.Compilers && typeof Elemenx.Resources === 'function')
+			kept = this.BakeMake(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/bake'));
+
+		if (!kept)
+			return null;
+
+		if (!this.BakeMade)
+			this.BakeMade = {Main: new Function('B', 'M', 'N', kept.Source)().Main, Inputs: kept.Inputs, Keys: kept.Keys};
+
+		return this.BakeMade;
+	},
+
+	/* The code of the land of the graph that bakes a body (BakeCode), made of another graph in the page: the library one changed. */
+	BakeMake: function (graph) {
+		this.BakeCode = graph ? this.BakeCodeOf(graph) : null;
+		this.BakeMade = null;
+
+		return this.BakeCode;
+	},
+
+	/*
+	 * The code of the land of a graph that bakes a body (what comes to its block BakeLand: SceneBlueprints.BakeLandGraph),
+	 * made of it in the page: {Source, Inputs, Keys}; null for a graph of no BakeLand (its GLSL written by hand).
+	 */
+	BakeCodeOf: function (graph) {
+		var land = this.$Service('SceneBlueprints').BakeLandGraph(graph);
+		var made = land ? this.$Service('Blueprints').NumericCode(land, {}, {}) : null;
+
+		if (!land)
+			return null;
+
+		if (!made)
+			throw new Error('Elemenx SceneTerrainGenerator: the land of the graph of a bake is not of numbers');
+
+		return {Source: made.Source, Inputs: made.Numeric.Inputs.map(function (one) {
+			return one.Name;
+		}), Keys: made.Keys};
+	},
+
 	/* The code of the graph of a type of a sketch (SketchCode), made of its graph in the page. */
 	SketchMake: function (type, graph) {
+		this.SketchCode = this.SketchCode || {};
+		this.SketchCode[type] = this.SketchCodeOf(type, graph);
+
+		if (this.SketchMade)
+			delete this.SketchMade[type];
+
+		return this.SketchCode[type];
+	},
+
+	/* The code of the graph of a type of a sketch, made of it in the page: {Source, Inputs, Parameters}. */
+	SketchCodeOf: function (type, graph) {
 		var blueprints = this.$Service('Blueprints');
 		var read = blueprints.Read(graph);
 		var made = blueprints.NumericCode(read, {}, {Points: 'floats', Levels: 'floats', Data: 'floats'}, ['Height']);
@@ -4003,15 +4123,40 @@ Elemenx.Service('SceneTerrainGenerator', {
 			parameters[parameter.key] = parameter.value;
 		});
 
-		this.SketchCode = this.SketchCode || {};
-		this.SketchCode[type] = {Source: made.Source, Inputs: made.Numeric.Inputs.map(function (one) {
+		return {Source: made.Source, Inputs: made.Numeric.Inputs.map(function (one) {
 			return one.Name;
 		}), Parameters: parameters};
+	},
 
-		if (this.SketchMade)
-			delete this.SketchMade[type];
+	/*
+	 * The code of the graphs of a ground of its own (Graphs: {'sketch/<type>' or 'carve/<type>': a graph or the name of one in
+	 * the resources}), made in the page: {name: {Source, Inputs, Parameters or Keys}}. Other names (a planet's) are not of a ground.
+	 */
+	GraphCodeOf: function (graphs) {
+		var self = this;
+		var made = {};
 
-		return this.SketchCode[type];
+		Object.keys(graphs || {}).forEach(function (name) {
+			var kind = name.split('/')[0];
+			var type = name.slice(kind.length + 1);
+			var graph = typeof graphs[name] === 'string' ? Elemenx.Resources('Blueprints', graphs[name]) : graphs[name];
+			if (!graph || !type) return;
+
+			if (kind === 'sketch') made[name] = self.SketchCodeOf(type, graph);
+			else if (kind === 'carve') made[name] = self.CarveCodeOf(type, graph);
+		});
+
+		return made;
+	},
+
+	/* The function of the code of a graph of a ground of its own (GraphCode), made once for the same code. */
+	OwnRun: function (code) {
+		this.OwnMade = this.OwnMade || {};
+
+		if (!this.OwnMade[code.Source])
+			this.OwnMade[code.Source] = {Main: new Function('B', 'M', 'N', code.Source)().Main, Inputs: code.Inputs, Parameters: code.Parameters || {}, Keys: code.Keys};
+
+		return this.OwnMade[code.Source];
 	},
 
 	/* The values of a type of a sketch where an item tells none: those of every type, then its own. */

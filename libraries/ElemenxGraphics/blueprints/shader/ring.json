@@ -1,0 +1,238 @@
+{
+	"version": 1,
+	"type": "ring",
+	"name": "Ring",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "place",
+			"type": "RingPlace",
+			"x": 40,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "bands",
+			"type": "RingBands",
+			"x": 280,
+			"y": 40,
+			"properties": [
+				{
+					"key": "WideScale",
+					"value": 22
+				},
+				{
+					"key": "FineScale",
+					"value": 140
+				},
+				{
+					"key": "Base",
+					"value": 0.2
+				},
+				{
+					"key": "Wide",
+					"value": 0.55
+				},
+				{
+					"key": "Fine",
+					"value": 0.25
+				},
+				{
+					"key": "Inner",
+					"value": 0.05
+				},
+				{
+					"key": "Outer",
+					"value": 0.92
+				}
+			]
+		},
+		{
+			"id": "gap",
+			"type": "RingGap",
+			"x": 520,
+			"y": 40,
+			"properties": [
+				{
+					"key": "At",
+					"value": 0.62
+				},
+				{
+					"key": "Width",
+					"value": 0.015
+				},
+				{
+					"key": "Depth",
+					"value": 0.9
+				}
+			]
+		},
+		{
+			"id": "inner",
+			"type": "RingGap",
+			"x": 760,
+			"y": 40,
+			"properties": [
+				{
+					"key": "At",
+					"value": 0.24
+				},
+				{
+					"key": "Width",
+					"value": 0.03
+				},
+				{
+					"key": "Depth",
+					"value": 0.45
+				}
+			]
+		},
+		{
+			"id": "narrow",
+			"type": "RingGap",
+			"x": 1000,
+			"y": 40,
+			"properties": [
+				{
+					"key": "At",
+					"value": 0.86
+				},
+				{
+					"key": "Width",
+					"value": 0.005
+				},
+				{
+					"key": "Depth",
+					"value": 0.85
+				}
+			]
+		},
+		{
+			"id": "color",
+			"type": "RingColor",
+			"x": 520,
+			"y": 300,
+			"properties": [
+				{
+					"key": "Mix",
+					"value": 0.6
+				}
+			]
+		},
+		{
+			"id": "light",
+			"type": "RingLight",
+			"x": 760,
+			"y": 300,
+			"properties": [
+				{
+					"key": "Back",
+					"value": 0.35
+				},
+				{
+					"key": "Side",
+					"value": 0.65
+				}
+			]
+		},
+		{
+			"id": "end",
+			"type": "RingEnd",
+			"x": 1240,
+			"y": 300,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "ring-link-0",
+			"p1": "place-out-R",
+			"p2": "bands-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "ring-link-1",
+			"p1": "place-out-Seed",
+			"p2": "bands-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "ring-link-2",
+			"p1": "place-out-R",
+			"p2": "gap-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "ring-link-3",
+			"p1": "place-out-R",
+			"p2": "inner-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "ring-link-4",
+			"p1": "place-out-R",
+			"p2": "narrow-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "ring-link-5",
+			"p1": "bands-out-Density",
+			"p2": "gap-in-Density",
+			"kind": "value"
+		},
+		{
+			"id": "ring-link-6",
+			"p1": "gap-out-Density",
+			"p2": "inner-in-Density",
+			"kind": "value"
+		},
+		{
+			"id": "ring-link-7",
+			"p1": "inner-out-Density",
+			"p2": "narrow-in-Density",
+			"kind": "value"
+		},
+		{
+			"id": "ring-link-8",
+			"p1": "bands-out-Wide",
+			"p2": "color-in-Wide",
+			"kind": "value"
+		},
+		{
+			"id": "ring-link-9",
+			"p1": "bands-out-Fine",
+			"p2": "color-in-Fine",
+			"kind": "value"
+		},
+		{
+			"id": "ring-link-10",
+			"p1": "color-out-Color",
+			"p2": "light-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "ring-link-11",
+			"p1": "place-out-World",
+			"p2": "light-in-World",
+			"kind": "value"
+		},
+		{
+			"id": "ring-link-12",
+			"p1": "place-out-Normal",
+			"p2": "light-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "ring-link-13",
+			"p1": "light-out-Color",
+			"p2": "end-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "ring-link-14",
+			"p1": "narrow-out-Density",
+			"p2": "end-in-Alpha",
+			"kind": "value"
+		}
+	]
+}

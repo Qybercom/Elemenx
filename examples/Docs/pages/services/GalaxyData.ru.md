@@ -14,7 +14,8 @@ GalaxyData: галактика как данные (docs/SPACE-FORMAT.md) — п
 - System(data, id) — система звезды: записанная в галактике, иначе из зерна звезды с её массой (Astronomy.Generate с Mass); для 'centre' — система центральной чёрной дыры: дыра с диском и молодые звёзды на тесных вытянутых орбитах (сотни–тысячи а.е., как S2), из зерна галактики.
 - Hole(data) — центральная чёрная дыра как тело ({ID: 'centre', Kind: 'blackhole', Place [0, 0, 0], Mass}); Star(data, 'centre') возвращает её же. HoleSystem(data) — её система из зерна: у звёзд вокруг дыры свои планеты и станции в пределах сферы Хилла в перицентре, вокруг них рой старых звёзд ядерного скопления (трейт Cluster).
 - Cluster(options) — звёздное скопление как система SystemData из зерна: {Seed, Type (open — рассеянное, globular — шаровое, nuclear — ядерное вокруг чёрной дыры), Name, Count (сколько звёзд перечислено поштучно), Radius (св. лет), Mass (масса дыры ядерного)}. Середина ID 'cluster' с трейтом Cluster {Type, Radius, Count, Seed} — рой неперечисленных звёзд, который рисует Scene; звёзды на орбитах по профилю Пламмера, у каждой планеты и станции, которые оставляет ей сфера Хилла.
-- Cosmos(data, id) — фон неба системы звезды (Cosmos сцены): полоса её галактики, ось — север галактики, как лежит система.
+- Cosmos(data, id) — фон неба системы звезды (Cosmos сцены): полоса этой самой галактики, видимая с места звезды (Galaxy — паспорт, Place), ось — север галактики, как лежит система.
+- Code(), IR() — рукава галактики из одного источника (Kernel на языке ядра: gx_turn, gx_bend, gx_wave, gx_arm на шуме градиентов Noise) как js и как IR для графа Blueprints; Spiral(data) — рукава по графу галактики (data.Graph, свой граф даёт сцена; SceneBlueprints.Galaxy): на них лежат и звёзды, и сгустки, и картинка; SeedNumber(manifest) — число зерна для её шума.
 - Rename, Remove, AddBody (тело вне систем: Place и Velocity), SetSystem — правки.
 - Use, DataOf, Open, Write, Save, Pack — как у SystemData; части {Kind: 'galaxy'}, {Kind: 'edits'}, части записанной системы — с System: id.
 - Звёзды секторов получили тип (Type: main, white-dwarf, brown-dwarf, giant, supergiant, neutron, pulsar, magnetar — примерно как в настоящей галактике) и Kind — вид сцены; система такой звезды строится вокруг звезды этого вида.
@@ -25,6 +26,10 @@ GalaxyData: галактика как данные (docs/SPACE-FORMAT.md) — п
 ## Методы
 
 - `Make(options)`
+- `Code()`
+- `IR()`
+- `SeedNumber(manifest)`
+- `Spiral(data)`
 - `Density(data, place)`
 - `Sector(data, x, y, z, limit)`
 - `Search(data, options)`
@@ -67,4 +72,4 @@ GalaxyData: галактика как данные (docs/SPACE-FORMAT.md) — п
 - [makes star clusters of three kinds of a seed: open ones loose and young, globular ones old and packed, nuclear ones round a black hole](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L230) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 - [gives its stars their kinds: a few white and brown dwarfs, rare giants and what heavy stars left, each of the kind of a Scene, with a system of that star](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L287) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 
-+13 ещё в тех же файлах
++15 ещё в тех же файлах

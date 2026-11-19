@@ -3102,6 +3102,13 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "SceneForecast",
+					"Title": {
+						"en": "SceneForecast"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneKinds",
 					"Title": {
 						"en": "SceneKinds"

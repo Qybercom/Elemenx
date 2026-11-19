@@ -129,7 +129,7 @@ describe('Contract: Blueprints, graphs in the JSON of Flowprint made into shader
 
 		expect(made.Fragment).toContain('outColor = vec4(0.0, 0.0, 0.0, 1.0);');
 		expect(fresh.Graphs()).toEqual(expect.arrayContaining(['generator', 'flow', 'pass', 'material', 'render', 'vertex']));
-		expect(fresh.NodeOf('Number').Graphs).toEqual(['generator', 'flow', 'pass', 'material', 'vertex', 'water', 'sky', 'land', 'render']);
+		expect(fresh.NodeOf('Number').Graphs).toEqual(['generator', 'flow', 'pass', 'material', 'vertex', 'water', 'sky', 'land', 'bake', 'render']);
 		expect(typeof fresh.NodeOf('Add').GLSL).toBe('string');
 	});
 
@@ -1031,5 +1031,28 @@ describe('Contract: the graphs of the Libraries as resources, made for their opt
 		blueprints.Link(graph, [curve.id, 'Value'], [result.id, 'Value']);
 
 		expect(blueprints.Compile(JSON.parse(blueprints.Write(graph))).Run({}, {T: 2.5}).Value).toBeCloseTo(5, 9);
+	});
+
+	/*
+	 * Regression: a block of a file that names none of its properties read each as nothing (its numbers 0 in a shader: the
+	 * planet graph of the library drew a planet burned white). Now each it does not name is as its type has it by default.
+	 */
+	it('reads a property a block of a file does not name as its type has it by default', function () {
+		var blueprints = Elemenx.Service('Blueprints');
+
+		blueprints.Node('TimesOfDefault', {Graphs: ['generator'], Properties: [{Key: 'Times', Type: 'number', Value: 3}, {Key: 'Plus', Type: 'number', Value: 1}], Inputs: [{Key: 'X', Type: 'float'}], Outputs: [{Key: 'Out', Type: 'float'}], Compute: function (inputs, properties) {
+			return {Out: (Number(inputs.X) || 0) * properties.Times + properties.Plus};
+		}});
+
+		var graph = blueprints.Read({version: 1, type: 'generator', parameters: [], blocks: [
+			{id: 'two', type: 'Number', x: 0, y: 0, properties: [{key: 'Value', value: 2}]},
+			{id: 'times', type: 'TimesOfDefault', x: 200, y: 0, properties: [{key: 'Plus', value: 10}]},
+			{id: 'result', type: 'Result', x: 400, y: 0, properties: []}
+		], links: [
+			{id: 'a', p1: 'two-out-Value', p2: 'times-in-X', kind: 'value'},
+			{id: 'b', p1: 'times-out-Out', p2: 'result-in-Value', kind: 'value'}
+		]});
+
+		expect(blueprints.Compile(graph).Run().Value).toBe(16);
 	});
 });

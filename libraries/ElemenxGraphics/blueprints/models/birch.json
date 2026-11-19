@@ -1,0 +1,237 @@
+{
+	"version": 1,
+	"type": "model",
+	"name": "birch",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "cylinder-0",
+			"type": "Cylinder",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Segments",
+					"value": 8
+				}
+			]
+		},
+		{
+			"id": "formula-1",
+			"type": "Formula",
+			"x": 0,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.035"
+				}
+			]
+		},
+		{
+			"id": "formula-2",
+			"type": "Formula",
+			"x": 0,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(0.018) / (0.035)"
+				}
+			]
+		},
+		{
+			"id": "formula-3",
+			"type": "Formula",
+			"x": 0,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.74"
+				}
+			]
+		},
+		{
+			"id": "formula-4",
+			"type": "Formula",
+			"x": 0,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.37, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-5",
+			"type": "Formula",
+			"x": 0,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.86, 0.85, 0.8]"
+				}
+			]
+		},
+		{
+			"id": "repeat-6",
+			"type": "Repeat",
+			"x": 0,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/models/birch-crown"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula-7",
+			"type": "Formula",
+			"x": 0,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "4"
+				}
+			]
+		},
+		{
+			"id": "input-8",
+			"type": "Input",
+			"x": 0,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "input-9",
+			"type": "Input",
+			"x": 0,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Variant"
+				}
+			]
+		},
+		{
+			"id": "join-10",
+			"type": "Join",
+			"x": 0,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "piece-11",
+			"type": "Piece",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "ID",
+					"value": "body"
+				}
+			]
+		},
+		{
+			"id": "model-12",
+			"type": "Model",
+			"x": 0,
+			"y": 1080,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "link-0",
+			"p1": "formula-1-out-Value",
+			"p2": "cylinder-0-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "link-1",
+			"p1": "formula-2-out-Value",
+			"p2": "cylinder-0-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "link-2",
+			"p1": "formula-3-out-Value",
+			"p2": "cylinder-0-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "link-3",
+			"p1": "formula-4-out-Value",
+			"p2": "cylinder-0-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-4",
+			"p1": "formula-5-out-Value",
+			"p2": "cylinder-0-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-5",
+			"p1": "formula-7-out-Value",
+			"p2": "repeat-6-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "link-6",
+			"p1": "input-8-out-Value",
+			"p2": "repeat-6-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "link-7",
+			"p1": "input-9-out-Value",
+			"p2": "repeat-6-in-Variant",
+			"kind": "value"
+		},
+		{
+			"id": "link-8",
+			"p1": "cylinder-0-out-Parts",
+			"p2": "join-10-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "link-9",
+			"p1": "repeat-6-out-List",
+			"p2": "join-10-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "link-10",
+			"p1": "join-10-out-Parts",
+			"p2": "piece-11-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "link-11",
+			"p1": "piece-11-out-Parts",
+			"p2": "model-12-in-Parts",
+			"kind": "value"
+		}
+	]
+}

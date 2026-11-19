@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadElemenx, unique } from '../../../../tests/setup.js';
 import { Use } from '../../../../tests/library.js';
+import source from './Workers.js?raw';
 
 var workers;
 
@@ -67,6 +68,51 @@ describe('Contract: Workers, the work of the Services off the main thread', func
 		expect(read).toEqual([7, 7, 7, 7, 8, null]);
 
 		pool.Destroy();
+	});
+
+	/* Most: a pool of a size of 3 has as many workers as Most lets it, for the pools made after it is set. */
+	it('makes a pool of no more workers than Most, whatever its size', async function () {
+		var name = unique('Who');
+		var was = workers.Most;
+
+		Elemenx.Service(name, {
+			Who: function () {
+				this.Mark = this.Mark || String(Math.random());
+
+				return this.Mark;
+			},
+			Source: function (names) {
+				return this.$Service('Workers').Source(this, names);
+			}
+		});
+
+		async function count (pool) {
+			var marks = await Promise.all([0, 1, 2, 3, 4, 5].map(function () {
+				return run(pool, name, 'Who', []);
+			}));
+
+			pool.Destroy();
+
+			return marks.filter(function (one, index) {
+				return marks.indexOf(one) === index;
+			}).length;
+		}
+
+		/* 4 unless told (the tests of the library tell fewer: tests/library.js). */
+		expect(source).toMatch(/\n\tMost: 4,\n/);
+
+		try {
+			workers.Most = 4;
+
+			expect(await count(workers.Pool(unique('Many'), {[name]: ['Who']}, 3))).toBe(3);
+
+			workers.Most = 1;
+
+			expect(await count(workers.Pool(unique('One'), {[name]: ['Who']}, 3))).toBe(1);
+		}
+		finally {
+			workers.Most = was;
+		}
 	});
 
 	/* With no worker a run goes in the page, a method of the Service as it is, calling the others of it. */

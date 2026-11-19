@@ -1,0 +1,253 @@
+{
+	"version": 1,
+	"type": "weather",
+	"name": "weather",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "weather-end",
+			"type": "WeatherEnd",
+			"x": 300,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "weather-season",
+			"type": "WeatherSeason",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Leaf",
+					"value": 0.05
+				},
+				{
+					"key": "Bare",
+					"value": 1.08
+				},
+				{
+					"key": "Blossom",
+					"value": 0.45
+				}
+			]
+		},
+		{
+			"id": "weather-snow-things",
+			"type": "WeatherSnow",
+			"x": 0,
+			"y": 120,
+			"properties": [
+				{
+					"key": "For",
+					"value": "things"
+				},
+				{
+					"key": "Low",
+					"value": 0.3
+				},
+				{
+					"key": "High",
+					"value": 0.75
+				},
+				{
+					"key": "Scale",
+					"value": 0.23
+				},
+				{
+					"key": "Weight",
+					"value": 1
+				},
+				{
+					"key": "Scale2",
+					"value": 0.9
+				},
+				{
+					"key": "Weight2",
+					"value": 0.5
+				},
+				{
+					"key": "Shift",
+					"value": -0.75
+				},
+				{
+					"key": "Amount",
+					"value": 0.3
+				}
+			]
+		},
+		{
+			"id": "weather-snow-solid",
+			"type": "WeatherSnow",
+			"x": 0,
+			"y": 240,
+			"properties": [
+				{
+					"key": "For",
+					"value": "solid"
+				},
+				{
+					"key": "Low",
+					"value": 0.35
+				},
+				{
+					"key": "High",
+					"value": 0.8
+				},
+				{
+					"key": "Scale",
+					"value": 0.6
+				},
+				{
+					"key": "Weight",
+					"value": 0.5
+				},
+				{
+					"key": "Scale2",
+					"value": 0.9
+				},
+				{
+					"key": "Weight2",
+					"value": 0
+				},
+				{
+					"key": "Shift",
+					"value": -0.25
+				},
+				{
+					"key": "Amount",
+					"value": 0.4
+				}
+			]
+		},
+		{
+			"id": "weather-snow-plants",
+			"type": "WeatherSnow",
+			"x": 0,
+			"y": 360,
+			"properties": [
+				{
+					"key": "For",
+					"value": "plants"
+				},
+				{
+					"key": "Low",
+					"value": 0.15
+				},
+				{
+					"key": "High",
+					"value": 0.5
+				},
+				{
+					"key": "Scale",
+					"value": 0.6
+				},
+				{
+					"key": "Weight",
+					"value": 0.5
+				},
+				{
+					"key": "Scale2",
+					"value": 0.9
+				},
+				{
+					"key": "Weight2",
+					"value": 0
+				},
+				{
+					"key": "Shift",
+					"value": -0.25
+				},
+				{
+					"key": "Amount",
+					"value": 0.4
+				}
+			]
+		},
+		{
+			"id": "weather-dissolve",
+			"type": "WeatherDissolve",
+			"x": 0,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Grain",
+					"value": 30
+				},
+				{
+					"key": "Streak",
+					"value": 6
+				}
+			]
+		},
+		{
+			"id": "weather-puddles",
+			"type": "WeatherPuddles",
+			"x": 0,
+			"y": 600,
+			"properties": [
+				{
+					"key": "Low",
+					"value": 0.66
+				},
+				{
+					"key": "High",
+					"value": 0.8
+				},
+				{
+					"key": "Grow",
+					"value": 0.18
+				},
+				{
+					"key": "Scale",
+					"value": 0.13
+				},
+				{
+					"key": "Scale2",
+					"value": 0.6
+				},
+				{
+					"key": "Weight2",
+					"value": 0.08
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "weather-link-0",
+			"p1": "weather-season-out-Done",
+			"p2": "weather-end-in-Season",
+			"kind": "value"
+		},
+		{
+			"id": "weather-link-1",
+			"p1": "weather-snow-things-out-Done",
+			"p2": "weather-end-in-Things",
+			"kind": "value"
+		},
+		{
+			"id": "weather-link-2",
+			"p1": "weather-snow-solid-out-Done",
+			"p2": "weather-end-in-Solid",
+			"kind": "value"
+		},
+		{
+			"id": "weather-link-3",
+			"p1": "weather-snow-plants-out-Done",
+			"p2": "weather-end-in-Plants",
+			"kind": "value"
+		},
+		{
+			"id": "weather-link-4",
+			"p1": "weather-dissolve-out-Done",
+			"p2": "weather-end-in-Dissolve",
+			"kind": "value"
+		},
+		{
+			"id": "weather-link-5",
+			"p1": "weather-puddles-out-Done",
+			"p2": "weather-end-in-Puddles",
+			"kind": "value"
+		}
+	]
+}

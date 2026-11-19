@@ -113,6 +113,28 @@ Elemenx.Component('SpaceDemo', {
 		this.SpacePaused = !this.SpacePaused;
 	},
 	SpacePaused: false,
+	/* The shader graph open (DemoGraph: '' none), those its scene is drawn with (Graphs of Scene), its scene made again as one changes. */
+	SpaceGraphOpen: '',
+	SpaceGraphs: null,
+	SpaceFresh: true,
+	SpaceGraphOpened: function (name) {
+		this.SpaceGraphOpen = this.SpaceGraphOpen === name ? '' : name;
+	},
+	SpaceGraphChanged: function (event) {
+		var self = this;
+		var given = event && event.detail ? event.detail : event;
+		var graphs = Object.assign({}, this.SpaceGraphs || {});
+
+		if (given.Graph) graphs[given.Name] = given.Graph;
+		else delete graphs[given.Name];
+
+		this.SpaceGraphs = Object.keys(graphs).length ? graphs : null;
+		this.SpaceFresh = false;
+
+		setTimeout(function () {
+			self.SpaceFresh = true;
+		}, 0);
+	},
 	SpaceScaled: function (value) {
 		this.SpaceReal = value;
 	},

@@ -1,0 +1,229 @@
+{
+	"version": 1,
+	"type": "model",
+	"name": "wolf",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "box-0",
+			"type": "Box",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "formula-1",
+			"type": "Formula",
+			"x": 0,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.04, 0.09, 0.03]"
+				}
+			]
+		},
+		{
+			"id": "formula-2",
+			"type": "Formula",
+			"x": 0,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[-0.05, 0.85, 0.46]"
+				}
+			]
+		},
+		{
+			"id": "formula-3",
+			"type": "Formula",
+			"x": 0,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.46, 0.46, 0.48]"
+				}
+			]
+		},
+		{
+			"id": "box-4",
+			"type": "Box",
+			"x": 0,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "formula-5",
+			"type": "Formula",
+			"x": 0,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.04, 0.09, 0.03]"
+				}
+			]
+		},
+		{
+			"id": "formula-6",
+			"type": "Formula",
+			"x": 0,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.05, 0.85, 0.46]"
+				}
+			]
+		},
+		{
+			"id": "formula-7",
+			"type": "Formula",
+			"x": 0,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.46, 0.46, 0.48]"
+				}
+			]
+		},
+		{
+			"id": "join-8",
+			"type": "Join",
+			"x": 0,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "call-9",
+			"type": "Call",
+			"x": 0,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/models/quadruped"
+				}
+			]
+		},
+		{
+			"id": "formula-10",
+			"type": "Formula",
+			"x": 0,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.46, 0.46, 0.48]"
+				}
+			]
+		},
+		{
+			"id": "formula-11",
+			"type": "Formula",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.72, 0.7, 0.68]"
+				}
+			]
+		},
+		{
+			"id": "model-12",
+			"type": "Model",
+			"x": 0,
+			"y": 1080,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "link-0",
+			"p1": "formula-1-out-Value",
+			"p2": "box-0-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-1",
+			"p1": "formula-2-out-Value",
+			"p2": "box-0-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-2",
+			"p1": "formula-3-out-Value",
+			"p2": "box-0-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-3",
+			"p1": "formula-5-out-Value",
+			"p2": "box-4-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-4",
+			"p1": "formula-6-out-Value",
+			"p2": "box-4-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-5",
+			"p1": "formula-7-out-Value",
+			"p2": "box-4-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-6",
+			"p1": "box-0-out-Parts",
+			"p2": "join-8-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "link-7",
+			"p1": "box-4-out-Parts",
+			"p2": "join-8-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "link-8",
+			"p1": "formula-10-out-Value",
+			"p2": "call-9-in-Coat",
+			"kind": "value"
+		},
+		{
+			"id": "link-9",
+			"p1": "formula-11-out-Value",
+			"p2": "call-9-in-Belly",
+			"kind": "value"
+		},
+		{
+			"id": "link-10",
+			"p1": "join-8-out-Parts",
+			"p2": "call-9-in-Head",
+			"kind": "value"
+		},
+		{
+			"id": "link-11",
+			"p1": "call-9-out-Parts",
+			"p2": "model-12-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "link-12",
+			"p1": "call-9-out-Pieces",
+			"p2": "model-12-in-Pieces",
+			"kind": "value"
+		}
+	]
+}

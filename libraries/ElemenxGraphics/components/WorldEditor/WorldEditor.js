@@ -5,13 +5,20 @@
  * planet). At the level of the galaxy its panel searches round where the view looks (GalaxyData.Search: a type, a class,
  * what was edited, a mass and a temperature, a text; at most 500, the nearest first): a row chosen is picked and flown to,
  * chosen twice gone into. What a world uses is edited beside it, each in a tab of its own: models (ModelEditor), plants (FloraEditor),
- * cutscenes (CutsceneEditor) and materials (Blueprint of type material), kept in the world by their names.
+ * cutscenes (CutsceneEditor) and materials (Blueprint of type material), kept in the world by their names. The graphs
+ * of the library its grounds and planets are made of (blueprints/planet, sketch, carve of ElemenxGraphics) are changed
+ * for it alone, each in a tab of its own (Blueprint of type generator), a copy of the library's; Reset gives the
+ * library's back. Its planets have those of planet/ (planet/relief: the option ReliefGraph...), the grounds of its
+ * locations those of sketch/ and carve/ (Graphs of their Terrain trait); the scenes of its systems and locations those of
+ * shader/ (Graphs of Scene: the bake of a body of noise, the weather of the surfaces of things, the shape of a lightning),
+ * made again as one of them changes.
  * Value is the world: {Name, Galaxy (options of GalaxyData.Make, or its data), Planets ({'star/body': the options of a
  * planet}), Locations ({'star/body/location': a document of SceneEditor}), Resources ({Models, Plants, Cutscenes,
- * Materials}: {ID: {Name, Value}})}. change emits it after each edit, level the path ({Path: [{Level, ID}]}).
+ * Materials}: {ID: {Name, Value}}), Graphs ({'planet/relief', 'sketch/river'...: a graph})}. change emits it after
+ * each edit, level the path ({Path: [{Level, ID}]}).
  * Its file (Pack, Open) is a zip: world.json, the parts of its galaxy under galaxy/ (its systems with them).
  * Methods: World(), Load(world), Galaxy(), Path(), Enter(level, id, callback), Up(index), AddResource(kind),
- * OpenResource(kind, id), Pack(callback), Open(source, callback).
+ * OpenResource(kind, id), GraphNames(), OpenGraph(name), ResetGraph(name), Pack(callback), Open(source, callback).
  */
 Elemenx.Component('WorldEditor', {
 	$TemplateURL: 'WorldEditor.html',
@@ -20,15 +27,15 @@ Elemenx.Component('WorldEditor', {
 	$Meta: {
 		Group: 'game',
 		Icon: 'globe',
-		Description: 'An editor of a whole world, level in level: a galaxy, the system of a star, a planet, a location; its models, plants, cutscenes and materials each in a tab beside it.',
+		Description: 'An editor of a whole world, level in level: a galaxy, the system of a star, a planet, a location; its models, plants, cutscenes, materials and graphs each in a tab beside it.',
 		Events: {
-			change: 'The world changed: {Name, Galaxy, Planets, Locations, Resources}.',
+			change: 'The world changed: {Name, Galaxy, Planets, Locations, Resources, Graphs}.',
 			level: 'The level shown changed: {Path: [{Level, ID}]}.',
 			error: 'A file of a world was not read: the error.'
 		},
-		Methods: ['World()', 'Load(world)', 'Galaxy()', 'Path()', 'Enter(level, id, callback)', 'Up(index)', 'AddResource(kind)', 'OpenResource(kind, id)', 'Pack(callback)', 'Open(source, callback)'],
+		Methods: ['World()', 'Load(world)', 'Galaxy()', 'Path()', 'Enter(level, id, callback)', 'Up(index)', 'AddResource(kind)', 'OpenResource(kind, id)', 'GraphNames()', 'OpenGraph(name)', 'ResetGraph(name)', 'ShaderGraphs()', 'Pack(callback)', 'Open(source, callback)'],
 		Props: {
-			Value: 'The world: {Name, Galaxy (options of GalaxyData.Make or its data), Planets, Locations, Resources}.',
+			Value: 'The world: {Name, Galaxy (options of GalaxyData.Make or its data), Planets, Locations, Resources, Graphs}.',
 			Generator: 'A generator of models for its models (ModelEditor): function (description, callback (error, recipe)).',
 			Label: 'What it shows, for screen readers.'
 		}
@@ -47,9 +54,15 @@ Elemenx.Component('WorldEditor', {
 	SearchFilters: null,
 	FoundList: null,
 	Chosen: null,
+	/* The graph of the library the panel would change next (GraphChosen). */
+	GraphPicked: '',
+	/* How many times its graphs changed: what the planet and the location are shown with is made again after. */
+	GraphsVersion: 0,
+	/* The scene shown is there (Remade takes it out for a frame). */
+	Fresh: true,
 
 	$OnCreate: function () {
-		var own = {World: null, Path: [{Level: 'galaxy', ID: ''}], Tabs: [], Given: null};
+		var own = {World: null, Path: [{Level: 'galaxy', ID: ''}], Tabs: [], Given: null, Shown: {}};
 
 		this.Own = function () {
 			return own;
@@ -93,7 +106,8 @@ Elemenx.Component('WorldEditor', {
 			Galaxy: galaxy,
 			Planets: Object.assign({}, given.Planets || {}),
 			Locations: Object.assign({}, given.Locations || {}),
-			Resources: {Models: Object.assign({}, resources.Models || {}), Plants: Object.assign({}, resources.Plants || {}), Cutscenes: Object.assign({}, resources.Cutscenes || {}), Materials: Object.assign({}, resources.Materials || {})}
+			Resources: {Models: Object.assign({}, resources.Models || {}), Plants: Object.assign({}, resources.Plants || {}), Cutscenes: Object.assign({}, resources.Cutscenes || {}), Materials: Object.assign({}, resources.Materials || {})},
+			Graphs: Object.assign({}, given.Graphs || {})
 		};
 		own.Path = [{Level: 'galaxy', ID: ''}];
 		own.Tabs = [];
@@ -596,14 +610,40 @@ Elemenx.Component('WorldEditor', {
 		return path[1].ID + '/' + path[2].ID;
 	},
 
+	/* The options of the planet with the graphs of the world (planet/relief: ReliefGraph...), the same object while neither changes. */
 	PlanetValue: function () {
 		var key = this.PlanetKey();
+		var planet = this.Own().World.Planets[key] || null;
+		var graphs = this.Own().World.Graphs;
+		var shown = this.Own().Shown;
+		var made;
 
-		return this.Own().World.Planets[key] || {Seed: key};
+		if (shown.Planet && shown.Planet.Key === key && shown.Planet.From === planet && shown.Planet.Graphs === this.GraphsText()) return shown.Planet.Value;
+
+		made = Object.assign({}, planet || {Seed: key});
+
+		this.$Service('ScenePlanet').ReliefNames.forEach(function (name) {
+			if (graphs['planet/' + name.toLowerCase()])
+				made[name + 'Graph'] = graphs['planet/' + name.toLowerCase()];
+		});
+
+		shown.Planet = {Key: key, From: planet, Graphs: this.GraphsText(), Value: made};
+
+		return made;
 	},
 
+	/* A planet as it is kept: of no graphs of the world (they are the world's). */
 	PlanetChanged: function (planet) {
-		this.Own().World.Planets[this.PlanetKey()] = planet;
+		var kept = Object.assign({}, planet);
+
+		this.$Service('ScenePlanet').ReliefNames.forEach(function (name) {
+			delete kept[name + 'Graph'];
+		});
+
+		delete kept.ReliefSources;
+
+		this.Own().World.Planets[this.PlanetKey()] = kept;
+		this.Own().Shown.Planet = {Key: this.PlanetKey(), From: kept, Graphs: this.GraphsText(), Value: planet};
 
 		this.Changed();
 	},
@@ -629,12 +669,42 @@ Elemenx.Component('WorldEditor', {
 		return path[1].ID + '/' + path[2].ID + '/' + path[3].ID;
 	},
 
+	/* The document of the location, its ground with the graphs of the world of sketch/ and carve/ (Graphs of its Terrain). */
 	LocationValue: function () {
-		return this.Own().World.Locations[this.LocationKey()] || null;
+		var key = this.LocationKey();
+		var document = this.Own().World.Locations[key] || null;
+		var shown = this.Own().Shown;
+		var graphs = this.GroundGraphs();
+
+		if (!document) return null;
+
+		if (shown.Location && shown.Location.Key === key && shown.Location.From === document && shown.Location.Graphs === this.GraphsText()) return shown.Location.Value;
+
+		shown.Location = {Key: key, From: document, Graphs: this.GraphsText(), Value: this.Grounded(document, graphs)};
+
+		return shown.Location.Value;
 	},
 
+	/* A copy of a document of a location, the Graphs of the Terrain of its grounds those given (none: none). */
+	Grounded: function (document, graphs) {
+		var copy = JSON.parse(JSON.stringify(document));
+
+		((copy.Scene || {}).Added || []).forEach(function (object) {
+			if (!object.Traits || !object.Traits.Terrain) return;
+
+			if (graphs) object.Traits.Terrain.Graphs = graphs;
+			else delete object.Traits.Terrain.Graphs;
+		});
+
+		return copy;
+	},
+
+	/* A location as it is kept: of no graphs of the world. */
 	LocationChanged: function (document) {
-		this.Own().World.Locations[this.LocationKey()] = document;
+		var kept = this.Grounded(document, null);
+
+		this.Own().World.Locations[this.LocationKey()] = kept;
+		this.Own().Shown.Location = {Key: this.LocationKey(), From: kept, Graphs: this.GraphsText(), Value: document};
 
 		this.Changed();
 	},
@@ -696,7 +766,7 @@ Elemenx.Component('WorldEditor', {
 	},
 
 	ResourceKind: function (tab) {
-		return tab && tab !== 'world' ? String(tab).split(':')[0] : '';
+		return tab && tab !== 'world' && String(tab).indexOf('graph:') !== 0 ? String(tab).split(':')[0] : '';
 	},
 
 	/* The resource of a tab: its list and its ID. */
@@ -728,12 +798,17 @@ Elemenx.Component('WorldEditor', {
 		return [{ID: 'world', Label: Elemenx.Locale.Text('graphics.worldEditor.world'), Icon: 'globe'}].concat(this.Own().Tabs.map(function (tab) {
 			var found = self.ResourceOf(tab);
 
+			if (self.GraphOf(tab))
+				return {ID: tab, Label: self.GraphOf(tab), Icon: 'code', Closable: true};
+
 			return {ID: tab, Label: found && found.List[found.ID] ? found.List[found.ID].Name : tab, Closable: true};
 		}));
 	},
 
 	TabChosen: function (value) {
 		this.Tab = value && value.detail !== undefined ? value.detail : value;
+		/* What a tab shows is of the world as it is now (its graphs may have changed in another). */
+		this.Version++;
 	},
 
 	TabClosed: function (value) {
@@ -748,6 +823,175 @@ Elemenx.Component('WorldEditor', {
 			this.Tab = 'world';
 
 		this.Version++;
+	},
+
+	/* The graphs */
+
+	/* The graphs of the library a world may change: planet/, sketch/, carve/ and shader/ of ElemenxGraphics, by their names. */
+	GraphNames: function () {
+		return (Elemenx.Resources('Blueprints') || []).filter(function (name) {
+			return /^ElemenxGraphics\/(planet|sketch|carve|shader)\/[^/]+$/.test(name);
+		}).map(function (name) {
+			return name.slice('ElemenxGraphics/'.length);
+		}).sort();
+	},
+
+	/* What the graphs of the world are now, as a text: what the planet and the location are shown with changes with it. */
+	GraphsText: function () {
+		var own = this.Own();
+
+		if (own.GraphsOf !== own.World.Graphs || own.GraphsVersion !== this.GraphsVersion) {
+			own.GraphsOf = own.World.Graphs;
+			own.GraphsVersion = this.GraphsVersion;
+			own.GraphsKey = JSON.stringify(own.World.Graphs);
+		}
+
+		return own.GraphsKey;
+	},
+
+	/* Its shader graphs (shader/), the Graphs of the scenes it shows; the same object while they stay, null with none. */
+	ShaderGraphs: function () {
+		var own = this.Own();
+		var graphs = own.World.Graphs;
+		var text = this.GraphsText();
+		var made = null;
+
+		if (own.ShadersKey === text) return own.Shaders;
+
+		Object.keys(graphs).forEach(function (name) {
+			if (name.indexOf('shader/') === 0) {
+				made = made || {};
+				made[name] = graphs[name];
+			}
+		});
+
+		own.ShadersKey = text;
+		own.Shaders = made;
+
+		return made;
+	},
+
+	/*
+	 * A scene is drawn with its shader graphs as it is made: one of them changed, the scene of the system or the location
+	 * shown is made again (out for a frame), the document it shows kept by the world.
+	 */
+	Remade: function (name) {
+		var self = this;
+
+		if (String(name).indexOf('shader/') !== 0) return;
+
+		this.Fresh = false;
+		this.Version++;
+
+		setTimeout(function () {
+			self.Fresh = true;
+			self.Version++;
+		}, 0);
+	},
+
+	/* Those of the grounds of its locations (sketch/, carve/), or null with none. */
+	GroundGraphs: function () {
+		var graphs = this.Own().World.Graphs;
+		var made = null;
+
+		Object.keys(graphs).forEach(function (name) {
+			if (/^(sketch|carve)\//.test(name)) {
+				made = made || {};
+				made[name] = graphs[name];
+			}
+		});
+
+		return made;
+	},
+
+	/* The groups of the panel: the graphs changed, each a button of its tab. */
+	GraphItems: function () {
+		return Object.keys(this.Own().World.Graphs).sort().map(function (name) {
+			return {ID: name, Label: name, Tab: 'graph:' + name};
+		});
+	},
+
+	/* The graphs of the library not changed yet, to change one. */
+	GraphOptions: function () {
+		var graphs = this.Own().World.Graphs;
+
+		return [{Value: '', Label: Elemenx.Locale.Text('graphics.worldEditor.pickGraph')}].concat(this.GraphNames().filter(function (name) {
+			return !graphs[name];
+		}).map(function (name) {
+			return {Value: name, Label: name};
+		}));
+	},
+
+	GraphChosen: function (value) {
+		this.GraphPicked = String(value && value.target ? value.target.value : value && value.detail !== undefined ? value.detail : value || '');
+	},
+
+	GraphChange: function () {
+		if (this.GraphPicked)
+			this.OpenGraph(this.GraphPicked);
+
+		this.GraphPicked = '';
+	},
+
+	/* A graph of the world in its tab: changed for the first time, a copy of the library's. */
+	OpenGraph: function (name) {
+		var own = this.Own();
+		var tab = 'graph:' + name;
+		var library;
+
+		if (!own.World.Graphs[name]) {
+			library = Elemenx.Resources('Blueprints', 'ElemenxGraphics/' + name);
+
+			if (!library) return;
+
+			own.World.Graphs[name] = JSON.parse(JSON.stringify(library));
+
+			this.GraphsVersion++;
+
+			this.Remade(name);
+
+			this.Changed();
+		}
+
+		if (own.Tabs.indexOf(tab) === -1)
+			own.Tabs.push(tab);
+
+		this.Tab = tab;
+		this.Version++;
+	},
+
+	/* The graph of the library back: the world's dropped, its tab closed. */
+	ResetGraph: function (name) {
+		var own = this.Own();
+		if (!own.World.Graphs[name]) return;
+
+		delete own.World.Graphs[name];
+
+		this.GraphsVersion++;
+
+		this.Remade(name);
+
+		this.TabClosed('graph:' + name);
+		this.Changed();
+	},
+
+	GraphOf: function (tab) {
+		return String(tab).indexOf('graph:') === 0 ? String(tab).slice(6) : '';
+	},
+
+	GraphValue: function (version, tab) {
+		return this.Own().World.Graphs[this.GraphOf(tab)] || null;
+	},
+
+	GraphChanged: function (tab, value) {
+		var name = this.GraphOf(tab);
+		if (!name || !this.Own().World.Graphs[name]) return;
+
+		this.Own().World.Graphs[name] = value;
+		this.GraphsVersion++;
+
+		this.Remade(name);
+		this.$Emit('change', this.Own().World);
 	},
 
 	/* The file */
@@ -776,7 +1020,7 @@ Elemenx.Component('WorldEditor', {
 				return;
 			}
 
-			files['world.json'] = new TextEncoder().encode(JSON.stringify({Format: 'elemenx-world', Version: 1, Name: world.Name, Planets: world.Planets, Locations: world.Locations, Resources: world.Resources}));
+			files['world.json'] = new TextEncoder().encode(JSON.stringify({Format: 'elemenx-world', Version: 1, Name: world.Name, Planets: world.Planets, Locations: world.Locations, Resources: world.Resources, Graphs: world.Graphs}));
 
 			archive.Compress(files, callback);
 		}, true);

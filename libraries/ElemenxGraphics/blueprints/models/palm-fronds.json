@@ -1,0 +1,222 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "palm-fronds",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "box-0",
+			"type": "Box",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "formula-1",
+			"type": "Formula",
+			"x": 0,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.5, 0.012, 0.09]"
+				}
+			]
+		},
+		{
+			"id": "formula-2",
+			"type": "Formula",
+			"x": 0,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(lean * 1.1 + cos(Index / 7 * 6.28) * 0.23, 0.76, sin(Index / 7 * 6.28) * 0.23)"
+				}
+			]
+		},
+		{
+			"id": "input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "lean"
+				}
+			]
+		},
+		{
+			"id": "input-4",
+			"type": "Input",
+			"x": 0,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Index"
+				}
+			]
+		},
+		{
+			"id": "formula-5",
+			"type": "Formula",
+			"x": 0,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Variant * 1000000 + 20000 + Index"
+				}
+			]
+		},
+		{
+			"id": "random-6",
+			"type": "Random",
+			"x": 0,
+			"y": 540,
+			"properties": []
+		},
+		{
+			"id": "input-7",
+			"type": "Input",
+			"x": 0,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Variant"
+				}
+			]
+		},
+		{
+			"id": "input-8",
+			"type": "Input",
+			"x": 0,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "formula-9",
+			"type": "Formula",
+			"x": 0,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(0.24, 0.5 + (0 + 0.14 * r0), 0.22)"
+				}
+			]
+		},
+		{
+			"id": "formula-10",
+			"type": "Formula",
+			"x": 0,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(0, -Index / 7 * 360, -18)"
+				}
+			]
+		},
+		{
+			"id": "result-11",
+			"type": "Result",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "link-0",
+			"p1": "formula-1-out-Value",
+			"p2": "box-0-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-1",
+			"p1": "input-3-out-Value",
+			"p2": "formula-2-in-lean",
+			"kind": "value"
+		},
+		{
+			"id": "link-2",
+			"p1": "input-4-out-Value",
+			"p2": "formula-2-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "link-3",
+			"p1": "formula-2-out-Value",
+			"p2": "box-0-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-4",
+			"p1": "input-7-out-Value",
+			"p2": "formula-5-in-Variant",
+			"kind": "value"
+		},
+		{
+			"id": "link-5",
+			"p1": "input-4-out-Value",
+			"p2": "formula-5-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "link-6",
+			"p1": "input-8-out-Value",
+			"p2": "random-6-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "link-7",
+			"p1": "formula-5-out-Value",
+			"p2": "random-6-in-Key",
+			"kind": "value"
+		},
+		{
+			"id": "link-8",
+			"p1": "random-6-out-Value",
+			"p2": "formula-9-in-r0",
+			"kind": "value"
+		},
+		{
+			"id": "link-9",
+			"p1": "formula-9-out-Value",
+			"p2": "box-0-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-10",
+			"p1": "input-4-out-Value",
+			"p2": "formula-10-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "link-11",
+			"p1": "formula-10-out-Value",
+			"p2": "box-0-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "link-12",
+			"p1": "box-0-out-Parts",
+			"p2": "result-11-in-Value",
+			"kind": "value"
+		}
+	]
+}

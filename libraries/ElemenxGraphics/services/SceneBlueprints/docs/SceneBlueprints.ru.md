@@ -9,3 +9,49 @@
 ## Вид графа nebula
 
 Облик туманности, считается каждый кадр, как граф звезды (берёт блоки генератора: Time, Sin, Curve, Parameter…). Конец — блок Nebula: Glow, Density, Turn (градусы), Grow, Detail, Turbulence, Thickness, Hollow (числа, 1 / 0 по умолчанию) и Outer, Inner (оттенки). Look(parameters, seconds) у скомпилированного графа даёт эти поля; Turbulence, Thickness и Hollow относятся к форме и берутся на время 0. Граф библиотеки — blueprints/nebula.json (Scene.LibraryNebula()).
+
+## Вид графа bake
+
+Поверхность тела из шума (не ScenePlanet), запекаемая в два его куба: `blueprintBake(p, inout surface, inout sky)` в шейдере `Bake` у Scene (`BakeGraph`, иначе `LibraryBake()`, `blueprints/shader/bake`). `surface` — цвет земли (rgb) и блеск (a), `sky` — облака (r), свечение лавы (g) и искры (b). Входы — блоки `Input` (`PX`, `PY`, `PZ` — направление; `Seed`, `Ocean`, `Cratered`, `Kind`, `Ice`, `Clouds`), числа — блоки генератора (`Fbm`, `Ridge`, `Formula`, `Smoothstep`…), поэтому то, что приходит в блок `BakeLand` (`Land`, `H`), считается и в странице: `BakeLandGraph(graph)` вырезает эту часть как генератор с результатом `Land`, и земля тела (`SceneTerrainGenerator.Sphere`) — та самая, что видна на картинке. Остальные блоки: `BakeRocky`, `BakeIcy`, `BakeLava`, `BakeGas` (поверхность каждого вида), `BakeKind` (поверхность вида тела), `BakeIce` (полярные шапки), `BakeClouds` и конец `BakeEnd`. Раньше земля была написана дважды — в шейдере и в странице, и шейдер рисовал кратеры под морем, которых у земли не было; теперь граф один, кратеров под морем нет нигде.
+
+## Вид графа weather
+
+Что погода и год делают с поверхностями вещей (шейдеры `Pbr` и `Solid`): `WeatherGraph` сцены, иначе `LibraryWeather()` (`blueprints/shader/weather`). Каждый блок даёт функцию, которую вызывают шейдеры: `WeatherSeason` (`weather_season` — листья желтеют, опадают и цветут; свойства `Leaf`, `Bare`, `Blossom`), `WeatherSnow` (`weather_snow_<For>` — сколько лежит снега; `For`: things, solid или plants; пороги и масштабы шума — свойства), `WeatherDissolve` (`weather_dissolve` — тело, уносимое лучом), `WeatherPuddles` (`weather_puddles` — лужи там, где плоско и мокро). Все приходят в `WeatherEnd`. Числа, которыми шейдеры различались, стали свойствами блоков.
+
+## Форма молнии
+
+Одна для молнии грозы (SceneLighting) и молнии эффекта (вид `bolt` у SceneEffects): генератор излома каждого шага (`Step`, `Seed` → `X`, `Z` от -0.5 до 0.5) с параметрами `Steps`, `Wide`, `Fork`, `ForkSteps`, `ForkDown`, `ForkWide`. `LibraryBolt()` — форма библиотеки (`blueprints/shader/bolt`); `Bolt(graph)` даёт `{Jag(step, seed), Steps… ForkWide, GLSL}` (функция `vec2 bolt_jag(float step, float seed)` для шейдера). Своя форма сцены — `BoltGraph` или `Graphs['shader/bolt']` (`Scene.BoltShape()`).
+
+## Вид графа air
+
+Воздух между глазом и тем, что он видит (`AirGraph` у Scene, иначе `LibraryAir()`, `blueprints/shader/air`). Каждый блок даёт функции только тем шейдерам, которые их просят (`#define ENX_AIR_<FOR>` перед местом графа): `AirHaze` (`air_haze_<For>(world)` — сколько дымки, `air_horizon_<For>(light)` — её цвет; For globe — вещи и земля глобуса, ground — земля и вода сцены), `AirFog` (проход Air: туман, который лежит низко, полосы дождя, свет воздуха, вуаль у горизонта), `AirUnder` (глаз под водой), конец `AirEnd`. Раньше одна и та же дымка была написана в четырёх шейдерах.
+
+## Вид графа clouds
+
+Облака (`CloudsGraph`, иначе `LibraryClouds()`, `blueprints/shader/clouds`): `CloudCover` (`clouds_cover` — покров погоды планеты в месте, его клубы), `CloudGlobe` (`cloudSeen`, `cloudAt` — глобус и тени облаков на земле), `CloudShell` (`shellThick` — облака вокруг глаза над поверхностью), `CloudLayer` (`lobe`, `thick` — слой облаков сцены на дешёвом 3D-шуме), конец `CloudsEnd`. Раньше покров глобуса и облаков у поверхности был одним и тем же циклом, написанным дважды.
+
+## Погода планеты
+
+Блоки чисел ForecastStorms, ForecastFronts, ForecastHeaps, ForecastCirrus, ForecastRain, ForecastShroud (сервис SceneForecast) и граф библиотеки `LibraryForecast()` (`blueprints/shader/forecast`). Блок другой библиотеки может быть числовым: `Numeric(inputs, properties, kit)` в его определении даёт выходы как выражения IR, `kit.Kernel(name, module)` добавляет функции его ядра в модуль один раз. `Chunk(context, name, lines, guard)` — функция блока как часть шейдеров Renderer под своим именем (guard — имя или имена для `#ifdef`).
+
+## Рукава галактики
+
+Блоки чисел GalaxyTurn (где место стоит на спирали), GalaxyBend (изгиб рукавов шумом градиентов; Bend — насколько), GalaxyWave (волна рукавов, со сдвигом внутрь для пыли), GalaxyArm (сколько диска в рукавах: Low, High, Power) — ядро GalaxyData. `LibraryGalaxy()` — граф библиотеки (`blueprints/shader/galaxy`), `Galaxy(graph)` даёт `{Of, Arm, GLSL}` (функция `vec4 galaxy_spiral(...)` для шейдера). Из него и звёзды, и сгустки, и туманности карты (GalaxyData), и её картинка (SceneGalaxy), и полоса в небе системы, и далёкие галактики (SceneCosmos). Свой граф сцены — `GalaxyGraph` или `Graphs['shader/galaxy']`.
+
+## Небо космоса
+
+Вид `cosmos` (CosmosGraph сцены): функция `blueprintCosmos(d, s, inout color)` в шейдере, который запекает небо в куб. Блоки по порядку: CosmosRay, CosmosGas, CosmosPlane, CosmosGlow, CosmosDust, CosmosBand (полоса галактики — честная или нарисованная), CosmosBursts, CosmosGalaxies, CosmosPillars, CosmosStars, CosmosBeacon, CosmosClusters, конец CosmosEnd. `LibraryCosmos()` — граф библиотеки (`blueprints/shader/cosmos`).
+
+Числовой граф берёт из ядер блоков только то, что вызывается (и то, что вызывает вызванное): раньше блок ядра тащил в шейдер весь шум.
+
+## Кольцо
+
+Вид `ring` (RingGraph сцены или `Graphs['shader/ring']`): функция `blueprintRing(r, world, normal, inout color, inout alpha)` в шейдере колец, `r` — доля поперёк кольца (0 у внутреннего края, 1 у внешнего). Блоки: RingPlace (R, World, Normal, Seed), RingBands (широкие и тонкие полосы: WideScale, FineScale, Base, Wide, Fine, края Inner и Outer), RingGap (щель: At, Width, Depth; щелей сколько угодно, одна за другой; уже полутора пикселей не бывает — тогда мельче), RingColor (цвета по полосам, Mix), RingLight (свет с обеих сторон: Back, Side), конец RingEnd. `LibraryRing()` — граф библиотеки (`blueprints/shader/ring`): три щели. Граф с одной щелью на 0.62 рисует ровно прежнее кольцо.
+
+## Планета издали
+
+Вид `planet` (PlanetGraph сцены или `Graphs['shader/planet']`): функция `blueprintPlanet(n, v, p, inout color, inout alpha)` в шейдере Planet. Блоки: PlanetPlace (Normal, View, Point, World, Day — насколько там светит солнце), PlanetSurface (запечённая картинка: Albedo, Gloss), PlanetRelief (горы для света: Lean, Steep), PlanetLight (Shine, Gloss), PlanetHeat (свечение лавы: Glow), PlanetClouds (облака погоды или запечённые: Cover, Color, Shade — тень под ними, Veil — сколько огней они закрывают; Tint, Shadow, Veil, Haze, DrawnVeil), RingShadow (тень кольца — той же функцией графа кольца, со всеми щелями: Strength), PlanetShade, GlobeLights (огни городов ночью; этот блок есть и у земли глобуса: Red, Green, Blue, Strength), PlanetMix (облака поверх), PlanetRim (воздух у края: Power), PlanetHighlight (Power), конец PlanetEnd (только облака, когда шейдер рисует оболочку облаков). `LibraryPlanet()` — граф библиотеки (`blueprints/shader/planet`).
+
+В граф облаков добавлен блок CloudShade: `cloudSide` (насколько облако темнее со стороны от солнца: Ahead, Gain, Most) и `cloudUnder` (облака, чья тень падает в эту точку: Low, High) — общие для глобуса и его земли.
+
+`Painted(kind, end, head)` — такой вид графа функции тела в шейдере.

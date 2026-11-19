@@ -168,7 +168,7 @@ Elemenx.Service('SceneMaterials', {
 		if (this.Chunks[key])
 			return this.Chunks[key];
 
-		lines = [this.Helpers, this.Functions(names)];
+		lines = [this.$Service('Noise').GLSLChunk(['enx_value2', 'enx_white', 'enx_white2']), this.Helpers, this.Functions(names)];
 
 		lines.push('void enx_material(float id, vec2 q, float px, inout vec3 c, inout float r, inout float m, inout float h) {');
 
@@ -203,7 +203,7 @@ Elemenx.Service('SceneMaterials', {
 		var self = this;
 		var textured = this.Textured(names);
 		var count = Math.min(names.length, 12);
-		var lines = [this.Functions(names), this.LandSlope, this.LandRag];
+		var lines = [this.$Service('Noise').GLSLChunk(['enx_value2', 'enx_white', 'enx_white2']), this.Functions(names), this.LandSlope, this.LandRag];
 		var i;
 
 		/* The tiles of the materials of a texture (SceneTextures): the layers of uLandColor and uLandSurface, in the order of Textured. */
@@ -322,16 +322,7 @@ Elemenx.Service('SceneMaterials', {
 	 * where materials meet, the one it lifts most there shows (landMaterials), so the edge of a lawn is torn as one is.
 	 */
 	LandRag: [
-		'float landRagNoise(vec2 p) {',
-		'	vec2 i = mod(floor(p), 289.0);',
-		'	vec2 f = fract(p);',
-		'	vec2 u = f * f * (3.0 - 2.0 * f);',
-		'	float a = fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5453);',
-		'	float b = fract(sin(dot(i + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5453);',
-		'	float c = fract(sin(dot(i + vec2(0.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);',
-		'	float d = fract(sin(dot(i + vec2(1.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);',
-		'	return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);',
-		'}',
+		'float landRagNoise(vec2 p) { return enx_value2(p); }',
 		'float landRag(vec2 place, float n) {',
 		'	vec2 o = vec2(n * 17.31, n * 9.73);',
 		'	return (landRagNoise(place / 2.3 + o) * 0.55 + landRagNoise(place / 0.7 + o * 1.7) * 0.3 + landRagNoise(place / 0.2 + o * 2.3) * 0.15 - 0.5) * 0.6;',
@@ -386,19 +377,8 @@ Elemenx.Service('SceneMaterials', {
 	 * a bed of soil under the grass at its top edge; where it gets gentler below, scree of the same rock.
 	 */
 	LandCliff: [
-		'float cliffHash(float n) {',
-		'	return fract(sin(n * 127.1) * 43758.5453);',
-		'}',
-		'float cliffNoise(vec2 p) {',
-		'	vec2 i = floor(p);',
-		'	vec2 f = fract(p);',
-		'	vec2 u = f * f * (3.0 - 2.0 * f);',
-		'	float a = fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5453);',
-		'	float b = fract(sin(dot(i + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5453);',
-		'	float c = fract(sin(dot(i + vec2(0.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);',
-		'	float d = fract(sin(dot(i + vec2(1.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);',
-		'	return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);',
-		'}',
+		'float cliffHash(float n) { return enx_white(n); }',
+		'float cliffNoise(vec2 p) { return enx_value2(p); }',
 		'vec3 cliffBed(float y, float region) {',
 		'	float i = floor(y);',
 		'	vec3 base = mix(mix(vec3(0.74, 0.66, 0.54), vec3(0.7, 0.56, 0.42), smoothstep(0.3, 0.6, region)), vec3(0.6, 0.58, 0.55), smoothstep(0.6, 0.9, region));',
@@ -529,6 +509,7 @@ Elemenx.Service('SceneMaterials', {
 
 		if (recipe)
 			return [
+				this.$Service('Noise').GLSLChunk(['enx_value2', 'enx_white', 'enx_white2']),
 				this.Helpers,
 				'#define uTileColor uEmissiveMap',
 				'#define uTileSurface uNormalMap',
@@ -551,6 +532,7 @@ Elemenx.Service('SceneMaterials', {
 			].join('\n');
 
 		return [
+			this.$Service('Noise').GLSLChunk(['enx_value2', 'enx_white', 'enx_white2']),
 			this.Helpers,
 			'void enx_pattern(vec2 q, float px, inout vec3 c, inout float r, inout float m, inout float h) {',
 			material.Code,
@@ -571,9 +553,7 @@ Elemenx.Service('SceneMaterials', {
 	 * over where it was mended, darker and smoother, their seams sealed. Thin lines fade where a pixel is wider than them.
 	 */
 	RoadWear: [
-		'float roadHash(vec2 p) {',
-		'	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);',
-		'}',
+		'float roadHash(vec2 p) { return enx_white2(p); }',
 		'void roadWear(vec2 q, float px, inout vec3 c, inout float r, inout float h) {',
 		'	float seen = 1.0 - smoothstep(0.04, 0.16, px);',
 		/* Across: one crack in most stretches of 9 m, wandering over the width. */

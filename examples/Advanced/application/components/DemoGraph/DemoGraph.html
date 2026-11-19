@@ -1,0 +1,7 @@
+<div class="demo-graph">
+	<div class="demo-graph-bar">
+		<span class="elemenx-caption">{{Name}}</span>
+		<Button Label="Reset" Icon="refresh" Variant="ghost" Size="small" (click)="Reset" />
+	</div>
+	<Blueprint class="demo-graph-editor" *if="Value" [value]="Value" (change)="Changed" />
+</div>

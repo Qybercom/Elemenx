@@ -350,3 +350,79 @@ describe('Contract: ModelEditor, its tab Roles: what the parts of a model are', 
 		expect(editor.Selected).toBe('');
 	});
 });
+
+describe('Contract: ModelEditor, its tab Graph: the graph a model of the library is made of, beside the model', function () {
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['ModelEditor', 'Blueprint', 'service:ModelBlueprints']);
+	});
+
+	beforeEach(function () {
+		resetDOM();
+	});
+
+	afterEach(function () {
+		while (owned.length) owned.pop().$Destroy();
+	});
+
+	it('opens the graph of a model of the library, shows each change of it on the model, gives it to the library and takes it back', async function () {
+		var component = Elemenx.Component(unique('GraphEditorHost'), {$Template: '<div style="width: 1100px; height: 560px"><ModelEditor #Editor Mode="graph" GraphModel="tank" /></div>'})();
+		var models = Elemenx.Service('SceneModels');
+		var editor;
+		var graph;
+		var shown;
+		var before = models.Make('tank').Pieces[0].Geometry.Colors.slice(0, 3);
+
+		owned.push(component);
+
+		document.getElementById('mount').appendChild(component.$Element());
+
+		await waitFor(function () {
+			editor = component.$Ref('Editor', true);
+
+			return editor && editor.Scene() && editor.Scene().Get('model') && editor.$Element().querySelector('.elemenx-model-editor-blueprint .elemenx-blueprint-block');
+		}, 8000);
+
+		editor.Scene().Scene().Loop.Stop();
+
+		expect(editor.Mode).toBe('graph');
+		expect(editor.GraphModel).toBe('tank');
+		expect(editor.GraphOptions().map(function (option) {
+			return option.Value;
+		})).toEqual(expect.arrayContaining(['knight', 'tank', 'pine', 'temple']));
+		expect(editor.GraphValue()).toEqual(Elemenx.Resources('Blueprints', 'ElemenxGraphics/models/tank'));
+		expect(editor.$Element().querySelectorAll('.elemenx-model-editor-blueprint .elemenx-blueprint-block').length).toBe(editor.GraphValue().blocks.length);
+
+		/* Its body painted red in the copy: the model shown is red at once, the library's not yet. */
+		graph = JSON.parse(JSON.stringify(editor.GraphValue()));
+
+		graph.blocks.filter(function (block) {
+			return block.type === 'Formula' && block.properties[0].value === '[0.42, 0.46, 0.36]';
+		}).forEach(function (block) {
+			block.properties[0].value = '[1, 0, 0]';
+		});
+
+		editor.GraphChanged(graph);
+		editor.Show();
+
+		shown = models.Make(editor.Scene().Get('model').Values.Model);
+
+		expect(shown.Pieces[0].Geometry.Colors.slice(0, 3)).toEqual([1, 0, 0]);
+		expect(models.Make('tank').Pieces[0].Geometry.Colors.slice(0, 3)).toEqual(before);
+
+		/* Given to the library, and taken back. */
+		editor.ApplyGraph();
+
+		expect(models.Make('tank').Pieces[0].Geometry.Colors.slice(0, 3)).toEqual([1, 0, 0]);
+
+		editor.ResetGraph();
+
+		expect(models.Make('tank').Pieces[0].Geometry.Colors.slice(0, 3)).toEqual(before);
+		expect(editor.GraphValue()).toEqual(Elemenx.Resources('Blueprints', 'ElemenxGraphics/models/tank'));
+
+		editor.Moded('shape');
+
+		expect(editor.$Element().querySelector('.elemenx-model-editor-blueprint')).toBe(null);
+	}, 30000);
+});

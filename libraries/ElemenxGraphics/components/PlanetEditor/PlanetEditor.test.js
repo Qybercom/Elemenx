@@ -17,7 +17,10 @@ async function mount (planet) {
 
 	document.getElementById('mount').appendChild(component.$Element());
 
-	/* Regression (under load): the workers that paint its globe, busy with the other tests, took more than the 20 s it had. */
+	/*
+	 * Regression (under load): the workers that paint its globe, busy with the other tests, took more than the 20 s it had;
+	 * then a test of 45 s ran out while its globe was still drawn: each test with it has 90 s.
+	 */
 	await waitFor(function () {
 		editor = component.$Ref('Editor', true);
 
@@ -164,7 +167,7 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		editor.Key({key: 'Delete'});
 
 		expect(host.Changes[host.Changes.length - 1].Paint).toEqual([]);
-	}, 45000);
+	}, 90000);
 
 	it('shows the winds and the plates as arrows over the globe', async function () {
 		var mounted = await mount({Seed: 'show'});
@@ -182,7 +185,7 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		await waitFor(function () {
 			return mounted.Drawn() > before;
 		}, 20000);
-	}, 45000);
+	}, 90000);
 	it('picks the location of a point, sets its kind and what is past it, adds a passage to the one beside, and opens it with the ground of the planet there', async function () {
 		var mounted = await mount({Seed: 'places', Ocean: 0.5, LocationSize: 50});
 		var editor = mounted.Editor;
@@ -234,7 +237,7 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		expect(opened.Location.Beyond).toBe('cliff');
 		expect(opened.Location.World.type).toBe('world');
 		expect(Elemenx.Service('SceneWorld').Make(opened.Location.World).Ground.Planet.Latitude).toBeCloseTo(opened.Location.Place.Latitude, 9);
-	}, 60000);
+	}, 90000);
 
 	/* On a touch screen: a bar of actions that ends a stroke, two fingers that turn the globe and bring it nearer. */
 	it('ends and drops a stroke by its bar of actions, a press on the bar no point of it, and two fingers bring the globe nearer', async function () {
@@ -299,7 +302,7 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		expect(editor.$Element().querySelector('.elemenx-planet-editor-canvas').style.transform).toBe('');
 		expect(editor.Own().View.Zoom).toBeGreaterThan(zoom * 1.5);
 		expect(editor.Own().Draft).toEqual([]);
-	}, 45000);
+	}, 90000);
 
 	/* The brushes of its relief: a drag paints an edit along its path, one step to undo and redo. */
 	it('paints the relief with a brush along a drag, an edit of the planet, and undoes and redoes it', async function () {
@@ -347,7 +350,7 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		editor.Key({key: 'y', ctrlKey: true, preventDefault: function () {}});
 
 		expect(host.Changes[host.Changes.length - 1].Edits.length).toBe(1);
-	}, 45000);
+	}, 90000);
 
 	/* The rules of detail: a region drawn with its rule, a rule of a biome, and the graph of a rule edited, the planet's own. */
 	it('draws a region of a rule, sets the rule of a biome, and edits the graph of a rule into one of the planet', async function () {
@@ -409,7 +412,7 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		expect(editor.RuleOptions().filter(function (option) {
 			return option.Value === 'mesas';
 		})[0].Label).toBe('mesas *');
-	}, 45000);
+	}, 90000);
 
 	/*
 	 * Regression: the picture of before was moved as a flat image when the globe turned (wrong at any latitude: black
@@ -458,7 +461,7 @@ describe('Contract: PlanetEditor, a planet drawn on a globe and shown as it is',
 		await waitFor(function () {
 			return editor.Own().MapTexture;
 		}, 30000);
-	}, 60000);
+	}, 90000);
 
 	/*
 	 * Its settlements and rivers as a Scene and a bake make them, changed in its Places: a village added where a press was,

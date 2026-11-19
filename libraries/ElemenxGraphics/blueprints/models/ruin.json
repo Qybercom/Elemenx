@@ -1,0 +1,111 @@
+{
+	"version": 1,
+	"type": "model",
+	"name": "ruin",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "repeat-0",
+			"type": "Repeat",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/models/ruin-stones"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula-1",
+			"type": "Formula",
+			"x": 0,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "5"
+				}
+			]
+		},
+		{
+			"id": "input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Variant"
+				}
+			]
+		},
+		{
+			"id": "piece-4",
+			"type": "Piece",
+			"x": 0,
+			"y": 360,
+			"properties": [
+				{
+					"key": "ID",
+					"value": "body"
+				}
+			]
+		},
+		{
+			"id": "model-5",
+			"type": "Model",
+			"x": 0,
+			"y": 450,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "link-0",
+			"p1": "formula-1-out-Value",
+			"p2": "repeat-0-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "link-1",
+			"p1": "input-2-out-Value",
+			"p2": "repeat-0-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "link-2",
+			"p1": "input-3-out-Value",
+			"p2": "repeat-0-in-Variant",
+			"kind": "value"
+		},
+		{
+			"id": "link-3",
+			"p1": "repeat-0-out-List",
+			"p2": "piece-4-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "link-4",
+			"p1": "piece-4-out-Parts",
+			"p2": "model-5-in-Parts",
+			"kind": "value"
+		}
+	]
+}

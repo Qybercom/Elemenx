@@ -27,6 +27,10 @@
  * merged, renamed, hidden or shown, duplicated, mirrored on X, removed, the origin moved to the bottom middle; taken out
  * into a model of their own, or put together with another model. The edits of the model of the document are in its recipe
  * (Edits), those of a model of a file kept for it; Undo takes them back.
+ * Its tab Graph (Mode graph) shows the graph a model of the library is made of (GraphModel, SceneModels: its recipe has
+ * Graph, a graph of the kind model of ModelBlueprints) in a Blueprint beside the model it makes: a copy of it, each change
+ * of it seen at once on the model (its Variant too). OpenGraph(name) opens one; ApplyGraph() gives the model of the
+ * library the graph changed (SceneModels.Define: a game makes it so from then on), ResetGraph() takes it back as it was.
  */
 Elemenx.Component('ModelEditor', {
 	$TemplateURL: 'ModelEditor.html',
@@ -40,7 +44,7 @@ Elemenx.Component('ModelEditor', {
 			change: 'The document changed: {Version, Name, Recipe}.',
 			select: 'The selected part changed: {ID}.'
 		},
-		Methods: ['Document()', 'Load(document)', 'Recipe()', 'Roles()', 'SetRoles(roles)', 'Moded(mode)', 'Save()', 'Restore()', 'Export()', 'Import(text)', 'Model(format, variant)', 'Download(format)', 'Define(name)', 'Select(id)', 'Add(shape, props)', 'Remove(id)', 'Undo()', 'Redo()', 'Generate(description, callback)', 'Scene()'],
+		Methods: ['Document()', 'Load(document)', 'Recipe()', 'Roles()', 'SetRoles(roles)', 'Moded(mode)', 'Save()', 'Restore()', 'Export()', 'Import(text)', 'Model(format, variant)', 'Download(format)', 'Define(name)', 'Select(id)', 'Add(shape, props)', 'Remove(id)', 'Undo()', 'Redo()', 'Generate(description, callback)', 'Scene()', 'OpenGraph(name)', 'ApplyGraph()', 'ResetGraph()'],
 		Props: {
 			Value: 'The document: {Version, Name, Recipe (a recipe of data of Models: Parts, Pieces, Group, Type, Size...)}.',
 			Variant: 'The variant shown: 0, the parts as they are; the others varied by their seed.',
@@ -52,7 +56,8 @@ Elemenx.Component('ModelEditor', {
 			Label: 'What it shows, for screen readers.',
 			Wire: 'Shows the wire of the model: each edge of its triangles.',
 			Edges: 'Shows the edges of the model: where its faces meet at an angle and its rims (true).',
-			Mode: {Options: ['shape', 'roles', 'parts'], Description: 'The tab shown: the parts of the recipe (shape), the roles of the parts of a model (roles) or what is done to its pieces (parts).'},
+			Mode: {Options: ['shape', 'roles', 'parts', 'graph'], Description: 'The tab shown: the parts of the recipe (shape), the roles of the parts of a model (roles), what is done to its pieces (parts) or the graph of a model of the library (graph).'},
+			GraphModel: 'In the tab Graph, the model of the library whose graph is shown (OpenGraph).',
 			RoleModel: 'In the tab Roles, a model of a file of SceneModels whose roles are edited (ModelRoles keeps them); empty: the one of the document (its recipe keeps them, Roles).'
 		}
 	},
@@ -105,7 +110,7 @@ Elemenx.Component('ModelEditor', {
 		{ID: 'turn', Icon: 'refresh', Key: 'graphics.modelEditor.turn', Hotkey: 'E'},
 		{ID: 'scale', Icon: 'maximize', Key: 'graphics.modelEditor.scale', Hotkey: 'R'}
 	],
-	Modes: [{ID: 'shape', Key: 'graphics.modelEditor.shape'}, {ID: 'roles', Key: 'graphics.modelEditor.roles'}, {ID: 'parts', Key: 'graphics.modelEditor.partsMode'}],
+	Modes: [{ID: 'shape', Key: 'graphics.modelEditor.shape'}, {ID: 'roles', Key: 'graphics.modelEditor.roles'}, {ID: 'parts', Key: 'graphics.modelEditor.partsMode'}, {ID: 'graph', Key: 'graphics.modelEditor.graphMode'}],
 	PartsSelected: null,
 	PartsName: '',
 	PartsWith: '',
@@ -116,6 +121,7 @@ Elemenx.Component('ModelEditor', {
 	],
 	Mode: 'shape',
 	RoleModel: '',
+	GraphModel: '',
 	RoleSelected: '',
 	RoleTool: 'pick',
 	RoleKind: 'door',
@@ -136,6 +142,10 @@ Elemenx.Component('ModelEditor', {
 		};
 
 		own.Document = this.Normalize(this.Value);
+
+		/* A model of the library given at once (GraphModel): its graph open. */
+		if (this.GraphModel)
+			this.OpenGraph(this.GraphModel);
 	},
 
 	$OnDestroy: function () {
@@ -163,6 +173,10 @@ Elemenx.Component('ModelEditor', {
 
 		if ('Variant' in changed)
 			own.Dirty = true;
+
+		/* A model of the library given from outside (GraphModel): its graph opened, unless it is the one open. */
+		if ('GraphModel' in changed && this.GraphModel && own.GraphOpen !== this.GraphModel)
+			this.OpenGraph(this.GraphModel);
 	},
 
 	/* A document whole: a recipe with its parts and pieces; a new one is a block on the ground. */
@@ -246,6 +260,13 @@ Elemenx.Component('ModelEditor', {
 
 		own.Dirty = false;
 
+		/* The model of the graph of the tab Graph: of the copy changed, its variant. */
+		if (this.Mode === 'graph' && own.Graph) {
+			this.ShowGraph(variant);
+
+			return;
+		}
+
 		if (this.RoleModel) {
 			if (own.Scene.Get('model')) own.Scene.Change('model', {Model: this.RoleModel});
 			else own.Scene.Add('thing', {ID: 'model', X: 0, Y: 0, Model: this.RoleModel, Size: this.Shown});
@@ -267,6 +288,102 @@ Elemenx.Component('ModelEditor', {
 			this.Forget(own.Name);
 
 		own.Name = name;
+	},
+
+	/* The model of the copy of the graph shown, under a name of its own each time, the one before let go. */
+	ShowGraph: function (variant) {
+		var own = this.Own();
+		var models = this.$Service('SceneModels');
+		var blueprints = this.$Service('ModelBlueprints');
+		var library = own.GraphRecipe || {};
+		var graph = own.Graph;
+		var seed = library.Seed === undefined || library.Seed === '' ? this.GraphModel : library.Seed;
+		var name;
+
+		own.Built++;
+		name = own.Key + '-' + own.Built;
+
+		models.Define(name, {Group: library.Group || '', Type: library.Type || '', Size: 1, Smooth: !!library.Smooth, Matte: library.Matte !== false, Build: function (tools, random) {
+			return models.Assemble(blueprints.Recipe(graph, library.Parameters, {Seed: seed, Variant: variant}), tools, random, 0);
+		}});
+
+		if (own.Scene.Get('model')) own.Scene.Change('model', {Model: name});
+		else own.Scene.Add('thing', {ID: 'model', X: 0, Y: 0, Model: name, Size: this.Shown});
+
+		if (own.Name)
+			this.Forget(own.Name);
+
+		own.Name = name;
+	},
+
+	/* The models of the library made of a graph (their recipes have Graph), to show one of in the tab Graph. */
+	GraphOptions: function () {
+		var models = this.$Service('SceneModels');
+
+		return [{Value: '', Label: Elemenx.Locale.Text('graphics.modelEditor.pickGraph')}].concat(models.Names().filter(function (name) {
+			return !!models.Recipes[name].Graph && name.indexOf('object-editor-') !== 0;
+		}).map(function (name) {
+			return {Value: name, Label: name};
+		}));
+	},
+
+	GraphPicked: function (event) {
+		this.OpenGraph(this.Told(event) || '');
+	},
+
+	/* The graph of a model of the library in the tab Graph: a copy, the model as it was kept to take it back (ResetGraph). */
+	OpenGraph: function (name) {
+		var own = this.Own();
+		var recipe = name ? this.$Service('SceneModels').Recipes[name] : null;
+		var graph = recipe && recipe.Graph;
+
+		if (typeof graph === 'string' && !/^\s*\{/.test(graph)) graph = Elemenx.Resources('Blueprints', graph);
+		else if (typeof graph === 'string') graph = JSON.parse(graph);
+
+		this.GraphModel = graph ? name : '';
+		own.GraphOpen = this.GraphModel;
+		own.Graph = graph ? JSON.parse(JSON.stringify(graph)) : null;
+		own.GraphRecipe = graph ? recipe : null;
+		own.GraphKept = graph ? Object.assign({}, recipe) : null;
+
+		if (this.Mode !== 'graph')
+			this.Moded('graph');
+
+		own.Dirty = true;
+		this.Version++;
+
+		return !!graph;
+	},
+
+	GraphValue: function () {
+		return this.Own().Graph;
+	},
+
+	/* The graph changed in its Blueprint: a copy of it, the model made again of it. */
+	GraphChanged: function (event) {
+		var graph = event && event.detail !== undefined ? event.detail : event;
+		if (!graph || !this.Own().Graph) return;
+
+		this.Own().Graph = JSON.parse(JSON.stringify(graph));
+		this.Own().Dirty = true;
+	},
+
+	/* The model of the library made of the graph changed: a game makes it so from then on. */
+	ApplyGraph: function () {
+		var own = this.Own();
+		if (!this.GraphModel || !own.Graph) return;
+
+		/* Of the graph alone: the Build a recipe of a graph was given is of the graph before. */
+		this.$Service('SceneModels').Define(this.GraphModel, Object.assign({}, own.GraphRecipe, {Graph: JSON.parse(JSON.stringify(own.Graph)), Build: null}));
+	},
+
+	/* The model of the library as it was before ApplyGraph, its graph shown again. */
+	ResetGraph: function () {
+		var own = this.Own();
+		if (!this.GraphModel || !own.GraphKept) return;
+
+		this.$Service('SceneModels').Define(this.GraphModel, own.GraphKept);
+		this.OpenGraph(this.GraphModel);
 	},
 
 	/* What was before a change made already (a stroke of the brush) kept for Undo. */
@@ -1033,7 +1150,8 @@ Elemenx.Component('ModelEditor', {
 	Moded: function (mode) {
 		var own = this.Own();
 
-		this.Mode = mode === 'roles' || mode === 'parts' ? mode : 'shape';
+		this.Mode = ['roles', 'parts', 'graph'].indexOf(mode) !== -1 ? mode : 'shape';
+		this.Own().Dirty = true;
 		this.PartsSelected = [];
 
 		if (this.Mode === 'shape' && this.RoleModel) {

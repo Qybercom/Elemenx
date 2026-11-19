@@ -13,6 +13,28 @@ Elemenx.Component('GalaxyDemo', {
 	GalaxyStar: '',
 	GalaxyEntered: '',
 	GalaxyOptions: {Seed: 'aurelia', Kind: 'spiral'},
+	/* The shader graph open (DemoGraph: '' none), those its scene is drawn with (Graphs of Scene), its scene made again as one changes. */
+	GalaxyGraphOpen: '',
+	GalaxyGraphs: null,
+	GalaxyFresh: true,
+	GalaxyGraphOpened: function (name) {
+		this.GalaxyGraphOpen = this.GalaxyGraphOpen === name ? '' : name;
+	},
+	GalaxyGraphChanged: function (event) {
+		var self = this;
+		var given = event && event.detail ? event.detail : event;
+		var graphs = Object.assign({}, this.GalaxyGraphs || {});
+
+		if (given.Graph) graphs[given.Name] = given.Graph;
+		else delete graphs[given.Name];
+
+		this.GalaxyGraphs = Object.keys(graphs).length ? graphs : null;
+		this.GalaxyFresh = false;
+
+		setTimeout(function () {
+			self.GalaxyFresh = true;
+		}, 0);
+	},
 	GalaxyNote: 'A drag turns, the wheel brings it near, a right drag moves along it; near, press a star to pick it, a double press flies to it.',
 	GalaxyKinds: [
 		{Value: 'spiral', Label: 'Spiral'},

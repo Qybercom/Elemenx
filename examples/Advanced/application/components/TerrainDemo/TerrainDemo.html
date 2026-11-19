@@ -40,8 +40,18 @@
 		<span class="elemenx-caption" role="status">{{TerrainNote}}</span>
 		<span class="elemenx-caption" aria-live="polite">{{TerrainMeasured}}</span>
 	</div>
+	<div class="scene-demo-row">
+		<span class="elemenx-caption">Graphs:</span>
+		<Button Label="Weather graph" Icon="code" Variant="ghost" [pressed]="TerrainGraphOpen === 'shader/weather'" [title]="'What the weather and the year do to things: leaves, snow, pools, a beam'" (click)="TerrainGraphOpened('shader/weather')" />
+		<Button Label="Bolt graph" Icon="code" Variant="ghost" [pressed]="TerrainGraphOpen === 'shader/bolt'" [title]="'The shape of a lightning, of a storm and of the effects'" (click)="TerrainGraphOpened('shader/bolt')" />
+		<Button Label="Clouds graph" Icon="code" Variant="ghost" [pressed]="TerrainGraphOpen === 'shader/clouds'" [title]="'The clouds: their layer over the land, of a cheap noise'" (click)="TerrainGraphOpened('shader/clouds')" />
+		<Button Label="Air graph" Icon="code" Variant="ghost" [pressed]="TerrainGraphOpen === 'shader/air'" [title]="'The air: the haze, the fog that lies low, the sheets of rain, under the sea'" (click)="TerrainGraphOpened('shader/air')" />
+	</div>
+	<div class="scene-demo-scene" *if="TerrainGraphOpen">
+		<DemoGraph [name]="TerrainGraphOpen" (change)="TerrainGraphChanged" />
+	</div>
 	<div class="scene-demo-scene">
-		<Scene Setting="terrain" Team="blue" Labels="true" Orders="true" [selectCheck]="TerrainSelectable" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [season]="TerrainSeason" [aurora]="TerrainAuroraOf(TerrainAurora)" [auroracolors]="TerrainAurora === 'fantasy' ? ['#ff4fd8', '#3fb4ff'] : null" [flare]="SceneFlare" [bokeh]="SceneBokeh" [compute]="TerrainCompute" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived"><DemoLoading slot="loading" Title="Terrain" />
+		<Scene *if="TerrainFresh" [graphs]="TerrainGraphs" Setting="terrain" Team="blue" Labels="true" Orders="true" [selectCheck]="TerrainSelectable" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [season]="TerrainSeason" [aurora]="TerrainAuroraOf(TerrainAurora)" [auroracolors]="TerrainAurora === 'fantasy' ? ['#ff4fd8', '#3fb4ff'] : null" [flare]="SceneFlare" [bokeh]="SceneBokeh" [compute]="TerrainCompute" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived"><DemoLoading slot="loading" Title="Terrain" />
 			<SceneObject ID="valley" Kind="ground" [world]="TerrainWorld(TerrainBiome, TerrainRelief)" [swell]="TerrainSwell" />
 			<SceneObject ID="sun" Kind="sun" [latitude]="TerrainLatitude" [dayofyear]="TerrainDay" Noon="150" [time]="TerrainHour" />
 			<SceneObject ID="hamlet" Kind="village" X="-70" Y="20" Houses="10" />

@@ -5,9 +5,17 @@
 		<Button Label="Warp (H)" Icon="send" Variant="ghost" (click)="OrbitTravel('warp')" />
 		<Button Label="Jump (J)" Icon="chevrons-right" Variant="ghost" (click)="OrbitTravel('jump')" />
 		<span>{{OrbitSpeed}} m/s{{OrbitPhase ? ' · ' + OrbitPhase : ''}}</span>
+		<Button Label="Clouds graph" Icon="code" Variant="ghost" [pressed]="OrbitGraphOpen === 'shader/clouds'" [title]="'The clouds of a planet: its globe, their shadows, round the ship over its surface'" (click)="OrbitGraphOpened('shader/clouds')" />
+		<Button Label="Forecast graph" Icon="code" Variant="ghost" [pressed]="OrbitGraphOpen === 'shader/forecast'" [title]="'The weather of a planet: its winds, storms, fronts, heaps, cirrus and rain; the rain over the ship comes of it'" (click)="OrbitGraphOpened('shader/forecast')" />
+		<Button Label="Sky graph" Icon="code" Variant="ghost" [pressed]="OrbitGraphOpen === 'shader/cosmos'" [title]="'The sky far behind the system: gas, dust, the band of its galaxy as seen from where it lies, galaxies, stars'" (click)="OrbitGraphOpened('shader/cosmos')" />
+		<Button Label="Planet graph" Icon="code" Variant="ghost" [pressed]="OrbitGraphOpen === 'shader/planet'" [title]="'The globe from far as blocks: its picture lit, its clouds and their shadows, its towns at night, its air at the edge'" (click)="OrbitGraphOpened('shader/planet')" />
+		<Button Label="Galaxy graph" Icon="code" Variant="ghost" [pressed]="OrbitGraphOpen === 'shader/galaxy'" [title]="'The arms of the galaxy the system lies in: the band across its sky follows them'" (click)="OrbitGraphOpened('shader/galaxy')" />
+	</div>
+	<div class="scene-demo-scene" *if="OrbitGraphOpen">
+		<DemoGraph [name]="OrbitGraphOpen" (change)="OrbitGraphChanged" />
 	</div>
 	<div class="scene-demo-scene">
-		<Scene Scale="real" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="OrbitCosmos" (ready)="OrbitReady" (travel)="OrbitTravelled" (landing)="OrbitLanding"><DemoLoading slot="loading" Title="Orbit" />
+		<Scene *if="OrbitFresh" [graphs]="OrbitGraphs" Scale="real" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="OrbitCosmos" (ready)="OrbitReady" (travel)="OrbitTravelled" (landing)="OrbitLanding"><DemoLoading slot="loading" Title="Orbit" />
 			<VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,b,x,y,rb,dpad" Label="Fly" (button)="OrbitPad" />
 			<SceneObject ID="sol" Kind="star" Name="Star" Mass="1">
 				<SceneObject ID="terra" Kind="planet" Name="Terra" Surface-Type="terran" Surface-Planet='{"Data": "/data/planets/terra.planet", "Levels": 2, "Markers": [{"ID": "peaks", "Name": "High Peaks", "Latitude": 45.756, "Longitude": 5.376}, {"ID": "river", "Name": "Great River", "Latitude": -31.5946, "Longitude": 160.7077}, {"ID": "hills", "Name": "Green Hills", "Latitude": 48.6706, "Longitude": -88.7}, {"ID": "base", "Name": "Sea Base", "Latitude": 18, "Longitude": 32}]}' Radius="6371" Mass="1" Distance="1" Day="23.93" Tilt="23.4">

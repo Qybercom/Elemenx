@@ -1,0 +1,314 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "land",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "planet-land-formula-0",
+			"type": "Formula",
+			"x": 260,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * 1.6 + SShape, PY * 1.6 + SShape, PZ * 1.6 + SShape)"
+				}
+			]
+		},
+		{
+			"id": "planet-land-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PX"
+				}
+			]
+		},
+		{
+			"id": "planet-land-input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SShape"
+				}
+			]
+		},
+		{
+			"id": "planet-land-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PY"
+				}
+			]
+		},
+		{
+			"id": "planet-land-input-4",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PZ"
+				}
+			]
+		},
+		{
+			"id": "planet-land-shape",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 10
+				},
+				{
+					"key": "Gain",
+					"value": 0.52
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "WarpScale",
+					"value": 1
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-land-input-5",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Octaves"
+				}
+			]
+		},
+		{
+			"id": "planet-land-formula-6",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(N - 0.5) * 2.2 + (Oceanic > 0.5 ? -0.25 : 0.25) - Level"
+				}
+			]
+		},
+		{
+			"id": "planet-land-input-7",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Oceanic"
+				}
+			]
+		},
+		{
+			"id": "planet-land-input-8",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Level"
+				}
+			]
+		},
+		{
+			"id": "planet-land-formula-9",
+			"type": "Formula",
+			"x": 780,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "V + WLand * max(0, 1.2 - V)"
+				}
+			]
+		},
+		{
+			"id": "planet-land-input-10",
+			"type": "Input",
+			"x": 0,
+			"y": 880,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "WLand"
+				}
+			]
+		},
+		{
+			"id": "planet-land-formula-11",
+			"type": "Formula",
+			"x": 1040,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "A - WSea * max(0, A + 1.2)"
+				}
+			]
+		},
+		{
+			"id": "planet-land-input-12",
+			"type": "Input",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "WSea"
+				}
+			]
+		},
+		{
+			"id": "planet-land-result-13",
+			"type": "Result",
+			"x": 1560,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Land"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "planet-land-link-0",
+			"p1": "planet-land-input-1-out-Value",
+			"p2": "planet-land-formula-0-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-land-link-1",
+			"p1": "planet-land-input-2-out-Value",
+			"p2": "planet-land-formula-0-in-SShape",
+			"kind": "value"
+		},
+		{
+			"id": "planet-land-link-2",
+			"p1": "planet-land-input-3-out-Value",
+			"p2": "planet-land-formula-0-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-land-link-3",
+			"p1": "planet-land-input-4-out-Value",
+			"p2": "planet-land-formula-0-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-land-link-4",
+			"p1": "planet-land-formula-0-out-Value",
+			"p2": "planet-land-shape-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-land-link-5",
+			"p1": "planet-land-input-5-out-Value",
+			"p2": "planet-land-shape-in-Octaves",
+			"kind": "value"
+		},
+		{
+			"id": "planet-land-link-6",
+			"p1": "planet-land-shape-out-Value",
+			"p2": "planet-land-formula-6-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "planet-land-link-7",
+			"p1": "planet-land-input-7-out-Value",
+			"p2": "planet-land-formula-6-in-Oceanic",
+			"kind": "value"
+		},
+		{
+			"id": "planet-land-link-8",
+			"p1": "planet-land-input-8-out-Value",
+			"p2": "planet-land-formula-6-in-Level",
+			"kind": "value"
+		},
+		{
+			"id": "planet-land-link-9",
+			"p1": "planet-land-formula-6-out-Value",
+			"p2": "planet-land-formula-9-in-V",
+			"kind": "value"
+		},
+		{
+			"id": "planet-land-link-10",
+			"p1": "planet-land-input-10-out-Value",
+			"p2": "planet-land-formula-9-in-WLand",
+			"kind": "value"
+		},
+		{
+			"id": "planet-land-link-11",
+			"p1": "planet-land-formula-9-out-Value",
+			"p2": "planet-land-formula-11-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "planet-land-link-12",
+			"p1": "planet-land-input-12-out-Value",
+			"p2": "planet-land-formula-11-in-WSea",
+			"kind": "value"
+		},
+		{
+			"id": "planet-land-link-13",
+			"p1": "planet-land-formula-11-out-Value",
+			"p2": "planet-land-result-13-in-Value",
+			"kind": "value"
+		}
+	]
+}

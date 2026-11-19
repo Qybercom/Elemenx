@@ -72,7 +72,8 @@
  *
  * Kinds of the ground (the setting terrain): ground (Terrain: World, the graph of its world (SceneWorld: its land, relief,
  * climate, biomes, sketch and what is made on it, the only place they are told; with none there is no ground), Swell (how
- * wild its sea, 0 to 1.5: SceneWaves; wilder in the rain), SwellWay (degrees the wind drives it): a ground of noise,
+ * wild its sea, 0 to 1.5: SceneWaves; wilder in the rain), SwellWay (degrees the wind drives it), Graphs (graphs of its
+ * own of the types of its sketch and its carves: {'sketch/<type>', 'carve/<type>': a graph}, as a world gives them): a ground of noise,
  * SceneTerrainGenerator.Flat, in chunks finer near the eye, with its sea; the objects its World makes are in the scene
  * as Generated, made again with it and never saved), sun (Sun: its light from far), unit (Walker: Speed,
  * MaxSlope, Swim; a Model; Patrol: points [x, z] or [x, z, y] it goes round for good), tree, rock and house (Model,
@@ -163,7 +164,7 @@ Elemenx.Component('Scene', {
 			shader: 'A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}).'
 		},
-		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryStar()', 'LibraryNebula()', 'LibraryLand()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'GalaxyData()', 'GalaxyView()', 'SetGalaxyView(view)', 'GalaxyStars()', 'GalaxyPicked()', 'GalaxyFocus(id)', 'EnterSystem(id, callback)', 'LeaveSystem(callback)', 'GalaxyEntered()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Phone()', 'Device()', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
+		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryStar()', 'LibraryNebula()', 'LibraryLand()', 'LibraryBake()', 'LibraryWeather()', 'LibraryAir()', 'LibraryClouds()', 'LibraryForecast()', 'LibraryCosmos()', 'LibraryRing()', 'LibraryPlanet()', 'WeatherOver(id, direction)', 'BoltShape()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'GalaxyData()', 'GalaxyView()', 'SetGalaxyView(view)', 'GalaxyStars()', 'GalaxyPicked()', 'GalaxyFocus(id)', 'EnterSystem(id, callback)', 'LeaveSystem(callback)', 'GalaxyEntered()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Phone()', 'Device()', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
 		Props: {
 			Setting: {Options: ['space', 'terrain', 'galaxy'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers; galaxy: a galaxy of Galaxy, SceneGalaxy).'},
 			Galaxy: 'The galaxy of Setting galaxy (SceneGalaxy, GalaxyData): a key of GalaxyData.Use, the URL of its file, its data, or options of GalaxyData.Make ({Seed, Kind, Radius, Arms}).',
@@ -205,6 +206,17 @@ Elemenx.Component('Scene', {
 			WindWay: 'Where the wind blows to: an azimuth in degrees.',
 			WaterGraph: 'What water looks like: a water graph of the Blueprints Service (or its JSON, or its GLSL) of its waves, the sky and the sun it mirrors, its depth, its foam and the fog over it; the one of the library (LibraryWater) when empty.',
 			LandGraph: 'What the land is, its light and its wet and snow too: a land graph of the Blueprints Service (or its JSON, or GLSL with blueprintLand); empty, the one of the library (LibraryLand()). Its Blueprint (a material graph) still paints it, in LandPaint.',
+			Graphs: 'The shader graphs of a world of its own by their names, read as the scene is made: shader/bake (BakeGraph), shader/weather (WeatherGraph), shader/bolt (BoltGraph), shader/air (AirGraph), shader/clouds (CloudsGraph), shader/forecast (ForecastGraph), shader/galaxy (GalaxyGraph), shader/cosmos (CosmosGraph), shader/ring (RingGraph), shader/planet (PlanetGraph); its props of them come first.',
+			BoltGraph: 'The shape of its lightnings, of a storm and of its effects: a generator of the Blueprints Service of the jag of each step (its results X and Z; or its JSON); empty, the one of the library (SceneBlueprints.LibraryBolt()).',
+			PlanetGraph: 'Its globes seen from far: a planet graph of the Blueprints Service of their picture lit, their clouds and the shadows of them and of a ring, their towns at night, their air at the edge (or its JSON, or GLSL with blueprintPlanet); empty, the one of the library (LibraryPlanet()).',
+			RingGraph: 'The rings round its bodies: a ring graph of the Blueprints Service of their bands, gaps, colors and light (or its JSON, or GLSL with blueprintRing); empty, the one of the library (LibraryRing()).',
+			CosmosGraph: 'What lies far behind a system, the sky its Cosmos is baked of: a cosmos graph of the Blueprints Service of its parts (gas, dust, the band of a galaxy, bursts, galaxies far off, pillars, stars, clusters; or its JSON, or GLSL with blueprintCosmos); empty, the one of the library (LibraryCosmos()).',
+			GalaxyGraph: 'The arms of a galaxy, its picture, its stars and the band of it across the sky of a system alike: a generator of the Blueprints Service of the blocks of GalaxyData (its results Turn, Bend, Wave and Arm; or its JSON); empty, the one of the library (SceneBlueprints.LibraryGalaxy()).',
+			ForecastGraph: 'The weather of a planet, its clouds, cirrus and rain over its body as its days go: a graph of numbers of the Blueprints Service of the blocks of SceneForecast (or its JSON), read by its shader and the page alike; empty, the one of the library (LibraryForecast()).',
+			CloudsGraph: 'The clouds (of the weather of a planet, its globe and round the eye over it, the layer of a scene): a clouds graph of the Blueprints Service (or its JSON); empty, the one of the library (LibraryClouds()).',
+			AirGraph: 'The air between the eye and what it sees (the haze, the fog, the eye under the sea): an air graph of the Blueprints Service (or its JSON); empty, the one of the library (LibraryAir()).',
+			WeatherGraph: 'What the weather and the year do to the surfaces of things (their leaves in autumn, snow, pools, a beam that takes a body away): a weather graph of the Blueprints Service (or its JSON); empty, the one of the library (LibraryWeather()).',
+			BakeGraph: 'What the surface of a body of noise is, baked into its cubes (its land read by its ground too): a bake graph of the Blueprints Service (or its JSON, or GLSL with blueprintBake); empty, the one of the library (LibraryBake()).',
 			SkyGraph: 'What the sky is: a sky graph of the Blueprints Service (or its JSON, or GLSL with blueprintSky); empty, the one of the library (LibrarySky()).',
 			GrassGraph: 'How the wind leans the grass: a vertex graph as WindGraph (or its JSON, or GLSL); empty, the one of the library (LibraryGrass()).',
 			WindGraph: 'How the wind bends what grows and sways: a vertex graph of the Blueprints Service (or its JSON, or its GLSL), the one of the library (LibraryWind) when empty; the Vertex of a material runs after it.',
@@ -273,6 +285,17 @@ Elemenx.Component('Scene', {
 	WindGraph: null,
 	GrassGraph: null,
 	SkyGraph: null,
+	BakeGraph: null,
+	WeatherGraph: null,
+	AirGraph: null,
+	CloudsGraph: null,
+	ForecastGraph: null,
+	GalaxyGraph: null,
+	CosmosGraph: null,
+	RingGraph: null,
+	PlanetGraph: null,
+	BoltGraph: null,
+	Graphs: null,
 	LandGraph: null,
 	WaterGraph: null,
 	Origin: false,
@@ -534,7 +557,7 @@ Elemenx.Component('Scene', {
 		var random = this.$Service('Random');
 		var vectors = math.Vectors;
 		var view = element.ownerDocument.defaultView || window;
-		var shaders = this.Landed(this.Skied(this.Watered(this.Winded(this.Shaders(graphics)))));
+		var shaders = this.Globed(this.Forecasted(this.Clouded(this.Aired(this.Weathered(this.Baked(this.Landed(this.Skied(this.Watered(this.Winded(this.Shaders(graphics)))))))))));
 		var renderer = graphics.Create(canvas, {Patient: true, Restored: function () {
 			build();
 		}});
@@ -1660,7 +1683,25 @@ Elemenx.Component('Scene', {
 			if (self.LandGraph && self.LandMade && !shaderChecked('land', 'LandGraph', self.LandMade, shaders.LandVertex, shaders.Land))
 				self.LandMade = self.Made(null, 'land', 'LandGraph', self.LibraryLand.bind(self));
 
-			shaders = self.Landed(self.Skied(self.Watered(self.Winded(self.Shaders(graphics)))));
+			if (self.GraphOf('BakeGraph', 'shader/bake') && self.BakeMade && !shaderChecked('bake', 'BakeGraph', self.BakeMade, graphics.Shaders.Quad, shaders.Bake))
+				self.BakeMade = self.Made(null, 'bake', 'BakeGraph', self.LibraryBake.bind(self));
+
+			if (self.GraphOf('CloudsGraph', 'shader/clouds') && self.CloudsMade && !shaderChecked('clouds', 'CloudsGraph', self.CloudsMade, shaders.Lit, shaders.Planet))
+				self.CloudsMade = self.Made(null, 'clouds', 'CloudsGraph', self.LibraryClouds.bind(self));
+
+			if (self.GraphOf('AirGraph', 'shader/air') && self.AirMade && (!shaderChecked('air', 'AirGraph', self.AirMade, shaders.ThingsVertex, shaders.Things)))
+				self.AirMade = self.Made(null, 'air', 'AirGraph', self.LibraryAir.bind(self));
+
+			if (self.GraphOf('RingGraph', 'shader/ring') && self.RingMade && !shaderChecked('ring', 'RingGraph', self.RingMade, shaders.Lit, shaders.Ring))
+				self.RingMade = self.Made(null, 'ring', 'RingGraph', self.LibraryRing.bind(self));
+
+			if (self.GraphOf('PlanetGraph', 'shader/planet') && self.PlanetMade && !shaderChecked('planet', 'PlanetGraph', self.PlanetMade, shaders.Lit, shaders.Planet))
+				self.PlanetMade = self.Made(null, 'planet', 'PlanetGraph', self.LibraryPlanet.bind(self));
+
+			if (self.GraphOf('WeatherGraph', 'shader/weather') && self.WeatherMade && (!shaderChecked('weather', 'WeatherGraph', self.WeatherMade, shaders.Instanced, shaders.Pbr) || !shaderChecked('weather', 'WeatherGraph', self.WeatherMade, shaders.Instanced, shaders.Solid)))
+				self.WeatherMade = self.Made(null, 'weather', 'WeatherGraph', self.LibraryWeather.bind(self));
+
+			shaders = self.Globed(self.Forecasted(self.Clouded(self.Aired(self.Weathered(self.Baked(self.Landed(self.Skied(self.Watered(self.Winded(self.Shaders(graphics)))))))))));
 		}
 
 		/* The meshes and programs, made once (and again when the browser gives a lost context back). */
@@ -1726,13 +1767,17 @@ Elemenx.Component('Scene', {
 			gpu.LandOf = function (own, names) {
 				var key = (names || []).join(',');
 				var kept = own ? own.Programs : gpu.LandPrograms;
-				var hook = 'void landMaterials(vec3 place, float px, inout vec3 color, inout float height) {}';
 
-				kept['Land:' + key] = kept['Land:' + key] || renderer.Program(shaders.LandVertex, engine.Leveled((own ? own.Fragments.Land : shaders.Land).replace(hook, function () {
-					return self.$Service('SceneMaterials').Land(names || []);
-				})));
+				kept['Land:' + key] = kept['Land:' + key] || renderer.Program(shaders.LandVertex, engine.Leveled(gpu.LandText(own ? own.Fragments.Land : shaders.Land, names)));
 
 				return kept['Land:' + key];
+			};
+
+			/* The fragment of the land with the materials of a ground (names) in it (SceneMaterials.Land). */
+			gpu.LandText = function (fragment, names) {
+				return fragment.replace('void landMaterials(vec3 place, float px, inout vec3 color, inout float height) {}', function () {
+					return self.$Service('SceneMaterials').Land(names || []);
+				});
 			};
 
 			lazy('ManyDepth', function () {
@@ -2141,6 +2186,31 @@ Elemenx.Component('Scene', {
 			return scene.Rings[object.ID];
 		}
 
+		/*
+		 * The ring round a body for the shadow it casts on it (RingShadow of the planet graph): its axis as it is turned, its
+		 * edges (in the units of the scene), its seed; none, when it has none.
+		 */
+		function ringOver (object) {
+			var ring = object.Radius ? scene.Order.filter(function (one) {
+				return one.Parent === object.ID && trait(one, 'Ring');
+			})[0] : null;
+			var settings = ring ? trait(ring, 'Ring') : null;
+			var turn;
+
+			if (!ring)
+				return {uRingOn: 0, uRingAxis: [0, 1, 0], uRingSpan: [1, 2], uRingSeed: 0, uRingColors: new Array(12).fill(0)};
+
+			turn = math.Rotation([1, 0, 0], (number(trait(object, 'Body').Tilt, 0) + number(settings.Inclination, 0)) * Math.PI / 180);
+
+			return {
+				uRingOn: 1,
+				uRingAxis: math.Apply(turn, [0, 1, 0]),
+				uRingSpan: [number(settings.Inner, 1.3) * object.Size, number(settings.Outer, 2.3) * object.Size],
+				uRingSeed: ring.Seed,
+				uRingColors: [].concat.apply([], ringOf(ring).Colors)
+			};
+		}
+
 		/* The rocks of a belt: each on an orbit of its own, between the edges of the belt. */
 		function rocksOf (object) {
 			var settings = trait(object, 'Belt');
@@ -2208,7 +2278,7 @@ Elemenx.Component('Scene', {
 					made.Relief.Destroy();
 			}
 
-			uniforms = {uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uWater: object.Look.Water, uOcean: object.Look.Ocean, uIce: object.Look.Ice, uClouds: object.Look.Clouds, uSeed: object.Seed};
+			uniforms = Object.assign(self.BakeValues() || {}, {uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uWater: object.Look.Water, uOcean: object.Look.Ocean, uIce: object.Look.Ice, uClouds: object.Look.Clouds, uSeed: object.Seed});
 			made = {Key: key, Ground: renderer.Cube(size), Sky: renderer.Cube(size), Planet: !!planet};
 
 			renderer.Bake(made.Ground, gpu.Bake, Object.assign({uLayer: 0}, uniforms));
@@ -2600,6 +2670,9 @@ Elemenx.Component('Scene', {
 			var strip = size / 4;
 			var left = 24;
 			var cube = renderer.Cube(size);
+			var bytes = [0, 1, 2, 3, 4, 5].map(function () {
+				return new Uint8Array(size * size * 4);
+			});
 			var face;
 			var row;
 
@@ -2614,8 +2687,11 @@ Elemenx.Component('Scene', {
 
 					left--;
 
-					if (!error && piece && piece.Data)
+					if (!error && piece && piece.Data) {
 						cube.Write(face, piece.Data, row, !left);
+
+						bytes[face].set(piece.Data, row * size * 4);
+					}
 
 					if (left) return;
 
@@ -2623,6 +2699,7 @@ Elemenx.Component('Scene', {
 						made.Climate.Destroy();
 
 					made.Climate = cube;
+					made.ClimateBytes = {Faces: bytes, Size: size};
 					made.Weather = made.Weather || renderer.Cube(256);
 					made.WeatherFaces = 0;
 				};
@@ -2640,16 +2717,72 @@ Elemenx.Component('Scene', {
 		 * runs fast (from orbit) the faces did not meet, straight seams along the edges of the cube, and a face jumped each
 		 * frame (the clouds flickered).
 		 */
+		/* The way to the star of a body in the frame of the body (its weather turns with it). */
+		function sunOfBody (object) {
+			var star = scene.Order.filter(function (each) {
+				return trait(each, 'Star') && each.World;
+			})[0];
+
+			return star && object.World ? vectors.Normalize(math.Apply(math.Invert(object.Turn) || math.Identity(), vectors.Normalize(vectors.Subtract(star.World, object.World)))) : [0, 1, 0];
+		}
+
+		/*
+		 * The weather of a planet over a direction of its body, in the page, of the very graph its shader bakes it of
+		 * (ForecastGraph, its js): of its climate there (as it came to the page), its days, its sun and its seed. {Cover, Kind,
+		 * Cirrus, Rain, Warm}; null before its climate is made.
+		 */
+		function weatherOver (object, direction) {
+			var made = object ? scene.Baked[object.ID] : null;
+			var kept = made && made.ClimateBytes;
+			var p = vectors.Normalize(direction);
+			var ax = Math.abs(p[0]);
+			var ay = Math.abs(p[1]);
+			var az = Math.abs(p[2]);
+			var face;
+			var a;
+			var b;
+			var at;
+			var cl;
+			var sun;
+			var run;
+
+			if (!kept)
+				return null;
+
+			/* Its face of the cube and the texel there, as ClimateFace lays them (cubeDirection of the shaders). */
+			if (ax >= ay && ax >= az) {
+				face = p[0] > 0 ? 0 : 1;
+				a = (p[0] > 0 ? -p[2] : p[2]) / ax;
+				b = -p[1] / ax;
+			}
+			else if (ay >= az) {
+				face = p[1] > 0 ? 2 : 3;
+				a = p[0] / ay;
+				b = (p[1] > 0 ? p[2] : -p[2]) / ay;
+			}
+			else {
+				face = p[2] > 0 ? 4 : 5;
+				a = (p[2] > 0 ? p[0] : -p[0]) / az;
+				b = -p[1] / az;
+			}
+
+			at = (Math.min(kept.Size - 1, Math.floor((b + 1) / 2 * kept.Size)) * kept.Size + Math.min(kept.Size - 1, Math.floor((a + 1) / 2 * kept.Size))) * 4;
+			cl = [kept.Faces[face][at] / 255, kept.Faces[face][at + 1] / 255, kept.Faces[face][at + 2] / 255, kept.Faces[face][at + 3] / 255];
+			sun = sunOfBody(object);
+			run = self.ForecastCode();
+			made = run({}, {PX: p[0], PY: p[1], PZ: p[2], Days: scene.Time, Seed: Math.abs(Math.round(Number(object.Seed) || 0)) % 997, RadiusKm: radiusOf(object), SunX: sun[0], SunY: sun[1], SunZ: sun[2], Cloudiness: Math.max(0, Math.min(1, Number(object.Look.Clouds) || 0)), Moist: cl[0], Warm: cl[1], Ground: cl[2], Climb: cl[3]});
+
+			return {Cover: made.Cover, Kind: made.Kind, Cirrus: made.Cirrus, Rain: made.Rain, Warm: cl[1]};
+		}
+
+		engine.WeatherOver = weatherOver;
+
 		function weatherStep (object, made) {
-			var star;
 			var sun;
 
 			if (!made || !made.Climate || !made.Weather || made.WeatherFrame === (scene.DrawnCount || {}).Frames || made.WeatherFaces >= 6 && made.WeatherDays === scene.Time && made.WeatherNext === undefined) return;
 
-			star = scene.Order.filter(function (each) {
-				return trait(each, 'Star') && each.World;
-			})[0];
-			sun = star && object.World ? vectors.Normalize(math.Apply(math.Invert(object.Turn) || math.Identity(), vectors.Normalize(vectors.Subtract(star.World, object.World)))) : [0, 1, 0];
+			sun = sunOfBody(object);
 			made.WeatherFrame = (scene.DrawnCount || {}).Frames;
 
 			/* Its program made the first time a planet has a weather (a scene with none never compiles it). */
@@ -3744,12 +3877,12 @@ Elemenx.Component('Scene', {
 								var high = math.Compose(local(object.World), object.Turn, size * 1.004);
 
 								later.push(function () {
-									drawReady(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: high, uNormalMatrix: math.NormalMatrix(high), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: [0, 0, 0, 0], uCloudsOnly: 1, uDrift: engine.CloudDrift(object), uLights: noLights(), uLightsOn: 0, uRelief: noLights(), uReliefOn: 0}, weatherValues(object, surface))), {Blend: 'alpha', DepthWrite: false});
+									drawReady(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: high, uNormalMatrix: math.NormalMatrix(high), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: [0, 0, 0, 0], uCloudsOnly: 1, uDrift: engine.CloudDrift(object), uLights: noLights(), uLightsOn: 0, uRelief: noLights(), uReliefOn: 0}, weatherValues(object, surface), ringOver(object))), {Blend: 'alpha', DepthWrite: false});
 								});
 							}
 						}
 						else {
-							drawReady(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: model, uNormalMatrix: math.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object), uCloudsOnly: 0, uDrift: engine.CloudDrift(object), uLights: surface.Lights || noLights(), uLightsOn: surface.Lights ? 1 : 0, uRelief: surface.Relief || noLights(), uReliefOn: surface.Relief ? 1 : 0}, weatherValues(object, surface))));
+							drawReady(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: model, uNormalMatrix: math.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object), uCloudsOnly: 0, uDrift: engine.CloudDrift(object), uLights: surface.Lights || noLights(), uLightsOn: surface.Lights ? 1 : 0, uRelief: surface.Relief || noLights(), uReliefOn: surface.Relief ? 1 : 0}, weatherValues(object, surface), ringOver(object))));
 						}
 
 						if (object.Look.Atmosphere[3]) {
@@ -4852,8 +4985,12 @@ Elemenx.Component('Scene', {
 					return lines.concat([made.Function]).join('\n');
 				}));
 
-				/* A ground with a Blueprint is a material of the land: drawn over the corners of the land. */
-				if (!shaderChecked(host === 'Land' ? 'land' : 'material', owner || material.Name || '', made, host === 'Land' ? shaders.LandVertex : shaders.Instanced, own.Fragments[host])) {
+				/*
+				 * A ground with a Blueprint is a material of the land: drawn over the corners of the land, checked as it is drawn,
+				 * its materials in it (LandOf). Regression: checked without them, it read landUnder they declare, did not compile
+				 * and the ground was drawn as the library's, whatever its Blueprint.
+				 */
+				if (!shaderChecked(host === 'Land' ? 'land' : 'material', owner || material.Name || '', made, host === 'Land' ? shaders.LandVertex : shaders.Instanced, host === 'Land' ? gpu.LandText(own.Fragments[host], []) : own.Fragments[host])) {
 					own.Made = null;
 					own.Fragments[host] = null;
 
@@ -6176,13 +6313,21 @@ Elemenx.Component('Scene', {
 		 * other objects stand on it at X and Y (across and down the map); a Walker walks a way round
 		 * the slopes, the sea and the things that block it. The view goes round a point of the ground.
 		 */
-		/* What the World of a ground makes (SceneWorld.Make), made again only when its graph is another. */
+		/*
+		 * What the World of a ground makes (SceneWorld.Make), made again only when its graph is another; the graphs of its own
+		 * (Graphs of its trait: {'sketch/<type>', 'carve/<type>': a graph}, as a world gives them) go with its ground.
+		 */
 		function worldOf (object) {
 			var graph = trait(object, 'Terrain').World || null;
+			var graphs = trait(object, 'Terrain').Graphs || null;
 
-			if (object.WorldGraph !== graph || !object.WorldMade) {
+			if (object.WorldGraph !== graph || object.WorldGraphs !== graphs || !object.WorldMade) {
 				object.WorldGraph = graph;
+				object.WorldGraphs = graphs;
 				object.WorldMade = self.$Service('SceneWorld').Make(graph);
+
+				if (graphs && object.WorldMade.Ground)
+					object.WorldMade = Object.assign({}, object.WorldMade, {Ground: Object.assign({}, object.WorldMade.Ground, {Graphs: graphs})});
 			}
 
 			return object.WorldMade;
@@ -9526,7 +9671,33 @@ Elemenx.Component('Scene', {
 			var type = surface.Type || 'rocky';
 			var relief = {terran: 8, ocean: 6, desert: 7, rocky: 9, moon: 10, dwarf: 6, ice: 5, lava: 6};
 
-			return surface.Planet ? terrain.Sphere({Planet: planetOf(object)}) : terrain.Sphere({Radius: object.Radius, Height: relief[type] || 6, Seed: object.Seed, Ocean: object.Look.Ocean, Type: type});
+			return surface.Planet ? terrain.Sphere({Planet: planetOf(object)}) : terrain.Sphere({Radius: object.Radius, Height: relief[type] || 6, Seed: object.Seed, Ocean: object.Look.Ocean, Type: type, BakeSource: bakeSource() || undefined});
+		}
+
+		/*
+		 * The land of the BakeGraph of the scene made code (SceneTerrainGenerator.BakeCodeOf), once: the ground of a body of noise
+		 * the land its picture shows; null for the one of the library, or a graph written by hand (its ground the one of the library).
+		 */
+		function bakeSource () {
+			var given = self.GraphOf('BakeGraph', 'shader/bake');
+
+			if (scene.BakeSource !== undefined) return scene.BakeSource;
+
+			scene.BakeSource = null;
+
+			try {
+				if (typeof given === 'string')
+					given = given.trim().charAt(0) === '{' ? JSON.parse(given) : null;
+
+				if (given && self.BakeMade)
+					scene.BakeSource = terrain.BakeCodeOf(given);
+			}
+			catch (error) {
+				if (window.console && window.console.warn)
+					window.console.warn('Elemenx Scene: the land of the BakeGraph cannot be made, the ground of the library is under it: ' + error.message);
+			}
+
+			return scene.BakeSource;
 		}
 
 		function land (id, options) {
@@ -11141,6 +11312,18 @@ Elemenx.Component('Scene', {
 			if (!cover || !object.Look.Atmosphere[3]) return null;
 
 			self.Weather = cover > 0.7 ? 'overcast' : cover > 0.3 ? 'cloudy' : 'clear';
+
+			/*
+			 * Of the weather of its map when it has one (WeatherOver, the very graph its clouds are baked of): rain under its clouds
+			 * that rain (snow where it is cold), a storm under its towers. Regression: none, it is new.
+			 */
+			if (!surface.WeatherSeen || scene.Seconds - surface.WeatherSeen > 0.5) {
+				surface.WeatherSeen = scene.Seconds;
+				surface.WeatherOver = weatherOver(object, surface.Up);
+			}
+
+			if (surface.WeatherOver)
+				self.Weather = surface.WeatherOver.Rain > 0.3 ? surface.WeatherOver.Warm < 0.3 ? 'snow' : surface.WeatherOver.Kind > 0.75 ? 'storm' : 'rain' : surface.WeatherOver.Cover > 0.7 ? 'overcast' : surface.WeatherOver.Cover > 0.3 ? 'cloudy' : 'clear';
 
 			/*
 			 * Of the weather of the planet, when it has one: a shell of its clouds round it (SceneLighting), the very ones its
@@ -14124,6 +14307,228 @@ Elemenx.Component('Scene', {
 		return this.Install(shaders, 'void blueprintLand(inout vec3 color, inout float alpha) {}', this.LandMade);
 	},
 
+	/*
+	 * The surface of a body of noise in the shader that bakes it: its BakeGraph, else the one of the library (LibraryBake),
+	 * made once. Its land the page reads too (SceneTerrainGenerator.Sphere: BakeSource).
+	 */
+	Baked: function (shaders) {
+		if (this.BakeMade === undefined)
+			this.BakeMade = this.Made(this.GraphOf('BakeGraph', 'shader/bake'), 'bake', 'BakeGraph', this.LibraryBake.bind(this));
+
+		return this.Install(shaders, 'void blueprintBake(vec3 p, inout vec4 surface, inout vec4 sky) {}', this.BakeMade);
+	},
+
+	/* A graph of the scene of its own: its prop, else the one of its Graphs of that name, else null. */
+	GraphOf: function (prop, name) {
+		return this[prop] || (this.Graphs && typeof this.Graphs === 'object' ? this.Graphs[name] : null) || null;
+	},
+
+	/*
+	 * The shape of the lightnings of the scene, of a storm and of its effects (SceneBlueprints.Bolt): of its BoltGraph (or
+	 * Graphs['shader/bolt']), else the one of the library; made once. One that cannot be made is told, the library one drawn.
+	 */
+	BoltShape: function () {
+		var blueprints = this.$Service('SceneBlueprints');
+		var given = this.GraphOf('BoltGraph', 'shader/bolt');
+
+		if (this.BoltMade)
+			return this.BoltMade;
+
+		try {
+			this.BoltMade = blueprints.Bolt(typeof given === 'string' ? JSON.parse(given) : given);
+		}
+		catch (error) {
+			if (window.console && window.console.warn)
+				window.console.warn('Elemenx Scene: the BoltGraph cannot be made, the bolt of the library is drawn: ' + error.message);
+
+			this.BoltMade = blueprints.Bolt();
+		}
+
+		return this.BoltMade;
+	},
+
+	/*
+	 * The graph of the arms of its galaxies (GalaxyData.Spiral: a Scene gives its galaxy this one): its GalaxyGraph (or
+	 * Graphs['shader/galaxy']) read, null for the one of the library; one that cannot be made is told, and null.
+	 */
+	GalaxySpiral: function () {
+		var given = this.GraphOf('GalaxyGraph', 'shader/galaxy');
+
+		if (this.SpiralMade !== undefined) return this.SpiralMade;
+
+		this.SpiralMade = null;
+
+		if (!given)
+			return null;
+
+		try {
+			given = typeof given === 'string' ? JSON.parse(given) : given;
+
+			this.$Service('SceneBlueprints').Galaxy(given);
+
+			this.SpiralMade = given;
+		}
+		catch (error) {
+			if (window.console && window.console.warn)
+				window.console.warn('Elemenx Scene: the GalaxyGraph cannot be made, the arms of the library are drawn: ' + error.message);
+		}
+
+		return this.SpiralMade;
+	},
+
+	/*
+	 * The weather of a planet in the shader that bakes it (WEATHER): its ForecastGraph (or Graphs['shader/forecast']), else
+	 * LibraryForecast, a graph of numbers made a function of GLSL (BlueprintShaders.NumericGLSL), called of the climate of
+	 * each place (uClimate) and the time, the sun and the seed of the planet; the page reads the same graph (WeatherOver).
+	 * One that cannot be made is told, the one of the library drawn.
+	 */
+	Forecasted: function (shaders) {
+		var graphics = this.$Service('Renderer');
+		var names = {PX: 'p.x', PY: 'p.y', PZ: 'p.z', Days: 'uDays', Seed: 'uWeatherSeed', RadiusKm: 'uRadiusKm', SunX: 'uSunAt.x', SunY: 'uSunAt.y', SunZ: 'uSunAt.z', Cloudiness: 'uCloudiness', Moist: 'cl.r', Warm: 'cl.g', Ground: 'cl.b', Climb: 'cl.a'};
+		var made = this.ForecastMade();
+		var text;
+
+		if (!made || typeof shaders.Weather !== 'string') return shaders;
+
+		text = [graphics.Chunks[made.Need], 'vec4 blueprintForecast(vec3 p) {', '\t/* Its climate smoothed over a few texels: the climb of the wind over hills changes from one to the next (clouds in squares). */', '\tvec4 cl = textureLod(uClimate, p, 1.5);', '\treturn ' + made.Name + '(' + made.Inputs.map(function (input) {
+			return names[input.Name] || '0.0';
+		}).join(', ') + ');', '}'].join('\n');
+
+		shaders.Weather = this.$Service('BlueprintShaders').Lined(shaders.Weather.replace('vec4 blueprintForecast(vec3 p) { return vec4(0.0); }', function () {
+			return text;
+		}));
+
+		return shaders;
+	},
+
+	/* The graph of the weather of the scene made GLSL (NumericGLSL), once; of the library where its own cannot be made. */
+	ForecastMade: function () {
+		var shaders = this.$Service('BlueprintShaders');
+		var given = this.GraphOf('ForecastGraph', 'shader/forecast');
+
+		if (this.ForecastGLSL !== undefined) return this.ForecastGLSL;
+
+		try {
+			this.ForecastGLSL = shaders.NumericGLSL(typeof given === 'string' ? JSON.parse(given) : given || this.LibraryForecast(), {});
+		}
+		catch (error) {
+			if (window.console && window.console.warn)
+				window.console.warn('Elemenx Scene: the ForecastGraph cannot be made, the weather of the library is drawn: ' + error.message);
+
+			this.ForecastGLSL = shaders.NumericGLSL(this.LibraryForecast(), {});
+		}
+
+		return this.ForecastGLSL;
+	},
+
+	/*
+	 * The weather of the map of a planet over a direction of its body (its direction, or none: over the eye on its surface),
+	 * in the page, of the graph its shader bakes it of: {Cover, Kind, Cirrus, Rain (0 to 1), Warm (of its climate)}; null
+	 * before its climate is made, or of a body of no weather.
+	 */
+	WeatherOver: function (id, direction) {
+		var surface = this.Scene().Surface;
+		var object = this.Scene().Objects[id];
+		var engine = this.Engine();
+		if (!object || !engine.WeatherOver) return null;
+
+		return engine.WeatherOver(object, direction || (surface && surface.ID === id ? surface.Up : [0, 1, 0]));
+	},
+
+	/* The js of the graph of the weather of the scene (NumericCode of the ForecastGraph, else of the library), made once: its Run. */
+	ForecastCode: function () {
+		var given = this.GraphOf('ForecastGraph', 'shader/forecast');
+		var made = null;
+
+		if (this.ForecastRun)
+			return this.ForecastRun;
+
+		try {
+			made = this.$Service('Blueprints').NumericCode(typeof given === 'string' ? JSON.parse(given) : given || this.LibraryForecast(), {});
+		}
+		catch (error) {
+			made = null;
+		}
+
+		this.ForecastRun = (made || this.$Service('Blueprints').NumericCode(this.LibraryForecast(), {})).Run;
+
+		return this.ForecastRun;
+	},
+
+	/* The weather of the library, a graph of numbers of SceneForecast (SceneBlueprints.LibraryForecast). */
+	LibraryForecast: function () {
+		return this.$Service('SceneBlueprints').LibraryForecast();
+	},
+
+	/*
+	 * The clouds in the shaders that ask for them (#define ENX_CLOUDS_<FOR>: the globe and the shadows of its clouds, round
+	 * the eye over a surface, the layer of a scene): its CloudsGraph (or Graphs['shader/clouds']), else LibraryClouds, made once.
+	 */
+	Clouded: function (shaders) {
+		if (this.CloudsMade === undefined)
+			this.CloudsMade = this.Made(this.GraphOf('CloudsGraph', 'shader/clouds'), 'clouds', 'CloudsGraph', this.LibraryClouds.bind(this));
+
+		return this.Install(shaders, 'void blueprintClouds() {}', this.CloudsMade || this.Made(null, 'clouds', 'CloudsGraph', this.LibraryClouds.bind(this)));
+	},
+
+	/*
+	 * The clouds of the library as a graph (the kind clouds of SceneBlueprints): the cover of the weather of a planet, its
+	 * globe, its clouds round the eye over its surface, the layer of a scene.
+	 */
+	LibraryClouds: function () {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/clouds'));
+	},
+
+	/*
+	 * The air between the eye and what it sees in the shaders that ask for it (#define ENX_AIR_<FOR>: the things and the
+	 * ground of a globe, the land and the water, the pass Air): its AirGraph (or Graphs['shader/air']), else LibraryAir, made once.
+	 */
+	Aired: function (shaders) {
+		if (this.AirMade === undefined)
+			this.AirMade = this.Made(this.GraphOf('AirGraph', 'shader/air'), 'air', 'AirGraph', this.LibraryAir.bind(this));
+
+		return this.Install(shaders, 'void blueprintAir() {}', this.AirMade || this.Made(null, 'air', 'AirGraph', this.LibraryAir.bind(this)));
+	},
+
+	/*
+	 * The air of the library as a graph (the kind air of SceneBlueprints): the haze of a globe and of a scene, the fog that
+	 * lies low and the sheets of rain of the pass Air, the eye under the sea.
+	 */
+	LibraryAir: function () {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/air'));
+	},
+
+	/* What the weather and the year do to the surfaces of things (Pbr, Solid): its WeatherGraph, else LibraryWeather, made once. */
+	Weathered: function (shaders) {
+		if (this.WeatherMade === undefined)
+			this.WeatherMade = this.Made(this.GraphOf('WeatherGraph', 'shader/weather'), 'weather', 'WeatherGraph', this.LibraryWeather.bind(this));
+
+		return this.Install(shaders, 'void blueprintWeather() {}', this.WeatherMade || this.Made(null, 'weather', 'WeatherGraph', this.LibraryWeather.bind(this)));
+	},
+
+	/*
+	 * What the weather and the year do to a surface, of the library, as a graph (the kind weather of SceneBlueprints): the
+	 * leaves of autumn, winter and spring, snow on things, on what is solid and on plants, a beam that takes a body away,
+	 * pools where it is flat and wet.
+	 */
+	LibraryWeather: function () {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/weather'));
+	},
+
+	/* The uniforms of the bake of the scene: its parameters. */
+	BakeValues: function () {
+		return this.BakeMade ? this.BakeMade.Values({}, {Time: 0}) : null;
+	},
+
+	/*
+	 * The surface of a body of noise of the library as a graph (the kind bake of SceneBlueprints): its land of a noise of
+	 * 6 octaves (craters on a rocky body without seas), its seas, the colors of each kind (rocky, icy, lava, gas), its
+	 * caps of ice, its clouds, the glow of lava and its sparks.
+	 */
+	LibraryBake: function () {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/bake'));
+	},
+
 	/* The uniforms of the land of the scene: its parameters and the time. */
 	LandValues: function (seconds) {
 		return this.LandMade ? this.LandMade.Values({}, {Time: seconds || 0}) : null;
@@ -14148,6 +14553,43 @@ Elemenx.Component('Scene', {
 	 * the air by day, the warm band and the pink of dusk, the light round the sun, high wisps, the clouds over all, an
 	 * eclipse, the glow of towns, a rainbow, the haze and the ball of the moon, the air over the stars and the disc of the sun.
 	 */
+	/* The sky far behind a system of the library as a graph (the kind cosmos of SceneBlueprints): SceneCosmos bakes it. */
+	LibraryCosmos: function () {
+		return this.$Service('SceneBlueprints').LibraryCosmos();
+	},
+
+	/* A ring round a body of the library as a graph (the kind ring of SceneBlueprints): its bands, gaps, colors and light. */
+	LibraryRing: function () {
+		return this.$Service('SceneBlueprints').LibraryRing();
+	},
+
+	/* A globe from far of the library as a graph (the kind planet of SceneBlueprints): its picture lit, its clouds, its lights, its air. */
+	LibraryPlanet: function () {
+		return this.$Service('SceneBlueprints').LibraryPlanet();
+	},
+
+	/*
+	 * The globes of the scene in their shaders, each of its graph (RingGraph, PlanetGraph or their Graphs['shader/...']), else
+	 * of the one of the library; made once. The ring in the Planet shader too (planetRing: the shadow it casts), its color and
+	 * seed of its own there.
+	 */
+	Globed: function (shaders) {
+		var ring;
+
+		if (this.RingMade === undefined)
+			this.RingMade = this.Made(this.GraphOf('RingGraph', 'shader/ring'), 'ring', 'RingGraph', this.LibraryRing.bind(this));
+
+		if (this.PlanetMade === undefined)
+			this.PlanetMade = this.Made(this.GraphOf('PlanetGraph', 'shader/planet'), 'planet', 'PlanetGraph', this.LibraryPlanet.bind(this));
+
+		ring = this.RingMade ? Object.assign({}, this.RingMade, {Function: this.RingMade.Function.replace(/\buSeed\b/g, 'uRingSeed').replace(/\buColors\b/g, 'uRingColors')}) : null;
+
+		this.Install(shaders, 'void planetRing(float r, vec3 world, vec3 normal, inout vec3 color, inout float alpha) {}', ring, 'void blueprintRing(', 'void planetRing(');
+		this.Install(shaders, 'void blueprintPlanet(vec3 n, vec3 v, vec3 p, inout vec3 color, inout float alpha) {}', this.PlanetMade);
+
+		return this.Install(shaders, 'void blueprintRing(float r, vec3 world, vec3 normal, inout vec3 color, inout float alpha) {}', this.RingMade);
+	},
+
 	LibrarySky: function () {
 		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/sky'));
 	},
@@ -14248,13 +14690,14 @@ Elemenx.Component('Scene', {
 
 		/* The rings of the drops on standing water: each cell of the surface has its drop, at a moment of its own. */
 		var ripples = [
+			this.$Service('Noise').GLSLChunk(['enx_white2']),
 			'float rings(vec2 p, float t) {',
 			'	vec2 cell = floor(p);',
 			'	float sum = 0.0;',
 			'	for (int x = -1; x <= 1; x++) {',
 			'		for (int y = -1; y <= 1; y++) {',
 			'			vec2 at = cell + vec2(float(x), float(y));',
-			'			float seed = fract(sin(dot(at, vec2(127.1, 311.7))) * 43758.5453);',
+			'			float seed = enx_white2(at);',
 			'			float age = fract(t * (0.8 + seed * 0.6) + seed * 7.0);',
 			'			float far = length(p - at - vec2(0.5 + (seed - 0.5) * 0.7, 0.5 + (fract(seed * 13.0) - 0.5) * 0.7));',
 			'			sum += sin((far - age * 1.1) * 34.0) * smoothstep(0.14, 0.0, abs(far - age * 1.1)) * (1.0 - age) * (1.0 - age);',
@@ -14281,126 +14724,8 @@ Elemenx.Component('Scene', {
 			'uniform float uWeatherSeed;',
 			/* How cloudy the world is (Clouds of its surface, 0 to 1): none, dry with a few, as the Earth (0.5), wetter, a shroud (1). */
 			'uniform float uCloudiness;',
-			'vec3 turnY(vec3 p, float a) {',
-			'	float c = cos(a);',
-			'	float s = sin(a);',
-			'	return vec3(p.x * c - p.z * s, p.y, p.x * s + p.z * c);',
-			'}',
-			/* Radians of longitude a day the wind of a latitude takes what it carries (8 m/s, east positive). */
-			'float zonal(float lat) {',
-			'	float band = abs(lat) * 57.29578;',
-			'	float east = mix(-1.0, 1.3, smoothstep(26.0, 34.0, band));',
-			'	east = mix(east, -0.6, smoothstep(56.0, 64.0, band));',
-			'	return east * 8.0 * 86.4 / uRadiusKm;',
-			'}',
-			/*
-			 * The wind of the body at a direction (radians a day, along its ground): the jets of its belts, each storm turning the
-			 * air round its eye (counterclockwise in the north), small eddies of a curl of a noise. storm: how strong a storm is there.
-			 */
-			'vec3 windAt(vec3 q, out float storm) {',
-			'	vec3 east = normalize(vec3(q.z, 0.0, -q.x) + vec3(1e-6, 0.0, 0.0));',
-			'	vec3 north = cross(q, east);',
-			'	float lat = asin(clamp(q.y, -1.0, 1.0));',
-			'	float band = abs(lat) * 57.29578;',
-			'	vec3 v = east * zonal(lat) + north * (band < 30.0 ? -0.12 : band < 60.0 ? 0.1 : -0.06) * sign(lat) * 8.0 * 86.4 / uRadiusKm;',
-			'	storm = 0.0;',
-			'	for (int k = 0; k < 10; k++) {',
-			'		float fk = float(k);',
-			'		float life = uDays / 7.0 + fract(fk * 0.618);',
-			'		float gen = floor(life);',
-			'		float age = fract(life);',
-			'		float h1 = hash3(vec3(fk * 13.0, gen, uWeatherSeed));',
-			'		float h2 = hash3(vec3(fk * 13.0 + 5.0, gen + 3.0, uWeatherSeed));',
-			'		float hemi = mod(fk, 2.0) < 0.5 ? 1.0 : -1.0;',
-			'		bool tropical = k >= 8;',
-			'		float lat0 = hemi * radians(tropical ? mix(12.0, 22.0, h1) : mix(38.0, 64.0, h1));',
-			'		float lon0 = h2 * 6.28318 + zonal(lat0) * age * 7.0 * (tropical ? 0.5 : 1.0);',
-			'		vec3 c = vec3(cos(lat0) * cos(lon0), sin(lat0), cos(lat0) * sin(lon0));',
-			'		float d = acos(clamp(dot(q, c), -1.0, 1.0));',
-			'		float r = radians(tropical ? mix(3.0, 6.0, h1) : mix(7.0, 13.0, h1));',
-			'		float strength = sin(3.14159 * age) * (tropical ? step(0.5, h2) : 1.0);',
-			'		float f = exp(-d * d / (r * r));',
-			'		v += cross(c, q) * hemi * strength * 5.0 * f / max(r, 0.02) * 0.1;',
-			'		storm = max(storm, strength * f);',
-			'	}',
-			/* Eddies: the curl of a noise that changes over days. */
-			'	vec3 at = q * 7.0 + vec3(uWeatherSeed, uDays * 0.15, 0.0);',
-			'	float e = 0.02;',
-			'	vec3 grad = vec3(noise3(at + vec3(e, 0.0, 0.0)) - noise3(at - vec3(e, 0.0, 0.0)), noise3(at + vec3(0.0, e, 0.0)) - noise3(at - vec3(0.0, e, 0.0)), noise3(at + vec3(0.0, 0.0, e)) - noise3(at - vec3(0.0, 0.0, e))) / (2.0 * e);',
-			'	v += cross(q, grad - q * dot(grad, q)) * 0.06;',
-			'	return v;',
-			'}',
-			/*
-			 * Clouds drawn out along the wind: a noise taken along the way the air came (six steps back of a third of a day each),
-			 * the mean of it: streams, bands bent round a storm, its arms spiralling in (as the Earth shows them from space).
-			 */
-			/* Two of them along the same way: fronts (x, of scale) and streams of a few hundred km (y, of fine), drawn out the most. */
-			'vec2 streamed(vec3 p, float scale, float fine, float salt) {',
-			'	mat3 askew = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
-			'	vec3 x = p;',
-			'	vec2 sum = vec2(0.0);',
-			'	float weight = 0.0;',
-			'	float storm;',
-			'	for (int i = 0; i < 6; i++) {',
-			'		float w = 1.0 - float(i) / 6.0;',
-			'		sum += vec2(fbm3(askew * x * scale + vec3(salt, salt * 0.7, uWeatherSeed), 4), fbm3(askew * (askew * x) * fine + vec3(salt * 1.3, 2.0, uWeatherSeed), 3)) * w;',
-			'		weight += w;',
-			'		x = normalize(x - windAt(x, storm) * 0.33);',
-			'	}',
-			'	return sum / weight;',
-			'}',
-			'vec4 weatherAt(vec3 p) {',
-			/* Its climate smoothed over a few texels: the climb of the wind over hills changes from one to the next (clouds in squares). */
-			'	vec4 cl = textureLod(uClimate, p, 1.5);',
-			'	float moist = cl.r;',
-			'	float warm = cl.g;',
-			'	float land = smoothstep(0.03, 0.3, cl.b);',
-			'	float climb = cl.a;',
-			'	float lat = asin(clamp(p.y, -1.0, 1.0));',
-			'	float band = abs(lat) * 57.29578;',
-			'	float storm;',
-			'	vec3 flow = windAt(p, storm);',
-			/* Where the air is now, of where it was (the content goes with it; new every three days, crossed, so nothing smears). */
-			'	float phase = uDays / 3.0;',
-			'	float pa = fract(phase);',
-			'	float pb = fract(phase + 0.5);',
-			'	vec3 qa = normalize(p - flow * pa * 3.0);',
-			'	vec3 qb = normalize(p - flow * pb * 3.0);',
-			'	float wa = 1.0 - abs(2.0 * pa - 1.0);',
-			'	vec2 sa = streamed(qa, 2.6, 14.0, floor(phase) * 7.31);',
-			'	vec2 sb = streamed(qb, 2.6, 14.0, floor(phase + 0.5) * 7.31 + 50.0);',
-			'	float keep = sqrt(wa * wa + (1.0 - wa) * (1.0 - wa));',
-			/* Streams stand out more than the mean of six can (it flattens a noise): its spread made as wide again. */
-			'	vec2 both = clamp((sa * wa + sb * (1.0 - wa) - 0.5) / keep * vec2(1.0, 1.8) + 0.5, 0.0, 1.0);',
-			'	float fronts = both.x * 0.55 + both.y * 0.45;',
-			'	float mid = clamp((fbm3(qa * 9.0 + floor(phase) * 3.1, 3) * wa + fbm3(qb * 9.0 + floor(phase + 0.5) * 3.1 + 20.0, 3) * (1.0 - wa) - 0.5) / sqrt(wa * wa + (1.0 - wa) * (1.0 - wa)) + 0.5, 0.0, 1.0);',
-			'	float itcz = exp(-pow((lat * 57.29578 - 5.0) / 8.0, 2.0));',
-			'	float dry = smoothstep(14.0, 22.0, band) * (1.0 - smoothstep(30.0, 38.0, band));',
-			/* The tracks of the storms (40 to 60 degrees) wetter, a storm wetter still: their commas and fronts. */
-			'	float tracks = smoothstep(35.0, 45.0, band) * (1.0 - smoothstep(60.0, 70.0, band));',
-			'	float humid = moist * 0.7 + (1.0 - land) * 0.1 + climb * 0.45 + itcz * 0.12 + tracks * 0.15 + storm * 0.7 - dry * 0.18 + (uCloudiness - 0.5) * 0.8;',
-			'	float heat = smoothstep(-0.1, 0.55, dot(p, uSunAt));',
-			/* The wetter, the more of it cloud, yet never all of it: the streams and bands of the air show between (a shroud: see below). */
-			'	float cut = clamp(1.15 - humid * 0.8, 0.35, 0.95);',
-			'	float sheet = smoothstep(cut - 0.08, cut + 0.08, fronts * 0.75 + mid * 0.25);',
-			'	float convect = clamp((warm - 0.42) * 2.4, 0.0, 1.0) * mix(0.35 + 0.25 * heat, heat, land) * smoothstep(0.2, 0.55, moist + climb * 0.3);',
-			/* Heaps in clusters cut by the streams, not a band all along the equator. */
-			'	float heaps = convect * smoothstep(0.5, 0.75, both.y * 0.7 + mid * 0.3 + humid * 0.15);',
-			/* Fair weather heaps almost everywhere by day, more over land, as on the Earth: no descent into a sky with none. */
-			'	float fair = heat * smoothstep(0.05, 0.3, moist) * mix(0.22, 0.38, land) * smoothstep(0.2, 0.4, warm) * clamp(uCloudiness * 2.0, 0.0, 1.0);',
-			'	heaps = max(heaps, fair);',
-			'	float cover = max(sheet, heaps * 0.8);',
-			'	float kind = clamp(0.15 + heaps * 0.55 + convect * itcz * 0.6 + storm * 0.25 * (1.0 - sheet) - (1.0 - warm) * 0.2, 0.0, 1.0);',
-			/* Fair weather ones are heaps. */
-			'	kind = max(kind, 0.5 * smoothstep(0.03, 0.1, fair) * (1.0 - sheet));',
-			'	float streak = both.y;',
-			'	float cirrus = smoothstep(0.55, 0.82, streak) * (0.35 + 0.65 * smoothstep(25.0, 45.0, band) + itcz * 0.4) * (1.0 - sheet * 0.5);',
-			'	float rain = sheet * smoothstep(0.62, 0.95, humid + storm * 0.3) + heaps * smoothstep(0.75, 1.0, kind) * 0.8;',
-			/* A shroud all over (as Venus), and none at all on a world with no clouds. */
-			'	cover = mix(cover, 1.0, smoothstep(0.85, 1.0, uCloudiness));',
-			'	kind = mix(kind, 0.1, smoothstep(0.85, 1.0, uCloudiness));',
-			'	return clamp(vec4(cover, kind, cirrus * step(0.001, uCloudiness), rain), 0.0, 1.0) * vec4(step(0.001, uCloudiness), 1.0, 1.0, step(0.001, uCloudiness));',
-			'}'
+			/* Its weather at a direction, of the graph of the scene (ForecastGraph): weatherAt(p) of the climate there. */
+			'vec4 blueprintForecast(vec3 p) { return vec4(0.0); }'
 		].join('\n');
 
 		/*
@@ -14412,48 +14737,9 @@ Elemenx.Component('Scene', {
 			'uniform samplerCube uWeather;',
 			'uniform float uWeatherOn;',
 			'uniform float uRadiusKm;',
-			'float cloudSeen(vec3 p, vec4 w, float foot) {',
-			'	vec3 k = p * uRadiusKm;',
-			'	float heap = smoothstep(0.3, 0.6, w.g);',
-			/* Its billows of 80, 30, 11, 4 and 1.5 km: heaps most of the small, sheets of the large; each only while a pixel sees it. */
-			'	float d = 0.0;',
-			'	float total = 0.0;',
-			'	float seen = 0.0;',
-			'	float size = 80.0;',
-			/* Each turned against the last: a noise of values cut at a level shows squares along its grid. */
-			'	mat3 askew = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
-			'	vec3 turned = k;',
-			'	for (int i = 0; i < 5; i++) {',
-			'		float a = i < 2 ? mix(0.6, 0.3, heap) : mix(0.22, 0.6, heap);',
-			'		float sharp = 1.0 - smoothstep(size * 0.12, size * 0.45, foot);',
-			'		turned = askew * turned;',
-			/* Two turnings of it a level: one noise of values alone, cut, made shapes of squares along its grid. */
-			'		d += ((noise3(turned / size + float(i) * 7.1) + noise3(askew * (turned / size) + float(i) * 3.7 + 11.0)) * 0.5 - 0.5) * 1.4 * a * sharp;',
-			'		total += a;',
-			'		seen += a * sharp;',
-			'		size /= 2.7;',
-			'	}',
-			/* What is not seen of them softens the edge as much: the cover of a texel its mean at any size. */
-			/* Softer the larger a pixel is on the ground: no hard edges of a decal from orbit. */
-			'	float spread = mix(0.12, 0.06, heap) + clamp(foot / 40.0, 0.0, 0.2);',
-			/*
-			 * Regression: cut at 1 less the cover, the noise (about 0.5, spread 0.22) left far less cloud than the cover said (12%
-			 * gave 3%): the cut where that share of it is over (a logit for its quantile).
-			 */
-			'	float level = 0.5 + 0.13 * log((1.0 - clamp(w.r, 0.01, 0.99)) / clamp(w.r, 0.01, 0.99));',
-			/*
-			 * Regression: what a pixel did not see of them only softened the cut, and a cover of 0.9 showed as a veil of 0.6: the
-			 * streams and swirls of the weather washed out from orbit. Unseen, the cloud is the cover of the weather as it is.
-			 */
-			'	float cloud = mix(w.r, smoothstep(level - spread, level + spread, 0.5 + d * 1.6 / max(seen / total, 0.05)), seen / total) * step(0.01, w.r);',
-			/* Cirrus, thin and drawn out east and west. */
-			'	float streak = noise3(vec3(k.x / 90.0, k.y / 9.0, k.z / 90.0) + 5.0) * 0.7 + noise3(vec3(k.x / 30.0, k.y / 3.0, k.z / 30.0)) * 0.3;',
-			'	float thin = w.b * smoothstep(0.45, 0.75, streak) * 0.18;',
-			'	return clamp(cloud + thin * (1.0 - cloud), 0.0, 1.0);',
-			'}',
-			'float cloudAt(vec3 p, float foot) {',
-			'	return cloudSeen(p, texture(uWeather, p), foot);',
-			'}'
+			/* Of the clouds of the scene (CloudsGraph): cloudSeen, cloudAt and the cover of the weather they are of. */
+			'#define ENX_CLOUDS_GLOBE',
+			'void blueprintClouds() {}'
 		].join('\n');
 
 		/* The slope of water at a point: waves with sharp crests that each bend the next, so lines run together and part, as on water. */
@@ -14903,7 +15189,7 @@ Elemenx.Component('Scene', {
 				'	for (int x = -1; x <= 1; x++) {',
 				'		for (int y = -1; y <= 1; y++) {',
 				'			vec2 at = cell + vec2(float(x), float(y));',
-				'			float s = fract(sin(dot(at, vec2(127.1, 311.7))) * 43758.5453);',
+				'			float s = enx_white2(at);',
 				'			if (s > amount) continue;',
 				'			float s2 = fract(s * 91.7 + 0.31);',
 				'			float slip = rain * steep * fract(uTime2 * (0.08 + 0.12 * s2) + s * 5.0) * 0.7;',
@@ -14964,20 +15250,8 @@ Elemenx.Component('Scene', {
 				'}',
 				/* What a material graph of Blueprints does to the surface: nothing here; a material with a Blueprint puts its own in this place. */
 				'void blueprintSurface(vec3 position, vec3 normal, vec2 uv, inout vec3 color, inout float alpha, inout float rough, inout float metal, inout vec3 emission, inout vec3 bent) {}',
-				/*
-				 * A body beamed away or coming (Teleport): it breaks up into sparkling grains in streaks up and down, from the
-				 * top, glowing in the color of the beam where it goes; uDissolve [how far, foot, height, phase].
-				 */
-				'float dissolved(vec3 world, inout vec3 color) {',
-				'	if (uDissolve.x <= 0.0) return 0.0;',
-				'	float h = clamp((world.y - uDissolve.y) / max(uDissolve.z, 0.01), 0.0, 1.0);',
-				'	float grain = noise3((world + uEyeAt) * vec3(30.0, 6.0, 30.0) + vec3(0.0, uDissolve.w, 0.0)) * 0.5 + 0.5;',
-				'	float d = grain * 0.8 + (1.0 - h) * 0.2;',
-				'	float gone = uDissolve.x * 1.3 - 0.15;',
-				'	if (d < gone) discard;',
-				'	color = mix(color, uDissolveColor, min(1.0, uDissolve.x * 1.6));',
-				'	return max(1.0 - smoothstep(0.0, 0.1, d - gone), uDissolve.x * 0.6) * (0.6 + 0.4 * sin(uDissolve.w * 9.0 + grain * 20.0));',
-				'}',
+				/* What the weather and the year do to its surface, a beam that takes it away (WeatherGraph: weather_season, weather_snow_..., weather_dissolve, weather_puddles). */
+				'void blueprintWeather() {}',
 				'void main() {',
 				'	if (uCut.w > 0.0 && distance(vWorld, uCut.xyz) < uCut.w) discard;',
 				'	vec4 base = uBaseColor * texture(uColorMap, vUV);',
@@ -15006,20 +15280,10 @@ Elemenx.Component('Scene', {
 				'	float ownRough = uRoughness * surface.g;',
 				'	float ownMetal = uMetallic * surface.b;',
 				'	vec3 ownGlow = uEmissive * texture(uEmissiveMap, vUV).rgb;',
-				'	ownGlow += uDissolveColor * dissolved(vWorld, albedo) * 3.0;',
+				'	ownGlow += uDissolveColor * weather_dissolve(vWorld, albedo) * 3.0;',
 				'	blueprintSurface(vWorld, n, vUV, albedo, base.a, ownRough, ownMetal, ownGlow, n);',
 				/* The leaves of a tree of a file are what is green of its textures: they turn, thin out to bare branches, blossom. */
-				'	if (uSeasonOn > 0.5 && uSeasonOn < 1.5) {',
-				'		float leaf = smoothstep(0.01, 0.05, albedo.g - max(albedo.r, albedo.b) * 0.9);',
-				'		float tree = fract(sin(dot(floor((vWorld.xz + uEyeAt.xz - vBody.xz) * 0.22), vec2(12.9898, 78.233))) * 43758.5453);',
-				'		if (leaf > 0.0) {',
-				'			vec3 fall = tree < 0.3 ? vec3(0.62, 0.42, 0.04) : tree < 0.55 ? vec3(0.55, 0.16, 0.02) : tree < 0.8 ? vec3(0.42, 0.05, 0.02) : vec3(0.25, 0.14, 0.05);',
-				'			albedo = mix(albedo, fall * (0.7 + 0.6 * dot(albedo, vec3(0.33))), uSeason.y * leaf);',
-				'			if (uSeason.x > 0.0 && noise3(vBody * 9.0 + tree * 7.0) * 0.5 + 0.5 < uSeason.x * leaf * 1.08) discard;',
-				'			if (uSeason.z > 0.0 && tree < 0.45 && noise3(vBody * 26.0) > 0.35) albedo = mix(albedo, tree < 0.2 ? vec3(0.95, 0.62, 0.72) : vec3(0.95, 0.94, 0.9), uSeason.z * leaf);',
-				'		}',
-				'		albedo = mix(albedo, albedo * vec3(1.15, 1.0, 0.55), uSeason.w * leaf * 0.5);',
-				'	}',
+				'	if (uSeasonOn > 0.5 && uSeasonOn < 1.5) weather_season(albedo, enx_white2(floor((vWorld.xz + uEyeAt.xz - vBody.xz) * 0.22)), vBody, true);',
 				/* Its own wet (1 + it, 0 for the weather's) and how much water beads on it (1 + it, 0 for all). */
 				'	float wet = vWet.x > 0.5 ? clamp(vWet.x - 1.0, 0.0, 1.0) : uWet;',
 				'	float beads = vWet.y > 0.5 ? clamp(vWet.y - 1.0, 0.0, 1.0) : 1.0;',
@@ -15039,7 +15303,7 @@ Elemenx.Component('Scene', {
 				'	float inDrop = step(1e-5, drop);',
 				/* Water stands where a surface lies flat and does not bead, and rain makes rings on it, gone where they are smaller than a pixel; snow lies on what looks up. Pools grow as it rains and shrink as it dries. */
 				'	float flat2 = smoothstep(0.86, 0.97, n.y) * step(0.99, base.a);',
-				'	float pool = wet * flat2 * (1.0 - smooth2) * smoothstep(0.66 - 0.18 * wet, 0.8 - 0.18 * wet, noise3((vWorld + uEyeAt) * vec3(0.13, 0.0, 0.13)) + noise3((vWorld + uEyeAt) * vec3(0.6, 0.0, 0.6)) * 0.08);',
+				'	float pool = weather_puddles(wet, flat2 * (1.0 - smooth2), vWorld + uEyeAt);',
 				'	float ringSeen = 1.0 - smoothstep(0.03, 0.09, length(fwidth((vWorld.xz + uEyeAt.xz) * 1.7)));',
 				'	if (pool > 0.02 && uRainDrops > 0.0 && ringSeen > 0.0) {',
 				'		vec2 ring = (vWorld.xz + uEyeAt.xz) * 1.7;',
@@ -15055,7 +15319,7 @@ Elemenx.Component('Scene', {
 				'	roughness = mix(roughness, 0.05, inDrop);',
 				/* Wet things lose their color first: water darkens them and takes the dust off the light. */
 				'	albedo *= (1.0 - wet * 0.38 - pool * 0.3) * (1.0 - inDrop * 0.12);',
-				'	float laid = uSnowed * smoothstep(0.3, 0.75, n.y + (noise3((vWorld + uEyeAt) * 0.23) + noise3((vWorld + uEyeAt) * 0.9) * 0.5 - 0.75) * 0.3);',
+				'	float laid = uSnowed * weather_snow_things(n.y, vWorld + uEyeAt);',
 				'	albedo = mix(albedo, vec3(0.86, 0.9, 0.95) * (0.72 + dot(albedo, vec3(0.5))), laid);',
 				'	roughness = mix(roughness, 0.7, laid);',
 				'	float metallic = clamp(ownMetal, 0.0, 1.0);',
@@ -15173,7 +15437,10 @@ Elemenx.Component('Scene', {
 				'}'
 			].join('\n'),
 
-			/* The surface of a body for its cubes: layer 0 its ground (rgb) and gloss (a), layer 1 its clouds (r) and glow (g). */
+			/*
+			 * The surface of a body of noise for its cubes, its graph (BakeGraph, else LibraryBake): layer 0 its ground (rgb) and
+			 * gloss (a), layer 1 its clouds (r), the glow of its lava (g) and its sparks (b).
+			 */
 			Bake: head + [
 				'in vec2 vQuad;',
 				'uniform int uLayer;',
@@ -15187,64 +15454,18 @@ Elemenx.Component('Scene', {
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				graphics.Chunks.Cube,
-				'vec3 ground(float h) {',
+				/* The four colors of the body by a height of 0 to 1 (its blocks paint with it). */
+				'vec3 bake_ground(float h) {',
 				'	if (h < 0.33) return mix(uColors[0], uColors[1], h / 0.33);',
 				'	if (h < 0.66) return mix(uColors[1], uColors[2], (h - 0.33) / 0.33);',
 				'	return mix(uColors[2], uColors[3], (h - 0.66) / 0.34);',
 				'}',
+				'void blueprintBake(vec3 p, inout vec4 surface, inout vec4 sky) {}',
 				'void main() {',
-				'	vec3 p = cubeDirection(uFace, vQuad);',
-				'	vec3 q = p * 2.2 + vec3(uSeed, uSeed * 0.7, uSeed * 1.3);',
-				'	vec3 albedo;',
-				'	float gloss = 0.04;',
-				'	float glow = 0.0;',
-				'	if (uLayer == 1) {',
-				'		float cloud = fbm3(p * 3.2 + vec3(0.0, uSeed * 2.0, 0.0), 5);',
-				'		float edge = 0.5 + (0.5 - uClouds) * 0.4;',
-				'		float cover = uClouds > 0.0 ? smoothstep(edge, edge + 0.12, cloud) * (uClouds >= 1.0 ? 1.0 : 0.85) : 0.0;',
-				'		if (uKind == 3) glow = smoothstep(0.8, 0.93, ridge3(q * 1.6 + 4.0, 5));',
-				'		outColor = vec4(cover, glow, smoothstep(0.88, 0.97, ridge3(q * 1.6 + 4.0, 5)), 1.0);',
-				'		return;',
-				'	}',
-				'	if (uKind == 4) {',
-				'		float warp = fbm3(vec3(p.x * 3.0, p.y * 9.0, p.z * 3.0) + uSeed, 4);',
-				'		float band = sin((p.y * 6.5 + warp * 2.4 + uSeed) * 3.14159);',
-				'		float fine = fbm3(vec3(p.x * 2.0, p.y * 38.0, p.z * 2.0) + uSeed, 3);',
-				'		albedo = mix(uColors[0], uColors[1], band * 0.5 + 0.5);',
-				'		albedo = mix(albedo, uColors[2], smoothstep(0.5, 0.78, fine) * 0.7);',
-				'		float storm = 1.0 - smoothstep(0.0, 0.16, length(vec2((atan(p.z, p.x) - uSeed) * 0.5, (p.y + 0.3) * 1.6)) + (warp - 0.5) * 0.08);',
-				'		albedo = mix(albedo, uColors[3], storm * 0.85);',
-				'		gloss = 0.08;',
-				'	}',
-				'	else {',
-				'		float h = fbm3(q, 6);',
-				'		if (uKind == 3) {',
-				'			albedo = mix(uColors[0], uColors[1], smoothstep(0.3, 0.7, h));',
-				'		}',
-				'		else if (uKind == 2) {',
-				'			float ridges = ridge3(q * 1.4, 5);',
-				'			albedo = mix(ground(h), uColors[0], smoothstep(0.7, 0.9, ridges) * 0.6);',
-				'			gloss = 0.25;',
-				'		}',
-				'		else {',
-				'			float land = uOcean > 0.0 ? (h - uOcean * 0.55 - 0.2) / max(0.05, 0.8 - uOcean * 0.55) : h;',
-				'			if (uKind == 0) {',
-				'				float craters = ridge3(q * 2.6 + 9.0, 3);',
-				'				land += (smoothstep(0.86, 0.96, craters) - 0.4) * 0.18;',
-				'			}',
-				'			albedo = ground(clamp(land, 0.0, 1.0));',
-				'			if (uOcean > 0.0 && land < 0.0) {',
-				'				albedo = mix(uWater * 1.25, uWater * 0.55, clamp(-land * 4.0, 0.0, 1.0));',
-				'				gloss = 0.7;',
-				'			}',
-				'		}',
-				'		if (uIce > 0.0) {',
-				'			float pole = abs(p.y) + (fbm3(q * 3.0, 3) - 0.5) * 0.3;',
-				'			float cap = uIce >= 1.0 ? 1.0 : smoothstep(1.0 - uIce, 1.0 - uIce + 0.04, pole);',
-				'			albedo = mix(albedo, vec3(0.93, 0.95, 0.98), cap * (uKind == 2 ? 0.35 : 1.0));',
-				'		}',
-				'	}',
-				'	outColor = vec4(albedo, gloss);',
+				'	vec4 surface = vec4(0.5, 0.5, 0.5, 0.04);',
+				'	vec4 sky = vec4(0.0, 0.0, 0.0, 1.0);',
+				'	blueprintBake(cubeDirection(uFace, vQuad), surface, sky);',
+				'	outColor = uLayer == 1 ? sky : surface;',
 				'}'
 			].join('\n'),
 
@@ -15256,7 +15477,7 @@ Elemenx.Component('Scene', {
 				graphics.Chunks.Cube,
 				weather,
 				'void main() {',
-				'	outColor = weatherAt(cubeDirection(uFace, vQuad));',
+				'	outColor = blueprintForecast(cubeDirection(uFace, vQuad));',
 				'}'
 			].join('\n'),
 
@@ -15293,81 +15514,23 @@ Elemenx.Component('Scene', {
 				'	}',
 				'	return clamp(day, 0.0, 1.0);',
 				'}',
+				/* Its ring, for the shadow it casts (the ring graph, its color and seed of its own: uRingColors, uRingSeed; uRingOn: it has one). */
+				'uniform float uRingOn;',
+				'uniform vec3 uRingAxis;',
+				'uniform vec2 uRingSpan;',
+				'uniform float uRingSeed;',
+				'uniform vec3 uRingColors[4];',
+				'void planetRing(float r, vec3 world, vec3 normal, inout vec3 color, inout float alpha) {}',
+				/* Its picture lit, its clouds, its lights at night, its air at its edge (PlanetGraph: blueprintPlanet). */
+				'void blueprintPlanet(vec3 n, vec3 v, vec3 p, inout vec3 color, inout float alpha) {}',
 				'void main() {',
 				'	vec3 n = normalize(vNormal);',
 				'	vec3 v = normalize(uCamera - vWorld);',
 				'	vec3 p = normalize(vLocal);',
-				'	vec4 surface = texture(uGround, p);',
-				'	float gloss = surface.a;',
-				/*
-				 * Its ranges lit from orbit (uRelief: how its ground leans, of its heights): the slopes made eight times steeper, as
-				 * the eye reads mountains by their light and shade from space (a texel of tens of kilometres sees them gentle).
-				 */
-				'	vec3 lit = n;',
-				'	if (uReliefOn > 0.5) {',
-				'		vec3 lean = (texture(uRelief, p).xyz - 0.5) / 2.5;',
-				'		lit = normalize(mat3(uModel) * normalize(p + lean * 8.0));',
-				'	}',
-				'	vec3 light = lighting(vWorld, lit, v, 12.0 + gloss * 70.0, gloss);',
-				'	vec3 color = surface.rgb * light;',
-				/* The clouds go with the wind, metres a second of real time round the body (uDrift: radians so far), never with its days made fast. */
-				'	float turn = uDrift;',
-				'	vec3 drifted = vec3(p.x * cos(turn) - p.z * sin(turn), p.y, p.x * sin(turn) + p.z * cos(turn));',
-				'	vec4 sky = texture(uSky, drifted);',
-				/*
-				 * The clouds of its weather (CLOUDS SEEN), when it has one: their puffs, each darker on its side away from the sun,
-				 * and their shadows on the ground, as far from them as their height and the sun tell (long at a low sun).
-				 */
-				'	if (uWeatherOn > 0.5) {',
-				'		float foot = max(length(fwidth(p)) * uRadiusKm, 0.05);',
-				'		vec3 sunL = normalize(transpose(mat3(uModel)) * (uLightPositions[0] - vWorld));',
-				'		float high = dot(sunL, p);',
-				'		vec3 toward = normalize(sunL - p * high + vec3(1e-6));',
-				'		vec4 w = texture(uWeather, p);',
-				'		float cloud = cloudSeen(p, w, foot);',
-				/*
-				 * Their side away from the sun and their shadows of the cover of the weather (their billows once only, above).
-				 * Regression: three of them in the program, each of five octaves, and the card took seconds more to make it.
-				 */
-				'		float ahead = texture(uWeather, normalize(p + toward * max(3.0, foot) / uRadiusKm)).r;',
-				'		float self = clamp((ahead - w.r) * 1.3, 0.0, 0.55) * smoothstep(-0.05, 0.2, high);',
-				'		float lift = mix(1.5, 6.0, w.g);',
-				'		vec3 under = normalize(p + toward * lift * sqrt(max(0.0, 1.0 - high * high)) / max(0.06, high) / uRadiusKm);',
-				'		float shadow = texture(uWeather, under).r * smoothstep(0.0, 0.12, high);',
-				'		vec3 white = mix(vec3(0.97), uAtmosphere.rgb, 0.12 * uAtmosphere.a) * lighting(vWorld, n, v, 1.0, 0.0) * (1.0 - self);',
-				'		if (uCloudsOnly > 0.5) {',
-				'			outColor = vec4(white, cloud);',
-				'			return;',
-				'		}',
-				'		vec4 heat = texture(uSky, p);',
-				'		if (uKind == 3) color += mix(uColors[2], uColors[3], heat.b) * heat.g * 1.6;',
-				'		color *= 1.0 - 0.7 * shadow;',
-				'		if (uLightsOn > 0.5) color += vec3(1.0, 0.72, 0.38) * texture(uLights, p).r * 1.6 * (1.0 - daylight(vWorld, n)) * (1.0 - cloud * 0.8);',
-				'		color = mix(color, white, cloud);',
-				'		float edge = pow(1.0 - max(dot(n, v), 0.0), 3.0);',
-				'		color += uAtmosphere.rgb * edge * uAtmosphere.a * daylight(vWorld, n);',
-				'		color += uHighlight.rgb * pow(1.0 - max(dot(n, v), 0.0), 6.0) * uHighlight.a;',
-				'		outColor = vec4(color, 1.0);',
-				'		return;',
-				'	}',
-				/* Its clouds alone, over its ground drawn of its planet (a globe near): their light, as much of them as there is. */
-				'	if (uCloudsOnly > 0.5) {',
-				'		vec3 lit = mix(vec3(0.96), uAtmosphere.rgb, uClouds >= 1.0 ? 0.55 * uAtmosphere.a : 0.0) * lighting(vWorld, n, v, 1.0, 0.0);',
-				'		outColor = vec4(lit, uClouds > 0.0 ? sky.r : 0.0);',
-				'		return;',
-				'	}',
-				'	vec4 heat = texture(uSky, p);',
-				'	if (uKind == 3) color += mix(uColors[2], uColors[3], heat.b) * heat.g * 1.6;',
-				'	if (uClouds > 0.0) {',
-				'		vec3 haze = mix(vec3(0.96), uAtmosphere.rgb, uClouds >= 1.0 ? 0.55 * uAtmosphere.a : 0.0);',
-				'		color = mix(color, haze * lighting(vWorld, n, v, 1.0, 0.0), sky.r);',
-				'	}',
-				/* Its settlements at night: their light where its sun is down. */
-				'	if (uLightsOn > 0.5) color += vec3(1.0, 0.72, 0.38) * texture(uLights, p).r * 1.6 * (1.0 - daylight(vWorld, n)) * (1.0 - (uClouds > 0.0 ? sky.r * 0.7 : 0.0));',
-				'	float rim = pow(1.0 - max(dot(n, v), 0.0), 3.0);',
-				'	color += uAtmosphere.rgb * rim * uAtmosphere.a * daylight(vWorld, n);',
-				'	color += uHighlight.rgb * pow(1.0 - max(dot(n, v), 0.0), 6.0) * uHighlight.a;',
-				'	outColor = vec4(color, 1.0);',
+				'	vec3 color = vec3(0.0);',
+				'	float alpha = 1.0;',
+				'	blueprintPlanet(n, v, p, color, alpha);',
+				'	outColor = vec4(color, alpha);',
 				'}'
 			].join('\n'),
 
@@ -15449,21 +15612,13 @@ Elemenx.Component('Scene', {
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				graphics.Chunks.Lights,
+				/* Its bands, its gaps, its colors and its light (RingGraph: blueprintRing). */
+				'void blueprintRing(float r, vec3 world, vec3 normal, inout vec3 color, inout float alpha) {}',
 				'void main() {',
-				'	float r = vUV.x;',
-				'	float wide = noise3(vec3(r * 22.0, uSeed, 0.5));',
-				'	float fine = noise3(vec3(r * 140.0, uSeed, 3.5));',
-				'	float gap = 1.0 - (1.0 - smoothstep(0.0, 0.015, abs(r - 0.62))) * 0.9;',
-				'	float alpha = (0.2 + 0.55 * wide + 0.25 * fine) * smoothstep(0.0, 0.05, r) * (1.0 - smoothstep(0.92, 1.0, r)) * gap;',
-				'	vec3 albedo = mix(mix(uColors[0], uColors[1], wide), mix(uColors[2], uColors[3], fine), fine * 0.6);',
-				'	vec3 n = normalize(vNormal);',
-				'	vec3 total = uAmbient;',
-				'	for (int i = 0; i < 4; i++) {',
-				'		if (i >= uLightCount) break;',
-				'		vec3 toLight = normalize(uLightPositions[i] - vWorld);',
-				'		total += uLightColors[i] * (0.35 + 0.65 * abs(dot(n, toLight))) * shadow(vWorld, uLightPositions[i]);',
-				'	}',
-				'	outColor = vec4(albedo * total, alpha);',
+				'	vec3 color = vec3(0.0);',
+				'	float alpha = 0.0;',
+				'	blueprintRing(vUV.x, vWorld, normalize(vNormal), color, alpha);',
+				'	outColor = vec4(color, alpha);',
 				'}'
 			].join('\n'),
 
@@ -15493,20 +15648,8 @@ Elemenx.Component('Scene', {
 				graphics.Chunks.Noise,
 				graphics.Chunks.Lights,
 				graphics.Chunks.Shadow,
-				/*
-				 * A body beamed away or coming (Teleport): it breaks up into sparkling grains in streaks up and down, from the
-				 * top, glowing in the color of the beam where it goes; uDissolve [how far, foot, height, phase].
-				 */
-				'float dissolved(vec3 world, inout vec3 color) {',
-				'	if (uDissolve.x <= 0.0) return 0.0;',
-				'	float h = clamp((world.y - uDissolve.y) / max(uDissolve.z, 0.01), 0.0, 1.0);',
-				'	float grain = noise3((world + uEyeAt) * vec3(30.0, 6.0, 30.0) + vec3(0.0, uDissolve.w, 0.0)) * 0.5 + 0.5;',
-				'	float d = grain * 0.8 + (1.0 - h) * 0.2;',
-				'	float gone = uDissolve.x * 1.3 - 0.15;',
-				'	if (d < gone) discard;',
-				'	color = mix(color, uDissolveColor, min(1.0, uDissolve.x * 1.6));',
-				'	return max(1.0 - smoothstep(0.0, 0.1, d - gone), uDissolve.x * 0.6) * (0.6 + 0.4 * sin(uDissolve.w * 9.0 + grain * 20.0));',
-				'}',
+				/* What the weather and the year do to its surface, a beam that takes it away (WeatherGraph: weather_season, weather_snow_..., weather_dissolve, weather_puddles). */
+				'void blueprintWeather() {}',
 				'void main() {',
 				'	vec3 n = normalize(vNormal);',
 				'	vec3 v = normalize(uCamera - vWorld);',
@@ -15515,26 +15658,12 @@ Elemenx.Component('Scene', {
 				 * The leaves of a plant are what is green of it: in autumn they turn, each tree to a color of its own; they thin
 				 * out to bare branches as the year goes cold, and come back in spring with the flowers of some trees.
 				 */
-				'	if (uSeasonOn > 0.5) {',
-				'		float leaf = smoothstep(0.01, 0.05, color.g - max(color.r, color.b) * 0.9);',
-				'		vec3 cell = floor((vWorld + uEyeAt) * 0.22);',
-				'		float tree = fract(sin(dot(cell.xz, vec2(12.9898, 78.233))) * 43758.5453);',
-				'		if (uSeasonOn < 1.5 && leaf > 0.0) {',
-				'			vec3 fall = tree < 0.3 ? vec3(0.62, 0.42, 0.04) : tree < 0.55 ? vec3(0.55, 0.16, 0.02) : tree < 0.8 ? vec3(0.42, 0.05, 0.02) : vec3(0.25, 0.14, 0.05);',
-				'			color = mix(color, fall * (0.7 + 0.6 * dot(color, vec3(0.33))), uSeason.y * leaf);',
-				'			if (uSeason.x > 0.0 && noise3(vLocal * 9.0 + tree * 7.0) * 0.5 + 0.5 < uSeason.x * leaf * 1.08) discard;',
-				'			if (uSeason.z > 0.0 && tree < 0.45 && noise3(vLocal * 26.0) > 0.35) color = mix(color, tree < 0.2 ? vec3(0.95, 0.62, 0.72) : vec3(0.95, 0.94, 0.9), uSeason.z * leaf);',
-				'		}',
-				'		color = mix(color, color * vec3(1.15, 1.0, 0.55), uSeason.w * leaf * 0.5);',
-				'	}',
+				'	if (uSeasonOn > 0.5) weather_season(color, enx_white2(floor((vWorld + uEyeAt) * 0.22).xz), vLocal, uSeasonOn < 1.5);',
 				'	color *= 1.0 - uRough * 0.45 + uRough * 0.45 * fbm3(vLocal * 3.0, 3);',
 				/* Snow lies on what looks up, thicker where the noise piles it. */
-				'	if (uSnowed > 0.0) {',
 				/* A plant holds snow on its slopes too: on the cones of a fir, the tops of its blobs. */
-				'		float laid = uSnowed * smoothstep(uSeasonOn > 0.5 ? 0.15 : 0.35, uSeasonOn > 0.5 ? 0.5 : 0.8, normalize(vNormal).y + (noise3((vWorld + uEyeAt) * 0.6) * 0.5 - 0.25) * 0.4);',
-				'		color = mix(color, vec3(0.86, 0.9, 0.95), laid);',
-				'	}',
-				'	float beamed = dissolved(vWorld, color);',
+				'	if (uSnowed > 0.0) color = mix(color, vec3(0.86, 0.9, 0.95), uSnowed * (uSeasonOn > 0.5 ? weather_snow_plants(normalize(vNormal).y, vWorld + uEyeAt) : weather_snow_solid(normalize(vNormal).y, vWorld + uEyeAt)));',
+				'	float beamed = weather_dissolve(vWorld, color);',
 				'	vec3 hot = max(vColor - vec3(1.0), 0.0) + uDissolveColor * beamed * 3.0;',
 				'	lightShade = sunLit(vWorld, n);',
 				'	vec3 sky = mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5);',
@@ -15624,6 +15753,9 @@ Elemenx.Component('Scene', {
 				'uniform float uDither;',
 				'out vec4 outColor;',
 				graphics.Chunks.Shadow,
+				/* The air of the scene (AirGraph): its functions this shader asks for. */
+				'#define ENX_AIR_GLOBE',
+				'void blueprintAir() {}',
 				'void main() {',
 				'	if (uBand.w > 0.0) {',
 				'		float far = length(vWorld);',
@@ -15638,8 +15770,7 @@ Elemenx.Component('Scene', {
 				'	vec3 around = vec3(0.05, 0.06, 0.08) + uAir.rgb * uAir.a * 0.3 * smoothstep(-0.25, 0.3, rise) + vec3(0.5, 0.25, 0.15) * dusk * uAir.a * 0.35;',
 				'	float day = max(dot(n, uSun), 0.0) * sunShadow(vWorld, n);',
 				'	vec3 color = vColor * (uSunColor * day + around);',
-				'	float haze = (1.0 - exp(-length(vWorld) / uFog)) * uAir.a * (1.0 - uHigh * 0.7);',
-				'	color = mix(color, mix(uAir.rgb, vec3(0.9), 0.35) * light, clamp(haze, 0.0, 1.0));',
+				'	color = mix(color, air_horizon_globe(light), clamp(air_haze_globe(vWorld), 0.0, 1.0));',
 				'	if (uLevel.a > 0.0) color = mix(color, uLevel.rgb * (0.3 + 0.9 * dot(color, vec3(0.333))), uLevel.a);',
 				'	outColor = vec4(color, 1.0);',
 				'}'
@@ -15730,7 +15861,12 @@ Elemenx.Component('Scene', {
 				'uniform vec3 uCloudTint;',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
+				/* The noises of the ground itself, only drawn: of a sine (n_hash at each of some forty of them, 7 s for the card to make it). */
+				this.$Service('Noise').GLSLChunk(['enx_fvalue3']),
 				graphics.Chunks.Shadow,
+				/* The air of the scene (AirGraph): its functions this shader asks for. */
+				'#define ENX_AIR_GLOBE',
+				'void blueprintAir() {}',
 				cloudsSeen,
 				waves,
 				'precision highp sampler2DArray;',
@@ -15881,14 +16017,14 @@ Elemenx.Component('Scene', {
 				'		pictureY = dFdy(tc);',
 				/* Texels a pixel: a texel over two pixels wide is a square of a smear unless something finer is told in it. */
 				'		float texel = max(length(pictureX), length(pictureY)) * uTexels;',
-				'		aside = vec2(noise3(vec3(grid * 1.7, 3.1)) + noise3(vec3(grid * 4.3, 5.7)) * 0.5, noise3(vec3(grid * 1.7, 9.7)) + noise3(vec3(grid * 4.3, 1.3)) * 0.5) - 0.75;',
+				'		aside = vec2(enx_fvalue3(vec3(grid * 1.7, 3.1)) + enx_fvalue3(vec3(grid * 4.3, 5.7)) * 0.5, enx_fvalue3(vec3(grid * 1.7, 9.7)) + enx_fvalue3(vec3(grid * 4.3, 1.3)) * 0.5) - 0.75;',
 				/*
 				 * Far ground, its texels wide on the screen (a square of kilometres, its 32 texels a side, some tens of pixels
 				 * each): its edges ragged finer still, as long as those are over three pixels, and each texel its own color up to
 				 * a narrow seam (the texels read as patches of land, fields, woods and stone, sharp), not one color drawn into the
 				 * next over all its width. Regression: from a few kilometres up the ground was smears and stretched blotches.
 				 */
-				'		aside += vec2(noise3(vec3(grid * 11.0, 2.3)) - 0.5, noise3(vec3(grid * 11.0, 8.9)) - 0.5) * 0.36 * (1.0 - smoothstep(0.02, 0.04, texel));',
+				'		aside += vec2(enx_fvalue3(vec3(grid * 11.0, 2.3)) - 0.5, enx_fvalue3(vec3(grid * 11.0, 8.9)) - 0.5) * 0.36 * (1.0 - smoothstep(0.02, 0.04, texel));',
 				'		vec2 g = grid + aside * 1.1 - 0.5;',
 				'		pictureSoft = (g + 0.5) / uTexels;',
 				'		vec2 inside = fract(g);',
@@ -15918,7 +16054,7 @@ Elemenx.Component('Scene', {
 				 * a kilometre is of the point from the anchor (uAnchor, km), exact.
 				 */
 				'	vec3 near = vWorld + uAnchor;',
-				'	float mottle = (noise3(place * 0.35) - 0.5) * 0.2 * (1.0 - smoothstep(1.2, 4.0, foot)) + (noise3(place * 1.9 + 7.0) - 0.5) * 0.14 * (1.0 - smoothstep(0.25, 0.8, foot)) + (noise3(near * 9.0 + 3.0) - 0.5) * 0.1 * (1.0 - smoothstep(0.05, 0.15, foot));',
+				'	float mottle = (enx_fvalue3(place * 0.35) - 0.5) * 0.2 * (1.0 - smoothstep(1.2, 4.0, foot)) + (enx_fvalue3(place * 1.9 + 7.0) - 0.5) * 0.14 * (1.0 - smoothstep(0.25, 0.8, foot)) + (enx_fvalue3(near * 9.0 + 3.0) - 0.5) * 0.1 * (1.0 - smoothstep(0.05, 0.15, foot));',
 				'	albedo *= 1.0 + mottle * (1.0 - water);',
 				/*
 				 * Near, finer than the ground of the body tells (a planet knows nothing under a kilometre): what grows there in
@@ -15933,7 +16069,7 @@ Elemenx.Component('Scene', {
 				'	float cover = uTiled * uWoods > 0.5 ? textureGrad(uReliefMap, pictureAt, pictureX, pictureY).a : 0.0;',
 				/* Each octave turned against the last, so no grid of the noise shows in the edges of the woods. */
 				'	mat3 askew = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
-				'	float stands = noise3(askew * place * 14.0 + 21.0) * 0.5 + noise3(place * 2.6 + 9.0) * 0.32 + noise3(askew * (askew * near) * 61.0 + 4.0) * 0.18 * (1.0 - smoothstep(0.004, 0.012, foot));',
+				'	float stands = enx_fvalue3(askew * place * 14.0 + 21.0) * 0.5 + enx_fvalue3(place * 2.6 + 9.0) * 0.32 + enx_fvalue3(askew * (askew * near) * 61.0 + 4.0) * 0.18 * (1.0 - smoothstep(0.004, 0.012, foot));',
 				/* Its edges a pixel and a half wide at least: no specks along them near. */
 				'	float spread = clamp(max(foot * 6.0, fwidth(stands) * 1.5), 0.02, 0.5);',
 				'	float wooded = mix(smoothstep(0.5 + (0.5 - cover) * 0.5 - spread, 0.5 + (0.5 - cover) * 0.5 + spread, stands), cover, smoothstep(0.05, 0.2, foot)) * step(0.01, cover) * (1.0 - water);',
@@ -15953,7 +16089,7 @@ Elemenx.Component('Scene', {
 				 * Each octave turned against the grid of the noise. Regression: of the grid as it is, its cells of 29 m sharpened
 				 * into squares, a chessboard of light and dark green over the near land.
 				 */
-				'	float crowns = noise3(askew * near * 34.0 + 11.0);',
+				'	float crowns = enx_fvalue3(askew * near * 34.0 + 11.0);',
 				'	albedo *= mix(1.0, 0.7 + 0.55 * smoothstep(0.3, 0.75, crowns), green * near2);',
 				/*
 				 * Its dunes (the sand of its deserts, Use.a): ridges of a kilometre or so bent by a noise of a few, a gentle side to
@@ -15971,7 +16107,7 @@ Elemenx.Component('Scene', {
 				'	float dunes = 0.0;',
 				'	if (sand > 0.003) {',
 				'		float seenDunes = 1.0 - smoothstep(0.12, 0.45, foot);',
-				'		float bend = noise3(place * 0.28 + 4.0) * 3.2;',
+				'		float bend = enx_fvalue3(place * 0.28 + 4.0) * 3.2;',
 				'		float duneWave = fract((place.x * 0.6 + place.z * 0.8) / 1.3 + bend);',
 				'		float ridge = duneWave < 0.72 ? duneWave / 0.72 : (1.0 - duneWave) / 0.28;',
 				'		float athwart = fract((place.x * -0.8 + place.z * 0.6 + place.y * 0.3) / 2.1 + bend * 0.7);',
@@ -15987,7 +16123,7 @@ Elemenx.Component('Scene', {
 				 * No rise of its woods over the ground (the crowns near tell them by their colors). Regression: their crowns 6 m
 				 * over the ground at an edge a pixel and a half wide laid the normal on its side, black specks along every wood.
 				 */
-				'	float bumps = ((noise3(near * 11.0 + 5.0) - 0.5) * 0.015 * near1 + (noise3(near * 52.0 + 2.0) - 0.5) * 0.003 * near2 + (crowns - 0.5) * 0.006 * green * near2 + standing + dunes * 0.07) * (1.0 - water);',
+				'	float bumps = ((enx_fvalue3(near * 11.0 + 5.0) - 0.5) * 0.015 * near1 + (enx_fvalue3(near * 52.0 + 2.0) - 0.5) * 0.003 * near2 + (crowns - 0.5) * 0.006 * green * near2 + standing + dunes * 0.07) * (1.0 - water);',
 				/*
 				 * Its slopes cut finer than its points (a planet knows nothing under a few hundred metres): ridges and gullies of
 				 * 300 m and of 115 m, as steep as the slope is, each as long as it is over three pixels wide. Regression: from a few
@@ -15995,8 +16131,8 @@ Elemenx.Component('Scene', {
 				 */
 				'	float rugged = smoothstep(0.06, 0.35, 1.0 - dot(n, up)) * (1.0 - water);',
 				/* Round at their tops: a crease of the noise was a line across the light, terraces drawn over a slope near. */
-				'	float ridge1 = noise3(askew * near * 3.3 + 1.0) * 2.0 - 1.0;',
-				'	float ridge2 = noise3(askew * (askew * near) * 8.7 + 6.0) * 2.0 - 1.0;',
+				'	float ridge1 = enx_fvalue3(askew * near * 3.3 + 1.0) * 2.0 - 1.0;',
+				'	float ridge2 = enx_fvalue3(askew * (askew * near) * 8.7 + 6.0) * 2.0 - 1.0;',
 				'	ridge1 = 1.0 - ridge1 * ridge1;',
 				'	ridge2 = 1.0 - ridge2 * ridge2;',
 				'	bumps += rugged * (ridge1 * ridge1 * 0.035 * (1.0 - smoothstep(0.05, 0.1, foot)) + ridge2 * ridge2 * 0.012 * (1.0 - smoothstep(0.02, 0.04, foot)));',
@@ -16073,14 +16209,12 @@ Elemenx.Component('Scene', {
 				/* The shadows of the clouds of its weather (CLOUDS SEEN), as far from them as their height and the sun tell. */
 				'	vec3 toward = normalize(uSun - up * rise + vec3(1e-6));',
 				'	if (uWeatherOn > 0.5) {',
-				'		vec4 above = texture(uWeather, up);',
-				'		vec3 under = normalize(up + toward * mix(1.5, 6.0, above.g) * sqrt(max(0.0, 1.0 - rise * rise)) / max(0.06, rise) / uRadiusKm);',
 				/* Of their thick part only: their thin edges and tops leave little shadow (it was more shadow than cloud). */
 				/*
-				 * Of the cover of the weather there (its billows not: a shadow is soft). Regression: three cloudAt in the program,
-				 * each its billows of five octaves, made the card take 7 s more to make it.
+				 * Of the cover of the weather there (cloudUnder of the clouds graph, its billows not: a shadow is soft). Regression:
+				 * three cloudAt in the program, each its billows of five octaves, made the card take 7 s more to make it.
 				 */
-				'		day *= 1.0 - 0.5 * smoothstep(0.3, 1.0, texture(uWeather, under).r) * smoothstep(0.0, 0.12, rise);',
+				'		day *= 1.0 - 0.5 * smoothstep(0.3, 1.0, cloudUnder(up, texture(uWeather, up).g, toward, rise)) * smoothstep(0.0, 0.12, rise);',
 				'	}',
 				'	vec3 color = albedo * (uSunColor * day + around);',
 				/* Water mirrors the sky, more at a glance; waves break the sun into a path of glints that reddens as it sets. */
@@ -16093,7 +16227,7 @@ Elemenx.Component('Scene', {
 				'		vec3 w = up;',
 				'		if (seen > 0.0) {',
 				'			vec3 q = place * 9.0 + vec3(0.0, uTime * 0.05, 0.0);',
-				'			vec3 g = vec3(noise3(q + vec3(0.2, 0.0, 0.0)) - noise3(q - vec3(0.2, 0.0, 0.0)), noise3(q + vec3(0.0, 0.2, 0.0)) - noise3(q - vec3(0.0, 0.2, 0.0)), noise3(q + vec3(0.0, 0.0, 0.2)) - noise3(q - vec3(0.0, 0.0, 0.2))) * 2.5;',
+				'			vec3 g = vec3(enx_fvalue3(q + vec3(0.2, 0.0, 0.0)) - enx_fvalue3(q - vec3(0.2, 0.0, 0.0)), enx_fvalue3(q + vec3(0.0, 0.2, 0.0)) - enx_fvalue3(q - vec3(0.0, 0.2, 0.0)), enx_fvalue3(q + vec3(0.0, 0.0, 0.2)) - enx_fvalue3(q - vec3(0.0, 0.0, 0.2))) * 2.5;',
 				'			w = normalize(up - (g - up * dot(g, up)) * 0.22 * seen);',
 				'		}',
 				'		float fresnel = 0.02 + 0.98 * pow(1.0 - max(dot(w, v), 0.0), 5.0);',
@@ -16113,9 +16247,8 @@ Elemenx.Component('Scene', {
 				/* Of its weather: the cover, each puff darker on its side away from the sun. */
 				'	if (uCloudsOn > 0.0 && uWeatherOn > 0.5) {',
 				'		float cover = cloudAt(up, foot);',
-				/* Their side away from the sun: of the cover of the weather here and toward the sun (one cloudAt only, as above). */
-				'		float ahead = texture(uWeather, normalize(up + toward * max(3.0, foot) / uRadiusKm)).r;',
-				'		float self = clamp((ahead - texture(uWeather, up).r) * 1.3, 0.0, 0.55) * smoothstep(-0.05, 0.2, rise);',
+				/* Their side away from the sun: of the cover of the weather here and toward the sun (cloudSide; one cloudAt only, as above). */
+				'		float self = cloudSide(up, texture(uWeather, up).r, toward, rise, foot);',
 				'		vec3 cloud = uCloudTint * (uSunColor * clamp(rise * 1.4 + 0.1, 0.0, 1.0) * (1.0 - self) + around);',
 				'		color = mix(color, cloud, cover * min(uCloudsOn, 1.0));',
 				'	}',
@@ -16128,14 +16261,13 @@ Elemenx.Component('Scene', {
 				'		mat3 turned = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
 				'		vec3 a1 = turned * at * 0.035;',
 				'		vec3 a2 = turned * a1 * 3.1 + 7.0;',
-				'		float heaps = noise3(a1) * 0.55 + noise3(a2) * 0.3 + noise3(turned * a2 * 2.7 + 3.0) * 0.15;',
+				'		float heaps = enx_fvalue3(a1) * 0.55 + enx_fvalue3(a2) * 0.3 + enx_fvalue3(turned * a2 * 2.7 + 3.0) * 0.15;',
 				'		heaps = smoothstep(0.25, 0.75, heaps);',
 				'		cover = clamp(cover * mix(1.0, 0.3 + 1.4 * heaps, 1.0 - smoothstep(4.0, 12.0, foot)), 0.0, 1.0);',
 				'		vec3 cloud = uCloudTint * (uSunColor * clamp(rise * 1.4 + 0.1, 0.0, 1.0) + around);',
 				'		color = mix(color, cloud, clamp(cover, 0.0, 1.0));',
 				'	}',
-				'	float haze = (1.0 - exp(-length(vWorld) / uFog)) * uAir.a * (1.0 - uHigh * 0.7);',
-				'	color = mix(color, mix(uAir.rgb, vec3(0.9), 0.35) * light, clamp(haze, 0.0, 1.0));',
+				'	color = mix(color, air_horizon_globe(light), clamp(air_haze_globe(vWorld), 0.0, 1.0));',
 				'	outColor = vec4(color, 1.0);',
 				'}'
 			].join('\n'),
@@ -16241,6 +16373,9 @@ Elemenx.Component('Scene', {
 				'void landMaterials(vec3 place, float px, inout vec3 color, inout float height) {}',
 				/* What a material graph of Blueprints does to the ground: nothing here; a ground with a Blueprint puts its own in this place. */
 				'void blueprintSurface(vec3 position, vec3 normal, vec2 uv, inout vec3 color, inout float alpha, inout float rough, inout float metal, inout vec3 emission, inout vec3 bent) {}',
+				/* The air of the scene (AirGraph): its functions this shader asks for. */
+				'#define ENX_AIR_GROUND',
+				'void blueprintAir() {}',
 				'void blueprintLand(inout vec3 color, inout float alpha) {}',
 				'void main() {',
 				'	vec3 color = vec3(0.0);',
@@ -16306,6 +16441,9 @@ Elemenx.Component('Scene', {
 				'	vec4 at = uSeenInverse * vec4(screen * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);',
 				'	return length(at.xyz / at.w) - far;',
 				'}',
+				/* The air of the scene (AirGraph): its functions this shader asks for. */
+				'#define ENX_AIR_GROUND',
+				'void blueprintAir() {}',
 				/* The water: the graph of water of the scene (WaterGraph, else the one of the library) in this place. */
 				'void blueprintWater(inout vec3 color, inout float alpha) {}',
 				'void main() {',

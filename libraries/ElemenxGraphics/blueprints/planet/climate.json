@@ -1,0 +1,444 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "climate",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "planet-climate-formula-0",
+			"type": "Formula",
+			"x": 260,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * 2 + 3 + SWeather, PY * 2 + SWeather, PZ * 2 + SWeather)"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PX"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SWeather"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PY"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-input-4",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PZ"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-weather-warm",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 3
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "WarpScale",
+					"value": 1
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-climate-formula-5",
+			"type": "Formula",
+			"x": 260,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * 6 - 5 + SWeather, PY * 6 + SWeather, PZ * 6 + SWeather)"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-weather-wet",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 3
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "WarpScale",
+					"value": 1
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-climate-formula-6",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.52 + 0.3 * cos(Band / 28 * 3.141592653589793) * (Band < 70 ? 1 : 0.5) - (Band > 70 ? 0.2 : 0)"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-input-7",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Band"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-formula-8",
+			"type": "Formula",
+			"x": 1040,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "29 - 52 * pow(abs(sin(Latitude)), 1.25) - max(0, Height) * 0.0065 + (N - 0.5) * 6 + PaintTemperature"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-input-9",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Latitude"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-input-10",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-input-11",
+			"type": "Input",
+			"x": 0,
+			"y": 880,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PaintTemperature"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-result-12",
+			"type": "Result",
+			"x": 1560,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Celsius"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-formula-13",
+			"type": "Formula",
+			"x": 1040,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(0, min(1, B + (Upwind + (N - 0.5) * 0.25) + PaintMoisture))"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-input-14",
+			"type": "Input",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Upwind"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-input-15",
+			"type": "Input",
+			"x": 0,
+			"y": 1100,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PaintMoisture"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-result-16",
+			"type": "Result",
+			"x": 1560,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Moisture"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "planet-climate-link-0",
+			"p1": "planet-climate-input-1-out-Value",
+			"p2": "planet-climate-formula-0-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-1",
+			"p1": "planet-climate-input-2-out-Value",
+			"p2": "planet-climate-formula-0-in-SWeather",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-2",
+			"p1": "planet-climate-input-3-out-Value",
+			"p2": "planet-climate-formula-0-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-3",
+			"p1": "planet-climate-input-4-out-Value",
+			"p2": "planet-climate-formula-0-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-4",
+			"p1": "planet-climate-formula-0-out-Value",
+			"p2": "planet-climate-weather-warm-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-5",
+			"p1": "planet-climate-input-1-out-Value",
+			"p2": "planet-climate-formula-5-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-6",
+			"p1": "planet-climate-input-2-out-Value",
+			"p2": "planet-climate-formula-5-in-SWeather",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-7",
+			"p1": "planet-climate-input-3-out-Value",
+			"p2": "planet-climate-formula-5-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-8",
+			"p1": "planet-climate-input-4-out-Value",
+			"p2": "planet-climate-formula-5-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-9",
+			"p1": "planet-climate-formula-5-out-Value",
+			"p2": "planet-climate-weather-wet-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-10",
+			"p1": "planet-climate-input-7-out-Value",
+			"p2": "planet-climate-formula-6-in-Band",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-11",
+			"p1": "planet-climate-input-9-out-Value",
+			"p2": "planet-climate-formula-8-in-Latitude",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-12",
+			"p1": "planet-climate-input-10-out-Value",
+			"p2": "planet-climate-formula-8-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-13",
+			"p1": "planet-climate-weather-warm-out-Value",
+			"p2": "planet-climate-formula-8-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-14",
+			"p1": "planet-climate-input-11-out-Value",
+			"p2": "planet-climate-formula-8-in-PaintTemperature",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-15",
+			"p1": "planet-climate-formula-8-out-Value",
+			"p2": "planet-climate-result-12-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-16",
+			"p1": "planet-climate-formula-6-out-Value",
+			"p2": "planet-climate-formula-13-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-17",
+			"p1": "planet-climate-input-14-out-Value",
+			"p2": "planet-climate-formula-13-in-Upwind",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-18",
+			"p1": "planet-climate-weather-wet-out-Value",
+			"p2": "planet-climate-formula-13-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-19",
+			"p1": "planet-climate-input-15-out-Value",
+			"p2": "planet-climate-formula-13-in-PaintMoisture",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-20",
+			"p1": "planet-climate-formula-13-out-Value",
+			"p2": "planet-climate-result-16-in-Value",
+			"kind": "value"
+		}
+	]
+}

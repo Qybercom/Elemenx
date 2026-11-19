@@ -187,6 +187,24 @@ describe('Contract: GLSL of the IR (ir-glsl), functions of numbers for a shader'
 		})).toContain('Elemenx glsl: down calls itself, and a shader has no stack (its js runs it)');
 	});
 
+	/*
+	 * Options.Once: each function (and its prototype) once in a shader however many texts of it come (#ifndef ENX_<name>),
+	 * the runtime too (RT_RUNTIME): the formulas of a graph of a shader, each a text of its own, put in the same shader.
+	 */
+	it('writes each function once in a shader with Once, however many texts of it are put in it', async function () {
+		var once = (await compile({From: 'kernel', To: 'glsl', Value: KERNEL, Options: {Once: true}})).Value;
+		var gpu;
+
+		expect(Elemenx.Compilers.Language('glsl').Directives).toBe(true);
+		expect(once).toContain('#ifndef ENX_f_value\n#define ENX_f_value\n');
+		expect(once).toContain('#ifndef RT_RUNTIME');
+		expect(made).not.toContain('#ifndef ENX_f_value');
+
+		gpu = run(shader(once + '\n' + once, 'floatBitsToUint(f_value(uIn.x, uIn.y, uIn.z))'), [[1.5, 2.25, -3.5]], 'float');
+
+		expect(Math.abs(gpu[0] - js.value(1.5, 2.25, -3.5))).toBeLessThan(1e-5);
+	});
+
 	/* A graph of numbers of Blueprints (Numeric): the relief of a ground, its noise of the Kernel, in a shader. */
 	it('makes a graph of numbers of Blueprints a function of a shader: the relief of a ground as near as floats hold it', async function () {
 		var blueprints;

@@ -1,0 +1,248 @@
+{
+	"version": 1,
+	"type": "model",
+	"name": "palm",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "formula-0",
+			"type": "Formula",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Variant * 1000000 + 0"
+				}
+			]
+		},
+		{
+			"id": "random-1",
+			"type": "Random",
+			"x": 0,
+			"y": 90,
+			"properties": []
+		},
+		{
+			"id": "input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Variant"
+				}
+			]
+		},
+		{
+			"id": "input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "formula-4",
+			"type": "Formula",
+			"x": 0,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(0.05 + 0.09 * r0)"
+				}
+			]
+		},
+		{
+			"id": "repeat-5",
+			"type": "Repeat",
+			"x": 0,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/models/palm-trunk"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula-6",
+			"type": "Formula",
+			"x": 0,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "7"
+				}
+			]
+		},
+		{
+			"id": "repeat-7",
+			"type": "Repeat",
+			"x": 0,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/models/palm-fronds"
+				},
+				{
+					"key": "Take",
+					"value": "Parts"
+				}
+			]
+		},
+		{
+			"id": "formula-8",
+			"type": "Formula",
+			"x": 0,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "7"
+				}
+			]
+		},
+		{
+			"id": "join-9",
+			"type": "Join",
+			"x": 0,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "piece-10",
+			"type": "Piece",
+			"x": 0,
+			"y": 900,
+			"properties": [
+				{
+					"key": "ID",
+					"value": "body"
+				}
+			]
+		},
+		{
+			"id": "model-11",
+			"type": "Model",
+			"x": 0,
+			"y": 990,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "link-0",
+			"p1": "input-2-out-Value",
+			"p2": "formula-0-in-Variant",
+			"kind": "value"
+		},
+		{
+			"id": "link-1",
+			"p1": "input-3-out-Value",
+			"p2": "random-1-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "link-2",
+			"p1": "formula-0-out-Value",
+			"p2": "random-1-in-Key",
+			"kind": "value"
+		},
+		{
+			"id": "link-3",
+			"p1": "random-1-out-Value",
+			"p2": "formula-4-in-r0",
+			"kind": "value"
+		},
+		{
+			"id": "link-4",
+			"p1": "formula-6-out-Value",
+			"p2": "repeat-5-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "link-5",
+			"p1": "input-3-out-Value",
+			"p2": "repeat-5-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "link-6",
+			"p1": "input-2-out-Value",
+			"p2": "repeat-5-in-Variant",
+			"kind": "value"
+		},
+		{
+			"id": "link-7",
+			"p1": "formula-4-out-Value",
+			"p2": "repeat-5-in-lean",
+			"kind": "value"
+		},
+		{
+			"id": "link-8",
+			"p1": "formula-8-out-Value",
+			"p2": "repeat-7-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "link-9",
+			"p1": "input-3-out-Value",
+			"p2": "repeat-7-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "link-10",
+			"p1": "input-2-out-Value",
+			"p2": "repeat-7-in-Variant",
+			"kind": "value"
+		},
+		{
+			"id": "link-11",
+			"p1": "formula-4-out-Value",
+			"p2": "repeat-7-in-lean",
+			"kind": "value"
+		},
+		{
+			"id": "link-12",
+			"p1": "repeat-5-out-List",
+			"p2": "join-9-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "link-13",
+			"p1": "repeat-7-out-List",
+			"p2": "join-9-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "link-14",
+			"p1": "join-9-out-Parts",
+			"p2": "piece-10-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "link-15",
+			"p1": "piece-10-out-Parts",
+			"p2": "model-11-in-Parts",
+			"kind": "value"
+		}
+	]
+}

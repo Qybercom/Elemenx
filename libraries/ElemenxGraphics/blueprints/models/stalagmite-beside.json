@@ -1,0 +1,228 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "stalagmite-beside",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "lathe-0",
+			"type": "Lathe",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Segments",
+					"value": 8
+				}
+			]
+		},
+		{
+			"id": "formula-1",
+			"type": "Formula",
+			"x": 0,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[[0.12, -0.03], [0.08, 0.1], [0.03, 0.3], [0, 0.38]]"
+				}
+			]
+		},
+		{
+			"id": "formula-2",
+			"type": "Formula",
+			"x": 0,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Variant * 1000000 + 10000 + Index"
+				}
+			]
+		},
+		{
+			"id": "random-3",
+			"type": "Random",
+			"x": 0,
+			"y": 270,
+			"properties": []
+		},
+		{
+			"id": "input-4",
+			"type": "Input",
+			"x": 0,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Variant"
+				}
+			]
+		},
+		{
+			"id": "input-5",
+			"type": "Input",
+			"x": 0,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Index"
+				}
+			]
+		},
+		{
+			"id": "input-6",
+			"type": "Input",
+			"x": 0,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "formula-7",
+			"type": "Formula",
+			"x": 0,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Variant * 1000000 + 10100 + Index"
+				}
+			]
+		},
+		{
+			"id": "random-8",
+			"type": "Random",
+			"x": 0,
+			"y": 720,
+			"properties": []
+		},
+		{
+			"id": "formula-9",
+			"type": "Formula",
+			"x": 0,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3((-0.3 + 0.6 * r0), 0, (-0.3 + 0.6 * r1))"
+				}
+			]
+		},
+		{
+			"id": "formula-10",
+			"type": "Formula",
+			"x": 0,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.6, 0.55, 0.47]"
+				}
+			]
+		},
+		{
+			"id": "result-11",
+			"type": "Result",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Parts"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "link-0",
+			"p1": "formula-1-out-Value",
+			"p2": "lathe-0-in-Points",
+			"kind": "value"
+		},
+		{
+			"id": "link-1",
+			"p1": "input-4-out-Value",
+			"p2": "formula-2-in-Variant",
+			"kind": "value"
+		},
+		{
+			"id": "link-2",
+			"p1": "input-5-out-Value",
+			"p2": "formula-2-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "link-3",
+			"p1": "input-6-out-Value",
+			"p2": "random-3-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "link-4",
+			"p1": "formula-2-out-Value",
+			"p2": "random-3-in-Key",
+			"kind": "value"
+		},
+		{
+			"id": "link-5",
+			"p1": "input-4-out-Value",
+			"p2": "formula-7-in-Variant",
+			"kind": "value"
+		},
+		{
+			"id": "link-6",
+			"p1": "input-5-out-Value",
+			"p2": "formula-7-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "link-7",
+			"p1": "input-6-out-Value",
+			"p2": "random-8-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "link-8",
+			"p1": "formula-7-out-Value",
+			"p2": "random-8-in-Key",
+			"kind": "value"
+		},
+		{
+			"id": "link-9",
+			"p1": "random-3-out-Value",
+			"p2": "formula-9-in-r0",
+			"kind": "value"
+		},
+		{
+			"id": "link-10",
+			"p1": "random-8-out-Value",
+			"p2": "formula-9-in-r1",
+			"kind": "value"
+		},
+		{
+			"id": "link-11",
+			"p1": "formula-9-out-Value",
+			"p2": "lathe-0-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-12",
+			"p1": "formula-10-out-Value",
+			"p2": "lathe-0-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-13",
+			"p1": "lathe-0-out-Parts",
+			"p2": "result-11-in-Value",
+			"kind": "value"
+		}
+	]
+}

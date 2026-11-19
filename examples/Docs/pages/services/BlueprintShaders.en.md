@@ -18,3 +18,5 @@ A pass and a material are baked (Blueprints.Bake) as JSON and read back with no 
 ## Tests
 
 - [runs the code of a GLSL block on its pins, makes the pins its properties name, and tells its errors on it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L252) — `tests/regression/blueprints.test.js`
+- [makes a generator of numbers a function of GLSL once (NumericGLSL, FormulaGLSL), a part of the shaders of Renderer](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L192) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
+- [makes the weather of a planet a graph of numbers: its shader and the page give the same cover, kind, cirrus and rain](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L335) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`

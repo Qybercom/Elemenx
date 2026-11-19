@@ -778,6 +778,165 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 	 * How mountainous it is (Mountains, 0 to 1): the more, the more of its land high in ranges; as the Earth (0.5) its peaks
 	 * reach over 6.5 km. Regression: crests under 5 km, broad swells, no peak.
 	 */
+	/*
+	 * Regression: its land and its relief were written out in code; they are the graphs blueprints/planet/land and relief
+	 * now, and a planet may have graphs of its own (LandGraph, ReliefGraph), made code in the page for its workers (Ruled).
+	 */
+	it('makes its land and its relief by the graphs of the library, or by a LandGraph and a ReliefGraph of its own, the same in a worker', async function () {
+		var land = JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/land')));
+		var relief = JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/relief')));
+		var points = spread(300);
+		var library = planets.Make({Seed: 'graphs'});
+		var drowned;
+		var raised;
+		var options;
+		var page;
+		var there;
+
+		expect(planets.ReliefRun('land').Inputs).toContain('Level');
+		expect(planets.ReliefRun('relief').Inputs).toContain('Small');
+
+		/* A land of its own: all of it over the sea. */
+		land.blocks.filter(function (one) {
+			return one.type === 'Formula' && one.properties[0].value.indexOf('WSea') !== -1;
+		})[0].properties[0].value = '1 + WSea * 0';
+		raised = planets.Make({Seed: 'graphs', LandGraph: land});
+
+		/* A sea floor of its own: 5 km down everywhere. */
+		relief.blocks.filter(function (one) {
+			return one.type === 'Formula' && one.properties[0].value.indexOf('min(-1, -(120') === 0;
+		})[0].properties[0].value = 'min(-1, -5000 + Push * 0 + Depth * 0 + Land * 0 + Oceanic * 0 + Boundary * 0)';
+		drowned = planets.Make({Seed: 'graphs', ReliefGraph: relief});
+
+		expect(points.filter(function (p) {
+			return library.Elevation(p) < 0;
+		}).length).toBeGreaterThan(100);
+		expect(points.every(function (p) {
+			return raised.Elevation(p) > 0;
+		})).toBe(true);
+		expect(points.every(function (p) {
+			return library.Elevation(p) > 0 ? drowned.Elevation(p) === library.Elevation(p) : drowned.Elevation(p) === -5000;
+		})).toBe(true);
+
+		/* In a worker, of the code made here. */
+		options = planets.Ruled({Seed: 'graphs', ReliefGraph: relief});
+
+		expect(options.ReliefSources.Relief.Source).toBeTruthy();
+
+		page = planets.Heights(options, 2, 32, 0, 8);
+		there = await new Promise(function (done, failed) {
+			planets.Work().Run('ScenePlanet', 'Heights', [options, 2, 32, 0, 8], function (error, made) {
+				if (error) failed(error);
+				else done(made);
+			});
+		});
+
+		expect(Array.from(there.Data)).toEqual(Array.from(page.Data));
+		expect(Array.from(page.Data)).toContain(-5000);
+	}, 60000);
+
+	it('gives a ground of a place of it its graphs of its own (Site): their code made in the page, the same squares in a worker', async function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var relief = JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/relief')));
+		var options;
+		var here;
+		var there;
+
+		relief.blocks.filter(function (one) {
+			return one.type === 'Formula' && one.properties[0].value.indexOf('min(-1, -(120') === 0;
+		})[0].properties[0].value = 'min(-1, -5000 + Push * 0 + Depth * 0 + Land * 0 + Oceanic * 0 + Boundary * 0)';
+		options = {Size: 2000, Height: 60, Water: 0, Seed: 'site', Compute: 'js', Planet: {Options: {Seed: 'graphs', Ocean: 0.97, ReliefGraph: relief}, Latitude: 0, Longitude: 0}};
+
+		expect(planets.GraphSources({Seed: 'x'})).toBe(undefined);
+		expect(Object.keys(planets.GraphSources({ReliefGraph: relief, WindGraph: Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/wind')}))).toEqual(['Relief', 'Wind']);
+
+		here = terrain.Flat(options).Chunk(0, 0, 400, 8);
+
+		expect(options.Planet.Options.ReliefSources.Relief.Source).toBeTruthy();
+
+		there = await new Promise(function (done, failed) {
+			terrain.Work().Run('SceneTerrainGenerator', 'Piece', ['Flat', options, null, [0, 0, 400, 8]], function (error, result) {
+				if (error) failed(error);
+				else done(result);
+			});
+		});
+
+		expect(Array.from(there.Positions)).toEqual(Array.from(new Float32Array(here.Positions)));
+	}, 60000);
+
+	it('makes its winds and its climate by the graphs of the library, or by a WindGraph, a RoughGraph and a ClimateGraph of its own, the same in a worker', async function () {
+		var wind = JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/wind')));
+		var rough = JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/rough')));
+		var climate = JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/climate')));
+		var points = spread(300);
+		var library = planets.Make({Seed: 'graphs'});
+		var blown;
+		var dry;
+		var hot;
+		var options;
+		var page;
+		var there;
+
+		function formula (graph, start, expression) {
+			graph.blocks.filter(function (one) {
+				return one.type === 'Formula' && one.properties[0].value.indexOf(start) === 0;
+			})[0].properties[0].value = expression;
+		}
+
+		expect(planets.ReliefRun('wind').Keys).toEqual(['East', 'North']);
+		expect(planets.ReliefRun('climate').Keys).toEqual(['Celsius', 'Moisture']);
+		expect(planets.ReliefRun('climate').Inputs).toContain('Upwind');
+		expect(planets.ReliefRun('rough').Keys).toEqual(['Rough']);
+
+		/* A wind of its own: 5 m/s to the east everywhere. */
+		formula(wind, '((Band < 30 ? -1', '5 + Band * 0 + N * 0');
+
+		blown = planets.Make({Seed: 'graphs', WindGraph: wind});
+
+		/* Land wherever the wind comes from: drier than of the library somewhere. */
+		formula(rough, '(N - 0.5) * 2.2', '1 + N * 0 + Oceanic * 0 + Level * 0 + WLand * 0 + WSea * 0');
+
+		dry = planets.Make({Seed: 'graphs', RoughGraph: rough});
+
+		/* A climate of its own: 40 degrees everywhere. */
+		formula(climate, '29 - 52', '40 + Latitude * 0 + Height * 0 + N * 0 + PaintTemperature * 0');
+
+		hot = planets.Make({Seed: 'graphs', ClimateGraph: climate});
+
+		expect(points.some(function (p) {
+			return Math.abs(library.Sample(p).Wind[0] - 5) > 1;
+		})).toBe(true);
+		expect(points.every(function (p) {
+			return blown.Sample(p).Wind[0] === 5;
+		})).toBe(true);
+		expect(points.every(function (p) {
+			return dry.Sample(p).Moisture <= library.Sample(p).Moisture;
+		})).toBe(true);
+		expect(points.some(function (p) {
+			return dry.Sample(p).Moisture < library.Sample(p).Moisture - 0.1;
+		})).toBe(true);
+		expect(points.every(function (p) {
+			return hot.Sample(p).Celsius === 40 && hot.Sample(p).Moisture === library.Sample(p).Moisture;
+		})).toBe(true);
+
+		/* In a worker, of the code made here. */
+		options = planets.Ruled({Seed: 'graphs', ClimateGraph: climate});
+
+		expect(options.ReliefSources.Climate.Source).toBeTruthy();
+		expect(options.ReliefSources.Wind).toBe(undefined);
+
+		page = planets.ClimateFace(options, 2, 16, 0, 4);
+		there = await new Promise(function (done, failed) {
+			planets.Work().Run('ScenePlanet', 'ClimateFace', [options, 2, 16, 0, 4], function (error, made) {
+				if (error) failed(error);
+				else done(made);
+			});
+		});
+
+		expect(Array.from(there.Data)).toEqual(Array.from(page.Data));
+		expect(page.Data[1]).toBe(Math.round(Math.max(0, Math.min(1, planets.Warmth(40))) * 255));
+	}, 60000);
+
 	it('raises more ranges the more mountainous it is, and peaks of many kilometres', function () {
 		var points = spread(6000);
 

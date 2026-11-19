@@ -254,6 +254,115 @@ describe('Contract: Noise, the noise of space by any algorithm, the same in a sh
 			expect(off).toBeLessThanOrEqual(spec.Type === 'worley' || spec.Type === 'white' ? 3 : 0);
 		});
 	}, 90000);
+
+	/*
+	 * Regression: the noise of the shaders was written again by hand in five places, a hash of a sine in 37; all of the
+	 * Kernel in every shader made them three times as slow to make. A shader takes what it asks for of its GLSL, once however
+	 * many times it comes, its faster functions (GLSLFaster) the very numbers of the Kernel.
+	 */
+	it('gives a shader what it asks of its GLSL and what that calls, once in it, its faster functions the numbers of the Kernel', function () {
+		var renderer = Elemenx.Service('Renderer').Create(document.createElement('canvas'), {Antialias: false});
+		var gl = renderer.GL;
+		var white = noise.GLSLChunk(['enx_white2']);
+		var value = noise.GLSLChunk(['enx_value3']);
+		var list = points(64, 40);
+		var code = noise.Code();
+		var plain = noise.GLSLPieces().Pieces;
+		var kernel = noise.GLSLKernel();
+
+		expect(gl.getExtension('EXT_color_buffer_float')).toBeTruthy();
+		expect(white).toContain('enx_white2');
+		expect(white).not.toContain('f_n_read');
+		expect(white).not.toContain('f_n_hash');
+		expect(value).toContain('float f_n_at(');
+		expect(value).toContain('uvec3 enx_pcg3(');
+		expect(value).not.toContain('f_n_worley');
+
+		/* Each of these, and one of them with all of the others: what is told twice is made once. */
+		function read (lines, call) {
+			var program = renderer.Program([
+				'#version 300 es',
+				'in vec3 aPosition;',
+				'void main() { gl_Position = vec4(aPosition.xy, 0.0, 1.0); }'
+			].join('\n'), [
+				'#version 300 es',
+				'precision highp float;',
+				'uniform vec3 uPoints[64];',
+				'out vec4 outColor;'
+			].concat(lines, ['void main() { vec3 p = uPoints[int(gl_FragCoord.x)]; outColor = vec4(' + call + ', 0.0, 0.0, 1.0); }']).join('\n'));
+			var target = renderer.Target(64, 1, {Float: true});
+			var quad = renderer.Mesh({Positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0], Indices: [0, 1, 2]});
+			var pixels = new Float32Array(64 * 4);
+
+			target.Begin();
+
+			renderer.Draw(quad, program, {uPoints: [].concat.apply([], list)}, {Depth: false, Cull: 'none'});
+
+			gl.readPixels(0, 0, 64, 1, gl.RGBA, gl.FLOAT, pixels);
+
+			target.End();
+
+			return list.map(function (p, index) {
+				return pixels[index * 4];
+			});
+		}
+
+		var hashed = read([white, value, Elemenx.Service('Renderer').Chunks.Noise, noise.GLSLChunk(['f_n_value0'])], 'f_n_hash(int(floor(p.x)), int(floor(p.y)), int(floor(p.z)))');
+		var valued = read([noise.GLSLChunk(['f_n_value0'])], 'f_n_value0(p.x, p.y, p.z)');
+		/* n_fvalue2 of the Kernel as it is (its n_fat), beside the one of four corners at once: the sine of the same card. */
+		var slow = read([noise.GLSLChunk(['f_n_fat', 'f_n_fade']), plain.f_n_fvalue2.Text.indexOf('vec4') === -1 ? '' : kernel.slice(kernel.indexOf('float f_n_fvalue2(float f_x, float f_y, float f_k, bool f_tiled, float f_px, float f_py) {')).split('\n}\n')[0].replace('f_n_fvalue2(', 'slow_fvalue2(') + '\n}'], 'slow_fvalue2(p.x, p.z, 3.0, true, 16.0, 16.0)');
+		var fast = read([noise.GLSLChunk(['f_n_fvalue2'])], 'f_n_fvalue2(p.x, p.z, 3.0, true, 16.0, 16.0)');
+		/* Of gradients: its faster function the numbers of its Kernel (and of the slopeNoise of a galaxy it took the place of), its Kernel as it is too. */
+		var sloped = read([noise.GLSLChunk(['enx_gradient3'])], 'enx_gradient3(p * 0.37)');
+		var slopedSlow = read([noise.GLSLChunk(['f_n_slope', 'f_n_fade']), kernel.slice(kernel.indexOf('float f_n_slopes(float f_x, float f_y, float f_z) {')).split('\n}\n')[0].replace('f_n_slopes(', 'slow_slopes(') + '\n}'], 'slow_slopes(p.x * 0.37, p.y * 0.37, p.z * 0.37)');
+		/*
+		 * The value noise of a sine (only drawn) beside its Kernel as it is (its n_fcorner each corner), and far out on a planet
+		 * (a million cells): wrapped, its sine still tells one corner from the next. Regression: n_value0 at each of some forty
+		 * noises of the Ground of a globe, 7 s for the card to make it.
+		 */
+		var drawn = read([noise.GLSLChunk(['f_n_fvalue3'])], 'f_n_fvalue3(p.x * 9.0, p.y * 9.0, p.z * 9.0)');
+		var drawnSlow = read([noise.GLSLChunk(['f_n_fcorner', 'f_n_fade']), kernel.slice(kernel.indexOf('float f_n_fvalue3(float f_x, float f_y, float f_z) {')).split('\n}\n')[0].replace('f_n_fvalue3(', 'slow_fvalue3(') + '\n}'], 'slow_fvalue3(p.x * 9.0, p.y * 9.0, p.z * 9.0)');
+		var far = read([noise.GLSLChunk(['enx_fvalue3'])], 'enx_fvalue3(p * 9.0 + vec3(1.0e6, 2.0e6, -1.5e6))');
+		var alike = 0;
+		var near = 0;
+
+		expect(plain.f_n_value0.Text).toContain('enx_hash4');
+		expect(plain.f_n_fvalue3.Text).toContain('vec4');
+
+		list.forEach(function (p, index) {
+			if (Math.abs(drawn[index] - drawnSlow[index]) < 1e-3)
+				alike++;
+
+			expect(drawn[index]).toBeGreaterThanOrEqual(0);
+			expect(drawn[index]).toBeLessThanOrEqual(1);
+		});
+
+		expect(alike).toBeGreaterThan(32);
+		expect(far.filter(function (one, index) {
+			return far.indexOf(one) === index;
+		}).length).toBeGreaterThan(48);
+		expect(plain.f_n_slopes.Text).toContain('enx_slope3');
+
+		list.forEach(function (p, index) {
+			expect(Math.abs(sloped[index] - code.n_slopes(p[0] * 0.37, p[1] * 0.37, p[2] * 0.37))).toBeLessThan(1e-3);
+			expect(Math.abs(slopedSlow[index] - sloped[index])).toBeLessThan(1e-3);
+		});
+
+		list.forEach(function (p, index) {
+			/* Read through a target of half floats: within 1e-3 (another hash would be a third off as a rule). */
+			expect(Math.abs(hashed[index] - code.n_hash(Math.floor(p[0]), Math.floor(p[1]), Math.floor(p[2])))).toBeLessThan(1e-3);
+			expect(Math.abs(valued[index] - code.n_value(p[0], p[1], p[2], false, 0, 0, 0))).toBeLessThan(1e-3);
+
+			if (Math.abs(fast[index] - slow[index]) < 1e-3)
+				near++;
+		});
+
+		/*
+		 * A sine of a card magnifies the last bit of its argument 40 000 times (a multiply and an add made one, or not): most
+		 * of them the very number, not each (two other functions would meet within 1e-3 at none).
+		 */
+		expect(near).toBeGreaterThan(32);
+	}, 90000);
 });
 
 describe('Contract: Noise made of its Kernel, one source for js and wasm', function () {
@@ -279,10 +388,10 @@ describe('Contract: Noise made of its Kernel, one source for js and wasm', funct
 		})).toContain('n_read');
 		expect(noise.Carried).toEqual(['Compiled']);
 
-		['value', 'perlin', 'simplex', 'worley', 'white'].forEach(function (type) {
+		['value', 'perlin', 'simplex', 'worley', 'white', 'gradient'].forEach(function (type) {
 			['none', 'fbm', 'ridged', 'billow'].forEach(function (fractal) {
 				specs.push({Type: type, Fractal: fractal, Octaves: 4, Seed: 'k' + type});
-				specs.push({Type: type, Fractal: fractal, Octaves: 3, Seed: 3, Scale: 2.5, Offset: [1, 2, 3], Warp: {Amount: 0.5, Octaves: 2}, Tile: type === 'simplex' ? undefined : [4, 0, 6], Cell: {Distance: ['euclid', 'manhattan', 'chebyshev'][fractal.length % 3], Return: ['f1', 'f2', 'edge', 'cell'][fractal.length % 4], Jitter: 0.6}, Terrace: {Steps: 4, Sharp: 0.3}, Power: 1.3, Range: [-1, 2]});
+				specs.push({Type: type, Fractal: fractal, Octaves: 3, Seed: 3, Scale: 2.5, Offset: [1, 2, 3], Warp: {Amount: 0.5, Octaves: 2}, Tile: type === 'simplex' || type === 'gradient' ? undefined : [4, 0, 6], Cell: {Distance: ['euclid', 'manhattan', 'chebyshev'][fractal.length % 3], Return: ['f1', 'f2', 'edge', 'cell'][fractal.length % 4], Jitter: 0.6}, Terrace: {Steps: 4, Sharp: 0.3}, Power: 1.3, Range: [-1, 2]});
 			});
 		});
 

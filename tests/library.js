@@ -64,6 +64,13 @@ function service (name) {
 
 	new Function(source)();
 
+	/*
+	 * Four pages of tests at once, each of many pools of workers: the most workers a pool has (Workers.Most) of
+	 * ELEMENX_POOL (vitest.config.mjs), so the machine is not given more threads than it has cores.
+	 */
+	if (name === 'Workers' && __ELEMENX_POOL__)
+		Elemenx.Service('Workers').Most = __ELEMENX_POOL__;
+
 	providers(name).forEach(service);
 }
 

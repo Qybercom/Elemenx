@@ -424,6 +424,7 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 
 		scene.SetViewpoint({Target: [40, 10, 20], Yaw: 0, Pitch: 0.5, Distance: 150});
 
+		/* Regression (under the load of the whole suite): 30 s were not enough for the squares of a metre to come; 50. */
 		fine = await waitFor(function () {
 			var ground = scene.Scene().Ground;
 			var volume = ground.Field.Volume;
@@ -435,7 +436,7 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 
 				return node.Size && node.Size / 32 <= 1 && volume.Touches(node.Center[0] - node.Size / 2, node.Center[2] - node.Size / 2, node.Center[0] + node.Size / 2, node.Center[2] + node.Size / 2);
 			});
-		}, 30000);
+		}, 50000);
 
 		expect(fine).toBe(true);
 	}, 60000);

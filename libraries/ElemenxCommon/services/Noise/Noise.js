@@ -1,7 +1,8 @@
 /*
  * Noise: the noise of space by any of its algorithms and with what is done to it, one description for all that is made
  * of noise (a ground, a texture, a field of growth, a flow), the same in the page, in a worker, in Node and in a shader.
- * - A noise is described by a spec: {Type (value, perlin, simplex, worley, white), Seed, Scale (the size of its features,
+ * - A noise is described by a spec: {Type (value, perlin, simplex, worley, white, gradient: of slopes of any way, its
+ *   lattice turned off the axes, no squares seen from far), Seed, Scale (the size of its features,
  *   in the units it is sampled in: 1), Offset ([x, y, z]), Fractal (none, fbm, ridged, billow), Octaves (4), Lacunarity
  *   (how much finer each octave is: 2.03; whole numbers when it tiles), Gain (how much fainter: 0.5), Shift ([x, y, z],
  *   added to each octave: [1.7, 9.2, 3.1]), Cell ({Distance: euclid, manhattan or chebyshev; Return: f1, f2, edge (f2
@@ -15,10 +16,16 @@
  *   Curl(x, y, z) (a flow with no source nor sink: what moves smoke, dust, water), Grid(options) (a Float32Array of
  *   Width by Height values, row by row, from X, Y with a Step, on the Plane xz, the default, or xy; Z the third axis).
  * - Types(), Fractals(): the names they may be.
- * - GLSLChunk(): the functions a shader needs once (enx_hash3, enx_value3, enx_perlin3, enx_simplex3, enx_worley3);
- *   GLSL(spec, name): a function float name(vec3 p) of the spec, after them: the same numbers as At, to the float;
- *   GLSLLines(spec, prefix, point): the same as lines of the body of a shader ({Lines, Value}), with no function of
- *   its own (a block of a graph of shaders).
+ * - The noise of a shader is of the Kernel too: GLSLKernel() the Kernel as GLSL (f_n_hash, f_n_value... f_n_read),
+ *   GLSLPieces() its functions and those of GLSLWrappers by their names, GLSLFaster those a shader makes as vectors (the
+ *   very numbers). GLSLChunk(names): what a shader asks of them (enx_hash3, enx_value3, enx_perlin3, enx_simplex3,
+ *   enx_worley3, enx_gradient3, enx_value2, enx_fvalue3 (a value noise of n_fhash, only drawn), enx_white, enx_white2, enx_white3: a number of 0 to 1 of any numbers, enx_pcg3, enx_hash4; f_n_...) and
+ *   what they call, each once in a shader however many times it comes (ENX_<name>); all with none. Two hashes: n_hash of
+ *   whole numbers, the same in the page and in a shader (noise3 and fbm3 of Renderer, a ground of the CPU and of the GPU
+ *   alike), and n_fhash of a sine, cheap, for what a shader reads many times a pixel. GLSL(spec, name): a function float name(vec3 p) of the spec, after
+ *   them: f_n_read of its numbers (GLSLNumbers(whole)), the same numbers as At, to the float; GLSLLines(spec, prefix,
+ *   point): the same as lines of the body of a shader ({Lines, Value}), with no function of its own (a block of a graph
+ *   of shaders).
  * - Source(names) gives its members to a worker of the Workers Service.
  * - Its numbers are of one source, Kernel (the kernel language of Elemenx.Compilers): Code() its functions as js (made in
  *   the page; a worker makes them of the text it carries, Compiled), IR() the module of the IR (for a graph of noise of
@@ -30,11 +37,11 @@
 Elemenx.Service('Noise', {
 	$Meta: {
 		Description: 'The noise of space by any algorithm (value, perlin, simplex, worley, white), with fractals, warp, tiling, terraces and blends, the same in a shader.',
-		Methods: ['Make(spec)', 'Types()', 'Fractals()', 'GLSLChunk()', 'GLSL(spec, name)', 'GLSLLines(spec, prefix, point)', 'Source(names)', 'Code()', 'IR()', 'Wasm()', 'Numbers(whole)', 'Whole(spec)']
+		Methods: ['Make(spec)', 'Types()', 'Fractals()', 'GLSLKernel()', 'GLSLPieces()', 'GLSLChunk(names)', 'GLSLNumbers(whole)', 'GLSL(spec, name)', 'GLSLLines(spec, prefix, point)', 'Source(names)', 'Code()', 'IR()', 'Wasm()', 'Numbers(whole)', 'Whole(spec)']
 	},
 
 	Types: function () {
-		return ['value', 'perlin', 'simplex', 'worley', 'white'];
+		return ['value', 'perlin', 'simplex', 'worley', 'white', 'gradient'];
 	},
 
 	Fractals: function () {
@@ -87,7 +94,7 @@ Elemenx.Service('Noise', {
 
 	/*
 	 * The noise in the kernel language of Elemenx.Compilers: the one source of its numbers, made js here (and in a worker,
-	 * of the text it carries) and wasm (Wasm()). Types: 0 value, 1 perlin, 2 simplex, 3 worley, 4 white; fractals: 0 none,
+	 * of the text it carries) and wasm (Wasm()). Types: 0 value, 1 perlin, 2 simplex, 3 worley, 4 white, 5 gradient; fractals: 0 none,
 	 * 1 fbm, 2 ridged, 3 billow; distances of worley: 0 euclid, 1 manhattan, 2 chebyshev; what it returns: 0 f1, 1 f2,
 	 * 2 edge, 3 cell. A lattice wrapped by a period (tiled) for value, perlin, worley and white.
 	 */
@@ -102,12 +109,16 @@ Elemenx.Service('Noise', {
 		'	a += b * c;',
 		'	return float(a & 16777215) / 16777215.0;',
 		'}',
-		'float n_wrap(float value, float size) { return size > 0.0 ? (value % size + size) % size : value; }',
+		/* A whole number of the lattice wrapped at a period (0: none): floor, not two remainders (a shader made it slower to make). */
+		'float n_wrap(float value, float size) { return size > 0.0 ? value - size * floor(value / size) : value; }',
 		'float n_fade(float t) { return t * t * t * (t * (t * 6.0 - 15.0) + 10.0); }',
 		/* A point of the lattice by whole numbers, each made once of its float (Regression: the float of each corner made a whole number again, 24 times a point, was most of the time of wasm). */
 		'float n_at(int i, int j, int k, bool tiled, float px, float py, float pz) {',
-		'	if (tiled) return n_hash(int(n_wrap(float(i), px)), int(n_wrap(float(j), py)), int(n_wrap(float(k), pz)));',
-		'	return n_hash(i, j, k);',
+		/* One hash of it, wrapped or not (two in a shader made each corner twice the code). */
+		'	int a = tiled ? int(n_wrap(float(i), px)) : i;',
+		'	int b = tiled ? int(n_wrap(float(j), py)) : j;',
+		'	int c = tiled ? int(n_wrap(float(k), pz)) : k;',
+		'	return n_hash(a, b, c);',
 		'}',
 		'float n_value(float x, float y, float z, bool tiled, float px, float py, float pz) {',
 		'	float ix = floor(x), iy = floor(y), iz = floor(z);',
@@ -117,6 +128,51 @@ Elemenx.Service('Noise', {
 		'		mix(n_at(i, j + 1, k, tiled, px, py, pz), n_at(i + 1, j + 1, k, tiled, px, py, pz), fx), fy),',
 		'		mix(mix(n_at(i, j, k + 1, tiled, px, py, pz), n_at(i + 1, j, k + 1, tiled, px, py, pz), fx),',
 		'		mix(n_at(i, j + 1, k + 1, tiled, px, py, pz), n_at(i + 1, j + 1, k + 1, tiled, px, py, pz), fx), fy), fz);',
+		'}',
+		/*
+		 * n_value of no period, of the hash of its corners at once: the noise of the shaders that must match the page (noise3,
+		 * fbm3 of Renderer: a ground of the CPU and of the GPU alike), of a quarter of the code of a shader of n_value.
+		 */
+		'float n_value0(float x, float y, float z) {',
+		'	float ix = floor(x), iy = floor(y), iz = floor(z);',
+		'	float fx = n_fade(x - ix), fy = n_fade(y - iy), fz = n_fade(z - iz);',
+		'	int i = int(ix), j = int(iy), k = int(iz);',
+		'	return mix(mix(mix(n_hash(i, j, k), n_hash(i + 1, j, k), fx), mix(n_hash(i, j + 1, k), n_hash(i + 1, j + 1, k), fx), fy),',
+		'		mix(mix(n_hash(i, j, k + 1), n_hash(i + 1, j, k + 1), fx), mix(n_hash(i, j + 1, k + 1), n_hash(i + 1, j + 1, k + 1), fx), fy), fz);',
+		'}',
+		/*
+		 * A hash of any three numbers of 0 to 1 of a sine (the one of the shaders, here once): what a shader reads many times
+		 * a pixel (the face of a cliff, the edges of materials, the tiles of a ground), of an operation or two. A shader of
+		 * the whole hash (n_hash, of whole numbers) at each of those was four times as slow to make (50 s the land of a
+		 * ground of many materials), one of a hash of floats of no sine half as slow again. n_hash where the page and the
+		 * shader must be the very same numbers: a js of a sine is not the sine of a card.
+		 */
+		'float n_fhash(float x, float y, float z) {',
+		'	return fract(sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453);',
+		'}',
+		/* A point of the lattice of a plane of n_fhash, its layer k, wrapped at a period (0: none). */
+		'float n_fat(float i, float j, float k, bool tiled, float px, float py) {',
+		'	return n_fhash(tiled ? n_wrap(i, px) : i, tiled ? n_wrap(j, py) : j, k);',
+		'}',
+		/* The value noise of a plane of n_fhash, of its four corners. */
+		'float n_fvalue2(float x, float y, float k, bool tiled, float px, float py) {',
+		'	float ix = floor(x), iy = floor(y);',
+		'	float fx = n_fade(x - ix), fy = n_fade(y - iy);',
+		'	return mix(mix(n_fat(ix, iy, k, tiled, px, py), n_fat(ix + 1.0, iy, k, tiled, px, py), fx),',
+		'		mix(n_fat(ix, iy + 1.0, k, tiled, px, py), n_fat(ix + 1.0, iy + 1.0, k, tiled, px, py), fx), fy);',
+		'}',
+		/*
+		 * The value noise of a space of n_fhash: what a shader only draws (the ground of a globe near), as cheap for a card to
+		 * make as a noise can be; each corner wrapped at 4096, the sine of numbers a card tells well.
+		 */
+		'float n_fcorner(float i, float j, float k) {',
+		'	return n_fhash(n_wrap(i, 4096.0), n_wrap(j, 4096.0), n_wrap(k, 4096.0));',
+		'}',
+		'float n_fvalue3(float x, float y, float z) {',
+		'	float ix = floor(x), iy = floor(y), iz = floor(z);',
+		'	float fx = n_fade(x - ix), fy = n_fade(y - iy), fz = n_fade(z - iz);',
+		'	return mix(mix(mix(n_fcorner(ix, iy, iz), n_fcorner(ix + 1.0, iy, iz), fx), mix(n_fcorner(ix, iy + 1.0, iz), n_fcorner(ix + 1.0, iy + 1.0, iz), fx), fy),',
+		'		mix(mix(n_fcorner(ix, iy, iz + 1.0), n_fcorner(ix + 1.0, iy, iz + 1.0), fx), mix(n_fcorner(ix, iy + 1.0, iz + 1.0), n_fcorner(ix + 1.0, iy + 1.0, iz + 1.0), fx), fy), fz);',
 		'}',
 		/* One of the twelve gradients of a point of the lattice, by its hash, dotted with where the point is from it. */
 		'float n_gradient(float hash, float x, float y, float z) {',
@@ -137,6 +193,39 @@ Elemenx.Service('Noise', {
 		'		mix(n_corner_of(i, j, k, 0, 1, 0, tiled, px, py, pz, fx, fy, fz), n_corner_of(i, j, k, 1, 1, 0, tiled, px, py, pz, fx, fy, fz), u), v),',
 		'		mix(mix(n_corner_of(i, j, k, 0, 0, 1, tiled, px, py, pz, fx, fy, fz), n_corner_of(i, j, k, 1, 0, 1, tiled, px, py, pz, fx, fy, fz), u),',
 		'		mix(n_corner_of(i, j, k, 0, 1, 1, tiled, px, py, pz, fx, fy, fz), n_corner_of(i, j, k, 1, 1, 1, tiled, px, py, pz, fx, fy, fz), u), v), w) * 0.5 + 0.5, 0.0, 1.0);',
+		'}',
+		/*
+		 * The slope of a point of the lattice of any way (the three numbers of its hash, as enx_pcg3 has them, each of 1024
+		 * steps), dotted with where a point is from it: the corners of n_slopes.
+		 */
+		'float n_slope(int x, int y, int z, float fx, float fy, float fz) {',
+		'	int a = (x + 65536) * 1664525 + 1013904223;',
+		'	int b = (y + 65536) * 1664525 + 1013904223;',
+		'	int c = (z + 65536) * 1664525 + 1013904223;',
+		'	a += b * c; b += c * a; c += a * b;',
+		'	a = a ^ a >>> 16; b = b ^ b >>> 16; c = c ^ c >>> 16;',
+		'	a += b * c; b += c * a; c += a * b;',
+		'	float gx = float(a & 1023) / 511.5 - 1.0 + 0.0001;',
+		'	float gy = float(b & 1023) / 511.5 - 1.0 + 0.0001;',
+		'	float gz = float(c & 1023) / 511.5 - 1.0 + 0.0001;',
+		'	return (gx * fx + gy * fy + gz * fz) / sqrt(gx * gx + gy * gy + gz * gz);',
+		'}',
+		/*
+		 * A noise of gradients of any way, its lattice turned off the axes (gradient): no squares nor rows stand in what is made
+		 * of it, seen from far (the clouds of a galaxy). 0 to 1, its mean 0.5.
+		 */
+		'float n_slopes(float x, float y, float z) {',
+		'	float rx = 0.788 * x - 0.369 * y + 0.49 * z;',
+		'	float ry = 0.346 * x + 0.928 * y + 0.137 * z;',
+		'	float rz = -0.509 * x + 0.051 * y + 0.861 * z;',
+		'	float ix = floor(rx), iy = floor(ry), iz = floor(rz);',
+		'	float fx = rx - ix, fy = ry - iy, fz = rz - iz;',
+		'	float u = n_fade(fx), v = n_fade(fy), w = n_fade(fz);',
+		'	int i = int(ix), j = int(iy), k = int(iz);',
+		'	return clamp(0.5 + 0.75 * mix(mix(mix(n_slope(i, j, k, fx, fy, fz), n_slope(i + 1, j, k, fx - 1.0, fy, fz), u),',
+		'		mix(n_slope(i, j + 1, k, fx, fy - 1.0, fz), n_slope(i + 1, j + 1, k, fx - 1.0, fy - 1.0, fz), u), v),',
+		'		mix(mix(n_slope(i, j, k + 1, fx, fy, fz - 1.0), n_slope(i + 1, j, k + 1, fx - 1.0, fy, fz - 1.0), u),',
+		'		mix(n_slope(i, j + 1, k + 1, fx, fy - 1.0, fz - 1.0), n_slope(i + 1, j + 1, k + 1, fx - 1.0, fy - 1.0, fz - 1.0), u), v), w), 0.0, 1.0);',
 		'}',
 		/* What a corner of the lattice (i, j, k) gives a point dx, dy, dz from it, of simplex noise: none past its reach. */
 		'float n_corner(int i, int j, int k, float dx, float dy, float dz) {',
@@ -200,6 +289,7 @@ Elemenx.Service('Noise', {
 		'	if (type == 2) return n_simplex(x, y, z);',
 		'	if (type == 3) return n_worley(x, y, z, tiled, px, py, pz, jitter, distance, returned);',
 		'	if (type == 4) return n_at(int(floor(x)), int(floor(y)), int(floor(z)), tiled, px, py, pz);',
+		'	if (type == 5) return n_slopes(x, y, z);',
 		'	return n_value(x, y, z, tiled, px, py, pz);',
 		'}',
 		/* The octaves of a fractal, each finer and fainter: fbm as it is, ridged the folds of mountains, billow round heaps. */
@@ -467,110 +557,257 @@ Elemenx.Service('Noise', {
 		};
 	},
 
-	/* The functions a shader needs once, before those of GLSL: the same hash and the same noises as the page. */
-	GLSLChunk: function () {
-		return [
-			'uvec3 enx_pcg(uvec3 v) {',
-			'	v = v * 1664525u + 1013904223u;',
-			'	v.x += v.y * v.z;',
-			'	v.y += v.z * v.x;',
-			'	v.z += v.x * v.y;',
-			'	v ^= v >> 16u;',
-			'	v.x += v.y * v.z;',
-			'	return v;',
-			'}',
-			'float enx_hash3(vec3 p, vec3 period) {',
-			'	vec3 q = p;',
-			'	if (period.x > 0.0) q.x = mod(q.x, period.x);',
-			'	if (period.y > 0.0) q.y = mod(q.y, period.y);',
-			'	if (period.z > 0.0) q.z = mod(q.z, period.z);',
-			'	uvec3 u = uvec3(ivec3(floor(q + 0.5)) + ivec3(65536));',
-			'	return float(enx_pcg(u).x & 16777215u) / 16777215.0;',
-			'}',
-			'vec3 enx_fade(vec3 t) {',
-			'	return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);',
-			'}',
-			'float enx_value3(vec3 x, vec3 period) {',
-			'	vec3 i = floor(x);',
-			'	vec3 f = enx_fade(x - i);',
-			'	return mix(mix(mix(enx_hash3(i, period), enx_hash3(i + vec3(1.0, 0.0, 0.0), period), f.x), mix(enx_hash3(i + vec3(0.0, 1.0, 0.0), period), enx_hash3(i + vec3(1.0, 1.0, 0.0), period), f.x), f.y),',
-			'		mix(mix(enx_hash3(i + vec3(0.0, 0.0, 1.0), period), enx_hash3(i + vec3(1.0, 0.0, 1.0), period), f.x), mix(enx_hash3(i + vec3(0.0, 1.0, 1.0), period), enx_hash3(i + vec3(1.0, 1.0, 1.0), period), f.x), f.y), f.z);',
-			'}',
-			'float enx_grad(float hash, vec3 d) {',
-			'	int g = int(floor(hash * 12.0)) % 12;',
-			'	float u = g < 8 ? d.x : d.y;',
-			'	float v = g < 4 ? d.y : (g == 12 || g == 14 ? d.x : d.z);',
-			'	return ((g & 1) == 0 ? u : -u) + ((g & 2) == 0 ? v : -v);',
-			'}',
-			'float enx_perlin3(vec3 x, vec3 period) {',
-			'	vec3 i = floor(x);',
-			'	vec3 f = x - i;',
-			'	vec3 w = enx_fade(f);',
-			'	float a = enx_grad(enx_hash3(i, period), f);',
-			'	float b = enx_grad(enx_hash3(i + vec3(1.0, 0.0, 0.0), period), f - vec3(1.0, 0.0, 0.0));',
-			'	float c = enx_grad(enx_hash3(i + vec3(0.0, 1.0, 0.0), period), f - vec3(0.0, 1.0, 0.0));',
-			'	float d = enx_grad(enx_hash3(i + vec3(1.0, 1.0, 0.0), period), f - vec3(1.0, 1.0, 0.0));',
-			'	float e = enx_grad(enx_hash3(i + vec3(0.0, 0.0, 1.0), period), f - vec3(0.0, 0.0, 1.0));',
-			'	float g = enx_grad(enx_hash3(i + vec3(1.0, 0.0, 1.0), period), f - vec3(1.0, 0.0, 1.0));',
-			'	float h = enx_grad(enx_hash3(i + vec3(0.0, 1.0, 1.0), period), f - vec3(0.0, 1.0, 1.0));',
-			'	float k = enx_grad(enx_hash3(i + vec3(1.0, 1.0, 1.0), period), f - vec3(1.0, 1.0, 1.0));',
-			'	return clamp(mix(mix(mix(a, b, w.x), mix(c, d, w.x), w.y), mix(mix(e, g, w.x), mix(h, k, w.x), w.y), w.z) * 0.5 + 0.5, 0.0, 1.0);',
-			'}',
-			'float enx_simplex3(vec3 v) {',
-			'	const float F3 = 1.0 / 3.0;',
-			'	const float G3 = 1.0 / 6.0;',
-			'	vec3 i = floor(v + (v.x + v.y + v.z) * F3);',
-			'	vec3 x0 = v - (i - (i.x + i.y + i.z) * G3);',
-			'	vec3 i1;',
-			'	vec3 i2;',
-			'	if (x0.x >= x0.y) {',
-			'		if (x0.y >= x0.z) { i1 = vec3(1.0, 0.0, 0.0); i2 = vec3(1.0, 1.0, 0.0); }',
-			'		else if (x0.x >= x0.z) { i1 = vec3(1.0, 0.0, 0.0); i2 = vec3(1.0, 0.0, 1.0); }',
-			'		else { i1 = vec3(0.0, 0.0, 1.0); i2 = vec3(1.0, 0.0, 1.0); }',
-			'	}',
-			'	else {',
-			'		if (x0.y < x0.z) { i1 = vec3(0.0, 0.0, 1.0); i2 = vec3(0.0, 1.0, 1.0); }',
-			'		else if (x0.x < x0.z) { i1 = vec3(0.0, 1.0, 0.0); i2 = vec3(0.0, 1.0, 1.0); }',
-			'		else { i1 = vec3(0.0, 1.0, 0.0); i2 = vec3(1.0, 1.0, 0.0); }',
-			'	}',
-			'	float total = 0.0;',
-			'	vec3 corners[4] = vec3[4](vec3(0.0), i1, i2, vec3(1.0));',
-			'	for (int n = 0; n < 4; n++) {',
-			'		vec3 d = x0 - corners[n] + float(n) * G3;',
-			'		float falloff = 0.6 - dot(d, d);',
-			'		if (falloff > 0.0) {',
-			'			falloff *= falloff;',
-			'			total += falloff * falloff * enx_grad(enx_hash3(i + corners[n], vec3(0.0)), d);',
-			'		}',
-			'	}',
-			'	return clamp(total * 16.0 + 0.5, 0.0, 1.0);',
-			'}',
-			'float enx_worley3(vec3 x, vec3 period, float jitter, int metric, int ret) {',
-			'	vec3 i = floor(x);',
-			'	float first = 1e9;',
-			'	float second = 1e9;',
-			'	float cell = 0.0;',
-			'	for (int dz = -1; dz <= 1; dz++)',
-			'	for (int dy = -1; dy <= 1; dy++)',
-			'	for (int dx = -1; dx <= 1; dx++) {',
-			'		vec3 c = i + vec3(float(dx), float(dy), float(dz));',
-			'		vec3 p = c + 0.5 + (vec3(enx_hash3(c, period), enx_hash3(c + vec3(131.0, -71.0, 37.0), period), enx_hash3(c + vec3(-59.0, 113.0, -17.0), period)) - 0.5) * jitter;',
-			'		vec3 a = abs(p - x);',
-			'		float far = metric == 1 ? a.x + a.y + a.z : metric == 2 ? max(a.x, max(a.y, a.z)) : length(p - x);',
-			'		if (far < first) { second = first; first = far; cell = enx_hash3(c + 7.0, period); }',
-			'		else if (far < second) { second = far; }',
-			'	}',
-			'	if (ret == 3) return cell;',
-			'	if (ret == 1) return min(1.0, second);',
-			'	if (ret == 2) return min(1.0, second - first);',
-			'	return min(1.0, first);',
-			'}'
-		].join('\n');
+	/*
+	 * The functions of the Kernel as GLSL (Elemenx.Compilers: kernel to glsl, its names f_n_value...), made once in the page:
+	 * the one source of the noise of the page, of a worker, of wasm and of a shader.
+	 */
+	GLSLKernel: function () {
+		var self = this;
+
+		if (this.KernelGLSL === undefined) {
+			this.KernelGLSL = null;
+
+			Elemenx.Compilers.Run({From: 'kernel', To: 'glsl', Value: [].concat(this.Kernel).join('\n'), Entry: 'noise'}, function (error, result) {
+				if (error)
+					throw new Error('Elemenx Noise: its kernel is no GLSL: ' + (error.message || error));
+
+				self.KernelGLSL = result.Value;
+			});
+		}
+
+		return this.KernelGLSL;
 	},
 
 	/*
-	 * The function of a spec for a shader, float name(vec3 p), after GLSLChunk: its numbers baked in. A blend makes a
-	 * function of each of its noises too (name_0, name_1...).
+	 * Functions of the Kernel a shader makes in fewer operations, as vectors (each the very numbers of the Kernel: a contract
+	 * holds them to it): its hash, of three whole numbers at once. Regression: made of the Kernel one number at a time, the
+	 * shaders of a ground of many materials took half as long again to make (50 s the Showcase, not 39 s).
+	 */
+	GLSLFaster: {
+		f_n_hash: [
+			'float f_n_hash(int f_x, int f_y, int f_z) { return float(enx_pcg3(ivec3(f_x, f_y, f_z)).x & 16777215u) / 16777215.0; }'
+		].join('\n'),
+		/*
+		 * n_value0: the hashes of its eight corners four at once (enx_hash4), the very numbers of n_hash. Regression: each corner
+		 * of its own (enx_pcg3, three numbers made of which one was read), the Ground of a globe of some forty of them took 7 s
+		 * for the card to make, 5 s so.
+		 */
+		f_n_value0: [
+			'float f_n_value0(float f_x, float f_y, float f_z) {',
+			'	vec3 x = vec3(f_x, f_y, f_z);',
+			'	vec3 i = floor(x);',
+			'	vec3 f = x - i;',
+			'	f = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);',
+			'	ivec3 c = ivec3(i);',
+			'	ivec4 cx = c.x + ivec4(0, 1, 0, 1);',
+			'	ivec4 cy = c.y + ivec4(0, 0, 1, 1);',
+			'	vec4 h = mix(enx_hash4(cx, cy, ivec4(c.z)), enx_hash4(cx, cy, ivec4(c.z + 1)), f.z);',
+			'	vec2 g = mix(h.xz, h.yw, f.x);',
+			'	return mix(g.x, g.y, f.y);',
+			'}'
+		].join('\n'),
+		/*
+		 * n_fvalue3: the value noise of a space of n_fhash (a sine), its corners four at once: what a shader only draws (no
+		 * page reads the same), the lattice wrapped at 4096 so the sine is of numbers a card tells well.
+		 */
+		f_n_fvalue3: [
+			'float f_n_fvalue3(float f_x, float f_y, float f_z) {',
+			'	vec3 x = vec3(f_x, f_y, f_z);',
+			'	vec3 i = floor(x);',
+			'	vec3 f = x - i;',
+			'	f = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);',
+			'	vec4 cx = vec4(i.x, i.x + 1.0, i.x, i.x + 1.0);',
+			'	vec4 cy = vec4(i.y, i.y, i.y + 1.0, i.y + 1.0);',
+			'	vec2 cz = vec2(i.z, i.z + 1.0);',
+			'	cx -= 4096.0 * floor(cx / 4096.0);',
+			'	cy -= 4096.0 * floor(cy / 4096.0);',
+			'	cz -= 4096.0 * floor(cz / 4096.0);',
+			'	vec4 a = cx * 12.9898 + cy * 78.233;',
+			'	vec4 h = mix(fract(sin(a + cz.x * 37.719) * 43758.5453), fract(sin(a + cz.y * 37.719) * 43758.5453), f.z);',
+			'	vec2 g = mix(h.xz, h.yw, f.x);',
+			'	return mix(g.x, g.y, f.y);',
+			'}'
+		].join('\n'),
+		/* n_fvalue2: the hashes of its four corners at once (n_fhash of a vec4), wrapped as n_wrap does. */
+		f_n_fvalue2: [
+			'float f_n_fvalue2(float f_x, float f_y, float f_k, bool f_tiled, float f_px, float f_py) {',
+			'	vec2 p = vec2(f_x, f_y);',
+			'	vec2 i = floor(p);',
+			'	vec2 w = p - i;',
+			'	w = w * w * w * (w * (w * 6.0 - 15.0) + 10.0);',
+			'	vec4 cx = i.x + vec4(0.0, 1.0, 0.0, 1.0);',
+			'	vec4 cy = i.y + vec4(0.0, 0.0, 1.0, 1.0);',
+			'	if (f_tiled && f_px > 0.0) cx = cx - f_px * floor(cx / f_px);',
+			'	if (f_tiled && f_py > 0.0) cy = cy - f_py * floor(cy / f_py);',
+			'	vec4 h = fract(sin(cx * 12.9898 + cy * 78.233 + f_k * 37.719) * 43758.5453);',
+			'	return mix(mix(h.x, h.y, w.x), mix(h.z, h.w, w.x), w.y);',
+			'}'
+		].join('\n'),
+		/* n_slopes: its lattice turned by a matrix, the slopes of its corners of the three numbers of enx_pcg3 at once. */
+		f_n_slopes: [
+			'float f_n_slopes(float f_x, float f_y, float f_z) {',
+			'	vec3 p = mat3(0.788, 0.346, -0.509, -0.369, 0.928, 0.051, 0.49, 0.137, 0.861) * vec3(f_x, f_y, f_z);',
+			'	vec3 i = floor(p);',
+			'	vec3 f = p - i;',
+			'	vec3 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);',
+			'	float a = dot(enx_slope3(i), f);',
+			'	float b = dot(enx_slope3(i + vec3(1.0, 0.0, 0.0)), f - vec3(1.0, 0.0, 0.0));',
+			'	float c = dot(enx_slope3(i + vec3(0.0, 1.0, 0.0)), f - vec3(0.0, 1.0, 0.0));',
+			'	float d = dot(enx_slope3(i + vec3(1.0, 1.0, 0.0)), f - vec3(1.0, 1.0, 0.0));',
+			'	float e = dot(enx_slope3(i + vec3(0.0, 0.0, 1.0)), f - vec3(0.0, 0.0, 1.0));',
+			'	float g = dot(enx_slope3(i + vec3(1.0, 0.0, 1.0)), f - vec3(1.0, 0.0, 1.0));',
+			'	float h = dot(enx_slope3(i + vec3(0.0, 1.0, 1.0)), f - vec3(0.0, 1.0, 1.0));',
+			'	float k = dot(enx_slope3(i + vec3(1.0)), f - vec3(1.0));',
+			'	return clamp(0.5 + 0.75 * mix(mix(mix(a, b, u.x), mix(c, d, u.x), u.y), mix(mix(e, g, u.x), mix(h, k, u.x), u.y), u.z), 0.0, 1.0);',
+			'}'
+		].join('\n')
+	},
+
+	/* The functions of a shader made of the Kernel (enx_...), each of what it calls. */
+	GLSLWrappers: [
+		/* The hash of n_hash of three whole numbers, each of its three numbers of 32 bits (x: that of n_hash): the slopes of a noise of gradients. */
+		/* n_hash of four points of the lattice at once, the very numbers: of the corners of a noise, four by four. */
+		'vec4 enx_hash4(ivec4 x, ivec4 y, ivec4 z) { uvec4 a = uvec4(x + 65536) * 1664525u + 1013904223u; uvec4 b = uvec4(y + 65536) * 1664525u + 1013904223u; uvec4 c = uvec4(z + 65536) * 1664525u + 1013904223u; a += b * c; b += c * a; c += a * b; a ^= a >> 16u; b ^= b >> 16u; c ^= c >> 16u; a += b * c; return vec4(a & 16777215u) / 16777215.0; }',
+		'uvec3 enx_pcg3(ivec3 c) { uvec3 v = uvec3(c + ivec3(65536)) * 1664525u + 1013904223u; v.x += v.y * v.z; v.y += v.z * v.x; v.z += v.x * v.y; v ^= v >> 16u; v.x += v.y * v.z; v.y += v.z * v.x; v.z += v.x * v.y; return v; }',
+		/* The slope of a point of the lattice of n_slopes, of the three numbers of its hash. */
+		'vec3 enx_slope3(vec3 i) { uvec3 h = enx_pcg3(ivec3(i)); return normalize(vec3(h & uvec3(1023u)) / 511.5 - 1.0 + 1e-4); }',
+		'float enx_gradient3(vec3 p) { return f_n_slopes(p.x, p.y, p.z); }',
+		'bool enx_tiled(vec3 period) { return period.x > 0.0 || period.y > 0.0 || period.z > 0.0; }',
+		'float enx_hash3(vec3 p, vec3 period) { vec3 q = floor(p + 0.5); return f_n_at(int(q.x), int(q.y), int(q.z), enx_tiled(period), period.x, period.y, period.z); }',
+		'float enx_value3(vec3 x, vec3 period) { return f_n_value(x.x, x.y, x.z, enx_tiled(period), period.x, period.y, period.z); }',
+		'float enx_perlin3(vec3 x, vec3 period) { return f_n_perlin(x.x, x.y, x.z, enx_tiled(period), period.x, period.y, period.z); }',
+		'float enx_simplex3(vec3 v) { return f_n_simplex(v.x, v.y, v.z); }',
+		'float enx_worley3(vec3 x, vec3 period, float jitter, int metric, int ret) { return f_n_worley(x.x, x.y, x.z, enx_tiled(period), period.x, period.y, period.z, jitter, metric, ret); }',
+		'float enx_value2(vec2 p) { return f_n_fvalue2(p.x, p.y, 0.0, false, 0.0, 0.0); }',
+		'float enx_fvalue3(vec3 p) { return f_n_fvalue3(p.x, p.y, p.z); }',
+		'float enx_white3(vec3 p) { return f_n_fhash(p.x, p.y, p.z); }',
+		'float enx_white2(vec2 p) { return f_n_fhash(p.x, p.y, 0.5); }',
+		'float enx_white(float x) { return f_n_fhash(x, x + 0.5, 0.25); }'
+	],
+
+	/*
+	 * The functions of GLSLKernel and GLSLWrappers by their names, each {Text, Calls}, and what comes before them all (the
+	 * runtime of glsl): made once.
+	 */
+	GLSLPieces: function () {
+		var pieces = {};
+		var head = [];
+		var lines;
+		var i;
+		var name;
+		var body;
+
+		if (this.Pieces)
+			return this.Pieces;
+
+		function piece (key, text) {
+			var calls = [];
+			var found;
+			var called = /\b((?:f_n|enx)_\w+)\(/g;
+
+			while ((found = called.exec(text)))
+				if (found[1] !== key && calls.indexOf(found[1]) === -1)
+					calls.push(found[1]);
+
+			pieces[key] = {Text: text, Calls: calls};
+		}
+
+		lines = this.GLSLKernel().split('\n');
+
+		for (i = 0; i < lines.length; i++) {
+			name = /^\w+ (f_n_\w+)\(.*\) \{$/.exec(lines[i]);
+
+			if (name) {
+				body = [lines[i]];
+
+				while (lines[++i] !== '}')
+					body.push(lines[i]);
+
+				body.push('}');
+
+				piece(name[1], body.join('\n'));
+			}
+			else if (!/^\w+ f_n_\w+\(.*\);$/.test(lines[i])) {
+				head.push(lines[i]);
+			}
+		}
+
+		this.GLSLWrappers.forEach(function (text) {
+			piece(/^\w+ (enx_\w+)\(/.exec(text)[1], text);
+		});
+
+		/* What a shader makes of the Kernel in fewer operations of its own (GLSLFaster), the very numbers. */
+		Object.keys(this.GLSLFaster).forEach(function (name) {
+			piece(name, this.GLSLFaster[name]);
+		}, this);
+
+		this.Pieces = {Head: head.join('\n'), Pieces: pieces};
+
+		return this.Pieces;
+	},
+
+	/*
+	 * What a shader needs of the noise, before what reads it: names (of GLSLWrappers: enx_hash3, enx_value3, enx_perlin3,
+	 * enx_simplex3, enx_worley3, enx_value2 (on a plane), enx_white, enx_white2, enx_white3 (a number of 0 to 1 of any
+	 * numbers, the same for the same ones: the hash of the Kernel of their bits); or of the Kernel: f_n_read...; all of
+	 * GLSLWrappers by default) and what they call of the Kernel, no more (a whole Kernel in every shader made each three
+	 * times slower to make). Each once in a shader however many times it comes (ENX_<name>). Regression: the noise of the
+	 * shaders was written again by hand in five places, a hash of a sine (fract(sin(..) * 43758.5453)) in 37.
+	 */
+	GLSLChunk: function (names) {
+		var made = this.GLSLPieces();
+		var order = [];
+		var lines;
+
+		function visit (name) {
+			var one = made.Pieces[name];
+			if (!one)
+				throw new Error('Elemenx Noise: there is no function ' + name + ' of its GLSL');
+
+			if (order.indexOf(name) !== -1) return;
+
+			one.Calls.forEach(visit);
+
+			order.push(name);
+		}
+
+		/* All by default: what GLSL and GLSLLines read (f_n_read, f_n_finish) too. */
+		(names || this.GLSLWrappers.map(function (text) {
+			return /^\w+ (enx_\w+)\(/.exec(text)[1];
+		}).concat(['f_n_read', 'f_n_finish'])).forEach(visit);
+
+		/* Its hash is of whole numbers of 32 bits: of a fragment shader too (mediump by default there). */
+		lines = ['precision highp int;', made.Head];
+
+		order.forEach(function (name) {
+			lines.push('#ifndef ENX_' + name, '#define ENX_' + name, made.Pieces[name].Text, '#endif');
+		});
+
+		return lines.join('\n');
+	},
+
+	/* The numbers of a whole spec as the arguments of f_n_read before its point, each of its type in GLSL (Numbers). */
+	GLSLNumbers: function (whole) {
+		var types = 'iiifffffffffffiibffibffffffbbff';
+
+		return this.Numbers(whole).map(function (value, index) {
+			var text;
+
+			if (types.charAt(index) === 'b')
+				return value ? 'true' : 'false';
+
+			if (types.charAt(index) === 'i')
+				return String(Math.round(Number(value)));
+
+			text = String(Number(value));
+
+			return /[.eE]/.test(text) ? text : text + '.0';
+		}).join(', ');
+	},
+
+	/*
+	 * The function of a spec for a shader, float name(vec3 p), after GLSLChunk: f_n_read of its numbers, the very numbers
+	 * of At, to the float. A blend makes a function of each of its noises too (name_0, name_1...).
 	 */
 	GLSL: function (spec, name) {
 		var self = this;
@@ -578,31 +815,12 @@ Elemenx.Service('Noise', {
 		var made = [];
 		var lines;
 		var body;
+		var post;
 
 		function number (value) {
 			var text = String(Number(value));
 
 			return /[.eE]/.test(text) ? text : text + '.0';
-		}
-
-		function finish (post, value) {
-			var lines = ['\tfloat value = ' + value + ';'];
-
-			if (post.Steps)
-				lines.push('\t{ float t = value * ' + number(post.Steps) + '; float s = floor(t); value = min(1.0, (s + ' + (post.Sharp >= 1 ? '0.0' : 'pow(t - s, ' + number(1 + post.Sharp * 15) + ')') + ') / ' + number(post.Steps) + '); }');
-
-			if (post.Power !== 1)
-				lines.push('\tvalue = pow(max(0.0, value), ' + number(post.Power) + ');');
-
-			if (post.Invert)
-				lines.push('\tvalue = 1.0 - value;');
-
-			if (post.Range)
-				lines.push('\tvalue = ' + number(post.Range[0]) + ' + value * ' + number(post.Range[1] - post.Range[0]) + ';');
-
-			lines.push('\treturn value;');
-
-			return lines.join('\n');
 		}
 
 		name = name || 'enx_noise';
@@ -648,7 +866,10 @@ Elemenx.Service('Noise', {
 				}
 			})();
 
-			return made.join('\n') + '\nfloat ' + name + '(vec3 p) {\n' + finish(this.Post(given), body) + '\n}';
+			post = this.Post(given);
+
+			/* What is done to the blend: f_n_finish of the Kernel, as Finish does it. */
+			return made.join('\n') + '\nfloat ' + name + '(vec3 p) {\n\treturn f_n_finish(' + body + ', ' + number(post.Steps) + ', ' + number(post.Sharp) + ', ' + number(post.Power) + ', ' + (post.Invert ? 'true' : 'false') + ', ' + (post.Range ? 'true' : 'false') + ', ' + number(post.Range ? post.Range[0] : 0) + ', ' + number(post.Range ? post.Range[1] : 1) + ');\n}';
 		}
 
 		lines = this.GLSLLines(given, name, 'p');
@@ -658,73 +879,12 @@ Elemenx.Service('Noise', {
 
 	/*
 	 * A noise of a spec (not a blend) as lines of GLSL in the body of a shader, after GLSLChunk: Lines (its variables named
-	 * after prefix, its loops in scopes of their own) and Value, the variable that holds it, of the point (a vec3).
+	 * after prefix) and Value, the variable that holds it, of the point (a vec3): f_n_read of the numbers of the spec.
 	 */
 	GLSLLines: function (spec, prefix, point) {
-		var whole = this.Whole(spec || {});
-		var lines = [];
 		var q = prefix + '_q';
 		var value = prefix + '_value';
 
-		function number (value) {
-			var text = String(Number(value));
-
-			return /[.eE]/.test(text) ? text : text + '.0';
-		}
-
-		function vector (list) {
-			return 'vec3(' + list.map(number).join(', ') + ')';
-		}
-
-		function base (at, period) {
-			switch (whole.Type) {
-				case 'perlin':
-					return 'enx_perlin3(' + at + ', ' + period + ')';
-				case 'simplex':
-					return 'enx_simplex3(' + at + ')';
-				case 'worley':
-					return 'enx_worley3(' + at + ', ' + period + ', ' + number(whole.Jitter) + ', ' + ['euclid', 'manhattan', 'chebyshev'].indexOf(whole.Distance) + ', ' + ['f1', 'f2', 'edge', 'cell'].indexOf(whole.Return) + ')';
-				case 'white':
-					return 'enx_hash3(floor(' + at + '), ' + period + ')';
-				default:
-					return 'enx_value3(' + at + ', ' + period + ')';
-			}
-		}
-
-		/* The octaves of a fractal into a variable, from a point. */
-		function octaves (target, start, count, fractal) {
-			var n = fractal === 'ridged' ? '1.0 - abs(n * 2.0 - 1.0)' : fractal === 'billow' ? 'abs(n * 2.0 - 1.0)' : 'n';
-
-			lines.push('float ' + target + ' = 0.0;');
-			lines.push('{ vec3 at = ' + start + '; float amplitude = 0.5; float weight = 0.0; vec3 period = ' + vector(whole.Tile || [0, 0, 0]) + ';');
-			lines.push('for (int o = 0; o < ' + count + '; o++) { float n = ' + base('at', 'period') + '; n = ' + n + '; ' + target + ' += n * amplitude; weight += amplitude; at = at * ' + number(whole.Lacunarity) + ' + ' + vector(whole.Shift) + '; amplitude *= ' + number(whole.Gain) + '; period *= ' + number(whole.Lacunarity) + '; }');
-			lines.push(target + ' /= weight; }');
-		}
-
-		lines.push('vec3 ' + q + ' = (' + point + ') / ' + number(whole.Scale) + ' + ' + vector(whole.Offset) + ' + vec3(' + number(whole.Seed) + ');');
-
-		if (whole.Warp) {
-			[0, 1, 2].forEach(function (axis) {
-				octaves(prefix + '_warp' + axis, q + ' * ' + number(whole.Warp.Scale) + ' + ' + vector([axis * 5.2, axis * 1.3, axis * 2.8]), whole.Warp.Octaves, 'fbm');
-			});
-
-			lines.push(q + ' += (vec3(' + prefix + '_warp0, ' + prefix + '_warp1, ' + prefix + '_warp2) * 2.0 - 1.0) * ' + number(whole.Warp.Amount) + ';');
-		}
-
-		octaves(value, q, whole.Fractal === 'none' ? 1 : whole.Octaves, whole.Fractal);
-
-		if (whole.Post.Steps)
-			lines.push('{ float t = ' + value + ' * ' + number(whole.Post.Steps) + '; float s = floor(t); ' + value + ' = min(1.0, (s + ' + (whole.Post.Sharp >= 1 ? '0.0' : 'pow(t - s, ' + number(1 + whole.Post.Sharp * 15) + ')') + ') / ' + number(whole.Post.Steps) + '); }');
-
-		if (whole.Post.Power !== 1)
-			lines.push(value + ' = pow(max(0.0, ' + value + '), ' + number(whole.Post.Power) + ');');
-
-		if (whole.Post.Invert)
-			lines.push(value + ' = 1.0 - ' + value + ';');
-
-		if (whole.Post.Range)
-			lines.push(value + ' = ' + number(whole.Post.Range[0]) + ' + ' + value + ' * ' + number(whole.Post.Range[1] - whole.Post.Range[0]) + ';');
-
-		return {Lines: lines, Value: value};
+		return {Lines: ['vec3 ' + q + ' = ' + point + ';', 'float ' + value + ' = f_n_read(' + this.GLSLNumbers(this.Whole(spec || {})) + ', ' + q + '.x, ' + q + '.y, ' + q + '.z);'], Value: value};
 	}
 });

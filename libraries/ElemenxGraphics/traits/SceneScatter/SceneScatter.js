@@ -235,16 +235,19 @@ Elemenx.Trait('SceneScatter', {
 			}
 
 			if (!state.Programs) {
+				/* Its things lit as those of the scene: what the weather does to them (Weathered) too. */
+				var lit = self.Weathered(self.Shaders(graphics));
+
 				state.Programs = {
-					Many: renderer.Program(shaders.Vertex, engine.Leveled(dithered(self.Shaders(graphics).Solid))),
-					Files: renderer.Program(shaders.Vertex, engine.Leveled(dithered(self.Shaders(graphics).Pbr))),
-					Depth: renderer.Program(shaders.Vertex, self.Shaders(graphics).Depth),
+					Many: renderer.Program(shaders.Vertex, engine.Leveled(dithered(lit.Solid))),
+					Files: renderer.Program(shaders.Vertex, engine.Leveled(dithered(lit.Pbr))),
+					Depth: renderer.Program(shaders.Vertex, lit.Depth),
 					/* The shadow of what is cut by the alpha of its picture (leaves): only where there is a leaf. */
 					DepthCut: renderer.Program(shaders.Vertex, shaders.DepthCut),
 					Bake: renderer.Program(shaders.BakeVertex, shaders.Bake),
 					BakeCut: renderer.Program(shaders.BakeCutVertex, shaders.BakeCut),
 					Picture: renderer.Program(shaders.PictureVertex, engine.Leveled(dithered(shaders.Picture))),
-					Facade: renderer.Program(shaders.Vertex, engine.Leveled(dithered(faced(self.Shaders(graphics).Solid)))),
+					Facade: renderer.Program(shaders.Vertex, engine.Leveled(dithered(faced(lit.Solid)))),
 					Grass: renderer.Program(shaders.GrassVertex, shaders.Grass)
 				};
 			}
@@ -2669,6 +2672,7 @@ Elemenx.Trait('SceneScatter', {
 				'out vec2 vWet;',
 				/* The wind: the vertex graph of the wind of the scene (WindGraph) in this place, run before the Vertex of a material. */
 				'void blueprintWind(vec3 position, vec3 normal, vec2 uv, float sway, float phase, float size, inout vec3 world, inout vec3 bent) {}',
+				this.$Service('Noise').GLSLChunk(['enx_white3']),
 				'void main() {',
 				'	vWet = vec2(0.0);',
 				'	vBody = aPosition * aInstance.w;',
@@ -2688,7 +2692,7 @@ Elemenx.Trait('SceneScatter', {
 				 */
 				'	if (uFlutter > 0.0) {',
 				'		vec3 cell = floor(aPosition * 12.0);',
-				'		float seed = fract(sin(dot(cell + aInstance.xyz, vec3(12.9898, 78.233, 37.719))) * 43758.5453) * 6.2832;',
+				'		float seed = enx_white3(cell + aInstance.xyz) * 6.2832;',
 				'		float beat = uFlutterTime * 2.6;',
 				'		world += vec3(sin(beat + seed), 0.6 * sin(beat * 1.3 + seed * 2.0), cos(beat * 0.9 + seed)) * uFlutter * aInstance.w * 0.0025 * clamp(aPosition.y, 0.0, 1.0);',
 				'	}',

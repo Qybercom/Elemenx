@@ -428,11 +428,8 @@ Elemenx.Trait('SceneNebula', {
 			'	return mix(texture(uBlock, a), texture(uBlock, b), u.z - z0);',
 			'}',
 			/* A value noise of its own, finer than its block: the grain seen near. */
-			'float hash13(vec3 p) {',
-			'	p = fract(p * 0.1031);',
-			'	p += dot(p, p.zyx + 31.32);',
-			'	return fract((p.x + p.y) * p.z);',
-			'}',
+			this.$Service('Noise').GLSLChunk(['enx_white3']),
+			'float hash13(vec3 p) { return enx_white3(p); }',
 			'float grain(vec3 p) {',
 			'	vec3 i = floor(p);',
 			'	vec3 f = fract(p);',

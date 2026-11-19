@@ -1,0 +1,609 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "forecast",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "forecast-input-px",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PX"
+				}
+			]
+		},
+		{
+			"id": "forecast-input-py",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PY"
+				}
+			]
+		},
+		{
+			"id": "forecast-input-pz",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PZ"
+				}
+			]
+		},
+		{
+			"id": "forecast-input-days",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Days"
+				}
+			]
+		},
+		{
+			"id": "forecast-input-seed",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "forecast-input-radiuskm",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RadiusKm"
+				}
+			]
+		},
+		{
+			"id": "forecast-input-sunx",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SunX"
+				}
+			]
+		},
+		{
+			"id": "forecast-input-suny",
+			"type": "Input",
+			"x": 0,
+			"y": 880,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SunY"
+				}
+			]
+		},
+		{
+			"id": "forecast-input-sunz",
+			"type": "Input",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SunZ"
+				}
+			]
+		},
+		{
+			"id": "forecast-input-cloudiness",
+			"type": "Input",
+			"x": 0,
+			"y": 1100,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Cloudiness"
+				}
+			]
+		},
+		{
+			"id": "forecast-input-moist",
+			"type": "Input",
+			"x": 0,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Moist"
+				}
+			]
+		},
+		{
+			"id": "forecast-input-warm",
+			"type": "Input",
+			"x": 0,
+			"y": 1320,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Warm"
+				}
+			]
+		},
+		{
+			"id": "forecast-input-ground",
+			"type": "Input",
+			"x": 0,
+			"y": 1430,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Ground"
+				}
+			]
+		},
+		{
+			"id": "forecast-input-climb",
+			"type": "Input",
+			"x": 0,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Climb"
+				}
+			]
+		},
+		{
+			"id": "forecast-storms",
+			"type": "ForecastStorms",
+			"x": 280,
+			"y": 110,
+			"properties": [
+				{
+					"key": "StreamScale",
+					"value": 2.6
+				},
+				{
+					"key": "StreamFine",
+					"value": 14
+				},
+				{
+					"key": "Eddies",
+					"value": 0.06
+				}
+			]
+		},
+		{
+			"id": "forecast-fronts",
+			"type": "ForecastFronts",
+			"x": 560,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Cut",
+					"value": 1.15
+				},
+				{
+					"key": "CutBy",
+					"value": 0.8
+				},
+				{
+					"key": "Soft",
+					"value": 0.08
+				}
+			]
+		},
+		{
+			"id": "forecast-heaps",
+			"type": "ForecastHeaps",
+			"x": 840,
+			"y": 110,
+			"properties": [
+				{
+					"key": "FairSea",
+					"value": 0.22
+				},
+				{
+					"key": "FairLand",
+					"value": 0.38
+				}
+			]
+		},
+		{
+			"id": "forecast-cirrus",
+			"type": "ForecastCirrus",
+			"x": 840,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Low",
+					"value": 0.55
+				},
+				{
+					"key": "High",
+					"value": 0.82
+				}
+			]
+		},
+		{
+			"id": "forecast-rain",
+			"type": "ForecastRain",
+			"x": 1120,
+			"y": 110,
+			"properties": [
+				{
+					"key": "From",
+					"value": 0.62
+				},
+				{
+					"key": "To",
+					"value": 0.95
+				}
+			]
+		},
+		{
+			"id": "forecast-shroud",
+			"type": "ForecastShroud",
+			"x": 1400,
+			"y": 110,
+			"properties": []
+		},
+		{
+			"id": "forecast-result-cover",
+			"type": "Result",
+			"x": 1680,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Cover"
+				}
+			]
+		},
+		{
+			"id": "forecast-result-kind",
+			"type": "Result",
+			"x": 1680,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Kind"
+				}
+			]
+		},
+		{
+			"id": "forecast-result-cirrus",
+			"type": "Result",
+			"x": 1680,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Cirrus"
+				}
+			]
+		},
+		{
+			"id": "forecast-result-rain",
+			"type": "Result",
+			"x": 1680,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Rain"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "forecast-link-0",
+			"p1": "forecast-input-px-out-Value",
+			"p2": "forecast-storms-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-1",
+			"p1": "forecast-input-py-out-Value",
+			"p2": "forecast-storms-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-2",
+			"p1": "forecast-input-pz-out-Value",
+			"p2": "forecast-storms-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-3",
+			"p1": "forecast-input-days-out-Value",
+			"p2": "forecast-storms-in-Days",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-4",
+			"p1": "forecast-input-seed-out-Value",
+			"p2": "forecast-storms-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-5",
+			"p1": "forecast-input-radiuskm-out-Value",
+			"p2": "forecast-storms-in-RadiusKm",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-6",
+			"p1": "forecast-storms-out-Fronts",
+			"p2": "forecast-fronts-in-Fronts",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-7",
+			"p1": "forecast-storms-out-Mid",
+			"p2": "forecast-fronts-in-Mid",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-8",
+			"p1": "forecast-input-moist-out-Value",
+			"p2": "forecast-fronts-in-Moist",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-9",
+			"p1": "forecast-input-ground-out-Value",
+			"p2": "forecast-fronts-in-Ground",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-10",
+			"p1": "forecast-input-climb-out-Value",
+			"p2": "forecast-fronts-in-Climb",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-11",
+			"p1": "forecast-input-py-out-Value",
+			"p2": "forecast-fronts-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-12",
+			"p1": "forecast-storms-out-Storm",
+			"p2": "forecast-fronts-in-Storm",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-13",
+			"p1": "forecast-input-cloudiness-out-Value",
+			"p2": "forecast-fronts-in-Cloudiness",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-14",
+			"p1": "forecast-input-px-out-Value",
+			"p2": "forecast-heaps-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-15",
+			"p1": "forecast-input-py-out-Value",
+			"p2": "forecast-heaps-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-16",
+			"p1": "forecast-input-pz-out-Value",
+			"p2": "forecast-heaps-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-17",
+			"p1": "forecast-input-sunx-out-Value",
+			"p2": "forecast-heaps-in-SunX",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-18",
+			"p1": "forecast-input-suny-out-Value",
+			"p2": "forecast-heaps-in-SunY",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-19",
+			"p1": "forecast-input-sunz-out-Value",
+			"p2": "forecast-heaps-in-SunZ",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-20",
+			"p1": "forecast-input-warm-out-Value",
+			"p2": "forecast-heaps-in-Warm",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-21",
+			"p1": "forecast-input-moist-out-Value",
+			"p2": "forecast-heaps-in-Moist",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-22",
+			"p1": "forecast-input-ground-out-Value",
+			"p2": "forecast-heaps-in-Ground",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-23",
+			"p1": "forecast-input-climb-out-Value",
+			"p2": "forecast-heaps-in-Climb",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-24",
+			"p1": "forecast-storms-out-Streams",
+			"p2": "forecast-heaps-in-Streams",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-25",
+			"p1": "forecast-storms-out-Mid",
+			"p2": "forecast-heaps-in-Mid",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-26",
+			"p1": "forecast-fronts-out-Humid",
+			"p2": "forecast-heaps-in-Humid",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-27",
+			"p1": "forecast-storms-out-Storm",
+			"p2": "forecast-heaps-in-Storm",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-28",
+			"p1": "forecast-fronts-out-Sheet",
+			"p2": "forecast-heaps-in-Sheet",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-29",
+			"p1": "forecast-input-cloudiness-out-Value",
+			"p2": "forecast-heaps-in-Cloudiness",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-30",
+			"p1": "forecast-storms-out-Streams",
+			"p2": "forecast-cirrus-in-Streams",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-31",
+			"p1": "forecast-input-py-out-Value",
+			"p2": "forecast-cirrus-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-32",
+			"p1": "forecast-fronts-out-Sheet",
+			"p2": "forecast-cirrus-in-Sheet",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-33",
+			"p1": "forecast-fronts-out-Sheet",
+			"p2": "forecast-rain-in-Sheet",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-34",
+			"p1": "forecast-fronts-out-Humid",
+			"p2": "forecast-rain-in-Humid",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-35",
+			"p1": "forecast-storms-out-Storm",
+			"p2": "forecast-rain-in-Storm",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-36",
+			"p1": "forecast-heaps-out-Heaps",
+			"p2": "forecast-rain-in-Heaps",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-37",
+			"p1": "forecast-heaps-out-Kind",
+			"p2": "forecast-rain-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-38",
+			"p1": "forecast-fronts-out-Sheet",
+			"p2": "forecast-shroud-in-Sheet",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-39",
+			"p1": "forecast-heaps-out-Heaps",
+			"p2": "forecast-shroud-in-Heaps",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-40",
+			"p1": "forecast-heaps-out-Kind",
+			"p2": "forecast-shroud-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-41",
+			"p1": "forecast-cirrus-out-Cirrus",
+			"p2": "forecast-shroud-in-Cirrus",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-42",
+			"p1": "forecast-rain-out-Rain",
+			"p2": "forecast-shroud-in-Rain",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-43",
+			"p1": "forecast-input-cloudiness-out-Value",
+			"p2": "forecast-shroud-in-Cloudiness",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-44",
+			"p1": "forecast-shroud-out-Cover",
+			"p2": "forecast-result-cover-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-45",
+			"p1": "forecast-shroud-out-Kind",
+			"p2": "forecast-result-kind-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-46",
+			"p1": "forecast-shroud-out-Cirrus",
+			"p2": "forecast-result-cirrus-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-47",
+			"p1": "forecast-shroud-out-Rain",
+			"p2": "forecast-result-rain-in-Value",
+			"kind": "value"
+		}
+	]
+}

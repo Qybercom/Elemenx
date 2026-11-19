@@ -1,0 +1,481 @@
+{
+	"version": 1,
+	"type": "model",
+	"name": "villager",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "formula-0",
+			"type": "Formula",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[]"
+				}
+			]
+		},
+		{
+			"id": "box-1",
+			"type": "Box",
+			"x": 0,
+			"y": 90,
+			"properties": []
+		},
+		{
+			"id": "formula-2",
+			"type": "Formula",
+			"x": 0,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.15, 0.05, 0.15]"
+				}
+			]
+		},
+		{
+			"id": "formula-3",
+			"type": "Formula",
+			"x": 0,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.99, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-4",
+			"type": "Formula",
+			"x": 0,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.5, 0.33, 0.2]"
+				}
+			]
+		},
+		{
+			"id": "formula-5",
+			"type": "Formula",
+			"x": 0,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[]"
+				}
+			]
+		},
+		{
+			"id": "cylinder-6",
+			"type": "Cylinder",
+			"x": 0,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Segments",
+					"value": 8
+				}
+			]
+		},
+		{
+			"id": "formula-7",
+			"type": "Formula",
+			"x": 0,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.014"
+				}
+			]
+		},
+		{
+			"id": "formula-8",
+			"type": "Formula",
+			"x": 0,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"id": "formula-9",
+			"type": "Formula",
+			"x": 0,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.46"
+				}
+			]
+		},
+		{
+			"id": "formula-10",
+			"type": "Formula",
+			"x": 0,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.175, 0.47, 0.16]"
+				}
+			]
+		},
+		{
+			"id": "formula-11",
+			"type": "Formula",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.5, 0.36, 0.23]"
+				}
+			]
+		},
+		{
+			"id": "formula-12",
+			"type": "Formula",
+			"x": 0,
+			"y": 1080,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[75, 0, 0]"
+				}
+			]
+		},
+		{
+			"id": "box-13",
+			"type": "Box",
+			"x": 0,
+			"y": 1170,
+			"properties": []
+		},
+		{
+			"id": "formula-14",
+			"type": "Formula",
+			"x": 0,
+			"y": 1260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.11, 0.09, 0.02]"
+				}
+			]
+		},
+		{
+			"id": "formula-15",
+			"type": "Formula",
+			"x": 240,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.175, 0.42, 0.37]"
+				}
+			]
+		},
+		{
+			"id": "formula-16",
+			"type": "Formula",
+			"x": 240,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.34, 0.36, 0.41]"
+				}
+			]
+		},
+		{
+			"id": "join-17",
+			"type": "Join",
+			"x": 240,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "call-18",
+			"type": "Call",
+			"x": 240,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/models/biped"
+				}
+			]
+		},
+		{
+			"id": "formula-19",
+			"type": "Formula",
+			"x": 240,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.72, 0.62, 0.42]"
+				}
+			]
+		},
+		{
+			"id": "formula-20",
+			"type": "Formula",
+			"x": 240,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.72, 0.62, 0.42]"
+				}
+			]
+		},
+		{
+			"id": "formula-21",
+			"type": "Formula",
+			"x": 240,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.9, 0.74, 0.6]"
+				}
+			]
+		},
+		{
+			"id": "formula-22",
+			"type": "Formula",
+			"x": 240,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.72, 0.62, 0.42]"
+				}
+			]
+		},
+		{
+			"id": "formula-23",
+			"type": "Formula",
+			"x": 240,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.4, 0.34, 0.28]"
+				}
+			]
+		},
+		{
+			"id": "formula-24",
+			"type": "Formula",
+			"x": 240,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.42, 0.3, 0.2]"
+				}
+			]
+		},
+		{
+			"id": "formula-25",
+			"type": "Formula",
+			"x": 240,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"id": "model-26",
+			"type": "Model",
+			"x": 240,
+			"y": 990,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "link-0",
+			"p1": "formula-2-out-Value",
+			"p2": "box-1-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-1",
+			"p1": "formula-3-out-Value",
+			"p2": "box-1-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-2",
+			"p1": "formula-4-out-Value",
+			"p2": "box-1-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-3",
+			"p1": "formula-7-out-Value",
+			"p2": "cylinder-6-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "link-4",
+			"p1": "formula-8-out-Value",
+			"p2": "cylinder-6-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "link-5",
+			"p1": "formula-9-out-Value",
+			"p2": "cylinder-6-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "link-6",
+			"p1": "formula-10-out-Value",
+			"p2": "cylinder-6-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-7",
+			"p1": "formula-11-out-Value",
+			"p2": "cylinder-6-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-8",
+			"p1": "formula-12-out-Value",
+			"p2": "cylinder-6-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "link-9",
+			"p1": "formula-14-out-Value",
+			"p2": "box-13-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-10",
+			"p1": "formula-15-out-Value",
+			"p2": "box-13-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-11",
+			"p1": "formula-16-out-Value",
+			"p2": "box-13-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-12",
+			"p1": "cylinder-6-out-Parts",
+			"p2": "join-17-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "link-13",
+			"p1": "box-13-out-Parts",
+			"p2": "join-17-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "link-14",
+			"p1": "formula-19-out-Value",
+			"p2": "call-18-in-Torso",
+			"kind": "value"
+		},
+		{
+			"id": "link-15",
+			"p1": "formula-20-out-Value",
+			"p2": "call-18-in-Belt",
+			"kind": "value"
+		},
+		{
+			"id": "link-16",
+			"p1": "formula-21-out-Value",
+			"p2": "call-18-in-Skin",
+			"kind": "value"
+		},
+		{
+			"id": "link-17",
+			"p1": "formula-22-out-Value",
+			"p2": "call-18-in-Arms",
+			"kind": "value"
+		},
+		{
+			"id": "link-18",
+			"p1": "formula-23-out-Value",
+			"p2": "call-18-in-Legs",
+			"kind": "value"
+		},
+		{
+			"id": "link-19",
+			"p1": "formula-24-out-Value",
+			"p2": "call-18-in-Boots",
+			"kind": "value"
+		},
+		{
+			"id": "link-20",
+			"p1": "formula-25-out-Value",
+			"p2": "call-18-in-Wide",
+			"kind": "value"
+		},
+		{
+			"id": "link-21",
+			"p1": "formula-0-out-Value",
+			"p2": "call-18-in-Body",
+			"kind": "value"
+		},
+		{
+			"id": "link-22",
+			"p1": "box-1-out-Parts",
+			"p2": "call-18-in-Head",
+			"kind": "value"
+		},
+		{
+			"id": "link-23",
+			"p1": "formula-5-out-Value",
+			"p2": "call-18-in-ArmL",
+			"kind": "value"
+		},
+		{
+			"id": "link-24",
+			"p1": "join-17-out-Parts",
+			"p2": "call-18-in-ArmR",
+			"kind": "value"
+		},
+		{
+			"id": "link-25",
+			"p1": "call-18-out-Parts",
+			"p2": "model-26-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "link-26",
+			"p1": "call-18-out-Pieces",
+			"p2": "model-26-in-Pieces",
+			"kind": "value"
+		}
+	]
+}

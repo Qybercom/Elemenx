@@ -72,7 +72,7 @@ Elemenx.Trait('SceneLighting', {
 		var renderer = engine.Renderer;
 		var graphics = this.$Service('Renderer');
 		var math = this.$Service('Math');
-		var shaders = this.LightingShaders(graphics);
+		var shaders = this.Clouded(this.Aired(this.LightingShaders(graphics)));
 		var blueprints = this.$Service('Blueprints');
 		var state = {Width: 0, Height: 0, Level: '', Scene: null, Bloom: [], Dark: null, Soft: null, Programs: null, Late: 0, Frames: 0, Step: 0, Screen: {}, Shaders: {}};
 		var levels = ['low', 'medium', 'high', 'ultra'];
@@ -702,27 +702,22 @@ Elemenx.Trait('SceneLighting', {
 			if (!ground || !strike || strike.Ground === false || now.Flash < 0.08 || scene.Camera.Ortho) return;
 
 			var low = Math.max(ground.Field.Top * 1.6, 90);
+			/* Its shape the one of the bolts of effects too (SceneBlueprints.Bolt: a jag of each step, where its branch leaves). */
+			var shape = self.BoltShape();
 
-			var random = strike.Seed;
-
-			function next () {
-				random = (random * 9301 + 49297) % 233280;
-
-				return random / 233280 - 0.5;
-			}
-
-			function line (x, y, z, down, steps, wide) {
+			function line (x, y, z, down, steps, wide, seed, fork) {
 				var i;
 
 				for (i = 0; i < steps; i++) {
-					var nextX = x + next() * wide;
-					var nextZ = z + next() * wide;
+					var jag = shape.Jag(i, seed);
+					var nextX = x + jag[0] * wide;
+					var nextZ = z + jag[1] * wide;
 					var nextY = y - down;
 
 					points.push(x, y, z, nextX, nextY, nextZ);
 
-					if (i === 5 && steps > 6)
-						line(nextX, nextY, nextZ, down * 0.8, 6, wide * 1.2);
+					if (fork && i === shape.Fork && shape.ForkSteps)
+						line(nextX, nextY, nextZ, down * shape.ForkDown, shape.ForkSteps, wide * shape.ForkWide, seed + 17, false);
 
 					x = nextX;
 					y = nextY;
@@ -730,7 +725,7 @@ Elemenx.Trait('SceneLighting', {
 				}
 			}
 
-			line(Math.cos(strike.Way) * low * 2.4 * strike.Far, low - eye[1], Math.sin(strike.Way) * low * 2.4 * strike.Far, low / 14, 14, low * 0.09);
+			line(Math.cos(strike.Way) * low * 2.4 * strike.Far, low - eye[1], Math.sin(strike.Way) * low * 2.4 * strike.Far, low / shape.Steps, shape.Steps, low * shape.Wide, strike.Seed, true);
 
 			if (!state.BoltProgram)
 				state.BoltProgram = renderer.Program(shaders.BoltVertex, shaders.Bolt);
@@ -1556,30 +1551,9 @@ Elemenx.Trait('SceneLighting', {
 			'uniform float uCover;',
 			'uniform vec3 uShape;',
 			'uniform vec2 uDrift;',
-			'float lobe(float toward, float g) {',
-			'	return (1.0 - g * g) / (12.57 * pow(1.0 + g * g - 2.0 * g * toward, 1.5)) * 6.0;',
-			'}',
-			'float thick(vec3 p, float fine) {',
-			'	float h = clamp((p.y - uLayer.x) / (uLayer.y - uLayer.x), 0.0, 1.0);',
-			'	vec2 flat2 = p.xz * uLayer.z + uDrift;',
-			'	vec4 big = texture(uNoise, vec3(flat2 * 0.05, 0.31));',
-			'	vec4 mid = texture(uNoise, vec3(flat2 * 0.17 + 3.1, 0.62));',
-			'	float map = big.b * 0.7 + mid.g * 0.3;',
-			'	float amount = clamp((map - mix(0.86, 0.2, uCover)) / 0.2, 0.0, 1.0);',
-			'	if (amount <= 0.0) return 0.0;',
-			'	float kind = clamp(uShape.x + (mid.b - 0.5) * 0.7, 0.0, 1.0);',
-			'	float top = kind < 0.5 ? mix(0.24, 0.62, kind * 2.0) : mix(0.62, 1.0, kind * 2.0 - 1.0);',
-			'	float rise = smoothstep(0.0, 0.08, h) * (1.0 - smoothstep(top * 0.55, top * (0.72 + amount * 0.28), h));',
-			'	vec4 shape = texture(uNoise, vec3(p.x, p.y * 1.4, p.z) * uLayer.z * 0.42 + vec3(uDrift.x * 2.0, 0.0, uDrift.y * 2.0));',
-			'	float body = (shape.r * rise - (1.0 - amount) * 0.9) / max(0.12, amount);',
-			'	if (body <= 0.0) return 0.0;',
-			'	if (fine > 0.5) {',
-			'		vec4 edge = texture(uNoise, vec3(p.x, p.y * 1.2, p.z) * uLayer.z * 2.6 + vec3(uDrift.x, -uDrift.x, uDrift.y) * 6.0);',
-			'		vec4 finer = texture(uNoise, vec3(p.z, p.x, p.y * 1.3) * uLayer.z * 7.3 + vec3(uDrift, 0.0) * 9.0);',
-			'		body -= (1.0 - edge.g * 0.7 - edge.a * 0.3) * 0.34 * (0.6 + uShape.z) * (1.0 - clamp(body * 1.6, 0.0, 1.0)) + (1.0 - finer.g) * 0.05;',
-			'	}',
-			'	return clamp(body * 4.2, 0.0, 1.0);',
-			'}'
+			/* Of the clouds of the scene (CloudsGraph): lobe, thick, and those of the shaders that ask for more. */
+			'#define ENX_CLOUDS_LAYER',
+			'void blueprintClouds() {}'
 		].join('\n');
 
 		return {
@@ -1962,96 +1936,10 @@ Elemenx.Trait('SceneLighting', {
 				'uniform float uShellUnit;',
 				'uniform samplerCube uWeather;',
 				'out vec4 outColor;',
-				cloudShape,
+				/* The clouds of the weather of a planet round the eye over its surface too (shellThick of the CloudsGraph). */
+				'#define ENX_CLOUDS_SHELL',
 				graphics.Chunks.Noise,
-				/*
-				 * The clouds of the weather of a planet over its surface (uShell: its radius, the ground under the eye, km; on): a
-				 * shell round it from 0.4 to 13 km over its sea. Of the weather of each place (uWeather, as Scene bakes it: cover,
-				 * kind, cirrus): sheets low and flat, heaps to 3 km with round tops, towers of a storm to 12, cirrus at 9 to 11;
-				 * their billows of a noise of the body (kilometres of it), so they stay where they are as the eye goes.
-				 */
-				'float shellThick(vec3 q, float foot, float detail) {',
-				'	float R = uShell.x;',
-				'	float r = length(q);',
-				'	float h = r - R;',
-				'	mat3 back = transpose(uTurn);',
-				'	vec4 w = texture(uWeather, back * (q / r));',
-				'	vec3 k = back * q;',
-				'	float kind = w.g;',
-				'	float heap = smoothstep(0.3, 0.6, kind);',
-				'	float base = mix(0.6, 1.0, heap);',
-				'	float top = kind < 0.5 ? mix(1.5, 3.2, kind * 2.0) : mix(3.2, 12.0, (kind - 0.5) * 2.0);',
-				/* Tops of heaps each of its own height (cauliflowers of a few km), of a sheet a little uneven. */
-				'	top = base + (top - base) * mix(0.8 + 0.2 * mix(noise3(k / 8.0 + 4.0), 0.5, smoothstep(1.5, 4.0, foot)), 0.45 + 0.55 * mix(noise3(k / 2.6 + 2.0), 0.5, smoothstep(0.5, 1.5, foot)), heap);',
-				'	float hn = (h - base) / (top - base);',
-				'	float d = 0.0;',
-				'	if (hn > 0.0 && hn < 1.0 && w.r > 0.02) {',
-				/*
-				 * Cheap (to find cloud, and for the light toward the sun): of the cover of the weather alone at this height, never
-				 * less than the full one. Regression: of another noise than the full one it said nothing where there was cloud, and
-				 * the long steps went over it: near, few clouds and thin.
-				 */
-				'		if (detail < 0.5) return clamp(w.r * mix(smoothstep(0.0, 0.25, hn) * (1.0 - smoothstep(0.55, 1.0, hn)), (1.0 - smoothstep(0.2, 1.0, hn)), heap) * 3.0 + 0.05, 0.0, 1.0);',
-				/*
-				 * Where there is cloud: the very cover its globe and their shadows show (CLOUDS SEEN of Scene), of billows of 80,
-				 * 30, 11, 4 and 1.5 km, as many of them as are asked (the far fewer).
-				 */
-				/* Each only while a pixel there (foot, km) sees it, as on the globe: what is finer its mean, no grain from high. */
-				'		float n = 0.0;',
-				'		float total = 0.0;',
-				'		float seen = 0.0;',
-				'		float size = 80.0;',
-				/* Each turned against the last, as the clouds of the globe are (no squares along the grid of the noise). */
-				'		mat3 askew = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
-				'		vec3 turned = k;',
-				'		for (int i = 0; i < 5; i++) {',
-				'			float a = i < 2 ? mix(0.6, 0.3, heap) : mix(0.22, 0.6, heap);',
-				'			float sharp = 1.0 - smoothstep(size * 0.12, size * 0.45, foot);',
-				'			turned = askew * turned;',
-				'			if (sharp > 0.0) n += ((noise3(turned / size + float(i) * 7.1) + noise3(askew * (turned / size) + float(i) * 3.7 + 11.0)) * 0.5 - 0.5) * 1.4 * a * sharp;',
-				'			total += a;',
-				'			seen += a * sharp;',
-				'			size /= 2.7;',
-				'		}',
-				'		float spread = mix(0.12, 0.06, heap) + clamp(foot / 40.0, 0.0, 0.2);',
-				/* Cut where the share the cover says is over (as the globe and the shadows do). */
-				'		float level = 0.5 + 0.13 * log((1.0 - clamp(w.r, 0.01, 0.99)) / clamp(w.r, 0.01, 0.99));',
-				/* Unseen billows: the cover of the weather as it is (as on the globe), narrower up high. */
-				'		float cover = mix(clamp(w.r - max(hn - 0.3, 0.0) * mix(0.15, 0.5, heap), 0.0, 1.0), smoothstep(level - spread, level + spread, 0.5 + n * 1.6 / max(seen / total, 0.05) - max(hn - 0.3, 0.0) * mix(0.15, 0.5, heap)), seen / total);',
-				/* A sheet flat with a soft top; a heap round, wide below, narrow over. */
-				'		float sheet = smoothstep(0.0, 0.25, hn) * (1.0 - smoothstep(0.55, 1.0, hn));',
-				/* A heap full in its lower half, round over it (as wide as its shadow on the ground). */
-				'		float round1 = smoothstep(0.0, 0.07, hn) * (1.0 - smoothstep(0.45, 1.0, hn));',
-				'		float shape = mix(sheet, round1, heap);',
-				/* Their edges eaten by billows of 1.2 km near (a regular block of noise showed its grid as dots). */
-				/*
-				 * Billows in three dimensions of 0.9 and 0.35 km, other at each height: heaps of cauliflowers, their sides uneven;
-				 * as far as a pixel there sees them (from high, their mean).
-				 */
-				'		float near = 1.0 - smoothstep(0.3, 1.2, foot);',
-				'		float closer = 1.0 - smoothstep(0.1, 0.45, foot);',
-				'		float closest = 1.0 - smoothstep(0.04, 0.18, foot);',
-				'		float billow = 0.5 + (noise3(askew * k / 0.9 + 9.0) - 0.5) * near * 0.75 + (noise3(askew * (askew * k) / 0.35 + 3.0) - 0.5) * closer * 0.45 + (noise3(k / 0.14 + 5.0) - 0.5) * closest * 0.3;',
-				/* As much cloud as its shadows on the ground and the globe show (it was thinner: more shadow than cloud). */
-				'		d = cover * shape - 0.04 - (1.0 - billow) * mix(0.25, 0.5, heap) + 0.5 * mix(0.25, 0.5, heap);',
-				/* Their edges eaten the most where they are thin: cauliflowers, not ovals, near. */
-				'		d -= (1.0 - billow) * 0.3 * (1.0 - clamp(d * 2.0, 0.0, 1.0)) * near;',
-				/* Not all of it at once full: the billows show inside a cloud too, not at its edges only. */
-				'		d = clamp(d * 2.5, 0.0, 1.0);',
-				'	}',
-				/* Cirrus: a thin veil drawn out east and west. */
-				/* Not for the light of others (detail 0.25): so thin a veil casts no dark band over the clouds under it. */
-				'	if (h > 8.5 && h < 11.0 && w.b > 0.02 && (detail < 0.2 || detail > 0.5)) {',
-				/*
-				 * Regression: a noise drawn out along the latitudes made them straight bars to the horizon. They are drawn out along
-				 * the wind in the weather itself (its cirrus, B); a noise of their own only frays them.
-				 */
-				'		mat3 turn2 = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
-				'		float fray = noise3(turn2 * k / 6.0 + 5.0) * 0.6 + noise3(k / 2.0 + 1.0) * 0.4;',
-				'		d = max(d, smoothstep(0.35, 0.85, w.b) * smoothstep(0.35, 0.65, fray) * smoothstep(8.5, 9.3, h) * (1.0 - smoothstep(10.2, 11.0, h)) * 0.08);',
-				'	}',
-				'	return d;',
-				'}',
+				cloudShape,
 				'void main() {',
 				'	vec4 far = uInverse * vec4(vQuad, 1.0, 1.0);',
 				'	vec3 ray = normalize(uTurn * (far.xyz / far.w));',
@@ -2350,6 +2238,10 @@ Elemenx.Trait('SceneLighting', {
 				'uniform float uUnder;',
 				'uniform float uSeconds;',
 				'out vec4 outColor;',
+				/* The fog and the eye under the sea of the air of the scene (AirGraph). */
+				'#define ENX_AIR_FOG',
+				'#define ENX_AIR_UNDER',
+				'void blueprintAir() {}',
 				'void main() {',
 				'	vec2 uv = vQuad * 0.5 + 0.5;',
 				'	if (uUnder > 0.5) uv = clamp(uv + vec2(sin(uv.y * 31.0 + uSeconds * 1.7), cos(uv.x * 27.0 + uSeconds * 1.3)) * 0.0025, 0.0, 1.0);',
@@ -2359,12 +2251,7 @@ Elemenx.Trait('SceneLighting', {
 				'	vec4 p = uInverse * vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);',
 				'	vec3 place = p.xyz / p.w;',
 				'	if (uUnder > 0.5) {',
-				'		float through = depth < 1.0 ? length(place) : 80.0;',
-				'		vec3 deep = pow(vec3(0.06, 0.32, 0.36), vec3(2.2)) * uAirLight * (0.25 + 0.75 * clamp(uSun.y * 3.0, 0.0, 1.0));',
-				'		vec3 ray = normalize(place);',
-				/* Lighter where the eye looks up toward the light of the surface. */
-				'		deep *= 1.0 + 2.5 * smoothstep(0.2, 1.0, ray.y);',
-				'		color = mix(color * exp(-through * vec3(0.16, 0.045, 0.035)), deep, 1.0 - exp(-through * 0.045));',
+				'		color = air_under(color, place, depth);',
 				'		outColor = vec4(pow(max(color, vec3(0.0)), vec3(1.0 / 2.2)), given.a);',
 				'		return;',
 				'	}',
@@ -2376,19 +2263,12 @@ Elemenx.Trait('SceneLighting', {
 				'		return;',
 				'	}',
 				/* Thick air hides the sky too. */
-				'	if (uFogSky > 0.0 && depth >= 1.0) color = mix(color, pow(mix(uAir.rgb, vec3(1.0), 0.55), vec3(2.2)) * uAirLight + pow(uAirGlow, vec3(2.2)) * 0.3, uFogSky);',
+				'	if (uFogSky > 0.0 && depth >= 1.0) color = mix(color, air_sky(), uFogSky);',
 				'	if (uFog > 0.0 && depth < 1.0 && uParallel < 0.5) {',
 				'		float far = length(place);',
 				'		vec3 way = place / far;',
-				/* The fog of a weather lies low: what a ray meets of it falls with the height the ray climbs to. */
-				'		float climb = place.y * uFogLow.y;',
-				'		float low = uFogLow.z > 0.0 ? uFogLow.z * exp(-uFogLow.x * uFogLow.y) * (abs(climb) < 0.01 ? 1.0 : (1.0 - exp(-climb)) / climb) : 0.0;',
-				/* Rain does not lie even: its sheets go past with the wind, and what is far comes and goes behind them. */
-				'		float sheets = uVeil > 0.01 ? 0.72 + 0.56 * texture(uNoise, vec3(way.x * 1.6 + uVeilMove.x, way.y * 0.8, way.z * 1.6 + uVeilMove.y) + vec3(0.0, uVeilMove.z, 0.0)).b : 1.0;',
-				'		float air = 1.0 - exp(-far * (uFog * sheets + low));',
-				'		vec3 sky = pow(mix(uAir.rgb, vec3(1.0), 0.4), vec3(2.2)) * uAirLight + pow(uAirGlow, vec3(2.2)) * 0.3;',
-				'		sky += uSunColor * pow(max(dot(way, uSun), 0.0), 8.0) * 0.6;',
-				'		color = mix(color, sky, air);',
+				/* The fog of a weather lies low, rain goes past in sheets (air_fog of the AirGraph). */
+				'		color = mix(color, air_far(way), air_fog(place, far, way));',
 				'	}',
 				'	if (uCover > 0.0 && (uBehind < 0.5 || depth >= 1.0)) {',
 				'		vec4 cloud = texture(uCloud, uv);',
@@ -2397,7 +2277,7 @@ Elemenx.Trait('SceneLighting', {
 				/* Far off, what stands melts into a sky of the same air: there is no line between them. */
 				'	if (uVeil > 0.01 && depth >= 1.0 && uParallel < 0.5) {',
 				'		vec3 ray = normalize(place);',
-				'		color = mix(color, pow(mix(uAir.rgb, vec3(1.0), 0.4), vec3(2.2)) * uAirLight + pow(uAirGlow, vec3(2.2)) * 0.3, min(0.96, uVeil * 2.4) * exp(-max(ray.y, 0.0) * 5.0));',
+				'		color = mix(color, air_hazed(), air_veil(ray));',
 				'	}',
 				'	outColor = vec4(pow(max(color, vec3(0.0)), vec3(1.0 / 2.2)), given.a);',
 				'}'
@@ -2451,12 +2331,13 @@ Elemenx.Trait('SceneLighting', {
 				'uniform float uReach;',
 				'out float vAlpha;',
 				'out float vTip;',
+				this.$Service('Noise').GLSLChunk(['enx_white3']),
 				'void main() {',
 				'	vec3 seed = aNormal;',
 				'	float t = uTime * 2.6 + seed.z * 11.0;',
 				'	float cycle = floor(t);',
 				'	float age = fract(t);',
-				'	vec2 h = fract(sin(vec2(cycle * 12.9898 + seed.x * 78.233, cycle * 39.346 + seed.y * 11.135)) * 43758.5453);',
+				'	vec2 h = vec2(enx_white3(vec3(cycle, seed.xy)), enx_white3(vec3(seed.yx, cycle) + 17.31));',
 				'	vec2 place = uEye.xz + (h * 2.0 - 1.0) * uReach;',
 				'	float ground = texture(uHeights, (place - uCenter) / uSpan + 0.5).r;',
 				/* As many as the rain is heavy, none on the water, a crown of a few centimetres that rises and falls back. */
@@ -2904,6 +2785,7 @@ Elemenx.Trait('SceneLighting', {
 				'vec3 decoded(vec2 uv) {',
 				'	return pow(max(texture(uColor, uv).rgb, vec3(0.0)), vec3(2.2));',
 				'}',
+				this.$Service('Noise').GLSLChunk(['enx_white2']),
 				'void main() {',
 				'	vec2 uv = vQuad * 0.5 + 0.5;',
 				/* Over what burns the air trembles: it bends the picture behind it. */
@@ -2989,7 +2871,7 @@ Elemenx.Trait('SceneLighting', {
 				'	if (uLutSize > 1.0) shown = table(shown);',
 				/* The grain of a sensor pushed by its ISO: more in the dark, another each frame. */
 				'	if (uLook.z > 0.0) {',
-				'		float n = fract(sin(dot(gl_FragCoord.xy + fract(uTick * 7.31) * 113.0, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;',
+				'		float n = enx_white2(gl_FragCoord.xy + fract(uTick * 7.31) * 113.0) - 0.5;',
 				'		shown += n * uLook.z * 0.09 * (1.2 - dot(shown, vec3(0.33)));',
 				'	}',
 				'	float grain = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) / 255.0;',

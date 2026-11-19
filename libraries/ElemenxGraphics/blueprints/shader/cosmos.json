@@ -1,0 +1,359 @@
+{
+	"version": 1,
+	"type": "cosmos",
+	"name": "Cosmos",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "ray",
+			"type": "CosmosRay",
+			"x": 40,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "gas",
+			"type": "CosmosGas",
+			"x": 280,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "plane",
+			"type": "CosmosPlane",
+			"x": 280,
+			"y": 300,
+			"properties": []
+		},
+		{
+			"id": "glow",
+			"type": "CosmosGlow",
+			"x": 520,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "dust",
+			"type": "CosmosDust",
+			"x": 760,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "band",
+			"type": "CosmosBand",
+			"x": 1000,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "bursts",
+			"type": "CosmosBursts",
+			"x": 40,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "galaxies",
+			"type": "CosmosGalaxies",
+			"x": 280,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "pillars",
+			"type": "CosmosPillars",
+			"x": 520,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "stars",
+			"type": "CosmosStars",
+			"x": 760,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "beacon",
+			"type": "CosmosBeacon",
+			"x": 1000,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "clusters",
+			"type": "CosmosClusters",
+			"x": 1240,
+			"y": 520,
+			"properties": []
+		},
+		{
+			"id": "end",
+			"type": "CosmosEnd",
+			"x": 1480,
+			"y": 520,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "cosmos-link-0",
+			"p1": "ray-out-Ray",
+			"p2": "gas-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-1",
+			"p1": "ray-out-Ray",
+			"p2": "plane-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-2",
+			"p1": "ray-out-Ray",
+			"p2": "glow-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-3",
+			"p1": "ray-out-Ray",
+			"p2": "dust-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-4",
+			"p1": "ray-out-Ray",
+			"p2": "band-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-5",
+			"p1": "ray-out-Ray",
+			"p2": "bursts-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-6",
+			"p1": "ray-out-Ray",
+			"p2": "galaxies-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-7",
+			"p1": "ray-out-Ray",
+			"p2": "pillars-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-8",
+			"p1": "ray-out-Ray",
+			"p2": "stars-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-9",
+			"p1": "ray-out-Ray",
+			"p2": "beacon-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-10",
+			"p1": "ray-out-Ray",
+			"p2": "clusters-in-Ray",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-11",
+			"p1": "ray-out-Seed",
+			"p2": "gas-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-12",
+			"p1": "ray-out-Seed",
+			"p2": "glow-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-13",
+			"p1": "ray-out-Seed",
+			"p2": "dust-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-14",
+			"p1": "ray-out-Seed",
+			"p2": "band-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-15",
+			"p1": "ray-out-Seed",
+			"p2": "bursts-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-16",
+			"p1": "ray-out-Seed",
+			"p2": "pillars-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-17",
+			"p1": "gas-out-Gas",
+			"p2": "glow-in-Gas",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-18",
+			"p1": "gas-out-Lit",
+			"p2": "glow-in-Lit",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-19",
+			"p1": "gas-out-Core",
+			"p2": "glow-in-Core",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-20",
+			"p1": "gas-out-Reach",
+			"p2": "glow-in-Reach",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-21",
+			"p1": "gas-out-Knots",
+			"p2": "glow-in-Knots",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-22",
+			"p1": "gas-out-Gas",
+			"p2": "dust-in-Gas",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-23",
+			"p1": "plane-out-High",
+			"p2": "dust-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-24",
+			"p1": "glow-out-Color",
+			"p2": "dust-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-25",
+			"p1": "dust-out-Color",
+			"p2": "band-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-26",
+			"p1": "plane-out-Disc",
+			"p2": "band-in-Disc",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-27",
+			"p1": "plane-out-High",
+			"p2": "band-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-28",
+			"p1": "band-out-Color",
+			"p2": "bursts-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-29",
+			"p1": "dust-out-Dust",
+			"p2": "bursts-in-Dust",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-30",
+			"p1": "bursts-out-Color",
+			"p2": "galaxies-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-31",
+			"p1": "gas-out-Gas",
+			"p2": "galaxies-in-Gas",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-32",
+			"p1": "dust-out-Dust",
+			"p2": "galaxies-in-Dust",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-33",
+			"p1": "band-out-Through",
+			"p2": "galaxies-in-Through",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-34",
+			"p1": "galaxies-out-Color",
+			"p2": "pillars-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-35",
+			"p1": "pillars-out-Color",
+			"p2": "stars-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-36",
+			"p1": "gas-out-Knots",
+			"p2": "stars-in-Knots",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-37",
+			"p1": "plane-out-Disc",
+			"p2": "stars-in-Disc",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-38",
+			"p1": "dust-out-Dust",
+			"p2": "stars-in-Dust",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-39",
+			"p1": "stars-out-Color",
+			"p2": "beacon-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-40",
+			"p1": "gas-out-Near",
+			"p2": "beacon-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-41",
+			"p1": "beacon-out-Color",
+			"p2": "clusters-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "cosmos-link-42",
+			"p1": "clusters-out-Color",
+			"p2": "end-in-Color",
+			"kind": "value"
+		}
+	]
+}

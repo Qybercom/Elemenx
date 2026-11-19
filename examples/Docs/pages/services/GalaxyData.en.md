@@ -15,13 +15,18 @@ GalaxyData: a galaxy as data (docs/SPACE-FORMAT.md): its passport, its supermass
 - Search(data, options): what of it lies round a place and is as asked (a type, a class, a mass, a temperature, a text, what was edited), the nearest first, at most Limit: {Items, More, Partial}.
 - Knots(data): the knots where its stars are born, as its picture draws them ({Grids: [{Cell, Count, Half, Data}]}): each one of its nebulae, a region where stars are born.
 - Objects(data): its nebulae and star clusters made of its seed ({ID, Kind, Type, Subtype, Name, Place, Radius, Seed}), ObjectOf(data, id) one of them, ObjectSystem(data, id) its scene as a system (Star and System take their IDs too: they are entered as a star is).
-- Cosmos(data, id): the backdrop of the sky of a system of a star (Cosmos of a Scene): the band of its galaxy across it, its pole the north of the galaxy as the system lies, as bright as the stars round it are many.
+- Cosmos(data, id): the backdrop of the sky of a system of a star (Cosmos of a Scene): the band of this very galaxy across it, as seen from where the star lies (Galaxy: its manifest, Place), its pole the north of the galaxy as the system lies, its stars as many as round it.
+- Code(), IR(): the arms of a galaxy of one source (Kernel, the kernel language: gx_turn, gx_bend, gx_wave, gx_arm on the noise of gradients of Noise) as js and as the IR of a graph of Blueprints; Spiral(data): the arms of a galaxy of its graph (data.Graph, a Scene gives it its own; SceneBlueprints.Galaxy), what its stars, its knots and its picture alike lie on; SeedNumber(manifest): the number of its seed for its noise.
 - Rename(data, id, name), Remove(data, id), AddBody(data, body), SetSystem(data, id, system): what is changed of it.
 - Use(key, data), DataOf(key); Open(source, callback), Write(data, store, callback, whole), Save(data), Pack(data, callback): as SystemData (parts {Kind: 'galaxy'}, {Kind: 'edits'}, those of a system written with System: id).
 
 ## Methods
 
 - `Make(options)`
+- `Code()`
+- `IR()`
+- `SeedNumber(manifest)`
+- `Spiral(data)`
 - `Density(data, place)`
 - `Sector(data, x, y, z, limit)`
 - `Search(data, options)`
@@ -64,4 +69,4 @@ GalaxyData: a galaxy as data (docs/SPACE-FORMAT.md): its passport, its supermass
 - [makes star clusters of three kinds of a seed: open ones loose and young, globular ones old and packed, nuclear ones round a black hole](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L230) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 - [gives its stars their kinds: a few white and brown dwarfs, rare giants and what heavy stars left, each of the kind of a Scene, with a system of that star](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L287) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 
-+13 more in the same files
++15 more in the same files

@@ -1,0 +1,149 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "bolt",
+	"parameters": [
+		{
+			"key": "Steps",
+			"type": "float",
+			"value": 14
+		},
+		{
+			"key": "Wide",
+			"type": "float",
+			"value": 0.09
+		},
+		{
+			"key": "Fork",
+			"type": "float",
+			"value": 5
+		},
+		{
+			"key": "ForkSteps",
+			"type": "float",
+			"value": 6
+		},
+		{
+			"key": "ForkDown",
+			"type": "float",
+			"value": 0.8
+		},
+		{
+			"key": "ForkWide",
+			"type": "float",
+			"value": 1.2
+		}
+	],
+	"blocks": [
+		{
+			"id": "bolt-step",
+			"type": "Input",
+			"x": 0,
+			"y": 120,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Step"
+				}
+			]
+		},
+		{
+			"id": "bolt-seed",
+			"type": "Input",
+			"x": 0,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "bolt-x",
+			"type": "Formula",
+			"x": 260,
+			"y": 120,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "fract(sin(Step * 12.9898 + Seed * 78.233) * 43758.5453) - 0.5"
+				}
+			]
+		},
+		{
+			"id": "bolt-z",
+			"type": "Formula",
+			"x": 260,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "fract(sin(Step * 39.3468 + Seed * 11.135) * 24634.6345) - 0.5"
+				}
+			]
+		},
+		{
+			"id": "bolt-result-x",
+			"type": "Result",
+			"x": 520,
+			"y": 120,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "bolt-result-z",
+			"type": "Result",
+			"x": 520,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Z"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "bolt-link-0",
+			"p1": "bolt-step-out-Value",
+			"p2": "bolt-x-in-Step",
+			"kind": "value"
+		},
+		{
+			"id": "bolt-link-1",
+			"p1": "bolt-seed-out-Value",
+			"p2": "bolt-x-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bolt-link-2",
+			"p1": "bolt-step-out-Value",
+			"p2": "bolt-z-in-Step",
+			"kind": "value"
+		},
+		{
+			"id": "bolt-link-3",
+			"p1": "bolt-seed-out-Value",
+			"p2": "bolt-z-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bolt-link-4",
+			"p1": "bolt-x-out-Value",
+			"p2": "bolt-result-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bolt-link-5",
+			"p1": "bolt-z-out-Value",
+			"p2": "bolt-result-z-in-Value",
+			"kind": "value"
+		}
+	]
+}

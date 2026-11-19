@@ -1,0 +1,556 @@
+{
+	"version": 1,
+	"type": "model",
+	"name": "soldier",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "box-0",
+			"type": "Box",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "formula-1",
+			"type": "Formula",
+			"x": 0,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.22, 0.26, 0.09]"
+				}
+			]
+		},
+		{
+			"id": "formula-2",
+			"type": "Formula",
+			"x": 0,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.68, -0.11]"
+				}
+			]
+		},
+		{
+			"id": "formula-3",
+			"type": "Formula",
+			"x": 0,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.27, 0.29, 0.34]"
+				}
+			]
+		},
+		{
+			"id": "box-4",
+			"type": "Box",
+			"x": 0,
+			"y": 360,
+			"properties": []
+		},
+		{
+			"id": "formula-5",
+			"type": "Formula",
+			"x": 0,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.16, 0.14, 0.16]"
+				}
+			]
+		},
+		{
+			"id": "formula-6",
+			"type": "Formula",
+			"x": 0,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.92, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-7",
+			"type": "Formula",
+			"x": 0,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.4, 0.45, 0.42]"
+				}
+			]
+		},
+		{
+			"id": "box-8",
+			"type": "Box",
+			"x": 0,
+			"y": 720,
+			"properties": []
+		},
+		{
+			"id": "formula-9",
+			"type": "Formula",
+			"x": 0,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.13, 0.04, 0.01]"
+				}
+			]
+		},
+		{
+			"id": "formula-10",
+			"type": "Formula",
+			"x": 0,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.92, 0.08]"
+				}
+			]
+		},
+		{
+			"id": "formula-11",
+			"type": "Formula",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.3, 1.1, 1.6]"
+				}
+			]
+		},
+		{
+			"id": "join-12",
+			"type": "Join",
+			"x": 0,
+			"y": 1080,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "formula-13",
+			"type": "Formula",
+			"x": 0,
+			"y": 1170,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[]"
+				}
+			]
+		},
+		{
+			"id": "box-14",
+			"type": "Box",
+			"x": 0,
+			"y": 1260,
+			"properties": []
+		},
+		{
+			"id": "formula-15",
+			"type": "Formula",
+			"x": 240,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.04, 0.06, 0.42]"
+				}
+			]
+		},
+		{
+			"id": "formula-16",
+			"type": "Formula",
+			"x": 240,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.17, 0.5, 0.18]"
+				}
+			]
+		},
+		{
+			"id": "formula-17",
+			"type": "Formula",
+			"x": 240,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.27, 0.29, 0.34]"
+				}
+			]
+		},
+		{
+			"id": "box-18",
+			"type": "Box",
+			"x": 240,
+			"y": 270,
+			"properties": []
+		},
+		{
+			"id": "formula-19",
+			"type": "Formula",
+			"x": 240,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.03, 0.1, 0.04]"
+				}
+			]
+		},
+		{
+			"id": "formula-20",
+			"type": "Formula",
+			"x": 240,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.17, 0.42, 0.06]"
+				}
+			]
+		},
+		{
+			"id": "formula-21",
+			"type": "Formula",
+			"x": 240,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.27, 0.29, 0.34]"
+				}
+			]
+		},
+		{
+			"id": "join-22",
+			"type": "Join",
+			"x": 240,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "call-23",
+			"type": "Call",
+			"x": 240,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/models/biped"
+				}
+			]
+		},
+		{
+			"id": "formula-24",
+			"type": "Formula",
+			"x": 240,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.4, 0.45, 0.42]"
+				}
+			]
+		},
+		{
+			"id": "formula-25",
+			"type": "Formula",
+			"x": 240,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.4, 0.45, 0.42]"
+				}
+			]
+		},
+		{
+			"id": "formula-26",
+			"type": "Formula",
+			"x": 240,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.9, 0.74, 0.6]"
+				}
+			]
+		},
+		{
+			"id": "formula-27",
+			"type": "Formula",
+			"x": 240,
+			"y": 1080,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.4, 0.45, 0.42]"
+				}
+			]
+		},
+		{
+			"id": "formula-28",
+			"type": "Formula",
+			"x": 240,
+			"y": 1170,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.28, 0.31, 0.3]"
+				}
+			]
+		},
+		{
+			"id": "formula-29",
+			"type": "Formula",
+			"x": 240,
+			"y": 1260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.34, 0.36, 0.41]"
+				}
+			]
+		},
+		{
+			"id": "formula-30",
+			"type": "Formula",
+			"x": 480,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"id": "model-31",
+			"type": "Model",
+			"x": 480,
+			"y": 90,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "link-0",
+			"p1": "formula-1-out-Value",
+			"p2": "box-0-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-1",
+			"p1": "formula-2-out-Value",
+			"p2": "box-0-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-2",
+			"p1": "formula-3-out-Value",
+			"p2": "box-0-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-3",
+			"p1": "formula-5-out-Value",
+			"p2": "box-4-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-4",
+			"p1": "formula-6-out-Value",
+			"p2": "box-4-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-5",
+			"p1": "formula-7-out-Value",
+			"p2": "box-4-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-6",
+			"p1": "formula-9-out-Value",
+			"p2": "box-8-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-7",
+			"p1": "formula-10-out-Value",
+			"p2": "box-8-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-8",
+			"p1": "formula-11-out-Value",
+			"p2": "box-8-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-9",
+			"p1": "box-4-out-Parts",
+			"p2": "join-12-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "link-10",
+			"p1": "box-8-out-Parts",
+			"p2": "join-12-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "link-11",
+			"p1": "formula-15-out-Value",
+			"p2": "box-14-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-12",
+			"p1": "formula-16-out-Value",
+			"p2": "box-14-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-13",
+			"p1": "formula-17-out-Value",
+			"p2": "box-14-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-14",
+			"p1": "formula-19-out-Value",
+			"p2": "box-18-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-15",
+			"p1": "formula-20-out-Value",
+			"p2": "box-18-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-16",
+			"p1": "formula-21-out-Value",
+			"p2": "box-18-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-17",
+			"p1": "box-14-out-Parts",
+			"p2": "join-22-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "link-18",
+			"p1": "box-18-out-Parts",
+			"p2": "join-22-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "link-19",
+			"p1": "formula-24-out-Value",
+			"p2": "call-23-in-Torso",
+			"kind": "value"
+		},
+		{
+			"id": "link-20",
+			"p1": "formula-25-out-Value",
+			"p2": "call-23-in-Belt",
+			"kind": "value"
+		},
+		{
+			"id": "link-21",
+			"p1": "formula-26-out-Value",
+			"p2": "call-23-in-Skin",
+			"kind": "value"
+		},
+		{
+			"id": "link-22",
+			"p1": "formula-27-out-Value",
+			"p2": "call-23-in-Arms",
+			"kind": "value"
+		},
+		{
+			"id": "link-23",
+			"p1": "formula-28-out-Value",
+			"p2": "call-23-in-Legs",
+			"kind": "value"
+		},
+		{
+			"id": "link-24",
+			"p1": "formula-29-out-Value",
+			"p2": "call-23-in-Boots",
+			"kind": "value"
+		},
+		{
+			"id": "link-25",
+			"p1": "formula-30-out-Value",
+			"p2": "call-23-in-Wide",
+			"kind": "value"
+		},
+		{
+			"id": "link-26",
+			"p1": "box-0-out-Parts",
+			"p2": "call-23-in-Body",
+			"kind": "value"
+		},
+		{
+			"id": "link-27",
+			"p1": "join-12-out-Parts",
+			"p2": "call-23-in-Head",
+			"kind": "value"
+		},
+		{
+			"id": "link-28",
+			"p1": "formula-13-out-Value",
+			"p2": "call-23-in-ArmL",
+			"kind": "value"
+		},
+		{
+			"id": "link-29",
+			"p1": "join-22-out-Parts",
+			"p2": "call-23-in-ArmR",
+			"kind": "value"
+		},
+		{
+			"id": "link-30",
+			"p1": "call-23-out-Parts",
+			"p2": "model-31-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "link-31",
+			"p1": "call-23-out-Pieces",
+			"p2": "model-31-in-Pieces",
+			"kind": "value"
+		}
+	]
+}

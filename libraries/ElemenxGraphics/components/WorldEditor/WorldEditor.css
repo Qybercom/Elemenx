@@ -100,9 +100,30 @@
 	overflow: hidden;
 }
 
+/* What it shows fills it and never makes it bigger (a Blueprint of many blocks made the editor as tall as its graph). */
 .elemenx-world-editor-main > * {
-	width: 100%;
-	height: 100%;
+	position: absolute;
+	inset: 0;
+}
+
+/* A graph of the world: what it is above, its Blueprint under it. */
+.elemenx-world-editor-graph {
+	display: grid;
+	grid-template-rows: auto minmax(0, 1fr);
+}
+
+.elemenx-world-editor-graph-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 4px 8px;
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.elemenx-world-editor-graph-blueprint {
+	min-height: 0;
 }
 
 /* On a phone the panel goes over the view, under it. */

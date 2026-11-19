@@ -15,7 +15,9 @@ var scenes = ['libraries/ElemenxGraphics/**/*.test.js', 'libraries/ElemenxGaming
 export default defineConfig({
 	publicDir: 'tests/public',
 	define: {
-		__ELEMENX_SCRIPT__: JSON.stringify(process.env.ELEMENX_SCRIPT || '/elemenx.js')
+		__ELEMENX_SCRIPT__: JSON.stringify(process.env.ELEMENX_SCRIPT || '/elemenx.js'),
+		/* The most workers a pool of a page of tests has (Workers.Most); 0: as many as the library makes. */
+		__ELEMENX_POOL__: JSON.stringify(Number(process.env.ELEMENX_POOL) || 0)
 	},
 	test: {
 		/* 4 files at a time, as the end-to-end tests (ELEMENX_WORKERS sets it): all of the processors froze the machine. */
@@ -47,11 +49,13 @@ export default defineConfig({
 			/*
 			 * The contracts run beside the scenes (groupOrder 0), whose workers grow plants and bake planets: under that load a
 			 * contract of a component took more than the 15 s a test has (a different one each run: Noise, TopologyIso,
-			 * SignaturePad, Countdown). 45 s.
+			 * SignaturePad, Countdown). 45 s. Its hooks (loading the framework, defining what a file uses: half a second alone) have as
+			 * long as its tests: under the same load they took more than the 30 s a hook has by default (ground-lod, compilers-wasm,
+			 * focus-on-open, PlanetEditor, ScenePlanet, a different one each run).
 			 */
-			{extends: true, test: {name: 'contracts', include: ['tests/**/*.test.js', 'libraries/**/*.test.js'], exclude: outside.concat(graphics, scenes), testTimeout: 45000, sequence: {groupOrder: 0}}},
-			{extends: true, test: {name: 'scenes', include: scenes, exclude: outside.concat(graphics), testTimeout: 60000, sequence: {groupOrder: 0}}},
-			{extends: true, test: {name: 'graphics', include: graphics, exclude: outside, maxWorkers: 1, testTimeout: 90000, sequence: {groupOrder: 1}}}
+			{extends: true, test: {name: 'contracts', include: ['tests/**/*.test.js', 'libraries/**/*.test.js'], exclude: outside.concat(graphics, scenes), testTimeout: 45000, hookTimeout: 45000, sequence: {groupOrder: 0}}},
+			{extends: true, test: {name: 'scenes', include: scenes, exclude: outside.concat(graphics), testTimeout: 60000, hookTimeout: 60000, sequence: {groupOrder: 0}}},
+			{extends: true, test: {name: 'graphics', include: graphics, exclude: outside, maxWorkers: 1, testTimeout: 90000, hookTimeout: 90000, sequence: {groupOrder: 1}}}
 		]
 	}
 });

@@ -68,8 +68,11 @@
 
 ## Тесты
 
+- [bakes a body of noise by its graph: its Input blocks the uniforms of the bake, Formula and Ridge in it, a sea where the land is under 0](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L136) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
 - [maps a list and takes one result of each, the values of lists of numbers each by each](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L107) — `tests/regression/blueprints-ir.test.js`
 - [takes vectors and choices, and says what of a graph is not of numbers](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L265) — `tests/regression/blueprints-ir.test.js`
+- [computes what only the Value of When needs inside its if, a When in a When, the same everywhere](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L315) — `tests/regression/blueprints-ir.test.js`
+- [takes the octaves of a noise as an input, the same as a noise of that many octaves, in js, wasm and its run](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L378) — `tests/regression/blueprints-ir.test.js`
 - [runs a generator of numbers with the very noise of the shaders, its parameters and inputs given](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L438) — `tests/regression/blueprints.test.js`
 - [reads a noise of the Noise Service by the spec of its block, in a generator and in a pass, the same numbers](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L665) — `tests/regression/blueprints.test.js`
 - [makes a generator JavaScript that gives the very values of its Run, many times faster; a graph with a block of no code gives null](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L697) — `tests/regression/blueprints.test.js`
@@ -77,8 +80,5 @@
 - [has a Curve of keys over a number: straight, smooth through them or held between them, round a loop or held at its ends](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L1001) — `tests/regression/blueprints.test.js`
 - [tree-shakes unused Library Components and keeps transitive Component dependencies](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/builder-multi-application.test.js#L226) — `tests/regression/builder-multi-application.test.js`
 - [makes a graph of its blocks a function of numbers: the points a list given, the same run, js and wasm](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Geometry/Geometry.test.js#L43) — `libraries/ElemenxCommon/services/Geometry/Geometry.test.js`
-- [computes what a formula reads once in a branch only when that branch is taken](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Geometry/Geometry.test.js#L87) — `libraries/ElemenxCommon/services/Geometry/Geometry.test.js`
-- [makes what is finer than the scale of its rules by the rule of the place: of its land, a painted region over it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L1450) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
-- [sows a rule of a graph: its library graph the very same things as the rule, a graph of its own its sizes, turns and shapes, in a worker too](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js#L244) — `libraries/ElemenxGraphics/services/SceneSower/SceneSower.test.js`
 
-+6 ещё в тех же файлах
++10 ещё в тех же файлах

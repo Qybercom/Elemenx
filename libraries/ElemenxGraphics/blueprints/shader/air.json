@@ -1,0 +1,177 @@
+{
+	"version": 1,
+	"type": "air",
+	"name": "air",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "air-end",
+			"type": "AirEnd",
+			"x": 300,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "air-globe",
+			"type": "AirHaze",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "For",
+					"value": "globe"
+				},
+				{
+					"key": "Thin",
+					"value": true
+				},
+				{
+					"key": "High",
+					"value": 0.7
+				},
+				{
+					"key": "White",
+					"value": 0.9
+				},
+				{
+					"key": "Whiten",
+					"value": 0.35
+				}
+			]
+		},
+		{
+			"id": "air-ground",
+			"type": "AirHaze",
+			"x": 0,
+			"y": 120,
+			"properties": [
+				{
+					"key": "For",
+					"value": "ground"
+				},
+				{
+					"key": "Thin",
+					"value": false
+				},
+				{
+					"key": "High",
+					"value": 0
+				},
+				{
+					"key": "White",
+					"value": 1
+				},
+				{
+					"key": "Whiten",
+					"value": 0.45
+				}
+			]
+		},
+		{
+			"id": "air-fog",
+			"type": "AirFog",
+			"x": 0,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Whiten",
+					"value": 0.4
+				},
+				{
+					"key": "SkyWhiten",
+					"value": 0.55
+				},
+				{
+					"key": "Shine",
+					"value": 0.6
+				},
+				{
+					"key": "ShinePower",
+					"value": 8
+				},
+				{
+					"key": "Sheets",
+					"value": 0.72
+				},
+				{
+					"key": "Swing",
+					"value": 0.56
+				},
+				{
+					"key": "Veil",
+					"value": 2.4
+				},
+				{
+					"key": "VeilMost",
+					"value": 0.96
+				},
+				{
+					"key": "VeilFall",
+					"value": 5
+				}
+			]
+		},
+		{
+			"id": "air-under",
+			"type": "AirUnder",
+			"x": 0,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Deep",
+					"value": [
+						0.06,
+						0.32,
+						0.36
+					]
+				},
+				{
+					"key": "Absorb",
+					"value": [
+						0.16,
+						0.045,
+						0.035
+					]
+				},
+				{
+					"key": "Clear",
+					"value": 0.045
+				},
+				{
+					"key": "Upward",
+					"value": 2.5
+				},
+				{
+					"key": "Far",
+					"value": 80
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "air-link-0",
+			"p1": "air-globe-out-Done",
+			"p2": "air-end-in-Globe",
+			"kind": "value"
+		},
+		{
+			"id": "air-link-1",
+			"p1": "air-ground-out-Done",
+			"p2": "air-end-in-Ground",
+			"kind": "value"
+		},
+		{
+			"id": "air-link-2",
+			"p1": "air-fog-out-Done",
+			"p2": "air-end-in-Fog",
+			"kind": "value"
+		},
+		{
+			"id": "air-link-3",
+			"p1": "air-under-out-Done",
+			"p2": "air-end-in-Under",
+			"kind": "value"
+		}
+	]
+}

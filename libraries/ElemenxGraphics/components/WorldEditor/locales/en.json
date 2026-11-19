@@ -77,7 +77,13 @@
 			"addModel": "Add a model",
 			"addPlant": "Add a plant",
 			"addCutscene": "Add a cutscene",
-			"addMaterial": "Add a material"
+			"addMaterial": "Add a material",
+			"graphs": "Graphs",
+			"graph": "A graph of the library",
+			"pickGraph": "Change a graph...",
+			"changeGraph": "Change it for this world",
+			"resetGraph": "Back to the library",
+			"graphNote": "The graph {name} of this world: its planets and locations are made by it, not by the library's."
 		}
 	}
 }

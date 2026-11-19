@@ -692,6 +692,105 @@
 					"Description": "What the land is, its light and its wet and snow too: a land graph of the Blueprints Service (or its JSON, or GLSL with blueprintLand); empty, the one of the library (LibraryLand()). Its Blueprint (a material graph) still paints it, in LandPaint."
 				},
 				{
+					"Name": "Graphs",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The shader graphs of a world of its own by their names, read as the scene is made: shader/bake (BakeGraph), shader/weather (WeatherGraph), shader/bolt (BoltGraph), shader/air (AirGraph), shader/clouds (CloudsGraph), shader/forecast (ForecastGraph), shader/galaxy (GalaxyGraph), shader/cosmos (CosmosGraph), shader/ring (RingGraph), shader/planet (PlanetGraph); its props of them come first."
+				},
+				{
+					"Name": "BoltGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The shape of its lightnings, of a storm and of its effects: a generator of the Blueprints Service of the jag of each step (its results X and Z; or its JSON); empty, the one of the library (SceneBlueprints.LibraryBolt())."
+				},
+				{
+					"Name": "PlanetGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its globes seen from far: a planet graph of the Blueprints Service of their picture lit, their clouds and the shadows of them and of a ring, their towns at night, their air at the edge (or its JSON, or GLSL with blueprintPlanet); empty, the one of the library (LibraryPlanet())."
+				},
+				{
+					"Name": "RingGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The rings round its bodies: a ring graph of the Blueprints Service of their bands, gaps, colors and light (or its JSON, or GLSL with blueprintRing); empty, the one of the library (LibraryRing())."
+				},
+				{
+					"Name": "CosmosGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What lies far behind a system, the sky its Cosmos is baked of: a cosmos graph of the Blueprints Service of its parts (gas, dust, the band of a galaxy, bursts, galaxies far off, pillars, stars, clusters; or its JSON, or GLSL with blueprintCosmos); empty, the one of the library (LibraryCosmos())."
+				},
+				{
+					"Name": "GalaxyGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The arms of a galaxy, its picture, its stars and the band of it across the sky of a system alike: a generator of the Blueprints Service of the blocks of GalaxyData (its results Turn, Bend, Wave and Arm; or its JSON); empty, the one of the library (SceneBlueprints.LibraryGalaxy())."
+				},
+				{
+					"Name": "ForecastGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The weather of a planet, its clouds, cirrus and rain over its body as its days go: a graph of numbers of the Blueprints Service of the blocks of SceneForecast (or its JSON), read by its shader and the page alike; empty, the one of the library (LibraryForecast())."
+				},
+				{
+					"Name": "CloudsGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The clouds (of the weather of a planet, its globe and round the eye over it, the layer of a scene): a clouds graph of the Blueprints Service (or its JSON); empty, the one of the library (LibraryClouds())."
+				},
+				{
+					"Name": "AirGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The air between the eye and what it sees (the haze, the fog, the eye under the sea): an air graph of the Blueprints Service (or its JSON); empty, the one of the library (LibraryAir())."
+				},
+				{
+					"Name": "WeatherGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What the weather and the year do to the surfaces of things (their leaves in autumn, snow, pools, a beam that takes a body away): a weather graph of the Blueprints Service (or its JSON); empty, the one of the library (LibraryWeather())."
+				},
+				{
+					"Name": "BakeGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What the surface of a body of noise is, baked into its cubes (its land read by its ground too): a bake graph of the Blueprints Service (or its JSON, or GLSL with blueprintBake); empty, the one of the library (LibraryBake())."
+				},
+				{
 					"Name": "SkyGraph",
 					"Type": "json",
 					"Default": null,
@@ -1068,6 +1167,16 @@
 				"LibraryStar()",
 				"LibraryNebula()",
 				"LibraryLand()",
+				"LibraryBake()",
+				"LibraryWeather()",
+				"LibraryAir()",
+				"LibraryClouds()",
+				"LibraryForecast()",
+				"LibraryCosmos()",
+				"LibraryRing()",
+				"LibraryPlanet()",
+				"WeatherOver(id, direction)",
+				"BoltShape()",
 				"LibraryWater()",
 				"EffectGraph(name)",
 				"Effects(types)",
@@ -1582,6 +1691,15 @@
 					"Description": "The kinds of objects to add in a star system."
 				},
 				{
+					"Name": "Graphs",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The shader graphs of a world its scene is drawn with (Graphs of Scene: shader/bake, shader/weather, shader/bolt), read as it is made."
+				},
+				{
 					"Name": "Models",
 					"Type": "json",
 					"Default": [],
@@ -1773,7 +1891,7 @@
 			"Kind": "Component",
 			"Group": "game",
 			"Icon": "globe",
-			"Description": "An editor of a whole world, level in level: a galaxy, the system of a star, a planet, a location; its models, plants, cutscenes and materials each in a tab beside it.",
+			"Description": "An editor of a whole world, level in level: a galaxy, the system of a star, a planet, a location; its models, plants, cutscenes, materials and graphs each in a tab beside it.",
 			"Props": [
 				{
 					"Name": "Value",
@@ -1782,7 +1900,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The world: {Name, Galaxy (options of GalaxyData.Make or its data), Planets, Locations, Resources}."
+					"Description": "The world: {Name, Galaxy (options of GalaxyData.Make or its data), Planets, Locations, Resources, Graphs}."
 				},
 				{
 					"Name": "Generator",
@@ -1813,7 +1931,7 @@
 				"error"
 			],
 			"EventDescriptions": {
-				"change": "The world changed: {Name, Galaxy, Planets, Locations, Resources}.",
+				"change": "The world changed: {Name, Galaxy, Planets, Locations, Resources, Graphs}.",
 				"level": "The level shown changed: {Path: [{Level, ID}]}.",
 				"error": "A file of a world was not read: the error."
 			},
@@ -1826,6 +1944,10 @@
 				"Up(index)",
 				"AddResource(kind)",
 				"OpenResource(kind, id)",
+				"GraphNames()",
+				"OpenGraph(name)",
+				"ResetGraph(name)",
+				"ShaderGraphs()",
 				"Pack(callback)",
 				"Open(source, callback)"
 			],
@@ -1935,11 +2057,21 @@
 					"Options": [
 						"shape",
 						"roles",
-						"parts"
+						"parts",
+						"graph"
 					],
 					"Schema": null,
 					"Body": false,
-					"Description": "The tab shown: the parts of the recipe (shape), the roles of the parts of a model (roles) or what is done to its pieces (parts)."
+					"Description": "The tab shown: the parts of the recipe (shape), the roles of the parts of a model (roles), what is done to its pieces (parts) or the graph of a model of the library (graph)."
+				},
+				{
+					"Name": "GraphModel",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In the tab Graph, the model of the library whose graph is shown (OpenGraph)."
 				},
 				{
 					"Name": "RoleModel",
@@ -1983,7 +2115,10 @@
 				"Undo()",
 				"Redo()",
 				"Generate(description, callback)",
-				"Scene()"
+				"Scene()",
+				"OpenGraph(name)",
+				"ApplyGraph()",
+				"ResetGraph()"
 			],
 			"Sample": {}
 		},
@@ -2443,10 +2578,17 @@
 				"PlainRelief(settings)",
 				"ShareGround(pool, options, made)",
 				"SketchDefaults(type)",
-				"SketchRun(type)",
+				"SketchRun(type, own)",
 				"SketchMake(type, graph)",
-				"CarveRun(type)",
+				"CarveRun(type, own)",
 				"CarveMake(type, graph)",
+				"GraphCodeOf(graphs)",
+				"SketchCodeOf(type, graph)",
+				"CarveCodeOf(type, graph)",
+				"BakeRun(own)",
+				"BakeMake(graph)",
+				"BakeCodeOf(graph)",
+				"OwnRun(code)",
 				"WasmShare(pool, key)"
 			],
 			"Sample": {}
@@ -2480,7 +2622,19 @@
 			"Current": "",
 			"Events": [],
 			"EventDescriptions": {},
-			"Methods": [],
+			"Methods": [
+				"BakeLandGraph(graph)",
+				"LibraryBolt()",
+				"Bolt(graph)",
+				"Chunk(context, name, lines, guard)",
+				"LibraryForecast()",
+				"LibraryGalaxy()",
+				"Galaxy(graph)",
+				"LibraryCosmos()",
+				"LibraryRing()",
+				"Painted(kind, end, head)",
+				"LibraryPlanet()"
+			],
 			"Sample": {}
 		},
 		{
@@ -2660,7 +2814,7 @@
 			"Kind": "Service",
 			"Group": "",
 			"Icon": "",
-			"Description": "The models of a game made of code: units, animals, plants, buildings and ships of pieces that move, fantasy and sci-fi, and their clips.",
+			"Description": "The models of a game made of graphs and code: units, animals, plants, buildings and ships of pieces that move, fantasy and sci-fi, and their clips.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -2977,6 +3131,31 @@
 			"Sample": {}
 		},
 		{
+			"Name": "SceneForecast",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The weather of a planet of one source in the kernel language: its winds and storms, fronts, heaps, cirrus and rain, the same in the page and in a shader.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Code()",
+				"IR()",
+				"Air(p, days, seed, radiusKm, scale, fine, eddy)",
+				"Fronts(fronts, mid, moist, ground, climb, py, storm, cloudiness, cut, cutBy, soft)",
+				"Heaps(p, sun, warm, moist, ground, climb, streams, mid, humid, storm, sheet, cloudiness, fairLow, fairHigh)",
+				"Cirrus(streams, py, sheet, low, high)",
+				"Rain(sheet, humid, storm, heaps, kind, from, to)",
+				"Shroud(sheet, heaps, kind, cirrus, rain, cloudiness)"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "ScenePlanet",
 			"Kind": "Service",
 			"Group": "",
@@ -3034,6 +3213,10 @@
 				"CellPlace(radius, cell)",
 				"Work()",
 				"Source(names)",
+				"ReliefRun(name)",
+				"ReliefMake(graph)",
+				"ReliefOf(name, graph, code)",
+				"GraphSources(options)",
 				"Kind(kind)",
 				"KindByShare(share)",
 				"Warmth(celsius)"
@@ -3144,6 +3327,10 @@
 				"Glow(data, count)",
 				"System(data, id)",
 				"Cosmos(data, id)",
+				"Code()",
+				"IR()",
+				"Spiral(data)",
+				"SeedNumber(manifest)",
 				"Rename(data, id, name)",
 				"Remove(data, id)",
 				"AddBody(data, body)",
@@ -3422,6 +3609,9 @@
 		"elemenx-world-editor-group": [],
 		"elemenx-world-editor-item": [],
 		"elemenx-world-editor-main": [],
+		"elemenx-world-editor-graph": [],
+		"elemenx-world-editor-graph-bar": [],
+		"elemenx-world-editor-graph-blueprint": [],
 		"elemenx-model-editor": [],
 		"elemenx-model-editor-toolbar": [],
 		"elemenx-model-editor-group": [
@@ -3430,6 +3620,8 @@
 		"elemenx-model-editor-snap": [],
 		"elemenx-model-editor-variant": [],
 		"elemenx-model-editor-format": [],
+		"elemenx-model-editor-graph": [],
+		"elemenx-model-editor-blueprint": [],
 		"elemenx-model-editor-side": [],
 		"elemenx-model-editor-inspector": [],
 		"elemenx-model-editor-title": [],

@@ -1,0 +1,974 @@
+{
+	"knight": {
+		"Group": "fantasy",
+		"Type": "unit",
+		"Size": 1.8,
+		"Speed": 8,
+		"Clips": {
+			"Rig": "Biped"
+		},
+		"Graph": "ElemenxGraphics/models/knight"
+	},
+	"archer": {
+		"Group": "fantasy",
+		"Type": "unit",
+		"Size": 1.8,
+		"Speed": 8,
+		"Clips": {
+			"Rig": "Biped"
+		},
+		"Graph": "ElemenxGraphics/models/archer"
+	},
+	"mage": {
+		"Group": "fantasy",
+		"Type": "unit",
+		"Size": 1.8,
+		"Speed": 8,
+		"Clips": {
+			"Rig": "Biped"
+		},
+		"Graph": "ElemenxGraphics/models/mage"
+	},
+	"orc": {
+		"Group": "fantasy",
+		"Type": "unit",
+		"Size": 1.8,
+		"Speed": 8,
+		"Clips": {
+			"Rig": "Biped"
+		},
+		"Graph": "ElemenxGraphics/models/orc"
+	},
+	"villager": {
+		"Group": "fantasy",
+		"Type": "unit",
+		"Size": 1.8,
+		"Speed": 8,
+		"Clips": {
+			"Rig": "Biped"
+		},
+		"Graph": "ElemenxGraphics/models/villager"
+	},
+	"soldier": {
+		"Group": "scifi",
+		"Type": "unit",
+		"Size": 1.8,
+		"Speed": 9,
+		"Clips": {
+			"Rig": "Biped"
+		},
+		"Graph": "ElemenxGraphics/models/soldier"
+	},
+	"robot": {
+		"Group": "scifi",
+		"Type": "unit",
+		"Size": 1.8,
+		"Speed": 9,
+		"Clips": {
+			"Rig": "Biped"
+		},
+		"Graph": "ElemenxGraphics/models/robot"
+	},
+	"mech": {
+		"Group": "scifi",
+		"Type": "unit",
+		"Size": 7,
+		"Speed": 7,
+		"Clips": {
+			"Rig": "Biped",
+			"walk": {
+				"Length": 1.2,
+				"Loop": true,
+				"Stride": 0.9,
+				"Tracks": {
+					"leg-l": [
+						[
+							0,
+							-32
+						],
+						[
+							0.5,
+							32
+						],
+						[
+							1,
+							-32
+						]
+					],
+					"leg-r": [
+						[
+							0,
+							32
+						],
+						[
+							0.5,
+							-32
+						],
+						[
+							1,
+							32
+						]
+					],
+					"arm-l": [
+						[
+							0,
+							26
+						],
+						[
+							0.5,
+							-26
+						],
+						[
+							1,
+							26
+						]
+					],
+					"arm-r": [
+						[
+							0,
+							-26
+						],
+						[
+							0.5,
+							26
+						],
+						[
+							1,
+							-26
+						]
+					],
+					"body": [
+						[
+							0,
+							-4,
+							0,
+							0,
+							0,
+							0,
+							0
+						],
+						[
+							0.25,
+							-4,
+							0,
+							0,
+							0,
+							0.018,
+							0
+						],
+						[
+							0.5,
+							-4,
+							0,
+							0,
+							0,
+							0,
+							0
+						],
+						[
+							0.75,
+							-4,
+							0,
+							0,
+							0,
+							0.018,
+							0
+						],
+						[
+							1,
+							-4,
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					]
+				}
+			}
+		},
+		"Matte": false,
+		"Graph": "ElemenxGraphics/models/mech"
+	},
+	"tank": {
+		"Group": "scifi",
+		"Type": "vehicle",
+		"Size": 6,
+		"Speed": 12,
+		"Clips": {
+			"Rig": "Tracked"
+		},
+		"Matte": false,
+		"Graph": "ElemenxGraphics/models/tank"
+	},
+	"rover": {
+		"Group": "scifi",
+		"Type": "vehicle",
+		"Size": 4,
+		"Speed": 14,
+		"Clips": {
+			"idle": {
+				"Length": 1,
+				"Loop": true,
+				"Spins": {
+					"dish": [
+						0,
+						60,
+						0
+					]
+				}
+			},
+			"walk": {
+				"Length": 1,
+				"Loop": true,
+				"Stride": 1.5,
+				"Spins": {
+					"dish": [
+						0,
+						60,
+						0
+					],
+					"wheels-f": [
+						360,
+						0,
+						0
+					],
+					"wheels-b": [
+						360,
+						0,
+						0
+					]
+				}
+			}
+		},
+		"Matte": false,
+		"Graph": "ElemenxGraphics/models/rover"
+	},
+	"boat": {
+		"Group": "transport",
+		"Type": "vehicle",
+		"Size": 5.5,
+		"Speed": 14,
+		"Matte": false,
+		"Graph": "ElemenxGraphics/models/boat"
+	},
+	"drone": {
+		"Group": "scifi",
+		"Type": "vehicle",
+		"Size": 2.4,
+		"Speed": 16,
+		"Clips": {
+			"idle": {
+				"Length": 2,
+				"Loop": true,
+				"Tracks": {
+					"body": [
+						[
+							0,
+							0,
+							0,
+							0,
+							0,
+							0,
+							0
+						],
+						[
+							0.5,
+							0,
+							0,
+							0,
+							0,
+							0.05,
+							0
+						],
+						[
+							1,
+							0,
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					]
+				},
+				"Spins": {
+					"rotor-a": [
+						0,
+						1400,
+						0
+					],
+					"rotor-b": [
+						0,
+						-1400,
+						0
+					],
+					"rotor-c": [
+						0,
+						1400,
+						0
+					],
+					"rotor-d": [
+						0,
+						-1400,
+						0
+					]
+				}
+			},
+			"walk": {
+				"Length": 1,
+				"Loop": true,
+				"Stride": 2,
+				"Tracks": {
+					"body": [
+						[
+							0,
+							8
+						],
+						[
+							1,
+							8
+						]
+					]
+				},
+				"Spins": {
+					"rotor-a": [
+						0,
+						1800,
+						0
+					],
+					"rotor-b": [
+						0,
+						-1800,
+						0
+					],
+					"rotor-c": [
+						0,
+						1800,
+						0
+					],
+					"rotor-d": [
+						0,
+						-1800,
+						0
+					]
+				}
+			}
+		},
+		"Matte": false,
+		"Graph": "ElemenxGraphics/models/drone"
+	},
+	"wolf": {
+		"Group": "nature",
+		"Type": "animal",
+		"Size": 2.2,
+		"Speed": 11,
+		"Clips": {
+			"Rig": "Quadruped"
+		},
+		"Graph": "ElemenxGraphics/models/wolf"
+	},
+	"deer": {
+		"Group": "nature",
+		"Type": "animal",
+		"Size": 2.2,
+		"Speed": 11,
+		"Clips": {
+			"Rig": "Quadruped"
+		},
+		"Graph": "ElemenxGraphics/models/deer"
+	},
+	"pine": {
+		"Group": "nature",
+		"Type": "plant",
+		"Size": 8,
+		"Sway": 0.5,
+		"Variants": 4,
+		"Graph": "ElemenxGraphics/models/pine"
+	},
+	"oak": {
+		"Group": "nature",
+		"Type": "plant",
+		"Size": 8,
+		"Sway": 0.35,
+		"Variants": 4,
+		"Graph": "ElemenxGraphics/models/oak"
+	},
+	"birch": {
+		"Group": "nature",
+		"Type": "plant",
+		"Size": 8,
+		"Sway": 0.5,
+		"Variants": 3,
+		"Graph": "ElemenxGraphics/models/birch"
+	},
+	"palm": {
+		"Group": "nature",
+		"Type": "plant",
+		"Size": 9,
+		"Sway": 0.8,
+		"Variants": 3,
+		"Graph": "ElemenxGraphics/models/palm"
+	},
+	"bush": {
+		"Group": "nature",
+		"Type": "plant",
+		"Size": 1.6,
+		"Sway": 0.4,
+		"Variants": 3,
+		"Graph": "ElemenxGraphics/models/bush"
+	},
+	"stump": {
+		"Group": "nature",
+		"Type": "plant",
+		"Size": 1.2,
+		"Sway": 0,
+		"Variants": 1,
+		"Graph": "ElemenxGraphics/models/stump"
+	},
+	"mushroom": {
+		"Group": "nature",
+		"Type": "plant",
+		"Size": 0.9,
+		"Sway": 0,
+		"Variants": 3,
+		"Graph": "ElemenxGraphics/models/mushroom"
+	},
+	"sequoia": {
+		"Group": "nature",
+		"Type": "plant",
+		"Size": 60,
+		"Sway": 0.12,
+		"Variants": 3,
+		"Graph": "ElemenxGraphics/models/sequoia"
+	},
+	"jungle": {
+		"Group": "nature",
+		"Type": "plant",
+		"Size": 24,
+		"Sway": 0.25,
+		"Variants": 4,
+		"Graph": "ElemenxGraphics/models/jungle"
+	},
+	"fern": {
+		"Group": "nature",
+		"Type": "plant",
+		"Size": 1.4,
+		"Sway": 0.6,
+		"Variants": 3,
+		"Graph": "ElemenxGraphics/models/fern"
+	},
+	"reed": {
+		"Group": "nature",
+		"Type": "plant",
+		"Size": 2.2,
+		"Sway": 0.9,
+		"Variants": 3,
+		"Graph": "ElemenxGraphics/models/reed"
+	},
+	"wheat": {
+		"Group": "nature",
+		"Type": "plant",
+		"Size": 1.1,
+		"Sway": 0.8,
+		"Variants": 2,
+		"Graph": "ElemenxGraphics/models/wheat"
+	},
+	"vine": {
+		"Group": "nature",
+		"Type": "plant",
+		"Size": 1.8,
+		"Sway": 0.3,
+		"Variants": 2,
+		"Graph": "ElemenxGraphics/models/vine"
+	},
+	"streetlamp": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 4.5,
+		"Lamps": [
+			{
+				"Place": [
+					0,
+					0.92,
+					0
+				],
+				"Color": [
+					1,
+					0.78,
+					0.52
+				],
+				"Power": 1.4,
+				"Radius": 4.2,
+				"Night": true
+			}
+		],
+		"Graph": "ElemenxGraphics/models/streetlamp"
+	},
+	"roadlamp": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 9,
+		"Lamps": [
+			{
+				"Place": [
+					0,
+					0.95,
+					0.18
+				],
+				"Color": [
+					1,
+					0.86,
+					0.66
+				],
+				"Power": 1.6,
+				"Radius": 3.2,
+				"Spot": 140,
+				"Aim": [
+					0,
+					-1,
+					0
+				],
+				"Night": true
+			},
+			{
+				"Place": [
+					0,
+					0.95,
+					-0.18
+				],
+				"Color": [
+					1,
+					0.86,
+					0.66
+				],
+				"Power": 1.6,
+				"Radius": 3.2,
+				"Spot": 140,
+				"Aim": [
+					0,
+					-1,
+					0
+				],
+				"Night": true
+			}
+		],
+		"Graph": "ElemenxGraphics/models/roadlamp"
+	},
+	"bench": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 0.85,
+		"Graph": "ElemenxGraphics/models/bench"
+	},
+	"bin": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 0.9,
+		"Graph": "ElemenxGraphics/models/bin"
+	},
+	"bus-stop": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 2.6,
+		"Graph": "ElemenxGraphics/models/bus-stop"
+	},
+	"roadsign": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 2.6,
+		"Graph": "ElemenxGraphics/models/roadsign"
+	},
+	"traffic-light": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 3.6,
+		"Graph": "ElemenxGraphics/models/traffic-light"
+	},
+	"hydrant": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 0.8,
+		"Graph": "ElemenxGraphics/models/hydrant"
+	},
+	"bollard": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 0.9,
+		"Graph": "ElemenxGraphics/models/bollard"
+	},
+	"planter": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 0.7,
+		"Graph": "ElemenxGraphics/models/planter"
+	},
+	"kiosk": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 2.8,
+		"Lamps": [
+			{
+				"Place": [
+					0,
+					0.55,
+					0.6
+				],
+				"Color": [
+					1,
+					0.9,
+					0.7
+				],
+				"Power": 0.5,
+				"Radius": 2.5,
+				"Night": true
+			}
+		],
+		"Graph": "ElemenxGraphics/models/kiosk"
+	},
+	"fence": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 2,
+		"Graph": "ElemenxGraphics/models/fence"
+	},
+	"hedge": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 2,
+		"Graph": "ElemenxGraphics/models/hedge"
+	},
+	"stone-wall": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 2,
+		"Graph": "ElemenxGraphics/models/stone-wall"
+	},
+	"pole": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 9,
+		"Graph": "ElemenxGraphics/models/pole"
+	},
+	"tent": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 3,
+		"Graph": "ElemenxGraphics/models/tent"
+	},
+	"ruin": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 6,
+		"Graph": "ElemenxGraphics/models/ruin"
+	},
+	"city-wall": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 6,
+		"Graph": "ElemenxGraphics/models/city-wall"
+	},
+	"wall-tower": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 12,
+		"Graph": "ElemenxGraphics/models/wall-tower"
+	},
+	"gate": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 8,
+		"Graph": "ElemenxGraphics/models/gate"
+	},
+	"well": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 2.5,
+		"Graph": "ElemenxGraphics/models/well"
+	},
+	"lighthouse": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 24,
+		"Graph": "ElemenxGraphics/models/lighthouse"
+	},
+	"temple": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 18,
+		"Graph": "ElemenxGraphics/models/temple"
+	},
+	"rock": {
+		"Group": "nature",
+		"Type": "rock",
+		"Size": 2.5,
+		"Variants": 3,
+		"Graph": "ElemenxGraphics/models/rock"
+	},
+	"boulder": {
+		"Group": "nature",
+		"Type": "rock",
+		"Size": 6,
+		"Variants": 3,
+		"Graph": "ElemenxGraphics/models/boulder"
+	},
+	"crystal": {
+		"Group": "nature",
+		"Type": "rock",
+		"Size": 3,
+		"Variants": 3,
+		"Graph": "ElemenxGraphics/models/crystal"
+	},
+	"stalactite": {
+		"Group": "nature",
+		"Type": "rock",
+		"Size": 2.2,
+		"Variants": 4,
+		"Matte": false,
+		"Smooth": true,
+		"Graph": "ElemenxGraphics/models/stalactite"
+	},
+	"stalagmite": {
+		"Group": "nature",
+		"Type": "rock",
+		"Size": 1.6,
+		"Variants": 4,
+		"Matte": false,
+		"Smooth": true,
+		"Graph": "ElemenxGraphics/models/stalagmite"
+	},
+	"cave-crystal": {
+		"Group": "nature",
+		"Type": "rock",
+		"Size": 1.4,
+		"Variants": 3,
+		"Matte": false,
+		"Lamps": [
+			{
+				"Place": [
+					0,
+					0.5,
+					0
+				],
+				"Color": [
+					0.5,
+					0.83,
+					1
+				],
+				"Power": 0.5,
+				"Radius": 4
+			}
+		],
+		"Graph": "ElemenxGraphics/models/cave-crystal"
+	},
+	"torch": {
+		"Group": "props",
+		"Type": "prop",
+		"Size": 1.7,
+		"Graph": "ElemenxGraphics/models/torch"
+	},
+	"house": {
+		"Group": "fantasy",
+		"Type": "building",
+		"Size": 8,
+		"Graph": "ElemenxGraphics/models/house"
+	},
+	"tower": {
+		"Group": "fantasy",
+		"Type": "building",
+		"Size": 10,
+		"Graph": "ElemenxGraphics/models/tower"
+	},
+	"wall": {
+		"Group": "fantasy",
+		"Type": "building",
+		"Size": 6,
+		"Graph": "ElemenxGraphics/models/wall"
+	},
+	"castle": {
+		"Group": "fantasy",
+		"Type": "building",
+		"Size": 26,
+		"Graph": "ElemenxGraphics/models/castle"
+	},
+	"barracks": {
+		"Group": "fantasy",
+		"Type": "building",
+		"Size": 12,
+		"Graph": "ElemenxGraphics/models/barracks"
+	},
+	"windmill": {
+		"Group": "fantasy",
+		"Type": "building",
+		"Size": 12,
+		"Clips": {
+			"idle": {
+				"Length": 1,
+				"Loop": true,
+				"Spins": {
+					"sails": [
+						0,
+						0,
+						55
+					]
+				}
+			}
+		},
+		"Graph": "ElemenxGraphics/models/windmill"
+	},
+	"hangar": {
+		"Group": "scifi",
+		"Type": "building",
+		"Size": 16,
+		"Matte": false,
+		"Graph": "ElemenxGraphics/models/hangar"
+	},
+	"dome": {
+		"Group": "scifi",
+		"Type": "building",
+		"Size": 12,
+		"Matte": false,
+		"Smooth": true,
+		"Graph": "ElemenxGraphics/models/dome"
+	},
+	"reactor": {
+		"Group": "scifi",
+		"Type": "building",
+		"Size": 12,
+		"Matte": false,
+		"Clips": {
+			"idle": {
+				"Length": 1,
+				"Loop": true,
+				"Spins": {
+					"rotor": [
+						0,
+						40,
+						0
+					]
+				}
+			}
+		},
+		"Graph": "ElemenxGraphics/models/reactor"
+	},
+	"radar": {
+		"Group": "scifi",
+		"Type": "building",
+		"Size": 8,
+		"Matte": false,
+		"Clips": {
+			"idle": {
+				"Length": 1,
+				"Loop": true,
+				"Spins": {
+					"dish": [
+						0,
+						36,
+						0
+					]
+				}
+			}
+		},
+		"Graph": "ElemenxGraphics/models/radar"
+	},
+	"silo": {
+		"Group": "scifi",
+		"Type": "building",
+		"Size": 12,
+		"Matte": false,
+		"Graph": "ElemenxGraphics/models/silo"
+	},
+	"gun": {
+		"Group": "scifi",
+		"Type": "building",
+		"Size": 5,
+		"Matte": false,
+		"Clips": {
+			"idle": {
+				"Length": 10,
+				"Loop": true,
+				"Tracks": {
+					"turret": [
+						[
+							0,
+							0,
+							-60,
+							0
+						],
+						[
+							0.5,
+							0,
+							60,
+							0
+						],
+						[
+							1,
+							0,
+							-60,
+							0
+						]
+					]
+				}
+			},
+			"attack": {
+				"Length": 0.4,
+				"Tracks": {
+					"barrel": [
+						[
+							0,
+							0,
+							0,
+							0,
+							0,
+							0,
+							0
+						],
+						[
+							0.15,
+							0,
+							0,
+							0,
+							0,
+							0,
+							-0.12
+						],
+						[
+							1,
+							0,
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					]
+				}
+			}
+		},
+		"Graph": "ElemenxGraphics/models/gun"
+	},
+	"fighter": {
+		"Group": "space",
+		"Type": "ship",
+		"Size": 0.07,
+		"Matte": false,
+		"Smooth": true,
+		"Graph": "ElemenxGraphics/models/fighter"
+	},
+	"cruiser": {
+		"Group": "space",
+		"Type": "ship",
+		"Size": 0.07,
+		"Matte": false,
+		"Smooth": true,
+		"Graph": "ElemenxGraphics/models/cruiser"
+	},
+	"freighter": {
+		"Group": "space",
+		"Type": "ship",
+		"Size": 0.07,
+		"Matte": false,
+		"Smooth": true,
+		"Graph": "ElemenxGraphics/models/freighter"
+	}
+}

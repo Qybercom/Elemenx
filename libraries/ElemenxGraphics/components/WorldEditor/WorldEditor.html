@@ -55,17 +55,32 @@
 					<div class="elemenx-world-editor-subtitle">{{group.Label}}<Button Size="small" Variant="ghost" Icon="add" [Title]="group.Add" (click)="AddResource(group.Kind)" /></div>
 					<Button class="elemenx-world-editor-item" *for="item of group.Items" *key="item.ID" Size="small" Variant="ghost" [Pressed]="Tab === item.Tab" [Label]="item.Label" (click)="OpenResource(group.Kind, item.ID)" />
 				</div>
+				<div class="elemenx-world-editor-group" data-kind="graph">
+					<div class="elemenx-world-editor-subtitle">{{$T('graphics.worldEditor.graphs')}}</div>
+					<div class="elemenx-world-editor-row">
+						<Select Size="small" [Label]="$T('graphics.worldEditor.graph')" [Options]="GraphOptions(Version)" [Value]="GraphPicked" (change)="GraphChosen($event)" />
+						<Button Size="small" Variant="ghost" Icon="edit" [Title]="$T('graphics.worldEditor.changeGraph')" [Disabled]="!GraphPicked" (click)="GraphChange" />
+					</div>
+					<Button class="elemenx-world-editor-item" *for="item of GraphItems(Version)" *key="item.ID" Size="small" Variant="ghost" Icon="code" [Pressed]="Tab === item.Tab" [Label]="item.Label" (click)="OpenGraph(item.ID)" />
+				</div>
 			</div>
 		</aside>
 		<div class="elemenx-world-editor-main">
 			<Scene *if="Tab === 'world' && Level(Version) === 'galaxy'" class="elemenx-world-editor-galaxy" Setting="galaxy" Labels="false" [galaxy]="GalaxyKey" [galaxyTime]="Time" (ready)="GalaxyReady" (galaxy)="StarPicked" (enter)="Entered" />
-			<SceneEditor *if="Tab === 'world' && Level(Version) === 'system'" #System Setting="space" [models]="ModelNames(Version)" (change)="SystemChanged" (select)="BodyPicked" />
+			<SceneEditor *if="Tab === 'world' && Level(Version) === 'system' && Fresh" #System [graphs]="ShaderGraphs(Version)" Setting="space" [models]="ModelNames(Version)" (change)="SystemChanged" (select)="BodyPicked" />
 			<PlanetEditor *if="Tab === 'world' && Level(Version) === 'planet'" [value]="PlanetValue(Version)" (change)="PlanetChanged" (location)="LocationOpened" />
-			<SceneEditor *if="Tab === 'world' && Level(Version) === 'location'" #Location [value]="LocationValue(Version)" [models]="ModelNames(Version)" (change)="LocationChanged" />
+			<SceneEditor *if="Tab === 'world' && Level(Version) === 'location' && Fresh" #Location [graphs]="ShaderGraphs(Version)" [value]="LocationValue(Version)" [models]="ModelNames(Version)" (change)="LocationChanged" />
 			<ModelEditor *if="ResourceKind(Tab) === 'model'" [value]="ResourceValue(Version, Tab)" [generator]="Generator" (change)="ResourceChanged(Tab, $event)" />
 			<FloraEditor *if="ResourceKind(Tab) === 'plant'" [preset]="ResourceValue(Version, Tab)" (change)="ResourceChanged(Tab, $event.Preset)" />
 			<CutsceneEditor *if="ResourceKind(Tab) === 'cutscene'" [value]="ResourceValue(Version, Tab)" (change)="ResourceChanged(Tab, $event)" />
 			<Blueprint *if="ResourceKind(Tab) === 'material'" Type="material" [value]="ResourceValue(Version, Tab)" (change)="ResourceChanged(Tab, $event)" />
+			<div class="elemenx-world-editor-graph" *if="GraphOf(Tab)">
+				<div class="elemenx-world-editor-graph-bar">
+					<span class="elemenx-world-editor-note">{{$T('graphics.worldEditor.graphNote', {name: GraphOf(Tab)})}}</span>
+					<Button Size="small" Variant="ghost" Icon="undo" [Label]="$T('graphics.worldEditor.resetGraph')" (click)="ResetGraph(GraphOf(Tab))" />
+				</div>
+				<Blueprint class="elemenx-world-editor-graph-blueprint" Type="generator" [value]="GraphValue(Version, Tab)" (change)="GraphChanged(Tab, $event)" />
+			</div>
 		</div>
 	</div>
 </div>

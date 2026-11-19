@@ -4,7 +4,7 @@
  * - Pool(name, services, size) returns the workers of a name, made once: services {Service: [members] or true} names
  *   what of each Service they carry, true for all of it (Members); a Service gives the source of its members by its
  *   method Source(names); size how many
- *   (by the cores of the device, 1 to 4). Its methods: Run(service, method, args, callback(error, result)) (the
+ *   (by the cores of the device, 1 to Most). Its methods: Run(service, method, args, callback(error, result)) (the
  *   method of the Service in a worker, on the data of args; the lists of numbers of the result come back as they
  *   are, Float32Array or Uint32Array, moved, not copied), Share(key, data) (data each worker keeps under a key, sent to
  *   each once: a method in a worker reads it by this.$Shared(key); the runs that follow see it), Waiting() (how many runs
@@ -16,6 +16,8 @@
  * - Members(owner): what a worker carries of a Service told whole: every method of it (not the $ ones) and the data it
  *   names in its list Carried (its tables; not the caches it fills as it runs). Regression: the lists of the members
  *   were written by hand in each pool and drifted apart (a method of one pool was missing in the next).
+ * - Most: the most workers a pool has (4), whatever its size: a page of many pools on a busy machine (the tests of the
+ *   library, four pages at once) gives each fewer. It holds for the pools made after it is set.
  * In a worker, this.$Service(name) of a member is what the pool carries of that Service.
  */
 Elemenx.Service('Workers', {
@@ -23,6 +25,9 @@ Elemenx.Service('Workers', {
 		Description: 'Work of the Services of the library off the main thread: workers made of the source of their methods.',
 		Methods: ['Pool(name, services, size)', 'Source(owner, names)', 'Members(owner)']
 	},
+
+	/* The most workers a pool has, whatever its size (see the header). */
+	Most: 4,
 
 	Source: function (owner, names) {
 		function text (value) {
@@ -55,7 +60,7 @@ Elemenx.Service('Workers', {
 	Pool: function (name, services, size) {
 		var self = this;
 		var pools = this.Pools = this.Pools || {};
-		var count = Math.max(1, Math.min(4, Number(size) || (typeof navigator !== 'undefined' && navigator.hardwareConcurrency || 2) - 1));
+		var count = Math.max(1, Math.min(Math.max(1, Number(this.Most) || 4), Number(size) || (typeof navigator !== 'undefined' && navigator.hardwareConcurrency || 2) - 1));
 		var workers = [];
 		var jobs = {};
 		var next = 0;

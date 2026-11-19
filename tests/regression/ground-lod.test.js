@@ -4,10 +4,14 @@ import { Use } from './../library.js';
 
 var owned = [];
 
-/* A scene of a ground of its options, its eye low over its middle. */
-async function mount (options) {
+/*
+ * A scene of a ground of its options, its eye low over its middle; nothing kept by the browser (CacheSize 0). Regression: the
+ * squares a run before kept (SceneCache) came at once, none was asked of a worker, and what is asked first went untested.
+ * view: where the eye is as it is made (over the middle by default).
+ */
+async function mount (options, view) {
 	var ready = null;
-	var component = Elemenx.Component(unique('LodHost'), {$Template: '<div style="width: 480px; height: 320px"><Scene Paused="true" Quality="low" Labels="false" (ready)="Ready"></Scene></div>', Ready: function (space) {
+	var component = Elemenx.Component(unique('LodHost'), {$Template: '<div style="width: 480px; height: 320px"><Scene Paused="true" Quality="low" Labels="false" CacheSize="0" (ready)="Ready"></Scene></div>', Ready: function (space) {
 		ready = space;
 	}})();
 	var now = performance.now() + 100;
@@ -22,7 +26,7 @@ async function mount (options) {
 
 	ready.Scene().Loop.Stop();
 	ready.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library(options)});
-	ready.SetViewpoint({Target: [0, 0, 0], Yaw: 0.3, Pitch: 0.35, Distance: 60});
+	ready.SetViewpoint(view || {Target: [0, 0, 0], Yaw: 0.3, Pitch: 0.35, Distance: 60});
 
 	await waitFor(function () {
 		var ground = ready.Scene().Ground;
@@ -140,18 +144,22 @@ describe('Regression: the squares of a ground as fine as the eye sees their grid
 	 * cave through the coarse one. Now from its lowest to its highest: the squares of the cave by the eye are asked first.
 	 */
 	it('asks first for the squares of a cave under a mountain the eye is in, before the low ground round the mountain', async function () {
-		var scene = await mount({Size: 2000, Height: 2, Water: 0, Scale: 500, Ridges: 0, Seed: 'cave-lod', Sketch: {Layers: [{ID: 'base', Visible: true, Strength: 1, Items: [{ID: 'm', Type: 'mountain', At: [0, 0], Radius: 160, Height: 220}]}]}, Passages: [{Radius: 2.5, Nodes: [{ID: 'a', At: [-300, 0, 3]}, {ID: 'b', At: [300, 0, 3]}], Ways: [{From: 'a', To: 'b'}]}]});
+		var scene = await mount({Size: 2000, Height: 2, Water: 0, Scale: 500, Ridges: 0, Seed: 'cave-lod', Sketch: {Layers: [{ID: 'base', Visible: true, Strength: 1, Items: [{ID: 'm', Type: 'mountain', At: [0, 0], Radius: 160, Height: 220}]}]}, Passages: [{Radius: 2.5, Nodes: [{ID: 'a', At: [-300, 0, 3]}, {ID: 'b', At: [300, 0, 3]}], Ways: [{From: 'a', To: 'b'}]}]}, {Target: [800, 4, 0], Yaw: Math.PI / 2, Pitch: 0, Distance: 3});
 		var ground = scene.Scene().Ground;
 		var work = scene.$Service('SceneTerrainGenerator').Work();
 		var run = work.Run;
 		var now = performance.now() + 5000;
 		var asked = [];
-		var arrived = false;
 		var eye;
 		var i;
 
+		/*
+		 * What is asked once the eye is in the cave, its place taken as it is asked (the frame walks the squares from it).
+		 * Regression: taken after the frame, the asks of the frame the eye came in went untold, the ones by the eye among them.
+		 */
 		work.Run = function (service, name, args, callback) {
-			if (arrived && name === 'Piece')
+			var at = scene.Scene().Eye;
+			if (name === 'Piece' && at && Math.hypot(at[0] + 60, at[2]) < 5)
 				asked.push(args[3]);
 
 			return run.apply(work, arguments);
@@ -165,7 +173,6 @@ describe('Regression: the squares of a ground as fine as the eye sees their grid
 			scene.Engine().Frame(now += 33);
 
 			eye = scene.Scene().Eye;
-			arrived = Math.hypot(eye[0] + 60, eye[2]) < 5;
 
 			await new Promise(function (done) {
 				setTimeout(done, 5);

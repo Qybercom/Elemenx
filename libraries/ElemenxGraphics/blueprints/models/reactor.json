@@ -1,0 +1,532 @@
+{
+	"version": 1,
+	"type": "model",
+	"name": "reactor",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "lathe-0",
+			"type": "Lathe",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Segments",
+					"value": 12
+				}
+			]
+		},
+		{
+			"id": "formula-1",
+			"type": "Formula",
+			"x": 0,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[[0.42, 0], [0.34, 0.08], [0.26, 0.48], [0.3, 0.72], [0.3, 0.74], [0, 0.74]]"
+				}
+			]
+		},
+		{
+			"id": "formula-2",
+			"type": "Formula",
+			"x": 0,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-3",
+			"type": "Formula",
+			"x": 0,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.78, 0.8, 0.84]"
+				}
+			]
+		},
+		{
+			"id": "cylinder-4",
+			"type": "Cylinder",
+			"x": 0,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Segments",
+					"value": 12
+				}
+			]
+		},
+		{
+			"id": "formula-5",
+			"type": "Formula",
+			"x": 0,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.18"
+				}
+			]
+		},
+		{
+			"id": "formula-6",
+			"type": "Formula",
+			"x": 0,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"id": "formula-7",
+			"type": "Formula",
+			"x": 0,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.02"
+				}
+			]
+		},
+		{
+			"id": "formula-8",
+			"type": "Formula",
+			"x": 0,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.75, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-9",
+			"type": "Formula",
+			"x": 0,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.8, 2.2, 2.8]"
+				}
+			]
+		},
+		{
+			"id": "box-10",
+			"type": "Box",
+			"x": 0,
+			"y": 900,
+			"properties": []
+		},
+		{
+			"id": "formula-11",
+			"type": "Formula",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.5, 0.02, 0.5]"
+				}
+			]
+		},
+		{
+			"id": "formula-12",
+			"type": "Formula",
+			"x": 0,
+			"y": 1080,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.01, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-13",
+			"type": "Formula",
+			"x": 0,
+			"y": 1170,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.27, 0.29, 0.34]"
+				}
+			]
+		},
+		{
+			"id": "join-14",
+			"type": "Join",
+			"x": 0,
+			"y": 1260,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 3
+				}
+			]
+		},
+		{
+			"id": "piece-15",
+			"type": "Piece",
+			"x": 240,
+			"y": 0,
+			"properties": [
+				{
+					"key": "ID",
+					"value": "body"
+				}
+			]
+		},
+		{
+			"id": "box-16",
+			"type": "Box",
+			"x": 240,
+			"y": 90,
+			"properties": []
+		},
+		{
+			"id": "formula-17",
+			"type": "Formula",
+			"x": 240,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.8, 0.03, 0.06]"
+				}
+			]
+		},
+		{
+			"id": "formula-18",
+			"type": "Formula",
+			"x": 240,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.36, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-19",
+			"type": "Formula",
+			"x": 240,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.27, 0.29, 0.34]"
+				}
+			]
+		},
+		{
+			"id": "box-20",
+			"type": "Box",
+			"x": 240,
+			"y": 450,
+			"properties": []
+		},
+		{
+			"id": "formula-21",
+			"type": "Formula",
+			"x": 240,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.06, 0.03, 0.8]"
+				}
+			]
+		},
+		{
+			"id": "formula-22",
+			"type": "Formula",
+			"x": 240,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.36, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-23",
+			"type": "Formula",
+			"x": 240,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.27, 0.29, 0.34]"
+				}
+			]
+		},
+		{
+			"id": "join-24",
+			"type": "Join",
+			"x": 240,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "piece-25",
+			"type": "Piece",
+			"x": 240,
+			"y": 900,
+			"properties": [
+				{
+					"key": "ID",
+					"value": "rotor"
+				}
+			]
+		},
+		{
+			"id": "join-26",
+			"type": "Join",
+			"x": 240,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "pivot-27",
+			"type": "Pivot",
+			"x": 240,
+			"y": 1080,
+			"properties": [
+				{
+					"key": "ID",
+					"value": "rotor"
+				},
+				{
+					"key": "Parent",
+					"value": "body"
+				},
+				{
+					"key": "Team",
+					"value": false
+				}
+			]
+		},
+		{
+			"id": "formula-28",
+			"type": "Formula",
+			"x": 240,
+			"y": 1170,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.36, 0]"
+				}
+			]
+		},
+		{
+			"id": "model-29",
+			"type": "Model",
+			"x": 240,
+			"y": 1260,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "link-0",
+			"p1": "formula-1-out-Value",
+			"p2": "lathe-0-in-Points",
+			"kind": "value"
+		},
+		{
+			"id": "link-1",
+			"p1": "formula-2-out-Value",
+			"p2": "lathe-0-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-2",
+			"p1": "formula-3-out-Value",
+			"p2": "lathe-0-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-3",
+			"p1": "formula-5-out-Value",
+			"p2": "cylinder-4-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "link-4",
+			"p1": "formula-6-out-Value",
+			"p2": "cylinder-4-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "link-5",
+			"p1": "formula-7-out-Value",
+			"p2": "cylinder-4-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "link-6",
+			"p1": "formula-8-out-Value",
+			"p2": "cylinder-4-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-7",
+			"p1": "formula-9-out-Value",
+			"p2": "cylinder-4-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-8",
+			"p1": "formula-11-out-Value",
+			"p2": "box-10-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-9",
+			"p1": "formula-12-out-Value",
+			"p2": "box-10-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-10",
+			"p1": "formula-13-out-Value",
+			"p2": "box-10-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-11",
+			"p1": "lathe-0-out-Parts",
+			"p2": "join-14-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "link-12",
+			"p1": "cylinder-4-out-Parts",
+			"p2": "join-14-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "link-13",
+			"p1": "box-10-out-Parts",
+			"p2": "join-14-in-Parts3",
+			"kind": "value"
+		},
+		{
+			"id": "link-14",
+			"p1": "join-14-out-Parts",
+			"p2": "piece-15-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "link-15",
+			"p1": "formula-17-out-Value",
+			"p2": "box-16-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-16",
+			"p1": "formula-18-out-Value",
+			"p2": "box-16-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-17",
+			"p1": "formula-19-out-Value",
+			"p2": "box-16-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-18",
+			"p1": "formula-21-out-Value",
+			"p2": "box-20-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-19",
+			"p1": "formula-22-out-Value",
+			"p2": "box-20-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-20",
+			"p1": "formula-23-out-Value",
+			"p2": "box-20-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-21",
+			"p1": "box-16-out-Parts",
+			"p2": "join-24-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "link-22",
+			"p1": "box-20-out-Parts",
+			"p2": "join-24-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "link-23",
+			"p1": "join-24-out-Parts",
+			"p2": "piece-25-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "link-24",
+			"p1": "piece-15-out-Parts",
+			"p2": "join-26-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "link-25",
+			"p1": "piece-25-out-Parts",
+			"p2": "join-26-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "link-26",
+			"p1": "formula-28-out-Value",
+			"p2": "pivot-27-in-Pivot",
+			"kind": "value"
+		},
+		{
+			"id": "link-27",
+			"p1": "join-26-out-Parts",
+			"p2": "model-29-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "link-28",
+			"p1": "pivot-27-out-Pieces",
+			"p2": "model-29-in-Pieces",
+			"kind": "value"
+		}
+	]
+}

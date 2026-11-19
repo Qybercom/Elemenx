@@ -177,6 +177,53 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 		expect(Array.from(worked.Positions)).toEqual(Array.from(page.Positions));
 	});
 
+	it('makes its ground of the graphs of its Terrain (Graphs, as a world gives them), and of the library\'s again with none', async function () {
+		var ready = null;
+		var component = Elemenx.Component(unique('GraphsHost'), {$Template: '<div style="width: 320px; height: 200px"><Scene Paused="true" Quality="low" Labels="false" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="600" Height="4" Water="0" Scale="300" Ridges="0" Seed="sketch" /></Scene></div>', Ready: function (space) {
+			ready = space;
+		}})();
+		var world = Elemenx.Service('SceneWorld').Library(Object.assign({}, GROUND, {Sketch: sketch([{ID: 'hill', Type: 'raise', Points: [[10, 0]], Radius: 12, Amount: 6}])}));
+		var raise = JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/sketch/raise')));
+		var plain = terrain.Flat(GROUND).Height(10, 0);
+		var inner;
+		var now = 1000;
+
+		/* A raise of its own: twice as high. */
+		raise.blocks.filter(function (one) {
+			return one.type === 'Formula';
+		})[0].properties[0].value = 'H + 2 * Amount * (0.5 + 0.5 * cos(min(1, max(0, (D) / max(0.000001, Radius))) * 3.141592653589793)) * S';
+
+		owned.push(component);
+
+		document.getElementById('mount').appendChild(component.$Element());
+
+		await waitFor(function () {
+			return ready;
+		}, 30000);
+
+		inner = ready.Scene();
+
+		inner.Loop.Stop();
+
+		function frame () {
+			inner.Rest = 0;
+
+			ready.Engine().Frame(now += 33);
+		}
+
+		ready.Change('land', {Traits: {Terrain: {World: world, Graphs: {'sketch/raise': raise}}}});
+
+		frame();
+
+		expect(inner.Ground.Field.Height(10, 0) - plain).toBeCloseTo(12, 4);
+
+		ready.Change('land', {Traits: {Terrain: {World: world, Graphs: null}}});
+
+		frame();
+
+		expect(inner.Ground.Field.Height(10, 0) - plain).toBeCloseTo(6, 4);
+	}, 90000);
+
 	it('makes a ground again only where its sketch changed: the same ground, its squares there made again, what stands there set on it again', async function () {
 		var ready = null;
 		var component = Elemenx.Component(unique('SketchHost'), {$Template: '<div style="width: 320px; height: 200px"><Scene Paused="true" Quality="low" Labels="false" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="600" Height="4" Water="0" Scale="300" Ridges="0" Seed="sketch" /></Scene></div>', Ready: function (space) {

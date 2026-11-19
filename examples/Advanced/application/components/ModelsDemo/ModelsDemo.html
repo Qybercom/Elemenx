@@ -8,7 +8,13 @@
 		<Button Label="March" Icon="map-pin" Variant="ghost" (click)="ModelsMarch" />
 		<Toggle Label="Shadows" [checked]="ModelsShadows" (change)="ModelsShadowed" />
 		<Button Label="To the files" Icon="box" Variant="ghost" *if="ModelsFiles.length" (click)="ModelsToFiles" />
+		<Select Size="small" Label="Model" [Options]="GraphOptions()" [Value]="GraphPicked" (change)="GraphChosen($event)" />
+		<Button Label="Open graph" Icon="code" Variant="ghost" [Disabled]="!GraphPicked" (click)="GraphOpened" />
+		<Button Label="Close graph" Icon="close" Variant="ghost" *if="GraphShown" (click)="GraphClosed" />
 		<span class="elemenx-caption" role="status">{{ModelsNote}}</span>
+	</div>
+	<div class="scene-demo-scene" *if="GraphShown">
+		<ModelEditor Mode="graph" [GraphModel]="GraphShown" />
 	</div>
 	<div class="scene-demo-scene">
 		<Scene Setting="terrain" Team="red" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [shadows]="ModelsShadows" (ready)="ModelsReady"><DemoLoading slot="loading" Title="Models" />

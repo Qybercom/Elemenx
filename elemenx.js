@@ -23319,9 +23319,21 @@
 				}).join(', ')});
 			}
 
+			/*
+			 * Once (Options.Once, a language of directives: glsl): each function, its prototype too, only when no module before it
+			 * in the same text made it (ENX_<name>): modules of graphs and the noise of the Noise Service side by side in a shader.
+			 */
+			var once = !!(settings.Once && language.Directives);
+
 			if (language.Prototype) {
 				module.Functions.forEach(function (fn) {
+					if (once)
+						line(0, '#ifndef ENX_' + language.Name(fn.Name));
+
 					line(0, signature(fn, language.Prototype));
+
+					if (once)
+						line(0, '#endif');
 				});
 			}
 
@@ -23331,6 +23343,9 @@
 				(fn.Params || []).forEach(function (param) {
 					scope[param.Name] = param.Type || 'any';
 				});
+
+				if (once)
+					line(0, '#ifndef ENX_' + language.Name(fn.Name) + '\n#define ENX_' + language.Name(fn.Name));
 
 				line(0, signature(fn, language.Function));
 
@@ -23347,6 +23362,9 @@
 				}
 
 				line(0, language.Statements.End);
+
+				if (once)
+					line(0, '#endif');
 			});
 
 			return {Text: fill(language.Module, {runtime: typeof language.Runtime === 'function' ? language.Runtime(settings) : language.Runtime || '', functions: constants.concat(lines).join('\n'), entry: language.Name(module.Entry || (module.Functions[0] && module.Functions[0].Name) || ''), names: module.Functions.map(function (fn) {
@@ -23524,11 +23542,16 @@
 			Param: '{type} {name}',
 			Function: '{returns} {name}({params}) {',
 			Prototype: '{returns} {name}({params});',
-			/* Its lists of numbers of RT_CAP at most (Options.ListSize, 256): their numbers and how many. */
+			/*
+			 * Its lists of numbers of RT_CAP at most (Options.ListSize, 256): their numbers and how many. Once in a shader however
+			 * many modules are in it (RT_RUNTIME): the noise of the Noise Service and a graph of numbers side by side.
+			 */
 			Runtime: function (options) {
-				return '#define RT_CAP ' + glslCap(options) + '\nstruct rt_floats { float v[RT_CAP]; int n; };\n' + glslRuntime;
+				return '#ifndef RT_RUNTIME\n#define RT_RUNTIME\n#define RT_CAP ' + glslCap(options) + '\nstruct rt_floats { float v[RT_CAP]; int n; };\n' + glslRuntime + '\n#endif';
 			},
 			Module: '{runtime}\n{functions}\n',
+			/* Its text takes the directives of a preprocessor (#ifndef): Options.Once. */
+			Directives: true,
 			Prepare: function (module, options) {
 				return glslReady(module, options);
 			}

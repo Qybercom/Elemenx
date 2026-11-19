@@ -1,0 +1,3653 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "relief",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "planet-relief-formula-0",
+			"type": "Formula",
+			"x": 260,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "exp(-abs(Boundary) / 180)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-1",
+			"type": "Input",
+			"x": 0,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Boundary"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-2",
+			"type": "Formula",
+			"x": 260,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * 9 + SFolds, PY * 9 + SFolds, PZ * 9 + SFolds)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PX"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-4",
+			"type": "Input",
+			"x": 0,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SFolds"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-5",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PY"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-6",
+			"type": "Input",
+			"x": 0,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PZ"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-folds",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "ridged"
+				},
+				{
+					"key": "Octaves",
+					"value": 10
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "WarpScale",
+					"value": 1
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-7",
+			"type": "Input",
+			"x": 0,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Octaves"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-8",
+			"type": "Formula",
+			"x": 1300,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(-1, -(120 + pow(min(1.5, -Land), 0.7) * Depth * 0.8) + max(0, -Push) * M * 2200 * (Oceanic > 0.5 ? 1 : 0.4) - max(0, Push) * M * Depth * 0.4 * (Oceanic > 0.5 ? 1 : 0.3))"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-9",
+			"type": "Input",
+			"x": 0,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Land"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-10",
+			"type": "Input",
+			"x": 0,
+			"y": 880,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Depth"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-11",
+			"type": "Input",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Push"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-12",
+			"type": "Input",
+			"x": 0,
+			"y": 1100,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Oceanic"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-13",
+			"type": "Formula",
+			"x": 260,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-14",
+			"type": "Formula",
+			"x": 260,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.12"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-smoothstep-15",
+			"type": "Smoothstep",
+			"x": 520,
+			"y": 220,
+			"properties": []
+		},
+		{
+			"id": "planet-relief-formula-16",
+			"type": "Formula",
+			"x": 260,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * 2.2 + SUplift, PY * 2.2 + SUplift, PZ * 2.2 + SUplift)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-17",
+			"type": "Input",
+			"x": 0,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SUplift"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-uplift",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 3
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "WarpScale",
+					"value": 1
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-18",
+			"type": "Formula",
+			"x": 260,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.5 + (0.5 - Mountains) * 0.4"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-19",
+			"type": "Input",
+			"x": 0,
+			"y": 1320,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Mountains"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-20",
+			"type": "Formula",
+			"x": 260,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.8 + (0.5 - Mountains) * 0.4"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-smoothstep-21",
+			"type": "Smoothstep",
+			"x": 520,
+			"y": 440,
+			"properties": []
+		},
+		{
+			"id": "planet-relief-formula-22",
+			"type": "Formula",
+			"x": 780,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(1, C + M * max(0, Push) * 1.2) * K"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-23",
+			"type": "Formula",
+			"x": 260,
+			"y": 880,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.42"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-24",
+			"type": "Formula",
+			"x": 260,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.8"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-smoothstep-25",
+			"type": "Smoothstep",
+			"x": 520,
+			"y": 550,
+			"properties": []
+		},
+		{
+			"id": "planet-relief-formula-26",
+			"type": "Formula",
+			"x": 260,
+			"y": 1100,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * 14 + SRanges, PY * 14 + SRanges, PZ * 14 + SRanges)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-27",
+			"type": "Input",
+			"x": 0,
+			"y": 1430,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SRanges"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-ranges",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "ridged"
+				},
+				{
+					"key": "Octaves",
+					"value": 7
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0.5
+				},
+				{
+					"key": "WarpScale",
+					"value": 0.4
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-28",
+			"type": "Formula",
+			"x": 780,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "pow(R, 2.2)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-29",
+			"type": "Formula",
+			"x": 260,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * 48 + SPeaks, PY * 48 + SPeaks, PZ * 48 + SPeaks)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-30",
+			"type": "Input",
+			"x": 0,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SPeaks"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-peaks",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "ridged"
+				},
+				{
+					"key": "Octaves",
+					"value": 4
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "WarpScale",
+					"value": 1
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-31",
+			"type": "Formula",
+			"x": 260,
+			"y": 1320,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.3"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-32",
+			"type": "Formula",
+			"x": 260,
+			"y": 1430,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.7"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-smoothstep-33",
+			"type": "Smoothstep",
+			"x": 520,
+			"y": 880,
+			"properties": []
+		},
+		{
+			"id": "planet-relief-formula-34",
+			"type": "Formula",
+			"x": 780,
+			"y": 330,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "15 + pow(min(1.5, Land), 1.1) * 780 + S * 900 * K + H * Relief * (0.3 + 0.5 * Mountains) * C + pow(P, 3) * Relief * 0.3 * (0.5 + Mountains) * C * T"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-35",
+			"type": "Input",
+			"x": 0,
+			"y": 1650,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Relief"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-36",
+			"type": "Formula",
+			"x": 780,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(1, C * 1.5)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-37",
+			"type": "Formula",
+			"x": 260,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Small < 40"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-38",
+			"type": "Input",
+			"x": 0,
+			"y": 1760,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Small"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-39",
+			"type": "Formula",
+			"x": 260,
+			"y": 1650,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * 320 + SSierra, PY * 320 + SSierra, PZ * 320 + SSierra)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-40",
+			"type": "Input",
+			"x": 0,
+			"y": 1870,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SSierra"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-sierra",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "ridged"
+				},
+				{
+					"key": "Octaves",
+					"value": 5
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0.35
+				},
+				{
+					"key": "WarpScale",
+					"value": 0.5
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-41",
+			"type": "Formula",
+			"x": 780,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "pow(N, 2.2)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-42",
+			"type": "Formula",
+			"x": 780,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(0, min(1, 0.5 + 0.5 * (R - 0.1) / 0.06))"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-43",
+			"type": "Formula",
+			"x": 780,
+			"y": 770,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "R * H + 0.1 * (1 - H) + 0.06 * H * (1 - H)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-when-44",
+			"type": "When",
+			"x": 1040,
+			"y": 110,
+			"properties": []
+		},
+		{
+			"id": "planet-relief-formula-45",
+			"type": "Formula",
+			"x": 780,
+			"y": 880,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Small < 40 ? H + (R - 0.3) * Relief * 0.45 * (0.5 + Mountains) * Q : H"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-46",
+			"type": "Formula",
+			"x": 260,
+			"y": 1760,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Small < 40 && R > 0.35"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-47",
+			"type": "Formula",
+			"x": 260,
+			"y": 1870,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * 300 + SHorns, PY * 300 + SHorns, PZ * 300 + SHorns)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-48",
+			"type": "Input",
+			"x": 0,
+			"y": 1980,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SHorns"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-horns",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 1100,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "ridged"
+				},
+				{
+					"key": "Octaves",
+					"value": 3
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "WarpScale",
+					"value": 1
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-49",
+			"type": "Formula",
+			"x": 260,
+			"y": 1980,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.35"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-50",
+			"type": "Formula",
+			"x": 260,
+			"y": 2090,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.75"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-smoothstep-51",
+			"type": "Smoothstep",
+			"x": 520,
+			"y": 1210,
+			"properties": []
+		},
+		{
+			"id": "planet-relief-formula-52",
+			"type": "Formula",
+			"x": 780,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "pow(N, 2.5) * Relief * 0.1 * (0.5 + Mountains) * Q * T"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-when-53",
+			"type": "When",
+			"x": 1040,
+			"y": 220,
+			"properties": []
+		},
+		{
+			"id": "planet-relief-formula-54",
+			"type": "Formula",
+			"x": 780,
+			"y": 1100,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Small < 40 && R > 0.35 ? H + W : H"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-55",
+			"type": "Formula",
+			"x": 780,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(H + max(0, Push) * M * Relief * 0.35 * (0.4 + D * 0.6) - max(0, -Push) * M * 900 + PaintRaise * (0.55 + D * 0.45) - PaintRift) * (1 - PaintRiver)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-56",
+			"type": "Input",
+			"x": 0,
+			"y": 2090,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PaintRaise"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-57",
+			"type": "Input",
+			"x": 0,
+			"y": 2200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PaintRift"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-58",
+			"type": "Input",
+			"x": 0,
+			"y": 2310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PaintRiver"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-59",
+			"type": "Formula",
+			"x": 260,
+			"y": 2200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * 7 + 31 + SUplift, PY * 7 + SUplift, PZ * 7 + SUplift)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-uplift-hills",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 1320,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 3
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "WarpScale",
+					"value": 1
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-60",
+			"type": "Formula",
+			"x": 260,
+			"y": 2310,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.38"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-61",
+			"type": "Formula",
+			"x": 260,
+			"y": 2420,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.72"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-smoothstep-62",
+			"type": "Smoothstep",
+			"x": 520,
+			"y": 1430,
+			"properties": []
+		},
+		{
+			"id": "planet-relief-formula-63",
+			"type": "Formula",
+			"x": 780,
+			"y": 1320,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(0.06 + Y * 0.5, min(1, H / 3200 + C * 0.5))"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-64",
+			"type": "Formula",
+			"x": 260,
+			"y": 2530,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "3 / Radius"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-65",
+			"type": "Input",
+			"x": 0,
+			"y": 2420,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Radius"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-66",
+			"type": "Formula",
+			"x": 260,
+			"y": 2640,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX + EX * St, PY + EY * St, PZ + EZ * St)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-67",
+			"type": "Input",
+			"x": 0,
+			"y": 2530,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "EX"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-68",
+			"type": "Input",
+			"x": 0,
+			"y": 2640,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "EY"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-69",
+			"type": "Input",
+			"x": 0,
+			"y": 2750,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "EZ"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-70",
+			"type": "Formula",
+			"x": 260,
+			"y": 2750,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX + NX * St, PY + NY * St, PZ + NZ * St)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-71",
+			"type": "Input",
+			"x": 0,
+			"y": 2860,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "NX"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-72",
+			"type": "Input",
+			"x": 0,
+			"y": 2970,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "NY"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-73",
+			"type": "Input",
+			"x": 0,
+			"y": 3080,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "NZ"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-74",
+			"type": "Formula",
+			"x": 780,
+			"y": 1430,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Relief * (0.3 + 0.5 * Mountains) * C"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-75",
+			"type": "Formula",
+			"x": 780,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Relief * 0.45 * (0.5 + Mountains) * Q"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-76",
+			"type": "Formula",
+			"x": 260,
+			"y": 2860,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(Q[0] * 14 + SRanges, Q[1] * 14 + SRanges, Q[2] * 14 + SRanges)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-ranges-east",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "ridged"
+				},
+				{
+					"key": "Octaves",
+					"value": 7
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0.5
+				},
+				{
+					"key": "WarpScale",
+					"value": 0.4
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-77",
+			"type": "Formula",
+			"x": 260,
+			"y": 2970,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(Q[0] * 14 + SRanges, Q[1] * 14 + SRanges, Q[2] * 14 + SRanges)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-ranges-north",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 1650,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "ridged"
+				},
+				{
+					"key": "Octaves",
+					"value": 7
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0.5
+				},
+				{
+					"key": "WarpScale",
+					"value": 0.4
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-78",
+			"type": "Formula",
+			"x": 260,
+			"y": 3080,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(Q[0] * 320 + SSierra, Q[1] * 320 + SSierra, Q[2] * 320 + SSierra)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-sierra-east",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 1760,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "ridged"
+				},
+				{
+					"key": "Octaves",
+					"value": 5
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0.35
+				},
+				{
+					"key": "WarpScale",
+					"value": 0.5
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-79",
+			"type": "Formula",
+			"x": 780,
+			"y": 1650,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "pow(N, 2.2)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-80",
+			"type": "Formula",
+			"x": 780,
+			"y": 1760,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(0, min(1, 0.5 + 0.5 * (R - 0.1) / 0.06))"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-81",
+			"type": "Formula",
+			"x": 780,
+			"y": 1870,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "R * H + 0.1 * (1 - H) + 0.06 * H * (1 - H)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-82",
+			"type": "Formula",
+			"x": 260,
+			"y": 3190,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(Q[0] * 320 + SSierra, Q[1] * 320 + SSierra, Q[2] * 320 + SSierra)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-sierra-north",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 1870,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "ridged"
+				},
+				{
+					"key": "Octaves",
+					"value": 5
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0.35
+				},
+				{
+					"key": "WarpScale",
+					"value": 0.5
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-83",
+			"type": "Formula",
+			"x": 780,
+			"y": 1980,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "pow(N, 2.2)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-84",
+			"type": "Formula",
+			"x": 780,
+			"y": 2090,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(0, min(1, 0.5 + 0.5 * (R - 0.1) / 0.06))"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-85",
+			"type": "Formula",
+			"x": 780,
+			"y": 2200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "R * H + 0.1 * (1 - H) + 0.06 * H * (1 - H)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-86",
+			"type": "Formula",
+			"x": 780,
+			"y": 2310,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec2(((pow(A, 2.2) - H) * L + (B - R) * S) / 3000, ((pow(C, 2.2) - H) * L + (D - R) * S) / 3000)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-87",
+			"type": "Formula",
+			"x": 260,
+			"y": 3300,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "C > 0.02 && Small < 20"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-when-88",
+			"type": "When",
+			"x": 1040,
+			"y": 330,
+			"properties": []
+		},
+		{
+			"id": "planet-relief-formula-89",
+			"type": "Formula",
+			"x": 780,
+			"y": 2420,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "sqrt(G[0] * G[0] + G[1] * G[1])"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-90",
+			"type": "Formula",
+			"x": 780,
+			"y": 2530,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 / (1 + S * S * 8)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-91",
+			"type": "Formula",
+			"x": 260,
+			"y": 3410,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Small < 20"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-92",
+			"type": "Formula",
+			"x": 260,
+			"y": 3520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * (Radius / 40) + SHills, PY * (Radius / 40) + SHills, PZ * (Radius / 40) + SHills)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-93",
+			"type": "Input",
+			"x": 0,
+			"y": 3190,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SHills"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-hills",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 1980,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 6
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "WarpScale",
+					"value": 1
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-94",
+			"type": "Formula",
+			"x": 780,
+			"y": 2640,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "H + (N - 0.5) * 2 * (40 + 700 * R) * K * W"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-when-95",
+			"type": "When",
+			"x": 1040,
+			"y": 440,
+			"properties": []
+		},
+		{
+			"id": "planet-relief-formula-96",
+			"type": "Formula",
+			"x": 780,
+			"y": 2750,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(-(EX * G[0] + NX * G[1]) / S, -(EY * G[0] + NY * G[1]) / S, -(EZ * G[0] + NZ * G[1]) / S)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-97",
+			"type": "Formula",
+			"x": 260,
+			"y": 3630,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * (Radius / 3), PY * (Radius / 3), PZ * (Radius / 3))"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-98",
+			"type": "Formula",
+			"x": 780,
+			"y": 2860,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(X[0] * D[0] + X[1] * D[1] + X[2] * D[2]) * 0.75"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-99",
+			"type": "Formula",
+			"x": 260,
+			"y": 3740,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "S > 0.000001 && Small < 3"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-100",
+			"type": "Formula",
+			"x": 260,
+			"y": 3850,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(X[0] - D[0] * A + 17 + SCrags, X[1] - D[1] * A + SCrags, X[2] - D[2] * A + SCrags)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-101",
+			"type": "Input",
+			"x": 0,
+			"y": 3300,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SCrags"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-crags-gullies",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 2090,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "ridged"
+				},
+				{
+					"key": "Octaves",
+					"value": 6
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "WarpScale",
+					"value": 1
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-102",
+			"type": "Formula",
+			"x": 780,
+			"y": 2970,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "H + (N - 0.55) * min(1, S * 3) * (300 + max(0, H) * 0.08) * min(1, C * 2)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-when-103",
+			"type": "When",
+			"x": 1040,
+			"y": 550,
+			"properties": []
+		},
+		{
+			"id": "planet-relief-formula-104",
+			"type": "Formula",
+			"x": 260,
+			"y": 3960,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * (Radius / 1.2) + SGrain, PY * (Radius / 1.2) + SGrain, PZ * (Radius / 1.2) + SGrain)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-input-105",
+			"type": "Input",
+			"x": 0,
+			"y": 3410,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SGrain"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-grain",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 2200,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 6
+				},
+				{
+					"key": "Gain",
+					"value": 0.48
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "WarpScale",
+					"value": 1
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-106",
+			"type": "Formula",
+			"x": 780,
+			"y": 3080,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "H + (N - 0.5) * 2 * (6 + 220 * R) * K * (0.4 + 0.6 * W) * (1 - 0.7 * min(1, C * 2))"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-107",
+			"type": "Formula",
+			"x": 780,
+			"y": 3190,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(0, min(1, (H - 600) / 2400))"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-108",
+			"type": "Formula",
+			"x": 260,
+			"y": 4070,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Small < 1"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-109",
+			"type": "Formula",
+			"x": 260,
+			"y": 4180,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(PX * (Radius / 1.2) * 0.6 + SCrags, PY * (Radius / 1.2) * 0.6 + SCrags, PZ * (Radius / 1.2) * 0.6 + SCrags)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-crags",
+			"type": "NoiseSpec",
+			"x": 520,
+			"y": 2310,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				},
+				{
+					"key": "Fractal",
+					"value": "ridged"
+				},
+				{
+					"key": "Octaves",
+					"value": 6
+				},
+				{
+					"key": "Gain",
+					"value": 0.5
+				},
+				{
+					"key": "Cell",
+					"value": "f1"
+				},
+				{
+					"key": "Distance",
+					"value": "euclid"
+				},
+				{
+					"key": "Warp",
+					"value": 0
+				},
+				{
+					"key": "WarpScale",
+					"value": 1
+				},
+				{
+					"key": "WarpOctaves",
+					"value": 2
+				},
+				{
+					"key": "Tile",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-110",
+			"type": "Formula",
+			"x": 780,
+			"y": 3300,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "A + (N - 0.45) * U * (180 + A * 0.12) * (0.4 + 0.6 * W) * min(1, 0.15 + C * 2)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-when-111",
+			"type": "When",
+			"x": 1040,
+			"y": 660,
+			"properties": []
+		},
+		{
+			"id": "planet-relief-formula-112",
+			"type": "Formula",
+			"x": 780,
+			"y": 3410,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "H / 250"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-113",
+			"type": "Formula",
+			"x": 780,
+			"y": 3520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "K - floor(K)"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-114",
+			"type": "Formula",
+			"x": 1300,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Small < 3 && C > 0.05 && H > 1500 ? H + ((floor(K) + F * F * F * (F * (F * 6 - 15) + 10)) * 250 - H) * 0.55 * min(1, C * 2) * min(1, (H - 1500) / 1000) : H"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-formula-115",
+			"type": "Formula",
+			"x": 260,
+			"y": 4290,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Land > 0"
+				}
+			]
+		},
+		{
+			"id": "planet-relief-when-116",
+			"type": "When",
+			"x": 1040,
+			"y": 770,
+			"properties": []
+		},
+		{
+			"id": "planet-relief-result-117",
+			"type": "Result",
+			"x": 1560,
+			"y": 110,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "planet-relief-link-0",
+			"p1": "planet-relief-input-1-out-Value",
+			"p2": "planet-relief-formula-0-in-Boundary",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-1",
+			"p1": "planet-relief-input-3-out-Value",
+			"p2": "planet-relief-formula-2-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-2",
+			"p1": "planet-relief-input-4-out-Value",
+			"p2": "planet-relief-formula-2-in-SFolds",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-3",
+			"p1": "planet-relief-input-5-out-Value",
+			"p2": "planet-relief-formula-2-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-4",
+			"p1": "planet-relief-input-6-out-Value",
+			"p2": "planet-relief-formula-2-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-5",
+			"p1": "planet-relief-formula-2-out-Value",
+			"p2": "planet-relief-folds-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-6",
+			"p1": "planet-relief-input-7-out-Value",
+			"p2": "planet-relief-folds-in-Octaves",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-7",
+			"p1": "planet-relief-input-9-out-Value",
+			"p2": "planet-relief-formula-8-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-8",
+			"p1": "planet-relief-input-10-out-Value",
+			"p2": "planet-relief-formula-8-in-Depth",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-9",
+			"p1": "planet-relief-input-11-out-Value",
+			"p2": "planet-relief-formula-8-in-Push",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-10",
+			"p1": "planet-relief-formula-0-out-Value",
+			"p2": "planet-relief-formula-8-in-M",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-11",
+			"p1": "planet-relief-input-12-out-Value",
+			"p2": "planet-relief-formula-8-in-Oceanic",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-12",
+			"p1": "planet-relief-input-9-out-Value",
+			"p2": "planet-relief-smoothstep-15-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-13",
+			"p1": "planet-relief-formula-13-out-Value",
+			"p2": "planet-relief-smoothstep-15-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-14",
+			"p1": "planet-relief-formula-14-out-Value",
+			"p2": "planet-relief-smoothstep-15-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-15",
+			"p1": "planet-relief-input-3-out-Value",
+			"p2": "planet-relief-formula-16-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-16",
+			"p1": "planet-relief-input-17-out-Value",
+			"p2": "planet-relief-formula-16-in-SUplift",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-17",
+			"p1": "planet-relief-input-5-out-Value",
+			"p2": "planet-relief-formula-16-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-18",
+			"p1": "planet-relief-input-6-out-Value",
+			"p2": "planet-relief-formula-16-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-19",
+			"p1": "planet-relief-formula-16-out-Value",
+			"p2": "planet-relief-uplift-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-20",
+			"p1": "planet-relief-input-19-out-Value",
+			"p2": "planet-relief-formula-18-in-Mountains",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-21",
+			"p1": "planet-relief-input-19-out-Value",
+			"p2": "planet-relief-formula-20-in-Mountains",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-22",
+			"p1": "planet-relief-uplift-out-Value",
+			"p2": "planet-relief-smoothstep-21-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-23",
+			"p1": "planet-relief-formula-18-out-Value",
+			"p2": "planet-relief-smoothstep-21-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-24",
+			"p1": "planet-relief-formula-20-out-Value",
+			"p2": "planet-relief-smoothstep-21-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-25",
+			"p1": "planet-relief-smoothstep-21-out-Out",
+			"p2": "planet-relief-formula-22-in-C",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-26",
+			"p1": "planet-relief-formula-0-out-Value",
+			"p2": "planet-relief-formula-22-in-M",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-27",
+			"p1": "planet-relief-input-11-out-Value",
+			"p2": "planet-relief-formula-22-in-Push",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-28",
+			"p1": "planet-relief-smoothstep-15-out-Out",
+			"p2": "planet-relief-formula-22-in-K",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-29",
+			"p1": "planet-relief-uplift-out-Value",
+			"p2": "planet-relief-smoothstep-25-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-30",
+			"p1": "planet-relief-formula-23-out-Value",
+			"p2": "planet-relief-smoothstep-25-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-31",
+			"p1": "planet-relief-formula-24-out-Value",
+			"p2": "planet-relief-smoothstep-25-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-32",
+			"p1": "planet-relief-input-3-out-Value",
+			"p2": "planet-relief-formula-26-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-33",
+			"p1": "planet-relief-input-27-out-Value",
+			"p2": "planet-relief-formula-26-in-SRanges",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-34",
+			"p1": "planet-relief-input-5-out-Value",
+			"p2": "planet-relief-formula-26-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-35",
+			"p1": "planet-relief-input-6-out-Value",
+			"p2": "planet-relief-formula-26-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-36",
+			"p1": "planet-relief-formula-26-out-Value",
+			"p2": "planet-relief-ranges-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-37",
+			"p1": "planet-relief-ranges-out-Value",
+			"p2": "planet-relief-formula-28-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-38",
+			"p1": "planet-relief-input-3-out-Value",
+			"p2": "planet-relief-formula-29-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-39",
+			"p1": "planet-relief-input-30-out-Value",
+			"p2": "planet-relief-formula-29-in-SPeaks",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-40",
+			"p1": "planet-relief-input-5-out-Value",
+			"p2": "planet-relief-formula-29-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-41",
+			"p1": "planet-relief-input-6-out-Value",
+			"p2": "planet-relief-formula-29-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-42",
+			"p1": "planet-relief-formula-29-out-Value",
+			"p2": "planet-relief-peaks-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-43",
+			"p1": "planet-relief-ranges-out-Value",
+			"p2": "planet-relief-smoothstep-33-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-44",
+			"p1": "planet-relief-formula-31-out-Value",
+			"p2": "planet-relief-smoothstep-33-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-45",
+			"p1": "planet-relief-formula-32-out-Value",
+			"p2": "planet-relief-smoothstep-33-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-46",
+			"p1": "planet-relief-input-9-out-Value",
+			"p2": "planet-relief-formula-34-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-47",
+			"p1": "planet-relief-smoothstep-25-out-Out",
+			"p2": "planet-relief-formula-34-in-S",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-48",
+			"p1": "planet-relief-smoothstep-15-out-Out",
+			"p2": "planet-relief-formula-34-in-K",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-49",
+			"p1": "planet-relief-formula-28-out-Value",
+			"p2": "planet-relief-formula-34-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-50",
+			"p1": "planet-relief-input-35-out-Value",
+			"p2": "planet-relief-formula-34-in-Relief",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-51",
+			"p1": "planet-relief-input-19-out-Value",
+			"p2": "planet-relief-formula-34-in-Mountains",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-52",
+			"p1": "planet-relief-formula-22-out-Value",
+			"p2": "planet-relief-formula-34-in-C",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-53",
+			"p1": "planet-relief-peaks-out-Value",
+			"p2": "planet-relief-formula-34-in-P",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-54",
+			"p1": "planet-relief-smoothstep-33-out-Out",
+			"p2": "planet-relief-formula-34-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-55",
+			"p1": "planet-relief-formula-22-out-Value",
+			"p2": "planet-relief-formula-36-in-C",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-56",
+			"p1": "planet-relief-input-38-out-Value",
+			"p2": "planet-relief-formula-37-in-Small",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-57",
+			"p1": "planet-relief-input-3-out-Value",
+			"p2": "planet-relief-formula-39-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-58",
+			"p1": "planet-relief-input-40-out-Value",
+			"p2": "planet-relief-formula-39-in-SSierra",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-59",
+			"p1": "planet-relief-input-5-out-Value",
+			"p2": "planet-relief-formula-39-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-60",
+			"p1": "planet-relief-input-6-out-Value",
+			"p2": "planet-relief-formula-39-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-61",
+			"p1": "planet-relief-formula-39-out-Value",
+			"p2": "planet-relief-sierra-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-62",
+			"p1": "planet-relief-sierra-out-Value",
+			"p2": "planet-relief-formula-41-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-63",
+			"p1": "planet-relief-formula-41-out-Value",
+			"p2": "planet-relief-formula-42-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-64",
+			"p1": "planet-relief-formula-41-out-Value",
+			"p2": "planet-relief-formula-43-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-65",
+			"p1": "planet-relief-formula-42-out-Value",
+			"p2": "planet-relief-formula-43-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-66",
+			"p1": "planet-relief-formula-37-out-Value",
+			"p2": "planet-relief-when-44-in-Test",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-67",
+			"p1": "planet-relief-formula-43-out-Value",
+			"p2": "planet-relief-when-44-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-68",
+			"p1": "planet-relief-input-38-out-Value",
+			"p2": "planet-relief-formula-45-in-Small",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-69",
+			"p1": "planet-relief-formula-34-out-Value",
+			"p2": "planet-relief-formula-45-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-70",
+			"p1": "planet-relief-when-44-out-Out",
+			"p2": "planet-relief-formula-45-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-71",
+			"p1": "planet-relief-input-35-out-Value",
+			"p2": "planet-relief-formula-45-in-Relief",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-72",
+			"p1": "planet-relief-input-19-out-Value",
+			"p2": "planet-relief-formula-45-in-Mountains",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-73",
+			"p1": "planet-relief-formula-36-out-Value",
+			"p2": "planet-relief-formula-45-in-Q",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-74",
+			"p1": "planet-relief-input-38-out-Value",
+			"p2": "planet-relief-formula-46-in-Small",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-75",
+			"p1": "planet-relief-when-44-out-Out",
+			"p2": "planet-relief-formula-46-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-76",
+			"p1": "planet-relief-input-3-out-Value",
+			"p2": "planet-relief-formula-47-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-77",
+			"p1": "planet-relief-input-48-out-Value",
+			"p2": "planet-relief-formula-47-in-SHorns",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-78",
+			"p1": "planet-relief-input-5-out-Value",
+			"p2": "planet-relief-formula-47-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-79",
+			"p1": "planet-relief-input-6-out-Value",
+			"p2": "planet-relief-formula-47-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-80",
+			"p1": "planet-relief-formula-47-out-Value",
+			"p2": "planet-relief-horns-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-81",
+			"p1": "planet-relief-when-44-out-Out",
+			"p2": "planet-relief-smoothstep-51-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-82",
+			"p1": "planet-relief-formula-49-out-Value",
+			"p2": "planet-relief-smoothstep-51-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-83",
+			"p1": "planet-relief-formula-50-out-Value",
+			"p2": "planet-relief-smoothstep-51-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-84",
+			"p1": "planet-relief-horns-out-Value",
+			"p2": "planet-relief-formula-52-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-85",
+			"p1": "planet-relief-input-35-out-Value",
+			"p2": "planet-relief-formula-52-in-Relief",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-86",
+			"p1": "planet-relief-input-19-out-Value",
+			"p2": "planet-relief-formula-52-in-Mountains",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-87",
+			"p1": "planet-relief-formula-36-out-Value",
+			"p2": "planet-relief-formula-52-in-Q",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-88",
+			"p1": "planet-relief-smoothstep-51-out-Out",
+			"p2": "planet-relief-formula-52-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-89",
+			"p1": "planet-relief-formula-46-out-Value",
+			"p2": "planet-relief-when-53-in-Test",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-90",
+			"p1": "planet-relief-formula-52-out-Value",
+			"p2": "planet-relief-when-53-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-91",
+			"p1": "planet-relief-input-38-out-Value",
+			"p2": "planet-relief-formula-54-in-Small",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-92",
+			"p1": "planet-relief-when-44-out-Out",
+			"p2": "planet-relief-formula-54-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-93",
+			"p1": "planet-relief-formula-45-out-Value",
+			"p2": "planet-relief-formula-54-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-94",
+			"p1": "planet-relief-when-53-out-Out",
+			"p2": "planet-relief-formula-54-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-95",
+			"p1": "planet-relief-formula-54-out-Value",
+			"p2": "planet-relief-formula-55-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-96",
+			"p1": "planet-relief-input-11-out-Value",
+			"p2": "planet-relief-formula-55-in-Push",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-97",
+			"p1": "planet-relief-formula-0-out-Value",
+			"p2": "planet-relief-formula-55-in-M",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-98",
+			"p1": "planet-relief-input-35-out-Value",
+			"p2": "planet-relief-formula-55-in-Relief",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-99",
+			"p1": "planet-relief-folds-out-Value",
+			"p2": "planet-relief-formula-55-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-100",
+			"p1": "planet-relief-input-56-out-Value",
+			"p2": "planet-relief-formula-55-in-PaintRaise",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-101",
+			"p1": "planet-relief-input-57-out-Value",
+			"p2": "planet-relief-formula-55-in-PaintRift",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-102",
+			"p1": "planet-relief-input-58-out-Value",
+			"p2": "planet-relief-formula-55-in-PaintRiver",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-103",
+			"p1": "planet-relief-input-3-out-Value",
+			"p2": "planet-relief-formula-59-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-104",
+			"p1": "planet-relief-input-17-out-Value",
+			"p2": "planet-relief-formula-59-in-SUplift",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-105",
+			"p1": "planet-relief-input-5-out-Value",
+			"p2": "planet-relief-formula-59-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-106",
+			"p1": "planet-relief-input-6-out-Value",
+			"p2": "planet-relief-formula-59-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-107",
+			"p1": "planet-relief-formula-59-out-Value",
+			"p2": "planet-relief-uplift-hills-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-108",
+			"p1": "planet-relief-uplift-hills-out-Value",
+			"p2": "planet-relief-smoothstep-62-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-109",
+			"p1": "planet-relief-formula-60-out-Value",
+			"p2": "planet-relief-smoothstep-62-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-110",
+			"p1": "planet-relief-formula-61-out-Value",
+			"p2": "planet-relief-smoothstep-62-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-111",
+			"p1": "planet-relief-smoothstep-62-out-Out",
+			"p2": "planet-relief-formula-63-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-112",
+			"p1": "planet-relief-formula-55-out-Value",
+			"p2": "planet-relief-formula-63-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-113",
+			"p1": "planet-relief-formula-22-out-Value",
+			"p2": "planet-relief-formula-63-in-C",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-114",
+			"p1": "planet-relief-input-65-out-Value",
+			"p2": "planet-relief-formula-64-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-115",
+			"p1": "planet-relief-input-3-out-Value",
+			"p2": "planet-relief-formula-66-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-116",
+			"p1": "planet-relief-input-67-out-Value",
+			"p2": "planet-relief-formula-66-in-EX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-117",
+			"p1": "planet-relief-formula-64-out-Value",
+			"p2": "planet-relief-formula-66-in-St",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-118",
+			"p1": "planet-relief-input-5-out-Value",
+			"p2": "planet-relief-formula-66-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-119",
+			"p1": "planet-relief-input-68-out-Value",
+			"p2": "planet-relief-formula-66-in-EY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-120",
+			"p1": "planet-relief-input-6-out-Value",
+			"p2": "planet-relief-formula-66-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-121",
+			"p1": "planet-relief-input-69-out-Value",
+			"p2": "planet-relief-formula-66-in-EZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-122",
+			"p1": "planet-relief-input-3-out-Value",
+			"p2": "planet-relief-formula-70-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-123",
+			"p1": "planet-relief-input-71-out-Value",
+			"p2": "planet-relief-formula-70-in-NX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-124",
+			"p1": "planet-relief-formula-64-out-Value",
+			"p2": "planet-relief-formula-70-in-St",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-125",
+			"p1": "planet-relief-input-5-out-Value",
+			"p2": "planet-relief-formula-70-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-126",
+			"p1": "planet-relief-input-72-out-Value",
+			"p2": "planet-relief-formula-70-in-NY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-127",
+			"p1": "planet-relief-input-6-out-Value",
+			"p2": "planet-relief-formula-70-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-128",
+			"p1": "planet-relief-input-73-out-Value",
+			"p2": "planet-relief-formula-70-in-NZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-129",
+			"p1": "planet-relief-input-35-out-Value",
+			"p2": "planet-relief-formula-74-in-Relief",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-130",
+			"p1": "planet-relief-input-19-out-Value",
+			"p2": "planet-relief-formula-74-in-Mountains",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-131",
+			"p1": "planet-relief-formula-22-out-Value",
+			"p2": "planet-relief-formula-74-in-C",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-132",
+			"p1": "planet-relief-input-35-out-Value",
+			"p2": "planet-relief-formula-75-in-Relief",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-133",
+			"p1": "planet-relief-input-19-out-Value",
+			"p2": "planet-relief-formula-75-in-Mountains",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-134",
+			"p1": "planet-relief-formula-36-out-Value",
+			"p2": "planet-relief-formula-75-in-Q",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-135",
+			"p1": "planet-relief-formula-66-out-Value",
+			"p2": "planet-relief-formula-76-in-Q",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-136",
+			"p1": "planet-relief-input-27-out-Value",
+			"p2": "planet-relief-formula-76-in-SRanges",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-137",
+			"p1": "planet-relief-formula-76-out-Value",
+			"p2": "planet-relief-ranges-east-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-138",
+			"p1": "planet-relief-formula-70-out-Value",
+			"p2": "planet-relief-formula-77-in-Q",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-139",
+			"p1": "planet-relief-input-27-out-Value",
+			"p2": "planet-relief-formula-77-in-SRanges",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-140",
+			"p1": "planet-relief-formula-77-out-Value",
+			"p2": "planet-relief-ranges-north-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-141",
+			"p1": "planet-relief-formula-66-out-Value",
+			"p2": "planet-relief-formula-78-in-Q",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-142",
+			"p1": "planet-relief-input-40-out-Value",
+			"p2": "planet-relief-formula-78-in-SSierra",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-143",
+			"p1": "planet-relief-formula-78-out-Value",
+			"p2": "planet-relief-sierra-east-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-144",
+			"p1": "planet-relief-sierra-east-out-Value",
+			"p2": "planet-relief-formula-79-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-145",
+			"p1": "planet-relief-formula-79-out-Value",
+			"p2": "planet-relief-formula-80-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-146",
+			"p1": "planet-relief-formula-79-out-Value",
+			"p2": "planet-relief-formula-81-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-147",
+			"p1": "planet-relief-formula-80-out-Value",
+			"p2": "planet-relief-formula-81-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-148",
+			"p1": "planet-relief-formula-70-out-Value",
+			"p2": "planet-relief-formula-82-in-Q",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-149",
+			"p1": "planet-relief-input-40-out-Value",
+			"p2": "planet-relief-formula-82-in-SSierra",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-150",
+			"p1": "planet-relief-formula-82-out-Value",
+			"p2": "planet-relief-sierra-north-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-151",
+			"p1": "planet-relief-sierra-north-out-Value",
+			"p2": "planet-relief-formula-83-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-152",
+			"p1": "planet-relief-formula-83-out-Value",
+			"p2": "planet-relief-formula-84-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-153",
+			"p1": "planet-relief-formula-83-out-Value",
+			"p2": "planet-relief-formula-85-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-154",
+			"p1": "planet-relief-formula-84-out-Value",
+			"p2": "planet-relief-formula-85-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-155",
+			"p1": "planet-relief-ranges-east-out-Value",
+			"p2": "planet-relief-formula-86-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-156",
+			"p1": "planet-relief-formula-28-out-Value",
+			"p2": "planet-relief-formula-86-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-157",
+			"p1": "planet-relief-formula-74-out-Value",
+			"p2": "planet-relief-formula-86-in-L",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-158",
+			"p1": "planet-relief-formula-81-out-Value",
+			"p2": "planet-relief-formula-86-in-B",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-159",
+			"p1": "planet-relief-when-44-out-Out",
+			"p2": "planet-relief-formula-86-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-160",
+			"p1": "planet-relief-formula-75-out-Value",
+			"p2": "planet-relief-formula-86-in-S",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-161",
+			"p1": "planet-relief-ranges-north-out-Value",
+			"p2": "planet-relief-formula-86-in-C",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-162",
+			"p1": "planet-relief-formula-85-out-Value",
+			"p2": "planet-relief-formula-86-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-163",
+			"p1": "planet-relief-formula-22-out-Value",
+			"p2": "planet-relief-formula-87-in-C",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-164",
+			"p1": "planet-relief-input-38-out-Value",
+			"p2": "planet-relief-formula-87-in-Small",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-165",
+			"p1": "planet-relief-formula-87-out-Value",
+			"p2": "planet-relief-when-88-in-Test",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-166",
+			"p1": "planet-relief-formula-86-out-Value",
+			"p2": "planet-relief-when-88-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-167",
+			"p1": "planet-relief-when-88-out-Out",
+			"p2": "planet-relief-formula-89-in-G",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-168",
+			"p1": "planet-relief-formula-89-out-Value",
+			"p2": "planet-relief-formula-90-in-S",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-169",
+			"p1": "planet-relief-input-38-out-Value",
+			"p2": "planet-relief-formula-91-in-Small",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-170",
+			"p1": "planet-relief-input-3-out-Value",
+			"p2": "planet-relief-formula-92-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-171",
+			"p1": "planet-relief-input-65-out-Value",
+			"p2": "planet-relief-formula-92-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-172",
+			"p1": "planet-relief-input-93-out-Value",
+			"p2": "planet-relief-formula-92-in-SHills",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-173",
+			"p1": "planet-relief-input-5-out-Value",
+			"p2": "planet-relief-formula-92-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-174",
+			"p1": "planet-relief-input-6-out-Value",
+			"p2": "planet-relief-formula-92-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-175",
+			"p1": "planet-relief-formula-92-out-Value",
+			"p2": "planet-relief-hills-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-176",
+			"p1": "planet-relief-formula-55-out-Value",
+			"p2": "planet-relief-formula-94-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-177",
+			"p1": "planet-relief-hills-out-Value",
+			"p2": "planet-relief-formula-94-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-178",
+			"p1": "planet-relief-formula-63-out-Value",
+			"p2": "planet-relief-formula-94-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-179",
+			"p1": "planet-relief-smoothstep-15-out-Out",
+			"p2": "planet-relief-formula-94-in-K",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-180",
+			"p1": "planet-relief-formula-90-out-Value",
+			"p2": "planet-relief-formula-94-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-181",
+			"p1": "planet-relief-formula-91-out-Value",
+			"p2": "planet-relief-when-95-in-Test",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-182",
+			"p1": "planet-relief-formula-94-out-Value",
+			"p2": "planet-relief-when-95-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-183",
+			"p1": "planet-relief-formula-55-out-Value",
+			"p2": "planet-relief-when-95-in-Else",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-184",
+			"p1": "planet-relief-input-67-out-Value",
+			"p2": "planet-relief-formula-96-in-EX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-185",
+			"p1": "planet-relief-when-88-out-Out",
+			"p2": "planet-relief-formula-96-in-G",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-186",
+			"p1": "planet-relief-input-71-out-Value",
+			"p2": "planet-relief-formula-96-in-NX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-187",
+			"p1": "planet-relief-formula-89-out-Value",
+			"p2": "planet-relief-formula-96-in-S",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-188",
+			"p1": "planet-relief-input-68-out-Value",
+			"p2": "planet-relief-formula-96-in-EY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-189",
+			"p1": "planet-relief-input-72-out-Value",
+			"p2": "planet-relief-formula-96-in-NY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-190",
+			"p1": "planet-relief-input-69-out-Value",
+			"p2": "planet-relief-formula-96-in-EZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-191",
+			"p1": "planet-relief-input-73-out-Value",
+			"p2": "planet-relief-formula-96-in-NZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-192",
+			"p1": "planet-relief-input-3-out-Value",
+			"p2": "planet-relief-formula-97-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-193",
+			"p1": "planet-relief-input-65-out-Value",
+			"p2": "planet-relief-formula-97-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-194",
+			"p1": "planet-relief-input-5-out-Value",
+			"p2": "planet-relief-formula-97-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-195",
+			"p1": "planet-relief-input-6-out-Value",
+			"p2": "planet-relief-formula-97-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-196",
+			"p1": "planet-relief-formula-97-out-Value",
+			"p2": "planet-relief-formula-98-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-197",
+			"p1": "planet-relief-formula-96-out-Value",
+			"p2": "planet-relief-formula-98-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-198",
+			"p1": "planet-relief-formula-89-out-Value",
+			"p2": "planet-relief-formula-99-in-S",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-199",
+			"p1": "planet-relief-input-38-out-Value",
+			"p2": "planet-relief-formula-99-in-Small",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-200",
+			"p1": "planet-relief-formula-97-out-Value",
+			"p2": "planet-relief-formula-100-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-201",
+			"p1": "planet-relief-formula-96-out-Value",
+			"p2": "planet-relief-formula-100-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-202",
+			"p1": "planet-relief-formula-98-out-Value",
+			"p2": "planet-relief-formula-100-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-203",
+			"p1": "planet-relief-input-101-out-Value",
+			"p2": "planet-relief-formula-100-in-SCrags",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-204",
+			"p1": "planet-relief-formula-100-out-Value",
+			"p2": "planet-relief-crags-gullies-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-205",
+			"p1": "planet-relief-when-95-out-Out",
+			"p2": "planet-relief-formula-102-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-206",
+			"p1": "planet-relief-crags-gullies-out-Value",
+			"p2": "planet-relief-formula-102-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-207",
+			"p1": "planet-relief-formula-89-out-Value",
+			"p2": "planet-relief-formula-102-in-S",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-208",
+			"p1": "planet-relief-formula-22-out-Value",
+			"p2": "planet-relief-formula-102-in-C",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-209",
+			"p1": "planet-relief-formula-99-out-Value",
+			"p2": "planet-relief-when-103-in-Test",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-210",
+			"p1": "planet-relief-formula-102-out-Value",
+			"p2": "planet-relief-when-103-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-211",
+			"p1": "planet-relief-when-95-out-Out",
+			"p2": "planet-relief-when-103-in-Else",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-212",
+			"p1": "planet-relief-input-3-out-Value",
+			"p2": "planet-relief-formula-104-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-213",
+			"p1": "planet-relief-input-65-out-Value",
+			"p2": "planet-relief-formula-104-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-214",
+			"p1": "planet-relief-input-105-out-Value",
+			"p2": "planet-relief-formula-104-in-SGrain",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-215",
+			"p1": "planet-relief-input-5-out-Value",
+			"p2": "planet-relief-formula-104-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-216",
+			"p1": "planet-relief-input-6-out-Value",
+			"p2": "planet-relief-formula-104-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-217",
+			"p1": "planet-relief-formula-104-out-Value",
+			"p2": "planet-relief-grain-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-218",
+			"p1": "planet-relief-when-103-out-Out",
+			"p2": "planet-relief-formula-106-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-219",
+			"p1": "planet-relief-grain-out-Value",
+			"p2": "planet-relief-formula-106-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-220",
+			"p1": "planet-relief-formula-63-out-Value",
+			"p2": "planet-relief-formula-106-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-221",
+			"p1": "planet-relief-smoothstep-15-out-Out",
+			"p2": "planet-relief-formula-106-in-K",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-222",
+			"p1": "planet-relief-formula-90-out-Value",
+			"p2": "planet-relief-formula-106-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-223",
+			"p1": "planet-relief-formula-22-out-Value",
+			"p2": "planet-relief-formula-106-in-C",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-224",
+			"p1": "planet-relief-when-103-out-Out",
+			"p2": "planet-relief-formula-107-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-225",
+			"p1": "planet-relief-input-38-out-Value",
+			"p2": "planet-relief-formula-108-in-Small",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-226",
+			"p1": "planet-relief-input-3-out-Value",
+			"p2": "planet-relief-formula-109-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-227",
+			"p1": "planet-relief-input-65-out-Value",
+			"p2": "planet-relief-formula-109-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-228",
+			"p1": "planet-relief-input-101-out-Value",
+			"p2": "planet-relief-formula-109-in-SCrags",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-229",
+			"p1": "planet-relief-input-5-out-Value",
+			"p2": "planet-relief-formula-109-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-230",
+			"p1": "planet-relief-input-6-out-Value",
+			"p2": "planet-relief-formula-109-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-231",
+			"p1": "planet-relief-formula-109-out-Value",
+			"p2": "planet-relief-crags-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-232",
+			"p1": "planet-relief-formula-106-out-Value",
+			"p2": "planet-relief-formula-110-in-A",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-233",
+			"p1": "planet-relief-crags-out-Value",
+			"p2": "planet-relief-formula-110-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-234",
+			"p1": "planet-relief-formula-107-out-Value",
+			"p2": "planet-relief-formula-110-in-U",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-235",
+			"p1": "planet-relief-formula-90-out-Value",
+			"p2": "planet-relief-formula-110-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-236",
+			"p1": "planet-relief-formula-22-out-Value",
+			"p2": "planet-relief-formula-110-in-C",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-237",
+			"p1": "planet-relief-formula-108-out-Value",
+			"p2": "planet-relief-when-111-in-Test",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-238",
+			"p1": "planet-relief-formula-110-out-Value",
+			"p2": "planet-relief-when-111-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-239",
+			"p1": "planet-relief-when-103-out-Out",
+			"p2": "planet-relief-when-111-in-Else",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-240",
+			"p1": "planet-relief-when-111-out-Out",
+			"p2": "planet-relief-formula-112-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-241",
+			"p1": "planet-relief-formula-112-out-Value",
+			"p2": "planet-relief-formula-113-in-K",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-242",
+			"p1": "planet-relief-input-38-out-Value",
+			"p2": "planet-relief-formula-114-in-Small",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-243",
+			"p1": "planet-relief-formula-22-out-Value",
+			"p2": "planet-relief-formula-114-in-C",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-244",
+			"p1": "planet-relief-when-111-out-Out",
+			"p2": "planet-relief-formula-114-in-H",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-245",
+			"p1": "planet-relief-formula-112-out-Value",
+			"p2": "planet-relief-formula-114-in-K",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-246",
+			"p1": "planet-relief-formula-113-out-Value",
+			"p2": "planet-relief-formula-114-in-F",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-247",
+			"p1": "planet-relief-input-9-out-Value",
+			"p2": "planet-relief-formula-115-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-248",
+			"p1": "planet-relief-formula-115-out-Value",
+			"p2": "planet-relief-when-116-in-Test",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-249",
+			"p1": "planet-relief-formula-114-out-Value",
+			"p2": "planet-relief-when-116-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-250",
+			"p1": "planet-relief-formula-8-out-Value",
+			"p2": "planet-relief-when-116-in-Else",
+			"kind": "value"
+		},
+		{
+			"id": "planet-relief-link-251",
+			"p1": "planet-relief-when-116-out-Out",
+			"p2": "planet-relief-result-117-in-Value",
+			"kind": "value"
+		}
+	]
+}

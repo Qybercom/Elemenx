@@ -47,4 +47,4 @@ Math: the numbers of space, the same in a page, in a worker and in Node, for wha
 - [takes lists of numbers (float\[\]): in js arrays, in wasm the memory, the same numbers; a vector by an index](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L273) — `tests/regression/compilers-wasm.test.js`
 - [says a list of numbers of a module is not for wasm, and keeps it once in js](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L322) — `tests/regression/compilers-wasm.test.js`
 
-+38 more in the same files
++39 more in the same files

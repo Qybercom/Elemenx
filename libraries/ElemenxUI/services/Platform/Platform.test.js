@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { loadElemenx, tick } from '../../../../tests/setup.js';
+import { loadElemenx, tick, waitFor } from '../../../../tests/setup.js';
 import { Use } from '../../../../tests/library.js';
 
 var platform;
@@ -45,9 +45,22 @@ function pixel (x, y) {
 	});
 }
 
-/* Waits for the drawings of the icon to end (a picture loads, then the canvas is drawn). */
-async function drawn () {
+/*
+ * Waits for the drawings of the icon to end (a picture loads, then the canvas is drawn): till test is true, ten seconds at
+ * most, then 80 ms for what would come after it wrongly. Regression (under load): 80 ms alone, the icon was not drawn yet.
+ */
+async function drawn (test) {
+	if (test)
+		expect(await waitFor(test, 10000)).toBeTruthy();
+
 	await tick(80);
+}
+
+/* An icon sent to the windows of the program. */
+function iconSent () {
+	return calls.some(function (each) {
+		return each[0] === 'icon';
+	});
 }
 
 /* A bridge of a program that records what the Platform Service asks. */
@@ -144,7 +157,9 @@ describe('Contract: the icon of the Application in the Platform Service of Eleme
 
 		Elemenx.Icon(Blue);
 
-		await drawn();
+		await drawn(function () {
+			return favicon().hasAttribute('data-elemenx-icon');
+		});
 
 		expect(document.querySelectorAll('link[rel~="icon"]').length).toBe(1);
 		expect(favicon().hasAttribute('data-elemenx-icon')).toBe(true);
@@ -153,7 +168,9 @@ describe('Contract: the icon of the Application in the Platform Service of Eleme
 
 		Elemenx.Icon(null);
 
-		await drawn();
+		await drawn(function () {
+			return !favicon().hasAttribute('data-elemenx-icon');
+		});
 
 		expect(favicon().hasAttribute('data-elemenx-icon')).toBe(false);
 		expect(favicon().getAttribute('href')).toMatch(/^data:image\/png;base64,/);
@@ -230,7 +247,7 @@ describe('Contract: the icon of the Application in the Platform Service of Eleme
 
 		Elemenx.Icon(Blue);
 
-		await drawn();
+		await drawn(iconSent);
 
 		expect(calls.length).toBe(1);
 		expect(calls[0][0]).toBe('icon');
@@ -251,7 +268,7 @@ describe('Contract: the icon of the Application in the Platform Service of Eleme
 		platform.Icon(Green);
 		platform.Badge(2);
 
-		await drawn();
+		await drawn(iconSent);
 
 		expect(calls.map(function (each) {
 			return each[0];
@@ -262,7 +279,7 @@ describe('Contract: the icon of the Application in the Platform Service of Eleme
 		platform.Icon(Blue);
 		Elemenx.Icon(Green);
 
-		await drawn();
+		await drawn(iconSent);
 
 		expect(calls.length).toBe(1);
 		expect(calls[0][0]).toBe('icon');

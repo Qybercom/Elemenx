@@ -330,7 +330,7 @@ describe('Contract: materials of models as material graphs of Blueprints, drawn 
 		made = blueprints.Compile(JSON.parse(JSON.stringify(scene.LibraryWater())));
 
 		expect(made.Type).toBe('water');
-		['wavesAt(', 'uMirror > 0.5 ? 14 : 7', 'fract(', ' * 0.2);', 'uTime', 'reflectedSky(', 'pow(', '1400.0', 'mirrored(vWorld', 'vec3(0.05, 0.13, 0.11)', 'vec3(0.82, 0.86, 0.85)', '1.0 - exp(-length(vWorld) / uFog)', '0.86', '0.14'].forEach(function (part) {
+		['wavesAt(', 'uMirror > 0.5 ? 14 : 7', 'fract(', ' * 0.2);', 'uTime', 'reflectedSky(', 'pow(', '1400.0', 'mirrored(vWorld', 'vec3(0.05, 0.13, 0.11)', 'vec3(0.82, 0.86, 0.85)', 'air_haze_ground(vWorld)', '0.86', '0.14'].forEach(function (part) {
 			expect(made.Function).toContain(part);
 		});
 
@@ -392,7 +392,7 @@ describe('Contract: materials of models as material graphs of Blueprints, drawn 
 		made = blueprints.Compile(JSON.parse(JSON.stringify(scene.LibraryLand())));
 
 		expect(made.Type).toBe('land');
-		['noise3(', 'rings(', 'uRainDrops', 'uWet', 'uSnowed', 'blueprintSurface(', 'sunLit(', 'aroundLight(', 'localLight(', 'mix(28.0, 1400.0', '1.0 / 2.2', 'uFog', '0.45'].forEach(function (part) {
+		['noise3(', 'rings(', 'uRainDrops', 'uWet', 'uSnowed', 'blueprintSurface(', 'sunLit(', 'aroundOpen(', 'localLit(', 'mix(28.0, 1400.0', '1.0 / 2.2', 'air_haze_ground(', 'air_horizon_ground('].forEach(function (part) {
 			expect(made.Function).toContain(part);
 		});
 

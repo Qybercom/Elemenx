@@ -1,0 +1,495 @@
+{
+	"version": 1,
+	"type": "model",
+	"name": "mushroom",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "formula-0",
+			"type": "Formula",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Variant * 1000000 + 0"
+				}
+			]
+		},
+		{
+			"id": "random-1",
+			"type": "Random",
+			"x": 0,
+			"y": 90,
+			"properties": []
+		},
+		{
+			"id": "input-2",
+			"type": "Input",
+			"x": 0,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Variant"
+				}
+			]
+		},
+		{
+			"id": "input-3",
+			"type": "Input",
+			"x": 0,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "formula-4",
+			"type": "Formula",
+			"x": 0,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Variant * 1000000 + 100"
+				}
+			]
+		},
+		{
+			"id": "random-5",
+			"type": "Random",
+			"x": 0,
+			"y": 450,
+			"properties": []
+		},
+		{
+			"id": "formula-6",
+			"type": "Formula",
+			"x": 0,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.7 + (0 + 0.2 * r0), 0.2 + (0 + 0.14 * r1), 0.16]"
+				}
+			]
+		},
+		{
+			"id": "cylinder-7",
+			"type": "Cylinder",
+			"x": 0,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Segments",
+					"value": 8
+				}
+			]
+		},
+		{
+			"id": "formula-8",
+			"type": "Formula",
+			"x": 0,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.1"
+				}
+			]
+		},
+		{
+			"id": "formula-9",
+			"type": "Formula",
+			"x": 0,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(0.07) / (0.1)"
+				}
+			]
+		},
+		{
+			"id": "formula-10",
+			"type": "Formula",
+			"x": 0,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.5"
+				}
+			]
+		},
+		{
+			"id": "formula-11",
+			"type": "Formula",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.25, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-12",
+			"type": "Formula",
+			"x": 0,
+			"y": 1080,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.92, 0.88, 0.8]"
+				}
+			]
+		},
+		{
+			"id": "lathe-13",
+			"type": "Lathe",
+			"x": 0,
+			"y": 1170,
+			"properties": [
+				{
+					"key": "Segments",
+					"value": 10
+				}
+			]
+		},
+		{
+			"id": "formula-14",
+			"type": "Formula",
+			"x": 0,
+			"y": 1260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[[0.36, 0], [0.33, 0.1], [0.18, 0.24], [0, 0.28]]"
+				}
+			]
+		},
+		{
+			"id": "formula-15",
+			"type": "Formula",
+			"x": 240,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.46, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-16",
+			"type": "Formula",
+			"x": 240,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "cap"
+				}
+			]
+		},
+		{
+			"id": "ball-17",
+			"type": "Ball",
+			"x": 240,
+			"y": 180,
+			"properties": []
+		},
+		{
+			"id": "formula-18",
+			"type": "Formula",
+			"x": 240,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(2 * (0.04) * [1, 1, 1][0], 2 * (0.04) * [1, 1, 1][1], 2 * (0.04) * [1, 1, 1][2])"
+				}
+			]
+		},
+		{
+			"id": "formula-19",
+			"type": "Formula",
+			"x": 240,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.12, 0.66, 0.06]"
+				}
+			]
+		},
+		{
+			"id": "formula-20",
+			"type": "Formula",
+			"x": 240,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.95, 0.95, 0.9]"
+				}
+			]
+		},
+		{
+			"id": "ball-21",
+			"type": "Ball",
+			"x": 240,
+			"y": 540,
+			"properties": []
+		},
+		{
+			"id": "formula-22",
+			"type": "Formula",
+			"x": 240,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(2 * (0.03) * [1, 1, 1][0], 2 * (0.03) * [1, 1, 1][1], 2 * (0.03) * [1, 1, 1][2])"
+				}
+			]
+		},
+		{
+			"id": "formula-23",
+			"type": "Formula",
+			"x": 240,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[-0.1, 0.62, 0.14]"
+				}
+			]
+		},
+		{
+			"id": "formula-24",
+			"type": "Formula",
+			"x": 240,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.95, 0.95, 0.9]"
+				}
+			]
+		},
+		{
+			"id": "join-25",
+			"type": "Join",
+			"x": 240,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 4
+				}
+			]
+		},
+		{
+			"id": "piece-26",
+			"type": "Piece",
+			"x": 240,
+			"y": 990,
+			"properties": [
+				{
+					"key": "ID",
+					"value": "body"
+				}
+			]
+		},
+		{
+			"id": "model-27",
+			"type": "Model",
+			"x": 240,
+			"y": 1080,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "link-0",
+			"p1": "input-2-out-Value",
+			"p2": "formula-0-in-Variant",
+			"kind": "value"
+		},
+		{
+			"id": "link-1",
+			"p1": "input-3-out-Value",
+			"p2": "random-1-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "link-2",
+			"p1": "formula-0-out-Value",
+			"p2": "random-1-in-Key",
+			"kind": "value"
+		},
+		{
+			"id": "link-3",
+			"p1": "input-2-out-Value",
+			"p2": "formula-4-in-Variant",
+			"kind": "value"
+		},
+		{
+			"id": "link-4",
+			"p1": "input-3-out-Value",
+			"p2": "random-5-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "link-5",
+			"p1": "formula-4-out-Value",
+			"p2": "random-5-in-Key",
+			"kind": "value"
+		},
+		{
+			"id": "link-6",
+			"p1": "random-1-out-Value",
+			"p2": "formula-6-in-r0",
+			"kind": "value"
+		},
+		{
+			"id": "link-7",
+			"p1": "random-5-out-Value",
+			"p2": "formula-6-in-r1",
+			"kind": "value"
+		},
+		{
+			"id": "link-8",
+			"p1": "formula-8-out-Value",
+			"p2": "cylinder-7-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "link-9",
+			"p1": "formula-9-out-Value",
+			"p2": "cylinder-7-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "link-10",
+			"p1": "formula-10-out-Value",
+			"p2": "cylinder-7-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "link-11",
+			"p1": "formula-11-out-Value",
+			"p2": "cylinder-7-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-12",
+			"p1": "formula-12-out-Value",
+			"p2": "cylinder-7-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-13",
+			"p1": "formula-14-out-Value",
+			"p2": "lathe-13-in-Points",
+			"kind": "value"
+		},
+		{
+			"id": "link-14",
+			"p1": "formula-15-out-Value",
+			"p2": "lathe-13-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-15",
+			"p1": "formula-6-out-Value",
+			"p2": "formula-16-in-cap",
+			"kind": "value"
+		},
+		{
+			"id": "link-16",
+			"p1": "formula-16-out-Value",
+			"p2": "lathe-13-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-17",
+			"p1": "formula-18-out-Value",
+			"p2": "ball-17-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-18",
+			"p1": "formula-19-out-Value",
+			"p2": "ball-17-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-19",
+			"p1": "formula-20-out-Value",
+			"p2": "ball-17-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-20",
+			"p1": "formula-22-out-Value",
+			"p2": "ball-21-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-21",
+			"p1": "formula-23-out-Value",
+			"p2": "ball-21-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-22",
+			"p1": "formula-24-out-Value",
+			"p2": "ball-21-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-23",
+			"p1": "cylinder-7-out-Parts",
+			"p2": "join-25-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "link-24",
+			"p1": "lathe-13-out-Parts",
+			"p2": "join-25-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "link-25",
+			"p1": "ball-17-out-Parts",
+			"p2": "join-25-in-Parts3",
+			"kind": "value"
+		},
+		{
+			"id": "link-26",
+			"p1": "ball-21-out-Parts",
+			"p2": "join-25-in-Parts4",
+			"kind": "value"
+		},
+		{
+			"id": "link-27",
+			"p1": "join-25-out-Parts",
+			"p2": "piece-26-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "link-28",
+			"p1": "piece-26-out-Parts",
+			"p2": "model-27-in-Parts",
+			"kind": "value"
+		}
+	]
+}

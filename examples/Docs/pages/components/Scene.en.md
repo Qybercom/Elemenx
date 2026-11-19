@@ -15,7 +15,7 @@ The sky of a ground: a SceneObject of kind sun takes Time (18:30, or hours as a 
 
 The surface: Land(id, {Latitude, Longitude, Altitude}) goes down to the ground of a body (not of a giant of gas), the very ground its baked surface shows (SceneTerrainGenerator.Sphere), in patches finer near the eye, under its sky (its atmosphere and its star); a drag looks round, the wheel rises and comes down, WASD and the arrows walk, Escape or TakeOff() goes back up. The time runs SurfaceSpeed days a second there (1/120). A ship lands and takes off by itself (its traits Entry and Flight, SceneLanding): Land(ship, {Marker} or {Latitude, Longitude}) takes it from its orbit through the air to the location of the point, TakeOff(ship) back up to a low orbit; the command Landing of the scene lists the markers of the body and lets a point be picked.
 
-Kinds of the ground (the setting terrain): ground (Terrain: World, the graph of its world (SceneWorld: its land, relief, climate, biomes, sketch and what is made on it, the only place they are told; with none there is no ground), Swell (how wild its sea, 0 to 1.5: SceneWaves; wilder in the rain), SwellWay (degrees the wind drives it): a ground of noise, SceneTerrainGenerator.Flat, in chunks finer near the eye, with its sea; the objects its World makes are in the scene as Generated, made again with it and never saved), sun (Sun: its light from far), unit (Walker: Speed, MaxSlope, Swim; a Model; Patrol: points [x, z] or [x, z, y] it goes round for good), tree, rock and house (Model, Blocks: what stands in the way). An object of it stands at X and Y of the ground; Move(id, [x, y]) walks a walker round what cannot be walked, a right click sends the selected one; the view turns round a point of the ground and the keys move it. Every model of the Models Service is a kind of the same name (knight, mech, wolf, oak, tower, reactor...), of the kind that fits it.
+Kinds of the ground (the setting terrain): ground (Terrain: World, the graph of its world (SceneWorld: its land, relief, climate, biomes, sketch and what is made on it, the only place they are told; with none there is no ground), Swell (how wild its sea, 0 to 1.5: SceneWaves; wilder in the rain), SwellWay (degrees the wind drives it), Graphs (graphs of its own of the types of its sketch and its carves: {'sketch/<type>', 'carve/<type>': a graph}, as a world gives them): a ground of noise, SceneTerrainGenerator.Flat, in chunks finer near the eye, with its sea; the objects its World makes are in the scene as Generated, made again with it and never saved), sun (Sun: its light from far), unit (Walker: Speed, MaxSlope, Swim; a Model; Patrol: points [x, z] or [x, z, y] it goes round for good), tree, rock and house (Model, Blocks: what stands in the way). An object of it stands at X and Y of the ground; Move(id, [x, y]) walks a walker round what cannot be walked, a right click sends the selected one; the view turns round a point of the ground and the keys move it. Every model of the Models Service is a kind of the same name (knight, mech, wolf, oak, tower, reactor...), of the kind that fits it.
 
 The models stand in the light of their sun and cast shadows on each other and on the ground (Shadows); a Model plays clips of its pieces (Clip: the one it plays when idle): walk on a way by itself, Play(id, clip, callback) the others (attack, cast, work, die); the wind bends what grows. View top or isometric sees a ground in parallel rays, as a game of two dimensions.
 
@@ -44,6 +44,7 @@ What a scene waits for, its programs and models, comes behind the page and holds
 | `BokehFocus` | `''` |
 | `Orbits` | `true` |
 | `Labels` | `true` |
+| `Graphs` | `null` |
 | `Clusters` | `true` |
 | `Details` | `true` |
 | `Background` | `true` |
@@ -178,4 +179,4 @@ What a scene waits for, its programs and models, comes behind the page and holds
 - [leaves out a pass switched off, takes the properties of its blocks, and adds a pass of a graph of its own after the picture](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L140) — `tests/regression/library-render-pipeline.test.js`
 - [draws the picture of the library when the Pipeline cannot be made, and tells it once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-render-pipeline.test.js#L202) — `tests/regression/library-render-pipeline.test.js`
 
-+303 more in the same files
++318 more in the same files

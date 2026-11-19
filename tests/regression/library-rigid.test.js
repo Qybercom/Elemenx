@@ -281,9 +281,16 @@ describe('Contract: Scene trait Rigid, solid things of a ground that fall and ar
 		 */
 		async function drawn () {
 			var i;
+			var still = 0;
 
-			for (i = 0; i < 300 && (i < 2 || inner.Ground.Missing); i++) {
+			/*
+			 * Three frames in a row of no square missing, none asked and the workers idle. Regression: under the load of the whole
+			 * suite one frame of none missing came while squares were still on their way: the plain frame drew 7, the last 24.
+			 */
+			for (i = 0; i < 600 && still < 3; i++) {
 				once();
+
+				still = !inner.Ground.Missing && !Object.keys(inner.Ground.Asked || {}).length && !scene.$Service('SceneTerrainGenerator').Work().Waiting() ? still + 1 : 0;
 
 				await new Promise(function (done) {
 					setTimeout(done, 5);

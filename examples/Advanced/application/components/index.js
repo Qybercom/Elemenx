@@ -4,6 +4,7 @@
 	'UIKitPage/UIKitPage.js',
 	'DemoFrame/DemoFrame.js',
 	'DemoLoading/DemoLoading.js',
+	'DemoGraph/DemoGraph.js',
 	'GamingPage/GamingPage.js',
 	'HardwarePage/HardwarePage.js',
 	'OrbitDemo/OrbitDemo.js',

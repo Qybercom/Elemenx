@@ -1,0 +1,354 @@
+{
+	"version": 1,
+	"type": "model",
+	"name": "hydrant",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "cylinder-0",
+			"type": "Cylinder",
+			"x": 0,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Segments",
+					"value": 10
+				}
+			]
+		},
+		{
+			"id": "formula-1",
+			"type": "Formula",
+			"x": 0,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.14"
+				}
+			]
+		},
+		{
+			"id": "formula-2",
+			"type": "Formula",
+			"x": 0,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.857142857142857"
+				}
+			]
+		},
+		{
+			"id": "formula-3",
+			"type": "Formula",
+			"x": 0,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.8"
+				}
+			]
+		},
+		{
+			"id": "formula-4",
+			"type": "Formula",
+			"x": 0,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.4, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-5",
+			"type": "Formula",
+			"x": 0,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.72, 0.12, 0.08]"
+				}
+			]
+		},
+		{
+			"id": "ball-6",
+			"type": "Ball",
+			"x": 0,
+			"y": 540,
+			"properties": []
+		},
+		{
+			"id": "formula-7",
+			"type": "Formula",
+			"x": 0,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.26, 0.26, 0.26]"
+				}
+			]
+		},
+		{
+			"id": "formula-8",
+			"type": "Formula",
+			"x": 0,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.82, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-9",
+			"type": "Formula",
+			"x": 0,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.72, 0.12, 0.08]"
+				}
+			]
+		},
+		{
+			"id": "cylinder-10",
+			"type": "Cylinder",
+			"x": 0,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Segments",
+					"value": 8
+				}
+			]
+		},
+		{
+			"id": "formula-11",
+			"type": "Formula",
+			"x": 0,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.05"
+				}
+			]
+		},
+		{
+			"id": "formula-12",
+			"type": "Formula",
+			"x": 0,
+			"y": 1080,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"id": "formula-13",
+			"type": "Formula",
+			"x": 0,
+			"y": 1170,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.42"
+				}
+			]
+		},
+		{
+			"id": "formula-14",
+			"type": "Formula",
+			"x": 0,
+			"y": 1260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0.55, 0]"
+				}
+			]
+		},
+		{
+			"id": "formula-15",
+			"type": "Formula",
+			"x": 240,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0.72, 0.12, 0.08]"
+				}
+			]
+		},
+		{
+			"id": "formula-16",
+			"type": "Formula",
+			"x": 240,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "[0, 0, 90]"
+				}
+			]
+		},
+		{
+			"id": "join-17",
+			"type": "Join",
+			"x": 240,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 3
+				}
+			]
+		},
+		{
+			"id": "piece-18",
+			"type": "Piece",
+			"x": 240,
+			"y": 270,
+			"properties": [
+				{
+					"key": "ID",
+					"value": "body"
+				}
+			]
+		},
+		{
+			"id": "model-19",
+			"type": "Model",
+			"x": 240,
+			"y": 360,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "link-0",
+			"p1": "formula-1-out-Value",
+			"p2": "cylinder-0-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "link-1",
+			"p1": "formula-2-out-Value",
+			"p2": "cylinder-0-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "link-2",
+			"p1": "formula-3-out-Value",
+			"p2": "cylinder-0-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "link-3",
+			"p1": "formula-4-out-Value",
+			"p2": "cylinder-0-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-4",
+			"p1": "formula-5-out-Value",
+			"p2": "cylinder-0-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-5",
+			"p1": "formula-7-out-Value",
+			"p2": "ball-6-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "link-6",
+			"p1": "formula-8-out-Value",
+			"p2": "ball-6-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-7",
+			"p1": "formula-9-out-Value",
+			"p2": "ball-6-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-8",
+			"p1": "formula-11-out-Value",
+			"p2": "cylinder-10-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "link-9",
+			"p1": "formula-12-out-Value",
+			"p2": "cylinder-10-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "link-10",
+			"p1": "formula-13-out-Value",
+			"p2": "cylinder-10-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "link-11",
+			"p1": "formula-14-out-Value",
+			"p2": "cylinder-10-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "link-12",
+			"p1": "formula-15-out-Value",
+			"p2": "cylinder-10-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "link-13",
+			"p1": "formula-16-out-Value",
+			"p2": "cylinder-10-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "link-14",
+			"p1": "cylinder-0-out-Parts",
+			"p2": "join-17-in-Parts1",
+			"kind": "value"
+		},
+		{
+			"id": "link-15",
+			"p1": "ball-6-out-Parts",
+			"p2": "join-17-in-Parts2",
+			"kind": "value"
+		},
+		{
+			"id": "link-16",
+			"p1": "cylinder-10-out-Parts",
+			"p2": "join-17-in-Parts3",
+			"kind": "value"
+		},
+		{
+			"id": "link-17",
+			"p1": "join-17-out-Parts",
+			"p2": "piece-18-in-Parts",
+			"kind": "value"
+		},
+		{
+			"id": "link-18",
+			"p1": "piece-18-out-Parts",
+			"p2": "model-19-in-Parts",
+			"kind": "value"
+		}
+	]
+}

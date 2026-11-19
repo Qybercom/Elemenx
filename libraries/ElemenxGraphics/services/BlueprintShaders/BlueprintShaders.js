@@ -160,6 +160,7 @@ Elemenx.Service('BlueprintShaders', {
 			var properties = self.Core.Properties(block);
 			var inputs = {};
 			var inputTypes = {};
+			var fromTypes = {};
 			var same = [];
 			var outputs = self.Core.Outputs(node, block) || [];
 			var context;
@@ -183,6 +184,7 @@ Elemenx.Service('BlueprintShaders', {
 				var type = input.Type === 'same' ? working : input.Type;
 
 				inputTypes[input.Key] = type;
+				fromTypes[input.Key] = from ? types[from.Block][from.Key] : type;
 
 				if (from) inputs[input.Key] = self.Convert(names[from.Block][from.Key], types[from.Block][from.Key], type);
 				else if (input.Default != null) inputs[input.Key] = input.Default;
@@ -194,7 +196,7 @@ Elemenx.Service('BlueprintShaders', {
 					needs.push(need);
 			});
 
-			context = {Inputs: inputs, Types: inputTypes, Type: working, Properties: properties, Block: block, Graph: kind, Lines: [], Index: index, Uniform: uniform, Texture: function (name) {
+			context = {Inputs: inputs, Types: inputTypes, FromTypes: fromTypes, Type: working, Properties: properties, Block: block, Graph: kind, Lines: [], Index: index, Uniform: uniform, Texture: function (name) {
 				var made = 'uTexture_' + self.Name(name);
 				var known = textures.some(function (one) {
 					return one.Name === name;
@@ -240,7 +242,7 @@ Elemenx.Service('BlueprintShaders', {
 			lines.push.apply(lines, context.Lines);
 
 			outputs.forEach(function (output) {
-				var type = output.Type === 'same' ? working : output.Type;
+				var type = made.Types && made.Types[output.Key] || (output.Type === 'same' ? working : output.Type);
 				var name = 'b' + index + '_' + self.Name(output.Key);
 
 				if (made[output.Key] == null) return;
@@ -420,6 +422,84 @@ Elemenx.Service('BlueprintShaders', {
 		}).filter(Boolean);
 	},
 
+	/* The inputs of the kinds of graphs of shaders by their names: {kind: {name: {Code, Type}}} (Input blocks). */
+	GraphInputs: {},
+
+	/*
+	 * A formula of a block Formula as a function of GLSL: a generator of numbers of it (its inputs of the types given, {name:
+	 * type}) made GLSL (NumericGLSL): {Name, Inputs, Type, Keys, Need}.
+	 */
+	FormulaGLSL: function (expression, types) {
+		var core = this.Core;
+		var names = core.Formula(expression).Names;
+		var kinds = {};
+		var graph = {version: 1, type: 'generator', name: 'formula', parameters: [], blocks: [{id: 'f', type: 'Formula', x: 0, y: 0, properties: [{key: 'Expression', value: expression}]}, {id: 'r', type: 'Result', x: 0, y: 0, properties: [{key: 'Key', value: 'Value'}]}], links: [{id: 'l', p1: 'f-out-Value', p2: 'r-in-Value', kind: 'value'}]};
+
+		names.forEach(function (one, index) {
+			var type = (types || {})[one];
+
+			kinds[one] = ['vec2', 'vec3', 'vec4'].indexOf(type) !== -1 ? type : 'float';
+
+			graph.blocks.push({id: 'i' + index, type: 'Input', x: 0, y: 0, properties: [{key: 'Name', value: one}]});
+			graph.links.push({id: 'l' + index, p1: 'i' + index + '-out-Value', p2: 'f-in-' + one, kind: 'value'});
+		});
+
+		return this.NumericGLSL(graph, kinds);
+	},
+
+	/*
+	 * A generator of numbers (a graph of the Blueprints Service, its inputs of the types given: {name: type}, float else) as a
+	 * function of GLSL: its IR (Blueprints.Numeric) made GLSL (Elemenx.Compilers, Once), a part of the shaders of Renderer
+	 * (Chunks). {Name (to call), Inputs [{Name, Type}] (its parameters in their order), Type (of its value: one result as it
+	 * is, two to four a vector), Keys (of its results), Need (the name of its part)}, made once for the same graph and types:
+	 * the very numbers of the page (Blueprints.NumericCode) in a shader.
+	 */
+	NumericGLSL: function (graph, types) {
+		var core = this.Core;
+		var read = core.Read(graph);
+		var key = JSON.stringify([read.blocks, read.links, read.parameters, types || {}]);
+		var made;
+		var name;
+		var text = null;
+		var chunks = this.$Service('Renderer').Chunks;
+
+		this.Numerics = this.Numerics || {};
+
+		if (this.Numerics[key])
+			return this.Numerics[key];
+
+		made = core.Numeric(read, {}, types || {});
+
+		if (made.Diagnostics.length)
+			throw new Error('Elemenx Blueprints: a graph of a shader is not of numbers: ' + (read.name || '') + ': ' + made.Diagnostics[0].Text);
+
+		/* Its name of a hash of the graph and its types (FNV-1a). */
+		name = 'bf' + (function () {
+			var hash = 2166136261;
+			var i;
+
+			for (i = 0; i < key.length; i++)
+				hash = Math.imul(hash ^ key.charCodeAt(i), 16777619) >>> 0;
+
+			return hash.toString(36);
+		})();
+		made.Module.Functions[0].Name = name;
+		made.Module.Entry = name;
+
+		Elemenx.Compilers.Run({From: 'ir', To: 'glsl', Value: made.Module, Options: {Once: true}}, function (error, result) {
+			if (!error)
+				text = result.Value;
+		});
+
+		if (text === null)
+			throw new Error('Elemenx Blueprints: a graph of a shader is no GLSL: ' + (read.name || ''));
+
+		chunks['Numeric_' + name] = text;
+		this.Numerics[key] = {Name: 'f_' + name, Inputs: made.Inputs, Type: made.Returns, Keys: made.Keys, Need: 'Numeric_' + name};
+
+		return this.Numerics[key];
+	},
+
 	/* BlueprintShaders: the library */
 
 	Library: function () {
@@ -427,7 +507,7 @@ Elemenx.Service('BlueprintShaders', {
 		var core = this.Core;
 		var shaders = ['pass', 'material', 'vertex'];
 		/* The kinds of shaders of the Libraries over this one, where the numbers and GLSL stand too (water, sky, land: SceneBlueprints). */
-		var numeric = shaders.concat(['water', 'sky', 'land']);
+		var numeric = shaders.concat(['water', 'sky', 'land', 'bake']);
 
 		function baked (made) {
 			return {version: core.Version, type: made.Type, hash: made.Hash, parameters: made.Parameters, baked: {Fragment: made.Fragment, Source: made.Source, Function: made.Function, Needs: made.Needs, Uniforms: made.Uniforms, Textures: made.Textures, Sources: made.Sources}};
@@ -865,6 +945,35 @@ Elemenx.Service('BlueprintShaders', {
 		shaded('Fbm', function (context) {
 			return {Value: 'fbm3(' + context.Inputs.Position + ' * ' + context.Inputs.Scale + ', ' + Math.max(1, Math.round(Number(context.Properties.Octaves) || 4)) + ')'};
 		}, {Needs: ['Noise']});
+
+		/* The folds of mountains of Math: ridge3 of Renderer, the same numbers as Math.Noise().Ridge. */
+		shaded('Ridge', function (context) {
+			return {Value: 'ridge3(' + context.Inputs.Position + ' * ' + context.Inputs.Scale + ', ' + Math.max(1, Math.round(Number(context.Properties.Octaves) || 4)) + ')'};
+		}, {Needs: ['Noise']});
+
+		/*
+		 * An input of a graph of a kind of shaders, by its name: what the kind tells of it (GraphInputs[kind][name]: {Code, Type}),
+		 * so one graph is read in the page as numbers (its Input blocks) and drawn in a shader alike.
+		 */
+		shaded('Input', function (context) {
+			var name = String(context.Properties.Name || '');
+			var one = (self.GraphInputs[context.Graph] || {})[name];
+			if (!one)
+				throw new Error('Elemenx Blueprints: a graph ' + context.Graph + ' has no input ' + name);
+
+			return {Value: one.Code, Types: {Value: one.Type || 'float'}};
+		});
+
+		/* A formula: a function of GLSL of its numbers (FormulaGLSL), a part of the shaders of its own, called with its inputs. */
+		shaded('Formula', function (context) {
+			var made = self.FormulaGLSL(String(context.Properties.Expression || '0'), context.FromTypes);
+
+			context.Need(made.Need);
+
+			return {Value: made.Name + '(' + made.Inputs.map(function (input) {
+				return self.Convert(context.Inputs[input.Name], context.FromTypes[input.Name], input.Type);
+			}).join(', ') + ')', Types: {Value: made.Type}};
+		});
 
 		/* A noise of the Noise Service by its spec: its lines in the body of the shader, its functions a part of the shaders (Noises). */
 		if (!self.$Service('Renderer').Chunks.Noises)

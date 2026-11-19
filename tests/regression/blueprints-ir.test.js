@@ -301,3 +301,103 @@ describe('Regression: a generator of numbers made once for its graph and the val
 		expect(near.Run({}, {X: 37, Z: -12}).Height).toBe(terrain.Flat({Size: 300, Height: 40, Water: 0, Scale: 60, Seed: 'test', Compute: 'js'}).Height(37, -12) / 40);
 	});
 });
+
+describe('Contract: When of a generator of numbers, its Value made only when its Test holds', function () {
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:Blueprints', 'service:Noise']);
+
+		blueprints = Elemenx.Service('Blueprints');
+	});
+
+	/* When: its Value alone computed inside an if (a noise finer than is asked skipped), nested; the same in js, wasm, its run and glsl. */
+	it('computes what only the Value of When needs inside its if, a When in a When, the same everywhere', async function () {
+		var noise = Elemenx.Service('Noise');
+		var made = graph('when', [], {
+			x: ['Input', {Name: 'X'}],
+			fine: ['Input', {Name: 'Fine'}],
+			at: ['Formula', {Expression: 'vec3(X * 0.37, 0.5, X * 0.11)'}],
+			hills: ['NoiseSpec', {Type: 'simplex', Fractal: 'ridged', Octaves: 10, Warp: 0.5, WarpScale: 0.4, WarpOctaves: 3}],
+			grain: ['NoiseSpec', {Type: 'simplex', Fractal: 'fbm', Octaves: 3}],
+			test: ['Formula', {Expression: 'Fine < 20'}],
+			small: ['Formula', {Expression: 'Fine < 1'}],
+			inner: ['Formula', {Expression: 'H * 100 + G'}],
+			deep: ['When', {}],
+			value: ['Formula', {Expression: 'D + H * 10 + X'}],
+			when: ['When', {}],
+			out: ['Result', {Key: 'Height'}]
+		}, [
+			['x', 'Value', 'at', 'X'], ['at', 'Value', 'hills', 'Position'], ['at', 'Value', 'grain', 'Position'],
+			['fine', 'Value', 'test', 'Fine'], ['fine', 'Value', 'small', 'Fine'],
+			['hills', 'Value', 'inner', 'H'], ['grain', 'Value', 'inner', 'G'],
+			['small', 'Value', 'deep', 'Test'], ['inner', 'Value', 'deep', 'Value'],
+			['deep', 'Out', 'value', 'D'], ['hills', 'Value', 'value', 'H'], ['x', 'Value', 'value', 'X'],
+			['test', 'Value', 'when', 'Test'], ['value', 'Value', 'when', 'Value'], ['x', 'Value', 'when', 'Else'],
+			['when', 'Out', 'out', 'Value']
+		]);
+		var code = blueprints.NumericCode(made, {});
+		var body = code.Numeric.Module.Functions[0].Body;
+		var wasm = Elemenx.Compilers.Instance(blueprints.Wasm(code.Numeric));
+		var run = blueprints.Compile(made).Run;
+		var hills = noise.Make({Type: 'simplex', Fractal: 'ridged', Octaves: 10, Warp: {Amount: 0.5, Scale: 0.4, Octaves: 3}});
+		var grain = noise.Make({Type: 'simplex', Fractal: 'fbm', Octaves: 3});
+		var text;
+		var i;
+
+		/* No noise at the top of the function: both inside the ifs, the grain inside the inner one. */
+		expect(JSON.stringify(body.filter(function (statement) {
+			return statement.Op !== 'if';
+		}))).not.toContain('n_read');
+		expect(JSON.stringify(body.filter(function (statement) {
+			return statement.Op === 'if';
+		})[0].Then.filter(function (statement) {
+			return statement.Op !== 'if';
+		})).split('n_read').length).toBe(2);
+
+		[[3, 40], [3, 10], [-7, 0.5], [12.5, 0.2]].forEach(function (pair) {
+			var x = pair[0];
+			var fine = pair[1];
+			var h = hills.At(x * 0.37, 0.5, x * 0.11);
+			var expected = fine < 20 ? (fine < 1 ? h * 100 + grain.At(x * 0.37, 0.5, x * 0.11) : 0) + h * 10 + x : x;
+
+			expect(code.Run({}, {X: x, Fine: fine}).Height).toBe(expected);
+			expect(wasm.Functions.g_main(x, fine)).toBe(expected);
+			expect(run({}, {X: x, Fine: fine}).Height).toBe(expected);
+		});
+
+		for (i = 0; i < 3; i++)
+			expect(new Function('B', 'M', 'N', code.Source)()({}, {X: i, Fine: 0.1}).Height).toBe(code.Run({}, {X: i, Fine: 0.1}).Height);
+
+		text = (await compile({From: 'ir', To: 'glsl', Value: code.Numeric.Module})).Value;
+
+		expect(text).toContain('if (');
+	});
+
+	/* Octaves of a noise given as an input: one function for every number of them, as a noise of that many. */
+	it('takes the octaves of a noise as an input, the same as a noise of that many octaves, in js, wasm and its run', function () {
+		var noise = Elemenx.Service('Noise');
+		var made = graph('octaves', [], {
+			x: ['Input', {Name: 'X'}],
+			count: ['Input', {Name: 'Count'}],
+			at: ['Formula', {Expression: 'vec3(X * 0.37, 0.5, X * 0.11)'}],
+			shape: ['NoiseSpec', {Type: 'simplex', Fractal: 'fbm', Octaves: 4, Gain: 0.52}],
+			out: ['Result', {Key: 'Value'}]
+		}, [['x', 'Value', 'at', 'X'], ['at', 'Value', 'shape', 'Position'], ['count', 'Value', 'shape', 'Octaves'], ['shape', 'Value', 'out', 'Value']]);
+		var code = blueprints.NumericCode(made, {});
+		var wasm = Elemenx.Compilers.Instance(blueprints.Wasm(code.Numeric));
+		var run = blueprints.Compile(made).Run;
+		var text = blueprints.Code(made).Run;
+
+		[3, 7, 10].forEach(function (count) {
+			var expected = noise.Make({Type: 'simplex', Fractal: 'fbm', Octaves: count, Gain: 0.52}).At(2.5 * 0.37, 0.5, 2.5 * 0.11);
+
+			expect(code.Run({}, {X: 2.5, Count: count}).Value).toBe(expected);
+			expect(wasm.Functions.g_main(2.5, count)).toBe(expected);
+			expect(run({}, {X: 2.5, Count: count}).Value).toBe(expected);
+			expect(text({}, {X: 2.5, Count: count}).Value).toBe(expected);
+		});
+
+		expect(code.Run({}, {X: 2.5, Count: 0}).Value).toBe(noise.Make({Type: 'simplex', Fractal: 'fbm', Octaves: 4, Gain: 0.52}).At(2.5 * 0.37, 0.5, 2.5 * 0.11));
+	});
+});

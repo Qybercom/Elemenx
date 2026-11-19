@@ -108,6 +108,9 @@ Elemenx.Trait('SceneGalaxy', {
 		function shown (data) {
 			state.Data = data;
 
+			/* The arms of the graph of the scene (GalaxyData.Spiral), not written with it. */
+			Object.defineProperty(data, 'Graph', {value: self.GalaxySpiral ? self.GalaxySpiral() : null, writable: true, configurable: true, enumerable: false});
+
 			if (state.Glow) {
 				state.Glow.Destroy();
 				state.Glow = null;
@@ -239,14 +242,7 @@ Elemenx.Trait('SceneGalaxy', {
 			var shape = galaxies.Shape(m);
 			var kinds = {elliptical: 1, dwarf: 2, irregular: 3, ring: 4};
 			var bulge = state.Bulge || {Radius: shape.Bulge, Flat: 0.6, Bright: 1};
-			var seed = 0;
-			var knots;
-			var i;
-
-			for (i = 0; i < m.Seed.length; i++)
-				seed = (seed * 31 + m.Seed.charCodeAt(i)) % 997;
-
-			knots = knotsOf();
+			var knots = knotsOf();
 
 			return {
 				uKnotsA: knots.A,
@@ -267,7 +263,7 @@ Elemenx.Trait('SceneGalaxy', {
 				uRing: shape.Ring / 1000,
 				uWidth: shape.Width / 1000,
 				uShape: [m.Shape[0], m.Shape[2], m.Shape[1]],
-				uSeed: seed / 10
+				uSeed: galaxies.SeedNumber(m)
 			};
 		}
 
@@ -890,8 +886,12 @@ Elemenx.Trait('SceneGalaxy', {
 		}
 
 		function programs () {
+			var noise;
+
 			if (state.Programs)
 				return state.Programs;
+
+			noise = [self.$Service('Renderer').Chunks.Noise, self.$Service('Noise').GLSLChunk(['enx_gradient3']), galaxies.Spiral({Graph: self.GalaxySpiral ? self.GalaxySpiral() : null}).GLSL].join('\n');
 
 			state.Programs = {
 				Glow: renderer.Program(shaders.GlowVertex, shaders.Glow),
@@ -905,9 +905,9 @@ Elemenx.Trait('SceneGalaxy', {
 				Meter: renderer.Program(self.$Service('Renderer').Shaders.Quad, shaders.Meter),
 				Band: renderer.Program(self.$Service('Renderer').Shaders.Quad, shaders.Band),
 				Mean: renderer.Program(self.$Service('Renderer').Shaders.Quad, shaders.Mean),
-				Field: renderer.Program(self.GalaxyFieldShader('#version 300 es\nprecision highp float;\n', self.$Service('Renderer').Chunks.Noise), shaders.Star),
-				Volume: renderer.Program(self.$Service('Renderer').Shaders.Quad, self.GalaxyVolumeShader('#version 300 es\nprecision highp float;\n', self.$Service('Renderer').Chunks.Noise)),
-				Plane: renderer.Program(self.$Service('Renderer').Shaders.Quad, self.GalaxyPlaneShader('#version 300 es\nprecision highp float;\n', self.$Service('Renderer').Chunks.Noise))
+				Field: renderer.Program(self.GalaxyFieldShader('#version 300 es\nprecision highp float;\n', noise), shaders.Star),
+				Volume: renderer.Program(self.$Service('Renderer').Shaders.Quad, self.GalaxyVolumeShader('#version 300 es\nprecision highp float;\n', noise)),
+				Plane: renderer.Program(self.$Service('Renderer').Shaders.Quad, self.GalaxyPlaneShader('#version 300 es\nprecision highp float;\n', noise))
 			};
 
 			return state.Programs;
@@ -973,23 +973,20 @@ Elemenx.Trait('SceneGalaxy', {
 		}
 
 		/*
-		 * The band of the galaxy across the sky of where the eye is (SceneCosmos, as a system sees it): round its pole, its
-		 * bulge towards its middle, lower as the eye stands higher over its plane, as bright as its stars are thick there. Made
-		 * again only when the eye went far enough to see it otherwise (a step of 2 degrees round its middle); the one before
-		 * stays till then. Null till the first is made.
+		 * The band of the galaxy across the sky of where the eye is (SceneCosmos, as a system sees it): a ray from the eye
+		 * through this very galaxy (its arms, its dust, its bulge: Galaxy and Place of the Cosmos), its north the pole of the
+		 * sky. Made again only when the eye went far enough to see it otherwise (300 ly); the one before stays till then. Null
+		 * till the first is made.
 		 */
 		function bandSky (view) {
 			var m = state.Data.Manifest;
 			var e = view.Eye;
-			var place = [e[0] * 1000, e[1] * 1000, e[2] * 1000];
-			var density = galaxies.Density(state.Data, place);
-			var angle = Math.round(Math.atan2(-e[2], -e[0]) * 90 / Math.PI) * Math.PI / 90;
-			var lift = Math.round(Math.max(-0.2, Math.min(0.2, place[1] / galaxies.Shape(m).Height * 0.06)) * 50) / 50;
-			var band = Math.round(Math.max(0.2, Math.min(1, 0.35 + Math.log(Math.max(1e-6, density / galaxies.Local)) * 0.15)) * 20) / 20;
+			var place = [Math.round(e[0] / 0.3) * 300, Math.round(e[1] / 0.03) * 30, Math.round(e[2] / 0.3) * 300];
+			var out = Math.max(Math.sqrt(place[0] * place[0] + place[2] * place[2]), 1e-6);
 
 			if (!engine.CosmosCubeOf) return null;
 
-			return engine.CosmosCubeOf({Kind: 'galaxy', Seed: m.Seed + ':band', Pole: [0, 1, 0], Middle: [Math.round(Math.cos(angle) * 1000) / 1000, 0, Math.round(Math.sin(angle) * 1000) / 1000], Lift: lift, Band: band, Stars: 0.12, Galaxies: 0}, 'galaxy-band', 512);
+			return engine.CosmosCubeOf({Kind: 'galaxy', Seed: m.Seed + ':band', Pole: [0, 1, 0], Middle: [-place[0] / out, 0, -place[2] / out], Galaxy: galaxies.Cosmos(state.Data, 'centre').Galaxy, Place: place, Band: 1, Stars: 0.12, Galaxies: 0}, 'galaxy-band', 512);
 		}
 
 		/* What is under a point of the screen: a star near, the black hole ('centre'), or ''. */
@@ -1613,31 +1610,12 @@ Elemenx.Trait('SceneGalaxy', {
 			 */
 			/*
 			 * Regression: its noise was of values on a grid, and its clouds stood in squares (blocks seen from far): a noise of
-			 * gradients now, turned off the axes of the grid.
+			 * gradients now, turned off the axes of the grid (enx_gradient3: of the Noise Service, type gradient, the same in the page).
 			 */
-			'vec3 slope3(vec3 i) {',
-			'	uvec3 h = pcg3(uvec3(ivec3(i) + ivec3(65536)));',
-			'	return normalize(vec3(h & uvec3(1023u)) / 511.5 - 1.0 + 1e-4);',
-			'}',
-			'float slopeNoise(vec3 p) {',
-			'	p = mat3(0.788, 0.346, -0.509, -0.369, 0.928, 0.051, 0.49, 0.137, 0.861) * p;',
-			'	vec3 i = floor(p);',
-			'	vec3 f = fract(p);',
-			'	vec3 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);',
-			'	float a = dot(slope3(i), f);',
-			'	float b = dot(slope3(i + vec3(1.0, 0.0, 0.0)), f - vec3(1.0, 0.0, 0.0));',
-			'	float c = dot(slope3(i + vec3(0.0, 1.0, 0.0)), f - vec3(0.0, 1.0, 0.0));',
-			'	float d = dot(slope3(i + vec3(1.0, 1.0, 0.0)), f - vec3(1.0, 1.0, 0.0));',
-			'	float e = dot(slope3(i + vec3(0.0, 0.0, 1.0)), f - vec3(0.0, 0.0, 1.0));',
-			'	float g = dot(slope3(i + vec3(1.0, 0.0, 1.0)), f - vec3(1.0, 0.0, 1.0));',
-			'	float h = dot(slope3(i + vec3(0.0, 1.0, 1.0)), f - vec3(0.0, 1.0, 1.0));',
-			'	float k = dot(slope3(i + vec3(1.0)), f - vec3(1.0));',
-			'	return clamp(0.5 + 0.75 * mix(mix(mix(a, b, u.x), mix(c, d, u.x), u.y), mix(mix(e, g, u.x), mix(h, k, u.x), u.y), u.z), 0.0, 1.0);',
-			'}',
 			'float octave(vec3 p, float size, float foot, float seed) {',
 			'	float seen = smoothstep(foot * 0.7, foot * 2.0, size);',
 			'	if (seen <= 0.0) return 0.5;',
-			'	return mix(0.5, slopeNoise(p / size + seed), seen);',
+			'	return mix(0.5, enx_gradient3(p / size + seed), seen);',
 			'}',
 			/*
 			 * Noise along its spiral: of its phase round it (periodic: a circle of `across` cells a turn) and of the log of its
@@ -1652,7 +1630,7 @@ Elemenx.Trait('SceneGalaxy', {
 			'	return abs(gRay.y) > 0.5 ? p.xz - gRay.xz * (p.y / gRay.y) : p.xz;',
 			'}',
 			'float spiralNoise(float phase, float lr, float across, float along, float seed) {',
-			'	return slopeNoise(vec3(cos(phase) * across, sin(phase) * across, lr * along) + seed);',
+			'	return enx_gradient3(vec3(cos(phase) * across, sin(phase) * across, lr * along) + seed);',
 			'}',
 			/* A star of each cell of the plane as wide as a pixel there: 1 on the mean, most dark, a few bright (the grain of its stars). */
 			'float speckle(vec2 at, float y, float foot) {',
@@ -1708,11 +1686,12 @@ Elemenx.Trait('SceneGalaxy', {
 			'	float ridge = 0.0;',
 			'	float lane = 0.0;',
 			'	float lr = log(max(r, 0.02) / max(uScale, 1e-3));',
-			'	float phase = atan(p.z, p.x) - lr / tan(uPitch) - uPhase;',
+			'	vec4 spiral = galaxy_spiral(p.xz, uScale, uRadius, uPitch, uPhase, uArms, uSeed, 0.0);',
+			'	float phase = spiral.x;',
 			'	if (uArms > 0.5) {',
 			/* Its arms: the wave of its spiral, torn in pieces along it and with more arms between (flocculent), not two smooth bands. */
-			'		float bend = (slopeNoise(vec3(p.x, 1.5, p.z) / (uRadius / 6.0) + uSeed) - 0.5) * 0.5;',
-			'		float w = 0.5 + 0.5 * cos(uArms * (phase + bend));',
+			'		float bend = spiral.y;',
+			'		float w = spiral.z;',
 			'		float pieces = spiralNoise(phase + bend, lr, 3.0, 0.8, uSeed);',
 			'		float more = spiralNoise(phase + bend, lr, 7.0, 1.5, uSeed * 1.3);',
 			'		float wave = pow(w, 2.0) * (0.45 + 1.1 * pieces) + pow(max(more - 0.45, 0.0) / 0.55, 1.5) * 0.9;',
@@ -1728,7 +1707,7 @@ Elemenx.Trait('SceneGalaxy', {
 			'		lane = ring * 0.6 + 0.2;',
 			'	}',
 			'	if (uKind > 2.5 && uKind < 3.5) {',
-			'		arms = pow(slopeNoise(p / (uRadius / 4.0) + uSeed), 2.0) * 3.5;',
+			'		arms = pow(enx_gradient3(p / (uRadius / 4.0) + uSeed), 2.0) * 3.5;',
 			'		ridge = arms * 0.3;',
 			'		lane = arms * 0.2 + 0.2;',
 			'	}',
@@ -2058,7 +2037,8 @@ Elemenx.Trait('SceneGalaxy', {
 			'	float far = length(off);',
 			'	float edge = (1.0 - smoothstep(0.35, 0.5, far / uCell)) * smoothstep(uInner * 0.7, uInner, far);',
 			'	vec3 tile = floor((own * uCell - off - uEye) / uCell + 0.5);',
-			'	float h = fract(sin(dot(tile, vec3(12.9898, 78.233, 37.719)) + aColor.w * 437.1) * 43758.5453);',
+			/* The sine of the hash of the very argument it had (its brightness has a long tail: a hash of a sine of too large an argument made too many bright ones). */
+			'	float h = enx_white3(vec3(tile.xy, tile.z + aColor.w * 437.1 / 37.719));',
 			'	vec3 light;',
 			'	float dust;',
 			'	sampleAt(backAt(at, uTime), uCell * 0.5, light, dust);',
@@ -2201,6 +2181,7 @@ Elemenx.Trait('SceneGalaxy', {
 				'	float s = sin(a);',
 				'	return vec3(p.x * c - p.z * s, p.y, p.x * s + p.z * c);',
 				'}',
+				this.$Service('Noise').GLSLChunk(['enx_white3']),
 				'void main() {',
 				'	vec3 at = turned(aPosition);',
 				'	float far = max(length(at - uEye), 1e-4);',
@@ -2208,7 +2189,7 @@ Elemenx.Trait('SceneGalaxy', {
 				'	gl_Position = uViewProjection * vec4(at, 1.0);',
 				'	gl_PointSize = clamp(wide * 2.0, 2.0, 160.0) * uRatio;',
 				'	vColor = vec4(aColor.rgb, clamp(wide / 4.0, mix(0.35, 0.08, uDark), 1.0) * (1.0 - smoothstep(60.0, 80.0, wide)));',
-				'	vSeed = fract(sin(dot(aPosition, vec3(12.9898, 78.233, 37.719))) * 43758.5453);',
+				'	vSeed = enx_white3(aPosition);',
 				'}'
 			].join('\n'),
 
@@ -2218,8 +2199,9 @@ Elemenx.Trait('SceneGalaxy', {
 				'uniform float uDark;',
 				'uniform float uFade;',
 				'out vec4 outColor;',
+				this.$Service('Noise').GLSLChunk(['enx_white2']),
 				'float hash2(vec2 p) {',
-				'	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);',
+				'	return enx_white2(p);',
 				'}',
 				'float noise2(vec2 p) {',
 				'	vec2 i = floor(p);',

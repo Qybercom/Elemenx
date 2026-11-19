@@ -51,6 +51,19 @@
 	min-width: 80px;
 }
 
+/* The graph of a model of the library (tab Graph), where the inspector is: its Blueprint fills it, never bigger. */
+.elemenx-model-editor-graph {
+	grid-area: inspector;
+	position: relative;
+	min-height: 0;
+	border-left: 1px solid var(--elemenx-border);
+}
+
+.elemenx-model-editor-blueprint {
+	position: absolute;
+	inset: 0;
+}
+
 .elemenx-model-editor-side,
 .elemenx-model-editor-inspector {
 	display: flex;

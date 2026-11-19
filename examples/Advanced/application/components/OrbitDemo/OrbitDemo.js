@@ -89,6 +89,28 @@ Elemenx.Component('OrbitDemo', {
 	OrbitCosmos: {Kind: 'galaxy', Seed: 'orbit'},
 	OrbitSpeed: 0,
 	OrbitPhase: '',
+	/* The shader graph open (DemoGraph: '' none), those its scene is drawn with (Graphs of Scene), its scene made again as one changes. */
+	OrbitGraphOpen: '',
+	OrbitGraphs: null,
+	OrbitFresh: true,
+	OrbitGraphOpened: function (name) {
+		this.OrbitGraphOpen = this.OrbitGraphOpen === name ? '' : name;
+	},
+	OrbitGraphChanged: function (event) {
+		var self = this;
+		var given = event && event.detail ? event.detail : event;
+		var graphs = Object.assign({}, this.OrbitGraphs || {});
+
+		if (given.Graph) graphs[given.Name] = given.Graph;
+		else delete graphs[given.Name];
+
+		this.OrbitGraphs = Object.keys(graphs).length ? graphs : null;
+		this.OrbitFresh = false;
+
+		setTimeout(function () {
+			self.OrbitFresh = true;
+		}, 0);
+	},
 	OrbitReady: function (scene) {
 		var models = this.$Service('SceneModels');
 

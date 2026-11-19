@@ -183,9 +183,10 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 		/*
 		 * No strip of it painted by a worker: the whole of it came from the store. Regression (load): under a whole run
-		 * its 256 strips were not drawn in 10 s; waited for as long as half the test.
+		 * its 256 strips were not drawn in 10 s; waited for as long as half the test. The test 150 s: its planet, of a seed of
+		 * its own, is baked whole first (half a minute alone; under a whole run more than the 60 s it had).
 		 */
-		await waitFor(function () {
+		expect(await waitFor(function () {
 			inner.Rest = 0;
 			inner.Looping = true;
 
@@ -194,10 +195,10 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 			inner.Looping = false;
 
 			return inner.Baked.terra && inner.Baked.terra.Painted === 256;
-		}, 30000);
+		}, 60000)).toBe(true);
 
 		expect(inner.Baked.terra.Strips).toBe(24);
-	}, 60000);
+	}, 150000);
 
 	beforeAll(async function () {
 		await loadElemenx();
@@ -924,10 +925,12 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		var point;
 		var i;
 
-		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'terra', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'terra', From: [0, 0, 1.3], Facing: [-1, 0, 0], Length: 30}});
-		scene.Control('me');
-
-		await waitFor(function () {
+		/*
+		 * Its globe painted first, then the ship by it. Regression: the ship came at once and flew on while the planet was baked
+		 * (half a minute of a cold cache, or of fewer workers): far by then, it saw no ground near; only after the tests before
+		 * it, which left the planet in the store of the browser, was it in time.
+		 */
+		expect(await waitFor(function () {
 			inner.Rest = 0;
 			inner.Looping = true;
 
@@ -935,8 +938,23 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 			inner.Looping = false;
 
+			return inner.Baked.terra && inner.Baked.terra.Painted;
+		}, 90000)).toBeTruthy();
+
+		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'terra', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'terra', From: [0, 0, 1.3], Facing: [-1, 0, 0], Length: 30}});
+		scene.Control('me');
+
+		/* A millisecond a frame from here on: frames for its squares, not for the ship to fly away (Regression: it was 35 000 km off). */
+		expect(await waitFor(function () {
+			inner.Rest = 0;
+			inner.Looping = true;
+
+			engine.Frame(now += 1);
+
+			inner.Looping = false;
+
 			return inner.Globes.terra && Object.keys(inner.Globes.terra.Nodes).length > 6;
-		}, 30000);
+		}, 30000)).toBe(true);
 
 		/* Its rivers on it: the color of a point of a big one is water. */
 		held = inner.Rivers.terra;
@@ -974,14 +992,17 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 		/*
 		 * Frames by hand: they wait for a program the card still makes. Regression (under load): frames of the loop left the
-		 * globe out while its program was made, and none of six drew its clouds.
+		 * globe out while its program was made, and none of six drew its clouds; then (fewer workers, a cold cache) six frames by
+		 * hand were not enough either: as many as come till its clouds are drawn, a minute at most.
 		 */
 		try {
-			for (i = 0; i < 6; i++) {
+			await waitFor(function () {
 				inner.Rest = 0;
 
-				engine.Frame(now += 100);
-			}
+				engine.Frame(now += 1);
+
+				return clouded > 0;
+			}, 60000);
 		}
 		finally {
 			engine.Renderer.Draw = draw;
@@ -991,7 +1012,7 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		expect(inner.Globes.terra.CloudsOver).toBe(true);
 		expect(shells).toBe(0);
 		expect(clouded).toBeGreaterThan(0);
-	}, 60000);
+	}, 150000);
 
 	/*
 	 * Regression: near, the colors of the ground of a planet were those of the points of its squares: a row of steps where
@@ -1298,6 +1319,36 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		}
 
 		expect(moved).toBeGreaterThan(after.length / 4 * 0.05);
+
+		/*
+		 * The weather over a place in the page (WeatherOver): of the very graph its shader bakes (ForecastGraph), the same
+		 * cover as its map shows there, but for the texels of the edges of its clouds (its climate read nearer in the page).
+		 */
+		var off = 0;
+		var asked = 0;
+		var x;
+		var y;
+
+		frames(7);
+
+		after = face(4);
+
+		for (y = 8; y < 256; y += 24) {
+			for (x = 8; x < 256; x += 24) {
+				var over = scene.WeatherOver('terra', [-1 + (x + 0.5) * 2 / 256, -(-1 + (y + 0.5) * 2 / 256), 1]);
+
+				expect(over.Cover).toBeGreaterThanOrEqual(0);
+				expect(over.Rain).toBeLessThanOrEqual(1);
+
+				asked++;
+
+				if (Math.abs(over.Cover - after[(y * 256 + x) * 4] / 255) > 0.25)
+					off++;
+			}
+		}
+
+		expect(off).toBeLessThan(asked * 0.15);
+		expect(scene.WeatherOver('sun')).toBe(null);
 
 		/* Over its surface: the shell of its weather, the sky with no wisps of its own. */
 		engine.Renderer.Draw = function (mesh, program, uniforms) {

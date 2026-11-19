@@ -78,33 +78,12 @@ Elemenx.Service('SceneTextures', {
 
 	/* The helpers of a recipe: each repeats at the tile, by a whole number of its cells across it. */
 	Helpers: [
-		'uint tex_pcg(uvec2 v) {',
-		'	v = v * 1664525u + 1013904223u;',
-		'	v.x += v.y * 1664525u;',
-		'	v.y += v.x * 1664525u;',
-		'	v = v ^ (v >> 16u);',
-		'	v.x += v.y * 1664525u;',
-		'	v.y += v.x * 1664525u;',
-		'	v = v ^ (v >> 16u);',
-		'	return v.x ^ v.y;',
-		'}',
-		'float tex_hash(vec2 cell, float period, float seed) {',
-		'	vec2 c = mod(floor(cell), period);',
-		'	return float(tex_pcg(uvec2(ivec2(c)) + uvec2(uint(seed * 977.0), uint(seed * 131.0) + 7u)) & 16777215u) / 16777215.0;',
-		'}',
+		'float tex_layer(float seed) { return floor(seed * 977.0); }',
+		'float tex_hash(vec2 cell, float period, float seed) { vec2 c = floor(cell); return f_n_fat(c.x, c.y, tex_layer(seed), period > 0.0, period, period); }',
 		'vec2 tex_hash2(vec2 cell, float period, float seed) {',
 		'	return vec2(tex_hash(cell, period, seed), tex_hash(cell, period, seed + 17.31));',
 		'}',
-		'float tex_noise(vec2 p, float period, float seed) {',
-		'	vec2 i = floor(p);',
-		'	vec2 f = fract(p);',
-		'	vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);',
-		'	float a = tex_hash(i, period, seed);',
-		'	float b = tex_hash(i + vec2(1.0, 0.0), period, seed);',
-		'	float c = tex_hash(i + vec2(0.0, 1.0), period, seed);',
-		'	float d = tex_hash(i + vec2(1.0, 1.0), period, seed);',
-		'	return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);',
-		'}',
+		'float tex_noise(vec2 p, float period, float seed) { return f_n_fvalue2(p.x, p.y, tex_layer(seed), period > 0.0, period, period); }',
 		/* Octaves of noise over the tile: period cells across it, twice as many each octave. */
 		'float tex_fbm(vec2 uv, float period, int octaves, float seed) {',
 		'	float sum = 0.0;',
@@ -211,6 +190,7 @@ Elemenx.Service('SceneTextures', {
 			'layout(location = 0) out vec4 outColor;',
 			'layout(location = 1) out vec4 outSurface;'
 		].concat(params, [
+			this.$Service('Noise').GLSLChunk(['f_n_fat', 'f_n_fvalue2']),
 			this.Helpers,
 			'void tex_recipe(vec2 uv, float px, float seed, inout vec3 c, inout float r, inout float h, inout float ao) {',
 			recipe.Code,
@@ -437,22 +417,14 @@ Elemenx.Service('SceneTextures', {
 	 */
 	Chunk: function (layered) {
 		var lines = [
+			this.$Service('Noise').GLSLChunk(['enx_value2', 'enx_white2']),
 			/*
 			 * The slopes of the place on the screen (metres: along x, then along y), set by the caller where all pixels go, with
 			 * tex_px over 0; else tex_sample takes its own derivatives.
 			 */
 			'float tex_px = -1.0;',
 			'vec4 tex_grad = vec4(0.0);',
-			'float tex_blend(vec2 place) {',
-			'	vec2 i = floor(place);',
-			'	vec2 f = fract(place);',
-			'	vec2 u = f * f * (3.0 - 2.0 * f);',
-			'	float a = fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5453);',
-			'	float b = fract(sin(dot(i + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5453);',
-			'	float c = fract(sin(dot(i + vec2(0.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);',
-			'	float d = fract(sin(dot(i + vec2(1.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);',
-			'	return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);',
-			'}',
+			'float tex_blend(vec2 place) { return enx_value2(place); }',
 			/* The corners of the triangle of a grid of hexagons a point is in, and its weights in them (Mikkelsen, hex-tiling). */
 			'void tex_hexes(vec2 st, out vec3 w, out vec2 v1, out vec2 v2, out vec2 v3) {',
 			'	vec2 skew = mat2(1.0, 0.0, -0.57735027, 1.15470054) * st * 3.4641016;',
@@ -466,9 +438,7 @@ Elemenx.Service('SceneTextures', {
 			'	v2 = base + vec2(s, 1.0 - s);',
 			'	v3 = base + vec2(1.0 - s, s);',
 			'}',
-			'vec2 tex_spot(vec2 v) {',
-			'	return fract(sin(vec2(dot(v, vec2(127.1, 311.7)), dot(v, vec2(269.5, 183.3)))) * 43758.5453);',
-			'}',
+			'vec2 tex_spot(vec2 v) { return vec2(enx_white2(v), enx_white2(v + vec2(17.31, -5.7))); }',
 			/* One piece of the tile, as a hexagon has it: turned and shifted its own way, sampled with the slopes of the place. */
 			'void tex_piece(sampler2D color, sampler2D surface, vec2 uv, vec2 dx, vec2 dy, vec2 v, float spin, out vec4 c, out vec4 s) {',
 			'	vec2 r = tex_spot(v);',

@@ -901,6 +901,9 @@ Elemenx.Trait('SceneEffects', {
 	},
 
 	EffectShaders: function (head) {
+		/* The shape of a bolt (kind bolt): the one of the storms (BoltShape). */
+		var bolt = this.BoltShape();
+
 		return {
 			Vertex: head + [
 				'in vec3 aPosition;',
@@ -1101,8 +1104,9 @@ Elemenx.Trait('SceneEffects', {
 				/* How much of the circle is written (1: all of it): ring by ring from the rim, each round from its top. */
 				'uniform float uDrawn;',
 				'out vec4 outColor;',
+				this.$Service('Noise').GLSLChunk(['enx_white']),
 				'float hash1(float x) {',
-				'	return fract(sin(x * 91.17) * 43758.5453);',
+				'	return enx_white(x);',
 				'}',
 				'float segment(vec2 p, vec2 a, vec2 b) {',
 				'	vec2 ab = b - a;',
@@ -1247,17 +1251,26 @@ Elemenx.Trait('SceneEffects', {
 				'uniform float uClock;',
 				'out vec2 vAt;',
 				'out float vShow;',
-				/* Three scales of jags, each of its own at every flicker. */
-				'float wander(float t, float seed) {',
-				'	return sin(t * 7.0 + seed) * 0.5 + sin(t * 17.0 + seed * 2.3) * 0.3 + sin(t * 43.0 + seed * 5.1) * 0.15 + sin(t * 89.0 + seed * 7.7) * 0.07;',
-				'}',
+				/*
+				 * The shape of the bolts of a storm too (SceneBlueprints.Bolt): a broken line of its steps, a jag each, its own at
+				 * every flicker (seed); between its corners along the way.
+				 */
+				bolt.GLSL,
 				'vec3 place(float t, float seed) {',
-				'	float edge = sin(min(t, 1.0) * 3.1415927 * 0.5 + 0.2);',
-				'	return uFrom + uAim * t + (uSide * wander(t, seed) + uOther * wander(t, seed + 3.7)) * uReach * edge;',
+				'	float at = clamp(t, 0.0, 1.0) * ' + bolt.Steps + '.0;',
+				'	float corner = min(floor(at), ' + (bolt.Steps - 1) + '.0);',
+				'	vec2 off = vec2(0.0);',
+				'	for (int i = 0; i < ' + bolt.Steps + '; i++) {',
+				'		if (float(i) >= corner) break;',
+				'		off += bolt_jag(float(i), seed);',
+				'	}',
+				'	off += bolt_jag(corner, seed) * (at - corner);',
+				'	return uFrom + uAim * t + (uSide * off.x + uOther * off.y) * uReach;',
 				'}',
+				this.$Service('Noise').GLSLChunk(['enx_white2']),
 				'void main() {',
 				'	float flick = floor(uClock * 13.0 + uSeed * 3.0);',
-				'	float seed = fract(sin(flick * 12.9898 + uSeed) * 43758.5453) * 40.0;',
+				'	float seed = enx_white2(vec2(flick, uSeed)) * 40.0;',
 				'	vec3 at = place(aPosition.y, seed);',
 				'	vec3 way = normalize(place(aPosition.y + 0.01, seed) - at);',
 				'	vec3 across = normalize(cross(way, uForward));',

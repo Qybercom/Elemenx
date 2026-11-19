@@ -58,6 +58,24 @@ Elemenx.Service('Renderer', {
 		Description: 'The graphics of three dimensions on WebGL2: a camera and a renderer of shapes with shaders.',
 		Methods: ['Create(canvas, options)', 'Camera(options)', 'Source(names)', 'CloudBlock(size)', 'Work()']
 	},
+	$OnCreate: function () {
+		this.Chunks.Noise = this.NoiseChunk();
+	},
+
+	/* The noise of the shaders: the Kernel of Noise (once in a shader: ENX_NOISE), noise3, fbm3, ridge3 and hash3 of it (ENX_SHADER_NOISE). */
+	NoiseChunk: function () {
+		return [
+			this.$Service('Noise').GLSLChunk(['f_n_hash', 'f_n_value0', 'enx_pcg3', 'enx_value2', 'enx_white', 'enx_white2', 'enx_white3']),
+			'#ifndef ENX_SHADER_NOISE',
+			'#define ENX_SHADER_NOISE',
+			'float hash3(vec3 p) { return f_n_hash(int(p.x), int(p.y), int(p.z)); }',
+			'float noise3(vec3 x) { return f_n_value0(x.x, x.y, x.z); }',
+			/* The octaves of n_octaves of the Kernel (fbm, ridged) of its value noise alone: what n_octaves reads of all the noises is not made. */
+			'float fbm3(vec3 p, int octaves) { float total = 0.0, amplitude = 0.5, weight = 0.0; for (int i = 0; i < 8; i++) { if (i >= octaves) break; total += noise3(p) * amplitude; weight += amplitude; p = p * 2.03 + vec3(1.7, 9.2, 3.1); amplitude *= 0.5; } return weight != 0.0 ? total / weight : 0.0; }',
+			'float ridge3(vec3 p, int octaves) { float total = 0.0, amplitude = 0.5, weight = 0.0; for (int i = 0; i < 8; i++) { if (i >= octaves) break; total += (1.0 - abs(noise3(p) * 2.0 - 1.0)) * amplitude; weight += amplitude; p = p * 2.03 + vec3(1.7, 9.2, 3.1); amplitude *= 0.5; } return weight != 0.0 ? total / weight : 0.0; }',
+			'#endif'
+		].join('\n');
+	},
 
 	/* The places of the attributes, the same in every program: a mesh binds its buffers to them. */
 	Locations: {aPosition: 0, aNormal: 1, aUV: 2, aColor: 3, aInstance: 4, aInstance2: 5, aInstance3: 6, aInstance4: 7, aInstance5: 8, aJoints: 9, aWeights: 10, aFrames: 11, aMaterials: 12, aMaterials2: 13, aMaterials3: 14},
@@ -248,56 +266,12 @@ Elemenx.Service('Renderer', {
 			'}'
 		].join('\n'),
 
-		Noise: [
-			'uvec3 pcg3(uvec3 v) {',
-			'	v = v * 1664525u + 1013904223u;',
-			'	v.x += v.y * v.z;',
-			'	v.y += v.z * v.x;',
-			'	v.z += v.x * v.y;',
-			'	v ^= v >> 16u;',
-			'	v.x += v.y * v.z;',
-			'	v.y += v.z * v.x;',
-			'	v.z += v.x * v.y;',
-			'	return v;',
-			'}',
-			'float hash3(vec3 p) {',
-			'	uvec3 u = uvec3(ivec3(p) + ivec3(65536));',
-			'	return float(pcg3(u).x & 16777215u) / 16777215.0;',
-			'}',
-			'float noise3(vec3 x) {',
-			'	vec3 i = floor(x);',
-			'	vec3 f = fract(x);',
-			'	f = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);',
-			'	return mix(mix(mix(hash3(i), hash3(i + vec3(1.0, 0.0, 0.0)), f.x), mix(hash3(i + vec3(0.0, 1.0, 0.0)), hash3(i + vec3(1.0, 1.0, 0.0)), f.x), f.y),',
-			'		mix(mix(hash3(i + vec3(0.0, 0.0, 1.0)), hash3(i + vec3(1.0, 0.0, 1.0)), f.x), mix(hash3(i + vec3(0.0, 1.0, 1.0)), hash3(i + vec3(1.0, 1.0, 1.0)), f.x), f.y), f.z);',
-			'}',
-			'float fbm3(vec3 p, int octaves) {',
-			'	float total = 0.0;',
-			'	float amplitude = 0.5;',
-			'	float weight = 0.0;',
-			'	for (int i = 0; i < 8; i++) {',
-			'		if (i >= octaves) break;',
-			'		total += noise3(p) * amplitude;',
-			'		weight += amplitude;',
-			'		p = p * 2.03 + vec3(1.7, 9.2, 3.1);',
-			'		amplitude *= 0.5;',
-			'	}',
-			'	return total / weight;',
-			'}',
-			'float ridge3(vec3 p, int octaves) {',
-			'	float total = 0.0;',
-			'	float amplitude = 0.5;',
-			'	float weight = 0.0;',
-			'	for (int i = 0; i < 8; i++) {',
-			'		if (i >= octaves) break;',
-			'		total += (1.0 - abs(noise3(p) * 2.0 - 1.0)) * amplitude;',
-			'		weight += amplitude;',
-			'		p = p * 2.03 + vec3(1.7, 9.2, 3.1);',
-			'		amplitude *= 0.5;',
-			'	}',
-			'	return total / weight;',
-			'}'
-		].join('\n'),
+		/*
+		 * The noise of the shaders (noise3, fbm3, ridge3, hash3): of the Kernel of the Noise Service (Noise.GLSLChunk, its one
+		 * source), made when the Service is ($OnCreate, NoiseChunk): the very numbers of Math.Noise and of Noise. Regression: they
+		 * were written again here, of a hash of their own (pcg3).
+		 */
+		Noise: '',
 
 		Lights: [
 			'uniform vec3 uLightPositions[4];',

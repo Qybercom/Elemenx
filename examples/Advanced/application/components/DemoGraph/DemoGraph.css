@@ -1,0 +1,18 @@
+.demo-graph {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+
+.demo-graph-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 8px;
+}
+
+.demo-graph-editor {
+	flex: 1;
+	min-height: 0;
+}

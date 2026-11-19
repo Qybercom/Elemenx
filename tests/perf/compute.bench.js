@@ -50,7 +50,7 @@ describe('Bench: the computations of a ground', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:Noise', 'service:SceneTerrainGenerator', 'service:Blueprints', 'service:Workers', 'service:Geometry', 'service:SceneShowcase', 'service:SceneWorld', 'service:SceneRoads', 'service:SceneModels', 'service:SceneBuildingGenerator']);
+		Use(['service:Noise', 'service:SceneTerrainGenerator', 'service:Blueprints', 'service:Workers', 'service:Geometry', 'service:SceneShowcase', 'service:SceneWorld', 'service:SceneRoads', 'service:SceneModels', 'service:SceneBuildingGenerator', 'service:ScenePlanet', 'service:Math', 'service:SceneFlora']);
 
 		noise = Elemenx.Service('Noise');
 		terrain = Elemenx.Service('SceneTerrainGenerator');
@@ -164,6 +164,23 @@ describe('Bench: the computations of a ground', function () {
 			for (i = 0; i < 100000; i++)
 				sum += ground.Density(-600 + (i % 50) * 2.8, 25 + (Math.floor(i / 50) % 40) * 0.9, -1120 + Math.floor(i / 2000) * 4.8);
 		}), 100000);
+
+		expect(sum).not.toBe(0);
+	});
+
+	/* The relief of a planet: as a globe sees it (finest 30 km) and as near as it is made (all its detail). */
+	it('relief of a planet', function () {
+		var planet = Elemenx.Service('ScenePlanet').Make({Seed: 'bench', Mountains: 0.7});
+		var sum = 0;
+
+		[['height:planet-globe', 30], ['height:planet-near', undefined]].forEach(function (pair) {
+			report(pair[0], measure(function () {
+				var i;
+
+				for (i = 0; i < 50000; i++)
+					sum += planet.Elevation([Math.cos(i * 0.0031) * Math.cos(i * 0.00017), Math.sin(i * 0.00017), Math.sin(i * 0.0031) * Math.cos(i * 0.00017)], pair[1]);
+			}), 50000);
+		});
 
 		expect(sum).not.toBe(0);
 	});

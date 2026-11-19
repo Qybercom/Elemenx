@@ -1445,6 +1445,47 @@ describe('Contract: the heights of a ground by wasm (Compute), the very ones of 
 		expect(terrain.Flat(JSON.parse(JSON.stringify(options))).Density(3, 2, 0)).toBe(-3);
 	});
 
+	it('makes a ground of graphs of its own (Graphs, as a world gives them) by them, every other ground by the library\'s, the same in a worker', async function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var mountain = JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/sketch/mountain')));
+		var sphere = JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/carve/sphere')));
+		var options = {Size: 300, Height: 20, Water: 0, Scale: 120, Seed: 'own-graphs', Compute: 'js', Sketch: {Layers: [{ID: 'l', Visible: true, Strength: 1, Items: [{ID: 'm', Type: 'mountain', At: [0, 0], Radius: 60, Height: 40, Ridged: 0}]}]}, Carves: [{Type: 'sphere', At: [100, 2, 100], Radius: 6}]};
+		var plain = terrain.Flat(Object.assign({}, options, {Sketch: null, Carves: null}));
+		var library;
+		var own;
+		var here;
+		var there;
+
+		mountain.blocks.filter(function (one) {
+			return one.type === 'Formula' && /Height \* pow/.test(one.properties[0].value);
+		})[0].properties[0].value = 'H + 2 * Height * S';
+		sphere.blocks.filter(function (one) {
+			return one.type === 'Formula';
+		})[0].properties[0].value = 'sqrt((X - CX) * (X - CX) + (Y - CY) * (Y - CY) + (Z - CZ) * (Z - CZ)) - Radius * 2';
+
+		own = terrain.Flat(Object.assign({}, options, {Graphs: {'sketch/mountain': mountain, 'carve/sphere': sphere, 'planet/relief': {}}}));
+		library = terrain.Flat(JSON.parse(JSON.stringify(options)));
+
+		expect(own.Height(10, 0) - plain.Height(10, 0)).toBeCloseTo(80, 6);
+		expect(own.Density(105, 2, 100)).toBe(-7);
+		expect(library.Height(0, 0) - plain.Height(0, 0)).toBeCloseTo(40, 6);
+		expect(library.Density(103, 2, 100)).toBe(-3);
+		expect(terrain.GraphCodeOf({'sketch/mountain': mountain, 'planet/relief': {}})['planet/relief']).toBe(undefined);
+
+		/* In a worker: the code of its graphs made here, sent with its options. */
+		options = Object.assign({}, options, {Graphs: {'sketch/mountain': mountain}});
+		here = terrain.Flat(options).Chunk(0, 0, 32, 16);
+		there = await new Promise(function (done, failed) {
+			terrain.Work().Run('SceneTerrainGenerator', 'Piece', ['Flat', options, null, [0, 0, 32, 16]], function (error, result) {
+				if (error) failed(error);
+				else done(result);
+			});
+		});
+
+		expect(Array.from(there.Positions)).toEqual(Array.from(new Float32Array(here.Positions)));
+		expect(options.GraphCode['sketch/mountain'].Source).toBeTruthy();
+	}, 60000);
+
 	it('reads the heights it made at once and makes any other as before', function () {
 		var field = terrain.Flat({Size: 2000, Height: 60, Seed: 'compute'});
 		var plain = terrain.Flat({Size: 2000, Height: 60, Seed: 'compute', Compute: 'js'});
