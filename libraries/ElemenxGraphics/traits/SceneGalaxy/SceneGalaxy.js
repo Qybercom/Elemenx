@@ -27,7 +27,7 @@
  *   (ly)}; SetGalaxyView(view) puts it there. GalaxyFocus(id): the view flies to a star (or the centre: '').
  * - GalaxyStars(): the stars near the view as they are drawn now (each {ID, Name, Place (where it is at GalaxyTime), Mass,
  *   Class, Color...}). GalaxyPicked(): the ID of the star picked.
- * - EnterSystem(id, callback): the view flies into the star and the scene shows its system (Setting space: its System of
+ * - EnterSystem(id, callback, options): the view flies into the star (options {Now: at once, as a ship jumped there}) and the scene shows its system (Setting space: its System of
  *   GalaxyData.System, its Cosmos of where it is in the galaxy); event enter {ID, Star, Key}. LeaveSystem(callback): out to
  *   the galaxy again, the view drawing back from the star; event leave {ID}. GalaxyEntered(): the ID of the star whose
  *   system is shown ('' in none).
@@ -2459,12 +2459,13 @@ Elemenx.Trait('SceneGalaxy', {
 		});
 	},
 
-	EnterSystem: function (id, callback) {
+	EnterSystem: function (id, callback, options) {
 		var self = this;
 		var state = this.Engine().Galaxy;
 		var galaxies = this.$Service('GalaxyData');
 		var done = typeof callback === 'function' ? callback : function () {};
 		var star = id ? state.StarOf(id) : null;
+		var now = !!(options && options.Now);
 
 		if (!state.Data || !star) {
 			done(new Error('SceneGalaxy: no star ' + id));
@@ -2475,7 +2476,7 @@ Elemenx.Trait('SceneGalaxy', {
 		state.Picked = star.ID;
 
 		/* Near it already (the view came to it): into its system at once, no flight back out. */
-		state.Fly(state.Now(star.Place), Math.min(state.Distance, 0.8), state.Follow === star.ID && state.Distance <= 0.8 ? 0 : 1.6, function () {
+		function into () {
 			var key = 'galaxy:' + state.Data.Manifest.ID + ':' + star.ID;
 
 			self.$Service('SystemData').Use(key, galaxies.System(state.Data, star.ID));
@@ -2495,7 +2496,51 @@ Elemenx.Trait('SceneGalaxy', {
 			self.$Emit('enter', {ID: star.ID, Star: star, Key: key});
 
 			done(null, key);
-		});
+		}
+
+		/* At once (Now: a ship that jumped there): the view of the map not flown (it flies only while the map is drawn). */
+		if (now) {
+			state.Target = state.Now(star.Place);
+			state.Distance = Math.min(state.Distance, 0.8);
+
+			into();
+
+			return;
+		}
+
+		state.Fly(state.Now(star.Place), Math.min(state.Distance, 0.8), state.Follow === star.ID && state.Distance <= 0.8 ? 0 : 1.6, into);
+	},
+
+	/*
+	 * The stars near the system it is in (its star entered), the nearest first: [{ID, Name, Class, Way (in the sky of the
+	 * system: SceneCosmos), Distance (ly)}]; radius ly (30), limit (12). None out of a system.
+	 */
+	GalaxyNear: function (radius, limit) {
+		var state = this.Engine().Galaxy;
+		var galaxies = this.$Service('GalaxyData');
+		var engine = this.Engine();
+		var star = state.Entered ? state.StarOf(state.Entered) : null;
+		var key;
+
+		if (!state.Data || !star || !engine.GalaxySky) return [];
+
+		key = [state.Entered, radius || 30, limit || 12, JSON.stringify(this.Cosmos || null)].join('|');
+
+		if (state.NearKey2 !== key) {
+			state.NearKey2 = key;
+			state.Near2 = (galaxies.Search(state.Data, {Centre: star.Place, Radius: radius || 30, Type: 'star', Limit: (limit || 12) + 1}).Items || []).filter(function (one) {
+				return one.ID !== star.ID;
+			}).slice(0, limit || 12).map(function (one) {
+				var way = [one.Place[0] - star.Place[0], one.Place[1] - star.Place[1], one.Place[2] - star.Place[2]];
+				var far = Math.hypot(way[0], way[1], way[2]);
+
+				return {ID: one.ID, Name: one.Name, Class: one.Class, Way: engine.GalaxySky([way[0] / far, way[1] / far, way[2] / far]), Distance: far};
+			}).filter(function (one) {
+				return !!one.Way;
+			});
+		}
+
+		return state.Near2;
 	},
 
 	LeaveSystem: function (callback) {

@@ -68,7 +68,28 @@
 			"properties": [
 				{
 					"key": "Keys",
-					"value": [[0, 0.75], [0.22, 1.55], [0.4, 0.95], [0.62, 1.35], [0.8, 0.6]]
+					"value": [
+						[
+							0,
+							0.75
+						],
+						[
+							0.22,
+							1.55
+						],
+						[
+							0.4,
+							0.95
+						],
+						[
+							0.62,
+							1.35
+						],
+						[
+							0.8,
+							0.6
+						]
+					]
 				},
 				{
 					"key": "Smooth",
@@ -89,7 +110,20 @@
 			"properties": [
 				{
 					"key": "Keys",
-					"value": [[0, 0.8], [0.3, 1.4], [0.7, 0.9]]
+					"value": [
+						[
+							0,
+							0.8
+						],
+						[
+							0.3,
+							1.4
+						],
+						[
+							0.7,
+							0.9
+						]
+					]
 				},
 				{
 					"key": "Smooth",
@@ -181,6 +215,256 @@
 					"value": "#ffffff"
 				}
 			]
+		},
+		{
+			"id": "sun-place",
+			"type": "SunPlace",
+			"x": 40,
+			"y": 600,
+			"properties": []
+		},
+		{
+			"id": "sun-cells",
+			"type": "SunCells",
+			"x": 280,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Speed",
+					"value": 0.08
+				},
+				{
+					"key": "Octaves",
+					"value": 4
+				}
+			]
+		},
+		{
+			"id": "sun-spots",
+			"type": "SunSpots",
+			"x": 280,
+			"y": 700,
+			"properties": [
+				{
+					"key": "BeltLow",
+					"value": 0.08
+				},
+				{
+					"key": "BeltLowFull",
+					"value": 0.2
+				},
+				{
+					"key": "BeltHigh",
+					"value": 0.45
+				},
+				{
+					"key": "BeltHighEnd",
+					"value": 0.62
+				},
+				{
+					"key": "Scale",
+					"value": 2.6
+				},
+				{
+					"key": "Drift",
+					"value": 0.01
+				},
+				{
+					"key": "From",
+					"value": 0.66
+				},
+				{
+					"key": "To",
+					"value": 0.74
+				},
+				{
+					"key": "FaculaeFrom",
+					"value": 0.58
+				},
+				{
+					"key": "FaculaeTo",
+					"value": 0.66
+				}
+			]
+		},
+		{
+			"id": "sun-bands",
+			"type": "SunBands",
+			"x": 280,
+			"y": 980,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 15
+				},
+				{
+					"key": "Stretch",
+					"value": 7
+				},
+				{
+					"key": "Wobble",
+					"value": 4
+				},
+				{
+					"key": "Drift",
+					"value": 0.02
+				}
+			]
+		},
+		{
+			"id": "sun-limb",
+			"type": "SunLimb",
+			"x": 280,
+			"y": 1180,
+			"properties": [
+				{
+					"key": "Power",
+					"value": 0.45
+				}
+			]
+		},
+		{
+			"id": "sun-color",
+			"type": "SunColor",
+			"x": 520,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Gamma",
+					"value": 2.2
+				}
+			]
+		},
+		{
+			"id": "sun-burn",
+			"type": "SunBurn",
+			"x": 760,
+			"y": 700,
+			"properties": [
+				{
+					"key": "White",
+					"value": 0.28
+				},
+				{
+					"key": "Hot",
+					"value": 2.4
+				},
+				{
+					"key": "Cool",
+					"value": 1.1
+				}
+			]
+		},
+		{
+			"id": "sun-end",
+			"type": "StarSurface",
+			"x": 1000,
+			"y": 700,
+			"properties": []
+		},
+		{
+			"id": "crown-place",
+			"type": "CrownPlace",
+			"x": 40,
+			"y": 1400,
+			"properties": []
+		},
+		{
+			"id": "crown-corona",
+			"type": "CrownCorona",
+			"x": 280,
+			"y": 1400,
+			"properties": [
+				{
+					"key": "Falloff",
+					"value": 2.6
+				},
+				{
+					"key": "Glow",
+					"value": 0.55
+				},
+				{
+					"key": "Fade",
+					"value": 2.5
+				}
+			]
+		},
+		{
+			"id": "crown-prominences",
+			"type": "CrownProminences",
+			"x": 520,
+			"y": 1400,
+			"properties": [
+				{
+					"key": "Glow",
+					"value": 1.3
+				}
+			]
+		},
+		{
+			"id": "crown-flare",
+			"type": "CrownFlare",
+			"x": 760,
+			"y": 1400,
+			"properties": [
+				{
+					"key": "Period",
+					"value": 23
+				},
+				{
+					"key": "Glow",
+					"value": 6
+				}
+			]
+		},
+		{
+			"id": "crown-end",
+			"type": "StarCrown",
+			"x": 1000,
+			"y": 1400,
+			"properties": []
+		},
+		{
+			"id": "beam-place",
+			"type": "BeamPlace",
+			"x": 40,
+			"y": 1700,
+			"properties": []
+		},
+		{
+			"id": "beam-glow",
+			"type": "BeamGlow",
+			"x": 280,
+			"y": 1700,
+			"properties": [
+				{
+					"key": "Width",
+					"value": 7
+				},
+				{
+					"key": "Taper",
+					"value": 1.7
+				},
+				{
+					"key": "Start",
+					"value": 0.015
+				},
+				{
+					"key": "White",
+					"value": 0.4
+				},
+				{
+					"key": "Glow",
+					"value": 1.3
+				}
+			]
+		},
+		{
+			"id": "beam-end",
+			"type": "StarBeam",
+			"x": 520,
+			"y": 1700,
+			"properties": []
 		}
 	],
 	"links": [
@@ -242,6 +526,156 @@
 			"id": "link-paced",
 			"p1": "pace-out-Out",
 			"p2": "star-in-Speed",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-0",
+			"p1": "sun-place-out-Point",
+			"p2": "sun-cells-in-Point",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-1",
+			"p1": "sun-place-out-Point",
+			"p2": "sun-spots-in-Point",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-2",
+			"p1": "sun-place-out-Point",
+			"p2": "sun-bands-in-Point",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-3",
+			"p1": "sun-place-out-Normal",
+			"p2": "sun-limb-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-4",
+			"p1": "sun-place-out-View",
+			"p2": "sun-limb-in-View",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-5",
+			"p1": "sun-cells-out-Cells",
+			"p2": "sun-color-in-Cells",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-6",
+			"p1": "sun-spots-out-Spots",
+			"p2": "sun-color-in-Spots",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-7",
+			"p1": "sun-spots-out-Faculae",
+			"p2": "sun-color-in-Faculae",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-8",
+			"p1": "sun-bands-out-Bands",
+			"p2": "sun-color-in-Bands",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-9",
+			"p1": "sun-limb-out-Limb",
+			"p2": "sun-color-in-Limb",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-10",
+			"p1": "sun-color-out-Color",
+			"p2": "sun-burn-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-11",
+			"p1": "sun-limb-out-Limb",
+			"p2": "sun-burn-in-Limb",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-12",
+			"p1": "sun-burn-out-Color",
+			"p2": "sun-end-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-13",
+			"p1": "crown-place-out-R",
+			"p2": "crown-corona-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-14",
+			"p1": "crown-place-out-Angle",
+			"p2": "crown-corona-in-Angle",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-15",
+			"p1": "crown-place-out-U",
+			"p2": "crown-corona-in-U",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-16",
+			"p1": "crown-corona-out-Color",
+			"p2": "crown-prominences-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-17",
+			"p1": "crown-place-out-Angle",
+			"p2": "crown-prominences-in-Angle",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-18",
+			"p1": "crown-place-out-U",
+			"p2": "crown-prominences-in-U",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-19",
+			"p1": "crown-prominences-out-Color",
+			"p2": "crown-flare-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-20",
+			"p1": "crown-place-out-Angle",
+			"p2": "crown-flare-in-Angle",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-21",
+			"p1": "crown-place-out-U",
+			"p2": "crown-flare-in-U",
+			"kind": "value"
+		},
+		{
+			"id": "star-part-link-22",
+			"p1": "crown-flare-out-Color",
+			"p2": "crown-end-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "star-beam-link-0",
+			"p1": "beam-place-out-Beam",
+			"p2": "beam-glow-in-Beam",
+			"kind": "value"
+		},
+		{
+			"id": "star-beam-link-1",
+			"p1": "beam-glow-out-Color",
+			"p2": "beam-end-in-Color",
 			"kind": "value"
 		}
 	]

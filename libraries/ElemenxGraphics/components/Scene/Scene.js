@@ -47,7 +47,7 @@
  * the sun's: an eclipse, of the sun at a new moon, of the moon at a full one), and NightLight, the light of the air in the dark.
  * SkyGlow (0 to 1) is the light towns throw on the air, of SkyGlowColor, from SkyGlowAzimuth or all round: it lights the clouds
  * from under and hides the faint stars. The stars turn with the planet, round its pole at the height of Latitude, and with them
- * the band of the galaxy (Galaxy, 0 for none). Weather (clear, cloudy, overcast, rain, storm, snow, fog) changes in a few
+ * the band of the galaxy (Galaxy, 0 for none). Weather (clear, cloudy, overcast, rain, storm, snow, fog; none: no air) changes in a few
  * seconds, and rain wets what stands in it (pools on what is level, drops on what is smooth; Wet and Drops of an object, 0 to
  * 1, its own); Flare (0 to 2) is how strongly a lens shows the sun; Bokeh (0 to 1) blurs what is out of focus (BokehFocus, a distance; else the hero, or the middle of the view). At high and ultra what is glossy
  * or wet mirrors what is on the screen, and past it the sky. Kind light (Color, Power, Radius, Height, Spot, Aim, Flicker,
@@ -119,7 +119,7 @@
 Elemenx.Component('Scene', {
 	$TemplateURL: 'Scene.html',
 	$StyleURL: 'Scene.css',
-	$Traits: ['SceneScatter', 'SceneLighting', 'SceneProbes', 'SceneEffects', 'SceneCosmos', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneDebris', 'SceneFracture', 'ScenePiping', 'SceneDeepSpace', 'SceneNebula', 'SceneGalaxy'],
+	$Traits: ['SceneScatter', 'SceneLighting', 'SceneProbes', 'SceneEffects', 'SceneCosmos', 'SceneGiants', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneDebris', 'SceneFracture', 'ScenePiping', 'SceneDeepSpace', 'SceneNebula', 'SceneGalaxy'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'star',
@@ -164,7 +164,7 @@ Elemenx.Component('Scene', {
 			shader: 'A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}).'
 		},
-		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryStar()', 'LibraryNebula()', 'LibraryLand()', 'LibraryBake()', 'LibraryWeather()', 'LibraryAir()', 'LibraryClouds()', 'LibraryForecast()', 'LibraryCosmos()', 'LibraryRing()', 'LibraryPlanet()', 'WeatherOver(id, direction)', 'BoltShape()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'GalaxyData()', 'GalaxyView()', 'SetGalaxyView(view)', 'GalaxyStars()', 'GalaxyPicked()', 'GalaxyFocus(id)', 'EnterSystem(id, callback)', 'LeaveSystem(callback)', 'GalaxyEntered()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Phone()', 'Device()', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
+		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryStar()', 'LibraryNebula()', 'LibraryLand()', 'LibraryBake()', 'LibraryWeather()', 'LibraryAir()', 'LibraryClouds()', 'LibraryForecast()', 'LibraryCosmos()', 'LibraryRing()', 'LibraryPlanet()', 'LibraryGround()', 'LibraryEnvelope()', 'Probe(id, name)', 'Unprobe(id)', 'Environment(id)', 'WeatherOver(id, direction)', 'BoltShape()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'TravelStop(id)', 'TravelStep(id, step)', 'Aim(id)', 'AimAlign(on)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'GalaxyData()', 'GalaxyView()', 'SetGalaxyView(view)', 'GalaxyStars()', 'GalaxyPicked()', 'GalaxyFocus(id)', 'EnterSystem(id, callback, options)', 'GalaxyNear(radius, limit)', 'LeaveSystem(callback)', 'GalaxyEntered()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Phone()', 'Device()', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
 		Props: {
 			Setting: {Options: ['space', 'terrain', 'galaxy'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers; galaxy: a galaxy of Galaxy, SceneGalaxy).'},
 			Galaxy: 'The galaxy of Setting galaxy (SceneGalaxy, GalaxyData): a key of GalaxyData.Use, the URL of its file, its data, or options of GalaxyData.Make ({Seed, Kind, Radius, Arms}).',
@@ -201,14 +201,16 @@ Elemenx.Component('Scene', {
 			Pipeline: 'The render graph of the Blueprints Service that makes the picture of a frame (high, ultra and medium): its passes (Scene, Clouds, Occlusion, Air, Frames, Mirror, Rays, Exposure, Bokeh, Bloom, Picture, Shader: a pass graph of its own) up to Present; empty: PipelineGraph(), the passes of the library.',
 			PipelineParameters: 'The values of the parameters of the Pipeline, by key.',
 			Flare: 'How strongly the rings and the glow a lens makes of the sun show, at high and ultra: 0 to 2 (true is 1).',
-			Weather: {Options: ['clear', 'cloudy', 'overcast', 'rain', 'storm', 'snow', 'fog', 'changing'], Description: 'What the air of a ground does; it changes in a few seconds, as a front comes; changing goes from one to the next by itself.'},
+			Weather: {Options: ['clear', 'cloudy', 'overcast', 'rain', 'storm', 'snow', 'fog', 'none', 'changing'], Description: 'What the air of a ground does; it changes in a few seconds, as a front comes; changing goes from one to the next by itself.'},
 			Wind: 'How strong the wind is, 0 to 4, for clouds, rain, grass and trees (empty: as the weather has it).',
 			WindWay: 'Where the wind blows to: an azimuth in degrees.',
 			WaterGraph: 'What water looks like: a water graph of the Blueprints Service (or its JSON, or its GLSL) of its waves, the sky and the sun it mirrors, its depth, its foam and the fog over it; the one of the library (LibraryWater) when empty.',
 			LandGraph: 'What the land is, its light and its wet and snow too: a land graph of the Blueprints Service (or its JSON, or GLSL with blueprintLand); empty, the one of the library (LibraryLand()). Its Blueprint (a material graph) still paints it, in LandPaint.',
-			Graphs: 'The shader graphs of a world of its own by their names, read as the scene is made: shader/bake (BakeGraph), shader/weather (WeatherGraph), shader/bolt (BoltGraph), shader/air (AirGraph), shader/clouds (CloudsGraph), shader/forecast (ForecastGraph), shader/galaxy (GalaxyGraph), shader/cosmos (CosmosGraph), shader/ring (RingGraph), shader/planet (PlanetGraph); its props of them come first.',
+			Graphs: 'The shader graphs of a world of its own by their names, read as the scene is made: shader/bake (BakeGraph), shader/weather (WeatherGraph), shader/bolt (BoltGraph), shader/air (AirGraph), shader/clouds (CloudsGraph), shader/forecast (ForecastGraph), shader/galaxy (GalaxyGraph), shader/cosmos (CosmosGraph), shader/ring (RingGraph), shader/planet (PlanetGraph), shader/ground (GroundGraph), planet/envelope (EnvelopeGraph), star (the stars with no Blueprint of their own: their surface, crown, beams and numbers); its props of them come first.',
 			BoltGraph: 'The shape of its lightnings, of a storm and of its effects: a generator of the Blueprints Service of the jag of each step (its results X and Z; or its JSON); empty, the one of the library (SceneBlueprints.LibraryBolt()).',
 			PlanetGraph: 'Its globes seen from far: a planet graph of the Blueprints Service of their picture lit, their clouds and the shadows of them and of a ring, their towns at night, their air at the edge (or its JSON, or GLSL with blueprintPlanet); empty, the one of the library (LibraryPlanet()).',
+			EnvelopeGraph: 'What lies over and under the surface of its bodies (their air, decks of clouds, seas, the depths of a giant): a generator of numbers of the Blueprints Service of the blocks EnvelopeState and EnvelopeLight of the Envelope Service (its results Pressure, Temperature, Zone and Light; or its JSON); empty, the one of the library (LibraryEnvelope()).',
+			GroundGraph: 'The ground of its globes near and from over them: a ground graph of the Blueprints Service of its picture, its woods, fields, snow and dunes, its relief, the tiles near, the shadows of its clouds and of a ring, its water, towns at night, clouds from over them and air (or its JSON, or GLSL with blueprintGround); empty, the one of the library (LibraryGround()).',
 			RingGraph: 'The rings round its bodies: a ring graph of the Blueprints Service of their bands, gaps, colors and light (or its JSON, or GLSL with blueprintRing); empty, the one of the library (LibraryRing()).',
 			CosmosGraph: 'What lies far behind a system, the sky its Cosmos is baked of: a cosmos graph of the Blueprints Service of its parts (gas, dust, the band of a galaxy, bursts, galaxies far off, pillars, stars, clusters; or its JSON, or GLSL with blueprintCosmos); empty, the one of the library (LibraryCosmos()).',
 			GalaxyGraph: 'The arms of a galaxy, its picture, its stars and the band of it across the sky of a system alike: a generator of the Blueprints Service of the blocks of GalaxyData (its results Turn, Bend, Wave and Arm; or its JSON); empty, the one of the library (SceneBlueprints.LibraryGalaxy()).',
@@ -294,6 +296,8 @@ Elemenx.Component('Scene', {
 	CosmosGraph: null,
 	RingGraph: null,
 	PlanetGraph: null,
+	GroundGraph: null,
+	EnvelopeGraph: null,
 	BoltGraph: null,
 	Graphs: null,
 	LandGraph: null,
@@ -1196,9 +1200,15 @@ Elemenx.Component('Scene', {
 			else if (model) {
 				object.Size = object.Owner ? object.Owner.Size * number(model.Size, 1) : number(model.Size, 0.1) * (model.Relative && parent ? parent.Size : 1) * (model.Relative ? 1 : between(1, 0.02, how));
 
-				/* In real sizes a craft is as long as it is: Length (metres) of it or of its Vehicle. */
-				if (real && !object.Owner && lengthOf(object))
-					object.Size = lengthOf(object) * METRE;
+				/*
+				 * In real sizes a craft is as long as it is: Length (metres) of it or of its Vehicle, its longest side (craftScale:
+				 * of its model, once it came). Regression: its height was (a model of a file is fitted to a height of 1), a
+				 * cruiser of 280 m was drawn 1.8 km long.
+				 */
+				if (real && !object.Owner && lengthOf(object)) {
+					object.Size = lengthOf(object) * METRE / craftScale(object);
+					object.Lengthed = true;
+				}
 			}
 			else if (trait(object, 'Nebula')) {
 				/* As wide as its Radius of light years laid out as the distances of the scene are. */
@@ -1225,6 +1235,19 @@ Elemenx.Component('Scene', {
 			if (object.Located)
 				object.Size = object.Located;
 		}
+
+		/*
+		 * The longest side of the model of a craft in its units (SceneModels.Extent), 1 before it came: a craft Length metres
+		 * long is drawn at Length over it (engine.CraftScale, SceneLanding too).
+		 */
+		function craftScale (object) {
+			var name = object.Values.Model || (trait(object, 'Model') || {}).Shape;
+			var extent = name && typeof name === 'string' && library.Has(name) ? library.Extent(name) : null;
+
+			return extent ? Math.max(extent[0], extent[1], extent[2], 1e-6) : 1;
+		}
+
+		engine.CraftScale = craftScale;
 
 		/* The length of a craft in metres (Length of it, else of its Vehicle); 0 for none. */
 		function lengthOf (object) {
@@ -1698,6 +1721,9 @@ Elemenx.Component('Scene', {
 			if (self.GraphOf('PlanetGraph', 'shader/planet') && self.PlanetMade && !shaderChecked('planet', 'PlanetGraph', self.PlanetMade, shaders.Lit, shaders.Planet))
 				self.PlanetMade = self.Made(null, 'planet', 'PlanetGraph', self.LibraryPlanet.bind(self));
 
+			if (self.GraphOf('GroundGraph', 'shader/ground') && self.GroundMade && !shaderChecked('ground', 'GroundGraph', self.GroundMade, shaders.GroundVertex, shaders.Ground))
+				self.GroundMade = self.Made(null, 'ground', 'GroundGraph', self.LibraryGround.bind(self));
+
 			if (self.GraphOf('WeatherGraph', 'shader/weather') && self.WeatherMade && (!shaderChecked('weather', 'WeatherGraph', self.WeatherMade, shaders.Instanced, shaders.Pbr) || !shaderChecked('weather', 'WeatherGraph', self.WeatherMade, shaders.Instanced, shaders.Solid)))
 				self.WeatherMade = self.Made(null, 'weather', 'WeatherGraph', self.LibraryWeather.bind(self));
 
@@ -1739,6 +1765,9 @@ Elemenx.Component('Scene', {
 			});
 			lazy('Air', function () {
 				return renderer.Program(shaders.Lit, shaders.Air);
+			});
+			lazy('AirAround', function () {
+				return renderer.Program(shaders.AirAround, shaders.Air);
 			});
 			lazy('Ring', function () {
 				return renderer.Program(shaders.Lit, shaders.Ring);
@@ -2211,6 +2240,369 @@ Elemenx.Component('Scene', {
 			};
 		}
 
+		/*
+		 * The ring of a body for its ground (GroundRing): its axis in the frame of its ground (the inverse of its Turn), its
+		 * edges in km from its middle (radius: of its ground).
+		 */
+		function ringUnder (object, radius) {
+			var over = ringOver(object);
+			var size = object.Size || 1;
+
+			if (!over.uRingOn) return over;
+
+			return Object.assign(over, {uRingAxis: vectors.Normalize(math.Apply(math.Invert(object.Turn || math.Identity()) || math.Identity(), over.uRingAxis)), uRingSpan: [over.uRingSpan[0] / size * radius, over.uRingSpan[1] / size * radius]});
+		}
+
+		/*
+		 * The envelope of a body (Envelope Service): its Surface Envelope (a name of a preset, an envelope, or {Preset, ...}),
+		 * else the one of the type of its surface; none where its air is none. Made once for what it is now.
+		 */
+		function envelopeOf (object) {
+			var surface = trait(object, 'Surface') || {};
+			var presets = self.$Service('Envelope').Presets();
+			var spec = surface.Envelope || (surface.Atmosphere === 'none' ? 'none' : (presets.Types || {})[surface.Type || 'rocky'] || 'none');
+			var body = {Radius: number(object.Radius, 1000), Mass: number((trait(object, 'Body') || {}).Mass, 0) || undefined, Day: number((trait(object, 'Body') || {}).Day, 0)};
+			var key = JSON.stringify([spec, body]);
+			if (!object.EnvelopeMade || object.EnvelopeMade.Key !== key)
+				object.EnvelopeMade = {Key: key, Made: self.$Service('Envelope').Make(spec, body)};
+
+			return object.EnvelopeMade.Made;
+		}
+
+		engine.EnvelopeOf = envelopeOf;
+
+		/*
+		 * What is at a height of the envelope of a body, of its graph (EnvelopeGraph, Graphs['planet/envelope'], else the one of the
+		 * library): {Zone, Phase, Pressure, Temperature, Density, Light, Glow, Inside, Solid}. A graph that cannot be made is told
+		 * once, the Kernel of the Service read instead.
+		 */
+		function envelopeAt (made, height) {
+			var run = envelopeRun();
+			var out;
+			var index;
+			var count = made.Names.length;
+
+			if (!run)
+				return self.$Service('Envelope').At(made, height);
+
+			out = run.Main.apply(null, run.Order.map(function (name) {
+				return name === 'Zones' ? made.Zones : height;
+			}));
+			out = run.Keys.length === 1 ? [out] : out;
+			index = Math.round(out[run.Keys.indexOf('Zone')]);
+
+			return {
+				Zone: index < 0 ? '' : index >= count ? 'core' : made.Names[index] || '',
+				Phase: index < 0 ? 'space' : index >= count ? 'solid' : made.Phases[index] || 'gas',
+				Pressure: out[run.Keys.indexOf('Pressure')] || 0,
+				Temperature: out[run.Keys.indexOf('Temperature')] || 0,
+				Density: densityOf(made, index, out[run.Keys.indexOf('Pressure')] || 0, out[run.Keys.indexOf('Temperature')] || 0),
+				Light: run.Keys.indexOf('Light') >= 0 ? out[run.Keys.indexOf('Light')] : 1,
+				Glow: self.$Service('Envelope').Glow(out[run.Keys.indexOf('Temperature')] || 0),
+				Inside: index >= 0,
+				Solid: index >= count || made.Phases[index] === 'solid'
+			};
+		}
+
+		engine.EnvelopeAt = envelopeAt;
+
+		/*
+		 * The Earth the air round an eye is measured against: its envelope, the light at its ground, how far the layer of the
+		 * clouds it was drawn with (3 to 9 km over the eye) stands from its deck of water. With it the air of the Earth is the
+		 * one it was: no light taken, its sky as high, its clouds where they were.
+		 */
+		var earthAir = null;
+
+		function earthOf () {
+			var envelope = self.$Service('Envelope');
+			var made;
+			var deck;
+
+			if (earthAir)
+				return earthAir;
+
+			made = envelope.Make('earth', {Radius: 6371, Mass: 1, Day: 23.93});
+			deck = made.Decks[0] || {Base: 3, Top: 9};
+			earthAir = {Made: made, Light: envelope.At(made, 0).Light, Base: 3 - deck.Base, Top: 9 - deck.Top};
+
+			return earthAir;
+		}
+
+		/*
+		 * The air round an eye at a height (km) over a body, of its envelope: Dim (how much of the light of its star the eye sees
+		 * there against the ground of the Earth, used to the dark: a power of 0.3; 1 where it is as light), Tint (its light of
+		 * the colour of its air to the power of how deep in it the light went: its blue lost first), High (how high its sky is: the height of the Earth where the air is as
+		 * thin, 0 at its ground and in all thicker air, 1 out of it), Layer (km: its main deck of clouds, the one that hides most,
+		 * moved as the layer of the Earth was from its deck of water; null: none), Color (of that deck), Cover (how much of the sky
+		 * its decks hide: 1 - e^-their depth of light; none on the Earth, whose clouds are of its weather), Diffuse (how much of its
+		 * light comes from all the sky, not from its star: the light taken against the ground of the Earth).
+		 */
+		function airAround (object, altitude) {
+			var envelope = self.$Service('Envelope');
+			var made = envelopeOf(object);
+			var earth = earthOf();
+			var at = made.Names.length ? envelopeAt(made, altitude) : null;
+			var pressure = at && at.Inside ? at.Pressure : 0;
+			var dim = at ? Math.pow(Math.max(0, Math.min(1, at.Light / earth.Light)), 0.3) : 1;
+			var air = object.Look && object.Look.Atmosphere || [1, 1, 1, 0];
+			var most = Math.max(air[0], air[1], air[2], 1e-3);
+			/* How deep in its air the light went (e-folds of what it lost against the Earth): its colour as much filtered, its blue first. */
+			var depth = at ? Math.min(3, -Math.log(Math.max(1e-6, Math.min(1, at.Light / earth.Light)))) * 0.8 : 0;
+			var deck = made.Decks.reduce(function (best, one) {
+				return !best || one.Opacity * (one.Top - one.Base) > best.Opacity * (best.Top - best.Base) ? one : best;
+			}, null);
+
+			return {
+				Dim: dim,
+				Tint: [0, 1, 2].map(function (i) {
+					return air[3] ? Math.pow(Math.max(1e-3, air[i] / most), depth) : 1;
+				}),
+				High: pressure > 0 ? Math.min(1, Math.max(0, envelope.HeightOf(earth.Made, pressure)) / (earth.Made.Sky || 100)) : 1,
+				Layer: deck ? [deck.Base + earth.Base, deck.Top + earth.Top] : null,
+				Color: deck && deck.Color ? paint(deck.Color).slice(0, 3) : [1, 1, 1],
+				Cover: 1 - Math.exp(-made.Decks.reduce(function (sum, one) {
+					return sum + (one.Opacity || 0) * Math.max(0, one.Top - one.Base);
+				}, 0)),
+				Diffuse: at ? 1 - Math.max(0, Math.min(1, at.Light / earth.Light)) : 0
+			};
+		}
+
+		engine.AirAround = airAround;
+
+		/*
+		 * What kind of world a body is (Envelope Habitat, of its air at its ground: living, scorched, hydrocarbon, dust, frozen,
+		 * barren) and its lands (resources/terrain/habitats: names of SceneBiomes; null: those of the Earth, as they were).
+		 */
+		var habitats = Elemenx.Resources('Data', 'ElemenxGraphics/terrain/habitats') || {};
+
+		function habitatOf (object) {
+			var surface = trait(object, 'Surface') || {};
+			var kind = self.$Service('Envelope').Habitat(envelopeOf(object), surface.Type || 'rocky');
+
+			return {Class: kind, Biomes: habitats[kind] ? habitats[kind].slice() : null};
+		}
+
+		engine.HabitatOf = habitatOf;
+
+		/* How bright a colour is to the eye (its luminance). */
+		function brightOf (color) {
+			return color[0] * 0.2126 + color[1] * 0.7152 + color[2] * 0.0722;
+		}
+
+		/*
+		 * The lands of a location of a body with no planet of its own (SceneLanding) and the colours of its far ground
+		 * (drawHorizon): {Biomes, Colors}. Its lands those of the kind of world it is (habitatOf), of the hue of the body (its
+		 * Look Colors, as it is seen from space) and as bright as they are; its far ground of those colours, as bright as its
+		 * lands. A world that lives keeps its lands (null) and its colours. Regression: grey lands under a beige far ground, the
+		 * far ground far brighter.
+		 */
+		function locationLands (object) {
+			var names = habitatOf(object).Biomes;
+			var biomes = self.$Service('SceneBiomes');
+			var colors = object.Look.Colors;
+			var lights = [];
+			var lands;
+			var light;
+			var mean = [0, 1, 2].map(function (axis) {
+				return colors.reduce(function (sum, color) {
+					return sum + color[axis];
+				}, 0) / colors.length;
+			});
+			var bright = Math.max(1e-3, brightOf(mean));
+
+			if (!names)
+				return {Biomes: null, Colors: colors};
+
+			lands = names.map(function (name) {
+				var ground = JSON.parse(JSON.stringify((biomes.Get(name) || {}).Ground || {}));
+
+				['Low', 'High', 'Sand', 'Rock', 'Snow', 'Deep', 'Road'].forEach(function (key) {
+					if (!Array.isArray(ground[key])) return;
+
+					ground[key] = ground[key].map(function (value, axis) {
+						return Math.min(1, value * mean[axis] / bright);
+					});
+
+					if (key === 'Low' || key === 'High')
+						lights.push(brightOf(ground[key]));
+				});
+
+				return {Biome: name, Ground: ground};
+			});
+			light = lights.length ? lights.reduce(function (sum, value) {
+				return sum + value;
+			}, 0) / lights.length : bright;
+
+			return {Biomes: lands, Colors: colors.map(function (color) {
+				return color.map(function (value) {
+					return Math.min(1, value * light / bright);
+				});
+			})};
+		}
+
+		engine.LandsOf = locationLands;
+
+		/*
+		 * The colour of the air of a body seen from its ground: the blue of the sky of the Earth ([0.55, 0.72, 1]) as much
+		 * changed as its air (Look Atmosphere) is from the one of the Earth (#7fb2ff); none: no air, the black of space.
+		 */
+		function airColorOf (object) {
+			var air = object.Look.Atmosphere;
+			var earth = [127 / 255, 178 / 255, 1];
+			var most = Math.max(air[0], air[1], air[2], 1e-3);
+
+			if (!air[3])
+				return [0, 0, 0, 0];
+
+			return [0.55, 0.72, 1].map(function (value, index) {
+				return Math.min(1, value * air[index] / most / earth[index]);
+			}).concat([0.95]);
+		}
+
+		/* The density of a zone (kg/m3): a gas of its pressure and temperature (its molar mass), a liquid, a fluid or a solid its own. */
+		function densityOf (made, index, pressure, temperature) {
+			var at = 2 + index * made.Stride;
+
+			if (index < 0 || index >= made.Names.length) return 0;
+			if (made.Zones[at + 6] >= 2.5) return made.Zones[at + 7];
+
+			return pressure * 100000 * made.Zones[at + 4] / (8.314462 * Math.max(1, temperature));
+		}
+
+		function envelopeRun () {
+			var code;
+
+			if (scene.EnvelopeRun !== undefined) return scene.EnvelopeRun;
+
+			try {
+				code = self.$Service('Blueprints').NumericCode(self.$Service('Blueprints').Read(self.GraphOf('EnvelopeGraph', 'planet/envelope') || self.LibraryEnvelope()), {}, {Zones: 'floats'});
+
+				if (!code || ['Pressure', 'Temperature', 'Zone'].some(function (key) {
+					return code.Keys.indexOf(key) === -1;
+				}))
+					throw new Error('an envelope graph is a generator of numbers of its results Pressure, Temperature, Zone and Light (its inputs Zones, a list of numbers, and Height)');
+
+				scene.EnvelopeRun = {Main: new Function('B', 'M', 'N', code.Source)().Main, Order: code.Numeric.Inputs.map(function (one) {
+					return one.Name;
+				}), Keys: code.Keys};
+			}
+			catch (error) {
+				scene.EnvelopeRun = null;
+
+				if (window.console && window.console.warn)
+					window.console.warn('Elemenx Scene: the EnvelopeGraph cannot be made, the envelope of the library is read: ' + error.message);
+			}
+
+			return scene.EnvelopeRun;
+		}
+
+		/*
+		 * Where an object is over the body it is by (km over its Radius): on the ground of a location (its metres over the sea),
+		 * flown over a surface (its altitude over the ground there), in space (the body it is nearest, for its size); the
+		 * height of the ground there too (km, null where it is not known).
+		 */
+		function heightOf (object) {
+			var located = scene.Location && scene.Ground ? scene.Objects[scene.Location.Body] : null;
+			var surface = scene.Surface;
+			var field;
+			var best = null;
+			var ground;
+
+			if (located && object.World) {
+				ground = scene.Ground.Field && scene.Ground.Field.Height ? scene.Ground.Field.Height(object.World[0], object.World[2]) / 1000 : null;
+
+				return {Body: located, Height: object.World[1] / 1000, Ground: ground};
+			}
+
+			if (surface && scene.Objects[surface.ID]) {
+				field = surface.Field;
+				ground = field && field.Elevation ? Math.max(0, field.Elevation(surface.Up)) : 0;
+
+				return {Body: scene.Objects[surface.ID], Height: surface.Altitude + ground, Ground: ground};
+			}
+
+			if (!object.World) return null;
+
+			scene.Order.forEach(function (one) {
+				var far;
+
+				if (one === object || !one.World || !one.Size || !trait(one, 'Body')) return;
+
+				far = vectors.Distance(one.World, object.World) / one.Size;
+
+				if (!best || far < best.Far)
+					best = {Body: one, Far: far};
+			});
+
+			return best ? {Body: best.Body, Height: (best.Far - 1) * radiusOf(best.Body), Ground: null} : null;
+		}
+
+		/* What is round each object asked for (Probe), in its slice of the Ether: once a frame, the same object of each. */
+		function probeStep () {
+			Object.keys(scene.Probed || {}).forEach(function (id) {
+				var name = scene.Probed[id];
+				var object = scene.Objects[id];
+				var slice = self.$Ether(name);
+				var where = object ? heightOf(object) : null;
+				var made = where ? envelopeAt(envelopeOf(where.Body), where.Height) : null;
+				var record = slice[id] = slice[id] || {};
+
+				/* In a tunnel of warp: out of normal space, of no body (it goes through them), its tunnel. */
+				if (object && object.Travel && object.Travel.Kind === 'warp' && object.Travel.Phase === 'inside') {
+					Object.assign(record, {Body: '', Altitude: null, Ground: null, Zone: object.Travel.Tunnel || '', Phase: 'tunnel', Pressure: 0, Temperature: 0, Density: 0, Light: 0, Glow: [0, 0, 0], Inside: false, Solid: false});
+				}
+				else if (!made) {
+					Object.assign(record, {Body: '', Altitude: null, Ground: null, Zone: '', Phase: 'space', Pressure: 0, Temperature: 0, Density: 0, Light: 1, Glow: [0, 0, 0], Inside: false, Solid: false});
+				}
+				else {
+					/* Under the ground of a body of rock: in its ground, whatever its envelope tells there. */
+					if (where.Ground !== null && where.Height < where.Ground)
+						Object.assign(made, {Zone: 'ground', Phase: 'solid', Solid: true, Light: 0});
+
+					Object.assign(record, made, {Body: where.Body.ID, Altitude: where.Height, Ground: where.Ground});
+				}
+
+				record.Radiation = object ? radiationAt(object) : {EM: 0, Ionizing: 0, Sources: []};
+
+				self.$Ether.Touch(name, id);
+			});
+		}
+
+		engine.ProbeStep = probeStep;
+
+		/*
+		 * The radiation round an object (what a game makes of it, its electronics and engines failing, is its own): of each
+		 * source (the trait Radiation of any object: EM and Ionizing, how strong at its middle; Reach, km where it is half
+		 * of that), as it falls with the square of the way past its reach. In a tunnel of warp only a source in the same tunnel
+		 * reaches it. {EM, Ionizing, Sources: [IDs]}.
+		 */
+		function radiationAt (object) {
+			var km = (engine.Metre ? engine.Metre() : 0) * 1000 || 1;
+			var tunnel = object.Travel && object.Travel.Phase === 'inside' ? object.Travel.Tunnel || '' : '';
+			var out = {EM: 0, Ionizing: 0, Sources: []};
+
+			if (!object.World) return out;
+
+			scene.Order.forEach(function (one) {
+				var source = (one.Traits || {}).Radiation;
+				var reach;
+				var part;
+
+				if (!source || !one.World || one === object) return;
+				if ((one.Travel && one.Travel.Phase === 'inside' ? one.Travel.Tunnel || '' : '') !== tunnel) return;
+
+				reach = number(source.Reach, 1000) * km;
+				part = 1 / (1 + Math.pow(vectors.Distance(one.World, object.World) / reach, 2));
+				out.EM += number(source.EM, 0) * part;
+				out.Ionizing += number(source.Ionizing, 0) * part;
+
+				if (part > 0.01)
+					out.Sources.push(one.ID);
+			});
+
+			return out;
+		}
+
 		/* The rocks of a belt: each on an orbit of its own, between the edges of the belt. */
 		function rocksOf (object) {
 			var settings = trait(object, 'Belt');
@@ -2450,11 +2842,43 @@ Elemenx.Component('Scene', {
 			if (!planet)
 				return null;
 
-			/* Its rules of detail made code here, for the workers that make its ground (ScenePlanet.Ruled). */
-			return planets.Ruled(Object.assign({}, typeof planet === 'string' ? JSON.parse(planet) : planet, {Radius: object.Radius}));
+			/* Its rules of detail made code here, for the workers that make its ground (ScenePlanet.Ruled); its climate and winds of its air. */
+			var own = typeof planet === 'string' ? JSON.parse(planet) : planet;
+
+			return planets.Ruled(Object.assign({}, own, {Radius: object.Radius}, airOf(object), own.Biomes ? {Biomes: own.Biomes} : {}));
 		}
 
 		engine.PlanetOptions = planetOf;
+
+		/*
+		 * The numbers of the climate and the winds of a planet of its envelope (Cells, Warm, Contrast, Lapse), only those not as
+		 * the Earth's: the options of a planet like the Earth (its key, the ground made of it) stay as they were.
+		 */
+		function airOf (object) {
+			var made = envelopeOf(object);
+			var out = {};
+			/* Its lands of the kind of world it is (habitatOf): none of the Earth where nothing lives. */
+			var lands = habitatOf(object).Biomes;
+			if (lands)
+				out.Biomes = lands;
+
+			/* A body of no air: its ground as it was (a climate of none is not one). */
+			if (!(made.Pressure > 0)) return out;
+
+			if (made.Cells !== 3)
+				out.Cells = made.Cells;
+
+			if (made.Warm)
+				out.Warm = made.Warm;
+
+			if (made.Contrast !== 1)
+				out.Contrast = made.Contrast;
+
+			if (made.Lapse && made.Lapse !== 6.5)
+				out.Lapse = made.Lapse;
+
+			return out;
+		}
 
 		/*
 		 * The rivers of a planet (ScenePlanet: Heights, then Drainage, in the workers), made once for its options and kept in
@@ -2770,7 +3194,7 @@ Elemenx.Component('Scene', {
 			cl = [kept.Faces[face][at] / 255, kept.Faces[face][at + 1] / 255, kept.Faces[face][at + 2] / 255, kept.Faces[face][at + 3] / 255];
 			sun = sunOfBody(object);
 			run = self.ForecastCode();
-			made = run({}, {PX: p[0], PY: p[1], PZ: p[2], Days: scene.Time, Seed: Math.abs(Math.round(Number(object.Seed) || 0)) % 997, RadiusKm: radiusOf(object), SunX: sun[0], SunY: sun[1], SunZ: sun[2], Cloudiness: Math.max(0, Math.min(1, Number(object.Look.Clouds) || 0)), Moist: cl[0], Warm: cl[1], Ground: cl[2], Climb: cl[3]});
+			made = run({}, {PX: p[0], PY: p[1], PZ: p[2], Days: scene.Time, Seed: Math.abs(Math.round(Number(object.Seed) || 0)) % 997, RadiusKm: radiusOf(object), Cells: envelopeOf(object).Cells, SunX: sun[0], SunY: sun[1], SunZ: sun[2], Cloudiness: Math.max(0, Math.min(1, Number(object.Look.Clouds) || 0)), Moist: cl[0], Warm: cl[1], Ground: cl[2], Climb: cl[3]});
 
 			return {Cover: made.Cover, Kind: made.Kind, Cirrus: made.Cirrus, Rain: made.Rain, Warm: cl[1]};
 		}
@@ -2798,7 +3222,7 @@ Elemenx.Component('Scene', {
 				return;
 			}
 
-			var values = {uClimate: made.Climate, uDays: scene.Time, uSunAt: sun, uRadiusKm: radiusOf(object), uWeatherSeed: Math.abs(Math.round(Number(object.Seed) || 0)) % 997, uCloudiness: Math.max(0, Math.min(1, Number(object.Look.Clouds) || 0))};
+			var values = {uClimate: made.Climate, uDays: scene.Time, uSunAt: sun, uRadiusKm: radiusOf(object), uCells: envelopeOf(object).Cells, uWeatherSeed: Math.abs(Math.round(Number(object.Seed) || 0)) % 997, uCloudiness: Math.max(0, Math.min(1, Number(object.Look.Clouds) || 0))};
 			var swap;
 
 			/* The first: all at once. */
@@ -3126,7 +3550,12 @@ Elemenx.Component('Scene', {
 			list.forEach(function (star) {
 				var color = paint(star.Color);
 				var falls = crowd ? Math.pow(nearest / Math.max(nearest, vectors.Distance(star.World, scene.Eye)), 2) : 1;
-				var strength = Math.min(1.6, 0.9 + 0.25 * Math.log(1 + star.Star.Luminosity)) * falls;
+				/*
+				 * In real sizes as much as it lights things so far from it (starShine: its luminosity over the square of the way),
+				 * as it lights the ground of a body there. Regression: the light did not fall with the distance, a ship at Neptune
+				 * as lit as one at the Earth.
+				 */
+				var strength = realness() >= 0.999 ? Math.min(1.6, 1.07 * starShine(star, vectors.Distance(star.World, scene.Eye))) : Math.min(1.6, 0.9 + 0.25 * Math.log(1 + star.Star.Luminosity)) * falls;
 				var at = vectors.Subtract(star.World, scene.Eye);
 
 				positions.push(at[0], at[1], at[2]);
@@ -3146,7 +3575,8 @@ Elemenx.Component('Scene', {
 				colors.push(0, 0, 0);
 			}
 
-			return {Positions: positions, Colors: colors, Count: list.length};
+			/* In a giant (SceneGiants): its stars as much as their light gets there, the glow of its depth from below. */
+			return {Positions: positions, Colors: colors, Count: engine.GiantLight ? engine.GiantLight(positions, colors, list.length) : list.length};
 		}
 
 		/* The balls that may shade a body: what it goes round, and its moons (the largest ones), relative to the eye. */
@@ -3620,7 +4050,8 @@ Elemenx.Component('Scene', {
 		/* The layer of clouds over a ground: high over its hills, its noise as large as the land allows. */
 		function groundClouds () {
 			var ground = scene.Ground;
-			var low = Math.max(ground.Field.Top * 1.6, 90);
+			/* As much higher than on the Earth as the main deck of the body is over the layer of the Earth (3 km: airAround). */
+			var low = Math.max(ground.Field.Top * 1.6, 90) * (ground.Aired && ground.Aired.Layer ? Math.max(0.2, ground.Aired.Layer[0] / 3) : 1);
 			var sky = ground.SkyLight;
 			var light = ground.SunColor;
 
@@ -3825,6 +4256,7 @@ Elemenx.Component('Scene', {
 				var later = [];
 
 				common.uViewProjection = matrix;
+				common.uDepthRange = range || [0, 1];
 
 				if (range)
 					renderer.GL.depthRange(range[0], range[1]);
@@ -3842,28 +4274,18 @@ Elemenx.Component('Scene', {
 					if (trait(object, 'Star')) {
 						model = placed(object, size);
 
-						drawReady(gpu.Sphere, gpu.Star, uniforms({uModel: model, uNormalMatrix: math.NormalMatrix(model), uColor: paint(object.Color).slice(0, 3), uSeed: object.Seed, uCells: object.Star.Radius > 8 ? 3 : object.Star.Radius > 2 ? 6 : 9, uBands: number(trait(object, 'Star').Bands, 0)}));
+						drawReady(gpu.Sphere, starProgram(object), uniforms({uModel: model, uNormalMatrix: math.NormalMatrix(model), uColor: paint(object.Color).slice(0, 3), uSeed: object.Seed, uCells: object.Star.Radius > 8 ? 3 : object.Star.Radius > 2 ? 6 : 9, uBands: number(trait(object, 'Star').Bands, 0)}));
 
 						later.push(function () {
-							/* In real sizes its disc is small, its light is not: a halo of a size on the screen, as bright as it blinds. */
-							var blind = realness() >= 0.999 ? starLight(object, vectors.Distance(object.World, scene.Eye)) : 0;
-							/* What is left of a star, ten kilometres or a few thousand across, still burns a point of light. */
-							var tiny = object.Star.Radius < 0.02 ? 1 : 0;
-							var wide = Math.max(size * 11, pixels(object.World, Math.max(520 * blind, 36 * tiny)));
-							var close = Math.max(size * 4.2, pixels(object.World, Math.max(110 * blind, 9 * tiny)));
-
-							/* The wide veil first: the disc does not end at once at black space. */
-							drawReady(gpu.Quad, gpu.Glow, uniforms({uCenter: local(object.World), uSize: wide, uRight: right, uUp: up, uColor: paint(object.Color).slice(0, 3).map(function (part) {
-								return part * (0.3 + blind * 0.5);
-							}), uInner: 0.09, uStyle: 0}), {Blend: 'add', DepthWrite: false, Cull: 'none'});
-
-							drawReady(gpu.Quad, gpu.Glow, uniforms({uCenter: local(object.World), uSize: close, uRight: right, uUp: up, uColor: paint(object.Color).slice(0, 3).map(function (part) {
-								return part * (1 + blind * 2);
-							}), uInner: 0.18, uStyle: 0}), {Blend: 'add', DepthWrite: false, Cull: 'none'});
+							/* In real sizes its disc is small, its light is not: a halo of a size on the screen, as bright as it blinds (drawGlare). */
+							drawGlare(object, local(object.World), right, up, size, pixels(object.World, 1), realness() >= 0.999 ? starLight(object, vectors.Distance(object.World, scene.Eye)) : 0, uniforms);
 						});
 					}
 					else if (trait(object, 'Body')) {
 						surface = baked(object);
+
+						/* A giant the eye is in (SceneGiants): its air round the eye is all of it, not its globe from outside. */
+						if (engine.GiantNow && engine.GiantNow() && engine.Giant.Body === object && engine.Giant.Fade > 0.5) return;
 
 						/* Near, a planet of ScenePlanet is its very ground, finer the nearer (drawGlobe), its clouds over it; far, its globe once all painted. */
 						var near = !!surface && surface.Planet && !scene.Camera.Ortho && object.Size / pixels(object.World, 1) > 60;
@@ -3877,17 +4299,39 @@ Elemenx.Component('Scene', {
 								var high = math.Compose(local(object.World), object.Turn, size * 1.004);
 
 								later.push(function () {
-									drawReady(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: high, uNormalMatrix: math.NormalMatrix(high), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: [0, 0, 0, 0], uCloudsOnly: 1, uDrift: engine.CloudDrift(object), uLights: noLights(), uLightsOn: 0, uRelief: noLights(), uReliefOn: 0}, weatherValues(object, surface), ringOver(object))), {Blend: 'alpha', DepthWrite: false});
+									drawReady(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: high, uNormalMatrix: math.NormalMatrix(high), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: [0, 0, 0, 0], uCloudsOnly: 1, uExact: 0, uBall: 0, uDrift: engine.CloudDrift(object), uLights: noLights(), uLightsOn: 0, uRelief: noLights(), uReliefOn: 0}, weatherValues(object, surface), ringOver(object))), {Blend: 'alpha', DepthWrite: false});
 								});
 							}
 						}
 						else {
-							drawReady(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uModel: model, uNormalMatrix: math.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object), uCloudsOnly: 0, uDrift: engine.CloudDrift(object), uLights: surface.Lights || noLights(), uLightsOn: surface.Lights ? 1 : 0, uRelief: surface.Relief || noLights(), uReliefOn: surface.Relief ? 1 : 0}, weatherValues(object, surface), ringOver(object))));
+							/*
+							 * Large on the screen (near): its ball exact, its mesh a little larger to cover it (its flat faces are some 80 km
+							 * off the ball of Jupiter, as much as the height of a ship over its tops). Within its mesh (some hundred km over a
+							 * giant) its inner side covers the view: drawn too.
+							 */
+							var exact = size / pixels(object.World, 1) > 30;
+							var apart = local(object.World);
+
+							if (exact)
+								model = placed(object, size * 1.003);
+
+							drawReady(gpu.Sphere, gpu.Planet, uniforms(Object.assign({uExact: exact ? 1 : 0, uBall: exact ? (vectors.Length(apart) - size) * (vectors.Length(apart) + size) : 0, uModel: model, uNormalMatrix: math.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object), uCloudsOnly: 0, uDrift: engine.CloudDrift(object), uLights: surface.Lights || noLights(), uLightsOn: surface.Lights ? 1 : 0, uRelief: surface.Relief || noLights(), uReliefOn: surface.Relief ? 1 : 0}, weatherValues(object, surface), ringOver(object))), exact && vectors.Length(apart) < size * 1.006 ? {Cull: 'none'} : undefined);
 						}
 
 						if (object.Look.Atmosphere[3]) {
 							later.push(function () {
 								var shell = math.Compose(local(object.World), null, size * 1.07);
+								var reach = vectors.Length(local(object.World));
+
+								/*
+								 * From inside its shell: the rays of the screen, behind all that stands, not its mesh round the eye. Regression: from
+								 * there (a ship near a giant) whole triangles of the shell went black over the stars.
+								 */
+								if (reach < size * 1.08) {
+									drawReady(gpu.Quad, gpu.AirAround, uniforms({uInverse: math.Invert(sky), uReach: reach, uColor: object.Look.Atmosphere.slice(0, 3), uStrength: object.Look.Atmosphere[3], uBody: local(object.World).concat([size]), uShell: size * 1.07}), {Blend: 'add', DepthWrite: false, Depth: 'lequal', Cull: 'none'});
+
+									return;
+								}
 
 								drawReady(gpu.Sphere, gpu.Air, uniforms({uModel: shell, uNormalMatrix: math.NormalMatrix(shell), uColor: object.Look.Atmosphere.slice(0, 3), uStrength: object.Look.Atmosphere[3], uBody: local(object.World).concat([size]), uShell: size * 1.07}), {Blend: 'add', DepthWrite: false, Cull: 'front'});
 							});
@@ -4040,8 +4484,17 @@ Elemenx.Component('Scene', {
 				var opened = Math.min(1, scene.Warp.Tunnel * 2);
 				var reach = furthest + (vectors.Distance(traveller.World, camera.Position) * 2.5 - furthest) * opened * opened * (3 - 2 * opened);
 
-				engine.CosmosWarp(plain, Object.assign({Depth: Math.min(0.99999, math.Apply(plain, vectors.Scale(forward, reach))[2])}, scene.Warp));
+				/*
+				 * Its rays of the view of the sky (sky), its depth of the view of space. Regression: of the view of space of real sizes (a
+				 * near plane of a metre, a far one past the stars) its inverse lost the way of each pixel, the tunnel and the stars drawn
+				 * out a dim blur round the point ahead.
+				 */
+				engine.CosmosWarp(sky, Object.assign({Depth: Math.min(0.99999, math.Apply(plain, vectors.Scale(forward, reach))[2])}, scene.Warp));
 			}
+
+			/* In a giant (SceneGiants): its air round the eye over all that lies far, drops on the glass in the seat of a ship. */
+			if (!scene.Ground && engine.GiantDraw)
+				engine.GiantDraw(sky);
 
 			if (self.Origin && self.Origin !== 'false') {
 				drawOrigin(matrix);
@@ -4179,6 +4632,99 @@ Elemenx.Component('Scene', {
 			var au = far / UNIT;
 
 			return Math.min(1, 0.9 * Math.sqrt(number(star.Star.Luminosity, 1) / Math.max(1e-6, au * au)));
+		}
+
+		/*
+		 * How much a star lights what is far from it (units of the view), to the Sun on the Earth: its luminosity over the square
+		 * of the distance, as an eye taken to it sees it (a power of 0.35: a third of the light at Neptune, not a thousandth),
+		 * 0.2 to 1.5. In sizes not real, 1. Of the light of things in space and on a body alike.
+		 */
+		function starShine (star, far) {
+			var au = far / UNIT;
+
+			if (realness() < 0.999) return 1;
+
+			return Math.max(0.2, Math.min(1.5, Math.pow(number(star.Star.Luminosity, 1) / Math.max(1e-6, au * au), 0.35)));
+		}
+
+		engine.StarShine = starShine;
+
+		/*
+		 * The star graph of a star (its Blueprint of the trait Star: a graph, its JSON), made once a graph: Look (its numbers
+		 * each frame: SceneDeepSpace), Surface and Crown (its parts in shaders); null with none. One that cannot be made is
+		 * told once, the star drawn as the library has it.
+		 */
+		var starGraphs = {Graphs: typeof WeakMap === 'function' ? new WeakMap() : null, Texts: {}};
+
+		function starMade (object) {
+			var graph = trait(object, 'Star') ? trait(object, 'Star').Blueprint : null;
+			var made;
+
+			if (!graph)
+				return null;
+
+			made = typeof graph === 'string' ? starGraphs.Texts[graph] : starGraphs.Graphs ? starGraphs.Graphs.get(graph) : undefined;
+
+			if (made !== undefined) return made;
+
+			try {
+				made = self.$Service('Blueprints').Compile(typeof graph === 'string' ? JSON.parse(graph) : graph);
+			}
+			catch (error) {
+				made = null;
+
+				if (engine.Told)
+					engine.Told('star', object.Name || object.ID, [{Block: null, Line: 0, Message: error.message}], error.message, 'Elemenx Scene: the Blueprint of a star cannot be made: ' + error.message);
+			}
+
+			if (typeof graph === 'string') starGraphs.Texts[graph] = made;
+			else if (starGraphs.Graphs) starGraphs.Graphs.set(graph, made);
+
+			return made;
+		}
+
+		engine.StarMade = starMade;
+
+		/* The program of the surface of a star: of its own star graph when it has one (StarSurface), else of the library. */
+		function starProgram (object) {
+			var own = starMade(object);
+			var program;
+
+			if (!own || !own.Surface || typeof WeakMap !== 'function') return gpu.Star;
+
+			gpu.StarPrograms = gpu.StarPrograms || new WeakMap();
+			program = gpu.StarPrograms.get(own);
+
+			if (!program) {
+				program = renderer.Program(shaders.Lit, self.Install({Star: self.Shaders(graphics).Star}, 'void blueprintSun(vec3 n, vec3 v, vec3 p, inout vec3 color) {}', own.Surface).Star);
+
+				gpu.StarPrograms.set(own, program);
+			}
+
+			return program;
+		}
+
+		/*
+		 * The glare of a star: a wide veil and a close one round its disc (size: the radius of its disc, pixel: a pixel there,
+		 * in units of the view), as bright as it blinds (blind: starLight), a point of light of what is left of a star (tiny);
+		 * the same seen from space and from a body (amount: how much passes, the clouds and a moon before it); wrap makes the
+		 * uniforms of the view of them.
+		 */
+		function drawGlare (star, centre, right, up, size, pixel, blind, wrap, amount) {
+			var color = paint(star.Color).slice(0, 3);
+			var tiny = star.Star.Radius < 0.02 ? 1 : 0;
+			var wide = Math.max(size * 11, pixel * Math.max(520 * blind, 36 * tiny));
+			var close = Math.max(size * 4.2, pixel * Math.max(110 * blind, 9 * tiny));
+			var through = amount === undefined ? 1 : amount;
+
+			/* The wide veil first: the disc does not end at once at black space. */
+			drawReady(gpu.Quad, gpu.Glow, wrap({uCenter: centre, uSize: wide, uRight: right, uUp: up, uColor: color.map(function (part) {
+				return part * (0.3 + blind * 0.5) * through;
+			}), uInner: 0.09, uStyle: 0}), {Blend: 'add', DepthWrite: false, Cull: 'none'});
+
+			drawReady(gpu.Quad, gpu.Glow, wrap({uCenter: centre, uSize: close, uRight: right, uUp: up, uColor: color.map(function (part) {
+				return part * (1 + blind * 2) * through;
+			}), uInner: 0.18, uStyle: 0}), {Blend: 'add', DepthWrite: false, Cull: 'none'});
 		}
 
 		/* The copies of the shapes of a frame: the rocks of the belts, the models of the objects, their pieces as they stand now. */
@@ -4736,6 +5282,12 @@ Elemenx.Component('Scene', {
 						self.$Emit('error', error);
 					}
 
+					/* A craft as long as it is of its model now come (craftScale), unless it is down in a location. */
+					scene.Order.forEach(function (object) {
+						if (object.Lengthed && !object.Located && object.Values.Model === name)
+							object.Size = lengthOf(object) * METRE / craftScale(object);
+					});
+
 					scene.Version++;
 				});
 			}
@@ -5183,6 +5735,9 @@ Elemenx.Component('Scene', {
 			var rig;
 
 			if (!made && library.Has(nameOf(object, settings))) return;
+
+			/* A ship seen from its seat (Person first): its hull is round the eye, not drawn over all the view. */
+			if (object.ID === scene.Hero && object.Ship && (scene.Inside || 0) > 0.5 && !scene.Ground) return;
 
 			if (!made) {
 				plain = object.Team ? 0.35 : 0;
@@ -6480,6 +7035,29 @@ Elemenx.Component('Scene', {
 			/* Through more air the lower it is: the blue goes first, and the land turns gold; under the horizon it is gone. */
 			scene.Ground.SunColor = sunThrough(paint(sun ? trait(sun, 'Sun').Color : '#fff4e0').slice(0, 3), Math.sin(elevation));
 
+			/*
+			 * The air of the body the location lies on (airAround, of its envelope at its ground): its light taken and tinted, its
+			 * sky of the colour of its air, its decks that hide the sky an overcast; on the Earth none of that changes a thing.
+			 */
+			var body = scene.Location ? scene.Objects[scene.Location.Body] : null;
+			var aired = body && body.Look ? airAround(body, 0) : null;
+
+			scene.Ground.Aired = aired;
+			/* Its air lit by its light as it gets there: of the colour that light is (Tint: none on the Earth). */
+			scene.Ground.AirColor = aired ? airColorOf(body).map(function (value, index) {
+				return index < 3 ? value * aired.Tint[index] : value;
+			}) : [0.55, 0.72, 1, 0.95];
+
+			if (aired) {
+				scene.Ground.SunColor = scene.Ground.SunColor.map(function (value, index) {
+					return value * aired.Dim * aired.Tint[index];
+				});
+
+				/* Decks that hide the sky an overcast; no air, none of any weather (no clouds, no wind). Regression: clouds over the Moon. */
+				if (aired.Cover > 0.85) self.Weather = 'overcast';
+				else if (!scene.Ground.AirColor[3]) self.Weather = 'none';
+			}
+
 			/* The moon: how much of it is lit and over the horizon; under the horizon of the sun it lights the land instead. */
 			moon = sun ? moonOf(trait(sun, 'Sun'), hour) : null;
 			night = Math.min(1, Math.max(0, (-Math.sin(elevation) - 0.03) / 0.1));
@@ -6515,6 +7093,16 @@ Elemenx.Component('Scene', {
 				return value * paint(sun ? trait(sun, 'Sun').Shade || '#ffffff' : '#ffffff')[index];
 			});
 			scene.Ground.FloorLight = lit.Floor;
+
+			if (aired) {
+				scene.Ground.SkyLight = scene.Ground.SkyLight.map(function (value, index) {
+					return value * aired.Dim * aired.Tint[index];
+				});
+				scene.Ground.FloorLight = scene.Ground.FloorLight.map(function (value, index) {
+					return value * aired.Dim * aired.Tint[index];
+				});
+			}
+
 			scene.Ground.Day = day;
 			scene.Ground.Night = night;
 			scene.Ground.Glare = (1 - night) * (1 - solar);
@@ -6532,6 +7120,11 @@ Elemenx.Component('Scene', {
 
 			/* The faintest star that is seen: the sun, the moon and the towns hide the rest. */
 			scene.Ground.StarLimit = 0.02 + Math.min(1, glow) * 0.22 + towns * 0.72 + Math.min(1, Math.max(0, (Math.sin(elevation) + 0.2) / 0.16)) * (1 - solar) * 1.1;
+
+			/* No air: the stars by day too, as in space; decks that hide the sky: none at night either. */
+			if (aired)
+				scene.Ground.StarLimit = scene.Ground.StarLimit * (1 - aired.High) + aired.Cover * 2;
+
 			scene.Ground.GalaxyLight = sun ? number(trait(sun, 'Sun').Galaxy, 1) : 1;
 			scene.Ground.StarTurn = sun && hour !== null ? skyTurn(trait(sun, 'Sun'), hour) : [1, 0, 0, 0, 1, 0, 0, 0, 1];
 
@@ -6579,8 +7172,14 @@ Elemenx.Component('Scene', {
 			});
 
 			/* Under clouds the air loses the blue of the sky. */
-			scene.Ground.AirTint = [0.55, 0.72, 1, 0.95].map(function (value, index) {
-				return value + ([0.64, 0.65, 0.68, 0.95][index] - value) * Math.min(1, air.Clouds * air.Clouds * 1.1 + air.Fog * 0.7);
+			scene.Ground.AirTint = scene.Ground.AirColor.map(function (value, index) {
+				var grey = [0.64, 0.65, 0.68, 0.95][index];
+
+				/* Under thick air (airAround Diffuse) the grey of its clouds of the colour of its air. */
+				if (aired && index < 3)
+					grey += (value * 0.8 - grey) * aired.Diffuse;
+
+				return value + (grey - value) * Math.min(1, air.Clouds * air.Clouds * 1.1 + air.Fog * 0.7);
 			});
 			scene.Ground.Air = air;
 
@@ -9581,7 +10180,7 @@ Elemenx.Component('Scene', {
 		function drawGround (matrix, nodes, shade, mirror) {
 			var ground = scene.Ground;
 			var field = ground.Field;
-			var air = [0.55, 0.72, 1, 0.95];
+			var air = ground.AirColor || [0.55, 0.72, 1, 0.95];
 			var fog = scene.Camera.Ortho || self.Graphics().Post ? 1e9 : field.Size * 0.9;
 
 			/* The stars first: the air, its sun and its moon come over them (not in a mirror: they keep to the view of the eye). */
@@ -9596,7 +10195,7 @@ Elemenx.Component('Scene', {
 			}
 
 			if (!scene.Camera.Ortho)
-				renderer.Draw(gpu.Quad, gpu.Sky, Object.assign({uInverse: math.Invert(matrix), uSun: ground.Sky, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0, uCover: ground.Shut, uEclipse: ground.Eclipse, uSunRadius: ground.SunRadius || 0.00465, uRainbow: ground.Rainbow || 0, uAurora: [ground.Aurora || 0, scene.Seconds % 3000, 0, 0], uAuroraLow: ground.AuroraLow || [0.2, 1, 0.55], uAuroraHigh: ground.AuroraHigh || [0.75, 0.25, 1], uMoonShade: ground.Moon ? ground.Moon.Shade : 0, uGlow: ground.Glow, uGlowWay: ground.GlowWay, uMoon: ground.Moon ? ground.Moon.Way : [0, 1, 0], uMoonLit: ground.Moon ? ground.Moon.Lit : [0, 1, 0], uMoonSize: ground.Moon ? ground.Moon.Size : 0, uMoonGlow: ground.Moon ? Math.min(1, ground.Moon.Glow) * Math.max(0, Math.min(1, ground.Moon.Way[1] / 0.15)) : 0, uNoWisps: groundClouds().Shell ? 1 : 0}, self.SkyValues(scene.Seconds)), {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
+				renderer.Draw(gpu.Quad, gpu.Sky, Object.assign({uInverse: math.Invert(matrix), uSun: ground.Sky, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0, uDip: 0, uCover: ground.Shut, uEclipse: ground.Eclipse, uSunRadius: ground.SunRadius || 0.00465, uRainbow: ground.Rainbow || 0, uAurora: [ground.Aurora || 0, scene.Seconds % 3000, 0, 0], uAuroraLow: ground.AuroraLow || [0.2, 1, 0.55], uAuroraHigh: ground.AuroraHigh || [0.75, 0.25, 1], uMoonShade: ground.Moon ? ground.Moon.Shade : 0, uGlow: ground.Glow, uGlowWay: ground.GlowWay, uMoon: ground.Moon ? ground.Moon.Way : [0, 1, 0], uMoonLit: ground.Moon ? ground.Moon.Lit : [0, 1, 0], uMoonSize: ground.Moon ? ground.Moon.Size : 0, uMoonGlow: ground.Moon ? Math.min(1, ground.Moon.Glow) * Math.max(0, Math.min(1, ground.Moon.Way[1] / 0.15)) : 0, uNoWisps: groundClouds().Shell ? 1 : 0, uDiffuse: 0}, self.SkyValues(scene.Seconds)), {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
 
 			/* Past the ground of a location: the far ground of its body. */
 			if (!scene.Camera.Ortho && !mirror && scene.Horizon)
@@ -10908,7 +11507,7 @@ Elemenx.Component('Scene', {
 					uCloudsOn: clouds ? 1 : 0,
 					uDrift: engine.CloudDrift(object),
 					uCloudTint: clouds ? cloudTint(object) : [1, 1, 1]
-				}, idle(), tiled(node), laid, weatherValues(object, scene.Baked[object.ID])), {Cull: 'back'});
+				}, idle(), tiled(node), laid, weatherValues(object, scene.Baked[object.ID]), ringUnder(object, field.Radius)), {Cull: 'back'});
 			});
 
 			forget(globe);
@@ -10918,9 +11517,12 @@ Elemenx.Component('Scene', {
 
 		/*
 		 * The far ground round a location (scene.Horizon): the ground of its body, as it is drawn from over its surface, past
-		 * the ground of the location. Behind all: drawn over the sky at one depth, that of the farthest point of the ground of
-		 * the location (so all of that is over it), the farthest first; the air of the scene takes it as far as that, its own
-		 * air the rest of the way.
+		 * the ground of the location. Behind all: drawn first (nothing of depth is drawn before it, the stars and the sky keep
+		 * none) in all the depths of a view of its own, from about the edge of the location to the far end, its own hills
+		 * hiding what lies behind them; then its depths are cleared, and all of the location comes over it. Regression: drawn
+		 * after it in the depths past the farthest point of the location, a few steps of depth for all of it, the slopes
+		 * behind a ridge were drawn over its slopes before them (dark blotches, then stripes, all over its hills). The air of
+		 * the scene takes it as far as that, its own air the rest of the way.
 		 */
 		function drawHorizon () {
 			var horizon = scene.Horizon;
@@ -10935,14 +11537,13 @@ Elemenx.Component('Scene', {
 			var view;
 			var far;
 			var matrix;
-			var star;
 			var sun;
 			var sunColor;
 			var nodes;
-			var depth;
 			var laid;
+			var colors;
 
-			if (!object || !frame || !object.Look) return;
+			if (!object || !frame || !object.Look || !scene.Ground) return;
 
 			field = horizon.Field;
 
@@ -10954,7 +11555,18 @@ Elemenx.Component('Scene', {
 			}
 
 			up = frame.Direction(camera.Position[0], camera.Position[2]);
-			eye = vectors.Scale(up, field.Radius + camera.Position[1] / 1000);
+
+			/*
+			 * The eye as high over the far ground: on a planet of its own the heights of the location are those of the planet; a
+			 * location of a ground of its own (a body with none) lies on its body as high as the highest of its ground under it and
+			 * round it (horizonTop, once). Regression: there the eye stood under the far ground (kilometres of its relief over the
+			 * location), then, of the height of its middle alone, under the squares round it (their grid coarser than its ground):
+			 * of them only the skirts of its squares were seen from under them, a net of strips over the sky.
+			 */
+			if (!located.Planet && horizon.Top === undefined)
+				horizon.Top = horizonTop(field, frame);
+
+			eye = vectors.Scale(up, field.Radius + (located.Planet ? 0 : horizon.Top) + camera.Position[1] / 1000);
 			look = toBody(vectors.Normalize(vectors.Subtract(camera.Target, camera.Position)));
 			view = math.LookAt([0, 0, 0], look, toBody(camera.Up));
 
@@ -10963,24 +11575,26 @@ Elemenx.Component('Scene', {
 			horizon.Altitude = Math.max(0.002, vectors.Length(eye) - field.Radius - field.Elevation(up));
 
 			far = Math.max(50, Math.sqrt(horizon.Altitude * (2 * field.Radius + horizon.Altitude)) * 3 + field.Radius * 0.1);
-			matrix = math.Multiply(math.Perspective(camera.Fov, renderer.Width / Math.max(1, renderer.Height), 0.01, far), view);
-			star = scene.Order.filter(function (each) {
-				return trait(each, 'Star') && each.World;
-			})[0];
-			sun = vectors.Normalize(star && object.World ? math.Apply(math.Invert(object.Turn) || math.Identity(), vectors.Normalize(vectors.Subtract(star.World, object.World))) : [0, 1, 0]);
-			sunColor = star ? paint(star.Color).slice(0, 3) : [1, 1, 1];
+			matrix = math.Multiply(math.Perspective(camera.Fov, renderer.Width / Math.max(1, renderer.Height), horizonNear(), far), view);
 
-			/* The farthest first: all at the one depth of the farthest point of the ground of the location. */
+			/*
+			 * Lit as the ground of the location is, by its very sun (scene.Ground: its way, its colour through the air of the
+			 * body, the moon at night); of the colours of the lands of the location on a body with no planet of its own (locationLands).
+			 * Regression: lit by the star as it is in space and of the colours of the body, a white band round a location under
+			 * the haze of Titan, a beige far ground far brighter than the grey lands round the eye.
+			 */
+			sun = vectors.Normalize(toBody(scene.Ground.Sun));
+			sunColor = scene.Ground.SunColor;
+			colors = located.Planet ? object.Look.Colors : horizon.Colors || (horizon.Colors = locationLands(object).Colors);
+
+			/* The farthest first. */
 			nodes = patches(horizon).map(function (node) {
 				return {Node: node, Far: vectors.Distance(node.Center, eye)};
 			}).sort(function (a, b) {
 				return b.Far - a.Far;
 			});
 
-			depth = horizonDepth();
 			laid = groundTiles(eye, horizon.Altitude);
-
-			renderer.GL.depthRange(depth, depth);
 
 			nodes.forEach(function (each) {
 				renderer.Draw(each.Node.Mesh, gpu.Ground, Object.assign({
@@ -10989,7 +11603,7 @@ Elemenx.Component('Scene', {
 					uCenter: each.Node.Center,
 					uSun: sun,
 					uSunColor: sunColor,
-					uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]),
+					uColors: [].concat(colors[0], colors[1], colors[2], colors[3]),
 					uPainted: field.Painted ? 1 : 0,
 					uWater: object.Look.Water,
 					uIce: object.Look.Ice,
@@ -11003,29 +11617,45 @@ Elemenx.Component('Scene', {
 					uLightsOn: lightsOf(object) === noLights() ? 0 : 1,
 					uSky: noLights(),
 					uCloudsOn: 0
-				}, idle(), tiled(each.Node), laid, weatherValues(object, scene.Baked[object.ID])), {Cull: 'back', Depth: 'lequal'});
+				}, idle(), tiled(each.Node), laid, weatherValues(object, scene.Baked[object.ID]), ringUnder(object, field.Radius)), {Cull: 'back'});
 			});
 
-			renderer.GL.depthRange(0, 1);
+			/* Its depths gone: the location comes over all of it (its draws wrote the depth: the mask is on). */
+			if (nodes.length)
+				renderer.GL.clear(renderer.GL.DEPTH_BUFFER_BIT);
 
 			forget(horizon);
 		}
 
-		/* The depth (0 to 1) of the farthest corner of the ground of the location, its lowest under the eye, in the view now. */
-		function horizonDepth () {
+		/*
+		 * The highest of the ground of a body (km over its radius, no lower than it) under a location and round it, as far past
+		 * its edges as its half: of 7 by 7 points of it.
+		 */
+		function horizonTop (field, frame) {
+			var size = scene.Ground.Field.Size;
+			var top = 0;
+			var i;
+			var j;
+
+			for (i = -3; i <= 3; i++) {
+				for (j = -3; j <= 3; j++)
+					top = Math.max(top, field.Elevation(frame.Direction(i * size / 3, j * size / 3)));
+			}
+
+			return top;
+		}
+
+		/*
+		 * The near plane of the view of the far ground (km): half the way to the circle within the ground of the location, however
+		 * it is turned (what is nearer is under the location, at the side of the view too), no nearer than 10 m; the farther it
+		 * is, the finer its depths are far off. Regression: of the way to its edges as if it were not turned, the far sea past its
+		 * edge was cut away, the skirts of its squares seen under it, walls.
+		 */
+		function horizonNear () {
 			var camera = scene.Camera;
-			var half = scene.Ground.Field.Size / 2;
-			var far = 0;
-			var near = camera.Near;
-			var end = camera.Far;
+			var edge = scene.Ground.Field.Size / 2 - Math.hypot(camera.Position[0], camera.Position[2]);
 
-			[[-half, -half], [half, -half], [half, half], [-half, half]].forEach(function (corner) {
-				far = Math.max(far, Math.hypot(corner[0] - camera.Position[0], corner[1] - camera.Position[2], Math.abs(camera.Position[1]) + 600));
-			});
-
-			far = Math.min(end * 0.999, far * 1.05);
-
-			return Math.min(0.9999999, ((end + near) / (end - near) - 2 * end * near / ((end - near) * far) + 1) / 2);
+			return Math.max(0.01, edge / 2 / 1000);
 		}
 
 		/* The squares of the faces of the cube in view, the finer the nearer (no finer than Finest km); each made once, a few a frame. */
@@ -11308,6 +11938,7 @@ Elemenx.Component('Scene', {
 			var axes = surface.Axes;
 			var cover = Number(object.Look.Clouds) || 0;
 			var day = Math.max(0, Math.min(1, vectors.Dot(sun, axes.Up) * 3 + 0.2));
+			var aired = surface.Aired || airAround(object, surface.Altitude);
 
 			if (!cover || !object.Look.Atmosphere[3]) return null;
 
@@ -11337,7 +11968,15 @@ Elemenx.Component('Scene', {
 
 			surface.CloudAltitude = surface.Altitude;
 
-			return {Turn: [axes.East[0], axes.Up[0], axes.North[0], axes.East[1], axes.Up[1], axes.North[1], axes.East[2], axes.Up[2], axes.North[2]], From: [surface.Eye[0] * 0, surface.Altitude, 0], Sun: [vectors.Dot(sun, axes.East), vectors.Dot(sun, axes.Up), vectors.Dot(sun, axes.North)], SunLight: [sunColor[0] * 2 * day, sunColor[1] * 2 * day, sunColor[2] * 2 * day], SkyTone: [0.34 * day + 0.01, 0.4 * day + 0.012, 0.5 * day + 0.02], Under: [0, 0, 0], Layer: [3, 9, 0.25], Over: true, Shell: weather ? [surface.Field.Radius, Math.max(0, surface.Field.Elevation(surface.Up)), 1 - fadeBetween(80, 150, surface.Altitude), 1] : null, Weather: weather, Moving: moving};
+			/* Decks that hide nearly all the sky (airAround Cover: those of Venus) are an overcast, whatever its weather says. */
+			if (aired.Cover > 0.85)
+				self.Weather = 'overcast';
+
+			/* Its main deck of clouds (airAround: 3 to 9 km on the Earth), of its colour, lit as much as light gets there. */			var layer = aired.Layer || [3, 9];
+			var tint = [aired.Color[0] * aired.Tint[0], aired.Color[1] * aired.Tint[1], aired.Color[2] * aired.Tint[2]];
+			var dim = aired.Dim;
+
+			return {Turn: [axes.East[0], axes.Up[0], axes.North[0], axes.East[1], axes.Up[1], axes.North[1], axes.East[2], axes.Up[2], axes.North[2]], From: [surface.Eye[0] * 0, surface.Altitude, 0], Sun: [vectors.Dot(sun, axes.East), vectors.Dot(sun, axes.Up), vectors.Dot(sun, axes.North)], SunLight: [sunColor[0] * 2 * day * aired.Color[0], sunColor[1] * 2 * day * aired.Color[1], sunColor[2] * 2 * day * aired.Color[2]], SkyTone: [(0.34 * day + 0.01) * dim * tint[0], (0.4 * day + 0.012) * dim * tint[1], (0.5 * day + 0.02) * dim * tint[2]], Under: [0, 0, 0], Layer: [layer[0], layer[1], 0.25], Over: true, Shell: weather ? [surface.Field.Radius, Math.max(0, surface.Field.Elevation(surface.Up)), 1 - fadeBetween(80, 150, surface.Altitude), 1] : null, Weather: weather, Moving: moving};
 		}
 
 		/*
@@ -11373,7 +12012,10 @@ Elemenx.Component('Scene', {
 			});
 
 			day = Math.max(0, Math.min(1, vectors.Dot(sun, flying.Axes.Up) * 3 + 0.2));
-			common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: [sun[0] * 1e6, sun[1] * 1e6, sun[2] * 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightColors: [sunColor[0] * 1.15, sunColor[1] * 1.15, sunColor[2] * 1.15, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightCount: 1, uSkyLight: [0.3 * day + 0.01, 0.38 * day + 0.012, 0.5 * day + 0.02], uFloorLight: [0.12 * day, 0.11 * day, 0.1 * day], uAmbient: [0.05 + 0.12 * day, 0.055 + 0.13 * day, 0.07 + 0.16 * day], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: 0, uWet: 0, uSnowed: 0, uRainDrops: 0, uEyeAt: [0, 0, 0], uTime2: scene.Seconds % 1000, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0]}, idle(), localLights(), self.WindValues(scene.Seconds));
+
+			var dim = flying.Aired ? flying.Aired.Dim : 1;
+
+			common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: [sun[0] * 1e6, sun[1] * 1e6, sun[2] * 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightColors: [sunColor[0] * 1.15, sunColor[1] * 1.15, sunColor[2] * 1.15, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightCount: 1, uSkyLight: [(0.3 * day + 0.01) * dim, (0.38 * day + 0.012) * dim, (0.5 * day + 0.02) * dim], uFloorLight: [0.12 * day * dim, 0.11 * day * dim, 0.1 * day * dim], uAmbient: [0.05 + 0.12 * day * dim, 0.055 + 0.13 * day * dim, 0.07 + 0.16 * day * dim], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: 0, uWet: 0, uSnowed: 0, uRainDrops: 0, uEyeAt: [0, 0, 0], uTime2: scene.Seconds % 1000, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0]}, idle(), localLights(), self.WindValues(scene.Seconds));
 
 			Object.keys(lists).forEach(function (name) {
 				var list = lists[name];
@@ -11413,12 +12055,17 @@ Elemenx.Component('Scene', {
 				return trait(each, 'Star') && each.World;
 			})[0];
 			var sun = star && object.World ? math.Apply(math.Invert(object.Turn) || math.Identity(), vectors.Normalize(vectors.Subtract(star.World, object.World))) : [0, 1, 0];
-			var sunColor = star ? paint(star.Color).slice(0, 3) : [1, 1, 1];
+			/* As much light as the star gives so far from it (starShine), the same as in space. */
+			var shine = star && object.World ? starShine(star, vectors.Distance(star.World, object.World)) : 1;
+			var sunColor = star ? paint(star.Color).slice(0, 3).map(function (part) {
+				return part * shine;
+			}) : [1, 1, 1];
 			var air = object.Look.Atmosphere;
 			var nodes = patches();
 			var plants = planted(nodes);
 			var reach = [engine.PlantsReach[0] * 1000, engine.PlantsReach[1] * 1000];
-			var thickness = 100;
+			var aired = airAround(object, surface.Altitude);
+			var thick = aired.High;
 			var shade = idle();
 			var extent;
 			var posted;
@@ -11427,8 +12074,16 @@ Elemenx.Component('Scene', {
 
 			sun = vectors.Normalize(sun);
 
+			/* Under thick air the light of its star as much as gets there, of the colour of its air (airAround: none taken on the Earth). */
+			sunColor = sunColor.map(function (part, i) {
+				return part * aired.Dim * aired.Tint[i];
+			});
+			surface.Aired = aired;
+
+			var lit = vectors.Normalize(vectors.Lerp(sun, surface.Up, aired.Diffuse));
+
 			/* The shadows of the relief round the eye, while the sun is up. */
-			if (shadowsWanted() && vectors.Dot(sun, surface.Up) > 0.03) {
+			if (shadowsWanted() && vectors.Dot(sun, surface.Up) > 0.03 && aired.Diffuse < 0.6) {
 				extent = Math.max(0.15, surface.Altitude * 4);
 
 				shade = castShadow(sun, surface.Eye, surface.Eye, extent, Math.max(extent * 2, field.Height * 2), function (light) {
@@ -11461,7 +12116,7 @@ Elemenx.Component('Scene', {
 			if (self.Background && self.Background !== 'false')
 				renderer.Draw(gpu.Stars, gpu.Far, {uViewProjection: math.Multiply(math.Perspective(scene.Camera.Fov, aspect, 0.1, 200), view), uRatio: renderer.Ratio}, {Depth: false, DepthWrite: false, Blend: 'add'});
 
-			renderer.Draw(gpu.Quad, gpu.Sky, Object.assign({uInverse: math.Invert(matrix), uSun: sun, uSunColor: sunColor, uAir: air, uUp: surface.Axes.Up, uHigh: Math.min(1, surface.Altitude / thickness), uSunRadius: discOf(star, object), uNoWisps: weatherValues(object, scene.Baked[object.ID]).uWeatherOn}, self.SkyValues(scene.Seconds)), {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
+			renderer.Draw(gpu.Quad, gpu.Sky, Object.assign({uInverse: math.Invert(matrix), uSun: sun, uSunColor: sunColor, uAir: air, uUp: surface.Axes.Up, uHigh: thick, uDip: Math.sqrt(Math.max(0, 1 - Math.pow(radiusOf(object) / (radiusOf(object) + Math.max(0, surface.Altitude)), 2))), uSunRadius: discOf(star, object), uNoWisps: weatherValues(object, scene.Baked[object.ID]).uWeatherOn, uCover: aired.Layer && surface.Altitude < aired.Layer[0] ? aired.Cover : 0, uDiffuse: aired.Diffuse}, self.SkyValues(scene.Seconds)), {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
 
 			landed = groundNear(field, surface.Eye, surface.Altitude);
 			laid = landed.Values;
@@ -11471,7 +12126,7 @@ Elemenx.Component('Scene', {
 					uViewProjection: matrix,
 					uOffset: vectors.Subtract(node.Center, surface.Eye),
 					uCenter: node.Center,
-					uSun: sun,
+					uSun: lit,
 					uSunColor: sunColor,
 					uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]),
 					uPainted: field.Painted ? 1 : 0,
@@ -11481,14 +12136,14 @@ Elemenx.Component('Scene', {
 					uRadius: field.Radius,
 					uTime: scene.Seconds,
 					uFog: Math.max(field.Radius * 0.02, far * 0.6),
-					uHigh: Math.min(1, surface.Altitude / thickness),
+					uHigh: thick,
 					uRelief: 1,
 					uLights: lightsOf(object),
 					uLightsOn: lightsOf(object) === noLights() ? 0 : 1,
 					uSky: noLights(),
 					/* High over its clouds (from 80 km, all from 150), they are drawn on its ground as its globe draws them. */
 					uCloudsOn: weatherValues(object, scene.Baked[object.ID]).uWeatherOn * fadeBetween(80, 150, surface.Altitude)
-				}, shade, tiled(node), laid, weatherValues(object, scene.Baked[object.ID])), {Cull: 'back'});
+				}, shade, tiled(node), laid, weatherValues(object, scene.Baked[object.ID]), ringUnder(object, field.Radius)), {Cull: 'back'});
 			});
 
 			/*
@@ -11504,16 +12159,33 @@ Elemenx.Component('Scene', {
 
 					var band = mesh !== node.Things.Trees ? [0, 0, 0, 0] : [plants ? engine.PlantsReach[0] : 0, plants ? engine.PlantsReach[1] : 0, engine.TreesReach - 0.3, engine.TreesReach];
 
-					renderer.Draw(mesh, gpu.Things, Object.assign({uViewProjection: matrix, uOffset: vectors.Subtract(node.Things.Center, surface.Eye), uCenter: node.Things.Center, uSun: sun, uSunColor: sunColor, uAir: air, uFog: Math.max(field.Radius * 0.02, far * 0.6), uHigh: Math.min(1, surface.Altitude / thickness), uLevel: engine.LevelColor('proxy', 1), uBand: band, uDither: engine.PostStep ? engine.PostStep() : 0}, shade), {Cull: 'back'});
+					renderer.Draw(mesh, gpu.Things, Object.assign({uViewProjection: matrix, uOffset: vectors.Subtract(node.Things.Center, surface.Eye), uCenter: node.Things.Center, uSun: lit, uSunColor: sunColor, uAir: air, uFog: Math.max(field.Radius * 0.02, far * 0.6), uHigh: thick, uLevel: engine.LevelColor('proxy', 1), uBand: band, uDither: engine.PostStep ? engine.PostStep() : 0}, shade), {Cull: 'back'});
 				});
 			});
 
 			/* The plants of SceneFlora near the eye, in their frame (SceneScatter). */
 			if (plants)
-				engine.ScatterPlanetDraw(plantValues(plants, sun, sunColor, shade), math.Multiply(matrix, plants.Frame.Matrix), plants.Eye, reach, inFrame(plants.Frame, sun, true), plantLight(sun, sunColor).Sun);
+				engine.ScatterPlanetDraw(plantValues(plants, lit, sunColor, shade), math.Multiply(matrix, plants.Frame.Matrix), plants.Eye, reach, inFrame(plants.Frame, sun, true), plantLight(sun, sunColor).Sun);
+
+			/*
+			 * The glare of the star as in space (drawGlare), far along its way, behind what stands before it; while it is over
+			 * the horizon of the eye (from high up far under the level of the ground under it). Regression: from a body it was
+			 * its disc of the sky alone, a white dot from orbit, never blinding as from space.
+			 */
+			if (star && object.World) {
+				var glareAt = far * 0.5;
+				var dip = Math.sqrt(Math.max(0, 1 - Math.pow(radiusOf(object) / (radiusOf(object) + Math.max(0, surface.Altitude)), 2)));
+				var over = Math.max(0, Math.min(1, (vectors.Dot(sun, surface.Axes.Up) + dip + 0.03) / 0.04));
+				if (over > 0)
+					drawGlare(star, vectors.Scale(sun, glareAt), [view[0], view[4], view[8]], [view[1], view[5], view[9]], discOf(star, object) * glareAt, glareAt * Math.tan(scene.Camera.Fov * Math.PI / 360) * 2 / Math.max(1, height), realness() >= 0.999 ? starLight(star, vectors.Distance(star.World, object.World)) : 0, function (values) {
+						values.uViewProjection = matrix;
+
+						return values;
+					}, over);
+			}
 
 			if (surface.Ship)
-				drawSurfaceShip(matrix, sun, sunColor);
+				drawSurfaceShip(matrix, lit, sunColor);
 
 			if (posted)
 				engine.PostEnd(Object.assign({Matrix: matrix, Sun: sun, SunColor: sunColor, Sky: false, Heat: surface.Heat, Clouds: surfaceClouds(surface, object, sun, sunColor)}, lens()));
@@ -11542,6 +12214,18 @@ Elemenx.Component('Scene', {
 			}
 
 			self.RunBehaviours('Step', [elapsed, now]);
+
+			/* The ships on a way far at once no player drives go on (SceneVehicles). */
+			if (engine.TravelersStep)
+				engine.TravelersStep(elapsed);
+
+			/* Its lightning in a deck of water (SceneGiants). */
+			if (engine.GiantStep)
+				engine.GiantStep(elapsed);
+
+			/* What is round the objects asked for, into the Ether (Probe). */
+			if (scene.Probed)
+				probeStep();
 
 			/* A galaxy (SceneGalaxy): what it draws is all of the frame; the system waits behind it. */
 			if (self.Setting === 'galaxy' && engine.GalaxyFrame) {
@@ -12993,6 +13677,7 @@ Elemenx.Component('Scene', {
 			this.DebrisStart();
 			this.DeepSpaceStart();
 			this.NebulaStart();
+			this.GiantsStart();
 			this.CosmosStart();
 			this.GalaxyStart();
 			this.VehiclesStart();
@@ -14384,7 +15069,7 @@ Elemenx.Component('Scene', {
 	 */
 	Forecasted: function (shaders) {
 		var graphics = this.$Service('Renderer');
-		var names = {PX: 'p.x', PY: 'p.y', PZ: 'p.z', Days: 'uDays', Seed: 'uWeatherSeed', RadiusKm: 'uRadiusKm', SunX: 'uSunAt.x', SunY: 'uSunAt.y', SunZ: 'uSunAt.z', Cloudiness: 'uCloudiness', Moist: 'cl.r', Warm: 'cl.g', Ground: 'cl.b', Climb: 'cl.a'};
+		var names = {PX: 'p.x', PY: 'p.y', PZ: 'p.z', Days: 'uDays', Seed: 'uWeatherSeed', RadiusKm: 'uRadiusKm', Cells: 'uCells', SunX: 'uSunAt.x', SunY: 'uSunAt.y', SunZ: 'uSunAt.z', Cloudiness: 'uCloudiness', Moist: 'cl.r', Warm: 'cl.g', Ground: 'cl.b', Climb: 'cl.a'};
 		var made = this.ForecastMade();
 		var text;
 
@@ -14563,14 +15248,127 @@ Elemenx.Component('Scene', {
 		return this.$Service('SceneBlueprints').LibraryRing();
 	},
 
+	/*
+	 * The star graph of the stars of the scene with no Blueprint of their own: its Graphs['star'] (a graph of the kind star, its
+	 * JSON), else the one of the library (LibraryStar); made once, null if neither can be made.
+	 */
+	StarScene: function () {
+		if (this.StarSceneMade === undefined)
+			this.StarSceneMade = this.Made(this.GraphOf('StarGraph', 'star'), 'star', 'StarGraph', this.LibraryStar.bind(this));
+
+		return this.StarSceneMade;
+	},
+
 	/* A globe from far of the library as a graph (the kind planet of SceneBlueprints): its picture lit, its clouds, its lights, its air. */
 	LibraryPlanet: function () {
 		return this.$Service('SceneBlueprints').LibraryPlanet();
 	},
 
 	/*
+	 * The ground of a globe near of the library as a graph (the kind ground of SceneBlueprints): its picture, woods, fields,
+	 * snow and dunes, its relief, the tiles near, its light and the shadows of clouds and of a ring, its water, towns at
+	 * night, clouds from over them and air.
+	 */
+	/*
+	 * What is round an object, written once a frame into a slice of the Ether (name: environment) under its ID, the same
+	 * object, till Unprobe: {Body, Altitude (km over the Radius of the body), Ground (km, null where not known), Zone, Phase
+	 * (space, gas, cloud, haze, liquid, supercritical, solid), Pressure (bar), Temperature (K), Density (kg/m3), Light (of its
+	 * sun, 0 to 1), Glow ([r, g, b] of the heat there), Inside (in the envelope of the body), Solid}. Returns the record.
+	 */
+	Probe: function (id, name) {
+		var scene = this.Scene();
+		var slice = name || 'environment';
+
+		scene.Probed = scene.Probed || {};
+		scene.Probed[id] = slice;
+
+		this.Engine().ProbeStep();
+
+		return this.$Ether(slice)[id];
+	},
+
+	Unprobe: function (id) {
+		var scene = this.Scene();
+		if (scene.Probed)
+			delete scene.Probed[id];
+	},
+
+	/* What is round an object now (Probe asks for it each frame): null when it is not asked for. */
+	Environment: function (id) {
+		var scene = this.Scene();
+
+		return scene.Probed && scene.Probed[id] ? this.$Ether(scene.Probed[id])[id] || null : null;
+	},
+
+	/* The envelope of a body of the library as a graph (planet/envelope): its state and its light at a height of its zones. */
+	LibraryEnvelope: function () {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/envelope'));
+	},
+
+	LibraryGround: function () {
+		return this.$Service('SceneBlueprints').LibraryGround();
+	},
+
+	/*
+	 * The alpha of a ring graph alone (its shadow on a ground, groundRing): the blocks the Alpha of its end is made of, the
+	 * rest left out (its light reads what a ground has not). A ring written by hand: none (null).
+	 */
+	RingAlpha: function (given) {
+		var graph = typeof given === 'string' ? (given.trim().charAt(0) === '{' ? JSON.parse(given) : null) : given || this.LibraryRing();
+		var ends;
+		var kept = {};
+		var grew = true;
+
+		if (!graph || !graph.blocks) return null;
+
+		ends = graph.blocks.filter(function (block) {
+			return block.type === 'RingEnd';
+		});
+
+		if (!ends.length) return null;
+
+		ends.forEach(function (block) {
+			kept[block.id] = true;
+		});
+
+		function owner (pin, side) {
+			return String(pin).slice(0, String(pin).lastIndexOf('-' + side + '-'));
+		}
+
+		function into (link) {
+			var to = owner(link.p2, 'in');
+
+			return kept[to] && !(ends.some(function (end) {
+				return end.id === to;
+			}) && !/-in-Alpha$/.test(link.p2));
+		}
+
+		while (grew) {
+			grew = false;
+
+			(graph.links || []).forEach(function (link) {
+				var from = owner(link.p1, 'out');
+
+				if (into(link) && !kept[from]) {
+					kept[from] = true;
+					grew = true;
+				}
+			});
+		}
+
+		return Object.assign({}, graph, {
+			blocks: graph.blocks.filter(function (block) {
+				return kept[block.id];
+			}),
+			links: (graph.links || []).filter(function (link) {
+				return kept[owner(link.p1, 'out')] && into(link);
+			})
+		});
+	},
+
+	/*
 	 * The globes of the scene in their shaders, each of its graph (RingGraph, PlanetGraph or their Graphs['shader/...']), else
-	 * of the one of the library; made once. The ring in the Planet shader too (planetRing: the shadow it casts), its color and
+	 * of the one of the library; the surface of a star of the star graph of the library; made once. The ring in the Planet shader too (planetRing: the shadow it casts), its color and
 	 * seed of its own there.
 	 */
 	Globed: function (shaders) {
@@ -14582,10 +15380,32 @@ Elemenx.Component('Scene', {
 		if (this.PlanetMade === undefined)
 			this.PlanetMade = this.Made(this.GraphOf('PlanetGraph', 'shader/planet'), 'planet', 'PlanetGraph', this.LibraryPlanet.bind(this));
 
+		if (this.GroundMade === undefined)
+			this.GroundMade = this.Made(this.GraphOf('GroundGraph', 'shader/ground'), 'ground', 'GroundGraph', this.LibraryGround.bind(this));
+
+		/* The shadow of a ring on a ground: the alpha of the ring graph alone (RingAlpha), its seed of its own there. */
+		if (this.RingAlphaMade === undefined) {
+			try {
+				this.RingAlphaMade = this.RingAlpha(this.GraphOf('RingGraph', 'shader/ring'));
+				this.RingAlphaMade = this.RingAlphaMade ? this.$Service('Blueprints').Compile(this.RingAlphaMade) : null;
+			}
+			catch (error) {
+				this.RingAlphaMade = null;
+			}
+		}
+
+		/* The surface of a star of the star graph of the library (a star of its own graph draws its own: starProgram). */
+		if (this.SunMade === undefined)
+			this.SunMade = (this.StarScene() || {}).Surface || null;
+
+		this.Install(shaders, 'void blueprintSun(vec3 n, vec3 v, vec3 p, inout vec3 color) {}', this.SunMade);
+
 		ring = this.RingMade ? Object.assign({}, this.RingMade, {Function: this.RingMade.Function.replace(/\buSeed\b/g, 'uRingSeed').replace(/\buColors\b/g, 'uRingColors')}) : null;
 
 		this.Install(shaders, 'void planetRing(float r, vec3 world, vec3 normal, inout vec3 color, inout float alpha) {}', ring, 'void blueprintRing(', 'void planetRing(');
 		this.Install(shaders, 'void blueprintPlanet(vec3 n, vec3 v, vec3 p, inout vec3 color, inout float alpha) {}', this.PlanetMade);
+		this.Install(shaders, 'void groundRing(float r, vec3 world, vec3 normal, inout vec3 color, inout float alpha) {}', this.RingAlphaMade ? Object.assign({}, this.RingAlphaMade, {Function: this.RingAlphaMade.Function.replace(/\buSeed\b/g, 'uRingSeed').replace(/\buColors\b/g, 'uRingColors')}) : null, 'void blueprintRing(', 'void groundRing(');
+		this.Install(shaders, 'void blueprintGround(inout vec3 color) {}', this.GroundMade);
 
 		return this.Install(shaders, 'void blueprintRing(float r, vec3 world, vec3 normal, inout vec3 color, inout float alpha) {}', this.RingMade);
 	},
@@ -14722,6 +15542,8 @@ Elemenx.Component('Scene', {
 			'uniform vec3 uSunAt;',
 			'uniform float uRadiusKm;',
 			'uniform float uWeatherSeed;',
+			/* The cells of its winds over a half of it (its envelope: 3 of the Earth). */
+			'uniform float uCells;',
 			/* How cloudy the world is (Clouds of its surface, 0 to 1): none, dry with a few, as the Earth (0.5), wetter, a shroud (1). */
 			'uniform float uCloudiness;',
 			/* Its weather at a direction, of the graph of the scene (ForecastGraph): weatherAt(p) of the climate there. */
@@ -14767,6 +15589,21 @@ Elemenx.Component('Scene', {
 		].join('\n');
 
 		return {
+			AirAround: head + [
+				'in vec3 aPosition;',
+				'uniform mat4 uInverse;',
+				'uniform float uReach;',
+				'out vec3 vWorld;',
+				'out vec3 vNormal;',
+				'void main() {',
+				'	vec4 far = uInverse * vec4(aPosition.xy, 1.0, 1.0);',
+				'	vec4 close = uInverse * vec4(aPosition.xy, -1.0, 1.0);',
+				'	vWorld = (far.xyz / far.w - close.xyz / close.w) * (uReach / 200.0);',
+				'	vNormal = -vWorld;',
+				'	gl_Position = vec4(aPosition.xy, 1.0, 1.0);',
+				'}'
+			].join('\n'),
+
 			Lit: head + [
 				'in vec3 aPosition;',
 				'in vec3 aNormal;',
@@ -15486,6 +16323,13 @@ Elemenx.Component('Scene', {
 				'in vec3 vWorld;',
 				'in vec3 vNormal;',
 				'in vec3 vLocal;',
+				'uniform float uExact;',
+				'uniform float uBall;',
+				'uniform vec2 uDepthRange;',
+				'uniform mat4 uViewProjection;',
+				'vec3 planetWorld;',
+				'vec3 planetMesh() { return vWorld; }',
+				'#define vWorld planetWorld',
 				'uniform vec3 uCamera;',
 				'uniform int uKind;',
 				'uniform vec3 uColors[4];',
@@ -15524,9 +16368,26 @@ Elemenx.Component('Scene', {
 				/* Its picture lit, its clouds, its lights at night, its air at its edge (PlanetGraph: blueprintPlanet). */
 				'void blueprintPlanet(vec3 n, vec3 v, vec3 p, inout vec3 color, inout float alpha) {}',
 				'void main() {',
+				'	planetWorld = planetMesh();',
 				'	vec3 n = normalize(vNormal);',
-				'	vec3 v = normalize(uCamera - vWorld);',
 				'	vec3 p = normalize(vLocal);',
+				'	if (uExact > 0.5) {',
+				'		vec3 middle = uModel[3].xyz;',
+				'		vec3 ray = normalize(planetWorld - uCamera);',
+				'		float b = dot(uCamera - middle, ray);',
+				'		float h = b * b - uBall;',
+				'		if (h < -(dot(uCamera - middle, uCamera - middle) - uBall) * 4e-6) discard;',
+				'		h = max(h, 0.0);',
+				'		float t = -b - sqrt(h);',
+				'		if (t <= 0.0) discard;',
+				'		planetWorld = uCamera + ray * t;',
+				'		n = normalize(planetWorld - middle);',
+				'		p = normalize(transpose(mat3(uModel)) * n);',
+				'		vec4 clip = uViewProjection * vec4(planetWorld, 1.0);',
+				'		gl_FragDepth = clamp(mix(uDepthRange.x, uDepthRange.y, clip.z / clip.w * 0.5 + 0.5), uDepthRange.x, uDepthRange.y);',
+				'	}',
+				'	else gl_FragDepth = gl_FragCoord.z;',
+				'	vec3 v = normalize(uCamera - vWorld);',
 				'	vec3 color = vec3(0.0);',
 				'	float alpha = 1.0;',
 				'	blueprintPlanet(n, v, p, color, alpha);',
@@ -15548,27 +16409,15 @@ Elemenx.Component('Scene', {
 				'uniform float uBands;',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
+				/* Its cells, spots, belts, limb and burn (the star graph: blueprintSun, its StarSurface; LibraryStar() of the library). */
+				'void blueprintSun(vec3 n, vec3 v, vec3 p, inout vec3 color) {}',
 				'void main() {',
 				'	vec3 n = normalize(vNormal);',
 				'	vec3 v = normalize(uCamera - vWorld);',
 				'	vec3 p = normalize(vLocal);',
-				'	float cells = fbm3(p * uCells + vec3(0.0, uTime * 0.08, uSeed), 4);',
-				/* Spots keep to the belts of middle latitudes, each with a bright ring of faculae round it. */
-				'	float belt = smoothstep(0.08, 0.2, abs(p.y)) * (1.0 - smoothstep(0.45, 0.62, abs(p.y)));',
-				'	float field = fbm3(p * 2.6 + vec3(uSeed, uTime * 0.01, 0.0), 3);',
-				'	float spots = smoothstep(0.66, 0.74, field) * belt * (1.0 - uBands);',
-				'	float bands = 0.5 + 0.5 * sin(p.y * 15.0 + fbm3(p * vec3(1.5, 7.0, 1.5) + vec3(uSeed, 0.0, uTime * 0.02), 3) * 4.0);',
-				'	float faculae = (smoothstep(0.58, 0.66, field) - spots) * belt;',
-				'	float limb = pow(max(dot(n, v), 0.0), 0.45);',
-				'	vec3 color = pow(uColor, vec3(2.2)) * mix(1.0, 0.55 + 0.75 * bands, uBands) * (0.7 + 0.6 * mix(cells, 0.5, uBands * 0.7)) * (0.5 + 0.6 * limb) * (1.0 - spots * 0.55) * (1.0 + faculae * 0.35 * (1.0 - limb));',
-				/*
-				 * A sun is far brighter than white: what shows of it to the eye is only that it burns. Regression: a cool star
-				 * (a red dwarf) was so too, white over its orange and burned out: the cooler it is, the less of that.
-				 */
-				'	float warm = 1.0 - clamp(uColor.b / max(uColor.r, 1e-3), 0.0, 1.0);',
-				/* Regression: an orange giant burned out white as the Sun does. A brown dwarf glows dim, maroon to magenta. */
-				'	color = mix(color, color * vec3(1.0, 0.5, 0.72) * 0.5, uBands);',
-				'	outColor = vec4(mix(color, vec3(1.0), 0.28 * limb * (1.0 - warm) * (1.0 - warm)) * mix(2.4, 1.1, clamp(warm * 1.5, 0.0, 1.0)), 1.0);',
+				'	vec3 color = vec3(0.0);',
+				'	blueprintSun(n, v, p, color);',
+				'	outColor = vec4(color, 1.0);',
 				'}'
 			].join('\n'),
 
@@ -15598,6 +16447,7 @@ Elemenx.Component('Scene', {
 				'		day += smoothstep(-0.06, 0.45, dot(limb, normalize(uLightPositions[i] - vWorld)));',
 				'	}',
 				'	float glow = edge * clamp(day, 0.0, 1.0) * uStrength;',
+				'	if (!(glow >= 0.0) || glow > 1e4) discard;',
 				'	outColor = vec4(uColor * glow, glow);',
 				'}'
 			].join('\n'),
@@ -15859,6 +16709,12 @@ Elemenx.Component('Scene', {
 				'uniform float uCloudsOn;',
 				'uniform float uDrift;',
 				'uniform vec3 uCloudTint;',
+				/* Its ring (uRingOn): its axis in the frame of the ground, its edges (km from the middle), its seed and colors. */
+				'uniform float uRingOn;',
+				'uniform vec3 uRingAxis;',
+				'uniform vec2 uRingSpan;',
+				'uniform float uRingSeed;',
+				'uniform vec3 uRingColors[4];',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				/* The noises of the ground itself, only drawn: of a sine (n_hash at each of some forty of them, 7 s for the card to make it). */
@@ -15988,178 +16844,13 @@ Elemenx.Component('Scene', {
 				'	if (h < 0.66) return mix(uColors[1], uColors[2], (h - 0.33) / 0.33);',
 				'	return mix(uColors[2], uColors[3], (h - 0.66) / 0.34);',
 				'}',
-				'void main() {',
-				'	vec3 n = normalize(vNormal);',
-				'	vec3 v = normalize(-vWorld);',
-				'	float sea = vLand.y;',
-				'	vec3 albedo = sea > 0.5 ? mix(uWater * 1.25, uWater * 0.55, clamp(-vLand.x * 4.0, 0.0, 1.0)) : ground(clamp(vLand.x, 0.0, 1.0));',
-				'	vec3 up = vDirection;',
-				/* From far its relief is told by its light: the slopes made steeper for the light (uRelief), as the eye reads mountains from orbit. */
-				'	if (uRelief > 1.0) n = normalize(up + (n - up * dot(n, up)) * uRelief);',
-				'	if (sea > 0.5) n = up;',
-				'	float rock = 1.0 - smoothstep(0.55, 0.75, dot(n, up));',
-				'	if (sea < 0.5) albedo = mix(albedo, uColors[1] * 0.8, rock * 0.6);',
-				'	if (uPainted > 0.5) albedo = sea > 0.5 ? vPainted : mix(vPainted, vec3(0.42, 0.39, 0.35), rock * 0.55);',
-				'	float water = sea;',
 				/*
-				 * Its picture: read a little aside by a noise of its texels, so the edges between its colors are ragged within a texel
-				 * and never a row of steps; its relief of its own normals, finer than its points, the slopes made steeper as above.
+				 * The tiles of the materials near (uTextured), as the ground of a location draws them: grass where it is green, dirt
+				 * where it is dry, cliff where it is steep, each tinted by the color of the place and only where a pixel is finer
+				 * than its features; laid in the plane at the anchor (metres from it). Of the block GroundTiles of the ground graph;
+				 * a ground near puts the materials of its biomes in the place of the tiles (nearGroundSource).
 				 */
-				'	vec2 aside = vec2(0.0);',
-				'	vec2 pictureAt = vPatch;',
-				'	vec2 pictureSoft = vPatch;',
-				'	vec2 pictureX = vec2(0.0);',
-				'	vec2 pictureY = vec2(0.0);',
-				'	if (uTiled > 0.5) {',
-				'		vec2 tc = vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels;',
-				'		vec2 grid = tc * uTexels;',
-				'		pictureX = dFdx(tc);',
-				'		pictureY = dFdy(tc);',
-				/* Texels a pixel: a texel over two pixels wide is a square of a smear unless something finer is told in it. */
-				'		float texel = max(length(pictureX), length(pictureY)) * uTexels;',
-				'		aside = vec2(enx_fvalue3(vec3(grid * 1.7, 3.1)) + enx_fvalue3(vec3(grid * 4.3, 5.7)) * 0.5, enx_fvalue3(vec3(grid * 1.7, 9.7)) + enx_fvalue3(vec3(grid * 4.3, 1.3)) * 0.5) - 0.75;',
-				/*
-				 * Far ground, its texels wide on the screen (a square of kilometres, its 32 texels a side, some tens of pixels
-				 * each): its edges ragged finer still, as long as those are over three pixels, and each texel its own color up to
-				 * a narrow seam (the texels read as patches of land, fields, woods and stone, sharp), not one color drawn into the
-				 * next over all its width. Regression: from a few kilometres up the ground was smears and stretched blotches.
-				 */
-				'		aside += vec2(enx_fvalue3(vec3(grid * 11.0, 2.3)) - 0.5, enx_fvalue3(vec3(grid * 11.0, 8.9)) - 0.5) * 0.36 * (1.0 - smoothstep(0.02, 0.04, texel));',
-				'		vec2 g = grid + aside * 1.1 - 0.5;',
-				'		pictureSoft = (g + 0.5) / uTexels;',
-				'		vec2 inside = fract(g);',
-				'		float seam = clamp(max(texel * 1.5, 0.22), 0.0, 0.5);',
-				'		inside = clamp((inside - 0.5) / (2.0 * seam) + 0.5, 0.0, 1.0);',
-				'		inside = inside * inside * (3.0 - 2.0 * inside);',
-				'		pictureAt = (floor(g) + inside + 0.5) / uTexels;',
-				'		vec4 painted = textureGrad(uColorMap, pictureAt, pictureX, pictureY);',
-				'		albedo = painted.rgb;',
-				'		water = painted.a;',
-				'		n = normalize(texture(uReliefMap, tc).xyz * 2.0 - 1.0);',
-				'		if (uRelief > 1.0) n = normalize(up + (n - up * dot(n, up)) * uRelief);',
-				'		n = normalize(mix(n, up, water));',
-				'	}',
-				'	if (uIce > 0.0 && uPainted < 0.5) {',
-				'		float pole = abs(up.y) + (fbm3(up * 6.6, 3) - 0.5) * 0.3;',
-				'		float cap = uIce >= 1.0 ? 1.0 : smoothstep(1.0 - uIce, 1.0 - uIce + 0.04, pole);',
-				'		albedo = mix(albedo, vec3(0.93, 0.95, 0.98), cap);',
-				'	}',
-				'	vec3 place = up * uRadius;',
-				/* Kilometres a pixel covers: what is finer than two pixels is not drawn, or it shimmers as the view moves. */
-				'	float foot = length(fwidth(place));',
-				/* Its land mottled at kilometres, hundreds and tens of metres (fields, woods, stone), each as long as it is over two pixels. */
-				/*
-				 * Regression: the place of the very point (its direction times the radius, thousands of km) trembles in the floats by
-				 * half a metre from pixel to pixel; noises of tens of metres of it, and their slopes, were specks. What is finer than
-				 * a kilometre is of the point from the anchor (uAnchor, km), exact.
-				 */
-				'	vec3 near = vWorld + uAnchor;',
-				'	float mottle = (enx_fvalue3(place * 0.35) - 0.5) * 0.2 * (1.0 - smoothstep(1.2, 4.0, foot)) + (enx_fvalue3(place * 1.9 + 7.0) - 0.5) * 0.14 * (1.0 - smoothstep(0.25, 0.8, foot)) + (enx_fvalue3(near * 9.0 + 3.0) - 0.5) * 0.1 * (1.0 - smoothstep(0.05, 0.15, foot));',
-				'	albedo *= 1.0 + mottle * (1.0 - water);',
-				/*
-				 * Near, finer than the ground of the body tells (a planet knows nothing under a kilometre): what grows there in
-				 * crowns and gaps, dry ground in ripples, and the relief of tens of metres, by the slope of a noise of the place on
-				 * the screen, each as long as it is over two pixels. Its derivatives taken where all pixels go.
-				 */
-				/*
-				 * Its woods (the share trees cover, of its picture): stands of tens and hundreds of metres, as many as the share;
-				 * from far their mean, a darker green; near, their edges, the crowns over the ground in the relief below.
-				 */
-				/* Read aside as its colors are: no steps of texels along the edges of the woods from far. */
-				'	float cover = uTiled * uWoods > 0.5 ? textureGrad(uReliefMap, pictureAt, pictureX, pictureY).a : 0.0;',
-				/* Each octave turned against the last, so no grid of the noise shows in the edges of the woods. */
-				'	mat3 askew = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
-				'	float stands = enx_fvalue3(askew * place * 14.0 + 21.0) * 0.5 + enx_fvalue3(place * 2.6 + 9.0) * 0.32 + enx_fvalue3(askew * (askew * near) * 61.0 + 4.0) * 0.18 * (1.0 - smoothstep(0.004, 0.012, foot));',
-				/* Its edges a pixel and a half wide at least: no specks along them near. */
-				'	float spread = clamp(max(foot * 6.0, fwidth(stands) * 1.5), 0.02, 0.5);',
-				'	float wooded = mix(smoothstep(0.5 + (0.5 - cover) * 0.5 - spread, 0.5 + (0.5 - cover) * 0.5 + spread, stands), cover, smoothstep(0.05, 0.2, foot)) * step(0.01, cover) * (1.0 - water);',
-				'	albedo = mix(albedo, albedo * vec3(0.42, 0.56, 0.4) + vec3(0.0, 0.015, 0.0), wooded);',
-				/* Its fields and houses (FIELDS), of the place on its face; the width of a pixel there taken where all pixels go. */
-				'	vec2 dwellAt = uSquare.xy + vPatch * uSquare.z;',
-				'	vec2 dwellWide = fwidth(dwellAt);',
-				'	float standing = 0.0;',
-				'	if (uDwelt > 0.5) {',
-				'		vec3 use = texture(uUseMap, vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels).rgb;',
-				'		albedo = mix(dwelling(albedo, dwellAt, ivec2(uSquareCell), int(uSquare.w + 0.5), use, max(dwellWide.x, dwellWide.y) * 1.5, foot, standing), albedo, water);',
-				'	}',
-				'	float green = clamp((albedo.g - max(albedo.r, albedo.b)) * 6.0, 0.0, 1.0) * (1.0 - water);',
-				'	float near1 = 1.0 - smoothstep(0.03, 0.09, foot);',
-				'	float near2 = 1.0 - smoothstep(0.006, 0.02, foot);',
-				/*
-				 * Each octave turned against the grid of the noise. Regression: of the grid as it is, its cells of 29 m sharpened
-				 * into squares, a chessboard of light and dark green over the near land.
-				 */
-				'	float crowns = enx_fvalue3(askew * near * 34.0 + 11.0);',
-				'	albedo *= mix(1.0, 0.7 + 0.55 * smoothstep(0.3, 0.75, crowns), green * near2);',
-				/*
-				 * Its dunes (the sand of its deserts, Use.a): ridges of a kilometre or so bent by a noise of a few, a gentle side to
-				 * the wind and a steep one away, some crossing them (star dunes), tens of metres high, as long as a pixel is finer
-				 * than a quarter of them; of the very place (thousands of km, half a metre in the floats: a kilometre is exact).
-				 */
-				'	float sand = uTiled > 0.5 ? textureGrad(uUseMap, pictureAt, pictureX, pictureY).a : 0.0;',
-				/*
-				 * Its snow (of its picture): its edge torn by a noise of tens of metres where it thins, none on what is steep
-				 * near (the rock of a wall shows through), as long as that is seen.
-				 */
-				'	float snow = uTiled > 0.5 ? textureGrad(uSnowMap, pictureAt, pictureX, pictureY).r : 0.0;',
-				/* Of the stands of its woods (a noise of the place made already): each noise more is seconds more for the card to make the program. */
-				'	snow = clamp(snow + (stands - 0.5) * 1.6 * snow * (1.0 - snow), 0.0, 1.0);',
-				'	float dunes = 0.0;',
-				'	if (sand > 0.003) {',
-				'		float seenDunes = 1.0 - smoothstep(0.12, 0.45, foot);',
-				'		float bend = enx_fvalue3(place * 0.28 + 4.0) * 3.2;',
-				'		float duneWave = fract((place.x * 0.6 + place.z * 0.8) / 1.3 + bend);',
-				'		float ridge = duneWave < 0.72 ? duneWave / 0.72 : (1.0 - duneWave) / 0.28;',
-				'		float athwart = fract((place.x * -0.8 + place.z * 0.6 + place.y * 0.3) / 2.1 + bend * 0.7);',
-				'		float star = 1.0 - abs(athwart * 2.0 - 1.0);',
-				'		dunes = (ridge * ridge * (3.0 - 2.0 * ridge) * 0.75 + star * star * 0.25) * sand * seenDunes;',
-				'		albedo *= 1.0 + (dunes - 0.35 * sand * seenDunes) * 0.18;',
-				'	}',
-				/*
-				 * Regression: hills of 90 m by 20 m and of 20 m by 4 m in the light of the normal, sides of 25 degrees: from low
-				 * the ground was pits and blotches, their sides away from the sun nearly black. Now a third of that.
-				 */
-				/*
-				 * No rise of its woods over the ground (the crowns near tell them by their colors). Regression: their crowns 6 m
-				 * over the ground at an edge a pixel and a half wide laid the normal on its side, black specks along every wood.
-				 */
-				'	float bumps = ((enx_fvalue3(near * 11.0 + 5.0) - 0.5) * 0.015 * near1 + (enx_fvalue3(near * 52.0 + 2.0) - 0.5) * 0.003 * near2 + (crowns - 0.5) * 0.006 * green * near2 + standing + dunes * 0.07) * (1.0 - water);',
-				/*
-				 * Its slopes cut finer than its points (a planet knows nothing under a few hundred metres): ridges and gullies of
-				 * 300 m and of 115 m, as steep as the slope is, each as long as it is over three pixels wide. Regression: from a few
-				 * kilometres up its mountains were smooth heaps, their slopes one smear of the color of their texels.
-				 */
-				'	float rugged = smoothstep(0.06, 0.35, 1.0 - dot(n, up)) * (1.0 - water);',
-				/* Round at their tops: a crease of the noise was a line across the light, terraces drawn over a slope near. */
-				'	float ridge1 = enx_fvalue3(askew * near * 3.3 + 1.0) * 2.0 - 1.0;',
-				'	float ridge2 = enx_fvalue3(askew * (askew * near) * 8.7 + 6.0) * 2.0 - 1.0;',
-				'	ridge1 = 1.0 - ridge1 * ridge1;',
-				'	ridge2 = 1.0 - ridge2 * ridge2;',
-				'	bumps += rugged * (ridge1 * ridge1 * 0.035 * (1.0 - smoothstep(0.05, 0.1, foot)) + ridge2 * ridge2 * 0.012 * (1.0 - smoothstep(0.02, 0.04, foot)));',
-				/* The normal before them: what picks the ways the tiles are laid, the same over a few pixels (their derivatives are taken in branches by it). */
-				'	vec3 smoothed = n;',
-				'	vec3 px = dFdx(vWorld);',
-				'	vec3 py = dFdy(vWorld);',
-				'	vec3 across = cross(py, n);',
-				'	float area = dot(px, across);',
-				'	vec3 tilt = (dFdx(bumps) * across + dFdy(bumps) * cross(n, px)) / (abs(area) > 1e-12 ? area : 1e-12);',
-				/*
-				 * Bent by its bumps no more than some 40 degrees: a step of them over a pixel or two (an edge of a dune, of a field)
-				 * never lays the normal on its side, a black speck.
-				 */
-				'	tilt *= step(1e-12, abs(area)) / max(1.0, length(tilt) / 0.85);',
-				/*
-				 * None where a pixel is under a metre: its bumps are kilometres of the place, and from pixel to pixel there they
-				 * differ by less than a float tells, over an area of a pixel as small: a tilt of rounding, rings and stripes of
-				 * moiré over the ground near. There the materials bend it (enx_bump, in metres).
-				 */
-				'	tilt *= smoothstep(0.0003, 0.0012, foot);',
-				'	n = normalize(n - tilt);',
-				/*
-				 * Nearer still: the tiles of the materials (uTextured), as the ground of a location draws them: grass where it is
-				 * green, grassy soil under the woods, dirt where it is dry, cliff where it is steep, each tinted by the color of
-				 * the place and only where a pixel is finer than its features; laid in the plane at the anchor (metres from it).
-				 */
+				'void groundLaid(inout vec3 albedo, inout vec3 n, vec3 smoothed, vec3 near, float foot, float green, float wooded, float snow, float water, float cover, vec2 pictureSoft) {',
 				'	vec3 q = near * 1000.0;',
 				'	vec3 local = vec3(dot(q, uEast), dot(q, uUp), dot(q, uNorth));',
 				'	vec2 topX = dFdx(local.xz);',
@@ -16197,77 +16888,14 @@ Elemenx.Component('Scene', {
 				'		}',
 				'		albedo = mix(albedo, laid / max(total, 1e-4), clamp(total, 0.0, 1.0));',
 				'	}',
-				'	float rise = dot(up, uSun);',
-				'	float light = clamp(rise * 3.0 + 0.3, 0.0, 1.0);',
-				'	float dusk = 1.0 - smoothstep(0.0, 0.35, abs(rise));',
-				/*
-				 * The sky lights what the sun does not reach: at sunset the land is dim and red, not black. By day as much of it as
-				 * a location has (Regression: what looked away from the sun was nearly black, a hole in the ground).
-				 */
-				'	vec3 around = vec3(0.05, 0.06, 0.08) + uAir.rgb * uAir.a * 0.42 * smoothstep(-0.25, 0.3, rise) + vec3(0.5, 0.25, 0.15) * dusk * uAir.a * 0.35;',
-				'	float day = max(dot(n, uSun), 0.0) * sunShadow(vWorld, n);',
-				/* The shadows of the clouds of its weather (CLOUDS SEEN), as far from them as their height and the sun tell. */
-				'	vec3 toward = normalize(uSun - up * rise + vec3(1e-6));',
-				'	if (uWeatherOn > 0.5) {',
-				/* Of their thick part only: their thin edges and tops leave little shadow (it was more shadow than cloud). */
-				/*
-				 * Of the cover of the weather there (cloudUnder of the clouds graph, its billows not: a shadow is soft). Regression:
-				 * three cloudAt in the program, each its billows of five octaves, made the card take 7 s more to make it.
-				 */
-				'		day *= 1.0 - 0.5 * smoothstep(0.3, 1.0, cloudUnder(up, texture(uWeather, up).g, toward, rise)) * smoothstep(0.0, 0.12, rise);',
-				'	}',
-				'	vec3 color = albedo * (uSunColor * day + around);',
-				/* Water mirrors the sky, more at a glance; waves break the sun into a path of glints that reddens as it sets. */
-				'	if (water > 0.01) {',
-				/*
-				 * Its waves: the slope of a noise of the very place (kilometres), seen where a pixel is smaller than a wave; past
-				 * that the sun is not broken into glints but spread wide over the sea, as from high over it.
-				 */
-				'		float seen = 1.0 - smoothstep(0.015, 0.06, foot);',
-				'		vec3 w = up;',
-				'		if (seen > 0.0) {',
-				'			vec3 q = place * 9.0 + vec3(0.0, uTime * 0.05, 0.0);',
-				'			vec3 g = vec3(enx_fvalue3(q + vec3(0.2, 0.0, 0.0)) - enx_fvalue3(q - vec3(0.2, 0.0, 0.0)), enx_fvalue3(q + vec3(0.0, 0.2, 0.0)) - enx_fvalue3(q - vec3(0.0, 0.2, 0.0)), enx_fvalue3(q + vec3(0.0, 0.0, 0.2)) - enx_fvalue3(q - vec3(0.0, 0.0, 0.2))) * 2.5;',
-				'			w = normalize(up - (g - up * dot(g, up)) * 0.22 * seen);',
-				'		}',
-				'		float fresnel = 0.02 + 0.98 * pow(1.0 - max(dot(w, v), 0.0), 5.0);',
-				'		vec3 r = reflect(-v, w);',
-				'		if (dot(r, up) < 0.0) r = r - up * 2.0 * dot(r, up);',
-				'		float toward = max(dot(r, uSun), 0.0);',
-				'		vec3 mirrored = mix(mix(uAir.rgb, vec3(1.0), 0.45), uAir.rgb * vec3(0.45, 0.6, 1.0), pow(max(dot(r, up), 0.0), 0.6)) * light + vec3(1.0, 0.5, 0.2) * dusk * exp(-max(dot(r, up), 0.0) * 5.0) * 0.8;',
-				'		float shine = (pow(toward, mix(90.0, 1400.0, seen)) * mix(0.9, 7.0, seen) + pow(toward, 180.0) * 0.16) * smoothstep(-0.02, 0.1, rise);',
-				'		color = mix(color, mix(color, mirrored, fresnel) + uSunColor * mix(vec3(1.0, 0.55, 0.25), vec3(1.0), smoothstep(0.0, 0.3, rise)) * shine, water);',
-				'	}',
-				/* Its settlements at night (of a globe near). */
-				'	if (uLightsOn > 0.5) color += vec3(1.0, 0.72, 0.38) * texture(uLights, up).r * 1.6 * (1.0 - smoothstep(-0.05, 0.12, rise));',
-				/*
-				 * Its clouds, seen from high over them (uCloudsOn): laid over the ground where it is, as the shell of them would
-				 * be; a shell so far over the ground fights it for the depth thousands of kilometres away, and flickers in stripes.
-				 */
-				/* Of its weather: the cover, each puff darker on its side away from the sun. */
-				'	if (uCloudsOn > 0.0 && uWeatherOn > 0.5) {',
-				'		float cover = cloudAt(up, foot);',
-				/* Their side away from the sun: of the cover of the weather here and toward the sun (cloudSide; one cloudAt only, as above). */
-				'		float self = cloudSide(up, texture(uWeather, up).r, toward, rise, foot);',
-				'		vec3 cloud = uCloudTint * (uSunColor * clamp(rise * 1.4 + 0.1, 0.0, 1.0) * (1.0 - self) + around);',
-				'		color = mix(color, cloud, cover * min(uCloudsOn, 1.0));',
-				'	}',
-				'	else if (uCloudsOn > 0.0) {',
-				'		vec3 drifted = vec3(up.x * cos(uDrift) - up.z * sin(uDrift), up.y, up.x * sin(uDrift) + up.z * cos(uDrift));',
-				'		float cover = texture(uSky, drifted).r * uCloudsOn;',
-				/* Their own shape: heaps of tens of kilometres and their gaps, as far as a pixel is smaller than they are. */
-				'		vec3 at = drifted * uRadius;',
-				/* Each octave turned against the last, so no grid of the noise shows. */
-				'		mat3 turned = mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60);',
-				'		vec3 a1 = turned * at * 0.035;',
-				'		vec3 a2 = turned * a1 * 3.1 + 7.0;',
-				'		float heaps = enx_fvalue3(a1) * 0.55 + enx_fvalue3(a2) * 0.3 + enx_fvalue3(turned * a2 * 2.7 + 3.0) * 0.15;',
-				'		heaps = smoothstep(0.25, 0.75, heaps);',
-				'		cover = clamp(cover * mix(1.0, 0.3 + 1.4 * heaps, 1.0 - smoothstep(4.0, 12.0, foot)), 0.0, 1.0);',
-				'		vec3 cloud = uCloudTint * (uSunColor * clamp(rise * 1.4 + 0.1, 0.0, 1.0) + around);',
-				'		color = mix(color, cloud, clamp(cover, 0.0, 1.0));',
-				'	}',
-				'	color = mix(color, air_horizon_globe(light), clamp(air_haze_globe(vWorld), 0.0, 1.0));',
+				'}',
+				/* The alpha of the ring of the body where the way to its sun crosses it (the ring graph: its shadow, GroundRing). */
+				'void groundRing(float r, vec3 world, vec3 normal, inout vec3 color, inout float alpha) {}',
+				/* Its ground of the ground graph (GroundGraph; LibraryGround() of the library): see Grounds of SceneBlueprints. */
+				'void blueprintGround(inout vec3 color) {}',
+				'void main() {',
+				'	vec3 color = vec3(0.0);',
+				'	blueprintGround(color);',
 				'	outColor = vec4(color, 1.0);',
 				'}'
 			].join('\n'),
@@ -16282,6 +16910,8 @@ Elemenx.Component('Scene', {
 				'uniform vec3 uUp;',
 				'uniform float uHigh;',
 				'uniform float uCover;',
+				/* How much of the light comes from all the sky under thick air (airAround): its blue gone into the colour of its air. */
+				'uniform float uDiffuse;',
 				/* 1 where a shell of clouds of a weather draws its own cirrus (SceneLighting): none of the sky's own wisps. */
 				'uniform float uNoWisps;',
 				'uniform vec3 uMoon;',
@@ -16295,6 +16925,8 @@ Elemenx.Component('Scene', {
 				'uniform vec3 uAuroraHigh;',
 				'uniform float uEclipse;',
 				'uniform float uSunRadius;',
+				/* How far under the level the horizon is seen (the sine of the angle): from high over a body the Sun shows under it. */
+				'uniform float uDip;',
 				'uniform vec3 uGlow;',
 				'uniform vec3 uGlowWay;',
 				'out vec4 outColor;',
@@ -16447,11 +17079,16 @@ Elemenx.Component('Scene', {
 				/* The water: the graph of water of the scene (WaterGraph, else the one of the library) in this place. */
 				'void blueprintWater(inout vec3 color, inout float alpha) {}',
 				'void main() {',
-				/* A ground with a horizon past it (a location of a planet): its sea ends where it ends, the horizon has the sea past it. */
-				'	if (uBound.y > 0.5 && max(abs(vWorld.x + uEye.x), abs(vWorld.z + uEye.z)) > uBound.x) discard;',
+				/*
+				 * A ground with a horizon past it (a location of a planet): its sea ends where it ends, fading out over an eighth of
+				 * its half past it, the sea of the horizon past it. Regression: cut off there, a seam of two seas, a straight line.
+				 */
+				'	float bound = max(abs(vWorld.x + uEye.x), abs(vWorld.z + uEye.z));',
+				'	if (uBound.y > 0.5 && bound > uBound.x * 1.125) discard;',
 				'	vec3 color = vec3(0.0);',
 				'	float alpha = 1.0;',
 				'	blueprintWater(color, alpha);',
+				'	if (uBound.y > 0.5) alpha *= 1.0 - smoothstep(uBound.x, uBound.x * 1.125, bound);',
 				'	outColor = vec4(color, alpha);',
 				'}'
 			].join('\n'),

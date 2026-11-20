@@ -55,8 +55,8 @@ default
 - [runs the systems of the application for traits of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L723) — `tests/regression/library-scene.test.js`
 - [lands on the surface of a body and takes off again; a giant of gas has none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L740) — `tests/regression/library-scene.test.js`
 - [makes crafts as long as they are and ships as fast as they go in real sizes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L799) — `tests/regression/library-scene.test.js`
-- [draws the Sun from a ship near a planet in real sizes, bright](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L848) — `tests/regression/library-scene.test.js`
-- [starts a ground behind a veil, its time still, until its squares and what grows round the eye are made](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L912) — `tests/regression/library-scene.test.js`
-- [plays the clips of a model: walking on a way by itself, a clip that ends going back, a kind for each model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L954) — `tests/regression/library-scene.test.js`
+- [draws the Sun from a ship near a planet in real sizes, bright](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L849) — `tests/regression/library-scene.test.js`
+- [writes what is round an object into the Ether each frame, of the envelope of the body it is by](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L921) — `tests/regression/library-scene.test.js`
+- [takes the air round an eye and the lands of a ground of the envelope of a body, the Earth as it was](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L977) — `tests/regression/library-scene.test.js`
 
-+163 more in the same files
++173 more in the same files

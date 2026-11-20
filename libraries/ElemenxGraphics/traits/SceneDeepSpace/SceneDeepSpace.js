@@ -32,6 +32,8 @@ Elemenx.Trait('SceneDeepSpace', {
 		var vectors = math.Vectors;
 		var head = '#version 300 es\nprecision highp float;\n';
 		var shaders = this.DeepSpaceShaders(head);
+		var crownHook = 'void blueprintCrown(float r, float angle, float u, inout vec3 color) {}';
+		var beamHook = 'void blueprintBeam(vec2 beam, inout vec3 color) {}';
 		var programs = null;
 		var quad = null;
 		var empty = null;
@@ -171,29 +173,9 @@ Elemenx.Trait('SceneDeepSpace', {
 		 * Parameters: a Curve of the Time animates its prominences), each part as much as its trait says too; without one,
 		 * of its trait alone. A graph that cannot be made is told once, and the star burns as its trait says.
 		 */
-		var looks = {Graphs: typeof WeakMap === 'function' ? new WeakMap() : null, Texts: {}};
-
 		function lookOf (object, star) {
-			var graph = star.Blueprint;
-			var made = null;
+			var made = (engine.StarMade ? engine.StarMade(object) : null) || (star.Blueprint || !self.GraphOf('StarGraph', 'star') ? null : self.StarScene());
 			var look = null;
-
-			if (graph && typeof graph === 'object' && looks.Graphs) made = looks.Graphs.get(graph);
-			else if (typeof graph === 'string') made = looks.Texts[graph];
-
-			if (graph && made === undefined) {
-				try {
-					made = self.$Service('Blueprints').Compile(typeof graph === 'string' ? JSON.parse(graph) : graph);
-				}
-				catch (error) {
-					made = null;
-
-					engine.Told('star', object.Name || object.ID, [{Block: null, Line: 0, Message: error.message}], error.message, 'Elemenx Scene: the Blueprint of a star cannot be made: ' + error.message);
-				}
-
-				if (typeof graph === 'string') looks.Texts[graph] = made;
-				else if (looks.Graphs) looks.Graphs.set(graph, made);
-			}
 
 			if (made && made.Look)
 				look = made.Look(star.Parameters || {}, scene.Seconds % 100000);
@@ -252,7 +234,7 @@ Elemenx.Trait('SceneDeepSpace', {
 					[axis, vectors.Scale(axis, -1)].forEach(function (way) {
 						var down = Math.max(0, -vectors.Dot(way, look));
 
-						engine.DrawReady(quad, programs.Beam, {uViewProjection: matrix, uCenter: center, uAxis: way, uLength: length, uWidth: length * 0.05, uColor: color, uStrength: number(star.Beams, 0) * (1 + 4 * Math.pow(down, 12))}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
+						engine.DrawReady(quad, beamOf(object), {uViewProjection: matrix, uCenter: center, uAxis: way, uLength: length, uWidth: length * 0.05, uColor: color, uStrength: number(star.Beams, 0) * (1 + 4 * Math.pow(down, 12))}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
 					});
 				}
 
@@ -262,12 +244,63 @@ Elemenx.Trait('SceneDeepSpace', {
 			};
 		}
 
+		/* A part of the star graph of the library (LibraryStar): its Crown (corona, prominences, flares), its Beam. */
+		function libraryPart (key) {
+			try {
+				return (self.StarScene() || {})[key] || null;
+			}
+			catch (error) {
+				return null;
+			}
+		}
+
+		/* The Corona shader of a crown (a part of a star graph). */
+		function crowned (crown) {
+			return self.Install({Corona: shaders.Corona}, crownHook, crown).Corona;
+		}
+
+		/* The program of the crown of a star: of its own star graph when it has a crown (StarCrown), else of the library. */
+		function crownOf (object) {
+			var own = engine.StarMade ? engine.StarMade(object) : null;
+			var program;
+
+			if (!own || !own.Crown || !programs.Own) return programs.Corona;
+
+			program = programs.Own.get(own);
+
+			if (!program) {
+				program = renderer.Program(shaders.LensVertex, crowned(own.Crown));
+
+				programs.Own.set(own, program);
+			}
+
+			return program;
+		}
+
+		/* The program of the beams of a pulsar: of its own star graph when it has a beam (StarBeam), else of the library. */
+		function beamOf (object) {
+			var own = engine.StarMade ? engine.StarMade(object) : null;
+			var program;
+
+			if (!own || !own.Beam || !programs.Own) return programs.Beam;
+
+			program = programs.Own.get(own.Beam);
+
+			if (!program) {
+				program = renderer.Program(shaders.BeamVertex, self.Install({Beam: shaders.Beam}, beamHook, own.Beam).Beam);
+
+				programs.Own.set(own.Beam, program);
+			}
+
+			return program;
+		}
+
 		/*
 		 * What is drawn of them, after all that stands (light bent, gas that glows): in the part of the depth the view is
 		 * drawn in now (planes), each once.
 		 */
 		function made () {
-			programs = programs || {Lens: null, Tail: renderer.Program(shaders.TailVertex, shaders.Tail), Glow: renderer.Program(shaders.LensVertex, shaders.Glow), Corona: renderer.Program(shaders.LensVertex, shaders.Corona), Beam: renderer.Program(shaders.BeamVertex, shaders.Beam), Field: renderer.Program(shaders.LensVertex, shaders.Field)};
+			programs = programs || {Lens: null, Tail: renderer.Program(shaders.TailVertex, shaders.Tail), Glow: renderer.Program(shaders.LensVertex, shaders.Glow), Corona: renderer.Program(shaders.LensVertex, crowned(libraryPart('Crown'))), Own: typeof WeakMap === 'function' ? new WeakMap() : null, Beam: renderer.Program(shaders.BeamVertex, self.Install({Beam: shaders.Beam}, beamHook, libraryPart('Beam')).Beam), Field: renderer.Program(shaders.LensVertex, shaders.Field)};
 		}
 
 		/*
@@ -342,7 +375,7 @@ Elemenx.Trait('SceneDeepSpace', {
 						object.CoronaAt = scene.Seconds;
 					}
 
-					engine.DrawReady(quad, programs.Corona, {uPhase: object.CoronaPhase || 0, uViewProjection: matrix, uCenter: vectors.Subtract(object.World, eye), uRight: right, uUp: up, uReach: size * 4, uColor: colorOf(object.Color, [1, 0.9, 0.7]), uSeed: object.Seed || 0, uTime: scene.Seconds % 100000, uParts: [look.Parts[0] * shown, look.Parts[1] * shown, look.Parts[2] * shown, 0], uShape: look.Shape, uTint: look.Tint}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
+					engine.DrawReady(quad, crownOf(object), {uPhase: object.CoronaPhase || 0, uViewProjection: matrix, uCenter: vectors.Subtract(object.World, eye), uRight: right, uUp: up, uReach: size * 4, uColor: colorOf(object.Color, [1, 0.9, 0.7]), uSeed: object.Seed || 0, uTime: scene.Seconds % 100000, uParts: [look.Parts[0] * shown, look.Parts[1] * shown, look.Parts[2] * shown, 0], uShape: look.Shape, uTint: look.Tint}, {Blend: 'add', DepthWrite: false, Cull: 'none'});
 				});
 			});
 
@@ -510,43 +543,15 @@ Elemenx.Trait('SceneDeepSpace', {
 				'	float f = fract(x);',
 				'	return mix(hash(i), hash(i + 1.0), f * f * (3.0 - 2.0 * f));',
 				'}',
+				/* Its corona, prominences and flares (the star graph: blueprintCrown, its StarCrown; LibraryStar() of the library). */
+				'void blueprintCrown(float r, float angle, float u, inout vec3 color) {}',
 				'void main() {',
 				'	float r = length(vQuad) * 4.0;',
 				'	if (r < 0.985 || r > 4.0) discard;',
 				'	float angle = atan(vQuad.y, vQuad.x);',
 				'	float u = r - 1.0;',
-				'	float streamers = 0.55 + 0.45 * wave(angle * 3.0 + uSeed) * wave(angle * 7.0 - uSeed + uTime * 0.02);',
-				'	vec3 color = uColor * exp(-u * 2.6) * streamers * 0.55 * uParts.x * (1.0 - smoothstep(2.5, 4.0, r));',
-				'	vec3 red = vec3(1.0, 0.36, 0.3);',
-				/*
-				 * uShape: how many prominences (up to 8), how high, how fast they breathe and stream, how torn (the look of a
-				 * Blueprint); uPhase how far they went (their speed added up). The last one comes and goes softly as their
-				 * count changes (regression: on and off at once).
-				 */
-				'	for (int i = 0; i < 8; i++) {',
-				'		float k = float(i);',
-				'		if (k >= ceil(uShape.x)) break;',
-				'		float whole = clamp(uShape.x - k, 0.0, 1.0);',
-				'		float at = hash(uSeed + k * 7.3) * 6.2832 - 3.1416;',
-				'		float wide = 0.08 + 0.1 * hash(uSeed + k * 3.1);',
-				'		float high = min(2.4, (0.12 + 0.3 * hash(uSeed + k * 5.7)) * uShape.y * (0.85 + 0.15 * sin(uPhase * 0.4 + k)));',
-				'		float t = (mod(angle - at + 3.1416, 6.2832) - 3.1416) / wide;',
-				'		if (abs(t) < 1.2) {',
-				'			float arch = high * sqrt(max(0.0, 1.0 - t * t));',
-				'			float d = abs(u - arch);',
-				'			float strands = 1.0 - 0.4 * clamp(uShape.w, 0.0, 2.5) * (1.0 - wave(t * 9.0 + uPhase * 0.5 + k * 13.0));',
-				/* A thick arch of gas, brightest along it, its inside filled and fading, torn into strands. */
-				'			float body = exp(-d * 22.0) * 0.8 + exp(-d * 70.0) * 0.6 + step(u, arch) * smoothstep(0.0, arch, u) * 0.25;',
-				'			color += mix(red, uColor, 0.25) * uTint * body * max(strands, 0.0) * smoothstep(1.2, 0.85, abs(t)) * 1.3 * uParts.y * whole;',
-				'		}',
-				'	}',
-				/* A flare: one every while, of its seed, at its own place on the edge. */
-				'	float round = floor(uTime / 23.0 + uSeed);',
-				'	float since = mod(uTime + uSeed * 23.0, 23.0);',
-				'	float where = hash(round) * 6.2832 - 3.1416;',
-				'	float off = mod(angle - where + 3.1416, 6.2832) - 3.1416;',
-				'	float burst = smoothstep(0.0, 0.6, since) * exp(-since * 0.8);',
-				'	color += vec3(1.0, 0.95, 0.85) * exp(-off * off * 120.0 - u * u * 18.0) * burst * 6.0 * uParts.z;',
+				'	vec3 color = vec3(0.0);',
+				'	blueprintCrown(r, angle, u, color);',
 				'	outColor = vec4(color, 1.0);',
 				'}'
 			].join('\n'),
@@ -578,10 +583,12 @@ Elemenx.Trait('SceneDeepSpace', {
 				'uniform vec3 uColor;',
 				'uniform float uStrength;',
 				'out vec4 outColor;',
+				/* Its light across and along it (the star graph: blueprintBeam, its StarBeam; LibraryStar() of the library). */
+				'void blueprintBeam(vec2 beam, inout vec3 color) {}',
 				'void main() {',
-				'	float across = exp(-vBeam.x * vBeam.x * 7.0);',
-				'	float along = pow(1.0 - vBeam.y, 1.7) * smoothstep(0.0, 0.015, vBeam.y);',
-				'	outColor = vec4(mix(uColor, vec3(1.0), 0.4) * across * along * uStrength * 1.3, 1.0);',
+				'	vec3 color = vec3(0.0);',
+				'	blueprintBeam(vBeam, color);',
+				'	outColor = vec4(color, 1.0);',
 				'}'
 			].join('\n'),
 

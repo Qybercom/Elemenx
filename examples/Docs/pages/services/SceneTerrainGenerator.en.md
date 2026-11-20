@@ -89,7 +89,7 @@ The same functions run in Node: they read no page.
 - [draws a material of a recipe by its Blueprint, its parameters uniforms that change it without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L73) — `tests/regression/library-material-blueprints.test.js`
 - [draws a ground by its Blueprint, the color of its parameter, and keeps the very same ground as its look changes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L199) — `tests/regression/library-material-blueprints.test.js`
 - [draws the wire of all, the edges of the models and the outlines of the chosen and hovered ones, each its colour](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-rigid.test.js#L261) — `tests/regression/library-rigid.test.js`
-- [asks a coarse part near the eye before the small squares far in the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L1419) — `tests/regression/library-scene-landing.test.js`
+- [asks a coarse part near the eye before the small squares far in the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L1597) — `tests/regression/library-scene-landing.test.js`
 - [keeps no grass where a tunnel cut the ground away under the sky](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L369) — `tests/regression/library-scene-roads.test.js`
 
 +64 more in the same files

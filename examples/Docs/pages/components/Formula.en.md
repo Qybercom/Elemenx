@@ -22,7 +22,7 @@ A formula written as in LaTeX (the part the Formulas Service reads: fractions, r
 
 ## Tests
 
-- [bakes a body of noise by its graph: its Input blocks the uniforms of the bake, Formula and Ridge in it, a sea where the land is under 0](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L136) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
+- [bakes a body of noise by its graph: its Input blocks the uniforms of the bake, Formula and Ridge in it, a sea where the land is under 0](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L137) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
 - [reads a formula: its names its inputs, the same of the graph run and of its code, vectors part by part](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L170) — `tests/regression/blueprints-ir.test.js`
 - [turns by the own Math in the run of a graph, in its Code and in its IR, to the bit](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L201) — `tests/regression/blueprints-ir.test.js`
 - [computes what only the Value of When needs inside its if, a When in a When, the same everywhere](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L315) — `tests/regression/blueprints-ir.test.js`
@@ -33,6 +33,6 @@ A formula written as in LaTeX (the part the Formulas Service reads: fractions, r
 - [opens the graph of a model of the library, shows each change of it on the model, gives it to the library and takes it back](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/ModelEditor/ModelEditor.test.js#L369) — `libraries/ElemenxGraphics/components/ModelEditor/ModelEditor.test.js`
 - [makes its land and its relief by the graphs of the library, or by a LandGraph and a ReliefGraph of its own, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L785) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 - [gives a ground of a place of it its graphs of its own (Site): their code made in the page, the same squares in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L838) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
-- [makes its winds and its climate by the graphs of the library, or by a WindGraph, a RoughGraph and a ClimateGraph of its own, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L867) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
+- [makes its winds and its climate by the graphs of the library, or by a WindGraph, a RoughGraph and a ClimateGraph of its own, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L912) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 
 +4 more in the same files

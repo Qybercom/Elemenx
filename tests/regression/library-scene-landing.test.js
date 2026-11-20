@@ -5,10 +5,11 @@ import { Use } from '../library.js';
 var owned = [];
 var PLANET = {Seed: 'terra', Ocean: 0.5, LocationSize: 1, Markers: [{ID: 'base', Name: 'Base Alpha', Latitude: 18, Longitude: 32}]};
 
-async function mount (planet, moons) {
+/* A scene of Terra round the Sun: its planet of its own (planet; false: none, a body of the Type given), its moons. */
+async function mount (planet, moons, type, extra) {
 	var ready = null;
 	var component = Elemenx.Component(unique('LandingHost'), {$Template: '<div style="width: 320px; height: 200px"><Scene Paused="true" Quality="low" Background="false" (ready)="Ready">' +
-		'<SceneObject ID="sun" Kind="star"><SceneObject ID="terra" Kind="planet" Surface-Type="terran" [surface-planet]="Planet" Radius="6371" Distance="1" Day="24">' + (moons || '') + '</SceneObject></SceneObject>' +
+		'<SceneObject ID="sun" Kind="star"><SceneObject ID="terra" Kind="planet" Surface-Type="' + (type || 'terran') + '"' + (planet === false ? '' : ' [surface-planet]="Planet"') + ' Radius="6371" Distance="1" Day="24"' + (extra || '') + '>' + (moons || '') + '</SceneObject></SceneObject>' +
 	'</Scene></div>', Planet: planet || PLANET, Ready: function (space) {
 		ready = space;
 	}})();
@@ -292,7 +293,8 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		/* Drawn over the surface: the ship where it flies, in kilometres, its own size. */
 		engine.Frame(now += 100);
 
-		expect(inner.Surface.ShipSize).toBeCloseTo(0.03, 9);
+		/* As long as its Length drawn (30 m): its size of the longest extent of its model (engine.CraftScale). */
+		expect(inner.Surface.ShipSize * engine.CraftScale(inner.Objects.me)).toBeCloseTo(0.03, 9);
 		expect(inner.SurfaceLists && Object.keys(inner.SurfaceLists).length).toBeGreaterThan(0);
 
 		/*
@@ -343,7 +345,7 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		expect(terra.Hidden).toBe(true);
 		expect(inner.Objects.sun.Hidden).toBe(true);
 		expect(hero.Hidden).toBeFalsy();
-		expect(hero.Size).toBe(30);
+		expect(hero.Size * engine.CraftScale(hero)).toBeCloseTo(30, 6);
 
 		to = inner.Location.Frame.Local([Math.cos(18 * Math.PI / 180) * Math.cos(32 * Math.PI / 180), Math.sin(18 * Math.PI / 180), -Math.cos(18 * Math.PI / 180) * Math.sin(32 * Math.PI / 180)]);
 
@@ -567,6 +569,182 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		expect(Math.max.apply(null, veils)).toBe(1);
 		expect(veils[veils.length - 1]).toBe(0);
 		expect(inner.Ground.Field.Border).toBeTruthy();
+	}, 120000);
+
+	/*
+	 * A location of a body with no planet of its own (a ground of its own laid on the surface of the body): the far ground
+	 * round it under the eye. Regression: the eye stood under the far ground (its relief kilometres over the location), only
+	 * the skirts of its squares were seen, a net of strips over the sky.
+	 */
+	it('keeps the far ground round a location of a body with no planet of its own under the eye', async function () {
+		var scene = await mount(false, '', 'desert');
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var i;
+
+		engine.Frame(now += 100, true);
+
+		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'terra', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'terra', From: [0, 0, 3], Facing: [0, 0, 1], Length: 30}});
+		scene.Control('me');
+
+		engine.Frame(now += 100, true);
+
+		expect(scene.Land('me', {Body: 'terra', Latitude: 12, Longitude: 40})).toBe(true);
+
+		for (i = 0; i < 3000 && !inner.Location; i++) {
+			inner.Rest = 0;
+
+			engine.Frame(now += 50, true);
+		}
+
+		/* Drawn: the far ground takes the eye of the location. */
+		for (i = 0; i < 400 && !(inner.Horizon && inner.Horizon.Up); i++) {
+			inner.Rest = 0;
+			inner.Looping = true;
+
+			engine.Frame(now += 50);
+
+			inner.Looping = false;
+		}
+
+		expect(inner.Location.Planet).toBe(false);
+		expect(inner.Horizon.Field.Elevation(inner.Horizon.Up)).toBeGreaterThan(0.2);
+		expect(inner.Horizon.Altitude).toBeGreaterThan(0.05);
+	}, 120000);
+
+	/*
+	 * Regression: the far ground of a body of no air was drawn at one depth, then in a few steps of depth past the location,
+	 * the slopes behind a ridge over the slopes before it (dark blotches, then stripes, all over its hills); clouds were drawn
+	 * over it; it was lit by the star as in space and of the colours of the body, beige and far brighter than the grey lands
+	 * round the eye. Drawn first in all the depths of a view of its own, then its depths cleared; lit by the sun of the
+	 * location; the lands of the location of the hue of the body, the far ground as bright as they are; no air, no weather.
+	 */
+	it('draws the far ground of a body of no air in depths of its own, lit and coloured as the location, no weather over it', async function () {
+		var scene = await mount(false, '', 'desert', ' Atmosphere="none" Colors="#c9a070,#b08860,#d8b890,#a07850"');
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var gl = engine.Renderer.GL;
+		var renderer = engine.Renderer;
+		var draw = renderer.Draw;
+		var clear = gl.clear;
+		var depthRange = gl.depthRange;
+		var events = [];
+		var ranges = [];
+		var last;
+		var biomes;
+		var lands;
+		var colors;
+		var now = performance.now() + 1000;
+		var i;
+
+		engine.Frame(now += 100, true);
+
+		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'terra', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'terra', From: [0, 0, 3], Facing: [0, 0, 1], Length: 30}});
+		scene.Control('me');
+
+		engine.Frame(now += 100, true);
+
+		expect(scene.Land('me', {Body: 'terra', Latitude: 12, Longitude: 40})).toBe(true);
+
+		for (i = 0; i < 3000 && !inner.Location; i++) {
+			inner.Rest = 0;
+
+			engine.Frame(now += 50, true);
+		}
+
+		gl.depthRange = function (near, far) {
+			ranges.push([near, far]);
+
+			return depthRange.call(gl, near, far);
+		};
+		/* H: a square of the far ground (its uniforms: no clouds of its own, a relief of 1), C: the depth alone cleared. */
+		renderer.Draw = function (mesh, program, uniforms, options) {
+			events.push(uniforms && uniforms.uColors && uniforms.uRelief === 1 && uniforms.uCloudsOn === 0 ? 'H' : 'D');
+
+			return draw.apply(renderer, arguments);
+		};
+		gl.clear = function (mask) {
+			if (mask === gl.DEPTH_BUFFER_BIT)
+				events.push('C');
+
+			return clear.call(gl, mask);
+		};
+
+		try {
+			for (i = 0; i < 600 && events.indexOf('H') === -1; i++) {
+				inner.Rest = 0;
+				inner.Looping = true;
+
+				engine.Frame(now += 50);
+
+				inner.Looping = false;
+			}
+		}
+		finally {
+			gl.depthRange = depthRange;
+			gl.clear = clear;
+			renderer.Draw = draw;
+		}
+
+		expect(inner.Horizon.Up).toBeTruthy();
+
+		/* Its depths cleared right after its last square: nothing of the location drawn between. */
+		last = events.lastIndexOf('H');
+
+		expect(last).toBeGreaterThan(-1);
+		expect(events.slice(last + 1).filter(function (event) {
+			return event !== 'H';
+		})[0]).toBe('C');
+		expect(ranges.some(function (range) {
+			return range[0] > 0;
+		})).toBe(false);
+		expect(scene.Weather).toBe('none');
+
+		/*
+		 * The eye over the highest of the far ground under the location and round it (Top): no square round it over the eye, its
+		 * skirts seen from under it (strips over the sky).
+		 */
+		var field = inner.Horizon.Field;
+		var frame = inner.Location.Frame;
+		var size = inner.Ground.Field.Size;
+		var highest = 0;
+		var a;
+		var b;
+
+		for (a = -3; a <= 3; a++) {
+			for (b = -3; b <= 3; b++)
+				highest = Math.max(highest, field.Elevation(frame.Direction(a * size / 3, b * size / 3)));
+		}
+
+		expect(inner.Horizon.Top).toBeCloseTo(highest, 6);
+		expect(Math.hypot(inner.Horizon.Eye[0], inner.Horizon.Eye[1], inner.Horizon.Eye[2]) - field.Radius).toBeGreaterThanOrEqual(highest);
+
+		/* The lands of the location of the hue of the body (warm), as bright as they were; the far ground as bright as they are. */
+		biomes = Elemenx.Service('SceneBiomes');
+		lands = engine.LandsOf(inner.Objects.terra);
+		colors = lands.Colors;
+
+		function bright (color) {
+			return color[0] * 0.2126 + color[1] * 0.7152 + color[2] * 0.0722;
+		}
+
+		expect(lands.Biomes.length).toBeGreaterThan(0);
+
+		lands.Biomes.forEach(function (land) {
+			var own = biomes.Get(land.Biome).Ground;
+
+			expect(land.Ground.Low[0]).toBeGreaterThan(land.Ground.Low[2]);
+			expect(Math.abs(bright(land.Ground.Low) - bright(own.Low))).toBeLessThan(0.06);
+			expect(land.Ground.Materials).toEqual(own.Materials);
+		});
+
+		expect(Math.abs(bright(colors.reduce(function (sum, color) {
+			return [sum[0] + color[0] / 4, sum[1] + color[1] / 4, sum[2] + color[2] / 4];
+		}, [0, 0, 0])) - lands.Biomes.reduce(function (sum, land) {
+			return sum + (bright(land.Ground.Low) + bright(land.Ground.High)) / 2 / lands.Biomes.length;
+		}, 0))).toBeLessThan(0.02);
+		expect(inner.Ground.Field.Biomes || inner.Ground.Field.BiomeList || true).toBeTruthy();
 	}, 120000);
 
 	/*

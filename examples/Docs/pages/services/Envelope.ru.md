@@ -1,0 +1,48 @@
+<!-- generated -->
+# Envelope
+
+Оболочка тела — одна модель для всего, что над поверхностью и под ней: воздух (газ, облачные палубы, дымка), моря и океаны подо льдом, горячая жидкость гиганта, его твёрдое ядро. У тела без воздуха (Луна, Меркурий) оболочки нет; у каменной планеты — воздух над грунтом; у гиганта — тысячи километров газа над маленьким ядром. Источник один — функции на языке ядра Elemenx.Compilers (Kernel): одни и те же на странице, в воркере, в wasm и в шейдере.
+
+Зоны идут сверху вниз, каждая от своего Top (км над Radius тела; ниже — отрицательные, или Deep — доля радиуса вниз) до Top следующей: {Name, Phase (gas, cloud, haze, liquid, supercritical, solid), Lapse (на сколько K за км теплее вниз; меньше 0 — холоднее), Opacity (сколько света солнца зона забирает на км, как он доходит до земли — с рассеянным, не только прямой луч), Density (кг/м³ жидкости, сверхкритической жидкости или твёрдого), Color}. Pressure (бар) и Temperature (K) на уровне Radius (высота 0), MolarMass (кг/моль) и Core (твёрдое под оболочкой, доля радиуса; нет — грунт тела) задают остальное: температура каждой зоны продолжает верхнюю; газ идеальный (P = P(верх) (T/T(верх))^(M g / R L), экспонента при L = 0), жидкость и флюид давят своей плотностью (P = P(верх) + ρ g d); g — из массы и радиуса тела, одна на всю глубину.
+
+Presets() — оболочки библиотеки по именам (resources/astronomy/envelopes: earth, mars, venus, titan, jupiter, saturn, uranus, neptune, europa, none) и Types — имя оболочки для каждого типа поверхности. Make(spec, body) — оболочка для тела ({Radius в км, Mass в массах Земли}): spec — имя пресета, оболочка или {Preset, ...что поменять}; {Zones (числа, которые читает Kernel), Names, Phases, Colors, Pressure, Temperature, Gravity, Floor (км: где под ней начинается твёрдое; -Infinity — грунт тела), Top (км: где кончается воздух — давление ниже TopPressure; 0 без воздуха), Sky (км: высота неба — где давление SkyPart от давления на высоте 0)}. У Земли Top = 120 км, Sky = 100 км — там, где их держали сцены. At(made, height) — что на высоте: {Zone (имя; '' над оболочкой, 'core' под её дном), Phase ('space' над ней, 'solid' в ядре), Pressure, Temperature, Density, Light (сколько света солнца доходит сверху, от 0 до 1), Glow (цвет собственного жара [r, g, b] от 0 до 1, умноженный на яркость: ниже ~750 K его нет), Inside, Solid}. Glow(temperature) — этот цвет.
+
+Code() — Kernel в js (собирается на странице, воркер берёт текст, Compiled); IR() — модуль IR для блоков Blueprints EnvelopeState (Pressure, Temperature, Density, Zone — по списку чисел Zones на высоте Height) и EnvelopeLight (Light, Phase) в графах чисел (generator). env_state(zones, height) — vec4 давления, температуры, плотности и номера зоны (-1 над оболочкой, их число — в ядре); env_light(zones, height) — vec2 света и фазы (-1 над оболочкой). Граф библиотеки — planet/envelope в ElemenxGraphics (EnvelopeGraph сцены). Source(names) отдаёт члены воркеру.
+
+Сцена: Probe(id, name) — что вокруг объекта, каждый кадр в срез эфира (Elemenx.Ether, по умолчанию environment) под его ID, один и тот же объект: {Body, Altitude (км над Radius тела), Ground (км; null, где неизвестна), Zone, Phase, Pressure, Temperature, Density, Light, Glow, Inside, Solid}; Unprobe(id), Environment(id). Ниже грунта каменного тела — Zone ground, Solid.
+
+Погода как следствие оболочки. Condensables оболочки — вещества, которые конденсируются: {Name, Of (water, ammonia, methane, hydrogen sulphide из библиотеки) или A и B насыщения (ln P = A − B/T, бар, Клаузиус — Клапейрон), Mix — доля в воздухе, Thick — км вверх, Opacity, Color}; облачная палуба начинается там, где поднимающийся воздух впервые насыщается этим веществом (Mix·P достигает насыщения). Палуба реакции или капель — {Name, Base, Top} в барах. Make отдаёт Decks [{Name, Base, Top, Opacity, Color}] и режет по ним зоны (в палубе — её имя, цвет и фаза cloud). У Земли вода насыщается на ~2 км, у Юпитера аммиак (~0,5 бар) над гидросульфидом аммония (1,4–2,2 бар) над водой (5–9 бар), у Титана — метан. Make(spec, {Radius, Mass, Day}) отдаёт и числа климата: Cells — ячейки ветров на полушарие из скорости экватора (кубический корень: Земля 3, Венера и Титан 1, Юпитер больше 6), Warm — на сколько средняя теплее земной (15 °C), Contrast — во сколько меньше разница мест (густой воздух выравнивает, Венера ~0,1; разреженный — до 2), Lapse — градиент у поверхности. Сцена кладёт их в опции планеты (только отличные от земных) — графы климата и ветра (planet/climate, planet/wind: входы Cells, Warm, Contrast, Lapse) и прогноз (вход Cells блока ForecastStorms, uCells шейдера погоды) считают по ним; у Земли всё как было.
+
+У вещества облаков есть Critical — критическая температура (K): выше неё оно не конденсируется, сколько бы его ни было (вода 647.1, аммиак 405.4, метан 190.6, сероводород 373.1). Без неё метан Нептуна «конденсировался» на глубине 3700 км, теперь его слой там, где он есть, — на 1–2 бар.
+
+Habitat(made, type) — какой мир у поверхности тела, по его воздуху на высоте 0: первое правило Habitats библиотеки, которое выполняется (Kelvin и Pressure — диапазоны [от, до], null — без края; Condensable — вещество облаков, которое у него есть; Types — тип поверхности):
+- giant — газовый или ледяной гигант, поверхности нет;
+- frozen — безвоздушный ледяной мир (Европа) и всё холодное, что не подошло под другие правила;
+- barren — безвоздушный каменный (Луна, Меркурий);
+- scorched — раскалённый, жарче 330 K (Венера);
+- hydrocarbon — холоднее 140 K с метаном (Титан);
+- living — где вода может быть жидкой и жить живое: 228–330 K, от 0.006 бар, есть вода (Земля);
+- dust — тонкий холодный воздух, меньше 0.1 бар (Марс).
+
+По классу Scene выбирает земли поверхности (Scene HabitatOf и resources/terrain/habitats ElemenxGraphics); у living — земные, как были.
+
+## Методы
+
+- `Source(names)`
+- `Code()`
+- `IR()`
+- `Presets()`
+- `Habitat(made, type)`
+- `Make(spec, body)`
+- `At(made, height)`
+
+## Тесты
+
+- [gives the air of the Earth as the standard atmosphere has it, its sky at 100 km and its top at 120 km](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Envelope/Envelope.test.js#L19) — `libraries/ElemenxCommon/services/Envelope/Envelope.test.js`
+- [makes the dense air of Venus and the haze of Titan of the same model](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Envelope/Envelope.test.js#L45) — `libraries/ElemenxCommon/services/Envelope/Envelope.test.js`
+- [goes down through a giant: its decks, the dark, the glow of its heat growing white, its solid core](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Envelope/Envelope.test.js#L65) — `libraries/ElemenxCommon/services/Envelope/Envelope.test.js`
+- [gives none to a body of no air, and the ocean under the ice of Europa](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Envelope/Envelope.test.js#L89) — `libraries/ElemenxCommon/services/Envelope/Envelope.test.js`
+- [makes the decks of clouds where a vapour saturates, the cells of the winds of how it turns, its warmth and contrast](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Envelope/Envelope.test.js#L107) — `libraries/ElemenxCommon/services/Envelope/Envelope.test.js`
+- [condenses a vapour only colder than its critical point: the methane of the ice giants near their tops](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Envelope/Envelope.test.js#L145) — `libraries/ElemenxCommon/services/Envelope/Envelope.test.js`
+- [makes a graph of numbers of its blocks give what its Kernel gives](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Envelope/Envelope.test.js#L163) — `libraries/ElemenxCommon/services/Envelope/Envelope.test.js`
+- [tells what kind of world the ground of a body is, of its air there](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Envelope/Envelope.test.js#L198) — `libraries/ElemenxCommon/services/Envelope/Envelope.test.js`

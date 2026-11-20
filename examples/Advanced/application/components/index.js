@@ -8,6 +8,7 @@
 	'GamingPage/GamingPage.js',
 	'HardwarePage/HardwarePage.js',
 	'OrbitDemo/OrbitDemo.js',
+	'UniverseDemo/UniverseDemo.js',
 	'WorldDemo/WorldDemo.js',
 	'RacingDemo/RacingDemo.js',
 	'CombatDemo/CombatDemo.js',

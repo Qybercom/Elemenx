@@ -236,6 +236,30 @@
 			"Sample": {}
 		},
 		{
+			"Name": "Envelope",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "What lies over and under the surface of a body as one model: its air, cloud decks and haze, seas and oceans under ice, the hot fluid of a giant, its core; pressure, temperature, light and glow at any height.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Presets()",
+				"Make(spec, body)",
+				"At(made, height)",
+				"Habitat(made, type)",
+				"Code()",
+				"IR()",
+				"Source(names)"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "Diff",
 			"Kind": "Service",
 			"Group": "",

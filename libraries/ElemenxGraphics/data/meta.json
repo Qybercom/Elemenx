@@ -649,6 +649,7 @@
 						"storm",
 						"snow",
 						"fog",
+						"none",
 						"changing"
 					],
 					"Schema": null,
@@ -698,7 +699,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The shader graphs of a world of its own by their names, read as the scene is made: shader/bake (BakeGraph), shader/weather (WeatherGraph), shader/bolt (BoltGraph), shader/air (AirGraph), shader/clouds (CloudsGraph), shader/forecast (ForecastGraph), shader/galaxy (GalaxyGraph), shader/cosmos (CosmosGraph), shader/ring (RingGraph), shader/planet (PlanetGraph); its props of them come first."
+					"Description": "The shader graphs of a world of its own by their names, read as the scene is made: shader/bake (BakeGraph), shader/weather (WeatherGraph), shader/bolt (BoltGraph), shader/air (AirGraph), shader/clouds (CloudsGraph), shader/forecast (ForecastGraph), shader/galaxy (GalaxyGraph), shader/cosmos (CosmosGraph), shader/ring (RingGraph), shader/planet (PlanetGraph), shader/ground (GroundGraph), planet/envelope (EnvelopeGraph), star (the stars with no Blueprint of their own: their surface, crown, beams and numbers); its props of them come first."
 				},
 				{
 					"Name": "BoltGraph",
@@ -717,6 +718,24 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "Its globes seen from far: a planet graph of the Blueprints Service of their picture lit, their clouds and the shadows of them and of a ring, their towns at night, their air at the edge (or its JSON, or GLSL with blueprintPlanet); empty, the one of the library (LibraryPlanet())."
+				},
+				{
+					"Name": "EnvelopeGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What lies over and under the surface of its bodies (their air, decks of clouds, seas, the depths of a giant): a generator of numbers of the Blueprints Service of the blocks EnvelopeState and EnvelopeLight of the Envelope Service (its results Pressure, Temperature, Zone and Light; or its JSON); empty, the one of the library (LibraryEnvelope())."
+				},
+				{
+					"Name": "GroundGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ground of its globes near and from over them: a ground graph of the Blueprints Service of its picture, its woods, fields, snow and dunes, its relief, the tiles near, the shadows of its clouds and of a ring, its water, towns at night, clouds from over them and air (or its JSON, or GLSL with blueprintGround); empty, the one of the library (LibraryGround())."
 				},
 				{
 					"Name": "RingGraph",
@@ -1175,6 +1194,11 @@
 				"LibraryCosmos()",
 				"LibraryRing()",
 				"LibraryPlanet()",
+				"LibraryGround()",
+				"LibraryEnvelope()",
+				"Probe(id, name)",
+				"Unprobe(id)",
+				"Environment(id)",
 				"WeatherOver(id, direction)",
 				"BoltShape()",
 				"LibraryWater()",
@@ -1182,6 +1206,10 @@
 				"Effects(types)",
 				"MountsOf(id, kind)",
 				"Travel(id, kind, options, callback)",
+				"TravelStop(id)",
+				"TravelStep(id, step)",
+				"Aim(id)",
+				"AimAlign(on)",
 				"OpenPart(id, name, amount)",
 				"Parts(id)",
 				"Part(id, role)",
@@ -1192,7 +1220,8 @@
 				"GalaxyStars()",
 				"GalaxyPicked()",
 				"GalaxyFocus(id)",
-				"EnterSystem(id, callback)",
+				"EnterSystem(id, callback, options)",
+				"GalaxyNear(radius, limit)",
 				"LeaveSystem(callback)",
 				"GalaxyEntered()",
 				"Add(kind, props)",
@@ -2633,7 +2662,8 @@
 				"LibraryCosmos()",
 				"LibraryRing()",
 				"Painted(kind, end, head)",
-				"LibraryPlanet()"
+				"LibraryPlanet()",
+				"LibraryGround()"
 			],
 			"Sample": {}
 		},
@@ -2842,6 +2872,7 @@
 				"Make(name, options)",
 				"Surfaces(model)",
 				"Whole(model)",
+				"Extent(name)",
 				"Bounds(geometry)",
 				"Levels(name, options)",
 				"Pose(model, clip, time, options)",
@@ -3146,7 +3177,7 @@
 			"Methods": [
 				"Code()",
 				"IR()",
-				"Air(p, days, seed, radiusKm, scale, fine, eddy)",
+				"Air(p, days, seed, radiusKm, scale, fine, eddy, cells)",
 				"Fronts(fronts, mid, moist, ground, climb, py, storm, cloudiness, cut, cutBy, soft)",
 				"Heaps(p, sun, warm, moist, ground, climb, streams, mid, humid, storm, sheet, cloudiness, fairLow, fairHigh)",
 				"Cirrus(streams, py, sheet, low, high)",
@@ -3432,6 +3463,13 @@
 		"elemenx-scene-cinema-subtitles": [],
 		"elemenx-scene-cinema-subtitle": [],
 		"elemenx-scene-cinema-speaker": [],
+		"elemenx-scene-sight": [],
+		"elemenx-scene-sight-nose": [],
+		"elemenx-scene-sight-mark": [],
+		"elemenx-scene-sight-target": [],
+		"elemenx-scene-sight-lead": [],
+		"elemenx-scene-sight-arrow": [],
+		"elemenx-scene-sight-label": [],
 		"elemenx-scene-labels": [
 			"hidden"
 		],

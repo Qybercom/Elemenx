@@ -76,6 +76,14 @@ Elemenx.Trait('SceneLanding', {
 			return {Airspeed: number(given.Airspeed, 160), Climb: number(given.Climb, 30), Hover: number(given.Hover, 40), Agility: number(given.Agility, 1)};
 		}
 
+		/*
+		 * The longest side of the model of a ship in its units (Scene: CraftScale): its model is drawn at its length over it,
+		 * the ship as long as it is (its height was, a model of a file fitted to a height of 1).
+		 */
+		function scaleOf (hero) {
+			return engine.CraftScale ? engine.CraftScale(hero) : 1;
+		}
+
 		/* How long a ship is, in metres (Length of its Vehicle, 40). */
 		function lengthOf (hero) {
 			return number(hero.Values.Vehicle && hero.Values.Vehicle.Length, 40);
@@ -195,8 +203,14 @@ Elemenx.Trait('SceneLanding', {
 			return 1 + (entry.Pace - 1) * Math.sqrt(smooth(0.6, 40, height));
 		}
 
-		/* Where the air of a body ends (km): a ship lower is in it, flown over its surface. */
+		/*
+		 * Where the air of a body ends (km): a ship lower is in it, flown over its surface. Of its envelope (Envelope: 120 km of
+		 * the Earth); a body of none, or with air drawn but of no envelope, as before (40 km, or 120 with air).
+		 */
 		function topOf (body) {
+			var top = body && engine.EnvelopeOf ? engine.EnvelopeOf(body).Top : 0;
+			if (top > 0) return top;
+
 			return body && body.Look && body.Look.Atmosphere[3] > 0.02 ? 120 : 40;
 		}
 
@@ -451,7 +465,7 @@ Elemenx.Trait('SceneLanding', {
 			landing.ShipAxes = axes;
 
 			surface.ShipAt = at;
-			surface.ShipSize = lengthOf(hero) / 1000;
+			surface.ShipSize = lengthOf(hero) / 1000 / scaleOf(hero);
 			surface.ShipTurn = turnOf(hero, axes.Right, axes.Up, axes.Ahead);
 			surface.ShipAxes = axes;
 		}
@@ -583,7 +597,14 @@ Elemenx.Trait('SceneLanding', {
 			else {
 				id = body.ID + ':' + target.Latitude.toFixed(4) + ':' + target.Longitude.toFixed(4);
 				place = {Latitude: target.Latitude, Longitude: target.Longitude, Turn: 0, Size: 4000};
-				world = self.$Service('SceneWorld').Library({Size: 4000, Height: 60, Water: 0, Seed: body.ID + ':' + id});
+
+				/*
+				 * Of the lands of the kind of world it is, of the hue of the body (Scene locationLands: none given on one that lives, its
+				 * lands as they were).
+				 */
+				var lands = engine.LandsOf ? engine.LandsOf(body).Biomes : null;
+
+				world = self.$Service('SceneWorld').Library(Object.assign({Size: 4000, Height: 60, Water: 0, Seed: body.ID + ':' + id}, lands ? {Biomes: lands} : {}));
 			}
 
 			frame = siteFrame(place, body.Radius * 1000);
@@ -601,15 +622,15 @@ Elemenx.Trait('SceneLanding', {
 				scene.Camera.Fov = landing.Fov;
 
 			landing.SpaceSize = hero.Size;
-			hero.Located = length;
-			hero.Size = length;
+			hero.Located = length / scaleOf(hero);
+			hero.Size = hero.Located;
 
 			self.Add('ground', {ID: ground, World: world, Generated: true});
 			self.Add('sun', {ID: light, Elevation: sun.Elevation, Azimuth: sun.Azimuth, Disc: sun.Disc, Moon: sun.Moon, MoonElevation: sun.MoonElevation, MoonAzimuth: sun.MoonAzimuth, MoonPhase: sun.MoonPhase, MoonSize: sun.MoonSize, Generated: true});
 
 			engine.Prepare(true);
 
-			hero.Size = length;
+			hero.Size = hero.Located;
 
 			/* As fast as it came and the way it went (metres a second now); the player flies on, a plan sets down at its point. */
 			var speed = Math.min(flightOf(hero).Airspeed * 1.6, landing.Speed * 1000);
@@ -1329,7 +1350,8 @@ Elemenx.Trait('SceneLanding', {
 			else if (hero.Landing && hero.Landing.Phase === 'transfer' && hero.Ship) transferStep(hero, elapsed);
 			else if (!(hero.Orbiting && orbitStep(hero, keys, elapsed))) space(hero, keys, elapsed);
 
-			if (!scene.Ground && !scene.Surface && !hero.Landing && hero.Ship)
+			/* Not on a way far at once: a tunnel of warp goes through the air of a body (out of normal space), a jump out of it comes out first. */
+			if (!scene.Ground && !scene.Surface && !hero.Landing && hero.Ship && !hero.Travel)
 				airborne(hero);
 
 			offer();

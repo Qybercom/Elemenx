@@ -56,6 +56,9 @@
  * - The kind planet: a globe from far (PlanetGraph of a Scene): its picture lit, its clouds and their shadows, the shadow
  *   of its ring, its towns at night, its air at its edge as blocks: see Planets; LibraryPlanet() the graph of the library
  *   (blueprints/shader/planet). Painted(kind, end, head): such a kind of a function of a body in a shader.
+ * - The kind ground: the ground of a globe near and from over it (GroundGraph of a Scene): its picture, woods, fields,
+ *   snow, dunes, relief, the tiles near, its light and the shadows of clouds and of its ring, water, towns at night, clouds
+ *   from over them and air as blocks: see Grounds; LibraryGround() the graph of the library (blueprints/shader/ground).
  * - The shape of a lightning, one for the bolt of a storm (SceneLighting) and the one of an effect (SceneEffects, kind
  *   bolt): a generator of the jag of each of its steps (Step, Seed: X and Z, -0.5 to 0.5), its parameters Steps (of its
  *   way), Wide (a jag to its length), Fork (the step a branch leaves at), ForkSteps, ForkDown and ForkWide (the branch:
@@ -67,11 +70,11 @@
 Elemenx.Service('SceneBlueprints', {
 	$Meta: {
 		Description: 'What a Scene adds to Blueprints: the graphs of effects and the blocks of the passes of its picture.',
-		Methods: ['BakeLandGraph(graph)', 'LibraryBolt()', 'Bolt(graph)', 'Chunk(context, name, lines, guard)', 'LibraryForecast()', 'LibraryGalaxy()', 'Galaxy(graph)', 'LibraryCosmos()', 'LibraryRing()', 'Painted(kind, end, head)', 'LibraryPlanet()']
+		Methods: ['BakeLandGraph(graph)', 'LibraryBolt()', 'Bolt(graph)', 'Chunk(context, name, lines, guard)', 'LibraryForecast()', 'LibraryGalaxy()', 'Galaxy(graph)', 'LibraryCosmos()', 'LibraryRing()', 'Painted(kind, end, head)', 'LibraryPlanet()', 'LibraryGround()']
 	},
 
 	$Provides: {
-		Blueprints: {Graphs: ['effect', 'water', 'sky', 'land', 'star', 'nebula', 'bake', 'weather', 'air', 'clouds', 'cosmos', 'ring', 'planet'], Nodes: ['PlanetPlace', 'PlanetSurface', 'PlanetRelief', 'PlanetLight', 'PlanetHeat', 'PlanetClouds', 'RingShadow', 'PlanetShade', 'GlobeLights', 'PlanetMix', 'PlanetRim', 'PlanetHighlight', 'PlanetEnd', 'CloudShade', 'RingPlace', 'RingBands', 'RingGap', 'RingColor', 'RingLight', 'RingEnd', 'CosmosRay', 'CosmosGas', 'CosmosPlane', 'CosmosGlow', 'CosmosDust', 'CosmosBand', 'CosmosBursts', 'CosmosGalaxies', 'CosmosPillars', 'CosmosStars', 'CosmosBeacon', 'CosmosClusters', 'CosmosEnd', 'GalaxyTurn', 'GalaxyBend', 'GalaxyWave', 'GalaxyArm', 'ForecastStorms', 'ForecastFronts', 'ForecastHeaps', 'ForecastCirrus', 'ForecastRain', 'ForecastShroud', 'CloudCover', 'CloudGlobe', 'CloudShell', 'CloudLayer', 'CloudsEnd', 'AirHaze', 'AirFog', 'AirUnder', 'AirEnd', 'WeatherSeason', 'WeatherSnow', 'WeatherDissolve', 'WeatherPuddles', 'WeatherEnd', 'BakeLand', 'BakeRocky', 'BakeIcy', 'BakeLava', 'BakeGas', 'BakeKind', 'BakeIce', 'BakeClouds', 'BakeEnd', 'Star', 'Nebula', 'LandPoint', 'LandMaterial', 'LandGrain', 'LandPools', 'LandAlbedo', 'LandPaint', 'LandLight', 'LandCaustics', 'LandSheen', 'LandCompose', 'LandEnd', 'SkyRay', 'SkyDay', 'SkyAir', 'SkyDusk', 'SkyHalo', 'SkyPink', 'SkyWisps', 'SkyCover', 'SkyEclipse', 'SkyTowns', 'SkyAurora', 'SkyRainbow', 'SkyMoonHaze', 'SkyMoon', 'SkyCompose', 'SkyEnd', 'Place', 'View', 'Far', 'Flow', 'Sun', 'Waves', 'WaterNormal', 'Fresnel', 'Glints', 'Sky', 'Body', 'Foam', 'Under', 'Absorb', 'Below', 'Reflection', 'WaterFog', 'Water', 'Layer', 'Effect', 'Scene', 'Clouds', 'Occlusion', 'Air', 'Frames', 'Mirror', 'Rays', 'Exposure', 'Bokeh', 'Bloom', 'Picture', 'Shader']}
+		Blueprints: {Graphs: ['effect', 'water', 'sky', 'land', 'star', 'nebula', 'bake', 'weather', 'air', 'clouds', 'cosmos', 'ring', 'planet', 'ground'], Nodes: ['GroundPlace', 'GroundBase', 'GroundPicture', 'GroundIce', 'GroundMottle', 'GroundWoods', 'GroundFields', 'GroundCrowns', 'GroundSnow', 'GroundDunes', 'GroundRelief', 'GroundTiles', 'GroundRing', 'GroundLight', 'GroundWater', 'GroundClouds', 'GroundAir', 'GroundEnd', 'SunPlace', 'SunCells', 'SunSpots', 'SunBands', 'SunLimb', 'SunColor', 'SunBurn', 'StarSurface', 'CrownPlace', 'CrownCorona', 'CrownProminences', 'CrownFlare', 'StarCrown', 'BeamPlace', 'BeamGlow', 'StarBeam', 'PlanetPlace', 'PlanetSurface', 'PlanetRelief', 'PlanetGas', 'PlanetLight', 'PlanetHeat', 'PlanetClouds', 'RingShadow', 'PlanetShade', 'GlobeLights', 'PlanetMix', 'PlanetRim', 'PlanetHighlight', 'PlanetEnd', 'CloudShade', 'RingPlace', 'RingBands', 'RingGap', 'RingColor', 'RingLight', 'RingEnd', 'CosmosRay', 'CosmosGas', 'CosmosPlane', 'CosmosGlow', 'CosmosDust', 'CosmosBand', 'CosmosBursts', 'CosmosGalaxies', 'CosmosPillars', 'CosmosStars', 'CosmosBeacon', 'CosmosClusters', 'CosmosEnd', 'GalaxyTurn', 'GalaxyBend', 'GalaxyWave', 'GalaxyArm', 'ForecastStorms', 'ForecastFronts', 'ForecastHeaps', 'ForecastCirrus', 'ForecastRain', 'ForecastShroud', 'CloudCover', 'CloudGlobe', 'CloudShell', 'CloudLayer', 'CloudsEnd', 'AirHaze', 'AirFog', 'AirUnder', 'AirEnd', 'WeatherSeason', 'WeatherSnow', 'WeatherDissolve', 'WeatherPuddles', 'WeatherEnd', 'BakeLand', 'BakeRocky', 'BakeIcy', 'BakeLava', 'BakeGas', 'BakeKind', 'BakeIce', 'BakeClouds', 'BakeEnd', 'Star', 'Nebula', 'LandPoint', 'LandMaterial', 'LandGrain', 'LandPools', 'LandAlbedo', 'LandPaint', 'LandLight', 'LandCaustics', 'LandSheen', 'LandCompose', 'LandEnd', 'SkyRay', 'SkyDay', 'SkyAir', 'SkyDusk', 'SkyHalo', 'SkyPink', 'SkyWisps', 'SkyCover', 'SkyEclipse', 'SkyTowns', 'SkyAurora', 'SkyRainbow', 'SkyMoonHaze', 'SkyMoon', 'SkyCompose', 'SkyEnd', 'Place', 'View', 'Far', 'Flow', 'Sun', 'Waves', 'WaterNormal', 'Fresnel', 'Glints', 'Sky', 'Body', 'Foam', 'Under', 'Absorb', 'Below', 'Reflection', 'WaterFog', 'Water', 'Layer', 'Effect', 'Scene', 'Clouds', 'Occlusion', 'Air', 'Frames', 'Mirror', 'Rays', 'Exposure', 'Bokeh', 'Bloom', 'Picture', 'Shader']}
 	},
 
 	$OnCreate: function () {
@@ -91,6 +94,7 @@ Elemenx.Service('SceneBlueprints', {
 		this.Cosmoses();
 		this.Rings();
 		this.Planets();
+		this.Grounds();
 	},
 
 	/*
@@ -103,23 +107,254 @@ Elemenx.Service('SceneBlueprints', {
 		var blueprints = this.$Service('Blueprints');
 		var fields = [['Corona', 1], ['Prominences', 1], ['Flares', 1], ['Count', 5], ['Height', 1], ['Speed', 1], ['Strands', 1]];
 
+		var shaders = this.$Service('BlueprintShaders');
+		var star = ['star'];
+
+		/* The first block of a type that is on, of a plan. */
+		function endOf (plan, type) {
+			return plan.Order.filter(function (id) {
+				return plan.Blocks[id].type === type && plan.Blocks[id].enabled !== false;
+			})[0];
+		}
+
+		/*
+		 * A part of a star in a shader (its surface, its crown): a function of GLSL (head) of the blocks its end (type) reads
+		 * and those they read, no more (the numbers of its Star block are of the page); null with no such end.
+		 */
+		function part (plan, type, head) {
+			var end = endOf(plan, type);
+			var wanted = {};
+			var shader;
+			var made;
+
+			if (!end)
+				return null;
+
+			(function want (id) {
+				if (wanted[id]) return;
+
+				wanted[id] = true;
+
+				Object.keys(plan.From[id] || {}).forEach(function (key) {
+					want(plan.From[id][key].Block);
+				});
+			})(end);
+
+			shader = shaders.Shader(Object.assign({}, plan, {Order: plan.Order.filter(function (id) {
+				return wanted[id];
+			})}), 'star');
+
+			made = {
+				Function: [head + ' {']
+					.concat(shader.Lines.map(function (line) {
+						return '\t' + line;
+					}))
+					.concat([shader.Result[type] || '', '}'])
+					.filter(function (line) {
+						return line !== '';
+					})
+					.join('\n'),
+				Needs: shader.Needs,
+				Uniforms: shader.Uniforms,
+				Textures: [],
+				Sources: shader.Sources
+			};
+
+			made.Values = shaders.Values(made);
+
+			return made;
+		}
+
 		blueprints.Graph('star', {
 			End: 'Star',
 			Uses: ['generator'],
 			Compile: function (plan) {
-				var end = plan.Order.filter(function (id) {
-					return plan.Blocks[id].type === 'Star' && plan.Blocks[id].enabled !== false;
-				})[0];
+				var end = endOf(plan, 'Star');
 
 				return {
 					Look: function (parameters, seconds) {
 						var run = {Outputs: {}, Parameters: parameters || {}, Inputs: {Time: Number(seconds) || 0}, Memo: true, Graph: {parameters: this && this.Parameters || plan.Graph.parameters}};
 
-						return blueprints.Pull(plan, end, 'Look', run, 0);
-					}
+						return end ? blueprints.Pull(plan, end, 'Look', run, 0) : null;
+					},
+					Surface: part(plan, 'StarSurface', 'void blueprintSun(vec3 n, vec3 v, vec3 p, inout vec3 color)'),
+					Crown: part(plan, 'StarCrown', 'void blueprintCrown(float r, float angle, float u, inout vec3 color)'),
+					Beam: part(plan, 'StarBeam', 'void blueprintBeam(vec2 beam, inout vec3 color)')
 				};
 			}
 		});
+
+		function pin (key, type, fallback) {
+			return {Key: key, Type: type, Default: fallback};
+		}
+
+		function out (key, type) {
+			return {Key: key, Type: type || 'float'};
+		}
+
+		function number (key, value) {
+			return {Key: key, Type: 'number', Value: value};
+		}
+
+		/* A block of lines of a part of a star: its name of its index, its inputs, the literal of each of its properties. */
+		function node (type, group, properties, inputs, outputs, lines) {
+			blueprints.Node(type, {Graphs: star, Group: inputs.length ? group : 'input', Properties: properties, Inputs: inputs, Outputs: outputs, GLSL: function (context) {
+				if (group === 'sun')
+					context.Need('Noise');
+
+				return lines(context, 'st' + context.Index + '_', context.Inputs, function (key) {
+					return shaders.Literal(Number(context.Properties[key]), 'float');
+				});
+			}});
+		}
+
+		var point = pin('Point', 'vec3', 'p');
+		var color = pin('Color', 'vec3', 'color');
+
+		/*
+		 * Its surface (the Star shader of a Scene: blueprintSun(n, v, p, inout color); uColor, uSeed, uTime, uCells: how fine
+		 * its cells are, uBands: a brown dwarf): SunPlace, SunCells (its cells of rising gas: Speed), SunSpots (spots in the
+		 * belts of middle latitudes, BeltLow to BeltHigh, a bright ring of faculae round each: Scale, Drift, From, To,
+		 * FaculaeFrom, FaculaeTo), SunBands (belts of cloud of a brown dwarf: Count, Stretch, Wobble, Drift), SunLimb (darker
+		 * at its edge: Power), SunColor (of them all, a brown dwarf maroon), SunBurn (far brighter than white, the less the
+		 * cooler it is: White, Hot, Cool); StarSurface its end.
+		 */
+		node('SunPlace', 'sun', [], [], [out('Normal', 'vec3'), out('View', 'vec3'), out('Point', 'vec3')], function () {
+			return {Normal: 'n', View: 'v', Point: 'p'};
+		});
+
+		node('SunCells', 'sun', [number('Speed', 0.08), number('Octaves', 4)], [point], [out('Cells')], function (context, name, inputs, value) {
+			context.Lines.push('float ' + name + 'cells = fbm3(' + inputs.Point + ' * uCells + vec3(0.0, uTime * ' + value('Speed') + ', uSeed), ' + Math.max(1, Math.min(8, Math.round(Number(context.Properties.Octaves) || 4))) + ');');
+
+			return {Cells: name + 'cells'};
+		});
+
+		node('SunSpots', 'sun', [number('BeltLow', 0.08), number('BeltLowFull', 0.2), number('BeltHigh', 0.45), number('BeltHighEnd', 0.62), number('Scale', 2.6), number('Drift', 0.01), number('From', 0.66), number('To', 0.74), number('FaculaeFrom', 0.58), number('FaculaeTo', 0.66)], [point], [out('Spots'), out('Faculae')], function (context, name, inputs, value) {
+			var p = inputs.Point;
+
+			context.Lines.push('float ' + name + 'belt = smoothstep(' + value('BeltLow') + ', ' + value('BeltLowFull') + ', abs(' + p + '.y)) * (1.0 - smoothstep(' + value('BeltHigh') + ', ' + value('BeltHighEnd') + ', abs(' + p + '.y)));');
+			context.Lines.push('float ' + name + 'field = fbm3(' + p + ' * ' + value('Scale') + ' + vec3(uSeed, uTime * ' + value('Drift') + ', 0.0), 3);');
+			context.Lines.push('float ' + name + 'spots = smoothstep(' + value('From') + ', ' + value('To') + ', ' + name + 'field) * ' + name + 'belt * (1.0 - uBands);');
+			context.Lines.push('float ' + name + 'faculae = (smoothstep(' + value('FaculaeFrom') + ', ' + value('FaculaeTo') + ', ' + name + 'field) - ' + name + 'spots) * ' + name + 'belt;');
+
+			return {Spots: name + 'spots', Faculae: name + 'faculae'};
+		});
+
+		node('SunBands', 'sun', [number('Count', 15), number('Stretch', 7), number('Wobble', 4), number('Drift', 0.02)], [point], [out('Bands')], function (context, name, inputs, value) {
+			var p = inputs.Point;
+
+			context.Lines.push('float ' + name + 'bands = 0.5 + 0.5 * sin(' + p + '.y * ' + value('Count') + ' + fbm3(' + p + ' * vec3(1.5, ' + value('Stretch') + ', 1.5) + vec3(uSeed, 0.0, uTime * ' + value('Drift') + '), 3) * ' + value('Wobble') + ');');
+
+			return {Bands: name + 'bands'};
+		});
+
+		node('SunLimb', 'sun', [number('Power', 0.45)], [pin('Normal', 'vec3', 'n'), pin('View', 'vec3', 'v')], [out('Limb')], function (context, name, inputs, value) {
+			context.Lines.push('float ' + name + 'limb = pow(max(dot(' + inputs.Normal + ', ' + inputs.View + '), 0.0), ' + value('Power') + ');');
+
+			return {Limb: name + 'limb'};
+		});
+
+		node('SunColor', 'sun', [number('Gamma', 2.2)], [pin('Cells', 'float', '0.5'), pin('Spots', 'float', '0.0'), pin('Faculae', 'float', '0.0'), pin('Bands', 'float', '0.5'), pin('Limb', 'float', '1.0')], [out('Color', 'vec3')], function (context, name, inputs, value) {
+			var gamma = value('Gamma');
+
+			context.Lines.push('vec3 ' + name + 'color = pow(uColor, vec3(' + gamma + ')) * mix(1.0, 0.55 + 0.75 * ' + inputs.Bands + ', uBands) * (0.7 + 0.6 * mix(' + inputs.Cells + ', 0.5, uBands * 0.7)) * (0.5 + 0.6 * ' + inputs.Limb + ') * (1.0 - ' + inputs.Spots + ' * 0.55) * (1.0 + ' + inputs.Faculae + ' * 0.35 * (1.0 - ' + inputs.Limb + '));');
+			context.Lines.push(name + 'color = mix(' + name + 'color, ' + name + 'color * vec3(1.0, 0.5, 0.72) * 0.5, uBands);');
+
+			return {Color: name + 'color'};
+		});
+
+		node('SunBurn', 'sun', [number('White', 0.28), number('Hot', 2.4), number('Cool', 1.1)], [color, pin('Limb', 'float', '1.0')], [out('Color', 'vec3')], function (context, name, inputs, value) {
+			context.Lines.push('float ' + name + 'warm = 1.0 - clamp(uColor.b / max(uColor.r, 1e-3), 0.0, 1.0);');
+			context.Lines.push('vec3 ' + name + 'color = mix(' + inputs.Color + ', vec3(1.0), ' + value('White') + ' * ' + inputs.Limb + ' * (1.0 - ' + name + 'warm) * (1.0 - ' + name + 'warm)) * mix(' + value('Hot') + ', ' + value('Cool') + ', clamp(' + name + 'warm * 1.5, 0.0, 1.0));');
+
+			return {Color: name + 'color'};
+		});
+
+		blueprints.Node('StarSurface', {Graphs: star, Group: 'output', Inputs: [color], Outputs: [], GLSL: function (context) {
+			return {Result: '\tcolor = ' + context.Inputs.Color + ';'};
+		}});
+
+		/*
+		 * Its crown (the Corona of SceneDeepSpace: blueprintCrown(r, angle, u, inout color): r how far out in its radii, angle
+		 * round it, u over its edge; uColor, uSeed, uTime, uParts: corona, prominences, flares, uShape: count, height, speed,
+		 * strands of prominences, uTint, uPhase: of its Star block): CrownPlace, CrownCorona (streamers: Falloff, Glow, Fade),
+		 * CrownProminences (arches of gas, up to 8: Glow), CrownFlare (one every Period seconds: Glow); StarCrown its end.
+		 */
+		node('CrownPlace', 'crown', [], [], [out('R'), out('Angle'), out('U')], function () {
+			return {R: 'r', Angle: 'angle', U: 'u'};
+		});
+
+		node('CrownCorona', 'crown', [number('Falloff', 2.6), number('Glow', 0.55), number('Fade', 2.5)], [pin('R', 'float', 'r'), pin('Angle', 'float', 'angle'), pin('U', 'float', 'u')], [out('Color', 'vec3')], function (context, name, inputs, value) {
+			context.Lines.push('float ' + name + 'streamers = 0.55 + 0.45 * wave(' + inputs.Angle + ' * 3.0 + uSeed) * wave(' + inputs.Angle + ' * 7.0 - uSeed + uTime * 0.02);');
+			context.Lines.push('vec3 ' + name + 'color = uColor * exp(-' + inputs.U + ' * ' + value('Falloff') + ') * ' + name + 'streamers * ' + value('Glow') + ' * uParts.x * (1.0 - smoothstep(' + value('Fade') + ', 4.0, ' + inputs.R + '));');
+
+			return {Color: name + 'color'};
+		});
+
+		node('CrownProminences', 'crown', [number('Glow', 1.3)], [color, pin('Angle', 'float', 'angle'), pin('U', 'float', 'u')], [out('Color', 'vec3')], function (context, name, inputs, value) {
+			var angle = inputs.Angle;
+			var u = inputs.U;
+
+			context.Lines.push('vec3 ' + name + 'color = ' + inputs.Color + ';');
+			context.Lines.push('vec3 ' + name + 'red = vec3(1.0, 0.36, 0.3);');
+			context.Lines.push('for (int i = 0; i < 8; i++) {');
+			context.Lines.push('\tfloat k = float(i);');
+			context.Lines.push('\tif (k >= ceil(uShape.x)) break;');
+			context.Lines.push('\tfloat whole = clamp(uShape.x - k, 0.0, 1.0);');
+			context.Lines.push('\tfloat at = hash(uSeed + k * 7.3) * 6.2832 - 3.1416;');
+			context.Lines.push('\tfloat wide = 0.08 + 0.1 * hash(uSeed + k * 3.1);');
+			context.Lines.push('\tfloat high = min(2.4, (0.12 + 0.3 * hash(uSeed + k * 5.7)) * uShape.y * (0.85 + 0.15 * sin(uPhase * 0.4 + k)));');
+			context.Lines.push('\tfloat t = (mod(' + angle + ' - at + 3.1416, 6.2832) - 3.1416) / wide;');
+			context.Lines.push('\tif (abs(t) < 1.2) {');
+			context.Lines.push('\t\tfloat arch = high * sqrt(max(0.0, 1.0 - t * t));');
+			context.Lines.push('\t\tfloat d = abs(' + u + ' - arch);');
+			context.Lines.push('\t\tfloat strands = 1.0 - 0.4 * clamp(uShape.w, 0.0, 2.5) * (1.0 - wave(t * 9.0 + uPhase * 0.5 + k * 13.0));');
+			context.Lines.push('\t\tfloat body = exp(-d * 22.0) * 0.8 + exp(-d * 70.0) * 0.6 + step(' + u + ', arch) * smoothstep(0.0, arch, ' + u + ') * 0.25;');
+			context.Lines.push('\t\t' + name + 'color += mix(' + name + 'red, uColor, 0.25) * uTint * body * max(strands, 0.0) * smoothstep(1.2, 0.85, abs(t)) * ' + value('Glow') + ' * uParts.y * whole;');
+			context.Lines.push('\t}');
+			context.Lines.push('}');
+
+			return {Color: name + 'color'};
+		});
+
+		node('CrownFlare', 'crown', [number('Period', 23), number('Glow', 6)], [color, pin('Angle', 'float', 'angle'), pin('U', 'float', 'u')], [out('Color', 'vec3')], function (context, name, inputs, value) {
+			var period = value('Period');
+
+			context.Lines.push('float ' + name + 'round = floor(uTime / ' + period + ' + uSeed);');
+			context.Lines.push('float ' + name + 'since = mod(uTime + uSeed * ' + period + ', ' + period + ');');
+			context.Lines.push('float ' + name + 'where = hash(' + name + 'round) * 6.2832 - 3.1416;');
+			context.Lines.push('float ' + name + 'off = mod(' + inputs.Angle + ' - ' + name + 'where + 3.1416, 6.2832) - 3.1416;');
+			context.Lines.push('float ' + name + 'burst = smoothstep(0.0, 0.6, ' + name + 'since) * exp(-' + name + 'since * 0.8);');
+			context.Lines.push('vec3 ' + name + 'color = ' + inputs.Color + ' + vec3(1.0, 0.95, 0.85) * exp(-' + name + 'off * ' + name + 'off * 120.0 - ' + inputs.U + ' * ' + inputs.U + ' * 18.0) * ' + name + 'burst * ' + value('Glow') + ' * uParts.z;');
+
+			return {Color: name + 'color'};
+		});
+
+		blueprints.Node('StarCrown', {Graphs: star, Group: 'output', Inputs: [color], Outputs: [], GLSL: function (context) {
+			return {Result: '\tcolor = ' + context.Inputs.Color + ';'};
+		}});
+
+		/*
+		 * The beams of a pulsar (the Beam of SceneDeepSpace: blueprintBeam(beam, inout color): beam.x across it, beam.y along
+		 * it, 0 at the star to 1; uColor, uStrength): BeamPlace, BeamGlow (as narrow as Width, fading along it by Taper, from
+		 * Start, whitened by White, Glow); StarBeam its end.
+		 */
+		node('BeamPlace', 'beam', [], [], [out('Beam', 'vec2')], function () {
+			return {Beam: 'beam'};
+		});
+
+		node('BeamGlow', 'beam', [number('Width', 7), number('Taper', 1.7), number('Start', 0.015), number('White', 0.4), number('Glow', 1.3)], [pin('Beam', 'vec2', 'beam')], [out('Color', 'vec3')], function (context, name, inputs, value) {
+			var beam = inputs.Beam;
+
+			context.Lines.push('float ' + name + 'across = exp(-' + beam + '.x * ' + beam + '.x * ' + value('Width') + ');');
+			context.Lines.push('float ' + name + 'along = pow(1.0 - ' + beam + '.y, ' + value('Taper') + ') * smoothstep(0.0, ' + value('Start') + ', ' + beam + '.y);');
+
+			return {Color: '(mix(uColor, vec3(1.0), ' + value('White') + ') * ' + name + 'across * ' + name + 'along * uStrength * ' + value('Glow') + ')'};
+		});
+
+		blueprints.Node('StarBeam', {Graphs: star, Group: 'output', Inputs: [color], Outputs: [], GLSL: function (context) {
+			return {Result: '\tcolor = ' + context.Inputs.Color + ';'};
+		}});
 
 		blueprints.Node('Star', {
 			Graphs: ['star'],
@@ -634,8 +869,8 @@ Elemenx.Service('SceneBlueprints', {
 			return {Day: 'smoothstep(-0.3, 0.25, ' + context.Inputs.Sun + ')', Low: '(1.0 - smoothstep(0.0, 0.5, abs(' + context.Inputs.Sun + ')))', Up: 'clamp(' + context.Inputs.Height + ', 0.0, 1.0)'};
 		});
 
-		/* The blue of the air, from the horizon up; the sun low, the air takes its blue. */
-		node('SkyAir', [float('Up', '0.0'), float('Day', '1.0'), float('Low', '0.0')], [{Key: 'Color', Type: 'vec3'}], 'mix(mix(uAir.rgb, vec3(1.0), 0.5), uAir.rgb * vec3(0.38, 0.55, 1.0), pow({Up}, 0.5)) * {Day} * mix(vec3(1.0), vec3(0.86, 0.74, 0.72), {Low})');
+		/* The blue of the air, from the horizon up; the sun low, the air takes its blue. Under thick air (uDiffuse) of the colour of the air only. */
+		node('SkyAir', [float('Up', '0.0'), float('Day', '1.0'), float('Low', '0.0')], [{Key: 'Color', Type: 'vec3'}], 'mix(mix(uAir.rgb, vec3(1.0), 0.5), uAir.rgb * mix(vec3(0.38, 0.55, 1.0), vec3(0.8), uDiffuse), pow({Up}, 0.5)) * {Day} * mix(vec3(1.0), vec3(0.86, 0.74, 0.72), {Low})');
 
 		/* The band of the horizon warms all round a low sun, most of all under it. */
 		node('SkyDusk', [vec3('Color', 'vec3(0.0)'), vec3('Ray', 'vec3(0.0, 1.0, 0.0)'), float('Up', '0.0'), float('Low', '0.0')], [{Key: 'Color', Type: 'vec3'}, {Key: 'Dusk', Type: 'float'}], function (context) {
@@ -677,7 +912,7 @@ Elemenx.Service('SceneBlueprints', {
 		});
 
 		/* The clouds over all of it. */
-		node('SkyCover', [vec3('Color', 'vec3(0.0)'), float('Day', '1.0')], [{Key: 'Color', Type: 'vec3'}], 'mix({Color}, vec3(0.62, 0.65, 0.7) * {Day}, uCover * 0.8)');
+		node('SkyCover', [vec3('Color', 'vec3(0.0)'), float('Day', '1.0')], [{Key: 'Color', Type: 'vec3'}], 'mix({Color}, mix(vec3(0.62, 0.65, 0.7), uAir.rgb * 0.75, uDiffuse) * {Day}, uCover * 0.8)');
 
 		/* The moon before the sun: the air goes dark round it, and the crown of the sun shows. */
 		node('SkyEclipse', [vec3('Color', 'vec3(0.0)'), float('Toward', '0.0')], [{Key: 'Color', Type: 'vec3'}, {Key: 'Crown', Type: 'vec3'}], function (context) {
@@ -812,8 +1047,14 @@ Elemenx.Service('SceneBlueprints', {
 			context.Lines.push('float ' + name + '_disk = smoothstep(cos(uSunRadius * 1.35), cos(uSunRadius * 0.75), ' + inputs.Toward + ') * (1.0 - uCover);');
 			context.Lines.push('float ' + name + '_alpha = clamp(' + name + '_density * (' + inputs.Day + ' * 0.97 * (1.0 - uEclipse) + ' + inputs.Dusk + ' * 0.6 + ' + inputs.Haze + ' + ' + inputs.Towns + ' * max(uGlow.r, uGlow.g) + ' + inputs.Aurora + '), 0.0, 1.0);');
 			context.Lines.push('float ' + name + '_hidden = ' + inputs.Shape + ' * smoothstep(0.0, 0.05, uEclipse);');
+			/*
+			 * The disc where it is over the horizon of the eye (uDip: how far under the level the horizon is seen from high up),
+			 * its light and its cover alike. Regression: under the level of the ground under the eye its light was none and
+			 * its cover whole: from 40 000 km over a body the Sun was a black disc.
+			 */
+			context.Lines.push('float ' + name + '_up = smoothstep(-0.03 - uDip, 0.01 - uDip, ' + inputs.Sun + ');');
 
-			return {Color: '((' + inputs.Color + ' + ' + inputs.Crown + ') * ' + name + '_density * (1.0 - ' + name + '_hidden) + ' + inputs.Tint + ' * ' + name + '_disk * (1.0 - smoothstep(0.0, 0.25, ' + inputs.Shape + ')) * 9.0 * smoothstep(-0.03, 0.01, ' + inputs.Sun + ') + ' + inputs.Moon + ')', Alpha: 'max(max(' + name + '_alpha, ' + name + '_disk), ' + inputs.Shape + ')'};
+			return {Color: '((' + inputs.Color + ' + ' + inputs.Crown + ') * ' + name + '_density * (1.0 - ' + name + '_hidden) + ' + inputs.Tint + ' * ' + name + '_disk * (1.0 - smoothstep(0.0, 0.25, ' + inputs.Shape + ')) * 9.0 * ' + name + '_up + ' + inputs.Moon + ')', Alpha: 'max(max(' + name + '_alpha, ' + name + '_disk * ' + name + '_up), ' + inputs.Shape + ')'};
 		});
 
 		/* The end: the color of the sky at the point, and how much of it covers the stars behind. */
@@ -1136,7 +1377,8 @@ Elemenx.Service('SceneBlueprints', {
 	 * has (uGround its picture baked, uSky its clouds and heat baked, uWeather, uLights, uRelief, uAtmosphere, uHighlight).
 	 * Its blocks: PlanetPlace (Normal, View, Point, World, Day: how much of a sun lights it there), PlanetSurface (its
 	 * picture: Albedo, Gloss), PlanetRelief (its ranges for the light: Lean the slopes of its picture, Steep how much steeper),
-	 * PlanetLight (Shine and Gloss its highlight), PlanetHeat (the glow of lava, Glow), PlanetClouds (of its weather or drawn:
+	 * PlanetGas (the tops of the clouds of a giant near: its bands torn by a flow, its billows; Strength, Stretch, Swirl,
+	 * Near, Bump), PlanetLight (Shine and Gloss its highlight), PlanetHeat (the glow of lava, Glow), PlanetClouds (of its weather or drawn:
 	 * Cover, Color, Shade under them, Veil over its lights; Tint, Haze, Shadow, Veil, DrawnVeil), RingShadow (of its ring,
 	 * the one of the ring graph, its gaps alike: Strength), PlanetShade, GlobeLights (its towns at night, a block of the
 	 * ground of a globe too: Red, Green, Blue, Strength), PlanetMix (its clouds over it), PlanetRim (its air at its edge,
@@ -1200,6 +1442,45 @@ Elemenx.Service('SceneBlueprints', {
 			context.Lines.push('}');
 
 			return {Lit: name + 'lit'};
+		});
+
+		/*
+		 * The tops of the clouds of a giant near (a body of the kind 4), finer the nearer the eye (Near: how many radii away
+		 * they begin to show): its bands baked read where a flow of noise pushes them (Swirl: how far, Stretch: drawn out along
+		 * its latitudes), their edges torn into festoons and eddies; nearer, the billows of its tops, lit as they stand (Bump:
+		 * how much they lean its light), as much as Strength says.
+		 */
+		node('PlanetGas', planet, [number('Strength', 1), number('Stretch', 4), number('Swirl', 1), number('Near', 3), number('Bump', 0.8)], [pin('Albedo', 'vec3', 'vec3(0.5)'), pin('Lit', 'vec3', 'n'), point, world], [out('Albedo', 'vec3'), out('Lit', 'vec3')], function (context, name, inputs, value) {
+			var p = inputs.Point;
+			var n = name;
+
+			context.Lines.push('vec3 ' + n + 'albedo = ' + inputs.Albedo + ';');
+			context.Lines.push('vec3 ' + n + 'lit = ' + inputs.Lit + ';');
+			context.Lines.push('if (uKind == 4 && uCloudsOnly < 0.5) {');
+			context.Lines.push('\tfloat ' + n + 'far = length(' + inputs.World + ' - uCamera) / length(uModel[0].xyz);');
+			context.Lines.push('\tfloat ' + n + 'bands = smoothstep(' + value('Near') + ', ' + value('Near') + ' * 0.4, ' + n + 'far) * ' + value('Strength') + ';');
+			context.Lines.push('\tif (' + n + 'bands > 0.0) {');
+			context.Lines.push('\t\tvec3 ' + n + 'q = vec3(' + p + '.x, ' + p + '.y * ' + value('Stretch') + ', ' + p + '.z);');
+			context.Lines.push('\t\tvec3 ' + n + 'flow = vec3(fbm3(' + n + 'q * 14.0, 3), fbm3(' + n + 'q * 14.0 + 4.2, 3), fbm3(' + n + 'q * 14.0 - 2.7, 3)) - 0.5;');
+			context.Lines.push('\t\tvec3 ' + n + 'eddy = vec3(fbm3(' + n + 'q * 70.0 + ' + n + 'flow * 6.0, 3), fbm3(' + n + 'q * 70.0 + ' + n + 'flow * 6.0 + 1.9, 3), fbm3(' + n + 'q * 70.0 + ' + n + 'flow * 6.0 - 3.3, 3)) - 0.5;');
+			context.Lines.push('\t\tvec3 ' + n + 'moved = normalize(' + p + ' + (' + n + 'flow * 0.035 + ' + n + 'eddy * 0.012) * ' + value('Swirl') + ' * ' + n + 'bands);');
+			context.Lines.push('\t\t' + n + 'albedo = mix(' + n + 'albedo, texture(uGround, ' + n + 'moved).rgb, ' + n + 'bands);');
+			context.Lines.push('\t\t' + n + 'albedo *= max(0.45, 1.0 + (' + n + 'eddy.x * 1.3 + ' + n + 'flow.y * 0.9) * ' + n + 'bands * (1.0 - 0.5 * smoothstep(0.1, 0.01, ' + n + 'far)));');
+			context.Lines.push('\t}');
+			context.Lines.push('\tfloat ' + n + 'near = smoothstep(' + value('Near') + ' * 0.08, ' + value('Near') + ' * 0.015, ' + n + 'far) * ' + value('Strength') + ';');
+			context.Lines.push('\tif (' + n + 'near > 0.0) {');
+			context.Lines.push('\t\tfloat ' + n + 'fine = smoothstep(' + value('Near') + ' * 0.004, ' + value('Near') + ' * 0.0008, ' + n + 'far);');
+			context.Lines.push('\t\tvec3 ' + n + 'b = ' + p + ' * vec3(900.0, 1500.0, 900.0);');
+			context.Lines.push('\t\tfloat ' + n + 'puff = fbm3(' + n + 'b, 4) + (fbm3(' + n + 'b * 9.0, 3) - 0.5) * 0.3 * ' + n + 'fine;');
+			context.Lines.push('\t\tfloat ' + n + 'dx = fbm3(' + n + 'b + vec3(0.08, 0.0, 0.0), 4);');
+			context.Lines.push('\t\tfloat ' + n + 'dz = fbm3(' + n + 'b + vec3(0.0, 0.0, 0.08), 4);');
+			context.Lines.push('\t\tvec3 ' + n + 'tilt = mat3(uModel) * vec3(' + n + 'dx - ' + n + 'puff, 0.0, ' + n + 'dz - ' + n + 'puff) / length(uModel[0].xyz);');
+			context.Lines.push('\t\t' + n + 'albedo *= mix(1.0, 0.7 + 0.65 * ' + n + 'puff, ' + n + 'near);');
+			context.Lines.push('\t\t' + n + 'lit = normalize(' + n + 'lit - ' + n + 'tilt * 6.0 * ' + value('Bump') + ' * ' + n + 'near);');
+			context.Lines.push('\t}');
+			context.Lines.push('}');
+
+			return {Albedo: n + 'albedo', Lit: n + 'lit'};
 		});
 
 		node('PlanetLight', planet, [number('Shine', 12), number('Gloss', 70)], [pin('Albedo', 'vec3', 'vec3(0.5)'), pin('Gloss', 'float', '0.0'), pin('Lit', 'vec3', 'n'), view, world], [out('Color', 'vec3')], function (context, name, inputs, value) {
@@ -1320,6 +1601,407 @@ Elemenx.Service('SceneBlueprints', {
 	/* A globe of the library (blueprints/shader/planet): see Planets. */
 	LibraryPlanet: function () {
 		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/planet'));
+	},
+
+	/*
+	 * The ground of a globe near as a graph (the kind ground: GroundGraph of a Scene): blueprintGround(inout color) in the
+	 * Ground shader, which reads what that shader has (the picture of its square, its woods, use and snow, the tiles near,
+	 * its weather, its lights at night). Its blocks: GroundPlace (Normal, View, Up, Height, Sea, Place: km from the middle,
+	 * Near: km from the anchor, exact, Foot: km a pixel, World), GroundBase (its colors by height, its rock where steep),
+	 * GroundPicture (its square's picture read ragged: Albedo, Normal, Water, At, Soft, DX, DY), GroundIce (its caps),
+	 * GroundMottle (its land mottled at kilometres to tens of metres), GroundWoods (stands of its woods: Wooded, Stands, Cover),
+	 * GroundFields (its fields and houses: Rise of its hedges), GroundCrowns (what grows near: Green, Crowns), GroundSnow,
+	 * GroundDunes, GroundRelief (its normal bent by its bumps and ridges: Normal, Smoothed before them), GroundTiles (the
+	 * tiles of materials near: groundLaid of the shader, the materials of a location for a ground near), GroundRing (the
+	 * shadow of a ring, the alpha of the ring graph), GroundLight (Color, Rise, Light, Dusk, Around, Toward, Day: for its
+	 * lights at night), GroundWater, GlobeLights (of the planet graph too), GroundClouds (seen from over them), GroundAir,
+	 * GroundEnd. LibraryGround() the one of the library (blueprints/shader/ground).
+	 */
+	Grounds: function () {
+		var blueprints = this.$Service('Blueprints');
+		var shaders = this.$Service('BlueprintShaders');
+		var ground = ['ground'];
+		var askew = 'mat3(0.80, 0.36, -0.48, -0.60, 0.48, -0.64, 0.0, 0.80, 0.60)';
+
+		function pin (key, type, fallback) {
+			return {Key: key, Type: type || 'float', Default: fallback};
+		}
+
+		function out (key, type) {
+			return {Key: key, Type: type || 'float'};
+		}
+
+		function number (key, value) {
+			return {Key: key, Type: 'number', Value: value};
+		}
+
+		/* A block of lines: its name of the index of the block, its inputs and literal of its properties at hand. */
+		function node (type, properties, inputs, outputs, lines) {
+			blueprints.Node(type, {Graphs: ground, Group: inputs.length ? 'ground' : 'input', Properties: properties, Inputs: inputs, Outputs: outputs, GLSL: function (context) {
+				return lines(context, 'd' + context.Index + '_', context.Inputs, function (key) {
+					return shaders.Literal(Number(context.Properties[key]), 'float');
+				}, function (line) {
+					context.Lines.push(line);
+				});
+			}});
+		}
+
+		var albedo = pin('Albedo', 'vec3', 'vec3(0.5)');
+		var normal = pin('Normal', 'vec3', 'normalize(vNormal)');
+		var up = pin('Up', 'vec3', 'vDirection');
+		var water = pin('Water', 'float', '0.0');
+		var place = pin('Place', 'vec3', 'vDirection * uRadius');
+		var near = pin('Near', 'vec3', 'vWorld + uAnchor');
+		var foot = pin('Foot', 'float', 'length(fwidth(vDirection * uRadius))');
+		var at = pin('At', 'vec2', 'vPatch');
+		var dx = pin('DX', 'vec2', 'vec2(0.0)');
+		var dy = pin('DY', 'vec2', 'vec2(0.0)');
+		var color = pin('Color', 'vec3', 'color');
+
+		this.Painted('ground', 'GroundEnd', 'void blueprintGround(inout vec3 color)');
+
+		node('GroundPlace', [], [], [out('Normal', 'vec3'), out('View', 'vec3'), out('Up', 'vec3'), out('Height'), out('Sea'), out('Place', 'vec3'), out('Near', 'vec3'), out('Foot'), out('World', 'vec3')], function (context, name, inputs, value, line) {
+			line('vec3 ' + name + 'place = vDirection * uRadius;');
+			/* Kilometres a pixel covers: what is finer than two pixels is not drawn, or it shimmers as the view moves. */
+			line('float ' + name + 'foot = length(fwidth(' + name + 'place));');
+
+			/*
+			 * Regression: the place of the very point (its direction times the radius, thousands of km) trembles in the floats by
+			 * half a metre from pixel to pixel; noises of tens of metres of it, and their slopes, were specks. What is finer than
+			 * a kilometre is of the point from the anchor (uAnchor, km), exact: Near.
+			 */
+			return {Normal: 'normalize(vNormal)', View: 'normalize(-vWorld)', Up: 'vDirection', Height: 'vLand.x', Sea: 'vLand.y', Place: name + 'place', Near: '(vWorld + uAnchor)', Foot: name + 'foot', World: 'vWorld'};
+		});
+
+		/* Its colors by its height (uColors), its sea deeper darker; its slopes steeper for the light from far (uRelief), rock where steep. */
+		node('GroundBase', [number('Shallow', 1.25), number('Deep', 0.55), number('Depth', 4), number('RockFrom', 0.55), number('RockTo', 0.75), number('Rock', 0.6), number('RockDark', 0.8), number('PaintedRock', 0.55)], [normal, up, pin('Height', 'float', 'vLand.x'), pin('Sea', 'float', 'vLand.y')], [out('Albedo', 'vec3'), out('Normal', 'vec3'), out('Water')], function (context, name, inputs, value, line) {
+			var u = inputs.Up;
+			var sea = inputs.Sea;
+
+			line('vec3 ' + name + 'albedo = ' + sea + ' > 0.5 ? mix(uWater * ' + value('Shallow') + ', uWater * ' + value('Deep') + ', clamp(-' + inputs.Height + ' * ' + value('Depth') + ', 0.0, 1.0)) : ground(clamp(' + inputs.Height + ', 0.0, 1.0));');
+			line('vec3 ' + name + 'n = ' + inputs.Normal + ';');
+			/* From far its relief is told by its light: the slopes made steeper for the light (uRelief), as the eye reads mountains from orbit. */
+			line('if (uRelief > 1.0) ' + name + 'n = normalize(' + u + ' + (' + name + 'n - ' + u + ' * dot(' + name + 'n, ' + u + ')) * uRelief);');
+			line('if (' + sea + ' > 0.5) ' + name + 'n = ' + u + ';');
+			line('float ' + name + 'rock = 1.0 - smoothstep(' + value('RockFrom') + ', ' + value('RockTo') + ', dot(' + name + 'n, ' + u + '));');
+			line('if (' + sea + ' < 0.5) ' + name + 'albedo = mix(' + name + 'albedo, uColors[1] * ' + value('RockDark') + ', ' + name + 'rock * ' + value('Rock') + ');');
+			line('if (uPainted > 0.5) ' + name + 'albedo = ' + sea + ' > 0.5 ? vPainted : mix(vPainted, vec3(0.42, 0.39, 0.35), ' + name + 'rock * ' + value('PaintedRock') + ');');
+
+			return {Albedo: name + 'albedo', Normal: name + 'n', Water: sea};
+		});
+
+		/*
+		 * Its picture (uTiled): read a little aside by a noise of its texels, so the edges between its colors are ragged within
+		 * a texel and never a row of steps; its relief of its own normals, finer than its points, the slopes made steeper as
+		 * above. Far ground, its texels wide on the screen: its edges ragged finer still (Ragged), each texel its own color up
+		 * to a narrow seam (Seam: at least, of a texel), not one color drawn into the next over all its width. Regression:
+		 * from a few kilometres up the ground was smears and stretched blotches.
+		 */
+		node('GroundPicture', [number('Ragged', 0.36), number('Seam', 0.22), number('Aside', 1.1)], [albedo, normal, water, up], [out('Albedo', 'vec3'), out('Normal', 'vec3'), out('Water'), out('At', 'vec2'), out('Soft', 'vec2'), out('DX', 'vec2'), out('DY', 'vec2')], function (context, name, inputs, value, line) {
+			var u = inputs.Up;
+
+			line('vec3 ' + name + 'albedo = ' + inputs.Albedo + ';');
+			line('vec3 ' + name + 'n = ' + inputs.Normal + ';');
+			line('float ' + name + 'water = ' + inputs.Water + ';');
+			line('vec2 ' + name + 'at = vPatch;');
+			line('vec2 ' + name + 'soft = vPatch;');
+			line('vec2 ' + name + 'x = vec2(0.0);');
+			line('vec2 ' + name + 'y = vec2(0.0);');
+			line('if (uTiled > 0.5) {');
+			line('\tvec2 ' + name + 'tc = vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels;');
+			line('\tvec2 ' + name + 'grid = ' + name + 'tc * uTexels;');
+			line('\t' + name + 'x = dFdx(' + name + 'tc);');
+			line('\t' + name + 'y = dFdy(' + name + 'tc);');
+			/* Texels a pixel: a texel over two pixels wide is a square of a smear unless something finer is told in it. */
+			line('\tfloat ' + name + 'texel = max(length(' + name + 'x), length(' + name + 'y)) * uTexels;');
+			line('\tvec2 ' + name + 'aside = vec2(enx_fvalue3(vec3(' + name + 'grid * 1.7, 3.1)) + enx_fvalue3(vec3(' + name + 'grid * 4.3, 5.7)) * 0.5, enx_fvalue3(vec3(' + name + 'grid * 1.7, 9.7)) + enx_fvalue3(vec3(' + name + 'grid * 4.3, 1.3)) * 0.5) - 0.75;');
+			line('\t' + name + 'aside += vec2(enx_fvalue3(vec3(' + name + 'grid * 11.0, 2.3)) - 0.5, enx_fvalue3(vec3(' + name + 'grid * 11.0, 8.9)) - 0.5) * ' + value('Ragged') + ' * (1.0 - smoothstep(0.02, 0.04, ' + name + 'texel));');
+			line('\tvec2 ' + name + 'g = ' + name + 'grid + ' + name + 'aside * ' + value('Aside') + ' - 0.5;');
+			line('\t' + name + 'soft = (' + name + 'g + 0.5) / uTexels;');
+			line('\tvec2 ' + name + 'inside = fract(' + name + 'g);');
+			line('\tfloat ' + name + 'seam = clamp(max(' + name + 'texel * 1.5, ' + value('Seam') + '), 0.0, 0.5);');
+			line('\t' + name + 'inside = clamp((' + name + 'inside - 0.5) / (2.0 * ' + name + 'seam) + 0.5, 0.0, 1.0);');
+			line('\t' + name + 'inside = ' + name + 'inside * ' + name + 'inside * (3.0 - 2.0 * ' + name + 'inside);');
+			line('\t' + name + 'at = (floor(' + name + 'g) + ' + name + 'inside + 0.5) / uTexels;');
+			line('\tvec4 ' + name + 'painted = textureGrad(uColorMap, ' + name + 'at, ' + name + 'x, ' + name + 'y);');
+			line('\t' + name + 'albedo = ' + name + 'painted.rgb;');
+			line('\t' + name + 'water = ' + name + 'painted.a;');
+			line('\t' + name + 'n = normalize(texture(uReliefMap, ' + name + 'tc).xyz * 2.0 - 1.0);');
+			line('\tif (uRelief > 1.0) ' + name + 'n = normalize(' + u + ' + (' + name + 'n - ' + u + ' * dot(' + name + 'n, ' + u + ')) * uRelief);');
+			line('\t' + name + 'n = normalize(mix(' + name + 'n, ' + u + ', ' + name + 'water));');
+			line('}');
+
+			return {Albedo: name + 'albedo', Normal: name + 'n', Water: name + 'water', At: name + 'at', Soft: name + 'soft', DX: name + 'x', DY: name + 'y'};
+		});
+
+		/* Its caps of ice (uIce: how far from its poles), their edge ragged by Ragged. */
+		node('GroundIce', [number('Scale', 6.6), number('Ragged', 0.3), number('Edge', 0.04)], [albedo, up], [out('Albedo', 'vec3')], function (context, name, inputs, value, line) {
+			context.Need('Noise');
+
+			line('vec3 ' + name + 'albedo = ' + inputs.Albedo + ';');
+			line('if (uIce > 0.0 && uPainted < 0.5) {');
+			line('\tfloat ' + name + 'pole = abs(' + inputs.Up + '.y) + (fbm3(' + inputs.Up + ' * ' + value('Scale') + ', 3) - 0.5) * ' + value('Ragged') + ';');
+			line('\tfloat ' + name + 'cap = uIce >= 1.0 ? 1.0 : smoothstep(1.0 - uIce, 1.0 - uIce + ' + value('Edge') + ', ' + name + 'pole);');
+			line('\t' + name + 'albedo = mix(' + name + 'albedo, vec3(0.93, 0.95, 0.98), ' + name + 'cap);');
+			line('}');
+
+			return {Albedo: name + 'albedo'};
+		});
+
+		/* Its land mottled at kilometres, hundreds and tens of metres (fields, woods, stone), each as long as it is over two pixels. */
+		node('GroundMottle', [number('Far', 0.2), number('Middle', 0.14), number('Fine', 0.1)], [albedo, water, place, near, foot], [out('Albedo', 'vec3')], function (context, name, inputs, value, line) {
+			var f = inputs.Foot;
+
+			line('float ' + name + 'mottle = (enx_fvalue3(' + inputs.Place + ' * 0.35) - 0.5) * ' + value('Far') + ' * (1.0 - smoothstep(1.2, 4.0, ' + f + ')) + (enx_fvalue3(' + inputs.Place + ' * 1.9 + 7.0) - 0.5) * ' + value('Middle') + ' * (1.0 - smoothstep(0.25, 0.8, ' + f + ')) + (enx_fvalue3(' + inputs.Near + ' * 9.0 + 3.0) - 0.5) * ' + value('Fine') + ' * (1.0 - smoothstep(0.05, 0.15, ' + f + '));');
+
+			return {Albedo: '(' + inputs.Albedo + ' * (1.0 + ' + name + 'mottle * (1.0 - ' + inputs.Water + ')))'};
+		});
+
+		/*
+		 * Its woods (the share trees cover, of its picture, read aside as its colors are): stands of tens and hundreds of
+		 * metres, as many as the share, each octave turned against the last (no grid of the noise in their edges); from far
+		 * their mean, a darker green (Red, Green, Blue); their edges a pixel and a half wide at least (no specks along them).
+		 */
+		node('GroundWoods', [number('Red', 0.42), number('Green', 0.56), number('Blue', 0.4)], [albedo, water, place, near, foot, at, dx, dy], [out('Albedo', 'vec3'), out('Wooded'), out('Stands'), out('Cover')], function (context, name, inputs, value, line) {
+			var f = inputs.Foot;
+
+			line('float ' + name + 'cover = uTiled * uWoods > 0.5 ? textureGrad(uReliefMap, ' + inputs.At + ', ' + inputs.DX + ', ' + inputs.DY + ').a : 0.0;');
+			line('mat3 ' + name + 'askew = ' + askew + ';');
+			line('float ' + name + 'stands = enx_fvalue3(' + name + 'askew * ' + inputs.Place + ' * 14.0 + 21.0) * 0.5 + enx_fvalue3(' + inputs.Place + ' * 2.6 + 9.0) * 0.32 + enx_fvalue3(' + name + 'askew * (' + name + 'askew * ' + inputs.Near + ') * 61.0 + 4.0) * 0.18 * (1.0 - smoothstep(0.004, 0.012, ' + f + '));');
+			line('float ' + name + 'spread = clamp(max(' + f + ' * 6.0, fwidth(' + name + 'stands) * 1.5), 0.02, 0.5);');
+			line('float ' + name + 'wooded = mix(smoothstep(0.5 + (0.5 - ' + name + 'cover) * 0.5 - ' + name + 'spread, 0.5 + (0.5 - ' + name + 'cover) * 0.5 + ' + name + 'spread, ' + name + 'stands), ' + name + 'cover, smoothstep(0.05, 0.2, ' + f + ')) * step(0.01, ' + name + 'cover) * (1.0 - ' + inputs.Water + ');');
+			line('vec3 ' + name + 'albedo = mix(' + inputs.Albedo + ', ' + inputs.Albedo + ' * vec3(' + value('Red') + ', ' + value('Green') + ', ' + value('Blue') + ') + vec3(0.0, 0.015, 0.0), ' + name + 'wooded);');
+
+			return {Albedo: name + 'albedo', Wooded: name + 'wooded', Stands: name + 'stands', Cover: name + 'cover'};
+		});
+
+		/* Its fields and houses (dwelling of the shader: uDwelt, uUseMap), of the place on its face; Rise: km its hedges stand up. */
+		node('GroundFields', [], [albedo, water, foot], [out('Albedo', 'vec3'), out('Rise')], function (context, name, inputs, value, line) {
+			line('vec3 ' + name + 'albedo = ' + inputs.Albedo + ';');
+			line('vec2 ' + name + 'at = uSquare.xy + vPatch * uSquare.z;');
+			line('vec2 ' + name + 'wide = fwidth(' + name + 'at);');
+			line('float ' + name + 'rise = 0.0;');
+			line('if (uDwelt > 0.5) {');
+			line('\tvec3 ' + name + 'use = texture(uUseMap, vPatch * (uTexels - 1.0) / uTexels + 0.5 / uTexels).rgb;');
+			line('\t' + name + 'albedo = mix(dwelling(' + name + 'albedo, ' + name + 'at, ivec2(uSquareCell), int(uSquare.w + 0.5), ' + name + 'use, max(' + name + 'wide.x, ' + name + 'wide.y) * 1.5, ' + inputs.Foot + ', ' + name + 'rise), ' + name + 'albedo, ' + inputs.Water + ');');
+			line('}');
+
+			return {Albedo: name + 'albedo', Rise: name + 'rise'};
+		});
+
+		/*
+		 * What grows near (where it is green): crowns and gaps of Scale a kilometre, darker and lighter by Dark and Light, as
+		 * long as they are over two pixels; each octave turned against the grid of the noise. Regression: of the grid as it is,
+		 * its cells of 29 m sharpened into squares, a chessboard of light and dark green over the near land.
+		 */
+		node('GroundCrowns', [number('Scale', 34), number('Dark', 0.7), number('Light', 0.55)], [albedo, water, near, foot], [out('Albedo', 'vec3'), out('Green'), out('Crowns')], function (context, name, inputs, value, line) {
+			line('float ' + name + 'green = clamp((' + inputs.Albedo + '.g - max(' + inputs.Albedo + '.r, ' + inputs.Albedo + '.b)) * 6.0, 0.0, 1.0) * (1.0 - ' + inputs.Water + ');');
+			line('float ' + name + 'crowns = enx_fvalue3(' + askew + ' * ' + inputs.Near + ' * ' + value('Scale') + ' + 11.0);');
+			line('vec3 ' + name + 'albedo = ' + inputs.Albedo + ' * mix(1.0, ' + value('Dark') + ' + ' + value('Light') + ' * smoothstep(0.3, 0.75, ' + name + 'crowns), ' + name + 'green * (1.0 - smoothstep(0.006, 0.02, ' + inputs.Foot + ')));');
+
+			return {Albedo: name + 'albedo', Green: name + 'green', Crowns: name + 'crowns'};
+		});
+
+		/* Its snow (of its picture): its edge torn by the stands of its woods (Torn) where it thins (a noise of the place made already). */
+		node('GroundSnow', [number('Torn', 1.6)], [pin('Stands', 'float', '0.5'), at, dx, dy], [out('Snow')], function (context, name, inputs, value, line) {
+			line('float ' + name + 'snow = uTiled > 0.5 ? textureGrad(uSnowMap, ' + inputs.At + ', ' + inputs.DX + ', ' + inputs.DY + ').r : 0.0;');
+			line(name + 'snow = clamp(' + name + 'snow + (' + inputs.Stands + ' - 0.5) * ' + value('Torn') + ' * ' + name + 'snow * (1.0 - ' + name + 'snow), 0.0, 1.0);');
+
+			return {Snow: name + 'snow'};
+		});
+
+		/*
+		 * Its dunes (the sand of its deserts, Use.a): ridges of a kilometre or so bent by a noise of a few, a gentle side to the
+		 * wind and a steep one away, some crossing them (star dunes), as long as a pixel is finer than a quarter of them;
+		 * lighter and darker by Strength.
+		 */
+		node('GroundDunes', [number('Strength', 0.18)], [albedo, place, foot, at, dx, dy], [out('Albedo', 'vec3'), out('Dunes')], function (context, name, inputs, value, line) {
+			var p = inputs.Place;
+
+			line('vec3 ' + name + 'albedo = ' + inputs.Albedo + ';');
+			line('float ' + name + 'sand = uTiled > 0.5 ? textureGrad(uUseMap, ' + inputs.At + ', ' + inputs.DX + ', ' + inputs.DY + ').a : 0.0;');
+			line('float ' + name + 'dunes = 0.0;');
+			line('if (' + name + 'sand > 0.003) {');
+			line('\tfloat ' + name + 'seen = 1.0 - smoothstep(0.12, 0.45, ' + inputs.Foot + ');');
+			line('\tfloat ' + name + 'bend = enx_fvalue3(' + p + ' * 0.28 + 4.0) * 3.2;');
+			line('\tfloat ' + name + 'wave = fract((' + p + '.x * 0.6 + ' + p + '.z * 0.8) / 1.3 + ' + name + 'bend);');
+			line('\tfloat ' + name + 'ridge = ' + name + 'wave < 0.72 ? ' + name + 'wave / 0.72 : (1.0 - ' + name + 'wave) / 0.28;');
+			line('\tfloat ' + name + 'athwart = fract((' + p + '.x * -0.8 + ' + p + '.z * 0.6 + ' + p + '.y * 0.3) / 2.1 + ' + name + 'bend * 0.7);');
+			line('\tfloat ' + name + 'star = 1.0 - abs(' + name + 'athwart * 2.0 - 1.0);');
+			line('\t' + name + 'dunes = (' + name + 'ridge * ' + name + 'ridge * (3.0 - 2.0 * ' + name + 'ridge) * 0.75 + ' + name + 'star * ' + name + 'star * 0.25) * ' + name + 'sand * ' + name + 'seen;');
+			line('\t' + name + 'albedo *= 1.0 + (' + name + 'dunes - 0.35 * ' + name + 'sand * ' + name + 'seen) * ' + value('Strength') + ';');
+			line('}');
+
+			return {Albedo: name + 'albedo', Dunes: name + 'dunes'};
+		});
+
+		/*
+		 * Its relief finer than its points, in the light of its normal: hills (Hills km) and knolls (Knolls), its crowns
+		 * (Crowns), the hedges of its fields, its dunes (Dunes); its slopes cut by ridges and gullies of 300 m and of 115 m
+		 * (Ridges, Gullies: km) as steep as the slope is, round at their tops, each as long as it is over three pixels. The
+		 * normal bent by them no more than Lean (a step over a pixel never lays it on its side, a black speck), none where a
+		 * pixel is under a metre (rings of moiré of the rounding of kilometres there: the materials bend it). Smoothed: the
+		 * normal before them. Regression: hills of 90 m by 20 m in the light of the normal, from low the ground was pits and
+		 * blotches; no rise of its woods (their crowns 6 m at an edge laid the normal on its side, black specks).
+		 */
+		node('GroundRelief', [number('Hills', 0.015), number('Knolls', 0.003), number('Crowns', 0.006), number('Dunes', 0.07), number('Ridges', 0.035), number('Gullies', 0.012), number('Lean', 0.85)], [normal, up, water, near, foot, pin('Crowns', 'float', '0.5'), pin('Green', 'float', '0.0'), pin('Rise', 'float', '0.0'), pin('Dunes', 'float', '0.0')], [out('Normal', 'vec3'), out('Smoothed', 'vec3')], function (context, name, inputs, value, line) {
+			var f = inputs.Foot;
+			var q = inputs.Near;
+
+			line('float ' + name + 'bumps = ((enx_fvalue3(' + q + ' * 11.0 + 5.0) - 0.5) * ' + value('Hills') + ' * (1.0 - smoothstep(0.03, 0.09, ' + f + ')) + (enx_fvalue3(' + q + ' * 52.0 + 2.0) - 0.5) * ' + value('Knolls') + ' * (1.0 - smoothstep(0.006, 0.02, ' + f + ')) + (' + inputs.Crowns + ' - 0.5) * ' + value('Crowns') + ' * ' + inputs.Green + ' * (1.0 - smoothstep(0.006, 0.02, ' + f + ')) + ' + inputs.Rise + ' + ' + inputs.Dunes + ' * ' + value('Dunes') + ') * (1.0 - ' + inputs.Water + ');');
+			line('vec3 ' + name + 'n = ' + inputs.Normal + ';');
+			line('float ' + name + 'rugged = smoothstep(0.06, 0.35, 1.0 - dot(' + name + 'n, ' + inputs.Up + ')) * (1.0 - ' + inputs.Water + ');');
+			line('mat3 ' + name + 'askew = ' + askew + ';');
+			line('float ' + name + 'ridge1 = enx_fvalue3(' + name + 'askew * ' + q + ' * 3.3 + 1.0) * 2.0 - 1.0;');
+			line('float ' + name + 'ridge2 = enx_fvalue3(' + name + 'askew * (' + name + 'askew * ' + q + ') * 8.7 + 6.0) * 2.0 - 1.0;');
+			line(name + 'ridge1 = 1.0 - ' + name + 'ridge1 * ' + name + 'ridge1;');
+			line(name + 'ridge2 = 1.0 - ' + name + 'ridge2 * ' + name + 'ridge2;');
+			line(name + 'bumps += ' + name + 'rugged * (' + name + 'ridge1 * ' + name + 'ridge1 * ' + value('Ridges') + ' * (1.0 - smoothstep(0.05, 0.1, ' + f + ')) + ' + name + 'ridge2 * ' + name + 'ridge2 * ' + value('Gullies') + ' * (1.0 - smoothstep(0.02, 0.04, ' + f + ')));');
+			line('vec3 ' + name + 'px = dFdx(vWorld);');
+			line('vec3 ' + name + 'py = dFdy(vWorld);');
+			line('vec3 ' + name + 'across = cross(' + name + 'py, ' + name + 'n);');
+			line('float ' + name + 'area = dot(' + name + 'px, ' + name + 'across);');
+			line('vec3 ' + name + 'tilt = (dFdx(' + name + 'bumps) * ' + name + 'across + dFdy(' + name + 'bumps) * cross(' + name + 'n, ' + name + 'px)) / (abs(' + name + 'area) > 1e-12 ? ' + name + 'area : 1e-12);');
+			line(name + 'tilt *= step(1e-12, abs(' + name + 'area)) / max(1.0, length(' + name + 'tilt) / ' + value('Lean') + ');');
+			line(name + 'tilt *= smoothstep(0.0003, 0.0012, ' + f + ');');
+
+			return {Normal: 'normalize(' + name + 'n - ' + name + 'tilt)', Smoothed: name + 'n'};
+		});
+
+		/*
+		 * Nearer still: the tiles of the materials (uTextured), as the ground of a location draws them (groundLaid of the
+		 * shader: of the tiles of the scene; of a ground near the materials of its biomes in their place).
+		 */
+		node('GroundTiles', [], [albedo, normal, pin('Smoothed', 'vec3', 'normalize(vNormal)'), near, foot, pin('Green', 'float', '0.0'), pin('Wooded', 'float', '0.0'), pin('Snow', 'float', '0.0'), water, pin('Cover', 'float', '0.0'), pin('Soft', 'vec2', 'vPatch')], [out('Albedo', 'vec3'), out('Normal', 'vec3')], function (context, name, inputs, value, line) {
+			line('vec3 ' + name + 'albedo = ' + inputs.Albedo + ';');
+			line('vec3 ' + name + 'n = ' + inputs.Normal + ';');
+			line('groundLaid(' + name + 'albedo, ' + name + 'n, ' + inputs.Smoothed + ', ' + inputs.Near + ', ' + inputs.Foot + ', ' + inputs.Green + ', ' + inputs.Wooded + ', ' + inputs.Snow + ', ' + inputs.Water + ', ' + inputs.Cover + ', ' + inputs.Soft + ');');
+
+			return {Albedo: name + 'albedo', Normal: name + 'n'};
+		});
+
+		/*
+		 * The shadow of its ring (uRingOn: it has one; uRingAxis in the frame of its ground, uRingSpan its edges, km): where the
+		 * way to the sun crosses the ring, as much as the ring is there (groundRing: the alpha of the ring graph, its gaps
+		 * alike), by Strength.
+		 */
+		node('GroundRing', [number('Strength', 0.9)], [up], [out('Shade')], function (context, name, inputs, value, line) {
+			line('vec3 ' + name + 'p = ' + inputs.Up + ' * uRadius;');
+			line('float ' + name + 'facing = dot(uSun, uRingAxis);');
+			line('float ' + name + 'far = -dot(' + name + 'p, uRingAxis) / (abs(' + name + 'facing) > 1e-4 ? ' + name + 'facing : 1e-4);');
+			line('vec3 ' + name + 'hit = ' + name + 'p + uSun * ' + name + 'far;');
+			line('float ' + name + 'r = (length(' + name + 'hit) - uRingSpan.x) / (uRingSpan.y - uRingSpan.x);');
+			line('vec3 ' + name + 'seen = vec3(0.0);');
+			line('float ' + name + 'ring = 0.0;');
+			line('groundRing(clamp(' + name + 'r, 0.0, 1.0), ' + name + 'hit, uRingAxis, ' + name + 'seen, ' + name + 'ring);');
+
+			return {Shade: '(1.0 - ' + name + 'ring * ' + value('Strength') + ' * step(0.0, ' + name + 'far) * step(0.0, ' + name + 'r) * step(' + name + 'r, 1.0) * uRingOn)'};
+		});
+
+		/*
+		 * Its light: the sun (its shadows, of a ring: Ring), and the sky lights what the sun does not reach: at sunset the land
+		 * is dim and red, not black (Sky, Dusk); the shadows of the clouds of its weather (cloudUnder of the clouds graph, its
+		 * thick part only), by Shadow. Day: how much the sun is up for its lights at night (DayFrom, DayTo of its rise).
+		 * Regression: what looked away from the sun was nearly black, a hole in the ground.
+		 */
+		node('GroundLight', [number('Sky', 0.42), number('Dusk', 0.35), number('Shadow', 0.5), number('DayFrom', -0.05), number('DayTo', 0.12)], [albedo, normal, up, pin('World', 'vec3', 'vWorld'), pin('Ring', 'float', '1.0')], [out('Color', 'vec3'), out('Rise'), out('Light'), out('Dusk'), out('Around', 'vec3'), out('Toward', 'vec3'), out('Day')], function (context, name, inputs, value, line) {
+			var u = inputs.Up;
+
+			line('float ' + name + 'rise = dot(' + u + ', uSun);');
+			line('float ' + name + 'light = clamp(' + name + 'rise * 3.0 + 0.3, 0.0, 1.0);');
+			line('float ' + name + 'dusk = 1.0 - smoothstep(0.0, 0.35, abs(' + name + 'rise));');
+			line('vec3 ' + name + 'around = vec3(0.05, 0.06, 0.08) + uAir.rgb * uAir.a * ' + value('Sky') + ' * smoothstep(-0.25, 0.3, ' + name + 'rise) + vec3(0.5, 0.25, 0.15) * ' + name + 'dusk * uAir.a * ' + value('Dusk') + ';');
+			line('float ' + name + 'day = max(dot(' + inputs.Normal + ', uSun), 0.0) * sunShadow(' + inputs.World + ', ' + inputs.Normal + ') * ' + inputs.Ring + ';');
+			line('vec3 ' + name + 'toward = normalize(uSun - ' + u + ' * ' + name + 'rise + vec3(1e-6));');
+			line('if (uWeatherOn > 0.5) {');
+			line('\t' + name + 'day *= 1.0 - ' + value('Shadow') + ' * smoothstep(0.3, 1.0, cloudUnder(' + u + ', texture(uWeather, ' + u + ').g, ' + name + 'toward, ' + name + 'rise)) * smoothstep(0.0, 0.12, ' + name + 'rise);');
+			line('}');
+
+			return {Color: '(' + inputs.Albedo + ' * (uSunColor * ' + name + 'day + ' + name + 'around))', Rise: name + 'rise', Light: name + 'light', Dusk: name + 'dusk', Around: name + 'around', Toward: name + 'toward', Day: 'smoothstep(' + value('DayFrom') + ', ' + value('DayTo') + ', ' + name + 'rise)'};
+		});
+
+		/*
+		 * Water mirrors the sky, more at a glance; waves (the slope of a noise of the very place, Waves) break the sun into a
+		 * path of glints that reddens as it sets, seen where a pixel is smaller than a wave; past that the sun is spread wide
+		 * over the sea, as from high over it (Glints, Spread: how bright).
+		 */
+		node('GroundWater', [number('Waves', 0.22), number('Glints', 7), number('Spread', 0.9)], [color, water, up, pin('View', 'vec3', 'normalize(-vWorld)'), place, foot, pin('Rise', 'float', 'dot(vDirection, uSun)'), pin('Light', 'float', '1.0'), pin('Dusk', 'float', '0.0')], [out('Color', 'vec3')], function (context, name, inputs, value, line) {
+			var u = inputs.Up;
+			var v = inputs.View;
+			var rise = inputs.Rise;
+
+			line('vec3 ' + name + 'color = ' + inputs.Color + ';');
+			line('if (' + inputs.Water + ' > 0.01) {');
+			line('\tfloat ' + name + 'seen = 1.0 - smoothstep(0.015, 0.06, ' + inputs.Foot + ');');
+			line('\tvec3 ' + name + 'w = ' + u + ';');
+			line('\tif (' + name + 'seen > 0.0) {');
+			line('\t\tvec3 ' + name + 'q = ' + inputs.Place + ' * 9.0 + vec3(0.0, uTime * 0.05, 0.0);');
+			line('\t\tvec3 ' + name + 'g = vec3(enx_fvalue3(' + name + 'q + vec3(0.2, 0.0, 0.0)) - enx_fvalue3(' + name + 'q - vec3(0.2, 0.0, 0.0)), enx_fvalue3(' + name + 'q + vec3(0.0, 0.2, 0.0)) - enx_fvalue3(' + name + 'q - vec3(0.0, 0.2, 0.0)), enx_fvalue3(' + name + 'q + vec3(0.0, 0.0, 0.2)) - enx_fvalue3(' + name + 'q - vec3(0.0, 0.0, 0.2))) * 2.5;');
+			line('\t\t' + name + 'w = normalize(' + u + ' - (' + name + 'g - ' + u + ' * dot(' + name + 'g, ' + u + ')) * ' + value('Waves') + ' * ' + name + 'seen);');
+			line('\t}');
+			line('\tfloat ' + name + 'fresnel = 0.02 + 0.98 * pow(1.0 - max(dot(' + name + 'w, ' + v + '), 0.0), 5.0);');
+			line('\tvec3 ' + name + 'r = reflect(-' + v + ', ' + name + 'w);');
+			line('\tif (dot(' + name + 'r, ' + u + ') < 0.0) ' + name + 'r = ' + name + 'r - ' + u + ' * 2.0 * dot(' + name + 'r, ' + u + ');');
+			line('\tfloat ' + name + 'toward = max(dot(' + name + 'r, uSun), 0.0);');
+			line('\tvec3 ' + name + 'mirrored = mix(mix(uAir.rgb, vec3(1.0), 0.45), uAir.rgb * vec3(0.45, 0.6, 1.0), pow(max(dot(' + name + 'r, ' + u + '), 0.0), 0.6)) * ' + inputs.Light + ' + vec3(1.0, 0.5, 0.2) * ' + inputs.Dusk + ' * exp(-max(dot(' + name + 'r, ' + u + '), 0.0) * 5.0) * 0.8;');
+			line('\tfloat ' + name + 'shine = (pow(' + name + 'toward, mix(90.0, 1400.0, ' + name + 'seen)) * mix(' + value('Spread') + ', ' + value('Glints') + ', ' + name + 'seen) + pow(' + name + 'toward, 180.0) * 0.16) * smoothstep(-0.02, 0.1, ' + rise + ');');
+			line('\t' + name + 'color = mix(' + name + 'color, mix(' + name + 'color, ' + name + 'mirrored, ' + name + 'fresnel) + uSunColor * mix(vec3(1.0, 0.55, 0.25), vec3(1.0), smoothstep(0.0, 0.3, ' + rise + ')) * ' + name + 'shine, ' + inputs.Water + ');');
+			line('}');
+
+			return {Color: name + 'color'};
+		});
+
+		/*
+		 * Its clouds, seen from high over them (uCloudsOn): laid over the ground where it is, as the shell of them would be (a
+		 * shell so far over the ground fights it for the depth thousands of kilometres away, and flickers in stripes). Of its
+		 * weather: the cover, each puff darker on its side away from the sun (cloudAt, cloudSide of the clouds graph); else
+		 * of its clouds baked (uSky, turned by the wind), heaps of tens of kilometres and their gaps of their own as far as a
+		 * pixel is smaller than they are. Lit by Sun of the rise of the sun.
+		 */
+		node('GroundClouds', [number('Sun', 1.4)], [color, up, foot, pin('Toward', 'vec3', 'uSun'), pin('Rise', 'float', 'dot(vDirection, uSun)'), pin('Around', 'vec3', 'vec3(0.05, 0.06, 0.08)')], [out('Color', 'vec3')], function (context, name, inputs, value, line) {
+			var u = inputs.Up;
+			var f = inputs.Foot;
+			var rise = inputs.Rise;
+
+			line('vec3 ' + name + 'color = ' + inputs.Color + ';');
+			line('if (uCloudsOn > 0.0 && uWeatherOn > 0.5) {');
+			line('\tfloat ' + name + 'cover = cloudAt(' + u + ', ' + f + ');');
+			line('\tfloat ' + name + 'self = cloudSide(' + u + ', texture(uWeather, ' + u + ').r, ' + inputs.Toward + ', ' + rise + ', ' + f + ');');
+			line('\tvec3 ' + name + 'cloud = uCloudTint * (uSunColor * clamp(' + rise + ' * ' + value('Sun') + ' + 0.1, 0.0, 1.0) * (1.0 - ' + name + 'self) + ' + inputs.Around + ');');
+			line('\t' + name + 'color = mix(' + name + 'color, ' + name + 'cloud, ' + name + 'cover * min(uCloudsOn, 1.0));');
+			line('}');
+			line('else if (uCloudsOn > 0.0) {');
+			line('\tvec3 ' + name + 'drifted = vec3(' + u + '.x * cos(uDrift) - ' + u + '.z * sin(uDrift), ' + u + '.y, ' + u + '.x * sin(uDrift) + ' + u + '.z * cos(uDrift));');
+			line('\tfloat ' + name + 'cover = texture(uSky, ' + name + 'drifted).r * uCloudsOn;');
+			line('\tvec3 ' + name + 'at = ' + name + 'drifted * uRadius;');
+			line('\tmat3 ' + name + 'turned = ' + askew + ';');
+			line('\tvec3 ' + name + 'a1 = ' + name + 'turned * ' + name + 'at * 0.035;');
+			line('\tvec3 ' + name + 'a2 = ' + name + 'turned * ' + name + 'a1 * 3.1 + 7.0;');
+			line('\tfloat ' + name + 'heaps = enx_fvalue3(' + name + 'a1) * 0.55 + enx_fvalue3(' + name + 'a2) * 0.3 + enx_fvalue3(' + name + 'turned * ' + name + 'a2 * 2.7 + 3.0) * 0.15;');
+			line('\t' + name + 'heaps = smoothstep(0.25, 0.75, ' + name + 'heaps);');
+			line('\t' + name + 'cover = clamp(' + name + 'cover * mix(1.0, 0.3 + 1.4 * ' + name + 'heaps, 1.0 - smoothstep(4.0, 12.0, ' + f + ')), 0.0, 1.0);');
+			line('\tvec3 ' + name + 'cloud = uCloudTint * (uSunColor * clamp(' + rise + ' * ' + value('Sun') + ' + 0.1, 0.0, 1.0) + ' + inputs.Around + ');');
+			line('\t' + name + 'color = mix(' + name + 'color, ' + name + 'cloud, clamp(' + name + 'cover, 0.0, 1.0));');
+			line('}');
+
+			return {Color: name + 'color'};
+		});
+
+		/* Its air (of the air graph): the haze of a globe between it and the eye, of the color of its horizon. */
+		node('GroundAir', [], [color, pin('Light', 'float', '1.0'), pin('World', 'vec3', 'vWorld')], [out('Color', 'vec3')], function (context, name, inputs) {
+			return {Color: 'mix(' + inputs.Color + ', air_horizon_globe(' + inputs.Light + '), clamp(air_haze_globe(' + inputs.World + '), 0.0, 1.0))'};
+		});
+
+		blueprints.Node('GroundEnd', {Graphs: ground, Group: 'output', Inputs: [color], Outputs: [],
+			GLSL: function (context) {
+				return {Result: '\tcolor = ' + context.Inputs.Color + ';'};
+			}
+		});
+	},
+
+	/* A ground of a globe of the library (blueprints/shader/ground): see Grounds. */
+	LibraryGround: function () {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/ground'));
 	},
 
 	/* The surface of a body of noise as a graph (the kind bake): see the header. */
@@ -1976,8 +2658,8 @@ Elemenx.Service('SceneBlueprints', {
 		}
 
 		/* The winds of the planet, its storms, where the air came from: fronts and streams drawn out along the wind (StreamScale, StreamFine), Eddies. */
-		block('ForecastStorms', ['PX', 'PY', 'PZ', 'Days', 'Seed', 'RadiusKm'], [number('StreamScale', 2.6), number('StreamFine', 14), number('Eddies', 0.06)], ['Fronts', 'Streams', 'Mid', 'Storm'], 'wx_air', function (input, prop, vector) {
-			return [vector('PX', 'PY', 'PZ'), input('Days'), input('Seed'), input('RadiusKm'), prop('StreamScale'), prop('StreamFine'), prop('Eddies')];
+		block('ForecastStorms', ['PX', 'PY', 'PZ', 'Days', 'Seed', 'RadiusKm', 'Cells'], [number('StreamScale', 2.6), number('StreamFine', 14), number('Eddies', 0.06)], ['Fronts', 'Streams', 'Mid', 'Storm'], 'wx_air', function (input, prop, vector) {
+			return [vector('PX', 'PY', 'PZ'), input('Days'), input('Seed'), input('RadiusKm'), prop('StreamScale'), prop('StreamFine'), prop('Eddies'), input('Cells')];
 		});
 
 		/* The sheets of a front where the air is humid enough (Cut less humid by CutBy, Soft), and how humid it is. */

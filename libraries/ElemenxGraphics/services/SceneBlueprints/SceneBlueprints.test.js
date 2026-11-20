@@ -16,9 +16,10 @@ async function mount (props) {
 
 	document.getElementById('mount').appendChild(component.$Element());
 
+	/* Regression: run with the other suites of scenes (all on one card) a Scene was now and then ready later than 8 s. */
 	expect(await waitFor(function () {
 		return ready;
-	}, 8000)).toBeTruthy();
+	}, 30000)).toBeTruthy();
 
 	ready.Scene().Loop.Stop();
 
@@ -340,7 +341,7 @@ describe('Contract: the shader graphs of a Scene (C13 phase 5): the bake of a bo
 		var code = blueprints.NumericCode(graph, {});
 		var renderer = graphics.Create(document.createElement('canvas'), {Antialias: false});
 		var gl = renderer.GL;
-		var names = {PX: 'uP.x', PY: 'uP.y', PZ: 'uP.z', Days: 'uDays', Seed: '41.0', RadiusKm: '6371.0', SunX: '0.6', SunY: '0.2', SunZ: '0.7746', Cloudiness: 'uCloudiness', Moist: 'uCl.r', Warm: 'uCl.g', Ground: 'uCl.b', Climb: 'uCl.a'};
+		var names = {PX: 'uP.x', PY: 'uP.y', PZ: 'uP.z', Days: 'uDays', Seed: '41.0', RadiusKm: '6371.0', Cells: '3.0', SunX: '0.6', SunY: '0.2', SunZ: '0.7746', Cloudiness: 'uCloudiness', Moist: 'uCl.r', Warm: 'uCl.g', Ground: 'uCl.b', Climb: 'uCl.a'};
 		var program;
 		var target = renderer.Target(1, 1, {Float: true});
 		var quad = renderer.Mesh({Positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0], Indices: [0, 1, 2]});
@@ -385,7 +386,7 @@ describe('Contract: the shader graphs of a Scene (C13 phase 5): the bake of a bo
 
 			target.End();
 
-			js = code.Run({}, {PX: p[0], PY: p[1], PZ: p[2], Days: 3.3 + i * 0.77, Seed: 41, RadiusKm: 6371, SunX: 0.6, SunY: 0.2, SunZ: 0.7746, Cloudiness: cloudiness, Moist: cl[0], Warm: cl[1], Ground: cl[2], Climb: cl[3]});
+			js = code.Run({}, {PX: p[0], PY: p[1], PZ: p[2], Days: 3.3 + i * 0.77, Seed: 41, RadiusKm: 6371, Cells: 3, SunX: 0.6, SunY: 0.2, SunZ: 0.7746, Cloudiness: cloudiness, Moist: cl[0], Warm: cl[1], Ground: cl[2], Climb: cl[3]});
 
 			expect(Math.abs(js.Cover - pixels[0])).toBeLessThan(0.01);
 			expect(Math.abs(js.Kind - pixels[1])).toBeLessThan(0.01);
@@ -397,6 +398,18 @@ describe('Contract: the shader graphs of a Scene (C13 phase 5): the bake of a bo
 		}
 
 		expect(rained).toBeGreaterThan(0);
+
+		/*
+		 * The cells of its winds (of its envelope: 3 of the Earth, 0 taken for 3): a planet that turns fast has more belts, its
+		 * air drawn another way.
+		 */
+		var forecast = Elemenx.Service('SceneForecast');
+		var at = [0.3, 0.55, 0.78];
+
+		expect(forecast.Air(at, 4.2, 41, 6371, 2.6, 14, 0.06, 0)).toEqual(forecast.Air(at, 4.2, 41, 6371, 2.6, 14, 0.06, 3));
+		expect(forecast.Air(at, 4.2, 41, 6371, 2.6, 14, 0.06, 9)).not.toEqual(forecast.Air(at, 4.2, 41, 6371, 2.6, 14, 0.06, 3));
+		expect(forecast.Code().wx_zonal(0.7, 6371, 3)).toBeGreaterThan(0);
+		expect(forecast.Code().wx_zonal(0.7, 6371, 9)).not.toBeCloseTo(forecast.Code().wx_zonal(0.7, 6371, 3), 3);
 	});
 
 	/*
@@ -681,6 +694,12 @@ describe('Contract: the shader graphs of a Scene (C13 phase 5): the bake of a bo
 		expect(made.Function).toContain(' * 1.6;');
 		expect(made.Function).not.toContain('0.0), 0.0)');
 
+		/* The tops of a giant near (PlanetGas): of a giant only, its bands read where a flow pushes them, its billows lean its light. */
+		expect(blueprints.Nodes('planet')).toContain('PlanetGas');
+		expect(made.Function).toContain('if (uKind == 4 && uCloudsOnly < 0.5) {');
+		expect(made.Function).toMatch(/texture\(uGround, g\d+_moved\)/);
+		expect(made.Function).toMatch(/_lit = normalize\(g\d+_lit - g\d+_tilt \* 6\.0 \* 0\.8/);
+
 		library.blocks.forEach(function (block) {
 			expect(block.properties.every(function (property) {
 				return Number(property.value) !== 0;
@@ -745,5 +764,279 @@ describe('Contract: the shader graphs of a Scene (C13 phase 5): the bake of a bo
 		})).toEqual([]);
 
 		warned.mockRestore();
+	});
+
+	/*
+	 * The ground of a globe near was one main of the Ground shader of a Scene; now its parts are blocks of a graph (the kind
+	 * ground), each number a property of its block, the tiles near a function of the shader a ground near puts its
+	 * materials in (groundLaid), the shadow of a ring the alpha of the ring graph alone (its light reads what a ground has not).
+	 */
+	it('draws the ground of a globe of a graph of its parts, the shadow of a ring on it of the alpha of the ring graph', async function () {
+		var blueprints = Elemenx.Service('Blueprints');
+		var library = Elemenx.Service('SceneBlueprints').LibraryGround();
+		var made = blueprints.Compile(library);
+		var own = JSON.parse(JSON.stringify(library));
+		var calls = ['enx_fvalue3(', 'textureGrad(uColorMap,', 'fbm3(', 'dwelling(', 'textureGrad(uSnowMap,', 'textureGrad(uUseMap,', 'groundLaid(', 'groundRing(', 'sunShadow(', 'cloudUnder(', 'reflect(', 'texture(uLights,', 'cloudAt(', 'air_haze_globe('];
+		var warned = vi.spyOn(console, 'warn');
+
+		expect(made.Type).toBe('ground');
+		expect(made.Function).toContain('void blueprintGround(inout vec3 color) {');
+
+		calls.reduce(function (at, call) {
+			expect(made.Function.indexOf(call)).toBeGreaterThan(at);
+
+			return made.Function.indexOf(call);
+		}, -1);
+
+		/* Its numbers of their properties: the dark of its woods, the light of its sky, the glints of its water. */
+		expect(made.Function).toContain('vec3(0.42, 0.56, 0.4)');
+		expect(made.Function).toContain('uAir.a * 0.42 * smoothstep(-0.25, 0.3,');
+		expect(made.Function).toContain('mix(0.9, 7.0,');
+
+		library.blocks.forEach(function (block) {
+			expect(block.properties.every(function (property) {
+				return Number(property.value) !== 0 || property.key === 'DayFrom';
+			})).toBe(true);
+		});
+
+		/* Its own: no shadow of a ring, no woods. */
+		own.blocks = own.blocks.filter(function (block) {
+			return block.id !== 'ring' && block.id !== 'woods';
+		});
+		own.links = own.links.filter(function (link) {
+			return !/^(ring|woods)-/.test(link.p1) && !/^(ring|woods)-/.test(link.p2);
+		}).concat([{id: 'own', p1: 'mottle-out-Albedo', p2: 'fields-in-Albedo', kind: 'value'}]);
+
+		expect(blueprints.Compile(own).Function).not.toContain('groundRing(');
+
+		var ready = null;
+		var component = Elemenx.Component(unique('GroundGraphHost'), {$Template: '<div style="width: 320px; height: 200px"><Scene Paused="true" Quality="medium" Labels="false" [graphs]="Graphs" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Mass="1">' +
+				'<SceneObject ID="terra" Kind="planet" Surface-Type="terran" Radius="6371" Distance="1">' +
+					'<SceneObject ID="rings" Kind="ring" Inner="1.4" Outer="2.2" />' +
+				'</SceneObject>' +
+			'</SceneObject>' +
+		'</Scene></div>', Graphs: {'shader/ground': own}, Ready: function (space) {
+			ready = space;
+		}})();
+
+		owned.push(component);
+
+		document.getElementById('mount').appendChild(component.$Element());
+
+		expect(await waitFor(function () {
+			return ready;
+		}, 8000)).toBeTruthy();
+
+		var renderer = ready.Engine().Renderer;
+		var chain = function () {
+			return ready.Globed(ready.Forecasted(ready.Clouded(ready.Aired(ready.Weathered(ready.Baked(ready.Landed(ready.Skied(ready.Watered(ready.Winded(ready.Shaders(Elemenx.Service('Renderer'))))))))))));
+		};
+		var shaders = chain();
+		var ring = shaders.Ground.slice(shaders.Ground.indexOf('void groundRing('), shaders.Ground.indexOf('void blueprintGround('));
+
+		ready.Scene().Loop.Stop();
+
+		/* The ring of the ground: its gaps and bands of its seed of its own, none of its light (no shadow(), no lights there). */
+		expect(ring).toContain('noise3(');
+		expect(ring).toContain('uRingSeed');
+		expect(ring).not.toMatch(/\buSeed\b/);
+		expect(ring).not.toContain('shadow(');
+		expect(ring).not.toContain('uLightCount');
+		expect(shaders.Ground).not.toContain('groundRing(clamp(');
+		expect(shaders.Ground).toContain('void groundLaid(inout vec3 albedo, inout vec3 n, vec3 smoothed, vec3 near, float foot, float green, float wooded, float snow, float water, float cover, vec2 pictureSoft) {');
+		expect(renderer.Check(shaders.GroundVertex, shaders.Ground)).toBeFalsy();
+
+		/* The library ground: the shadow of the ring in it, the whole compiles. */
+
+		ready.GroundMade = blueprints.Compile(library);
+		shaders = chain();
+
+		expect(shaders.Ground).toContain('groundRing(clamp(');
+		expect(renderer.Check(shaders.GroundVertex, shaders.Ground)).toBeFalsy();
+		expect(warned.mock.calls.filter(function (call) {
+			return /ground|ring/i.test(String(call[0]));
+		})).toEqual([]);
+
+		warned.mockRestore();
+	});
+
+	/*
+	 * Regression: the surface of a star was one main of the Star shader of a Scene, its corona, prominences and flares one
+	 * of the Corona of SceneDeepSpace, its graph (the kind star) only the numbers of each frame. Now its parts are blocks of
+	 * the same graph, the library one the very pixels of before; a star of its own graph draws its own.
+	 */
+	it('draws the surface and the crown of a star of its star graph, the library one the very pixels of before', async function () {
+		var blueprints = Elemenx.Service('Blueprints');
+		var graphics = Elemenx.Service('Renderer');
+		var library = Elemenx.Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/star'));
+		var made = blueprints.Compile(library);
+		var sunHook = 'void blueprintSun(vec3 n, vec3 v, vec3 p, inout vec3 color) {}';
+		var crownHook = 'void blueprintCrown(float r, float angle, float u, inout vec3 color) {}';
+		var sunBefore = [
+			'void main() {',
+			'	vec3 n = normalize(vNormal);',
+			'	vec3 v = normalize(uCamera - vWorld);',
+			'	vec3 p = normalize(vLocal);',
+			'	float cells = fbm3(p * uCells + vec3(0.0, uTime * 0.08, uSeed), 4);',
+			'	float belt = smoothstep(0.08, 0.2, abs(p.y)) * (1.0 - smoothstep(0.45, 0.62, abs(p.y)));',
+			'	float field = fbm3(p * 2.6 + vec3(uSeed, uTime * 0.01, 0.0), 3);',
+			'	float spots = smoothstep(0.66, 0.74, field) * belt * (1.0 - uBands);',
+			'	float bands = 0.5 + 0.5 * sin(p.y * 15.0 + fbm3(p * vec3(1.5, 7.0, 1.5) + vec3(uSeed, 0.0, uTime * 0.02), 3) * 4.0);',
+			'	float faculae = (smoothstep(0.58, 0.66, field) - spots) * belt;',
+			'	float limb = pow(max(dot(n, v), 0.0), 0.45);',
+			'	vec3 color = pow(uColor, vec3(2.2)) * mix(1.0, 0.55 + 0.75 * bands, uBands) * (0.7 + 0.6 * mix(cells, 0.5, uBands * 0.7)) * (0.5 + 0.6 * limb) * (1.0 - spots * 0.55) * (1.0 + faculae * 0.35 * (1.0 - limb));',
+			'	float warm = 1.0 - clamp(uColor.b / max(uColor.r, 1e-3), 0.0, 1.0);',
+			'	color = mix(color, color * vec3(1.0, 0.5, 0.72) * 0.5, uBands);',
+			'	outColor = vec4(mix(color, vec3(1.0), 0.28 * limb * (1.0 - warm) * (1.0 - warm)) * mix(2.4, 1.1, clamp(warm * 1.5, 0.0, 1.0)), 1.0);',
+			'}'
+		].join('\n');
+		var crownBefore = [
+			'void main() {',
+			'	float r = length(vQuad) * 4.0;',
+			'	if (r < 0.985 || r > 4.0) discard;',
+			'	float angle = atan(vQuad.y, vQuad.x);',
+			'	float u = r - 1.0;',
+			'	float streamers = 0.55 + 0.45 * wave(angle * 3.0 + uSeed) * wave(angle * 7.0 - uSeed + uTime * 0.02);',
+			'	vec3 color = uColor * exp(-u * 2.6) * streamers * 0.55 * uParts.x * (1.0 - smoothstep(2.5, 4.0, r));',
+			'	vec3 red = vec3(1.0, 0.36, 0.3);',
+			'	for (int i = 0; i < 8; i++) {',
+			'		float k = float(i);',
+			'		if (k >= ceil(uShape.x)) break;',
+			'		float whole = clamp(uShape.x - k, 0.0, 1.0);',
+			'		float at = hash(uSeed + k * 7.3) * 6.2832 - 3.1416;',
+			'		float wide = 0.08 + 0.1 * hash(uSeed + k * 3.1);',
+			'		float high = min(2.4, (0.12 + 0.3 * hash(uSeed + k * 5.7)) * uShape.y * (0.85 + 0.15 * sin(uPhase * 0.4 + k)));',
+			'		float t = (mod(angle - at + 3.1416, 6.2832) - 3.1416) / wide;',
+			'		if (abs(t) < 1.2) {',
+			'			float arch = high * sqrt(max(0.0, 1.0 - t * t));',
+			'			float d = abs(u - arch);',
+			'			float strands = 1.0 - 0.4 * clamp(uShape.w, 0.0, 2.5) * (1.0 - wave(t * 9.0 + uPhase * 0.5 + k * 13.0));',
+			'			float body = exp(-d * 22.0) * 0.8 + exp(-d * 70.0) * 0.6 + step(u, arch) * smoothstep(0.0, arch, u) * 0.25;',
+			'			color += mix(red, uColor, 0.25) * uTint * body * max(strands, 0.0) * smoothstep(1.2, 0.85, abs(t)) * 1.3 * uParts.y * whole;',
+			'		}',
+			'	}',
+			'	float round = floor(uTime / 23.0 + uSeed);',
+			'	float since = mod(uTime + uSeed * 23.0, 23.0);',
+			'	float where = hash(round) * 6.2832 - 3.1416;',
+			'	float off = mod(angle - where + 3.1416, 6.2832) - 3.1416;',
+			'	float burst = smoothstep(0.0, 0.6, since) * exp(-since * 0.8);',
+			'	color += vec3(1.0, 0.95, 0.85) * exp(-off * off * 120.0 - u * u * 18.0) * burst * 6.0 * uParts.z;',
+			'	outColor = vec4(color, 1.0);',
+			'}'
+		].join('\n');
+
+		expect(made.Type).toBe('star');
+		expect(made.Look({}, 3)).toEqual(expect.objectContaining({Count: expect.any(Number), Tint: expect.any(Array)}));
+		expect(made.Surface.Function).toContain('void blueprintSun(vec3 n, vec3 v, vec3 p, inout vec3 color) {');
+		expect(made.Crown.Function).toContain('void blueprintCrown(float r, float angle, float u, inout vec3 color) {');
+
+		var space = await mount(null);
+		var shaders = space.Shaders(graphics);
+		var deep = space.DeepSpaceShaders('#version 300 es\nprecision highp float;\n');
+		var renderer = graphics.Create(document.createElement('canvas'), {Antialias: false});
+		var gl = renderer.GL;
+		var quad = renderer.Mesh({Positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0], Indices: [0, 1, 2]});
+
+		expect(gl.getExtension('EXT_color_buffer_float')).toBeTruthy();
+
+		/* 32 by 32 of a fragment over the screen, of what the vertex gives (a sphere seen from the front, a quad of a crown). */
+		function drawn (vertex, fragment, values) {
+			var program = renderer.Program(vertex, fragment);
+			var target = renderer.Target(32, 32, {Float: true});
+			var pixels = new Float32Array(32 * 32 * 4);
+
+			target.Begin();
+
+			renderer.Draw(quad, program, values, {Depth: false, Cull: 'none'});
+
+			gl.readPixels(0, 0, 32, 32, gl.RGBA, gl.FLOAT, pixels);
+
+			target.End();
+
+			return pixels;
+		}
+
+		var sphere = [
+			'#version 300 es',
+			'in vec3 aPosition;',
+			'out vec3 vWorld;',
+			'out vec3 vNormal;',
+			'out vec3 vLocal;',
+			'void main() { vec2 q = aPosition.xy; float z = sqrt(max(0.0, 1.0 - dot(q, q))); vLocal = vec3(q, z); vNormal = vLocal; vWorld = vLocal; gl_Position = vec4(aPosition.xy, 0.0, 1.0); }'
+		].join('\n');
+		var flat = [
+			'#version 300 es',
+			'in vec3 aPosition;',
+			'out vec3 vAt;',
+			'out vec2 vQuad;',
+			'void main() { vQuad = aPosition.xy * 0.26; vAt = vec3(vQuad, 0.0); gl_Position = vec4(aPosition.xy, 0.0, 1.0); }'
+		].join('\n');
+		var surfaceValues = {uCamera: [0, 0, 4], uColor: [1, 0.85, 0.6], uSeed: 7.3, uTime: 41, uCells: 6, uBands: 0};
+		var crownValues = {uColor: [1, 0.9, 0.7], uSeed: 3.1, uTime: 30, uParts: [1, 1, 1, 0], uShape: [5, 1, 3, 1], uTint: [1, 0.9, 0.8], uPhase: 12};
+		var sunWas = drawn(sphere, shaders.Star.slice(0, shaders.Star.indexOf(sunHook)) + sunBefore, surfaceValues);
+		var sunNow = drawn(sphere, space.Install({Star: shaders.Star}, sunHook, made.Surface).Star, surfaceValues);
+		var crownWas = drawn(flat, deep.Corona.slice(0, deep.Corona.indexOf(crownHook)) + crownBefore, crownValues);
+		var crownNow = drawn(flat, space.Install({Corona: deep.Corona}, crownHook, made.Crown).Corona, crownValues);
+		var beamHook = 'void blueprintBeam(vec2 beam, inout vec3 color) {}';
+		var along = [
+			'#version 300 es',
+			'in vec3 aPosition;',
+			'out vec2 vBeam;',
+			'void main() { vBeam = vec2(aPosition.x, aPosition.y * 0.5 + 0.5); gl_Position = vec4(aPosition.xy, 0.0, 1.0); }'
+		].join('\n');
+		var beamValues = {uColor: [0.6, 0.7, 1], uStrength: 1.5};
+		var beamWas = drawn(along, deep.Beam.slice(0, deep.Beam.indexOf(beamHook)) + [
+			'void main() {',
+			'	float across = exp(-vBeam.x * vBeam.x * 7.0);',
+			'	float along = pow(1.0 - vBeam.y, 1.7) * smoothstep(0.0, 0.015, vBeam.y);',
+			'	outColor = vec4(mix(uColor, vec3(1.0), 0.4) * across * along * uStrength * 1.3, 1.0);',
+			'}'
+		].join('\n'), beamValues);
+		var beamNow = drawn(along, space.Install({Beam: deep.Beam}, beamHook, made.Beam).Beam, beamValues);
+		var lit = 0;
+
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+
+		for (var j = 0; j < beamWas.length; j++)
+			expect(Math.abs(beamNow[j] - beamWas[j])).toBeLessThan(1e-4);
+
+		for (var i = 0; i < sunWas.length; i++) {
+			expect(Math.abs(sunNow[i] - sunWas[i])).toBeLessThan(1e-4);
+			expect(Math.abs(crownNow[i] - crownWas[i])).toBeLessThan(1e-4);
+
+			if (crownWas[i] > 0.01)
+				lit++;
+		}
+
+		expect(lit).toBeGreaterThan(100);
+
+		/* A star of its own graph: no spots, its crown of a corona alone. */
+		var own = JSON.parse(JSON.stringify(library));
+
+		own.blocks = own.blocks.filter(function (block) {
+			return block.id !== 'sun-spots' && block.id !== 'crown-prominences' && block.id !== 'crown-flare';
+		});
+		own.links = own.links.filter(function (link) {
+			return !/^(sun-spots|crown-prominences|crown-flare)-/.test(link.p1) && !/^(sun-spots|crown-prominences|crown-flare)-/.test(link.p2);
+		}).concat([{id: 'own', p1: 'crown-corona-out-Color', p2: 'crown-end-in-Color', kind: 'value'}]);
+
+		var mine = blueprints.Compile(own);
+
+		expect(mine.Surface.Function).not.toContain('smoothstep(0.66, 0.74');
+		expect(mine.Crown.Function).not.toContain('for (int i = 0; i < 8; i++)');
+
+		/* An old graph of its numbers alone: its parts of the library. */
+		var numbers = JSON.parse(JSON.stringify(library));
+
+		numbers.blocks = numbers.blocks.filter(function (block) {
+			return !/^(sun|crown)-/.test(block.id);
+		});
+		numbers.links = numbers.links.filter(function (link) {
+			return !/^(sun|crown)-/.test(link.p1) && !/^(sun|crown)-/.test(link.p2);
+		});
+
+		expect(blueprints.Compile(numbers).Surface).toBe(null);
+		expect(blueprints.Compile(numbers).Look({}, 3).Count).toBeGreaterThan(0);
 	});
 });

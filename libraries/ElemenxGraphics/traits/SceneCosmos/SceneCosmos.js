@@ -506,6 +506,32 @@ Elemenx.Trait('SceneCosmos', {
 			engine.DrawReady(quad, programs.Warp, uniforms, {DepthWrite: false, Blend: 'add', Cull: 'none'});
 		};
 
+		/*
+		 * A way in the galaxy (ly, its axes) as a way in the sky of the system (the axes of the scene): of the turn of the band
+		 * of its Cosmos (its pole its north, its middle the way to the centre), backwards; null for a sky of no galaxy.
+		 */
+		var galaxyTurn = null;
+
+		engine.GalaxySky = function (way) {
+			var key = JSON.stringify(self.Cosmos || null);
+			var made;
+			var turn;
+
+			if (!galaxyTurn || galaxyTurn.Key !== key) {
+				made = self.Cosmos ? settings(self.Cosmos) : null;
+				galaxyTurn = {Key: key, Turn: made && made.Band ? made.Band.Uniforms.uTurn : null};
+			}
+
+			turn = galaxyTurn.Turn;
+
+			if (!turn)
+				return null;
+
+			return math.Vectors.Normalize([0, 1, 2].map(function (j) {
+				return turn[j * 3] * way[0] + turn[j * 3 + 1] * way[1] + turn[j * 3 + 2] * way[2];
+			}));
+		};
+
 		/* The cube of the sky of the system, once baked (what bent light reads, SceneDeepSpace); null before it is. */
 		engine.CosmosCube = function () {
 			return self.Cosmos && space.Cube ? space.Cube : null;

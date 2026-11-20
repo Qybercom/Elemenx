@@ -10,8 +10,9 @@
  * for it alone, each in a tab of its own (Blueprint of type generator), a copy of the library's; Reset gives the
  * library's back. Its planets have those of planet/ (planet/relief: the option ReliefGraph...), the grounds of its
  * locations those of sketch/ and carve/ (Graphs of their Terrain trait); the scenes of its systems and locations those of
- * shader/ (Graphs of Scene: the bake of a body of noise, the weather of the surfaces of things, the shape of a lightning),
- * made again as one of them changes.
+ * shader/ (Graphs of Scene: the bake of a body of noise, the weather of the surfaces of things, the shape of a lightning)
+ * and planet/envelope (what lies over and under the surface of their bodies, read by the scene), made again as one of them
+ * changes.
  * Value is the world: {Name, Galaxy (options of GalaxyData.Make, or its data), Planets ({'star/body': the options of a
  * planet}), Locations ({'star/body/location': a document of SceneEditor}), Resources ({Models, Plants, Cutscenes,
  * Materials}: {ID: {Name, Value}}), Graphs ({'planet/relief', 'sketch/river'...: a graph})}. change emits it after
@@ -849,8 +850,12 @@ Elemenx.Component('WorldEditor', {
 		return own.GraphsKey;
 	},
 
-	/* Its shader graphs (shader/), the Graphs of the scenes it shows; the same object while they stay, null with none. */
+	/*
+	 * Its graphs of the scenes it shows (shader/, and planet/envelope: what lies over and under the surface of their bodies,
+	 * read by the scene, not by the planet), the Graphs of those scenes; the same object while they stay, null with none.
+	 */
 	ShaderGraphs: function () {
+		var self = this;
 		var own = this.Own();
 		var graphs = own.World.Graphs;
 		var text = this.GraphsText();
@@ -859,7 +864,7 @@ Elemenx.Component('WorldEditor', {
 		if (own.ShadersKey === text) return own.Shaders;
 
 		Object.keys(graphs).forEach(function (name) {
-			if (name.indexOf('shader/') === 0) {
+			if (self.Scened(name)) {
 				made = made || {};
 				made[name] = graphs[name];
 			}
@@ -871,6 +876,11 @@ Elemenx.Component('WorldEditor', {
 		return made;
 	},
 
+	/* Whether a graph of the world is one of its scenes (shader/, planet/envelope). */
+	Scened: function (name) {
+		return String(name).indexOf('shader/') === 0 || name === 'planet/envelope';
+	},
+
 	/*
 	 * A scene is drawn with its shader graphs as it is made: one of them changed, the scene of the system or the location
 	 * shown is made again (out for a frame), the document it shows kept by the world.
@@ -878,7 +888,7 @@ Elemenx.Component('WorldEditor', {
 	Remade: function (name) {
 		var self = this;
 
-		if (String(name).indexOf('shader/') !== 0) return;
+		if (!this.Scened(name)) return;
 
 		this.Fresh = false;
 		this.Version++;

@@ -1,0 +1,144 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "Envelope",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "envelope-zones",
+			"type": "Input",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Zones"
+				}
+			]
+		},
+		{
+			"id": "envelope-height",
+			"type": "Input",
+			"x": 40,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "envelope-state",
+			"type": "EnvelopeState",
+			"x": 300,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "envelope-light",
+			"type": "EnvelopeLight",
+			"x": 300,
+			"y": 240,
+			"properties": []
+		},
+		{
+			"id": "envelope-pressure",
+			"type": "Result",
+			"x": 560,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pressure"
+				}
+			]
+		},
+		{
+			"id": "envelope-temperature",
+			"type": "Result",
+			"x": 560,
+			"y": 100,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Temperature"
+				}
+			]
+		},
+		{
+			"id": "envelope-zone",
+			"type": "Result",
+			"x": 560,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Zone"
+				}
+			]
+		},
+		{
+			"id": "envelope-shine",
+			"type": "Result",
+			"x": 560,
+			"y": 300,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Light"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "envelope-link-0",
+			"p1": "envelope-zones-out-Value",
+			"p2": "envelope-state-in-Zones",
+			"kind": "value"
+		},
+		{
+			"id": "envelope-link-1",
+			"p1": "envelope-height-out-Value",
+			"p2": "envelope-state-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "envelope-link-2",
+			"p1": "envelope-zones-out-Value",
+			"p2": "envelope-light-in-Zones",
+			"kind": "value"
+		},
+		{
+			"id": "envelope-link-3",
+			"p1": "envelope-height-out-Value",
+			"p2": "envelope-light-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "envelope-link-4",
+			"p1": "envelope-state-out-Pressure",
+			"p2": "envelope-pressure-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "envelope-link-5",
+			"p1": "envelope-state-out-Temperature",
+			"p2": "envelope-temperature-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "envelope-link-6",
+			"p1": "envelope-state-out-Zone",
+			"p2": "envelope-zone-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "envelope-link-7",
+			"p1": "envelope-light-out-Light",
+			"p2": "envelope-shine-in-Value",
+			"kind": "value"
+		}
+	]
+}

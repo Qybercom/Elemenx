@@ -604,7 +604,8 @@ Elemenx.Service('ScenePlanet', {
 		/* Of each graph: where each input of it is in its list (one past it: an input it has not), its numbers of the planet set once. */
 		Object.keys(reliefs).forEach(function (name) {
 			var inputs = reliefs[name].Inputs;
-			var fixed = {Octaves: octaves, Relief: relief, Mountains: mountains, Depth: depth, Radius: radius, Level: 0};
+			/* Of its air too (Cells, Warm, Contrast, Lapse of its envelope; 0: as the Earth). */
+			var fixed = {Octaves: octaves, Relief: relief, Mountains: mountains, Depth: depth, Radius: radius, Level: 0, Cells: Number(given.Cells) || 0, Warm: Number(given.Warm) || 0, Contrast: Number(given.Contrast) || 0, Lapse: Number(given.Lapse) || 0};
 			var at = {};
 
 			['Shape', 'Folds', 'Uplift', 'Ranges', 'Peaks', 'Sierra', 'Horns', 'Hills', 'Crags', 'Grain', 'Weather'].forEach(function (one) {

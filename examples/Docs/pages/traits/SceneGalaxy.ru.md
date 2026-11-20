@@ -11,6 +11,14 @@ SceneGalaxy: галактика как режим сцены (Setting="galaxy", 
 - GalaxyStars() — звёзды рядом с видом, как нарисованы сейчас; GalaxyPicked() — выбранная.
 - EnterSystem(id, callback) — полёт в звезду и показ её системы (Setting space, System из GalaxyData.System, Cosmos из GalaxyData.Cosmos), событие enter {ID, Star, Key}; LeaveSystem(callback) — обратно в галактику, событие leave {ID}; GalaxyEntered() — чья система показана.
 
+## Соседние звёзды и вход без полёта
+
+`GalaxyNear(radius, limit)` — ближние звёзды галактики вокруг системы, в которой находится сцена, ближайшие первыми: `[{ID, Name, Class, Way, Distance (св. лет)}]`. `Way` — направление на звезду в небе системы: из галактики оно переводится тем же поворотом, по которому рисуется полоса галактики на небе (`GalaxySky` в SceneCosmos), только обратным. По умолчанию радиус 30 св. лет, не больше 12 звёзд. Вне системы список пуст.
+
+`EnterSystem(id, callback, {Now: true})` — войти в систему сразу, без полёта вида по карте: например, когда туда прыгнул корабль. Полёт вида идёт только пока рисуется карта, поэтому из режима космоса вход без `Now` не завершится.
+
+Межзвёздный прыжок от лица корабля — в SceneVehicles: цель `star:<ID>`.
+
 ## Методы
 
 - `GalaxyData()`
@@ -20,5 +28,5 @@ SceneGalaxy: галактика как режим сцены (Setting="galaxy", 
 - `GalaxyPicked()`
 - `GalaxyEntered()`
 - `GalaxyFocus(id)`
-- `EnterSystem(id, callback)`
+- `EnterSystem(id, callback, options)`
 - `LeaveSystem(callback)`

@@ -35,6 +35,34 @@
 			]
 		},
 		{
+			"id": "gas",
+			"type": "PlanetGas",
+			"x": 520,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Strength",
+					"value": 1
+				},
+				{
+					"key": "Stretch",
+					"value": 4
+				},
+				{
+					"key": "Swirl",
+					"value": 1
+				},
+				{
+					"key": "Near",
+					"value": 3
+				},
+				{
+					"key": "Bump",
+					"value": 0.8
+				}
+			]
+		},
+		{
 			"id": "light",
 			"type": "PlanetLight",
 			"x": 520,
@@ -194,7 +222,7 @@
 		{
 			"id": "planet-link-3",
 			"p1": "surface-out-Albedo",
-			"p2": "light-in-Albedo",
+			"p2": "gas-in-Albedo",
 			"kind": "value"
 		},
 		{
@@ -206,7 +234,7 @@
 		{
 			"id": "planet-link-5",
 			"p1": "relief-out-Lit",
-			"p2": "light-in-Lit",
+			"p2": "gas-in-Lit",
 			"kind": "value"
 		},
 		{
@@ -387,6 +415,30 @@
 			"id": "planet-link-35",
 			"p1": "clouds-out-Cover",
 			"p2": "end-in-Cover",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-36",
+			"p1": "gas-out-Albedo",
+			"p2": "light-in-Albedo",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-37",
+			"p1": "gas-out-Lit",
+			"p2": "light-in-Lit",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-38",
+			"p1": "place-out-Point",
+			"p2": "gas-in-Point",
+			"kind": "value"
+		},
+		{
+			"id": "planet-link-39",
+			"p1": "place-out-World",
+			"p2": "gas-in-World",
 			"kind": "value"
 		}
 	]

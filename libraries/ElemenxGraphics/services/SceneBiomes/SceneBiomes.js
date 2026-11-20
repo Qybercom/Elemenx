@@ -6,7 +6,9 @@
  *   trait Scatter], Grass: {rule of the trait Grass, or null}, Climate: where it is on a ground of lands by their climate
  *   (Biomes of SceneTerrainGenerator.Flat): {Height, Moisture, Temperature}, or a list of them, each a range [from, to]
  *   (null: no end; Height in parts of the top of the ground, the others 0 to 1)}. temperate, taiga, tundra, desert,
- *   savanna, swamp (their climates hold every one, none twice), alien (none: it is a land of its own); data of the
+ *   savanna, swamp (their climates hold every one, none twice), alien (none: it is a land of its own); the lands of the
+ *   worlds where nothing lives, none of grass or woods (scorched-, hydrocarbon-, dust-, frozen-, barren- plains and highlands,
+ *   dunes and shores, ridges, maria: what Scene gives a ground of the kind of world of its air, Envelope Habitat); data of the
  *   resources (resources/biomes, ElemenxGraphics/biomes/<name>): an Application gives one of that name in its place.
  * - Check(list, field): whether lands by their climate cover a ground and its heights as they should: the gaps of their
  *   climates in each band of heights, lands the ground never reaches, lands it never has, the part of it of no land.

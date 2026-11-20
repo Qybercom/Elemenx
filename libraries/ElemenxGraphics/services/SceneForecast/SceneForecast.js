@@ -14,7 +14,7 @@
 Elemenx.Service('SceneForecast', {
 	$Meta: {
 		Description: 'The weather of a planet of one source in the kernel language: its winds and storms, fronts, heaps, cirrus and rain, the same in the page and in a shader.',
-		Methods: ['Code()', 'IR()', 'Air(p, days, seed, radiusKm, scale, fine, eddy)', 'Fronts(fronts, mid, moist, ground, climb, py, storm, cloudiness, cut, cutBy, soft)', 'Heaps(p, sun, warm, moist, ground, climb, streams, mid, humid, storm, sheet, cloudiness, fairLow, fairHigh)', 'Cirrus(streams, py, sheet, low, high)', 'Rain(sheet, humid, storm, heaps, kind, from, to)', 'Shroud(sheet, heaps, kind, cirrus, rain, cloudiness)']
+		Methods: ['Code()', 'IR()', 'Air(p, days, seed, radiusKm, scale, fine, eddy, cells)', 'Fronts(fronts, mid, moist, ground, climb, py, storm, cloudiness, cut, cutBy, soft)', 'Heaps(p, sun, warm, moist, ground, climb, streams, mid, humid, storm, sheet, cloudiness, fairLow, fairHigh)', 'Cirrus(streams, py, sheet, low, high)', 'Rain(sheet, humid, storm, heaps, kind, from, to)', 'Shroud(sheet, heaps, kind, cirrus, rain, cloudiness)']
 	},
 
 	Kernel: [
@@ -34,12 +34,27 @@ Elemenx.Service('SceneForecast', {
 		'	}',
 		'	return weight != 0.0 ? total / weight : 0.0;',
 		'}',
-		'/* Radians of longitude a day the wind of a latitude takes what it carries (8 m/s, east positive). */',
-		'float wx_zonal(float lat, float radiusKm) {',
+		'/* Radians of longitude a day the wind of a latitude takes what it carries (8 m/s, east positive): of the cells of its winds (cells; 0: 3, as the Earth: trades to 30 degrees, westerlies to 60, polar easterlies). */',
+		'float wx_zonal(float lat, float radiusKm, float cells) {',
+		'	float n = cells > 0.5 ? cells : 3.0;',
+		'	float w = 90.0 / n;',
 		'	float band = abs(lat) * 57.29578;',
-		'	float east = mix(-1.0, 1.3, smoothstep(26.0, 34.0, band));',
-		'	east = mix(east, -0.6, smoothstep(56.0, 64.0, band));',
+		'	float east = -1.0;',
+		'	for (int k = 1; k < 12; k++) {',
+		'		if (float(k) < n) {',
+		'			float odd = float(k) - 2.0 * floor(float(k) / 2.0);',
+		'			float value = odd > 0.5 ? 1.3 : (float(k) >= n - 1.0 ? -0.6 : -1.0);',
+		'			east = mix(east, value, smoothstep(w * float(k) - 4.0, w * float(k) + 4.0, band));',
+		'		}',
+		'	}',
 		'	return east * 8.0 * 86.4 / radiusKm;',
+		'}',
+		'/* A number of each cell of the winds a band is in: even, odd, and the last of three or more its own (the polar cell). */',
+		'float wx_cell(float band, float cells, float even, float odd, float last) {',
+		'	float n = cells > 0.5 ? cells : 3.0;',
+		'	float i = floor(band / (90.0 / n));',
+		'	if (i >= n - 1.0 && i >= 2.0) return last;',
+		'	return i - 2.0 * floor(i / 2.0) > 0.5 ? odd : even;',
 		'}',
 		'/* The latitude of a direction (radians), its band (degrees) and the wet band of the equator (ITCZ). */',
 		'vec3 wx_belts(float py) {',
@@ -51,12 +66,13 @@ Elemenx.Service('SceneForecast', {
 		' * ten storms that turn the air round their eyes (counterclockwise in the north), born and gone in a week, eddies of a',
 		' * curl of a noise that changes over days (eddy: how much).',
 		' */',
-		'vec4 wx_wind(vec3 q, float days, float seed, float radiusKm, float eddy) {',
+		'vec4 wx_wind(vec3 q, float days, float seed, float radiusKm, float eddy, float cells) {',
 		'	vec3 east = normalize(vec3(q.z, 0.0, -q.x) + vec3(1e-6, 0.0, 0.0));',
 		'	vec3 north = cross(q, east);',
 		'	float lat = asin(clamp(q.y, -1.0, 1.0));',
 		'	float band = abs(lat) * 57.29578;',
-		'	vec3 v = east * wx_zonal(lat, radiusKm) + north * (band < 30.0 ? -0.12 : band < 60.0 ? 0.1 : -0.06) * sign(lat) * 8.0 * 86.4 / radiusKm;',
+		'	vec3 v = east * wx_zonal(lat, radiusKm, cells) + north * wx_cell(band, cells, -0.12, 0.1, -0.06) * sign(lat) * 8.0 * 86.4 / radiusKm;',
+		'	float wide = 90.0 / (cells > 0.5 ? cells : 3.0) / 30.0;',
 		'	float storm = 0.0;',
 		'	for (int k = 0; k < 10; k++) {',
 		'		float fk = float(k);',
@@ -67,8 +83,8 @@ Elemenx.Service('SceneForecast', {
 		'		float h2 = n_hash(int(fk * 13.0 + 5.0), int(gen + 3.0), int(seed));',
 		'		float hemi = fk - floor(fk / 2.0) * 2.0 < 0.5 ? 1.0 : -1.0;',
 		'		bool tropical = k >= 8;',
-		'		float lat0 = hemi * ((tropical ? mix(12.0, 22.0, h1) : mix(38.0, 64.0, h1)) * 0.017453292519943295);',
-		'		float lon0 = h2 * 6.28318 + wx_zonal(lat0, radiusKm) * age * 7.0 * (tropical ? 0.5 : 1.0);',
+		'		float lat0 = hemi * (min(85.0, (tropical ? mix(12.0, 22.0, h1) : mix(38.0, 64.0, h1)) * wide) * 0.017453292519943295);',
+		'		float lon0 = h2 * 6.28318 + wx_zonal(lat0, radiusKm, cells) * age * 7.0 * (tropical ? 0.5 : 1.0);',
 		'		vec3 c = vec3(cos(lat0) * cos(lon0), sin(lat0), cos(lat0) * sin(lon0));',
 		'		float d = acos(clamp(dot(q, c), -1.0, 1.0));',
 		'		float r = (tropical ? mix(3.0, 6.0, h1) : mix(7.0, 13.0, h1)) * 0.017453292519943295;',
@@ -87,7 +103,7 @@ Elemenx.Service('SceneForecast', {
 		' * A noise taken along the way the air came (six steps back of a third of a day each), the mean of it: fronts (x, of',
 		' * scale) and streams of a few hundred km (y, of fine), bands bent round a storm, its arms spiralling in.',
 		' */',
-		'vec2 wx_streamed(vec3 p, float scale, float fine, float salt, float days, float seed, float radiusKm, float eddy) {',
+		'vec2 wx_streamed(vec3 p, float scale, float fine, float salt, float days, float seed, float radiusKm, float eddy, float cells) {',
 		'	vec3 x = p;',
 		'	vec2 sum = vec2(0.0, 0.0);',
 		'	float weight = 0.0;',
@@ -95,7 +111,7 @@ Elemenx.Service('SceneForecast', {
 		'		float w = 1.0 - float(i) / 6.0;',
 		'		sum = sum + vec2(wx_fbm(wx_askew(x) * scale + vec3(salt, salt * 0.7, seed), 4), wx_fbm(wx_askew(wx_askew(x)) * fine + vec3(salt * 1.3, 2.0, seed), 3)) * w;',
 		'		weight += w;',
-		'		vec4 wind = wx_wind(x, days, seed, radiusKm, eddy);',
+		'		vec4 wind = wx_wind(x, days, seed, radiusKm, eddy, cells);',
 		'		x = normalize(x - vec3(wind.x, wind.y, wind.z) * 0.33);',
 		'	}',
 		'	return sum / weight;',
@@ -104,8 +120,8 @@ Elemenx.Service('SceneForecast', {
 		' * Where the air is now, of where it was (new every three days, crossed, so nothing smears): fronts, streams, the middle',
 		' * of them (0 to 1, their spread made as wide again: the mean of six flattens a noise), and the storm there.',
 		' */',
-		'vec4 wx_air(vec3 p, float days, float seed, float radiusKm, float scale, float fine, float eddy) {',
-		'	vec4 wind = wx_wind(p, days, seed, radiusKm, eddy);',
+		'vec4 wx_air(vec3 p, float days, float seed, float radiusKm, float scale, float fine, float eddy, float cells) {',
+		'	vec4 wind = wx_wind(p, days, seed, radiusKm, eddy, cells);',
 		'	vec3 flow = vec3(wind.x, wind.y, wind.z);',
 		'	float phase = days / 3.0;',
 		'	float pa = fract(phase);',
@@ -113,8 +129,8 @@ Elemenx.Service('SceneForecast', {
 		'	vec3 qa = normalize(p - flow * pa * 3.0);',
 		'	vec3 qb = normalize(p - flow * pb * 3.0);',
 		'	float wa = 1.0 - abs(2.0 * pa - 1.0);',
-		'	vec2 sa = wx_streamed(qa, scale, fine, floor(phase) * 7.31, days, seed, radiusKm, eddy);',
-		'	vec2 sb = wx_streamed(qb, scale, fine, floor(phase + 0.5) * 7.31 + 50.0, days, seed, radiusKm, eddy);',
+		'	vec2 sa = wx_streamed(qa, scale, fine, floor(phase) * 7.31, days, seed, radiusKm, eddy, cells);',
+		'	vec2 sb = wx_streamed(qb, scale, fine, floor(phase + 0.5) * 7.31 + 50.0, days, seed, radiusKm, eddy, cells);',
 		'	float keep = sqrt(wa * wa + (1.0 - wa) * (1.0 - wa));',
 		'	float bx = clamp((sa.x * wa + sb.x * (1.0 - wa) - 0.5) / keep * 1.0 + 0.5, 0.0, 1.0);',
 		'	float by = clamp((sa.y * wa + sb.y * (1.0 - wa) - 0.5) / keep * 1.8 + 0.5, 0.0, 1.0);',
@@ -209,8 +225,8 @@ Elemenx.Service('SceneForecast', {
 		return this.IRMade;
 	},
 
-	Air: function (p, days, seed, radiusKm, scale, fine, eddy) {
-		var made = this.Code().wx_air(p, days, seed, radiusKm, scale, fine, eddy);
+	Air: function (p, days, seed, radiusKm, scale, fine, eddy, cells) {
+		var made = this.Code().wx_air(p, days, seed, radiusKm, scale, fine, eddy, Number(cells) || 0);
 
 		return {Fronts: made[0], Streams: made[1], Mid: made[2], Storm: made[3]};
 	},

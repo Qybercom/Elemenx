@@ -374,6 +374,16 @@ describe('Contract: WorldEditor, a world level in level (galaxy, system, planet,
 		editor.ResetGraph('shader/weather');
 
 		expect(editor.ShaderGraphs()).toBe(null);
+
+		/* The envelope of the bodies (planet/envelope) is the scene's: given to it, the scene made again. Regression: it was kept by the world, no scene read it. */
+		editor.OpenGraph('planet/envelope');
+
+		expect(editor.Fresh).toBe(false);
+		expect(Object.keys(editor.ShaderGraphs())).toEqual(['planet/envelope']);
+
+		editor.ResetGraph('planet/envelope');
+
+		expect(editor.ShaderGraphs()).toBe(null);
 	});
 
 	it('keeps all of the world in one file: its galaxy and its edits, its planets, its locations and its resources', async function () {

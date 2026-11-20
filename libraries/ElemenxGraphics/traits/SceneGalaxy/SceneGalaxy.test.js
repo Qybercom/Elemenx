@@ -181,6 +181,86 @@ describe('Contract: the galaxy of a Scene (Setting galaxy): its glow, its stars 
 	});
 
 	/*
+	 * From a system, the stars near of the galaxy (GalaxyNear: each its way in the sky of the system, of its band's turn);
+	 * a ship aims at one (star:<its ID>) and jumps there (a warp of the kind hyper, out of the well of every body: HyperWell),
+	 * into its system at once (EnterSystem Now: no flight of the view of the map).
+	 */
+	it('lists the stars near a system in its sky, and a ship jumps to one of them into its system at once', async function () {
+		var made = await mount({Seed: 'contract'});
+		var scene = made.Scene;
+		var star;
+		var near;
+		var key = '';
+		var target;
+		var i;
+
+		scene.SetGalaxyView({Target: [27000, 0, 0], Distance: 200});
+
+		frames(scene, 2);
+
+		star = scene.GalaxyStars()[0];
+
+		/* At once, though the map is not drawn to fly its view. */
+		scene.EnterSystem(star.ID, function (error, given) {
+			key = given;
+		}, {Now: true});
+
+		expect(key).toContain(star.ID);
+		expect(scene.GalaxyEntered()).toBe(star.ID);
+
+		await waitFor(function () {
+			frames(scene, 1);
+
+			return scene.Get('star');
+		}, 4000);
+
+		near = scene.GalaxyNear(30, 5);
+
+		expect(near.length).toBeGreaterThan(0);
+		expect(near.length).toBeLessThan(6);
+
+		near.forEach(function (one, index) {
+			expect(Math.hypot(one.Way[0], one.Way[1], one.Way[2])).toBeCloseTo(1, 6);
+			expect(one.Distance).toBeLessThan(30);
+			expect(one.ID).not.toBe(star.ID);
+
+			if (index)
+				expect(one.Distance).toBeGreaterThanOrEqual(near[index - 1].Distance);
+		});
+
+		target = near[0];
+
+		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'star', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'star', From: [0, 0, 3], Facing: [0, 0, 1], Warp: {Enter: 0.2, Exit: 0.2, HyperSpeed: 200}}});
+		scene.Control('me');
+
+		frames(scene, 2);
+
+		/* Too near its star: no jump between stars (HyperWell); far enough, it goes. */
+		expect(scene.Aim('star:' + target.ID)).toBe('star:' + target.ID);
+		expect(scene.Aim('star:nowhere')).toBe('');
+
+		scene.Aim('star:' + target.ID);
+		scene.Engine().Travel(scene.Scene().Objects.me, 'warp');
+
+		expect(scene.Scene().Objects.me.Refused).toMatchObject({Kind: 'warp', Reason: 'well'});
+
+		scene.Scene().Objects.me.Ship.At = [0, 0, scene.Scene().Objects.star.Size * 60];
+
+		frames(scene, 1);
+
+		expect(scene.Engine().Travel(scene.Scene().Objects.me, 'warp')).toBe(true);
+		expect(scene.Scene().Objects.me.Travel).toMatchObject({Kind: 'hyper', Galaxy: target.ID});
+
+		for (i = 0; i < 200 && scene.GalaxyEntered() !== target.ID; i++)
+			frames(scene, 1);
+
+		expect(scene.GalaxyEntered()).toBe(target.ID);
+		expect(made.Told.some(function (event) {
+			return event && event.ID === target.ID && event.Key;
+		})).toBe(true);
+	});
+
+	/*
 	 * Regression: from far no star could be picked; its black hole was a dark ring seen from far (its bulge hides it); the
 	 * stars near the view stood as a box of sectors.
 	 */

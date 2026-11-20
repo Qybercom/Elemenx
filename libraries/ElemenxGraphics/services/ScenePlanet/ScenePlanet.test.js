@@ -864,6 +864,51 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 		expect(Array.from(there.Positions)).toEqual(Array.from(new Float32Array(here.Positions)));
 	}, 60000);
 
+	/*
+	 * Its climate and winds of its air (Envelope of its body: Scene puts its numbers in its options): Cells of its winds,
+	 * Warm, Contrast, Lapse; none, or the Earth's, as before. A planet warmer by 30 degrees is 30 degrees warmer; one of a
+	 * thick air differs less from place to place; one that turns fast has its winds in more belts.
+	 */
+	it('makes its climate and its winds of the numbers of its air, the Earth\'s as before', function () {
+		var plain = planets.Make({Seed: 'air'});
+		var earth = planets.Make({Seed: 'air', Cells: 3, Warm: 0, Contrast: 1, Lapse: 6.5});
+		var warm = planets.Make({Seed: 'air', Warm: 30});
+		var thick = planets.Make({Seed: 'air', Contrast: 0.1});
+		var fast = planets.Make({Seed: 'air', Cells: 9});
+		var spreadOf = function (planet) {
+			var low = Infinity;
+			var high = -Infinity;
+
+			[0, 20, 40, 60, 80].forEach(function (latitude) {
+				var sample = planet.Sample(planets.Direction(latitude, 37));
+				var celsius = sample.Celsius + Math.max(0, sample.Elevation) * 0.0065;
+
+				low = Math.min(low, celsius);
+				high = Math.max(high, celsius);
+			});
+
+			return high - low;
+		};
+		var winds = 0;
+
+		[[10, 20], [35, -40], [52, 100], [-68, 7], [5, 160]].forEach(function (place) {
+			var p = planets.Direction(place[0], place[1]);
+			var a = plain.Sample(p);
+			var b = earth.Sample(p);
+
+			expect(b.Celsius).toBeCloseTo(a.Celsius, 9);
+			expect(b.Moisture).toBeCloseTo(a.Moisture, 9);
+			expect(b.Wind[0]).toBeCloseTo(a.Wind[0], 9);
+			expect(warm.Sample(p).Celsius - a.Celsius).toBeCloseTo(30, 6);
+
+			if (Math.abs(fast.Sample(p).Wind[0] - a.Wind[0]) > 1)
+				winds++;
+		});
+
+		expect(spreadOf(thick)).toBeLessThan(spreadOf(plain) * 0.3);
+		expect(winds).toBeGreaterThan(0);
+	});
+
 	it('makes its winds and its climate by the graphs of the library, or by a WindGraph, a RoughGraph and a ClimateGraph of its own, the same in a worker', async function () {
 		var wind = JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/wind')));
 		var rough = JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/rough')));
@@ -879,7 +924,7 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 
 		function formula (graph, start, expression) {
 			graph.blocks.filter(function (one) {
-				return one.type === 'Formula' && one.properties[0].value.indexOf(start) === 0;
+				return one.type === 'Formula' && one.properties[0].value.indexOf(start) !== -1;
 			})[0].properties[0].value = expression;
 		}
 
@@ -889,7 +934,7 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 		expect(planets.ReliefRun('rough').Keys).toEqual(['Rough']);
 
 		/* A wind of its own: 5 m/s to the east everywhere. */
-		formula(wind, '((Band < 30 ? -1', '5 + Band * 0 + N * 0');
+		formula(wind, '? -0.6 :', '5 + Band * 0 + N * 0');
 
 		blown = planets.Make({Seed: 'graphs', WindGraph: wind});
 
@@ -899,7 +944,7 @@ describe('Contract: ScenePlanet, a planet as one continuous function of a direct
 		dry = planets.Make({Seed: 'graphs', RoughGraph: rough});
 
 		/* A climate of its own: 40 degrees everywhere. */
-		formula(climate, '29 - 52', '40 + Latitude * 0 + Height * 0 + N * 0 + PaintTemperature * 0');
+		formula(climate, 'Warm + 15', '40 + Latitude * 0 + Height * 0 + N * 0 + PaintTemperature * 0');
 
 		hot = planets.Make({Seed: 'graphs', ClimateGraph: climate});
 

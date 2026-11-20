@@ -8,7 +8,7 @@ The models of a game, made of graphs and of code: no files, the same shape for t
 - The Lamps of a model of a file are what shines in it (BuiltLamps): a Scene lights its world with them. A model built of parts tells its own: recipe Lamps [{Place [x, y, z] (in its units: its height is 1), Color, Power, Radius (in its units), Spot (degrees of its cone; none: all round), Aim, Night (true: lit only at night)}].
 - BoneMatrix(model, bone, clip, time): the matrix of a bone at a second of a clip; Grip(bone, aim): where a thing in a hand stands.
 - Make(name, {Variant}) returns a model, made once: {Name, Key, Group, Type, Size, Speed, Sway, Matte, Clips, Pieces: [{ID, Parent, Pivot, Team, Geometry}]}. Remake(name) has it made again on the next Make, under a Key of its own (what cut its pieces, the roles of its parts, changed).
-- Whole(model) is a model as one geometry, Bounds(geometry) its {Radius, Middle} and Levels(name, {Variant}) its geometries from the finest down: for what is sown in masses and seen from afar.
+- Whole(model) is a model as one geometry, Bounds(geometry) its {Radius, Middle} and Levels(name, {Variant}) its geometries from the finest down: for what is sown in masses and seen from afar. Extent(name): how large it stands, [x, y, z] in its units, once ready (a craft is drawn as long as its Length of its longest side).
 - Pose(model, clip, time, {From, FromTime, Fade}) returns the matrix of each piece at a second of a clip, in the space of the model; Fade (0 to 1) mixes it from the pose of the clip From. Length(model, clip) is the seconds of a clip.
 
 A clip is {Length, Loop, Hold, Stride, Tracks: {piece: [[time 0 to 1, rx, ry, rz, mx, my, mz]...]}, Spins: {piece: [x, y, z] degrees a second}}; Hold keeps the last pose when it ends, Stride is how far a walk goes in one cycle, in sizes of the model.
@@ -30,6 +30,7 @@ The same functions run in Node: they read no page.
 - `Info(name)`
 - `Make(name, options)`
 - `Whole(model)`
+- `Extent(name)`
 - `Surfaces(model)`
 - `Bake(model)`
 - `BoneMatrix(model, bone, clip, time)`
@@ -84,4 +85,4 @@ The same functions run in Node: they read no page.
 - [offers the models it is given that Models has, and places each as the kind its Type fits, as large as it is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L108) — `tests/regression/library-scene-editor.test.js`
 - [joins the pieces of a skeleton that never moves, of one material, into one draw, in their places](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-frames.test.js#L48) — `tests/regression/library-scene-frames.test.js`
 
-+36 more in the same files
++37 more in the same files

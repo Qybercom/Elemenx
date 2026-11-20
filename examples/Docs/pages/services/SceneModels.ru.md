@@ -19,6 +19,10 @@ PieceList(name) перечисляет части для редактора: {ID
 
 Модели библиотеки (Builtin) — графы вида model (blueprints/models/<имя>): циклы модели — отдельные графы <имя>-<цикл>, которые вызывает её Repeat, тела на двух и на четырёх ногах — общие графы biped и quadruped. Каждая модель описана в resources/models/builtin.json: Group, Type, Size, Speed, Sway, Variants, Matte, Smooth, Lamps, Clips ({Rig} — клипы скелета и свои поверх них) и Graph. Манекен остаётся кодом (SceneMannequin). Граф встроенной модели открывается в ModelEditor на вкладке «Граф»: правка сразу видна на модели, «Применить к модели» отдаёт её игре, «Как было» возвращает прежний граф.
 
+## Габариты модели
+
+`Extent(name)` — сколько модель занимает стоя, `[x, y, z]` в её единицах (модель из файла — уже подогнанная, как её рисуют), когда она готова; до того `null`. Считается один раз на модель (и заново после `Remake`). Корабль сцены в натуральном масштабе рисуется так, чтобы его самая длинная сторона была его `Length` метров (раньше длиной выходила высота: модель из файла подгоняется под высоту 1, и крейсер в 280 м выходил длиной 1,8 км).
+
 ## Методы
 
 - `KindOf(type)`
@@ -31,6 +35,7 @@ PieceList(name) перечисляет части для редактора: {ID
 - `Info(name)`
 - `Make(name, options)`
 - `Whole(model)`
+- `Extent(name)`
 - `Surfaces(model)`
 - `Bake(model)`
 - `BoneMatrix(model, bone, clip, time)`
@@ -85,4 +90,4 @@ PieceList(name) перечисляет части для редактора: {ID
 - [offers the models it is given that Models has, and places each as the kind its Type fits, as large as it is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L108) — `tests/regression/library-scene-editor.test.js`
 - [joins the pieces of a skeleton that never moves, of one material, into one draw, in their places](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-frames.test.js#L48) — `tests/regression/library-scene-frames.test.js`
 
-+36 ещё в тех же файлах
++37 ещё в тех же файлах

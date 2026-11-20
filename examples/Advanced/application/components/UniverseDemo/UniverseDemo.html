@@ -1,0 +1,26 @@
+<div class="scene-demo">
+	<div class="scene-demo-row">
+		<Button Label="Galaxy map" Icon="map" Variant="ghost" [Disabled]="!UniverseEntered" (click)="UniverseMap" />
+		<Button Label="Enter the system" Icon="arrow-right" [Disabled]="!!UniverseEntered || !UniversePicked" (click)="UniverseEnter" />
+		<Button Label="Home" Icon="home" Variant="ghost" [Disabled]="!UniverseHome || UniverseEntered === UniverseHome" (click)="UniverseGoHome" />
+		<Select Label="Warp step" [options]="UniverseSteps" [value]="UniverseStep" (change)="UniverseStepChosen" />
+		<Select Label="Go to" [options]="UniverseGoals" [value]="UniverseGoal" [Disabled]="UniverseEntered !== UniverseHome" (change)="UniverseGoTo" />
+		<Toggle Label="Cockpit" [checked]="UniverseCockpit" (change)="UniverseCockpitToggled" />
+		<span *if="UniverseAir">{{UniverseAir}}</span>
+		<span *if="UniverseTravel">{{UniverseTravel}}</span>
+		<span *if="UniverseAim">{{UniverseAim}}</span>
+	</div>
+	<div class="scene-demo-row">
+		<Button Label="Envelope graph" Icon="code" Variant="ghost" [pressed]="UniverseGraphOpen === 'planet/envelope'" [title]="'What lies over and under the surface of the bodies as blocks: pressure, temperature, the deck and the light at a height; their skies, clouds, light and lands, and the inside of the giants, come of it'" (click)="UniverseGraphOpened('planet/envelope')" />
+		<Button Label="Planet graph" Icon="code" Variant="ghost" [pressed]="UniverseGraphOpen === 'shader/planet'" [title]="'The globes as blocks: their picture lit, the tops of the clouds of a giant near (PlanetGas: its bands torn into eddies, its billows), their air at the edge'" (click)="UniverseGraphOpened('shader/planet')" />
+	</div>
+	<p class="elemenx-caption" aria-live="polite">{{UniverseNote}}</p>
+	<div class="scene-demo-scene" *if="UniverseGraphOpen">
+		<DemoGraph [name]="UniverseGraphOpen" (change)="UniverseGraphChanged" />
+	</div>
+	<div class="scene-demo-scene">
+		<Scene *if="UniverseFresh" [graphs]="UniverseGraphs" Setting="galaxy" Scale="real" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [galaxy]="UniverseGalaxy" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="UniverseReady" (galaxy)="UniversePick" (enter)="UniverseIn" (leave)="UniverseOut" (travel)="UniverseTravelled"><DemoLoading slot="loading" Title="Universe" />
+			<VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,b,x,y,rb,dpad" Label="Fly" />
+		</Scene>
+	</div>
+</div>

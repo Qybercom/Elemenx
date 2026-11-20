@@ -314,6 +314,18 @@
 					"value": "Rain"
 				}
 			]
+		},
+		{
+			"id": "forecast-input-cells",
+			"type": "Input",
+			"x": 20,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Cells"
+				}
+			]
 		}
 	],
 	"links": [
@@ -603,6 +615,12 @@
 			"id": "forecast-link-47",
 			"p1": "forecast-shroud-out-Rain",
 			"p2": "forecast-result-rain-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "forecast-link-cells",
+			"p1": "forecast-input-cells-out-Value",
+			"p2": "forecast-storms-in-Cells",
 			"kind": "value"
 		}
 	]

@@ -14,7 +14,18 @@
  * 1000, from 60 000 km over it, as the root of how high it is) in place of Top. The keys fly it: A and D or the
  * arrows turn it, R and F or the arrows up and down pitch it, Q and E roll, W and S set its speed, C and X lift it up and down, Shift
  * boosts, Space brings all of it to rest. The mouse only looks round it. Its Thrust goes to what burns on it. H takes it into warp and
- * J jumps (Travel(id, kind, options, callback)), with Warp and Jump of its Vehicle: {To, Length, Enter, Inside, Exit, Tint}.
+ * J jumps as long as it is held (Travel(id, kind, options, callback)), with Warp and Jump of its Vehicle: {To, Step, Hold, Length,
+ * Join, Relay, Well, Enter, Exit, Tint}; H again in warp comes out of it, [ and ] its step down and up (TravelStop, TravelStep).
+ * A warp is a tunnel of its own (an ID; others may catch up with it: Join), out of normal space: nothing stops it but a
+ * blocker of warp (the trait WarpBlocker of any object: Radius in its sizes, Active); it cannot start in the well of a body
+ * (Well: how much of its pull at its surface; 0: anywhere), it never comes out in a body. Its speed is its step (Steps:
+ * km/s; a relay, the trait WarpRelay {To, Step, Reach}, has its own); a jump goes in normal space, a body on its way stops
+ * it. Each ship on its way tells the Ether (travel: {Kind, Phase, Step, Speed km/s, Tunnel, To, Left km, Reason, By, Passing:
+ * [{ID, Name, Pass km, Seconds, Distance km}]}) once a frame; the event travel tells each phase, refused (Reason well,
+ * blocked, relay), joined, and why it came out (Reason arrived, command, blocked, body, released, leader).
+ * Aiming (Aim(id), AimAlign(on)): T takes what lies nearest the nose of the ship driven, G turns it there by itself; its
+ * lead is where that will be when it gets there at its step of warp; marks over the view (.elemenx-scene-sight) and the
+ * Ether aim tell it; H with no place of its own goes there.
  *
  * A boat, besides the settings of Physics.Boat (Power, Top, Turn, Length, Width, Draft, Plane, Lean): Yaw, Heading, Seat. It
  * floats on the sea of the ground, on its waves (SceneWaves), at its four ends; W gives it the motor, S goes astern, A and D
@@ -925,6 +936,26 @@ Elemenx.Trait('SceneVehicles', {
 
 		engine.BoxOf = boxOf;
 
+		/*
+		 * How far from its middle a body stops a ship: a giant of gas or of ices at its core (the Floor of its envelope: all over
+		 * it is its air, gone through), any other at its surface (and a little over it).
+		 */
+		function solidOf (object) {
+			var surface = (object.Traits || {}).Surface;
+			var made;
+
+			if (surface && (surface.Type === 'gas' || surface.Type === 'ice-giant') && engine.EnvelopeOf && object.Radius) {
+				made = engine.EnvelopeOf(object);
+
+				if (made && isFinite(made.Floor) && made.Floor < 0)
+					return object.Size * Math.max(0.01, 1 + made.Floor / object.Radius);
+			}
+
+			return object.Size * 1.01;
+		}
+
+		engine.SolidOf = solidOf;
+
 		/* Whether a ball at a place of the world meets what an object is: the way out of it and how deep, or null. */
 		function meeting (object, at, radius) {
 			var traits = object.Traits || {};
@@ -936,7 +967,9 @@ Elemenx.Trait('SceneVehicles', {
 				apart = vectors.Subtract(at, object.World);
 				far = vectors.Length(apart);
 
-				return far < object.Size * 1.01 + radius ? {Normal: vectors.Scale(apart, 1 / (far || 1)), Depth: object.Size * 1.01 + radius - far} : null;
+				var solid = solidOf(object);
+
+				return far < solid + radius ? {Normal: vectors.Scale(apart, 1 / (far || 1)), Depth: solid + radius - far} : null;
 			}
 
 			if (!name || !library.Has(name) || !library.Ready(name)) return null;
@@ -1281,27 +1314,34 @@ Elemenx.Trait('SceneVehicles', {
 			}
 		}
 
+		/* Where a ship is first, of its Vehicle: From (in sizes of what it is round), looking along Facing. */
+		function shipState (hero, settings, around) {
+			var first = vectors.Normalize(settings.Facing || [0, 0, 1]);
+			var aside = vectors.Normalize(vectors.Cross([0, 1, 0], first));
+
+			hero.Ship = {At: vectors.Scale(settings.From || [0, 0, 2], around ? around.Size : 1), Right: aside, Up: vectors.Cross(first, aside), Ahead: first, Way: [0, 0, 0], Spin: [0, 0, 0], Throttle: 0.2};
+			hero.Clock = {};
+
+			return hero.Ship;
+		}
+
 		function ship (hero, keys, elapsed) {
 			var settings = hero.Values.Vehicle;
 			var around = settings.Around ? scene.Objects[settings.Around] : null;
 			var state = hero.Ship;
 
 			if (!state) {
-				var first = vectors.Normalize(settings.Facing || [0, 0, 1]);
-				var aside = vectors.Normalize(vectors.Cross([0, 1, 0], first));
-
-				state = hero.Ship = {At: vectors.Scale(settings.From || [0, 0, 2], around ? around.Size : 1), Right: aside, Up: vectors.Cross(first, aside), Ahead: first, Way: [0, 0, 0], Spin: [0, 0, 0], Throttle: 0.2};
-				hero.Clock = {};
+				state = shipState(hero, settings, around);
 				scene.Yaw = 0;
 				scene.Pitch = 0.16;
 			}
 
 			/* H goes into warp, J jumps: each once a press. */
-			if (!hero.Travel && keys.KeyH && !hero.Pressed)
-				engine.Travel(hero, 'warp');
+			if (!hero.Travel && keys.KeyH && !hero.Pressed) engine.Travel(hero, 'warp');
+			else if (hero.Travel && hero.Travel.Kind === 'warp' && keys.KeyH && !hero.Pressed) engine.TravelStop(hero);
 
 			if (!hero.Travel && keys.KeyJ && !hero.Pressed)
-				engine.Travel(hero, 'jump');
+				engine.Travel(hero, 'jump', {Hold: true});
 
 			hero.Pressed = !!(keys.KeyH || keys.KeyJ);
 
@@ -1309,7 +1349,7 @@ Elemenx.Trait('SceneVehicles', {
 			openingsStep(hero, elapsed);
 
 			if (hero.Travel) {
-				travelStep(hero, state, settings, around && around.World ? around.World : [0, 0, 0], elapsed);
+				travelStep(hero, state, settings, around && around.World ? around.World : [0, 0, 0], elapsed, keys);
 
 				return;
 			}
@@ -1362,7 +1402,10 @@ Elemenx.Trait('SceneVehicles', {
 		/*
 		 * In real sizes a ship goes at Speed (m/s, 3000) near a body, and faster the farther from it, up to Cruise times as
 		 * fast (1000: 3000 km/s) from 60 000 km over it, as the root of how high it is: over the top of the air a hundred km/s
-		 * and more, as fast as a way down goes there; between bodies a way takes seconds to minutes, not days.
+		 * and more, as fast as a way down goes there; between bodies a way takes seconds to minutes, not days. Under the top of
+		 * a giant (its air goes on down to its core) as deep as it is, as fast as so high over it. How high: over the body
+		 * nearest (not only the one it flies round: out of a warp it is by another). Regression: out of a warp to a giant the
+		 * ship went into it as fast as so far from the Earth it flew round.
 		 */
 		function real (settings, around, state) {
 			var metre = engine.Metre();
@@ -1372,9 +1415,31 @@ Elemenx.Trait('SceneVehicles', {
 			if (!metre)
 				return settings;
 
-			high = around && around.Radius ? Math.max(0, (vectors.Length(state.At) / around.Size - 1) * around.Radius) : 60000;
+			high = nearHeight(around && around.World ? vectors.Add(around.World, state.At) : state.At);
+			high = isFinite(high) ? high : 60000;
 
 			return Object.assign({}, settings, {Top: (speed + speed * (given(settings.Cruise, 1000) - 1) * Math.sqrt(Math.min(1, high / 60000))) * metre});
+		}
+
+		/* How fast a ship may go where it is now (of its Vehicle, as real sizes have it; scene units a second). */
+		engine.ShipTop = function (hero) {
+			var settings = hero && hero.Values.Vehicle;
+			if (!settings || !hero.Ship) return 0;
+
+			return given(real(settings, settings.Around ? scene.Objects[settings.Around] : null, hero.Ship).Top, 1);
+		};
+
+		/* How far (km, up or down) a place of the world is from the surface of the body nearest to it. */
+		function nearHeight (at) {
+			var least = Infinity;
+
+			scene.Order.forEach(function (object) {
+				if (!object.World || !object.Size || !object.Radius || !(object.Traits || {}).Body) return;
+
+				least = Math.min(least, Math.abs((vectors.Distance(at, object.World) / object.Size - 1) * object.Radius));
+			});
+
+			return least;
 		}
 
 		function placeShip (hero, settings, at, right, up, ahead) {
@@ -1460,10 +1525,23 @@ Elemenx.Trait('SceneVehicles', {
 			if (target && target.World) {
 				way = vectors.Normalize(vectors.Subtract(target.World, travel.Start));
 
-				return vectors.Subtract(target.World, vectors.Scale(way, standOff(hero, target) + travel.Drift));
+				return vectors.Subtract(target.World, vectors.Scale(way, standOff(hero, target) + driftOf(hero, travel, target)));
 			}
 
-			return vectors.Add(travel.Start, vectors.Scale(travel.Axis, travel.Distance));
+			return null;
+		}
+
+		/*
+		 * How far a ship goes on out of its way far at once, its speed falling as the square of what is left: a third of its
+		 * many times its top a second over its Exit, never more than half how far it stands off what it went to, nor (straight
+		 * ahead) than its speed then over its Exit. Regression: of a top of real sizes (thousands of km/s) it went on past the
+		 * Moon it went to, its goal behind it.
+		 */
+		function driftOf (hero, travel, target) {
+			if (target)
+				return Math.min(travel.Drift, standOff(hero, target) * 0.5);
+
+			return Math.min(travel.Drift, (travel.Speed || 0) * travel.Lengths.exit / 3);
 		}
 
 		/* Turns a ship by a part of the way from where it looks to a way. */
@@ -1488,24 +1566,208 @@ Elemenx.Trait('SceneVehicles', {
 		 * slows from a speed of many times its top one. Jump: the afterburner gathers, a dash with the stars drawn out a little,
 		 * and it slows back to its top speed. What the view shows of it is scene.Warp.
 		 */
-		function travelStep (hero, state, settings, origin, elapsed) {
+		/* The numbers of a way far at once of the library (resources/vehicles/travel.json), under those of its Vehicle and those given. */
+		function travelOf (settings, kind, options) {
+			return Object.assign({}, (Elemenx.Resources('Data', 'ElemenxGraphics/vehicles/travel') || {})[kind] || {}, settings[kind === 'warp' ? 'Warp' : 'Jump'] || {}, options || {});
+		}
+
+		/* Units of the scene in a kilometre (of real sizes), else none (0). */
+		function kilometre () {
+			return engine.Metre ? engine.Metre() * 1000 : 0;
+		}
+
+		/*
+		 * How fast a ship goes in a tunnel of warp at a step, in units of the scene a second: of Steps of its numbers (km/s, each
+		 * ten times the last; past 6 the steps of relays); of no real sizes, 12 times its top at step 3, ten times a step.
+		 */
+		function stepSpeed (travel, top) {
+			var steps = travel.Steps || [];
+			var step = Math.max(1, Math.min(steps.length || 9, Math.round(travel.Step || 3)));
+
+			if (kilometre() && steps.length)
+				return steps[step - 1] * kilometre();
+
+			return top * 12 * Math.pow(10, step - 3);
+		}
+
+		/*
+		 * The body whose well a ship is too deep in to go into warp (Well: how much of the pull at its surface still holds a
+		 * ship there; 0: none ever does): the deepest of them, or null.
+		 */
+		function wellOf (hero, well) {
+			var deepest = null;
+
+			if (!(well > 0)) return null;
+
+			scene.Order.forEach(function (object) {
+				var traits = object.Traits || {};
+				var pull;
+
+				if (object === hero || !object.World || !object.Size || !traits.Body && !traits.Star) return;
+
+				pull = Math.pow(object.Size / Math.max(1e-9, vectors.Distance(object.World, hero.World)), 2);
+
+				if (pull > well && (!deepest || pull > deepest.Pull))
+					deepest = {Body: object, Pull: pull};
+			});
+
+			return deepest;
+		}
+
+		/* The blockers of warp (the trait WarpBlocker of any object: Radius in its sizes, Active): their middles and reach. */
+		function blockers () {
+			return scene.Order.filter(function (object) {
+				var blocker = (object.Traits || {}).WarpBlocker;
+
+				return blocker && blocker.Active !== false && blocker.Active !== 'false' && object.World;
+			}).map(function (object) {
+				return {ID: object.ID, At: object.World, Reach: given(object.Traits.WarpBlocker.Radius, 20) * (object.Size || 1)};
+			});
+		}
+
+		function blockedAt (at) {
+			return blockers().filter(function (blocker) {
+				return vectors.Distance(blocker.At, at) < blocker.Reach;
+			})[0] || null;
+		}
+
+		/* Where a way from a to b first comes into the reach of a blocker: {ID, Part (of the way, 0 to 1)}, or null. */
+		function blockedOn (a, b) {
+			var way = vectors.Subtract(b, a);
+			var length = vectors.Dot(way, way);
+			var best = null;
+
+			if (length <= 0) return null;
+
+			blockers().forEach(function (blocker) {
+				var from = vectors.Subtract(a, blocker.At);
+				var half = vectors.Dot(from, way);
+				var c = vectors.Dot(from, from) - blocker.Reach * blocker.Reach;
+				var disc = half * half - length * c;
+				var part;
+
+				if (c < 0 || disc < 0) return;
+
+				part = (-half - Math.sqrt(disc)) / length;
+
+				if (part >= 0 && part <= 1 && (!best || part < best.Part))
+					best = {ID: blocker.ID, Part: part};
+			});
+
+			return best;
+		}
+
+		/* A point out of every body: on its way out of one it is in, as far from it as a ship stands off before it. */
+		function outOfBodies (hero, point) {
+			var out = point;
+
+			scene.Order.forEach(function (object) {
+				var traits = object.Traits || {};
+				var apart;
+				var far;
+
+				if (object === hero || !object.World || !object.Size || !traits.Body && !traits.Star) return;
+
+				apart = vectors.Subtract(out, object.World);
+				far = vectors.Length(apart);
+
+				if (far < object.Size * 1.2)
+					out = vectors.Add(object.World, vectors.Scale(far > 1e-9 ? vectors.Scale(apart, 1 / far) : [0, 1, 0], object.Size + standOff(hero, object)));
+			});
+
+			return out;
+		}
+
+		/* The tunnels of warp of the scene by their IDs: {ID, Members (the IDs in it), Step, Permanent (of a relay)}. */
+		function tunnels () {
+			scene.Tunnels = scene.Tunnels || {};
+
+			return scene.Tunnels;
+		}
+
+		function leaveTunnel (hero, travel) {
+			var tunnel = travel.Tunnel ? tunnels()[travel.Tunnel] : null;
+			if (!tunnel) return;
+
+			tunnel.Members = tunnel.Members.filter(function (id) {
+				return id !== hero.ID;
+			});
+
+			if (!tunnel.Members.length && !tunnel.Permanent)
+				delete tunnels()[tunnel.ID];
+
+			travel.Tunnel = '';
+		}
+
+		/*
+		 * What a ship in warp goes by, the nearest first in time: each object near its way ahead (within a fifth of how far it
+		 * is, or fifty of its sizes), how near it passes (km), in how many seconds, and how far it is now (km).
+		 */
+		function passing (hero, at, axis, speed) {
+			var km = kilometre() || 1;
+
+			return scene.Order.filter(function (object) {
+				var traits = object.Traits || {};
+
+				return object !== hero && object.World && !object.Hidden && (traits.Body || traits.Star || object.Values.Model || traits.WarpBlocker || traits.WarpRelay);
+			}).map(function (object) {
+				var to = vectors.Subtract(object.World, at);
+				var along = vectors.Dot(to, axis);
+				var aside = vectors.Length(vectors.Subtract(to, vectors.Scale(axis, along)));
+
+				return {ID: object.ID, Name: object.Values.Name || object.ID, Along: along, Aside: aside, Size: object.Size || 0};
+			}).filter(function (one) {
+				return one.Along > 0 && one.Aside < Math.max(one.Size * 50, one.Along * 0.2);
+			}).sort(function (a, b) {
+				return a.Along - b.Along;
+			}).slice(0, 6).map(function (one) {
+				return {ID: one.ID, Name: one.Name, Pass: one.Aside / km, Seconds: speed > 0 ? one.Along / speed : Infinity, Distance: Math.hypot(one.Along, one.Aside) / km};
+			});
+		}
+
+		/* What a ship on its way far at once tells (the Ether: travel, under its ID), once a frame while it goes. */
+		function tellTravel (hero, travel, at, axis, ahead) {
+			var slice = self.$Ether('travel');
+			var km = kilometre() || 1;
+			var goal = ahead || goalOf(hero, travel);
+			var record = slice[hero.ID] = slice[hero.ID] || {};
+
+			Object.assign(record, {Kind: travel.Kind, Phase: travel.Phase, Step: travel.Step, Speed: travel.Speed / km, Tunnel: travel.Tunnel || '', To: travel.Target || travel.To || '', Left: goal ? vectors.Distance(goal, at) / km : null, Light: travel.Kind === 'hyper' ? travel.Light : null, Reason: travel.Reason || '', By: travel.By || '', Passing: travel.Kind === 'warp' && travel.Phase === 'inside' ? passing(hero, at, axis, travel.Speed) : []});
+
+			self.$Ether.Touch('travel', hero.ID);
+		}
+
+		function travelStep (hero, state, settings, origin, elapsed, keys) {
 			var travel = hero.Travel;
-			var top = given(settings.Top, 1);
-			var warp = travel.Kind === 'warp';
+			/* Its top speed as it flies (of real sizes: its speed and its cruise by how high it is; else its Top). */
+			var top = given(real(settings, settings.Around ? scene.Objects[settings.Around] : null, state).Top, 1);
+			var warp = travel.Kind === 'warp' || travel.Kind === 'hyper';
 			var t;
 			var world;
 			var look = {Stretch: 0, Tunnel: 0, Flash: 0, Shake: 0, Wide: 0, Lag: 0, Pace: 0};
 
 			travel.Time += elapsed;
-			t = Math.min(1, travel.Time / Math.max(1e-3, travel.Lengths[travel.Phase]));
+			t = travel.Phase === 'inside' ? 0 : Math.min(1, travel.Time / Math.max(1e-3, travel.Lengths[travel.Phase]));
 			world = vectors.Add(origin, state.At);
 
-			if (travel.Phase === 'enter') {
-				var target = targetOf(hero, travel, world);
-				if (target)
-					aimShip(state, vectors.Normalize(vectors.Subtract(target.World, world)), Math.min(1, elapsed * Math.max(2.5, 5 / travel.Lengths.enter)));
+			/* Its step of warp up and down on the way ([ and ]); H again, out of it where it is. */
+			if (warp && travel.Phase === 'inside' && !travel.Relay) {
+				if (keys.BracketRight && !travel.Keyed)
+					travel.Step = Math.min(6, travel.Step + 1);
 
-				state.Way = vectors.Lerp(state.Way, vectors.Scale(state.Ahead, top * (warp ? 0.15 : 0.6)), Math.min(1, elapsed * 2));
+				if (keys.BracketLeft && !travel.Keyed)
+					travel.Step = Math.max(1, travel.Step - 1);
+
+				travel.Keyed = !!(keys.BracketRight || keys.BracketLeft);
+			}
+
+			if (travel.Phase === 'enter') {
+				var target = travel.Kind === 'hyper' ? null : targetOf(hero, travel, world);
+				if (target || travel.Way)
+					aimShip(state, travel.Way || vectors.Normalize(vectors.Subtract(target.World, world)), Math.min(1, elapsed * Math.max(2.5, 5 / travel.Lengths.enter)));
+
+				/* Into warp it turns at the speed it had, slower if that is more than a part of its top: never far on the way in. */
+				state.Way = vectors.Lerp(state.Way, vectors.Scale(state.Ahead, warp ? Math.min(vectors.Length(state.Way), top * 0.15) : top * 0.6), Math.min(1, elapsed * 2));
 				state.At = vectors.Add(state.At, vectors.Scale(state.Way, elapsed));
 
 				hero.Thrust = warp ? 0.3 + 2.7 * t * t : 1 + 2 * t;
@@ -1515,36 +1777,134 @@ Elemenx.Trait('SceneVehicles', {
 				if (t >= 1) {
 					travel.Start = vectors.Add(origin, state.At);
 					travel.Target = target ? target.ID : '';
-					travel.Axis = state.Ahead.slice();
-					travel.Distance = clearAhead(hero, travel.Start, travel.Axis, travel.Length * top);
+					travel.Axis = travel.Way ? travel.Way.slice() : state.Ahead.slice();
+					travel.Speed = vectors.Length(state.Way);
+
+					/* A jump straight ahead of a length: to as far as told (seconds of its top speed); held, as long as it is held. */
+					/* Of what it flies round (it goes on round its star): its goal with it. */
+					if (!warp && !target && !travel.Hold)
+						travel.Ahead = vectors.Add(state.At, vectors.Scale(travel.Axis, travel.Length * top));
 
 					if (target)
 						travel.Axis = vectors.Normalize(vectors.Subtract(goalOf(hero, travel), travel.Start));
+
+					/* Its tunnel: of the relay it goes by (for good), else one of its own. */
+					if (warp) {
+						travel.Tunnel = travel.Relay ? 'relay:' + [travel.Relay, travel.To].sort().join('-') : 'tunnel-' + (scene.TunnelCount = (scene.TunnelCount || 0) + 1);
+						tunnels()[travel.Tunnel] = tunnels()[travel.Tunnel] || {ID: travel.Tunnel, Members: [], Step: travel.Step, Permanent: !!travel.Relay};
+
+						tunnels()[travel.Tunnel].Members.push(hero.ID);
+					}
 
 					next(hero, travel, 'inside');
 				}
 			}
 			else if (travel.Phase === 'inside') {
-				var goal = goalOf(hero, travel);
-				var e = smooth(0, 1, t);
+				var goal = travel.Ahead ? vectors.Add(origin, travel.Ahead) : goalOf(hero, travel);
+				var axis = goal && vectors.Distance(goal, world) > 1e-9 ? vectors.Normalize(vectors.Subtract(goal, world)) : travel.Axis;
+				var left = goal ? vectors.Distance(goal, world) : Infinity;
+				var aim = warp ? stepSpeed(travel, top) : top * given(travel.Pace, 5);
+				var leader = travel.Leader ? scene.Objects[travel.Leader] : null;
+				var end = '';
+				var step;
+				var to;
+				var blocked;
+				var clear;
 
-				aimShip(state, travel.Target ? vectors.Normalize(vectors.Subtract(goal, travel.Start)) : travel.Axis, Math.min(1, elapsed * 4));
+				/* Up to the speed of its step over Ramp seconds, and down as it nears its goal (Brake: seconds of its way left at most). */
+				travel.Speed += (aim - travel.Speed) * Math.min(1, elapsed / Math.max(0.05, travel.Ramp));
 
-				state.At = vectors.Subtract(vectors.Lerp(travel.Start, goal, warp ? e : t * t * (3 - 2 * t)), origin);
-				state.Way = vectors.Scale(state.Ahead, top * (warp ? 12 : 5));
+				if (isFinite(left))
+					travel.Speed = Math.min(travel.Speed, Math.max(left / Math.max(0.05, travel.Brake), aim * 0.01));
+
+				step = travel.Speed * elapsed;
+
+				/* In normal space (a jump) a body on its way stops it before it. */
+				if (!warp) {
+					clear = clearAhead(hero, world, axis, Infinity);
+
+					if (clear <= step) {
+						step = clear;
+						end = 'body';
+					}
+				}
+
+				if (step >= left) {
+					step = left;
+					end = end || 'arrived';
+				}
+
+				to = vectors.Add(world, vectors.Scale(axis, step));
+
+				/* In the tunnel of another it caught up with: as it goes, where it was beside it. */
+				if (leader && leader.Travel && leader.Travel.Phase === 'inside' && leader.Travel.Tunnel === travel.Tunnel) {
+					to = vectors.Add(leader.World, travel.Offset);
+					axis = leader.Travel.Axis || axis;
+					travel.Speed = leader.Travel.Speed;
+				}
+				else if (leader) {
+					end = end || 'leader';
+				}
+
+				/* Catching up with the tunnel of another (Join: its ID): a step not lower, near its axis (Capture, km). */
+				if (warp && travel.Join && !leader)
+					joinTunnel(hero, travel, to);
+
+				/* Of all of space only a blocker of warp stops a tunnel: at the edge of its reach. */
+				if (warp) {
+					blocked = blockedOn(world, to);
+
+					if (blocked) {
+						to = vectors.Add(world, vectors.Scale(vectors.Subtract(to, world), blocked.Part));
+						end = 'blocked';
+						travel.By = blocked.ID;
+					}
+				}
+
+				/* Of light-years: as many as it goes a second (HyperSpeed, ramped as its speed is), arrived where none are left. */
+				if (travel.Kind === 'hyper') {
+					travel.Light = Math.max(0, travel.Light - travel.HyperSpeed * Math.min(1, travel.Speed / Math.max(1e-9, aim)) * elapsed);
+
+					if (travel.Light <= 0)
+						end = end || 'arrived';
+				}
+
+				if (travel.Stop)
+					end = end || 'command';
+
+				if (!warp && travel.Hold && !keys.KeyJ)
+					end = end || 'released';
+
+				aimShip(state, axis, Math.min(1, elapsed * 4));
+
+				state.At = vectors.Subtract(to, origin);
+				state.Way = vectors.Scale(state.Ahead, travel.Speed);
+				travel.Axis = axis;
 
 				hero.Thrust = 3;
 
-				look = warp ? {Stretch: 1, Tunnel: 1, Flash: Math.max(0, 1 - travel.Time / 0.4) * 0.9, Shake: 0.22, Wide: 0.3, Lag: 0.15, Pace: 4} : {Stretch: 0.5, Tunnel: 0, Flash: Math.max(0, 1 - travel.Time / 0.25) * 0.2, Shake: 0.55, Wide: 0.18, Lag: 0.08 + Math.sin(Math.PI * t) * 0.35, Pace: 2.4};
+				look = warp ? {Stretch: 1, Tunnel: 1, Flash: Math.max(0, 1 - travel.Time / 0.4) * 0.9, Shake: 0.22, Wide: 0.3, Lag: 0.15, Pace: 4} : {Stretch: 0.5, Tunnel: 0, Flash: Math.max(0, 1 - travel.Time / 0.25) * 0.2, Shake: 0.55, Wide: 0.18, Lag: 0.08 + Math.sin(Math.min(Math.PI, travel.Time * 2)) * 0.35, Pace: 2.4};
 
-				if (t >= 1) {
-					travel.Exit = goal;
+				if (end) {
+					/* Never out in a body: a tunnel goes through them, its way out on their outside. */
+					to = outOfBodies(hero, to);
+					state.At = vectors.Subtract(to, origin);
+					travel.Reason = end;
+					travel.Exit = to;
+					travel.Coast = driftOf(hero, travel, travel.Target ? scene.Objects[travel.Target] : null);
+
+					leaveTunnel(hero, travel);
 
 					next(hero, travel, 'exit');
+
+					/* At the star it jumped to: its system, at once (the ship of a game made there again: event travel Phase arrived). */
+					if (travel.Kind === 'hyper' && end === 'arrived' && self.EnterSystem)
+						arrive(hero, travel);
 				}
 			}
 			else {
-				var fast = top * (warp ? 12 : 5) * (1 - t) * (1 - t);
+				/* Its speed out falls as the square of what is left: over its Exit it goes as far as it was to drift (Coast). */
+				var fast = (travel.Coast === undefined ? top * (warp ? 12 : 5) : travel.Coast * 3 / Math.max(1e-3, travel.Lengths.exit)) * (1 - t) * (1 - t);
 
 				state.Way = vectors.Scale(state.Ahead, top * Math.max(state.Throttle, 0.4) + fast);
 				state.At = vectors.Add(state.At, vectors.Scale(state.Way, elapsed));
@@ -1567,6 +1927,8 @@ Elemenx.Trait('SceneVehicles', {
 
 			placeShip(hero, settings, vectors.Add(origin, state.At), state.Right, state.Up, state.Ahead);
 
+			tellTravel(hero, travel, hero.World, travel.Axis || state.Ahead, travel.Ahead ? vectors.Add(origin, travel.Ahead) : null);
+
 			if (hero.Travel) {
 				travel.Flow += elapsed * look.Pace;
 
@@ -1574,34 +1936,137 @@ Elemenx.Trait('SceneVehicles', {
 			}
 		}
 
-		/* The next phase of a way far at once: told as an event, and to whom asked for it at its end. */
+		/*
+		 * A ship in warp that would catch up with the tunnel of another (Join: its ID): once it is near the axis of one in it
+		 * (Capture, km; a scene of no real sizes: its sizes) and goes at a step not lower than the tunnel's, it is in that tunnel,
+		 * beside that one, as long as it goes.
+		 */
+		function joinTunnel (hero, travel, at) {
+			var tunnel = tunnels()[travel.Join];
+			var reach = travel.Capture * (kilometre() || hero.Size || 1);
+
+			if (!tunnel || tunnel.ID === travel.Tunnel || travel.Step < tunnel.Step) return;
+
+			tunnel.Members.some(function (id) {
+				var other = scene.Objects[id];
+				var way = other && other.Travel ? other.Travel.Axis : null;
+				var to;
+				var aside;
+
+				if (!other || !way || other === hero || other.Travel.Phase !== 'inside') return false;
+
+				to = vectors.Subtract(at, other.World);
+				aside = vectors.Length(vectors.Subtract(to, vectors.Scale(way, vectors.Dot(to, way))));
+
+				if (aside > reach) return false;
+
+				leaveTunnel(hero, travel);
+
+				travel.Tunnel = tunnel.ID;
+				travel.Leader = id;
+				travel.Offset = vectors.Subtract(at, other.World);
+				travel.Target = other.Travel.Target;
+
+				tunnel.Members.push(hero.ID);
+
+				self.$Emit('travel', {ID: hero.ID, Kind: travel.Kind, Phase: 'joined', Tunnel: tunnel.ID, By: id});
+
+				return true;
+			});
+		}
+
+		/*
+		 * Into the system of the star it jumped to, at the start of the next frame (TravelersStep): the scene is made again
+		 * there, before its objects are placed. Regression: made again in the step of the ship, the same frame drew objects of no
+		 * place yet, and threw.
+		 */
+		function arrive (hero, travel) {
+			scene.Arriving = {ID: hero.ID, Travel: travel};
+		}
+
+		function arrived (id, travel) {
+			self.EnterSystem(travel.Galaxy, function (error) {
+				self.$Emit('travel', {ID: id, Kind: 'hyper', Phase: 'arrived', To: travel.To, Galaxy: travel.Galaxy, Error: error ? error.message : ''});
+
+				if (travel.Callback)
+					travel.Callback(error || null, {ID: id, Kind: 'hyper', Galaxy: travel.Galaxy, Reason: 'arrived'});
+			}, {Now: true});
+		}
+
+		/* The next phase of a way far at once: told as an event (why it came out, what stopped it, its tunnel), and to whom asked for it at its end. */
 		function next (hero, travel, phase) {
 			travel.Phase = phase;
 			travel.Time = 0;
 
-			self.$Emit('travel', {ID: hero.ID, Kind: travel.Kind, Phase: phase});
+			self.$Emit('travel', {ID: hero.ID, Kind: travel.Kind, Phase: phase, Reason: travel.Reason || '', By: travel.By || '', Tunnel: travel.Tunnel || ''});
 
 			if (phase === 'done' && travel.Callback)
-				travel.Callback(null, {ID: hero.ID, Kind: travel.Kind, At: hero.World.slice()});
+				travel.Callback(null, {ID: hero.ID, Kind: travel.Kind, At: hero.World.slice(), Reason: travel.Reason || ''});
+		}
+
+		/* A way far at once that cannot be: told (Phase refused, Reason: well, blocked or relay, By), kept for Travel to tell. */
+		function refused (hero, kind, reason, by) {
+			hero.Refused = {Kind: kind, Reason: reason, By: by};
+
+			self.$Emit('travel', {ID: hero.ID, Kind: kind, Phase: 'refused', Reason: reason, By: by});
+
+			return false;
 		}
 
 		/*
-		 * Sends a ship far at once: kind warp or jump; options {To (the ID of what it goes to), Length (how far, in seconds of its
-		 * top speed, with no To), Enter, Inside, Exit (seconds), Tint}, over Warp or Jump of its Vehicle. False if it cannot go.
+		 * Sends a ship far at once, kind warp (into a tunnel of its own, out of normal space: nothing there stops it but a
+		 * blocker of warp) or jump (a dash in normal space: a body on its way stops it); options {To (the ID of what it goes
+		 * to), Step (of warp, 1 to 6), Hold (a jump as long as J is held), Length (a jump straight ahead: seconds of its top
+		 * speed), Join (the ID of a tunnel to catch up with), Relay (the ID of a relay it is by: to the one it is joined to),
+		 * Well (how much of the pull of a body still holds it out of warp; 0: none), Enter, Exit (seconds), Tint}, over Warp
+		 * or Jump of its Vehicle. False if it cannot go (refused: why).
 		 */
 		engine.Travel = function (hero, kind, options, callback) {
 			var settings = hero && hero.Values.Vehicle;
 			var made;
+			var relay;
+			var well;
+			var blocker;
 
-			if (!settings || settings.Kind !== 'ship' || !hero.Ship || hero.Travel || (kind !== 'warp' && kind !== 'jump')) return false;
+			if (hero)
+				hero.Refused = null;
 
-			/* Its phases, its length and its tint (resources/vehicles/travel.json), under those of its Vehicle and those given. */
-			made = Object.assign((Elemenx.Resources('Data', 'ElemenxGraphics/vehicles/travel') || {})[kind] || {}, settings[kind === 'warp' ? 'Warp' : 'Jump'] || {}, options || {});
+			if (!settings || settings.Kind !== 'ship' || hero.Travel || (kind !== 'warp' && kind !== 'jump')) return false;
 
-			hero.Travel = {Kind: kind, Phase: 'enter', Time: 0, Flow: 0, To: made.To || '', Length: given(made.Length, 0), Lengths: {enter: given(made.Enter, 1), inside: given(made.Inside, 1), exit: given(made.Exit, 1)}, Tint: engine.Paint(made.Tint).slice(0, 3), Callback: callback || null};
+			/* A ship no player drove yet: where its Vehicle puts it. */
+			if (!hero.Ship)
+				shipState(hero, settings, settings.Around ? scene.Objects[settings.Around] : null);
+
+			made = travelOf(settings, kind, options);
+
+			/* The ship driven goes to what it aims at, when it is told no place of its own. */
+			if (hero.ID === scene.Hero && !(options && options.To) && scene.Aim && scene.Aim.Target && targetById(hero, scene.Aim.Target))
+				made.To = scene.Aim.Target;
+
+			/* To a star of the galaxy: an interstellar jump (hyper), out of its well far enough (HyperWell). */
+			if (kind === 'warp' && /^star:/.test(String(made.To || ''))) return hyper(hero, settings, made, callback);
+
+			relay = made.Relay ? scene.Objects[made.Relay] : null;
+
+			/* By a relay: from within its reach to the one it is joined to, by a tunnel of the two and its step. */
+			if (made.Relay && !(relay && relay.World && (relay.Traits || {}).WarpRelay && scene.Objects[relay.Traits.WarpRelay.To] && vectors.Distance(relay.World, hero.World) <= given(relay.Traits.WarpRelay.Reach, 30) * (relay.Size || 1))) return refused(hero, kind, 'relay', made.Relay);
+
+			if (kind === 'warp' && !relay) {
+				well = wellOf(hero, given(made.Well, 0.15));
+
+				if (well)
+					return refused(hero, kind, 'well', well.Body.ID);
+			}
+
+			blocker = kind === 'warp' ? blockedAt(hero.World) : null;
+
+			if (blocker)
+				return refused(hero, kind, 'blocked', blocker.ID);
+
+			hero.Travel = {Kind: kind, Phase: 'enter', Time: 0, Flow: 0, Speed: 0, Gone: 0, To: relay ? relay.Traits.WarpRelay.To : made.To || '', Relay: relay ? relay.ID : '', Join: made.Join || '', Hold: !!made.Hold, Step: relay ? given(relay.Traits.WarpRelay.Step, 8) : given(made.Step, 3), Steps: made.Steps || [], Ramp: given(made.Ramp, 2), Brake: given(made.Brake, 1.2), Pace: given(made.Speed, 5), Capture: given(made.Capture, 50), Length: given(made.Length, 0), Lengths: {enter: given(made.Enter, 1), exit: given(made.Exit, 1)}, Tint: engine.Paint(made.Tint).slice(0, 3), Callback: callback || null};
 
 			/* Out of it, it goes on at many times its top speed, falling as the square of what is left: a third of that way. */
-			hero.Travel.Drift = given(settings.Top, 1) * (kind === 'warp' ? 12 : 5) * hero.Travel.Lengths.exit / 3;
+			hero.Travel.Drift = given(real(settings, settings.Around ? scene.Objects[settings.Around] : null, hero.Ship).Top, 1) * (kind === 'warp' ? 12 : 5) * hero.Travel.Lengths.exit / 3;
 
 			self.$Emit('travel', {ID: hero.ID, Kind: kind, Phase: 'enter'});
 
@@ -1609,8 +2074,362 @@ Elemenx.Trait('SceneVehicles', {
 		};
 
 		/*
+		 * The ships on a way far at once no player drives (a wing in the tunnel of its leader, a ship a game sent): each goes on
+		 * as the one driven does, of no keys.
+		 */
+		engine.TravelersStep = function (elapsed) {
+			var arriving = scene.Arriving;
+
+			if (arriving) {
+				scene.Arriving = null;
+
+				arrived(arriving.ID, arriving.Travel);
+
+				return;
+			}
+
+			/* The marks of aiming only over a ship driven in space. */
+			var hero = scene.Hero ? scene.Objects[scene.Hero] : null;
+
+			if (hero && hero.Ship && hero.Values.Vehicle && hero.Values.Vehicle.Kind === 'ship' && !scene.Ground && !scene.Surface) {
+				/* What it aims at (T, G), its marks over the view: every frame, however it flies (in orbit too). */
+				aimStep(hero, engine.PadKeys ? engine.PadKeys(scene.Keys || {}) : scene.Keys || {}, elapsed);
+			}
+			else if (scene.Aim) {
+				engine.AimClear();
+			}
+
+			scene.Order.forEach(function (object) {
+				var settings = object.Values.Vehicle;
+				var around;
+
+				if (!object.Travel || !object.Ship || object.ID === scene.Hero || !settings) return;
+
+				around = settings.Around ? scene.Objects[settings.Around] : null;
+
+				travelStep(object, object.Ship, settings, around && around.World ? around.World : [0, 0, 0], elapsed, {});
+			});
+		};
+
+		/*
+		 * An interstellar jump to a star near (To star:<ID>): a tunnel of warp out of the well of every body (HyperWell, of the
+		 * pull at its surface: 0.0005), its way along the way to the star in the sky, at HyperSpeed light-years a second (2);
+		 * as it comes there, the system of that star (EnterSystem at once), the ship out at its edge.
+		 */
+		function hyper (hero, settings, made, callback) {
+			var star = targetById(hero, made.To);
+			var well = wellOf(hero, given(made.HyperWell, 0.0005));
+			var blocker = blockedAt(hero.World);
+
+			if (!star)
+				return refused(hero, 'warp', 'star', made.To);
+
+			if (well)
+				return refused(hero, 'warp', 'well', well.Body.ID);
+
+			if (blocker)
+				return refused(hero, 'warp', 'blocked', blocker.ID);
+
+			hero.Travel = {Kind: 'hyper', Phase: 'enter', Time: 0, Flow: 0, Speed: 0, To: made.To, Galaxy: star.Galaxy, Light: star.Light, Way: star.Way, Step: given(made.Step, 3), Steps: made.Steps || [], Ramp: given(made.Ramp, 2), Brake: given(made.Brake, 1.2), Pace: 5, Capture: 0, Length: 0, Lengths: {enter: given(made.Enter, 1), exit: given(made.Exit, 1)}, HyperSpeed: given(made.HyperSpeed, 2), Tint: engine.Paint(made.HyperTint || '#b07cff').slice(0, 3), Callback: callback || null, Drift: 0};
+
+			self.$Emit('travel', {ID: hero.ID, Kind: 'hyper', Phase: 'enter', To: made.To});
+
+			return true;
+		}
+
+		/* Out of its way far at once where it is (a command of its own, or of the game). */
+		engine.TravelStop = function (hero) {
+			if (!hero || !hero.Travel) return false;
+
+			hero.Travel.Stop = true;
+
+			return true;
+		};
+
+		/*
+		 * Aiming from a ship (scene.Aim {Target, Align}): T takes what lies nearest its nose (within 6 degrees or its disc), or
+		 * lets it go; G turns the ship to it by itself (and lets it be). Its lead: where it will be when the ship gets there at
+		 * its step of warp (its way now times how long, twice over). Ready: the nose on the lead within 2 degrees, out of the
+		 * well of every body, out of the reach of a blocker of warp. H with no place of its own goes to what it aims at.
+		 */
+		function aimOf () {
+			scene.Aim = scene.Aim || {Target: '', Align: false, Keys: {}, Past: {}, Seen: {}};
+
+			return scene.Aim;
+		}
+
+		function candidates (hero) {
+			return scene.Order.filter(function (object) {
+				var traits = object.Traits || {};
+
+				return object !== hero && object.World && !object.Hidden && (traits.Body || traits.Star || object.Values.Model || traits.WarpRelay || traits.WarpBlocker);
+			}).concat(farStars(hero));
+		}
+
+		/*
+		 * The stars near of the galaxy the system lies in (GalaxyNear of SceneGalaxy), each a target far along its way in the sky
+		 * (ID star:<its ID>): what an interstellar jump goes to.
+		 */
+		function farStars (hero) {
+			var far = (scene.Camera && scene.Camera.Far || 1e6) * 0.4;
+
+			if (!self.GalaxyNear || !hero.World) return [];
+
+			return self.GalaxyNear(30, 12).map(function (star) {
+				return {ID: 'star:' + star.ID, Values: {Name: star.Name}, Traits: {}, World: vectors.Add(hero.World, vectors.Scale(star.Way, far)), Size: 0, Galaxy: star.ID, Light: star.Distance, Way: star.Way};
+			});
+		}
+
+		/* An object of the scene, or a star near of the galaxy (star:<ID>), by its ID. */
+		function targetById (hero, id) {
+			if (scene.Objects[id])
+				return scene.Objects[id];
+
+			if (!/^star:/.test(String(id))) return null;
+
+			return farStars(hero).filter(function (one) {
+				return one.ID === id;
+			})[0] || null;
+		}
+
+		/* What lies nearest a way from a ship: within 6 degrees of it, or its disc if larger. */
+		function nearestTo (hero, way) {
+			var best = null;
+
+			candidates(hero).forEach(function (object) {
+				var to = vectors.Subtract(object.World, hero.World);
+				var far = vectors.Length(to);
+				var angle = Math.acos(Math.max(-1, Math.min(1, vectors.Dot(way, vectors.Scale(to, 1 / Math.max(1e-12, far))))));
+				if (angle < Math.max(0.105, Math.atan((object.Size || 0) / Math.max(1e-12, far))) && (!best || angle < best.Angle))
+					best = {ID: object.ID, Angle: angle};
+			});
+
+			return best ? best.ID : '';
+		}
+
+		function leadOf (hero, target, aim) {
+			var settings = hero.Values.Vehicle;
+			var way = aim.Way && aim.WayOf === target.ID ? aim.Way : [0, 0, 0];
+			var speed = stepSpeed(travelOf(settings, 'warp'), given(real(settings, settings.Around ? scene.Objects[settings.Around] : null, hero.Ship).Top, 1));
+			var at = target.World;
+			var i;
+
+			for (i = 0; i < 2; i++)
+				at = vectors.Add(target.World, vectors.Scale(way, vectors.Distance(at, hero.World) / Math.max(1e-12, speed)));
+
+			return at;
+		}
+
+		function aimStep (hero, keys, elapsed) {
+			var aim = aimOf();
+			var settings = hero.Values.Vehicle;
+			var state = hero.Ship;
+			var km = kilometre() || 1;
+			var target;
+			var record = {Target: '', Name: '', Distance: null, Angle: null, Lead: null, Aligned: false, Ready: false, Why: '', Align: aim.Align, Marks: []};
+			var lead = null;
+			var way;
+			var angle;
+			var well;
+			var blocker;
+
+			if (keys.KeyT && !aim.Keys.T)
+				aim.Target = aim.Target && nearestTo(hero, state.Ahead) === aim.Target ? '' : nearestTo(hero, state.Ahead) || '';
+
+			if (keys.KeyG && !aim.Keys.G)
+				aim.Align = !aim.Align;
+
+			aim.Keys = {T: !!keys.KeyT, G: !!keys.KeyG};
+			target = aim.Target ? targetById(hero, aim.Target) : null;
+
+			/* Gone: let go; not placed yet (the scene made again this frame): as if none, this frame. */
+			if (aim.Target && !target)
+				aim.Target = '';
+
+			if (target && !target.World)
+				target = null;
+
+			if (target) {
+				/*
+				 * Its way a second to the ship, of where both were a frame before. Regression: of its way in the world (round its star
+				 * with the ship) its lead was thousands of km off it.
+				 */
+				if (aim.Past[target.ID] && aim.Past[hero.ID] && elapsed > 0) {
+					aim.Way = vectors.Scale(vectors.Subtract(vectors.Subtract(target.World, aim.Past[target.ID]), vectors.Subtract(hero.World, aim.Past[hero.ID])), 1 / elapsed);
+					aim.WayOf = target.ID;
+				}
+
+				aim.Past = {};
+				aim.Past[target.ID] = target.World.slice();
+				aim.Past[hero.ID] = hero.World.slice();
+
+				lead = leadOf(hero, target, aim);
+				way = vectors.Normalize(vectors.Subtract(lead, hero.World));
+				angle = Math.acos(Math.max(-1, Math.min(1, vectors.Dot(state.Ahead, way)))) * 180 / Math.PI;
+				well = wellOf(hero, target.Galaxy ? given(travelOf(settings, 'warp').HyperWell, 0.0005) : given(travelOf(settings, 'warp').Well, 0.15));
+				blocker = blockedAt(hero.World);
+
+				if (aim.Align && !hero.Travel) {
+					aimShip(state, way, Math.min(1, elapsed * 1.5));
+
+					state.Spin = [0, 0, 0];
+				}
+
+				record = {Target: target.ID, Name: target.Values.Name || target.ID, Distance: target.Galaxy ? target.Light * 9.4607e12 : vectors.Distance(target.World, hero.World) / km, Angle: angle, Lead: way, Aligned: angle < 2, Ready: angle < 2 && !well && !blocker && !hero.Travel, Why: hero.Travel ? 'travel' : well ? 'well' : blocker ? 'blocked' : angle >= 2 ? 'turn' : '', Align: aim.Align, Marks: []};
+			}
+
+			record.Marks = candidates(hero).map(function (object) {
+				var to = vectors.Subtract(object.World, hero.World);
+				var far = vectors.Length(to);
+
+				return {ID: object.ID, Name: object.Values.Name || object.ID, Angle: Math.acos(Math.max(-1, Math.min(1, vectors.Dot(state.Ahead, vectors.Scale(to, 1 / Math.max(1e-12, far)))))) * 180 / Math.PI, Distance: far / km};
+			}).filter(function (one) {
+				return one.Angle < 25;
+			}).sort(function (a, b) {
+				return a.Angle - b.Angle;
+			}).slice(0, 8);
+
+			Object.assign(self.$Ether('aim'), record);
+
+			self.$Ether.Touch('aim');
+
+			drawAim(hero, target, lead, record);
+		}
+
+		/* A number of km for the eye: 1.2 Mkm, 384 000 km, 12.5 km. */
+		function kmText (value) {
+			if (value === null || value === undefined) return '';
+
+			if (value >= 1e11)
+				return (value / 9.4607e12).toFixed(1) + ' ly';
+
+			if (value >= 1e7)
+				return (value / 1.496e8).toFixed(2) + ' AU';
+
+			if (value >= 1e6)
+				return (value / 1e6).toFixed(1) + ' Mkm';
+
+			return (value >= 100 ? Math.round(value).toLocaleString() : value.toFixed(1)) + ' km';
+		}
+
+		/*
+		 * The marks of aiming over the view (.elemenx-scene-sight): the nose of the ship (where it points), a frame round what it
+		 * aims at with its name, how far, how far to turn and whether it can go; the lead where it will be; an arrow at the
+		 * edge to it when it is out of the view; small frames round what lies near the nose.
+		 */
+		function drawAim (hero, target, lead, record) {
+			var root = self.$Element ? self.$Element().querySelector('.elemenx-scene-sight') : null;
+			var camera = scene.Camera;
+			var width = scene.Width;
+			var height = scene.Height;
+			var aim = aimOf();
+			var used = {};
+
+			if (!root) return;
+
+			function part (key, kind) {
+				var element = aim.Seen[key];
+
+				if (!element) {
+					element = aim.Seen[key] = root.ownerDocument.createElement('div');
+					element.className = 'elemenx-scene-sight-' + kind;
+
+					root.appendChild(element);
+				}
+
+				/* Its layer made again (the template of the scene drawn anew): in the one there is now. */
+				if (element.parentNode !== root)
+					root.appendChild(element);
+
+				used[key] = true;
+				element.hidden = false;
+
+				return element;
+			}
+
+			function place (element, spot) {
+				element.style.transform = 'translate(' + Math.round(spot.X) + 'px, ' + Math.round(spot.Y) + 'px) translate(-50%, -50%)';
+			}
+
+			var nose = camera.Project(vectors.Add(hero.World, vectors.Scale(hero.Ship.Ahead, Math.max(hero.Size * 400, 1e-6))), width, height);
+			if (nose.Visible)
+				place(part('nose', 'nose'), nose);
+
+			record.Marks.forEach(function (mark) {
+				var object = scene.Objects[mark.ID];
+				var spot = object ? camera.Project(object.World, width, height) : null;
+				if (!spot || !spot.Visible || mark.ID === record.Target) return;
+
+				place(part('mark:' + mark.ID, 'mark'), spot);
+			});
+
+			if (target) {
+				var spot = camera.Project(target.World, width, height);
+				var frame;
+				var arrow;
+				var label;
+				var dx;
+				var dy;
+				var scale;
+
+				if (spot.Visible && spot.X >= 0 && spot.X <= width && spot.Y >= 0 && spot.Y <= height) {
+					frame = part('target', 'target');
+
+					frame.setAttribute('data-ready', String(record.Ready));
+
+					place(frame, spot);
+
+					label = part('label', 'label');
+					label.textContent = record.Name + ' · ' + kmText(record.Distance) + ' · ' + record.Angle.toFixed(1) + '°' + (record.Ready ? ' · ready' : record.Why && record.Why !== 'turn' ? ' · ' + record.Why : '');
+					label.style.transform = 'translate(' + Math.round(spot.X) + 'px, ' + Math.round(spot.Y + 36) + 'px) translate(-50%, 0)';
+				}
+				else {
+					/* Out of the view: an arrow at its edge, the way to it from the middle. */
+					dx = (spot.Visible ? spot.X : width - spot.X) - width / 2;
+					dy = (spot.Visible ? spot.Y : height - spot.Y) - height / 2;
+					scale = Math.min((width / 2 - 24) / Math.max(1e-6, Math.abs(dx)), (height / 2 - 24) / Math.max(1e-6, Math.abs(dy)));
+					arrow = part('arrow', 'arrow');
+					arrow.style.transform = 'translate(' + Math.round(width / 2 + dx * scale) + 'px, ' + Math.round(height / 2 + dy * scale) + 'px) translate(-50%, -50%) rotate(' + Math.atan2(dy, dx) + 'rad)';
+					label = part('label', 'label');
+					label.textContent = record.Name + ' · ' + kmText(record.Distance) + ' · ' + record.Angle.toFixed(0) + '°';
+					label.style.transform = 'translate(' + Math.round(width / 2 + dx * scale * 0.86) + 'px, ' + Math.round(height / 2 + dy * scale * 0.86) + 'px) translate(-50%, -50%)';
+				}
+
+				var ahead = lead ? camera.Project(lead, width, height) : null;
+				if (ahead && ahead.Visible && vectors.Distance(lead, target.World) > (target.Size || 0) * 0.5)
+					place(part('lead', 'lead'), ahead);
+			}
+
+			Object.keys(aim.Seen).forEach(function (key) {
+				if (!used[key])
+					aim.Seen[key].hidden = true;
+			});
+		}
+
+		engine.AimStep = aimStep;
+
+		engine.AimClear = function () {
+			var aim = aimOf();
+
+			Object.keys(aim.Seen).forEach(function (key) {
+				aim.Seen[key].hidden = true;
+			});
+		};
+
+		/* Its step of warp on the way (1 to 6; a relay keeps its own). */
+		engine.TravelStep = function (hero, step) {
+			if (!hero || !hero.Travel || hero.Travel.Kind !== 'warp' || hero.Travel.Relay) return false;
+
+			hero.Travel.Step = Math.max(1, Math.min(6, Math.round(Number(step) || 1)));
+
+			return true;
+		};
+
+		/*
 		 * The view of a ship goes round it as the mouse says, from where it stands behind it: it stays with the ship, its own axes
-		 * coming after those of the ship, and steers nothing.
+		 * coming after those of the ship, and steers nothing. In the first person (Person first of the Scene) from its seat (Seat of
+		 * its Vehicle, in its own axes and its sizes; at its nose by default), along its way, the mouse turning the head: scene.Inside
+		 * eases to 1 (what is on its glass shows, SceneGiants).
 		 */
 		engine.ShipView = function (hero, elapsed) {
 			var seen = hero.Seen;
@@ -1645,7 +2464,21 @@ Elemenx.Trait('SceneVehicles', {
 					delete scene.WarpFov;
 			}
 
+			scene.Inside = (scene.Inside || 0) + ((self.Person === 'first' ? 1 : 0) - (scene.Inside || 0)) * (1 - Math.exp(-elapsed * 10));
 			scene.Target = hero.World.slice();
+
+			if (self.Person === 'first') {
+				var seat = settings.Seat || [0, 0.12, 0.62];
+				var head = vectors.Add(vectors.Add(vectors.Scale(seen.Right, seat[0] * size), vectors.Scale(seen.Up, seat[1] * size)), vectors.Scale(seen.Ahead, seat[2] * size));
+				var look = vectors.Add(vectors.Add(vectors.Scale(seen.Right, -Math.sin(scene.Yaw) * Math.cos(scene.Pitch - 0.16)), vectors.Scale(seen.Up, Math.sin(scene.Pitch - 0.16))), vectors.Scale(seen.Ahead, Math.cos(scene.Yaw) * Math.cos(scene.Pitch - 0.16)));
+
+				camera.Position = vectors.Add(vectors.Add(hero.World, head), shake);
+				camera.Target = vectors.Add(camera.Position, vectors.Scale(look, size * 10));
+				camera.Up = seen.Up.slice();
+
+				return true;
+			}
+
 			camera.Position = vectors.Add(vectors.Add(hero.World, vectors.Scale(way, far)), shake);
 			camera.Target = vectors.Add(hero.World, shake);
 			camera.Up = view.Up.slice();
@@ -1859,8 +2692,46 @@ Elemenx.Trait('SceneVehicles', {
 	 */
 	Travel: function (id, kind, options, callback) {
 		var object = this.Scene().Objects[id];
+		var why = {well: 'in the well of ', blocked: 'by the blocker of warp ', relay: 'not by the relay '};
+
 		if (!this.Engine().Travel(object, kind, options, callback) && callback)
-			callback(new Error('Elemenx Scene: ' + id + ' cannot ' + kind + ' now'));
+			callback(new Error('Elemenx Scene: ' + id + ' cannot ' + kind + ' now' + (object && object.Refused ? ': ' + why[object.Refused.Reason] + object.Refused.By : '')));
+	},
+
+	/* Out of its way far at once where it is now: false when it is on none. */
+	TravelStop: function (id) {
+		return this.Engine().TravelStop(this.Scene().Objects[id]);
+	},
+
+	/*
+	 * What the ship driven aims at: an ID, of an object or of a star near of the galaxy (star:<its ID>: a jump between stars; what it goes to in warp with no place of its own, its lead and marks over the
+	 * view), '' for none. The Ether aim tells it once a frame: {Target, Name, Distance km, Angle (degrees to turn), Lead
+	 * (the way to where it will be), Aligned, Ready, Why (turn, well, blocked, travel), Align, Marks: [{ID, Name, Angle,
+	 * Distance}] near the nose}. T takes what lies nearest the nose, G turns to it by itself.
+	 */
+	Aim: function (id) {
+		var scene = this.Scene();
+
+		scene.Aim = scene.Aim || {Target: '', Align: false, Keys: {}, Past: {}, Seen: {}};
+		/* An object of the scene, or a star near of the galaxy (star:<its ID>: GalaxyNear). */
+		scene.Aim.Target = id && (scene.Objects[id] || /^star:/.test(String(id)) && this.GalaxyNear && this.GalaxyNear(30, 12).some(function (star) {
+			return 'star:' + star.ID === id;
+		})) ? id : '';
+
+		return scene.Aim.Target;
+	},
+
+	/* The ship driven turns to what it aims at by itself (true), or not. */
+	AimAlign: function (on) {
+		var scene = this.Scene();
+
+		scene.Aim = scene.Aim || {Target: '', Align: false, Keys: {}, Past: {}, Seen: {}};
+		scene.Aim.Align = !!on;
+	},
+
+	/* Its step of warp on the way (1 to 6; a relay keeps its own): false when it is in no warp. */
+	TravelStep: function (id, step) {
+		return this.Engine().TravelStep(this.Scene().Objects[id], step);
 	},
 
 	/* What a vehicle is built of, of a kind or all, where each stands now: [{Kind, At, Aim, Mount}]. */

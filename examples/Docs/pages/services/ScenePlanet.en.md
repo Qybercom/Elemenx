@@ -42,7 +42,7 @@ The same functions run in workers and in Node: they read no page.
 
 ## Tests
 
-- [draws a planet of ScenePlanet from space of the lands of its globe](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L34) — `tests/regression/library-scene-landing.test.js`
+- [draws a planet of ScenePlanet from space of the lands of its globe](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L35) — `tests/regression/library-scene-landing.test.js`
 - [stands houses where a settlement is, woods where trees grow, and nothing on the sea](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/planet-things.test.js#L45) — `tests/regression/planet-things.test.js`
 - [gives the numbers of a kind of settlement, the kind of a place by its share, and the warmth of a temperature](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L32) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 - [turns a latitude and a longitude into a direction and back](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L46) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
@@ -55,4 +55,4 @@ The same functions run in workers and in Node: they read no page.
 - [paints a piece of a globe in a worker byte for byte as in the page, and turns a pixel into a direction and back](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L238) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 - [gives its ground to land on as the Sphere of SceneTerrainGenerator does: its heights, squares with its colors, the same in a worker](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js#L260) — `libraries/ElemenxGraphics/services/ScenePlanet/ScenePlanet.test.js`
 
-+39 more in the same files
++40 more in the same files

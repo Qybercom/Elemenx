@@ -1,0 +1,24 @@
+{
+	"giant": null,
+	"living": null,
+	"scorched": [
+		"scorched-plains",
+		"scorched-highlands"
+	],
+	"hydrocarbon": [
+		"hydrocarbon-dunes",
+		"hydrocarbon-shores"
+	],
+	"dust": [
+		"dust-plains",
+		"dust-highlands"
+	],
+	"frozen": [
+		"frozen-plains",
+		"frozen-ridges"
+	],
+	"barren": [
+		"barren-maria",
+		"barren-highlands"
+	]
+}

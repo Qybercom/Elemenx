@@ -46,7 +46,14 @@ Elemenx.Service('SystemData', {
 			if (body.Type === 'belt')
 				return {ID: body.ID, Kind: 'belt', Parent: body.Parent, Values: {Name: body.Name}, Traits: {Belt: {Inner: body.Inner, Outer: body.Outer, Count: body.Count}}};
 
-			return {ID: body.ID, Kind: body.Parent === 'star' ? 'planet' : 'moon', Parent: body.Parent, Values: {Name: body.Name}, Traits: {Orbit: body.Orbit, Body: {Radius: body.Radius, Day: body.Day, Tilt: body.Tilt || 0}, Surface: {Type: body.Kind}}};
+			/*
+			 * A body of a ground of its own (terran, ocean, desert): a globe of its seed (ScenePlanet: its continents, climate, rivers
+			 * and towns, made in the workers as it is seen), as much sea as its kind has.
+			 */
+			var ocean = {terran: 0.62, ocean: 0.9, desert: 0.06}[body.Kind];
+			var surface = ocean === undefined ? {Type: body.Kind} : {Type: body.Kind, Planet: {Seed: seed + ':' + body.ID, Ocean: ocean}};
+
+			return {ID: body.ID, Kind: body.Parent === 'star' ? 'planet' : 'moon', Parent: body.Parent, Values: {Name: body.Name}, Traits: {Orbit: body.Orbit, Body: {Radius: body.Radius, Day: body.Day, Tilt: body.Tilt || 0}, Surface: surface}};
 		});
 	},
 

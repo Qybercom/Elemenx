@@ -1,4 +1,4 @@
 {
-	"warp": {"Enter": 2.4, "Inside": 4, "Exit": 1.8, "Length": 600, "Tint": "#5a9cff"},
-	"jump": {"Enter": 0.7, "Inside": 1.1, "Exit": 1, "Length": 30, "Tint": "#ffb070"}
+	"warp": {"Enter": 2.4, "Exit": 1.8, "Tint": "#5a9cff", "Step": 3, "Steps": [30000, 300000, 3000000, 30000000, 300000000, 3000000000, 30000000000, 300000000000], "Ramp": 2, "Brake": 1.2, "Well": 0.15, "Capture": 50, "HyperWell": 0.0005, "HyperSpeed": 2, "HyperTint": "#b07cff"},
+	"jump": {"Enter": 0.7, "Exit": 1, "Length": 30, "Speed": 5, "Ramp": 0.3, "Brake": 0.4, "Tint": "#ffb070"}
 }

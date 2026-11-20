@@ -1,0 +1,101 @@
+{
+	"Types": {"rocky": "none", "moon": "none", "dwarf": "none", "lava": "none", "desert": "mars", "terran": "earth", "ocean": "earth", "ice": "europa", "gas": "jupiter", "ice-giant": "neptune"},
+	"Condensables": {
+		"water": {"A": 13.76, "B": 5130, "Critical": 647.1},
+		"ammonia": {"A": 11.72, "B": 2808, "Critical": 405.4},
+		"methane": {"A": 8.83, "B": 985, "Critical": 190.6},
+		"hydrogen sulphide": {"A": 10.58, "B": 2249, "Critical": 373.1}
+	},
+	"Habitats": [
+		{"Class": "giant", "Types": ["gas", "ice-giant"]},
+		{"Class": "frozen", "Pressure": [null, 0.001], "Kelvin": [null, 160], "Types": ["ice"]},
+		{"Class": "barren", "Pressure": [null, 0.001]},
+		{"Class": "scorched", "Kelvin": [330, null]},
+		{"Class": "hydrocarbon", "Kelvin": [null, 140], "Condensable": "methane"},
+		{"Class": "living", "Kelvin": [228, 330], "Pressure": [0.006, null], "Condensable": "water"},
+		{"Class": "dust", "Pressure": [null, 0.1]},
+		{"Class": "frozen"}
+	],
+	"Envelopes": {
+		"none": {"Zones": []},
+		"earth": {"Pressure": 1.01325, "Temperature": 288.15, "MolarMass": 0.028964, "Floor": -11, "Zones": [
+			{"Name": "thermosphere", "Phase": "gas", "Top": 600, "Lapse": -1.58},
+			{"Name": "mesosphere", "Phase": "gas", "Top": 86, "Lapse": 2.39},
+			{"Name": "stratosphere", "Phase": "gas", "Top": 51, "Lapse": -1.35, "Opacity": 0.0005},
+			{"Name": "troposphere", "Phase": "gas", "Top": 11, "Lapse": 6.5, "Opacity": 0.02, "Color": "#7fb2ff"},
+			{"Name": "ocean", "Phase": "liquid", "Top": 0, "Lapse": -2.5, "Density": 1025, "Opacity": 25, "Color": "#0a3a6a"}
+		], "Condensables": [
+			{"Name": "clouds of water", "Of": "water", "Mix": 0.01, "Thick": 6, "Color": "#ffffff"}
+		]},
+		"mars": {"Pressure": 0.00636, "Temperature": 210, "MolarMass": 0.04334, "Floor": -8, "Zones": [
+			{"Name": "upper", "Phase": "gas", "Top": 250, "Lapse": 0},
+			{"Name": "dust", "Phase": "haze", "Top": 40, "Lapse": 2.5, "Opacity": 0.012, "Color": "#d8a070"}
+		], "Condensables": [
+			{"Name": "clouds of water ice", "Of": "water", "Mix": 0.0002, "Thick": 5, "Opacity": 0.002, "Color": "#e8eef4"}
+		]},
+		"venus": {"Pressure": 92, "Temperature": 737, "MolarMass": 0.04345, "Floor": -3, "Zones": [
+			{"Name": "upper", "Phase": "gas", "Top": 250, "Lapse": 0, "Opacity": 0.0005},
+			{"Name": "haze", "Phase": "haze", "Top": 90, "Lapse": 2, "Opacity": 0.01, "Color": "#e8d8a8"},
+			{"Name": "middle", "Phase": "gas", "Top": 70, "Lapse": 5.45, "Color": "#f0e2b0"},
+			{"Name": "lower haze", "Phase": "haze", "Top": 48, "Lapse": 7.7, "Opacity": 0.02, "Color": "#e0b070"},
+			{"Name": "troposphere", "Phase": "gas", "Top": 31, "Lapse": 7.7, "Opacity": 0.005, "Color": "#d89050"}
+		], "Condensables": [
+			{"Name": "clouds of sulphuric acid", "Base": 1.3, "Top": 0.035, "Opacity": 0.13, "Color": "#f0e2b0"}
+		]},
+		"titan": {"Pressure": 1.467, "Temperature": 93.7, "MolarMass": 0.0279, "Floor": -1, "Zones": [
+			{"Name": "upper haze", "Phase": "haze", "Top": 600, "Lapse": 0, "Opacity": 0.002, "Color": "#c89040"},
+			{"Name": "haze", "Phase": "haze", "Top": 200, "Lapse": -0.7, "Opacity": 0.008, "Color": "#d09848"},
+			{"Name": "troposphere", "Phase": "gas", "Top": 44, "Lapse": 0.54, "Opacity": 0.0025, "Color": "#c88a40"}
+		], "Condensables": [
+			{"Name": "clouds of methane", "Of": "methane", "Mix": 0.05, "Thick": 10, "Opacity": 0.006, "Color": "#e8d0a0"}
+		]},
+		"jupiter": {"Pressure": 1, "Temperature": 165, "MolarMass": 0.00228, "Core": 0.15, "Zones": [
+			{"Name": "upper", "Phase": "gas", "Top": 1000, "Lapse": -0.94, "Opacity": 0.0001},
+			{"Name": "haze", "Phase": "haze", "Top": 50, "Lapse": 0.67, "Opacity": 0.003, "Color": "#e8dcc8"},
+			{"Name": "troposphere", "Phase": "gas", "Top": 20, "Lapse": 1.9, "Opacity": 0.002, "Color": "#c8a880"},
+			{"Name": "deep gas", "Phase": "gas", "Top": -100, "Lapse": 2, "Opacity": 0.02, "Color": "#5a3a28"},
+			{"Name": "hot fluid", "Phase": "supercritical", "Top": -1000, "Lapse": 0.4, "Density": 500, "Opacity": 0.5, "Color": "#ff6020"},
+			{"Name": "metallic hydrogen", "Phase": "liquid", "Deep": 0.2, "Lapse": 0.256, "Density": 2000, "Opacity": 2, "Color": "#fff4e0"}
+		], "Condensables": [
+			{"Name": "clouds of ammonia", "Of": "ammonia", "Mix": 0.00026, "Thick": 20, "Opacity": 0.06, "Color": "#f2e8d8"},
+			{"Name": "clouds of ammonium hydrosulphide", "Base": 2.2, "Top": 1.4, "Opacity": 0.05, "Color": "#b07a4a"},
+			{"Name": "clouds of water", "Of": "water", "Mix": 0.0025, "Thick": 40, "Opacity": 0.06, "Color": "#c8c8d0"}
+		]},
+		"saturn": {"Pressure": 1, "Temperature": 134, "MolarMass": 0.0022, "Core": 0.2, "Zones": [
+			{"Name": "upper", "Phase": "gas", "Top": 1000, "Lapse": -0.4, "Opacity": 0.0001},
+			{"Name": "haze", "Phase": "haze", "Top": 60, "Lapse": 0.3, "Opacity": 0.004, "Color": "#ecdcb4"},
+			{"Name": "troposphere", "Phase": "gas", "Top": 30, "Lapse": 0.85, "Opacity": 0.002, "Color": "#d8c08e"},
+			{"Name": "deep gas", "Phase": "gas", "Top": -200, "Lapse": 0.85, "Opacity": 0.01, "Color": "#5a4430"},
+			{"Name": "hot fluid", "Phase": "supercritical", "Top": -2000, "Lapse": 0.3, "Density": 400, "Opacity": 0.4, "Color": "#ff6020"},
+			{"Name": "metallic hydrogen", "Phase": "liquid", "Deep": 0.3, "Lapse": 0.2, "Density": 1500, "Opacity": 2, "Color": "#fff4e0"}
+		], "Condensables": [
+			{"Name": "clouds of ammonia", "Of": "ammonia", "Mix": 0.0003, "Thick": 30, "Opacity": 0.04, "Color": "#f0e4c4"},
+			{"Name": "clouds of ammonium hydrosulphide", "Base": 4.5, "Top": 3, "Opacity": 0.03, "Color": "#c8a46a"},
+			{"Name": "clouds of water", "Of": "water", "Mix": 0.003, "Thick": 60, "Opacity": 0.035, "Color": "#c8c8d0"}
+		]},
+		"uranus": {"Pressure": 1, "Temperature": 76, "MolarMass": 0.0026, "Core": 0.25, "Zones": [
+			{"Name": "upper", "Phase": "gas", "Top": 1000, "Lapse": -0.5, "Opacity": 0.0001},
+			{"Name": "haze", "Phase": "haze", "Top": 50, "Lapse": 0.2, "Opacity": 0.003, "Color": "#bfe8ee"},
+			{"Name": "troposphere", "Phase": "gas", "Top": 20, "Lapse": 0.8, "Opacity": 0.002, "Color": "#9ad8e4"},
+			{"Name": "deep gas", "Phase": "gas", "Top": -60, "Lapse": 0.8, "Opacity": 0.02, "Color": "#305860"},
+			{"Name": "mantle of ices", "Phase": "supercritical", "Deep": 0.15, "Lapse": 0.2, "Density": 1500, "Opacity": 1, "Color": "#ff8030"}
+		], "Condensables": [
+			{"Name": "clouds of methane", "Of": "methane", "Mix": 0.023, "Thick": 15, "Opacity": 0.05, "Color": "#d8f0f4"},
+			{"Name": "clouds of hydrogen sulphide", "Of": "hydrogen sulphide", "Mix": 0.001, "Thick": 20, "Opacity": 0.04, "Color": "#9ad8e4"}
+		]},
+		"neptune": {"Pressure": 1, "Temperature": 72, "MolarMass": 0.0026, "Core": 0.25, "Zones": [
+			{"Name": "upper", "Phase": "gas", "Top": 1000, "Lapse": -0.5, "Opacity": 0.0001},
+			{"Name": "haze", "Phase": "haze", "Top": 50, "Lapse": 0.2, "Opacity": 0.003, "Color": "#9ac0f0"},
+			{"Name": "troposphere", "Phase": "gas", "Top": 20, "Lapse": 0.9, "Opacity": 0.002, "Color": "#6a8ae0"},
+			{"Name": "deep gas", "Phase": "gas", "Top": -60, "Lapse": 0.9, "Opacity": 0.02, "Color": "#203060"},
+			{"Name": "mantle of ices", "Phase": "supercritical", "Deep": 0.15, "Lapse": 0.22, "Density": 1600, "Opacity": 1, "Color": "#ff8030"}
+		], "Condensables": [
+			{"Name": "clouds of methane", "Of": "methane", "Mix": 0.04, "Thick": 15, "Opacity": 0.05, "Color": "#e0ecff"},
+			{"Name": "clouds of hydrogen sulphide", "Of": "hydrogen sulphide", "Mix": 0.001, "Thick": 20, "Opacity": 0.04, "Color": "#6a8ae0"}
+		]},
+		"europa": {"Pressure": 0, "Temperature": 102, "MolarMass": 0.032, "Floor": -120, "Zones": [
+			{"Name": "shell of ice", "Phase": "solid", "Top": 0, "Lapse": 8, "Density": 920, "Opacity": 0.5, "Color": "#d8e8f0"},
+			{"Name": "ocean under the ice", "Phase": "liquid", "Top": -20, "Lapse": 0.02, "Density": 1030, "Opacity": 25, "Color": "#0a2a4a"}
+		]}
+	}
+}

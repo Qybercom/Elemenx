@@ -35,7 +35,8 @@
  *   [{ID, Parent, Pivot, Team, Geometry}]}. Remake(name) has it made again on the next Make, under a Key of its own (what
  *   cut its pieces, the roles of its parts, changed).
  * - Whole(model) is a model as one geometry, Bounds(geometry) its {Radius, Middle} and Levels(name, {Variant}) its
- *   geometries from the finest down: for what is sown in masses and seen from afar.
+ *   geometries from the finest down: for what is sown in masses and seen from afar. Extent(name): how large it stands,
+ *   [x, y, z] in its units, once ready (a craft is drawn as long as its Length of its longest side).
  * - Pose(model, clip, time, {From, FromTime, Fade}) returns the matrix of each piece at a second of a clip, in the space
  *   of the model; Fade (0 to 1) mixes it from the pose of the clip From. Length(model, clip) is the seconds of a clip.
  * A clip is {Length, Loop, Hold, Stride, Tracks: {piece: [[time 0 to 1, rx, ry, rz, mx, my, mz]...]}, Spins: {piece:
@@ -52,7 +53,7 @@
 Elemenx.Service('SceneModels', {
 	$Meta: {
 		Description: 'The models of a game made of graphs and code: units, animals, plants, buildings and ships of pieces that move, fantasy and sci-fi, and their clips.',
-		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Remake(name)', 'Edits(name)', 'SetEdits(name, edits)', 'Edit(name, edit)', 'PieceList(name)', 'Extract(name, ids, newName)', 'Combine(newName, parts, options)', 'Assemble(recipe, tools, random, variant)', 'Tagged(name, tag)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Make(name, options)', 'Surfaces(model)', 'Whole(model)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)', 'KindOf(type)']
+		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Remake(name)', 'Edits(name)', 'SetEdits(name, edits)', 'Edit(name, edit)', 'PieceList(name)', 'Extract(name, ids, newName)', 'Combine(newName, parts, options)', 'Assemble(recipe, tools, random, variant)', 'Tagged(name, tag)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Make(name, options)', 'Surfaces(model)', 'Whole(model)', 'Extent(name)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)', 'KindOf(type)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['model']}},
@@ -878,6 +879,37 @@ Elemenx.Service('SceneModels', {
 		return meshes.Merge(model.Pieces.map(function (piece) {
 			return piece.Rest ? {Geometry: piece.Placed || piece.Geometry, Matrix: piece.Rest} : {Geometry: piece.Geometry};
 		}));
+	},
+
+	/*
+	 * How large a model is standing still, [x, y, z] in its units (a model of a file fitted as it is drawn), once it is
+	 * ready; null before. Made once a model (and again when it is made again: Remake). A craft as long as its Length is
+	 * drawn of it (Scene: Length over its longest side).
+	 */
+	Extent: function (name) {
+		var recipe = this.Recipes[name];
+		var revision = this.Revisions ? this.Revisions[name] || 0 : 0;
+		var positions;
+		var low = [Infinity, Infinity, Infinity];
+		var high = [-Infinity, -Infinity, -Infinity];
+		var i;
+		var axis;
+
+		if (!recipe || !this.Ready(name)) return null;
+
+		if (recipe.Extent && recipe.Extent.Revision === revision) return recipe.Extent.Size.slice();
+
+		positions = this.Whole(this.Make(name)).Positions;
+
+		for (i = 0; i < positions.length; i += 3)
+			for (axis = 0; axis < 3; axis++) {
+				low[axis] = Math.min(low[axis], positions[i + axis]);
+				high[axis] = Math.max(high[axis], positions[i + axis]);
+			}
+
+		recipe.Extent = {Revision: revision, Size: positions.length ? [high[0] - low[0], high[1] - low[1], high[2] - low[2]] : [1, 1, 1]};
+
+		return recipe.Extent.Size.slice();
 	},
 
 	/* A model of a file standing still, one geometry for each material: for what is sown near the eye. */

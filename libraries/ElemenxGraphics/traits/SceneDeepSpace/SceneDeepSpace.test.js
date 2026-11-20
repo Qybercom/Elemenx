@@ -293,7 +293,8 @@ describe('Contract: the deep space of a Scene: black holes, wormholes, comets, q
 		expect(inner.Objects.pulsar.Size).toBeLessThan(inner.Objects['white-dwarf'].Size);
 
 		/* Regression: an orange giant burned out white as the Sun does; a brown dwarf is banded, dim and maroon. */
-		expect(scene.Shaders(Elemenx.Service('Renderer')).Star).toContain('mix(2.4, 1.1, clamp(warm * 1.5, 0.0, 1.0))');
+		/* Of the star graph of the library in the Star shader (its SunBurn). */
+		expect(scene.Globed(scene.Shaders(Elemenx.Service('Renderer'))).Star).toMatch(/mix\(2\.4, 1\.1, clamp\(\w+warm \* 1\.5, 0\.0, 1\.0\)\)/);
 		expect(scene.Shaders(Elemenx.Service('Renderer')).Star).toContain('uniform float uBands;');
 
 		/* The magnetic axis of a pulsar turns round with it. */

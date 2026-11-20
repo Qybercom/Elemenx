@@ -32,7 +32,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `CaseName` | the own key of an object that is a key in another case (a lower-case attribute of a template for a prop), or `null` when none or several are (of a value and a method of the same letters, the value); its names are kept by their lower case for each object (read again when its count of keys changes) | Template and Component, Structural |
 | `Assign` | copies the own enumerable properties of a source into a target and returns the target | Template and Component, Router, SSR, Structural, Storage, WebWorker, ServiceWorker |
 | `Report` | reports an exception as an uncaught error at once, like the DOM does for event listeners (`reportError`; without it, rethrown from a timer) | Application, Install, Locale, Router, SSR, Widgets |
-| `Notify` | calls one event listener in isolation: its exception is reported and the dispatch continues | Template and Component, Router, Network, Events, Messaging, Identity, Hardware |
+| `Notify` | calls one event listener in isolation: its exception is reported and the dispatch continues | Template and Component, Router, Network, Events, Messaging, Identity, Hardware, Ether |
 | `Invoke` | calls a callback `(error, value)` from a promise handler; an exception thrown by the callback is reported instead of being swallowed | Network, ServiceWorker |
 
 ## Outlet
@@ -215,6 +215,13 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 |---|---|---|
 | `HardwareFor` | owner-aware `$Hardware` facade (Serial, USB, Firmware) | Owner resources, Application |
 | `DestroyHardwareOwner` | closes the ports and devices an owner opened and forgets its listeners | Owner resources |
+
+## Ether
+
+| Field | Purpose | Used by |
+|---|---|---|
+| `EtherFor` | owner-aware `$Ether` facade (slices, Touch, Set, Version, On, Off, Mirror) | Owner resources, Application |
+| `DestroyEtherOwner` | forgets what an owner hears of the Ether and hears nothing more for it | Owner resources |
 
 ## Events
 

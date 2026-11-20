@@ -1,0 +1,58 @@
+{
+	"Order": 19,
+	"Climate": {
+		"Height": [
+			null,
+			0.4
+		]
+	},
+	"Ground": {
+		"Low": [
+			0.32,
+			0.32,
+			0.31
+		],
+		"High": [
+			0.36,
+			0.36,
+			0.35
+		],
+		"Sand": [
+			0.42,
+			0.41,
+			0.4
+		],
+		"Rock": [
+			0.26,
+			0.26,
+			0.26
+		],
+		"Snow": [
+			0.5,
+			0.5,
+			0.49
+		],
+		"Road": [
+			0.36,
+			0.36,
+			0.35
+		],
+		"Materials": {
+			"Low": "gravel",
+			"High": "gravel",
+			"Sand": "gravel",
+			"Snow": "rock"
+		}
+	},
+	"Scatter": [
+		{
+			"Shapes": [
+				"rock",
+				"boulder"
+			],
+			"Density": 0.25,
+			"MaxSlope": 0.9
+		}
+	],
+	"Grass": null
+}

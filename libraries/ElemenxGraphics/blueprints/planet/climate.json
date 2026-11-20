@@ -188,7 +188,7 @@
 			"properties": [
 				{
 					"key": "Expression",
-					"value": "0.52 + 0.3 * cos(Band / 28 * 3.141592653589793) * (Band < 70 ? 1 : 0.5) - (Band > 70 ? 0.2 : 0)"
+					"value": "0.52 + 0.3 * cos(Band * 3 / (Cells > 0.5 ? Cells : 3) / 28 * 3.141592653589793) * (Band < 70 ? 1 : 0.5) - (Band > 70 ? 0.2 : 0)"
 				}
 			]
 		},
@@ -212,7 +212,7 @@
 			"properties": [
 				{
 					"key": "Expression",
-					"value": "29 - 52 * pow(abs(sin(Latitude)), 1.25) - max(0, Height) * 0.0065 + (N - 0.5) * 6 + PaintTemperature"
+					"value": "Warm + 15 + (14 - 52 * pow(abs(sin(Latitude)), 1.25) + (N - 0.5) * 6) * (Contrast > 0 ? Contrast : 1) - max(0, Height) * (Lapse > 0 ? Lapse : 6.5) / 1000 + PaintTemperature"
 				}
 			]
 		},
@@ -309,6 +309,54 @@
 				{
 					"key": "Key",
 					"value": "Moisture"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-input-warm",
+			"type": "Input",
+			"x": 0,
+			"y": 2200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Warm"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-input-contrast",
+			"type": "Input",
+			"x": 0,
+			"y": 2310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Contrast"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-input-lapse",
+			"type": "Input",
+			"x": 0,
+			"y": 2420,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Lapse"
+				}
+			]
+		},
+		{
+			"id": "planet-climate-input-cells",
+			"type": "Input",
+			"x": 0,
+			"y": 2530,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Cells"
 				}
 			]
 		}
@@ -438,6 +486,30 @@
 			"id": "planet-climate-link-20",
 			"p1": "planet-climate-formula-13-out-Value",
 			"p2": "planet-climate-result-16-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-warm-8",
+			"p1": "planet-climate-input-warm-out-Value",
+			"p2": "planet-climate-formula-8-in-Warm",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-contrast-8",
+			"p1": "planet-climate-input-contrast-out-Value",
+			"p2": "planet-climate-formula-8-in-Contrast",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-lapse-8",
+			"p1": "planet-climate-input-lapse-out-Value",
+			"p2": "planet-climate-formula-8-in-Lapse",
+			"kind": "value"
+		},
+		{
+			"id": "planet-climate-link-cells-6",
+			"p1": "planet-climate-input-cells-out-Value",
+			"p2": "planet-climate-formula-6-in-Cells",
 			"kind": "value"
 		}
 	]

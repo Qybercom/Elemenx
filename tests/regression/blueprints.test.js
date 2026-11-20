@@ -993,7 +993,7 @@ describe('Contract: the graphs of the Libraries as resources, made for their opt
 	it('reads the lands of their resources, in their order', function () {
 		var biomes = Elemenx.Service('SceneBiomes');
 
-		expect(biomes.Names()).toEqual(['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'alien', 'rainforest', 'semidesert', 'steppe']);
+		expect(biomes.Names()).toEqual(['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'alien', 'rainforest', 'semidesert', 'steppe', 'scorched-plains', 'scorched-highlands', 'hydrocarbon-dunes', 'hydrocarbon-shores', 'dust-plains', 'dust-highlands', 'frozen-plains', 'frozen-ridges', 'barren-maria', 'barren-highlands']);
 		expect(biomes.Get('taiga').Ground.Materials).toEqual({Low: 'soil', Sand: 'gravel'});
 		expect(biomes.Get('taiga').Order).toBe(undefined);
 	});

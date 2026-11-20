@@ -821,7 +821,8 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		engine.Frame(now += 100, true);
 
-		expect(inner.Objects.me.Size / metre).toBeCloseTo(22, 6);
+		/* As long as its Length drawn: its Size of the longest extent of its model (engine.CraftScale). */
+		expect(inner.Objects.me.Size * engine.CraftScale(inner.Objects.me) / metre).toBeCloseTo(22, 6);
 
 		inner.Objects.me.Ship.Throttle = 1;
 
@@ -906,6 +907,448 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		gl.readPixels(Math.round(spot.X * renderer.Ratio), Math.round(renderer.Height - spot.Y * renderer.Ratio), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data);
 
 		expect(data[0] + data[1] + data[2]).toBeGreaterThan(600);
+	});
+
+	/*
+	 * Regression: in space the light of a star did not fall with the distance (a ship at Neptune as lit as at the Earth),
+	 * while a body lit its ground of its own. Now both of one measure: the luminosity over the square of the way, as an eye
+	 * taken to it sees it.
+	 */
+	/*
+	 * What is round an object (Probe): of the envelope of the body it is by (Envelope: the air of the Earth, the depths of a
+	 * giant), into a slice of the Ether each frame, the same object; the top of the air of the Earth where landing had it.
+	 */
+	it('writes what is round an object into the Ether each frame, of the envelope of the body it is by', async function () {
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Mass="1">' +
+				'<SceneObject ID="earth" Kind="planet" Surface-Type="terran" Radius="6371" Mass="1" Distance="1">' +
+					'<SceneObject ID="station" Kind="craft" Distance="1.05" Period="90" />' +
+				'</SceneObject>' +
+				'<SceneObject ID="jupiter" Kind="planet" Surface-Type="gas" Radius="69911" Mass="317.8" Distance="5.2">' +
+					'<SceneObject ID="diver" Kind="craft" Distance="0.99" Period="90" />' +
+				'</SceneObject>' +
+			'</SceneObject>' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var station = scene.Probe('station');
+		var diver = scene.Probe('diver', 'deep');
+		var heard = [];
+
+		scene.$Ether.On('environment', 'station', function (data) {
+			heard.push(data.station.Zone);
+		});
+
+		engine.Frame(now += 100, true);
+
+		expect(Elemenx.Ether('environment').station).toBe(station);
+		expect(scene.Environment('station')).toBe(station);
+		expect(station).toMatchObject({Body: 'earth', Zone: 'thermosphere', Phase: 'gas', Inside: true, Solid: false});
+		expect(station.Altitude).toBeCloseTo(318.55, 0);
+		expect(station.Pressure).toBeLessThan(1e-8);
+		expect(Elemenx.Ether('deep').diver).toBe(diver);
+		expect(diver.Body).toBe('jupiter');
+		expect(diver.Altitude).toBeCloseTo(-699.11, 0);
+		expect(diver.Zone).toBe('deep gas');
+		expect(diver.Temperature).toBeGreaterThan(1500);
+		expect(diver.Light).toBeLessThan(0.001);
+		expect(diver.Density).toBeGreaterThan(1);
+		expect(engine.EnvelopeOf(scene.Scene().Objects.earth).Top).toBeCloseTo(120, 0);
+
+		await waitFor(function () {
+			return heard.length > 0;
+		}, 2000);
+
+		expect(heard[0]).toBe('thermosphere');
+
+		scene.Unprobe('station');
+
+		expect(scene.Environment('station')).toBeNull();
+	});
+
+	/*
+	 * The air round an eye over a body, of its envelope (airAround), and the kind of world its ground is (habitatOf): on the
+	 * Earth nothing taken, its sky as high as it was (its height over the sky of the Earth), its clouds 3 to 9 km, the lands
+	 * of the Earth; under the air of Venus little light, from all the sky, an overcast of its acid at 50 to 70 km, scorched
+	 * lands; Titan of hydrocarbons, Mars of dust, the Moon barren, Europa frozen. Regression: the air of the ground of every
+	 * body was the one of the Earth: Venus a sunny day of grass, its stars in the sky at 33 bar.
+	 */
+	it('takes the air round an eye and the lands of a ground of the envelope of a body, the Earth as it was', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Mass="1">' +
+				'<SceneObject ID="earth" Kind="planet" Surface-Type="terran" Radius="6371" Mass="1" Distance="1" Day="23.93" />' +
+				'<SceneObject ID="venus" Kind="planet" Surface-Type="desert" Surface-Envelope="venus" Surface-Atmosphere="#e8d8a8" Radius="6052" Mass="0.815" Distance="0.72" />' +
+				'<SceneObject ID="titan" Kind="planet" Surface-Type="ice" Surface-Envelope="titan" Radius="2575" Mass="0.0225" Distance="9.5" />' +
+				'<SceneObject ID="mars" Kind="planet" Surface-Type="desert" Radius="3390" Mass="0.107" Distance="1.52" />' +
+				'<SceneObject ID="moon" Kind="planet" Surface-Type="moon" Radius="1737" Mass="0.0123" Distance="1.1" />' +
+				'<SceneObject ID="europa" Kind="planet" Surface-Type="ice" Radius="1561" Mass="0.008" Distance="5.2" />' +
+				'<SceneObject ID="jupiter" Kind="planet" Surface-Type="gas" Radius="69911" Mass="317.8" Distance="5.2" />' +
+			'</SceneObject>' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var engine = scene.Engine();
+
+		scene.Change('venus', {Traits: {Surface: {Type: 'desert', Envelope: 'venus', Atmosphere: '#e8d8a8'}}});
+		scene.Change('titan', {Traits: {Surface: {Type: 'ice', Envelope: 'titan'}}});
+
+		engine.Frame(performance.now() + 1000, true);
+
+		var objects = scene.Scene().Objects;
+		var made = engine.EnvelopeOf(objects.earth);
+
+		[0, 2, 15, 60].forEach(function (height) {
+			var air = engine.AirAround(objects.earth, height);
+
+			expect(air.Dim).toBe(1);
+			expect(air.Tint).toEqual([1, 1, 1]);
+			expect(air.Diffuse).toBe(0);
+			expect(air.Cover).toBe(0);
+			expect(air.High).toBeCloseTo(Math.min(1, height / made.Sky), 3);
+		});
+
+		expect(engine.AirAround(objects.earth, 0).Layer[0]).toBeCloseTo(3, 9);
+		expect(engine.AirAround(objects.earth, 0).Layer[1]).toBeCloseTo(9, 9);
+
+		var venus = engine.AirAround(objects.venus, 0);
+
+		expect(venus.Dim).toBeLessThan(0.4);
+		expect(venus.Diffuse).toBeGreaterThan(0.9);
+		expect(venus.Cover).toBeGreaterThan(0.9);
+		expect(venus.High).toBe(0);
+		expect(venus.Layer[0]).toBeGreaterThan(45);
+		expect(venus.Layer[1]).toBeLessThan(80);
+		expect(venus.Tint[2]).toBeLessThan(venus.Tint[0]);
+		expect(engine.AirAround(objects.moon, 0)).toMatchObject({Dim: 1, High: 1, Cover: 0, Layer: null});
+
+		expect(['earth', 'venus', 'titan', 'mars', 'moon', 'europa', 'jupiter'].map(function (id) {
+			return engine.HabitatOf(objects[id]).Class;
+		})).toEqual(['living', 'scorched', 'hydrocarbon', 'dust', 'barren', 'frozen', 'giant']);
+		expect(engine.HabitatOf(objects.earth).Biomes).toBeNull();
+		expect(engine.HabitatOf(objects.venus).Biomes).toEqual(['scorched-plains', 'scorched-highlands']);
+
+		/* Its lands have none of grass or woods. */
+		engine.HabitatOf(objects.venus).Biomes.concat(engine.HabitatOf(objects.titan).Biomes).forEach(function (name) {
+			var land = Elemenx.Service('SceneBiomes').Get(name);
+
+			expect(land.Grass).toBeNull();
+			expect(land.Scatter.every(function (rule) {
+				return rule.Shapes.every(function (shape) {
+					return /rock|boulder/.test(shape);
+				});
+			})).toBe(true);
+		});
+	});
+
+	/*
+	 * Inside a giant (SceneGiants): a ship stops only at its core (all over it is its air), the eye under the top of its decks
+	 * sees the deck it is in, lightning in the deck of water, its stars dimmed as their light gets there and the glow of its
+	 * depth from below; from the seat of a ship (Person first) the hull is not drawn and drops show on the glass.
+	 */
+	it('lets a ship into a giant down to its core, sees its decks, its dark and its glow, and its drops from the seat', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Mass="1">' +
+				'<SceneObject ID="earth" Kind="planet" Surface-Type="terran" Radius="6371" Mass="1" Distance="1" />' +
+				'<SceneObject ID="jupiter" Kind="planet" Surface-Type="gas" Radius="69911" Mass="317.8" Distance="5.2" />' +
+			'</SceneObject>' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var jupiter = inner.Objects.jupiter;
+		var earth = inner.Objects.earth;
+		var vectors = Elemenx.Service('Math').Vectors;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33, true);
+			}
+		}
+
+		/* The eye at a height (km) over its 1 bar, on the side of its sun. */
+		function eyeAt (height) {
+			var up = vectors.Normalize(vectors.Subtract(inner.Objects.sun.World, jupiter.World));
+
+			inner.Eye = vectors.Add(jupiter.World, vectors.Scale(up, jupiter.Size * (1 + height / jupiter.Radius)));
+
+			return engine.GiantNow();
+		}
+
+		frames(2);
+
+		/* Its core, of its envelope (Core 0.15): there a ship stops; a body of rock at its surface. */
+		expect(engine.SolidOf(jupiter)).toBeCloseTo(jupiter.Size * 0.15, 6);
+		expect(engine.SolidOf(earth)).toBeCloseTo(earth.Size * 1.01, 6);
+
+		expect(eyeAt(5000)).toBeNull();
+		expect(eyeAt(30)).toMatchObject({Body: jupiter, Fade: 1, Lightning: false});
+		expect(engine.Giant.State.Zone).toBe('clouds of ammonia');
+		expect(engine.Giant.Seen).toBeGreaterThan(0.7);
+
+		expect(eyeAt(-40).Lightning).toBe(true);
+		expect(engine.Giant.State.Zone).toBe('clouds of water');
+
+		/* Deep: no light of its sun gets there, the glow of its heat a light from its middle, red more than blue. */
+		var deep = eyeAt(-3000);
+		var positions = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+		var colors = [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+		var count = engine.GiantLight(positions, colors, 1);
+
+		expect(deep.State.Phase).toBe('supercritical');
+		expect(count).toBe(2);
+		expect(colors[0]).toBeLessThan(0.01);
+		expect(colors[3]).toBeGreaterThan(colors[5]);
+		expect(vectors.Normalize(positions.slice(3, 6))[0]).toBeCloseTo(vectors.Normalize(vectors.Subtract(jupiter.World, inner.Eye))[0], 5);
+
+		/* Its shader is whole: the air round the eye and the drops on the glass. */
+		var gl = document.createElement('canvas').getContext('webgl2');
+		var shaders = scene.GiantsShaders('#version 300 es\nprecision highp float;\n', Elemenx.Service('Renderer'));
+
+		[[gl.VERTEX_SHADER, shaders.Vertex], [gl.FRAGMENT_SHADER, shaders.Inside]].forEach(function (pair) {
+			var shader = gl.createShader(pair[0]);
+
+			gl.shaderSource(shader, pair[1]);
+			gl.compileShader(shader);
+
+			expect(gl.getShaderInfoLog(shader) || '').toBe('');
+			expect(gl.getShaderParameter(shader, gl.COMPILE_STATUS)).toBe(true);
+		});
+
+		/* A ship in it, half way down: it is not pushed out; from its seat the eye is at its nose and the view is inside it. */
+		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'jupiter', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'jupiter', From: [0, 0, 0.5], Facing: [1, 0, 0]}});
+		scene.Control('me');
+
+		scene.Person = 'first';
+
+		frames(12);
+
+		var ship = inner.Objects.me;
+
+		expect(vectors.Distance(ship.World, jupiter.World)).toBeLessThan(jupiter.Size * 0.6);
+		expect(vectors.Distance(ship.World, jupiter.World)).toBeGreaterThan(jupiter.Size * 0.4);
+		expect(inner.Inside).toBeGreaterThan(0.5);
+		expect(vectors.Distance(inner.Camera.Position, ship.World)).toBeLessThan(ship.Size);
+		expect(engine.GiantNow().Body).toBe(jupiter);
+	});
+
+	/*
+	 * In real sizes a ship goes as fast as it is high (or deep) over the body nearest to it. Regression: out of a warp to a
+	 * giant the ship still flew round the Earth, and went into the giant as fast as so far from the Earth.
+	 */
+	it('takes how fast a ship goes of the body nearest to it, deep in a giant as high over it', async function () {
+		var mounted = await mount('<Scene Scale="real" Paused="true" Quality="low" Background="false" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Mass="1">' +
+				'<SceneObject ID="earth" Kind="planet" Surface-Type="terran" Radius="6371" Mass="1" Distance="1" />' +
+				'<SceneObject ID="jupiter" Kind="planet" Surface-Type="gas" Radius="69911" Mass="317.8" Distance="5.2" />' +
+			'</SceneObject>' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var vectors = Elemenx.Service('Math').Vectors;
+		var now = performance.now() + 1000;
+		var earth = inner.Objects.earth;
+		var jupiter = inner.Objects.jupiter;
+
+		engine.Frame(now += 33, true);
+
+		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'earth', Vehicle: {Kind: 'ship', Speed: 3000, Around: 'earth', From: [0, 0, 3], Facing: [1, 0, 0]}});
+		scene.Control('me');
+
+		engine.Frame(now += 33, true);
+
+		var ship = inner.Objects.me;
+		var up = vectors.Normalize(vectors.Subtract(inner.Objects.sun.World, jupiter.World));
+
+		/* At a height over the giant (km, below 0 in it), in the frame of the Earth it flies round. */
+		function at (height) {
+			ship.Ship.At = vectors.Subtract(vectors.Add(jupiter.World, vectors.Scale(up, jupiter.Size * (1 + height / jupiter.Radius))), earth.World);
+
+			return engine.ShipTop(ship) / engine.Metre();
+		}
+
+		expect(at(100)).toBeLessThan(200000);
+		expect(at(-100)).toBeCloseTo(at(100), 0);
+		expect(at(-60000)).toBeGreaterThan(2.9e6);
+	});
+
+	/*
+	 * Near a giant (inside the shell of its air, 3000 km over its tops): its edge is drawn where its ball is (exact, not on the
+	 * flat faces of its mesh), its air glows all along over it. Regression: from inside its shell whole triangles of the shell
+	 * went black over the stars and over its edge.
+	 */
+	it('draws the edge of a giant near round and its air over it whole, from inside the shell of its air', async function () {
+		var mounted = await mount('<Scene Scale="real" Paused="true" Quality="low" Background="false" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Mass="1">' +
+				'<SceneObject ID="jupiter" Kind="planet" Surface-Type="gas" Radius="69911" Mass="317.8" Distance="5.2" />' +
+			'</SceneObject>' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var renderer = engine.Renderer;
+		var gl = renderer.GL;
+		var vectors = Elemenx.Service('Math').Vectors;
+		var now = performance.now() + 1000;
+		var data = new Uint8Array(4);
+		var jupiter = inner.Objects.jupiter;
+		var height = 3000;
+
+		engine.Frame(now += 100, true);
+
+		/* Over its day side, looking along its edge (down by as much as the edge lies under the level of the eye). */
+		var up = vectors.Normalize(vectors.Subtract(inner.Objects.sun.World, jupiter.World));
+		var side = vectors.Normalize(vectors.Cross([0, 1, 0], up));
+		var dip = Math.acos(jupiter.Radius / (jupiter.Radius + height));
+		var facing = vectors.Normalize(vectors.Subtract(vectors.Scale(side, Math.cos(dip)), vectors.Scale(up, Math.sin(dip))));
+
+		scene.Add('ship', {ID: 'me', Name: '', Parent: 'jupiter', Vehicle: {Kind: 'ship', Length: 22, Around: 'jupiter', From: vectors.Scale(up, 1 + height / jupiter.Radius), Facing: facing}});
+		scene.Control('me');
+
+		function frame () {
+			inner.Looping = true;
+
+			engine.Frame(now += 100);
+
+			inner.Looping = false;
+		}
+
+		frame();
+
+		inner.Pitch = 0;
+		inner.Yaw = 0;
+
+		expect(await waitFor(function () {
+			frame();
+
+			return renderer.Progress().Needed === 0 && !!jupiter.Look;
+		}, 60000)).toBe(true);
+
+		frame();
+		frame();
+
+		var middle = jupiter.World;
+		var aside = vectors.Cross(up, side);
+		var over = [];
+		var on = [];
+
+		/* Along its edge round the way the eye looks: a point 1500 km over it (its air), a point on it just short of it. */
+		for (var a = -0.3; a <= 0.3; a += 0.03) {
+			var round = vectors.Normalize(vectors.Add(vectors.Scale(side, Math.cos(a)), vectors.Scale(aside, Math.sin(a))));
+			var limb = vectors.Add(vectors.Scale(up, Math.cos(dip)), vectors.Scale(round, Math.sin(dip)));
+			var near = vectors.Add(vectors.Scale(up, Math.cos(dip - 0.004)), vectors.Scale(round, Math.sin(dip - 0.004)));
+			var high = engine.Project(vectors.Add(middle, vectors.Scale(limb, jupiter.Size * (1 + 1500 / jupiter.Radius))));
+			var low = engine.Project(vectors.Add(middle, vectors.Scale(near, jupiter.Size)));
+
+			[[high, over], [low, on]].forEach(function (pair) {
+				if (!pair[0].Visible || pair[0].X < 2 || pair[0].Y < 2 || pair[0].X > inner.Width - 2 || pair[0].Y > inner.Height - 2) return;
+
+				gl.readPixels(Math.round(pair[0].X * renderer.Ratio), Math.round(renderer.Height - pair[0].Y * renderer.Ratio), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+				pair[1].push(data[0] + data[1] + data[2]);
+			});
+		}
+
+		expect(over.length).toBeGreaterThan(8);
+		expect(on.length).toBeGreaterThan(8);
+		expect(Math.min.apply(null, over)).toBeGreaterThan(6);
+		expect(Math.min.apply(null, on)).toBeGreaterThan(30);
+	});
+
+	it('lights things in real sizes as much as a star gives so far from it, the same in space and on a body', async function () {
+		var mounted = await mount('<Scene Scale="real" Paused="true" Background="false" Quality="low" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Mass="1" />' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var engine = scene.Engine();
+		var sun = scene.Scene().Objects.sun;
+		var au = 1.495978707e11 * engine.Metre();
+
+		expect(engine.StarShine(sun, au)).toBeCloseTo(1, 2);
+		expect(engine.StarShine(sun, au * 1.524)).toBeCloseTo(Math.pow(1 / (1.524 * 1.524), 0.35), 2);
+		expect(engine.StarShine(sun, au * 30)).toBe(0.2);
+		expect(engine.StarShine(sun, au * 0.387)).toBe(1.5);
+
+		scene.Scale = '';
+
+		expect(engine.StarShine(sun, au * 30)).toBe(1);
+	});
+
+	/*
+	 * Regression: from high over a body, the Sun under the level of the ground under the eye (yet over its horizon, which
+	 * is far under that level so high) was drawn by the sky as a black disc: its light none, its cover whole.
+	 */
+	it('draws the disc of the Sun in the sky of a body from high over it where it is over the horizon, never a black disc', async function () {
+		var mounted = await mount('<Scene Paused="true" Background="false" Quality="low" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Mass="1" />' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var graphics = Elemenx.Service('Renderer');
+		var math = Elemenx.Service('Math');
+		var shaders = scene.Skied(scene.Shaders(graphics));
+		var renderer = graphics.Create(document.createElement('canvas'), {Antialias: false});
+		var gl = renderer.GL;
+		var up = math.Vectors.Normalize([0, 1, 0.07]);
+
+		expect(gl.getExtension('EXT_color_buffer_float')).toBeTruthy();
+		expect(shaders.Sky).toContain('uniform float uDip;');
+
+		/* The middle of the view looking at the Sun, 4 degrees under the level of the ground: its color and cover there. */
+		function drawn (dip) {
+			var program = renderer.Program(graphics.Shaders.Quad, shaders.Sky);
+			var target = renderer.Target(9, 9, {Float: true});
+			var quad = renderer.Mesh({Positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0], Indices: [0, 1, 2]});
+			var pixels = new Float32Array(4);
+
+			target.Begin();
+
+			renderer.Draw(quad, program, Object.assign({uInverse: math.Invert(math.Perspective(0.8, 1, 0.1, 100)), uSun: [0, 0, -1], uSunColor: [1, 1, 1], uAir: [0.3, 0.5, 0.9, 0], uUp: up, uHigh: 1, uDip: dip, uCover: 0, uEclipse: 0, uSunRadius: 0.05, uMoonSize: 0, uGlow: [0, 0, 0], uGlowWay: [0, 1, 0]}, scene.SkyValues(0)), {Depth: false, Cull: 'none'});
+
+			gl.readPixels(4, 4, 1, 1, gl.RGBA, gl.FLOAT, pixels);
+
+			target.End();
+
+			return Array.from(pixels);
+		}
+
+		var level = drawn(0);
+		var high = drawn(0.6);
+
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+		expect(level[3]).toBeLessThan(0.05);
+		expect(high[3]).toBeGreaterThan(0.9);
+		expect(high[0]).toBeGreaterThan(1);
+	});
+
+	/*
+	 * Regression: in real sizes a craft was as high as its Length (a model of a file is fitted to a height of 1): a cruiser
+	 * of 280 m was drawn 1.8 km long. Now its longest side is its Length.
+	 */
+	it('draws a craft in real sizes as long as its Length along its longest side, not as high', async function () {
+		var mounted = await mount('<Scene Scale="real" Paused="true" Background="false" Quality="low" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Mass="1">' +
+				'<SceneObject ID="earth" Kind="planet" Radius="6371" Mass="1" Distance="1" />' +
+			'</SceneObject>' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var engine = scene.Engine();
+		var extent = Elemenx.Service('SceneModels').Extent('cruiser');
+		var long;
+
+		scene.Add('craft', {ID: 'long', Name: '', Model: 'cruiser', Length: 100, Parent: 'earth', Distance: 2});
+
+		engine.Frame(performance.now() + 100, true);
+
+		long = scene.Scene().Objects.long;
+
+		expect(extent).not.toBe(null);
+		expect(Math.max(extent[0], extent[1], extent[2]) / extent[1]).toBeGreaterThan(1.5);
+		expect(engine.CraftScale(long)).toBeCloseTo(Math.max(extent[0], extent[1], extent[2]), 6);
+		expect(long.Size / engine.Metre() * engine.CraftScale(long)).toBeCloseTo(100, 3);
+		expect(long.Size / engine.Metre() * extent[1]).toBeLessThan(70);
 	});
 
 	/* The game does not go on before all the view needs is there: the squares of its ground near the eye and what grows round it. */
@@ -1598,8 +2041,10 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		 * Regression: the sea of a globe took its waves of a place that was always nought (a noise of rounding: streaks that
 		 * flickered), and a grain of kilometres where a pixel covers more. Its waves are of the very place, past two pixels none.
 		 */
-		expect(space.Shaders(graphics).Ground).not.toContain('dot(place, side)');
-		expect(space.Shaders(graphics).Ground).toContain('float foot = length(fwidth(place));');
+		var ground = Elemenx.Service('Blueprints').Compile(space.LibraryGround()).Function;
+
+		expect(ground).not.toContain('dot(place, side)');
+		expect(ground).toMatch(/float (d\d+_)foot = length\(fwidth\(\1place\)\);/);
 		expect(space.Shaders(graphics).Ground).toContain('uCloudsOn');
 
 		/*
@@ -1609,10 +2054,10 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		 * materials finer than a pixel). Each texel its own color up to a narrow seam, ragged finer while that is seen;
 		 * ridges finer than its points on its slopes; the noise turned against its grid; what is finer than a pixel its mean.
 		 */
-		expect(space.Shaders(graphics).Ground).toContain('float seam = clamp(max(texel * 1.5, 0.22), 0.0, 0.5);');
-		expect(space.Shaders(graphics).Ground).toContain('vec4 painted = textureGrad(uColorMap, pictureAt, pictureX, pictureY);');
-		expect(space.Shaders(graphics).Ground).toContain('float rugged = smoothstep(0.06, 0.35, 1.0 - dot(n, up)) * (1.0 - water);');
-		expect(space.Shaders(graphics).Ground).not.toContain('noise3(near * 34.0');
+		expect(ground).toMatch(/float (d\d+_)seam = clamp\(max\(\1texel \* 1\.5, 0\.22\), 0\.0, 0\.5\);/);
+		expect(ground).toMatch(/vec4 (d\d+_)painted = textureGrad\(uColorMap, \1at, \1x, \1y\);/);
+		expect(ground).toMatch(/float (d\d+_)rugged = smoothstep\(0\.06, 0\.35, 1\.0 - dot\(\1n, \w+\)\) \* \(1\.0 - \w+\);/);
+		expect(ground).not.toMatch(/noise3\([^;]*\* 34\.0/);
 		expect(Elemenx.Service('SceneMaterials').LandCliff).toContain('vec3 bed = mix(cliffBed((place.y + warp) / thick, region), mean, many);');
 		expect(Elemenx.Service('SceneMaterials').Get('rock').Code).toContain('enx_mff(q * 1.2, 5, px * 1.2)');
 
@@ -1651,14 +2096,14 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		 * rounding where a pixel is under a metre); a square beside a coarser one met it in a step, its skirt a wall. Its
 		 * points of an edge go onto the edge of the square beside, as many levels coarser as it is (uEdges, SpherePatch).
 		 */
-		expect(space.Shaders(graphics).Ground).toContain('tilt *= smoothstep(0.0003, 0.0012, foot);');
+		expect(ground).toMatch(/(d\d+_)tilt \*= smoothstep\(0\.0003, 0\.0012, \w+\);/);
 		expect(space.Shaders(graphics).GroundVertex).toContain('uniform vec4 uEdges;');
 		expect(space.Shaders(graphics).GroundVertex).toContain('vec3 position = aPosition + (coarser > 2.5 ? aMaterials3.xyz');
 		expect(gameSceneSource).toContain('node.Edges[edge] = Math.min(3, place[4] - level);');
 
 		/* Regression: black specks along every wood near (its crowns 6 m over the ground at an edge of a pixel and a half). */
-		expect(space.Shaders(graphics).Ground).not.toMatch(/wooded \* [0-9.]+ \* near1/);
-		expect(space.Shaders(graphics).Ground).toContain('tilt *= step(1e-12, abs(area)) / max(1.0, length(tilt) / 0.85);');
+		expect(ground).not.toMatch(/wooded \* [0-9.]+ \* \(1\.0 - smoothstep\(0\.03/);
+		expect(ground).toMatch(/(d\d+_)tilt \*= step\(1e-12, abs\(\1area\)\) \/ max\(1\.0, length\(\1tilt\) \/ 0\.85\);/);
 
 		/* Its snow near (Snow of the picture of a square): the snow of each biome over its ground, where its picture says. */
 		expect(space.Shaders(graphics).Ground).toContain('uniform sampler2D uSnowMap;');
@@ -2399,7 +2844,13 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		}
 
 		expect(Object.keys(kinds).length).toBeGreaterThan(2);
-		expect(gameSceneSource).toContain("'fog', 'changing']");
+		expect(gameSceneSource).toContain("'fog', 'none', 'changing']");
+		/*
+		 * Regression: the sea of a location was cut off at its edge, a straight seam with the sea of the far ground; the near
+		 * plane of the far ground cut its sea past the edge of a turned location away (walls of the skirts of its squares).
+		 */
+		expect(gameSceneSource).toContain('alpha *= 1.0 - smoothstep(uBound.x, uBound.x * 1.125, bound);');
+		expect(gameSceneSource).toContain('var edge = scene.Ground.Field.Size / 2 - Math.hypot(camera.Position[0], camera.Position[2]);');
 	});
 
 	it('casts the shadows of the clouds that are there, from a map of what they hold', async function () {
@@ -3757,7 +4208,14 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 	/* Regression: the woods of a planet read where its texel is, its colors aside of it: steps of texels along their edges from far. */
 	it('reads the woods of a planet aside, as its colors, no steps along their edges', function () {
-		expect(gameSceneSource).toContain("'	float cover = uTiled * uWoods > 0.5 ? textureGrad(uReliefMap, pictureAt, pictureX, pictureY).a : 0.0;',");
+		var made = Elemenx.Service('Blueprints').Compile(Elemenx.Service('SceneBlueprints').LibraryGround());
+		var picture = /vec4 (d\d+_)painted = textureGrad\(uColorMap, \1at, \1x, \1y\);/.exec(made.Function);
+
+		/* The ground graph: its woods (GroundWoods) of the very place its picture is read at (GroundPicture), its gradients. */
+		expect(picture).toBeTruthy();
+		expect((/_cover = uTiled \* uWoods > 0\.5 \? textureGrad\(uReliefMap, ([^,]+), ([^,]+), ([^)]+)\)/.exec(made.Function) || []).slice(1)).toEqual(['At', 'DX', 'DY'].map(function (pin) {
+			return 'b' + picture[1].replace(/\D/g, '') + '_' + pin;
+		}));
 	});
 
 	/*
@@ -5479,8 +5937,25 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			}
 		}
 
+		function vectors (a) {
+			return Math.hypot(a[0], a[1], a[2]);
+		}
+
 		function apart (a, b) {
 			return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+		}
+
+		/* Frames till a ship is on no way far at once (at most count): how many. */
+		function arrive (ship, count) {
+			var i = 0;
+
+			while (ship.Travel && i < count) {
+				frames(1);
+
+				i++;
+			}
+
+			return i;
 		}
 
 		/* A key pressed on the scene as a player presses it, for a frame. */
@@ -5548,12 +6023,22 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			var inside = warps[warps.length - 1];
 
 			expect(inside).toMatchObject({Kind: 'warp', Phase: 'inside', Stretch: 1, Tunnel: 1});
+			/*
+			 * Regression: of the view of space of real sizes (a near plane of a metre, a far one past the stars) the tunnel and its
+			 * stars took the way of each pixel of its inverse, lost: a dim blur round the point ahead. Its rays are of the view of the sky.
+			 */
+			expect(gameSceneSource).toContain('engine.CosmosWarp(sky, Object.assign({Depth: Math.min(0.99999, math.Apply(plain,');
 			expect(inside.Depth).toBeLessThan(0.99999);
 			expect(inner.Camera.Fov).toBeGreaterThan(fov * 1.2);
 
-			frames(30);
+			/* In its own tunnel, told to the Ether each frame: its step, its speed, what it goes to and how far it is left. */
+			expect(Elemenx.Ether('travel').me).toMatchObject({Kind: 'warp', Phase: 'inside', Step: 3, To: 'moon'});
+			expect(Elemenx.Ether('travel').me.Tunnel).toMatch(/^tunnel-\d+$/);
+			expect(Elemenx.Ether('travel').me.Left).toBeGreaterThan(0);
+			expect(arrive(ship, 2000)).toBeLessThan(2000);
 
 			expect(told).toEqual(['warp:enter', 'warp:inside', 'warp:exit', 'warp:done']);
+			expect(Elemenx.Ether('travel').me.Reason).toBe('arrived');
 			expect(ship.Travel).toBe(null);
 			expect(inner.Warp).toBe(null);
 			expect(inner.Camera.Fov).toBe(fov);
@@ -5587,7 +6072,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 				return warp.Kind === 'jump' && warp.Phase === 'inside' && warp.Stretch > 0.3 && warp.Tunnel === 0;
 			})).toBe(true);
 
-			frames(20);
+			arrive(ship, 400);
 
 			expect(ended[0]).toBe(null);
 			expect(ended[1]).toMatchObject({ID: 'me', Kind: 'jump'});
@@ -5611,7 +6096,9 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 			scene.Travel('me', 'jump', {Length: 1000, Enter: 0.1, Inside: 0.2, Exit: 0.1});
 
-			frames(20);
+			arrive(ship, 2000);
+
+			expect(Elemenx.Ether('travel').me.Reason).toBe('body');
 
 			expect(before).toBeGreaterThan(world.Size * 8);
 			expect(apart(ship.World, world.World)).toBeGreaterThan(world.Size * 5.5);
@@ -5624,14 +6111,238 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 			expect(ended.message).toBe('Elemenx Scene: star cannot jump now');
 
-			/* J jumps. */
+			/* J jumps as long as it is held: let go, it comes out (turned away from the world first: else it stops before it). */
+			face(ship.Ship, [ship.World[0] - world.World[0], ship.World[1] - world.World[1], ship.World[2] - world.World[2]]);
+
 			press('KeyJ');
 
-			expect(ship.Travel.Kind).toBe('jump');
+			expect(ship.Travel).toMatchObject({Kind: 'jump', Hold: true});
+
+			arrive(ship, 400);
+
+			expect(Elemenx.Ether('travel').me.Reason).toBe('released');
+
+			/* Too deep in the well of a body it cannot go into warp (Well); of Well 0 it can, anywhere. */
+			ship.Ship.At = ship.Ship.At.map(function (value) {
+				return value / vectors(ship.Ship.At) * world.Size * 1.5;
+			});
+
+			frames(1);
+
+			scene.Travel('me', 'warp', {}, function (error) {
+				ended = error;
+			});
+
+			expect(ended.message).toBe('Elemenx Scene: me cannot warp now: in the well of world');
+			expect(told[told.length - 1]).toBe('warp:refused');
+			expect(scene.Travel('me', 'warp', {Well: 0})).toBe(undefined);
+			expect(ship.Travel.Kind).toBe('warp');
+
+			/* A warp straight ahead goes till it is stopped (H again, TravelStop); it never comes out in a body. */
+			frames(40);
+
+			expect(ship.Travel.Phase).toBe('inside');
+			expect(scene.TravelStep('me', 5)).toBe(true);
+			expect(ship.Travel.Step).toBe(5);
+			expect(scene.TravelStop('me')).toBe(true);
+
+			arrive(ship, 400);
+
+			expect(Elemenx.Ether('travel').me.Reason).toBe('command');
+			expect(scene.TravelStop('me')).toBe(false);
+			inner.Objects.world.Traits.Body && expect(apart(ship.World, world.World)).toBeGreaterThan(world.Size);
 		}
 		finally {
 			scene.$Emit = emit;
 			engine.CosmosWarp = drawn;
+		}
+	});
+
+	/*
+	 * A warp is out of normal space: only a blocker of warp (the trait WarpBlocker of any object, a body too) stops its tunnel,
+	 * at the edge of its reach; another ship catches up with its tunnel (Join: a step not lower, near its axis) and goes in it;
+	 * a relay (WarpRelay) sends it to the one it is joined to by a tunnel of the two that stays; radiation (the trait Radiation)
+	 * reaches what is round it, but in a tunnel only from what is in the same tunnel.
+	 */
+	it('stops a warp only at a blocker of warp, lets another ship catch up with its tunnel, sends it by a relay, keeps radiation out of a tunnel', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1"><SceneObject ID="moon" Kind="moon" Radius="1737" Distance="384400 km" /></SceneObject></SceneObject></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 100;
+		var told = [];
+		var emit = scene.$Emit;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		function apart (a, b) {
+			return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+		}
+
+		function arrive (ship, count) {
+			var i = 0;
+
+			while (ship.Travel && i < count) {
+				frames(1);
+
+				i++;
+			}
+
+			return i;
+		}
+
+		scene.$Emit = function (name, data) {
+			if (name === 'travel')
+				told.push(data);
+
+			return emit.apply(this, arguments);
+		};
+
+		try {
+			frames(2);
+
+			scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'world', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'world', From: [0, 0, 3], Facing: [0, 0, 1], Warp: {Enter: 0.3, Exit: 0.3, Well: 0}}});
+			scene.Add('ship', {ID: 'wing', Name: '', Size: 0.002, Parent: 'world', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'world', From: [0.03, 0, 3], Facing: [0, 0, 1], Warp: {Enter: 0.3, Exit: 0.3, Well: 0}}});
+			scene.Control('wing');
+
+			frames(1);
+
+			scene.Control('me');
+
+			frames(2);
+
+
+			/* Radiation of the moon reaches the ship; probed, it is in the Ether. */
+			scene.Change('moon', {Traits: {Radiation: {EM: 4, Ionizing: 2, Reach: 1e9}}});
+			scene.Change('wing', {Traits: {Radiation: {EM: 1, Reach: 1e9}}});
+
+			frames(1);
+
+			var round = scene.Probe('me', 'ship');
+
+			expect(round.Radiation.EM).toBeGreaterThan(4.5);
+			expect(round.Radiation.Sources).toEqual(['moon', 'wing']);
+
+			/* Straight ahead into warp, the wing catching up with its tunnel. */
+			scene.Travel('me', 'warp', {});
+
+			frames(15);
+
+			expect(inner.Objects.me.Travel.Phase).toBe('inside');
+
+			/* In its tunnel no radiation but of what is in the same tunnel. */
+			frames(1);
+
+			expect(Elemenx.Ether('ship').me.Radiation).toEqual({EM: 0, Ionizing: 0, Sources: []});
+
+			var tunnel = inner.Objects.me.Travel.Tunnel;
+
+			scene.Travel('wing', 'warp', {Join: tunnel, Step: 3});
+
+			frames(30);
+
+			expect(told.some(function (one) {
+				return one.ID === 'wing' && one.Phase === 'joined' && one.Tunnel === tunnel && one.By === 'me';
+			})).toBe(true);
+			expect(inner.Objects.wing.Travel.Tunnel).toBe(tunnel);
+			expect(inner.Tunnels[tunnel].Members).toEqual(['me', 'wing']);
+
+			frames(1);
+
+			expect(Elemenx.Ether('ship').me.Radiation.Sources).toEqual(['wing']);
+
+			/* The leader out, the one in its tunnel out with it; the tunnel gone. */
+			scene.TravelStop('me');
+
+			arrive(inner.Objects.me, 400);
+			arrive(inner.Objects.wing, 400);
+
+			expect(Elemenx.Ether('travel').wing.Reason).toBe('leader');
+			expect(inner.Tunnels[tunnel]).toBe(undefined);
+
+			/* A blocker of warp on the moon (a body may be one: an anomaly): a warp to it comes out at the edge of its reach. */
+			scene.Change('moon', {Traits: {WarpBlocker: {Radius: 9}}});
+
+			inner.Objects.me.Ship.At = [0, 0, inner.Objects.world.Size * 3];
+
+			frames(1);
+
+			scene.Travel('me', 'warp', {To: 'moon'});
+
+			expect(arrive(inner.Objects.me, 3000)).toBeLessThan(3000);
+			expect(Elemenx.Ether('travel').me).toMatchObject({Reason: 'blocked', By: 'moon'});
+			expect(apart(inner.Objects.me.World, inner.Objects.moon.World)).toBeGreaterThan(inner.Objects.moon.Size * 6.5);
+			expect(apart(inner.Objects.me.World, inner.Objects.moon.World)).toBeLessThan(inner.Objects.moon.Size * 9);
+
+			/* In its reach no warp starts. */
+			inner.Objects.me.Ship.At = inner.Objects.me.Ship.At.slice();
+
+			var error = null;
+
+			scene.Travel('me', 'warp', {To: 'moon', Well: 0}, function (made) {
+				error = made;
+			});
+
+			expect(error.message).toBe('Elemenx Scene: me cannot warp now: by the blocker of warp moon');
+
+			/* A relay: the world joined to the moon; from by the world, to the moon at its step, by a tunnel that stays. */
+			scene.Change('moon', {Traits: {WarpBlocker: {Active: false}}});
+			scene.Change('world', {Traits: {WarpRelay: {To: 'moon', Step: 8, Reach: 5}}});
+
+			inner.Objects.me.Ship.At = [0, 0, inner.Objects.world.Size * 3];
+
+			frames(1);
+
+			scene.Travel('me', 'warp', {Relay: 'world'});
+
+			expect(inner.Objects.me.Travel).toMatchObject({Relay: 'world', To: 'moon', Step: 8});
+			expect(arrive(inner.Objects.me, 400)).toBeLessThan(400);
+			expect(Elemenx.Ether('travel').me).toMatchObject({Reason: 'arrived', Tunnel: ''});
+			expect(inner.Tunnels['relay:moon-world']).toMatchObject({Permanent: true, Members: []});
+			expect(apart(inner.Objects.me.World, inner.Objects.moon.World)).toBeLessThan(inner.Objects.moon.Size * 9);
+
+			/*
+			 * Aiming: what the ship driven aims at (Aim), told to the Ether each frame (how far to turn, ready), its marks over the
+			 * view; turned to it by itself (AimAlign); a warp of no place of its own goes there.
+			 */
+			scene.Change('world', {Traits: {WarpRelay: {To: '', Reach: 0}}});
+
+			inner.Objects.me.Ship.At = [0, 0, inner.Objects.world.Size * 3];
+			inner.Objects.me.Ship.Ahead = [0, 0, 1];
+
+			expect(scene.Aim('nowhere')).toBe('');
+			expect(scene.Aim('world')).toBe('world');
+
+			frames(2);
+
+			expect(Elemenx.Ether('aim')).toMatchObject({Target: 'world', Name: 'world', Align: false});
+			expect(Elemenx.Ether('aim').Angle).toBeGreaterThan(30);
+			expect(Elemenx.Ether('aim').Why).toBe('turn');
+			expect(scene.$Element().querySelector('.elemenx-scene-sight')).toBeTruthy();
+
+			scene.AimAlign(true);
+
+			inner.Objects.me.Ship.Throttle = 0;
+			inner.Objects.me.Ship.Way = [0, 0, 0];
+
+			frames(200);
+
+			expect(Elemenx.Ether('aim').Angle).toBeLessThan(2);
+			expect(Elemenx.Ether('aim').Aligned).toBe(true);
+
+			scene.AimAlign(false);
+			scene.Travel('me', 'warp', {Well: 0});
+
+			expect(inner.Objects.me.Travel.To).toBe('world');
+		}
+		finally {
+			scene.$Emit = emit;
 		}
 	});
 
@@ -7463,7 +8174,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		engine.Renderer.Draw = draw;
 
 		/* The cooler, the less it burns out white (an orange giant too, since the stars of other kinds came). */
-		expect(mounted.Space.Shaders(graphics).Star).toMatch(/mix\(2\.4, 1\.1, clamp\(warm \* 1\.5, 0\.0, 1\.0\)\)/);
+		expect(mounted.Space.Globed(mounted.Space.Shaders(graphics)).Star).toMatch(/mix\(2\.4, 1\.1, clamp\(\w+warm \* 1\.5, 0\.0, 1\.0\)\)/);
 		expect(mounted.Space.LightingShaders(graphics).Shafts).toMatch(/step\(uClear,/);
 	});
 

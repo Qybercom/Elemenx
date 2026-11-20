@@ -1096,6 +1096,13 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-scene-loading`: `own`
 - `elemenx-scene-lock`: `locked`, `off`
 - `elemenx-scene-screens`
+- `elemenx-scene-sight`
+- `elemenx-scene-sight-arrow`
+- `elemenx-scene-sight-label`
+- `elemenx-scene-sight-lead`
+- `elemenx-scene-sight-mark`
+- `elemenx-scene-sight-nose`
+- `elemenx-scene-sight-target`
 - `elemenx-scene-takeoff`
 - `elemenx-scene-veil`
 

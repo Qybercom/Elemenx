@@ -9,7 +9,7 @@ Elemenx.Component('OrbitDemo', {
 	$Traits: ['SceneDemo'],
 	/* What each ship is built of, in its own measures: the points are read off the model. */
 	OrbitShips: [
-		{Value: 'space_ship (1).glb', Label: 'Interceptor', Length: 22, Yaw: 0, Mounts: [
+		{Value: 'space_ship (1).glb', Label: 'Oppenheimer', Length: 89, Yaw: 0, Mounts: [
 			{Kind: 'engine', At: [0.25, 0.485, -1.835], Aim: [0, 0, -1], Mouth: [0.06, 0.08], Size: 0.1},
 			{Kind: 'engine', At: [-0.25, 0.485, -1.835], Aim: [0, 0, -1], Mouth: [0.06, 0.08], Size: 0.1},
 			{Kind: 'engine', At: [0.25, 0.355, -1.75], Aim: [0, 0, -1], Mouth: [0.06, 0.08], Size: 0.1},
@@ -65,7 +65,7 @@ Elemenx.Component('OrbitDemo', {
 			{Kind: 'engine', At: [1.27, 0.86, 3.385], Aim: [0, 0, 1], Mouth: 0.035, Size: 0.14},
 			{Kind: 'engine', At: [-1.27, 0.86, 3.385], Aim: [0, 0, 1], Mouth: 0.035, Size: 0.14}
 		]},
-		{Value: 'venator_class_star_destroyer.glb', Label: 'Venator', Yaw: 0, Mounts: [
+		{Value: 'venator_class_star_destroyer.glb', Label: 'Venator', Length: 1137, Yaw: 0, Mounts: [
 			{Kind: 'engine', At: [0.4224, 0.248, -1.63], Aim: [0, 0, -1], Mouth: 0.05, Size: 0.22},
 			{Kind: 'engine', At: [-0.4224, 0.248, -1.63], Aim: [0, 0, -1], Mouth: 0.05, Size: 0.22},
 			{Kind: 'engine', At: [0.224, 0.168, -1.884], Aim: [0, 0, -1], Mouth: 0.05, Size: 0.22},
@@ -88,7 +88,53 @@ Elemenx.Component('OrbitDemo', {
 	OrbitPlace: 'luna',
 	OrbitCosmos: {Kind: 'galaxy', Seed: 'orbit'},
 	OrbitSpeed: 0,
+	/* What is round the ship (the Ether of its Probe). */
+	OrbitAirZone: '',
+	OrbitAirAltitude: null,
+	OrbitAirPressure: 0,
+	OrbitAirTemperature: 0,
+	OrbitAir: function () {
+		var pressure = this.OrbitAirPressure;
+
+		if (this.OrbitAirAltitude === null || this.OrbitAirAltitude === undefined) return '';
+
+		return Math.round(this.OrbitAirAltitude) + ' km · ' + (this.OrbitAirZone || 'space') + (pressure > 0 ? ' · ' + (pressure >= 0.01 ? pressure.toFixed(2) : pressure.toExponential(1)) + ' bar · ' + Math.round(this.OrbitAirTemperature) + ' K' : '');
+	},
 	OrbitPhase: '',
+	/* The step of warp (1 to 6: each ten times the last), what the ship goes by in warp (the Ether: travel), a blocker of warp on Luna. */
+	OrbitSteps: [{Value: '1', Label: 'Step 1'}, {Value: '2', Label: 'Step 2'}, {Value: '3', Label: 'Step 3'}, {Value: '4', Label: 'Step 4'}, {Value: '5', Label: 'Step 5'}, {Value: '6', Label: 'Step 6'}],
+	OrbitStep: '3',
+	OrbitPassing: '',
+	OrbitBlocked: false,
+	/* What the ship aims at (T takes it, G turns to it; the Ether aim). */
+	OrbitAiming: '',
+	OrbitAimed: function (data) {
+		this.OrbitAiming = data && data.Target ? 'aim: ' + data.Name + ' ' + Math.round(data.Angle) + '°' + (data.Ready ? ' ready' : data.Why ? ' (' + data.Why + ')' : '') + (data.Align ? ' · aligning' : '') : '';
+	},
+	OrbitStepChosen: function (value) {
+		var scene = this.OrbitScene ? this.OrbitScene() : null;
+
+		this.OrbitStep = value;
+
+		if (scene)
+			scene.TravelStep('me', Number(value));
+	},
+	OrbitBlocker: function () {
+		var scene = this.OrbitScene ? this.OrbitScene() : null;
+
+		this.OrbitBlocked = !this.OrbitBlocked;
+
+		if (scene)
+			scene.Change('luna', {Traits: {WarpBlocker: {Radius: 60, Active: this.OrbitBlocked}}});
+	},
+	/* What the ship goes by in warp, the nearest in time first: a name, how near it passes and in how many seconds. */
+	OrbitPassed: function (data) {
+		var record = data && data.me;
+
+		this.OrbitPassing = record && record.Kind === 'warp' && record.Phase === 'inside' ? (record.Passing || []).slice(0, 3).map(function (one) {
+			return one.Name + ' ' + (one.Seconds < 100 ? one.Seconds.toFixed(1) : Math.round(one.Seconds)) + ' s, ' + Math.round(one.Pass).toLocaleString() + ' km';
+		}).join(' · ') : '';
+	},
 	/* The shader graph open (DemoGraph: '' none), those its scene is drawn with (Graphs of Scene), its scene made again as one changes. */
 	OrbitGraphOpen: '',
 	OrbitGraphs: null,
@@ -126,6 +172,16 @@ Elemenx.Component('OrbitDemo', {
 		});
 
 		this.OrbitShipChosen(this.OrbitShip);
+
+		/* What is round the ship (Probe of the Scene, into the Ether): its zone, height, pressure and temperature shown. */
+		scene.Probe('me');
+
+		this.$Ether.On('travel', 'me', this.OrbitPassed.bind(this));
+		this.$Ether.On('aim', '', this.OrbitAimed.bind(this));
+
+		['Zone', 'Altitude', 'Pressure', 'Temperature'].forEach(function (key) {
+			this.$Ether.Mirror('environment', 'me.' + key, 'OrbitAir' + key);
+		}, this);
 
 		this.OrbitWatch(scene);
 	},
@@ -171,7 +227,7 @@ Elemenx.Component('OrbitDemo', {
 		if (scene.Get('me'))
 			scene.Remove('me');
 
-		scene.Add('ship', {ID: 'me', Name: '', Model: name, Size: ship.Size || 0.012, Parent: 'terra', Vehicle: {Kind: 'ship', Yaw: ship.Yaw, Mounts: ship.Mounts, Top: 0.09, Speed: 3000, Length: ship.Length, Around: 'terra', From: [-2.6, 0.3, 1.5], Facing: [1, -0.08, -0.5], Follow: [4.6, 1.1], Warp: {To: 'luna'}}});
+		scene.Add('ship', {ID: 'me', Name: '', Model: name, Size: ship.Size || 0.012, Parent: 'terra', Vehicle: {Kind: 'ship', Yaw: ship.Yaw, Mounts: ship.Mounts, Top: 0.09, Speed: 3000, Length: ship.Length, Around: 'terra', From: [-2.6, 0.3, 1.5], Facing: [1, -0.08, -0.5], Follow: [4.6, 1.1], Warp: {To: 'luna', Well: 0.25}}});
 		scene.Control('me');
 	},
 	/* Where H warps to, as the buttons do. */
@@ -197,13 +253,20 @@ Elemenx.Component('OrbitDemo', {
 			return;
 		}
 
-		scene.Travel('me', kind, kind === 'warp' ? {To: this.OrbitPlace} : {}, function (error) {
+		/* In warp already, H again comes out of it where it is. */
+		if (kind === 'warp' && hero && hero.Travel && hero.Travel.Kind === 'warp') {
+			scene.TravelStop('me');
+
+			return;
+		}
+
+		scene.Travel('me', kind, kind === 'warp' ? {To: this.OrbitPlace, Step: Number(this.OrbitStep)} : {Length: 30}, function (error) {
 			if (error)
-				self.OrbitPhase = kind + ': ' + (!hero ? 'no ship' : !hero.Ship ? 'the ship has not flown yet' : hero.Travel ? 'already ' + hero.Travel.Kind + ' ' + hero.Travel.Phase : 'cannot now');
+				self.OrbitPhase = kind + ': ' + (!hero ? 'no ship' : hero.Travel ? 'already ' + hero.Travel.Kind + ' ' + hero.Travel.Phase : error.message.replace(/^Elemenx Scene: me /, ''));
 		});
 	},
 	OrbitTravelled: function (event) {
-		this.OrbitPhase = event.Phase === 'done' ? '' : event.Kind + ': ' + event.Phase;
+		this.OrbitPhase = event.Phase === 'done' ? (event.Reason && event.Reason !== 'arrived' ? event.Kind + ' out: ' + event.Reason + (event.By ? ' (' + event.By + ')' : '') : '') : event.Kind + ': ' + event.Phase + (event.Reason ? ' (' + event.Reason + ')' : '');
 	},
 	/* The phases of a landing and of a take-off, where those of a warp are. */
 	OrbitLanding: function (event) {

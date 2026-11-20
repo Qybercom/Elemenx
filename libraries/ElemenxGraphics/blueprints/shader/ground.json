@@ -1,0 +1,869 @@
+{
+	"version": 1,
+	"type": "ground",
+	"name": "Ground",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "place",
+			"type": "GroundPlace",
+			"x": 40,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "base",
+			"type": "GroundBase",
+			"x": 280,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Shallow",
+					"value": 1.25
+				},
+				{
+					"key": "Deep",
+					"value": 0.55
+				},
+				{
+					"key": "Depth",
+					"value": 4
+				},
+				{
+					"key": "RockFrom",
+					"value": 0.55
+				},
+				{
+					"key": "RockTo",
+					"value": 0.75
+				},
+				{
+					"key": "Rock",
+					"value": 0.6
+				},
+				{
+					"key": "RockDark",
+					"value": 0.8
+				},
+				{
+					"key": "PaintedRock",
+					"value": 0.55
+				}
+			]
+		},
+		{
+			"id": "picture",
+			"type": "GroundPicture",
+			"x": 520,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Ragged",
+					"value": 0.36
+				},
+				{
+					"key": "Seam",
+					"value": 0.22
+				},
+				{
+					"key": "Aside",
+					"value": 1.1
+				}
+			]
+		},
+		{
+			"id": "ice",
+			"type": "GroundIce",
+			"x": 760,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Scale",
+					"value": 6.6
+				},
+				{
+					"key": "Ragged",
+					"value": 0.3
+				},
+				{
+					"key": "Edge",
+					"value": 0.04
+				}
+			]
+		},
+		{
+			"id": "mottle",
+			"type": "GroundMottle",
+			"x": 1000,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Far",
+					"value": 0.2
+				},
+				{
+					"key": "Middle",
+					"value": 0.14
+				},
+				{
+					"key": "Fine",
+					"value": 0.1
+				}
+			]
+		},
+		{
+			"id": "woods",
+			"type": "GroundWoods",
+			"x": 1240,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Red",
+					"value": 0.42
+				},
+				{
+					"key": "Green",
+					"value": 0.56
+				},
+				{
+					"key": "Blue",
+					"value": 0.4
+				}
+			]
+		},
+		{
+			"id": "fields",
+			"type": "GroundFields",
+			"x": 1480,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "crowns",
+			"type": "GroundCrowns",
+			"x": 1720,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Scale",
+					"value": 34
+				},
+				{
+					"key": "Dark",
+					"value": 0.7
+				},
+				{
+					"key": "Light",
+					"value": 0.55
+				}
+			]
+		},
+		{
+			"id": "snow",
+			"type": "GroundSnow",
+			"x": 1480,
+			"y": 320,
+			"properties": [
+				{
+					"key": "Torn",
+					"value": 1.6
+				}
+			]
+		},
+		{
+			"id": "dunes",
+			"type": "GroundDunes",
+			"x": 1960,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Strength",
+					"value": 0.18
+				}
+			]
+		},
+		{
+			"id": "relief",
+			"type": "GroundRelief",
+			"x": 1960,
+			"y": 320,
+			"properties": [
+				{
+					"key": "Hills",
+					"value": 0.015
+				},
+				{
+					"key": "Knolls",
+					"value": 0.003
+				},
+				{
+					"key": "Crowns",
+					"value": 0.006
+				},
+				{
+					"key": "Dunes",
+					"value": 0.07
+				},
+				{
+					"key": "Ridges",
+					"value": 0.035
+				},
+				{
+					"key": "Gullies",
+					"value": 0.012
+				},
+				{
+					"key": "Lean",
+					"value": 0.85
+				}
+			]
+		},
+		{
+			"id": "tiles",
+			"type": "GroundTiles",
+			"x": 2200,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "ring",
+			"type": "GroundRing",
+			"x": 2200,
+			"y": 420,
+			"properties": [
+				{
+					"key": "Strength",
+					"value": 0.9
+				}
+			]
+		},
+		{
+			"id": "light",
+			"type": "GroundLight",
+			"x": 2440,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Sky",
+					"value": 0.42
+				},
+				{
+					"key": "Dusk",
+					"value": 0.35
+				},
+				{
+					"key": "Shadow",
+					"value": 0.5
+				},
+				{
+					"key": "DayFrom",
+					"value": -0.05
+				},
+				{
+					"key": "DayTo",
+					"value": 0.12
+				}
+			]
+		},
+		{
+			"id": "water",
+			"type": "GroundWater",
+			"x": 2680,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Waves",
+					"value": 0.22
+				},
+				{
+					"key": "Glints",
+					"value": 7
+				},
+				{
+					"key": "Spread",
+					"value": 0.9
+				}
+			]
+		},
+		{
+			"id": "lights",
+			"type": "GlobeLights",
+			"x": 2920,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Red",
+					"value": 1
+				},
+				{
+					"key": "Green",
+					"value": 0.72
+				},
+				{
+					"key": "Blue",
+					"value": 0.38
+				},
+				{
+					"key": "Strength",
+					"value": 1.6
+				}
+			]
+		},
+		{
+			"id": "clouds",
+			"type": "GroundClouds",
+			"x": 3160,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Sun",
+					"value": 1.4
+				}
+			]
+		},
+		{
+			"id": "air",
+			"type": "GroundAir",
+			"x": 3400,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "end",
+			"type": "GroundEnd",
+			"x": 3640,
+			"y": 40,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "ground-link-0",
+			"p1": "place-out-Normal",
+			"p2": "base-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-1",
+			"p1": "place-out-Up",
+			"p2": "base-in-Up",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-2",
+			"p1": "place-out-Height",
+			"p2": "base-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-3",
+			"p1": "place-out-Sea",
+			"p2": "base-in-Sea",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-4",
+			"p1": "base-out-Albedo",
+			"p2": "picture-in-Albedo",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-5",
+			"p1": "base-out-Normal",
+			"p2": "picture-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-6",
+			"p1": "base-out-Water",
+			"p2": "picture-in-Water",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-7",
+			"p1": "place-out-Up",
+			"p2": "picture-in-Up",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-8",
+			"p1": "picture-out-Albedo",
+			"p2": "ice-in-Albedo",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-9",
+			"p1": "place-out-Up",
+			"p2": "ice-in-Up",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-10",
+			"p1": "ice-out-Albedo",
+			"p2": "mottle-in-Albedo",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-11",
+			"p1": "picture-out-Water",
+			"p2": "mottle-in-Water",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-12",
+			"p1": "place-out-Place",
+			"p2": "mottle-in-Place",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-13",
+			"p1": "place-out-Near",
+			"p2": "mottle-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-14",
+			"p1": "place-out-Foot",
+			"p2": "mottle-in-Foot",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-15",
+			"p1": "mottle-out-Albedo",
+			"p2": "woods-in-Albedo",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-16",
+			"p1": "picture-out-Water",
+			"p2": "woods-in-Water",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-17",
+			"p1": "place-out-Place",
+			"p2": "woods-in-Place",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-18",
+			"p1": "place-out-Near",
+			"p2": "woods-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-19",
+			"p1": "place-out-Foot",
+			"p2": "woods-in-Foot",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-20",
+			"p1": "picture-out-At",
+			"p2": "woods-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-21",
+			"p1": "picture-out-DX",
+			"p2": "woods-in-DX",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-22",
+			"p1": "picture-out-DY",
+			"p2": "woods-in-DY",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-23",
+			"p1": "woods-out-Albedo",
+			"p2": "fields-in-Albedo",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-24",
+			"p1": "picture-out-Water",
+			"p2": "fields-in-Water",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-25",
+			"p1": "place-out-Foot",
+			"p2": "fields-in-Foot",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-26",
+			"p1": "fields-out-Albedo",
+			"p2": "crowns-in-Albedo",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-27",
+			"p1": "picture-out-Water",
+			"p2": "crowns-in-Water",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-28",
+			"p1": "place-out-Near",
+			"p2": "crowns-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-29",
+			"p1": "place-out-Foot",
+			"p2": "crowns-in-Foot",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-30",
+			"p1": "woods-out-Stands",
+			"p2": "snow-in-Stands",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-31",
+			"p1": "picture-out-At",
+			"p2": "snow-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-32",
+			"p1": "picture-out-DX",
+			"p2": "snow-in-DX",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-33",
+			"p1": "picture-out-DY",
+			"p2": "snow-in-DY",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-34",
+			"p1": "crowns-out-Albedo",
+			"p2": "dunes-in-Albedo",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-35",
+			"p1": "place-out-Place",
+			"p2": "dunes-in-Place",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-36",
+			"p1": "place-out-Foot",
+			"p2": "dunes-in-Foot",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-37",
+			"p1": "picture-out-At",
+			"p2": "dunes-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-38",
+			"p1": "picture-out-DX",
+			"p2": "dunes-in-DX",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-39",
+			"p1": "picture-out-DY",
+			"p2": "dunes-in-DY",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-40",
+			"p1": "picture-out-Normal",
+			"p2": "relief-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-41",
+			"p1": "place-out-Up",
+			"p2": "relief-in-Up",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-42",
+			"p1": "picture-out-Water",
+			"p2": "relief-in-Water",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-43",
+			"p1": "place-out-Near",
+			"p2": "relief-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-44",
+			"p1": "place-out-Foot",
+			"p2": "relief-in-Foot",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-45",
+			"p1": "crowns-out-Crowns",
+			"p2": "relief-in-Crowns",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-46",
+			"p1": "crowns-out-Green",
+			"p2": "relief-in-Green",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-47",
+			"p1": "fields-out-Rise",
+			"p2": "relief-in-Rise",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-48",
+			"p1": "dunes-out-Dunes",
+			"p2": "relief-in-Dunes",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-49",
+			"p1": "dunes-out-Albedo",
+			"p2": "tiles-in-Albedo",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-50",
+			"p1": "relief-out-Normal",
+			"p2": "tiles-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-51",
+			"p1": "relief-out-Smoothed",
+			"p2": "tiles-in-Smoothed",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-52",
+			"p1": "place-out-Near",
+			"p2": "tiles-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-53",
+			"p1": "place-out-Foot",
+			"p2": "tiles-in-Foot",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-54",
+			"p1": "crowns-out-Green",
+			"p2": "tiles-in-Green",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-55",
+			"p1": "woods-out-Wooded",
+			"p2": "tiles-in-Wooded",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-56",
+			"p1": "snow-out-Snow",
+			"p2": "tiles-in-Snow",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-57",
+			"p1": "picture-out-Water",
+			"p2": "tiles-in-Water",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-58",
+			"p1": "woods-out-Cover",
+			"p2": "tiles-in-Cover",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-59",
+			"p1": "picture-out-Soft",
+			"p2": "tiles-in-Soft",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-60",
+			"p1": "place-out-Up",
+			"p2": "ring-in-Up",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-61",
+			"p1": "tiles-out-Albedo",
+			"p2": "light-in-Albedo",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-62",
+			"p1": "tiles-out-Normal",
+			"p2": "light-in-Normal",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-63",
+			"p1": "place-out-Up",
+			"p2": "light-in-Up",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-64",
+			"p1": "place-out-World",
+			"p2": "light-in-World",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-65",
+			"p1": "ring-out-Shade",
+			"p2": "light-in-Ring",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-66",
+			"p1": "light-out-Color",
+			"p2": "water-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-67",
+			"p1": "picture-out-Water",
+			"p2": "water-in-Water",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-68",
+			"p1": "place-out-Up",
+			"p2": "water-in-Up",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-69",
+			"p1": "place-out-View",
+			"p2": "water-in-View",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-70",
+			"p1": "place-out-Place",
+			"p2": "water-in-Place",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-71",
+			"p1": "place-out-Foot",
+			"p2": "water-in-Foot",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-72",
+			"p1": "light-out-Rise",
+			"p2": "water-in-Rise",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-73",
+			"p1": "light-out-Light",
+			"p2": "water-in-Light",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-74",
+			"p1": "light-out-Dusk",
+			"p2": "water-in-Dusk",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-75",
+			"p1": "water-out-Color",
+			"p2": "lights-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-76",
+			"p1": "place-out-Up",
+			"p2": "lights-in-Point",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-77",
+			"p1": "light-out-Day",
+			"p2": "lights-in-Day",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-78",
+			"p1": "lights-out-Color",
+			"p2": "clouds-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-79",
+			"p1": "place-out-Up",
+			"p2": "clouds-in-Up",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-80",
+			"p1": "place-out-Foot",
+			"p2": "clouds-in-Foot",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-81",
+			"p1": "light-out-Toward",
+			"p2": "clouds-in-Toward",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-82",
+			"p1": "light-out-Rise",
+			"p2": "clouds-in-Rise",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-83",
+			"p1": "light-out-Around",
+			"p2": "clouds-in-Around",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-84",
+			"p1": "clouds-out-Color",
+			"p2": "air-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-85",
+			"p1": "light-out-Light",
+			"p2": "air-in-Light",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-86",
+			"p1": "place-out-World",
+			"p2": "air-in-World",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-87",
+			"p1": "air-out-Color",
+			"p2": "end-in-Color",
+			"kind": "value"
+		}
+	]
+}

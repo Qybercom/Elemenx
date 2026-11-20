@@ -35,6 +35,7 @@
  *   WebWorker                Elemenx.WebWorker
  *   ServiceWorker            Elemenx.ServiceWorker
  *   Hardware                 Elemenx.Hardware: Serial (Web Serial), USB (WebUSB), Firmware; $Hardware of an owner
+ *   Ether                    Elemenx.Ether: data of the whole page by slices, read straight, heard once a frame; $Ether of an owner
  *   Owner resources          wiring and release of the facades owned by Services, Components and Applications
  *   Install                  Elemenx.Install: the page as an application of the system (PWA), its prompt and worker
  *   Widgets                  Elemenx.Widgets: Components of an Application mounted on a page of another site
@@ -21794,6 +21795,230 @@
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Ether */
+	(function (global) {
+		'use strict';
+
+		/*
+		 * Elemenx.Ether: data kept for the whole page, read where it lies. Elemenx.Ether(name) is a slice, a plain object
+		 * of its own (made empty the first time), the same object always: its fields are read straight, no call, no copy.
+		 * Who writes into it changes its fields where they are and tells it once, Touch(name, path) (path: 'ship.Depth',
+		 * or none for all of it), or Set(name, path, value) does both; Version(name) is how many times it was told, for
+		 * what is worked out of it and kept till it changes. On(name, path, callback) hears it: callback(slice, paths) at
+		 * most once a frame, and only when a path told is the one heard, inside it or round it ('ship' hears
+		 * 'ship.Depth', 'ship.Depth' hears 'ship'); Off takes it away. No actions, no reducers, no copies: a scene writes
+		 * sixty times a second, the page wakes once a frame. $Ether of a Service, a Component or an Application is the same,
+		 * its own: what it hears it stops hearing when it is destroyed; Mirror(name, path, field) puts the value at the
+		 * path into its field as it changes (its template follows). A worker has its own Ether.
+		 */
+		var slices = {};
+		var versions = {};
+		var listeners = [];
+		var told = {};
+		var waiting = false;
+		var gone = typeof WeakSet === 'function' ? new WeakSet() : null;
+
+		function named (name) {
+			if (typeof name !== 'string' || !name)
+				throw new Error('Elemenx.Ether expects a name');
+
+			return name;
+		}
+
+		function slice (name) {
+			named(name);
+
+			if (!Object.prototype.hasOwnProperty.call(slices, name)) {
+				slices[name] = {};
+				versions[name] = 0;
+			}
+
+			return slices[name];
+		}
+
+		function pathOf (path) {
+			if (path === undefined || path === null || path === '') return '';
+			if (Array.isArray(path)) return path.join('.');
+
+			if (typeof path !== 'string')
+				throw new Error('Elemenx.Ether expects a path of names: ship.Depth');
+
+			return path;
+		}
+
+		/* One is the other, inside it or round it, by whole names. */
+		function meets (a, b) {
+			if (a === '' || b === '' || a === b) return true;
+
+			return a.indexOf(b + '.') === 0 || b.indexOf(a + '.') === 0;
+		}
+
+		function valueAt (object, path) {
+			var names = path ? path.split('.') : [];
+			var value = object;
+			var i;
+
+			for (i = 0; i < names.length; i++) {
+				if (value === null || value === undefined) return undefined;
+
+				value = value[names[i]];
+			}
+
+			return value;
+		}
+
+		function frame (callback) {
+			if (typeof global.requestAnimationFrame === 'function') global.requestAnimationFrame(callback);
+			else setTimeout(callback, 16);
+		}
+
+		/* Once a frame: each listener of a slice told whose path meets a path told, once. */
+		function deliver () {
+			var now = told;
+
+			waiting = false;
+			told = {};
+
+			listeners.slice().forEach(function (listener) {
+				var paths = now[listener.Name];
+				var met;
+
+				if (!paths || listeners.indexOf(listener) === -1) return;
+
+				met = paths.filter(function (path) {
+					return meets(path, listener.Path);
+				});
+
+				if (met.length)
+					Runtime.Notify(listener.Callback, null, [slices[listener.Name], met]);
+			});
+		}
+
+		function touch (name, path) {
+			var paths;
+
+			slice(name);
+
+			path = pathOf(path);
+			versions[name]++;
+			paths = told[name] = told[name] || [];
+
+			if (paths.indexOf(path) === -1)
+				paths.push(path);
+
+			if (!waiting) {
+				waiting = true;
+
+				frame(deliver);
+			}
+		}
+
+		function listen (owner, name, path, callback) {
+			if (typeof callback !== 'function')
+				throw new Error('Elemenx.Ether expects a callback');
+
+			var listener = {Name: named(name), Path: pathOf(path), Callback: callback, Owner: owner};
+
+			slice(name);
+
+			/* An owner destroyed hears nothing more. */
+			if (owner && gone && gone.has(owner)) return listener;
+
+			listeners.push(listener);
+
+			return listener;
+		}
+
+		function unlisten (owner, name, path, callback) {
+			path = pathOf(path);
+
+			listeners = listeners.filter(function (listener) {
+				return !(listener.Name === name && listener.Path === path && listener.Callback === callback && (!owner || listener.Owner === owner));
+			});
+		}
+
+		function createEther (owner) {
+			var ether = function (name) {
+				return slice(name);
+			};
+
+			ether.Touch = function (name, path) {
+				touch(name, path);
+
+				return ether;
+			};
+
+			ether.Set = function (name, path, value) {
+				var names = pathOf(path).split('.');
+				var place = slice(name);
+				var i;
+
+				if (!names[0])
+					throw new Error('Elemenx.Ether expects a path of names: ship.Depth');
+
+				for (i = 0; i < names.length - 1; i++) {
+					if (!place[names[i]] || typeof place[names[i]] !== 'object')
+						place[names[i]] = {};
+
+					place = place[names[i]];
+				}
+
+				place[names[names.length - 1]] = value;
+
+				touch(name, path);
+
+				return ether;
+			};
+
+			ether.Version = function (name) {
+				slice(name);
+
+				return versions[name];
+			};
+
+			ether.On = function (name, path, callback) {
+				listen(owner, name, path, callback);
+
+				return ether;
+			};
+
+			ether.Off = function (name, path, callback) {
+				unlisten(owner, named(name), path, callback);
+
+				return ether;
+			};
+
+			/* The value at a path of a slice in a field of its owner, now and as it changes (only of an owner). */
+			if (owner) {
+				ether.Mirror = function (name, path, field) {
+					if (typeof field !== 'string' || !field)
+						throw new Error('Elemenx.Ether expects a field to mirror into');
+
+					owner[field] = valueAt(slice(name), pathOf(path));
+
+					listen(owner, name, path, function (data) {
+						owner[field] = valueAt(data, pathOf(path));
+					});
+
+					return ether;
+				};
+			}
+
+			return ether;
+		}
+
+		Elemenx.Ether = createEther(null);
+		Runtime.EtherFor = createEther;
+		Runtime.DestroyEtherOwner = function (owner) {
+			listeners = listeners.filter(function (listener) {
+				return listener.Owner !== owner;
+			});
+
+			if (gone && owner)
+				gone.add(owner);
+		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
 	/* Owner resources */
 	(function (global) {
 		'use strict';
@@ -21828,6 +22053,9 @@
 
 			if (Runtime.HardwareFor)
 				owner.$Hardware = Runtime.HardwareFor(owner);
+
+			if (Runtime.EtherFor)
+				owner.$Ether = Runtime.EtherFor(owner);
 		};
 
 		Runtime.InitializeOwnerSubscriptions = function (owner, definition) {
@@ -21856,6 +22084,9 @@
 
 			if (Runtime.DestroyHardwareOwner)
 				Runtime.DestroyHardwareOwner(owner);
+
+			if (Runtime.DestroyEtherOwner)
+				Runtime.DestroyEtherOwner(owner);
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
@@ -26937,6 +27168,10 @@
 			/* Its ports and devices, closed when it is destroyed (DestroyOwnerResources). */
 			if (Runtime.HardwareFor)
 				api.$Hardware = Runtime.HardwareFor(api);
+
+			/* What it hears of the Ether, heard no more when it is destroyed (DestroyOwnerResources). */
+			if (Runtime.EtherFor)
+				api.$Ether = Runtime.EtherFor(api);
 
 			api.$Messaging = function (context, value) {
 				if (arguments.length === 2) {

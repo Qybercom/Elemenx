@@ -68,7 +68,7 @@
 
 ## Тесты
 
-- [bakes a body of noise by its graph: its Input blocks the uniforms of the bake, Formula and Ridge in it, a sea where the land is under 0](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L136) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
+- [bakes a body of noise by its graph: its Input blocks the uniforms of the bake, Formula and Ridge in it, a sea where the land is under 0](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L137) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
 - [maps a list and takes one result of each, the values of lists of numbers each by each](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L107) — `tests/regression/blueprints-ir.test.js`
 - [takes vectors and choices, and says what of a graph is not of numbers](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L265) — `tests/regression/blueprints-ir.test.js`
 - [computes what only the Value of When needs inside its if, a When in a When, the same everywhere](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L315) — `tests/regression/blueprints-ir.test.js`
@@ -79,6 +79,6 @@
 - [makes a generator of formulas JavaScript, the same values as its interpreter, lists part by part](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L831) — `tests/regression/blueprints.test.js`
 - [has a Curve of keys over a number: straight, smooth through them or held between them, round a loop or held at its ends](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L1001) — `tests/regression/blueprints.test.js`
 - [tree-shakes unused Library Components and keeps transitive Component dependencies](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/builder-multi-application.test.js#L226) — `tests/regression/builder-multi-application.test.js`
-- [makes a graph of its blocks a function of numbers: the points a list given, the same run, js and wasm](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Geometry/Geometry.test.js#L43) — `libraries/ElemenxCommon/services/Geometry/Geometry.test.js`
+- [makes a graph of numbers of its blocks give what its Kernel gives](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Envelope/Envelope.test.js#L163) — `libraries/ElemenxCommon/services/Envelope/Envelope.test.js`
 
-+10 ещё в тех же файлах
++11 ещё в тех же файлах

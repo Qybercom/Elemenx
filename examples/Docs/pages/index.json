@@ -2766,6 +2766,13 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "Envelope",
+					"Title": {
+						"en": "Envelope"
+					},
+					"Library": "ElemenxCommon"
+				},
+				{
 					"ID": "FPS",
 					"Title": {
 						"en": "FPS"
@@ -3557,6 +3564,13 @@
 					"ID": "SceneGalaxy",
 					"Title": {
 						"en": "SceneGalaxy"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneGiants",
+					"Title": {
+						"en": "SceneGiants"
 					},
 					"Library": "ElemenxGraphics"
 				},

@@ -327,6 +327,77 @@
 	font-weight: 600;
 }
 
+/* The marks of aiming from a ship: its nose, what it aims at, its lead, an arrow to it out of the view, what lies near the nose. */
+.elemenx-scene-sight {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.elemenx-scene-sight-nose,
+.elemenx-scene-sight-mark,
+.elemenx-scene-sight-target,
+.elemenx-scene-sight-lead,
+.elemenx-scene-sight-arrow,
+.elemenx-scene-sight-label {
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+.elemenx-scene-sight-nose {
+	width: 18px;
+	height: 18px;
+	border: 1px solid var(--elemenx-scene-label);
+	border-radius: 50%;
+	opacity: 0.7;
+}
+
+.elemenx-scene-sight-mark {
+	width: 22px;
+	height: 22px;
+	border: 1px solid var(--elemenx-scene-label);
+	opacity: 0.35;
+}
+
+.elemenx-scene-sight-target {
+	width: 34px;
+	height: 34px;
+	border: 2px solid var(--elemenx-scene-selection);
+}
+
+.elemenx-scene-sight-target[data-ready="true"] {
+	border-style: double;
+	border-width: 4px;
+}
+
+.elemenx-scene-sight-lead {
+	width: 10px;
+	height: 10px;
+	border: 1px solid var(--elemenx-scene-selection);
+	transform-origin: center;
+	rotate: 45deg;
+}
+
+.elemenx-scene-sight-arrow {
+	width: 0;
+	height: 0;
+	border-top: 8px solid transparent;
+	border-bottom: 8px solid transparent;
+	border-left: 14px solid var(--elemenx-scene-selection);
+}
+
+.elemenx-scene-sight-label {
+	padding: 1px 6px;
+	font-size: 11px;
+	line-height: 16px;
+	color: var(--elemenx-scene-selection);
+	white-space: nowrap;
+	text-shadow: 0 1px 2px var(--elemenx-scene-shadow);
+}
+
 /* The names: buttons over the places of their bodies, moved every frame. */
 .elemenx-scene-labels {
 	position: absolute;

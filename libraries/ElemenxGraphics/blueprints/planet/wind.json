@@ -188,7 +188,7 @@
 			"properties": [
 				{
 					"key": "Expression",
-					"value": "((Band < 30 ? -1 : Band < 60 ? 1 : -0.6) + (N - 0.5) * 0.8) * 8"
+					"value": "((floor(Band / (90 / (Cells > 0.5 ? Cells : 3))) >= (Cells > 0.5 ? Cells : 3) - 1 ? (floor(Band / (90 / (Cells > 0.5 ? Cells : 3))) >= 2 ? -0.6 : (floor(Band / (90 / (Cells > 0.5 ? Cells : 3))) - 2 * floor(floor(Band / (90 / (Cells > 0.5 ? Cells : 3))) / 2) > 0.5 ? 1 : -1)) : (floor(Band / (90 / (Cells > 0.5 ? Cells : 3))) - 2 * floor(floor(Band / (90 / (Cells > 0.5 ? Cells : 3))) / 2) > 0.5 ? 1 : -1)) + (N - 0.5) * 0.8) * 8"
 				}
 			]
 		},
@@ -224,7 +224,7 @@
 			"properties": [
 				{
 					"key": "Expression",
-					"value": "((Band < 30 ? -0.35 : Band < 60 ? 0.3 : -0.2) * (Latitude >= 0 ? 1 : -1) + (N - 0.5) * 0.8) * 8"
+					"value": "((floor(Band / (90 / (Cells > 0.5 ? Cells : 3))) >= (Cells > 0.5 ? Cells : 3) - 1 ? (floor(Band / (90 / (Cells > 0.5 ? Cells : 3))) >= 2 ? -0.2 : (floor(Band / (90 / (Cells > 0.5 ? Cells : 3))) - 2 * floor(floor(Band / (90 / (Cells > 0.5 ? Cells : 3))) / 2) > 0.5 ? 0.3 : -0.35)) : (floor(Band / (90 / (Cells > 0.5 ? Cells : 3))) - 2 * floor(floor(Band / (90 / (Cells > 0.5 ? Cells : 3))) / 2) > 0.5 ? 0.3 : -0.35)) * (Latitude >= 0 ? 1 : -1) + (N - 0.5) * 0.8) * 8"
 				}
 			]
 		},
@@ -249,6 +249,18 @@
 				{
 					"key": "Key",
 					"value": "North"
+				}
+			]
+		},
+		{
+			"id": "planet-wind-input-cells",
+			"type": "Input",
+			"x": 0,
+			"y": 1650,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Cells"
 				}
 			]
 		}
@@ -354,6 +366,18 @@
 			"id": "planet-wind-link-16",
 			"p1": "planet-wind-formula-9-out-Value",
 			"p2": "planet-wind-result-11-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "planet-wind-link-cells-6",
+			"p1": "planet-wind-input-cells-out-Value",
+			"p2": "planet-wind-formula-6-in-Cells",
+			"kind": "value"
+		},
+		{
+			"id": "planet-wind-link-cells-9",
+			"p1": "planet-wind-input-cells-out-Value",
+			"p2": "planet-wind-formula-9-in-Cells",
 			"kind": "value"
 		}
 	]
