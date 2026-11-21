@@ -28,11 +28,13 @@
  * (Ungroup(id)); a double press on its title renames it. Comments (comment of blocks, links and groups, in Markdown) are
  * shown as Comments says: caption (a line in a small muted text under a block, in a frame under its title, by the middle
  * of a link), icon (a mark with the text as its title) or hidden. A double press on the head of a block or on a comment
- * edits it (Comment(id, text) from code). select tells {Block, Link, Group, Blocks}.
+ * edits it (Comment(id, text) from code). select tells {Block, Link, Group, Blocks}. Its palette is as wide as its edge is
+ * dragged, kept for the next time (EditorPanes).
  */
 Elemenx.Component('Blueprint', {
 	$TemplateURL: 'Blueprint.html',
 	$StyleURL: 'Blueprint.css',
+	$Traits: ['EditorPanes'],
 	$Meta: {
 		Group: 'codes',
 		Icon: 'share',
@@ -56,6 +58,7 @@ Elemenx.Component('Blueprint', {
 		},
 		Sample: {Type: 'generator', Value: {version: 1, type: 'generator', parameters: [{key: 'Scale', type: 'float', value: 2}], blocks: [{id: 'n', type: 'Number', x: 40, y: 40, properties: [{key: 'Value', value: 3}]}, {id: 's', type: 'Parameter', x: 40, y: 160, properties: [{key: 'Key', value: 'Scale'}, {key: 'Type', value: 'float'}]}, {id: 'm', type: 'Multiply', x: 280, y: 90, properties: []}, {id: 'r', type: 'Result', x: 500, y: 100, properties: [{key: 'Key', value: 'Value'}]}], links: [{id: 'a', p1: 'n-out-Value', p2: 'm-in-A'}, {id: 'b', p1: 's-out-Value', p2: 'm-in-B'}, {id: 'c', p1: 'm-out-Out', p2: 'r-in-Value'}]}}
 	},
+	PanesKey: 'blueprint',
 	Value: null,
 	Type: 'flow',
 	Palette: true,

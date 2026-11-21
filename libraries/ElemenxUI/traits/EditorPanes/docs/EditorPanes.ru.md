@@ -3,4 +3,4 @@ EditorPanes: панели редактора нужной ширины — кр�
 - PaneWidth(name, fallback) — ширина панели в CSS ('220px'), запомненная или заданная по умолчанию.
 - PaneResized(name, event) — запомнить ширину, на которой закончилось перетаскивание края (событие resizeend директивы *resizable).
 
-Используют SceneEditor, PlanetEditor, ModelEditor и WorldEditor.
+Трейт библиотеки ElemenxUI. Используют SceneEditor, PlanetEditor, ModelEditor, WorldEditor, FloraEditor, CutsceneEditor, TextureLab (ElemenxGraphics) и Blueprint (ElemenxUI).

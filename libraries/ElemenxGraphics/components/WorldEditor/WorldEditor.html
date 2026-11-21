@@ -72,7 +72,14 @@
 			<SceneEditor *if="Tab === 'world' && Level(Version) === 'location' && Fresh" #Location [graphs]="ShaderGraphs(Version)" [value]="LocationValue(Version)" [models]="ModelNames(Version)" (change)="LocationChanged" />
 			<ModelEditor *if="ResourceKind(Tab) === 'model'" [value]="ResourceValue(Version, Tab)" [generator]="Generator" (change)="ResourceChanged(Tab, $event)" />
 			<FloraEditor *if="ResourceKind(Tab) === 'plant'" [preset]="ResourceValue(Version, Tab)" (change)="ResourceChanged(Tab, $event.Preset)" />
-			<CutsceneEditor *if="ResourceKind(Tab) === 'cutscene'" [value]="ResourceValue(Version, Tab)" (change)="ResourceChanged(Tab, $event)" />
+			<div class="elemenx-world-editor-cutscene" *if="ResourceKind(Tab) === 'cutscene'">
+				<div class="elemenx-world-editor-graph-bar">
+					<Select Size="small" [Label]="$T('graphics.worldEditor.cutsceneLocation')" [Options]="LocationOptions(Version)" [Value]="CutsceneLocation(Version, Tab)" [Placeholder]="$T('graphics.worldEditor.pickLocation')" (change)="CutsceneLocationChosen(Tab, $event)" />
+					<span class="elemenx-world-editor-note" *if="!CutsceneLocation(Version, Tab)">{{$T('graphics.worldEditor.cutsceneNoLocation')}}</span>
+				</div>
+				<Scene *if="CutsceneLocation(Version, Tab)" class="elemenx-world-editor-cutscene-scene" [graphs]="ShaderGraphs(Version)" Setting="ground" Paused="true" Labels="false" Details="false" Quality="medium" [loader]="true" (ready)="CutsceneSceneReady" />
+				<CutsceneEditor class="elemenx-world-editor-cutscene-editor" [value]="ResourceValue(Version, Tab)" [scene]="CutsceneScene(Version, Tab)" (change)="ResourceChanged(Tab, $event)" />
+			</div>
 			<Blueprint *if="ResourceKind(Tab) === 'material'" Type="material" [value]="ResourceValue(Version, Tab)" (change)="ResourceChanged(Tab, $event)" />
 			<div class="elemenx-world-editor-graph" *if="GraphOf(Tab)">
 				<div class="elemenx-world-editor-graph-bar">

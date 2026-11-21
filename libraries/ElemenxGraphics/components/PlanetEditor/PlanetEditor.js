@@ -93,10 +93,13 @@ Elemenx.Component('PlanetEditor', {
 		{ID: 'moisture', Key: 'graphics.planetEditor.overlays.moisture'},
 		{ID: 'biomes', Key: 'graphics.planetEditor.overlays.biomes'}
 	],
-	/* The fields of the planet, and of each kind of stroke with their first values. */
+	/*
+	 * The fields of the planet, and of each kind of stroke with their first values; those of a planet that tells none of
+	 * ScenePlanet.Defaults (resources/planet/defaults), given as it is made. Regression: a copy of them here too.
+	 */
 	Settings: [
-		{Key: 'Seed', Value: 'planet'}, {Key: 'Radius', Value: 6371}, {Key: 'Ocean', Value: 0.65}, {Key: 'Relief', Value: 8000},
-		{Key: 'Depth', Value: 6000}, {Key: 'Plates', Value: 14}, {Key: 'Detail', Value: 2}, {Key: 'LocationSize', Value: 4},
+		{Key: 'Seed', Value: null}, {Key: 'Radius', Value: null}, {Key: 'Ocean', Value: null}, {Key: 'Relief', Value: null},
+		{Key: 'Depth', Value: null}, {Key: 'Plates', Value: null}, {Key: 'Detail', Value: null}, {Key: 'LocationSize', Value: 4},
 		{Key: 'Grid', Value: 'cube'}
 	],
 	StrokeFields: {
@@ -1384,7 +1387,7 @@ Elemenx.Component('PlanetEditor', {
 
 		last = planets.Direction(end[0], end[1]);
 		here = planets.Direction(under.Latitude, under.Longitude);
-		far = Math.acos(Math.max(-1, Math.min(1, last[0] * here[0] + last[1] * here[1] + last[2] * here[2]))) * (Number((this.Value || {}).Radius) || 6371);
+		far = Math.acos(Math.max(-1, Math.min(1, last[0] * here[0] + last[1] * here[1] + last[2] * here[2]))) * (Number((this.Value || {}).Radius) || this.$Service('ScenePlanet').Defaults.Radius);
 
 		if (far < Math.max(1, Number(this.Brush.Radius) || 150) / 3) return;
 

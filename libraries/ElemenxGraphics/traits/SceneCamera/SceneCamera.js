@@ -28,6 +28,12 @@ Elemenx.Trait('SceneCamera', {
 		var scene = this.Scene();
 		var engine = this.Engine();
 		var state = {Active: '', From: null, Fly: 0, Flown: 0, Fov: 0, Cut: 0, Focus: 0, Was: null, Rigs: {}, Poses: {}};
+		/* What each rig of a camera is (resources/camera/rigs): its numbers and what it does. */
+		var rigs = Elemenx.Resources('Data', 'ElemenxGraphics/camera/rigs') || {};
+
+		/* The rigs to choose for a camera in an inspector (SceneEditor). */
+		engine.Options = engine.Options || {};
+		engine.Options['Camera:Rig'] = Object.keys(rigs);
 
 		function number (value, fallback) {
 			return value === undefined || value === null || value === '' || isNaN(Number(value)) ? fallback : Number(value);
@@ -70,11 +76,8 @@ Elemenx.Trait('SceneCamera', {
 
 		/* A color of #rrggbb, linear; white when it is none. */
 		function colorOf (value) {
-			var text = String(value || '').replace('#', '');
-			if (!/^[0-9a-fA-F]{6}$/.test(text)) return [1, 1, 1];
-
-			return [0, 2, 4].map(function (at) {
-				return Math.pow(parseInt(text.slice(at, at + 2), 16) / 255, 2.2);
+			return engine.Hex(value, [1, 1, 1]).map(function (part) {
+				return Math.pow(part, 2.2);
 			});
 		}
 
@@ -205,32 +208,37 @@ Elemenx.Trait('SceneCamera', {
 		 * the turn a little late, the steps of who carries it; gimbal: the horizon held, the turns smoothed, its pitch within
 		 * PitchMin and PitchMax; steadicam: it floats after its place on a spring, level; drone: its weight, leaning into how it
 		 * speeds up, hovering with a drift). Shake scales what shakes, Smooth (seconds) how late it turns, Lag (seconds) how late it
-		 * follows, Tilt how much of the lean of a drone its camera keeps.
+		 * follows, Tilt how much of the lean of a drone its camera keeps. What each rig is (resources/camera/rigs): its Shake,
+		 * Smooth and Lag; Still (as it is put), Roll (its roll kept), Stops (its pitch within its stops, its horizon level),
+		 * Spring (after its place on a spring of that damping), Lean (it leans as it speeds up), Hover (its drift and shiver, not
+		 * the breath of hands), Walk (the steps of who carries it). Regression: the numbers of each rig, and what it does by its
+		 * name, in the code alone.
 		 */
 		function rigged (object, raw, elapsed) {
 			var v = valuesOf(object);
 			var rig = String(v.Rig || 'tripod');
+			var set = rigs[rig] || rigs.tripod || {Still: true};
 			var kept = state.Rigs[object.ID];
 			var dt = Math.max(0, Math.min(0.1, elapsed));
 			var wanted = anglesOf(raw);
 			var seed = object.ID.length * 3.1 + object.ID.charCodeAt(0) * 0.37;
-			var shake = number(v.Shake, {handheld: 0.5, steadicam: 0.2, gimbal: 0.05, drone: 0.15}[rig] || 0);
-			var smooth = Math.max(0.001, number(v.Smooth, {handheld: 0.12, gimbal: 0.3, steadicam: 0.25, drone: 0.35}[rig] || 0.001));
-			var lag = Math.max(0.05, number(v.Lag, {steadicam: 0.6, drone: 0.9}[rig] || 0.05));
+			var shake = number(v.Shake, set.Shake || 0);
+			var smooth = Math.max(0.001, number(v.Smooth, set.Smooth || 0.001));
+			var lag = Math.max(0.05, number(v.Lag, set.Lag || 0.05));
 			var time;
 			var ease;
 			var position;
 			var roll;
 			var pitch;
 
-			if (rig === 'tripod' || !rig) {
+			if (set.Still) {
 				state.Rigs[object.ID] = null;
 
 				return raw;
 			}
 
 			if (!kept || kept.Rig !== rig || elapsed > 0.5) {
-				kept = state.Rigs[object.ID] = {Rig: rig, Time: 0, Place: raw.Position.slice(), Speed: [0, 0, 0], Yaw: wanted.Yaw, Pitch: wanted.Pitch, Roll: rig === 'handheld' ? wanted.Roll : 0, Carrier: raw.Carrier, Walked: 0, Lean: [0, 0]};
+				kept = state.Rigs[object.ID] = {Rig: rig, Time: 0, Place: raw.Position.slice(), Speed: [0, 0, 0], Yaw: wanted.Yaw, Pitch: wanted.Pitch, Roll: set.Roll ? wanted.Roll : 0, Carrier: raw.Carrier, Walked: 0, Lean: [0, 0]};
 			}
 
 			kept.Time += dt;
@@ -241,16 +249,16 @@ Elemenx.Trait('SceneCamera', {
 			kept.Yaw += angle(kept.Yaw, wanted.Yaw) * ease;
 			pitch = wanted.Pitch;
 
-			if (rig === 'gimbal' || rig === 'drone')
+			if (set.Stops)
 				pitch = Math.max(radians(number(v.PitchMin, -90)), Math.min(radians(number(v.PitchMax, 30)), pitch));
 
 			kept.Pitch += (pitch - kept.Pitch) * ease;
-			kept.Roll += ((rig === 'handheld' ? wanted.Roll : 0) - kept.Roll) * ease;
+			kept.Roll += ((set.Roll ? wanted.Roll : 0) - kept.Roll) * ease;
 
 			/* The place: as it is put (in the hands, on a gimbal), or after it on a spring (a steadicam, a drone). */
-			if (rig === 'steadicam' || rig === 'drone') {
+			if (set.Spring) {
 				var spring = Math.PI * 2 / lag;
-				var damping = rig === 'drone' ? 0.85 : 0.7;
+				var damping = set.Spring;
 				var steps = Math.max(1, Math.ceil(dt / 0.01));
 				var before = kept.Speed.slice();
 				var k;
@@ -264,7 +272,7 @@ Elemenx.Trait('SceneCamera', {
 				}
 
 				/* A drone leans into how it speeds up, its camera keeping Tilt of it. */
-				if (rig === 'drone' && dt > 0) {
+				if (set.Lean && dt > 0) {
 					var push = [(kept.Speed[0] - before[0]) / dt, (kept.Speed[2] - before[2]) / dt];
 					var forth = [Math.sin(kept.Yaw), Math.cos(kept.Yaw)];
 					var lean = [Math.max(-0.4, Math.min(0.4, -(push[0] * forth[0] + push[1] * forth[1]) * 0.05)), Math.max(-0.4, Math.min(0.4, (push[0] * forth[1] - push[1] * forth[0]) * 0.05))];
@@ -284,7 +292,7 @@ Elemenx.Trait('SceneCamera', {
 
 			var yaw = kept.Yaw;
 
-			if (rig === 'drone') {
+			if (set.Hover) {
 				var tilt = number(v.Tilt, 0.3);
 
 				pitch += kept.Lean[0] * tilt;
@@ -305,7 +313,7 @@ Elemenx.Trait('SceneCamera', {
 			}
 
 			/* The steps of who carries it in the hands: a bob and a sway at the pace of the walk. */
-			if (rig === 'handheld' && raw.Carrier && kept.Carrier && dt > 0) {
+			if (set.Walk && raw.Carrier && kept.Carrier && dt > 0) {
 				var walk = Math.hypot(raw.Carrier[0] - kept.Carrier[0], raw.Carrier[2] - kept.Carrier[2]) / dt;
 
 				kept.Walked += dt * (1.6 + Math.min(walk, 6) * 0.35) * Math.min(1, walk / 0.5);

@@ -5,7 +5,8 @@
  * planet). At the level of the galaxy its panel searches round where the view looks (GalaxyData.Search: a type, a class,
  * what was edited, a mass and a temperature, a text; at most 500, the nearest first): a row chosen is picked and flown to,
  * chosen twice gone into. What a world uses is edited beside it, each in a tab of its own: models (ModelEditor), plants (FloraEditor),
- * cutscenes (CutsceneEditor) and materials (Blueprint of type material), kept in the world by their names. The graphs
+ * cutscenes (CutsceneEditor, each of a location of the world: Location, the key of it, played in a scene of it beside
+ * the cutscene; one added in a location is of it) and materials (Blueprint of type material), kept in the world by their names. The graphs
  * of the library its grounds and planets are made of (blueprints/planet, sketch, carve of ElemenxGraphics) are changed
  * for it alone, each in a tab of its own (Blueprint of type generator), a copy of the library's; Reset gives the
  * library's back. Its planets have those of planet/ (planet/relief: the option ReliefGraph...), the grounds of its
@@ -15,7 +16,7 @@
  * changes.
  * Value is the world: {Name, Galaxy (options of GalaxyData.Make, or its data), Planets ({'star/body': the options of a
  * planet}), Locations ({'star/body/location': a document of SceneEditor}), Resources ({Models, Plants, Cutscenes,
- * Materials}: {ID: {Name, Value}}), Graphs ({'planet/relief', 'sketch/river'...: a graph})}. change emits it after
+ * Materials}: {ID: {Name, Value}}; a cutscene with its Location too), Graphs ({'planet/relief', 'sketch/river'...: a graph})}. change emits it after
  * each edit, level the path ({Path: [{Level, ID}]}).
  * Its file (Pack, Open) is a zip: world.json, the parts of its galaxy under galaxy/ (its systems with them).
  * Methods: World(), Load(world), Galaxy(), Path(), Enter(level, id, callback), Up(index), AddResource(kind),
@@ -750,6 +751,10 @@ Elemenx.Component('WorldEditor', {
 
 		list[id] = {Name: known.One + ' ' + count, Value: kind === 'model' ? {Version: 1, Name: id, Recipe: {Parts: []}} : kind === 'cutscene' ? {} : null};
 
+		/* A cutscene added in a location is of it. */
+		if (kind === 'cutscene' && this.Level() === 'location')
+			list[id].Location = this.LocationKey();
+
 		this.Changed();
 		this.OpenResource(kind, id);
 
@@ -791,6 +796,63 @@ Elemenx.Component('WorldEditor', {
 		found.List[found.ID].Value = value;
 
 		this.$Emit('change', this.Own().World);
+	},
+
+	/* The cutscenes of the world */
+
+	/* Its locations to choose for a cutscene: {Value (its key), Label (its name, its body)}. */
+	LocationOptions: function () {
+		var locations = this.Own().World.Locations;
+
+		return Object.keys(locations).map(function (key) {
+			var parts = key.split('/');
+
+			return {Value: key, Label: (locations[key].Name || parts[2]) + ' (' + parts[1] + ')'};
+		});
+	},
+
+	/* The location a cutscene of a tab is of: its key, '' of none (or of one no longer in the world). */
+	CutsceneLocation: function (version, tab) {
+		var found = this.ResourceOf(tab);
+		var key = found && found.List[found.ID] ? found.List[found.ID].Location || '' : '';
+
+		return key && this.Own().World.Locations[key] ? key : '';
+	},
+
+	CutsceneLocationChosen: function (tab, event) {
+		var found = this.ResourceOf(tab);
+		if (!found || !found.List[found.ID]) return;
+
+		found.List[found.ID].Location = String(event && event.target ? event.target.value : event && event.detail !== undefined ? event.detail : event || '');
+
+		this.Changed();
+	},
+
+	CutsceneSceneReady: function (scene) {
+		this.Own().Cutscene = {Scene: scene, Key: ''};
+		this.Version++;
+	},
+
+	/*
+	 * The Scene a cutscene of the tab plays in: the one of its location (its document, of the graphs of the world), loaded
+	 * again when another location is chosen. Regression: its tab gave CutsceneEditor no scene: Play, Record, the camera and
+	 * the keys from the view did nothing.
+	 */
+	CutsceneScene: function (version, tab) {
+		var own = this.Own().Cutscene;
+		var key = this.CutsceneLocation(version, tab);
+		var document = key ? this.Grounded(this.Own().World.Locations[key], this.GroundGraphs()) : null;
+
+		/* None while its scene is made, nor one gone (its location taken away, the scene with it). */
+		if (!own || !own.Scene || !key || own.Scene.Scene().Gone) return null;
+
+		if (own.Key !== key) {
+			own.Key = key;
+
+			own.Scene.Load(document.Scene || {Version: 1, Seed: '', Time: 0, Travels: [], Added: [], Removed: [], Overrides: {}});
+		}
+
+		return own.Scene;
 	},
 
 	TabItems: function () {

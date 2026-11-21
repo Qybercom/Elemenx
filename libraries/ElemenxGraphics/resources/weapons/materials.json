@@ -1,0 +1,15 @@
+{
+	"Names": [
+		{"Material": "glass", "Match": "glass|window|windscreen|windshield|crystal"},
+		{"Material": "metal", "Match": "metal|steel|iron|chrome|alumin|copper|brass|gun|car_paint|carpaint|body_paint"},
+		{"Material": "wood", "Match": "wood|bark|plank|log|timber|crate"},
+		{"Material": "stone", "Match": "stone|brick|concrete|rock|marble|tile|plaster"},
+		{"Material": "flesh", "Match": "skin|flesh|face|body|hair"},
+		{"Material": "fabric", "Match": "cloth|fabric|leather|cotton|seat"}
+	],
+	"Walker": "flesh",
+	"Vehicle": "metal",
+	"Types": {"plant": "wood", "building": "stone", "rock": "stone", "ship": "metal", "vehicle": "metal"},
+	"Groups": {"buildings": "stone", "transport": "metal"},
+	"Otherwise": "wood"
+}

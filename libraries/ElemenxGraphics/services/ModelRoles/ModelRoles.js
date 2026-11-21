@@ -38,71 +38,20 @@ Elemenx.Service('ModelRoles', {
 
 	StorageKey: 'elemenx-model-roles',
 
-	/* The kinds of roles, by group, and what a new one starts as. */
-	Catalogue: [
-		{ID: 'door', Group: 'opens', Icon: 'door', Motion: {Type: 'hinge', Axis: [0, 1, 0], Angle: 70}, Pace: 0.6},
-		{ID: 'trunk', Group: 'opens', Icon: 'box', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 60}, Pace: 0.6},
-		{ID: 'hood', Group: 'opens', Icon: 'box', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: -55}, Pace: 0.6},
-		{ID: 'hatch', Group: 'opens', Icon: 'square', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 90}, Pace: 0.6},
-		{ID: 'window', Group: 'opens', Icon: 'square', Motion: {Type: 'slide', Way: [0, -1, 0], Reach: 0.4}, Pace: 0.4},
-		{ID: 'lever', Group: 'opens', Icon: 'sliders', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 40}, Pace: 1},
-		{ID: 'part', Group: 'opens', Icon: 'move', Motion: {Type: 'hinge', Axis: [0, 1, 0], Angle: 90}, Pace: 0.6},
-		{ID: 'fan', Group: 'turns', Icon: 'refresh', Motion: {Type: 'spin', Axis: [0, 1, 0], Speed: 2}, Open: 1},
-		{ID: 'wheel', Group: 'drives', Icon: 'circle', Motion: {Type: 'none'}, Corner: 'FL'},
-		{ID: 'caliper', Group: 'drives', Icon: 'circle', Motion: {Type: 'none'}, Corner: 'FL', Held: true},
-		{ID: 'steering', Group: 'drives', Icon: 'steering', Motion: {Type: 'hinge', Axis: [0, 0, 1], Angle: 120}, Drive: 'steer'},
-		{ID: 'pedal-gas', Group: 'drives', Icon: 'chevron-down', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 15}, Drive: 'gas'},
-		{ID: 'pedal-brake', Group: 'drives', Icon: 'chevron-down', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 15}, Drive: 'brake'},
-		{ID: 'handbrake', Group: 'drives', Icon: 'chevron-up', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 25}, Drive: 'hand'},
-		{ID: 'gear', Group: 'drives', Icon: 'sliders', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 12, Aside: [0, 0, 1], AsideAngle: 10}, Drive: 'gear'},
-		{ID: 'paddle', Group: 'drives', Icon: 'chevron-right', Motion: {Type: 'hinge', Axis: [0, 1, 0], Angle: 8}, Drive: 'paddle'},
-		{ID: 'stalk', Group: 'drives', Icon: 'chevron-up', Motion: {Type: 'hinge', Axis: [0, 0, 1], Angle: 10}, Drive: 'indicator'},
-		{ID: 'wiper', Group: 'drives', Icon: 'refresh', Motion: {Type: 'hinge', Axis: [0, 0, 1], Angle: 90}, Drive: 'wipers'},
-		{ID: 'lamp-head', Group: 'lights', Icon: 'sun', Motion: {Type: 'glow'}, Light: {Kind: 'head'}},
-		{ID: 'lamp-rear', Group: 'lights', Icon: 'sun', Motion: {Type: 'glow'}, Light: {Kind: 'rear'}},
-		{ID: 'lamp-brake', Group: 'lights', Icon: 'sun', Motion: {Type: 'glow'}, Light: {Kind: 'brake'}},
-		{ID: 'lamp-reverse', Group: 'lights', Icon: 'sun', Motion: {Type: 'glow'}, Light: {Kind: 'reverse'}},
-		{ID: 'lamp-indicator', Group: 'lights', Icon: 'sun', Motion: {Type: 'glow'}, Light: {Kind: 'indicator'}},
-		{ID: 'light', Group: 'lights', Icon: 'sun', Motion: {Type: 'glow'}, Light: {Kind: 'glow', Color: '#ffd9a0', Power: 1, Radius: 8}},
-		/* What hangs a wheel on a car: it goes with the travel of its wheel (stroke), turns with it (wheel-steer, roll). */
-		{ID: 'arm', Group: 'chassis', Icon: 'move', Motion: {Type: 'hinge', Axis: [0, 0, 1], Angle: 57.2958}, Drive: 'stroke', Corner: 'FL', Length: 0.3, Pace: 0},
-		{ID: 'knuckle', Group: 'chassis', Icon: 'circle', Motion: {Type: 'hinge', Axis: [0, 1, 0], Angle: 57.2958}, Drive: 'wheel-steer', Corner: 'FL', Pace: 0},
-		{ID: 'shock', Group: 'chassis', Icon: 'sliders', Motion: {Type: 'stretch', Way: [0, -1, 0]}, Drive: 'stroke', Corner: 'FL', Length: 0.3, Pace: 0},
-		{ID: 'halfshaft', Group: 'chassis', Icon: 'refresh', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 360}, Drive: 'roll', Corner: 'RL', Pace: 0},
-		{ID: 'gauge-speed', Group: 'chassis', Icon: 'gauge', Motion: {Type: 'hinge', Axis: [0, 0, 1], Angle: -240}, Drive: 'speed', Pace: 4},
-		{ID: 'gauge-rpm', Group: 'chassis', Icon: 'gauge', Motion: {Type: 'hinge', Axis: [0, 0, 1], Angle: -240}, Drive: 'rpm', Pace: 8},
-		{ID: 'exhaust', Group: 'chassis', Icon: 'cloud', Motion: {Type: 'emit'}, Effect: 'smoke', Rate: 6, Drive: 'gas'},
-		/* What flies: its control surfaces as its controls go, its propeller as its throttle, its gear up while it flies. */
-		{ID: 'aileron', Group: 'flight', Icon: 'move', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 20}, Drive: 'roll-air', Pace: 0},
-		{ID: 'elevator', Group: 'flight', Icon: 'move', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 20}, Drive: 'pitch', Pace: 0},
-		{ID: 'rudder', Group: 'flight', Icon: 'move', Motion: {Type: 'hinge', Axis: [0, 1, 0], Angle: 25}, Drive: 'yaw', Pace: 0},
-		{ID: 'flap', Group: 'flight', Icon: 'move', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 30}, Drive: 'flaps', Pace: 0.5},
-		{ID: 'propeller', Group: 'flight', Icon: 'refresh', Motion: {Type: 'spin', Axis: [0, 0, 1], Speed: 20}, Drive: 'throttle'},
-		{ID: 'gear-leg', Group: 'flight', Icon: 'chevron-up', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: 95}, Drive: 'airborne', Pace: 0.3},
-		/* Arms: a turret and its barrel as they aim (Aim of the object: {Yaw, Pitch} degrees), what recoils when it fires (Fired). */
-		{ID: 'turret', Group: 'weapons', Icon: 'refresh', Motion: {Type: 'hinge', Axis: [0, 1, 0], Angle: 1}, Drive: 'aim-yaw', Pace: 0},
-		{ID: 'barrel', Group: 'weapons', Icon: 'chevron-up', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: -1}, Drive: 'aim-pitch', Pace: 0, Follow: ''},
-		{ID: 'recoil', Group: 'weapons', Icon: 'chevron-down', Motion: {Type: 'slide', Way: [0, 0, -1], Reach: 0.15}, Drive: 'fire', Pace: 0},
-		/* Mechanisms: opened as they are told, or by the wind, the time of day, the throttle. */
-		{ID: 'drawer', Group: 'mechanisms', Icon: 'box', Motion: {Type: 'slide', Way: [0, 0, 1], Reach: 0.4}, Pace: 0.5},
-		{ID: 'lid', Group: 'mechanisms', Icon: 'box', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: -100}, Pace: 0.6},
-		{ID: 'button', Group: 'mechanisms', Icon: 'circle', Motion: {Type: 'slide', Way: [0, 0, -1], Reach: 0.01}, Pace: 0.08},
-		{ID: 'valve', Group: 'mechanisms', Icon: 'refresh', Motion: {Type: 'hinge', Axis: [0, 1, 0], Angle: 720}, Pace: 1.5},
-		{ID: 'turbine', Group: 'mechanisms', Icon: 'refresh', Motion: {Type: 'spin', Axis: [0, 0, 1], Speed: 0.6}, Drive: 'wind'},
-		{ID: 'clock-hour', Group: 'mechanisms', Icon: 'clock', Motion: {Type: 'hinge', Axis: [0, 0, 1], Angle: -360}, Drive: 'clock-hour', Pace: 0},
-		{ID: 'clock-minute', Group: 'mechanisms', Icon: 'clock', Motion: {Type: 'hinge', Axis: [0, 0, 1], Angle: -360}, Drive: 'clock-minute', Pace: 0},
-		{ID: 'radar', Group: 'mechanisms', Icon: 'refresh', Motion: {Type: 'spin', Axis: [0, 1, 0], Speed: 0.25}, Open: 1},
-		{ID: 'boom', Group: 'mechanisms', Icon: 'chevron-up', Motion: {Type: 'hinge', Axis: [1, 0, 0], Angle: -60}, Pace: 0.15},
-		{ID: 'platform', Group: 'mechanisms', Icon: 'chevron-up', Motion: {Type: 'slide', Way: [0, 1, 0], Reach: 3}, Pace: 0.1},
-		/* Points: where a thing is held (socket), what a part gives off (emitter), a part that stops what comes to it (collider). */
-		{ID: 'socket', Group: 'points', Icon: 'target', Motion: {Type: 'point'}},
-		{ID: 'emitter', Group: 'points', Icon: 'cloud', Motion: {Type: 'emit'}, Effect: 'smoke', Rate: 2},
-		{ID: 'collider', Group: 'points', Icon: 'square', Motion: {Type: 'collider'}}
-	],
+	/*
+	 * The kinds of roles, by group, and what a new one starts as (resources/models/roles): doors and hatches that open, what
+	 * drives a car (wheels, steering, pedals...), lamps, its chassis, what flies, arms, mechanisms, points. Regression: written
+	 * here, a role more needed a change of the code.
+	 */
+	Catalogue: [],
+
 
 	$OnCreate: function () {
 		var self = this;
 		var listeners = [];
+
+		this.Catalogue = (typeof Elemenx !== 'undefined' && Elemenx.Resources ? Elemenx.Resources('Data', 'ElemenxGraphics/models/roles') : null) || [];
+
 		var version = 0;
 		var kept = {};
 

@@ -597,6 +597,9 @@
 			"pickGraph": "Change a graph...",
 			"changeGraph": "Change it for this world",
 			"resetGraph": "Back to the library",
+			"cutsceneLocation": "A location",
+			"pickLocation": "Pick a location...",
+			"cutsceneNoLocation": "A cutscene plays in a location of the world: pick one.",
 			"graphNote": "The graph {name} of this world: its planets and locations are made by it, not by the library's."
 		}
 	}

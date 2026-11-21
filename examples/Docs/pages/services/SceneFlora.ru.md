@@ -7,7 +7,7 @@ SceneFlora: реалистичные растения из кода. Вид — 
 - Far(name) — дальняя форма вида дерева (так его рисует лес ScenePlanet): {Kind (crown или palm), Height (средняя, м), Bare (голый ствол, доля высоты), Width (наибольший радиус кроны, доля высоты), Profile (профиль кроны), Color (листва), Bark (ствол)}; null — для вида из стеблей (трав) и для имени не вида.
 - Preset(name) — копия пресета вида (или данного объекта) со всем, чего он не задал, от сосны.
 - Tree(preset, variant) — растение: {Name, Height (м), Bark и Leaves — геометрия {Positions, Normals, UVs, Indices} в метрах, стоит на 0; Lods — два упрощённых уровня тех же ветвей {Bark, Leaves} (пятая и четырнадцатая часть карточек листвы, крупнее на корень из этого, так что крона закрыта так же); Triangles, Nodes}.
-- Textures(preset) — его картинки {Bark, BarkNormal, Leaves}, каждая {Width, Height, Data (RGBA)}. Свои картинки вида — Bark.Image и Leaves.Image в пресете (тогда кора без рельефа).
+- Textures(preset) — его картинки {Bark, BarkNormal, Leaves}, каждая {Width, Height, Data (RGBA)}. Свои картинки вида — Bark.Image и Leaves.Image в пресете (тогда кора без рельефа). Кору рисует граф её узора — blueprints/flora/bark/<Bark.Pattern> (plain, plates, birch, ridges, fibrous, bands, diamonds, rings; каждый вызывает bark/base — общий шум и переход цвета Low → High по Split): на каждую точку входы CX, CZ (вокруг ствола), T (вверх по растению), Split, Rings, цвета Low и High, SFine и SCells — зёрна двух шумов; результаты R, G, B (цвет с тенью) и Bump (рельеф, из него — карта нормалей). Новый узор — новый граф без кода; свой граф вида — Bark.Graph. BarkRun(bark) — функция графа коры, BarkMake(bark) — его код; код узоров библиотеки (BarkCode) уходит к воркерам.
 - Asset(tree, textures) — растение как ассет файла (как его даёт Gltf): один узел, меш из двух частей — кора и листва (листва режется по альфе и видна с обеих сторон), материалы, картинки, Lods и Detail для SceneScatter.
 - Define(name, preset, options) — вид как модель SceneModels: {Variants (8), Size, Sway, Group, Keep (false — не хранить в браузере: предпросмотр FloraEditor)}. Варианты строятся в воркерах (Work) при первом запросе, каждый — другое растение вида; картинки одни на все варианты. Выращенный вид хранится в браузере (SceneCache, группа flora) под ключом из пресета, числа вариантов и суммы кода генератора (Key(preset, variants)): при следующем запуске он берётся оттуда сразу; вид со своими картинками не хранится. Возвращает имя.
 - FromPicture(picture, base) — вид по фотографии растения на белом или прозрачном фоне (её референс), от пресета base: голый ствол, профиль кроны, ширина, наклон и просветы, цвета листвы и коры; {Preset, Found {Box, Foot, Trunk, Rows, Holes}}, null — если растения нет. Из нескольких в ряд — самое крупное, каждое по своему стволу. Так работает FloraEditor.
@@ -28,6 +28,8 @@ SceneFlora: реалистичные растения из кода. Вид — 
 
 ## Методы
 
+- `BarkRun(bark)`
+- `BarkMake(bark)`
 - `Species()`
 - `Preset(name)`
 - `Tree(preset, variant)`
@@ -39,7 +41,7 @@ SceneFlora: реалистичные растения из кода. Вид — 
 
 ## Тесты
 
-- [draws its plants in its style: realistic plants of SceneFlora once they came, or the simple models of code](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4148) — `tests/regression/library-scene.test.js`
+- [draws its plants in its style: realistic plants of SceneFlora once they came, or the simple models of code](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4292) — `tests/regression/library-scene.test.js`
 - [grows each species as tall as it is, its bark and its leaves within a budget of triangles, the same of the same seed](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js#L16) — `libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js`
 - [turns the triangles of its bark out, as the normals of their corners look, at every level](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js#L52) — `libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js`
 - [takes more cards of the darker half of its atlas at its simpler levels, as its crown is in its own shade near](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js#L92) — `libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js`
@@ -52,4 +54,4 @@ SceneFlora: реалистичные растения из кода. Вид — 
 - [draws its bark (a normal map with it) and its leaves, cut where there is no leaf, or takes pictures of its own](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js#L361) — `libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js`
 - [defines a species as a model of SceneModels, each of its variants another plant, made in workers](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js#L382) — `libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js`
 
-+2 ещё в тех же файлах
++4 ещё в тех же файлах

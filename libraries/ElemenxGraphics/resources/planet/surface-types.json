@@ -1,0 +1,12 @@
+{
+	"rocky": {"Shader": 0, "Giant": false, "Cratered": true},
+	"desert": {"Shader": 0, "Giant": false, "Cratered": true},
+	"dwarf": {"Shader": 0, "Giant": false, "Cratered": true},
+	"moon": {"Shader": 0, "Giant": false, "Cratered": true},
+	"terran": {"Shader": 1, "Giant": false},
+	"ocean": {"Shader": 1, "Giant": false},
+	"ice": {"Shader": 2, "Giant": false},
+	"lava": {"Shader": 3, "Giant": false},
+	"gas": {"Shader": 4, "Giant": true},
+	"ice-giant": {"Shader": 4, "Giant": true}
+}

@@ -9,6 +9,7 @@
  *   Matrix(aspect) (both), Orbit(target, yaw, pitch, distance) (it looks at target from round it), Ray(x, y, width,
  *   height) ({Origin, Direction} through a point of the screen), Project(point, width, height) ({X, Y, Depth,
  *   Visible}: where a point of space is on the screen).
+ * - Patch(source, from, to): a shader with a text of it given to another; throws when the shader has none of it.
  * - CloudBlock(size): the block of noise of clouds (RGBA of size on each side, a Uint8Array for Volume), the same each
  *   time; Work() the worker that makes it off the main thread.
  *   Chunks.Lights is the light of up to 4 points on a surface, with the shadows of up to 4 balls (lighting(position,
@@ -36,7 +37,8 @@
  *   draws once: the program is Shaders.Quad with a fragment shader that takes the direction of each texel from
  *   cubeDirection(uFace, vQuad) (Chunks.Cube): a surface of noise computed once, sampled at every frame.
  * - Target(width, height, {Colors, Depth, DepthTexture, Float, Samples, Mipmaps}) returns textures to draw into: Textures,
- *   Depth (with DepthTexture), Begin(), End() (it resolves the samples and makes the mipmaps), Destroy();
+ *   Depth (with DepthTexture), Begin(), End() (it resolves the samples and makes the mipmaps), Destroy(); CopyDepth() the
+ *   depth drawn so far into the target drawn into now, copied into a depth texture it keeps ({Handle}; null on the canvas);
  *   Viewport(x, y, width, height) draws in a part of it. Texture takes options Float for an array of floats, Single for
  *   one byte a texel (a mask, read as .r), Srgb for the colors of a picture, Mipmaps, and Wrap and Filter of a sampler of glTF.
  * - Shadow(size) returns a shadow map, a depth texture for a uniform sampler2DShadow (Begin(region): what is drawn till End()
@@ -56,7 +58,7 @@
 Elemenx.Service('Renderer', {
 	$Meta: {
 		Description: 'The graphics of three dimensions on WebGL2: a camera and a renderer of shapes with shaders.',
-		Methods: ['Create(canvas, options)', 'Camera(options)', 'Source(names)', 'CloudBlock(size)', 'Work()']
+		Methods: ['Create(canvas, options)', 'Camera(options)', 'Source(names)', 'CloudBlock(size)', 'Work()', 'Patch(source, from, to)']
 	},
 	$OnCreate: function () {
 		this.Chunks.Noise = this.NoiseChunk();
@@ -147,6 +149,17 @@ Elemenx.Service('Renderer', {
 	},
 
 	/* The source of its members, for a worker (Workers): CloudBlock runs there as it does here. */
+	/*
+	 * A shader changed in one place: from (a text of it) given to (to). Regression: a change of the text of a shader made a
+	 * replace of it find nothing, and its program was made as it was, with no word of it: it throws now.
+	 */
+	Patch: function (source, from, to) {
+		if (String(source).indexOf(from) === -1)
+			throw new Error('Elemenx Renderer: the shader has no ' + JSON.stringify(from) + ' to patch');
+
+		return String(source).split(from).join(to);
+	},
+
 	Source: function (names) {
 		return this.$Service('Workers').Source(this, names);
 	},
@@ -1550,6 +1563,10 @@ Elemenx.Service('Renderer', {
 
 				gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
+				/* Where its draws go (the buffers of its samples, if it has them), and whether they have a depth (CopyDepth). */
+				made.Drawn = many || frame;
+				made.Deep = !!(many || depth || settings.DepthTexture || settings.DepthFrom && settings.DepthFrom.Depth);
+
 				made.Begin = function () {
 					gl.bindFramebuffer(gl.FRAMEBUFFER, many || frame);
 					gl.viewport(0, 0, width, height);
@@ -1639,6 +1656,11 @@ Elemenx.Service('Renderer', {
 					if (depth)
 						gl.deleteRenderbuffer(depth);
 
+					if (made.Copy) {
+						gl.deleteTexture(made.Copy.Handle);
+						gl.deleteFramebuffer(made.Copy.Frame);
+					}
+
 					gl.deleteFramebuffer(frame);
 
 					forget(textures, made);
@@ -1651,6 +1673,42 @@ Elemenx.Service('Renderer', {
 
 			Viewport: function (x, y, width, height) {
 				gl.viewport(x, y, width, height);
+			},
+
+			/*
+			 * The depth drawn so far into the target drawn into now, copied into a depth texture of its own (one kept by the
+			 * target, as large; its samples resolved), to read in a shader while its depth is drawn again: {Handle}. Null on the
+			 * canvas, or of a target of no depth.
+			 */
+			CopyDepth: function () {
+				var target = current.Target;
+				var copy;
+
+				if (!target || !target.Deep) return null;
+
+				copy = target.Copy;
+
+				if (!copy) {
+					copy = target.Copy = {Handle: gl.createTexture(), Frame: gl.createFramebuffer()};
+
+					gl.bindTexture(gl.TEXTURE_2D, copy.Handle);
+					gl.texStorage2D(gl.TEXTURE_2D, 1, gl.DEPTH_COMPONENT24, target.Width, target.Height);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+					gl.bindFramebuffer(gl.FRAMEBUFFER, copy.Frame);
+					gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, copy.Handle, 0);
+					gl.drawBuffers([gl.NONE]);
+					gl.readBuffer(gl.NONE);
+				}
+
+				gl.bindFramebuffer(gl.READ_FRAMEBUFFER, target.Drawn);
+				gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, copy.Frame);
+				gl.blitFramebuffer(0, 0, target.Width, target.Height, 0, 0, target.Width, target.Height, gl.DEPTH_BUFFER_BIT, gl.NEAREST);
+				gl.bindFramebuffer(gl.FRAMEBUFFER, target.Drawn);
+
+				return copy;
 			},
 
 			/* A depth texture seen from a light: what is drawn between Begin() and End() writes only into it. */

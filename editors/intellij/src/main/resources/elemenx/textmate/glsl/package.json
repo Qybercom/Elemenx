@@ -1,0 +1,22 @@
+{
+	"name": "elemenx-glsl",
+	"displayName": "GLSL of Elemenx",
+	"description": "The grammar of GLSL the extension of VS Code has (editors/vscode/syntaxes/glsl.json), for the TextMate bundles of the IDEs of JetBrains.",
+	"version": "1.0.0",
+	"contributes": {
+		"languages": [
+			{
+				"id": "glsl",
+				"aliases": ["GLSL", "glsl"],
+				"extensions": [".glsl", ".vert", ".frag"]
+			}
+		],
+		"grammars": [
+			{
+				"language": "glsl",
+				"scopeName": "source.glsl",
+				"path": "./syntaxes/glsl.json"
+			}
+		]
+	}
+}

@@ -289,9 +289,7 @@ Elemenx.Trait('SceneEffects', {
 		}
 
 		function tint (value) {
-			var text = String(value).replace('#', '');
-
-			return Array.isArray(value) ? value : [parseInt(text.slice(0, 2), 16) / 255, parseInt(text.slice(2, 4), 16) / 255, parseInt(text.slice(4, 6), 16) / 255];
+			return Array.isArray(value) ? value : engine.Hex(value, [1, 1, 1]);
 		}
 
 		/* The layers of a type with what an effect says of them. */
@@ -519,7 +517,6 @@ Elemenx.Trait('SceneEffects', {
 			var wide = one.Mouth ? one.Mouth[0] * one.Width : layer.Size[0] * one.Size * Math.sqrt(one.Volume) * one.Width;
 			var high = one.Mouth ? one.Mouth[1] * one.Width : wide;
 			var long = (one.Mouth ? Math.max(one.Mouth[0], one.Mouth[1]) * 8 : layer.Speed[0] * one.Size) * one.Length;
-			var level = self.Graphics().Level;
 
 			if (one.Once && age >= 1) return;
 
@@ -546,7 +543,7 @@ Elemenx.Trait('SceneEffects', {
 				uStraight: one.Mouth ? 1 : 0,
 				uHollow: layer.Hollow || 0,
 				uSoftEdge: layer.Soft || 0,
-				uSteps: level === 'low' ? 10 : level === 'medium' ? 14 : level === 'high' ? 20 : 28,
+				uSteps: self.Graphics().Effects.Steps,
 				uAge: age,
 				uClock: scene.Seconds % 1000 + (one.At[0] + one.At[2]) * 0.37,
 				uColor: shade(one, layer),

@@ -1,7 +1,7 @@
 /*
  * WorldEditorDemo (Graphics): WorldEditor · a world level in level: its galaxy (pick a star, put a star or a body of no
  * system where the view looks), the system of a star, a planet of it, a location of the planet; its models, plants,
- * cutscenes and materials each in a tab beside it; the whole world saved as one file and opened again. Its relief is a
+ * cutscenes (one of them, Arrival, of its location Harbour, played in a scene of it) and materials each in a tab beside it; the whole world saved as one file and opened again. Its relief is a
  * graph of its own (Graphs, planet/relief: ranges twice as high as of the library), changed in a tab as any graph of the
  * library its planets and grounds are made of.
  */
@@ -11,7 +11,26 @@ Elemenx.Component('WorldEditorDemo', {
 	World: null,
 
 	$OnCreate: function () {
-		this.World = {Name: 'Aurelia', Galaxy: {Seed: 'aurelia', Kind: 'spiral', Name: 'Aurelia'}, Graphs: {'planet/relief': this.HighRanges()}};
+		this.World = {Name: 'Aurelia', Galaxy: {Seed: 'aurelia', Kind: 'spiral', Name: 'Aurelia'}, Graphs: {'planet/relief': this.HighRanges()}, Locations: this.Locations(), Resources: {Cutscenes: this.Cutscenes()}};
+	},
+
+	/* A location of the world to play a cutscene in: a harbour by the sea, two cameras over it, each looking at the other. */
+	Locations: function () {
+		return {'aurelia/coast/harbour': {Version: 1, Name: 'Harbour', Setting: 'ground', Scene: {Version: 1, Seed: '', Time: 0, Travels: [], Removed: [], Overrides: {}, Added: [
+			{ID: 'ground', Kind: 'ground', Values: {}, Traits: {Terrain: {World: this.$Service('SceneWorld').Library({Size: 400, Height: 20, Water: 0.25, Seed: 'harbour'})}}, Parts: []},
+			{ID: 'sun', Kind: 'sun', Values: {}, Traits: {Sun: {Time: 9}}, Parts: []},
+			{ID: 'pier', Kind: 'camera', Values: {X: -60, Y: -40}, Traits: {Camera: {Lift: 6, Target: 'cliff'}}, Parts: []},
+			{ID: 'cliff', Kind: 'camera', Values: {X: 70, Y: 30}, Traits: {Camera: {Lift: 40, Target: 'pier'}}, Parts: []}
+		]}}};
+	},
+
+	/* A cutscene of the harbour (its tab plays it in a scene of the location): from the pier to the cliff, a title over it. */
+	Cutscenes: function () {
+		return {'arrival': {Name: 'Arrival', Location: 'aurelia/coast/harbour', Value: {arrival: {Tracks: [
+			{Type: 'camera', Keys: [{At: 0, Camera: 'pier'}, {At: 4, Camera: 'cliff'}]},
+			{Type: 'fade', Keys: [{At: 0, Value: 1}, {At: 1, Value: 0}]},
+			{Type: 'title', Items: [{At: 0.5, Length: 3, Text: 'The harbour of Aurelia', Typing: 14, In: 0}]}
+		], Restore: true, Skip: true}}}};
 	},
 
 	/* The relief of the library with its ranges twice as high: the term of the ranges of its plains doubled. */

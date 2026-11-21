@@ -1,0 +1,830 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "bark-diamonds",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "bark-diamonds-input-cx",
+			"type": "Input",
+			"x": 200,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CX"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-input-cz",
+			"type": "Input",
+			"x": 200,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CZ"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-input-t",
+			"type": "Input",
+			"x": 200,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "T"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-input-split",
+			"type": "Input",
+			"x": 200,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Split"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-input-rings",
+			"type": "Input",
+			"x": 200,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Rings"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-input-lowr",
+			"type": "Input",
+			"x": 200,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowR"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-input-lowg",
+			"type": "Input",
+			"x": 200,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowG"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-input-lowb",
+			"type": "Input",
+			"x": 200,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowB"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-input-highr",
+			"type": "Input",
+			"x": 200,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighR"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-input-highg",
+			"type": "Input",
+			"x": 200,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighG"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-input-highb",
+			"type": "Input",
+			"x": 200,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighB"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-input-sfine",
+			"type": "Input",
+			"x": 200,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SFine"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-input-scells",
+			"type": "Input",
+			"x": 460,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SCells"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-base",
+			"type": "Call",
+			"x": 460,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/flora/bark/base"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-fallat",
+			"type": "Formula",
+			"x": 460,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(CX * 1.4, T * 20, CZ * 1.4)"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-fall",
+			"type": "NoiseSpec",
+			"x": 460,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 4
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-spotsat",
+			"type": "Formula",
+			"x": 460,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(CX * 4, T * 9, CZ * 4)"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-spots",
+			"type": "NoiseSpec",
+			"x": 460,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 4
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-edgeat",
+			"type": "Formula",
+			"x": 460,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(CX * 2, T * 26, CZ * 2)"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-edge",
+			"type": "NoiseSpec",
+			"x": 460,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "worley"
+				},
+				{
+					"key": "Fractal",
+					"value": "none"
+				},
+				{
+					"key": "Cell",
+					"value": "edge"
+				},
+				{
+					"key": "Jitter",
+					"value": 0.9
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-scar",
+			"type": "Formula",
+			"x": 460,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(0.7, 0.76, Fall) * smoothstep(0.3, 0.5, Spots)"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-foot",
+			"type": "Formula",
+			"x": 460,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 - smoothstep(0.04, 0.16, T + (N - 0.5) * 0.06)"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-fissure",
+			"type": "Formula",
+			"x": 460,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 - smoothstep(0.03, 0.1, Edge)"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-dark",
+			"type": "Formula",
+			"x": 460,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(Scar * 0.85, Foot * (0.5 + Fissure * 0.45))"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-colorr",
+			"type": "Formula",
+			"x": 720,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HighR + (LowR - HighR) * Dark"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-colorg",
+			"type": "Formula",
+			"x": 720,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HighG + (LowG - HighG) * Dark"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-colorb",
+			"type": "Formula",
+			"x": 720,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HighB + (LowB - HighB) * Dark"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-bump",
+			"type": "Formula",
+			"x": 720,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.5 + (N - 0.5) * 0.25 - Scar * 0.25 + Foot * (1 - Fissure) * 0.4"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-shade",
+			"type": "Formula",
+			"x": 720,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 + (N - 0.5) * 0.14"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-outr",
+			"type": "Formula",
+			"x": 720,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "ColorR * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-result-r",
+			"type": "Result",
+			"x": 720,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "R"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-outg",
+			"type": "Formula",
+			"x": 720,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "ColorG * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-result-g",
+			"type": "Result",
+			"x": 720,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "G"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-outb",
+			"type": "Formula",
+			"x": 720,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "ColorB * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-result-b",
+			"type": "Result",
+			"x": 720,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "B"
+				}
+			]
+		},
+		{
+			"id": "bark-diamonds-result-bump",
+			"type": "Result",
+			"x": 720,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Bump"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "bark-diamonds-link-0",
+			"p1": "bark-diamonds-input-cx-out-Value",
+			"p2": "bark-diamonds-base-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-1",
+			"p1": "bark-diamonds-input-cz-out-Value",
+			"p2": "bark-diamonds-base-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-2",
+			"p1": "bark-diamonds-input-t-out-Value",
+			"p2": "bark-diamonds-base-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-3",
+			"p1": "bark-diamonds-input-split-out-Value",
+			"p2": "bark-diamonds-base-in-Split",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-4",
+			"p1": "bark-diamonds-input-lowr-out-Value",
+			"p2": "bark-diamonds-base-in-LowR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-5",
+			"p1": "bark-diamonds-input-lowg-out-Value",
+			"p2": "bark-diamonds-base-in-LowG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-6",
+			"p1": "bark-diamonds-input-lowb-out-Value",
+			"p2": "bark-diamonds-base-in-LowB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-7",
+			"p1": "bark-diamonds-input-highr-out-Value",
+			"p2": "bark-diamonds-base-in-HighR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-8",
+			"p1": "bark-diamonds-input-highg-out-Value",
+			"p2": "bark-diamonds-base-in-HighG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-9",
+			"p1": "bark-diamonds-input-highb-out-Value",
+			"p2": "bark-diamonds-base-in-HighB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-10",
+			"p1": "bark-diamonds-input-sfine-out-Value",
+			"p2": "bark-diamonds-base-in-SFine",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-11",
+			"p1": "bark-diamonds-input-cx-out-Value",
+			"p2": "bark-diamonds-fallat-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-12",
+			"p1": "bark-diamonds-input-t-out-Value",
+			"p2": "bark-diamonds-fallat-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-13",
+			"p1": "bark-diamonds-input-cz-out-Value",
+			"p2": "bark-diamonds-fallat-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-14",
+			"p1": "bark-diamonds-fallat-out-Value",
+			"p2": "bark-diamonds-fall-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-15",
+			"p1": "bark-diamonds-input-sfine-out-Value",
+			"p2": "bark-diamonds-fall-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-16",
+			"p1": "bark-diamonds-input-cx-out-Value",
+			"p2": "bark-diamonds-spotsat-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-17",
+			"p1": "bark-diamonds-input-t-out-Value",
+			"p2": "bark-diamonds-spotsat-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-18",
+			"p1": "bark-diamonds-input-cz-out-Value",
+			"p2": "bark-diamonds-spotsat-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-19",
+			"p1": "bark-diamonds-spotsat-out-Value",
+			"p2": "bark-diamonds-spots-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-20",
+			"p1": "bark-diamonds-input-sfine-out-Value",
+			"p2": "bark-diamonds-spots-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-21",
+			"p1": "bark-diamonds-input-cx-out-Value",
+			"p2": "bark-diamonds-edgeat-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-22",
+			"p1": "bark-diamonds-input-t-out-Value",
+			"p2": "bark-diamonds-edgeat-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-23",
+			"p1": "bark-diamonds-input-cz-out-Value",
+			"p2": "bark-diamonds-edgeat-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-24",
+			"p1": "bark-diamonds-edgeat-out-Value",
+			"p2": "bark-diamonds-edge-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-25",
+			"p1": "bark-diamonds-input-scells-out-Value",
+			"p2": "bark-diamonds-edge-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-26",
+			"p1": "bark-diamonds-fall-out-Value",
+			"p2": "bark-diamonds-scar-in-Fall",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-27",
+			"p1": "bark-diamonds-spots-out-Value",
+			"p2": "bark-diamonds-scar-in-Spots",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-28",
+			"p1": "bark-diamonds-input-t-out-Value",
+			"p2": "bark-diamonds-foot-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-29",
+			"p1": "bark-diamonds-base-out-N",
+			"p2": "bark-diamonds-foot-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-30",
+			"p1": "bark-diamonds-edge-out-Value",
+			"p2": "bark-diamonds-fissure-in-Edge",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-31",
+			"p1": "bark-diamonds-scar-out-Value",
+			"p2": "bark-diamonds-dark-in-Scar",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-32",
+			"p1": "bark-diamonds-foot-out-Value",
+			"p2": "bark-diamonds-dark-in-Foot",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-33",
+			"p1": "bark-diamonds-fissure-out-Value",
+			"p2": "bark-diamonds-dark-in-Fissure",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-34",
+			"p1": "bark-diamonds-input-highr-out-Value",
+			"p2": "bark-diamonds-colorr-in-HighR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-35",
+			"p1": "bark-diamonds-input-lowr-out-Value",
+			"p2": "bark-diamonds-colorr-in-LowR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-36",
+			"p1": "bark-diamonds-dark-out-Value",
+			"p2": "bark-diamonds-colorr-in-Dark",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-37",
+			"p1": "bark-diamonds-input-highg-out-Value",
+			"p2": "bark-diamonds-colorg-in-HighG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-38",
+			"p1": "bark-diamonds-input-lowg-out-Value",
+			"p2": "bark-diamonds-colorg-in-LowG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-39",
+			"p1": "bark-diamonds-dark-out-Value",
+			"p2": "bark-diamonds-colorg-in-Dark",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-40",
+			"p1": "bark-diamonds-input-highb-out-Value",
+			"p2": "bark-diamonds-colorb-in-HighB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-41",
+			"p1": "bark-diamonds-input-lowb-out-Value",
+			"p2": "bark-diamonds-colorb-in-LowB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-42",
+			"p1": "bark-diamonds-dark-out-Value",
+			"p2": "bark-diamonds-colorb-in-Dark",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-43",
+			"p1": "bark-diamonds-base-out-N",
+			"p2": "bark-diamonds-bump-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-44",
+			"p1": "bark-diamonds-scar-out-Value",
+			"p2": "bark-diamonds-bump-in-Scar",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-45",
+			"p1": "bark-diamonds-foot-out-Value",
+			"p2": "bark-diamonds-bump-in-Foot",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-46",
+			"p1": "bark-diamonds-fissure-out-Value",
+			"p2": "bark-diamonds-bump-in-Fissure",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-47",
+			"p1": "bark-diamonds-base-out-N",
+			"p2": "bark-diamonds-shade-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-48",
+			"p1": "bark-diamonds-colorr-out-Value",
+			"p2": "bark-diamonds-outr-in-ColorR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-49",
+			"p1": "bark-diamonds-shade-out-Value",
+			"p2": "bark-diamonds-outr-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-50",
+			"p1": "bark-diamonds-outr-out-Value",
+			"p2": "bark-diamonds-result-r-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-51",
+			"p1": "bark-diamonds-colorg-out-Value",
+			"p2": "bark-diamonds-outg-in-ColorG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-52",
+			"p1": "bark-diamonds-shade-out-Value",
+			"p2": "bark-diamonds-outg-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-53",
+			"p1": "bark-diamonds-outg-out-Value",
+			"p2": "bark-diamonds-result-g-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-54",
+			"p1": "bark-diamonds-colorb-out-Value",
+			"p2": "bark-diamonds-outb-in-ColorB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-55",
+			"p1": "bark-diamonds-shade-out-Value",
+			"p2": "bark-diamonds-outb-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-56",
+			"p1": "bark-diamonds-outb-out-Value",
+			"p2": "bark-diamonds-result-b-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-diamonds-link-57",
+			"p1": "bark-diamonds-bump-out-Value",
+			"p2": "bark-diamonds-result-bump-in-Value",
+			"kind": "value"
+		}
+	]
+}

@@ -8,11 +8,13 @@
  * plays it from its start as a video and gives the file (record {Name, Video}). Target is the object a move or a cut goes
  * to by default (the selection of an editor). Camera from view asks for a camera where the view of the Scene is (camera
  * {Props}); Key from view keys the move of the Target there, at the playhead.
- * Methods: Cutscene() (the one edited), Add(type), Remove(), Preview(seconds), Play(), Stop(), Record().
+ * Methods: Cutscene() (the one edited), Add(type), Remove(), Preview(seconds), Play(), Stop(), Record(). Its fields are as
+ * wide as their edge is dragged, kept for the next time (EditorPanes).
  */
 Elemenx.Component('CutsceneEditor', {
 	$TemplateURL: 'CutsceneEditor.html',
 	$StyleURL: 'CutsceneEditor.css',
+	$Traits: ['EditorPanes'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'video',
@@ -30,6 +32,7 @@ Elemenx.Component('CutsceneEditor', {
 			Label: 'What it shows, for screen readers.'
 		}
 	},
+	PanesKey: 'cutscene-editor',
 	Value: null,
 	Scene: null,
 	Target: '',

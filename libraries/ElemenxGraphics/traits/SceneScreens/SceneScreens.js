@@ -184,8 +184,7 @@ Elemenx.Trait('SceneScreens', {
 		 * frame of its own.
 		 */
 		engine.ScreensWorld = function (projection, view, world) {
-			var level = self.Graphics().Level;
-			var most = {low: 0, medium: 1, high: 2, ultra: 4}[level] || 0;
+			var most = self.Graphics().Screens.Most;
 			var matrix = math.Multiply(projection, view);
 			var tick = state.Tick = state.Tick + 1;
 			var used = {};

@@ -41,6 +41,15 @@ describe('Elemenx editors: one description of the extensions', function () {
 		expect(fs.readFileSync(path.join(root, 'vscode', 'README.md'), 'utf8')).toBe('# ' + extension.DisplayName + '\n\n' + fs.readFileSync(path.join(root, extension.Description), 'utf8'));
 	});
 
+	/* Regression: a line of undefined in the description, on the pages of the extensions in every Marketplace. */
+	it('says no undefined in the description of the extensions, and tells their GLSL', function () {
+		var description = fs.readFileSync(path.join(root, extension.Description), 'utf8');
+
+		expect(description).not.toMatch(/^undefined$/m);
+		expect(description).toContain('**GLSL**');
+		expect(fs.readFileSync(path.join(root, 'visualstudio', 'overview.md'), 'utf8')).not.toMatch(/^undefined$/m);
+	});
+
 	it('gives the plugin of JetBrains its name, vendor and description from it, and the logo as its icon', function () {
 		var gradle = fs.readFileSync(path.join(root, 'intellij', 'build.gradle.kts'), 'utf8');
 		var plugin = fs.readFileSync(path.join(root, 'intellij', 'src', 'main', 'resources', 'META-INF', 'plugin.xml'), 'utf8');

@@ -162,14 +162,20 @@ Elemenx.Trait('ScenePiping', {
 		}
 
 		/* A plume of a gas or of steam out of a place: an effect of the scene, once. */
+		/*
+		 * What a gas gives off out of a pipe (Plume of its fluid, resources/pipes/fluids): {Effect, Size and Power: [at no
+		 * pressure, more a bar, the most]}. Regression: every gas the steam of the code, of the sizes of steam or of none.
+		 */
 		function plume (key, pipe, at, way) {
 			var field = scene.Ground && scene.Ground.Field;
+			var made = (pipes.Fluids()[pipe.Fluid.Type] || {}).Plume;
+			var pressure = Number(pipe.Fluid.Pressure) || 0;
 
-			if (state.Plumes[key]) return;
+			if (state.Plumes[key] || !made) return;
 
 			state.Plumes[key] = 'plume-' + key;
 
-			self.Add('effect', {ID: state.Plumes[key], X: at[0], Y: at[2], Lift: at[1] - Math.max(0, field ? field.Height(at[0], at[2]) : 0), Type: 'steam', Size: pipe.Fluid.Type === 'steam' ? Math.min(3, 0.8 + pipe.Fluid.Pressure * 0.25) : 0.5, Power: pipe.Fluid.Type === 'steam' ? Math.min(2, 0.6 + pipe.Fluid.Pressure * 0.15) : 0.15, Aim: way, Light: false});
+			self.Add('effect', {ID: state.Plumes[key], X: at[0], Y: at[2], Lift: at[1] - Math.max(0, field ? field.Height(at[0], at[2]) : 0), Type: made.Effect, Size: Math.min(made.Size[2], made.Size[0] + pressure * made.Size[1]), Power: Math.min(made.Power[2], made.Power[0] + pressure * made.Power[1]), Aim: way, Light: false});
 		}
 
 		/* What flows in each pipe out of its mouth and its holes; each fluid on; what soaked away, ran into the sea or is too many, gone. */

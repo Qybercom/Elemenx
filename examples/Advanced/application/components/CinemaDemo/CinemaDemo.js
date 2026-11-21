@@ -161,13 +161,14 @@ Elemenx.Component('CinemaDemo', {
 
 		this.CinemaApply();
 	},
-	CinemaRigs: [
-		{Value: 'tripod', Label: 'Tripod'},
-		{Value: 'handheld', Label: 'Handheld'},
-		{Value: 'gimbal', Label: 'Gimbal'},
-		{Value: 'steadicam', Label: 'Steadicam'},
-		{Value: 'drone', Label: 'Drone'}
-	],
+	/* The rigs of a camera to choose: those of the library (resources/camera/rigs), each named. */
+	CinemaRigs: function () {
+		this.Rigs = this.Rigs || Object.keys(Elemenx.Resources('Data', 'ElemenxGraphics/camera/rigs') || {}).map(function (name) {
+			return {Value: name, Label: name.charAt(0).toUpperCase() + name.slice(1)};
+		});
+
+		return this.Rigs;
+	},
 	CinemaLensChosen: function (value) {
 		this.CinemaLens = value && value.detail !== undefined ? value.detail : value;
 

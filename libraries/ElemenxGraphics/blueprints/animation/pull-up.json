@@ -1,0 +1,1417 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-pull-up",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "animation-pull-up-phase",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Phase"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-leftarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.0625,
+							-5.85
+						],
+						[
+							0.125,
+							-11.48
+						],
+						[
+							0.1875,
+							-16.67
+						],
+						[
+							0.25,
+							-21.21
+						],
+						[
+							0.3125,
+							-24.94
+						],
+						[
+							0.375,
+							-27.72
+						],
+						[
+							0.4375,
+							-29.42
+						],
+						[
+							0.5,
+							-30
+						],
+						[
+							0.5625,
+							-29.42
+						],
+						[
+							0.625,
+							-27.72
+						],
+						[
+							0.6875,
+							-24.94
+						],
+						[
+							0.75,
+							-21.21
+						],
+						[
+							0.8125,
+							-16.67
+						],
+						[
+							0.875,
+							-11.48
+						],
+						[
+							0.9375,
+							-5.85
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-leftarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-leftarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							70
+						],
+						[
+							0.0625,
+							55.37
+						],
+						[
+							0.125,
+							41.3
+						],
+						[
+							0.1875,
+							28.33
+						],
+						[
+							0.25,
+							16.97
+						],
+						[
+							0.3125,
+							7.64
+						],
+						[
+							0.375,
+							0.71
+						],
+						[
+							0.4375,
+							-3.56
+						],
+						[
+							0.5,
+							-5
+						],
+						[
+							0.5625,
+							-3.56
+						],
+						[
+							0.625,
+							0.71
+						],
+						[
+							0.6875,
+							7.64
+						],
+						[
+							0.75,
+							16.97
+						],
+						[
+							0.8125,
+							28.33
+						],
+						[
+							0.875,
+							41.3
+						],
+						[
+							0.9375,
+							55.37
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-leftarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-leftfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							75
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-leftfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-leftforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.0625,
+							-23.41
+						],
+						[
+							0.125,
+							-45.92
+						],
+						[
+							0.1875,
+							-66.67
+						],
+						[
+							0.25,
+							-84.85
+						],
+						[
+							0.3125,
+							-99.78
+						],
+						[
+							0.375,
+							-110.87
+						],
+						[
+							0.4375,
+							-117.69
+						],
+						[
+							0.5,
+							-120
+						],
+						[
+							0.5625,
+							-117.69
+						],
+						[
+							0.625,
+							-110.87
+						],
+						[
+							0.6875,
+							-99.78
+						],
+						[
+							0.75,
+							-84.85
+						],
+						[
+							0.8125,
+							-66.67
+						],
+						[
+							0.875,
+							-45.92
+						],
+						[
+							0.9375,
+							-23.41
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-leftforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-leftleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							25
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-leftleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-leftshoulder-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							18
+						],
+						[
+							0.0625,
+							16.05
+						],
+						[
+							0.125,
+							14.17
+						],
+						[
+							0.1875,
+							12.44
+						],
+						[
+							0.25,
+							10.93
+						],
+						[
+							0.3125,
+							9.69
+						],
+						[
+							0.375,
+							8.76
+						],
+						[
+							0.4375,
+							8.19
+						],
+						[
+							0.5,
+							8
+						],
+						[
+							0.5625,
+							8.19
+						],
+						[
+							0.625,
+							8.76
+						],
+						[
+							0.6875,
+							9.69
+						],
+						[
+							0.75,
+							10.93
+						],
+						[
+							0.8125,
+							12.44
+						],
+						[
+							0.875,
+							14.17
+						],
+						[
+							0.9375,
+							16.05
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-leftshoulder-z",
+			"type": "Result",
+			"x": 520,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftShoulder.z"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-leftupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-12
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-leftupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-rightarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.0625,
+							-5.85
+						],
+						[
+							0.125,
+							-11.48
+						],
+						[
+							0.1875,
+							-16.67
+						],
+						[
+							0.25,
+							-21.21
+						],
+						[
+							0.3125,
+							-24.94
+						],
+						[
+							0.375,
+							-27.72
+						],
+						[
+							0.4375,
+							-29.42
+						],
+						[
+							0.5,
+							-30
+						],
+						[
+							0.5625,
+							-29.42
+						],
+						[
+							0.625,
+							-27.72
+						],
+						[
+							0.6875,
+							-24.94
+						],
+						[
+							0.75,
+							-21.21
+						],
+						[
+							0.8125,
+							-16.67
+						],
+						[
+							0.875,
+							-11.48
+						],
+						[
+							0.9375,
+							-5.85
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-rightarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-rightarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-70
+						],
+						[
+							0.0625,
+							-55.37
+						],
+						[
+							0.125,
+							-41.3
+						],
+						[
+							0.1875,
+							-28.33
+						],
+						[
+							0.25,
+							-16.97
+						],
+						[
+							0.3125,
+							-7.64
+						],
+						[
+							0.375,
+							-0.71
+						],
+						[
+							0.4375,
+							3.56
+						],
+						[
+							0.5,
+							5
+						],
+						[
+							0.5625,
+							3.56
+						],
+						[
+							0.625,
+							-0.71
+						],
+						[
+							0.6875,
+							-7.64
+						],
+						[
+							0.75,
+							-16.97
+						],
+						[
+							0.8125,
+							-28.33
+						],
+						[
+							0.875,
+							-41.3
+						],
+						[
+							0.9375,
+							-55.37
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-rightarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-rightfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							75
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-rightfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-rightforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.0625,
+							23.41
+						],
+						[
+							0.125,
+							45.92
+						],
+						[
+							0.1875,
+							66.67
+						],
+						[
+							0.25,
+							84.85
+						],
+						[
+							0.3125,
+							99.78
+						],
+						[
+							0.375,
+							110.87
+						],
+						[
+							0.4375,
+							117.69
+						],
+						[
+							0.5,
+							120
+						],
+						[
+							0.5625,
+							117.69
+						],
+						[
+							0.625,
+							110.87
+						],
+						[
+							0.6875,
+							99.78
+						],
+						[
+							0.75,
+							84.85
+						],
+						[
+							0.8125,
+							66.67
+						],
+						[
+							0.875,
+							45.92
+						],
+						[
+							0.9375,
+							23.41
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-rightforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-rightleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							25
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-rightleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-rightshoulder-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-18
+						],
+						[
+							0.0625,
+							-16.05
+						],
+						[
+							0.125,
+							-14.17
+						],
+						[
+							0.1875,
+							-12.44
+						],
+						[
+							0.25,
+							-10.93
+						],
+						[
+							0.3125,
+							-9.69
+						],
+						[
+							0.375,
+							-8.76
+						],
+						[
+							0.4375,
+							-8.19
+						],
+						[
+							0.5,
+							-8
+						],
+						[
+							0.5625,
+							-8.19
+						],
+						[
+							0.625,
+							-8.76
+						],
+						[
+							0.6875,
+							-9.69
+						],
+						[
+							0.75,
+							-10.93
+						],
+						[
+							0.8125,
+							-12.44
+						],
+						[
+							0.875,
+							-14.17
+						],
+						[
+							0.9375,
+							-16.05
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-rightshoulder-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightShoulder.z"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-rightupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-12
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-rightupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-curve-root-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.0625,
+							0.1389
+						],
+						[
+							0.125,
+							0.2725
+						],
+						[
+							0.1875,
+							0.3956
+						],
+						[
+							0.25,
+							0.5035
+						],
+						[
+							0.3125,
+							0.592
+						],
+						[
+							0.375,
+							0.6578
+						],
+						[
+							0.4375,
+							0.6983
+						],
+						[
+							0.5,
+							0.712
+						],
+						[
+							0.5625,
+							0.6983
+						],
+						[
+							0.625,
+							0.6578
+						],
+						[
+							0.6875,
+							0.592
+						],
+						[
+							0.75,
+							0.5035
+						],
+						[
+							0.8125,
+							0.3956
+						],
+						[
+							0.875,
+							0.2725
+						],
+						[
+							0.9375,
+							0.1389
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-root-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.y"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-number-pose",
+			"type": "Number",
+			"x": 780,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-pose",
+			"type": "Result",
+			"x": 1000,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pose"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-number-length",
+			"type": "Number",
+			"x": 780,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 2.2
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-length",
+			"type": "Result",
+			"x": 1000,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Length"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-number-loop",
+			"type": "Number",
+			"x": 780,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-loop",
+			"type": "Result",
+			"x": 1000,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Loop"
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-number-stride",
+			"type": "Number",
+			"x": 780,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-pull-up-result-stride",
+			"type": "Result",
+			"x": 1000,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stride"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-pull-up-link-0",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-leftarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-1",
+			"p1": "animation-pull-up-curve-leftarm-x-out-Value",
+			"p2": "animation-pull-up-result-leftarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-2",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-leftarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-3",
+			"p1": "animation-pull-up-curve-leftarm-z-out-Value",
+			"p2": "animation-pull-up-result-leftarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-4",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-leftfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-5",
+			"p1": "animation-pull-up-curve-leftfingers-out-Value",
+			"p2": "animation-pull-up-result-leftfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-6",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-leftforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-7",
+			"p1": "animation-pull-up-curve-leftforearm-y-out-Value",
+			"p2": "animation-pull-up-result-leftforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-8",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-leftleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-9",
+			"p1": "animation-pull-up-curve-leftleg-x-out-Value",
+			"p2": "animation-pull-up-result-leftleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-10",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-leftshoulder-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-11",
+			"p1": "animation-pull-up-curve-leftshoulder-z-out-Value",
+			"p2": "animation-pull-up-result-leftshoulder-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-12",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-leftupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-13",
+			"p1": "animation-pull-up-curve-leftupleg-x-out-Value",
+			"p2": "animation-pull-up-result-leftupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-14",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-rightarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-15",
+			"p1": "animation-pull-up-curve-rightarm-x-out-Value",
+			"p2": "animation-pull-up-result-rightarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-16",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-rightarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-17",
+			"p1": "animation-pull-up-curve-rightarm-z-out-Value",
+			"p2": "animation-pull-up-result-rightarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-18",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-rightfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-19",
+			"p1": "animation-pull-up-curve-rightfingers-out-Value",
+			"p2": "animation-pull-up-result-rightfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-20",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-rightforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-21",
+			"p1": "animation-pull-up-curve-rightforearm-y-out-Value",
+			"p2": "animation-pull-up-result-rightforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-22",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-rightleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-23",
+			"p1": "animation-pull-up-curve-rightleg-x-out-Value",
+			"p2": "animation-pull-up-result-rightleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-24",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-rightshoulder-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-25",
+			"p1": "animation-pull-up-curve-rightshoulder-z-out-Value",
+			"p2": "animation-pull-up-result-rightshoulder-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-26",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-rightupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-27",
+			"p1": "animation-pull-up-curve-rightupleg-x-out-Value",
+			"p2": "animation-pull-up-result-rightupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-28",
+			"p1": "animation-pull-up-phase-out-Value",
+			"p2": "animation-pull-up-curve-root-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-29",
+			"p1": "animation-pull-up-curve-root-y-out-Value",
+			"p2": "animation-pull-up-result-root-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-30",
+			"p1": "animation-pull-up-number-pose-out-Value",
+			"p2": "animation-pull-up-result-pose-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-31",
+			"p1": "animation-pull-up-number-length-out-Value",
+			"p2": "animation-pull-up-result-length-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-32",
+			"p1": "animation-pull-up-number-loop-out-Value",
+			"p2": "animation-pull-up-result-loop-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-pull-up-link-33",
+			"p1": "animation-pull-up-number-stride-out-Value",
+			"p2": "animation-pull-up-result-stride-in-Value",
+			"kind": "value"
+		}
+	]
+}

@@ -36,14 +36,12 @@ Elemenx.Trait('SceneLighting', {
 	Pipeline: null,
 	PipelineParameters: null,
 
-	/* What each level of the graphics draws. */
+	/*
+	 * What each level of the graphics draws (resources/graphics/quality): the light and the picture, and what the other traits
+	 * draw of it (Galaxy, Cosmos, Nebula, Screens). Regression: those of the other traits each a table of its own in its code.
+	 */
 	LightingSets: function () {
-		return {
-			low: {Post: false, Cascades: 1, Bounce: false, Occlusion: 0, Rays: false, Samples: 0, Reach: 0.6, Grass: false},
-			medium: {Post: true, Cascades: 1, Bounce: false, Occlusion: 0, Rays: false, Samples: 4, Reach: 0.8, Clouds: 9},
-			high: {Post: true, Cascades: 4, ShadowFar: 300, Bounce: true, Occlusion: 0.5, Contact: true, Rays: true, Samples: 4, Reach: 1, Mirror: true, Frames: true, Field: true, Clouds: 16, Lamps: 2, Probes: 8, ProbeSubset: 8},
-			ultra: {Post: true, Cascades: 4, ShadowFar: 500, Bounce: true, Occlusion: 1, Contact: true, Rays: true, Samples: 4, Reach: 1.4, Mirror: true, Frames: true, Field: true, Clouds: 26, Lamps: 2, Probes: 16, ProbeSubset: 4}
-		};
+		return Elemenx.Resources('Data', 'ElemenxGraphics/graphics/quality') || {};
 	},
 
 	/*
@@ -77,6 +75,11 @@ Elemenx.Trait('SceneLighting', {
 		var state = {Width: 0, Height: 0, Level: '', Scene: null, Bloom: [], Dark: null, Soft: null, Programs: null, Late: 0, Frames: 0, Step: 0, Screen: {}, Shaders: {}};
 		var levels = ['low', 'medium', 'high', 'ultra'];
 		var sets = this.LightingSets();
+		/*
+		 * The numbers of the picture over the passes of its graph (resources/graphics/picture): its bloom and how weather adds to
+		 * it, its sharpening, the flash of a lightning, the tone of a veil of haze. Regression: written in the call of the pass.
+		 */
+		var picture = Elemenx.Resources('Data', 'ElemenxGraphics/graphics/picture');
 
 		state.Floats = !!renderer.GL.getExtension('EXT_color_buffer_float');
 
@@ -770,7 +773,7 @@ Elemenx.Trait('SceneLighting', {
 				state.Fall = {Mesh: renderer.Mesh(geometry), Program: renderer.Program(shaders.FallVertex, shaders.Fall)};
 			}
 
-			if (!snow && now.Rain > 0.05 && level() !== 'low')
+			if (!snow && now.Rain > 0.05 && sets[level()].Splashes)
 				splashes(matrix, eye, ground, now, tone);
 
 			if (amount < 0.02) {
@@ -1280,14 +1283,14 @@ Elemenx.Trait('SceneLighting', {
 					uColor: inputs.Color,
 					uDepth: inputs.Depth,
 					uBloom: inputs.Bloom || emptyPicture(),
-					uBloomGain: 0.62 * (1 + (state.Now2 ? Math.min(1, (state.Now2.Fog || 0) + (state.Now2.Rain || 0) * 0.4 + (state.Now2.Snow || 0) * 0.5) : 0) * 1.6),
+					uBloomGain: picture.Bloom.Gain * (1 + (state.Now2 ? Math.min(1, (state.Now2.Fog || 0) * picture.Bloom.Fog + (state.Now2.Rain || 0) * picture.Bloom.Rain + (state.Now2.Snow || 0) * picture.Bloom.Snow) : 0) * picture.Bloom.Weather),
 					uPixel: [1 / renderer.Width, 1 / renderer.Height],
-					uSharp: frame.Set.Frames ? 0.16 : 0.12,
+					uSharp: frame.Set.Frames ? picture.Sharp.Frames : picture.Sharp.Plain,
 					uHeat: view.Heat || 0,
 					uMirror: inputs.Mirror || white,
 					uMirrorOn: inputs.Mirror ? frame.Set.Show === 'mirror' ? 2 : 1 : 0,
 					uMirrorInfo: inputs.Mirror && state.MirrorInfo ? state.MirrorInfo : white,
-					uFlash: now.Flash * (now.Strike && now.Strike.Ground === false ? 0.06 : 0.18),
+					uFlash: now.Flash * (now.Strike && now.Strike.Ground === false ? picture.Flash.Sky : picture.Flash.Ground),
 					uShimmer: view.Shimmer || new Array(16).fill(0),
 					uTick: scene.Seconds % 1000,
 					uEye: inputs.Eye || white,
@@ -1296,7 +1299,7 @@ Elemenx.Trait('SceneLighting', {
 					uNight: view.Night || 0,
 					uDeep: view.Deep || 0,
 					uNoise: state.Noise || emptyNoise(),
-					uGrade: [1 - (view.Veil || 0) * 0.14, 1 - (view.Veil || 0) * 0.05, 1 + (view.Veil || 0) * 0.02, Math.min(0.5, (view.Veil || 0) * 0.5 + (now.Clouds * now.Clouds) * 0.16)],
+					uGrade: [1 - (view.Veil || 0) * picture.Veil.Red, 1 - (view.Veil || 0) * picture.Veil.Green, 1 + (view.Veil || 0) * picture.Veil.Blue, Math.min(picture.Veil.Most, (view.Veil || 0) * picture.Veil.Haze + (now.Clouds * now.Clouds) * picture.Veil.Clouds)],
 					uSunColor: view.SunColor || [1, 1, 1],
 					uRays: rays * (view.Star ? view.Glare : Math.pow(1 - Math.min(1, now.Fog), 2)),
 					uShaft: inputs.Shaft || white,

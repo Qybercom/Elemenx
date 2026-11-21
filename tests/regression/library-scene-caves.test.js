@@ -17,9 +17,10 @@ async function mount (land) {
 
 	document.getElementById('mount').appendChild(component.$Element());
 
+	/* A wait that ends as soon as it is ready: as long as a busy machine takes (it gives false past it). */
 	await waitFor(function () {
 		return ready;
-	}, 4000);
+	}, 30000);
 
 	ready.Scene().Loop.Stop();
 
@@ -31,6 +32,28 @@ describe('Contract: a Scene under its ground: the floors of its tunnels and cave
 		await loadElemenx();
 
 		Use(['Scene', 'SceneObject', 'service:SceneWorld']);
+
+		/*
+		 * Warmed once: the first scene of the page makes the programs of the card (some 110: seconds of waiting for it), the
+		 * code of its graphs and its workers. Regression: the first test paid for it, some 6 s alone and over its minute under
+		 * the load of a full run.
+		 */
+		resetDOM();
+
+		var scene = await mount();
+		var inner = scene.Scene();
+		var now = performance.now() + 1000;
+
+		await waitFor(function () {
+			now += 30;
+			inner.Rest = 0;
+
+			scene.Engine().Frame(now);
+
+			return inner.Ground;
+		}, 30000);
+
+		while (owned.length) owned.pop().$Destroy();
 	});
 
 	beforeEach(function () {
@@ -62,7 +85,7 @@ describe('Contract: a Scene under its ground: the floors of its tunnels and cave
 			frame();
 
 			return inner.Ground;
-		}, 4000);
+		}, 30000);
 
 		field = inner.Ground.Field;
 
@@ -122,7 +145,7 @@ describe('Contract: a Scene under its ground: the floors of its tunnels and cave
 			frame();
 
 			return inner.Ground;
-		}, 4000);
+		}, 30000);
 
 		field = inner.Ground.Field;
 
@@ -150,8 +173,11 @@ describe('Contract: a Scene under its ground: the floors of its tunnels and cave
 		expect(inner.Objects.miner.World[1]).toBeLessThan(3);
 		expect(field.Height(0, 0) - inner.Objects.miner.World[1]).toBeGreaterThan(8);
 
-		/* A floor no walker comes to (in the rock under the tunnel): no way. */
-		expect(scene.Move('miner', [30, 30, -10])).toBe(false);
+		/*
+		 * A place no walker comes to (past the edge of the ground): no way. Not a floor in the rock under the hill: none is
+		 * there, so its height is the top of the hill, walked to out of the mouth of the tunnel (a walker came out of none).
+		 */
+		expect(scene.Move('miner', [250, 0])).toBe(false);
 	}, 60000);
 	/*
 	 * Regression: by its Error a square of a cave went on to half the size of the one beside, their surfaces met at other
@@ -176,7 +202,7 @@ describe('Contract: a Scene under its ground: the floors of its tunnels and cave
 			frame();
 
 			return inner.Ground;
-		}, 4000);
+		}, 30000);
 
 		scene.Paused = false;
 
@@ -196,6 +222,13 @@ describe('Contract: a Scene under its ground: the floors of its tunnels and cave
 
 			return visited.Out;
 		}, 40000);
+
+		/*
+		 * In and out again. Regression: the mouth of a tunnel of no height at its end had its floor 2.8 m under the ground (its
+		 * axis on it): the walker fell in and found no way out, the wait ran its 40 s out and nothing told it.
+		 */
+		expect(visited).toEqual({In: true, Out: true});
+		expect(inner.Ground.Field.Path({X: 0, Z: 0, Y: 1.2}, {X: -90, Z: 0}, {MaxSlope: 0.45, Step: 1.8})).toBeTruthy();
 
 		/* The lantern went with it, and it is one of the lamps of the scene. */
 		expect(inner.Objects.lantern).toBeTruthy();
@@ -250,7 +283,7 @@ describe('Contract: a Scene under its ground: the floors of its tunnels and cave
 			frame();
 
 			return inner.Ground && Object.keys(inner.Ground.Nodes).length > 4;
-		}, 6000);
+		}, 30000);
 
 		/* Its time goes: what stands is set down again in it. */
 		scene.Paused = false;
@@ -303,7 +336,7 @@ describe('Contract: a Scene under its ground: the floors of its tunnels and cave
 			other.Engine().Frame(now += 30);
 
 			return other.Scene().Ground && other.Scene().Ground.Field.Volume;
-		}, 4000);
+		}, 30000);
 
 		expect(other.Scene().Ground.Field.Density(20, top - 2, 20)).toBeLessThan(0);
 	}, 60000);

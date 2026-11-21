@@ -1324,6 +1324,103 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 	});
 
 	/*
+	 * Regression: the far ground of a location, drawn in depths of its own view, then its depths cleared, was the sky to the
+	 * air after the scene: the sky's weather over its hills (a grey band of a shower), the clouds of the sky over it, no
+	 * haze, its horizon sharp and dark. HorizonDepth puts the depths of the view of the location where it was: as far as each
+	 * point truly is, never nearer than where its ray leaves the ground of the location, no farther than the far plane; the
+	 * sky left as it is, the outline against it as far as the view goes.
+	 */
+	it('puts the depths of the far ground of a location in the view of the location, of their true distance', async function () {
+		var mounted = await mount('<Scene Paused="true" Background="false" Quality="low" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Mass="1" />' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var graphics = Elemenx.Service('Renderer');
+		var math = Elemenx.Service('Math');
+		var shaders = scene.Shaders(graphics);
+		var renderer = graphics.Create(document.createElement('canvas'), {Antialias: false});
+		var gl = renderer.GL;
+		var program = renderer.Program(graphics.Shaders.Quad, shaders.HorizonDepth);
+		var reader = renderer.Program(graphics.Shaders.Quad, '#version 300 es\nprecision highp float;\nin vec2 vQuad;\nuniform sampler2D uDepth;\nout vec4 outColor;\nvoid main() { outColor = vec4((1.0 - texture(uDepth, vQuad * 0.5 + 0.5).r) * 10000.0, 0.0, 0.0, 1.0); }');
+		var flat = renderer.Program(['#version 300 es', 'in vec3 aPosition;', 'void main() { gl_Position = vec4(aPosition, 1.0); }'].join('\n'), '#version 300 es\nprecision highp float;\nout vec4 outColor;\nvoid main() { outColor = vec4(0.2, 0.4, 0.2, 1.0); }');
+		var quad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
+		var location = math.Perspective(60, 1, 0.5, 20000);
+		var seen = math.Multiply(location, math.LookAt([0, 0, 0], [0, 0, -1], [0, 1, 0]));
+
+		expect(gl.getExtension('EXT_color_buffer_float')).toBeTruthy();
+
+		/* What the making of the context left. */
+		gl.getError();
+
+		expect(renderer.CopyDepth()).toBe(null);
+
+		/*
+		 * The far ground over the left half (columns 0 to 3 of 8) at a distance (km) of its own view (0.1 to 100 km); its depths read
+		 * as 1 - depth, times 10 000 (a target of half floats).
+		 */
+		function drawn (km, half) {
+			var target = renderer.Target(8, 8, {Float: true, DepthTexture: true, Samples: 4});
+			var shown = renderer.Target(8, 8, {Float: true});
+			var own = math.Perspective(60, 1, 0.1, 100);
+			var z = (own[10] * -km + own[14]) / km;
+			var left = renderer.Mesh({Positions: [-1, -1, z, 0, -1, z, 0, 1, z, -1, 1, z], Indices: [0, 1, 2, 0, 2, 3]});
+			var pixels = new Float32Array(8 * 8 * 4);
+			var copy;
+
+			target.Begin();
+
+			renderer.Clear([0, 0, 0, 1]);
+			renderer.Draw(left, flat, {}, {Cull: 'none'});
+
+			copy = renderer.CopyDepth();
+
+			gl.clear(gl.DEPTH_BUFFER_BIT);
+
+			renderer.Draw(quad, program, {uDepth: copy, uMatrix: seen, uInverse: math.Invert(seen), uForward: [0, 0, -1], uRange: [100, 100000], uPlace: [0, 0], uHalf: half}, {Blend: 'over', Cull: 'none'});
+
+			target.End();
+
+			shown.Begin();
+
+			renderer.Draw(quad, reader, {uDepth: target.Depth}, {Depth: false, Cull: 'none'});
+
+			gl.readPixels(0, 0, 8, 8, gl.RGBA, gl.FLOAT, pixels);
+
+			shown.End();
+
+			target.Destroy();
+			shown.Destroy();
+
+			return function (column, row) {
+				return 1 - pixels[(row * 8 + column) * 4] / 10000;
+			};
+		}
+
+		/* The depth of the view of the location of a point at a distance along the axis of the view (metres). */
+		function depthAt (metres) {
+			return (location[10] * -metres + location[14]) / metres * 0.5 + 0.5;
+		}
+
+		var far = drawn(8, 1000);
+		var exit = drawn(8, 12000);
+		var beyond = drawn(40, 1000);
+
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+		/* As far as it is (8 km), the sky (right half) left as it was. */
+		expect(far(1, 4)).toBeCloseTo(depthAt(8000), 5);
+		expect(far(6, 4)).toBe(1);
+		/* Its outline against the sky (column 3 by column 4) as far as the view goes, under 1. */
+		expect(far(3, 4)).toBeGreaterThan(depthAt(19000));
+		expect(far(3, 4)).toBeLessThan(1);
+		/* Within the ground of the location (12 km to its edge on each side): as far as the ray leaves it, never nearer. */
+		expect(exit(1, 4)).toBeGreaterThan(depthAt(8000) + 1e-5);
+		expect(exit(1, 4)).toBeLessThan(depthAt(19000));
+		/* Past the far plane (40 km of 20): no farther than it, still not the sky. */
+		expect(beyond(1, 4)).toBeGreaterThan(depthAt(19000));
+		expect(beyond(1, 4)).toBeLessThan(1);
+	});
+
+	/*
 	 * Regression: in real sizes a craft was as high as its Length (a model of a file is fitted to a height of 1): a cruiser
 	 * of 280 m was drawn 1.8 km long. Now its longest side is its Length.
 	 */
@@ -1350,6 +1447,53 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(long.Size / engine.Metre() * engine.CraftScale(long)).toBeCloseTo(100, 3);
 		expect(long.Size / engine.Metre() * extent[1]).toBeLessThan(70);
 	});
+
+	/*
+	 * Regression: the sea mirrored the sky of the Earth over every body (its air a blue of its own), the amber air of Vesper
+	 * over a blue sea. It takes the air of its ground (AirColor), as its sky does.
+	 */
+	it('draws the sea of a ground of the colour of the air of its ground', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="400" Height="20" Water="0.3" Seed="test" />' +
+			'<SceneObject ID="sun" Kind="sun" />' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var renderer = engine.Renderer;
+		var draw = renderer.Draw;
+		var seas = [];
+		var now = performance.now() + 1000;
+		var i;
+
+		for (i = 0; i < 400 && !(inner.Ground && inner.Ground.Field && inner.Ground.Field.Water); i++)
+			engine.Frame(now += 50, true);
+
+		expect(inner.Ground.Field.Water).toBeTruthy();
+
+		/* The air of the ground made again each frame (of its body, none here): of another colour once the frame draws. */
+		renderer.Draw = function (mesh, program, uniforms) {
+			inner.Ground.AirColor = [0.9, 0.6, 0.3, 0.95];
+
+			if (uniforms && uniforms.uWild !== undefined && uniforms.uFlow !== undefined)
+				seas.push(uniforms.uAir);
+
+			return draw.apply(renderer, arguments);
+		};
+
+		try {
+			engine.Frame(now += 50);
+		}
+		finally {
+			renderer.Draw = draw;
+		}
+
+		expect(seas.length).toBeGreaterThan(0);
+
+		seas.forEach(function (air) {
+			expect(air).toEqual([0.9, 0.6, 0.3, 0.95]);
+		});
+	}, 60000);
 
 	/* The game does not go on before all the view needs is there: the squares of its ground near the eye and what grows round it. */
 	it('starts a ground behind a veil, its time still, until its squares and what grows round the eye are made', async function () {
@@ -6806,6 +6950,39 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		turning.Car = {Spin: 0, Steer: 1};
 
 		expect(engine.WheelTurn(turning, pad)[0]).toBeLessThan(0.95);
+	});
+
+	/*
+	 * Regression: the needles of a car given no Top nor Redline read a top of 60 m/s and a redline of 7000, its physics 92 and
+	 * 7500: at 60 m/s the speed needle stood at the end, the rev needle past it before the engine changed up. Both read the
+	 * defaults of Physics (CarDefaults).
+	 */
+	it('reads the speed and the rpm of a car of no Top nor Redline of its own as its physics does', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var defaults = Elemenx.Service('Physics').CarDefaults;
+		var now = performance.now() + 100;
+		var i;
+
+		engine.Frame(now += 33);
+
+		scene.Add('unit', {ID: 'car', Name: '', Size: 1, X: 0, Y: 0, Vehicle: {Kind: 'car', Wheels: 'none', Openings: [
+			{Name: 'needle', Drive: 'speed', Pace: 1000},
+			{Name: 'tacho', Drive: 'rpm', Pace: 1000}
+		]}});
+
+		for (i = 0; i < 3; i++) {
+			inner.Objects.car.Car = {Forward: defaults.Top / 2, Rpm: defaults.Redline / 2};
+			inner.Rest = 0;
+
+			engine.Frame(now += 33);
+		}
+
+		expect(defaults).toEqual({Top: 92, Redline: 7500});
+		expect(inner.Objects.car.Opens.needle).toBeCloseTo(0.5, 3);
+		expect(inner.Objects.car.Opens.tacho).toBeCloseTo(0.5, 3);
 	});
 
 	it('turns what the driver moves round its hinge: the steering wheel with the steering, pedals, paddles on the wheel, a pair of doors each its own way', async function () {

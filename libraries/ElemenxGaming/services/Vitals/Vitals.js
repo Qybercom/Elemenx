@@ -22,7 +22,8 @@
  *   freighter}; change it or add yours); Settings(object): the health of an object (its trait Health over the one of its kind,
  *   or a Health or MaxHealth given to it alone), null for what cannot be hurt. Card(ledger, object, rows) adds its row of
  *   health to its card, Target(ledger, object) whether a weapon may aim at it (it has health and lives): the hooks SceneCard
- *   and SceneTarget of GameCombat and GameStrategy.
+ *   and SceneTarget of GameCombat and GameStrategy. Bar(context, x, y, part, color, width, height) draws a bar of health on
+ *   a canvas (2D) round x, y (px): width and height of its fill, part (0 to 1) of it in color over a dark frame a pixel wider.
  * - Of(scene): the ledger of a Scene, made once: it reads the health of its objects (Settings: Max, Armor, Resist, Parts, Regen,
  *   Death) and their Values.Health, writes Values.Health back, turns each hit of the scene (event hit of its weapons) into
  *   Damage, and at death does what Death says: remove (by default), break (Scene.Break), die (the clip die, then it stays),
@@ -31,7 +32,7 @@
 Elemenx.Service('Vitals', {
 	$Meta: {
 		Description: 'The health of what a game can hurt, as data with one way in: damage and heal through rules, events, a host and its clients.',
-		Methods: ['Make(options)', 'Of(scene)', 'Settings(object)', 'Card(ledger, object, rows)', 'Target(ledger, object)']
+		Methods: ['Make(options)', 'Of(scene)', 'Settings(object)', 'Card(ledger, object, rows)', 'Target(ledger, object)', 'Bar(context, x, y, part, color, width, height)']
 	},
 
 	$OnCreate: function () {
@@ -409,6 +410,20 @@ Elemenx.Service('Vitals', {
 	},
 
 	/* The row of health of an object on the card of its Scene (SceneCard of a behaviour), once whoever adds it. */
+	/*
+	 * A bar of health over what has it: its fill (width x height px, part of it in color) in a dark frame a pixel round it,
+	 * its middle at x, y. Regression: drawn by GameCombat and GameStrategy each its own way.
+	 */
+	Bar: function (context, x, y, part, color, width, height) {
+		context.fillStyle = 'rgba(0, 0, 0, 0.6)';
+
+		context.fillRect(x - width / 2 - 1, y - 3, width + 2, height + 2);
+
+		context.fillStyle = color;
+
+		context.fillRect(x - width / 2, y - 2, width * Math.max(0, part), height);
+	},
+
 	Card: function (ledger, object, rows) {
 		var state = object && ledger ? ledger.Get(object.ID) : null;
 		if (!state || rows.some(function (row) {

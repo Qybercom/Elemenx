@@ -732,3 +732,37 @@ describe('Contract: Physics Boat, a boat on the waves', function () {
 		expect(beached.Forward).toBeLessThan(1);
 	});
 });
+
+describe('Contract: Physics CarDefaults, what a car has none given of', function () {
+	var physics;
+
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:Physics']);
+
+		physics = Elemenx.Service('Physics');
+	});
+
+	/* A top speed of 92 m/s and a redline of 7500: a car of gears and none of its own revs up to that redline (in its last gear at its top, a little over). */
+	it('gives a car of no Top nor Redline of its own the ones of CarDefaults', function () {
+		var flat = function () {
+			return {Height: 0, Grip: 1, Drag: 0};
+		};
+		var state = {X: 0, Z: 0, Heading: 0, Forward: 0, Aside: 0, Rate: 0, Steer: 0, Y: 0, Rise: 0, Pitch: 0, PitchSpeed: 0, Roll: 0, RollSpeed: 0, Spin: 0};
+		var most = 0;
+		var i;
+
+		expect(physics.CarDefaults).toEqual({Top: 92, Redline: 7500});
+
+		for (i = 0; i < 120 * 30; i++) {
+			physics.Car(state, {Gas: true}, flat, {Gears: [0.3, 0.5, 0.7, 1]}, 1 / 120);
+
+			most = Math.max(most, state.Rpm);
+		}
+
+		expect(most).toBeGreaterThan(physics.CarDefaults.Redline * 0.9);
+		expect(most).toBeLessThanOrEqual(physics.CarDefaults.Redline * 1.05);
+		expect(state.Forward).toBeLessThanOrEqual(physics.CarDefaults.Top * 1.01);
+	});
+});

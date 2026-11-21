@@ -22,6 +22,9 @@
  *   its Velocity (ly a Myr).
  * - Glow(data, count): points of all of it seen from far, made of its seed: {Positions (ly), Colors (r, g, b, brightness),
  *   Knots, Disc, Bulge}: its light and its dust are drawn of Density along rays by a Scene (SceneGalaxy).
+ * - BulgeOf(manifest): its smooth middle {Radius (ly), Flat, Color, Bright}, the Bulge of Glow; StructureGLSL: the light of
+ *   its parts but its arms in GLSL (galaxy_old, galaxy_thin, galaxy_thick, galaxy_halo, galaxy_bulge), one for the galaxy
+ *   seen from far (SceneGalaxy) and its band seen from within (SceneCosmos).
  * - System(data, id): the system of a star (SystemData): written (Systems), else made of its seed with the mass of the star;
  *   of its black hole ('centre'): the hole with its disc and the young stars that go round it close and fast (as S2 round
  *   ours: hundreds to thousands of AU, long thin orbits), made of the seed of the galaxy. Hole(data): its black hole as a
@@ -101,6 +104,62 @@ Elemenx.Service('GalaxyData', {
 			Systems: {}
 		};
 	},
+
+	/* The middle of each kind of galaxy: [how large its bulge is, of the bulge of its shape; how flat it is]. */
+	Bulges: {spiral: [1.5, 0.62], barred: [1.25, 0.75], lenticular: [1.7, 0.55], elliptical: [0, 1], dwarf: [0, 1], irregular: [0.4, 0.8], ring: [1.3, 0.7]},
+
+	/*
+	 * Its smooth middle as its glow and its shaders draw it, from outside (SceneGalaxy) and from within (SceneCosmos):
+	 * {Radius (ly), Flat, Color, Bright}.
+	 */
+	BulgeOf: function (manifest) {
+		var m = manifest;
+		var middle = this.Bulges[m.Kind] || this.Bulges.spiral;
+
+		if (m.Kind === 'elliptical')
+			return {Radius: m.Radius * 0.07, Flat: m.Shape[2], Color: [1, 0.84, 0.64], Bright: 1};
+
+		if (m.Kind === 'dwarf')
+			return {Radius: m.Radius * 0.2, Flat: 1, Color: [1, 0.86, 0.7], Bright: 0.35};
+
+		return {Radius: this.Shape(m).Bulge * middle[0], Flat: middle[1], Color: [1, 0.86, 0.64], Bright: middle[0] ? 1 : 0};
+	},
+
+	/*
+	 * The light of the parts of a galaxy but its arms, in GLSL, at p (kly, of its frame), r across its plane and z up from
+	 * it: its old stars warm in its middle and bluer outward (galaxy_old), its thin disc and its thick one (galaxy_thin,
+	 * galaxy_thick: of its Disc and its Height), its halo, its bulge (of BulgeOf: a Sersic-like glow, its nucleus a point in
+	 * it) with its bar. One for its look from outside (SceneGalaxy) and from within (SceneCosmos): the band of a galaxy
+	 * seen from a star of it is of the numbers of the galaxy seen from far. Regression: written twice, the two drifted (a
+	 * thick disc of 0.08 against 0.03, a bar of other widths, a bulge of another curve and colour).
+	 */
+	StructureGLSL: [
+		'const vec3 lightOld = vec3(1.0, 0.86, 0.66);',
+		'const vec3 lightYoung = vec3(0.5, 0.66, 1.0);',
+		'const vec3 lightBulge = vec3(1.0, 0.8, 0.55);',
+		'vec3 galaxy_old(float r, float radius) {',
+		'	return mix(lightOld, vec3(0.78, 0.84, 1.0), smoothstep(radius * 0.12, radius * 0.6, r));',
+		'}',
+		'float galaxy_thin(float r, float z, float scale, float height) {',
+		'	return exp(-r / scale - z / height);',
+		'}',
+		'float galaxy_thick(float r, float z, float scale, float height) {',
+		'	return exp(-r / (scale * 1.25) - z / (height * 3.0)) * 0.03;',
+		'}',
+		'float galaxy_halo(vec3 p, float radius) {',
+		'	return exp(-length(p) / (radius * 0.25)) * 0.0012;',
+		'}',
+		'float galaxy_bulge(vec3 p, float bulge, float squash, float bright, float bar, float phase) {',
+		'	float rb = length(vec3(p.x, p.y / max(squash, 0.05), p.z)) / max(bulge * 0.7, 1e-4);',
+		'	float light = exp(-pow(rb + 0.02, 0.55) * 3.2) * bright * 5.0 + exp(-length(p) / max(bulge * 0.04, 1e-4)) * 6.0;',
+		'	if (bar > 0.0) {',
+		'		float along = p.x * cos(phase) + p.z * sin(phase);',
+		'		float across = -p.x * sin(phase) + p.z * cos(phase);',
+		'		light += exp(-pow(along / bar, 2.0) - pow(across / (bar * 0.2), 2.0) - pow(p.y / (bar * 0.12), 2.0)) * 1.4;',
+		'	}',
+		'	return light;',
+		'}'
+	].join('\n'),
 
 	/* The numbers of its shape: scale lengths and heights of its parts, ly. */
 	Shape: function (manifest) {
@@ -213,6 +272,14 @@ Elemenx.Service('GalaxyData', {
 		return this.Spiral(data).Arm(manifest, x / 1000, z / 1000, shift || 0, this.SeedNumber(manifest));
 	},
 
+	/* The kinds of galaxies as the graph of their density takes them (Kind). */
+	DensityKinds: ['spiral', 'barred', 'lenticular', 'elliptical', 'irregular', 'dwarf', 'ring'],
+
+	/*
+	 * The density of its stars at a place (ly): the graph blueprints/galaxy/density (DensityGraph of the manifest: one of
+	 * its own), of its kind, its shape (Shape), and what its arms (Arm), its clumps (Clumps) and its bar (Along, Across)
+	 * are there, those reckoned only for a kind that reads them. Regression: each kind a branch of the code.
+	 */
 	Density: function (data, place) {
 		var m = data.Manifest;
 		var s = this.Shape(m);
@@ -220,40 +287,64 @@ Elemenx.Service('GalaxyData', {
 		var y = place[1];
 		var z = place[2];
 		var radius = Math.sqrt(x * x + z * z);
-		var r = Math.sqrt(x * x + y * y + z * z);
-		/* The disc of an Earth-like neighbourhood: 0.004 at 54% of the radius of the galaxy. */
-		var disc = this.Local / Math.exp(-0.54 * m.Radius / s.Disc) * Math.exp(-radius / s.Disc) * Math.exp(-Math.abs(y) / s.Height);
-		var bulge = 3 * Math.exp(-Math.sqrt(x * x + z * z + y * y * 2.5) / s.Bulge);
-		var e;
-		var q;
-		var bar;
+		var kind = this.DensityKinds.indexOf(m.Kind);
+		var run = this.DensityRun(m.DensityGraph);
+		var list = run.List;
+		var slot = run.Slot;
+		var made;
 
-		if (m.Kind === 'elliptical') {
-			q = Math.sqrt(x * x / (m.Shape[0] * m.Shape[0]) + y * y / (m.Shape[2] * m.Shape[2]) + z * z / (m.Shape[1] * m.Shape[1]));
-			e = m.Radius * 0.22;
+		list[slot.Kind] = kind === -1 ? 0 : kind;
+		list[slot.X] = x;
+		list[slot.Y] = y;
+		list[slot.Z] = z;
+		list[slot.Radius] = m.Radius;
+		list[slot.Disc] = s.Disc;
+		list[slot.Height] = s.Height;
+		list[slot.Bulge] = s.Bulge;
+		list[slot.Bar] = s.Bar;
+		list[slot.Ring] = s.Ring;
+		list[slot.Width] = s.Width;
+		list[slot.Local] = this.Local;
+		list[slot.SX] = m.Shape[0];
+		list[slot.SY] = m.Shape[1];
+		list[slot.SZ] = m.Shape[2];
+		list[slot.Arm] = m.Kind === 'spiral' || m.Kind === 'barred' && radius > s.Bar ? this.Arm(m, x, z, 0, data) : 1;
+		list[slot.Clumps] = m.Kind === 'irregular' ? this.Clumps(data, x, y, z) : 0;
+		list[slot.Along] = m.Kind === 'barred' ? this.Along(m, x, z) : 0;
+		list[slot.Across] = m.Kind === 'barred' ? this.Across(m, x, z) : 0;
+		made = run.Main.apply(null, list);
 
-			return 0.01 * Math.exp(-7.67 * (Math.pow(Math.max(1e-6, q / e), 0.25) - 1));
-		}
+		return typeof made === 'number' ? made : made[0];
+	},
 
-		if (m.Kind === 'dwarf')
-			return 0.02 * Math.pow(1 + r * r / Math.pow(m.Radius * 0.25, 2), -2.5);
+	/* The function of the graph of the density (of the library, or one of its own), made once: {Main, List, Slot}. */
+	DensityRun: function (graph) {
+		var key = graph ? JSON.stringify(graph) : '';
+		var made;
+		var inputs;
 
-		if (m.Kind === 'ring')
-			return bulge * 0.5 + this.Local * 2 * Math.exp(-Math.pow((radius - s.Ring) / s.Width, 2)) * Math.exp(-Math.abs(y) / s.Height);
+		this.DensityMade = this.DensityMade || {};
 
-		if (m.Kind === 'irregular')
-			return disc * (0.3 + 1.7 * this.Clumps(data, x, y, z)) + bulge * 0.05;
+		if (this.DensityMade[key])
+			return this.DensityMade[key];
 
-		if (m.Kind === 'barred') {
-			bar = Math.exp(-Math.pow(this.Along(m, x, z) / s.Bar, 2) - Math.pow(this.Across(m, x, z) / (s.Bar * 0.18), 2) - Math.pow(y / (s.Bar * 0.15), 2));
+		made = this.$Service('Blueprints').NumericCode(graph || Elemenx.Resources('Blueprints', 'ElemenxGraphics/galaxy/density'), {}, null, ['Density']);
 
-			return disc * (radius > s.Bar ? this.Arm(m, x, z, 0, data) : 1) + bulge + bar * 1.5;
-		}
+		if (!made)
+			throw new Error('Elemenx GalaxyData: the graph of the density of a galaxy is not of numbers');
 
-		if (m.Kind === 'lenticular')
-			return disc * 1.2 + bulge * 1.4;
+		inputs = made.Numeric.Inputs.map(function (one) {
+			return one.Name;
+		});
+		this.DensityMade[key] = {Main: made.Run.Main, List: inputs.map(function () {
+			return 0;
+		}), Slot: {}};
 
-		return disc * this.Arm(m, x, z, 0, data) + bulge;
+		inputs.forEach(function (name, index) {
+			this.DensityMade[key].Slot[name] = index;
+		}, this);
+
+		return this.DensityMade[key];
 	},
 
 	/* Along and across the bar of a barred galaxy, ly. */
@@ -1090,8 +1181,7 @@ Elemenx.Service('GalaxyData', {
 		var made = 0;
 		var tries = 0;
 		var parts = m.Kind === 'elliptical' || m.Kind === 'dwarf' ? {Sphere: 1} : m.Kind === 'ring' ? {Bulge: 0.15, Ring: 0.6, Disc: 0.25} : m.Kind === 'lenticular' ? {Bulge: 0.25, Disc: 0.75} : m.Kind === 'irregular' ? {Clump: 0.9, Bulge: 0.1} : m.Kind === 'barred' ? {Bulge: 0.08, Bar: 0.14, Disc: 0.78} : {Bulge: 0.1, Disc: 0.9};
-		var bulges = {spiral: [1.5, 0.62], barred: [1.25, 0.75], lenticular: [1.7, 0.55], elliptical: [0, 1], dwarf: [0, 1], irregular: [0.4, 0.8], ring: [1.3, 0.7]};
-		var middle = bulges[m.Kind] || bulges.spiral;
+		var middle = this.Bulges[m.Kind] || this.Bulges.spiral;
 
 		function gamma (k) {
 			var product = 1;
@@ -1227,7 +1317,7 @@ Elemenx.Service('GalaxyData', {
 			Knots: knots,
 			/* Its disc as one smooth light under the points: {Scale, Radius (ly), Arms, Pitch, Phase, Ring (ly: the radius of a ring, 0 none), Bright}. */
 			Disc: {Scale: s.Disc, Radius: m.Radius, Arms: m.Arms, Pitch: m.Pitch, Phase: m.Phase, Ring: m.Kind === 'ring' ? s.Ring : 0, Width: s.Width, Bright: {spiral: 1, barred: 1, lenticular: 1.1, ring: 0.7, irregular: 0.35}[m.Kind] || 0},
-			Bulge: m.Kind === 'elliptical' ? {Radius: m.Radius * 0.07, Flat: m.Shape[2], Color: [1, 0.84, 0.64], Bright: 1} : m.Kind === 'dwarf' ? {Radius: m.Radius * 0.2, Flat: 1, Color: [1, 0.86, 0.7], Bright: 0.35} : {Radius: s.Bulge * middle[0], Flat: middle[1], Color: [1, 0.86, 0.64], Bright: middle[0] ? 1 : 0}
+			Bulge: this.BulgeOf(m)
 		};
 	},
 

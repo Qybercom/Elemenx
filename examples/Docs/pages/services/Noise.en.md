@@ -33,6 +33,7 @@ The same functions run in Node: they read no page.
 
 ## Tests
 
+- [smooths a number between two in a formula of its run, its Code and its numbers; jitters cells as Noise does](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/bark-graphs.test.js#L79) — `tests/regression/bark-graphs.test.js`
 - [reads a noise of the Noise Service by the spec of its block, in a generator and in a pass, the same numbers](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L665) — `tests/regression/blueprints.test.js`
 - [makes the kernel of the Noise Service a library of a shader: its value noise of the page as near as floats hold it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-glsl.test.js#L286) — `tests/regression/compilers-glsl.test.js`
 - [wraps whole numbers round as the hash of the Noise Service does](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L94) — `tests/regression/compilers-wasm.test.js`
@@ -44,6 +45,5 @@ The same functions run in Node: they read no page.
 - [does what follows: terraces, a power, the other way round, a range; blends of noises, a grid, a gradient and a curl](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Noise/Noise.test.js#L172) — `libraries/ElemenxCommon/services/Noise/Noise.test.js`
 - [writes a spec as a function of a shader that gives the same numbers as the page](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Noise/Noise.test.js#L203) — `libraries/ElemenxCommon/services/Noise/Noise.test.js`
 - [gives a shader what it asks of its GLSL and what that calls, once in it, its faster functions the numbers of the Kernel](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Noise/Noise.test.js#L263) — `libraries/ElemenxCommon/services/Noise/Noise.test.js`
-- [gives the very numbers of its js in wasm, a batch of points of a spec given once](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Noise/Noise.test.js#L381) — `libraries/ElemenxCommon/services/Noise/Noise.test.js`
 
-+8 more in the same files
++10 more in the same files

@@ -14,17 +14,23 @@
  * - Asset(options): {Nodes, Meshes, Materials, Images, Skins, Animations, Motions, Scene}: the person as Gltf gives one, its
  *   skin a mesh of the surface of its shapes (surface nets over a grid fine only near it), its eyes balls of their own, each
  *   corner skinned to the 4 bones nearest by the shapes it is of; Clips(bones) its clips.
- * - Clips(bones, options): the clips of a person: idle, attention, walk, jog, sprint, strafe-left, strafe-right, walk-back,
- *   run-back, crouch, crouch-walk, lie-front, lie-back, lie-left, lie-right, crawl, aim-hip, aim-shoulder, aim-bow, sit,
- *   drive, jump, jump-forward, hang, pull-up, swim-breaststroke, swim-back, swim-crawl ([{Name, Length, Channels}]);
- *   Pose(bones, pose) the turns of the bones of a pose.
+ * - Clips(bones, options): the clips of a person ([{Name, Length, Channels}]): its gaits (Gaits: idle, walk, jog, sprint,
+ *   walk-back, run-back, strafe-left, strafe-right, strafe-left-run, strafe-right-run, crouch, crouch-walk, jump,
+ *   jump-forward) and its poses (Poses: t-pose, attention, lie-front, lie-back, lie-left, lie-right, crawl, aim-hip,
+ *   aim-shoulder, aim-bow, sit, drive, hang, pull-up, swim-breaststroke, swim-crawl, swim-back), each of its graph (a pose:
+ *   Pose 1, every bone of its keys). Pose(bones, pose) the turns of the bones of a pose.
+ * - Gait(bones, graph, options): a clip of a graph of a gait (blueprints/animation/<name> of the library by its name, an
+ *   Application's of that name in its place, or a graph given): its legs of the path of the feet (GaitPose: a foot on the
+ *   ground is a point of it, so it never slides; two bones reach the ankle), the rest of the body of the keys of the graph,
+ *   its stride what the feet travel, fitted to the legs of the person (LegOf). Its numbers and keys were set beside clips
+ *   of Mixamo (their files are not in the library): within degrees of them.
  * - Define(name, options): a model of SceneModels of that name, made when it is first asked for (Load), as a file is.
  * SceneModels has the model mannequin of it (Options of none). The same functions run in Node: they read no page.
  */
 Elemenx.Service('SceneMannequin', {
 	$Meta: {
 		Description: 'A person made wholly of code, as detailed as a model of a file: its skin, its skeleton of Mixamo and its clips.',
-		Methods: ['Options(options)', 'Skeleton(options)', 'Shapes(options, bones)', 'Distance(shapes, point)', 'Near(shapes, point)', 'Asset(options)', 'Clips(bones, options)', 'Pose(bones, pose)', 'Define(name, options)']
+		Methods: ['Options(options)', 'Skeleton(options)', 'Shapes(options, bones)', 'Distance(shapes, point)', 'Near(shapes, point)', 'Asset(options)', 'Clips(bones, options)', 'Gait(bones, graph, options)', 'Pose(bones, pose)', 'Define(name, options)']
 	},
 
 	Options: function (options) {
@@ -69,27 +75,34 @@ Elemenx.Service('SceneMannequin', {
 			return bones.length - 1;
 		}
 
-		var top = 0.5 * legs + 0.03;
+		/*
+		 * The joints of the legs where a person has them: the hip at 0.53 of the height, the knee at 0.285, the ankle at
+		 * 0.046 (the thigh as long as the shank); the hips a little over the hip joints. The chest, the neck and the head stand
+		 * of base, where they were before the hips came up (regression: the hip joint at 0.5, a thigh shorter than the shank,
+		 * a run of bent knees).
+		 */
+		var base = 0.5 * legs + 0.03;
+		var top = 0.53 * legs + 0.035;
 		var hips = add('Hips', -1, [0, top, 0]);
-		var spine = add('Spine', hips, [0, top + 0.06, 0.004]);
-		var spine1 = add('Spine1', spine, [0, top + 0.13, 0.006]);
-		var spine2 = add('Spine2', spine1, [0, top + 0.2, 0.004]);
-		var neck = add('Neck', spine2, [0, top + 0.3, -0.004]);
-		var head = add('Head', neck, [0, top + 0.345, 0.004]);
+		var spine = add('Spine', hips, [0, top + 0.05, 0.004]);
+		var spine1 = add('Spine1', spine, [0, base + 0.14, 0.006]);
+		var spine2 = add('Spine2', spine1, [0, base + 0.2, 0.004]);
+		var neck = add('Neck', spine2, [0, base + 0.3, -0.004]);
+		var head = add('Head', neck, [0, base + 0.345, 0.004]);
 
-		add('HeadTop_End', head, [0, top + 0.345 + 0.125 * o.Head, 0.004]);
-		add('LeftEye', head, [0.0185 * o.Head, top + 0.403 + (o.Head - 1) * 0.06, 0.042 * o.Head]);
-		add('RightEye', head, [-0.0185 * o.Head, top + 0.403 + (o.Head - 1) * 0.06, 0.042 * o.Head]);
-		add('Jaw', head, [0, top + 0.37, 0.012]);
+		add('HeadTop_End', head, [0, base + 0.345 + 0.125 * o.Head, 0.004]);
+		add('LeftEye', head, [0.0185 * o.Head, base + 0.403 + (o.Head - 1) * 0.06, 0.042 * o.Head]);
+		add('RightEye', head, [-0.0185 * o.Head, base + 0.403 + (o.Head - 1) * 0.06, 0.042 * o.Head]);
+		add('Jaw', head, [0, base + 0.37, 0.012]);
 
 		[['Left', 1], ['Right', -1]].forEach(function (side) {
 			var s = side[1];
 			var name = side[0];
-			var clavicle = add(name + 'Shoulder', spine2, [s * 0.022, top + 0.282, 0.002]);
-			var arm = add(name + 'Arm', clavicle, [s * shoulder, top + 0.287, -0.004]);
-			var fore = add(name + 'ForeArm', arm, [s * (shoulder + 0.158), top + 0.287, -0.006]);
-			var wrist = shoulder + 0.158 + 0.135;
-			var hand = add(name + 'Hand', fore, [s * wrist, top + 0.287, -0.004]);
+			var clavicle = add(name + 'Shoulder', spine2, [s * 0.022, base + 0.282, 0.002]);
+			var arm = add(name + 'Arm', clavicle, [s * shoulder, base + 0.287, -0.004]);
+			var fore = add(name + 'ForeArm', arm, [s * (shoulder + 0.172), base + 0.287, -0.006]);
+			var wrist = shoulder + 0.172 + 0.146;
+			var hand = add(name + 'Hand', fore, [s * wrist, base + 0.287, -0.004]);
 
 			/* The fingers: three bones and an end each, from the knuckles of the palm; the thumb from its root at the wrist. */
 			[['Thumb', 0.012, 0.018, [0.022, 0.016, 0.012], -0.006], ['Index', 0.054, 0.0135, [0.024, 0.015, 0.011], 0], ['Middle', 0.056, 0.0035, [0.027, 0.017, 0.012], 0.001], ['Ring', 0.054, -0.0065, [0.025, 0.016, 0.011], 0], ['Pinky', 0.049, -0.0155, [0.019, 0.012, 0.01], -0.001]].forEach(function (finger) {
@@ -97,7 +110,7 @@ Elemenx.Service('SceneMannequin', {
 				var z = finger[2];
 				var parent = hand;
 				var thumb = finger[0] === 'Thumb';
-				var y = top + 0.287 + finger[4];
+				var y = base + 0.287 + finger[4];
 				var k;
 
 				for (k = 0; k < 4; k++) {
@@ -117,7 +130,7 @@ Elemenx.Service('SceneMannequin', {
 				}
 			});
 
-			var thigh = add(name + 'UpLeg', hips, [s * hip, top - 0.03, 0.002]);
+			var thigh = add(name + 'UpLeg', hips, [s * hip, top - 0.035, 0.002]);
 			var knee = add(name + 'Leg', thigh, [s * (hip - 0.004), 0.285 * legs + 0.0, 0.006]);
 			var ankle = add(name + 'Foot', knee, [s * (hip - 0.008), 0.046, -0.006]);
 			var toe = add(name + 'ToeBase', ankle, [s * (hip - 0.006), 0.014, 0.074]);
@@ -942,197 +955,393 @@ Elemenx.Service('SceneMannequin', {
 		return {Name: name, Length: length, Channels: channels, Stride: stride || 0, Loop: loop !== false, Made: self.Prefix};
 	},
 
+	/* SceneMannequin: gaits of graphs */
+
+	/* The clips of graphs of the library (blueprints/animation/<name>): each its own graph, an Application's in its place. */
+	Gaits: ['idle', 'walk', 'jog', 'sprint', 'walk-back', 'run-back', 'strafe-left', 'strafe-right', 'strafe-left-run', 'strafe-right-run', 'crouch', 'crouch-walk', 'jump', 'jump-forward'],
+
+	/* The length of a leg of the mannequin of no options (hip to ankle, metres): the graphs are of its size. */
+	LegOf: function (bones) {
+		var self = this;
+		var sum = 0;
+
+		[['LeftUpLeg', 'LeftLeg'], ['LeftLeg', 'LeftFoot']].forEach(function (pair) {
+			var a = bones[self.Find(bones, pair[0])].At;
+			var b = bones[self.Find(bones, pair[1])].At;
+
+			sum += Math.sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) + (a[2] - b[2]) * (a[2] - b[2]));
+		});
+
+		return sum;
+	},
+
+	/*
+	 * The values of a graph of a gait at a phase (0 to 1 of its cycle), a function: its graph run (of the library by its name,
+	 * ElemenxGraphics/animation/<name>, or a graph given), each phase once.
+	 */
+	GaitValues: function (graph) {
+		var blueprints = this.$Service('Blueprints');
+		var read = typeof graph === 'string' ? Elemenx.Resources('Blueprints', 'ElemenxGraphics/animation/' + graph) : graph;
+		var made;
+		var cache = {};
+
+		if (!read)
+			throw new Error('Elemenx SceneMannequin: no graph of the gait ' + graph);
+
+		made = blueprints.Code(read) || blueprints.Compile(read);
+
+		return function (phase) {
+			var key = Math.round(phase * 1e6);
+			if (!cache[key])
+				cache[key] = made.Run({}, {Phase: phase});
+
+			return cache[key];
+		};
+	},
+
+	/*
+	 * The pose of a gait at a phase ({Bone: [x, y, z] degrees, Root: [x, y, z] metres}): of the values of its graph, the legs
+	 * of the path of the feet. A foot on the ground is a point of the ground (the heel while its toes are up, the joint of the
+	 * toes while its heel is) going back at the speed of the body, so it never slides; in the air it goes on, lifted (Lift),
+	 * leaving and landing at the speed of the ground. Its pitch is of the graph; its ankle follows of the point and the pitch;
+	 * the thigh and the knee are two bones that reach it, the knee ahead (and out by Pole); the toes stay flat on the ground
+	 * while the heel is up (no more than ToeBend). The rest of the body is of the graph: the right side is the left half a
+	 * cycle on (turns round y and z turned over), or its own keys (Right...); the hips are turned by Yaw, the chest by Chest
+	 * of the world and the head looks ahead. Still: in place (the feet where they stand, both of one phase: a crouch, a jump).
+	 * Back: the cycle run back in time. Offset: the legs half a cycle on (a gait mirrored). Scale: of the legs, over those of
+	 * the mannequin the graph is of (its metres).
+	 */
+	GaitPose: function (bones, values, phase, scale, size) {
+		var self = this;
+		var D = Math.PI / 180;
+		var v0 = values(0);
+		var still = !!v0.Still;
+		var at = v0.Back ? ((1 - phase) % 1 + 1) % 1 : phase;
+		var offset = v0.Offset || 0;
+		var direction = (v0.Direction || 0) * D;
+		var travel = [Math.sin(direction), 0, Math.cos(direction)];
+		var pose = {};
+		var now = values(at);
+		var hipsRest = bones[0].At;
+		var height = v0.Height === undefined ? 1 : v0.Height;
+
+		function times (a, b) {
+			return [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]];
+		}
+
+		function back (q) {
+			return [-q[0], -q[1], -q[2], q[3]];
+		}
+
+		function rotate (q, p) {
+			var r = times(times(q, [p[0], p[1], p[2], 0]), back(q));
+
+			return [r[0], r[1], r[2]];
+		}
+
+		function round (axis, angle) {
+			var s = Math.sin(angle / 2);
+
+			return [axis[0] * s, axis[1] * s, axis[2] * s, Math.cos(angle / 2)];
+		}
+
+		function add (a, b) {
+			return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+		}
+
+		function sub (a, b) {
+			return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+		}
+
+		function times3 (a, k) {
+			return [a[0] * k, a[1] * k, a[2] * k];
+		}
+
+		function dot (a, b) {
+			return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+		}
+
+		function cross (a, b) {
+			return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+		}
+
+		function unit (a) {
+			var size = Math.sqrt(dot(a, a)) || 1;
+
+			return [a[0] / size, a[1] / size, a[2] / size];
+		}
+
+		/* The part of a direction across another (a side, of a front). */
+		function across (a, b) {
+			return unit(sub(a, times3(b, dot(a, b))));
+		}
+
+		/* A quaternion of the columns of a matrix. */
+		function basis (x, y, z) {
+			var trace = x[0] + y[1] + z[2];
+			var k;
+
+			if (trace > 0) {
+				k = 0.5 / Math.sqrt(trace + 1);
+
+				return [(y[2] - z[1]) * k, (z[0] - x[2]) * k, (x[1] - y[0]) * k, 0.25 / k];
+			}
+
+			if (x[0] > y[1] && x[0] > z[2]) {
+				k = 2 * Math.sqrt(1 + x[0] - y[1] - z[2]);
+
+				return [0.25 * k, (y[0] + x[1]) / k, (z[0] + x[2]) / k, (y[2] - z[1]) / k];
+			}
+
+			if (y[1] > z[2]) {
+				k = 2 * Math.sqrt(1 + y[1] - x[0] - z[2]);
+
+				return [(y[0] + x[1]) / k, 0.25 * k, (z[1] + y[2]) / k, (z[0] - x[2]) / k];
+			}
+
+			k = 2 * Math.sqrt(1 + z[2] - x[0] - y[1]);
+
+			return [(z[0] + x[2]) / k, (z[1] + y[2]) / k, 0.25 * k, (x[1] - y[0]) / k];
+		}
+
+		/* The turn that lays a direction a (its side s0) along b, its side as near s as it may be. */
+		function lay (a, s0, b, s) {
+			var side = across(s, b);
+
+			return times(basis(b, side, cross(b, side)), back(basis(a, s0, cross(a, s0))));
+		}
+
+		/* A turn as the degrees of Turn (y of x of z). */
+		function degrees (q) {
+			var x = q[0];
+			var y = q[1];
+			var z = q[2];
+			var w = q[3];
+
+			return [Math.asin(Math.max(-1, Math.min(1, -2 * (y * z - x * w)))) / D, Math.atan2(2 * (x * z + y * w), 1 - 2 * (x * x + y * y)) / D, Math.atan2(2 * (x * y + z * w), 1 - 2 * (x * x + z * z)) / D];
+		}
+
+		function rest (name) {
+			return bones[self.Find(bones, name)].At;
+		}
+
+		function turn (name) {
+			pose[name] = pose[name] || [0, 0, 0];
+
+			return pose[name];
+		}
+
+		/*
+		 * A pose (Pose: lying, sitting, swimming): every bone of its keys, no path of the feet; the right side its own keys or
+		 * the left's of the same moment, mirrored; the hips moved by Root.
+		 */
+		if (v0.Pose) {
+			Object.keys(now).forEach(function (key) {
+				var found = /^([A-Za-z0-9]+)\.([xyz])$/.exec(key);
+				var axis;
+
+				if (/^(Left|Right)(Fingers|Thumb)$/.test(key)) {
+					pose[key] = now[key];
+
+					if (/^Left/.test(key) && now[key.replace('Left', 'Right')] === undefined)
+						pose[key.replace('Left', 'Right')] = now[key];
+
+					return;
+				}
+
+				if (!found || found[1] === 'Root') return;
+
+				axis = 'xyz'.indexOf(found[2]);
+				turn(found[1])[axis] = now[key];
+
+				if (/^Left/.test(found[1]) && now[key.replace('Left', 'Right')] === undefined)
+					turn(found[1].replace('Left', 'Right'))[axis] = (axis === 0 ? 1 : -1) * now[key];
+			});
+
+			pose.Root = [(now['Root.x'] || 0) * scale, (now['Root.y'] || 0) * scale, (now['Root.z'] || 0) * scale];
+
+			return pose;
+		}
+
+		/* The turns of the graph: each Bone.axis, the right side the left's half a cycle on (or of one phase, in place). */
+		Object.keys(now).forEach(function (key) {
+			var found = /^([A-Za-z0-9]+)\.([xyz])$/.exec(key);
+			var axis;
+			var other;
+
+			/* How far the fingers curl (a hand's, the other's half a cycle on): of one number each. */
+			if (/^Left(Fingers|Thumb)$/.test(key)) {
+				pose[key] = still ? now[key] : values((at + offset) % 1)[key];
+
+				if (now[key.replace('Left', 'Right')] === undefined)
+					pose[key.replace('Left', 'Right')] = still ? now[key] : values((at + 0.5 + offset) % 1)[key];
+
+				return;
+			}
+
+			if (/^Right(Fingers|Thumb)$/.test(key)) {
+				pose[key] = now[key];
+
+				return;
+			}
+
+			if (!found || found[1] === 'Root') return;
+
+			axis = 'xyz'.indexOf(found[2]);
+
+			if (/^Left/.test(found[1])) {
+				turn(found[1])[axis] = still ? now[key] : values((at + offset) % 1)[key];
+				other = key.replace('Left', 'Right');
+
+				if (now[other] === undefined)
+					turn(found[1].replace('Left', 'Right'))[axis] = (axis === 0 ? 1 : -1) * (still ? now[key] : values((at + 0.5 + offset) % 1)[key]);
+			}
+			else {
+				turn(found[1])[axis] = now[key];
+			}
+		});
+
+		/* The body turned: the hips to the travel, the chest of the world, the head ahead. */
+		if (v0.Yaw || v0.Chest) {
+			turn('Hips')[1] += v0.Yaw || 0;
+			['Spine', 'Spine1', 'Spine2'].forEach(function (name) {
+				turn(name)[1] += ((v0.Chest || 0) - (v0.Yaw || 0)) / 3;
+			});
+			turn('Neck')[1] -= (v0.Chest || 0) * 0.3;
+			turn('Head')[1] -= (v0.Chest || 0) * 0.7;
+		}
+
+		var hipsTurn = this.Turn(pose.Hips || [0, 0, 0]);
+		var hipsAt = [(now['Root.x'] || 0) * scale, hipsRest[1] * height + (now['Root.y'] || 0) * scale, (now['Root.z'] || 0) * scale];
+
+		pose.Root = sub(hipsAt, hipsRest);
+
+		['Left', 'Right'].forEach(function (side, which) {
+			var sign = which === 0 ? 1 : -1;
+			var part = still ? at : (at + which * 0.5 + offset) % 1;
+			var mine = values(part);
+			var up = rest(side + 'UpLeg');
+			var knee = rest(side + 'Leg');
+			var ankle = rest(side + 'Foot');
+			var ball = rest(side + 'ToeBase');
+			var thigh = Math.sqrt(dot(sub(knee, up), sub(knee, up)));
+			var shank = Math.sqrt(dot(sub(ankle, knee), sub(ankle, knee)));
+			var stance = v0.Stance === undefined ? 1 : v0.Stance;
+			var stride = (v0.Stride || 0) * scale;
+			var reach = v0[side + 'Reach'] !== undefined ? v0[side + 'Reach'] : v0.Reach || 0;
+			var width = (v0[side + 'Width'] !== undefined ? v0[side + 'Width'] : v0.Width || 0) * scale;
+			var own = function (name) {
+				return mine[side + name] !== undefined ? mine[side + name] : mine[name];
+			};
+			var pitch = (own('FootPitch') || 0) * D;
+			var yaw = direction + sign * (v0.ToeOut || 0) * D;
+			var footTurn = times(round([0, 1, 0], yaw), round([1, 0, 0], pitch));
+			var toe = own('Toe') || 0;
+			var bend = v0.ToeBend === undefined ? 30 : v0.ToeBend;
+			var along;
+			var lift = 0;
+			var t;
+			var swing;
+
+			/* Where along the travel the heel's ground point is, and how high the ankle goes. */
+			if (still) {
+				along = reach * scale + (own('Along') || 0) * scale;
+				lift = Math.max(0, (v0.Follow ? (now['Root.y'] || 0) : 0) + (own('Lift') || 0)) * scale;
+			}
+			else if (part < stance) {
+				along = stride * (reach - part);
+			}
+			else {
+				t = (part - stance) / (1 - stance);
+
+				/* Forward of the body in the air: a curve of Hermite, leaving and landing at the speed of the ground. */
+				var from = stride * (reach - stance);
+				var to = stride * reach;
+				var tangent = -stride * (1 - stance);
+
+				along = (2 * t * t * t - 3 * t * t + 1) * from + (t * t * t - 2 * t * t + t) * tangent + (-2 * t * t * t + 3 * t * t) * to + (t * t * t - t * t) * tangent;
+
+				/* Its Lift and Swing are keys of the part of the swing: the graph run at that part (else an arc of the number Lift). */
+				swing = values(t);
+				lift = (swing.Lift !== undefined ? Math.max(0, swing.Lift) : (v0.Lift || 0) * Math.pow(Math.sin(Math.PI * t), v0.LiftShape || 1.2)) * scale;
+
+				/* The foot a little back or on of the plain path in the air (the heel kicked up behind), a part of the stride. */
+				if (swing.Swing !== undefined)
+					along += stride * swing.Swing * Math.sin(Math.PI * t);
+			}
+
+			/* The toes flat on the ground while the heel is up; off the ground they come back to the keys, the tip clear. */
+			if ((still ? lift < 0.002 : part < stance) && pitch > 0)
+				toe = Math.max(-bend, -pitch / D);
+
+			if (!still && part >= stance)
+				toe += (Math.max(-bend, Math.min(0, -pitch / D)) - toe) * Math.max(0, 1 - t / 0.3);
+
+			/* The ground point, then the pivot of the foot on it: the heel while the toes are up, the joint of the toes while the heel is. */
+			var ground = add(times3(travel, along), [sign * width, 0, 0]);
+			var heel = [0, 0, ankle[2] - 0.035 * size];
+			var restBall = [ball[0] - ankle[0], ball[1], ball[2]];
+			var restAnkle = [0, ankle[1], ankle[2]];
+			var pivot = pitch > 0 ? restBall : heel;
+			var pivotAt = add(ground, rotate(round([0, 1, 0], yaw), sub(pivot, heel)));
+			var ankleAt = add(add(pivotAt, rotate(footTurn, sub(restAnkle, pivot))), [0, lift, 0]);
+
+			/* Two bones to the ankle: the hip of the hips turned, the knee ahead (out by Pole). */
+			var hip = add(hipsAt, rotate(hipsTurn, sub(up, hipsRest)));
+			var reachTo = sub(ankleAt, hip);
+			var d = Math.min(Math.sqrt(dot(reachTo, reachTo)), (thigh + shank) * 0.9995);
+			var dir = unit(reachTo);
+			var poleYaw = direction + sign * (v0.Pole || 0) * D;
+			var poleWant = [Math.sin(poleYaw), 0, Math.cos(poleYaw)];
+			var alpha = Math.acos(Math.max(-1, Math.min(1, (thigh * thigh + d * d - shank * shank) / (2 * thigh * d))));
+			var kneeAt = add(hip, add(times3(dir, thigh * Math.cos(alpha)), times3(across(poleWant, dir), thigh * Math.sin(alpha))));
+			var ankleReached = add(hip, times3(dir, d));
+			var thighDir = unit(sub(knee, up));
+			var shankDir = unit(sub(ankle, knee));
+			var thighWorld = lay(thighDir, across([0, 0, 1], thighDir), unit(sub(kneeAt, hip)), poleWant);
+			var shankWorld = lay(shankDir, across([0, 0, 1], shankDir), unit(sub(ankleReached, kneeAt)), poleWant);
+
+			pose[side + 'UpLeg'] = degrees(times(back(hipsTurn), thighWorld));
+			pose[side + 'Leg'] = degrees(times(back(thighWorld), shankWorld));
+			pose[side + 'Foot'] = degrees(times(back(shankWorld), footTurn));
+			pose[side + 'ToeBase'] = [toe, 0, 0];
+		});
+
+		return pose;
+	},
+
+	/*
+	 * A clip of a graph of a gait (a graph, or the name of one of the library: blueprints/animation/<name>) for these bones:
+	 * its frames posed (GaitPose) at a rate of 30 a second, the hips moved, {Name, Length, Channels, Stride (metres a cycle
+	 * over the height, what the feet travel: they do not slide), Loop, Made}. Options: those of Options (Height: its height),
+	 * Name (of the clip).
+	 */
+	Gait: function (bones, graph, options) {
+		var self = this;
+		var o = this.Options(options);
+		var values = this.GaitValues(graph);
+		var v0 = values(0);
+		var scale = this.LegOf(bones) / this.LegOf(this.Skeleton({}));
+		var length = (v0.Length || 1) * Math.sqrt(scale);
+		var name = (options && options.Name) || (typeof graph === 'string' ? graph : String(graph.name || 'gait').replace(/^animation-/, ''));
+		var loop = v0.Loop === undefined || !!v0.Loop;
+
+		return this.Clip(bones, name, length, Math.max(24, Math.round(length * 30)), function (t) {
+			return self.GaitPose(bones, values, t, scale, o.Height);
+		}, loop, v0.Still ? 0 : (v0.Stride || 0) * scale / o.Height);
+	},
+
+	/* The poses, of graphs of the library too (blueprints/animation/<name>): standing, lying, crawling, aiming, seated, hanging, swimming. */
+	Poses: ['t-pose', 'attention', 'lie-front', 'lie-back', 'lie-left', 'lie-right', 'crawl', 'aim-hip', 'aim-shoulder', 'aim-bow', 'sit', 'drive', 'hang', 'pull-up', 'swim-breaststroke', 'swim-crawl', 'swim-back'],
+
+	/* Every clip of the person, each of its graph: the gaits (Gaits), then the poses (Poses). */
 	Clips: function (bones, options) {
 		var self = this;
 		var o = this.Options(options);
-		var h = o.Height;
-		var clips = [];
-		var sin = Math.sin;
-		var cos = Math.cos;
-		var tau = Math.PI * 2;
 
-		function add (name, length, poseAt, loop, stride, count) {
-			clips.push(self.Clip(bones, name, length, count || 24, poseAt, loop, stride));
-		}
-
-		/* Arms down at the sides, a little out and bent: the rest of a standing person. */
-		function down (more) {
-			return Object.assign({LArm: [0, 0, -76], RArm: [0, 0, 76], LForeArm: [0, -12, 0], RForeArm: [0, 12, 0], LFingers: 12, RFingers: 12, LThumb: 10, RThumb: 10}, more || {});
-		}
-
-		/* A gait: the legs swing by phase (a stride of Swing degrees), the knees bend as each comes through, the arms swing against them. */
-		function gait (t, swing, knee, arms, bob, lean, back) {
-			var a = t * tau;
-			var dir = back ? -1 : 1;
-			var lift = Math.max(0, sin(a + 0.6));
-			var lift2 = Math.max(0, sin(a + Math.PI + 0.6));
-
-			return down({
-				Root: [sin(a) * 0.012 * h, -Math.abs(cos(a)) * bob * h, 0],
-				Spine: [lean, sin(a) * 6, 0],
-				Spine2: [0, -sin(a) * 8, 0],
-				Neck: [-lean * 0.6, sin(a) * 3, 0],
-				LUpLeg: [-dir * sin(a) * swing, 0, 0],
-				RUpLeg: [dir * sin(a) * swing, 0, 0],
-				LLeg: [knee * lift + 5, 0, 0],
-				RLeg: [knee * lift2 + 5, 0, 0],
-				LFoot: [-dir * sin(a) * swing * 0.25 - 5 * lift, 0, 0],
-				RFoot: [dir * sin(a) * swing * 0.25 - 5 * lift2, 0, 0],
-				LArm: [dir * sin(a) * arms, 0, -78],
-				RArm: [-dir * sin(a) * arms, 0, 78],
-				LForeArm: [0, -12 - arms * 0.5 * (1 + sin(a)) * 0.5, 0],
-				RForeArm: [0, 12 + arms * 0.5 * (1 - sin(a)) * 0.5, 0]
-			});
-		}
-
-		add('idle', 4, function (t) {
-			var breath = sin(t * tau);
-
-			return down({Root: [sin(t * tau) * 0.003 * h, breath * 0.002 * h, 0], Spine: [breath * 1.5, 0, 0], Spine2: [breath * 1.2, 0, 0], Head: [-breath, sin(t * tau) * 3, 0], LUpLeg: [0, 0, 2], RUpLeg: [0, 0, -2]});
-		}, true);
-
-		/* Its rest, standing as a T: what an editor or a retarget measures. */
-		add('t-pose', 1, function () {
-			return {};
-		}, true, 0, 1);
-
-		add('attention', 2, function () {
-			return {LArm: [0, 0, -84], RArm: [0, 0, 84], LForeArm: [0, -4, 0], RForeArm: [0, 4, 0], LFingers: 6, RFingers: 6, Head: [-3, 0, 0]};
-		}, true, 0, 2);
-
-		add('walk', 1.1, function (t) {
-			return gait(t, 26, 38, 18, 0.012, 3);
-		}, true, 1.45);
-		add('jog', 0.72, function (t) {
-			return Object.assign(gait(t, 38, 70, 30, 0.022, 9), {LForeArm: [0, -80, 0], RForeArm: [0, 80, 0], LFingers: 40, RFingers: 40});
-		}, true, 2.1);
-		add('sprint', 0.56, function (t) {
-			return Object.assign(gait(t, 52, 100, 48, 0.03, 16), {LForeArm: [0, -95, 0], RForeArm: [0, 95, 0], LFingers: 55, RFingers: 55});
-		}, true, 3.4);
-		add('walk-back', 1.2, function (t) {
-			return gait(t, 20, 32, 12, 0.01, -2, true);
-		}, true, 1.1);
-		add('run-back', 0.8, function (t) {
-			return Object.assign(gait(t, 30, 60, 22, 0.02, -4, true), {LForeArm: [0, -70, 0], RForeArm: [0, 70, 0]});
-		}, true, 1.7);
-
-		/* Strafes: the legs swing out and in, a step across. */
-		[['strafe-left', 1], ['strafe-right', -1]].forEach(function (one) {
-			add(one[0], 1, function (t) {
-				var a = t * tau;
-				var s = one[1];
-
-				return down({Root: [0, -Math.abs(cos(a)) * 0.012 * h, 0], LUpLeg: [0, 0, s * Math.max(0, sin(a)) * 18 + 2], RUpLeg: [0, 0, -s * Math.max(0, -sin(a)) * 18 - 2], LLeg: [Math.max(0, sin(a)) * 25 + 4, 0, 0], RLeg: [Math.max(0, -sin(a)) * 25 + 4, 0, 0], Spine: [3, 0, s * sin(a) * 3]});
-			}, true, 1.2);
+		return this.Gaits.concat(this.Poses).map(function (name) {
+			return self.Gait(bones, name, o);
 		});
-
-		/* Crouching: the hips low, knees deep. */
-		function crouch (t, walk) {
-			var a = t * tau;
-
-			return down({Root: [0, -0.2 * h, 0.03 * h], Spine: [25, 0, 0], Spine1: [8, 0, 0], Neck: [-25, 0, 0], LUpLeg: [-80 - (walk ? sin(a) * 25 : 0), 0, 4], RUpLeg: [-70 + (walk ? sin(a) * 25 : 0), 0, -4], LLeg: [105 + (walk ? Math.max(0, sin(a + 0.6)) * 20 : 0), 0, 0], RLeg: [95 + (walk ? Math.max(0, -sin(a + 0.6)) * 20 : 0), 0, 0], LFoot: [-20, 0, 0], RFoot: [-22, 0, 0], LArm: [-20, 0, -70], RArm: [-20, 0, 70], LForeArm: [0, -35, 0], RForeArm: [0, 35, 0]});
-		}
-
-		add('crouch', 3, function (t) {
-			return crouch(t, false);
-		}, true);
-		add('crouch-walk', 1.4, function (t) {
-			return crouch(t, true);
-		}, true, 0.9);
-
-		/* Lying: the whole turned at the hips, its height near the ground, breathing. */
-		[['lie-front', [90, 0, 0], 0.11], ['lie-back', [-90, 0, 0], 0.1], ['lie-left', [0, 0, 90], 0.15], ['lie-right', [0, 0, -90], 0.15]].forEach(function (one) {
-			add(one[0], 4, function (t) {
-				var breath = sin(t * tau);
-				var front = one[0] === 'lie-front';
-
-				return {Body: one[1], Root: [0, -(bones[0].At[1] - one[2] * h), front ? -0.0 : 0], Spine: [breath * 1.5, 0, 0], LArm: front ? [0, -20, -40] : [0, 0, -70], RArm: front ? [0, 20, 40] : [0, 0, 70], LForeArm: [0, front ? -80 : -20, 0], RForeArm: [0, front ? 80 : 20, 0], Head: front ? [-60, 0, 0] : [0, 0, 0], LUpLeg: [0, 0, 6], RUpLeg: one[0] === 'lie-left' ? [-30, 0, -6] : [0, 0, -6], RLeg: one[0] === 'lie-left' ? [40, 0, 0] : [0, 0, 0], LFingers: 20, RFingers: 20};
-			}, true);
-		});
-
-		/* A crawl on the belly: elbows and knees by turns. */
-		add('crawl', 1.6, function (t) {
-			var a = t * tau;
-
-			return {Body: [88, 0, sin(a) * 4], Root: [0, -(bones[0].At[1] - 0.12 * h), 0], Head: [-55, 0, 0], LArm: [-20 - sin(a) * 25, -40, -30], RArm: [-20 + sin(a) * 25, 40, 30], LForeArm: [0, -90 + sin(a) * 20, 0], RForeArm: [0, 90 + sin(a) * 20, 0], LUpLeg: [-sin(a) * 25 - 10, 0, 18], RUpLeg: [sin(a) * 25 - 10, 0, -18], LLeg: [40 + sin(a) * 30, 0, 0], RLeg: [40 - sin(a) * 30, 0, 0], LFingers: 25, RFingers: 25};
-		}, true, 0.5);
-
-		/* Aiming: from the hip, at the shoulder, a bow drawn. */
-		add('aim-hip', 2, function (t) {
-			var breath = sin(t * tau) * 0.6;
-
-			return {Spine: [4 + breath, -10, 0], RArm: [-30, -30, 60], RForeArm: [0, 70, 0], LArm: [-50, 30, -50], LForeArm: [0, -50, 0], RFingers: 45, LFingers: 30, RUpLeg: [0, 0, -6], LUpLeg: [-8, 0, 6], LLeg: [8, 0, 0]};
-		}, true);
-		add('aim-shoulder', 2, function (t) {
-			var breath = sin(t * tau) * 0.4;
-
-			return {Spine: [6 + breath, -20, 0], Neck: [6, 18, 0], Head: [8, 6, 0], RArm: [-80, -20, 15], RForeArm: [0, 95, 0], LArm: [-85, 35, -10], LForeArm: [0, -35, 0], RFingers: 45, LFingers: 35, RUpLeg: [0, 0, -8], LUpLeg: [-10, 0, 8], LLeg: [10, 0, 0]};
-		}, true);
-		add('aim-bow', 2, function (t) {
-			var breath = sin(t * tau) * 0.4;
-
-			return {Spine: [2 + breath, -70, 0], Neck: [0, 60, 0], Head: [4, 10, 0], LArm: [0, 0, 0], LForeArm: [0, 0, 0], LFingers: 60, LThumb: 30, RArm: [0, 10, -10], RForeArm: [0, 150, 0], RHand: [0, 0, 0], RFingers: 70, RUpLeg: [0, 0, -12], LUpLeg: [0, 0, 12]};
-		}, true);
-
-		/* Seated: on a chair, at a wheel. */
-		add('sit', 3, function (t) {
-			var breath = sin(t * tau);
-
-			return {Root: [0, -0.24 * h, -0.02 * h], Spine: [-4 + breath, 0, 0], LUpLeg: [-88, 0, 4], RUpLeg: [-88, 0, -4], LLeg: [88, 0, 0], RLeg: [88, 0, 0], LArm: [-30, 0, -74], RArm: [-30, 0, 74], LForeArm: [0, -55, 0], RForeArm: [0, 55, 0], LFingers: 18, RFingers: 18};
-		}, true);
-		add('drive', 3, function (t) {
-			var breath = sin(t * tau);
-
-			return {Root: [0, -0.26 * h, -0.05 * h], Spine: [-14 + breath, 0, 0], Neck: [12, 0, 0], LUpLeg: [-70, 0, 6], RUpLeg: [-74, 0, -6], LLeg: [60, 0, 0], RLeg: [70, 0, 0], LArm: [-55, 0, -40], RArm: [-55, 0, 40], LForeArm: [0, -45, 0], RForeArm: [0, 45, 0], LFingers: 65, RFingers: 65, LThumb: 25, RThumb: 25};
-		}, true);
-
-		/* Jumps: a crouch, the push, up, and down again. */
-		function jump (t, forward) {
-			var crouchAt = Math.max(0, 1 - Math.abs(t - 0.12) / 0.12) + Math.max(0, 1 - Math.abs(t - 0.9) / 0.1);
-			var up = t > 0.2 && t < 0.85 ? sin((t - 0.2) / 0.65 * Math.PI) : 0;
-
-			return down({Root: [0, (-crouchAt * 0.12 + up * 0.35) * h, forward ? t * 1.2 * h : 0], Spine: [crouchAt * 20 + (forward ? 10 : 0), 0, 0], LUpLeg: [-crouchAt * 60 - up * (forward ? 50 : 15), 0, 0], RUpLeg: [-crouchAt * 60 - up * (forward ? 10 : 15), 0, 0], LLeg: [crouchAt * 80 + up * 40, 0, 0], RLeg: [crouchAt * 80 + up * 60, 0, 0], LArm: [-up * 120 + crouchAt * 30, 0, -70], RArm: [-up * 120 + crouchAt * 30, 0, 70]});
-		}
-
-		add('jump', 1.1, function (t) {
-			return jump(t, false);
-		}, false);
-		add('jump-forward', 1, function (t) {
-			return jump(t, true);
-		}, false);
-
-		/* Hanging by the hands, and pulling up. */
-		add('hang', 2, function (t) {
-			var a = t * tau;
-
-			return {Root: [0, 0.02 * h, 0], LArm: [0, 0, 70], RArm: [0, 0, -70], LShoulder: [0, 0, 18], RShoulder: [0, 0, -18], LForeArm: [0, 0, 8], RForeArm: [0, 0, -8], LFingers: 75, RFingers: 75, LUpLeg: [sin(a) * 6 - 5, 0, 0], RUpLeg: [-sin(a) * 6 - 5, 0, 0], LLeg: [12, 0, 0], RLeg: [12, 0, 0], Spine: [sin(a) * 2, 0, 0]};
-		}, true);
-		add('pull-up', 2.2, function (t) {
-			var up = sin(t * Math.PI);
-
-			return {Root: [0, up * 0.4 * h, 0], LArm: [-up * 30, 0, 70 - up * 75], RArm: [-up * 30, 0, -70 + up * 75], LShoulder: [0, 0, 18 - up * 10], RShoulder: [0, 0, -18 + up * 10], LForeArm: [0, -up * 120, 0], RForeArm: [0, up * 120, 0], LFingers: 75, RFingers: 75, LUpLeg: [-12, 0, 0], RUpLeg: [-12, 0, 0], LLeg: [25, 0, 0], RLeg: [25, 0, 0]};
-		}, true);
-
-		/* Swimming: on the belly (breaststroke, crawl) or on the back. */
-		add('swim-breaststroke', 1.6, function (t) {
-			var a = t * tau;
-			var pull = Math.max(0, sin(a));
-			var kick = Math.max(0, sin(a + 2));
-
-			return {Body: [80, 0, 0], Root: [0, -0.05 * h, 0], Head: [-50 + pull * 20, 0, 0], LArm: [-90 + pull * 40, -pull * 60, -10], RArm: [-90 + pull * 40, pull * 60, 10], LForeArm: [0, -pull * 70, 0], RForeArm: [0, pull * 70, 0], LUpLeg: [-kick * 50, 0, kick * 25], RUpLeg: [-kick * 50, 0, -kick * 25], LLeg: [kick * 90, 0, 0], RLeg: [kick * 90, 0, 0], LFingers: 5, RFingers: 5};
-		}, true, 0.8);
-		add('swim-crawl', 1.2, function (t) {
-			var a = t * tau;
-
-			return {Body: [85, sin(a) * 25, 0], Root: [0, -0.05 * h, 0], Head: [-30, -sin(a) * 30, 0], LArm: [-90 + sin(a) * 180, 0, -15], RArm: [-90 - sin(a) * 180, 0, 15], LForeArm: [0, -20, 0], RForeArm: [0, 20, 0], LUpLeg: [sin(a * 3) * 18, 0, 3], RUpLeg: [-sin(a * 3) * 18, 0, -3], LLeg: [12, 0, 0], RLeg: [12, 0, 0], LFingers: 8, RFingers: 8};
-		}, true, 1.3);
-		add('swim-back', 1.5, function (t) {
-			var a = t * tau;
-
-			return {Body: [-85, sin(a) * 20, 0], Root: [0, -0.05 * h, 0], Head: [20, 0, 0], LArm: [-90 + sin(a) * 180, 0, -15], RArm: [-90 - sin(a) * 180, 0, 15], LUpLeg: [sin(a * 3) * 15, 0, 3], RUpLeg: [-sin(a * 3) * 15, 0, -3], LFingers: 8, RFingers: 8};
-		}, true, 1.1);
-
-		return clips;
 	},
 
 	/*

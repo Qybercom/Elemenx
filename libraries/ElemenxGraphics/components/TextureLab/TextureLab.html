@@ -2,7 +2,7 @@
 	<div class="elemenx-texture-lab-view" #View role="img" [attribute.aria-label]="Label || $T('graphics.textureLab.label')">
 		<canvas class="elemenx-texture-lab-canvas" #Canvas></canvas>
 	</div>
-	<aside class="elemenx-texture-lab-panel">
+	<aside class="elemenx-texture-lab-panel" *resizable="{Edges: 'left', MinWidth: 200, MaxWidth: 560}" [style.width]="PaneWidth('panel', 240)" (resizeend)="PaneResized('panel', $event)">
 		<div class="elemenx-texture-lab-field"><span>{{$T('graphics.textureLab.texture')}}</span>
 			<Select [Label]="$T('graphics.textureLab.texture')" [Options]="NameOptions(Version)" [Value]="Texture" (change)="Picked($event)" />
 		</div>

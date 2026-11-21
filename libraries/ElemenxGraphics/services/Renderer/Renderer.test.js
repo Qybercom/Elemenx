@@ -421,6 +421,58 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 		deep.Destroy();
 	});
 
+	/* CopyDepth: the depth drawn so far into the target drawn into now, in a texture of its own to read while it is drawn again; none on the canvas. */
+	it('copies the depth of the target drawn into now with CopyDepth, of a depth texture or of a buffer of depth, none on the canvas', function () {
+		var gl = renderer.GL;
+		var vertex = ['#version 300 es', 'in vec3 aPosition;', 'void main() { gl_Position = vec4(aPosition, 1.0); }'].join('\n');
+		var flat = renderer.Program(vertex, ['#version 300 es', 'precision highp float;', 'out vec4 outColor;', 'void main() { outColor = vec4(1.0); }'].join('\n'));
+		var reader = renderer.Program(['#version 300 es', 'in vec3 aPosition;', 'out vec2 vQuad;', 'void main() { vQuad = aPosition.xy; gl_Position = vec4(aPosition.xy, 0.0, 1.0); }'].join('\n'), ['#version 300 es', 'precision highp float;', 'in vec2 vQuad;', 'uniform sampler2D uDepth;', 'out vec4 outColor;', 'void main() { outColor = vec4(texture(uDepth, vQuad * 0.5 + 0.5).r, 0.0, 0.0, 1.0); }'].join('\n'));
+		var left = renderer.Mesh({Positions: [-1, -1, 0.5, 0, -1, 0.5, 0, 1, 0.5, -1, 1, 0.5], Indices: [0, 1, 2, 0, 2, 3]});
+		var quad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
+
+		expect(renderer.CopyDepth()).toBe(null);
+
+		[{DepthTexture: true}, {Depth: true}].forEach(function (options) {
+			var target = renderer.Target(4, 4, options);
+			var shown = renderer.Target(4, 4, {});
+			var pixels = new Uint8Array(4 * 4 * 4);
+			var copy;
+
+			target.Begin();
+
+			renderer.Clear([0, 0, 0, 1]);
+			renderer.Draw(left, flat, {}, {Cull: 'none'});
+
+			copy = renderer.CopyDepth();
+
+			/* Drawn again over what it holds: the target is still the one drawn into. */
+			gl.clear(gl.DEPTH_BUFFER_BIT);
+
+			renderer.Draw(left, flat, {}, {Cull: 'none'});
+
+			target.End();
+
+			expect(copy).not.toBe(null);
+			expect(target.Copy).toBe(copy);
+
+			shown.Begin();
+
+			renderer.Draw(quad, reader, {uDepth: copy}, {Depth: false, Cull: 'none'});
+
+			gl.readPixels(0, 0, 4, 4, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+			shown.End();
+
+			/* The left half of the depth of the square (0.75 of 0.5 in its view), the right half the depth it was cleared to. */
+			expect(Math.abs(pixels[0] - 191)).toBeLessThan(2);
+			expect(pixels[3 * 4]).toBe(255);
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+
+			shown.Destroy();
+			target.Destroy();
+		});
+	});
+
 	/*
 	 * Arrays held (the common ones of a frame) and given again, the very same, are not read again: a list of 72 lamps read
 	 * for each of thousands of draws took milliseconds a frame. One not held, changed in its place, is still sent again.

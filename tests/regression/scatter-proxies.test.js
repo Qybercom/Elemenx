@@ -386,6 +386,52 @@ describe('Contract: Scatter draws far tiles of what is sown as proxies of SceneP
 	}, 60000);
 
 	/*
+	 * Regression: the grass of a planet had none of the season the grass of its location has (burnt in summer, brown in
+	 * autumn, low and white in winter): green round a ship, burnt once it landed. Of the season of a location there now.
+	 */
+	it('draws the grass of a planet in the season a location there has: burnt in summer, low and white in winter', async function () {
+		var scene = await mount();
+		var engine = scene.Engine();
+		var side = 16;
+		var data = new Float32Array(side * side * 4);
+		var math = Elemenx.Service('Math');
+		var matrix = math.Multiply(math.Perspective(60, 1.5, 0.1, 2000), math.LookAt([0, 2, 0], [0, 0, -20], [0, 1, 0]));
+		var green = engine.Paint('#2f6a24');
+		var drawReady = engine.DrawReady;
+		var seen = {};
+		var i;
+
+		for (i = 0; i < side * side; i++)
+			data[i * 4 + 1] = 1;
+
+		engine.ScatterPlanetGrass({Key: 'seasons', Center: [0, -40], Size: 256, Side: side, Data: data, Grass: {Height: 0.8, Density: 1, Color: '#2f6a24', Root: '#1c3d15'}});
+
+		try {
+			['summer', 'winter'].forEach(function (season) {
+				scene.Season = season;
+				engine.DrawReady = function (mesh, program, values) {
+					if (values && values.uField)
+						seen[season] = values;
+
+					return drawReady.apply(this, arguments);
+				};
+
+				engine.ScatterPlanetDraw({uShadowOn: 0, uSkyLight: [0.3, 0.36, 0.46], uFloorLight: [0.1, 0.1, 0.09]}, matrix, [0, 2, 0], [700, 900], [0, 1, 0], [1, 1, 1]);
+			});
+		}
+		finally {
+			engine.DrawReady = drawReady;
+
+			engine.ScatterPlanetGrass(null);
+		}
+
+		/* Burnt in summer: more red than its green; in winter whiter still and lower. */
+		expect(seen.summer.uTip[0]).toBeGreaterThan(green[0] + 0.02);
+		expect(seen.winter.uTip[2]).toBeGreaterThan(seen.summer.uTip[2] + 0.1);
+		expect(seen.winter.uBlade[0]).toBeLessThan(seen.summer.uBlade[0]);
+	}, 60000);
+
+	/*
 	 * Regression: leaves that flutter are told to the frames as moving; a tree between two levels (a pattern of holes that
 	 * turns each frame) stayed a hatch, the frames taking little of what was before. While it fades it is told as standing.
 	 */

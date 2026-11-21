@@ -311,7 +311,6 @@ Elemenx.Component('RacingDemo', {
 	},
 	RibbonTab: 'home',
 	RaceTab: 'drive',
-	RaceNote: '',
 
 	$OnDestroy: function () {
 		window.clearInterval(this.RaceClock);

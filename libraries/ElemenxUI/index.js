@@ -72,6 +72,7 @@
 	'services/Audience/Audience.js',
 	'services/Suprematist/Suprematist.js',
 	'traits/Declared/Declared.js',
+	'traits/EditorPanes/EditorPanes.js',
 	'components/Icon/Icon.js',
 	'components/FileIcon/FileIcon.js',
 	'components/Button/Button.js',

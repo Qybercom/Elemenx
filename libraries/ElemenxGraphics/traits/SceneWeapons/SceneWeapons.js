@@ -47,8 +47,6 @@ Elemenx.Trait('SceneWeapons', {
 		var head = '#version 300 es\nprecision highp float;\n';
 		var shaders = this.WeaponShaders(head);
 
-		var fire = [[1, 0.96, 0.7], [1, 0.62, 0.18], [0.5, 0.16, 0.04]];
-
 		/* Asked for when the scene starts (engine.Warm), waited for with the rest: none is made in the play. */
 		(engine.Warms = engine.Warms || []).push(function (setting) {
 			if (setting === 'galaxy' || !renderer) return;
@@ -59,88 +57,20 @@ Elemenx.Trait('SceneWeapons', {
 		/* Its weapon types (resources/weapons/types.json), a copy of its own: Weapons changes it. */
 		scene.WeaponTypes = Elemenx.Resources('Data', 'ElemenxGraphics/weapons/types') || {};
 
-		/* What a hit does, by the material it hits: its effect, its mark, the factor of its damage. */
+		/*
+		 * What a hit does, by the material it hits: its effect, its mark, the factor of its damage. Its effects (muzzle, cannon,
+		 * backblast, railflash, the hits of each material, blast, plasmaburst) are the effect graphs of the library
+		 * (blueprints/effects). Regression: written here too, they took the place of the graphs: a graph changed never reached
+		 * a scene.
+		 */
 		scene.HitRules = Elemenx.Resources('Data', 'ElemenxGraphics/weapons/hit-rules') || {};
-
-		self.Effects({
-			muzzle: {Lamp: {Color: '#ffb060', Power: 0.6, Radius: 7, Flicker: 0}, Once: true, Lasts: 0.08, Layers: [
-				{Kind: 'flame', Count: 10, Life: 0.06, Speed: [6, 14], Spread: 0.25, Drag: 6, Size: [0.12, 0.3], Color: fire, Blend: 'add'},
-				{Kind: 'spark', Count: 6, Life: 0.25, Speed: [4, 10], Spread: 0.3, Drag: 2, Size: [0.008, 0.003], Stretch: 0.02, Color: [1, 0.75, 0.4], Blend: 'add'}
-			]},
-			cannon: {Lamp: {Color: '#ffb060', Power: 2, Radius: 16, Flicker: 0}, Once: true, Lasts: 0.25, Layers: [
-				{Kind: 'flame', Count: 30, Life: 0.15, Speed: [10, 26], Spread: 0.35, Drag: 5, Size: [0.5, 1.6], Color: fire, Blend: 'add'},
-				{Kind: 'smoke', Count: 22, Life: 3, Speed: [2, 7], Spread: 0.6, Rise: 0.5, Drag: 1.6, Size: [0.6, 3], Wander: 0.4, Color: [0.5, 0.49, 0.48], Opacity: 0.3, Blend: 'alpha'}
-			]},
-			backblast: {Lamp: {Color: '#ffb060', Power: 1, Radius: 10, Flicker: 0}, Once: true, Lasts: 0.2, Layers: [
-				{Kind: 'flame', Count: 16, Life: 0.12, Speed: [4, 10], Spread: 0.5, Drag: 4, Size: [0.2, 0.7], Color: fire, Blend: 'add'},
-				{Kind: 'smoke', Count: 18, Life: 2, Speed: [1, 4], Spread: 0.9, Rise: 0.4, Drag: 1.6, Size: [0.3, 1.8], Wander: 0.4, Color: [0.62, 0.62, 0.62], Opacity: 0.25, Blend: 'alpha'}
-			]},
-			railflash: {Lamp: {Color: '#7fd8ff', Power: 1.4, Radius: 12, Flicker: 0}, Once: true, Lasts: 0.15, Layers: [
-				{Kind: 'spark', Count: 30, Life: 0.4, Speed: [3, 9], Spread: 0.7, Drag: 2, Size: [0.012, 0.004], Stretch: 0.03, Color: [0.6, 0.9, 1], Blend: 'add'},
-				{Kind: 'wave', Life: 0.25, Size: [0.8, 0.8], Color: [0.4, 0.8, 1], Hot: [0.9, 1, 1], Blend: 'add'}
-			]},
-			'hit-metal': {Lamp: {Color: '#ffc070', Power: 0.25, Radius: 4, Flicker: 0}, Once: true, Lasts: 0.1, Layers: [
-				{Kind: 'spark', Count: 22, Life: 0.6, Speed: [2, 8], Spread: 0.7, Gravity: 9, Drag: 0.8, Bounce: 0.3, Size: [0.012, 0.004], Stretch: 0.025, Color: [1, 0.75, 0.4], Blend: 'add'},
-				{Kind: 'smoke', Count: 3, Life: 0.8, Speed: [0.3, 1], Spread: 0.5, Rise: 0.3, Drag: 2, Size: [0.04, 0.25], Color: [0.5, 0.5, 0.5], Opacity: 0.15, Blend: 'alpha'}
-			]},
-			'hit-stone': {Lamp: null, Once: true, Lasts: 0.1, Layers: [
-				{Kind: 'smoke', Count: 10, Life: 1.4, Speed: [0.6, 2.4], Spread: 0.6, Rise: 0.2, Gravity: 1, Drag: 1.6, Size: [0.06, 0.5], Wander: 0.2, Color: [0.62, 0.6, 0.56], Opacity: 0.35, Blend: 'alpha'},
-				{Kind: 'spark', Count: 12, Life: 0.7, Speed: [2, 6], Spread: 0.6, Gravity: 9, Drag: 0.5, Bounce: 0.3, Size: [0.014, 0.014], Stretch: 0, Color: [0.35, 0.33, 0.3], Blend: 'alpha'}
-			]},
-			'hit-wood': {Lamp: null, Once: true, Lasts: 0.1, Layers: [
-				{Kind: 'spark', Count: 14, Life: 0.9, Speed: [1.5, 5], Spread: 0.6, Gravity: 9, Drag: 0.6, Bounce: 0.2, Size: [0.02, 0.008], Stretch: 0.01, Color: [0.55, 0.4, 0.22], Blend: 'alpha'},
-				{Kind: 'smoke', Count: 6, Life: 1, Speed: [0.4, 1.6], Spread: 0.5, Rise: 0.2, Drag: 1.8, Size: [0.05, 0.35], Color: [0.6, 0.52, 0.4], Opacity: 0.25, Blend: 'alpha'}
-			]},
-			'hit-soil': {Lamp: null, Once: true, Lasts: 0.1, Layers: [
-				{Kind: 'smoke', Count: 12, Life: 1.2, Speed: [1, 3.6], Spread: 0.45, Gravity: 4, Drag: 1.4, Size: [0.08, 0.6], Wander: 0.2, Color: [0.36, 0.3, 0.22], Opacity: 0.4, Blend: 'alpha'},
-				{Kind: 'spark', Count: 14, Life: 0.8, Speed: [2, 5], Spread: 0.5, Gravity: 9, Drag: 0.4, Size: [0.016, 0.016], Stretch: 0, Color: [0.25, 0.2, 0.14], Blend: 'alpha'}
-			]},
-			'hit-snow': {Lamp: null, Once: true, Lasts: 0.1, Layers: [
-				{Kind: 'smoke', Count: 14, Life: 1.2, Speed: [1, 3], Spread: 0.5, Gravity: 3, Drag: 1.4, Size: [0.08, 0.6], Wander: 0.3, Color: [0.95, 0.97, 1], Opacity: 0.45, Blend: 'alpha'}
-			]},
-			'hit-water': {Lamp: null, Once: true, Lasts: 0.1, Layers: [
-				{Kind: 'smoke', Count: 14, Life: 0.9, Speed: [2, 5], Spread: 0.3, Rise: 0.4, Gravity: 9, Drag: 0.8, Size: [0.05, 0.4], Wander: 0.1, Color: [0.92, 0.95, 0.97], Opacity: 0.45, Blend: 'alpha'},
-				{Kind: 'wave', Life: 0.8, Size: [0.6, 0.6], Color: [0.6, 0.7, 0.75], Hot: [0.9, 0.95, 1], Blend: 'add'}
-			]},
-			'hit-flesh': {Lamp: null, Once: true, Lasts: 0.1, Layers: [
-				{Kind: 'smoke', Count: 9, Life: 0.5, Speed: [0.8, 2.4], Spread: 0.5, Gravity: 3, Drag: 2, Size: [0.05, 0.3], Color: [0.45, 0.03, 0.03], Opacity: 0.55, Blend: 'alpha'},
-				{Kind: 'spark', Count: 10, Life: 0.6, Speed: [1, 3.5], Spread: 0.5, Gravity: 9, Drag: 0.5, Size: [0.014, 0.014], Stretch: 0, Color: [0.4, 0.02, 0.02], Blend: 'alpha'}
-			]},
-			'hit-glass': {Lamp: null, Once: true, Lasts: 0.1, Layers: [
-				{Kind: 'spark', Count: 26, Life: 0.9, Speed: [1, 5], Spread: 0.7, Gravity: 9, Drag: 0.3, Bounce: 0.2, Size: [0.016, 0.006], Stretch: 0.004, Color: [0.85, 0.95, 1], Blend: 'add'}
-			]},
-			'hit-dust': {Lamp: null, Once: true, Lasts: 0.1, Layers: [
-				{Kind: 'smoke', Count: 8, Life: 1.2, Speed: [0.4, 1.6], Spread: 0.5, Rise: 0.2, Drag: 1.8, Size: [0.05, 0.4], Wander: 0.2, Color: [0.7, 0.68, 0.64], Opacity: 0.3, Blend: 'alpha'}
-			]},
-			'hit-energy': {Lamp: {Color: '#ff7040', Power: 0.4, Radius: 5, Flicker: 0.2}, Once: true, Lasts: 0.12, Layers: [
-				{Kind: 'spark', Count: 16, Life: 0.5, Speed: [1, 4], Spread: 0.8, Gravity: 3, Drag: 1, Size: [0.012, 0.004], Stretch: 0.02, Color: [1, 0.55, 0.3], Blend: 'add'},
-				{Kind: 'smoke', Count: 4, Life: 1.4, Speed: [0.2, 0.8], Spread: 0.4, Rise: 0.8, Drag: 1.2, Size: [0.06, 0.4], Color: [0.3, 0.3, 0.3], Opacity: 0.2, Blend: 'alpha'}
-			]},
-			'hit-steam': {Lamp: null, Once: true, Lasts: 0.1, Layers: [
-				{Kind: 'smoke', Count: 10, Life: 1.4, Speed: [0.5, 1.4], Spread: 0.4, Rise: 1, Drag: 1, Size: [0.1, 0.8], Wander: 0.3, Color: [0.85, 0.87, 0.9], Opacity: 0.3, Blend: 'alpha'}
-			]},
-			/* A shell or a rocket that lands: a short fireball, earth and dust thrown up, light, grey-brown in the sun. */
-			blast: {Lamp: {Color: '#ffa050', Power: 2, Radius: 22, Flicker: 0}, Heat: 1.5, Once: true, Lasts: 3, Layers: [
-				{Kind: 'flame', Count: 70, Life: 0.45, Speed: [3, 11], Spread: 1.6, Rise: 1.6, Drag: 3.4, Size: [0.8, 1.8], Wander: 0.3, Color: fire, Blend: 'add'},
-				{Kind: 'smoke', Count: 34, Life: 3, Speed: [2, 8], Spread: 1.3, Rise: 0.7, Gravity: 1.5, Drag: 2, Size: [0.8, 4], Wander: 0.6, Color: [0.82, 0.76, 0.66], Opacity: 0.3, Blend: 'alpha', Start: 0.08},
-				{Kind: 'spark', Count: 60, Life: 1.6, Speed: [4, 14], Spread: 1.2, Gravity: 9, Drag: 0.6, Bounce: 0.3, Size: [0.03, 0.03], Stretch: 0, Color: [0.28, 0.22, 0.15], Blend: 'alpha'},
-				{Kind: 'spark', Count: 50, Life: 1.2, Speed: [6, 20], Spread: 1.6, Gravity: 10, Drag: 0.9, Size: [0.025, 0.008], Stretch: 0.02, Color: [1, 0.7, 0.3], Blend: 'add'}
-			]},
-			plasmaburst: {Lamp: {Color: '#62ffb0', Power: 1, Radius: 8, Flicker: 0}, Once: true, Lasts: 0.3, Layers: [
-				{Kind: 'wave', Life: 0.35, Size: [1.2, 1.2], Color: [0.3, 1, 0.6], Hot: [0.85, 1, 0.9], Blend: 'add'},
-				{Kind: 'spark', Count: 26, Life: 0.6, Speed: [2, 6], Spread: 1.2, Gravity: 2, Drag: 1.4, Size: [0.012, 0.004], Stretch: 0.02, Color: [0.5, 1, 0.7], Blend: 'add'}
-			]}
-		});
 
 		function number (value, fallback) {
 			return value === null || value === undefined || value === '' || isNaN(Number(value)) ? fallback : Number(value);
 		}
 
 		function colorOf (text, fallback) {
-			var hex = String(text || '').replace('#', '');
-			if (!/^[0-9a-f]{6}$/i.test(hex)) return fallback || [1, 1, 1];
-
-			return [parseInt(hex.slice(0, 2), 16) / 255, parseInt(hex.slice(2, 4), 16) / 255, parseInt(hex.slice(4, 6), 16) / 255];
+			return engine.Hex(text, fallback || [1, 1, 1]);
 		}
 
 		function typeOf (name) {
@@ -198,17 +128,21 @@ Elemenx.Trait('SceneWeapons', {
 			return [object.World[0], object.World[1] + heightOf(object) * 0.5, object.World[2]];
 		}
 
+		/*
+		 * The material of a thing a shot hits (resources/weapons/materials): of the name of the material of its part (Names, the
+		 * first that matches), else a walker, a vehicle, the Type or the Group of its model, else Otherwise. Regression: in the
+		 * code alone, by the names of the kinds.
+		 */
+		var materials = Elemenx.Resources('Data', 'ElemenxGraphics/weapons/materials') || {Names: [], Types: {}, Groups: {}};
+
 		/* What a material of a part of a model is called, its kind. */
 		function materialNamed (name) {
 			var text = String(name || '').toLowerCase();
-			if (/glass|window|windscreen|windshield|crystal/.test(text)) return 'glass';
-			if (/metal|steel|iron|chrome|alumin|copper|brass|gun|car_paint|carpaint|body_paint/.test(text)) return 'metal';
-			if (/wood|bark|plank|log|timber|crate/.test(text)) return 'wood';
-			if (/stone|brick|concrete|rock|marble|tile|plaster/.test(text)) return 'stone';
-			if (/skin|flesh|face|body|hair/.test(text)) return 'flesh';
-			if (/cloth|fabric|leather|cotton|seat/.test(text)) return 'fabric';
+			var found = materials.Names.filter(function (rule) {
+				return new RegExp(rule.Match).test(text);
+			})[0];
 
-			return '';
+			return found ? found.Material : '';
 		}
 
 		/* The material of a thing where a shot hits it. */
@@ -224,17 +158,16 @@ Elemenx.Trait('SceneWeapons', {
 			if (named)
 				return named;
 
-			if (traitOf(object, 'Walker') || object.Kind === 'unit') return 'flesh';
+			if (traitOf(object, 'Walker') || object.Kind === 'unit') return materials.Walker;
 
-			if (object.Values.Vehicle) return 'metal';
+			if (object.Values.Vehicle) return materials.Vehicle;
 
 			info = library.Has(String(object.Values.Model || (traitOf(object, 'Model') || {}).Shape || '')) ? library.Info(String(object.Values.Model || traitOf(object, 'Model').Shape)) : null;
 
-			if (info && info.Type === 'plant') return 'wood';
-			if (info && (info.Type === 'building' || info.Type === 'rock' || info.Group === 'buildings')) return 'stone';
-			if (info && (info.Group === 'transport' || info.Type === 'ship' || info.Type === 'vehicle')) return 'metal';
+			if (info && materials.Types[info.Type]) return materials.Types[info.Type];
+			if (info && materials.Groups[info.Group]) return materials.Groups[info.Group];
 
-			return 'wood';
+			return materials.Otherwise;
 		}
 
 		/* The material of the ground at a point: water under the sea, snow, a road, the soil. */
@@ -1133,10 +1066,6 @@ Elemenx.Trait('SceneWeapons', {
 
 			engine.DrawReady(state.MarksMesh, programs.Mark, {uViewProjection: matrix, uEye: scene.Eye || [0, 0, 0], uSun: ground ? ground.Sun : [0.3, 0.8, 0.5], uSunColor: ground ? ground.SunColor : [1, 1, 1], uSky: ground ? ground.SkyLight : [0.3, 0.3, 0.32], uTime: state.Clock, uKeep: number(self.MarkSeconds, 60)}, {Blend: 'over', DepthWrite: false, Depth: 'lequal', Cull: 'none'});
 		}
-
-		engine.WeaponsState = function () {
-			return state;
-		};
 
 		engine.WeaponsMarked = function (id, kill) {
 			state.Marked = {At: state.Clock, Kill: !!kill, Target: id};

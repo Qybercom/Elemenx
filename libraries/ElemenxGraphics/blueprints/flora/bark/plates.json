@@ -1,0 +1,536 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "bark-plates",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "bark-plates-input-cx",
+			"type": "Input",
+			"x": 200,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CX"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-input-cz",
+			"type": "Input",
+			"x": 200,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CZ"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-input-t",
+			"type": "Input",
+			"x": 200,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "T"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-input-split",
+			"type": "Input",
+			"x": 200,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Split"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-input-rings",
+			"type": "Input",
+			"x": 200,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Rings"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-input-lowr",
+			"type": "Input",
+			"x": 200,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowR"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-input-lowg",
+			"type": "Input",
+			"x": 200,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowG"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-input-lowb",
+			"type": "Input",
+			"x": 200,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowB"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-input-highr",
+			"type": "Input",
+			"x": 200,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighR"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-input-highg",
+			"type": "Input",
+			"x": 200,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighG"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-input-highb",
+			"type": "Input",
+			"x": 200,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighB"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-input-sfine",
+			"type": "Input",
+			"x": 200,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SFine"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-input-scells",
+			"type": "Input",
+			"x": 460,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SCells"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-base",
+			"type": "Call",
+			"x": 460,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/flora/bark/base"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-edgeat",
+			"type": "Formula",
+			"x": 460,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(CX * 2.2, T * 34, CZ * 2.2)"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-edge",
+			"type": "NoiseSpec",
+			"x": 460,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "worley"
+				},
+				{
+					"key": "Fractal",
+					"value": "none"
+				},
+				{
+					"key": "Cell",
+					"value": "edge"
+				},
+				{
+					"key": "Jitter",
+					"value": 0.9
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "bark-plates-crack",
+			"type": "Formula",
+			"x": 460,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 - smoothstep(0.02, 0.12, Edge)"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-bump",
+			"type": "Formula",
+			"x": 460,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(1 - Crack) * (0.6 + N * 0.4) * (1 - High * 0.7) + High * N * 0.5"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-shade",
+			"type": "Formula",
+			"x": 460,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 - Crack * 0.55 * (1 - High * 0.8) + (N - 0.5) * 0.25"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-outr",
+			"type": "Formula",
+			"x": 460,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "CR * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-result-r",
+			"type": "Result",
+			"x": 460,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "R"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-outg",
+			"type": "Formula",
+			"x": 460,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "CG * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-result-g",
+			"type": "Result",
+			"x": 460,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "G"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-outb",
+			"type": "Formula",
+			"x": 460,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "CB * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-result-b",
+			"type": "Result",
+			"x": 720,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "B"
+				}
+			]
+		},
+		{
+			"id": "bark-plates-result-bump",
+			"type": "Result",
+			"x": 720,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Bump"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "bark-plates-link-0",
+			"p1": "bark-plates-input-cx-out-Value",
+			"p2": "bark-plates-base-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-1",
+			"p1": "bark-plates-input-cz-out-Value",
+			"p2": "bark-plates-base-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-2",
+			"p1": "bark-plates-input-t-out-Value",
+			"p2": "bark-plates-base-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-3",
+			"p1": "bark-plates-input-split-out-Value",
+			"p2": "bark-plates-base-in-Split",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-4",
+			"p1": "bark-plates-input-lowr-out-Value",
+			"p2": "bark-plates-base-in-LowR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-5",
+			"p1": "bark-plates-input-lowg-out-Value",
+			"p2": "bark-plates-base-in-LowG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-6",
+			"p1": "bark-plates-input-lowb-out-Value",
+			"p2": "bark-plates-base-in-LowB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-7",
+			"p1": "bark-plates-input-highr-out-Value",
+			"p2": "bark-plates-base-in-HighR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-8",
+			"p1": "bark-plates-input-highg-out-Value",
+			"p2": "bark-plates-base-in-HighG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-9",
+			"p1": "bark-plates-input-highb-out-Value",
+			"p2": "bark-plates-base-in-HighB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-10",
+			"p1": "bark-plates-input-sfine-out-Value",
+			"p2": "bark-plates-base-in-SFine",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-11",
+			"p1": "bark-plates-input-cx-out-Value",
+			"p2": "bark-plates-edgeat-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-12",
+			"p1": "bark-plates-input-t-out-Value",
+			"p2": "bark-plates-edgeat-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-13",
+			"p1": "bark-plates-input-cz-out-Value",
+			"p2": "bark-plates-edgeat-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-14",
+			"p1": "bark-plates-edgeat-out-Value",
+			"p2": "bark-plates-edge-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-15",
+			"p1": "bark-plates-input-scells-out-Value",
+			"p2": "bark-plates-edge-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-16",
+			"p1": "bark-plates-edge-out-Value",
+			"p2": "bark-plates-crack-in-Edge",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-17",
+			"p1": "bark-plates-crack-out-Value",
+			"p2": "bark-plates-bump-in-Crack",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-18",
+			"p1": "bark-plates-base-out-N",
+			"p2": "bark-plates-bump-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-19",
+			"p1": "bark-plates-base-out-High",
+			"p2": "bark-plates-bump-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-20",
+			"p1": "bark-plates-crack-out-Value",
+			"p2": "bark-plates-shade-in-Crack",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-21",
+			"p1": "bark-plates-base-out-High",
+			"p2": "bark-plates-shade-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-22",
+			"p1": "bark-plates-base-out-N",
+			"p2": "bark-plates-shade-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-23",
+			"p1": "bark-plates-base-out-CR",
+			"p2": "bark-plates-outr-in-CR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-24",
+			"p1": "bark-plates-shade-out-Value",
+			"p2": "bark-plates-outr-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-25",
+			"p1": "bark-plates-outr-out-Value",
+			"p2": "bark-plates-result-r-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-26",
+			"p1": "bark-plates-base-out-CG",
+			"p2": "bark-plates-outg-in-CG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-27",
+			"p1": "bark-plates-shade-out-Value",
+			"p2": "bark-plates-outg-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-28",
+			"p1": "bark-plates-outg-out-Value",
+			"p2": "bark-plates-result-g-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-29",
+			"p1": "bark-plates-base-out-CB",
+			"p2": "bark-plates-outb-in-CB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-30",
+			"p1": "bark-plates-shade-out-Value",
+			"p2": "bark-plates-outb-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-31",
+			"p1": "bark-plates-outb-out-Value",
+			"p2": "bark-plates-result-b-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-plates-link-32",
+			"p1": "bark-plates-bump-out-Value",
+			"p2": "bark-plates-result-bump-in-Value",
+			"kind": "value"
+		}
+	]
+}

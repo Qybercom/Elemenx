@@ -1,6 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadElemenx } from '../../../../tests/setup.js';
 import { Use } from '../../../../tests/library.js';
+import galaxySource from '../../traits/SceneGalaxy/SceneGalaxy.js?raw';
+import cosmosSource from '../../traits/SceneCosmos/SceneCosmos.js?raw';
 
 var galaxies;
 
@@ -21,6 +23,37 @@ describe('Contract: GalaxyData, a galaxy as data: its black hole, its stars sect
 
 		galaxies = Elemenx.Service('GalaxyData');
 	}, 60000);
+
+	/*
+	 * Its middle (BulgeOf) as its glow has it, of each kind; the light of its parts but its arms one piece of GLSL
+	 * (StructureGLSL) for its look from far and from within. Regression: the band of a galaxy seen from inside it had other
+	 * numbers than the galaxy seen from far (a thick disc of 0.08 against 0.03, its bar, the curve and the colour of its bulge).
+	 */
+	it('gives its middle of each kind and the light of its parts in one piece of GLSL, seen from far and from within alike', function () {
+		galaxies.Kinds().forEach(function (kind) {
+			var data = galaxies.Make({Seed: 'bulge', Kind: kind});
+			var bulge = galaxies.BulgeOf(data.Manifest);
+
+			expect(bulge).toEqual(galaxies.Glow(data, 200).Bulge);
+			expect(bulge.Radius).toBeGreaterThan(0);
+			expect(bulge.Flat).toBeGreaterThan(0);
+		});
+
+		expect(galaxies.BulgeOf(galaxies.Make({Seed: 'bulge', Kind: 'elliptical'}).Manifest).Bright).toBe(1);
+		['vec3 galaxy_old(float r, float radius)', 'float galaxy_thin(', 'float galaxy_thick(', 'float galaxy_halo(', 'float galaxy_bulge(vec3 p, float bulge, float squash, float bright, float bar, float phase)', '* 0.03;'].forEach(function (part) {
+			expect(galaxies.StructureGLSL).toContain(part);
+		});
+
+		/* Both looks of it take that piece, and neither has its own numbers of it. */
+		[galaxySource, cosmosSource].forEach(function (source) {
+			expect(source).toContain("this.$Service('GalaxyData').StructureGLSL");
+			expect(source).not.toContain('const vec3 lightOld');
+			expect(source).not.toContain('exp(-r / (uScale * 1.25)');
+			expect(source).not.toContain('float thick = 0.08');
+		});
+
+		expect(cosmosSource).toContain("'		float bulge = galaxy_bulge(p, uRb, uFlat, uBright, uBar, uPhase);',");
+	});
 
 	it('makes a galaxy of a seed and of a kind, with its supermassive black hole at its centre', function () {
 		var spiral = galaxies.Make({Seed: 'milky'});

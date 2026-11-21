@@ -144,13 +144,7 @@ Elemenx.Component('GameCombat', {
 
 			if (top.Visible === false) return;
 
-			context.fillStyle = 'rgba(0, 0, 0, 0.6)';
-
-			context.fillRect(top.X - 21, top.Y - 3, 42, 6);
-
-			context.fillStyle = state.Part > 0.5 ? '#6ad15f' : state.Part > 0.25 ? '#e8c14a' : '#e0503f';
-
-			context.fillRect(top.X - 20, top.Y - 2, 40 * Math.max(0, state.Part), 4);
+			vitals.Bar(context, top.X, top.Y, state.Part, state.Part > 0.5 ? '#6ad15f' : state.Part > 0.25 ? '#e8c14a' : '#e0503f', 40, 4);
 		});
 	},
 

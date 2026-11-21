@@ -23648,7 +23648,7 @@
 				'function rt_smooth(e0, e1, x) { var t = Math.min(Math.max((x - e0) / (e1 - e0), 0), 1); return t * t * (3 - 2 * t); }',
 				'function rt_hash(a, b) { var h = Math.imul((a | 0) ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul((b | 0) + 0x632be5ab, 0xc2b2ae35); h ^= h >>> 15; h = Math.imul(h, 0x2c1b3c6d); h ^= h >>> 12; return (h >>> 0) / 4294967296; }',
 				'function rt_key(v) { var h = 0, i; if (typeof v === "number") return Math.round(v * 1000) | 0; v = String(v); for (i = 0; i < v.length; i++) h = (Math.imul(h, 31) + v.charCodeAt(i)) | 0; return h; }',
-				'var rt_ops = {add: function (a, b) { return a + b; }, sub: function (a, b) { return a - b; }, mul: function (a, b) { return a * b; }, div: function (a, b) { return b ? a / b : 0; }, min: Math.min, max: Math.max, pow: function (a, b) { return f_m_pow(a, b); }, step: function (e, x) { return x < e ? 0 : 1; }, sin: function (x) { return f_m_sin(x); }, cos: function (x) { return f_m_cos(x); }, abs: Math.abs, floor: Math.floor, exp: function (x) { return f_m_exp(x); }, fract: function (x) { return x - Math.floor(x); }, sqrt: function (x) { return Math.sqrt(Math.max(0, x)); }, saturate: function (x) { return Math.max(0, Math.min(1, x)); }};',
+				'var rt_ops = {add: function (a, b) { return a + b; }, sub: function (a, b) { return a - b; }, mul: function (a, b) { return a * b; }, div: function (a, b) { return b ? a / b : 0; }, min: Math.min, max: Math.max, pow: function (a, b) { return f_m_pow(a, b); }, step: function (e, x) { return x < e ? 0 : 1; }, sin: function (x) { return f_m_sin(x); }, cos: function (x) { return f_m_cos(x); }, abs: Math.abs, floor: Math.floor, exp: function (x) { return f_m_exp(x); }, acos: function (x) { return f_m_acos(x); }, asin: function (x) { return f_m_asin(x); }, fract: function (x) { return x - Math.floor(x); }, sqrt: function (x) { return Math.sqrt(Math.max(0, x)); }, saturate: function (x) { return Math.max(0, Math.min(1, x)); }};',
 				'function rt_e(op, a, b) { var f = rt_ops[op], n, r = [], i; if (!Array.isArray(a) && !Array.isArray(b)) return f(Number(a) || 0, Number(b) || 0); n = Math.max(Array.isArray(a) ? a.length : 0, Array.isArray(b) ? b.length : 0); for (i = 0; i < n; i++) r.push(f(Number(Array.isArray(a) ? a[i] : a) || 0, Number(Array.isArray(b) ? b[i] : b) || 0)); return r; }',
 				'var rt_sizes = {float: 1, vec2: 2, vec3: 3, vec4: 4, int: 1, bool: 1};',
 				'function rt_numbers(v, n) { var l, i; if (typeof v === "string" && /^#[0-9a-f]{6,8}$/i.test(v)) { l = []; for (i = 1; i < v.length; i += 2) l.push(parseInt(v.slice(i, i + 2), 16) / 255); } else if (Array.isArray(v)) { l = v.map(Number); } else { l = [Number(v) || 0]; while (l.length < n) l.push(l[0]); } while (l.length < n) l.push(n === 4 && l.length === 3 ? 1 : 0); return l.slice(0, n); }',
@@ -24496,11 +24496,11 @@
 				}
 
 				/*
-				 * each of pow, sin, cos or exp (of what may be a vector): the runtime of js turns them by the own ones too
+				 * each of pow, sin, cos, exp, acos or asin (of what may be a vector): the runtime of js turns them by the own ones too
 				 * (rt_ops), so these come with the module. Regression: they went to the Math of the browser, a graph a last bit
 				 * off its run.
 				 */
-				if (copy.Op === 'call' && copy.Name === 'each' && copy.Args && copy.Args[0] && copy.Args[0].Op === 'const' && ['pow', 'sin', 'cos', 'exp'].indexOf(copy.Args[0].Value) !== -1)
+				if (copy.Op === 'call' && copy.Name === 'each' && copy.Args && copy.Args[0] && copy.Args[0].Op === 'const' && ['pow', 'sin', 'cos', 'exp', 'acos', 'asin'].indexOf(copy.Args[0].Value) !== -1)
 					needed[names[copy.Args[0].Value]] = true;
 
 				if (copy.Op === 'call' && own(names, copy.Name) && !own(defined, copy.Name)) {

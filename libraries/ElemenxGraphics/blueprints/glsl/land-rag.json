@@ -1,0 +1,24 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "land-rag",
+	"glsl": {
+		"Field": "LandRag"
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "chunk",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "float landRagNoise(vec2 p) { return enx_value2(p); }\nfloat landRag(vec2 place, float n) {\n\tvec2 o = vec2(n * 17.31, n * 9.73);\n\treturn (landRagNoise(place / 2.3 + o) * 0.55 + landRagNoise(place / 0.7 + o * 1.7) * 0.3 + landRagNoise(place / 0.2 + o * 2.3) * 0.15 - 0.5) * 0.6;\n}"
+				}
+			]
+		}
+	],
+	"links": []
+}

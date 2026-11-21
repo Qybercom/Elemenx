@@ -1,0 +1,797 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "travel-look",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "travel-look-input-phase",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Phase"
+				}
+			]
+		},
+		{
+			"id": "travel-look-input-warp",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Warp"
+				}
+			]
+		},
+		{
+			"id": "travel-look-input-t",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "T"
+				}
+			]
+		},
+		{
+			"id": "travel-look-input-time",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Time"
+				}
+			]
+		},
+		{
+			"id": "travel-look-s03",
+			"type": "Smoothstep",
+			"x": 400,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "travel-look-s03-low",
+			"type": "Number",
+			"x": 250,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.3
+				}
+			]
+		},
+		{
+			"id": "travel-look-s03-high",
+			"type": "Number",
+			"x": 250,
+			"y": 100,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "travel-look-s08",
+			"type": "Smoothstep",
+			"x": 400,
+			"y": 190,
+			"properties": []
+		},
+		{
+			"id": "travel-look-s08-low",
+			"type": "Number",
+			"x": 250,
+			"y": 190,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.8
+				}
+			]
+		},
+		{
+			"id": "travel-look-s08-high",
+			"type": "Number",
+			"x": 250,
+			"y": 250,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "travel-look-s09",
+			"type": "Smoothstep",
+			"x": 400,
+			"y": 340,
+			"properties": []
+		},
+		{
+			"id": "travel-look-s09-low",
+			"type": "Number",
+			"x": 250,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.9
+				}
+			]
+		},
+		{
+			"id": "travel-look-s09-high",
+			"type": "Number",
+			"x": 250,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "travel-look-s006",
+			"type": "Smoothstep",
+			"x": 400,
+			"y": 490,
+			"properties": []
+		},
+		{
+			"id": "travel-look-s006-low",
+			"type": "Number",
+			"x": 250,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "travel-look-s006-high",
+			"type": "Number",
+			"x": 250,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.6
+				}
+			]
+		},
+		{
+			"id": "travel-look-s0018",
+			"type": "Smoothstep",
+			"x": 400,
+			"y": 640,
+			"properties": []
+		},
+		{
+			"id": "travel-look-s0018-low",
+			"type": "Number",
+			"x": 250,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "travel-look-s0018-high",
+			"type": "Number",
+			"x": 250,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.18
+				}
+			]
+		},
+		{
+			"id": "travel-look-s007",
+			"type": "Smoothstep",
+			"x": 400,
+			"y": 790,
+			"properties": []
+		},
+		{
+			"id": "travel-look-s007-low",
+			"type": "Number",
+			"x": 250,
+			"y": 790,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "travel-look-s007-high",
+			"type": "Number",
+			"x": 250,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.7
+				}
+			]
+		},
+		{
+			"id": "travel-look-s008",
+			"type": "Smoothstep",
+			"x": 400,
+			"y": 940,
+			"properties": []
+		},
+		{
+			"id": "travel-look-s008-low",
+			"type": "Number",
+			"x": 250,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "travel-look-s008-high",
+			"type": "Number",
+			"x": 250,
+			"y": 1000,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.8
+				}
+			]
+		},
+		{
+			"id": "travel-look-stretch",
+			"type": "Formula",
+			"x": 700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Phase < 0.5 ? (Warp > 0.5 ? S03 : T * 0.12) : Phase < 1.5 ? (Warp > 0.5 ? 1 : 0.5) : (Warp > 0.5 ? 1 - S006 : 0.5 * (1 - S008))"
+				}
+			]
+		},
+		{
+			"id": "travel-look-result-stretch",
+			"type": "Result",
+			"x": 1100,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stretch"
+				}
+			]
+		},
+		{
+			"id": "travel-look-tunnel",
+			"type": "Formula",
+			"x": 700,
+			"y": 190,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Phase < 0.5 ? (Warp > 0.5 ? S08 * 0.7 : 0) : Phase < 1.5 ? (Warp > 0.5 ? 1 : 0) : (Warp > 0.5 ? 1 - S0018 : 0)"
+				}
+			]
+		},
+		{
+			"id": "travel-look-result-tunnel",
+			"type": "Result",
+			"x": 1100,
+			"y": 190,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Tunnel"
+				}
+			]
+		},
+		{
+			"id": "travel-look-flash",
+			"type": "Formula",
+			"x": 700,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Phase < 0.5 ? (Warp > 0.5 ? S09 * 0.9 : 0) : Phase < 1.5 ? (Warp > 0.5 ? max(0, 1 - Time / 0.4) * 0.9 : max(0, 1 - Time / 0.25) * 0.2) : (Warp > 0.5 ? max(0, 1 - T / 0.25) : 0)"
+				}
+			]
+		},
+		{
+			"id": "travel-look-result-flash",
+			"type": "Result",
+			"x": 1100,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Flash"
+				}
+			]
+		},
+		{
+			"id": "travel-look-shake",
+			"type": "Formula",
+			"x": 700,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Phase < 0.5 ? (Warp > 0.5 ? T * 0.35 : T * 0.3) : Phase < 1.5 ? (Warp > 0.5 ? 0.22 : 0.55) : (Warp > 0.5 ? 0.5 * (1 - T) : 0.35 * (1 - T))"
+				}
+			]
+		},
+		{
+			"id": "travel-look-result-shake",
+			"type": "Result",
+			"x": 1100,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Shake"
+				}
+			]
+		},
+		{
+			"id": "travel-look-wide",
+			"type": "Formula",
+			"x": 700,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Phase < 0.5 ? (Warp > 0.5 ? S03 * 0.3 : -0.06 * T) : Phase < 1.5 ? (Warp > 0.5 ? 0.3 : 0.18) : (Warp > 0.5 ? 0.3 * (1 - S007) : 0.18 * (1 - S008))"
+				}
+			]
+		},
+		{
+			"id": "travel-look-result-wide",
+			"type": "Result",
+			"x": 1100,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Wide"
+				}
+			]
+		},
+		{
+			"id": "travel-look-lag",
+			"type": "Formula",
+			"x": 700,
+			"y": 790,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Phase < 0.5 ? (Warp > 0.5 ? T * 0.15 : T * 0.08) : Phase < 1.5 ? (Warp > 0.5 ? 0.15 : 0.08 + sin(min(PI, Time * 2)) * 0.35) : (Warp > 0.5 ? -0.2 * (1 - T) : -0.12 * (1 - T))"
+				}
+			]
+		},
+		{
+			"id": "travel-look-result-lag",
+			"type": "Result",
+			"x": 1100,
+			"y": 790,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Lag"
+				}
+			]
+		},
+		{
+			"id": "travel-look-pace",
+			"type": "Formula",
+			"x": 700,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Phase < 0.5 ? (Warp > 0.5 ? 0.15 + 2.5 * T * T : 0.15) : Phase < 1.5 ? (Warp > 0.5 ? 4 : 2.4) : (Warp > 0.5 ? 4 * (1 - T) : 2.4 * (1 - T))"
+				}
+			]
+		},
+		{
+			"id": "travel-look-result-pace",
+			"type": "Result",
+			"x": 1100,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pace"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "travel-look-link-0",
+			"p1": "travel-look-s03-low-out-Value",
+			"p2": "travel-look-s03-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-1",
+			"p1": "travel-look-s03-high-out-Value",
+			"p2": "travel-look-s03-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-2",
+			"p1": "travel-look-input-t-out-Value",
+			"p2": "travel-look-s03-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-3",
+			"p1": "travel-look-s08-low-out-Value",
+			"p2": "travel-look-s08-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-4",
+			"p1": "travel-look-s08-high-out-Value",
+			"p2": "travel-look-s08-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-5",
+			"p1": "travel-look-input-t-out-Value",
+			"p2": "travel-look-s08-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-6",
+			"p1": "travel-look-s09-low-out-Value",
+			"p2": "travel-look-s09-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-7",
+			"p1": "travel-look-s09-high-out-Value",
+			"p2": "travel-look-s09-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-8",
+			"p1": "travel-look-input-t-out-Value",
+			"p2": "travel-look-s09-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-9",
+			"p1": "travel-look-s006-low-out-Value",
+			"p2": "travel-look-s006-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-10",
+			"p1": "travel-look-s006-high-out-Value",
+			"p2": "travel-look-s006-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-11",
+			"p1": "travel-look-input-t-out-Value",
+			"p2": "travel-look-s006-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-12",
+			"p1": "travel-look-s0018-low-out-Value",
+			"p2": "travel-look-s0018-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-13",
+			"p1": "travel-look-s0018-high-out-Value",
+			"p2": "travel-look-s0018-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-14",
+			"p1": "travel-look-input-t-out-Value",
+			"p2": "travel-look-s0018-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-15",
+			"p1": "travel-look-s007-low-out-Value",
+			"p2": "travel-look-s007-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-16",
+			"p1": "travel-look-s007-high-out-Value",
+			"p2": "travel-look-s007-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-17",
+			"p1": "travel-look-input-t-out-Value",
+			"p2": "travel-look-s007-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-18",
+			"p1": "travel-look-s008-low-out-Value",
+			"p2": "travel-look-s008-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-19",
+			"p1": "travel-look-s008-high-out-Value",
+			"p2": "travel-look-s008-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-20",
+			"p1": "travel-look-input-t-out-Value",
+			"p2": "travel-look-s008-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-21",
+			"p1": "travel-look-input-phase-out-Value",
+			"p2": "travel-look-stretch-in-Phase",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-22",
+			"p1": "travel-look-input-warp-out-Value",
+			"p2": "travel-look-stretch-in-Warp",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-23",
+			"p1": "travel-look-s03-out-Out",
+			"p2": "travel-look-stretch-in-S03",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-24",
+			"p1": "travel-look-input-t-out-Value",
+			"p2": "travel-look-stretch-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-25",
+			"p1": "travel-look-s006-out-Out",
+			"p2": "travel-look-stretch-in-S006",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-26",
+			"p1": "travel-look-s008-out-Out",
+			"p2": "travel-look-stretch-in-S008",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-result-stretch",
+			"p1": "travel-look-stretch-out-Value",
+			"p2": "travel-look-result-stretch-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-27",
+			"p1": "travel-look-input-phase-out-Value",
+			"p2": "travel-look-tunnel-in-Phase",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-28",
+			"p1": "travel-look-input-warp-out-Value",
+			"p2": "travel-look-tunnel-in-Warp",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-29",
+			"p1": "travel-look-s08-out-Out",
+			"p2": "travel-look-tunnel-in-S08",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-30",
+			"p1": "travel-look-s0018-out-Out",
+			"p2": "travel-look-tunnel-in-S0018",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-result-tunnel",
+			"p1": "travel-look-tunnel-out-Value",
+			"p2": "travel-look-result-tunnel-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-31",
+			"p1": "travel-look-input-phase-out-Value",
+			"p2": "travel-look-flash-in-Phase",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-32",
+			"p1": "travel-look-input-warp-out-Value",
+			"p2": "travel-look-flash-in-Warp",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-33",
+			"p1": "travel-look-s09-out-Out",
+			"p2": "travel-look-flash-in-S09",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-34",
+			"p1": "travel-look-input-time-out-Value",
+			"p2": "travel-look-flash-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-35",
+			"p1": "travel-look-input-t-out-Value",
+			"p2": "travel-look-flash-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-result-flash",
+			"p1": "travel-look-flash-out-Value",
+			"p2": "travel-look-result-flash-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-36",
+			"p1": "travel-look-input-phase-out-Value",
+			"p2": "travel-look-shake-in-Phase",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-37",
+			"p1": "travel-look-input-warp-out-Value",
+			"p2": "travel-look-shake-in-Warp",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-38",
+			"p1": "travel-look-input-t-out-Value",
+			"p2": "travel-look-shake-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-result-shake",
+			"p1": "travel-look-shake-out-Value",
+			"p2": "travel-look-result-shake-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-39",
+			"p1": "travel-look-input-phase-out-Value",
+			"p2": "travel-look-wide-in-Phase",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-40",
+			"p1": "travel-look-input-warp-out-Value",
+			"p2": "travel-look-wide-in-Warp",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-41",
+			"p1": "travel-look-s03-out-Out",
+			"p2": "travel-look-wide-in-S03",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-42",
+			"p1": "travel-look-input-t-out-Value",
+			"p2": "travel-look-wide-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-43",
+			"p1": "travel-look-s007-out-Out",
+			"p2": "travel-look-wide-in-S007",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-44",
+			"p1": "travel-look-s008-out-Out",
+			"p2": "travel-look-wide-in-S008",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-result-wide",
+			"p1": "travel-look-wide-out-Value",
+			"p2": "travel-look-result-wide-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-45",
+			"p1": "travel-look-input-phase-out-Value",
+			"p2": "travel-look-lag-in-Phase",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-46",
+			"p1": "travel-look-input-warp-out-Value",
+			"p2": "travel-look-lag-in-Warp",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-47",
+			"p1": "travel-look-input-t-out-Value",
+			"p2": "travel-look-lag-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-48",
+			"p1": "travel-look-input-time-out-Value",
+			"p2": "travel-look-lag-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-result-lag",
+			"p1": "travel-look-lag-out-Value",
+			"p2": "travel-look-result-lag-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-49",
+			"p1": "travel-look-input-phase-out-Value",
+			"p2": "travel-look-pace-in-Phase",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-50",
+			"p1": "travel-look-input-warp-out-Value",
+			"p2": "travel-look-pace-in-Warp",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-51",
+			"p1": "travel-look-input-t-out-Value",
+			"p2": "travel-look-pace-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "travel-look-link-result-pace",
+			"p1": "travel-look-pace-out-Value",
+			"p2": "travel-look-result-pace-in-Value",
+			"kind": "value"
+		}
+	]
+}

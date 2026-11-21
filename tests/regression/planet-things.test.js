@@ -180,4 +180,45 @@ describe('Contract: what stands on the surface of a planet, seen from over it (S
 		expect(most).toBeLessThan(2);
 		expect(Math.hypot(built.Center[0], built.Center[1], built.Center[2])).toBeGreaterThan(6370);
 	});
+
+	/*
+	 * Regression: the mean colour of its houses was of a table of three kinds (city, town, village): a hamlet or a fort put
+	 * on a planet broke its picture (NaN through all of it). A kind of no Planet of its own takes the numbers of a village,
+	 * Roofs among them. Regression too: a point of a settlement kept to 7 places fell short of length 1, its distance (an acos)
+	 * never less than some 1.5 km: no village had its houses in the picture (built 0 at its middle).
+	 */
+	it('draws the picture of a square of a hamlet and of a fort put on a planet, of the houses of a village', function () {
+		var towns = planets.Settlements(PLANET, 80).Settlements.map(function (one) {
+			return Object.assign({}, one);
+		});
+		var city = towns.filter(function (one) {
+			return one.Kind === 'city';
+		})[0];
+		var pictures = {};
+
+		['hamlet', 'fort', 'village'].forEach(function (kind) {
+			city.Kind = kind;
+
+			var field = planets.Sphere(Object.assign({}, PLANET, {Settlements: towns}));
+			var at = faceOf(city.Point);
+			var picture = planets.PatchPicture(field, at[0], at[1], at[2], 12 / (Math.PI / 4 * field.Radius), 48);
+			var built = 0;
+			var k;
+
+			for (k = 0; k < picture.Use.length; k += 4)
+				built = Math.max(built, picture.Use[k + 1]);
+
+			expect(built).toBeGreaterThan(60);
+			expect(Array.from(picture.Color).every(function (value) {
+				return value >= 0 && value <= 255;
+			})).toBe(true);
+
+			pictures[kind] = Array.from(picture.Color);
+		});
+
+		expect(pictures.hamlet).toEqual(pictures.village);
+		expect(pictures.fort).toEqual(pictures.village);
+		expect(planets.Kind('hamlet').Roofs).toEqual(planets.Kind('village').Roofs);
+		expect(planets.Kind('city').Roofs).not.toEqual(planets.Kind('village').Roofs);
+	});
 });

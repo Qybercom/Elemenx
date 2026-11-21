@@ -12,6 +12,8 @@ FloraEditor: вид растения по его фотографии (SceneFlor
 
 На фото может быть несколько растений в ряд: берётся самое крупное — каждое отделяется по своему стволу у земли (то, что не поднимается от земли хотя бы на десятую часть высоты, вроде надписи или фигурки человека, стволом не считается), а растение — то, что связано со своим стволом. Свои картинки: кора — по окружности ствола и вверх по высоте растения, листва — атлас 512×1024 как у SceneFlora (четыре ветки сверху, они же в тени снизу). Вид в 3D не хранится в кэше браузера (Keep: false), определённая модель — хранится.
 
+Ширина картинки слева и панели справа меняется перетаскиванием их края и запоминается (EditorPanes, ключ flora-editor).
+
 ## Свойства
 
 | Свойство | По умолчанию |
@@ -37,5 +39,6 @@ FloraEditor: вид растения по его фотографии (SceneFlor
 
 ## Тесты
 
+- [drags the panes of ](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/editor-panes.test.js#L46) — `tests/regression/editor-panes.test.js`
 - [starts of its species, reads a picture into its preset, its numbers on sliders, and grows the plant in its view](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/FloraEditor/FloraEditor.test.js#L68) — `libraries/ElemenxGraphics/components/FloraEditor/FloraEditor.test.js`
 - [turns a number of its preset on a slider, emits change, and defines the model under Name](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/FloraEditor/FloraEditor.test.js#L101) — `libraries/ElemenxGraphics/components/FloraEditor/FloraEditor.test.js`

@@ -130,7 +130,8 @@ describe('Contract: SceneMannequin, a person made of code: its skeleton of Mixam
 		['idle', 'walk', 'jog', 'sprint', 'strafe-left', 'crouch-walk', 'lie-front', 'crawl', 'aim-bow', 'sit', 'drive', 'jump', 'pull-up', 'swim-crawl'].forEach(function (name) {
 			expect(names).toContain(name);
 		});
-		expect(asset.Motions.walk.Stride).toBeGreaterThan(1);
+		/* What its feet travel in a cycle (1.575 m), over its height: they do not slide (tests/regression/mannequin-gaits). */
+		expect(asset.Motions.walk.Stride).toBeCloseTo(1.575 / 1.78, 3);
 		expect(knee[0]).toBeCloseTo(Math.sin(Math.PI / 4), 5);
 		expect(pose.Turns[mannequin.Find(bones, 'LeftHandMiddle2')][2]).not.toBe(0);
 		expect(pose.Turns[mannequin.Find(bones, 'RightHandMiddle2')]).toEqual([0, 0, 0, 1]);
@@ -152,7 +153,7 @@ describe('Contract: SceneMannequin, a person made of code: its skeleton of Mixam
 		expect(made.Joints).toBe(mannequin.Skeleton({}).length);
 		expect(Object.keys(made.Clips)).toContain('walk');
 		expect(Object.keys(made.Clips)).toContain('run');
-		expect(models.Length(made, 'walk')).toBeCloseTo(1.1, 3);
+		expect(models.Length(made, 'walk')).toBeCloseTo(mannequin.Gait(mannequin.Skeleton({Height: 1.6}), 'walk', {Height: 1.6}).Length, 6);
 		expect(made.Size).toBe(1.6);
 	});
 

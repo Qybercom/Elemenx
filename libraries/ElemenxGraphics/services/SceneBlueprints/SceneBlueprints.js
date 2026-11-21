@@ -59,6 +59,8 @@
  * - The kind ground: the ground of a globe near and from over it (GroundGraph of a Scene): its picture, woods, fields,
  *   snow, dunes, relief, the tiles near, its light and the shadows of clouds and of its ring, water, towns at night, clouds
  *   from over them and air as blocks: see Grounds; LibraryGround() the graph of the library (blueprints/shader/ground).
+ * - LibraryShader(name): a shader graph of the library (blueprints/shader/<name>) read; LibraryCosmos(), LibraryRing(),
+ *   LibraryPlanet(), LibraryGround(), LibraryForecast(), LibraryBolt() and LibraryGalaxy() each give theirs of it.
  * - The shape of a lightning, one for the bolt of a storm (SceneLighting) and the one of an effect (SceneEffects, kind
  *   bolt): a generator of the jag of each of its steps (Step, Seed: X and Z, -0.5 to 0.5), its parameters Steps (of its
  *   way), Wide (a jag to its length), Fork (the step a branch leaves at), ForkSteps, ForkDown and ForkWide (the branch:
@@ -70,7 +72,7 @@
 Elemenx.Service('SceneBlueprints', {
 	$Meta: {
 		Description: 'What a Scene adds to Blueprints: the graphs of effects and the blocks of the passes of its picture.',
-		Methods: ['BakeLandGraph(graph)', 'LibraryBolt()', 'Bolt(graph)', 'Chunk(context, name, lines, guard)', 'LibraryForecast()', 'LibraryGalaxy()', 'Galaxy(graph)', 'LibraryCosmos()', 'LibraryRing()', 'Painted(kind, end, head)', 'LibraryPlanet()', 'LibraryGround()']
+		Methods: ['BakeLandGraph(graph)', 'LibraryShader(name)', 'LibraryBolt()', 'Bolt(graph)', 'Chunk(context, name, lines, guard)', 'LibraryForecast()', 'LibraryGalaxy()', 'Galaxy(graph)', 'LibraryCosmos()', 'LibraryRing()', 'Painted(kind, end, head)', 'LibraryPlanet()', 'LibraryGround()']
 	},
 
 	$Provides: {
@@ -1187,8 +1189,13 @@ Elemenx.Service('SceneBlueprints', {
 	},
 
 	/* The sky far behind a system of the library (blueprints/shader/cosmos): see the header. */
+	/* A shader graph of the library (blueprints/shader/<name>), read: what each Library* of a shader gives. */
+	LibraryShader: function (name) {
+		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/' + name));
+	},
+
 	LibraryCosmos: function () {
-		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/cosmos'));
+		return this.LibraryShader('cosmos');
 	},
 
 	/*
@@ -1320,7 +1327,7 @@ Elemenx.Service('SceneBlueprints', {
 
 	/* A ring of the library (blueprints/shader/ring): see Rings. */
 	LibraryRing: function () {
-		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/ring'));
+		return this.LibraryShader('ring');
 	},
 
 	/*
@@ -1600,7 +1607,7 @@ Elemenx.Service('SceneBlueprints', {
 
 	/* A globe of the library (blueprints/shader/planet): see Planets. */
 	LibraryPlanet: function () {
-		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/planet'));
+		return this.LibraryShader('planet');
 	},
 
 	/*
@@ -2001,7 +2008,7 @@ Elemenx.Service('SceneBlueprints', {
 
 	/* A ground of a globe of the library (blueprints/shader/ground): see Grounds. */
 	LibraryGround: function () {
-		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/ground'));
+		return this.LibraryShader('ground');
 	},
 
 	/* The surface of a body of noise as a graph (the kind bake): see the header. */
@@ -2694,12 +2701,12 @@ Elemenx.Service('SceneBlueprints', {
 	 * Warm, Ground, Climb): Cover, Kind, Cirrus, Rain.
 	 */
 	LibraryForecast: function () {
-		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/forecast'));
+		return this.LibraryShader('forecast');
 	},
 
 	/* The shape of a lightning of the library (blueprints/shader/bolt): see the header. */
 	LibraryBolt: function () {
-		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/bolt'));
+		return this.LibraryShader('bolt');
 	},
 
 	/* The shape of a lightning of a graph (none: the library one) for the page and for a shader: see the header. */
@@ -2802,7 +2809,7 @@ Elemenx.Service('SceneBlueprints', {
 
 	/* The arms of a galaxy of the library (blueprints/shader/galaxy): see the header. */
 	LibraryGalaxy: function () {
-		return this.$Service('Blueprints').Read(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/galaxy'));
+		return this.LibraryShader('galaxy');
 	},
 
 	/*

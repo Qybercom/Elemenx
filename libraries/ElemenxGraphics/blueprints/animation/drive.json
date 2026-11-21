@@ -1,0 +1,1182 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-drive",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "animation-drive-phase",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Phase"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-leftarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-55
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-leftarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-leftarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-40
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-leftarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-leftfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							65
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-leftfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-leftforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-45
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-leftforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-leftleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							60
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-leftleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-leftthumb",
+			"type": "Curve",
+			"x": 260,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							25
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-leftthumb",
+			"type": "Result",
+			"x": 520,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftThumb"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-leftupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-70
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-leftupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-leftupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							6
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-leftupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-neck-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							12
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-neck-x",
+			"type": "Result",
+			"x": 520,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Neck.x"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-rightarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-55
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-rightarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-rightarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							40
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-rightarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-rightfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							65
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-rightfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-rightforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							45
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-rightforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-rightleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							70
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-rightleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-rightthumb",
+			"type": "Curve",
+			"x": 260,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							25
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-rightthumb",
+			"type": "Result",
+			"x": 520,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightThumb"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-rightupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-74
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-rightupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-rightupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-6
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-rightupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-root-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-0.4628
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-root-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.y"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-root-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-0.089
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-root-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.z"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-curve-spine-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-14
+						],
+						[
+							0.0625,
+							-13.62
+						],
+						[
+							0.125,
+							-13.29
+						],
+						[
+							0.1875,
+							-13.08
+						],
+						[
+							0.25,
+							-13
+						],
+						[
+							0.3125,
+							-13.08
+						],
+						[
+							0.375,
+							-13.29
+						],
+						[
+							0.4375,
+							-13.62
+						],
+						[
+							0.5,
+							-14
+						],
+						[
+							0.5625,
+							-14.38
+						],
+						[
+							0.625,
+							-14.71
+						],
+						[
+							0.6875,
+							-14.92
+						],
+						[
+							0.75,
+							-15
+						],
+						[
+							0.8125,
+							-14.92
+						],
+						[
+							0.875,
+							-14.71
+						],
+						[
+							0.9375,
+							-14.38
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-spine-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine.x"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-number-pose",
+			"type": "Number",
+			"x": 780,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-pose",
+			"type": "Result",
+			"x": 1000,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pose"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-number-length",
+			"type": "Number",
+			"x": 780,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 3
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-length",
+			"type": "Result",
+			"x": 1000,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Length"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-number-loop",
+			"type": "Number",
+			"x": 780,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-loop",
+			"type": "Result",
+			"x": 1000,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Loop"
+				}
+			]
+		},
+		{
+			"id": "animation-drive-number-stride",
+			"type": "Number",
+			"x": 780,
+			"y": 2340,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-drive-result-stride",
+			"type": "Result",
+			"x": 1000,
+			"y": 2340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stride"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-drive-link-0",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-leftarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-1",
+			"p1": "animation-drive-curve-leftarm-x-out-Value",
+			"p2": "animation-drive-result-leftarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-2",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-leftarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-3",
+			"p1": "animation-drive-curve-leftarm-z-out-Value",
+			"p2": "animation-drive-result-leftarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-4",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-leftfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-5",
+			"p1": "animation-drive-curve-leftfingers-out-Value",
+			"p2": "animation-drive-result-leftfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-6",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-leftforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-7",
+			"p1": "animation-drive-curve-leftforearm-y-out-Value",
+			"p2": "animation-drive-result-leftforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-8",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-leftleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-9",
+			"p1": "animation-drive-curve-leftleg-x-out-Value",
+			"p2": "animation-drive-result-leftleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-10",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-leftthumb-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-11",
+			"p1": "animation-drive-curve-leftthumb-out-Value",
+			"p2": "animation-drive-result-leftthumb-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-12",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-leftupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-13",
+			"p1": "animation-drive-curve-leftupleg-x-out-Value",
+			"p2": "animation-drive-result-leftupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-14",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-leftupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-15",
+			"p1": "animation-drive-curve-leftupleg-z-out-Value",
+			"p2": "animation-drive-result-leftupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-16",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-neck-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-17",
+			"p1": "animation-drive-curve-neck-x-out-Value",
+			"p2": "animation-drive-result-neck-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-18",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-rightarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-19",
+			"p1": "animation-drive-curve-rightarm-x-out-Value",
+			"p2": "animation-drive-result-rightarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-20",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-rightarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-21",
+			"p1": "animation-drive-curve-rightarm-z-out-Value",
+			"p2": "animation-drive-result-rightarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-22",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-rightfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-23",
+			"p1": "animation-drive-curve-rightfingers-out-Value",
+			"p2": "animation-drive-result-rightfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-24",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-rightforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-25",
+			"p1": "animation-drive-curve-rightforearm-y-out-Value",
+			"p2": "animation-drive-result-rightforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-26",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-rightleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-27",
+			"p1": "animation-drive-curve-rightleg-x-out-Value",
+			"p2": "animation-drive-result-rightleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-28",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-rightthumb-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-29",
+			"p1": "animation-drive-curve-rightthumb-out-Value",
+			"p2": "animation-drive-result-rightthumb-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-30",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-rightupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-31",
+			"p1": "animation-drive-curve-rightupleg-x-out-Value",
+			"p2": "animation-drive-result-rightupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-32",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-rightupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-33",
+			"p1": "animation-drive-curve-rightupleg-z-out-Value",
+			"p2": "animation-drive-result-rightupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-34",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-root-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-35",
+			"p1": "animation-drive-curve-root-y-out-Value",
+			"p2": "animation-drive-result-root-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-36",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-root-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-37",
+			"p1": "animation-drive-curve-root-z-out-Value",
+			"p2": "animation-drive-result-root-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-38",
+			"p1": "animation-drive-phase-out-Value",
+			"p2": "animation-drive-curve-spine-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-39",
+			"p1": "animation-drive-curve-spine-x-out-Value",
+			"p2": "animation-drive-result-spine-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-40",
+			"p1": "animation-drive-number-pose-out-Value",
+			"p2": "animation-drive-result-pose-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-41",
+			"p1": "animation-drive-number-length-out-Value",
+			"p2": "animation-drive-result-length-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-42",
+			"p1": "animation-drive-number-loop-out-Value",
+			"p2": "animation-drive-result-loop-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-drive-link-43",
+			"p1": "animation-drive-number-stride-out-Value",
+			"p2": "animation-drive-result-stride-in-Value",
+			"kind": "value"
+		}
+	]
+}

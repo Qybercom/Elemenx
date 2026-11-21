@@ -1,0 +1,142 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-t-pose",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "animation-t-pose-phase",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Phase"
+				}
+			]
+		},
+		{
+			"id": "animation-t-pose-number-pose",
+			"type": "Number",
+			"x": 780,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-t-pose-result-pose",
+			"type": "Result",
+			"x": 1000,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pose"
+				}
+			]
+		},
+		{
+			"id": "animation-t-pose-number-length",
+			"type": "Number",
+			"x": 780,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-t-pose-result-length",
+			"type": "Result",
+			"x": 1000,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Length"
+				}
+			]
+		},
+		{
+			"id": "animation-t-pose-number-loop",
+			"type": "Number",
+			"x": 780,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-t-pose-result-loop",
+			"type": "Result",
+			"x": 1000,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Loop"
+				}
+			]
+		},
+		{
+			"id": "animation-t-pose-number-stride",
+			"type": "Number",
+			"x": 780,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-t-pose-result-stride",
+			"type": "Result",
+			"x": 1000,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stride"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-t-pose-link-0",
+			"p1": "animation-t-pose-number-pose-out-Value",
+			"p2": "animation-t-pose-result-pose-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-t-pose-link-1",
+			"p1": "animation-t-pose-number-length-out-Value",
+			"p2": "animation-t-pose-result-length-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-t-pose-link-2",
+			"p1": "animation-t-pose-number-loop-out-Value",
+			"p2": "animation-t-pose-result-loop-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-t-pose-link-3",
+			"p1": "animation-t-pose-number-stride-out-Value",
+			"p2": "animation-t-pose-result-stride-in-Value",
+			"kind": "value"
+		}
+	]
+}

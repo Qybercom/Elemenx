@@ -3495,7 +3495,7 @@
 					"Title": {
 						"en": "EditorPanes"
 					},
-					"Library": "ElemenxGraphics"
+					"Library": "ElemenxUI"
 				},
 				{
 					"ID": "SceneBehaviour",

@@ -91,6 +91,12 @@
 				"Passages(packed, x, y, z, blend, crust, ground)",
 				"Fall(distance, radius)",
 				"Nearest(points, x, y, z)",
+				"Painted(packed, x, y, z)",
+				"Strokes(packed, x, y, z)",
+				"Bend(record, t, width, bend)",
+				"River(packed, x, y, z, radius, width, bend)",
+				"EditWeight(packed, at, x, y, z)",
+				"Edits(packed, softs, x, y, z, height)",
 				"Code()",
 				"IR()",
 				"Source(names)"
@@ -138,7 +144,8 @@
 				"Distances(grid, targets, options)",
 				"Flow(grid, targets, options)",
 				"Search(options)",
-				"Smooth(grid, path)"
+				"Smooth(grid, path)",
+				"Source(names)"
 			],
 			"Sample": {}
 		},
@@ -529,6 +536,7 @@
 				"Read(json)",
 				"Write(graph)",
 				"Fill(graph, values)",
+				"Inlined(graph)",
 				"Check(graph)",
 				"Order(graph)",
 				"Compile(graph, options)",
@@ -539,6 +547,7 @@
 				"IR(graph, options)",
 				"Invoke(name, inputs)",
 				"Hash2(a, b)",
+				"Chain(seed, index)",
 				"CurveAt(keys, x, smooth, loop)",
 				"Numeric(graph, values, types, keys)",
 				"NumericCode(graph, values, types, keys)",

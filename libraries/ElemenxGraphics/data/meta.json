@@ -765,6 +765,24 @@
 					"Description": "The arms of a galaxy, its picture, its stars and the band of it across the sky of a system alike: a generator of the Blueprints Service of the blocks of GalaxyData (its results Turn, Bend, Wave and Arm; or its JSON); empty, the one of the library (SceneBlueprints.LibraryGalaxy())."
 				},
 				{
+					"Name": "TravelLookGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How a warp and a jump look in each of their phases (Stretch, Tunnel, Flash, Shake, Wide, Lag, Pace of the Phase: 0 into it, 1 in it, 2 out of it; Warp: 1 a warp, 0 a jump; T of the phase; Time in it): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/travel-look)."
+				},
+				{
+					"Name": "SeasonGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The season of the sun and what it does to plants and the land (Warmth, Rising, Bare, Turn, Blossom, Dry, Snow of its Fixed season, Latitude, YearDays and DayOfYear): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/weather/season)."
+				},
+				{
 					"Name": "ForecastGraph",
 					"Type": "json",
 					"Default": null,
@@ -2397,7 +2415,8 @@
 				"Camera(options)",
 				"Source(names)",
 				"CloudBlock(size)",
-				"Work()"
+				"Work()",
+				"Patch(source, from, to)"
 			],
 			"Sample": {}
 		},
@@ -2482,7 +2501,8 @@
 				"Chunk(names)",
 				"Land(names)",
 				"LandNames()",
-				"Surface(name)"
+				"Surface(name)",
+				"Glsl()"
 			],
 			"Sample": {}
 		},
@@ -2653,6 +2673,7 @@
 			"EventDescriptions": {},
 			"Methods": [
 				"BakeLandGraph(graph)",
+				"LibraryShader(name)",
 				"LibraryBolt()",
 				"Bolt(graph)",
 				"Chunk(context, name, lines, guard)",
@@ -2902,6 +2923,7 @@
 				"Near(shapes, point)",
 				"Asset(options)",
 				"Clips(bones, options)",
+				"Gait(bones, graph, options)",
 				"Pose(bones, pose)",
 				"Define(name, options)"
 			],
@@ -3250,7 +3272,9 @@
 				"GraphSources(options)",
 				"Kind(kind)",
 				"KindByShare(share)",
-				"Warmth(celsius)"
+				"Warmth(celsius)",
+				"SurfaceType(type)",
+				"Giant(type)"
 			],
 			"Sample": {}
 		},
@@ -3650,6 +3674,8 @@
 		"elemenx-world-editor-graph": [],
 		"elemenx-world-editor-graph-bar": [],
 		"elemenx-world-editor-graph-blueprint": [],
+		"elemenx-world-editor-cutscene": [],
+		"elemenx-world-editor-cutscene-scene": [],
 		"elemenx-model-editor": [],
 		"elemenx-model-editor-toolbar": [],
 		"elemenx-model-editor-group": [

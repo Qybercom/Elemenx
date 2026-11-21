@@ -6,3 +6,5 @@
 - Flow(grid, targets, options): поле потока к целям, для многих юнитов сразу: {Distances, Next(x, y) (следующая клетка или null), Direction(x, y) ({X, Y} шага: -1, 0 или 1)}.
 - Search({Start, Goal, Key, Neighbors, Heuristic, Limit}): A* на своём графе (без Heuristic — Дейкстра): Goal(node) истинно у цели (или это сама цель, сравниваемая по Key), Key(node) — её текст, Neighbors(node) — [{Node, Cost}]; возвращает {Path: [узлы], Cost} или null.
 - Smooth(grid, path): путь без клеток, которые он проходит по прямой: только его углы.
+
+Source(names) — исходник его членов для воркера (Workers): поиски путей земли и планеты (магистрали планеты, дороги и пути пешехода по земле и под ней, маршрут по ходам) идут через Search и в воркерах.

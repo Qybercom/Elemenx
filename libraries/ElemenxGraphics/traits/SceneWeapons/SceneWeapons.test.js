@@ -65,6 +65,21 @@ describe('Contract: the weapons of a Scene: shots, what they hit, of what materi
 		}
 	}
 
+	/*
+	 * Regression: the effects of the weapons (and the transporter of SceneDebris) were written in their traits too, and took
+	 * the place of the effect graphs of the library: a graph changed never reached a scene. Each is its graph now.
+	 */
+	it('takes the effects of its weapons, its hits and its transporter of the effect graphs of the library', async function () {
+		var made = await mount();
+		var types = made.Scene.Scene().EffectTypes;
+
+		['muzzle', 'cannon', 'backblast', 'railflash', 'hit-metal', 'hit-stone', 'hit-wood', 'hit-soil', 'hit-snow', 'hit-water', 'hit-flesh', 'hit-glass', 'hit-dust', 'hit-energy', 'hit-steam', 'blast', 'plasmaburst', 'transporter'].forEach(function (name) {
+			expect(types[name], name).toBeTruthy();
+			expect(types[name].Blueprint, name).toBeTruthy();
+			expect(types[name].Layers.length, name).toBeGreaterThan(0);
+		});
+	});
+
 	it('hits what a ray meets first: a thing (its triangles, the side facing the shot), its material, a mark that stays; the rate holds the next', async function () {
 		var made = await mount('<SceneObject ID="gun" Kind="thing" Model="test-crate" Size="0.5" X="0" Y="0" Weapon="rifle" />' +
 			'<SceneObject ID="crate" Kind="thing" Model="test-crate" Size="2" X="0" Y="10" />');

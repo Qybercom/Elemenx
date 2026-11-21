@@ -44,9 +44,7 @@ Elemenx.Trait('SceneNebula', {
 		}
 
 		function colorOf (text, fallback) {
-			var hex = String(text || '').trim().replace('#', '');
-
-			return /^[0-9a-f]{6}$/i.test(hex) ? [parseInt(hex.slice(0, 2), 16) / 255, parseInt(hex.slice(2, 4), 16) / 255, parseInt(hex.slice(4, 6), 16) / 255] : fallback;
+			return engine.Hex(text, fallback);
 		}
 
 		function tinted (color, tint) {
@@ -55,13 +53,9 @@ Elemenx.Trait('SceneNebula', {
 			return [color[0] * by[0], color[1] * by[1], color[2] * by[2]];
 		}
 
-		function level () {
-			return self.Graphics ? self.Graphics().Level : 'medium';
-		}
-
 		/* The side of the block of its shape: 128 (64 at low quality), its slices in columns of 16 (8). */
 		function sideOf () {
-			return level() === 'low' ? 64 : 128;
+			return self.Graphics().Nebula.Side;
 		}
 
 		/* What its graph gives (compiled once, of the graph or its text); null without one or one that cannot be made. */
@@ -175,6 +169,20 @@ Elemenx.Trait('SceneNebula', {
 			quad = quad || renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
 		}
 
+		/*
+		 * The blocks of the nebulae no longer in the scene let go (removed, a system of others come). Regression: kept until the
+		 * scene stopped, a block of 128³ each (16 MB) of every nebula the scene ever showed.
+		 */
+		function forget () {
+			Object.keys(blocks).forEach(function (id) {
+				if (scene.Objects[id] && trait(scene.Objects[id], 'Nebula')) return;
+
+				blocks[id].Target.Destroy();
+
+				delete blocks[id];
+			});
+		}
+
 		function nebulae () {
 			return scene.Active.filter(function (object) {
 				return !!trait(object, 'Nebula') && !object.Hidden;
@@ -233,10 +241,14 @@ Elemenx.Trait('SceneNebula', {
 
 		/* In the part of the depth its middle is in, after all that stands: each nebula through its ball. */
 		engine.NebulaDraw = function (matrix, later, planes) {
-			var steps = {low: 40, medium: 64, high: 80, ultra: 96}[level()] || 64;
+			var steps = self.Graphics().Nebula.Steps;
 			var tall = 2 * Math.tan(scene.Camera.Fov * Math.PI / 360) / Math.max(1, scene.Height);
 
-			if (!renderer || scene.Ground || !nebulae().length) return;
+			if (!renderer) return;
+
+			forget();
+
+			if (scene.Ground || !nebulae().length) return;
 
 			made();
 
@@ -292,13 +304,6 @@ Elemenx.Trait('SceneNebula', {
 			});
 		};
 
-		engine.NebulaForget = function () {
-			Object.keys(blocks).forEach(function (id) {
-				blocks[id].Target.Destroy();
-			});
-
-			blocks = {};
-		};
 	},
 
 	/* The quad over the whole view at a depth given (uDepth, of the nearest point of the nebula). */

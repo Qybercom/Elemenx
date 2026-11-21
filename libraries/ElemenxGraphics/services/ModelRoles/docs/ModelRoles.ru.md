@@ -17,3 +17,5 @@ ModelRoles: что такое части модели — её колёса, р�
 - points (точки): socket — точка крепления (Scene.Socket(id, name) → {At, Axis}); emitter — излучатель эффекта (Effect, Rate — выбросов в секунду, Drive); collider — части роли становятся коллайдером по своему контуру.
 
 Rig отдаёт ещё Sockets, Emitters и Colliders, а у Openings появились Stretch, Corner и Length. Приводы, которые ставят часть сразу, без Pace: steer, wipers, stroke, wheel-steer, roll, pitch, yaw, roll-air, aim-yaw, aim-pitch, fire, clock-hour, clock-minute.
+
+Каталог ролей (Catalogue: двери, люки, руль, педали, фары, подвеска, рули самолёта, оружие, механизмы, точки) лежит в resources/models/roles.json; новая роль — новая запись, без правки кода.

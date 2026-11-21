@@ -4,7 +4,7 @@
 	"mud": {"Kind": "liquid", "Density": 1600, "Viscosity": 60, "Color": [0.36, 0.27, 0.17], "Opacity": 1},
 	"oil": {"Kind": "liquid", "Density": 870, "Viscosity": 30, "Color": [0.06, 0.05, 0.03], "Opacity": 0.98, "Burns": true},
 	"fuel": {"Kind": "liquid", "Density": 750, "Viscosity": 0.6, "Color": [0.72, 0.58, 0.24], "Opacity": 0.5, "Burns": true},
-	"gas": {"Kind": "gas", "Density": 0.8, "Viscosity": 0, "Color": [0.85, 0.9, 1], "Opacity": 0.05, "Burns": true},
-	"steam": {"Kind": "gas", "Density": 0.6, "Viscosity": 0, "Color": [0.95, 0.96, 0.97], "Opacity": 0.6, "Hot": true},
-	"air": {"Kind": "gas", "Density": 1.2, "Viscosity": 0, "Color": [1, 1, 1], "Opacity": 0}
+	"gas": {"Kind": "gas", "Density": 0.8, "Viscosity": 0, "Color": [0.85, 0.9, 1], "Opacity": 0.05, "Burns": true, "Plume": {"Effect": "steam", "Size": [0.5, 0, 0.5], "Power": [0.15, 0, 0.15]}},
+	"steam": {"Kind": "gas", "Density": 0.6, "Viscosity": 0, "Color": [0.95, 0.96, 0.97], "Opacity": 0.6, "Hot": true, "Plume": {"Effect": "steam", "Size": [0.8, 0.25, 3], "Power": [0.6, 0.15, 2]}},
+	"air": {"Kind": "gas", "Density": 1.2, "Viscosity": 0, "Color": [1, 1, 1], "Opacity": 0, "Plume": {"Effect": "steam", "Size": [0.5, 0, 0.5], "Power": [0.15, 0, 0.15]}}
 }

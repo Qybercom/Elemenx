@@ -1,7 +1,7 @@
 <!-- generated -->
 # TextureLab
 
-TextureLab: a bench for the textures of SceneTextures, to see one as sharp as the ground will have it and turn its params. Texture is its name; View tile (the tile Repeat times across, to find a seam or a grid) or ground (a plane under the eye at Height metres, looking down by Pitch degrees: what a walker sees of it, near and far); Mode lit, color, normal or height; Sun its elevation in degrees, Turn its azimuth. The panel beside picks them and a slider for each param of the recipe; change emits {Texture, Params} as they change. Methods: Draw(), Bake() (the tile again), Picture() (PNG as a data URL).
+TextureLab: a bench for the textures of SceneTextures, to see one as sharp as the ground will have it and turn its params. Texture is its name; View tile (the tile Repeat times across, to find a seam or a grid) or ground (a plane under the eye at Height metres, looking down by Pitch degrees: what a walker sees of it, near and far); Mode lit, color, normal or height; Sun its elevation in degrees, Turn its azimuth. The panel beside picks them and a slider for each param of the recipe; change emits {Texture, Params} as they change. Methods: Draw(), Bake() (the tile again), Picture() (PNG as a data URL). Its panel is as wide as its edge is dragged, kept for the next time (EditorPanes).
 
 ## Properties
 
@@ -30,4 +30,5 @@ TextureLab: a bench for the textures of SceneTextures, to see one as sharp as th
 
 ## Tests
 
+- [drags the panes of ](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/editor-panes.test.js#L46) — `tests/regression/editor-panes.test.js`
 - [shows a texture in TextureLab as a tile or a ground, a slider for each param, and tells change](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L203) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`

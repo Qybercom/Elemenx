@@ -1,7 +1,7 @@
 <div class="scene-demo">
 	<div class="scene-demo-row">
 		<Select Label="Lens" [options]="CinemaLenses" [value]="CinemaLens" (change)="CinemaLensChosen" />
-		<Select Label="Rig" [options]="CinemaRigs" [value]="CinemaRig" (change)="CinemaRigChosen" />
+		<Select Label="Rig" [options]="CinemaRigs()" [value]="CinemaRig" (change)="CinemaRigChosen" />
 		<Button Label="Cutscene" Icon="play" (click)="CinemaPlay" />
 		<Button Label="Record the cutscene" Icon="video" Variant="ghost" [disabled]="CinemaRecording" (click)="CinemaRecord" />
 	</div>

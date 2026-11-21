@@ -1,0 +1,7 @@
+{
+	"tripod": {"Still": true},
+	"handheld": {"Shake": 0.5, "Smooth": 0.12, "Lag": 0.05, "Roll": true, "Walk": true},
+	"gimbal": {"Shake": 0.05, "Smooth": 0.3, "Lag": 0.05, "Stops": true},
+	"steadicam": {"Shake": 0.2, "Smooth": 0.25, "Lag": 0.6, "Spring": 0.7},
+	"drone": {"Shake": 0.15, "Smooth": 0.35, "Lag": 0.9, "Stops": true, "Spring": 0.85, "Lean": true, "Hover": true}
+}

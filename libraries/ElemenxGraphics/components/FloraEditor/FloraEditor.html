@@ -1,5 +1,5 @@
 <div class="elemenx-flora-editor" role="group" [attribute.aria-label]="Label || $T('graphics.floraEditor.label')">
-	<div class="elemenx-flora-editor-reference">
+	<div class="elemenx-flora-editor-reference" *resizable="{Edges: 'right', MinWidth: 140, MaxWidth: 520}" [style.width]="PaneWidth('reference', 200)" (resizeend)="PaneResized('reference', $event)">
 		<canvas class="elemenx-flora-editor-picture" #Reference [class.shown]="HasPicture"></canvas>
 		<div class="elemenx-flora-editor-hint" *if="!HasPicture">{{$T('graphics.floraEditor.hint')}}</div>
 		<FileUpload class="elemenx-flora-editor-load" Variant="inline" Accept="image/*" [Label]="$T('graphics.floraEditor.picture')" (change)="Loaded($event)" />
@@ -13,7 +13,7 @@
 		</Scene>
 		<div class="elemenx-flora-editor-busy" *if="Busy">{{$T('graphics.floraEditor.growing')}}</div>
 	</div>
-	<aside class="elemenx-flora-editor-panel">
+	<aside class="elemenx-flora-editor-panel" *resizable="{Edges: 'left', MinWidth: 200, MaxWidth: 560}" [style.width]="PaneWidth('panel', 250)" (resizeend)="PaneResized('panel', $event)">
 		<div class="elemenx-flora-editor-field"><span>{{$T('graphics.floraEditor.species')}}</span>
 			<Select [Label]="$T('graphics.floraEditor.species')" [Options]="Choices('Species', Version)" [Value]="Species" (change)="Specied($event)" />
 		</div>

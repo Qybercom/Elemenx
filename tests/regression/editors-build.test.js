@@ -140,4 +140,23 @@ describe('Elemenx editors: the build of the extensions', function () {
 
 		vi.unstubAllEnvs();
 	});
+
+	/*
+	 * The strings of shaders in JavaScript read as GLSL by VS Code (syntaxes/elemenx-js-glsl.json): a line that starts as
+	 * GLSL does after its tabs written as escapes; in and out only of a type. Regression: '\tfloat x;' (the lines inside a
+	 * function, as the Libraries write them) was not GLSL, 'in a minute' was. The plugin of IntelliJ reads the same grammar of
+	 * GLSL (its bundle of TextMate, its strings of shaders: ElemenxGlslTest).
+	 */
+	it('reads a string of a shader as GLSL in VS Code after its escaped tabs, and words beginning with in or out as none', function () {
+		var grammar = JSON.parse(fs.readFileSync(path.join(__dirname, '../../editors/vscode/syntaxes/elemenx-js-glsl.json'), 'utf8'));
+		var begin = new RegExp(grammar.patterns[0].begin);
+
+		expect(begin.test("'\\t\\tfloat x = 1.0;'")).toBe(true);
+		expect(begin.test("'\t\tfloat x = 1.0;'")).toBe(true);
+		expect(begin.test("'flat in vec4 vColor;'")).toBe(true);
+		expect(begin.test("'uniform sampler2D uMap;'")).toBe(true);
+		expect(begin.test("'in a minute'")).toBe(false);
+		expect(begin.test("'out of time'")).toBe(false);
+		expect(fs.existsSync(path.join(__dirname, '../../editors/intellij/src/main/resources/elemenx/textmate/glsl/package.json'))).toBe(true);
+	});
 });

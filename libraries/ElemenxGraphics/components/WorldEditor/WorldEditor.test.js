@@ -210,6 +210,54 @@ describe('Contract: WorldEditor, a world level in level (galaxy, system, planet,
 		expect(editor.Path()[1].ID).toBe(star.ID);
 	});
 
+	/*
+	 * Regression: the tab of a cutscene gave its CutsceneEditor no scene: Play, Record, the camera and the keys from the
+	 * view did nothing. A cutscene is of a location of the world, played in a scene of it beside its editor.
+	 */
+	it('plays a cutscene of the world in a scene of the location it is of, chosen in its tab', async function () {
+		var made = await mount();
+		var editor = made.Editor;
+		var world = editor.World();
+		var id;
+		var cutscenes;
+
+		world.Locations['sun/terra/harbour'] = {Version: 1, Name: 'Harbour', Setting: 'ground', Scene: {Version: 1, Seed: '', Time: 0, Travels: [], Removed: [], Overrides: {}, Added: [
+			{ID: 'ground', Kind: 'ground', Values: {}, Traits: {Terrain: {World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 4, Seed: 'harbour'})}}, Parts: []},
+			{ID: 'sun', Kind: 'sun', Values: {}, Traits: {Sun: {Time: 11}}, Parts: []}
+		]}};
+
+		editor.Load(world);
+
+		id = editor.AddResource('cutscene');
+
+		await waitFor(function () {
+			return editor.$Element().querySelector('.elemenx-world-editor-main .elemenx-cutscene-editor');
+		}, 6000);
+
+		/* Of no location yet: told to pick one, no scene. */
+		expect(editor.CutsceneLocation(0, editor.Tab)).toBe('');
+		expect(editor.LocationOptions()).toEqual([{Value: 'sun/terra/harbour', Label: 'Harbour (terra)'}]);
+		expect(editor.$Element().querySelector('.elemenx-world-editor-cutscene .elemenx-scene')).toBe(null);
+
+		editor.CutsceneLocationChosen(editor.Tab, 'sun/terra/harbour');
+
+		expect(editor.World().Resources.Cutscenes[id].Location).toBe('sun/terra/harbour');
+
+		await waitFor(function () {
+			cutscenes = Elemenx.Instance(editor.$Element().querySelector('.elemenx-world-editor-main .elemenx-cutscene-editor'));
+
+			return cutscenes && cutscenes.Scene;
+		}, 15000);
+
+		/* Its editor plays in the scene of the location: its ground and its sun in it. */
+		expect(cutscenes.Scene.Get('ground')).toBeTruthy();
+		expect(cutscenes.Scene.Get('sun')).toBeTruthy();
+
+		await waitFor(function () {
+			return cutscenes.Scene.Scene().Ground;
+		}, 30000);
+	}, 60000);
+
 	it('opens what the world uses in tabs of their editors: a model, a plant, a cutscene, a material', async function () {
 		var made = await mount();
 		var editor = made.Editor;

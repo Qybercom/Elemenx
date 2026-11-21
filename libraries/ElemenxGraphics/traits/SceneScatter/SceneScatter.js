@@ -130,7 +130,7 @@ Elemenx.Trait('SceneScatter', {
 				'	vec4 baked = texture(uFacade, (vec2(mod(cell, 3.0), floor(cell / 3.0)) + uv) / vec2(3.0, 2.0));',
 				'	return baked.a > 0.5 ? baked.rgb : min(own, vec3(1.0));',
 				'}'
-			].join('\n') + '\n' + fragment.slice(at).replace('vec3 color = pow(min(vColor, vec3(1.0)), vec3(2.2));', 'vec3 color = pow(facadeColor(vLocal, normalize(vBodyNormal), vColor), vec3(2.2));');
+			].join('\n') + '\n' + graphics.Patch(fragment.slice(at), 'vec3 color = pow(min(vColor, vec3(1.0)), vec3(2.2));', 'vec3 color = pow(facadeColor(vLocal, normalize(vBodyNormal), vColor), vec3(2.2));');
 		}
 
 		/* Whether a model is a building: far away it is drawn of its facades, not of a picture. */
@@ -1954,19 +1954,29 @@ Elemenx.Trait('SceneScatter', {
 
 			[[grass.Near, near], [grass.Far, far]].forEach(function (each) {
 				if (each[1].length) {
-					/* The season on the grass: burnt in summer, brown in autumn, low and white under the snow of winter. */
-					var season = ground.Season || {Dry: 0, Turn: 0, Snow: 0};
-					var snow = engine.Snowed ? engine.Snowed() : 0;
-					var seasoned = function (color, tip) {
-						var dry = Math.min(1, season.Dry * tip + season.Turn * 0.6);
-						var made = [color[0] + (0.72 * tip + 0.3 - color[0]) * dry * 0.6, color[1] + (0.6 * tip + 0.25 - color[1]) * dry * 0.45, color[2] + (0.25 - color[2]) * dry * 0.5];
+					var blades = bladesOf(rule, ground.Season, engine.Snowed ? engine.Snowed() : 0);
 
-						return [made[0] + (0.86 - made[0]) * snow * 0.8, made[1] + (0.9 - made[1]) * snow * 0.8, made[2] + (0.95 - made[2]) * snow * 0.8];
-					};
-
-					engine.DrawReady(each[0], programs().Grass, Object.assign(Object.create(uniforms), {uOrigin: vectors.Subtract([0, 0, 0], eye), uField: grass.Texture, uFree: grass.Free, uFieldSize: [ground.Field.Size, grass.Side], uFieldCenter: [0, 0], uBlade: [(Number(rule.Height) || 0.7) * (1 - snow * 0.85), Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: seasoned(engine.Paint(rule.Root || '#2f5a22'), 0.5), uTip: seasoned(engine.Paint(rule.Color || '#7fae4a'), 1), uSun: ground.Sun, uSunColor: ground.SunColor, uEye: target}), {Cull: 'none'});
+					engine.DrawReady(each[0], programs().Grass, Object.assign(Object.create(uniforms), {uOrigin: vectors.Subtract([0, 0, 0], eye), uField: grass.Texture, uFree: grass.Free, uFieldSize: [ground.Field.Size, grass.Side], uFieldCenter: [0, 0], uBlade: [blades.Height, Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: blades.Root, uTip: blades.Tip, uSun: ground.Sun, uSunColor: ground.SunColor, uEye: target}), {Cull: 'none'});
 				}
 			});
+		}
+
+		/*
+		 * The blades of a rule of grass in a season (of SeasonNow; none: none of it) and under snow (0 to 1): burnt in summer,
+		 * brown in autumn, low and white under the snow of winter. {Height, Root, Tip}: the grass of a ground and the one of a
+		 * planet alike. Regression: the grass of a planet had none of it, green round a ship that landed where it was burnt.
+		 */
+		function bladesOf (rule, season, snow) {
+			var now = season || {Dry: 0, Turn: 0, Snow: 0};
+
+			function seasoned (color, tip) {
+				var dry = Math.min(1, now.Dry * tip + now.Turn * 0.6);
+				var made = [color[0] + (0.72 * tip + 0.3 - color[0]) * dry * 0.6, color[1] + (0.6 * tip + 0.25 - color[1]) * dry * 0.45, color[2] + (0.25 - color[2]) * dry * 0.5];
+
+				return [made[0] + (0.86 - made[0]) * snow * 0.8, made[1] + (0.9 - made[1]) * snow * 0.8, made[2] + (0.95 - made[2]) * snow * 0.8];
+			}
+
+			return {Height: (Number(rule.Height) || 0.7) * (1 - snow * 0.85), Root: seasoned(engine.Paint(rule.Root || '#2f5a22'), 0.5), Tip: seasoned(engine.Paint(rule.Color || '#7fae4a'), 1)};
 		}
 
 		/* Before anything is drawn of a frame: what came, and the streams when the view moved. */
@@ -2363,6 +2373,8 @@ Elemenx.Trait('SceneScatter', {
 		function planetGrassDraw (uniforms, matrix, eye, sun, sunColor) {
 			var grass = planet.Grass;
 			var rule = grass && grass.Rule;
+			var season;
+			var blades;
 			var view;
 			var extent = 7;
 			var patches = 22;
@@ -2406,10 +2418,14 @@ Elemenx.Trait('SceneScatter', {
 
 			grass.Blades = near.length / 4 * 1300 + far.length / 4 * 330;
 
+			/* Of the season a location there has (SeasonNow of its sun), its snow of that season. */
+			season = engine.SeasonNow ? engine.SeasonNow(null) : null;
+			blades = bladesOf(rule, season, season ? season.Snow : 0);
+
 			[[grass.Near, near], [grass.Far, far]].forEach(function (each) {
 				if (!each[1].length) return;
 
-				engine.DrawReady(each[0], programs().Grass, Object.assign(Object.create(uniforms), {uViewProjection: matrix, uOrigin: [-eye[0], -eye[1], -eye[2]], uField: grass.Texture, uFree: state.WhiteFree, uFieldSize: [grass.Size, grass.Side], uFieldCenter: grass.Center, uBlade: [Number(rule.Height) || 0.7, Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: engine.Paint(rule.Root || '#2f5a22').slice(0, 3), uTip: engine.Paint(rule.Color || '#7fae4a').slice(0, 3), uSun: sun, uSunColor: sunColor, uEye: eye, uGlowOn: 0}), {Cull: 'none'});
+				engine.DrawReady(each[0], programs().Grass, Object.assign(Object.create(uniforms), {uViewProjection: matrix, uOrigin: [-eye[0], -eye[1], -eye[2]], uField: grass.Texture, uFree: state.WhiteFree, uFieldSize: [grass.Size, grass.Side], uFieldCenter: grass.Center, uBlade: [blades.Height, Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: blades.Root, uTip: blades.Tip, uSun: sun, uSunColor: sunColor, uEye: eye, uGlowOn: 0}), {Cull: 'none'});
 			});
 		}
 

@@ -6,7 +6,8 @@
  * Threshold pixels (or flicked), or swipecancel if not (and when the browser takes the gesture). An owner listens with
  * (swipe)="Handler" (event.detail). A move that began on a field, a slider or anything marked data-no-swipe is left to it.
  * With Mouse a mouse drags the element too: the click that ends a move is no press (a link, a picture that opens),
- * and a picture inside is not dragged away by the browser.
+ * and a picture inside is not dragged away by the browser. What the finger does is told by the Recognizer of the Gestures
+ * Service, as (pan) and (swipe) of templates are.
  */
 Elemenx.Directive('swipe', {
 	$Meta: {
@@ -18,52 +19,70 @@ Elemenx.Directive('swipe', {
 
 		data.Options = {Axis: 'x', Threshold: 40, Mouse: false};
 
+		/*
+		 * Its element gives swipe itself: the events of templates of the Gestures Service ((swipe) among them) are not started
+		 * on it, and one started before it is stopped.
+		 */
+		element.__ElemenxSwipe = true;
+
+		if (typeof element.__ElemenxGestures === 'function')
+			element.__ElemenxGestures();
+
 		data.Emit = function (name, detail) {
 			element.dispatchEvent(new CustomEvent(name, {detail: detail}));
 		};
 
-		data.Move = function (event) {
-			var dx;
-			var dy;
+		/*
+		 * What a finger does, of the Gestures Service (its Recognizer, the one of (pan) and (swipe) of templates): a pan of it
+		 * past 6 px, a swipe of it quick at its end. Regression: a recognizer of its own beside that one, the two told a pan
+		 * and a flick each its own way.
+		 */
+		data.Recognizer = context.Component.$Service('Gestures').Recognizer({Slop: 6});
 
+		data.Push = function (kind, event) {
+			return data.Recognizer.Push(kind, event.pointerId, event.clientX, event.clientY, Date.now());
+		};
+
+		data.Move = function (event) {
 			if (!data.Start || event.pointerId !== data.Start.ID) return;
 
-			dx = event.clientX - data.Start.X;
-			dy = event.clientY - data.Start.Y;
+			data.Push('move', event).forEach(function (gesture) {
+				if (gesture.Type !== 'pan' || !data.Start) return;
 
-			/* The first few pixels decide: along the axis it is a swipe, across it the page scrolls. */
-			if (!data.Start.Moving) {
-				if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+				/* The first few pixels decide: along the axis it is a swipe, across it the page scrolls. */
+				if (gesture.Phase === 'start') {
+					if (data.Options.Axis === 'y' ? Math.abs(gesture.DX) > Math.abs(gesture.DY) : Math.abs(gesture.DY) > Math.abs(gesture.DX)) {
+						data.Start = null;
 
-				if (data.Options.Axis === 'y' ? Math.abs(dx) > Math.abs(dy) : Math.abs(dy) > Math.abs(dx)) {
-					data.Start = null;
+						data.Recognizer.Reset();
 
-					return;
+						return;
+					}
+
+					data.Start.Moving = true;
+
+					/* A pointer the browser no longer knows (gone meanwhile) cannot be captured: the move goes on without it. */
+					try {
+						element.setPointerCapture(event.pointerId);
+					}
+					catch (error) {
+					}
 				}
 
-				data.Start.Moving = true;
-
-				/* A pointer the browser no longer knows (gone meanwhile) cannot be captured: the move goes on without it. */
-				try {
-					element.setPointerCapture(event.pointerId);
-				}
-				catch (error) {
-				}
-			}
-
-			data.Start.Last = {X: event.clientX, Y: event.clientY, Time: Date.now()};
-
-			data.Emit('swipemove', data.Options.Axis === 'y' ? {DX: 0, DY: dy} : {DX: dx, DY: 0});
+				data.Emit('swipemove', data.Options.Axis === 'y' ? {DX: 0, DY: gesture.DY} : {DX: gesture.DX, DY: 0});
+			});
 		};
 
 		data.Up = function (event) {
 			var start = data.Start;
+			var told;
 			var distance;
-			var speed;
+			var flicked;
 
 			if (!start || event.pointerId !== start.ID) return;
 
 			data.Start = null;
+			told = data.Push(event.type === 'pointercancel' ? 'cancel' : 'up', event);
 
 			if (!start.Moving) return;
 
@@ -75,9 +94,12 @@ Elemenx.Directive('swipe', {
 			}, 0);
 
 			distance = data.Options.Axis === 'y' ? event.clientY - start.Y : event.clientX - start.X;
-			speed = Math.abs(distance) / Math.max(1, Date.now() - start.Time);
+			/* Flicked: a swipe of the Recognizer along its axis, the way it went. */
+			flicked = told.some(function (gesture) {
+				return gesture.Type === 'swipe' && gesture.Direction === (data.Options.Axis === 'y' ? (distance < 0 ? 'up' : 'down') : (distance < 0 ? 'left' : 'right'));
+			});
 
-			if (event.type !== 'pointercancel' && (Math.abs(distance) > data.Options.Threshold || (Math.abs(distance) > 12 && speed > 0.5))) {
+			if (event.type !== 'pointercancel' && (Math.abs(distance) > data.Options.Threshold || (Math.abs(distance) > 12 && flicked))) {
 				data.Emit('swipe', {
 					Direction: data.Options.Axis === 'y' ? (distance < 0 ? 'up' : 'down') : (distance < 0 ? 'left' : 'right'),
 					DX: data.Options.Axis === 'y' ? 0 : distance,
@@ -94,7 +116,10 @@ Elemenx.Directive('swipe', {
 			if (event.button > 0 || data.Start) return;
 			if (event.target.closest && event.target.closest('input, textarea, select, [contenteditable="true"], [role="slider"], [data-no-swipe]')) return;
 
-			data.Start = {ID: event.pointerId, X: event.clientX, Y: event.clientY, Time: Date.now(), Moving: false};
+			data.Start = {ID: event.pointerId, X: event.clientX, Y: event.clientY, Moving: false};
+
+			data.Recognizer.Reset();
+			data.Push('down', event);
 		};
 
 		data.Click = function (event) {
@@ -143,5 +168,7 @@ Elemenx.Directive('swipe', {
 		element.removeEventListener('pointercancel', data.Up);
 		element.removeEventListener('click', data.Click, true);
 		element.removeEventListener('dragstart', data.Drag);
+
+		delete element.__ElemenxSwipe;
 	}
 });

@@ -28,10 +28,13 @@ Of(scene) — реестр сцены, один на её элемент. Он �
 - die — сыграть клип die и оставить;
 - keep — ничего.
 
+Bar(context, x, y, part, color, width, height) — полоса здоровья на холсте 2D с серединой в x, y (пиксели): заливка шириной width и высотой height, её доля part (0…1) цветом color, вокруг тёмная рамка на пиксель шире. Ей рисуют полосы GameCombat и GameStrategy.
+
 ## Методы
 
 - `Make(options)`
 - `Settings(object)`
+- `Bar(context, x, y, part, color, width, height)`
 - `Card(ledger, object, rows)`
 - `Target(ledger, object)`
 - `Of(scene)`
@@ -42,4 +45,5 @@ Of(scene) — реестр сцены, один на её элемент. Он �
 - [lets handlers change or cancel a change before it is applied; spares its own team; applies one change ID once](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/services/Vitals/Vitals.test.js#L47) — `libraries/ElemenxGaming/services/Vitals/Vitals.test.js`
 - [keeps a host and its clients the same: a client asks, the host applies and sends the state, in order](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/services/Vitals/Vitals.test.js#L72) — `libraries/ElemenxGaming/services/Vitals/Vitals.test.js`
 - [regenerates, saves and loads, and reads what it does not know yet](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/services/Vitals/Vitals.test.js#L107) — `libraries/ElemenxGaming/services/Vitals/Vitals.test.js`
+- [patches a shader loud, draws a bar of health once and reads a shader graph of the library once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/hardcode-tables.test.js#L130) — `tests/regression/hardcode-tables.test.js`
 - [gives the kinds of the scene their health, shows it on the card, and lets the weapons aim only at what lives](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/components/GameCombat/GameCombat.test.js#L98) — `libraries/ElemenxGaming/components/GameCombat/GameCombat.test.js`

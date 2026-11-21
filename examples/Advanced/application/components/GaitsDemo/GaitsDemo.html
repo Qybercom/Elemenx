@@ -1,0 +1,18 @@
+<div class="scene-demo">
+	<div class="scene-demo-row">
+		<Select Label="Clip" Size="small" [options]="GaitsClips()" [value]="GaitsClip" (change)="GaitsChosen" />
+		<Select Label="Camera" Size="small" [options]="GaitsViews" [value]="GaitsView" (change)="GaitsViewChosen" />
+		<Button Label="Open graph" Icon="code" Variant="ghost" (click)="GaitsGraphOpened" />
+		<Button Label="Close graph" Icon="close" Variant="ghost" *if="GaitsGraph" (click)="GaitsGraphClosed" />
+		<span class="elemenx-caption" role="status">{{GaitsNote}}</span>
+	</div>
+	<div class="scene-demo-scene" *if="GaitsGraph">
+		<Blueprint [value]="GaitsGraph" (change)="GaitsGraphChanged" />
+	</div>
+	<div class="scene-demo-scene">
+		<Scene Setting="terrain" Labels="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="GaitsReady"><DemoLoading slot="loading" Title="Gaits" />
+			<SceneObject ID="meadow" Kind="ground" [world]="WorldOf('meadow')" />
+			<SceneObject ID="noon" Kind="sun" Elevation="40" Azimuth="200" />
+		</Scene>
+	</div>
+</div>

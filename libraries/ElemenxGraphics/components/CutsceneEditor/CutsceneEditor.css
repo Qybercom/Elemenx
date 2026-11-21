@@ -48,7 +48,7 @@
 }
 
 .elemenx-cutscene-editor-fields {
-	width: 220px;
+	flex: 0 0 auto;
 	overflow: auto;
 	border-left: 1px solid var(--elemenx-border);
 	padding: 4px 8px;
@@ -79,8 +79,9 @@
 		flex-direction: column;
 	}
 
+	/* Under the line on a phone: as wide as it, whatever width was dragged. */
 	.elemenx-cutscene-editor-fields {
-		width: auto;
+		min-width: 100%;
 		max-height: 40%;
 		border-top: 1px solid var(--elemenx-border);
 		border-left: 0;

@@ -1,0 +1,330 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "valley",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "planet-valley-input-px",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PX"
+				}
+			]
+		},
+		{
+			"id": "planet-valley-input-py",
+			"type": "Input",
+			"x": 0,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PY"
+				}
+			]
+		},
+		{
+			"id": "planet-valley-input-pz",
+			"type": "Input",
+			"x": 0,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PZ"
+				}
+			]
+		},
+		{
+			"id": "planet-valley-input-height",
+			"type": "Input",
+			"x": 0,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "planet-valley-input-radius",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Radius"
+				}
+			]
+		},
+		{
+			"id": "planet-valley-input-rivers",
+			"type": "Input",
+			"x": 0,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Rivers"
+				}
+			]
+		},
+		{
+			"id": "planet-valley-input-riverwidth",
+			"type": "Input",
+			"x": 0,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RiverWidth"
+				}
+			]
+		},
+		{
+			"id": "planet-valley-input-riverbend",
+			"type": "Input",
+			"x": 0,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RiverBend"
+				}
+			]
+		},
+		{
+			"id": "planet-valley-input-valley",
+			"type": "Input",
+			"x": 0,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Valley"
+				}
+			]
+		},
+		{
+			"id": "planet-valley-input-valleypower",
+			"type": "Input",
+			"x": 0,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "ValleyPower"
+				}
+			]
+		},
+		{
+			"id": "planet-valley-river",
+			"type": "River",
+			"x": 1,
+			"y": 1040,
+			"properties": []
+		},
+		{
+			"id": "planet-valley-wide",
+			"type": "Formula",
+			"x": 2,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Valley * pow(Flow, ValleyPower)"
+				}
+			]
+		},
+		{
+			"id": "planet-valley-bed",
+			"type": "Formula",
+			"x": 2,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(2, min(Level, Height))"
+				}
+			]
+		},
+		{
+			"id": "planet-valley-low",
+			"type": "Number",
+			"x": 2,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "planet-valley-side",
+			"type": "Smoothstep",
+			"x": 3,
+			"y": 240,
+			"properties": []
+		},
+		{
+			"id": "planet-valley-carved",
+			"type": "Formula",
+			"x": 4,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Far >= Wide ? Height : Bed + (Height - Bed) * max(0.12, Side)"
+				}
+			]
+		},
+		{
+			"id": "planet-valley-result-height",
+			"type": "Result",
+			"x": 5,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "planet-valley-link-0",
+			"p1": "planet-valley-input-rivers-out-Value",
+			"p2": "planet-valley-river-in-Packed",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-1",
+			"p1": "planet-valley-input-px-out-Value",
+			"p2": "planet-valley-river-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-2",
+			"p1": "planet-valley-input-py-out-Value",
+			"p2": "planet-valley-river-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-3",
+			"p1": "planet-valley-input-pz-out-Value",
+			"p2": "planet-valley-river-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-4",
+			"p1": "planet-valley-input-radius-out-Value",
+			"p2": "planet-valley-river-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-5",
+			"p1": "planet-valley-input-riverwidth-out-Value",
+			"p2": "planet-valley-river-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-6",
+			"p1": "planet-valley-input-riverbend-out-Value",
+			"p2": "planet-valley-river-in-Bend",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-7",
+			"p1": "planet-valley-input-valley-out-Value",
+			"p2": "planet-valley-wide-in-Valley",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-8",
+			"p1": "planet-valley-river-out-Flow",
+			"p2": "planet-valley-wide-in-Flow",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-9",
+			"p1": "planet-valley-input-valleypower-out-Value",
+			"p2": "planet-valley-wide-in-ValleyPower",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-10",
+			"p1": "planet-valley-river-out-Level",
+			"p2": "planet-valley-bed-in-Level",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-11",
+			"p1": "planet-valley-input-height-out-Value",
+			"p2": "planet-valley-bed-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-12",
+			"p1": "planet-valley-low-out-Value",
+			"p2": "planet-valley-side-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-13",
+			"p1": "planet-valley-wide-out-Value",
+			"p2": "planet-valley-side-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-14",
+			"p1": "planet-valley-river-out-Far",
+			"p2": "planet-valley-side-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-15",
+			"p1": "planet-valley-river-out-Far",
+			"p2": "planet-valley-carved-in-Far",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-16",
+			"p1": "planet-valley-wide-out-Value",
+			"p2": "planet-valley-carved-in-Wide",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-17",
+			"p1": "planet-valley-input-height-out-Value",
+			"p2": "planet-valley-carved-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-18",
+			"p1": "planet-valley-bed-out-Value",
+			"p2": "planet-valley-carved-in-Bed",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-19",
+			"p1": "planet-valley-side-out-Out",
+			"p2": "planet-valley-carved-in-Side",
+			"kind": "value"
+		},
+		{
+			"id": "planet-valley-link-20",
+			"p1": "planet-valley-carved-out-Value",
+			"p2": "planet-valley-result-height-in-Value",
+			"kind": "value"
+		}
+	]
+}

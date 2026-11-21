@@ -9,7 +9,10 @@
  *   leaves or tufts of needles, lit as the round of its crown is; dead stubs on its bare trunk; a tree its roots out
  *   from the foot of its trunk along the ground and into it (none of a stalk nor of a plant lower than 3 m).
  * - Its textures are drawn of code too: its bark (the height of the plant along it: a pine dark below, orange above; its
- *   relief a normal map) and its leaves (an atlas of four clusters, their alpha the cut, and below them the same in
+ *   relief a normal map), each point of the graph of its pattern (blueprints/flora/bark/<Bark.Pattern>: plain, plates, birch,
+ *   ridges, fibrous, bands, diamonds, rings, each calling bark/base; inputs CX, CZ, T, Split, Rings, its Low and High colors,
+ *   SFine and SCells, the seeds of its two noises; results R, G, B and Bump; Bark.Graph one of its own; BarkRun(bark) its
+ *   function, BarkMake(bark) its code, BarkCode those of the library carried to the workers) and its leaves (an atlas of four clusters, their alpha the cut, and below them the same in
  *   shade: the leaves deep in its crown). A preset may give its own
  *   pictures instead (Bark.Image, Leaves.Image: {Width, Height, Data} RGBA).
  * - Species() the names of its presets; Preset(name) a copy of one (with what it does not tell); Tree(preset, variant)
@@ -54,8 +57,53 @@ Elemenx.Service('SceneFlora', {
 		this.Presets = Object.assign(Elemenx.Resources('Data', 'ElemenxGraphics/flora/presets') || {}, this.Presets);
 	},
 
-	/* What a worker carries of it besides its methods: its presets. */
-	Carried: ['Presets'],
+	/* What a worker carries of it besides its methods: its presets, the code of the graphs of its barks (made in the page). */
+	Carried: ['Presets', 'BarkCode', 'BarkPatterns'],
+
+	/* The patterns of bark of the library (blueprints/flora/bark/<name>): one not of them is plain. */
+	BarkPatterns: ['plain', 'plates', 'birch', 'ridges', 'fibrous', 'bands', 'diamonds', 'rings'],
+
+	/* The code of the graphs of the barks of the library, by pattern ({Source, Inputs}), made in the page as asked. */
+	BarkCode: {},
+
+	/* The graph of a bark as a function {Main (of its inputs in order: R, G, B, Bump), Inputs}: of its Code, its Graph, its Pattern. */
+	BarkRun: function (bark) {
+		var code = bark.Code || this.BarkMake(bark);
+
+		this.BarkMade = this.BarkMade || {};
+
+		if (!this.BarkMade[code.Source])
+			this.BarkMade[code.Source] = {Main: new Function('B', 'M', 'N', code.Source)().Main, Inputs: code.Inputs};
+
+		return this.BarkMade[code.Source];
+	},
+
+	/*
+	 * The code of the graph of a bark ({Source, Inputs}), made in the page: of its own Graph (a graph or the name of one), else
+	 * of its Pattern of the library (kept, carried to the workers).
+	 */
+	BarkMake: function (bark) {
+		var name = this.BarkPatterns.indexOf(bark.Pattern) === -1 ? 'plain' : bark.Pattern;
+		var graph;
+		var made;
+
+		if (!bark.Graph && this.BarkCode[name]) return this.BarkCode[name];
+
+		graph = bark.Graph ? typeof bark.Graph === 'string' ? Elemenx.Resources('Blueprints', bark.Graph) : bark.Graph : Elemenx.Resources('Blueprints', 'ElemenxGraphics/flora/bark/' + name);
+		made = graph ? this.$Service('Blueprints').NumericCode(graph, {}) : null;
+
+		if (!made)
+			throw new Error('Elemenx SceneFlora: the bark ' + (bark.Graph ? 'of its own graph' : name) + ' has no code of numbers');
+
+		made = {Source: made.Source, Inputs: made.Numeric.Inputs.map(function (one) {
+			return one.Name;
+		})};
+
+		if (!bark.Graph)
+			this.BarkCode[name] = made;
+
+		return made;
+	},
 
 	Species: function () {
 		return Object.keys(this.Presets);
@@ -114,6 +162,10 @@ Elemenx.Service('SceneFlora', {
 	},
 
 	Source: function (names) {
+		this.BarkPatterns.forEach(function (name) {
+			this.BarkMake({Pattern: name});
+		}, this);
+
 		return this.$Service('Workers').Source(this, names);
 	},
 
@@ -1268,115 +1320,40 @@ Elemenx.Service('SceneFlora', {
 	BarkPicture: function (p) {
 		var width = 256;
 		var height = 1024;
-		var noise = this.$Service('Noise');
-		var fine = noise.Make({Type: 'simplex', Seed: p.Name + ':bark', Fractal: 'fbm', Octaves: 4});
-		var cells = noise.Make({Type: 'worley', Seed: p.Name + ':plates', Cell: {Return: 'edge', Jitter: 0.9}});
+		var math = this.$Service('Math');
+		var run = this.BarkRun(p.Bark);
 		var bumps = new Float32Array(width * height);
 		var data = new Uint8Array(width * height * 4);
 		var normal = new Uint8Array(width * height * 4);
-		var pattern = p.Bark.Pattern;
+		/* Its numbers, the same for every point: its colors, where it turns, its rings, the seeds of its two noises. */
+		var fixed = {Split: p.Bark.Split, Rings: p.Bark.Rings || 140, LowR: p.Bark.Low[0], LowG: p.Bark.Low[1], LowB: p.Bark.Low[2], HighR: p.Bark.High[0], HighG: p.Bark.High[1], HighB: p.Bark.High[2], SFine: math.SeedOffset(p.Name + ':bark'), SCells: math.SeedOffset(p.Name + ':plates')};
+		var list = run.Inputs.map(function (name) {
+			return fixed[name] === undefined ? 0 : fixed[name];
+		});
+		var at = {CX: run.Inputs.indexOf('CX'), CZ: run.Inputs.indexOf('CZ'), T: run.Inputs.indexOf('T')};
 		var x;
 		var y;
 
-		function smooth (a, b, v) {
-			var t = Math.max(0, Math.min(1, (v - a) / (b - a)));
-
-			return t * t * (3 - 2 * t);
-		}
-
+		/*
+		 * Each point of it of the graph of its pattern (blueprints/flora/bark/<Pattern>, plain for one of none; Bark.Graph: its
+		 * own): its color shaded and its relief. Round the trunk: seamless along u (a circle), up the plant along v.
+		 * Regression: a branch of the code for each pattern.
+		 */
 		for (y = 0; y < height; y++) {
 			for (x = 0; x < width; x++) {
-				/* Round the trunk: seamless along u (a circle of the noise), up the plant along v. */
 				var a = x / width * Math.PI * 2;
-				var cx = Math.cos(a);
-				var cz = Math.sin(a);
-				var t = y / height;
-				var n = fine.At(cx * 3, t * 40, cz * 3);
-				var high = smooth(p.Bark.Split - 0.08, p.Bark.Split + 0.08, t + (n - 0.5) * 0.12);
-				var color = [p.Bark.Low[0] + (p.Bark.High[0] - p.Bark.Low[0]) * high, p.Bark.Low[1] + (p.Bark.High[1] - p.Bark.Low[1]) * high, p.Bark.Low[2] + (p.Bark.High[2] - p.Bark.Low[2]) * high];
-				var bump = n;
-				var shade = 1;
-
-				if (pattern === 'plates') {
-					/* Plates between deep cracks below; thin flakes peeling above. */
-					var edge = cells.At(cx * 2.2, t * 34, cz * 2.2);
-					var crack = 1 - smooth(0.02, 0.12, edge);
-
-					bump = (1 - crack) * (0.6 + n * 0.4) * (1 - high * 0.7) + high * n * 0.5;
-					shade = 1 - crack * 0.55 * (1 - high * 0.8) + (n - 0.5) * 0.25;
-				}
-				else if (pattern === 'birch') {
-					/* White, dashes of black across it, black fissured at its foot. */
-					var dash = fine.At(cx * 9, t * 900, cz * 9);
-					var lenticel = smooth(0.72, 0.8, dash) * smooth(0.4, 0.6, fine.At(cx * 2, t * 60, cz * 2));
-					var foot = 1 - smooth(0.04, 0.14, t + (n - 0.5) * 0.06);
-					var crack2 = 1 - smooth(0.03, 0.1, cells.At(cx * 2, t * 30, cz * 2));
-
-					color = [p.Bark.High[0], p.Bark.High[1], p.Bark.High[2]];
-					color = color.map(function (part, index) {
-						var black = p.Bark.Low[index];
-						var dark = Math.max(lenticel * 0.9, foot * (0.55 + crack2 * 0.4));
-
-						return part + (black - part) * dark;
-					});
-					bump = 0.5 + (n - 0.5) * 0.3 - lenticel * 0.2 + foot * (1 - crack2) * 0.4;
-					shade = 1 + (n - 0.5) * 0.12;
-				}
-				else if (pattern === 'ridges') {
-					/* Deep ridges up the trunk, wandering and joining. */
-					var ridge = Math.abs(fine.At(cx * 6, t * 22, cz * 6) - 0.5) * 2;
-
-					bump = 1 - Math.pow(ridge, 0.6);
-					shade = 0.7 + bump * 0.45 + (n - 0.5) * 0.2;
-				}
-				else if (pattern === 'fibrous') {
-					/* A sequoia: soft fibres up the trunk in long strips, deep wide furrows between broad ribs. */
-					var fibre = Math.abs(fine.At(cx * 16, t * 7, cz * 16) - 0.5) * 2;
-					var rib = Math.abs(fine.At(cx * 3.5, t * 2.5, cz * 3.5) - 0.5) * 2;
-
-					bump = (1 - Math.pow(rib, 0.5)) * 0.6 + (1 - fibre) * 0.4;
-					shade = 0.6 + bump * 0.55 + (n - 0.5) * 0.15;
-				}
-				else if (pattern === 'bands') {
-					/* A cherry: smooth, shining, its lenticels in pale dashes round it, thin bands of it peeling. */
-					var lenticels = smooth(0.64, 0.72, fine.At(cx * 10, t * 520, cz * 10)) * smooth(0.3, 0.5, fine.At(cx * 3, t * 40, cz * 3));
-					var peel = smooth(0.62, 0.7, fine.At(cx * 1.5, t * 90, cz * 1.5));
-
-					color = color.map(function (part) {
-						return part + (0.58 - part) * lenticels * 0.85;
-					});
-					bump = 0.5 + (n - 0.5) * 0.2 - lenticels * 0.15 + peel * 0.2;
-					shade = 0.95 + (n - 0.5) * 0.12 - peel * 0.12;
-				}
-				else if (pattern === 'diamonds') {
-					/* An aspen, a poplar: pale and smooth, dark diamonds where twigs fell, dark and fissured at its foot. */
-					var scar = smooth(0.7, 0.76, fine.At(cx * 1.4, t * 20, cz * 1.4)) * smooth(0.3, 0.5, fine.At(cx * 4, t * 9, cz * 4));
-					var base = 1 - smooth(0.04, 0.16, t + (n - 0.5) * 0.06);
-					var fissure = 1 - smooth(0.03, 0.1, cells.At(cx * 2, t * 26, cz * 2));
-
-					color = [p.Bark.High[0], p.Bark.High[1], p.Bark.High[2]].map(function (part, index) {
-						return part + (p.Bark.Low[index] - part) * Math.max(scar * 0.85, base * (0.5 + fissure * 0.45));
-					});
-					bump = 0.5 + (n - 0.5) * 0.25 - scar * 0.25 + base * (1 - fissure) * 0.4;
-					shade = 1 + (n - 0.5) * 0.14;
-				}
-				else if (pattern === 'rings') {
-					/* The rings of the scars of old leaves. */
-					var ring = Math.pow(Math.abs(Math.sin(t * (p.Bark.Rings || 140) * Math.PI + (n - 0.5) * 2)), 4);
-
-					bump = 1 - ring * 0.7 + (n - 0.5) * 0.3;
-					shade = 0.8 + bump * 0.25;
-				}
-				else {
-					shade = 0.9 + (n - 0.5) * 0.3;
-				}
-
+				var made;
 				var o = (y * width + x) * 4;
 
-				bumps[y * width + x] = bump;
-				data[o] = Math.round(Math.max(0, Math.min(1, color[0] * shade)) * 255);
-				data[o + 1] = Math.round(Math.max(0, Math.min(1, color[1] * shade)) * 255);
-				data[o + 2] = Math.round(Math.max(0, Math.min(1, color[2] * shade)) * 255);
+				list[at.CX] = Math.cos(a);
+				list[at.CZ] = Math.sin(a);
+				list[at.T] = y / height;
+				made = run.Main.apply(null, list);
+
+				bumps[y * width + x] = made[3];
+				data[o] = Math.round(Math.max(0, Math.min(1, made[0])) * 255);
+				data[o + 1] = Math.round(Math.max(0, Math.min(1, made[1])) * 255);
+				data[o + 2] = Math.round(Math.max(0, Math.min(1, made[2])) * 255);
 				data[o + 3] = 255;
 			}
 		}
@@ -2209,6 +2186,10 @@ Elemenx.Service('SceneFlora', {
 				}
 
 				function make () {
+					/* A bark of a graph of its own: its code made here (a worker makes none). */
+					if (p.Bark && p.Bark.Graph && !p.Bark.Code)
+						p = Object.assign({}, p, {Bark: Object.assign({}, p.Bark, {Code: self.BarkMake(p.Bark)})});
+
 					pool.Run('SceneFlora', 'Textures', [p], function (error, made) {
 						failed = failed || error;
 						textures = made;

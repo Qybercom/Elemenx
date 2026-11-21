@@ -1,0 +1,418 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "bark-base",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "bark-base-input-cx",
+			"type": "Input",
+			"x": 200,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CX"
+				}
+			]
+		},
+		{
+			"id": "bark-base-input-cz",
+			"type": "Input",
+			"x": 200,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CZ"
+				}
+			]
+		},
+		{
+			"id": "bark-base-input-t",
+			"type": "Input",
+			"x": 200,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "T"
+				}
+			]
+		},
+		{
+			"id": "bark-base-input-split",
+			"type": "Input",
+			"x": 200,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Split"
+				}
+			]
+		},
+		{
+			"id": "bark-base-input-lowr",
+			"type": "Input",
+			"x": 200,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowR"
+				}
+			]
+		},
+		{
+			"id": "bark-base-input-lowg",
+			"type": "Input",
+			"x": 200,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowG"
+				}
+			]
+		},
+		{
+			"id": "bark-base-input-lowb",
+			"type": "Input",
+			"x": 200,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowB"
+				}
+			]
+		},
+		{
+			"id": "bark-base-input-highr",
+			"type": "Input",
+			"x": 200,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighR"
+				}
+			]
+		},
+		{
+			"id": "bark-base-input-highg",
+			"type": "Input",
+			"x": 200,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighG"
+				}
+			]
+		},
+		{
+			"id": "bark-base-input-highb",
+			"type": "Input",
+			"x": 200,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighB"
+				}
+			]
+		},
+		{
+			"id": "bark-base-input-sfine",
+			"type": "Input",
+			"x": 200,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SFine"
+				}
+			]
+		},
+		{
+			"id": "bark-base-nat",
+			"type": "Formula",
+			"x": 200,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(CX * 3, T * 40, CZ * 3)"
+				}
+			]
+		},
+		{
+			"id": "bark-base-n",
+			"type": "NoiseSpec",
+			"x": 460,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 4
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "bark-base-high",
+			"type": "Formula",
+			"x": 460,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(Split - 0.08, Split + 0.08, T + (N - 0.5) * 0.12)"
+				}
+			]
+		},
+		{
+			"id": "bark-base-cr",
+			"type": "Formula",
+			"x": 460,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "LowR + (HighR - LowR) * High"
+				}
+			]
+		},
+		{
+			"id": "bark-base-cg",
+			"type": "Formula",
+			"x": 460,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "LowG + (HighG - LowG) * High"
+				}
+			]
+		},
+		{
+			"id": "bark-base-cb",
+			"type": "Formula",
+			"x": 460,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "LowB + (HighB - LowB) * High"
+				}
+			]
+		},
+		{
+			"id": "bark-base-result-n",
+			"type": "Result",
+			"x": 460,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "N"
+				}
+			]
+		},
+		{
+			"id": "bark-base-result-high",
+			"type": "Result",
+			"x": 460,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "High"
+				}
+			]
+		},
+		{
+			"id": "bark-base-result-cr",
+			"type": "Result",
+			"x": 460,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "CR"
+				}
+			]
+		},
+		{
+			"id": "bark-base-result-cg",
+			"type": "Result",
+			"x": 460,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "CG"
+				}
+			]
+		},
+		{
+			"id": "bark-base-result-cb",
+			"type": "Result",
+			"x": 460,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "CB"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "bark-base-link-0",
+			"p1": "bark-base-input-cx-out-Value",
+			"p2": "bark-base-nat-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-1",
+			"p1": "bark-base-input-t-out-Value",
+			"p2": "bark-base-nat-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-2",
+			"p1": "bark-base-input-cz-out-Value",
+			"p2": "bark-base-nat-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-3",
+			"p1": "bark-base-nat-out-Value",
+			"p2": "bark-base-n-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-4",
+			"p1": "bark-base-input-sfine-out-Value",
+			"p2": "bark-base-n-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-5",
+			"p1": "bark-base-input-split-out-Value",
+			"p2": "bark-base-high-in-Split",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-6",
+			"p1": "bark-base-input-t-out-Value",
+			"p2": "bark-base-high-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-7",
+			"p1": "bark-base-n-out-Value",
+			"p2": "bark-base-high-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-8",
+			"p1": "bark-base-input-lowr-out-Value",
+			"p2": "bark-base-cr-in-LowR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-9",
+			"p1": "bark-base-input-highr-out-Value",
+			"p2": "bark-base-cr-in-HighR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-10",
+			"p1": "bark-base-high-out-Value",
+			"p2": "bark-base-cr-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-11",
+			"p1": "bark-base-input-lowg-out-Value",
+			"p2": "bark-base-cg-in-LowG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-12",
+			"p1": "bark-base-input-highg-out-Value",
+			"p2": "bark-base-cg-in-HighG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-13",
+			"p1": "bark-base-high-out-Value",
+			"p2": "bark-base-cg-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-14",
+			"p1": "bark-base-input-lowb-out-Value",
+			"p2": "bark-base-cb-in-LowB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-15",
+			"p1": "bark-base-input-highb-out-Value",
+			"p2": "bark-base-cb-in-HighB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-16",
+			"p1": "bark-base-high-out-Value",
+			"p2": "bark-base-cb-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-17",
+			"p1": "bark-base-n-out-Value",
+			"p2": "bark-base-result-n-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-18",
+			"p1": "bark-base-high-out-Value",
+			"p2": "bark-base-result-high-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-19",
+			"p1": "bark-base-cr-out-Value",
+			"p2": "bark-base-result-cr-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-20",
+			"p1": "bark-base-cg-out-Value",
+			"p2": "bark-base-result-cg-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-base-link-21",
+			"p1": "bark-base-cb-out-Value",
+			"p2": "bark-base-result-cb-in-Value",
+			"kind": "value"
+		}
+	]
+}

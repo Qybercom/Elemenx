@@ -698,9 +698,9 @@ Elemenx.Trait('SceneVehicles', {
 				case 'roll':
 					return [(car.Spin || 0) / (Math.PI * 2), 0];
 				case 'speed':
-					return [Math.min(1, Math.abs(car.Forward || 0) / Math.max(1, given(settings.Top, 60))), 0];
+					return [Math.min(1, Math.abs(car.Forward || 0) / Math.max(1, given(settings.Top, physics.CarDefaults.Top))), 0];
 				case 'rpm':
-					return [Math.min(1, (car.Rpm || 0) / Math.max(1, given(settings.Redline, 7000))), 0];
+					return [Math.min(1, (car.Rpm || 0) / Math.max(1, given(settings.Redline, physics.CarDefaults.Redline))), 0];
 				case 'pitch':
 					return [Math.max(-1, Math.min(1, spin[0] / turn)), 0];
 				case 'yaw':
@@ -944,7 +944,7 @@ Elemenx.Trait('SceneVehicles', {
 			var surface = (object.Traits || {}).Surface;
 			var made;
 
-			if (surface && (surface.Type === 'gas' || surface.Type === 'ice-giant') && engine.EnvelopeOf && object.Radius) {
+			if (surface && self.$Service('ScenePlanet').Giant(surface.Type) && engine.EnvelopeOf && object.Radius) {
 				made = engine.EnvelopeOf(object);
 
 				if (made && isFinite(made.Floor) && made.Floor < 0)
@@ -1449,12 +1449,6 @@ Elemenx.Trait('SceneVehicles', {
 			hero.Turn = hero.Flight.Turn;
 		}
 
-		function smooth (from, to, value) {
-			var t = Math.max(0, Math.min(1, (value - from) / (to - from)));
-
-			return t * t * (3 - 2 * t);
-		}
-
 		/* What a way far at once goes to: an object far enough to go to, or none (it goes straight ahead). */
 		function targetOf (hero, travel, from) {
 			var target = travel.To ? scene.Objects[travel.To] : null;
@@ -1737,6 +1731,19 @@ Elemenx.Trait('SceneVehicles', {
 			self.$Ether.Touch('travel', hero.ID);
 		}
 
+		/*
+		 * How a warp or a jump looks (blueprints/vehicles/travel-look, or TravelLookGraph of the scene) in its phase (0 into
+		 * it, 1 in it, 2 out of it), t of the phase, time in it: {Stretch, Tunnel, Flash, Shake, Wide, Lag, Pace}. Regression:
+		 * curves of the code, three of each kind.
+		 */
+		function lookOf (phase, warp, t, time) {
+			var graph = self.GraphOf('TravelLookGraph', 'vehicles/travel-look') || Elemenx.Resources('Blueprints', 'ElemenxGraphics/vehicles/travel-look');
+			if (!scene.TravelLook || scene.TravelLook.Graph !== graph)
+				scene.TravelLook = {Graph: graph, Code: self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)))};
+
+			return scene.TravelLook.Code.Run({}, {Phase: phase, Warp: warp ? 1 : 0, T: t || 0, Time: time || 0});
+		}
+
 		function travelStep (hero, state, settings, origin, elapsed, keys) {
 			var travel = hero.Travel;
 			/* Its top speed as it flies (of real sizes: its speed and its cruise by how high it is; else its Top). */
@@ -1772,7 +1779,7 @@ Elemenx.Trait('SceneVehicles', {
 
 				hero.Thrust = warp ? 0.3 + 2.7 * t * t : 1 + 2 * t;
 
-				look = warp ? {Stretch: smooth(0.3, 1, t), Tunnel: smooth(0.8, 1, t) * 0.7, Flash: smooth(0.9, 1, t) * 0.9, Shake: t * 0.35, Wide: smooth(0.3, 1, t) * 0.3, Lag: t * 0.15, Pace: 0.15 + 2.5 * t * t} : {Stretch: t * 0.12, Tunnel: 0, Flash: 0, Shake: t * 0.3, Wide: -0.06 * t, Lag: t * 0.08, Pace: 0.15};
+				look = lookOf(0, warp, t, travel.Time);
 
 				if (t >= 1) {
 					travel.Start = vectors.Add(origin, state.At);
@@ -1883,7 +1890,7 @@ Elemenx.Trait('SceneVehicles', {
 
 				hero.Thrust = 3;
 
-				look = warp ? {Stretch: 1, Tunnel: 1, Flash: Math.max(0, 1 - travel.Time / 0.4) * 0.9, Shake: 0.22, Wide: 0.3, Lag: 0.15, Pace: 4} : {Stretch: 0.5, Tunnel: 0, Flash: Math.max(0, 1 - travel.Time / 0.25) * 0.2, Shake: 0.55, Wide: 0.18, Lag: 0.08 + Math.sin(Math.min(Math.PI, travel.Time * 2)) * 0.35, Pace: 2.4};
+				look = lookOf(1, warp, 0, travel.Time);
 
 				if (end) {
 					/* Never out in a body: a tunnel goes through them, its way out on their outside. */
@@ -1911,7 +1918,7 @@ Elemenx.Trait('SceneVehicles', {
 
 				hero.Thrust = Math.max(Math.abs(state.Throttle), 3 * (1 - t));
 
-				look = warp ? {Stretch: 1 - smooth(0, 0.6, t), Tunnel: 1 - smooth(0, 0.18, t), Flash: Math.max(0, 1 - t / 0.25), Shake: 0.5 * (1 - t), Wide: 0.3 * (1 - smooth(0, 0.7, t)), Lag: -0.2 * (1 - t), Pace: 4 * (1 - t)} : {Stretch: 0.5 * (1 - smooth(0, 0.8, t)), Tunnel: 0, Flash: 0, Shake: 0.35 * (1 - t), Wide: 0.18 * (1 - smooth(0, 0.8, t)), Lag: -0.12 * (1 - t), Pace: 2.4 * (1 - t)};
+				look = lookOf(2, warp, t, travel.Time);
 
 				if (t >= 1) {
 					state.Throttle = Math.max(state.Throttle, 0.4);

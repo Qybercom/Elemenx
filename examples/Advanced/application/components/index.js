@@ -14,6 +14,7 @@
 	'CombatDemo/CombatDemo.js',
 	'TerrainDemo/TerrainDemo.js',
 	'LocationsDemo/LocationsDemo.js',
+	'GaitsDemo/GaitsDemo.js',
 	'SpaceDemo/SpaceDemo.js',
 	'DeepSpaceDemo/DeepSpaceDemo.js',
 	'GalaxyDemo/GalaxyDemo.js',

@@ -11,6 +11,7 @@ Elemenx.Component('GraphicsPage', {
 		{Name: 'DeepSpace', Label: 'Deep space', Note: 'Scene · SceneDeepSpace: a black hole with its disc, light bent round it; a wormhole to another sky; a comet; a quasar; a planetoid to land on'},
 		{Name: 'Galaxy', Label: 'Galaxy', Note: 'Scene · Setting galaxy, GalaxyData: a galaxy of each kind, its black hole, its stars sector by sector; a drag turns, the wheel brings it near, press a star, enter its system'},
 		{Name: 'Showcase', Label: 'Showcase world', Note: 'Scene · SceneShowcase: every primitive of the generation in one world of three kilometres, district by district; Benchmark tours them all and measures each'},
+		{Name: 'Gaits', Label: 'Gaits', Note: 'Scene · SceneMannequin: the gaits of the mannequin, each a graph of the library (blueprints/animation), its feet planted; X Bot beside it plays the clip of Mixamo it was compared with, when this copy has the files'},
 		{Name: 'Models', Label: 'Models', Note: 'Scene · the Models Service: units, animals, plants, buildings of fantasy and sci-fi made of code, with their clips, the shadows of the sun and the wind'},
 		{Name: 'Textures', Label: 'Textures', Note: 'TextureLab · SceneTextures: textures of materials made of code, baked once into tiles with no seam'},
 		{Name: 'Cinema', Label: 'Camera and cinema', Note: 'Scene · SceneCamera, SceneScreens, SceneCinema: lenses of real cameras, rigs, screens, cutscenes and their video'},

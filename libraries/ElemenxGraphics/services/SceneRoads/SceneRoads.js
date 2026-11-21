@@ -3640,7 +3640,7 @@ Elemenx.Service('SceneRoads', {
 
 	/* The workers of the models of roads: all of this Service, the ground of noise for the height of their piers. */
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneRoads', {Math: true, Noise: true, Random: true, Blueprints: true, ScenePlanet: true, SceneTerrainGenerator: true, SceneRoads: true});
+		return this.$Service('Workers').Pool('SceneRoads', {Math: true, Noise: true, Random: true, Pathfinding: true, Blueprints: true, Geometry: true, ScenePlanet: true, SceneTerrainGenerator: true, SceneRoads: true});
 	},
 
 	/* What a worker carries of this Service besides its methods: the surfaces and the types the library defined. */

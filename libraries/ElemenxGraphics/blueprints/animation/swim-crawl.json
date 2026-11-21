@@ -1,0 +1,1433 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-swim-crawl",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "animation-swim-crawl-phase",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Phase"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-head-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-30
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-head-x",
+			"type": "Result",
+			"x": 520,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Head.x"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-head-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.0625,
+							-11.48
+						],
+						[
+							0.125,
+							-21.21
+						],
+						[
+							0.1875,
+							-27.72
+						],
+						[
+							0.25,
+							-30
+						],
+						[
+							0.3125,
+							-27.72
+						],
+						[
+							0.375,
+							-21.21
+						],
+						[
+							0.4375,
+							-11.48
+						],
+						[
+							0.5,
+							0
+						],
+						[
+							0.5625,
+							11.48
+						],
+						[
+							0.625,
+							21.21
+						],
+						[
+							0.6875,
+							27.72
+						],
+						[
+							0.75,
+							30
+						],
+						[
+							0.8125,
+							27.72
+						],
+						[
+							0.875,
+							21.21
+						],
+						[
+							0.9375,
+							11.48
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-head-y",
+			"type": "Result",
+			"x": 520,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Head.y"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-hips-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							85
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-hips-x",
+			"type": "Result",
+			"x": 520,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Hips.x"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-hips-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.0625,
+							9.57
+						],
+						[
+							0.125,
+							17.68
+						],
+						[
+							0.1875,
+							23.1
+						],
+						[
+							0.25,
+							25
+						],
+						[
+							0.3125,
+							23.1
+						],
+						[
+							0.375,
+							17.68
+						],
+						[
+							0.4375,
+							9.57
+						],
+						[
+							0.5,
+							0
+						],
+						[
+							0.5625,
+							-9.57
+						],
+						[
+							0.625,
+							-17.68
+						],
+						[
+							0.6875,
+							-23.1
+						],
+						[
+							0.75,
+							-25
+						],
+						[
+							0.8125,
+							-23.1
+						],
+						[
+							0.875,
+							-17.68
+						],
+						[
+							0.9375,
+							-9.57
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-hips-y",
+			"type": "Result",
+			"x": 520,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Hips.y"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-leftarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-90
+						],
+						[
+							0.0625,
+							-21.12
+						],
+						[
+							0.125,
+							37.28
+						],
+						[
+							0.1875,
+							76.3
+						],
+						[
+							0.25,
+							90
+						],
+						[
+							0.3125,
+							76.3
+						],
+						[
+							0.375,
+							37.28
+						],
+						[
+							0.4375,
+							-21.12
+						],
+						[
+							0.5,
+							-90
+						],
+						[
+							0.5625,
+							-158.88
+						],
+						[
+							0.625,
+							-217.28
+						],
+						[
+							0.6875,
+							-256.3
+						],
+						[
+							0.75,
+							-270
+						],
+						[
+							0.8125,
+							-256.3
+						],
+						[
+							0.875,
+							-217.28
+						],
+						[
+							0.9375,
+							-158.88
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-leftarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-leftarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-15
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-leftarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-leftfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							8
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-leftfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-leftforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-20
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-leftforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-leftleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							12
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-leftleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-leftupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.0625,
+							16.63
+						],
+						[
+							0.125,
+							12.73
+						],
+						[
+							0.1875,
+							-6.89
+						],
+						[
+							0.25,
+							-18
+						],
+						[
+							0.3125,
+							-6.89
+						],
+						[
+							0.375,
+							12.73
+						],
+						[
+							0.4375,
+							16.63
+						],
+						[
+							0.5,
+							0
+						],
+						[
+							0.5625,
+							-16.63
+						],
+						[
+							0.625,
+							-12.73
+						],
+						[
+							0.6875,
+							6.89
+						],
+						[
+							0.75,
+							18
+						],
+						[
+							0.8125,
+							6.89
+						],
+						[
+							0.875,
+							-12.73
+						],
+						[
+							0.9375,
+							-16.63
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-leftupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-leftupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							3
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-leftupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-rightarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-90
+						],
+						[
+							0.0625,
+							-158.88
+						],
+						[
+							0.125,
+							-217.28
+						],
+						[
+							0.1875,
+							-256.3
+						],
+						[
+							0.25,
+							-270
+						],
+						[
+							0.3125,
+							-256.3
+						],
+						[
+							0.375,
+							-217.28
+						],
+						[
+							0.4375,
+							-158.88
+						],
+						[
+							0.5,
+							-90
+						],
+						[
+							0.5625,
+							-21.12
+						],
+						[
+							0.625,
+							37.28
+						],
+						[
+							0.6875,
+							76.3
+						],
+						[
+							0.75,
+							90
+						],
+						[
+							0.8125,
+							76.3
+						],
+						[
+							0.875,
+							37.28
+						],
+						[
+							0.9375,
+							-21.12
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-rightarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-rightarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							15
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-rightarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-rightfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							8
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-rightfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-rightforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							20
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-rightforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-rightleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							12
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-rightleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-rightupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.0625,
+							-16.63
+						],
+						[
+							0.125,
+							-12.73
+						],
+						[
+							0.1875,
+							6.89
+						],
+						[
+							0.25,
+							18
+						],
+						[
+							0.3125,
+							6.89
+						],
+						[
+							0.375,
+							-12.73
+						],
+						[
+							0.4375,
+							-16.63
+						],
+						[
+							0.5,
+							0
+						],
+						[
+							0.5625,
+							16.63
+						],
+						[
+							0.625,
+							12.73
+						],
+						[
+							0.6875,
+							-6.89
+						],
+						[
+							0.75,
+							-18
+						],
+						[
+							0.8125,
+							-6.89
+						],
+						[
+							0.875,
+							12.73
+						],
+						[
+							0.9375,
+							16.63
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-rightupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-rightupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-3
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-rightupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-curve-root-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-0.089
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-root-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.y"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-number-pose",
+			"type": "Number",
+			"x": 780,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-pose",
+			"type": "Result",
+			"x": 1000,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pose"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-number-length",
+			"type": "Number",
+			"x": 780,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1.2
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-length",
+			"type": "Result",
+			"x": 1000,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Length"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-number-loop",
+			"type": "Number",
+			"x": 780,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-loop",
+			"type": "Result",
+			"x": 1000,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Loop"
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-number-stride",
+			"type": "Number",
+			"x": 780,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 2.314
+				}
+			]
+		},
+		{
+			"id": "animation-swim-crawl-result-stride",
+			"type": "Result",
+			"x": 1000,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stride"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-swim-crawl-link-0",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-head-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-1",
+			"p1": "animation-swim-crawl-curve-head-x-out-Value",
+			"p2": "animation-swim-crawl-result-head-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-2",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-head-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-3",
+			"p1": "animation-swim-crawl-curve-head-y-out-Value",
+			"p2": "animation-swim-crawl-result-head-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-4",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-hips-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-5",
+			"p1": "animation-swim-crawl-curve-hips-x-out-Value",
+			"p2": "animation-swim-crawl-result-hips-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-6",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-hips-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-7",
+			"p1": "animation-swim-crawl-curve-hips-y-out-Value",
+			"p2": "animation-swim-crawl-result-hips-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-8",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-leftarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-9",
+			"p1": "animation-swim-crawl-curve-leftarm-x-out-Value",
+			"p2": "animation-swim-crawl-result-leftarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-10",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-leftarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-11",
+			"p1": "animation-swim-crawl-curve-leftarm-z-out-Value",
+			"p2": "animation-swim-crawl-result-leftarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-12",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-leftfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-13",
+			"p1": "animation-swim-crawl-curve-leftfingers-out-Value",
+			"p2": "animation-swim-crawl-result-leftfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-14",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-leftforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-15",
+			"p1": "animation-swim-crawl-curve-leftforearm-y-out-Value",
+			"p2": "animation-swim-crawl-result-leftforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-16",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-leftleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-17",
+			"p1": "animation-swim-crawl-curve-leftleg-x-out-Value",
+			"p2": "animation-swim-crawl-result-leftleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-18",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-leftupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-19",
+			"p1": "animation-swim-crawl-curve-leftupleg-x-out-Value",
+			"p2": "animation-swim-crawl-result-leftupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-20",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-leftupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-21",
+			"p1": "animation-swim-crawl-curve-leftupleg-z-out-Value",
+			"p2": "animation-swim-crawl-result-leftupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-22",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-rightarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-23",
+			"p1": "animation-swim-crawl-curve-rightarm-x-out-Value",
+			"p2": "animation-swim-crawl-result-rightarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-24",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-rightarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-25",
+			"p1": "animation-swim-crawl-curve-rightarm-z-out-Value",
+			"p2": "animation-swim-crawl-result-rightarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-26",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-rightfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-27",
+			"p1": "animation-swim-crawl-curve-rightfingers-out-Value",
+			"p2": "animation-swim-crawl-result-rightfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-28",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-rightforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-29",
+			"p1": "animation-swim-crawl-curve-rightforearm-y-out-Value",
+			"p2": "animation-swim-crawl-result-rightforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-30",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-rightleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-31",
+			"p1": "animation-swim-crawl-curve-rightleg-x-out-Value",
+			"p2": "animation-swim-crawl-result-rightleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-32",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-rightupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-33",
+			"p1": "animation-swim-crawl-curve-rightupleg-x-out-Value",
+			"p2": "animation-swim-crawl-result-rightupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-34",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-rightupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-35",
+			"p1": "animation-swim-crawl-curve-rightupleg-z-out-Value",
+			"p2": "animation-swim-crawl-result-rightupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-36",
+			"p1": "animation-swim-crawl-phase-out-Value",
+			"p2": "animation-swim-crawl-curve-root-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-37",
+			"p1": "animation-swim-crawl-curve-root-y-out-Value",
+			"p2": "animation-swim-crawl-result-root-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-38",
+			"p1": "animation-swim-crawl-number-pose-out-Value",
+			"p2": "animation-swim-crawl-result-pose-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-39",
+			"p1": "animation-swim-crawl-number-length-out-Value",
+			"p2": "animation-swim-crawl-result-length-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-40",
+			"p1": "animation-swim-crawl-number-loop-out-Value",
+			"p2": "animation-swim-crawl-result-loop-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-swim-crawl-link-41",
+			"p1": "animation-swim-crawl-number-stride-out-Value",
+			"p2": "animation-swim-crawl-result-stride-in-Value",
+			"kind": "value"
+		}
+	]
+}

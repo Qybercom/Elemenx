@@ -8,11 +8,13 @@ The library of materials of a Scene: what a surface is made of, drawn by its own
 - Land(names): the GLSL of the materials of a ground (up to 12, its slots) in the shader of the land: landMaterials(place, px, color, height), each by the weight of it at the corners (vMaterials, vMaterials2, vMaterials3), drawn once where it weighs.
 - LandNames(): the materials a ground may be made of. Texture of a material names a texture of SceneTextures: on a ground it is its tile baked (sharp near, smooth far, no repeat), Textured(names) the textures of a ground in the order of its layers (SceneTextures.Array), its Code what a model of it draws.
 - Surface(name): a material written by hand for a Blueprint of a material of a model (Blueprints, type material): the pattern on its body, in metres of it, on the side its normal faces most.
+- Glsl(): its texts of GLSL of the ground and of roads (Helpers, LandSlope, LandRag, LandTexture, LandCliff, RoadWear), each of the block GLSL of its graph (blueprints/glsl/<name>), read again (an Application changed one).
 
 The same functions run in Node: they read no page.
 
 ## Methods
 
+- `Glsl()`
 - `Names(group)`
 - `Has(name)`
 - `Get(name)`
@@ -30,6 +32,8 @@ The same functions run in Node: they read no page.
 - [draws each of its materials as a pattern: it compiles, it varies near, and fades to its color where it is too small to see](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js#L142) — `libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js`
 - [defines a material of its own, in the chunk of materials and as the surface of a model](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js#L155) — `libraries/ElemenxGraphics/services/SceneMaterials/SceneMaterials.test.js`
 - [defines the materials and the textures of their resources, one of an Application in the place of one of them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L941) — `tests/regression/blueprints.test.js`
-- [keeps from the shaders what would blur, flicker or show as noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2008) — `tests/regression/library-scene.test.js`
+- [reads its GLSL of its graphs, the very texts of the code](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-glsl.test.js#L28) — `tests/regression/ground-glsl.test.js`
+- [takes a graph of its GLSL an Application gives in its place](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-glsl.test.js#L41) — `tests/regression/ground-glsl.test.js`
+- [keeps from the shaders what would blur, flicker or show as noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2152) — `tests/regression/library-scene.test.js`
 - [reads a tile the same from pixel to pixel where a pixel covers many tiles, and noises finer than a pixel as their mean](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L155) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
 - [draws the materials of a ground that name a texture with their tiles, a layer each, bound to its land](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L243) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`

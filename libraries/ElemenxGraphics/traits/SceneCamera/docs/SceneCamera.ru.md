@@ -17,3 +17,5 @@ Shake масштабирует всё, что дрожит (handheld 0.5, steadi
 Lens() движка отдаёт проходам картинки то, что они берут у камеры, показывающей мир: {Fov, Exposure (число, если своя, иначе null), Compensation, Coc ({Focal, Scale} или null), Focus, Shutter, Balance, Saturation, Contrast, Grain, Vignette, Aberration, Distortion, Polarizer, LUT, Cut}. Без активной камеры — null.
 
 Эффекты объектива работают на качестве medium, high и ultra. Угол обзора и положение камеры — на любом качестве.
+
+Риги камеры описаны в resources/camera/rigs.json: у каждого Shake, Smooth и Lag и что он делает — Still (стоит, как поставлен), Roll (крен сохраняется), Stops (наклон в упорах, горизонт ровный), Spring (идёт за местом на пружине с таким затуханием), Lean (наклоняется при разгоне), Hover (дрейф и дрожь винтов), Walk (шаги того, кто несёт). Новый риг — новая запись таблицы. Список ригов для инспектора — engine.Options['Camera:Rig'].

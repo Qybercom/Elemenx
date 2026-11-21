@@ -4,10 +4,12 @@
  * Height metres, looking down by Pitch degrees: what a walker sees of it, near and far); Mode lit, color, normal or height;
  * Sun its elevation in degrees, Turn its azimuth. The panel beside picks them and a slider for each param of the recipe;
  * change emits {Texture, Params} as they change. Methods: Draw(), Bake() (the tile again), Picture() (PNG as a data URL).
+ * Its panel is as wide as its edge is dragged, kept for the next time (EditorPanes).
  */
 Elemenx.Component('TextureLab', {
 	$TemplateURL: 'TextureLab.html',
 	$StyleURL: 'TextureLab.css',
+	$Traits: ['EditorPanes'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'art:palette',
@@ -29,6 +31,7 @@ Elemenx.Component('TextureLab', {
 			Label: 'What it shows, for screen readers.'
 		}
 	},
+	PanesKey: 'texture-lab',
 	Texture: 'lawn',
 	View: 'ground',
 	Mode: 'lit',

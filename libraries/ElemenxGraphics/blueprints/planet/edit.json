@@ -1,0 +1,143 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "edit",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "planet-edit-input-px",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PX"
+				}
+			]
+		},
+		{
+			"id": "planet-edit-input-py",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PY"
+				}
+			]
+		},
+		{
+			"id": "planet-edit-input-pz",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PZ"
+				}
+			]
+		},
+		{
+			"id": "planet-edit-input-height",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "planet-edit-input-edits",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Edits"
+				}
+			]
+		},
+		{
+			"id": "planet-edit-input-softs",
+			"type": "Input",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Softs"
+				}
+			]
+		},
+		{
+			"id": "planet-edit-brushes",
+			"type": "Edits",
+			"x": 300,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "planet-edit-result",
+			"type": "Result",
+			"x": 600,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "planet-edit-link-0",
+			"p1": "planet-edit-input-px-out-Value",
+			"p2": "planet-edit-brushes-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "planet-edit-link-1",
+			"p1": "planet-edit-input-py-out-Value",
+			"p2": "planet-edit-brushes-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "planet-edit-link-2",
+			"p1": "planet-edit-input-pz-out-Value",
+			"p2": "planet-edit-brushes-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "planet-edit-link-3",
+			"p1": "planet-edit-input-height-out-Value",
+			"p2": "planet-edit-brushes-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "planet-edit-link-4",
+			"p1": "planet-edit-input-edits-out-Value",
+			"p2": "planet-edit-brushes-in-Packed",
+			"kind": "value"
+		},
+		{
+			"id": "planet-edit-link-5",
+			"p1": "planet-edit-input-softs-out-Value",
+			"p2": "planet-edit-brushes-in-Softs",
+			"kind": "value"
+		},
+		{
+			"id": "planet-edit-link-result",
+			"p1": "planet-edit-brushes-out-Height",
+			"p2": "planet-edit-result-in-Value",
+			"kind": "value"
+		}
+	]
+}

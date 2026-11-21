@@ -1,0 +1,1182 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-aim-shoulder",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "animation-aim-shoulder-phase",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Phase"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-head-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							8
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-head-x",
+			"type": "Result",
+			"x": 520,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Head.x"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-head-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							6
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-head-y",
+			"type": "Result",
+			"x": 520,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Head.y"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-leftarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-85
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-leftarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-leftarm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							35
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-leftarm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-leftarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-10
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-leftarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-leftfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							35
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-leftfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-leftforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-35
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-leftforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-leftleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							10
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-leftleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-leftupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-10
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-leftupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-leftupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							8
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-leftupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-neck-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							6
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-neck-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Neck.x"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-neck-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							18
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-neck-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Neck.y"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-rightarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-80
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-rightarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-rightarm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-20
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-rightarm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-rightarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							15
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-rightarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-rightfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							45
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-rightfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-rightforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							95
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-rightforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-rightupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-8
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-rightupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-spine-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							6
+						],
+						[
+							0.0625,
+							6.15
+						],
+						[
+							0.125,
+							6.28
+						],
+						[
+							0.1875,
+							6.37
+						],
+						[
+							0.25,
+							6.4
+						],
+						[
+							0.3125,
+							6.37
+						],
+						[
+							0.375,
+							6.28
+						],
+						[
+							0.4375,
+							6.15
+						],
+						[
+							0.5,
+							6
+						],
+						[
+							0.5625,
+							5.85
+						],
+						[
+							0.625,
+							5.72
+						],
+						[
+							0.6875,
+							5.63
+						],
+						[
+							0.75,
+							5.6
+						],
+						[
+							0.8125,
+							5.63
+						],
+						[
+							0.875,
+							5.72
+						],
+						[
+							0.9375,
+							5.85
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-spine-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine.x"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-curve-spine-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-20
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-spine-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine.y"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-number-pose",
+			"type": "Number",
+			"x": 780,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-pose",
+			"type": "Result",
+			"x": 1000,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pose"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-number-length",
+			"type": "Number",
+			"x": 780,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-length",
+			"type": "Result",
+			"x": 1000,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Length"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-number-loop",
+			"type": "Number",
+			"x": 780,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-loop",
+			"type": "Result",
+			"x": 1000,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Loop"
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-number-stride",
+			"type": "Number",
+			"x": 780,
+			"y": 2340,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-aim-shoulder-result-stride",
+			"type": "Result",
+			"x": 1000,
+			"y": 2340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stride"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-aim-shoulder-link-0",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-head-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-1",
+			"p1": "animation-aim-shoulder-curve-head-x-out-Value",
+			"p2": "animation-aim-shoulder-result-head-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-2",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-head-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-3",
+			"p1": "animation-aim-shoulder-curve-head-y-out-Value",
+			"p2": "animation-aim-shoulder-result-head-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-4",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-leftarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-5",
+			"p1": "animation-aim-shoulder-curve-leftarm-x-out-Value",
+			"p2": "animation-aim-shoulder-result-leftarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-6",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-leftarm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-7",
+			"p1": "animation-aim-shoulder-curve-leftarm-y-out-Value",
+			"p2": "animation-aim-shoulder-result-leftarm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-8",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-leftarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-9",
+			"p1": "animation-aim-shoulder-curve-leftarm-z-out-Value",
+			"p2": "animation-aim-shoulder-result-leftarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-10",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-leftfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-11",
+			"p1": "animation-aim-shoulder-curve-leftfingers-out-Value",
+			"p2": "animation-aim-shoulder-result-leftfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-12",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-leftforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-13",
+			"p1": "animation-aim-shoulder-curve-leftforearm-y-out-Value",
+			"p2": "animation-aim-shoulder-result-leftforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-14",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-leftleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-15",
+			"p1": "animation-aim-shoulder-curve-leftleg-x-out-Value",
+			"p2": "animation-aim-shoulder-result-leftleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-16",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-leftupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-17",
+			"p1": "animation-aim-shoulder-curve-leftupleg-x-out-Value",
+			"p2": "animation-aim-shoulder-result-leftupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-18",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-leftupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-19",
+			"p1": "animation-aim-shoulder-curve-leftupleg-z-out-Value",
+			"p2": "animation-aim-shoulder-result-leftupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-20",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-neck-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-21",
+			"p1": "animation-aim-shoulder-curve-neck-x-out-Value",
+			"p2": "animation-aim-shoulder-result-neck-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-22",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-neck-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-23",
+			"p1": "animation-aim-shoulder-curve-neck-y-out-Value",
+			"p2": "animation-aim-shoulder-result-neck-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-24",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-rightarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-25",
+			"p1": "animation-aim-shoulder-curve-rightarm-x-out-Value",
+			"p2": "animation-aim-shoulder-result-rightarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-26",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-rightarm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-27",
+			"p1": "animation-aim-shoulder-curve-rightarm-y-out-Value",
+			"p2": "animation-aim-shoulder-result-rightarm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-28",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-rightarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-29",
+			"p1": "animation-aim-shoulder-curve-rightarm-z-out-Value",
+			"p2": "animation-aim-shoulder-result-rightarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-30",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-rightfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-31",
+			"p1": "animation-aim-shoulder-curve-rightfingers-out-Value",
+			"p2": "animation-aim-shoulder-result-rightfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-32",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-rightforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-33",
+			"p1": "animation-aim-shoulder-curve-rightforearm-y-out-Value",
+			"p2": "animation-aim-shoulder-result-rightforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-34",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-rightupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-35",
+			"p1": "animation-aim-shoulder-curve-rightupleg-z-out-Value",
+			"p2": "animation-aim-shoulder-result-rightupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-36",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-spine-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-37",
+			"p1": "animation-aim-shoulder-curve-spine-x-out-Value",
+			"p2": "animation-aim-shoulder-result-spine-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-38",
+			"p1": "animation-aim-shoulder-phase-out-Value",
+			"p2": "animation-aim-shoulder-curve-spine-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-39",
+			"p1": "animation-aim-shoulder-curve-spine-y-out-Value",
+			"p2": "animation-aim-shoulder-result-spine-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-40",
+			"p1": "animation-aim-shoulder-number-pose-out-Value",
+			"p2": "animation-aim-shoulder-result-pose-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-41",
+			"p1": "animation-aim-shoulder-number-length-out-Value",
+			"p2": "animation-aim-shoulder-result-length-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-42",
+			"p1": "animation-aim-shoulder-number-loop-out-Value",
+			"p2": "animation-aim-shoulder-result-loop-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-aim-shoulder-link-43",
+			"p1": "animation-aim-shoulder-number-stride-out-Value",
+			"p2": "animation-aim-shoulder-result-stride-in-Value",
+			"kind": "value"
+		}
+	]
+}

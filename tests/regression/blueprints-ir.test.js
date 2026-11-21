@@ -401,3 +401,67 @@ describe('Contract: When of a generator of numbers, its Value made only when its
 		expect(code.Run({}, {X: 2.5, Count: 0}).Value).toBe(noise.Make({Type: 'simplex', Fractal: 'fbm', Octaves: 4, Gain: 0.52}).At(2.5 * 0.37, 0.5, 2.5 * 0.11));
 	});
 });
+
+describe('Contract: lists of numbers in a generator of numbers: Reduce of a known list unrolled, Item, Count, Nearest Other', function () {
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:Blueprints', 'service:Noise', 'service:Geometry']);
+
+		blueprints = Elemenx.Service('Blueprints');
+	});
+
+	/* A step of a walk against the wind: of its item (how far), its index and the sum so far, what X gives there. */
+	it('runs a Reduce over a list of its parameters once for each item, the same of its Code, its js and its wasm', function () {
+		define('ReduceStep', graph('ReduceStep', [], {
+			item: ['Input', {Name: 'Item'}], index: ['Input', {Name: 'Index'}], sum: ['Input', {Name: 'Sum'}], x: ['Input', {Name: 'X'}],
+			step: ['Formula', {Expression: 'Sum + (sin(X * Item) > 0 ? -0.05 : 0.06) + Index * 0.001'}],
+			out: ['Result', {Key: 'Sum'}]
+		}, [['item', 'Value', 'step', 'Item'], ['index', 'Value', 'step', 'Index'], ['sum', 'Value', 'step', 'Sum'], ['x', 'Value', 'step', 'X'], ['step', 'Value', 'out', 'Value']]));
+
+		var made = graph('upwind', [{key: 'Steps', type: 'any', value: [1, 2, 3, 4, 5, 6]}], {
+			x: ['Input', {Name: 'X'}], steps: ['Parameter', {Key: 'Steps', Type: 'floats'}], start: ['Number', {Value: 0.5}],
+			walk: ['Reduce', {Graph: 'ReduceStep'}],
+			count: ['Count'], last: ['Item'], two: ['Number', {Value: 5}],
+			out: ['Result', {Key: 'Value'}], many: ['Result', {Key: 'Count'}], end: ['Result', {Key: 'Last'}]
+		}, [['steps', 'Value', 'walk', 'List'], ['start', 'Value', 'walk', 'Initial'], ['x', 'Value', 'walk', 'X'], ['walk', 'Sum', 'out', 'Value'],
+			['steps', 'Value', 'count', 'List'], ['count', 'Count', 'many', 'Value'], ['steps', 'Value', 'last', 'List'], ['two', 'Value', 'last', 'Index'], ['last', 'Value', 'end', 'Value']]);
+		var code = blueprints.Compile(made);
+		var numeric = blueprints.NumericCode(made, {});
+		var wasm = Elemenx.Compilers.Instance(blueprints.Wasm(numeric.Numeric));
+		var other = blueprints.NumericCode(made, {Steps: [2, 4]});
+
+		expect(numeric.Keys).toEqual(['Value', 'Count', 'Last']);
+
+		[0.3, 1.7, -2.2].forEach(function (x) {
+			var sum = 0.5;
+
+			[1, 2, 3, 4, 5, 6].forEach(function (item, index) {
+				sum = sum + (Math.sin(x * item) > 0 ? -0.05 : 0.06) + index * 0.001;
+			});
+
+			expect(code.Run({}, {X: x})).toEqual({Value: sum, Count: 6, Last: 6});
+			expect(numeric.Run({}, {X: x}).Value).toBeCloseTo(sum, 12);
+			expect(numeric.Run({}, {X: x}).Count).toBe(6);
+			expect(numeric.Run({}, {X: x}).Last).toBe(6);
+			expect(Array.from(wasm.Functions.g_main(x))).toEqual([numeric.Run({}, {X: x}).Value, 6, 6]);
+			expect(other.Run({}, {X: x}).Count).toBe(2);
+		});
+	});
+
+	it('finds the nearest of points and the next one, and its index (Other)', function () {
+		var points = [1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0];
+		var made = graph('plates', [{key: 'Points', type: 'any', value: points}], {
+			x: ['Input', {Name: 'X'}], y: ['Input', {Name: 'Y'}], z: ['Input', {Name: 'Z'}], points: ['Parameter', {Key: 'Points', Type: 'floats'}], near: ['Nearest'],
+			index: ['Result', {Key: 'Index'}], other: ['Result', {Key: 'Other'}]
+		}, [['points', 'Value', 'near', 'Points'], ['x', 'Value', 'near', 'X'], ['y', 'Value', 'near', 'Y'], ['z', 'Value', 'near', 'Z'], ['near', 'Index', 'index', 'Value'], ['near', 'Other', 'other', 'Value']]);
+		var numeric = blueprints.NumericCode(made, {});
+
+		expect(Elemenx.Service('Geometry').Nearest(points, 0.2, 0.1, 0.9)).toEqual(expect.objectContaining({Index: 2, Other: 0}));
+		expect(numeric.Run({}, {X: 0.2, Y: 0.1, Z: 0.9})).toEqual({Index: 2, Other: 0});
+		expect(numeric.Run({}, {X: 0.1, Y: 0.9, Z: -0.2})).toEqual({Index: 1, Other: 0});
+		expect(blueprints.Compile(made).Run({}, {X: -0.9, Y: 0.3, Z: 0})).toEqual({Index: 3, Other: 1});
+		/* A list of its own wasm holds not: told, its js runs it. */
+		expect(blueprints.Wasm(numeric.Numeric)).toBe(null);
+	});
+});

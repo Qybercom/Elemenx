@@ -697,13 +697,7 @@ Elemenx.Component('GameStrategy', {
 
 			if (top.Visible === false) return;
 
-			context.fillStyle = 'rgba(0, 0, 0, 0.6)';
-
-			context.fillRect(top.X - 16, top.Y - 3, 32, 5);
-
-			context.fillStyle = String(object.Team) === String(self.Team) ? '#6ad15f' : '#e0503f';
-
-			context.fillRect(top.X - 15, top.Y - 2, 30 * Math.max(0, health / max), 3);
+			vitals.Bar(context, top.X, top.Y, health / max, String(object.Team) === String(self.Team) ? '#6ad15f' : '#e0503f', 30, 3);
 		});
 
 		/* The marks of orders: a ring that grows and fades where they go, on what they attack. */

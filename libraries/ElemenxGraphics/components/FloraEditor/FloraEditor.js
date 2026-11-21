@@ -6,11 +6,13 @@
  * Species: the preset it starts of (a species of SceneFlora: pine, oak, willow, apple...); Preset: one given instead (an object or its
  * JSON); Variant: which plant of the species the view shows; Name: the model Define makes. Events: change {Preset} as it
  * changes, define {Name}. Methods: Current() (the preset as it is now), Analyse(picture) ({Width, Height, Data}: the
- * preset of a picture, null when it holds no plant), Grow() (the view again), Define(name).
+ * preset of a picture, null when it holds no plant), Grow() (the view again), Define(name). Its picture and its panel are
+ * as wide as their edges are dragged, kept for the next time (EditorPanes).
  */
 Elemenx.Component('FloraEditor', {
 	$TemplateURL: 'FloraEditor.html',
 	$StyleURL: 'FloraEditor.css',
+	$Traits: ['EditorPanes'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'tree',
@@ -28,6 +30,7 @@ Elemenx.Component('FloraEditor', {
 			Label: 'What it shows, for screen readers.'
 		}
 	},
+	PanesKey: 'flora-editor',
 	Species: 'oak',
 	Preset: null,
 	Variant: 0,

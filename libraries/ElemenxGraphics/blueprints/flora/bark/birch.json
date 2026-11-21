@@ -1,0 +1,830 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "bark-birch",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "bark-birch-input-cx",
+			"type": "Input",
+			"x": 200,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CX"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-input-cz",
+			"type": "Input",
+			"x": 200,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CZ"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-input-t",
+			"type": "Input",
+			"x": 200,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "T"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-input-split",
+			"type": "Input",
+			"x": 200,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Split"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-input-rings",
+			"type": "Input",
+			"x": 200,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Rings"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-input-lowr",
+			"type": "Input",
+			"x": 200,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowR"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-input-lowg",
+			"type": "Input",
+			"x": 200,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowG"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-input-lowb",
+			"type": "Input",
+			"x": 200,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowB"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-input-highr",
+			"type": "Input",
+			"x": 200,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighR"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-input-highg",
+			"type": "Input",
+			"x": 200,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighG"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-input-highb",
+			"type": "Input",
+			"x": 200,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighB"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-input-sfine",
+			"type": "Input",
+			"x": 200,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SFine"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-input-scells",
+			"type": "Input",
+			"x": 460,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SCells"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-base",
+			"type": "Call",
+			"x": 460,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/flora/bark/base"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-dashat",
+			"type": "Formula",
+			"x": 460,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(CX * 9, T * 900, CZ * 9)"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-dash",
+			"type": "NoiseSpec",
+			"x": 460,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 4
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "bark-birch-spotsat",
+			"type": "Formula",
+			"x": 460,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(CX * 2, T * 60, CZ * 2)"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-spots",
+			"type": "NoiseSpec",
+			"x": 460,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 4
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "bark-birch-edgeat",
+			"type": "Formula",
+			"x": 460,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(CX * 2, T * 30, CZ * 2)"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-edge",
+			"type": "NoiseSpec",
+			"x": 460,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "worley"
+				},
+				{
+					"key": "Fractal",
+					"value": "none"
+				},
+				{
+					"key": "Cell",
+					"value": "edge"
+				},
+				{
+					"key": "Jitter",
+					"value": 0.9
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "bark-birch-lenticel",
+			"type": "Formula",
+			"x": 460,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(0.72, 0.8, Dash) * smoothstep(0.4, 0.6, Spots)"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-foot",
+			"type": "Formula",
+			"x": 460,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 - smoothstep(0.04, 0.14, T + (N - 0.5) * 0.06)"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-crack",
+			"type": "Formula",
+			"x": 460,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 - smoothstep(0.03, 0.1, Edge)"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-dark",
+			"type": "Formula",
+			"x": 460,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(Lenticel * 0.9, Foot * (0.55 + Crack * 0.4))"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-colorr",
+			"type": "Formula",
+			"x": 720,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HighR + (LowR - HighR) * Dark"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-colorg",
+			"type": "Formula",
+			"x": 720,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HighG + (LowG - HighG) * Dark"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-colorb",
+			"type": "Formula",
+			"x": 720,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HighB + (LowB - HighB) * Dark"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-bump",
+			"type": "Formula",
+			"x": 720,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.5 + (N - 0.5) * 0.3 - Lenticel * 0.2 + Foot * (1 - Crack) * 0.4"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-shade",
+			"type": "Formula",
+			"x": 720,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 + (N - 0.5) * 0.12"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-outr",
+			"type": "Formula",
+			"x": 720,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "ColorR * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-result-r",
+			"type": "Result",
+			"x": 720,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "R"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-outg",
+			"type": "Formula",
+			"x": 720,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "ColorG * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-result-g",
+			"type": "Result",
+			"x": 720,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "G"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-outb",
+			"type": "Formula",
+			"x": 720,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "ColorB * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-result-b",
+			"type": "Result",
+			"x": 720,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "B"
+				}
+			]
+		},
+		{
+			"id": "bark-birch-result-bump",
+			"type": "Result",
+			"x": 720,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Bump"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "bark-birch-link-0",
+			"p1": "bark-birch-input-cx-out-Value",
+			"p2": "bark-birch-base-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-1",
+			"p1": "bark-birch-input-cz-out-Value",
+			"p2": "bark-birch-base-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-2",
+			"p1": "bark-birch-input-t-out-Value",
+			"p2": "bark-birch-base-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-3",
+			"p1": "bark-birch-input-split-out-Value",
+			"p2": "bark-birch-base-in-Split",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-4",
+			"p1": "bark-birch-input-lowr-out-Value",
+			"p2": "bark-birch-base-in-LowR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-5",
+			"p1": "bark-birch-input-lowg-out-Value",
+			"p2": "bark-birch-base-in-LowG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-6",
+			"p1": "bark-birch-input-lowb-out-Value",
+			"p2": "bark-birch-base-in-LowB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-7",
+			"p1": "bark-birch-input-highr-out-Value",
+			"p2": "bark-birch-base-in-HighR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-8",
+			"p1": "bark-birch-input-highg-out-Value",
+			"p2": "bark-birch-base-in-HighG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-9",
+			"p1": "bark-birch-input-highb-out-Value",
+			"p2": "bark-birch-base-in-HighB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-10",
+			"p1": "bark-birch-input-sfine-out-Value",
+			"p2": "bark-birch-base-in-SFine",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-11",
+			"p1": "bark-birch-input-cx-out-Value",
+			"p2": "bark-birch-dashat-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-12",
+			"p1": "bark-birch-input-t-out-Value",
+			"p2": "bark-birch-dashat-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-13",
+			"p1": "bark-birch-input-cz-out-Value",
+			"p2": "bark-birch-dashat-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-14",
+			"p1": "bark-birch-dashat-out-Value",
+			"p2": "bark-birch-dash-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-15",
+			"p1": "bark-birch-input-sfine-out-Value",
+			"p2": "bark-birch-dash-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-16",
+			"p1": "bark-birch-input-cx-out-Value",
+			"p2": "bark-birch-spotsat-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-17",
+			"p1": "bark-birch-input-t-out-Value",
+			"p2": "bark-birch-spotsat-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-18",
+			"p1": "bark-birch-input-cz-out-Value",
+			"p2": "bark-birch-spotsat-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-19",
+			"p1": "bark-birch-spotsat-out-Value",
+			"p2": "bark-birch-spots-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-20",
+			"p1": "bark-birch-input-sfine-out-Value",
+			"p2": "bark-birch-spots-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-21",
+			"p1": "bark-birch-input-cx-out-Value",
+			"p2": "bark-birch-edgeat-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-22",
+			"p1": "bark-birch-input-t-out-Value",
+			"p2": "bark-birch-edgeat-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-23",
+			"p1": "bark-birch-input-cz-out-Value",
+			"p2": "bark-birch-edgeat-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-24",
+			"p1": "bark-birch-edgeat-out-Value",
+			"p2": "bark-birch-edge-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-25",
+			"p1": "bark-birch-input-scells-out-Value",
+			"p2": "bark-birch-edge-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-26",
+			"p1": "bark-birch-dash-out-Value",
+			"p2": "bark-birch-lenticel-in-Dash",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-27",
+			"p1": "bark-birch-spots-out-Value",
+			"p2": "bark-birch-lenticel-in-Spots",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-28",
+			"p1": "bark-birch-input-t-out-Value",
+			"p2": "bark-birch-foot-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-29",
+			"p1": "bark-birch-base-out-N",
+			"p2": "bark-birch-foot-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-30",
+			"p1": "bark-birch-edge-out-Value",
+			"p2": "bark-birch-crack-in-Edge",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-31",
+			"p1": "bark-birch-lenticel-out-Value",
+			"p2": "bark-birch-dark-in-Lenticel",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-32",
+			"p1": "bark-birch-foot-out-Value",
+			"p2": "bark-birch-dark-in-Foot",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-33",
+			"p1": "bark-birch-crack-out-Value",
+			"p2": "bark-birch-dark-in-Crack",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-34",
+			"p1": "bark-birch-input-highr-out-Value",
+			"p2": "bark-birch-colorr-in-HighR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-35",
+			"p1": "bark-birch-input-lowr-out-Value",
+			"p2": "bark-birch-colorr-in-LowR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-36",
+			"p1": "bark-birch-dark-out-Value",
+			"p2": "bark-birch-colorr-in-Dark",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-37",
+			"p1": "bark-birch-input-highg-out-Value",
+			"p2": "bark-birch-colorg-in-HighG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-38",
+			"p1": "bark-birch-input-lowg-out-Value",
+			"p2": "bark-birch-colorg-in-LowG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-39",
+			"p1": "bark-birch-dark-out-Value",
+			"p2": "bark-birch-colorg-in-Dark",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-40",
+			"p1": "bark-birch-input-highb-out-Value",
+			"p2": "bark-birch-colorb-in-HighB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-41",
+			"p1": "bark-birch-input-lowb-out-Value",
+			"p2": "bark-birch-colorb-in-LowB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-42",
+			"p1": "bark-birch-dark-out-Value",
+			"p2": "bark-birch-colorb-in-Dark",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-43",
+			"p1": "bark-birch-base-out-N",
+			"p2": "bark-birch-bump-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-44",
+			"p1": "bark-birch-lenticel-out-Value",
+			"p2": "bark-birch-bump-in-Lenticel",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-45",
+			"p1": "bark-birch-foot-out-Value",
+			"p2": "bark-birch-bump-in-Foot",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-46",
+			"p1": "bark-birch-crack-out-Value",
+			"p2": "bark-birch-bump-in-Crack",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-47",
+			"p1": "bark-birch-base-out-N",
+			"p2": "bark-birch-shade-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-48",
+			"p1": "bark-birch-colorr-out-Value",
+			"p2": "bark-birch-outr-in-ColorR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-49",
+			"p1": "bark-birch-shade-out-Value",
+			"p2": "bark-birch-outr-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-50",
+			"p1": "bark-birch-outr-out-Value",
+			"p2": "bark-birch-result-r-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-51",
+			"p1": "bark-birch-colorg-out-Value",
+			"p2": "bark-birch-outg-in-ColorG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-52",
+			"p1": "bark-birch-shade-out-Value",
+			"p2": "bark-birch-outg-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-53",
+			"p1": "bark-birch-outg-out-Value",
+			"p2": "bark-birch-result-g-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-54",
+			"p1": "bark-birch-colorb-out-Value",
+			"p2": "bark-birch-outb-in-ColorB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-55",
+			"p1": "bark-birch-shade-out-Value",
+			"p2": "bark-birch-outb-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-56",
+			"p1": "bark-birch-outb-out-Value",
+			"p2": "bark-birch-result-b-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-birch-link-57",
+			"p1": "bark-birch-bump-out-Value",
+			"p2": "bark-birch-result-bump-in-Value",
+			"kind": "value"
+		}
+	]
+}

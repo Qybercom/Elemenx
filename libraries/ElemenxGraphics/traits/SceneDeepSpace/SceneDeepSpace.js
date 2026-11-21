@@ -54,9 +54,7 @@ Elemenx.Trait('SceneDeepSpace', {
 		}
 
 		function colorOf (text, fallback) {
-			var hex = String(text || '').replace('#', '');
-
-			return /^[0-9a-f]{6}$/i.test(hex) ? [parseInt(hex.slice(0, 2), 16) / 255, parseInt(hex.slice(2, 4), 16) / 255, parseInt(hex.slice(4, 6), 16) / 255] : fallback;
+			return engine.Hex(text, fallback);
 		}
 
 		/*

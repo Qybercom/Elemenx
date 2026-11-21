@@ -1,0 +1,24 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "land-slope",
+	"glsl": {
+		"Field": "LandSlope"
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "chunk",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "vec3 landSlope = vec3(0.0, 1.0, 0.0);\nfloat landUnder = 0.0;\nfloat landGloss = 0.0;\nvec3 landSteeper(vec3 place) {\n\tvec3 soft = normalize(vNormal);\n\tif (dot(vNormal, vNormal) < 0.56) return soft;\n\tvec3 face = cross(dFdx(place), dFdy(place));\n\tif (dot(face, face) < 1e-12) return soft;\n\tface = normalize(face);\n\tface *= sign(face.y + 1e-6);\n\treturn abs(face.y) < soft.y - 0.05 ? face : soft;\n}"
+				}
+			]
+		}
+	],
+	"links": []
+}

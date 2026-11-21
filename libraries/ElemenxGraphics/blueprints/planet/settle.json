@@ -1,0 +1,130 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "settle",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "planet-settle-formula",
+			"type": "Formula",
+			"x": 300,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(0, 1 - abs(Celsius - 16) / 16) * max(0, 1 - abs(Moisture - 0.55) / 0.45) * max(0.15, 1 - Elevation / 2200) * (RiverFar < 15 ? 1 + min(2, RiverFlow / 150) : 1) * (Elevation < 60 ? 1.5 : 1)"
+				}
+			]
+		},
+		{
+			"id": "planet-settle-input-celsius",
+			"type": "Input",
+			"x": 0,
+			"y": 60,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Celsius"
+				}
+			]
+		},
+		{
+			"id": "planet-settle-input-moisture",
+			"type": "Input",
+			"x": 0,
+			"y": 170,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Moisture"
+				}
+			]
+		},
+		{
+			"id": "planet-settle-input-elevation",
+			"type": "Input",
+			"x": 0,
+			"y": 280,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Elevation"
+				}
+			]
+		},
+		{
+			"id": "planet-settle-input-riverfar",
+			"type": "Input",
+			"x": 0,
+			"y": 390,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RiverFar"
+				}
+			]
+		},
+		{
+			"id": "planet-settle-input-riverflow",
+			"type": "Input",
+			"x": 0,
+			"y": 500,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RiverFlow"
+				}
+			]
+		},
+		{
+			"id": "planet-settle-result",
+			"type": "Result",
+			"x": 760,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Score"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "planet-settle-link-0",
+			"p1": "planet-settle-input-celsius-out-Value",
+			"p2": "planet-settle-formula-in-Celsius",
+			"kind": "value"
+		},
+		{
+			"id": "planet-settle-link-1",
+			"p1": "planet-settle-input-moisture-out-Value",
+			"p2": "planet-settle-formula-in-Moisture",
+			"kind": "value"
+		},
+		{
+			"id": "planet-settle-link-2",
+			"p1": "planet-settle-input-elevation-out-Value",
+			"p2": "planet-settle-formula-in-Elevation",
+			"kind": "value"
+		},
+		{
+			"id": "planet-settle-link-3",
+			"p1": "planet-settle-input-riverfar-out-Value",
+			"p2": "planet-settle-formula-in-RiverFar",
+			"kind": "value"
+		},
+		{
+			"id": "planet-settle-link-4",
+			"p1": "planet-settle-input-riverflow-out-Value",
+			"p2": "planet-settle-formula-in-RiverFlow",
+			"kind": "value"
+		},
+		{
+			"id": "planet-settle-link-score",
+			"p1": "planet-settle-formula-out-Value",
+			"p2": "planet-settle-result-in-Value",
+			"kind": "value"
+		}
+	]
+}

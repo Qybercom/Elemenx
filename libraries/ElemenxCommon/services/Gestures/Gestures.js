@@ -21,7 +21,7 @@
  *   Returns its stop. A finger is the element's till it lifts (pointer capture).
  * - The events of templates (Elemenx.EventSource): (tap), (doubletap), (press), (pressup), (pan), (swipe), (pinch),
  *   (rotate), (tilt) on any element; the gesture in event.detail. The attribute data-gestures-mouse on the element takes a
- *   mouse too, as one finger (a page to try them on a computer).
+ *   mouse too, as one finger (a page to try them on a computer). On an element of *swipe none of them (it gives swipe).
  */
 Elemenx.Service('Gestures', {
 	$Meta: {
@@ -397,11 +397,32 @@ Elemenx.Service('Gestures', {
 	}
 });
 
-/* The events of templates: (tap), (pinch)... on an element start its recognition there, each gesture an event of its Type. */
+/*
+ * The events of templates: (tap), (pinch)... on an element start its recognition there, each gesture an event of its Type
+ * (its stop kept on the element, __ElemenxGestures); on an element of *swipe none: the directive gives swipe itself, and
+ * stops one started before it. Regression: (swipe) of a *swipe element (Gallery, MenuList, ProductCard) started it there
+ * too: a second swipe of any way, the element of touch-action none (the page did not scroll over it on a phone), its
+ * fingers held from a link in it.
+ */
 Elemenx.EventSource(['tap', 'doubletap', 'press', 'pressup', 'pan', 'swipe', 'pinch', 'rotate', 'tilt'], {
 	Attach: function (element) {
-		return Elemenx.Service('Gestures').Listen(element, function (gesture) {
+		var stopped = false;
+		var stop;
+
+		if (element.__ElemenxSwipe) return null;
+
+		stop = Elemenx.Service('Gestures').Listen(element, function (gesture) {
 			element.dispatchEvent(new CustomEvent(gesture.Type, {detail: gesture}));
 		}, {Mouse: element.hasAttribute('data-gestures-mouse')});
+
+		element.__ElemenxGestures = function () {
+			if (stopped) return;
+
+			stopped = true;
+
+			stop();
+		};
+
+		return element.__ElemenxGestures;
 	}
 });

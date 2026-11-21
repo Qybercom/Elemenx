@@ -1,0 +1,789 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "upwind-step",
+	"parameters": [
+		{
+			"key": "Rough",
+			"type": "text",
+			"value": "ElemenxGraphics/planet/rough",
+			"comment": "The graph of the land roughly it calls"
+		}
+	],
+	"blocks": [
+		{
+			"id": "planet-upwind-step-input-item",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Item"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-index",
+			"type": "Input",
+			"x": 0,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Index"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-sum",
+			"type": "Input",
+			"x": 0,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Sum"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-px",
+			"type": "Input",
+			"x": 0,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PX"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-py",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PY"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-pz",
+			"type": "Input",
+			"x": 0,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "PZ"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-ex",
+			"type": "Input",
+			"x": 0,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "EX"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-ey",
+			"type": "Input",
+			"x": 0,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "EY"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-ez",
+			"type": "Input",
+			"x": 0,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "EZ"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-nx",
+			"type": "Input",
+			"x": 0,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "NX"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-ny",
+			"type": "Input",
+			"x": 0,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "NY"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-nz",
+			"type": "Input",
+			"x": 0,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "NZ"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-windeast",
+			"type": "Input",
+			"x": 0,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "WindEast"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-windnorth",
+			"type": "Input",
+			"x": 0,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "WindNorth"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-land",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Land"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-radius",
+			"type": "Input",
+			"x": 0,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Radius"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-level",
+			"type": "Input",
+			"x": 0,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Level"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-sshape",
+			"type": "Input",
+			"x": 0,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SShape"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-middles",
+			"type": "Input",
+			"x": 0,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Middles"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-oceans",
+			"type": "Input",
+			"x": 0,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Oceans"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-lands",
+			"type": "Input",
+			"x": 0,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Lands"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-input-seas",
+			"type": "Input",
+			"x": 0,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seas"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-reach",
+			"type": "Formula",
+			"x": 1,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Item * 220 / Radius"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-bx0",
+			"type": "Formula",
+			"x": 2,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "PX - (EX * WindEast + NX * WindNorth) / 8 * Reach"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-by0",
+			"type": "Formula",
+			"x": 2,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "PY - (EY * WindEast + NY * WindNorth) / 8 * Reach"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-bz0",
+			"type": "Formula",
+			"x": 2,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "PZ - (EZ * WindEast + NZ * WindNorth) / 8 * Reach"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-bl0",
+			"type": "Formula",
+			"x": 3,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "sqrt(BX0 * BX0 + BY0 * BY0 + BZ0 * BZ0)"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-bl",
+			"type": "Formula",
+			"x": 3,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "BL0 != 0 ? BL0 : 1"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-bx",
+			"type": "Formula",
+			"x": 3,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "BX0 / BL"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-by",
+			"type": "Formula",
+			"x": 3,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "BY0 / BL"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-bz",
+			"type": "Formula",
+			"x": 3,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "BZ0 / BL"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-nearest",
+			"type": "Nearest",
+			"x": 4,
+			"y": 340,
+			"properties": []
+		},
+		{
+			"id": "planet-upwind-step-oceanic",
+			"type": "Item",
+			"x": 5,
+			"y": 440,
+			"properties": []
+		},
+		{
+			"id": "planet-upwind-step-wland",
+			"type": "Painted",
+			"x": 5,
+			"y": 540,
+			"properties": []
+		},
+		{
+			"id": "planet-upwind-step-wsea",
+			"type": "Painted",
+			"x": 5,
+			"y": 640,
+			"properties": []
+		},
+		{
+			"id": "planet-upwind-step-rough",
+			"type": "Call",
+			"x": 6,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "{Rough}"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-brought",
+			"type": "Formula",
+			"x": 7,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Sum + (Rough > 0 ? -0.05 : 0.06) - (Rough > 0.5 && Land > 0 ? 0.06 : 0)"
+				}
+			]
+		},
+		{
+			"id": "planet-upwind-step-result-sum",
+			"type": "Result",
+			"x": 8,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Sum"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "planet-upwind-step-link-0",
+			"p1": "planet-upwind-step-input-item-out-Value",
+			"p2": "planet-upwind-step-reach-in-Item",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-1",
+			"p1": "planet-upwind-step-input-radius-out-Value",
+			"p2": "planet-upwind-step-reach-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-2",
+			"p1": "planet-upwind-step-input-px-out-Value",
+			"p2": "planet-upwind-step-bx0-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-3",
+			"p1": "planet-upwind-step-input-ex-out-Value",
+			"p2": "planet-upwind-step-bx0-in-EX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-4",
+			"p1": "planet-upwind-step-input-windeast-out-Value",
+			"p2": "planet-upwind-step-bx0-in-WindEast",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-5",
+			"p1": "planet-upwind-step-input-nx-out-Value",
+			"p2": "planet-upwind-step-bx0-in-NX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-6",
+			"p1": "planet-upwind-step-input-windnorth-out-Value",
+			"p2": "planet-upwind-step-bx0-in-WindNorth",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-7",
+			"p1": "planet-upwind-step-reach-out-Value",
+			"p2": "planet-upwind-step-bx0-in-Reach",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-8",
+			"p1": "planet-upwind-step-input-py-out-Value",
+			"p2": "planet-upwind-step-by0-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-9",
+			"p1": "planet-upwind-step-input-ey-out-Value",
+			"p2": "planet-upwind-step-by0-in-EY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-10",
+			"p1": "planet-upwind-step-input-windeast-out-Value",
+			"p2": "planet-upwind-step-by0-in-WindEast",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-11",
+			"p1": "planet-upwind-step-input-ny-out-Value",
+			"p2": "planet-upwind-step-by0-in-NY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-12",
+			"p1": "planet-upwind-step-input-windnorth-out-Value",
+			"p2": "planet-upwind-step-by0-in-WindNorth",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-13",
+			"p1": "planet-upwind-step-reach-out-Value",
+			"p2": "planet-upwind-step-by0-in-Reach",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-14",
+			"p1": "planet-upwind-step-input-pz-out-Value",
+			"p2": "planet-upwind-step-bz0-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-15",
+			"p1": "planet-upwind-step-input-ez-out-Value",
+			"p2": "planet-upwind-step-bz0-in-EZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-16",
+			"p1": "planet-upwind-step-input-windeast-out-Value",
+			"p2": "planet-upwind-step-bz0-in-WindEast",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-17",
+			"p1": "planet-upwind-step-input-nz-out-Value",
+			"p2": "planet-upwind-step-bz0-in-NZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-18",
+			"p1": "planet-upwind-step-input-windnorth-out-Value",
+			"p2": "planet-upwind-step-bz0-in-WindNorth",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-19",
+			"p1": "planet-upwind-step-reach-out-Value",
+			"p2": "planet-upwind-step-bz0-in-Reach",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-20",
+			"p1": "planet-upwind-step-bx0-out-Value",
+			"p2": "planet-upwind-step-bl0-in-BX0",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-21",
+			"p1": "planet-upwind-step-by0-out-Value",
+			"p2": "planet-upwind-step-bl0-in-BY0",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-22",
+			"p1": "planet-upwind-step-bz0-out-Value",
+			"p2": "planet-upwind-step-bl0-in-BZ0",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-23",
+			"p1": "planet-upwind-step-bl0-out-Value",
+			"p2": "planet-upwind-step-bl-in-BL0",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-24",
+			"p1": "planet-upwind-step-bx0-out-Value",
+			"p2": "planet-upwind-step-bx-in-BX0",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-25",
+			"p1": "planet-upwind-step-bl-out-Value",
+			"p2": "planet-upwind-step-bx-in-BL",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-26",
+			"p1": "planet-upwind-step-by0-out-Value",
+			"p2": "planet-upwind-step-by-in-BY0",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-27",
+			"p1": "planet-upwind-step-bl-out-Value",
+			"p2": "planet-upwind-step-by-in-BL",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-28",
+			"p1": "planet-upwind-step-bz0-out-Value",
+			"p2": "planet-upwind-step-bz-in-BZ0",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-29",
+			"p1": "planet-upwind-step-bl-out-Value",
+			"p2": "planet-upwind-step-bz-in-BL",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-30",
+			"p1": "planet-upwind-step-input-middles-out-Value",
+			"p2": "planet-upwind-step-nearest-in-Points",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-31",
+			"p1": "planet-upwind-step-bx-out-Value",
+			"p2": "planet-upwind-step-nearest-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-32",
+			"p1": "planet-upwind-step-by-out-Value",
+			"p2": "planet-upwind-step-nearest-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-33",
+			"p1": "planet-upwind-step-bz-out-Value",
+			"p2": "planet-upwind-step-nearest-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-34",
+			"p1": "planet-upwind-step-input-oceans-out-Value",
+			"p2": "planet-upwind-step-oceanic-in-List",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-35",
+			"p1": "planet-upwind-step-nearest-out-Index",
+			"p2": "planet-upwind-step-oceanic-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-36",
+			"p1": "planet-upwind-step-input-lands-out-Value",
+			"p2": "planet-upwind-step-wland-in-Packed",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-37",
+			"p1": "planet-upwind-step-bx-out-Value",
+			"p2": "planet-upwind-step-wland-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-38",
+			"p1": "planet-upwind-step-by-out-Value",
+			"p2": "planet-upwind-step-wland-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-39",
+			"p1": "planet-upwind-step-bz-out-Value",
+			"p2": "planet-upwind-step-wland-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-40",
+			"p1": "planet-upwind-step-input-seas-out-Value",
+			"p2": "planet-upwind-step-wsea-in-Packed",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-41",
+			"p1": "planet-upwind-step-bx-out-Value",
+			"p2": "planet-upwind-step-wsea-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-42",
+			"p1": "planet-upwind-step-by-out-Value",
+			"p2": "planet-upwind-step-wsea-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-43",
+			"p1": "planet-upwind-step-bz-out-Value",
+			"p2": "planet-upwind-step-wsea-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-44",
+			"p1": "planet-upwind-step-bx-out-Value",
+			"p2": "planet-upwind-step-rough-in-PX",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-45",
+			"p1": "planet-upwind-step-by-out-Value",
+			"p2": "planet-upwind-step-rough-in-PY",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-46",
+			"p1": "planet-upwind-step-bz-out-Value",
+			"p2": "planet-upwind-step-rough-in-PZ",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-47",
+			"p1": "planet-upwind-step-input-sshape-out-Value",
+			"p2": "planet-upwind-step-rough-in-SShape",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-48",
+			"p1": "planet-upwind-step-oceanic-out-Value",
+			"p2": "planet-upwind-step-rough-in-Oceanic",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-49",
+			"p1": "planet-upwind-step-input-level-out-Value",
+			"p2": "planet-upwind-step-rough-in-Level",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-50",
+			"p1": "planet-upwind-step-wland-out-Value",
+			"p2": "planet-upwind-step-rough-in-WLand",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-51",
+			"p1": "planet-upwind-step-wsea-out-Value",
+			"p2": "planet-upwind-step-rough-in-WSea",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-52",
+			"p1": "planet-upwind-step-input-sum-out-Value",
+			"p2": "planet-upwind-step-brought-in-Sum",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-53",
+			"p1": "planet-upwind-step-rough-out-Rough",
+			"p2": "planet-upwind-step-brought-in-Rough",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-54",
+			"p1": "planet-upwind-step-input-land-out-Value",
+			"p2": "planet-upwind-step-brought-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "planet-upwind-step-link-55",
+			"p1": "planet-upwind-step-brought-out-Value",
+			"p2": "planet-upwind-step-result-sum-in-Value",
+			"kind": "value"
+		}
+	]
+}

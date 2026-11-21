@@ -16,11 +16,20 @@
  *   Heuristic): Goal(node) is true at the goal (or is the goal, compared by Key), Key(node) its text, Neighbors(node)
  *   [{Node, Cost}]; returns {Path: [nodes], Cost} or null.
  * - Smooth(grid, path): the path without the cells it passes in a straight line: its corners only.
+ * - Source(names): the source of its members, for a worker (Workers): the searches of the ground and the planet run there.
  */
 Elemenx.Service('Pathfinding', {
 	$Meta: {
 		Description: 'The ways across a map: A*, Dijkstra and flow fields on a grid, A* on a graph of your own.',
-		Methods: ['Grid(width, height, cost)', 'Path(grid, from, to, options)', 'Distances(grid, targets, options)', 'Flow(grid, targets, options)', 'Search(options)', 'Smooth(grid, path)']
+		Methods: ['Grid(width, height, cost)', 'Path(grid, from, to, options)', 'Distances(grid, targets, options)', 'Flow(grid, targets, options)', 'Search(options)', 'Smooth(grid, path)', 'Source(names)']
+	},
+
+	/*
+	 * The source of its members, for a worker (Workers). Regression: of none, a pool of workers given it failed to start
+	 * and ran all in the page.
+	 */
+	Source: function (names) {
+		return this.$Service('Workers').Source(this, names);
 	},
 
 	/* A queue of the cheapest first: a binary heap of items and their priorities. */

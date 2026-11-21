@@ -97,7 +97,17 @@ class ElemenxColorSettingsPage : ColorSettingsPage {
 		AttributesDescriptor("Event (event)", ElemenxColors.EVENT),
 		AttributesDescriptor("Directive *directive", ElemenxColors.DIRECTIVE),
 		AttributesDescriptor("Interpolation {{ }}", ElemenxColors.INTERPOLATION),
-		AttributesDescriptor("Reference #name", ElemenxColors.REF)
+		AttributesDescriptor("Reference #name", ElemenxColors.REF),
+		/* The strings of shaders in JavaScript (ElemenxGlslAnnotator). */
+		AttributesDescriptor("GLSL//Text", ElemenxGlsl.TEXT),
+		AttributesDescriptor("GLSL//Keyword", ElemenxGlsl.KEYWORD),
+		AttributesDescriptor("GLSL//Type", ElemenxGlsl.TYPE),
+		AttributesDescriptor("GLSL//Function", ElemenxGlsl.FUNCTION),
+		AttributesDescriptor("GLSL//Built-in variable", ElemenxGlsl.BUILTIN),
+		AttributesDescriptor("GLSL//Number", ElemenxGlsl.NUMBER),
+		AttributesDescriptor("GLSL//Comment", ElemenxGlsl.COMMENT),
+		AttributesDescriptor("GLSL//Preprocessor", ElemenxGlsl.PREPROCESSOR),
+		AttributesDescriptor("GLSL//Operator", ElemenxGlsl.OPERATOR)
 	)
 
 	override fun getDisplayName(): String = "Elemenx"

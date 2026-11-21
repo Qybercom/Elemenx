@@ -23,3 +23,5 @@ EditCheck (action, target) решает, что можно читателю; fal
 - group {Blocks}, ungroup {Group}, rename {Group}, comment {Target};
 - parameter {Change (add, remove, set), Index, Field}.
 Отказанное остаётся как было. ReadOnly работает раньше EditCheck: то, что он и так запрещает, не спрашивается; методы, вызванные из кода, тоже.
+
+Ширина палитры меняется перетаскиванием её края и запоминается (EditorPanes, ключ blueprint).

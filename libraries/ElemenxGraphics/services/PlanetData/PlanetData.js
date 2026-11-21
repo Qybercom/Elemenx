@@ -96,7 +96,7 @@ Elemenx.Service('PlanetData', {
 			Version: 1,
 			ID: String(given.ID || 'planet-' + (bare.Seed === undefined ? 'planet' : bare.Seed)),
 			Name: String(given.Name || given.ID || bare.Seed || 'Planet'),
-			Radius: Number(bare.Radius) || 6371,
+			Radius: Number(bare.Radius) || planets.Defaults.Radius,
 			Sea: 0,
 			Seed: bare.Seed === undefined ? 'planet' : String(bare.Seed),
 			Origin: {Kind: 'generated', Options: bare},

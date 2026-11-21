@@ -9,9 +9,11 @@ The ways across a map: on a grid of cells, or on a graph of your own.
 - Flow(grid, targets, options): a flow field to the targets, for many units at once: {Distances, Next(x, y) (the next cell, or null), Direction(x, y) ({X, Y} of the step: -1, 0 or 1)}.
 - Search({Start, Goal, Key, Neighbors, Heuristic, Limit}): A* on a graph of your own (Dijkstra without a Heuristic): Goal(node) is true at the goal (or is the goal, compared by Key), Key(node) its text, Neighbors(node) [{Node, Cost}]; returns {Path: [nodes], Cost} or null.
 - Smooth(grid, path): the path without the cells it passes in a straight line: its corners only.
+- Source(names): the source of its members, for a worker (Workers): the searches of the ground and the planet run there.
 
 ## Methods
 
+- `Source(names)`
 - `Grid(width, height, cost)`
 - `Path(grid, from, to, options)`
 - `Distances(grid, targets, options)`
@@ -81,3 +83,5 @@ The ways across a map: on a grid of cells, or on a graph of your own.
 - [Pathfinding: a way round the walls, no corner cut, around costly cells, to the nearest reachable cell, on a graph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L123) — `tests/regression/game-services.test.js`
 - [Visibility: a line, the sight past a wall, the field of view and its shadows, the fog of war](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L200) — `tests/regression/game-services.test.js`
 - [Loop: steps of the same time whatever the frames, a part of a step to draw between, its speed, pause and catch-up limit](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L247) — `tests/regression/game-services.test.js`
+- [finds the very ways it found before, by the Search of Pathfinding alone](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ways-search.test.js#L32) — `tests/regression/ways-search.test.js`
+- [finds the highways of a planet in its workers as in the page](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ways-search.test.js#L58) — `tests/regression/ways-search.test.js`

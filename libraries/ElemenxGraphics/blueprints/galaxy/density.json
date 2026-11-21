@@ -1,0 +1,724 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "density",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "galaxy-density-input-kind",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Kind"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-x",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-y",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Y"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-z",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-radius",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Radius"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-disc",
+			"type": "Input",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Disc"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-height",
+			"type": "Input",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-bulge",
+			"type": "Input",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Bulge"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-bar",
+			"type": "Input",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Bar"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-ring",
+			"type": "Input",
+			"x": 0,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Ring"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-width",
+			"type": "Input",
+			"x": 0,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-local",
+			"type": "Input",
+			"x": 0,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Local"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-sx",
+			"type": "Input",
+			"x": 0,
+			"y": 1120,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SX"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-sy",
+			"type": "Input",
+			"x": 0,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SY"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-sz",
+			"type": "Input",
+			"x": 0,
+			"y": 1300,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SZ"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-arm",
+			"type": "Input",
+			"x": 0,
+			"y": 1390,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Arm"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-clumps",
+			"type": "Input",
+			"x": 0,
+			"y": 1480,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Clumps"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-along",
+			"type": "Input",
+			"x": 0,
+			"y": 1570,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Along"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-input-across",
+			"type": "Input",
+			"x": 0,
+			"y": 1660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Across"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-rad",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "sqrt(X * X + Z * Z)"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-r",
+			"type": "Formula",
+			"x": 580,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "sqrt(X * X + Y * Y + Z * Z)"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-discv",
+			"type": "Formula",
+			"x": 840,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Local / exp(-0.54 * Radius / Disc) * exp(-Rad / Disc) * exp(-abs(Y) / Height)"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-bulgev",
+			"type": "Formula",
+			"x": 1100,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "3 * exp(-sqrt(X * X + Z * Z + Y * Y * 2.5) / Bulge)"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-elliptical",
+			"type": "Formula",
+			"x": 320,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.01 * exp(-7.67 * (pow(max(0.000001, sqrt(X * X / (SX * SX) + Y * Y / (SZ * SZ) + Z * Z / (SY * SY)) / (Radius * 0.22)), 0.25) - 1))"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-dwarf",
+			"type": "Formula",
+			"x": 580,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.02 * pow(1 + R * R / pow(Radius * 0.25, 2), -2.5)"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-ringv",
+			"type": "Formula",
+			"x": 840,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "BulgeV * 0.5 + Local * 2 * exp(-pow((Rad - Ring) / Width, 2)) * exp(-abs(Y) / Height)"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-irregular",
+			"type": "Formula",
+			"x": 1100,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "DiscV * (0.3 + 1.7 * Clumps) + BulgeV * 0.05"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-barred",
+			"type": "Formula",
+			"x": 320,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "DiscV * Arm + BulgeV + exp(-pow(Along / Bar, 2) - pow(Across / (Bar * 0.18), 2) - pow(Y / (Bar * 0.15), 2)) * 1.5"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-lenticular",
+			"type": "Formula",
+			"x": 580,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "DiscV * 1.2 + BulgeV * 1.4"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-spiral",
+			"type": "Formula",
+			"x": 840,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "DiscV * Arm + BulgeV"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-density",
+			"type": "Formula",
+			"x": 1100,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Kind < 0.5 ? Spiral : Kind < 1.5 ? Barred : Kind < 2.5 ? Lenticular : Kind < 3.5 ? Elliptical : Kind < 4.5 ? Irregular : Kind < 5.5 ? Dwarf : RingV"
+				}
+			]
+		},
+		{
+			"id": "galaxy-density-result",
+			"type": "Result",
+			"x": 1400,
+			"y": 600,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Density"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "galaxy-density-link-0",
+			"p1": "galaxy-density-input-x-out-Value",
+			"p2": "galaxy-density-rad-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-1",
+			"p1": "galaxy-density-input-z-out-Value",
+			"p2": "galaxy-density-rad-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-2",
+			"p1": "galaxy-density-input-x-out-Value",
+			"p2": "galaxy-density-r-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-3",
+			"p1": "galaxy-density-input-y-out-Value",
+			"p2": "galaxy-density-r-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-4",
+			"p1": "galaxy-density-input-z-out-Value",
+			"p2": "galaxy-density-r-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-5",
+			"p1": "galaxy-density-input-local-out-Value",
+			"p2": "galaxy-density-discv-in-Local",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-6",
+			"p1": "galaxy-density-input-radius-out-Value",
+			"p2": "galaxy-density-discv-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-7",
+			"p1": "galaxy-density-input-disc-out-Value",
+			"p2": "galaxy-density-discv-in-Disc",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-8",
+			"p1": "galaxy-density-rad-out-Value",
+			"p2": "galaxy-density-discv-in-Rad",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-9",
+			"p1": "galaxy-density-input-y-out-Value",
+			"p2": "galaxy-density-discv-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-10",
+			"p1": "galaxy-density-input-height-out-Value",
+			"p2": "galaxy-density-discv-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-11",
+			"p1": "galaxy-density-input-x-out-Value",
+			"p2": "galaxy-density-bulgev-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-12",
+			"p1": "galaxy-density-input-z-out-Value",
+			"p2": "galaxy-density-bulgev-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-13",
+			"p1": "galaxy-density-input-y-out-Value",
+			"p2": "galaxy-density-bulgev-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-14",
+			"p1": "galaxy-density-input-bulge-out-Value",
+			"p2": "galaxy-density-bulgev-in-Bulge",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-15",
+			"p1": "galaxy-density-input-x-out-Value",
+			"p2": "galaxy-density-elliptical-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-16",
+			"p1": "galaxy-density-input-sx-out-Value",
+			"p2": "galaxy-density-elliptical-in-SX",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-17",
+			"p1": "galaxy-density-input-y-out-Value",
+			"p2": "galaxy-density-elliptical-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-18",
+			"p1": "galaxy-density-input-sz-out-Value",
+			"p2": "galaxy-density-elliptical-in-SZ",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-19",
+			"p1": "galaxy-density-input-z-out-Value",
+			"p2": "galaxy-density-elliptical-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-20",
+			"p1": "galaxy-density-input-sy-out-Value",
+			"p2": "galaxy-density-elliptical-in-SY",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-21",
+			"p1": "galaxy-density-input-radius-out-Value",
+			"p2": "galaxy-density-elliptical-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-22",
+			"p1": "galaxy-density-r-out-Value",
+			"p2": "galaxy-density-dwarf-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-23",
+			"p1": "galaxy-density-input-radius-out-Value",
+			"p2": "galaxy-density-dwarf-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-24",
+			"p1": "galaxy-density-bulgev-out-Value",
+			"p2": "galaxy-density-ringv-in-BulgeV",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-25",
+			"p1": "galaxy-density-input-local-out-Value",
+			"p2": "galaxy-density-ringv-in-Local",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-26",
+			"p1": "galaxy-density-rad-out-Value",
+			"p2": "galaxy-density-ringv-in-Rad",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-27",
+			"p1": "galaxy-density-input-ring-out-Value",
+			"p2": "galaxy-density-ringv-in-Ring",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-28",
+			"p1": "galaxy-density-input-width-out-Value",
+			"p2": "galaxy-density-ringv-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-29",
+			"p1": "galaxy-density-input-y-out-Value",
+			"p2": "galaxy-density-ringv-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-30",
+			"p1": "galaxy-density-input-height-out-Value",
+			"p2": "galaxy-density-ringv-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-31",
+			"p1": "galaxy-density-discv-out-Value",
+			"p2": "galaxy-density-irregular-in-DiscV",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-32",
+			"p1": "galaxy-density-input-clumps-out-Value",
+			"p2": "galaxy-density-irregular-in-Clumps",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-33",
+			"p1": "galaxy-density-bulgev-out-Value",
+			"p2": "galaxy-density-irregular-in-BulgeV",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-34",
+			"p1": "galaxy-density-discv-out-Value",
+			"p2": "galaxy-density-barred-in-DiscV",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-35",
+			"p1": "galaxy-density-input-arm-out-Value",
+			"p2": "galaxy-density-barred-in-Arm",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-36",
+			"p1": "galaxy-density-bulgev-out-Value",
+			"p2": "galaxy-density-barred-in-BulgeV",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-37",
+			"p1": "galaxy-density-input-along-out-Value",
+			"p2": "galaxy-density-barred-in-Along",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-38",
+			"p1": "galaxy-density-input-bar-out-Value",
+			"p2": "galaxy-density-barred-in-Bar",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-39",
+			"p1": "galaxy-density-input-across-out-Value",
+			"p2": "galaxy-density-barred-in-Across",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-40",
+			"p1": "galaxy-density-input-y-out-Value",
+			"p2": "galaxy-density-barred-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-41",
+			"p1": "galaxy-density-discv-out-Value",
+			"p2": "galaxy-density-lenticular-in-DiscV",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-42",
+			"p1": "galaxy-density-bulgev-out-Value",
+			"p2": "galaxy-density-lenticular-in-BulgeV",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-43",
+			"p1": "galaxy-density-discv-out-Value",
+			"p2": "galaxy-density-spiral-in-DiscV",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-44",
+			"p1": "galaxy-density-input-arm-out-Value",
+			"p2": "galaxy-density-spiral-in-Arm",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-45",
+			"p1": "galaxy-density-bulgev-out-Value",
+			"p2": "galaxy-density-spiral-in-BulgeV",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-46",
+			"p1": "galaxy-density-input-kind-out-Value",
+			"p2": "galaxy-density-density-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-47",
+			"p1": "galaxy-density-spiral-out-Value",
+			"p2": "galaxy-density-density-in-Spiral",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-48",
+			"p1": "galaxy-density-barred-out-Value",
+			"p2": "galaxy-density-density-in-Barred",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-49",
+			"p1": "galaxy-density-lenticular-out-Value",
+			"p2": "galaxy-density-density-in-Lenticular",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-50",
+			"p1": "galaxy-density-elliptical-out-Value",
+			"p2": "galaxy-density-density-in-Elliptical",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-51",
+			"p1": "galaxy-density-irregular-out-Value",
+			"p2": "galaxy-density-density-in-Irregular",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-52",
+			"p1": "galaxy-density-dwarf-out-Value",
+			"p2": "galaxy-density-density-in-Dwarf",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-53",
+			"p1": "galaxy-density-ringv-out-Value",
+			"p2": "galaxy-density-density-in-RingV",
+			"kind": "value"
+		},
+		{
+			"id": "galaxy-density-link-result",
+			"p1": "galaxy-density-density-out-Value",
+			"p2": "galaxy-density-result-in-Value",
+			"kind": "value"
+		}
+	]
+}

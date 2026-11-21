@@ -41,7 +41,7 @@ Elemenx.Service('SceneLocations', {
 
 	/* The radius and the size of the cells of a planet, km. */
 	Grid: function (planet) {
-		return {Radius: Number(planet.Radius) || 6371, Size: Number(planet.LocationSize) || 4, Kind: planet.Grid === 'hex' ? 'hex' : 'cube'};
+		return {Radius: Number(planet.Radius) || this.$Service('ScenePlanet').Defaults.Radius, Size: Number(planet.LocationSize) || 4, Kind: planet.Grid === 'hex' ? 'hex' : 'cube'};
 	},
 
 	/*
@@ -55,11 +55,11 @@ Elemenx.Service('SceneLocations', {
 		var site;
 		var half = this.Extent(place) / 2;
 		var middle = planets.Direction(place.Latitude, place.Longitude);
-		var reach = (half * 3 + 30000) / ((Number(planet.Radius) || 6371) * 1000);
+		var reach = (half * 3 + 30000) / (this.Grid(planet).Radius * 1000);
 		var items = [];
 		var courses;
 		/* The cosine of how far from its middle a point of a river is kept: the location, half of it again and 2 km. */
-		var near = Math.cos((half * 1.5 + 2000) / ((Number(planet.Radius) || 6371) * 1000));
+		var near = Math.cos((half * 1.5 + 2000) / (this.Grid(planet).Radius * 1000));
 
 		if (!rivers.length) return undefined;
 
@@ -142,7 +142,7 @@ Elemenx.Service('SceneLocations', {
 		var towns = Array.isArray(planet.Settlements) ? planet.Settlements : planet.Settlements ? planets.TownsOf(planet.Settlements) : [];
 		var half = this.Extent(place) / 2;
 		var middle = planets.Direction(place.Latitude, place.Longitude);
-		var reach = half * 2 / ((Number(planet.Radius) || 6371) * 1000);
+		var reach = half * 2 / (this.Grid(planet).Radius * 1000);
 		var roads = trunks && trunks.Layers ? trunks.Layers[0].Items : [];
 		var items = [];
 		var site;
@@ -254,7 +254,7 @@ Elemenx.Service('SceneLocations', {
 		var roads = Array.isArray(planet.Highways) ? planet.Highways : planet.Highways ? planets.HighwaysOf(planet.Highways) : [];
 		var half = this.Extent(place) / 2 - 1;
 		var middle = planets.Direction(place.Latitude, place.Longitude);
-		var near = Math.cos(400 / (Number(planet.Radius) || 6371));
+		var near = Math.cos(400 / this.Grid(planet).Radius);
 		var items = [];
 		var site;
 

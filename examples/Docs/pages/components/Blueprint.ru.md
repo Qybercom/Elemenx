@@ -27,6 +27,8 @@ EditCheck (action, target) решает, что можно читателю; fal
 - parameter {Change (add, remove, set), Index, Field}.
 Отказанное остаётся как было. ReadOnly работает раньше EditCheck: то, что он и так запрещает, не спрашивается; методы, вызванные из кода, тоже.
 
+Ширина палитры меняется перетаскиванием её края и запоминается (EditorPanes, ключ blueprint).
+
 ## Свойства
 
 | Свойство | По умолчанию |
@@ -73,6 +75,7 @@ EditCheck (action, target) решает, что можно читателю; fal
 
 ## Тесты
 
+- [drags the panes of ](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/editor-panes.test.js#L46) — `tests/regression/editor-panes.test.js`
 - [burns an effect of a Blueprint, its parameters the values of its layers, one graph for many effects](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-effect-blueprints.test.js#L147) — `tests/regression/library-effect-blueprints.test.js`
 - [burns nothing of a Blueprint that cannot be made, and tells it once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-effect-blueprints.test.js#L190) — `tests/regression/library-effect-blueprints.test.js`
 - [draws a material of a recipe by its Blueprint, its parameters uniforms that change it without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L73) — `tests/regression/library-material-blueprints.test.js`
@@ -84,6 +87,5 @@ EditCheck (action, target) решает, что можно читателю; fal
 - [burns a star as its Blueprint says at each time: the prominences of the library rise and fall by a Curve of the Time, as much as its Activity](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/traits/SceneDeepSpace/SceneDeepSpace.test.js#L341) — `libraries/ElemenxGraphics/traits/SceneDeepSpace/SceneDeepSpace.test.js`
 - [moves its prominences on by their speed a step at a time, however the speed changes, faster as the Speed of its Blueprint says](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/traits/SceneDeepSpace/SceneDeepSpace.test.js#L430) — `libraries/ElemenxGraphics/traits/SceneDeepSpace/SceneDeepSpace.test.js`
 - [shows the blocks where they stand with their pins, the links between the pins, and the file it keeps](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/Blueprint/Blueprint.test.js#L93) — `libraries/ElemenxUI/components/Blueprint/Blueprint.test.js`
-- [draws a link by a drag from a pin to another, takes the place of the one there, and takes one away let go on nothing](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/Blueprint/Blueprint.test.js#L140) — `libraries/ElemenxUI/components/Blueprint/Blueprint.test.js`
 
-+15 ещё в тех же файлах
++16 ещё в тех же файлах

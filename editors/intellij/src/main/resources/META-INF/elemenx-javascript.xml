@@ -1,0 +1,6 @@
+<idea-plugin>
+	<!-- The strings of shaders of JavaScript (arrays of lines of GLSL) in the colors of GLSL. -->
+	<extensions defaultExtensionNs="com.intellij">
+		<annotator language="JavaScript" implementationClass="com.qybercom.elemenx.ElemenxGlslAnnotator" />
+	</extensions>
+</idea-plugin>

@@ -1,0 +1,24 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "road-wear",
+	"glsl": {
+		"Field": "RoadWear"
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "chunk",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "float roadHash(vec2 p) { return enx_white2(p); }\nvoid roadWear(vec2 q, float px, inout vec3 c, inout float r, inout float h) {\n\tfloat seen = 1.0 - smoothstep(0.04, 0.16, px);\n\tfloat cell = floor(q.y / 9.0);\n\tfloat y0 = (cell + 0.15 + 0.7 * roadHash(vec2(cell, 7.7))) * 9.0;\n\tfloat wave = (enx_mn(vec2(q.x * 0.6, cell * 3.1)) - 0.5) * 0.6 + (enx_mn(vec2(q.x * 7.0, cell)) - 0.5) * 0.06;\n\tfloat sealed = step(0.5, roadHash(vec2(cell, 2.9)));\n\tfloat wide = mix(0.006, 0.025, sealed);\n\tfloat across = (1.0 - smoothstep(wide, wide + px, abs(q.y - y0 - wave))) * step(0.25, roadHash(vec2(cell, 3.1)));\n\tfloat run = floor(q.y / 60.0);\n\tfloat at = fract(q.y / 60.0);\n\tfloat x0 = (roadHash(vec2(run, 1.3)) - 0.5) * 5.0 + (enx_mn(vec2(q.y * 0.35, run)) - 0.5) * 0.4;\n\tfloat along = (1.0 - smoothstep(0.005, 0.005 + px, abs(q.x - x0))) * step(0.5, roadHash(vec2(run, 9.1))) * step(roadHash(vec2(run, 2.2)) * 0.5, at) * step(at, 0.5 + 0.5 * roadHash(vec2(run, 5.5)));\n\tfloat crack = max(across, along) * seen;\n\tc = mix(c, vec3(0.02, 0.02, 0.022), crack * 0.9);\n\tr = mix(r, mix(0.9, 0.45, sealed), crack);\n\th = mix(h, mix(0.0, 0.6, sealed), crack);\n\tvec2 pc = vec2(floor(q.x / 3.5), floor(q.y / 30.0));\n\tif (roadHash(pc + 11.0) > 0.65) {\n\t\tvec2 lo = vec2(pc.x * 3.5 + 0.2 + roadHash(pc + 1.0) * 0.9, pc.y * 30.0 + 2.0 + roadHash(pc + 2.0) * 14.0);\n\t\tvec2 size = vec2(1.1 + roadHash(pc + 3.0) * 1.3, 1.5 + roadHash(pc + 4.0) * 10.0);\n\t\tvec2 d = min(q - lo, lo + size - q);\n\t\tfloat inside = min(d.x, d.y);\n\t\tfloat mended = smoothstep(-px, px, inside);\n\t\tfloat seam = (1.0 - smoothstep(0.012, 0.012 + px, abs(inside))) * seen;\n\t\tc = mix(c, c * 0.7, mended);\n\t\tr = mix(r, r - 0.06, mended);\n\t\tc = mix(c, vec3(0.025), seam * 0.8);\n\t}\n}"
+				}
+			]
+		}
+	],
+	"links": []
+}

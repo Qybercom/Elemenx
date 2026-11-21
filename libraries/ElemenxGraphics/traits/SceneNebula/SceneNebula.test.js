@@ -161,6 +161,49 @@ describe('Contract: the nebulae of a Scene: clouds of gas and dust drawn as volu
 		}
 	}, 60000);
 
+	/* Regression: the block of a nebula taken out of the scene was kept till the scene stopped (16 MB each of 128³). */
+	it('lets the block of a nebula go once it is taken out of the scene, the others kept', async function () {
+		var scene = await mount();
+		var engine = scene.Engine();
+		var inner = scene.Scene();
+		var gl = engine.Renderer.GL;
+		var remove = gl.deleteFramebuffer;
+		var gone = 0;
+		var orion = inner.Objects.orion;
+
+		inner.Camera.Position = [orion.World[0], orion.World[1], orion.World[2] + orion.Size * 3];
+
+		await waitFor(function () {
+			frames(scene, 1);
+
+			return engine.NebulaLook('orion').Baked && engine.NebulaLook('ring').Baked;
+		}, 30000);
+
+		gl.deleteFramebuffer = function () {
+			gone++;
+
+			return remove.apply(gl, arguments);
+		};
+
+		try {
+			/* Drawn on, none let go; the ring taken out, its block goes. */
+			frames(scene, 2);
+
+			expect(gone).toBe(0);
+
+			scene.Remove('ring');
+
+			frames(scene, 2);
+		}
+		finally {
+			gl.deleteFramebuffer = remove;
+		}
+
+		expect(gone).toBe(1);
+		expect(engine.NebulaLook('ring')).toBe(null);
+		expect(engine.NebulaLook('orion').Baked).toBe(true);
+	}, 60000);
+
 	/*
 	 * Regression: its shape was a block of 64³ made at once, blurred near; it had no graph of its look. Now 128³ (64³ at low),
 	 * a band of rows a frame (a stage of the loading), a fine grain near; its graph makes it breathe, turn and spread, and the

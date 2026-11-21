@@ -18,10 +18,12 @@ SceneBlueprints: what a Scene adds to Blueprints, declared in $Provides: Bluepri
 - The kind ring: a ring round a body (RingGraph of a Scene), its bands, its gaps, its colors and its light as blocks: see Rings; LibraryRing() the graph of the library (blueprints/shader/ring).
 - The kind planet: a globe from far (PlanetGraph of a Scene): its picture lit, its clouds and their shadows, the shadow of its ring, its towns at night, its air at its edge as blocks: see Planets; LibraryPlanet() the graph of the library (blueprints/shader/planet). Painted(kind, end, head): such a kind of a function of a body in a shader.
 - The kind ground: the ground of a globe near and from over it (GroundGraph of a Scene): its picture, woods, fields, snow, dunes, relief, the tiles near, its light and the shadows of clouds and of its ring, water, towns at night, clouds from over them and air as blocks: see Grounds; LibraryGround() the graph of the library (blueprints/shader/ground).
+- LibraryShader(name): a shader graph of the library (blueprints/shader/<name>) read; LibraryCosmos(), LibraryRing(), LibraryPlanet(), LibraryGround(), LibraryForecast(), LibraryBolt() and LibraryGalaxy() each give theirs of it.
 - The shape of a lightning, one for the bolt of a storm (SceneLighting) and the one of an effect (SceneEffects, kind bolt): a generator of the jag of each of its steps (Step, Seed: X and Z, -0.5 to 0.5), its parameters Steps (of its way), Wide (a jag to its length), Fork (the step a branch leaves at), ForkSteps, ForkDown and ForkWide (the branch: its steps, how far down and how wide each, to the bolt). LibraryBolt() the one of the library (blueprints/shader/bolt); Bolt(graph) {Jag(step, seed) ([X, Z]), Steps.. ForkWide, GLSL (the text of vec2 bolt_jag(float step, float seed), the shape in a shader: of a hash of a sine, its floats part from the numbers of the page where the sine is large, the way the same)}, made once a graph.
 
 ## Methods
 
+- `LibraryShader(name)`
 - `LibraryCosmos()`
 - `LibraryRing()`
 - `Painted(kind, end, head)`
@@ -37,7 +39,8 @@ SceneBlueprints: what a Scene adds to Blueprints, declared in $Provides: Bluepri
 
 ## Tests
 
-- [reads the woods of a planet aside, as its colors, no steps along their edges](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4210) — `tests/regression/library-scene.test.js`
+- [patches a shader loud, draws a bar of health once and reads a shader graph of the library once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/hardcode-tables.test.js#L130) — `tests/regression/hardcode-tables.test.js`
+- [reads the woods of a planet aside, as its colors, no steps along their edges](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4354) — `tests/regression/library-scene.test.js`
 - [makes the land of a body in the page of the graph that bakes its picture, the same numbers as before, no craters under a sea](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L90) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
 - [gives the lightnings of a storm and of an effect one shape of a graph: its jags, its branch, its own of BoltGraph or Graphs](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L213) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
 - [makes the weather of a planet a graph of numbers: its shader and the page give the same cover, kind, cirrus and rain](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L336) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`

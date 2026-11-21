@@ -11,6 +11,8 @@
 
 Панель сбоку выбирает всё это, по ползунку на каждый параметр рецепта. Событие change сообщает {Texture, Params}, когда они меняются. Методы: Draw(), Bake() (плитка заново), Picture() (PNG как data URL).
 
+Ширина панели меняется перетаскиванием её края и запоминается (EditorPanes, ключ texture-lab).
+
 ## Свойства
 
 | Свойство | По умолчанию |
@@ -38,4 +40,5 @@
 
 ## Тесты
 
+- [drags the panes of ](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/editor-panes.test.js#L46) — `tests/regression/editor-panes.test.js`
 - [shows a texture in TextureLab as a tile or a ground, a slider for each param, and tells change](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L203) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`

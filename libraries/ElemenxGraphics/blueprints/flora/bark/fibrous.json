@@ -1,0 +1,604 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "bark-fibrous",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "bark-fibrous-input-cx",
+			"type": "Input",
+			"x": 200,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CX"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-input-cz",
+			"type": "Input",
+			"x": 200,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CZ"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-input-t",
+			"type": "Input",
+			"x": 200,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "T"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-input-split",
+			"type": "Input",
+			"x": 200,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Split"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-input-rings",
+			"type": "Input",
+			"x": 200,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Rings"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-input-lowr",
+			"type": "Input",
+			"x": 200,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowR"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-input-lowg",
+			"type": "Input",
+			"x": 200,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowG"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-input-lowb",
+			"type": "Input",
+			"x": 200,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowB"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-input-highr",
+			"type": "Input",
+			"x": 200,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighR"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-input-highg",
+			"type": "Input",
+			"x": 200,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighG"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-input-highb",
+			"type": "Input",
+			"x": 200,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighB"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-input-sfine",
+			"type": "Input",
+			"x": 200,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SFine"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-input-scells",
+			"type": "Input",
+			"x": 460,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SCells"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-base",
+			"type": "Call",
+			"x": 460,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/flora/bark/base"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-stripat",
+			"type": "Formula",
+			"x": 460,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(CX * 16, T * 7, CZ * 16)"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-strip",
+			"type": "NoiseSpec",
+			"x": 460,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 4
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-wideat",
+			"type": "Formula",
+			"x": 460,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(CX * 3.5, T * 2.5, CZ * 3.5)"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-wide",
+			"type": "NoiseSpec",
+			"x": 460,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 4
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-fibre",
+			"type": "Formula",
+			"x": 460,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "abs(Strip - 0.5) * 2"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-rib",
+			"type": "Formula",
+			"x": 460,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "abs(Wide - 0.5) * 2"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-bump",
+			"type": "Formula",
+			"x": 460,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(1 - pow(Rib, 0.5)) * 0.6 + (1 - Fibre) * 0.4"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-shade",
+			"type": "Formula",
+			"x": 460,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.6 + Bump * 0.55 + (N - 0.5) * 0.15"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-outr",
+			"type": "Formula",
+			"x": 460,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "CR * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-result-r",
+			"type": "Result",
+			"x": 460,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "R"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-outg",
+			"type": "Formula",
+			"x": 720,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "CG * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-result-g",
+			"type": "Result",
+			"x": 720,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "G"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-outb",
+			"type": "Formula",
+			"x": 720,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "CB * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-result-b",
+			"type": "Result",
+			"x": 720,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "B"
+				}
+			]
+		},
+		{
+			"id": "bark-fibrous-result-bump",
+			"type": "Result",
+			"x": 720,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Bump"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "bark-fibrous-link-0",
+			"p1": "bark-fibrous-input-cx-out-Value",
+			"p2": "bark-fibrous-base-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-1",
+			"p1": "bark-fibrous-input-cz-out-Value",
+			"p2": "bark-fibrous-base-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-2",
+			"p1": "bark-fibrous-input-t-out-Value",
+			"p2": "bark-fibrous-base-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-3",
+			"p1": "bark-fibrous-input-split-out-Value",
+			"p2": "bark-fibrous-base-in-Split",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-4",
+			"p1": "bark-fibrous-input-lowr-out-Value",
+			"p2": "bark-fibrous-base-in-LowR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-5",
+			"p1": "bark-fibrous-input-lowg-out-Value",
+			"p2": "bark-fibrous-base-in-LowG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-6",
+			"p1": "bark-fibrous-input-lowb-out-Value",
+			"p2": "bark-fibrous-base-in-LowB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-7",
+			"p1": "bark-fibrous-input-highr-out-Value",
+			"p2": "bark-fibrous-base-in-HighR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-8",
+			"p1": "bark-fibrous-input-highg-out-Value",
+			"p2": "bark-fibrous-base-in-HighG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-9",
+			"p1": "bark-fibrous-input-highb-out-Value",
+			"p2": "bark-fibrous-base-in-HighB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-10",
+			"p1": "bark-fibrous-input-sfine-out-Value",
+			"p2": "bark-fibrous-base-in-SFine",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-11",
+			"p1": "bark-fibrous-input-cx-out-Value",
+			"p2": "bark-fibrous-stripat-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-12",
+			"p1": "bark-fibrous-input-t-out-Value",
+			"p2": "bark-fibrous-stripat-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-13",
+			"p1": "bark-fibrous-input-cz-out-Value",
+			"p2": "bark-fibrous-stripat-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-14",
+			"p1": "bark-fibrous-stripat-out-Value",
+			"p2": "bark-fibrous-strip-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-15",
+			"p1": "bark-fibrous-input-sfine-out-Value",
+			"p2": "bark-fibrous-strip-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-16",
+			"p1": "bark-fibrous-input-cx-out-Value",
+			"p2": "bark-fibrous-wideat-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-17",
+			"p1": "bark-fibrous-input-t-out-Value",
+			"p2": "bark-fibrous-wideat-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-18",
+			"p1": "bark-fibrous-input-cz-out-Value",
+			"p2": "bark-fibrous-wideat-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-19",
+			"p1": "bark-fibrous-wideat-out-Value",
+			"p2": "bark-fibrous-wide-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-20",
+			"p1": "bark-fibrous-input-sfine-out-Value",
+			"p2": "bark-fibrous-wide-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-21",
+			"p1": "bark-fibrous-strip-out-Value",
+			"p2": "bark-fibrous-fibre-in-Strip",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-22",
+			"p1": "bark-fibrous-wide-out-Value",
+			"p2": "bark-fibrous-rib-in-Wide",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-23",
+			"p1": "bark-fibrous-rib-out-Value",
+			"p2": "bark-fibrous-bump-in-Rib",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-24",
+			"p1": "bark-fibrous-fibre-out-Value",
+			"p2": "bark-fibrous-bump-in-Fibre",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-25",
+			"p1": "bark-fibrous-bump-out-Value",
+			"p2": "bark-fibrous-shade-in-Bump",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-26",
+			"p1": "bark-fibrous-base-out-N",
+			"p2": "bark-fibrous-shade-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-27",
+			"p1": "bark-fibrous-base-out-CR",
+			"p2": "bark-fibrous-outr-in-CR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-28",
+			"p1": "bark-fibrous-shade-out-Value",
+			"p2": "bark-fibrous-outr-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-29",
+			"p1": "bark-fibrous-outr-out-Value",
+			"p2": "bark-fibrous-result-r-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-30",
+			"p1": "bark-fibrous-base-out-CG",
+			"p2": "bark-fibrous-outg-in-CG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-31",
+			"p1": "bark-fibrous-shade-out-Value",
+			"p2": "bark-fibrous-outg-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-32",
+			"p1": "bark-fibrous-outg-out-Value",
+			"p2": "bark-fibrous-result-g-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-33",
+			"p1": "bark-fibrous-base-out-CB",
+			"p2": "bark-fibrous-outb-in-CB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-34",
+			"p1": "bark-fibrous-shade-out-Value",
+			"p2": "bark-fibrous-outb-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-35",
+			"p1": "bark-fibrous-outb-out-Value",
+			"p2": "bark-fibrous-result-b-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-fibrous-link-36",
+			"p1": "bark-fibrous-bump-out-Value",
+			"p2": "bark-fibrous-result-bump-in-Value",
+			"kind": "value"
+		}
+	]
+}

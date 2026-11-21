@@ -126,9 +126,7 @@ Elemenx.Trait('SceneGalaxy', {
 
 		/* How many points of glow its quality draws. */
 		function glowCount () {
-			var level = self.Graphics ? self.Graphics().Level : 'medium';
-
-			return {low: 70000, medium: 130000, high: 190000, ultra: 260000}[level] || 130000;
+			return self.Graphics().Galaxy.Glow;
 		}
 
 		/* Points in thousands of light-years: what a float holds well across all of it. */
@@ -154,7 +152,6 @@ Elemenx.Trait('SceneGalaxy', {
 
 			state.Glow = pointsOf(glow);
 			state.Knots = pointsOf(glow.Knots);
-			state.Bulge = glow.Bulge;
 			state.GlowCount = count;
 
 			return state.Glow;
@@ -241,7 +238,7 @@ Elemenx.Trait('SceneGalaxy', {
 			var m = state.Data.Manifest;
 			var shape = galaxies.Shape(m);
 			var kinds = {elliptical: 1, dwarf: 2, irregular: 3, ring: 4};
-			var bulge = state.Bulge || {Radius: shape.Bulge, Flat: 0.6, Bright: 1};
+			var bulge = galaxies.BulgeOf(m);
 			var knots = knotsOf();
 
 			return {
@@ -274,8 +271,7 @@ Elemenx.Trait('SceneGalaxy', {
 		 * True when it is whole.
 		 */
 		function plane () {
-			var level = self.Graphics ? self.Graphics().Level : 'medium';
-			var size = {low: 1024, medium: 1536, high: 2048, ultra: 2048}[level] || 1536;
+			var size = self.Graphics().Galaxy.Plane;
 			var shape = shapeOf();
 			var key = JSON.stringify(shape) + '|' + size;
 			var low = Math.log(0.02 / Math.max(shape.uScale, 1e-3));
@@ -370,9 +366,9 @@ Elemenx.Trait('SceneGalaxy', {
 		 * view, and the computer stuck meanwhile.
 		 */
 		function volume (view, fine) {
-			var level = self.Graphics ? self.Graphics().Level : 'medium';
-			var part = (fine ? {low: 0.5, medium: 0.75, high: 1, ultra: 1} : {low: 0.3, medium: 0.35, high: 0.4, ultra: 0.5})[level] || 0.5;
-			var steps = (fine ? {low: 32, medium: 40, high: 52, ultra: 64} : {low: 20, medium: 24, high: 28, ultra: 32})[level] || 40;
+			var set = self.Graphics().Galaxy;
+			var part = fine ? set.FinePart : set.Part;
+			var steps = fine ? set.FineSteps : set.Steps;
 			var width = Math.max(1, Math.round(renderer.Width * part));
 			var height = Math.max(1, Math.round(renderer.Height * part));
 			var rows = fine ? Math.max(8, Math.round(number(state.StepBudget, 3e6) / (width * steps))) : height;
@@ -471,8 +467,7 @@ Elemenx.Trait('SceneGalaxy', {
 
 		/* The points of the cube of the stars round the eye, made again when the quality changes: where each is in it, a tint and a seed. */
 		function fieldMesh () {
-			var level = self.Graphics ? self.Graphics().Level : 'medium';
-			var count = {low: 40000, medium: 80000, high: 120000, ultra: 160000}[level] || 80000;
+			var count = self.Graphics().Galaxy.Field;
 			var random;
 			var positions = [];
 			var colors = [];
@@ -837,7 +832,7 @@ Elemenx.Trait('SceneGalaxy', {
 			var cz = Math.floor(at[2] / size);
 			var key = cx + '.' + cy + '.' + cz;
 			var reach = 2;
-			var each = {low: 120, medium: 240, high: 360, ultra: 480}[self.Graphics ? self.Graphics().Level : 'medium'] || 300;
+			var each = self.Graphics().Galaxy.Near;
 			var stars = [];
 			var x;
 			var y;
@@ -1595,9 +1590,7 @@ Elemenx.Trait('SceneGalaxy', {
 			'uniform vec3 uShape;',
 			'uniform float uSeed;',
 			noise,
-			'const vec3 lightOld = vec3(1.0, 0.86, 0.66);',
-			'const vec3 lightYoung = vec3(0.5, 0.66, 1.0);',
-			'const vec3 lightBulge = vec3(1.0, 0.8, 0.55);',
+			this.$Service('GalaxyData').StructureGLSL,
 			/* The arms at a place: the wave of the log spiral (bent by a noise), 0 to 1, shifted inward for the dust. */
 			'float waveAt(vec3 p, float bend, float shift) {',
 			'	float r = max(length(p.xz), 0.05);',
@@ -1794,18 +1787,12 @@ Elemenx.Trait('SceneGalaxy', {
 			'		return;',
 			'	}',
 			/* Its disc: old stars warm in its middle, bluer outward; its thick disc and its halo faint. */
-			'	float thin = exp(-r / uScale - z / uHeight) * edge;',
-			'	float thick = exp(-r / (uScale * 1.25) - z / (uHeight * 3.0)) * edge * 0.03;',
-			'	float halo = exp(-length(p) / (uRadius * 0.25)) * 0.0012;',
-			'	vec3 old = mix(lightOld, vec3(0.78, 0.84, 1.0), smoothstep(uRadius * 0.12, uRadius * 0.6, r));',
-			/* Its bulge small and warm, its nucleus a bright point in it. */
-			'	float rb = length(vec3(p.x, p.y / max(uFlat, 0.05), p.z)) / max(uBulge * 0.7, 1e-4);',
-			'	float bulge = exp(-pow(rb + 0.02, 0.55) * 3.2) * uBulgeBright * 5.0 + exp(-length(p) / max(uBulge * 0.04, 1e-4)) * 6.0;',
-			'	if (uBar > 0.0) {',
-			'		float along = p.x * cos(uPhase) + p.z * sin(uPhase);',
-			'		float across = -p.x * sin(uPhase) + p.z * cos(uPhase);',
-			'		bulge += exp(-pow(along / uBar, 2.0) - pow(across / (uBar * 0.2), 2.0) - pow(p.y / (uBar * 0.12), 2.0)) * 1.4;',
-			'	}',
+			'	float thin = galaxy_thin(r, z, uScale, uHeight) * edge;',
+			'	float thick = galaxy_thick(r, z, uScale, uHeight) * edge;',
+			'	float halo = galaxy_halo(p, uRadius);',
+			'	vec3 old = galaxy_old(r, uRadius);',
+			/* Its bulge small and warm, its nucleus a bright point in it, its bar. */
+			'	float bulge = galaxy_bulge(p, uBulge, uFlat, uBulgeBright, uBar, uPhase);',
 			/*
 			 * Its threads jostled across by a noise of space as fine as they are wide: ragged tubes, not sheets through its layer.
 			 * Regression: a pattern of its plane through its whole layer, each edge a wall, and seen low near the walls stood

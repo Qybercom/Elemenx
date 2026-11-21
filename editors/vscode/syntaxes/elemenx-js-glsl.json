@@ -3,8 +3,8 @@
 	"injectionSelector": "L:source.js -comment",
 	"patterns": [
 		{
-			"comment": "A string of the source of a shader, as the Libraries write them, a line an item of an array: one that starts with GLSL (a declaration, #version, a statement of main) is read as GLSL.",
-			"begin": "(')(?=\\t*(#version|precision |uniform |in |out |layout|flat |void |vec[234] |float |int |mat[34] |sampler|bool |gl_|if \\(|for \\(|return |discard))",
+			"comment": "A string of the source of a shader, as the Libraries write them, a line an item of an array: one that starts with GLSL (a declaration, #version, a statement of main; in and out of a type), after its tabs written as escapes, is read as GLSL. Regression: 'in a minute' was GLSL, '\\tfloat x;' was not.",
+			"begin": "(')(?=(?:\\\\t|\\t)*(#version|precision |uniform |(?:flat +)?(?:in|out|inout) +(?:highp +|mediump +|lowp +)?(?:[biu]?vec|mat|float|int|uint|bool|sampler)|layout|void |[biu]?vec[234] |float |int |uint |mat[234] |sampler|bool |gl_|if \\(|for \\(|return |discard|const |struct ))",
 			"beginCaptures": {
 				"1": {"name": "string.quoted.single.js punctuation.definition.string.begin.js"}
 			},

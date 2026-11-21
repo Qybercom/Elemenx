@@ -133,7 +133,7 @@ Elemenx.Trait('SceneLanding', {
 			var surface = body && body.Traits ? body.Traits.Surface : null;
 			var type = surface ? surface.Type : 'rocky';
 
-			return !!(body && body.Traits && body.Traits.Body && body.Radius && type !== 'gas' && type !== 'ice-giant');
+			return !!(body && body.Traits && body.Traits.Body && body.Radius && !self.$Service('ScenePlanet').Giant(type));
 		}
 
 		/* The planet of a body (Surface: Planet, the options of ScenePlanet) at its radius; null for a body of no planet. */

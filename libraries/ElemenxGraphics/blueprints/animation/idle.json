@@ -1,0 +1,2741 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-idle",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "animation-idle-phase",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Phase"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-footpitch",
+			"type": "Curve",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							2
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-footpitch",
+			"type": "Result",
+			"x": 520,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "FootPitch"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-head-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							19
+						],
+						[
+							0.25,
+							19
+						],
+						[
+							0.5,
+							19
+						],
+						[
+							0.75,
+							19
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-head-x",
+			"type": "Result",
+			"x": 520,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Head.x"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-head-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.125,
+							-1
+						],
+						[
+							0.25,
+							0
+						],
+						[
+							0.375,
+							0
+						],
+						[
+							0.5,
+							-1
+						],
+						[
+							0.625,
+							1
+						],
+						[
+							0.75,
+							-1
+						],
+						[
+							0.875,
+							-1
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-head-y",
+			"type": "Result",
+			"x": 520,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Head.y"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-head-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-10
+						],
+						[
+							0.125,
+							-10
+						],
+						[
+							0.25,
+							-9
+						],
+						[
+							0.375,
+							-9
+						],
+						[
+							0.5,
+							-9
+						],
+						[
+							0.625,
+							-10
+						],
+						[
+							0.75,
+							-11
+						],
+						[
+							0.875,
+							-9
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-head-z",
+			"type": "Result",
+			"x": 520,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Head.z"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-hips-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							1
+						],
+						[
+							0.125,
+							1
+						],
+						[
+							0.25,
+							1
+						],
+						[
+							0.375,
+							1
+						],
+						[
+							0.5,
+							1
+						],
+						[
+							0.625,
+							1
+						],
+						[
+							0.75,
+							1
+						],
+						[
+							0.875,
+							1
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-hips-x",
+			"type": "Result",
+			"x": 520,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Hips.x"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-hips-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							2
+						],
+						[
+							0.125,
+							1
+						],
+						[
+							0.25,
+							2
+						],
+						[
+							0.375,
+							2
+						],
+						[
+							0.5,
+							1
+						],
+						[
+							0.625,
+							2
+						],
+						[
+							0.75,
+							2
+						],
+						[
+							0.875,
+							2
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-hips-y",
+			"type": "Result",
+			"x": 520,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Hips.y"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-hips-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-2
+						],
+						[
+							0.125,
+							-1
+						],
+						[
+							0.25,
+							-1
+						],
+						[
+							0.375,
+							0
+						],
+						[
+							0.5,
+							1
+						],
+						[
+							0.625,
+							2
+						],
+						[
+							0.75,
+							2
+						],
+						[
+							0.875,
+							1
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-hips-z",
+			"type": "Result",
+			"x": 520,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Hips.z"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-leftarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							4
+						],
+						[
+							0.125,
+							5
+						],
+						[
+							0.25,
+							6
+						],
+						[
+							0.375,
+							5
+						],
+						[
+							0.5,
+							4
+						],
+						[
+							0.625,
+							5
+						],
+						[
+							0.75,
+							6
+						],
+						[
+							0.875,
+							5
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-leftarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-leftarm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-4
+						],
+						[
+							0.125,
+							-4
+						],
+						[
+							0.25,
+							-5
+						],
+						[
+							0.375,
+							-5
+						],
+						[
+							0.5,
+							-4
+						],
+						[
+							0.625,
+							-5
+						],
+						[
+							0.75,
+							-5
+						],
+						[
+							0.875,
+							-5
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-leftarm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-leftarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-77
+						],
+						[
+							0.125,
+							-82
+						],
+						[
+							0.25,
+							-89
+						],
+						[
+							0.375,
+							-82
+						],
+						[
+							0.5,
+							-77
+						],
+						[
+							0.625,
+							-83
+						],
+						[
+							0.75,
+							-87
+						],
+						[
+							0.875,
+							-81
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-leftarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-leftfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							14
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-leftfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-leftforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-13
+						],
+						[
+							0.125,
+							-13
+						],
+						[
+							0.25,
+							-13
+						],
+						[
+							0.375,
+							-13
+						],
+						[
+							0.5,
+							-13
+						],
+						[
+							0.625,
+							-13
+						],
+						[
+							0.75,
+							-13
+						],
+						[
+							0.875,
+							-13
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-leftforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-lefthand-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-26
+						],
+						[
+							0.25,
+							-26
+						],
+						[
+							0.5,
+							-26
+						],
+						[
+							0.75,
+							-26
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-lefthand-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftHand.x"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-lefthand-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-16
+						],
+						[
+							0.25,
+							-16
+						],
+						[
+							0.5,
+							-16
+						],
+						[
+							0.75,
+							-16
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-lefthand-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftHand.z"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-leftshoulder-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-6
+						],
+						[
+							0.125,
+							-6
+						],
+						[
+							0.25,
+							-6
+						],
+						[
+							0.375,
+							-6
+						],
+						[
+							0.5,
+							-6
+						],
+						[
+							0.625,
+							-6
+						],
+						[
+							0.75,
+							-6
+						],
+						[
+							0.875,
+							-6
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-leftshoulder-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftShoulder.y"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-leftshoulder-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-12
+						],
+						[
+							0.25,
+							-1
+						],
+						[
+							0.5,
+							-11
+						],
+						[
+							0.75,
+							-2
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-leftshoulder-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftShoulder.z"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-leftthumb",
+			"type": "Curve",
+			"x": 260,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							10
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-leftthumb",
+			"type": "Result",
+			"x": 520,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftThumb"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-neck-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-2
+						],
+						[
+							0.25,
+							-1
+						],
+						[
+							0.5,
+							-2
+						],
+						[
+							0.75,
+							-2
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-neck-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Neck.x"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-neck-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							2
+						],
+						[
+							0.125,
+							1
+						],
+						[
+							0.25,
+							4
+						],
+						[
+							0.375,
+							1
+						],
+						[
+							0.5,
+							2
+						],
+						[
+							0.625,
+							3
+						],
+						[
+							0.75,
+							1
+						],
+						[
+							0.875,
+							2
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-neck-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Neck.y"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-rightarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.125,
+							1
+						],
+						[
+							0.25,
+							1
+						],
+						[
+							0.375,
+							1
+						],
+						[
+							0.5,
+							0
+						],
+						[
+							0.625,
+							0
+						],
+						[
+							0.75,
+							1
+						],
+						[
+							0.875,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-rightarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-rightarm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							9
+						],
+						[
+							0.125,
+							9
+						],
+						[
+							0.25,
+							9
+						],
+						[
+							0.375,
+							10
+						],
+						[
+							0.5,
+							9
+						],
+						[
+							0.625,
+							9
+						],
+						[
+							0.75,
+							9
+						],
+						[
+							0.875,
+							8
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-rightarm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-rightarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							62
+						],
+						[
+							0.125,
+							66
+						],
+						[
+							0.25,
+							71
+						],
+						[
+							0.375,
+							66
+						],
+						[
+							0.5,
+							61
+						],
+						[
+							0.625,
+							68
+						],
+						[
+							0.75,
+							70
+						],
+						[
+							0.875,
+							65
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-rightarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-rightforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							16
+						],
+						[
+							0.125,
+							16
+						],
+						[
+							0.25,
+							16
+						],
+						[
+							0.375,
+							16
+						],
+						[
+							0.5,
+							16
+						],
+						[
+							0.625,
+							16
+						],
+						[
+							0.75,
+							16
+						],
+						[
+							0.875,
+							16
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-rightforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-rightshoulder-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 2340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-5
+						],
+						[
+							0.125,
+							-5
+						],
+						[
+							0.25,
+							-6
+						],
+						[
+							0.375,
+							-5
+						],
+						[
+							0.5,
+							-4
+						],
+						[
+							0.625,
+							-5
+						],
+						[
+							0.75,
+							-6
+						],
+						[
+							0.875,
+							-6
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-rightshoulder-y",
+			"type": "Result",
+			"x": 520,
+			"y": 2340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightShoulder.y"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-rightshoulder-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 2440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							11
+						],
+						[
+							0.125,
+							7
+						],
+						[
+							0.25,
+							1
+						],
+						[
+							0.375,
+							7
+						],
+						[
+							0.5,
+							12
+						],
+						[
+							0.625,
+							4
+						],
+						[
+							0.75,
+							2
+						],
+						[
+							0.875,
+							9
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-rightshoulder-z",
+			"type": "Result",
+			"x": 520,
+			"y": 2440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightShoulder.z"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-root-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 2540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-0.085
+						],
+						[
+							0.125,
+							-0.09
+						],
+						[
+							0.25,
+							-0.085
+						],
+						[
+							0.375,
+							-0.095
+						],
+						[
+							0.5,
+							-0.105
+						],
+						[
+							0.625,
+							-0.105
+						],
+						[
+							0.75,
+							-0.11
+						],
+						[
+							0.875,
+							-0.105
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-root-x",
+			"type": "Result",
+			"x": 520,
+			"y": 2540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.x"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-root-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 2640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-0.005
+						],
+						[
+							0.125,
+							-0.005
+						],
+						[
+							0.25,
+							-0.005
+						],
+						[
+							0.375,
+							-0.005
+						],
+						[
+							0.5,
+							-0.005
+						],
+						[
+							0.625,
+							-0.005
+						],
+						[
+							0.75,
+							-0.005
+						],
+						[
+							0.875,
+							-0.005
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-root-y",
+			"type": "Result",
+			"x": 520,
+			"y": 2640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.y"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-root-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 2740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0.025
+						],
+						[
+							0.125,
+							0.03
+						],
+						[
+							0.25,
+							0.035
+						],
+						[
+							0.375,
+							0.04
+						],
+						[
+							0.5,
+							0.04
+						],
+						[
+							0.625,
+							0.045
+						],
+						[
+							0.75,
+							0.045
+						],
+						[
+							0.875,
+							0.045
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-root-z",
+			"type": "Result",
+			"x": 520,
+			"y": 2740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.z"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-spine-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 2840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-6
+						],
+						[
+							0.25,
+							-8
+						],
+						[
+							0.5,
+							-6
+						],
+						[
+							0.75,
+							-7
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-spine-x",
+			"type": "Result",
+			"x": 520,
+			"y": 2840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine.x"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-spine-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 2940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-2
+						],
+						[
+							0.125,
+							-1
+						],
+						[
+							0.25,
+							-2
+						],
+						[
+							0.375,
+							-2
+						],
+						[
+							0.5,
+							-1
+						],
+						[
+							0.625,
+							-2
+						],
+						[
+							0.75,
+							-1
+						],
+						[
+							0.875,
+							-1
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-spine-y",
+			"type": "Result",
+			"x": 520,
+			"y": 2940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine.y"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-spine-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 3040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							12
+						],
+						[
+							0.125,
+							10
+						],
+						[
+							0.25,
+							11
+						],
+						[
+							0.375,
+							9
+						],
+						[
+							0.5,
+							8
+						],
+						[
+							0.625,
+							8
+						],
+						[
+							0.75,
+							8
+						],
+						[
+							0.875,
+							8
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-spine-z",
+			"type": "Result",
+			"x": 520,
+			"y": 3040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine.z"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-spine1-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 3140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							6
+						],
+						[
+							0.25,
+							7
+						],
+						[
+							0.5,
+							6
+						],
+						[
+							0.75,
+							5
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-spine1-x",
+			"type": "Result",
+			"x": 520,
+			"y": 3140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine1.x"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-curve-spine2-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 3240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							5
+						],
+						[
+							0.25,
+							3
+						],
+						[
+							0.5,
+							5
+						],
+						[
+							0.75,
+							4
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-spine2-x",
+			"type": "Result",
+			"x": 520,
+			"y": 3240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine2.x"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-number-length",
+			"type": "Number",
+			"x": 780,
+			"y": 3340,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 8.21
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-length",
+			"type": "Result",
+			"x": 1000,
+			"y": 3340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Length"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-number-stride",
+			"type": "Number",
+			"x": 780,
+			"y": 3440,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-stride",
+			"type": "Result",
+			"x": 1000,
+			"y": 3440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stride"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-number-stance",
+			"type": "Number",
+			"x": 780,
+			"y": 3540,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-stance",
+			"type": "Result",
+			"x": 1000,
+			"y": 3540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stance"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-number-reach",
+			"type": "Number",
+			"x": 780,
+			"y": 3640,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.02
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-reach",
+			"type": "Result",
+			"x": 1000,
+			"y": 3640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Reach"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-number-leftreach",
+			"type": "Number",
+			"x": 780,
+			"y": 3740,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.060000000000000005
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-leftreach",
+			"type": "Result",
+			"x": 1000,
+			"y": 3740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftReach"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-number-rightreach",
+			"type": "Number",
+			"x": 780,
+			"y": 3840,
+			"properties": [
+				{
+					"key": "Value",
+					"value": -0.17999999999999997
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-rightreach",
+			"type": "Result",
+			"x": 1000,
+			"y": 3840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightReach"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-number-width",
+			"type": "Number",
+			"x": 780,
+			"y": 3940,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.08
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-width",
+			"type": "Result",
+			"x": 1000,
+			"y": 3940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-number-height",
+			"type": "Number",
+			"x": 780,
+			"y": 4040,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.98
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-height",
+			"type": "Result",
+			"x": 1000,
+			"y": 4040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-number-toeout",
+			"type": "Number",
+			"x": 780,
+			"y": 4140,
+			"properties": [
+				{
+					"key": "Value",
+					"value": -10
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-toeout",
+			"type": "Result",
+			"x": 1000,
+			"y": 4140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "ToeOut"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-number-pole",
+			"type": "Number",
+			"x": 780,
+			"y": 4240,
+			"properties": [
+				{
+					"key": "Value",
+					"value": -15
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-pole",
+			"type": "Result",
+			"x": 1000,
+			"y": 4240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pole"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-number-toebend",
+			"type": "Number",
+			"x": 780,
+			"y": 4340,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 30
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-toebend",
+			"type": "Result",
+			"x": 1000,
+			"y": 4340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "ToeBend"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-number-direction",
+			"type": "Number",
+			"x": 780,
+			"y": 4440,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-direction",
+			"type": "Result",
+			"x": 1000,
+			"y": 4440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Direction"
+				}
+			]
+		},
+		{
+			"id": "animation-idle-number-still",
+			"type": "Number",
+			"x": 780,
+			"y": 4540,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-idle-result-still",
+			"type": "Result",
+			"x": 1000,
+			"y": 4540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Still"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-idle-link-0",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-footpitch-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-1",
+			"p1": "animation-idle-curve-footpitch-out-Value",
+			"p2": "animation-idle-result-footpitch-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-2",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-head-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-3",
+			"p1": "animation-idle-curve-head-x-out-Value",
+			"p2": "animation-idle-result-head-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-4",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-head-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-5",
+			"p1": "animation-idle-curve-head-y-out-Value",
+			"p2": "animation-idle-result-head-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-6",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-head-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-7",
+			"p1": "animation-idle-curve-head-z-out-Value",
+			"p2": "animation-idle-result-head-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-8",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-hips-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-9",
+			"p1": "animation-idle-curve-hips-x-out-Value",
+			"p2": "animation-idle-result-hips-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-10",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-hips-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-11",
+			"p1": "animation-idle-curve-hips-y-out-Value",
+			"p2": "animation-idle-result-hips-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-12",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-hips-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-13",
+			"p1": "animation-idle-curve-hips-z-out-Value",
+			"p2": "animation-idle-result-hips-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-14",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-leftarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-15",
+			"p1": "animation-idle-curve-leftarm-x-out-Value",
+			"p2": "animation-idle-result-leftarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-16",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-leftarm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-17",
+			"p1": "animation-idle-curve-leftarm-y-out-Value",
+			"p2": "animation-idle-result-leftarm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-18",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-leftarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-19",
+			"p1": "animation-idle-curve-leftarm-z-out-Value",
+			"p2": "animation-idle-result-leftarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-20",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-leftfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-21",
+			"p1": "animation-idle-curve-leftfingers-out-Value",
+			"p2": "animation-idle-result-leftfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-22",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-leftforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-23",
+			"p1": "animation-idle-curve-leftforearm-y-out-Value",
+			"p2": "animation-idle-result-leftforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-24",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-lefthand-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-25",
+			"p1": "animation-idle-curve-lefthand-x-out-Value",
+			"p2": "animation-idle-result-lefthand-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-26",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-lefthand-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-27",
+			"p1": "animation-idle-curve-lefthand-z-out-Value",
+			"p2": "animation-idle-result-lefthand-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-28",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-leftshoulder-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-29",
+			"p1": "animation-idle-curve-leftshoulder-y-out-Value",
+			"p2": "animation-idle-result-leftshoulder-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-30",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-leftshoulder-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-31",
+			"p1": "animation-idle-curve-leftshoulder-z-out-Value",
+			"p2": "animation-idle-result-leftshoulder-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-32",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-leftthumb-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-33",
+			"p1": "animation-idle-curve-leftthumb-out-Value",
+			"p2": "animation-idle-result-leftthumb-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-34",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-neck-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-35",
+			"p1": "animation-idle-curve-neck-x-out-Value",
+			"p2": "animation-idle-result-neck-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-36",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-neck-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-37",
+			"p1": "animation-idle-curve-neck-y-out-Value",
+			"p2": "animation-idle-result-neck-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-38",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-rightarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-39",
+			"p1": "animation-idle-curve-rightarm-x-out-Value",
+			"p2": "animation-idle-result-rightarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-40",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-rightarm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-41",
+			"p1": "animation-idle-curve-rightarm-y-out-Value",
+			"p2": "animation-idle-result-rightarm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-42",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-rightarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-43",
+			"p1": "animation-idle-curve-rightarm-z-out-Value",
+			"p2": "animation-idle-result-rightarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-44",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-rightforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-45",
+			"p1": "animation-idle-curve-rightforearm-y-out-Value",
+			"p2": "animation-idle-result-rightforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-46",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-rightshoulder-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-47",
+			"p1": "animation-idle-curve-rightshoulder-y-out-Value",
+			"p2": "animation-idle-result-rightshoulder-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-48",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-rightshoulder-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-49",
+			"p1": "animation-idle-curve-rightshoulder-z-out-Value",
+			"p2": "animation-idle-result-rightshoulder-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-50",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-root-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-51",
+			"p1": "animation-idle-curve-root-x-out-Value",
+			"p2": "animation-idle-result-root-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-52",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-root-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-53",
+			"p1": "animation-idle-curve-root-y-out-Value",
+			"p2": "animation-idle-result-root-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-54",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-root-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-55",
+			"p1": "animation-idle-curve-root-z-out-Value",
+			"p2": "animation-idle-result-root-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-56",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-spine-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-57",
+			"p1": "animation-idle-curve-spine-x-out-Value",
+			"p2": "animation-idle-result-spine-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-58",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-spine-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-59",
+			"p1": "animation-idle-curve-spine-y-out-Value",
+			"p2": "animation-idle-result-spine-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-60",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-spine-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-61",
+			"p1": "animation-idle-curve-spine-z-out-Value",
+			"p2": "animation-idle-result-spine-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-62",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-spine1-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-63",
+			"p1": "animation-idle-curve-spine1-x-out-Value",
+			"p2": "animation-idle-result-spine1-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-64",
+			"p1": "animation-idle-phase-out-Value",
+			"p2": "animation-idle-curve-spine2-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-65",
+			"p1": "animation-idle-curve-spine2-x-out-Value",
+			"p2": "animation-idle-result-spine2-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-66",
+			"p1": "animation-idle-number-length-out-Value",
+			"p2": "animation-idle-result-length-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-67",
+			"p1": "animation-idle-number-stride-out-Value",
+			"p2": "animation-idle-result-stride-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-68",
+			"p1": "animation-idle-number-stance-out-Value",
+			"p2": "animation-idle-result-stance-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-69",
+			"p1": "animation-idle-number-reach-out-Value",
+			"p2": "animation-idle-result-reach-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-70",
+			"p1": "animation-idle-number-leftreach-out-Value",
+			"p2": "animation-idle-result-leftreach-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-71",
+			"p1": "animation-idle-number-rightreach-out-Value",
+			"p2": "animation-idle-result-rightreach-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-72",
+			"p1": "animation-idle-number-width-out-Value",
+			"p2": "animation-idle-result-width-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-73",
+			"p1": "animation-idle-number-height-out-Value",
+			"p2": "animation-idle-result-height-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-74",
+			"p1": "animation-idle-number-toeout-out-Value",
+			"p2": "animation-idle-result-toeout-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-75",
+			"p1": "animation-idle-number-pole-out-Value",
+			"p2": "animation-idle-result-pole-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-76",
+			"p1": "animation-idle-number-toebend-out-Value",
+			"p2": "animation-idle-result-toebend-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-77",
+			"p1": "animation-idle-number-direction-out-Value",
+			"p2": "animation-idle-result-direction-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-idle-link-78",
+			"p1": "animation-idle-number-still-out-Value",
+			"p2": "animation-idle-result-still-in-Value",
+			"kind": "value"
+		}
+	]
+}

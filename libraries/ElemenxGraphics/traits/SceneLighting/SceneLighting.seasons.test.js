@@ -47,7 +47,7 @@ describe('Contract: the seasons of a Scene: of the date and the latitude, or fix
 		while (owned.length) owned.pop().$Destroy();
 	});
 
-	/* Frames till the season is known; the uniforms of the draws of the last one. */
+	/* Frames till the season is known; the uniforms of the draws of the last one, its plants and its ground drawn in it. */
 	async function frames (scene) {
 		var renderer = scene.Engine().Renderer;
 		var draw = renderer.Draw;
@@ -75,8 +75,11 @@ describe('Contract: the seasons of a Scene: of the date and the latitude, or fix
 
 				scene.Engine().Frame(now += 33);
 
+				/* Its plants and its ground in one frame: the squares of the ground come of the workers, after the plants may. */
 				return seen.some(function (one) {
 					return one.uSeasonOn > 0;
+				}) && seen.some(function (one) {
+					return one.uSnowed !== undefined;
 				});
 			}, 10000);
 		}

@@ -10,8 +10,11 @@
 - Search({Start, Goal, Key, Neighbors, Heuristic, Limit}): A* на своём графе (без Heuristic — Дейкстра): Goal(node) истинно у цели (или это сама цель, сравниваемая по Key), Key(node) — её текст, Neighbors(node) — [{Node, Cost}]; возвращает {Path: [узлы], Cost} или null.
 - Smooth(grid, path): путь без клеток, которые он проходит по прямой: только его углы.
 
+Source(names) — исходник его членов для воркера (Workers): поиски путей земли и планеты (магистрали планеты, дороги и пути пешехода по земле и под ней, маршрут по ходам) идут через Search и в воркерах.
+
 ## Методы
 
+- `Source(names)`
 - `Grid(width, height, cost)`
 - `Path(grid, from, to, options)`
 - `Distances(grid, targets, options)`
@@ -81,3 +84,5 @@
 - [Pathfinding: a way round the walls, no corner cut, around costly cells, to the nearest reachable cell, on a graph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L123) — `tests/regression/game-services.test.js`
 - [Visibility: a line, the sight past a wall, the field of view and its shadows, the fog of war](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L200) — `tests/regression/game-services.test.js`
 - [Loop: steps of the same time whatever the frames, a part of a step to draw between, its speed, pause and catch-up limit](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L247) — `tests/regression/game-services.test.js`
+- [finds the very ways it found before, by the Search of Pathfinding alone](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ways-search.test.js#L32) — `tests/regression/ways-search.test.js`
+- [finds the highways of a planet in its workers as in the page](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ways-search.test.js#L58) — `tests/regression/ways-search.test.js`

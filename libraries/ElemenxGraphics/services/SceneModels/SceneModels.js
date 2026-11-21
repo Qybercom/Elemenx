@@ -58,8 +58,11 @@ Elemenx.Service('SceneModels', {
 
 	$Provides: {Seeded: {Kinds: ['model']}},
 
-	/* The kind of a scene a model of a Type is (resources/models/kinds: unit, animal and vehicle a unit, plant a tree...). */
-	Kinds: {unit: 'unit', animal: 'unit', vehicle: 'unit', plant: 'tree', rock: 'rock', building: 'house'},
+	/*
+	 * The kind of a scene a model of a Type is, of resources/models/kinds alone (unit, animal and vehicle a unit, plant a tree...),
+	 * read as it is made. Regression: a copy of it here, the two to keep alike.
+	 */
+	Kinds: {},
 
 	/* The kind of a model of a Type: of Kinds, null for a type of none. */
 	KindOf: function (type) {

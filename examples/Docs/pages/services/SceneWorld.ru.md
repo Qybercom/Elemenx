@@ -46,4 +46,4 @@ ID вещей мира — world-<номер по порядку>, а у вещ�
 - [makes the objects of the World of a ground in the scene, marked in the tree, not saved: they come again of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L746) — `tests/regression/library-scene-editor.test.js`
 - [preloads the globe of a planet into the store of the browser, and a scene of it takes it from there at once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L162) — `tests/regression/library-scene-landing.test.js`
 
-+39 ещё в тех же файлах
++40 ещё в тех же файлах

@@ -101,7 +101,7 @@ Elemenx.Component('LocationsDemo', {
 		return character.Clips === 'rifle' ? {Model: 'rifle', Bone: 'HandR', Aim: 'HandL', At: [0.0914, -0.0369, 0], Turn: [0, 180, -4.9], Size: 0.145} : undefined;
 	},
 	/* Who walks on the locations: a line for a file of data/models, and the set of clips that suits it if not the usual one. */
-	PlaceCharacters: [{Value: 'elf', Label: 'Elf', File: 'rigged_elf_woman.glb'}, {Value: 'nyx', Label: 'Nyx', File: 'nyx_common.glb'}, {Value: 'swordsman', Label: 'Swordswoman', File: 'hit2_female_swordsman.glb'}, {Value: 'killjoy', Label: 'Killjoy', File: 'killjoy__valorant.glb'}, {Value: 'warrior', Label: 'Warrior', File: 'low_poly_female_warrior_charctor.glb'}, {Value: 'chief', Label: 'Master Chief', File: 'master_chief_high_poly.glb', Clips: 'rifle'}, {Value: 'xbot', Label: 'X Bot (FBX)', File: 'elf_anim/X Bot.fbx'}],
+	PlaceCharacters: [{Value: 'elf', Label: 'Elf', File: 'rigged_elf_woman.glb'}, {Value: 'nyx', Label: 'Nyx', File: 'nyx_common.glb'}, {Value: 'swordsman', Label: 'Swordswoman', File: 'hit2_female_swordsman.glb'}, {Value: 'killjoy', Label: 'Killjoy', File: 'killjoy__valorant.glb'}, {Value: 'warrior', Label: 'Warrior', File: 'low_poly_female_warrior_charctor.glb'}, {Value: 'chief', Label: 'Master Chief', File: 'master_chief_high_poly.glb', Clips: 'rifle'}, {Value: 'xbot', Label: 'X Bot (FBX)', File: 'elf_anim/X Bot.fbx'}, {Value: 'mannequin', Label: 'Mannequin (gaits of graphs)', Model: 'mannequin'}],
 	PlaceCharacter: 'elf',
 	PlaceHero: function () {
 		var models = this.$Service('SceneModels');
@@ -110,6 +110,13 @@ Elemenx.Component('LocationsDemo', {
 		var character = this.PlaceCharacters.filter(function (each) {
 			return each.Value === chosen;
 		})[0];
+
+		/* A model of code (the mannequin: its gaits graphs of the library), not a file. */
+		if (character.Model) {
+			models.Load(character.Model);
+
+			return character.Model;
+		}
 
 		function rifle (file, stride) {
 			return {URL: '/data/models/riffle_anim/' + file + '.fbx', Stride: stride || 1, Held: true};
@@ -417,6 +424,21 @@ Elemenx.Component('LocationsDemo', {
 
 		if (!hero) return;
 
+		function swap () {
+			var place = {X: hero.Values.X, Y: hero.Values.Y, Z: hero.Air === undefined ? hero.Values.Z : hero.Air, Size: hero.Size};
+
+			scene.Remove('hero');
+			scene.Add('unit', Object.assign({ID: 'hero', Name: 'You', Model: self.PlaceHero(), Hold: self.PlaceHold()}, place));
+			scene.Control('hero');
+		}
+
+		/* A model of code is there always; a file only in a copy that has it. */
+		if (character.Model) {
+			swap();
+
+			return;
+		}
+
 		request.open('HEAD', '/data/models/' + character.File);
 
 		request.onload = function () {
@@ -426,11 +448,7 @@ Elemenx.Component('LocationsDemo', {
 				return;
 			}
 
-			var place = {X: hero.Values.X, Y: hero.Values.Y, Z: hero.Air === undefined ? hero.Values.Z : hero.Air, Size: hero.Size};
-
-			scene.Remove('hero');
-			scene.Add('unit', Object.assign({ID: 'hero', Name: 'You', Model: self.PlaceHero(), Hold: self.PlaceHold()}, place));
-			scene.Control('hero');
+			swap();
 		};
 
 		request.send();

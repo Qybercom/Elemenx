@@ -19,7 +19,7 @@
 			</ContextMenu>
 			<div class="elemenx-cutscene-editor-empty" *if="!Cutscene(Version, Value, Current)">{{$T('graphics.cutsceneEditor.none')}}</div>
 		</div>
-		<aside class="elemenx-cutscene-editor-fields" *if="Piece(Version, Value, Current, Selected)">
+		<aside class="elemenx-cutscene-editor-fields" *if="Piece(Version, Value, Current, Selected)" *resizable="{Edges: 'left', MinWidth: 180, MaxWidth: 520}" [style.width]="PaneWidth('fields', 220)" (resizeend)="PaneResized('fields', $event)">
 			<div class="elemenx-cutscene-editor-title">{{Piece(Version, Value, Current, Selected).Track.Type}}<Button Size="small" Variant="ghost" Icon="delete" [Title]="$T('graphics.cutsceneEditor.remove')" (click)="Remove()" /></div>
 			<div class="elemenx-cutscene-editor-field" *for="field of Piece(Version, Value, Current, Selected).Fields" *key="field.Key" [attribute.data-field]="field.Key"><span>{{field.Key}}</span><Input Size="small" [Label]="field.Key" [Value]="field.Value" (change)="Fielded(field.Key, $event)" /></div>
 		</aside>

@@ -37,9 +37,7 @@ Elemenx.Trait('SceneGiants', {
 		}
 
 		function colorOf (text) {
-			var hex = String(text || '').trim().replace('#', '');
-
-			return /^[0-9a-f]{6}$/i.test(hex) ? [parseInt(hex.slice(0, 2), 16) / 255, parseInt(hex.slice(2, 4), 16) / 255, parseInt(hex.slice(4, 6), 16) / 255] : [0.5, 0.45, 0.4];
+			return engine.Hex(text, [0.5, 0.45, 0.4]);
 		}
 
 		function smooth (from, to, value) {
@@ -70,7 +68,7 @@ Elemenx.Trait('SceneGiants', {
 				var height;
 				var ceiling;
 
-				if (!surface || surface.Type !== 'gas' && surface.Type !== 'ice-giant' || !object.World || !object.Size || !object.Radius) return;
+				if (!surface || !self.$Service('ScenePlanet').Giant(surface.Type) || !object.World || !object.Size || !object.Radius) return;
 
 				envelope = engine.EnvelopeOf(object);
 				height = (vectors.Distance(scene.Eye, object.World) / object.Size - 1) * object.Radius;
@@ -212,7 +210,7 @@ Elemenx.Trait('SceneGiants', {
 			var giants = scene.Order.some(function (object) {
 				var surface = trait(object, 'Surface');
 
-				return surface && (surface.Type === 'gas' || surface.Type === 'ice-giant');
+				return surface && self.$Service('ScenePlanet').Giant(surface.Type);
 			});
 			if (!renderer || setting === 'galaxy' || !giants) return;
 

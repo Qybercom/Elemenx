@@ -5,6 +5,9 @@
 	<depends>com.intellij.modules.platform</depends>
 	<depends>com.intellij.modules.xml</depends>
 	<depends>com.redhat.devtools.lsp4ij</depends>
+	<!-- GLSL: its files colored of the grammar of VS Code (a bundle of TextMate), the strings of shaders in JavaScript too. -->
+	<depends optional="true" config-file="elemenx-textmate.xml">org.jetbrains.plugins.textmate</depends>
+	<depends optional="true" config-file="elemenx-javascript.xml">JavaScript</depends>
 
 	<!--
 		The inspections of HTML kept quiet on the Components and the bindings of Elemenx; their colors (Settings → Editor →

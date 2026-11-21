@@ -42,13 +42,15 @@
  * - Read(json) reads a text or an object of JSON and gives the graph (a version newer than Version is an error; the
  *   pins a type has are added where they are missing); Write(graph) gives it as the text of a file. Fill(graph,
  *   values) sets the values of its parameters by key and puts each value in the place of its {Key} in the texts of the
- *   properties of its blocks (a graph of a resource made for the options it is asked with); it returns the graph.
+ *   properties of its blocks (a graph of a resource made for the options it is asked with); it returns the graph, what it
+ *   was filled with kept (filled): the graphs it calls are filled with it too. Inlined(graph): the graph with the graphs
+ *   its Call blocks call in their places (a generator of numbers, Numeric, is one function of no calls).
  * - A generator graph of the resources (group Blueprints) is a function: its Input blocks what it is given, its Result
  *   blocks what it gives. Call runs one (its pins those of the graph), Repeat runs it Count times ({Index, Count}), Map
  *   for each item of a list ({Item, Index}), Reduce for each ({Item, Index, Sum}, from Initial, its result Sum); what
  *   else the graph takes they pass on as given; Take keeps one result of each. A graph may call itself, as deep as 256
  *   calls (a Repeat of Count 0 ends it). List, Count and Item make and read lists, Random(Seed, Key) a number of 0 to 1
- *   of them (Hash2), Select one of two, Table the row of a key (Rows, Default). Invoke(name, inputs) runs one.
+ *   of them (Hash2), Chain(Seed, Index) the index-th number of a chain of a seed (Chain), Select one of two, Table the row of a key (Rows, Default). Invoke(name, inputs) runs one.
  * - IR(graph, {Name}) gives the graph in the IR of Elemenx.Compilers ({Module, Diagnostics}: a block of no IR, as noise yet,
  *   is told), each graph a function (P, I) of a record of its results; the kind blueprint goes to ir by it (blueprint-ir),
  *   and on to js or cpp. A block of a Service tells its own: IR(inputs, properties, context) of its definition (context
@@ -56,7 +58,10 @@
  * - Numeric(graph, values, types, keys) gives a generator of numbers as one typed function of the IR (g_main), its parameters
  *   fixed (values, the graph's own else), its inputs its parameters (float, or of types {name: type}), its results its
  *   result (one, or two to four numbers as a vector; keys: only those), its noise of the Kernel of Noise: {Module, Inputs, Keys, Returns,
- *   Diagnostics}, a block of no numbers told. NumericCode(graph, values, types) makes it js as Code does ({Source, Run,
+ *   Diagnostics}, a block of no numbers told. Lists of numbers in it (floats: a Parameter of Type floats, an input of that
+ *   type): Item (its index within it), Count, Nearest; a Reduce of such a list of a known length (a Parameter of 64 items at
+ *   most) unrolled, its graph once for each item (Inlined); an Item and a Count of a list known are numbers themselves, so
+ *   wasm, which holds no list of its own, runs it. NumericCode(graph, values, types) makes it js as Code does ({Source, Run,
  *   Keys, Numeric}, made once; null when it is not of numbers), Wasm(numeric) wasm of it (batch:g_main).
  * - Check(graph) lists what is wrong ([{Block, Pin, Link, Message}]): a type not known or not for this graph, a link
  *   of pins not there or of kinds that do not go together, two links to one input, a circle of values, a graph with
@@ -88,8 +93,9 @@
  * Remap, Curve (a value of keys over a number, time most often: its Keys [[x, value]...], Smooth linear, smooth or step,
  * Loop a length after which it begins again; CurveAt(keys, x, smooth, loop) the same in code), Dot, Length, Normalize,
  * Split, Combine, Noise, Fbm, Ridge, NoiseSpec (a noise of the Noise Service by its spec: Warp, WarpScale, WarpOctaves;
- *   its input Octaves, when linked, instead of its property), When (its Value when Test holds, else Else: what only its
- *   Value needs is made only then), Line, Area, Level, Grid, TunnelWall, PassageWalls, Fall and Nearest (of
+ *   Jitter of its cells; its inputs Octaves and Seed, a number as Math.SeedOffset gives it, when linked, instead of its
+ *   properties), When (its Value when Test holds, else Else: what only its
+ *   Value needs is made only then), Line, Area, Level, Grid, TunnelWall, PassageWalls, Fall, Nearest, Painted, Strokes, River and Edits (of
  * the Geometry Service: of a line, an area or points given as a list of numbers, floats), Result, Compare, And, Or, Not, Field, Get, Set, Event,
  * Branch, Sequence, For, Delay, Action, Emit; BlueprintShaders adds UV, Pixel, Position, Normal, Texture, Output,
  * Surface and Present, and the GLSL of the numbers.
@@ -98,7 +104,7 @@
 Elemenx.Service('Blueprints', {
 	$Meta: {
 		Description: 'Graphs of blocks in the JSON of Flowprint, made into code and flows of actions (and into shaders by BlueprintShaders).',
-		Methods: ['Node(type, definition)', 'Nodes(graph)', 'NodeOf(type)', 'Graph(type, definition)', 'Graphs()', 'Create(type, options)', 'Block(type, options)', 'Add(graph, type, options)', 'Link(graph, from, to)', 'Remove(graph, id)', 'Pin(block, key, out)', 'Read(json)', 'Write(graph)', 'Fill(graph, values)', 'Check(graph)', 'Order(graph)', 'Compile(graph, options)', 'Code(graph)', 'Source(names)', 'Bake(graph)', 'Start(graph, context)', 'IR(graph, options)', 'Invoke(name, inputs)', 'Hash2(a, b)', 'CurveAt(keys, x, smooth, loop)', 'Numeric(graph, values, types, keys)', 'NumericCode(graph, values, types, keys)', 'Wasm(numeric)']
+		Methods: ['Node(type, definition)', 'Nodes(graph)', 'NodeOf(type)', 'Graph(type, definition)', 'Graphs()', 'Create(type, options)', 'Block(type, options)', 'Add(graph, type, options)', 'Link(graph, from, to)', 'Remove(graph, id)', 'Pin(block, key, out)', 'Read(json)', 'Write(graph)', 'Fill(graph, values)', 'Inlined(graph)', 'Check(graph)', 'Order(graph)', 'Compile(graph, options)', 'Code(graph)', 'Source(names)', 'Bake(graph)', 'Start(graph, context)', 'IR(graph, options)', 'Invoke(name, inputs)', 'Hash2(a, b)', 'Chain(seed, index)', 'CurveAt(keys, x, smooth, loop)', 'Numeric(graph, values, types, keys)', 'NumericCode(graph, values, types, keys)', 'Wasm(numeric)']
 	},
 
 	Version: 1,
@@ -518,10 +524,23 @@ Elemenx.Service('Blueprints', {
 
 	Fill: function (graph, values) {
 		var given = values || {};
+		var filled = Object.assign({}, graph.filled || {});
 
 		function own (key) {
 			return Object.prototype.hasOwnProperty.call(given, key) && given[key] !== undefined && given[key] !== null;
 		}
+
+		/*
+		 * What it was filled with kept (filled): the graphs it calls (Call, Repeat, Map, Reduce) are filled with it too, of the
+		 * same seed and values of their parameters of the same names. Regression: a graph called read its {Seed} as it is.
+		 */
+		Object.keys(given).forEach(function (key) {
+			if (own(key))
+				filled[key] = given[key];
+		});
+
+		if (Object.keys(filled).length)
+			graph.filled = filled;
 
 		(graph.parameters || []).forEach(function (parameter) {
 			if (own(parameter.key))
@@ -693,7 +712,7 @@ Elemenx.Service('Blueprints', {
 
 	/* What makes a graph what it is: not where its blocks stand, nor its comments, nor the values of its parameters. */
 	Hash: function (graph) {
-		var text = JSON.stringify([graph.type, graph.parameters.map(function (parameter) {
+		var parts = [graph.type, graph.parameters.map(function (parameter) {
 			return [parameter.key, parameter.type];
 		}), graph.blocks.map(function (block) {
 			return [block.id, block.type, block.properties, block.enabled !== false, (block.pins || []).map(function (pin) {
@@ -701,7 +720,14 @@ Elemenx.Service('Blueprints', {
 			})];
 		}), graph.links.map(function (link) {
 			return [link.p1, link.p2, link.enabled !== false];
-		})]);
+		})];
+		var text;
+
+		/* What it was filled with, its called graphs filled of it (Fill): of none, the hash it always had. */
+		if (graph.filled && Object.keys(graph.filled).length)
+			parts.push(graph.filled);
+
+		text = JSON.stringify(parts);
 
 		return this.Digest(text);
 	},
@@ -764,6 +790,11 @@ Elemenx.Service('Blueprints', {
 		if (graph && typeof graph.glsl === 'string') return this.Written(graph, options);
 
 		graph = this.Read(graph);
+
+		/* A generator with the graphs it calls in their places (Inlined), filled as it is: run as its Code is. */
+		if (graph.type === 'generator')
+			graph = this.Inlined(graph);
+
 		definition = this.Makers[graph.type];
 		hash = this.Hash(graph);
 
@@ -1067,10 +1098,13 @@ Elemenx.Service('Blueprints', {
 		var run;
 		var hash;
 
+		/* The graphs it calls in their places (Inlined), filled as it is. */
 		graph = this.Read(graph);
 
 		if (graph.type !== 'generator')
 			throw new Error('Elemenx Blueprints: Code makes a generator, not a ' + graph.type + ' graph');
+
+		graph = this.Inlined(graph);
 
 		problems = this.Check(graph);
 
@@ -1272,7 +1306,7 @@ Elemenx.Service('Blueprints', {
 				context.Prelude('var s' + index + ' = ' + JSON.stringify(spec) + ', n' + index + ' = {};');
 
 				/* Of its octaves (Octaves) when they are given, a noise made once for each number of them. */
-				return {Value: '(function (p, s, o) { var k = Math.round(Number(o)) || 0; return (n' + index + '[k] || (n' + index + '[k] = N.Make(k ? Object.assign({}, s' + index + ', {Octaves: k}) : s' + index + '))).At(p[0] * s, p[1] * s, p[2] * s); })(' + inputs.Position + ', ' + inputs.Scale + ', ' + (inputs.Octaves || 0) + ')'};
+				return {Value: '(function (p, s, o, d) { var k = Math.round(Number(o)) || 0; var spec = k ? Object.assign({}, s' + index + ', {Octaves: k}) : s' + index + '; if (Number(d)) return N.Read(Object.assign(N.Whole(spec), {Seed: Number(d)}), p[0] * s, p[1] * s, p[2] * s); return (n' + index + '[k] || (n' + index + '[k] = N.Make(spec))).At(p[0] * s, p[1] * s, p[2] * s); })(' + inputs.Position + ', ' + inputs.Scale + ', ' + (inputs.Octaves || 0) + ', ' + (inputs.Seed || 0) + ')'};
 			case 'Formula':
 				return {Value: this.FormulaCode(this.Formula(properties.Expression).Tree, inputs)};
 			case 'Compare':
@@ -1285,6 +1319,8 @@ Elemenx.Service('Blueprints', {
 				return {Out: '!!(' + inputs.A + ' || ' + inputs.B + ')'};
 			case 'Not':
 				return {Out: '!' + inputs.X};
+			case 'Chain':
+				return {Value: 'B.Chain(' + inputs.Seed + ', ' + inputs.Index + ')'};
 			default:
 				return null;
 		}
@@ -1497,6 +1533,7 @@ Elemenx.Service('Blueprints', {
 			{Key: 'Gain', Type: 'number', Value: 0.5, Min: 0, Max: 1},
 			{Key: 'Cell', Type: 'select', Options: ['f1', 'f2', 'edge', 'cell'], Value: 'f1'},
 			{Key: 'Distance', Type: 'select', Options: ['euclid', 'manhattan', 'chebyshev'], Value: 'euclid'},
+			{Key: 'Jitter', Type: 'number', Value: 1, Min: 0, Max: 1},
 			{Key: 'Warp', Type: 'number', Value: 0, Min: 0, Max: 4},
 			{Key: 'WarpScale', Type: 'number', Value: 1, Min: 0.05, Max: 8},
 			{Key: 'WarpOctaves', Type: 'number', Value: 2, Min: 1, Max: 6},
@@ -1508,7 +1545,7 @@ Elemenx.Service('Blueprints', {
 		var given = properties || {};
 		var tile = Number(given.Tile) || 0;
 
-		return {Type: given.Type || 'perlin', Seed: given.Seed || '', Fractal: given.Fractal || 'fbm', Octaves: Number(given.Octaves) || 4, Gain: given.Gain === undefined ? 0.5 : Number(given.Gain), Cell: {Return: given.Cell || 'f1', Distance: given.Distance || 'euclid'}, Warp: Number(given.Warp) ? {Amount: Number(given.Warp), Scale: Number(given.WarpScale) || 1, Octaves: Number(given.WarpOctaves) || 2} : null, Tile: tile ? [tile, tile, tile] : null};
+		return {Type: given.Type || 'perlin', Seed: given.Seed || '', Fractal: given.Fractal || 'fbm', Octaves: Number(given.Octaves) || 4, Gain: given.Gain === undefined ? 0.5 : Number(given.Gain), Cell: {Return: given.Cell || 'f1', Distance: given.Distance || 'euclid', Jitter: given.Jitter === undefined || given.Jitter === null || given.Jitter === '' ? 1 : Number(given.Jitter)}, Warp: Number(given.Warp) ? {Amount: Number(given.Warp), Scale: Number(given.WarpScale) || 1, Octaves: Number(given.WarpOctaves) || 2} : null, Tile: tile ? [tile, tile, tile] : null};
 	},
 
 	/* Blueprints: functions and the IR */
@@ -1516,7 +1553,9 @@ Elemenx.Service('Blueprints', {
 	/*
 	 * An expression of a block Formula read: {Tree, Names (its inputs: the names it reads, in their order)}, or an error.
 	 * Numbers, texts ('a' or "a"), names, true, false, PI; [a, b] lists; a[i]; f(a, b); - and !; * / %; + -; < <= > >=;
-	 * == !=; &&; ||; a ? b : c. Regression: none, it is new.
+	 * == !=; &&; ||; a ? b : c. Its functions: min, max, pow, step, floor, abs, sqrt, sin, cos, fract, exp, acos, asin,
+	 * saturate, clamp, mix, smoothstep (of numbers: (x - a) / (b - a) cut to 0..1, s * s * (3 - 2 * s)), round, atan2, hypot,
+	 * ceil, count, vec2, vec3, vec4, text. Regression: none, it is new.
 	 */
 	Formula: function (text) {
 		var source = String(text === undefined || text === null ? '' : text);
@@ -1687,7 +1726,7 @@ Elemenx.Service('Blueprints', {
 
 	/* The functions of a formula, each of numbers or of lists of them part by part (Each), as the IR has them. */
 	FormulaCalls: {
-		min: 'min', max: 'max', pow: 'pow', step: 'step', floor: 'floor', abs: 'abs', sqrt: 'sqrt', sin: 'sin', cos: 'cos', fract: 'fract', exp: 'exp', saturate: 'saturate'
+		min: 'min', max: 'max', pow: 'pow', step: 'step', floor: 'floor', abs: 'abs', sqrt: 'sqrt', sin: 'sin', cos: 'cos', fract: 'fract', exp: 'exp', acos: 'acos', asin: 'asin', saturate: 'saturate'
 	},
 
 	/* The operators and the functions of numbers of a formula, part by part of lists (Each): its value and its code alike. */
@@ -1711,13 +1750,20 @@ Elemenx.Service('Blueprints', {
 		return typeof Elemenx !== 'undefined' && Elemenx.Compilers && Elemenx.Compilers.Math ? Elemenx.Compilers.Math() : Math;
 	},
 
+	/* smoothstep(a, b, x) of a formula: the share of x between a and b cut to 0..1, s * s * (3 - 2 * s). */
+	FormulaSmooth: function (a, b, x) {
+		var s = Math.max(0, Math.min(1, (x - a) / (b - a)));
+
+		return s * s * (3 - 2 * s);
+	},
+
 	FormulaSingles: {min: Math.min, max: Math.max, pow: Math.pow, step: function (e, x) {
 		return x < e ? 0 : 1;
 	}, floor: Math.floor, abs: Math.abs, sqrt: function (x) {
 		return Math.sqrt(Math.max(0, x));
 	}, sin: Math.sin, cos: Math.cos, fract: function (x) {
 		return x - Math.floor(x);
-	}, exp: Math.exp, saturate: function (x) {
+	}, exp: Math.exp, acos: Math.acos, asin: Math.asin, saturate: function (x) {
 		return Math.max(0, Math.min(1, x));
 	}},
 
@@ -1729,7 +1775,7 @@ Elemenx.Service('Blueprints', {
 	FormulaCode: function (tree, inputs) {
 		var self = this;
 		var ops = {'+': 'function (a, b) { return a + b; }', '-': 'function (a, b) { return a - b; }', '*': 'function (a, b) { return a * b; }', '/': 'function (a, b) { return b ? a / b : 0; }'};
-		var singles = {min: 'Math.min', max: 'Math.max', pow: 'B.Math().pow', step: 'function (e, x) { return x < e ? 0 : 1; }', floor: 'Math.floor', abs: 'Math.abs', sqrt: 'function (x) { return Math.sqrt(Math.max(0, x)); }', sin: 'B.Math().sin', cos: 'B.Math().cos', fract: 'function (x) { return x - Math.floor(x); }', exp: 'B.Math().exp', saturate: 'function (x) { return Math.max(0, Math.min(1, x)); }'};
+		var singles = {min: 'Math.min', max: 'Math.max', pow: 'B.Math().pow', step: 'function (e, x) { return x < e ? 0 : 1; }', floor: 'Math.floor', abs: 'Math.abs', sqrt: 'function (x) { return Math.sqrt(Math.max(0, x)); }', sin: 'B.Math().sin', cos: 'B.Math().cos', fract: 'function (x) { return x - Math.floor(x); }', exp: 'B.Math().exp', acos: 'B.Math().acos', asin: 'B.Math().asin', saturate: 'function (x) { return Math.max(0, Math.min(1, x)); }'};
 
 		function code (node) {
 			var args;
@@ -1763,6 +1809,8 @@ Elemenx.Service('Blueprints', {
 						return 'E(' + args[1] + ', E(' + args[2] + ', ' + args[0] + ', Math.min), Math.max)';
 					case 'mix':
 						return 'E(' + args[0] + ', E(E(' + args[1] + ', ' + args[0] + ', ' + ops['-'] + '), ' + args[2] + ', ' + ops['*'] + '), ' + ops['+'] + ')';
+					case 'smoothstep':
+						return '(function (a, b, x) { var s = Math.max(0, Math.min(1, (x - a) / (b - a))); return s * s * (3 - 2 * s); })(Number(' + args[0] + ') || 0, Number(' + args[1] + ') || 0, Number(' + args[2] + ') || 0)';
 					case 'round':
 						return 'B.Math().round(Number(' + args[0] + ') || 0)';
 					case 'atan2':
@@ -1799,7 +1847,7 @@ Elemenx.Service('Blueprints', {
 		var ops = this.FormulaOps;
 		var own = this.Math();
 		/* Of the own Math, as the code of a graph computes them (Math). */
-		var singles = Object.assign({}, this.FormulaSingles, {sin: own.sin, cos: own.cos, exp: own.exp, pow: own.pow});
+		var singles = Object.assign({}, this.FormulaSingles, {sin: own.sin, cos: own.cos, exp: own.exp, pow: own.pow, acos: own.acos, asin: own.asin});
 
 		function value (node) {
 			var args;
@@ -1839,6 +1887,8 @@ Elemenx.Service('Blueprints', {
 						return self.Each(args[1], self.Each(args[2], args[0], Math.min), Math.max);
 					case 'mix':
 						return self.Each(args[0], self.Each(self.Each(args[1], args[0], ops['-']), args[2], ops['*']), ops['+']);
+					case 'smoothstep':
+						return self.FormulaSmooth(Number(args[0]) || 0, Number(args[1]) || 0, Number(args[2]) || 0);
 					case 'round':
 						return own.round(Number(args[0]) || 0);
 					case 'atan2':
@@ -1935,6 +1985,8 @@ Elemenx.Service('Blueprints', {
 						return call('each', c('max'), args[1], call('each', c('min'), args[2], args[0]));
 					case 'mix':
 						return call('each', c('add'), args[0], call('each', c('mul'), call('each', c('sub'), args[1], args[0]), args[2]));
+					case 'smoothstep':
+						return call('smoothstep', call('cast', args[0], c('float')), call('cast', args[1], c('float')), call('cast', args[2], c('float')));
 					case 'round':
 					case 'ceil':
 						return call(node.Name, call('cast', args[0], c('float')));
@@ -2370,7 +2422,10 @@ Elemenx.Service('Blueprints', {
 
 						return word + '_' + index + '_' + serial;
 					}, Call: function (callee) {
+						/* Filled as the graph that calls it was (Fill). */
 						var graphOf = self.Callee(callee);
+						if (graphOf && source.filled)
+							graphOf = self.Fill(JSON.parse(JSON.stringify(graphOf)), source.filled);
 
 						if (!graphOf) {
 							diagnostics.push({File: name, Line: 0, Column: 0, Severity: 'error', Text: 'Elemenx Blueprints: no graph ' + callee + ' to call', Block: id});
@@ -2419,11 +2474,220 @@ Elemenx.Service('Blueprints', {
 	 * g_main and those of the noise), Inputs: [{Name, Type}], Keys (of its results), Returns, Diagnostics}: a block of no
 	 * numbers (a text, a list, a graph called, an action) is told there; such a graph runs by Code, IR or Compile.
 	 */
+	/*
+	 * A graph with the graphs its Call blocks call in their places (a generator of numbers is one function of no calls):
+	 * their blocks under the ID of the call (call~block), what the call is given into their Input blocks, what reads the
+	 * call out of their Result blocks; their parameters among those of the graph (a parameter it has keeps its value),
+	 * filled as the graph is (Fill). Of a call of none of that name, the graph as it is (its Call is told then). The graph
+	 * itself when it calls none; a graph that calls itself (through others too) called as it is, not put in its place
+	 * (chain: the names of the graphs it is in); eight calls deep at most. values (of a generator of numbers, Numeric: its
+	 * parameters as it is made): a Reduce of a list of numbers of a known length (a Parameter, or nothing linked: none)
+	 * unrolled too, its graph once for each item (reduce~index~block), each given the Sum of the one before, Initial the
+	 * first; 64 items at most.
+	 */
+	Inlined: function (graph, chain, values) {
+		var self = this;
+		var within = chain || [];
+		var calls = graph.blocks.filter(function (block) {
+			return ['Call', 'Reduce'].indexOf(block.type) !== -1 && block.enabled !== false && within.indexOf(self.Properties(block).Graph) === -1 && (block.type === 'Call' || values && length(block) !== null);
+		});
+		var serial = 0;
+		var copy;
+
+		/* How many items the list of a Reduce has, known as the graph is made: of the Parameter it comes of; null when not known. */
+		function length (block) {
+			var from = null;
+			var made = null;
+
+			graph.links.forEach(function (link) {
+				if (link.p2 === block.id + '-in-List')
+					from = link.p1.split('-out-')[0];
+			});
+
+			if (from === null) return 0;
+
+			graph.blocks.forEach(function (one) {
+				var key;
+				var value;
+
+				if (one.id !== from || one.type !== 'Parameter') return;
+
+				key = self.Properties(one).Key;
+				value = Object.prototype.hasOwnProperty.call(values, key) ? values[key] : (graph.parameters || []).filter(function (parameter) {
+					return parameter.key === key;
+				}).map(function (parameter) {
+					return parameter.value;
+				})[0];
+
+				if (Array.isArray(value) && value.length <= 64 && value.every(function (item) {
+					return typeof item === 'number';
+				}))
+					made = value.length;
+			});
+
+			return made;
+		}
+
+		if (!calls.length || within.length > 8) return graph;
+
+		copy = JSON.parse(JSON.stringify(graph));
+
+		/* A block of its own in the graph (a number, an item of a list), its ID under the call. */
+		function added (id, type, properties) {
+			copy.blocks.push({id: id, type: type, x: 0, y: 0, properties: Object.keys(properties).map(function (key) {
+				return {key: key, value: properties[key]};
+			})});
+
+			return id + '-out-Value';
+		}
+
+		function link (from, to) {
+			serial++;
+
+			copy.links.push({id: 'inlined-link-' + serial, p1: from, p2: to, kind: 'value'});
+		}
+
+		/* The blocks of a graph called put in the graph under a prefix, fed by feeding ({input: pin}): what its results come of ({key: pin}). */
+		function place (callee, prefix, feeding) {
+			var inputs = {};
+			var results = {};
+			var given = {};
+			var out = {};
+
+			(copy.parameters || []).forEach(function (parameter) {
+				given[parameter.key] = true;
+			});
+
+			(callee.parameters || []).forEach(function (parameter) {
+				if (!given[parameter.key])
+					copy.parameters.push(JSON.parse(JSON.stringify(parameter)));
+			});
+
+			callee.blocks.forEach(function (block) {
+				var made;
+
+				if (block.type === 'Input') {
+					inputs[block.id] = self.Properties(block).Name;
+
+					return;
+				}
+
+				if (block.type === 'Result') {
+					results[block.id] = self.Properties(block).Key || 'Value';
+
+					return;
+				}
+
+				made = JSON.parse(JSON.stringify(block));
+				made.id = prefix + block.id;
+
+				delete made.pins;
+
+				copy.blocks.push(made);
+			});
+
+			function source (pin) {
+				var from = pin.split('-out-')[0];
+				if (Object.prototype.hasOwnProperty.call(inputs, from)) return feeding[inputs[from]] || null;
+
+				return prefix + pin;
+			}
+
+			callee.links.forEach(function (one) {
+				var to = one.p2.split('-in-')[0];
+				var from = source(one.p1);
+
+				if (Object.prototype.hasOwnProperty.call(results, to)) {
+					out[results[to]] = from;
+
+					return;
+				}
+
+				if (from)
+					copy.links.push({id: prefix + one.id, p1: from, p2: prefix + one.p2, kind: one.kind});
+			});
+
+			return out;
+		}
+
+		calls.forEach(function (call) {
+			var name = self.Properties(call).Graph;
+			var callee = self.Callee(name);
+			var feeding = {};
+			var reading;
+			var out = {};
+			var count;
+			var sum;
+			var i;
+
+			if (!callee) return;
+
+			count = call.type === 'Reduce' ? length(call) : 0;
+			callee = self.Read(JSON.parse(JSON.stringify(callee)));
+
+			if (graph.filled)
+				callee = self.Fill(callee, graph.filled);
+
+			callee = self.Inlined(callee, within.concat([name]), values);
+
+			copy.links.forEach(function (one) {
+				if (one.p2.split('-in-')[0] === call.id)
+					feeding[one.p2.slice(call.id.length + 4)] = one.p1;
+			});
+
+			reading = copy.links.filter(function (one) {
+				return one.p1.split('-out-')[0] === call.id;
+			});
+
+			copy.blocks = copy.blocks.filter(function (block) {
+				return block.id !== call.id;
+			});
+			copy.links = copy.links.filter(function (one) {
+				return one.p1.split('-out-')[0] !== call.id && one.p2.split('-in-')[0] !== call.id;
+			});
+
+			if (call.type === 'Call') {
+				out = place(callee, call.id + '~', feeding);
+			}
+			else {
+				/* Each item: its Item of the list, its Index, the Sum of the one before (the first: Initial, else nought). */
+				sum = feeding.Initial || added(call.id + '~initial', 'Number', {Value: 0});
+
+				for (i = 0; i < count; i++) {
+					var prefix = call.id + '~' + i + '~';
+					var index = added(prefix + 'index', 'Number', {Value: i});
+					var item = added(prefix + 'item', 'Item', {});
+					var made;
+
+					link(feeding.List, prefix + 'item-in-List');
+					link(index, prefix + 'item-in-Index');
+
+					made = place(callee, prefix, Object.assign({}, feeding, {Item: item, Index: index, Sum: sum}));
+					sum = made.Sum || sum;
+				}
+
+				out = {Sum: sum};
+			}
+
+			reading.forEach(function (one) {
+				var key = one.p1.slice(call.id.length + 5);
+				if (out[key])
+					copy.links.push({id: one.id, p1: out[key], p2: one.p2, kind: one.kind});
+			});
+		});
+
+		copy.blocks.forEach(function (block) {
+			delete block.pins;
+		});
+
+		return this.Read(copy);
+	},
+
 	Numeric: function (graph, values, types, keys) {
 		var self = this;
-		var read = this.Read(graph);
-		var plan;
 		var given = values || {};
+		var read = this.Inlined(this.Read(graph), null, given);
+		var plan;
 		var kinds = types || {};
 		var defaults = {};
 		var needed = {};
@@ -2557,6 +2821,7 @@ Elemenx.Service('Blueprints', {
 
 			return {E: call.apply(null, ['n_read'].concat(numbers.map(function (one, index) {
 				if (index === 2 && octaves) return octaves;
+				if (one && one.E) return one.E;
 
 				return c(typeof one === 'boolean' ? one : Number(one), typeof one === 'boolean' ? 'bool' : 'float');
 			}), [bin('*', call('x', p.E), s.E), bin('*', call('y', p.E), s.E), bin('*', call('z', p.E), s.E)])), T: 'float'};
@@ -2578,12 +2843,45 @@ Elemenx.Service('Blueprints', {
 		}
 
 		/*
+		 * The item of a list of numbers at an index (Item): its whole part, within the list (of an empty list, nought); of a
+		 * vector its part so (a list of two to four numbers is a vector), of a number the number.
+		 */
+		function item (list, index) {
+			var at = kept(sized(index, 1));
+			var count;
+			var made;
+			var k;
+
+			/* Of a list and an index both known: the number itself (a Reduce unrolled reads no list: wasm holds none of its own). */
+			if (list.T === 'floats' && list.E.Op === 'const' && at.E.Op === 'const')
+				return {E: c(list.E.Value.length ? list.E.Value[Math.max(0, Math.min(list.E.Value.length - 1, Math.floor(at.E.Value)))] : 0, 'float'), T: 'float'};
+
+			if (list.T === 'floats') {
+				list = kept(list);
+				count = kept({E: call('toFloat', {Op: 'length', List: list.E}), T: 'float'});
+
+				return {E: {Op: 'select', Test: bin('>', count.E, c(0, 'float')), A: {Op: 'index', List: list.E, At: call('toInt', call('max', c(0, 'float'), call('min', bin('-', count.E, c(1, 'float')), call('floor', at.E))))}, B: c(0, 'float')}, T: 'float'};
+			}
+
+			if (!vectors[list.T])
+				return sized(list, 1);
+
+			list = kept(list);
+			made = call(['x', 'y', 'z', 'w'][size(list.T) - 1], list.E);
+
+			for (k = size(list.T) - 2; k >= 0; k--)
+				made = {Op: 'select', Test: bin('<', at.E, c(k + 1, 'float')), A: call(['x', 'y', 'z', 'w'][k], list.E), B: made};
+
+			return {E: made, T: 'float'};
+		}
+
+		/*
 		 * A formula of the inputs of its block (Formula), of numbers: as FormulaValue computes it, part by part of a vector, b ? a / b
 		 * : 0 of a division; null when a part of it is not of numbers (a text, a name it is not given).
 		 */
 		function formula (tree, input) {
 			var calls = {min: 'min', max: 'max', pow: 'pow'};
-			var singles = {floor: 'floor', abs: 'abs', sin: 'sin', cos: 'cos', fract: 'fract', exp: 'exp', round: 'round', ceil: 'ceil'};
+			var singles = {floor: 'floor', abs: 'abs', sin: 'sin', cos: 'cos', fract: 'fract', exp: 'exp', acos: 'acos', asin: 'asin', round: 'round', ceil: 'ceil'};
 
 			function value (node) {
 				var args;
@@ -2702,6 +3000,13 @@ Elemenx.Service('Blueprints', {
 						return single(args[0], function (x) {
 							return call('max', c(0, 'float'), call('min', c(1, 'float'), x));
 						});
+					/* Of numbers: its share between a and b cut to 0..1, s * s * (3 - 2 * s), as FormulaSmooth. */
+					case 'smoothstep':
+						t = kept(sized(args[0], 1));
+						n = kept({E: bin('-', sized(args[1], 1).E, t.E), T: 'float'});
+						n = kept({E: call('max', c(0, 'float'), call('min', c(1, 'float'), bin('/', bin('-', sized(args[2], 1).E, t.E), n.E))), T: 'float'});
+
+						return {E: bin('*', bin('*', n.E, n.E), bin('-', c(3, 'float'), bin('*', c(2, 'float'), n.E))), T: 'float'};
 					case 'clamp':
 						return each(args[1], each(args[2], args[0], function (h, x) {
 							return call('min', h, x);
@@ -2883,7 +3188,24 @@ Elemenx.Service('Blueprints', {
 				case 'Fall':
 					return {Out: {E: geometry('geo_fall', [sized(input.Distance, 1).E, sized(input.Radius, 1).E]), T: 'float'}};
 				case 'Nearest':
-					return input.Points.T === 'floats' ? parts({E: geometry('geo_nearest', [input.Points.E, sized(input.X, 1).E, sized(input.Y, 1).E, sized(input.Z, 1).E]), T: 'vec3'}, ['Index', 'Near', 'Next']) : null;
+					return input.Points.T === 'floats' ? parts({E: geometry('geo_nearest', [input.Points.E, sized(input.X, 1).E, sized(input.Y, 1).E, sized(input.Z, 1).E]), T: 'vec4'}, ['Index', 'Near', 'Next', 'Other']) : null;
+				case 'Edits':
+					return input.Packed.T === 'floats' && input.Softs.T === 'floats' ? {Height: {E: geometry('geo_edits', [input.Packed.E, input.Softs.E].concat(['X', 'Y', 'Z', 'Height'].map(function (key) {
+						return sized(input[key], 1).E;
+					}))), T: 'float'}} : null;
+				case 'River':
+					return input.Packed.T === 'floats' ? parts({E: geometry('geo_river', [input.Packed.E].concat(['X', 'Y', 'Z', 'Radius', 'Width', 'Bend'].map(function (key) {
+						return sized(input[key], 1).E;
+					}))), T: 'vec3'}, ['Far', 'Flow', 'Level']) : null;
+				case 'Strokes':
+					return input.Packed.T === 'floats' ? {Value: {E: geometry('geo_strokes', [input.Packed.E, sized(input.X, 1).E, sized(input.Y, 1).E, sized(input.Z, 1).E]), T: 'float'}} : null;
+				case 'Painted':
+					return input.Packed.T === 'floats' ? {Value: {E: geometry('geo_painted', [input.Packed.E, sized(input.X, 1).E, sized(input.Y, 1).E, sized(input.Z, 1).E]), T: 'float'}} : null;
+				/* An item of a list of numbers (its index cut to a whole one within it; of none, nought), of a vector its part. */
+				case 'Item':
+					return {Value: item(input.List, input.Index)};
+				case 'Count':
+					return {Count: input.List.T === 'floats' && input.List.E.Op === 'const' ? {E: c(input.List.E.Value.length, 'float'), T: 'float'} : input.List.T === 'floats' ? {E: call('toFloat', {Op: 'length', List: input.List.E}), T: 'float'} : {E: c(size(input.List.T), 'float'), T: 'float'}};
 				case 'NoiseSpec':
 					whole = noise.Numbers(noise.Whole(self.NoiseOf(properties)));
 
@@ -2895,6 +3217,10 @@ Elemenx.Service('Blueprints', {
 					else {
 						t = null;
 					}
+
+					/* Its seed linked (a number, as Math.SeedOffset gives it): in the place of the one of its property. */
+					if (input.Seed && !(input.Seed.E.Op === 'const' && !input.Seed.E.Value))
+						whole = whole.slice(0, 9).concat([kept(sized(input.Seed, 1))]).concat(whole.slice(10));
 
 					return {Value: noiseCall(whole, input.Position, input.Scale, t)};
 				case 'Noise':
@@ -3077,7 +3403,7 @@ Elemenx.Service('Blueprints', {
 			}
 
 			if (piece.type === 'Parameter') {
-				made = {Value: constant(Object.prototype.hasOwnProperty.call(given, properties.Key) ? given[properties.Key] : defaults[properties.Key], kinds[properties.Key])};
+				made = {Value: constant(Object.prototype.hasOwnProperty.call(given, properties.Key) ? given[properties.Key] : defaults[properties.Key], kinds[properties.Key] || (properties.Type === 'floats' ? 'floats' : undefined))};
 			}
 			else if (piece.type === 'Input') {
 				if (!inputs.some(function (one) {
@@ -3310,6 +3636,36 @@ Elemenx.Service('Blueprints', {
 		return bytes;
 	},
 
+	/*
+	 * The numbers of a seed one after another, the index-th of them (0 to 1, 0 the first): each the FNV-1a of the seed and
+	 * the one before ('seed:state'), of five places; the same in any language (what the plates of a planet were made of).
+	 */
+	Chain: function (seed, index) {
+		var key = String(seed);
+		var at = Math.max(0, Math.floor(Number(index) || 0));
+		var list;
+		var state;
+
+		this.Chains = this.Chains || {};
+		list = this.Chains[key] = this.Chains[key] || {States: [2166136261], Values: []};
+
+		while (list.Values.length <= at) {
+			var text = key + ':' + list.States[list.States.length - 1];
+			var value = 2166136261;
+			var k;
+
+			for (k = 0; k < text.length; k++)
+				value = Math.imul(value ^ text.charCodeAt(k), 16777619);
+
+			state = value >>> 0;
+
+			list.States.push(state);
+			list.Values.push((state % 100000) / 100000);
+		}
+
+		return list.Values[at];
+	},
+
 	/* A number 0 to 1 of two values (of text or numbers), the very one rt_hash(rt_key(a), rt_key(b)) of the IR in JavaScript gives. */
 	Hash2: function (a, b) {
 		function key (value) {
@@ -3422,7 +3778,7 @@ Elemenx.Service('Blueprints', {
 		});
 
 		/* A parameter of the graph: a uniform in a shader, a value given in code. */
-		this.Node('Parameter', {Graphs: '*', Group: 'value', Properties: [{Key: 'Key', Type: 'text', Value: ''}, {Key: 'Type', Type: 'select', Options: ['float', 'vec2', 'vec3', 'vec4', 'bool', 'int', 'text', 'any'], Value: 'float'}],
+		this.Node('Parameter', {Graphs: '*', Group: 'value', Properties: [{Key: 'Key', Type: 'text', Value: ''}, {Key: 'Type', Type: 'select', Options: ['float', 'vec2', 'vec3', 'vec4', 'bool', 'int', 'text', 'any', 'floats'], Value: 'float'}],
 			Outputs: function (properties) {
 				return [{Key: 'Value', Type: properties.Type || 'float'}];
 			},
@@ -3632,12 +3988,20 @@ Elemenx.Service('Blueprints', {
 
 		/* A noise of any algorithm of the Noise Service, by its spec: the same as a ground, a texture or a shader made of it. */
 		/* Octaves: linked, its number of octaves instead of its property's (one code for planets of other detail); 0, its property. */
-		this.Node('NoiseSpec', {Graphs: numeric, Group: 'noise', Properties: self.NoiseProperties(), Inputs: [{Key: 'Position', Type: 'vec3', Value: 0}, {Key: 'Scale', Type: 'float', Value: 1}, {Key: 'Octaves', Type: 'float', Value: 0}], Outputs: [{Key: 'Value', Type: 'float'}],
+		this.Node('NoiseSpec', {Graphs: numeric, Group: 'noise', Properties: self.NoiseProperties(), Inputs: [{Key: 'Position', Type: 'vec3', Value: 0}, {Key: 'Scale', Type: 'float', Value: 1}, {Key: 'Octaves', Type: 'float', Value: 0}, {Key: 'Seed', Type: 'float', Value: 0}], Outputs: [{Key: 'Value', Type: 'float'}],
 			Compute: function (inputs, properties) {
 				var p = inputs.Position;
+				var whole;
 				var spec = Number(inputs.Octaves) ? Object.assign(self.NoiseOf(properties), {Octaves: Number(inputs.Octaves)}) : self.NoiseOf(properties);
 				var key = JSON.stringify(spec);
 				var samplers = self.Samplers = self.Samplers || {};
+
+				/* Of a seed given as a number (as Math.SeedOffset gives it), in the place of the one of its property. */
+				if (Number(inputs.Seed)) {
+					whole = Object.assign(self.$Service('Noise').Whole(spec), {Seed: Number(inputs.Seed)});
+
+					return {Value: self.$Service('Noise').Read(whole, p[0] * inputs.Scale, p[1] * inputs.Scale, p[2] * inputs.Scale)};
+				}
 
 				samplers[key] = samplers[key] || self.$Service('Noise').Make(spec);
 
@@ -3697,9 +4061,37 @@ Elemenx.Service('Blueprints', {
 			}
 		});
 
-		this.Node('Nearest', {Graphs: numeric, Group: 'geometry', Inputs: [{Key: 'Points', Type: 'floats', Value: []}, {Key: 'X', Type: 'float', Value: 0}, {Key: 'Y', Type: 'float', Value: 0}, {Key: 'Z', Type: 'float', Value: 0}], Outputs: [{Key: 'Index', Type: 'float'}, {Key: 'Near', Type: 'float'}, {Key: 'Next', Type: 'float'}],
+		this.Node('Nearest', {Graphs: numeric, Group: 'geometry', Inputs: [{Key: 'Points', Type: 'floats', Value: []}, {Key: 'X', Type: 'float', Value: 0}, {Key: 'Y', Type: 'float', Value: 0}, {Key: 'Z', Type: 'float', Value: 0}], Outputs: [{Key: 'Index', Type: 'float'}, {Key: 'Near', Type: 'float'}, {Key: 'Next', Type: 'float'}, {Key: 'Other', Type: 'float'}],
 			Compute: function (inputs) {
 				return self.$Service('Geometry').Nearest(inputs.Points || [], Number(inputs.X) || 0, Number(inputs.Y) || 0, Number(inputs.Z) || 0);
+			}
+		});
+
+		/* A height as brushes along paths of directions packed as numbers leave it (Geometry.Edits), Softs the heights the smooth ones go to. */
+		this.Node('Edits', {Graphs: numeric, Group: 'geometry', Inputs: [{Key: 'Packed', Type: 'floats', Value: []}, {Key: 'Softs', Type: 'floats', Value: []}, {Key: 'X', Type: 'float', Value: 0}, {Key: 'Y', Type: 'float', Value: 0}, {Key: 'Z', Type: 'float', Value: 0}, {Key: 'Height', Type: 'float', Value: 0}], Outputs: [{Key: 'Height', Type: 'float'}],
+			Compute: function (inputs) {
+				return {Height: self.$Service('Geometry').Edits(inputs.Packed || [], inputs.Softs || [], Number(inputs.X) || 0, Number(inputs.Y) || 0, Number(inputs.Z) || 0, Number(inputs.Height) || 0)};
+			}
+		});
+
+		/* The nearest river to a direction of its segments packed as numbers (Geometry.River): how far, its flow and its level there. */
+		this.Node('River', {Graphs: numeric, Group: 'geometry', Inputs: [{Key: 'Packed', Type: 'floats', Value: []}, {Key: 'X', Type: 'float', Value: 0}, {Key: 'Y', Type: 'float', Value: 0}, {Key: 'Z', Type: 'float', Value: 0}, {Key: 'Radius', Type: 'float', Value: 1}, {Key: 'Width', Type: 'float', Value: 0.015}, {Key: 'Bend', Type: 'float', Value: 11}], Outputs: [{Key: 'Far', Type: 'float'}, {Key: 'Flow', Type: 'float'}, {Key: 'Level', Type: 'float'}],
+			Compute: function (inputs) {
+				return self.$Service('Geometry').River(inputs.Packed || [], Number(inputs.X) || 0, Number(inputs.Y) || 0, Number(inputs.Z) || 0, Number(inputs.Radius) || 1, Number(inputs.Width) || 0, Number(inputs.Bend) || 0);
+			}
+		});
+
+		/* Lines of directions on a sphere packed as numbers (Geometry.Strokes): what they give a direction, their sum. */
+		this.Node('Strokes', {Graphs: numeric, Group: 'geometry', Inputs: [{Key: 'Packed', Type: 'floats', Value: []}, {Key: 'X', Type: 'float', Value: 0}, {Key: 'Y', Type: 'float', Value: 0}, {Key: 'Z', Type: 'float', Value: 0}], Outputs: [{Key: 'Value', Type: 'float'}],
+			Compute: function (inputs) {
+				return {Value: self.$Service('Geometry').Strokes(inputs.Packed || [], Number(inputs.X) || 0, Number(inputs.Y) || 0, Number(inputs.Z) || 0)};
+			}
+		});
+
+		/* Areas of directions on a sphere packed as numbers (Geometry.Painted): how much a direction is of them, their sum. */
+		this.Node('Painted', {Graphs: numeric, Group: 'geometry', Inputs: [{Key: 'Packed', Type: 'floats', Value: []}, {Key: 'X', Type: 'float', Value: 0}, {Key: 'Y', Type: 'float', Value: 0}, {Key: 'Z', Type: 'float', Value: 0}], Outputs: [{Key: 'Value', Type: 'float'}],
+			Compute: function (inputs) {
+				return {Value: self.$Service('Geometry').Painted(inputs.Packed || [], Number(inputs.X) || 0, Number(inputs.Y) || 0, Number(inputs.Z) || 0)};
 			}
 		});
 
@@ -3857,6 +4249,13 @@ Elemenx.Service('Blueprints', {
 		this.Node('Random', {Graphs: code, Group: 'function', Inputs: [{Key: 'Seed', Type: 'any', Value: 0}, {Key: 'Key', Type: 'any', Value: 0}], Outputs: [{Key: 'Value', Type: 'float'}],
 			Compute: function (inputs) {
 				return {Value: self.Hash2(inputs.Seed, inputs.Key)};
+			}
+		});
+
+		/* The index-th number of a seed (Chain): of a chain of them, each of the one before. */
+		this.Node('Chain', {Graphs: code, Group: 'function', Inputs: [{Key: 'Seed', Type: 'any', Value: 0}, {Key: 'Index', Type: 'float', Value: 0}], Outputs: [{Key: 'Value', Type: 'float'}],
+			Compute: function (inputs) {
+				return {Value: self.Chain(inputs.Seed, inputs.Index)};
 			}
 		});
 

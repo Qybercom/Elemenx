@@ -21,6 +21,8 @@ ModelRoles: что такое части модели — её колёса, р�
 
 Rig отдаёт ещё Sockets, Emitters и Colliders, а у Openings появились Stretch, Corner и Length. Приводы, которые ставят часть сразу, без Pace: steer, wipers, stroke, wheel-steer, roll, pitch, yaw, roll-air, aim-yaw, aim-pitch, fire, clock-hour, clock-minute.
 
+Каталог ролей (Catalogue: двери, люки, руль, педали, фары, подвеска, рули самолёта, оружие, механизмы, точки) лежит в resources/models/roles.json; новая роль — новая запись, без правки кода.
+
 ## Методы
 
 - `Version()`
@@ -50,3 +52,4 @@ Rig отдаёт ещё Sockets, Emitters и Colliders, а у Openings появ�
 - [moves the door of a house as its role says: Part(id, role) sets it, it comes by degrees, the scene tells it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L161) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
 - [drives a shock by its wheel, a clock by the time, a turret by its aim; holds at a socket, emits, and collides](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L222) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
 - [lights a lamp of a role as far as it is set, turns a fan while it is on, and remakes the model when the roles change](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js#L292) — `libraries/ElemenxGraphics/services/ModelRoles/ModelRoles.test.js`
+- [reads the rigs of a camera, the roles of parts, the materials a shot hits and the evergreen plants of tables](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/hardcode-tables.test.js#L111) — `tests/regression/hardcode-tables.test.js`

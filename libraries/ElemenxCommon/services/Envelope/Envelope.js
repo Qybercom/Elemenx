@@ -198,9 +198,10 @@ Elemenx.Service('Envelope', {
 
 	Make: function (spec, body) {
 		var given = this.Spec(spec);
-		var radius = Math.max(1, Number(body && body.Radius) || 6371);
-		var mass = Number(body && body.Mass) || Math.pow(radius / 6371, 3);
-		var g = 9.80665 * mass / Math.pow(radius / 6371, 2);
+		var earth = this.$Service('Astronomy').EarthRadius;
+		var radius = Math.max(1, Number(body && body.Radius) || earth);
+		var mass = Number(body && body.Mass) || Math.pow(radius / earth, 3);
+		var g = 9.80665 * mass / Math.pow(radius / earth, 2);
 		var molar = Number(given.MolarMass) || 0.029;
 		var phases = this.Phases;
 		var stride = this.Stride;

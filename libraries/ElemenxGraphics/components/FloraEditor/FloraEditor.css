@@ -1,6 +1,6 @@
 .elemenx-flora-editor {
 	display: grid;
-	grid-template-columns: minmax(140px, 0.7fr) minmax(0, 1.6fr) 250px;
+	grid-template-columns: auto minmax(0, 1fr) auto;
 	height: 100%;
 	min-height: 420px;
 	overflow: hidden;
@@ -106,6 +106,12 @@
 
 	.elemenx-flora-editor-view {
 		grid-row: 1;
+	}
+
+	/* Under one another on a phone: as wide as it, whatever width was dragged. */
+	.elemenx-flora-editor-reference,
+	.elemenx-flora-editor-panel {
+		min-width: 100%;
 	}
 
 	.elemenx-flora-editor-reference {

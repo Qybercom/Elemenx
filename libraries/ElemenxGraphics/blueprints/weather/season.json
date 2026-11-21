@@ -1,0 +1,809 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "season",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "season-input-fixed",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Fixed"
+				}
+			]
+		},
+		{
+			"id": "season-input-haslatitude",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HasLatitude"
+				}
+			]
+		},
+		{
+			"id": "season-input-latitude",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Latitude"
+				}
+			]
+		},
+		{
+			"id": "season-input-yeardays",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "YearDays"
+				}
+			]
+		},
+		{
+			"id": "season-input-dayofyear",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "DayOfYear"
+				}
+			]
+		},
+		{
+			"id": "season-far",
+			"type": "Formula",
+			"x": 300,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HasLatitude < 0.5 ? 0.75 : saturate((abs(Latitude) - 15) / 20)"
+				}
+			]
+		},
+		{
+			"id": "season-south",
+			"type": "Formula",
+			"x": 600,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HasLatitude > 0.5 && Latitude < 0 ? -1 : 1"
+				}
+			]
+		},
+		{
+			"id": "season-phase",
+			"type": "Formula",
+			"x": 900,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(DayOfYear - YearDays * 172 / 365) / YearDays * 3.141592653589793 * 2"
+				}
+			]
+		},
+		{
+			"id": "season-warmth",
+			"type": "Formula",
+			"x": 300,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Fixed > 3.5 ? -1 : Fixed > 2.5 ? -0.35 : Fixed > 1.5 ? 1 : Fixed > 0.5 ? -0.3 : cos(Phase) * South * Far + (1 - Far) * 0.6"
+				}
+			]
+		},
+		{
+			"id": "season-rising",
+			"type": "Formula",
+			"x": 600,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Fixed > 2.5 ? 0 : Fixed > 0.5 ? 1 : sin(Phase) * South < 0 ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "season-cold",
+			"type": "Formula",
+			"x": 900,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HasLatitude < 0.5 ? 0.7 : saturate((abs(Latitude) - 30) / 20)"
+				}
+			]
+		},
+		{
+			"id": "season-turnv",
+			"type": "Formula",
+			"x": 300,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Rising > 0.5 ? 0 : Autumn"
+				}
+			]
+		},
+		{
+			"id": "season-blossomv",
+			"type": "Formula",
+			"x": 600,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Rising > 0.5 ? Spring * SpringEnd : 0"
+				}
+			]
+		},
+		{
+			"id": "season-dryv",
+			"type": "Formula",
+			"x": 900,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Summer * 0.3 + (Rising > 0.5 ? 0 : Fall * 0.4)"
+				}
+			]
+		},
+		{
+			"id": "season-snowv",
+			"type": "Formula",
+			"x": 300,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Winter * Cold"
+				}
+			]
+		},
+		{
+			"id": "season-bare",
+			"type": "Smoothstep",
+			"x": 1300,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "season-bare-low",
+			"type": "Number",
+			"x": 1150,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Value",
+					"value": -0.2
+				}
+			]
+		},
+		{
+			"id": "season-bare-high",
+			"type": "Number",
+			"x": 1150,
+			"y": 100,
+			"properties": [
+				{
+					"key": "Value",
+					"value": -0.75
+				}
+			]
+		},
+		{
+			"id": "season-autumn",
+			"type": "Smoothstep",
+			"x": 1300,
+			"y": 190,
+			"properties": []
+		},
+		{
+			"id": "season-autumn-low",
+			"type": "Number",
+			"x": 1150,
+			"y": 190,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.45
+				}
+			]
+		},
+		{
+			"id": "season-autumn-high",
+			"type": "Number",
+			"x": 1150,
+			"y": 250,
+			"properties": [
+				{
+					"key": "Value",
+					"value": -0.25
+				}
+			]
+		},
+		{
+			"id": "season-spring",
+			"type": "Smoothstep",
+			"x": 1300,
+			"y": 340,
+			"properties": []
+		},
+		{
+			"id": "season-spring-low",
+			"type": "Number",
+			"x": 1150,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Value",
+					"value": -0.6
+				}
+			]
+		},
+		{
+			"id": "season-spring-high",
+			"type": "Number",
+			"x": 1150,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Value",
+					"value": -0.2
+				}
+			]
+		},
+		{
+			"id": "season-springend",
+			"type": "Smoothstep",
+			"x": 1300,
+			"y": 490,
+			"properties": []
+		},
+		{
+			"id": "season-springend-low",
+			"type": "Number",
+			"x": 1150,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.45
+				}
+			]
+		},
+		{
+			"id": "season-springend-high",
+			"type": "Number",
+			"x": 1150,
+			"y": 550,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.1
+				}
+			]
+		},
+		{
+			"id": "season-summer",
+			"type": "Smoothstep",
+			"x": 1300,
+			"y": 640,
+			"properties": []
+		},
+		{
+			"id": "season-summer-low",
+			"type": "Number",
+			"x": 1150,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.7
+				}
+			]
+		},
+		{
+			"id": "season-summer-high",
+			"type": "Number",
+			"x": 1150,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "season-fall",
+			"type": "Smoothstep",
+			"x": 1300,
+			"y": 790,
+			"properties": []
+		},
+		{
+			"id": "season-fall-low",
+			"type": "Number",
+			"x": 1150,
+			"y": 790,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.3
+				}
+			]
+		},
+		{
+			"id": "season-fall-high",
+			"type": "Number",
+			"x": 1150,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Value",
+					"value": -0.4
+				}
+			]
+		},
+		{
+			"id": "season-winter",
+			"type": "Smoothstep",
+			"x": 1300,
+			"y": 940,
+			"properties": []
+		},
+		{
+			"id": "season-winter-low",
+			"type": "Number",
+			"x": 1150,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Value",
+					"value": -0.55
+				}
+			]
+		},
+		{
+			"id": "season-winter-high",
+			"type": "Number",
+			"x": 1150,
+			"y": 1000,
+			"properties": [
+				{
+					"key": "Value",
+					"value": -0.92
+				}
+			]
+		},
+		{
+			"id": "season-result-warmth",
+			"type": "Result",
+			"x": 1700,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Warmth"
+				}
+			]
+		},
+		{
+			"id": "season-result-rising",
+			"type": "Result",
+			"x": 1700,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Rising"
+				}
+			]
+		},
+		{
+			"id": "season-result-bare",
+			"type": "Result",
+			"x": 1700,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Bare"
+				}
+			]
+		},
+		{
+			"id": "season-result-turn",
+			"type": "Result",
+			"x": 1700,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Turn"
+				}
+			]
+		},
+		{
+			"id": "season-result-blossom",
+			"type": "Result",
+			"x": 1700,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Blossom"
+				}
+			]
+		},
+		{
+			"id": "season-result-dry",
+			"type": "Result",
+			"x": 1700,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Dry"
+				}
+			]
+		},
+		{
+			"id": "season-result-snow",
+			"type": "Result",
+			"x": 1700,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Snow"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "season-link-0",
+			"p1": "season-bare-low-out-Value",
+			"p2": "season-bare-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-1",
+			"p1": "season-bare-high-out-Value",
+			"p2": "season-bare-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-2",
+			"p1": "season-warmth-out-Value",
+			"p2": "season-bare-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-3",
+			"p1": "season-autumn-low-out-Value",
+			"p2": "season-autumn-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-4",
+			"p1": "season-autumn-high-out-Value",
+			"p2": "season-autumn-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-5",
+			"p1": "season-warmth-out-Value",
+			"p2": "season-autumn-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-6",
+			"p1": "season-spring-low-out-Value",
+			"p2": "season-spring-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-7",
+			"p1": "season-spring-high-out-Value",
+			"p2": "season-spring-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-8",
+			"p1": "season-warmth-out-Value",
+			"p2": "season-spring-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-9",
+			"p1": "season-springend-low-out-Value",
+			"p2": "season-springend-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-10",
+			"p1": "season-springend-high-out-Value",
+			"p2": "season-springend-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-11",
+			"p1": "season-warmth-out-Value",
+			"p2": "season-springend-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-12",
+			"p1": "season-summer-low-out-Value",
+			"p2": "season-summer-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-13",
+			"p1": "season-summer-high-out-Value",
+			"p2": "season-summer-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-14",
+			"p1": "season-warmth-out-Value",
+			"p2": "season-summer-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-15",
+			"p1": "season-fall-low-out-Value",
+			"p2": "season-fall-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-16",
+			"p1": "season-fall-high-out-Value",
+			"p2": "season-fall-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-17",
+			"p1": "season-warmth-out-Value",
+			"p2": "season-fall-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-18",
+			"p1": "season-winter-low-out-Value",
+			"p2": "season-winter-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-19",
+			"p1": "season-winter-high-out-Value",
+			"p2": "season-winter-in-High",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-20",
+			"p1": "season-warmth-out-Value",
+			"p2": "season-winter-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-21",
+			"p1": "season-input-haslatitude-out-Value",
+			"p2": "season-far-in-HasLatitude",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-22",
+			"p1": "season-input-latitude-out-Value",
+			"p2": "season-far-in-Latitude",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-23",
+			"p1": "season-input-haslatitude-out-Value",
+			"p2": "season-south-in-HasLatitude",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-24",
+			"p1": "season-input-latitude-out-Value",
+			"p2": "season-south-in-Latitude",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-25",
+			"p1": "season-input-dayofyear-out-Value",
+			"p2": "season-phase-in-DayOfYear",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-26",
+			"p1": "season-input-yeardays-out-Value",
+			"p2": "season-phase-in-YearDays",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-27",
+			"p1": "season-input-fixed-out-Value",
+			"p2": "season-warmth-in-Fixed",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-28",
+			"p1": "season-phase-out-Value",
+			"p2": "season-warmth-in-Phase",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-29",
+			"p1": "season-south-out-Value",
+			"p2": "season-warmth-in-South",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-30",
+			"p1": "season-far-out-Value",
+			"p2": "season-warmth-in-Far",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-31",
+			"p1": "season-input-fixed-out-Value",
+			"p2": "season-rising-in-Fixed",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-32",
+			"p1": "season-phase-out-Value",
+			"p2": "season-rising-in-Phase",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-33",
+			"p1": "season-south-out-Value",
+			"p2": "season-rising-in-South",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-34",
+			"p1": "season-input-haslatitude-out-Value",
+			"p2": "season-cold-in-HasLatitude",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-35",
+			"p1": "season-input-latitude-out-Value",
+			"p2": "season-cold-in-Latitude",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-36",
+			"p1": "season-rising-out-Value",
+			"p2": "season-turnv-in-Rising",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-37",
+			"p1": "season-autumn-out-Out",
+			"p2": "season-turnv-in-Autumn",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-38",
+			"p1": "season-rising-out-Value",
+			"p2": "season-blossomv-in-Rising",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-39",
+			"p1": "season-spring-out-Out",
+			"p2": "season-blossomv-in-Spring",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-40",
+			"p1": "season-springend-out-Out",
+			"p2": "season-blossomv-in-SpringEnd",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-41",
+			"p1": "season-summer-out-Out",
+			"p2": "season-dryv-in-Summer",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-42",
+			"p1": "season-rising-out-Value",
+			"p2": "season-dryv-in-Rising",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-43",
+			"p1": "season-fall-out-Out",
+			"p2": "season-dryv-in-Fall",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-44",
+			"p1": "season-winter-out-Out",
+			"p2": "season-snowv-in-Winter",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-45",
+			"p1": "season-cold-out-Value",
+			"p2": "season-snowv-in-Cold",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-result-warmth",
+			"p1": "season-warmth-out-Value",
+			"p2": "season-result-warmth-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-result-rising",
+			"p1": "season-rising-out-Value",
+			"p2": "season-result-rising-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-result-bare",
+			"p1": "season-bare-out-Out",
+			"p2": "season-result-bare-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-result-turn",
+			"p1": "season-turnv-out-Value",
+			"p2": "season-result-turn-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-result-blossom",
+			"p1": "season-blossomv-out-Value",
+			"p2": "season-result-blossom-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-result-dry",
+			"p1": "season-dryv-out-Value",
+			"p2": "season-result-dry-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "season-link-result-snow",
+			"p1": "season-snowv-out-Value",
+			"p2": "season-result-snow-in-Value",
+			"kind": "value"
+		}
+	]
+}

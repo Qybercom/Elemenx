@@ -24,3 +24,5 @@ Of(scene) — реестр сцены, один на её элемент. Он �
 - break — разбить (Scene.Break);
 - die — сыграть клип die и оставить;
 - keep — ничего.
+
+Bar(context, x, y, part, color, width, height) — полоса здоровья на холсте 2D с серединой в x, y (пиксели): заливка шириной width и высотой height, её доля part (0…1) цветом color, вокруг тёмная рамка на пиксель шире. Ей рисуют полосы GameCombat и GameStrategy.

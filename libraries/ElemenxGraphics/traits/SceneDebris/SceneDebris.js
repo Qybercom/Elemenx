@@ -241,18 +241,8 @@ Elemenx.Trait('SceneDebris', {
 			return made.length;
 		};
 
-		self.Effects({
-			transporter: {Lamp: {Color: '#a8dcff', Power: 0.9, Radius: 9, Flicker: 0.25}, Once: true, Lasts: 1.6, Layers: [
-				{Kind: 'beam', Life: 1.6, Speed: [2.4, 2.4], Size: [0.75, 0.75], Hollow: 0.55, Soft: 2, Color: [0.35, 0.65, 1], Hot: [0.9, 0.97, 1], Blend: 'add'},
-				{Kind: 'mote', Count: 140, Life: 1.5, Speed: [0.2, 1.4], Spread: 0.5, Rise: 1.2, Drag: 0.6, Size: [0.035, 0.008], Wander: 1.4, Color: [0.75, 0.9, 1], Blend: 'add', Base: 4},
-				{Kind: 'spark', Count: 50, Life: 0.9, Speed: [0.3, 1.6], Spread: 1.2, Rise: 1.5, Drag: 1.2, Size: [0.01, 0.004], Stretch: 0.02, Wander: 0.8, Color: [1, 0.92, 0.7], Blend: 'add'}
-			]}
-		});
-
 		function colorOf (text) {
-			var hex = String(text || '').replace('#', '');
-
-			return /^[0-9a-f]{6}$/i.test(hex) ? [parseInt(hex.slice(0, 2), 16) / 255, parseInt(hex.slice(2, 4), 16) / 255, parseInt(hex.slice(4, 6), 16) / 255] : [0.62, 0.86, 1];
+			return engine.Hex(text, [0.62, 0.86, 1]);
 		}
 
 		/* A beaming: away from where it stands, then to the place. */

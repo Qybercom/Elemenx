@@ -1,0 +1,29 @@
+{
+	"Mountains": {
+		"Width": 150,
+		"Least": 1,
+		"Reach": 1,
+		"Amount": 4000,
+		"Of": "Height",
+		"Power": 1.5
+	},
+	"Rift": {
+		"Width": 60,
+		"Least": 1,
+		"Reach": 1,
+		"Amount": 1200,
+		"Of": "Depth",
+		"Power": 1
+	},
+	"River": {
+		"Width": 6,
+		"Least": 0.1,
+		"Reach": 4,
+		"Amount": 0.85,
+		"Of": "",
+		"Power": 1
+	},
+	"Area": {
+		"Edge": 200
+	}
+}

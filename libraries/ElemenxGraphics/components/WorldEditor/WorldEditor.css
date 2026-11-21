@@ -126,6 +126,16 @@
 	min-height: 0;
 }
 
+/* A cutscene of the world: its location to choose above, the scene of it, its editor under it. */
+.elemenx-world-editor-cutscene {
+	display: grid;
+	grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.elemenx-world-editor-cutscene-scene {
+	min-height: 0;
+}
+
 /* On a phone the panel goes over the view, under it. */
 @media (max-width: 700px) {
 	.elemenx-world-editor-body {

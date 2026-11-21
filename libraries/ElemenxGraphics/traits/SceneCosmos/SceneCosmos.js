@@ -71,9 +71,7 @@ Elemenx.Trait('SceneCosmos', {
 		}
 
 		function color (value) {
-			var text = String(value).replace('#', '');
-
-			return [parseInt(text.slice(0, 2), 16) / 255, parseInt(text.slice(2, 4), 16) / 255, parseInt(text.slice(4, 6), 16) / 255];
+			return engine.Hex(value, [1, 1, 1]);
 		}
 
 		function hash (text) {
@@ -215,6 +213,7 @@ Elemenx.Trait('SceneCosmos', {
 			var galaxy = told.Galaxy && typeof told.Galaxy === 'object' ? told.Galaxy : {};
 			var m = galaxy.Manifest || (galaxy.Radius && galaxy.Phase !== undefined ? galaxy : galaxies.Make(Object.assign({Seed: seed + ':galaxy', Kind: 'spiral'}, galaxy)).Manifest);
 			var shape = galaxies.Shape(m);
+			var bulge = galaxies.BulgeOf(m);
 			var sown = hash(seed + 'place');
 			var angle = sown % 6283 / 1000;
 			var place = told.Place ? told.Place.map(Number) : [Math.cos(angle) * m.Radius * 0.54, (sown % 61 - 30), Math.sin(angle) * m.Radius * 0.54];
@@ -239,7 +238,7 @@ Elemenx.Trait('SceneCosmos', {
 					turn.push(centre[i] * middle[j] + [0, 1, 0][i] * pole[j] + side[i] * aside[j]);
 			}
 
-			var uniforms = {uTurn: turn, uEye: eye, uLd: shape.Disc / 1000, uHd: shape.Height / 1000 * 0.35, uRb: shape.Bulge / 1000, uBar: shape.Bar / 1000, uRadius: m.Radius / 1000, uArms: m.Kind === 'lenticular' ? 0 : m.Arms || 0, uPitch: m.Pitch * Math.PI / 180, uPhase: m.Phase * Math.PI / 180, uSeed: galaxies.SeedNumber(m), uRound: m.Kind === 'elliptical' || m.Kind === 'dwarf' ? 1 : 0, uDust: 1.5 * dust};
+			var uniforms = {uTurn: turn, uEye: eye, uLd: shape.Disc / 1000, uHd: shape.Height / 1000 * 0.35, uRb: Math.max(bulge.Radius, 1) / 1000, uFlat: bulge.Flat, uBright: bulge.Bright, uBar: shape.Bar / 1000, uRadius: m.Radius / 1000, uArms: m.Kind === 'lenticular' ? 0 : m.Arms || 0, uPitch: m.Pitch * Math.PI / 180, uPhase: m.Phase * Math.PI / 180, uSeed: galaxies.SeedNumber(m), uRound: m.Kind === 'elliptical' || m.Kind === 'dwarf' ? 1 : 0, uDust: 1.5 * dust};
 
 			uniforms.uExpose = 1.8 / bandLight(uniforms);
 
@@ -267,7 +266,7 @@ Elemenx.Trait('SceneCosmos', {
 				var r = Math.sqrt(x * x + z * z);
 				var far = Math.max(0, Math.min(1, (a - 0.5) / 2.5));
 
-				sum += (Math.exp(-r / u.uLd - Math.abs(u.uEye[1]) / u.uHd) + 0.08 * Math.exp(-r / u.uLd)) * far * far * (3 - 2 * far) * dt;
+				sum += (0.47 * Math.exp(-r / u.uLd - Math.abs(u.uEye[1]) / u.uHd) + 0.03 * Math.exp(-r / (u.uLd * 1.25) - Math.abs(u.uEye[1]) / (u.uHd * 3))) * far * far * (3 - 2 * far) * dt;
 			}
 
 			return Math.max(sum, 1e-4);
@@ -275,9 +274,7 @@ Elemenx.Trait('SceneCosmos', {
 
 		/* The cube of the band: as fine as the picture, a ray of 200 steps at the least. */
 		function bandSize () {
-			var level = self.Graphics().Level;
-
-			return {low: 128, medium: 256, high: 384, ultra: 512}[level] || 256;
+			return self.Graphics().Cosmos.Band;
 		}
 
 		/*
@@ -287,7 +284,7 @@ Elemenx.Trait('SceneCosmos', {
 		function banded (holder, band) {
 			var size = bandSize();
 			var key = band.Key + size;
-			var steps = self.Graphics().Level === 'low' ? 200 : 400;
+			var steps = self.Graphics().Cosmos.BandSteps;
 			var rows = Math.max(1, Math.ceil(size * size * steps / 1500000));
 			var next = holder.BandNext;
 
@@ -329,7 +326,7 @@ Elemenx.Trait('SceneCosmos', {
 		function program (pillars, waited) {
 			var name = pillars ? 'Program' : 'Plain';
 
-			space[name] = space[name] || renderer.Program(graphics.Shaders.Quad, pillars ? shaders.Bake : shaders.Bake.replace('vec4 standing(vec3 d, vec3 s) {', 'vec4 standing(vec3 d, vec3 s) {\n\treturn vec4(0.0);'), !waited);
+			space[name] = space[name] || renderer.Program(graphics.Shaders.Quad, pillars ? shaders.Bake : graphics.Patch(shaders.Bake, 'vec4 standing(vec3 d, vec3 s) {', 'vec4 standing(vec3 d, vec3 s) {\n\treturn vec4(0.0);'), !waited);
 
 			return space[name];
 		}
@@ -387,9 +384,7 @@ Elemenx.Trait('SceneCosmos', {
 		}
 
 		function size () {
-			var level = self.Graphics().Level;
-
-			return level === 'low' ? 256 : level === 'medium' ? 512 : level === 'high' ? 1024 : 2048;
+			return self.Graphics().Cosmos.Sky;
 		}
 
 		function backdrop (holder, matrix, turn, strength) {
@@ -614,6 +609,8 @@ Elemenx.Trait('SceneCosmos', {
 			'uniform float uLd;',
 			'uniform float uHd;',
 			'uniform float uRb;',
+			'uniform float uFlat;',
+			'uniform float uBright;',
 			'uniform float uBar;',
 			'uniform float uRadius;',
 			'uniform float uArms;',
@@ -626,6 +623,7 @@ Elemenx.Trait('SceneCosmos', {
 			'uniform float uRaySteps;',
 			'out vec4 outColor;',
 			arms,
+			this.$Service('GalaxyData').StructureGLSL,
 			graphics.Chunks.Cube,
 			/* How much of the disc is in its arms there, shifted inward for the dust (1 for no arms). */
 			'float armAt(vec3 p, float shift) {',
@@ -647,23 +645,19 @@ Elemenx.Trait('SceneCosmos', {
 			'		if (r > uRadius * 1.3 && z > uHd * 6.0) continue;',
 			'		vec3 through = exp(-tau);',
 			'		float far = smoothstep(0.5, 3.0, ta);',
-			'		float bulge = 3.0 * exp(-sqrt(r * r + p.y * p.y * 2.5) / (uRb * 0.7));',
 			/* A sphere of old stars (an elliptical, a dwarf): its glow alone, no dust. */
 			'		if (uRound > 0.5) {',
-			'			light += vec3(1.0, 0.88, 0.72) * exp(-pow(max(length(p) / (uRadius * 0.22), 1e-3), 0.25) * 7.67 + 7.67) * 0.02 * dt * far;',
+			'			light += lightBulge * exp(-pow(max(length(p) / (uRadius * 0.22), 1e-3), 0.25) * 7.67 + 7.67) * 0.02 * dt * far;',
 			'			continue;',
 			'		}',
 			'		float arm = armAt(p, 0.0);',
-			'		float disc = exp(-r / uLd - z / uHd);',
-			'		float thick = 0.08 * exp(-r / uLd - z / (uHd * 3.0));',
-			'		if (uBar > 0.0) {',
-			'			float along = p.x * cos(uPhase) + p.z * sin(uPhase);',
-			'			float across = -p.x * sin(uPhase) + p.z * cos(uPhase);',
-			'			bulge += 1.5 * exp(-pow(along / uBar, 2.0) - pow(across / (uBar * 0.18), 2.0) - pow(p.y / (uBar * 0.15), 2.0));',
-			'		}',
-			/* Its stars in clouds along its arms; old and warm in its bulge. */
+			/* Its discs, its bulge and its bar of the numbers of the galaxy seen from far (GalaxyData.StructureGLSL). */
+			'		float disc = galaxy_thin(r, z, uLd, uHd);',
+			'		float thick = galaxy_thick(r, z, uLd, uHd);',
+			'		float bulge = galaxy_bulge(p, uRb, uFlat, uBright, uBar, uPhase);',
+			/* Its stars in clouds along its arms, as much of the disc as from far (0.47: its arms half); old and warm in its bulge. */
 			'		float clouds = 0.6 + 0.8 * fbm3(p / 0.9 + s, 3);',
-			'		vec3 stars = vec3(0.95, 0.97, 1.0) * (disc * arm * clouds + thick) + vec3(1.0, 0.92, 0.82) * bulge * 0.65;',
+			'		vec3 stars = galaxy_old(r, uRadius) * (disc * arm * clouds * 0.47 + thick) + lightBulge * bulge;',
 			'		light += stars * through * dt * far;',
 			/* Where young stars are born, on the ridges of its arms near its plane: the gas glows pink. */
 			'		if (z < uHd * 1.5 && arm > 1.0) {',

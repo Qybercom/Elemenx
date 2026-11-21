@@ -52,6 +52,9 @@ dependencies {
 
 		plugin("com.redhat.devtools.lsp4ij:0.21.0")
 
+		/* The bundles of TextMate: the files of GLSL colored of the grammar of VS Code (ElemenxTextMateBundles). */
+		bundledPlugin("org.jetbrains.plugins.textmate")
+
 		/* The tests run in a light IDE of its own: the inspections of HTML on a template. */
 		testFramework(TestFrameworkType.Platform)
 	}
@@ -126,6 +129,11 @@ tasks.processResources {
 
 	from("../server") {
 		into("elemenx/server")
+	}
+
+	/* The grammar of GLSL of the extension of VS Code, the one grammar of both: the bundle of TextMate and the strings of shaders. */
+	from("../vscode/syntaxes/glsl.json") {
+		into("elemenx/textmate/glsl/syntaxes")
 	}
 
 	from("../../libraries/ElemenxUI/data/meta.json") {

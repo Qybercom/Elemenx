@@ -14,7 +14,7 @@
 .elemenx-blueprint-side {
 	box-sizing: border-box;
 	display: flex;
-	flex: 0 0 200px;
+	flex: 0 0 auto;
 	flex-direction: column;
 	gap: 8px;
 	min-height: 0;
@@ -367,8 +367,10 @@
 		flex-direction: column;
 	}
 
+	/* Over the graph on a phone: as wide as it, whatever width was dragged. */
 	.elemenx-blueprint-side {
 		flex: 0 0 auto;
+		min-width: 100%;
 		max-height: 40%;
 		border-right: 0;
 		border-bottom: 1px solid var(--elemenx-border);

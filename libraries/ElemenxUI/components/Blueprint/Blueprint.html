@@ -1,5 +1,5 @@
 <div class="elemenx-blueprint" [class.read-only]="Locked()" tabindex="-1" (keydown)="Key">
-	<aside class="elemenx-blueprint-side" *if="!Locked() && Palette !== false && Palette !== 'false'">
+	<aside class="elemenx-blueprint-side" *if="!Locked() && Palette !== false && Palette !== 'false'" *resizable="{Edges: 'right', MinWidth: 160, MaxWidth: 480}" [style.width]="PaneWidth('palette', 200)" (resizeend)="PaneResized('palette', $event)">
 		<Input class="elemenx-blueprint-filter" Size="small" Type="search" [Placeholder]="$T('ui.blueprint.find')" [Label]="$T('ui.blueprint.find')" [Value]="Filter" (input)="Filtered($event)" />
 		<div class="elemenx-blueprint-palette" role="list" [attribute.aria-label]="$T('ui.blueprint.palette')">
 			<div class="elemenx-blueprint-group" *for="group of Groups(Kind, Filter)" *key="group.Name">

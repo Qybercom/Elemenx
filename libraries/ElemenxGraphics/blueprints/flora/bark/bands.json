@@ -1,0 +1,754 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "bark-bands",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "bark-bands-input-cx",
+			"type": "Input",
+			"x": 200,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CX"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-input-cz",
+			"type": "Input",
+			"x": 200,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "CZ"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-input-t",
+			"type": "Input",
+			"x": 200,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "T"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-input-split",
+			"type": "Input",
+			"x": 200,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Split"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-input-rings",
+			"type": "Input",
+			"x": 200,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Rings"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-input-lowr",
+			"type": "Input",
+			"x": 200,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowR"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-input-lowg",
+			"type": "Input",
+			"x": 200,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowG"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-input-lowb",
+			"type": "Input",
+			"x": 200,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LowB"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-input-highr",
+			"type": "Input",
+			"x": 200,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighR"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-input-highg",
+			"type": "Input",
+			"x": 200,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighG"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-input-highb",
+			"type": "Input",
+			"x": 200,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighB"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-input-sfine",
+			"type": "Input",
+			"x": 200,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SFine"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-input-scells",
+			"type": "Input",
+			"x": 460,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SCells"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-base",
+			"type": "Call",
+			"x": 460,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Graph",
+					"value": "ElemenxGraphics/flora/bark/base"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-dashat",
+			"type": "Formula",
+			"x": 460,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(CX * 10, T * 520, CZ * 10)"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-dash",
+			"type": "NoiseSpec",
+			"x": 460,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 4
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "bark-bands-spotsat",
+			"type": "Formula",
+			"x": 460,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(CX * 3, T * 40, CZ * 3)"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-spots",
+			"type": "NoiseSpec",
+			"x": 460,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 4
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "bark-bands-stripat",
+			"type": "Formula",
+			"x": 460,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "vec3(CX * 1.5, T * 90, CZ * 1.5)"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-strip",
+			"type": "NoiseSpec",
+			"x": 460,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Type",
+					"value": "simplex"
+				},
+				{
+					"key": "Fractal",
+					"value": "fbm"
+				},
+				{
+					"key": "Octaves",
+					"value": 4
+				},
+				{
+					"key": "Seed",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "bark-bands-lenticels",
+			"type": "Formula",
+			"x": 460,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(0.64, 0.72, Dash) * smoothstep(0.3, 0.5, Spots)"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-peel",
+			"type": "Formula",
+			"x": 460,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(0.62, 0.7, Strip)"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-colorr",
+			"type": "Formula",
+			"x": 460,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "CR + (0.58 - CR) * Lenticels * 0.85"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-colorg",
+			"type": "Formula",
+			"x": 460,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "CG + (0.58 - CG) * Lenticels * 0.85"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-colorb",
+			"type": "Formula",
+			"x": 720,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "CB + (0.58 - CB) * Lenticels * 0.85"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-bump",
+			"type": "Formula",
+			"x": 720,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.5 + (N - 0.5) * 0.2 - Lenticels * 0.15 + Peel * 0.2"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-shade",
+			"type": "Formula",
+			"x": 720,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.95 + (N - 0.5) * 0.12 - Peel * 0.12"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-outr",
+			"type": "Formula",
+			"x": 720,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "ColorR * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-result-r",
+			"type": "Result",
+			"x": 720,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "R"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-outg",
+			"type": "Formula",
+			"x": 720,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "ColorG * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-result-g",
+			"type": "Result",
+			"x": 720,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "G"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-outb",
+			"type": "Formula",
+			"x": 720,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "ColorB * Shade"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-result-b",
+			"type": "Result",
+			"x": 720,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "B"
+				}
+			]
+		},
+		{
+			"id": "bark-bands-result-bump",
+			"type": "Result",
+			"x": 720,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Bump"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "bark-bands-link-0",
+			"p1": "bark-bands-input-cx-out-Value",
+			"p2": "bark-bands-base-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-1",
+			"p1": "bark-bands-input-cz-out-Value",
+			"p2": "bark-bands-base-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-2",
+			"p1": "bark-bands-input-t-out-Value",
+			"p2": "bark-bands-base-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-3",
+			"p1": "bark-bands-input-split-out-Value",
+			"p2": "bark-bands-base-in-Split",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-4",
+			"p1": "bark-bands-input-lowr-out-Value",
+			"p2": "bark-bands-base-in-LowR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-5",
+			"p1": "bark-bands-input-lowg-out-Value",
+			"p2": "bark-bands-base-in-LowG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-6",
+			"p1": "bark-bands-input-lowb-out-Value",
+			"p2": "bark-bands-base-in-LowB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-7",
+			"p1": "bark-bands-input-highr-out-Value",
+			"p2": "bark-bands-base-in-HighR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-8",
+			"p1": "bark-bands-input-highg-out-Value",
+			"p2": "bark-bands-base-in-HighG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-9",
+			"p1": "bark-bands-input-highb-out-Value",
+			"p2": "bark-bands-base-in-HighB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-10",
+			"p1": "bark-bands-input-sfine-out-Value",
+			"p2": "bark-bands-base-in-SFine",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-11",
+			"p1": "bark-bands-input-cx-out-Value",
+			"p2": "bark-bands-dashat-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-12",
+			"p1": "bark-bands-input-t-out-Value",
+			"p2": "bark-bands-dashat-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-13",
+			"p1": "bark-bands-input-cz-out-Value",
+			"p2": "bark-bands-dashat-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-14",
+			"p1": "bark-bands-dashat-out-Value",
+			"p2": "bark-bands-dash-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-15",
+			"p1": "bark-bands-input-sfine-out-Value",
+			"p2": "bark-bands-dash-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-16",
+			"p1": "bark-bands-input-cx-out-Value",
+			"p2": "bark-bands-spotsat-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-17",
+			"p1": "bark-bands-input-t-out-Value",
+			"p2": "bark-bands-spotsat-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-18",
+			"p1": "bark-bands-input-cz-out-Value",
+			"p2": "bark-bands-spotsat-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-19",
+			"p1": "bark-bands-spotsat-out-Value",
+			"p2": "bark-bands-spots-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-20",
+			"p1": "bark-bands-input-sfine-out-Value",
+			"p2": "bark-bands-spots-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-21",
+			"p1": "bark-bands-input-cx-out-Value",
+			"p2": "bark-bands-stripat-in-CX",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-22",
+			"p1": "bark-bands-input-t-out-Value",
+			"p2": "bark-bands-stripat-in-T",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-23",
+			"p1": "bark-bands-input-cz-out-Value",
+			"p2": "bark-bands-stripat-in-CZ",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-24",
+			"p1": "bark-bands-stripat-out-Value",
+			"p2": "bark-bands-strip-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-25",
+			"p1": "bark-bands-input-sfine-out-Value",
+			"p2": "bark-bands-strip-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-26",
+			"p1": "bark-bands-dash-out-Value",
+			"p2": "bark-bands-lenticels-in-Dash",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-27",
+			"p1": "bark-bands-spots-out-Value",
+			"p2": "bark-bands-lenticels-in-Spots",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-28",
+			"p1": "bark-bands-strip-out-Value",
+			"p2": "bark-bands-peel-in-Strip",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-29",
+			"p1": "bark-bands-base-out-CR",
+			"p2": "bark-bands-colorr-in-CR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-30",
+			"p1": "bark-bands-lenticels-out-Value",
+			"p2": "bark-bands-colorr-in-Lenticels",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-31",
+			"p1": "bark-bands-base-out-CG",
+			"p2": "bark-bands-colorg-in-CG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-32",
+			"p1": "bark-bands-lenticels-out-Value",
+			"p2": "bark-bands-colorg-in-Lenticels",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-33",
+			"p1": "bark-bands-base-out-CB",
+			"p2": "bark-bands-colorb-in-CB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-34",
+			"p1": "bark-bands-lenticels-out-Value",
+			"p2": "bark-bands-colorb-in-Lenticels",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-35",
+			"p1": "bark-bands-base-out-N",
+			"p2": "bark-bands-bump-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-36",
+			"p1": "bark-bands-lenticels-out-Value",
+			"p2": "bark-bands-bump-in-Lenticels",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-37",
+			"p1": "bark-bands-peel-out-Value",
+			"p2": "bark-bands-bump-in-Peel",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-38",
+			"p1": "bark-bands-base-out-N",
+			"p2": "bark-bands-shade-in-N",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-39",
+			"p1": "bark-bands-peel-out-Value",
+			"p2": "bark-bands-shade-in-Peel",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-40",
+			"p1": "bark-bands-colorr-out-Value",
+			"p2": "bark-bands-outr-in-ColorR",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-41",
+			"p1": "bark-bands-shade-out-Value",
+			"p2": "bark-bands-outr-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-42",
+			"p1": "bark-bands-outr-out-Value",
+			"p2": "bark-bands-result-r-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-43",
+			"p1": "bark-bands-colorg-out-Value",
+			"p2": "bark-bands-outg-in-ColorG",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-44",
+			"p1": "bark-bands-shade-out-Value",
+			"p2": "bark-bands-outg-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-45",
+			"p1": "bark-bands-outg-out-Value",
+			"p2": "bark-bands-result-g-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-46",
+			"p1": "bark-bands-colorb-out-Value",
+			"p2": "bark-bands-outb-in-ColorB",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-47",
+			"p1": "bark-bands-shade-out-Value",
+			"p2": "bark-bands-outb-in-Shade",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-48",
+			"p1": "bark-bands-outb-out-Value",
+			"p2": "bark-bands-result-b-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "bark-bands-link-49",
+			"p1": "bark-bands-bump-out-Value",
+			"p2": "bark-bands-result-bump-in-Value",
+			"kind": "value"
+		}
+	]
+}

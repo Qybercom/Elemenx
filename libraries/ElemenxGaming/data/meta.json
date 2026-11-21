@@ -1462,7 +1462,8 @@
 				"Of(scene)",
 				"Settings(object)",
 				"Card(ledger, object, rows)",
-				"Target(ledger, object)"
+				"Target(ledger, object)",
+				"Bar(context, x, y, part, color, width, height)"
 			],
 			"Sample": {}
 		},

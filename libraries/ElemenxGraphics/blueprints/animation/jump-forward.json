@@ -1,0 +1,2339 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-jump-forward",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "animation-jump-forward-phase",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Phase"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-along",
+			"type": "Curve",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.41,
+							0
+						],
+						[
+							0.5,
+							0.3
+						],
+						[
+							0.6,
+							0.72
+						],
+						[
+							0.66,
+							0.85
+						],
+						[
+							1,
+							0.85
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-along",
+			"type": "Result",
+			"x": 520,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Along"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-footpitch",
+			"type": "Curve",
+			"x": 260,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							7
+						],
+						[
+							0.1,
+							4
+						],
+						[
+							0.2,
+							20
+						],
+						[
+							0.3,
+							7
+						],
+						[
+							0.4,
+							34
+						],
+						[
+							0.5,
+							37
+						],
+						[
+							0.6,
+							15
+						],
+						[
+							0.7,
+							-6
+						],
+						[
+							0.8,
+							4
+						],
+						[
+							0.9,
+							-5
+						],
+						[
+							1,
+							-2
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-footpitch",
+			"type": "Result",
+			"x": 520,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "FootPitch"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-head-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							20
+						],
+						[
+							0.1,
+							2
+						],
+						[
+							0.2,
+							-24
+						],
+						[
+							0.3,
+							-18
+						],
+						[
+							0.4,
+							9
+						],
+						[
+							0.5,
+							-5
+						],
+						[
+							0.6,
+							1
+						],
+						[
+							0.7,
+							-1
+						],
+						[
+							0.8,
+							6
+						],
+						[
+							0.9,
+							16
+						],
+						[
+							1,
+							20
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-head-x",
+			"type": "Result",
+			"x": 520,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Head.x"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-hips-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-2
+						],
+						[
+							0.1,
+							9
+						],
+						[
+							0.2,
+							20
+						],
+						[
+							0.3,
+							15
+						],
+						[
+							0.4,
+							10
+						],
+						[
+							0.5,
+							11
+						],
+						[
+							0.6,
+							10
+						],
+						[
+							0.7,
+							11
+						],
+						[
+							0.8,
+							8
+						],
+						[
+							0.9,
+							1
+						],
+						[
+							1,
+							-8
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-hips-x",
+			"type": "Result",
+			"x": 520,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Hips.x"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-leftarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							2
+						],
+						[
+							0.1,
+							40
+						],
+						[
+							0.2,
+							-19
+						],
+						[
+							0.3,
+							-40
+						],
+						[
+							0.4,
+							-27
+						],
+						[
+							0.5,
+							-17
+						],
+						[
+							0.6,
+							7
+						],
+						[
+							0.7,
+							-13
+						],
+						[
+							0.8,
+							-4
+						],
+						[
+							0.9,
+							3
+						],
+						[
+							1,
+							4
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-leftarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-leftarm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-7
+						],
+						[
+							0.1,
+							41
+						],
+						[
+							0.2,
+							-34
+						],
+						[
+							0.3,
+							-75
+						],
+						[
+							0.4,
+							-22
+						],
+						[
+							0.5,
+							31
+						],
+						[
+							0.6,
+							43
+						],
+						[
+							0.7,
+							27
+						],
+						[
+							0.8,
+							4
+						],
+						[
+							0.9,
+							-6
+						],
+						[
+							1,
+							-1
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-leftarm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-leftarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-79
+						],
+						[
+							0.1,
+							-48
+						],
+						[
+							0.2,
+							-52
+						],
+						[
+							0.3,
+							-3
+						],
+						[
+							0.4,
+							-18
+						],
+						[
+							0.5,
+							-10
+						],
+						[
+							0.6,
+							-54
+						],
+						[
+							0.7,
+							-80
+						],
+						[
+							0.8,
+							-66
+						],
+						[
+							0.9,
+							-71
+						],
+						[
+							1,
+							-78
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-leftarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-leftfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							25
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-leftfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-leftforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-13
+						],
+						[
+							0.1,
+							-71
+						],
+						[
+							0.2,
+							-27
+						],
+						[
+							0.3,
+							-20
+						],
+						[
+							0.4,
+							-58
+						],
+						[
+							0.5,
+							-86
+						],
+						[
+							0.6,
+							-43
+						],
+						[
+							0.7,
+							-7
+						],
+						[
+							0.8,
+							-8
+						],
+						[
+							0.9,
+							-21
+						],
+						[
+							1,
+							-16
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-leftforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-lefthand-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-23
+						],
+						[
+							0.1,
+							-29
+						],
+						[
+							0.2,
+							-21
+						],
+						[
+							0.3,
+							-5
+						],
+						[
+							0.4,
+							-29
+						],
+						[
+							0.5,
+							11
+						],
+						[
+							0.6,
+							-4
+						],
+						[
+							0.7,
+							-28
+						],
+						[
+							0.8,
+							-19
+						],
+						[
+							0.9,
+							-27
+						],
+						[
+							1,
+							-26
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-lefthand-x",
+			"type": "Result",
+			"x": 520,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftHand.x"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-lefthand-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-16
+						],
+						[
+							0.1,
+							25
+						],
+						[
+							0.2,
+							12
+						],
+						[
+							0.3,
+							-19
+						],
+						[
+							0.4,
+							-33
+						],
+						[
+							0.5,
+							31
+						],
+						[
+							0.6,
+							31
+						],
+						[
+							0.7,
+							0
+						],
+						[
+							0.8,
+							6
+						],
+						[
+							0.9,
+							-23
+						],
+						[
+							1,
+							-17
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-lefthand-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftHand.z"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-leftshoulder-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-3
+						],
+						[
+							0.1,
+							-3
+						],
+						[
+							0.2,
+							-8
+						],
+						[
+							0.3,
+							1
+						],
+						[
+							0.4,
+							17
+						],
+						[
+							0.5,
+							-3
+						],
+						[
+							0.6,
+							11
+						],
+						[
+							0.7,
+							-3
+						],
+						[
+							0.8,
+							-7
+						],
+						[
+							0.9,
+							-6
+						],
+						[
+							1,
+							-11
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-leftshoulder-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftShoulder.z"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-leftthumb",
+			"type": "Curve",
+			"x": 260,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							12
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-leftthumb",
+			"type": "Result",
+			"x": 520,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftThumb"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-lift",
+			"type": "Curve",
+			"x": 260,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-0.115
+						],
+						[
+							0.1,
+							-0.1
+						],
+						[
+							0.2,
+							-0.915
+						],
+						[
+							0.3,
+							-0.46
+						],
+						[
+							0.4,
+							-0.02
+						],
+						[
+							0.5,
+							0.045
+						],
+						[
+							0.6,
+							-0.07
+						],
+						[
+							0.7,
+							0.035
+						],
+						[
+							0.8,
+							-0.08
+						],
+						[
+							0.9,
+							-0.12
+						],
+						[
+							1,
+							-0.12
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-lift",
+			"type": "Result",
+			"x": 520,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Lift"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-neck-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.1,
+							-3
+						],
+						[
+							0.2,
+							-14
+						],
+						[
+							0.3,
+							-12
+						],
+						[
+							0.4,
+							4
+						],
+						[
+							0.5,
+							-2
+						],
+						[
+							0.6,
+							0
+						],
+						[
+							0.7,
+							-3
+						],
+						[
+							0.8,
+							-3
+						],
+						[
+							0.9,
+							2
+						],
+						[
+							1,
+							4
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-neck-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Neck.x"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-rightalong",
+			"type": "Curve",
+			"x": 260,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.41,
+							0
+						],
+						[
+							0.5,
+							0.3
+						],
+						[
+							0.6,
+							0.72
+						],
+						[
+							0.66,
+							0.85
+						],
+						[
+							1,
+							0.85
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-rightalong",
+			"type": "Result",
+			"x": 520,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightAlong"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-rightfootpitch",
+			"type": "Curve",
+			"x": 260,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-1
+						],
+						[
+							0.1,
+							-2
+						],
+						[
+							0.2,
+							-4
+						],
+						[
+							0.3,
+							-3
+						],
+						[
+							0.4,
+							18
+						],
+						[
+							0.5,
+							36
+						],
+						[
+							0.6,
+							15
+						],
+						[
+							0.7,
+							12
+						],
+						[
+							0.8,
+							-4
+						],
+						[
+							0.9,
+							-3
+						],
+						[
+							1,
+							-1
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-rightfootpitch",
+			"type": "Result",
+			"x": 520,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightFootPitch"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-rightlift",
+			"type": "Curve",
+			"x": 260,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-0.12
+						],
+						[
+							0.1,
+							-0.12
+						],
+						[
+							0.2,
+							0.205
+						],
+						[
+							0.3,
+							0.13
+						],
+						[
+							0.4,
+							-0.095
+						],
+						[
+							0.5,
+							-0.005
+						],
+						[
+							0.6,
+							0.025
+						],
+						[
+							0.7,
+							0.065
+						],
+						[
+							0.8,
+							-0.955
+						],
+						[
+							0.9,
+							-0.14
+						],
+						[
+							1,
+							-0.12
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-rightlift",
+			"type": "Result",
+			"x": 520,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightLift"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-root-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0.06
+						],
+						[
+							0.07,
+							0.055
+						],
+						[
+							0.14,
+							-0.1
+						],
+						[
+							0.21,
+							-0.25
+						],
+						[
+							0.29,
+							-0.125
+						],
+						[
+							0.36,
+							0.015
+						],
+						[
+							0.43,
+							0.275
+						],
+						[
+							0.5,
+							0.365
+						],
+						[
+							0.57,
+							0.27
+						],
+						[
+							0.64,
+							0.065
+						],
+						[
+							0.71,
+							-0.07
+						],
+						[
+							0.79,
+							-0.045
+						],
+						[
+							0.86,
+							0.05
+						],
+						[
+							0.93,
+							0.075
+						],
+						[
+							1,
+							0.06
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-root-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.y"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-root-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.25,
+							-0.03
+						],
+						[
+							0.38,
+							0.05
+						],
+						[
+							0.5,
+							0.4
+						],
+						[
+							0.62,
+							0.75
+						],
+						[
+							0.72,
+							0.84
+						],
+						[
+							1,
+							0.85
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-root-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.z"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-spine-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-8
+						],
+						[
+							0.1,
+							-5
+						],
+						[
+							0.2,
+							14
+						],
+						[
+							0.3,
+							6
+						],
+						[
+							0.4,
+							-7
+						],
+						[
+							0.5,
+							1
+						],
+						[
+							0.6,
+							-4
+						],
+						[
+							0.7,
+							-3
+						],
+						[
+							0.8,
+							-6
+						],
+						[
+							0.9,
+							-8
+						],
+						[
+							1,
+							-10
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-spine-x",
+			"type": "Result",
+			"x": 520,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine.x"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-spine1-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							8
+						],
+						[
+							0.1,
+							7
+						],
+						[
+							0.2,
+							7
+						],
+						[
+							0.3,
+							7
+						],
+						[
+							0.4,
+							5
+						],
+						[
+							0.5,
+							6
+						],
+						[
+							0.6,
+							6
+						],
+						[
+							0.7,
+							5
+						],
+						[
+							0.8,
+							5
+						],
+						[
+							0.9,
+							4
+						],
+						[
+							1,
+							4
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-spine1-x",
+			"type": "Result",
+			"x": 520,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine1.x"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-curve-spine2-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							5
+						],
+						[
+							0.1,
+							6
+						],
+						[
+							0.2,
+							10
+						],
+						[
+							0.3,
+							8
+						],
+						[
+							0.4,
+							8
+						],
+						[
+							0.5,
+							7
+						],
+						[
+							0.6,
+							7
+						],
+						[
+							0.7,
+							6
+						],
+						[
+							0.8,
+							6
+						],
+						[
+							0.9,
+							6
+						],
+						[
+							1,
+							5
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-spine2-x",
+			"type": "Result",
+			"x": 520,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine2.x"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-number-length",
+			"type": "Number",
+			"x": 780,
+			"y": 2340,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1.64
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-length",
+			"type": "Result",
+			"x": 1000,
+			"y": 2340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Length"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-number-stride",
+			"type": "Number",
+			"x": 780,
+			"y": 2440,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-stride",
+			"type": "Result",
+			"x": 1000,
+			"y": 2440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stride"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-number-stance",
+			"type": "Number",
+			"x": 780,
+			"y": 2540,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-stance",
+			"type": "Result",
+			"x": 1000,
+			"y": 2540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stance"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-number-reach",
+			"type": "Number",
+			"x": 780,
+			"y": 2640,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-reach",
+			"type": "Result",
+			"x": 1000,
+			"y": 2640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Reach"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-number-width",
+			"type": "Number",
+			"x": 780,
+			"y": 2740,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.06
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-width",
+			"type": "Result",
+			"x": 1000,
+			"y": 2740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-number-height",
+			"type": "Number",
+			"x": 780,
+			"y": 2840,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.92
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-height",
+			"type": "Result",
+			"x": 1000,
+			"y": 2840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-number-toeout",
+			"type": "Number",
+			"x": 780,
+			"y": 2940,
+			"properties": [
+				{
+					"key": "Value",
+					"value": -10
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-toeout",
+			"type": "Result",
+			"x": 1000,
+			"y": 2940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "ToeOut"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-number-pole",
+			"type": "Number",
+			"x": 780,
+			"y": 3040,
+			"properties": [
+				{
+					"key": "Value",
+					"value": -6
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-pole",
+			"type": "Result",
+			"x": 1000,
+			"y": 3040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pole"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-number-toebend",
+			"type": "Number",
+			"x": 780,
+			"y": 3140,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 42
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-toebend",
+			"type": "Result",
+			"x": 1000,
+			"y": 3140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "ToeBend"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-number-direction",
+			"type": "Number",
+			"x": 780,
+			"y": 3240,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-direction",
+			"type": "Result",
+			"x": 1000,
+			"y": 3240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Direction"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-number-still",
+			"type": "Number",
+			"x": 780,
+			"y": 3340,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-still",
+			"type": "Result",
+			"x": 1000,
+			"y": 3340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Still"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-number-loop",
+			"type": "Number",
+			"x": 780,
+			"y": 3440,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-loop",
+			"type": "Result",
+			"x": 1000,
+			"y": 3440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Loop"
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-number-follow",
+			"type": "Number",
+			"x": 780,
+			"y": 3540,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-jump-forward-result-follow",
+			"type": "Result",
+			"x": 1000,
+			"y": 3540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Follow"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-jump-forward-link-0",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-along-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-1",
+			"p1": "animation-jump-forward-curve-along-out-Value",
+			"p2": "animation-jump-forward-result-along-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-2",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-footpitch-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-3",
+			"p1": "animation-jump-forward-curve-footpitch-out-Value",
+			"p2": "animation-jump-forward-result-footpitch-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-4",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-head-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-5",
+			"p1": "animation-jump-forward-curve-head-x-out-Value",
+			"p2": "animation-jump-forward-result-head-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-6",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-hips-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-7",
+			"p1": "animation-jump-forward-curve-hips-x-out-Value",
+			"p2": "animation-jump-forward-result-hips-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-8",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-leftarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-9",
+			"p1": "animation-jump-forward-curve-leftarm-x-out-Value",
+			"p2": "animation-jump-forward-result-leftarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-10",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-leftarm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-11",
+			"p1": "animation-jump-forward-curve-leftarm-y-out-Value",
+			"p2": "animation-jump-forward-result-leftarm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-12",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-leftarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-13",
+			"p1": "animation-jump-forward-curve-leftarm-z-out-Value",
+			"p2": "animation-jump-forward-result-leftarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-14",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-leftfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-15",
+			"p1": "animation-jump-forward-curve-leftfingers-out-Value",
+			"p2": "animation-jump-forward-result-leftfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-16",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-leftforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-17",
+			"p1": "animation-jump-forward-curve-leftforearm-y-out-Value",
+			"p2": "animation-jump-forward-result-leftforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-18",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-lefthand-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-19",
+			"p1": "animation-jump-forward-curve-lefthand-x-out-Value",
+			"p2": "animation-jump-forward-result-lefthand-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-20",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-lefthand-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-21",
+			"p1": "animation-jump-forward-curve-lefthand-z-out-Value",
+			"p2": "animation-jump-forward-result-lefthand-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-22",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-leftshoulder-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-23",
+			"p1": "animation-jump-forward-curve-leftshoulder-z-out-Value",
+			"p2": "animation-jump-forward-result-leftshoulder-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-24",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-leftthumb-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-25",
+			"p1": "animation-jump-forward-curve-leftthumb-out-Value",
+			"p2": "animation-jump-forward-result-leftthumb-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-26",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-lift-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-27",
+			"p1": "animation-jump-forward-curve-lift-out-Value",
+			"p2": "animation-jump-forward-result-lift-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-28",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-neck-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-29",
+			"p1": "animation-jump-forward-curve-neck-x-out-Value",
+			"p2": "animation-jump-forward-result-neck-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-30",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-rightalong-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-31",
+			"p1": "animation-jump-forward-curve-rightalong-out-Value",
+			"p2": "animation-jump-forward-result-rightalong-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-32",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-rightfootpitch-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-33",
+			"p1": "animation-jump-forward-curve-rightfootpitch-out-Value",
+			"p2": "animation-jump-forward-result-rightfootpitch-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-34",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-rightlift-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-35",
+			"p1": "animation-jump-forward-curve-rightlift-out-Value",
+			"p2": "animation-jump-forward-result-rightlift-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-36",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-root-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-37",
+			"p1": "animation-jump-forward-curve-root-y-out-Value",
+			"p2": "animation-jump-forward-result-root-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-38",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-root-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-39",
+			"p1": "animation-jump-forward-curve-root-z-out-Value",
+			"p2": "animation-jump-forward-result-root-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-40",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-spine-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-41",
+			"p1": "animation-jump-forward-curve-spine-x-out-Value",
+			"p2": "animation-jump-forward-result-spine-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-42",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-spine1-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-43",
+			"p1": "animation-jump-forward-curve-spine1-x-out-Value",
+			"p2": "animation-jump-forward-result-spine1-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-44",
+			"p1": "animation-jump-forward-phase-out-Value",
+			"p2": "animation-jump-forward-curve-spine2-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-45",
+			"p1": "animation-jump-forward-curve-spine2-x-out-Value",
+			"p2": "animation-jump-forward-result-spine2-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-46",
+			"p1": "animation-jump-forward-number-length-out-Value",
+			"p2": "animation-jump-forward-result-length-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-47",
+			"p1": "animation-jump-forward-number-stride-out-Value",
+			"p2": "animation-jump-forward-result-stride-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-48",
+			"p1": "animation-jump-forward-number-stance-out-Value",
+			"p2": "animation-jump-forward-result-stance-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-49",
+			"p1": "animation-jump-forward-number-reach-out-Value",
+			"p2": "animation-jump-forward-result-reach-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-50",
+			"p1": "animation-jump-forward-number-width-out-Value",
+			"p2": "animation-jump-forward-result-width-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-51",
+			"p1": "animation-jump-forward-number-height-out-Value",
+			"p2": "animation-jump-forward-result-height-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-52",
+			"p1": "animation-jump-forward-number-toeout-out-Value",
+			"p2": "animation-jump-forward-result-toeout-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-53",
+			"p1": "animation-jump-forward-number-pole-out-Value",
+			"p2": "animation-jump-forward-result-pole-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-54",
+			"p1": "animation-jump-forward-number-toebend-out-Value",
+			"p2": "animation-jump-forward-result-toebend-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-55",
+			"p1": "animation-jump-forward-number-direction-out-Value",
+			"p2": "animation-jump-forward-result-direction-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-56",
+			"p1": "animation-jump-forward-number-still-out-Value",
+			"p2": "animation-jump-forward-result-still-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-57",
+			"p1": "animation-jump-forward-number-loop-out-Value",
+			"p2": "animation-jump-forward-result-loop-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-jump-forward-link-58",
+			"p1": "animation-jump-forward-number-follow-out-Value",
+			"p2": "animation-jump-forward-result-follow-in-Value",
+			"kind": "value"
+		}
+	]
+}

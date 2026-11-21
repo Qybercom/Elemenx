@@ -35,7 +35,8 @@ class ElemenxLanguageServer(@Suppress("UNUSED_PARAMETER") project: Project) : OS
 
 /**
  * The files of the server, copied out of the plugin once for its version: Node cannot read them inside its jar. They are
- * the ones files.txt lists (the server, its core, and the sources of Elemenx and ElemenxUI the definitions go to).
+ * the ones files.txt lists (the server, its core, the sources of Elemenx and ElemenxUI the definitions go to, the bundle of
+ * GLSL of TextMate).
  */
 object ElemenxServerFiles {
 	private val essential = listOf("server/elemenx-language-server.js", "core/elemenx-language.js", "core/meta.json")
@@ -48,8 +49,9 @@ object ElemenxServerFiles {
 		return listed ?: essential
 	}
 
+	/** The folder they are copied out into, once for the version of the plugin; the bundle of GLSL of TextMate is among them. */
 	@Synchronized
-	fun server(): Path {
+	fun folder(): Path {
 		/* The version of the plugin (regression: the jar names none, every start copied all the files again as dev). */
 		val version = PluginManagerCore.getPlugin(PluginId.getId("com.qybercom.elemenx"))?.version ?: "dev"
 		val folder = Path.of(PathManager.getSystemPath(), "elemenx-language-server", version)
@@ -66,6 +68,8 @@ object ElemenxServerFiles {
 			}
 		}
 
-		return folder.resolve("server/elemenx-language-server.js")
+		return folder
 	}
+
+	fun server(): Path = folder().resolve("server/elemenx-language-server.js")
 }

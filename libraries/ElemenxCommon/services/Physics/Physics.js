@@ -20,6 +20,7 @@
  *   take it back. Each of the four wheels [front left, front right, rear left, rear right] is a weight of its own on a spring and a
  *   damper under the body, so it follows the road and the body rides over it, leaning as it speeds up, brakes and turns. Strokes is how
  *   far each spring has gone from rest, above 0 when the wheel hangs lower than it did.
+ * - CarDefaults {Top: 92, Redline: 7500}: what a car has none given of (m/s, revolutions a minute), its gauges read the same.
  * - Gearbox(state, input, settings, gas, braking, speed, elapsed): the gears of a car (Car runs it when it has Gears): Gear, Rpm,
  *   Shifting, Shifted in the state; returns how much of its power the engine gives now.
  * - Hit(state, normal, depth, at, settings): a car at a wall: normal [x, z] looks out of the wall, depth is how far in it went, at [x, z] is
@@ -75,6 +76,9 @@ Elemenx.Service('Physics', {
 	},
 
 	Gravity: 9.81,
+
+	/* What a car has none given of: its top speed (m/s) and the redline of its engine (revolutions a minute), the gauges read alike. */
+	CarDefaults: {Top: 92, Redline: 7500},
 
 	Steps: function (clock, elapsed, length, each) {
 		var count = 0;
@@ -211,7 +215,7 @@ Elemenx.Service('Physics', {
 		var number = this.Number;
 		var mass = number(settings.Mass, 1500);
 		var power = number(settings.Power, 520000);
-		var top = number(settings.Top, 92);
+		var top = number(settings.Top, this.CarDefaults.Top);
 		var brake = number(settings.Brake, 11);
 		var base = number(settings.Base, 2.7);
 		var lock = number(settings.Lock, 0.55);
@@ -340,8 +344,8 @@ Elemenx.Service('Physics', {
 		var number = this.Number;
 		var gears = settings.Gears;
 		var count = gears.length;
-		var top = number(settings.Top, 92);
-		var redline = number(settings.Redline, 7500);
+		var top = number(settings.Top, this.CarDefaults.Top);
+		var redline = number(settings.Redline, this.CarDefaults.Redline);
 		var idle = number(settings.Idle, 900);
 		var time = number(settings.ShiftTime, 0.22);
 		var manual = settings.Shift === 'manual';

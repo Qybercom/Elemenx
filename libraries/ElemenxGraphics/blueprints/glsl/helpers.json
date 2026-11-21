@@ -1,0 +1,24 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "helpers",
+	"glsl": {
+		"Field": "Helpers"
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "chunk",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "float enx_mh(vec2 p) {\n\tvec3 p3 = fract(vec3(p.xyx) * 0.1031);\n\tp3 += dot(p3, p3.yzx + 33.33);\n\treturn fract((p3.x + p3.y) * p3.z);\n}\nvec2 enx_mh2(vec2 p) {\n\tvec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));\n\tp3 += dot(p3, p3.yzx + 33.33);\n\treturn fract((p3.xx + p3.yz) * p3.zy);\n}\nfloat enx_mn(vec2 p) {\n\tvec2 i = floor(p);\n\tvec2 f = fract(p);\n\tvec2 u = f * f * (3.0 - 2.0 * f);\n\treturn mix(mix(enx_mh(i), enx_mh(i + vec2(1.0, 0.0)), u.x), mix(enx_mh(i + vec2(0.0, 1.0)), enx_mh(i + vec2(1.0, 1.0)), u.x), u.y);\n}\nfloat enx_mf(vec2 p, int octaves) {\n\tfloat sum = 0.0;\n\tfloat amount = 0.5;\n\tfloat whole = 0.0;\n\tfor (int i = 0; i < 6; i++) {\n\t\tif (i >= octaves) break;\n\t\tsum += amount * enx_mn(p);\n\t\twhole += amount;\n\t\tp = p * 2.03 + vec2(17.1, 5.3);\n\t\tamount *= 0.5;\n\t}\n\treturn sum / whole;\n}\nfloat enx_mnf(vec2 p, float wide) {\n\treturn mix(0.5, enx_mn(p), 1.0 - smoothstep(0.25, 0.5, wide));\n}\nfloat enx_mff(vec2 p, int octaves, float wide) {\n\tfloat sum = 0.0;\n\tfloat amount = 0.5;\n\tfloat whole = 0.0;\n\tfor (int i = 0; i < 6; i++) {\n\t\tif (i >= octaves) break;\n\t\tsum += amount * mix(0.5, enx_mn(p), 1.0 - smoothstep(0.25, 0.5, wide));\n\t\twhole += amount;\n\t\tp = p * 2.03 + vec2(17.1, 5.3);\n\t\twide *= 2.03;\n\t\tamount *= 0.5;\n\t}\n\treturn sum / whole;\n}\nvec4 enx_mc(vec2 p, float jitter) {\n\tvec2 i = floor(p);\n\tvec2 f = fract(p);\n\tfloat f1 = 8.0;\n\tfloat f2 = 8.0;\n\tvec2 near = i;\n\tfor (int y = -1; y <= 1; y++) {\n\t\tfor (int x = -1; x <= 1; x++) {\n\t\t\tvec2 g = vec2(float(x), float(y));\n\t\t\tvec2 r = g + enx_mh2(i + g) * jitter - f;\n\t\t\tfloat d = dot(r, r);\n\t\t\tif (d < f1) { f2 = f1; f1 = d; near = i + g; }\n\t\t\telse if (d < f2) f2 = d;\n\t\t}\n\t}\n\treturn vec4(sqrt(f1), sqrt(f2), enx_mh(near), enx_mh(near + vec2(7.3, 1.9)));\n}\nfloat enx_ms(float px, float size) {\n\treturn 1.0 - smoothstep(size * 0.15, size * 0.5, px);\n}\nvec3 enx_bump(vec3 position, vec3 normal, float h) {\n\tvec3 dx = dFdx(position);\n\tvec3 dy = dFdy(position);\n\tvec3 r1 = cross(dy, normal);\n\tvec3 r2 = cross(normal, dx);\n\tfloat det = dot(dx, r1);\n\tif (abs(det) < 1e-12) return normal;\n\tvec3 grad = sign(det) * (dFdx(h) * r1 + dFdy(h) * r2);\n\tgrad /= max(1.0, length(grad) / (abs(det) * 1.2));\n\treturn normalize(abs(det) * normal - grad);\n}"
+				}
+			]
+		}
+	],
+	"links": []
+}

@@ -1,0 +1,1035 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-sit",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "animation-sit-phase",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Phase"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-leftarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-30
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-leftarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-leftarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-74
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-leftarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-leftfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							18
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-leftfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-leftforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-55
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-leftforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-leftleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							88
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-leftleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-leftupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-88
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-leftupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-leftupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							4
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-leftupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-rightarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-30
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-rightarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-rightarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							74
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-rightarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-rightfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							18
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-rightfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-rightforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							55
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-rightforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-rightleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							88
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-rightleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-rightupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-88
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-rightupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-rightupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-4
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-rightupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-root-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-0.4272
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-root-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.y"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-root-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-0.0356
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-root-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.z"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-curve-spine-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-4
+						],
+						[
+							0.0625,
+							-3.62
+						],
+						[
+							0.125,
+							-3.29
+						],
+						[
+							0.1875,
+							-3.08
+						],
+						[
+							0.25,
+							-3
+						],
+						[
+							0.3125,
+							-3.08
+						],
+						[
+							0.375,
+							-3.29
+						],
+						[
+							0.4375,
+							-3.62
+						],
+						[
+							0.5,
+							-4
+						],
+						[
+							0.5625,
+							-4.38
+						],
+						[
+							0.625,
+							-4.71
+						],
+						[
+							0.6875,
+							-4.92
+						],
+						[
+							0.75,
+							-5
+						],
+						[
+							0.8125,
+							-4.92
+						],
+						[
+							0.875,
+							-4.71
+						],
+						[
+							0.9375,
+							-4.38
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-spine-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine.x"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-number-pose",
+			"type": "Number",
+			"x": 780,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-pose",
+			"type": "Result",
+			"x": 1000,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pose"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-number-length",
+			"type": "Number",
+			"x": 780,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 3
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-length",
+			"type": "Result",
+			"x": 1000,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Length"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-number-loop",
+			"type": "Number",
+			"x": 780,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-loop",
+			"type": "Result",
+			"x": 1000,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Loop"
+				}
+			]
+		},
+		{
+			"id": "animation-sit-number-stride",
+			"type": "Number",
+			"x": 780,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-sit-result-stride",
+			"type": "Result",
+			"x": 1000,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stride"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-sit-link-0",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-leftarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-1",
+			"p1": "animation-sit-curve-leftarm-x-out-Value",
+			"p2": "animation-sit-result-leftarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-2",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-leftarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-3",
+			"p1": "animation-sit-curve-leftarm-z-out-Value",
+			"p2": "animation-sit-result-leftarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-4",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-leftfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-5",
+			"p1": "animation-sit-curve-leftfingers-out-Value",
+			"p2": "animation-sit-result-leftfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-6",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-leftforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-7",
+			"p1": "animation-sit-curve-leftforearm-y-out-Value",
+			"p2": "animation-sit-result-leftforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-8",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-leftleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-9",
+			"p1": "animation-sit-curve-leftleg-x-out-Value",
+			"p2": "animation-sit-result-leftleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-10",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-leftupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-11",
+			"p1": "animation-sit-curve-leftupleg-x-out-Value",
+			"p2": "animation-sit-result-leftupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-12",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-leftupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-13",
+			"p1": "animation-sit-curve-leftupleg-z-out-Value",
+			"p2": "animation-sit-result-leftupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-14",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-rightarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-15",
+			"p1": "animation-sit-curve-rightarm-x-out-Value",
+			"p2": "animation-sit-result-rightarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-16",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-rightarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-17",
+			"p1": "animation-sit-curve-rightarm-z-out-Value",
+			"p2": "animation-sit-result-rightarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-18",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-rightfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-19",
+			"p1": "animation-sit-curve-rightfingers-out-Value",
+			"p2": "animation-sit-result-rightfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-20",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-rightforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-21",
+			"p1": "animation-sit-curve-rightforearm-y-out-Value",
+			"p2": "animation-sit-result-rightforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-22",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-rightleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-23",
+			"p1": "animation-sit-curve-rightleg-x-out-Value",
+			"p2": "animation-sit-result-rightleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-24",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-rightupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-25",
+			"p1": "animation-sit-curve-rightupleg-x-out-Value",
+			"p2": "animation-sit-result-rightupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-26",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-rightupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-27",
+			"p1": "animation-sit-curve-rightupleg-z-out-Value",
+			"p2": "animation-sit-result-rightupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-28",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-root-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-29",
+			"p1": "animation-sit-curve-root-y-out-Value",
+			"p2": "animation-sit-result-root-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-30",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-root-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-31",
+			"p1": "animation-sit-curve-root-z-out-Value",
+			"p2": "animation-sit-result-root-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-32",
+			"p1": "animation-sit-phase-out-Value",
+			"p2": "animation-sit-curve-spine-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-33",
+			"p1": "animation-sit-curve-spine-x-out-Value",
+			"p2": "animation-sit-result-spine-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-34",
+			"p1": "animation-sit-number-pose-out-Value",
+			"p2": "animation-sit-result-pose-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-35",
+			"p1": "animation-sit-number-length-out-Value",
+			"p2": "animation-sit-result-length-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-36",
+			"p1": "animation-sit-number-loop-out-Value",
+			"p2": "animation-sit-result-loop-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-sit-link-37",
+			"p1": "animation-sit-number-stride-out-Value",
+			"p2": "animation-sit-result-stride-in-Value",
+			"kind": "value"
+		}
+	]
+}

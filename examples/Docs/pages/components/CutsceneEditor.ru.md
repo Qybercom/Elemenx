@@ -9,6 +9,8 @@ Value — катсцены по имени ({Имя: {Tracks, Restore, Skip, Loo
 
 В SceneEditor он открывается кнопкой «Катсцены» на панели инструментов и стоит под видом, на месте графов. Каждая правка — один шаг отмены. Виды camera и screen есть в палитре.
 
+Ширина полей выбранного меняется перетаскиванием их края и запоминается (EditorPanes, ключ cutscene-editor).
+
 ## Свойства
 
 | Свойство | По умолчанию |
@@ -36,5 +38,6 @@ Value — катсцены по имени ({Имя: {Tracks, Restore, Skip, Loo
 
 ## Тесты
 
+- [drags the panes of ](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/editor-panes.test.js#L46) — `tests/regression/editor-panes.test.js`
 - [creates a cutscene, adds what a film has at the playhead as ranges of its lanes, moves them, edits their fields, takes them away](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/CutsceneEditor/CutsceneEditor.test.js#L53) — `libraries/ElemenxGraphics/components/CutsceneEditor/CutsceneEditor.test.js`
 - [shows the Scene at the moment the playhead is at, keys the move of its target where the view is, asks for a camera there](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/CutsceneEditor/CutsceneEditor.test.js#L116) — `libraries/ElemenxGraphics/components/CutsceneEditor/CutsceneEditor.test.js`

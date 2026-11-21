@@ -1,0 +1,6 @@
+{
+	"Bloom": {"Gain": 0.62, "Weather": 1.6, "Fog": 1, "Rain": 0.4, "Snow": 0.5},
+	"Sharp": {"Frames": 0.16, "Plain": 0.12},
+	"Flash": {"Ground": 0.18, "Sky": 0.06},
+	"Veil": {"Red": 0.14, "Green": 0.05, "Blue": 0.02, "Haze": 0.5, "Clouds": 0.16, "Most": 0.5}
+}

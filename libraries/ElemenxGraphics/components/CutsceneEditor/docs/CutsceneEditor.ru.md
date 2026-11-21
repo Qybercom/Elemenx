@@ -5,3 +5,5 @@ Value — катсцены по имени ({Имя: {Tracks, Restore, Skip, Loo
 Методы: Cutscene() (редактируемая), Add(type), Remove(), Preview(seconds), Play(), Stop(), Record().
 
 В SceneEditor он открывается кнопкой «Катсцены» на панели инструментов и стоит под видом, на месте графов. Каждая правка — один шаг отмены. Виды camera и screen есть в палитре.
+
+Ширина полей выбранного меняется перетаскиванием их края и запоминается (EditorPanes, ключ cutscene-editor).

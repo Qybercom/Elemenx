@@ -1,0 +1,24 @@
+{
+	"version": 1,
+	"type": "material",
+	"name": "land-texture",
+	"glsl": {
+		"Field": "LandTexture"
+	},
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "chunk",
+			"type": "GLSL",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Code",
+					"value": "uniform sampler2DArray uLandColor;\nuniform sampler2DArray uLandSurface;\nvec3 landDX = vec3(0.0);\nvec3 landDY = vec3(0.0);\nvec3 landTint(vec3 color) {\n\tvec3 tint = color / max(max(color.r, max(color.g, color.b)), 0.01);\n\treturn mix(vec3(1.0), tint, 0.35) * 1.08;\n}\nvec3 landColored(float layer, vec3 c, vec3 color) {\n\tvec3 mean = max(pow(textureLod(uLandColor, vec3(0.5, 0.5, layer), 16.0).rgb, vec3(2.2)), vec3(0.02));\n\treturn mix(c * landTint(color), color * c / mean, 0.8);\n}\nvoid landTexture(float layer, float metres, float spin, vec3 place, out vec3 c, out float h, out float lit) {\n\tvec3 n = abs(landSlope);\n\tvec3 k = pow(n, vec3(8.0));\n\tk /= k.x + k.y + k.z;\n\tvec3 a;\n\tfloat r;\n\tvec3 bent;\n\tfloat hh;\n\tfloat l;\n\tfloat used = 0.0;\n\tc = vec3(0.0);\n\th = 0.0;\n\tlit = 0.0;\n\tif (k.y > 0.03) { tex_grad_layer = vec4(landDX.xz, landDY.xz); tex_sample_layer(uLandColor, uLandSurface, layer, place.xz, metres, spin, a, r, bent, hh, l); c += a * k.y; h += hh * k.y; lit += l * k.y; used += k.y; }\n\tif (k.x > 0.03) { tex_grad_layer = vec4(landDX.zy, landDY.zy); tex_sample_layer(uLandColor, uLandSurface, layer, place.zy, metres, spin, a, r, bent, hh, l); c += a * k.x; h += hh * k.x; lit += l * k.x; used += k.x; }\n\tif (k.z > 0.03) { tex_grad_layer = vec4(landDX.xy, landDY.xy); tex_sample_layer(uLandColor, uLandSurface, layer, place.xy, metres, spin, a, r, bent, hh, l); c += a * k.z; h += hh * k.z; lit += l * k.z; used += k.z; }\n\tc /= max(used, 1e-4);\n\th /= max(used, 1e-4);\n\tlit /= max(used, 1e-4);\n}"
+				}
+			]
+		}
+	],
+	"links": []
+}
