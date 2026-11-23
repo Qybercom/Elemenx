@@ -171,9 +171,61 @@ Elemenx.Trait('SceneCamera', {
 		/* SceneCamera: rigs */
 
 		/* A slow wandering of -1 to 1 of its own for each seed: sines whose times never meet. */
-		function wander (time, seed, rate) {
-			return (Math.sin(time * rate * 6.2832 + seed * 1.7) * 0.5 + Math.sin(time * rate * 6.2832 * 2.31 + seed * 4.3) * 0.3 + Math.sin(time * rate * 6.2832 * 5.17 + seed * 9.1) * 0.2);
-		}
+		/*
+		 * How a view shakes (blueprints/camera/shake; ShakeGraph of the scene or its Graphs['camera/shake'] in its place), of
+		 * {Time, Seed, Shake (of a rig), Hover, Walked, Stride (the steps of who carries it), Heat (of the air on a ship), Size,
+		 * Kick (of shots), Elapsed, Blast (a blast near), Rpm (of the engine driven, 0 to 1), Jolt (how fast its springs go, m/s)}:
+		 * {X, Y, Z, Pitch, Yaw, Roll of a rig; HeatRight, HeatUp; KickTaken; TraumaPitch, TraumaYaw, TraumaRoll (of the blast,
+		 * the engine and the road: as the square of all of them), BlastLeft}.
+		 */
+		/* A blast at a place of the world shakes the view as near it is to the eye (Power 1 at its foot, Size its reach in tens of metres). */
+		engine.Shock = function (at, power, size) {
+			var eye = scene.Eye || at;
+			var reach = 15 * Math.max(0.1, size || 1);
+			var far = Math.hypot(at[0] - eye[0], at[1] - eye[1], at[2] - eye[2]);
+
+			scene.Blast = Math.min(1, (scene.Blast || 0) + (power || 0) / (1 + far * far / (reach * reach)));
+		};
+
+		/*
+		 * What shakes the view of the hero, a turn of it of the graph of the shake: a blast near (it fades), its engine (the rpm
+		 * of the car it drives), the road under it (how fast its springs go). {Pitch, Yaw, Roll}, radians.
+		 */
+		engine.Trauma = function (focus, elapsed) {
+			var car = focus && focus.Car;
+			var settings = focus && focus.Values.Vehicle || {};
+			var strokes = focus && focus.Strokes || null;
+			var jolt = 0;
+			var made;
+
+			if (strokes && scene.Strokes && elapsed > 0)
+				strokes.forEach(function (stroke, index) {
+					jolt += Math.abs(stroke - (scene.Strokes[index] || 0)) / elapsed / (focus.Size || 1);
+				});
+
+			scene.Strokes = strokes ? strokes.slice() : null;
+
+			if (!scene.Blast && !car) return null;
+
+			made = engine.CameraShake({Time: scene.Seconds, Seed: 3, Elapsed: elapsed, Blast: scene.Blast || 0, Rpm: car ? Math.min(1, (car.Rpm || 0) / Math.max(1, Number(settings.Redline) || 7500)) : 0, Jolt: jolt});
+			scene.Blast = made.BlastLeft;
+
+			return {Pitch: made.TraumaPitch, Yaw: made.TraumaYaw, Roll: made.TraumaRoll};
+		};
+
+		engine.CameraShake = function (given) {
+			var graph = self.GraphOf('ShakeGraph', 'camera/shake') || Elemenx.Resources('Blueprints', 'ElemenxGraphics/camera/shake');
+			var inputs = {Time: 0, Seed: 0, Shake: 0, Hover: 0, Walked: 0, Stride: 0, Heat: 0, Size: 1, Kick: 0, Elapsed: 0, Blast: 0, Rpm: 0, Jolt: 0};
+			var made = scene.CameraShakeCode;
+			if (!made || made.Graph !== graph)
+				made = scene.CameraShakeCode = {Graph: graph, Code: self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)))};
+
+			Object.keys(given || {}).forEach(function (key) {
+				inputs[key] = given[key];
+			});
+
+			return made.Code.Run({}, inputs);
+		};
 
 		function angle (from, to) {
 			var d = to - from;
@@ -297,32 +349,31 @@ Elemenx.Trait('SceneCamera', {
 
 				pitch += kept.Lean[0] * tilt;
 				roll += kept.Lean[1] * tilt;
-
-				/* Hovering: a drift of a few centimetres, and the shiver of its rotors. */
-				position[0] += wander(time, seed, 0.21) * 0.05 * shake / 0.15;
-				position[1] += wander(time, seed + 2, 0.17) * 0.04 * shake / 0.15;
-				position[2] += wander(time, seed + 5, 0.19) * 0.05 * shake / 0.15;
-				pitch += wander(time, seed + 7, 23) * 0.0006 * shake / 0.15;
-			}
-			else {
-				/* The breath of who holds it, the tremor of hands, a slow sway: all by Shake. */
-				pitch += (wander(time, seed, 0.27) * 0.007 + wander(time, seed + 1, 7.3) * 0.0016) * shake * 2;
-				yaw += (wander(time, seed + 3, 0.19) * 0.009 + wander(time, seed + 4, 6.1) * 0.0014) * shake * 2;
-				roll += wander(time, seed + 6, 0.23) * 0.012 * shake * 2;
-				position[1] += wander(time, seed + 8, 0.27) * 0.004 * shake * 2;
 			}
 
-			/* The steps of who carries it in the hands: a bob and a sway at the pace of the walk. */
+			/* The steps of who carries it in the hands: their pace (a bob and a sway of the graph of the shake). */
+			var stride = 0;
+
 			if (set.Walk && raw.Carrier && kept.Carrier && dt > 0) {
 				var walk = Math.hypot(raw.Carrier[0] - kept.Carrier[0], raw.Carrier[2] - kept.Carrier[2]) / dt;
 
 				kept.Walked += dt * (1.6 + Math.min(walk, 6) * 0.35) * Math.min(1, walk / 0.5);
 
-				var stride = Math.min(1, walk / 2) * shake * 2;
-
-				position[1] += Math.abs(Math.sin(kept.Walked * Math.PI)) * 0.025 * stride;
-				roll += Math.sin(kept.Walked * Math.PI) * 0.012 * stride;
+				stride = Math.min(1, walk / 2) * shake * 2;
 			}
+
+			/*
+			 * Hovering, a drift of a few centimetres and the shiver of its rotors; held, the breath of who holds it, the tremor of
+			 * hands and a slow sway; carried, the steps: all by Shake, of the graph of the shake (engine.CameraShake).
+			 */
+			var shaken = engine.CameraShake({Time: time, Seed: seed, Shake: shake, Hover: set.Hover ? 1 : 0, Walked: kept.Walked || 0, Stride: stride});
+
+			position[0] += shaken.X;
+			position[1] += shaken.Y;
+			position[2] += shaken.Z;
+			pitch += shaken.Pitch;
+			yaw += shaken.Yaw;
+			roll += shaken.Roll;
 
 			kept.Carrier = raw.Carrier;
 

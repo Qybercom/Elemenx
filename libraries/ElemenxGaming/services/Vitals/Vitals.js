@@ -19,25 +19,28 @@
  *   Hit}), revive ({ID, Value}), health (any change: {ID, Value, Max}).
  * - Configure({Mode, Send, FriendlyFire}) changes them. Step(elapsed): regeneration. Receive(message): a message of the transport. Save() and Load(saved): {Version, States}.
  * - Kinds: the health a game gives the kinds of a Scene ({unit: {Max: 100}, house, module, station, craft, ship, cruiser,
- *   freighter}; change it or add yours); Settings(object): the health of an object (its trait Health over the one of its kind,
- *   or a Health or MaxHealth given to it alone), null for what cannot be hurt. Card(ledger, object, rows) adds its row of
+ *   freighter}; change it or add yours); Units: what a unit is of its model ({archer: {Max, Damage, Range, Sight}, knight,
+ *   orc, villager, soldier, robot}), UnitOf(object) its row ({} for none); Settings(object): the health of an object (its
+ *   trait Health over the one of its model over the one of its kind, or a Health or MaxHealth given to it alone), null for
+ *   what cannot be hurt. Card(ledger, object, rows) adds its row of
  *   health to its card, Target(ledger, object) whether a weapon may aim at it (it has health and lives): the hooks SceneCard
  *   and SceneTarget of GameCombat and GameStrategy. Bar(context, x, y, part, color, width, height) draws a bar of health on
  *   a canvas (2D) round x, y (px): width and height of its fill, part (0 to 1) of it in color over a dark frame a pixel wider.
  * - Of(scene): the ledger of a Scene, made once: it reads the health of its objects (Settings: Max, Armor, Resist, Parts, Regen,
  *   Death) and their Values.Health, writes Values.Health back, turns each hit of the scene (event hit of its weapons) into
  *   Damage, and at death does what Death says: remove (by default), break (Scene.Break), die (the clip die, then it stays),
- *   keep.
+ *   keep. A damage goes through the layers of the shield of what it hurts first (Absorb of the Scene: SceneShipSystems).
  */
 Elemenx.Service('Vitals', {
 	$Meta: {
 		Description: 'The health of what a game can hurt, as data with one way in: damage and heal through rules, events, a host and its clients.',
-		Methods: ['Make(options)', 'Of(scene)', 'Settings(object)', 'Card(ledger, object, rows)', 'Target(ledger, object)', 'Bar(context, x, y, part, color, width, height)']
+		Methods: ['Make(options)', 'Of(scene)', 'Settings(object)', 'UnitOf(object)', 'Card(ledger, object, rows)', 'Target(ledger, object)', 'Bar(context, x, y, part, color, width, height)']
 	},
 
 	$OnCreate: function () {
 		this.Scenes = typeof WeakMap === 'function' ? new WeakMap() : null;
 		this.Kinds = Object.assign(Elemenx.Resources('Data', 'ElemenxGaming/vitals/kinds') || {}, this.Kinds);
+		this.Units = Object.assign(Elemenx.Resources('Data', 'ElemenxGaming/vitals/units') || {}, this.Units);
 	},
 
 	Make: function (options) {
@@ -377,7 +380,19 @@ Elemenx.Service('Vitals', {
 	 * The health settings of an object of a Scene: its trait Health over the health of its kind (Kinds, through what the kind
 	 * extends), or a Health it was given alone (Values.Health); null for what has none (it cannot be hurt).
 	 */
+	/*
+	 * What a unit is of its model (Units, resources/vitals/units: archer, knight, orc, villager, soldier, robot; change it or
+	 * add yours): {Max (its health), Damage (a second, near), Range (metres), Sight (metres)}, empty for a model of none.
+	 * Regression: each demo gave each unit its numbers itself.
+	 */
+	UnitOf: function (object) {
+		var model = object && object.Values ? object.Values.Model : '';
+
+		return typeof model === 'string' && Object.prototype.hasOwnProperty.call(this.Units || {}, model) ? this.Units[model] : {};
+	},
+
 	Settings: function (object) {
+		var unit;
 		var kinds = null;
 		var given = object && object.Traits ? object.Traits.Health : null;
 		var name = object ? object.Kind : '';
@@ -403,10 +418,12 @@ Elemenx.Service('Vitals', {
 			seen++;
 		}
 
-		if (!given && !base && (object.Values === undefined || object.Values.Health === undefined || object.Values.Health === null || object.Values.Health === '')) return null;
+		unit = this.UnitOf(object);
 
-		/* A MaxHealth given to it alone (an attribute of its tag) is its Max. */
-		return Object.assign({Max: 100}, base || {}, given || {}, object.Values && object.Values.MaxHealth !== undefined && object.Values.MaxHealth !== null && object.Values.MaxHealth !== '' ? {Max: Number(object.Values.MaxHealth)} : {});
+		if (!given && !base && !unit.Max && (object.Values === undefined || object.Values.Health === undefined || object.Values.Health === null || object.Values.Health === '')) return null;
+
+		/* Over the health of its kind the one of its model (Units); a MaxHealth given to it alone (an attribute of its tag) is its Max. */
+		return Object.assign({Max: 100}, base || {}, unit.Max ? {Max: unit.Max} : {}, given || {}, object.Values && object.Values.MaxHealth !== undefined && object.Values.MaxHealth !== null && object.Values.MaxHealth !== '' ? {Max: Number(object.Values.MaxHealth)} : {});
 	},
 
 	/* The row of health of an object on the card of its Scene (SceneCard of a behaviour), once whoever adds it. */
@@ -494,6 +511,18 @@ Elemenx.Service('Vitals', {
 			if (death === 'die' && typeof scene.Play === 'function' && scene.Play(event.ID, 'die')) return;
 
 			scene.Remove(event.ID);
+		});
+
+		/*
+		 * Damage goes through the layers of the shield of what it hurts first (Absorb of the Scene, SceneShipSystems: a
+		 * ship's or a character's): what they take is gone, what is left hurts it; all of it taken, it is no damage.
+		 */
+		ledger.Before(function (change) {
+			if (change.Kind !== 'damage' || typeof scene.Absorb !== 'function') return;
+
+			change.Amount = scene.Absorb(change.ID, change.Amount, change.Hit);
+
+			if (change.Amount <= 0) return false;
 		});
 
 		/* Each hit of the scene (its weapons) is damage; the regeneration goes with its time. */

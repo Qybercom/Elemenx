@@ -26,15 +26,15 @@
 
 - [merges the geometries of a model as large as a building of glass without running out of the stack](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Meshes/Meshes.node.test.js#L25) — `libraries/ElemenxGraphics/services/Meshes/Meshes.node.test.js`
 - [puts planets on their orbits and makes shapes of three dimensions with the Services of the system Libraries](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`
+- [lays the rooms of a ship out by its class: a fighter a cockpit, a corvette a bridge to a cargo hold on a ramp, a capital ship a command post](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-aboard.test.js#L55) — `tests/regression/library-aboard.test.js`
 - [joins the pieces of a skeleton that never moves, of one material, into one draw, in their places](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-frames.test.js#L48) — `tests/regression/library-scene-frames.test.js`
 - [casts the shadow of the still pieces of a model of a file, of all their materials, by one draw](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-frames.test.js#L145) — `tests/regression/library-scene-frames.test.js`
 - [draws what moves together of a model of a file as one for each material: all that stands still, each wheel, each opening](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-frames.test.js#L375) — `tests/regression/library-scene-frames.test.js`
 - [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L186) — `tests/regression/library-scene.test.js`
 - [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L487) — `tests/regression/library-scene.test.js`
 - [keeps from the shaders what would blur, flicker or show as noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2152) — `tests/regression/library-scene.test.js`
-- [makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3025) — `tests/regression/library-scene.test.js`
-- [burns where it is told: effects with their lamps, those of a body, bursts that end, types of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3516) — `tests/regression/library-scene.test.js`
-- [Renderer makes programs behind the page for who is patient, and sets in a program only what changed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5236) — `tests/regression/library-scene.test.js`
-- [A mirrored node keeps its mirror, and what a file keeps as one piece stands apart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5638) — `tests/regression/library-scene.test.js`
+- [makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3147) — `tests/regression/library-scene.test.js`
+- [burns where it is told: effects with their lamps, those of a body, bursts that end, types of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3638) — `tests/regression/library-scene.test.js`
+- [Renderer makes programs behind the page for who is patient, and sets in a program only what changed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5358) — `tests/regression/library-scene.test.js`
 
-+14 ещё в тех же файлах
++15 ещё в тех же файлах

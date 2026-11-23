@@ -2855,6 +2855,7 @@ Elemenx.Trait('SceneScatter', {
 				'uniform vec3 uFloorLight;',
 				'out vec4 outColor;',
 				graphics.Chunks.Shadow,
+				graphics.Chunks.SkyLight,
 				'void main() {',
 				'	vec4 color = texture(uColors, vUV);',
 				'	if (color.a < 0.5) discard;',
@@ -2862,7 +2863,7 @@ Elemenx.Trait('SceneScatter', {
 				'	n = normalize(vec3(vTurn.x * n.x + vTurn.y * n.z, n.y, vTurn.x * n.z - vTurn.y * n.x));',
 				'	float light = max(dot(n, uSun), 0.0) * sunShadow(vWorld, n);',
 				'	vec3 albedo = pow(color.rgb * vTint, vec3(2.2));',
-				'	outColor = vec4(pow(albedo * (uSunColor * light * 1.35 + aroundLight(vWorld, n, mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5))), vec3(1.0 / 2.2)), 1.0);',
+				'	outColor = vec4(pow(albedo * (uSunColor * light * 1.35 + aroundLight(vWorld, n, skyLight(n, 1.0, uSkyLight, uFloorLight, uSun, 1.25))), vec3(1.0 / 2.2)), 1.0);',
 				'}'
 			].join('\n'),
 
@@ -2957,6 +2958,7 @@ Elemenx.Trait('SceneScatter', {
 				'uniform vec3 uFloorLight;',
 				'out vec4 outColor;',
 				graphics.Chunks.Shadow,
+				graphics.Chunks.SkyLight,
 				'void main() {',
 				'	float light = max(uSun.y, 0.0) * sunLit(vWorld, vec3(0.0, 1.0, 0.0));',
 				/* What bends in the wind shows its pale side: from afar the wind is a slow sheen. */
@@ -2964,7 +2966,7 @@ Elemenx.Trait('SceneScatter', {
 				'	vec3 tip = mix(uTip, uTip * vec3(1.25, 1.05, 0.55), vDry);',
 				'	vec3 color = pow(mix(uRoot, tip, vAlong) * vTone * (1.0 + vWave * 0.05 * vAlong), vec3(2.2));',
 				'	float through = 1.0 + vAlong * 0.6;',
-				'	outColor = vec4(pow(color * (uSunColor * light * 1.35 * through + aroundSoft(vWorld, vec3(0.0, 1.0, 0.0), mix(uFloorLight, uSkyLight, 0.5 + vAlong * 0.5)) * (0.4 + vAlong * 0.6) + localLight(vWorld, vec3(0.0, 1.0, 0.0))), vec3(1.0 / 2.2)), 1.0);',
+				'	outColor = vec4(pow(color * (uSunColor * light * 1.35 * through + aroundSoft(vWorld, vec3(0.0, 1.0, 0.0), skyLight(vec3(0.0, vAlong, 0.0), 1.0, uSkyLight, uFloorLight, uSun, 1.25)) * (0.4 + vAlong * 0.6) + localLight(vWorld, vec3(0.0, 1.0, 0.0))), vec3(1.0 / 2.2)), 1.0);',
 				'}'
 			].join('\n')
 		};

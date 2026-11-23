@@ -21,6 +21,10 @@ Mirrors and Screens of a vehicle are panes in its model, {At, Normal (where it f
 
 Mounts of a vehicle of any kind are what it is built of, each where its model says, in its size: {Kind, At: [x, y, z], Aim: [x, y, z], Size, On, Mouth} and Type with what an effect takes (an effect that burns on it; Twist, degrees round the aim, leans it; Mouth, [width, height] or a radius, in its model, is the opening it comes out of: it fills it with light, the jet is as wide as it is, and an engine lights what is round it as it burns), or Model and Turn ([x, y, z] degrees; a model that stands on it). Kind is free: engine goes with the thrust, and burns as an exhaust if no Type is told; a game names its weapons, shields and holds as it likes, and asks MountsOf(id, kind) where they stand now. Pop of a mount is a burst there when a car lets go of the gas at speed: true for backfire, or {Type, Size, Every} (the seconds at least between two).
 
+Seats of a vehicle: [{ID, Role (driver, pilot, engineer, gunner, passenger: free), At ([x, y, z] of its model), Exit (where who leaves steps out), Controls (who sits there drives or flies it)}]; with none, one of its kind where its Seat is (a car, a boat: driver; a ship: pilot), out by its side. Board(actor, vehicle, seat) sits an actor (the character of the player: an object that walks) in the first free seat that drives (or seat): it is kept as it is, hidden, carried in its seat; the vehicle the hero if the actor was and the seat drives. Leave(actor): out where its seat says, shown, the hero again; the vehicle goes on as it was (its engine, its doors, its speed: what none drives rolls on by itself and slows). Context(actor): {Kind (walk or seat), Vehicle, Seat, Role, Controls}; the event context of the Scene tells each change. BoardKey() is G of the hero: in by the vehicle it stands by, out of the one it drives (not a ship in space).
+
+Readout(id) is what the instruments of an object read (of the hero by none), of the graph blueprints/vehicles/readout (ReadoutGraph of the vehicle or of the scene, its Graphs['vehicles/readout']): {ID, Kind (car, boat, ship; walk: on foot), Speed and TopSpeed (km/h), SpeedPart, Rpm, RpmPart, Gear, Left, Right, Lights, Health, MaxHealth, HealthPart, Driver}.
+
 ## Methods
 
 - `Parts(id)`
@@ -31,3 +35,8 @@ Mounts of a vehicle of any kind are what it is built of, each where its model sa
 - `AimAlign(on)`
 - `MountsOf(id, kind)`
 - `Vehicles(kinds)`
+- `Board(id, vehicle, seat)`
+- `Leave(id)`
+- `Readout(id)`
+- `Context(id)`
+- `BoardKey()`

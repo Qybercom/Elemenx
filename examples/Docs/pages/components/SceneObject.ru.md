@@ -59,4 +59,4 @@
 - [writes what is round an object into the Ether each frame, of the envelope of the body it is by](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L921) — `tests/regression/library-scene.test.js`
 - [takes the air round an eye and the lands of a ground of the envelope of a body, the Earth as it was](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L977) — `tests/regression/library-scene.test.js`
 
-+176 ещё в тех же файлах
++181 ещё в тех же файлах

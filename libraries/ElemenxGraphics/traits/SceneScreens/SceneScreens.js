@@ -11,7 +11,7 @@
  *   seconds (0: each frame);
  * - Element: an element of the page (a selector, or a data-screen of the slot screens, laid out out of sight) as a picture,
  *   drawn again when it changes, every Every seconds at most (0.15), Pixels [width, height] (its own size). With Interactive
- *   (true) the pointer works on it as on the element: a press, a move, a release and a click go to what lies under the pointer
+ *   (true) the pointer (a mouse, a finger) works on it as on the element: a press, a move, a release and a click go to what lies under the pointer
  *   in it, the wheel scrolls it, a field pressed takes the keys. What :hover would show of it does not show.
  * ScreenAt(clientX, clientY) tells the screen under a point of the page: {ID, U, V (0 to 1, from its left and its top)} or null.
  */
@@ -315,7 +315,11 @@ Elemenx.Trait('SceneScreens', {
 
 				if (!next) break;
 
-				if (!style || style.pointerEvents !== 'none')
+				/*
+				 * One a pointer passes through: pointer-events none of its own, not of what it is in (the slot of the screens has it
+				 * for the page). Regression: inherited from the slot, it was on everything there, and nothing on a screen was pressed.
+				 */
+				if (!style || style.pointerEvents !== 'none' || getComputedStyle(walk).pointerEvents === 'none')
 					found = next;
 
 				walk = next;

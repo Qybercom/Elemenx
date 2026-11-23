@@ -1,0 +1,166 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "shield",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "shield-input-value",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Value"
+				}
+			]
+		},
+		{
+			"id": "shield-input-capacity",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Capacity"
+				}
+			]
+		},
+		{
+			"id": "shield-input-regen",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Regen"
+				}
+			]
+		},
+		{
+			"id": "shield-input-power",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Power"
+				}
+			]
+		},
+		{
+			"id": "shield-input-since",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Since"
+				}
+			]
+		},
+		{
+			"id": "shield-input-delay",
+			"type": "Input",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Delay"
+				}
+			]
+		},
+		{
+			"id": "shield-input-elapsed",
+			"type": "Input",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Elapsed"
+				}
+			]
+		},
+		{
+			"id": "shield-formula-value",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Since >= Delay ? min(Capacity, Value + Regen * Power * Elapsed) : Value"
+				}
+			]
+		},
+		{
+			"id": "shield-result-value",
+			"type": "Result",
+			"x": 680,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Value"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "shield-link-0",
+			"p1": "shield-input-since-out-Value",
+			"p2": "shield-formula-value-in-Since",
+			"kind": "value"
+		},
+		{
+			"id": "shield-link-1",
+			"p1": "shield-input-delay-out-Value",
+			"p2": "shield-formula-value-in-Delay",
+			"kind": "value"
+		},
+		{
+			"id": "shield-link-2",
+			"p1": "shield-input-capacity-out-Value",
+			"p2": "shield-formula-value-in-Capacity",
+			"kind": "value"
+		},
+		{
+			"id": "shield-link-3",
+			"p1": "shield-input-value-out-Value",
+			"p2": "shield-formula-value-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "shield-link-4",
+			"p1": "shield-input-regen-out-Value",
+			"p2": "shield-formula-value-in-Regen",
+			"kind": "value"
+		},
+		{
+			"id": "shield-link-5",
+			"p1": "shield-input-power-out-Value",
+			"p2": "shield-formula-value-in-Power",
+			"kind": "value"
+		},
+		{
+			"id": "shield-link-6",
+			"p1": "shield-input-elapsed-out-Value",
+			"p2": "shield-formula-value-in-Elapsed",
+			"kind": "value"
+		},
+		{
+			"id": "shield-link-7",
+			"p1": "shield-formula-value-out-Value",
+			"p2": "shield-result-value-in-Value",
+			"kind": "value"
+		}
+	]
+}

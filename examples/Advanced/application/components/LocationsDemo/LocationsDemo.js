@@ -14,6 +14,79 @@ Elemenx.Component('LocationsDemo', {
 		/* The demo alone on its page: its location at once (tens of megabytes: the catalogue waited to be asked). */
 		this.PlaceLoad();
 	},
+	/*
+	 * Ships standing on the ground beside the walker (of data/vehicles/ships.json, Parked): the inside of each of its class
+	 * (SceneInteriors), its ramp down behind it; the walker goes up it, G at a console sits there, G again stands it up.
+	 */
+	PlaceParked: function () {
+		var self = this;
+		var scene = this.PlaceScene ? this.PlaceScene() : null;
+		if (!scene || !scene.Scene().Objects.hero) return;
+
+		this.$Service('DemoData').Get('/data/vehicles/ships.json', function (error, ships) {
+			var hero = scene.Scene().Objects.hero;
+			var reach;
+
+			if (error || !ships || !ships[1] || !hero.World) return;
+
+			reach = Math.min(30, scene.Scene().Ground.Field.Size * 0.3);
+
+			/*
+			 * Two ships of one fleet (alpha): the first of the list, its flagship, its tail and ramp toward the walker; a scout
+			 * on the other side of it. Each with a crew on foot by it (Crew: its ID): the strategic view of the seat of command of
+			 * the flagship orders them all (SceneTactics, GameStrategy Command seat).
+			 */
+			self.PlaceStand(ships[0], 'parked', [hero.World[0] - ships[0].Length * 0.45, hero.World[2] + ships[0].Length * 0.6], {Parked: true, Fleet: 'alpha', Flagship: true}, 3);
+			self.PlaceStand(ships[1], 'scout', [hero.World[0] + ships[1].Length * 0.9, hero.World[2] + ships[1].Length * 0.4], {Parked: true, Fleet: 'alpha'}, 2);
+
+			/*
+			 * Raiders of another team round the walker, within the location, two going round: for the turrets of the ship, its
+			 * radar, its marks and its crews.
+			 */
+			[[0.9, -0.2, false], [-0.8, -0.6, true], [0.3, -1, true]].forEach(function (spot, index) {
+				var id = 'raider-' + index;
+				var x = hero.World[0] + spot[0] * reach;
+				var y = hero.World[2] + spot[1] * reach;
+
+				if (scene.Get(id))
+					scene.Remove(id);
+
+				scene.Add('unit', {ID: id, Name: 'Raider ' + (index + 1), Size: 1.8, X: x, Y: y, Team: 'red', Health: 100, Weapon: 'rifle', Patrol: spot[2] ? [[x, y], [x + reach * 0.4, y], [x + reach * 0.4, y + reach * 0.3]] : null});
+			});
+
+			self.PlaceNote = ships[0].Label + ' stands there on its legs, a scout beside it: up its ramp (under its belly), G at a console sits there, G again stands up. In a seat: the modes of its role (turret, radar, schematic, command of the fleet) on its screen and over the view; Escape back.';
+		});
+	},
+	/* A ship of the list standing on its legs at [x, z] (Vehicle of its own), as long as it is, its crew of count on foot by it. */
+	PlaceStand: function (ship, id, at, vehicle, count) {
+		var self = this;
+		var scene = this.PlaceScene();
+		var models = this.$Service('SceneModels');
+		var name = 'ship-' + ship.Value;
+		if (!models.Has(name))
+			models.Define(name, {URL: '/data/models/' + ship.Value, Type: 'prop'});
+
+		/*
+		 * As long as it is: a model of a file is fitted to a height of 1, its longest side is Length. Regression: its Size was
+		 * its Length, and a ship of 89 m stood 361 m long.
+		 */
+		models.Load(name, function (failed) {
+			var extent = failed ? [1, 1, 1] : models.Extent(name);
+			var index;
+
+			if (scene.Get(id))
+				scene.Remove(id);
+
+			scene.Add('ship', self.$Service('DemoData').Ship(ship, {ID: id, Name: ship.Label, Model: name, Size: ship.Length / Math.max(extent[0], extent[1], extent[2], 1e-6), X: at[0], Y: at[1], Yaw: 0, Vehicle: vehicle}));
+
+			for (index = 0; index < count; index++) {
+				if (scene.Get(id + '-crew-' + index))
+					scene.Remove(id + '-crew-' + index);
+
+				scene.Add('unit', {ID: id + '-crew-' + index, Name: ship.Label + ' crew ' + (index + 1), Size: 1.8, X: at[0] + (index - (count - 1) / 2) * 2.5, Y: at[1] - ship.Length * 0.6 - 3, Team: 'blue', Crew: id, Health: 100, Weapon: 'rifle'});
+			}
+		});
+	},
 	/* A location of the files kept out of git, and a walker on it; a copy without them says so. */
 	PlaceLoad: function () {
 		var self = this;
@@ -51,26 +124,29 @@ Elemenx.Component('LocationsDemo', {
 
 			self.PlaceNote = 'Loading ' + site.File;
 
-			self.PlaceWalker(scene, site, address, 0);
+			self.PlaceComing = {Scene: scene, Site: site, Address: address};
 		};
 
 		request.send();
 	},
+	/* The location asked for (Scene, Site, Address), till its ground comes. */
+	PlaceComing: null,
+	/* Its ground came (ground of the Scene): the walker on the ground of the location asked for. */
+	PlaceGrounded: function (event) {
+		var given = event && event.detail ? event.detail : event;
+		var coming = this.PlaceComing;
+		if (!coming || !given || !given.Location || String(given.Key).indexOf(coming.Address) === -1) return;
+
+		this.PlaceComing = null;
+
+		this.PlaceWalker(coming.Scene, coming.Site);
+	},
 	/* When the ground has come: the walker on it, a lamp that goes with it and a few along the way. */
-	PlaceWalker: function (scene, site, address, tries) {
+	PlaceWalker: function (scene, site) {
 		var self = this;
 		var ground = scene.Scene().Ground;
 		var start;
 		var i;
-
-		if (!ground || !ground.Field.Start || ground.Key.indexOf(address) === -1) {
-			if (tries < 400)
-				window.setTimeout(function () {
-					self.PlaceWalker(scene, site, address, tries + 1);
-				}, 50);
-
-			return;
-		}
 
 		/* On the tree the largest floors are its roofs: the walker starts on what is under them. */
 		start = ground.Field.Spots().filter(function (spot) {
@@ -410,6 +486,7 @@ Elemenx.Component('LocationsDemo', {
 	},
 	PlacePerson: 'third',
 	PlaceFree: true,
+	PlaceCutaway: false,
 	/* Another walker on the same spot: only its model changes. */
 	PlaceCharacterChosen: function (value) {
 		var self = this;

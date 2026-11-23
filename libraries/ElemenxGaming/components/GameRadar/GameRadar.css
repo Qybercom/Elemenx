@@ -1,0 +1,43 @@
+/* The radar: a map of rings from over the vehicle, or the space round it on a canvas. */
+.elemenx-game-radar {
+	display: inline-block;
+	contain: layout style;
+}
+
+.elemenx-game-radar[hidden] {
+	display: none;
+}
+
+.elemenx-game-radar-rings {
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	background: radial-gradient(circle, transparent 15.5%, var(--elemenx-game-text) 16%, transparent 16.6%, transparent 32.5%, var(--elemenx-game-text) 33%, transparent 33.6%), linear-gradient(var(--elemenx-game-text), var(--elemenx-game-text)) center / 1px 100% no-repeat;
+	opacity: 0.2;
+	pointer-events: none;
+}
+
+.elemenx-game-radar-space {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 8px;
+}
+
+.elemenx-game-radar-bubble {
+	display: block;
+	cursor: crosshair;
+}
+
+.elemenx-game-radar-foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-game-radar-zoom {
+	display: flex;
+	gap: 4px;
+}

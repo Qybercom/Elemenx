@@ -1,0 +1,849 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "aboard-forces",
+	"parameters": [
+		{
+			"key": "Compensation",
+			"type": "float",
+			"value": 0.9,
+			"comment": "How much of how the ship speeds up and turns its artificial gravity takes away (1: none felt)"
+		},
+		{
+			"key": "Threshold",
+			"type": "float",
+			"value": 2,
+			"comment": "What is left of it under this (m/s²) is not felt at all"
+		},
+		{
+			"key": "Push",
+			"type": "float",
+			"value": 0.35,
+			"comment": "How fast what is felt carries the walker along the deck (m/s for each m/s²)"
+		},
+		{
+			"key": "MaxPush",
+			"type": "float",
+			"value": 4,
+			"comment": "The most it carries it (m/s)"
+		},
+		{
+			"key": "Shake",
+			"type": "float",
+			"value": 0.006,
+			"comment": "How much what is felt shakes the view (radians for each m/s²)"
+		},
+		{
+			"key": "TurnShake",
+			"type": "float",
+			"value": 0.02,
+			"comment": "How much a turn of the ship shakes the view (radians for each rad/s felt)"
+		},
+		{
+			"key": "HitShake",
+			"type": "float",
+			"value": 0.06,
+			"comment": "How much a hit on the ship shakes the view (radians at its full)"
+		},
+		{
+			"key": "HitPush",
+			"type": "float",
+			"value": 2.5,
+			"comment": "How far a hit throws the walker (m/s at its full)"
+		},
+		{
+			"key": "WarpShake",
+			"type": "float",
+			"value": 0.012,
+			"comment": "How much a way far at once (warp, jump) shakes the view"
+		},
+		{
+			"key": "MaxShake",
+			"type": "float",
+			"value": 0.12,
+			"comment": "The most the view shakes (radians)"
+		}
+	],
+	"blocks": [
+		{
+			"id": "aboard-forces-input-time",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Time"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-input-elapsed",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Elapsed"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-input-ax",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Ax"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-input-ay",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Ay"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-input-az",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Az"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-input-turn",
+			"type": "Input",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Turn"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-input-hit",
+			"type": "Input",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Hit"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-input-hitx",
+			"type": "Input",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HitX"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-input-hitz",
+			"type": "Input",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HitZ"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-input-warp",
+			"type": "Input",
+			"x": 0,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Warp"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-parameter-compensation",
+			"type": "Parameter",
+			"x": 0,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Compensation"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-parameter-threshold",
+			"type": "Parameter",
+			"x": 0,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Threshold"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-parameter-push",
+			"type": "Parameter",
+			"x": 0,
+			"y": 1120,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Push"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-parameter-maxpush",
+			"type": "Parameter",
+			"x": 0,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "MaxPush"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-parameter-shake",
+			"type": "Parameter",
+			"x": 0,
+			"y": 1300,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Shake"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-parameter-turnshake",
+			"type": "Parameter",
+			"x": 0,
+			"y": 1390,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "TurnShake"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-parameter-hitshake",
+			"type": "Parameter",
+			"x": 0,
+			"y": 1480,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "HitShake"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-parameter-hitpush",
+			"type": "Parameter",
+			"x": 0,
+			"y": 1570,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "HitPush"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-parameter-warpshake",
+			"type": "Parameter",
+			"x": 0,
+			"y": 1660,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "WarpShake"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-parameter-maxshake",
+			"type": "Parameter",
+			"x": 0,
+			"y": 1750,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "MaxShake"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-formula-pushx",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(-MaxPush, min(MaxPush, -(Ax < 0 ? -1 : 1) * max(0, abs(Ax) * (1 - Compensation) - Threshold) * Push + HitX * Hit * HitPush))"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-result-pushx",
+			"type": "Result",
+			"x": 900,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "PushX"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-formula-pushz",
+			"type": "Formula",
+			"x": 320,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(-MaxPush, min(MaxPush, -(Az < 0 ? -1 : 1) * max(0, abs(Az) * (1 - Compensation) - Threshold) * Push + HitZ * Hit * HitPush))"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-result-pushz",
+			"type": "Result",
+			"x": 900,
+			"y": 200,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "PushZ"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-formula-shakepitch",
+			"type": "Formula",
+			"x": 320,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(MaxShake, Shake * (abs((Ax < 0 ? -1 : 1) * max(0, abs(Ax) * (1 - Compensation) - Threshold)) + abs((Ay < 0 ? -1 : 1) * max(0, abs(Ay) * (1 - Compensation) - Threshold)) + abs((Az < 0 ? -1 : 1) * max(0, abs(Az) * (1 - Compensation) - Threshold))) + TurnShake * abs(Turn) * (1 - Compensation) + HitShake * Hit + WarpShake * Warp) * (sin(Time * 23 + 1) * 0.5 + sin(Time * 53.13 + 4.3) * 0.3 + sin(Time * 118.91 + 9.1) * 0.2)"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-result-shakepitch",
+			"type": "Result",
+			"x": 900,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "ShakePitch"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-formula-shakeyaw",
+			"type": "Formula",
+			"x": 320,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(MaxShake, Shake * (abs((Ax < 0 ? -1 : 1) * max(0, abs(Ax) * (1 - Compensation) - Threshold)) + abs((Ay < 0 ? -1 : 1) * max(0, abs(Ay) * (1 - Compensation) - Threshold)) + abs((Az < 0 ? -1 : 1) * max(0, abs(Az) * (1 - Compensation) - Threshold))) + TurnShake * abs(Turn) * (1 - Compensation) + HitShake * Hit + WarpShake * Warp) * (sin(Time * 19 + 2) * 0.5 + sin(Time * 43.89 + 8.6) * 0.3 + sin(Time * 98.23 + 18.2) * 0.2)"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-result-shakeyaw",
+			"type": "Result",
+			"x": 900,
+			"y": 520,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "ShakeYaw"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-formula-shakeroll",
+			"type": "Formula",
+			"x": 320,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(MaxShake, Shake * (abs((Ax < 0 ? -1 : 1) * max(0, abs(Ax) * (1 - Compensation) - Threshold)) + abs((Ay < 0 ? -1 : 1) * max(0, abs(Ay) * (1 - Compensation) - Threshold)) + abs((Az < 0 ? -1 : 1) * max(0, abs(Az) * (1 - Compensation) - Threshold))) + TurnShake * abs(Turn) * (1 - Compensation) + HitShake * Hit + WarpShake * Warp) * 0.6 * (sin(Time * 29 + 3) * 0.5 + sin(Time * 66.99 + 12.9) * 0.3 + sin(Time * 149.93 + 27.3) * 0.2)"
+				}
+			]
+		},
+		{
+			"id": "aboard-forces-result-shakeroll",
+			"type": "Result",
+			"x": 900,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "ShakeRoll"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "aboard-forces-link-0",
+			"p1": "aboard-forces-input-ax-out-Value",
+			"p2": "aboard-forces-formula-pushx-in-Ax",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-1",
+			"p1": "aboard-forces-input-hit-out-Value",
+			"p2": "aboard-forces-formula-pushx-in-Hit",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-2",
+			"p1": "aboard-forces-input-hitx-out-Value",
+			"p2": "aboard-forces-formula-pushx-in-HitX",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-3",
+			"p1": "aboard-forces-parameter-compensation-out-Value",
+			"p2": "aboard-forces-formula-pushx-in-Compensation",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-4",
+			"p1": "aboard-forces-parameter-threshold-out-Value",
+			"p2": "aboard-forces-formula-pushx-in-Threshold",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-5",
+			"p1": "aboard-forces-parameter-push-out-Value",
+			"p2": "aboard-forces-formula-pushx-in-Push",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-6",
+			"p1": "aboard-forces-parameter-maxpush-out-Value",
+			"p2": "aboard-forces-formula-pushx-in-MaxPush",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-7",
+			"p1": "aboard-forces-parameter-hitpush-out-Value",
+			"p2": "aboard-forces-formula-pushx-in-HitPush",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-8",
+			"p1": "aboard-forces-formula-pushx-out-Value",
+			"p2": "aboard-forces-result-pushx-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-9",
+			"p1": "aboard-forces-input-az-out-Value",
+			"p2": "aboard-forces-formula-pushz-in-Az",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-10",
+			"p1": "aboard-forces-input-hit-out-Value",
+			"p2": "aboard-forces-formula-pushz-in-Hit",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-11",
+			"p1": "aboard-forces-input-hitz-out-Value",
+			"p2": "aboard-forces-formula-pushz-in-HitZ",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-12",
+			"p1": "aboard-forces-parameter-compensation-out-Value",
+			"p2": "aboard-forces-formula-pushz-in-Compensation",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-13",
+			"p1": "aboard-forces-parameter-threshold-out-Value",
+			"p2": "aboard-forces-formula-pushz-in-Threshold",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-14",
+			"p1": "aboard-forces-parameter-push-out-Value",
+			"p2": "aboard-forces-formula-pushz-in-Push",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-15",
+			"p1": "aboard-forces-parameter-maxpush-out-Value",
+			"p2": "aboard-forces-formula-pushz-in-MaxPush",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-16",
+			"p1": "aboard-forces-parameter-hitpush-out-Value",
+			"p2": "aboard-forces-formula-pushz-in-HitPush",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-17",
+			"p1": "aboard-forces-formula-pushz-out-Value",
+			"p2": "aboard-forces-result-pushz-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-18",
+			"p1": "aboard-forces-input-time-out-Value",
+			"p2": "aboard-forces-formula-shakepitch-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-19",
+			"p1": "aboard-forces-input-ax-out-Value",
+			"p2": "aboard-forces-formula-shakepitch-in-Ax",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-20",
+			"p1": "aboard-forces-input-ay-out-Value",
+			"p2": "aboard-forces-formula-shakepitch-in-Ay",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-21",
+			"p1": "aboard-forces-input-az-out-Value",
+			"p2": "aboard-forces-formula-shakepitch-in-Az",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-22",
+			"p1": "aboard-forces-input-turn-out-Value",
+			"p2": "aboard-forces-formula-shakepitch-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-23",
+			"p1": "aboard-forces-input-hit-out-Value",
+			"p2": "aboard-forces-formula-shakepitch-in-Hit",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-24",
+			"p1": "aboard-forces-input-warp-out-Value",
+			"p2": "aboard-forces-formula-shakepitch-in-Warp",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-25",
+			"p1": "aboard-forces-parameter-compensation-out-Value",
+			"p2": "aboard-forces-formula-shakepitch-in-Compensation",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-26",
+			"p1": "aboard-forces-parameter-threshold-out-Value",
+			"p2": "aboard-forces-formula-shakepitch-in-Threshold",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-27",
+			"p1": "aboard-forces-parameter-shake-out-Value",
+			"p2": "aboard-forces-formula-shakepitch-in-Shake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-28",
+			"p1": "aboard-forces-parameter-turnshake-out-Value",
+			"p2": "aboard-forces-formula-shakepitch-in-TurnShake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-29",
+			"p1": "aboard-forces-parameter-hitshake-out-Value",
+			"p2": "aboard-forces-formula-shakepitch-in-HitShake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-30",
+			"p1": "aboard-forces-parameter-warpshake-out-Value",
+			"p2": "aboard-forces-formula-shakepitch-in-WarpShake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-31",
+			"p1": "aboard-forces-parameter-maxshake-out-Value",
+			"p2": "aboard-forces-formula-shakepitch-in-MaxShake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-32",
+			"p1": "aboard-forces-formula-shakepitch-out-Value",
+			"p2": "aboard-forces-result-shakepitch-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-33",
+			"p1": "aboard-forces-input-time-out-Value",
+			"p2": "aboard-forces-formula-shakeyaw-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-34",
+			"p1": "aboard-forces-input-ax-out-Value",
+			"p2": "aboard-forces-formula-shakeyaw-in-Ax",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-35",
+			"p1": "aboard-forces-input-ay-out-Value",
+			"p2": "aboard-forces-formula-shakeyaw-in-Ay",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-36",
+			"p1": "aboard-forces-input-az-out-Value",
+			"p2": "aboard-forces-formula-shakeyaw-in-Az",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-37",
+			"p1": "aboard-forces-input-turn-out-Value",
+			"p2": "aboard-forces-formula-shakeyaw-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-38",
+			"p1": "aboard-forces-input-hit-out-Value",
+			"p2": "aboard-forces-formula-shakeyaw-in-Hit",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-39",
+			"p1": "aboard-forces-input-warp-out-Value",
+			"p2": "aboard-forces-formula-shakeyaw-in-Warp",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-40",
+			"p1": "aboard-forces-parameter-compensation-out-Value",
+			"p2": "aboard-forces-formula-shakeyaw-in-Compensation",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-41",
+			"p1": "aboard-forces-parameter-threshold-out-Value",
+			"p2": "aboard-forces-formula-shakeyaw-in-Threshold",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-42",
+			"p1": "aboard-forces-parameter-shake-out-Value",
+			"p2": "aboard-forces-formula-shakeyaw-in-Shake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-43",
+			"p1": "aboard-forces-parameter-turnshake-out-Value",
+			"p2": "aboard-forces-formula-shakeyaw-in-TurnShake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-44",
+			"p1": "aboard-forces-parameter-hitshake-out-Value",
+			"p2": "aboard-forces-formula-shakeyaw-in-HitShake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-45",
+			"p1": "aboard-forces-parameter-warpshake-out-Value",
+			"p2": "aboard-forces-formula-shakeyaw-in-WarpShake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-46",
+			"p1": "aboard-forces-parameter-maxshake-out-Value",
+			"p2": "aboard-forces-formula-shakeyaw-in-MaxShake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-47",
+			"p1": "aboard-forces-formula-shakeyaw-out-Value",
+			"p2": "aboard-forces-result-shakeyaw-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-48",
+			"p1": "aboard-forces-input-time-out-Value",
+			"p2": "aboard-forces-formula-shakeroll-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-49",
+			"p1": "aboard-forces-input-ax-out-Value",
+			"p2": "aboard-forces-formula-shakeroll-in-Ax",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-50",
+			"p1": "aboard-forces-input-ay-out-Value",
+			"p2": "aboard-forces-formula-shakeroll-in-Ay",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-51",
+			"p1": "aboard-forces-input-az-out-Value",
+			"p2": "aboard-forces-formula-shakeroll-in-Az",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-52",
+			"p1": "aboard-forces-input-turn-out-Value",
+			"p2": "aboard-forces-formula-shakeroll-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-53",
+			"p1": "aboard-forces-input-hit-out-Value",
+			"p2": "aboard-forces-formula-shakeroll-in-Hit",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-54",
+			"p1": "aboard-forces-input-warp-out-Value",
+			"p2": "aboard-forces-formula-shakeroll-in-Warp",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-55",
+			"p1": "aboard-forces-parameter-compensation-out-Value",
+			"p2": "aboard-forces-formula-shakeroll-in-Compensation",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-56",
+			"p1": "aboard-forces-parameter-threshold-out-Value",
+			"p2": "aboard-forces-formula-shakeroll-in-Threshold",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-57",
+			"p1": "aboard-forces-parameter-shake-out-Value",
+			"p2": "aboard-forces-formula-shakeroll-in-Shake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-58",
+			"p1": "aboard-forces-parameter-turnshake-out-Value",
+			"p2": "aboard-forces-formula-shakeroll-in-TurnShake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-59",
+			"p1": "aboard-forces-parameter-hitshake-out-Value",
+			"p2": "aboard-forces-formula-shakeroll-in-HitShake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-60",
+			"p1": "aboard-forces-parameter-warpshake-out-Value",
+			"p2": "aboard-forces-formula-shakeroll-in-WarpShake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-61",
+			"p1": "aboard-forces-parameter-maxshake-out-Value",
+			"p2": "aboard-forces-formula-shakeroll-in-MaxShake",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-forces-link-62",
+			"p1": "aboard-forces-formula-shakeroll-out-Value",
+			"p2": "aboard-forces-result-shakeroll-in-Value",
+			"kind": "value"
+		}
+	]
+}

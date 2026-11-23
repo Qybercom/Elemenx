@@ -47,3 +47,23 @@
 .ui-kit-place-ribbon {
 	margin-block-end: 4px;
 }
+
+/* The screen of a console inside a ship (GameConsole): as large as the picture of it, of the shape of the screen. */
+.scene-demo-console {
+	box-sizing: border-box;
+	width: 560px;
+	height: 311px;
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+}
+
+/* The modes of a seat and the radar of its vehicle, over the view (SceneTactics): at its left, under its top. */
+.scene-demo-tactics {
+	position: absolute;
+	top: 56px;
+	left: 12px;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+}

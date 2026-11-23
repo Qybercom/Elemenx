@@ -1,0 +1,15 @@
+<div class="elemenx-game-radar" [hidden]="!Vehicle && !Contacts.length" [class]="[Shape === 'bubble' ? 'bubble' : 'plan']" role="group" [attribute.aria-label]="Label || $T('gaming.radar.label')">
+	<GameMinimap *if="Shape !== 'bubble'" [Size]="Size" [Markers]="Markers" Heading="0" North="false" [Zoomable]="Zoomable" [Note]="RangeText()" [Label]="Label || $T('gaming.radar.label')" (marker)="MarkerPressed($event)" (zoom)="Zoomed($event)">
+		<div class="elemenx-game-radar-rings" aria-hidden="true"></div>
+	</GameMinimap>
+	<div class="elemenx-game-panel elemenx-game-radar-space" *if="Shape === 'bubble'">
+		<canvas class="elemenx-game-radar-bubble" [style.width]="Number(Size) + 'px'" (click)="BubblePressed"></canvas>
+		<div class="elemenx-game-radar-foot">
+			<span>{{RangeText()}}</span>
+			<span *if="Zoomable" class="elemenx-game-radar-zoom">
+				<Button Shape="round" Size="small" Icon="add" [title]="$T('gaming.ui.zoomIn')" (click)="ZoomIn" />
+				<Button Shape="round" Size="small" Icon="remove" [title]="$T('gaming.ui.zoomOut')" (click)="ZoomOut" />
+			</span>
+		</div>
+	</div>
+</div>

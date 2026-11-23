@@ -1,0 +1,15 @@
+<div class="elemenx-game-panel elemenx-game-console" [class]="[Size]" role="group" [attribute.aria-label]="Label || $T('gaming.console.label')">
+	<div class="elemenx-game-console-head">
+		<span class="elemenx-game-console-role">{{RoleName()}}</span>
+		<span class="elemenx-game-console-ship">{{Name}}</span>
+	</div>
+	<div class="elemenx-game-console-body">
+		<GameFlight [For]="Ship" [Engineer]="Current === 'engineer'" [Nav]="Current === 'sensors' ? 8 : 3" Size="small" />
+		<GameRadar *if="Radar" [For]="Ship" Shape="plan" [Size]="RadarSize" [Range]="RadarRange" Zoomable="true" />
+	</div>
+	<div class="elemenx-game-console-row">
+		<GameTactics *if="Seated" Size="small" />
+		<slot></slot>
+		<Button *if="Seated" Size="small" Variant="ghost" Icon="logout" [Label]="$T('gaming.console.stand')" (click)="Stand" />
+	</div>
+</div>

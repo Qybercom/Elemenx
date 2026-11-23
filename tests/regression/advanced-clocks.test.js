@@ -45,7 +45,7 @@ describe('Regression: the clocks of the pages of Advanced', function () {
 			expect([name, demo.Running]).toEqual([name, []]);
 		});
 
-		/* Orbit, Racing, Terrain and Space keep one each. */
-		expect(all).toBeGreaterThanOrEqual(4);
+		/* Racing, Terrain and Space keep one each (Orbit had one for its speed: GameFlight reads it now, in the scene). */
+		expect(all).toBeGreaterThanOrEqual(3);
 	});
 });

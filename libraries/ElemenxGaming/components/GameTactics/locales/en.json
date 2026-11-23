@@ -1,0 +1,15 @@
+{
+	"gaming": {
+		"tactics": {
+			"label": "Modes of the seat",
+			"modes": {
+				"seat": "Console",
+				"helm": "Helm",
+				"turret": "Turret",
+				"radar": "Radar",
+				"schematic": "Schematic",
+				"strategic": "Command"
+			}
+		}
+	}
+}

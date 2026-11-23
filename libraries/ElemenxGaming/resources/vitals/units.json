@@ -1,0 +1,8 @@
+{
+	"archer": {"Max": 40, "Damage": 8, "Range": 12},
+	"knight": {"Max": 100, "Damage": 14, "Range": 2.5},
+	"orc": {"Max": 100, "Damage": 12, "Range": 2.5},
+	"villager": {"Max": 30, "Damage": 4, "Range": 2},
+	"soldier": {"Max": 100, "Range": 28, "Sight": 40},
+	"robot": {"Max": 120, "Range": 24, "Sight": 40}
+}

@@ -51,6 +51,60 @@
 				}
 			}
 		},
+		"console": {
+			"label": "Console",
+			"stand": "Stand up",
+			"roles": {
+				"pilot": "Pilot",
+				"copilot": "Copilot",
+				"captain": "Captain",
+				"engineer": "Engineer",
+				"tactical": "Tactical",
+				"gunner": "Gunner",
+				"sensors": "Sensors",
+				"commander": "Commander"
+			}
+		},
+		"dash": {
+			"label": "Instruments",
+			"speed": "Speed",
+			"gear": "Gear",
+			"revolutions": "Revolutions"
+		},
+		"flight": {
+			"label": "Flight",
+			"speed": "Speed",
+			"height": "Height",
+			"travel": "Travel",
+			"throttle": "Throttle",
+			"shield": "Shield {id}",
+			"tripped": "Shut down by heat",
+			"on": "On",
+			"vent": "Vent",
+			"engines": "Engines",
+			"shields": "Shields",
+			"weapons": "Weapons",
+			"nav": "Known places",
+			"jammed": "Warp blocked by {id} in {km} km",
+			"jammedIn": "Warp blocked here by {id}"
+		},
+		"radar": {
+			"label": "Radar"
+		},
+		"tactics": {
+			"label": "Modes of the seat",
+			"modes": {
+				"seat": "Console",
+				"helm": "Helm",
+				"turret": "Turret",
+				"radar": "Radar",
+				"schematic": "Schematic",
+				"strategic": "Command"
+			}
+		},
+		"targets": {
+			"label": "Targets"
+		},
 		"vitals": {
 			"health": "Health"
 		}

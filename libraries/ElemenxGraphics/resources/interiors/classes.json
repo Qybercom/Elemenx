@@ -1,0 +1,41 @@
+{
+	"Deck": {"Floor": 1.6, "Slab": 0.2, "Wall": 0.2, "Height": 3.2, "Door": 1.6, "DoorHeight": 2.3, "Ramp": 3, "Skin": 0.3, "Slope": 0.45, "Lamp": 6},
+	"Colors": {"Floor": [0.24, 0.26, 0.29], "Wall": [0.44, 0.47, 0.52], "Trim": [0.36, 0.39, 0.44], "Console": [0.14, 0.15, 0.17], "Screen": [0.35, 1.25, 1.7], "Seat": [0.2, 0.22, 0.26], "Reactor": [1.6, 0.9, 0.35], "Lamp": [2.4, 2.3, 2.1], "Ceiling": [0.42, 0.45, 0.5], "Gear": [0.3, 0.32, 0.35]},
+	"Drop": ["common", "quarters", "lift", "armory", "gunnery", "command", "corridor"],
+	"Classes": [
+		{"Name": "fighter", "Turrets": [{"Place": "belly", "Along": 0.3, "Weapon": "plasma", "Arc": 30, "Low": -25, "High": 10}], "Gear": 1.2, "Most": 20, "Entry": "canopy", "Rooms": [
+			{"Kind": "cockpit", "Length": 3, "Width": 2.2, "Seats": ["pilot"]}
+		]},
+		{"Name": "small", "Turrets": [{"Place": "top", "Along": 0.1, "Weapon": "plasma"}, {"Place": "belly", "Along": 0.25, "Weapon": "plasma"}], "Gear": 2.6, "Most": 60, "Entry": "ramp", "Rooms": [
+			{"Kind": "cockpit", "Length": 3.5, "Width": 4, "Seats": ["pilot", "copilot"]},
+			{"Kind": "corridor", "Length": 5, "Width": 2.2},
+			{"Kind": "common", "Length": 6, "Width": 6},
+			{"Kind": "cargo", "Length": 8, "Width": 7, "Ramp": true}
+		]},
+		{"Name": "medium", "Turrets": [{"Place": "top", "Along": 0.15, "Weapon": "plasma"}, {"Place": "belly", "Along": 0.3, "Weapon": "laser"}], "Gear": 3.2, "Most": 150, "Entry": "ramp", "Rooms": [
+			{"Kind": "bridge", "Length": 6, "Width": 7, "Seats": ["pilot", "engineer"]},
+			{"Kind": "corridor", "Length": 8, "Width": 2.4},
+			{"Kind": "quarters", "Length": 6, "Width": 8},
+			{"Kind": "armory", "Length": 5, "Width": 6, "Seats": ["gunner"]},
+			{"Kind": "engine", "Length": 8, "Width": 8, "Reactors": true, "Seats": ["engineer"]},
+			{"Kind": "cargo", "Length": 8, "Width": 8, "Ramp": true}
+		]},
+		{"Name": "large", "Turrets": [{"Place": "top", "Along": 0.25, "Weapon": "railgun"}, {"Place": "top", "Along": -0.2, "Weapon": "plasma"}, {"Place": "belly", "Along": 0.1, "Weapon": "laser"}], "Gear": 4.5, "Most": 500, "Entry": "ramp", "Rooms": [
+			{"Kind": "bridge", "Length": 12, "Width": 12, "Seats": ["captain", "pilot", "tactical", "engineer", "sensors"]},
+			{"Kind": "corridor", "Length": 12, "Width": 3},
+			{"Kind": "lift", "Length": 4, "Width": 4},
+			{"Kind": "armory", "Length": 8, "Width": 10, "Seats": ["gunner", "gunner"]},
+			{"Kind": "engine", "Length": 14, "Width": 14, "Reactors": true, "Seats": ["engineer"]},
+			{"Kind": "hangar", "Length": 20, "Width": 18, "Ramp": true}
+		]},
+		{"Name": "capital", "Turrets": [{"Place": "top", "Along": 0.3, "Weapon": "railgun"}, {"Place": "top", "Along": 0, "Weapon": "rocket"}, {"Place": "belly", "Along": 0.2, "Weapon": "laser"}], "Gear": 8, "Most": 100000, "Entry": "ramp", "Rooms": [
+			{"Kind": "bridge", "Length": 14, "Width": 14, "Seats": ["captain", "pilot", "tactical", "engineer", "sensors"]},
+			{"Kind": "command", "Length": 10, "Width": 12, "Seats": ["commander"]},
+			{"Kind": "corridor", "Length": 16, "Width": 3},
+			{"Kind": "lift", "Length": 4, "Width": 4},
+			{"Kind": "gunnery", "Length": 10, "Width": 14, "Seats": ["gunner", "gunner", "gunner"]},
+			{"Kind": "engine", "Length": 18, "Width": 18, "Reactors": true, "Seats": ["engineer"]},
+			{"Kind": "hangar", "Length": 36, "Width": 30, "Ramp": true}
+		]}
+	]
+}

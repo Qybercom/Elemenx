@@ -1,0 +1,51 @@
+/* The instruments of a ship on a panel of the theme: rows of what it reads, the places it knows under them. */
+.elemenx-game-flight {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 8px 12px;
+	contain: layout style;
+}
+
+.elemenx-game-flight[hidden] {
+	display: none;
+}
+
+.elemenx-game-flight-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 12px;
+}
+
+/* A bar of a Meter is as wide as its parent: here a width of its own (see GameDash). */
+.elemenx-game-flight .elemenx-meter:not(.dial) {
+	width: 120px;
+}
+
+.elemenx-game-flight-reactor {
+	display: flex;
+	align-items: flex-end;
+	gap: 6px;
+}
+
+.elemenx-game-flight-nav {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: var(--elemenx-font-size-small);
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-game-flight-kind {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-game-flight-far {
+	color: var(--elemenx-text-muted);
+}
+
+/* The shares of the power: a slider of a width of its own beside its name. */
+.elemenx-game-flight .elemenx-slider {
+	width: 140px;
+}

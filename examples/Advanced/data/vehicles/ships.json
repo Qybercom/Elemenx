@@ -1,0 +1,1324 @@
+[
+	{
+		"Value": "space_ship (1).glb",
+		"Label": "Oppenheimer",
+		"Length": 89,
+		"Yaw": 0,
+		"Mounts": [
+			{
+				"Kind": "engine",
+				"At": [
+					0.25,
+					0.485,
+					-1.835
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": [
+					0.06,
+					0.08
+				],
+				"Size": 0.1
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.25,
+					0.485,
+					-1.835
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": [
+					0.06,
+					0.08
+				],
+				"Size": 0.1
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					0.25,
+					0.355,
+					-1.75
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": [
+					0.06,
+					0.08
+				],
+				"Size": 0.1
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.25,
+					0.355,
+					-1.75
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": [
+					0.06,
+					0.08
+				],
+				"Size": 0.1
+			}
+		],
+		"Systems": {
+			"Power": {
+				"Reactors": [
+					{
+						"ID": "core",
+						"Output": 60,
+						"Rise": 0.04,
+						"Cool": 0.08
+					}
+				],
+				"Needs": {
+					"Engines": 50,
+					"Shields": 15,
+					"Weapons": 10
+				}
+			},
+			"Shields": {
+				"Layers": [
+					{
+						"ID": "hull",
+						"Capacity": 120,
+						"Regen": 12,
+						"Delay": 2,
+						"Color": "#6fd2ff"
+					}
+				]
+			},
+			"Sensors": {
+				"Range": 400000
+			}
+		}
+	},
+	{
+		"Value": "space_ship.glb",
+		"Label": "Scout",
+		"Length": 35,
+		"Yaw": 0,
+		"Mounts": [
+			{
+				"Kind": "engine",
+				"At": [
+					0,
+					0.84,
+					-1.41
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": [
+					0.13,
+					0.085
+				],
+				"Size": 0.16
+			}
+		],
+		"Systems": {
+			"Power": {
+				"Reactors": [
+					{
+						"ID": "core",
+						"Output": 60,
+						"Rise": 0.04,
+						"Cool": 0.08
+					}
+				],
+				"Needs": {
+					"Engines": 50,
+					"Shields": 15,
+					"Weapons": 10
+				}
+			},
+			"Shields": {
+				"Layers": [
+					{
+						"ID": "hull",
+						"Capacity": 120,
+						"Regen": 12,
+						"Delay": 2,
+						"Color": "#6fd2ff"
+					}
+				]
+			},
+			"Sensors": {
+				"Range": 400000
+			}
+		}
+	},
+	{
+		"Value": "unsa_cruiser__spaceship.glb",
+		"Label": "Cruiser",
+		"Length": 280,
+		"Yaw": 0,
+		"Mounts": [
+			{
+				"Kind": "engine",
+				"At": [
+					0.317,
+					0.385,
+					-2.66
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": [
+					0.055,
+					0.075
+				],
+				"Size": 0.12
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.317,
+					0.385,
+					-2.66
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": [
+					0.055,
+					0.075
+				],
+				"Size": 0.12
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					0.404,
+					0.385,
+					-2.66
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": [
+					0.055,
+					0.075
+				],
+				"Size": 0.12
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.404,
+					0.385,
+					-2.66
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": [
+					0.055,
+					0.075
+				],
+				"Size": 0.12
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					0.49,
+					0.385,
+					-2.66
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": [
+					0.055,
+					0.075
+				],
+				"Size": 0.12
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.49,
+					0.385,
+					-2.66
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": [
+					0.055,
+					0.075
+				],
+				"Size": 0.12
+			}
+		],
+		"Systems": {
+			"Power": {
+				"Reactors": [
+					{
+						"ID": "main",
+						"Output": 220,
+						"Rise": 0.03
+					},
+					{
+						"ID": "aux",
+						"Output": 60,
+						"Rise": 0.05
+					}
+				],
+				"Needs": {
+					"Engines": 180,
+					"Shields": 60,
+					"Weapons": 50
+				}
+			},
+			"Shields": {
+				"Layers": [
+					{
+						"ID": "outer",
+						"Capacity": 300,
+						"Regen": 25,
+						"Delay": 3,
+						"Color": "#8fb8ff"
+					},
+					{
+						"ID": "inner",
+						"Capacity": 400,
+						"Regen": 15,
+						"Delay": 4,
+						"Color": "#6fd2ff"
+					}
+				]
+			},
+			"Sensors": {
+				"Range": 900000
+			}
+		}
+	},
+	{
+		"Value": "space_battleship_aquamarine.glb",
+		"Label": "Battleship",
+		"Length": 640,
+		"Yaw": 0,
+		"Mounts": [
+			{
+				"Kind": "engine",
+				"At": [
+					0.3125,
+					0.522,
+					-1.612
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.05,
+				"Size": 0.22
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.3125,
+					0.522,
+					-1.612
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.05,
+				"Size": 0.22
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					0.474,
+					0.517,
+					-1.578
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.039,
+				"Size": 0.18
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.474,
+					0.517,
+					-1.578
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.039,
+				"Size": 0.18
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					0.6,
+					0.512,
+					-1.557
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.03,
+				"Size": 0.14
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.6,
+					0.512,
+					-1.557
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.03,
+				"Size": 0.14
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					0.7075,
+					0.5,
+					-1.512
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.024,
+				"Size": 0.1
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.7075,
+					0.5,
+					-1.512
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.024,
+				"Size": 0.1
+			}
+		],
+		"Systems": {
+			"Power": {
+				"Reactors": [
+					{
+						"ID": "main",
+						"Output": 600,
+						"Rise": 0.02
+					},
+					{
+						"ID": "port",
+						"Output": 200,
+						"Rise": 0.04
+					},
+					{
+						"ID": "starboard",
+						"Output": 200,
+						"Rise": 0.04
+					}
+				],
+				"Needs": {
+					"Engines": 520,
+					"Shields": 200,
+					"Weapons": 180
+				}
+			},
+			"Shields": {
+				"Layers": [
+					{
+						"ID": "outer",
+						"Capacity": 900,
+						"Regen": 60,
+						"Delay": 3,
+						"Color": "#c07bff"
+					},
+					{
+						"ID": "middle",
+						"Capacity": 1200,
+						"Regen": 40,
+						"Delay": 4,
+						"Color": "#8fb8ff"
+					},
+					{
+						"ID": "inner",
+						"Capacity": 1500,
+						"Regen": 25,
+						"Delay": 5,
+						"Color": "#6fd2ff"
+					}
+				]
+			},
+			"Sensors": {
+				"Range": 2000000
+			}
+		}
+	},
+	{
+		"Value": "millenium_falcon_star_wars.glb",
+		"Label": "Millennium Falcon",
+		"Length": 35,
+		"Yaw": 0,
+		"Mounts": [
+			{
+				"Kind": "engine",
+				"At": [
+					0,
+					0.46,
+					-2.06
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": [
+					0.13,
+					0.05
+				],
+				"Size": 0.2,
+				"Length": 0.45,
+				"Glare": 0.5
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					0.253,
+					0.46,
+					-2.034
+				],
+				"Aim": [
+					0.184,
+					0,
+					-0.983
+				],
+				"Mouth": [
+					0.13,
+					0.05
+				],
+				"Size": 0.2,
+				"Length": 0.45,
+				"Glare": 0.5,
+				"Light": false
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.253,
+					0.46,
+					-2.034
+				],
+				"Aim": [
+					-0.184,
+					0,
+					-0.983
+				],
+				"Mouth": [
+					0.13,
+					0.05
+				],
+				"Size": 0.2,
+				"Length": 0.45,
+				"Glare": 0.5,
+				"Light": false
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					0.505,
+					0.46,
+					-1.962
+				],
+				"Aim": [
+					0.367,
+					0,
+					-0.93
+				],
+				"Mouth": [
+					0.13,
+					0.05
+				],
+				"Size": 0.2,
+				"Length": 0.45,
+				"Glare": 0.5,
+				"Light": false
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.505,
+					0.46,
+					-1.962
+				],
+				"Aim": [
+					-0.367,
+					0,
+					-0.93
+				],
+				"Mouth": [
+					0.13,
+					0.05
+				],
+				"Size": 0.2,
+				"Length": 0.45,
+				"Glare": 0.5,
+				"Light": false
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					0.758,
+					0.46,
+					-1.851
+				],
+				"Aim": [
+					0.544,
+					0,
+					-0.839
+				],
+				"Mouth": [
+					0.14,
+					0.05
+				],
+				"Size": 0.2,
+				"Length": 0.45,
+				"Glare": 0.5
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.758,
+					0.46,
+					-1.851
+				],
+				"Aim": [
+					-0.544,
+					0,
+					-0.839
+				],
+				"Mouth": [
+					0.14,
+					0.05
+				],
+				"Size": 0.2,
+				"Length": 0.45,
+				"Glare": 0.5
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					1.01,
+					0.46,
+					-1.664
+				],
+				"Aim": [
+					0.716,
+					0,
+					-0.698
+				],
+				"Mouth": [
+					0.15,
+					0.05
+				],
+				"Size": 0.2,
+				"Length": 0.4,
+				"Glare": 0.5,
+				"Light": false
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-1.01,
+					0.46,
+					-1.664
+				],
+				"Aim": [
+					-0.716,
+					0,
+					-0.698
+				],
+				"Mouth": [
+					0.15,
+					0.05
+				],
+				"Size": 0.2,
+				"Length": 0.4,
+				"Glare": 0.5,
+				"Light": false
+			}
+		],
+		"Systems": {
+			"Power": {
+				"Reactors": [
+					{
+						"ID": "core",
+						"Output": 60,
+						"Rise": 0.04,
+						"Cool": 0.08
+					}
+				],
+				"Needs": {
+					"Engines": 50,
+					"Shields": 15,
+					"Weapons": 10
+				}
+			},
+			"Shields": {
+				"Layers": [
+					{
+						"ID": "hull",
+						"Capacity": 120,
+						"Regen": 12,
+						"Delay": 2,
+						"Color": "#6fd2ff"
+					}
+				]
+			},
+			"Sensors": {
+				"Range": 400000
+			}
+		}
+	},
+	{
+		"Value": "tempest.glb",
+		"Label": "Tempest",
+		"Length": 60,
+		"Yaw": -90,
+		"Size": 0.007,
+		"Mounts": [
+			{
+				"Kind": "engine",
+				"At": [
+					-3.25,
+					0.504,
+					0.802
+				],
+				"Aim": [
+					-1,
+					0,
+					0
+				],
+				"Mouth": [
+					0.2,
+					0.085
+				],
+				"Size": 0.3,
+				"Twist": 31,
+				"Length": 0.5
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-3.25,
+					0.504,
+					-0.802
+				],
+				"Aim": [
+					-1,
+					0,
+					0
+				],
+				"Mouth": [
+					0.2,
+					0.085
+				],
+				"Size": 0.3,
+				"Twist": -31,
+				"Length": 0.5
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-3.015,
+					0.12,
+					1.432
+				],
+				"Aim": [
+					-1,
+					0,
+					0
+				],
+				"Mouth": [
+					0.135,
+					0.06
+				],
+				"Size": 0.22,
+				"Twist": 31,
+				"Length": 0.5
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-3.015,
+					0.12,
+					-1.432
+				],
+				"Aim": [
+					-1,
+					0,
+					0
+				],
+				"Mouth": [
+					0.135,
+					0.06
+				],
+				"Size": 0.22,
+				"Twist": -31,
+				"Length": 0.5
+			}
+		],
+		"Systems": {
+			"Power": {
+				"Reactors": [
+					{
+						"ID": "core",
+						"Output": 60,
+						"Rise": 0.04,
+						"Cool": 0.08
+					}
+				],
+				"Needs": {
+					"Engines": 50,
+					"Shields": 15,
+					"Weapons": 10
+				}
+			},
+			"Shields": {
+				"Layers": [
+					{
+						"ID": "hull",
+						"Capacity": 120,
+						"Regen": 12,
+						"Delay": 2,
+						"Color": "#6fd2ff"
+					}
+				]
+			},
+			"Sensors": {
+				"Range": 400000
+			}
+		}
+	},
+	{
+		"Value": "uss_enterprise_star_trek_wrath_of_khan.glb",
+		"Label": "USS Enterprise",
+		"Length": 305,
+		"Yaw": 180,
+		"Mounts": [
+			{
+				"Kind": "engine",
+				"At": [
+					0.045,
+					0.875,
+					-0.823
+				],
+				"Aim": [
+					0,
+					0.35,
+					1
+				],
+				"Mouth": [
+					0.04,
+					0.03
+				],
+				"Size": 0.14,
+				"Length": 0.7,
+				"Color": "#ff3a24",
+				"Hot": "#ffd2a8"
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.045,
+					0.875,
+					-0.823
+				],
+				"Aim": [
+					0,
+					0.35,
+					1
+				],
+				"Mouth": [
+					0.04,
+					0.03
+				],
+				"Size": 0.14,
+				"Length": 0.7,
+				"Color": "#ff3a24",
+				"Hot": "#ffd2a8"
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					0.673,
+					0.86,
+					2.05
+				],
+				"Aim": [
+					0,
+					0,
+					1
+				],
+				"Mouth": 0.045,
+				"Size": 0.14
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.673,
+					0.86,
+					2.05
+				],
+				"Aim": [
+					0,
+					0,
+					1
+				],
+				"Mouth": 0.045,
+				"Size": 0.14
+			}
+		],
+		"Systems": {
+			"Power": {
+				"Reactors": [
+					{
+						"ID": "main",
+						"Output": 220,
+						"Rise": 0.03
+					},
+					{
+						"ID": "aux",
+						"Output": 60,
+						"Rise": 0.05
+					}
+				],
+				"Needs": {
+					"Engines": 180,
+					"Shields": 60,
+					"Weapons": 50
+				}
+			},
+			"Shields": {
+				"Layers": [
+					{
+						"ID": "outer",
+						"Capacity": 300,
+						"Regen": 25,
+						"Delay": 3,
+						"Color": "#8fb8ff"
+					},
+					{
+						"ID": "inner",
+						"Capacity": 400,
+						"Regen": 15,
+						"Delay": 4,
+						"Color": "#6fd2ff"
+					}
+				]
+			},
+			"Sensors": {
+				"Range": 900000
+			}
+		}
+	},
+	{
+		"Value": "star_trek_dedication_class_starship.glb",
+		"Label": "USS Dedication",
+		"Length": 800,
+		"Yaw": 180,
+		"Size": 0.008,
+		"Mounts": [
+			{
+				"Kind": "engine",
+				"At": [
+					0.34,
+					0.54,
+					-0.37
+				],
+				"Aim": [
+					0,
+					0,
+					1
+				],
+				"Mouth": [
+					0.115,
+					0.018
+				],
+				"Size": 0.14,
+				"Length": 0.35,
+				"Color": "#ff3a24",
+				"Hot": "#ffd2a8"
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.34,
+					0.54,
+					-0.37
+				],
+				"Aim": [
+					0,
+					0,
+					1
+				],
+				"Mouth": [
+					0.115,
+					0.018
+				],
+				"Size": 0.14,
+				"Length": 0.35,
+				"Color": "#ff3a24",
+				"Hot": "#ffd2a8"
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					1.27,
+					0.86,
+					3.385
+				],
+				"Aim": [
+					0,
+					0,
+					1
+				],
+				"Mouth": 0.035,
+				"Size": 0.14
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-1.27,
+					0.86,
+					3.385
+				],
+				"Aim": [
+					0,
+					0,
+					1
+				],
+				"Mouth": 0.035,
+				"Size": 0.14
+			}
+		],
+		"Systems": {
+			"Power": {
+				"Reactors": [
+					{
+						"ID": "main",
+						"Output": 600,
+						"Rise": 0.02
+					},
+					{
+						"ID": "port",
+						"Output": 200,
+						"Rise": 0.04
+					},
+					{
+						"ID": "starboard",
+						"Output": 200,
+						"Rise": 0.04
+					}
+				],
+				"Needs": {
+					"Engines": 520,
+					"Shields": 200,
+					"Weapons": 180
+				}
+			},
+			"Shields": {
+				"Layers": [
+					{
+						"ID": "outer",
+						"Capacity": 900,
+						"Regen": 60,
+						"Delay": 3,
+						"Color": "#c07bff"
+					},
+					{
+						"ID": "middle",
+						"Capacity": 1200,
+						"Regen": 40,
+						"Delay": 4,
+						"Color": "#8fb8ff"
+					},
+					{
+						"ID": "inner",
+						"Capacity": 1500,
+						"Regen": 25,
+						"Delay": 5,
+						"Color": "#6fd2ff"
+					}
+				]
+			},
+			"Sensors": {
+				"Range": 2000000
+			}
+		}
+	},
+	{
+		"Value": "venator_class_star_destroyer.glb",
+		"Label": "Venator",
+		"Length": 1137,
+		"Yaw": 0,
+		"Mounts": [
+			{
+				"Kind": "engine",
+				"At": [
+					0.4224,
+					0.248,
+					-1.63
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.05,
+				"Size": 0.22
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.4224,
+					0.248,
+					-1.63
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.05,
+				"Size": 0.22
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					0.224,
+					0.168,
+					-1.884
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.05,
+				"Size": 0.22
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.224,
+					0.168,
+					-1.884
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.05,
+				"Size": 0.22
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					0.3536,
+					0.357,
+					-1.447
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.016,
+				"Size": 0.08
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.3536,
+					0.357,
+					-1.447
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.016,
+				"Size": 0.08
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					0.187,
+					0.357,
+					-1.635
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.022,
+				"Size": 0.1
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.187,
+					0.357,
+					-1.635
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.022,
+				"Size": 0.1
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					0.099,
+					0.211,
+					-1.49
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.022,
+				"Size": 0.1
+			},
+			{
+				"Kind": "engine",
+				"At": [
+					-0.099,
+					0.211,
+					-1.49
+				],
+				"Aim": [
+					0,
+					0,
+					-1
+				],
+				"Mouth": 0.022,
+				"Size": 0.1
+			}
+		],
+		"Systems": {
+			"Power": {
+				"Reactors": [
+					{
+						"ID": "main",
+						"Output": 600,
+						"Rise": 0.02
+					},
+					{
+						"ID": "port",
+						"Output": 200,
+						"Rise": 0.04
+					},
+					{
+						"ID": "starboard",
+						"Output": 200,
+						"Rise": 0.04
+					}
+				],
+				"Needs": {
+					"Engines": 520,
+					"Shields": 200,
+					"Weapons": 180
+				}
+			},
+			"Shields": {
+				"Layers": [
+					{
+						"ID": "outer",
+						"Capacity": 900,
+						"Regen": 60,
+						"Delay": 3,
+						"Color": "#c07bff"
+					},
+					{
+						"ID": "middle",
+						"Capacity": 1200,
+						"Regen": 40,
+						"Delay": 4,
+						"Color": "#8fb8ff"
+					},
+					{
+						"ID": "inner",
+						"Capacity": 1500,
+						"Regen": 25,
+						"Delay": 5,
+						"Color": "#6fd2ff"
+					}
+				]
+			},
+			"Sensors": {
+				"Range": 2000000
+			}
+		}
+	}
+]

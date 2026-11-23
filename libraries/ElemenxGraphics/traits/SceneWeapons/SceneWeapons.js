@@ -14,9 +14,10 @@
  *
  * Fire(id, options) shoots the weapon of an object (Values.Weapon, or options.Weapon) from its muzzle toward options.At (a
  * point [x, y, z] or the ID of an object; an artillery shell takes the arc to reach it) or along options.Way; false while the
- * weapon is not ready (its rate, its magazine). The hero with a Weapon fires with the left button while the pointer is
- * taken, toward the middle of the view, and locks what stays under its aim (Lock of the weapon): lock and unlock events,
- * Locked() the IDs; a homing shot goes to them.
+ * weapon is not ready (its rate, its magazine); options.Hold, seconds a beam burns (its Hold, else). The hero with a Weapon
+ * fires with the left button while the pointer is taken, or the right trigger of a pad held, toward the middle of the view, and locks what stays under its aim (Lock of the weapon): lock and unlock events,
+ * Locked() the IDs; a homing shot goes to them. The hero at a turret (SceneTactics) fires the weapon of the turret so, from
+ * it, its vehicle the source of the shot (Fired of an object: when it fired last, for the recoil of its parts).
  *
  * Where a shot hits it asks the material there (Values.Material of an object; the name of the material of the part of the
  * model hit; walkers flesh, vehicles metal, plants wood, buildings and rocks stone; of the ground: water, snow, a road, soil)
@@ -235,7 +236,7 @@ Elemenx.Trait('SceneWeapons', {
 				var object = scene.Objects[id];
 				var found;
 
-				if (id === skip || object.Hidden || !object.World || object.Owner === skip || object.Values.Shootable === false) return;
+				if (id === skip || object.Hidden || !object.World || object.Owner === skip || skip && object.Values.Aboard === skip || object.Values.Shootable === false) return;
 
 				found = engine.ModelHit ? engine.ModelHit(object, ray, best ? best.Distance : range) : null;
 
@@ -319,7 +320,11 @@ Elemenx.Trait('SceneWeapons', {
 
 			state.Hits++;
 
-			if (shot.Source === scene.Hero && found.ID)
+			/* A hit on a ship in flight is felt in it (SceneAboard). */
+			if (found.Object && engine.AboardHit)
+				engine.AboardHit(found.Object, way, told.Amount);
+
+			if (shot.Source === gunnerID() && found.ID)
 				state.Marked = {At: state.Clock, Kill: false, Target: found.ID};
 
 			self.$Emit('hit', told);
@@ -456,6 +461,10 @@ Elemenx.Trait('SceneWeapons', {
 
 			state.Ready[key] = state.Clock + 1 / Math.max(0.01, number(type.Rate, 2));
 
+			/* Its weapons need their power for a moment (SceneShipSystems). */
+			if (engine.SystemsFired)
+				engine.SystemsFired(id);
+
 			if (rounds) {
 				rounds.Left--;
 
@@ -475,12 +484,15 @@ Elemenx.Trait('SceneWeapons', {
 			count = Math.max(1, number(type.Pellets, 1));
 
 			for (i = 0; i < count; i++) {
-				var shot = {ID: id + '-' + (++state.Counter), Name: typeof name === 'string' ? name : 'own', Type: type, Source: id, Team: object.Team || object.Values.Team || '', From: from.slice(), Way: spread(way, number(settings.Spread, number(type.Spread, 0)) + (id === scene.Hero ? state.Spread : 0)), Target: target ? target.ID : settings.Target || (id === scene.Hero ? lockedFirst() : ''), Born: state.Clock};
+				var shot = {ID: id + '-' + (++state.Counter), Name: typeof name === 'string' ? name : 'own', Type: type, Source: id, Team: object.Team || object.Values.Team || '', From: from.slice(), Way: spread(way, number(settings.Spread, number(type.Spread, 0)) + (id === gunnerID() ? state.Spread : 0)), Target: target ? target.ID : settings.Target || (id === gunnerID() ? lockedFirst() : ''), Born: state.Clock, Hold: Number(settings.Hold) || 0};
 
 				launch(shot);
 			}
 
-			if (id === scene.Hero) {
+			/* Its turret and barrel parts recoil (the drive fire). */
+			object.Values.Fired = scene.Seconds;
+
+			if (id === gunnerID()) {
 				state.Spread = Math.min(4, state.Spread + number(type.Recoil, 0.4) * 0.6);
 				state.Kick += number(type.Recoil, 0.4) * 0.012;
 			}
@@ -510,7 +522,7 @@ Elemenx.Trait('SceneWeapons', {
 			}
 
 			if (type.Kind === 'beam') {
-				shot.Until = state.Clock + number(type.Hold, 0.12);
+				shot.Until = state.Clock + (shot.Hold > 0 ? shot.Hold : number(type.Hold, 0.12));
 				shot.Burned = 0;
 				shot.Marked = 0;
 
@@ -550,7 +562,7 @@ Elemenx.Trait('SceneWeapons', {
 					if (!holder || state.Clock > shot.Until) return false;
 
 					/* The beam of the hero held by the button goes where the view looks. */
-					if (shot.Source === scene.Hero && state.Holding)
+					if (shot.Source === gunnerID() && state.Holding)
 						aimFromView(shot);
 
 					found = trace(shot.From, shot.Way, range, shot.Source);
@@ -641,21 +653,56 @@ Elemenx.Trait('SceneWeapons', {
 			state.Spread = Math.max(0, state.Spread - elapsed * 3);
 		}
 
+		/*
+		 * Who shoots for the hero: a turret it mans (SceneTactics, HeroTurret: {ID of its vehicle, Weapon, From}), else itself
+		 * with the Weapon it has: {ID, Object, Weapon, From (null: its muzzle)}; null for none.
+		 */
+		function gunner () {
+			var hero = scene.Objects[scene.Hero];
+			var turret = engine.HeroTurret ? engine.HeroTurret() : null;
+			if (turret && scene.Objects[turret.ID])
+				return {ID: turret.ID, Object: scene.Objects[turret.ID], Weapon: turret.Weapon, From: turret.From, Turret: true};
+
+			return hero && hero.Values.Weapon ? {ID: hero.ID, Object: hero, Weapon: hero.Values.Weapon, From: null, Turret: false} : null;
+		}
+
+		function gunnerID () {
+			var shooter = scene.Hero ? gunner() : null;
+
+			return shooter ? shooter.ID : scene.Hero;
+		}
+
+		engine.HeroGunner = gunner;
+
 		/* The aim of the hero: from its muzzle toward what the middle of the view shows. */
 		function aimFromView (shot) {
-			var hero = scene.Objects[scene.Hero];
+			var shooter = gunner();
 			var ray = engine.Ray(scene.Width / 2, scene.Height / 2);
 			var range = number(shot.Type.Range, 300);
-			var found = trace(ray.Origin, ray.Direction, range + 50, scene.Hero);
+			var found = shooter ? trace(ray.Origin, ray.Direction, range + 50, shooter.ID) : null;
 			var point = found ? found.Point : vectors.Add(ray.Origin, vectors.Scale(ray.Direction, range));
 
-			shot.From = muzzleOf(hero, point);
+			if (!shooter) return;
+
+			shot.From = shooter.From || muzzleOf(shooter.Object, point);
 			shot.Way = vectors.Normalize(vectors.Subtract(point, shot.From));
 		}
 
+		/*
+		 * The right trigger of a pad (a pad on the screen too) held: the hero on foot with a weapon fires as the left button
+		 * does, where the middle of the view is (a beam burns while it is held). In a vehicle the trigger is its gas.
+		 * Regression: each demo held the trigger by a timer of its own.
+		 */
+		function padTrigger () {
+			var shooter = gunner();
+			if (!shooter || !shooter.Turret && shooter.Object.Values.Vehicle) return false;
+
+			return self.$Service('InputDevices').Axes().RightTrigger > 0.5;
+		}
+
 		function heroFire () {
-			var hero = scene.Objects[scene.Hero];
-			var type = hero ? typeOf(hero.Values.Weapon) : null;
+			var shooter = gunner();
+			var type = shooter ? typeOf(shooter.Weapon) : null;
 			var ray;
 			var range;
 			var found;
@@ -665,13 +712,13 @@ Elemenx.Trait('SceneWeapons', {
 
 			ray = engine.Ray(scene.Width / 2, scene.Height / 2);
 			range = number(type.Range, 300);
-			found = trace(ray.Origin, ray.Direction, range + 50, scene.Hero);
+			found = trace(ray.Origin, ray.Direction, range + 50, shooter.ID);
 			point = found ? found.Point : vectors.Add(ray.Origin, vectors.Scale(ray.Direction, range));
 
 			/* A beam held is one shot made longer. */
 			if (type.Kind === 'beam') {
 				var held = state.Shots.filter(function (shot) {
-					return shot.Source === scene.Hero && shot.Type === type;
+					return shot.Source === shooter.ID && shot.Type === type;
 				})[0];
 
 				if (held) {
@@ -681,7 +728,7 @@ Elemenx.Trait('SceneWeapons', {
 				}
 			}
 
-			return engine.Fire(scene.Hero, {At: point});
+			return shooter.Turret ? engine.Fire(shooter.ID, {At: point, Weapon: shooter.Weapon, From: shooter.From}) : engine.Fire(shooter.ID, {At: point});
 		}
 
 		/* The lock of the hero: what stays under its aim, the nearest to the middle, seen. */
@@ -695,7 +742,8 @@ Elemenx.Trait('SceneWeapons', {
 
 		function locking (elapsed) {
 			var hero = scene.Objects[scene.Hero];
-			var type = hero ? typeOf(hero.Values.Weapon) : null;
+			var shooter = hero ? gunner() : null;
+			var type = shooter ? typeOf(shooter.Weapon) : null;
 			var lock = type && type.Lock;
 			var cone;
 			var range;
@@ -725,7 +773,7 @@ Elemenx.Trait('SceneWeapons', {
 				var angle;
 				var seen;
 
-				if (id === scene.Hero || !object.World || object.Hidden || object.Owner || !targetable(object, true)) return null;
+				if (id === scene.Hero || id === shooter.ID || object.Values.Aboard === shooter.ID || !object.World || object.Hidden || object.Owner || !targetable(object, true)) return null;
 
 				if (hero.Team && object.Team && String(hero.Team) === String(object.Team)) return null;
 
@@ -739,7 +787,7 @@ Elemenx.Trait('SceneWeapons', {
 
 				if (angle > cone) return null;
 
-				seen = trace(ray.Origin, vectors.Scale(way, 1 / far), far + 1, scene.Hero);
+				seen = trace(ray.Origin, vectors.Scale(way, 1 / far), far + 1, shooter.ID);
 
 				if (seen && seen.ID !== id && seen.Distance < far - heightOf(object)) return null;
 
@@ -758,7 +806,7 @@ Elemenx.Trait('SceneWeapons', {
 				if (was.Progress >= 1 && !was.Locked) {
 					was.Locked = true;
 
-					self.$Emit('lock', {ID: one.ID, Weapon: hero.Values.Weapon});
+					self.$Emit('lock', {ID: one.ID, Weapon: shooter.Weapon});
 				}
 
 				keep[one.ID] = was;
@@ -789,7 +837,7 @@ Elemenx.Trait('SceneWeapons', {
 			/* Its own clock: the shots go on in a scene whose days are Paused. */
 			state.Clock += elapsed;
 
-			if (state.Holding && scene.Hero)
+			if ((state.Holding || padTrigger()) && scene.Hero)
 				heroFire();
 
 			step(elapsed);
@@ -798,7 +846,7 @@ Elemenx.Trait('SceneWeapons', {
 
 			/* The view of the hero kicks up with each shot, then settles. */
 			if (state.Kick > 0.0001) {
-				var taken = Math.min(state.Kick, elapsed * 0.6 + state.Kick * elapsed * 12);
+				var taken = engine.CameraShake({Kick: state.Kick, Elapsed: elapsed}).KickTaken;
 
 				scene.Pitch = Math.max(-1.3, scene.Pitch - taken);
 				state.Kick -= taken;
@@ -820,7 +868,8 @@ Elemenx.Trait('SceneWeapons', {
 		function aimLayer () {
 			var layer = self.$Element().querySelector('.elemenx-scene-aim');
 			var hero = scene.Objects[scene.Hero];
-			var type = hero ? typeOf(hero.Values.Weapon) : null;
+			var shooter = hero ? gunner() : null;
+			var type = shooter ? typeOf(shooter.Weapon) : null;
 			var kind = self.Crosshair || type && type.Crosshair || 'cross';
 			var cross;
 			var marked = state.Marked && state.Clock - state.Marked.At < 0.18 ? state.Marked : null;
@@ -1094,7 +1143,7 @@ Elemenx.Trait('SceneWeapons', {
 		return scene.HitRules;
 	},
 
-	/* A shot of the weapon of an object: Fire(id, {At, Way, Weapon, Spread, From}); false while it is not ready. */
+	/* A shot of the weapon of an object: Fire(id, {At, Way, Weapon, Spread, From, Hold}); false while it is not ready. */
 	Fire: function (id, options) {
 		var engine = this.Engine();
 
@@ -1134,13 +1183,13 @@ Elemenx.Trait('SceneWeapons', {
 			engine.WeaponsMarked(id, true);
 	},
 
-	/* The left button fires the weapon of the hero while the pointer is taken. */
+	/* The left button fires the weapon of the hero (or the turret it mans) while the pointer is taken. */
 	WeaponsPointer: function (kind, event) {
 		var scene = this.Scene();
 		var engine = this.Engine();
 		var hero = scene.Hero ? scene.Objects[scene.Hero] : null;
 
-		if (!engine || !engine.WeaponsHold || !hero || !hero.Values.Weapon || event.button !== 0 && kind === 'down' || !this.Captured()) {
+		if (!engine || !engine.WeaponsHold || !hero || !(engine.HeroGunner && engine.HeroGunner()) || event.button !== 0 && kind === 'down' || !this.Captured()) {
 			if (kind === 'up' && engine && engine.WeaponsHold)
 				engine.WeaponsHold(false);
 

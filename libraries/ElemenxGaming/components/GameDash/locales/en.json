@@ -1,0 +1,10 @@
+{
+	"gaming": {
+		"dash": {
+			"label": "Instruments",
+			"speed": "Speed",
+			"gear": "Gear",
+			"revolutions": "Revolutions"
+		}
+	}
+}

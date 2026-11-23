@@ -46,6 +46,8 @@ SurfaceType(type) — тип поверхности тела из resources/plan
 
 Насколько место хорошо для жизни (очки мест поселений Settlements), считает граф blueprints/planet/settle: по теплу, влажности, высоте, близкой реке и её расходу. Мир может дать свой граф опцией SettleGraph, как и другие графы планеты.
 
+Как выглядит тексель картинки дальней земли квадрата (PatchPicture), говорит граф `blueprints/shader/ground-far`: альпийский луг выше границы леса, скалы на крутом (круче там, где влажно и тепло), пустыни (песчаные моря и каменистые плато), солончак в сухой котловине и болото в мокрой, снег, лёд на холодном море, вода у берега, поля и дома поселений, долина и русло реки, магистраль — река и дорога берут столько текселя, сколько покрывают. Вход — то, что код знает о точке: Land, Coast, Height, Rise, Moisture, Celsius, Slope, Dry, Erg, Stone, цвет суши и моря (LandR/G/B, SeaR/G/B), Farm, Built, цвет крыш (RoofR/G/B), River, Flow, Far, Width, Plain, цвет воды реки (StreamR/G/B), Road, Along, цвет магистрали (HighwayR/G/B), Texel, Woods; выход — R, G, B, Water, Trees, Farm, Built, Dune, Snow. Граф числовой: он собирается в код в странице тремя функциями (выходы по четыре: PictureKeys) и уходит в воркеры планеты. Свой граф — опция планеты GroundFarGraph (или GroundFarGraph сцены, её Graphs['shader/ground-far']); PictureRun(graph, code) — функции графа, PictureMake(graph) — их код.
+
 ## Методы
 
 - `Direction(latitude, longitude)`
@@ -62,6 +64,8 @@ SurfaceType(type) — тип поверхности тела из resources/plan
 - `ReliefRun(name)`
 - `ReliefMake(graph, values)`
 - `GraphSources(options)`
+- `PictureRun(graph, code)`
+- `PictureMake(graph)`
 - `PlateOf(graph, source)`
 - `ReliefOf(name, graph, code)`
 - `Ruled(options)`

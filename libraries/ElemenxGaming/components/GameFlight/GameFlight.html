@@ -1,0 +1,34 @@
+<div class="elemenx-game-panel elemenx-game-flight" [class]="[Size]" role="group" [attribute.aria-label]="Label || $T('gaming.flight.label')" [hidden]="!Shown">
+	<div class="elemenx-game-flight-row">
+		<GameStat [Label]="$T('gaming.flight.speed')" [Value]="Speed" [Size]="Size" />
+		<GameStat *if="Height" [Label]="$T('gaming.flight.height')" [Value]="Height" Size="small" />
+		<GameStat *if="Travel" [Label]="$T('gaming.flight.travel')" [Value]="Travel" Tone="accent" Size="small" />
+		<Meter Size="small" Min="0" Max="100" [Label]="$T('gaming.flight.throttle')" Unit="%" ShowValue="true" [value]="Throttle" />
+	</div>
+	<span class="elemenx-badge danger" *if="Jam">{{Jam}}</span>
+	<div class="elemenx-game-flight-row" *if="Layers.length">
+		<Meter *for="layer of Layers" *key="layer.ID" Size="small" Min="0" Max="100" Low="25" High="50" Optimum="100" [Label]="$T('gaming.flight.shield', {id: layer.ID})" Unit="%" ShowValue="true" [value]="layer.Part" />
+	</div>
+	<div class="elemenx-game-flight-row" *if="Reactors.length">
+		<div class="elemenx-game-flight-reactor" *for="reactor of Reactors" *key="reactor.ID">
+			<Meter Size="small" Min="0" Max="100" Low="60" High="85" Optimum="20" [Label]="reactor.ID + ' · ' + reactor.Supply + ' MW'" Unit="%" ShowValue="true" [value]="reactor.Heat" />
+			<span class="elemenx-badge warning" *if="reactor.Tripped">{{$T('gaming.flight.tripped')}}</span>
+			<Toggle *if="Engineer" Size="small" [Label]="$T('gaming.flight.on')" [checked]="reactor.On" (change)="Turned(reactor.ID, $event)" />
+		</div>
+		<Button *if="Engineer" Size="small" Variant="ghost" Icon="flame" [Label]="$T('gaming.flight.vent')" (click)="Vented" />
+	</div>
+	<div class="elemenx-game-flight-row" *if="Power">
+		<Meter Size="small" Min="0" Max="100" Low="40" High="80" Optimum="100" [Label]="$T('gaming.flight.engines')" Unit="%" ShowValue="true" [value]="Power.Engines" />
+		<Meter Size="small" Min="0" Max="100" Low="40" High="80" Optimum="100" [Label]="$T('gaming.flight.shields')" Unit="%" ShowValue="true" [value]="Power.Shields" />
+		<Meter Size="small" Min="0" Max="100" Low="40" High="80" Optimum="100" [Label]="$T('gaming.flight.weapons')" Unit="%" ShowValue="true" [value]="Power.Weapons" />
+	</div>
+	<div class="elemenx-game-flight-row" *if="Engineer && Shares">
+		<Field [Label]="$T('gaming.flight.engines')" Horizontal="true" Size="small"><Slider Size="small" Min="0" Max="4" Step="0.5" ShowValue="end" [Label]="$T('gaming.flight.engines')" [value]="Shares.Engines" (input)="Shared('Engines', $event)" /></Field>
+		<Field [Label]="$T('gaming.flight.shields')" Horizontal="true" Size="small"><Slider Size="small" Min="0" Max="4" Step="0.5" ShowValue="end" [Label]="$T('gaming.flight.shields')" [value]="Shares.Shields" (input)="Shared('Shields', $event)" /></Field>
+		<Field [Label]="$T('gaming.flight.weapons')" Horizontal="true" Size="small"><Slider Size="small" Min="0" Max="4" Step="0.5" ShowValue="end" [Label]="$T('gaming.flight.weapons')" [value]="Shares.Weapons" (input)="Shared('Weapons', $event)" /></Field>
+	</div>
+	<ol class="elemenx-game-flight-nav" *if="Places.length" [attribute.aria-label]="$T('gaming.flight.nav')">
+		<li *for="place of Places" *key="place.ID"><span class="elemenx-game-flight-kind">{{place.Kind}}</span> {{place.Name}} <span class="elemenx-game-flight-far">{{place.Far}} · {{place.Bearing}}&#176;</span></li>
+	</ol>
+	<slot></slot>
+</div>

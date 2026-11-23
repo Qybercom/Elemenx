@@ -157,6 +157,62 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 		expect(after.Triangles - before.Triangles).toBe(2 + 2 * 3);
 	});
 
+	/*
+	 * A pass of its own nearer than all drawn (DepthRange: the inside of a ship over the surface of a body, near and far each of
+	 * a frame of its own): what it draws lays its depth within its part of the buffer, before what is deeper.
+	 */
+	it('lays the depth of what it draws within a part of the buffer (DepthRange), all of it again with none', function () {
+		var canvas = document.createElement('canvas');
+		var own = Elemenx.Service('Renderer').Create(canvas, {Antialias: false});
+		var program = own.Program([
+			'#version 300 es',
+			'in vec3 aPosition;',
+			'uniform float uZ;',
+			'void main() { gl_Position = vec4(aPosition.xy, uZ, 1.0); }'
+		].join('\n'), [
+			'#version 300 es',
+			'precision highp float;',
+			'uniform vec4 uColor;',
+			'out vec4 outColor;',
+			'void main() { outColor = uColor; }'
+		].join('\n'));
+		var quad = own.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
+		var gl = own.GL;
+		var pixel = new Uint8Array(4);
+
+		own.Resize(4, 4, 1);
+		own.Clear([0, 0, 0, 1]);
+
+		/* Far: at 0.4 of the buffer (z 0.4 * 2 - 1 = -0.2). */
+		own.Draw(quad, program, {uZ: -0.2, uColor: [1, 0, 0, 1]}, {Cull: 'none'});
+
+		/* Of its z the middle (0.5), within 0.6 to 1: deeper (0.8), behind. */
+		own.DepthRange(0.6, 1);
+		own.Draw(quad, program, {uZ: 0, uColor: [0, 1, 0, 1]}, {Cull: 'none'});
+
+		gl.readPixels(1, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+		expect(Array.from(pixel)).toEqual([255, 0, 0, 255]);
+
+		/* Within 0 to 0.1 (0.05): before it. */
+		own.DepthRange(0, 0.1);
+		own.Draw(quad, program, {uZ: 0, uColor: [0, 0, 1, 1]}, {Cull: 'none'});
+
+		gl.readPixels(1, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+		expect(Array.from(pixel)).toEqual([0, 0, 255, 255]);
+
+		/* All of it again: 0.5, behind the blue (0.05). */
+		own.DepthRange();
+		own.Draw(quad, program, {uZ: 0, uColor: [1, 1, 1, 1]}, {Cull: 'none'});
+
+		gl.readPixels(1, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+		expect(Array.from(pixel)).toEqual([0, 0, 255, 255]);
+
+		own.Destroy();
+	});
+
 	/* Its triangles again, its points kept: what a level of detail of clusters draws now (SceneClusters). */
 	it('gives a mesh other triangles of the same points (Triangles)', function () {
 		var program = renderer.Program([

@@ -2,6 +2,7 @@
  * GaitsDemo (Graphics): Scene · SceneMannequin: the gaits of the mannequin, each a graph of the library
  * (blueprints/animation/<clip>): its legs of the path of the feet (they do not slide), the rest keyed. Beside it X Bot plays
  * the clip of Mixamo the gait was compared with, when its files are in data/models of this copy (they are kept out of git).
+ * Killjoy, a model of a file with no clips of its own, walks of the same graphs (SceneModels.Gait), when the copy has it.
  * Open graph shows the graph of the clip; a change of it is seen on the mannequin at once.
  */
 Elemenx.Component('GaitsDemo', {
@@ -81,11 +82,38 @@ Elemenx.Component('GaitsDemo', {
 		};
 
 		request.send();
+
+		/* A model of a file with no clips of its own (Killjoy, when this copy has it): it walks of the same graphs (SceneModels.Gait). */
+		this.GaitsFile(scene);
+	},
+	GaitsFile: function (scene) {
+		var self = this;
+		var models = this.$Service('SceneModels');
+		var request = new XMLHttpRequest();
+
+		request.open('HEAD', '/data/models/killjoy__valorant.glb');
+
+		request.onload = function () {
+			if (request.status !== 200 || !scene.$Element().isConnected) return;
+
+			if (!models.Has('gaits-file'))
+				models.Define('gaits-file', {URL: '/data/models/killjoy__valorant.glb', Type: 'unit'});
+
+			models.Load('gaits-file', function () {
+				if (!scene.$Element().isConnected) return;
+
+				scene.Add('unit', {ID: 'file', Name: 'Killjoy', Model: 'gaits-file', X: -2.2, Y: 0, Size: 1.7, Facing: 90, Clip: 'idle'});
+
+				self.GaitsPlay();
+			});
+		};
+
+		request.send();
 	},
 	/* The camera at the side of them (or ahead, or behind), at the height of the hips. */
 	GaitsCamera: function () {
 		var scene = this.GaitsScene ? this.GaitsScene() : null;
-		var at = {side: [1.1, -6.5], front: [7.5, 0.4], back: [-6.5, 0.4]}[this.GaitsView];
+		var at = {side: [0.4, -8], front: [8.5, 0.4], back: [-8, 0.4]}[this.GaitsView];
 
 		if (!scene) return;
 
@@ -121,6 +149,12 @@ Elemenx.Component('GaitsDemo', {
 		/* Its own clip from now on (what it plays when nothing else is asked), begun at once. */
 		scene.Change('man', {Clip: this.GaitsClip});
 		scene.Play('man', this.GaitsClip);
+
+		/* The model of a file has the walk and the idle of the graphs: it walks with them, else it stands. */
+		if (scene.Get('file')) {
+			scene.Change('file', {Clip: this.GaitsClip === 'walk' ? 'walk' : 'idle'});
+			scene.Play('file', this.GaitsClip === 'walk' ? 'walk' : 'idle');
+		}
 
 		if (scene.Get('xbot')) {
 			scene.Change('xbot', {Clip: this.GaitsClip});

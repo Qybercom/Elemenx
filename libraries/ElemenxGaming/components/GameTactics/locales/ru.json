@@ -1,0 +1,15 @@
+{
+	"gaming": {
+		"tactics": {
+			"label": "Режимы места",
+			"modes": {
+				"seat": "Пульт",
+				"helm": "Штурвал",
+				"turret": "Турель",
+				"radar": "Радар",
+				"schematic": "Схема",
+				"strategic": "Командование"
+			}
+		}
+	}
+}

@@ -1,0 +1,159 @@
+{
+	"version": 1,
+	"type": "effect",
+	"name": "sonicboom",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "layer1",
+			"type": "Layer",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Kind",
+					"value": "wave"
+				},
+				{
+					"key": "Blend",
+					"value": "add"
+				},
+				{
+					"key": "Size",
+					"value": [
+						6,
+						6
+					]
+				},
+				{
+					"key": "Life",
+					"value": 0.5
+				},
+				{
+					"key": "Color",
+					"value": [
+						0.9,
+						0.95,
+						1
+					]
+				},
+				{
+					"key": "Hot",
+					"value": [
+						1,
+						1,
+						1
+					]
+				}
+			]
+		},
+		{
+			"id": "layer2",
+			"type": "Layer",
+			"x": 300,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Kind",
+					"value": "smoke"
+				},
+				{
+					"key": "Blend",
+					"value": "alpha"
+				},
+				{
+					"key": "Count",
+					"value": 40
+				},
+				{
+					"key": "Life",
+					"value": 0.6
+				},
+				{
+					"key": "Speed",
+					"value": [
+						2,
+						6
+					]
+				},
+				{
+					"key": "Spread",
+					"value": 0.6
+				},
+				{
+					"key": "Size",
+					"value": [
+						0.5,
+						2
+					]
+				},
+				{
+					"key": "Color",
+					"value": [
+						0.97,
+						0.98,
+						1
+					]
+				},
+				{
+					"key": "Opacity",
+					"value": 0.4
+				},
+				{
+					"key": "Drag",
+					"value": 3
+				}
+			]
+		},
+		{
+			"id": "effect",
+			"type": "Effect",
+			"x": 560,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Once",
+					"value": true
+				},
+				{
+					"key": "Then",
+					"value": ""
+				},
+				{
+					"key": "Lasts",
+					"value": 0.7
+				},
+				{
+					"key": "LampColor",
+					"value": "#dfe9ff"
+				},
+				{
+					"key": "LampPower",
+					"value": 1.5
+				},
+				{
+					"key": "LampRadius",
+					"value": 25
+				},
+				{
+					"key": "LampFlicker",
+					"value": 0
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "sonicboom-link-0",
+			"p1": "layer1-out-Layers",
+			"p2": "layer2-in-Under",
+			"kind": "value"
+		},
+		{
+			"id": "sonicboom-link-1",
+			"p1": "layer2-out-Layers",
+			"p2": "effect-in-Layers",
+			"kind": "value"
+		}
+	]
+}

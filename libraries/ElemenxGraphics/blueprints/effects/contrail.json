@@ -1,0 +1,158 @@
+{
+	"version": 1,
+	"type": "effect",
+	"name": "contrail",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "layer1",
+			"type": "Layer",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Kind",
+					"value": "stream"
+				},
+				{
+					"key": "Blend",
+					"value": "alpha"
+				},
+				{
+					"key": "Size",
+					"value": [
+						0.12,
+						0.12
+					]
+				},
+				{
+					"key": "Speed",
+					"value": [
+						40,
+						40
+					]
+				},
+				{
+					"key": "Color",
+					"value": [
+						0.95,
+						0.96,
+						1
+					]
+				},
+				{
+					"key": "Life",
+					"value": 3
+				},
+				{
+					"key": "Opacity",
+					"value": 0.5
+				},
+				{
+					"key": "Wander",
+					"value": 0.1
+				}
+			]
+		},
+		{
+			"id": "layer2",
+			"type": "Layer",
+			"x": 300,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Kind",
+					"value": "smoke"
+				},
+				{
+					"key": "Blend",
+					"value": "alpha"
+				},
+				{
+					"key": "Count",
+					"value": 30
+				},
+				{
+					"key": "Life",
+					"value": 6
+				},
+				{
+					"key": "Speed",
+					"value": [
+						0.5,
+						1
+					]
+				},
+				{
+					"key": "Spread",
+					"value": 0.15
+				},
+				{
+					"key": "Size",
+					"value": [
+						0.3,
+						2.5
+					]
+				},
+				{
+					"key": "Color",
+					"value": [
+						0.96,
+						0.97,
+						1
+					]
+				},
+				{
+					"key": "Opacity",
+					"value": 0.18
+				},
+				{
+					"key": "Drag",
+					"value": 0.3
+				},
+				{
+					"key": "Wind",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "effect",
+			"type": "Effect",
+			"x": 560,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Once",
+					"value": false
+				},
+				{
+					"key": "Then",
+					"value": ""
+				},
+				{
+					"key": "Aim",
+					"value": [
+						0,
+						0,
+						-1
+					]
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "contrail-link-0",
+			"p1": "layer1-out-Layers",
+			"p2": "layer2-in-Under",
+			"kind": "value"
+		},
+		{
+			"id": "contrail-link-1",
+			"p1": "layer2-out-Layers",
+			"p2": "effect-in-Layers",
+			"kind": "value"
+		}
+	]
+}

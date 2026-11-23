@@ -24,17 +24,18 @@ Elemenx.Component('DemoFrame', {
 	/* What the scene of the demo is drawn on (Scene.Device), shown under the meter of the frames. */
 	DeviceLine: '',
 	Quality: 'auto',
-	Qualities: [{Value: 'auto', Label: 'Auto'}, {Value: 'low', Label: 'Low'}, {Value: 'medium', Label: 'Medium'}, {Value: 'high', Label: 'High'}, {Value: 'ultra', Label: 'Ultra'}],
+	Qualities: [],
 
 	$OnCreate: function () {
 		var self = this;
 		var screen = this.$Service('Screen');
 
 		this.Phone = screen.Phone();
+		this.Qualities = this.$Service('DemoQuality').List;
+		this.Quality = this.$Service('DemoQuality').Read();
 
 		try {
 			this.FPS = window.localStorage.getItem('demo-fps') === '1';
-			this.Quality = window.localStorage.getItem('ui-kit-quality') || 'auto';
 		}
 		catch (error) {
 			this.FPS = false;
@@ -79,14 +80,7 @@ Elemenx.Component('DemoFrame', {
 	QualityChosen: function (value) {
 		this.Quality = value;
 
-		try {
-			window.localStorage.setItem('ui-kit-quality', value);
-		}
-		catch (error) {
-			value = String(value);
-		}
-
-		window.dispatchEvent(new CustomEvent('scene-demo-quality', {detail: value}));
+		this.$Service('DemoQuality').Choose(value);
 	},
 
 	NoteOf: function (name) {

@@ -102,8 +102,8 @@ Elemenx.Component('CombatDemo', {
 			{ID: 'plate', Kind: 'thing', Model: 'demo-plate', Size: 1.6, X: -2, Y: 14, Material: 'metal', Traits: {Health: {Max: 400, Death: 'keep'}, Fracture: {Material: 'metal', Pattern: 'parts'}}},
 			{ID: 'pane', Kind: 'thing', Model: 'demo-pane', Size: 1.7, X: 2, Y: 14, Material: 'glass', Traits: {Fracture: {Material: 'glass'}}},
 			{ID: 'wall', Kind: 'thing', Model: 'demo-wall', Size: 2.5, X: 7, Y: 16, Material: 'stone', Traits: {Fracture: {Material: 'stone', Pieces: 14}}},
-			{ID: 'robot-1', Kind: 'unit', Model: 'robot', X: -3, Y: 24, Team: 'red', Health: 120, Damage: 0, Sight: 1},
-			{ID: 'robot-2', Kind: 'unit', Model: 'robot', X: 3, Y: 26, Team: 'red', Health: 120, Damage: 0, Sight: 1}
+			{ID: 'robot-1', Kind: 'unit', Model: 'robot', X: -3, Y: 24, Team: 'red', Damage: 0, Sight: 1},
+			{ID: 'robot-2', Kind: 'unit', Model: 'robot', X: 3, Y: 26, Team: 'red', Damage: 0, Sight: 1}
 		];
 
 		if (!scene) return;
@@ -118,6 +118,19 @@ Elemenx.Component('CombatDemo', {
 		/* The wall already hit twice: its cracks show at once, and grow with each shot. */
 		this.CombatCrack();
 	},
+	/* A crack asked for before the ground came; its ground came (ground of the Scene): the wall stands on it the frame after. */
+	CombatCrackLater: false,
+	CombatGrounded: function () {
+		var self = this;
+
+		if (!this.CombatCrackLater) return;
+
+		this.CombatCrackLater = false;
+
+		window.requestAnimationFrame(function () {
+			self.CombatCrack();
+		});
+	},
 	/* Two blows to the wall: a web of cracks where they struck (SceneFracture). */
 	CombatCrack: function () {
 		var scene = this.CombatScene ? this.CombatScene() : null;
@@ -125,11 +138,18 @@ Elemenx.Component('CombatDemo', {
 		var wall = scene ? scene.Scene().Objects.wall : null;
 		if (!wall) return;
 
-		/* Not standing on its ground yet (the ground comes after the scene is ready): a little later. */
-		if (!wall.World || !scene.Scene().Ground) {
-			setTimeout(function () {
+		/* No ground yet (it comes after the scene is ready): once it comes (CombatGrounded). */
+		if (!scene.Scene().Ground) {
+			this.CombatCrackLater = true;
+
+			return;
+		}
+
+		/* The wall just put back: it stands on the ground the frame after. */
+		if (!wall.World) {
+			window.requestAnimationFrame(function () {
 				self.CombatCrack();
-			}, 300);
+			});
 
 			return;
 		}
@@ -263,8 +283,8 @@ Elemenx.Component('CombatDemo', {
 		if (!scene || !strategy) return;
 
 		for (i = 0; i < 4; i++) {
-			blue.push({ID: 'blue-' + i, Kind: 'unit', Model: 'soldier', X: -30 + i * 3, Y: 34 + (i % 2) * 3, Team: 'blue', Weapon: i === 3 ? 'rocket' : 'rifle', Range: 28, Sight: 40, Health: 100});
-			red.push({ID: 'red-' + i, Kind: 'unit', Model: 'robot', X: 22 + i * 3, Y: 36 + (i % 2) * 3, Team: 'red', Weapon: 'plasma', Range: 24, Sight: 40, Health: 100});
+			blue.push({ID: 'blue-' + i, Kind: 'unit', Model: 'soldier', X: -30 + i * 3, Y: 34 + (i % 2) * 3, Team: 'blue', Weapon: i === 3 ? 'rocket' : 'rifle'});
+			red.push({ID: 'red-' + i, Kind: 'unit', Model: 'robot', X: 22 + i * 3, Y: 36 + (i % 2) * 3, Team: 'red', Weapon: 'plasma'});
 		}
 
 		blue.concat(red).forEach(function (one) {
@@ -309,34 +329,14 @@ Elemenx.Component('CombatDemo', {
 		this.CombatAimed({detail: this.CombatTarget});
 	},
 	CombatFire: function () {
-		var self = this;
 		var scene = this.CombatScene ? this.CombatScene() : null;
 		var point = this.CombatPoint();
-		var held = 0;
-		var clock;
-
 		if (!scene || !point) return;
 
 		this.CombatAimed({detail: this.CombatTarget});
 
-		/* A laser is held for a moment and a half. */
-		if (this.CombatWeapon === 'laser') {
-			clock = window.setInterval(function () {
-				held += 50;
-
-				if (held > 1500 || !scene.$Element().isConnected) {
-					window.clearInterval(clock);
-
-					return;
-				}
-
-				scene.Fire('hero', {At: self.CombatPoint() || point});
-			}, 50);
-
-			return;
-		}
-
-		scene.Fire('hero', {At: point});
+		/* A beam (the laser) burns for a moment and a half (Hold of the shot); the rest fire once. */
+		scene.Fire('hero', {At: point, Hold: 1.5});
 	},
 	CombatTargets: [
 		{Value: 'crate', Label: 'Wooden crate'},
@@ -388,33 +388,5 @@ Elemenx.Component('CombatDemo', {
 	CombatSpell: function (name) {
 		if (typeof this[name] === 'function')
 			this[name]();
-	},
-
-	/*
-	 * The trigger of the gamepad on the screen fires where the crosshair is, as a press of the mouse does, the view staying
-	 * where it was turned; a laser burns while it is held. Regression: it fired as the Fire button does, the view turned to
-	 * the target of the list each time.
-	 */
-	CombatPad: function (event) {
-		var scene = this.CombatScene ? this.CombatScene() : null;
-
-		if (event.Button !== 'rt') return;
-
-		window.clearInterval(this.CombatHeld);
-
-		if (!event.Down || !scene) return;
-
-		scene.Fire('hero');
-
-		if (this.CombatWeapon === 'laser') {
-			this.CombatHeld = window.setInterval(function () {
-				if (scene.$Element().isConnected)
-					scene.Fire('hero');
-			}, 50);
-		}
-	},
-
-	$OnDestroy: function () {
-		window.clearInterval(this.CombatHeld);
 	}
 });

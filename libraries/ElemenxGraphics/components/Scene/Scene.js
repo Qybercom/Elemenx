@@ -60,7 +60,8 @@
  * Plane) makes a ground of a model of a file, its floors and walls read from its triangles; Control(id) gives the keys to a
  * walker: a press takes the mouse (Capture), it faces the view, A and D step aside, Shift runs, Shift and Alt sprint, Space
  * jumps, a drag with the right button turns the view and leaves the walk as it was. A
- * skeleton with no clips gets walk and idle made from the names of its bones, Motions of a recipe bring clips of FBX files.
+ * skeleton with no clips gets walk and idle of the graphs of the mannequin laid on it by its roles (SceneModels.Gait),
+ * Motions of a recipe bring clips of FBX files.
  *
  * The surface: Land(id, {Latitude, Longitude, Altitude}) goes down to the ground of a body (not of a giant of gas),
  * the very ground its baked surface shows (SceneTerrainGenerator.Sphere), in patches finer near the eye, under its sky (its
@@ -119,7 +120,7 @@
 Elemenx.Component('Scene', {
 	$TemplateURL: 'Scene.html',
 	$StyleURL: 'Scene.css',
-	$Traits: ['SceneScatter', 'SceneLighting', 'SceneProbes', 'SceneEffects', 'SceneCosmos', 'SceneGiants', 'SceneVehicles', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneDebris', 'SceneFracture', 'ScenePiping', 'SceneDeepSpace', 'SceneNebula', 'SceneGalaxy'],
+	$Traits: ['SceneScatter', 'SceneLighting', 'SceneProbes', 'SceneEffects', 'SceneCosmos', 'SceneGiants', 'SceneVehicles', 'SceneShipSystems', 'SceneAboard', 'SceneTactics', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneDebris', 'SceneFracture', 'ScenePiping', 'SceneDeepSpace', 'SceneNebula', 'SceneGalaxy'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'star',
@@ -135,6 +136,10 @@ Elemenx.Component('Scene', {
 			person: 'V took the view of a walker to another place: third, first or shoulder.',
 			loading: 'What the scene waits for came a step nearer: {Part (up to 100, never back), Stage (programs, models, sky, galaxy, nebulae, rivers, globes, surface, ground, plants, view; empty when done), Stages ([{Name, Label, Done, Total}] of those it has)}.',
 			prepared: 'All the view needs is made and the veil goes: {First (the start of the scene, not a location that came)}.',
+			shield: 'A layer of the shield of an object took a hit (SceneShipSystems): {ID, Layer, Value, Capacity, Taken, Broken, Hit}.',
+			discover: 'A place came within the sensors of a vehicle and is known now (SceneShipSystems, NavPoint): {ID, By, Kind, Name}.',
+			context: 'An actor (the character of the player) sat in a seat of a vehicle or left it (SceneVehicles Board, Leave, BoardKey: G): {Actor, Kind (walk or seat), Vehicle, Seat, Role, Controls}.',
+			ground: 'A ground came, its field made (a ground of the scene, of a location, of a planet landed on): {Key (its shape: location:<id>:<model> for a location), ID (the object it is of), Location (true for a location)}.',
 			shoulder: 'B took the view over another shoulder: right or left.',
 			arrive: 'An object reached where it was sent: {ID, At}.',
 			land: 'The view went down to the surface of a body: {ID}.',
@@ -176,6 +181,7 @@ Elemenx.Component('Scene', {
 			Speed: 'The days of the scene a second.',
 			Capture: 'With a walker under the keys (Control), a press takes the pointer: the mouse turns the view, Escape gives it back.',
 			Person: {Options: ['third', 'first', 'shoulder'], Description: 'Where the view of a walker stands: behind it (third), in its eyes (first, its head hidden but its body and what it holds seen) or over its shoulder. V changes it while the pointer is taken.'},
+			Cutaway: 'While a walker is inside a ship standing (SceneAboard), its hull and its ceilings are not drawn and the view looks in from over it, as at a house cut open; off, the hull stays round it, the view within its rooms.',
 			Shoulder: {Options: ['right', 'left'], Description: 'Over which shoulder the view stands. B changes it while the pointer is taken.'},
 			Axes: {Options: ['', 'top-left', 'top-right', 'bottom-left', 'bottom-right'], Description: 'The corner where the Axes of the view stand, none when empty; a press on one looks along it.'},
 			Origin: 'Draws the three axes of the world at its middle (and the colliders as their outlines).',
@@ -211,9 +217,20 @@ Elemenx.Component('Scene', {
 			PlanetGraph: 'Its globes seen from far: a planet graph of the Blueprints Service of their picture lit, their clouds and the shadows of them and of a ring, their towns at night, their air at the edge (or its JSON, or GLSL with blueprintPlanet); empty, the one of the library (LibraryPlanet()).',
 			EnvelopeGraph: 'What lies over and under the surface of its bodies (their air, decks of clouds, seas, the depths of a giant): a generator of numbers of the Blueprints Service of the blocks EnvelopeState and EnvelopeLight of the Envelope Service (its results Pressure, Temperature, Zone and Light; or its JSON); empty, the one of the library (LibraryEnvelope()).',
 			GroundGraph: 'The ground of its globes near and from over them: a ground graph of the Blueprints Service of its picture, its woods, fields, snow and dunes, its relief, the tiles near, the shadows of its clouds and of a ring, its water, towns at night, clouds from over them and air (or its JSON, or GLSL with blueprintGround); empty, the one of the library (LibraryGround()).',
+			GroundFarGraph: 'How a texel of the picture of the far ground of its planets looks (a generator graph of numbers, or the name of one: blueprints/shader/ground-far, of its land, sea, slope, warmth, wet, deserts, fields, houses, a river and a highway: R, G, B, Water, Trees, Farm, Built, Dune, Snow); empty, Graphs of shader/ground-far, else the one of the library. Made code in the page, it paints the planet in its workers.',
+			SkyLightGraph: 'The light of the sky on all it lights and mirrors (a generator graph of numbers: blueprints/shader/sky-light, of WayY, SunDot, SunY, Spread, SkyR/G/B, FloorR/G/B, Gain: R, G, B): the sea, glass, the paint of a car, the objects, the grass, the land and the probes; empty, Graphs of shader/sky-light, else the one of the library. Read as the scene is made.',
 			RingGraph: 'The rings round its bodies: a ring graph of the Blueprints Service of their bands, gaps, colors and light (or its JSON, or GLSL with blueprintRing); empty, the one of the library (LibraryRing()).',
 			CosmosGraph: 'What lies far behind a system, the sky its Cosmos is baked of: a cosmos graph of the Blueprints Service of its parts (gas, dust, the band of a galaxy, bursts, galaxies far off, pillars, stars, clusters; or its JSON, or GLSL with blueprintCosmos); empty, the one of the library (LibraryCosmos()).',
 			GalaxyGraph: 'The arms of a galaxy, its picture, its stars and the band of it across the sky of a system alike: a generator of the Blueprints Service of the blocks of GalaxyData (its results Turn, Bend, Wave and Arm; or its JSON); empty, the one of the library (SceneBlueprints.LibraryGalaxy()).',
+			ReactorGraph: 'A step of a reactor of the systems of an object (SceneShipSystems): Heat, Tripped, Supply of Heat, Load, Rise, Cool, Elapsed, On, Tripped, Trip, Resume, Output; empty, the one of the library (blueprints/vehicles/reactor); of the Power of an object wins.',
+			PowerGraph: 'What the power of the reactors gives each system (SceneShipSystems): Engines, Shields, Weapons, Load of Supply, the needs and the shares of each; empty, the one of the library (blueprints/vehicles/power).',
+			ShieldGraph: 'A step of a layer of a shield (SceneShipSystems): Value of Value, Capacity, Regen, Power, Since, Delay, Elapsed; empty, the one of the library (blueprints/vehicles/shield).',
+			ReadoutGraph: 'What the instruments of a vehicle or of a character on foot read (Speed, TopSpeed, SpeedPart, RpmPart, Gear, Left, Right, Lights, HealthPart of Forward, Top, Rpm, Redline, Gear, Indicate, Hazard, Blink, Lights, Health, MaxHealth): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/readout); ReadoutGraph of a vehicle wins.',
+			DrivesGraph: 'What each moving part, lamp, emitter and pop of a vehicle is driven to of its state (steer, gas, wipers, stroke, lamp-brake... of Steer, Gas, Swept, Stroke...): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/drives); DrivesGraph of a vehicle wins.',
+			WheelGraph: 'How each wheel of a car turns of its state (SpinAngle, SteerAngle, Drop, Camber of Spin, Steer, Stroke, Size, Front, Held, Side): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/wheel); WheelGraph of a vehicle wins.',
+			ThrustGraph: 'How what burns on an engine looks of its thrust (Length, Intensity, Inside of Thrust): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/thrust); ThrustGraph of a vehicle wins.',
+			LandingLookGraph: 'How a landing looks as it goes (Heat, Fov, Thrust, Raise, TransferThrust, OrbitThrust, HoverThrust of Thick, Speed, Over, Going, Throttle, Manual, T, Landed, Pull, Flat, Top): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/landing/look).',
+			ShakeGraph: 'How a view shakes (X, Y, Z, Pitch, Yaw, Roll of a rig; HeatRight, HeatUp; KickTaken; TraumaPitch, TraumaYaw, TraumaRoll, BlastLeft of Time, Seed, Shake, Hover, Walked, Stride, Heat, Size, Kick, Elapsed, Blast, Rpm, Jolt): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/camera/shake).',
 			TravelLookGraph: 'How a warp and a jump look in each of their phases (Stretch, Tunnel, Flash, Shake, Wide, Lag, Pace of the Phase: 0 into it, 1 in it, 2 out of it; Warp: 1 a warp, 0 a jump; T of the phase; Time in it): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/travel-look).',
 			SeasonGraph: 'The season of the sun and what it does to plants and the land (Warmth, Rising, Bare, Turn, Blossom, Dry, Snow of its Fixed season, Latitude, YearDays and DayOfYear): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/weather/season).',
 			ForecastGraph: 'The weather of a planet, its clouds, cirrus and rain over its body as its days go: a graph of numbers of the Blueprints Service of the blocks of SceneForecast (or its JSON), read by its shader and the page alike; empty, the one of the library (LibraryForecast()).',
@@ -284,6 +301,7 @@ Elemenx.Component('Scene', {
 	Orbits: true,
 	Labels: true,
 	Person: 'third',
+	Cutaway: false,
 	Shoulder: 'right',
 	Axes: '',
 	WindGraph: null,
@@ -295,12 +313,23 @@ Elemenx.Component('Scene', {
 	CloudsGraph: null,
 	ForecastGraph: null,
 	SeasonGraph: null,
+	DrivesGraph: null,
+	ReadoutGraph: null,
+	ReactorGraph: null,
+	PowerGraph: null,
+	ShieldGraph: null,
+	WheelGraph: null,
+	ThrustGraph: null,
+	LandingLookGraph: null,
+	ShakeGraph: null,
 	TravelLookGraph: null,
 	GalaxyGraph: null,
 	CosmosGraph: null,
 	RingGraph: null,
 	PlanetGraph: null,
 	GroundGraph: null,
+	GroundFarGraph: null,
+	SkyLightGraph: null,
 	EnvelopeGraph: null,
 	BoltGraph: null,
 	Graphs: null,
@@ -643,6 +672,10 @@ Elemenx.Component('Scene', {
 			Colors: {Background: [0.01, 0.02, 0.04, 1], Orbit: [0.55, 0.65, 0.85, 0.3], Selection: [0.5, 0.77, 1, 1], Wire: [0.35, 0.85, 0.45, 0.7], Outline: [1, 0.72, 0.15, 1], Hover: [0.5, 0.82, 1, 1], Edges: [0.88, 0.25, 0.98, 1], Collider: [1, 0.55, 0.15, 0.9]},
 			Painted: 0
 		};
+
+		/* The light of the sky of its graph in each shader (SkyLit), before its programs are made. */
+		if (renderer)
+			renderer.Replaces[graphics.Chunks.SkyLight] = this.SkyLit();
 
 		this.Engine = function () {
 			return engine;
@@ -1213,7 +1246,13 @@ Elemenx.Component('Scene', {
 				object.Size = between(0.5 * Math.pow(object.Radius / astronomy.EarthRadius, 0.45), object.Radius * KM * UNIT, how);
 			}
 			else if (model) {
-				object.Size = object.Owner ? object.Owner.Size * number(model.Size, 1) : number(model.Size, 0.1) * (model.Relative && parent ? parent.Size : 1) * (model.Relative ? 1 : between(1, 0.02, how));
+				/*
+				 * What walks in a location of a system, and the inside of a ship standing there (SceneAboard): of the location, its
+				 * size in metres. Regression: a pilot out of its ship was 3.6 cm tall, the inside of the ship a fiftieth of it.
+				 */
+				var located = !!scene.Location && !object.Owner && (!!object.Values.Aboard || !!trait(object, 'Walker'));
+
+				object.Size = object.Owner ? object.Owner.Size * number(model.Size, 1) : number(model.Size, 0.1) * (model.Relative && parent ? parent.Size : 1) * (model.Relative || located ? 1 : between(1, 0.02, how));
 
 				/*
 				 * In real sizes a craft is as long as it is: Length (metres) of it or of its Vehicle, its longest side (craftScale:
@@ -1833,6 +1872,12 @@ Elemenx.Component('Scene', {
 			});
 			lazy('GlowMany', function () {
 				return renderer.Program(shaders.Instanced, shaders.BodyGlow);
+			});
+			lazy('Shell', function () {
+				return renderer.Program(shaders.Instanced, shaders.Shell);
+			});
+			lazy('ShellSkinned', function () {
+				return renderer.Program(shaders.Skinned, shaders.Shell);
 			});
 			lazy('Outline', function () {
 				return renderer.Program(shaders.Instanced, shaders.Flat);
@@ -2791,8 +2836,8 @@ Elemenx.Component('Scene', {
 					return;
 				}
 
-				planets.Work().Run('ScenePlanet', kind, kind === 'Settlements' ? [base, 20000] : [base, 20], function (failed, made) {
-					var list = failed || !made ? [] : made[kind];
+				function made (failed, result) {
+					var list = failed || !result ? [] : result[kind];
 
 					if (scene.Gone) return;
 
@@ -2802,6 +2847,32 @@ Elemenx.Component('Scene', {
 						keepGlobe(key, list);
 
 					done();
+				}
+
+				if (kind === 'Settlements') {
+					planets.Work().Run('ScenePlanet', kind, [base, 20000], made);
+
+					return;
+				}
+
+				/*
+				 * Its highways by parts, in the workers, put together in their order: the same as of one run. Regression: one
+				 * worker laid them all (3 s alone), and the globe waited for them: under the load of the tests it took minutes.
+				 */
+				var parts = [];
+				var left = 8;
+				var wrong = null;
+
+				/* Eight parts: the ways are not as long, two parts a worker even them out. */
+				[0, 1, 2, 3, 4, 5, 6, 7].forEach(function (part) {
+					planets.Work().Run('ScenePlanet', kind, [base, 20, part, 8], function (failed, piece) {
+						parts[part] = piece;
+						wrong = wrong || failed;
+
+						if (--left) return;
+
+						made(wrong, wrong ? null : planets.MergeHighways(parts));
+					});
 				});
 			});
 		}
@@ -2865,8 +2936,10 @@ Elemenx.Component('Scene', {
 
 			/* Its rules of detail made code here, for the workers that make its ground (ScenePlanet.Ruled); its climate and winds of its air. */
 			var own = typeof planet === 'string' ? JSON.parse(planet) : planet;
+			/* Its far ground of the graph of the scene (GroundFarGraph, Graphs['shader/ground-far']), its own before it. */
+			var far = own.GroundFarGraph || self.GraphOf('GroundFarGraph', 'shader/ground-far');
 
-			return planets.Ruled(Object.assign({}, own, {Radius: object.Radius}, airOf(object), own.Biomes ? {Biomes: own.Biomes} : {}));
+			return planets.Ruled(Object.assign({}, own, {Radius: object.Radius}, airOf(object), own.Biomes ? {Biomes: own.Biomes} : {}, far ? {GroundFarGraph: far} : {}));
 		}
 
 		engine.PlanetOptions = planetOf;
@@ -3778,7 +3851,8 @@ Elemenx.Component('Scene', {
 
 		/*
 		 * The keys of a frame with the pads in them (InputDevices: a pad on the screen, a phone that leans, a real one): A is Space,
-		 * B KeyC, RB or the press of the left stick Shift (run, drift, boost), LB Alt; the sticks and the triggers as they
+		 * B KeyC, RB or the press of the left stick Shift (run, drift, boost), LB Alt, X KeyH (a ship warps), Y KeyJ (a ship
+		 * jumps while it is held); the sticks and the triggers as they
 		 * lean, in Pad: {X (right), Y (ahead), LookX, LookY (up), Gas, Brake, DX, DY (the cross: right, up)}, for what moves
 		 * by how far (a walk, a wheel).
 		 */
@@ -3786,7 +3860,7 @@ Elemenx.Component('Scene', {
 			var input = self.$Service('InputDevices');
 			var axes = input.Axes();
 			var made = Object.assign({}, keys);
-			var buttons = {a: 'Space', b: 'KeyC', rb: 'ShiftLeft', ls: 'ShiftLeft', lb: 'AltLeft'};
+			var buttons = {a: 'Space', b: 'KeyC', rb: 'ShiftLeft', ls: 'ShiftLeft', lb: 'AltLeft', x: 'KeyH', y: 'KeyJ'};
 
 			Object.keys(buttons).forEach(function (button) {
 				if (input.Held(button))
@@ -4018,6 +4092,16 @@ Elemenx.Component('Scene', {
 		}
 
 		/*
+		 * The rooms of the ship standing nearest the eye (engine.Indoor: {At, Yaw, Half, Leak}), within 300 m: the box
+		 * indoorDaylight takes the day out of. Regression: the sky lit the rooms of a ship as a house with no roof.
+		 */
+		function indoorLight () {
+			var box = scene.Ground && engine.Indoor ? engine.Indoor(scene.Eye, 300) : null;
+
+			return box ? {uIndoorAt: local(box.At).concat([box.Yaw]), uIndoorHalf: box.Half.concat([1 + box.Leak])} : {uIndoorAt: [0, 0, 0, 0], uIndoorHalf: [0, 0, 0, 0]};
+		}
+
+		/*
 		 * The daylight of a cave round the eye for what is not of the ground (models, what is sown, walkers): a box of 64 by 32
 		 * by 64 m in points 2 m apart (SceneTerrainGenerator.Daylight, made in a worker as the eye goes 16 m on), in the texture
 		 * of the probes, which it has no use for at a quality without them (Graphics().Probes 0): every program has it, and
@@ -4158,11 +4242,14 @@ Elemenx.Component('Scene', {
 			if (scene.Ground && !shade.uProbeOn)
 				Object.assign(shade, caveLight());
 
+			/* The rooms of a ship standing near: little of the day comes into them (SceneAboard). */
+			Object.assign(shade, indoorLight());
+
 			/* What burns on a ship lights it in space as well. */
 			if (!scene.Ground)
 				Object.assign(shade, localLights());
 
-			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uSkyLight: scene.Ground ? scene.Ground.SkyLight : [0.004, 0.004, 0.006], uFloorLight: scene.Ground ? scene.Ground.FloorLight : [0.004, 0.004, 0.006], uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : scene.CosmosShade ? [0.025 + scene.CosmosShade[0], 0.027 + scene.CosmosShade[1], 0.035 + scene.CosmosShade[2]] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Gust || 0, uWet: scene.Ground ? scene.Ground.Air.Wet : 0, uSnowed: snowed(), uRainDrops: scene.Ground ? scene.Ground.Air.Rain : 0, uEyeAt: scene.Eye || [0, 0, 0], uTime2: scene.Seconds % 1000, uNightGlow: scene.Ground ? scene.Ground.Night || 0 : 1, uScreenMirror: engine.ScreenMirror && engine.ScreenMirror() ? 1 : 0, uLevel: engine.LevelColor('near', 0)}, shade, self.WindValues(scene.Seconds));
+			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uSkyLight: scene.Ground ? scene.Ground.SkyLight : [0.004, 0.004, 0.006], uFloorLight: scene.Ground ? scene.Ground.FloorLight : [0.004, 0.004, 0.006], uSkySun: scene.Ground ? scene.Ground.Sun : [0, 1, 0], uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : scene.CosmosShade ? [0.025 + scene.CosmosShade[0], 0.027 + scene.CosmosShade[1], 0.035 + scene.CosmosShade[2]] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Gust || 0, uWet: scene.Ground ? scene.Ground.Air.Wet : 0, uSnowed: snowed(), uRainDrops: scene.Ground ? scene.Ground.Air.Rain : 0, uEyeAt: scene.Eye || [0, 0, 0], uTime2: scene.Seconds % 1000, uNightGlow: scene.Ground ? scene.Ground.Night || 0 : 1, uScreenMirror: engine.ScreenMirror && engine.ScreenMirror() ? 1 : 0, uLevel: engine.LevelColor('near', 0)}, shade, self.WindValues(scene.Seconds));
 
 			/* The arrays of the frame stay as they are till the next one: given again to each draw, they are not read again. */
 			renderer.Hold(Object.keys(common).map(function (key) {
@@ -4206,7 +4293,7 @@ Elemenx.Component('Scene', {
 				scene.Ground.Under = !!scene.Ground.Field.Water && !scene.Camera.Ortho && scene.Eye[1] < self.$Service('SceneWaves').At(scene.Ground.Waves, scene.Eye[0], scene.Eye[2], scene.Seconds).Height;
 
 			var worldOf = function (vp, eye, small) {
-				var mine = Object.assign(Object.create(common), {uViewProjection: vp, uCamera: eye, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0]});
+				var mine = Object.assign(Object.create(common), {uViewProjection: vp, uCamera: eye, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0], uHoleAt: [0, 0, 0, 0], uHoleHalf: [0, 0, 0, 0], uHeroFade: 0});
 
 				var sees = frustum(vp, renderer.Width);
 
@@ -4425,9 +4512,11 @@ Elemenx.Component('Scene', {
 					renderer.Draw(shape(name), gpu.Many, uniforms(Object.assign({uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list), uMoving: list.Still ? 0 : 1}, engine.SeasonValues(name), engine.DissolveValues(list), levelOf(list))));
 				});
 
-				/* The mirrors as panes of what they show, the glass after all it shows through. */
-				if (scene.Ground)
-					drawPanes(uniforms, mirrored, later);
+				/*
+				 * The mirrors as panes of what they show, the glass after all it shows through; in space the screens alone (of the
+				 * consoles of a ship in flight, SceneAboard). Regression: in space a console showed its glow, never its screen.
+				 */
+				drawPanes(uniforms, mirrored, later);
 
 				/* What glows: its surfaces once more, their light added, brightest at their edges; bloom spreads it round them. */
 				Object.keys(scene.GlowLists || {}).forEach(function (name) {
@@ -4442,6 +4531,9 @@ Elemenx.Component('Scene', {
 					if (list.Count)
 						renderer.Draw(shape(name, list.Geometry), list.Skinned ? gpu.OutlineSkinned : gpu.Outline, Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uOutline: Math.tan(scene.Camera.Fov * Math.PI / 360) * 2 * (scene.OutlineWidth || 3) / Math.max(1, scene.Height), uColor: [list.Tints[0], list.Tints[1], list.Tints[2], 1], uBody: [0, 0, 0, 0]})), {Cull: 'front'});
 				});
+
+				/* The shells of the shields: their light added over all, the depth kept, their front faces. */
+				drawShells(scene.ShellLists, uniforms);
 
 				/* The wire of all and the edges of the models, over them. */
 				[['wire', wired(), scene.Colors.Wire], ['edges', edged(), scene.Colors.Edges]].forEach(function (one) {
@@ -4815,6 +4907,8 @@ Elemenx.Component('Scene', {
 
 			outlines();
 
+			shells();
+
 			if (!scene.StillLists) {
 				scene.StillLists = {};
 
@@ -4948,6 +5042,79 @@ Elemenx.Component('Scene', {
 
 			return {Look: ['none', 'ring', 'outline'].indexOf(look) === -1 ? 'none' : look, Color: [color[0] * beat, color[1] * beat, color[2] * beat, 1], Width: Math.max(0.5, number(own.Width !== undefined ? own.Width : mark.Width, 3)), Cursor: String(own.Cursor || mark.Cursor || '')};
 		};
+
+		/*
+		 * The layers of the shields (SceneShipSystems: ShipState.Layers of what has them, a ship or a character), each a shell
+		 * round its outline: its model gathered once more for each layer with something left, grown along its normals (the
+		 * outer the farther: Grow of a layer, of its size, else 4 % and 4 % more each layer in), as bright as it is full, a
+		 * flash a moment after a hit.
+		 */
+		function shells () {
+			var lists = scene.ShellLists = scene.ShellLists || {};
+
+			Object.keys(lists).forEach(function (name) {
+				lists[name].Count = 0;
+			});
+
+			scene.Order.forEach(function (object) {
+				shellsOf(lists, object);
+			});
+
+			Object.keys(lists).forEach(function (name) {
+				if (lists[name].Count) upload(name, lists[name]);
+				else forgotten(lists, name);
+			});
+		}
+
+		/* The shells of the layers of the shield of an object, gathered into lists (those of the scene, of a ship over a surface). */
+		function shellsOf (lists, object) {
+			var state = object.ShipState;
+			var settings = trait(object, 'Model');
+			var count;
+			var middle;
+			/* Its hull a ghost round its rooms, while the hero looks at its schematic (SceneTactics): its shields round it still. */
+			var ghost = !!(object.CutAway && engine.TacticCut && engine.TacticCut(object.ID));
+			if (!object.World || object.Hidden && !ghost || !settings || !(settings.Shape || object.Values.Model)) return;
+
+			/* Its middle: of a ship where it is, of what stands on the ground half its height up. */
+			middle = object.Ship || !scene.Ground ? object.World : [object.World[0], object.World[1] + (object.Size || 1) * 0.5, object.World[2]];
+
+			if (ghost) {
+				scene.Shelling = {Key: object.ID + ':ghost', Color: [0.35, 0.75, 1, 0.3], Grow: 0, Flash: 0, Center: middle};
+
+				gatherModel(lists, object, settings);
+
+				scene.Shelling = null;
+			}
+
+			if (!state || !state.Layers || !state.Layers.length) return;
+
+			count = state.Layers.length;
+
+			state.Layers.forEach(function (layer, index) {
+				var part = layer.Capacity > 0 ? layer.Value / layer.Capacity : 0;
+				var flash = Math.max(0, 1 - state.Since * 3) * (layer.Struck || 0);
+				var color = paint(layer.Color, [0.5, 0.83, 1, 1]);
+				var grow = layer.Grow !== undefined ? Number(layer.Grow) : 0.04 + 0.04 * (count - 1 - index);
+
+				if (part <= 0.001 && flash <= 0.001) return;
+
+				scene.Shelling = {Key: object.ID + ':' + layer.ID, Color: [color[0], color[1], color[2], part], Grow: (object.Size || 1) * grow, Flash: flash, Center: middle};
+
+				gatherModel(lists, object, settings);
+
+				scene.Shelling = null;
+			});
+		}
+
+		/* The shells of lists drawn: their light added over all, the depth kept, their front faces (values: the uniforms of the pass). */
+		function drawShells (lists, values) {
+			Object.keys(lists || {}).forEach(function (name) {
+				var list = lists[name];
+				if (list.Count && list.Shell)
+					renderer.Draw(shape(name, list.Geometry), list.Skinned ? gpu.ShellSkinned : gpu.Shell, Object.assign(values({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uGrow: list.Shell.Grow, uShellCenter: local(list.Shell.Center), uColor: list.Shell.Color, uFlash: list.Shell.Flash, uTime: scene.Seconds % 1000})), {Blend: 'add', DepthWrite: false, Depth: 'lequal', Cull: 'back'});
+			});
+		}
 
 		/*
 		 * The outlines of the object chosen (Selected, as SelectMark says), of the one under the pointer (as HoverMark says) and
@@ -5750,7 +5917,10 @@ Elemenx.Component('Scene', {
 			var team = paint(teamColor(object.Team)).slice(0, 3);
 			/* Dissolving (Teleport): a list of its own, with how far it has gone. */
 			var dissolve = object.Dissolve && object.Dissolve.Amount > 0 ? object.Dissolve : null;
-			var dissolving = dissolve ? 'dissolve:' + object.ID + ':' : '';
+			var hole = engine.HoleOf ? engine.HoleOf(object) : null;
+			var fade = object.ID === scene.Hero && !object.Values.Vehicle ? scene.HeroFade || 0 : 0;
+			/* Drawn apart: cut by a hole (over the ramp of a ship standing), faded (a hero the view is too close to), dissolving. */
+			var dissolving = (dissolve ? 'dissolve:' + object.ID + ':' : '') + (hole ? 'hole:' + object.ID + ':' : '') + (fade > 0.01 ? 'fade:' + object.ID + ':' : '');
 			var pose;
 			var plain;
 			var rig;
@@ -5814,7 +5984,7 @@ Elemenx.Component('Scene', {
 					/* The glass of a mirror of the car that is driven shows its picture (MirrorKey): its own list, of that car alone. */
 					var reflecting = piece.Mirror !== undefined && object.ID === scene.Hero ? 'car:' + object.ID + ':' + piece.Mirror : '';
 
-					batch(models, (still ? 'still:' : '') + dissolving + made.Key + '/' + piece.ID + (reflecting ? '@' + object.ID : ''), object.World, piece.Skin !== -1 ? whole : math.Multiply(whole, wheel ? math.Multiply(engine.WheelTurn(object, wheel), rest) : rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Soft: softOf(object, made, piece), Glow: object.Glow && object.Glow.Body ? object.Glow.Color : lit, Lit: !!lit && !(object.Glow && object.Glow.Body), Wet: object.Values.Wet, Drops: object.Values.Drops, MirrorKey: reflecting, Dissolve: dissolve, Merged: shadow && !reflecting && shadow.Shadow.IDs.indexOf(piece.ID) >= 0 ? shadow : null});
+					batch(models, (still ? 'still:' : '') + dissolving + made.Key + '/' + piece.ID + (reflecting ? '@' + object.ID : ''), object.World, piece.Skin !== -1 ? whole : math.Multiply(whole, wheel ? math.Multiply(engine.WheelTurn(object, wheel), rest) : rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Soft: softOf(object, made, piece), Glow: object.Glow && object.Glow.Body ? object.Glow.Color : lit, Lit: !!lit && !(object.Glow && object.Glow.Body), Wet: object.Values.Wet, Drops: object.Values.Drops, MirrorKey: reflecting, Dissolve: dissolve, Hole: hole, Fade: fade, Merged: shadow && !reflecting && shadow.Shadow.IDs.indexOf(piece.ID) >= 0 ? shadow : null});
 
 					return;
 				}
@@ -5823,7 +5993,7 @@ Elemenx.Component('Scene', {
 				var moved = piece.Opening ? engine.OpeningMove(object, piece) : null;
 				var placed = moved ? math.Multiply(base, moved) : base;
 
-				batch(models, (still ? 'still:' : '') + dissolving + made.Key + '/' + piece.ID, object.World, pose ? math.Multiply(placed, pose[piece.ID]) : placed, piece.Team ? team : color, {Matte: made.Matte, Rough: made.Matte ? 0.5 : 0.15, Sway: made.Sway, Geometry: piece.Geometry, Material: piece.Material || null, Still: still, Glow: object.Glow && object.Glow.Body ? object.Glow.Color : null, Wet: object.Values.Wet, Drops: object.Values.Drops, Dissolve: dissolve});
+				batch(models, (still ? 'still:' : '') + dissolving + made.Key + '/' + piece.ID, object.World, pose ? math.Multiply(placed, pose[piece.ID]) : placed, piece.Team ? team : color, {Matte: made.Matte, Rough: made.Matte ? 0.5 : 0.15, Sway: made.Sway, Geometry: piece.Geometry, Material: piece.Material || null, Still: still, Glow: object.Glow && object.Glow.Body ? object.Glow.Color : null, Wet: object.Values.Wet, Drops: object.Values.Drops, Dissolve: dissolve, Hole: hole, Fade: fade});
 			});
 		}
 
@@ -6240,6 +6410,17 @@ Elemenx.Component('Scene', {
 			var at = settings.Still ? world : local(world);
 			var i;
 
+			/* A shell of a shield: a list of its own for each layer, of the same shape, its color, how far it grows, its flash. */
+			if (scene.Shelling && models === scene.ShellLists && name.indexOf('shell:') !== 0) {
+				var shell = scene.Shelling;
+
+				batch(models, 'shell:' + shell.Key + ':' + name, world, matrix, [1, 1, 1], Object.assign({}, settings, {Glow: null, Still: false, Geometry: settings.Geometry || shapeGeometry(name)}));
+
+				models['shell:' + shell.Key + ':' + name].Shell = shell;
+
+				return;
+			}
+
 			/* An outline: a list of its own, of the same shape, in the colour of the outline. */
 			if (scene.Outlining && models === scene.OutlineLists && name.indexOf('outline:') !== 0) {
 				batch(models, 'outline:' + name, world, matrix, scene.Outlining.Color, Object.assign({}, settings, {Glow: null, Still: false, Geometry: settings.Geometry || shapeGeometry(name)}));
@@ -6260,6 +6441,8 @@ Elemenx.Component('Scene', {
 
 			/* A body that is beamed away or comes (Teleport): drawn apart, dissolving. */
 			list.Dissolve = settings.Dissolve || null;
+			list.Hole = settings.Hole || null;
+			list.Fade = settings.Fade || 0;
 
 			/* Its shadow drawn by the shape of all the still pieces of its model, joined (shadowJoined). */
 			list.Merged = settings.Merged || null;
@@ -6834,6 +7017,7 @@ Elemenx.Component('Scene', {
 
 		function moveLabels () {
 			var camera = scene.Camera;
+			var walled = !!scene.Eye && !!engine.InsideOf && !!engine.InsideOf(scene.Eye);
 			/* Of the many stars of a cluster the names of the dozen nearest the eye (and of the one chosen): the others hid all. */
 			var named = {};
 
@@ -6867,8 +7051,12 @@ Elemenx.Component('Scene', {
 				if (shown && parent && (!trait(parent, 'Star') || star && crowded(parent, star)) && object.ID !== scene.Selected && object.ID !== scene.Focus)
 					shown = near < Math.max(vectors.Length(object.Relative || [0, 0, 0]), parent.Size * 3) * 14;
 
+				/*
+				 * What is not drawn is not named, nor what is outside the rooms of a ship the eye is in (SceneAboard). Regression: the
+				 * name of a hero sitting in a ship stood over its hull; the names of the planets stood on the walls of its rooms.
+				 */
 				if (shown)
-					shown = !hidden(object, parent) && !hidden(object, scene.Focus ? scene.Objects[scene.Focus] : null);
+					shown = !object.Hidden && !hidden(object, parent) && !hidden(object, scene.Focus ? scene.Objects[scene.Focus] : null) && !(walled && !object.Values.Aboard && object.ID !== scene.Hero);
 
 				if (!shown) {
 					if (!button.hidden)
@@ -7012,6 +7200,8 @@ Elemenx.Component('Scene', {
 
 				scene.Prefetch = null;
 				scene.Ground = {Shape: key, Key: key + sketched + (scene.Digs.length ? '#dug' + scene.Digs.length : ''), Sketched: sketched, Dug: scene.Digs.length, CarvesOf: carvesOf, ID: object ? object.ID : '', Field: site ? locationField(site) : ahead ? ahead.Field : terrain.Flat(options), Nodes: {}, Frame: 0, Keys: {}, Prefetched: ahead ? ahead.Pieces : null};
+
+				tellGround(scene.Ground, !!site);
 			}
 			else if ((scene.Ground.Sketched !== sketched || scene.Ground.Dug !== scene.Digs.length || !sameCarves(scene.Ground.CarvesOf, carvesOf)) && !site) {
 				/* What the tunnels of roads and the pipes cut came or changed: the squares round them made again. */
@@ -7330,6 +7520,17 @@ Elemenx.Component('Scene', {
 			return false;
 		}
 
+		/*
+		 * A ground came (ground: {Key, ID, Location}), its field made: told after the frame it came in, while it is still the
+		 * ground of the scene. Regression: the demos asked for it again and again on a timer.
+		 */
+		function tellGround (ground, location) {
+			view.setTimeout(function () {
+				if (scene.Ground === ground && element.isConnected)
+					self.$Emit('ground', {Key: ground.Shape, ID: ground.ID, Location: location});
+			}, 0);
+		}
+
 		/* The floors and the walls of a location, from where its triangles stand. */
 		function locationField (site) {
 			var model = library.Make(site.Values.Model);
@@ -7471,6 +7672,9 @@ Elemenx.Component('Scene', {
 			if (!settings || !settings.Shape || object.Owner || object.Hidden) return false;
 			if (trait(object, 'Orbit') || trait(object, 'Walker') || trait(object, 'Mover') || trait(object, 'Formation') || trait(object, 'Rigid')) return false;
 
+			/* The inside of a ship (SceneAboard) goes with it. Regression: stood once in a location of a system, it was not drawn. */
+			if (object.Values.Aboard) return false;
+
 			/* What has parts that move by their roles (a door, a lamp) is drawn as it stands each frame. */
 			if (engine.RigOf && engine.RigOf(object)) return false;
 
@@ -7533,6 +7737,12 @@ Elemenx.Component('Scene', {
 			var parent = object.Owner || (object.Parent ? scene.Objects[object.Parent] : null);
 
 			if (object.ID === scene.Hero) return false;
+
+			/*
+			 * A ship in the air of the location or down in it (its pilot out of it, walking in it), the inside of a ship (SceneAboard):
+			 * of the location, not of space. Regression: a ship coming down with its pilot on foot in it was away, not drawn.
+			 */
+			if (object.Flying && scene.Location || object.Values.Aboard) return false;
 
 			if (traits.Star || traits.Body || traits.Ring || traits.Belt || traits.Orbit || traits.Formation || traits.Mover) return true;
 
@@ -7885,7 +8095,7 @@ Elemenx.Component('Scene', {
 
 			/* Where it may step: the ground lets it, and no wall of a pipe stands there (ScenePiping). */
 			function can (at, on) {
-				return (!field.CanStep || field.CanStep(at, on, y)) && !(engine.PipeBlocks && engine.PipeBlocks(at, on, y, hero.Size * 0.15, [hero.Size * 0.3, hero.Size * 0.7]));
+				return (!field.CanStep || field.CanStep(at, on, y)) && !(engine.PipeBlocks && engine.PipeBlocks(at, on, y, hero.Size * 0.15, [hero.Size * 0.3, hero.Size * 0.7])) && !(engine.InteriorBlocks && engine.InteriorBlocks(at, on, y));
 			}
 
 			/* A body by what stands round it: in a location it goes as far as its sides let it, and slides along what it meets. */
@@ -7933,7 +8143,7 @@ Elemenx.Component('Scene', {
 				}
 			}
 
-			var floor = Math.max(0, field.Height(x, z, y), engine.PipeFloor ? engine.PipeFloor(x, z, y) : -Infinity);
+			var floor = Math.max(0, field.Height(x, z, y), engine.PipeFloor ? engine.PipeFloor(x, z, y) : -Infinity, engine.InteriorFloor ? engine.InteriorFloor(x, z, y) : -Infinity);
 
 			if (keys.Space && landed)
 				rise = hero.Size * 3;
@@ -8075,11 +8285,21 @@ Elemenx.Component('Scene', {
 			return cache[base];
 		};
 
-		/* The uniforms of a list dissolving (Teleport): how far, the foot and the height of the body, its color. */
+		/* The uniforms of a list dissolving (Teleport): how far, the foot and the height of the body, its color; its hole, its fade. */
 		engine.DissolveValues = function (list) {
 			var given = list && list.Dissolve;
 
-			return given ? {uDissolve: [given.Amount, given.Base - (scene.Eye ? scene.Eye[1] : 0), given.Height, given.Seed || 0], uDissolveColor: given.Color || [0.6, 0.85, 1]} : {uDissolve: [0, 0, 1, 0], uDissolveColor: [0, 0, 0]};
+			var hole = list && list.Hole;
+			var values = given ? {uDissolve: [given.Amount, given.Base - (scene.Eye ? scene.Eye[1] : 0), given.Height, given.Seed || 0], uDissolveColor: given.Color || [0.6, 0.85, 1]} : {uDissolve: [0, 0, 1, 0], uDissolveColor: [0, 0, 0]};
+
+			/* A hole cut in it (HoleOf: over the ramp of a ship standing), how far it fades (a hero the view is too close to). */
+			values.uHoleAt = hole ? local(hole.At).concat([hole.Yaw]) : [0, 0, 0, 0];
+			values.uHoleHalf = hole ? hole.Half.concat([1]) : [0, 0, 0, 0];
+			/* Its box turned as the hull lies (Turn, of the scene into the box: a ship in flight lies any way), else by its Yaw. */
+			values.uHoleTurn = hole && hole.Turn ? hole.Turn : hole ? [Math.cos(hole.Yaw), 0, Math.sin(hole.Yaw), 0, 1, 0, -Math.sin(hole.Yaw), 0, Math.cos(hole.Yaw)] : [1, 0, 0, 0, 1, 0, 0, 0, 1];
+			values.uHeroFade = list && list.Fade || 0;
+
+			return values;
 		};
 
 		/* The uniforms of the season for a model. */
@@ -8104,6 +8324,12 @@ Elemenx.Component('Scene', {
 		}
 
 		/* Where the view of a hero stands now: each way of it comes and goes in a quarter of a second. */
+		/* The walk and its view as they go on a ground, for a walk elsewhere (SceneAboard: on foot in a ship in flight). */
+		engine.Leaning = leaning;
+		engine.FaceView = faceView;
+		engine.TurnKeys = turnKeys;
+		engine.EasePerson = easePerson;
+
 		function easePerson (elapsed) {
 			var step = 1 - Math.exp(-elapsed * 10);
 
@@ -8160,7 +8386,11 @@ Elemenx.Component('Scene', {
 
 			/* With a hero the keys walk it, and the view goes after it. */
 			if (scene.Hero && scene.Objects[scene.Hero]) {
-				if (!engine.VehicleStep(scene.Objects[scene.Hero], keys, elapsed)) {
+				/* In a seat that drives nothing (a console): it sits; G stands it up. */
+				if (scene.Objects[scene.Hero].Aboard) {
+					keys = {Pad: keys.Pad};
+				}
+				else if (!engine.VehicleStep(scene.Objects[scene.Hero], keys, elapsed)) {
 					walkHero(scene.Objects[scene.Hero], keys, elapsed);
 
 					puddled(scene.Objects[scene.Hero], elapsed);
@@ -8203,8 +8433,9 @@ Elemenx.Component('Scene', {
 			camera.Up = [0, 1, 0];
 
 			/* Round a hero the eye comes down to the ground at its distance, and from there it only looks up. */
-			if (scene.Hero && focus && scene.Pitch < 0 && inside < 0.5)
-				lowest = Math.asin(Math.min(0.9, (ground.Target[1] - focus.World[1] - 0.15) / Math.max(0.1, away)));
+			if (scene.Hero && focus && scene.Pitch < 0 && inside < 0.5 && !scene.Tactic)
+				/* Regression: a hero come up at once far over the point the view goes round made it the arcsine of less than -1: NaN. */
+				lowest = Math.asin(Math.max(-0.9, Math.min(0.9, (ground.Target[1] - focus.World[1] - 0.15) / Math.max(0.1, away))));
 
 			camera.Orbit(round, scene.Yaw, lowest === null ? scene.Pitch : Math.max(scene.Pitch, -lowest), away);
 
@@ -8219,9 +8450,13 @@ Elemenx.Component('Scene', {
 			if (camera.Position[1] < floor)
 				camera.Position[1] = floor;
 
-			/* Behind a hero a wall comes before the eye: it stays on the near side of it. */
-			if (scene.Hero && field.Blocked && !(focus && focus.Values.Vehicle))
-				camera.Position = clearView(field, round, camera.Position, elapsed);
+			/*
+			 * Behind a hero (or the vehicle it drives) what is solid comes before the eye (a wall, a collider, the hull and the
+			 * walls and ceilings of a ship standing): it stays on the near side of it. Regression: only the walls of a location
+			 * held it, and the view went through the hull of a ship, out of its rooms.
+			 */
+			if (scene.Hero && focus && focus.World)
+				camera.Position = clearView(field, ground.Target, camera.Position, elapsed, focus.Values.Vehicle ? focus.ID : '');
 
 			/* From the ground a hero stays in the frame: the view rises only as far as it keeps the knees at its lower edge. */
 			if (lowest !== null) {
@@ -8261,50 +8496,141 @@ Elemenx.Component('Scene', {
 				var neck = vectors.Add([focus.World[0], ground.Target[1] - focus.Size * 0.8, focus.World[2]], scene.HeadAt);
 				var eyes = vectors.Add(neck, vectors.Add(vectors.Scale(ahead, focus.Size * 0.15), vectors.Scale(over, focus.Size * 0.07)));
 
+				/* Its eyes before a wall come back toward its neck: the view never looks out of a wall it stands at. */
+				eyes = vectors.Lerp(neck, eyes, freeWay(field, neck, eyes, 0.12, '') / Math.max(1e-6, vectors.Distance(neck, eyes)));
+
 				scene.CutAt = vectors.Add(neck, [0, focus.Size * 0.05, 0]);
 				camera.Position = vectors.Lerp(camera.Position, eyes, inside);
 				camera.Target = vectors.Lerp(camera.Target, vectors.Add(eyes, vectors.Scale(ahead, 10)), inside);
+			}
+
+			deskView(focus, camera, elapsed);
+
+			/* In a mode of its seat (SceneTactics: a turret, the view round its vehicle) the mode has the view. */
+			if (scene.Tactic && engine.TacticView)
+				engine.TacticView(focus, camera, elapsed);
+
+			/* A walker the view comes too close to (a wall behind it, a ceiling over it) fades, gone at a third of a metre. */
+			scene.HeroFade = scene.Hero && focus && !focus.Values.Vehicle && inside < 0.5 ? Math.max(0, Math.min(1, (focus.Size * 0.5 - vectors.Distance(camera.Position, ground.Target)) / (focus.Size * 0.3))) : 0;
+
+			/* What shakes the hero (a blast near, its engine, the road under it): a turn of the view round the eye (engine.Trauma). */
+			var shaken = scene.Hero ? engine.Trauma(focus, elapsed) : null;
+
+			if (shaken) {
+				var sight = vectors.Subtract(camera.Target, camera.Position);
+				var side = vectors.Normalize(vectors.Cross(sight, [0, 1, 0]));
+
+				sight = math.Apply(math.Multiply(math.Rotation([0, 1, 0], shaken.Yaw), math.Rotation(side, shaken.Pitch)), sight);
+				camera.Target = vectors.Add(camera.Position, sight);
+				camera.Up = math.Apply(math.Rotation(vectors.Normalize(sight), shaken.Roll), [0, 1, 0]);
 			}
 
 			scene.Eye = camera.Position.slice();
 			scene.Target = ground.Target.slice();
 			camera.Near = Math.max(0.05, scene.Distance * 0.01);
 			camera.Far = field.Size * 3 + scene.Distance * 4;
+
+			/*
+			 * The view of a mode round a vehicle (SceneTactics) sees as far as it stands off and past. Regression: the far plane was
+			 * of the distance of the hero, nearer than the eye of the radar over the ship, and nothing was drawn.
+			 */
+			if (scene.Tactic && scene.Tactic !== 'turret' && scene.TacticReach)
+				camera.Far = Math.max(camera.Far, scene.TacticReach * 4 + field.Size);
 		}
 
-		/* The last place on the way from what the eye follows to the eye that no wall stands on. */
-		function clearView (field, from, to, elapsed) {
-			var far = vectors.Distance(from, to);
-			var steps = Math.ceil(far / 0.3);
-			var free = far;
-			var i;
+		/*
+		 * At a console of a ship standing (SceneAboard): the eyes of who sits there, on the screen of the console, in a third of a
+		 * second. The pointer is given back (its screen is pressed as the page is); a drag looks round, as far as a head turns.
+		 */
+		function deskView (focus, camera, elapsed) {
+			var desk = focus && focus.Aboard && !scene.Tactic && engine.ConsoleView ? engine.ConsoleView(focus) : null;
+			var key = desk ? focus.Aboard.Vehicle + ':' + focus.Aboard.Seat : '';
+			var way;
+			var turn;
+			var ahead;
 
-			/* A wall at a part of the way: a ray along the ground is measured from the ground under it, which is no wall. */
-			function walled (part) {
-				var at = vectors.Lerp(from, to, part);
+			scene.Desk = (scene.Desk || 0) + ((desk ? 1 : 0) - (scene.Desk || 0)) * (1 - Math.exp(-elapsed * 10));
 
-				return field.Blocked(at[0], at[2], Math.max(at[1] - 1, field.Height(at[0], at[2], at[1] + 1) + 0.1));
+			if (!desk) {
+				scene.DeskOf = '';
+
+				return;
 			}
 
+			way = vectors.Normalize(vectors.Subtract(desk.Screen, desk.Eye));
+
+			/* Sat down: it looks at the screen, the mouse its own. */
+			if (scene.DeskOf !== key) {
+				scene.DeskOf = key;
+				scene.DeskYaw = Math.atan2(-way[0], -way[2]);
+				scene.Yaw = scene.DeskYaw;
+				scene.Pitch = Math.asin(-way[1]);
+
+				/* From a view far off (sat down at once): there at once, not through the walls between. */
+				if (vectors.Distance(camera.Position, desk.Eye) > 6)
+					scene.Desk = 1;
+
+				if (self.Captured() && document.exitPointerLock)
+					document.exitPointerLock();
+			}
+
+			turn = Math.atan2(Math.sin(scene.Yaw - scene.DeskYaw), Math.cos(scene.Yaw - scene.DeskYaw));
+			scene.Yaw = scene.DeskYaw + Math.max(-1.4, Math.min(1.4, turn));
+			scene.Pitch = Math.max(-0.9, Math.min(1, scene.Pitch));
+			ahead = [-Math.sin(scene.Yaw) * Math.cos(scene.Pitch), -Math.sin(scene.Pitch), -Math.cos(scene.Yaw) * Math.cos(scene.Pitch)];
+
+			camera.Position = vectors.Lerp(camera.Position, desk.Eye, scene.Desk);
+			camera.Target = vectors.Lerp(camera.Target, vectors.Add(desk.Eye, vectors.Scale(ahead, 10)), scene.Desk);
+		}
+
+		/*
+		 * Whether a ball of the view (radius metres round a point) is in what is solid: a wall of a location (a ray along the
+		 * ground is measured from the ground under it, which is no wall), a collider, the hull, walls and ceilings of a ship
+		 * standing (but the one of except: the vehicle the view goes round; round a vehicle the walls of a location hold it not: its
+		 * view would shake along a barrier).
+		 */
+		function viewSolid (field, at, radius, except) {
+			if (!except && field.Blocked && field.Blocked(at[0], at[2], Math.max(at[1] - 1, field.Height(at[0], at[2], at[1] + 1) + 0.1))) return true;
+
+			if (engine.ColliderHit && engine.ColliderHit(at[0], at[2], at[1], radius)) return true;
+
+			return !!(engine.InteriorSolid && engine.InteriorSolid(at, radius, except));
+		}
+
+		/* How far a ball of the view goes from a point toward another before it meets what is solid (all the way: their distance). */
+		function freeWay (field, from, to, radius, except) {
+			var far = vectors.Distance(from, to);
+			var steps = Math.ceil(far / 0.15);
+			var i;
+
 			for (i = 1; i <= steps; i++) {
-				if (walled(i / steps)) {
+				if (viewSolid(field, vectors.Lerp(from, to, i / steps), radius, except)) {
 					var near = (i - 1) / steps;
 					var past = i / steps;
 
 					/* Its face is found to a hair: steps of the ray would show as jumps of the eye along a wall. */
 					for (var halves = 0; halves < 5; halves++) {
-						if (walled((near + past) / 2)) past = (near + past) / 2;
+						if (viewSolid(field, vectors.Lerp(from, to, (near + past) / 2), radius, except)) past = (near + past) / 2;
 						else near = (near + past) / 2;
 					}
 
-					free = Math.max(0.6, near * far - 0.2);
-
-					break;
+					return near * far;
 				}
 			}
 
-			/* It comes in fast, and goes out slowly: no flicker on the edge of a wall. */
-			scene.Clear = scene.Clear === undefined ? free : scene.Clear + (free - scene.Clear) * (1 - Math.exp(-elapsed * (free < scene.Clear ? 30 : 2.5)));
+			return far;
+		}
+
+		/*
+		 * The eye on the near side of what is solid between it and what it follows: a ball as wide as what its near plane
+		 * shows, so that no wall is cut by it. It comes in at once (never through a wall for a frame), and goes out slowly: no
+		 * flicker on the edge of one.
+		 */
+		function clearView (field, from, to, elapsed, except) {
+			var far = vectors.Distance(from, to);
+			var free = Math.max(0.1, freeWay(field, from, to, 0.22, except));
+
+			scene.Clear = scene.Clear === undefined || free < scene.Clear ? free : scene.Clear + (free - scene.Clear) * (1 - Math.exp(-elapsed * 2.5));
 
 			return scene.Clear < far ? vectors.Lerp(from, to, scene.Clear / far) : to;
 		}
@@ -9141,7 +9467,8 @@ Elemenx.Component('Scene', {
 			var x = number(object.Values.X, 0);
 			var z = number(object.Values.Y, 0);
 			var center = object.Values.Z !== undefined && object.Values.Z !== '' ? [x, number(object.Values.Z, 0), z] : [x, Math.max(0, scene.Ground.Field.Height(x, z)) + number(settings.Lift, 1), z];
-			var turn = math.Multiply(math.Rotation([0, 1, 0], number(settings.Yaw, 0) * Math.PI / 180), math.Rotation([1, 0, 0], number(settings.Pitch, 0) * Math.PI / 180));
+			/* Turned as what carries it lies (PaneTurn: a screen of a console of a ship in flight, SceneAboard), else by Yaw and Pitch. */
+			var turn = object.PaneTurn || math.Multiply(math.Rotation([0, 1, 0], number(settings.Yaw, 0) * Math.PI / 180), math.Rotation([1, 0, 0], number(settings.Pitch, 0) * Math.PI / 180));
 			var width = number(settings.Width, 2);
 			var height = number(settings.Height, 2);
 			var at = vectors.Subtract(center, scene.Eye);
@@ -9152,7 +9479,7 @@ Elemenx.Component('Scene', {
 		/* A pane of an object (a mirror, a glass, a screen) for the traits: its middle, the ways of it, its size. */
 		engine.PaneOf = function (object, settings) {
 			var pane = paneOf(object, settings);
-			var turn = math.Multiply(math.Rotation([0, 1, 0], number(settings.Yaw, 0) * Math.PI / 180), math.Rotation([1, 0, 0], number(settings.Pitch, 0) * Math.PI / 180));
+			var turn = object.PaneTurn || math.Multiply(math.Rotation([0, 1, 0], number(settings.Yaw, 0) * Math.PI / 180), math.Rotation([1, 0, 0], number(settings.Pitch, 0) * Math.PI / 180));
 
 			pane.Right = math.Apply(turn, [1, 0, 0]);
 			pane.Up = math.Apply(turn, [0, 1, 0]);
@@ -9504,6 +9831,8 @@ Elemenx.Component('Scene', {
 				var screen = trait(object, 'Screen');
 				var pane;
 
+				if (!ground && (mirror || glass || !screen || object.Values.Z === undefined)) return;
+
 				/*
 				 * A screen: what its source shows (SceneScreens). A camera's picture is opaque, dark until it came; a picture of a page,
 				 * an image, a video or a canvas has the clear places of its own (an element of no background): it is laid over what
@@ -9539,12 +9868,12 @@ Elemenx.Component('Scene', {
 					later.push(function () {
 						pane = paneOf(object, glass);
 
-						renderer.Draw(gpu.Pane, gpu.Glass, uniforms({uModel: pane.Model, uSize: [pane.Width, pane.Height], uMirror: mirrored[object.ID] ? mirrored[object.ID].Textures[0] : white, uOn: mirrored[object.ID] ? 1 : 0, uScreen: [renderer.Width, renderer.Height], uRect: rectOf(mirrored[object.ID]), uTint: paint(glass.Tint || '#cfe6f0').slice(0, 3), uClarity: Math.max(0, Math.min(1, number(glass.Clarity, 0.88))), uFrost: Math.max(0, Math.min(1, number(glass.Frost, 0))), uReflect: Math.max(0, Math.min(1, number(glass.Reflect, 0.35))), uSun: ground.Sun, uSunColor: ground.SunColor, uSkyLight: ground.SkyLight}), {Blend: 'over', DepthWrite: false, Cull: 'none'});
+						renderer.Draw(gpu.Pane, gpu.Glass, uniforms({uModel: pane.Model, uSize: [pane.Width, pane.Height], uMirror: mirrored[object.ID] ? mirrored[object.ID].Textures[0] : white, uOn: mirrored[object.ID] ? 1 : 0, uScreen: [renderer.Width, renderer.Height], uRect: rectOf(mirrored[object.ID]), uTint: paint(glass.Tint || '#cfe6f0').slice(0, 3), uClarity: Math.max(0, Math.min(1, number(glass.Clarity, 0.88))), uFrost: Math.max(0, Math.min(1, number(glass.Frost, 0))), uReflect: Math.max(0, Math.min(1, number(glass.Reflect, 0.35))), uSun: ground.Sun, uSunColor: ground.SunColor, uSkyLight: ground.SkyLight, uFloorLight: ground.FloorLight}), {Blend: 'over', DepthWrite: false, Cull: 'none'});
 					});
 				}
 			});
 
-			var car = drivenCar();
+			var car = ground ? drivenCar() : null;
 			if (!car) return;
 
 			/* The mirrors of the car that is driven, and its screens: pictures of what the page shows. */
@@ -10434,17 +10763,18 @@ Elemenx.Component('Scene', {
 			var axes = ground(surface.Up);
 			var heading = vectors.Add(vectors.Scale(axes.North, Math.cos(surface.Yaw)), vectors.Scale(axes.East, Math.sin(surface.Yaw)));
 			var air = scene.Objects[surface.ID] ? scene.Objects[surface.ID].Look.Atmosphere[3] : 0;
+			var was = surface.Altitude;
 
 			surface.Altitude = Math.exp(Math.log(way.From) + (Math.log(Math.max(0.0005, surface.Wanted)) - Math.log(way.From)) * eased);
 			surface.Up = vectors.Normalize(vectors.Add(surface.Up, vectors.Scale(heading, (eased - way.Done) * way.Sweep)));
 			way.Done = eased;
 
 			/*
-			 * The view stays tilted where the player tilted it, all the way. Regression: it was tilted down to the ground going
-			 * up and up to the horizon coming down, whatever the player had turned it to.
+			 * The view stays tilted where the player tilted it, all the way. The air heats as a ship's in it does (one heat, of the
+			 * graph of a landing: engine.LandingLook), of how fast the view comes down. Regression: a formula of its own, its heat
+			 * high at 80 km, a ship's at 65 km.
 			 */
-			if (surface.Rising) surface.Heat = 0;
-			else surface.Heat = air * 0.2 * Math.pow(Math.max(0, 1 - Math.abs(Math.log(surface.Altitude / 80)) / 1.4), 2);
+			surface.Heat = engine.LandingLook({Thick: air, Speed: elapsed > 0 && was !== undefined ? Math.abs(was - surface.Altitude) / elapsed : 0, Over: surface.Altitude, Going: surface.Rising ? 1 : 0}).Heat;
 
 			if (t >= 1) {
 				surface.Way = null;
@@ -10467,8 +10797,10 @@ Elemenx.Component('Scene', {
 			var eye;
 			var look;
 
-			/* A ship flies over it: it says where the eye stands (SceneLanding). */
+			/* A ship flies over it: it says where the eye stands (SceneLanding); with the hero in it on foot, the frame of the ship (SceneAboard). */
 			if (surface.Ship) {
+				if (engine.AfootSurface && engine.AfootSurface(surface, keys, elapsed)) return;
+
 				engine.PadLook(keys.Pad, elapsed);
 				engine.LandingSurfaceStep(surface, keys, elapsed);
 
@@ -11373,7 +11705,7 @@ Elemenx.Component('Scene', {
 		function plantValues (plants, sun, sunColor, shade) {
 			var local = inFrame(plants.Frame, sun, true);
 			var light = plantLight(sun, sunColor);
-			var values = Object.assign({uCamera: [0, 0, 0], uLightPositions: [local[0] * 1e6, local[1] * 1e6, local[2] * 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightColors: [light.Sun[0] * 1.15, light.Sun[1] * 1.15, light.Sun[2] * 1.15, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightCount: 1, uSkyLight: light.Sky, uFloorLight: light.Floor, uAmbient: [0.17, 0.19, 0.23], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWet: 0, uSnowed: 0, uRainDrops: 0, uEyeAt: [0, 0, 0], uTime2: scene.Seconds % 1000, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0], uSeasonOn: 0, uDissolve: [0, 0, 1, 0], uSoft: 0}, shade, self.WindValues(scene.Seconds));
+			var values = Object.assign({uCamera: [0, 0, 0], uLightPositions: [local[0] * 1e6, local[1] * 1e6, local[2] * 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightColors: [light.Sun[0] * 1.15, light.Sun[1] * 1.15, light.Sun[2] * 1.15, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightCount: 1, uSkyLight: light.Sky, uFloorLight: light.Floor, uSkySun: local, uAmbient: [0.17, 0.19, 0.23], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWet: 0, uSnowed: 0, uRainDrops: 0, uEyeAt: [0, 0, 0], uTime2: scene.Seconds % 1000, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0], uHoleAt: [0, 0, 0, 0], uHoleHalf: [0, 0, 0, 0], uHeroFade: 0, uSeasonOn: 0, uDissolve: [0, 0, 1, 0], uSoft: 0}, shade, self.WindValues(scene.Seconds));
 
 			if (shade.uShadowOn) {
 				values.uShadowMatrix = math.Multiply(shade.uShadowMatrix, plants.Frame.Matrix);
@@ -12047,6 +12379,13 @@ Elemenx.Component('Scene', {
 
 			gatherModel(lists, hero, settings);
 
+			/* Its inside and who walks in it, of its frame (SceneAboard). */
+			(engine.AfootSurfaceObjects ? engine.AfootSurfaceObjects(hero.ID) : []).forEach(function (object) {
+				/* Not before it has a place (the first frame over the surface). */
+				if (trait(object, 'Model') && !object.Hidden && object.World)
+					gatherModel(lists, object, trait(object, 'Model'));
+			});
+
 			/* What glows of it is not drawn over the surface: its lists start again each frame. */
 			Object.keys(scene.GlowLists || {}).forEach(function (name) {
 				scene.GlowLists[name].Count = 0;
@@ -12056,16 +12395,42 @@ Elemenx.Component('Scene', {
 
 			var dim = flying.Aired ? flying.Aired.Dim : 1;
 
-			common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: [sun[0] * 1e6, sun[1] * 1e6, sun[2] * 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightColors: [sunColor[0] * 1.15, sunColor[1] * 1.15, sunColor[2] * 1.15, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightCount: 1, uSkyLight: [(0.3 * day + 0.01) * dim, (0.38 * day + 0.012) * dim, (0.5 * day + 0.02) * dim], uFloorLight: [0.12 * day * dim, 0.11 * day * dim, 0.1 * day * dim], uAmbient: [0.05 + 0.12 * day * dim, 0.055 + 0.13 * day * dim, 0.07 + 0.16 * day * dim], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: 0, uWet: 0, uSnowed: 0, uRainDrops: 0, uEyeAt: [0, 0, 0], uTime2: scene.Seconds % 1000, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0]}, idle(), localLights(), self.WindValues(scene.Seconds));
+			common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: [sun[0] * 1e6, sun[1] * 1e6, sun[2] * 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightColors: [sunColor[0] * 1.15, sunColor[1] * 1.15, sunColor[2] * 1.15, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightCount: 1, uSkyLight: [(0.3 * day + 0.01) * dim, (0.38 * day + 0.012) * dim, (0.5 * day + 0.02) * dim], uFloorLight: [0.12 * day * dim, 0.11 * day * dim, 0.1 * day * dim], uSkySun: sun, uAmbient: [0.05 + 0.12 * day * dim, 0.055 + 0.13 * day * dim, 0.07 + 0.16 * day * dim], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: 0, uWet: 0, uSnowed: 0, uRainDrops: 0, uEyeAt: [0, 0, 0], uTime2: scene.Seconds % 1000, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0], uHoleAt: [0, 0, 0, 0], uHoleHalf: [0, 0, 0, 0], uHeroFade: 0}, idle(), localLights(), self.WindValues(scene.Seconds));
 
-			Object.keys(lists).forEach(function (name) {
+			/*
+			 * What is seen through (glass: the window of its inside, SceneAboard) after all the rest, over it, its depth not written.
+			 * Regression: drawn as all the rest, the window was a pane of grey: nothing of the ground and the sky through it.
+			 */
+			Object.keys(lists).sort(function (a, b) {
+				return (lists[a].Material && seeThrough(lists[a].Material) ? 1 : 0) - (lists[b].Material && seeThrough(lists[b].Material) ? 1 : 0);
+			}).forEach(function (name) {
 				var list = lists[name];
+				var blended = !!list.Material && seeThrough(list.Material);
+
 				if (!list.Count) return;
 
 				upload(name, list);
 
-				if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign(Object.create(common), {uOrigin: [0, 0, 0], uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft, uSeasonOn: 0, uDissolve: [0, 0, 1, 0]}, surface(list), blueprintValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back'});
+				if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign(Object.create(common), {uOrigin: [0, 0, 0], uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft, uSeasonOn: 0}, engine.DissolveValues(list), surface(list), blueprintValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: blended ? 'over' : 'none', DepthWrite: !blended});
 				else renderer.Draw(shape(name), gpu.Many, Object.assign(Object.create(common), {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: [0, 0, 0], uSeasonOn: 0, uDissolve: [0, 0, 1, 0]}));
+			});
+
+			/* The shells of its shield, where it is over the surface. Regression: drawn in space only, not of the ship over a planet. */
+			var shellLists = scene.SurfaceShellLists = scene.SurfaceShellLists || {};
+
+			Object.keys(shellLists).forEach(function (name) {
+				shellLists[name].Count = 0;
+			});
+
+			shellsOf(shellLists, hero);
+
+			Object.keys(shellLists).forEach(function (name) {
+				if (shellLists[name].Count)
+					upload(name, shellLists[name]);
+			});
+
+			drawShells(shellLists, function (values) {
+				return Object.assign(Object.create(common), values, {uOrigin: [0, 0, 0]});
 			});
 
 			/* Its engines burn as they did in space: its own effects, where it is over the surface. */
@@ -12212,8 +12577,22 @@ Elemenx.Component('Scene', {
 					}, over);
 			}
 
-			if (surface.Ship)
+			/*
+			 * With the eye in the ship (SceneAboard: ShipNear) the ship is a pass of its own, of a near plane of centimetres, laid
+			 * in the nearest part of the depth: nearer than all the world, whose depth stays its own (the air and the clouds after
+			 * it read it). Regression: of one near plane of centimetres all past 2 km lay on the far plane, cut off: through the
+			 * window of a ship coming down no ground, no sky.
+			 */
+			if (surface.Ship && surface.ShipNear) {
+				renderer.DepthRange(0, 0.0005);
+
+				drawSurfaceShip(math.Multiply(math.Perspective(scene.Camera.Fov, aspect, surface.ShipNear, surface.ShipFar || 5), view), lit, sunColor);
+
+				renderer.DepthRange();
+			}
+			else if (surface.Ship) {
 				drawSurfaceShip(matrix, lit, sunColor);
+			}
 
 			if (posted)
 				engine.PostEnd(Object.assign({Matrix: matrix, Sun: sun, SunColor: sunColor, Sky: false, Heat: surface.Heat, Clouds: surfaceClouds(surface, object, sun, sunColor)}, lens()));
@@ -12304,8 +12683,11 @@ Elemenx.Component('Scene', {
 				return;
 			}
 
-			if (scene.Ground) aimGround(elapsed);
-			else aim(elapsed);
+			/* On foot in a ship in flight (SceneAboard): the walk and the view are of its frame. */
+			if (!(engine.AfootView && engine.AfootView(elapsed))) {
+				if (scene.Ground) aimGround(elapsed);
+				else aim(elapsed);
+			}
 
 			/* A cutscene sets what it moves first; then the camera that shows the world is placed. */
 			if (engine.CinemaStep)
@@ -12319,6 +12701,15 @@ Elemenx.Component('Scene', {
 			if (engine.WeaponsStep)
 				engine.WeaponsStep(elapsed);
 
+			if (engine.SystemsStep)
+				engine.SystemsStep(elapsed);
+
+			if (engine.AboardStep)
+				engine.AboardStep(elapsed);
+
+			if (engine.TacticsStep)
+				engine.TacticsStep(elapsed);
+
 			if (engine.DebrisStep)
 				engine.DebrisStep(elapsed);
 
@@ -12327,6 +12718,9 @@ Elemenx.Component('Scene', {
 
 			if (engine.RigsStep)
 				engine.RigsStep(elapsed);
+
+			if (engine.VehiclesIdle)
+				engine.VehiclesIdle(elapsed);
 
 			if (!quiet && renderer && !renderer.Lost && scene.Width && scene.Height) {
 				draw();
@@ -13694,6 +14088,9 @@ Elemenx.Component('Scene', {
 		this.PipingStart();
 		this.CameraStart();
 		this.CinemaStart();
+		this.SystemsStart();
+		this.AboardStart();
+		this.TacticsStart();
 
 		if (renderer) {
 			this.ScatterStart();
@@ -13828,7 +14225,14 @@ Elemenx.Component('Scene', {
 	},
 
 	PointerDown: function (event) {
-		if (this.Fingered(event)) return;
+		/* A finger does its gestures, but on the screen of an element it presses it as a mouse does (SceneScreens). */
+		if (this.Fingered(event)) {
+			if (this.ScreenPointer)
+				this.ScreenPointer('down', event);
+
+			return;
+		}
+
 		if (this.RunBehaviours('Pointer', ['down', event])) return;
 		if (this.ScreenPointer && this.ScreenPointer('down', event)) return;
 		if (this.WeaponsPointer && this.WeaponsPointer('down', event)) return;
@@ -13847,8 +14251,11 @@ Elemenx.Component('Scene', {
 		if (event.target.setPointerCapture && !document.pointerLockElement)
 			event.target.setPointerCapture(event.pointerId);
 
-		/* With a hero the first press takes the pointer: the mouse then turns the view by itself, Escape gives it back. */
-		if (scene.Hero && self.Capture !== false && self.Capture !== 'false' && event.button === 0 && !this.Captured() && event.target.requestPointerLock)
+		/*
+		 * With a hero the first press takes the pointer: the mouse then turns the view by itself, Escape gives it back. Not at a
+		 * console (SceneAboard): its screen is pressed there; nor in a mode of a seat but a turret (SceneTactics).
+		 */
+		if (scene.Hero && !scene.DeskOf && (!scene.Tactic || scene.Tactic === 'turret') && self.Capture !== false && self.Capture !== 'false' && event.button === 0 && !this.Captured() && event.target.requestPointerLock)
 			held = event.target.requestPointerLock();
 
 		if (held && held.catch)
@@ -13871,7 +14278,14 @@ Elemenx.Component('Scene', {
 	},
 
 	PointerMove: function (event) {
-		if (this.Fingered(event)) return;
+		/* A finger does its gestures, but on the screen of an element it presses it as a mouse does (SceneScreens). */
+		if (this.Fingered(event)) {
+			if (this.ScreenPointer)
+				this.ScreenPointer('move', event);
+
+			return;
+		}
+
 		if (this.RunBehaviours('Pointer', ['move', event])) return;
 		if (this.ScreenPointer && this.ScreenPointer('move', event)) return;
 
@@ -14003,7 +14417,14 @@ Elemenx.Component('Scene', {
 	},
 
 	PointerUp: function (event) {
-		if (this.Fingered(event)) return;
+		/* A finger does its gestures, but on the screen of an element it presses it as a mouse does (SceneScreens). */
+		if (this.Fingered(event)) {
+			if (this.ScreenPointer)
+				this.ScreenPointer('up', event);
+
+			return;
+		}
+
 
 		/*
 		 * Taken by a behaviour (an order of GameStrategy) or by a screen: what the press began ends all the same.
@@ -14017,6 +14438,13 @@ Elemenx.Component('Scene', {
 
 		if (this.WeaponsPointer)
 			this.WeaponsPointer('up', event);
+
+		/* A press in a mode of a seat with the pointer free (SceneTactics): what it is on may be the target. */
+		if (this.TacticsPointer && this.TacticsPointer('up', event)) {
+			this.PointerCancel(event);
+
+			return;
+		}
 
 		var scene = this.Scene();
 		var drag = scene.Drag;
@@ -14173,6 +14601,13 @@ Elemenx.Component('Scene', {
 
 		event.preventDefault();
 
+		/* In a mode of a seat round its vehicle (SceneTactics) the wheel brings the view nearer or farther. */
+		if (this.Scene().Tactic && this.Scene().Tactic !== 'turret' && this.Scene().TacticReach) {
+			this.Scene().TacticReach = Math.max(4, Math.min(5000, this.Scene().TacticReach * Math.exp(amount * 0.0015)));
+
+			return;
+		}
+
 		/* On the ground the wheel is the altitude: down to the height of an eye, up to where the air ends (a ship over it: near or far, as in space). */
 		if (surface && !surface.Ship) {
 			if (!surface.Rising)
@@ -14211,6 +14646,7 @@ Elemenx.Component('Scene', {
 		/* What is typed into a screen goes to it, not to the scene. */
 		if (this.ScreenTyped && this.ScreenTyped(event)) return;
 		if (this.CinemaKey && this.CinemaKey(event)) return;
+		if (this.TacticsKey && this.TacticsKey(event)) return;
 
 		/* Ctrl+Shift+L: the colors of the levels of detail on and off, in any scene. */
 		if (event.code === 'KeyL' && event.ctrlKey && event.shiftKey && !event.repeat) {
@@ -14228,6 +14664,13 @@ Elemenx.Component('Scene', {
 			this.Person = {third: 'first', first: 'shoulder', shoulder: 'third'}[this.Person] || 'third';
 
 			this.$Emit('person', this.Person);
+		}
+
+		/* G gets into the vehicle the hero stands by, or out of the one it drives (SceneVehicles.BoardKey); in space too, out of a ship with an inside in flight. */
+		if (event.code === 'KeyG' && scene.Hero && (!scene.Surface || scene.Surface.Ship) && !event.repeat && this.BoardKey && this.BoardKey()) {
+			event.preventDefault();
+
+			return;
 		}
 
 		/* And B from one shoulder to the other. */
@@ -15031,6 +15474,35 @@ Elemenx.Component('Scene', {
 		return this.Install(shaders, 'void blueprintBake(vec3 p, inout vec4 surface, inout vec4 sky) {}', this.BakeMade);
 	},
 
+	/*
+	 * The light of the sky of the scene in its shaders: its SkyLightGraph (or Graphs['shader/sky-light']), else the one of
+	 * the library, a graph of numbers made a function of GLSL (BlueprintShaders.NumericGLSL) in place of SkyLight of the
+	 * Renderer: skyLight(way, spread, sky, ground, sun, gain), one model for all that mirrors it and that it lights. One that
+	 * cannot be made is told, the one of the library drawn.
+	 */
+	SkyLit: function () {
+		var shaders = this.$Service('BlueprintShaders');
+		var chunks = this.$Service('Renderer').Chunks;
+		var given = this.GraphOf('SkyLightGraph', 'shader/sky-light');
+		var names = {WayY: 'way.y', SunDot: 'dot(way, sun)', SunY: 'sun.y', Spread: 'spread', SkyR: 'sky.r', SkyG: 'sky.g', SkyB: 'sky.b', FloorR: 'ground.r', FloorG: 'ground.g', FloorB: 'ground.b', Gain: 'gain'};
+		var library = Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/sky-light');
+		var made;
+
+		try {
+			made = shaders.NumericGLSL(typeof given === 'string' ? JSON.parse(given) : given || library, {});
+		}
+		catch (error) {
+			if (window.console && window.console.warn)
+				window.console.warn('Elemenx Scene: the SkyLightGraph cannot be made, the light of the sky of the library is drawn: ' + error.message);
+
+			made = shaders.NumericGLSL(library, {});
+		}
+
+		return [chunks[made.Need], 'vec3 skyLight(vec3 way, float spread, vec3 sky, vec3 ground, vec3 sun, float gain) {', '	return vec3(' + made.Name + '(' + made.Inputs.map(function (input) {
+			return names[input.Name] || '0.0';
+		}).join(', ') + '));', '}'].join('\n');
+	},
+
 	/* A graph of the scene of its own: its prop, else the one of its Graphs of that name, else null. */
 	GraphOf: function (prop, name) {
 		return this[prop] || (this.Graphs && typeof this.Graphs === 'object' ? this.Graphs[name] : null) || null;
@@ -15721,6 +16193,12 @@ Elemenx.Component('Scene', {
 				'uniform vec3 uOrigin;',
 				/* An outline: each corner pushed out along its normal, as far as a few pixels are where it is (0: none). */
 				'uniform float uOutline;',
+				/*
+				 * A shell of a shield: each corner pushed this far (units of the scene; 0: none) out from the middle of what it guards
+				 * (uShellCenter): by where it is, not by the normal of its face, so the faces of a model of corners stay joined.
+				 */
+				'uniform float uGrow;',
+				'uniform vec3 uShellCenter;',
 				'out vec3 vWorld;',
 				'out vec3 vNormal;',
 				'out vec3 vLocal;',
@@ -15748,6 +16226,11 @@ Elemenx.Component('Scene', {
 				'	blueprintWind(aPosition, aNormal, aUV, aInstance.w, aInstance5.a, length(aInstance3.xyz), world, bent);',
 				'	blueprintVertex(aPosition, aNormal, aUV, aInstance.w, aInstance5.a, length(aInstance3.xyz), world, bent);',
 				'	if (uOutline > 0.0) world += normalize(bent) * uOutline * length(world);',
+				'	if (uGrow > 0.0) {',
+				'		vec3 outward = normalize(world - uShellCenter + bent * 0.001);',
+				'		world += outward * uGrow;',
+				'		bent = normalize(mix(bent, outward, 0.7));',
+				'	}',
 				'	vWorld = world;',
 				'	vNormal = normalize(bent);',
 				'	vLocal = aPosition;',
@@ -15775,6 +16258,12 @@ Elemenx.Component('Scene', {
 				'uniform vec3 uOrigin;',
 				/* An outline: each corner pushed out along its normal, as far as a few pixels are where it is (0: none). */
 				'uniform float uOutline;',
+				/*
+				 * A shell of a shield: each corner pushed this far (units of the scene; 0: none) out from the middle of what it guards
+				 * (uShellCenter): by where it is, not by the normal of its face, so the faces of a model of corners stay joined.
+				 */
+				'uniform float uGrow;',
+				'uniform vec3 uShellCenter;',
 				'uniform sampler2D uPalette;',
 				'uniform float uJointOffset;',
 				'out vec3 vWorld;',
@@ -15832,6 +16321,11 @@ Elemenx.Component('Scene', {
 				'	blueprintWind(aPosition, aNormal, aUV, 0.0, aInstance5.a, length(aInstance3.xyz), world, bent);',
 				'	blueprintVertex(aPosition, aNormal, aUV, 0.0, aInstance5.a, length(aInstance3.xyz), world, bent);',
 				'	if (uOutline > 0.0) world += normalize(bent) * uOutline * length(world);',
+				'	if (uGrow > 0.0) {',
+				'		vec3 outward = normalize(world - uShellCenter + bent * 0.001);',
+				'		world += outward * uGrow;',
+				'		bent = normalize(mix(bent, outward, 0.7));',
+				'	}',
 				'	vWorld = world;',
 				'	vNormal = normalize(bent);',
 				'	vLocal = aPosition;',
@@ -15943,7 +16437,9 @@ Elemenx.Component('Scene', {
 				'uniform vec3 uSun;',
 				'uniform vec3 uSunColor;',
 				'uniform vec3 uSkyLight;',
+				'uniform vec3 uFloorLight;',
 				'out vec4 outColor;',
+				graphics.Chunks.SkyLight,
 				'void main() {',
 				'	vec3 v = normalize(-vWorld);',
 				'	vec3 n = normalize(vNormal);',
@@ -15952,7 +16448,7 @@ Elemenx.Component('Scene', {
 				'	float fresnel = 0.04 + 0.96 * pow(1.0 - max(dot(n, v), 0.0), 5.0);',
 				'	vec3 r = reflect(-v, n);',
 				'	float glint = pow(max(dot(r, uSun), 0.0), mix(600.0, 24.0, uFrost)) * mix(6.0, 0.6, uFrost);',
-				'	vec3 sky = uSkyLight * (0.7 + 0.6 * max(r.y, 0.0)) + vec3(0.18, 0.22, 0.28) * max(r.y, 0.0);',
+				'	vec3 sky = skyLight(r, uFrost, uSkyLight, uFloorLight, uSun, 1.25);',
 				'	sky = mix(sky, textureLod(uMirror, (gl_FragCoord.xy / uScreen * 2.0 - 1.0 - uRect.xy) / (uRect.zw - uRect.xy), uFrost * 6.0).rgb, uOn * front);',
 				'	vec2 side = min(vUV, 1.0 - vUV) * uSize;',
 				'	float rim = 1.0 - smoothstep(0.01, 0.035, min(side.x, side.y));',
@@ -16077,6 +16573,10 @@ Elemenx.Component('Scene', {
 				'uniform float uMoving;',
 				'uniform float uGlass;',
 				'uniform vec4 uCut;',
+				'uniform vec4 uHoleAt;',
+				'uniform vec4 uHoleHalf;',
+				'uniform mat3 uHoleTurn;',
+				'uniform float uHeroFade;',
 				'uniform sampler2D uSpecularMap;',
 				'uniform sampler2D uColorMap;',
 				'uniform sampler2D uNormalMap;',
@@ -16117,6 +16617,14 @@ Elemenx.Component('Scene', {
 				'void blueprintWeather() {}',
 				'void main() {',
 				'	if (uCut.w > 0.0 && distance(vWorld, uCut.xyz) < uCut.w) discard;',
+				/* A hole cut in a hull (over the ramp of a ship standing: SceneAboard), a box turned by its yaw. */
+				'	if (uHoleHalf.w > 0.5) {',
+				'		vec3 off = vWorld - uHoleAt.xyz;',
+				'		vec3 inHole = uHoleTurn * off;',
+				'		if (all(lessThan(abs(inHole), uHoleHalf.xyz))) discard;',
+				'	}',
+				/* A hero the view is too close to fades in a dither (its own TAA blends it). */
+				'	if (uHeroFade > 0.0 && fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) < uHeroFade) discard;',
 				'	vec4 base = uBaseColor * texture(uColorMap, vUV);',
 				/*
 				 * What is cut by its alpha keeps as much of it far as near: the alpha of each step of its mipmap, the mean of the one
@@ -16214,8 +16722,8 @@ Elemenx.Component('Scene', {
 				'	total += albedo * (1.0 - metallic) * localLight(vWorld, n);',
 				'	float occlusion = mix(1.0, texture(uOcclusionMap, vUV).r, uOcclusion);',
 				'	vec3 reflected = reflect(-v, n);',
-				'	vec3 around = aroundLight(vWorld, n, mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5));',
-				'	vec3 mirrored = mix(uFloorLight, uSkyLight, reflected.y * 0.5 + 0.5);',
+				'	vec3 around = aroundLight(vWorld, n, skyLight(n, 1.0, uSkyLight, uFloorLight, uSkySun, 1.25));',
+				'	vec3 mirrored = skyLight(reflected, roughness, uSkyLight, uFloorLight, uSkySun, 1.25) * indoorDaylight(vWorld + n * 0.3);',
 				'	vec3 fresnel = f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(1.0 - nv, 5.0);',
 				/* With the reflections of the screen on (uScreenMirror), what a dielectric mirrors is theirs, added over it: not the sky here too. */
 				'	float screened = uScreenMirror > 0.5 && (metallic < 0.5 || uClearcoat * (1.0 - uCoatRough) > 1.0 - roughness) ? 0.0 : 1.0;',
@@ -16542,7 +17050,7 @@ Elemenx.Component('Scene', {
 				'	float beamed = weather_dissolve(vWorld, color);',
 				'	vec3 hot = max(vColor - vec3(1.0), 0.0) + uDissolveColor * beamed * 3.0;',
 				'	lightShade = sunLit(vWorld, n);',
-				'	vec3 sky = mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5);',
+				'	vec3 sky = skyLight(n, 1.0, uSkyLight, uFloorLight, uSkySun, 1.25);',
 				'	vec3 light = lighting(vWorld, n, v, uShine, uSpecular) - sky + aroundLight(vWorld, n, sky);',
 				'	light = (max(light, vec3(0.0)) + localLight(vWorld, n)) * (1.0 - (vWet.x > 0.5 ? clamp(vWet.x - 1.0, 0.0, 1.0) : uWet) * 0.25);',
 				'	if (uSoft > 0.0 && uLightCount > 0) {',
@@ -16573,6 +17081,27 @@ Elemenx.Component('Scene', {
 				'		a = pow(clamp(1.0 - (d - uInner) / (1.0 - uInner), 0.0, 1.0), 2.6) * 0.85;',
 				'	}',
 				'	outColor = vec4(uColor * a, a);',
+				'}'
+			].join('\n'),
+
+			/*
+			 * A layer of a shield as a shell round the outline of what it guards: clear where it is seen square on, bright at its
+			 * edges, a slow ripple of light going over it; brighter the fuller it is (uColor.a), a flash where it was just hit.
+			 */
+			Shell: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'in vec3 vLocal;',
+				'uniform vec4 uColor;',
+				'uniform float uFlash;',
+				'uniform float uTime;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	vec3 n = normalize(vNormal);',
+				'	float edge = pow(1.0 - abs(dot(n, normalize(-vWorld))), 2.5);',
+				'	float ripple = 0.5 + 0.5 * sin(dot(vLocal, vec3(9.0, 7.0, 11.0)) - uTime * 3.0);',
+				'	vec3 color = uColor.rgb * ((0.03 + edge * 0.55) * (0.75 + 0.25 * ripple) * uColor.a + uFlash * (0.35 + edge));',
+				'	outColor = vec4(color, 1.0);',
 				'}'
 			].join('\n'),
 
@@ -17084,6 +17613,7 @@ Elemenx.Component('Scene', {
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				graphics.Chunks.Shadow,
+				graphics.Chunks.SkyLight,
 				ripples,
 				materials.Helpers,
 				/* What its ground is made of: nothing here; a ground puts the materials of its slots in this place (SceneMaterials.Land). */
@@ -17128,11 +17658,9 @@ Elemenx.Component('Scene', {
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				waves,
+				graphics.Chunks.SkyLight,
 				'vec3 reflectedSky(vec3 way) {',
-				'	float up = clamp(way.y, 0.0, 1.0);',
-				'	float low = 1.0 - smoothstep(0.0, 0.5, abs(uSun.y));',
-				'	vec3 sky = mix(mix(uAir.rgb, vec3(1.0), 0.5), uAir.rgb * vec3(0.38, 0.55, 1.0), pow(up, 0.5));',
-				'	return sky + vec3(1.0, 0.54, 0.2) * low * exp(-up * 5.5) * (0.3 + 1.1 * pow(dot(way, uSun) * 0.5 + 0.5, 4.0));',
+				'	return skyLight(way, 0.0, uAir.rgb, uAir.rgb * 0.3, uSun, 1.0);',
 				'}',
 				'vec4 mirrored(vec3 from, vec3 way) {',
 				'	vec3 at = from;',

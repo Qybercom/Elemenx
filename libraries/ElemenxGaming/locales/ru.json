@@ -51,6 +51,60 @@
 				}
 			}
 		},
+		"console": {
+			"label": "Пульт",
+			"stand": "Встать",
+			"roles": {
+				"pilot": "Пилот",
+				"copilot": "Второй пилот",
+				"captain": "Капитан",
+				"engineer": "Бортинженер",
+				"tactical": "Тактика",
+				"gunner": "Стрелок",
+				"sensors": "Датчики",
+				"commander": "Командир"
+			}
+		},
+		"dash": {
+			"label": "Приборы",
+			"speed": "Скорость",
+			"gear": "Передача",
+			"revolutions": "Обороты"
+		},
+		"flight": {
+			"label": "Полёт",
+			"speed": "Скорость",
+			"height": "Высота",
+			"travel": "Путь",
+			"throttle": "Газ",
+			"shield": "Щит {id}",
+			"tripped": "Выключен перегревом",
+			"on": "Вкл",
+			"vent": "Сброс тепла",
+			"engines": "Двигатели",
+			"shields": "Щиты",
+			"weapons": "Оружие",
+			"nav": "Известные места",
+			"jammed": "Варп блокирует {id} через {km} км",
+			"jammedIn": "Здесь варп блокирует {id}"
+		},
+		"radar": {
+			"label": "Радар"
+		},
+		"tactics": {
+			"label": "Режимы места",
+			"modes": {
+				"seat": "Пульт",
+				"helm": "Штурвал",
+				"turret": "Турель",
+				"radar": "Радар",
+				"schematic": "Схема",
+				"strategic": "Командование"
+			}
+		},
+		"targets": {
+			"label": "Цели"
+		},
 		"vitals": {
 			"health": "Прочность"
 		}

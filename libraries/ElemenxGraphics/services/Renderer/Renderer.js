@@ -15,7 +15,10 @@
  *   Chunks.Lights is the light of up to 4 points on a surface, with the shadows of up to 4 balls (lighting(position,
  *   normal, view, shine, specular); the global lightShade dims its first light). Chunks.Shadow reads a shadow map
  *   (sunShadow(position, normal): 0 in the shadow, 1 in the light; uniforms uShadowMap, uShadowMatrix, uShadowBias,
- *   uShadowOn).
+ *   uShadowOn). Chunks.SkyLight is the light of the sky along a way (skyLight(way, spread, sky, ground, sun, gain): 0 a
+ *   mirror, 1 what is lit all round), of ground and sky only as it is: a renderer's Replaces ({text: what goes in its
+ *   place}, set before its programs) puts other texts in place of theirs in each shader it compiles (a Scene its graph of
+ *   the light of the sky, shader/sky-light).
  *
  * Create(canvas, options) returns a renderer, or null where there is no WebGL2 (options: Alpha, Antialias, Ratio); its
  * Destroy lets go of all it made, its context kept with those let go and given back the oldest first only when the page
@@ -52,7 +55,9 @@
  * - Counts(): what it drew since it was made, {Draws, Triangles} (the copies of an instanced mesh counted): the
  *   difference of two of them is what a frame, or a second, costs.
  * - Resize(width, height, ratio), Clear(color) ([r, g, b, a], 0 to 1), Winding(clockwise) (the front of a triangle goes round
- *   clockwise: a world drawn as a mirror shows it), Lost (the context was taken by the browser),
+ *   clockwise: a world drawn as a mirror shows it), DepthRange(near, far) (what is drawn next lays its depth within near and
+ *   far of the buffer, 0 to 1: a near pass of its own nearer than all a far one drew; DepthRange() all of it again), Lost
+ *   (the context was taken by the browser),
  *   Destroy().
  */
 Elemenx.Service('Renderer', {
@@ -295,6 +300,11 @@ Elemenx.Service('Renderer', {
 			'uniform int uOccluderCount;',
 			'uniform vec3 uSkyLight;',
 			'uniform vec3 uFloorLight;',
+			/* The way to the sun, for the light of the sky (skyLight: see SkyLight, the same text, a graph of a Scene put in its place). */
+			'uniform vec3 uSkySun;',
+			'vec3 skyLight(vec3 way, float spread, vec3 sky, vec3 ground, vec3 sun, float gain) {',
+			'	return mix(ground, sky, way.y * 0.5 + 0.5);',
+			'}',
 			'float lightShade = 1.0;',
 			'float shadow(vec3 position, vec3 light) {',
 			'	float lit = 1.0;',
@@ -313,7 +323,7 @@ Elemenx.Service('Renderer', {
 			'	return lit;',
 			'}',
 			'vec3 lighting(vec3 position, vec3 normal, vec3 view, float shine, float specular) {',
-			'	vec3 total = mix(uFloorLight, uSkyLight, normal.y * 0.5 + 0.5);',
+			'	vec3 total = skyLight(normal, 1.0, uSkyLight, uFloorLight, uSkySun, 1.25);',
 			'	for (int i = 0; i < 4; i++) {',
 			'		if (i >= uLightCount) break;',
 			'		vec3 toLight = normalize(uLightPositions[i] - position);',
@@ -325,6 +335,17 @@ Elemenx.Service('Renderer', {
 			'		total += uLightColors[i] * (diffuse + gloss) * lit;',
 			'	}',
 			'	return total;',
+			'}'
+		].join('\n'),
+
+		/*
+		 * The light of the sky along a way (one model for what mirrors it and what it lights): spread 0 a mirror, 1 what is
+		 * lit all round; sky its light, ground the light of the ground, sun the way to the sun, gain how much brighter the sky
+		 * is along a way than on the mean. As it is, of ground and sky only; a Scene puts its graph in its place (Replaces).
+		 */
+		SkyLight: [
+			'vec3 skyLight(vec3 way, float spread, vec3 sky, vec3 ground, vec3 sun, float gain) {',
+			'	return mix(ground, sky, way.y * 0.5 + 0.5);',
 			'}'
 		].join('\n'),
 
@@ -468,10 +489,23 @@ Elemenx.Service('Renderer', {
 			'	vec4 at = uShadowMatrix * vec4(position, 1.0);',
 			'	return pow(textureLod(uBounce, at.xy * 0.5 + 0.5, 3.0).rgb, vec3(2.2)) * 0.55;',
 			'}',
-			/* The shadows of the clouds that are there: the map of what they hold, along the way to the sun. */
+			/*
+			 * The daylight in the rooms of a ship standing (Scene: SceneAboard): a box turned by its yaw (uIndoorAt.xyz its middle
+			 * from the eye, w its yaw; uIndoorHalf.xyz its half sizes, w 1 + what of the day still comes in), the daylight going
+			 * over a quarter of a metre at its sides; 1 out of it, and with no box (w 0).
+			 */
+			'uniform vec4 uIndoorAt;',
+			'uniform vec4 uIndoorHalf;',
+			'float indoorDaylight(vec3 position) {',
+			'	if (uIndoorHalf.w < 0.5) return 1.0;',
+			'	vec3 off = position - uIndoorAt.xyz;',
+			'	vec3 inside = abs(vec3(cos(uIndoorAt.w) * off.x - sin(uIndoorAt.w) * off.z, off.y, sin(uIndoorAt.w) * off.x + cos(uIndoorAt.w) * off.z)) - uIndoorHalf.xyz;',
+			'	return mix(uIndoorHalf.w - 1.0, 1.0, smoothstep(-0.25, 0.25, max(max(inside.x, inside.y), inside.z)));',
+			'}',
+			/* The shadows of the clouds that are there: the map of what they hold, along the way to the sun; none in the rooms of a ship. */
 			'float sunLit(vec3 position, vec3 normal) {',
 			'	float cloud = uCloudShade.w > 0.0 ? texture(uCloudMap, (position.xz + uCloudShade.xy) * uCloudShade.z + 0.5).r : 0.0;',
-			'	return sunShadow(position, normal) * (1.0 - uCloudShade.w * cloud);',
+			'	return sunShadow(position, normal) * (1.0 - uCloudShade.w * cloud) * indoorDaylight(position + normal * 0.3);',
 			'}',
 			/* Lamps, fires, what shines near: each to its radius, a spot within its cone. Their light has no shadow. */
 			'float lampSeen(int index, vec3 position) {',
@@ -613,11 +647,12 @@ Elemenx.Service('Renderer', {
 			'	return mix(open, probed, weight);',
 			'}',
 			'vec3 aroundLight(vec3 position, vec3 normal, vec3 sky) {',
+			'	float indoor = indoorDaylight(position + normal * 0.3);',
 			'	vec3 open = (sky * skySeen(position) + sunBounce(position)) * caveDaylight(position + normal * 0.5);',
-			'	if (uProbeOn < 0.5) return open;',
+			'	if (uProbeOn < 0.5) return open * indoor;',
 			'	float weight;',
 			'	vec3 probed = probeLight(position, normal, weight);',
-			'	return mix(open, probed, weight);',
+			'	return mix(open, probed, weight) * indoor;',
 			'}',
 			/* The same for what is drawn very many times (grass): one and the same now, its name kept for them. */
 			'vec3 aroundSoft(vec3 position, vec3 normal, vec3 sky) {',
@@ -769,7 +804,18 @@ Elemenx.Service('Renderer', {
 		parallel = gl.getExtension('KHR_parallel_shader_compile');
 		modes = {'triangles': gl.TRIANGLES, 'lines': gl.LINES, 'line-strip': gl.LINE_STRIP, 'line-loop': gl.LINE_LOOP, 'points': gl.POINTS};
 
-		function compile (type, source) {
+		/* A shader with the texts of Replaces of the renderer put in place of theirs (the light of the sky of a graph: SkyLight). */
+		function replaced (source) {
+			Object.keys(renderer.Replaces || {}).forEach(function (from) {
+				if (source.indexOf(from) !== -1)
+					source = source.split(from).join(renderer.Replaces[from]);
+			});
+
+			return source;
+		}
+
+		function compile (type, given) {
+			var source = replaced(given);
 			var key = type + ':' + source;
 			var shader = shaders[key];
 			if (shader)
@@ -1203,6 +1249,12 @@ Elemenx.Service('Renderer', {
 			Ratio: 1,
 			Lost: false,
 
+			/*
+			 * Texts of its shaders put in place of others in each it compiles ({text: what goes in its place}), set before its
+			 * programs are made: the light of the sky of a graph (Scene, shader/sky-light) in place of SkyLight of Chunks.
+			 */
+			Replaces: {},
+
 			Program: function (vertex, fragment, behind) {
 				var key = vertex + '\n--\n' + fragment;
 				var program = programs[key];
@@ -1243,7 +1295,7 @@ Elemenx.Service('Renderer', {
 				[[gl.VERTEX_SHADER, vertex], [gl.FRAGMENT_SHADER, fragment]].forEach(function (pair) {
 					var shader = gl.createShader(pair[0]);
 
-					gl.shaderSource(shader, pair[1]);
+					gl.shaderSource(shader, replaced(pair[1]));
 					gl.compileShader(shader);
 
 					if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS) && !gl.isContextLost())
@@ -1800,6 +1852,11 @@ Elemenx.Service('Renderer', {
 			/* Which way the front of a triangle goes round: clockwise for a world drawn as a mirror shows it (its turn is the other way). */
 			Winding: function (clockwise) {
 				gl.frontFace(clockwise ? gl.CW : gl.CCW);
+			},
+
+			/* The part of the depth buffer what is drawn next lays its depth in (0 to 1); none given: all of it. */
+			DepthRange: function (near, far) {
+				gl.depthRange(near === undefined ? 0 : near, far === undefined ? 1 : far);
 			},
 
 			/*

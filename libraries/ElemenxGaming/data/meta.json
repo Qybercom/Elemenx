@@ -1373,6 +1373,434 @@
 			"Sample": {}
 		},
 		{
+			"Name": "GameDash",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "trophy",
+			"Description": "The instruments of a game over a Scene: of a vehicle its speed, gear, revolutions, indicators and lights; of a character on foot its health and pace.",
+			"Props": [
+				{
+					"Name": "For",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of what it reads; empty: the hero, as it changes."
+				},
+				{
+					"Name": "Every",
+					"Type": "number",
+					"Default": 0.1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How often it reads, in seconds."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "small, medium or large."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"Size": "medium"
+			}
+		},
+		{
+			"Name": "GameFlight",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "trophy",
+			"Description": "The instruments of a ship over a Scene: speed, height and air, travel, throttle, reactors, power, layers of its shield, a blocker of warp, the places it knows.",
+			"Props": [
+				{
+					"Name": "For",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the ship it reads; empty: the hero."
+				},
+				{
+					"Name": "Every",
+					"Type": "number",
+					"Default": 0.15,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How often it reads, in seconds."
+				},
+				{
+					"Name": "Nav",
+					"Type": "number",
+					"Default": 5,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How many places it knows it shows, the nearest first."
+				},
+				{
+					"Name": "Engineer",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Adds the hands of an engineer: the shares of the power, the reactors on and off, venting their heat."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "small, medium or large."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"Engineer": true
+			}
+		},
+		{
+			"Name": "GameTactics",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "crosshair",
+			"Description": "The modes of the seat the hero sits in (its seat, helm, turret, radar, schematic): a button for each, the one it is in marked.",
+			"Props": [
+				{
+					"Name": "Every",
+					"Type": "number",
+					"Default": 0.25,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How often it reads, in seconds."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "small, medium or large."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "GameRadar",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "compass",
+			"Description": "The radar of a vehicle: what it knows round it, as a map from over it (plan) or the space round it (bubble); a press makes a contact its target.",
+			"Props": [
+				{
+					"Name": "For",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the vehicle; empty: the one the hero sits in, or is in."
+				},
+				{
+					"Name": "Shape",
+					"Type": "select",
+					"Default": "plan",
+					"Options": [
+						"plan",
+						"bubble"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "plan (a map from over it) or bubble (the space round it)."
+				},
+				{
+					"Name": "Range",
+					"Type": "number",
+					"Default": 150,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How far it shows, in metres."
+				},
+				{
+					"Name": "Every",
+					"Type": "number",
+					"Default": 0.2,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How often it reads, in seconds."
+				},
+				{
+					"Name": "Size",
+					"Type": "number",
+					"Default": 180,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its width in pixels."
+				},
+				{
+					"Name": "Zoomable",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Adds the + and - buttons."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"target"
+			],
+			"EventDescriptions": {
+				"target": "A contact was pressed and made the target: {Vehicle, Target}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Shape": "bubble"
+			}
+		},
+		{
+			"Name": "GameConsole",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "monitor",
+			"Description": "The screen of a console of a ship, shown on the consoles inside it: its role, the ship, its instruments, and a button to stand up from the seat.",
+			"Props": [
+				{
+					"Name": "For",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the ship; empty: the one the hero sits in."
+				},
+				{
+					"Name": "Role",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"pilot",
+						"copilot",
+						"captain",
+						"engineer",
+						"tactical",
+						"gunner",
+						"sensors",
+						"commander"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The role of the console; empty: the one of the seat the hero sits in."
+				},
+				{
+					"Name": "Every",
+					"Type": "number",
+					"Default": 0.25,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How often it reads, in seconds."
+				},
+				{
+					"Name": "Radar",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the radar of the ship beside its instruments."
+				},
+				{
+					"Name": "RadarRange",
+					"Type": "number",
+					"Default": 200,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How far its radar shows, in metres."
+				},
+				{
+					"Name": "RadarSize",
+					"Type": "number",
+					"Default": 150,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The width of its radar, in pixels."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "small, medium or large."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"Role": "engineer"
+			}
+		},
+		{
+			"Name": "GameTargets",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "target",
+			"Description": "Marks over the view on what the vehicle of the hero knows: frames, names and distances, its target and the lead of a turret.",
+			"Props": [
+				{
+					"Name": "For",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the vehicle; empty: the one the hero sits in."
+				},
+				{
+					"Name": "Show",
+					"Type": "select",
+					"Default": "auto",
+					"Options": [
+						"auto",
+						"all",
+						"target"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "auto (by the mode of the seat), all or target."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"Show": "all"
+			}
+		},
+		{
 			"Name": "GameStrategy",
 			"Kind": "Component",
 			"Group": "game",
@@ -1414,6 +1842,18 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "The units selected from the start (IDs: a list, or text with commas), as they come."
+				},
+				{
+					"Name": "Command",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"seat"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "seat: only in the strategic view of the seat of the hero, its units those it commands."
 				},
 				{
 					"Name": "Label",
@@ -1461,6 +1901,7 @@
 				"Make(options)",
 				"Of(scene)",
 				"Settings(object)",
+				"UnitOf(object)",
 				"Card(ledger, object, rows)",
 				"Target(ledger, object)",
 				"Bar(context, x, y, part, color, width, height)"
@@ -1782,7 +2223,40 @@
 			"down",
 			"up"
 		],
-		"elemenx-game-leaderboard-score": []
+		"elemenx-game-leaderboard-score": [],
+		"elemenx-game-dash": [
+			"large",
+			"small"
+		],
+		"elemenx-meter": [],
+		"elemenx-game-flight": [],
+		"elemenx-game-flight-row": [],
+		"elemenx-game-flight-reactor": [],
+		"elemenx-game-flight-nav": [],
+		"elemenx-game-flight-kind": [],
+		"elemenx-game-flight-far": [],
+		"elemenx-slider": [],
+		"elemenx-game-tactics": [],
+		"elemenx-game-radar": [],
+		"elemenx-game-radar-rings": [],
+		"elemenx-game-radar-space": [],
+		"elemenx-game-radar-bubble": [],
+		"elemenx-game-radar-foot": [],
+		"elemenx-game-radar-zoom": [],
+		"elemenx-game-console": [],
+		"elemenx-game-console-head": [],
+		"elemenx-game-console-role": [],
+		"elemenx-game-console-ship": [],
+		"elemenx-game-console-body": [],
+		"elemenx-game-console-row": [],
+		"elemenx-game-targets": [],
+		"elemenx-game-target": [
+			"ally",
+			"chosen",
+			"enemy"
+		],
+		"elemenx-game-target-name": [],
+		"elemenx-game-target-lead": []
 	},
 	"Kinds": [
 		{

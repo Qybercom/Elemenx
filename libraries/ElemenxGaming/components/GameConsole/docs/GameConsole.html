@@ -1,0 +1,10 @@
+<p class="elemenx-caption">GameConsole reads where the hero is of the Scene it stands in: here, as if the hero sat at the console of an engineer (Show takes a context as Context gives it).</p>
+<GameConsole #console Role="engineer" />
+<Button Label="Sit at the console" (click)="Sit" />
+<script>
+({
+	Sit: function () {
+		this.$Ref('console', true).Show({Kind: 'seat', Vehicle: 'tempest', Seat: 'engineer', Role: 'engineer', Controls: false});
+	}
+})
+</script>

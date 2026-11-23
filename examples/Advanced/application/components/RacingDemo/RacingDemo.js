@@ -19,9 +19,18 @@ Elemenx.Component('RacingDemo', {
 	RaceBoard: {Lap: '–', Time: '0:00.0', Best: '–'},
 	RaceLaps: 3,
 	RaceLapText: '',
-	RaceRpmPart: 0,
-	RaceGearOnly: 'N',
-	RaceSignals: {Left: false, Right: false, Lights: false},
+	/* The graph of the library open (vehicles/drives, vehicles/wheel): each change of it on the car at once. */
+	RaceGraphOpen: '',
+	RaceGraphOpened: function (name) {
+		this.RaceGraphOpen = this.RaceGraphOpen === name ? '' : name;
+	},
+	RaceGraphChanged: function (event) {
+		var given = event && event.detail ? event.detail : event;
+		var scene = this.RaceScene ? this.RaceScene() : null;
+		if (!scene) return;
+
+		scene[given.Name === 'vehicles/wheel' ? 'WheelGraph' : 'DrivesGraph'] = given.Graph || null;
+	},
 	RaceReady: function (scene) {
 		this.RaceScene = function () {
 			return scene;
@@ -52,7 +61,7 @@ Elemenx.Component('RacingDemo', {
 		scene.Add('grass', {ID: 'meadow', Density: 0.6, Height: 0.5});
 		scene.Add('road', track.Spec);
 
-		this.RaceWait(0);
+		this.RaceWaiting = true;
 
 		this.RaceWatch(scene);
 	},
@@ -63,7 +72,7 @@ Elemenx.Component('RacingDemo', {
 		window.clearInterval(this.RaceClock);
 
 		this.RaceClock = window.setInterval(function () {
-			var hero = scene.Scene().Objects.car;
+			var read;
 
 			if (!self.$Element().isConnected) {
 				window.clearInterval(self.RaceClock);
@@ -71,11 +80,11 @@ Elemenx.Component('RacingDemo', {
 				return;
 			}
 
-			self.RaceSpeed = hero && hero.Car ? Math.round(Math.abs(hero.Car.Forward) * 3.6) : 0;
-			self.RaceGearOnly = hero && hero.Car && hero.Car.Gear !== undefined ? (hero.Car.Gear < 0 ? 'R' : hero.Car.Gear === 0 ? 'N' : String(hero.Car.Gear)) : 'N';
-			self.RaceRpmPart = hero && hero.Car && hero.Car.Rpm ? Math.round(Math.min(1, hero.Car.Rpm / 7500) * 100) : 0;
-			self.RaceSignals = {Left: !!(hero && hero.Signals && (hero.Signals.Indicate === -1 || hero.Signals.Hazard) && Math.floor((hero.Blink || 0) / 0.36) % 2 === 0), Right: !!(hero && hero.Signals && (hero.Signals.Indicate === 1 || hero.Signals.Hazard) && Math.floor((hero.Blink || 0) / 0.36) % 2 === 0), Lights: !!(hero && hero.Signals && hero.Signals.Lights)};
-			self.RaceGear = hero && hero.Car && hero.Car.Gear !== undefined ? (hero.Car.Gear < 0 ? 'R' : hero.Car.Gear === 0 ? 'N' : String(hero.Car.Gear)) + ' · ' + Math.round(hero.Car.Rpm / 100) * 100 + ' rpm' : '';
+			/* The figures of the line over the scene, of what the instruments of the car read (Readout). */
+			read = scene.Readout('car');
+
+			self.RaceSpeed = read ? Math.round(read.Speed) : 0;
+			self.RaceGear = read && read.Rpm ? (read.Gear < 0 ? 'R' : read.Gear === 0 ? 'N' : String(read.Gear)) + ' · ' + Math.round(read.Rpm / 100) * 100 + ' rpm' : '';
 
 			self.RaceBoardRead();
 		}, 200);
@@ -94,19 +103,12 @@ Elemenx.Component('RacingDemo', {
 
 		this.RaceBoard = {Lap: mine.Finished ? 'Finished' : Math.min(this.RaceLaps, mine.Lap + 1) + '/' + this.RaceLaps, Time: this.RaceClockOf(mine.Finished ? mine.Last : mine.LapTime), Best: mine.Best ? this.RaceClockOf(mine.Best) : '–'};
 	},
-	RaceWait: function (tries) {
-		var self = this;
-		var scene = this.RaceScene();
-		var ground = scene.Scene().Ground;
+	/* Its ground came (ground of the Scene): the car on the track, once its roads are there. */
+	RaceWaiting: false,
+	RaceGrounded: function () {
+		if (!this.RaceWaiting || !this.RaceScene || !this.RaceScene().Roads().length) return;
 
-		if (!ground || !ground.Field || !scene.Roads().length) {
-			if (tries < 400)
-				window.setTimeout(function () {
-					self.RaceWait(tries + 1);
-				}, 50);
-
-			return;
-		}
+		this.RaceWaiting = false;
 
 		this.RaceCarPut();
 	},
@@ -138,13 +140,32 @@ Elemenx.Component('RacingDemo', {
 		}) ? 'doors' : ''}] : []).concat((car.Controls || []).map(function (each) {
 			return each.Name === 'doors' ? Object.assign({}, each, {Open: doors}) : each;
 		})), Gears: car.Gears || [0.3, 0.45, 0.58, 0.7, 0.81, 0.91, 1], Shift: car.Shift || 'auto', Lamps: car.Lamps || [], Mirrors: car.Mirrors || null, Screens: car.Screens || null}, car.Tune, this.RaceTune), Wet: this.RaceWashed ? 1 : '', Drops: this.RaceDrops});
-		scene.Control('car');
+
+		/* The driver: a character of its own, in the seat of the car (G or Get out: out by its side, in again). */
+		if (scene.Get('driver'))
+			scene.Remove('driver');
+
+		scene.Add('unit', {ID: 'driver', Name: 'Driver', Model: 'soldier', Size: 1.75, X: start.X + 3, Y: start.Z});
+		scene.Control('driver');
+		scene.Board('driver', 'car');
 
 		scene.Scene().Wanted = scene.Scene().Distance = 8;
 		scene.Scene().Yaw = start.Heading + Math.PI;
 		scene.Scene().Pitch = 0.16;
 
 		this.RaceRestart();
+	},
+	/* The driver gets out of the car by its side (the car going on as it was), or into it again when it stands by it. */
+	RaceAboard: true,
+	RaceBoarded: function () {
+		var scene = this.RaceScene ? this.RaceScene() : null;
+		if (scene)
+			scene.BoardKey();
+	},
+	RaceContext: function (event) {
+		var given = event && event.detail ? event.detail : event;
+		if (given && given.Actor === 'driver')
+			this.RaceAboard = given.Kind === 'seat';
 	},
 	/* The race again from the line: a new track, a car put on it. */
 	RaceRestart: function () {

@@ -1,0 +1,526 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "readout",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "readout-input-forward",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Forward"
+				}
+			]
+		},
+		{
+			"id": "readout-input-top",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Top"
+				}
+			]
+		},
+		{
+			"id": "readout-input-rpm",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Rpm"
+				}
+			]
+		},
+		{
+			"id": "readout-input-redline",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Redline"
+				}
+			]
+		},
+		{
+			"id": "readout-input-gear",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Gear"
+				}
+			]
+		},
+		{
+			"id": "readout-input-indicate",
+			"type": "Input",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Indicate"
+				}
+			]
+		},
+		{
+			"id": "readout-input-hazard",
+			"type": "Input",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Hazard"
+				}
+			]
+		},
+		{
+			"id": "readout-input-blink",
+			"type": "Input",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Blink"
+				}
+			]
+		},
+		{
+			"id": "readout-input-lights",
+			"type": "Input",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Lights"
+				}
+			]
+		},
+		{
+			"id": "readout-input-health",
+			"type": "Input",
+			"x": 0,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Health"
+				}
+			]
+		},
+		{
+			"id": "readout-input-maxhealth",
+			"type": "Input",
+			"x": 0,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "MaxHealth"
+				}
+			]
+		},
+		{
+			"id": "readout-step-on",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "floor(Blink / 0.36) % 2 < 0.5 ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "readout-formula-speed",
+			"type": "Formula",
+			"x": 680,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "abs(Forward) * 3.6"
+				}
+			]
+		},
+		{
+			"id": "readout-result-speed",
+			"type": "Result",
+			"x": 1040,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Speed"
+				}
+			]
+		},
+		{
+			"id": "readout-formula-topspeed",
+			"type": "Formula",
+			"x": 680,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Top * 3.6"
+				}
+			]
+		},
+		{
+			"id": "readout-result-topspeed",
+			"type": "Result",
+			"x": 1040,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "TopSpeed"
+				}
+			]
+		},
+		{
+			"id": "readout-formula-speedpart",
+			"type": "Formula",
+			"x": 680,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(1, abs(Forward) / max(1, Top))"
+				}
+			]
+		},
+		{
+			"id": "readout-result-speedpart",
+			"type": "Result",
+			"x": 1040,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "SpeedPart"
+				}
+			]
+		},
+		{
+			"id": "readout-formula-rpmpart",
+			"type": "Formula",
+			"x": 680,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Redline > 0 ? min(1, Rpm / Redline) : 0"
+				}
+			]
+		},
+		{
+			"id": "readout-result-rpmpart",
+			"type": "Result",
+			"x": 1040,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RpmPart"
+				}
+			]
+		},
+		{
+			"id": "readout-formula-gear",
+			"type": "Formula",
+			"x": 680,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Gear"
+				}
+			]
+		},
+		{
+			"id": "readout-result-gear",
+			"type": "Result",
+			"x": 1040,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Gear"
+				}
+			]
+		},
+		{
+			"id": "readout-formula-left",
+			"type": "Formula",
+			"x": 680,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Indicate < -0.5 ? 1 : Hazard > 0 ? 1 : 0) * On"
+				}
+			]
+		},
+		{
+			"id": "readout-result-left",
+			"type": "Result",
+			"x": 1040,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Left"
+				}
+			]
+		},
+		{
+			"id": "readout-formula-right",
+			"type": "Formula",
+			"x": 680,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Indicate > 0.5 ? 1 : Hazard > 0 ? 1 : 0) * On"
+				}
+			]
+		},
+		{
+			"id": "readout-result-right",
+			"type": "Result",
+			"x": 1040,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Right"
+				}
+			]
+		},
+		{
+			"id": "readout-formula-lights",
+			"type": "Formula",
+			"x": 680,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Lights > 0 ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "readout-result-lights",
+			"type": "Result",
+			"x": 1040,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Lights"
+				}
+			]
+		},
+		{
+			"id": "readout-formula-healthpart",
+			"type": "Formula",
+			"x": 680,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "MaxHealth > 0 ? min(1, max(0, Health / MaxHealth)) : 1"
+				}
+			]
+		},
+		{
+			"id": "readout-result-healthpart",
+			"type": "Result",
+			"x": 1040,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "HealthPart"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "readout-link-0",
+			"p1": "readout-input-blink-out-Value",
+			"p2": "readout-step-on-in-Blink",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-1",
+			"p1": "readout-input-forward-out-Value",
+			"p2": "readout-formula-speed-in-Forward",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-2",
+			"p1": "readout-formula-speed-out-Value",
+			"p2": "readout-result-speed-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-3",
+			"p1": "readout-input-top-out-Value",
+			"p2": "readout-formula-topspeed-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-4",
+			"p1": "readout-formula-topspeed-out-Value",
+			"p2": "readout-result-topspeed-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-5",
+			"p1": "readout-input-forward-out-Value",
+			"p2": "readout-formula-speedpart-in-Forward",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-6",
+			"p1": "readout-input-top-out-Value",
+			"p2": "readout-formula-speedpart-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-7",
+			"p1": "readout-formula-speedpart-out-Value",
+			"p2": "readout-result-speedpart-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-8",
+			"p1": "readout-input-redline-out-Value",
+			"p2": "readout-formula-rpmpart-in-Redline",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-9",
+			"p1": "readout-input-rpm-out-Value",
+			"p2": "readout-formula-rpmpart-in-Rpm",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-10",
+			"p1": "readout-formula-rpmpart-out-Value",
+			"p2": "readout-result-rpmpart-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-11",
+			"p1": "readout-input-gear-out-Value",
+			"p2": "readout-formula-gear-in-Gear",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-12",
+			"p1": "readout-formula-gear-out-Value",
+			"p2": "readout-result-gear-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-13",
+			"p1": "readout-input-indicate-out-Value",
+			"p2": "readout-formula-left-in-Indicate",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-14",
+			"p1": "readout-input-hazard-out-Value",
+			"p2": "readout-formula-left-in-Hazard",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-15",
+			"p1": "readout-step-on-out-Value",
+			"p2": "readout-formula-left-in-On",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-16",
+			"p1": "readout-formula-left-out-Value",
+			"p2": "readout-result-left-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-17",
+			"p1": "readout-input-indicate-out-Value",
+			"p2": "readout-formula-right-in-Indicate",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-18",
+			"p1": "readout-input-hazard-out-Value",
+			"p2": "readout-formula-right-in-Hazard",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-19",
+			"p1": "readout-step-on-out-Value",
+			"p2": "readout-formula-right-in-On",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-20",
+			"p1": "readout-formula-right-out-Value",
+			"p2": "readout-result-right-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-21",
+			"p1": "readout-input-lights-out-Value",
+			"p2": "readout-formula-lights-in-Lights",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-22",
+			"p1": "readout-formula-lights-out-Value",
+			"p2": "readout-result-lights-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-23",
+			"p1": "readout-input-maxhealth-out-Value",
+			"p2": "readout-formula-healthpart-in-MaxHealth",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-24",
+			"p1": "readout-input-health-out-Value",
+			"p2": "readout-formula-healthpart-in-Health",
+			"kind": "value"
+		},
+		{
+			"id": "readout-link-25",
+			"p1": "readout-formula-healthpart-out-Value",
+			"p2": "readout-result-healthpart-in-Value",
+			"kind": "value"
+		}
+	]
+}

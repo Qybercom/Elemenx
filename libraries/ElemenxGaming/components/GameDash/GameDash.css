@@ -1,0 +1,20 @@
+/* The instruments over a scene: what changes does not move the page. */
+.elemenx-game-dash {
+	display: inline-flex;
+}
+
+/*
+ * A bar of a Meter is as wide as its parent: in a panel as wide as what it holds it had no width of its own, and ran out
+ * of it, the stats after it cut off. Regression: the revolutions of the Racing demo past the edge of its panel.
+ */
+.elemenx-game-dash .elemenx-meter:not(.dial) {
+	width: 150px;
+}
+
+.elemenx-game-dash.small .elemenx-meter:not(.dial) {
+	width: 110px;
+}
+
+.elemenx-game-dash.large .elemenx-meter:not(.dial) {
+	width: 190px;
+}

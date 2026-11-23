@@ -1301,8 +1301,12 @@ Elemenx.Service('SceneTerrainGenerator', {
 				return {Positions: [-half, y, -half, half, y, -half, half, y, half, -half, y, half], Normals: [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0], UVs: [0, 0, 1, 0, 1, 1, 0, 1], Colors: color.concat(color, color, color), Indices: [0, 2, 1, 0, 3, 2]};
 			},
 
+			/*
+			 * A way straight there, of points {X, Z} (as a Scene asks for one) or [x, z]. Regression: it read only [x, z], and a
+			 * walker sent anywhere over a location of a model (a patrol, an order) went to NaN and was lost.
+			 */
 			Path: function (from, to) {
-				return [{X: from[0], Z: from[1]}, {X: to[0], Z: to[1]}];
+				return [{X: Array.isArray(from) ? from[0] : from.X, Z: Array.isArray(from) ? from[1] : from.Z}, {X: Array.isArray(to) ? to[0] : to.X, Z: Array.isArray(to) ? to[1] : to.Z}];
 			}
 		};
 

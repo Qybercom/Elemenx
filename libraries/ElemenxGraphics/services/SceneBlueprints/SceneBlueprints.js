@@ -3049,7 +3049,7 @@ Elemenx.Service('SceneBlueprints', {
 			context.Lines.push('vec3 ' + name + '_gloss;');
 			context.Lines.push('vec3 ' + name + '_lamps = localLit(' + inputs.World + ', ' + inputs.Normal + ', landGloss, ' + name + '_gloss);');
 
-			return {Light: '((uSunColor * 1.35 * max(dot(' + inputs.Normal + ', uSun), 0.0) * ' + name + '_sunlit + aroundOpen(' + inputs.World + ', ' + inputs.Normal + ', mix(uFloorLight, uSkyLight, ' + inputs.Normal + '.y * 0.5 + 0.5)) * ' + inputs.Open + ') + ' + name + '_lamps + ' + name + '_gloss)', Sunlit: name + '_sunlit'};
+			return {Light: '((uSunColor * 1.35 * max(dot(' + inputs.Normal + ', uSun), 0.0) * ' + name + '_sunlit + aroundOpen(' + inputs.World + ', ' + inputs.Normal + ', skyLight(' + inputs.Normal + ', 1.0, uSkyLight, uFloorLight, uSun, 1.25)) * ' + inputs.Open + ') + ' + name + '_lamps + ' + name + '_gloss)', Sunlit: name + '_sunlit'};
 		});
 
 		/*

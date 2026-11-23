@@ -1,0 +1,14 @@
+<div class="elemenx-game-dash" [class]="[Size]" role="group" [attribute.aria-label]="Label || $T('gaming.dash.label')">
+	<GameStats *if="Kind && Kind !== 'walk'" [Label]="Label || $T('gaming.dash.label')" [Size]="Size">
+		<GameStat Value="&#9664;" [Tone]="Left ? 'success' : 'muted'" [Size]="Size" />
+		<Meter Shape="dial" Needle="true" Ticks="7" [Size]="Size" Min="0" [max]="TopSpeed" [low]="Math.round(TopSpeed * 0.7)" [high]="Math.round(TopSpeed * 0.85)" [optimum]="Math.round(TopSpeed * 0.3)" [Label]="$T('gaming.dash.speed')" Unit=" km/h" ShowValue="true" [value]="Speed" />
+		<GameStat [Label]="$T('gaming.dash.gear')" [Value]="Gear" Tone="warning" Size="large" />
+		<Meter [Size]="Size" Min="0" Max="100" Low="75" High="90" Optimum="40" [Label]="$T('gaming.dash.revolutions')" ShowValue="false" [value]="Rpm" />
+		<GameStat Value="&#9679;" [Tone]="Lights ? 'accent' : 'muted'" [Size]="Size" />
+		<GameStat Value="&#9654;" [Tone]="Right ? 'success' : 'muted'" [Size]="Size" />
+	</GameStats>
+	<GameStats *if="Kind === 'walk'" [Label]="Label || $T('gaming.dash.label')" [Size]="Size">
+		<Meter [Size]="Size" Min="0" Max="100" Low="30" High="60" Optimum="100" [Label]="$T('gaming.ui.health')" Unit="%" ShowValue="true" [value]="Health" />
+		<GameStat [Label]="$T('gaming.dash.speed')" [Value]="Speed" Unit=" km/h" [Size]="Size" />
+	</GameStats>
+</div>

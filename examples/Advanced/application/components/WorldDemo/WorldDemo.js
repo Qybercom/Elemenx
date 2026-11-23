@@ -20,14 +20,14 @@ Elemenx.Component('WorldDemo', {
 	},
 	/* The units of the Game world, in metres from the middle of its land: the player is blue. */
 	WorldUnits: [
-		{ID: 'archer-1', Name: 'Archer', X: -62, Y: -22, Team: 'blue', Model: 'archer', Health: 40, Damage: 8, Range: 12},
-		{ID: 'archer-2', Name: 'Archer', X: -58, Y: -22, Team: 'blue', Model: 'archer', Health: 32, Damage: 8, Range: 12},
-		{ID: 'archer-3', Name: 'Archer', X: -62, Y: -18, Team: 'blue', Model: 'archer', Health: 40, Damage: 8, Range: 12},
-		{ID: 'knight-1', Name: 'Knight', X: -55, Y: -16, Team: 'blue', Model: 'knight', Health: 100, Damage: 14, Range: 2.5},
-		{ID: 'knight-2', Name: 'Knight', X: -58, Y: -13, Team: 'blue', Model: 'knight', Health: 60, Damage: 14, Range: 2.5},
-		{ID: 'raider-1', Name: 'Orc', X: 60, Y: 30, Team: 'red', Model: 'orc', Health: 100, Damage: 12, Range: 2.5},
-		{ID: 'raider-2', Name: 'Orc', X: 64, Y: 34, Team: 'red', Model: 'orc', Health: 100, Damage: 12, Range: 2.5},
-		{ID: 'raider-3', Name: 'Orc', X: 58, Y: 36, Team: 'red', Model: 'orc', Health: 100, Damage: 12, Range: 2.5}
+		{ID: 'archer-1', Name: 'Archer', X: -62, Y: -22, Team: 'blue', Model: 'archer'},
+		{ID: 'archer-2', Name: 'Archer', X: -58, Y: -22, Team: 'blue', Model: 'archer', Health: 32},
+		{ID: 'archer-3', Name: 'Archer', X: -62, Y: -18, Team: 'blue', Model: 'archer'},
+		{ID: 'knight-1', Name: 'Knight', X: -55, Y: -16, Team: 'blue', Model: 'knight'},
+		{ID: 'knight-2', Name: 'Knight', X: -58, Y: -13, Team: 'blue', Model: 'knight', Health: 60},
+		{ID: 'raider-1', Name: 'Orc', X: 60, Y: 30, Team: 'red', Model: 'orc'},
+		{ID: 'raider-2', Name: 'Orc', X: 64, Y: 34, Team: 'red', Model: 'orc'},
+		{ID: 'raider-3', Name: 'Orc', X: 58, Y: 36, Team: 'red', Model: 'orc'}
 	],
 	/* The scene of the game and its GameStrategy, kept for the buttons of the section. */
 	WorldReady: function (scene) {
@@ -116,7 +116,7 @@ Elemenx.Component('WorldDemo', {
 
 		this.WorldAdded++;
 
-		scene.Add('unit', {ID: id, Name: 'Recruit', X: -74, Y: -32, Team: 'blue', Model: 'villager', Health: 30, Damage: 4, Range: 2});
+		scene.Add('unit', {ID: id, Name: 'Recruit', X: -74, Y: -32, Team: 'blue', Model: 'villager'});
 
 		if (this.Strategy())
 			this.Strategy().Order([id], [-66 + this.WorldAdded % 4 * 3, -26]);

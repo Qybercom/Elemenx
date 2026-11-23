@@ -1,0 +1,18 @@
+{
+	"gaming": {
+		"console": {
+			"label": "Пульт",
+			"stand": "Встать",
+			"roles": {
+				"pilot": "Пилот",
+				"copilot": "Второй пилот",
+				"captain": "Капитан",
+				"engineer": "Бортинженер",
+				"tactical": "Тактика",
+				"gunner": "Стрелок",
+				"sensors": "Датчики",
+				"commander": "Командир"
+			}
+		}
+	}
+}

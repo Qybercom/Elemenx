@@ -71,5 +71,23 @@ describe('Regression: the searches of ways of a planet and of a ground, one Sear
 		expect(planets.Work().Inline()).toBe(false);
 		expect(page.Highways.length).toBeGreaterThan(0);
 		expect(hash(worker)).toBe(hash(page));
+
+		/*
+		 * In parts, each in a worker, put together in their order: the very highways of one run. Regression: one worker laid
+		 * them all, and the globe of a scene waited for it (minutes under the load of the tests).
+		 */
+		var pieces = await Promise.all([0, 1, 2, 3].map(function (part) {
+			return new Promise(function (resolve, reject) {
+				planets.Work().Run('ScenePlanet', 'Highways', [given, 20, part, 4], function (error, made) {
+					if (error) reject(error);
+					else resolve(made);
+				});
+			});
+		}));
+
+		expect(pieces.every(function (piece) {
+			return piece.Highways.length > 0;
+		})).toBe(true);
+		expect(hash(planets.MergeHighways(pieces))).toBe(hash(page));
 	}, 120000);
 });

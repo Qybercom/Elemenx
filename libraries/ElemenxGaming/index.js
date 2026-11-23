@@ -5,6 +5,7 @@
 	'locales/en.json',
 	'locales/ru.json',
 	'resources/vitals/kinds.json',
+	'resources/vitals/units.json',
 	'services/Vitals/Vitals.js',
 	'services/GameItems/GameItems.js',
 	'components/GameHud/GameHud.js',
@@ -23,5 +24,11 @@
 	'components/GameLeaderboard/GameLeaderboard.js',
 	'components/GameCombat/GameCombat.js',
 	'components/GameRace/GameRace.js',
+	'components/GameDash/GameDash.js',
+	'components/GameFlight/GameFlight.js',
+	'components/GameTactics/GameTactics.js',
+	'components/GameRadar/GameRadar.js',
+	'components/GameConsole/GameConsole.js',
+	'components/GameTargets/GameTargets.js',
 	'components/GameStrategy/GameStrategy.js'
 ];

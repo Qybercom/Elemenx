@@ -1,0 +1,57 @@
+/* The screen of a console: its role and the ship over the instruments, its buttons under them. */
+.elemenx-game-console {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	box-sizing: border-box;
+	padding: 10px 14px;
+	contain: layout style;
+}
+
+.elemenx-game-console-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.elemenx-game-console-role {
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+
+.elemenx-game-console-ship {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+/* Its instruments, its radar (Radar) beside them. */
+.elemenx-game-console-body {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	min-height: 0;
+}
+
+.elemenx-game-console-body > .elemenx-game-flight {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+/* Its instruments and the modes of its seat as a part of it, not a panel over a panel. */
+.elemenx-game-console .elemenx-game-flight,
+.elemenx-game-console .elemenx-game-tactics {
+	padding: 0;
+	background: none;
+	border: 0;
+	box-shadow: none;
+}
+
+.elemenx-game-console-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+}

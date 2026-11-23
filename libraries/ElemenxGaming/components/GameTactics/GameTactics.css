@@ -1,0 +1,9 @@
+/* The modes of a seat: a row of buttons, the one it is in marked. */
+.elemenx-game-tactics {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	padding: 4px;
+	contain: layout style;
+}

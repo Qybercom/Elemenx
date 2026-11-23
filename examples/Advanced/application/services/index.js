@@ -1,5 +1,7 @@
 [
 	'Session.js',
 	'RuntimeService.js',
-	'IntegrationService.js'
+	'IntegrationService.js',
+	'DemoQuality.js',
+	'DemoData.js'
 ];

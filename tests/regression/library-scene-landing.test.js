@@ -466,6 +466,28 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 		expect(Math.hypot(inner.Camera.Position[0] - hero.World[0], inner.Camera.Position[1] - hero.World[1], inner.Camera.Position[2] - hero.World[2])).toBeLessThan(30 * 6);
 		expect(scene.ShipCan).toBe('takeoff');
+
+		/*
+		 * In real sizes, what walks in the location is as tall as it is, and the inside of the ship standing there (SceneAboard)
+		 * is of the location: its size its own, going with the ship (not stood once), turned as the ship is. Regression: a
+		 * walker was a fiftieth of its size, the inside stood once was not drawn, turned by a Yaw it stood across the ship.
+		 */
+		scene.Scale = 'real';
+
+		scene.Add('unit', {ID: 'walker', Size: 1.8, X: hero.World[0] + 6, Y: hero.World[2]});
+
+		for (i = 0; i < 6; i++)
+			engine.Frame(now += 100, true);
+
+		var inside = inner.Objects['me:inside'];
+		var math = Elemenx.Service('Math');
+		var ahead = math.Apply(inside.Turn, [0, 0, 1]);
+		var nose = math.Apply(hero.Turn, [0, 0, 1]);
+
+		expect(inner.Objects.walker.Size).toBeCloseTo(1.8, 5);
+		expect(inside.Size).toBe(1);
+		expect(inner.Still.indexOf(inside)).toBe(-1);
+		expect(Math.atan2(ahead[0], ahead[2])).toBeCloseTo(Math.atan2(nose[0], nose[2]), 2);
 	}, 120000);
 
 	/*

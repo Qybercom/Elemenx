@@ -80,6 +80,76 @@ describe('Contract: the weapons of a Scene: shots, what they hit, of what materi
 		});
 	});
 
+	/* Contract: Fire(id, {Hold}) burns a beam that many seconds (the Combat demo held its laser by a timer of its own). */
+	it('burns a beam as long as Hold of the shot says', async function () {
+		var made = await mount('<SceneObject ID="gun" Kind="thing" Model="test-crate" Size="0.5" X="0" Y="0" Weapon="laser" />');
+		var scene = made.Scene;
+
+		function beams () {
+			return scene.Scene().Weapons.Shots.filter(function (shot) {
+				return shot.Source === 'gun' && shot.Type.Kind === 'beam';
+			}).length;
+		}
+
+		frames(scene, 3);
+
+		expect(scene.Fire('gun', {At: [0, 1, 10], Hold: 1.5})).toBe(true);
+
+		frames(scene, 30);
+
+		expect(beams()).toBe(1);
+
+		frames(scene, 30);
+
+		expect(beams()).toBe(0);
+	});
+
+	/*
+	 * Regression: the right trigger of a pad fired nothing by itself: the Combat demo fired on its button and held a laser by
+	 * a timer. Held, the hero on foot with a weapon fires where the middle of the view is, the view kept; a beam burns while it
+	 * is held and goes out once it is let go.
+	 */
+	it('fires the weapon of the hero by the right trigger of a pad held, the view kept', async function () {
+		var made = await mount('<SceneObject ID="me" Kind="unit" Model="test-crate" Size="1" X="0" Y="0" Weapon="laser" />');
+		var scene = made.Scene;
+		var pad = Elemenx.Service('InputDevices').Virtual(unique('trigger'), {Navigate: false});
+		var yaw;
+
+		function beams () {
+			return scene.Scene().Weapons.Shots.filter(function (shot) {
+				return shot.Source === 'me' && shot.Type.Kind === 'beam';
+			}).length;
+		}
+
+		try {
+			frames(scene, 3);
+
+			scene.Control('me');
+
+			frames(scene, 3);
+
+			yaw = scene.Scene().Yaw;
+
+			expect(beams()).toBe(0);
+
+			pad.Trigger('right', 1);
+
+			frames(scene, 10);
+
+			expect(beams()).toBe(1);
+			expect(scene.Scene().Yaw).toBeCloseTo(yaw, 6);
+
+			pad.Trigger('right', 0);
+
+			frames(scene, 15);
+
+			expect(beams()).toBe(0);
+		}
+		finally {
+			pad.Destroy();
+		}
+	});
+
 	it('hits what a ray meets first: a thing (its triangles, the side facing the shot), its material, a mark that stays; the rate holds the next', async function () {
 		var made = await mount('<SceneObject ID="gun" Kind="thing" Model="test-crate" Size="0.5" X="0" Y="0" Weapon="rifle" />' +
 			'<SceneObject ID="crate" Kind="thing" Model="test-crate" Size="2" X="0" Y="10" />');

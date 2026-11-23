@@ -394,6 +394,15 @@
 					"Description": "Where the view of a walker stands: behind it (third), in its eyes (first, its head hidden but its body and what it holds seen) or over its shoulder. V changes it while the pointer is taken."
 				},
 				{
+					"Name": "Cutaway",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "While a walker is inside a ship standing (SceneAboard), its hull and its ceilings are not drawn and the view looks in from over it, as at a house cut open; off, the hull stays round it, the view within its rooms."
+				},
+				{
 					"Name": "Shoulder",
 					"Type": "select",
 					"Default": "right",
@@ -738,6 +747,24 @@
 					"Description": "The ground of its globes near and from over them: a ground graph of the Blueprints Service of its picture, its woods, fields, snow and dunes, its relief, the tiles near, the shadows of its clouds and of a ring, its water, towns at night, clouds from over them and air (or its JSON, or GLSL with blueprintGround); empty, the one of the library (LibraryGround())."
 				},
 				{
+					"Name": "GroundFarGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How a texel of the picture of the far ground of its planets looks (a generator graph of numbers, or the name of one: blueprints/shader/ground-far, of its land, sea, slope, warmth, wet, deserts, fields, houses, a river and a highway: R, G, B, Water, Trees, Farm, Built, Dune, Snow); empty, Graphs of shader/ground-far, else the one of the library. Made code in the page, it paints the planet in its workers."
+				},
+				{
+					"Name": "SkyLightGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The light of the sky on all it lights and mirrors (a generator graph of numbers: blueprints/shader/sky-light, of WayY, SunDot, SunY, Spread, SkyR/G/B, FloorR/G/B, Gain: R, G, B): the sea, glass, the paint of a car, the objects, the grass, the land and the probes; empty, Graphs of shader/sky-light, else the one of the library. Read as the scene is made."
+				},
+				{
 					"Name": "RingGraph",
 					"Type": "json",
 					"Default": null,
@@ -763,6 +790,87 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "The arms of a galaxy, its picture, its stars and the band of it across the sky of a system alike: a generator of the Blueprints Service of the blocks of GalaxyData (its results Turn, Bend, Wave and Arm; or its JSON); empty, the one of the library (SceneBlueprints.LibraryGalaxy())."
+				},
+				{
+					"Name": "ReactorGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A step of a reactor of the systems of an object (SceneShipSystems): Heat, Tripped, Supply of Heat, Load, Rise, Cool, Elapsed, On, Tripped, Trip, Resume, Output; empty, the one of the library (blueprints/vehicles/reactor); of the Power of an object wins."
+				},
+				{
+					"Name": "PowerGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What the power of the reactors gives each system (SceneShipSystems): Engines, Shields, Weapons, Load of Supply, the needs and the shares of each; empty, the one of the library (blueprints/vehicles/power)."
+				},
+				{
+					"Name": "ShieldGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A step of a layer of a shield (SceneShipSystems): Value of Value, Capacity, Regen, Power, Since, Delay, Elapsed; empty, the one of the library (blueprints/vehicles/shield)."
+				},
+				{
+					"Name": "ReadoutGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What the instruments of a vehicle or of a character on foot read (Speed, TopSpeed, SpeedPart, RpmPart, Gear, Left, Right, Lights, HealthPart of Forward, Top, Rpm, Redline, Gear, Indicate, Hazard, Blink, Lights, Health, MaxHealth): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/readout); ReadoutGraph of a vehicle wins."
+				},
+				{
+					"Name": "DrivesGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What each moving part, lamp, emitter and pop of a vehicle is driven to of its state (steer, gas, wipers, stroke, lamp-brake... of Steer, Gas, Swept, Stroke...): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/drives); DrivesGraph of a vehicle wins."
+				},
+				{
+					"Name": "WheelGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How each wheel of a car turns of its state (SpinAngle, SteerAngle, Drop, Camber of Spin, Steer, Stroke, Size, Front, Held, Side): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/wheel); WheelGraph of a vehicle wins."
+				},
+				{
+					"Name": "ThrustGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How what burns on an engine looks of its thrust (Length, Intensity, Inside of Thrust): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/thrust); ThrustGraph of a vehicle wins."
+				},
+				{
+					"Name": "LandingLookGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How a landing looks as it goes (Heat, Fov, Thrust, Raise, TransferThrust, OrbitThrust, HoverThrust of Thick, Speed, Over, Going, Throttle, Manual, T, Landed, Pull, Flat, Top): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/landing/look)."
+				},
+				{
+					"Name": "ShakeGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How a view shakes (X, Y, Z, Pitch, Yaw, Roll of a rig; HeatRight, HeatUp; KickTaken; TraumaPitch, TraumaYaw, TraumaRoll, BlastLeft of Time, Seed, Shake, Hover, Walked, Stride, Heat, Size, Kick, Elapsed, Blast, Rpm, Jolt): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/camera/shake)."
 				},
 				{
 					"Name": "TravelLookGraph",
@@ -1121,6 +1229,10 @@
 				"person",
 				"loading",
 				"prepared",
+				"shield",
+				"discover",
+				"context",
+				"ground",
 				"shoulder",
 				"arrive",
 				"land",
@@ -1156,6 +1268,10 @@
 				"person": "V took the view of a walker to another place: third, first or shoulder.",
 				"loading": "What the scene waits for came a step nearer: {Part (up to 100, never back), Stage (programs, models, sky, galaxy, nebulae, rivers, globes, surface, ground, plants, view; empty when done), Stages ([{Name, Label, Done, Total}] of those it has)}.",
 				"prepared": "All the view needs is made and the veil goes: {First (the start of the scene, not a location that came)}.",
+				"shield": "A layer of the shield of an object took a hit (SceneShipSystems): {ID, Layer, Value, Capacity, Taken, Broken, Hit}.",
+				"discover": "A place came within the sensors of a vehicle and is known now (SceneShipSystems, NavPoint): {ID, By, Kind, Name}.",
+				"context": "An actor (the character of the player) sat in a seat of a vehicle or left it (SceneVehicles Board, Leave, BoardKey: G): {Actor, Kind (walk or seat), Vehicle, Seat, Role, Controls}.",
+				"ground": "A ground came, its field made (a ground of the scene, of a location, of a planet landed on): {Key (its shape: location:<id>:<model> for a location), ID (the object it is of), Location (true for a location)}.",
 				"shoulder": "B took the view over another shoulder: right or left.",
 				"arrive": "An object reached where it was sent: {ID, At}.",
 				"land": "The view went down to the surface of a body: {ID}.",
@@ -2924,6 +3040,7 @@
 				"Asset(options)",
 				"Clips(bones, options)",
 				"Gait(bones, graph, options)",
+				"Source(graph, options)",
 				"Pose(bones, pose)",
 				"Define(name, options)"
 			],
@@ -3252,7 +3369,8 @@
 				"PlacedTowns(options, towns)",
 				"PlacedRivers(options, rivers)",
 				"UseSettlements(key, towns)",
-				"Highways(options, step)",
+				"Highways(options, step, part, parts)",
+				"MergeHighways(pieces)",
 				"UseHighways(key, roads)",
 				"Lights(options, face, size, row, rows)",
 				"Sphere(options)",
@@ -3267,6 +3385,8 @@
 				"Work()",
 				"Source(names)",
 				"ReliefRun(name)",
+				"PictureRun(graph, code)",
+				"PictureMake(graph)",
 				"ReliefMake(graph)",
 				"ReliefOf(name, graph, code)",
 				"GraphSources(options)",
@@ -3423,6 +3543,32 @@
 				"Extent(place)",
 				"Kinds()",
 				"Beyonds()"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneInteriors",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The inside of a ship to walk in: rooms laid out by its class (cockpit, bridge, corridor, engine room, cargo, hangar) fitted into its hull, consoles for its roles, a hatch and a ramp, its legs.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"ClassOf(length)",
+				"GearOf(ship)",
+				"Hull(pieces, options)",
+				"Plan(ship, hull)",
+				"Solid(plan, hull, point, radius)",
+				"Parts(plan, tools)",
+				"Ceiling(plan, tools)",
+				"Ramp(plan, tools)",
+				"Define(models, ship, hull)"
 			],
 			"Sample": {}
 		},

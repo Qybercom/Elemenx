@@ -1,0 +1,412 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "power",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "power-input-supply",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Supply"
+				}
+			]
+		},
+		{
+			"id": "power-input-needengines",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "NeedEngines"
+				}
+			]
+		},
+		{
+			"id": "power-input-needshields",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "NeedShields"
+				}
+			]
+		},
+		{
+			"id": "power-input-needweapons",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "NeedWeapons"
+				}
+			]
+		},
+		{
+			"id": "power-input-shareengines",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "ShareEngines"
+				}
+			]
+		},
+		{
+			"id": "power-input-shareshields",
+			"type": "Input",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "ShareShields"
+				}
+			]
+		},
+		{
+			"id": "power-input-shareweapons",
+			"type": "Input",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "ShareWeapons"
+				}
+			]
+		},
+		{
+			"id": "power-step-shares",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(0.0001, ShareEngines + ShareShields + ShareWeapons)"
+				}
+			]
+		},
+		{
+			"id": "power-step-givenengines",
+			"type": "Formula",
+			"x": 320,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(NeedEngines, Supply * ShareEngines / Shares)"
+				}
+			]
+		},
+		{
+			"id": "power-step-givenshields",
+			"type": "Formula",
+			"x": 320,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(NeedShields, Supply * ShareShields / Shares)"
+				}
+			]
+		},
+		{
+			"id": "power-step-givenweapons",
+			"type": "Formula",
+			"x": 320,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(NeedWeapons, Supply * ShareWeapons / Shares)"
+				}
+			]
+		},
+		{
+			"id": "power-formula-engines",
+			"type": "Formula",
+			"x": 680,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "NeedEngines > 0 ? GivenEngines / NeedEngines : 1"
+				}
+			]
+		},
+		{
+			"id": "power-result-engines",
+			"type": "Result",
+			"x": 1040,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Engines"
+				}
+			]
+		},
+		{
+			"id": "power-formula-shields",
+			"type": "Formula",
+			"x": 680,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "NeedShields > 0 ? GivenShields / NeedShields : 1"
+				}
+			]
+		},
+		{
+			"id": "power-result-shields",
+			"type": "Result",
+			"x": 1040,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Shields"
+				}
+			]
+		},
+		{
+			"id": "power-formula-weapons",
+			"type": "Formula",
+			"x": 680,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "NeedWeapons > 0 ? GivenWeapons / NeedWeapons : 1"
+				}
+			]
+		},
+		{
+			"id": "power-result-weapons",
+			"type": "Result",
+			"x": 1040,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Weapons"
+				}
+			]
+		},
+		{
+			"id": "power-formula-load",
+			"type": "Formula",
+			"x": 680,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Supply > 0 ? min(1, (GivenEngines + GivenShields + GivenWeapons) / Supply) : 0"
+				}
+			]
+		},
+		{
+			"id": "power-result-load",
+			"type": "Result",
+			"x": 1040,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Load"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "power-link-0",
+			"p1": "power-input-shareengines-out-Value",
+			"p2": "power-step-shares-in-ShareEngines",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-1",
+			"p1": "power-input-shareshields-out-Value",
+			"p2": "power-step-shares-in-ShareShields",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-2",
+			"p1": "power-input-shareweapons-out-Value",
+			"p2": "power-step-shares-in-ShareWeapons",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-3",
+			"p1": "power-input-needengines-out-Value",
+			"p2": "power-step-givenengines-in-NeedEngines",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-4",
+			"p1": "power-input-supply-out-Value",
+			"p2": "power-step-givenengines-in-Supply",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-5",
+			"p1": "power-input-shareengines-out-Value",
+			"p2": "power-step-givenengines-in-ShareEngines",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-6",
+			"p1": "power-step-shares-out-Value",
+			"p2": "power-step-givenengines-in-Shares",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-7",
+			"p1": "power-input-needshields-out-Value",
+			"p2": "power-step-givenshields-in-NeedShields",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-8",
+			"p1": "power-input-supply-out-Value",
+			"p2": "power-step-givenshields-in-Supply",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-9",
+			"p1": "power-input-shareshields-out-Value",
+			"p2": "power-step-givenshields-in-ShareShields",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-10",
+			"p1": "power-step-shares-out-Value",
+			"p2": "power-step-givenshields-in-Shares",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-11",
+			"p1": "power-input-needweapons-out-Value",
+			"p2": "power-step-givenweapons-in-NeedWeapons",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-12",
+			"p1": "power-input-supply-out-Value",
+			"p2": "power-step-givenweapons-in-Supply",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-13",
+			"p1": "power-input-shareweapons-out-Value",
+			"p2": "power-step-givenweapons-in-ShareWeapons",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-14",
+			"p1": "power-step-shares-out-Value",
+			"p2": "power-step-givenweapons-in-Shares",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-15",
+			"p1": "power-input-needengines-out-Value",
+			"p2": "power-formula-engines-in-NeedEngines",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-16",
+			"p1": "power-step-givenengines-out-Value",
+			"p2": "power-formula-engines-in-GivenEngines",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-17",
+			"p1": "power-formula-engines-out-Value",
+			"p2": "power-result-engines-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-18",
+			"p1": "power-input-needshields-out-Value",
+			"p2": "power-formula-shields-in-NeedShields",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-19",
+			"p1": "power-step-givenshields-out-Value",
+			"p2": "power-formula-shields-in-GivenShields",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-20",
+			"p1": "power-formula-shields-out-Value",
+			"p2": "power-result-shields-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-21",
+			"p1": "power-input-needweapons-out-Value",
+			"p2": "power-formula-weapons-in-NeedWeapons",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-22",
+			"p1": "power-step-givenweapons-out-Value",
+			"p2": "power-formula-weapons-in-GivenWeapons",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-23",
+			"p1": "power-formula-weapons-out-Value",
+			"p2": "power-result-weapons-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-24",
+			"p1": "power-input-supply-out-Value",
+			"p2": "power-formula-load-in-Supply",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-25",
+			"p1": "power-step-givenengines-out-Value",
+			"p2": "power-formula-load-in-GivenEngines",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-26",
+			"p1": "power-step-givenshields-out-Value",
+			"p2": "power-formula-load-in-GivenShields",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-27",
+			"p1": "power-step-givenweapons-out-Value",
+			"p2": "power-formula-load-in-GivenWeapons",
+			"kind": "value"
+		},
+		{
+			"id": "power-link-28",
+			"p1": "power-formula-load-out-Value",
+			"p2": "power-result-load-in-Value",
+			"kind": "value"
+		}
+	]
+}

@@ -1,0 +1,3 @@
+<div class="elemenx-game-panel elemenx-game-tactics" [class]="[Size]" role="toolbar" [attribute.aria-label]="Label || $T('gaming.tactics.label')" *if="Modes.length">
+	<Button *for="mode of Modes" [Size]="Size === 'large' ? 'medium' : 'small'" [Variant]="mode === Current ? 'primary' : 'ghost'" [Pressed]="mode === Current" [Icon]="IconOf(mode)" [Label]="NameOf(mode)" (click)="Choose(mode)" />
+</div>

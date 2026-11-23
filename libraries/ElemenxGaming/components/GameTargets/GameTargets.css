@@ -1,0 +1,68 @@
+/*
+ * The marks over the view: a frame on each contact, the presses through the rest of it (over what a hud of a Scene gives
+ * its children: the pointer would be taken by the whole view).
+ */
+div.elemenx-game-targets {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	contain: layout style;
+}
+
+.elemenx-game-target {
+	--elemenx-game-target: var(--elemenx-game-accent);
+
+	position: absolute;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border: 2px solid var(--elemenx-game-target);
+	border-radius: 3px;
+	background: none;
+	transform: translate(-50%, -50%);
+	cursor: pointer;
+	pointer-events: auto;
+}
+
+.elemenx-game-target.enemy {
+	--elemenx-game-target: var(--elemenx-game-bad);
+}
+
+.elemenx-game-target.ally {
+	--elemenx-game-target: var(--elemenx-game-good);
+}
+
+/* The target: its corners only, larger. */
+.elemenx-game-target.chosen {
+	width: 38px;
+	height: 38px;
+	border-width: 3px;
+	border-style: dashed;
+}
+
+.elemenx-game-target:focus-visible {
+	outline: 2px solid var(--elemenx-game-accent);
+	outline-offset: 2px;
+}
+
+.elemenx-game-target-name {
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	margin-top: 4px;
+	color: var(--elemenx-game-target);
+	font-size: var(--elemenx-font-size-small);
+	white-space: nowrap;
+	text-shadow: 0 1px 2px rgb(0 0 0 / 80%);
+	transform: translateX(-50%);
+}
+
+/* The lead of a turret: a ring where to aim. */
+.elemenx-game-target-lead {
+	position: absolute;
+	width: 12px;
+	height: 12px;
+	border: 2px solid var(--elemenx-game-bad);
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+}

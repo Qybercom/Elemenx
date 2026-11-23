@@ -270,7 +270,7 @@ Elemenx.Trait('SceneProbes', {
 
 			read = state.Probes[state.Read];
 			write = state.Probes[1 - state.Read];
-			sky = {uSkyLight: ground.SkyLight, uFloorLight: ground.FloorLight};
+			sky = {uSkyLight: ground.SkyLight, uFloorLight: ground.FloorLight, uSkySun: ground.Sun};
 			spin = turn();
 			common = {uProbe: state.Volume.Textures[0], uProbeBox: vectors.Subtract(state.Laid.Corner, scene.Eye).concat([1]), uProbeCount: size};
 			full = state.Fresh || state.Shift.some(function (part) {
@@ -513,8 +513,10 @@ Elemenx.Trait('SceneProbes', {
 				'uniform float uRays;',
 				'uniform vec3 uSkyLight;',
 				'uniform vec3 uFloorLight;',
+				'uniform vec3 uSkySun;',
 				'out vec4 outColor;',
 				grid,
+				graphics.Chunks.SkyLight,
 				march,
 				'void main() {',
 				'	ivec2 f = ivec2(gl_FragCoord.xy);',
@@ -540,7 +542,7 @@ Elemenx.Trait('SceneProbes', {
 				'	}',
 				'	vec3 way = rayWay(f.y % total, total, uTurn);',
 				'	vec4 hit = march(vec3(cell) + 0.5, way);',
-				'	outColor = hit.a >= 0.0 ? hit : vec4(mix(uFloorLight, uSkyLight, way.y * 0.5 + 0.5), 10000.0);',
+				'	outColor = hit.a >= 0.0 ? hit : vec4(skyLight(way, 0.0, uSkyLight, uFloorLight, uSkySun, 1.25), 10000.0);',
 				'}'
 			].join('\n'),
 

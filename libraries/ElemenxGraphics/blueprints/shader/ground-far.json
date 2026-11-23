@@ -1,0 +1,2362 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "ground-far",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "ground-far-input-land",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Land"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-coast",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Coast"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-height",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-rise",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Rise"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-moisture",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Moisture"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-celsius",
+			"type": "Input",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Celsius"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-slope",
+			"type": "Input",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Slope"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-dry",
+			"type": "Input",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Dry"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-erg",
+			"type": "Input",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Erg"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-stone",
+			"type": "Input",
+			"x": 0,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Stone"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-landr",
+			"type": "Input",
+			"x": 0,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LandR"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-landg",
+			"type": "Input",
+			"x": 0,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LandG"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-landb",
+			"type": "Input",
+			"x": 0,
+			"y": 1120,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "LandB"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-sear",
+			"type": "Input",
+			"x": 0,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SeaR"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-seag",
+			"type": "Input",
+			"x": 0,
+			"y": 1300,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SeaG"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-seab",
+			"type": "Input",
+			"x": 0,
+			"y": 1390,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SeaB"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-farm",
+			"type": "Input",
+			"x": 0,
+			"y": 1480,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Farm"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-built",
+			"type": "Input",
+			"x": 0,
+			"y": 1570,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Built"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-roofr",
+			"type": "Input",
+			"x": 0,
+			"y": 1660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofR"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-roofg",
+			"type": "Input",
+			"x": 0,
+			"y": 1750,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofG"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-roofb",
+			"type": "Input",
+			"x": 0,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "RoofB"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-river",
+			"type": "Input",
+			"x": 0,
+			"y": 1930,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "River"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-flow",
+			"type": "Input",
+			"x": 0,
+			"y": 2020,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Flow"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-far",
+			"type": "Input",
+			"x": 0,
+			"y": 2110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Far"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-width",
+			"type": "Input",
+			"x": 0,
+			"y": 2200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Width"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-plain",
+			"type": "Input",
+			"x": 0,
+			"y": 2290,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Plain"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-streamr",
+			"type": "Input",
+			"x": 0,
+			"y": 2380,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "StreamR"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-streamg",
+			"type": "Input",
+			"x": 0,
+			"y": 2470,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "StreamG"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-streamb",
+			"type": "Input",
+			"x": 0,
+			"y": 2560,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "StreamB"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-road",
+			"type": "Input",
+			"x": 0,
+			"y": 2650,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Road"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-along",
+			"type": "Input",
+			"x": 0,
+			"y": 2740,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Along"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-highwayr",
+			"type": "Input",
+			"x": 0,
+			"y": 2830,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighwayR"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-highwayg",
+			"type": "Input",
+			"x": 0,
+			"y": 2920,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighwayG"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-highwayb",
+			"type": "Input",
+			"x": 0,
+			"y": 3010,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HighwayB"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-texel",
+			"type": "Input",
+			"x": 0,
+			"y": 3100,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Texel"
+				}
+			]
+		},
+		{
+			"id": "ground-far-input-woods",
+			"type": "Input",
+			"x": 0,
+			"y": 3190,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Woods"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-shore",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Coast > 0 ? max(0, min(1, 0.5 - Height / max(1, Rise))) : 0"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-basin",
+			"type": "Formula",
+			"x": 320,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Land > 0 ? (Coast > 0 ? 0 : smoothstep(6, 1, Height)) : 0"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-damp",
+			"type": "Formula",
+			"x": 320,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(0.3, 0.55, Moisture)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-green",
+			"type": "Formula",
+			"x": 320,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(0.35, 0.7, Moisture) * smoothstep(2, 16, Celsius)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-meadow",
+			"type": "Formula",
+			"x": 320,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(5, 0, Celsius) * (1 - smoothstep(-4, -9, Celsius)) * 0.6"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-ar",
+			"type": "Formula",
+			"x": 320,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "LandR + (0.46 - LandR) * (Meadow)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-ag",
+			"type": "Formula",
+			"x": 320,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "LandG + (0.47 - LandG) * (Meadow)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-ab",
+			"type": "Formula",
+			"x": 320,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "LandB + (0.3 - LandB) * (Meadow)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-rock",
+			"type": "Formula",
+			"x": 320,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(0.15 + 0.6 * Green, 0.45 + 0.75 * Green, Slope) * (0.75 + 0.2 * smoothstep(1500, 3500, Height))"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-br",
+			"type": "Formula",
+			"x": 320,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "AR + (0.44 - AR) * (Rock)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-bg",
+			"type": "Formula",
+			"x": 320,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "AG + (0.42 - AG) * (Rock)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-bb",
+			"type": "Formula",
+			"x": 320,
+			"y": 1250,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "AB + (0.4 - AB) * (Rock)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-sand",
+			"type": "Formula",
+			"x": 680,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Dry * Erg * 0.8"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-cr",
+			"type": "Formula",
+			"x": 680,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "BR + (0.84 - BR) * (Sand)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-cg",
+			"type": "Formula",
+			"x": 680,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "BG + (0.66 - BG) * (Sand)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-cb",
+			"type": "Formula",
+			"x": 680,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "BB + (0.42 - BB) * (Sand)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-stony",
+			"type": "Formula",
+			"x": 680,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Dry * Stone * 0.55"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-dr",
+			"type": "Formula",
+			"x": 680,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "CR + (0.44 - CR) * (Stony)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-dg",
+			"type": "Formula",
+			"x": 680,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "CG + (0.35 - CG) * (Stony)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-db",
+			"type": "Formula",
+			"x": 680,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "CB + (0.27 - CB) * (Stony)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-marsh",
+			"type": "Formula",
+			"x": 680,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Basin * Damp * 0.6"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-er",
+			"type": "Formula",
+			"x": 680,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "DR + (0.2 - DR) * (Marsh)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-eg",
+			"type": "Formula",
+			"x": 680,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "DG + (0.24 - DG) * (Marsh)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-eb",
+			"type": "Formula",
+			"x": 680,
+			"y": 1250,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "DB + (0.15 - DB) * (Marsh)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-salt",
+			"type": "Formula",
+			"x": 1040,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Basin * (1 - Damp) * 0.85"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-fr",
+			"type": "Formula",
+			"x": 1040,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "ER + (0.9 - ER) * (Salt)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-fg",
+			"type": "Formula",
+			"x": 1040,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "EG + (0.87 - EG) * (Salt)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-fb",
+			"type": "Formula",
+			"x": 1040,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "EB + (0.8 - EB) * (Salt)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-wet",
+			"type": "Formula",
+			"x": 1040,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(Shore, Basin * Damp * 0.55)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-white",
+			"type": "Formula",
+			"x": 1040,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(-3, -9, Celsius) * (1 - smoothstep(0.45, 0.9, Slope))"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-gr",
+			"type": "Formula",
+			"x": 1040,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "FR + (0.92 - FR) * (White)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-gg",
+			"type": "Formula",
+			"x": 1040,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "FG + (0.94 - FG) * (White)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-gb",
+			"type": "Formula",
+			"x": 1040,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "FB + (0.97 - FB) * (White)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-crops",
+			"type": "Formula",
+			"x": 1040,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Farm * 0.85"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-hr",
+			"type": "Formula",
+			"x": 1040,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "GR + (0.48 - GR) * (Crops)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-hg",
+			"type": "Formula",
+			"x": 1040,
+			"y": 1250,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "GG + (0.47 - GG) * (Crops)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-hb",
+			"type": "Formula",
+			"x": 1400,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "GB + (0.27 - GB) * (Crops)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-ir",
+			"type": "Formula",
+			"x": 1400,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HR + (RoofR - HR) * (Built)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-ig",
+			"type": "Formula",
+			"x": 1400,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HG + (RoofG - HG) * (Built)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-ib",
+			"type": "Formula",
+			"x": 1400,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HB + (RoofB - HB) * (Built)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-ice",
+			"type": "Formula",
+			"x": 1400,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(-10, -14, Celsius)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-jr",
+			"type": "Formula",
+			"x": 1400,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "SeaR + (0.85 - SeaR) * (Ice)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-jg",
+			"type": "Formula",
+			"x": 1400,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "SeaG + (0.9 - SeaG) * (Ice)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-jb",
+			"type": "Formula",
+			"x": 1400,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "SeaB + (0.95 - SeaB) * (Ice)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-kr",
+			"type": "Formula",
+			"x": 1400,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "IR + (JR - IR) * (Wet)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-kg",
+			"type": "Formula",
+			"x": 1400,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "IG + (JG - IG) * (Wet)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-kb",
+			"type": "Formula",
+			"x": 1400,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "IB + (JB - IB) * (Wet)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-valley",
+			"type": "Formula",
+			"x": 1400,
+			"y": 1250,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "River > 0 ? (Far < Plain ? smoothstep(Plain, Plain * 0.5, Far) : 0) : 0"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-lr",
+			"type": "Formula",
+			"x": 1760,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "KR + (KR * 0.85 + 0.03 - KR) * (Valley)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-lg",
+			"type": "Formula",
+			"x": 1760,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "KG + (KG * 0.9 + 0.08 - KG) * (Valley)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-lb",
+			"type": "Formula",
+			"x": 1760,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "KB + (KB * 0.85 - KB) * (Valley)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-channel",
+			"type": "Formula",
+			"x": 1760,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "River > 0 ? (Flow > 25 ? max(0, min(Far + Texel / 2, Width) - max(Far - Texel / 2, -Width)) / Texel : 0) : 0"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-mr",
+			"type": "Formula",
+			"x": 1760,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "LR + (StreamR - LR) * (Channel)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-mg",
+			"type": "Formula",
+			"x": 1760,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "LG + (StreamG - LG) * (Channel)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-mb",
+			"type": "Formula",
+			"x": 1760,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "LB + (StreamB - LB) * (Channel)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-water",
+			"type": "Formula",
+			"x": 1760,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(Wet, Channel)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-paved",
+			"type": "Formula",
+			"x": 1760,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Road > 0 ? max(0, min(Along + Texel / 2, 0.015) - max(Along - Texel / 2, -0.015)) / Texel * 0.8 : 0"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-nr",
+			"type": "Formula",
+			"x": 1760,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "MR + (HighwayR - MR) * (Paved)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-ng",
+			"type": "Formula",
+			"x": 1760,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "MG + (HighwayG - MG) * (Paved)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-step-nb",
+			"type": "Formula",
+			"x": 1760,
+			"y": 1250,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "MB + (HighwayB - MB) * (Paved)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-formula-r",
+			"type": "Formula",
+			"x": 2120,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "NR"
+				}
+			]
+		},
+		{
+			"id": "ground-far-result-r",
+			"type": "Result",
+			"x": 2480,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "R"
+				}
+			]
+		},
+		{
+			"id": "ground-far-formula-g",
+			"type": "Formula",
+			"x": 2120,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "NG"
+				}
+			]
+		},
+		{
+			"id": "ground-far-result-g",
+			"type": "Result",
+			"x": 2480,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "G"
+				}
+			]
+		},
+		{
+			"id": "ground-far-formula-b",
+			"type": "Formula",
+			"x": 2120,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "NB"
+				}
+			]
+		},
+		{
+			"id": "ground-far-result-b",
+			"type": "Result",
+			"x": 2480,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "B"
+				}
+			]
+		},
+		{
+			"id": "ground-far-formula-water",
+			"type": "Formula",
+			"x": 2120,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Water"
+				}
+			]
+		},
+		{
+			"id": "ground-far-result-water",
+			"type": "Result",
+			"x": 2480,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Water"
+				}
+			]
+		},
+		{
+			"id": "ground-far-formula-trees",
+			"type": "Formula",
+			"x": 2120,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Woods * (1 - Water) * (1 - Farm * 0.9) * (1 - Built)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-result-trees",
+			"type": "Result",
+			"x": 2480,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Trees"
+				}
+			]
+		},
+		{
+			"id": "ground-far-formula-farm",
+			"type": "Formula",
+			"x": 2120,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Farm * (1 - Water)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-result-farm",
+			"type": "Result",
+			"x": 2480,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Farm"
+				}
+			]
+		},
+		{
+			"id": "ground-far-formula-built",
+			"type": "Formula",
+			"x": 2120,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Built * (1 - Water)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-result-built",
+			"type": "Result",
+			"x": 2480,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Built"
+				}
+			]
+		},
+		{
+			"id": "ground-far-formula-dune",
+			"type": "Formula",
+			"x": 2120,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Dry * Erg * (1 - Water) * (1 - Built)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-result-dune",
+			"type": "Result",
+			"x": 2480,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Dune"
+				}
+			]
+		},
+		{
+			"id": "ground-far-formula-snow",
+			"type": "Formula",
+			"x": 2120,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "White * (1 - Water)"
+				}
+			]
+		},
+		{
+			"id": "ground-far-result-snow",
+			"type": "Result",
+			"x": 2480,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Snow"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "ground-far-link-0",
+			"p1": "ground-far-input-coast-out-Value",
+			"p2": "ground-far-step-shore-in-Coast",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-1",
+			"p1": "ground-far-input-height-out-Value",
+			"p2": "ground-far-step-shore-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-2",
+			"p1": "ground-far-input-rise-out-Value",
+			"p2": "ground-far-step-shore-in-Rise",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-3",
+			"p1": "ground-far-input-land-out-Value",
+			"p2": "ground-far-step-basin-in-Land",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-4",
+			"p1": "ground-far-input-coast-out-Value",
+			"p2": "ground-far-step-basin-in-Coast",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-5",
+			"p1": "ground-far-input-height-out-Value",
+			"p2": "ground-far-step-basin-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-6",
+			"p1": "ground-far-input-moisture-out-Value",
+			"p2": "ground-far-step-damp-in-Moisture",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-7",
+			"p1": "ground-far-input-moisture-out-Value",
+			"p2": "ground-far-step-green-in-Moisture",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-8",
+			"p1": "ground-far-input-celsius-out-Value",
+			"p2": "ground-far-step-green-in-Celsius",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-9",
+			"p1": "ground-far-input-celsius-out-Value",
+			"p2": "ground-far-step-meadow-in-Celsius",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-10",
+			"p1": "ground-far-input-landr-out-Value",
+			"p2": "ground-far-step-ar-in-LandR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-11",
+			"p1": "ground-far-step-meadow-out-Value",
+			"p2": "ground-far-step-ar-in-Meadow",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-12",
+			"p1": "ground-far-input-landg-out-Value",
+			"p2": "ground-far-step-ag-in-LandG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-13",
+			"p1": "ground-far-step-meadow-out-Value",
+			"p2": "ground-far-step-ag-in-Meadow",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-14",
+			"p1": "ground-far-input-landb-out-Value",
+			"p2": "ground-far-step-ab-in-LandB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-15",
+			"p1": "ground-far-step-meadow-out-Value",
+			"p2": "ground-far-step-ab-in-Meadow",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-16",
+			"p1": "ground-far-step-green-out-Value",
+			"p2": "ground-far-step-rock-in-Green",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-17",
+			"p1": "ground-far-input-slope-out-Value",
+			"p2": "ground-far-step-rock-in-Slope",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-18",
+			"p1": "ground-far-input-height-out-Value",
+			"p2": "ground-far-step-rock-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-19",
+			"p1": "ground-far-step-ar-out-Value",
+			"p2": "ground-far-step-br-in-AR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-20",
+			"p1": "ground-far-step-rock-out-Value",
+			"p2": "ground-far-step-br-in-Rock",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-21",
+			"p1": "ground-far-step-ag-out-Value",
+			"p2": "ground-far-step-bg-in-AG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-22",
+			"p1": "ground-far-step-rock-out-Value",
+			"p2": "ground-far-step-bg-in-Rock",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-23",
+			"p1": "ground-far-step-ab-out-Value",
+			"p2": "ground-far-step-bb-in-AB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-24",
+			"p1": "ground-far-step-rock-out-Value",
+			"p2": "ground-far-step-bb-in-Rock",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-25",
+			"p1": "ground-far-input-dry-out-Value",
+			"p2": "ground-far-step-sand-in-Dry",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-26",
+			"p1": "ground-far-input-erg-out-Value",
+			"p2": "ground-far-step-sand-in-Erg",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-27",
+			"p1": "ground-far-step-br-out-Value",
+			"p2": "ground-far-step-cr-in-BR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-28",
+			"p1": "ground-far-step-sand-out-Value",
+			"p2": "ground-far-step-cr-in-Sand",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-29",
+			"p1": "ground-far-step-bg-out-Value",
+			"p2": "ground-far-step-cg-in-BG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-30",
+			"p1": "ground-far-step-sand-out-Value",
+			"p2": "ground-far-step-cg-in-Sand",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-31",
+			"p1": "ground-far-step-bb-out-Value",
+			"p2": "ground-far-step-cb-in-BB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-32",
+			"p1": "ground-far-step-sand-out-Value",
+			"p2": "ground-far-step-cb-in-Sand",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-33",
+			"p1": "ground-far-input-dry-out-Value",
+			"p2": "ground-far-step-stony-in-Dry",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-34",
+			"p1": "ground-far-input-stone-out-Value",
+			"p2": "ground-far-step-stony-in-Stone",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-35",
+			"p1": "ground-far-step-cr-out-Value",
+			"p2": "ground-far-step-dr-in-CR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-36",
+			"p1": "ground-far-step-stony-out-Value",
+			"p2": "ground-far-step-dr-in-Stony",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-37",
+			"p1": "ground-far-step-cg-out-Value",
+			"p2": "ground-far-step-dg-in-CG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-38",
+			"p1": "ground-far-step-stony-out-Value",
+			"p2": "ground-far-step-dg-in-Stony",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-39",
+			"p1": "ground-far-step-cb-out-Value",
+			"p2": "ground-far-step-db-in-CB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-40",
+			"p1": "ground-far-step-stony-out-Value",
+			"p2": "ground-far-step-db-in-Stony",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-41",
+			"p1": "ground-far-step-basin-out-Value",
+			"p2": "ground-far-step-marsh-in-Basin",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-42",
+			"p1": "ground-far-step-damp-out-Value",
+			"p2": "ground-far-step-marsh-in-Damp",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-43",
+			"p1": "ground-far-step-dr-out-Value",
+			"p2": "ground-far-step-er-in-DR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-44",
+			"p1": "ground-far-step-marsh-out-Value",
+			"p2": "ground-far-step-er-in-Marsh",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-45",
+			"p1": "ground-far-step-dg-out-Value",
+			"p2": "ground-far-step-eg-in-DG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-46",
+			"p1": "ground-far-step-marsh-out-Value",
+			"p2": "ground-far-step-eg-in-Marsh",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-47",
+			"p1": "ground-far-step-db-out-Value",
+			"p2": "ground-far-step-eb-in-DB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-48",
+			"p1": "ground-far-step-marsh-out-Value",
+			"p2": "ground-far-step-eb-in-Marsh",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-49",
+			"p1": "ground-far-step-basin-out-Value",
+			"p2": "ground-far-step-salt-in-Basin",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-50",
+			"p1": "ground-far-step-damp-out-Value",
+			"p2": "ground-far-step-salt-in-Damp",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-51",
+			"p1": "ground-far-step-er-out-Value",
+			"p2": "ground-far-step-fr-in-ER",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-52",
+			"p1": "ground-far-step-salt-out-Value",
+			"p2": "ground-far-step-fr-in-Salt",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-53",
+			"p1": "ground-far-step-eg-out-Value",
+			"p2": "ground-far-step-fg-in-EG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-54",
+			"p1": "ground-far-step-salt-out-Value",
+			"p2": "ground-far-step-fg-in-Salt",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-55",
+			"p1": "ground-far-step-eb-out-Value",
+			"p2": "ground-far-step-fb-in-EB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-56",
+			"p1": "ground-far-step-salt-out-Value",
+			"p2": "ground-far-step-fb-in-Salt",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-57",
+			"p1": "ground-far-step-shore-out-Value",
+			"p2": "ground-far-step-wet-in-Shore",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-58",
+			"p1": "ground-far-step-basin-out-Value",
+			"p2": "ground-far-step-wet-in-Basin",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-59",
+			"p1": "ground-far-step-damp-out-Value",
+			"p2": "ground-far-step-wet-in-Damp",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-60",
+			"p1": "ground-far-input-celsius-out-Value",
+			"p2": "ground-far-step-white-in-Celsius",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-61",
+			"p1": "ground-far-input-slope-out-Value",
+			"p2": "ground-far-step-white-in-Slope",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-62",
+			"p1": "ground-far-step-fr-out-Value",
+			"p2": "ground-far-step-gr-in-FR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-63",
+			"p1": "ground-far-step-white-out-Value",
+			"p2": "ground-far-step-gr-in-White",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-64",
+			"p1": "ground-far-step-fg-out-Value",
+			"p2": "ground-far-step-gg-in-FG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-65",
+			"p1": "ground-far-step-white-out-Value",
+			"p2": "ground-far-step-gg-in-White",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-66",
+			"p1": "ground-far-step-fb-out-Value",
+			"p2": "ground-far-step-gb-in-FB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-67",
+			"p1": "ground-far-step-white-out-Value",
+			"p2": "ground-far-step-gb-in-White",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-68",
+			"p1": "ground-far-input-farm-out-Value",
+			"p2": "ground-far-step-crops-in-Farm",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-69",
+			"p1": "ground-far-step-gr-out-Value",
+			"p2": "ground-far-step-hr-in-GR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-70",
+			"p1": "ground-far-step-crops-out-Value",
+			"p2": "ground-far-step-hr-in-Crops",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-71",
+			"p1": "ground-far-step-gg-out-Value",
+			"p2": "ground-far-step-hg-in-GG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-72",
+			"p1": "ground-far-step-crops-out-Value",
+			"p2": "ground-far-step-hg-in-Crops",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-73",
+			"p1": "ground-far-step-gb-out-Value",
+			"p2": "ground-far-step-hb-in-GB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-74",
+			"p1": "ground-far-step-crops-out-Value",
+			"p2": "ground-far-step-hb-in-Crops",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-75",
+			"p1": "ground-far-step-hr-out-Value",
+			"p2": "ground-far-step-ir-in-HR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-76",
+			"p1": "ground-far-input-roofr-out-Value",
+			"p2": "ground-far-step-ir-in-RoofR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-77",
+			"p1": "ground-far-input-built-out-Value",
+			"p2": "ground-far-step-ir-in-Built",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-78",
+			"p1": "ground-far-step-hg-out-Value",
+			"p2": "ground-far-step-ig-in-HG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-79",
+			"p1": "ground-far-input-roofg-out-Value",
+			"p2": "ground-far-step-ig-in-RoofG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-80",
+			"p1": "ground-far-input-built-out-Value",
+			"p2": "ground-far-step-ig-in-Built",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-81",
+			"p1": "ground-far-step-hb-out-Value",
+			"p2": "ground-far-step-ib-in-HB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-82",
+			"p1": "ground-far-input-roofb-out-Value",
+			"p2": "ground-far-step-ib-in-RoofB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-83",
+			"p1": "ground-far-input-built-out-Value",
+			"p2": "ground-far-step-ib-in-Built",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-84",
+			"p1": "ground-far-input-celsius-out-Value",
+			"p2": "ground-far-step-ice-in-Celsius",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-85",
+			"p1": "ground-far-input-sear-out-Value",
+			"p2": "ground-far-step-jr-in-SeaR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-86",
+			"p1": "ground-far-step-ice-out-Value",
+			"p2": "ground-far-step-jr-in-Ice",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-87",
+			"p1": "ground-far-input-seag-out-Value",
+			"p2": "ground-far-step-jg-in-SeaG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-88",
+			"p1": "ground-far-step-ice-out-Value",
+			"p2": "ground-far-step-jg-in-Ice",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-89",
+			"p1": "ground-far-input-seab-out-Value",
+			"p2": "ground-far-step-jb-in-SeaB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-90",
+			"p1": "ground-far-step-ice-out-Value",
+			"p2": "ground-far-step-jb-in-Ice",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-91",
+			"p1": "ground-far-step-ir-out-Value",
+			"p2": "ground-far-step-kr-in-IR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-92",
+			"p1": "ground-far-step-jr-out-Value",
+			"p2": "ground-far-step-kr-in-JR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-93",
+			"p1": "ground-far-step-wet-out-Value",
+			"p2": "ground-far-step-kr-in-Wet",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-94",
+			"p1": "ground-far-step-ig-out-Value",
+			"p2": "ground-far-step-kg-in-IG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-95",
+			"p1": "ground-far-step-jg-out-Value",
+			"p2": "ground-far-step-kg-in-JG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-96",
+			"p1": "ground-far-step-wet-out-Value",
+			"p2": "ground-far-step-kg-in-Wet",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-97",
+			"p1": "ground-far-step-ib-out-Value",
+			"p2": "ground-far-step-kb-in-IB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-98",
+			"p1": "ground-far-step-jb-out-Value",
+			"p2": "ground-far-step-kb-in-JB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-99",
+			"p1": "ground-far-step-wet-out-Value",
+			"p2": "ground-far-step-kb-in-Wet",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-100",
+			"p1": "ground-far-input-river-out-Value",
+			"p2": "ground-far-step-valley-in-River",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-101",
+			"p1": "ground-far-input-far-out-Value",
+			"p2": "ground-far-step-valley-in-Far",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-102",
+			"p1": "ground-far-input-plain-out-Value",
+			"p2": "ground-far-step-valley-in-Plain",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-103",
+			"p1": "ground-far-step-kr-out-Value",
+			"p2": "ground-far-step-lr-in-KR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-104",
+			"p1": "ground-far-step-valley-out-Value",
+			"p2": "ground-far-step-lr-in-Valley",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-105",
+			"p1": "ground-far-step-kg-out-Value",
+			"p2": "ground-far-step-lg-in-KG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-106",
+			"p1": "ground-far-step-valley-out-Value",
+			"p2": "ground-far-step-lg-in-Valley",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-107",
+			"p1": "ground-far-step-kb-out-Value",
+			"p2": "ground-far-step-lb-in-KB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-108",
+			"p1": "ground-far-step-valley-out-Value",
+			"p2": "ground-far-step-lb-in-Valley",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-109",
+			"p1": "ground-far-input-river-out-Value",
+			"p2": "ground-far-step-channel-in-River",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-110",
+			"p1": "ground-far-input-flow-out-Value",
+			"p2": "ground-far-step-channel-in-Flow",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-111",
+			"p1": "ground-far-input-far-out-Value",
+			"p2": "ground-far-step-channel-in-Far",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-112",
+			"p1": "ground-far-input-texel-out-Value",
+			"p2": "ground-far-step-channel-in-Texel",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-113",
+			"p1": "ground-far-input-width-out-Value",
+			"p2": "ground-far-step-channel-in-Width",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-114",
+			"p1": "ground-far-step-lr-out-Value",
+			"p2": "ground-far-step-mr-in-LR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-115",
+			"p1": "ground-far-input-streamr-out-Value",
+			"p2": "ground-far-step-mr-in-StreamR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-116",
+			"p1": "ground-far-step-channel-out-Value",
+			"p2": "ground-far-step-mr-in-Channel",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-117",
+			"p1": "ground-far-step-lg-out-Value",
+			"p2": "ground-far-step-mg-in-LG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-118",
+			"p1": "ground-far-input-streamg-out-Value",
+			"p2": "ground-far-step-mg-in-StreamG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-119",
+			"p1": "ground-far-step-channel-out-Value",
+			"p2": "ground-far-step-mg-in-Channel",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-120",
+			"p1": "ground-far-step-lb-out-Value",
+			"p2": "ground-far-step-mb-in-LB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-121",
+			"p1": "ground-far-input-streamb-out-Value",
+			"p2": "ground-far-step-mb-in-StreamB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-122",
+			"p1": "ground-far-step-channel-out-Value",
+			"p2": "ground-far-step-mb-in-Channel",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-123",
+			"p1": "ground-far-step-wet-out-Value",
+			"p2": "ground-far-step-water-in-Wet",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-124",
+			"p1": "ground-far-step-channel-out-Value",
+			"p2": "ground-far-step-water-in-Channel",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-125",
+			"p1": "ground-far-input-road-out-Value",
+			"p2": "ground-far-step-paved-in-Road",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-126",
+			"p1": "ground-far-input-along-out-Value",
+			"p2": "ground-far-step-paved-in-Along",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-127",
+			"p1": "ground-far-input-texel-out-Value",
+			"p2": "ground-far-step-paved-in-Texel",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-128",
+			"p1": "ground-far-step-mr-out-Value",
+			"p2": "ground-far-step-nr-in-MR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-129",
+			"p1": "ground-far-input-highwayr-out-Value",
+			"p2": "ground-far-step-nr-in-HighwayR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-130",
+			"p1": "ground-far-step-paved-out-Value",
+			"p2": "ground-far-step-nr-in-Paved",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-131",
+			"p1": "ground-far-step-mg-out-Value",
+			"p2": "ground-far-step-ng-in-MG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-132",
+			"p1": "ground-far-input-highwayg-out-Value",
+			"p2": "ground-far-step-ng-in-HighwayG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-133",
+			"p1": "ground-far-step-paved-out-Value",
+			"p2": "ground-far-step-ng-in-Paved",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-134",
+			"p1": "ground-far-step-mb-out-Value",
+			"p2": "ground-far-step-nb-in-MB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-135",
+			"p1": "ground-far-input-highwayb-out-Value",
+			"p2": "ground-far-step-nb-in-HighwayB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-136",
+			"p1": "ground-far-step-paved-out-Value",
+			"p2": "ground-far-step-nb-in-Paved",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-137",
+			"p1": "ground-far-step-nr-out-Value",
+			"p2": "ground-far-formula-r-in-NR",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-138",
+			"p1": "ground-far-formula-r-out-Value",
+			"p2": "ground-far-result-r-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-139",
+			"p1": "ground-far-step-ng-out-Value",
+			"p2": "ground-far-formula-g-in-NG",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-140",
+			"p1": "ground-far-formula-g-out-Value",
+			"p2": "ground-far-result-g-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-141",
+			"p1": "ground-far-step-nb-out-Value",
+			"p2": "ground-far-formula-b-in-NB",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-142",
+			"p1": "ground-far-formula-b-out-Value",
+			"p2": "ground-far-result-b-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-143",
+			"p1": "ground-far-step-water-out-Value",
+			"p2": "ground-far-formula-water-in-Water",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-144",
+			"p1": "ground-far-formula-water-out-Value",
+			"p2": "ground-far-result-water-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-145",
+			"p1": "ground-far-input-woods-out-Value",
+			"p2": "ground-far-formula-trees-in-Woods",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-146",
+			"p1": "ground-far-step-water-out-Value",
+			"p2": "ground-far-formula-trees-in-Water",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-147",
+			"p1": "ground-far-input-farm-out-Value",
+			"p2": "ground-far-formula-trees-in-Farm",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-148",
+			"p1": "ground-far-input-built-out-Value",
+			"p2": "ground-far-formula-trees-in-Built",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-149",
+			"p1": "ground-far-formula-trees-out-Value",
+			"p2": "ground-far-result-trees-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-150",
+			"p1": "ground-far-input-farm-out-Value",
+			"p2": "ground-far-formula-farm-in-Farm",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-151",
+			"p1": "ground-far-step-water-out-Value",
+			"p2": "ground-far-formula-farm-in-Water",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-152",
+			"p1": "ground-far-formula-farm-out-Value",
+			"p2": "ground-far-result-farm-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-153",
+			"p1": "ground-far-input-built-out-Value",
+			"p2": "ground-far-formula-built-in-Built",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-154",
+			"p1": "ground-far-step-water-out-Value",
+			"p2": "ground-far-formula-built-in-Water",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-155",
+			"p1": "ground-far-formula-built-out-Value",
+			"p2": "ground-far-result-built-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-156",
+			"p1": "ground-far-input-dry-out-Value",
+			"p2": "ground-far-formula-dune-in-Dry",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-157",
+			"p1": "ground-far-input-erg-out-Value",
+			"p2": "ground-far-formula-dune-in-Erg",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-158",
+			"p1": "ground-far-step-water-out-Value",
+			"p2": "ground-far-formula-dune-in-Water",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-159",
+			"p1": "ground-far-input-built-out-Value",
+			"p2": "ground-far-formula-dune-in-Built",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-160",
+			"p1": "ground-far-formula-dune-out-Value",
+			"p2": "ground-far-result-dune-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-161",
+			"p1": "ground-far-step-white-out-Value",
+			"p2": "ground-far-formula-snow-in-White",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-162",
+			"p1": "ground-far-step-water-out-Value",
+			"p2": "ground-far-formula-snow-in-Water",
+			"kind": "value"
+		},
+		{
+			"id": "ground-far-link-163",
+			"p1": "ground-far-formula-snow-out-Value",
+			"p2": "ground-far-result-snow-in-Value",
+			"kind": "value"
+		}
+	]
+}

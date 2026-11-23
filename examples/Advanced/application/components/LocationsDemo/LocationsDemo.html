@@ -5,10 +5,12 @@
 				<Select Label="Location" Size="small" [options]="PlaceList" [value]="PlaceName" (change)="PlaceChosen" />
 				<Select Label="Character" Size="small" [options]="PlaceCharacters" [value]="PlaceCharacter" (change)="PlaceCharacterChosen" />
 				<Button Label="Walk here" Icon="map-pin" Variant="ghost" Size="small" (click)="PlaceLoad" />
+				<Button Label="Parked ship" Icon="send" Variant="ghost" Size="small" [title]="'A ship standing beside the walker, its inside to walk in: up its ramp, G at a console sits there, G again stands up'" (click)="PlaceParked" />
 			</RibbonGroup>
 			<RibbonGroup Title="Camera" Icon="eye">
 				<Select Label="Camera" Size="small" [options]="PlacePersons" [value]="PlacePerson" (change)="PlacePerson = $event" />
 				<Toggle Label="Free look" [checked]="PlaceFree" (change)="PlaceFree = $event" />
+				<Toggle Label="Cutaway" [checked]="PlaceCutaway" (change)="PlaceCutaway = $event" [title]="'Inside a ship: its hull and ceilings not drawn, the view from over it'" />
 				<Button Label="Next camera (V)" Variant="ghost" Size="small" (click)="PlaceNextPerson" />
 				<Field Label="Bokeh" Horizontal="true" Size="small"><Slider Label="Bokeh" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SceneBokeh" (input)="SceneBokeh = $event" /></Field>
 			</RibbonGroup>
@@ -129,6 +131,6 @@
 		</RibbonTab>
 	</Ribbon>
 	<div class="scene-demo-scene">
-		<Scene Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" [freelook]="PlaceFree" [person]="PlacePerson" [shoulder]="PlaceShoulder" [axes]="PlaceAxes ? 'top-right' : ''" [origin]="PlaceOrigin" [bokeh]="SceneBokeh" (person)="PlacePerson = $event" (shoulder)="PlaceShoulder = $event" (ready)="PlaceReady"><DemoLoading slot="loading" Title="Locations" /><VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,rb,lb" Label="Walk" /><SceneObject *if="PlaceGlow" ID="hero-glow" Kind="effect" Type="glow" Follow="hero" Color="#7fd0ff" Intensity="1" Where="both" /><SceneObject *if="PlaceMana" ID="hero-mana" Kind="effect" Type="mana" Follow="hero" /></Scene>
+		<Scene Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" [freelook]="PlaceFree" [cutaway]="PlaceCutaway" [person]="PlacePerson" [shoulder]="PlaceShoulder" [axes]="PlaceAxes ? 'top-right' : ''" [origin]="PlaceOrigin" [bokeh]="SceneBokeh" (person)="PlacePerson = $event" (shoulder)="PlaceShoulder = $event" (ready)="PlaceReady" (ground)="PlaceGrounded"><DemoLoading slot="loading" Title="Locations" /><VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,rb,lb" Label="Walk" /><GameTargets slot="hud" /><GameStrategy Command="seat" /><div slot="hud" class="scene-demo-tactics"><GameTactics /><GameRadar Shape="bubble" Size="220" Range="240" Zoomable="true" /></div><div slot="screens" data-screen="console" class="scene-demo-console"><GameConsole /></div><div slot="screens" data-screen="console:pilot" class="scene-demo-console"><GameConsole Role="pilot" Radar="true" /></div><div slot="screens" data-screen="console:engineer" class="scene-demo-console"><GameConsole Role="engineer" /></div><div slot="screens" data-screen="console:gunner" class="scene-demo-console"><GameConsole Role="gunner" /></div><SceneObject *if="PlaceGlow" ID="hero-glow" Kind="effect" Type="glow" Follow="hero" Color="#7fd0ff" Intensity="1" Where="both" /><SceneObject *if="PlaceMana" ID="hero-mana" Kind="effect" Type="mana" Follow="hero" /></Scene>
 	</div>
 </div>

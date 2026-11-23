@@ -2407,6 +2407,10 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(field.Walkable(9, 9)).toBe(true);
 		expect(field.Walkable(30, 30)).toBe(false);
 
+		/* A way over it, asked as a Scene asks (points {X, Z}). Regression: it read [x, z] only, and a patrol there went to NaN. */
+		expect(field.Path({X: 1, Z: 2}, {X: 5, Z: -3})).toEqual([{X: 1, Z: 2}, {X: 5, Z: -3}]);
+		expect(field.Path([1, 2], [5, -3])).toEqual([{X: 1, Z: 2}, {X: 5, Z: -3}]);
+
 		/* The other side of a floor is no floor, however its triangles are wound: its normals tell. */
 		var under = terrain.FromModel([{Positions: [-5, 0, -5, 5, 0, -5, 5, 0, 5, -5, 0, 5], Normals: [0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0], Indices: [0, 2, 1, 0, 3, 2]}, {Positions: [-5, 4, -5, 5, 4, -5, 5, 4, 5, -5, 4, 5], Normals: [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0], Indices: [0, 1, 2, 0, 2, 3]}], {});
 
@@ -2576,6 +2580,124 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		frame();
 
 		expect(Math.abs(inner.Objects.hero.Heading[0] - way[0])).toBeGreaterThan(0.2);
+	});
+
+	/*
+	 * Regression: X and Y of a pad (the one on the screen of Universe too) did nothing to a ship: only A, B, RB, LS and LB were
+	 * keys of a frame, the Orbit demo pressed warp and jump by itself. X is H (warp), Y is J (jump while held).
+	 */
+	/*
+	 * Contract: Board(actor, vehicle, seat), Leave(actor), Context(actor) and the event context. The character of the player
+	 * sits in a car (kept as it is, hidden, carried in its seat), drives it, and leaves it while it goes: it steps out by its
+	 * side, the hero again, and the car rolls on by itself, slower, the engine and the doors as they were.
+	 */
+	it('lets the character get into a car, drive it, and leave it while it goes, kept as it was', async function () {
+		var told = [];
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready" (context)="Changed"><SceneObject ID="land" Kind="ground" Size="600" Height="0" Water="0" Seed="flat" /></Scene>', {Changed: function (event) {
+			told.push(event && event.detail ? event.detail : event);
+		}});
+		var space = mounted.Space;
+		var inner = space.Scene();
+		var now = performance.now() + 1000;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				space.Engine().Frame(now += 30);
+			}
+		}
+
+		space.Add('unit', {ID: 'me', Size: 1.2, X: 0, Y: 0, Health: 77});
+		space.Add('unit', {ID: 'car', Size: 1.2, X: 2, Y: 0, Vehicle: {Kind: 'car'}});
+
+		frames(3);
+
+		space.Control('me');
+
+		frames(3);
+
+		expect(space.Context('me')).toEqual({Kind: 'walk', Vehicle: '', Seat: '', Role: '', Controls: false});
+		expect(space.BoardKey()).toBe(true);
+		expect(space.Context('me')).toEqual({Kind: 'seat', Vehicle: 'car', Seat: 'driver', Role: 'driver', Controls: true});
+		expect(inner.Hero).toBe('car');
+		expect(inner.Objects.me.Hidden).toBe(true);
+		expect(told[0]).toMatchObject({Actor: 'me', Kind: 'seat', Vehicle: 'car', Role: 'driver'});
+
+		inner.Ground.Keys = {KeyW: true};
+
+		frames(60);
+
+		inner.Ground.Keys = {};
+
+		var going = inner.Objects.car.Car.Forward;
+		var seat = inner.Objects.me.World;
+
+		expect(going).toBeGreaterThan(3);
+		expect(Math.hypot(seat[0] - inner.Objects.car.World[0], seat[2] - inner.Objects.car.World[2])).toBeLessThan(2);
+
+		expect(space.Leave('me')).toBe(true);
+		expect(inner.Hero).toBe('me');
+		expect(inner.Objects.me.Hidden).toBe(false);
+		expect(inner.Objects.me.Values.Health).toBe(77);
+		expect(space.Context('me').Kind).toBe('walk');
+		expect(told[1]).toMatchObject({Actor: 'me', Kind: 'walk'});
+
+		var at = inner.Objects.car.World.slice();
+
+		frames(20);
+
+		expect(Math.hypot(inner.Objects.car.World[0] - at[0], inner.Objects.car.World[2] - at[2])).toBeGreaterThan(0.5);
+		expect(inner.Objects.car.Car.Forward).toBeLessThan(going);
+		expect(space.Leave('me')).toBe(false);
+	});
+
+	/* Contract: ground, once a ground came (its field made): {Key, ID, Location}. */
+	it('tells when its ground came, its field made, of what object', async function () {
+		var told = [];
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready" (ground)="Grounded"><SceneObject ID="land" Kind="ground" Size="300" Height="0" Water="0" Seed="flat" /></Scene>', {Grounded: function (event) {
+			told.push(event && event.detail ? event.detail : event);
+		}});
+		var now = performance.now() + 1000;
+
+		for (var i = 0; i < 5 && !told.length; i++) {
+			mounted.Space.Scene().Rest = 0;
+
+			mounted.Space.Engine().Frame(now += 30);
+
+			await new Promise(function (resolve) {
+				setTimeout(resolve, 20);
+			});
+		}
+
+		expect(told.length).toBe(1);
+		expect(told[0].ID).toBe('land');
+		expect(told[0].Location).toBe(false);
+		expect(told[0].Key).toBe(mounted.Space.Scene().Ground.Shape);
+		expect(mounted.Space.Scene().Ground.Field).toBeTruthy();
+	});
+
+	it('warps a ship by X of a pad and jumps it by Y, as H and J do', async function () {
+		var pad = Elemenx.Service('InputDevices').Virtual(unique('travel'), {Navigate: false});
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"></Scene>');
+
+		try {
+			expect(mounted.Space.Engine().PadKeys({}).KeyH).toBeFalsy();
+
+			pad.Press('x');
+
+			expect(mounted.Space.Engine().PadKeys({}).KeyH).toBe(true);
+			expect(mounted.Space.Engine().PadKeys({}).KeyJ).toBeFalsy();
+
+			pad.Release('x');
+			pad.Press('y');
+
+			expect(mounted.Space.Engine().PadKeys({}).KeyJ).toBe(true);
+			expect(mounted.Space.Engine().PadKeys({}).KeyH).toBeFalsy();
+		}
+		finally {
+			pad.Destroy();
+		}
 	});
 
 	it('walks, drives and looks by a pad as far as it leans: half a trigger is half the gas, the stick steers, A jumps', async function () {
@@ -6058,7 +6180,7 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		frames(2);
 
 		expect(stepped).toBe(2);
-		expect(gameSceneSource).toContain('field.Blocked && !(focus && focus.Values.Vehicle)');
+		expect(gameSceneSource).toContain('if (!except && field.Blocked && field.Blocked(');
 	});
 
 	it('sends a ship far at once: a warp to a body and a jump ahead, each going in, inside and out, and never into a body', async function () {
@@ -11064,45 +11186,62 @@ describe('Contract: Gltf, the models other programs make', function () {
 		expect(Object.keys(models.Make('test-attack').Clips).sort()).toEqual(['Attack', 'attack']);
 	});
 
-	it('makes clips from a skeleton by the names of its bones: legs that swing in turn, arms let down', function () {
+	/*
+	 * Regression: a skeleton with no clips walked of sines of its own (legs swinging round one axis, a stride of 1.3 its
+	 * height whatever its legs): the walk and the idle of the mannequin's graphs are laid on it now (Retarget), its stride
+	 * what its feet travel.
+	 */
+	it('makes clips from a skeleton by the names of its bones: the walk of the graphs, legs in turn, arms let down', function () {
 		function node (name, parent, at) {
 			return {Name: name, Parent: parent, Translation: at, Rotation: [0, 0, 0, 1], Scale: [1, 1, 1], Mesh: -1, Skin: -1, Children: []};
 		}
 
-		var nodes = [node('Pelvis', -1, [0, 1, 0]), node('Bip001 L Thigh', 0, [0.1, 0, 0]), node('Bip001 L Calf', 1, [0, -0.5, 0]), node('Bip001 R Thigh', 0, [-0.1, 0, 0]), node('Bip001 R Calf', 3, [0, -0.5, 0]), node('Bip001 L UpperArm', 0, [0.2, 0.5, 0]), node('Bip001 L Forearm', 5, [0.3, 0, 0])];
+		/* The angle of a turn of a channel at a key, radians. */
+		function angle (channel, key) {
+			return 2 * Math.acos(Math.min(1, Math.abs(channel.Values[key * 4 + 3])));
+		}
 
-		nodes[0].Children = [1, 3, 5];
+		var nodes = [node('Pelvis', -1, [0, 1, 0]), node('Bip001 L Thigh', 0, [0.1, -0.05, 0]), node('Bip001 L Calf', 1, [0, -0.45, 0]), node('Bip001 L Foot', 2, [0, -0.42, 0]), node('Bip001 R Thigh', 0, [-0.1, -0.05, 0]), node('Bip001 R Calf', 4, [0, -0.45, 0]), node('Bip001 R Foot', 5, [0, -0.42, 0]), node('Bip001 Spine', 0, [0, 0.1, 0]), node('Bip001 L UpperArm', 7, [0.2, 0.4, 0]), node('Bip001 L Forearm', 8, [0.3, 0, 0]), node('Bip001 L Hand', 9, [0.25, 0, 0])];
+
+		nodes[0].Children = [1, 4, 7];
 		nodes[1].Children = [2];
-		nodes[3].Children = [4];
+		nodes[2].Children = [3];
+		nodes[4].Children = [5];
 		nodes[5].Children = [6];
+		nodes[7].Children = [8];
+		nodes[8].Children = [9];
+		nodes[9].Children = [10];
 
-		var asset = {Nodes: nodes, Scene: [0], Skins: [{Joints: [0, 1, 2, 3, 4, 5, 6]}], Animations: []};
+		var asset = {Nodes: nodes, Scene: [0], Skins: [{Joints: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}], Animations: []};
 		var gait = models.Gait(asset);
-		var legs = gait.Walk.Channels.filter(function (channel) {
-			return channel.Node === 1 || channel.Node === 3;
-		});
+		var mannequin = Elemenx.Service('SceneMannequin');
+		var left = gait.Walk.Channels.filter(function (channel) {
+			return channel.Node === 1;
+		})[0];
+		var right = gait.Walk.Channels.filter(function (channel) {
+			return channel.Node === 4;
+		})[0];
+		var keys = left.Times.length - 1;
+		var swing = [];
+		var k;
 
-		expect(gait.Walk.Length).toBe(1);
-		expect(legs.length).toBe(2);
+		for (k = 0; k <= keys; k++)
+			swing.push(angle(left, k));
 
-		/* A quarter of the way one leg is ahead and the other behind: the same turn, opposite. */
-		var key = 6 * 4;
+		expect(gait.Walk.Length).toBeCloseTo(mannequin.Gait(mannequin.Skeleton({}), 'walk').Length, 6);
+		expect(Math.max.apply(null, swing) - Math.min.apply(null, swing)).toBeGreaterThan(0.4);
 
-		expect(legs[0].Values[key]).toBeCloseTo(-legs[1].Values[key], 3);
-		expect(Math.abs(legs[0].Values[key])).toBeGreaterThan(0.1);
-
-		/* The forearm goes on along it, or the elbow keeps the pose of arms held out. */
-		expect(gait.Idle.Channels.filter(function (channel) {
-			return channel.Node === 6;
-		}).length).toBe(1);
+		/* The legs in turn: the right one does half a cycle on what the left one does. */
+		expect(angle(right, Math.round(keys / 2))).toBeCloseTo(angle(left, 0), 1);
 
 		/* An arm held out comes down. */
-		var arm = gait.Idle.Channels.filter(function (channel) {
-			return channel.Node === 5;
-		})[0];
+		expect(angle(gait.Idle.Channels.filter(function (channel) {
+			return channel.Node === 8;
+		})[0], 0)).toBeGreaterThan(0.8);
 
-		expect(Math.abs(arm.Values[2])).toBeGreaterThan(0.3);
-
+		/* Its stride, of the mannequin's for legs as long as its own (0.92 of its height): what its feet travel. */
+		expect(gait.Stride).toBeGreaterThan(0.5);
+		expect(gait.Stride).toBeLessThan(1.4);
 		expect(models.Gait({Nodes: [node('Column', -1, [0, 0, 0])], Scene: [0], Skins: [{Joints: [0]}], Animations: []})).toBe(null);
 	});
 

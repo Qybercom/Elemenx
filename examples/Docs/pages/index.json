@@ -1397,9 +1397,33 @@
 					"Library": "ElemenxGaming"
 				},
 				{
+					"ID": "GameConsole",
+					"Title": {
+						"en": "GameConsole"
+					},
+					"Group": "game",
+					"Library": "ElemenxGaming"
+				},
+				{
+					"ID": "GameDash",
+					"Title": {
+						"en": "GameDash"
+					},
+					"Group": "game",
+					"Library": "ElemenxGaming"
+				},
+				{
 					"ID": "GameDialogue",
 					"Title": {
 						"en": "GameDialogue"
+					},
+					"Group": "game",
+					"Library": "ElemenxGaming"
+				},
+				{
+					"ID": "GameFlight",
+					"Title": {
+						"en": "GameFlight"
 					},
 					"Group": "game",
 					"Library": "ElemenxGaming"
@@ -1477,6 +1501,14 @@
 					"Library": "ElemenxGaming"
 				},
 				{
+					"ID": "GameRadar",
+					"Title": {
+						"en": "GameRadar"
+					},
+					"Group": "game",
+					"Library": "ElemenxGaming"
+				},
+				{
 					"ID": "GameSlot",
 					"Title": {
 						"en": "GameSlot"
@@ -1512,6 +1544,22 @@
 					"ID": "GameTabs",
 					"Title": {
 						"en": "GameTabs"
+					},
+					"Group": "game",
+					"Library": "ElemenxGaming"
+				},
+				{
+					"ID": "GameTactics",
+					"Title": {
+						"en": "GameTactics"
+					},
+					"Group": "game",
+					"Library": "ElemenxGaming"
+				},
+				{
+					"ID": "GameTargets",
+					"Title": {
+						"en": "GameTargets"
 					},
 					"Group": "game",
 					"Library": "ElemenxGaming"
@@ -3116,6 +3164,13 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "SceneInteriors",
+					"Title": {
+						"en": "SceneInteriors"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneKinds",
 					"Title": {
 						"en": "SceneKinds"
@@ -3498,6 +3553,13 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "SceneAboard",
+					"Title": {
+						"en": "SceneAboard"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneBehaviour",
 					"Title": {
 						"en": "SceneBehaviour"
@@ -3634,6 +3696,20 @@
 					"ID": "SceneScreens",
 					"Title": {
 						"en": "SceneScreens"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneShipSystems",
+					"Title": {
+						"en": "SceneShipSystems"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneTactics",
+					"Title": {
+						"en": "SceneTactics"
 					},
 					"Library": "ElemenxGraphics"
 				},

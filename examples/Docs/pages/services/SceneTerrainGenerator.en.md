@@ -86,10 +86,10 @@ The same functions run in Node: they read no page.
 - [makes a graph of numbers of Blueprints a function of a shader: the relief of a ground as near as floats hold it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-glsl.test.js#L209) — `tests/regression/compilers-glsl.test.js`
 - [gives each ground the very climate it had, of one graph](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-climate.test.js#L59) — `tests/regression/ground-climate.test.js`
 - [gives a ground of its own noise in a worker the climate of the page](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-climate.test.js#L80) — `tests/regression/ground-climate.test.js`
+- [paints the very bytes the code painted before](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-far.test.js#L49) — `tests/regression/ground-far.test.js`
+- [paints a planet of a graph of its own, its code carried to its workers](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-far.test.js#L87) — `tests/regression/ground-far.test.js`
 - [asks first for the squares of a cave under a mountain the eye is in, before the low ground round the mountain](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-lod.test.js#L146) — `tests/regression/ground-lod.test.js`
 - [asks for as many squares a frame as the workers take, however long the walk over them took](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/ground-lod.test.js#L198) — `tests/regression/ground-lod.test.js`
 - [draws a material of a recipe by its Blueprint, its parameters uniforms that change it without making it again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L73) — `tests/regression/library-material-blueprints.test.js`
-- [draws a ground by its Blueprint, the color of its parameter, and keeps the very same ground as its look changes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-material-blueprints.test.js#L199) — `tests/regression/library-material-blueprints.test.js`
-- [draws the wire of all, the edges of the models and the outlines of the chosen and hovered ones, each its colour](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-rigid.test.js#L261) — `tests/regression/library-rigid.test.js`
 
-+68 more in the same files
++70 more in the same files

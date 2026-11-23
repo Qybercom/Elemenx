@@ -23,14 +23,15 @@
  *   Application's of that name in its place, or a graph given): its legs of the path of the feet (GaitPose: a foot on the
  *   ground is a point of it, so it never slides; two bones reach the ankle), the rest of the body of the keys of the graph,
  *   its stride what the feet travel, fitted to the legs of the person (LegOf). Its numbers and keys were set beside clips
- *   of Mixamo (their files are not in the library): within degrees of them.
+ *   of Mixamo (their files are not in the library): within degrees of them. Source(graph, options): a clip of a graph as
+ *   Fbx.Parse reads a file (Bones, Length, Curves; Stride, Leg), what SceneModels.Retarget lays on another skeleton.
  * - Define(name, options): a model of SceneModels of that name, made when it is first asked for (Load), as a file is.
  * SceneModels has the model mannequin of it (Options of none). The same functions run in Node: they read no page.
  */
 Elemenx.Service('SceneMannequin', {
 	$Meta: {
 		Description: 'A person made wholly of code, as detailed as a model of a file: its skin, its skeleton of Mixamo and its clips.',
-		Methods: ['Options(options)', 'Skeleton(options)', 'Shapes(options, bones)', 'Distance(shapes, point)', 'Near(shapes, point)', 'Asset(options)', 'Clips(bones, options)', 'Gait(bones, graph, options)', 'Pose(bones, pose)', 'Define(name, options)']
+		Methods: ['Options(options)', 'Skeleton(options)', 'Shapes(options, bones)', 'Distance(shapes, point)', 'Near(shapes, point)', 'Asset(options)', 'Clips(bones, options)', 'Gait(bones, graph, options)', 'Source(graph, options)', 'Pose(bones, pose)', 'Define(name, options)']
 	},
 
 	Options: function (options) {
@@ -1329,6 +1330,79 @@ Elemenx.Service('SceneMannequin', {
 		return this.Clip(bones, name, length, Math.max(24, Math.round(length * 30)), function (t) {
 			return self.GaitPose(bones, values, t, scale, o.Height);
 		}, loop, v0.Still ? 0 : (v0.Stride || 0) * scale / o.Height);
+	},
+
+	/*
+	 * A clip of a graph as the skeleton and the clip of a file of FBX are read (Fbx.Parse): {Bones: [{Name (with no prefix),
+	 * Parent, Translation (metres, of its parent), Pre, Rotation (degrees, its rest: none)}], Length, Curves: {bone: {R: [x,
+	 * y, z], T (the hips): [x, y, z]}}, Stride (metres a cycle), Leg (hip to ankle, metres)}, the curves of degrees in the
+	 * order of FBX (x turns first), unwrapped frame to frame. So SceneModels.Retarget lays it on any skeleton by the roles of
+	 * its bones, as it lays a clip of Mixamo. Options: those of Gait.
+	 */
+	Source: function (graph, options) {
+		var bones = this.Skeleton(options || {});
+		var clip = this.Gait(bones, graph, options);
+		var curves = {};
+		var degrees = 180 / Math.PI;
+
+		/* A quaternion as degrees x, y, z of a matrix Rz Ry Rx (FBX: x turns first). */
+		function euler (q) {
+			var x = q[0];
+			var y = q[1];
+			var z = q[2];
+			var w = q[3];
+			var m20 = 2 * (x * z - y * w);
+
+			return [Math.atan2(2 * (y * z + x * w), 1 - 2 * (x * x + y * y)) * degrees, Math.asin(Math.max(-1, Math.min(1, -m20))) * degrees, Math.atan2(2 * (x * y + z * w), 1 - 2 * (y * y + z * z)) * degrees];
+		}
+
+		clip.Channels.forEach(function (channel) {
+			var times = Array.prototype.slice.call(channel.Times);
+			var own = curves[channel.Node] = curves[channel.Node] || {};
+			var axes = [[], [], []];
+			var k;
+
+			if (channel.Path === 'rotation') {
+				for (k = 0; k < times.length; k++) {
+					var turned = euler([channel.Values[k * 4], channel.Values[k * 4 + 1], channel.Values[k * 4 + 2], channel.Values[k * 4 + 3]]);
+
+					turned.forEach(function (value, axis) {
+						var last = axes[axis][k - 1];
+
+						/* The short way from the frame before: no jump of 360 degrees between two keys. */
+						axes[axis].push(last === undefined ? value : value + Math.round((last - value) / 360) * 360);
+					});
+				}
+
+				own.R = axes.map(function (values) {
+					return {Times: times, Values: values};
+				});
+
+				return;
+			}
+
+			for (k = 0; k < times.length; k++) {
+				axes[0].push(channel.Values[k * 3]);
+				axes[1].push(channel.Values[k * 3 + 1]);
+				axes[2].push(channel.Values[k * 3 + 2]);
+			}
+
+			own.T = axes.map(function (values) {
+				return {Times: times, Values: values};
+			});
+		});
+
+		return {
+			Bones: bones.map(function (bone) {
+				var parent = bone.Parent === -1 ? [0, 0, 0] : bones[bone.Parent].At;
+
+				return {ID: bone.Name, Name: bone.Name.replace(/^.*:/, ''), Parent: bone.Parent, Translation: [bone.At[0] - parent[0], bone.At[1] - parent[1], bone.At[2] - parent[2]], Pre: [0, 0, 0], Rotation: [0, 0, 0]};
+			}),
+			Length: clip.Length,
+			Curves: curves,
+			Stride: clip.Stride * this.Options(options).Height,
+			Leg: this.LegOf(bones)
+		};
 	},
 
 	/* The poses, of graphs of the library too (blueprints/animation/<name>): standing, lying, crawling, aiming, seated, hanging, swimming. */

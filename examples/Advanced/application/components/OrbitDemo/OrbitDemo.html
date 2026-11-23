@@ -6,8 +6,7 @@
 		<Button Label="Jump (J)" Icon="chevrons-right" Variant="ghost" (click)="OrbitTravel('jump')" />
 		<Select Label="Warp step" [options]="OrbitSteps" [value]="OrbitStep" (change)="OrbitStepChosen" />
 		<Button Label="Warp blocker on Luna" Icon="lock" Variant="ghost" [pressed]="OrbitBlocked" [title]="'A blocker of warp (an anomaly of Luna): a warp to it comes out at the edge of its reach'" (click)="OrbitBlocker" />
-		<span>{{OrbitSpeed}} m/s{{OrbitPhase ? ' · ' + OrbitPhase : ''}}</span>
-		<span>{{OrbitAir()}}</span>
+		<span *if="OrbitPhase">{{OrbitPhase}}</span>
 		<span *if="OrbitPassing">{{OrbitPassing}}</span>
 		<span *if="OrbitAiming">{{OrbitAiming}}</span>
 		<Button Label="Clouds graph" Icon="code" Variant="ghost" [pressed]="OrbitGraphOpen === 'shader/clouds'" [title]="'The clouds of a planet: its globe, their shadows, round the ship over its surface'" (click)="OrbitGraphOpened('shader/clouds')" />
@@ -15,6 +14,8 @@
 		<Button Label="Sky graph" Icon="code" Variant="ghost" [pressed]="OrbitGraphOpen === 'shader/cosmos'" [title]="'The sky far behind the system: gas, dust, the band of its galaxy as seen from where it lies, galaxies, stars'" (click)="OrbitGraphOpened('shader/cosmos')" />
 		<Button Label="Planet graph" Icon="code" Variant="ghost" [pressed]="OrbitGraphOpen === 'shader/planet'" [title]="'The globe from far as blocks: its picture lit, its clouds and their shadows, its towns at night, its air at the edge'" (click)="OrbitGraphOpened('shader/planet')" />
 		<Button Label="Ground graph" Icon="code" Variant="ghost" [pressed]="OrbitGraphOpen === 'shader/ground'" [title]="'The ground of the globe near and from over it as blocks: its picture, woods, fields, snow, dunes, relief, the tiles near, its light, water, towns at night, clouds and air'" (click)="OrbitGraphOpened('shader/ground')" />
+		<Button Label="Far ground graph" Icon="code" Variant="ghost" [pressed]="OrbitGraphOpen === 'shader/ground-far'" [title]="'The picture of the ground of the globe from far as blocks: alpine meadow, rock on the steep, deserts, salt and marsh, snow, ice, the water by the coast, fields and houses, a river and a highway, as much of a texel as they cover'" (click)="OrbitGraphOpened('shader/ground-far')" />
+		<Button Label="Forces graph" Icon="code" Variant="ghost" [pressed]="OrbitGraphOpen === 'aboard/forces'" [title]="'What is felt aboard as the ship flies (G: out of the seat): how much its artificial gravity takes away, how far a walker is carried and the view shaken by its speeding up, its turns, hits and warp'" (click)="OrbitGraphOpened('aboard/forces')" />
 		<Button Label="Galaxy graph" Icon="code" Variant="ghost" [pressed]="OrbitGraphOpen === 'shader/galaxy'" [title]="'The arms of the galaxy the system lies in: the band across its sky follows them'" (click)="OrbitGraphOpened('shader/galaxy')" />
 	</div>
 	<div class="scene-demo-scene" *if="OrbitGraphOpen">
@@ -22,19 +23,11 @@
 	</div>
 	<div class="scene-demo-scene">
 		<Scene *if="OrbitFresh" [graphs]="OrbitGraphs" Scale="real" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="OrbitCosmos" (ready)="OrbitReady" (travel)="OrbitTravelled" (landing)="OrbitLanding"><DemoLoading slot="loading" Title="Orbit" />
-			<VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,b,x,y,rb,dpad" Label="Fly" (button)="OrbitPad" />
-			<SceneObject ID="sol" Kind="star" Name="Star" Mass="1">
-				<SceneObject ID="terra" Kind="planet" Name="Terra" Surface-Type="terran" Surface-Planet='{"Data": "/data/planets/terra.planet", "Levels": 2, "Markers": [{"ID": "peaks", "Name": "High Peaks", "Latitude": 45.756, "Longitude": 5.376}, {"ID": "river", "Name": "Great River", "Latitude": -31.5946, "Longitude": 160.7077}, {"ID": "hills", "Name": "Green Hills", "Latitude": 48.6706, "Longitude": -88.7}, {"ID": "base", "Name": "Sea Base", "Latitude": 18, "Longitude": 32}]}' Radius="6371" Mass="1" Distance="1" Day="23.93" Tilt="23.4">
-					<SceneObject ID="luna" Kind="moon" Name="Luna" Surface-Type="moon" Radius="1737" Distance="384400 km" Day="0" />
-					<SceneObject ID="rocks" Kind="belt" Name="Rocks" Inner="1.3" Outer="1.75" Count="700" Inclination="6" Rocks="0.14" />
-					<SceneObject ID="station-1" Kind="craft" Name="Halcyon" Model="station-a" Size="0.32" Length="450" Distance="1.75" Period="90" Inclination="4" Anomaly="196" />
-					<SceneObject ID="station-2" Kind="craft" Name="Meridian" Model="station-b" Size="0.3" Length="380" Distance="2.05" Period="120" Inclination="-3" Anomaly="214" />
-					<SceneObject ID="station-3" Kind="craft" Name="Ring One" Model="station-c" Size="0.4" Length="1500" Distance="1.6" Period="80" Inclination="9" Anomaly="228" />
-					<SceneObject ID="station-4" Kind="craft" Name="Anchor" Model="station-d" Size="0.3" Length="320" Distance="2.3" Period="140" Inclination="2" Anomaly="178" />
-					<SceneObject ID="cruiser" Kind="craft" Name="Cruiser" Model="ship-cruiser" Size="0.1" Length="280" Distance="1.9" Period="60" Inclination="1" Anomaly="205" />
-					<SceneObject ID="battleship" Kind="craft" Name="Battleship" Model="ship-battleship" Size="0.14" Length="640" Distance="2.2" Period="70" Inclination="-2" Anomaly="190" />
-				</SceneObject>
-			</SceneObject>
+			<VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,b,x,y,rb,dpad" Label="Fly" />
+			<GameTargets slot="hud" />
+			<div slot="hud" class="scene-demo-tactics"><GameTactics /><GameRadar Shape="bubble" Size="220" Range="400" Zoomable="true" /></div>
+			<GameHud slot="hud" Label="Flight"><GameFlight slot="bottom" Engineer="true" Size="small" /></GameHud>
+			<div slot="screens" data-screen="console" class="scene-demo-console"><GameConsole /></div><div slot="screens" data-screen="console:pilot" class="scene-demo-console"><GameConsole Role="pilot" Radar="true" /></div><div slot="screens" data-screen="console:engineer" class="scene-demo-console"><GameConsole Role="engineer" /></div><div slot="screens" data-screen="console:gunner" class="scene-demo-console"><GameConsole Role="gunner" /></div>
 		</Scene>
 	</div>
 </div>

@@ -1,0 +1,346 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "reactor",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "reactor-input-heat",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Heat"
+				}
+			]
+		},
+		{
+			"id": "reactor-input-load",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Load"
+				}
+			]
+		},
+		{
+			"id": "reactor-input-rise",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Rise"
+				}
+			]
+		},
+		{
+			"id": "reactor-input-cool",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Cool"
+				}
+			]
+		},
+		{
+			"id": "reactor-input-elapsed",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Elapsed"
+				}
+			]
+		},
+		{
+			"id": "reactor-input-on",
+			"type": "Input",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "On"
+				}
+			]
+		},
+		{
+			"id": "reactor-input-tripped",
+			"type": "Input",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Tripped"
+				}
+			]
+		},
+		{
+			"id": "reactor-input-trip",
+			"type": "Input",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Trip"
+				}
+			]
+		},
+		{
+			"id": "reactor-input-resume",
+			"type": "Input",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Resume"
+				}
+			]
+		},
+		{
+			"id": "reactor-input-output",
+			"type": "Input",
+			"x": 0,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Output"
+				}
+			]
+		},
+		{
+			"id": "reactor-step-working",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "On > 0 ? (Tripped > 0 ? 0 : 1) : 0"
+				}
+			]
+		},
+		{
+			"id": "reactor-step-hot",
+			"type": "Formula",
+			"x": 320,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(0, min(1.2, Heat + (Working > 0 ? Load * Rise - (1 - Load) * Cool * 0.5 : -Cool) * Elapsed))"
+				}
+			]
+		},
+		{
+			"id": "reactor-formula-heat",
+			"type": "Formula",
+			"x": 680,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Hot"
+				}
+			]
+		},
+		{
+			"id": "reactor-result-heat",
+			"type": "Result",
+			"x": 1040,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Heat"
+				}
+			]
+		},
+		{
+			"id": "reactor-formula-tripped",
+			"type": "Formula",
+			"x": 680,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Tripped > 0 ? (Hot > Resume ? 1 : 0) : (Hot >= Trip ? 1 : 0)"
+				}
+			]
+		},
+		{
+			"id": "reactor-result-tripped",
+			"type": "Result",
+			"x": 1040,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Tripped"
+				}
+			]
+		},
+		{
+			"id": "reactor-formula-supply",
+			"type": "Formula",
+			"x": 680,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Working > 0 ? (Hot >= Trip ? 0 : Output) : 0"
+				}
+			]
+		},
+		{
+			"id": "reactor-result-supply",
+			"type": "Result",
+			"x": 1040,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Supply"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "reactor-link-0",
+			"p1": "reactor-input-on-out-Value",
+			"p2": "reactor-step-working-in-On",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-1",
+			"p1": "reactor-input-tripped-out-Value",
+			"p2": "reactor-step-working-in-Tripped",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-2",
+			"p1": "reactor-input-heat-out-Value",
+			"p2": "reactor-step-hot-in-Heat",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-3",
+			"p1": "reactor-step-working-out-Value",
+			"p2": "reactor-step-hot-in-Working",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-4",
+			"p1": "reactor-input-load-out-Value",
+			"p2": "reactor-step-hot-in-Load",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-5",
+			"p1": "reactor-input-rise-out-Value",
+			"p2": "reactor-step-hot-in-Rise",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-6",
+			"p1": "reactor-input-cool-out-Value",
+			"p2": "reactor-step-hot-in-Cool",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-7",
+			"p1": "reactor-input-elapsed-out-Value",
+			"p2": "reactor-step-hot-in-Elapsed",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-8",
+			"p1": "reactor-step-hot-out-Value",
+			"p2": "reactor-formula-heat-in-Hot",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-9",
+			"p1": "reactor-formula-heat-out-Value",
+			"p2": "reactor-result-heat-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-10",
+			"p1": "reactor-input-tripped-out-Value",
+			"p2": "reactor-formula-tripped-in-Tripped",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-11",
+			"p1": "reactor-step-hot-out-Value",
+			"p2": "reactor-formula-tripped-in-Hot",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-12",
+			"p1": "reactor-input-resume-out-Value",
+			"p2": "reactor-formula-tripped-in-Resume",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-13",
+			"p1": "reactor-input-trip-out-Value",
+			"p2": "reactor-formula-tripped-in-Trip",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-14",
+			"p1": "reactor-formula-tripped-out-Value",
+			"p2": "reactor-result-tripped-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-15",
+			"p1": "reactor-step-working-out-Value",
+			"p2": "reactor-formula-supply-in-Working",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-16",
+			"p1": "reactor-step-hot-out-Value",
+			"p2": "reactor-formula-supply-in-Hot",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-17",
+			"p1": "reactor-input-trip-out-Value",
+			"p2": "reactor-formula-supply-in-Trip",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-18",
+			"p1": "reactor-input-output-out-Value",
+			"p2": "reactor-formula-supply-in-Output",
+			"kind": "value"
+		},
+		{
+			"id": "reactor-link-19",
+			"p1": "reactor-formula-supply-out-Value",
+			"p2": "reactor-result-supply-in-Value",
+			"kind": "value"
+		}
+	]
+}

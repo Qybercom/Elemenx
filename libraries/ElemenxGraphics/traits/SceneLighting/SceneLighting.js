@@ -2856,7 +2856,8 @@ Elemenx.Trait('SceneLighting', {
 				'	}',
 				'	color += texture(uBloom, uv).rgb * uBloomGain;',
 				/* The air burning round what comes down through it, at the edges of the view. */
-				'	color += vec3(1.0, 0.36, 0.1) * uHeat * smoothstep(0.5, 1.25, length(vQuad));',
+				/* The heat of the air round a ship coming in, at the edges of the view: faint, the cocoon round the ship is what burns. */
+				'	color += vec3(1.0, 0.36, 0.1) * uHeat * 0.25 * smoothstep(0.5, 1.25, length(vQuad));',
 				'	float open = uEyeOn > 0.5 && uExposure == 1.0 ? clamp(0.3 / exp(texture(uEye, vec2(0.5)).r), 0.8, mix(1.35, 5.0, uDeep)) : uExposure;',
 				/* At night an eye holds no color, but where something burns: the moon lays no red on the sand, and turning away changes nothing. */
 				'	if (uNight > 0.0) {',

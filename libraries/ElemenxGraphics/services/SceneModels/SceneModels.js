@@ -10,7 +10,7 @@
  *   depth, at, color, turn), Cylinder(radius, top, height, at, color, turn, segments), Ball(radius, at, color, scale),
  *   Blob(radius, at, color, rough, scale), Lathe(points, at, color, segments) and Wedge(width, height, depth, at, color,
  *   turn); at is [x, y, z] in the space of the model, turn degrees round x, y and z, a piece with Team takes the color
- *   of its team; tools.Meshes (the shapes), tools.Math and tools.Rigs (Biped, Quadruped, Tracked: clips to reuse) are at hand.
+ *   of its team, a part with Glass is seen through (a window: GlassMaterial, its color the tint); tools.Meshes (the shapes), tools.Math and tools.Rigs (Biped, Quadruped, Tracked: clips to reuse) are at hand.
  *   A recipe of data has Parts in place of Build (Assemble: shapes with their Piece, Tags, Mirror, Chance and Vary, its
  *   Pieces, Rig for its clips, Seed: its variants of it, not of its name), JSON to keep and to edit (ModelEditor);
  *   Tagged(name, tag) gives the pieces of a tag.
@@ -337,12 +337,13 @@ Elemenx.Service('SceneModels', {
 
 		piece.Parts.forEach(function (part) {
 			var color = part.Color || [1, 1, 1];
-			var key = part.Material && !piece.Team ? part.Material + ':' + color.map(function (one) {
+			/* A part of glass (Glass: a window) is seen through: a material of its own. */
+			var key = part.Glass ? 'glass:' + color.join(',') : part.Material && !piece.Team ? part.Material + ':' + color.map(function (one) {
 				return Math.round(one * 1000);
 			}).join(',') : '';
 
 			if (!Object.prototype.hasOwnProperty.call(found, key)) {
-				found[key] = {Key: key, Parts: [], Material: key ? self.PatternMaterial(part.Material, color) : null};
+				found[key] = {Key: key, Parts: [], Material: part.Glass ? self.GlassMaterial(color) : key ? self.PatternMaterial(part.Material, color) : null};
 
 				groups[key ? 'push' : 'unshift'](found[key]);
 			}
@@ -351,6 +352,18 @@ Elemenx.Service('SceneModels', {
 		});
 
 		return groups.length ? groups : [{Key: '', Parts: [], Material: null}];
+	},
+
+	/* A material of glass of a model, tinted by the color given: mostly seen through, a little of the sky in it. */
+	GlassMaterial: function (color) {
+		var key = 'glass:' + color.join(',');
+
+		this.PatternMaterials = this.PatternMaterials || {};
+
+		if (!this.PatternMaterials[key])
+			this.PatternMaterials[key] = {Name: key, BaseColor: [color[0], color[1], color[2], 0.06], Metallic: 0, Roughness: 0.05, Emissive: [0, 0, 0], Alpha: 'BLEND', DoubleSided: true};
+
+		return this.PatternMaterials[key];
 	},
 
 	/* A material of a model drawn by a pattern of SceneMaterials, its base the color given: one for each, shared by the models. */
@@ -1590,7 +1603,7 @@ Elemenx.Service('SceneModels', {
 			if (!clips.walk) {
 				add('walk', gait.Walk);
 
-				clips.walk.Stride = recipe.Stride || 1.3;
+				clips.walk.Stride = recipe.Stride || gait.Stride || 1.3;
 			}
 
 			if (!clips.idle)
@@ -2024,7 +2037,12 @@ Elemenx.Service('SceneModels', {
 
 		made.push({Node: mover, Path: 'translation', Times: new Float32Array(keys), Values: new Float32Array(values), Size: 3, Step: false});
 
-		return self.Named(name, source.Length, made);
+		made = self.Named(name, source.Length, made);
+
+		/* How much bigger its legs are than those of the clip (its hips moved so much more). */
+		made.Scale = height;
+
+		return made;
 	},
 
 	/* A bone goes to a place of the world at rest, and what hangs on it stays where it was. */
@@ -2056,180 +2074,33 @@ Elemenx.Service('SceneModels', {
 	},
 
 	/*
-	 * Clips made from a skeleton, for a model that came without them: its bones are known by their names (Biped, Mixamo,
-	 * Blender). Each bone turns round an axis of the world, whichever way the file holds it, so one recipe fits all: legs
-	 * that swing and knees that bend, arms let down and swinging against them, a spine that turns. null with no legs.
+	 * Clips made for a skeleton that came without them: the walk and the idle of the graphs of the mannequin
+	 * (SceneMannequin.Source of blueprints/animation/walk and idle) laid on it by Retarget, its bones known by what they
+	 * are (Biped, Mixamo, Blender), the hips moved in the proportion of its legs. {Walk, Idle, Stride: what its feet travel
+	 * in a cycle, over its height}; null with no hips, thighs or feet.
 	 */
 	Gait: function (asset) {
-		var rest = this.NodeWorld(asset, this.Sample(asset, null, 0), this.$Service('Math').Identity());
-		var joints = {};
-		var turns = [];
+		var mannequin = this.$Service('SceneMannequin');
+		var source = mannequin.Source('walk');
+		var walk = this.Retarget(asset, source, 'walk', {});
+		var rest;
+		var low = Infinity;
+		var high = -Infinity;
 
+		if (!walk)
+			return null;
+
+		rest = this.NodeWorld(asset, this.Sample(asset, null, 0), this.$Service('Math').Identity());
+
+		/* Its height, of its bones at rest: from its lowest joint to its highest. */
 		asset.Skins.forEach(function (skin) {
 			skin.Joints.forEach(function (joint) {
-				joints[joint] = true;
+				low = Math.min(low, rest[joint][13]);
+				high = Math.max(high, rest[joint][13]);
 			});
 		});
 
-		function find (pattern) {
-			var found = Object.keys(joints).filter(function (index) {
-				return pattern.test(asset.Nodes[index].Name);
-			})[0];
-
-			return found === undefined ? -1 : Number(found);
-		}
-
-		function times (a, b) {
-			return [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]];
-		}
-
-		function round (axis, angle) {
-			var s = Math.sin(angle / 2);
-
-			return [axis[0] * s, axis[1] * s, axis[2] * s, Math.cos(angle / 2)];
-		}
-
-		function worldTurn (index) {
-			var node = asset.Nodes[index];
-
-			return node.Parent === -1 ? node.Rotation : times(worldTurn(node.Parent), node.Rotation);
-		}
-
-		function at (index) {
-			return [rest[index][12], rest[index][13], rest[index][14]];
-		}
-
-		function unit (v) {
-			var length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) || 1;
-
-			return [v[0] / length, v[1] / length, v[2] / length];
-		}
-
-		function cross (a, b) {
-			return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-		}
-
-		var bones = {
-			ThighL: find(/\bL[ _.]*Thigh|Left[ _.]*Up[ _.]*Leg|thigh[._]l\b/i),
-			ThighR: find(/\bR[ _.]*Thigh|Right[ _.]*Up[ _.]*Leg|thigh[._]r\b/i),
-			CalfL: find(/\bL[ _.]*Calf|Left[ _.]*Leg(?!.*Up)|calf[._]l\b/i),
-			CalfR: find(/\bR[ _.]*Calf|Right[ _.]*Leg(?!.*Up)|calf[._]r\b/i),
-			ArmL: find(/\bL[ _.]*Upper[ _.]*Arm|Left[ _.]*Arm(?!.*Fore)|upper[ _]?arm[._]l\b/i),
-			ArmR: find(/\bR[ _.]*Upper[ _.]*Arm|Right[ _.]*Arm(?!.*Fore)|upper[ _]?arm[._]r\b/i),
-			ForeL: find(/\bL[ _.]*Fore[ _.]*arm|Left[ _.]*Fore[ _.]*Arm|fore[ _]?arm[._]l\b/i),
-			ForeR: find(/\bR[ _.]*Fore[ _.]*arm|Right[ _.]*Fore[ _.]*Arm|fore[ _]?arm[._]r\b/i),
-			HandL: find(/\bL[ _.]*Hand|Left[ _.]*Hand|hand[._]l\b/i),
-			HandR: find(/\bR[ _.]*Hand|Right[ _.]*Hand|hand[._]r\b/i),
-			Spine: find(/spine1?(_|$)|spine1?\b/i)
-		};
-		if (bones.ThighL < 0 || bones.ThighR < 0 || bones.CalfL < 0 || bones.CalfR < 0) return null;
-
-		var thighs = [at(bones.ThighR)[0] - at(bones.ThighL)[0], 0, at(bones.ThighR)[2] - at(bones.ThighL)[2]];
-		var forward = unit(cross([0, 1, 0], thighs));
-		var axis = cross([0, 1, 0], forward);
-
-		/* A turn of the world for a bone, at a place of the cycle, as the turn of its node in its parent. */
-		function channel (bone, count, length, angle, first) {
-			var node = asset.Nodes[bone];
-			var parent = node.Parent === -1 ? [0, 0, 0, 1] : worldTurn(node.Parent);
-			var back = [-parent[0], -parent[1], -parent[2], parent[3]];
-			var values = [];
-			var keys = [];
-			var i;
-
-			for (i = 0; i <= count; i++) {
-				var turn = round(axis, angle(i / count * Math.PI * 2));
-
-				if (first)
-					turn = times(turn, first);
-
-				var local = times(times(times(back, turn), parent), node.Rotation);
-
-				values.push(local[0], local[1], local[2], local[3]);
-				keys.push(i / count * length);
-			}
-
-			return {Node: bone, Path: 'rotation', Times: new Float32Array(keys), Values: new Float32Array(values), Size: 4, Step: false};
-		}
-
-		/* An arm held out is let down first: from where it points to the side of the body. */
-		function lowered (arm, fore) {
-			var way = fore < 0 ? [0, -1, 0] : unit([at(fore)[0] - at(arm)[0], at(fore)[1] - at(arm)[1], at(fore)[2] - at(arm)[2]]);
-			var down = unit([way[0] * 0.4, -1, way[2] * 0.4]);
-
-			return turnTo(way, down);
-		}
-
-		function turnTo (way, down) {
-			var pivot = cross(way, down);
-			var size = Math.sqrt(pivot[0] * pivot[0] + pivot[1] * pivot[1] + pivot[2] * pivot[2]);
-
-			return size < 0.05 ? null : round(unit(pivot), Math.atan2(size, way[0] * down[0] + way[1] * down[1] + way[2] * down[2]));
-		}
-
-		/* A forearm goes on along the arm let down, or the elbow stays as a pose of arms held out left it. */
-		function along (fore, hand, arm) {
-			var turn;
-			var way;
-			var down;
-			var r;
-
-			if (fore < 0 || hand < 0 || !arm) return null;
-
-			way = unit([at(hand)[0] - at(fore)[0], at(hand)[1] - at(fore)[1], at(hand)[2] - at(fore)[2]]);
-			down = unit([way[0] * 0.4, -1, way[2] * 0.4]);
-			turn = [-arm[0], -arm[1], -arm[2], arm[3]];
-			r = times(times(turn, [down[0], down[1], down[2], 0]), arm);
-
-			return turnTo(way, [r[0], r[1], r[2]]);
-		}
-
-		function clip (name, length, count, swing) {
-			var channels = turns.map(function (one) {
-				return channel(one.Bone, count, length, swing(one), one.First);
-			});
-
-			return {Name: name, Length: length, Channels: channels};
-		}
-
-		[['ThighL', 'Leg', 1], ['ThighR', 'Leg', -1], ['CalfL', 'Knee', 1], ['CalfR', 'Knee', -1], ['ArmL', 'Arm', -1], ['ArmR', 'Arm', 1], ['ForeL', 'Elbow', 1], ['ForeR', 'Elbow', 1]].forEach(function (one) {
-			var bone = bones[one[0]];
-			if (bone < 0) return;
-
-			var left = /L$/.test(one[0]);
-			var arm = bones[left ? 'ArmL' : 'ArmR'];
-			var first = arm < 0 ? null : lowered(arm, bones[left ? 'ForeL' : 'ForeR']);
-
-			turns.push({Bone: bone, Part: one[1], Side: one[2], First: one[1] === 'Arm' ? first : one[1] === 'Elbow' ? along(bone, bones[left ? 'HandL' : 'HandR'], first) : null});
-		});
-
-		return {
-			Walk: clip('Walk (made)', 1, 24, function (one) {
-				return function (phase) {
-					if (one.Part === 'Leg')
-						return -0.48 * one.Side * Math.sin(phase);
-
-					if (one.Part === 'Knee')
-						return 0.12 + 0.85 * Math.max(0, one.Side * Math.cos(phase));
-
-					if (one.Part === 'Arm')
-						return -0.34 * one.Side * Math.sin(phase);
-
-					return -0.3 + 0.12 * Math.sin(phase);
-				};
-			}),
-			Idle: clip('Idle (made)', 3, 12, function (one) {
-				return function (phase) {
-					if (one.Part === 'Elbow')
-						return -0.14 + 0.02 * Math.sin(phase);
-
-					if (one.Part === 'Arm')
-						return 0.02 * Math.sin(phase);
-
-					return 0;
-				};
-			})
-		};
+		return {Walk: walk, Idle: this.Retarget(asset, mannequin.Source('idle'), 'idle', {}), Stride: source.Stride * walk.Scale / Math.max(1e-6, high - low)};
 	},
 
 	/* The pieces of a model with many, as one for each material: a location of thousands of meshes is a few draws. */

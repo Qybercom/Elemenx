@@ -1,0 +1,14 @@
+<p class="elemenx-caption">GameDash reads the Readout of the Scene it stands in: here, what a dash shows of a car and of a character on foot (Show takes a readout as Readout gives it).</p>
+<GameDash #dash />
+<Button Label="A car at 120 km/h" (click)="Car" />
+<Button Label="On foot" (click)="Foot" />
+<script>
+({
+	Car: function () {
+		this.$Ref('dash', true).Show({Kind: 'car', Speed: 120, TopSpeed: 330, Gear: 4, RpmPart: 0.62, Left: 1, Lights: 1});
+	},
+	Foot: function () {
+		this.$Ref('dash', true).Show({Kind: 'walk', Speed: 5, HealthPart: 0.7});
+	}
+})
+</script>

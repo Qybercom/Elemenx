@@ -1,0 +1,21 @@
+{
+	"gaming": {
+		"flight": {
+			"label": "Flight",
+			"speed": "Speed",
+			"height": "Height",
+			"travel": "Travel",
+			"throttle": "Throttle",
+			"shield": "Shield {id}",
+			"tripped": "Shut down by heat",
+			"on": "On",
+			"vent": "Vent",
+			"engines": "Engines",
+			"shields": "Shields",
+			"weapons": "Weapons",
+			"nav": "Known places",
+			"jammed": "Warp blocked by {id} in {km} km",
+			"jammedIn": "Warp blocked here by {id}"
+		}
+	}
+}

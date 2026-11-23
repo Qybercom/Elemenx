@@ -6,7 +6,7 @@
 Elemenx.Trait('SceneDemo', {
 	$StyleURL: 'SceneDemo.css',
 	SceneQuality: 'auto',
-	SceneQualities: [{Value: 'auto', Label: 'Auto'}, {Value: 'low', Label: 'Low'}, {Value: 'medium', Label: 'Medium'}, {Value: 'high', Label: 'High'}, {Value: 'ultra', Label: 'Ultra'}],
+	SceneQualities: [],
 	SpaceSystem: 'sol',
 	SceneWeather: 'clear',
 	SceneWeathers: [{Value: 'clear', Label: 'Clear'}, {Value: 'cloudy', Label: 'Cloudy'}, {Value: 'overcast', Label: 'Overcast'}, {Value: 'rain', Label: 'Rain'}, {Value: 'storm', Label: 'Storm'}, {Value: 'snow', Label: 'Snow'}, {Value: 'fog', Label: 'Fog'}, {Value: 'changing', Label: 'Changing'}],
@@ -33,12 +33,8 @@ Elemenx.Trait('SceneDemo', {
 			return worlds[key];
 		};
 
-		try {
-			this.SceneQuality = window.localStorage.getItem('ui-kit-quality') || 'auto';
-		}
-		catch (error) {
-			this.SceneQuality = 'auto';
-		}
+		this.SceneQualities = this.$Service('DemoQuality').List;
+		this.SceneQuality = this.$Service('DemoQuality').Read();
 
 		/* The quality chosen in the frame of the page (DemoFrame), one for all the demos. */
 		this.QualityHeard = function (event) {
@@ -56,14 +52,7 @@ Elemenx.Trait('SceneDemo', {
 	SceneQualityChosen: function (value) {
 		this.SceneQuality = value;
 
-		try {
-			window.localStorage.setItem('ui-kit-quality', value);
-		}
-		catch (error) {
-			value = String(value);
-		}
-
-		window.dispatchEvent(new CustomEvent('scene-demo-quality', {detail: value}));
+		this.$Service('DemoQuality').Choose(value);
 	},
 
 	SceneWeatherChosen: function (value) {

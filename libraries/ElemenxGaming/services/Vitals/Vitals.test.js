@@ -13,6 +13,22 @@ describe('Contract: Vitals, the health of what a game can hurt, with one way in'
 		vitals = Elemenx.Service('Vitals');
 	});
 
+	/*
+	 * Contract: UnitOf(object), what a unit is of its model (Units, resources/vitals/units); its health over the one of its
+	 * kind. Regression: each demo gave each unit its numbers itself.
+	 */
+	it('knows what a unit is of its model: its health, damage, range and sight', function () {
+		var archer = {ID: 'a', Kind: 'unit', Traits: {}, Values: {Model: 'archer'}};
+
+		expect(vitals.UnitOf(archer)).toEqual({Max: 40, Damage: 8, Range: 12});
+		expect(vitals.UnitOf({Values: {Model: 'nothing-such'}})).toEqual({});
+		expect(vitals.UnitOf({Values: {Model: 'constructor'}})).toEqual({});
+		expect(vitals.Settings(archer).Max).toBe(40);
+		expect(vitals.Settings({ID: 'b', Kind: 'unit', Traits: {Health: {Max: 70}}, Values: {Model: 'archer'}}).Max).toBe(70);
+		expect(vitals.Settings({ID: 'c', Kind: 'unit', Traits: {}, Values: {Model: 'robot', MaxHealth: 50}}).Max).toBe(50);
+		expect(vitals.Settings({ID: 'd', Kind: 'unit', Traits: {}, Values: {}}).Max).toBe(100);
+	});
+
 	it('takes damage by the type and the part hit, less the armour, and tells damage, health and death once', function () {
 		var written = {};
 		var ledger = vitals.Make({Write: function (id, value) {

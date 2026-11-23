@@ -45,6 +45,26 @@ Elemenx.Trait('SceneLanding', {
 		/* Where it changes from the surface to a location coming down (km over the ground). */
 		var LOW = 0.6;
 
+		/*
+		 * How a landing looks as it goes (blueprints/landing/look; LandingLookGraph of the scene or its Graphs['landing/look'] in
+		 * its place), of {Thick (the air of the body), Speed (km/s), Over (km over the ground), Going (1 up), Throttle, Manual, T
+		 * (of a transfer), Landed, Pull, Flat, Top (of a hover)}: {Heat, Fov, Thrust, Raise, TransferThrust, OrbitThrust,
+		 * HoverThrust}. The way down of the view (Land of a body, no ship) heats of it too: one heat of the air.
+		 */
+		engine.LandingLook = function (given) {
+			var graph = self.GraphOf('LandingLookGraph', 'landing/look') || Elemenx.Resources('Blueprints', 'ElemenxGraphics/landing/look');
+			var inputs = {Thick: 0, Speed: 0, Over: 0, Going: 0, Throttle: 0, Manual: 0, T: 0, Landed: 0, Pull: 0, Flat: 0, Top: 1};
+			var made = scene.LandingLookCode;
+			if (!made || made.Graph !== graph)
+				made = scene.LandingLookCode = {Graph: graph, Code: self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)))};
+
+			Object.keys(given || {}).forEach(function (key) {
+				inputs[key] = given[key];
+			});
+
+			return made.Code.Run({}, inputs);
+		};
+
 		function number (value, fallback) {
 			return value === undefined || value === null || value === '' || isNaN(Number(value)) ? fallback : Number(value);
 		}
@@ -288,6 +308,7 @@ Elemenx.Trait('SceneLanding', {
 			var at;
 			var motion;
 			var heat;
+			var look;
 			var thick = body && body.Look ? body.Look.Atmosphere[3] : 0;
 
 			/* A key of flight takes it over. */
@@ -356,14 +377,19 @@ Elemenx.Trait('SceneLanding', {
 			landing.Speed = air.Speed * pace;
 			landing.Gamma = air.Gamma;
 
-			heat = thick * 0.6 * smooth(1.5, 6, air.Speed) * Math.exp(-Math.pow((over - 65) / 28, 2)) * (going ? 0.25 : 1);
+			/* How it looks (blueprints/landing/look): the heat of the air on it, its nose raised high up, its thrust. */
+			look = engine.LandingLook({Thick: thick, Speed: air.Speed, Over: over, Going: going ? 1 : 0, Throttle: air.Throttle, Manual: landing.Manual ? 1 : 0});
+
+			accompany(hero, look, lengthOf(hero) / 1000, thick, over);
+
+			heat = look.Heat;
 			surface.Heat = heat;
 
-			show(hero, surface, at, motion, landing.Manual ? 0 : 0.7 * smooth(25, 55, over) * (going ? 0 : 1), air.Bank, elapsed);
+			show(hero, surface, at, motion, look.Raise, air.Bank, elapsed);
 
-			chase(surface, landing, hero, at, heat);
+			chase(surface, landing, hero, at, look);
 
-			hero.Thrust = 0.3 + air.Throttle * 0.7 + (going ? 0.6 : 0);
+			hero.Thrust = look.Thrust;
 
 			if (!landing.Manual && !going)
 				phase(hero, over > 12 ? 'entry' : 'approach');
@@ -392,7 +418,98 @@ Elemenx.Trait('SceneLanding', {
 		 * Regression: the view was in the axes of the ship, eased: as the ship lifted its nose for the air the view went up
 		 * to the sky, and it turned and banked with it, whatever the player had turned it to.
 		 */
-		function chase (surface, landing, hero, at, heat) {
+		/*
+		 * What comes with a ship as it lands, an effect of its own (<ship>:<kind>, drawn with it over the surface): there as
+		 * long as it is on (more than a hundredth), told what it is to look like when that changes by a twentieth.
+		 */
+		function withShip (hero, kind, on, settings) {
+			var id = hero.ID + ':' + kind;
+			var have = scene.Objects[id];
+			var told = hero.Accompanied = hero.Accompanied || {};
+			var last = told[kind];
+
+			if (on <= 0.01) {
+				if (have)
+					self.Remove(id);
+
+				delete told[kind];
+
+				return;
+			}
+
+			if (!have) {
+				self.Add('effect', Object.assign({ID: id, Type: kind}, settings));
+
+				told[kind] = on;
+
+				return;
+			}
+
+			if (last === undefined || Math.abs(last - on) > 0.05) {
+				self.Change(id, settings);
+
+				told[kind] = on;
+			}
+		}
+
+		/*
+		 * In the air of a body (of its look, blueprints/landing/look): the cocoon of hot air round it coming in, red, then
+		 * white-blue as it heats; the white trail it leaves high up; the bang as it goes past the speed of sound (and the view
+		 * shakes).
+		 */
+		function accompany (hero, look, size, thick, over) {
+			var landing = hero.Landing;
+			var hot = look.CocoonHot;
+			var mach = look.Mach;
+
+			withShip(hero, 'plasma', look.Cocoon, {Follow: hero.ID, Offset: [0, 0, size * 0.45], Size: size, Intensity: look.Cocoon, Length: 0.6 + look.Cocoon * 2.4, Color: [1 - 0.25 * hot, 0.42 + 0.43 * hot, 0.12 + 0.88 * hot], Hot: [1 - 0.05 * hot, 0.86 + 0.11 * hot, 0.62 + 0.38 * hot]});
+			withShip(hero, 'contrail', look.Contrail, {Follow: hero.ID, Size: size, Intensity: look.Contrail, Length: look.Contrail});
+
+			if (landing.Mach !== undefined && (landing.Mach - 1) * (mach - 1) < 0 && thick > 0.05 && over < 40) {
+				if (scene.Objects[hero.ID + ':sonicboom'])
+					self.Remove(hero.ID + ':sonicboom');
+
+				self.Add('effect', {ID: hero.ID + ':sonicboom', Type: 'sonicboom', Follow: hero.ID, Size: size});
+
+				landing.Boomed = scene.Seconds;
+
+				if (engine.Shock && scene.Eye)
+					engine.Shock(scene.Eye, 0.5, 1);
+			}
+
+			/* The bang is over in a moment: its effect goes. */
+			if (landing.Boomed !== undefined && scene.Seconds - landing.Boomed > 1.5) {
+				if (scene.Objects[hero.ID + ':sonicboom'])
+					self.Remove(hero.ID + ':sonicboom');
+
+				landing.Boomed = undefined;
+			}
+
+			landing.Mach = mach;
+		}
+
+		/* Out of the air (in space, in a location): none of it. */
+		function leaveAir (hero) {
+			['plasma', 'contrail'].forEach(function (kind) {
+				withShip(hero, kind, 0, {});
+			});
+
+			if (hero.Landing)
+				hero.Landing.Mach = undefined;
+		}
+
+		/*
+		 * Low over the ground of a location: what its jets blow off it, more as it comes down and the harder they burn: dust off
+		 * the land, spray off the sea (jetdust, jetspray).
+		 */
+		function blowDust (hero, at, floor, size, sea) {
+			var look = engine.LandingLook({Height: at[1] - floor, Size: size, Push: hero.Thrust || 0});
+
+			withShip(hero, sea ? 'jetdust' : 'jetspray', 0, {});
+			withShip(hero, sea ? 'jetspray' : 'jetdust', look.Dust, {At: [at[0], sea ? 0 : floor, at[2]], Size: size * 0.3, Intensity: look.Dust, Volume: look.Dust});
+		}
+
+		function chase (surface, landing, hero, at, look) {
 			var field = surface.Field;
 			var size = lengthOf(hero) / 1000;
 			var follow = hero.Values.Vehicle.Follow || [3.2, 0.85];
@@ -401,7 +518,8 @@ Elemenx.Trait('SceneLanding', {
 			var way = vectors.Add(vectors.Add(vectors.Scale(view.Right, round[0]), vectors.Scale(view.Up, round[1])), vectors.Scale(view.Ahead, round[2]));
 			var far = size * Math.hypot(follow[0], follow[1]) * scene.Wanted / Math.max(1e-12, landing.ShipFar || scene.Wanted);
 			var time = scene.Seconds;
-			var shake = vectors.Scale(vectors.Add(vectors.Scale(view.Right, Math.sin(time * 47) + Math.sin(time * 23) * 0.5), vectors.Scale(view.Up, Math.sin(time * 41 + 1) + Math.sin(time * 19) * 0.5)), size * 0.04 * heat);
+			var shaken = engine.CameraShake({Time: time, Heat: look.Heat, Size: size});
+			var shake = vectors.Add(vectors.Scale(view.Right, shaken.HeatRight), vectors.Scale(view.Up, shaken.HeatUp));
 			var eye = vectors.Add(vectors.Add(at, vectors.Scale(way, far)), shake);
 			var high = vectors.Length(eye) - field.Radius - field.Elevation(vectors.Normalize(eye));
 			if (high < size * 0.3)
@@ -422,7 +540,7 @@ Elemenx.Trait('SceneLanding', {
 			if (landing.Fov === undefined)
 				landing.Fov = scene.Camera.Fov;
 
-			scene.Camera.Fov = landing.Fov * (1 + heat * 0.12);
+			scene.Camera.Fov = landing.Fov * look.Fov;
 		}
 
 		/*
@@ -573,6 +691,9 @@ Elemenx.Trait('SceneLanding', {
 			var landing = hero.Landing;
 			var body = scene.Objects[landing.Body];
 			var planet = planetOf(body);
+
+			leaveAir(hero);
+
 			var target = latLon(landing.Target);
 			var locations = self.$Service('SceneLocations');
 			var location = null;
@@ -886,6 +1007,12 @@ Elemenx.Trait('SceneLanding', {
 			var landing = hero.Landing;
 			var body = scene.Objects[landing.Body];
 			var vehicle = hero.Values.Vehicle;
+
+			leaveAir(hero);
+
+			withShip(hero, 'jetdust', 0, {});
+			withShip(hero, 'jetspray', 0, {});
+
 			var air = landing.Air;
 			var scale = body.Size / body.Radius;
 			var axes = landing.ShipAxes;
@@ -1012,7 +1139,7 @@ Elemenx.Trait('SceneLanding', {
 				hero.Ship.Way = velocity;
 			}
 
-			hero.Thrust = 1 + 1.5 * Math.sin(Math.PI * t);
+			hero.Thrust = engine.LandingLook({T: t}).TransferThrust;
 
 			engine.PlaceShip(hero, vehicle, vectors.Add(body.World, at), axes.Right, axes.Up, axes.Ahead);
 
@@ -1089,7 +1216,7 @@ Elemenx.Trait('SceneLanding', {
 			hero.Ship.Up = vectors.Cross(ahead, right);
 			hero.Ship.Right = right;
 			hero.Ship.Way = vectors.Scale(ahead, orbit.Rate * orbit.Radius);
-			hero.Thrust = 0.05;
+			hero.Thrust = engine.LandingLook({}).OrbitThrust;
 
 			engine.PlaceShip(hero, hero.Values.Vehicle, vectors.Add(body.World, at), right, hero.Ship.Up, ahead);
 
@@ -1279,7 +1406,9 @@ Elemenx.Trait('SceneLanding', {
 
 			engine.PlaceShip(hero, vehicle, air.At.slice(), axes.Right, axes.Up, axes.Ahead);
 
-			hero.Thrust = air.Landed ? 0 : 0.35 + Math.min(1.6, vectors.Length(vectors.Subtract(wanted, air.Way)) / 10 + flat / top);
+			hero.Thrust = engine.LandingLook({Landed: air.Landed ? 1 : 0, Pull: vectors.Length(vectors.Subtract(wanted, air.Way)), Flat: flat, Top: top}).HoverThrust;
+
+			blowDust(hero, air.At, floor, lengthOf(hero), !!field.Water && field.Height(air.At[0], air.At[2]) < 0);
 
 			/*
 			 * The view stays turned where the player turned it, nearer or farther as the ship goes faster. Regression: it went

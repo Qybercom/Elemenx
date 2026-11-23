@@ -283,6 +283,28 @@ Elemenx.Trait('SceneEffects', {
 			return made;
 		}
 
+		/*
+		 * How what burns on an engine looks of its thrust (blueprints/vehicles/thrust; ThrustGraph of the vehicle, of the scene
+		 * or its Graphs['vehicles/thrust'] in its place): {Length, Intensity (shares of what it is told), Inside (of its
+		 * intensity, the glow in its mouth)}.
+		 */
+		function thrustOf (object, thrust) {
+			var settings = object.Values && object.Values.Vehicle || {};
+			var graph = settings.ThrustGraph || self.GraphOf('ThrustGraph', 'vehicles/thrust') || Elemenx.Resources('Blueprints', 'ElemenxGraphics/vehicles/thrust');
+			var codes = scene.ThrustCodes = scene.ThrustCodes || [];
+			var code = codes.filter(function (one) {
+				return one.Graph === graph;
+			})[0];
+
+			if (!code) {
+				code = {Graph: graph, Code: self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)))};
+
+				codes.push(code);
+			}
+
+			return code.Code.Run({}, {Thrust: thrust || 0});
+		}
+
 		/* What an effect is told to look like. */
 		function looks (settings) {
 			return {Color: settings.Color ? tint(settings.Color) : null, Hot: settings.Hot ? tint(settings.Hot) : null, Volume: Math.max(0.1, given(settings.Volume, 1)), Intensity: Math.max(0, given(settings.Intensity, 1)), Length: Math.max(0.1, given(settings.Length, 1)), Width: Math.max(0.1, given(settings.Width, 1)), Smoke: Math.max(0, given(settings.Smoke, 1))};
@@ -359,7 +381,7 @@ Elemenx.Trait('SceneEffects', {
 
 				/* What burns on a thing that drives goes with its thrust. */
 				if (carrier && carrier.Thrust !== undefined)
-					seen.Length *= 0.25 + carrier.Thrust;
+					seen.Length *= thrustOf(carrier, carrier.Thrust).Length;
 
 				return type && settings.On !== false && settings.On !== 'false' ? Object.assign(seen, {Type: type, At: placeOf(object, settings), Aim: aimOf(object, settings, type), Size: given(settings.Size, 1), Power: given(settings.Power, 1), Since: scene.Seconds + (object.Seed || 0) * 40, Light: settings.Light, Key: object.ID, Seed: settings.Seed || object.ID, Rings: settings.Rings, Spin: given(settings.Spin, 1), Grown: (coming > 0 ? Math.min(1, (scene.Seconds - born[object.ID]) / coming) : 1) * Math.min(1, fading * 1.5), Drawn: drawn, Layers: layersOf(type, settings.Tune)}) : null;
 			}).filter(Boolean);
@@ -387,9 +409,12 @@ Elemenx.Trait('SceneEffects', {
 					if (!type) return;
 
 					if (engineOn) {
-						seen.Length *= 0.25 + (object.Thrust || 0);
-						seen.Intensity *= Math.min(1, (object.Thrust || 0) * 6) * (0.9 + 1.5 * Math.min(1, object.Thrust || 0));
-						seen.Inside = seen.Intensity * 0.75;
+						var burning = thrustOf(object, object.Thrust || 0);
+
+						seen.Length *= burning.Length;
+						seen.Intensity *= burning.Intensity;
+						seen.Inside = seen.Intensity * burning.Inside;
+						seen.Haze = burning.Haze;
 						seen.Intensity *= veilOf(mount.At);
 					}
 
@@ -474,7 +499,10 @@ Elemenx.Trait('SceneEffects', {
 			});
 		};
 
-		/* Where the air trembles on the screen: [x, y, radius, strength], up to four, the nearest first. */
+		/*
+		 * Where the air trembles on the screen: [x, y, radius, strength], up to four, the nearest first. Over a fire; behind
+		 * the mouth of an engine, along its aim, as much as its thrust makes it (Haze of the graph of the thrust).
+		 */
 		engine.EffectHeat = function (matrix, aspect) {
 			var data = [];
 
@@ -483,11 +511,12 @@ Elemenx.Trait('SceneEffects', {
 			}).sort(function (a, b) {
 				return vectors.Distance(a.At, scene.Eye) - vectors.Distance(b.At, scene.Eye);
 			}).slice(0, 4).forEach(function (one) {
-				var size = one.Size * 1.6;
-				var seen = math.Apply(matrix, vectors.Subtract(vectors.Add(one.At, [0, size * 1.3, 0]), scene.Eye));
-				var far = vectors.Distance(one.At, scene.Eye);
+				var size = one.Mouth ? Math.max(one.Mouth[0], one.Mouth[1]) * 4 : one.Size * 1.6;
+				var where = one.Mouth && one.Aim ? vectors.Add(one.At, vectors.Scale(vectors.Normalize(one.Aim), size * 1.2)) : vectors.Add(one.At, [0, size * 1.3, 0]);
+				var seen = math.Apply(matrix, vectors.Subtract(where, scene.Eye));
+				var far = vectors.Distance(where, scene.Eye);
 
-				data.push(seen[0] * 0.5 + 0.5, seen[1] * 0.5 + 0.5, size / Math.max(0.5, far) * 0.7 / Math.max(1, aspect / 2), seen[2] < 1 ? one.Type.Heat * one.Power : 0);
+				data.push(seen[0] * 0.5 + 0.5, seen[1] * 0.5 + 0.5, size / Math.max(0.5, far) * 0.7 / Math.max(1, aspect / 2), seen[2] < 1 ? one.Type.Heat * one.Power * (one.Haze === undefined ? 1 : one.Haze) : 0);
 			});
 
 			while (data.length < 16)
@@ -892,9 +921,18 @@ Elemenx.Trait('SceneEffects', {
 		return true;
 	},
 
-	/* An effect that happens once at a place [x, y, z] of the world: Burst('explosion', [0, 1, 0], {Size, Power, Aim}). */
+	/*
+	 * An effect that happens once at a place [x, y, z] of the world: Burst('explosion', [0, 1, 0], {Size, Power, Aim, Shock}).
+	 * A blast (explosion, fireball) shakes the view near it (Shock: how much, 1 for those; 0 for none).
+	 */
 	Burst: function (type, place, options) {
-		return this.Engine().EffectBurst(type, place, options);
+		var given = options || {};
+		var shock = given.Shock !== undefined ? Number(given.Shock) || 0 : /explosion|fireball/.test(String(type)) ? 1 : 0;
+		var engine = this.Engine();
+		if (shock && engine.Shock && place)
+			engine.Shock(place, shock, Number(given.Size) || 1);
+
+		return engine.EffectBurst(type, place, options);
 	},
 
 	EffectShaders: function (head) {

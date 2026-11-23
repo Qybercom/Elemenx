@@ -257,6 +257,65 @@ describe('Regression: the poses of the mannequin, graphs of the library', functi
 	});
 });
 
+/*
+ * A skeleton with no clips of its own walks of the mannequin's graphs (SceneModels.Gait: SceneMannequin.Source laid by
+ * Retarget). On the mannequin's own skeleton that is its own walk, turn for turn.
+ */
+describe('Regression: the gaits of the graphs on another skeleton', function () {
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['service:SceneMannequin', 'service:SceneModels', 'service:Blueprints']);
+
+		man = Elemenx.Service('SceneMannequin');
+		bones = man.Skeleton({});
+	});
+
+	it('lays the walk of the graphs on a skeleton by its roles: on its own skeleton, its very walk', function () {
+		var models = Elemenx.Service('SceneModels');
+		var nodes = bones.map(function (bone) {
+			var parent = bone.Parent === -1 ? [0, 0, 0] : bones[bone.Parent].At;
+
+			return {Name: bone.Name, Parent: bone.Parent, Translation: [bone.At[0] - parent[0], bone.At[1] - parent[1], bone.At[2] - parent[2]], Rotation: [0, 0, 0, 1], Scale: [1, 1, 1], Mesh: -1, Skin: -1, Children: []};
+		});
+		var own = man.Gait(bones, 'walk');
+		var gait;
+		var source = man.Source('walk');
+
+		nodes.forEach(function (node, index) {
+			if (node.Parent !== -1)
+				nodes[node.Parent].Children.push(index);
+		});
+
+		gait = models.Gait({Nodes: nodes, Scene: [0], Skins: [{Joints: nodes.map(function (node, index) {
+			return index;
+		})}], Animations: []});
+
+		['LeftUpLeg', 'LeftLeg', 'RightUpLeg', 'Spine1'].forEach(function (name) {
+			var index = man.Find(bones, name);
+			var mine = own.Channels.filter(function (channel) {
+				return channel.Node === index && channel.Path === 'rotation';
+			})[0];
+			var laid = gait.Walk.Channels.filter(function (channel) {
+				return channel.Node === index && channel.Path === 'rotation';
+			})[0];
+			var k;
+
+			for (k = 0; k < mine.Values.length; k += 4) {
+				var dot = Math.abs(mine.Values[k] * laid.Values[k] + mine.Values[k + 1] * laid.Values[k + 1] + mine.Values[k + 2] * laid.Values[k + 2] + mine.Values[k + 3] * laid.Values[k + 3]);
+
+				expect([name, dot > 0.9999]).toEqual([name, true]);
+			}
+		});
+
+		expect(source.Bones.length).toBe(bones.length);
+		expect(source.Stride).toBeCloseTo(own.Stride * 1.78, 6);
+		expect(gait.Stride).toBeCloseTo(own.Stride * 1.78 / (bones[man.Find(bones, 'HeadTop_End')].At[1] - Math.min.apply(null, bones.map(function (bone) {
+			return bone.At[1];
+		}))), 3);
+	});
+});
+
 describe('Contract: SceneMannequin.Gait, a clip of a graph of a gait', function () {
 	beforeAll(async function () {
 		await loadElemenx();

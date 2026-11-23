@@ -9,7 +9,7 @@ var graphics = ['tests/regression/library-scene.test.js', 'tests/regression/game
  * The other contracts that draw scenes: the programs of a scene are made in seconds, many more beside other files, so
  * they are let run a minute (15 s cut them off under load); they run beside the others all the same.
  */
-var scenes = ['libraries/ElemenxGraphics/**/*.test.js', 'libraries/ElemenxGaming/**/*.test.js', 'tests/regression/blueprints.test.js', 'tests/regression/model-formats.test.js', 'tests/regression/library-drawing.test.js', 'tests/regression/library-object-editor.test.js', 'tests/regression/contact-shadows.test.js', 'tests/regression/fps.test.js', 'tests/regression/game-editor.test.js', 'tests/regression/ground-lod.test.js', 'tests/regression/library-effect-blueprints.test.js', 'tests/regression/library-game-race.test.js', 'tests/regression/library-game-strategy.test.js', 'tests/regression/library-material-blueprints.test.js', 'tests/regression/library-render-pipeline.test.js', 'tests/regression/library-rigid.test.js', 'tests/regression/library-scene-behaviours.test.js', 'tests/regression/library-scene-caves.test.js', 'tests/regression/library-scene-editing.test.js', 'tests/regression/library-scene-frames.test.js', 'tests/regression/library-scene-landing.test.js', 'tests/regression/library-scene-roads.test.js', 'tests/regression/library-scene-screens.test.js', 'tests/regression/library-shader-errors.test.js', 'tests/regression/library-triggers.test.js', 'tests/regression/probe-light.test.js', 'tests/regression/scatter-sketch.test.js', 'tests/regression/scene-game-hooks.test.js', 'tests/regression/shadow-cascades.test.js', 'tests/regression/terrain-sketch.test.js'];
+var scenes = ['libraries/ElemenxGraphics/**/*.test.js', 'libraries/ElemenxGaming/**/*.test.js', 'tests/regression/blueprints.test.js', 'tests/regression/model-formats.test.js', 'tests/regression/library-drawing.test.js', 'tests/regression/library-object-editor.test.js', 'tests/regression/contact-shadows.test.js', 'tests/regression/fps.test.js', 'tests/regression/game-editor.test.js', 'tests/regression/ground-lod.test.js', 'tests/regression/library-effect-blueprints.test.js', 'tests/regression/library-game-race.test.js', 'tests/regression/library-game-strategy.test.js', 'tests/regression/library-material-blueprints.test.js', 'tests/regression/library-render-pipeline.test.js', 'tests/regression/library-rigid.test.js', 'tests/regression/library-scene-behaviours.test.js', 'tests/regression/library-scene-caves.test.js', 'tests/regression/library-scene-editing.test.js', 'tests/regression/library-scene-frames.test.js', 'tests/regression/library-scene-landing.test.js', 'tests/regression/library-scene-roads.test.js', 'tests/regression/library-scene-screens.test.js', 'tests/regression/library-shader-errors.test.js', 'tests/regression/library-triggers.test.js', 'tests/regression/probe-light.test.js', 'tests/regression/scatter-sketch.test.js', 'tests/regression/scene-game-hooks.test.js', 'tests/regression/shadow-cascades.test.js', 'tests/regression/terrain-sketch.test.js', 'tests/regression/hardcode-tables.test.js', 'tests/regression/library-aboard.test.js', 'tests/regression/library-game-dash.test.js', 'tests/regression/library-scene-planet-data.test.js', 'tests/regression/library-tactics.test.js', 'tests/regression/planet-graphs.test.js', 'tests/regression/scatter-proxies.test.js', 'tests/regression/scene-clusters.test.js', 'tests/regression/scene-culling.test.js'];
 
 /* ELEMENX_SCRIPT runs the browser contracts against another build of the framework: npm run test:min uses dist/elemenx.min.js. */
 export default defineConfig({
@@ -47,15 +47,19 @@ export default defineConfig({
 		 */
 		projects: [
 			/*
-			 * The contracts run beside the scenes (groupOrder 0), whose workers grow plants and bake planets: under that load a
+			 * The contracts ran beside the scenes, whose workers grow plants and bake planets: under that load a
 			 * contract of a component took more than the 15 s a test has (a different one each run: Noise, TopologyIso,
 			 * SignaturePad, Countdown). 45 s. Its hooks (loading the framework, defining what a file uses: half a second alone) have as
 			 * long as its tests: under the same load they took more than the 30 s a hook has by default (ground-lod, compilers-wasm,
 			 * focus-on-open, PlanetEditor, ScenePlanet, a different one each run).
 			 */
 			{extends: true, test: {name: 'contracts', include: ['tests/**/*.test.js', 'libraries/**/*.test.js'], exclude: outside.concat(graphics, scenes), testTimeout: 45000, hookTimeout: 45000, sequence: {groupOrder: 0}}},
-			{extends: true, test: {name: 'scenes', include: scenes, exclude: outside.concat(graphics), testTimeout: 60000, hookTimeout: 60000, sequence: {groupOrder: 0}}},
-			{extends: true, test: {name: 'graphics', include: graphics, exclude: outside, maxWorkers: 1, testTimeout: 90000, hookTimeout: 90000, sequence: {groupOrder: 1}}}
+			/*
+			 * The scenes after the contracts (groupOrder 1), two files at a time: four beside the contracts fought for the
+			 * processor and the graphics card, and the bake of a planet (16 s alone) stretched seven times past the minute a test has.
+			 */
+			{extends: true, test: {name: 'scenes', include: scenes, exclude: outside.concat(graphics), maxWorkers: 2, testTimeout: 60000, hookTimeout: 60000, sequence: {groupOrder: 1}}},
+			{extends: true, test: {name: 'graphics', include: graphics, exclude: outside, maxWorkers: 1, testTimeout: 90000, hookTimeout: 90000, sequence: {groupOrder: 2}}}
 		]
 	}
 });

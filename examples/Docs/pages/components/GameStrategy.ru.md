@@ -8,6 +8,10 @@
 
 Юнит с Weapon (оружие сцены: rifle, rocket, mortar…) стреляет с дальности Range (25 м) с разбросом Spread (градусы, 2); его выстрелы попадают во всё, что на пути. Урон идёт через здоровье сцены (Vitals), общее с GameCombat.
 
+Чего юнит не говорит сам (Damage, Range, Sight, здоровье), то берётся по его модели из Vitals.Units (`resources/vitals/units.json`). Демо больше не прописывает числа каждому юниту.
+
+С Command="seat" он работает, только пока герой в стратегическом виде своего места (SceneTactics, режим `strategic`). Его бойцы тогда — те, кем командует это место (Command сцены): пеший экипаж своего корабля или все экипажи флотилии, какой бы ни была их команда. Отданные приказы выполняются и после выхода из вида, а выделение снимается. Сам герой и те, кто сидит на местах, бойцами при этом не считаются.
+
 ## Свойства
 
 | Свойство | По умолчанию |
@@ -16,6 +20,7 @@
 | `Fog` | `false` |
 | `Spread` | `2.5` |
 | `Selected` | `''` |
+| `Command` | `''` |
 | `Label` | `''` |
 
 ## События
@@ -42,4 +47,5 @@
 - [hides in its fog the units of other teams that its units do not see, and tells what was seen and explored](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L252) — `tests/regression/library-game-strategy.test.js`
 - [sees no farther than the weather and the light let it: a fog takes the range of sight of its units](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L280) — `tests/regression/library-game-strategy.test.js`
 - [sets no timer of no function while the scene and its game are made](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L301) — `tests/regression/library-game-strategy.test.js`
+- [commands from the seat of command: its crew, or every crew of its fleet from the flagship; the view of a strategy carried by the keys; GameStrategy orders only them, only there](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tactics.test.js#L318) — `tests/regression/library-tactics.test.js`
 - [has the armed units of a strategy shoot their foe from afar until it is gone](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/components/GameCombat/GameCombat.test.js#L182) — `libraries/ElemenxGaming/components/GameCombat/GameCombat.test.js`

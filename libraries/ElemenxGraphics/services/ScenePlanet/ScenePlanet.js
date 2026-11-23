@@ -40,8 +40,9 @@
  *   Moisture). LandGraph, ReliefGraph, RoughGraph, WindGraph and ClimateGraph: graphs of its own; ReliefRun(name) the
  *   library's as a function {Main, Inputs, Keys}, ReliefMake(graph) the code of one {Source, Inputs, Keys},
  *   ReliefOf(name, graph, code) its function; GraphSources(options) the code of its own (ReliefSources) for the workers, as
- *   Ruled(options) and SceneTerrainGenerator.Site give it them. Its plates are of blueprints/planet/plate (inputs Index,
- *   Count, Seed, Ocean; results MX, MY, MZ, its middle, VX, VY, VZ, its motion, Oceanic: of seven numbers of its seed,
+ *   Ruled(options) and SceneTerrainGenerator.Site give it them. The picture of a square of its far ground (PatchPicture)
+ *   is of blueprints/shader/ground-far (GroundFarGraph: one of its own; PictureRun(graph, code), PictureMake(graph)).
+ *   Its plates are of blueprints/planet/plate (inputs Index, Count, Seed, Ocean; results MX, MY, MZ, its middle, VX, VY, VZ, its motion, Oceanic: of seven numbers of its seed,
  *   Blueprints.Chain), PlateGraph one of its own: PlateOf(graph, source) its function (Code: of a text, not of numbers).
  * - Edits: what was changed of its relief after it was made, brushes along a path, in their order: [{Type (raise, lower,
  *   flatten, smooth), Points [[latitude, longitude]...], Radius (km), Amount (metres; of smooth 0 to 1), Height (metres,
@@ -71,7 +72,7 @@
 Elemenx.Service('ScenePlanet', {
 	$Meta: {
 		Description: 'A planet as one continuous function of a direction: painted continents, tectonic plates, winds, climate and biomes, as fine as it is asked.',
-		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'ViewTurn(yaw, pitch, roll)', 'Map(options, rows, width, height, overlay)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'UseData(key, data)', 'AddTiles(key, names)', 'DataOf(key)', 'Ruled(options)', 'DataVectors(key)', 'Vectored(options)', 'TownsFor(options)', 'TileName(layer, face, level, x, y)', 'TileDirection(face, s, t)', 'TilePlace(direction)', 'TileValues(options, layer, face, level, x, y, size, table)', 'Settlements(options, count)', 'PlacedTowns(options, towns)', 'PlacedRivers(options, rivers)', 'UseSettlements(key, towns)', 'Highways(options, step)', 'UseHighways(key, roads)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)', 'ReliefRun(name)', 'ReliefMake(graph)', 'ReliefOf(name, graph, code)', 'GraphSources(options)', 'Kind(kind)', 'KindByShare(share)', 'Warmth(celsius)', 'SurfaceType(type)', 'Giant(type)']
+		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'ViewTurn(yaw, pitch, roll)', 'Map(options, rows, width, height, overlay)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'UseData(key, data)', 'AddTiles(key, names)', 'DataOf(key)', 'Ruled(options)', 'DataVectors(key)', 'Vectored(options)', 'TownsFor(options)', 'TileName(layer, face, level, x, y)', 'TileDirection(face, s, t)', 'TilePlace(direction)', 'TileValues(options, layer, face, level, x, y, size, table)', 'Settlements(options, count)', 'PlacedTowns(options, towns)', 'PlacedRivers(options, rivers)', 'UseSettlements(key, towns)', 'Highways(options, step, part, parts)', 'MergeHighways(pieces)', 'UseHighways(key, roads)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)', 'ReliefRun(name)', 'PictureRun(graph, code)', 'PictureMake(graph)', 'ReliefMake(graph)', 'ReliefOf(name, graph, code)', 'GraphSources(options)', 'Kind(kind)', 'KindByShare(share)', 'Warmth(celsius)', 'SurfaceType(type)', 'Giant(type)']
 	},
 
 	/* The kinds of strokes of a paint. */
@@ -2185,7 +2186,7 @@ Elemenx.Service('ScenePlanet', {
 		return !!this.SurfaceType(type).Giant;
 	},
 
-	Carried: ['Rules', 'Defaults', 'SurfaceTypes', 'Rivers', 'ClimateCode', 'ReliefCode', 'ReliefNames', 'PlateCode', 'Paint'],
+	Carried: ['Rules', 'Defaults', 'SurfaceTypes', 'Rivers', 'ClimateCode', 'ReliefCode', 'ReliefNames', 'PlateCode', 'PictureCode', 'Paint'],
 
 	/*
 	 * The graphs of the land and of the relief of a planet made code (blueprints/planet/land and relief): {land, relief:
@@ -2256,6 +2257,12 @@ Elemenx.Service('ScenePlanet', {
 		if (options && (options.UpwindGraph || options.RoughGraph)) {
 			made = made || {};
 			made.Upwind = this.UpwindMake(options);
+		}
+
+		/* Its far ground of a graph of its own (GroundFarGraph: how a texel of the picture of a square looks). */
+		if (options && options.GroundFarGraph) {
+			made = made || {};
+			made.GroundFar = this.PictureMake(options.GroundFarGraph);
 		}
 
 		/* Its plates of a graph of its own (PlateGraph): of its Code, not of numbers (the numbers of its seed are of a text). */
@@ -2366,6 +2373,56 @@ Elemenx.Service('ScenePlanet', {
 			this.PlateCode = this.$Service('Blueprints').Code(Elemenx.Resources('Blueprints', 'ElemenxGraphics/planet/plate')).Source;
 
 		return this.PlateCode;
+	},
+
+	/*
+	 * The code of the graph of the far ground of the library (blueprints/shader/ground-far: how a texel of the picture of a
+	 * square looks, PatchPicture), of numbers: [{Source, Keys, Inputs}] of its results by fours (PictureKeys: a generator of
+	 * numbers gives up to four), made in the page, carried to its workers.
+	 */
+	PictureCode: null,
+
+	PictureKeys: [['R', 'G', 'B', 'Water'], ['Trees', 'Farm', 'Built', 'Dune'], ['Snow']],
+
+	/*
+	 * The graph of the far ground as functions, each of the inputs in their order (Inputs) of its results (Keys): of Land,
+	 * Coast, Height, Rise, Moisture, Celsius, Slope, Dry, Erg, Stone, LandR/G/B, SeaR/G/B, Farm, Built, RoofR/G/B, River,
+	 * Flow, Far, Width, Plain, StreamR/G/B, Road, Along, HighwayR/G/B, Texel, Woods; R, G, B, Water, Trees, Farm, Built,
+	 * Dune, Snow. A river or a road in a texel far wider than it is as much of it as it covers (the same mean at every
+	 * size): Width the half of its channel, Far (Along of a road) the distance of the middle of the texel from it, km.
+	 */
+	PictureRun: function (graph, code) {
+		var self = this;
+		var codes = code || (graph ? this.PictureMake(graph) : null);
+
+		if (!codes) {
+			this.PictureCode = this.PictureCode || this.PictureMake('ElemenxGraphics/shader/ground-far');
+			codes = this.PictureCode;
+		}
+
+		return codes.map(function (one) {
+			return self.ReliefOf('ground-far', null, one);
+		});
+	},
+
+	/*
+	 * The code of a graph of the far ground (a graph or the name of one in the resources), made in the page: [{Source, Keys,
+	 * Inputs}] of its results by fours (PictureKeys); a planet of one of its own (GroundFarGraph) carries it to its workers
+	 * (ReliefSources.GroundFar).
+	 */
+	PictureMake: function (graph) {
+		var self = this;
+		var read = typeof graph === 'string' ? Elemenx.Resources('Blueprints', graph) : graph;
+
+		return this.PictureKeys.map(function (keys) {
+			var made = self.$Service('Blueprints').NumericCode(read, {}, {}, keys);
+			if (!made)
+				throw new Error('Elemenx ScenePlanet: a graph of the far ground is not of numbers');
+
+			return {Source: made.Source, Keys: made.Keys, Inputs: made.Numeric.Inputs.map(function (one) {
+				return one.Name;
+			})};
+		});
 	},
 
 	/*
@@ -2544,9 +2601,11 @@ Elemenx.Service('ScenePlanet', {
 	 * The highways of a planet: its cities and towns (Settlements) joined by the shortest net of them (a town to the nearest
 	 * of those joined before it, cities first), each over the ground through cells of step km (20): round what is steep, over
 	 * water only where it must (a bridge or a ferry costs 15 times as much), none longer than 1500 km. {Highways: [{Points
-	 * (directions), Class (highway between cities, road to a town), From, To (indexes of its settlements)}]}.
+	 * (directions), Class (highway between cities, road to a town), From, To (indexes of its settlements)}]}. part of parts:
+	 * only the ways whose place in the net is that part (each with Order, its place), for workers to share them: their
+	 * ways put in Order (MergeHighways) are what one run of all gives.
 	 */
-	Highways: function (options, step) {
+	Highways: function (options, step, part, parts) {
 		var self = this;
 		var planet = this.Planet(options);
 		var radius = planet.Radius;
@@ -2667,11 +2726,37 @@ Elemenx.Service('ScenePlanet', {
 				ways.push({From: town, To: best.Other, Class: town.Kind === 'city' && best.Other.Kind === 'city' ? 'highway' : 'road'});
 		});
 
-		return {Highways: ways.map(function (way) {
-			var path = route(way.From.Point, way.To.Point);
+		var share = Number(parts) > 1 ? Number(parts) : 0;
 
-			return path ? {Points: fewer(path), Class: way.Class, From: way.From.Index, To: way.To.Index} : null;
+		return {Highways: ways.map(function (way, order) {
+			var path;
+			var made;
+
+			if (share && order % share !== Number(part || 0)) return null;
+
+			path = route(way.From.Point, way.To.Point);
+			made = path ? {Points: fewer(path), Class: way.Class, From: way.From.Index, To: way.To.Index} : null;
+
+			if (made && share)
+				made.Order = order;
+
+			return made;
 		}).filter(Boolean)};
+	},
+
+	/* The ways of the parts of a run of Highways ([{Highways}] of each part), in their Order: what one run of all gives. */
+	MergeHighways: function (pieces) {
+		var all = [];
+
+		(pieces || []).forEach(function (piece) {
+			all = all.concat(piece && piece.Highways || []);
+		});
+
+		return {Highways: all.sort(function (a, b) {
+			return a.Order - b.Order;
+		}).map(function (way) {
+			return {Points: way.Points, Class: way.Class, From: way.From, To: way.To};
+		})};
 	},
 
 	/* The highways kept under a key, as UseRivers keeps rivers. */
@@ -3814,10 +3899,6 @@ Elemenx.Service('ScenePlanet', {
 			return t * t * (3 - 2 * t);
 		}
 
-		function mix (a, b, t) {
-			return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
-		}
-
 		/* The heights a texel round each, one more round the square for its slopes; the samples of its own texels. */
 		for (k = -1; k <= n; k++) {
 			for (i = -1; i <= n; i++) {
@@ -3913,14 +3994,6 @@ Elemenx.Service('ScenePlanet', {
 			return top + (bottom - top) * sy;
 		}
 
-		/*
-		 * How much of a texel (texel km wide, its middle far km from the middle of a band half km wide) the band covers, 0
-		 * to 1: a road or a river in a texel far wider than it is as much of it as it takes, the same mean at every size.
-		 */
-		function covered (half, far, texel) {
-			return Math.max(0, Math.min(far + texel / 2, half) - Math.max(far - texel / 2, -half)) / texel;
-		}
-
 		function dwelt (up, x, y, sample, slope, height) {
 			var towns = nearTowns || (planet.Towns ? planet.Towns(up) : []);
 			var built = 0;
@@ -3958,11 +4031,25 @@ Elemenx.Service('ScenePlanet', {
 		}
 
 		/*
-		 * The mean of its fields (their crops: see FIELDS of the Ground shader, which draws each parcel of it); the one of its
-		 * houses (roofs, streets and gardens) Roofs of the kind of the settlement (Kind: a kind of none on a planet, of a village).
-		 * Regression: of a table of three kinds, a hamlet or a fort put by hand on a planet broke its picture.
+		 * How a texel looks, of the graph of the far ground (PictureRun). The houses of a settlement Roofs of its kind (Kind: a
+		 * kind of none on a planet, of a village). Regression: of a table of three kinds, a hamlet or a fort put by hand on a
+		 * planet broke its picture.
 		 */
-		var cropMean = [0.48, 0.47, 0.27];
+		var look = this.PictureRun((planet.Options || {}).GroundFarGraph, ((planet.Options || {}).ReliefSources || {}).GroundFar);
+		var given;
+		var got;
+
+		function read (code) {
+			var r = code.Main.apply(null, code.Inputs.map(function (name) {
+				return given[name];
+			}));
+
+			code.Keys.forEach(function (key, index) {
+				got[key] = code.Keys.length === 1 ? r : r[index];
+			});
+		}
+		var stream = this.Rivers.Color;
+		var highway = this.Rivers.Highway;
 
 		for (k = 0; k < n; k++) {
 			for (i = 0; i < n; i++) {
@@ -3984,14 +4071,8 @@ Elemenx.Service('ScenePlanet', {
 				 * lower than 1 m) had water round its rim by the same rule, steep there, and none in it: rings of water.
 				 */
 				var coast = height <= 0 || heights[at + 1] <= 0 || heights[at - 1] <= 0 || heights[at + side] <= 0 || heights[at - side] <= 0;
-				var water = coast ? Math.max(0, Math.min(1, 0.5 - height / Math.max(1, rise))) : 0;
-				/* A basin of the land, its floor at the least height of land (1 m, its rim to 6): a marsh where it is wet, a salt flat where it is dry. */
-				var basin = sample.Land && !coast ? smooth(6, 1, height) : 0;
-				var damp = smooth(0.3, 0.55, sample.Moisture);
 				/* How dry and warm: sand seas and stony plateaus where it is a desert (none where it is cold). */
 				var arid = self.Arid(sample, field.Radius);
-				/* Rock on the steep: steeper where it is wet and warm (woods hold to a slope there), less where it is dry or cold. */
-				var green = smooth(0.35, 0.7, sample.Moisture) * smooth(2, 16, sample.Celsius);
 				var a = lifted(at + 1);
 				var b = lifted(at - 1);
 				var c = lifted(at + side);
@@ -3999,13 +4080,12 @@ Elemenx.Service('ScenePlanet', {
 				var made = unit([(c[1] - d[1]) * (a[2] - b[2]) - (c[2] - d[2]) * (a[1] - b[1]), (c[2] - d[2]) * (a[0] - b[0]) - (c[0] - d[0]) * (a[2] - b[2]), (c[0] - d[0]) * (a[1] - b[1]) - (c[1] - d[1]) * (a[0] - b[0])]);
 				var land;
 				var sea;
-				var paint;
 				var river;
 				var road;
 				var fx = (cu - extent / 2 + i * step) * km;
 				var fy = (cv - extent / 2 + k * step) * km;
 				var used;
-				var white;
+				var roof;
 				var o = (k * n + i) * 4;
 
 				if (made[0] * up[0] + made[1] * up[1] + made[2] * up[2] < 0)
@@ -4015,69 +4095,38 @@ Elemenx.Service('ScenePlanet', {
 				if (height <= 0)
 					made = up;
 
-				/* Its land: of its biome and height, rock where it is steep, snow where it is cold and not too steep. */
+				/*
+				 * Its land of its biome and height, its sea by its depth, its fields and houses, its river and highway: how they
+				 * make its color, of the graph of the far ground (blueprints/shader/ground-far: alpine meadow, rock on the steep,
+				 * deserts and basins, snow, ice, the water by the coast, the valley and the channel of a river, a highway).
+				 */
 				land = self.Color(planet, Object.assign({}, sample, {Land: true, Elevation: Math.max(0, height), Celsius: 20, Pictured: true}), 'relief', 1);
-				/*
-				 * Over the tree line alpine meadow, green and brown; rock grey on the steep, more so the higher (the walls of a
-				 * range bare); snow below, only where it is not too steep.
-				 */
-				land = mix(land, [0.46, 0.47, 0.3], smooth(5, 0, sample.Celsius) * (1 - smooth(-4, -9, sample.Celsius)) * 0.6);
-				land = mix(land, [0.44, 0.42, 0.4], smooth(0.15 + 0.6 * green, 0.45 + 0.75 * green, slope) * (0.75 + 0.2 * smooth(1500, 3500, height)));
-				/*
-				 * Its deserts: sand seas, orange, where the noise of their tens of kilometres is high (dunes on them drawn by the
-				 * shader, of Use), dark stony plateaus between; dry basins white with salt, wet ones water.
-				 */
-				land = self.Desert(land, arid, basin, damp);
-				water = Math.max(water, basin * damp * 0.55);
-				white = smooth(-3, -9, sample.Celsius) * (1 - smooth(0.45, 0.9, slope));
-				land = mix(land, [0.92, 0.94, 0.97], white);
-
-				/* Its fields and houses: their mean here, each parcel and house drawn by the shader (of Use). */
-				used = dwelt(up, fx, fy, sample, slope, height);
-				land = mix(land, cropMean, used.Farm * 0.85);
-				land = mix(land, self.Kind(used.Kind).Roofs, used.Built);
-
-				/* Its sea: by its depth (a coast of land by the shallows), ice where it is colder still. */
 				sea = self.Color(planet, Object.assign({}, sample, {Land: false, Elevation: Math.min(-1, height), Celsius: 20, Pictured: true}), 'relief', 1);
-				sea = mix(sea, [0.85, 0.9, 0.95], smooth(-10, -14, sample.Celsius));
-				paint = mix(land, sea, water);
+				used = dwelt(up, fx, fy, sample, slope, height);
+				roof = self.Kind(used.Kind).Roofs;
+				river = sample.Land ? planet.River(up) : null;
+				road = sample.Land ? planet.Highway(up) : null;
+				given = {Land: sample.Land ? 1 : 0, Coast: coast ? 1 : 0, Height: height, Rise: rise, Moisture: sample.Moisture, Celsius: sample.Celsius, Slope: slope, Dry: arid.Dry, Erg: arid.Erg, Stone: arid.Stone, LandR: land[0], LandG: land[1], LandB: land[2], SeaR: sea[0], SeaG: sea[1], SeaB: sea[2], Farm: used.Farm, Built: used.Built, RoofR: roof[0], RoofG: roof[1], RoofB: roof[2], River: river ? 1 : 0, Flow: river ? river.Flow : 0, Far: river ? river.Far : 0, Width: river ? self.RiverChannel(river.Flow) : 0, Plain: river ? self.RiverValley(river.Flow) : 1, StreamR: stream[0], StreamG: stream[1], StreamB: stream[2], Road: road ? 1 : 0, Along: road ? road.Far : 0, HighwayR: highway[0], HighwayG: highway[1], HighwayB: highway[2], Texel: texel, Woods: woods(sample, height, slope)};
+				got = {};
 
-				if (sample.Land) {
-					river = planet.River(up);
-					road = planet.Highway(up);
+				look.forEach(read);
 
-					if (river) {
-						var channel = self.RiverChannel(river.Flow);
-						var plain = self.RiverValley(river.Flow);
-						var wet = river.Flow > 25 ? covered(channel, river.Far, texel) : 0;
-
-						if (river.Far < plain)
-							paint = mix(paint, [paint[0] * 0.85 + 0.03, paint[1] * 0.9 + 0.08, paint[2] * 0.85], smooth(plain, plain * 0.5, river.Far));
-
-						paint = mix(paint, self.Rivers.Color, wet);
-						water = Math.max(water, wet);
-					}
-
-					if (road)
-						paint = mix(paint, self.Rivers.Highway, covered(0.015, road.Far, texel) * 0.8);
-				}
-
-				color[o] = Math.round(Math.max(0, Math.min(1, paint[0])) * 255);
-				color[o + 1] = Math.round(Math.max(0, Math.min(1, paint[1])) * 255);
-				color[o + 2] = Math.round(Math.max(0, Math.min(1, paint[2])) * 255);
-				color[o + 3] = Math.round(water * 255);
+				color[o] = Math.round(Math.max(0, Math.min(1, got.R)) * 255);
+				color[o + 1] = Math.round(Math.max(0, Math.min(1, got.G)) * 255);
+				color[o + 2] = Math.round(Math.max(0, Math.min(1, got.B)) * 255);
+				color[o + 3] = Math.round(got.Water * 255);
 				normal[o] = Math.round((made[0] * 0.5 + 0.5) * 255);
 				normal[o + 1] = Math.round((made[1] * 0.5 + 0.5) * 255);
 				normal[o + 2] = Math.round((made[2] * 0.5 + 0.5) * 255);
 				/* Fields and houses take the woods: a hedge or a grove left, no more. */
-				normal[o + 3] = Math.round(woods(sample, height, slope) * (1 - water) * (1 - used.Farm * 0.9) * (1 - used.Built) * 255);
-				use[o] = Math.round(used.Farm * (1 - water) * 255);
-				use[o + 1] = Math.round(used.Built * (1 - water) * 255);
+				normal[o + 3] = Math.round(got.Trees * 255);
+				use[o] = Math.round(got.Farm * 255);
+				use[o + 1] = Math.round(got.Built * 255);
 				use[o + 2] = self.Kind(used.Kind).Use;
 				/* Its sand of dunes (the Ground shader draws them of it). */
-				use[o + 3] = Math.round(arid.Dry * arid.Erg * (1 - water) * (1 - used.Built) * 255);
+				use[o + 3] = Math.round(got.Dune * 255);
 				/* How much of it snow lies on (its ground near is of the snow of its biome there). */
-				snow[k * n + i] = Math.round(white * (1 - water) * 255);
+				snow[k * n + i] = Math.round(got.Snow * 255);
 			}
 		}
 
@@ -4539,6 +4588,7 @@ Elemenx.Service('ScenePlanet', {
 		}, this);
 
 		this.PlateSource();
+		this.PictureRun();
 
 		return this.$Service('Workers').Source(this, names);
 	}

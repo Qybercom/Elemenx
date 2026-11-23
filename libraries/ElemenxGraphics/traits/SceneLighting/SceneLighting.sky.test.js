@@ -123,8 +123,21 @@ describe('Contract: the lights of the sky of a Scene: the northern lights and th
 		var draw = renderer.Draw;
 		var flashes = [];
 		var bolts = 0;
+		var random = Math.random;
+		var seed = 7;
 
 		scene.Weather = 'storm';
+
+		/*
+		 * Chance held still: from 0.5 up, the storm makes no flash of its own between those asked for. Regression (load): the
+		 * frames went by in larger steps, and a bolt of the storm came now and then into a sheet asked for (or a sheet into a
+		 * strike), a different check failing each run.
+		 */
+		Math.random = function () {
+			seed = (seed * 16807) % 2147483647;
+
+			return 0.5 + seed / 2147483647 * 0.49;
+		};
 		scene.Quality = 'high';
 
 		renderer.Draw = function (mesh, program, uniforms, options) {
@@ -183,6 +196,7 @@ describe('Contract: the lights of the sky of a Scene: the northern lights and th
 		}
 		finally {
 			renderer.Draw = draw;
+			Math.random = random;
 		}
 	}, 30000);
 

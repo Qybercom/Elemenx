@@ -1,0 +1,166 @@
+{
+	"version": 1,
+	"type": "effect",
+	"name": "jetspray",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "layer1",
+			"type": "Layer",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Kind",
+					"value": "smoke"
+				},
+				{
+					"key": "Blend",
+					"value": "alpha"
+				},
+				{
+					"key": "Count",
+					"value": 70
+				},
+				{
+					"key": "Life",
+					"value": 2.4
+				},
+				{
+					"key": "Speed",
+					"value": [
+						7,
+						14
+					]
+				},
+				{
+					"key": "Spread",
+					"value": 3
+				},
+				{
+					"key": "Size",
+					"value": [
+						0.8,
+						4.5
+					]
+				},
+				{
+					"key": "Color",
+					"value": [
+						0.86,
+						0.9,
+						0.95
+					]
+				},
+				{
+					"key": "Opacity",
+					"value": 0.4
+				},
+				{
+					"key": "Rise",
+					"value": 0.35
+				},
+				{
+					"key": "Drag",
+					"value": 2
+				},
+				{
+					"key": "Wander",
+					"value": 0.4
+				},
+				{
+					"key": "Wind",
+					"value": 0.7
+				}
+			]
+		},
+		{
+			"id": "layer2",
+			"type": "Layer",
+			"x": 300,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Kind",
+					"value": "spark"
+				},
+				{
+					"key": "Blend",
+					"value": "alpha"
+				},
+				{
+					"key": "Count",
+					"value": 60
+				},
+				{
+					"key": "Life",
+					"value": 1.1
+				},
+				{
+					"key": "Speed",
+					"value": [
+						6,
+						13
+					]
+				},
+				{
+					"key": "Spread",
+					"value": 2.6
+				},
+				{
+					"key": "Size",
+					"value": [
+						0.04,
+						0.04
+					]
+				},
+				{
+					"key": "Color",
+					"value": [
+						0.8,
+						0.88,
+						0.95
+					]
+				},
+				{
+					"key": "Gravity",
+					"value": 9
+				},
+				{
+					"key": "Opacity",
+					"value": 0.7
+				}
+			]
+		},
+		{
+			"id": "effect",
+			"type": "Effect",
+			"x": 560,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Once",
+					"value": false
+				},
+				{
+					"key": "Then",
+					"value": ""
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "jetspray-link-0",
+			"p1": "layer1-out-Layers",
+			"p2": "layer2-in-Under",
+			"kind": "value"
+		},
+		{
+			"id": "jetspray-link-1",
+			"p1": "layer2-out-Layers",
+			"p2": "effect-in-Layers",
+			"kind": "value"
+		}
+	]
+}

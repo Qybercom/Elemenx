@@ -1,0 +1,160 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "vehicles-thrust",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "vehicles-thrust-input-thrust",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Thrust"
+				}
+			]
+		},
+		{
+			"id": "vehicles-thrust-formula-length",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.25 + Thrust"
+				}
+			]
+		},
+		{
+			"id": "vehicles-thrust-result-length",
+			"type": "Result",
+			"x": 760,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Length"
+				}
+			]
+		},
+		{
+			"id": "vehicles-thrust-formula-intensity",
+			"type": "Formula",
+			"x": 320,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(1, Thrust * 6) * (0.9 + 1.5 * min(1, Thrust))"
+				}
+			]
+		},
+		{
+			"id": "vehicles-thrust-result-intensity",
+			"type": "Result",
+			"x": 760,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Intensity"
+				}
+			]
+		},
+		{
+			"id": "vehicles-thrust-formula-inside",
+			"type": "Formula",
+			"x": 320,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.75"
+				}
+			]
+		},
+		{
+			"id": "vehicles-thrust-result-inside",
+			"type": "Result",
+			"x": 760,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Inside"
+				}
+			]
+		},
+		{
+			"id": "vehicles-thrust-formula-haze",
+			"type": "Formula",
+			"x": 320,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(1, Thrust)"
+				}
+			]
+		},
+		{
+			"id": "vehicles-thrust-result-haze",
+			"type": "Result",
+			"x": 760,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Haze"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "vehicles-thrust-link-0",
+			"p1": "vehicles-thrust-input-thrust-out-Value",
+			"p2": "vehicles-thrust-formula-length-in-Thrust",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-thrust-link-1",
+			"p1": "vehicles-thrust-formula-length-out-Value",
+			"p2": "vehicles-thrust-result-length-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-thrust-link-2",
+			"p1": "vehicles-thrust-input-thrust-out-Value",
+			"p2": "vehicles-thrust-formula-intensity-in-Thrust",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-thrust-link-3",
+			"p1": "vehicles-thrust-formula-intensity-out-Value",
+			"p2": "vehicles-thrust-result-intensity-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-thrust-link-4",
+			"p1": "vehicles-thrust-formula-inside-out-Value",
+			"p2": "vehicles-thrust-result-inside-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-thrust-link-5",
+			"p1": "vehicles-thrust-input-thrust-out-Value",
+			"p2": "vehicles-thrust-formula-haze-in-Thrust",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-thrust-link-6",
+			"p1": "vehicles-thrust-formula-haze-out-Value",
+			"p2": "vehicles-thrust-result-haze-in-Value",
+			"kind": "value"
+		}
+	]
+}

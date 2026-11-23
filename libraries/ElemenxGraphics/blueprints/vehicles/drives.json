@@ -1,0 +1,1978 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "vehicles-drives",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "vehicles-drives-input-steer",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Steer"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-gas",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Gas"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-brake",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Brake"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-hand",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Hand"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-shifting",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Shifting"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-shifted",
+			"type": "Input",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Shifted"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-indicate",
+			"type": "Input",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Indicate"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-wipers",
+			"type": "Input",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Wipers"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-swept",
+			"type": "Input",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Swept"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-period",
+			"type": "Input",
+			"x": 0,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Period"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-stroke",
+			"type": "Input",
+			"x": 0,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Stroke"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-size",
+			"type": "Input",
+			"x": 0,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Size"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-length",
+			"type": "Input",
+			"x": 0,
+			"y": 1120,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Length"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-front",
+			"type": "Input",
+			"x": 0,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Front"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-spin",
+			"type": "Input",
+			"x": 0,
+			"y": 1300,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Spin"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-forward",
+			"type": "Input",
+			"x": 0,
+			"y": 1390,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Forward"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-top",
+			"type": "Input",
+			"x": 0,
+			"y": 1480,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Top"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-rpm",
+			"type": "Input",
+			"x": 0,
+			"y": 1570,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Rpm"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-redline",
+			"type": "Input",
+			"x": 0,
+			"y": 1660,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Redline"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-spinpitch",
+			"type": "Input",
+			"x": 0,
+			"y": 1750,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SpinPitch"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-spinyaw",
+			"type": "Input",
+			"x": 0,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SpinYaw"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-spinroll",
+			"type": "Input",
+			"x": 0,
+			"y": 1930,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SpinRoll"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-turn",
+			"type": "Input",
+			"x": 0,
+			"y": 2020,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Turn"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-ship",
+			"type": "Input",
+			"x": 0,
+			"y": 2110,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Ship"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-throttle",
+			"type": "Input",
+			"x": 0,
+			"y": 2200,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Throttle"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-landed",
+			"type": "Input",
+			"x": 0,
+			"y": 2290,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Landed"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-aimyaw",
+			"type": "Input",
+			"x": 0,
+			"y": 2380,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "AimYaw"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-aimpitch",
+			"type": "Input",
+			"x": 0,
+			"y": 2470,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "AimPitch"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-fired",
+			"type": "Input",
+			"x": 0,
+			"y": 2560,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Fired"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-firedage",
+			"type": "Input",
+			"x": 0,
+			"y": 2650,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "FiredAge"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-gust",
+			"type": "Input",
+			"x": 0,
+			"y": 2740,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Gust"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-hour",
+			"type": "Input",
+			"x": 0,
+			"y": 2830,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Hour"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-lights",
+			"type": "Input",
+			"x": 0,
+			"y": 2920,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Lights"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-hazard",
+			"type": "Input",
+			"x": 0,
+			"y": 3010,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Hazard"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-side",
+			"type": "Input",
+			"x": 0,
+			"y": 3100,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Side"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-blink",
+			"type": "Input",
+			"x": 0,
+			"y": 3190,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Blink"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-gear",
+			"type": "Input",
+			"x": 0,
+			"y": 3280,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Gear"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-gearknown",
+			"type": "Input",
+			"x": 0,
+			"y": 3370,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "GearKnown"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-wasgas",
+			"type": "Input",
+			"x": 0,
+			"y": 3460,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "WasGas"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-pace",
+			"type": "Input",
+			"x": 0,
+			"y": 3550,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Pace"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-on",
+			"type": "Input",
+			"x": 0,
+			"y": 3640,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "On"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-boost",
+			"type": "Input",
+			"x": 0,
+			"y": 3730,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Boost"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-steer",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Steer"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-steer",
+			"type": "Result",
+			"x": 760,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "steer"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-gas",
+			"type": "Formula",
+			"x": 320,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Gas"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-gas",
+			"type": "Result",
+			"x": 760,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "gas"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-brake",
+			"type": "Formula",
+			"x": 320,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Brake"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-brake",
+			"type": "Result",
+			"x": 760,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "brake"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-hand",
+			"type": "Formula",
+			"x": 320,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Hand"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-hand",
+			"type": "Result",
+			"x": 760,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "hand"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-paddle",
+			"type": "Formula",
+			"x": 320,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Shifting > 0 ? Shifted : 0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-paddle",
+			"type": "Result",
+			"x": 760,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "paddle"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-sequential",
+			"type": "Formula",
+			"x": 320,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Shifting > 0 ? -Shifted : 0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-sequential",
+			"type": "Result",
+			"x": 760,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "sequential"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-indicator",
+			"type": "Formula",
+			"x": 320,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Indicate"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-indicator",
+			"type": "Result",
+			"x": 760,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "indicator"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-wipers",
+			"type": "Formula",
+			"x": 320,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Wipers > 0 ? 0.5 - 0.5 * cos(Swept * PI * 2 / Period) : 0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-wipers",
+			"type": "Result",
+			"x": 760,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "wipers"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-stroke",
+			"type": "Formula",
+			"x": 320,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Stroke / Size / Length"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-stroke",
+			"type": "Result",
+			"x": 760,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "stroke"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-wheel-steer",
+			"type": "Formula",
+			"x": 320,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Front > 0 ? Steer * 0.5 : 0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-wheel-steer",
+			"type": "Result",
+			"x": 760,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "wheel-steer"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-roll",
+			"type": "Formula",
+			"x": 320,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Spin / (PI * 2)"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-roll",
+			"type": "Result",
+			"x": 760,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "roll"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-speed",
+			"type": "Formula",
+			"x": 320,
+			"y": 1250,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(1, abs(Forward) / max(1, Top))"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-speed",
+			"type": "Result",
+			"x": 760,
+			"y": 1250,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "speed"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-rpm",
+			"type": "Formula",
+			"x": 320,
+			"y": 1360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(1, Rpm / max(1, Redline))"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-rpm",
+			"type": "Result",
+			"x": 760,
+			"y": 1360,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "rpm"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-pitch",
+			"type": "Formula",
+			"x": 320,
+			"y": 1470,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(-1, min(1, SpinPitch / Turn))"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-pitch",
+			"type": "Result",
+			"x": 760,
+			"y": 1470,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "pitch"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-yaw",
+			"type": "Formula",
+			"x": 320,
+			"y": 1580,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(-1, min(1, SpinYaw / Turn))"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-yaw",
+			"type": "Result",
+			"x": 760,
+			"y": 1580,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "yaw"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-roll-air",
+			"type": "Formula",
+			"x": 320,
+			"y": 1690,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(-1, min(1, SpinRoll / Turn))"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-roll-air",
+			"type": "Result",
+			"x": 760,
+			"y": 1690,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "roll-air"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-throttle",
+			"type": "Formula",
+			"x": 320,
+			"y": 1800,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Throttle"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-throttle",
+			"type": "Result",
+			"x": 760,
+			"y": 1800,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "throttle"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-flaps",
+			"type": "Formula",
+			"x": 320,
+			"y": 1910,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Ship > 0 && Throttle < 0.3 ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-flaps",
+			"type": "Result",
+			"x": 760,
+			"y": 1910,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "flaps"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-airborne",
+			"type": "Formula",
+			"x": 320,
+			"y": 2020,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Ship > 0 && Landed < 0.5 ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-airborne",
+			"type": "Result",
+			"x": 760,
+			"y": 2020,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "airborne"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-aim-yaw",
+			"type": "Formula",
+			"x": 320,
+			"y": 2130,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "AimYaw"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-aim-yaw",
+			"type": "Result",
+			"x": 760,
+			"y": 2130,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "aim-yaw"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-aim-pitch",
+			"type": "Formula",
+			"x": 320,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "AimPitch"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-aim-pitch",
+			"type": "Result",
+			"x": 760,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "aim-pitch"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-fire",
+			"type": "Formula",
+			"x": 320,
+			"y": 2350,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Fired > 0 ? exp(-max(0, FiredAge) * 12) : 0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-fire",
+			"type": "Result",
+			"x": 760,
+			"y": 2350,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "fire"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-wind",
+			"type": "Formula",
+			"x": 320,
+			"y": 2460,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(0.1, Gust)"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-wind",
+			"type": "Result",
+			"x": 760,
+			"y": 2460,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "wind"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-clock-hour",
+			"type": "Formula",
+			"x": 320,
+			"y": 2570,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Hour % 12) / 12"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-clock-hour",
+			"type": "Result",
+			"x": 760,
+			"y": 2570,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "clock-hour"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-clock-minute",
+			"type": "Formula",
+			"x": 320,
+			"y": 2680,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Hour * 60 % 60) / 60"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-clock-minute",
+			"type": "Result",
+			"x": 760,
+			"y": 2680,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "clock-minute"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-lamp-head",
+			"type": "Formula",
+			"x": 320,
+			"y": 2790,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Lights > 0 ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-lamp-head",
+			"type": "Result",
+			"x": 760,
+			"y": 2790,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "lamp-head"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-lamp-rear",
+			"type": "Formula",
+			"x": 320,
+			"y": 2900,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Brake > 0.05 && Forward > -0.5 && (GearKnown < 0.5 || Gear != -1)) ? 1 : Lights > 0 ? 0.3 : 0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-lamp-rear",
+			"type": "Result",
+			"x": 760,
+			"y": 2900,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "lamp-rear"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-lamp-brake",
+			"type": "Formula",
+			"x": 320,
+			"y": 3010,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Brake > 0.05 && Forward > -0.5 && (GearKnown < 0.5 || Gear != -1)) ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-lamp-brake",
+			"type": "Result",
+			"x": 760,
+			"y": 3010,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "lamp-brake"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-lamp-reverse",
+			"type": "Formula",
+			"x": 320,
+			"y": 3120,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(GearKnown > 0 && Gear == -1) || (GearKnown < 0.5 && Forward < -0.3) ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-lamp-reverse",
+			"type": "Result",
+			"x": 760,
+			"y": 3120,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "lamp-reverse"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-lamp-indicator",
+			"type": "Formula",
+			"x": 320,
+			"y": 3230,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Hazard > 0 ? Side : -Indicate) == Side && floor(Blink / 0.36) % 2 == 0 ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-lamp-indicator",
+			"type": "Result",
+			"x": 760,
+			"y": 3230,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "lamp-indicator"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-pop",
+			"type": "Formula",
+			"x": 320,
+			"y": 3340,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "WasGas > 0 && Gas == 0 && Pace >= 14 ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-pop",
+			"type": "Result",
+			"x": 760,
+			"y": 3340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "pop"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-emit",
+			"type": "Formula",
+			"x": 320,
+			"y": 3450,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(0.15, abs(On))"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-emit",
+			"type": "Result",
+			"x": 760,
+			"y": 3450,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "emit"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-thrust-car",
+			"type": "Formula",
+			"x": 320,
+			"y": 3560,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Gas != 0 ? 0.45 : 0.04) + 0.55 * min(1, Pace / Top) * (Gas != 0 ? 1 : 0)"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-thrust-car",
+			"type": "Result",
+			"x": 760,
+			"y": 3560,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "thrust-car"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-thrust-boat",
+			"type": "Formula",
+			"x": 320,
+			"y": 3670,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Gas != 0 ? 0.3 + 0.7 * min(1, Pace / Top) : 0.05"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-thrust-boat",
+			"type": "Result",
+			"x": 760,
+			"y": 3670,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "thrust-boat"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-formula-thrust-ship",
+			"type": "Formula",
+			"x": 320,
+			"y": 3780,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "abs(Throttle) * (Boost > 0 ? 2 : 1)"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-result-thrust-ship",
+			"type": "Result",
+			"x": 760,
+			"y": 3780,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "thrust-ship"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "vehicles-drives-link-0",
+			"p1": "vehicles-drives-input-steer-out-Value",
+			"p2": "vehicles-drives-formula-steer-in-Steer",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-1",
+			"p1": "vehicles-drives-formula-steer-out-Value",
+			"p2": "vehicles-drives-result-steer-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-2",
+			"p1": "vehicles-drives-input-gas-out-Value",
+			"p2": "vehicles-drives-formula-gas-in-Gas",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-3",
+			"p1": "vehicles-drives-formula-gas-out-Value",
+			"p2": "vehicles-drives-result-gas-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-4",
+			"p1": "vehicles-drives-input-brake-out-Value",
+			"p2": "vehicles-drives-formula-brake-in-Brake",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-5",
+			"p1": "vehicles-drives-formula-brake-out-Value",
+			"p2": "vehicles-drives-result-brake-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-6",
+			"p1": "vehicles-drives-input-hand-out-Value",
+			"p2": "vehicles-drives-formula-hand-in-Hand",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-7",
+			"p1": "vehicles-drives-formula-hand-out-Value",
+			"p2": "vehicles-drives-result-hand-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-8",
+			"p1": "vehicles-drives-input-shifting-out-Value",
+			"p2": "vehicles-drives-formula-paddle-in-Shifting",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-9",
+			"p1": "vehicles-drives-input-shifted-out-Value",
+			"p2": "vehicles-drives-formula-paddle-in-Shifted",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-10",
+			"p1": "vehicles-drives-formula-paddle-out-Value",
+			"p2": "vehicles-drives-result-paddle-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-11",
+			"p1": "vehicles-drives-input-shifting-out-Value",
+			"p2": "vehicles-drives-formula-sequential-in-Shifting",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-12",
+			"p1": "vehicles-drives-input-shifted-out-Value",
+			"p2": "vehicles-drives-formula-sequential-in-Shifted",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-13",
+			"p1": "vehicles-drives-formula-sequential-out-Value",
+			"p2": "vehicles-drives-result-sequential-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-14",
+			"p1": "vehicles-drives-input-indicate-out-Value",
+			"p2": "vehicles-drives-formula-indicator-in-Indicate",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-15",
+			"p1": "vehicles-drives-formula-indicator-out-Value",
+			"p2": "vehicles-drives-result-indicator-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-16",
+			"p1": "vehicles-drives-input-wipers-out-Value",
+			"p2": "vehicles-drives-formula-wipers-in-Wipers",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-17",
+			"p1": "vehicles-drives-input-swept-out-Value",
+			"p2": "vehicles-drives-formula-wipers-in-Swept",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-18",
+			"p1": "vehicles-drives-input-period-out-Value",
+			"p2": "vehicles-drives-formula-wipers-in-Period",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-19",
+			"p1": "vehicles-drives-formula-wipers-out-Value",
+			"p2": "vehicles-drives-result-wipers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-20",
+			"p1": "vehicles-drives-input-stroke-out-Value",
+			"p2": "vehicles-drives-formula-stroke-in-Stroke",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-21",
+			"p1": "vehicles-drives-input-size-out-Value",
+			"p2": "vehicles-drives-formula-stroke-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-22",
+			"p1": "vehicles-drives-input-length-out-Value",
+			"p2": "vehicles-drives-formula-stroke-in-Length",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-23",
+			"p1": "vehicles-drives-formula-stroke-out-Value",
+			"p2": "vehicles-drives-result-stroke-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-24",
+			"p1": "vehicles-drives-input-front-out-Value",
+			"p2": "vehicles-drives-formula-wheel-steer-in-Front",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-25",
+			"p1": "vehicles-drives-input-steer-out-Value",
+			"p2": "vehicles-drives-formula-wheel-steer-in-Steer",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-26",
+			"p1": "vehicles-drives-formula-wheel-steer-out-Value",
+			"p2": "vehicles-drives-result-wheel-steer-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-27",
+			"p1": "vehicles-drives-input-spin-out-Value",
+			"p2": "vehicles-drives-formula-roll-in-Spin",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-28",
+			"p1": "vehicles-drives-formula-roll-out-Value",
+			"p2": "vehicles-drives-result-roll-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-29",
+			"p1": "vehicles-drives-input-forward-out-Value",
+			"p2": "vehicles-drives-formula-speed-in-Forward",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-30",
+			"p1": "vehicles-drives-input-top-out-Value",
+			"p2": "vehicles-drives-formula-speed-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-31",
+			"p1": "vehicles-drives-formula-speed-out-Value",
+			"p2": "vehicles-drives-result-speed-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-32",
+			"p1": "vehicles-drives-input-rpm-out-Value",
+			"p2": "vehicles-drives-formula-rpm-in-Rpm",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-33",
+			"p1": "vehicles-drives-input-redline-out-Value",
+			"p2": "vehicles-drives-formula-rpm-in-Redline",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-34",
+			"p1": "vehicles-drives-formula-rpm-out-Value",
+			"p2": "vehicles-drives-result-rpm-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-35",
+			"p1": "vehicles-drives-input-spinpitch-out-Value",
+			"p2": "vehicles-drives-formula-pitch-in-SpinPitch",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-36",
+			"p1": "vehicles-drives-input-turn-out-Value",
+			"p2": "vehicles-drives-formula-pitch-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-37",
+			"p1": "vehicles-drives-formula-pitch-out-Value",
+			"p2": "vehicles-drives-result-pitch-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-38",
+			"p1": "vehicles-drives-input-spinyaw-out-Value",
+			"p2": "vehicles-drives-formula-yaw-in-SpinYaw",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-39",
+			"p1": "vehicles-drives-input-turn-out-Value",
+			"p2": "vehicles-drives-formula-yaw-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-40",
+			"p1": "vehicles-drives-formula-yaw-out-Value",
+			"p2": "vehicles-drives-result-yaw-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-41",
+			"p1": "vehicles-drives-input-spinroll-out-Value",
+			"p2": "vehicles-drives-formula-roll-air-in-SpinRoll",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-42",
+			"p1": "vehicles-drives-input-turn-out-Value",
+			"p2": "vehicles-drives-formula-roll-air-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-43",
+			"p1": "vehicles-drives-formula-roll-air-out-Value",
+			"p2": "vehicles-drives-result-roll-air-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-44",
+			"p1": "vehicles-drives-input-throttle-out-Value",
+			"p2": "vehicles-drives-formula-throttle-in-Throttle",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-45",
+			"p1": "vehicles-drives-formula-throttle-out-Value",
+			"p2": "vehicles-drives-result-throttle-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-46",
+			"p1": "vehicles-drives-input-ship-out-Value",
+			"p2": "vehicles-drives-formula-flaps-in-Ship",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-47",
+			"p1": "vehicles-drives-input-throttle-out-Value",
+			"p2": "vehicles-drives-formula-flaps-in-Throttle",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-48",
+			"p1": "vehicles-drives-formula-flaps-out-Value",
+			"p2": "vehicles-drives-result-flaps-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-49",
+			"p1": "vehicles-drives-input-ship-out-Value",
+			"p2": "vehicles-drives-formula-airborne-in-Ship",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-50",
+			"p1": "vehicles-drives-input-landed-out-Value",
+			"p2": "vehicles-drives-formula-airborne-in-Landed",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-51",
+			"p1": "vehicles-drives-formula-airborne-out-Value",
+			"p2": "vehicles-drives-result-airborne-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-52",
+			"p1": "vehicles-drives-input-aimyaw-out-Value",
+			"p2": "vehicles-drives-formula-aim-yaw-in-AimYaw",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-53",
+			"p1": "vehicles-drives-formula-aim-yaw-out-Value",
+			"p2": "vehicles-drives-result-aim-yaw-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-54",
+			"p1": "vehicles-drives-input-aimpitch-out-Value",
+			"p2": "vehicles-drives-formula-aim-pitch-in-AimPitch",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-55",
+			"p1": "vehicles-drives-formula-aim-pitch-out-Value",
+			"p2": "vehicles-drives-result-aim-pitch-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-56",
+			"p1": "vehicles-drives-input-fired-out-Value",
+			"p2": "vehicles-drives-formula-fire-in-Fired",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-57",
+			"p1": "vehicles-drives-input-firedage-out-Value",
+			"p2": "vehicles-drives-formula-fire-in-FiredAge",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-58",
+			"p1": "vehicles-drives-formula-fire-out-Value",
+			"p2": "vehicles-drives-result-fire-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-59",
+			"p1": "vehicles-drives-input-gust-out-Value",
+			"p2": "vehicles-drives-formula-wind-in-Gust",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-60",
+			"p1": "vehicles-drives-formula-wind-out-Value",
+			"p2": "vehicles-drives-result-wind-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-61",
+			"p1": "vehicles-drives-input-hour-out-Value",
+			"p2": "vehicles-drives-formula-clock-hour-in-Hour",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-62",
+			"p1": "vehicles-drives-formula-clock-hour-out-Value",
+			"p2": "vehicles-drives-result-clock-hour-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-63",
+			"p1": "vehicles-drives-input-hour-out-Value",
+			"p2": "vehicles-drives-formula-clock-minute-in-Hour",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-64",
+			"p1": "vehicles-drives-formula-clock-minute-out-Value",
+			"p2": "vehicles-drives-result-clock-minute-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-65",
+			"p1": "vehicles-drives-input-lights-out-Value",
+			"p2": "vehicles-drives-formula-lamp-head-in-Lights",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-66",
+			"p1": "vehicles-drives-formula-lamp-head-out-Value",
+			"p2": "vehicles-drives-result-lamp-head-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-67",
+			"p1": "vehicles-drives-input-brake-out-Value",
+			"p2": "vehicles-drives-formula-lamp-rear-in-Brake",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-68",
+			"p1": "vehicles-drives-input-forward-out-Value",
+			"p2": "vehicles-drives-formula-lamp-rear-in-Forward",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-69",
+			"p1": "vehicles-drives-input-gearknown-out-Value",
+			"p2": "vehicles-drives-formula-lamp-rear-in-GearKnown",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-70",
+			"p1": "vehicles-drives-input-gear-out-Value",
+			"p2": "vehicles-drives-formula-lamp-rear-in-Gear",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-71",
+			"p1": "vehicles-drives-input-lights-out-Value",
+			"p2": "vehicles-drives-formula-lamp-rear-in-Lights",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-72",
+			"p1": "vehicles-drives-formula-lamp-rear-out-Value",
+			"p2": "vehicles-drives-result-lamp-rear-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-73",
+			"p1": "vehicles-drives-input-brake-out-Value",
+			"p2": "vehicles-drives-formula-lamp-brake-in-Brake",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-74",
+			"p1": "vehicles-drives-input-forward-out-Value",
+			"p2": "vehicles-drives-formula-lamp-brake-in-Forward",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-75",
+			"p1": "vehicles-drives-input-gearknown-out-Value",
+			"p2": "vehicles-drives-formula-lamp-brake-in-GearKnown",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-76",
+			"p1": "vehicles-drives-input-gear-out-Value",
+			"p2": "vehicles-drives-formula-lamp-brake-in-Gear",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-77",
+			"p1": "vehicles-drives-formula-lamp-brake-out-Value",
+			"p2": "vehicles-drives-result-lamp-brake-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-78",
+			"p1": "vehicles-drives-input-gearknown-out-Value",
+			"p2": "vehicles-drives-formula-lamp-reverse-in-GearKnown",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-79",
+			"p1": "vehicles-drives-input-gear-out-Value",
+			"p2": "vehicles-drives-formula-lamp-reverse-in-Gear",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-80",
+			"p1": "vehicles-drives-input-forward-out-Value",
+			"p2": "vehicles-drives-formula-lamp-reverse-in-Forward",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-81",
+			"p1": "vehicles-drives-formula-lamp-reverse-out-Value",
+			"p2": "vehicles-drives-result-lamp-reverse-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-82",
+			"p1": "vehicles-drives-input-hazard-out-Value",
+			"p2": "vehicles-drives-formula-lamp-indicator-in-Hazard",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-83",
+			"p1": "vehicles-drives-input-side-out-Value",
+			"p2": "vehicles-drives-formula-lamp-indicator-in-Side",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-84",
+			"p1": "vehicles-drives-input-indicate-out-Value",
+			"p2": "vehicles-drives-formula-lamp-indicator-in-Indicate",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-85",
+			"p1": "vehicles-drives-input-blink-out-Value",
+			"p2": "vehicles-drives-formula-lamp-indicator-in-Blink",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-86",
+			"p1": "vehicles-drives-formula-lamp-indicator-out-Value",
+			"p2": "vehicles-drives-result-lamp-indicator-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-87",
+			"p1": "vehicles-drives-input-wasgas-out-Value",
+			"p2": "vehicles-drives-formula-pop-in-WasGas",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-88",
+			"p1": "vehicles-drives-input-gas-out-Value",
+			"p2": "vehicles-drives-formula-pop-in-Gas",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-89",
+			"p1": "vehicles-drives-input-pace-out-Value",
+			"p2": "vehicles-drives-formula-pop-in-Pace",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-90",
+			"p1": "vehicles-drives-formula-pop-out-Value",
+			"p2": "vehicles-drives-result-pop-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-91",
+			"p1": "vehicles-drives-input-on-out-Value",
+			"p2": "vehicles-drives-formula-emit-in-On",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-92",
+			"p1": "vehicles-drives-formula-emit-out-Value",
+			"p2": "vehicles-drives-result-emit-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-93",
+			"p1": "vehicles-drives-input-gas-out-Value",
+			"p2": "vehicles-drives-formula-thrust-car-in-Gas",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-94",
+			"p1": "vehicles-drives-input-pace-out-Value",
+			"p2": "vehicles-drives-formula-thrust-car-in-Pace",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-95",
+			"p1": "vehicles-drives-input-top-out-Value",
+			"p2": "vehicles-drives-formula-thrust-car-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-96",
+			"p1": "vehicles-drives-formula-thrust-car-out-Value",
+			"p2": "vehicles-drives-result-thrust-car-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-97",
+			"p1": "vehicles-drives-input-gas-out-Value",
+			"p2": "vehicles-drives-formula-thrust-boat-in-Gas",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-98",
+			"p1": "vehicles-drives-input-pace-out-Value",
+			"p2": "vehicles-drives-formula-thrust-boat-in-Pace",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-99",
+			"p1": "vehicles-drives-input-top-out-Value",
+			"p2": "vehicles-drives-formula-thrust-boat-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-100",
+			"p1": "vehicles-drives-formula-thrust-boat-out-Value",
+			"p2": "vehicles-drives-result-thrust-boat-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-101",
+			"p1": "vehicles-drives-input-throttle-out-Value",
+			"p2": "vehicles-drives-formula-thrust-ship-in-Throttle",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-102",
+			"p1": "vehicles-drives-input-boost-out-Value",
+			"p2": "vehicles-drives-formula-thrust-ship-in-Boost",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-103",
+			"p1": "vehicles-drives-formula-thrust-ship-out-Value",
+			"p2": "vehicles-drives-result-thrust-ship-in-Value",
+			"kind": "value"
+		}
+	]
+}

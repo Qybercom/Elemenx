@@ -1,0 +1,874 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "camera-shake",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "camera-shake-input-time",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Time"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-input-seed",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-input-shake",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Shake"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-input-hover",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Hover"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-input-walked",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Walked"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-input-stride",
+			"type": "Input",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Stride"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-input-heat",
+			"type": "Input",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Heat"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-input-size",
+			"type": "Input",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Size"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-input-kick",
+			"type": "Input",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Kick"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-input-elapsed",
+			"type": "Input",
+			"x": 0,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Elapsed"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-input-blast",
+			"type": "Input",
+			"x": 0,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Blast"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-input-rpm",
+			"type": "Input",
+			"x": 0,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Rpm"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-input-jolt",
+			"type": "Input",
+			"x": 0,
+			"y": 1120,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Jolt"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-formula-x",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Hover > 0 ? (sin(Time * 0.21 * 6.2832 + (Seed) * 1.7) * 0.5 + sin(Time * 0.21 * 6.2832 * 2.31 + (Seed) * 4.3) * 0.3 + sin(Time * 0.21 * 6.2832 * 5.17 + (Seed) * 9.1) * 0.2) * 0.05 * Shake / 0.15 : 0"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-result-x",
+			"type": "Result",
+			"x": 760,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-formula-y",
+			"type": "Formula",
+			"x": 320,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Hover > 0 ? (sin(Time * 0.17 * 6.2832 + (Seed + 2) * 1.7) * 0.5 + sin(Time * 0.17 * 6.2832 * 2.31 + (Seed + 2) * 4.3) * 0.3 + sin(Time * 0.17 * 6.2832 * 5.17 + (Seed + 2) * 9.1) * 0.2) * 0.04 * Shake / 0.15 : (sin(Time * 0.27 * 6.2832 + (Seed + 8) * 1.7) * 0.5 + sin(Time * 0.27 * 6.2832 * 2.31 + (Seed + 8) * 4.3) * 0.3 + sin(Time * 0.27 * 6.2832 * 5.17 + (Seed + 8) * 9.1) * 0.2) * 0.004 * Shake * 2) + abs(sin(Walked * PI)) * 0.025 * Stride"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-result-y",
+			"type": "Result",
+			"x": 760,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Y"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-formula-z",
+			"type": "Formula",
+			"x": 320,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Hover > 0 ? (sin(Time * 0.19 * 6.2832 + (Seed + 5) * 1.7) * 0.5 + sin(Time * 0.19 * 6.2832 * 2.31 + (Seed + 5) * 4.3) * 0.3 + sin(Time * 0.19 * 6.2832 * 5.17 + (Seed + 5) * 9.1) * 0.2) * 0.05 * Shake / 0.15 : 0"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-result-z",
+			"type": "Result",
+			"x": 760,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Z"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-formula-pitch",
+			"type": "Formula",
+			"x": 320,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Hover > 0 ? (sin(Time * 23 * 6.2832 + (Seed + 7) * 1.7) * 0.5 + sin(Time * 23 * 6.2832 * 2.31 + (Seed + 7) * 4.3) * 0.3 + sin(Time * 23 * 6.2832 * 5.17 + (Seed + 7) * 9.1) * 0.2) * 0.0006 * Shake / 0.15 : ((sin(Time * 0.27 * 6.2832 + (Seed) * 1.7) * 0.5 + sin(Time * 0.27 * 6.2832 * 2.31 + (Seed) * 4.3) * 0.3 + sin(Time * 0.27 * 6.2832 * 5.17 + (Seed) * 9.1) * 0.2) * 0.007 + (sin(Time * 7.3 * 6.2832 + (Seed + 1) * 1.7) * 0.5 + sin(Time * 7.3 * 6.2832 * 2.31 + (Seed + 1) * 4.3) * 0.3 + sin(Time * 7.3 * 6.2832 * 5.17 + (Seed + 1) * 9.1) * 0.2) * 0.0016) * Shake * 2"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-result-pitch",
+			"type": "Result",
+			"x": 760,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pitch"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-formula-yaw",
+			"type": "Formula",
+			"x": 320,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Hover > 0 ? 0 : ((sin(Time * 0.19 * 6.2832 + (Seed + 3) * 1.7) * 0.5 + sin(Time * 0.19 * 6.2832 * 2.31 + (Seed + 3) * 4.3) * 0.3 + sin(Time * 0.19 * 6.2832 * 5.17 + (Seed + 3) * 9.1) * 0.2) * 0.009 + (sin(Time * 6.1 * 6.2832 + (Seed + 4) * 1.7) * 0.5 + sin(Time * 6.1 * 6.2832 * 2.31 + (Seed + 4) * 4.3) * 0.3 + sin(Time * 6.1 * 6.2832 * 5.17 + (Seed + 4) * 9.1) * 0.2) * 0.0014) * Shake * 2"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-result-yaw",
+			"type": "Result",
+			"x": 760,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Yaw"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-formula-roll",
+			"type": "Formula",
+			"x": 320,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Hover > 0 ? 0 : (sin(Time * 0.23 * 6.2832 + (Seed + 6) * 1.7) * 0.5 + sin(Time * 0.23 * 6.2832 * 2.31 + (Seed + 6) * 4.3) * 0.3 + sin(Time * 0.23 * 6.2832 * 5.17 + (Seed + 6) * 9.1) * 0.2) * 0.012 * Shake * 2) + sin(Walked * PI) * 0.012 * Stride"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-result-roll",
+			"type": "Result",
+			"x": 760,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Roll"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-formula-heatright",
+			"type": "Formula",
+			"x": 320,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(sin(Time * 47) + sin(Time * 23) * 0.5) * Size * 0.04 * Heat"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-result-heatright",
+			"type": "Result",
+			"x": 760,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "HeatRight"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-formula-heatup",
+			"type": "Formula",
+			"x": 320,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(sin(Time * 41 + 1) + sin(Time * 19) * 0.5) * Size * 0.04 * Heat"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-result-heatup",
+			"type": "Result",
+			"x": 760,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "HeatUp"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-formula-kicktaken",
+			"type": "Formula",
+			"x": 320,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(Kick, Elapsed * 0.6 + Kick * Elapsed * 12)"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-result-kicktaken",
+			"type": "Result",
+			"x": 760,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "KickTaken"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-formula-traumapitch",
+			"type": "Formula",
+			"x": 320,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(1, Blast + Rpm * 0.12 + min(0.4, Jolt * 0.4)) * min(1, Blast + Rpm * 0.12 + min(0.4, Jolt * 0.4)) * (sin(Time * 9 * 6.2832 + (Seed + 11) * 1.7) * 0.5 + sin(Time * 9 * 6.2832 * 2.31 + (Seed + 11) * 4.3) * 0.3 + sin(Time * 9 * 6.2832 * 5.17 + (Seed + 11) * 9.1) * 0.2) * 0.05"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-result-traumapitch",
+			"type": "Result",
+			"x": 760,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "TraumaPitch"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-formula-traumayaw",
+			"type": "Formula",
+			"x": 320,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(1, Blast + Rpm * 0.12 + min(0.4, Jolt * 0.4)) * min(1, Blast + Rpm * 0.12 + min(0.4, Jolt * 0.4)) * (sin(Time * 8 * 6.2832 + (Seed + 13) * 1.7) * 0.5 + sin(Time * 8 * 6.2832 * 2.31 + (Seed + 13) * 4.3) * 0.3 + sin(Time * 8 * 6.2832 * 5.17 + (Seed + 13) * 9.1) * 0.2) * 0.05"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-result-traumayaw",
+			"type": "Result",
+			"x": 760,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "TraumaYaw"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-formula-traumaroll",
+			"type": "Formula",
+			"x": 320,
+			"y": 1250,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(1, Blast + Rpm * 0.12 + min(0.4, Jolt * 0.4)) * min(1, Blast + Rpm * 0.12 + min(0.4, Jolt * 0.4)) * (sin(Time * 7 * 6.2832 + (Seed + 17) * 1.7) * 0.5 + sin(Time * 7 * 6.2832 * 2.31 + (Seed + 17) * 4.3) * 0.3 + sin(Time * 7 * 6.2832 * 5.17 + (Seed + 17) * 9.1) * 0.2) * 0.06"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-result-traumaroll",
+			"type": "Result",
+			"x": 760,
+			"y": 1250,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "TraumaRoll"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-formula-blastleft",
+			"type": "Formula",
+			"x": 320,
+			"y": 1360,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(0, Blast - Elapsed * 1.5)"
+				}
+			]
+		},
+		{
+			"id": "camera-shake-result-blastleft",
+			"type": "Result",
+			"x": 760,
+			"y": 1360,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "BlastLeft"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "camera-shake-link-0",
+			"p1": "camera-shake-input-hover-out-Value",
+			"p2": "camera-shake-formula-x-in-Hover",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-1",
+			"p1": "camera-shake-input-time-out-Value",
+			"p2": "camera-shake-formula-x-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-2",
+			"p1": "camera-shake-input-seed-out-Value",
+			"p2": "camera-shake-formula-x-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-3",
+			"p1": "camera-shake-input-shake-out-Value",
+			"p2": "camera-shake-formula-x-in-Shake",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-4",
+			"p1": "camera-shake-formula-x-out-Value",
+			"p2": "camera-shake-result-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-5",
+			"p1": "camera-shake-input-hover-out-Value",
+			"p2": "camera-shake-formula-y-in-Hover",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-6",
+			"p1": "camera-shake-input-time-out-Value",
+			"p2": "camera-shake-formula-y-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-7",
+			"p1": "camera-shake-input-seed-out-Value",
+			"p2": "camera-shake-formula-y-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-8",
+			"p1": "camera-shake-input-shake-out-Value",
+			"p2": "camera-shake-formula-y-in-Shake",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-9",
+			"p1": "camera-shake-input-walked-out-Value",
+			"p2": "camera-shake-formula-y-in-Walked",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-10",
+			"p1": "camera-shake-input-stride-out-Value",
+			"p2": "camera-shake-formula-y-in-Stride",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-11",
+			"p1": "camera-shake-formula-y-out-Value",
+			"p2": "camera-shake-result-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-12",
+			"p1": "camera-shake-input-hover-out-Value",
+			"p2": "camera-shake-formula-z-in-Hover",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-13",
+			"p1": "camera-shake-input-time-out-Value",
+			"p2": "camera-shake-formula-z-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-14",
+			"p1": "camera-shake-input-seed-out-Value",
+			"p2": "camera-shake-formula-z-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-15",
+			"p1": "camera-shake-input-shake-out-Value",
+			"p2": "camera-shake-formula-z-in-Shake",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-16",
+			"p1": "camera-shake-formula-z-out-Value",
+			"p2": "camera-shake-result-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-17",
+			"p1": "camera-shake-input-hover-out-Value",
+			"p2": "camera-shake-formula-pitch-in-Hover",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-18",
+			"p1": "camera-shake-input-time-out-Value",
+			"p2": "camera-shake-formula-pitch-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-19",
+			"p1": "camera-shake-input-seed-out-Value",
+			"p2": "camera-shake-formula-pitch-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-20",
+			"p1": "camera-shake-input-shake-out-Value",
+			"p2": "camera-shake-formula-pitch-in-Shake",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-21",
+			"p1": "camera-shake-formula-pitch-out-Value",
+			"p2": "camera-shake-result-pitch-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-22",
+			"p1": "camera-shake-input-hover-out-Value",
+			"p2": "camera-shake-formula-yaw-in-Hover",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-23",
+			"p1": "camera-shake-input-time-out-Value",
+			"p2": "camera-shake-formula-yaw-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-24",
+			"p1": "camera-shake-input-seed-out-Value",
+			"p2": "camera-shake-formula-yaw-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-25",
+			"p1": "camera-shake-input-shake-out-Value",
+			"p2": "camera-shake-formula-yaw-in-Shake",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-26",
+			"p1": "camera-shake-formula-yaw-out-Value",
+			"p2": "camera-shake-result-yaw-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-27",
+			"p1": "camera-shake-input-hover-out-Value",
+			"p2": "camera-shake-formula-roll-in-Hover",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-28",
+			"p1": "camera-shake-input-time-out-Value",
+			"p2": "camera-shake-formula-roll-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-29",
+			"p1": "camera-shake-input-seed-out-Value",
+			"p2": "camera-shake-formula-roll-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-30",
+			"p1": "camera-shake-input-shake-out-Value",
+			"p2": "camera-shake-formula-roll-in-Shake",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-31",
+			"p1": "camera-shake-input-walked-out-Value",
+			"p2": "camera-shake-formula-roll-in-Walked",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-32",
+			"p1": "camera-shake-input-stride-out-Value",
+			"p2": "camera-shake-formula-roll-in-Stride",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-33",
+			"p1": "camera-shake-formula-roll-out-Value",
+			"p2": "camera-shake-result-roll-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-34",
+			"p1": "camera-shake-input-time-out-Value",
+			"p2": "camera-shake-formula-heatright-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-35",
+			"p1": "camera-shake-input-size-out-Value",
+			"p2": "camera-shake-formula-heatright-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-36",
+			"p1": "camera-shake-input-heat-out-Value",
+			"p2": "camera-shake-formula-heatright-in-Heat",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-37",
+			"p1": "camera-shake-formula-heatright-out-Value",
+			"p2": "camera-shake-result-heatright-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-38",
+			"p1": "camera-shake-input-time-out-Value",
+			"p2": "camera-shake-formula-heatup-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-39",
+			"p1": "camera-shake-input-size-out-Value",
+			"p2": "camera-shake-formula-heatup-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-40",
+			"p1": "camera-shake-input-heat-out-Value",
+			"p2": "camera-shake-formula-heatup-in-Heat",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-41",
+			"p1": "camera-shake-formula-heatup-out-Value",
+			"p2": "camera-shake-result-heatup-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-42",
+			"p1": "camera-shake-input-kick-out-Value",
+			"p2": "camera-shake-formula-kicktaken-in-Kick",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-43",
+			"p1": "camera-shake-input-elapsed-out-Value",
+			"p2": "camera-shake-formula-kicktaken-in-Elapsed",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-44",
+			"p1": "camera-shake-formula-kicktaken-out-Value",
+			"p2": "camera-shake-result-kicktaken-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-45",
+			"p1": "camera-shake-input-blast-out-Value",
+			"p2": "camera-shake-formula-traumapitch-in-Blast",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-46",
+			"p1": "camera-shake-input-rpm-out-Value",
+			"p2": "camera-shake-formula-traumapitch-in-Rpm",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-47",
+			"p1": "camera-shake-input-jolt-out-Value",
+			"p2": "camera-shake-formula-traumapitch-in-Jolt",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-48",
+			"p1": "camera-shake-input-time-out-Value",
+			"p2": "camera-shake-formula-traumapitch-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-49",
+			"p1": "camera-shake-input-seed-out-Value",
+			"p2": "camera-shake-formula-traumapitch-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-50",
+			"p1": "camera-shake-formula-traumapitch-out-Value",
+			"p2": "camera-shake-result-traumapitch-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-51",
+			"p1": "camera-shake-input-blast-out-Value",
+			"p2": "camera-shake-formula-traumayaw-in-Blast",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-52",
+			"p1": "camera-shake-input-rpm-out-Value",
+			"p2": "camera-shake-formula-traumayaw-in-Rpm",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-53",
+			"p1": "camera-shake-input-jolt-out-Value",
+			"p2": "camera-shake-formula-traumayaw-in-Jolt",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-54",
+			"p1": "camera-shake-input-time-out-Value",
+			"p2": "camera-shake-formula-traumayaw-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-55",
+			"p1": "camera-shake-input-seed-out-Value",
+			"p2": "camera-shake-formula-traumayaw-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-56",
+			"p1": "camera-shake-formula-traumayaw-out-Value",
+			"p2": "camera-shake-result-traumayaw-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-57",
+			"p1": "camera-shake-input-blast-out-Value",
+			"p2": "camera-shake-formula-traumaroll-in-Blast",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-58",
+			"p1": "camera-shake-input-rpm-out-Value",
+			"p2": "camera-shake-formula-traumaroll-in-Rpm",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-59",
+			"p1": "camera-shake-input-jolt-out-Value",
+			"p2": "camera-shake-formula-traumaroll-in-Jolt",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-60",
+			"p1": "camera-shake-input-time-out-Value",
+			"p2": "camera-shake-formula-traumaroll-in-Time",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-61",
+			"p1": "camera-shake-input-seed-out-Value",
+			"p2": "camera-shake-formula-traumaroll-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-62",
+			"p1": "camera-shake-formula-traumaroll-out-Value",
+			"p2": "camera-shake-result-traumaroll-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-63",
+			"p1": "camera-shake-input-blast-out-Value",
+			"p2": "camera-shake-formula-blastleft-in-Blast",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-64",
+			"p1": "camera-shake-input-elapsed-out-Value",
+			"p2": "camera-shake-formula-blastleft-in-Elapsed",
+			"kind": "value"
+		},
+		{
+			"id": "camera-shake-link-65",
+			"p1": "camera-shake-formula-blastleft-out-Value",
+			"p2": "camera-shake-result-blastleft-in-Value",
+			"kind": "value"
+		}
+	]
+}

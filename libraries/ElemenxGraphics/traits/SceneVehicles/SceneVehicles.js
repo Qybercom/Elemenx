@@ -74,6 +74,19 @@
  * it). Kind is free: engine goes with the thrust, and burns as an exhaust if no Type is told; a game names its weapons, shields and
  * holds as it likes, and asks MountsOf(id, kind) where they stand now. Pop of a mount is a burst there when a car lets go of the gas at speed:
  * true for backfire, or {Type, Size, Every} (the seconds at least between two).
+ *
+ * Seats of a vehicle: [{ID, Role (driver, pilot, engineer, gunner, passenger: free), At ([x, y, z] of its model), Exit
+ * (where who leaves steps out), Controls (who sits there drives or flies it)}]; with none, one of its kind where its Seat is
+ * (a car, a boat: driver; a ship: pilot), out by its side. Board(actor, vehicle, seat) sits an actor (the character of the
+ * player: an object that walks) in the first free seat that drives (or seat): it is kept as it is, hidden, carried in its
+ * seat; the vehicle the hero if the actor was and the seat drives. Leave(actor): out where its seat says, shown, the hero
+ * again; the vehicle goes on as it was (its engine, its doors, its speed: what none drives rolls on by itself and slows).
+ * Context(actor): {Kind (walk or seat), Vehicle, Seat, Role, Controls}; the event context of the Scene tells each change.
+ * BoardKey() is G of the hero: in by the vehicle it stands by, out of the one it drives (not a ship in space).
+ *
+ * Readout(id) is what the instruments of an object read (of the hero by none), of the graph blueprints/vehicles/readout
+ * (ReadoutGraph of the vehicle or of the scene, its Graphs['vehicles/readout']): {ID, Kind (car, boat, ship; walk: on foot),
+ * Speed and TopSpeed (km/h), SpeedPart, Rpm, RpmPart, Gear, Left, Right, Lights, Health, MaxHealth, HealthPart, Driver}.
  */
 Elemenx.Trait('SceneVehicles', {
 	VehiclesStart: function () {
@@ -230,18 +243,40 @@ Elemenx.Trait('SceneVehicles', {
 			return found;
 		}
 
-		/* The turn of a wheel in the space of its model: it spins round its axle, a front one first steers, and it rides on its spring. */
+		/*
+		 * How a wheel turns, of the graph of the wheel (blueprints/vehicles/wheel; WheelGraph of the vehicle, of the scene or its
+		 * Graphs['vehicles/wheel'] in its place): {SpinAngle (round its axle), SteerAngle (round up), Drop (down on its spring, in
+		 * its model), Camber (leaning out, radians)}, of the state as it is now (a run of the graph is a function: no keeping).
+		 */
+		function wheelOf (object, wheel) {
+			var settings = object.Values.Vehicle || {};
+			var state = object.Car || {Spin: 0, Steer: 0};
+			var graph = settings.WheelGraph || self.GraphOf('WheelGraph', 'vehicles/wheel') || Elemenx.Resources('Blueprints', 'ElemenxGraphics/vehicles/wheel');
+			var codes = scene.WheelCodes = scene.WheelCodes || [];
+			var code = codes.filter(function (one) {
+				return one.Graph === graph;
+			})[0];
+
+			if (!code) {
+				code = {Graph: graph, Code: self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)))};
+
+				codes.push(code);
+			}
+
+			return code.Code.Run({}, {Spin: state.Spin || 0, Steer: state.Steer || 0, Stroke: (object.Strokes || [0, 0, 0, 0])[wheel.Corner] || 0, Size: object.Size || 1, Front: wheel.Front ? 1 : 0, Held: wheel.Held ? 1 : 0, Side: wheel.Corner % 2 === 0 ? 1 : -1});
+		}
+
+		/* The turn of a wheel in the space of its model: it spins round its axle, a front one steers and leans, and it rides on its spring (of its graph). */
 		engine.WheelTurn = function (object, wheel) {
 			var settings = object.Values.Vehicle;
-			var state = object.Car || {Spin: 0, Steer: 0};
 			var yaw = given(settings.Yaw, 0) * Math.PI / 180;
 			var axle = [Math.cos(yaw), 0, -Math.sin(yaw)];
-			var spin = wheel.Held ? math.Identity() : math.Rotation(axle, state.Spin);
-			var turn = wheel.Front ? math.Multiply(math.Rotation([0, 1, 0], state.Steer * 0.5), spin) : spin;
+			var ahead = [Math.sin(yaw), 0, Math.cos(yaw)];
+			var made = wheelOf(object, wheel);
+			var spin = math.Rotation(axle, made.SpinAngle || 0);
+			var turn = math.Multiply(math.Rotation([0, 1, 0], made.SteerAngle || 0), made.Camber ? math.Multiply(math.Rotation(ahead, made.Camber), spin) : spin);
 			var m = wheel.Middle;
-
-			var strokes = object.Strokes || [0, 0, 0, 0];
-			var drop = (strokes[wheel.Corner] || 0) / (object.Size || 1);
+			var drop = made.Drop || 0;
 
 			return math.Multiply(math.Translation(m[0], m[1] - drop, m[2]), math.Multiply(turn, math.Translation(-m[0], -m[1], -m[2])));
 		};
@@ -635,99 +670,87 @@ Elemenx.Trait('SceneVehicles', {
 		var Gates = Elemenx.Resources('Data', 'ElemenxGraphics/vehicles/gates') || {};
 
 		/*
-		 * What drives a moving part of a car, if anything: steer (the wheel, -1 to 1), gas, brake and hand (0 to 1), gear ([ahead,
-		 * aside] of its gate; sequential: a knock back up, ahead down), paddle (1 while it changes up, -1 down), indicator (-1 left,
-		 * 1 right), wipers (they sweep while they are on). Null for what only opens as it is told. Sign 1 or -1 keeps only that way
-		 * of it (the paddle of each side).
+		 * What drives a moving part of a car, if anything, of the graph of the drives (blueprints/vehicles/drives; DrivesGraph
+		 * of the vehicle, of the scene or its Graphs['vehicles/drives'] in its place): steer (the wheel, -1 to 1), gas, brake and
+		 * hand (0 to 1), paddle and sequential (as it changes up or down), indicator (-1 left, 1 right), wipers (they sweep while
+		 * they are on, Period), stroke (the travel of the spring of its wheel, in Lengths of it), wheel-steer, roll (turns),
+		 * speed and rpm (0 to 1), pitch, yaw, roll-air (-1 to 1), throttle, flaps, airborne, aim-yaw and aim-pitch, fire (1 as
+		 * it fires, then less), wind, clock-hour and clock-minute (turns), and whatever else a graph of its own gives. gear is
+		 * where the lever stands in the gate of the gear ([ahead, aside], of the gates). Null for what only opens as it is told.
+		 * Sign 1 or -1 keeps only that way of it (the paddle of each side). Hinges of degrees (Angle 57.2958) take radians.
 		 */
 		function drivenOf (object, opening) {
 			var car = object.Car || {};
-			var held = object.Controls || {};
-			var signals = object.Signals || {};
 			var gates;
 			var gate;
+			var value;
 
-			switch (opening.Drive) {
-				case 'steer':
-					return [car.Steer || 0, 0];
-				case 'gas':
-				case 'brake':
-				case 'hand':
-					return [held[opening.Drive.charAt(0).toUpperCase() + opening.Drive.slice(1)] || 0, 0];
-				case 'paddle':
-					return [car.Shifting > 0 ? car.Shifted || 0 : 0, 0];
-				case 'sequential':
-					return [car.Shifting > 0 ? -(car.Shifted || 0) : 0, 0];
-				case 'gear':
-					gates = opening.Gates || Gates[object.Values.Vehicle.Shift === 'manual' ? 'manual' : 'auto'];
-					gate = car.Gear === undefined || car.Gear === 0 ? 'N' : car.Gear < 0 ? 'R' : gates[car.Gear] ? String(car.Gear) : 'D';
+			if (opening.Drive === 'gear') {
+				gates = opening.Gates || Gates[object.Values.Vehicle.Shift === 'manual' ? 'manual' : 'auto'];
+				gate = car.Gear === undefined || car.Gear === 0 ? 'N' : car.Gear < 0 ? 'R' : gates[car.Gear] ? String(car.Gear) : 'D';
 
-					return (gates[gate] || [0, 0]).slice();
-				case 'indicator':
-					return [signals.Indicate || 0, 0];
-				case 'wipers':
-					return [signals.Wipers ? 0.5 - 0.5 * Math.cos((object.Swept || 0) * Math.PI * 2 / given(opening.Period, 1.3)) : 0, 0];
-				default:
-					return drivenMore(object, opening, car);
+				return (gates[gate] || [0, 0]).slice();
 			}
+
+			if (!opening.Drive) return null;
+
+			value = drivesOf(object, opening)[opening.Drive];
+
+			return value === undefined ? null : [value, 0];
 		}
 
 		var Corners = {FL: 0, FR: 1, RL: 2, RR: 3};
 
+		/* The graph of the drives of an object, made once for each graph. */
+		function drivesCode (object) {
+			var settings = object.Values.Vehicle || {};
+			var graph = settings.DrivesGraph || self.GraphOf('DrivesGraph', 'vehicles/drives') || Elemenx.Resources('Blueprints', 'ElemenxGraphics/vehicles/drives');
+			var made = scene.DrivesCodes = scene.DrivesCodes || [];
+			var found = made.filter(function (one) {
+				return one.Graph === graph;
+			})[0];
+
+			if (!found) {
+				found = {Graph: graph, Code: self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)))};
+
+				made.push(found);
+			}
+
+			return found.Code;
+		}
+
 		/*
-		 * What else drives a part, as far as it goes: the travel of the spring of its wheel (stroke, in Lengths of it), the
-		 * steering of its wheel (wheel-steer, radians) and its roll (roll, turns), the speed and the rpm (0 to 1), the controls of
-		 * what flies (pitch, yaw, roll-air: -1 to 1; throttle, flaps; airborne: 1 while it flies), the aim of the object (aim-yaw,
-		 * aim-pitch: degrees of Aim), a shot (fire: 1 as it fires, then less), the wind and the time of day (wind; clock-hour,
-		 * clock-minute: turns). Hinges of degrees (Angle 57.2958) take radians, of 360 turns.
+		 * The drives of an object for one of its parts (an opening, a lamp of a Side, an emitter of what it is On): the graph of
+		 * the drives run of the state of the object and the settings of the part ({drive: value}).
 		 */
-		function drivenMore (object, opening, car) {
-			var corner = Corners[opening.Corner] === undefined ? 0 : Corners[opening.Corner];
+		function drivesOf (object, part, more) {
+			var car = object.Car || {};
+			var held = object.Controls || {};
+			var signals = object.Signals || {};
 			var settings = object.Values.Vehicle || {};
 			var ship = object.Ship || null;
 			var spin = ship && ship.Spin || [0, 0, 0];
-			var turn = given(settings.Turn, 1.5) || 1.5;
 			var aim = object.Values.Aim || {};
 			var hour = scene.Ground && scene.Ground.Hour !== undefined && scene.Ground.Hour !== null ? scene.Ground.Hour : 12;
+			var corner = Corners[part.Corner] === undefined ? 0 : Corners[part.Corner];
+			var fired = object.Values.Fired !== undefined;
+			var inputs = {
+				Steer: car.Steer || 0, Gas: held.Gas || 0, Brake: held.Brake || 0, Hand: held.Hand || 0, Shifting: car.Shifting || 0, Shifted: car.Shifted || 0,
+				Indicate: signals.Indicate || 0, Wipers: signals.Wipers ? 1 : 0, Swept: object.Swept || 0, Period: given(part.Period, 1.3),
+				Stroke: (object.Strokes || car.Strokes || [0, 0, 0, 0])[corner] || 0, Size: object.Size || 1, Length: given(part.Length, 0.3), Front: corner < 2 ? 1 : 0,
+				Spin: car.Spin || 0, Forward: car.Forward || 0, Top: given(settings.Top, physics.CarDefaults.Top), Rpm: car.Rpm || 0, Redline: given(settings.Redline, physics.CarDefaults.Redline),
+				SpinPitch: spin[0], SpinYaw: spin[1], SpinRoll: spin[2], Turn: given(settings.Turn, 1.5) || 1.5, Ship: ship ? 1 : 0,
+				Throttle: ship ? Math.abs(ship.Throttle || 0) : held.Gas || 0, Landed: object.Landed ? 1 : 0, AimYaw: given(aim.Yaw, 0), AimPitch: given(aim.Pitch, 0),
+				Fired: fired ? 1 : 0, FiredAge: fired ? scene.Seconds - Number(object.Values.Fired) : 0, Gust: scene.Gust || 0, Hour: hour,
+				Lights: signals.Lights ? 1 : 0, Hazard: signals.Hazard ? 1 : 0, Side: 0, Blink: object.Blink || 0, Gear: car.Gear === undefined ? 0 : car.Gear, GearKnown: car.Gear === undefined ? 0 : 1,
+				WasGas: 0, Pace: 0, On: 0
+			};
 
-			switch (opening.Drive) {
-				case 'stroke':
-					return [(object.Strokes || car.Strokes || [0, 0, 0, 0])[corner] / (object.Size || 1) / given(opening.Length, 0.3), 0];
-				case 'wheel-steer':
-					return [corner < 2 ? (car.Steer || 0) * 0.5 : 0, 0];
-				case 'roll':
-					return [(car.Spin || 0) / (Math.PI * 2), 0];
-				case 'speed':
-					return [Math.min(1, Math.abs(car.Forward || 0) / Math.max(1, given(settings.Top, physics.CarDefaults.Top))), 0];
-				case 'rpm':
-					return [Math.min(1, (car.Rpm || 0) / Math.max(1, given(settings.Redline, physics.CarDefaults.Redline))), 0];
-				case 'pitch':
-					return [Math.max(-1, Math.min(1, spin[0] / turn)), 0];
-				case 'yaw':
-					return [Math.max(-1, Math.min(1, spin[1] / turn)), 0];
-				case 'roll-air':
-					return [Math.max(-1, Math.min(1, spin[2] / turn)), 0];
-				case 'throttle':
-					return [ship ? Math.abs(ship.Throttle || 0) : (object.Controls || {}).Gas || 0, 0];
-				case 'flaps':
-					return [ship && Math.abs(ship.Throttle || 0) < 0.3 ? 1 : 0, 0];
-				case 'airborne':
-					return [ship && !object.Landed ? 1 : 0, 0];
-				case 'aim-yaw':
-					return [given(aim.Yaw, 0), 0];
-				case 'aim-pitch':
-					return [given(aim.Pitch, 0), 0];
-				case 'fire':
-					return [object.Values.Fired === undefined ? 0 : Math.exp(-Math.max(0, scene.Seconds - Number(object.Values.Fired)) * 12), 0];
-				case 'wind':
-					return [Math.max(0.1, scene.Gust || 0), 0];
-				case 'clock-hour':
-					return [(hour % 12) / 12, 0];
-				case 'clock-minute':
-					return [(hour * 60 % 60) / 60, 0];
-				default:
-					return null;
-			}
+			Object.keys(more || {}).forEach(function (key) {
+				inputs[key] = more[key];
+			});
+
+			return drivesCode(object).Run({}, inputs);
 		}
 
 		/* Drives that are where they say at once: no pace. */
@@ -822,7 +845,7 @@ Elemenx.Trait('SceneVehicles', {
 
 			rig.Emitters.forEach(function (emitter) {
 				var on = emitter.Drive ? drivenOf(object, {Drive: emitter.Drive}) : [1, 0];
-				var left = (object.Emitted[emitter.Role] || 0) + elapsed * emitter.Rate * Math.max(0.15, on ? Math.abs(on[0]) : 0);
+				var left = (object.Emitted[emitter.Role] || 0) + elapsed * emitter.Rate * drivesOf(object, emitter, {On: on ? on[0] : 0}).emit;
 
 				if (left < 1) {
 					object.Emitted[emitter.Role] = left;
@@ -1111,7 +1134,8 @@ Elemenx.Trait('SceneVehicles', {
 
 			hero.Gassed = !!gas;
 
-			if (!was || gas || pace < 14) return;
+			/* When it pops: of the graph of the drives (the gas let go at speed). */
+			if (!drivesOf(hero, {}, {WasGas: was ? 1 : 0, Gas: gas || 0, Pace: pace}).pop) return;
 
 			engine.MountsOf(hero).forEach(function (mount) {
 				var pop = mount.Mount.Pop;
@@ -1184,7 +1208,7 @@ Elemenx.Trait('SceneVehicles', {
 			hero.Flight = {At: [seen.X, seen.Y, seen.Z], Turn: turn};
 			hero.World = hero.Flight.At;
 			hero.Turn = turn;
-			hero.Thrust = (input.Gas ? 0.45 : 0.04) + 0.55 * Math.min(1, pace / given(settings.Top, 92)) * (input.Gas ? 1 : 0);
+			hero.Thrust = drivesOf(hero, {}, {Gas: input.Gas ? Number(input.Gas) || 1 : 0, Pace: pace, Top: given(settings.Top, 92)})['thrust-car'];
 			hero.Head = settings.Seat ? math.Apply(turn, settings.Seat) : null;
 			hero.Body = math.Multiply(math.Rotation([0, 1, 0], seen.Heading), math.Multiply(math.Rotation([1, 0, 0], -seen.Pitch), math.Rotation([0, 0, 1], seen.Roll)));
 
@@ -1213,7 +1237,7 @@ Elemenx.Trait('SceneVehicles', {
 			/* The view comes round behind it as it goes; a hand on the mouse holds it for a while. From the seat it looks ahead, but while the right button is held. */
 			var seated = (scene.Inside || 0) > 0.5;
 
-			if (pace > 1 && !scene.LookHeld && (seated || !scene.Drag && performance.now() - (scene.Looked || 0) > 1500)) {
+			if (hero.ID === scene.Hero && pace > 1 && !scene.LookHeld && (seated || !scene.Drag && performance.now() - (scene.Looked || 0) > 1500)) {
 				var behind = seen.Heading + Math.PI;
 				var apart = Math.atan2(Math.sin(behind - scene.Yaw), Math.cos(behind - scene.Yaw));
 
@@ -1280,7 +1304,7 @@ Elemenx.Trait('SceneVehicles', {
 			hero.Flight = {At: [seen.X, seen.Y, seen.Z], Turn: turn};
 			hero.World = hero.Flight.At;
 			hero.Turn = turn;
-			hero.Thrust = input.Gas ? 0.3 + 0.7 * Math.min(1, pace / given(settings.Top, 16)) : 0.05;
+			hero.Thrust = drivesOf(hero, {}, {Gas: input.Gas ? Number(input.Gas) || 1 : 0, Pace: pace, Top: given(settings.Top, 16)})['thrust-boat'];
 			hero.Head = settings.Seat ? math.Apply(turn, settings.Seat) : null;
 			hero.Body = math.Multiply(math.Rotation([0, 1, 0], seen.Heading), math.Multiply(math.Rotation([1, 0, 0], -seen.Pitch), math.Rotation([0, 0, 1], seen.Roll)));
 
@@ -1306,7 +1330,7 @@ Elemenx.Trait('SceneVehicles', {
 			/* The view comes round behind it as it goes, as behind a car. */
 			var seated = (scene.Inside || 0) > 0.5;
 
-			if (pace > 1 && !scene.LookHeld && (seated || !scene.Drag && performance.now() - (scene.Looked || 0) > 1500)) {
+			if (hero.ID === scene.Hero && pace > 1 && !scene.LookHeld && (seated || !scene.Drag && performance.now() - (scene.Looked || 0) > 1500)) {
 				var behind = seen.Heading + Math.PI;
 				var apart = Math.atan2(Math.sin(behind - scene.Yaw), Math.cos(behind - scene.Yaw));
 
@@ -1361,6 +1385,11 @@ Elemenx.Trait('SceneVehicles', {
 			 */
 			var pad = keys.Pad || {X: 0, Y: 0, LookX: 0, LookY: 0, Gas: 0, Brake: 0};
 			var input = {Yaw: Math.max(-1, Math.min(1, (keys.KeyA || keys.ArrowLeft ? 1 : 0) - (keys.KeyD || keys.ArrowRight ? 1 : 0) - pad.X)), Pitch: Math.max(-1, Math.min(1, (keys.KeyR || keys.ArrowDown ? 1 : 0) - (keys.KeyF || keys.ArrowUp ? 1 : 0) + pad.Y)), Roll: Math.max(-1, Math.min(1, (keys.KeyE ? 1 : 0) - (keys.KeyQ ? 1 : 0) + (pad.DX || 0))), Throttle: Math.max(-1, Math.min(1, (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0) + pad.Gas - pad.Brake)), Lift: Math.max(-1, Math.min(1, (keys.KeyC ? 1 : 0) - (keys.KeyX ? 1 : 0) + (pad.DY || 0))), Boost: keys.ShiftLeft || keys.ShiftRight, Stop: keys.Space};
+
+			/* Its engines as much as their power lets them (SceneShipSystems: a ship of reactors of its own). */
+			if (engine.EnginesPower)
+				input.Throttle *= engine.EnginesPower(hero);
+
 			var last = hero.Last || state;
 
 			var part = physics.Steps(hero.Clock, elapsed, 1 / 120, function (step) {
@@ -1394,7 +1423,7 @@ Elemenx.Trait('SceneVehicles', {
 			var ahead = vectors.Normalize(physics.Blend(last.Ahead, state.Ahead, part));
 			var at = around && around.World ? vectors.Add(around.World, from) : from;
 
-			hero.Thrust = Math.abs(state.Throttle) * (input.Boost ? 2 : 1);
+			hero.Thrust = drivesOf(hero, {}, {Throttle: state.Throttle || 0, Boost: input.Boost ? 1 : 0})['thrust-ship'];
 
 			placeShip(hero, settings, at, right, up, ahead);
 		}
@@ -1733,15 +1762,16 @@ Elemenx.Trait('SceneVehicles', {
 
 		/*
 		 * How a warp or a jump looks (blueprints/vehicles/travel-look, or TravelLookGraph of the scene) in its phase (0 into
-		 * it, 1 in it, 2 out of it), t of the phase, time in it: {Stretch, Tunnel, Flash, Shake, Wide, Lag, Pace}. Regression:
+		 * it, 1 in it, 2 out of it), t of the phase, time in it (the throttle of the ship): {Stretch, Tunnel, Flash, Shake, Wide,
+		 * Lag, Pace, Thrust}. Regression:
 		 * curves of the code, three of each kind.
 		 */
-		function lookOf (phase, warp, t, time) {
+		function lookOf (phase, warp, t, time, throttle) {
 			var graph = self.GraphOf('TravelLookGraph', 'vehicles/travel-look') || Elemenx.Resources('Blueprints', 'ElemenxGraphics/vehicles/travel-look');
 			if (!scene.TravelLook || scene.TravelLook.Graph !== graph)
 				scene.TravelLook = {Graph: graph, Code: self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)))};
 
-			return scene.TravelLook.Code.Run({}, {Phase: phase, Warp: warp ? 1 : 0, T: t || 0, Time: time || 0});
+			return scene.TravelLook.Code.Run({}, {Phase: phase, Warp: warp ? 1 : 0, T: t || 0, Time: time || 0, Throttle: throttle || 0});
 		}
 
 		function travelStep (hero, state, settings, origin, elapsed, keys) {
@@ -1777,9 +1807,9 @@ Elemenx.Trait('SceneVehicles', {
 				state.Way = vectors.Lerp(state.Way, vectors.Scale(state.Ahead, warp ? Math.min(vectors.Length(state.Way), top * 0.15) : top * 0.6), Math.min(1, elapsed * 2));
 				state.At = vectors.Add(state.At, vectors.Scale(state.Way, elapsed));
 
-				hero.Thrust = warp ? 0.3 + 2.7 * t * t : 1 + 2 * t;
-
 				look = lookOf(0, warp, t, travel.Time);
+
+				hero.Thrust = look.Thrust;
 
 				if (t >= 1) {
 					travel.Start = vectors.Add(origin, state.At);
@@ -1888,9 +1918,9 @@ Elemenx.Trait('SceneVehicles', {
 				state.Way = vectors.Scale(state.Ahead, travel.Speed);
 				travel.Axis = axis;
 
-				hero.Thrust = 3;
-
 				look = lookOf(1, warp, 0, travel.Time);
+
+				hero.Thrust = look.Thrust;
 
 				if (end) {
 					/* Never out in a body: a tunnel goes through them, its way out on their outside. */
@@ -1916,9 +1946,9 @@ Elemenx.Trait('SceneVehicles', {
 				state.Way = vectors.Scale(state.Ahead, top * Math.max(state.Throttle, 0.4) + fast);
 				state.At = vectors.Add(state.At, vectors.Scale(state.Way, elapsed));
 
-				hero.Thrust = Math.max(Math.abs(state.Throttle), 3 * (1 - t));
+				look = lookOf(2, warp, t, travel.Time, state.Throttle);
 
-				look = lookOf(2, warp, t, travel.Time);
+				hero.Thrust = look.Thrust;
 
 				if (t >= 1) {
 					state.Throttle = Math.max(state.Throttle, 0.4);
@@ -2501,29 +2531,16 @@ Elemenx.Trait('SceneVehicles', {
 		var Lamps = Elemenx.Resources('Data', 'ElemenxGraphics/vehicles/lamps') || {};
 
 		/* How far a lamp of a car is lit now, 0 to 1, on its side (1 the left, as x goes, -1 the right). */
+		/* How bright a lamp is (0 to 1): of the graph of the drives (lamp-head, lamp-rear, lamp-brake, lamp-reverse, lamp-indicator), a glow of its role. */
 		function lampOn (object, lamp, side) {
-			var signals = object.Signals || {};
-			var held = object.Controls || {};
-			var car = object.Car || {};
-			var braking = (held.Brake || 0) > 0.05 && (car.Forward || 0) > -0.5 && car.Gear !== -1;
-			var way = signals.Hazard ? side : -(signals.Indicate || 0);
+			var value;
 
-			switch (lamp.Kind) {
-				case 'head':
-					return signals.Lights ? 1 : 0;
-				case 'rear':
-					return braking ? 1 : signals.Lights ? 0.3 : 0;
-				case 'brake':
-					return braking ? 1 : 0;
-				case 'reverse':
-					return car.Gear === -1 || car.Gear === undefined && (car.Forward || 0) < -0.3 ? 1 : 0;
-				case 'indicator':
-					return way === side && Math.floor((object.Blink || 0) / 0.36) % 2 === 0 ? 1 : 0;
-				case 'glow':
-					return lamp.Role ? given((object.Opens || {})['role:' + lamp.Role], given(lamp.Open, 0)) : given(lamp.Open, 1);
-				default:
-					return 0;
-			}
+			if (lamp.Kind === 'glow')
+				return lamp.Role ? given((object.Opens || {})['role:' + lamp.Role], given(lamp.Open, 0)) : given(lamp.Open, 1);
+
+			value = drivesOf(object, lamp, {Side: side})['lamp-' + lamp.Kind];
+
+			return value === undefined ? 0 : value;
 		}
 
 		function lampOf (object, index) {
@@ -2592,6 +2609,9 @@ Elemenx.Trait('SceneVehicles', {
 
 		scene.Vehicles = {car: car, ship: ship, boat: boat};
 
+		/* Who sits in which seat of what ({actor: {Vehicle, Seat, Was}}): Board, Leave. */
+		scene.Seated = scene.Seated || {};
+
 		/* Where a ship stands and how it lies, of its axes: for what flies it otherwise (SceneLanding). */
 		engine.PlaceShip = placeShip;
 
@@ -2608,6 +2628,286 @@ Elemenx.Trait('SceneVehicles', {
 			});
 		};
 
+		/*
+		 * The seats of a vehicle: its Seats ([{ID, Role, At: [x, y, z] of its model, Exit: [x, y, z] where who leaves it steps
+		 * out, Controls: whoever sits there drives or flies it}]), else one of its kind where its Seat is (a car, a boat: the
+		 * driver; a ship: the pilot), its exit by its left side.
+		 */
+		function seatsOf (object) {
+			var settings = object.Values.Vehicle || {};
+			var role = settings.Kind === 'ship' ? 'pilot' : 'driver';
+			var at = Array.isArray(settings.Seat) ? settings.Seat : [0, (object.Size || 1) * 0.4, 0];
+
+			if (Array.isArray(settings.Seats) && settings.Seats.length) return settings.Seats;
+
+			return [{ID: role, Role: role, At: at, Exit: [(object.Size || 1) * 0.75, 0, at[2]], Controls: true}];
+		}
+
+		/* A point of the model of a vehicle where it stands now, turned as it lies (Turn), else by where it faces. */
+		function onVehicle (object, point) {
+			/* A ship standing, its seats inside it (SceneAboard): where its inside stands. */
+			var inner = engine.InteriorWorld ? engine.InteriorWorld(object, point) : null;
+			var turn;
+			var at;
+
+			if (inner)
+				return inner;
+
+			turn = object.Turn || math.Rotation([0, 1, 0], (object.Facing || 0) + given(object.Values.Vehicle && object.Values.Vehicle.Yaw, 0) * Math.PI / 180);
+			at = object.World || [given(object.Values.X, 0), 0, given(object.Values.Y, 0)];
+
+			return vectors.Add(at, math.Apply(turn, point || [0, 0, 0]));
+		}
+
+		function tellContext (actor) {
+			self.$Emit('context', Object.assign({Actor: actor.ID}, engine.ActorContext(actor.ID)));
+		}
+
+		/* Where an actor is: walking, or in a seat of a vehicle ({Kind: walk | seat, Vehicle, Seat, Role, Controls}). */
+		engine.ActorContext = function (id) {
+			var actor = scene.Objects[id];
+			var aboard = actor ? actor.Aboard : null;
+			var vehicle = aboard ? scene.Objects[aboard.Vehicle] : null;
+			var seat = vehicle ? seatsOf(vehicle).filter(function (one) {
+				return one.ID === aboard.Seat;
+			})[0] : null;
+
+			if (!actor)
+				return null;
+
+			return seat ? {Kind: 'seat', Vehicle: vehicle.ID, Seat: seat.ID, Role: seat.Role || '', Controls: !!seat.Controls} : {Kind: 'walk', Vehicle: '', Seat: '', Role: '', Controls: false};
+		};
+
+		/*
+		 * An actor (an object that walks: the character of the player) sits in a seat of a vehicle (the first free one that
+		 * drives it, else the first free): it is kept as it is (its health, what it holds, its values), hidden, carried where
+		 * the seat is; a seat that drives makes the vehicle the hero if the actor was. False where it cannot.
+		 */
+		engine.Board = function (id, vehicleID, seatID) {
+			var actor = scene.Objects[id];
+			var vehicle = scene.Objects[vehicleID];
+			var crew;
+			var seats;
+			var seat;
+
+			if (!actor || !vehicle || !vehicle.Values.Vehicle || actor === vehicle || actor.Values.Vehicle || actor.Aboard) return false;
+
+			crew = vehicle.Crew = vehicle.Crew || {};
+			seats = seatsOf(vehicle).filter(function (one) {
+				return !crew[one.ID] && (!seatID || one.ID === seatID);
+			});
+			seat = seats.filter(function (one) {
+				return one.Controls;
+			})[0] || seats[0];
+
+			if (!seat)
+				return false;
+
+			crew[seat.ID] = actor.ID;
+
+			/* Off its feet in a ship in flight (SceneAboard). */
+			if (scene.Afoot)
+				delete scene.Afoot[actor.ID];
+
+			actor.Aboard = scene.Seated[actor.ID] = {Vehicle: vehicle.ID, Seat: seat.ID, Was: !!actor.Hidden};
+			actor.Hidden = true;
+
+			if (seat.Controls && scene.Hero === actor.ID) {
+				vehicle.Pilot = actor.ID;
+
+				engine.Control(vehicle.ID);
+			}
+
+			carry(actor, vehicle, seat);
+
+			tellContext(actor);
+
+			return true;
+		};
+
+		/*
+		 * An actor leaves its seat: it steps out where the seat says (Exit), on the ground, shown again; the hero again if the
+		 * vehicle was the hero and it drove. The vehicle goes on as it was: its engine, its doors, its speed (it rolls on by
+		 * itself, VehiclesIdle). False where it is in none.
+		 */
+		engine.Leave = function (id) {
+			var actor = scene.Objects[id];
+			/* Who sits where is of the scene (Seated). Regression: over the surface of a body (no VehiclesIdle there) G left no seat. */
+			var aboard = actor ? actor.Aboard || scene.Seated[id] || null : null;
+			var vehicle = aboard ? scene.Objects[aboard.Vehicle] : null;
+			var seat;
+			var out;
+
+			if (!aboard)
+				return false;
+
+			seat = vehicle ? seatsOf(vehicle).filter(function (one) {
+				return one.ID === aboard.Seat;
+			})[0] : null;
+
+			if (vehicle && vehicle.Crew)
+				delete vehicle.Crew[aboard.Seat];
+
+			out = vehicle ? onVehicle(vehicle, seat && seat.Exit || [(vehicle.Size || 1) * 0.75, 0, 0]) : actor.World || [0, 0, 0];
+			actor.Aboard = null;
+			delete scene.Seated[actor.ID];
+			/* Out where it is: of the location it stands in, not of space (one added in space was away down here). */
+			actor.Away = false;
+			actor.Hidden = aboard.Was;
+			actor.Values.X = out[0];
+			actor.Values.Y = out[2];
+			/* Out on a floor of the inside of a ship (or on its ground), where it stands. */
+			actor.Air = out[1];
+			actor.World = out.slice();
+			scene.Overrides[actor.ID] = scene.Overrides[actor.ID] || {};
+			scene.Overrides[actor.ID].Values = Object.assign(scene.Overrides[actor.ID].Values || {}, {X: out[0], Y: out[2]});
+
+			/* Out in a ship in flight: on foot in its frame (SceneAboard). */
+			if (vehicle && engine.AboardLeft)
+				engine.AboardLeft(actor, vehicle, seat);
+
+			if (vehicle && vehicle.Pilot === actor.ID) {
+				vehicle.Pilot = '';
+
+				if (scene.Hero === vehicle.ID)
+					engine.Control(actor.ID);
+			}
+
+			tellContext(actor);
+
+			return true;
+		};
+
+		/* The vehicle the hero on foot stands by (within its size and 1.5 m), the nearest; null for none. */
+		engine.Nearest = function (id) {
+			var actor = scene.Objects[id];
+			var best = null;
+			var far = Infinity;
+
+			if (!actor || !actor.World || actor.Aboard) return null;
+
+			scene.Order.forEach(function (object) {
+				var apart;
+
+				if (!object.Values.Vehicle || !object.World || object.Hidden || object === actor) return;
+
+				apart = Math.hypot(object.World[0] - actor.World[0], object.World[2] - actor.World[2]);
+
+				if (apart < (object.Size || 1) + 1.5 && apart < far) {
+					far = apart;
+					best = object;
+				}
+			});
+
+			return best;
+		};
+
+		/* An actor in a seat goes where the seat is (its X and Y), as the vehicle goes. */
+		function carry (actor, vehicle, seat) {
+			var at = onVehicle(vehicle, seat.At);
+
+			actor.Values.X = at[0];
+			actor.Values.Y = at[2];
+			actor.World = at;
+			scene.Overrides[actor.ID] = scene.Overrides[actor.ID] || {};
+			scene.Overrides[actor.ID].Values = Object.assign(scene.Overrides[actor.ID].Values || {}, {X: at[0], Y: at[2]});
+		}
+
+		/*
+		 * What is driven by none (left while it went, a car let roll) goes on by itself with no hand on it: it slows as it
+		 * would, and stops; those in its seats go where their seats are. Regression: only the vehicle of the hero moved.
+		 */
+		engine.VehiclesIdle = function (elapsed) {
+			scene.Order.forEach(function (object) {
+				var settings = object.Values.Vehicle;
+				var state = object.Car || object.Boat;
+				if (settings && object.Driven && object.ID !== scene.Hero && state && (settings.Kind === 'car' || settings.Kind === 'boat') && Math.abs(state.Forward || 0) > 0.05 && scene.Vehicles[settings.Kind])
+					scene.Vehicles[settings.Kind](object, {Pad: {X: 0, Y: 0, Gas: 0, Brake: 0}}, elapsed);
+			});
+
+			/*
+			 * Who sits where is of the scene (Seated), not of the objects: an object made again (a ship come down into a
+			 * location) is in its seat still, its vehicle knows it. Regression: the pilot of a ship landed stood at nothing.
+			 */
+			Object.keys(scene.Seated).forEach(function (id) {
+				var record = scene.Seated[id];
+				var actor = scene.Objects[id];
+				var vehicle = scene.Objects[record.Vehicle];
+				var seat;
+
+				if (!actor || !vehicle) return;
+
+				actor.Aboard = record;
+				actor.Hidden = true;
+				vehicle.Crew = vehicle.Crew || {};
+				vehicle.Crew[record.Seat] = id;
+
+				seat = seatsOf(vehicle).filter(function (one) {
+					return one.ID === record.Seat;
+				})[0];
+
+				if (seat && seat.Controls)
+					vehicle.Pilot = id;
+
+				if (seat)
+					carry(actor, vehicle, seat);
+			});
+		};
+
+		/*
+		 * What the instruments of an object read (the graph of its readout: ReadoutGraph of the vehicle, of the scene or its
+		 * Graphs['vehicles/readout'], else the library's): {ID, Kind (car, boat, ship: what it is driven as; walk: a character
+		 * on foot), Speed (km/h), TopSpeed (km/h), SpeedPart, Rpm, RpmPart (of its redline), Gear (-1 reverse, 0 neutral),
+		 * Left, Right (an indicator lit now, 0 or 1), Lights, Health, MaxHealth, HealthPart, Driver (who drives it, an actor)};
+		 * null for none. One way for all that shows them (GameDash). Regression: each demo read its car itself.
+		 */
+		engine.Readout = function (id) {
+			var object = scene.Objects[id];
+			var settings = object ? object.Values.Vehicle : null;
+			var state = object ? object.Car || object.Boat || object.Ship : null;
+			var signals = object ? object.Signals || {} : {};
+			var graph;
+			var made;
+			var found;
+			var metre;
+			var out;
+
+			if (!object)
+				return null;
+
+			graph = settings && settings.ReadoutGraph || self.GraphOf('ReadoutGraph', 'vehicles/readout') || Elemenx.Resources('Blueprints', 'ElemenxGraphics/vehicles/readout');
+			made = scene.ReadoutCodes = scene.ReadoutCodes || [];
+			found = made.filter(function (one) {
+				return one.Graph === graph;
+			})[0];
+
+			if (!found) {
+				found = {Graph: graph, Code: self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)))};
+
+				made.push(found);
+			}
+
+			/* A ship goes in units of the scene: in metres a second of its real sizes (as they are with none). */
+			metre = settings && settings.Kind === 'ship' && engine.Metre && engine.Metre() || 1;
+
+			out = found.Code.Run({}, {
+				/* In the air of a location metres a second; on its way down or up its real speed (SceneLanding); in space of its way. */
+				Forward: object.Flying ? vectors.Length(object.Flying.Way) : object.Landing && object.Landing.Real ? object.Landing.Real * 1000 : settings ? state && state.Forward !== undefined ? state.Forward : state && state.Way ? vectors.Length(state.Way) / metre : 0 : given(object.Walking, 0),
+				Top: settings ? given(settings.Top, settings.Kind === 'car' ? physics.CarDefaults.Top : 30) / (settings.Kind === 'ship' ? metre : 1) : 6,
+				Rpm: state && state.Rpm || 0,
+				Redline: settings ? given(settings.Redline, physics.CarDefaults.Redline) : 0,
+				Gear: state && state.Gear !== undefined ? state.Gear : 0,
+				Indicate: signals.Indicate || 0,
+				Hazard: signals.Hazard ? 1 : 0,
+				Blink: object.Blink || 0,
+				Lights: signals.Lights ? 1 : 0,
+				Health: given(object.Values.Health, 0),
+				MaxHealth: given(object.Values.MaxHealth, object.Values.Health !== undefined ? 100 : 0)
+			});
+
+			return Object.assign({ID: object.ID, Kind: settings ? settings.Kind || 'car' : 'walk', Rpm: state && state.Rpm || 0, Health: given(object.Values.Health, 0), MaxHealth: given(object.Values.MaxHealth, 100), Driver: object.Pilot || '', Throttle: object.Ship ? object.Ship.Throttle || 0 : 0, Travel: object.Travel ? {Kind: object.Travel.Kind, Phase: object.Travel.Phase, Step: object.Travel.Step} : null, Environment: self.Environment ? self.Environment(object.ID) : null}, out, {Systems: engine.ShipSystems ? engine.ShipSystems(object.ID) : null});
+		};
+
 		/* A step of what is driven; false if the hero is no vehicle. */
 		engine.VehicleStep = function (hero, keys, elapsed) {
 			var settings = hero.Values.Vehicle;
@@ -2616,6 +2916,9 @@ Elemenx.Trait('SceneVehicles', {
 				return false;
 
 			step(hero, keys, elapsed);
+
+			/* Driven once: left, it goes on by itself (VehiclesIdle). */
+			hero.Driven = true;
 
 			return true;
 		};
@@ -2754,5 +3057,64 @@ Elemenx.Trait('SceneVehicles', {
 	/* Adds kinds of vehicles: {Kind: function (hero, keys, elapsed)}. */
 	Vehicles: function (kinds) {
 		Object.assign(this.Scene().Vehicles, kinds);
+	},
+
+	/* An actor sits in a seat of a vehicle (the first free that drives it, else the first free, or seat): see Seats. */
+	Board: function (id, vehicle, seat) {
+		var engine = this.Engine();
+
+		return !!(engine && engine.Board && engine.Board(id, vehicle, seat));
+	},
+
+	/* An actor leaves its seat, out where the seat says; the vehicle goes on as it was. */
+	Leave: function (id) {
+		var engine = this.Engine();
+
+		return !!(engine && engine.Leave && engine.Leave(id));
+	},
+
+	/* What the instruments of an object read: see Readout (of the hero by none). */
+	Readout: function (id) {
+		var engine = this.Engine();
+
+		return engine && engine.Readout ? engine.Readout(id === undefined ? this.Scene().Hero : id) : null;
+	},
+
+	/* Where an actor is: {Kind: walk | seat, Vehicle, Seat, Role, Controls}; null for none. */
+	Context: function (id) {
+		var engine = this.Engine();
+
+		return engine && engine.ActorContext ? engine.ActorContext(id) : null;
+	},
+
+	/*
+	 * G of the hero: on foot by a vehicle it sits in it, in a seat it leaves (the actor that drives the hero vehicle). True
+	 * when it did. Not in a ship flown in space (its keys are its own there).
+	 */
+	BoardKey: function () {
+		var scene = this.Scene();
+		var engine = this.Engine();
+		var hero = scene.Objects[scene.Hero];
+		var near;
+		var seat;
+
+		if (!hero || !engine || !engine.Board) return false;
+
+		/* In a seat that drives nothing (a console of a ship standing): up, beside it. */
+		if (hero.Aboard)
+			return engine.Leave(hero.ID);
+
+		if (hero.Values.Vehicle)
+			return !!hero.Pilot && (hero.Values.Vehicle.Kind !== 'ship' || !!(engine.InteriorWorld && engine.InteriorWorld(hero))) && engine.Leave(hero.Pilot);
+
+		/* By a console inside a ship standing (SceneAboard): its seat. */
+		seat = engine.NearestSeat ? engine.NearestSeat(hero.ID) : null;
+
+		if (seat)
+			return engine.Board(hero.ID, seat.Vehicle, seat.Seat);
+
+		near = engine.Nearest(hero.ID);
+
+		return !!near && near.Values.Vehicle.Kind !== 'ship' && engine.Board(hero.ID, near.ID);
 	}
 });

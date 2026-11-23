@@ -857,6 +857,32 @@ describe('Contract: Blueprints, graphs in the JSON of Flowprint made into shader
 			expect(code.Run({}, point)).toEqual(made.Run({}, point));
 		}
 	});
+
+	/* A minus before a name, a bracket or a call; a parameter not given is the value of the graph, in the code as block by block. */
+	it('reads a minus before a name, a bracket or a call, and the parameters a run is not given as those of the graph', function () {
+		var graph = blueprints.Create('generator', {parameters: [{key: 'Most', type: 'float', value: 4}]});
+		var a = blueprints.Add(graph, 'Input', {properties: {Name: 'A'}});
+		var most = blueprints.Add(graph, 'Parameter', {properties: {Key: 'Most', Type: 'float'}});
+		var formula = blueprints.Add(graph, 'Formula', {properties: {Expression: 'max(-Most, -(A < 0 ? -1 : 1) * abs(A) * 2 + -min(A, 1))'}});
+		var result = blueprints.Add(graph, 'Result', {properties: {Key: 'Value'}});
+		var made;
+		var code;
+
+		blueprints.Link(graph, [a.id, 'Value'], [formula.id, 'A']);
+		blueprints.Link(graph, [most.id, 'Value'], [formula.id, 'Most']);
+		blueprints.Link(graph, [formula.id, 'Value'], [result.id, 'Value']);
+
+		made = blueprints.Compile(stored(graph));
+		code = blueprints.Code(stored(graph));
+
+		expect(blueprints.FormulaValue(blueprints.Formula('-2 * -(3 - 5) + -abs(-1)').Tree, {})).toBe(-5);
+		expect(made.Run({}, {A: 1}).Value).toBe(-3);
+		expect(code.Run({}, {A: 1}).Value).toBe(-3);
+		expect(code.Run({}, {A: -0.5}).Value).toBeCloseTo(1.5, 6);
+		expect(code.Run({}, {A: 10}).Value).toBe(-4);
+		expect(made.Run({Most: 30}, {A: 10}).Value).toBe(-21);
+		expect(code.Run({Most: 30}, {A: 10}).Value).toBe(-21);
+	});
 });
 
 describe('Contract: the graphs of the Libraries as resources, made for their options', function () {

@@ -45,6 +45,7 @@
 		<Button Label="Weather graph" Icon="code" Variant="ghost" [pressed]="TerrainGraphOpen === 'shader/weather'" [title]="'What the weather and the year do to things: leaves, snow, pools, a beam'" (click)="TerrainGraphOpened('shader/weather')" />
 		<Button Label="Bolt graph" Icon="code" Variant="ghost" [pressed]="TerrainGraphOpen === 'shader/bolt'" [title]="'The shape of a lightning, of a storm and of the effects'" (click)="TerrainGraphOpened('shader/bolt')" />
 		<Button Label="Clouds graph" Icon="code" Variant="ghost" [pressed]="TerrainGraphOpen === 'shader/clouds'" [title]="'The clouds: their layer over the land, of a cheap noise'" (click)="TerrainGraphOpened('shader/clouds')" />
+		<Button Label="Sky light graph" Icon="code" Variant="ghost" [pressed]="TerrainGraphOpen === 'shader/sky-light'" [title]="'The light of the sky on all it lights and mirrors, as blocks: the sea, glass, the paint of a car, the objects, the grass; whiter at the horizon, deeper blue up high, the glow of a low sun'" (click)="TerrainGraphOpened('shader/sky-light')" />
 		<Button Label="Air graph" Icon="code" Variant="ghost" [pressed]="TerrainGraphOpen === 'shader/air'" [title]="'The air: the haze, the fog that lies low, the sheets of rain, under the sea'" (click)="TerrainGraphOpened('shader/air')" />
 	</div>
 	<div class="scene-demo-scene" *if="TerrainGraphOpen">

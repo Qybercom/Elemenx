@@ -5,6 +5,7 @@
  * of them, Escape none. A right press orders them: on the ground they go there and spread round it (Spread metres apart),
  * on a unit of another team they attack it; S stops them. A unit with Damage (per second, 10) attacks what is within its
  * Range (3 metres), going to it first, and by itself what comes within half its Sight; a unit with no Health left is gone.
+ * What it does not say itself (Damage, Range, Sight, its health) is of its model (Vitals.Units, resources/vitals/units).
  * A unit with a Weapon (of the weapons of the Scene: rifle, rocket, mortar...) shoots it from its Range (25 metres) with a
  * Spread of its own (degrees, 2), its shots hitting what is in their way; the damage is of the health of the scene (Vitals).
  * Fog hides what the units of the Team do not see (Sight of a unit, 30 metres) and darkens what they have not seen yet or
@@ -12,6 +13,10 @@
  * orders), the wheel brings it near. By fingers (Gestures): a tap selects, a double tap all of that kind on the screen, a
  * press orders, one finger carries the map (with Framing on it draws a frame that selects), two bring it near, turn and
  * tilt it. Selected: the units selected from the start, as they come into the scene.
+ *
+ * Command seat: it plays only while the hero is in the strategic view of its seat (SceneTactics: Tactic strategic), and
+ * its units are then those it commands from there (Command of the scene: the crew of its vehicle on foot, or every crew of
+ * its fleet), whatever their team; the units it has told go on doing it when the view is left (none is selected then).
  *
  * Methods: Selection(), Select(ids), Order(ids, target, kind) (target [x, z], {X, Z} or the ID of a unit; kind move or
  * attack), Stop(ids), Seen(x, z) and Explored(x, z) (of the fog), Framing(on) (one finger draws a frame; no on: whether it
@@ -35,6 +40,7 @@ Elemenx.Component('GameStrategy', {
 			Fog: 'The fog of war: what the units do not see is hidden and darkened.',
 			Spread: 'Metres between the units sent to one place.',
 			Selected: 'The units selected from the start (IDs: a list, or text with commas), as they come.',
+			Command: {Options: ['', 'seat'], Description: 'seat: only in the strategic view of the seat of the hero, its units those it commands.'},
 			Label: 'The name of it for screen readers.'
 		}
 	},
@@ -42,6 +48,7 @@ Elemenx.Component('GameStrategy', {
 	Fog: false,
 	Spread: 2.5,
 	Selected: '',
+	Command: '',
 	Label: '',
 
 	SceneStart: function (scene) {
@@ -86,7 +93,35 @@ Elemenx.Component('GameStrategy', {
 	},
 
 	Mine: function (object) {
-		return !!(object && object.Traits && object.Traits.Walker && String(object.Team || '') === String(this.Team));
+		if (!object || !object.Traits || !object.Traits.Walker) return false;
+
+		if (this.Command === 'seat')
+			return !!this.Commanded && this.Commanded.indexOf(object.ID) !== -1;
+
+		return String(object.Team || '') === String(this.Team);
+	},
+
+	/* Whether it plays now: always, or with Command seat in the strategic view of the seat of the hero. */
+	Playing: function () {
+		var scene = this.ParentScene();
+
+		return this.Command !== 'seat' || !!scene && typeof scene.Tactic === 'function' && scene.Tactic() === 'strategic';
+	},
+
+	/*
+	 * With Command seat, whom the hero commands (on foot, of the Command of its seat): looked at again as it is asked (a
+	 * selection, a press, a key), not only as the scene steps. Regression: a scene at rest steps not, and just in the view of
+	 * its seat none of the crew could be selected.
+	 */
+	Commands: function () {
+		var scene = this.ParentScene();
+		var command = this.Command === 'seat' && scene && scene.Command ? scene.Command() : null;
+
+		this.Commanded = command ? command.Units.filter(function (unit) {
+			return !unit.Seated;
+		}).map(function (unit) {
+			return unit.ID;
+		}) : [];
 	},
 
 	Foe: function (object) {
@@ -96,6 +131,9 @@ Elemenx.Component('GameStrategy', {
 	Units: function () {
 		var self = this;
 		var space = this.Space();
+
+		if (this.Command === 'seat')
+			this.Commands();
 
 		return space ? Object.keys(space.Objects).map(function (id) {
 			return space.Objects[id];
@@ -111,6 +149,9 @@ Elemenx.Component('GameStrategy', {
 	Select: function (ids) {
 		var space = this.Space();
 		var self = this;
+
+		if (this.Command === 'seat')
+			this.Commands();
 
 		this.Chosen = (ids || []).filter(function (id) {
 			return space && self.Mine(space.Objects[id]);
@@ -135,7 +176,10 @@ Elemenx.Component('GameStrategy', {
 		var picked;
 		var object;
 
-		if (!this.Space() || !this.Space().Ground || !event || event.clientX === undefined) return false;
+		if (!this.Space() || !this.Space().Ground || !event || event.clientX === undefined || !this.Playing()) return false;
+
+		if (this.Command === 'seat')
+			this.Commands();
 
 		at = this.Local(event);
 
@@ -277,7 +321,10 @@ Elemenx.Component('GameStrategy', {
 		var at;
 		var picked;
 
-		if (!this.Space() || !this.Space().Ground) return false;
+		if (!this.Space() || !this.Space().Ground || !this.Playing()) return false;
+
+		if (this.Command === 'seat')
+			this.Commands();
 
 		at = this.Local(event);
 
@@ -318,6 +365,8 @@ Elemenx.Component('GameStrategy', {
 	},
 
 	SceneKey: function (event) {
+		if (!this.Playing()) return false;
+
 		if ((event.ctrlKey || event.metaKey) && event.code === 'KeyA') {
 			this.Select(this.Units().map(function (unit) {
 				return unit.ID;
@@ -415,12 +464,25 @@ Elemenx.Component('GameStrategy', {
 
 		this.Clock += spent;
 
+		if (this.Command === 'seat')
+			this.Commands();
+
 		this.Initial();
 
 		this.Fight(spent);
 
 		if (this.Fog === true || this.Fog === 'true')
 			this.Fogged();
+
+		/* Out of the strategic view of a seat: nothing selected, nothing drawn; what was told goes on. */
+		if (!this.Playing()) {
+			if (this.Chosen.length)
+				this.Select([]);
+
+			this.Clear();
+
+			return;
+		}
 
 		this.Draw(spent);
 	},
@@ -453,21 +515,22 @@ Elemenx.Component('GameStrategy', {
 		var fighters = Object.keys(objects).map(function (id) {
 			return objects[id];
 		}).filter(function (object) {
-			return object.World && object.Traits.Walker && vitals.Settings(object) && !object.Owner;
+			/* With Command seat the hero is no unit (it commands from its seat), nor is who sits hidden in a seat. */
+			return object.World && object.Traits.Walker && vitals.Settings(object) && !object.Owner && !(self.Command === 'seat' && (object.ID === space.Hero || object.Hidden));
 		});
 
 		fighters.forEach(function (unit) {
 			var order = self.Orders[unit.ID];
 			/* A unit with a Weapon shoots from afar (the shots of the scene, SceneWeapons), one without strikes near. */
 			var armed = unit.Values.Weapon && typeof scene.Fire === 'function';
-			var range = self.Value(unit.Values.Range, armed ? 25 : 3);
+			var range = self.Value(unit.Values.Range, self.Value(vitals.UnitOf(unit).Range, armed ? 25 : 3));
 			var target;
 			var far;
 
 			/* Idle, it takes on a foe that comes near. */
 			if (!order && !space.Ways[unit.ID]) {
 				/* As far as the weather and the light let it see (Scene.SightOf). */
-				var sight = self.Seeing(self.Value(unit.Values.Sight, 30)) / 2;
+				var sight = self.Seeing(self.Value(unit.Values.Sight, self.Value(vitals.UnitOf(unit).Sight, 30))) / 2;
 				var near = fighters.filter(function (other) {
 					return other.Team && unit.Team && String(other.Team) !== String(unit.Team) && Math.hypot(other.World[0] - unit.World[0], other.World[2] - unit.World[2]) <= sight;
 				})[0];
@@ -506,7 +569,7 @@ Elemenx.Component('GameStrategy', {
 				return;
 			}
 
-			self.Strike(unit, target, self.Value(unit.Values.Damage, 10) * elapsed);
+			self.Strike(unit, target, self.Value(unit.Values.Damage, self.Value(vitals.UnitOf(unit).Damage, 10)) * elapsed);
 		});
 	},
 
@@ -581,7 +644,7 @@ Elemenx.Component('GameStrategy', {
 		fog.State.Hide();
 
 		this.Units().forEach(function (unit) {
-			var sight = self.Seeing(self.Value(unit.Values.Sight, 30)) / cell;
+			var sight = self.Seeing(self.Value(unit.Values.Sight, self.Value(self.$Service('Vitals').UnitOf(unit).Sight, 30))) / cell;
 			var cx = (unit.World[0] + size / 2) / cell;
 			var cz = (unit.World[2] + size / 2) / cell;
 			var x;
@@ -620,6 +683,12 @@ Elemenx.Component('GameStrategy', {
 	},
 
 	/* What lies over the picture: the fog, the rings of the selected, the bars of health, the marks of orders and the frame. */
+	Clear: function () {
+		var canvas = this.$Element();
+		if (canvas.getContext && canvas.width)
+			canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+	},
+
 	Draw: function (elapsed) {
 		var self = this;
 		var vitals = this.$Service('Vitals');

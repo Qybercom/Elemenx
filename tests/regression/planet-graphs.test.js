@@ -439,7 +439,7 @@ describe('Regression: the generation of worlds and their looks, graphs of the li
 		expect(made.Dry).toBeCloseTo(smooth(0.7, 1, made.Warmth) * 0.3 + (made.Rising ? 0 : smooth(0.3, -0.4, made.Warmth) * 0.4), 12);
 
 		/* Into a warp, half way: its curves as they were; a jump in it, its sway of its time. */
-		expect(look.Run({}, {Phase: 0, Warp: 1, T: 0.5, Time: 0})).toEqual({Stretch: smooth(0.3, 1, 0.5), Tunnel: smooth(0.8, 1, 0.5) * 0.7, Flash: smooth(0.9, 1, 0.5) * 0.9, Shake: 0.5 * 0.35, Wide: smooth(0.3, 1, 0.5) * 0.3, Lag: 0.5 * 0.15, Pace: 0.15 + 2.5 * 0.5 * 0.5});
+		expect(look.Run({}, {Phase: 0, Warp: 1, T: 0.5, Time: 0})).toEqual({Stretch: smooth(0.3, 1, 0.5), Tunnel: smooth(0.8, 1, 0.5) * 0.7, Flash: smooth(0.9, 1, 0.5) * 0.9, Shake: 0.5 * 0.35, Wide: smooth(0.3, 1, 0.5) * 0.3, Lag: 0.5 * 0.15, Pace: 0.15 + 2.5 * 0.5 * 0.5, Thrust: 0.3 + 2.7 * 0.5 * 0.5});
 		expect(look.Run({}, {Phase: 1, Warp: 0, T: 0, Time: 0.3}).Lag).toBeCloseTo(0.08 + Math.sin(0.6) * 0.35, 12);
 		expect(look.Run({}, {Phase: 2, Warp: 1, T: 0.25, Time: 0}).Tunnel).toBe(1 - smooth(0, 0.18, 0.25));
 

@@ -1,0 +1,250 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "vehicles-wheel",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "vehicles-wheel-input-spin",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Spin"
+				}
+			]
+		},
+		{
+			"id": "vehicles-wheel-input-steer",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Steer"
+				}
+			]
+		},
+		{
+			"id": "vehicles-wheel-input-stroke",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Stroke"
+				}
+			]
+		},
+		{
+			"id": "vehicles-wheel-input-size",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Size"
+				}
+			]
+		},
+		{
+			"id": "vehicles-wheel-input-front",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Front"
+				}
+			]
+		},
+		{
+			"id": "vehicles-wheel-input-held",
+			"type": "Input",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Held"
+				}
+			]
+		},
+		{
+			"id": "vehicles-wheel-input-side",
+			"type": "Input",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Side"
+				}
+			]
+		},
+		{
+			"id": "vehicles-wheel-formula-spinangle",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Held > 0 ? 0 : Spin"
+				}
+			]
+		},
+		{
+			"id": "vehicles-wheel-result-spinangle",
+			"type": "Result",
+			"x": 760,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "SpinAngle"
+				}
+			]
+		},
+		{
+			"id": "vehicles-wheel-formula-steerangle",
+			"type": "Formula",
+			"x": 320,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Front > 0 ? Steer * 0.5 : 0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-wheel-result-steerangle",
+			"type": "Result",
+			"x": 760,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "SteerAngle"
+				}
+			]
+		},
+		{
+			"id": "vehicles-wheel-formula-drop",
+			"type": "Formula",
+			"x": 320,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Stroke / Size"
+				}
+			]
+		},
+		{
+			"id": "vehicles-wheel-result-drop",
+			"type": "Result",
+			"x": 760,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Drop"
+				}
+			]
+		},
+		{
+			"id": "vehicles-wheel-formula-camber",
+			"type": "Formula",
+			"x": 320,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0"
+				}
+			]
+		},
+		{
+			"id": "vehicles-wheel-result-camber",
+			"type": "Result",
+			"x": 760,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Camber"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "vehicles-wheel-link-0",
+			"p1": "vehicles-wheel-input-held-out-Value",
+			"p2": "vehicles-wheel-formula-spinangle-in-Held",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-wheel-link-1",
+			"p1": "vehicles-wheel-input-spin-out-Value",
+			"p2": "vehicles-wheel-formula-spinangle-in-Spin",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-wheel-link-2",
+			"p1": "vehicles-wheel-formula-spinangle-out-Value",
+			"p2": "vehicles-wheel-result-spinangle-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-wheel-link-3",
+			"p1": "vehicles-wheel-input-front-out-Value",
+			"p2": "vehicles-wheel-formula-steerangle-in-Front",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-wheel-link-4",
+			"p1": "vehicles-wheel-input-steer-out-Value",
+			"p2": "vehicles-wheel-formula-steerangle-in-Steer",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-wheel-link-5",
+			"p1": "vehicles-wheel-formula-steerangle-out-Value",
+			"p2": "vehicles-wheel-result-steerangle-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-wheel-link-6",
+			"p1": "vehicles-wheel-input-stroke-out-Value",
+			"p2": "vehicles-wheel-formula-drop-in-Stroke",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-wheel-link-7",
+			"p1": "vehicles-wheel-input-size-out-Value",
+			"p2": "vehicles-wheel-formula-drop-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-wheel-link-8",
+			"p1": "vehicles-wheel-formula-drop-out-Value",
+			"p2": "vehicles-wheel-result-drop-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-wheel-link-9",
+			"p1": "vehicles-wheel-formula-camber-out-Value",
+			"p2": "vehicles-wheel-result-camber-in-Value",
+			"kind": "value"
+		}
+	]
+}

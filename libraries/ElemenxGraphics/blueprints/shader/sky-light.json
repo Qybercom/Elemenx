@@ -1,0 +1,916 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "sky-light",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "sky-light-input-wayy",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "WayY"
+				}
+			]
+		},
+		{
+			"id": "sky-light-input-sundot",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SunDot"
+				}
+			]
+		},
+		{
+			"id": "sky-light-input-suny",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SunY"
+				}
+			]
+		},
+		{
+			"id": "sky-light-input-spread",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Spread"
+				}
+			]
+		},
+		{
+			"id": "sky-light-input-skyr",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SkyR"
+				}
+			]
+		},
+		{
+			"id": "sky-light-input-skyg",
+			"type": "Input",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SkyG"
+				}
+			]
+		},
+		{
+			"id": "sky-light-input-skyb",
+			"type": "Input",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "SkyB"
+				}
+			]
+		},
+		{
+			"id": "sky-light-input-floorr",
+			"type": "Input",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "FloorR"
+				}
+			]
+		},
+		{
+			"id": "sky-light-input-floorg",
+			"type": "Input",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "FloorG"
+				}
+			]
+		},
+		{
+			"id": "sky-light-input-floorb",
+			"type": "Input",
+			"x": 0,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "FloorB"
+				}
+			]
+		},
+		{
+			"id": "sky-light-input-gain",
+			"type": "Input",
+			"x": 0,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Gain"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-up",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "clamp(WayY, 0, 1)"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-low",
+			"type": "Formula",
+			"x": 320,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 - smoothstep(0, 0.5, abs(SunY))"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-white",
+			"type": "Formula",
+			"x": 320,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Gain * max(SkyR, max(SkyG, SkyB))"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-curve",
+			"type": "Formula",
+			"x": 320,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "sqrt(Up)"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-glow",
+			"type": "Formula",
+			"x": 320,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "White * Low * exp(-Up * 5.5) * (0.3 + 1.1 * pow(SunDot * 0.5 + 0.5, 4))"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-above",
+			"type": "Formula",
+			"x": 320,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(-0.1, 0, WayY)"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-even",
+			"type": "Formula",
+			"x": 320,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Spread * 0.7"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-half",
+			"type": "Formula",
+			"x": 320,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "WayY * 0.5 + 0.5"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-horizonr",
+			"type": "Formula",
+			"x": 320,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Gain * SkyR + (White - Gain * SkyR) * 0.5"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-zenithr",
+			"type": "Formula",
+			"x": 320,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Gain * SkyR * 0.38"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-wayr",
+			"type": "Formula",
+			"x": 320,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HorizonR + (ZenithR - HorizonR) * Curve + Glow * 1"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-seenr",
+			"type": "Formula",
+			"x": 320,
+			"y": 1250,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "FloorR + (WayR - FloorR) * Above"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-meanr",
+			"type": "Formula",
+			"x": 680,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "FloorR + (SkyR - FloorR) * Half"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-horizong",
+			"type": "Formula",
+			"x": 680,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Gain * SkyG + (White - Gain * SkyG) * 0.5"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-zenithg",
+			"type": "Formula",
+			"x": 680,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Gain * SkyG * 0.55"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-wayg",
+			"type": "Formula",
+			"x": 680,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HorizonG + (ZenithG - HorizonG) * Curve + Glow * 0.54"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-seeng",
+			"type": "Formula",
+			"x": 680,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "FloorG + (WayG - FloorG) * Above"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-meang",
+			"type": "Formula",
+			"x": 680,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "FloorG + (SkyG - FloorG) * Half"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-horizonb",
+			"type": "Formula",
+			"x": 680,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Gain * SkyB + (White - Gain * SkyB) * 0.5"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-zenithb",
+			"type": "Formula",
+			"x": 680,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Gain * SkyB * 1"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-wayb",
+			"type": "Formula",
+			"x": 680,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HorizonB + (ZenithB - HorizonB) * Curve + Glow * 0.2"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-seenb",
+			"type": "Formula",
+			"x": 680,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "FloorB + (WayB - FloorB) * Above"
+				}
+			]
+		},
+		{
+			"id": "sky-light-step-meanb",
+			"type": "Formula",
+			"x": 680,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "FloorB + (SkyB - FloorB) * Half"
+				}
+			]
+		},
+		{
+			"id": "sky-light-formula-r",
+			"type": "Formula",
+			"x": 1040,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "SeenR + (MeanR - SeenR) * Even"
+				}
+			]
+		},
+		{
+			"id": "sky-light-result-r",
+			"type": "Result",
+			"x": 1400,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "R"
+				}
+			]
+		},
+		{
+			"id": "sky-light-formula-g",
+			"type": "Formula",
+			"x": 1040,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "SeenG + (MeanG - SeenG) * Even"
+				}
+			]
+		},
+		{
+			"id": "sky-light-result-g",
+			"type": "Result",
+			"x": 1400,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "G"
+				}
+			]
+		},
+		{
+			"id": "sky-light-formula-b",
+			"type": "Formula",
+			"x": 1040,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "SeenB + (MeanB - SeenB) * Even"
+				}
+			]
+		},
+		{
+			"id": "sky-light-result-b",
+			"type": "Result",
+			"x": 1400,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "B"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "sky-light-link-0",
+			"p1": "sky-light-input-wayy-out-Value",
+			"p2": "sky-light-step-up-in-WayY",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-1",
+			"p1": "sky-light-input-suny-out-Value",
+			"p2": "sky-light-step-low-in-SunY",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-2",
+			"p1": "sky-light-input-gain-out-Value",
+			"p2": "sky-light-step-white-in-Gain",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-3",
+			"p1": "sky-light-input-skyr-out-Value",
+			"p2": "sky-light-step-white-in-SkyR",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-4",
+			"p1": "sky-light-input-skyg-out-Value",
+			"p2": "sky-light-step-white-in-SkyG",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-5",
+			"p1": "sky-light-input-skyb-out-Value",
+			"p2": "sky-light-step-white-in-SkyB",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-6",
+			"p1": "sky-light-step-up-out-Value",
+			"p2": "sky-light-step-curve-in-Up",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-7",
+			"p1": "sky-light-step-white-out-Value",
+			"p2": "sky-light-step-glow-in-White",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-8",
+			"p1": "sky-light-step-low-out-Value",
+			"p2": "sky-light-step-glow-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-9",
+			"p1": "sky-light-step-up-out-Value",
+			"p2": "sky-light-step-glow-in-Up",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-10",
+			"p1": "sky-light-input-sundot-out-Value",
+			"p2": "sky-light-step-glow-in-SunDot",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-11",
+			"p1": "sky-light-input-wayy-out-Value",
+			"p2": "sky-light-step-above-in-WayY",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-12",
+			"p1": "sky-light-input-spread-out-Value",
+			"p2": "sky-light-step-even-in-Spread",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-13",
+			"p1": "sky-light-input-wayy-out-Value",
+			"p2": "sky-light-step-half-in-WayY",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-14",
+			"p1": "sky-light-input-gain-out-Value",
+			"p2": "sky-light-step-horizonr-in-Gain",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-15",
+			"p1": "sky-light-input-skyr-out-Value",
+			"p2": "sky-light-step-horizonr-in-SkyR",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-16",
+			"p1": "sky-light-step-white-out-Value",
+			"p2": "sky-light-step-horizonr-in-White",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-17",
+			"p1": "sky-light-input-gain-out-Value",
+			"p2": "sky-light-step-zenithr-in-Gain",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-18",
+			"p1": "sky-light-input-skyr-out-Value",
+			"p2": "sky-light-step-zenithr-in-SkyR",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-19",
+			"p1": "sky-light-step-horizonr-out-Value",
+			"p2": "sky-light-step-wayr-in-HorizonR",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-20",
+			"p1": "sky-light-step-zenithr-out-Value",
+			"p2": "sky-light-step-wayr-in-ZenithR",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-21",
+			"p1": "sky-light-step-curve-out-Value",
+			"p2": "sky-light-step-wayr-in-Curve",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-22",
+			"p1": "sky-light-step-glow-out-Value",
+			"p2": "sky-light-step-wayr-in-Glow",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-23",
+			"p1": "sky-light-input-floorr-out-Value",
+			"p2": "sky-light-step-seenr-in-FloorR",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-24",
+			"p1": "sky-light-step-wayr-out-Value",
+			"p2": "sky-light-step-seenr-in-WayR",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-25",
+			"p1": "sky-light-step-above-out-Value",
+			"p2": "sky-light-step-seenr-in-Above",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-26",
+			"p1": "sky-light-input-floorr-out-Value",
+			"p2": "sky-light-step-meanr-in-FloorR",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-27",
+			"p1": "sky-light-input-skyr-out-Value",
+			"p2": "sky-light-step-meanr-in-SkyR",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-28",
+			"p1": "sky-light-step-half-out-Value",
+			"p2": "sky-light-step-meanr-in-Half",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-29",
+			"p1": "sky-light-input-gain-out-Value",
+			"p2": "sky-light-step-horizong-in-Gain",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-30",
+			"p1": "sky-light-input-skyg-out-Value",
+			"p2": "sky-light-step-horizong-in-SkyG",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-31",
+			"p1": "sky-light-step-white-out-Value",
+			"p2": "sky-light-step-horizong-in-White",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-32",
+			"p1": "sky-light-input-gain-out-Value",
+			"p2": "sky-light-step-zenithg-in-Gain",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-33",
+			"p1": "sky-light-input-skyg-out-Value",
+			"p2": "sky-light-step-zenithg-in-SkyG",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-34",
+			"p1": "sky-light-step-horizong-out-Value",
+			"p2": "sky-light-step-wayg-in-HorizonG",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-35",
+			"p1": "sky-light-step-zenithg-out-Value",
+			"p2": "sky-light-step-wayg-in-ZenithG",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-36",
+			"p1": "sky-light-step-curve-out-Value",
+			"p2": "sky-light-step-wayg-in-Curve",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-37",
+			"p1": "sky-light-step-glow-out-Value",
+			"p2": "sky-light-step-wayg-in-Glow",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-38",
+			"p1": "sky-light-input-floorg-out-Value",
+			"p2": "sky-light-step-seeng-in-FloorG",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-39",
+			"p1": "sky-light-step-wayg-out-Value",
+			"p2": "sky-light-step-seeng-in-WayG",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-40",
+			"p1": "sky-light-step-above-out-Value",
+			"p2": "sky-light-step-seeng-in-Above",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-41",
+			"p1": "sky-light-input-floorg-out-Value",
+			"p2": "sky-light-step-meang-in-FloorG",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-42",
+			"p1": "sky-light-input-skyg-out-Value",
+			"p2": "sky-light-step-meang-in-SkyG",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-43",
+			"p1": "sky-light-step-half-out-Value",
+			"p2": "sky-light-step-meang-in-Half",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-44",
+			"p1": "sky-light-input-gain-out-Value",
+			"p2": "sky-light-step-horizonb-in-Gain",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-45",
+			"p1": "sky-light-input-skyb-out-Value",
+			"p2": "sky-light-step-horizonb-in-SkyB",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-46",
+			"p1": "sky-light-step-white-out-Value",
+			"p2": "sky-light-step-horizonb-in-White",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-47",
+			"p1": "sky-light-input-gain-out-Value",
+			"p2": "sky-light-step-zenithb-in-Gain",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-48",
+			"p1": "sky-light-input-skyb-out-Value",
+			"p2": "sky-light-step-zenithb-in-SkyB",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-49",
+			"p1": "sky-light-step-horizonb-out-Value",
+			"p2": "sky-light-step-wayb-in-HorizonB",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-50",
+			"p1": "sky-light-step-zenithb-out-Value",
+			"p2": "sky-light-step-wayb-in-ZenithB",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-51",
+			"p1": "sky-light-step-curve-out-Value",
+			"p2": "sky-light-step-wayb-in-Curve",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-52",
+			"p1": "sky-light-step-glow-out-Value",
+			"p2": "sky-light-step-wayb-in-Glow",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-53",
+			"p1": "sky-light-input-floorb-out-Value",
+			"p2": "sky-light-step-seenb-in-FloorB",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-54",
+			"p1": "sky-light-step-wayb-out-Value",
+			"p2": "sky-light-step-seenb-in-WayB",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-55",
+			"p1": "sky-light-step-above-out-Value",
+			"p2": "sky-light-step-seenb-in-Above",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-56",
+			"p1": "sky-light-input-floorb-out-Value",
+			"p2": "sky-light-step-meanb-in-FloorB",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-57",
+			"p1": "sky-light-input-skyb-out-Value",
+			"p2": "sky-light-step-meanb-in-SkyB",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-58",
+			"p1": "sky-light-step-half-out-Value",
+			"p2": "sky-light-step-meanb-in-Half",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-59",
+			"p1": "sky-light-step-seenr-out-Value",
+			"p2": "sky-light-formula-r-in-SeenR",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-60",
+			"p1": "sky-light-step-meanr-out-Value",
+			"p2": "sky-light-formula-r-in-MeanR",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-61",
+			"p1": "sky-light-step-even-out-Value",
+			"p2": "sky-light-formula-r-in-Even",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-62",
+			"p1": "sky-light-formula-r-out-Value",
+			"p2": "sky-light-result-r-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-63",
+			"p1": "sky-light-step-seeng-out-Value",
+			"p2": "sky-light-formula-g-in-SeenG",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-64",
+			"p1": "sky-light-step-meang-out-Value",
+			"p2": "sky-light-formula-g-in-MeanG",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-65",
+			"p1": "sky-light-step-even-out-Value",
+			"p2": "sky-light-formula-g-in-Even",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-66",
+			"p1": "sky-light-formula-g-out-Value",
+			"p2": "sky-light-result-g-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-67",
+			"p1": "sky-light-step-seenb-out-Value",
+			"p2": "sky-light-formula-b-in-SeenB",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-68",
+			"p1": "sky-light-step-meanb-out-Value",
+			"p2": "sky-light-formula-b-in-MeanB",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-69",
+			"p1": "sky-light-step-even-out-Value",
+			"p2": "sky-light-formula-b-in-Even",
+			"kind": "value"
+		},
+		{
+			"id": "sky-light-link-70",
+			"p1": "sky-light-formula-b-out-Value",
+			"p2": "sky-light-result-b-in-Value",
+			"kind": "value"
+		}
+	]
+}
